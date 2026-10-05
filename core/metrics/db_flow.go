@@ -11,26 +11,21 @@ const Export = "export"
 
 // Flow is the energy attributed from one source to one sink over the queried period.
 type Flow struct {
-	From   string  `json:"from"`
-	To     string  `json:"to"`
-	Energy float64 `json:"energy"` // kWh
+	From         string  `json:"from"`
+	To           string  `json:"to"`
+	Energy       float64 `json:"energy"`                 // kWh
+	Cost         float64 `json:"cost,omitempty"`         // home and loadpoint only
+	PricedEnergy float64 `json:"pricedEnergy,omitempty"` // kWh with a price
 }
 
-// FlowCost sums the grid tariff over the slots that carry a grid price.
-// Consumption is what home and loadpoints cost with grid energy at the grid
-// price and self-produced energy at the feed-in price (lost revenue), Baseline
-// what the same energy would have cost at the average grid price.
+// FlowCost sums the grid tariff over the slots that carry a grid price. What
+// home and loadpoints cost is on the flows that reached them.
 type FlowCost struct {
-	Import            float64 `json:"import"`
-	Export            float64 `json:"export"`
-	ImportEnergy      float64 `json:"importEnergy"` // kWh priced
-	ExportEnergy      float64 `json:"exportEnergy"` // kWh priced
-	Consumption       float64 `json:"consumption"`
-	ConsumptionEnergy float64 `json:"consumptionEnergy"` // kWh priced
-	Home              float64 `json:"home"`              // consumption share of home only
-	HomeEnergy        float64 `json:"homeEnergy"`        // kWh priced
-	Baseline          float64 `json:"baseline"`
-	AvgGrid           float64 `json:"avgGrid"`
+	Import       float64 `json:"import"`
+	Export       float64 `json:"export"`
+	ImportEnergy float64 `json:"importEnergy"` // kWh with a price
+	ExportEnergy float64 `json:"exportEnergy"` // kWh with a price
+	AvgGrid      float64 `json:"avgGrid"`
 }
 
 // FlowCo2 sums the grid co2 intensity (kg) over the slots that carry a co2
@@ -114,6 +109,8 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 	defer rows.Close()
 
 	sums := make(map[[2]string]float64)
+	costs := make(map[[2]string]float64)
+	priced := make(map[[2]string]float64)
 	var cost FlowCost
 	var co2 FlowCo2
 	var costSlots, co2Slots float64
@@ -124,26 +121,27 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 			return FlowResult{}, err
 		}
 
-		// energy that reached home and loadpoints, split by grid and self-produced.
+		// energy that reached home and loadpoints, and the grid's part of it.
 		// Consumption a slot's sources cannot cover (meter mismatch, coarse
 		// counters) stays out of the cost model on both sides.
-		var gridToConsumption, greenToConsumption, gridToHome, greenToHome float64
+		var consumption, gridToConsumption float64
 		attribute(s, func(from, to string, energy float64) {
 			sums[[2]string{from, to}] += energy
 			if to != Home && to != Loadpoint {
 				return
 			}
+			if s.Grid != nil {
+				key := [2]string{from, to}
+				priced[key] += energy
+				if from == Grid {
+					costs[key] += energy * *s.Grid
+				} else if s.FeedIn != nil {
+					costs[key] += energy * *s.FeedIn
+				}
+			}
+			consumption += energy
 			if from == Grid {
 				gridToConsumption += energy
-			} else {
-				greenToConsumption += energy
-			}
-			if to == Home {
-				if from == Grid {
-					gridToHome += energy
-				} else {
-					greenToHome += energy
-				}
 			}
 		})
 
@@ -152,21 +150,15 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 			cost.ImportEnergy += s.GridIn
 			cost.AvgGrid += *s.Grid
 			costSlots++
-			cost.ConsumptionEnergy += gridToConsumption + greenToConsumption
-			cost.Consumption += gridToConsumption * *s.Grid
-			cost.HomeEnergy += gridToHome + greenToHome
-			cost.Home += gridToHome * *s.Grid
 			if s.FeedIn != nil {
 				cost.Export += s.GridOut * *s.FeedIn
 				cost.ExportEnergy += s.GridOut
-				cost.Consumption += greenToConsumption * *s.FeedIn
-				cost.Home += greenToHome * *s.FeedIn
 			}
 		}
 
 		if s.Co2 != nil {
 			co2.Consumption += gridToConsumption * *s.Co2 / 1e3
-			co2.ConsumptionEnergy += gridToConsumption + greenToConsumption
+			co2.ConsumptionEnergy += consumption
 			co2.AvgCo2 += *s.Co2
 			co2Slots++
 		}
@@ -179,15 +171,15 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 	var res FlowResult
 	for _, from := range flowSources {
 		for _, to := range flowSinks {
-			if e := roundEnergy(sums[[2]string{from, to}]); e > 0 {
-				res.Flows = append(res.Flows, Flow{From: from, To: to, Energy: e})
+			key := [2]string{from, to}
+			if e := roundEnergy(sums[key]); e > 0 {
+				res.Flows = append(res.Flows, Flow{From: from, To: to, Energy: e, Cost: costs[key], PricedEnergy: priced[key]})
 			}
 		}
 	}
 
 	if costSlots > 0 {
 		cost.AvgGrid /= costSlots
-		cost.Baseline = cost.AvgGrid * cost.ConsumptionEnergy
 		res.Cost = &cost
 	}
 

@@ -8,9 +8,11 @@ import echartsChart from "@/mixins/echartsChart";
 import colors from "@/colors";
 import { tooltipStyle, tooltipTable, type TooltipRow } from "../Forecast/echarts";
 
-// proportional fill bar, segments grow with their share of the sum. One text line
-// tall with the bar centered, so it aligns with sublines beside it and the whole
-// line takes the touch
+// proportional fill bar, segments grow with their share of the sum and keep a small
+// gap between them. One text line tall with the bar centered, so it aligns with
+// sublines beside it and the whole line takes the touch
+const GLIDE = { duration: 500, easing: "exponentialOut" };
+
 export default defineComponent({
 	name: "MixBar",
 	mixins: [echartsChart],
@@ -22,17 +24,33 @@ export default defineComponent({
 	computed: {
 		chartOption(): Record<string, unknown> {
 			const total = this.segments.reduce((acc, s) => acc + s.value, 0);
-			const drawn = this.segments.filter((s) => s.value > 0);
+			// a part thinner than the gap would only eat the pill's rounded end
+			const drawn = this.segments
+				.map((s, i) => ({ ...s, id: `segment-${i}` }))
+				.filter((s) => s.value >= total / 100 && s.value > 0);
+			// a sliver of nothing between neighbours, so they read as separate parts
+			const parts = drawn.flatMap((s, i) =>
+				i ? [{ id: `gap-${i}`, value: total / 100, color: "transparent" }, s] : [s]
+			);
 			// pill ends on the outer drawn segments
-			const radius = (s: { value: number }) => {
+			const radius = (s: { id: string }) => {
 				const first = s === drawn[0] ? 3 : 0;
 				const last = s === drawn.at(-1) ? 3 : 0;
 				return [first, last, last, first];
 			};
 			return {
+				// values glide in step with the number above the bar (AnimatedNumber)
+				animationDuration: GLIDE.duration,
+				animationEasing: GLIDE.easing,
+				animationDurationUpdate: GLIDE.duration,
+				animationEasingUpdate: GLIDE.easing,
 				grid: { left: 0, right: 0, top: 0, bottom: 0 },
 				// the stack fills the width, echarts would otherwise round the axis up
-				xAxis: { type: "value", show: false, max: total || 1 },
+				xAxis: {
+					type: "value",
+					show: false,
+					max: parts.reduce((acc, s) => acc + s.value, 0) || 1,
+				},
 				yAxis: { type: "category", show: false, data: [""] },
 				tooltip: {
 					show: this.tooltip.length > 0,
@@ -41,7 +59,8 @@ export default defineComponent({
 					...tooltipStyle(colors.text || ""),
 					formatter: () => tooltipTable("", this.tooltip),
 				},
-				series: this.segments.map((s) => ({
+				series: parts.map((s) => ({
+					id: s.id,
 					type: "bar",
 					stack: "mix",
 					data: [s.value],
@@ -50,6 +69,12 @@ export default defineComponent({
 					silent: true,
 				})),
 			};
+		},
+	},
+	methods: {
+		// the number of parts changes, stale ones must go
+		applyChartOption() {
+			this.chart?.setOption(this.chartOption, { replaceMerge: ["series"] });
 		},
 	},
 });

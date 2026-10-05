@@ -1,6 +1,7 @@
 <template>
 	<div data-testid="consumer-treemap">
-		<div ref="root" class="treemap position-relative">
+		<slot name="chart" />
+		<div v-show="!$slots['chart']" ref="root" class="treemap position-relative">
 			<div
 				v-for="tile in layout"
 				:key="tile.name"

@@ -21,7 +21,7 @@ const SESSIONS_GROUP = "sessions_group";
 const SESSIONS_TYPE = "sessions_type";
 const ENERGY_ENTITY_CHART = "energy_entity_chart";
 const ENERGY_OVERVIEW = "energy_overview";
-const ENERGY_GRID_PRICES = "energy_grid_prices";
+const ENERGY_CONSUMER_VIEW = "energy_consumer_view";
 const BATTERY_UNIT = "battery_unit";
 const SETTINGS_PRICE_ZOOM = "settings_price_zoom";
 const SETTINGS_HIDE_FEEDIN = "settings_hide_feedin";
@@ -134,7 +134,7 @@ export interface Settings {
   sessionsType: string;
   energyEntityChart: string;
   energyOverview: string;
-  energyGridPrices: boolean;
+  energyConsumerView: string;
   batteryUnit: string;
   priceZoom: boolean;
   hideFeedin: boolean;
@@ -168,7 +168,7 @@ const settings: Settings = reactive({
   sessionsType: read(SESSIONS_TYPE),
   energyEntityChart: read(ENERGY_ENTITY_CHART),
   energyOverview: read(ENERGY_OVERVIEW),
-  energyGridPrices: readBool(ENERGY_GRID_PRICES),
+  energyConsumerView: read(ENERGY_CONSUMER_VIEW),
   batteryUnit: read(BATTERY_UNIT),
   priceZoom: readBool(SETTINGS_PRICE_ZOOM),
   hideFeedin: readBool(SETTINGS_HIDE_FEEDIN),
@@ -201,7 +201,7 @@ watch(() => settings.sessionsGroup, save(SESSIONS_GROUP));
 watch(() => settings.sessionsType, save(SESSIONS_TYPE));
 watch(() => settings.energyEntityChart, save(ENERGY_ENTITY_CHART));
 watch(() => settings.energyOverview, save(ENERGY_OVERVIEW));
-watch(() => settings.energyGridPrices, saveBool(ENERGY_GRID_PRICES));
+watch(() => settings.energyConsumerView, save(ENERGY_CONSUMER_VIEW));
 watch(() => settings.batteryUnit, save(BATTERY_UNIT));
 watch(() => settings.priceZoom, saveBool(SETTINGS_PRICE_ZOOM));
 watch(() => settings.hideFeedin, saveBool(SETTINGS_HIDE_FEEDIN));

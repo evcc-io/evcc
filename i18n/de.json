@@ -1303,7 +1303,6 @@
         "bars": "Balken",
         "pattern": "Muster"
       },
-      "consumed": "Verbraucht",
       "cost": "Kosten",
       "others": "Sonstige",
       "source": {
@@ -1311,7 +1310,11 @@
         "battery": "Speicher",
         "grid": "Netz"
       },
-      "title": "Verbraucher"
+      "title": "Verbraucher",
+      "view": {
+        "river": "River",
+        "treemap": "Treemap"
+      }
     },
     "direction": {
       "battery": {
@@ -1319,8 +1322,8 @@
         "returnEnergy": "entladen"
       },
       "grid": {
-        "energy": "bezogen",
-        "returnEnergy": "eingespeist"
+        "energy": "Bezug",
+        "returnEnergy": "Einspeisung"
       },
       "meter": {
         "energy": "Energie",
@@ -1340,9 +1343,11 @@
       "overview": "Übersicht",
       "pv": "Erzeugung",
       "title": "Energiefluss",
-      "usage": "Verwendung"
+      "usage": "Verwendung",
+      "withdrawal": "Entnahme"
     },
     "grid": {
+      "amount": "Betrag",
       "cost": "Netzkosten",
       "energy": "Energie",
       "export": "Einspeisung",
@@ -1351,7 +1356,6 @@
       "importPrice": "Bezugspreis",
       "price": "Preis",
       "revenue": "Einspeisevergütung",
-      "showPrices": "Preise anzeigen",
       "title": "Netz"
     },
     "group": {
@@ -1362,20 +1366,16 @@
       "meter": "Weitere Zähler",
       "pv": "Erzeugung"
     },
-    "loadpoint": {
-      "charged": "Geladen",
-      "used": "Verbraucht"
-    },
     "production": {
-      "accuracy": "Vorhersagegenauigkeit",
       "above": "{value} darüber",
+      "accuracy": "Vorhersagegenauigkeit",
       "below": "{value} darunter",
-      "breakdown": "Aufteilung",
       "deviation": "Abweichung",
       "expectedTomorrow": "morgen erwartet",
+      "exported": "{value} eingespeist",
       "produced": "Erzeugt",
       "remainingToday": "heute verbleibend",
-      "selfConsumed": "{value} selbst verbraucht",
+      "selfConsumed": "Selbst verbraucht",
       "title": "Erzeugung"
     },
     "socTemp": {
@@ -1384,13 +1384,24 @@
       "temperature": "Temperatur",
       "used": "verbraucht"
     },
+    "sources": {
+      "battery": "Batterie",
+      "cost": "Kosten",
+      "energy": "Energie",
+      "grid": "Netz",
+      "hint": "Solar- und Batteriestrom zum Einspeisepreis bewertet.",
+      "price": "Preis/kWh",
+      "pv": "Solar",
+      "share": "Anteil",
+      "source": "Quelle",
+      "title": "Quellen",
+      "total": "Gesamt"
+    },
     "stat": {
       "autarky": "Autarkie",
       "co2Saved": "CO₂ gespart",
       "co2SavedTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz.",
       "configure": "Jetzt einrichten",
-      "gridExport": "Einspeisung",
-      "gridImport": "Netzbezug",
       "noCo2": "Keine CO₂-Daten.",
       "noPrice": "Keine Preisdaten.",
       "savings": "Ersparnis",

@@ -19,8 +19,8 @@ test("both grid entities count as one grid", async ({ page }) => {
   const grid = page.getByTestId("energy-grid");
   await expect(grid).toContainText("Import");
   await expect(grid).toContainText("4.0 kWh");
-  // no tariff, no price switch, the tiles point at the tariff settings
-  await expect(page.getByRole("switch", { name: "show prices" })).toHaveCount(0);
+  // no tariff, no prices in the chart, the tiles point at the tariff settings
+  await expect(grid).not.toContainText("Import price");
   await expect(page.getByTestId("energy-stat-gridImport")).toContainText("No price data.");
   await expect(page.getByTestId("energy-stat-gridExport")).toContainText("Configure now");
 

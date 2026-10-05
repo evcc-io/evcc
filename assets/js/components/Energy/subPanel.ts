@@ -3,8 +3,8 @@ import { forecastYAxis, hoverDot, lineDefaults } from "./echarts";
 
 // skinny panel below a chart's main plot, sharing its x axis
 const PANEL_HEIGHT = 40;
-const PANEL_GAP = 16;
-export const PANEL_EXTRA = 40; // added chart height, the main plot gives up the rest
+const PANEL_GAP = 24;
+export const PANEL_EXTRA = 48; // added chart height, the main plot gives up the rest
 
 export interface SubPanel {
   series: Record<string, unknown>[];
@@ -26,9 +26,11 @@ export function socTempPanel(
     min = Math.floor(Math.min(...present) / 10) * 10;
     max = Math.max(Math.ceil(Math.max(...present) / 10) * 10, min + 10);
   }
+  // a light box needs less tint than a dark one
+  const dark = document.documentElement.classList.contains("dark");
   return {
     // same hue as the area, so the fill stays a clean tint of the device color
-    track: setAlpha(color, "0d") || "",
+    track: setAlpha(color, dark ? "1a" : "0d") || "",
     series: [
       {
         id: "soctemp",

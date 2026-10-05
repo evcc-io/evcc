@@ -5,18 +5,15 @@ export interface Flow {
   from: FlowSource;
   to: FlowSink;
   energy: number; // kWh
+  cost?: number; // home and loadpoint only
+  pricedEnergy?: number; // kWh with a price
 }
 
 export interface FlowCost {
   import: number;
   export: number;
-  importEnergy: number; // kWh priced
-  exportEnergy: number; // kWh priced
-  consumption: number; // grid share at grid price, self-produced share at feed-in price
-  consumptionEnergy: number; // kWh priced
-  home: number; // share of consumption cost for home only
-  homeEnergy: number; // kWh priced
-  baseline: number;
+  importEnergy: number; // kWh with a price
+  exportEnergy: number; // kWh with a price
   avgGrid: number;
 }
 
@@ -50,6 +47,7 @@ export interface PriceBand {
   avg: (number | null)[];
   lo: (number | null)[];
   hi: (number | null)[];
+  cost?: (number | null)[]; // what the category's energy cost or earned
 }
 
 export interface PriceOverlay {
@@ -66,6 +64,12 @@ export interface ConsumerEnergy {
 export enum ENTITY_CHART {
   BARS = "bars",
   PATTERN = "pattern",
+}
+
+// the consumers card: shares of the period, or the consumers over time
+export enum CONSUMER_VIEW {
+  TREEMAP = "treemap",
+  RIVER = "river",
 }
 
 // the overview card

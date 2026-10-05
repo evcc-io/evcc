@@ -12,7 +12,9 @@ import StatCards from "./StatCards.vue";
 import MixBar from "./MixBar.vue";
 import formatter from "@/mixins/formatter";
 import { CURRENCY } from "@/types/evcc";
-import type { FlowCo2, FlowCost, StatItem } from "./types";
+import type { Flow, FlowCo2, FlowCost, StatItem } from "./types";
+import { sinkCost } from "./mix";
+import { groupColor } from "./groups";
 
 export default defineComponent({
 	name: "CostStats",
@@ -20,16 +22,17 @@ export default defineComponent({
 	mixins: [formatter],
 	props: {
 		autarky: { type: Number, default: 0 }, // percent
+		flows: { type: Array as PropType<Flow[]>, default: () => [] },
 		cost: { type: Object as PropType<FlowCost> },
 		co2: { type: Object as PropType<FlowCo2> },
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 	},
 	computed: {
-		// the remainder is the track, same tone as the bootstrap progress track
+		// own energy in the production color, the remainder came from the grid
 		autarkySegments(): { value: number; color: string }[] {
 			return [
-				{ value: this.autarky, color: "var(--evcc-accent2)" },
-				{ value: 100 - this.autarky, color: "var(--bs-secondary-bg)" },
+				{ value: this.autarky, color: groupColor("pv") },
+				{ value: 100 - this.autarky, color: "var(--evcc-grid)" },
 			];
 		},
 		stats(): StatItem[] {
@@ -44,9 +47,9 @@ export default defineComponent({
 			];
 			if (this.cost) {
 				// consumption priced grid only minus what it cost with own energy at the feed-in price
-				const savings = this.cost.baseline - this.cost.consumption;
-				const consumption = this.cost.consumptionEnergy;
-				const effective = consumption ? this.cost.consumption / consumption : 0;
+				const { cost, energy } = sinkCost(this.flows, "home", "loadpoint");
+				const savings = this.cost.avgGrid * energy - cost;
+				const effective = energy ? cost / energy : 0;
 				const fmt = (v: number) => this.fmtPricePerKWh(v, this.currency, false, false);
 				list.push({
 					key: "savings",
@@ -57,7 +60,7 @@ export default defineComponent({
 					// effective price per kWh consumed vs. the average grid price
 					sub: `${fmt(effective)} vs. ${this.fmtPricePerKWh(this.cost.avgGrid, this.currency)}`,
 					tooltip: this.$t("energy.stat.savingsTooltip", {
-						energy: this.fmtKWh(this.cost.consumptionEnergy),
+						energy: this.fmtKWh(energy),
 					}),
 				});
 			} else {

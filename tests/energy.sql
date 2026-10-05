@@ -65,8 +65,23 @@ INSERT INTO `meters` VALUES (2, 1789503300, 1, 0);
 INSERT INTO `meters` VALUES (8, 1789552800, 1, 0);
 INSERT INTO `meters` VALUES (2, 1789552800, 1, 0);
 
+-- 2026-09-17 12:00 CEST: solar charging without price data, pv 1 → carport 1
+INSERT INTO `meters` VALUES (4, 1789639200, 1, 0);
+INSERT INTO `meters` VALUES (5, 1789639200, 1, 0);
+
+-- 2026-09-18 12:00 CEST: no solar, battery 1 → carport 1
+INSERT INTO `meters` VALUES (3, 1789725600, 0, 1);
+INSERT INTO `meters` VALUES (5, 1789725600, 1, 0);
+
 -- tariffs for all four slots: grid 0.30 (night 0.25 / 0.35), feed-in 0.10, co2 400 g/kWh
 INSERT INTO `tariffs` VALUES (1789466400, 0.3, 0.1, 400, NULL);
 INSERT INTO `tariffs` VALUES (1789467300, 0.3, 0.1, 400, NULL);
 INSERT INTO `tariffs` VALUES (1789502400, 0.25, 0.1, 400, NULL);
 INSERT INTO `tariffs` VALUES (1789503300, 0.35, 0.1, 400, NULL);
+
+-- battery soc on 2026-09-15: charging at noon, discharging at night
+ALTER TABLE `meters` ADD COLUMN `soc_temp` real;
+UPDATE `meters` SET soc_temp = 50 WHERE meter = 3 AND ts = 1789466400;
+UPDATE `meters` SET soc_temp = 60 WHERE meter = 3 AND ts = 1789467300;
+UPDATE `meters` SET soc_temp = 70 WHERE meter = 3 AND ts = 1789502400;
+UPDATE `meters` SET soc_temp = 60 WHERE meter = 3 AND ts = 1789503300;

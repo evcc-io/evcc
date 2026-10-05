@@ -334,8 +334,7 @@ export default defineComponent({
 		onChartInit() {
 			this.chartWidth = this.chart?.getWidth() ?? 0;
 		},
-		resize() {
-			this.chart?.resize();
+		onChartResize() {
 			this.chartWidth = this.chart?.getWidth() ?? 0;
 		},
 		// the period options have different coordinate systems, replace instead of merge

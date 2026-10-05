@@ -7,6 +7,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import {
+	echarts,
 	axisNameStyle,
 	FONT_FAMILY,
 	forecastGrid,
@@ -17,8 +18,16 @@ import {
 	xAxisLabelStyle,
 	type TooltipRow,
 	lineDefaults,
+	hoverDot,
 } from "../Forecast/echarts";
-import colors, { resolveColors, deviceColorMap, darken, batteryColor, setAlpha } from "@/colors";
+import colors, {
+	resolveColors,
+	deviceColorMap,
+	darken,
+	batteryColor,
+	setAlpha,
+	lighterColor,
+} from "@/colors";
 import store from "@/store";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import echartsChart from "@/mixins/echartsChart";
@@ -37,8 +46,10 @@ export interface HistorySlot {
 	energy: number;
 	returnEnergy: number;
 	socTemp?: number; // a single slot's soc in percent or temperature
-	socTempMin?: number; // range over an aggregated bucket
-	socTempMax?: number;
+	cost?: number; // grid import, where a price exists
+	pricedEnergy?: number; // kWh with a price
+	returnCost?: number; // grid export, where a price exists
+	pricedReturnEnergy?: number; // kWh with a price
 }
 
 export interface HistorySeries {
@@ -71,24 +82,6 @@ export function stepAlpha(i: number, n: number): number {
 // Multiple entities stack into one bar; grid and meter render side-by-side.
 const STACKED_GROUPS: ReadonlySet<string> = new Set(["loadpoint", "consumer", "pv", "battery"]);
 
-// `pick` per slot of the first series carrying it, mapped onto the categories
-function perCategory<T>(
-	series: HistorySeries[],
-	keys: string[],
-	keyOf: (t: number) => string,
-	pick: (slot: HistorySlot) => T | null
-): (T | null)[] | null {
-	const source = series.find((s) => s.data.some((slot) => pick(slot) !== null));
-	if (!source) return null;
-	const index = new Map(keys.map((k, i) => [k, i]));
-	const out: (T | null)[] = keys.map(() => null);
-	for (const slot of source.data) {
-		const idx = index.get(keyOf(new Date(slot.start).getTime()));
-		if (idx !== undefined) out[idx] = pick(slot);
-	}
-	return out;
-}
-
 export default defineComponent({
 	name: "GroupChart",
 	mixins: [formatter, echartsChart],
@@ -111,11 +104,10 @@ export default defineComponent({
 		// bidirectional data with an automatic range instead of a symmetric one
 		autoRange: Boolean,
 		height: { type: Number, default: 180 },
-		// soc or temperature on its own scale: the slots' line in the day view, the
-		// bucket's range as a band per column otherwise
+		// soc or temperature of the day's slots in a panel below the bars
 		socTemp: Boolean,
-		// import and export price per category on a left axis. Lines in the day view,
-		// the slot range as a stepped band otherwise
+		// import and export price per category: in the tooltip, and in a panel below
+		// the bars when a price moves
 		prices: { type: Object as PropType<PriceOverlay | null>, default: null },
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		// the bands below the baseline continue the order above it in reverse, so a
@@ -124,6 +116,9 @@ export default defineComponent({
 		stackThrough: Boolean,
 		// stacked charts share one axis, only the last one labels it
 		showXAxis: { type: Boolean, default: true },
+		// what the parts above and below the baseline stand for, written along the left edge
+		upperLabel: { type: String, default: "" },
+		lowerLabel: { type: String, default: "" },
 	},
 	emits: ["slot"],
 	data(): {
@@ -225,30 +220,21 @@ export default defineComponent({
 		},
 		// day view: soc or temperature per category from the first series carrying it
 		socTempValues(): (number | null)[] | null {
-			if (this.period !== PERIODS.DAY) return null;
-			return this.socTemp
-				? perCategory(
-						this.series,
-						this.categoryKeys,
-						this.timestampKey,
-						(slot) => slot.socTemp ?? null
-					)
-				: null;
+			if (this.period !== PERIODS.DAY || !this.socTemp) return null;
+			const source = this.series.find((s) => s.data.some((slot) => slot.socTemp != null));
+			if (!source) return null;
+			const out: (number | null)[] = this.categoryKeys.map(() => null);
+			for (const slot of source.data) {
+				const idx = this.categoryKeys.indexOf(
+					this.timestampKey(new Date(slot.start).getTime())
+				);
+				if (idx >= 0) out[idx] = slot.socTemp ?? null;
+			}
+			return out;
 		},
-		// month and year: min and max of soc or temperature per category
-		socTempBands(): ([number, number] | null)[] | null {
-			if (this.period === PERIODS.DAY) return null;
-			return this.socTemp
-				? perCategory(this.series, this.categoryKeys, this.timestampKey, (slot) =>
-						slot.socTempMin != null && slot.socTempMax != null
-							? ([slot.socTempMin, slot.socTempMax] as [number, number])
-							: null
-					)
-				: null;
-		},
-		// day view: soc or temperature as line and area in its own panel below the bars
+		// below the bars: soc or temperature of the day as line and area, or the grid prices
 		subPanel(): SubPanel | null {
-			if (!this.socTempValues) return null;
+			if (!this.socTempValues) return this.pricePanel;
 			const isTemp = this.socTempIsTemp;
 			return socTempPanel(
 				this.socTempValues,
@@ -260,20 +246,130 @@ export default defineComponent({
 		chartHeight(): number {
 			return this.height + (this.subPanel ? PANEL_EXTRA : 0);
 		},
+		// the baseline splits the plot, a label for each side that has data. Pinned to
+		// the plot's corners so they stay put between periods: read bottom up, the
+		// upper label ends at the top, the lower one starts at the bottom
+		sideLabels(): Record<string, unknown>[][] {
+			const has = (key: "energy" | "returnEnergy") =>
+				this.series.some((s) => s.data.some((slot) => slot[key] > 0));
+			// each area runs from the baseline to its axis end (an infinite value is
+			// clipped to it) and carries its label on the outer corner: as far left of the
+			// plot as the tick labels are right of it, and shifted along the rotated text
+			// (positive is up) to the chart's own top and bottom
+			return [
+				...(this.upperLabel && has("energy")
+					? [
+							[
+								{
+									name: this.upperLabel,
+									yAxis: 0,
+									label: {
+										position: [-14, "0%"],
+										align: "right",
+										offset: [28, 0],
+									},
+								},
+								{ yAxis: Infinity },
+							],
+						]
+					: []),
+				...(this.lowerLabel && has("returnEnergy")
+					? [
+							[
+								{
+									name: this.lowerLabel,
+									yAxis: 0,
+									label: {
+										position: [-14, "100%"],
+										align: "left",
+										offset: [-17, 0],
+									},
+								},
+								{ yAxis: -Infinity },
+							],
+						]
+					: []),
+			];
+		},
+		// tooltip rows by stable entity index. A stack reads top down: what stacks
+		// upwards in reverse series order, then what hangs below the baseline, which
+		// continues that order when stacked through
+		rowOrder(): number[] {
+			const rows = this.series.map((s, i) => ({
+				idx: s.paletteIndex ?? i,
+				up: s.data.some((slot) => slot.energy > 0),
+			}));
+			if (!this.stackEntities) return rows.map((r) => r.idx);
+			const below = rows.filter((r) => !r.up);
+			return [
+				...rows.filter((r) => r.up).reverse(),
+				...(this.stackThrough ? below.reverse() : below),
+			].map((r) => r.idx);
+		},
 		// another view of the same data: stack order or the price overlay toggled
 		viewKey(): string {
 			return `${this.stackThrough}-${!!this.prices}`;
 		},
-		// highest price of either direction
-		priceExtent(): number {
-			const top = (band?: PriceBand) =>
-				Math.max(0, ...(band?.hi ?? []).filter((v): v is number => v !== null));
-			return Math.max(top(this.prices?.import), top(this.prices?.feedin));
+		// the prices that move over the period, zoomed into their range. A constant price
+		// is only in the tooltip
+		pricePanel(): SubPanel | null {
+			const known = (v: (number | null)[]) => v.filter((x): x is number => x !== null);
+			const lo = (band: PriceBand) => Math.min(...known(band.lo));
+			const hi = (band: PriceBand) => Math.max(...known(band.hi));
+			const bands: { key: string; band: PriceBand; color: string }[] = [];
+			const add = (key: string, band: PriceBand | undefined, color: string) => {
+				// an effective price carries float noise, a flat tariff must stay flat
+				if (band && hi(band) - lo(band) > 1e-4) bands.push({ key, band, color });
+			};
+			add("import", this.prices?.import, colors.price || "");
+			add("feedin", this.prices?.feedin, colors.export || "");
+			if (!bands.length) return null;
+			const min = Math.min(...bands.map(({ band }) => lo(band)));
+			const max = Math.max(...bands.map(({ band }) => hi(band)));
+			const series = ({ key, band, color }: (typeof bands)[number]) => ({
+				id: `price-${key}`,
+				name: `price-${key}`,
+				type: "line",
+				xAxisIndex: 1,
+				yAxisIndex: 1,
+				data: band.avg,
+				// a price holds for its whole slot: points sit at slot centers, so the
+				// jump between two points lands on the slot boundary
+				step: "middle",
+				...hoverDot(color),
+				lineStyle: { ...lineDefaults, color },
+				// glow fading out below the line, like the price forecast
+				areaStyle: {
+					color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+						{ offset: 0, color: lighterColor(color) || color },
+						{ offset: 0.75, color: setAlpha(color, "00") || color },
+						{ offset: 1, color: setAlpha(color, "00") || color },
+					]),
+				},
+				z: 4,
+			});
+			return {
+				track: "transparent",
+				series: bands.map(series),
+				// the exact price range, currencies differ too much for rounding rules
+				yAxis: forecastYAxis({
+					gridIndex: 1,
+					position: "right",
+					min,
+					max,
+					// labels at both ends only
+					interval: max - min,
+					splitLine: { show: false },
+					axisLabel: {
+						color: colors.muted || "",
+						hideOverlap: true,
+						formatter: (v: number) => this.fmtPricePerKWh(v, this.currency, true),
+					},
+				}),
+			};
 		},
 		socTempIsTemp(): boolean {
-			return !!this.series.find((s) =>
-				s.data.some((slot) => slot.socTemp != null || slot.socTempMax != null)
-			)?.isTemp;
+			return !!this.series.find((s) => s.data.some((slot) => slot.socTemp != null))?.isTemp;
 		},
 		categoryTimestamps(): number[] {
 			const out: number[] = [];
@@ -379,131 +475,28 @@ export default defineComponent({
 				itemStyle: { color: overlayCol },
 				z: 4,
 			};
-			result.push(lineCasing(overlay, 3), overlay);
-
-			const priceLine = (id: string, data: (number | null)[], color: string) => ({
-				id,
-				name: id,
-				type: "line",
-				yAxisIndex: 1,
-				data,
-				// a price holds from its slot's start: points sit at slot centers, so the
-				// jump between two points lands on the slot boundary
-				step: this.period === PERIODS.DAY ? "middle" : false,
-				symbol: "none",
-				lineStyle: { ...lineDefaults, color, width: 1.5 },
-				z: 4,
-			});
-			const priceBand = (key: "import" | "feedin", band: PriceBand, color: string) => {
-				if (this.period === PERIODS.DAY) {
-					// in front of the bars with a casing, like the forecast line
-					const line = priceLine(`price-${key}`, band.avg, color);
-					return [lineCasing(line, 3), line];
-				}
-				// the slot's price range as a block over the whole slot width, a hairline
-				// when it is a single price
-				return [
-					{
-						id: `price-${key}`,
-						name: `price-${key}`,
-						type: "custom",
-						yAxisIndex: 1,
-						silent: true,
-						// behind the bars
-						z: 1,
-						data: band.lo.flatMap((lo, i) =>
-							lo === null || band.hi[i] === null ? [] : [[i, lo, band.hi[i]]]
-						),
-						renderItem: (
-							_: unknown,
-							api: {
-								value: (i: number) => number;
-								coord: (v: number[]) => number[];
-								size: (v: number[]) => number[];
-							}
-						) => {
-							const [x, top] = api.coord([api.value(0), api.value(2)]);
-							const [, bottom] = api.coord([api.value(0), api.value(1)]);
-							const width = api.size([1, 0])[0]!;
-							return {
-								type: "rect",
-								shape: {
-									x: x! - width / 2,
-									y: top,
-									width,
-									height: Math.max(1, bottom! - top!),
+			// the side labels ride on the overlay, not on its casing
+			result.push(lineCasing(overlay, 3), {
+				...overlay,
+				...(this.sideLabels.length
+					? {
+							// invisible areas above and below the baseline, each carrying its label
+							markArea: {
+								silent: true,
+								itemStyle: { color: "transparent" },
+								label: {
+									rotate: 90,
+									verticalAlign: "middle",
+									color: colors.muted || "",
+									fontSize: 10,
+									opacity: 0.75,
 								},
-								style: { fill: setAlpha(color, "33") },
-								blur: { style: { opacity: 1 } },
-							};
-						},
-					},
-				];
-			};
-			if (this.prices?.import)
-				result.push(...priceBand("import", this.prices.import, colors.price || ""));
-			if (this.prices?.feedin)
-				result.push(...priceBand("feedin", this.prices.feedin, colors.export || ""));
+								data: this.sideLabels,
+							},
+						}
+					: {}),
+			});
 
-			if (this.socTempBands) {
-				// the range as one path per run of buckets: flat across each slot along the
-				// highs, an s-curve over the slot edge to the next, back along the lows
-				const runs: { x: number; lo: number; hi: number }[][] = [];
-				this.socTempBands.forEach((band, i) => {
-					if (!band) return;
-					const run = this.socTempBands![i - 1] ? runs.at(-1)! : [];
-					if (!run.length) runs.push(run);
-					// at least a sliver for a constant value, so the slot still reads as covered
-					run.push({ x: i, lo: band[0], hi: Math.max(band[1], band[0] + 1) });
-				});
-				result.push({
-					id: "soctemp",
-					name: "soctemp",
-					type: "custom",
-					yAxisIndex: 1,
-					silent: true,
-					// one item per run, not per bucket, so it must stay out of the axis tooltip
-					tooltip: { show: false },
-					z: 1,
-					data: runs.map((_, i) => i),
-					renderItem: (
-						params: { dataIndex: number },
-						api: { coord: (v: number[]) => number[]; size: (v: number[]) => number[] }
-					) => {
-						const run = runs[params.dataIndex]!;
-						// slot edges in pixels from the slot's center and width, category
-						// coordinates only resolve whole indices
-						const width = api.size([1, 0])[0]!;
-						const P = (slot: number, offset: number, y: number) => {
-							const [cx, cy] = api.coord([slot, y]);
-							return `${(cx! + offset * width).toFixed(1)},${cy!.toFixed(1)}`;
-						};
-						// flat within a slot up to 0.4 widths from its center, the step eased
-						// over the remaining 0.2 around the slot edge; the run's outer edges are
-						// square. `sign` walks the highs forward and the lows back
-						const edge = (pts: typeof run, key: "lo" | "hi", sign: 1 | -1) =>
-							pts
-								.map((pt, j) => {
-									const next = pts[j + 1];
-									const to = ` L${P(pt.x, sign * (next ? 0.4 : 0.5), pt[key])}`;
-									return next
-										? `${to} C${P(pt.x, sign * 0.5, pt[key])} ${P(next.x, -sign * 0.5, next[key])} ${P(next.x, -sign * 0.4, next[key])}`
-										: to;
-								})
-								.join("");
-						const first = run[0]!;
-						const last = run.at(-1)!;
-						const d = `M${P(first.x, -0.5, first.hi)}${edge(run, "hi", 1)} L${P(last.x, 0.5, last.lo)}${edge([...run].reverse(), "lo", -1)} Z`;
-						return {
-							type: "path",
-							shape: { pathData: d },
-							style: { fill: setAlpha(colors.muted, "40") },
-							// stays put while the hovered slot dims the other bars
-							blur: { style: { opacity: 1 } },
-						};
-					},
-				});
-			}
 			if (this.subPanel) result.push(...this.subPanel.series);
 
 			// Always render import + export series per entity, even if one direction
@@ -554,12 +547,9 @@ export default defineComponent({
 				}
 			}
 
-			// hover dims all but the active slot (onChartMouseMove); silent stops single-segment highlight
-			const barEmphasis = {
-				silent: true,
-				emphasis: { focus: "self" },
-				blur: { itemStyle: { opacity: 0.25 } },
-			};
+			// hover lightens the active slot's bars (onChartMouseMove), like the sessions
+			// charts; silent stops single-segment highlight
+			const barEmphasis = { silent: true };
 			const returnSeries: Record<string, unknown>[] = [];
 			this.series.forEach((s, i) => {
 				const c = this.entryColors[i] || this.color;
@@ -692,7 +682,7 @@ export default defineComponent({
 			const tooltipDate = this.tooltipDateLabel;
 			const barGrid = {
 				...forecastGrid(),
-				left: this.subPanel || this.socTempBands || this.prices ? 36 : 0,
+				left: this.socTempValues ? 36 : this.upperLabel || this.lowerLabel ? 22 : 0,
 				right: 36,
 				...(this.showXAxis ? {} : { bottom: 4 }),
 			};
@@ -729,7 +719,7 @@ export default defineComponent({
 				axisPointer: { link: [{ xAxisIndex: "all" }] },
 				tooltip: {
 					trigger: "axis",
-					// transparent shadow snaps to slots without a band; triggerEmphasis off (it hard-codes notBlur), we dim slots in onChartMouseMove
+					// transparent shadow snaps to slots without a band; triggerEmphasis off, the slot is highlighted in onChartMouseMove
 					axisPointer: {
 						type: "shadow",
 						triggerEmphasis: false,
@@ -768,9 +758,7 @@ export default defineComponent({
 						// this slot are zero or missing — keeps the tooltip layout
 						// stable across slots.
 						const indices =
-							this.focusedEntity !== null
-								? [this.focusedEntity]
-								: this.series.map((s, i) => s.paletteIndex ?? i);
+							this.focusedEntity !== null ? [this.focusedEntity] : this.rowOrder;
 						const nameByIdx = new Map(
 							this.series.map((s, i) => [s.paletteIndex ?? i, s.title])
 						);
@@ -797,6 +785,8 @@ export default defineComponent({
 								: this.fmtWh(watts, unit);
 						};
 
+						// the overlay line's value in this slot, e.g. the solar forecast
+						const forecast = params.find((p) => p.seriesId === "overlay")?.value;
 						const rows: TooltipRow[] = indices.map((i, idx) => {
 							const t = rowValues[idx] ?? { energy: 0, returnEnergy: 0 };
 							// a single value covers both sides, a sink can draw from above and below
@@ -805,26 +795,40 @@ export default defineComponent({
 									? [formatValue(t.energy), formatValue(t.returnEnergy)]
 									: [formatValue(t.energy + t.returnEnergy)];
 							return {
-								// the price row below needs a name column to line up with
+								// the price or forecast row below needs a name column to line up with
 								name: showName
 									? (nameByIdx.get(i) ?? "")
 									: this.prices
 										? this.$t("energy.grid.energy")
-										: undefined,
+										: forecast != null
+											? this.singleEntityName(this.series[idx]!)
+											: undefined,
 								values,
 							};
 						});
-						const priceAt = (band?: PriceBand) => {
-							const i = first.dataIndex;
-							if (!band || band.avg[i] == null) return "";
-							return this.period === PERIODS.DAY
-								? this.fmtPricePerKWh(band.avg[i]!, this.currency)
-								: this.fmtPriceRange(band.lo[i]!, band.hi[i]!, this.currency);
+						// cost or revenue and the price of the slot, per direction
+						const at = (
+							values: (number | null)[] | undefined,
+							fmt: (v: number) => string
+						) => {
+							const v = values?.[first.dataIndex];
+							return v == null ? "" : fmt(v);
 						};
 						if (this.prices) {
+							const { import: imported, feedin } = this.prices;
+							const money = (v: number) => this.fmtMoneyWithSymbol(v, this.currency);
+							const price = (v: number) => this.fmtPricePerKWh(v, this.currency);
+							const amounts = [at(imported?.cost, money), at(feedin?.cost, money)];
+							if (amounts.some((v) => v !== "")) {
+								rows.push({ name: this.$t("energy.grid.amount"), values: amounts });
+							}
 							rows.push({
-								name: this.$t("energy.grid.price"),
-								values: [priceAt(this.prices.import), priceAt(this.prices.feedin)],
+								// a slot has one price, a longer bucket the average paid
+								name:
+									this.period === PERIODS.DAY
+										? this.$t("energy.grid.price")
+										: `ø ${this.$t("energy.grid.price")}`,
+								values: [at(imported?.avg, price), at(feedin?.avg, price)],
 							});
 						}
 						if (showName) {
@@ -842,20 +846,21 @@ export default defineComponent({
 								total: true,
 							});
 						}
-						// one entity with its soc or temperature: a named row per value, the
-						// slot value in the day view and the bucket's range otherwise
-						const fmtSocTemp = (v: number) =>
-							this.socTempIsTemp ? this.fmtTemperature(v) : this.fmtPercentage(v);
-						const band = this.socTempBands?.[first.dataIndex];
+						// below the separator, it is not part of the sum
+						if (forecast != null) {
+							rows.push({
+								name: this.overlayLabel,
+								values: [formatValue(forecast)],
+								total: true,
+							});
+						}
+						// one entity with its soc or temperature in the day view: a named row
+						// per value
 						const socTemp = this.socTempValues?.[first.dataIndex];
-						const socTempText = band
-							? band[0] === band[1]
-								? fmtSocTemp(band[0])
-								: `${fmtSocTemp(band[0])} – ${fmtSocTemp(band[1])}`
-							: socTemp != null
-								? fmtSocTemp(socTemp)
-								: null;
-						if (socTempText !== null && !showName) {
+						if (socTemp != null && !showName) {
+							const socTempText = this.socTempIsTemp
+								? this.fmtTemperature(socTemp)
+								: this.fmtPercentage(socTemp);
 							const t = rowValues[0] ?? { energy: 0, returnEnergy: 0 };
 							const label = (key: string) => this.$t(`energy.socTemp.${key}`);
 							const named: TooltipRow[] = this.isBidirectional
@@ -932,45 +937,7 @@ export default defineComponent({
 							},
 						},
 					}),
-					// the panel's axis, or left: soc always 0 to 100, temperature at least
-					// 30 to 70, or the price range with feed-in below zero
-					this.subPanel?.yAxis ??
-						forecastYAxis(
-							this.prices
-								? {
-										show: true,
-										position: "left",
-										// from zero unless a price goes negative
-										min: (v: { min: number }) => Math.min(0, v.min),
-										max: this.priceExtent,
-										splitNumber: 3,
-										splitLine: { show: false },
-										name: this.pricePerKWhUnit(this.currency, true),
-										...axisNameStyle("right"),
-										axisLabel: {
-											color: colors.muted || "",
-											hideOverlap: true,
-											formatter: (v: number) =>
-												this.fmtPricePerKWh(v, this.currency, true, false),
-										},
-									}
-								: {
-										show: !!this.socTempBands,
-										position: "left",
-										min: this.socTempIsTemp
-											? (v: { min: number }) => Math.min(30, v.min)
-											: 0,
-										max: this.socTempIsTemp
-											? (v: { max: number }) => Math.max(70, v.max)
-											: 100,
-										splitNumber: 3,
-										interval: this.socTempIsTemp ? undefined : 25,
-										splitLine: { show: false },
-										name: this.socTempIsTemp ? "°C" : "%",
-										...axisNameStyle("right"),
-										axisLabel: { color: colors.muted || "", hideOverlap: true },
-									}
-						),
+					...(this.subPanel ? [this.subPanel.yAxis] : []),
 				],
 				series: this.echartsSeries,
 			};
@@ -994,9 +961,15 @@ export default defineComponent({
 			this.chart?.getZr().on("click", (e: { offsetX: number; offsetY: number }) => {
 				this.emitSlotAt(e.offsetX, e.offsetY);
 			});
+			// echarts lifts a highlighted element above its siblings, the svg renderer
+			// then re-inserts every bar on each hover step. Nothing overlaps here, so
+			// the order can stay
+			this.chart?.on("finished", () => {
+				const elements = this.chart?.getZr().storage.getDisplayList() ?? [];
+				for (const el of elements) (el as { z2EmphasisLift?: number }).z2EmphasisLift = 0;
+			});
 		},
-		resize() {
-			this.chart?.resize();
+		onChartResize() {
 			this.chartWidth = this.chart?.getWidth() ?? 0;
 		},
 		onChartTap(x: number, y: number) {
@@ -1052,7 +1025,7 @@ export default defineComponent({
 		onTouchTooltipReset() {
 			this.clearHighlight();
 		},
-		// highlight hovered slot, dim rest. manual because built-in axis highlight hard-codes notBlur
+		// highlight the hovered slot. Manual, so slots without a bar are skipped and the panel's line gets its dot
 		onChartMouseMove(e: { offsetX: number; offsetY: number }) {
 			if (!this.chart) return;
 			const point: [number, number] = [e.offsetX, e.offsetY];
@@ -1063,8 +1036,8 @@ export default defineComponent({
 			const grid = this.chart.convertFromPixel({ gridIndex: 0 }, point) as number[];
 			const slot = Math.round(grid[0]!);
 			if (slot === this.activeSlot) return;
-			// Skip empty slots, else hovering a gap would dim the whole chart. The
-			// panel's line still gets its dot there.
+			// nothing to highlight in a slot without a bar, the panel's line still gets
+			// its dot there
 			if (!this.slotsWithData[slot] && !this.subPanel) {
 				this.clearHighlight();
 				return;
@@ -1074,7 +1047,9 @@ export default defineComponent({
 			this.chart.dispatchAction({
 				type: "highlight",
 				dataIndex: slot,
-				...(this.slotsWithData[slot] ? {} : { seriesId: "soctemp" }),
+				...(this.slotsWithData[slot]
+					? {}
+					: { seriesId: this.subPanel?.series.map((s) => s["id"]) }),
 			});
 		},
 		clearHighlight() {

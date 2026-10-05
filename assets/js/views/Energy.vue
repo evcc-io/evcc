@@ -74,6 +74,8 @@
 										:height="OVERVIEW_HEIGHT"
 										stacked
 										auto-range
+										:upper-label="$t('energy.flow.pv')"
+										:lower-label="$t('energy.flow.withdrawal')"
 										@slot="drillDown"
 									/>
 									<LegendList class="mt-4" :legends="stackLegends" />
@@ -83,6 +85,7 @@
 						<div class="col-12 col-lg-3 col-xxl-2">
 							<CostStats
 								:autarky="autarky"
+								:flows="flows"
 								:cost="flow?.cost"
 								:co2="flow?.co2"
 								:currency="currency"
@@ -103,32 +106,11 @@
 								<template #icon>
 									<shopicon-regular-powersupply></shopicon-regular-powersupply>
 								</template>
-								<template v-if="gridPrices" #actions>
-									<div class="form-check form-switch mb-0 text-nowrap">
-										<input
-											id="energyGridPrices"
-											:checked="settings.energyGridPrices"
-											class="form-check-input"
-											type="checkbox"
-											role="switch"
-											@change="
-												settings.energyGridPrices =
-													!settings.energyGridPrices
-											"
-										/>
-										<label
-											class="form-check-label text-muted"
-											for="energyGridPrices"
-										>
-											{{ $t("energy.grid.showPrices") }}
-										</label>
-									</div>
-								</template>
 								<GroupChart
 									group="grid"
 									:color="colors.grid || ''"
 									:series="gridSeries"
-									:prices="settings.energyGridPrices ? gridPrices : null"
+									:prices="chartPrices"
 									:currency="currency"
 									:height="200"
 									:period="effectivePeriod"
@@ -183,10 +165,9 @@
 						</div>
 						<div class="col-12 col-lg-3 col-xxl-2">
 							<StatCards :stats="productionStats">
-								<template v-if="pvBreakdown.length > 1" #produced>
-									<Stat :label="$t('energy.production.breakdown')" class="mt-3">
-										<MixBar :segments="pvBreakdown" :tooltip="breakdownRows" />
-									</Stat>
+								<template #selfConsumed>
+									<MixBar :segments="selfSegments" :tooltip="selfRows" />
+									<div class="small text-muted">{{ exportedLabel }}</div>
 								</template>
 								<template v-if="tomorrowForecast !== undefined" #remaining>
 									<Stat
@@ -265,9 +246,6 @@
 						:title="lp.title"
 						:color="loadpointColors[lp.title] || ''"
 						:device-color="deviceColors[lp.title] || ''"
-						:energy-label="
-							$t(lp.isTemp ? 'energy.loadpoint.used' : 'energy.loadpoint.charged')
-						"
 						:price="loadpointPrice"
 						:series="lp"
 						:daily="loadpointDaily(lp.title) ?? undefined"
@@ -279,6 +257,8 @@
 						:chart="entityChart"
 						@update:chart="settings.energyEntityChart = $event"
 						@drill="drillDown"
+						:flow-sources="flowSources"
+						@sources="showSources"
 					/>
 				</Card>
 				<Card
@@ -290,6 +270,19 @@
 					data-testid="energy-consumers"
 					data-anchor
 				>
+					<template #actions>
+						<IconSelectGroup>
+							<IconSelectItem
+								v-for="option in consumerViewOptions"
+								:key="option.value"
+								:active="consumerView === option.value"
+								:title="option.name"
+								@click="setConsumerView(option.value)"
+							>
+								<component :is="option.icon" />
+							</IconSelectItem>
+						</IconSelectGroup>
+					</template>
 					<ConsumerTreemap
 						:consumers="consumers"
 						:others="others"
@@ -298,7 +291,18 @@
 						:currency="currency"
 						:selected="consumer"
 						@select="selectConsumer"
-					/>
+					>
+						<template v-if="consumerView === CONSUMER_VIEW.RIVER" #chart>
+							<ConsumerRiver
+								:layers="riverLayers"
+								:selected="consumer"
+								:period="effectivePeriod"
+								:from="from"
+								:to="to"
+								@select="selectConsumer"
+							/>
+						</template>
+					</ConsumerTreemap>
 					<template v-if="consumer">
 						<hr class="my-4" />
 						<EntityDetail
@@ -308,7 +312,6 @@
 							:pickable="consumerPickable"
 							:device-color="deviceColors[consumerTitle] || ''"
 							sink="home"
-							:energy-label="$t('energy.consumers.consumed')"
 							:price="homePrice"
 							:title="consumerTitle"
 							:color="consumerColor"
@@ -322,9 +325,38 @@
 							:chart="entityChart"
 							@update:chart="settings.energyEntityChart = $event"
 							@drill="drillDown"
+							:flow-sources="flowSources"
+							@sources="showSources"
 							@close="selectConsumer(null)"
 						/>
 					</template>
+				</Card>
+				<!-- no individual consumers: the house consumption alone, nothing to break down -->
+				<Card
+					v-else-if="homeEnergy > 0"
+					edge-to-edge
+					class="box-pull-out mb-4"
+					data-testid="energy-consumers"
+					data-anchor
+				>
+					<EntityDetail
+						sink="home"
+						:price="homePrice"
+						:title="consumerTitle"
+						:color="consumerColor"
+						:flow="flow ?? undefined"
+						:series="consumerSeries ?? undefined"
+						:period="effectivePeriod"
+						:from="from"
+						:to="to"
+						:currency="currency"
+						:daily="consumerDaily ?? undefined"
+						:chart="entityChart"
+						:flow-sources="flowSources"
+						@update:chart="settings.energyEntityChart = $event"
+						@drill="drillDown"
+						@sources="showSources"
+					/>
 				</Card>
 				<MetersCard
 					v-if="meters.length"
@@ -335,6 +367,13 @@
 					:from="from"
 					:to="to"
 					@drill="drillDown"
+				/>
+				<SourcesModal
+					ref="sourcesModal"
+					:title="sourcesDetail.title"
+					:period="periodLabel"
+					:rows="sourcesDetail.rows"
+					:currency="currency"
 				/>
 				<div v-if="hasData" class="d-flex align-items-baseline gap-2 mb-3">
 					<DownloadButton :label="$t('general.download')" :href="downloadHref" />
@@ -375,19 +414,26 @@ import ForecastDeviation from "../components/Energy/ForecastDeviation.vue";
 import CostStats from "../components/Energy/CostStats.vue";
 import ConsumerTreemap, { OTHERS } from "../components/Energy/ConsumerTreemap.vue";
 import EntityDetail from "../components/Energy/EntityDetail.vue";
-import { sumEnergy } from "../components/Energy/mix";
+import { sinkCost, sumEnergy, type SourceRow } from "../components/Energy/mix";
 import { usageSplit } from "../components/Energy/usage";
 import { SLOT_MS } from "../components/Energy/slots";
 import MetersCard from "../components/Energy/MetersCard.vue";
+import SourcesModal from "../components/Energy/SourcesModal.vue";
+import ConsumerRiver, { type RiverLayer } from "../components/Energy/ConsumerRiver.vue";
+import TreemapIcon from "../components/MaterialIcon/Treemap.vue";
+import StreamIcon from "../components/MaterialIcon/Stream.vue";
 import type { HistorySeries } from "../components/Energy/GroupChart.vue";
 import colors, { batteryColor, darken, deviceColorMap, resolveColors } from "../colors";
 import { PERIODS } from "../components/Sessions/types";
 import {
+	CONSUMER_VIEW,
 	ENTITY_CHART,
 	OVERVIEW_VIEW,
 	type ConsumerEnergy,
 	type Flow,
 	type FlowResult,
+	type FlowSink,
+	type FlowSource,
 	type StatItem,
 	type PriceBand,
 	type PriceOverlay,
@@ -442,6 +488,8 @@ export default defineComponent({
 		ConsumerTreemap,
 		EntityDetail,
 		MetersCard,
+		SourcesModal,
+		ConsumerRiver,
 	},
 	mixins: [formatter],
 	props: {
@@ -462,9 +510,11 @@ export default defineComponent({
 			settings,
 			colors,
 			OVERVIEW_VIEW,
+			CONSUMER_VIEW,
 			OVERVIEW_HEIGHT,
 			loading: false,
 			focusedPv: null as number | null,
+			sourcesDetail: { title: "", rows: [] as SourceRow[] },
 			startDate: new Date(2020, 0, 1),
 		};
 	},
@@ -515,30 +565,87 @@ export default defineComponent({
 			}
 			return parts.join(" · ");
 		},
+		// the selected day, month or year
+		periodLabel(): string {
+			switch (this.effectivePeriod) {
+				case PERIODS.DAY:
+					return this.fmtDayMonthYear(this.from);
+				case PERIODS.MONTH:
+					return this.fmtMonthYear(this.from);
+				default:
+					return String(this.from.getFullYear());
+			}
+		},
+		// sources with an entity, in attribution order
+		flowSources(): FlowSource[] {
+			const sources: FlowSource[] = [];
+			if (this.pvSeries.length) sources.push("pv");
+			if (this.batteries.length) sources.push("battery");
+			if (this.hasGrid) sources.push("grid");
+			return sources;
+		},
 		// average price of home consumption, applied to every consumer
 		homePrice(): number | undefined {
-			const cost = this.flow?.cost;
-			return cost?.homeEnergy ? cost.home / cost.homeEnergy : undefined;
+			return this.sinkPrice("home");
 		},
 		// loadpoints are what consumption prices beyond home
 		loadpointPrice(): number | undefined {
-			const cost = this.flow?.cost;
-			if (!cost) return undefined;
-			const kWh = cost.consumptionEnergy - cost.homeEnergy;
-			return kWh > 0 ? (cost.consumption - cost.home) / kWh : undefined;
+			return this.sinkPrice("loadpoint");
+		},
+		// unknown stored values fall back to the treemap
+		consumerView(): CONSUMER_VIEW {
+			const stored = settings.energyConsumerView as CONSUMER_VIEW;
+			return Object.values(CONSUMER_VIEW).includes(stored) ? stored : CONSUMER_VIEW.TREEMAP;
+		},
+		consumerViewOptions(): { value: CONSUMER_VIEW; name: string; icon: object }[] {
+			return [
+				{ value: CONSUMER_VIEW.TREEMAP, icon: TreemapIcon },
+				{ value: CONSUMER_VIEW.RIVER, icon: StreamIcon },
+			].map((o) => ({ ...o, name: this.$t(`energy.consumers.view.${o.value}`) }));
+		},
+		// the consumers over time in the treemap's colors: others first, then by energy
+		riverLayers(): RiverLayer[] {
+			const palette = this.consumerPalette;
+			const layers: RiverLayer[] = this.withData("consumer")
+				.map((s) => ({
+					key: s.title,
+					name: s.title,
+					color: palette[s.title] || "",
+					series: s,
+				}))
+				.sort((a, b) => sumEnergy(b.series) - sumEnergy(a.series));
+			const others = this.othersOf(this.series);
+			if (others && this.others > 0) {
+				layers.unshift({
+					key: OTHERS,
+					name: this.$t("energy.consumers.others"),
+					color: colors.muted || "",
+					series: others,
+				});
+			}
+			return layers;
+		},
+		// the consumer shown in detail: the selected one, or all of the house
+		// consumption when there are no individual consumers to pick from
+		activeConsumer(): string | null {
+			return this.consumers.length ? this.consumer : OTHERS;
 		},
 		consumerTitle(): string {
-			return this.consumer === OTHERS
+			if (!this.consumers.length) return this.$t("energy.group.consumer");
+			return this.activeConsumer === OTHERS
 				? this.$t("energy.consumers.others")
-				: (this.consumer ?? "");
+				: (this.activeConsumer ?? "");
 		},
 		consumerPickable(): boolean {
-			return this.consumer !== OTHERS;
+			return this.activeConsumer !== OTHERS;
 		},
 		consumerColor(): string {
-			if (this.consumer === OTHERS) return colors.muted || "";
-			const titles = this.consumers.map((e) => e.title).sort();
-			return resolveColors(titles, this.deviceColors)[this.consumer ?? ""] || "";
+			if (this.activeConsumer === OTHERS) return colors.muted || "";
+			return this.consumerPalette[this.activeConsumer ?? ""] || "";
+		},
+		// sorted so a consumer keeps its color, the treemap resolves the same way
+		consumerPalette(): Record<string, string> {
+			return resolveColors(this.consumers.map((e) => e.title).sort(), this.deviceColors);
 		},
 		consumerSeries(): HistorySeries | null {
 			return this.entitySeries(this.series);
@@ -674,13 +781,12 @@ export default defineComponent({
 		stackLegends(): Legend[] {
 			const total = (s: HistorySeries) =>
 				s.data.reduce((acc, slot) => acc + slot.energy + slot.returnEnergy, 0);
-			// overview: self-consumption first, the stack draws it above battery charging
-			const [charge, discharge, self, ...rest] = this.flowSeries;
-			// usage reads top down like the stack
+			const [charge, discharge, self, gridImport, gridExport] = this.flowSeries;
+			// both read top down like their stack
 			const ordered =
 				this.overview === OVERVIEW_VIEW.USAGE
 					? [...this.usageSeries].reverse()
-					: [self, charge, discharge, ...rest];
+					: [gridExport, self, charge, discharge, gridImport];
 			return ordered
 				.filter((s): s is HistorySeries => !!s)
 				.map((s) => ({
@@ -749,7 +855,7 @@ export default defineComponent({
 					value: this.fmtKWh(this.gridExport),
 				},
 			];
-			const prices = settings.energyGridPrices ? this.gridPrices : null;
+			const prices = this.gridPrices;
 			const range = (band: PriceBand) => {
 				const known = (v: (number | null)[]) => v.filter((x): x is number => x !== null);
 				return this.fmtPriceRange(
@@ -758,11 +864,17 @@ export default defineComponent({
 					this.currency
 				);
 			};
+			// a day shows the tariff's range, longer periods what was paid on average
+			const cost = this.flow?.cost;
+			const price = (band: PriceBand, amount?: number, energy?: number) =>
+				this.isDay || !amount || !energy
+					? range(band)
+					: `ø ${this.fmtPricePerKWh(amount / energy, this.currency)}`;
 			if (prices?.import) {
 				list.push({
 					label: this.$t("energy.grid.importPrice"),
 					color: colors.price || "",
-					value: range(prices.import),
+					value: price(prices.import, cost?.import, cost?.importEnergy),
 					type: "line",
 				});
 			}
@@ -770,13 +882,48 @@ export default defineComponent({
 				list.push({
 					label: this.$t("energy.grid.exportPrice"),
 					color: colors.export || "",
-					value: range(prices.feedin),
+					value: price(prices.feedin, cost?.export, cost?.exportEnergy),
 					type: "line",
 				});
 			}
 			return list;
 		},
-		// tariffs per chart category, the slot range per bucket outside the day view
+		// per bucket for chart and tooltip: what the energy cost or earned, and its price.
+		// A day's slots carry the tariff, longer buckets the effective price of their
+		// energy, the tariff average where none flowed
+		chartPrices(): PriceOverlay | null {
+			const tariffs = this.gridPrices;
+			if (!tariffs) return null;
+			type Key = "cost" | "pricedEnergy" | "returnCost" | "pricedReturnEnergy";
+			const sums = (key: Key) => {
+				const out = Array.from({ length: this.bucketCount }, (): number | null => null);
+				for (const s of this.gridSeries) {
+					for (const slot of s.data) {
+						const v = slot[key];
+						if (v == null) continue;
+						const i = this.bucketIndex(slot.start);
+						out[i] = (out[i] ?? 0) + v;
+					}
+				}
+				return out;
+			};
+			const band = (tariff: PriceBand | undefined, costKey: Key, energyKey: Key) => {
+				if (!tariff) return undefined;
+				const cost = sums(costKey);
+				if (this.effectivePeriod === PERIODS.DAY) return { ...tariff, cost };
+				const energy = sums(energyKey);
+				// by priced energy, not all energy: unpriced slots must not dilute it
+				const avg = tariff.avg.map((price, i) =>
+					energy[i] ? cost[i]! / energy[i]! : price
+				);
+				return { avg, lo: avg, hi: avg, cost };
+			};
+			return {
+				import: band(tariffs.import, "cost", "pricedEnergy"),
+				feedin: band(tariffs.feedin, "returnCost", "pricedReturnEnergy"),
+			};
+		},
+		// the tariff per bucket, its average and range
 		gridPrices(): PriceOverlay | null {
 			if (!this.tariffs.length) return null;
 			const band = (key: "grid" | "feedin"): PriceBand | undefined => {
@@ -877,37 +1024,41 @@ export default defineComponent({
 			const tomorrow = this.solar?.tomorrow;
 			return tomorrow ? tomorrow.energy / 1e3 : undefined;
 		},
-		selfConsumedLabel(): string {
-			return this.$t("energy.production.selfConsumed", {
-				value: this.fmtPercentage(this.ratio(this.selfConsumption)),
+		// production split into what was used and what went to the grid
+		selfShare(): number {
+			return this.ratio(this.selfConsumption);
+		},
+		selfSegments(): { value: number; color: string }[] {
+			return [
+				{ value: this.selfShare, color: groupColor("pv") },
+				{ value: 100 - this.selfShare, color: colors.export || "" },
+			];
+		},
+		// the rest of the production
+		exportedLabel(): string {
+			return this.$t("energy.production.exported", {
+				value: this.fmtPercentage(100 - this.selfShare),
 			});
 		},
-		// same colors as the chart entities
-		pvBreakdown(): { title: string; value: number; color: string }[] {
-			const n = this.pvSeries.length;
-			return this.pvSeries.map((s, i) => ({
-				title: s.title,
-				value: this.total([s]),
-				color: darken(groupColor("pv"), stepAlpha(i, n)),
-			}));
-		},
-		breakdownRows(): TooltipRow[] {
-			return this.pvBreakdown.map((src) => ({
-				name: src.title,
-				values: [
-					this.fmtPercentage(this.ratio(src.value / this.pvTotal)),
-					this.fmtKWh(src.value),
-				],
-			}));
+		selfRows(): TooltipRow[] {
+			const produced = this.sumFlows((f) => f.from === "pv");
+			const exported = this.sumFlows((f) => f.to === "export");
+			const row = (name: string, share: number, energy: number) => ({
+				name,
+				values: [this.fmtPercentage(share), this.fmtKWh(energy)],
+			});
+			return [
+				row(this.$t("energy.production.selfConsumed"), this.selfShare, produced - exported),
+				row(this.$t("energy.flow.export"), 100 - this.selfShare, exported),
+			];
 		},
 		productionStats(): StatItem[] {
 			const list: StatItem[] = [
 				{
-					key: "produced",
-					label: this.$t("energy.production.produced"),
-					number: this.pvTotal,
-					format: (v: number) => this.fmtKWh(v),
-					sub: this.selfConsumedLabel,
+					key: "selfConsumed",
+					label: this.$t("energy.production.selfConsumed"),
+					number: this.selfShare,
+					format: (v: number) => this.fmtPercentage(v),
 				},
 			];
 			if (this.inFlightDay && this.remainingForecast !== undefined) {
@@ -983,7 +1134,9 @@ export default defineComponent({
 		dailyKey(): string {
 			const calendar =
 				this.entityChart === ENTITY_CHART.PATTERN && this.effectivePeriod !== PERIODS.DAY;
-			const titles = [this.consumer, ...this.loadpoints.map((s) => s.title)].filter(Boolean);
+			const titles = [this.activeConsumer, ...this.loadpoints.map((s) => s.title)].filter(
+				Boolean
+			);
 			return calendar && titles.length ? `${this.fetchKey}|${titles.join(",")}` : "";
 		},
 		// csv of the period's series, same query as the charts
@@ -1213,9 +1366,12 @@ export default defineComponent({
 			return list.find((s) => s.group === "loadpoint" && s.title === title) || null;
 		},
 		entitySeries(series: HistorySeries[]): HistorySeries | null {
-			if (!this.consumer) return null;
-			if (this.consumer === OTHERS) return this.othersOf(series);
-			return series.find((s) => s.group === "consumer" && s.title === this.consumer) || null;
+			if (!this.activeConsumer) return null;
+			if (this.activeConsumer === OTHERS) return this.othersOf(series);
+			return (
+				series.find((s) => s.group === "consumer" && s.title === this.activeConsumer) ||
+				null
+			);
 		},
 		async fetchDaily() {
 			if (!this.dailyKey) {
@@ -1231,8 +1387,9 @@ export default defineComponent({
 			};
 			// the consumer itself, others needs home and all consumers, plus the loadpoints
 			const scopes: Record<string, string>[] = [];
-			if (this.consumer === OTHERS) scopes.push({ group: "home" }, { group: "consumer" });
-			else if (this.consumer) scopes.push({ title: this.consumer });
+			if (this.activeConsumer === OTHERS)
+				scopes.push({ group: "home" }, { group: "consumer" });
+			else if (this.activeConsumer) scopes.push({ title: this.activeConsumer });
 			if (this.loadpoints.length) scopes.push({ group: "loadpoint" });
 			try {
 				const res = await Promise.all(
@@ -1261,6 +1418,11 @@ export default defineComponent({
 			if (Math.abs(delta) > 1) window.scrollBy({ top: delta, behavior: "instant" });
 		},
 		// a second click on the open entity closes it, like the production legend
+		// another view of the consumers starts without a selection
+		setConsumerView(view: CONSUMER_VIEW) {
+			settings.energyConsumerView = view;
+			if (this.consumer) this.selectConsumer(null);
+		},
 		async selectConsumer(key: string | null) {
 			const next = key === this.consumer ? null : key;
 			const query = this.buildBaseQuery();
@@ -1282,6 +1444,15 @@ export default defineComponent({
 			}
 		},
 		// a bar in the year view opens that month, a day bar opens that day
+		// average price of the priced energy that reached the sink, undefined without any
+		sinkPrice(sink: FlowSink): number | undefined {
+			const { cost, energy } = sinkCost(this.flows, sink);
+			return energy ? cost / energy : undefined;
+		},
+		showSources(detail: { title: string; rows: SourceRow[] }) {
+			this.sourcesDetail = detail;
+			(this.$refs["sourcesModal"] as unknown as { open: () => void }).open();
+		},
 		drillDown(start: Date) {
 			if (this.effectivePeriod === PERIODS.DAY) return;
 			const query = this.buildBaseQuery();

@@ -1303,7 +1303,6 @@
         "bars": "Bars",
         "pattern": "Pattern"
       },
-      "consumed": "Consumed",
       "cost": "Cost",
       "others": "Others",
       "source": {
@@ -1311,7 +1310,11 @@
         "battery": "battery",
         "grid": "grid"
       },
-      "title": "Consumers"
+      "title": "Consumers",
+      "view": {
+        "river": "River",
+        "treemap": "Treemap"
+      }
     },
     "direction": {
       "battery": {
@@ -1319,8 +1322,8 @@
         "returnEnergy": "discharged"
       },
       "grid": {
-        "energy": "imported",
-        "returnEnergy": "exported"
+        "energy": "Import",
+        "returnEnergy": "Export"
       },
       "meter": {
         "energy": "Energy",
@@ -1340,9 +1343,11 @@
       "overview": "Overview",
       "pv": "Production",
       "title": "Energy flow",
-      "usage": "Usage"
+      "usage": "Usage",
+      "withdrawal": "Withdrawal"
     },
     "grid": {
+      "amount": "Amount",
       "cost": "Grid cost",
       "energy": "Energy",
       "export": "Export",
@@ -1351,7 +1356,6 @@
       "importPrice": "Import price",
       "price": "Price",
       "revenue": "Feed-in revenue",
-      "showPrices": "show prices",
       "title": "Grid"
     },
     "group": {
@@ -1362,20 +1366,16 @@
       "meter": "Additional meters",
       "pv": "Production"
     },
-    "loadpoint": {
-      "charged": "Charged",
-      "used": "Used"
-    },
     "production": {
-      "accuracy": "Forecast accuracy",
       "above": "{value} above",
+      "accuracy": "Forecast accuracy",
       "below": "{value} below",
-      "breakdown": "Breakdown",
       "deviation": "Deviation",
       "expectedTomorrow": "expected tomorrow",
+      "exported": "{value} exported",
       "produced": "Produced",
       "remainingToday": "remaining today",
-      "selfConsumed": "{value} self-consumed",
+      "selfConsumed": "Self-consumed",
       "title": "Production"
     },
     "socTemp": {
@@ -1384,13 +1384,24 @@
       "temperature": "temperature",
       "used": "used"
     },
+    "sources": {
+      "battery": "Battery",
+      "cost": "Cost",
+      "energy": "Energy",
+      "grid": "Grid",
+      "hint": "Solar and battery energy valued at feed-in price.",
+      "price": "Price/kWh",
+      "pv": "Solar",
+      "share": "Share",
+      "source": "Source",
+      "title": "Sources",
+      "total": "Total"
+    },
     "stat": {
       "autarky": "Autarky",
       "co2Saved": "CO₂ saved",
       "co2SavedTooltip": "Compared to drawing the consumed {energy} from the grid.",
       "configure": "Configure now",
-      "gridExport": "Grid export",
-      "gridImport": "Grid import",
       "noCo2": "No CO₂ data.",
       "noPrice": "No price data.",
       "savings": "Savings",

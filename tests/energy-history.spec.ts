@@ -1,5 +1,6 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
+import { expectModalVisible, expectModalHidden } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -162,12 +163,45 @@ test.describe("consumption breakdown", () => {
     for (const name of ["Others 300 Wh", "Kitchen 400 Wh", "Office 300 Wh"]) {
       await expect(consumption.getByRole("button", { name })).toHaveCount(2);
     }
+    // the breakdown comes first, a timeline only opens for a selected consumer
+    await expect(consumption.getByRole("heading", { name: "Consumers" })).toBeVisible();
+    await expect(chart(page, "consumer")).toHaveCount(0);
+  });
+
+  test("treemap or river, remembered", async ({ page }) => {
+    await gotoDay(page, 2026, 4, 7);
+    const consumption = card(page, "consumer");
+    await expect(consumption.getByTestId("consumer-treemap")).toContainText("Kitchen");
+    await expect(consumption.getByTestId("consumer-river")).toHaveCount(0);
+
+    // the stream replaces the tiles, the legend stays
+    await consumption.getByTitle("River").click();
+    await expect(consumption.getByTestId("consumer-river")).toBeVisible();
+    await expect(consumption.getByRole("button", { name: "Kitchen 400 Wh" })).toHaveCount(1);
+
+    await page.reload();
+    await expect(consumption.getByTestId("consumer-river")).toBeVisible();
+
+    // switching the view drops the selection
+    await consumption.getByRole("button", { name: "Kitchen 400 Wh" }).click();
+    await expect(page.getByTestId("consumer-detail")).toBeVisible();
+    await consumption.getByTitle("Treemap").click();
+    await expect(page.getByTestId("consumer-detail")).toHaveCount(0);
+    await expect(consumption.getByTestId("consumer-river")).toHaveCount(0);
+    await expect(consumption.getByRole("button", { name: "Kitchen 400 Wh" })).toHaveCount(2);
   });
 
   // 2026-03-24: home = 0.4 kWh, no meter entities with data.
-  test("home without meters has no consumers card", async ({ page }) => {
+  test("home without meters shows the consumption alone", async ({ page }) => {
     await gotoDay(page, 2026, 3, 24);
-    await expect(card(page, "consumer")).toHaveCount(0);
+    const consumption = card(page, "consumer");
+    await expect(consumption.getByRole("heading", { name: "Consumption 400 Wh" })).toBeVisible();
+    await expect(chart(page, "consumer")).toBeVisible();
+    // nothing to break down: no tiles, no legend, not closable
+    await expect(consumption.getByRole("heading", { name: "Consumers" })).toHaveCount(0);
+    await expect(consumption.getByRole("button", { name: "Others" })).toHaveCount(0);
+    await expect(consumption.getByRole("button", { name: "Close" })).toHaveCount(0);
+    await expect(consumption.getByTitle("River")).toHaveCount(0);
   });
 
   // 2026-04-12: consumers are not a bidirectional group. Return energy is
@@ -193,8 +227,36 @@ test.describe("consumption breakdown", () => {
       .poll(() => yAxis(chart(page, "consumer")))
       .toEqual(["W", "0", "250", "500", "750", "1,000"]);
 
+    // the house ran on solar that hour, the consumer inherits its sources
+    const sources = detail.getByRole("button", { name: "Sources" });
+    await expect(sources).toContainText("100% solar");
+    await sources.click();
+    const modal = page.getByTestId("energy-sources-modal");
+    await expectModalVisible(modal);
+    await expect(modal.getByRole("heading", { name: "Kitchen" })).toBeVisible();
+    await expect(modal.getByRole("row", { name: "Solar" })).toContainText("400 Wh");
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+
     await kitchen.click();
     await expect(detail).toHaveCount(0);
+  });
+
+  test("river layer opens its consumer", async ({ page }) => {
+    await gotoDay(page, 2026, 4, 7);
+    const consumption = card(page, "consumer");
+    await consumption.getByTitle("River").click();
+    const river = consumption.getByTestId("consumer-river");
+    const box = await river.boundingBox();
+    if (!box) throw new Error("chart not visible");
+    // 12:22, the stream is symmetric around its middle: Others below, Kitchen in
+    // the middle, Office on top
+    await river.click({
+      position: { x: (box.width * (12 * 60 + 22)) / 1440, y: 8 + (box.height - 32) / 2 },
+    });
+    await expect(
+      page.getByTestId("consumer-detail").getByRole("heading", { name: "Kitchen" })
+    ).toBeVisible();
   });
 });
 

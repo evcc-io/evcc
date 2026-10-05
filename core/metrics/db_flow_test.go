@@ -85,12 +85,13 @@ func TestQueryFlow(t *testing.T) {
 	res, err := QueryFlow(slot(0), slot(2))
 	require.NoError(t, err)
 
+	// only slot 1 is priced: battery to home at feed-in 0.1, grid to loadpoint at 0.3
 	assert.Equal(t, []Flow{
-		{PV, Home, 0.5},
-		{PV, Battery, 0.5},
-		{PV, Export, 1},
-		{Battery, Home, 0.5},
-		{Grid, Loadpoint, 1},
+		{From: PV, To: Home, Energy: 0.5},
+		{From: PV, To: Battery, Energy: 0.5},
+		{From: PV, To: Export, Energy: 1},
+		{From: Battery, To: Home, Energy: 0.5, Cost: 0.05, PricedEnergy: 0.5},
+		{From: Grid, To: Loadpoint, Energy: 1, Cost: 0.3, PricedEnergy: 1},
 	}, res.Flows)
 
 	require.NotNil(t, res.Cost)
@@ -99,12 +100,6 @@ func TestQueryFlow(t *testing.T) {
 	assert.InDelta(t, 1, res.Cost.ImportEnergy, 1e-9)
 	assert.InDelta(t, 0.5, res.Cost.ExportEnergy, 1e-9)
 	assert.InDelta(t, 0.3, res.Cost.AvgGrid, 1e-9)
-	assert.InDelta(t, 0.3*1.5, res.Cost.Baseline, 1e-9) // slot 1 consumption only
-	assert.InDelta(t, 1.5, res.Cost.ConsumptionEnergy, 1e-9)
-	// grid 1 kWh to loadpoint at 0.3, battery 0.5 kWh to home at feed-in 0.1
-	assert.InDelta(t, 0.3+0.05, res.Cost.Consumption, 1e-9)
-	assert.InDelta(t, 0.05, res.Cost.Home, 1e-9)
-	assert.InDelta(t, 0.5, res.Cost.HomeEnergy, 1e-9)
 
 	assert.Nil(t, res.Co2)
 }

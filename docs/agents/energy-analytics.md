@@ -59,14 +59,17 @@ Per slot with a grid price:
 
 - Import cost = import × grid price. Export revenue = export × feed-in price.
 - **Consumption cost**: grid energy that reached home or loadpoints at the grid price, plus self-produced energy that reached them at the feed-in price. The feed-in price is the opportunity cost: that kWh could have been sold.
-- **Baseline**: the same consumed energy at the period's average grid price, as if there were no PV and no battery.
+- Each flow into home or loadpoints carries its own cost and priced energy under the same rule. Consumption cost is the sum of these flows, and it can be split by source.
+- **Baseline**: the same consumed energy at the period's average grid price, as if there were no PV and no battery. The page derives it from the average grid price and the priced consumption.
 - **Savings** = baseline - consumption cost.
 
 CO2 works the same way with grid intensity, but self-produced energy counts as zero, so consumption CO2 is only the grid share.
 
-Slots without a price (or CO2 value) are excluded from the cost model on both sides. The displayed "priced energy" is what the savings figure covers, so a partially priced period is visibly smaller instead of wrong. The effective price per kWh shown next to savings is consumption cost divided by priced consumption, compared with the average grid price.
+Slots without a price (or CO2 value) are excluded from the cost model on both sides. Every cost is therefore reported together with the energy it covers. The displayed "priced energy" is what the savings figure covers, so a partially priced period is visibly smaller instead of wrong. An average price is always cost divided by priced energy, never by all energy: the month in which price recording began would otherwise show a price that is far too low. The effective price per kWh shown next to savings is consumption cost divided by priced consumption, compared with the average grid price.
 
-Per-entity cost uses average sink rates, not slot detail: every consumer is priced at the average rate of home, every loadpoint at the average rate of the non-home consumption. Sub-meters are not attributed individually because their slot pattern would have to be matched against the home slot pattern with no gain in trust.
+The grid history carries the same pair per bucket: import cost and feed-in revenue with their priced energy. The grid chart uses them for the amount and the effective price of a day or month.
+
+Per-entity cost uses average sink rates, not slot detail: every consumer is priced at the average rate of home, every loadpoint at the average rate of the non-home consumption. The source breakdown of an entity works the same way: it inherits the source shares and prices of its sink, scaled to its energy. Sub-meters are not attributed individually because their slot pattern would have to be matched against the home slot pattern with no gain in trust.
 
 ## Forecast accuracy
 
@@ -101,7 +104,11 @@ Known data quality traits that are accepted, not fixed:
 
 ## Tariff aggregation for charts
 
-The tariff read path can aggregate slots per hour, day or month, returning the mean plus min and max per bucket. Averages are only used for display context. The day view shows the raw 15-minute price line, longer views show the min to max price range per bucket and per period, because a per-day average of a fixed two-zone tariff is a constant and hides the very information a user wants (when it was cheap or expensive). Cost figures always come from the slot-level model above, never from these aggregates.
+The tariff read path can aggregate slots per hour, day or month, returning the mean plus min and max per bucket. These aggregates are display context only. Cost figures always come from the slot-level model above.
+
+The grid chart shows prices in a panel below the bars. The day view draws the raw 15-minute tariff. Month and year views draw the effective price per bucket, which is the bucket's cost divided by its priced energy. A plain per-day tariff average would be a constant for a fixed two-zone tariff and hide when energy was actually bought cheap or expensive. A bucket without energy falls back to the tariff average so the line stays continuous.
+
+A price is only charted when it changes over the period. A constant price still appears in the legend and the tooltip. The legend shows the tariff range for a day and the average price paid for longer periods.
 
 ## Deciding new metrics
 

@@ -7,7 +7,7 @@ type WithChartOption = { chartOption: Record<string, unknown> };
 // Shared echarts lifecycle: init on a `chartEl` template ref (lazily re-checked
 // so v-if-gated charts work), option updates via deep watch, resizing with the
 // element (flex and grid lay tiles out after the chart exists), touch tooltips, disposal. Override `applyChartOption`, `onChartInit`,
-// `onTouchTooltipReset`, `onChartTap` or `resize` for custom behavior.
+// `onTouchTooltipReset`, `onChartTap`, `onChartResize` or `resize` for custom behavior.
 export default defineComponent({
   data(): { chart: echarts.ECharts | null; observer: ResizeObserver | null } {
     return { chart: null, observer: null };
@@ -71,6 +71,9 @@ export default defineComponent({
         return;
       }
       this.chart.resize();
+      this.onChartResize();
     },
+    // after the chart took a new size
+    onChartResize() {},
   },
 });

@@ -1733,12 +1733,18 @@ paths:
                           socTemp:
                             type: number
                             description: State of charge in percent or temperature of a single slot
-                          socTempMin:
+                          cost:
                             type: number
-                            description: Lowest slot value in an aggregated bucket
-                          socTempMax:
+                            description: Grid import cost, where a price exists
+                          pricedEnergy:
                             type: number
-                            description: Highest slot value in an aggregated bucket
+                            description: kWh imported where a price exists
+                          returnCost:
+                            type: number
+                            description: Feed-in revenue, where a price exists
+                          pricedReturnEnergy:
+                            type: number
+                            description: kWh exported where a price exists
             text/csv:
               schema:
                 type: string
@@ -1776,6 +1782,12 @@ paths:
                         energy:
                           type: number
                           description: kWh
+                        cost:
+                          type: number
+                          description: Cost of the energy, for home and loadpoint
+                        pricedEnergy:
+                          type: number
+                          description: kWh where a price exists
                   cost:
                     type: object
                     description: Grid cost sums, omitted without grid price data
@@ -1786,25 +1798,10 @@ paths:
                         type: number
                       importEnergy:
                         type: number
-                        description: kWh priced
+                        description: kWh where a price exists
                       exportEnergy:
                         type: number
-                        description: kWh priced
-                      consumption:
-                        type: number
-                        description: Cost of home and loadpoint energy, grid share at grid price, self-produced share at feed-in price
-                      consumptionEnergy:
-                        type: number
-                        description: kWh priced
-                      home:
-                        type: number
-                        description: Share of consumption cost for home only
-                      homeEnergy:
-                        type: number
-                        description: kWh priced
-                      baseline:
-                        type: number
-                        description: Consumption priced at the average grid price
+                        description: kWh where a price exists
                       avgGrid:
                         type: number
                   co2:

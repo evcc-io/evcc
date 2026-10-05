@@ -24,5 +24,5 @@
 
 - **Source**: https://github.com/tabler/tabler-icons
 - **License**: MIT License
-- **Files**: /assets/js/components/MaterialIcon/Sankey.vue, /assets/js/components/MaterialIcon/Plug.vue
+- **Files**: /assets/js/components/MaterialIcon/Sankey.vue, /assets/js/components/MaterialIcon/Plug.vue, /assets/js/components/MaterialIcon/Treemap.vue
 - **Notes**: Repackaged as Vue component
