@@ -169,7 +169,7 @@ var _ api.ChargerEx = (*Heatpump)(nil)
 func (wb *Heatpump) MaxCurrentMillis(current float64) error {
 	phases := 1
 	if wb.lp != nil {
-		phases = wb.lp.GetPhases()
+		phases = wb.lp.ActivePhases()
 	}
 	return wb.setMaxPower(int64(230 * current * float64(phases)))
 }
