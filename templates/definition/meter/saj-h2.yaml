@@ -113,7 +113,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13895 # AppMode 
-              type: writeholding
+              type: writesingle
               decode: int16
         - source: const
           value: {{ .minsoc }} 
@@ -122,7 +122,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13905 # BatSocLimitkeep 
-              type: writeholding
+              type: writesingle
               decode: int16
     - case: 2 # hold
       set:
@@ -135,7 +135,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13895 # AppMode 
-              type: writeholding
+              type: writesingle
               decode: int16
         - source: const
           value: {{ .maxsoc }}
@@ -144,7 +144,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13905 # BatSocLimitkeep 
-              type: writeholding
+              type: writesingle
               decode: int16
     - case: 3 # charge
       set:
@@ -157,7 +157,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13895 # AppMode 
-              type: writeholding
+              type: writesingle
               decode: int16
         - source: const
           value: 1 # enable
@@ -166,7 +166,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13828 # Charge_time_enable_control 
-              type: writeholding
+              type: writesingle
               decode: int16
         - source: const
           value: 0 # start (00:00)
@@ -175,7 +175,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13830 # First_charge_start_time 
-              type: writeholding
+              type: writesingle
               decode: int16
         - source: const
           value: 0x173B # end (23:59)
@@ -184,7 +184,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13831 # First_charge_end_time 
-              type: writeholding
+              type: writesingle
               decode: int16
         - source: const
           value: 0x7F64 # end (0xFF / 100%)
@@ -193,7 +193,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13832 # First_charge_power_time 
-              type: writeholding
+              type: writesingle
               decode: int16
   {{- include "battery-params" . }}
   {{- end }}
