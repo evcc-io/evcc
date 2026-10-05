@@ -94,6 +94,36 @@ func TestReservedPVPower(t *testing.T) {
 	}
 }
 
+// battery drained by another loadpoint's battery boost does not support charging (#34449)
+func TestBatteryBoosted(t *testing.T) {
+	boosting := newPVLoadpoint(1, api.ModeSmart, api.StatusC, true, time.Time{})
+	other := newPVLoadpoint(0, api.ModeSmart, api.StatusC, true, time.Time{})
+
+	site := &Site{
+		log:        util.NewLogger("site"),
+		loadpoints: []*Loadpoint{boosting, other},
+	}
+
+	for _, tc := range []struct {
+		boost         int
+		other, itself bool
+	}{
+		{boostDisabled, false, false},
+		{boostStart, true, false},
+		{boostContinue, true, false},
+		{boostHold, false, false}, // soc limit reached, battery no longer drained
+	} {
+		boosting.batteryBoost = tc.boost
+
+		if got := site.batteryBoosted(other); got != tc.other {
+			t.Errorf("boost %d: other want %v, got %v", tc.boost, tc.other, got)
+		}
+		if got := site.batteryBoosted(boosting); got != tc.itself {
+			t.Errorf("boost %d: boosting loadpoint want %v, got %v", tc.boost, tc.itself, got)
+		}
+	}
+}
+
 // feedInCharger is a stateful charger, unlike the mocks used elsewhere, since the
 // feed-in pause is asserted across multiple update cycles
 type feedInCharger struct {
