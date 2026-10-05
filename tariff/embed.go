@@ -65,12 +65,27 @@ func (t *embed) init() (err error) {
 	calcFn := vm.Globals()["calc"]
 
 	t.calc = func(price, charges float64, ts time.Time) (float64, error) {
-		res := calcFn.Call([]reflect.Value{
-			reflect.ValueOf(price),
-			reflect.ValueOf(charges),
-			reflect.ValueOf(t.Tax),
-			reflect.ValueOf(time.Unix(ts.Unix(), 0).Local()),
-		})
+		var (
+			res []reflect.Value
+			err error
+		)
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					err = fmt.Errorf("panic: %v", r)
+				}
+			}()
+			res = calcFn.Call([]reflect.Value{
+				reflect.ValueOf(price),
+				reflect.ValueOf(charges),
+				reflect.ValueOf(t.Tax),
+				reflect.ValueOf(time.Unix(ts.Unix(), 0).Local()),
+			})
+		}()
+
+		if err != nil {
+			return 0, err
+		}
 		return res[0].Float(), nil
 	}
 
