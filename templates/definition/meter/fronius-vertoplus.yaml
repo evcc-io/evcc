@@ -3,7 +3,7 @@ products:
   - brand: Fronius
     description:
       generic: Verto Plus
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "curtail"]
 requirements:
   description:
     de: |
@@ -154,6 +154,55 @@ render: |
       value: 160:3:DCWH # mppt 3
       scale: 0.001
   {{- include "sunspec-maxacpower-tcp" . }}
+  curtail:
+    source: sequence
+    set:
+      - source: sunspec
+        {{- include "modbus-connection" . | indent 6 }}
+        id: 1
+        value: 123:WMaxLimPct
+      - source: switch
+        switch:
+          - case: 100 # Uncurtailed
+            set:
+              source: const
+              value: 0 # Limit disabled
+              set:
+                source: sunspec
+                {{- include "modbus-connection" . | indent 14 }}
+                id: 1
+                value: 123:WMaxLim_Ena
+        default:
+          source: const
+          value: 1 # Limit enabled
+          set:
+            source: sunspec
+            {{- include "modbus-connection" . | indent 10 }}
+            id: 1
+            value: 123:WMaxLim_Ena
+  curtailed: # the limit percentage only applies while the limit is enabled
+    source: go
+    in:
+    - name: ena
+      type: bool
+      config:
+        source: sunspec
+        {{- include "modbus-connection" . | indent 6 }}
+        id: 1
+        value: 123:WMaxLim_Ena
+    - name: limit
+      type: float
+      config:
+        source: sunspec
+        {{- include "modbus-connection" . | indent 6 }}
+        id: 1
+        value: 123:WMaxLimPct
+    script: |
+      percent := 100
+      if ena {
+        percent = int(limit)
+      }
+      percent
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

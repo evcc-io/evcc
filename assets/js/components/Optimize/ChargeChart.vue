@@ -81,7 +81,7 @@ export default defineComponent({
 	},
 	computed: {
 		consumptionLabel(): string {
-			return this.$t("main.history.group.consumer");
+			return this.$t("energy.group.consumer");
 		},
 		consumptionColor(): string {
 			return colors.muted || "";

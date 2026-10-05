@@ -131,14 +131,10 @@ export default defineComponent({
 					const items = dataset.data.filter((v): v is number => v !== null);
 					const min = Math.min(...items);
 					const max = Math.max(...items);
-					const format = (value: number, withUnit: boolean) => {
-						return this.costType === TYPES.PRICE
-							? this.fmtPricePerKWh(value, this.currency, false, withUnit)
-							: withUnit
-								? this.fmtCo2Medium(value)
-								: this.fmtGrams(value, false);
-					};
-					value = `${format(min, false)} – ${format(max, true)}`;
+					value =
+						this.costType === TYPES.PRICE
+							? this.fmtPriceRange(min, max, this.currency)
+							: `${this.fmtGrams(min, false)} – ${this.fmtCo2Medium(max)}`;
 					type = "line";
 				} else {
 					const total = dataset.data.reduce((acc: number, curr) => acc + (curr || 0), 0);
