@@ -3,7 +3,9 @@ package core
 import (
 	"cmp"
 	"fmt"
+	"math"
 	"slices"
+	"strconv"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/config"
@@ -39,6 +41,17 @@ func printPtr[T any](format string, v *T) string {
 		return "<nil>"
 	}
 	return fmt.Sprintf(format, *v)
+}
+
+// printPrice returns a price with at least two decimals, more if needed
+func printPrice(v *float64) string {
+	if v == nil {
+		return "<nil>"
+	}
+	if math.Round(*v*100)/100 == *v {
+		return fmt.Sprintf("%.2f", *v)
+	}
+	return strconv.FormatFloat(*v, 'f', -1, 64)
 }
 
 func ptrValueEqual[T comparable](a, b *T) bool {
