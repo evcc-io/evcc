@@ -658,7 +658,7 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 				ChargingPower:    []float32{tc.charge},
 				DischargingPower: []float32{tc.disch},
 			}
-			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, optimizer.BatteryConfig{}, res, 0, tc.gridImp, tc.gridExp, 1)
+			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, optimizer.BatteryConfig{}, res, 0, tc.gridImp, tc.gridExp, false, false, 1)
 			assert.Equal(t, tc.want, s.Action)
 			assert.InDelta(t, tc.charge, s.Charge, 1e-3)
 			assert.InDelta(t, tc.disch, s.Discharge, 1e-3)
@@ -667,13 +667,13 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	}
 
 	// no result yields an empty suggestion
-	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, optimizer.BatteryResult{}, 0, 1000, 0, 1))
+	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, optimizer.BatteryResult{}, 0, 1000, 0, false, false, 1))
 
 	res := optimizer.BatteryResult{
 		ChargingPower:    []float32{100, 0},
 		DischargingPower: []float32{0, 0},
 	}
-	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, res, 1, 1000, 0, 1)
+	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, res, 1, 1000, 0, false, false, 1)
 	assert.Equal(t, api.BatteryHold.String(), s.Action)
 
 	// an idle battery at its soc bound withholds nothing: normal instead of hold/holdcharge
@@ -684,12 +684,45 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 		DischargingPower: []float32{0},
 		StateOfCharge:    []float32{1000},
 	}
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, 1).Action, "empty battery idle while importing")
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, false, false, 1).Action, "empty battery idle while importing")
 	res.StateOfCharge[0] = 9000
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "full battery idle while exporting")
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, false, false, 1).Action, "full battery idle while exporting")
 	res.StateOfCharge[0] = 5000
-	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, 1).Action, "idle within bounds is withheld")
-	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "idle within bounds is withheld")
+	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, false, false, 1).Action, "idle within bounds is withheld")
+	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, false, false, 1).Action, "idle within bounds is withheld")
+
+	// with balanced grid, another battery's flow tells why this one is idle
+	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, 0, 0, 0, true, false, 1).Action, "idle while another battery discharges")
+	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, 0, 0, 0, false, true, 1).Action, "idle while another battery charges")
+}
+
+// two home batteries, one covering the home while the other is planned idle (#34417)
+func TestOtherBatteryFlow(t *testing.T) {
+	details := []batteryDetail{
+		{Type: batteryTypeBattery},
+		{Type: batteryTypeBattery},
+		{Type: batteryTypeLoadpoint},
+	}
+	results := []optimizer.BatteryResult{
+		{ChargingPower: []float32{0}, DischargingPower: []float32{500}},
+		{ChargingPower: []float32{0}, DischargingPower: []float32{0}},
+		{ChargingPower: []float32{11000}, DischargingPower: []float32{0}},
+	}
+
+	// the idle battery sees the other battery discharging, the loadpoint is no home battery
+	dis, chg := otherBatteryFlow(details, results, 1, 0, 1)
+	assert.True(t, dis)
+	assert.False(t, chg)
+
+	// the discharging battery sees no other flow
+	dis, chg = otherBatteryFlow(details, results, 0, 0, 1)
+	assert.False(t, dis)
+	assert.False(t, chg)
+
+	// noise below the threshold is ignored
+	results[0].DischargingPower[0] = suggestionThreshold
+	dis, _ = otherBatteryFlow(details, results, 1, 0, 1)
+	assert.False(t, dis)
 }
 
 // TestSuggestionActionable ensures the actionable flag follows the current state
