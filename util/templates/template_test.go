@@ -171,6 +171,29 @@ func TestRequiredPerUsage(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// TestModbusHostPattern guards that the modbus host is validated like the plain host
+// param instead of rendering invalid yaml (#34380)
+func TestModbusHostPattern(t *testing.T) {
+	tmpl, err := ByName(Meter, "fox-ess-avocado")
+	require.NoError(t, err)
+
+	_, _, err = tmpl.RenderResult(Meter, RenderModeInstance, map[string]any{
+		"usage":  "battery",
+		"modbus": "tcpip",
+		"host":   " 192 . 168 . 178 . 51",
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "host")
+	assert.Contains(t, err.Error(), "does not match required pattern")
+
+	_, _, err = tmpl.RenderResult(Meter, RenderModeInstance, map[string]any{
+		"usage":  "battery",
+		"modbus": "tcpip",
+		"host":   "192.168.178.51",
+	})
+	require.NoError(t, err)
+}
+
 func TestValidatePattern(t *testing.T) {
 	tmpl := &Template{
 		Params: []Param{{Name: "host", Pattern: &Pattern{Regex: `^[^\\/\s]+(:[0-9]{1,5})?$`}}},

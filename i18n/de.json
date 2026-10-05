@@ -200,6 +200,14 @@
       "titleAdd": "Verbrauchszähler hinzufügen",
       "titleEdit": "Verbrauchszähler bearbeiten"
     },
+    "combobox": {
+      "count": "{count} Vorschläge",
+      "matching": "Passend",
+      "other": "Weitere",
+      "searching": "Suche…",
+      "suggestions": "Vorschläge",
+      "used": "bereits verwendet"
+    },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
       "descriptionInterval": "Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest und die Ladung anpasst. Die Standardeinstellung von 30 Sekunden ist eine sichere Wahl. Geräte wie Fahrzeuge, Wallbox und Wechselrichter brauchen in der Regel mehrere Sekunden um ihr Verhalten anzupassen. Wenn deine Komponenten schnell reagieren kannst du niedrigere Werte verwenden. Wir empfehlen dringend nicht unter 10 Sekunden zu gehen. Wenn du komisches Regelverhalten oder springende Leistungswerte beobachtest wähle ein größeres Intervall.",
@@ -1306,6 +1314,123 @@
     "restartDescription": "Schon versucht, das Gerät aus- und wieder einzuschalten?",
     "secondaryActions": "Noch keine Lösung gefunden? Hier sind noch ein paar weitere Möglichkeiten."
   },
+  "energy": {
+    "battery": {
+      "charged": "Geladen",
+      "discharged": "Entladen"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Balken",
+        "pattern": "Muster"
+      },
+      "cost": "Kosten",
+      "others": "Sonstige",
+      "source": {
+        "pv": "Solar",
+        "battery": "Speicher",
+        "grid": "Netz"
+      },
+      "title": "Verbraucher",
+      "view": {
+        "river": "River",
+        "treemap": "Treemap"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "geladen",
+        "returnEnergy": "entladen"
+      },
+      "grid": {
+        "energy": "Bezug",
+        "returnEnergy": "Einspeisung"
+      },
+      "meter": {
+        "energy": "Energie",
+        "returnEnergy": "Energie (rückwärts)"
+      }
+    },
+    "empty": "Keine Energiedaten für diesen Zeitraum verfügbar.",
+    "flow": {
+      "battery": "Batterie",
+      "batteryCharge": "Batterieladung",
+      "batteryDischarge": "Batterieentladung",
+      "charging": "Laden",
+      "export": "Einspeisung",
+      "grid": "Netzbezug",
+      "heating": "Heizen",
+      "home": "Verbrauch",
+      "overview": "Übersicht",
+      "pv": "Erzeugung",
+      "title": "Energiefluss",
+      "usage": "Verwendung",
+      "withdrawal": "Entnahme"
+    },
+    "grid": {
+      "amount": "Betrag",
+      "cost": "Netzkosten",
+      "energy": "Energie",
+      "export": "Einspeisung",
+      "exportPrice": "Einspeisepreis",
+      "import": "Bezug",
+      "importPrice": "Bezugspreis",
+      "price": "Preis",
+      "revenue": "Einspeisevergütung",
+      "title": "Netz"
+    },
+    "group": {
+      "battery": "Batterie",
+      "consumer": "Verbrauch",
+      "forecast": "Vorhersage",
+      "grid": "Netz",
+      "meter": "Weitere Zähler",
+      "pv": "Erzeugung"
+    },
+    "production": {
+      "above": "{value} darüber",
+      "accuracy": "Vorhersagegenauigkeit",
+      "below": "{value} darunter",
+      "deviation": "Abweichung",
+      "expectedTomorrow": "morgen erwartet",
+      "exported": "{value} eingespeist",
+      "produced": "Erzeugt",
+      "remainingToday": "heute verbleibend",
+      "selfConsumed": "Selbst verbraucht",
+      "title": "Erzeugung"
+    },
+    "socTemp": {
+      "charged": "geladen",
+      "soc": "Ladung",
+      "temperature": "Temperatur",
+      "used": "verbraucht"
+    },
+    "sources": {
+      "battery": "Batterie",
+      "cost": "Kosten",
+      "energy": "Energie",
+      "grid": "Netz",
+      "hint": "Solar- und Batteriestrom zum Einspeisepreis bewertet.",
+      "price": "Preis/kWh",
+      "pv": "Solar",
+      "share": "Anteil",
+      "source": "Quelle",
+      "title": "Quellen",
+      "total": "Gesamt"
+    },
+    "stat": {
+      "autarky": "Autarkie",
+      "co2Saved": "CO₂ gespart",
+      "co2SavedTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz.",
+      "configure": "Jetzt einrichten",
+      "noCo2": "Keine CO₂-Daten.",
+      "noPrice": "Keine Preisdaten.",
+      "savings": "Ersparnis",
+      "savingsTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz.",
+      "versus": "{value} statt {reference}"
+    },
+    "title": "Energie"
+  },
   "issue": {
     "additional": {
       "copied": "Kopiert!",
@@ -1482,35 +1607,6 @@
       "consumption": "Verbrauch",
       "feedIn": "Einspeisung",
       "title": "Externe Begrenzung aktiv"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "geladen",
-          "returnEnergy": "entladen"
-        },
-        "grid": {
-          "energy": "bezogen",
-          "returnEnergy": "eingespeist"
-        },
-        "meter": {
-          "energy": "Energie",
-          "returnEnergy": "Energie (rückwärts)"
-        }
-      },
-      "download": "Download",
-      "empty": "Keine Verlaufsdaten für diesen Zeitraum.",
-      "group": {
-        "battery": "Batterie",
-        "consumer": "Verbrauch",
-        "forecast": "Vorhersage",
-        "grid": "Netz",
-        "loadpoint": "Laden & Heizen",
-        "meter": "Weitere Zähler",
-        "pv": "Erzeugung"
-      },
-      "otherConsumers": "Andere",
-      "title": "Historie"
     },
     "loadpoint": {
       "avgPrice": "⌀ Preis",
@@ -1944,6 +2040,7 @@
     "battery": "Batterie",
     "charge": "Laden",
     "comingSoon": "Diese Seite ist in Arbeit.",
+    "energy": "Energie",
     "forecast": "Vorhersage",
     "more": "Mehr",
     "sessions": "Ladungen"

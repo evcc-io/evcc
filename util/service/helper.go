@@ -10,6 +10,15 @@ import (
 	"github.com/spf13/cast"
 )
 
+// Option is a service suggestion with context
+type Option struct {
+	Value string `json:"value"`
+	Label string `json:"label,omitempty"`
+	Hint  string `json:"hint,omitempty"`
+	Match bool   `json:"match,omitempty"`
+	Used  bool   `json:"used,omitempty"`
+}
+
 // toString converts to canonical string representation
 func toString(value any, castType string) string {
 	res := value

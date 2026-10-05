@@ -21,7 +21,8 @@ params:
       de: IP-Adresse oder Hostname
       en: IP address or hostname
     example: 192.0.2.2
-    pattern:
+    service: network/hosts?template={template}
+    pattern: &host-pattern
       regex: "^[^\\/\\s]+(:[0-9]{1,5})?$" # any char except slash/space, optional :port
       examples: ["192.168.1.100", "example.com", "server.local:8080"]
   - name: ip
@@ -929,6 +930,7 @@ modbus:
       params:
         - name: id
         - name: host
+          pattern: *host-pattern
         - name: port
           default: 502
         - name: delay
@@ -939,6 +941,7 @@ modbus:
       params:
         - name: id
         - name: host
+          pattern: *host-pattern
         - name: port
           default: 502
         - name: delay
@@ -949,6 +952,7 @@ modbus:
       params:
         - name: id
         - name: host
+          pattern: *host-pattern
         - name: port
           default: 502
         - name: delay

@@ -14,6 +14,7 @@ func init() {
 	mux.HandleFunc("GET /{country}/city", getCity)
 	mux.HandleFunc("GET /modbus", getModbus)
 	mux.HandleFunc("GET /insecure", getInsecure)
+	mux.HandleFunc("GET /options", getOptions)
 
 	service.Register("demo", mux)
 }
@@ -38,6 +39,16 @@ func getCity(w http.ResponseWriter, req *http.Request) {
 		cities = []string{"madrid", "barcelona", "valencia"}
 	}
 	json.NewEncoder(w).Encode(cities)
+}
+
+func getOptions(w http.ResponseWriter, req *http.Request) {
+	json.NewEncoder(w).Encode([]Option{
+		{Value: "192.0.2.10", Label: "alpha", Hint: "Vendor A", Match: true, Used: true},
+		{Value: "192.0.2.20", Label: "beta", Hint: "Vendor B"},
+		{Value: "192.0.2.30", Label: "gamma", Hint: "Vendor C", Match: true},
+		{Value: "192.0.2.40", Label: "delta", Used: true},
+		{Value: "192.0.2.50"},
+	})
 }
 
 func getInsecure(w http.ResponseWriter, req *http.Request) {

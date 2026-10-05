@@ -108,10 +108,20 @@ func (v *API) login() error {
 	}
 
 	v.Client.Jar = jar
-	v.Client.CheckRedirect = func(req *http.Request, _ []*http.Request) error {
-		// follow the https redirect chain to the portal, stop at app schemes
-		if req.URL.Scheme != "https" {
+	previousRedirect := v.Client.CheckRedirect
+	defer func() { v.Client.CheckRedirect = previousRedirect }()
+
+	identityHost := strings.TrimPrefix(vwidentity.BaseURL, "https://")
+	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		// Cookies from the redirect response are already stored in the jar.
+		if req.URL.Scheme != "https" || isUserPage(req.URL) || isMarketingConsentPage(req.URL) {
 			return http.ErrUseLastResponse
+		}
+		if !isLoginHost(req.URL.Host, identityHost) {
+			return fmt.Errorf("unexpected login redirect host %s", req.URL.Host)
+		}
+		if len(via) >= 10 {
+			return errors.New("stopped after 10 redirects")
 		}
 		return nil
 	}
@@ -179,23 +189,26 @@ func (v *API) login() error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode >= http.StatusBadRequest {
-		return errors.New(resp.Status)
+	final, err := loginLocation(resp)
+	if err != nil {
+		return err
 	}
 
-	final := resp.Request.URL
-
-	// VW periodically interjects an optional marketing consent page after an
-	// otherwise successful login. Skip it without consenting (#29760).
+	// Skip optional marketing consent using its callback without fetching the page.
 	if cb, err := vwidentity.MarketingConsentCallback(final); err != nil {
 		return err
 	} else if cb != nil {
+		if final.Scheme != "https" || !isLoginHost(final.Host, identityHost) || !validMarketingCallback(cb, identityHost) {
+			return errors.New("unexpected marketing consent callback URL")
+		}
 		resp, err = v.Get(cb.String())
 		if err != nil {
 			return err
 		}
-		resp.Body.Close()
-		final = resp.Request.URL
+		defer resp.Body.Close()
+		if final, err = loginLocation(resp); err != nil {
+			return err
+		}
 	}
 
 	// a successful login lands on the portal; a remaining signin/consent url means
@@ -209,8 +222,50 @@ func (v *API) login() error {
 	if final.Host != portalHost {
 		return fmt.Errorf("login did not complete: unexpected landing host %s", final.Host)
 	}
+	if !isUserPage(final) {
+		return errors.New("login did not complete: unexpected landing page")
+	}
 
 	return nil
+}
+
+func isLoginHost(host, identityHost string) bool {
+	return strings.EqualFold(host, identityHost) || strings.EqualFold(host, portalHost)
+}
+
+func isMarketingConsentPage(u *url.URL) bool {
+	return strings.EqualFold(u.Host, strings.TrimPrefix(vwidentity.BaseURL, "https://")) &&
+		strings.Contains(u.Path, "/consent/marketing/")
+}
+
+func validMarketingCallback(u *url.URL, identityHost string) bool {
+	validPath := u.Path == "/oidc/v1/oauth/client/callback" || u.Path == "/oidc/v1/oauth/client/callback/success"
+	return u.Scheme == "https" && strings.EqualFold(u.Host, identityHost) && validPath
+}
+
+func isUserPage(u *url.URL) bool {
+	return u.Scheme == "https" && strings.EqualFold(u.Host, portalHost) &&
+		strings.HasPrefix(u.Path, "/content/euda/") && strings.HasSuffix(u.Path, "/user.html")
+}
+
+func loginLocation(resp *http.Response) (*url.URL, error) {
+	if resp.StatusCode >= http.StatusBadRequest {
+		return nil, errors.New(resp.Status)
+	}
+
+	switch resp.StatusCode {
+	case http.StatusMovedPermanently, http.StatusFound, http.StatusSeeOther, http.StatusTemporaryRedirect, http.StatusPermanentRedirect:
+		location, err := resp.Location()
+		if err != nil {
+			return nil, fmt.Errorf("login redirect: %w", err)
+		}
+		return location, nil
+	}
+
+	if resp.Request == nil || resp.Request.URL == nil {
+		return nil, errors.New("login response URL missing")
+	}
+	return resp.Request.URL, nil
 }
 
 // get executes a GET request, re-authenticating once on 401/403, and returns the body

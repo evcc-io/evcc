@@ -3,6 +3,8 @@ products:
   - brand: Kostal
     description:
       generic: Smart Energy Meter
+discovery:
+  mac: ["1897F1", "240BB1"]
 params:
   - name: usage
     choice: ["grid"]

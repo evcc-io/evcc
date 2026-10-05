@@ -8,6 +8,8 @@ requirements:
   description:
     de: Der Zähler muss in Sensorposition 2 (Netzanschluss) installiert sein. Sensorposition 1 (Haushaltsverbrauch) wird nicht unterstützt.
     en: The energy meter must be installed in sensor position 2 (grid connection). Sensor position 1 (House consumption) is not supported.
+discovery:
+  mac: ["1897F1", "240BB1"]
 params:
   - name: usage
     choice: ["grid"]

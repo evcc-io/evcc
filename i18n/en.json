@@ -200,6 +200,14 @@
       "titleAdd": "Add Consumer Meter",
       "titleEdit": "Edit Consumer Meter"
     },
+    "combobox": {
+      "count": "{count} suggestions",
+      "matching": "Matching",
+      "other": "Other",
+      "searching": "Searching…",
+      "suggestions": "Suggestions",
+      "used": "already used"
+    },
     "control": {
       "description": "Usually the default values are fine. Only change them if you know what you are doing.",
       "descriptionInterval": "Update cycle in seconds. Defines how often evcc reads meter data and adjusts charging. The default of 30 seconds is a safe choice. Devices like vehicles, wallboxes and inverters typically need several seconds to adjust their behavior. If your components react quickly you can use lower values. We strongly recommend not going below 10 seconds. If you observe erratic control behavior or jumping power values choose a larger interval.",
@@ -780,7 +788,7 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionExternalUrl": "Address for other devices that want to connect to evcc and for autodiscovery of the evcc app.",
+      "descriptionExternalUrl": "Address for other devices that want to connect to evcc and for auto discovery of the evcc app.",
       "descriptionHost": "Used to announce evcc in your local network.",
       "descriptionInternalUrl": "Local network address of evcc.",
       "descriptionPort": "Port for the web interface and API. You'll need to update your browser URL if you change this.",
@@ -1306,6 +1314,123 @@
     "restartDescription": "Tried turning it off and on again?",
     "secondaryActions": "Still not able to solve your problem? Here are some more heavy-handed options."
   },
+  "energy": {
+    "battery": {
+      "charged": "Charged",
+      "discharged": "Discharged"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Bars",
+        "pattern": "Pattern"
+      },
+      "cost": "Cost",
+      "others": "Others",
+      "source": {
+        "pv": "solar",
+        "battery": "battery",
+        "grid": "grid"
+      },
+      "title": "Consumers",
+      "view": {
+        "river": "River",
+        "treemap": "Treemap"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "charged",
+        "returnEnergy": "discharged"
+      },
+      "grid": {
+        "energy": "Import",
+        "returnEnergy": "Export"
+      },
+      "meter": {
+        "energy": "Energy",
+        "returnEnergy": "Energy (reverse)"
+      }
+    },
+    "empty": "No energy data available for this time range.",
+    "flow": {
+      "battery": "Battery",
+      "batteryCharge": "Battery charge",
+      "batteryDischarge": "Battery discharge",
+      "charging": "Charging",
+      "export": "Grid export",
+      "grid": "Grid import",
+      "heating": "Heating",
+      "home": "Consumption",
+      "overview": "Overview",
+      "pv": "Production",
+      "title": "Energy flow",
+      "usage": "Usage",
+      "withdrawal": "Withdrawal"
+    },
+    "grid": {
+      "amount": "Amount",
+      "cost": "Grid cost",
+      "energy": "Energy",
+      "export": "Export",
+      "exportPrice": "Export price",
+      "import": "Import",
+      "importPrice": "Import price",
+      "price": "Price",
+      "revenue": "Feed-in revenue",
+      "title": "Grid"
+    },
+    "group": {
+      "battery": "Battery",
+      "consumer": "Consumption",
+      "forecast": "Forecast",
+      "grid": "Grid",
+      "meter": "Additional meters",
+      "pv": "Production"
+    },
+    "production": {
+      "above": "{value} above",
+      "accuracy": "Forecast accuracy",
+      "below": "{value} below",
+      "deviation": "Deviation",
+      "expectedTomorrow": "expected tomorrow",
+      "exported": "{value} exported",
+      "produced": "Produced",
+      "remainingToday": "remaining today",
+      "selfConsumed": "Self-consumed",
+      "title": "Production"
+    },
+    "socTemp": {
+      "charged": "charged",
+      "soc": "charge",
+      "temperature": "temperature",
+      "used": "used"
+    },
+    "sources": {
+      "battery": "Battery",
+      "cost": "Cost",
+      "energy": "Energy",
+      "grid": "Grid",
+      "hint": "Solar and battery energy valued at feed-in price.",
+      "price": "Price/kWh",
+      "pv": "Solar",
+      "share": "Share",
+      "source": "Source",
+      "title": "Sources",
+      "total": "Total"
+    },
+    "stat": {
+      "autarky": "Autarky",
+      "co2Saved": "CO₂ saved",
+      "co2SavedTooltip": "Compared to drawing the consumed {energy} from the grid.",
+      "configure": "Configure now",
+      "noCo2": "No CO₂ data.",
+      "noPrice": "No price data.",
+      "savings": "Savings",
+      "savingsTooltip": "Compared to buying the consumed {energy} from the grid.",
+      "versus": "{value} vs. {reference}"
+    },
+    "title": "Energy"
+  },
   "issue": {
     "additional": {
       "copied": "copied!",
@@ -1482,35 +1607,6 @@
       "consumption": "Consumption",
       "feedIn": "Feed-in",
       "title": "External limit active"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "charged",
-          "returnEnergy": "discharged"
-        },
-        "grid": {
-          "energy": "imported",
-          "returnEnergy": "exported"
-        },
-        "meter": {
-          "energy": "Energy",
-          "returnEnergy": "Energy (reverse)"
-        }
-      },
-      "download": "Download",
-      "empty": "No history data available for this time range.",
-      "group": {
-        "battery": "Battery",
-        "consumer": "Consumption",
-        "forecast": "Forecast",
-        "grid": "Grid",
-        "loadpoint": "Charging & Heating",
-        "meter": "Additional meters",
-        "pv": "Production"
-      },
-      "otherConsumers": "Others",
-      "title": "History"
     },
     "loadpoint": {
       "avgPrice": "⌀ Price",
@@ -1944,6 +2040,7 @@
     "battery": "Battery",
     "charge": "Charge",
     "comingSoon": "This page is under construction.",
+    "energy": "Energy",
     "forecast": "Forecast",
     "more": "More",
     "sessions": "Sessions"
