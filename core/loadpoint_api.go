@@ -1027,7 +1027,7 @@ func (lp *Loadpoint) setSmartCostLimit(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set smart cost limit:", printPtr("%.1f", val))
+	lp.log.DEBUG.Println("set smart cost limit:", printPtr("%.3f", val))
 
 	if !ptrValueEqual(lp.smartCostLimit, val) {
 		lp.smartCostLimit = val
@@ -1089,7 +1089,7 @@ func (lp *Loadpoint) setSmartFeedInPriorityLimit(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set smart feed-in limit:", printPtr("%.1f", val))
+	lp.log.DEBUG.Println("set smart feed-in limit:", printPtr("%.3f", val))
 
 	if !ptrValueEqual(lp.smartFeedInPriorityLimit, val) {
 		lp.smartFeedInPriorityLimit = val
