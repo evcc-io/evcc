@@ -57,7 +57,7 @@ func (t *embed) init() (err error) {
 	vm.ImportUsed()
 
 	// Compile the formula into a callable function, avoiding any per-call parsing
-	src := fmt.Sprintf(`var calc = func(price, charges, tax float64, ts time.Time) float64 { return %s }`, t.Formula)
+	src := fmt.Sprintf(`var calc = func(price, charges, tax float64, ts time.Time) float64 { return float64(%s) }`, t.Formula)
 	if _, err := vm.Eval(src); err != nil {
 		return err
 	}
