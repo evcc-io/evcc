@@ -29,6 +29,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/ocpp"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -38,14 +39,19 @@ import (
 // OCPP charger implementation
 type OCPP struct {
 	implement.Caps
+	log     *util.Logger
 	cp      *ocpp.CP
 	conn    *ocpp.Connector
 	phases  int
 	enabled bool
 	current float64
+	lp      loadpoint.API
 
 	stackLevelZero      bool
 	profileKindRelative bool
+	txProfile           bool
+	profileCurrent      float64
+	transactionID       int
 }
 
 const defaultIdTag = "evcc" // RemoteStartTransaction only
@@ -76,14 +82,22 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		ProfileKindRelative  bool
 		RemoteStart          bool
 		NoChangeAvailability *bool
+		ChargingProfile      types.ChargingProfilePurposeType
 	}{
-		Connector:      1,
-		MeterInterval:  10 * time.Second,
-		ConnectTimeout: 5 * time.Minute,
+		Connector:       1,
+		MeterInterval:   10 * time.Second,
+		ConnectTimeout:  5 * time.Minute,
+		ChargingProfile: types.ChargingProfilePurposeTxDefaultProfile,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+	if cc.ChargingProfile != types.ChargingProfilePurposeTxDefaultProfile && cc.ChargingProfile != types.ChargingProfilePurposeTxProfile {
+		return nil, fmt.Errorf("invalid charging profile: %s", cc.ChargingProfile)
+	}
+	if cc.ChargingProfile == types.ChargingProfilePurposeTxProfile && cc.Connector <= 0 {
+		return nil, fmt.Errorf("TxProfile requires a positive connector: %d", cc.Connector)
 	}
 
 	stackLevelZero := cc.StackLevelZero != nil && *cc.StackLevelZero
@@ -102,6 +116,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
+	c.txProfile = cc.ChargingProfile == types.ChargingProfilePurposeTxProfile
 
 	if c.cp.HasMeasurement(types.MeasurandPowerActiveImport) {
 		implement.Has(c, implement.Meter(c.conn.CurrentPower))
@@ -139,9 +154,14 @@ func NewOCPP(ctx context.Context,
 ) (*OCPP, error) {
 	log := util.NewLogger(fmt.Sprintf("%s-%d", cmp.Or(id, "ocpp"), connector))
 
-	cp, err := ocpp.Instance().RegisterChargepoint(id,
+	cs, err := ocpp.Instance()
+	if err != nil {
+		return nil, err
+	}
+
+	cp, err := cs.RegisterChargepoint(id,
 		func() *ocpp.CP {
-			return ocpp.NewChargePoint(log, id)
+			return ocpp.NewChargePoint(log, cs, id)
 		},
 		func(cp *ocpp.CP) error {
 			log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
@@ -176,6 +196,7 @@ func NewOCPP(ctx context.Context,
 
 	c := &OCPP{
 		Caps:                implement.New(),
+		log:                 log,
 		cp:                  cp,
 		conn:                conn,
 		stackLevelZero:      stackLevelZero,
@@ -204,6 +225,19 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 	status, err := c.conn.Status()
 	if err != nil {
 		return api.StatusNone, err
+	}
+	if c.txProfile {
+		transactionID, err := c.conn.TransactionID()
+		if err != nil {
+			return api.StatusNone, err
+		}
+		// Transaction profiles expire even when the requested current stays unchanged.
+		if transactionID != c.transactionID {
+			// a failed update must not fail the status, it remains eligible for retry
+			if err := c.setCurrent(c.profileCurrent); err != nil {
+				c.log.WARN.Printf("reapply charging profile: %v", err)
+			}
+		}
 	}
 
 	switch status {
@@ -297,22 +331,53 @@ func (c *OCPP) Enable(enable bool) error {
 	return err
 }
 
-// setCurrent sets the TxDefaultChargingProfile with given current
+// setCurrent applies the charging profile with the given current.
 func (c *OCPP) setCurrent(current float64) error {
-	err := c.conn.SetChargingProfileRequest(c.createTxDefaultChargingProfile(math.Trunc(10*current) / 10))
-	if err != nil {
-		err = fmt.Errorf("set charging profile: %w", err)
+	var transactionID int
+	if c.txProfile {
+		var err error
+		transactionID, err = c.conn.TransactionID()
+		if err != nil {
+			return err
+		}
+		// StopTransaction clears the transaction id before the status notification arrives.
+		// Only an initially unknown transaction is awaited, an ended one restores the default profile.
+		if transactionID == 0 && c.transactionID == 0 {
+			status, err := c.conn.Status()
+			if err != nil {
+				return err
+			}
+			// After reconnect, wait for MeterValues to recover an active transaction ID.
+			switch status {
+			case core.ChargePointStatusCharging, core.ChargePointStatusSuspendedEV, core.ChargePointStatusSuspendedEVSE:
+				return fmt.Errorf("transaction id: %w", api.ErrNotAvailable)
+			}
+		}
 	}
 
-	return err
+	if err := c.conn.SetChargingProfileRequest(c.createChargingProfile(math.Trunc(10*current)/10, transactionID)); err != nil {
+		return fmt.Errorf("set charging profile: %w", err)
+	}
+	c.transactionID = transactionID
+	c.profileCurrent = current
+	return nil
 }
 
-// createTxDefaultChargingProfile returns a TxDefaultChargingProfile with given current
-func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingProfile {
+// createChargingProfile returns the charging profile for the current transaction.
+func (c *OCPP) createChargingProfile(current float64, transactionID int) *types.ChargingProfile {
 	phases := c.phases
 	period := types.NewChargingSchedulePeriod(0, current)
 
 	if c.cp.ChargingRateUnit == types.ChargingRateUnitWatts {
+		// c.phases is only set via the phase switcher; fall back to the loadpoint's
+		// actually active phases so single-phase charging isn't billed as 3p power
+		if phases == 0 && c.lp != nil {
+			phases = c.lp.ActivePhases()
+		}
+		// OCPP assumes phases == 3 if not set
+		if phases == 0 {
+			phases = 3
+		}
 		period = types.NewChargingSchedulePeriod(0, math.Trunc(230.0*current*float64(phases)))
 	} else {
 		// OCPP assumes phases == 3 if not set
@@ -329,6 +394,10 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 			ChargingRateUnit:       c.cp.ChargingRateUnit,
 			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
+	}
+	if c.txProfile && transactionID != 0 {
+		res.ChargingProfilePurpose = types.ChargingProfilePurposeTxProfile
+		res.TransactionId = transactionID
 	}
 
 	if c.profileKindRelative {
@@ -399,8 +468,8 @@ func (c *OCPP) phases1p3p(phases int) error {
 var _ api.Identifier = (*OCPP)(nil)
 
 // Identify implements the api.Identifier interface
-func (c *OCPP) Identify() (string, error) {
-	return c.conn.IdTag(), nil
+func (c *OCPP) Identify() ([]string, error) {
+	return []string{c.conn.IdTag()}, nil
 }
 
 var _ api.Diagnosis = (*OCPP)(nil)
@@ -434,4 +503,11 @@ func (c *OCPP) Diagnose() {
 			fmt.Printf("\t\t%s (%s): %s\n", opt.Key, rw[opt.Readonly], *opt.Value)
 		}
 	}
+}
+
+var _ loadpoint.Controller = (*OCPP)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (c *OCPP) LoadpointControl(lp loadpoint.API) {
+	c.lp = lp
 }

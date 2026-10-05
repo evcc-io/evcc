@@ -14,7 +14,6 @@ params:
     choice: ["tcpip"]
     id: 255
   - name: connector
-    default: 1
 render: |
   type: abl-em4
   {{- include "modbus" . }}

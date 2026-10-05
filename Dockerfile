@@ -1,12 +1,12 @@
 # STEP 1 build ui
-FROM --platform=$BUILDPLATFORM node:26-alpine AS node
+FROM --platform=$BUILDPLATFORM ghcr.io/voidzero-dev/vite-plus:1.0.0@sha256:8d788678fb9783ba8994c4fe5652af3316bfc414f7ef6ead0136932ee6075b8b AS node
 
-RUN apk update && apk add --no-cache make
+USER root
 
 WORKDIR /build
 
 # install node tools
-COPY package*.json ./
+COPY .node-version package*.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
 
 # build ui
@@ -21,7 +21,7 @@ RUN make ui
 
 
 # STEP 2 build executable binary
-FROM --platform=$BUILDPLATFORM golang:1.26.3-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1-alpine AS builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -45,14 +45,13 @@ RUN --mount=type=cache,target=${GOMODCACHE} go mod download
 # install tools
 COPY Makefile .
 COPY cmd/implement/ cmd/implement/
-COPY cmd/openapi/ cmd/openapi/
 COPY api/ api/
-RUN --mount=type=cache,target=${GOMODCACHE} make install
+RUN --mount=type=cache,target=${GOMODCACHE} --mount=type=cache,target=${GOCACHE} make install
 
 # prepare
 COPY . .
 RUN make patch-asn1
-RUN --mount=type=cache,target=${GOMODCACHE} make assets
+RUN --mount=type=cache,target=${GOMODCACHE} --mount=type=cache,target=${GOCACHE} make assets
 
 # copy ui
 COPY --from=node /build/dist /build/dist

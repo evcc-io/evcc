@@ -10,25 +10,29 @@ import {
 	FONT_FAMILY,
 	markPointLabel,
 	tooltipStyle,
+	tooltipTable,
 	forecastGrid,
 	forecastXAxes,
 	forecastYAxis,
+	hoverDot,
+	lineDefaults,
 } from "./echarts";
 import colors, { lighterColor } from "@/colors";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import chartMixin from "./chartMixin";
 import { highestSlotIndexByDay } from "@/utils/forecast";
-import type { SolarDetails, TimeseriesEntry } from "./types";
+import { energyAxisScale, type EnergyAxisScale } from "@/utils/energyAxis";
+import type { UiSolarDetails, UiTimeseriesEntry } from "@/types/evcc";
 
 export default defineComponent({
 	name: "SolarChart",
 	mixins: [formatter, chartMixin],
 	props: {
-		solar: { type: Object as PropType<SolarDetails> },
-		rawSolar: { type: Object as PropType<SolarDetails> },
+		solar: { type: Object as PropType<UiSolarDetails> },
+		rawSolar: { type: Object as PropType<UiSolarDetails> },
 	},
 	computed: {
-		entries(): TimeseriesEntry[] {
+		entries(): UiTimeseriesEntry[] {
 			return (this.solar?.timeseries || []).filter(
 				(e) => new Date(e.ts) >= this.startDate && new Date(e.ts) <= this.endDate
 			);
@@ -42,8 +46,11 @@ export default defineComponent({
 			}
 			return max;
 		},
-		markPoints(): { coord: [string, number]; value: string }[] {
-			const points: { coord: [string, number]; value: string }[] = [];
+		axisScale(): EnergyAxisScale {
+			return energyAxisScale(this.combinedMax);
+		},
+		markPoints(): { coord: [number, number]; value: string }[] {
+			const points: { coord: [number, number]; value: string }[] = [];
 			const days = [
 				{ energy: this.solar?.today?.energy, day: 0 },
 				{ energy: this.solar?.tomorrow?.energy, day: 1 },
@@ -77,26 +84,30 @@ export default defineComponent({
 						snapThreshold: 50,
 						lineStyle: { color: "transparent" },
 					},
-					...tooltipStyle(selfColor, () => this.chart),
+					...tooltipStyle(selfColor),
 					formatter: (params: { value: [string, number] }[]) => {
 						const p = params[0];
 						if (!p) return "";
 						const d = new Date(p.value[0]);
 						const time = `${this.weekdayShort(d)} ${this.fmtHourMinute(d)}`;
-						return `${time}<br/>${this.fmtW(p.value[1], POWER_UNIT.AUTO)}`;
+						return tooltipTable(time, [
+							{ values: [this.fmtW(p.value[1], POWER_UNIT.AUTO)] },
+						]);
 					},
 				},
-				xAxis: forecastXAxes(this.startDate, this.endDate, this.weekdayShort),
+				xAxis: forecastXAxes(
+					this.startDate,
+					this.endDate,
+					this.hourShort,
+					this.weekdayShort
+				),
 				yAxis: forecastYAxis({
-					max: (value: { max: number }) => {
-						const m = Math.max(value.max, this.combinedMax);
-						const step = Math.pow(10, Math.floor(Math.log10(m || 1)));
-						return Math.ceil(m / step) * step;
-					},
+					max: this.axisScale.limit,
 					splitNumber: 2,
 					axisLabel: {
 						color: colors.muted,
-						formatter: (value: number) => this.fmtW(value, POWER_UNIT.KW, false, 0),
+						formatter: (value: number) =>
+							this.fmtW(value, this.axisScale.unit, false, this.axisScale.digits),
 					},
 				}),
 				series: [
@@ -104,18 +115,9 @@ export default defineComponent({
 						type: "line",
 						data,
 						smooth: true,
-						symbol: "circle",
-						symbolSize: 6,
-						showSymbol: false,
-						lineStyle: { color: selfColor, width: 3 },
+						...hoverDot(selfColor),
+						lineStyle: { color: selfColor, ...lineDefaults },
 						areaStyle: { color: lighterColor(selfColor) },
-						emphasis: {
-							disabled: false,
-							scale: false,
-							lineStyle: { color: selfColor, width: 3 },
-							areaStyle: { color: lighterColor(selfColor) },
-							itemStyle: { color: selfColor, borderColor: selfColor, borderWidth: 2 },
-						},
 						markPoint: markPointLabel(
 							selfColor,
 							this.tooltipVisible ? [] : this.markPoints,

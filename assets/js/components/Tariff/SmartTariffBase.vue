@@ -8,7 +8,7 @@
 			<label :for="formId" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 				{{ limitLabel }}
 			</label>
-			<div class="col-sm-8 col-lg-4 pe-0">
+			<div class="col-sm-8 col-lg-4 pe-lg-0">
 				<div class="input-group input-group-sm mb-1 mb-lg-0">
 					<div class="input-group-text">
 						<div class="form-check form-switch m-0">
@@ -56,15 +56,15 @@
 					{{ activeHoursText }}
 				</div>
 			</div>
-			<div class="text-end">
+			<div class="text-end" data-testid="price-range">
 				<div class="label">
 					<span v-if="activeSlot">{{ activeSlotName }}</span>
 					<span v-else>{{ currentPriceLabel }}</span>
 				</div>
-				<div v-if="activeSlot" class="value text-primary">
+				<div v-if="activeSlot" class="value" :class="highlightColor">
 					{{ activeSlotCost }}
 				</div>
-				<div v-else-if="activeSlots.length" class="value text-primary">
+				<div v-else-if="limitedSlots.length" class="value" :class="activeHoursClass">
 					{{ fmtActiveCostRange }}
 				</div>
 				<div v-else class="value value-inactive">
@@ -221,11 +221,15 @@ export default defineComponent({
 		warningSlots() {
 			return this.totalSlots.filter((s) => s.warning);
 		},
+		// slots matching the limit, regardless of direction
+		limitedSlots() {
+			return this.limitDirection === "below" ? this.activeSlots : this.warningSlots;
+		},
 		fmtTotalCostRange() {
 			return this.fmtCostRange(this.costRange(this.totalSlots));
 		},
 		fmtActiveCostRange() {
-			return this.fmtCostRange(this.costRange(this.activeSlots));
+			return this.fmtCostRange(this.costRange(this.limitedSlots));
 		},
 		activeSlot(): Slot | null {
 			return this.activeIndex !== null ? this.slots[this.activeIndex] || null : null;
@@ -240,7 +244,7 @@ export default defineComponent({
 		activeSlotName() {
 			if (this.activeSlot) {
 				const { day, start, end } = this.activeSlot;
-				const range = `${this.fmtTimeString(start)}–${this.fmtTimeString(end)}`;
+				const range = `${this.fmtTimeString(start)} – ${this.fmtTimeString(end)}`;
 				return this.$t("main.targetChargePlan.timeRange", { day, range });
 			}
 			return null;
@@ -306,15 +310,9 @@ export default defineComponent({
 		},
 		fmtCostRange({ min, max }: { min: number | undefined; max: number | undefined }): string {
 			if (min === undefined || max === undefined) return "";
-			const fmtMin = this.formatShortValue(min);
-			const fmtMax = this.formatShortValue(max);
-			return `${fmtMin} – ${fmtMax}`;
-		},
-		formatShortValue(value: number): string {
-			if (this.isCo2) {
-				return this.fmtCo2Short(value);
-			}
-			return this.fmtPricePerKWh(value, this.currency, true);
+			return this.isCo2
+				? `${this.fmtCo2Short(min)} – ${this.fmtCo2Short(max)}`
+				: this.fmtPriceRange(min, max, this.currency, true);
 		},
 		slotsForLimit(limit: number | null): Slot[] {
 			return generateRateSlots(

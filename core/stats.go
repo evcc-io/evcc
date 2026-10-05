@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/now"
 )
@@ -29,7 +29,7 @@ func NewStats() *Stats {
 
 // Update publishes stats based on charging sessions
 func (s *Stats) Update(p publisher) {
-	if time.Since(s.updated) < time.Hour {
+	if time.Since(s.updated) < 15*time.Minute {
 		return
 	}
 

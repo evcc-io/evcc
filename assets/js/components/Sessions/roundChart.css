@@ -1,0 +1,7 @@
+/* square chart area for round charts (doughnut, polar, radar), consistent size across cards */
+.round-chart {
+	width: 100%;
+	max-width: 420px;
+	aspect-ratio: 1;
+	margin-inline: auto;
+}

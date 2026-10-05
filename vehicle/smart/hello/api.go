@@ -2,6 +2,7 @@ package hello
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/samber/lo"
 )
 
 // https://github.com/TA2k/ioBroker.smart-eq
@@ -19,12 +19,14 @@ import (
 type API struct {
 	*request.Helper
 	identity *Identity
+	baseURI  string
 }
 
 func NewAPI(log *util.Logger, identity *Identity) *API {
 	v := &API{
 		Helper:   request.NewHelper(log),
 		identity: identity,
+		baseURI:  ApiURI,
 	}
 
 	v.Client.Transport = &transport.Decorator{
@@ -55,6 +57,14 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	return v
 }
 
+// SetSeries selects the API host for the vehicle's platform.
+// Smart #5 (series HY) is served by the V2 host; #1/#3 (HX/HC) use V1.
+func (v *API) SetSeries(series string) {
+	if strings.HasPrefix(series, "HY") {
+		v.baseURI = ApiURIV2
+	}
+}
+
 func (v *API) request(method, path string, params url.Values, body io.Reader) (*http.Request, error) {
 	if body != nil {
 		b, err := io.ReadAll(body)
@@ -75,7 +85,7 @@ func (v *API) request(method, path string, params url.Values, body io.Reader) (*
 		body.(*bytes.Reader).Seek(0, io.SeekStart)
 	}
 
-	uri := fmt.Sprintf("%s/%s?%s", ApiURI, strings.TrimPrefix(path, "/"), params.Encode())
+	uri := fmt.Sprintf("%s/%s?%s", v.baseURI, strings.TrimPrefix(path, "/"), params.Encode())
 	req, err := request.New(method, uri, body, map[string]string{
 		"x-api-signature-nonce": nonce,
 		"x-signature":           sign,
@@ -85,16 +95,56 @@ func (v *API) request(method, path string, params url.Values, body io.Reader) (*
 	return req, err
 }
 
-func (v *API) Vehicles() ([]string, error) {
-	var res struct {
-		Code    Int
-		Message string
-		Error   Error
-		Data    struct {
-			List []Vehicle
+// response is the common envelope of all api responses
+type response[T any] struct {
+	Code    Int
+	Message string
+	Error   Error
+	Data    T
+}
+
+// do executes a signed request. A ResponseTokenInvalid answer means the backend
+// no longer accepts the token although it has not expired yet- retry once with a
+// fresh login. The body is built per attempt as it may embed the current token.
+func do[T any](v *API, method, path string, params url.Values, body func() ([]byte, error)) (T, error) {
+	var zero T
+	var res response[T]
+	var err error
+
+	for range 2 {
+		var rdr io.Reader
+		if body != nil {
+			b, err := body()
+			if err != nil {
+				return zero, err
+			}
+			rdr = bytes.NewReader(b)
 		}
+
+		var req *http.Request
+		req, err = v.request(method, path, params, rdr)
+		if err != nil {
+			return zero, err
+		}
+
+		res = response[T]{}
+		err = v.DoJSON(req, &res)
+
+		if res.Code != ResponseTokenInvalid && res.Error.Code != ResponseTokenInvalid {
+			break
+		}
+
+		v.identity.Invalidate()
 	}
 
+	if err := responseError(err, res.Code, res.Message, res.Error); err != nil {
+		return zero, err
+	}
+
+	return res.Data, nil
+}
+
+func (v *API) Vehicles() ([]Vehicle, error) {
 	userID, err := v.identity.UserID()
 	if err != nil {
 		return nil, err
@@ -105,68 +155,38 @@ func (v *API) Vehicles() ([]string, error) {
 		"userId":        {userID},
 	}
 
-	path := "/device-platform/user/vehicle/secure"
-	req, err := v.request(http.MethodGet, path, params, nil)
-	if err != nil {
-		return nil, err
-	}
+	// vehicle list is fetched on V1: SetSeries runs only after this call
+	res, err := do[struct{ List []Vehicle }](v, http.MethodGet, "/device-platform/user/vehicle/secure", params, nil)
 
-	err = v.DoJSON(req, &res)
-	if err := responseError(err, res.Code, res.Message, res.Error); err != nil {
-		return nil, err
-	}
-
-	vehicles := lo.Map(res.Data.List, func(v Vehicle, _ int) string {
-		return v.VIN
-	})
-
-	return vehicles, err
+	return res.List, err
 }
 
 func (v *API) UpdateSession(vin string) error {
-	token, err := v.identity.Token()
-	if err != nil {
-		return err
-	}
-
 	params := url.Values{
 		"identity_type": {"smart"},
 	}
 
-	data := map[string]string{
-		"vin":          vin,
-		"sessionToken": token.AccessToken,
-		"language":     "",
+	body := func() ([]byte, error) {
+		token, err := v.identity.Token()
+		if err != nil {
+			return nil, err
+		}
+
+		return json.Marshal(map[string]string{
+			"vin":          vin,
+			"sessionToken": token.AccessToken,
+			"language":     "",
+		})
 	}
 
-	path := "/device-platform/user/session/update"
-	req, err := v.request(http.MethodPost, path, params, request.MarshalJSON(data))
-	if err != nil {
-		return err
-	}
+	_, err := do[struct{}](v, http.MethodPost, "/device-platform/user/session/update", params, body)
 
-	var res struct {
-		Code    Int
-		Message string
-		Error   Error
-	}
-
-	err = v.DoJSON(req, &res)
-	return responseError(err, res.Code, res.Message, res.Error)
+	return err
 }
 
 func (v *API) Status(vin string) (VehicleStatus, error) {
 	if err := v.UpdateSession(vin); err != nil {
 		return VehicleStatus{}, fmt.Errorf("update session failed: %w", err)
-	}
-
-	var res struct {
-		Code    Int
-		Message string
-		Error   Error
-		Data    struct {
-			VehicleStatus VehicleStatus
-		}
 	}
 
 	userID, err := v.identity.UserID()
@@ -180,16 +200,19 @@ func (v *API) Status(vin string) (VehicleStatus, error) {
 		"userId": {userID},
 	}
 
-	path := "/remote-control/vehicle/status/" + vin
-	req, err := v.request(http.MethodGet, path, params, nil)
-	if err != nil {
-		return VehicleStatus{}, err
+	res, err := do[struct{ VehicleStatus VehicleStatus }](v, http.MethodGet, "/remote-control/vehicle/status/"+vin, params, nil)
+
+	return res.VehicleStatus, err
+}
+
+func (v *API) SocStatus(vin string) (VehicleSocStatus, error) {
+	if err := v.UpdateSession(vin); err != nil {
+		return VehicleSocStatus{}, fmt.Errorf("update session failed: %w", err)
 	}
 
-	err = v.DoJSON(req, &res)
-	if err := responseError(err, res.Code, res.Message, res.Error); err != nil {
-		return VehicleStatus{}, err
+	params := url.Values{
+		"setting": {"charging"},
 	}
 
-	return res.Data.VehicleStatus, err
+	return do[VehicleSocStatus](v, http.MethodGet, "/remote-control/vehicle/status/soc/"+vin, params, nil)
 }

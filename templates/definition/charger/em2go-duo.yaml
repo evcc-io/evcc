@@ -9,7 +9,6 @@ params:
     choice: ["tcpip"]
     id: 255
   - name: connector
-    default: 1
 render: |
   type: em2go-duo
   {{- include "modbus" . }}

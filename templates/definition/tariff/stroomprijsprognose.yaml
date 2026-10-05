@@ -16,13 +16,7 @@ params:
     choice: ["DE", "NL", "BE", "DK1", "DK2", "FR"]
     required: true
   - name: currency
-    default: EUR
-    type: choice
-    description:
-      en: Currency
-      de: Währung
     choice: ["EUR", "DKK"]
-    required: true
   - name: horizon
     default: 120
     type: int
@@ -35,8 +29,8 @@ params:
   - preset: tariff-features
 render: |
   type: custom
-  {{ include "tariff-base" . }}
-  {{ include "tariff-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}
   forecast:
     source: http
     uri: https://api.energypriceforecast.eu/api/v1/evcc/tariff?country={{.region}}&type=grid&currency={{.currency}}&hours={{.horizon}}

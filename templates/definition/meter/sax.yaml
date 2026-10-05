@@ -19,9 +19,7 @@ params:
     id: 64
   - preset: battery-params
   - name: watchdog
-    type: duration
     default: 240s
-    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}

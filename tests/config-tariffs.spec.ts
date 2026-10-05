@@ -26,7 +26,7 @@ test.describe("tariffs", async () => {
     await page.goto("/#/config");
 
     // New configuration section should show with "Add Tariff" button
-    await expect(page.getByRole("heading", { name: "Tariffs & Forecasts" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Tariffs & forecasts" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add Tariff" })).toBeVisible();
 
     // Old tariff card should not be shown
@@ -83,7 +83,6 @@ grid:
     // restart done
     await expect(restartButton).not.toBeVisible();
 
-    await expect(page.getByTestId("generalconfig-currency")).toContainText("Currency CHF");
     await expect(page.getByTestId("tariffs-legacy")).toContainText(
       ["Grid price", "12.3 ct."].join("")
     );
@@ -93,17 +92,19 @@ grid:
     await start(CONFIG_WITH_TARIFFS);
     await page.goto("/#/config");
 
-    await expect(page.getByTestId("generalconfig-currency")).toContainText("Currency SEK");
     await expect(page.getByTestId("tariffs-legacy")).toBeVisible();
     await expect(page.getByTestId("tariffs-legacy")).toContainText(
       [
-        "Tariffs & Forecasts",
+        "Tariffs & forecasts",
         "Grid price",
         "30.0 öre",
         "Feed-in price",
         "-10.0 öre",
         "Grid CO₂",
         "300 g",
+        "Solar forecast",
+        "Outdoor temperature",
+        "15.5°C",
       ].join("")
     );
   });
@@ -117,6 +118,7 @@ grid:
     const tariffFeedin = page.getByTestId("tariff-feedIn");
     const tariffCo2 = page.getByTestId("tariff-co2");
     const tariffSolar = page.getByTestId("tariff-solar");
+    const tariffTemperature = page.getByTestId("tariff-temperature");
     const tariffPlanner = page.getByTestId("tariff-planner");
     const addTariff = page.getByRole("button", { name: "Add tariff" });
     const addForecast = page.getByRole("button", { name: "Add forecast" });
@@ -126,6 +128,9 @@ grid:
     const addGridExport = modal.getByRole("button", { name: "Add grid export tariff" });
     const addCo2Forecast = modal.getByRole("button", { name: "Add CO₂ forecast" });
     const addSolarForecast = modal.getByRole("button", { name: "Add solar forecast" });
+    const addTemperatureForecast = modal.getByRole("button", {
+      name: "Add temperature forecast",
+    });
     const addPlannerForecast = modal.getByRole("button", { name: "Add planner forecast" });
     const save = modal.getByRole("button", { name: "Validate & save" });
 
@@ -184,11 +189,22 @@ grid:
     await expectModalHidden(modal);
     await expect(tariffSolar.nth(1)).toContainText("Roof West");
 
+    // create temperature forecast
+    await addForecast.click();
+    await expectModalVisible(modal);
+    await addTemperatureForecast.click();
+    await modal.getByLabel("Provider").selectOption("Demo Temperature Forecast");
+    await save.click();
+    await expectModalHidden(modal);
+    await expect(tariffTemperature).toContainText("Outdoor temperature");
+    await expect(tariffTemperature).toContainText(["Forecast", "10.0°C – 20.0°C"].join(""));
+
     // create planner forecast
     await addForecast.click();
     await expectModalVisible(modal);
-    // co2 already exists, should not be offered
+    // co2 and temperature already exist, should not be offered
     await expect(addCo2Forecast).not.toBeVisible();
+    await expect(addTemperatureForecast).not.toBeVisible();
     await expect(addSolarForecast).toBeVisible();
     await expect(addPlannerForecast).toBeVisible();
     await addPlannerForecast.click();
@@ -214,12 +230,16 @@ grid:
     await expect(tariffSolar).toHaveCount(2);
     await expect(tariffSolar.nth(0)).toContainText("Roof South");
     await expect(tariffSolar.nth(1)).toContainText("Roof West");
+    await expect(tariffTemperature).toBeVisible();
+    await expect(tariffTemperature).toContainText("Outdoor temperature");
     await expect(tariffPlanner).toBeVisible();
     await expect(tariffPlanner).toContainText("Price");
 
     // delete all in reverse order
     await deleteTariff(modal, tariffPlanner);
     await expect(tariffPlanner).toHaveCount(0);
+    await deleteTariff(modal, tariffTemperature);
+    await expect(tariffTemperature).toHaveCount(0);
     await deleteTariff(modal, tariffSolar, 1);
     await expect(tariffSolar).toHaveCount(1);
     await deleteTariff(modal, tariffSolar, 0);
@@ -233,6 +253,12 @@ grid:
     await expect(tariffGrid).toHaveCount(0);
 
     // final state: both add buttons visible again
+    await expect(addTariff).toBeVisible();
+    await expect(addForecast).toBeVisible();
+
+    // deletes must not leave stale refs behind that break the next start
+    await restart();
+    await page.reload();
     await expect(addTariff).toBeVisible();
     await expect(addForecast).toBeVisible();
   });
@@ -255,8 +281,8 @@ grid:
     await expect(tariffGrid).toContainText(["Price", "32.1 ct"].join(""));
 
     // change currency to NOK
-    await page.getByTestId("generalconfig-currency").getByRole("button", { name: "edit" }).click();
-    const currencyModal = page.getByTestId("currency-modal");
+    await page.getByTestId("generalconfig-site").getByRole("button", { name: "edit" }).click();
+    const currencyModal = page.getByTestId("site-modal");
     await expectModalVisible(currencyModal);
     await currencyModal.getByLabel("Currency").selectOption("NOK");
     await expect(
@@ -335,7 +361,7 @@ grid:
     await save.click();
     await expectModalHidden(modal);
     await expect(tariffGrid).toBeVisible();
-    await expect(tariffGrid).toContainText(["Forecast", "10.0 ct – 30.0 ct"].join(""));
+    await expect(tariffGrid).toContainText(["Forecast", "10.0 – 30.0 ct"].join(""));
   });
 
   test("charges zones", async ({ page }) => {

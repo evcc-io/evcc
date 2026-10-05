@@ -44,20 +44,71 @@ Either `brand` or `description` needs to be set. Examples by device class:
 
 Note: The official website of the manufacturer or service provider is the reference for the exact spelling.
 
+## `link`
+
+`link` is an optional URL pointing to the integration provider. It is shown during configuration and in the documentation.
+
+Guidelines:
+
+- The URL must start with `https://`.
+- Only add a link if it is useful for configuring the device, e.g. the cloud portal where credentials or tokens are managed, the page of the connected service, or the project page of a generic integration.
+- Link the page that describes the actual service being integrated, e.g. the dynamic tariff product page or the dataset page, not the company homepage. The homepage is fine when the whole site is that single service.
+- Write for end users: the page should describe the service and ideally offer a signup or account/token call to action. Do not link API documentation or developer portals.
+- Do not link general product detail or marketing pages, e.g. the manufacturer page of a charger.
+- Use canonical, stable URLs in the provider's default language and without tracking parameters. Verify that the URL is live.
+- `link` can be set at the template level (applies to all products) and overridden per product via a `link` entry under `products`.
+
+**Example** (template-level link, overridden by a rebranded product):
+
+```yaml
+template: smartcharge
+link: https://portal.smartcharge.example.com
+products:
+  - ...
+  - brand: PowerCloud
+    link: https://portal.powercloud.example.com
+```
+
 ## `group`
 
 `group` is used to group switchable sockets and generic device support (e.g. SunSpec) templates.
 
 ## `capabilities`
 
-`capabilities` provides an option to define special capabilities of the device as a list of strings
+`capabilities` provides an option to define special capabilities of the device as a list of strings.
 
-**Possible Values**:
+**Possible values**:
 
-- `iso151182`: If the charger supports communicating via ISO15118-2
-- `rfid`: If the charger supports RFID
-- `1p3p`: If the charger supports 1P/3P-phase switching
-- `smahems`: If the device can be used as an SMA HEMS device, only used for the SMA Home Manager 2.0 right now
+- `iso151182`: The device supports communicating via ISO 15118-2.
+- `mA`: The device supports granular (milliamp) current control.
+- `rfid`: The device supports RFID.
+- `1p3p`: The device supports 1P/3P phase switching.
+- `battery-control`: The device supports battery control.
+- `meter`: The device has a built-in energy meter.
+- `dim`: The device supports EnWG §14a dimming.
+- `curtail`: The device supports EEG §9 curtailment.
+
+`capabilities` can be set at two levels:
+
+- **Template level** (next to `template`): applies to every product.
+- **Product level** (under a `products` entry): applies to that product only.
+
+Both levels are merged, not overwritten: template-level capabilities are appended to each product's own list. A product cannot remove an inherited capability, and duplicates are rejected, so do not repeat a template-level capability on a product.
+
+**Example** (all products get `1p3p`; only the second product additionally gets `meter`):
+
+```yaml
+template: demo-charger
+capabilities: ["1p3p"]
+products:
+  - brand: Demo
+    description:
+      generic: Basic
+  - brand: Demo
+    description:
+      generic: Plus
+    capabilities: ["meter"] # effective: ["meter", "1p3p"]
+```
 
 ## `requirements`
 
@@ -107,6 +158,8 @@ en: |
 
 It is a list, so a device can have multiple caveats. Each entry has a language-specific `description` (`de`, `en`) and a `link`.
 
+Like `capabilities`, `caveats` can be set at template level (applies to every product) or product level (under a `products` entry, applies to that product only). Template-level caveats are appended to each product's own list, so do not repeat a template-level caveat on a product.
+
 Guidelines:
 
 - Add **one entry per distinct problem** (e.g. "unreliable meter" and "occasional reboots" are two entries); don't list the same problem twice.
@@ -124,6 +177,42 @@ caveats:
       en: Phase switching occasionally disables itself.
     link: https://github.com/evcc-io/evcc/issues/21708
 ```
+
+**Example** (caveat for one product only):
+
+```yaml
+template: demo-charger
+products:
+  - brand: Demo
+    description:
+      generic: Basic
+  - brand: Demo
+    description:
+      generic: Plus
+    caveats:
+      - description:
+          de: Phasenumschaltung deaktiviert sich gelegentlich von selbst.
+          en: Phase switching occasionally disables itself.
+        link: https://github.com/evcc-io/evcc/issues/21708
+```
+
+## `discovery`
+
+`discovery` describes how the devices of a template can be recognized in the local network. The host suggestions mark matching hosts and use them for auto-fill. Any single hit is a match.
+
+```yaml
+discovery:
+  mdns: ["_shelly._tcp", "_http._tcp:shelly*"] # service type in the announced spelling, optional instance name pattern after the colon
+  hostname: ["shelly*"] # pattern for any DNS or mDNS name of the host, domain is ignored, case-insensitive
+  mac: ["8400EC"] # hardware address prefix, 6 to 9 upper case hex digits
+```
+
+Guidelines:
+
+- Only add hints verified against the IEEE registry (`mac`), the vendor's documentation, or a real device. A registered prefix does not guarantee that the devices use it, many products contain third-party network modules.
+- Hostname patterns must be specific to the vendor. Patterns like `hs*` match unrelated devices.
+- ESP-based devices (Shelly, Tasmota, OpenDTU) share the Espressif prefixes. Use `mdns` or `hostname` for them.
+- The "Network discovery" modal on the config page (experimental) shows how configured devices appear in the network and is the source for new hints.
 
 ## `auth`
 
@@ -234,7 +323,7 @@ auth:
 - `string`: for string values (default)
 - `bool`: for `true` and `false` values
 - `choice`: for a selection from predefined options (defined in `choice` property)
-- `chargemodes`: for a selection of charge modes (`Off`, `Now`, `MinPV`, `PV`), including `None` which results in the param not being set
+- `chargemodes`: for a selection of charge modes (`Off`, `Smart`, `Now`), including `None` which results in the param not being set
 - `duration`: for duration values (e.g., `5m`, `1h30m`, `10s`)
 - `float`: for floating point numbers
 - `int`: for integer values
@@ -274,19 +363,49 @@ auth:
 
 **Format**: `service-name/endpoint` or `service-name/endpoint?param1={param1}&param2={param2}`
 
-Parameters from other params can be referenced using `{param-name}` syntax, which will be replaced with the user's input for that parameter. The endpoint will only be called once the user has entered values for all referenced parameters. The endpoint is called every time a referenced parameter value changes.
+Parameters from other params can be referenced using `{param-name}` syntax, which will be replaced with the user's input for that parameter. `{template}` is the name of the selected template. The endpoint will only be called once the user has entered values for all referenced parameters. The endpoint is called every time a referenced parameter value changes.
+
+**Response formats**:
+
+Service endpoints return either an array of strings (e.g., `["value1", "value2"]`) or an array of objects with context:
+
+```json
+[
+  {
+    "value": "192.168.1.10",
+    "label": "inverter.local",
+    "hint": "SMA",
+    "match": true,
+    "used": false
+  }
+]
+```
+
+- `value`: written to the field (required)
+- `label`: secondary line below the value
+- `hint`: shown on the right, e.g. a brand
+- `match`: the entry fits the current context, listed in a separate group on top
+- `used`: the entry is already taken by another device, listed last
+
+A service that is still collecting data answers with the `Retry-After` header (seconds). The UI shows a searching indicator and fetches again after that time.
 
 **UI behaviour**:
 
-Service endpoints must return an array of strings (e.g., `["value1", "value2"]`). These values are shown as suggestions, not strict selections - users can always enter custom text values. The UI handles service responses differently based on the parameter configuration and response content:
+Values are shown as suggestions, not strict selections - users can always enter custom text values. The UI handles service responses differently based on the parameter configuration and response content:
 
-- **Auto-fill (prepopulation)**: If the service returns exactly **one** value, the parameter is **required**, and the field is currently **empty**, the value will be automatically filled into the field.
+- **Auto-fill (prepopulation)**: If the service returns exactly **one** value (or exactly one unused `match` for object responses), the parameter is **required**, and the field is currently **empty**, the value will be automatically filled into the field.
 
-- **Dropdown suggestions**: In all other cases (multiple values, non-required parameter, or field already has a value), the returned values are shown as a dropdown/datalist for the user to select from or ignore.
+- **Dropdown suggestions**: In all other cases (multiple values, non-required parameter, or field already has a value), the returned values are shown as a datalist (strings) or a combobox with grouping (objects) for the user to select from or ignore.
 
 - **Empty response**: If the service returns an empty array or no data, the field remains a regular text input.
 
 **Available services**:
+
+- **Network**
+
+  `network/hosts?template={template}`: Lists the hosts of the local network found by mDNS, SSDP and the neighbor table of the operating system, with hostname and vendor. Hosts matching the template's `discovery` hints are marked. The `host` param uses it by default.
+
+  `EVCC_DISCOVERY_HOSTS` replaces the scan with a static list, e.g. where the network is not reachable: `[{"ip": "192.168.1.10", "mac": "00:15:BB:12:34:56", "hostname": "sma3009876543"}]`. An empty list `[]` disables discovery.
 
 - **Hardware**
 
@@ -318,3 +437,9 @@ Service endpoints must return an array of strings (e.g., `["value1", "value2"]`)
 ## `render`
 
 `render` contains the internal device configuration. All `param` `name` values can be used as a template variable, e.g. `{{ .host }}` for a param named `host`. The content is a go template, so all of go template feature can be used, e.g. `{{- if ... }}` statements, etc.
+
+`render` is evaluated once when the device is configured. Plugin fields like the HTTP `uri` and `body` are go templates themselves and are evaluated on every request (sprig functions plus `addDate` and `timeRound`). Time-dependent expressions must be deferred to request time by wrapping them in a raw string, otherwise `now` freezes at config time:
+
+```yaml
+uri: https://example.org/forecast?from={{ `{{ now | date "2006-01-02" }}` }}&to={{ `{{ addDate now 0 0 5 | date "2006-01-02" }}` }}
+```

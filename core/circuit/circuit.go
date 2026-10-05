@@ -75,10 +75,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		if err != nil {
 			return nil, err
 		}
+		// disabled meter has no instance, circuit falls back to loadpoint sum
 		meter = dev.Instance()
-		if meter == nil {
-			return nil, errors.New("missing meter instance")
-		}
 	}
 
 	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("circuit"))
@@ -214,11 +212,16 @@ func (c *Circuit) effectiveMaxPower() float64 {
 	}
 
 	hemsLimit := c.hems.MaxConsumptionPower()
-	if hemsLimit <= 0 {
+	if hemsLimit == nil || *hemsLimit <= 0 {
 		return maxPower
 	}
 
-	return min(hemsLimit, maxPower)
+	// unconfigured maxPower means unlimited, so the HEMS limit applies alone
+	if maxPower <= 0 {
+		return *hemsLimit
+	}
+
+	return min(*hemsLimit, maxPower)
 }
 
 // SetMaxPower sets the max power

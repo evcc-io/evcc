@@ -41,7 +41,7 @@ func NewAPI(log *util.Logger, domain, namespace, deviceToken string) *API {
 		RefreshToken: deviceToken,
 	}
 
-	ts := oauth.RefreshTokenSource(token, api.refreshToken)
+	ts := oauth.RefreshTokenSource(log, token, api.refreshToken)
 
 	// Install oauth2.Transport for Bearer token, plus a decorator for the
 	// namespace header required by all API endpoints.

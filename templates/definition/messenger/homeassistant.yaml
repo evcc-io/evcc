@@ -3,7 +3,7 @@ products:
   - brand: Home Assistant
 auth:
   type: homeassistant
-  params: [uri]
+  params: [uri, insecure]
 params:
   - name: uri
     required: true
@@ -27,7 +27,8 @@ params:
       en: >
         Home Assistant notify service in the form `domain.service` (e.g. `notify.mobile_app_android`).
         Leave empty to create a persistent notification in the HA UI.
-    service: homeassistant/services?uri={uri}&domain=notify
+    service: homeassistant/services?uri={uri}&insecure={insecure}&domain=notify
+  - name: insecure
   - name: critical
     type: bool
     default: false
@@ -56,6 +57,7 @@ params:
 render: |
   type: homeassistant
   uri: {{ .uri }}
+  insecure: {{ .insecure }}
   {{- if .notify }}
   notify: {{ .notify }}
   {{- end }}

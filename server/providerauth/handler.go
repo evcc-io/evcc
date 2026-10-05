@@ -17,10 +17,14 @@ type errorResponse struct {
 	Error string `json:"error"`
 }
 
+// loginResponse is one of three shapes: a redirect url, a device code, or a
+// challenge answered in the ui. Authenticated is set when no user input is needed.
 type loginResponse struct {
-	LoginUri string     `json:"loginUri"`
-	Code     string     `json:"code,omitempty"`
-	Expiry   *time.Time `json:"expiry,omitempty"`
+	LoginUri      string             `json:"loginUri,omitempty"`
+	Code          string             `json:"code,omitempty"`
+	Expiry        *time.Time         `json:"expiry,omitempty"`
+	Challenge     *api.AuthChallenge `json:"challenge,omitempty"`
+	Authenticated bool               `json:"authenticated,omitempty"`
 }
 
 // jsonWrite writes a JSON response
@@ -44,8 +48,13 @@ type Handler struct {
 	log       *util.Logger
 	secret    []byte
 	providers map[string]api.AuthProvider
-	states    map[string]string
+	states    map[string]stateEntry
 	updateC   chan string
+}
+
+type stateEntry struct {
+	id       string
+	returnTo string // config modal query to restore on callback
 }
 
 // TODO get status from update channel
@@ -86,18 +95,26 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	a.log.DEBUG.Printf("login request for: %s", id)
 
 	a.mu.Lock()
-	defer a.mu.Unlock()
-
 	provider, ok := a.providers[id]
 	if !ok {
+		a.mu.Unlock()
 		jsonError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
+	// server-side login needs no redirect state. runs outside the lock: it does network i/o
+	if c, ok := provider.(api.AuthChallenger); ok {
+		a.mu.Unlock()
+		challenge, err := c.StartChallenge()
+		a.challengeResponse(w, id, challenge, err)
+		return
+	}
+	defer a.mu.Unlock()
+
 	// Generate a new state and store the provider
 	state := NewState()
 	encryptedState := state.Encrypt(a.secret)
-	a.states[encryptedState] = id
+	a.states[encryptedState] = stateEntry{id: id, returnTo: r.URL.Query().Get("return")}
 
 	// Schedule cleanup for stale state entries after state becomes invalid
 	time.AfterFunc(stateValidity, func() {
@@ -127,6 +144,42 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonWrite(w, res)
+}
+
+// challengeResponse writes the outcome of a challenge step
+func (a *Handler) challengeResponse(w http.ResponseWriter, id string, challenge *api.AuthChallenge, err error) {
+	if err != nil {
+		a.log.DEBUG.Printf("login for provider %s failed: %v", id, err)
+		jsonError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	jsonWrite(w, loginResponse{Challenge: challenge, Authenticated: challenge == nil})
+}
+
+func (a *Handler) handleSubmit(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	a.log.DEBUG.Printf("submit request for: %s", id)
+
+	var req struct {
+		Answer string `json:"answer"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonError(w, http.StatusBadRequest, "invalid request")
+		return
+	}
+
+	a.mu.Lock()
+	provider, ok := a.providers[id].(api.AuthChallenger)
+	a.mu.Unlock()
+
+	if !ok {
+		jsonError(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	challenge, err := provider.SubmitChallenge(req.Answer)
+	a.challengeResponse(w, id, challenge, err)
 }
 
 func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
@@ -176,11 +229,12 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 	defer a.mu.Unlock()
 
 	// Find the corresponding provider
-	id, ok := a.states[encryptedState]
+	entry, ok := a.states[encryptedState]
 	if !ok {
 		a.redirectToError(w, r, "no provider found for state")
 		return
 	}
+	id := entry.id
 
 	provider, ok := a.providers[id]
 	if !ok {
@@ -198,5 +252,11 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/#/config?callbackCompleted="+url.QueryEscape(id), http.StatusFound)
+	// restore the config modal stack alongside the completion marker
+	query := "callbackCompleted=" + url.QueryEscape(id)
+	if entry.returnTo != "" {
+		query = entry.returnTo + "&" + query
+	}
+
+	http.Redirect(w, r, "/#/config?"+query, http.StatusFound)
 }

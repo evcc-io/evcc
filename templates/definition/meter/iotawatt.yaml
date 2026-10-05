@@ -46,7 +46,6 @@ params:
       de: "Serienname für Phase L3. Für einphasig leer lassen."
   - name: cache
     default: 2s
-    advanced: true
 render: |
   type: custom
   {{- if and .seriesL2 .seriesL3 }}

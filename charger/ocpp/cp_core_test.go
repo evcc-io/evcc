@@ -14,7 +14,7 @@ import (
 
 func TestBootNotificationStoresResultAndConnects(t *testing.T) {
 	log := util.NewLogger("test")
-	cp := NewChargePoint(log, "test-cp")
+	cp := NewChargePoint(log, instance, "test-cp")
 
 	assert.False(t, cp.Connected(), "should not be connected initially")
 	assert.Nil(t, cp.BootNotificationResult, "should have no boot result initially")
@@ -27,6 +27,9 @@ func TestBootNotificationStoresResultAndConnects(t *testing.T) {
 	res, err := cp.OnBootNotification(bootReq)
 	require.NoError(t, err)
 	assert.Equal(t, core.RegistrationStatusAccepted, res.Status)
+
+	// heartbeat must stay below the websocket inactivity timeout
+	assert.Less(t, time.Duration(res.Interval)*time.Second, pingWait)
 
 	// should be connected after BootNotification
 	assert.True(t, cp.Connected(), "should be connected after BootNotification")
@@ -43,7 +46,7 @@ func TestBootNotificationStoresResultAndConnects(t *testing.T) {
 
 func TestBootNotificationStopsTimer(t *testing.T) {
 	log := util.NewLogger("test")
-	cp := NewChargePoint(log, "test-cp")
+	cp := NewChargePoint(log, instance, "test-cp")
 
 	// simulate WebSocket connect (starts timer)
 	cp.onTransportConnect()
@@ -73,7 +76,7 @@ func TestBootNotificationStopsTimer(t *testing.T) {
 
 func TestTransportConnectTimeoutFallback(t *testing.T) {
 	log := util.NewLogger("test")
-	cp := NewChargePoint(log, "test-cp")
+	cp := NewChargePoint(log, instance, "test-cp")
 
 	// use a short timeout for testing
 	origTimeout := Timeout
@@ -99,7 +102,7 @@ func TestTransportConnectTimeoutFallback(t *testing.T) {
 
 func TestDisconnectCancelsTimer(t *testing.T) {
 	log := util.NewLogger("test")
-	cp := NewChargePoint(log, "test-cp")
+	cp := NewChargePoint(log, instance, "test-cp")
 
 	// use a short timeout for testing
 	origTimeout := Timeout
@@ -126,7 +129,7 @@ func TestDisconnectCancelsTimer(t *testing.T) {
 
 func TestBootNotificationChannelCoalesces(t *testing.T) {
 	log := util.NewLogger("test")
-	cp := NewChargePoint(log, "test-cp")
+	cp := NewChargePoint(log, instance, "test-cp")
 
 	// pre-fill the channel (buffer size 1) with a stale notification
 	cp.bootNotificationRequestC <- &core.BootNotificationRequest{
@@ -165,7 +168,7 @@ func TestBootNotificationChannelCoalesces(t *testing.T) {
 // notification so a later Setup re-runs against the charge point's real state.
 func TestBootNotificationRebootLoopKeepsLatest(t *testing.T) {
 	log := util.NewLogger("test")
-	cp := NewChargePoint(log, "test-cp")
+	cp := NewChargePoint(log, instance, "test-cp")
 
 	for i := range 5 {
 		_, err := cp.OnBootNotification(&core.BootNotificationRequest{
@@ -188,7 +191,7 @@ func TestBootNotificationRebootLoopKeepsLatest(t *testing.T) {
 
 func TestReconnectAfterReboot(t *testing.T) {
 	log := util.NewLogger("test")
-	cp := NewChargePoint(log, "test-cp")
+	cp := NewChargePoint(log, instance, "test-cp")
 
 	// simulate initial connection
 	cp.connect(true)
@@ -220,7 +223,7 @@ func TestReconnectAfterReboot(t *testing.T) {
 
 func TestMonitorRebootOnlyOnce(t *testing.T) {
 	log := util.NewLogger("test")
-	cp := NewChargePoint(log, "test-cp")
+	cp := NewChargePoint(log, instance, "test-cp")
 
 	ctx := t.Context()
 	var callCount atomic.Int32

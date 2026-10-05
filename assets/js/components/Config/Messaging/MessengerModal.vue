@@ -10,6 +10,7 @@
 		@added="$emit('changed', $event)"
 		@updated="$emit('changed')"
 		@removed="$emit('changed')"
+		@disable="$emit('disable', $event)"
 	></DeviceModalBase>
 </template>
 
@@ -32,7 +33,7 @@ export default defineComponent({
 	components: {
 		DeviceModalBase,
 	},
-	emits: ["changed"],
+	emits: ["changed", "disable"],
 	data() {
 		return {
 			initialValues,
@@ -58,12 +59,11 @@ export default defineComponent({
 				},
 				{
 					label: "primary",
-					options: [...products.filter((p: Product) => p.group !== "generic")],
+					options: products.filter((p: Product) => p.group !== "generic"),
 				},
 			];
 		},
-		handleTemplateChange(e: Event, values: DeviceValues) {
-			const value = (e.target as HTMLSelectElement).value;
+		handleTemplateChange(value: string, values: DeviceValues) {
 			if (value === ConfigType.Custom) {
 				values.type = ConfigType.Custom;
 				values.yaml = defaultMessengerYaml;

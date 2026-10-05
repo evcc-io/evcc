@@ -237,11 +237,6 @@ var _ api.Meter = (*Plugchoice)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Plugchoice) CurrentPower() (float64, error) {
-	// Should be zero if not enabled
-	if !c.enabled {
-		return 0, nil
-	}
-
 	res, err := c.powerG.Get()
 	if err != nil {
 		return 0, err

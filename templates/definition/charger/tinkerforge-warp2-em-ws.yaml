@@ -1,7 +1,10 @@
 template: tinkerforge-warp2-em-ws
 products:
-  - { brand: TinkerForge, description: { generic: WARP2 Smart + Energy Manager } }
-  - { brand: TinkerForge, description: { generic: WARP2 Pro + Energy Manager } }
+  - brand: TinkerForge
+    description: { generic: WARP2 Smart + Energy Manager }
+  - brand: TinkerForge
+    description: { generic: WARP2 Pro + Energy Manager }
+    capabilities: ["meter"]
 capabilities: ["mA", "rfid", "1p3p", "dim"]
 requirements:
   description:

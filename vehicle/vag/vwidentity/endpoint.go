@@ -9,15 +9,14 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+	"uuid"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/urlvalues"
 	"github.com/evcc-io/evcc/vehicle/vag"
-	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
 )
@@ -42,7 +41,7 @@ func LoginWithAuthURL(log *util.Logger, uri string, q url.Values, user, password
 	var verify func(url.Values)
 
 	// add code challenge
-	q = urlvalues.Copy(q)
+	q = q.Clone()
 	if rt := q.Get("response_type"); strings.Contains(rt, "code") {
 		verify = vag.ChallengeAndVerifier(q)
 	}
@@ -92,7 +91,7 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 	// add nonce and state
 	query := url.Values{
 		"nonce": {lo.RandomString(43, lo.LettersCharset)},
-		"state": {uuid.NewString()},
+		"state": {uuid.New().String()},
 	}
 
 	uri = uri + "&" + query.Encode()
@@ -194,11 +193,11 @@ func (v *Service) loginLegacy(vars FormVars, user, password string) (url.Values,
 	return parseAuthLocation(parsed)
 }
 
-// marketingConsentCallback returns the OIDC callback url embedded in an
+// MarketingConsentCallback returns the OIDC callback url embedded in an
 // optional VW/Audi marketing consent page. VW periodically interjects this
 // page (path .../consent/marketing/...) after an otherwise successful login.
 // It returns a nil url if u is not a marketing consent page.
-func marketingConsentCallback(u *url.URL) (*url.URL, error) {
+func MarketingConsentCallback(u *url.URL) (*url.URL, error) {
 	if u == nil || !strings.Contains(u.Path, "/consent/marketing/") {
 		return nil, nil
 	}
@@ -227,7 +226,7 @@ func (v *Service) skipMarketingConsent(resp *http.Response) (*url.URL, bool, err
 		return nil, false, nil
 	}
 
-	cb, err := marketingConsentCallback(resp.Request.URL)
+	cb, err := MarketingConsentCallback(resp.Request.URL)
 	if err != nil {
 		return nil, true, err
 	}

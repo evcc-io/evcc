@@ -10,17 +10,17 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
-	octoDeGql "github.com/evcc-io/evcc/tariff/octopusde/graphql"
+	krakengql "github.com/evcc-io/evcc/tariff/octopuskraken/graphql"
 	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/now"
 )
 
 // ErrAuthFailed re-exports the GraphQL auth-failure sentinel for use in tests.
-var ErrAuthFailed = octoDeGql.ErrAuthFailed
+var ErrAuthFailed = krakengql.ErrAuthFailed
 
 type OctopusDe struct {
 	log       *util.Logger
-	gqlClient *octoDeGql.OctopusDeGraphQLClient
+	gqlClient *krakengql.Client
 	data      *util.Monitor[api.Rates]
 }
 
@@ -73,7 +73,7 @@ func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 	log := util.NewLogger("octopus-de")
 
 	// Create GraphQL client
-	gqlClient, err := octoDeGql.NewClient(log, cc.Email, cc.Password, cc.AccountNumber)
+	gqlClient, err := krakengql.NewClient(log, krakengql.BaseURI, cc.Email, cc.Password, cc.AccountNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (t *OctopusDe) run(done chan error) {
 		if err := backoff.Retry(func() error {
 			agr, err := t.gqlClient.ActiveAgreement()
 			if err != nil {
-				if errors.Is(err, octoDeGql.ErrAuthFailed) {
+				if errors.Is(err, krakengql.ErrAuthFailed) {
 					return backoff.Permanent(err)
 				}
 				return backoffPermanentError(err)
@@ -157,7 +157,7 @@ type RatePeriod struct {
 // ratesForAgreement determines the tariff type of agr and returns the corresponding
 // rate periods. It supports Dynamic, Simple, and Time-of-Use tariffs.
 // now is used as the reference time for horizon computation and ToU rate generation.
-func ratesForAgreement(agr octoDeGql.Agreement, now time.Time) ([]RatePeriod, error) {
+func ratesForAgreement(agr krakengql.Agreement, now time.Time) ([]RatePeriod, error) {
 	horizon, err := computeHorizon(now, agr, planDays)
 	if err != nil {
 		return nil, err
@@ -188,7 +188,7 @@ func ratesForAgreement(agr octoDeGql.Agreement, now time.Time) ([]RatePeriod, er
 }
 
 // extractForecastRates converts dynamic-tariff UnitRateForecast entries into RatePeriod values.
-func extractForecastRates(forecasts []octoDeGql.UnitRateForecast, horizon planningHorizon) ([]RatePeriod, error) {
+func extractForecastRates(forecasts []krakengql.UnitRateForecast, horizon planningHorizon) ([]RatePeriod, error) {
 	var rates []RatePeriod
 	for _, forecast := range forecasts {
 		info := forecast.UnitRateInformation
@@ -229,7 +229,7 @@ func extractForecastRates(forecasts []octoDeGql.UnitRateForecast, horizon planni
 
 // simpleRates converts a SimpleProductUnitRateInformation into a single RatePeriod
 // ending at horizon, the pre-computed planning horizon.
-func simpleRates(info octoDeGql.SimpleProductUnitRateInformation, horizon planningHorizon) ([]RatePeriod, error) {
+func simpleRates(info krakengql.SimpleProductUnitRateInformation, horizon planningHorizon) ([]RatePeriod, error) {
 	netRate, err := parseFloat(info.NetUnitRateCentsPerKwh)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse net unit rate: %w", err)
@@ -247,7 +247,7 @@ func simpleRates(info octoDeGql.SimpleProductUnitRateInformation, horizon planni
 }
 
 // computeHorizon returns the planning window, capped by the validity of the agreement.
-func computeHorizon(now time.Time, agreement octoDeGql.Agreement, planDays int) (planningHorizon, error) {
+func computeHorizon(now time.Time, agreement krakengql.Agreement, planDays int) (planningHorizon, error) {
 	start := now
 	end := now.AddDate(0, 0, planDays)
 
@@ -289,7 +289,7 @@ func computePeriod(day time.Time, fromOffset, toOffset time.Duration) (time.Time
 
 // ratePeriodsForDay expands one TouRate slot for a single day into RatePeriods,
 // filtered to the window [now, horizon].
-func ratePeriodsForDay(day time.Time, horizon planningHorizon, r octoDeGql.TouRate) ([]RatePeriod, error) {
+func ratePeriodsForDay(day time.Time, horizon planningHorizon, r krakengql.TouRate) ([]RatePeriod, error) {
 	grossRate, err := parseFloat(r.LatestGrossUnitRateCentsPerKwh)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse gross unit rate for slot %q: %w", r.TimeslotName, err)
@@ -328,7 +328,7 @@ func ratePeriodsForDay(day time.Time, horizon planningHorizon, r octoDeGql.TouRa
 // generateTouRates produces rate periods for a Time of Use tariff
 // by repeating each timeslot's activation window for each day in the planning horizon.
 // now is the reference time for filtering past periods; horizon is the pre-computed end of the window.
-func generateTouRates(rates []octoDeGql.TouRate, horizon planningHorizon) ([]RatePeriod, error) {
+func generateTouRates(rates []krakengql.TouRate, horizon planningHorizon) ([]RatePeriod, error) {
 	startDay := now.With(horizon.start).BeginningOfDay()
 
 	var result []RatePeriod

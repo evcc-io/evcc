@@ -68,12 +68,12 @@ func NewAblEm4FromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	return NewAblEm4(ctx, cc.URI, cc.ID, cc.Connector)
+	return NewAblEm4(ctx, cc.TcpSettings, cc.Connector)
 }
 
 // NewAblEm4 creates an ABL eM4 charger
-func NewAblEm4(ctx context.Context, uri string, id uint8, connector uint16) (*AblEm4, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewAblEm4(ctx context.Context, settings modbus.TcpSettings, connector uint16) (*AblEm4, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

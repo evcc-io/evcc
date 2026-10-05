@@ -30,8 +30,14 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.T
 	}
 
 	// check slot length
-	if rr, err := v.Rates(); err == nil && len(rr) > 0 && rr[0].End.Sub(rr[0].Start) == SlotDuration {
-		return v, nil
+	if rr, err := v.Rates(); err == nil && len(rr) > 0 {
+		if r, ok := shortSlot(rr); ok {
+			return nil, fmt.Errorf("tariff type '%s': slot duration %v shorter than %v", util.TypeWithTemplateName(typ, other), r.End.Sub(r.Start), SlotDuration)
+		}
+
+		if rr[0].End.Sub(rr[0].Start) == SlotDuration {
+			return v, nil
+		}
 	}
 
 	return &SlotWrapper{Tariff: v}, nil

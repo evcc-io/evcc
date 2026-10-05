@@ -18,25 +18,35 @@
 				/>
 			</Item>
 
+			<Item v-if="experimental" to="/energy" :label="$t('tabBar.energy')">
+				<SankeyIcon class="tab-icon" />
+			</Item>
+
 			<Item to="/forecast" :label="$t('tabBar.forecast')">
 				<ForecastGraphIcon class="tab-icon" />
 			</Item>
 
-			<Item to="/sessions" :label="$t('tabBar.sessions')">
+			<!-- six tabs do not fit a phone, sessions moves into the more menu there -->
+			<Item
+				to="/sessions"
+				:label="$t('tabBar.sessions')"
+				:class="{ 'd-none d-sm-flex': experimental }"
+			>
 				<SessionsIcon class="tab-icon" />
 			</Item>
 
 			<MoreItem
 				:active="moreActive"
+				:vehicles="vehicles"
 				:auth-providers="authProviders"
 				:sponsor="sponsor"
 				:fatal="fatal"
 				:experimental="experimental"
 				:auth-disabled="authDisabled"
-				:evopt="evopt"
+				:optimizer="optimizer"
 				:installed="installed"
-				:commit="commit"
 				:available-version="availableVersion"
+				:custom-brand="customBrand"
 			/>
 		</div>
 	</nav>
@@ -46,11 +56,12 @@
 import "@h2d2/shopicons/es/regular/lightning";
 import ForecastGraphIcon from "../MaterialIcon/ForecastGraph.vue";
 import SessionsIcon from "../MaterialIcon/Sessions.vue";
+import SankeyIcon from "../MaterialIcon/Sankey.vue";
 import BatteryIcon from "../Energyflow/BatteryIcon.vue";
 import Item from "./Item.vue";
 import MoreItem from "./MoreItem.vue";
 import { defineComponent, type PropType } from "vue";
-import type { FatalError, Forecast, Sponsor, EvOpt, AuthProviders, Battery } from "@/types/evcc";
+import type { FatalError, Sponsor, AuthProviders, Battery, Vehicle } from "@/types/evcc";
 
 export default defineComponent({
 	name: "BottomTabBar",
@@ -58,6 +69,7 @@ export default defineComponent({
 		BatteryIcon,
 		ForecastGraphIcon,
 		SessionsIcon,
+		SankeyIcon,
 		Item,
 		MoreItem,
 	},
@@ -65,7 +77,7 @@ export default defineComponent({
 		battery: { type: Object as PropType<Battery> },
 		batteryGridChargeActive: Boolean,
 		batteryMode: { type: String as PropType<string> },
-		forecast: { type: Object as PropType<Forecast> },
+		vehicles: { type: Object as PropType<Record<string, Vehicle>>, default: () => ({}) },
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
@@ -73,10 +85,10 @@ export default defineComponent({
 		authDisabled: Boolean,
 		offline: Boolean,
 		startupCompleted: Boolean,
-		evopt: { type: Object as PropType<EvOpt>, required: false },
+		optimizer: Boolean,
 		installed: String,
-		commit: String,
 		availableVersion: String,
+		customBrand: String,
 	},
 	computed: {
 		hidden() {
@@ -92,7 +104,7 @@ export default defineComponent({
 			return (this.battery?.devices?.length ?? 0) > 0;
 		},
 		moreActive() {
-			const mainTabs = ["/", "/battery", "/forecast", "/sessions"];
+			const mainTabs = ["/", "/energy", "/battery", "/forecast", "/sessions"];
 			return !mainTabs.includes(this.$route.path);
 		},
 	},

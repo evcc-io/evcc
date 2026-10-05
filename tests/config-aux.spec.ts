@@ -20,10 +20,11 @@ test.describe("aux meter", async () => {
     await expect(page.getByTestId("aux")).toHaveCount(0);
 
     // create
-    await page.getByRole("button", { name: "Add additional meter" }).click();
+    await page.getByRole("button", { name: "Add consumer" }).click();
 
     const meterModal = page.getByTestId("meter-modal");
-    await meterModal.getByRole("button", { name: "Add self-regulating consumer" }).click();
+    await expectModalVisible(meterModal);
+    await meterModal.getByRole("button", { name: "Self-regulating consumer" }).click();
     await meterModal.getByLabel("Title").fill("Water heater");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
     await meterModal.getByLabel("Power").fill("1200");
@@ -61,14 +62,13 @@ test.describe("aux meter", async () => {
   test("user-defined meter", async ({ page }) => {
     await page.goto("/#/config");
 
-    await page.getByRole("button", { name: "Add additional meter" }).click();
+    await page.getByRole("button", { name: "Add consumer" }).click();
     const modal = page.getByTestId("meter-modal");
     await expectModalVisible(modal);
-    await modal.getByRole("button", { name: "Add self-regulating consumer" }).click();
+    await modal.getByRole("button", { name: "Self-regulating consumer" }).click();
 
     await modal.getByLabel("Title").fill("Large heater");
     await modal.getByLabel("Manufacturer").selectOption("User-defined device");
-    await page.waitForLoadState("networkidle");
     const editor = modal.getByTestId("yaml-editor");
     await expect(editor).toContainText("power: # current power");
 
@@ -89,7 +89,7 @@ energy:
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: successful");
     await expect(restResult).toContainText(["Power", "3.0 kW"].join(""));
-    await expect(restResult).toContainText(["Energy", "42.0 kWh"].join(""));
+    await expect(restResult).toContainText(["Consumed", "42.0 kWh"].join(""));
 
     // create
     await modal.getByRole("button", { name: "Save" }).click();
@@ -107,7 +107,6 @@ energy:
     await page.getByTestId("aux").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(modal);
     await expect(modal.getByLabel("Manufacturer")).toHaveValue("User-defined device");
-    await page.waitForLoadState("networkidle");
     await expect(editor).toContainText("value: 3000 # W");
     await expect(editor).toContainText("value: 42.0 # kWh");
 
@@ -127,8 +126,8 @@ energy:
     await expect(restResult).toContainText("Status: unknown");
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: successful");
-    await expect(restResult).toContainText(["Power", "0.3 kW"].join(""));
-    await expect(restResult).toContainText(["Energy", "4.2 kWh"].join(""));
+    await expect(restResult).toContainText(["Power", "300 W"].join(""));
+    await expect(restResult).toContainText(["Consumed", "4.2 kWh"].join(""));
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
     await expect(page.getByTestId("aux")).toHaveCount(1);
@@ -153,15 +152,14 @@ energy:
   test("user-defined meter with errors", async ({ page }) => {
     await page.goto("/#/config");
 
-    await page.getByRole("button", { name: "Add additional meter" }).click();
+    await page.getByRole("button", { name: "Add consumer" }).click();
 
     const modal = page.getByTestId("meter-modal");
     await expectModalVisible(modal);
-    await modal.getByRole("button", { name: "Add self-regulating consumer" }).click();
+    await modal.getByRole("button", { name: "Self-regulating consumer" }).click();
 
     await modal.getByLabel("Title").fill("Large heater");
     await modal.getByLabel("Manufacturer").selectOption("User-defined device");
-    await page.waitForLoadState("networkidle");
     const editor = modal.getByTestId("yaml-editor");
 
     // yaml syntax error

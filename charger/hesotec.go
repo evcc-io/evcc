@@ -69,12 +69,12 @@ func NewHesotecFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, err
 	}
 
-	return NewHesotec(ctx, cc.URI, cc.ID)
+	return NewHesotec(ctx, cc)
 }
 
 // NewHesotec creates Hesotec charger
-func NewHesotec(ctx context.Context, uri string, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewHesotec(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

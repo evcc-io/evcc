@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/evcc-io/evcc/util"
 	"golang.org/x/oauth2"
 )
 
@@ -13,7 +14,7 @@ type refreshTokenSource struct {
 	refresher func(token *oauth2.Token) (*oauth2.Token, error)
 }
 
-func RefreshTokenSource(token *oauth2.Token, refresher func(token *oauth2.Token) (*oauth2.Token, error)) oauth2.TokenSource {
+func RefreshTokenSource(log *util.Logger, token *oauth2.Token, refresher func(token *oauth2.Token) (*oauth2.Token, error)) oauth2.TokenSource {
 	if token == nil {
 		// allocate an (expired) token or mergeToken will fail
 		token = new(oauth2.Token)
@@ -24,7 +25,7 @@ func RefreshTokenSource(token *oauth2.Token, refresher func(token *oauth2.Token)
 		refresher: refresher,
 	}
 
-	return ts
+	return Redacted(log, ts)
 }
 
 func (ts *refreshTokenSource) Token() (*oauth2.Token, error) {

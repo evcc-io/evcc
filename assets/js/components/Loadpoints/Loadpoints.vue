@@ -36,9 +36,7 @@
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(loadpoint.id) }"
 					@click="goTo(loadpoint.id)"
-					@open-charging-plan-modal="
-						(openArrivalTab) => openChargingPlanModal(loadpoint.id, openArrivalTab)
-					"
+					@open-charging-plan-modal="openChargingPlanModal(loadpoint.id)"
 					@open-settings-modal="openSettingsModal(loadpoint.id)"
 				/>
 			</div>
@@ -93,6 +91,7 @@ import "@h2d2/shopicons/es/bold/circle";
 import "@h2d2/shopicons/es/filled/lightning";
 
 import Loadpoint from "./Loadpoint.vue";
+import Dropdown from "bootstrap/js/dist/dropdown";
 import { defineComponent, type PropType } from "vue";
 import type {
 	UiLoadpoint,
@@ -100,7 +99,7 @@ import type {
 	Timeout,
 	Vehicle,
 	BATTERY_MODE,
-	Forecast,
+	UiForecast,
 	CURRENCY,
 } from "@/types/evcc";
 import ChargingPlanModal from "../ChargingPlans/ChargingPlanModal.vue";
@@ -125,7 +124,7 @@ export default defineComponent({
 		batteryConfigured: Boolean,
 		batterySoc: Number,
 		batteryMode: String as PropType<BATTERY_MODE>,
-		forecast: Object as PropType<Forecast>,
+		forecast: Object as PropType<UiForecast>,
 	},
 	emits: ["id-changed"],
 	data() {
@@ -134,6 +133,7 @@ export default defineComponent({
 			scrollTimeout: null as Timeout,
 			highlightedIndex: 0,
 			viewportHeight: 0 as number,
+			resizeObserver: null as ResizeObserver | null,
 		};
 	},
 	computed: {
@@ -161,25 +161,51 @@ export default defineComponent({
 		this.updateViewport();
 		window.addEventListener("resize", this.updateViewport);
 
+		this.highlightedIndex = this.selectedIndex;
 		if (this.selectedIndex > 0) {
 			this.$refs["carousel"]?.scrollTo({ top: 0, left: this.left(this.selectedIndex) });
 		}
 		this.$refs["carousel"]?.addEventListener("scroll", this.handleCarouselScroll);
+
+		// re-snap after layout changes (rotation, late safe-area updates in the app)
+		if (this.$refs["carousel"]) {
+			this.resizeObserver = new ResizeObserver(() => {
+				this.$refs["carousel"]?.scrollTo({
+					top: 0,
+					left: this.left(this.highlightedIndex),
+				});
+			});
+			this.resizeObserver.observe(this.$refs["carousel"]);
+		}
 	},
 	unmounted() {
 		window.removeEventListener("resize", this.updateViewport);
 		this.$refs["carousel"]?.removeEventListener("scroll", this.handleCarouselScroll);
+		this.resizeObserver?.disconnect();
 	},
 	methods: {
 		indexById(id: string | undefined) {
-			return this.loadpoints.findIndex((lp) => lp.id === id) || 0;
+			const index = this.loadpoints.findIndex((lp) => lp.id === id);
+			return index === -1 ? 0 : index;
 		},
 		idByIndex(index: number) {
 			return this.loadpoints[index]?.id;
 		},
 		handleCarouselScroll() {
-			const { scrollLeft } = this.$refs["carousel"] as HTMLElement;
-			const { offsetWidth } = this.$refs["carousel"]?.children[0] as HTMLElement;
+			const carousel = this.$refs["carousel"] as HTMLElement | undefined;
+			if (!carousel || !carousel.children.length) {
+				return;
+			}
+
+			// swiping doesn't fire a click, so bootstrap's own outside-click auto-close
+			// never triggers and an open "always charge" popover would stay put
+			const openToggle = carousel.querySelector('[data-bs-toggle="dropdown"].show');
+			if (openToggle) {
+				Dropdown.getInstance(openToggle)?.hide();
+			}
+
+			const { scrollLeft } = carousel;
+			const { offsetWidth } = carousel.children[0] as HTMLElement;
 			this.highlightedIndex = Math.round((scrollLeft - 7.5) / offsetWidth);
 
 			// save scroll position to url if not changing for 2s
@@ -205,7 +231,11 @@ export default defineComponent({
 			this.viewportHeight = window.innerHeight;
 		},
 		left(index: number) {
-			return (this.$refs["carousel"]?.children[0] as HTMLElement).offsetWidth * index;
+			const carousel = this.$refs["carousel"] as HTMLElement | undefined;
+			if (!carousel || !carousel.children.length) {
+				return 0;
+			}
+			return (carousel.children[0] as HTMLElement).offsetWidth * index;
 		},
 		scrollTo(index: number) {
 			this.highlightedIndex = index;
@@ -224,17 +254,10 @@ export default defineComponent({
 				}
 			}, 1000);
 		},
-		openChargingPlanModal(loadpointId: string, openArrivalTab = false) {
+		openChargingPlanModal(loadpointId: string) {
 			const modal = this.$refs["chargingPlanModal"] as
 				| InstanceType<typeof ChargingPlanModal>
 				| undefined;
-
-			if (openArrivalTab) {
-				modal?.showArrivalTab();
-			} else {
-				modal?.showDepartureTab();
-			}
-
 			modal?.open(loadpointId);
 		},
 		openSettingsModal(loadpointId: string) {

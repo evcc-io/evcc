@@ -19,6 +19,8 @@ params:
   - name: usage
     choice: ["grid", "pv", "aux"]
   - name: host
+  - name: cache
+    default: 1s
 render: |
   {{- define "uri" -}}
   http://{{ .host }}/all
@@ -27,51 +29,64 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: http
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .power_io
   energy:
     source: http
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .energy_in
     scale: 0.001  
   voltages:
   - source: http
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .voltages[0]
   - source: http
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .voltages[1]
   - source: http
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .voltages[2]
   currents:
   - source: http
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .currents[0]
   - source: http
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .currents[1]
   - source: http
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .currents[2]
   powers:
   - source: http
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .powers[0]
   - source: http
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .powers[1]
   - source: http
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .powers[2]
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: http
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .PvPower[0]
   energy:
     source: http
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .PvEnergy[0]
     scale: 0.001
@@ -79,10 +94,12 @@ render: |
   {{- if eq .usage "aux" }}
   power:
     source: http
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .power_sf
   energy:
     source: http
+    cache: {{ .cache }}
     uri: {{ include "uri" . }}
     jq: .day_energy_sf
     scale: 0.001

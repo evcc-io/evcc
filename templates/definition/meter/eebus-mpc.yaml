@@ -15,5 +15,6 @@ params:
     choice: ["charge"]
   - preset: eebus
 render: |
+  type: eebus
   {{ include "eebus" . }}
   usage: {{ .usage }}

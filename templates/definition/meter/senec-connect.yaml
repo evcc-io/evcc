@@ -1,0 +1,81 @@
+template: senec-connect
+products:
+  - brand: SENEC
+    description:
+      generic: .Connect (Cloud)
+  - brand: SENEC
+    description:
+      generic: .Home P4
+  - brand: SENEC
+    description:
+      generic: .Home E4
+requirements:
+  description:
+    de: >-
+      Cloud-Anbindung über die SENEC.Connect-API. Ein Subscription Key aus dem SENEC
+      Developer Portal wird benötigt. Der Zugriff ist read-only, eine Batteriesteuerung ist darüber
+      nicht möglich.
+    en: >-
+      Cloud connection via the SENEC.Connect API. A subscription key from the SENEC
+      developer portal is required. Access is read-only, battery control is not possible.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: token
+    required: true
+    description:
+      de: Subscription Key
+      en: Subscription key
+    help:
+      de: Abonnement-Schlüssel aus dem SENEC Developer Portal (wird als Header `Ocp-Apim-Subscription-Key` gesendet).
+      en: Subscription key from the SENEC developer portal (sent as header `Ocp-Apim-Subscription-Key`).
+    type: string
+  - name: serial
+    advanced: true
+    help:
+      de: Nur erforderlich, wenn mehrere Systeme im Account registriert sind. Seriennummer (z.B. `v4-00014176`) oder System-ID (z.B. `P4H1-01GU14324-0105-FD`).
+      en: Only required if multiple systems are registered in the account. Serial number (e.g. `v4-00014176`) or system ID (e.g. `P4H1-01GU14324-0105-FD`).
+  - name: maxacpower
+  - preset: battery-minmaxsoc
+render: |
+  {{ define "senec-connect-plugin" }}
+  source: http
+  uri: https://apim-eds-gwc-prod.azure-api.net/senec-connect/v1/systems/device-data/general
+  headers:
+  - accept: application/json
+  - Ocp-Apim-Subscription-Key: {{ .token }}
+  cache: 1s
+  {{- end }}
+  {{ define "senec-connect-system" }}.[]{{ if .serial }} | select(.bessNameplate.serial_number == {{ toJson .serial }} or .bessNameplate.system_id == {{ toJson .serial }}){{ end }}{{ end }}
+  type: custom
+  power:
+    {{- include "senec-connect-plugin" . | indent 2 }}
+  {{- if eq .usage "grid" }}
+    jq: {{ include "senec-connect-system" . }} | .meter.grid_power # + from grid, - to grid
+  {{- end }}
+  {{- if eq .usage "pv" }}
+    jq: {{ include "senec-connect-system" . }} | .meter.production
+  {{- end }}
+  {{- if eq .usage "battery" }}
+    jq: {{ include "senec-connect-system" . }} | .battery.power # + charge, - discharge
+    scale: -1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  maxacpower: {{ .maxacpower }} # W
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  soc:
+    {{- include "senec-connect-plugin" . | indent 2 }}
+    jq: {{ include "senec-connect-system" . }} | .battery.state_of_charge
+  capacity: # nameplate rating
+    {{- include "senec-connect-plugin" . | indent 2 }}
+    jq: {{ include "senec-connect-system" . }} | .bessNameplate.design_capacity
+    scale: 0.001 # Wh -> kWh
+  maxchargepower: # nameplate rating
+    {{- include "senec-connect-plugin" . | indent 2 }}
+    jq: {{ include "senec-connect-system" . }} | .bessNameplate.active_charge_power
+  maxdischargepower: # nameplate rating
+    {{- include "senec-connect-plugin" . | indent 2 }}
+    jq: {{ include "senec-connect-system" . }} | .bessNameplate.active_discharge_power
+  {{- include "battery-minmaxsoc" . }}
+  {{- end }}

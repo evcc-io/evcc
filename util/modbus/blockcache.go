@@ -69,6 +69,15 @@ func (c *Cache) get(key string) ([]byte, bool) {
 	return e.payload, true
 }
 
+// Clear drops all cached entries. Callers use this after a write to force the
+// next read to fetch fresh values instead of serving a stale cached payload.
+func (c *Cache) Clear() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	clear(c.data)
+}
+
 // put inserts or overwrites a payload in the cache.
 func (c *Cache) put(key string, payload []byte) {
 	c.mu.Lock()

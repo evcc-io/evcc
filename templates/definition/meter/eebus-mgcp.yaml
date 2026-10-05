@@ -14,5 +14,6 @@ params:
     choice: ["grid"]
   - preset: eebus
 render: |
+  type: eebus
   {{ include "eebus" . }}
   usage: {{ .usage }}

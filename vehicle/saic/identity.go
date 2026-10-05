@@ -18,6 +18,7 @@ import (
 
 type Identity struct {
 	*request.Helper
+	log         *util.Logger
 	TokenSource oauth2.TokenSource
 	User        string
 	Password    string
@@ -29,6 +30,7 @@ type Identity struct {
 func NewIdentity(log *util.Logger, user, password, baseUrl string) *Identity {
 	v := &Identity{
 		Helper:   request.NewHelper(log),
+		log:      log,
 		User:     user,
 		Password: requests.Sha1(password),
 		baseUrl:  baseUrl,
@@ -56,7 +58,7 @@ func (v *Identity) Login() error {
 		return err
 	}
 
-	v.TokenSource = oauth2.ReuseTokenSourceWithExpiry(token, oauth.RefreshTokenSource(token, v.refreshToken), 15*time.Minute)
+	v.TokenSource = oauth2.ReuseTokenSourceWithExpiry(token, oauth.RefreshTokenSource(v.log, token, v.refreshToken), 15*time.Minute)
 
 	return nil
 }

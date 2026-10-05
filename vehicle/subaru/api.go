@@ -70,10 +70,6 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	return v
 }
 
-func (v *API) IDToken() string {
-	return v.identity.IDToken()
-}
-
 func (v *API) Vehicles() ([]string, error) {
 	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, VehicleGuidPath)
 

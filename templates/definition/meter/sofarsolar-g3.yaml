@@ -36,7 +36,6 @@ params:
       de: Gültige Werte sind 0 (Eigenbedarfsmodus), 1 (Nutzungszeitmodus), 2 (Zeitmodus), 4 (Peak-shaving Modus)
       en: Valid values are 0 (self use), 1 (time of use), 2 (timing mode), 4 (peak-shaving mode)
     default: 0 # self use
-    advanced: true
   - name: externalpower
     type: bool
     description:
@@ -144,7 +143,7 @@ render: |
           type: holding
           decode: uint16
         scale: 10
-      {{- if eq .externalpower "true" }}
+      {{- if .externalpower }}
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register: 

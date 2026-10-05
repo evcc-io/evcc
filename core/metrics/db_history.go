@@ -1,17 +1,16 @@
 package metrics
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"io"
 	"math"
+	"slices"
 	"sort"
-	"strconv"
 	"time"
 
-	"github.com/evcc-io/evcc/server/db"
-	csvutil "github.com/evcc-io/evcc/util/csv"
+	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/util/export"
+	"gorm.io/gorm"
 )
 
 // Slot represents an aggregated energy time slot
@@ -20,6 +19,12 @@ type Slot struct {
 	End          time.Time `json:"end"`
 	Energy       float64   `json:"energy"`
 	ReturnEnergy float64   `json:"returnEnergy"`
+	SocTemp      *float64  `json:"socTemp,omitempty"` // a single slot's value
+	// a price may not exist for every slot, priced energy is tracked separately to keep averages correct
+	Cost               *float64 `json:"cost,omitempty"`               // grid import, where a price exists
+	PricedEnergy       *float64 `json:"pricedEnergy,omitempty"`       // kWh with a price
+	ReturnCost         *float64 `json:"returnCost,omitempty"`         // grid export, where a price exists
+	PricedReturnEnergy *float64 `json:"pricedReturnEnergy,omitempty"` // kWh with a price
 }
 
 // roundEnergy rounds kWh to Wh precision and clamps negative noise to zero.
@@ -29,23 +34,42 @@ func roundEnergy(v float64) float64 {
 
 // Series represents an energy series for one title group or one entity group.
 type Series struct {
-	Title string `json:"title,omitempty"`
-	Group string `json:"group"`
-	Data  []Slot `json:"data"`
+	Title  string `json:"title,omitempty"`
+	Group  string `json:"group"`
+	IsTemp bool   `json:"isTemp,omitempty"` // socTemp values are temperature, not soc
+	Data   []Slot `json:"data"`
 }
 
-// SeriesCSV wraps a slice of Series for CSV export.
-type SeriesCSV []Series
+// SeriesExport wraps a slice of Series for tabular export.
+type SeriesExport []Series
 
 // GroupOrder is the canonical display order of metric groups, mirroring the
 // frontend GROUP_ORDER plus home/forecast.
-var GroupOrder = []string{PV, Battery, Grid, Loadpoint, Meter, Home, Forecast}
+var GroupOrder = []string{PV, Battery, Grid, Loadpoint, Consumer, Meter, Home, Forecast, Temperature}
 
 var aggregateFormats = map[string]string{
 	"15m":   "%Y-%m-%d %H:%M",
 	"hour":  "%Y-%m-%d %H:00",
 	"day":   "%Y-%m-%d",
 	"month": "%Y-%m",
+}
+
+// aggregateStarts aligns a bucket's first slot to the bucket boundary, so all
+// entities share the same bucket start
+var aggregateStarts = map[string]func(time.Time) time.Time{
+	"15m": func(t time.Time) time.Time { return t },
+	"hour": func(t time.Time) time.Time {
+		t = t.Local()
+		return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
+	},
+	"day": func(t time.Time) time.Time {
+		t = t.Local()
+		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	},
+	"month": func(t time.Time) time.Time {
+		t = t.Local()
+		return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location())
+	},
 }
 
 var aggregateDurations = map[string]func(time.Time) time.Time{
@@ -55,9 +79,58 @@ var aggregateDurations = map[string]func(time.Time) time.Time{
 	"month": func(t time.Time) time.Time { return t.AddDate(0, 1, 0) },
 }
 
+// EnergyFilter narrows QueryEnergy to matching entities. Empty fields are ignored.
+type EnergyFilter struct {
+	Group string
+	Name  string
+	Title string
+}
+
+// entityQuery returns a subquery selecting the ids of the matching entities,
+// nil for an empty filter.
+func entityQuery(f EnergyFilter) *gorm.DB {
+	if f.Group == "" && f.Name == "" && f.Title == "" {
+		return nil
+	}
+
+	tx := db.Instance.Model(new(entity)).Select("id")
+	if f.Group != "" {
+		tx = tx.Where(`"group" = ?`, f.Group)
+	}
+	if f.Name != "" {
+		tx = tx.Where("name = ?", f.Name)
+	}
+	if f.Title != "" {
+		tx = tx.Where("title = ?", f.Title)
+	}
+
+	return tx
+}
+
+// DeleteEnergy removes the slots in [from,to), narrowed to the matching
+// entities. Both bounds are required, a full wipe is /api/db/reset.
+func DeleteEnergy(from, to time.Time, filter ...EnergyFilter) (int64, error) {
+	if from.IsZero() || to.IsZero() {
+		return 0, errors.New("missing from/to")
+	}
+
+	tx := db.Instance.Where("ts >= ? AND ts < ?", from.Unix(), to.Unix())
+
+	if len(filter) > 0 {
+		if sub := entityQuery(filter[0]); sub != nil {
+			tx = tx.Where("meter IN (?)", sub)
+		}
+	}
+
+	res := tx.Delete(new(meter))
+
+	return res.RowsAffected, res.Error
+}
+
 // QueryEnergy returns aggregated energy data, per title or per group.
-func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, error) {
+func QueryEnergy(from, to time.Time, aggregate string, grouped bool, filter ...EnergyFilter) ([]Series, error) {
 	addDuration := aggregateDurations[aggregate]
+	bucketStart := aggregateStarts[aggregate]
 
 	format, ok := aggregateFormats[aggregate]
 	if !ok {
@@ -80,14 +153,29 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 		Start        SqlTime
 		Energy       float64
 		ReturnEnergy float64
+		SocTemp      *float64
+		IsTemp       bool
+
+		Cost, PricedEnergy, ReturnCost, PricedReturnEnergy *float64
+	}
+
+	// soc_temp only for a single slot bucket; omitted for grouped sums
+	socCols := `, CASE WHEN COUNT(*) = 1 THEN m.soc_temp END AS soc_temp, e.is_temp AS is_temp`
+	if grouped {
+		socCols = ``
 	}
 
 	tx := db.Instance.Table("meters m").
 		Select(selectTitle + `, e."group",
 			MIN(m.ts) AS start,
 			COALESCE(SUM(m.energy), 0) AS energy,
-			COALESCE(SUM(m.return_energy), 0) AS return_energy`).
+			COALESCE(SUM(m.return_energy), 0) AS return_energy,
+			SUM(CASE WHEN e."group" = 'grid' THEN m.energy * t.grid END) AS cost,
+			SUM(CASE WHEN e."group" = 'grid' AND t.grid IS NOT NULL THEN m.energy END) AS priced_energy,
+			SUM(CASE WHEN e."group" = 'grid' THEN m.return_energy * t.feedin END) AS return_cost,
+			SUM(CASE WHEN e."group" = 'grid' AND t.feedin IS NOT NULL THEN m.return_energy END) AS priced_return_energy` + socCols).
 		Joins("JOIN entities e ON m.meter = e.id").
+		Joins("LEFT JOIN tariffs t ON t.ts = m.ts").
 		Group(groupCols).
 		Order(groupCols)
 
@@ -98,6 +186,12 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 		tx = tx.Where("m.ts < ?", to.Unix())
 	}
 
+	if len(filter) > 0 {
+		if sub := entityQuery(filter[0]); sub != nil {
+			tx = tx.Where("m.meter IN (?)", sub)
+		}
+	}
+
 	var rows []row
 	if err := tx.Scan(&rows).Error; err != nil {
 		return nil, err
@@ -106,15 +200,22 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 	var res []Series
 	for _, r := range rows {
 		if n := len(res); n == 0 || res[n-1].Title != r.Title || res[n-1].Group != r.Group {
-			res = append(res, Series{Title: r.Title, Group: r.Group})
+			res = append(res, Series{Title: r.Title, Group: r.Group, IsTemp: r.IsTemp})
 		}
 
 		s := &res[len(res)-1]
+		start := bucketStart(time.Time(r.Start))
 		s.Data = append(s.Data, Slot{
-			Start:        time.Time(r.Start),
-			End:          addDuration(time.Time(r.Start)),
+			Start:        start,
+			End:          addDuration(start),
 			Energy:       roundEnergy(r.Energy),
 			ReturnEnergy: roundEnergy(r.ReturnEnergy),
+			SocTemp:      r.SocTemp,
+
+			Cost:               r.Cost,
+			PricedEnergy:       r.PricedEnergy,
+			ReturnCost:         r.ReturnCost,
+			PricedReturnEnergy: r.PricedReturnEnergy,
 		})
 	}
 
@@ -128,20 +229,21 @@ func hasReturnEnergy(group string) bool {
 	return group == Grid || group == Battery
 }
 
-// WriteCsv emits a wide-table CSV with columns
-//
-//	time.start, time.end, <group>.<entity>.energy.Wh[, <group>.<entity>.returnEnergy.Wh], …
-//
-// Only grid and battery contribute a second returnEnergy column.
-// Values are plain Wh integers (the DB is already rounded to milli-kWh) — no
-// decimal point, no thousands separator, so they survive locale-mismatched
-// spreadsheet importers unambiguously.
-func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
-	ww, _, err := csvutil.NewLocalizedWriter(ctx, w)
-	if err != nil {
-		return err
-	}
+func seriesHasSocTemp(s *Series) bool {
+	return slices.ContainsFunc(s.Data, func(slot Slot) bool { return slot.SocTemp != nil })
+}
 
+// socTempValue rounds a soc/temp value to 0.1, nil when unset
+func socTempValue(v *float64) any {
+	if v == nil {
+		return nil
+	}
+	return math.Round(*v*10) / 10
+}
+
+// Write emits the wide table to ww: time.start, time.end, then one energy.Wh
+// column per entity (grid/battery add returnEnergy.Wh) as plain locale-safe Wh ints.
+func (s SeriesExport) Write(ww export.RowWriter) error {
 	byGroup := make(map[string][]*Series)
 	for i := range s {
 		g := s[i].Group
@@ -171,10 +273,11 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 		}
 	})
 
-	header := []string{"time.start", "time.end"}
+	header := []any{"time.start", "time.end"}
 	type col struct {
 		series       *Series
 		returnEnergy bool
+		socTemp      bool
 	}
 	cols := []col{{}, {}}
 	tsSet := make(map[int64]time.Time)
@@ -205,6 +308,14 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 			if hasReturnEnergy(g) {
 				header = append(header, p+".returnEnergy.Wh")
 				cols = append(cols, col{series: e, returnEnergy: true})
+			}
+			if seriesHasSocTemp(e) {
+				unit := ".soc.pct"
+				if e.IsTemp {
+					unit = ".temp.degC"
+				}
+				header = append(header, p+unit)
+				cols = append(cols, col{series: e, socTemp: true})
 			}
 			for _, slot := range e.Data {
 				tsSet[slot.Start.UnixNano()] = slot.Start
@@ -239,26 +350,29 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 		}
 	}
 
-	row := make([]string, len(cols))
+	row := make([]any, len(cols))
 	for _, ts := range timestamps {
-		row[0] = ts.Local().Format("2006-01-02 15:04:05")
-		row[1] = endByStart[ts.UnixNano()].Local().Format("2006-01-02 15:04:05")
+		row[0] = ts.Local()
+		row[1] = endByStart[ts.UnixNano()].Local()
 		for i := 2; i < len(cols); i++ {
 			c := cols[i]
 			if c.series == nil {
-				row[i] = ""
+				row[i] = nil
 				continue
 			}
 			slot, ok := slotIdx[c.series][ts.UnixNano()]
 			if !ok {
-				row[i] = ""
+				row[i] = nil
 				continue
 			}
-			v := slot.Energy
-			if c.returnEnergy {
-				v = slot.ReturnEnergy
+			switch {
+			case c.socTemp:
+				row[i] = socTempValue(slot.SocTemp)
+			case c.returnEnergy:
+				row[i] = int64(math.Round(slot.ReturnEnergy * 1000))
+			default:
+				row[i] = int64(math.Round(slot.Energy * 1000))
 			}
-			row[i] = strconv.FormatInt(int64(math.Round(v*1000)), 10)
 		}
 		if err := ww.Write(row); err != nil {
 			return err

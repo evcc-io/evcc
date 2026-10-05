@@ -20,6 +20,7 @@ package charger
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -67,14 +68,14 @@ func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]any) (api
 		return nil, err
 	}
 
-	return NewCfosPowerBrain(ctx, cc.URI, cc.ID)
+	return NewCfosPowerBrain(ctx, cc)
 }
 
 // NewCfosPowerBrain creates a cFos charger
-func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (api.Charger, error) {
-	uri = util.DefaultPort(uri, 4701)
+func NewCfosPowerBrain(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	settings.URI = util.DefaultPort(settings.URI, 4701)
 
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -123,6 +124,8 @@ func (wb *CfosPowerBrain) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 2: // laden
 		return api.StatusC, nil
+	case 5: // Übertemperatur
+		return api.StatusNone, errors.New("temperature exceeded")
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
 	}
@@ -239,11 +242,11 @@ func (wb *CfosPowerBrain) WakeUp() error {
 var _ api.Identifier = (*CfosPowerBrain)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *CfosPowerBrain) Identify() (string, error) {
+func (wb *CfosPowerBrain) Identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(cfosRegLastRfid, 15)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }

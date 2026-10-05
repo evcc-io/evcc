@@ -144,6 +144,23 @@ func (c *gen1) ReturnEnergy() (float64, error) {
 	return c.energy(energy) / 1000, nil
 }
 
+// IsReversed reports whether the device reverses its measurement direction. Gen1 devices cannot.
+func (c *gen1) IsReversed() bool {
+	return false
+}
+
+// HasReturnEnergy reports whether the device measures energy in the return direction.
+// Only the EM variants have a total_returned register, relay/plug meters don't.
+func (c *gen1) HasReturnEnergy() bool {
+	res, err := c.status.Get()
+	return err == nil && c.channel >= len(res.Meters) && c.channel < len(res.EMeters)
+}
+
+// HasPhases reports whether the device provides phase readings. Gen1 exposes none.
+func (c *gen1) HasPhases() bool {
+	return false
+}
+
 // IsThreePhase reports whether the device is a three-phase energy meter.
 func (c *gen1) IsThreePhase() bool {
 	res, err := c.status.Get()

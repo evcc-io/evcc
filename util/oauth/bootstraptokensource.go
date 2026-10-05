@@ -3,6 +3,7 @@ package oauth
 import (
 	"sync"
 
+	"github.com/evcc-io/evcc/util"
 	"golang.org/x/oauth2"
 )
 
@@ -11,10 +12,10 @@ type bootstrapTokenSource struct {
 	refresher func() (*oauth2.Token, error)
 }
 
-func BootstrapTokenSource(refresher func() (*oauth2.Token, error)) oauth2.TokenSource {
-	return &bootstrapTokenSource{
+func BootstrapTokenSource(log *util.Logger, refresher func() (*oauth2.Token, error)) oauth2.TokenSource {
+	return Redacted(log, &bootstrapTokenSource{
 		refresher: refresher,
-	}
+	})
 }
 
 func (ts *bootstrapTokenSource) Token() (*oauth2.Token, error) {

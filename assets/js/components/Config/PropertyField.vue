@@ -86,8 +86,21 @@
 		:currency="currency"
 		:valueLabel="zonesValueLabel"
 	/>
+	<Combobox
+		v-else-if="combobox"
+		:id="id"
+		v-model="value"
+		:options="serviceValues"
+		:placeholder="placeholder"
+		:required="required"
+		:pattern="patternRegex"
+		:title="patternTitle"
+		:invalid="invalid"
+		:disabled="disabled"
+		:loading="serviceLoading"
+	/>
 	<div v-else class="d-flex" :class="sizeClass">
-		<div class="position-relative flex-grow-1">
+		<div class="position-relative flex-grow-1 shrinkable">
 			<input
 				:id="id"
 				:value="value"
@@ -122,8 +135,23 @@
 				</option>
 			</datalist>
 		</div>
+		<CustomSelect
+			v-if="unitSelectable"
+			:id="id + '_unit_select'"
+			:options="unitOptions"
+			:selected="durationUnit"
+			:aria-label="$t('config.form.durationUnit', { label })"
+			@change="onUnitChange"
+		>
+			<span
+				:id="id + '_unit'"
+				class="input-group-text h-100"
+				style="border-top-left-radius: 0; border-bottom-left-radius: 0"
+				>{{ unitValue }}</span
+			>
+		</CustomSelect>
 		<span
-			v-if="unitValue"
+			v-else-if="unitValue"
 			:id="id + '_unit'"
 			class="input-group-text"
 			style="border-top-left-radius: 0; border-bottom-left-radius: 0"
@@ -136,14 +164,22 @@
 import "@h2d2/shopicons/es/regular/minus";
 import VehicleIcon from "../VehicleIcon";
 import SelectGroup from "../Helper/SelectGroup.vue";
+import CustomSelect from "../Helper/CustomSelect.vue";
+import Combobox from "../Helper/Combobox.vue";
 import PropertyZonesField from "./PropertyZonesField.vue";
 import formatter from "@/mixins/formatter";
+import parseGoDuration, {
+	displayFactors,
+	durationUnits,
+	goDurationUnit,
+	toGoDuration,
+} from "@/utils/goDuration";
 
 const NS_PER_SECOND = 1000000000;
 
 export default {
 	name: "PropertyField",
-	components: { VehicleIcon, SelectGroup, PropertyZonesField },
+	components: { VehicleIcon, SelectGroup, CustomSelect, Combobox, PropertyZonesField },
 	mixins: [formatter],
 	props: {
 		id: String,
@@ -152,6 +188,8 @@ export default {
 		placeholder: String,
 		type: String,
 		unit: String,
+		// transitional: emit ns numbers, remove once all callers accept duration strings (loadpoint follow-up)
+		legacyDuration: Boolean,
 		size: String,
 		scale: Number,
 		required: Boolean,
@@ -162,12 +200,20 @@ export default {
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
 		serviceValues: { type: Array, default: () => [] },
+		serviceLoading: Boolean,
 		currency: { type: String, default: "EUR" },
 		rows: { type: Number },
 	},
 	emits: ["update:modelValue"],
 	data: () => {
-		return { selectMode: false };
+		return { selectMode: false, unitOverride: null };
+	},
+	watch: {
+		combobox() {
+			// arriving suggestions replace the input element, keep focus
+			if (document.activeElement?.id !== this.id) return;
+			this.$nextTick(() => document.getElementById(this.id)?.focus());
+		},
 	},
 	computed: {
 		patternRegex() {
@@ -177,6 +223,9 @@ export default {
 			const examples = this.pattern.Examples || [];
 			if (!examples.length) return null;
 			return examples.join(", ");
+		},
+		combobox() {
+			return typeof this.serviceValues[0] === "object";
 		},
 		datalistId() {
 			return this.serviceValues.length > 0 ? `${this.id}-datalist` : null;
@@ -240,7 +289,7 @@ export default {
 		},
 		unitValue() {
 			if (this.type === "Duration") {
-				return this.fmtDurationUnit(this.value, this.unit);
+				return this.fmtDurationUnit(this.value, this.durationUnit);
 			}
 			if (this.pricePerKWh) {
 				return this.pricePerKWhUnit(this.currency);
@@ -252,7 +301,7 @@ export default {
 		},
 		useLazyBinding() {
 			// avoid conversion loop issues
-			return this.pricePerKWh;
+			return this.inputType === "number";
 		},
 		icons() {
 			return this.property === "icon";
@@ -297,14 +346,25 @@ export default {
 			return this.choice.length > 0 || this.chargeModes;
 		},
 		durationFactor() {
-			return this.unit === "minute" ? 60 : 1;
+			return displayFactors[this.durationUnit] ?? 1;
+		},
+		durationUnit() {
+			return this.unitOverride ?? goDurationUnit(this.modelValue) ?? this.unit ?? "second";
+		},
+		unitSelectable() {
+			return this.type === "Duration" && !this.legacyDuration && !this.disabled;
+		},
+		unitOptions() {
+			return durationUnits.map((value) => ({
+				value,
+				name: this.fmtDurationUnit(2, value),
+			}));
 		},
 		selectOptions() {
 			if (this.chargeModes) {
 				return [
 					{ key: "off", name: this.$t("main.mode.off") },
-					{ key: "pv", name: this.$t("main.mode.pv") },
-					{ key: "minpv", name: this.$t("main.mode.minpv") },
+					{ key: "smart", name: this.$t("main.mode.smart") },
 					{ key: "now", name: this.$t("main.mode.now") },
 				];
 			}
@@ -343,8 +403,15 @@ export default {
 					return Array.isArray(this.modelValue) ? this.modelValue.join("\n") : "";
 				}
 
-				if (this.type === "Duration" && typeof this.modelValue === "number") {
-					return this.modelValue / this.durationFactor / NS_PER_SECOND;
+				if (this.type === "Duration") {
+					const ns =
+						typeof this.modelValue === "string"
+							? parseGoDuration(this.modelValue)
+							: this.modelValue;
+					if (typeof ns === "number") {
+						return ns / this.durationFactor / NS_PER_SECOND;
+					}
+					return "";
 				}
 
 				if (this.pricePerKWh) {
@@ -367,7 +434,9 @@ export default {
 				}
 
 				if (this.type === "Duration" && typeof newValue === "number") {
-					newValue = newValue * this.durationFactor * NS_PER_SECOND;
+					newValue = this.legacyDuration
+						? newValue * this.durationFactor * NS_PER_SECOND
+						: toGoDuration(newValue, this.durationUnit);
 				}
 
 				if (this.pricePerKWh) {
@@ -385,7 +454,17 @@ export default {
 			}
 			return val;
 		},
+		onUnitChange(e) {
+			// read display value before override changes the getter's unit
+			const num = this.value;
+			this.unitOverride = e.target.value;
+			if (typeof num === "number") {
+				this.$emit("update:modelValue", toGoDuration(num, this.unitOverride));
+			}
+		},
 		onFieldChange(e) {
+			// unparsable input (e.g. locale decimal separator mismatch)
+			if (e.target.validity?.badInput) return;
 			this.value = this.coerceValue(e.target.value);
 		},
 		onFieldInput(e) {
@@ -407,13 +486,8 @@ export default {
 </script>
 
 <style scoped>
-input[type="number"] {
-	appearance: textfield;
-}
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-	-webkit-appearance: none;
-	margin: 0;
+.shrinkable {
+	min-width: 0;
 }
 .w-min-100 {
 	min-width: min(100px, 100%);

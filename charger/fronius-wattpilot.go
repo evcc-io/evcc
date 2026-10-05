@@ -135,8 +135,9 @@ func (c *Wattpilot) Voltages() (float64, float64, float64, error) {
 var _ api.Identifier = (*Wattpilot)(nil)
 
 // Identify implements the api.Identifier interface
-func (c *Wattpilot) Identify() (string, error) {
-	return c.api.GetRFID()
+func (c *Wattpilot) Identify() ([]string, error) {
+	id, err := c.api.GetRFID()
+	return []string{id}, err
 }
 
 var _ api.PhaseSwitcher = (*Wattpilot)(nil)

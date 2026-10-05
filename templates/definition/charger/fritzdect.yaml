@@ -25,7 +25,6 @@ params:
   - name: password
     required: true
   - name: ain
-    required: true
     service: fritz/devices?uri={uri}&user={user}&password={password}
   - name: firmware82
     advanced: true

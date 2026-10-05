@@ -1,8 +1,9 @@
 package hello
 
 const (
-	ApiURI = "https://api.ecloudeu.com"
-	ApiKey = "3_L94eyQ-wvJhWm7Afp1oBhfTGXZArUfSHHW9p9Pncg513hZELXsxCfMWHrF8f5P5a"
+	ApiURI   = "https://api.ecloudeu.com"   // Smart #1/#3 (series HX/HC)
+	ApiURIV2 = "https://apiv2.ecloudeu.com" // Smart #5 (series HY)
+	ApiKey   = "3_L94eyQ-wvJhWm7Afp1oBhfTGXZArUfSHHW9p9Pncg513hZELXsxCfMWHrF8f5P5a"
 
 	appID        = "SmartAPPEU"
 	operatorCode = "SMART"

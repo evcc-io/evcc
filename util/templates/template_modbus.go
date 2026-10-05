@@ -3,6 +3,7 @@ package templates
 import (
 	_ "embed"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -29,7 +30,11 @@ func (t *Template) ModbusParams(modbusType string, values map[string]any) {
 		return
 	}
 
-	modbusParams := ConfigDefaults.Modbus.Types[values[ParamModbus].(string)].Params
+	// skip params the template already defines (e.g. deprecated delay, timeout)
+	modbusParams := slices.DeleteFunc(slices.Clone(ConfigDefaults.Modbus.Types[values[ParamModbus].(string)].Params), func(p Param) bool {
+		i, _ := t.ParamByName(p.Name)
+		return i >= 0
+	})
 
 	// add the modbus params at the beginning
 	t.Params = append(modbusParams, t.Params...)
@@ -64,9 +69,12 @@ func (t *Template) ModbusValues(renderMode int, values map[string]any) {
 		typeParams := modbusConfig.Types[iface].Params
 
 		for _, p := range typeParams {
-			// don't overwrite custom values
-			if values[p.Name] != nil {
-				continue
+			// don't overwrite custom values. Params the template deprecated in favour
+			// of the modbus definition are pre-populated with an empty string default.
+			if v := values[p.Name]; v != nil {
+				if s, ok := v.(string); !ok || s != "" {
+					continue
+				}
 			}
 
 			values[p.Name] = p.DefaultValue(renderMode)
@@ -89,6 +97,14 @@ func (t *Template) ModbusValues(renderMode int, values map[string]any) {
 			case ModbusParamComset:
 				if modbusParam.Comset != "" {
 					defaultValue = modbusParam.Comset
+				}
+			case ModbusParamDelay:
+				if modbusParam.Delay != "" {
+					defaultValue = modbusParam.Delay
+				}
+			case ModbusParamTimeout:
+				if modbusParam.Timeout != "" {
+					defaultValue = modbusParam.Timeout
 				}
 			}
 

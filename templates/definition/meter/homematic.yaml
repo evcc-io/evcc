@@ -30,7 +30,6 @@ params:
       de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend mit Doppelpunkt getrennt nach der Geräte Id angezeigt.
     example: HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5, HM-ES-TX-WM=1
   - name: cache
-    advanced: true
     default: 1s
     description:
       en: XML-RPC API cache duration

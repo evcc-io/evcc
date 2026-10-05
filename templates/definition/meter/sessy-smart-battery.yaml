@@ -14,7 +14,7 @@ params:
   - name: password
     required: true
   - name: cache
-    default: 10
+    default: 1s
   - preset: battery-params
   - name: capacity
     default: 5
@@ -42,6 +42,7 @@ render: |
     headers:
       - content-type: application/json
     jq: .sessy_energy.import_wh
+    scale: 0.001
     cache: {{ .cache }}
     timeout: 10s
   soc:

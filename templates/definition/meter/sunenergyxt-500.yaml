@@ -1,0 +1,154 @@
+# Used API docs for SunEnergyXT 500 Series: https://github.com/SunEnergyXT/SunEnergyXT-500-Series/blob/main/API.en.md
+template: sunenergyxt-500
+products:
+  # single entry: the `model` param carries the Standard/PRO distinction
+  - brand: SunEnergyXT
+    description:
+      generic: SunEnergyXT 500 / 500 PRO
+capabilities: ["battery-control"]
+requirements:
+  description:
+    en: |
+      The battery's local mode must be enabled in the manufacturer's app.
+      Furthermore, the device's IP address must be set to a fixed, permanent IP address in the router.
+      An external meter (e.g., Shelly) measuring the grid connection point must be connected to the battery via the manufacturer's app.
+      It is required for the `grid` usage, and also for the `battery` usage, because the normal battery mode enables the device's
+      zero feed-in regulation, which reads this meter.
+    de: |
+      Der lokale Modus der Batterie muss in der Hersteller-App aktiviert werden.
+      Des Weiteren muss die IP-Adresse des Geräts im Router auf eine feste, dauerhafte IP-Adresse eingestellt werden.
+      Mit der Batterie muss ein externer Zähler (z. B. Shelly) verbunden sein, der den Hausanschlusspunkt misst (dieser wird über die Hersteller-App hinzugefügt).
+      Er wird für die Verwendung `grid` benötigt und ebenso für die Verwendung `battery`, da der normale Batteriemodus die
+      Nulleinspeise-Regelung des Geräts aktiviert, die diesen Zähler ausliest.
+caveats:
+  - description:
+      de: |
+        Aktuell muss jeder Kopfspeicher einzeln in EVCC angelegt werden.
+        Mehrere Kopfspeicher in ein System zu verbinden, ist vom Hersteller angekündigt, jedoch softwareseitig noch nicht umgesetzt.
+      en: |
+        Currently, each head storage must be individually added in EVCC.
+        Connecting multiple head storages into one system has been announced by the manufacturer but is not yet implemented on the software side.
+    # link:
+  - description:
+      de: |
+        `maxacpower` und `maxdischargepower` werden aus dem gewählten `model` abgeleitet, wenn sie leer bleiben.
+        Ein ausdrücklich gesetzter Wert hat Vorrang und wird nicht auf das Modell-Limit begrenzt.
+      en: |
+        `maxacpower` and `maxdischargepower` are derived from the selected `model` when left empty.
+        An explicitly configured value takes precedence and is not clamped to the model limit.
+params:
+  - name: usage
+    type: choice
+    choice: ["grid", "pv", "battery"]
+    required: true
+  - name: model
+    type: choice
+    choice: ["standard", "pro"]
+    required: true
+    description:
+      de: Modell
+      en: Model
+    help:
+      de: |
+        `standard` für die SunEnergyXT 500, `pro` für die SunEnergyXT 500 PRO.
+        Bestimmt die maximale AC- und Entladeleistung (800 W bzw. 2400 W).
+      en: |
+        `standard` for the SunEnergyXT 500, `pro` for the SunEnergyXT 500 PRO.
+        Determines the maximum AC and discharge power (800 W resp. 2400 W).
+  - name: host
+    required: true
+  # maxacpower/maxdischargepower: leave empty to derive the limit from `model`
+  - name: maxacpower
+  - preset: battery-capacity
+  - preset: battery-minmaxsoc
+  # head unit alone; each extension pack adds another 5 kWh
+  - name: capacity
+    default: 5
+    help:
+      de: |
+        Gesamtkapazität des Speichers: Kopfspeicher 5 kWh, jede Erweiterung +5 kWh.
+        Also 5 (nur Kopfspeicher), 10 (+1 Erweiterung) oder 15 (+2 Erweiterungen).
+        Die Anzahl der erkannten Akkupakete steht im Feld `ON` unter `/read`.
+      en: |
+        Total storage capacity: head unit 5 kWh, each extension pack adds 5 kWh.
+        So 5 (head unit only), 10 (+1 extension) or 15 (+2 extensions).
+        The number of detected battery packs is reported in the `ON` field of `/read`.
+  # grid charging is limited to -2400..0 W on both models
+  - name: maxchargepower
+    default: 2400
+  - name: maxdischargepower
+  - name: cache
+    advanced: true
+    default: 2s
+  - name: timeout
+    advanced: true
+    default: 10s
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/read
+    cache: {{ .cache }}
+    timeout: {{ .timeout }}
+    jq: .state.reported.GP
+    scale: -1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/read
+    cache: {{ .cache }}
+    timeout: {{ .timeout }}
+    jq: .state.reported.BP
+    scale: -1
+  soc:
+    source: http
+    uri: http://{{ .host }}/read
+    cache: {{ .cache }}
+    timeout: {{ .timeout }}
+    jq: .state.reported.SC
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: http
+        method: POST
+        uri: http://{{ .host }}/write
+        headers:
+          - Content-Type: application/json
+        # GS must be reset explicitly: MM (zero feed-in regulation) and GS (manual
+        # setpoint) are independent, so a leftover GS would keep grid charging.
+        body: '{"state":{"MM":1,"GS":0}}'
+    - case: 2 # hold
+      set:
+        source: http
+        method: POST
+        uri: http://{{ .host }}/write
+        headers:
+          - Content-Type: application/json
+        body: '{"state":{"MM":0,"GS":0}}'
+    - case: 3 # charges
+      set:
+        source: http
+        method: POST
+        uri: http://{{ .host }}/write
+        headers:
+          - Content-Type: application/json
+        # GS < 0 means grid import / grid charging
+        body: '{"state":{"MM":0,"GS":-{{ .maxchargepower | int }}}}'
+  {{- include "battery-capacity" . }}
+  {{- include "battery-minmaxsoc" . }}
+  maxchargepower: {{ .maxchargepower | int }} # W
+  maxdischargepower: {{ if gt (.maxdischargepower | int) 0 }}{{ .maxdischargepower | int }}{{ else }}{{ ternary 2400 800 (eq .model "pro") }}{{ end }} # W
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/read
+    cache: {{ .cache }}
+    timeout: {{ .timeout }}
+    jq: .state.reported.PV
+  maxacpower: {{ if gt (.maxacpower | int) 0 }}{{ .maxacpower | int }}{{ else }}{{ ternary 2400 800 (eq .model "pro") }}{{ end }} # W
+  {{- end }}

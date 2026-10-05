@@ -34,7 +34,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 		Climater      *plugin.Config
 		MaxCurrent    *plugin.Config
 		GetMaxCurrent *plugin.Config
-		FinishTime    *plugin.Config
+		FinishTime    *plugin.Config // deprecated, ignored
 		Wakeup        *plugin.Config
 		ChargeEnable  *plugin.Config
 		ChargedEnergy *plugin.Config
@@ -142,13 +142,6 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 			return lat, lon, nil
 		}))
 	}
-
-	// decorate finishtime
-	finishTime, err := cc.FinishTime.TimeGetter(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("finishTime: %w", err)
-	}
-	implement.May(v, implement.VehicleFinishTimer(finishTime))
 
 	// decorate wakeup
 	wakeup, err := cc.Wakeup.BoolSetter(ctx, "wakeup")

@@ -3,7 +3,19 @@ covers: ["go-e-gemini"]
 products:
   - brand: go-e
     description:
+      generic: Charger Gemini flex 2.0
+  - brand: go-e
+    description:
+      generic: Charger Gemini 2.0
+  - brand: go-e
+    description:
+      generic: Charger Gemini flex
+  - brand: go-e
+    description:
       generic: Charger Gemini
+  - brand: go-e
+    description:
+      generic: Charger CORE
   - brand: go-e
     description:
       generic: Charger HOME+
@@ -22,6 +34,10 @@ requirements:
       Requires "HTTP API v1" api, "HTTP API v2" for 1P/3P phase switching.
       The "simulate unplugging" option should be activated in the Go-E app ("Car" menu item).
   evcc: ["sponsorship"]
+discovery:
+  mdns: ["_go-e_go-eCharger._tcp"]
+  hostname: ["go-echarger*"]
+  mac: ["D455AD", "98FC841"]
 params:
   - name: host
 render: |

@@ -44,6 +44,17 @@ test.describe("limitSoc", async () => {
     await expect(page.getByTestId("limit-soc-value")).toHaveText("50%");
   });
 
+  test("starts at 5% and includes api-set values", async ({ page, request }) => {
+    await page.goto("/");
+
+    const combobox = page.getByTestId("limit-soc").getByRole("combobox");
+    await expect(combobox.getByRole("option").first()).toHaveText("5%");
+
+    await request.post("/api/loadpoints/1/limitsoc/42");
+    await expect(page.getByTestId("limit-soc-value")).toHaveText("42%");
+    await expect(combobox.getByRole("option", { name: "42%" })).toHaveCount(1);
+  });
+
   test("can be set even if vehicle isn't connected yet", async ({ page }) => {
     await page.goto(simulatorUrl());
     await page.getByTestId("loadpoint0").getByText("A (disconnected)").click();

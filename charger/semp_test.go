@@ -251,8 +251,8 @@ func TestSEMPCharger(t *testing.T) {
 		planningResponse: mockPlanningRequestResponse,
 		infoResponse:     mockDeviceInfoResponse,
 	}
-	server := httptest.NewServer(handler)
-	defer server.Close()
+	server := httptest.NewTestServer(t, handler)
+	server.Start()
 
 	ctx := t.Context()
 
@@ -318,8 +318,8 @@ func TestSEMPChargerOff(t *testing.T) {
 		planningResponse: mockEmptyPlanningRequestResponse,
 		infoResponse:     mockDeviceInfoResponse,
 	}
-	server := httptest.NewServer(handler)
-	defer server.Close()
+	server := httptest.NewTestServer(t, handler)
+	server.Start()
 
 	ctx := t.Context()
 
@@ -353,8 +353,8 @@ func TestSEMPChargerDeviceNotFound(t *testing.T) {
 		planningResponse: mockPlanningRequestResponse,
 		infoResponse:     mockDeviceInfoResponse,
 	}
-	server := httptest.NewServer(handler)
-	defer server.Close()
+	server := httptest.NewTestServer(t, handler)
+	server.Start()
 
 	// NewSEMP now calls Enabled() which will fail if device is not found
 	_, err := NewSEMP(t.Context(), server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
@@ -368,8 +368,8 @@ func TestSEMPChargerReady(t *testing.T) {
 		planningResponse: mockPlanningRequestResponse,
 		infoResponse:     mockDeviceInfoResponse,
 	}
-	server := httptest.NewServer(handler)
-	defer server.Close()
+	server := httptest.NewTestServer(t, handler)
+	server.Start()
 
 	ctx := t.Context()
 
@@ -396,8 +396,8 @@ func TestSEMPChargerPhases1p3p(t *testing.T) {
 		planningResponse: mockPlanningRequestResponse,
 		infoResponse:     mockDeviceInfoPhases1p3pResponse,
 	}
-	server := httptest.NewServer(handler)
-	defer server.Close()
+	server := httptest.NewTestServer(t, handler)
+	server.Start()
 
 	ctx := t.Context()
 
@@ -440,8 +440,8 @@ func TestSEMPChargerChargedEnergy(t *testing.T) {
 		infoResponse:       mockDeviceInfoResponse,
 		parametersResponse: mockParametersResponse,
 	}
-	server := httptest.NewServer(handler)
-	defer server.Close()
+	server := httptest.NewTestServer(t, handler)
+	server.Start()
 
 	ctx := t.Context()
 
@@ -465,8 +465,8 @@ func TestSEMPChargerChargedEnergy(t *testing.T) {
 			infoResponse:     mockDeviceInfoResponse,
 			// parametersResponse left empty
 		}
-		server2 := httptest.NewServer(handler2)
-		defer server2.Close()
+		server2 := httptest.NewTestServer(t, handler2)
+		server2.Start()
 
 		wb2, err := NewSEMP(t.Context(), server2.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 		require.NoError(t, err)
@@ -483,8 +483,8 @@ func TestSEMPChargerAutoDetectDeviceID(t *testing.T) {
 		planningResponse: mockPlanningRequestResponse,
 		infoResponse:     mockDeviceInfoResponse,
 	}
-	server := httptest.NewServer(handler)
-	defer server.Close()
+	server := httptest.NewTestServer(t, handler)
+	server.Start()
 
 	ctx := t.Context()
 

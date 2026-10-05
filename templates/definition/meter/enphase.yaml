@@ -4,12 +4,14 @@ products:
     description:
       generic: IQ Gateway
 requirements:
+discovery:
+  mdns: ["_enphase-envoy._tcp"]
+  mac: ["001DC0"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: host
   - name: schema
-    default: https
     advanced: true
   - name: token
     help:
@@ -28,7 +30,6 @@ params:
     usages: ["battery"]
   - preset: battery-params
   - name: cache
-    advanced: true
     default: 1s
   - name: timeout
     advanced: true

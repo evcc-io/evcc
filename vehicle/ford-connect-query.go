@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/vehicle/ford/query"
 )
 
@@ -25,7 +26,7 @@ func init() {
 func NewFordConnectQueryFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
-		Credentials ClientCredentials
+		Credentials oauth.ClientCredentials
 		RedirectURI string
 		VIN         string
 		Cache       time.Duration

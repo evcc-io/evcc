@@ -77,12 +77,12 @@ func NewEgoFromConfig(ctx context.Context, other map[string]any) (api.Charger, e
 		return nil, err
 	}
 
-	return NewEgo(ctx, &cc.embed, cc.URI, cc.ID)
+	return NewEgo(ctx, &cc.embed, cc.TcpSettings)
 }
 
 // NewEgo creates E.G.O. Smart Heater charger
-func NewEgo(ctx context.Context, embed *embed, uri string, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewEgo(ctx context.Context, embed *embed, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ var _ api.ChargerEx = (*Ego)(nil)
 func (wb *Ego) MaxCurrentMillis(current float64) error {
 	phases := 1
 	if wb.lp != nil {
-		if p := wb.lp.GetPhases(); p != 0 {
+		if p := wb.lp.ActivePhases(); p != 0 {
 			phases = p
 		}
 	}

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -8,17 +9,19 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"text/template"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/server/assets"
-	"github.com/evcc-io/evcc/server/db"
-	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/encode"
 	"github.com/evcc-io/evcc/util/jq"
@@ -29,6 +32,13 @@ import (
 )
 
 var ignoreState = []string{"releaseNotes"} // excessive size
+
+// limits for the unauthenticated jq parameter of the state endpoint
+const (
+	maxJqQueryLen    = 8192        // maximum length of the jq query
+	maxJqDuration    = time.Second // maximum jq evaluation time
+	maxJqResultBytes = 1 << 20     // maximum size of the encoded jq result
+)
 
 // getPreferredLanguage returns the preferred language as two letter code
 func getPreferredLanguage(header string) string {
@@ -41,7 +51,44 @@ func getPreferredLanguage(header string) string {
 	return base.String()
 }
 
-func indexHandler(customCss bool) http.HandlerFunc {
+// globalsJsHandler serves version and ui customization as window.evcc globals
+func globalsJsHandler(custom Customization) http.HandlerFunc {
+	globals := struct {
+		Version    string `json:"version"`
+		Commit     string `json:"commit"`
+		CustomCss  bool   `json:"customCss"`
+		CustomLogo bool   `json:"customLogo"`
+		Brand      string `json:"customBrand"`
+		Website    string `json:"customWebsite"`
+		Email      string `json:"customEmail"`
+		Phone      string `json:"customPhone"`
+		Theme      string `json:"customTheme"`
+	}{
+		Version:    util.Version,
+		Commit:     util.Commit,
+		CustomCss:  custom.Css != "",
+		CustomLogo: custom.LogoLight != "",
+		Brand:      custom.Brand,
+		Website:    custom.Website,
+		Email:      custom.Email,
+		Phone:      custom.Phone,
+		Theme:      custom.Theme,
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=UTF-8")
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+
+		if _, err := w.Write([]byte("window.evcc = ")); err != nil {
+			return
+		}
+		if err := json.NewEncoder(w).Encode(globals); err != nil {
+			log.ERROR.Println("httpd: failed to render globals:", err.Error())
+		}
+	}
+}
+
+func indexHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
@@ -64,9 +111,7 @@ func indexHandler(customCss bool) http.HandlerFunc {
 
 		if err := t.Execute(w, map[string]any{
 			"Version":     util.Version,
-			"Commit":      util.Commit,
 			"DefaultLang": defaultLang,
-			"CustomCss":   customCss,
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
 		}
@@ -84,6 +129,24 @@ func jsonHandler(h http.Handler) http.Handler {
 func jsonWrite(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
+}
+
+// jsonWriteLimited writes data as json, failing if the encoded result exceeds limit bytes.
+// Encoding into a buffer keeps oversized results from reaching the client at all.
+func jsonWriteLimited(w http.ResponseWriter, data any, limit int) {
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(data); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if buf.Len() > limit {
+		jsonError(w, http.StatusBadRequest, errors.New("result too large"))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	buf.WriteTo(w)
 }
 
 func jsonError(w http.ResponseWriter, status int, err error) {
@@ -138,9 +201,32 @@ func intHandler(set func(int) error, get func() int) http.HandlerFunc {
 	return handler(strconv.Atoi, set, get)
 }
 
+// countries where exporting grid-charged battery energy forfeits feed-in remuneration or is prohibited
+// (DE: §19 EEG, FR: EDF OA, US: NEM 3.0, AT: OeMAG/DSO contracts)
+var gridDischargeRestricted = []string{"DE", "FR", "US", "AT"}
+
+// batteryGridDischargeHandler updates battery grid discharge. Enabling requires force=true unless the country rules it out.
+func batteryGridDischargeHandler(site site.API) http.HandlerFunc {
+	set := boolHandler(site.SetBatteryGridDischarge, site.GetBatteryGridDischarge)
+	return func(w http.ResponseWriter, r *http.Request) {
+		if v, _ := strconv.ParseBool(mux.Vars(r)["value"]); v && r.URL.Query().Get("force") != "true" {
+			if c := site.GetCountry(); c == "" || slices.Contains(gridDischargeRestricted, c) {
+				jsonError(w, http.StatusPreconditionRequired, errors.New("confirmation required, use force=true"))
+				return
+			}
+		}
+		set(w, r)
+	}
+}
+
 // boolHandler updates bool-param api
 func boolHandler(set func(bool) error, get func() bool) http.HandlerFunc {
 	return handler(strconv.ParseBool, set, get)
+}
+
+// stringHandler updates string-param api
+func stringHandler(set func(string) error, get func() string) http.HandlerFunc {
+	return handler(func(s string) (string, error) { return s, nil }, set, get)
 }
 
 // durationHandler updates duration-param api
@@ -152,6 +238,14 @@ func durationHandler(set func(time.Duration) error, get func() time.Duration) ht
 func getHandler[T any](get func() T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		jsonWrite(w, get())
+	}
+}
+
+// callHandler invokes an api function without result
+func callHandler(fun func()) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fun()
+		jsonWrite(w, nil)
 	}
 }
 
@@ -171,7 +265,7 @@ func updateSmartCostLimit(site site.API, setLimit func(loadpoint.API, *float64))
 			val = &f
 		}
 
-		for _, lp := range site.Loadpoints() {
+		for _, lp := range site.ActiveLoadpoints() {
 			setLimit(lp, val)
 		}
 
@@ -212,6 +306,11 @@ func stateHandler(cache *util.ParamCache) http.HandlerFunc {
 		if q := r.URL.Query().Get("jq"); q != "" {
 			q = strings.TrimPrefix(q, ".result")
 
+			if len(q) > maxJqQueryLen {
+				jsonError(w, http.StatusBadRequest, errors.New("jq: query too long"))
+				return
+			}
+
 			query, err := gojq.Parse(q)
 			if err != nil {
 				jsonError(w, http.StatusBadRequest, err)
@@ -224,13 +323,21 @@ func stateHandler(cache *util.ParamCache) http.HandlerFunc {
 				return
 			}
 
-			res, err := jq.Query(query, b)
+			// the query is attacker-controlled, so bound evaluation time and result size
+			ctx, cancel := context.WithTimeout(r.Context(), maxJqDuration)
+			defer cancel()
+
+			res, err := jq.QueryContext(ctx, query, b)
 			if err != nil {
-				jsonError(w, http.StatusBadRequest, err)
+				status := http.StatusBadRequest
+				if ctx.Err() != nil {
+					status = http.StatusServiceUnavailable
+				}
+				jsonError(w, status, err)
 				return
 			}
 
-			jsonWrite(w, res)
+			jsonWriteLimited(w, res, maxJqResultBytes)
 			return
 		}
 
@@ -433,8 +540,10 @@ func restoreDatabase(shutdown func()) http.HandlerFunc {
 			return
 		}
 
-		shutdown()
 		w.WriteHeader(http.StatusNoContent)
+		// flush before shutdown, the process may exit before the handler returns
+		_ = http.NewResponseController(w).Flush()
+		shutdown()
 	}
 }
 
@@ -443,6 +552,7 @@ func resetDatabase(shutdown func()) http.HandlerFunc {
 		var req struct {
 			Sessions bool `json:"sessions"`
 			Settings bool `json:"settings"`
+			Remote   bool `json:"remote"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
@@ -475,13 +585,24 @@ func resetDatabase(shutdown func()) http.HandlerFunc {
 			}
 		}
 
+		if req.Remote {
+			for _, key := range []string{keys.Remote, keys.RemoteClients, keys.RemoteLastSeen} {
+				if err := settings.Delete(key); err != nil {
+					jsonError(w, http.StatusInternalServerError, err)
+					return
+				}
+			}
+		}
+
 		// close db connection to avoid on-shutdown writes
 		if err := db.Close(); err != nil {
 			jsonError(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		shutdown()
 		w.WriteHeader(http.StatusNoContent)
+		// flush before shutdown, the process may exit before the handler returns
+		_ = http.NewResponseController(w).Flush()
+		shutdown()
 	}
 }

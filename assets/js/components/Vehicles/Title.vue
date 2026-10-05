@@ -1,12 +1,13 @@
 <template>
 	<div class="d-flex justify-content-between mb-3 align-items-center" data-testid="vehicle-title">
-		<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
+		<h4 class="d-flex align-items-center flex-grow-1 overflow-hidden ring-space">
 			<div
 				v-if="iconType === 'refresh'"
 				ref="refresh"
 				class="me-2 flex-shrink-0 spin"
 				:title="$t('main.vehicle.detectionActive')"
 				data-bs-toggle="tooltip"
+				data-testid="vehicle-detection-icon"
 			>
 				<Sync />
 			</div>
@@ -105,7 +106,7 @@ export default defineComponent({
 		},
 		vehicleOptions(): SelectOption<string>[] {
 			return this.vehicles.map((v) => ({
-				name: v.name,
+				name: v.name ?? "",
 				value: v.title,
 			}));
 		},

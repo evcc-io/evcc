@@ -13,6 +13,8 @@ func ChargeModeString(mode string) (ChargeMode, error) {
 		return ModeEmpty, nil // undefined
 	case string(ModeNow):
 		return ModeNow, nil
+	case string(ModeSmart):
+		return ModeSmart, nil
 	case string(ModeMinPV):
 		return ModeMinPV, nil
 	case string(ModePV):
@@ -21,6 +23,16 @@ func ChargeModeString(mode string) (ChargeMode, error) {
 		return ModeOff, nil
 	default:
 		return "", fmt.Errorf("invalid value: %s", mode)
+	}
+}
+
+// AlwaysChargeString converts string to AlwaysCharge
+func AlwaysChargeString(value string) (AlwaysCharge, error) {
+	switch ac := AlwaysCharge(strings.ToLower(value)); ac {
+	case AlwaysChargeOff, AlwaysChargeOn, AlwaysChargeOnce:
+		return ac, nil
+	default:
+		return "", fmt.Errorf("invalid value: %s", value)
 	}
 }
 

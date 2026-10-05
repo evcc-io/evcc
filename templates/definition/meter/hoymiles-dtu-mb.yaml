@@ -16,7 +16,6 @@ params:
   - name: modbus
     choice: ["tcpip"]
   - name: maxacpower
-    advanced: true
     default: "0"
     description:
       de: "Gesamtleistung der Wechselrichter"

@@ -9,15 +9,17 @@ requirements:
 group: generic
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
   - name: coarsecurrent
     advanced: true
   - name: welcomecharge
-    advanced: true
+  - name: climaterdisabled
+    deprecated: true
+  - name: autodetectdisabled
+    deprecated: true
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
-  {{ include "vehicle-features" (merge (dict "basefeatures" (list "offline")) .) }}
+  {{- include "common" . }}
+  {{ include "features" (merge (dict "basefeatures" (list "offline")) .) }}
   soc:
     source: const
     value: 0

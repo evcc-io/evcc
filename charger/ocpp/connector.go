@@ -22,11 +22,13 @@ type Connector struct {
 	cp    *CP
 	id    int
 
-	status  *core.StatusNotificationRequest
-	statusC chan struct{}
+	status   *core.StatusNotificationRequest
+	statusC  chan struct{}
+	rebooted bool
 
-	meterUpdated time.Time
-	measurements map[types.Measurand]types.SampledValue
+	meterUpdated   time.Time // local receive time, drives watchdog and timeout
+	meterTimestamp time.Time // charger sample time, orders incoming meter values
+	measurements   map[types.Measurand]types.SampledValue
 
 	txnId int
 	idTag string
@@ -63,7 +65,7 @@ func NewConnector(ctx context.Context, log *util.Logger, id int, cp *CP, idTag s
 
 	var ok bool
 	// apply cached status if available
-	instance.WithConnectorStatus(cp.ID(), id, func(status *core.StatusNotificationRequest) {
+	cp.cs.WithConnectorStatus(cp.ID(), id, func(status *core.StatusNotificationRequest) {
 		if _, err := cp.OnStatusNotification(status); err == nil {
 			ok = true
 		}

@@ -16,9 +16,9 @@
 					<small v-if="expiryLabel(client)" class="text-muted ms-2 me-2 text-end">
 						{{ expiryLabel(client) }}
 					</small>
-					<span v-if="isActive(client)" class="badge bg-success ms-2 me-2">
+					<Badge v-if="isActive(client)" class="ms-2 me-2">
 						{{ $t("config.remote.active") }}
-					</span>
+					</Badge>
 					<small
 						v-else-if="activityLabel(client)"
 						class="text-muted ms-2 me-2 text-end d-block"
@@ -52,6 +52,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import "@h2d2/shopicons/es/regular/trash";
+import Badge from "../../Helper/Badge.vue";
 import formatter from "@/mixins/formatter";
 import minuteTicker from "@/mixins/minuteTicker";
 import type { RemoteClient } from "@/types/evcc";
@@ -59,6 +60,7 @@ import { isRemoteClientActive } from "@/utils/remote";
 
 export default defineComponent({
 	name: "RemoteClientList",
+	components: { Badge },
 	mixins: [formatter, minuteTicker],
 	props: {
 		clients: { type: Array as PropType<RemoteClient[]>, required: true },

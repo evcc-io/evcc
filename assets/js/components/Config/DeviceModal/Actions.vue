@@ -1,32 +1,48 @@
 <template>
 	<div>
+		<slot name="before-test"></slot>
+
 		<TestResult
-			v-if="testState"
+			v-if="Object.keys(testState).length > 0"
 			v-bind="testState"
 			:sponsor-token-required="sponsorTokenRequired"
 			:currency="currency"
+			:usage="usage"
 			@test="$emit('test')"
 		/>
 
-		<div class="mt-4 d-flex justify-content-between">
-			<button
-				v-if="isDeletable"
-				type="button"
-				class="btn btn-link text-danger"
-				tabindex="0"
-				@click.prevent="$emit('remove')"
-			>
-				{{ $t("config.general.delete") }}
-			</button>
-			<button
-				v-else
-				type="button"
-				class="btn btn-link text-muted"
-				data-bs-dismiss="modal"
-				tabindex="0"
-			>
-				{{ $t("config.general.cancel") }}
-			</button>
+		<slot name="after-test"></slot>
+
+		<div class="mt-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+			<div class="d-flex flex-wrap align-items-center gap-1">
+				<button
+					v-if="isDeletable"
+					type="button"
+					class="btn btn-link text-danger"
+					tabindex="0"
+					@click.prevent="$emit('remove')"
+				>
+					{{ $t("config.general.delete") }}
+				</button>
+				<button
+					v-else
+					type="button"
+					class="btn btn-link text-muted"
+					data-bs-dismiss="modal"
+					tabindex="0"
+				>
+					{{ $t("config.general.cancel") }}
+				</button>
+				<button
+					v-if="isDeletable && canDisable"
+					type="button"
+					class="btn btn-link text-muted"
+					tabindex="0"
+					@click.prevent="$emit('disable', !isDisabled)"
+				>
+					{{ isDisabled ? $t("config.general.enable") : $t("config.general.disable") }}
+				</button>
+			</div>
 			<button
 				type="submit"
 				:class="buttonClass"
@@ -61,17 +77,19 @@ export default defineComponent({
 	},
 	props: {
 		isDeletable: Boolean as PropType<boolean>,
+		isDisabled: Boolean as PropType<boolean>,
+		canDisable: { type: Boolean as PropType<boolean>, default: true },
 		testState: {
 			type: Object as PropType<TestState>,
-			default: () => {},
+			default: {},
 		},
 		isSaving: Boolean as PropType<boolean>,
 		isSucceeded: Boolean as PropType<boolean>,
-		isNew: Boolean as PropType<boolean>,
 		sponsorTokenRequired: Boolean as PropType<boolean>,
 		currency: String as PropType<CURRENCY>,
+		usage: String as PropType<string>,
 	},
-	emits: ["save", "remove", "test"],
+	emits: ["save", "remove", "test", "disable"],
 	computed: {
 		saveButtonLabel(): string {
 			const { isError, isUnknown, isRunning } = this.testState;

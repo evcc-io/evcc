@@ -4,6 +4,8 @@ products:
     description:
       generic: Tasmota (1 Phase + SML Meter)
 group: switchsockets
+discovery:
+  hostname: ["tasmota*"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "charge"]
@@ -14,7 +16,6 @@ params:
       en: admin is default
   - name: password
   - name: channel
-    type: int
     default: 1
     required: true
     description:

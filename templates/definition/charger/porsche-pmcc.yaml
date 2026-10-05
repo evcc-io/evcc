@@ -7,5 +7,6 @@ capabilities: ["iso151182", "mA", "meter", "dim"]
 params:
   - preset: eebus
 render: |
+  type: eebus-evse
   {{ include "eebus" . }}
   meter: true

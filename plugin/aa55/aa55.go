@@ -9,6 +9,7 @@ package aa55
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/grid-x/modbus"
 )
@@ -25,6 +26,44 @@ func buildPDU(addr byte, register, count uint16) []byte {
 		byte(register >> 8), byte(register),
 		byte(count >> 8), byte(count),
 	}
+}
+
+// buildWriteSinglePDU constructs the 6-byte PDU body for a WRITE SINGLE REGISTER
+// request: [addr, 0x06, reg_hi, reg_lo, val_hi, val_lo].
+func buildWriteSinglePDU(addr byte, register, value uint16) []byte {
+	return []byte{
+		addr, modbus.FuncCodeWriteSingleRegister,
+		byte(register >> 8), byte(register),
+		byte(value >> 8), byte(value),
+	}
+}
+
+// buildWriteMultiplePDU constructs the WRITE MULTIPLE REGISTERS PDU body:
+// [addr, 0x10, reg_hi, reg_lo, count_hi, count_lo, byteCount, data…].
+func buildWriteMultiplePDU(addr byte, register uint16, values []byte) []byte {
+	count := uint16(len(values) / 2)
+	pdu := []byte{
+		addr, modbus.FuncCodeWriteMultipleRegisters,
+		byte(register >> 8), byte(register),
+		byte(count >> 8), byte(count),
+		byte(len(values)),
+	}
+	return append(pdu, values...)
+}
+
+// validateWriteResponse checks the AA55 frame echoed for a write request:
+// only the magic bytes and echoed function code are validated (high bit = reject).
+func validateWriteResponse(buf []byte, funcCode byte) error {
+	if len(buf) < 4 || buf[0] != 0xAA || buf[1] != 0x55 {
+		return errors.New("invalid response header")
+	}
+	if buf[3] == funcCode|0x80 {
+		return fmt.Errorf("write rejected (code %#x)", buf[3])
+	}
+	if buf[3] != funcCode {
+		return fmt.Errorf("unexpected function code %#x", buf[3])
+	}
+	return nil
 }
 
 // stripHeader validates the AA55 response frame and returns the bare payload

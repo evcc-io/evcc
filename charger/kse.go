@@ -70,12 +70,12 @@ func NewKSEFromConfig(ctx context.Context, other map[string]any) (api.Charger, e
 		return nil, err
 	}
 
-	return NewKSE(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+	return NewKSE(ctx, cc)
 }
 
 // NewKSE creates KSE charger
-func NewKSE(ctx context.Context, uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, modbus.Rtu, slaveID)
+func NewKSE(ctx context.Context, settings modbus.Settings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx, modbus.Rtu)
 	if err != nil {
 		return nil, err
 	}
@@ -263,13 +263,13 @@ func (wb *KSE) getPhases() (int, error) {
 }
 
 // Identify implements the api.Identifier interface
-func (wb *KSE) identify() (string, error) {
+func (wb *KSE) identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(kseRegNFCTransactionID, 4)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }
 
 var _ api.Diagnosis = (*KSE)(nil)

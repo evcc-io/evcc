@@ -9,7 +9,6 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/settings"
-	"github.com/evcc-io/evcc/core/wrapper"
 )
 
 var _ loadpoint.API = (*Loadpoint)(nil)
@@ -156,6 +155,20 @@ func (lp *Loadpoint) setMode(mode api.ChargeMode) {
 	lp.settings.SetString(keys.Mode, string(mode))
 }
 
+// alwaysChargeSupported reports if the charger can hold min power
+func (lp *Loadpoint) alwaysChargeSupported() bool {
+	return !lp.chargerHasFeature(api.SwitchDevice)
+}
+
+// normalizeMode maps deprecated modes; switch devices never get always charge
+func (lp *Loadpoint) normalizeMode(mode api.ChargeMode) (api.ChargeMode, api.AlwaysCharge) {
+	mode, ac := mode.Normalize()
+	if !lp.alwaysChargeSupported() {
+		ac = ""
+	}
+	return mode, ac
+}
+
 // SetMode sets loadpoint charge mode
 func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	lp.Lock()
@@ -167,6 +180,13 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	}
 
 	lp.log.DEBUG.Printf("set charge mode: %s", string(mode))
+
+	// normalize deprecated aliases; must happen before the change check since
+	// pv/minpv carry an always charge side effect even when mode stays smart
+	mode, ac := lp.normalizeMode(mode)
+	if ac != "" {
+		lp.setAlwaysCharge(ac)
+	}
 
 	// apply immediately
 	if lp.mode != mode {
@@ -181,12 +201,58 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 			lp.resetPhaseTimer()
 			lp.resetPVTimer()
 			lp.setPlanActive(false)
-		case api.ModeMinPV:
-			lp.resetPVTimer()
+		case api.ModeSmart:
+			if lp.alwaysCharge.Active() {
+				lp.resetPVTimer()
+			}
 		}
 
 		lp.requestUpdate()
 	}
+}
+
+// GetAlwaysCharge returns the always charge state
+func (lp *Loadpoint) GetAlwaysCharge() api.AlwaysCharge {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.alwaysCharge
+}
+
+// setAlwaysCharge sets the always charge state (no mutex)
+func (lp *Loadpoint) setAlwaysCharge(ac api.AlwaysCharge) {
+	if lp.alwaysCharge == ac {
+		return
+	}
+
+	lp.alwaysCharge = ac
+	lp.publish(keys.AlwaysCharge, ac)
+
+	// once is session-scoped and not persisted
+	persisted := api.AlwaysChargeOff
+	if ac == api.AlwaysChargeOn {
+		persisted = api.AlwaysChargeOn
+	}
+	lp.settings.SetString(keys.AlwaysCharge, string(persisted))
+
+	if ac.Active() {
+		lp.resetPVTimer()
+	}
+	lp.requestUpdate()
+}
+
+// SetAlwaysCharge sets the always charge state
+func (lp *Loadpoint) SetAlwaysCharge(ac api.AlwaysCharge) error {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if !lp.alwaysChargeSupported() {
+		return errors.New("always charge is not supported by this charger")
+	}
+
+	lp.log.DEBUG.Println("set always charge:", ac)
+	lp.setAlwaysCharge(ac)
+
+	return nil
 }
 
 // GetDefaultMode returns the default charge mode
@@ -202,6 +268,9 @@ func (lp *Loadpoint) SetDefaultMode(mode api.ChargeMode) {
 	defer lp.Unlock()
 
 	lp.log.DEBUG.Println("set default mode:", mode)
+
+	// deprecated pv/minpv map to smart, always charge is not part of the default
+	mode, _ = lp.normalizeMode(mode)
 
 	if lp.DefaultMode != mode {
 		lp.DefaultMode = mode
@@ -311,6 +380,34 @@ func (lp *Loadpoint) SetLimitSoc(soc int) {
 	// apply immediately
 	if lp.limitSoc != soc {
 		lp.setLimitSoc(soc)
+		lp.requestUpdate()
+	}
+}
+
+// GetMinSoc returns the loadpoint min soc (heating: min temperature)
+func (lp *Loadpoint) GetMinSoc() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.minSoc
+}
+
+// setMinSoc sets the loadpoint min soc (no mutex)
+func (lp *Loadpoint) setMinSoc(soc int) {
+	lp.minSoc = soc
+	lp.publish(keys.MinSoc, soc)
+	lp.settings.SetInt(keys.MinSoc, int64(soc))
+}
+
+// SetMinSoc sets the loadpoint min soc (heating: min temperature)
+func (lp *Loadpoint) SetMinSoc(soc int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set min soc:", soc)
+
+	// apply immediately
+	if lp.minSoc != soc {
+		lp.setMinSoc(soc)
 		lp.requestUpdate()
 	}
 }
@@ -466,6 +563,29 @@ func (lp *Loadpoint) SetSocConfig(soc loadpoint.SocConfig) {
 	lp.setSocConfig(soc)
 }
 
+// GetUI returns the display-only ui settings
+func (lp *Loadpoint) GetUI() loadpoint.UIConfig {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.Ui
+}
+
+func (lp *Loadpoint) setUI(ui loadpoint.UIConfig) {
+	lp.Ui = ui
+	lp.publish(keys.UI, ui)
+	lp.settings.SetJson(keys.UI, ui)
+}
+
+// SetUI sets the display-only ui settings. Not used in control logic.
+func (lp *Loadpoint) SetUI(ui loadpoint.UIConfig) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Printf("set ui config: %+v", ui)
+
+	lp.setUI(ui)
+}
+
 // GetThresholds returns the PV mode threshold settings
 func (lp *Loadpoint) GetThresholds() loadpoint.ThresholdsConfig {
 	lp.RLock()
@@ -603,8 +723,8 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if enable && lp.mode != api.ModePV && lp.mode != api.ModeMinPV {
-		return errors.New("battery boost is only available in PV modes")
+	if enable && lp.mode != api.ModeSmart {
+		return errors.New("battery boost is only available in smart mode")
 	}
 
 	lp.log.DEBUG.Println("set battery boost:", enable)
@@ -629,7 +749,8 @@ func (lp *Loadpoint) GetBatteryBoostLimit() int {
 	return lp.batteryBoostLimit
 }
 
-// SetBatteryBoostLimit sets the battery boost soc limit
+// SetBatteryBoostLimit sets the battery boost soc limit. Relaxing the limit
+// resumes a boost held by it, 100 disables the feature and ends an active boost.
 func (lp *Loadpoint) SetBatteryBoostLimit(limit int) {
 	lp.Lock()
 	defer lp.Unlock()
@@ -637,16 +758,30 @@ func (lp *Loadpoint) SetBatteryBoostLimit(limit int) {
 	lp.log.DEBUG.Println("set battery boost limit:", limit)
 
 	if lp.batteryBoostLimit != limit {
+		relaxed := limit < lp.batteryBoostLimit && lp.batteryBoostLimit < 100
+
 		lp.batteryBoostLimit = limit
 		lp.settings.SetInt(keys.BatteryBoostLimit, int64(limit))
 		lp.publish(keys.BatteryBoostLimit, limit)
+
+		// lock is held, hence assign instead of setBatteryBoost
+		switch {
+		case limit == 100 && lp.batteryBoost != boostDisabled:
+			lp.log.DEBUG.Println("battery boost disable: limit removed")
+			lp.batteryBoost = boostDisabled
+			lp.publish(keys.BatteryBoost, false)
+		case relaxed && lp.batteryBoost == boostHold:
+			lp.log.DEBUG.Println("battery boost resume: limit relaxed")
+			lp.batteryBoost = boostStart
+		}
+
+		lp.requestUpdate()
 	}
 }
 
 // HasChargeMeter determines if a physical charge meter is attached
 func (lp *Loadpoint) HasChargeMeter() bool {
-	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)
-	return lp.chargeMeter != nil && !isWrapped
+	return lp.chargeMeter != nil && lp.chargeMeter.fake == nil
 }
 
 // GetChargePower returns the current charge power
@@ -659,16 +794,16 @@ func (lp *Loadpoint) GetChargePower() float64 {
 // GetChargePowerFlexibility returns the flexible amount of current charging power
 func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 	mode := lp.GetMode()
-	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() ||
-		lp.planActive || lp.smartLimitActive(lp.GetSmartCostLimit(), rates, true) {
+	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() || lp.planActive ||
+		lp.GetBatteryBoost() != boostDisabled || lp.smartLimitActive(lp.GetSmartCostLimit(), rates, true) {
 		return 0
 	}
 
-	if mode == api.ModePV {
+	if loadpoint.SurplusFlexible(lp) {
 		return lp.GetChargePower()
 	}
 
-	// MinPV mode: a charger without current control (switch socket or heatpump) cannot release power.
+	// always charge: a charger without current control (switch socket or heatpump) cannot release power.
 	if lp.chargerHasFeature(api.SwitchDevice) || lp.chargerHasFeature(api.Continuous) {
 		return 0
 	}
@@ -862,13 +997,34 @@ func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set smart cost limit:", printPtr("%.1f", val))
+	lp.log.DEBUG.Println("set smart cost limit:", printPtr("%.3f", val))
 
 	if !ptrValueEqual(lp.smartCostLimit, val) {
 		lp.smartCostLimit = val
 
 		lp.settings.SetFloatPtr(keys.SmartCostLimit, val)
 		lp.publish(keys.SmartCostLimit, val)
+	}
+}
+
+// GetSolarShare gets the solar share
+func (lp *Loadpoint) GetSolarShare() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.solarShare
+}
+
+// SetSolarShare sets the solar share
+func (lp *Loadpoint) SetSolarShare(val float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if lp.solarShare != val {
+		lp.log.DEBUG.Printf("set solar share: %.2f", val)
+		lp.solarShare = val
+
+		lp.settings.SetFloat(keys.SolarShare, val)
+		lp.publish(keys.SolarShare, val)
 	}
 }
 
@@ -884,7 +1040,7 @@ func (lp *Loadpoint) SetSmartFeedInPriorityLimit(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set smart feed-in limit:", printPtr("%.1f", val))
+	lp.log.DEBUG.Println("set smart feed-in limit:", printPtr("%.3f", val))
 
 	if !ptrValueEqual(lp.smartFeedInPriorityLimit, val) {
 		lp.smartFeedInPriorityLimit = val

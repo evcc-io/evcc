@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"runtime"
 	"testing"
 	"time"
 
@@ -133,4 +134,48 @@ func TestEmbedDecodeChargesZones(t *testing.T) {
 	assert.InDelta(t, 0.05, cc.ChargesZones_[0].Charges, 1e-9)
 	assert.Equal(t, "Jan-Mar", cc.ChargesZones_[0].Months)
 	assert.Len(t, cc.chargesZones, 2)
+}
+
+func TestTotalPriceFormulaMemoryStable(t *testing.T) {
+	ts := time.Date(2026, 1, 15, 11, 0, 0, 0, time.Local)
+	e := embed{
+		Charges: 0.10,
+		Tax:     0.19,
+		Formula: "(price + charges) * (1 + tax)",
+	}
+	require.NoError(t, e.init())
+
+	sample := func() uint64 {
+		runtime.GC()
+		var ms runtime.MemStats
+		runtime.ReadMemStats(&ms)
+		return ms.HeapAlloc
+	}
+
+	before := int64(sample())
+	for i := 0; i < 10_000; i++ {
+		e.totalPrice(0.20, ts)
+	}
+	after := int64(sample())
+	runtime.KeepAlive(&e)
+
+	// Interpreter grows ~4.5KB per parsed statement; 10k calls would add ~45MB
+	assert.Less(t, after-before, int64(8<<20)) // 8MB
+}
+
+func TestTotalPriceFormulaPanic(t *testing.T) {
+	e := embed{Formula: "float64([]int{1}[int(price)])"}
+	require.NoError(t, e.init())
+
+	_, err := e.calc(5, 0, time.Now())
+	require.ErrorContains(t, err, "panic")
+	assert.Zero(t, e.totalPrice(5, time.Now()))
+}
+
+func TestTotalPriceFormulaFloatKind(t *testing.T) {
+	e := embed{Formula: "float32(price)"}
+	require.NoError(t, e.init())
+
+	// the formula yields float32, so the result only carries float32 precision
+	assert.InDelta(t, 0.20, e.totalPrice(0.20, time.Now()), 1e-6)
 }

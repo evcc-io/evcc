@@ -126,7 +126,7 @@ export default defineComponent({
 		entries(): StationEntry[] {
 			const byId = new Map<string, StationEntry>();
 			const published = new Set<string>();
-			for (const station of this.ocpp.status.stations) {
+			for (const station of this.ocpp.status?.stations ?? []) {
 				byId.set(station.id, {
 					id: station.id,
 					status: station.status,

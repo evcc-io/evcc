@@ -18,4 +18,4 @@ params:
 render: |
   type: elering
   region: {{ .region }}
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}

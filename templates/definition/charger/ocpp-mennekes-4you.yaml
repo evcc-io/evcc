@@ -2,10 +2,22 @@ template: ocpp-mennekes-4you
 products:
   - brand: Mennekes
     description:
-      generic: AMTRON 4Business
+      generic: AMTRON 4You 400 (OCPP)
+    capabilities: ["1p3p"]
   - brand: Mennekes
     description:
-      generic: AMTRON 4You
+      generic: AMTRON 4You 500 11 kW (OCPP)
+    capabilities: ["1p3p"]
+  - brand: Mennekes
+    description:
+      generic: AMTRON 4You 500 22 kW (OCPP)
+  - brand: Mennekes
+    description:
+      generic: AMTRON 4Business 700 11 kW (OCPP)
+    capabilities: ["1p3p"]
+  - brand: Mennekes
+    description:
+      generic: AMTRON 4Business 700 22 kW (OCPP)
 capabilities: ["rfid", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
@@ -13,4 +25,5 @@ params:
   - preset: ocpp
 render: |
   {{ include "ocpp" . }}
+  forcepowerctrl: true
   connecttimeout: 15m

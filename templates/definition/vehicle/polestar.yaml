@@ -1,14 +1,15 @@
 template: polestar
+deprecated: true
 products:
   - brand: Polestar
 requirements:
   evcc: ["skiptest"]
 params:
   - preset: vehicle-base
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: vin
     example: LPSVS...
 render: |
   type: polestar-grpc
-  {{ include "vehicle-base" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}

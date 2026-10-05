@@ -6,6 +6,8 @@ products:
       en: single phase
 capabilities: ["meter"]
 group: switchsockets
+discovery:
+  hostname: ["tasmota*"]
 params:
   - name: host
   - name: user
@@ -14,7 +16,6 @@ params:
       en: admin is default
   - name: password
   - name: channel
-    type: int
     default: 1
     required: true
     description:

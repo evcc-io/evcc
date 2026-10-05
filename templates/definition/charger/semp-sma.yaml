@@ -13,11 +13,27 @@ requirements:
     en: |
       Configure the SEMP base URL (`http://<charger-host>/SEMP`) and the device ID of the charger.
       IMPORTANT: The charger must NOT be registered directly as a consumer in the Sunny Home Manager / Sunny Portal at the same time!
-      The configuration option "Disconnect after full charge" must be disabled.
+
+      Setup on the "SMA EV Charger":
+      1. Set the rotary switch on the wallbox to PV/Eco charging.
+      2. Deactivate the wallbox in the Sunny Portal (it can be added back via evcc later).
+      3. Set "Operation with grid connection point meter" to "Yes" and set up a meter (SMA Sunny Home Manager 2 or Energy Meter) under "Configuration -> Parameters -> Meter configuration". This is required for the SEMP interface to be enabled.
+      4. Set "Charging release via app" to "No".
+      5. Set "Disconnect after full charge" to "No".
+      6. Restart the device and wait for it to come back online.
+      7. Add the charger in evcc and check/save the configuration (a vehicle may need to be connected for the SEMP interface to report the correct status).
     de: |
       Konfiguriere die SEMP Basis-URL (`http://<charger-host>/SEMP`) und die Geräte-ID des Chargers.
       WICHTIG: Der Charger darf NICHT gleichzeitig im Sunny Home Manager bzw. im Sunny Portal direkt als Verbraucher registriert sein!
-      Die Konfigurationsoption "Trennung nach Vollladung" muss deaktiviert sein.
+
+      Einrichtung beim "SMA EV Charger":
+      1. Drehschalter an der Wallbox auf PV/Eco-Laden stellen.
+      2. Wallbox im Sunny Portal deaktivieren (kann später über evcc wieder hinzugefügt werden).
+      3. "Betrieb mit Netzanschlusspunktzähler" auf "Ja" stellen und einen Zähler einrichten über "Konfiguration -> Parameter -> Zählerkonfiguration" (SMA Sunny Home Manager 2 oder Energy Meter). Erst dadurch wird die SEMP-Schnittstelle freigegeben.
+      4. "Ladefreigabe über App" auf "Nein" stellen.
+      5. "Trennung nach Vollladung" auf "Nein" stellen.
+      6. Geräteneustart auslösen und warten, bis das Gerät wieder online ist.
+      7. Die Wallbox in evcc anlegen und prüfen/speichern (eventuell muss ein Fahrzeug angeschlossen sein, damit die SEMP-Schnittstelle den richtigen Status zurückgibt).
 params:
   - name: uri
     description:

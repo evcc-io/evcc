@@ -163,8 +163,8 @@ func (d *dumper) Dump(name string, v any) {
 
 	if v, ok := api.Cap[api.BatteryPowerLimiter](v); ok {
 		charge, discharge := v.GetPowerLimits()
-		fmt.Fprintf(w, "Charge power:\t%.0fW\t\t\n", charge)
-		fmt.Fprintf(w, "Discharge power:\t%.0fW\t\t\n", discharge)
+		fmt.Fprintf(w, "Max charge power:\t%.0fW\t\t\n", charge)
+		fmt.Fprintf(w, "Max discharge power:\t%.0fW\t\t\n", discharge)
 	}
 
 	if v, ok := api.Cap[api.MaxACPowerGetter](v); ok {
@@ -180,8 +180,8 @@ func (d *dumper) Dump(name string, v any) {
 
 	if v, ok := api.Cap[api.Curtailer](v); ok {
 		d.measureTime(w, "Curtailed", func() (string, error) {
-			curtailed, err := v.Curtailed()
-			return fmt.Sprintf("%t", curtailed), err
+			percent, err := v.CurtailedPercent()
+			return fmt.Sprintf("%d%%", percent), err
 		})
 	}
 
@@ -202,8 +202,9 @@ func (d *dumper) Dump(name string, v any) {
 	}
 
 	// controllable battery
-	if api.HasCap[api.BatteryController](v) {
+	if v, ok := api.Cap[api.BatteryController](v); ok {
 		fmt.Fprintf(w, "Controllable:\ttrue\t\t\n")
+		fmt.Fprintf(w, "Battery modes:\t%v\t\t\n", v.BatteryModes())
 	}
 
 	if v, ok := api.Cap[api.Charger](v); ok {
@@ -247,13 +248,6 @@ func (d *dumper) Dump(name string, v any) {
 		d.measureTime(w, "Odometer", func() (string, error) {
 			odo, err := v.Odometer()
 			return fmt.Sprintf("%.0fkm", odo), err
-		})
-	}
-
-	if v, ok := api.Cap[api.VehicleFinishTimer](v); ok {
-		d.measureTime(w, "Finish time", func() (string, error) {
-			ft, err := v.FinishTime()
-			return fmt.Sprintf("%v", ft.Truncate(time.Minute).In(time.Local)), err
 		})
 	}
 
@@ -313,7 +307,8 @@ func (d *dumper) Dump(name string, v any) {
 
 	if v, ok := api.Cap[api.Identifier](v); ok {
 		d.measureTime(w, "Identifier", func() (string, error) {
-			id, err := v.Identify()
+			ids, err := v.Identify()
+			id := strings.Join(ids, ", ")
 			if err == nil && id == "" {
 				id = "<none>"
 			}

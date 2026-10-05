@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=https://storage.googleapis.com/coderabbit_public_assets/schema.v2.json
+reviews:
+  # Leave the PR description untouched (no "Summary by CodeRabbit").
+  high_level_summary: false
+
+  # Suppress the walkthrough comment by disabling all its parts.
+  changed_files_summary: false
+  sequence_diagrams: false
+  estimate_code_review_effort: false
+  assess_linked_issues: false
+  related_issues: false
+  related_prs: false
+  poem: false
+
+  # Auto-apply suggested labels and reviewers to the PR.
+  auto_apply_labels: true
+  auto_assign_reviewers: true
+
+  # Flag spam / low-quality PRs (public GitHub repos only).
+  slop_detection:
+    enabled: true

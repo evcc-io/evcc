@@ -28,6 +28,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/vehicle/tronity"
@@ -53,8 +54,8 @@ func init() {
 func NewTronityFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
-		Credentials ClientCredentials
-		Tokens      Tokens
+		Credentials oauth.ClientCredentials
+		Tokens      oauth.Tokens
 		VIN         string
 		Cache       time.Duration
 	}{
@@ -92,7 +93,7 @@ func NewTronityFromConfig(other map[string]any) (api.Vehicle, error) {
 	var ts oauth2.TokenSource
 	token, err := cc.Tokens.Token()
 
-	// https://app.platform.tronity.io/docs#tag/Authentication
+	// https://app.tronity.tech/docs#tag/Authentication
 	if err != nil {
 		// use app flow if we don't have tokens
 		ts = tronity.TokenSource(log, oc)

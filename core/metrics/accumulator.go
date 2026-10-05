@@ -11,10 +11,67 @@ import (
 type Accumulator struct {
 	clock             clock.Clock
 	updated           time.Time
-	energyMeter       *float64 // kWh
-	returnEnergyMeter *float64 // kWh
+	energyMeter       meterTotal
+	returnEnergyMeter meterTotal
 	Energy            float64  `json:"energy"`       // kWh
 	ReturnEnergy      float64  `json:"returnEnergy"` // kWh
+	SocTemp           *float64 `json:"socTemp,omitempty"`
+}
+
+// meterTotal tracks a cumulative meter reading in kWh. A lower reading is ignored
+// as a dropout until a second, increasing lower reading confirms the counter reset.
+type meterTotal struct {
+	last, reset *float64
+}
+
+// add returns the increase over the last reading and advances it
+func (t *meterTotal) add(v float64) float64 {
+	switch {
+	case t.last == nil:
+		t.last = &v
+	case v >= *t.last:
+		delta := v - *t.last
+		t.last, t.reset = &v, nil
+		return delta
+	case t.reset != nil && v > *t.reset:
+		t.last, t.reset = &v, nil
+	default:
+		t.reset = &v
+	}
+	return 0
+}
+
+// AccumulatorState is the resumable meter-reading checkpoint of an Accumulator.
+type AccumulatorState struct {
+	EnergyMeter       *float64 // kWh, last absolute reading
+	ReturnEnergyMeter *float64 // kWh, last absolute reading
+}
+
+// Snapshot returns the current meter readings for persistence.
+func (m *Accumulator) Snapshot() AccumulatorState {
+	return AccumulatorState{EnergyMeter: m.energyMeter.last, ReturnEnergyMeter: m.returnEnergyMeter.last}
+}
+
+// Restore seeds the meter readings so the first delta covers the downtime.
+func (m *Accumulator) Restore(s AccumulatorState) {
+	m.energyMeter = meterTotal{last: s.EnergyMeter}
+	m.returnEnergyMeter = meterTotal{last: s.ReturnEnergyMeter}
+}
+
+// CompleteFor reports whether the state can seed a collector of the given group.
+// Bidirectional groups need both readings for a complete restore.
+func (s AccumulatorState) CompleteFor(group string) bool {
+	if group == Battery || group == Grid {
+		return s.EnergyMeter != nil && s.ReturnEnergyMeter != nil
+	}
+	return s.EnergyMeter != nil || s.ReturnEnergyMeter != nil
+}
+
+// setSocTemp keeps the first reading per slot.
+func (m *Accumulator) setSocTemp(value float64) {
+	if m.SocTemp == nil {
+		m.SocTemp = &value
+	}
 }
 
 func WithClock(clock clock.Clock) func(*Accumulator) {
@@ -31,20 +88,16 @@ func NewAccumulator(opt ...func(*Accumulator)) *Accumulator {
 	return m
 }
 
-func (m *Accumulator) Updated() time.Time {
-	return m.updated
-}
-
 func (m *Accumulator) String() string {
 	b := new(bytes.Buffer)
 	fmt.Fprintf(b, "Accumulated: %.3fkWh energy, %.3fkWh return energy, updated: %v", m.Energy, m.ReturnEnergy, m.updated.Truncate(time.Second))
-	if m.energyMeter != nil || m.returnEnergyMeter != nil {
+	if m.energyMeter.last != nil || m.returnEnergyMeter.last != nil {
 		fmt.Fprintf(b, " energy total:")
-		if m.energyMeter != nil {
-			fmt.Fprintf(b, " %.3fkWh", *m.energyMeter)
+		if m.energyMeter.last != nil {
+			fmt.Fprintf(b, " %.3fkWh", *m.energyMeter.last)
 		}
-		if m.returnEnergyMeter != nil {
-			fmt.Fprintf(b, " %.3fkWh return energy", *m.returnEnergyMeter)
+		if m.returnEnergyMeter.last != nil {
+			fmt.Fprintf(b, " %.3fkWh return energy", *m.returnEnergyMeter.last)
 		}
 	}
 	return b.String()
@@ -52,34 +105,14 @@ func (m *Accumulator) String() string {
 
 // SetEnergyMeterTotal adds the difference to the last total meter value in kWh
 func (m *Accumulator) SetEnergyMeterTotal(v float64) {
-	defer func() {
-		m.updated = m.clock.Now()
-		m.energyMeter = new(v)
-	}()
-
-	if m.energyMeter == nil {
-		return
-	}
-
-	if v >= *m.energyMeter {
-		m.Energy += v - *m.energyMeter
-	}
+	m.updated = m.clock.Now()
+	m.Energy += m.energyMeter.add(v)
 }
 
 // SetReturnEnergyMeterTotal adds the difference to the last total meter value in kWh
 func (m *Accumulator) SetReturnEnergyMeterTotal(v float64) {
-	defer func() {
-		m.updated = m.clock.Now()
-		m.returnEnergyMeter = new(v)
-	}()
-
-	if m.returnEnergyMeter == nil {
-		return
-	}
-
-	if v >= *m.returnEnergyMeter {
-		m.ReturnEnergy += v - *m.returnEnergyMeter
-	}
+	m.updated = m.clock.Now()
+	m.ReturnEnergy += m.returnEnergyMeter.add(v)
 }
 
 // AddEnergy adds the given energy in kWh to the energy total

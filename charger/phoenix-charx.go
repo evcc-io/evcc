@@ -65,7 +65,7 @@ func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
-	wb, err := NewPhoenixCharx(ctx, cc.URI, cc.ID, cc.Connector)
+	wb, err := NewPhoenixCharx(ctx, cc.TcpSettings, cc.Connector)
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +86,8 @@ func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]any) (api.C
 }
 
 // NewPhoenixCharx creates a Phoenix charger
-func NewPhoenixCharx(ctx context.Context, uri string, id uint8, connector uint16) (*PhoenixCharx, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewPhoenixCharx(ctx context.Context, settings modbus.TcpSettings, connector uint16) (*PhoenixCharx, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -267,22 +267,27 @@ func (wb *PhoenixCharx) getPhaseValues(reg uint16) (float64, float64, float64, e
 var _ api.Identifier = (*PhoenixCharx)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *PhoenixCharx) Identify() (string, error) {
+func (wb *PhoenixCharx) Identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegEvid), 10)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	if res := bytesAsString(b); res != "" {
-		return res, nil
+	var ids []string
+	if evid := bytesAsString(b); evid != "" {
+		ids = append(ids, evid)
 	}
 
 	b, err = wb.conn.ReadHoldingRegisters(wb.register(charxRegRfid), 10)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(b), nil
+	if rfid := bytesAsString(b); rfid != "" {
+		ids = append(ids, rfid)
+	}
+
+	return ids, nil
 }
 
 var _ api.Diagnosis = (*PhoenixCharx)(nil)

@@ -78,19 +78,17 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 	var once sync.Once
 
 	for ; true; <-time.Tick(interval) {
-		// ensure we don't run when not needed, but execute once at startup
-		select {
-		case <-t.data.Done():
-			if !t.fromTo.IsActive(time.Now().Hour()) {
-				continue
-			}
-		default:
+		if !t.fromTo.IsActive(time.Now().Hour()) {
+			// keep cached forecast alive while fetching is paused
+			mergeRatesAfter(t.data, nil, beginningOfDay())
+			once.Do(func() { close(done) })
+			continue
 		}
 
 		var res solcast.Forecasts
 
 		if err := backoff.Retry(func() error {
-			uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT30M&format=json", t.site)
+			uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT30M&format=json&hours=96", t.site)
 			return backoffPermanentError(t.GetJSON(uri, &res))
 		}, bo()); err != nil {
 			if reportError(&once, done, err) {

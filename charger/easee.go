@@ -527,13 +527,19 @@ func (c *Easee) Enable(enable bool) (err error) {
 
 	// resume/stop charger
 	action := easee.ChargePause
-	var targetCurrent float64
 	if enable {
 		action = easee.ChargeResume
 		if opMode == easee.ModeAwaitingAuthentication && c.authorize {
 			action = easee.ChargeStart
 		}
-		targetCurrent = 32
+	}
+
+	// Easee firmware delays ~5 min when starting at 6A.
+	// Vendor docs recommend 7A minimum, clamp DCC before start.
+	if action == easee.ChargeStart && c.current < 7 {
+		if err := c.MaxCurrent(7); err != nil {
+			return err
+		}
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
@@ -543,19 +549,6 @@ func (c *Easee) Enable(enable bool) (err error) {
 
 	if err := c.waitForChargerEnabledState(enable); err != nil {
 		return err
-	}
-
-	if action == easee.ChargeStart { // ChargeStart does not mingle with DCC, no need for below operations
-		return nil
-	}
-
-	if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
-		return err
-	}
-
-	if enable {
-		// reset currents after enable, as easee automatically resets to maxA
-		return c.MaxCurrent(int64(c.current))
 	}
 
 	return nil
@@ -770,28 +763,6 @@ func (c *Easee) Phases1p3p(phases int) error {
 		if err != nil {
 			c.dispatcher.CancelOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
 		}
-
-		// Sending DCC:7 to skip charge pause after scaling down to 1p.
-		// The loadpoint's next control interval will send the real target current.
-		if err == nil && phases == 1 {
-			override := 7.0
-			chargerData := easee.ChargerSettings{
-				DynamicChargerCurrent: &override,
-			}
-			chargerURI := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-			noop, sendErr := c.dispatcher.Send(chargerURI, chargerData)
-			if sendErr != nil {
-				c.log.WARN.Printf("phase switch: failed to set charger current override: %v", sendErr)
-			} else if !noop {
-				if waitErr := c.waitForDynamicChargerCurrent(override); waitErr != nil {
-					c.log.WARN.Printf("phase switch: charger current override confirmation timeout: %v", waitErr)
-				}
-			}
-
-			c.mux.Lock()
-			c.current = override
-			c.mux.Unlock()
-		}
 	} else {
 		// charger level
 		if phases == 3 {
@@ -857,11 +828,11 @@ func (c *Easee) StatusReason() (api.Reason, error) {
 var _ api.Identifier = (*Easee)(nil)
 
 // Currents implements the api.PhaseCurrents interface
-func (c *Easee) Identify() (string, error) {
+func (c *Easee) Identify() ([]string, error) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	return c.rfid, nil
+	return []string{c.rfid}, nil
 }
 
 // Set smart charging status to update the chargers led (smart=blue, fast=white)
@@ -871,7 +842,7 @@ func (c *Easee) updateSmartCharging() {
 	}
 
 	mode := c.lp.GetMode()
-	isSmartCharging := mode == api.ModePV || mode == api.ModeMinPV
+	isSmartCharging := mode == api.ModeSmart
 
 	c.mux.Lock()
 	updateNeeded := c.opMode != easee.ModeDisconnected && isSmartCharging != c.smartCharging

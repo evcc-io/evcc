@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -39,8 +38,6 @@ func NewMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 		Currents           []string
 		Voltages           []string
 		Powers             []string
-		Delay              time.Duration
-		Timeout            time.Duration
 	}{
 		Power: "Power",
 		Settings: modbus.Settings{
@@ -62,16 +59,10 @@ func NewMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 	modbus.Lock()
 	defer modbus.Unlock()
 
-	conn, err := modbus.NewConnection(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
+	conn, err := cc.Settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	// set non-default timeout
-	conn.Timeout(cc.Timeout)
-
-	// set non-default delay
-	conn.Delay(cc.Delay)
 
 	log := util.NewLogger("modbus")
 	conn.Logger(log.TRACE)

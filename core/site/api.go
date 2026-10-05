@@ -1,6 +1,8 @@
 package site
 
 import (
+	"iter"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 )
@@ -15,16 +17,21 @@ type API interface {
 	Publisher
 
 	Loadpoints() []loadpoint.API
+	ActiveLoadpoints() iter.Seq2[int, loadpoint.API]
 	Vehicles() Vehicles
-	Optimize() error
+	Optimize()
 
 	// Meta
 	GetTitle() string
 	SetTitle(string)
+	GetCountry() string
+	SetCountry(string)
 
 	// Config
 	GetGridMeterRef() string
 	SetGridMeterRef(string)
+	GetCurtailerRefs() []string
+	SetCurtailerRefs([]string)
 	GetPVMeterRefs() []string
 	SetPVMeterRefs([]string)
 	GetBatteryMeterRefs() []string
@@ -33,6 +40,8 @@ type API interface {
 	SetAuxMeterRefs([]string)
 	GetExtMeterRefs() []string
 	SetExtMeterRefs([]string)
+	GetConsumerMeterRefs() []string
+	SetConsumerMeterRefs([]string)
 
 	// circuits
 	GetCircuit() api.Circuit
@@ -42,6 +51,7 @@ type API interface {
 	//
 
 	GetBatterySoc() float64
+	GetBatteryMaxDischargePower() *float64
 	GetPrioritySoc() float64
 	SetPrioritySoc(float64) error
 	GetBufferSoc() float64
@@ -53,6 +63,15 @@ type API interface {
 	GetBatteryGridChargeLimit() *float64
 	// SetBatteryGridChargeLimit sets the grid charge limit
 	SetBatteryGridChargeLimit(limit *float64) error
+	// GetBatteryGridDischargeLimit get the grid discharge (feed-in) limit
+	GetBatteryGridDischargeLimit() *float64
+	// SetBatteryGridDischargeLimit sets the grid discharge (feed-in) limit
+	SetBatteryGridDischargeLimit(limit *float64) error
+
+	// GetOptimizerChargingStrategy gets the optimizer grid charging strategy
+	GetOptimizerChargingStrategy() string
+	// SetOptimizerChargingStrategy sets the optimizer grid charging strategy
+	SetOptimizerChargingStrategy(strategy string) error
 
 	//
 	// power and energy
@@ -61,6 +80,10 @@ type API interface {
 	GetGridPower() float64
 	GetResidualPower() float64
 	SetResidualPower(float64) error
+	GetGridExportLimit() float64
+	SetGridExportLimit(float64) error
+	GetProfilePercentile() *float64
+	SetProfilePercentile(*float64) error
 
 	//
 	// tariffs and costs
@@ -70,11 +93,22 @@ type API interface {
 	GetTariff(api.TariffUsage) api.Tariff
 
 	//
+	// forecast
+	//
+
+	// GetSolarAdjusted returns if the solar forecast is adjusted to real production data
+	GetSolarAdjusted() bool
+	// SetSolarAdjusted sets if the solar forecast is adjusted to real production data
+	SetSolarAdjusted(bool)
+
+	//
 	// battery control
 	//
 
 	GetBatteryDischargeControl() bool
 	SetBatteryDischargeControl(bool) error
+	GetBatteryGridDischarge() bool
+	SetBatteryGridDischarge(bool) error
 
 	//
 	// battery control external

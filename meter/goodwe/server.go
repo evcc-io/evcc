@@ -96,7 +96,7 @@ func (m *Server) listen() {
 			m.log.ERROR.Println(err)
 			continue
 		}
-		m.log.TRACE.Printf("recv from %s: % X", addr, buf[:n])
+		m.log.TRACE.Printf("recv %s: % X", addr, buf[:n])
 
 		ip := addr.IP.String()
 		monitor := m.GetInverter(ip)

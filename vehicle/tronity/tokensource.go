@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
@@ -14,7 +15,7 @@ type tokenSource struct {
 }
 
 func TokenSource(log *util.Logger, oc *oauth2.Config) oauth2.TokenSource {
-	return oauth2.ReuseTokenSource(nil, &tokenSource{log, oc})
+	return oauth2.ReuseTokenSource(nil, oauth.Redacted(log, &tokenSource{log, oc}))
 }
 
 func (ts *tokenSource) Token() (*oauth2.Token, error) {

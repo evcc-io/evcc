@@ -15,7 +15,6 @@ params:
     choice: ["battery"]
   - name: token
     required: true
-    mask: true
     description:
       de: VRM Token
       en: VRM token

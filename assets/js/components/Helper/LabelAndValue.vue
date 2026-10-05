@@ -1,6 +1,6 @@
 <template>
 	<div class="root">
-		<div class="mb-2 label text-truncate-xs-only" :class="labelClass">
+		<div class="label text-truncate" :class="labelClass" :style="{ color }">
 			<slot name="label">{{ label }}</slot>
 		</div>
 		<slot>
@@ -34,6 +34,7 @@ export default defineComponent({
 		valueFmt: Function as PropType<(n: number) => string>,
 		extraValue: String,
 		align: { type: String, default: "center" },
+		color: String,
 	},
 	computed: {
 		labelClass() {
@@ -53,12 +54,17 @@ export default defineComponent({
 	text-transform: uppercase;
 	color: var(--evcc-gray);
 	font-size: 14px;
+	/* focus ring clearance, keeps mb-2 spacing */
+	padding: 0.5rem;
+	margin: -0.5rem -0.5rem 0;
 }
 .value {
 	font-size: 18px;
 }
 .extraValue {
+	margin-top: 0.1rem;
 	color: var(--evcc-gray);
 	font-size: 14px;
+	font-weight: normal;
 }
 </style>

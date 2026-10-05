@@ -24,7 +24,6 @@ params:
       en: Found on the device label. Enter as a 16-character hex string (8 bytes).
   - name: password
     required: true
-    mask: true
     description:
       de: Passwort (wie in der EVSE Master App gesetzt)
       en: Password (set in the EVSE Master app)

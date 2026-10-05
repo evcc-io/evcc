@@ -5,14 +5,29 @@ products:
       generic: WPM (SG Ready)
 group: heating
 capabilities: ["meter", "dim"]
-# requirements:
+requirements:
+  description:
+    de: Die SG Ready Steuerung über Modbus mit einem ISG funktioniert nur im Warmwasserbetrieb sowie im Automatik-/Programmbetrieb. Im Komfortbetrieb werden die SG Ready Befehle ignoriert.
+    en: SG Ready control via Modbus with the ISG only works in domestic hot water (DHW) mode and in automatic/programmed mode. In comfort mode, SG Ready commands are ignored.
 #   evcc: ["sponsorship"]
+discovery:
+  hostname: ["servicewelt*"]
+  mac: ["78E9962", "70B3D5C45"]
 params:
   - name: modbus
     choice: ["tcpip"]
   - name: tempsource
     type: choice
     choice: ["warmwater", "buffer"]
+  - name: power
+    type: bool
+    advanced: true
+    description:
+      de: Leistungsaufnahme auslesen
+      en: Read power consumption
+    help:
+      de: Aufnahmeleistung des Inverters. Nur bei WPMsystem (WPM 4) verfügbar, nicht bei WPM 3/3i.
+      en: Inverter power consumption. Only available on WPMsystem (WPM 4), not on WPM 3/3i.
 render: |
   type: sgready
   getmode:
@@ -107,5 +122,15 @@ render: |
       type: input
       encoding: int16
     scale: 0.1
+  {{- end }}
+  {{- if .power }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3679 # 3680 INVERTER AUFNAHMELEISTUNG IWS 1 (1-based)
+      type: input
+      encoding: int16nan
+    scale: 100 # 0.1 kW -> W
   {{- end }}
   {{ include "heatpumpswitch" . }}

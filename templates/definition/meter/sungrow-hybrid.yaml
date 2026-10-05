@@ -14,6 +14,9 @@ caveats:
       de: Für korrekte Funktion dürfen maximale Lade- und Entladeleistung nicht zu hoch angesetzt werden.
       en: For correct operation, maximum charge and discharge power must not be set too high.
     link: https://github.com/evcc-io/evcc/discussions/23557
+discovery:
+  hostname: ["sungrow*"]
+  mac: ["AC199F"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -21,16 +24,16 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
   - name: maxacpower
-    service: modbus/read?address=5000&type=input&encoding=uint16&scale=100&{modbus}
+    service: modbus/read?address=5000&type=input&encoding=uint16&scale=100&{modbus} # Nominal output power, 0.1kW
   - preset: battery-params
   - name: maxchargepower
-    service: modbus/read?address=13051&type=holding&encoding=uint16&scale=1&{modbus}
+    service: modbus/read?address=5627&type=input&encoding=uint16&scale=100&{modbus} # BDC rated power, 0.1kW: Battery DC/DC Converters power, also inverter default value after delivery
     required: true
   - name: maxdischargepower
-    service: modbus/read?address=33047&type=holding&encoding=uint16&scale=10&{modbus}
+    service: modbus/read?address=5627&type=input&encoding=uint16&scale=100&{modbus} # BDC rated power, 0.1kW: Battery DC/DC Converters power, also inverter default value after delivery
     required: true
   - name: capacity
-    service: modbus/read?address=5638&type=input&encoding=uint16&scale=0.01&resulttype=float&{modbus}
+    service: modbus/read?address=5638&type=input&encoding=uint16&scale=0.01&resulttype=float&{modbus} # Battery Capacity - High precision, 0.01kWh
   - name: timeout
     deprecated: true
 render: |
@@ -43,6 +46,9 @@ render: |
       type: input
       address: 13009 # Export power
       decode: int32s
+    block: # 13000-13046
+      register: 13000
+      count: 47
     scale: -1
   energy:
     source: modbus
@@ -51,53 +57,21 @@ render: |
       address: 13036 # Total Import Energy, 0.1kWh
       type: input
       decode: uint32s
+    block: # 13000-13046
+      register: 13000
+      count: 47
     scale: 0.1
-  currents:
-  - source: calc
-    div:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        type: input
-        address: 5602 # Meter Phase A Active Power, 1W
-        decode: int32s
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        type: input
-        address: 5018 # Phase A voltage, 0.1V
-        decode: uint16
-      scale: 0.1
-  - source: calc
-    div:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        type: input
-        address: 5604 # Meter Phase B Active Power, 1W
-        decode: int32s
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        type: input
-        address: 5019 # Phase b voltage, 0.1V
-        decode: uint16
-      scale: 0.1
-  - source: calc
-    div:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        type: input
-        address: 5606 # Meter Phase C Active Power, 1W
-        decode: int32s
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        type: input
-        address: 5020 # Phase C voltage, 0.1V
-        decode: uint16
-      scale: 0.1
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 13045 # Total export energy, 0.1kWh
+      type: input
+      decode: uint32s
+    block: # 13000-13046
+      register: 13000
+      count: 47
+    scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -107,6 +81,9 @@ render: |
       address: 5016 # Total DC power
       type: input
       decode: uint32s
+    block: # 5016-5020
+      register: 5016
+      count: 5
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -114,6 +91,9 @@ render: |
       address: 13002 # Total PV Generation, 0.1kWh
       type: input
       decode: uint32s
+    block: # 13000-13046
+      register: 13000
+      count: 47
     scale: 0.1
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
@@ -136,6 +116,9 @@ render: |
           type: input
           address: 13000 # Battery running state
           decode: uint16
+        block: # 13000-13046
+          register: 13000
+          count: 47
     - name: bc
       type: int
       config:
@@ -145,6 +128,9 @@ render: |
           type: input
           address: 13020 # Battery current
           decode: int16
+        block: # 13000-13046
+          register: 13000
+          count: 47
     - name: bp
       type: int
       config:
@@ -154,6 +140,9 @@ render: |
           type: input
           address: 13021 # Battery power
           decode: int16
+        block: # 13000-13046
+          register: 13000
+          count: 47
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -161,6 +150,20 @@ render: |
       address: 13026 # Total battery discharge energy, 0.1kWh
       type: input
       decode: uint32s
+    block: # 13000-13046
+      register: 13000
+      count: 47
+    scale: 0.1
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 13040 # Total Charge Energy (Accumulated charge of batteries), 0.1kWh
+      type: input
+      decode: uint32s
+    block: # 13000-13046
+      register: 13000
+      count: 47
     scale: 0.1
   soc:
     source: modbus
@@ -169,6 +172,9 @@ render: |
       address: 13022 # Battery level
       type: input
       decode: int16
+    block: # 13000-13046
+      register: 13000
+      count: 47
     scale: 0.1
   batterymode:
     source: switch
@@ -193,6 +199,15 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13049 # EMS mode selection
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: {{ div .maxchargepower 10 }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33046 # Battery max charge power
               type: writesingle
               decode: uint16
         - source: const
@@ -224,6 +239,15 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13050 # Charge/discharge command
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: {{ div .maxchargepower 10 }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33046 # Battery max charge power
               type: writesingle
               decode: uint16
         # Set max battery discharge power, effectively stops discharging
@@ -259,12 +283,71 @@ render: |
               type: writesingle
               decode: uint16
         - source: const
+          value: {{ div .maxchargepower 10 }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33046 # Battery max charge power
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: {{ div .maxdischargepower 10 }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33047 # Battery max discharge power
+              type: writesingle
+              decode: uint16
+        - source: const
           value: {{ .maxchargepower }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13051 # Battery max forced (dis)charge power
+              type: writesingle
+              decode: uint16
+    - case: 4 # holdcharge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # Self-consumption mode (Default)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13049 # EMS mode selection
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0xCC # Stop (Default)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13050 # Charge/discharge command
+              type: writesingle
+              decode: uint16
+        # Set max battery charge power, effectively stops charging
+        - source: const
+          value: 1 # 0.01kW, min allowed value for register
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33046 # Battery max charge power
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: {{ div .maxdischargepower 10 }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33047 # Battery max discharge power
               type: writesingle
               decode: uint16
   {{- include "battery-params" . }}

@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -185,7 +186,8 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func ensureAuthHandler(authObject auth.Auth) mux.MiddlewareFunc {
+// EnsureAuthHandler returns middleware that rejects unauthenticated requests
+func EnsureAuthHandler(authObject auth.Auth) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if next == nil {
@@ -239,6 +241,21 @@ func regenerateApiKeyHandler(authObject auth.Auth) http.HandlerFunc {
 
 		jsonWrite(w, map[string]string{"key": key})
 	}
+}
+
+// requireCriticalConfigAuth guards script-plugin configs: API key passes; session users must supply the admin password.
+func requireCriticalConfigAuth(w http.ResponseWriter, r *http.Request, authObject auth.Auth, req configReq) bool {
+	if authObject.GetAuthMode() == auth.Disabled || !configHasCriticalPlugin(req) {
+		return true
+	}
+	if key := apiKeyFromRequest(r); key != "" && authObject.ValidateApiKey(key) {
+		return true
+	}
+	if !authObject.IsAdminPasswordValid(r.Header.Get("X-Admin-Password")) {
+		jsonError(w, http.StatusPreconditionRequired, errors.New("admin password required"))
+		return false
+	}
+	return true
 }
 
 // ensureDbAuth guards /db/ endpoints: API key Bearer passes directly;
