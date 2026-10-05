@@ -16,15 +16,12 @@ const SINKS: FlowSink[] = ["home", "loadpoint", "battery", "export"];
 // one shade per source, feed-in stands out
 const LINK_ALPHA: Record<string, string> = { pv: "b0", battery: "50", grid: "40", export: "e0" };
 
-const MIN_LINK_SHARE = 0.01;
-
 const COMPACT = window.matchMedia("(max-width: 575.98px)");
 
 interface Node {
 	name: string;
 	label: string;
 	value: number;
-	drawn: number;
 	color: string | object;
 	source: boolean;
 }
@@ -40,19 +37,6 @@ export default defineComponent({
 		return { compact: COMPACT.matches };
 	},
 	computed: {
-		// hairline links are noise, node totals still include them. Every node keeps
-		// its largest link so it stays connected and in its column.
-		visibleFlows(): Flow[] {
-			const total = this.flows.reduce((acc, f) => acc + f.energy, 0);
-			const largest = new Map<string, Flow>();
-			for (const f of this.flows) {
-				for (const key of [`from-${f.from}`, `to-${f.to}`]) {
-					if ((largest.get(key)?.energy ?? 0) < f.energy) largest.set(key, f);
-				}
-			}
-			const keep = new Set(largest.values());
-			return this.flows.filter((f) => keep.has(f) || f.energy >= total * MIN_LINK_SHARE);
-		},
 		nodeColors(): Record<string, string> {
 			return {
 				pv: groupColor("pv"),
@@ -62,16 +46,13 @@ export default defineComponent({
 			};
 		},
 		nodes(): Node[] {
-			const sumOf = (flows: Flow[], key: "from" | "to", id: string) =>
-				flows.filter((f) => f[key] === id).reduce((acc, f) => acc + f.energy, 0);
-			// label shows the full total, node height matches the drawn links
-			const sum = (key: "from" | "to", id: string) => sumOf(this.flows, key, id);
-			const drawn = (key: "from" | "to", id: string) => sumOf(this.visibleFlows, key, id);
+			// every flow is drawn, so a node's label is the sum of the links you can hover
+			const sum = (key: "from" | "to", id: string) =>
+				this.flows.filter((f) => f[key] === id).reduce((acc, f) => acc + f.energy, 0);
 			const src = SOURCES.map((id) => ({
 				name: `from-${id}`,
 				label: this.$t(`energy.flow.${id}`),
 				value: sum("from", id),
-				drawn: drawn("from", id),
 				color: this.nodeColors[id] || "",
 				source: true,
 			}));
@@ -80,7 +61,6 @@ export default defineComponent({
 				name: `to-${id}`,
 				label: id === "loadpoint" ? loadpointLabel : this.$t(`energy.flow.${id}`),
 				value: sum("to", id),
-				drawn: drawn("to", id),
 				// colored by where the energy came from, only feed-in keeps its own color
 				color: id === "export" ? this.nodeColors[id] || "" : this.sourceBands(id),
 				source: false,
@@ -156,7 +136,7 @@ export default defineComponent({
 						emphasis: { focus: "adjacency" },
 						data: this.nodes.map((n) => ({
 							name: n.name,
-							value: n.drawn,
+							value: n.value,
 							depth: n.source ? 0 : 1,
 							// rounded towards the label, sharp where the links attach
 							itemStyle: {
@@ -165,7 +145,7 @@ export default defineComponent({
 							},
 							label: labelFor(n),
 						})),
-						links: this.visibleFlows.map((f) => ({
+						links: this.flows.map((f) => ({
 							source: `from-${f.from}`,
 							target: `to-${f.to}`,
 							value: f.energy,
@@ -190,7 +170,7 @@ export default defineComponent({
 		// incoming links which attach in source order
 		sourceBands(to: FlowSink): object {
 			const flows = SOURCES.flatMap((from) =>
-				this.visibleFlows.filter((f) => f.from === from && f.to === to)
+				this.flows.filter((f) => f.from === from && f.to === to)
 			);
 			const total = flows.reduce((acc, f) => acc + f.energy, 0) || 1;
 			let offset = 0;
