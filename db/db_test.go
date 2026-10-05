@@ -2,7 +2,6 @@ package db
 
 import (
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -101,25 +100,9 @@ func TestUnitWAL(t *testing.T) {
 	entries, err = os.ReadDir(dir)
 	require.NoError(t, err)
 	assert.Len(t, entries, 1)
-}
 
-func TestUnitFileMounted(t *testing.T) {
-	mountinfo := `22 1 8:1 / / rw,relatime - ext4 /dev/sda1 rw
-36 22 8:1 /home/user/.evcc /root/.evcc rw,relatime - ext4 /dev/sda1 rw
-37 22 8:1 /home/user/evcc.db /data/evcc.db rw,relatime - ext4 /dev/sda1 rw
-38 22 8:1 /home/user/my\040evcc.db /data/my\040evcc.db rw,relatime - ext4 /dev/sda1 rw
-`
-	for _, tc := range []struct {
-		file    string
-		mounted bool
-	}{
-		{"/data/evcc.db", true},
-		{"/data/my evcc.db", true},
-		{"/root/.evcc/evcc.db", false}, // directory mount
-		{"/root/.evcc", true},
-	} {
-		assert.Equal(t, tc.mounted, fileMounted(strings.NewReader(mountinfo), tc.file), tc.file)
-	}
+	// shutdown closes again after restore and reset have closed
+	require.NoError(t, Close())
 }
 
 type migrationParent struct {

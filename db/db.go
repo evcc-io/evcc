@@ -1,11 +1,9 @@
 package db
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,13 +44,6 @@ func New(driver, dsn string) (*gorm.DB, error) {
 
 		// Store the expanded file path for later use
 		filePath = file
-
-		if f, err := os.Open("/proc/self/mountinfo"); err == nil {
-			if abs, err := filepath.Abs(file); err == nil && fileMounted(f, abs) {
-				util.NewLogger("main").WARN.Printf("database %s is mounted as a single file, mount its directory instead or the latest changes in %s-wal get lost when the container is recreated", abs, filepath.Base(abs))
-			}
-			f.Close()
-		}
 
 		// WAL with synchronous NORMAL syncs to disk on checkpoint instead of every commit,
 		// a power loss may drop the latest commits but cannot corrupt the database.
@@ -98,24 +89,6 @@ func New(driver, dsn string) (*gorm.DB, error) {
 	}
 
 	return db, nil
-}
-
-// mountEscaper escapes a path like the mount point column of /proc/self/mountinfo
-var mountEscaper = strings.NewReplacer(" ", `\040`, "\t", `\011`, "\n", `\012`, `\`, `\134`)
-
-// fileMounted reports whether file is itself a mount point, i.e. a single-file bind mount
-func fileMounted(mountinfo io.Reader, file string) bool {
-	escaped := mountEscaper.Replace(file)
-
-	scanner := bufio.NewScanner(mountinfo)
-	for scanner.Scan() {
-		// mount id, parent id, major:minor, root, mount point, ...
-		if fields := strings.Fields(scanner.Text()); len(fields) > 4 && fields[4] == escaped {
-			return true
-		}
-	}
-
-	return false
 }
 
 func NewInstance(driver, dsn string) error {
