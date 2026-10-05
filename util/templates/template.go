@@ -361,6 +361,9 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 
 	t.ModbusValues(renderMode, values)
 
+	// modbus params take part in validation like the template's own params
+	t.ModbusParams("", values)
+
 	res := make(map[string]any)
 
 	var usage string

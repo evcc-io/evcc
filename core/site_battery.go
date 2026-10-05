@@ -176,6 +176,24 @@ func (site *Site) batterySocLimitReached(dev config.Device[api.Meter], discharge
 	return false, nil
 }
 
+// batteryModeFallbacks lists the modes applied instead of an unsupported mode, most to least aligned with its intent
+var batteryModeFallbacks = map[api.BatteryMode][]api.BatteryMode{
+	api.BatteryCharge:     {api.BatteryHold, api.BatteryNormal},       // keep the energy while grid power is cheap
+	api.BatteryDischarge:  {api.BatteryHoldCharge, api.BatteryNormal}, // don't store pv, feed the house instead
+	api.BatteryHold:       {api.BatteryNormal},
+	api.BatteryHoldCharge: {api.BatteryNormal},
+}
+
+// supportedBatteryMode returns the requested mode if supported, otherwise the first supported fallback or unknown
+func supportedBatteryMode(supported []api.BatteryMode, mode api.BatteryMode) api.BatteryMode {
+	for _, m := range append([]api.BatteryMode{mode}, batteryModeFallbacks[mode]...) {
+		if slices.Contains(supported, m) {
+			return m
+		}
+	}
+	return api.BatteryUnknown
+}
+
 // applyBatteryMode applies the mode to each battery.
 //
 // A battery that reached the soc bound of the requested mode is held instead:
@@ -212,16 +230,26 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 			}
 		}
 
-		// don't re-apply the mode the battery is already in
-		name := dev.Config().Name
-		if deviceMode == api.BatteryUnknown || deviceMode == site.batteryModeApplied[name] {
+		if deviceMode == api.BatteryUnknown {
 			continue
 		}
 
-		if !slices.Contains(batCtrl.BatteryModes(), deviceMode) {
-			site.log.DEBUG.Printf("battery %s does not support mode: %s", deviceTitleOrName(dev), deviceMode)
+		// an unsupported mode falls back to the closest supported one instead of leaving the battery in the mode applied before
+		applyMode := supportedBatteryMode(batCtrl.BatteryModes(), deviceMode)
+		if applyMode == api.BatteryUnknown {
 			continue
 		}
+
+		// don't re-apply the mode the battery is already in
+		name := dev.Config().Name
+		if applyMode == site.batteryModeApplied[name] {
+			continue
+		}
+
+		if applyMode != deviceMode {
+			site.log.WARN.Printf("battery %s does not support mode %s, using %s", deviceTitleOrName(dev), deviceMode, applyMode)
+		}
+		deviceMode = applyMode
 
 		if err := batCtrl.SetBatteryMode(deviceMode); err != nil {
 			if !errors.Is(err, api.ErrNotAvailable) {

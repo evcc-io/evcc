@@ -18,11 +18,20 @@
 				/>
 			</Item>
 
+			<Item v-if="experimental" to="/energy" :label="$t('tabBar.energy')">
+				<SankeyIcon class="tab-icon" />
+			</Item>
+
 			<Item to="/forecast" :label="$t('tabBar.forecast')">
 				<ForecastGraphIcon class="tab-icon" />
 			</Item>
 
-			<Item to="/sessions" :label="$t('tabBar.sessions')">
+			<!-- six tabs do not fit a phone, sessions moves into the more menu there -->
+			<Item
+				to="/sessions"
+				:label="$t('tabBar.sessions')"
+				:class="{ 'd-none d-sm-flex': experimental }"
+			>
 				<SessionsIcon class="tab-icon" />
 			</Item>
 
@@ -47,6 +56,7 @@
 import "@h2d2/shopicons/es/regular/lightning";
 import ForecastGraphIcon from "../MaterialIcon/ForecastGraph.vue";
 import SessionsIcon from "../MaterialIcon/Sessions.vue";
+import SankeyIcon from "../MaterialIcon/Sankey.vue";
 import BatteryIcon from "../Energyflow/BatteryIcon.vue";
 import Item from "./Item.vue";
 import MoreItem from "./MoreItem.vue";
@@ -59,6 +69,7 @@ export default defineComponent({
 		BatteryIcon,
 		ForecastGraphIcon,
 		SessionsIcon,
+		SankeyIcon,
 		Item,
 		MoreItem,
 	},
@@ -93,7 +104,7 @@ export default defineComponent({
 			return (this.battery?.devices?.length ?? 0) > 0;
 		},
 		moreActive() {
-			const mainTabs = ["/", "/battery", "/forecast", "/sessions"];
+			const mainTabs = ["/", "/energy", "/battery", "/forecast", "/sessions"];
 			return !mainTabs.includes(this.$route.path);
 		},
 	},

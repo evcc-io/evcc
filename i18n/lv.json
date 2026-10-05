@@ -1230,6 +1230,31 @@
     "restartDescription": "Vai mēģinājāt izslēgt un atkal ieslēgt?",
     "secondaryActions": "Joprojām nevarat atrisināt problēmu? Šeit ir vēl dažas radikālākas iespējas."
   },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "uzlādēts",
+        "returnEnergy": "izlādēts"
+      },
+      "grid": {
+        "energy": "importēts",
+        "returnEnergy": "eksportēts"
+      },
+      "meter": {
+        "energy": "Enerģija",
+        "returnEnergy": "Enerģija (atpakaļvirzienā)"
+      }
+    },
+    "group": {
+      "battery": "Akumulators",
+      "consumer": "Patēriņš",
+      "forecast": "Prognoze",
+      "grid": "Tīkls",
+      "loadpoint": "Uzlāde un sildīšana",
+      "meter": "Papildu patēriņa skaitītāji",
+      "pv": "Ražošana"
+    }
+  },
   "issue": {
     "additional": {
       "copied": "nokopēts!",
@@ -1406,35 +1431,6 @@
       "consumption": "Patēriņš",
       "feedIn": "Atdeve",
       "title": "Ārējais ierobežojums aktīvs"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "uzlādēts",
-          "returnEnergy": "izlādēts"
-        },
-        "grid": {
-          "energy": "importēts",
-          "returnEnergy": "eksportēts"
-        },
-        "meter": {
-          "energy": "Enerģija",
-          "returnEnergy": "Enerģija (atpakaļvirzienā)"
-        }
-      },
-      "download": "Lejupielādēt",
-      "empty": "Nav vēstures datu par šo laika periodu.",
-      "group": {
-        "battery": "Akumulators",
-        "consumer": "Patēriņš",
-        "forecast": "Prognoze",
-        "grid": "Tīkls",
-        "loadpoint": "Uzlāde un sildīšana",
-        "meter": "Papildu patēriņa skaitītāji",
-        "pv": "Ražošana"
-      },
-      "otherConsumers": "Citi",
-      "title": "Vēsture"
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",

@@ -2,7 +2,9 @@ name: Claude Issue & PR Agent
 
 on:
   issues:
-    types: [opened]
+    # reopened: the triage agent closes incomplete reports and asks the reporter
+    # to add the details and reopen, which re-runs triage (see the agent job)
+    types: [opened, reopened]
   # a reporter answering an earlier request for information re-runs the agent,
   # see the reanalyze job below
   issue_comment:
@@ -18,11 +20,16 @@ on:
 jobs:
   agent:
     name: Issue triage
-    if: github.event_name == 'issues'
+    # a reopen only re-triages when the reporter did it; a maintainer reopening
+    # has taken over
+    if: |
+      github.event_name == 'issues' &&
+      (github.event.action == 'opened' || github.event.sender.login == github.event.issue.user.login)
     permissions:
-      contents: write # create branch + push PR fix
-      issues: write # add labels + comment analysis
-      pull-requests: write # open PR fix
+      contents: write # push the fix branch (open-pr job only, the agent job reduces to read)
+      issues: write # add labels + comment analysis + close duplicates
+      pull-requests: write # open the draft PR
+      discussions: read # read referenced discussions
       id-token: write
       actions: read
     uses: ./.github/workflows/claude-issue-agent-run.yml
@@ -50,7 +57,7 @@ jobs:
     outputs:
       run: ${{ steps.check.outputs.run }}
     steps:
-      - uses: actions/github-script@v9
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         id: check
         with:
           script: |
@@ -76,6 +83,8 @@ jobs:
     permissions:
       contents: read # explore the codebase for the answer; no fix/PR in analyze mode
       issues: write # comment
+      pull-requests: write # the reusable job requests it, a caller may not grant less
+      discussions: read # read referenced discussions
       id-token: write
       actions: read
     uses: ./.github/workflows/claude-issue-agent-run.yml
@@ -84,6 +93,44 @@ jobs:
       # no comment_id: there is no invoking command to read or resolve
       mode: analyze
     secrets: inherit
+
+  # The triage agent closes duplicates and tells the reporter that a reply
+  # reopens the issue. Only a duplicate closed by the bot and answered by its
+  # reporter qualifies: a maintainer's own closing stays closed. Reopening with
+  # GITHUB_TOKEN raises no `reopened` event, so triage does not run again.
+  reopen-duplicate:
+    name: Reopen duplicate on reply
+    if: |
+      github.event_name == 'issue_comment' &&
+      !github.event.issue.pull_request &&
+      github.event.issue.state == 'closed' &&
+      github.event.issue.state_reason == 'duplicate' &&
+      github.event.comment.user.login == github.event.issue.user.login
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.issue.number;
+
+            const events = await github.paginate(github.rest.issues.listEvents, {
+              owner,
+              repo,
+              issue_number,
+            });
+            const closed = events.filter((e) => e.event === 'closed').at(-1);
+            if (closed?.actor?.login !== 'github-actions[bot]') return;
+
+            await github.rest.issues.update({
+              owner,
+              repo,
+              issue_number,
+              state: 'open',
+              state_reason: 'reopened',
+            });
 
   pr-label:
     name: PR labeling
@@ -104,7 +151,7 @@ jobs:
       # base repo checkout only — never the untrusted PR head; the agent reads PR
       # metadata via gh and treats it as data, not instructions, and runs no PR code.
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
@@ -121,7 +168,8 @@ jobs:
           allowed_non_write_users: '*'
           additional_permissions: |
             actions: read
-          claude_args: '--allowed-tools "Read,Grep,Glob,Bash(gh label list),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr edit:*)" --disallowed-tools "Task"'
+          # labeling is a classification over the file list, Haiku is enough
+          claude_args: '--model claude-haiku-4-5 --allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr edit:*),Bash(gh api:*)" --disallowed-tools "Task"'
           prompt: |
             You label pull requests for the evcc repository.
             Work on PR #${{ github.event.pull_request.number }}. Fetch its title,
@@ -145,6 +193,13 @@ jobs:
                Only ever apply labels from the existing set — never create a new label.
                Skip any label already present. Prefer a couple of precise labels over
                many loose ones; if nothing clearly matches, apply none.
+
+               The `bug` label qualifies a pull request for backport into a bugfix
+               release, so be reluctant with it. A fix-looking diff or body is not
+               enough. Apply `bug` ONLY when the body references an issue
+               (`fixes #N`, `closes #N`, `#N`) whose type is Bug; check with
+               `gh api repos/${{ github.repository }}/issues/N --jq '.type.name'`.
+               No referenced issue, or a referenced issue without type Bug: no `bug`.
 
             Do NOT post a comment, modify any code, or push anything. Labeling is the
             only action for pull requests.
