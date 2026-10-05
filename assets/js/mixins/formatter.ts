@@ -156,6 +156,11 @@ export default defineComponent({
           POWER_UNIT.KW === unit || POWER_UNIT.MW === unit || (POWER_UNIT.W !== unit && 0 === watt)
             ? 1
             : 0;
+        // with a free choice of unit, four digits of kW(h) are precise enough: 1,774 kWh.
+        // A forced unit keeps its decimal so columns stay aligned
+        if (POWER_UNIT.AUTO === format && POWER_UNIT.KW === unit && Math.abs(value) >= 1000) {
+          d = 0;
+        }
       }
       return `${new Intl.NumberFormat(this.$i18n?.locale, {
         style: "decimal",
