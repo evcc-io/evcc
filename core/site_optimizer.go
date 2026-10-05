@@ -172,9 +172,11 @@ func suggestionEvent(detail batteryDetail, s types.Suggestion) messenger.Event {
 // Because the optimization is linear, the slot is at an operating-range extreme, so it
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
-// (hold), exporting means charging is withheld (holdcharge). At its soc bound nothing is
-// withheld, the bound does it, so the battery stays in normal mode.
-func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
+// (hold), exporting means charging is withheld (holdcharge). Another battery discharging or
+// charging in the same slot counts like importing or exporting, it covers what this battery
+// could have. At its soc bound nothing is withheld, the bound does it, so the battery stays
+// in normal mode.
+func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, slot int, gridImport, gridExport float32, otherDischarging, otherCharging bool, slotHours float64) types.Suggestion {
 	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
 		return types.Suggestion{}
 	}
@@ -204,10 +206,10 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 		case charge > suggestionThreshold && gridImporting:
 			// charging while importing means grid charging
 			s.Action = api.BatteryCharge.String()
-		case idle && gridImporting && !empty:
+		case idle && (gridImporting || otherDischarging) && !empty:
 			// idle while importing: discharge is deliberately withheld
 			s.Action = api.BatteryHold.String()
-		case idle && gridExporting && !full:
+		case idle && (gridExporting || otherCharging) && !full:
 			// idle while exporting: surplus is exported instead of charged
 			s.Action = api.BatteryHoldCharge.String()
 		case discharge > suggestionThreshold && gridExporting:
@@ -223,6 +225,25 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 	}
 
 	return s
+}
+
+// otherBatteryFlow reports whether any home battery other than self discharges or charges in the slot
+func otherBatteryFlow(details []batteryDetail, results []optimizer.BatteryResult, self, slot int, slotHours float64) (bool, bool) {
+	var discharging, charging bool
+
+	for j, res := range results {
+		if j == self || j >= len(details) || details[j].Type != batteryTypeBattery || slot < 0 || slotHours <= 0 {
+			continue
+		}
+		if slot < len(res.DischargingPower) && float64(res.DischargingPower[slot])/slotHours > suggestionThreshold {
+			discharging = true
+		}
+		if slot < len(res.ChargingPower) && float64(res.ChargingPower[slot])/slotHours > suggestionThreshold {
+			charging = true
+		}
+	}
+
+	return discharging, charging
 }
 
 // loadpointCurrentAction returns the loadpoint's current operating mode for
@@ -828,7 +849,8 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 			}),
 		})
 
-		suggestion := currentSlotSuggestion(detail, batReq, batRes, slot, gridImport, gridExport, slotHours)
+		otherDischarging, otherCharging := otherBatteryFlow(details.BatteryDetails, res.Batteries, i, slot, slotHours)
+		suggestion := currentSlotSuggestion(detail, batReq, batRes, slot, gridImport, gridExport, otherDischarging, otherCharging, slotHours)
 		if suggestion.Action == "" {
 			continue
 		}
