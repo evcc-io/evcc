@@ -230,9 +230,12 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 // otherBatteryFlow reports whether any home battery other than self discharges or charges in the slot
 func otherBatteryFlow(details []batteryDetail, results []optimizer.BatteryResult, self, slot int, slotHours float64) (bool, bool) {
 	var discharging, charging bool
+	if slot < 0 || slotHours <= 0 {
+		return discharging, charging
+	}
 
 	for j, res := range results {
-		if j == self || j >= len(details) || details[j].Type != batteryTypeBattery || slot < 0 || slotHours <= 0 {
+		if j == self || j >= len(details) || details[j].Type != batteryTypeBattery {
 			continue
 		}
 		if slot < len(res.DischargingPower) && float64(res.DischargingPower[slot])/slotHours > suggestionThreshold {
