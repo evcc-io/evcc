@@ -2,9 +2,9 @@ package plugin
 
 import (
 	"reflect"
-	"sync"
 	"testing"
 
+	"github.com/evcc-io/evcc/plugin/golang"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/traefik/yaegi/interp"
@@ -66,15 +66,14 @@ func TestGoIntParam(t *testing.T) {
 func TestGoCompileOnce(t *testing.T) {
 	var i int64
 	p := &Go{
-		vm:     interp.New(interp.Options{}),
-		mu:     new(sync.Mutex),
+		vm:     &golang.VM{Interpreter: interp.New(interp.Options{})},
 		script: "res := mode * 2\nres",
 		in:     []inputTransformation{{name: "mode", function: func() (any, error) { i++; return i, nil }}},
 		prg:    make(map[string]*interp.Program),
 	}
 
 	roots := func() int {
-		return reflect.ValueOf(p.vm).Elem().FieldByName("roots").Len()
+		return reflect.ValueOf(p.vm.Interpreter).Elem().FieldByName("roots").Len()
 	}
 
 	var n int

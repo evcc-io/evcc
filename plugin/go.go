@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strings"
-	"sync"
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/plugin/golang"
@@ -16,33 +14,11 @@ import (
 
 // Go implements Go request provider
 type Go struct {
-	vm     *interp.Interpreter
-	mu     *sync.Mutex // serializes execution on the VM
+	vm     *golang.VM
 	script string
 	in     []inputTransformation
 	out    []outputTransformation
 	prg    map[string]*interp.Program // compiled script by setter parameter
-}
-
-var (
-	goMu    sync.Mutex
-	goLocks = make(map[string]*sync.Mutex) // named VMs are shared between plugins
-)
-
-// vmLock returns the execution lock of the VM, shared for named VMs
-func vmLock(name string) *sync.Mutex {
-	if name == "" {
-		return new(sync.Mutex)
-	}
-
-	goMu.Lock()
-	defer goMu.Unlock()
-
-	name = strings.ToLower(name)
-	if _, ok := goLocks[name]; !ok {
-		goLocks[name] = new(sync.Mutex)
-	}
-	return goLocks[name]
 }
 
 type goParam struct {
@@ -85,7 +61,6 @@ func NewGoPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 
 	p := &Go{
 		vm:     vm,
-		mu:     vmLock(cc.VM),
 		script: cc.Script,
 		in:     in,
 		out:    out,
@@ -244,8 +219,9 @@ func (p *Go) evaluate(key string, params []goParam) (res any, err error) {
 		err = backoff.Permanent(err)
 	}()
 
-	p.mu.Lock()
-	defer p.mu.Unlock()
+	// named VMs are shared between plugins
+	p.vm.Lock()
+	defer p.vm.Unlock()
 
 	prg, ok := p.prg[key]
 	if !ok {
