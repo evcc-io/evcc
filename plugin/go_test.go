@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"reflect"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -66,6 +67,7 @@ func TestGoCompileOnce(t *testing.T) {
 	var i int64
 	p := &Go{
 		vm:     interp.New(interp.Options{}),
+		mu:     new(sync.Mutex),
 		script: "res := mode * 2\nres",
 		in:     []inputTransformation{{name: "mode", function: func() (any, error) { i++; return i, nil }}},
 		prg:    make(map[string]*interp.Program),
