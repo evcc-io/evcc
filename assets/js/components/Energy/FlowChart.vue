@@ -16,6 +16,10 @@ const SINKS: FlowSink[] = ["home", "loadpoint", "battery", "export"];
 // one shade per source, feed-in stands out
 const LINK_ALPHA: Record<string, string> = { pv: "b0", battery: "50", grid: "40", export: "e0" };
 
+// links below this share of all energy are noise, e.g. a trace of battery energy
+// in the export from meter timing
+const MIN_LINK_SHARE = 0.01;
+
 const COMPACT = window.matchMedia("(max-width: 575.98px)");
 
 interface Node {
@@ -37,6 +41,11 @@ export default defineComponent({
 		return { compact: COMPACT.matches };
 	},
 	computed: {
+		// without the hairline links, a node left with none is not drawn either
+		visibleFlows(): Flow[] {
+			const total = this.flows.reduce((acc, f) => acc + f.energy, 0);
+			return this.flows.filter((f) => f.energy >= total * MIN_LINK_SHARE);
+		},
 		nodeColors(): Record<string, string> {
 			return {
 				pv: groupColor("pv"),
@@ -46,9 +55,11 @@ export default defineComponent({
 			};
 		},
 		nodes(): Node[] {
-			// every flow is drawn, so a node's label is the sum of the links you can hover
+			// only what is drawn counts, so a node's label is the sum of the links you can hover
 			const sum = (key: "from" | "to", id: string) =>
-				this.flows.filter((f) => f[key] === id).reduce((acc, f) => acc + f.energy, 0);
+				this.visibleFlows
+					.filter((f) => f[key] === id)
+					.reduce((acc, f) => acc + f.energy, 0);
 			const src = SOURCES.map((id) => ({
 				name: `from-${id}`,
 				label: this.$t(`energy.flow.${id}`),
@@ -145,7 +156,7 @@ export default defineComponent({
 							},
 							label: labelFor(n),
 						})),
-						links: this.flows.map((f) => ({
+						links: this.visibleFlows.map((f) => ({
 							source: `from-${f.from}`,
 							target: `to-${f.to}`,
 							value: f.energy,
@@ -170,7 +181,7 @@ export default defineComponent({
 		// incoming links which attach in source order
 		sourceBands(to: FlowSink): object {
 			const flows = SOURCES.flatMap((from) =>
-				this.flows.filter((f) => f.from === from && f.to === to)
+				this.visibleFlows.filter((f) => f.from === from && f.to === to)
 			);
 			const total = flows.reduce((acc, f) => acc + f.energy, 0) || 1;
 			let offset = 0;
