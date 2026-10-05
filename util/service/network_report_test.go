@@ -33,7 +33,8 @@ func TestReportDevices(t *testing.T) {
 	hosts := []discovery.Host{
 		{IP: "192.0.2.1", MAC: "AA:BB:CC:00:00:01", Hostname: "phone-of-someone"},
 		{
-			IP: "192.0.2.158", MAC: "AC:19:9F:12:34:56", Hostname: "SUNGROWB23417A5199.local",
+			IP: "192.0.2.158", MAC: "AC:19:9F:12:34:56", Hostname: "inverter.fritz.box",
+			Aliases:  []string{"SUNGROWB23417A5199.fritz.box", "SUNGROWB23417A5199.local"},
 			Services: []string{"_http._tcp:SUNGROWB23417A5199"},
 		},
 		{IP: "192.0.2.9", Hostname: "other.local"},
@@ -42,16 +43,18 @@ func TestReportDevices(t *testing.T) {
 	configs := []config.Named{
 		{Type: "template", Other: map[string]any{"template": "sungrow-hybrid", "usage": "pv", "host": "192.0.2.158"}},
 		{Type: "template", Other: map[string]any{"template": "sungrow-hybrid", "usage": "battery", "host": "192.0.2.158"}},
-		{Type: "template", Other: map[string]any{"template": "other", "uri": "http://OTHER.local:8080/api"}},
+		{Type: "template", Other: map[string]any{"template": "uri", "uri": "http://OTHER.local:8080/api"}},
+		{Type: "template", Other: map[string]any{"template": "cloud", "user": "someone"}},
 		{Type: "template", Other: map[string]any{"template": "other", "host": "192.0.2.77"}},
 		{Type: "custom", Other: map[string]any{"host": "192.0.2.1"}},
 	}
 
-	assert.Equal(t, []reportDevice{
+	assert.Equal(t, []ReportDevice{
 		{
-			Template: "sungrow-hybrid",
-			Mac:      "AC199F", Hostname: "SUNGROWB*",
-			Services: []string{"_http._tcp:SUNGROWB*"},
+			Template:  "sungrow-hybrid",
+			Mac:       "AC199F",
+			Hostnames: []string{"inverter", "SUNGROWB*"},
+			Services:  []string{"_http._tcp:SUNGROWB*"},
 		},
 		{Template: "other"},
 	}, reportDevices(configs, hosts))

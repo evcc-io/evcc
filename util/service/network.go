@@ -94,12 +94,14 @@ func resolve(s string) []string {
 }
 
 func isHost(h discovery.Host, hosts []string) bool {
-	return slices.Contains(hosts, h.IP) || h.Hostname != "" && slices.Contains(hosts, strings.ToLower(h.Hostname))
+	return slices.Contains(hosts, h.IP) || slices.ContainsFunc(h.Names(), func(name string) bool {
+		return slices.Contains(hosts, strings.ToLower(name))
+	})
 }
 
-func usedHosts() []string {
+func usedHosts(configs []config.Named) []string {
 	var res []string
-	for _, conf := range allDeviceConfigs() {
+	for _, conf := range configs {
 		res = append(res, configHosts(conf)...)
 	}
 	return res
@@ -145,12 +147,12 @@ func getHosts(w http.ResponseWriter, req *http.Request) {
 	all := allTemplates()
 	selected := discoveryByName(all, req.URL.Query().Get("template"))
 
-	used := usedHosts()
+	used := usedHosts(allDeviceConfigs())
 
 	res := make([]Option, 0)
 	for _, h := range hosts(w, req, mdnsTypes(all)) {
 		match := func(d templates.Discovery) bool {
-			return d.Match(h.Hostname, h.MAC, h.Services)
+			return d.Match(h.Names(), h.MAC, h.Services)
 		}
 
 		o := Option{

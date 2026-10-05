@@ -202,8 +202,8 @@ products:
 
 ```yaml
 discovery:
-  mdns: ["_shelly._tcp", "_http._tcp:shelly*"] # service type, optional instance name pattern after the colon
-  hostname: ["shelly*"] # hostname pattern, domain is ignored, case-insensitive
+  mdns: ["_shelly._tcp", "_http._tcp:shelly*"] # service type in the announced spelling, optional instance name pattern after the colon
+  hostname: ["shelly*"] # pattern for any DNS or mDNS name of the host, domain is ignored, case-insensitive
   mac: ["8400EC"] # hardware address prefix, 6 to 9 upper case hex digits
 ```
 

@@ -1,4 +1,4 @@
-import { xAxisLabelStyle } from "../Forecast/echarts";
+import { hoverDot, xAxisLabelStyle } from "../Forecast/echarts";
 import colors from "@/colors";
 import type { DemandDetail } from "@/types/evcc";
 
@@ -63,6 +63,12 @@ export function formatSlotRange(times: number[], dt: number[], index: number): s
   const f = (d: Date) =>
     `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   return `${f(start)} - ${f(end)}`;
+}
+
+// hover dot created on demand: a hidden symbol per slot makes the svg renderer re-insert all
+// of them on every hover frame. The temporary dot only drops when new data re-renders the chart.
+export function transientHoverDot(color: string) {
+  return { ...hoverDot(color), showSymbol: false };
 }
 
 // slot energy (Wh) to average power (kW)
