@@ -558,6 +558,38 @@ func TestScalePhasesNotAvailable(t *testing.T) {
 	require.Equal(t, 1, lp.GetPhases())
 }
 
+// TestScalePhasesUpMinCurrent verifies that scaling up drops to min current before
+// switching, so the 1p current is not offered on 3 phases (issue #34450).
+func TestScalePhasesUpMinCurrent(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	plainCharger := api.NewMockCharger(ctrl)
+	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+
+	gomock.InOrder(
+		plainCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil),
+		phaseCharger.EXPECT().Phases1p3p(3).Return(nil),
+	)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.clock = clock.NewMock()
+	lp.wakeUpTimer = NewTimer()
+	lp.charger = struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{plainCharger, phaseCharger}
+	lp.minCurrent = minA
+	lp.maxCurrent = maxA
+	lp.enabled = true
+	lp.offeredCurrent = maxA
+	lp.phases = 1
+
+	require.NoError(t, lp.scalePhases(3))
+	require.Equal(t, 3, lp.GetPhases())
+	require.Equal(t, float64(minA), lp.offeredCurrent)
+}
+
 // TestMinChargingPhaseScaling verifies that minCharging scales down to 1 phase
 // (the absolute minimum) when phase switching is available, so feed-in priority
 // in min+pv mode drops to 1p min current instead of staying on 3p (issue #30298).
@@ -705,7 +737,9 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 					return min(new, tc.availableCircuitPower)
 				}).AnyTimes()
 
-				circuit.EXPECT().ValidateCurrent(gomock.Any(), lp.maxCurrent).Return(lp.maxCurrent).AnyTimes()
+				circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any()).DoAndReturn(func(_, new float64) float64 {
+					return new
+				}).AnyTimes()
 			}
 
 			plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()

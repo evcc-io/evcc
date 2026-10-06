@@ -1430,6 +1430,13 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 	}
 
 	if lp.GetPhases() != phases {
+		// drop to min current before scaling up so the 1p current is not applied to all phases
+		if lp.enabled && phases > 1 {
+			if err := lp.setLimit(lp.effectiveMinCurrent()); err != nil {
+				return err
+			}
+		}
+
 		// switch phases
 		if err := cp.Phases1p3p(phases); err != nil {
 			return fmt.Errorf("switch phases: %w", err)
@@ -1829,8 +1836,8 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	activePhases := lp.ActivePhases()
 	effectiveCurrent := lp.effectiveCurrent()
 	if scaledTo == 3 {
-		// if we did scale, adjust the effective current to the new phase count
-		effectiveCurrent /= float64(lp.maxActivePhases())
+		// if we did scale, spread the power measured before the switch over the new phase count
+		effectiveCurrent = powerToCurrent(lp.chargePower, lp.maxActivePhases())
 	}
 	if lp.chargerHasFeature(api.IntegratedDevice) {
 		// for slow-acting heating devices, only take actually consumed power into account
