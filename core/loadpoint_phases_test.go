@@ -319,6 +319,14 @@ func TestPvScalePhases(t *testing.T) {
 	}
 }
 
+type climaterVehicle struct {
+	*api.MockVehicle
+}
+
+func (v *climaterVehicle) Climater() (bool, error) {
+	return true, nil
+}
+
 func TestPvScalePhasesTimer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := &struct {
@@ -328,6 +336,11 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		api.NewMockCharger(ctrl),
 		api.NewMockPhaseSwitcher(ctrl),
 	}
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Features().Return(nil).AnyTimes()
+	vehicle.EXPECT().Phases().Return(0).AnyTimes()
+	climater := &climaterVehicle{vehicle}
 
 	dt := time.Minute
 	Voltage = 230 // V
@@ -412,6 +425,13 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			lp.phaseTimer = elapsed
 			lp.enabled = true
 			lp.mode = api.ModeMinPV
+		}},
+
+		// climater keep-alive never disables, so scale down even if 1p is not sustainable
+		{"3/3->1, insufficient for 1p, charging, climater active", 3, 3, 0.1, 1, 1, func(lp *Loadpoint) {
+			lp.phaseTimer = elapsed
+			lp.enabled = true
+			lp.vehicle = climater
 		}},
 
 		// switch down from 3p/0p while not yet charging
