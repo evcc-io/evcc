@@ -1431,7 +1431,7 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 
 	if lp.GetPhases() != phases {
 		// drop to min current before scaling up so the 1p current is not applied to all phases
-		if lp.enabled && phases == 3 {
+		if lp.enabled && phases > 1 {
 			if err := lp.setLimit(lp.effectiveMinCurrent()); err != nil {
 				return err
 			}
