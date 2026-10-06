@@ -189,4 +189,18 @@ func TestTotalPriceFormulaScript(t *testing.T) {
 
 	ts := time.Date(2026, 1, 1, 12, 0, 0, 0, time.Local)
 	assert.InDelta(t, (1+0.1)*1.255+0.025, e.totalPrice(1, ts), 1e-9)
+
+	ts = time.Date(2026, 1, 1, 23, 0, 0, 0, time.Local)
+	assert.InDelta(t, (1+0.1)*1.255+0.0112, e.totalPrice(1, ts), 1e-9)
+}
+
+func TestTotalPriceFormulaMultiline(t *testing.T) {
+	e := embed{Formula: "x := 2.0 // factor\nprice * x // result"}
+	require.NoError(t, e.init())
+	assert.InDelta(t, 0.4, e.totalPrice(0.2, time.Now()), 1e-9)
+}
+
+func TestTotalPriceFormulaNoTrailingExpression(t *testing.T) {
+	e := embed{Formula: "x := price"}
+	require.ErrorContains(t, e.init(), "must end with an expression")
 }

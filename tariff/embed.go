@@ -3,6 +3,9 @@ package tariff
 import (
 	"errors"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"reflect"
 	"slices"
 	"time"
@@ -51,57 +54,19 @@ func (t *embed) init() (err error) {
 		return nil
 	}
 
-	if err := t.compileExpression(); err != nil {
-		// not a single expression, e.g. statements or if blocks
-		t.calc = t.evalScript
-	}
-
-	// test the formula
-	_, err = t.calc(0, t.Charges, time.Now())
-
-	return err
-}
-
-// evalScript evaluates the formula as a script on every call
-func (t *embed) evalScript(price, charges float64, ts time.Time) (float64, error) {
-	vm := interp.New(interp.Options{})
-	if err := vm.Use(stdlib.Symbols); err != nil {
-		return 0, err
-	}
-	vm.ImportUsed()
-
-	if _, err := vm.Eval(fmt.Sprintf(`
-	var (
-		price float64 = %f
-		charges float64 = %f
-		tax float64 = %f
-		ts = time.Unix(%d, 0).Local()
-	)`, price, charges, t.Tax, ts.Unix())); err != nil {
-		return 0, err
-	}
-
-	res, err := vm.Eval(t.Formula)
-	if err != nil {
-		return 0, err
-	}
-
-	if !res.CanFloat() {
-		return 0, errors.New("formula did not return a float value")
-	}
-
-	return res.Float(), nil
-}
-
-// compileExpression compiles a single-expression formula into a callable function
-func (t *embed) compileExpression() error {
 	vm := interp.New(interp.Options{})
 	if err := vm.Use(stdlib.Symbols); err != nil {
 		return err
 	}
 	vm.ImportUsed()
 
+	body, err := formulaBody(t.Formula)
+	if err != nil {
+		return err
+	}
+
 	// Compile the formula into a callable function, avoiding any per-call parsing
-	src := fmt.Sprintf(`var calc = func(price, charges, tax float64, ts time.Time) float64 { return float64(%s) }`, t.Formula)
+	src := fmt.Sprintf("var calc = func(price, charges, tax float64, ts time.Time) float64 {\n%s\n}", body)
 	if _, err := vm.Eval(src); err != nil {
 		return err
 	}
@@ -133,7 +98,36 @@ func (t *embed) compileExpression() error {
 		return res[0].Float(), nil
 	}
 
-	return nil
+	// test the formula
+	_, err = t.calc(0, t.Charges, time.Now())
+
+	return err
+}
+
+// formulaBody turns the formula's trailing expression into the return statement,
+// allowing multi-statement formulas like `x := 1; if ... { x = 2 }; price + x`
+func formulaBody(formula string) (string, error) {
+	const prefix = "package p; func _() {\n"
+
+	f, err := parser.ParseFile(token.NewFileSet(), "", prefix+formula+"\n}", 0)
+	if err != nil {
+		return "", err
+	}
+
+	stmts := f.Decls[0].(*ast.FuncDecl).Body.List
+	if len(stmts) == 0 {
+		return "", errors.New("empty formula")
+	}
+
+	last, ok := stmts[len(stmts)-1].(*ast.ExprStmt)
+	if !ok {
+		return "", errors.New("formula must end with an expression")
+	}
+
+	// file base is 1, offsets are relative to the formula
+	start, end := int(last.Pos())-1-len(prefix), int(last.End())-1-len(prefix)
+
+	return formula[:start] + "return float64(" + formula[start:end] + ")" + formula[end:], nil
 }
 
 // effectiveCharges resolves the charge for ts in local time; later zones win.
