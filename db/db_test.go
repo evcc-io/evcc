@@ -1,6 +1,7 @@
 package db
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -64,6 +65,44 @@ func TestUnitNewDriver(t *testing.T) {
 			assert.Equal(t, test.expectedFilePath, FilePath())
 		})
 	}
+}
+
+// TestUnitWAL verifies WAL mode and that backup and restore leave no sidecar files behind
+func TestUnitWAL(t *testing.T) {
+	dir := t.TempDir()
+
+	db, err := New("sqlite", dir+"/evcc.db")
+	require.NoError(t, err)
+	Instance = db
+
+	var mode string
+	require.NoError(t, db.Raw("PRAGMA journal_mode").Scan(&mode).Error)
+	assert.Equal(t, "wal", mode)
+
+	require.NoError(t, db.Exec("CREATE TABLE t (v integer)").Error)
+	require.NoError(t, db.Exec("INSERT INTO t VALUES (1)").Error)
+
+	backupDir := t.TempDir()
+	require.NoError(t, Backup(t.Context(), backupDir+"/backup.db"))
+	entries, err := os.ReadDir(backupDir)
+	require.NoError(t, err)
+	assert.Len(t, entries, 1, "backup must be a single self-contained file")
+
+	require.NoError(t, db.Exec("INSERT INTO t VALUES (2)").Error)
+	require.NoError(t, Restore(t.Context(), backupDir+"/backup.db"))
+
+	var count int
+	require.NoError(t, db.Raw("SELECT count(*) FROM t").Scan(&count).Error)
+	assert.Equal(t, 1, count)
+
+	// closing checkpoints the wal into the database file
+	require.NoError(t, Close())
+	entries, err = os.ReadDir(dir)
+	require.NoError(t, err)
+	assert.Len(t, entries, 1)
+
+	// shutdown closes again after restore and reset have closed
+	require.NoError(t, Close())
 }
 
 type migrationParent struct {

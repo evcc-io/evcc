@@ -86,7 +86,7 @@
 					<VehicleIcon :names="[lp.icon]" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
-					<BatteryIcon :soc="batterySoc" :gridCharge="batteryGridCharge" />
+					<BatteryIcon :soc="batterySoc" :mode="batteryMode" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'pvExport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
@@ -97,7 +97,15 @@
 			</div>
 			<div class="label-scale-name">Out</div>
 		</div>
-		<BatteryIcon hold class="battery-hold" :class="{ 'battery-hold--active': batteryHold }" />
+		<router-link
+			v-if="batteryConfigured"
+			to="/battery"
+			class="battery-status"
+			:aria-label="$t('main.energyflow.batteryStatus')"
+			@click.stop
+		>
+			<BatteryIcon :soc="batterySoc" :mode="batteryMode" />
+		</router-link>
 	</div>
 </template>
 
@@ -111,7 +119,7 @@ import QuestionIcon from "../MaterialIcon/Question.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
 import { defineComponent, type PropType } from "vue";
-import type { UiLoadpoint } from "@/types/evcc";
+import type { BATTERY_MODE, UiLoadpoint } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Visualization",
@@ -126,8 +134,8 @@ export default defineComponent({
 		batterySoc: { type: Number },
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
-		batteryHold: { type: Boolean, default: false },
-		batteryGridCharge: { type: Boolean, default: false },
+		batteryConfigured: { type: Boolean, default: false },
+		batteryMode: { type: String as PropType<BATTERY_MODE> },
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		powerUnit: { type: String as PropType<POWER_UNIT>, default: POWER_UNIT.KW },
@@ -299,19 +307,10 @@ html.dark .grid-import {
 .visualization--ready :deep(.label-bar-icon) {
 	transition-duration: var(--evcc-transition-very-fast), 500ms;
 }
-.battery-hold {
+.battery-status {
 	position: absolute;
 	top: 2.5rem;
 	right: -0.25rem;
 	color: var(--evcc-gray);
-	opacity: 0;
-}
-.visualization--ready .battery-hold {
-	transition-property: opacity;
-	transition-duration: var(--evcc-transition-medium);
-	transition-timing-function: linear;
-}
-.battery-hold--active {
-	opacity: 1;
 }
 </style>
