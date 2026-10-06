@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"slices"
@@ -50,6 +51,49 @@ func (t *embed) init() (err error) {
 		return nil
 	}
 
+	if err := t.compileExpression(); err != nil {
+		// not a single expression, e.g. statements or if blocks
+		t.calc = t.evalScript
+	}
+
+	// test the formula
+	_, err = t.calc(0, t.Charges, time.Now())
+
+	return err
+}
+
+// evalScript evaluates the formula as a script on every call
+func (t *embed) evalScript(price, charges float64, ts time.Time) (float64, error) {
+	vm := interp.New(interp.Options{})
+	if err := vm.Use(stdlib.Symbols); err != nil {
+		return 0, err
+	}
+	vm.ImportUsed()
+
+	if _, err := vm.Eval(fmt.Sprintf(`
+	var (
+		price float64 = %f
+		charges float64 = %f
+		tax float64 = %f
+		ts = time.Unix(%d, 0).Local()
+	)`, price, charges, t.Tax, ts.Unix())); err != nil {
+		return 0, err
+	}
+
+	res, err := vm.Eval(t.Formula)
+	if err != nil {
+		return 0, err
+	}
+
+	if !res.CanFloat() {
+		return 0, errors.New("formula did not return a float value")
+	}
+
+	return res.Float(), nil
+}
+
+// compileExpression compiles a single-expression formula into a callable function
+func (t *embed) compileExpression() error {
 	vm := interp.New(interp.Options{})
 	if err := vm.Use(stdlib.Symbols); err != nil {
 		return err
@@ -89,10 +133,7 @@ func (t *embed) init() (err error) {
 		return res[0].Float(), nil
 	}
 
-	// test the formula
-	_, err = t.calc(0, t.Charges, time.Now())
-
-	return err
+	return nil
 }
 
 // effectiveCharges resolves the charge for ts in local time; later zones win.
