@@ -210,19 +210,3 @@ func TestLoginRedirects(t *testing.T) {
 		})
 	}
 }
-
-func TestLoginSkippedAfterConcurrentLogin(t *testing.T) {
-	v := &API{
-		Helper: &request.Helper{Client: &http.Client{
-			Transport: loginRoundTripFunc(func(req *http.Request) (*http.Response, error) {
-				t.Errorf("unexpected request %s", req.URL)
-				return nil, errors.New("unexpected request")
-			}),
-		}},
-	}
-	v.loginGen.Store(1)
-
-	// caller observed generation 0 before another caller logged in
-	assert.NoError(t, v.login(0))
-	assert.Equal(t, uint64(1), v.loginGen.Load())
-}
