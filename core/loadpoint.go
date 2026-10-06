@@ -187,8 +187,10 @@ type Loadpoint struct {
 	progress                *Progress     // Step-wise progress indicator
 
 	// session log
-	db      *session.DB
-	session *session.Session
+	db                     *session.DB
+	session                *session.Session
+	sessionPersisted       time.Time // last tick-driven session persist, throttles DB writes while charging
+	sessionEnergyErrLogged time.Time // last logged session energy read failure
 
 	settings settings.Settings
 

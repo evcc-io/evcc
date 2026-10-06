@@ -418,7 +418,7 @@ func (conn *reportConnection) dial() {
 		return nil
 	}
 
-	_ = backoff.Retry(op, backoff.WithMaxRetries(bo, 0))
+	_ = backoff.Retry(op, bo)
 }
 
 func (conn *reportConnection) close() {
