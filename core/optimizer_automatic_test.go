@@ -466,6 +466,12 @@ func TestOptimizerPlanClipsAtPlanTime(t *testing.T) {
 
 	plan, _ = lp.OptimizerPlan(now)
 	assert.Nil(t, plan)
+
+	// 20 minutes later the first slot has ended and the second is half done
+	lp.clock.(*clock.Mock).Add(20 * time.Minute)
+	plan, power = lp.OptimizerPlan(now.Add(time.Hour))
+	assert.Equal(t, api.Rates{{Start: lp.clock.Now(), End: slot(1).End}}, plan)
+	assert.InDelta(t, 1000, power, 1e-6)
 }
 
 // TestOptimizerPlanActive covers the optimizer's schedule replacing the planner:
@@ -501,8 +507,8 @@ func TestOptimizerPlanActive(t *testing.T) {
 		lp.planLocked = PlanLock{Time: planTime, Soc: 60, Id: 1}
 		lp.setSuggestion(&types.Suggestion{Action: actionCharge})
 		lp.setOptimizerPlan(optimizerPlan{
-			rates:  api.Rates{slot(0), slot(4)},
-			energy: []float64{920, 920},
+			rates:  api.Rates{slot(0), slot(4), slot(14)},
+			energy: []float64{920, 920, 920},
 		})
 	}
 
@@ -525,7 +531,7 @@ func TestOptimizerPlanActive(t *testing.T) {
 	optimize()
 	assert.True(t, lp.plannerActive())
 
-	// deadline critical after the last slot
+	// deadline critical ahead of the last slot
 	clck.Add(2 * time.Hour)
 	optimize()
 	assert.True(t, lp.plannerActive())

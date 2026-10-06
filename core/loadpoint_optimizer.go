@@ -26,9 +26,9 @@ func (lp *Loadpoint) setOptimizerPlan(plan optimizerPlan) {
 	lp.optimizerPlan = plan
 }
 
-// OptimizerPlan returns the optimizer's charging schedule up to the plan time
-// and its average power, nil if the optimizer is not in charge. Later slots
-// serve surplus, not the plan.
+// OptimizerPlan returns the optimizer's remaining charging schedule up to the
+// plan time and its average power, nil if the optimizer is not in charge. Later
+// slots serve surplus, not the plan.
 func (lp *Loadpoint) OptimizerPlan(planTime time.Time) (api.Rates, float64) {
 	if lp.gate() == nil {
 		return nil, 0
@@ -37,22 +37,26 @@ func (lp *Loadpoint) OptimizerPlan(planTime time.Time) (api.Rates, float64) {
 	lp.RLock()
 	defer lp.RUnlock()
 
+	now := lp.clock.Now()
+
 	var rates api.Rates
 	var energy float64
 	for i, slot := range lp.optimizerPlan.rates {
-		if !slot.Start.Before(planTime) {
-			break
+		// keep what is left until the plan time, like the planner does: the schedule
+		// is from the last solve and its goal slot may end after the plan time
+		clipped := slot
+		if clipped.Start.Before(now) {
+			clipped.Start = now
+		}
+		if clipped.End.After(planTime) {
+			clipped.End = planTime
+		}
+		if !clipped.Start.Before(clipped.End) {
+			continue
 		}
 
-		slotEnergy := lp.optimizerPlan.energy[i]
-		// the goal slot may end after the plan time, clamp it like the planner does
-		if slot.End.After(planTime) {
-			slotEnergy *= float64(planTime.Sub(slot.Start)) / float64(slot.End.Sub(slot.Start))
-			slot.End = planTime
-		}
-
-		rates = append(rates, slot)
-		energy += slotEnergy
+		rates = append(rates, clipped)
+		energy += lp.optimizerPlan.energy[i] * float64(clipped.End.Sub(clipped.Start)) / float64(slot.End.Sub(slot.Start))
 	}
 
 	if len(rates) == 0 {
