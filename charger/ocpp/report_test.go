@@ -224,3 +224,79 @@ func TestChangeConfigurationNotSupported(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, occore.ConfigurationStatusNotSupported, res.Status)
 }
+
+type memReportStore struct {
+	states map[int]persistedReportState
+}
+
+func (m *memReportStore) load(id int) (persistedReportState, bool) {
+	st, ok := m.states[id]
+	return st, ok
+}
+
+func (m *memReportStore) save(id int, st persistedReportState) {
+	m.states[id] = st
+}
+
+func init() {
+	reportStore = &memReportStore{states: map[int]persistedReportState{}}
+}
+
+func restoreRule(id int) ReportRule {
+	return ReportRule{LoadpointId: id, UpstreamURL: "ws://example.invalid", StationID: "s", IdTag: "t"}
+}
+
+// An open transaction outlived the process, so the restart ends it at the last reported value
+func TestRestoreEndsOpenTransaction(t *testing.T) {
+	at := time.Date(2026, 10, 6, 20, 0, 0, 0, time.UTC)
+	txn := 7
+	reportStore.save(10, persistedReportState{TransactionId: &txn, LastWh: 1500, LastAt: at})
+
+	conn := newReportConnection(restoreRule(10))
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+	require.NotNil(t, conn.transactionId)
+	assert.Equal(t, 7, *conn.transactionId)
+	require.Len(t, conn.events, 1)
+	assert.Equal(t, reportEventStop, conn.events[0].kind)
+	assert.Equal(t, 1500.0, conn.events[0].wh)
+	assert.Equal(t, at, conn.events[0].at)
+}
+
+// A start that was already confirmed must not be sent again after a restart
+func TestRestoreDoesNotResendConfirmedStart(t *testing.T) {
+	at := time.Date(2026, 10, 6, 20, 0, 0, 0, time.UTC)
+	txn := 8
+	reportStore.save(11, persistedReportState{
+		TransactionId: &txn,
+		LastWh:        200,
+		LastAt:        at,
+		Events: []persistedEvent{
+			{Kind: reportEventStart, At: at, Wh: 100},
+			{Kind: reportEventMeter, At: at, Wh: 200},
+		},
+	})
+
+	conn := newReportConnection(restoreRule(11))
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+	require.Len(t, conn.events, 2)
+	assert.Equal(t, reportEventMeter, conn.events[0].kind)
+	assert.Equal(t, reportEventStop, conn.events[1].kind)
+}
+
+// Session boundaries are saved as they are queued, so a restart keeps them
+func TestPushPersistsSessionBoundaries(t *testing.T) {
+	conn := newUnstartedConnection("Carport")
+	conn.rule.LoadpointId = 12
+	conn.mu.Lock()
+	conn.sessionActive = true
+	conn.push(reportEvent{kind: reportEventStart, at: time.Now(), wh: 1000})
+	conn.mu.Unlock()
+
+	st, ok := reportStore.load(12)
+	require.True(t, ok)
+	require.Len(t, st.Events, 1)
+	assert.Equal(t, reportEventStart, st.Events[0].Kind)
+	assert.Equal(t, 1000.0, st.Events[0].Wh)
+}

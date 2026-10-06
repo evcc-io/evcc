@@ -278,8 +278,9 @@ type reportConnection struct {
 	events        []reportEvent
 	sessionActive bool
 	transactionId *int
-	lastWh        float64 // last register value of the session, re-sent on request
-	idTagStatus   string  // last idTag status the upstream answered with
+	lastWh        float64   // last register value of the session, re-sent on request
+	lastAt        time.Time // when lastWh was taken
+	idTagStatus   string    // last idTag status the upstream answered with
 
 	// intermediate MeterValues throttle - reconcile always runs on this
 	// connection's single worker goroutine (run's job loop), so these two are
@@ -355,6 +356,10 @@ func newReportConnection(rule ReportRule) *reportConnection {
 			reportLog.DEBUG.Printf("%s: %v", conn.title, err)
 		}
 	}()
+
+	conn.mu.Lock()
+	conn.restoreLocked()
+	conn.mu.Unlock()
 
 	return conn
 }
@@ -543,8 +548,13 @@ func (conn *reportConnection) push(ev reportEvent) {
 	}
 	if ev.kind != reportEventStop {
 		conn.lastWh = ev.wh
+		conn.lastAt = ev.at
 	}
 	conn.events = append(conn.events, ev)
+
+	if ev.kind != reportEventMeter {
+		conn.persistLocked()
+	}
 }
 
 // reconcile drains the event queue in order: Authorize and StartTransaction for a
@@ -590,6 +600,9 @@ func (conn *reportConnection) reconcile() {
 
 		conn.mu.Lock()
 		conn.events = conn.events[1:]
+		if ev.kind != reportEventMeter {
+			conn.persistLocked()
+		}
 		conn.mu.Unlock()
 	}
 }
@@ -617,6 +630,7 @@ func (conn *reportConnection) sendStart(ev reportEvent) error {
 
 	conn.mu.Lock()
 	conn.transactionId = &res.TransactionId
+	conn.persistLocked()
 	conn.mu.Unlock()
 
 	// don't let a previous session's send time throttle this new session's first sample
@@ -657,6 +671,10 @@ func (conn *reportConnection) sendMeter(ev reportEvent, next *reportEvent, txID 
 	}
 
 	conn.lastMeterSent = now
+
+	conn.mu.Lock()
+	conn.persistLocked()
+	conn.mu.Unlock()
 	return nil
 }
 

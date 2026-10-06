@@ -18,6 +18,7 @@ const (
 	Ocpp               = "ocpp"
 	OcppForwarder      = "ocppforwarder"
 	OcppReport         = "ocppreport"
+	OcppReportState    = "ocppReportState"
 	OcppReportEnabled  = "ocppReportEnabled"
 	Tariffs            = "tariffs"
 	TariffRefs         = "tariffRefs"
