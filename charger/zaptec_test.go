@@ -141,3 +141,18 @@ func TestZaptecConnectionDurationIgnoresEmptySession(t *testing.T) {
 	assert.Equal(t, "b", c.session)
 	assert.NotEqual(t, start, c.sessionStart)
 }
+
+func TestZaptecEnableWhileCharging(t *testing.T) {
+	c := &Zaptec{
+		statusG: util.ResettableCached(func() (zaptec.StateResponse, error) {
+			return zaptec.StateResponse{{StateId: zaptec.ChargerOperationMode, ValueAsString: "3"}}, nil
+		}, 0),
+	}
+
+	// no request helper: resume command must not be sent while charging
+	require.NoError(t, c.Enable(true))
+
+	enabled, err := c.Enabled()
+	require.NoError(t, err)
+	assert.True(t, enabled)
+}

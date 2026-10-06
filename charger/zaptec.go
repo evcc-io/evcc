@@ -279,6 +279,14 @@ func (c *Zaptec) Enabled() (bool, error) {
 func (c *Zaptec) Enable(enable bool) error {
 	cmd := zaptec.CmdStopChargingFinal
 	if enable {
+		// resume is rejected while already charging, e.g. after a restart
+		if res, err := c.statusG.Get(); err == nil {
+			if mode, err := res.ObservationByID(zaptec.ChargerOperationMode).Int(); err == nil && mode == zaptec.OpModeConnectedCharging && !res.ObservationByID(zaptec.FinalStopActive).Bool() {
+				c.enabled = true
+				return nil
+			}
+		}
+
 		cmd = zaptec.CmdResumeCharging
 	}
 
