@@ -1131,6 +1131,9 @@ export default defineComponent({
 		hems() {
 			return store.state?.hems;
 		},
+		hemsCurtailed(): boolean {
+			return (this.hems?.status?.curtailed ?? 100) < 100;
+		},
 		hemsTags(): DeviceTags {
 			const result: DeviceTags = {};
 			const exportLimit = store.state?.gridExportLimit || 0;
@@ -1654,6 +1657,8 @@ export default defineComponent({
 			return this.deviceValues[type][id] || {};
 		},
 		curtailmentBanner(type: DeviceType, name: string): string | undefined {
+			// inverters may report their own export regulation, only flag limits we imposed
+			if (!this.hemsCurtailed) return undefined;
 			// devices report the allowed feed-in percent, 100 = uncurtailed
 			const value = this.deviceTags(type, name)["curtailed"]?.value;
 			return typeof value === "number" && value < 100
