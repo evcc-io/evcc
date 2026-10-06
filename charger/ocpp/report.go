@@ -282,18 +282,11 @@ type reportConnection struct {
 	mu     sync.Mutex
 	booted bool
 
-	// desired session state - the source of truth for what should be
-	// reported upstream. reconcile() drives the connection towards this
-	// state and is safe to call repeatedly (on connect, on reconnect, on
-	// every new value, and as a fallback if a queued reconcile job was
-	// dropped under backpressure) - so a dropped attempt is simply retried
-	// by the next reconcile rather than a session-boundary message being
-	// permanently lost.
+	// events not yet confirmed upstream, in the order they happened; reconcile
+	// drains the head and stops at the first failure, so a failed message is
+	// retried by the next call and events queued while offline keep their times
+	events        []reportEvent
 	sessionActive bool
-	meterStartWh  float64
-	lastMeterWh   float64
-	pendingStop   bool
-	meterStopWh   float64
 	transactionId *int
 
 	// intermediate MeterValues throttle - reconcile always runs on this
@@ -466,13 +459,50 @@ func (conn *reportConnection) ensureBoot() {
 	conn.mu.Unlock()
 }
 
-// reconcile drives the connection's upstream OCPP session state towards the
-// desired state recorded by ReportSessionStart/ReportMeterValue/
-// ReportSessionStop, so a message that failed (not yet connected, transient
-// error) is retried by whichever of the following runs next: a later
-// reconcile call, the reconnect handler, or the dial-success handler. Never
-// attempts anything while disconnected - a call that's certain to fail would
-// just waste the one attempt an unconditional fire-and-forget job gets.
+// maxQueuedEvents bounds the in-memory event queue; meter samples are superseded
+// by newer ones, so they are dropped first when the queue is full
+const maxQueuedEvents = 1000
+
+type reportEventKind int
+
+const (
+	reportEventStart reportEventKind = iota
+	reportEventMeter
+	reportEventStop
+)
+
+// reportEvent is one session boundary or meter sample, stamped with the time it
+// happened so that events replayed after an outage keep their original times
+type reportEvent struct {
+	kind reportEventKind
+	at   time.Time
+	wh   float64
+}
+
+// push appends an event, dropping the oldest meter sample (or the oldest event
+// if there is none) when the queue is full. Caller holds conn.mu.
+func (conn *reportConnection) push(ev reportEvent) {
+	if len(conn.events) >= maxQueuedEvents {
+		idx := 0
+		for i, e := range conn.events {
+			if e.kind == reportEventMeter {
+				idx = i
+				break
+			}
+		}
+		if conn.events[idx].kind != reportEventMeter {
+			reportLog.WARN.Printf("%s: report queue full, dropping oldest event", conn.title)
+		}
+		conn.events = append(conn.events[:idx], conn.events[idx+1:]...)
+	}
+	conn.events = append(conn.events, ev)
+}
+
+// reconcile drains the event queue in order: Authorize and StartTransaction for a
+// start, MeterValues for samples, StopTransaction for a stop. It stops at the first
+// failure and keeps the remaining events for the next call, and it never attempts
+// anything while disconnected, so a call that's certain to fail doesn't waste the
+// one attempt an unconditional fire-and-forget job gets.
 func (conn *reportConnection) reconcile() {
 	if !conn.cp.IsConnected() {
 		return
@@ -480,84 +510,122 @@ func (conn *reportConnection) reconcile() {
 
 	conn.ensureBoot()
 
-	conn.mu.Lock()
-	active := conn.sessionActive
-	meterStart := conn.meterStartWh
-	lastMeter := conn.lastMeterWh
-	pendingStop := conn.pendingStop
-	meterStop := conn.meterStopWh
-	txID := conn.transactionId
-	conn.mu.Unlock()
-
-	if !active {
-		return
-	}
-
-	idTag := conn.rule.IdTag
-
-	if txID == nil {
-		if _, err := conn.cp.Authorize(idTag); err != nil {
-			reportLog.DEBUG.Printf("%s: authorize: %v", conn.title, err)
+	for {
+		conn.mu.Lock()
+		if len(conn.events) == 0 {
+			conn.mu.Unlock()
 			return
 		}
+		ev := conn.events[0]
+		var next *reportEvent
+		if len(conn.events) > 1 {
+			n := conn.events[1]
+			next = &n
+		}
+		txID := conn.transactionId
+		conn.mu.Unlock()
 
-		res, err := conn.cp.StartTransaction(1, idTag, int(meterStart), types.NewDateTime(time.Now()))
+		var err error
+		switch ev.kind {
+		case reportEventStart:
+			err = conn.sendStart(ev)
+		case reportEventMeter:
+			err = conn.sendMeter(ev, next, txID)
+		case reportEventStop:
+			err = conn.sendStop(ev, txID)
+		}
+
 		if err != nil {
-			reportLog.DEBUG.Printf("%s: start transaction: %v", conn.title, err)
 			return
 		}
 
 		conn.mu.Lock()
-		conn.transactionId = &res.TransactionId
-		txID = conn.transactionId
+		conn.events = conn.events[1:]
 		conn.mu.Unlock()
-
-		// don't let a previous session's send time throttle this new
-		// session's first sample
-		conn.lastMeterSent = time.Time{}
-	}
-
-	if pendingStop {
-		if _, err := conn.cp.StopTransaction(int(meterStop), types.NewDateTime(time.Now()), *txID); err != nil {
-			reportLog.DEBUG.Printf("%s: stop transaction: %v", conn.title, err)
-			return
-		}
-
-		conn.mu.Lock()
-		conn.sessionActive = false
-		conn.pendingStop = false
-		conn.transactionId = nil
-		conn.mu.Unlock()
-		return
-	}
-
-	// throttle intermediate samples; ReportMeterValue already kept lastMeter
-	// current above, so whichever reconcile call next clears the interval
-	// sends the freshest value - no sample is skipped, only delayed
-	if now := time.Now(); now.Sub(conn.lastMeterSent) >= conn.meterInterval {
-		mv := types.MeterValue{
-			Timestamp: types.NewDateTime(now),
-			SampledValue: []types.SampledValue{{
-				Value:     fmt.Sprintf("%.0f", lastMeter),
-				Measurand: types.MeasurandEnergyActiveImportRegister,
-				Unit:      types.UnitOfMeasureWh,
-			}},
-		}
-		if _, err := conn.cp.MeterValues(1, []types.MeterValue{mv}, func(r *core.MeterValuesRequest) {
-			r.TransactionId = txID
-		}); err != nil {
-			reportLog.DEBUG.Printf("%s: meter values: %v", conn.title, err)
-		} else {
-			conn.lastMeterSent = now
-		}
 	}
 }
 
+func (conn *reportConnection) sendStart(ev reportEvent) error {
+	idTag := conn.rule.IdTag
+
+	if _, err := conn.cp.Authorize(idTag); err != nil {
+		reportLog.DEBUG.Printf("%s: authorize: %v", conn.title, err)
+		return err
+	}
+
+	res, err := conn.cp.StartTransaction(1, idTag, int(ev.wh), types.NewDateTime(ev.at))
+	if err != nil {
+		reportLog.DEBUG.Printf("%s: start transaction: %v", conn.title, err)
+		return err
+	}
+
+	conn.mu.Lock()
+	conn.transactionId = &res.TransactionId
+	conn.mu.Unlock()
+
+	// don't let a previous session's send time throttle this new session's first sample
+	conn.lastMeterSent = time.Time{}
+	return nil
+}
+
+// sendMeter sends a sample unless a newer one follows directly, or it falls inside
+// the throttle interval and nothing else is queued behind it. The sample waiting
+// for the interval is kept at the head of the queue and sent by a later call.
+func (conn *reportConnection) sendMeter(ev reportEvent, next *reportEvent, txID *int) error {
+	if txID == nil {
+		return nil
+	}
+
+	if next != nil && next.kind == reportEventMeter {
+		return nil
+	}
+
+	now := time.Now()
+	if next == nil && now.Sub(conn.lastMeterSent) < conn.meterInterval {
+		return errReportThrottled
+	}
+
+	mv := types.MeterValue{
+		Timestamp: types.NewDateTime(ev.at),
+		SampledValue: []types.SampledValue{{
+			Value:     fmt.Sprintf("%.0f", ev.wh),
+			Measurand: types.MeasurandEnergyActiveImportRegister,
+			Unit:      types.UnitOfMeasureWh,
+		}},
+	}
+	if _, err := conn.cp.MeterValues(1, []types.MeterValue{mv}, func(r *core.MeterValuesRequest) {
+		r.TransactionId = txID
+	}); err != nil {
+		reportLog.DEBUG.Printf("%s: meter values: %v", conn.title, err)
+		return err
+	}
+
+	conn.lastMeterSent = now
+	return nil
+}
+
+func (conn *reportConnection) sendStop(ev reportEvent, txID *int) error {
+	if txID == nil {
+		return nil
+	}
+
+	if _, err := conn.cp.StopTransaction(int(ev.wh), types.NewDateTime(ev.at), *txID); err != nil {
+		reportLog.DEBUG.Printf("%s: stop transaction: %v", conn.title, err)
+		return err
+	}
+
+	conn.mu.Lock()
+	conn.sessionActive = false
+	conn.transactionId = nil
+	conn.mu.Unlock()
+	return nil
+}
+
+// errReportThrottled keeps a throttled sample at the head of the queue
+var errReportThrottled = errors.New("throttled")
+
 // ReportSessionStart notifies the loadpoint's report connection (if any) that
 // a charging session started. No-op if the loadpoint has no rule configured.
-// Records the intent durably before enqueuing reconcile, so it survives a
-// dropped/failed attempt and is retried by a later reconcile (see
-// reportConnection.reconcile).
 func ReportSessionStart(loadpointTitle string, meterStartWh float64) {
 	reportMu.RLock()
 	conn := connections[loadpointTitle]
@@ -568,9 +636,7 @@ func ReportSessionStart(loadpointTitle string, meterStartWh float64) {
 
 	conn.mu.Lock()
 	conn.sessionActive = true
-	conn.meterStartWh = meterStartWh
-	conn.lastMeterWh = meterStartWh
-	conn.pendingStop = false
+	conn.push(reportEvent{kind: reportEventStart, at: time.Now(), wh: meterStartWh})
 	conn.mu.Unlock()
 
 	conn.enqueue(conn.reconcile)
@@ -591,16 +657,15 @@ func ReportMeterValue(loadpointTitle string, energyWh float64) {
 		conn.mu.Unlock()
 		return
 	}
-	conn.lastMeterWh = energyWh
+	conn.push(reportEvent{kind: reportEventMeter, at: time.Now(), wh: energyWh})
 	conn.mu.Unlock()
 
 	conn.enqueue(conn.reconcile)
 }
 
 // ReportSessionStop notifies the loadpoint's report connection (if any) that
-// the charging session ended. Recorded as a durable pending-stop flag rather
-// than sent directly, so it's retried by reconcile even if the connection is
-// currently down or a queued attempt gets dropped under backpressure.
+// the charging session ended. Queued behind any pending samples, so the stop
+// carries the last value reported before it.
 func ReportSessionStop(loadpointTitle string, meterStopWh float64) {
 	reportMu.RLock()
 	conn := connections[loadpointTitle]
@@ -614,8 +679,8 @@ func ReportSessionStop(loadpointTitle string, meterStopWh float64) {
 		conn.mu.Unlock()
 		return
 	}
-	conn.pendingStop = true
-	conn.meterStopWh = meterStopWh
+	conn.sessionActive = false
+	conn.push(reportEvent{kind: reportEventStop, at: time.Now(), wh: meterStopWh})
 	conn.mu.Unlock()
 
 	conn.enqueue(conn.reconcile)

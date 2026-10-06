@@ -2,6 +2,7 @@ package ocpp
 
 import (
 	"testing"
+	"time"
 
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	occore "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -114,37 +115,26 @@ func TestApplyReportRulesNoOpForUnconfiguredLoadpoint(t *testing.T) {
 	})
 }
 
-// ReportSessionStart/MeterValue/Stop must record durable desired state before
-// ever touching the network, so a call made while offline (or one whose
-// reconcile job gets dropped under backpressure) is retried by the next
-// reconcile rather than silently lost - see reportConnection.reconcile.
-func TestReportSessionLifecycleRecordsDurableState(t *testing.T) {
+func TestReportSessionLifecycleQueuesEvents(t *testing.T) {
 	conn := newUnstartedConnection("Carport")
 	reportMu.Lock()
 	connections = map[string]*reportConnection{"Carport": conn}
 	reportMu.Unlock()
 
 	ReportSessionStart("Carport", 1000)
-	conn.mu.Lock()
-	assert.True(t, conn.sessionActive)
-	assert.Equal(t, 1000.0, conn.meterStartWh)
-	assert.Equal(t, 1000.0, conn.lastMeterWh)
-	assert.False(t, conn.pendingStop)
-	conn.mu.Unlock()
-
 	ReportMeterValue("Carport", 1200)
-	conn.mu.Lock()
-	assert.Equal(t, 1200.0, conn.lastMeterWh)
-	conn.mu.Unlock()
-
 	ReportSessionStop("Carport", 1500)
+
 	conn.mu.Lock()
-	assert.True(t, conn.pendingStop)
-	assert.Equal(t, 1500.0, conn.meterStopWh)
-	// sessionActive is only cleared once reconcile confirms the
-	// StopTransaction, not at the moment the stop is requested
-	assert.True(t, conn.sessionActive)
-	conn.mu.Unlock()
+	defer conn.mu.Unlock()
+	require.Len(t, conn.events, 3)
+	assert.Equal(t, reportEventStart, conn.events[0].kind)
+	assert.Equal(t, 1000.0, conn.events[0].wh)
+	assert.Equal(t, reportEventMeter, conn.events[1].kind)
+	assert.Equal(t, 1200.0, conn.events[1].wh)
+	assert.Equal(t, reportEventStop, conn.events[2].kind)
+	assert.Equal(t, 1500.0, conn.events[2].wh)
+	assert.False(t, conn.sessionActive)
 }
 
 // A meter update for a loadpoint with no active reported session (no
@@ -160,12 +150,12 @@ func TestReportMeterValueNoOpWithoutActiveSession(t *testing.T) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 	assert.False(t, conn.sessionActive)
-	assert.Zero(t, conn.lastMeterWh)
+	assert.Empty(t, conn.events)
 }
 
-// A stop for a loadpoint with no active reported session must not set
-// pendingStop - reconcile would otherwise try to stop a transaction that was
-// never started.
+// A stop for a loadpoint with no active reported session must not queue a
+// stop - reconcile would otherwise try to stop a transaction that was never
+// started.
 func TestReportSessionStopNoOpWithoutActiveSession(t *testing.T) {
 	conn := newUnstartedConnection("Carport")
 	reportMu.Lock()
@@ -175,27 +165,42 @@ func TestReportSessionStopNoOpWithoutActiveSession(t *testing.T) {
 	ReportSessionStop("Carport", 500)
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
-	assert.False(t, conn.pendingStop)
+	assert.Empty(t, conn.events)
 }
 
 // reconcile must not attempt BootNotification/Authorize/StartTransaction
-// against a disconnected connection - an attempt against a dead connection
-// is certain to fail and, unlike the durable state above, would previously
-// have been the only attempt made (see the original bug this replaced).
+// against a disconnected connection, and queued events must survive the no-op
+// so they are sent in order once a connection is established.
 func TestReconcileNoOpWhenDisconnected(t *testing.T) {
 	conn := newUnstartedConnection("Carport")
+	conn.mu.Lock()
 	conn.sessionActive = true
-	conn.meterStartWh = 1000
-	conn.lastMeterWh = 1000
+	conn.push(reportEvent{kind: reportEventStart, at: time.Now(), wh: 1000})
+	conn.mu.Unlock()
 
 	require.False(t, conn.cp.IsConnected())
 	assert.NotPanics(t, conn.reconcile)
 
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
-	// desired state must survive the no-op reconcile untouched, ready for
-	// the next reconcile once a connection is established
-	assert.True(t, conn.sessionActive)
+	assert.Len(t, conn.events, 1)
 	assert.Nil(t, conn.transactionId)
 	assert.False(t, conn.booted)
+}
+
+// A full queue drops the oldest meter sample first, so session boundaries are kept
+func TestReportQueueDropsMeterSamplesFirst(t *testing.T) {
+	conn := newUnstartedConnection("Carport")
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	conn.push(reportEvent{kind: reportEventStart, at: time.Now(), wh: 1000})
+	for i := 0; i < maxQueuedEvents; i++ {
+		conn.push(reportEvent{kind: reportEventMeter, at: time.Now(), wh: float64(i)})
+	}
+	conn.push(reportEvent{kind: reportEventStop, at: time.Now(), wh: 2000})
+
+	require.Len(t, conn.events, maxQueuedEvents)
+	assert.Equal(t, reportEventStart, conn.events[0].kind)
+	assert.Equal(t, reportEventStop, conn.events[len(conn.events)-1].kind)
 }
