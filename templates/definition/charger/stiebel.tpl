@@ -85,7 +85,7 @@ setmode:
             encoding: uint16
 {{- end }}
 
-{{ define "stiebel-wpm" }}
+{{ define "stiebel-wpm-base" }}
 {{- include "stiebel-sgready" . }}
 {{- if .tempsource }}
 temp:

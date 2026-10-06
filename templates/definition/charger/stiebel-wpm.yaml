@@ -23,7 +23,7 @@ params:
     type: bool
     deprecated: true
 render: |
-  {{- include "stiebel-wpm" . }}
+  {{- include "stiebel-wpm-base" . }}
   {{- if .power }}
   {{- include "stiebel-wpm-power" . }}
   {{- end }}

@@ -19,6 +19,6 @@ params:
     type: choice
     choice: ["warmwater", "buffer"]
 render: |
-  {{- include "stiebel-wpm" . }}
+  {{- include "stiebel-wpm-base" . }}
   {{- include "stiebel-wpm-power" . }}
   {{ include "heatpumpswitch" . }}
