@@ -7,6 +7,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
+	"gorm.io/gorm"
 )
 
 func TestUnitNewDriver(t *testing.T) {
@@ -103,6 +105,49 @@ func TestUnitWAL(t *testing.T) {
 
 	// shutdown closes again after restore and reset have closed
 	require.NoError(t, Close())
+}
+
+// TestUnitConcurrentWrites verifies that the connection pool serves concurrent
+// read-modify-write transactions and reads without SQLITE_BUSY
+func TestUnitConcurrentWrites(t *testing.T) {
+	db, err := New("sqlite", t.TempDir()+"/evcc.db")
+	require.NoError(t, err)
+	require.NoError(t, db.Exec("CREATE TABLE t (id integer primary key, v integer)").Error)
+	require.NoError(t, db.Exec("INSERT INTO t VALUES (1, 0)").Error)
+
+	const workers, rounds = 8, 50
+
+	var eg errgroup.Group
+	for range workers {
+		eg.Go(func() error {
+			for range rounds {
+				if err := db.Transaction(func(tx *gorm.DB) error {
+					var v int
+					if err := tx.Raw("SELECT v FROM t WHERE id = 1").Scan(&v).Error; err != nil {
+						return err
+					}
+					return tx.Exec("UPDATE t SET v = ? WHERE id = 1", v+1).Error
+				}); err != nil {
+					return err
+				}
+			}
+			return nil
+		})
+		eg.Go(func() error {
+			for range rounds {
+				var v int
+				if err := db.Raw("SELECT v FROM t WHERE id = 1").Scan(&v).Error; err != nil {
+					return err
+				}
+			}
+			return nil
+		})
+	}
+	require.NoError(t, eg.Wait())
+
+	var v int
+	require.NoError(t, db.Raw("SELECT v FROM t WHERE id = 1").Scan(&v).Error)
+	assert.Equal(t, workers*rounds, v)
 }
 
 type migrationParent struct {

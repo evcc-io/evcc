@@ -27,6 +27,7 @@ func FilePath() string {
 
 func New(driver, dsn string) (*gorm.DB, error) {
 	var dialect gorm.Dialector
+	var memory bool
 
 	switch driver {
 	case "sqlite":
@@ -37,6 +38,8 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		memory = file == ":memory:" || strings.Contains(params, "mode=memory")
 
 		if err := os.MkdirAll(filepath.Dir(file), 0700); err != nil {
 			return nil, err
@@ -62,6 +65,12 @@ func New(driver, dsn string) (*gorm.DB, error) {
 			params += "_pragma=" + pragma
 		}
 
+		// take the write lock on BEGIN, so concurrent writers wait on busy_timeout
+		// instead of failing with SQLITE_BUSY when upgrading from a read
+		if !strings.Contains(params, "_txlock=") {
+			params += "&_txlock=immediate"
+		}
+
 		connectionStr := file + "?" + params
 
 		util.NewLogger("main").INFO.Println("using sqlite database:", connectionStr)
@@ -82,9 +91,9 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	// sqlite allows a single writer; serialize on one connection so concurrent
-	// writes wait on busy_timeout instead of failing with SQLITE_BUSY.
-	if sqlDB, err := db.DB(); err == nil {
+	// WAL lets readers run alongside the single writer. In-memory databases
+	// exist per connection and need exactly one.
+	if sqlDB, err := db.DB(); err == nil && memory {
 		sqlDB.SetMaxOpenConns(1)
 	}
 
