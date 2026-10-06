@@ -29,8 +29,9 @@ test.describe("Basics", async () => {
       await page.goto(route.path);
 
       await expect(page.getByRole("heading", { name: route.title || title })).toBeVisible();
-      // no battery tab when battery is not configured
-      await expect(page.getByRole("link", { name: "Battery" })).not.toBeVisible();
+      // no battery tab and no energyflow battery icon when battery is not configured
+      await expect(page.getByRole("link", { name: "Battery", exact: true })).not.toBeVisible();
+      await expect(page.getByRole("link", { name: "Battery status" })).not.toBeVisible();
       const menu = await openMoreMenu(page);
       await expect(menu.getByRole("button", { name: "User Interface" })).toBeVisible();
       await expect(menu.getByRole("button", { name: "Need Help?" })).toBeVisible();
@@ -76,7 +77,7 @@ test.describe("Advanced", async () => {
 
       await expect(page.getByRole("heading", { name: route.title || title })).toBeVisible();
       // battery tab visible when battery is configured
-      await expect(page.getByRole("link", { name: "Battery" })).toBeVisible();
+      await expect(page.getByRole("link", { name: "Battery", exact: true })).toBeVisible();
       const menu = await openMoreMenu(page);
       await expect(menu.getByRole("button", { name: "User Interface" })).toBeVisible();
       await expect(menu.getByRole("button", { name: "Need Help?" })).toBeVisible();
@@ -86,7 +87,15 @@ test.describe("Advanced", async () => {
   test("Home Battery from bottom nav", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: title })).toBeVisible();
-    await page.getByRole("link", { name: "Battery" }).click();
+    await page.getByRole("link", { name: "Battery", exact: true }).click();
+
+    await expect(page.getByRole("heading", { name: "Home Battery" })).toBeVisible();
+  });
+
+  test("Home Battery from energyflow icon", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: title })).toBeVisible();
+    await page.getByRole("link", { name: "Battery status" }).click();
 
     await expect(page.getByRole("heading", { name: "Home Battery" })).toBeVisible();
   });
