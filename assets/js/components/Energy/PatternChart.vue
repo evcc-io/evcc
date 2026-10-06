@@ -221,6 +221,32 @@ export default defineComponent({
 						...xAxisLabelStyle(),
 						hideOverlap: false,
 						interval: this.dayStep - 1,
+						formatter: (value: number) => {
+							const d = new Date(
+								this.from.getFullYear(),
+								this.from.getMonth(),
+								value
+							);
+							const weekday = this.fmtWeekdayByIndex(d.getDay(), "short");
+							const isSunday = d.getDay() === 0;
+							const weekdayFmt = isSunday
+								? `{sun|${weekday}}`
+								: `{weekday|${weekday}}`;
+							return `${value}\n${weekdayFmt}`;
+						},
+						rich: {
+							weekday: {
+								color: colors.muted || "",
+								fontSize: 10,
+								lineHeight: 12,
+							},
+							sun: {
+								color: colors.text || colors.muted || "",
+								fontWeight: "bold",
+								fontSize: 10,
+								lineHeight: 12,
+							},
+						},
 					},
 				},
 				yAxis: {
