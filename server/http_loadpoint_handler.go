@@ -40,13 +40,10 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 
 		goal, _ := lp.GetPlanGoal()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-		strategy := lp.EffectivePlanStrategy()
-		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
 
-		// the optimizer schedules the plan itself while in control
-		p, power := lp.OptimizerPlan(planTime)
-		if p != nil {
-			plan, maxPower, requiredDuration = p, power, planner.Duration(p)
+		plan, power, optimizer := lp.EffectivePlan(planTime, requiredDuration, lp.EffectivePlanStrategy())
+		if optimizer {
+			maxPower, requiredDuration = power, planner.Duration(plan)
 		}
 
 		res := PlanResponse{
@@ -55,7 +52,7 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 			Duration:  int64(requiredDuration.Seconds()),
 			Plan:      plan,
 			Power:     maxPower,
-			Optimizer: p != nil,
+			Optimizer: optimizer,
 		}
 
 		jsonWrite(w, res)

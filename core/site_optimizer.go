@@ -845,9 +845,14 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 		if key := detail.key(); key != "" && detail.controllable {
 			suggestions[key] = suggestion
 
-			// the schedule is gated by the suggestion, so it needs no clearing
+			// the schedule is gated by the suggestion, so it needs no clearing.
+			// Without the plan goal in the model its slots are no plan.
 			if detail.loadpoint != nil {
-				site.loadpoints[*detail.loadpoint].setOptimizerPlan(loadpointPlan(batRes, req.TimeSeries.PN, schedule, now))
+				var plan optimizerPlan
+				if batReq.SGoal != nil {
+					plan = loadpointPlan(batRes, req.TimeSeries.PN, schedule, now)
+				}
+				site.loadpoints[*detail.loadpoint].setOptimizerPlan(plan)
 			}
 		}
 	}
