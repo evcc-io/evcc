@@ -26,7 +26,7 @@ export default defineComponent({
 	name: "OcppReportButton",
 	components: { OcppForwardStatus },
 	props: {
-		loadpointTitle: { type: String, required: true },
+		loadpointId: { type: Number, required: true },
 		rule: { type: Object as PropType<OcppReportRule>, default: undefined },
 		connected: { type: Boolean, default: false },
 		error: { type: String, default: undefined },
@@ -76,7 +76,7 @@ export default defineComponent({
 	},
 	methods: {
 		edit() {
-			openModal("ocppreport", { loadpoint: this.loadpointTitle });
+			openModal("ocppreport", { loadpoint: this.loadpointId });
 		},
 	},
 });

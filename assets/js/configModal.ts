@@ -9,7 +9,7 @@ export interface ModalEntry {
   choices?: string[];
   station?: string;
   parent?: number;
-  loadpoint?: string;
+  loadpoint?: number;
 }
 
 export type ModalParams = Omit<ModalEntry, "name">;
@@ -137,7 +137,7 @@ export function parseKey(key: string): {
   choices?: string[];
   station?: string;
   parent?: number;
-  loadpoint?: string;
+  loadpoint?: number;
 } {
   const bracketMatch = key.match(/^([^[]+)\[([^\]]+)\]$/);
   if (!bracketMatch) {
@@ -163,8 +163,9 @@ export function parseKey(key: string): {
   }
   if (paramKey === "parent") {
     return { name, parent: parseInt(paramValue, 10) };
+  }
   if (paramKey === "loadpoint") {
-    return { name, loadpoint: paramValue };
+    return { name, loadpoint: parseInt(paramValue, 10) };
   }
   return { name };
 }
@@ -200,7 +201,7 @@ export function parseQueryString(queryString: string): ModalEntry[] {
     if (parsed.choices) entry.choices = parsed.choices;
     if (parsed.station) entry.station = parsed.station;
     if (parsed.parent) entry.parent = parsed.parent;
-    if (parsed.loadpoint) entry.loadpoint = parsed.loadpoint;
+    if (parsed.loadpoint !== undefined) entry.loadpoint = parsed.loadpoint;
     entries.push(entry);
   }
   return entries;
@@ -219,7 +220,7 @@ export function buildQuery(stack: ModalEntry[]): Record<string, string> {
       key += `[station:${entry.station}]`;
     } else if (entry.parent) {
       key += `[parent:${entry.parent}]`;
-    } else if (entry.loadpoint) {
+    } else if (entry.loadpoint !== undefined) {
       key += `[loadpoint:${entry.loadpoint}]`;
     }
     query[key] = entry.id !== undefined ? String(entry.id) : "";
@@ -291,7 +292,7 @@ export function openModal(name: string, params?: ModalParams): Promise<ModalResu
   if (params?.choices) entry.choices = params.choices;
   if (params?.station) entry.station = params.station;
   if (params?.parent) entry.parent = params.parent;
-  if (params?.loadpoint) entry.loadpoint = params.loadpoint;
+  if (params?.loadpoint !== undefined) entry.loadpoint = params.loadpoint;
 
   const newStack = [...configModal.stack, entry];
   const query = buildQuery(newStack);
@@ -337,7 +338,7 @@ export function replaceModal(name: string, params?: ModalParams): void {
   if (params?.choices) entry.choices = params.choices;
   if (params?.station) entry.station = params.station;
   if (params?.parent) entry.parent = params.parent;
-  if (params?.loadpoint) entry.loadpoint = params.loadpoint;
+  if (params?.loadpoint !== undefined) entry.loadpoint = params.loadpoint;
 
   const newStack = [...configModal.stack.slice(0, -1), entry];
   const query = buildQuery(newStack);

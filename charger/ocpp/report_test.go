@@ -83,7 +83,7 @@ func TestOnUnlockConnectorNotSupported(t *testing.T) {
 // SetReportEnabled(true) has something to reconnect once flipped back on.
 func TestApplyReportRulesSkipsConnectionsWhenGloballyDisabled(t *testing.T) {
 	reportMu.Lock()
-	connections = make(map[string]*reportConnection)
+	connections = make(map[int]*reportConnection)
 	reportEnabled = false
 	reportMu.Unlock()
 	t.Cleanup(func() {
@@ -105,25 +105,25 @@ func TestApplyReportRulesNoOpForUnconfiguredLoadpoint(t *testing.T) {
 	// ReportSessionStart/MeterValue/Stop must be safe no-ops when no rule
 	// is configured for the given loadpoint - this is the common case.
 	reportMu.Lock()
-	connections = make(map[string]*reportConnection)
+	connections = make(map[int]*reportConnection)
 	reportMu.Unlock()
 
 	assert.NotPanics(t, func() {
-		ReportSessionStart("unknown", 1000)
-		ReportMeterValue("unknown", 500)
-		ReportSessionStop("unknown", 1500)
+		ReportSessionStart(0, 1000)
+		ReportMeterValue(0, 500)
+		ReportSessionStop(0, 1500)
 	})
 }
 
 func TestReportSessionLifecycleQueuesEvents(t *testing.T) {
 	conn := newUnstartedConnection("Carport")
 	reportMu.Lock()
-	connections = map[string]*reportConnection{"Carport": conn}
+	connections = map[int]*reportConnection{0: conn}
 	reportMu.Unlock()
 
-	ReportSessionStart("Carport", 1000)
-	ReportMeterValue("Carport", 1200)
-	ReportSessionStop("Carport", 1500)
+	ReportSessionStart(0, 1000)
+	ReportMeterValue(0, 1200)
+	ReportSessionStop(0, 1500)
 
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
@@ -143,10 +143,10 @@ func TestReportSessionLifecycleQueuesEvents(t *testing.T) {
 func TestReportMeterValueNoOpWithoutActiveSession(t *testing.T) {
 	conn := newUnstartedConnection("Carport")
 	reportMu.Lock()
-	connections = map[string]*reportConnection{"Carport": conn}
+	connections = map[int]*reportConnection{0: conn}
 	reportMu.Unlock()
 
-	ReportMeterValue("Carport", 999)
+	ReportMeterValue(0, 999)
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 	assert.False(t, conn.sessionActive)
@@ -159,10 +159,10 @@ func TestReportMeterValueNoOpWithoutActiveSession(t *testing.T) {
 func TestReportSessionStopNoOpWithoutActiveSession(t *testing.T) {
 	conn := newUnstartedConnection("Carport")
 	reportMu.Lock()
-	connections = map[string]*reportConnection{"Carport": conn}
+	connections = map[int]*reportConnection{0: conn}
 	reportMu.Unlock()
 
-	ReportSessionStop("Carport", 500)
+	ReportSessionStop(0, 500)
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 	assert.Empty(t, conn.events)

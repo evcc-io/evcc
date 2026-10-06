@@ -64,10 +64,10 @@
 											loadpoint.title &&
 											!loadpointIsHeating(loadpoint)
 										"
-										:loadpoint-title="loadpoint.title"
-										:rule="ocppReportRule(loadpoint.title)"
-										:connected="ocppReportConnected(loadpoint.title)"
-										:error="ocppReportError(loadpoint.title)"
+										:loadpoint-id="loadpoint.id!"
+										:rule="ocppReportRule(loadpoint.id!)"
+										:connected="ocppReportConnected(loadpoint.id!)"
+										:error="ocppReportError(loadpoint.id!)"
 									/>
 								</div>
 							</template>
@@ -1741,15 +1741,14 @@ export default defineComponent({
 			const { circuit } = loadpoint;
 			return !!circuit && !this.circuits.some((c) => c.name === circuit);
 		},
-		ocppReportRule(title: string) {
-			return (store.state?.ocppreport?.config || []).find((r) => r.loadpointTitle === title);
+		ocppReportRule(id: number) {
+			return (store.state?.ocppreport?.config || []).find((r) => r.loadpointId === id);
 		},
-		ocppReportError(title: string): string | undefined {
-			return (store.state?.ocppreport?.status || []).find((s) => s.loadpointTitle === title)
-				?.error;
+		ocppReportError(id: number): string | undefined {
+			return (store.state?.ocppreport?.status || []).find((s) => s.loadpointId === id)?.error;
 		},
-		ocppReportConnected(title: string): boolean {
-			return !!(store.state?.ocppreport?.status || []).find((s) => s.loadpointTitle === title)
+		ocppReportConnected(id: number): boolean {
+			return !!(store.state?.ocppreport?.status || []).find((s) => s.loadpointId === id)
 				?.upstreamConnected;
 		},
 		hasDeviceError(type: DeviceType, name?: string) {

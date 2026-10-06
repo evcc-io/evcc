@@ -51,6 +51,9 @@ const defaultMeterInterval = 60 * time.Second
 // upstream OCPP 1.6J Central System. One-way: evcc reports, it never accepts
 // remote control from the upstream (evcc-io/evcc#32989).
 type ReportRule struct {
+	// LoadpointId is the loadpoint index the rule is bound to; LoadpointTitle is
+	// display only and may change, so it never keys anything
+	LoadpointId    int    `json:"loadpointId" yaml:"loadpointId"`
 	LoadpointTitle string `json:"loadpointTitle" yaml:"loadpointTitle"`
 	UpstreamURL    string `json:"upstreamUrl" yaml:"upstreamUrl"`
 	// StationID is mandatory - no more "evcc-<loadpoint>" fallback; a rule
@@ -83,6 +86,7 @@ func (r ReportRule) sameConnection(o ReportRule) bool {
 
 // ReportSessionStatus is a snapshot of one report connection for the UI.
 type ReportSessionStatus struct {
+	LoadpointId       int    `json:"loadpointId"`
 	LoadpointTitle    string `json:"loadpointTitle"`
 	UpstreamURL       string `json:"upstreamUrl"`
 	UpstreamConnected bool   `json:"upstreamConnected"`
@@ -98,34 +102,34 @@ var (
 	// switch existed.
 	reportEnabled = true
 	reportRules   []ReportRule
-	connections   = make(map[string]*reportConnection) // keyed by LoadpointTitle
-	reportErrors  = make(map[string]string)
+	connections   = make(map[int]*reportConnection) // keyed by LoadpointId
+	reportErrors  = make(map[int]string)
 
 	reportCbMu      sync.Mutex
 	reportUpdatedCb func()
 
 	loadpointLookupMu sync.RWMutex
-	loadpointLookupFn func(title string) (loadpoint.API, bool)
+	loadpointLookupFn func(id int) (loadpoint.API, bool)
 )
 
 // SetLoadpointLookup registers the function used to resolve a loadpoint by
-// title, so an upstream TriggerMessage(MeterValues) request can read current
+// id, so an upstream TriggerMessage(MeterValues) request can read current
 // state to answer it - the only inbound use, purely a read. Called once at
 // site startup.
-func SetLoadpointLookup(fn func(title string) (loadpoint.API, bool)) {
+func SetLoadpointLookup(fn func(id int) (loadpoint.API, bool)) {
 	loadpointLookupMu.Lock()
 	loadpointLookupFn = fn
 	loadpointLookupMu.Unlock()
 }
 
-func lookupLoadpoint(title string) (loadpoint.API, bool) {
+func lookupLoadpoint(id int) (loadpoint.API, bool) {
 	loadpointLookupMu.RLock()
 	fn := loadpointLookupFn
 	loadpointLookupMu.RUnlock()
 	if fn == nil {
 		return nil, false
 	}
-	return fn(title)
+	return fn(id)
 }
 
 // SetReportUpdated registers a callback fired when a connection's status changes.
@@ -189,12 +193,13 @@ func GetReportStatus() []ReportSessionStatus {
 	out := make([]ReportSessionStatus, 0, len(reportRules))
 	for _, r := range reportRules {
 		st := ReportSessionStatus{
+			LoadpointId:    r.LoadpointId,
 			LoadpointTitle: r.LoadpointTitle,
 			UpstreamURL:    strings.TrimRight(r.UpstreamURL, "/"),
 		}
-		if conn, ok := connections[r.LoadpointTitle]; ok && conn.cp.IsConnected() {
+		if conn, ok := connections[r.LoadpointId]; ok && conn.cp.IsConnected() {
 			st.UpstreamConnected = true
-		} else if msg, ok := reportErrors[r.LoadpointTitle]; ok {
+		} else if msg, ok := reportErrors[r.LoadpointId]; ok {
 			st.Error = msg
 		}
 		out = append(out, st)
@@ -202,17 +207,17 @@ func GetReportStatus() []ReportSessionStatus {
 	return out
 }
 
-func recordReportError(title, msg string) {
+func recordReportError(id int, msg string) {
 	reportMu.Lock()
-	reportErrors[title] = msg
+	reportErrors[id] = msg
 	reportMu.Unlock()
 	notifyReportUpdated()
 }
 
-func clearReportError(title string) {
+func clearReportError(id int) {
 	reportMu.Lock()
-	_, had := reportErrors[title]
-	delete(reportErrors, title)
+	_, had := reportErrors[id]
+	delete(reportErrors, id)
 	reportMu.Unlock()
 	if had {
 		notifyReportUpdated()
@@ -228,26 +233,26 @@ func ApplyReportRules(rules []ReportRule) {
 	// below is torn down as stale and none get (re)started, but reportRules
 	// still holds the real config for status/config endpoints and for
 	// SetReportEnabled to reconnect from once re-enabled
-	valid := make(map[string]bool, len(rules))
+	valid := make(map[int]bool, len(rules))
 	if reportEnabled {
 		for _, r := range rules {
-			valid[r.LoadpointTitle] = true
+			valid[r.LoadpointId] = true
 		}
 	}
 
 	var stale []*reportConnection
-	for title, conn := range connections {
-		if !valid[title] {
+	for id, conn := range connections {
+		if !valid[id] {
 			stale = append(stale, conn)
-			delete(connections, title)
-			delete(reportErrors, title)
+			delete(connections, id)
+			delete(reportErrors, id)
 		}
 	}
 
 	var toStart []*reportConnection
 	if reportEnabled {
 		for _, r := range rules {
-			if old, ok := connections[r.LoadpointTitle]; ok {
+			if old, ok := connections[r.LoadpointId]; ok {
 				if old.rule.sameConnection(r) {
 					old.rule = r // idTag etc. may have changed, doesn't need a reconnect
 					continue
@@ -255,7 +260,7 @@ func ApplyReportRules(rules []ReportRule) {
 				stale = append(stale, old)
 			}
 			conn := newReportConnection(r)
-			connections[r.LoadpointTitle] = conn
+			connections[r.LoadpointId] = conn
 			toStart = append(toStart, conn)
 		}
 	}
@@ -338,10 +343,10 @@ func newReportConnection(rule ReportRule) *reportConnection {
 		if err != nil {
 			msg = err.Error()
 		}
-		recordReportError(conn.title, msg)
+		recordReportError(conn.rule.LoadpointId, msg)
 	})
 	endpoint.SetOnReconnectedHandler(func() {
-		clearReportError(conn.title)
+		clearReportError(conn.rule.LoadpointId)
 		conn.mu.Lock()
 		conn.booted = false // re-boot after reconnect
 		conn.mu.Unlock()
@@ -394,14 +399,14 @@ func (conn *reportConnection) dial() {
 		default:
 		}
 		if err := conn.cp.Start(conn.rule.UpstreamURL); err != nil {
-			recordReportError(conn.title, err.Error())
+			recordReportError(conn.rule.LoadpointId, err.Error())
 			return err
 		}
 		// always notify on a successful connect, even if no prior error was
 		// recorded (e.g. the very first attempt succeeds) - the UI still
 		// needs to see the connected transition
 		reportMu.Lock()
-		delete(reportErrors, conn.title)
+		delete(reportErrors, conn.rule.LoadpointId)
 		reportMu.Unlock()
 		notifyReportUpdated()
 		// flush any session state that accumulated while offline (e.g. a
@@ -626,9 +631,9 @@ var errReportThrottled = errors.New("throttled")
 
 // ReportSessionStart notifies the loadpoint's report connection (if any) that
 // a charging session started. No-op if the loadpoint has no rule configured.
-func ReportSessionStart(loadpointTitle string, meterStartWh float64) {
+func ReportSessionStart(loadpointId int, meterStartWh float64) {
 	reportMu.RLock()
-	conn := connections[loadpointTitle]
+	conn := connections[loadpointId]
 	reportMu.RUnlock()
 	if conn == nil {
 		return
@@ -644,9 +649,9 @@ func ReportSessionStart(loadpointTitle string, meterStartWh float64) {
 
 // ReportMeterValue notifies the loadpoint's report connection (if any) of the
 // current cumulative session energy. No-op without an active reported session.
-func ReportMeterValue(loadpointTitle string, energyWh float64) {
+func ReportMeterValue(loadpointId int, energyWh float64) {
 	reportMu.RLock()
-	conn := connections[loadpointTitle]
+	conn := connections[loadpointId]
 	reportMu.RUnlock()
 	if conn == nil {
 		return
@@ -666,9 +671,9 @@ func ReportMeterValue(loadpointTitle string, energyWh float64) {
 // ReportSessionStop notifies the loadpoint's report connection (if any) that
 // the charging session ended. Queued behind any pending samples, so the stop
 // carries the last value reported before it.
-func ReportSessionStop(loadpointTitle string, meterStopWh float64) {
+func ReportSessionStop(loadpointId int, meterStopWh float64) {
 	reportMu.RLock()
-	conn := connections[loadpointTitle]
+	conn := connections[loadpointId]
 	reportMu.RUnlock()
 	if conn == nil {
 		return
@@ -754,10 +759,10 @@ func (h *reportHandler) OnTriggerMessage(request *remotetrigger.TriggerMessageRe
 		h.conn.mu.Unlock()
 		h.conn.enqueue(h.conn.ensureBoot)
 	case core.MeterValuesFeatureName:
-		if lp, ok := lookupLoadpoint(h.conn.title); ok {
+		if lp, ok := lookupLoadpoint(h.conn.rule.LoadpointId); ok {
 			// GetChargedEnergy is already in Wh, unlike finalizeSessionEnergy's
 			// kWh-based register - no *1e3 here (was reporting 1000x too high)
-			ReportMeterValue(h.conn.title, lp.GetChargedEnergy())
+			ReportMeterValue(h.conn.rule.LoadpointId, lp.GetChargedEnergy())
 		}
 	}
 

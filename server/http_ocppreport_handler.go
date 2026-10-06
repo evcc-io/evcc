@@ -22,7 +22,13 @@ func updateOcppReportHandler(w http.ResponseWriter, r *http.Request) {
 	// stationId and idTag are mandatory - no more "evcc-<loadpoint>" /
 	// "EVCC" fallbacks; an empty idTag would also silently and permanently
 	// fail every Authorize/StartTransaction (ocpp-go validates it required)
+	seen := make(map[int]bool, len(rules))
 	for _, rule := range rules {
+		if seen[rule.LoadpointId] {
+			jsonError(w, http.StatusBadRequest, fmt.Errorf("%s: only one report rule per loadpoint", rule.LoadpointTitle))
+			return
+		}
+		seen[rule.LoadpointId] = true
 		if rule.StationID == "" {
 			jsonError(w, http.StatusBadRequest, fmt.Errorf("%s: stationId is required", rule.LoadpointTitle))
 			return
@@ -33,15 +39,15 @@ func updateOcppReportHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// restore masked secrets (password, caCert) from stored rules by loadpoint title
+	// restore masked secrets (password, caCert) from stored rules by loadpoint id
 	var old []ocpp.ReportRule
 	if err := settings.Json(keys.OcppReport, &old); err == nil {
-		stored := make(map[string]ocpp.ReportRule, len(old))
+		stored := make(map[int]ocpp.ReportRule, len(old))
 		for _, o := range old {
-			stored[o.LoadpointTitle] = o
+			stored[o.LoadpointId] = o
 		}
 		for i := range rules {
-			if o, ok := stored[rules[i].LoadpointTitle]; ok {
+			if o, ok := stored[rules[i].LoadpointId]; ok {
 				if err := mergeMaskedAny(&o, &rules[i]); err != nil {
 					jsonError(w, http.StatusInternalServerError, err)
 					return

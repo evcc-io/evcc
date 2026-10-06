@@ -61,10 +61,10 @@
 							v-if="
 								experimental &&
 								reportEnabled &&
-								entry.title &&
+								loadpointId(entry.title) !== undefined &&
 								!stationHeating[entry.id]
 							"
-							:loadpoint-title="entry.title"
+							:loadpoint-id="loadpointId(entry.title)!"
 							:rule="reportRule(entry.title)"
 							:connected="reportConnected(entry.title)"
 							:error="reportError(entry.title)"
@@ -190,15 +190,21 @@ export default defineComponent({
 					return "muted";
 			}
 		},
-		reportRule(title: string): OcppReportRule | undefined {
-			return (store.state?.ocppreport?.config || []).find((r) => r.loadpointTitle === title);
+		loadpointId(title?: string): number | undefined {
+			const index = (store.state?.loadpoints || []).findIndex((lp) => lp.title === title);
+			return index >= 0 ? index : undefined;
 		},
-		reportError(title: string): string | undefined {
-			return (store.state?.ocppreport?.status || []).find((s) => s.loadpointTitle === title)
-				?.error;
+		reportRule(title?: string): OcppReportRule | undefined {
+			const id = this.loadpointId(title);
+			return (store.state?.ocppreport?.config || []).find((r) => r.loadpointId === id);
 		},
-		reportConnected(title: string): boolean {
-			return !!(store.state?.ocppreport?.status || []).find((s) => s.loadpointTitle === title)
+		reportError(title?: string): string | undefined {
+			const id = this.loadpointId(title);
+			return (store.state?.ocppreport?.status || []).find((s) => s.loadpointId === id)?.error;
+		},
+		reportConnected(title?: string): boolean {
+			const id = this.loadpointId(title);
+			return !!(store.state?.ocppreport?.status || []).find((s) => s.loadpointId === id)
 				?.upstreamConnected;
 		},
 	},

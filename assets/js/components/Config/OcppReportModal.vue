@@ -221,9 +221,12 @@ export default defineComponent({
 		return { removing: false };
 	},
 	computed: {
-		// loadpoint title the modal is editing, carried via the config modal stack
+		// loadpoint id the modal is editing, carried via the config modal stack
+		targetLoadpointId(): number {
+			return getModal("ocppreport")?.loadpoint ?? -1;
+		},
 		targetLoadpointTitle(): string {
-			return getModal("ocppreport")?.loadpoint || "";
+			return this.loadpoints.find((l) => l.id === this.targetLoadpointId)?.title || "";
 		},
 		defaultStationId(): string {
 			return `evcc-${this.targetLoadpointTitle}`;
@@ -232,11 +235,11 @@ export default defineComponent({
 			return store.state?.ocppreport?.config || [];
 		},
 		ruleExists(): boolean {
-			return this.rules.some((r) => r.loadpointTitle === this.targetLoadpointTitle);
+			return this.rules.some((r) => r.loadpointId === this.targetLoadpointId);
 		},
 		session(): OcppReportSession | undefined {
 			return store.state?.ocppreport?.status?.find(
-				(s) => s.loadpointTitle === this.targetLoadpointTitle
+				(s) => s.loadpointId === this.targetLoadpointId
 			);
 		},
 		sessionError(): string | undefined {
@@ -257,7 +260,7 @@ export default defineComponent({
 		// features can run in parallel, but pointed at the same backend they'd
 		// report the same session twice (see evcc-io/evcc#32989 discussion)
 		conflictingForwarderHost(): string | undefined {
-			const lp = this.loadpoints.find((l) => l.title === this.targetLoadpointTitle);
+			const lp = this.loadpoints.find((l) => l.id === this.targetLoadpointId);
 			const charger = lp && this.chargers.find((c) => c.name === lp.charger);
 			const stationId = charger?.config?.["stationid"] as string | undefined;
 			if (!stationId) return undefined;
@@ -278,10 +281,11 @@ export default defineComponent({
 		// pick the rule for the target loadpoint, or seed a new one prefilled with the title
 		transformReadValues(rules: OcppReportRule[]): OcppReportRule {
 			const list = Array.isArray(rules) ? rules : [];
-			const existing = list.find((r) => r.loadpointTitle === this.targetLoadpointTitle);
+			const existing = list.find((r) => r.loadpointId === this.targetLoadpointId);
 			return existing
 				? { ...existing }
 				: {
+						loadpointId: this.targetLoadpointId,
 						loadpointTitle: this.targetLoadpointTitle,
 						upstreamUrl: "",
 					};
@@ -289,7 +293,7 @@ export default defineComponent({
 		// merge the edited rule back into the complete set that gets persisted
 		transformWriteValues(rule: OcppReportRule): OcppReportRule[] {
 			const list = this.rules.map((r) => ({ ...r }));
-			const index = list.findIndex((r) => r.loadpointTitle === rule.loadpointTitle);
+			const index = list.findIndex((r) => r.loadpointId === rule.loadpointId);
 			if (index >= 0) {
 				list[index] = rule;
 			} else {
@@ -300,9 +304,7 @@ export default defineComponent({
 		async removeRule() {
 			this.removing = true;
 			try {
-				const list = this.rules.filter(
-					(r) => r.loadpointTitle !== this.targetLoadpointTitle
-				);
+				const list = this.rules.filter((r) => r.loadpointId !== this.targetLoadpointId);
 				const res = await api.post("/config/ocppreport", list, {
 					validateStatus: (code: number) => [200, 202, 400].includes(code),
 				});

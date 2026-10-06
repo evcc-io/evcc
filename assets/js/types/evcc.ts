@@ -409,7 +409,9 @@ export interface OcppForwarderSession {
  * backend (evcc-io/evcc#32989). One-way: evcc never accepts remote control
  * from the upstream. */
 export interface OcppReportRule {
-  /** Title of the loadpoint to report. */
+  /** Index of the loadpoint to report; identifies the rule. */
+  loadpointId: number;
+  /** Title of the loadpoint to report, display only. */
   loadpointTitle: string;
   /** URL of the upstream OCPP backend. */
   upstreamUrl: string;
@@ -432,7 +434,9 @@ export interface OcppReport extends ConfigStatus<OcppReportRule[], OcppReportSes
 
 /** Connection status of an OCPP report rule. */
 export interface OcppReportSession {
-  /** Loadpoint title. */
+  /** Index of the loadpoint. */
+  loadpointId: number;
+  /** Loadpoint title, display only. */
   loadpointTitle: string;
   /** URL of the upstream OCPP backend. */
   upstreamUrl: string;

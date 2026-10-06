@@ -82,6 +82,7 @@ type Task = func()
 // Loadpoint is responsible for controlling charge depending on
 // Soc needs and power availability.
 type Loadpoint struct {
+	id       int         // index in site.loadpoints, set at boot; identifies the loadpoint outside the site
 	clock    clock.Clock // mockable time
 	bus      evbus.Bus   // event bus
 	site     site.API
@@ -563,7 +564,7 @@ func (lp *Loadpoint) evChargeStartHandler() {
 			if session.MeterStart != nil {
 				meterStart = *session.MeterStart
 			}
-			ocpp.ReportSessionStart(lp.GetTitle(), meterStart*1e3)
+			ocpp.ReportSessionStart(lp.id, meterStart*1e3)
 		}
 		// capture start soc once available (may not be present at session start)
 		if soc := lp.vehicleSoc; session.SocStart == nil && soc > 0 && !lp.chargerHasFeature(api.Heating) {

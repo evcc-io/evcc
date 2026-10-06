@@ -209,6 +209,11 @@ func newMeterCollector(group, ref, title string, meter api.Meter) (*metrics.Coll
 }
 
 func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tariff.Tariffs) error {
+	for id, lp := range loadpoints {
+		if lp != nil {
+			lp.id = id
+		}
+	}
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
 
@@ -1388,16 +1393,14 @@ func (site *Site) currentRate(rates api.Rates) api.Rate {
 
 // prepare publishes initial values
 // registerOcppReportLookup lets the OCPP report client (evcc-io/evcc#32989)
-// resolve a loadpoint by title for outbound session reporting and inbound
+// resolve a loadpoint by id for outbound session reporting and inbound
 // remote-control dispatch.
 func (site *Site) registerOcppReportLookup() {
-	ocpp.SetLoadpointLookup(func(title string) (loadpoint.API, bool) {
-		for _, lp := range site.ActiveLoadpoints() {
-			if lp.GetTitle() == title {
-				return lp, true
-			}
+	ocpp.SetLoadpointLookup(func(id int) (loadpoint.API, bool) {
+		if id < 0 || id >= len(site.loadpoints) || site.loadpoints[id] == nil {
+			return nil, false
 		}
-		return nil, false
+		return site.loadpoints[id], true
 	})
 }
 

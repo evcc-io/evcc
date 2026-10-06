@@ -134,7 +134,7 @@ func (lp *Loadpoint) reportSessionStop(s *session.Session) {
 	if s.MeterStop != nil {
 		meterStop = *s.MeterStop
 	}
-	ocpp.ReportSessionStop(lp.GetTitle(), meterStop*1e3)
+	ocpp.ReportSessionStop(lp.id, meterStop*1e3)
 }
 
 type sessionOption func(*session.Session)
@@ -206,7 +206,7 @@ func (lp *Loadpoint) finalizeSessionEnergy() {
 	if s.MeterStart != nil {
 		register += *s.MeterStart
 	}
-	ocpp.ReportMeterValue(lp.GetTitle(), register*1e3)
+	ocpp.ReportMeterValue(lp.id, register*1e3)
 }
 
 func (lp *Loadpoint) resetHeatingSession() {
