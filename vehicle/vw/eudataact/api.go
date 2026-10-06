@@ -47,6 +47,7 @@ type API struct {
 	log            *util.Logger
 	brand          brand
 	user, password string
+	loginMu        sync.Mutex // serializes logins, which swap the shared client's jar and redirect policy
 }
 
 // apiKey identifies a portal account. All vehicles of the same brand and user
@@ -102,6 +103,9 @@ func NewAPI(log *util.Logger, brandName, user, password string) (*API, error) {
 // browser follows the redirect chain back to RedirectURI, so the cookie jar is
 // kept on the client for all subsequent data calls.
 func (v *API) login() error {
+	v.loginMu.Lock()
+	defer v.loginMu.Unlock()
+
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
 		return err
