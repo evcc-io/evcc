@@ -219,10 +219,10 @@ func TestLoginSkippedAfterConcurrentLogin(t *testing.T) {
 				return nil, errors.New("unexpected request")
 			}),
 		}},
-		loginGen: 1,
 	}
+	v.loginGen.Store(1)
 
 	// caller observed generation 0 before another caller logged in
 	assert.NoError(t, v.login(0))
-	assert.Equal(t, uint64(1), v.generation())
+	assert.Equal(t, uint64(1), v.loginGen.Load())
 }

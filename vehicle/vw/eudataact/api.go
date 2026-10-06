@@ -49,8 +49,8 @@ type API struct {
 	brand          brand
 	user, password string
 	jar            sessionJar
-	loginMu        sync.Mutex // serializes logins
-	loginGen       uint64     // guarded by loginMu, incremented on each successful login
+	loginMu        sync.Mutex    // serializes logins
+	loginGen       atomic.Uint64 // incremented on each successful login
 }
 
 // sessionJar lets login replace the session cookies while other vehicles use the client.
@@ -124,7 +124,7 @@ func (v *API) login(gen uint64) error {
 	v.loginMu.Lock()
 	defer v.loginMu.Unlock()
 
-	if v.loginGen != gen {
+	if v.loginGen.Load() != gen {
 		return nil
 	}
 
@@ -253,15 +253,9 @@ func (v *API) login(gen uint64) error {
 	}
 
 	v.jar.Store(jar)
-	v.loginGen++
+	v.loginGen.Add(1)
 
 	return nil
-}
-
-func (v *API) generation() uint64 {
-	v.loginMu.Lock()
-	defer v.loginMu.Unlock()
-	return v.loginGen
 }
 
 func isLoginHost(host, identityHost string) bool {
@@ -310,7 +304,7 @@ func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
 		return nil, err
 	}
 
-	gen := v.generation()
+	gen := v.loginGen.Load()
 	resp, err := v.Do(req)
 	if err != nil {
 		return nil, err
