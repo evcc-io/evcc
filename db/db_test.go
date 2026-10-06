@@ -165,8 +165,9 @@ func (migrationChild) TableName() string { return "migration_children" }
 
 // TestUnitMigrateConstraint guards against migrator implementations that pin a
 // connection and then query the pool again: the single connection deadlocks.
+// In-memory databases keep a single connection.
 func TestUnitMigrateConstraint(t *testing.T) {
-	db, err := New("sqlite", t.TempDir()+"/evcc.db")
+	db, err := New("sqlite", ":memory:")
 	require.NoError(t, err)
 
 	// existing table without the foreign key, forces the migrator to recreate it
