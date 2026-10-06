@@ -195,8 +195,10 @@ func NewBenderCC(ctx context.Context, settings modbus.TcpSettings, cache time.Du
 	}
 
 	// check feature rfid
-	if _, err := wb.identify(); err == nil {
-		implement.Has(wb, implement.Identifier(wb.identify))
+	if !wb.mennekes4 {
+		if _, err := wb.identify(); err == nil {
+			implement.Has(wb, implement.Identifier(wb.identify))
+		}
 	}
 
 	return wb, nil
@@ -507,11 +509,7 @@ func (wb *BenderCC) getPhases() (int, error) {
 func (wb *BenderCC) identify() ([]string, error) {
 	var ids []string
 
-	if wb.mennekes4 {
-		return nil, api.ErrNotAvailable
-	}
-
-	if !wb.legacy {
+	if !wb.legacy && !wb.mennekes4 {
 		b, err := wb.conn.ReadHoldingRegisters(bendRegSmartVehicleDetected, 1)
 		if err == nil && binary.BigEndian.Uint16(b) != 0 {
 			b, err = wb.conn.ReadHoldingRegisters(bendRegEVCCID, 6)
