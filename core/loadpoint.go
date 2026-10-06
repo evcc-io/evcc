@@ -14,7 +14,6 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -82,14 +81,15 @@ type Task = func()
 // Loadpoint is responsible for controlling charge depending on
 // Soc needs and power availability.
 type Loadpoint struct {
-	id       int         // index in site.loadpoints, set at boot; identifies the loadpoint outside the site
-	clock    clock.Clock // mockable time
-	bus      evbus.Bus   // event bus
-	site     site.API
-	pushChan chan<- messenger.Event // notifications
-	uiChan   chan<- util.Param      // client push messages
-	lpChan   chan<- *Loadpoint      // update requests
-	log      *util.Logger
+	id              int             // index in site.loadpoints, set at boot; identifies the loadpoint outside the site
+	sessionReporter SessionReporter // outbound session reporting, nil if disabled
+	clock           clock.Clock     // mockable time
+	bus             evbus.Bus       // event bus
+	site            site.API
+	pushChan        chan<- messenger.Event // notifications
+	uiChan          chan<- util.Param      // client push messages
+	lpChan          chan<- *Loadpoint      // update requests
+	log             *util.Logger
 
 	rwMutex      atomic.Int64 // count reentrant RWMutex
 	sync.RWMutex              // guard status
@@ -564,7 +564,9 @@ func (lp *Loadpoint) evChargeStartHandler() {
 			if session.MeterStart != nil {
 				meterStart = *session.MeterStart
 			}
-			ocpp.ReportSessionStart(lp.id, meterStart*1e3)
+			if r := lp.reporter(); r != nil {
+				r.SessionStart(lp.id, meterStart*1e3)
+			}
 		}
 		// capture start soc once available (may not be present at session start)
 		if soc := lp.vehicleSoc; session.SocStart == nil && soc > 0 && !lp.chargerHasFeature(api.Heating) {

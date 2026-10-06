@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/wrapper"
@@ -122,19 +121,9 @@ func (lp *Loadpoint) stopSession() {
 // reportSessionStop ends the OCPP transaction of the session. A charging pause is not
 // the end of a session, so this runs once the session is cleared, not per segment.
 func (lp *Loadpoint) reportSessionStop(s *session.Session) {
-	// prefer the real hardware register (s.MeterStop) when the charger has
-	// one; most chargers don't (see chargeMeterTotal), so fall back to the
-	// same estimated absolute register finalizeSessionEnergy already reports
-	// via MeterValues - otherwise meterStop silently reports 0 regardless of
-	// energy actually delivered, on every charger without an energy meter
-	meterStop := s.ChargedEnergy
-	if s.MeterStart != nil {
-		meterStop += *s.MeterStart
+	if r := lp.reporter(); r != nil {
+		r.SessionStop(lp.id, lp.sessionRegisterKWh(s)*1e3)
 	}
-	if s.MeterStop != nil {
-		meterStop = *s.MeterStop
-	}
-	ocpp.ReportSessionStop(lp.id, meterStop*1e3)
 }
 
 type sessionOption func(*session.Session)
@@ -200,13 +189,9 @@ func (lp *Loadpoint) finalizeSessionEnergy() {
 		lp.sessionPersisted = lp.clock.Now()
 	}
 
-	// register-style reading: absolute cumulative meter, same baseline as
-	// StartTransaction's meterStart, so a backend can just subtract them
-	register := chargedKWh
-	if s.MeterStart != nil {
-		register += *s.MeterStart
+	if r := lp.reporter(); r != nil {
+		r.SessionMeter(lp.id, lp.sessionRegisterKWh(s)*1e3)
 	}
-	ocpp.ReportMeterValue(lp.id, register*1e3)
 }
 
 func (lp *Loadpoint) resetHeatingSession() {

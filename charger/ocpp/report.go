@@ -20,13 +20,14 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/db/settings"
 	"slices"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -45,7 +46,10 @@ var reportLog = util.NewLogger("ocpp-report")
 // (often much shorter) update cadence. Mirrors the forwarder's per-charger
 // meterInterval throttle (forwarder.go), fixed rather than absorbed from
 // upstream since report has no ChangeConfiguration channel to absorb it from.
-const defaultMeterInterval = 60 * time.Second
+const (
+	defaultMeterInterval     = 60 * time.Second
+	defaultHeartbeatInterval = 5 * time.Minute
+)
 
 // ReportRule configures reporting a loadpoint's charging sessions to an
 // upstream OCPP 1.6J Central System. One-way: evcc reports, it never accepts
@@ -90,6 +94,7 @@ type ReportSessionStatus struct {
 	LoadpointTitle    string `json:"loadpointTitle"`
 	UpstreamURL       string `json:"upstreamUrl"`
 	UpstreamConnected bool   `json:"upstreamConnected"`
+	IdTagStatus       string `json:"idTagStatus,omitempty"`
 	Error             string `json:"error,omitempty"`
 }
 
@@ -107,30 +112,7 @@ var (
 
 	reportCbMu      sync.Mutex
 	reportUpdatedCb func()
-
-	loadpointLookupMu sync.RWMutex
-	loadpointLookupFn func(id int) (loadpoint.API, bool)
 )
-
-// SetLoadpointLookup registers the function used to resolve a loadpoint by
-// id, so an upstream TriggerMessage(MeterValues) request can read current
-// state to answer it - the only inbound use, purely a read. Called once at
-// site startup.
-func SetLoadpointLookup(fn func(id int) (loadpoint.API, bool)) {
-	loadpointLookupMu.Lock()
-	loadpointLookupFn = fn
-	loadpointLookupMu.Unlock()
-}
-
-func lookupLoadpoint(id int) (loadpoint.API, bool) {
-	loadpointLookupMu.RLock()
-	fn := loadpointLookupFn
-	loadpointLookupMu.RUnlock()
-	if fn == nil {
-		return nil, false
-	}
-	return fn(id)
-}
 
 // SetReportUpdated registers a callback fired when a connection's status changes.
 func SetReportUpdated(cb func()) {
@@ -199,6 +181,9 @@ func GetReportStatus() []ReportSessionStatus {
 		}
 		if conn, ok := connections[r.LoadpointId]; ok && conn.cp.IsConnected() {
 			st.UpstreamConnected = true
+			conn.mu.Lock()
+			st.IdTagStatus = conn.idTagStatus
+			conn.mu.Unlock()
 		} else if msg, ok := reportErrors[r.LoadpointId]; ok {
 			st.Error = msg
 		}
@@ -293,6 +278,8 @@ type reportConnection struct {
 	events        []reportEvent
 	sessionActive bool
 	transactionId *int
+	lastWh        float64 // last register value of the session, re-sent on request
+	idTagStatus   string  // last idTag status the upstream answered with
 
 	// intermediate MeterValues throttle - reconcile always runs on this
 	// connection's single worker goroutine (run's job loop), so these two are
@@ -377,14 +364,66 @@ func newReportConnection(rule ReportRule) *reportConnection {
 func (conn *reportConnection) run() {
 	go conn.dial()
 
+	heartbeat := time.NewTicker(defaultHeartbeatInterval)
+	defer heartbeat.Stop()
+
 	for {
 		select {
 		case job := <-conn.jobs:
 			job()
+		case <-heartbeat.C:
+			conn.enqueue(conn.sendHeartbeat)
 		case <-conn.done:
 			return
 		}
 	}
+}
+
+func (conn *reportConnection) sendHeartbeat() {
+	if !conn.cp.IsConnected() {
+		return
+	}
+	if _, err := conn.cp.Heartbeat(); err != nil {
+		reportLog.DEBUG.Printf("%s: heartbeat: %v", conn.title, err)
+	}
+}
+
+// statusNow is the connector status implied by the session state
+func (conn *reportConnection) statusNow() core.ChargePointStatus {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+	if conn.sessionActive {
+		return core.ChargePointStatusCharging
+	}
+	return core.ChargePointStatusAvailable
+}
+
+// sendStatus reports the connector status. Only after a successful boot, since a
+// Central System rejects or ignores status from an unregistered station.
+func (conn *reportConnection) sendStatus(status core.ChargePointStatus) {
+	conn.mu.Lock()
+	booted := conn.booted
+	conn.mu.Unlock()
+	if !booted || !conn.cp.IsConnected() {
+		return
+	}
+	if _, err := conn.cp.StatusNotification(1, core.NoError, status); err != nil {
+		reportLog.DEBUG.Printf("%s: status notification: %v", conn.title, err)
+	}
+}
+
+// noteIdTagStatus records the idTag status the upstream answered with. It is shown
+// in the report status and logged, but never enforced: the charger authorizes the
+// idTag itself, and this client has no way to stop it.
+func (conn *reportConnection) noteIdTagStatus(status types.AuthorizationStatus) {
+	conn.mu.Lock()
+	conn.idTagStatus = string(status)
+	conn.mu.Unlock()
+
+	if status != types.AuthorizationStatusAccepted {
+		reportLog.WARN.Printf("%s: upstream idTag status %s", conn.title, status)
+	}
+	notifyReportUpdated()
 }
 
 func (conn *reportConnection) dial() {
@@ -462,6 +501,8 @@ func (conn *reportConnection) ensureBoot() {
 	conn.mu.Lock()
 	conn.booted = true
 	conn.mu.Unlock()
+
+	conn.sendStatus(conn.statusNow())
 }
 
 // maxQueuedEvents bounds the in-memory event queue; meter samples are superseded
@@ -499,6 +540,9 @@ func (conn *reportConnection) push(ev reportEvent) {
 			reportLog.WARN.Printf("%s: report queue full, dropping oldest event", conn.title)
 		}
 		conn.events = append(conn.events[:idx], conn.events[idx+1:]...)
+	}
+	if ev.kind != reportEventStop {
+		conn.lastWh = ev.wh
 	}
 	conn.events = append(conn.events, ev)
 }
@@ -553,15 +597,22 @@ func (conn *reportConnection) reconcile() {
 func (conn *reportConnection) sendStart(ev reportEvent) error {
 	idTag := conn.rule.IdTag
 
-	if _, err := conn.cp.Authorize(idTag); err != nil {
+	auth, err := conn.cp.Authorize(idTag)
+	if err != nil {
 		reportLog.DEBUG.Printf("%s: authorize: %v", conn.title, err)
 		return err
+	}
+	if auth.IdTagInfo != nil {
+		conn.noteIdTagStatus(auth.IdTagInfo.Status)
 	}
 
 	res, err := conn.cp.StartTransaction(1, idTag, int(ev.wh), types.NewDateTime(ev.at))
 	if err != nil {
 		reportLog.DEBUG.Printf("%s: start transaction: %v", conn.title, err)
 		return err
+	}
+	if res.IdTagInfo != nil {
+		conn.noteIdTagStatus(res.IdTagInfo.Status)
 	}
 
 	conn.mu.Lock()
@@ -629,6 +680,22 @@ func (conn *reportConnection) sendStop(ev reportEvent, txID *int) error {
 // errReportThrottled keeps a throttled sample at the head of the queue
 var errReportThrottled = errors.New("throttled")
 
+// SessionReporter forwards loadpoint sessions to the report connections. It is wired
+// into core at boot, so core only depends on the interface it declares.
+type SessionReporter struct{}
+
+func (SessionReporter) SessionStart(loadpointId int, meterStartWh float64) {
+	ReportSessionStart(loadpointId, meterStartWh)
+}
+
+func (SessionReporter) SessionMeter(loadpointId int, registerWh float64) {
+	ReportMeterValue(loadpointId, registerWh)
+}
+
+func (SessionReporter) SessionStop(loadpointId int, meterStopWh float64) {
+	ReportSessionStop(loadpointId, meterStopWh)
+}
+
 // ReportSessionStart notifies the loadpoint's report connection (if any) that
 // a charging session started. No-op if the loadpoint has no rule configured.
 func ReportSessionStart(loadpointId int, meterStartWh float64) {
@@ -645,6 +712,7 @@ func ReportSessionStart(loadpointId int, meterStartWh float64) {
 	conn.mu.Unlock()
 
 	conn.enqueue(conn.reconcile)
+	conn.enqueue(func() { conn.sendStatus(core.ChargePointStatusCharging) })
 }
 
 // ReportMeterValue notifies the loadpoint's report connection (if any) of the
@@ -689,6 +757,7 @@ func ReportSessionStop(loadpointId int, meterStopWh float64) {
 	conn.mu.Unlock()
 
 	conn.enqueue(conn.reconcile)
+	conn.enqueue(func() { conn.sendStatus(core.ChargePointStatusAvailable) })
 }
 
 // reportHandler implements the inbound OCPP call handlers (remote control)
@@ -734,7 +803,7 @@ func (h *reportHandler) OnChangeAvailability(request *core.ChangeAvailabilityReq
 }
 
 func (h *reportHandler) OnChangeConfiguration(request *core.ChangeConfigurationRequest) (*core.ChangeConfigurationConfirmation, error) {
-	return core.NewChangeConfigurationConfirmation(core.ConfigurationStatusAccepted), nil
+	return core.NewChangeConfigurationConfirmation(core.ConfigurationStatusNotSupported), nil
 }
 
 func (h *reportHandler) OnClearCache(request *core.ClearCacheRequest) (*core.ClearCacheConfirmation, error) {
@@ -759,12 +828,29 @@ func (h *reportHandler) OnTriggerMessage(request *remotetrigger.TriggerMessageRe
 		h.conn.mu.Unlock()
 		h.conn.enqueue(h.conn.ensureBoot)
 	case core.MeterValuesFeatureName:
-		if lp, ok := lookupLoadpoint(h.conn.rule.LoadpointId); ok {
-			// GetChargedEnergy is already in Wh, unlike finalizeSessionEnergy's
-			// kWh-based register - no *1e3 here (was reporting 1000x too high)
-			ReportMeterValue(h.conn.rule.LoadpointId, lp.GetChargedEnergy())
+		h.conn.mu.Lock()
+		if h.conn.sessionActive {
+			h.conn.push(reportEvent{kind: reportEventMeter, at: time.Now(), wh: h.conn.lastWh})
 		}
+		h.conn.mu.Unlock()
+		h.conn.enqueue(h.conn.reconcile)
+	case core.StatusNotificationFeatureName:
+		h.conn.enqueue(func() { h.conn.sendStatus(h.conn.statusNow()) })
+	case core.HeartbeatFeatureName:
+		h.conn.enqueue(h.conn.sendHeartbeat)
+	default:
+		return remotetrigger.NewTriggerMessageConfirmation(remotetrigger.TriggerMessageStatusNotImplemented), nil
 	}
 
 	return remotetrigger.NewTriggerMessageConfirmation(remotetrigger.TriggerMessageStatusAccepted), nil
+}
+
+// ReportEnabledSetting returns the saved master switch, defaulting to true when it
+// was never set
+func ReportEnabledSetting() bool {
+	b, err := settings.Bool(keys.OcppReportEnabled)
+	if err != nil {
+		return true
+	}
+	return b
 }

@@ -204,3 +204,23 @@ func TestReportQueueDropsMeterSamplesFirst(t *testing.T) {
 	assert.Equal(t, reportEventStart, conn.events[0].kind)
 	assert.Equal(t, reportEventStop, conn.events[len(conn.events)-1].kind)
 }
+
+// A trigger for a message the report client cannot send is answered honestly, not accepted
+func TestTriggerMessageUnsupportedIsNotImplemented(t *testing.T) {
+	conn := newUnstartedConnection("Carport")
+	h := &reportHandler{conn: conn}
+
+	res, err := h.OnTriggerMessage(remotetrigger.NewTriggerMessageRequest(remotetrigger.MessageTrigger(occore.DataTransferFeatureName)))
+	require.NoError(t, err)
+	assert.Equal(t, remotetrigger.TriggerMessageStatusNotImplemented, res.Status)
+}
+
+// Configuration changes are not applied by the report client, so they must not be accepted
+func TestChangeConfigurationNotSupported(t *testing.T) {
+	conn := newUnstartedConnection("Carport")
+	h := &reportHandler{conn: conn}
+
+	res, err := h.OnChangeConfiguration(occore.NewChangeConfigurationRequest("HeartbeatInterval", "60"))
+	require.NoError(t, err)
+	assert.Equal(t, occore.ConfigurationStatusNotSupported, res.Status)
+}

@@ -46,16 +46,6 @@ func setOcppReportEnabled(pub publisher) func(bool) error {
 	}
 }
 
-// getOcppReportEnabled defaults true when never explicitly set, so existing
-// rules keep reporting until a user deliberately turns the switch off.
-func getOcppReportEnabled() bool {
-	b, err := settings.Bool(keys.OcppReportEnabled)
-	if err != nil {
-		return true
-	}
-	return b
-}
-
 func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
