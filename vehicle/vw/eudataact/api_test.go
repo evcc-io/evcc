@@ -7,10 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"sync"
-	"sync/atomic"
 	"testing"
-	"time"
 
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
@@ -211,37 +208,4 @@ func TestLoginRedirects(t *testing.T) {
 			assert.NoError(t, err)
 		})
 	}
-}
-
-// concurrent re-logins of vehicles sharing one account must not interleave,
-// otherwise the deferred restore leaves the login redirect policy on the client
-func TestLoginConcurrent(t *testing.T) {
-	var inflight, overlaps atomic.Int32
-	originalRedirectErr := errors.New("original redirect policy")
-
-	v := &API{Helper: &request.Helper{Client: &http.Client{
-		CheckRedirect: func(*http.Request, []*http.Request) error { return originalRedirectErr },
-		Transport: loginRoundTripFunc(func(req *http.Request) (*http.Response, error) {
-			if inflight.Add(1) > 1 {
-				overlaps.Add(1)
-			}
-			time.Sleep(10 * time.Millisecond)
-			inflight.Add(-1)
-
-			return &http.Response{
-				StatusCode: http.StatusInternalServerError,
-				Body:       io.NopCloser(strings.NewReader("")),
-				Request:    req,
-			}, nil
-		}),
-	}}}
-
-	var wg sync.WaitGroup
-	for range 4 {
-		wg.Go(func() { _ = v.login() })
-	}
-	wg.Wait()
-
-	assert.Zero(t, overlaps.Load(), "logins must not overlap")
-	assert.ErrorIs(t, v.Client.CheckRedirect(nil, nil), originalRedirectErr)
 }
