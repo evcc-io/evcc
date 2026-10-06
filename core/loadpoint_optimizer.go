@@ -43,8 +43,16 @@ func (lp *Loadpoint) OptimizerPlan(planTime time.Time) (api.Rates, float64) {
 		if !slot.Start.Before(planTime) {
 			break
 		}
+
+		slotEnergy := lp.optimizerPlan.energy[i]
+		// the goal slot may end after the plan time, clamp it like the planner does
+		if slot.End.After(planTime) {
+			slotEnergy *= float64(planTime.Sub(slot.Start)) / float64(slot.End.Sub(slot.Start))
+			slot.End = planTime
+		}
+
 		rates = append(rates, slot)
-		energy += lp.optimizerPlan.energy[i]
+		energy += slotEnergy
 	}
 
 	if len(rates) == 0 {

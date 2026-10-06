@@ -458,6 +458,12 @@ func TestOptimizerPlanClipsAtPlanTime(t *testing.T) {
 	assert.Equal(t, api.Rates{slot(0), slot(1)}, plan)
 	assert.InDelta(t, 1500, power, 1e-6)
 
+	// plan time inside the second slot: 500Wh plus a third of 250Wh in 20 minutes
+	planTime := now.Add(20 * time.Minute)
+	plan, power = lp.OptimizerPlan(planTime)
+	assert.Equal(t, api.Rates{slot(0), {Start: slot(1).Start, End: planTime}}, plan)
+	assert.InDelta(t, 1750, power, 1e-6)
+
 	plan, _ = lp.OptimizerPlan(now)
 	assert.Nil(t, plan)
 }
