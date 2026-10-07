@@ -9,7 +9,16 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import { FONT_FAMILY, forecastGrid, tooltipStyle, tooltipTable, xAxisLabelStyle } from "./echarts";
+import {
+	boundaryAxis,
+	boundarySeries,
+	FONT_FAMILY,
+	forecastGrid,
+	tooltipStyle,
+	tooltipTable,
+	weekBoundaries,
+	xAxisLabelStyle,
+} from "./echarts";
 import echartsChart from "@/mixins/echartsChart";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import colors, { setAlpha } from "@/colors";
@@ -17,7 +26,7 @@ import { SLOT_MS, slotWatts } from "./slots";
 import type { HistorySeries } from "./GroupChart.vue";
 import { PERIODS } from "../Sessions/types";
 import { labelStep, DAY_STEPS, MONTH_STEPS } from "@/utils/labelStep";
-import { is12hFormat } from "@/units";
+import { is12hFormat, weekStart } from "@/units";
 import { PANEL_EXTRA, panelGrids, socTempPanel, type SubPanel } from "./subPanel";
 
 const DAY_SLOTS = 96;
@@ -211,29 +220,21 @@ export default defineComponent({
 				visualMap: this.legend(this.fmtKWh(this.max), 36),
 				// same frame and label styles as the bar chart
 				grid: { ...forecastGrid(), left: 0, right: 36 },
-				xAxis: {
-					type: "category",
-					data: Array.from({ length: days }, (_, i) => i + 1),
-					axisLine: { show: false },
-					axisTick: { show: false },
-					// even steps like the bar chart instead of dropping overlapping labels
-					axisLabel: {
-						...xAxisLabelStyle(),
-						hideOverlap: false,
-						interval: this.dayStep - 1,
-						formatter: (value: number) => {
-							const d = new Date(
-								this.from.getFullYear(),
-								this.from.getMonth(),
-								value
-							);
-							if (d.getDay() === this.firstDayOfWeek) {
-								return `${value}\n${this.weekdayShort(d)}`;
-							}
-							return `${value}`;
+				xAxis: [
+					{
+						type: "category",
+						data: Array.from({ length: days }, (_, i) => i + 1),
+						axisLine: { show: false },
+						axisTick: { show: false },
+						// even steps like the bar chart instead of dropping overlapping labels
+						axisLabel: {
+							...xAxisLabelStyle(),
+							hideOverlap: false,
+							interval: this.dayStep - 1,
 						},
 					},
-				},
+					boundaryAxis(days),
+				],
 				yAxis: {
 					type: "category",
 					position: "right",
@@ -259,6 +260,7 @@ export default defineComponent({
 						},
 						emphasis: { disabled: true },
 					},
+					boundarySeries(weekBoundaries(this.from, days)),
 				],
 			};
 		},
@@ -293,7 +295,7 @@ export default defineComponent({
 						borderColor: colors.box || "",
 					},
 					dayLabel: {
-						firstDay: this.firstDayOfWeek,
+						firstDay: weekStart(),
 						nameMap: this.dayNames,
 						fontSize: 10,
 						color: colors.muted || "",
@@ -316,24 +318,6 @@ export default defineComponent({
 		dayNames(): string[] {
 			// echarts expects sunday first
 			return [0, 1, 2, 3, 4, 5, 6].map((i) => this.fmtWeekdayByIndex(i, "narrow"));
-		},
-		firstDayOfWeek(): number {
-			try {
-				const tag = typeof navigator !== "undefined" ? navigator.language : "en";
-				const locale = new Intl.Locale(tag) as Intl.Locale & {
-					getWeekInfo?: () => { firstDay?: number };
-				};
-				if (typeof locale.getWeekInfo === "function") {
-					const info = locale.getWeekInfo();
-					if (info?.firstDay !== undefined) {
-						// Intl returns 1 (Mon) .. 7 (Sun); JS Date / ECharts firstDay uses 0 (Sun) .. 6 (Sat)
-						return info.firstDay % 7;
-					}
-				}
-			} catch {
-				// fallback on older engines
-			}
-			return 1;
 		},
 	},
 	methods: {
