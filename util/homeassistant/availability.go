@@ -102,34 +102,44 @@ func beginRequest(uri string) (uint64, error) {
 }
 
 func updateAvailability(uri string, seq uint64, unreachable bool, err error) {
+	cause := err
+	if ue, ok := errors.AsType[*url.Error](err); ok {
+		cause = ue.Err
+	}
+
+	if !setAvailability(uri, seq, unreachable, cause) {
+		return
+	}
+
+	// logged outside the lock since writing a log line may block
+	if unreachable {
+		log.ERROR.Printf("Home Assistant unavailable at %s: %v", uri, cause)
+	} else {
+		log.INFO.Printf("Home Assistant available again at %s", uri)
+	}
+}
+
+// setAvailability updates the instance state and reports whether its availability changed
+func setAvailability(uri string, seq uint64, unreachable bool, cause error) bool {
 	outageMu.Lock()
 	defer outageMu.Unlock()
 
 	// a slow response must not override the state set by a request sent later
 	a := outages[uri]
 	if seq < a.applied {
-		return
+		return false
 	}
 	a.applied = seq
 
-	if unreachable {
-		cause := err
-		if ue, ok := errors.AsType[*url.Error](err); ok {
-			cause = ue.Err
-		}
-
-		if a.err == nil {
-			log.ERROR.Printf("Home Assistant unavailable at %s: %v", uri, cause)
-		}
-
-		a.err = fmt.Errorf("%s unavailable: %w", uri, cause)
-		a.retry = time.Now().Add(retryDelay)
-
-		return
-	}
-
-	if a.err != nil {
-		log.INFO.Printf("Home Assistant available again at %s", uri)
+	if !unreachable {
+		changed := a.err != nil
 		a.err = nil
+		return changed
 	}
+
+	changed := a.err == nil
+	a.err = fmt.Errorf("%s unavailable: %w", uri, cause)
+	a.retry = time.Now().Add(retryDelay)
+
+	return changed
 }
