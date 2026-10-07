@@ -19,11 +19,17 @@ func (lp *Loadpoint) GetDemandPredictor() string {
 
 // SetDemandPredictor sets the demand predictor override ("daily", "weekday", "temperature", or "").
 func (lp *Loadpoint) SetDemandPredictor(predictor string) {
+	switch predictor {
+	case "daily", "weekday", "temperature":
+	default:
+		return
+	}
 	lp.Lock()
 	lp.demandPredictor = predictor
 	lp.Unlock()
 	lp.publish(keys.DemandPredictor, predictor)
 	lp.settings.SetString(keys.DemandPredictor, predictor)
+	lp.triggerOptimizer()
 }
 
 // effectiveDemandPredictor returns the active predictor, consulting the runtime override
