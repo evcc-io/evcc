@@ -1619,6 +1619,19 @@
       "batteryUsage": "Hausbatterie",
       "currents": "Ladestrom",
       "default": "default",
+      "demandPredictor": {
+        "daily": {
+          "description": "Am besten für Geräte mit ähnlichem Verbrauch über den Tag für alle Tage der Woche."
+        },
+        "label": "Verbrauchsprognose",
+        "noTempTariff": "Erfordert einen konfigurierten Temperatur-Tarif.",
+        "temperature": {
+          "description": "Am besten für Raumheizungen, deren Verbrauch mit der Außentemperatur variiert, z. B. Wärmepumpen oder elektrische Heizgeräte."
+        },
+        "weekday": {
+          "description": "Am besten für Geräte, deren Verbrauch einem Wochentag-Muster folgt, z. B. Warmwasser oder Pool."
+        }
+      },
       "heating": "Heizen",
       "maxCurrent": {
         "label": "Max. Ladestrom"

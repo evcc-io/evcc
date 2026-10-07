@@ -70,38 +70,52 @@
 				@batteryboostlimit-updated="setBatteryBoostLimit"
 			/>
 			<h6 v-if="heating">
-				{{ $t("main.loadpointSettings.heating") }}
-			</h6>
-			<div v-if="heating" class="mb-3 row">
-				<label :for="formId('mintemp')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
-					{{ $t("main.loadpointSettings.minTemp.label") }}
-				</label>
-				<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
-					<select
-						:id="formId('mintemp')"
-						v-model.number="selectedMinTemp"
-						class="form-select form-select-sm"
-						@change="setMinTemp"
-					>
-						<option
-							v-for="{ value, name } in minTempOptions"
-							:key="value"
-							:value="value"
+					{{ $t("main.loadpointSettings.heating") }}
+				</h6>
+				<div v-if="heating" class="mb-3 row">
+					<label :for="formId('mintemp')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
+						{{ $t("main.loadpointSettings.minTemp.label") }}
+					</label>
+					<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
+						<select
+							:id="formId('mintemp')"
+							v-model.number="selectedMinTemp"
+							class="form-select form-select-sm"
+							@change="setMinTemp"
 						>
-							{{ name }}
-						</option>
-					</select>
+							<option
+								v-for="{ value, name } in minTempOptions"
+								:key="value"
+								:value="value"
+							>
+								{{ name }}
+							</option>
+						</select>
+					</div>
+					<div class="col-sm-8 offset-sm-4 mt-1">
+						<small class="text-muted">
+							{{
+								$t("main.loadpointSettings.minTemp.description", [
+									selectedMinTemp ? fmtTemperature(selectedMinTemp) : "x °C",
+								])
+							}}
+						</small>
+					</div>
 				</div>
-				<div class="col-sm-8 offset-sm-4 mt-1">
-					<small class="text-muted">
-						{{
-							$t("main.loadpointSettings.minTemp.description", [
-								selectedMinTemp ? fmtTemperature(selectedMinTemp) : "x °C",
-							])
-						}}
-					</small>
+				<div v-if="heating" class="mb-3 row">
+					<label :for="formId('demandpredictor')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
+						{{ $t("main.loadpointSettings.demandPredictor.label") }}
+					</label>
+					<DemandPredictorDropdown
+						:id="formId('demandpredictor')"
+						:loadpoint-id="id ?? ''"
+						:demand-predictor="loadpoint?.demandPredictor ?? ''"
+						:charger-feature-demand-temperature="loadpoint?.chargerFeatureDemandTemperature ?? false"
+						:charger-feature-demand-weekday="loadpoint?.chargerFeatureDemandWeekday ?? false"
+						:tariff-temperature="tariffTemperature"
+						class="col-sm-8 col-lg-4 pe-0"
+					/>
 				</div>
-			</div>
 
 			<h6>
 				{{ $t("main.loadpointSettings.currents") }}
@@ -202,6 +216,7 @@ import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
 import SmartFeedInPriority from "../Tariff/SmartFeedInPriority.vue";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 import SolarShareSlider from "./SolarShareSlider.vue";
+import DemandPredictorDropdown from "./DemandPredictorDropdown.vue";
 import { defineComponent, type PropType } from "vue";
 import { PHASES, CURRENCY, SMART_COST_TYPE, type UiForecast, type UiLoadpoint } from "@/types/evcc";
 import api from "@/api";
@@ -228,6 +243,7 @@ export default defineComponent({
 		SmartFeedInPriority,
 		LoadpointSettingsBatteryBoost: SettingsBatteryBoost,
 		SolarShareSlider,
+		DemandPredictorDropdown,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -237,6 +253,7 @@ export default defineComponent({
 		smartCostAvailable: Boolean,
 		smartFeedInPriorityAvailable: Boolean,
 		tariffGrid: Number,
+		tariffTemperature: Number,
 		currency: String as PropType<CURRENCY>,
 		multipleLoadpoints: Boolean,
 		forecast: Object as PropType<UiForecast>,

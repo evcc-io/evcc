@@ -51,6 +51,7 @@
 				:tariffGrid="tariffGrid"
 				:tariffCo2="tariffCo2"
 				:tariffFeedIn="tariffFeedIn"
+				:tariffTemperature="tariffTemperature"
 				:currency="currency"
 				:gridConfigured="gridConfigured"
 				:pvConfigured="pvConfigured"
@@ -138,6 +139,7 @@ export default defineComponent({
 		tariffFeedIn: Number,
 		tariffGrid: Number,
 		tariffCo2: Number,
+		tariffTemperature: Number,
 		tariffPriceHome: Number,
 		tariffCo2Home: Number,
 		tariffPriceLoadpoints: Number,

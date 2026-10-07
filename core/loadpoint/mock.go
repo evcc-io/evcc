@@ -319,6 +319,20 @@ func (mr *MockAPIMockRecorder) GetDefaultVehicleRef() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefaultVehicleRef", reflect.TypeOf((*MockAPI)(nil).GetDefaultVehicleRef))
 }
 
+// GetDemandPredictor mocks base method.
+func (m *MockAPI) GetDemandPredictor() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDemandPredictor")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetDemandPredictor indicates an expected call of GetDemandPredictor.
+func (mr *MockAPIMockRecorder) GetDemandPredictor() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDemandPredictor", reflect.TypeOf((*MockAPI)(nil).GetDemandPredictor))
+}
+
 // GetDisableDelay mocks base method.
 func (m *MockAPI) GetDisableDelay() time.Duration {
 	m.ctrl.T.Helper()
@@ -921,6 +935,18 @@ func (m *MockAPI) SetDefaultVehicleRef(arg0 string) {
 func (mr *MockAPIMockRecorder) SetDefaultVehicleRef(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDefaultVehicleRef", reflect.TypeOf((*MockAPI)(nil).SetDefaultVehicleRef), arg0)
+}
+
+// SetDemandPredictor mocks base method.
+func (m *MockAPI) SetDemandPredictor(predictor string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetDemandPredictor", predictor)
+}
+
+// SetDemandPredictor indicates an expected call of SetDemandPredictor.
+func (mr *MockAPIMockRecorder) SetDemandPredictor(predictor any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDemandPredictor", reflect.TypeOf((*MockAPI)(nil).SetDemandPredictor), predictor)
 }
 
 // SetDisableDelay mocks base method.
