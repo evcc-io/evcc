@@ -37,6 +37,7 @@
       "discharging": "discharging",
       "energy": "Energy",
       "gridCharge": "grid charging",
+      "gridDischarge": "grid discharging",
       "hold": "discharge locked",
       "holdCharge": "charge locked",
       "ofTotal": "of {total}",
@@ -1305,11 +1306,6 @@
       },
       "cost": "Cost",
       "others": "Others",
-      "source": {
-        "pv": "solar",
-        "battery": "battery",
-        "grid": "grid"
-      },
       "title": "Consumers",
       "view": {
         "river": "River",
@@ -1556,6 +1552,7 @@
       "batteryCharge": "Battery charging",
       "batteryChargeHold": "Battery (charge locked)",
       "batteryDischarge": "Battery discharging",
+      "batteryStatus": "Battery status",
       "batteryDischargeHold": "Battery (discharge locked)",
       "batteryGridChargeActive": "Grid charging: active",
       "batteryGridChargeLimit": "Grid charging: when",

@@ -560,7 +560,7 @@ func (site *Site) GetBatteryGridChargeLimit() *float64 {
 }
 
 func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
-	site.log.DEBUG.Println("set grid charge limit:", printPtr("%.1f", val))
+	site.log.DEBUG.Println("set grid charge limit:", printPtr("%.3f", val))
 
 	if !site.hasBatteryControl() {
 		return ErrBatteryControlNotAvailable
@@ -594,7 +594,7 @@ func (site *Site) GetBatteryGridDischargeLimit() *float64 {
 }
 
 func (site *Site) SetBatteryGridDischargeLimit(val *float64) error {
-	site.log.DEBUG.Println("set grid discharge limit:", printPtr("%.1f", val))
+	site.log.DEBUG.Println("set grid discharge limit:", printPtr("%.3f", val))
 
 	if !site.hasBatteryControl() {
 		return ErrBatteryControlNotAvailable

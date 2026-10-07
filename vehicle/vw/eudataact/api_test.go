@@ -183,8 +183,9 @@ func TestLoginRedirects(t *testing.T) {
 					}),
 				}},
 			}
+			v.Client.Jar = &v.jar
 
-			err := v.login()
+			err := v.login(0)
 			for _, body := range bodies {
 				assert.True(t, body.closed, "login response body must be closed")
 			}

@@ -27,6 +27,7 @@ func FilePath() string {
 
 func New(driver, dsn string) (*gorm.DB, error) {
 	var dialect gorm.Dialector
+	var memory bool
 
 	switch driver {
 	case "sqlite":
@@ -38,6 +39,8 @@ func New(driver, dsn string) (*gorm.DB, error) {
 			return nil, err
 		}
 
+		memory = file == ":memory:" || strings.Contains(params, "mode=memory")
+
 		if err := os.MkdirAll(filepath.Dir(file), 0700); err != nil {
 			return nil, err
 		}
@@ -45,8 +48,10 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		// Store the expanded file path for later use
 		filePath = file
 
-		// TODO WAL mode "journal_mode(WAL)", "synchronous(NORMAL)"
-		for _, pragma := range []string{"busy_timeout(5000)", "foreign_keys(1)", "auto_vacuum(INCREMENTAL)"} {
+		// WAL with synchronous NORMAL syncs to disk on checkpoint instead of every commit,
+		// a power loss may drop the latest commits but cannot corrupt the database.
+		// It creates evcc.db-wal and evcc.db-shm next to the database.
+		for _, pragma := range []string{"busy_timeout(5000)", "journal_mode(WAL)", "synchronous(NORMAL)", "foreign_keys(1)", "auto_vacuum(INCREMENTAL)"} {
 			// add pragma if not already present
 			if short, _, _ := strings.Cut(pragma, "("); strings.Contains(params, "_pragma="+short) {
 				continue
@@ -58,6 +63,12 @@ func New(driver, dsn string) (*gorm.DB, error) {
 			}
 
 			params += "_pragma=" + pragma
+		}
+
+		// take the write lock on BEGIN, so concurrent writers wait on busy_timeout
+		// instead of failing with SQLITE_BUSY when upgrading from a read
+		if !strings.Contains(params, "_txlock=") {
+			params += "&_txlock=immediate"
 		}
 
 		connectionStr := file + "?" + params
@@ -80,9 +91,9 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	// sqlite allows a single writer; serialize on one connection so concurrent
-	// writes wait on busy_timeout instead of failing with SQLITE_BUSY.
-	if sqlDB, err := db.DB(); err == nil {
+	// WAL lets readers run alongside the single writer. In-memory databases
+	// exist per connection and need exactly one.
+	if sqlDB, err := db.DB(); err == nil && memory {
 		sqlDB.SetMaxOpenConns(1)
 	}
 

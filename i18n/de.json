@@ -37,6 +37,7 @@
       "discharging": "entlädt",
       "energy": "Energie",
       "gridCharge": "Netzladen",
+      "gridDischarge": "Netzentladen",
       "hold": "Entladesperre",
       "holdCharge": "Ladesperre",
       "ofTotal": "von {total}",
@@ -1305,11 +1306,6 @@
       },
       "cost": "Kosten",
       "others": "Sonstige",
-      "source": {
-        "pv": "Solar",
-        "battery": "Speicher",
-        "grid": "Netz"
-      },
       "title": "Verbraucher",
       "view": {
         "river": "River",
@@ -1556,6 +1552,7 @@
       "batteryCharge": "Batterie laden",
       "batteryChargeHold": "Batterie (Ladesperre)",
       "batteryDischarge": "Batterie entladen",
+      "batteryStatus": "Batteriestatus",
       "batteryDischargeHold": "Batterie (Entladesperre)",
       "batteryGridChargeActive": "Netzladen: aktiv",
       "batteryGridChargeLimit": "Netzladen: wenn",

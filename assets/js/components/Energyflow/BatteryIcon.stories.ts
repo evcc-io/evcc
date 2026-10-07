@@ -1,4 +1,5 @@
 import BatteryIcon from "./BatteryIcon.vue";
+import { BATTERY_MODE } from "@/types/evcc";
 import type { Meta, StoryFn } from "@storybook/vue3";
 
 export default {
@@ -47,8 +48,29 @@ Soc80.args = { soc: 80 };
 export const Soc90 = Template.bind({});
 Soc90.args = { soc: 90 };
 
-export const Hold = Template.bind({});
-Hold.args = { hold: true };
+const socs = [0, 25, 50, 75, 100];
+const modes = [
+  BATTERY_MODE.HOLD,
+  BATTERY_MODE.CHARGE,
+  BATTERY_MODE.HOLDCHARGE,
+  BATTERY_MODE.DISCHARGE,
+];
 
-export const GridCharge = Template.bind({});
-GridCharge.args = { gridCharge: true };
+export const Overview = () => ({
+  components: { BatteryIcon },
+  setup() {
+    return { socs, modes };
+  },
+  template: `
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+      <div v-for="soc in socs" :key="soc" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <BatteryIcon :soc="soc" size="xl" />
+        <small style="font-family: monospace; color: #666; font-size: 12px;">soc {{ soc }}</small>
+      </div>
+      <div v-for="mode in modes" :key="mode" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <BatteryIcon :mode="mode" size="xl" />
+        <small style="font-family: monospace; color: #666; font-size: 12px;">{{ mode }}</small>
+      </div>
+    </div>
+  `,
+});
