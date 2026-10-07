@@ -1968,9 +1968,7 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 		}
 	} else {
 		power = 0
-		if !errors.Is(err, api.ErrUnreachable) {
-			lp.log.ERROR.Printf("charge power: %v", err)
-		}
+		lp.log.ERROR.Printf("charge power: %v", err)
 	}
 
 	// update charge currents
@@ -1994,7 +1992,7 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 			lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
 
 			return nil
-		}, modbus.Backoff()); err != nil && !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, api.ErrUnreachable) {
+		}, modbus.Backoff()); err != nil && !errors.Is(err, api.ErrNotAvailable) {
 			lp.log.ERROR.Printf("charge currents: %v", err)
 		}
 	}
@@ -2037,7 +2035,7 @@ func (lp *Loadpoint) updateChargeVoltages() {
 	u1, u2, u3, err := phaseMeter.Voltages()
 	if err != nil {
 		// phaseSwitching devices may announce voltages but doesn't deliver
-		if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, api.ErrUnreachable) {
+		if !errors.Is(err, api.ErrNotAvailable) {
 			lp.log.ERROR.Printf("charge voltages: %v", err)
 		}
 		return
@@ -2179,14 +2177,14 @@ func (lp *Loadpoint) publishSocAndRange() {
 						lp.log.DEBUG.Printf("%s soc limit: %d%%", typ, limit)
 						// https://github.com/evcc-io/evcc/issues/13349
 						lp.publish(keys.VehicleLimitSoc, float64(limit))
-					} else if !loadpoint.AcceptableError(err) && !errors.Is(err, api.ErrUnreachable) {
+					} else if !loadpoint.AcceptableError(err) {
 						lp.log.ERROR.Printf("%s soc limit: %v", typ, err)
 					}
 				}
 			} else {
 				socErr = err
 
-				if !loadpoint.AcceptableError(err) && !errors.Is(err, api.ErrUnreachable) {
+				if !loadpoint.AcceptableError(err) {
 					lp.log.ERROR.Printf("charger soc: %v", err)
 				}
 			}
@@ -2212,7 +2210,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 				lp.vehicleRange = rng
 				lp.publish(keys.VehicleRange, rng)
-			} else if !loadpoint.AcceptableError(err) && !errors.Is(err, api.ErrUnreachable) {
+			} else if !loadpoint.AcceptableError(err) {
 				lp.log.ERROR.Printf("vehicle range: %v", err)
 			}
 		}
@@ -2401,9 +2399,7 @@ NO_DIM:
 	// read and publish status
 	welcomeCharge, err := lp.updateChargerStatus()
 	if err != nil {
-		if !errors.Is(err, api.ErrUnreachable) {
-			lp.log.ERROR.Println(err)
-		}
+		lp.log.ERROR.Println(err)
 		return
 	}
 

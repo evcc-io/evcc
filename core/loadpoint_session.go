@@ -21,7 +21,7 @@ func (lp *Loadpoint) chargeMeterTotal() float64 {
 
 	f, err := m.TotalEnergy()
 	if err != nil {
-		if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, api.ErrUnreachable) {
+		if !errors.Is(err, api.ErrNotAvailable) {
 			lp.log.ERROR.Printf("charge total import: %v", err)
 		}
 		return 0

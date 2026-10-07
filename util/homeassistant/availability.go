@@ -2,36 +2,32 @@ package homeassistant
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/request"
 )
 
+// retryDelay limits requests to an unavailable instance to one per period
+const retryDelay = 5 * time.Second
+
 // availability is the state of an instance shared by all its connections
 type availability struct {
-	seq     uint64 // last sequence number issued to a request
-	applied uint64 // sequence number of the request that determined the state
-	down    bool
+	seq     uint64    // last sequence number issued to a request
+	applied uint64    // sequence number of the request that determined the state
+	err     error     // cause of the outage, nil while available
+	retry   time.Time // during an outage, requests fail without network access until then
 }
 
 var (
 	outageMu sync.Mutex
 	outages  = make(map[string]*availability)
 )
-
-// unreachableError marks a request error caused by the instance being unreachable
-type unreachableError struct {
-	error
-}
-
-func (e *unreachableError) Unwrap() []error {
-	return []error{e.error, api.ErrUnreachable}
-}
 
 // isUnreachable reports whether err indicates that the instance could not be reached
 func isUnreachable(err error) bool {
@@ -48,12 +44,17 @@ func isUnreachable(err error) bool {
 	return ok && ne.Timeout()
 }
 
-// trackAvailability runs a request to the instance at uri and logs availability changes
-// once per instance instead of once per entity. Errors caused by the instance being
-// unreachable are marked with api.ErrUnreachable.
+// trackAvailability runs a request to the instance at uri. While the instance is
+// unavailable, requests fail without network access except for one per retryDelay.
+// Errors caused by the instance being unreachable are permanent, since retrying
+// them immediately only adds load and delay.
 func trackAvailability(uri string, req func() error) error {
-	seq := nextSequence(uri)
-	err := req()
+	seq, err := beginRequest(uri)
+	if err != nil {
+		return backoff.Permanent(err)
+	}
+
+	err = req()
 	unreachable := isUnreachable(err)
 
 	// the request did not get a response, e.g. due to missing login
@@ -67,16 +68,17 @@ func trackAvailability(uri string, req func() error) error {
 		return err
 	}
 
-	// backoff returns the error wrapped by a permanent error, which would drop the marker
-	if pe, ok := errors.AsType[*backoff.PermanentError](err); ok {
-		return backoff.Permanent(&unreachableError{pe.Err})
+	// status errors are already permanent
+	if _, ok := errors.AsType[*backoff.PermanentError](err); ok {
+		return err
 	}
 
-	return &unreachableError{err}
+	return backoff.Permanent(err)
 }
 
-// nextSequence numbers requests in the order they are sent
-func nextSequence(uri string) uint64 {
+// beginRequest numbers requests in the order they are sent, or returns the
+// outage cause if the request must not be sent
+func beginRequest(uri string) (uint64, error) {
 	outageMu.Lock()
 	defer outageMu.Unlock()
 
@@ -86,8 +88,17 @@ func nextSequence(uri string) uint64 {
 		outages[uri] = a
 	}
 
+	if a.err != nil {
+		if time.Now().Before(a.retry) {
+			return 0, a.err
+		}
+
+		// let this request through and keep failing the others for another retryDelay
+		a.retry = time.Now().Add(retryDelay)
+	}
+
 	a.seq++
-	return a.seq
+	return a.seq, nil
 }
 
 func updateAvailability(uri string, seq uint64, unreachable bool, err error) {
@@ -101,18 +112,24 @@ func updateAvailability(uri string, seq uint64, unreachable bool, err error) {
 	}
 	a.applied = seq
 
-	if a.down == unreachable {
-		return
-	}
-	a.down = unreachable
-
 	if unreachable {
 		cause := err
 		if ue, ok := errors.AsType[*url.Error](err); ok {
 			cause = ue.Err
 		}
-		log.ERROR.Printf("Home Assistant unavailable at %s: %v", uri, cause)
-	} else {
+
+		if a.err == nil {
+			log.ERROR.Printf("Home Assistant unavailable at %s: %v", uri, cause)
+		}
+
+		a.err = fmt.Errorf("%s unavailable: %w", uri, cause)
+		a.retry = time.Now().Add(retryDelay)
+
+		return
+	}
+
+	if a.err != nil {
 		log.INFO.Printf("Home Assistant available again at %s", uri)
+		a.err = nil
 	}
 }

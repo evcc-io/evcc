@@ -371,7 +371,7 @@ func (lp *Loadpoint) vehicleOdometer() {
 			lp.updateSession(func(session *session.Session) {
 				session.Odometer = &odo
 			})
-		} else if !loadpoint.AcceptableError(err) && !errors.Is(err, api.ErrUnreachable) {
+		} else if !loadpoint.AcceptableError(err) {
 			lp.log.ERROR.Printf("vehicle odometer: %v", err)
 		}
 	}
@@ -436,7 +436,7 @@ func (lp *Loadpoint) vehicleClimateActive() bool {
 			return active
 		}
 
-		if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, api.ErrAsleep) && !errors.Is(err, api.ErrUnreachable) {
+		if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, api.ErrAsleep) {
 			lp.log.ERROR.Printf("climater: %v", err)
 		}
 	}

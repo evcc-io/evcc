@@ -1,7 +1,6 @@
 package coordinator
 
 import (
-	"errors"
 	"slices"
 	"sync"
 
@@ -141,7 +140,7 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle, lpStatus 
 		if vs, ok := api.Cap[api.ChargeState](vehicle); ok {
 			status, err := vs.Status()
 			if err != nil {
-				if !loadpoint.AcceptableError(err) && !errors.Is(err, api.ErrUnreachable) {
+				if !loadpoint.AcceptableError(err) {
 					c.log.ERROR.Println("vehicle status:", err)
 				}
 				continue

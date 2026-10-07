@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
@@ -21,7 +22,19 @@ func outage(uri string) bool {
 	outageMu.Lock()
 	defer outageMu.Unlock()
 	a, ok := outages[uri]
-	return ok && a.down
+	return ok && a.err != nil
+}
+
+// expireRetry ends the period in which requests to an unavailable instance fail without network access
+func expireRetry(uri string) {
+	outageMu.Lock()
+	defer outageMu.Unlock()
+	outages[uri].retry = time.Time{}
+}
+
+func isPermanent(err error) bool {
+	_, ok := errors.AsType[*backoff.PermanentError](err)
+	return ok
 }
 
 func TestIsUnreachable(t *testing.T) {
@@ -52,27 +65,31 @@ func TestIsUnreachable(t *testing.T) {
 	}
 }
 
-func TestGetStateUnreachable(t *testing.T) {
+func TestUnreachableNotRetried(t *testing.T) {
 	srv := httptest.NewServer(http.NotFoundHandler())
 	srv.Close()
 
 	conn := newTestConnection(srv.URL)
 
-	_, err := conn.GetState("sensor.foo")
-	require.ErrorIs(t, err, api.ErrUnreachable)
-	assert.ErrorContains(t, err, "sensor.foo", "original error message must be kept")
-	assert.True(t, outage(srv.URL))
+	var attempts int
+	_, err := backoff.RetryWithData(func() (StateResponse, error) {
+		attempts++
+		return conn.GetState("sensor.foo")
+	}, backoff.WithMaxRetries(backoff.NewConstantBackOff(time.Millisecond), 3))
 
-	// other connections to the same instance share the outage
-	err = newTestConnection(srv.URL).CallSwitchService("switch.foo", true)
-	require.ErrorIs(t, err, api.ErrUnreachable)
+	require.Error(t, err)
+	assert.Equal(t, 1, attempts)
+	assert.ErrorContains(t, err, "sensor.foo", "original error message must be kept")
 	assert.True(t, outage(srv.URL))
 }
 
-func TestAvailabilityRecovery(t *testing.T) {
+func TestOutage(t *testing.T) {
+	var requests atomic.Int32
 	var down atomic.Bool
+	down.Store(true)
 
 	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
 		switch {
 		case down.Load():
 			w.WriteHeader(http.StatusBadGateway)
@@ -84,33 +101,73 @@ func TestAvailabilityRecovery(t *testing.T) {
 	}))
 	srv.Start()
 
-	conn := newTestConnection(srv.URL)
-
-	_, err := conn.GetState("sensor.foo")
-	require.NoError(t, err)
-	assert.False(t, outage(srv.URL))
-
-	down.Store(true)
-	_, err = conn.GetState("sensor.foo")
-	require.ErrorIs(t, err, api.ErrUnreachable)
+	_, err := newTestConnection(srv.URL).GetState("sensor.foo")
+	require.Error(t, err)
 	assert.True(t, outage(srv.URL))
+	assert.Equal(t, int32(1), requests.Load())
 
-	// status errors are permanent, the marker must survive backoff unwrapping them
-	_, err = backoff.RetryWithData(func() (StateResponse, error) {
-		return conn.GetState("sensor.foo")
-	}, backoff.NewExponentialBackOff())
-	require.ErrorIs(t, err, api.ErrUnreachable)
+	// other connections to the same instance fail without sending a request
+	_, err = newTestConnection(srv.URL).GetState("sensor.bar")
+	assert.ErrorContains(t, err, srv.URL+" unavailable")
+	assert.True(t, isPermanent(err))
+
+	err = newTestConnection(srv.URL).CallSwitchService("switch.foo", true)
+	assert.ErrorContains(t, err, srv.URL+" unavailable")
+	assert.Equal(t, int32(1), requests.Load())
+
+	// after the retry delay, a request reaches the instance again
+	expireRetry(srv.URL)
+	_, err = newTestConnection(srv.URL).GetStates()
+	require.Error(t, err)
+	assert.Equal(t, int32(2), requests.Load())
+	assert.True(t, outage(srv.URL))
 
 	// any response other than a gateway error proves the instance is available
 	down.Store(false)
-	_, err = conn.GetState("sensor.missing")
-	require.Error(t, err)
-	assert.NotErrorIs(t, err, api.ErrUnreachable)
+	expireRetry(srv.URL)
+	_, err = newTestConnection(srv.URL).GetState("sensor.missing")
+	assert.ErrorContains(t, err, "404")
 	assert.False(t, outage(srv.URL))
+
+	_, err = newTestConnection(srv.URL).GetState("sensor.foo")
+	require.NoError(t, err)
+	assert.Equal(t, int32(4), requests.Load())
+}
+
+// TestSingleRetry verifies that only one request reaches an unavailable instance
+// after the retry delay, while the others keep failing without network access
+func TestSingleRetry(t *testing.T) {
+	uri := "http://single-retry"
+	refused := &url.Error{Op: "Get", URL: uri, Err: &net.OpError{Op: "dial", Err: errors.New("connection refused")}}
+
+	require.Error(t, trackAvailability(uri, func() error { return refused }))
+	expireRetry(uri)
+
+	started := make(chan struct{})
+	release := make(chan struct{})
+	done := make(chan error)
+
+	go func() {
+		done <- trackAvailability(uri, func() error {
+			close(started)
+			<-release
+			return nil
+		})
+	}()
+	<-started
+
+	var sent bool
+	err := trackAvailability(uri, func() error { sent = true; return nil })
+	assert.ErrorContains(t, err, uri+" unavailable")
+	assert.False(t, sent, "request must not be sent while another one is pending")
+
+	close(release)
+	require.NoError(t, <-done)
+	assert.False(t, outage(uri))
 }
 
 // TestStaleResponse verifies that a response to an older request doesn't override
-// the state set by a newer one, while still returning its own marked error
+// the state set by a newer one, while still returning its own error
 func TestStaleResponse(t *testing.T) {
 	refused := &url.Error{Op: "Get", URL: "http://ha", Err: &net.OpError{Op: "dial", Err: errors.New("connection refused")}}
 
@@ -141,28 +198,13 @@ func TestStaleResponse(t *testing.T) {
 			<-started
 
 			newer := trackAvailability(uri, func() error { return tc.newer })
-			assert.Equal(t, tc.newer != nil, errors.Is(newer, api.ErrUnreachable))
+			assert.True(t, errors.Is(newer, tc.newer))
 
 			close(release)
 			older := <-done
-			assert.Equal(t, tc.older != nil, errors.Is(older, api.ErrUnreachable), "older request keeps its own error")
+			assert.True(t, errors.Is(older, tc.older), "older request keeps its own error")
 
 			assert.Equal(t, tc.wantUnreached, outage(uri), "state follows the newer request")
 		})
 	}
-}
-
-func TestGetStatesTracked(t *testing.T) {
-	srv := httptest.NewServer(http.NotFoundHandler())
-	srv.Close()
-
-	conn := newTestConnection(srv.URL)
-
-	_, err := conn.GetStates()
-	require.ErrorIs(t, err, api.ErrUnreachable)
-
-	_, err = conn.GetServices()
-	require.ErrorIs(t, err, api.ErrUnreachable)
-
-	assert.True(t, outage(srv.URL))
 }

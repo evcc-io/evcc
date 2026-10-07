@@ -33,7 +33,7 @@ func (site *Site) updateCircuits() {
 		return
 	}
 
-	if err := site.circuit.Update(site.loadpointsAsCircuitDevices()); err != nil && !errors.Is(err, api.ErrUnreachable) {
+	if err := site.circuit.Update(site.loadpointsAsCircuitDevices()); err != nil {
 		site.log.ERROR.Println(err)
 	}
 
