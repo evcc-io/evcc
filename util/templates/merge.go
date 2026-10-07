@@ -13,8 +13,6 @@ var matchKey = strings.EqualFold
 
 // mergeMaps recursively merges other into target using matchKey for key comparison
 func mergeMaps(other map[string]any, target map[string]any) error {
-	// return mergo.Map(&target, other, mergo.WithOverride)
-	// return util.DecodeOther(other, target)
 	merge(target, other, 0)
 	return nil
 }
