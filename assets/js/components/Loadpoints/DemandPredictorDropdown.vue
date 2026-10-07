@@ -6,12 +6,21 @@
 			class="form-select form-select-sm"
 			@change="onChange"
 		>
-			<option value="daily">{{ $t("main.loadpointSettings.demandPredictor.daily.description") }}</option>
-			<option value="weekday">{{ $t("main.loadpointSettings.demandPredictor.weekday.description") }}</option>
-			<option value="temperature">{{ $t("main.loadpointSettings.demandPredictor.temperature.description") }}</option>
+			<option value="daily">
+				{{ $t("main.loadpointSettings.demandPredictor.daily.description") }}
+			</option>
+			<option value="weekday">
+				{{ $t("main.loadpointSettings.demandPredictor.weekday.description") }}
+			</option>
+			<option value="temperature">
+				{{ $t("main.loadpointSettings.demandPredictor.temperature.description") }}
+			</option>
 		</select>
 		<div class="mt-1">
-			<small v-if="effectivePredictor === 'temperature' && tariffTemperature === undefined" class="text-warning">
+			<small
+				v-if="effectivePredictor === 'temperature' && tariffTemperature === undefined"
+				class="text-warning"
+			>
 				{{ $t("main.loadpointSettings.demandPredictor.noTempTariff") }}
 			</small>
 			<small v-else class="text-muted">
