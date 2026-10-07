@@ -59,7 +59,7 @@
       "gridDischargeConfirm": {
         "country": "Pays configuré : {country}.",
         "description": "La possibilité d'injecter l'énergie stockée dans la batterie vers le réseau dépend de votre pays et de votre contrat de rachat. Si la batterie est également rechargée à partir du réseau, l'énergie injectée n'est plus exclusivement d'origine solaire. Dans le cadre de nombreux tarifs de rachat, cela entraîne la perte de votre rémunération ou est tout simplement interdit. Vérifiez au préalable les conditions de votre contrat de rachat et les exigences du gestionnaire de réseau.",
-        "noCountry": "Aucun pays n'est configuré. Configurez-le via {lien}.",
+        "noCountry": "Aucun pays n'est configuré. Configurez-le via {link}.",
         "title": "Exportation vers le réseau à partir de la batterie"
       },
       "priority": "La batterie domestique a la priorité tant qu’elle est chargée en dessous de {soc}. Ensuite, les points de charge reçoivent le surplus.",
@@ -1238,7 +1238,7 @@
     "stat": {
       "autarky": "Autarcie",
       "co2Saved": "CO₂ économisé",
-      "co2SavedTooltip": "Comparé au prélèvement de l'énergie consommée sur le réseau.",
+      "co2SavedTooltip": "Comparé au prélèvement de l'{energy} consommée sur le réseau.",
       "configure": "Configurer maintenant",
       "noCo2": "Aucune donnée sur le CO₂.",
       "noPrice": "Aucune donnée de prix.",

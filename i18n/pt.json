@@ -1207,7 +1207,7 @@
     "production": {
       "above": "{value} acima",
       "accuracy": "Precisão da previsão",
-      "below": "{valor} abaixo",
+      "below": "{value} abaixo",
       "deviation": "Desvio",
       "expectedTomorrow": "esperado amanhã",
       "exported": "{value} exportado",
@@ -1512,7 +1512,7 @@
       "description": "sem interrupções",
       "label": "Carregar sempre",
       "labelHeating": "Aquecer sempre",
-      "minCurrent": "min {atual}",
+      "minCurrent": "min {current}",
       "once": "até ao final da sessão",
       "onceTip": "Apenas para esta sessão",
       "permanent": "permanece ligado de forma permanente"
