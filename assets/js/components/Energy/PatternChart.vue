@@ -227,7 +227,10 @@ export default defineComponent({
 								this.from.getMonth(),
 								value
 							);
-							return `${value}\n${this.weekdayShort(d)}`;
+							if (d.getDay() === this.firstDayOfWeek) {
+								return `${value}\n${this.weekdayShort(d)}`;
+							}
+							return `${value}`;
 						},
 					},
 				},
@@ -290,7 +293,7 @@ export default defineComponent({
 						borderColor: colors.box || "",
 					},
 					dayLabel: {
-						firstDay: 1,
+						firstDay: this.firstDayOfWeek,
 						nameMap: this.dayNames,
 						fontSize: 10,
 						color: colors.muted || "",
@@ -313,6 +316,24 @@ export default defineComponent({
 		dayNames(): string[] {
 			// echarts expects sunday first
 			return [0, 1, 2, 3, 4, 5, 6].map((i) => this.fmtWeekdayByIndex(i, "narrow"));
+		},
+		firstDayOfWeek(): number {
+			try {
+				const tag = typeof navigator !== "undefined" ? navigator.language : "en";
+				const locale = new Intl.Locale(tag) as Intl.Locale & {
+					getWeekInfo?: () => { firstDay?: number };
+				};
+				if (typeof locale.getWeekInfo === "function") {
+					const info = locale.getWeekInfo();
+					if (info?.firstDay !== undefined) {
+						// Intl returns 1 (Mon) .. 7 (Sun); JS Date / ECharts firstDay uses 0 (Sun) .. 6 (Sat)
+						return info.firstDay % 7;
+					}
+				}
+			} catch {
+				// fallback on older engines
+			}
+			return 1;
 		},
 	},
 	methods: {
