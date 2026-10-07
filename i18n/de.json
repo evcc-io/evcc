@@ -1621,15 +1621,18 @@
       "default": "default",
       "demandPredictor": {
         "daily": {
-          "description": "Am besten für Geräte mit ähnlichem Verbrauch über den Tag für alle Tage der Woche."
+          "description": "Am besten für Geräte mit ähnlichem Verbrauch über den Tag für alle Tage der Woche.",
+          "label": "Durchschnitt"
         },
         "label": "Verbrauchsprognose",
         "noTempTariff": "Erfordert einen konfigurierten Temperatur-Tarif.",
         "temperature": {
-          "description": "Am besten für Raumheizungen, deren Verbrauch mit der Außentemperatur variiert, z. B. Wärmepumpen oder elektrische Heizgeräte."
+          "description": "Am besten für Raumheizungen, deren Verbrauch mit der Außentemperatur variiert, z. B. Wärmepumpen oder elektrische Heizgeräte.",
+          "label": "Temperatur"
         },
         "weekday": {
-          "description": "Am besten für Geräte, deren Verbrauch einem Wochentag-Muster folgt, z. B. Warmwasser oder Pool."
+          "description": "Am besten für Geräte, deren Verbrauch einem Wochentag-Muster folgt, z. B. Warmwasser oder Pool.",
+          "label": "Wochentag"
         }
       },
       "heating": "Heizen",

@@ -119,9 +119,26 @@
 					:charger-feature-demand-weekday="
 						loadpoint?.chargerFeatureDemandWeekday ?? false
 					"
-					:tariff-temperature="tariffTemperature"
-					class="col-sm-8 col-lg-4 pe-0"
+					class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center"
 				/>
+				<div class="col-sm-8 offset-sm-4 mt-1">
+					<small
+						v-if="
+							effectiveDemandPredictor === 'temperature' &&
+							tariffTemperature === undefined
+						"
+						class="text-warning"
+					>
+						{{ $t("main.loadpointSettings.demandPredictor.noTempTariff") }}
+					</small>
+					<small v-else class="text-muted">
+						{{
+							$t(
+								`main.loadpointSettings.demandPredictor.${effectiveDemandPredictor}.description`
+							)
+						}}
+					</small>
+				</div>
 			</div>
 
 			<h6>
@@ -291,6 +308,13 @@ export default defineComponent({
 		},
 		heating() {
 			return this.loadpoint?.chargerFeatureHeating;
+		},
+		effectiveDemandPredictor(): string {
+			const lp = this.loadpoint;
+			if (lp?.demandPredictor) return lp.demandPredictor;
+			if (lp?.chargerFeatureDemandTemperature) return "temperature";
+			if (lp?.chargerFeatureDemandWeekday) return "weekday";
+			return "daily";
 		},
 		minTemp() {
 			// stored as loadpoint minSoc, interpreted as temperature for heating devices
