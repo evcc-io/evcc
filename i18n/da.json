@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Godkendelse lykkedes",
     "buttonConnect": "Opret forbindelse til {provider}",
     "buttonDisconnect": "Afbryd forbindelse",
+    "challenge": {
+      "captcha": {
+        "label": "Indtast tegnene, der vises på billedet.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Indsæt koden eller adressen på siden som du blev videresendt til.",
+        "title": "Autorisationskode"
+      },
+      "openLogin": "Åbn login-side",
+      "submit": "Fortsæt"
+    },
     "confirmLogout": "Er du sikker på, at du vil afbryde {title}?",
     "connect": "forbind",
     "disconnect": "afbryd",
@@ -43,6 +55,12 @@
       "bufferTitle": "Batteri som opladningsbuffer",
       "discharge": "Forhindrer hjemmebatteriet at aflade i hurtig mode og ved planlagt opladning.",
       "gridDischarge": "Tillad hjemmebatteriet at aflade til elnettet.",
+      "gridDischargeConfirm": {
+        "country": "Konfigureret land: {country}.",
+        "description": "Om batterienergi må leveres til elnettet afhænger af dit land og din indfødningsaftale. Hvis batteriet også oplades fra elnettet, er den eksporterede energi ikke længere udelukkende solenergi. I mange indfødningsordninger betyder det, at du mister din betaling, eller at det er forbudt. Kontrollér først din indfødningsaftale og netoperatørens krav.",
+        "noCountry": "Intet land er konfigureret. Indstil det under {link}.",
+        "title": "Eksporter til nettet fra batteriet"
+      },
       "priority": "Hjemmebatteriet har prioritet, mens det er under {soc}. Derefter får ladepunkterne overskuddet.",
       "priorityNone": "Soloverskud går direkte til ladepunkterne. Sæt en værdi over {soc} for at prioritere hjemmebatteriet.",
       "priorityTitle": "Hvor sendes overskuddet først hen?"
@@ -144,8 +162,35 @@
         "switchsocket": "Brugerdefineret stikkontakt"
       }
     },
+    "circuit": {
+      "addMeter": "Tilføj dedikeret energimåler",
+      "custom": "Bruger-defineret kredsløb",
+      "deleteChildrenFirst": "For at slette dette kredsløb, skal det underordnede kredsløb først slettes.",
+      "meterDedicated": "Dedikeret måler",
+      "meterGrid": "Elnetsmåler",
+      "meterHelp": "Måler, der måler det samlede forbrug i dette kredsløb.",
+      "meterLabel": "Energimåler",
+      "meterLabelAdd": "Tilføj kredsløbs-måler",
+      "meterLabelEdit": "Juster kredsløbs-måler",
+      "meterNone": "Ingen måler",
+      "meterSelectionHelpDedicatedMeter": "Tilføj en eksisterende måler til nedenstående kredsløb.",
+      "meterSelectionHelpGridMeter": "Bruger den eksisterende elnetsmåler i installationen.",
+      "meterSelectionHelpNoMeter": "Summen af alle ladepunkter bruges.",
+      "meterSelectionLabel": "Vælg måler",
+      "parentCircuit": "Overordnet kredsløb",
+      "template": "Kredsløb",
+      "titleAdd": "Tilføj kredsløb",
+      "titleEdit": "Tilpas kredsløb",
+      "titleLabel": "Titel"
+    },
     "circuits": {
+      "addMainCircuit": "Tilføj hovedkredsløb",
+      "addSubCircuit": "Tilføj underkredsløb",
+      "chargingPointsNote": "Tildel ladepunkter og varmere til et kredsløb i deres egne indstillinger.",
       "description": "Sikrer, at summen af alle ladepunkter forbundet til et kredsløb ikke overstiger de konfigurerede effekt- og strømgrænser. Kredsløb kan indlejres for at opbygge et hierarki.",
+      "legacyWarning": "Ny konfiguration af kredsløb tilgængelig! Fjern og gem din konfiguration her for at bruge den nye guidede proces.",
+      "meterDedicated": "Måler",
+      "meterGrid": "Elnet",
       "title": "Belastningsstyring",
       "usableMeters": "Gyldige målerreferencer"
     },
@@ -216,6 +261,8 @@
       "identifier": "RFID-identifikator",
       "loginBlocked": "Grænsen for loginforsøg er nået",
       "max": "max",
+      "maxCurrent": "Max. strøm",
+      "maxPower": "Max. effekt",
       "messengers": "Tjenester",
       "no": "nej",
       "odometer": "Kilometertæller",
@@ -352,6 +399,7 @@
       "enable": "Aktiver",
       "error": "Fejl",
       "experimental": "Eksperimentel",
+      "forceEnable": "Aktiver alligevel",
       "forceSave": "Gem alligevel",
       "fromYamlHint": "Bemærk: Er konfigureret via evcc.yaml. Fjern indtastningen fra filen for at aktivere redigering her.",
       "hideAdvancedSettings": "Skjul avancerede indstillinger",
@@ -370,6 +418,7 @@
       "saving": "Gemmer…",
       "selectFile": "Gennemse",
       "showAdvancedSettings": "Vis avancerede indstillinger",
+      "site": "Anlæg",
       "telemetry": "Telemetri",
       "templateLoading": "Indlæser...",
       "title": "Titel",
@@ -888,6 +937,22 @@
       "labelVendorId": "Leverandør-ID",
       "title": "SMA Sunny Home Manager"
     },
+    "site": {
+      "country": {
+        "description": "Bruges til regionsspecifikke oplysninger og standardindstillinger.",
+        "label": "Land"
+      },
+      "currency": {
+        "description": "Bruges til at formatere pris, omkostninger og besparelser baseret på dine tariffer.",
+        "example": "Din opladningspris var {price}. Du sparede {amount}.",
+        "label": "Valuta"
+      },
+      "siteTitle": {
+        "description": "Vises på hovedskærmen og i browserfanen.",
+        "label": "Titel"
+      },
+      "title": "Anlæg"
+    },
     "sponsor": {
       "addToken": "Indtast token",
       "changeToken": "Udskift token",
@@ -1193,6 +1258,7 @@
   },
   "general": {
     "back": "Tilbage",
+    "cancel": "Afbryd",
     "download": "Download",
     "error": "Fejl",
     "none": "ingen",
