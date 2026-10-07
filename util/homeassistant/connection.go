@@ -80,9 +80,10 @@ func (c *Connection) GetServices() ([]ServiceDomainResponse, error) {
 // GetState retrieves the state of an entity
 func (c *Connection) GetState(entity string) (StateResponse, error) {
 	var res StateResponse
-	uri := fmt.Sprintf("%s/api/states/%s", c.instance.URI(), url.PathEscape(entity))
+	base := c.instance.URI()
+	uri := fmt.Sprintf("%s/api/states/%s", base, url.PathEscape(entity))
 
-	if err := c.GetJSON(uri, &res); err != nil {
+	if err := trackAvailability(base, c.GetJSON(uri, &res)); err != nil {
 		return res, err
 	}
 
@@ -223,7 +224,8 @@ func (c *Connection) GetChargeStatus(entity string, states StatusMap) (api.Charg
 
 // CallService calls a Home Assistant service
 func (c *Connection) CallService(domain, service string, data map[string]any) error {
-	uri := fmt.Sprintf("%s/api/services/%s/%s", c.instance.URI(), domain, service)
+	base := c.instance.URI()
+	uri := fmt.Sprintf("%s/api/services/%s/%s", base, domain, service)
 
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
@@ -231,7 +233,7 @@ func (c *Connection) CallService(domain, service string, data map[string]any) er
 	}
 
 	_, err = c.DoBody(req)
-	return err
+	return trackAvailability(base, err)
 }
 
 func domain(entity string) (string, error) {

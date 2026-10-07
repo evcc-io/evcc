@@ -55,6 +55,10 @@ var ErrOutdated = errors.New("outdated")
 // ErrTimeout is the error returned when a timeout happened
 var ErrTimeout = errors.New("timeout")
 
+// ErrUnreachable indicates that a backend shared by multiple devices is unreachable.
+// The backend logs the outage once, so callers should not log it per device.
+var ErrUnreachable = errors.New("unreachable")
+
 // LoginRequiredError creates a login error for given auth provider
 func LoginRequiredError(providerAuth string) error {
 	return backoff.Permanent(&ErrLoginRequired{

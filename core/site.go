@@ -677,7 +677,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 		if err == nil {
 			mm[i].Power = power
 			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
-		} else if !errors.Is(err, api.ErrNotAvailable) {
+		} else if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, api.ErrUnreachable) {
 			if b.Len() > 0 {
 				site.log.ERROR.Println("\n" + b.String())
 			}
@@ -688,7 +688,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 		if m, ok := api.Cap[api.MeterEnergy](meter); ok {
 			if f, err := nonZeroEnergy(m.TotalEnergy()); err == nil {
 				mm[i].Energy = new(f)
-			} else if !errors.Is(err, api.ErrNotAvailable) {
+			} else if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, api.ErrUnreachable) {
 				site.log.ERROR.Printf("%s %d energy: %v", key, i+1, err)
 			}
 		}
@@ -697,7 +697,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 		if m, ok := api.Cap[api.MeterReturnEnergy](meter); ok {
 			if f, err := nonZeroEnergy(m.ReturnEnergy()); err == nil {
 				mm[i].ReturnEnergy = new(f)
-			} else if !errors.Is(err, api.ErrNotAvailable) {
+			} else if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, api.ErrUnreachable) {
 				site.log.ERROR.Printf("%s %d return energy: %v", key, i+1, err)
 			}
 		}
@@ -803,7 +803,7 @@ func (site *Site) updateBatteryMeters() {
 				}
 
 				site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
-			} else {
+			} else if !errors.Is(err, api.ErrUnreachable) {
 				site.log.ERROR.Printf("battery %d soc: %v", i+1, err)
 			}
 		}
@@ -1022,7 +1022,7 @@ func (site *Site) updateGridMeter() error {
 
 		site.log.DEBUG.Printf("grid power: %.0fW", res)
 	} else if !errors.Is(err, api.ErrNotAvailable) {
-		return fmt.Errorf("grid power: %v", err)
+		return fmt.Errorf("grid power: %w", err)
 	}
 
 	// grid phase currents (signed)
@@ -1034,7 +1034,7 @@ func (site *Site) updateGridMeter() error {
 			if p1, p2, p3, err = phaseMeter.Powers(); err == nil {
 				mm.Powers = []float64{p1, p2, p3}
 				site.log.DEBUG.Printf("grid powers: %.0fW", mm.Powers)
-			} else if !errors.Is(err, api.ErrNotAvailable) {
+			} else if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, api.ErrUnreachable) {
 				site.log.ERROR.Printf("grid powers: %v", err)
 			}
 		}
@@ -1042,7 +1042,7 @@ func (site *Site) updateGridMeter() error {
 		if i1, i2, i3, err := phaseMeter.Currents(); err == nil {
 			mm.Currents = []float64{util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3)}
 			site.log.DEBUG.Printf("grid currents: %.3gA", mm.Currents)
-		} else if !errors.Is(err, api.ErrNotAvailable) {
+		} else if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, api.ErrUnreachable) {
 			site.log.ERROR.Printf("grid currents: %v", err)
 		}
 	}
@@ -1052,7 +1052,7 @@ func (site *Site) updateGridMeter() error {
 	if energyMeter, ok := api.Cap[api.MeterEnergy](meter); ok {
 		if f, err := nonZeroEnergy(energyMeter.TotalEnergy()); err == nil {
 			mm.Energy = &f
-		} else if !errors.Is(err, api.ErrNotAvailable) {
+		} else if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, api.ErrUnreachable) {
 			site.log.ERROR.Printf("grid energy: %v", err)
 		}
 	}
@@ -1062,7 +1062,7 @@ func (site *Site) updateGridMeter() error {
 	if returnEnergyMeter, ok := api.Cap[api.MeterReturnEnergy](meter); ok {
 		if f, err := nonZeroEnergy(returnEnergyMeter.ReturnEnergy()); err == nil {
 			mm.ReturnEnergy = &f
-		} else if !errors.Is(err, api.ErrNotAvailable) {
+		} else if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, api.ErrUnreachable) {
 			site.log.ERROR.Printf("grid return energy: %v", err)
 		}
 	}
@@ -1263,7 +1263,9 @@ func (site *Site) update(lp updater) {
 	site.applyHemsLimits()
 
 	if state, err := site.updateMeters(); err != nil {
-		site.log.ERROR.Println(err)
+		if !errors.Is(err, api.ErrUnreachable) {
+			site.log.ERROR.Println(err)
+		}
 	} else {
 		if sponsor.IsAuthorized() && optimizerEnabled() {
 			site.reapplySuggestions(time.Now())

@@ -1,8 +1,10 @@
 package core
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util"
@@ -232,4 +234,24 @@ func TestRequiredBatteryMode(t *testing.T) {
 		res := s.requiredBatteryMode(tc.gridChargeActive, tc.gridDischargeActive, api.Rate{})
 		assert.Equal(t, tc.res, res, "expected %s, got %s", tc.res, res)
 	}
+}
+
+// TestUpdateMetersUnreachable verifies that an unreachable grid meter keeps
+// api.ErrUnreachable in the error chain, so the outage isn't logged per device
+func TestUpdateMetersUnreachable(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	// permanent to skip the retry backoff
+	err := backoff.Permanent(fmt.Errorf("connection refused: %w", api.ErrUnreachable))
+
+	grid := api.NewMockMeter(ctrl)
+	grid.EXPECT().CurrentPower().Return(0.0, err)
+
+	site := &Site{
+		log:       util.NewLogger("foo"),
+		gridMeter: config.NewStaticDevice(config.Named{}, api.Meter(grid)),
+	}
+
+	_, err = site.updateMeters()
+	assert.ErrorIs(t, err, api.ErrUnreachable)
 }
