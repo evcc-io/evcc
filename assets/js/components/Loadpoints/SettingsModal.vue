@@ -119,7 +119,6 @@
 					:charger-feature-demand-weekday="
 						loadpoint?.chargerFeatureDemandWeekday ?? false
 					"
-					class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center"
 				/>
 				<div class="col-sm-8 offset-sm-4 mt-1">
 					<small

@@ -1,20 +1,22 @@
 <template>
-	<select
-		:id="id"
-		:value="effectivePredictor"
-		class="form-select form-select-sm"
-		@change="onChange"
-	>
-		<option value="daily">
-			{{ $t("main.loadpointSettings.demandPredictor.daily.label") }}
-		</option>
-		<option value="weekday">
-			{{ $t("main.loadpointSettings.demandPredictor.weekday.label") }}
-		</option>
-		<option value="temperature">
-			{{ $t("main.loadpointSettings.demandPredictor.temperature.label") }}
-		</option>
-	</select>
+	<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
+		<select
+			:id="id"
+			:value="effectivePredictor"
+			class="form-select form-select-sm"
+			@change="onChange"
+		>
+			<option value="daily">
+				{{ $t("main.loadpointSettings.demandPredictor.daily.label") }}
+			</option>
+			<option value="weekday">
+				{{ $t("main.loadpointSettings.demandPredictor.weekday.label") }}
+			</option>
+			<option value="temperature">
+				{{ $t("main.loadpointSettings.demandPredictor.temperature.label") }}
+			</option>
+		</select>
+	</div>
 </template>
 
 <script lang="ts">
