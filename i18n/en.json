@@ -1306,11 +1306,6 @@
       },
       "cost": "Cost",
       "others": "Others",
-      "source": {
-        "pv": "solar",
-        "battery": "battery",
-        "grid": "grid"
-      },
       "title": "Consumers",
       "view": {
         "river": "River",
