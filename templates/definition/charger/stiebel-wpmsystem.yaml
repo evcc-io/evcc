@@ -1,0 +1,24 @@
+template: stiebel-wpmsystem
+products:
+  - brand: Stiebel Eltron
+    description:
+      generic: WPMsystem (SG Ready)
+group: heating
+capabilities: ["meter", "dim"]
+requirements:
+  description:
+    de: Die SG Ready Steuerung über Modbus mit einem ISG funktioniert nur im Warmwasserbetrieb sowie im Automatik-/Programmbetrieb. Im Komfortbetrieb werden die SG Ready Befehle ignoriert.
+    en: SG Ready control via Modbus with the ISG only works in domestic hot water (DHW) mode and in automatic/programmed mode. In comfort mode, SG Ready commands are ignored.
+discovery:
+  hostname: ["servicewelt*"]
+  mac: ["78E9962", "70B3D5C45"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: tempsource
+    type: choice
+    choice: ["warmwater", "buffer"]
+render: |
+  {{- include "stiebel-wpm-base" . }}
+  {{- include "stiebel-wpm-power" . }}
+  {{ include "heatpumpswitch" . }}
