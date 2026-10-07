@@ -490,16 +490,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 			return req, details, err
 		}
 
-		scale := site.effectiveSolarScale()
-		ftSlots := scaleAndPrune(solarEnergy, scale, minLen)
-
-		// decay the scale derived from measured vs forecasted energy of the last completed slot
-		if pv, fcst := site.measuredSlotEnergy(site.Meters.PVMetersRef...), site.measuredSlotEnergy(metrics.Forecast)*scale; pv > 0 && fcst > 0 {
-			orig := slices.Clone(ftSlots[:min(optimizerDecaySlots, len(ftSlots))])
-			blendScale(ftSlots, pv/fcst, optimizerDecaySlots)
-			site.log.DEBUG.Printf("optimizer: pv slots updated with scale %.2f: %.0f -> %.0f", pv/fcst, orig, ftSlots[:len(orig)])
-		}
-		ft = prorate(ftSlots, firstSlotDuration)
+		ft = prorate(scaleAndPrune(solarEnergy, site.effectiveSolarScale(), minLen), firstSlotDuration)
 	}
 
 	req = optimizer.OptimizationInput{
@@ -1152,24 +1143,16 @@ func unmodelledPower(lp loadpoint.API) float64 {
 	return max(0, power)
 }
 
-// measuredSlotEnergy returns the summed energy in Wh of the last completed
-// metrics slot for the given collector refs, 0 when not available
-func (site *Site) measuredSlotEnergy(refs ...string) float64 {
-	var sum float64
-	for _, ref := range refs {
-		c, ok := site.collectors[ref]
-		if !ok {
-			return 0
-		}
-
-		v, ok := c.LastSlotEnergy()
-		if !ok {
-			return 0
-		}
-		sum += v
+// measuredSlotEnergy returns the energy in Wh of the last completed
+// metrics slot for the given collector ref, 0 when not available
+func (site *Site) measuredSlotEnergy(ref string) float64 {
+	c, ok := site.collectors[ref]
+	if !ok {
+		return 0
 	}
 
-	return sum * 1e3
+	v, _ := c.LastSlotEnergy()
+	return v * 1e3
 }
 
 // blendMeasured decays the first slots from the measured value into the
@@ -1179,15 +1162,6 @@ func blendMeasured[T constraints.Float](slots []T, measured T, decaySlots int) {
 	for i := range min(decaySlots, len(slots)) {
 		w := T(decaySlots-i) / T(decaySlots)
 		slots[i] = w*measured + (1-w)*slots[i]
-	}
-}
-
-// blendScale decays a scale factor towards 1 over the first slots.
-// Slot 0 is scaled by the full factor, from slot decaySlots on it is 1.
-func blendScale[T constraints.Float](slots []T, scale float64, decaySlots int) {
-	for i := range min(decaySlots, len(slots)) {
-		w := float64(decaySlots-i) / float64(decaySlots)
-		slots[i] = T(float64(slots[i]) * (w*scale + (1 - w)))
 	}
 }
 

@@ -229,7 +229,7 @@ test.describe("consumption breakdown", () => {
 
     // the house ran on solar that hour, the consumer inherits its sources
     const sources = detail.getByRole("button", { name: "Sources" });
-    await expect(sources).toContainText("100% solar");
+    await expect(sources).toContainText("100% Solar");
     await sources.click();
     const modal = page.getByTestId("energy-sources-modal");
     await expectModalVisible(modal);

@@ -26,6 +26,7 @@ requirements:
       Die API liefert die zuletzt vom Fahrzeug an die Herstellerserver gemeldeten Daten; das Fahrzeug wird nicht geweckt.
 params:
   - preset: vehicle-common
+  - name: welcomecharge
   - preset: vehicle-online
   - name: clientid
     required: true
