@@ -16,7 +16,6 @@ import (
 // Cloud is an api.Vehicle implementation
 type Cloud struct {
 	*embed
-	token        string
 	brand        string
 	config       map[string]string
 	client       pb.VehicleClient
@@ -54,7 +53,6 @@ func NewCloudFromConfig(other map[string]any) (api.Vehicle, error) {
 
 	v := &Cloud{
 		embed:  &cc.embed,
-		token:  sponsor.Token,
 		brand:  cc.Brand,
 		config: cc.Other,
 		client: pb.NewVehicleClient(conn),
@@ -70,7 +68,7 @@ func NewCloudFromConfig(other map[string]any) (api.Vehicle, error) {
 // prepareVehicle obtains new vehicle handle from cloud server
 func (v *Cloud) prepareVehicle() error {
 	req := &pb.NewRequest{
-		Token:  v.token,
+		Token:  sponsor.Token(),
 		Type:   v.brand,
 		Config: v.config,
 	}
@@ -89,7 +87,7 @@ func (v *Cloud) prepareVehicle() error {
 // chargeState implements the api.Vehicle interface
 func (v *Cloud) chargeState() (float64, error) {
 	req := &pb.SoCRequest{
-		Token:     v.token,
+		Token:     sponsor.Token(),
 		VehicleId: v.vehicleID,
 	}
 
