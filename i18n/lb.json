@@ -1219,7 +1219,12 @@
     "socTemp": {
       "charged": "opgelueden",
       "soc": "Opgelueden",
-      "temperature": "Temperatur"
+      "temperature": "Temperatur",
+      "used": "verbraucht"
+    },
+    "sources": {
+      "battery": "Batterie",
+      "cost": "Käschten"
     }
   },
   "footer": {
