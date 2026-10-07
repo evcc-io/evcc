@@ -61,29 +61,32 @@ func (c *Connection) URI() string {
 	return c.instance.URI()
 }
 
+// getJSON retrieves path from the instance and tracks the instance's availability
+func (c *Connection) getJSON(path string, res any) error {
+	uri := c.instance.URI()
+	return trackAvailability(uri, func() error {
+		return c.GetJSON(uri+path, res)
+	})
+}
+
 // GetStates retrieves the list of entities
 func (c *Connection) GetStates() ([]StateResponse, error) {
 	var res []StateResponse
-	uri := fmt.Sprintf("%s/api/states", c.instance.URI())
-	err := c.GetJSON(uri, &res)
+	err := c.getJSON("/api/states", &res)
 	return res, err
 }
 
 // GetServices retrieves the list of callable services
 func (c *Connection) GetServices() ([]ServiceDomainResponse, error) {
 	var res []ServiceDomainResponse
-	uri := fmt.Sprintf("%s/api/services", c.instance.URI())
-	err := c.GetJSON(uri, &res)
+	err := c.getJSON("/api/services", &res)
 	return res, err
 }
 
 // GetState retrieves the state of an entity
 func (c *Connection) GetState(entity string) (StateResponse, error) {
 	var res StateResponse
-	base := c.instance.URI()
-	uri := fmt.Sprintf("%s/api/states/%s", base, url.PathEscape(entity))
-
-	if err := trackAvailability(base, c.GetJSON(uri, &res)); err != nil {
+	if err := c.getJSON("/api/states/"+url.PathEscape(entity), &res); err != nil {
 		return res, err
 	}
 
@@ -224,16 +227,17 @@ func (c *Connection) GetChargeStatus(entity string, states StatusMap) (api.Charg
 
 // CallService calls a Home Assistant service
 func (c *Connection) CallService(domain, service string, data map[string]any) error {
-	base := c.instance.URI()
-	uri := fmt.Sprintf("%s/api/services/%s/%s", base, domain, service)
+	uri := c.instance.URI()
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/api/services/%s/%s", uri, domain, service), request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
 
-	_, err = c.DoBody(req)
-	return trackAvailability(base, err)
+	return trackAvailability(uri, func() error {
+		_, err := c.DoBody(req)
+		return err
+	})
 }
 
 func domain(entity string) (string, error) {

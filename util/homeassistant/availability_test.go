@@ -20,7 +20,8 @@ import (
 func outage(uri string) bool {
 	outageMu.Lock()
 	defer outageMu.Unlock()
-	return outages[uri]
+	a, ok := outages[uri]
+	return ok && a.down
 }
 
 func TestIsUnreachable(t *testing.T) {
@@ -106,4 +107,62 @@ func TestAvailabilityRecovery(t *testing.T) {
 	require.Error(t, err)
 	assert.NotErrorIs(t, err, api.ErrUnreachable)
 	assert.False(t, outage(srv.URL))
+}
+
+// TestStaleResponse verifies that a response to an older request doesn't override
+// the state set by a newer one, while still returning its own marked error
+func TestStaleResponse(t *testing.T) {
+	refused := &url.Error{Op: "Get", URL: "http://ha", Err: &net.OpError{Op: "dial", Err: errors.New("connection refused")}}
+
+	tests := []struct {
+		name          string
+		older, newer  error
+		wantUnreached bool
+	}{
+		{"older failure after newer success", refused, nil, false},
+		{"older success after newer failure", nil, refused, true},
+	}
+
+	for i, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			uri := fmt.Sprintf("http://stale%d", i)
+
+			started := make(chan struct{})
+			release := make(chan struct{})
+			done := make(chan error)
+
+			go func() {
+				done <- trackAvailability(uri, func() error {
+					close(started)
+					<-release
+					return tc.older
+				})
+			}()
+			<-started
+
+			newer := trackAvailability(uri, func() error { return tc.newer })
+			assert.Equal(t, tc.newer != nil, errors.Is(newer, api.ErrUnreachable))
+
+			close(release)
+			older := <-done
+			assert.Equal(t, tc.older != nil, errors.Is(older, api.ErrUnreachable), "older request keeps its own error")
+
+			assert.Equal(t, tc.wantUnreached, outage(uri), "state follows the newer request")
+		})
+	}
+}
+
+func TestGetStatesTracked(t *testing.T) {
+	srv := httptest.NewServer(http.NotFoundHandler())
+	srv.Close()
+
+	conn := newTestConnection(srv.URL)
+
+	_, err := conn.GetStates()
+	require.ErrorIs(t, err, api.ErrUnreachable)
+
+	_, err = conn.GetServices()
+	require.ErrorIs(t, err, api.ErrUnreachable)
+
+	assert.True(t, outage(srv.URL))
 }

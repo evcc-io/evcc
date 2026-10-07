@@ -371,7 +371,7 @@ func (lp *Loadpoint) vehicleOdometer() {
 			lp.updateSession(func(session *session.Session) {
 				session.Odometer = &odo
 			})
-		} else if !loadpoint.AcceptableError(err) {
+		} else if !loadpoint.AcceptableError(err) && !errors.Is(err, api.ErrUnreachable) {
 			lp.log.ERROR.Printf("vehicle odometer: %v", err)
 		}
 	}
