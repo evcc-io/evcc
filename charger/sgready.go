@@ -216,7 +216,7 @@ var _ api.ChargerEx = (*SgReady)(nil)
 func (wb *SgReady) MaxCurrentMillis(current float64) error {
 	phases := 1
 	if wb.lp != nil {
-		phases = wb.lp.GetPhases()
+		phases = wb.lp.ActivePhases()
 	}
 	return wb.setMaxPower(int64(grid.CurrentToPower(current, phases)))
 }

@@ -2,10 +2,13 @@ template: stiebel-wpm
 products:
   - brand: Stiebel Eltron
     description:
-      generic: WPM (SG Ready)
+      generic: WPM 3/3i (SG Ready)
 group: heating
-capabilities: ["meter", "dim"]
-# requirements:
+capabilities: ["dim"]
+requirements:
+  description:
+    de: Die SG Ready Steuerung über Modbus mit einem ISG funktioniert nur im Warmwasserbetrieb sowie im Automatik-/Programmbetrieb. Im Komfortbetrieb werden die SG Ready Befehle ignoriert. Der WPM 3/3i liefert keine Leistungsaufnahme über Modbus. Ohne zusätzlichen Zähler wird die Leistung aus dem Ladestrom geschätzt.
+    en: SG Ready control via Modbus with the ISG only works in domestic hot water (DHW) mode and in automatic/programmed mode. In comfort mode, SG Ready commands are ignored. The WPM 3/3i does not provide power consumption via Modbus. Without an additional meter, power is estimated from the charge current.
 #   evcc: ["sponsorship"]
 discovery:
   hostname: ["servicewelt*"]
@@ -18,116 +21,10 @@ params:
     choice: ["warmwater", "buffer"]
   - name: power
     type: bool
-    advanced: true
-    description:
-      de: Leistungsaufnahme auslesen
-      en: Read power consumption
-    help:
-      de: Aufnahmeleistung des Inverters. Nur bei WPMsystem (WPM 4) verfügbar, nicht bei WPM 3/3i.
-      en: Inverter power consumption. Only available on WPMsystem (WPM 4), not on WPM 3/3i.
+    deprecated: true
 render: |
-  type: sgready
-  getmode:
-    source: map
-    values:
-      1: 1 # Frostschutz
-      2: 2 # Normal
-      3: 3 # Forcierter Betrieb
-      4: 3 # Sofortige Ansteuerung
-    get:
-      source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 5000
-        type: input
-        encoding: uint16
-  setmode:
-    source: switch
-    switch:
-    - case: 2 # normal
-      set:
-        source: sequence
-        set:
-        - source: const
-          value: 0
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 4001
-              type: writesingle
-              encoding: uint16
-        - source: const
-          value: 0
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 4002
-              type: writesingle
-              encoding: uint16
-    - case: 3 # boost
-      set:
-        source: sequence
-        set:
-        - source: const
-          value: 1
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 4001
-              type: writesingle
-              encoding: uint16
-        - source: const
-          value: 0
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 4002
-              type: writesingle
-              encoding: uint16
-    - case: 1 # dimm
-      set:
-        source: sequence
-        set:
-        - source: const
-          value: 0
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 4001
-              type: writesingle
-              encoding: uint16
-        - source: const
-          value: 1
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 4002
-              type: writesingle
-              encoding: uint16
-  {{- if .tempsource }}
-  temp:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: {{ if eq .tempsource "warmwater" -}} 521 {{ else }} 517 {{- end }}
-      type: input
-      encoding: int16
-    scale: 0.1
-  {{- end }}
+  {{- include "stiebel-wpm-base" . }}
   {{- if .power }}
-  power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 3679 # 3680 INVERTER AUFNAHMELEISTUNG IWS 1 (1-based)
-      type: input
-      encoding: int16nan
-    scale: 100 # 0.1 kW -> W
+  {{- include "stiebel-wpm-power" . }}
   {{- end }}
   {{ include "heatpumpswitch" . }}

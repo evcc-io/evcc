@@ -34,8 +34,8 @@ import (
 )
 
 // https://www.keba.com/en/emobility/service-support/downloads/Downloads
-// https://www.keba.com/download/x/dea7ae6b84/kecontactp30modbustcp_pgen.pdf
-// https://www.keba.com/download/x/4a24e19f80/kecontactp40modbustcp_pgen.pdf
+// https://www.keba.com/download/x/44932c2bc8/kecontactp30modbustcp_pgen.pdf
+// https://www.keba.com/download/x/e9c9ced3ac/kecontactp40modbustcp_pgen.pdf
 
 // Keba is an api.Charger implementation
 type Keba struct {

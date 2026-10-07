@@ -43,12 +43,13 @@ func TestReportDevices(t *testing.T) {
 	configs := []config.Named{
 		{Type: "template", Other: map[string]any{"template": "sungrow-hybrid", "usage": "pv", "host": "192.0.2.158"}},
 		{Type: "template", Other: map[string]any{"template": "sungrow-hybrid", "usage": "battery", "host": "192.0.2.158"}},
-		{Type: "template", Other: map[string]any{"template": "other", "uri": "http://OTHER.local:8080/api"}},
+		{Type: "template", Other: map[string]any{"template": "uri", "uri": "http://OTHER.local:8080/api"}},
+		{Type: "template", Other: map[string]any{"template": "cloud", "user": "someone"}},
 		{Type: "template", Other: map[string]any{"template": "other", "host": "192.0.2.77"}},
 		{Type: "custom", Other: map[string]any{"host": "192.0.2.1"}},
 	}
 
-	assert.Equal(t, []reportDevice{
+	assert.Equal(t, []ReportDevice{
 		{
 			Template:  "sungrow-hybrid",
 			Mac:       "AC199F",

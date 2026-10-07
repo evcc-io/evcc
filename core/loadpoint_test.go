@@ -1033,6 +1033,32 @@ func TestBatterySupport(t *testing.T) {
 	assert.False(t, lp.batterySupported(2*minPower, minPower, true, false), "import remains after scale down")
 }
 
+func TestBatteryStartEnableDelay(t *testing.T) {
+	grid.Voltage = 230
+	ctrl := gomock.NewController(t)
+	clck := clock.NewMock()
+
+	lp := &Loadpoint{
+		log:            util.NewLogger("foo"),
+		clock:          clck,
+		charger:        api.NewMockCharger(ctrl),
+		site:           &mockSite{},
+		minCurrent:     minA,
+		maxCurrent:     maxA,
+		phases:         3,
+		measuredPhases: 3,
+		Enable:         loadpoint.ThresholdConfig{Delay: time.Minute},
+		solarShare:     1,
+		status:         api.StatusB,
+	}
+
+	surplus := -2 * grid.CurrentToPower(minA, 3)
+
+	assert.Equal(t, 0.0, lp.pvMaxCurrent(surplus, 0, false, true), "enable delay pending")
+	clck.Add(time.Minute + time.Second)
+	assert.Equal(t, minA, lp.pvMaxCurrent(surplus, 0, false, true), "enable timer must not be reset by battery support")
+}
+
 // TestPVSolarSharePhases verifies that the derived switch points scale with the
 // phases charging actually runs on, not with the theoretical 1p minimum.
 func TestPVSolarSharePhases(t *testing.T) {

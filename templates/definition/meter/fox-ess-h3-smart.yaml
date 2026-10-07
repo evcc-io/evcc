@@ -14,6 +14,18 @@ params:
   - preset: battery-params
   - name: maxchargepower
     required: true
+  - name: maxdischargecurrent
+    required: true
+    description:
+      en: Max Discharge Current
+      de: Max Entladestrom
+    help:
+      en: Battery max discharge current in A, written back when leaving hold mode. Inverter default is 50 A for H3-Pro/Smart (26 A for H3).
+      de: Maximaler Batterieentladestrom in A, wird beim Verlassen des Haltemodus zurückgeschrieben. Werkseinstellung 50 A bei H3-Pro/Smart (26 A bei H3).
+  - name: minsoc
+    default: 10
+  - name: maxsoc
+    default: 100
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -164,6 +176,16 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
+            value: {{ .minsoc }} # written before Maximum SoC: the inverter rejects a
+            # Maximum SoC at or below the On-Grid reserve, which earlier versions raised in hold mode
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46611 # Minimum SoC On-Grid
+                type: writesingle
+                encoding: uint16
+          - source: const
             value: {{ .maxsoc }}
             set:
               source: modbus
@@ -173,12 +195,12 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: {{ .minsoc }}
+            value: {{ mul .maxdischargecurrent 10 }} # 0.1 A, restores the limit after hold
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 46611 # Minimum SoC On-Grid
+                address: 46608 # Battery max discharge current
                 type: writesingle
                 encoding: uint16
       - case: 2 # hold - stop battery discharge
@@ -189,8 +211,8 @@ render: |
             value: 0 # Disabled: keeping remote control enabled with a 0W active power
             # target (tried previously) makes the inverter curtail PV production
             # entirely instead of just holding the battery, confirmed on real
-            # hardware. Stay on plain Self Use and rely solely on the On-Grid SoC
-            # reserve below to block discharge; Work Mode is not locked against
+            # hardware. Stay on plain Self Use and rely solely on the discharge
+            # current limit below to block discharge; Work Mode is not locked against
             # external changes while holding, which is the accepted trade-off.
             set:
               source: modbus
@@ -209,12 +231,14 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 100 # blocks discharge regardless of current SoC
+            value: 0 # blocks discharge at any SoC. The On-Grid SoC reserve (46611) is
+            # a discharge floor instead: it must stay below Maximum SoC and the
+            # inverter charges from grid towards it
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 46611 # Minimum SoC On-Grid
+                address: 46608 # Battery max discharge current
                 type: writesingle
                 encoding: uint16
       - case: 3 # charge - force battery charge

@@ -1084,6 +1084,26 @@
     "restartDescription": "Cihazı kapatıp tekrar açmayı denedin mi?",
     "secondaryActions": "Hâlâ bir çözüm bulamadın mı? Burada birkaç seçenek daha var.."
   },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "doldu",
+        "returnEnergy": "boşaldı"
+      },
+      "grid": {
+        "energy": "alındı",
+        "returnEnergy": "satıldı"
+      }
+    },
+    "group": {
+      "battery": "Batarya",
+      "forecast": "Öngörü",
+      "grid": "Şebeke",
+      "loadpoint": "Doldurma ve Isıtma",
+      "meter": "Tüketim",
+      "pv": "Üretim"
+    }
+  },
   "issue": {
     "additional": {
       "description": "Sorunu hızlı bir şekilde yeniden oluşturmamıza yardımcı olacak yapılandırma ve günlükleri ekle. Mümkün olduğunca fazla bilgi paylaşmanı öneririz. Durum bilgisi genellikle gerekli değildir.",
@@ -1223,29 +1243,6 @@
     },
     "hemsWarning": {
       "title": "Harici sınır:"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "doldu",
-          "returnEnergy": "boşaldı"
-        },
-        "grid": {
-          "energy": "alındı",
-          "returnEnergy": "satıldı"
-        }
-      },
-      "empty": "Bu zaman aralığı için geçmiş verisi yok.",
-      "group": {
-        "battery": "Batarya",
-        "forecast": "Öngörü",
-        "grid": "Şebeke",
-        "loadpoint": "Doldurma ve Isıtma",
-        "meter": "Tüketim",
-        "pv": "Üretim"
-      },
-      "otherConsumers": "Diğerleri",
-      "title": "Geçmiş"
     },
     "loadpoint": {
       "avgPrice": "⌀ Fiyat",

@@ -33,7 +33,7 @@ jobs:
       platforms: ${{ steps.parse.outputs.platforms }}
     steps:
       - name: React to comment
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             await github.rest.reactions.createForIssueComment({
@@ -77,7 +77,7 @@ jobs:
       matrix:
         arch: ${{ fromJSON(needs.prep.outputs.archs) }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.prep.outputs.sha }}
           fetch-depth: 0
@@ -102,7 +102,7 @@ jobs:
           gzip -9 "evcc-linux-${{ matrix.arch }}"
 
       - name: Upload binary
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: evcc-pr-${{ github.event.issue.number }}-linux-${{ matrix.arch }}
           path: evcc-linux-${{ matrix.arch }}.gz
@@ -116,7 +116,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.prep.outputs.sha }}
           fetch-depth: 0
@@ -157,7 +157,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Comment result
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             const num = context.payload.issue.number;
@@ -195,7 +195,7 @@ jobs:
             }
 
       - name: Resolve command comment
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             // collapse the /build comment as resolved now that the build is done

@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -47,6 +48,22 @@ type API struct {
 	log            *util.Logger
 	brand          brand
 	user, password string
+	jar            sessionJar
+	loginMu        sync.Mutex    // serializes logins
+	loginGen       atomic.Uint64 // incremented on each successful login
+}
+
+// sessionJar lets login replace the session cookies while other vehicles use the client.
+type sessionJar struct {
+	atomic.Pointer[cookiejar.Jar]
+}
+
+func (j *sessionJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
+	j.Load().SetCookies(u, cookies)
+}
+
+func (j *sessionJar) Cookies(u *url.URL) []*http.Cookie {
+	return j.Load().Cookies(u)
 }
 
 // apiKey identifies a portal account. All vehicles of the same brand and user
@@ -87,8 +104,9 @@ func NewAPI(log *util.Logger, brandName, user, password string) (*API, error) {
 		user:     user,
 		password: password,
 	}
+	v.Client.Jar = &v.jar
 
-	if err := v.login(); err != nil {
+	if err := v.login(0); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
@@ -101,18 +119,26 @@ func NewAPI(log *util.Logger, brandName, user, password string) (*API, error) {
 // service. The portal relies on the session cookies that are set while the
 // browser follows the redirect chain back to RedirectURI, so the cookie jar is
 // kept on the client for all subsequent data calls.
-func (v *API) login() error {
+// Logins are skipped if another caller has logged in since gen was observed.
+func (v *API) login(gen uint64) error {
+	v.loginMu.Lock()
+	defer v.loginMu.Unlock()
+
+	if v.loginGen.Load() != gen {
+		return nil
+	}
+
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
 		return err
 	}
 
-	v.Client.Jar = jar
-	previousRedirect := v.Client.CheckRedirect
-	defer func() { v.Client.CheckRedirect = previousRedirect }()
+	// private client copy, data requests keep their jar and redirect policy until login succeeds
+	client := *v.Client
+	client.Jar = jar
 
 	identityHost := strings.TrimPrefix(vwidentity.BaseURL, "https://")
-	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		// Cookies from the redirect response are already stored in the jar.
 		if req.URL.Scheme != "https" || isUserPage(req.URL) || isMarketingConsentPage(req.URL) {
 			return http.ErrUseLastResponse
@@ -137,7 +163,7 @@ func (v *API) login() error {
 		"nonce":         {lo.RandomString(43, lo.LettersCharset)},
 	}
 
-	resp, err := v.Get(vwidentity.Config.AuthURL + "?" + q.Encode())
+	resp, err := client.Get(vwidentity.Config.AuthURL + "?" + q.Encode())
 	if err != nil {
 		return err
 	}
@@ -155,7 +181,7 @@ func (v *API) login() error {
 	}
 
 	uri := vwidentity.BaseURL + vars.Action
-	resp, err = v.PostForm(uri, url.Values{
+	resp, err = client.PostForm(uri, url.Values{
 		"_csrf":      {vars.Inputs["_csrf"]},
 		"relayState": {vars.Inputs["relayState"]},
 		"hmac":       {vars.Inputs["hmac"]},
@@ -177,7 +203,7 @@ func (v *API) login() error {
 	// password/authenticate step - the client follows the redirect chain back to
 	// the portal which sets the session cookie
 	uri = strings.ReplaceAll(uri, params.TemplateModel.IdentifierUrl, params.TemplateModel.PostAction)
-	resp, err = v.PostForm(uri, url.Values{
+	resp, err = client.PostForm(uri, url.Values{
 		"_csrf":      {params.CsrfToken},
 		"relayState": {params.TemplateModel.RelayState},
 		"hmac":       {params.TemplateModel.Hmac},
@@ -201,7 +227,7 @@ func (v *API) login() error {
 		if final.Scheme != "https" || !isLoginHost(final.Host, identityHost) || !validMarketingCallback(cb, identityHost) {
 			return errors.New("unexpected marketing consent callback URL")
 		}
-		resp, err = v.Get(cb.String())
+		resp, err = client.Get(cb.String())
 		if err != nil {
 			return err
 		}
@@ -225,6 +251,9 @@ func (v *API) login() error {
 	if !isUserPage(final) {
 		return errors.New("login did not complete: unexpected landing page")
 	}
+
+	v.jar.Store(jar)
+	v.loginGen.Add(1)
 
 	return nil
 }
@@ -275,6 +304,7 @@ func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
 		return nil, err
 	}
 
+	gen := v.loginGen.Load()
 	resp, err := v.Do(req)
 	if err != nil {
 		return nil, err
@@ -283,7 +313,7 @@ func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
 	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
 		resp.Body.Close()
 
-		if err := v.login(); err != nil {
+		if err := v.login(gen); err != nil {
 			return nil, fmt.Errorf("login failed: %w", err)
 		}
 
