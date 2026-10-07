@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Autorisatie gelukt",
     "buttonConnect": "Verbind met {provider}",
     "buttonDisconnect": "Verbinding verbreken",
+    "challenge": {
+      "captcha": {
+        "label": "Voer de tekens in zoals getoond in de afbeelding.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Plak de code of het adres van de pagina waarnaar je bent doorverwezen.",
+        "title": "Autorisatiecode"
+      },
+      "openLogin": "Open inlogpagina",
+      "submit": "Doorgaan"
+    },
     "confirmLogout": "Weet u zeker dat u de verbinding met {title} wilt verbreken?",
     "connect": "verbinding maken",
     "disconnect": "verbinding verbreken",
@@ -43,6 +55,12 @@
       "bufferTitle": "Batterij als laadbuffer",
       "discharge": "Blokkeer het ontladen van de thuisbatterij in snelle modus en bij gepland laden.",
       "gridDischarge": "Sta ontladen van de batterij naar het net toe.",
+      "gridDischargeConfirm": {
+        "country": "Geconfigureerd land: {country}.",
+        "description": "Afhankelijk van de reglementen van het land en de afspraken met je energieleverancier is het mogelijk om energie uit de accu terug te voeden naar het net, de geëxporteerde energie is niet langer puur zonne-energie. Onder veel omstandigheden is dit niet toegestaan. Controleer de reglementen van de netbeheerder en het contract met je energieleverancier.",
+        "noCountry": "Geen land geconfigureerd. Stel dit in onder {link}.",
+        "title": "Exporteren naar het net vanuit de accu"
+      },
       "priority": "Thuisbatterij heeft voorrang tot {soc} gehaald wordt. Na het behalen van het ingestelde percentage gaat het overschot naar de laadpunten.",
       "priorityNone": "Zon-overschot gaat rechtstreeks naar de laadpunten. Stel een waarde boven {soc} in om de thuisbatterij voorrang te geven.",
       "priorityTitle": "Waar gaat het overschot als eerst heen?"
@@ -143,6 +161,11 @@
         "sgready-relay": "Gebruikersgedefinieerde warmtepomp (sg-ready via relais)",
         "switchsocket": "Gebruikersgedefinieerd schakelbaar stopcontact"
       }
+    },
+    "circuit": {
+      "meterNone": "Geen meter",
+      "meterSelectionHelpNoMeter": "De som van alle laadpunten wordt gebruikt.",
+      "meterSelectionLabel": "Meterselectie"
     },
     "circuits": {
       "description": "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
@@ -888,6 +911,11 @@
       "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
     },
+    "site": {
+      "country": {
+        "label": "Land"
+      }
+    },
     "sponsor": {
       "addToken": "Token invoeren",
       "changeToken": "Token bewerken",
@@ -1193,6 +1221,7 @@
   },
   "general": {
     "back": "Terug",
+    "cancel": "Annuleren",
     "download": "Download",
     "error": "Fout",
     "none": "geen",
