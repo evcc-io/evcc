@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -207,4 +208,56 @@ func TestStaleResponse(t *testing.T) {
 			assert.Equal(t, tc.wantUnreached, outage(uri), "state follows the newer request")
 		})
 	}
+}
+
+// TestChangesLoggedInOrder verifies that a change queued while an earlier one is still
+// being logged is logged after it, without its caller waiting for the log write
+func TestChangesLoggedInOrder(t *testing.T) {
+	var (
+		mu     sync.Mutex
+		logged []int
+	)
+	record := func(i int) {
+		mu.Lock()
+		defer mu.Unlock()
+		logged = append(logged, i)
+	}
+
+	started := make(chan struct{})
+	release := make(chan struct{})
+
+	outageMu.Lock()
+	changes = append(changes, func() {
+		unlocked := outageMu.TryLock()
+		if unlocked {
+			outageMu.Unlock()
+		}
+		assert.True(t, unlocked, "lock must not be held while logging")
+
+		close(started)
+		if unlocked {
+			<-release
+		}
+		record(1)
+	})
+	outageMu.Unlock()
+
+	done := make(chan struct{})
+	go func() {
+		logChanges()
+		close(done)
+	}()
+	<-started
+
+	outageMu.Lock()
+	changes = append(changes, func() { record(2) })
+	outageMu.Unlock()
+
+	// returns while the first change is still being logged
+	logChanges()
+
+	close(release)
+	<-done
+
+	assert.Equal(t, []int{1, 2}, logged)
 }

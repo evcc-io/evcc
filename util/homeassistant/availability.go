@@ -27,6 +27,10 @@ type availability struct {
 var (
 	outageMu sync.Mutex
 	outages  = make(map[string]*availability)
+
+	// availability changes in the order they happened, logged by one goroutine at a time
+	changes  []func()
+	draining bool
 )
 
 // isUnreachable reports whether err indicates that the instance could not be reached
@@ -107,39 +111,59 @@ func updateAvailability(uri string, seq uint64, unreachable bool, err error) {
 		cause = ue.Err
 	}
 
-	if !setAvailability(uri, seq, unreachable, cause) {
-		return
-	}
-
-	// logged outside the lock since writing a log line may block
-	if unreachable {
-		log.ERROR.Printf("Home Assistant unavailable at %s: %v", uri, cause)
-	} else {
-		log.INFO.Printf("Home Assistant available again at %s", uri)
-	}
+	setAvailability(uri, seq, unreachable, cause)
+	logChanges()
 }
 
-// setAvailability updates the instance state and reports whether its availability changed
-func setAvailability(uri string, seq uint64, unreachable bool, cause error) bool {
+// setAvailability updates the instance state and queues a log line if its availability changed
+func setAvailability(uri string, seq uint64, unreachable bool, cause error) {
 	outageMu.Lock()
 	defer outageMu.Unlock()
 
 	// a slow response must not override the state set by a request sent later
 	a := outages[uri]
 	if seq < a.applied {
-		return false
+		return
 	}
 	a.applied = seq
 
 	if !unreachable {
-		changed := a.err != nil
-		a.err = nil
-		return changed
+		if a.err != nil {
+			a.err = nil
+			changes = append(changes, func() { log.INFO.Printf("Home Assistant available again at %s", uri) })
+		}
+		return
 	}
 
-	changed := a.err == nil
+	if a.err == nil {
+		changes = append(changes, func() { log.ERROR.Printf("Home Assistant unavailable at %s: %v", uri, cause) })
+	}
+
 	a.err = fmt.Errorf("%s unavailable: %w", uri, cause)
 	a.retry = time.Now().Add(retryDelay)
+}
 
-	return changed
+// logChanges logs queued availability changes in order. The lock is released while
+// logging since writing a log line may block. While another goroutine is logging,
+// callers return immediately and their changes are logged by that goroutine.
+func logChanges() {
+	outageMu.Lock()
+	defer outageMu.Unlock()
+
+	if draining {
+		return
+	}
+	draining = true
+
+	for len(changes) > 0 {
+		next := changes[0]
+		changes = changes[1:]
+
+		outageMu.Unlock()
+		next()
+		outageMu.Lock()
+	}
+
+	changes = nil
+	draining = false
 }
