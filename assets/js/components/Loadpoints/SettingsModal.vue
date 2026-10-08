@@ -360,7 +360,11 @@ export default defineComponent({
 			return this.loadpoint?.phasesNow ?? 0;
 		},
 		phasePresetOptions() {
-			// 0 = no preset, only fixed presets make sense per mode
+			// 0 = no preset, only fixed presets make sense per mode.
+			// a single-phase connection cannot offer 3 phases.
+			if (this.loadpoint?.chargerSinglePhase) {
+				return [0, 1];
+			}
 			return [0, 1, 3];
 		},
 		phasesOptions() {

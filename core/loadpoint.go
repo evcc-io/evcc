@@ -795,6 +795,12 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.PhasesConfigured, lp.phasesConfigured)
 	lp.publish(keys.PhasesSmart, lp.phasesSmart)
 	lp.publish(keys.PhasesNow, lp.phasesNow)
+
+	// apply the active mode's phase preset (SetMode is not called on startup)
+	if preset := lp.effectiveModePhasePreset(lp.mode); preset != 0 {
+		lp.log.DEBUG.Printf("apply %s phase preset: %dp", string(lp.mode), preset)
+		lp.setPhasesConfigured(preset)
+	}
 	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
 	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())

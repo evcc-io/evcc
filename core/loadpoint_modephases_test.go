@@ -137,6 +137,54 @@ done:
 	ctrl.Finish()
 }
 
+// onePhaseSwitchCharger is a phase-switching charger on a single-phase connection.
+type onePhaseSwitchCharger struct {
+	*api.MockCharger
+	*api.MockPhaseSwitcher
+}
+
+// Phases implements api.PhaseDescriber.
+func (c *onePhaseSwitchCharger) Phases() int {
+	return 1
+}
+
+// TestModePhasePresetStartupApply asserts that the active mode's preset is
+// applied on startup (Prepare), where SetMode is never called.
+func TestModePhasePresetStartupApply(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	store := settings.NewMemorySettings()
+	seed := newModePresetLoadpoint(t, store, modePresetCharger(ctrl))
+	seed.SetMode(api.ModeSmart)
+	require.NoError(t, seed.SetPhasesSmart(1))
+
+	restored := newModePresetLoadpoint(t, store, modePresetCharger(ctrl))
+	require.Equal(t, api.ModeSmart, restored.GetMode())
+	require.Equal(t, 1, restored.GetPhasesConfigured())
+
+	ctrl.Finish()
+}
+
+// TestModePhasePresetCappedAtPhysical asserts that a stale preset exceeding
+// the charger's physically connected phases is ignored on mode switch.
+func TestModePhasePresetCappedAtPhysical(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	plainCharger := api.NewMockCharger(ctrl)
+	plainCharger.EXPECT().Enabled().Return(false, nil).AnyTimes()
+	charger := &onePhaseSwitchCharger{plainCharger, api.NewMockPhaseSwitcher(ctrl)}
+
+	store := settings.NewMemorySettings()
+	lp := newModePresetLoadpoint(t, store, charger)
+
+	// simulate stale preset from before a charger swap
+	lp.phasesSmart = 3
+
+	lp.SetMode(api.ModeSmart)
+	require.Equal(t, 1, lp.GetPhasesConfigured())
+
+	ctrl.Finish()
+}
+
 // TestModePhasePresetRestore asserts that presets survive a restart via settings.
 func TestModePhasePresetRestore(t *testing.T) {
 	ctrl := gomock.NewController(t)

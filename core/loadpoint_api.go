@@ -195,7 +195,7 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 		// apply mode phase preset (if any) for chargers with phase switching.
 		// the actual switch happens in the control loop via scalePhasesRequired,
 		// keeping phase timers and load management intact
-		if preset := lp.modePhasePreset(mode); preset != 0 && lp.hasPhaseSwitching() {
+		if preset := lp.effectiveModePhasePreset(mode); preset != 0 {
 			lp.log.DEBUG.Printf("apply %s phase preset: %dp", string(mode), preset)
 			lp.setPhasesConfigured(preset)
 		}
@@ -449,6 +449,23 @@ func (lp *Loadpoint) modePhasePreset(mode api.ChargeMode) int {
 	default:
 		return 0
 	}
+}
+
+// effectiveModePhasePreset returns the applicable phase preset for the given
+// charge mode (0 = none). Presets exceeding the charger's physically connected
+// phases (e.g. after a charger swap) are ignored.
+func (lp *Loadpoint) effectiveModePhasePreset(mode api.ChargeMode) int {
+	preset := lp.modePhasePreset(mode)
+	if preset == 0 || !lp.hasPhaseSwitching() {
+		return 0
+	}
+
+	if physical := lp.getChargerPhysicalPhases(); physical != 0 && preset > physical {
+		lp.log.WARN.Printf("ignoring %s phase preset %dp, charger physically connected with %dp", string(mode), preset, physical)
+		return 0
+	}
+
+	return preset
 }
 
 // GetLimitSoc returns the session limit soc
