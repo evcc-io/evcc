@@ -31,6 +31,8 @@ const (
 
 	PhasesConfigured = "phasesConfigured" // desired phase mode (0/1/3, 0 = automatic), user selection
 	PhasesActive     = "phasesActive"     // expectedly active phases, taking vehicle into account (1/2/3)
+	PhasesSmart      = "phasesSmart"      // phase preset applied on switching to smart mode (0/1/3, 0 = no preset)
+	PhasesNow        = "phasesNow"        // phase preset applied on switching to now mode (0/1/3, 0 = no preset)
 
 	ChargerIcon         = "chargerIcon"         // charger icon for ui
 	ChargerFeature      = "chargerFeature"      // charger feature

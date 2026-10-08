@@ -1639,6 +1639,15 @@
         "phases_3": "3-phasig",
         "phases_3_hint": "({min} bis {max})"
       },
+      "phasePreset": {
+        "label": "Phasen-Vorgabe pro Modus",
+        "description": "Phasen beim Wechsel des Lademodus erzwingen. Der Wechsel selbst behält die üblichen Verzögerungen.",
+        "smart": "Smart",
+        "now": "Schnell (now)",
+        "preset_0": "keine Vorgabe",
+        "preset_1": "immer 1-phasig",
+        "preset_3": "immer 3-phasig"
+      },
       "smartCostCheap": "günstige Netzladung",
       "smartCostClean": "Grünes Netzladen",
       "solar": "Solarüberschuss",

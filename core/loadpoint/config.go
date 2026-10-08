@@ -22,6 +22,8 @@ type DynamicConfig struct {
 	AlwaysCharge             string    `json:"alwaysCharge"`
 	Priority                 int       `json:"priority"`
 	PhasesConfigured         int       `json:"phasesConfigured"`
+	PhasesSmart              int       `json:"phasesSmart"`
+	PhasesNow                int       `json:"phasesNow"`
 	MinCurrent               float64   `json:"minCurrent"`
 	MaxCurrent               float64   `json:"maxCurrent"`
 	SmartCostLimit           *float64  `json:"smartCostLimit"`
@@ -100,6 +102,14 @@ func (payload DynamicConfig) Apply(lp API) error {
 
 	if err == nil {
 		err = lp.SetPhasesConfigured(payload.PhasesConfigured)
+	}
+
+	if err == nil {
+		err = lp.SetPhasesSmart(payload.PhasesSmart)
+	}
+
+	if err == nil {
+		err = lp.SetPhasesNow(payload.PhasesNow)
 	}
 
 	if err == nil {

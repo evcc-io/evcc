@@ -119,6 +119,8 @@ type Loadpoint struct {
 	minCurrent               float64  // PV mode: start current	Min+PV mode: min current
 	maxCurrent               float64  // Max allowed current. Physically ensured by the charger
 	phasesConfigured         int      // Charger configured phase mode 0/1/3
+	phasesSmart              int      // Phase preset applied on switching to smart mode 0/1/3 (0 = no preset)
+	phasesNow                int      // Phase preset applied on switching to now mode 0/1/3 (0 = no preset)
 	limitSoc                 int      // Session limit for soc
 	limitEnergy              float64  // Session limit for energy
 	minSoc                   int      // Forced charging below this soc (heating: temperature), 0=disabled
@@ -388,6 +390,12 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
 		lp.setPhasesConfigured(int(v))
+	}
+	if v, err := lp.settings.Int(keys.PhasesSmart); err == nil {
+		lp.setPhasesSmart(int(v))
+	}
+	if v, err := lp.settings.Int(keys.PhasesNow); err == nil {
+		lp.setPhasesNow(int(v))
 	}
 	if v, err := lp.settings.Float(keys.MinCurrent); err == nil && v > 0 {
 		lp.setMinCurrent(v)

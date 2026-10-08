@@ -94,6 +94,14 @@ type API interface {
 	GetPhasesConfigured() int
 	// SetPhasesConfigured sets the configured phases
 	SetPhasesConfigured(int) error
+	// GetPhasesSmart returns the smart-mode phase preset (0 = no preset)
+	GetPhasesSmart() int
+	// SetPhasesSmart sets the smart-mode phase preset (0/1/3, 0 = no preset)
+	SetPhasesSmart(int) error
+	// GetPhasesNow returns the now-mode phase preset (0 = no preset)
+	GetPhasesNow() int
+	// SetPhasesNow sets the now-mode phase preset (0/1/3, 0 = no preset)
+	SetPhasesNow(int) error
 	// ActivePhases returns the active phases for the current vehicle
 	ActivePhases() int
 
