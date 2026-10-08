@@ -434,7 +434,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	solar := currentRates(solarTariff)
 
 	grid := currentRates(site.GetTariff(api.TariffUsageGrid))
-	feedIn := currentRates(site.GetTariff(api.TariffUsageFeedIn))
+	feedIn := feedInRates(site.GetTariff(api.TariffUsageFeedIn), grid)
 
 	minLen := lo.Min([]int{len(grid), len(feedIn)})
 	// exclude empty solar forecast from minLen
@@ -1212,6 +1212,17 @@ func currentRates(tariff api.Tariff) api.Rates {
 	now := time.Now()
 	return lo.Filter(rates, func(slot api.Rate, _ int) bool {
 		return slot.End.After(now)
+	})
+}
+
+// feedInRates returns the feed-in rates, or zero-priced grid slots without feed-in tariff
+func feedInRates(tariff api.Tariff, grid api.Rates) api.Rates {
+	if tariff != nil {
+		return currentRates(tariff)
+	}
+
+	return lo.Map(grid, func(slot api.Rate, _ int) api.Rate {
+		return api.Rate{Start: slot.Start, End: slot.End}
 	})
 }
 
