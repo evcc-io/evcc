@@ -26,15 +26,15 @@ params:
     advanced: true
     default: false
     description:
-      de: Sigen Energie Gateway installiert
-      en: Sigen Energy gateway installed
+      de: Sigen Energy Gateway installiert
+      en: Sigen Energy Gateway installed
     help:
       de: |
         Nutzt bei aktiver Entladesperre das Register "Backup SoC" (40046) statt "Discharge Cut-Off SoC" (40048).
-        Dadurch bleibt die Hausversorgung bei einem Netzausfall erhalten. Erfordert ein installiertes optionales Backup-Gateway.
+        Dadurch bleibt die Hausversorgung bei einem Netzausfall erhalten.
       en: |
         Uses the "Backup SoC" register (40046) instead of "Discharge Cut-Off SoC" (40048) to block discharge.
-        This keeps the house powered during a grid outage. Requires an installed optional backup gateway.
+        This keeps the house powered during a grid outage.
   - preset: battery-params
 render: |
   type: custom
