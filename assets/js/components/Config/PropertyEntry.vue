@@ -45,7 +45,7 @@ export default {
 		Description: String,
 		Help: String,
 		Example: String,
-		Default: [String, Number],
+		Default: [String, Number, Boolean],
 		Type: String,
 		Unit: String,
 		Mask: Boolean,

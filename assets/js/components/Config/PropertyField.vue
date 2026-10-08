@@ -186,7 +186,7 @@ export default {
 		property: String,
 		masked: Boolean,
 		placeholder: String,
-		defaultValue: [String, Number],
+		defaultValue: [String, Number, Boolean],
 		type: String,
 		unit: String,
 		// transitional: emit ns numbers, remove once all callers accept duration strings (loadpoint follow-up)
