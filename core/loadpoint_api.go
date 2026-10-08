@@ -451,6 +451,26 @@ func (lp *Loadpoint) modePhasePreset(mode api.ChargeMode) int {
 	}
 }
 
+// enforcePhasePreset applies the governing mode phase preset for the current
+// charging decision (no mutex, call without lock). Fast-equivalent charging
+// inside smart mode (planner, minSoc, cheap smart cost) is treated like now
+// mode. The actual switch happens in the control loop via scalePhasesRequired,
+// keeping phase timers and load management intact.
+func (lp *Loadpoint) enforcePhasePreset(mode api.ChargeMode, minSocNotReached, plannerActive, smartCostActive bool) {
+	preset := 0
+	switch {
+	case mode == api.ModeNow || minSocNotReached || plannerActive || smartCostActive:
+		preset = lp.effectiveModePhasePreset(api.ModeNow)
+	case mode == api.ModeSmart:
+		preset = lp.effectiveModePhasePreset(api.ModeSmart)
+	}
+
+	if preset != 0 && preset != lp.GetPhasesConfigured() {
+		lp.log.DEBUG.Printf("apply governing %s phase preset: %dp", string(mode), preset)
+		lp.setPhasesConfigured(preset)
+	}
+}
+
 // effectiveModePhasePreset returns the applicable phase preset for the given
 // charge mode (0 = none). Presets exceeding the charger's physically connected
 // phases (e.g. after a charger swap) are ignored.

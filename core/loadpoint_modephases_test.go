@@ -137,6 +137,39 @@ done:
 	ctrl.Finish()
 }
 
+// TestEnforcePhasePreset asserts that the governing preset follows the
+// charging decision: fast-equivalent charging inside smart mode (planner,
+// minSoc, cheap smart cost) uses the now preset, pure surplus following
+// uses the smart preset.
+func TestEnforcePhasePreset(t *testing.T) {
+	for _, tc := range []struct {
+		mode                                             api.ChargeMode
+		minSocNotReached, plannerActive, smartCostActive bool
+		expected                                         int
+	}{
+		{api.ModeSmart, false, false, false, 1}, // pure surplus following
+		{api.ModeSmart, false, true, false, 3},  // planner active
+		{api.ModeSmart, true, false, false, 3},  // minSoc not reached
+		{api.ModeSmart, false, false, true, 3},  // cheap smart cost
+		{api.ModeNow, false, false, false, 3},   // now mode
+		{api.ModeOff, false, false, false, 0},   // off keeps configured phases
+	} {
+		t.Run(string(tc.mode), func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := settings.NewMemorySettings()
+			lp := newModePresetLoadpoint(t, store, modePresetCharger(ctrl))
+			require.NoError(t, lp.SetPhasesSmart(1))
+			require.NoError(t, lp.SetPhasesNow(3))
+
+			lp.enforcePhasePreset(tc.mode, tc.minSocNotReached, tc.plannerActive, tc.smartCostActive)
+			require.Equal(t, tc.expected, lp.GetPhasesConfigured())
+
+			ctrl.Finish()
+		})
+	}
+}
+
 // onePhaseSwitchCharger is a phase-switching charger on a single-phase connection.
 type onePhaseSwitchCharger struct {
 	*api.MockCharger

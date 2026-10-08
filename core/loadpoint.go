@@ -2467,6 +2467,11 @@ NO_DIM:
 	minSocNotReached := lp.minSocNotReached()
 	lp.publish(keys.MinSocNotReached, minSocNotReached)
 
+	// enforce the governing mode phase preset: fast-equivalent charging
+	// (now mode, planner, minSoc, cheap smart cost) uses the now preset,
+	// pure surplus following uses the smart preset
+	lp.enforcePhasePreset(mode, minSocNotReached, plannerActive, smartCostActive)
+
 	// execute loading strategy
 	switch {
 	case !lp.connected():
