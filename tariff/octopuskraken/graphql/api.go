@@ -31,8 +31,6 @@ type Client struct {
 // NewClient returns a new, authenticated instance for the given Kraken instance
 // (other regional Octopus companies run the same platform under their own baseURI).
 func NewClient(log *util.Logger, baseURI, email, password, accountNumber string) (*Client, error) {
-	log.Redact(email, password)
-
 	ts := oauth2.ReuseTokenSource(nil, oauth.Redacted(log, &tokenSource{
 		log:      log,
 		baseURI:  baseURI,
