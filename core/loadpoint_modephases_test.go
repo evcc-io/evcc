@@ -4,7 +4,9 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/settings"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -97,6 +99,40 @@ func TestModePhasePresetIgnoredWithoutSwitching(t *testing.T) {
 
 	lp.SetMode(api.ModeNow)
 	require.Equal(t, 0, lp.GetPhasesConfigured())
+
+	ctrl.Finish()
+}
+
+// TestModePhasePresetPublished asserts that the presets are part of the
+// published loadpoint state (required by the openapi State schema),
+// even on a fresh start without stored settings.
+func TestModePhasePresetPublished(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	uiChan := make(chan util.Param, 256)
+	pushChan := make(chan messenger.Event, 8)
+	lpChan := make(chan *Loadpoint, 8)
+
+	store := settings.NewMemorySettings()
+	lp := NewLoadpoint(util.NewLogger("foo"), store)
+	lp.charger = modePresetCharger(ctrl)
+	lp.Prepare(new(Site), uiChan, pushChan, lpChan)
+
+	published := make(map[string]any)
+	for {
+		select {
+		case p := <-uiChan:
+			published[p.Key] = p.Val
+		default:
+			goto done
+		}
+	}
+done:
+
+	require.Contains(t, published, keys.PhasesSmart)
+	require.Contains(t, published, keys.PhasesNow)
+	require.Equal(t, 0, published[keys.PhasesSmart])
+	require.Equal(t, 0, published[keys.PhasesNow])
 
 	ctrl.Finish()
 }

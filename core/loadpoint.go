@@ -793,6 +793,8 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	}
 
 	lp.publish(keys.PhasesConfigured, lp.phasesConfigured)
+	lp.publish(keys.PhasesSmart, lp.phasesSmart)
+	lp.publish(keys.PhasesNow, lp.phasesNow)
 	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
 	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
