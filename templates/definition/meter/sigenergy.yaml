@@ -20,7 +20,6 @@ params:
   - name: modbus
     choice: ["tcpip"]
   - name: maxacpower
-  - preset: battery-params
   - name: gateway
     type: bool
     usages: ["battery"]
@@ -36,6 +35,7 @@ params:
       en: |
         Uses the "Backup SoC" register (40046) instead of "Discharge Cut-Off SoC" (40048) to block discharge.
         This keeps the house powered during a grid outage. Requires an installed optional backup gateway.
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
