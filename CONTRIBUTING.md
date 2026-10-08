@@ -29,6 +29,12 @@ Otherwise you can use the evcc binary and point it to your new template file for
 evcc --template-type charger --template new-charger-template.yaml
 ```
 
+If you already have evcc running, you have to stop it first. Also, you have to ignore the database setting.
+
+```sh
+evcc --template-type charger --template new-charger-template.yaml --ignore-db
+```
+
 Besides the actual device configuration, templates contain meta-data like product name, manufacturer, instructions how to configure the device to work with evcc.
 On release, this data is extracted and pushed to the [`evcc-io/docs`](https://github.com/evcc-io/docs) repository to keep the documentation in sync. You can verify the generated meta-data by running:
 
