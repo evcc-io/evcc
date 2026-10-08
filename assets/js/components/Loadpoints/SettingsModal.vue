@@ -156,14 +156,10 @@
 				</label>
 				<div class="col-sm-8 pe-0">
 					<p class="mt-0 mb-2">
-						<small>
-							{{ $t("main.loadpointSettings.phasePreset.description") }}</small
-						>
+						<small> {{ $t("main.loadpointSettings.phasePreset.description") }}</small>
 					</p>
 					<div class="mb-2">
-						<strong>{{
-							$t("main.loadpointSettings.phasePreset.smart")
-						}}</strong>
+						<strong>{{ $t("main.loadpointSettings.phasePreset.smart") }}</strong>
 						<div
 							v-for="phases in phasePresetOptions"
 							:key="`smart_${phases}`"
@@ -182,11 +178,7 @@
 								class="form-check-label"
 								:for="formId(`phasepreset_smart_${phases}`)"
 							>
-								{{
-									$t(
-										`main.loadpointSettings.phasePreset.preset_${phases}`
-									)
-								}}
+								{{ $t(`main.loadpointSettings.phasePreset.preset_${phases}`) }}
 							</label>
 						</div>
 					</div>
@@ -210,11 +202,7 @@
 								class="form-check-label"
 								:for="formId(`phasepreset_now_${phases}`)"
 							>
-								{{
-									$t(
-										`main.loadpointSettings.phasePreset.preset_${phases}`
-									)
-								}}
+								{{ $t(`main.loadpointSettings.phasePreset.preset_${phases}`) }}
 							</label>
 						</div>
 					</div>

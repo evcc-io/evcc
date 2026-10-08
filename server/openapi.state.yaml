@@ -954,6 +954,12 @@ components:
         phasesConfigured:
           description: Configured phase mode. 0 is automatic switching, 1 and 3 select a fixed phase count.
           type: number
+        phasesSmart:
+          description: Smart-mode phase preset. 0 is no preset, 1 and 3 force phases on switching to smart mode.
+          type: number
+        phasesNow:
+          description: Now-mode phase preset. 0 is no preset, 1 and 3 force phases on switching to now mode.
+          type: number
         plan:
           description: Time slots of the current charging plan.
           type: array
@@ -1147,6 +1153,8 @@ components:
         - phaseRemaining
         - phasesActive
         - phasesConfigured
+        - phasesSmart
+        - phasesNow
         - plan
         - planActive
         - planEnergy
