@@ -21,14 +21,14 @@ params:
     choice: ["tcpip"]
   - name: maxacpower
   - preset: battery-params
-  - name: backupgateway
+  - name: gateway
     type: bool
     usages: ["battery"]
     advanced: true
     default: false
     description:
-      de: Backup-Gateway installiert
-      en: Backup gateway installed
+      de: Sigen Energie Gateway installiert
+      en: Sigen Energy gateway installed
     help:
       de: |
         Nutzt bei aktiver Entladesperre das Register "Backup SoC" (40046) statt "Discharge Cut-Off SoC" (40048).
@@ -129,7 +129,7 @@ render: |
       {{- include "modbus-connection" . | indent 4 }}
       id: 247
       register:
-        {{- if .backupgateway }}
+        {{- if .gateway }}
         address: 40046 # Backup SoC
         {{- else }}
         address: 40048 # Discharge Cut-Off SoC
