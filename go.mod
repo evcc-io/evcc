@@ -33,6 +33,7 @@ require (
 	github.com/enbility/eebus-go v0.7.1-0.20260720111250-363db3c5c262
 	github.com/enbility/ship-go v0.6.1-0.20260720110450-0aa90f64ac76
 	github.com/enbility/spine-go v0.7.1-0.20260629113257-b3bcc643f323
+	github.com/evanphx/json-patch/v5 v5.9.11
 	github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4
 	github.com/evcc-io/optimizer v0.0.0-20261004131720-6ba24fca01f5
 	github.com/evcc-io/rct v0.2.0

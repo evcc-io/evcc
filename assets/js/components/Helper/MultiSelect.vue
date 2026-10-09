@@ -8,6 +8,7 @@
 			aria-expanded="false"
 			data-bs-auto-close="outside"
 			tabindex="0"
+			:disabled="disabled"
 		>
 			<slot></slot>
 		</button>
@@ -43,6 +44,7 @@
 							type="checkbox"
 							:value="option.value"
 							tabindex="0"
+							:disabled="option.disabled"
 						/>
 						<div class="form-check-label">
 							{{ option.name }}
@@ -64,15 +66,16 @@ export default defineComponent({
 	name: "MultiSelect",
 	props: {
 		id: String,
-		value: { type: Array as PropType<string[] | number[]>, default: () => [] },
+		modelValue: { type: Array as PropType<string[] | number[]>, default: () => [] },
 		options: { type: Array as PropType<SelectOption<string | number>[]>, default: () => [] },
 		selectAllLabel: String,
 		isTopLevel: Boolean,
+		disabled: Boolean,
 	},
 	emits: ["open", "update:modelValue"],
 	data() {
 		return {
-			internalValue: [...this.value],
+			internalValue: [...this.modelValue],
 		};
 	},
 	computed: {
@@ -84,9 +87,13 @@ export default defineComponent({
 		},
 	},
 	watch: {
+		modelValue(newValue) {
+			if (deepEqual(newValue, this.internalValue)) return;
+			this.internalValue = [...newValue];
+		},
 		options: {
 			immediate: true,
-			handler(newOptions: SelectOption<string>[]) {
+			handler(newOptions: SelectOption<string | number>[]) {
 				this.internalValue = this.internalValue.filter((value) =>
 					newOptions.some((option) => option.value === value)
 				);

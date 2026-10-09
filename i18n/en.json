@@ -182,7 +182,13 @@
       "meterLabelAdd": "Add Circuit Meter",
       "meterLabelEdit": "Edit Circuit Meter",
       "deleteChildrenFirst": "To delete this circuit, first delete its child circuits.",
-      "meterLabel": "Energy meter"
+      "meterLabel": "Energy meter",
+      "loadpointLabel": "Assigned loadpoints",
+      "noLoadpointsAssigned": "No loadpoints assigned",
+      "loadpointHelp": "Select the loadpoints for this circuit. Only unassigned loadpoints created through the configuration UI can be selected.",
+      "yamlLoadpoints": "These loadpoints are defined in the configuration file and can only be assigned to a circuit there:",
+      "assignedLoadpoints": "These loadpoints are already assigned to another circuit:",
+      "noLoadpointsAssignable": "No loadpoints assignable"
     },
     "circuits": {
       "addSubCircuit": "Add sub-circuit",

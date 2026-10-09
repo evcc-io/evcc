@@ -28,6 +28,7 @@
 				<a v-if="link" class="text-gray" :href="link" target="_blank">
 					{{ $t("config.general.docsLink") }}
 				</a>
+				<slot name="additional-help"></slot>
 			</div>
 			<div v-if="danger" class="alert alert-danger my-2" role="alert">
 				<strong>{{ $t("config.form.danger") }}:</strong> {{ danger }}
