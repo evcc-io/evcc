@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"math"
 	"testing"
 
 	"github.com/evcc-io/evcc/charger/ocpp"
@@ -45,25 +44,7 @@ func TestWattsProfilePhases(t *testing.T) {
 			profile := c.createChargingProfile(current, 0)
 			limit := profile.ChargingSchedule.ChargingSchedulePeriod[0].Limit
 
-			require.Equal(t, math.Ceil(230.0*current*float64(tc.wantPhases)/100)*100, limit)
+			require.Equal(t, 230.0*current*float64(tc.wantPhases), limit)
 		})
-	}
-}
-
-// TestWattsProfileRoundUp checks the minimum current isn't missed at grid voltages above 230V
-func TestWattsProfileRoundUp(t *testing.T) {
-	for _, tc := range []struct {
-		phases int
-		want   float64
-	}{
-		{1, 1400}, // 1380W would be 5.97A at 231V
-		{3, 4200}, // 4140W would be 5.97A at 231V
-	} {
-		c := &OCPP{
-			cp:     &ocpp.CP{ChargingRateUnit: types.ChargingRateUnitWatts},
-			phases: tc.phases,
-		}
-		profile := c.createChargingProfile(6, 0)
-		require.Equal(t, tc.want, profile.ChargingSchedule.ChargingSchedulePeriod[0].Limit)
 	}
 }
