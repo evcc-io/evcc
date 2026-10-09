@@ -474,9 +474,15 @@ func (c *OCPP) MaxCurrentMillis(current float64) error {
 func (c *OCPP) phases1p3p(phases int) error {
 	c.phases = phases
 
-	enabled, err := c.Enabled()
-	if err != nil {
-		return err
+	// the cached intent survives the charger's own pause: Enabled() reports
+	// SuspendedEVSE as disabled, which would write a 0A profile and never
+	// record the switch. Status only decides when no Enable has been issued yet.
+	enabled := c.enabled
+	if !enabled {
+		var err error
+		if enabled, err = c.Enabled(); err != nil {
+			return err
+		}
 	}
 
 	var current float64
@@ -484,7 +490,7 @@ func (c *OCPP) phases1p3p(phases int) error {
 		current = c.current
 	}
 
-	err = c.setCurrent(current)
+	err := c.setCurrent(current)
 	if err == nil && enabled {
 		c.phasesSwitched = time.Now()
 	}
