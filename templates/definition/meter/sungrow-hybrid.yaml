@@ -98,11 +98,14 @@ render: |
     scale: 0.1
   maxacpower: {{ .maxacpower }} # W
   # EEG §9 curtailment via the power limitation registers
-  #   13086 (doc 13087) power limitation switch, 0xAA enable / 0x55 disable
-  #   13087 (doc 13088) power limitation value, 0.1 % of nominal power => Does not work on SHX.0RS, use 13073 (doc 13074) instead, which is in W resolution
+  #   13086 (doc 13087) feed-in limitation switch, 0xAA enable / 0x55 disable
+  #   13073 (doc 13074) feed-in limitation value, W
+  # The 0.1 % ratio register 13087 (doc 13088) is missing on older firmware (e.g. SH4.0RS).
   curtail:
     source: sequence
     set:
+      # Order matters: switch must be set BEFORE the value (see sungrow-inverter).
+      # A failed value write surfaces as error and is retried on next curtail.
       - source: go
         script: |
           ena := 170 // 0xAA - enable limitation
