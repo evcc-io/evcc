@@ -109,24 +109,14 @@
 					<template #additional-help>
 						<div v-if="assignedLoadpoints.length" class="text-gray hyphenate">
 							{{ $t("config.circuit.assignedLoadpoints") }}
-							<code
-								v-for="lp in assignedLoadpoints"
-								:key="lp.name"
-								class="ms-1 loadpoint"
-							>
-								{{ lp.title }}
-								<span v-if="lp.name" class="ms-1">({{ lp.name }})</span>
+							<code class="ms-1">
+								{{ assignedLoadpoints }}
 							</code>
 						</div>
 						<div v-if="yamlLoadpoints.length" class="text-gray hyphenate">
 							{{ $t("config.circuit.yamlLoadpoints") }}
-							<code
-								v-for="lp in yamlLoadpoints"
-								:key="lp.name"
-								class="ms-1 loadpoint"
-							>
-								{{ lp.title
-								}}<span v-if="lp.name" class="ms-1">({{ lp.name }})</span>
+							<code class="ms-1">
+								{{ yamlLoadpoints }}
 							</code>
 						</div>
 					</template>
@@ -281,12 +271,14 @@ export default defineComponent({
 			);
 		},
 		assignedLoadpoints() {
-			return this.loadpoints.filter(
+			const lps = this.loadpoints.filter(
 				(l) => l.id && l.circuit && l.circuit !== `db:${this.id}`
 			);
+			return this.formatLoadpoints(lps);
 		},
 		yamlLoadpoints() {
-			return this.loadpoints.filter((l) => !l.id);
+			const lps = this.loadpoints.filter((l) => !l.id);
+			return this.formatLoadpoints(lps);
 		},
 	},
 	watch: {
@@ -365,6 +357,13 @@ export default defineComponent({
 		initialAssignedLoadpoints() {
 			return this.availableLoadpoints.map((l) => l.id) as number[];
 		},
+		formatLoadpoints(loadpoints: ConfigLoadpoint[]) {
+			const labels = loadpoints.map(({ title, name }) =>
+				name ? `${title} (${name})` : title
+			);
+
+			return new Intl.ListFormat(this.$i18n?.locale).format(labels);
+		},
 		async patchAssignedLoadpoints(circuitDeleted?: boolean) {
 			const initial = this.initialAssignedLoadpoints();
 			const current = circuitDeleted ? [] : this.selectedLoadpointIds;
@@ -405,8 +404,3 @@ export default defineComponent({
 	},
 });
 </script>
-<style scoped>
-.loadpoint:not(:last-child)::after {
-	content: ",";
-}
-</style>
