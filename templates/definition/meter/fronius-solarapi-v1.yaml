@@ -18,6 +18,8 @@ requirements:
       Username and password are only required for active battery control.
 
       **Attention**: Active battery control should only be used if no other settings for time-dependent battery control were made in the inverter configuration under "Energy Management" - "Battery Management", as existing settings will be overwritten. Choose corresponding configuration URI!
+discovery:
+  mac: ["0003AC"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

@@ -4,6 +4,9 @@ products:
     description:
       generic: SG Series Inverter
 capabilities: ["curtail"]
+discovery:
+  hostname: ["sungrow*"]
+  mac: ["AC199F"]
 params:
   - name: usage
     choice: ["grid", "pv"]

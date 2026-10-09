@@ -49,18 +49,24 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
 		if s := lp.GetStatus(); s != api.StatusB && s != api.StatusC {
 			continue
 		}
-		if lp.GetMode() == api.ModeOff {
+		// For Continuous devices ModeOff means "normal operation" (heat pump runs
+		// on its own schedule). Skip only non-continuous loadpoints in ModeOff.
+		if lp.GetMode() == api.ModeOff && !lp.chargerHasFeature(api.Continuous) {
 			continue
 		}
 
 		var p []float64
+		var predictorType string
 
 		if profile, correct := lp.demandProfile(); profile != nil {
+			predictorType = "daily"
 			p = tileAndTrim(profile[:], minLen)
 			if correct {
+				predictorType = "temperature"
 				p = site.applyTemperatureCorrection(p)
 			}
 		} else if wp := lp.demandProfileWeekday(minLen); wp != nil {
+			predictorType = "weekday"
 			p = wp
 		} else {
 			continue
@@ -74,6 +80,9 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
 		for i := range min(len(gt), len(p)) {
 			gt[i] += p[i]
 		}
+
+		site.log.DEBUG.Printf("heating demand: added %s forecast for %s (%d slots)",
+			predictorType, lp.GetTitle(), len(p))
 
 		res = append(res, heatingDemand{lp, p})
 	}
@@ -127,12 +136,14 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 	// temperature source only provides data from today onward.
 	for h := range pastCount {
 		if pastCount[h] == 0 {
+			site.log.DEBUG.Printf("temperature correction: missing historical temperature data for hour %02d:00, skipping correction", h)
 			return profile
 		}
 	}
 
 	res := slices.Clone(profile)
 	slotStart := currentTime.Truncate(tariff.SlotDuration)
+	logged := 0
 
 	for i := range profile {
 		ts := slotStart.Add(time.Duration(i) * tariff.SlotDuration)
@@ -140,6 +151,7 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 
 		r, err := rates.At(ts)
 		if err != nil {
+			site.log.DEBUG.Printf("temperature correction: slot %s: no rate available: %v", ts.Local().Format("15:04"), err)
 			continue
 		}
 		tFuture := r.Value
@@ -147,16 +159,31 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		// above the heating threshold the correction is skipped, keeping the
 		// historical average in the model (e.g. summer DHW still consumes energy)
 		if tFuture >= heatingStopThreshold {
+			if logged < 3 && profile[i] > 0 {
+				site.log.DEBUG.Printf("temperature correction: slot %s (h=%02d): forecast=%.1f°C >= threshold=%.1f°C, keeping unscaled profile",
+					ts.Local().Format("15:04"), h, tFuture, heatingStopThreshold)
+				logged++
+			}
 			continue
 		}
 
-		denominator := tRoom - pastSum[h]/float64(pastCount[h])
+		pastAvg := pastSum[h] / float64(pastCount[h])
+		denominator := tRoom - pastAvg
 		if denominator <= 0.5 {
+			site.log.DEBUG.Printf("temperature correction: slot %s (h=%02d): hist_avg=%.1f°C too close to room temp=%.1f°C, skipping slot",
+				ts.Local().Format("15:04"), h, pastAvg, tRoom)
 			continue
 		}
 
 		// clamp to prevent extreme corrections from bad data
-		res[i] = profile[i] * min(maxCorrection, max(minCorrection, (tRoom-tFuture)/denominator))
+		factor := min(maxCorrection, max(minCorrection, (tRoom-tFuture)/denominator))
+		res[i] = profile[i] * factor
+
+		if logged < 3 && factor != 1.0 && profile[i] > 0 {
+			site.log.DEBUG.Printf("temperature correction: slot %s (h=%02d): forecast=%.1f°C, hist_avg=%.1f°C -> factor=%.2fx (load: %.0fWh -> %.0fWh)",
+				ts.Local().Format("15:04"), h, tFuture, pastAvg, factor, profile[i]*1e3, res[i]*1e3)
+			logged++
+		}
 	}
 
 	return res

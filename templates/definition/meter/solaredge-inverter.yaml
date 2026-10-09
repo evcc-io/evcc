@@ -10,6 +10,9 @@ requirements:
   description:
     de: Nur ein System kann und darf auf den Wechselrichter zugreifen!
     en: Only one system may access the inverter!
+discovery:
+  mdns: ["_solaredge-modbus._tcp"]
+  mac: ["002702", "84D6C5", "28B77C1", "9405BBA", "480BB25", "88A9A71"]
 params:
   - name: usage
     choice: ["grid", "pv"]

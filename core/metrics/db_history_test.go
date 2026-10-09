@@ -181,17 +181,66 @@ func TestQueryEnergySoc(t *testing.T) {
 	from := base.Add(-time.Hour).UTC()
 	to := base.Add(time.Hour).UTC()
 
-	// hourly bucket reports the first slot's snapshot, not an average
+	// an aggregated bucket has no soc, a single slot carries its value
 	res, err := QueryEnergy(from, to, "hour", false)
 	require.NoError(t, err)
 	require.Len(t, res, 1)
 	require.Len(t, res[0].Data, 1)
-	require.Equal(t, 80.0, *res[0].Data[0].SocTemp)
+	require.Nil(t, res[0].Data[0].SocTemp)
 	require.False(t, res[0].IsTemp) // battery: value is soc
+
+	res, err = QueryEnergy(from, to, "15m", false)
+	require.NoError(t, err)
+	require.Len(t, res[0].Data, 2)
+	require.Equal(t, 80.0, *res[0].Data[0].SocTemp)
 
 	// grouped sums omit the per-entity snapshot
 	res, err = QueryEnergy(from, to, "hour", true)
 	require.NoError(t, err)
 	require.Len(t, res, 1)
 	require.Nil(t, res[0].Data[0].SocTemp)
+}
+
+func TestQueryEnergyGridCost(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	grid := entity{Name: "grid", Group: Grid}
+	require.NoError(t, db.Instance.Create(&grid).Error)
+	pv := entity{Name: "pv", Group: PV}
+	require.NoError(t, db.Instance.Create(&pv).Error)
+
+	base := time.Date(2026, 4, 15, 16, 0, 0, 0, time.Now().Location())
+	slot := func(i int) time.Time { return base.Add(time.Duration(i) * 15 * time.Minute) }
+
+	// import 1 kWh at 0.20, 3 kWh at 0.40, 1 kWh unpriced; export 2 kWh at 0.10
+	require.NoError(t, persist(grid, slot(0), 1, 2, nil, false))
+	require.NoError(t, persist(grid, slot(1), 3, 0, nil, false))
+	require.NoError(t, persist(grid, slot(2), 1, 0, nil, false))
+	require.NoError(t, persist(pv, slot(0), 5, 0, nil, false))
+	require.NoError(t, PersistTariffs(slot(0), new(0.2), new(0.1), nil, nil))
+	require.NoError(t, PersistTariffs(slot(1), new(0.4), nil, nil, nil))
+
+	res, err := QueryEnergy(base.Add(-time.Hour), base.Add(time.Hour), "hour", false)
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+
+	// the bucket sums slot energy times slot price, unpriced slots stay out
+	g := res[0].Data[0]
+	require.Equal(t, Grid, res[0].Group)
+	require.InDelta(t, 5, g.Energy, 1e-9)
+	require.InDelta(t, 1.4, *g.Cost, 1e-9)
+	require.InDelta(t, 4, *g.PricedEnergy, 1e-9)
+	require.InDelta(t, 0.2, *g.ReturnCost, 1e-9)
+	require.InDelta(t, 2, *g.PricedReturnEnergy, 1e-9)
+
+	// other groups carry no cost
+	require.Nil(t, res[1].Data[0].Cost)
+
+	// a bucket starts at its boundary, not at the entity's first slot
+	res, err = QueryEnergy(base.Add(-time.Hour), base.Add(time.Hour), "day", false)
+	require.NoError(t, err)
+	midnight := time.Date(2026, 4, 15, 0, 0, 0, 0, time.Now().Location())
+	require.True(t, midnight.Equal(res[0].Data[0].Start))
+	require.True(t, midnight.AddDate(0, 0, 1).Equal(res[0].Data[0].End))
 }

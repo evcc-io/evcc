@@ -11,7 +11,7 @@
     "dev": "vp dev",
     "playwright": "playwright install && playwright test --ui",
     "playwright:ci": "cross-env CI=true playwright test",
-    "simulator": "vp dev tests/simulator",
+    "simulator": "vp build tests/simulator && vp preview tests/simulator",
     "storybook": "storybook dev -p 6006",
     "license": "license-compliance --production --report detailed --allow \"MIT;Apache-2.0;ISC;BSD-2-Clause;BSD-3-Clause;0BSD\""
   },
@@ -55,6 +55,7 @@
   "repository": "github:evcc-io/evcc",
   "devDependencies": {
     "@playwright/test": "^1.63.0",
+    "@redocly/cli": "^2.62.0",
     "@redocly/openapi-core": "^2.53.3",
     "@storybook/vue3": "^10.6.0",
     "@storybook/vue3-vite": "^10.6.0",
@@ -71,6 +72,7 @@
     "@vue/compiler-sfc": "^3.5.43",
     "@vue/test-utils": "^2.5.1",
     "@vue/tsconfig": "^0.9.1",
+    "aedes": "^1.2.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "body-parser": "^2.3.0",
@@ -78,16 +80,14 @@
     "happy-dom": "^20.14.5",
     "kill-port": "^2.0.1",
     "license-compliance": "^4.0.0",
-    "mqtt": "^5.16.0",
     "rollup-plugin-visualizer": "^7.1.1",
     "storybook": "^10.6.0",
     "terser": "^5.51.2",
     "ts-json-schema-generator": "^2.9.0",
     "tsx": "^4.23.13",
     "typescript": "^5.9.3",
-    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.6",
-    "vite-plus": "0.2.6",
-    "vitest": "4.1.11",
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",
+    "vite-plus": "1.0.0",
     "vue-hot-reload-api": "^2.3.4",
     "vue-tsc": "^3.3.11",
     "wait-on": "^9.1.0",
@@ -95,8 +95,9 @@
     "yaml": "^2.9.1"
   },
   "overrides": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.6",
-    "@vitest/mocker": "4.1.11",
-    "vitest": "4.1.11"
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",
+    "storybook": {
+      "vite-plus": "$vite-plus"
+    }
   }
 }

@@ -37,6 +37,7 @@
       "discharging": "discharging",
       "energy": "Energy",
       "gridCharge": "grid charging",
+      "gridDischarge": "grid discharging",
       "hold": "discharge locked",
       "holdCharge": "charge locked",
       "ofTotal": "of {total}",
@@ -204,6 +205,14 @@
       "description": "Tracks smaller, non-controllable appliances (refrigerator, washing machine, ...). Gives you a better overview of your home consumption.",
       "titleAdd": "Add Consumer Meter",
       "titleEdit": "Edit Consumer Meter"
+    },
+    "combobox": {
+      "count": "{count} suggestions",
+      "matching": "Matching",
+      "other": "Other",
+      "searching": "Searching…",
+      "suggestions": "Suggestions",
+      "used": "already used"
     },
     "control": {
       "description": "Usually the default values are fine. Only change them if you know what you are doing.",
@@ -785,7 +794,7 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionExternalUrl": "Address for other devices that want to connect to evcc and for autodiscovery of the evcc app.",
+      "descriptionExternalUrl": "Address for other devices that want to connect to evcc and for auto discovery of the evcc app.",
       "descriptionHost": "Used to announce evcc in your local network.",
       "descriptionInternalUrl": "Local network address of evcc.",
       "descriptionPort": "Port for the web interface and API. You'll need to update your browser URL if you change this.",
@@ -1046,7 +1055,7 @@
         "temperature": "Add temperature forecast"
       },
       "planner": {
-        "description": "Advanced setting. Usually not needed as dynamic electricity tariffs or CO₂ forecasts are used automatically. Enables an additional data source that's only used for charge planning, not for statistics and price calculations.",
+        "description": "This advanced setting is usually not needed. The planner forecast serves as the basis for charging plans and cheap or clean grid charging (vehicles, heating devices, home battery). Without it, the dynamic grid price or CO₂ forecast is used automatically. Statistics, cost calculations and optimizer decisions are not affected.",
         "titleAdd": "Add Planner Forecast",
         "titleEdit": "Edit Planner Forecast"
       },
@@ -1291,6 +1300,118 @@
     "restartDescription": "Tried turning it off and on again?",
     "secondaryActions": "Still not able to solve your problem? Here are some more heavy-handed options."
   },
+  "energy": {
+    "battery": {
+      "charged": "Charged",
+      "discharged": "Discharged"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Bars",
+        "pattern": "Pattern"
+      },
+      "cost": "Cost",
+      "others": "Others",
+      "title": "Consumers",
+      "view": {
+        "river": "River",
+        "treemap": "Treemap"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "charged",
+        "returnEnergy": "discharged"
+      },
+      "grid": {
+        "energy": "Import",
+        "returnEnergy": "Export"
+      },
+      "meter": {
+        "energy": "Energy",
+        "returnEnergy": "Energy (reverse)"
+      }
+    },
+    "empty": "No energy data available for this time range.",
+    "flow": {
+      "battery": "Battery",
+      "batteryCharge": "Battery charge",
+      "batteryDischarge": "Battery discharge",
+      "charging": "Charging",
+      "export": "Grid export",
+      "grid": "Grid import",
+      "heating": "Heating",
+      "home": "Consumption",
+      "overview": "Overview",
+      "pv": "Production",
+      "title": "Energy flow",
+      "usage": "Usage",
+      "withdrawal": "Withdrawal"
+    },
+    "grid": {
+      "amount": "Amount",
+      "cost": "Grid cost",
+      "energy": "Energy",
+      "export": "Export",
+      "exportPrice": "Export price",
+      "import": "Import",
+      "importPrice": "Import price",
+      "price": "Price",
+      "revenue": "Feed-in revenue",
+      "title": "Grid"
+    },
+    "group": {
+      "battery": "Battery",
+      "consumer": "Consumption",
+      "forecast": "Forecast",
+      "grid": "Grid",
+      "meter": "Additional meters",
+      "pv": "Production"
+    },
+    "production": {
+      "above": "{value} above",
+      "accuracy": "Forecast accuracy",
+      "below": "{value} below",
+      "deviation": "Deviation",
+      "expectedTomorrow": "expected tomorrow",
+      "exported": "{value} exported",
+      "produced": "Produced",
+      "remainingToday": "remaining today",
+      "selfConsumed": "Self-consumed",
+      "title": "Production"
+    },
+    "socTemp": {
+      "charged": "charged",
+      "soc": "charge",
+      "temperature": "temperature",
+      "used": "used"
+    },
+    "sources": {
+      "battery": "Battery",
+      "cost": "Cost",
+      "energy": "Energy",
+      "grid": "Grid",
+      "hint": "Solar and battery energy valued at feed-in price.",
+      "price": "Price/kWh",
+      "pv": "Solar",
+      "share": "Share",
+      "source": "Source",
+      "title": "Sources",
+      "total": "Total"
+    },
+    "stat": {
+      "autarky": "Autarky",
+      "co2Saved": "CO₂ saved",
+      "co2SavedTooltip": "Compared to drawing the consumed {energy} from the grid.",
+      "configure": "Configure now",
+      "noCo2": "No CO₂ data.",
+      "noPrice": "No price data.",
+      "savings": "Savings",
+      "savingsTooltip": "Compared to buying the consumed {energy} from the grid.",
+      "versus": "{value} vs. {reference}"
+    },
+    "title": "Energy"
+  },
   "issue": {
     "additional": {
       "copied": "copied!",
@@ -1328,6 +1449,10 @@
     },
     "issueDescription": "Description",
     "issueTitle": "Title",
+    "nightlyHint": "It might already be fixed. Please verify with the latest {nightlyVersion} before.",
+    "nightlyHintVersion": "Nightly version",
+    "searchHint": "Before reporting a bug, search existing {issues}.",
+    "searchHintLink": "GitHub issues",
     "stepsToReproduce": "Steps to reproduce",
     "subTitleDiscussion": "Describe your problem",
     "subTitleEmail": "Describe your problem",
@@ -1437,6 +1562,7 @@
       "batteryCharge": "Battery charging",
       "batteryChargeHold": "Battery (charge locked)",
       "batteryDischarge": "Battery discharging",
+      "batteryStatus": "Battery status",
       "batteryDischargeHold": "Battery (discharge locked)",
       "batteryGridChargeActive": "Grid charging: active",
       "batteryGridChargeLimit": "Grid charging: when",
@@ -1467,35 +1593,6 @@
       "consumption": "Consumption",
       "feedIn": "Feed-in",
       "title": "External limit active"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "charged",
-          "returnEnergy": "discharged"
-        },
-        "grid": {
-          "energy": "imported",
-          "returnEnergy": "exported"
-        },
-        "meter": {
-          "energy": "Energy",
-          "returnEnergy": "Energy (reverse)"
-        }
-      },
-      "download": "Download",
-      "empty": "No history data available for this time range.",
-      "group": {
-        "battery": "Battery",
-        "consumer": "Consumption",
-        "forecast": "Forecast",
-        "grid": "Grid",
-        "loadpoint": "Charging & Heating",
-        "meter": "Additional meters",
-        "pv": "Production"
-      },
-      "otherConsumers": "Others",
-      "title": "History"
     },
     "loadpoint": {
       "avgPrice": "⌀ Price",
@@ -1928,6 +2025,7 @@
     "battery": "Battery",
     "charge": "Charge",
     "comingSoon": "This page is under construction.",
+    "energy": "Energy",
     "forecast": "Forecast",
     "more": "More",
     "sessions": "Sessions"

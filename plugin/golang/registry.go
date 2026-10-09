@@ -8,13 +8,19 @@ import (
 	"github.com/traefik/yaegi/interp"
 )
 
+// VM is an interpreter with the lock serializing its execution
+type VM struct {
+	*interp.Interpreter
+	sync.Mutex
+}
+
 var (
 	mu       sync.Mutex
-	registry = make(map[string]*interp.Interpreter)
+	registry = make(map[string]*VM)
 )
 
-// RegisteredVM returns a JS VM. If name is not empty, it will return a shared instance.
-func RegisteredVM(name, init string) (*interp.Interpreter, error) {
+// RegisteredVM returns a Go VM. If name is not empty, it will return a shared instance.
+func RegisteredVM(name, init string) (*VM, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -23,7 +29,7 @@ func RegisteredVM(name, init string) (*interp.Interpreter, error) {
 
 	// create new VM
 	if !ok {
-		vm = interp.New(interp.Options{})
+		vm = &VM{Interpreter: interp.New(interp.Options{})}
 		if err := vm.Use(stdlib.Symbols); err != nil {
 			return nil, err
 		}

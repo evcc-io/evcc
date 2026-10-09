@@ -951,6 +951,113 @@ func TestPVSolarShare(t *testing.T) {
 		"disable threshold should apply despite solar share")
 }
 
+// TestBatterySupport verifies that battery-supported charging ends once the battery
+// is maxed out and grid import takes over (issue #32151)
+func TestBatterySupport(t *testing.T) {
+	Voltage = 230
+	ctrl := gomock.NewController(t)
+	clck := clock.NewMock()
+	site := &mockSite{}
+
+	lp := &Loadpoint{
+		log:            util.NewLogger("foo"),
+		clock:          clck,
+		charger:        api.NewMockCharger(ctrl),
+		site:           site,
+		minCurrent:     minA,
+		maxCurrent:     maxA,
+		phases:         3,
+		measuredPhases: 3,
+		Disable:        loadpoint.ThresholdConfig{Delay: 3 * time.Minute},
+		solarShare:     1,
+		status:         api.StatusC,
+		enabled:        true,
+	}
+
+	minPower := currentToPower(minA, 3)
+
+	// battery covers the car: sitePower is the battery discharge, no grid import
+	assert.Equal(t, minA, lp.pvMaxCurrent(minPower, minPower, true, false), "battery covers demand")
+	assert.True(t, lp.pvTimer.IsZero(), "no disable timer while supported")
+
+	// household load exceeds the battery: grid import starts the disable timer
+	assert.Equal(t, minA, lp.pvMaxCurrent(minPower+1000, minPower, true, false), "disable delay pending")
+	assert.False(t, lp.pvTimer.IsZero(), "disable timer must run on grid import")
+
+	// import vanishes: timer resets, support continues
+	assert.Equal(t, minA, lp.pvMaxCurrent(minPower, minPower, true, false))
+	assert.True(t, lp.pvTimer.IsZero(), "disable timer must reset once the battery covers demand again")
+
+	// residual power is no grid import, the controller tolerance absorbs a small import
+	site.residualPower = 100
+	assert.Equal(t, minA, lp.pvMaxCurrent(minPower+100, minPower, true, false), "residual power is no grid import")
+	assert.True(t, lp.pvTimer.IsZero(), "no disable timer on residual power")
+	assert.Equal(t, minA, lp.pvMaxCurrent(minPower+100+250, minPower, true, false))
+	assert.False(t, lp.pvTimer.IsZero(), "disable timer must run on import beyond tolerance")
+	assert.Equal(t, minA, lp.pvMaxCurrent(minPower+100+50, minPower, true, false))
+	assert.True(t, lp.pvTimer.IsZero(), "tolerance must cover small import")
+	site.residualPower = 0
+
+	// sustained import disables
+	lp.pvMaxCurrent(minPower+1000, minPower, true, false)
+	clck.Add(lp.Disable.Delay)
+	assert.Equal(t, 0.0, lp.pvMaxCurrent(minPower+1000, minPower, true, false), "sustained grid import must disable")
+
+	// battery held idle after a plan ended: the car runs on grid import and the
+	// elapsed pv timer disables right away instead of bridging to bufferSoc (#34296)
+	clck.Add(time.Hour) // mock clock must be past the elapsed sentinel
+	lp.elapsePVTimer()
+	assert.Equal(t, 0.0, lp.pvMaxCurrent(minPower, 0, true, false), "held battery must not keep charging")
+
+	// start off the battery only if its discharge limit has room for the car
+	lp.status = api.StatusB
+	lp.enabled = false
+	limit := minPower + 1000
+	site.maxDischargePower = &limit
+
+	assert.Equal(t, minA, lp.pvMaxCurrent(500, 500, false, true), "battery has room for min power")
+	assert.Equal(t, 0.0, lp.pvMaxCurrent(2000, 2000, false, true), "battery would exceed its discharge limit")
+
+	// pending scale down: import is judged after the car dropped to 1p min power
+	lp.charger = &struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{api.NewMockCharger(ctrl), api.NewMockPhaseSwitcher(ctrl)}
+	lp.status = api.StatusC
+	lp.enabled = true
+	lp.phaseTimer = clck.Now()
+	site.maxDischargePower = nil
+
+	assert.True(t, lp.batterySupported(minPower+1000, minPower, true, false), "scale down removes the import")
+	assert.False(t, lp.batterySupported(2*minPower, minPower, true, false), "import remains after scale down")
+}
+
+func TestBatteryStartEnableDelay(t *testing.T) {
+	Voltage = 230
+	ctrl := gomock.NewController(t)
+	clck := clock.NewMock()
+
+	lp := &Loadpoint{
+		log:            util.NewLogger("foo"),
+		clock:          clck,
+		charger:        api.NewMockCharger(ctrl),
+		site:           &mockSite{},
+		minCurrent:     minA,
+		maxCurrent:     maxA,
+		phases:         3,
+		measuredPhases: 3,
+		Enable:         loadpoint.ThresholdConfig{Delay: time.Minute},
+		solarShare:     1,
+		status:         api.StatusB,
+	}
+
+	surplus := -2 * currentToPower(minA, 3)
+
+	assert.Equal(t, 0.0, lp.pvMaxCurrent(surplus, 0, false, true), "enable delay pending")
+	clck.Add(time.Minute + time.Second)
+	assert.Equal(t, minA, lp.pvMaxCurrent(surplus, 0, false, true), "enable timer must not be reset by battery support")
+}
+
 // TestPVSolarSharePhases verifies that the derived switch points scale with the
 // phases charging actually runs on, not with the theoretical 1p minimum.
 func TestPVSolarSharePhases(t *testing.T) {

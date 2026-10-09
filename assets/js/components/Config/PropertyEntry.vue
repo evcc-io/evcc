@@ -18,8 +18,10 @@
 			:pattern="Pattern"
 			:choice="Choice"
 			:service-values="serviceValues"
+			:service-loading="serviceLoading"
 			:label="label"
 			:currency="currency"
+			:default-value="Default"
 		/>
 	</FormRow>
 </template>
@@ -43,12 +45,14 @@ export default {
 		Description: String,
 		Help: String,
 		Example: String,
+		Default: [String, Number, Boolean],
 		Type: String,
 		Unit: String,
 		Mask: Boolean,
 		Pattern: { type: Object, default: () => ({}) },
 		Choice: Array,
 		serviceValues: Array,
+		serviceLoading: Boolean,
 		modelValue: [String, Number, Boolean, Object],
 		currency: { type: String, default: "EUR" },
 	},

@@ -17,19 +17,24 @@ export default defineConfig({
     tasks: {
       build: {
         command: "vp build",
-        // node_modules layout differs between jobs that ran vitest and those that did not
-        input: [{ auto: true }, "!**/node_modules/**"],
+        cache: {
+          // node_modules layout differs between jobs that ran vitest and those that did not
+          input: [{ auto: true }, "!**/node_modules/**"],
+        },
       },
       openapi: {
         command: "tsx scripts/state-schema/index.ts",
-        // generated schema is an output, not an input
-        input: [{ auto: true }, "!server/openapi.state.yaml"],
+        cache: {
+          // generated schema is an output, not an input
+          input: [{ auto: true }, "!server/openapi.state.yaml"],
+        },
       },
       test: {
-        command:
-          "cross-env TZ=Europe/Berlin NODE_OPTIONS=--no-experimental-webstorage vp test",
-        // vitest keeps its own result cache below node_modules
-        input: [{ auto: true }, "!**/node_modules/.vite/vitest/**"],
+        command: "cross-env TZ=Europe/Berlin NODE_OPTIONS=--no-experimental-webstorage vp test",
+        cache: {
+          // vitest keeps its own result cache below node_modules
+          input: [{ auto: true }, "!**/node_modules/.vite/vitest/**"],
+        },
       },
     },
   },
@@ -100,6 +105,8 @@ export default defineConfig({
     emptyOutDir: true,
     assetsInlineLimit: 1024,
     chunkSizeWarningLimit: 800, // legacy build increases file size
+    // plugin-legacy defaults this to chrome61, the css minifier then drops every Safari-only prefix
+    cssTarget: ["chrome61", "ios12"],
   },
   server: {
     port: frontendPort,

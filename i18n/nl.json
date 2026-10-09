@@ -1230,6 +1230,31 @@
     "restartDescription": "Geprobeerd om het uit en weer aan te zetten?",
     "secondaryActions": "Nog niet gelukt om je probleem op te lossen? Hier zijn enkele hardhandige opties."
   },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "geladen",
+        "returnEnergy": "ontladen"
+      },
+      "grid": {
+        "energy": "geimporteerd",
+        "returnEnergy": "geexporteerd"
+      },
+      "meter": {
+        "energy": "Energie",
+        "returnEnergy": "Energie (omgekeerd)"
+      }
+    },
+    "group": {
+      "battery": "Batterij",
+      "consumer": "Verbruik",
+      "forecast": "Voorspelling",
+      "grid": "Net",
+      "loadpoint": "Laden & Verwarmen",
+      "meter": "Extra meters",
+      "pv": "Productie"
+    }
+  },
   "issue": {
     "additional": {
       "copied": "gekopieerd!",
@@ -1406,35 +1431,6 @@
       "consumption": "Verbruik",
       "feedIn": "Teruglevering",
       "title": "Externe limiet actief"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "geladen",
-          "returnEnergy": "ontladen"
-        },
-        "grid": {
-          "energy": "geimporteerd",
-          "returnEnergy": "geexporteerd"
-        },
-        "meter": {
-          "energy": "Energie",
-          "returnEnergy": "Energie (omgekeerd)"
-        }
-      },
-      "download": "Download",
-      "empty": "Er is voor deze tijdspanne geen data beschikbaar.",
-      "group": {
-        "battery": "Batterij",
-        "consumer": "Verbruik",
-        "forecast": "Voorspelling",
-        "grid": "Net",
-        "loadpoint": "Laden & Verwarmen",
-        "meter": "Extra meters",
-        "pv": "Productie"
-      },
-      "otherConsumers": "Overig",
-      "title": "Geschiedenis"
     },
     "loadpoint": {
       "avgPrice": "⌀ Prijs",

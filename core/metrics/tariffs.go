@@ -88,3 +88,52 @@ func PersistTariffs(ts time.Time, grid, feedin, co2, temperature *float64) error
 		Temperature: temperature,
 	}).Error
 }
+
+// TariffSlot is one persisted 15 minute slot of tariff values, or the average
+// of a bucket with the slot range when aggregated
+type TariffSlot struct {
+	Timestamp   int64     `json:"-" gorm:"column:ts"`
+	Start       time.Time `json:"start" gorm:"-"`
+	Grid        *float64  `json:"grid,omitempty"`
+	GridMin     *float64  `json:"gridMin,omitempty"`
+	GridMax     *float64  `json:"gridMax,omitempty"`
+	FeedIn      *float64  `json:"feedin,omitempty"`
+	FeedInMin   *float64  `json:"feedinMin,omitempty"`
+	FeedInMax   *float64  `json:"feedinMax,omitempty"`
+	Co2         *float64  `json:"co2,omitempty"`
+	Temperature *float64  `json:"temperature,omitempty"`
+}
+
+// QueryTariffs returns the persisted slots in [from,to), zero bounds are open.
+// With an aggregate of hour, day or month the slots are averaged per bucket.
+func QueryTariffs(from, to time.Time, aggregate string) ([]TariffSlot, error) {
+	tx := db.Instance.Table("tariffs").Order("ts")
+	if !from.IsZero() {
+		tx = tx.Where("ts >= ?", from.Unix())
+	}
+	if !to.IsZero() {
+		tx = tx.Where("ts < ?", to.Unix())
+	}
+
+	if aggregate == "" || aggregate == "15m" {
+		tx = tx.Select("ts, grid, feedin AS feed_in, co2, temperature")
+	} else {
+		format, ok := aggregateFormats[aggregate]
+		if !ok {
+			return nil, fmt.Errorf("invalid aggregate: %s", aggregate)
+		}
+		tx = tx.Select(`MIN(ts) AS ts,
+			AVG(grid) AS grid, MIN(grid) AS grid_min, MAX(grid) AS grid_max,
+			AVG(feedin) AS feed_in, MIN(feedin) AS feed_in_min, MAX(feedin) AS feed_in_max`).
+			Group(fmt.Sprintf(`strftime('%s', ts, 'unixepoch', 'localtime')`, format))
+	}
+
+	var res []TariffSlot
+	if err := tx.Scan(&res).Error; err != nil {
+		return nil, err
+	}
+	for i := range res {
+		res[i].Start = time.Unix(res[i].Timestamp, 0)
+	}
+	return res, nil
+}

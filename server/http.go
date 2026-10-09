@@ -208,6 +208,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"deletesession":                   {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
 		"gridsessions":                    {"GET", "/gridsessions", gridSessionsHandler},
 		"energyhistory":                   {"GET", "/history/energy", energyHistoryHandler},
+		"energyflow":                      {"GET", "/history/flow", energyFlowHandler},
+		"tariffhistory":                   {"GET", "/history/tariffs", tariffHistoryHandler},
 		"optimize":                        {"POST", "/optimize", callHandler(site.Optimize)},
 		"telemetry2":                      {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
 		"devicecolors":                    {"PUT", "/devicecolors", updateDeviceColor(site)},
@@ -440,8 +442,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"logareas":   {"GET", "/log/areas", logAreasHandler},
 			"clearcache": {"DELETE", "/cache", clearCacheHandler},
 			"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
-				shutdown()
 				w.WriteHeader(http.StatusNoContent)
+				_ = http.NewResponseController(w).Flush()
+				shutdown()
 			}},
 		}
 

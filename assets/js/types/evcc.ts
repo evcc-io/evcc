@@ -1420,6 +1420,16 @@ export interface UiForecast {
   temperature?: UiForecastSlot[];
 }
 
+export interface ServiceOption {
+  value: string;
+  label?: string;
+  hint?: string;
+  match?: boolean;
+  used?: boolean;
+}
+
+export type ServiceValue = string | ServiceOption;
+
 export interface SelectOption<T> {
   name: string;
   value: T;

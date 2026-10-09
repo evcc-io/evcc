@@ -70,7 +70,7 @@ func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 		return nil, errors.New("missing account number")
 	}
 
-	log := util.NewLogger("octopus-de")
+	log := util.NewLogger("octopus-de").Redact(cc.Email, cc.Password)
 
 	// Create GraphQL client
 	gqlClient, err := krakengql.NewClient(log, krakengql.BaseURI, cc.Email, cc.Password, cc.AccountNumber)
