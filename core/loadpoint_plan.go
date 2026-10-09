@@ -209,8 +209,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	active = !activeSlot.End.IsZero()
 
 	if active {
-		// ignore short plans if not already active
-		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < tariff.SlotDuration-time.Minute && !planner.SlotHasSuccessor(activeSlot, plan) {
+		// skip a short isolated slot unless it is the last, a later slot absorbs its remainder
+		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < tariff.SlotDuration-time.Minute &&
+			!planner.SlotHasSuccessor(activeSlot, plan) && !planner.IsLast(activeSlot, plan) {
 			lp.log.DEBUG.Printf("plan: slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
 		}

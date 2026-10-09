@@ -87,6 +87,17 @@ func IsFirst(r api.Rate, plan api.Rates) bool {
 	return true
 }
 
+// IsLast returns if the slot is the last slot in the plan.
+// Does not require the plan to be sorted by start time.
+func IsLast(r api.Rate, plan api.Rates) bool {
+	for _, slot := range plan {
+		if r.End.Before(slot.End) {
+			return false
+		}
+	}
+	return true
+}
+
 // clampRates filters rates to the given time window and adjusts boundary slots
 func clampRates(rates api.Rates, start, end time.Time) api.Rates {
 	res := make(api.Rates, 0, len(rates))

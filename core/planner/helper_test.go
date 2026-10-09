@@ -59,6 +59,27 @@ func TestIsFirst(t *testing.T) {
 	require.True(t, IsFirst(first, []api.Rate{first}))
 }
 
+func TestIsLast(t *testing.T) {
+	clock := clock.NewMock()
+	plan := rates([]float64{20, 60, 10, 80, 40, 90}, clock.Now(), time.Hour)
+
+	last := plan[len(plan)-1]
+	rand.Shuffle(len(plan), func(i, j int) {
+		plan[i], plan[j] = plan[j], plan[i]
+	})
+
+	for i := range plan {
+		if plan[i] != last {
+			require.False(t, IsLast(plan[i], plan))
+		}
+	}
+
+	require.True(t, IsLast(last, plan))
+
+	// ensure single slot is always last
+	require.True(t, IsLast(last, []api.Rate{last}))
+}
+
 func TestDuration(t *testing.T) {
 	now := time.Now()
 	plan := api.Rates{
