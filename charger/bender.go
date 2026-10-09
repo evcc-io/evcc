@@ -404,7 +404,13 @@ func (wb *BenderCC) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
+	// 0xFFFFFFFF marks unavailable data
+	v := binary.BigEndian.Uint32(b)
+	if v == 0xffffffff {
+		return 0, api.ErrNotAvailable
+	}
+
+	return float64(v) / 1e3, nil
 }
 
 // getPhaseValues returns 3 sequential register values
