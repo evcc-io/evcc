@@ -55,6 +55,19 @@ func TestOptimizerHorizon(t *testing.T) {
 	assert.Equal(t, 8, slotsUntil(rates, horizon, 8))
 }
 
+func TestFeedInRatesWithoutTariff(t *testing.T) {
+	start := time.Now().Truncate(tariff.SlotDuration)
+	grid := api.Rates{
+		{Start: start, End: start.Add(tariff.SlotDuration), Value: 0.3},
+		{Start: start.Add(tariff.SlotDuration), End: start.Add(2 * tariff.SlotDuration), Value: 0.2},
+	}
+
+	assert.Equal(t, api.Rates{
+		{Start: grid[0].Start, End: grid[0].End},
+		{Start: grid[1].Start, End: grid[1].End},
+	}, feedInRates(nil, grid))
+}
+
 func TestApplyPrecondition(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -151,6 +164,23 @@ func TestAsTimestamps(t *testing.T) {
 	}, got)
 }
 
+func TestPlanSlot(t *testing.T) {
+	// now aligned to a 15-minute boundary: s_goal[i] models the SoC at the END of slot i,
+	// so a plan 2h out (exactly 8 slots away) must land on slot 7, not 8 (#33831)
+	now := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
+	assert.Equal(t, 7, planSlot(now, now.Add(2*time.Hour)))
+	assert.Equal(t, 0, planSlot(now, now.Add(15*time.Minute)))
+	assert.Equal(t, 0, planSlot(now, now.Add(5*time.Minute)))
+
+	// now 10 minutes into a slot: the partial first slot (5min) absorbs the offset
+	now2 := time.Date(2025, 1, 1, 12, 10, 0, 0, time.UTC)
+	assert.Equal(t, 7, planSlot(now2, now2.Add(110*time.Minute)))
+
+	// deadline not in the future
+	assert.Equal(t, -1, planSlot(now, now))
+	assert.Equal(t, -1, planSlot(now, now.Add(-time.Minute)))
+}
+
 func TestUnmodelledPower(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -182,6 +212,12 @@ func TestUnmodelledPower(t *testing.T) {
 }
 
 func TestBatteryForecastSocExtremes(t *testing.T) {
+	now := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
+	schedule := optimizerSchedule{
+		timestamps: []time.Time{now, now.Add(tariff.SlotDuration), now.Add(2 * tariff.SlotDuration)},
+		dt:         []int{900, 900, 900},
+	}
+
 	for _, tc := range []struct {
 		name      string
 		req       []optimizer.BatteryConfig
@@ -250,14 +286,14 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 		},
 		{
 			"already full — no highest",
-			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}},
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000, SInitial: 1000}},
 			[][]float32{{1000, 1000, 500}},
 			nil,
 			&batteryForecastSlot{slot: 2, soc: 50, limit: false},
 		},
 		{
 			"already empty — no lowest",
-			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000, SMin: 100}},
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000, SMin: 100, SInitial: 100}},
 			[][]float32{{100, 100, 500}},
 			&batteryForecastSlot{slot: 2, soc: 50, limit: false},
 			nil,
@@ -276,7 +312,7 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 				resp[i] = optimizer.BatteryResult{StateOfCharge: s}
 			}
 
-			high, low := batteryForecastSocExtremes(tc.req, resp)
+			high, low := batteryForecastSocExtremes(tc.req, resp, schedule, now)
 
 			if tc.high == nil {
 				assert.Nil(t, high, "high")
@@ -296,6 +332,90 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBatteryForecastActiveSlot(t *testing.T) {
+	req := []optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}}
+	resp := []optimizer.BatteryResult{{StateOfCharge: []float32{1000, 500, 800}}}
+	base := time.Date(2025, 1, 1, 12, 15, 0, 0, time.UTC)
+	timestamps := []time.Time{base.Add(-time.Second), base, base.Add(tariff.SlotDuration)}
+	schedule := optimizerSchedule{timestamps: timestamps, dt: []int{1, 900, 900}}
+	now := base.Add(4 * time.Second)
+
+	high, low := batteryForecastSocExtremes(req, resp, schedule, now)
+	require.NotNil(t, high)
+	require.NotNil(t, low)
+	assert.Equal(t, 2, high.slot)
+	assert.InDelta(t, 80, high.soc, 1e-3)
+	assert.Equal(t, 1, low.slot)
+	assert.InDelta(t, 50, low.soc, 1e-3)
+
+	forecast := (&Site{}).addBatteryForecastTotals(req, resp, schedule, now)
+	require.NotNil(t, forecast)
+	require.NotNil(t, forecast.Highest)
+	require.NotNil(t, forecast.Lowest)
+	assert.Equal(t, timestamps[2].Add(tariff.SlotDuration), forecast.Highest.Time)
+	assert.Equal(t, timestamps[1].Add(tariff.SlotDuration), forecast.Lowest.Time)
+
+	resp[0].StateOfCharge = []float32{500, 1000, 800}
+	forecast = (&Site{}).addBatteryForecastTotals(req, resp, schedule, now)
+	require.NotNil(t, forecast)
+	require.NotNil(t, forecast.Highest)
+	assert.True(t, forecast.Highest.Limit)
+	assert.Equal(t, timestamps[1].Add(tariff.SlotDuration), forecast.Highest.Time)
+
+	resp[0].StateOfCharge = []float32{500, 0, 200}
+	forecast = (&Site{}).addBatteryForecastTotals(req, resp, schedule, now)
+	require.NotNil(t, forecast)
+	require.NotNil(t, forecast.Lowest)
+	assert.True(t, forecast.Lowest.Limit)
+	assert.Equal(t, timestamps[1].Add(tariff.SlotDuration), forecast.Lowest.Time)
+	assert.Nil(t, (&Site{}).addBatteryForecastTotals(req, resp, schedule, base.Add(2*tariff.SlotDuration)))
+}
+
+// TestBatteryRequestGridModes ensures grid charging and discharging are only
+// offered to the optimizer for batteries that support the respective mode
+func TestBatteryRequestGridModes(t *testing.T) {
+	newBatteryDevice := func(t *testing.T, modes ...api.BatteryMode) config.Device[api.Meter] {
+		batCon := api.NewMockBatteryController(gomock.NewController(t))
+		batCon.EXPECT().BatteryModes().Return(modes).AnyTimes()
+
+		return config.NewStaticDevice(config.Named{}, api.Meter(&struct {
+			api.Meter
+			api.BatteryController
+		}{
+			BatteryController: batCon,
+		}))
+	}
+
+	site := &Site{log: util.NewLogger("foo"), batteryGridDischarge: true}
+	capacity, soc := 10.0, 50.0
+	m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+	req, _ := site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryHold, api.BatteryCharge), m, nil, 8, 15*time.Minute)
+	assert.True(t, req.ChargeFromGrid)
+	assert.False(t, req.DischargeToGrid, "grid discharge opt-in must not apply to a battery without discharge mode")
+
+	req, _ = site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryDischarge), m, nil, 8, 15*time.Minute)
+	assert.False(t, req.ChargeFromGrid)
+	assert.True(t, req.DischargeToGrid)
+
+	site.batteryGridDischarge = false
+	req, _ = site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryDischarge), m, nil, 8, 15*time.Minute)
+	assert.False(t, req.DischargeToGrid, "grid discharge requires the opt-in")
+}
+
+// Batteries without soc limits must still get the full capacity as SMax, otherwise the
+// optimizer treats any charge as exceeding the limit and never charges the battery.
+func TestBatteryRequestWithoutSocLimiter(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+	capacity, soc := 10.0, 50.0
+	dev := config.NewStaticDevice(config.Named{}, api.Meter(&struct{ api.Meter }{}))
+
+	req, _ := site.batteryRequest(dev, types.Measurement{Capacity: &capacity, Soc: &soc}, nil, 8, 15*time.Minute)
+
+	assert.Equal(t, float32(0), req.SMin)
+	assert.Equal(t, float32(10000), req.SMax)
 }
 
 // TestBatteryRequestSocLimitsClamp ensures the reported soc is always clamped into
@@ -421,6 +541,38 @@ func TestLoadpointRequestChargeGoal(t *testing.T) {
 	}
 }
 
+func TestLoadpointRequestChargingState(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	for status, want := range map[api.ChargeStatus]bool{api.StatusA: false, api.StatusB: false, api.StatusC: true} {
+		t.Run(string(status), func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			v := api.NewMockVehicle(ctrl)
+			v.EXPECT().Capacity().Return(50.0).AnyTimes()
+			v.EXPECT().GetTitle().Return("").AnyTimes()
+
+			lp := loadpoint.NewMockAPI(ctrl)
+			lp.EXPECT().GetVehicle().Return(v).AnyTimes()
+			lp.EXPECT().GetSoc().Return(20.0).AnyTimes()
+			lp.EXPECT().EffectiveLimitSoc().Return(80).AnyTimes()
+			lp.EXPECT().GetLimitEnergy().Return(0.0).AnyTimes()
+			lp.EXPECT().GetTitle().Return("lp").AnyTimes()
+			lp.EXPECT().EffectiveMinPower().Return(1380.0).AnyTimes()
+			lp.EXPECT().EffectiveMaxPower().Return(11000.0).AnyTimes()
+			lp.EXPECT().GetMode().Return(api.ModeNow).AnyTimes()
+			lp.EXPECT().GetStatus().Return(status).AnyTimes()
+			lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOff).AnyTimes()
+			lp.EXPECT().GetChargePower().Return(11000.0).AnyTimes()
+			lp.EXPECT().GetRemainingEnergy().Return(0.0).AnyTimes()
+
+			req, _ := site.loadpointRequest(lp, 8, 15*time.Minute, nil)
+
+			assert.Equal(t, want, req.CActive)
+		})
+	}
+}
+
 func TestOptimizerChargingStrategy(t *testing.T) {
 	site := &Site{log: util.NewLogger("foo")}
 
@@ -450,6 +602,26 @@ func TestGridExportLimit(t *testing.T) {
 	assert.Equal(t, 7000.0, site.GetGridExportLimit())
 }
 
+func TestProfilePercentile(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	// average by default
+	assert.Nil(t, site.GetProfilePercentile())
+
+	ptr := func(v float64) *float64 { return &v }
+
+	// out of range rejected, unchanged
+	require.Error(t, site.SetProfilePercentile(ptr(101)))
+	assert.Nil(t, site.GetProfilePercentile())
+
+	require.NoError(t, site.SetProfilePercentile(ptr(50)))
+	assert.Equal(t, 50.0, *site.GetProfilePercentile())
+
+	// delete reverts to average
+	require.NoError(t, site.SetProfilePercentile(nil))
+	assert.Nil(t, site.GetProfilePercentile())
+}
+
 func TestBlendMeasured(t *testing.T) {
 	slots := []float64{100, 100, 100, 100, 100, 100}
 	blendMeasured(slots, 200, 4)
@@ -459,17 +631,6 @@ func TestBlendMeasured(t *testing.T) {
 	short := []float32{100, 100}
 	blendMeasured(short, 200, 4)
 	assert.Equal(t, []float32{200, 175}, short)
-}
-
-func TestBlendScale(t *testing.T) {
-	slots := []float32{100, 100, 100, 100, 100, 100}
-	blendScale(slots, 2, 4)
-	assert.Equal(t, []float32{200, 175, 150, 125, 100, 100}, slots)
-
-	// fewer slots than decay length
-	short := []float64{100, 100}
-	blendScale(short, 0.5, 4)
-	assert.Equal(t, []float64{50, 62.5}, short)
 }
 
 func TestCurrentSlotSuggestion(t *testing.T) {
@@ -497,7 +658,7 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 				ChargingPower:    []float32{tc.charge},
 				DischargingPower: []float32{tc.disch},
 			}
-			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, tc.importing, tc.export, 1)
+			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, 0, tc.importing, tc.export, 1)
 			assert.Equal(t, tc.want, s.Action)
 			assert.InDelta(t, tc.charge, s.Charge, 1e-3)
 			assert.InDelta(t, tc.disch, s.Discharge, 1e-3)
@@ -505,7 +666,14 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	}
 
 	// no result yields an empty suggestion
-	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, true, false, 1))
+	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, 0, true, false, 1))
+
+	res := optimizer.BatteryResult{
+		ChargingPower:    []float32{100, 0},
+		DischargingPower: []float32{0, 0},
+	}
+	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, res, 1, true, false, 1)
+	assert.Equal(t, api.BatteryHold.String(), s.Action)
 }
 
 // TestSuggestionActionable ensures the actionable flag follows the current state
@@ -514,17 +682,20 @@ func TestSuggestionActionable(t *testing.T) {
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
 
 	site := &Site{
-		batteryMode: api.BatteryNormal,
-		loadpoints:  []*Loadpoint{lp},
+		loadpoints: []*Loadpoint{lp},
 	}
 	site.setSuggestions(map[string]types.Suggestion{
-		batteryKey("bat"): {Action: api.BatteryCharge.String()},
-		loadpointKey(0):   {Action: actionCharge},
+		batteryKey("bat"):    {Action: api.BatteryCharge.String()},
+		batteryKey("normal"): {Action: api.BatteryNormal.String()},
+		loadpointKey(0):      {Action: actionCharge},
 	})
 
 	batterySuggestion := func(name string) *types.Suggestion {
-		return site.suggestion(batteryKey(name), site.GetBatteryMode().String())
+		return site.suggestion(batteryKey(name), site.batteryAction())
 	}
+
+	// battery never switched (unknown mode) is in normal operation
+	assert.False(t, batterySuggestion("normal").Actionable)
 	loadpointSuggestion := func(id int) *types.Suggestion {
 		return site.suggestion(loadpointKey(id), loadpointCurrentAction(lp))
 	}
@@ -608,4 +779,101 @@ func TestDiffSuggestions(t *testing.T) {
 	// vanished device is pruned and re-notifies on return
 	assert.Empty(t, site.diffSuggestions(map[string]pendingSuggestion{}))
 	assert.Len(t, site.diffSuggestions(pending(stop)), 1)
+}
+
+// reapplyFixture applies a solve completed 12:08, 8 minutes into the 12:00-12:15 slot
+func reapplyFixture(site *Site, batteries []optimizer.BatteryConfig, res []optimizer.BatteryResult, details []batteryDetail) time.Time {
+	completed := time.Date(2025, 1, 1, 12, 8, 0, 0, time.UTC)
+	dt := []int{7 * 60, 900, 900}
+	schedule := optimizerSchedule{timestamps: asTimestamps(dt, completed), dt: dt}
+
+	site.applyOptimizerResult(
+		optimizer.OptimizationInput{TimeSeries: optimizer.TimeSeries{Dt: dt}, Batteries: batteries},
+		requestDetails{Timestamps: schedule.timestamps, BatteryDetails: details},
+		optimizer.OptimizationResult{GridImport: []float32{0, 500, 0}, Batteries: res}, // slot 1 imports
+		schedule, completed, completed)
+
+	return completed
+}
+
+var (
+	reapplyMidGap      = time.Date(2025, 1, 1, 12, 20, 0, 0, time.UTC) // slot 0 ended, next solve not due before 12:23
+	reapplyIdleBattery = optimizer.BatteryResult{ChargingPower: []float32{0, 0, 0}, DischargingPower: []float32{0, 0, 0}}
+	reapplyHomeBattery = batteryDetail{Type: batteryTypeBattery, Name: "home", controllable: true}
+)
+
+func TestReapplySuggestionAcrossSlotBoundary(t *testing.T) {
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.status = api.StatusC
+	site := &Site{loadpoints: []*Loadpoint{lp}}
+
+	reapplyFixture(site,
+		[]optimizer.BatteryConfig{{}, {}},
+		[]optimizer.BatteryResult{
+			reapplyIdleBattery, // hold/normal follows grid import
+			{ChargingPower: []float32{0, 11000, 0}, DischargingPower: []float32{0, 0, 0}}, // loadpoint: stop, then charge
+		},
+		[]batteryDetail{reapplyHomeBattery, {Type: batteryTypeLoadpoint, loadpoint: new(int), controllable: true}},
+	)
+
+	require.NotNil(t, site.suggestion(batteryKey("home"), api.BatteryNormal.String()))
+	assert.Equal(t, api.BatteryNormal.String(), site.suggestion(batteryKey("home"), api.BatteryNormal.String()).Action)
+	assert.Equal(t, actionStop, site.suggestion(loadpointKey(0), actionCharge).Action)
+
+	site.reapplySuggestions(reapplyMidGap)
+
+	assert.Equal(t, api.BatteryHold.String(), site.suggestion(batteryKey("home"), api.BatteryNormal.String()).Action)
+	assert.Equal(t, actionCharge, site.suggestion(loadpointKey(0), actionStop).Action)
+}
+
+func TestReapplySuggestionsDoesNotResurrectClearedAdvice(t *testing.T) {
+	site := &Site{}
+
+	reapplyFixture(site,
+		[]optimizer.BatteryConfig{{SCapacity: 5000, SMax: 5000}}, // capacity makes the forecast eligible
+		[]optimizer.BatteryResult{{ChargingPower: []float32{0, 0, 0}, DischargingPower: []float32{0, 0, 0}, StateOfCharge: []float32{1000, 1500, 1500}}},
+		[]batteryDetail{reapplyHomeBattery},
+	)
+
+	require.NotNil(t, site.suggestion(batteryKey("home"), api.BatteryNormal.String()))
+	require.NotNil(t, site.battery.Forecast)
+
+	site.clearSuggestions()
+	site.reapplySuggestions(reapplyMidGap)
+
+	assert.Nil(t, site.suggestion(batteryKey("home"), api.BatteryNormal.String()))
+	assert.Nil(t, site.battery.Forecast)
+}
+
+func TestReapplySuggestionsExcludeDisconnectedLoadpoint(t *testing.T) {
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.status = api.StatusB
+	site := &Site{loadpoints: []*Loadpoint{lp}}
+
+	reapplyFixture(site,
+		[]optimizer.BatteryConfig{{}},
+		[]optimizer.BatteryResult{{ChargingPower: []float32{0, 11000, 0}, DischargingPower: []float32{0, 0, 0}}},
+		[]batteryDetail{{Type: batteryTypeLoadpoint, loadpoint: new(int), controllable: true}},
+	)
+
+	require.Equal(t, actionStop, site.suggestion(loadpointKey(0), actionCharge).Action)
+
+	// unplugged before the slot boundary
+	lp.status = api.StatusA
+	site.reapplySuggestions(reapplyMidGap)
+
+	assert.Equal(t, actionStop, site.suggestion(loadpointKey(0), actionCharge).Action)
+	assert.Nil(t, site.lastOptimizerSolve)
+}
+
+func TestReapplySuggestionsExpireAfterOutage(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	completed := reapplyFixture(site, []optimizer.BatteryConfig{{}}, []optimizer.BatteryResult{reapplyIdleBattery}, []batteryDetail{reapplyHomeBattery})
+	require.NotNil(t, site.suggestion(batteryKey("home"), api.BatteryNormal.String()))
+
+	site.reapplySuggestions(completed.Add(2*tariff.SlotDuration + time.Minute))
+
+	assert.Nil(t, site.suggestion(batteryKey("home"), api.BatteryNormal.String()))
+	assert.Nil(t, site.lastOptimizerSolve)
 }

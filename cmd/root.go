@@ -454,6 +454,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Tariffs, Val: globalconfig.ConfigStatus{
 		YamlSource: yamlSource.tariffs,
 	}}
+	valueChan <- util.Param{Key: keys.CircuitsConfig, Val: globalconfig.ConfigStatus{
+		YamlSource: yamlSource.circuits,
+	}}
 
 	// publish remote access status
 	valueChan <- util.Param{Key: keys.Remote, Val: remoteAccess.ConfigStatus()}
@@ -506,8 +509,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 		once.Do(func() { close(stopC) })     // signal loop to end
 	}, viper.ConfigFileUsed(), remoteAccess)
 
-	// show and check version, reduce api load during development
-	if util.Version != util.DevVersion {
+	// skip update check for dev and nightly builds, reduces api load
+	if util.Version != util.DevVersion && !strings.Contains(util.Version, "-dev.") {
 		go updater.Run(log, httpd, valueChan)
 	}
 
@@ -547,9 +550,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// wait for shutdown
 	<-stopC
 
+	// floor the wait, a short interval must not cut off shutdown hooks like the settings flush
 	select {
 	case <-shutdownDoneC(): // wait for shutdown
-	case <-time.After(conf.Interval):
+		// close after the hooks, which may still write, to checkpoint the wal into the database file
+		if db.Instance != nil {
+			_ = db.Close()
+		}
+	case <-time.After(max(conf.Interval, 5*time.Second)):
 	}
 
 	// exit code 1 on error

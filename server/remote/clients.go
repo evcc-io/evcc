@@ -2,10 +2,12 @@ package remote
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
@@ -144,6 +146,7 @@ func (r *Remote) DeleteClient(username string) error {
 
 // Authenticate validates basic-auth credentials. Always runs bcrypt
 // (against a dummy hash on miss) to prevent username enumeration via timing.
+// Verified checks are cached, bcrypt costs seconds on small SBCs.
 func (r *Remote) Authenticate(username, password string) bool {
 	hash := dummyHash
 	var found *persistedClient
@@ -155,12 +158,16 @@ func (r *Remote) Authenticate(username, password string) bool {
 		}
 	}
 
-	valid := bcrypt.CompareHashAndPassword(hash, []byte(password)) == nil
-	if !valid || found == nil {
-		return false
+	pw := sha256.Sum256([]byte(password))
+	if v, _ := authCache.Load(string(hash)); v != pw {
+		if bcrypt.CompareHashAndPassword(hash, []byte(password)) != nil || found == nil {
+			return false
+		}
+		authCache.Store(string(hash), pw)
 	}
-	if found.ExpiresAt != nil && time.Now().After(*found.ExpiresAt) {
-		return false
-	}
-	return true
+
+	return found.ExpiresAt == nil || time.Now().Before(*found.ExpiresAt)
 }
+
+// authCache maps bcrypt hash to sha256 of the verified password
+var authCache sync.Map

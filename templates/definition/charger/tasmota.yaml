@@ -6,6 +6,8 @@ products:
       en: single phase
 capabilities: ["meter"]
 group: switchsockets
+discovery:
+  hostname: ["tasmota*"]
 params:
   - name: host
   - name: user

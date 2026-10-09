@@ -25,6 +25,9 @@ func Digest(user, password string, base http.RoundTripper) http.RoundTripper {
 }
 
 // digestChallenge additionally accepts challenges announcing the non-RFC SHA256
+// algorithm, and falls back to the non-standard X-WWW-Authenticate header used by
+// some servers (e.g. Fronius Gen24) to avoid triggering a browser's native
+// digest-auth popup for XHR/API requests
 func digestChallenge(h http.Header) (*digest.Challenge, error) {
 	chal, err := digest.FindChallenge(h)
 	if err == nil || !errors.Is(err, digest.ErrNoChallenge) {
@@ -36,6 +39,15 @@ func digestChallenge(h http.Header) (*digest.Challenge, error) {
 			continue
 		}
 		if chal, err := digest.ParseChallenge(header); err == nil && strings.EqualFold(chal.Algorithm, nonRfcSha256) {
+			return chal, nil
+		}
+	}
+
+	for _, header := range h.Values("X-WWW-Authenticate") {
+		if !digest.IsDigest(header) {
+			continue
+		}
+		if chal, err := digest.ParseChallenge(header); err == nil {
 			return chal, nil
 		}
 	}

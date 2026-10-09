@@ -9,6 +9,10 @@ requirements:
     de: "'auto_charge' muss auf false gesetzt werden."
     en: "'auto_charge' must be set to false."
   evcc: ["sponsorship"]
+discovery:
+  mdns: ["_shelly._tcp", "_http._tcp:shelly*"]
+  hostname: ["shelly*"]
+  mac: ["8400EC"]
 params:
   - name: host
   - name: user

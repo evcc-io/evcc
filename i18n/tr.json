@@ -972,7 +972,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Destekçi ol",
-      "becomeSponsorExtended": "Çıkartma almak için bizi doğrudan destekle.",
       "confetti": "Konfeti istermisin?",
       "confettiPromise": "Çıkartmalar ve dijital konfeti de var",
       "sticker": "… ya da evcc çıkartmaları?",
@@ -981,9 +980,7 @@
       "titleNoSponsor": "Bize destek ol",
       "titleSponsor": "Destekçisin",
       "titleTrial": "Deneme modu",
-      "titleVictron": "Victron Energy tarafından desteklenmektedir",
-      "trial": "Deneme modundasın ve tüm özellikleri kullanabilirsin. Destekçi olursan seviniriz.",
-      "victron": "Victron Energy donanımı üzerinde evcc kullanıyorsun ve tüm özelliklere erişebiliyorsun."
+      "trial": "Deneme modundasın ve tüm özellikleri kullanabilirsin. Destekçi olursan seviniriz."
     },
     "telemetry": {
       "optIn": "Doldurma verilerimi paylaşmak istiyorum.",
@@ -1086,6 +1083,26 @@
     "restartButton": "Yeniden Başlat",
     "restartDescription": "Cihazı kapatıp tekrar açmayı denedin mi?",
     "secondaryActions": "Hâlâ bir çözüm bulamadın mı? Burada birkaç seçenek daha var.."
+  },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "doldu",
+        "returnEnergy": "boşaldı"
+      },
+      "grid": {
+        "energy": "alındı",
+        "returnEnergy": "satıldı"
+      }
+    },
+    "group": {
+      "battery": "Batarya",
+      "forecast": "Öngörü",
+      "grid": "Şebeke",
+      "loadpoint": "Doldurma ve Isıtma",
+      "meter": "Tüketim",
+      "pv": "Üretim"
+    }
   },
   "issue": {
     "additional": {
@@ -1226,29 +1243,6 @@
     },
     "hemsWarning": {
       "title": "Harici sınır:"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "doldu",
-          "returnEnergy": "boşaldı"
-        },
-        "grid": {
-          "energy": "alındı",
-          "returnEnergy": "satıldı"
-        }
-      },
-      "empty": "Bu zaman aralığı için geçmiş verisi yok.",
-      "group": {
-        "battery": "Batarya",
-        "forecast": "Öngörü",
-        "grid": "Şebeke",
-        "loadpoint": "Doldurma ve Isıtma",
-        "meter": "Tüketim",
-        "pv": "Üretim"
-      },
-      "otherConsumers": "Diğerleri",
-      "title": "Geçmiş"
     },
     "loadpoint": {
       "avgPrice": "⌀ Fiyat",

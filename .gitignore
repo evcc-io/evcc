@@ -5,6 +5,7 @@ __debug_bin*
 .DS_store
 *.db
 *.gz
+!util/discovery/oui.txt.gz
 *.py
 testdata/**/*
 *.log

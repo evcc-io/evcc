@@ -9,9 +9,9 @@
 import { defineComponent, type PropType } from "vue";
 import {
 	axisNameStyle,
+	boundaryAxis,
 	FONT_FAMILY,
 	forecastYAxis,
-	hoverDot,
 	lineCasing,
 	tooltipStyle,
 	tooltipTable,
@@ -19,7 +19,7 @@ import {
 	lineDefaults,
 } from "../Forecast/echarts";
 import type { EvoptData } from "./TimeSeriesDataTable.vue";
-import type { BatteryDetail, DeviceColors } from "@/types/evcc";
+import type { BatteryDetail, DemandDetail, DeviceColors } from "@/types/evcc";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import echartsChart from "@/mixins/echartsChart";
 import colors from "@/colors";
@@ -29,15 +29,24 @@ import type { Legend } from "../Sessions/types";
 import {
 	slotTimes,
 	slotXAxis,
-	dayBoundaryAxis,
 	dayBoundarySeries,
 	formatSlotRange,
 	whToKW,
 	loadpointTitle,
+	demandTitle,
+	transientHoverDot,
 } from "./chart";
 
 const GRID_LABEL = "Grid Power";
 const SOLAR_LABEL = "Solar Forecast";
+
+// one stacked bar series, data in kW
+interface StackEntry {
+	label: string;
+	color: string;
+	data: number[];
+	id?: string;
+}
 
 export default defineComponent({
 	name: "ChargeChart",
@@ -52,6 +61,14 @@ export default defineComponent({
 			type: Array as PropType<BatteryDetail[]>,
 			required: true,
 		},
+		demandDetails: {
+			type: Array as PropType<DemandDetail[]>,
+			default: () => [],
+		},
+		demandColors: {
+			type: Array as PropType<string[]>,
+			default: () => [],
+		},
 		timestamp: {
 			type: String,
 			default: "",
@@ -64,19 +81,28 @@ export default defineComponent({
 	},
 	computed: {
 		consumptionLabel(): string {
-			return this.$t("main.history.group.consumer");
+			return this.$t("energy.group.consumer");
 		},
 		consumptionColor(): string {
 			return colors.muted || "";
 		},
-		// stack and legend order: loadpoints first, then batteries
-		entryOrder(): number[] {
-			const batteries: number[] = [];
-			const vehicles: number[] = [];
-			this.batteryDetails.forEach((d, i) =>
-				(d.type === "battery" ? batteries : vehicles).push(i)
-			);
-			return [...vehicles, ...batteries];
+		// stack order from the zero line: fixed loads first (consumption, unmodelled, heating),
+		// flexible ones outer (charging loadpoints, home batteries)
+		stackEntries(): StackEntry[] {
+			// the summed gt when there is no breakdown
+			const details: DemandDetail[] = this.demandDetails.length
+				? this.demandDetails
+				: [{ type: "home", values: this.evopt.req.time_series.gt }];
+			return [
+				...details.map((d, i) => ({
+					label: demandTitle(d, this.consumptionLabel),
+					color: this.demandColors[i] || this.consumptionColor,
+					data: d.values.map(this.toKW),
+					id: d.title ? loadpointTitle(d) : undefined,
+				})),
+				...this.batteryEntries("vehicle"),
+				...this.batteryEntries("battery"),
+			];
 		},
 		times(): number[] {
 			return slotTimes(this.timestamp, this.evopt.req.time_series.dt);
@@ -105,7 +131,7 @@ export default defineComponent({
 				z: 4,
 				data: this.gridPower,
 				smooth: 0.2,
-				...hoverDot(colors.grid || ""),
+				...transientHoverDot(colors.grid || ""),
 				lineStyle: { color: colors.grid || "", ...lineDefaults },
 			};
 			const solar = {
@@ -114,7 +140,7 @@ export default defineComponent({
 				z: 4,
 				data: this.evopt.req.time_series.ft.map(this.toKW),
 				smooth: 0.2,
-				...hoverDot(colors.forecast || ""),
+				...transientHoverDot(colors.forecast || ""),
 				lineStyle: { color: colors.forecast || "", ...lineDefaults },
 			};
 			const series: Record<string, unknown>[] = [
@@ -123,33 +149,19 @@ export default defineComponent({
 				grid,
 				lineCasing(solar, 3),
 				solar,
-				{
-					name: this.consumptionLabel,
+				...this.stackEntries.map((e) => ({
+					name: e.label,
 					type: "bar",
 					stack: "charge",
-					data: this.evopt.req.time_series.gt.map(this.toKW),
-					itemStyle: { color: this.consumptionColor },
+					// one path per series instead of an svg element per slot. Stacking works in
+					// large mode despite the outdated TODO in echarts' barGrid layout
+					large: true,
+					largeThreshold: 0,
+					data: e.data,
+					itemStyle: { color: e.color },
 					emphasis: { disabled: true },
-				},
+				})),
 			];
-			this.entryOrder.forEach((index) => {
-				const battery = this.evopt.res.batteries[index];
-				if (!battery) return;
-				// charging positive, discharging negative; one of both is always zero
-				const power = battery.charging_power.map((charging, i) => {
-					const chargingKW = this.toKW(charging, i);
-					const dischargingKW = this.toKW(battery.discharging_power[i] || 0, i);
-					return chargingKW > 0 ? chargingKW : -dischargingKW;
-				});
-				series.push({
-					name: this.getBatteryTitle(index),
-					type: "bar",
-					stack: "charge",
-					data: power,
-					itemStyle: { color: this.batteryColors[index] },
-					emphasis: { disabled: true },
-				});
-			});
 			return series;
 		},
 		chartOption(): Record<string, unknown> {
@@ -166,7 +178,7 @@ export default defineComponent({
 					...tooltipStyle(colors.text || ""),
 					formatter: this.tooltipFormatter,
 				},
-				xAxis: [slotXAxis(this.times, this.weekdayShort), dayBoundaryAxis(this.times)],
+				xAxis: [slotXAxis(this.times, this.weekdayShort), boundaryAxis(this.times.length)],
 				yAxis: forecastYAxis({
 					min: undefined,
 					position: "right",
@@ -188,24 +200,14 @@ export default defineComponent({
 			const legends: Legend[] = [
 				{ label: GRID_LABEL, color: colors.grid || "", value: "", type: "line" },
 				{ label: SOLAR_LABEL, color: colors.forecast || "", value: "", type: "line" },
-				{
-					label: this.consumptionLabel,
-					color: this.consumptionColor,
+				...this.stackEntries.map((e) => ({
+					label: e.label,
+					color: e.color,
 					value: "",
-					type: "area",
-				},
+					type: "area" as const,
+					id: e.id,
+				})),
 			];
-			this.entryOrder.forEach((i) => {
-				const detail = this.batteryDetails[i];
-				if (!detail) return;
-				legends.push({
-					label: this.getBatteryTitle(i),
-					color: this.batteryColors[i] || "",
-					value: "",
-					type: "area",
-					id: detail.type === "vehicle" ? loadpointTitle(detail) : undefined,
-				});
-			});
 			return legends;
 		},
 	},
@@ -216,9 +218,25 @@ export default defineComponent({
 		formatValue(value: number): string {
 			return this.fmtW(value * 1000, POWER_UNIT.AUTO);
 		},
-		getBatteryTitle(index: number): string {
-			const detail = this.batteryDetails[index];
-			return detail ? detail.title || detail.name : `Battery ${index + 1}`;
+		batteryEntries(type: BatteryDetail["type"]): StackEntry[] {
+			return this.batteryDetails.flatMap((detail, index) => {
+				const battery = this.evopt.res.batteries[index];
+				if (detail.type !== type || !battery) return [];
+				// charging positive, discharging negative; one of both is always zero
+				const data = battery.charging_power.map((charging, i) => {
+					const chargingKW = this.toKW(charging, i);
+					const dischargingKW = this.toKW(battery.discharging_power[i] || 0, i);
+					return chargingKW > 0 ? chargingKW : -dischargingKW;
+				});
+				return [
+					{
+						label: detail.title || detail.name,
+						color: this.batteryColors[index] || "",
+						data,
+						id: type === "vehicle" ? loadpointTitle(detail) : undefined,
+					},
+				];
+			});
 		},
 		tooltipFormatter(
 			params: { dataIndex: number; seriesName?: string; value?: number }[]

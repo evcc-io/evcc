@@ -1071,7 +1071,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Staň se sponzorem",
-      "becomeSponsorExtended": "Podpořte nás přímo a získejte samolepky.",
       "confetti": "Připraven na konfety?",
       "confettiPromise": "Budou nálepky a digitální konfety",
       "sticker": "... nebo evcc nálepky?",
@@ -1080,9 +1079,7 @@
       "titleNoSponsor": "Podpořte nás",
       "titleSponsor": "Jste podporovatel",
       "titleTrial": "Zkušební režim",
-      "titleVictron": "Sponzorováno společností Victron Energy",
-      "trial": "Jste v zkušebním režimu a můžete používat všechny funkce. Prosím, zvažte podporu projektu.",
-      "victron": "Používáte evcc na hardwaru Victron Energy a máte přístup ke všem funkcím."
+      "trial": "Jste v zkušebním režimu a můžete používat všechny funkce. Prosím, zvažte podporu projektu."
     },
     "telemetry": {
       "optIn": "Chci přispět svými daty.",
@@ -1199,6 +1196,31 @@
     "restartButton": "Restartovat",
     "restartDescription": "Zkusili jste to restartovat?",
     "secondaryActions": "Stále se vám nedaří vyřešit váš problém? Zde jsou některé další možnosti."
+  },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "nabito",
+        "returnEnergy": "vybito"
+      },
+      "grid": {
+        "energy": "nakoupeno z distribuce",
+        "returnEnergy": "prodáno do distribuce"
+      },
+      "meter": {
+        "energy": "Energie",
+        "returnEnergy": "Energie (reverse)"
+      }
+    },
+    "group": {
+      "battery": "Baterie",
+      "consumer": "Spotřeba",
+      "forecast": "Předpověď",
+      "grid": "Distribuční síť",
+      "loadpoint": "Nabíjení a vytápění",
+      "meter": "Ďalší měřiče",
+      "pv": "Výroba"
+    }
   },
   "issue": {
     "additional": {
@@ -1361,35 +1383,6 @@
       "consumption": "Spotřeba",
       "feedIn": "Export",
       "title": "Externí limit: aktívní"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "nabito",
-          "returnEnergy": "vybito"
-        },
-        "grid": {
-          "energy": "nakoupeno z distribuce",
-          "returnEnergy": "prodáno do distribuce"
-        },
-        "meter": {
-          "energy": "Energie",
-          "returnEnergy": "Energie (reverse)"
-        }
-      },
-      "download": "Stáhnout",
-      "empty": "Pro zvolený úsek nejsou k dispozici historická data.",
-      "group": {
-        "battery": "Baterie",
-        "consumer": "Spotřeba",
-        "forecast": "Předpověď",
-        "grid": "Distribuční síť",
-        "loadpoint": "Nabíjení a vytápění",
-        "meter": "Ďalší měřiče",
-        "pv": "Výroba"
-      },
-      "otherConsumers": "Ostatní",
-      "title": "Historie"
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",

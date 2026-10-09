@@ -1,7 +1,5 @@
 name: Claude Code Review
 
-# Disabled; original job conditions are retained for re-enablement.
-
 # Stage 1 (unprivileged): runs on every PR, including forks. Fork PRs get a
 # read-only token and no secrets, so the review itself cannot run here. This
 # job only records the PR number; the privileged "Claude Code Review (run)"
@@ -17,7 +15,7 @@ concurrency:
 jobs:
   prepare:
     # Skip draft PRs
-    if: ${{ false && github.event.pull_request.draft == false }}
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     permissions: {}
     steps:
@@ -27,7 +25,7 @@ jobs:
         run: echo "$PR_NUMBER" > pr-number.txt
 
       - name: Upload PR number
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: pr-number
           path: pr-number.txt

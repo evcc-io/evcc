@@ -6,6 +6,9 @@
 		<button type="button" class="dropdown-item" @click="openHelpModal">
 			{{ $t("header.needHelp") }}
 		</button>
+		<router-link class="dropdown-item" to="/issue" active-class="active">
+			{{ $t("issue.title") }}
+		</router-link>
 		<button
 			type="button"
 			class="dropdown-item d-flex align-items-center"
@@ -77,8 +80,14 @@
 		>
 			Optimize 🧪
 		</router-link>
-		<router-link v-if="experimental" class="dropdown-item" to="/history" active-class="active">
-			{{ $t("main.history.title") }} 🧪
+		<!-- the menu opens upwards, the tab that moved here on phones stays closest to the bar -->
+		<router-link
+			v-if="experimental"
+			class="dropdown-item d-sm-none"
+			to="/sessions"
+			active-class="active"
+		>
+			{{ $t("tabBar.sessions") }}
 		</router-link>
 	</div>
 </template>
@@ -96,7 +105,7 @@ import {
 import settings from "@/settings";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
-import type { FatalError, Sponsor, EvOpt, AuthProviders, Vehicle } from "@/types/evcc";
+import type { FatalError, Sponsor, AuthProviders, Vehicle } from "@/types/evcc";
 
 export default defineComponent({
 	name: "MoreMenu",
@@ -108,7 +117,7 @@ export default defineComponent({
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		experimental: Boolean,
 		authDisabled: Boolean,
-		evopt: { type: Object as PropType<EvOpt>, required: false },
+		optimizer: Boolean,
 		installed: String,
 		availableVersion: String,
 		customBrand: String,
@@ -156,7 +165,7 @@ export default defineComponent({
 			);
 		},
 		optimizeAvailable() {
-			return !!this.evopt && this.experimental;
+			return this.optimizer && this.experimental;
 		},
 		showLogout() {
 			return !this.authDisabled && isLoggedIn();

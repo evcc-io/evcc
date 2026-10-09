@@ -143,7 +143,7 @@ func NewBenderCC(ctx context.Context, settings modbus.TcpSettings, cache time.Du
 		model = bytesAsString(b)
 	}
 
-	// Mennekes 4You/4Business firmware closes the modbus connection on access to unsupported registers 730/740
+	// Mennekes 4You/4Business firmware closes the modbus connection on access to unsupported registers 720/730/740
 	wb.mennekes4 = strings.Contains(model, "4You") || strings.Contains(model, "4Business")
 
 	// check presence of metering
@@ -195,8 +195,10 @@ func NewBenderCC(ctx context.Context, settings modbus.TcpSettings, cache time.Du
 	}
 
 	// check feature rfid
-	if _, err := wb.identify(); err == nil {
-		implement.Has(wb, implement.Identifier(wb.identify))
+	if !wb.mennekes4 {
+		if _, err := wb.identify(); err == nil {
+			implement.Has(wb, implement.Identifier(wb.identify))
+		}
 	}
 
 	return wb, nil
@@ -580,8 +582,10 @@ func (wb *BenderCC) Diagnose() {
 			fmt.Printf("\tEVCCID:\t%s\n", b)
 		}
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10); err == nil {
-		fmt.Printf("\tUserID:\t%s\n", b)
+	if !wb.mennekes4 {
+		if b, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10); err == nil {
+			fmt.Printf("\tUserID:\t%s\n", b)
+		}
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(wb.regCurr, 1); err == nil {
 		fmt.Printf("\tCurrent Limit:\t%d\n", binary.BigEndian.Uint16(b))

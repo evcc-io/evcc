@@ -19,6 +19,8 @@ requirements:
       Anwendbar für verschiedene Wechselrichter Generationen (G1/G2/G3). Für die aktive Batteriesteuerung muss die Funktion externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein.
     en: |
       Compatible with various inverter generations (G1/G2/G3). For active battery control, the feature external battery control via Modbus must be activated using installer access.
+discovery:
+  mac: ["1897F1", "240BB1"]
 params:
   - name: usage
     choice: ["pv", "battery"]
@@ -125,15 +127,8 @@ render: |
       switch:
       - case: 1 # normal
         set:
-          source: const
-          value: 0 # W (set once to reset from forced charge)
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 1034 # Battery charge power (DC) setpoint, absolute [W]
-              type: writemultiple
-              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+          source: sleep
+          duration: 0s # no-op
       - case: 2 # hold
         set:
           source: const
@@ -169,5 +164,18 @@ render: |
               address: 1038 # Battery max. charge power limit, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+      {{- if .maxdischargepower }}
+      - case: 5 # discharge (forced feed-in arbitrage)
+        set:
+          source: const
+          value: {{ .maxdischargepower }} # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1034 # Battery charge power (DC) setpoint, absolute [W]
+              type: writemultiple
+              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+      {{- end }}
   {{- include "battery-params" . }}
   {{- end }}
