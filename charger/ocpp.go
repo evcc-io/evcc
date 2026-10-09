@@ -400,7 +400,9 @@ func (c *OCPP) createChargingProfile(current float64, transactionID int) *types.
 		if phases == 0 {
 			phases = 3
 		}
-		period = types.NewChargingSchedulePeriod(0, math.Trunc(230.0*current*float64(phases)))
+		// round up to 100W: with grid voltage above 230V the exact power would
+		// fall below the minimum current and the charger suspends or drops a phase
+		period = types.NewChargingSchedulePeriod(0, math.Ceil(230.0*current*float64(phases)/100)*100)
 	} else {
 		// OCPP assumes phases == 3 if not set
 		if phases != 0 {
