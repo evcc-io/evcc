@@ -137,7 +137,7 @@ jobs:
           python-version: 3.12
 
       - name: Install Cloudsmith CLI
-        run: pip install cloudsmith-cli==1.16.0
+        run: pip install cloudsmith-cli==1.28.0
 
       - name: Publish .deb to Cloudsmith
         env:
