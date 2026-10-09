@@ -1049,7 +1049,7 @@
         "temperature": "Add temperature forecast"
       },
       "planner": {
-        "description": "Advanced setting. Usually not needed, as the dynamic grid price or CO₂ forecast is used automatically. Replaces it for charging plans, cheap or clean grid charging (vehicles, heating devices, home battery) and the matching limit charts. Not used for statistics or cost calculations.",
+        "description": "This advanced setting is usually not needed. The planner forecast serves as the basis for charging plans and cheap or clean grid charging (vehicles, heating devices, home battery). Without it, the dynamic grid price or CO₂ forecast is used automatically. Statistics and cost calculations are not affected.",
         "titleAdd": "Add Planner Forecast",
         "titleEdit": "Edit Planner Forecast"
       },
