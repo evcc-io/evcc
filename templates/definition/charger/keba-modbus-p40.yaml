@@ -29,6 +29,7 @@ params:
   - name: welcomecharge
 render: |
   type: keba-modbus
+  model: p40
   {{- include "modbus" . }}
   {{- if .welcomecharge }}
   features: ["welcomecharge"]
