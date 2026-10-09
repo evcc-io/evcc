@@ -3,6 +3,9 @@ products:
   - brand: FoxESS
     description:
       generic: H3-Pro/Smart Series Hybrid Inverter
+  - brand: A-Tronix
+    description:
+      generic: AX Plus Series Hybrid Inverter
 capabilities: ["battery-control"]
 params:
   - name: usage
