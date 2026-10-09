@@ -292,10 +292,40 @@ export function forecastXAxes(
         show: true,
         showMinLine: false,
         showMaxLine: false,
-        lineStyle: { color: colors.border || "", type: "dashed" },
+        lineStyle: { color: colors.muted || "", type: "solid" },
       },
     },
   ];
+}
+
+// hidden value axis aligned with the category bands (slot i spans i-0.5..i+0.5)
+export function boundaryAxis(count: number) {
+  return {
+    type: "value",
+    min: -0.5,
+    max: count - 0.5,
+    show: false,
+    axisPointer: { show: false },
+  };
+}
+
+// vertical marker lines at positions on the boundary axis, same style as the day dividers.
+// Above the series so cell borders can't cover a line sitting in the gap
+export function boundarySeries(positions: number[]) {
+  return {
+    type: "line",
+    xAxisIndex: 1,
+    data: [] as number[],
+    silent: true,
+    markLine: {
+      silent: true,
+      z: 3,
+      symbol: "none",
+      label: { show: false },
+      lineStyle: { color: colors.muted || "", type: "solid" },
+      data: positions.map((xAxis) => ({ xAxis })),
+    },
+  };
 }
 
 export function forecastYAxis(overrides: Record<string, unknown> = {}) {

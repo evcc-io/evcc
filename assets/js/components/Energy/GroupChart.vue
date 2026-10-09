@@ -16,10 +16,13 @@ import {
 	tooltipStyle,
 	tooltipTable,
 	xAxisLabelStyle,
+	boundaryAxis,
+	boundarySeries,
+	weekBoundaries,
 	type TooltipRow,
 	lineDefaults,
 	hoverDot,
-} from "../Forecast/echarts";
+} from "./echarts";
 import colors, {
 	resolveColors,
 	deviceColorMap,
@@ -680,6 +683,8 @@ export default defineComponent({
 			const keys = this.categoryKeys;
 			const formatLabel = this.labelForTimestamp;
 			const tooltipDate = this.tooltipDateLabel;
+			// the sub panel owns axis index 1 and only exists in the day view
+			const weekMarkers = this.period === PERIODS.MONTH && !this.subPanel;
 			const barGrid = {
 				...forecastGrid(),
 				left: this.socTempValues ? 36 : this.upperLabel || this.lowerLabel ? 22 : 0,
@@ -903,7 +908,9 @@ export default defineComponent({
 								axisLabel: xAxisLabel,
 							},
 						]
-					: barXAxis,
+					: weekMarkers
+						? [barXAxis, boundaryAxis(cats.length)]
+						: barXAxis,
 				yAxis: [
 					forecastYAxis({
 						// automatic range must be allowed below zero for the export band
@@ -939,7 +946,12 @@ export default defineComponent({
 					}),
 					...(this.subPanel ? [this.subPanel.yAxis] : []),
 				],
-				series: this.echartsSeries,
+				series: [
+					...this.echartsSeries,
+					...(weekMarkers
+						? [boundarySeries(weekBoundaries(this.from, cats.length))]
+						: []),
+				],
 			};
 		},
 	},

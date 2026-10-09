@@ -95,10 +95,10 @@ params:
 render: |
   type: custom
   {{ include "base" . }}
-  {{ include "features" (merge (dict "basefeatures" (list "cacheable")) .) }}
+  {{ include "features" (merge (dict "basefeatures" (list "cacheable")) (omit . "average")) }}
   forecast:
     source: http
-    uri: https://api.energypriceforecast.eu/api/v1/evcc/tariff?country={{.region}}&type=grid&currency={{.currency}}&hours={{.horizon}}
+    uri: https://api.energypriceforecast.eu/api/v1/evcc/tariff?country={{.region}}&type=grid&currency={{.currency}}&hours={{.horizon}}{{ if .average }}&resolution=hourly{{ end }}
     {{ if .apikey }}
     auth:
       type: bearer

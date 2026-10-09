@@ -9,6 +9,7 @@
 import { defineComponent, type PropType } from "vue";
 import {
 	axisNameStyle,
+	boundaryAxis,
 	FONT_FAMILY,
 	forecastYAxis,
 	lineCasing,
@@ -28,7 +29,6 @@ import type { Legend } from "../Sessions/types";
 import {
 	slotTimes,
 	slotXAxis,
-	dayBoundaryAxis,
 	dayBoundarySeries,
 	formatSlotRange,
 	whToKW,
@@ -178,7 +178,7 @@ export default defineComponent({
 					...tooltipStyle(colors.text || ""),
 					formatter: this.tooltipFormatter,
 				},
-				xAxis: [slotXAxis(this.times, this.weekdayShort), dayBoundaryAxis(this.times)],
+				xAxis: [slotXAxis(this.times, this.weekdayShort), boundaryAxis(this.times.length)],
 				yAxis: forecastYAxis({
 					min: undefined,
 					position: "right",

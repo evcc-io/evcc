@@ -300,7 +300,6 @@ export default defineComponent({
 					id: "vehicleLimit",
 					visible:
 						!this.heating &&
-						this.connected &&
 						this.vehicleLimitSoc > 0 &&
 						this.vehicleLimitSoc < (this.effectiveLimitSoc || 100),
 					content: this.fmtPercentage(this.vehicleLimitSoc),
