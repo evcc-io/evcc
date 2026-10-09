@@ -151,7 +151,7 @@
 								<FormRow
 									id="loadpointEnableDelay"
 									:label="$t('config.loadpoint.thresholdEnableDelayLabel')"
-									style="margin-bottom: 0 !important"
+									class="mb-0"
 								>
 									<PropertyField
 										id="loadpointEnableDelay"
@@ -166,7 +166,7 @@
 								<FormRow
 									id="loadpointDisableDelay"
 									:label="$t('config.loadpoint.thresholdDisableDelayLabel')"
-									style="margin-bottom: 0 !important"
+									class="mb-0"
 								>
 									<PropertyField
 										id="loadpointDisableDelay"
@@ -191,7 +191,7 @@
 									<FormRow
 										id="loadpointEnableThreshold"
 										:label="$t('config.loadpoint.thresholdEnableLabel')"
-										style="margin-bottom: 0 !important"
+										class="mb-0"
 									>
 										<PropertyField
 											id="loadpointEnableThreshold"
@@ -205,7 +205,7 @@
 									<FormRow
 										id="loadpointDisableThreshold"
 										:label="$t('config.loadpoint.thresholdDisableLabel')"
-										style="margin-bottom: 0 !important"
+										class="mb-0"
 									>
 										<PropertyField
 											id="loadpointDisableThreshold"
