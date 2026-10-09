@@ -12,6 +12,7 @@ import (
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/db/settings"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -431,4 +432,112 @@ func TestOptimizerPhaseScaleUp(t *testing.T) {
 			assert.Equal(t, 3, lp.GetPhases())
 		})
 	}
+}
+
+func TestOptimizerPlanClipsAtPlanTime(t *testing.T) {
+	lp := &Loadpoint{
+		log:     util.NewLogger("foo"),
+		clock:   clock.NewMock(),
+		vehicle: modelledVehicle(gomock.NewController(t)),
+		site:    &mockSite{automatic: true},
+	}
+
+	now := lp.clock.Now()
+	slot := func(i int) api.Rate {
+		return api.Rate{Start: now.Add(time.Duration(i) * 15 * time.Minute), End: now.Add(time.Duration(i+1) * 15 * time.Minute)}
+	}
+
+	// two plan slots, one surplus slot after the plan time
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge})
+	lp.setOptimizerPlan(optimizerPlan{
+		rates:  api.Rates{slot(0), slot(1), slot(8)},
+		energy: []float64{500, 250, 1000},
+	})
+
+	plan, power := lp.OptimizerPlan(now.Add(time.Hour))
+	assert.Equal(t, api.Rates{slot(0), slot(1)}, plan)
+	assert.InDelta(t, 1500, power, 1e-6)
+
+	// plan time inside the second slot: 500Wh plus a third of 250Wh in 20 minutes
+	planTime := now.Add(20 * time.Minute)
+	plan, power = lp.OptimizerPlan(planTime)
+	assert.Equal(t, api.Rates{slot(0), {Start: slot(1).Start, End: planTime}}, plan)
+	assert.InDelta(t, 1750, power, 1e-6)
+
+	plan, _ = lp.OptimizerPlan(now)
+	assert.Nil(t, plan)
+
+	// 20 minutes later the first slot has ended and the second is half done
+	lp.clock.(*clock.Mock).Add(20 * time.Minute)
+	plan, power = lp.OptimizerPlan(now.Add(time.Hour))
+	assert.Equal(t, api.Rates{{Start: lp.clock.Now(), End: slot(1).End}}, plan)
+	assert.InDelta(t, 1000, power, 1e-6)
+}
+
+// TestOptimizerPlanActive covers the optimizer's schedule replacing the planner:
+// the plan is active during its slots and once the deadline is critical, the
+// planner's continuation rules don't apply
+func TestOptimizerPlanActive(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	clck := clock.NewMock()
+
+	Voltage = 230
+
+	lp := &Loadpoint{
+		log:        util.NewLogger("foo"),
+		clock:      clck,
+		charger:    api.NewMockCharger(ctrl),
+		pushChan:   make(chan messenger.Event, 1),
+		vehicle:    modelledVehicle(ctrl),
+		site:       &mockSite{automatic: true},
+		status:     api.StatusC,
+		phases:     1,
+		minCurrent: minA,
+		maxCurrent: maxA,
+		vehicleSoc: 50,
+	}
+
+	now := clck.Now()
+	planTime := now.Add(4 * time.Hour)
+	slot := func(i int) api.Rate {
+		return api.Rate{Start: now.Add(time.Duration(i) * 15 * time.Minute), End: now.Add(time.Duration(i+1) * 15 * time.Minute)}
+	}
+	optimize := func() {
+		// plan of 5kWh, 1.4h at 3680W- the lock is dropped whenever the plan goes inactive
+		lp.planLocked = PlanLock{Time: planTime, Soc: 60, Id: 1}
+		lp.setSuggestion(&types.Suggestion{Action: actionCharge})
+		lp.setOptimizerPlan(optimizerPlan{
+			rates:  api.Rates{slot(0), slot(4), slot(14)},
+			energy: []float64{920, 920, 920},
+		})
+	}
+
+	// goal reached: nothing to plan
+	optimize()
+	plan, _, optimized := lp.EffectivePlan(planTime, 0, api.PlanStrategy{})
+	assert.Nil(t, plan)
+	assert.False(t, optimized)
+
+	// first slot
+	assert.True(t, lp.plannerActive())
+
+	// between slots the planner would avoid the restart
+	clck.Add(20 * time.Minute)
+	optimize()
+	assert.False(t, lp.plannerActive())
+
+	// second slot
+	clck.Add(45 * time.Minute)
+	optimize()
+	assert.True(t, lp.plannerActive())
+
+	// deadline critical ahead of the last slot
+	clck.Add(2 * time.Hour)
+	optimize()
+	assert.True(t, lp.plannerActive())
+
+	// stalled optimizer falls back to the planner
+	clck.Add(time.Hour)
+	_, _, optimized = lp.EffectivePlan(planTime, time.Hour, api.PlanStrategy{})
+	assert.False(t, optimized)
 }

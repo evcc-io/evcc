@@ -2,8 +2,10 @@ package core
 
 import (
 	"math"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/types"
 )
 
@@ -14,6 +16,54 @@ func (lp *Loadpoint) setSuggestion(s *types.Suggestion) {
 
 	lp.suggestion = s
 	lp.suggestionUpdated = lp.clock.Now()
+}
+
+// setOptimizerPlan stores the charging schedule of the last solve
+func (lp *Loadpoint) setOptimizerPlan(plan optimizerPlan) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.optimizerPlan = plan
+}
+
+// OptimizerPlan returns the optimizer's remaining charging schedule up to the
+// plan time and its average power, nil if the optimizer is not in charge. Later
+// slots serve surplus, not the plan.
+func (lp *Loadpoint) OptimizerPlan(planTime time.Time) (api.Rates, float64) {
+	if lp.gate() == nil {
+		return nil, 0
+	}
+
+	lp.RLock()
+	defer lp.RUnlock()
+
+	now := lp.clock.Now()
+
+	var rates api.Rates
+	var energy float64
+	for i, slot := range lp.optimizerPlan.rates {
+		// keep what is left until the plan time, like the planner does: the schedule
+		// is from the last solve and its goal slot may end after the plan time
+		clipped := slot
+		if clipped.Start.Before(now) {
+			clipped.Start = now
+		}
+		if clipped.End.After(planTime) {
+			clipped.End = planTime
+		}
+		if !clipped.Start.Before(clipped.End) {
+			continue
+		}
+
+		rates = append(rates, clipped)
+		energy += lp.optimizerPlan.energy[i] * float64(clipped.End.Sub(clipped.Start)) / float64(slot.End.Sub(slot.Start))
+	}
+
+	if len(rates) == 0 {
+		return nil, 0
+	}
+
+	return rates, energy / planner.Duration(rates).Hours()
 }
 
 // optimizerControlled indicates that the optimizer decides for this loadpoint.

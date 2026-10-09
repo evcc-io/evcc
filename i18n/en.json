@@ -1733,6 +1733,7 @@
     "targetChargePlan": {
       "chargeDuration": "Charging time",
       "co2Label": "CO₂ emission ⌀",
+      "optimizerHint": "Note: This plan was created by the {optimizer}.",
       "priceLabel": "Energy price",
       "timeRange": "{day} {range} h",
       "unknownPrice": "still unknown"

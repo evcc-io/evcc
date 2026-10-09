@@ -109,6 +109,22 @@ func (mr *MockAPIMockRecorder) EffectiveMinPower() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectiveMinPower", reflect.TypeOf((*MockAPI)(nil).EffectiveMinPower))
 }
 
+// EffectivePlan mocks base method.
+func (m *MockAPI) EffectivePlan(planTime time.Time, requiredDuration time.Duration, strategy api.PlanStrategy) (api.Rates, float64, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EffectivePlan", planTime, requiredDuration, strategy)
+	ret0, _ := ret[0].(api.Rates)
+	ret1, _ := ret[1].(float64)
+	ret2, _ := ret[2].(bool)
+	return ret0, ret1, ret2
+}
+
+// EffectivePlan indicates an expected call of EffectivePlan.
+func (mr *MockAPIMockRecorder) EffectivePlan(planTime, requiredDuration, strategy any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePlan", reflect.TypeOf((*MockAPI)(nil).EffectivePlan), planTime, requiredDuration, strategy)
+}
+
 // EffectivePlanId mocks base method.
 func (m *MockAPI) EffectivePlanId() int {
 	m.ctrl.T.Helper()
