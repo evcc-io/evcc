@@ -564,7 +564,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		}
 
 		// skip disabled loadpoints
-		if cfg, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, grid); cfg.CMax > 0 {
+		if cfg, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, planner); cfg.CMax > 0 {
 			detail.loadpoint = &id
 			batteries = append(batteries, optimizerBattery{cfg, detail})
 		}
@@ -882,7 +882,7 @@ func batteryForecastSocExtremes(req []optimizer.BatteryConfig, resp []optimizer.
 	return high, low
 }
 
-func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDuration time.Duration, grid api.Rates) (optimizer.BatteryConfig, batteryDetail) {
+func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDuration time.Duration, planner api.Rates) (optimizer.BatteryConfig, batteryDetail) {
 	bat := optimizer.BatteryConfig{
 		ChargeFromGrid: true,
 		CActive:        lp.GetStatus() == api.StatusC,
@@ -955,7 +955,7 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 			demand = continuousDemand(lp, minLen)
 		}
 		// add smartcost limit, precondition and plan goal, if configured
-		demand = applySmartCostLimit(lp, demand, grid, minLen)
+		demand = applySmartCostLimit(lp, demand, planner, minLen)
 		demand = applyPrecondition(lp, demand, minLen)
 		site.applyPlanGoal(lp, &bat, minLen)
 	}
@@ -1329,16 +1329,16 @@ func planSlot(now, ts time.Time) int {
 }
 
 // TODO remove once smart cost limit usage becomes obsolete
-func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, minLen int) []float32 {
+func applySmartCostLimit(lp loadpoint.API, demand []float32, planner api.Rates, minLen int) []float32 {
 	costLimit := lp.GetSmartCostLimit()
 	if costLimit == nil {
 		return demand
 	}
 
-	maxLen := min(minLen, len(grid))
+	maxLen := min(minLen, len(planner))
 
 	// Check if any slots meet the cost limit
-	if hasAffordableSlots := slices.ContainsFunc(grid[:maxLen], func(r api.Rate) bool {
+	if hasAffordableSlots := slices.ContainsFunc(planner[:maxLen], func(r api.Rate) bool {
 		return r.Value <= *costLimit
 	}); !hasAffordableSlots {
 		return demand
@@ -1351,7 +1351,7 @@ func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, min
 	}
 
 	for i := range maxLen {
-		if grid[i].Value <= *costLimit {
+		if planner[i].Value <= *costLimit {
 			demand[i] = float32(maxPower / slotsPerHour)
 		}
 		// else: keep existing demand (either 0 or minPower from always charge)
