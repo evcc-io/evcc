@@ -13,12 +13,12 @@
 				<BatteryIcon class="tab-icon" :soc="batterySoc || 0" :mode="batteryMode" />
 			</Item>
 
-			<Item v-if="experimental" to="/energy" :label="$t('tabBar.energy')">
-				<SankeyIcon class="tab-icon" />
-			</Item>
-
 			<Item to="/forecast" :label="$t('tabBar.forecast')">
 				<ForecastGraphIcon class="tab-icon" />
+			</Item>
+
+			<Item v-if="experimental" to="/energy" :label="$t('tabBar.energy')">
+				<SankeyIcon class="tab-icon" />
 			</Item>
 
 			<!-- six tabs do not fit a phone, sessions moves into the more menu there -->
@@ -102,7 +102,7 @@ export default defineComponent({
 			return (this.battery?.devices?.length ?? 0) > 0;
 		},
 		moreActive() {
-			const mainTabs = ["/", "/energy", "/battery", "/forecast", "/sessions"];
+			const mainTabs = ["/", "/battery", "/forecast", "/energy", "/sessions"];
 			return !mainTabs.includes(this.$route.path);
 		},
 	},
