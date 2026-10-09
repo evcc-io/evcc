@@ -413,7 +413,8 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 		// New charging session pending, reset internal value of SESSION_ENERGY to 0, and its observation timestamp to "now".
 		// This should be done in a proper way by the api, but it's not.
-		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
+		// Only a real replug resets: at startup and after charger offline opMode is ModeOffline and the session continues.
+		if c.opMode == easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
 			c.sessionEnergy = 0
 			c.currentSessionID = 0
 			c.obsTime[easee.SESSION_ENERGY] = time.Now()
