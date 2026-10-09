@@ -4,7 +4,6 @@
 		name="circuit"
 		device-type="circuit"
 		default-template="static"
-		size="xl"
 		:modal-title="$t(`config.circuit.${isNew ? 'titleAdd' : 'titleEdit'}`)"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
@@ -107,18 +106,20 @@
 						{{ loadpointsLabel }}
 					</MultiSelect>
 					<template #additional-help>
-						<div v-if="assignedLoadpoints.length" class="text-gray hyphenate">
-							{{ $t("config.circuit.assignedLoadpoints") }}
-							<code class="ms-1">
-								{{ assignedLoadpoints }}
-							</code>
-						</div>
-						<div v-if="yamlLoadpoints.length" class="text-gray hyphenate">
-							{{ $t("config.circuit.yamlLoadpoints") }}
-							<code class="ms-1">
-								{{ yamlLoadpoints }}
-							</code>
-						</div>
+						<ul>
+							<li v-if="assignedLoadpoints.length" class="text-gray hyphenate">
+								{{ $t("config.circuit.assignedLoadpoints") }}
+								<code class="ms-1">
+									{{ assignedLoadpoints }}
+								</code>
+							</li>
+							<li v-if="yamlLoadpoints.length" class="text-gray hyphenate">
+								{{ $t("config.circuit.yamlLoadpoints") }}
+								<code class="ms-1">
+									{{ yamlLoadpoints }}
+								</code>
+							</li>
+						</ul>
 					</template>
 				</FormRow>
 			</div>
@@ -404,3 +405,8 @@ export default defineComponent({
 	},
 });
 </script>
+<style scoped>
+ul {
+	padding-left: 1rem;
+}
+</style>

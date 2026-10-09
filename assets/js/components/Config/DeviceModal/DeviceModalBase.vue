@@ -371,8 +371,6 @@ export default defineComponent({
 		hideInfo: { type: Boolean, default: false },
 		// Optional: hide the bottom-middle disable button
 		hideDisable: { type: Boolean, default: false },
-		// Optional: set modal size manually
-		size: String,
 	},
 	emits: [
 		"added",
@@ -415,7 +413,7 @@ export default defineComponent({
 			return JSON.stringify(this.values) !== this.baseline;
 		},
 		modalSize(): string | undefined {
-			return this.size ? this.size : this.showYamlInput ? "xl" : undefined;
+			return this.showYamlInput ? "xl" : undefined;
 		},
 		computedTemplateOptions() {
 			if (this.provideTemplateOptions) {
