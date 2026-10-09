@@ -23,4 +23,4 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Validate OpenAPI spec
-        run: go run github.com/getkin/kin-openapi/cmd/validate@v0.133.0 -ext -- server/openapi.yaml
+        run: go tool validate -ext -- server/openapi.yaml
