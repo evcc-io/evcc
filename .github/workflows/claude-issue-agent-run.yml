@@ -399,7 +399,8 @@ jobs:
           if [ "$MODE" = triage ]; then
             args+=(--draft)
           fi
-          if [ "$(gh api "repos/$GITHUB_REPOSITORY/issues/$ISSUE" --jq '.type.name // empty')" = Bug ]; then
-            args+=(--label bug)
-          fi
+          # carry the triaged issue labels over: the PR labeling job skips bot authors
+          mapfile -t labels < <(gh api "repos/$GITHUB_REPOSITORY/issues/$ISSUE" \
+            --jq '[.labels[].name] + (if .type.name == "Bug" then ["bug"] else [] end) | unique | .[]')
+          for l in "${labels[@]}"; do args+=(--label "$l"); done
           gh pr create "${args[@]}"
