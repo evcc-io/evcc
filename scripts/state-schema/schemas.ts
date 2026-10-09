@@ -16,6 +16,8 @@ const RENAME: Record<string, string> = {
   CHARGER_STATUS_REASON: "ChargerStatusReason",
   PHASE_ACTION: "PhaseAction",
   PV_ACTION: "PvAction",
+  PRIORITY_STRATEGY: "PriorityStrategy",
+  PRIORITY_BASIS: "PriorityBasis",
   SMART_COST_TYPE: "SmartCostType",
   OCPP_STATION_STATUS: "OcppConnectionStatus",
   MODBUS_BAUDRATE: "ModbusBaudrate",

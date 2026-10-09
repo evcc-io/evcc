@@ -34,6 +34,36 @@ func (lp *Loadpoint) EffectivePriority() int {
 	return lp.GetPriority()
 }
 
+// PriorityGap returns the strategy gap in soc-% (percent basis) or kWh (energy basis).
+// It is unavailable when disconnected, heating, or missing strategy, charge level, or capacity.
+func (lp *Loadpoint) PriorityGap(strategy api.PriorityStrategy, basis api.PriorityBasis) (float64, bool) {
+	soc := lp.GetSoc()
+	status := lp.GetStatus()
+	if status != api.StatusB && status != api.StatusC || lp.chargerHasFeature(api.Heating) || soc <= 0 {
+		return 0, false
+	}
+
+	var gap float64
+	switch strategy {
+	case api.PrioritySoc:
+		gap = 100 - soc
+	case api.PriorityDeficit:
+		gap = float64(lp.EffectiveLimitSoc()) - soc
+	default:
+		return 0, false
+	}
+
+	if basis == api.PriorityBasisEnergy {
+		v := lp.GetVehicle()
+		if v == nil || v.Capacity() <= 0 {
+			return 0, false
+		}
+		gap *= v.Capacity() / 100
+	}
+
+	return gap, true
+}
+
 type plan struct {
 	Id    int
 	Start time.Time // last possible start time
