@@ -404,10 +404,9 @@ func (wb *BenderCC) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	// 0xFFFFFFFF marks unavailable data; values with the sign bit set are
-	// negative as int32 and were seen while the charger restarts
+	// 0xFFFFFFFF marks unavailable data
 	v := binary.BigEndian.Uint32(b)
-	if v >= 1<<31 {
+	if v == 0xffffffff {
 		return 0, api.ErrNotAvailable
 	}
 
