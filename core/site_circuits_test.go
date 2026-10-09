@@ -132,7 +132,7 @@ type dimmableMeter struct {
 	getErr   error
 	dimErr   error
 	gets     int
-	dimCalls []bool
+	dimCalls []float64
 }
 
 func (m *dimmableMeter) Dimmed() (bool, error) {
@@ -140,12 +140,12 @@ func (m *dimmableMeter) Dimmed() (bool, error) {
 	return m.dimmed, m.getErr
 }
 
-func (m *dimmableMeter) Dim(dim bool) error {
-	m.dimCalls = append(m.dimCalls, dim)
+func (m *dimmableMeter) Dim(limit float64) error {
+	m.dimCalls = append(m.dimCalls, limit)
 	if m.dimErr != nil {
 		return m.dimErr
 	}
-	m.dimmed = dim
+	m.dimmed = limit > 0
 	return nil
 }
 
@@ -160,24 +160,28 @@ func TestDimMetersCache(t *testing.T) {
 	m := &dimmableMeter{}
 	site := dimSite(m)
 
-	require.NoError(t, site.dimMeters(true))
-	assert.Equal(t, []bool{true}, m.dimCalls)
+	require.NoError(t, site.dimMeters(4200))
+	assert.Equal(t, []float64{4200}, m.dimCalls)
 	assert.Equal(t, 1, m.gets)
 
 	for range 3 {
-		require.NoError(t, site.dimMeters(true))
+		require.NoError(t, site.dimMeters(4200))
 	}
-	assert.Equal(t, []bool{true}, m.dimCalls)
+	assert.Equal(t, []float64{4200}, m.dimCalls)
 	assert.Equal(t, 1, m.gets)
 
-	require.NoError(t, site.dimMeters(false))
-	assert.Equal(t, []bool{true, false}, m.dimCalls)
+	// changed limit is written
+	require.NoError(t, site.dimMeters(3000))
+	assert.Equal(t, []float64{4200, 3000}, m.dimCalls)
+
+	require.NoError(t, site.dimMeters(0))
+	assert.Equal(t, []float64{4200, 3000, 0}, m.dimCalls)
 
 	// failed write is retried
 	m.dimErr = errors.New("nope")
-	require.Error(t, site.dimMeters(true))
-	require.Error(t, site.dimMeters(true))
-	assert.Equal(t, []bool{true, false, true, true}, m.dimCalls)
+	require.Error(t, site.dimMeters(4200))
+	require.Error(t, site.dimMeters(4200))
+	assert.Equal(t, []float64{4200, 3000, 0, 4200, 4200}, m.dimCalls)
 }
 
 // A device that cannot report its state is written once, not on every cycle.
@@ -186,10 +190,10 @@ func TestDimMetersNotAvailable(t *testing.T) {
 	site := dimSite(m)
 
 	for range 3 {
-		require.NoError(t, site.dimMeters(true))
+		require.NoError(t, site.dimMeters(4200))
 	}
-	assert.Equal(t, []bool{true}, m.dimCalls)
+	assert.Equal(t, []float64{4200}, m.dimCalls)
 
-	require.NoError(t, site.dimMeters(false))
-	assert.Equal(t, []bool{true, false}, m.dimCalls)
+	require.NoError(t, site.dimMeters(0))
+	assert.Equal(t, []float64{4200, 0}, m.dimCalls)
 }

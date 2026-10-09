@@ -188,10 +188,10 @@ func (wb *SgReady) Dimmed() (bool, error) {
 	return mode == Dim, err
 }
 
-// Dimm implements the api.Dimmer interface
-func (wb *SgReady) Dim(dim bool) error {
+// Dim implements the api.Dimmer interface
+func (wb *SgReady) Dim(limit float64) error {
 	mode := Normal
-	if dim {
+	if limit > 0 {
 		mode = Dim
 	}
 
