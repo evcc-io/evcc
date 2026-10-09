@@ -104,7 +104,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 
 	// temperature (optional, heating devices: soc slot holds temperature in °C)
 	if cc.Temp != "" {
-		implement.Has(c, implement.Battery(func() (float64, error) { return conn.GetFloatState(cc.Temp) }))
+		implement.Has(c, implement.Battery(func() (float64, error) { return conn.GetTemperatureState(cc.Temp) }))
 	}
 
 	// phase currents (optional)
