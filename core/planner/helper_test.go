@@ -21,21 +21,21 @@ func TestSplitPrecondition(t *testing.T) {
 	assert.Equal(t, rr[3:], precond, "precond")
 }
 
-func TestSlotHasSuccessor(t *testing.T) {
-	plan := rates([]float64{20, 60, 10, 80, 40, 90}, time.Now(), time.Hour)
+func TestSlotHasLaterSuccessor(t *testing.T) {
+	clock := clock.NewMock()
+	rr := rates([]float64{1, 2, 3, 4}, clock.Now(), tariff.SlotDuration)
 
-	last := plan[len(plan)-1]
-	rand.Shuffle(len(plan)-1, func(i, j int) {
-		plan[i], plan[j] = plan[j], plan[i]
-	})
+	// single slot
+	require.False(t, SlotHasLaterSuccessor(rr[0], api.Rates{rr[0]}))
 
-	for i := range plan {
-		if plan[i] != last {
-			require.True(t, SlotHasSuccessor(plan[i], plan))
-		}
-	}
+	// adjacent successor
+	require.False(t, SlotHasLaterSuccessor(rr[0], api.Rates{rr[1], rr[0]}))
 
-	require.False(t, SlotHasSuccessor(last, plan))
+	// last slot
+	require.False(t, SlotHasLaterSuccessor(rr[3], api.Rates{rr[3], rr[0]}))
+
+	// later successor
+	require.True(t, SlotHasLaterSuccessor(rr[0], api.Rates{rr[3], rr[0]}))
 }
 
 func TestIsFirst(t *testing.T) {
@@ -57,27 +57,6 @@ func TestIsFirst(t *testing.T) {
 
 	// ensure single slot is always first
 	require.True(t, IsFirst(first, []api.Rate{first}))
-}
-
-func TestIsLast(t *testing.T) {
-	clock := clock.NewMock()
-	plan := rates([]float64{20, 60, 10, 80, 40, 90}, clock.Now(), time.Hour)
-
-	last := plan[len(plan)-1]
-	rand.Shuffle(len(plan), func(i, j int) {
-		plan[i], plan[j] = plan[j], plan[i]
-	})
-
-	for i := range plan {
-		if plan[i] != last {
-			require.False(t, IsLast(plan[i], plan))
-		}
-	}
-
-	require.True(t, IsLast(last, plan))
-
-	// ensure single slot is always last
-	require.True(t, IsLast(last, []api.Rate{last}))
 }
 
 func TestDuration(t *testing.T) {
