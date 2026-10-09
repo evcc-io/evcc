@@ -16,7 +16,7 @@
 					@plan-preview="previewStaticPlan"
 				/>
 				<div v-if="socBasedPlanning">
-					<div v-if="multiplePlans" class="d-none d-lg-block">
+					<div v-if="multiplePlans">
 						<hr class="mt-5" />
 						<h5>
 							<div class="inner mb-3" data-testid="repeating-plan-title">
@@ -29,6 +29,7 @@
 						:id="id"
 						:rangePerSoc="rangePerSoc"
 						:plans="repeatingPlans"
+						:vehicle="vehicle"
 						@updated="updateRepeatingPlans"
 					/>
 				</div>
