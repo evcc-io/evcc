@@ -10,6 +10,7 @@ on:
       - "server/openapi.yaml"
       - "server/openapi.state.yaml"
       - ".github/workflows/openapi-validate.yml"
+      - "go.mod" # validator version follows go.mod
 
 jobs:
   validate-openapi:
