@@ -422,7 +422,7 @@ import SourcesModal from "../components/Energy/SourcesModal.vue";
 import ConsumerRiver, { type RiverLayer } from "../components/Energy/ConsumerRiver.vue";
 import TreemapIcon from "../components/MaterialIcon/Treemap.vue";
 import StreamIcon from "../components/MaterialIcon/Stream.vue";
-import type { HistorySeries } from "../components/Energy/GroupChart.vue";
+import type { HistorySeries, HistorySlot } from "../components/Energy/GroupChart.vue";
 import colors, { batteryColor, darken, deviceColorMap, resolveColors } from "../colors";
 import { PERIODS } from "../components/Sessions/types";
 import {
@@ -672,9 +672,17 @@ export default defineComponent({
 		overviewTitle(): string {
 			return this.overviewOptions.find((o) => o.value === this.overview)?.name || "";
 		},
-		// the buckets every stack is built on
-		flowSlots() {
-			return this.series.find((s) => s.group === "grid" || s.group === "pv")?.data || [];
+		// the buckets every stack is built on: union of all series, a newly added
+		// meter alone would only cover the slots since it was added
+		flowSlots(): HistorySlot[] {
+			const slots = new Map<string, HistorySlot>();
+			for (const s of this.series) {
+				if (s.group === "forecast") continue;
+				for (const slot of s.data) {
+					if (!slots.has(slot.start)) slots.set(slot.start, slot);
+				}
+			}
+			return [...slots.values()].sort((a, b) => a.start.localeCompare(b.start));
 		},
 		stackSeries(): HistorySeries[] {
 			return this.overview === OVERVIEW_VIEW.USAGE ? this.usageSeries : this.flowSeries;

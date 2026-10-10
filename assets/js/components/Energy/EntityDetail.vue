@@ -168,7 +168,7 @@ export default defineComponent({
 			this.isLarge = e.matches;
 		},
 		fmtSource(from: FlowSource, share: number): string {
-			return `${this.fmtPercentage(share)} ${this.$t(`energy.consumers.source.${from}`)}`;
+			return `${this.fmtPercentage(share)} ${this.$t(`energy.sources.${from}`)}`;
 		},
 		fmtMainSource(share: number): string {
 			return this.fmtSource(this.mainSource.from, share);
@@ -203,7 +203,7 @@ export default defineComponent({
 		mainSource(): SourceRow {
 			return this.sources[0]!;
 		},
-		// the other sources, e.g. "14% battery, 10% grid"
+		// the other sources, e.g. "14% Battery, 10% Grid"
 		sourceText(): string {
 			return this.sources
 				.slice(1)

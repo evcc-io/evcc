@@ -165,35 +165,40 @@
     },
     "circuit": {
       "addMeter": "Dedizierten Energiezähler hinzufügen",
-      "custom": "Benutzerdefinierter Stromkreis",
-      "deleteChildrenFirst": "Um diesen Stromkreis zu löschen, müssen zuerst die untergeordneten Stromkreise gelöscht werden.",
-      "meterDedicated": "Dedizierter Zähler",
-      "meterGrid": "Netzbezugszähler",
-      "meterHelp": "Zähler, der den Gesamtverbrauch dieses Stromkreises misst.",
-      "meterLabel": "Zähler",
-      "meterLabelAdd": "Stromkreiszähler hinzufügen",
-      "meterLabelEdit": "Stromkreiszähler bearbeiten",
+      "meterSelectionLabel": "Zählerauswahl",
       "meterNone": "Kein Zähler",
+      "meterSelectionHelpNoMeter": "Die Summe aller Ladepunkte wird verwendet.",
       "meterSelectionHelpDedicatedMeter": "Füge unten einen vorhandenen Zähler zu diesem Stromkreis hinzu.",
       "meterSelectionHelpGridMeter": "Verwendet den vorhandenen Netzbezugszähler deiner Installation.",
-      "meterSelectionHelpNoMeter": "Die Summe aller Ladepunkte wird verwendet.",
-      "meterSelectionLabel": "Zählerauswahl",
+      "meterGrid": "Netzbezugszähler",
+      "meterDedicated": "Dedizierter Zähler",
       "parentCircuit": "Übergeordneter Stromkreis",
-      "template": "Stromkreis",
       "titleAdd": "Stromkreis hinzufügen",
       "titleEdit": "Stromkreis bearbeiten",
-      "titleLabel": "Titel"
+      "titleLabel": "Titel",
+      "template": "Stromkreis",
+      "custom": "Benutzerdefinierter Stromkreis",
+      "meterHelp": "Zähler, der den Gesamtverbrauch dieses Stromkreises misst.",
+      "meterLabelAdd": "Stromkreiszähler hinzufügen",
+      "meterLabelEdit": "Stromkreiszähler bearbeiten",
+      "meterLabel": "Zähler",
+      "deleteChildrenFirst": "Um diesen Stromkreis zu löschen, müssen zuerst die untergeordneten Stromkreise gelöscht werden."
     },
     "circuits": {
-      "addMainCircuit": "Hauptstromkreis hinzufügen",
       "addSubCircuit": "Untergeordneten Stromkreis hinzufügen",
       "chargingPointsNote": "Ladepunkte & Heizgeräte weist du in ihren jeweiligen Einstellungen einem Stromkreis zu.",
+      "addMainCircuit": "Hauptstromkreis hinzufügen",
       "description": "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen.",
       "legacyWarning": "Neue Stromkreis-Konfiguration verfügbar! Entferne und speichere deine Konfiguration hier, um den neuen geführten Prozess zu verwenden.",
+      "title": "Lastmanagement",
       "meterDedicated": "Zähler",
       "meterGrid": "Netz",
-      "title": "Lastmanagement",
       "usableMeters": "Verwendbare Zählerreferenzen"
+    },
+    "consumer": {
+      "description": "Erfasst kleinere, nicht steuerbare Verbraucher (Kühlschrank, Waschmaschine, ...). So bekommst du einen besseren Überblick über deinen Hausverbrauch.",
+      "titleAdd": "Verbrauchszähler hinzufügen",
+      "titleEdit": "Verbrauchszähler bearbeiten"
     },
     "combobox": {
       "count": "{count} Vorschläge",
@@ -202,11 +207,6 @@
       "searching": "Suche…",
       "suggestions": "Vorschläge",
       "used": "bereits verwendet"
-    },
-    "consumer": {
-      "description": "Erfasst kleinere, nicht steuerbare Verbraucher (Kühlschrank, Waschmaschine, ...). So bekommst du einen besseren Überblick über deinen Hausverbrauch.",
-      "titleAdd": "Verbrauchszähler hinzufügen",
-      "titleEdit": "Verbrauchszähler bearbeiten"
     },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
@@ -421,9 +421,9 @@
       "saving": "Speichere …",
       "selectFile": "Durchsuchen",
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
-      "site": "Standort",
       "telemetry": "Telemetrie",
       "templateLoading": "Lade …",
+      "site": "Standort",
       "title": "Titel",
       "typeDeprecated": "Der Typ '{type}' ist veraltet und wird in einer zukünftigen Version entfernt. Bitte Changelog prüfen und Gerät neu anlegen.",
       "validateSave": "Überprüfen & speichern"
@@ -1049,7 +1049,7 @@
         "temperature": "Temperatur-Vorhersage hinzufügen"
       },
       "planner": {
-        "description": "Erweiterte Einstellung. Normalerweise nicht nötig, da dynamische Stromtarife oder CO₂-Vorhersagen automatisch verwendet werden. Ermöglicht eine zusätzliche Datenquelle, die nur für die Ladeplanung verwendet wird und nicht für Statistiken und Preisberechnungen.",
+        "description": "Diese erweiterte Einstellung ist meist nicht nötig. Die Planer-Vorhersage dient als Grundlage für Ladepläne und günstiges oder sauberes Netzladen (Fahrzeuge, Wärmeerzeuger, Hausbatterie). Ohne diese Vorhersage wird automatisch der dynamische Strompreis oder die CO₂-Vorhersage verwendet. Statistiken, Kostenberechnungen und Entscheidungen des Optimizers werden dadurch nicht beeinflusst.",
         "titleAdd": "Planer-Vorhersage hinzufügen",
         "titleEdit": "Planer-Vorhersage bearbeiten"
       },
@@ -1118,123 +1118,6 @@
       "titleAdd": "Fahrzeug hinzufügen",
       "titleEdit": "Fahrzeug bearbeiten"
     }
-  },
-  "energy": {
-    "battery": {
-      "charged": "Geladen",
-      "discharged": "Entladen"
-    },
-    "consumers": {
-      "chart": {
-        "bars": "Balken",
-        "pattern": "Muster"
-      },
-      "cost": "Kosten",
-      "others": "Sonstige",
-      "source": {
-        "battery": "Speicher",
-        "grid": "Netz",
-        "pv": "Solar"
-      },
-      "title": "Verbraucher",
-      "view": {
-        "river": "River",
-        "treemap": "Treemap"
-      }
-    },
-    "direction": {
-      "battery": {
-        "energy": "geladen",
-        "returnEnergy": "entladen"
-      },
-      "grid": {
-        "energy": "Bezug",
-        "returnEnergy": "Einspeisung"
-      },
-      "meter": {
-        "energy": "Energie",
-        "returnEnergy": "Energie (rückwärts)"
-      }
-    },
-    "empty": "Keine Energiedaten für diesen Zeitraum verfügbar.",
-    "flow": {
-      "battery": "Batterie",
-      "batteryCharge": "Batterieladung",
-      "batteryDischarge": "Batterieentladung",
-      "charging": "Laden",
-      "export": "Einspeisung",
-      "grid": "Netzbezug",
-      "heating": "Heizen",
-      "home": "Verbrauch",
-      "overview": "Übersicht",
-      "pv": "Erzeugung",
-      "title": "Energiefluss",
-      "usage": "Verwendung",
-      "withdrawal": "Entnahme"
-    },
-    "grid": {
-      "amount": "Betrag",
-      "cost": "Netzkosten",
-      "energy": "Energie",
-      "export": "Einspeisung",
-      "exportPrice": "Einspeisepreis",
-      "import": "Bezug",
-      "importPrice": "Bezugspreis",
-      "price": "Preis",
-      "revenue": "Einspeisevergütung",
-      "title": "Netz"
-    },
-    "group": {
-      "battery": "Batterie",
-      "consumer": "Verbrauch",
-      "forecast": "Vorhersage",
-      "grid": "Netz",
-      "meter": "Weitere Zähler",
-      "pv": "Erzeugung"
-    },
-    "production": {
-      "above": "{value} darüber",
-      "accuracy": "Vorhersagegenauigkeit",
-      "below": "{value} darunter",
-      "deviation": "Abweichung",
-      "expectedTomorrow": "morgen erwartet",
-      "exported": "{value} eingespeist",
-      "produced": "Erzeugt",
-      "remainingToday": "heute verbleibend",
-      "selfConsumed": "Selbst verbraucht",
-      "title": "Erzeugung"
-    },
-    "socTemp": {
-      "charged": "geladen",
-      "soc": "Ladung",
-      "temperature": "Temperatur",
-      "used": "verbraucht"
-    },
-    "sources": {
-      "battery": "Batterie",
-      "cost": "Kosten",
-      "energy": "Energie",
-      "grid": "Netz",
-      "hint": "Solar- und Batteriestrom zum Einspeisepreis bewertet.",
-      "price": "Preis/kWh",
-      "pv": "Solar",
-      "share": "Anteil",
-      "source": "Quelle",
-      "title": "Quellen",
-      "total": "Gesamt"
-    },
-    "stat": {
-      "autarky": "Autarkie",
-      "co2Saved": "CO₂ gespart",
-      "co2SavedTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz.",
-      "configure": "Jetzt einrichten",
-      "noCo2": "Keine CO₂-Daten.",
-      "noPrice": "Keine Preisdaten.",
-      "savings": "Ersparnis",
-      "savingsTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz.",
-      "versus": "{value} statt {reference}"
-    },
-    "title": "Energie"
   },
   "footer": {
     "community": {
@@ -1411,6 +1294,118 @@
     "restartDescription": "Schon versucht, das Gerät aus- und wieder einzuschalten?",
     "secondaryActions": "Noch keine Lösung gefunden? Hier sind noch ein paar weitere Möglichkeiten."
   },
+  "energy": {
+    "battery": {
+      "charged": "Geladen",
+      "discharged": "Entladen"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Balken",
+        "pattern": "Muster"
+      },
+      "cost": "Kosten",
+      "others": "Sonstige",
+      "title": "Verbraucher",
+      "view": {
+        "river": "River",
+        "treemap": "Treemap"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "geladen",
+        "returnEnergy": "entladen"
+      },
+      "grid": {
+        "energy": "Bezug",
+        "returnEnergy": "Einspeisung"
+      },
+      "meter": {
+        "energy": "Energie",
+        "returnEnergy": "Energie (rückwärts)"
+      }
+    },
+    "empty": "Keine Energiedaten für diesen Zeitraum verfügbar.",
+    "flow": {
+      "battery": "Batterie",
+      "batteryCharge": "Batterieladung",
+      "batteryDischarge": "Batterieentladung",
+      "charging": "Laden",
+      "export": "Einspeisung",
+      "grid": "Netzbezug",
+      "heating": "Heizen",
+      "home": "Verbrauch",
+      "overview": "Übersicht",
+      "pv": "Erzeugung",
+      "title": "Energiefluss",
+      "usage": "Verwendung",
+      "withdrawal": "Entnahme"
+    },
+    "grid": {
+      "amount": "Betrag",
+      "cost": "Netzkosten",
+      "energy": "Energie",
+      "export": "Einspeisung",
+      "exportPrice": "Einspeisepreis",
+      "import": "Bezug",
+      "importPrice": "Bezugspreis",
+      "price": "Preis",
+      "revenue": "Einspeisevergütung",
+      "title": "Netz"
+    },
+    "group": {
+      "battery": "Batterie",
+      "consumer": "Verbrauch",
+      "forecast": "Vorhersage",
+      "grid": "Netz",
+      "meter": "Weitere Zähler",
+      "pv": "Erzeugung"
+    },
+    "production": {
+      "above": "{value} darüber",
+      "accuracy": "Vorhersagegenauigkeit",
+      "below": "{value} darunter",
+      "deviation": "Abweichung",
+      "expectedTomorrow": "morgen erwartet",
+      "exported": "{value} eingespeist",
+      "produced": "Erzeugt",
+      "remainingToday": "heute verbleibend",
+      "selfConsumed": "Selbst verbraucht",
+      "title": "Erzeugung"
+    },
+    "socTemp": {
+      "charged": "geladen",
+      "soc": "Ladung",
+      "temperature": "Temperatur",
+      "used": "verbraucht"
+    },
+    "sources": {
+      "battery": "Batterie",
+      "cost": "Kosten",
+      "energy": "Energie",
+      "grid": "Netz",
+      "hint": "Solar- und Batteriestrom zum Einspeisepreis bewertet.",
+      "price": "Preis/kWh",
+      "pv": "Solar",
+      "share": "Anteil",
+      "source": "Quelle",
+      "title": "Quellen",
+      "total": "Gesamt"
+    },
+    "stat": {
+      "autarky": "Autarkie",
+      "co2Saved": "CO₂ gespart",
+      "co2SavedTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz.",
+      "configure": "Jetzt einrichten",
+      "noCo2": "Keine CO₂-Daten.",
+      "noPrice": "Keine Preisdaten.",
+      "savings": "Ersparnis",
+      "savingsTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz.",
+      "versus": "{value} statt {reference}"
+    },
+    "title": "Energie"
+  },
   "issue": {
     "additional": {
       "copied": "Kopiert!",
@@ -1448,6 +1443,10 @@
     },
     "issueDescription": "Beschreibung",
     "issueTitle": "Titel",
+    "nightlyHint": "Vielleicht ist der Fehler bereits behoben. Bitte teste vorher die aktuelle {nightlyVersion}.",
+    "nightlyHintVersion": "Nightly-Version",
+    "searchHint": "Bevor du einen Fehler meldest, durchsuche die bestehenden {issues}.",
+    "searchHintLink": "GitHub-Issues",
     "stepsToReproduce": "Schritte zur Reproduktion",
     "subTitleDiscussion": "Beschreibe dein Problem",
     "subTitleEmail": "Beschreibe dein Problem",
@@ -1557,10 +1556,10 @@
       "batteryCharge": "Batterie laden",
       "batteryChargeHold": "Batterie (Ladesperre)",
       "batteryDischarge": "Batterie entladen",
+      "batteryStatus": "Batteriestatus",
       "batteryDischargeHold": "Batterie (Entladesperre)",
       "batteryGridChargeActive": "Netzladen: aktiv",
       "batteryGridChargeLimit": "Netzladen: wenn",
-      "batteryStatus": "Batteriestatus",
       "batteryTooltip": "{energy} von {total} ({soc})",
       "forecast": "Vorhersage",
       "forecastTooltip": "Vorhersage: verbleibende PV-Produktion heute",

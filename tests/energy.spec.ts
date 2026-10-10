@@ -138,6 +138,22 @@ test.describe("page", () => {
     await expect(page.getByTestId("energy-stat-co2")).toContainText("1 kg");
   });
 
+  // the overview grid must cover every series, not only the slots of the
+  // first grid/pv series. Solar sorts first and has no rows at night and on
+  // days 16 and 18, where grid import and battery discharge happen
+  test("overview covers slots of every series", async ({ page }) => {
+    const legend = (label: string) =>
+      page.getByTestId("energy-flow").getByRole("listitem").filter({ hasText: label });
+
+    await page.goto("/#/energy?year=2026&month=9&day=15");
+    await expect(legend("Grid import")).toContainText("2.0 kWh");
+    await expect(legend("Battery discharge")).toContainText("1.0 kWh");
+
+    await page.goto("/#/energy?period=month&year=2026&month=9");
+    await expect(legend("Grid import")).toContainText("3.0 kWh");
+    await expect(legend("Battery discharge")).toContainText("2.0 kWh");
+  });
+
   // plot area spans the chart width minus the 36px axes, 96 slots a day
   const slotX = (width: number, slot: number, left = 0) =>
     left + ((width - left - 36) * (slot + 0.5)) / 96;
@@ -236,8 +252,8 @@ test.describe("page", () => {
       // carport 3 kWh: 1 solar at feed-in 0.10, 2 grid at ø 0.30
       await page.goto("/#/energy?year=2026&month=9&day=15");
       const sources = page.getByTestId("energy-loadpoint").getByRole("button", { name: "Sources" });
-      await expect(sources).toContainText("33% solar");
-      await expect(sources).toContainText("0% battery, 67% grid");
+      await expect(sources).toContainText("33% Solar");
+      await expect(sources).toContainText("0% Battery, 67% Grid");
 
       await sources.click();
       const modal = page.getByTestId("energy-sources-modal");
@@ -266,7 +282,7 @@ test.describe("page", () => {
       const loadpoint = page.getByTestId("energy-loadpoint");
       await expect(loadpoint.getByRole("heading", { name: "Carport 1.0 kWh" })).toBeVisible();
       const sources = loadpoint.getByRole("button", { name: "Sources" });
-      await expect(sources).toContainText("100% solar");
+      await expect(sources).toContainText("100% Solar");
       await expect(sources).not.toContainText("battery");
       await expect(sources).not.toContainText("grid");
 
@@ -283,7 +299,7 @@ test.describe("page", () => {
     test("battery leads without solar", async ({ page }) => {
       await page.goto("/#/energy?year=2026&month=9&day=18");
       const sources = page.getByTestId("energy-loadpoint").getByRole("button", { name: "Sources" });
-      await expect(sources).toContainText("100% battery");
+      await expect(sources).toContainText("100% Battery");
       await expect(sources).not.toContainText("solar");
     });
 
