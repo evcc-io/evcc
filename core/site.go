@@ -385,8 +385,8 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 
 	// revert battery mode on shutdown
 	shutdown.Register(func() {
-		if mode := site.GetBatteryMode(); batteryModeModified(mode) {
-			if err := site.applyBatteryMode(api.BatteryNormal); err != nil {
+		if site.batteryModesModified() {
+			if err := site.applyBatteryMode(api.BatteryNormal, nil); err != nil {
 				site.log.ERROR.Println("battery mode:", err)
 			}
 		}

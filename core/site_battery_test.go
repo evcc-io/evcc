@@ -132,11 +132,11 @@ func TestBatteryUnsupportedModeReleases(t *testing.T) {
 		batCon.EXPECT().SetBatteryMode(api.BatteryNormal),
 	)
 
-	assert.NoError(t, site.applyBatteryMode(api.BatteryCharge))
-	assert.NoError(t, site.applyBatteryMode(api.BatteryHoldCharge))
+	assert.NoError(t, site.applyBatteryMode(api.BatteryCharge, nil))
+	assert.NoError(t, site.applyBatteryMode(api.BatteryHoldCharge, nil))
 
 	// normal is already applied
-	assert.NoError(t, site.applyBatteryMode(api.BatteryHoldCharge))
+	assert.NoError(t, site.applyBatteryMode(api.BatteryHoldCharge, nil))
 
 	ctrl.Finish()
 }
@@ -244,7 +244,7 @@ func TestRequiredExternalBatteryMode(t *testing.T) {
 		site.batteryMode = tc.internal
 		site.batteryModeExternal = tc.external
 
-		mode := site.requiredBatteryMode(false, false, api.Rate{})
+		mode, _ := site.requiredBatteryMode(false, false, api.Rate{})
 		assert.Equal(t, tc.new.String(), mode.String(), "internal mode expected %s got %s", tc.new, mode)
 	}
 }
@@ -497,7 +497,7 @@ func TestBatteryGridDischargeEvFastCharging(t *testing.T) {
 		loadpoints:    []*Loadpoint{lp},
 	}
 
-	res := site.requiredBatteryMode(false, true, api.Rate{})
+	res, _ := site.requiredBatteryMode(false, true, api.Rate{})
 	assert.Equal(t, api.BatteryHold, res, "expected discharge to be held back for a fast charging EV")
 }
 

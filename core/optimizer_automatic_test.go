@@ -549,3 +549,89 @@ func TestOptimizerPlanActive(t *testing.T) {
 	_, _, optimized = lp.EffectivePlan(planTime, time.Hour, api.PlanStrategy{})
 	assert.False(t, optimized)
 }
+
+// TestBatteryModesPerDevice guards that in automatic mode each battery follows its own
+// optimizer suggestion instead of the mode of the first battery
+func TestBatteryModesPerDevice(t *testing.T) {
+	enableAutomatic(t)
+	ctrl := gomock.NewController(t)
+
+	active, activeCon := batteryControlMock(ctrl, 50, 100)
+	idle, idleCon := batteryControlMock(ctrl, 50, 100)
+
+	site := &Site{
+		log: util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{
+			config.NewStaticDevice(config.Named{Name: "active"}, active),
+			config.NewStaticDevice(config.Named{Name: "idle"}, idle),
+		},
+		suggestions: map[string]types.Suggestion{
+			batteryKey("active"): {Action: api.BatteryNormal.String()},
+			batteryKey("idle"):   {Action: api.BatteryHold.String()},
+		},
+	}
+
+	activeCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
+	idleCon.EXPECT().SetBatteryMode(api.BatteryHold).Times(1)
+
+	for range 3 {
+		site.updateBatteryMode(false, false, api.Rate{})
+	}
+
+	assert.Equal(t, api.BatteryNormal, site.batteryMode, "site mode follows the first battery")
+}
+
+// TestBatteryModesReleasedWithoutSuggestion guards that a battery held by an earlier suggestion
+// returns to normal once the suggestions are gone, although the site mode is normal already
+func TestBatteryModesReleasedWithoutSuggestion(t *testing.T) {
+	enableAutomatic(t)
+	ctrl := gomock.NewController(t)
+
+	idle, idleCon := batteryControlMock(ctrl, 50, 100)
+
+	site := &Site{
+		log:                util.NewLogger("foo"),
+		batteryMeters:      []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "idle"}, idle)},
+		batteryMode:        api.BatteryNormal,
+		batteryModeApplied: map[string]api.BatteryMode{"idle": api.BatteryHold},
+	}
+
+	idleCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
+
+	for range 3 {
+		site.updateBatteryMode(false, false, api.Rate{})
+	}
+}
+
+// TestBatteryModesHemsCurtailed guards that HEMS curtailment overrides a grid discharge
+// suggested for a battery other than the first
+func TestBatteryModesHemsCurtailed(t *testing.T) {
+	enableAutomatic(t)
+	ctrl := gomock.NewController(t)
+
+	active, activeCon := batteryControlMock(ctrl, 50, 100)
+	idle, idleCon := batteryControlMock(ctrl, 50, 100)
+
+	curtailed := 60
+	h := api.NewMockHEMS(ctrl)
+	h.EXPECT().CurtailedPercent().Return(&curtailed).AnyTimes()
+	h.EXPECT().MaxConsumptionPower().Return(nil).AnyTimes()
+
+	site := &Site{
+		log:  util.NewLogger("foo"),
+		hems: h,
+		batteryMeters: []config.Device[api.Meter]{
+			config.NewStaticDevice(config.Named{Name: "active"}, active),
+			config.NewStaticDevice(config.Named{Name: "idle"}, idle),
+		},
+		suggestions: map[string]types.Suggestion{
+			batteryKey("active"): {Action: api.BatteryNormal.String()},
+			batteryKey("idle"):   {Action: api.BatteryDischarge.String()},
+		},
+	}
+
+	activeCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
+	idleCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
+
+	site.updateBatteryMode(false, false, api.Rate{})
+}
