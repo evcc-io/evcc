@@ -1,7 +1,7 @@
 {
   "authProviders": {
-    "authCode": "Autorisierungscode",
-    "authCodeHelp": "Kopiere diesen Code und verwende ihn im nächsten Schritt. Gültig für {duration}.",
+    "authCode": "Authentifizierungscode",
+    "authCodeHelp": "Kopiere diesen Code und verwende ihn im nächsten Schritt. Er ist gültig für {duration}.",
     "authorizationFailed": "Autorisierung fehlgeschlagen",
     "authorizationRequired": "Autorisierung erforderlich",
     "authorizationSuccessful": "Autorisierung erfolgreich",
@@ -788,7 +788,7 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionExternalUrl": "Adresse, mit der sich andere Geräte mit evcc verbinden und für die Autodiscovery der evcc-App.",
+      "descriptionExternalUrl": "Adresse, mit der sich andere Geräte mit evcc verbinden und für die Auto-Discovery der evcc-App.",
       "descriptionHost": "Wird verwendet, um evcc in deinem lokalen Netzwerk anzukündigen.",
       "descriptionInternalUrl": "Lokale Netzwerkadresse von evcc.",
       "descriptionPort": "Port für die Web-Oberfläche und API. Du musst deine Browser-URL aktualisieren, wenn du dies änderst.",
@@ -913,7 +913,7 @@
       "grid": "Netzanschluss",
       "integrations": "Integrationen",
       "loadpoints": "Ladepunkte & Heizungen",
-      "meter": "PV & Batterie",
+      "meter": "PV & Speicher",
       "services": "Dienste",
       "system": "System",
       "vehicles": "Fahrzeuge"
