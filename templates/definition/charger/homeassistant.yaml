@@ -120,6 +120,16 @@ params:
     help:
       en: Entity ID for cumulative energy measurement in kWh
       de: Entitäts-ID für kumulative Energiemessung in kWh
+  - name: temp
+    description:
+      de: Temperaturentität
+      en: Temperature entity
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor,input_number
+    example: "sensor.boiler_temperature"
+    advanced: true
+    help:
+      en: Entity ID for temperature measurement in °C (heating devices)
+      de: Entitäts-ID für Temperaturmessung in °C (Heizgeräte)
   - name: currentL1
     description:
       de: L1 Stromentität
@@ -210,6 +220,7 @@ render: |
   milliamps: {{ .milliamps }}
   power: {{ .power }}
   energy: {{ .energy }}
+  temp: {{ .temp }}
   {{- if and .currentL1 .currentL2 .currentL3 }}
   currents:
     - {{ .currentL1 }}

@@ -45,6 +45,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		Currents             []string // optional - current sensors for L1, L2, L3
 		Voltages             []string // optional - voltage sensors for L1, L2, L3
 		Phases               string   // optional - select entity for 1p/3p phase switching
+		Temp                 string   // optional - temperature sensor (°C), for heating devices
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -99,6 +100,11 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	}
 	if cc.Energy != "" {
 		implement.Has(c, implement.MeterEnergy(func() (float64, error) { return conn.GetFloatState(cc.Energy) }))
+	}
+
+	// temperature (optional), reported as soc for heating devices
+	if cc.Temp != "" {
+		implement.Has(c, implement.Battery(func() (float64, error) { return conn.GetTemperatureState(cc.Temp) }))
 	}
 
 	// phase currents (optional)
