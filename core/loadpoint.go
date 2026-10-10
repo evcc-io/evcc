@@ -2484,7 +2484,7 @@ NO_DIM:
 		err = lp.disableUnlessClimater()
 
 	case lp.LimitSocReached():
-		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.EffectiveLimitSoc())
+		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% >= %d%%", lp.vehicleSoc, lp.EffectiveLimitSoc())
 		err = lp.disableUnlessClimater()
 
 	// immediate charging- must be placed after limits are evaluated
