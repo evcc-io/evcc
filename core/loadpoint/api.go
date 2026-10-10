@@ -147,6 +147,8 @@ type API interface {
 	RequestUpdate()
 	// GetPlanGoal returns the plan goal and if the goal is soc based
 	GetPlanGoal() (float64, bool)
+	// GetPlanRemainingEnergy returns the energy plan's missing energy in kWh
+	GetPlanRemainingEnergy() float64
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state
 	GetPlanRequiredDuration(goal, maxPower float64) time.Duration
 	// GetPlanStrategy returns the plan strategy
