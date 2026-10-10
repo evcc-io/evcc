@@ -1412,6 +1412,14 @@ components:
         internalUrl:
           description: URL in the local network.
           type: string
+        mdns:
+          description: mDNS announcement.
+          type: object
+          properties:
+            disabled:
+              type: boolean
+          required:
+            - disabled
       required:
         - host
         - port

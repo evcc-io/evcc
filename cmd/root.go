@@ -351,7 +351,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// announce on mDNS
-	if err == nil {
+	if err == nil && !conf.Network.Mdns.Disabled {
 		if err := configureMDNS(conf.Network); err != nil {
 			log.WARN.Println("mDNS:", err)
 		}
