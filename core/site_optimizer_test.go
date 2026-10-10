@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -692,6 +693,64 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "idle within bounds is withheld")
 }
 
+func TestCurrentSlotSuggestionGridTolerance(t *testing.T) {
+	battery := batteryDetail{Type: batteryTypeBattery}
+	req := optimizer.BatteryConfig{SMin: 2845.5, SMax: 18970}
+
+	for _, seconds := range []int{900, 570, 250, 2} {
+		t.Run(fmt.Sprint(seconds), func(t *testing.T) {
+			hours := float64(seconds) / 3600
+			for _, tc := range []struct {
+				name                   string
+				charge, discharge      float64
+				gridImport, gridExport float64
+				want                   api.BatteryMode
+			}{
+				{"idle import noise", 0, 0, 4e-05 / hours, 0, api.BatteryNormal},
+				{"idle export noise", 0, 0, 0, 4e-05 / hours, api.BatteryNormal},
+				{"idle balanced", 0, 0, 0, 0, api.BatteryNormal},
+				{"pv charge import noise", 3000, 0, 4e-05 / hours, 0, api.BatteryNormal},
+				{"self-consumption export noise", 0, 2000, 0, 4e-05 / hours, api.BatteryNormal},
+				{"import below threshold", 0, 0, 49, 0, api.BatteryNormal},
+				{"export below threshold", 0, 0, 0, 49, api.BatteryNormal},
+				{"import above threshold", 0, 0, 51, 0, api.BatteryHold},
+				{"export above threshold", 0, 0, 0, 51, api.BatteryHoldCharge},
+				{"grid charge above threshold", 3000, 0, 51, 0, api.BatteryCharge},
+				{"grid discharge above threshold", 0, 2000, 0, 51, api.BatteryDischarge},
+			} {
+				t.Run(tc.name, func(t *testing.T) {
+					res := optimizer.BatteryResult{
+						ChargingPower:    []float32{float32(tc.charge * hours)},
+						DischargingPower: []float32{float32(tc.discharge * hours)},
+						StateOfCharge:    []float32{5501.3},
+					}
+					gridImport, gridExport := float32(tc.gridImport*hours), float32(tc.gridExport*hours)
+					s := currentSlotSuggestion(battery, req, res, 0, gridImport, gridExport, hours)
+					assert.Equal(t, tc.want.String(), s.Action)
+					assert.InDelta(t, float64(res.ChargingPower[0])/hours, s.Charge, 1e-6)
+					assert.InDelta(t, float64(res.DischargingPower[0])/hours, s.Discharge, 1e-6)
+					assert.InDelta(t, float64(gridImport-gridExport)/hours, s.Grid, 1e-6)
+				})
+			}
+		})
+	}
+
+	// These durations represent the 50 W boundary exactly in float32 slot energy.
+	for _, hours := range []float64{1, 0.25} {
+		for _, batteryFlows := range [][2]float32{{0, 0}, {3000, 0}, {0, 3000}} {
+			res := optimizer.BatteryResult{
+				ChargingPower:    []float32{batteryFlows[0] * float32(hours)},
+				DischargingPower: []float32{batteryFlows[1] * float32(hours)},
+				StateOfCharge:    []float32{5501.3},
+			}
+			for _, flows := range [][2]float32{{50 * float32(hours), 0}, {0, 50 * float32(hours)}} {
+				s := currentSlotSuggestion(battery, req, res, 0, flows[0], flows[1], hours)
+				assert.Equal(t, api.BatteryNormal.String(), s.Action)
+			}
+		}
+	}
+}
+
 // TestSuggestionActionable ensures the actionable flag follows the current state
 // instead of the state at optimizer run time
 func TestSuggestionActionable(t *testing.T) {
@@ -840,6 +899,38 @@ func TestReapplySuggestionAcrossSlotBoundary(t *testing.T) {
 
 	assert.Equal(t, api.BatteryHold.String(), site.suggestion(batteryKey("home"), api.BatteryNormal.String()).Action)
 	assert.Equal(t, actionCharge, site.suggestion(loadpointKey(0), actionStop).Action)
+}
+
+func TestReapplySuggestionsGridTolerance(t *testing.T) {
+	now := time.Date(2026, 10, 10, 11, 20, 30, 0, time.UTC)
+	schedule := optimizerSchedule{
+		timestamps: []time.Time{now, now.Add(570 * time.Second), now.Add(1470 * time.Second)},
+		dt:         []int{570, 900, 900},
+	}
+	site := &Site{log: util.NewLogger("foo")}
+	site.applyOptimizerResult(
+		optimizer.OptimizationInput{
+			TimeSeries: optimizer.TimeSeries{Dt: schedule.dt},
+			Batteries:  []optimizer.BatteryConfig{{SMin: 2845.5, SMax: 18970}},
+		},
+		requestDetails{Timestamps: schedule.timestamps, BatteryDetails: []batteryDetail{reapplyHomeBattery}},
+		optimizer.OptimizationResult{
+			GridImport: []float32{4e-05, 4e-05, 12},
+			Batteries: []optimizer.BatteryResult{{
+				ChargingPower:    []float32{0, 0, 0},
+				DischargingPower: []float32{0, 0, 0},
+				StateOfCharge:    []float32{5501.3, 5501.3, 5501.3},
+			}},
+		},
+		schedule, now, now,
+	)
+	assert.Equal(t, api.BatteryNormal.String(), site.suggestions[batteryKey("home")].Action)
+
+	for _, at := range []time.Time{schedule.timestamps[1], schedule.timestamps[2].Add(time.Minute)} {
+		site.reapplySuggestions(at)
+		assert.Equal(t, api.BatteryNormal.String(), site.suggestions[batteryKey("home")].Action)
+	}
+	assert.InDelta(t, 48, site.suggestions[batteryKey("home")].Grid, 1e-6)
 }
 
 func TestReapplySuggestionsDoesNotResurrectClearedAdvice(t *testing.T) {
