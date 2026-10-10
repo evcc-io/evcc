@@ -21,6 +21,7 @@
 			:service-loading="serviceLoading"
 			:label="label"
 			:currency="currency"
+			:default-value="Default"
 		/>
 	</FormRow>
 </template>
@@ -44,6 +45,7 @@ export default {
 		Description: String,
 		Help: String,
 		Example: String,
+		Default: [String, Number, Boolean],
 		Type: String,
 		Unit: String,
 		Mask: Boolean,

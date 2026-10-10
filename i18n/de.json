@@ -1049,7 +1049,7 @@
         "temperature": "Temperatur-Vorhersage hinzufügen"
       },
       "planner": {
-        "description": "Erweiterte Einstellung. Normalerweise nicht nötig, da dynamische Stromtarife oder CO₂-Vorhersagen automatisch verwendet werden. Ermöglicht eine zusätzliche Datenquelle, die nur für die Ladeplanung verwendet wird und nicht für Statistiken und Preisberechnungen.",
+        "description": "Diese erweiterte Einstellung ist meist nicht nötig. Die Planer-Vorhersage dient als Grundlage für Ladepläne und günstiges oder sauberes Netzladen (Fahrzeuge, Wärmeerzeuger, Hausbatterie). Ohne diese Vorhersage wird automatisch der dynamische Strompreis oder die CO₂-Vorhersage verwendet. Statistiken, Kostenberechnungen und Entscheidungen des Optimizers werden dadurch nicht beeinflusst.",
         "titleAdd": "Planer-Vorhersage hinzufügen",
         "titleEdit": "Planer-Vorhersage bearbeiten"
       },
@@ -1443,6 +1443,10 @@
     },
     "issueDescription": "Beschreibung",
     "issueTitle": "Titel",
+    "nightlyHint": "Vielleicht ist der Fehler bereits behoben. Bitte teste vorher die aktuelle {nightlyVersion}.",
+    "nightlyHintVersion": "Nightly-Version",
+    "searchHint": "Bevor du einen Fehler meldest, durchsuche die bestehenden {issues}.",
+    "searchHintLink": "GitHub-Issues",
     "stepsToReproduce": "Schritte zur Reproduktion",
     "subTitleDiscussion": "Beschreibe dein Problem",
     "subTitleEmail": "Beschreibe dein Problem",

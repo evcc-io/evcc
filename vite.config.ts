@@ -105,6 +105,8 @@ export default defineConfig({
     emptyOutDir: true,
     assetsInlineLimit: 1024,
     chunkSizeWarningLimit: 800, // legacy build increases file size
+    // plugin-legacy defaults this to chrome61, the css minifier then drops every Safari-only prefix
+    cssTarget: ["chrome61", "ios12"],
   },
   server: {
     port: frontendPort,

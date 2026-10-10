@@ -2,10 +2,14 @@ package charger
 
 import (
 	"errors"
+	"io"
+	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/evcc-io/evcc/charger/zaptec"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -140,4 +144,51 @@ func TestZaptecConnectionDurationIgnoresEmptySession(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "b", c.session)
 	assert.NotEqual(t, start, c.sessionStart)
+}
+
+type zaptecRoundTripper func(*http.Request) (*http.Response, error)
+
+func (f zaptecRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+func TestZaptecEnableRejection(t *testing.T) {
+	tests := []struct {
+		name    string
+		status  int
+		body    string
+		wantErr bool
+	}{
+		{"accepted", http.StatusOK, "", false},
+		{"rejected by Go 2", http.StatusInternalServerError, `{"Code":528,"Details":"Charging is not Paused nor Scheduled; Resume command cannot be sent"}`, false},
+		{"rejected by Pro", http.StatusInternalServerError, `{"Code":520,"Details":null,"StackTrace":null}`, false},
+		{"failed", http.StatusInternalServerError, `{"Code":500}`, true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			helper := request.NewHelper(util.NewLogger("foo"))
+			helper.Transport = zaptecRoundTripper(func(req *http.Request) (*http.Response, error) {
+				assert.Equal(t, "/api/chargers/id/sendCommand/507", req.URL.Path)
+				return &http.Response{StatusCode: tc.status, Body: io.NopCloser(strings.NewReader(tc.body)), Request: req}, nil
+			})
+
+			c := &Zaptec{
+				Helper:   helper,
+				instance: zaptec.Charger{Id: "id"},
+				statusG: util.ResettableCached(func() (zaptec.StateResponse, error) {
+					return nil, nil
+				}, 0),
+			}
+
+			err := c.Enable(true)
+			if tc.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			assert.Equal(t, !tc.wantErr, c.enabled)
+		})
+	}
 }
