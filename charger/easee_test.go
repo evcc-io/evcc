@@ -509,6 +509,14 @@ func TestEasee_Phases1p3p_chargerLevel(t *testing.T) {
 		require.NoError(t, e.Phases1p3p(tc.phases))
 		assert.Equal(t, tc.sent, sent, "phaseMode %d to %dp", tc.phaseMode, tc.phases)
 	}
+
+	// automatic is not reported as 3p, so the loadpoint switches to lock it
+	for phaseMode, phases := range map[int]int{1: 1, 2: 0, 3: 3} {
+		e.phaseMode = phaseMode
+		res, err := e.GetPhases()
+		require.NoError(t, err)
+		assert.Equal(t, phases, res, "phaseMode %d", phaseMode)
+	}
 }
 
 func TestLivenessCheck_staleObservations(t *testing.T) {

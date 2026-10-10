@@ -799,10 +799,9 @@ func (c *Easee) GetPhases() (int, error) {
 			}
 		}
 	} else {
-		// charger level
-		phases = c.phaseMode
-		if phases == 2 { // map automatic to 3p
-			phases = 3
+		// charger level: automatic (2, left by earlier versions) is unknown so the loadpoint locks the phases
+		if c.phaseMode != 2 {
+			phases = c.phaseMode
 		}
 	}
 	return phases, nil
