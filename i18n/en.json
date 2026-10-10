@@ -1623,6 +1623,22 @@
       "batteryUsage": "Home Battery",
       "currents": "Charging Current",
       "default": "default",
+      "demandPredictor": {
+        "daily": {
+          "description": "Best for devices with consistent daily usage, regardless of the day of the week.",
+          "label": "Average"
+        },
+        "label": "Demand forecast",
+        "noTempTariff": "Requires a temperature tariff to be configured.",
+        "temperature": {
+          "description": "Best for room heating where load changes with outdoor temperature, like heat pumps or electrical room heaters.",
+          "label": "Temperature"
+        },
+        "weekday": {
+          "description": "Best for devices where load follows a same weekday pattern, like warm water or pool heaters.",
+          "label": "Weekday"
+        }
+      },
       "heating": "Heating",
       "maxCurrent": {
         "label": "Max. Current"

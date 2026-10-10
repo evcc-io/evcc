@@ -102,6 +102,43 @@
 					</small>
 				</div>
 			</div>
+			<div v-if="heating" class="mb-3 row">
+				<label
+					:for="formId('demandpredictor')"
+					class="col-sm-4 col-form-label pt-0 pt-sm-2"
+				>
+					{{ $t("main.loadpointSettings.demandPredictor.label") }}
+				</label>
+				<DemandPredictorDropdown
+					:id="formId('demandpredictor')"
+					:loadpoint-id="id ?? ''"
+					:demand-predictor="loadpoint?.demandPredictor ?? ''"
+					:charger-feature-demand-temperature="
+						loadpoint?.chargerFeatureDemandTemperature ?? false
+					"
+					:charger-feature-demand-weekday="
+						loadpoint?.chargerFeatureDemandWeekday ?? false
+					"
+				/>
+				<div class="col-sm-8 offset-sm-4 mt-1">
+					<small
+						v-if="
+							effectiveDemandPredictor === 'temperature' &&
+							tariffTemperature === undefined
+						"
+						class="text-warning"
+					>
+						{{ $t("main.loadpointSettings.demandPredictor.noTempTariff") }}
+					</small>
+					<small v-else class="text-muted">
+						{{
+							$t(
+								`main.loadpointSettings.demandPredictor.${effectiveDemandPredictor}.description`
+							)
+						}}
+					</small>
+				</div>
+			</div>
 
 			<h6>
 				{{ $t("main.loadpointSettings.currents") }}
@@ -202,6 +239,7 @@ import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
 import SmartFeedInPriority from "../Tariff/SmartFeedInPriority.vue";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 import SolarShareSlider from "./SolarShareSlider.vue";
+import DemandPredictorDropdown from "./DemandPredictorDropdown.vue";
 import { defineComponent, type PropType } from "vue";
 import { PHASES, CURRENCY, SMART_COST_TYPE, type UiForecast, type UiLoadpoint } from "@/types/evcc";
 import api from "@/api";
@@ -228,6 +266,7 @@ export default defineComponent({
 		SmartFeedInPriority,
 		LoadpointSettingsBatteryBoost: SettingsBatteryBoost,
 		SolarShareSlider,
+		DemandPredictorDropdown,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -237,6 +276,7 @@ export default defineComponent({
 		smartCostAvailable: Boolean,
 		smartFeedInPriorityAvailable: Boolean,
 		tariffGrid: Number,
+		tariffTemperature: Number,
 		currency: String as PropType<CURRENCY>,
 		multipleLoadpoints: Boolean,
 		forecast: Object as PropType<UiForecast>,
@@ -267,6 +307,13 @@ export default defineComponent({
 		},
 		heating() {
 			return this.loadpoint?.chargerFeatureHeating;
+		},
+		effectiveDemandPredictor(): string {
+			const lp = this.loadpoint;
+			if (lp?.demandPredictor) return lp.demandPredictor;
+			if (lp?.chargerFeatureDemandTemperature) return "temperature";
+			if (lp?.chargerFeatureDemandWeekday) return "weekday";
+			return "daily";
 		},
 		minTemp() {
 			// stored as loadpoint minSoc, interpreted as temperature for heating devices

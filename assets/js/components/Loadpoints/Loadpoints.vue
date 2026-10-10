@@ -75,6 +75,7 @@
 				:multipleLoadpoints="multipleLoadpoints"
 				:currency="currency"
 				:tariffGrid="tariffGrid"
+				:tariffTemperature="tariffTemperature"
 				:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
 				:smartCostAvailable="smartCostAvailable"
 				:smartCostType="smartCostType"
@@ -117,6 +118,7 @@ export default defineComponent({
 		tariffGrid: Number,
 		tariffCo2: Number,
 		tariffFeedIn: Number,
+		tariffTemperature: Number,
 		currency: String as PropType<CURRENCY>,
 		selectedId: String,
 		gridConfigured: Boolean,
