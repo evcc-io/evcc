@@ -7,6 +7,9 @@ network:
   port: 7070
   # externalurl is the user-configurable public url from outside
   externalurl: https://behind-reverse-proxy
+  # mdns announces evcc on the local network, used for auto discovery by the evcc app
+  mdns:
+    disabled: false
 
 interval: 30s # control cycle interval. Interval <30s can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval
 
