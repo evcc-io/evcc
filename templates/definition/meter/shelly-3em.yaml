@@ -8,6 +8,10 @@ caveats:
       de: Integrierter Zähler ohne Phasensaldierung; stattdessen Leistungsintegration.
       en: Built-in meter lacks summative energy measurement; power is integrated instead.
     link: https://github.com/evcc-io/evcc/issues/29727
+discovery:
+  mdns: ["_shelly._tcp", "_http._tcp:shelly*"]
+  hostname: ["shelly*"]
+  mac: ["8400EC"]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

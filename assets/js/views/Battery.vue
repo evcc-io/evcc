@@ -27,6 +27,7 @@
 						:battery-grid-discharge="state.batteryGridDischarge"
 						:battery="state.battery"
 						:experimental="state.experimental"
+						:country="state.country"
 					/>
 
 					<Card
@@ -57,7 +58,7 @@ import { defineComponent } from "vue";
 import store from "@/store";
 import settings from "@/settings";
 import api from "@/api";
-import { SMART_COST_TYPE, CURRENCY, type BatteryMeter } from "@/types/evcc";
+import { CURRENCY, type BatteryMeter } from "@/types/evcc";
 import Header from "../components/Top/Header.vue";
 import Card from "../components/Helper/Card.vue";
 import SmartCostLimit from "../components/Tariff/SmartCostLimit.vue";
@@ -144,8 +145,7 @@ export default defineComponent({
 			return this.gridChargePossible || this.gridChargeLimit !== null;
 		},
 		gridChargeTariff() {
-			const { co2, grid } = store.uiForecast.value;
-			return this.state.smartCostType === SMART_COST_TYPE.CO2 ? co2 : grid;
+			return store.uiForecast.value.planner;
 		},
 		smartCostLimitProps() {
 			return {

@@ -34,7 +34,7 @@ jobs:
 
     steps:
       - name: React to comment
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             await github.rest.reactions.createForIssueComment({
@@ -46,8 +46,11 @@ jobs:
 
       - name: Resolve target branch
         id: pr
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
+          # creating the release branch is subject to the release/** ruleset, which
+          # GITHUB_TOKEN cannot bypass
+          github-token: ${{ secrets.RELEASE_DEPLOY_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
 
@@ -141,7 +144,7 @@ jobs:
             core.setOutput('sha', pr.merge_commit_sha);
             core.setOutput('title', pr.title);
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           ref: ${{ steps.pr.outputs.target }}
@@ -202,7 +205,7 @@ jobs:
 
       - name: Comment result
         if: always()
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         env:
           TARGET: ${{ steps.pr.outputs.target }}
           URL: ${{ steps.create.outputs.url }}
@@ -225,7 +228,7 @@ jobs:
 
       - name: Resolve command comment
         if: always()
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             // collapse the /backport comment as resolved, the result was reported

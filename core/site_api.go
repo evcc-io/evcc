@@ -66,6 +66,18 @@ func (site *Site) SetTitle(title string) {
 	settings.SetString(keys.Title, title)
 }
 
+// GetCountry returns the ISO 3166-1 alpha-2 country code
+func (site *Site) GetCountry() string {
+	country, _ := settings.String(keys.Country)
+	return country
+}
+
+// SetCountry sets the ISO 3166-1 alpha-2 country code
+func (site *Site) SetCountry(country string) {
+	settings.SetString(keys.Country, country)
+	site.publish(keys.Country, country)
+}
+
 // GetGridMeterRef returns the GridMeterRef
 func (site *Site) GetGridMeterRef() string {
 	site.RLock()
@@ -504,9 +516,14 @@ func (site *Site) SetBatteryGridDischarge(val bool) error {
 	}
 	site.Unlock()
 
-	// drop the limit, it is meaningless without the opt-in
-	if changed && !val {
-		return site.SetBatteryGridDischargeLimit(nil)
+	if changed {
+		// re-run the optimizer so the new discharge mode takes effect immediately
+		go site.optimizerUpdateAsync(0)
+
+		// drop the limit, it is meaningless without the opt-in
+		if !val {
+			return site.SetBatteryGridDischargeLimit(nil)
+		}
 	}
 
 	return nil
@@ -530,6 +547,9 @@ func (site *Site) SetSolarAdjusted(val bool) {
 		site.solarAdjusted = val
 		settings.SetBool(keys.SolarAdjusted, val)
 		site.publish(keys.SolarAdjusted, val)
+
+		// re-run the optimizer so the adjusted forecast takes effect immediately
+		go site.optimizerUpdateAsync(0)
 	}
 }
 
@@ -540,7 +560,7 @@ func (site *Site) GetBatteryGridChargeLimit() *float64 {
 }
 
 func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
-	site.log.DEBUG.Println("set grid charge limit:", printPtr("%.1f", val))
+	site.log.DEBUG.Println("set grid charge limit:", printPtr("%.3f", val))
 
 	if !site.hasBatteryControl() {
 		return ErrBatteryControlNotAvailable
@@ -559,6 +579,9 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 			settings.SetFloat(keys.BatteryGridChargeLimit, *val)
 			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
+
+		// re-run the optimizer so the new limit takes effect immediately
+		go site.optimizerUpdateAsync(0)
 	}
 
 	return nil
@@ -571,7 +594,7 @@ func (site *Site) GetBatteryGridDischargeLimit() *float64 {
 }
 
 func (site *Site) SetBatteryGridDischargeLimit(val *float64) error {
-	site.log.DEBUG.Println("set grid discharge limit:", printPtr("%.1f", val))
+	site.log.DEBUG.Println("set grid discharge limit:", printPtr("%.3f", val))
 
 	if !site.hasBatteryControl() {
 		return ErrBatteryControlNotAvailable

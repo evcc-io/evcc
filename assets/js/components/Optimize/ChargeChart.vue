@@ -9,9 +9,9 @@
 import { defineComponent, type PropType } from "vue";
 import {
 	axisNameStyle,
+	boundaryAxis,
 	FONT_FAMILY,
 	forecastYAxis,
-	hoverDot,
 	lineCasing,
 	tooltipStyle,
 	tooltipTable,
@@ -29,12 +29,12 @@ import type { Legend } from "../Sessions/types";
 import {
 	slotTimes,
 	slotXAxis,
-	dayBoundaryAxis,
 	dayBoundarySeries,
 	formatSlotRange,
 	whToKW,
 	loadpointTitle,
 	demandTitle,
+	transientHoverDot,
 } from "./chart";
 
 const GRID_LABEL = "Grid Power";
@@ -81,7 +81,7 @@ export default defineComponent({
 	},
 	computed: {
 		consumptionLabel(): string {
-			return this.$t("main.history.group.consumer");
+			return this.$t("energy.group.consumer");
 		},
 		consumptionColor(): string {
 			return colors.muted || "";
@@ -131,7 +131,7 @@ export default defineComponent({
 				z: 4,
 				data: this.gridPower,
 				smooth: 0.2,
-				...hoverDot(colors.grid || ""),
+				...transientHoverDot(colors.grid || ""),
 				lineStyle: { color: colors.grid || "", ...lineDefaults },
 			};
 			const solar = {
@@ -140,7 +140,7 @@ export default defineComponent({
 				z: 4,
 				data: this.evopt.req.time_series.ft.map(this.toKW),
 				smooth: 0.2,
-				...hoverDot(colors.forecast || ""),
+				...transientHoverDot(colors.forecast || ""),
 				lineStyle: { color: colors.forecast || "", ...lineDefaults },
 			};
 			const series: Record<string, unknown>[] = [
@@ -153,6 +153,10 @@ export default defineComponent({
 					name: e.label,
 					type: "bar",
 					stack: "charge",
+					// one path per series instead of an svg element per slot. Stacking works in
+					// large mode despite the outdated TODO in echarts' barGrid layout
+					large: true,
+					largeThreshold: 0,
 					data: e.data,
 					itemStyle: { color: e.color },
 					emphasis: { disabled: true },
@@ -174,7 +178,7 @@ export default defineComponent({
 					...tooltipStyle(colors.text || ""),
 					formatter: this.tooltipFormatter,
 				},
-				xAxis: [slotXAxis(this.times, this.weekdayShort), dayBoundaryAxis(this.times)],
+				xAxis: [slotXAxis(this.times, this.weekdayShort), boundaryAxis(this.times.length)],
 				yAxis: forecastYAxis({
 					min: undefined,
 					position: "right",

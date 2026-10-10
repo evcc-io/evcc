@@ -174,6 +174,11 @@ export interface State {
   forecast: Forecast;
   /** Configured currency for all monetary values. */
   currency?: CURRENCY;
+  /**
+   * Configured site country as ISO 3166-1 alpha-2 code. Empty when not set.
+   * @example "DE"
+   */
+  country?: string;
   /** Fatal startup errors. */
   fatal?: FatalError[];
   /** Status of configured vehicle authentication providers, keyed by provider name. */
@@ -274,6 +279,8 @@ export interface State {
   interval?: number;
   /** Load management circuits, keyed by circuit name. */
   circuits?: Record<string, Circuit>;
+  /** Load management configuration. */
+  circuitsConfig?: GenericConfigStatus;
   /** Battery buffer SoC in %. Energy above this level may be used for charging in solar mode. */
   bufferSoc?: number;
   /** Battery priority SoC in %. Home battery is charged first while below this level. */
@@ -434,6 +441,8 @@ export interface Config {
 
 /** A load management circuit limiting power and current of its assigned loadpoints. */
 export interface Circuit {
+  /** Circuit name used as configuration reference. */
+  name?: string;
   /** Circuit title for UI display. */
   title?: string;
   /** Circuit icon name for UI display. */
@@ -450,11 +459,11 @@ export interface Circuit {
   maxCurrent?: number;
 }
 
-export interface Entity {
+export interface Entity<C = never> {
   name: string;
   type: string;
   id: number;
-  config: Config;
+  config: Config | C;
   deviceDisable?: boolean;
 }
 
@@ -491,7 +500,17 @@ export interface ConfigMeter extends Entity {
   deviceIcon?: string;
 }
 
-export type ConfigCircuit = Entity;
+export interface ConfigCircuit extends Entity<{
+  maxcurrent?: number;
+  maxpower?: number;
+  meter?: string;
+  parent: string;
+  title?: string;
+}> {
+  deviceProduct: string;
+  deviceTitle?: string;
+  type: ConfigType;
+}
 
 export interface LoadpointThreshold {
   delay: number;
@@ -839,6 +858,12 @@ export enum CURRENCY {
   RUB = "RUB",
   KZT = "KZT",
 }
+
+/** ISO 3166-1 alpha-2 country codes, names resolved via Intl.DisplayNames. */
+export const COUNTRIES =
+  "AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW".split(
+    " "
+  );
 
 export enum ICON_SIZE {
   XS = "xs",
@@ -1395,6 +1420,16 @@ export interface UiForecast {
   temperature?: UiForecastSlot[];
 }
 
+export interface ServiceOption {
+  value: string;
+  label?: string;
+  hint?: string;
+  match?: boolean;
+  used?: boolean;
+}
+
+export type ServiceValue = string | ServiceOption;
+
 export interface SelectOption<T> {
   name: string;
   value: T;
@@ -1410,8 +1445,17 @@ export type DeviceType =
   | "messenger"
   | "tariff"
   | "hems"
+  | "circuit"
   | "curtailer";
-export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
+export type MeterType =
+  | "grid"
+  | "pv"
+  | "battery"
+  | "charge"
+  | "aux"
+  | "ext"
+  | "consumer"
+  | "circuit";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar" | "temperature";
 

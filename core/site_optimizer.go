@@ -434,7 +434,8 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	solar := currentRates(solarTariff)
 
 	grid := currentRates(site.GetTariff(api.TariffUsageGrid))
-	feedIn := currentRates(site.GetTariff(api.TariffUsageFeedIn))
+	planner := currentRates(site.GetTariff(api.TariffUsagePlanner))
+	feedIn := feedInRates(site.GetTariff(api.TariffUsageFeedIn), grid)
 
 	minLen := lo.Min([]int{len(grid), len(feedIn)})
 	// exclude empty solar forecast from minLen
@@ -490,16 +491,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 			return req, details, err
 		}
 
-		scale := site.effectiveSolarScale()
-		ftSlots := scaleAndPrune(solarEnergy, scale, minLen)
-
-		// decay the scale derived from measured vs forecasted energy of the last completed slot
-		if pv, fcst := site.measuredSlotEnergy(site.Meters.PVMetersRef...), site.measuredSlotEnergy(metrics.Forecast)*scale; pv > 0 && fcst > 0 {
-			orig := slices.Clone(ftSlots[:min(optimizerDecaySlots, len(ftSlots))])
-			blendScale(ftSlots, pv/fcst, optimizerDecaySlots)
-			site.log.DEBUG.Printf("optimizer: pv slots updated with scale %.2f: %.0f -> %.0f", pv/fcst, orig, ftSlots[:len(orig)])
-		}
-		ft = prorate(ftSlots, firstSlotDuration)
+		ft = prorate(scaleAndPrune(solarEnergy, site.effectiveSolarScale(), minLen), firstSlotDuration)
 	}
 
 	req = optimizer.OptimizationInput{
@@ -572,7 +564,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		}
 
 		// skip disabled loadpoints
-		if cfg, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, grid); cfg.CMax > 0 {
+		if cfg, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, planner); cfg.CMax > 0 {
 			detail.loadpoint = &id
 			batteries = append(batteries, optimizerBattery{cfg, detail})
 		}
@@ -598,7 +590,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 			continue
 		}
 
-		cfg, detail := site.batteryRequest(dev, b, grid, minLen, firstSlotDuration)
+		cfg, detail := site.batteryRequest(dev, b, planner, minLen, firstSlotDuration)
 		batteries = append(batteries, optimizerBattery{cfg, detail})
 	}
 
@@ -890,7 +882,7 @@ func batteryForecastSocExtremes(req []optimizer.BatteryConfig, resp []optimizer.
 	return high, low
 }
 
-func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDuration time.Duration, grid api.Rates) (optimizer.BatteryConfig, batteryDetail) {
+func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDuration time.Duration, planner api.Rates) (optimizer.BatteryConfig, batteryDetail) {
 	bat := optimizer.BatteryConfig{
 		ChargeFromGrid: true,
 		CActive:        lp.GetStatus() == api.StatusC,
@@ -963,7 +955,7 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 			demand = continuousDemand(lp, minLen)
 		}
 		// add smartcost limit, precondition and plan goal, if configured
-		demand = applySmartCostLimit(lp, demand, grid, minLen)
+		demand = applySmartCostLimit(lp, demand, planner, minLen)
 		demand = applyPrecondition(lp, demand, minLen)
 		site.applyPlanGoal(lp, &bat, minLen)
 	}
@@ -998,7 +990,7 @@ func clearDemandWhenFull(demand []float32, headroom float32) []float32 {
 	return res
 }
 
-func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, grid api.Rates, minLen int, firstSlotDuration time.Duration) (optimizer.BatteryConfig, batteryDetail) {
+func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, planner api.Rates, minLen int, firstSlotDuration time.Duration) (optimizer.BatteryConfig, batteryDetail) {
 	bat := optimizer.BatteryConfig{
 		CMax:      batteryPower,
 		DMax:      batteryPower,
@@ -1043,7 +1035,7 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 
 	// tariff forecast-based grid charging demand
 	if bat.ChargeFromGrid {
-		if demand := site.applyBatteryGridChargeLimit(bat.CMax, grid, minLen); demand != nil {
+		if demand := site.applyBatteryGridChargeLimit(bat.CMax, planner, minLen); demand != nil {
 			bat.PDemand = prorate(demand, firstSlotDuration)
 		}
 	}
@@ -1152,24 +1144,16 @@ func unmodelledPower(lp loadpoint.API) float64 {
 	return max(0, power)
 }
 
-// measuredSlotEnergy returns the summed energy in Wh of the last completed
-// metrics slot for the given collector refs, 0 when not available
-func (site *Site) measuredSlotEnergy(refs ...string) float64 {
-	var sum float64
-	for _, ref := range refs {
-		c, ok := site.collectors[ref]
-		if !ok {
-			return 0
-		}
-
-		v, ok := c.LastSlotEnergy()
-		if !ok {
-			return 0
-		}
-		sum += v
+// measuredSlotEnergy returns the energy in Wh of the last completed
+// metrics slot for the given collector ref, 0 when not available
+func (site *Site) measuredSlotEnergy(ref string) float64 {
+	c, ok := site.collectors[ref]
+	if !ok {
+		return 0
 	}
 
-	return sum * 1e3
+	v, _ := c.LastSlotEnergy()
+	return v * 1e3
 }
 
 // blendMeasured decays the first slots from the measured value into the
@@ -1179,15 +1163,6 @@ func blendMeasured[T constraints.Float](slots []T, measured T, decaySlots int) {
 	for i := range min(decaySlots, len(slots)) {
 		w := T(decaySlots-i) / T(decaySlots)
 		slots[i] = w*measured + (1-w)*slots[i]
-	}
-}
-
-// blendScale decays a scale factor towards 1 over the first slots.
-// Slot 0 is scaled by the full factor, from slot decaySlots on it is 1.
-func blendScale[T constraints.Float](slots []T, scale float64, decaySlots int) {
-	for i := range min(decaySlots, len(slots)) {
-		w := float64(decaySlots-i) / float64(decaySlots)
-		slots[i] = T(float64(slots[i]) * (w*scale + (1 - w)))
 	}
 }
 
@@ -1238,6 +1213,17 @@ func currentRates(tariff api.Tariff) api.Rates {
 	now := time.Now()
 	return lo.Filter(rates, func(slot api.Rate, _ int) bool {
 		return slot.End.After(now)
+	})
+}
+
+// feedInRates returns the feed-in rates, or zero-priced grid slots without feed-in tariff
+func feedInRates(tariff api.Tariff, grid api.Rates) api.Rates {
+	if tariff != nil {
+		return currentRates(tariff)
+	}
+
+	return lo.Map(grid, func(slot api.Rate, _ int) api.Rate {
+		return api.Rate{Start: slot.Start, End: slot.End}
 	})
 }
 
@@ -1343,16 +1329,16 @@ func planSlot(now, ts time.Time) int {
 }
 
 // TODO remove once smart cost limit usage becomes obsolete
-func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, minLen int) []float32 {
+func applySmartCostLimit(lp loadpoint.API, demand []float32, planner api.Rates, minLen int) []float32 {
 	costLimit := lp.GetSmartCostLimit()
 	if costLimit == nil {
 		return demand
 	}
 
-	maxLen := min(minLen, len(grid))
+	maxLen := min(minLen, len(planner))
 
 	// Check if any slots meet the cost limit
-	if hasAffordableSlots := slices.ContainsFunc(grid[:maxLen], func(r api.Rate) bool {
+	if hasAffordableSlots := slices.ContainsFunc(planner[:maxLen], func(r api.Rate) bool {
 		return r.Value <= *costLimit
 	}); !hasAffordableSlots {
 		return demand
@@ -1365,7 +1351,7 @@ func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, min
 	}
 
 	for i := range maxLen {
-		if grid[i].Value <= *costLimit {
+		if planner[i].Value <= *costLimit {
 			demand[i] = float32(maxPower / slotsPerHour)
 		}
 		// else: keep existing demand (either 0 or minPower from always charge)
@@ -1427,15 +1413,15 @@ func applyPrecondition(lp loadpoint.API, demand []float32, minLen int) []float32
 	return demand
 }
 
-func (site *Site) applyBatteryGridChargeLimit(cMax float32, grid api.Rates, minLen int) []float32 {
+func (site *Site) applyBatteryGridChargeLimit(cMax float32, planner api.Rates, minLen int) []float32 {
 	limit := site.GetBatteryGridChargeLimit()
 	if limit == nil {
 		return nil
 	}
 
-	maxLen := min(minLen, len(grid))
+	maxLen := min(minLen, len(planner))
 
-	if hasAffordableSlots := slices.ContainsFunc(grid[:maxLen], func(r api.Rate) bool {
+	if hasAffordableSlots := slices.ContainsFunc(planner[:maxLen], func(r api.Rate) bool {
 		return r.Value <= *limit
 	}); !hasAffordableSlots {
 		return nil
@@ -1443,7 +1429,7 @@ func (site *Site) applyBatteryGridChargeLimit(cMax float32, grid api.Rates, minL
 
 	demand := make([]float32, minLen)
 	for i := range maxLen {
-		if grid[i].Value <= *limit {
+		if planner[i].Value <= *limit {
 			demand[i] = float32(float64(cMax) / slotsPerHour)
 		}
 	}
