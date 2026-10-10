@@ -559,6 +559,20 @@ func (mr *MockAPIMockRecorder) GetPlanGoal() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanGoal", reflect.TypeOf((*MockAPI)(nil).GetPlanGoal))
 }
 
+// GetPlanRemainingEnergy mocks base method.
+func (m *MockAPI) GetPlanRemainingEnergy() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPlanRemainingEnergy")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetPlanRemainingEnergy indicates an expected call of GetPlanRemainingEnergy.
+func (mr *MockAPIMockRecorder) GetPlanRemainingEnergy() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanRemainingEnergy", reflect.TypeOf((*MockAPI)(nil).GetPlanRemainingEnergy))
+}
+
 // GetPlanRequiredDuration mocks base method.
 func (m *MockAPI) GetPlanRequiredDuration(goal, maxPower float64) time.Duration {
 	m.ctrl.T.Helper()
