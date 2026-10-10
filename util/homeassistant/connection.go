@@ -156,20 +156,6 @@ func (c *Connection) GetTemperatureState(entity string) (float64, error) {
 	return res, nil
 }
 
-// toCelsius converts a temperature value with the given Home Assistant unit to °C
-func toCelsius(value float64, unit string) (float64, error) {
-	switch strings.TrimSpace(unit) {
-	case "", "°C":
-		return value, nil
-	case "°F":
-		return (value - 32) * 5 / 9, nil
-	case "K":
-		return value - 273.15, nil
-	default:
-		return 0, fmt.Errorf("invalid temperature unit '%s'", unit)
-	}
-}
-
 // GetBoolState retrieves the state of an entity as boolean
 func (c *Connection) GetBoolState(entity string) (bool, error) {
 	state, err := c.GetState(entity)

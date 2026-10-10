@@ -102,7 +102,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		implement.Has(c, implement.MeterEnergy(func() (float64, error) { return conn.GetFloatState(cc.Energy) }))
 	}
 
-	// temperature (optional, heating devices: soc slot holds temperature in °C)
+	// temperature (optional), reported as soc for heating devices
 	if cc.Temp != "" {
 		implement.Has(c, implement.Battery(func() (float64, error) { return conn.GetTemperatureState(cc.Temp) }))
 	}
