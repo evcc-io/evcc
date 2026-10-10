@@ -109,7 +109,8 @@ func getEntities(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	w.Header().Set("Cache-control", "max-age=300")
+	// short cache: hints carry live values, the form refetches on every change
+	w.Header().Set("Cache-control", "max-age=30")
 	jsonWrite(w, entityOptions(states, queryList(req, "domain"), queryList(req, "unit")))
 }
 
