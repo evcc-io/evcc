@@ -92,6 +92,8 @@ export interface Network {
   externalUrl?: string;
   /** URL in the local network. */
   internalUrl?: string;
+  /** mDNS announcement. */
+  mdns?: { disabled: boolean };
 }
 
 /** Home energy management system configuration. */
