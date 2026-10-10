@@ -1,6 +1,7 @@
 package homeassistant
 
 import (
+	"cmp"
 	"encoding/json"
 	"errors"
 	"maps"
@@ -34,18 +35,12 @@ func getInstances(w http.ResponseWriter, req *http.Request) {
 		res = append(res, service.Option{Value: uri, Label: name, Match: true})
 	}
 
-	jsonWrite(w, sortOptions(res))
-}
-
-func sortOptions(res []service.Option) []service.Option {
-	slices.SortFunc(res, func(a, b service.Option) int {
-		return strings.Compare(a.Value, b.Value)
-	})
-	return res
+	slices.SortFunc(res, func(a, b service.Option) int { return cmp.Compare(a.Value, b.Value) })
+	jsonWrite(w, res)
 }
 
 func entityOptions(states []StateResponse, domains, units []string) []service.Option {
-	res := make([]service.Option, 0)
+	var res []service.Option
 	for _, e := range states {
 		if !matchesDomains(e.EntityId, domains) {
 			continue
@@ -60,7 +55,8 @@ func entityOptions(states []StateResponse, domains, units []string) []service.Op
 		}
 		res = append(res, o)
 	}
-	return sortOptions(res)
+	slices.SortFunc(res, func(a, b service.Option) int { return cmp.Compare(a.Value, b.Value) })
+	return res
 }
 
 func connectionFromRequest(req *http.Request) (*Connection, error) {
@@ -78,18 +74,10 @@ func connectionFromRequest(req *http.Request) (*Connection, error) {
 	return NewConnection(log, uri, "", insecure)
 }
 
-// domainsFromRequest parses the comma-separated "domain" query parameter.
-func domainsFromRequest(req *http.Request) []string {
-	if domain := req.URL.Query().Get("domain"); domain != "" {
-		return strings.Split(domain, ",")
-	}
-	return nil
-}
-
-// unitsFromRequest parses the comma-separated "unit" query parameter.
-func unitsFromRequest(req *http.Request) []string {
-	if unit := req.URL.Query().Get("unit"); unit != "" {
-		return strings.Split(unit, ",")
+// queryList parses a comma-separated query parameter.
+func queryList(req *http.Request, key string) []string {
+	if v := req.URL.Query().Get(key); v != "" {
+		return strings.Split(v, ",")
 	}
 	return nil
 }
@@ -122,7 +110,7 @@ func getEntities(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.Header().Set("Cache-control", "max-age=300")
-	jsonWrite(w, entityOptions(states, domainsFromRequest(req), unitsFromRequest(req)))
+	jsonWrite(w, entityOptions(states, queryList(req, "domain"), queryList(req, "unit")))
 }
 
 func getServices(w http.ResponseWriter, req *http.Request) {
@@ -132,7 +120,7 @@ func getServices(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	domains := domainsFromRequest(req)
+	domains := queryList(req, "domain")
 
 	seen := make(map[string]struct{})
 

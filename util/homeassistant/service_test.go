@@ -1,6 +1,7 @@
 package homeassistant
 
 import (
+	"net/http/httptest"
 	"testing"
 
 	"github.com/evcc-io/evcc/server/service"
@@ -30,4 +31,11 @@ func TestEntityOptions(t *testing.T) {
 
 	assert.Len(t, entityOptions(states, nil, nil), 3)
 	assert.Empty(t, entityOptions(states, []string{"light"}, nil))
+}
+
+func TestQueryList(t *testing.T) {
+	req := httptest.NewRequest("GET", "/entities?domain=sensor,number&unit=%25", nil)
+	assert.Equal(t, []string{"sensor", "number"}, queryList(req, "domain"))
+	assert.Equal(t, []string{"%"}, queryList(req, "unit"))
+	assert.Nil(t, queryList(req, "missing"))
 }

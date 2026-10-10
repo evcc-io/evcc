@@ -283,9 +283,6 @@ export default defineComponent({
 	border-top: var(--bs-dropdown-border-width) solid var(--bs-dropdown-divider-bg);
 }
 .option {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
 	min-height: 44px;
 	cursor: pointer;
 }

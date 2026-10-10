@@ -30,7 +30,7 @@ params:
     description:
       de: Ladezustand [%]
       en: State of charge [%]
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=%
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=%25
     example: "sensor.vehicle_soc"
     required: true
     help:
@@ -85,7 +85,7 @@ params:
     description:
       de: Ziel-Ladezustand [%]
       en: Target state of charge [%]
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=number,input_number&unit=%
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=number,input_number&unit=%25
     example: "number.vehicle_target_state_of_charge"
     help:
       en: Entity ID for the vehicle's target state of charge in percent (`number` or `input_number` entity)
