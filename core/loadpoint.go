@@ -81,13 +81,15 @@ type Task = func()
 // Loadpoint is responsible for controlling charge depending on
 // Soc needs and power availability.
 type Loadpoint struct {
-	clock    clock.Clock // mockable time
-	bus      evbus.Bus   // event bus
-	site     site.API
-	pushChan chan<- messenger.Event // notifications
-	uiChan   chan<- util.Param      // client push messages
-	lpChan   chan<- *Loadpoint      // update requests
-	log      *util.Logger
+	id              int             // index in site.loadpoints, set at boot; identifies the loadpoint outside the site
+	sessionReporter SessionReporter // outbound session reporting, nil if disabled
+	clock           clock.Clock     // mockable time
+	bus             evbus.Bus       // event bus
+	site            site.API
+	pushChan        chan<- messenger.Event // notifications
+	uiChan          chan<- util.Param      // client push messages
+	lpChan          chan<- *Loadpoint      // update requests
+	log             *util.Logger
 
 	rwMutex      atomic.Int64 // count reentrant RWMutex
 	sync.RWMutex              // guard status
@@ -186,8 +188,10 @@ type Loadpoint struct {
 	progress                *Progress     // Step-wise progress indicator
 
 	// session log
-	db      *session.DB
-	session *session.Session
+	db                     *session.DB
+	session                *session.Session
+	sessionPersisted       time.Time // last tick-driven session persist, throttles DB writes while charging
+	sessionEnergyErrLogged time.Time // last logged session energy read failure
 
 	settings settings.Settings
 
@@ -555,6 +559,14 @@ func (lp *Loadpoint) evChargeStartHandler() {
 	lp.updateSession(func(session *session.Session) {
 		if session.Created.IsZero() {
 			session.Created = lp.clock.Now()
+
+			meterStart := 0.0
+			if session.MeterStart != nil {
+				meterStart = *session.MeterStart
+			}
+			if r := lp.reporter(); r != nil {
+				r.SessionStart(lp.id, meterStart*1e3)
+			}
 		}
 		// capture start soc once available (may not be present at session start)
 		if soc := lp.vehicleSoc; session.SocStart == nil && soc > 0 && !lp.chargerHasFeature(api.Heating) {
@@ -577,6 +589,12 @@ func (lp *Loadpoint) evChargeStopHandler() {
 	if !lp.pvTimer.Equal(elapsed) {
 		lp.resetPVTimer()
 	}
+
+	// re-read energy from charger so stopSession's OCPP report carries the
+	// real meter-stop value - without this, s.MeterStop stays nil (only
+	// evVehicleDisconnectHandler used to set it) and every charge-stop-without-
+	// unplug reports a meterStop of 0, regardless of energy actually delivered
+	lp.finalizeSessionEnergy()
 
 	lp.stopSession()
 }
@@ -2366,6 +2384,13 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	// update progress and soc before status is updated
 	lp.publishChargeProgress()
 	lp.PublishEffectiveValues()
+
+	// re-read energy every tick so an active OCPP report rule gets
+	// intermediate MeterValues during charging, not just at session
+	// start/stop; finalizeSessionEnergy no-ops cheaply without a session or
+	// without new energy, and charger/ocpp/report.go throttles the actual
+	// upstream send rate independently of this cadence
+	lp.finalizeSessionEnergy()
 
 	// §14a
 	if dimmer, ok := api.Cap[api.Dimmer](lp.charger); ok {

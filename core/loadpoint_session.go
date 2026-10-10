@@ -40,7 +40,8 @@ func (lp *Loadpoint) createSession() {
 		return
 	}
 
-	lp.session = lp.db.New(lp.chargeMeterTotal())
+	meterStart := lp.chargeMeterTotal()
+	lp.session = lp.db.New(meterStart)
 
 	if v := lp.GetVehicle(); v != nil {
 		lp.session.Vehicle = v.GetTitle()
@@ -88,9 +89,13 @@ func (lp *Loadpoint) applyEnergyMetrics(s *session.Session) {
 	s.PricePerKWh = lp.energyMetrics.PricePerKWh()
 	s.Co2PerKWh = lp.energyMetrics.Co2PerKWh()
 	s.ChargedEnergy = lp.energyMetrics.TotalWh() / 1e3
-
-	lp.db.Persist(s)
 }
+
+const (
+	// sessionPersistInterval bounds session DB writes while charging; the session is always persisted on stop
+	sessionPersistInterval      = time.Minute
+	sessionEnergyErrLogInterval = 5 * time.Minute
+)
 
 // stopSession ends a charging session segment and persists the session.
 func (lp *Loadpoint) stopSession() {
@@ -110,6 +115,15 @@ func (lp *Loadpoint) stopSession() {
 	s.ChargeDuration = new(lp.chargeDuration.Abs())
 
 	lp.applyEnergyMetrics(s)
+	lp.db.Persist(s)
+}
+
+// reportSessionStop ends the OCPP transaction of the session. A charging pause is not
+// the end of a session, so this runs once the session is cleared, not per segment.
+func (lp *Loadpoint) reportSessionStop(s *session.Session) {
+	if r := lp.reporter(); r != nil {
+		r.SessionStop(lp.id, lp.sessionRegisterKWh(s)*1e3)
+	}
 }
 
 type sessionOption func(*session.Session)
@@ -137,6 +151,10 @@ func (lp *Loadpoint) clearSession() {
 		return
 	}
 
+	if s := lp.session; s != nil && !s.Created.IsZero() {
+		lp.reportSessionStop(s)
+	}
+
 	lp.session = nil
 }
 
@@ -148,7 +166,10 @@ func (lp *Loadpoint) finalizeSessionEnergy() {
 
 	f, err := lp.chargeRater.ChargedEnergy()
 	if err != nil {
-		lp.log.ERROR.Printf("session energy: %v", err)
+		if lp.clock.Since(lp.sessionEnergyErrLogged) >= sessionEnergyErrLogInterval {
+			lp.log.ERROR.Printf("session energy: %v", err)
+			lp.sessionEnergyErrLogged = lp.clock.Now()
+		}
 		return
 	}
 
@@ -162,6 +183,15 @@ func (lp *Loadpoint) finalizeSessionEnergy() {
 	lp.energyMetrics.Update(chargedKWh)
 
 	lp.applyEnergyMetrics(s)
+
+	if lp.clock.Since(lp.sessionPersisted) >= sessionPersistInterval {
+		lp.db.Persist(s)
+		lp.sessionPersisted = lp.clock.Now()
+	}
+
+	if r := lp.reporter(); r != nil {
+		r.SessionMeter(lp.id, lp.sessionRegisterKWh(s)*1e3)
+	}
 }
 
 func (lp *Loadpoint) resetHeatingSession() {

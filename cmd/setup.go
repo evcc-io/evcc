@@ -698,6 +698,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 	// setup OCPP server
 	if err == nil {
 		configureOCPP(&conf.Ocpp, conf.Network.ExternalUrl)
+		configureOCPPReport()
 	}
 
 	// setup EEBus server
@@ -979,6 +980,17 @@ func configureOCPP(cfg *ocpp.Config, externalUrl string) {
 			return
 		}
 		ocpp.ApplyForwarderRules(rules)
+	}
+}
+
+// setup OCPP report client (evcc-io/evcc#32989) - independent of the central
+// system, since it dials out rather than accepting connections
+func configureOCPPReport() {
+	ocpp.SetReportEnabled(ocpp.ReportEnabledSetting())
+
+	var rules []ocpp.ReportRule
+	if err := settings.Json(keys.OcppReport, &rules); err == nil && len(rules) > 0 {
+		ocpp.ApplyReportRules(rules)
 	}
 }
 
@@ -1464,6 +1476,8 @@ func configureSite(conf map[string]any, loadpoints []*core.Loadpoint, tariffs *t
 	if err := site.Boot(log, loadpoints, tariffs); err != nil {
 		return site, fmt.Errorf("failed booting site: %w", err)
 	}
+
+	site.SetSessionReporter(ocpp.SessionReporter{})
 
 	return site, nil
 }

@@ -57,6 +57,18 @@
 							:rule="entry.rule"
 							:error="entry.error"
 						/>
+						<OcppReportButton
+							v-if="
+								experimental &&
+								reportEnabled &&
+								loadpointId(entry.title) !== undefined &&
+								!stationHeating[entry.id]
+							"
+							:loadpoint-id="loadpointId(entry.title)!"
+							:rule="reportRule(entry.title)"
+							:connected="reportConnected(entry.title)"
+							:error="reportError(entry.title)"
+						/>
 					</li>
 				</ul>
 			</div>
@@ -70,11 +82,13 @@ import GenericModal from "../Helper/GenericModal.vue";
 import FormRow from "./FormRow.vue";
 import Markdown from "./Markdown.vue";
 import OcppForwarderButton from "./OcppForwarderButton.vue";
+import OcppReportButton from "./OcppReportButton.vue";
 import StatusIndicator from "./StatusIndicator.vue";
 import type {
 	Ocpp,
 	OcppForwarderRule,
 	OcppForwarderSession,
+	OcppReportRule,
 	OcppStationStatus,
 } from "@/types/evcc";
 import { OCPP_STATION_STATUS } from "@/types/evcc";
@@ -96,6 +110,7 @@ export default defineComponent({
 		FormRow,
 		Markdown,
 		OcppForwarderButton,
+		OcppReportButton,
 		StatusIndicator,
 	},
 	props: {
@@ -105,6 +120,10 @@ export default defineComponent({
 		},
 		stationTitles: {
 			type: Object as PropType<Record<string, string>>,
+			default: () => ({}),
+		},
+		stationHeating: {
+			type: Object as PropType<Record<string, boolean>>,
 			default: () => ({}),
 		},
 	},
@@ -120,6 +139,12 @@ export default defineComponent({
 		},
 		sessions(): OcppForwarderSession[] {
 			return store.state?.ocppforwarder?.status || [];
+		},
+		experimental(): boolean {
+			return !!store.state?.experimental;
+		},
+		reportEnabled(): boolean {
+			return !!store.state?.ocppReportEnabled;
 		},
 		// merge of published stations and configured forwarder rules, keyed by id.
 		// a rule without a matching station is shown as "unknown".
@@ -164,6 +189,23 @@ export default defineComponent({
 				default:
 					return "muted";
 			}
+		},
+		loadpointId(title?: string): number | undefined {
+			const index = (store.state?.loadpoints || []).findIndex((lp) => lp.title === title);
+			return index >= 0 ? index : undefined;
+		},
+		reportRule(title?: string): OcppReportRule | undefined {
+			const id = this.loadpointId(title);
+			return (store.state?.ocppreport?.config || []).find((r) => r.loadpointId === id);
+		},
+		reportError(title?: string): string | undefined {
+			const id = this.loadpointId(title);
+			return (store.state?.ocppreport?.status || []).find((s) => s.loadpointId === id)?.error;
+		},
+		reportConnected(title?: string): boolean {
+			const id = this.loadpointId(title);
+			return !!(store.state?.ocppreport?.status || []).find((s) => s.loadpointId === id)
+				?.upstreamConnected;
 		},
 	},
 });

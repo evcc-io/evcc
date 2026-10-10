@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -34,6 +35,15 @@ func setExperimental(pub publisher) func(bool) error {
 func getExperimental() bool {
 	b, _ := settings.Bool(keys.Experimental)
 	return b
+}
+
+func setOcppReportEnabled(pub publisher) func(bool) error {
+	return func(b bool) error {
+		settings.SetBool(keys.OcppReportEnabled, b)
+		ocpp.SetReportEnabled(b)
+		pub(keys.OcppReportEnabled, b)
+		return nil
+	}
 }
 
 func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *http.Request) {

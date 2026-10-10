@@ -208,6 +208,11 @@ func newMeterCollector(group, ref, title string, meter api.Meter) (*metrics.Coll
 }
 
 func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tariff.Tariffs) error {
+	for id, lp := range loadpoints {
+		if lp != nil {
+			lp.id = id
+		}
+	}
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
 
@@ -1386,6 +1391,7 @@ func (site *Site) currentRate(rates api.Rates) api.Rate {
 }
 
 // prepare publishes initial values
+
 func (site *Site) prepare() {
 	if err := site.restoreSettings(); err != nil {
 		site.log.ERROR.Println(err)

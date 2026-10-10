@@ -53,7 +53,23 @@
 							@enable="handleDisable('loadpoint', loadpoint.id!, false)"
 						>
 							<template #tags>
-								<DeviceTags :tags="loadpointTags(loadpoint)" usage="charge" />
+								<div
+									class="d-flex align-items-center justify-content-between gap-2"
+								>
+									<DeviceTags :tags="loadpointTags(loadpoint)" usage="charge" />
+									<OcppReportButton
+										v-if="
+											experimental &&
+											ocppReportEnabled &&
+											loadpoint.title &&
+											!loadpointIsHeating(loadpoint)
+										"
+										:loadpoint-id="loadpoint.id!"
+										:rule="ocppReportRule(loadpoint.id!)"
+										:connected="ocppReportConnected(loadpoint.id!)"
+										:error="ocppReportError(loadpoint.id!)"
+									/>
+								</div>
 							</template>
 							<template #icon>
 								<VehicleIcon
@@ -489,6 +505,15 @@
 						>
 							<template #icon><McpIcon /></template>
 						</DeviceCard>
+						<DeviceCard
+							v-if="experimental"
+							:title="`${$t('config.ocppreportsettings.title')} 🧪`"
+							editable
+							data-testid="ocppreportsettings"
+							@edit="openModal('ocppreportsettings')"
+						>
+							<template #icon><OcppIcon /></template>
+						</DeviceCard>
 					</div>
 				</ConfigSection>
 
@@ -599,8 +624,18 @@
 					:yamlSource="eebus?.yamlSource"
 					@changed="loadDirty"
 				/>
-				<OcppModal :ocpp="ocpp" :stationTitles="stationTitles" />
+				<OcppModal
+					:ocpp="ocpp"
+					:stationTitles="stationTitles"
+					:stationHeating="stationHeating"
+				/>
 				<OcppForwarderModal @changed="loadDirty" />
+				<OcppReportModal
+					:loadpoints="loadpoints"
+					:chargers="chargers"
+					@changed="loadDirty"
+				/>
+				<OcppReportSettingsModal :enabled="ocppReportEnabled" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<SecurityModal :auth-disabled="authDisabled" />
 				<ApiKeyModal :auth-disabled="authDisabled" />
@@ -643,6 +678,9 @@ import EebusModal from "../components/Config/EebusModal.vue";
 import OcppIcon from "../components/MaterialIcon/Ocpp.vue";
 import OcppModal from "../components/Config/OcppModal.vue";
 import OcppForwarderModal from "../components/Config/OcppForwarderModal.vue";
+import OcppReportModal from "../components/Config/OcppReportModal.vue";
+import OcppReportSettingsModal from "../components/Config/OcppReportSettingsModal.vue";
+import OcppReportButton from "../components/Config/OcppReportButton.vue";
 import formatter from "../mixins/formatter";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import HemsIcon from "../components/MaterialIcon/Hems.vue";
@@ -762,6 +800,9 @@ export default defineComponent({
 		OcppIcon,
 		OcppModal,
 		OcppForwarderModal,
+		OcppReportModal,
+		OcppReportSettingsModal,
+		OcppReportButton,
 		GeneralConfig,
 		HemsIcon,
 		HemsModal,
@@ -1213,6 +1254,9 @@ export default defineComponent({
 		experimental() {
 			return store.state?.experimental;
 		},
+		ocppReportEnabled() {
+			return store.state?.ocppReportEnabled;
+		},
 		eebus() {
 			return store.state?.eebus;
 		},
@@ -1244,6 +1288,18 @@ export default defineComponent({
 		},
 		circuitsYamlSource() {
 			return store.state.circuitsConfig?.yamlSource;
+		},
+		// maps an OCPP station id to whether its bound loadpoint is a heating loadpoint
+		// (report, like the loadpoint list icon, is hidden for heating loadpoints)
+		stationHeating(): Record<string, boolean> {
+			const map: Record<string, boolean> = {};
+			this.chargers.forEach((charger) => {
+				const stationId = charger.config?.["stationid"];
+				if (typeof stationId !== "string" || !stationId) return;
+				const loadpoint = this.loadpoints.find((lp) => lp.charger === charger.name);
+				if (loadpoint) map[stationId] = this.loadpointIsHeating(loadpoint);
+			});
+			return map;
 		},
 		messagingTags(): DeviceTags {
 			if (this.messagingUiConfigured) {
@@ -1667,6 +1723,10 @@ export default defineComponent({
 			const meterTags = meter ? this.deviceTags("meter", meter) : {};
 			return { ...chargerTags, ...meterTags };
 		},
+		loadpointIsHeating(loadpoint: ConfigLoadpoint): boolean {
+			const { charger } = loadpoint;
+			return !!(charger && this.deviceTags("charger", charger)["heating"]?.value);
+		},
 		openModal,
 		loadpointError(loadpoint: ConfigLoadpoint): boolean {
 			return (
@@ -1681,6 +1741,16 @@ export default defineComponent({
 			// their circuit reference and no fatal error is ever reported for it
 			const { circuit } = loadpoint;
 			return !!circuit && !this.circuits.some((c) => c.name === circuit);
+		},
+		ocppReportRule(id: number) {
+			return (store.state?.ocppreport?.config || []).find((r) => r.loadpointId === id);
+		},
+		ocppReportError(id: number): string | undefined {
+			return (store.state?.ocppreport?.status || []).find((s) => s.loadpointId === id)?.error;
+		},
+		ocppReportConnected(id: number): boolean {
+			return !!(store.state?.ocppreport?.status || []).find((s) => s.loadpointId === id)
+				?.upstreamConnected;
 		},
 		hasDeviceError(type: DeviceType, name?: string) {
 			if (!name) return false;
