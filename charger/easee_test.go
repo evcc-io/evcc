@@ -471,6 +471,54 @@ func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
 		"expected orphan should be registered before the POST")
 }
 
+// TestEasee_Phases1p3p_chargerLevel verifies that charger level phase switching locks
+// the requested phases instead of handing 3p to the charger's automatic (#34620)
+func TestEasee_Phases1p3p_chargerLevel(t *testing.T) {
+	const chargerID = "TESTTEST"
+
+	e := newEasee()
+	e.charger = chargerID
+	e.opMode = easee.ModeDisconnected // no pause/resume
+
+	httpmock.ActivateNonDefault(e.Client)
+	defer httpmock.DeactivateAndReset()
+
+	var sent []int
+	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, chargerID)
+	httpmock.RegisterResponder(http.MethodPost, uri, func(req *http.Request) (*http.Response, error) {
+		var data easee.ChargerSettings
+		if err := json.NewDecoder(req.Body).Decode(&data); err != nil {
+			return nil, err
+		}
+		sent = append(sent, *data.PhaseMode)
+		return httpmock.NewStringResponse(200, ""), nil
+	})
+
+	for _, tc := range []struct {
+		phaseMode, phases int
+		sent              []int
+	}{
+		{1, 3, []int{3}},
+		{2, 3, []int{3}}, // automatic from earlier versions
+		{3, 1, []int{1}},
+		{3, 3, nil}, // already locked
+	} {
+		sent = nil
+		e.phaseMode = tc.phaseMode
+
+		require.NoError(t, e.Phases1p3p(tc.phases))
+		assert.Equal(t, tc.sent, sent, "phaseMode %d to %dp", tc.phaseMode, tc.phases)
+	}
+
+	// automatic is not reported as 3p, so the loadpoint switches to lock it
+	for phaseMode, phases := range map[int]int{1: 1, 2: 0, 3: 3} {
+		e.phaseMode = phaseMode
+		res, err := e.GetPhases()
+		require.NoError(t, err)
+		assert.Equal(t, phases, res, "phaseMode %d", phaseMode)
+	}
+}
+
 func TestLivenessCheck_staleObservations(t *testing.T) {
 	e := newEasee()
 	e.opMode = easee.ModeCharging
