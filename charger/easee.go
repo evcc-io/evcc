@@ -764,11 +764,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 			c.dispatcher.CancelOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
 		}
 	} else {
-		// charger level
-		if phases == 3 {
-			phases = 2 // mode 2 means auto
-		}
-
+		// charger level: phaseMode 1 and 3 lock the phases, 2 would leave them to the charger
 		// change phaseMode only if necessary
 		if phases != c.phaseMode {
 			data := easee.ChargerSettings{
