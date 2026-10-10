@@ -123,26 +123,30 @@ func TestOptimizerGate(t *testing.T) {
 	stop := types.Suggestion{Action: actionStop}
 
 	tc := []struct {
-		mode   api.ChargeMode
-		ac     api.AlwaysCharge
-		s      types.Suggestion
-		expect func(h *api.MockCharger)
+		mode     api.ChargeMode
+		ac       api.AlwaysCharge
+		s        types.Suggestion
+		buffered bool // battery above bufferSoc/bufferStartSoc, discharging into the vehicle
+		expect   func(h *api.MockCharger)
 	}{
 		// optimizer starts and stops smart charging, replacing the price limits.
 		// Stop hands over to the pv loop, which disables at once after a grid-fed slot
-		{api.ModeSmart, api.AlwaysChargeOff, full, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
-		{api.ModeSmart, api.AlwaysChargeOff, stop, func(h *api.MockCharger) { h.EXPECT().Enable(false) }},
+		{api.ModeSmart, api.AlwaysChargeOff, full, false, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
+		{api.ModeSmart, api.AlwaysChargeOff, stop, false, func(h *api.MockCharger) { h.EXPECT().Enable(false) }},
+
+		// the optimizer plans the battery, its buffer must not keep the vehicle charging (#34606)
+		{api.ModeSmart, api.AlwaysChargeOff, stop, true, func(h *api.MockCharger) { h.EXPECT().Enable(false) }},
 
 		// always charge keeps its minimum power when the optimizer stops
-		{api.ModeSmart, api.AlwaysChargeOn, full, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
-		{api.ModeSmart, api.AlwaysChargeOn, stop, nil}, // already at min current
+		{api.ModeSmart, api.AlwaysChargeOn, full, false, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
+		{api.ModeSmart, api.AlwaysChargeOn, stop, false, nil}, // already at min current
 
 		// a grid-fed power below the maximum is applied as current
-		{api.ModeSmart, api.AlwaysChargeOff, types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(10)) }},
+		{api.ModeSmart, api.AlwaysChargeOff, types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, false, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(10)) }},
 
 		// off and fast remain the user's decision
-		{api.ModeOff, api.AlwaysChargeOff, full, func(h *api.MockCharger) { h.EXPECT().Enable(false) }},
-		{api.ModeNow, api.AlwaysChargeOff, stop, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
+		{api.ModeOff, api.AlwaysChargeOff, full, false, func(h *api.MockCharger) { h.EXPECT().Enable(false) }},
+		{api.ModeNow, api.AlwaysChargeOff, stop, false, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
 	}
 
 	for _, tc := range tc {
@@ -159,7 +163,11 @@ func TestOptimizerGate(t *testing.T) {
 		}
 
 		// grid import above min power, no measured surplus
-		lp.Update(2000, 0, nil, nil, false, false, 0, nil, nil, nil)
+		if tc.buffered {
+			lp.Update(1972, 1737, nil, nil, true, true, 0, nil, nil, nil)
+		} else {
+			lp.Update(2000, 0, nil, nil, false, false, 0, nil, nil, nil)
+		}
 
 		ctrl.Finish()
 	}
