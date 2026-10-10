@@ -1,0 +1,18 @@
+template: hager-witty
+products:
+  - brand: Hager
+    description:
+      generic: witty plus (Modbus TCP)
+capabilities: ["mA", "rfid", "meter", "1p3p"]
+requirements:
+  description:
+    de: In der Hager-Charge-App unter "Lastmanagement" muss Modbus TCP aktiviert und das Netzwerk auf "Kabelgebunden" gestellt sein. Nur die witty plus unterstützt Modbus TCP, witty one/pro/park nutzen OCPP.
+    en: Modbus TCP must be enabled in the Hager Charge app under "Load management" and the network set to "Wired". Only the witty plus supports Modbus TCP, witty one/pro/park use OCPP.
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+render: |
+  type: hager-witty
+  {{- include "modbus" . }}
