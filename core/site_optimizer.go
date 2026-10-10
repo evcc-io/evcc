@@ -181,8 +181,8 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 
 	charge := float64(res.ChargingPower[slot]) / slotHours
 	discharge := float64(res.DischargingPower[slot]) / slotHours
-	gridImporting := gridImport > 0
-	gridExporting := gridExport > 0
+	gridImporting := float64(gridImport)/slotHours > suggestionThreshold
+	gridExporting := float64(gridExport)/slotHours > suggestionThreshold
 
 	s := types.Suggestion{
 		Charge:    charge,
