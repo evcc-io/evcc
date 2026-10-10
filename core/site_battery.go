@@ -75,6 +75,11 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischarg
 		batteryMode = api.BatteryNormal
 	}
 
+	// load management: don't start grid charging without headroom, stop it when the circuit is over power
+	if site.fromTo(batteryMode, api.BatteryCharge) && site.batteryChargeExceedsCircuit() {
+		batteryMode = api.BatteryHold
+	}
+
 	// NOTE: applyBatteryMode is always called when charge or discharge mode is active to
 	// validate max soc / min soc reserve
 	if modeChanged := batteryMode != api.BatteryUnknown; modeChanged || site.batteryMode == api.BatteryCharge || site.batteryMode == api.BatteryDischarge {
@@ -131,6 +136,61 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		res = keepUnlessModified(api.BatteryDischarge)
 	case batteryModeModified(batMode):
 		res = api.BatteryNormal
+	}
+
+	return res
+}
+
+// batteryChargeExceedsCircuit reports whether grid charging exceeds the root circuit's power limit: starting needs
+// headroom for the batteries' charge limits (or the charge power at the last stop), charging stops when over power
+func (site *Site) batteryChargeExceedsCircuit() bool {
+	if site.circuit == nil {
+		return false
+	}
+
+	if site.batteryMode == api.BatteryCharge {
+		// a meterless circuit sums loadpoints only, stopping the battery would not reduce its power
+		maxPower := site.circuit.GetMaxPower()
+		if power := site.circuit.GetChargePower(); site.circuit.HasMeter() && maxPower > 0 && power > maxPower {
+			// restarting needs headroom for at least this power (charging is negative)
+			site.batteryChargeStopPower = max(0, -site.state().battery.Power)
+			site.log.DEBUG.Printf("battery mode: circuit over power %.0fW > %.0fW, stop charging at %.0fW", power, maxPower, site.batteryChargeStopPower)
+			return true
+		}
+		return false
+	}
+
+	power := site.batteryMaxChargePower()
+	if power == 0 {
+		power = site.batteryChargeStopPower
+	}
+
+	if power > 0 {
+		if available := site.circuit.ValidatePower(0, power); available < power {
+			site.log.DEBUG.Printf("battery mode: circuit headroom %.0fW < %.0fW, don't start charging", available, power)
+			return true
+		}
+	}
+
+	return false
+}
+
+// batteryMaxChargePower returns the summed charge power limit of the controllable batteries, 0 if any is unknown
+func (site *Site) batteryMaxChargePower() float64 {
+	var res float64
+	for _, dev := range site.batteryMeters {
+		meter := dev.Instance()
+		if !api.HasCap[api.BatteryController](meter) {
+			continue
+		}
+
+		bpl, ok := api.Cap[api.BatteryPowerLimiter](meter)
+		if !ok {
+			return 0
+		}
+
+		charge, _ := bpl.GetPowerLimits()
+		res += charge
 	}
 
 	return res

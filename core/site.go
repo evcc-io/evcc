@@ -114,6 +114,7 @@ type Site struct {
 	siteState
 
 	batteryMaxDischargePower *float64                    // Max discharge power of all battery meters
+	batteryChargeStopPower   float64                     // Battery charge power when load management last stopped grid charging
 	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
