@@ -53,11 +53,17 @@ test.describe("charging loadpoint", async () => {
 
     await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     await expect(lpModal.getByLabel("Title")).toHaveValue("Solar Carport");
+    await expect(lpModal.getByLabel("Title")).not.toHaveAttribute("placeholder");
     // verify defaults
     await expect(lpModal.getByLabel("Default mode")).toHaveValue("");
-    // mode
-    await expect(lpModal.getByTestId("loadpointSolarMode-default")).toHaveClass(/active/);
-    await expect(lpModal.getByTestId("loadpointSolarMode-custom")).not.toHaveClass(/active/);
+    // solar delays, thresholds collapsed
+    await expect(lpModal.getByLabel("Enable delay")).toHaveValue("1");
+    await expect(lpModal.getByLabel("Enable grid power")).not.toBeVisible();
+    // no help text for empty delay
+    await lpModal.getByLabel("Disable delay").fill("");
+    await lpModal.getByLabel("Disable delay").blur();
+    await expect(lpModal).not.toContainText("Stops when there is not enough surplus");
+    await lpModal.getByLabel("Disable delay").fill("3");
     // min/max current
     await expect(minCurrent).toHaveValue("6");
     await expect(maxCurrent).toHaveValue("16");

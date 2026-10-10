@@ -1039,7 +1039,7 @@ input::-webkit-date-and-time-value {
 		visibility var(--evcc-transition-fast) ease;
 }
 
-.collapsible-wrapper.open .collapsible-content {
+.collapsible-wrapper.open > .collapsible-content {
 	opacity: 1;
 	visibility: visible;
 	transition:

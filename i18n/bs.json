@@ -259,7 +259,6 @@
         "charging": "Učitaj",
         "heating": "Grijač"
       },
-      "chargingTitle": "Ponašanje",
       "circuitHelp": "Dodjela zadatka upravljanja opterećenjem kako bi se osiguralo da se ne prekorače ograničenja snage i struje.",
       "circuitInvalid": "Kružni tok ne postoji",
       "circuitLabel": "Kružni tok",
@@ -304,11 +303,7 @@
       "priorityHelp": "Oni s višim prioritetom dobivaju prednost pri pristupu višku solarne energije.",
       "priorityLabel": "Prioritet",
       "save": "Sačuvaj",
-      "solarBehaviorCustomHelp": "Definirajte vlastite pragove i odgode za omogućavanje i onemogućavanje.",
-      "solarBehaviorDefaultHelp": "Počnite nakon {enableDelay} kada je višak dovoljan. Zaustavite kada viška nije dovoljno za {disableDelay}.",
-      "thresholdDisableHelpPositive": "Zaustavi kada se iz mreže potroši više od {power} za {delay}.",
-      "thresholdDisableHelpZero": "Zaustavite kada se za {delay} ne može zadovoljiti minimalna potrebna snaga.",
-      "thresholdEnableHelpZero": "­ Počnite kada se minimalna potrebna snaga može zadovoljiti za {delay}."
+      "thresholdDisableHelpPositive": "Zaustavi kada se iz mreže potroši više od {power} za {delay}."
     },
     "meter": {
       "save": "Sačuvaj"
