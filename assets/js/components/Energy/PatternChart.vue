@@ -9,7 +9,16 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import { FONT_FAMILY, forecastGrid, tooltipStyle, tooltipTable, xAxisLabelStyle } from "./echarts";
+import {
+	boundaryAxis,
+	boundarySeries,
+	FONT_FAMILY,
+	forecastGrid,
+	tooltipStyle,
+	tooltipTable,
+	weekBoundaries,
+	xAxisLabelStyle,
+} from "./echarts";
 import echartsChart from "@/mixins/echartsChart";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import colors, { setAlpha } from "@/colors";
@@ -17,7 +26,7 @@ import { SLOT_MS, slotWatts } from "./slots";
 import type { HistorySeries } from "./GroupChart.vue";
 import { PERIODS } from "../Sessions/types";
 import { labelStep, DAY_STEPS, MONTH_STEPS } from "@/utils/labelStep";
-import { is12hFormat } from "@/units";
+import { is12hFormat, weekStart } from "@/units";
 import { PANEL_EXTRA, panelGrids, socTempPanel, type SubPanel } from "./subPanel";
 
 const DAY_SLOTS = 96;
@@ -211,18 +220,21 @@ export default defineComponent({
 				visualMap: this.legend(this.fmtKWh(this.max), 36),
 				// same frame and label styles as the bar chart
 				grid: { ...forecastGrid(), left: 0, right: 36 },
-				xAxis: {
-					type: "category",
-					data: Array.from({ length: days }, (_, i) => i + 1),
-					axisLine: { show: false },
-					axisTick: { show: false },
-					// even steps like the bar chart instead of dropping overlapping labels
-					axisLabel: {
-						...xAxisLabelStyle(),
-						hideOverlap: false,
-						interval: this.dayStep - 1,
+				xAxis: [
+					{
+						type: "category",
+						data: Array.from({ length: days }, (_, i) => i + 1),
+						axisLine: { show: false },
+						axisTick: { show: false },
+						// even steps like the bar chart instead of dropping overlapping labels
+						axisLabel: {
+							...xAxisLabelStyle(),
+							hideOverlap: false,
+							interval: this.dayStep - 1,
+						},
 					},
-				},
+					boundaryAxis(days),
+				],
 				yAxis: {
 					type: "category",
 					position: "right",
@@ -248,6 +260,7 @@ export default defineComponent({
 						},
 						emphasis: { disabled: true },
 					},
+					boundarySeries(weekBoundaries(this.from, days)),
 				],
 			};
 		},
@@ -282,7 +295,7 @@ export default defineComponent({
 						borderColor: colors.box || "",
 					},
 					dayLabel: {
-						firstDay: 1,
+						firstDay: weekStart(),
 						nameMap: this.dayNames,
 						fontSize: 10,
 						color: colors.muted || "",

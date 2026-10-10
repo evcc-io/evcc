@@ -44,6 +44,21 @@ params:
       en: |
         Unset or all = total power on the AC side (behind the inverter), mppt1-4 = one individual MPPT on the DC side (before the inverter).
         MPPT meters measure DC power (voltage × current) on the DC side. There is no accumulated energy register for individual MPPTs.
+  - name: gateway
+    type: bool
+    usages: ["battery"]
+    advanced: true
+    default: false
+    description:
+      de: Sigen Energy Gateway installiert
+      en: Sigen Energy Gateway installed
+    help:
+      de: |
+        Nutzt bei aktiver Entladesperre das Register "Backup SoC" (40046) statt "Discharge Cut-Off SoC" (40048).
+        Dadurch bleibt die Hausversorgung bei einem Netzausfall erhalten.
+      en: |
+        Uses the "Backup SoC" register (40046) instead of "Discharge Cut-Off SoC" (40048) to block discharge.
+        This keeps the house powered during a grid outage.
   - preset: battery-params
 render: |
   type: custom
@@ -164,7 +179,11 @@ render: |
       {{- include "modbus-connection" . | indent 4 }}
       id: 247
       register:
+        {{- if .gateway }}
+        address: 40046 # Backup SoC
+        {{- else }}
         address: 40048 # Discharge Cut-Off SoC
+        {{- end }}
         type: writeholding
         decode: uint16
       scale: 10

@@ -236,8 +236,8 @@ test.describe("page", () => {
       // carport 3 kWh: 1 solar at feed-in 0.10, 2 grid at ø 0.30
       await page.goto("/#/energy?year=2026&month=9&day=15");
       const sources = page.getByTestId("energy-loadpoint").getByRole("button", { name: "Sources" });
-      await expect(sources).toContainText("33% solar");
-      await expect(sources).toContainText("0% battery, 67% grid");
+      await expect(sources).toContainText("33% Solar");
+      await expect(sources).toContainText("0% Battery, 67% Grid");
 
       await sources.click();
       const modal = page.getByTestId("energy-sources-modal");
@@ -266,7 +266,7 @@ test.describe("page", () => {
       const loadpoint = page.getByTestId("energy-loadpoint");
       await expect(loadpoint.getByRole("heading", { name: "Carport 1.0 kWh" })).toBeVisible();
       const sources = loadpoint.getByRole("button", { name: "Sources" });
-      await expect(sources).toContainText("100% solar");
+      await expect(sources).toContainText("100% Solar");
       await expect(sources).not.toContainText("battery");
       await expect(sources).not.toContainText("grid");
 
@@ -283,7 +283,7 @@ test.describe("page", () => {
     test("battery leads without solar", async ({ page }) => {
       await page.goto("/#/energy?year=2026&month=9&day=18");
       const sources = page.getByTestId("energy-loadpoint").getByRole("button", { name: "Sources" });
-      await expect(sources).toContainText("100% battery");
+      await expect(sources).toContainText("100% Battery");
       await expect(sources).not.toContainText("solar");
     });
 

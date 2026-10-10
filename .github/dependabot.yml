@@ -27,3 +27,9 @@ updates:
     open-pull-requests-limit: 0
     labels:
       - "infrastructure"
+  - package-ecosystem: "pip"
+    directory: "/.github"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "infrastructure"

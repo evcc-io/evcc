@@ -18,14 +18,19 @@ requirements:
       Register at the [Pleos Playground](https://pleos.ai/playground), open "My Vehicle Data API", select the manufacturer and log in with your Bluelink/Kia Connect/Genesis Connected account to obtain a client ID and client secret ([instructions](https://document.pleos.ai/en/api-reference/vehicle-data-api/getting-started/for-private-users/request-my-vehicle-api-key)).
 
       The API returns the data last reported by the vehicle to the manufacturer's servers; it does not wake the vehicle.
+
+      Older vehicles (CCS 1.0) need `welcomecharge` for automatic detection.
     de: |
       Nutzt die im Rahmen des EU Data Act bereitgestellten Fahrzeugdaten über die [Pleos Vehicle Data API](https://document.pleos.ai/en/api-reference/vehicle-data-api/intro) (nur Europa).
 
       Registrierung im [Pleos Playground](https://pleos.ai/playground), dort unter "My Vehicle Data API" den Hersteller wählen und mit dem Bluelink-/Kia Connect-/Genesis Connected-Konto anmelden, um Client ID und Client Secret zu erhalten ([Anleitung](https://document.pleos.ai/en/api-reference/vehicle-data-api/getting-started/for-private-users/request-my-vehicle-api-key)).
 
       Die API liefert die zuletzt vom Fahrzeug an die Herstellerserver gemeldeten Daten; das Fahrzeug wird nicht geweckt.
+
+      Ältere Fahrzeuge (CCS 1.0) brauchen `welcomecharge` zur automatischen Erkennung.
 params:
   - preset: vehicle-common
+  - name: welcomecharge
   - preset: vehicle-online
   - name: clientid
     required: true

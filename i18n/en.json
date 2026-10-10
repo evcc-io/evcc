@@ -37,6 +37,7 @@
       "discharging": "discharging",
       "energy": "Energy",
       "gridCharge": "grid charging",
+      "gridDischarge": "grid discharging",
       "hold": "discharge locked",
       "holdCharge": "charge locked",
       "ofTotal": "of {total}",
@@ -1048,7 +1049,7 @@
         "temperature": "Add temperature forecast"
       },
       "planner": {
-        "description": "Advanced setting. Usually not needed as dynamic electricity tariffs or CO₂ forecasts are used automatically. Enables an additional data source that's only used for charge planning, not for statistics and price calculations.",
+        "description": "This advanced setting is usually not needed. The planner forecast serves as the basis for charging plans and cheap or clean grid charging (vehicles, heating devices, home battery). Without it, the dynamic grid price or CO₂ forecast is used automatically. Statistics, cost calculations and optimizer decisions are not affected.",
         "titleAdd": "Add Planner Forecast",
         "titleEdit": "Edit Planner Forecast"
       },
@@ -1305,11 +1306,6 @@
       },
       "cost": "Cost",
       "others": "Others",
-      "source": {
-        "pv": "solar",
-        "battery": "battery",
-        "grid": "grid"
-      },
       "title": "Consumers",
       "view": {
         "river": "River",
@@ -1447,6 +1443,10 @@
     },
     "issueDescription": "Description",
     "issueTitle": "Title",
+    "nightlyHint": "It might already be fixed. Please verify with the latest {nightlyVersion} before.",
+    "nightlyHintVersion": "Nightly version",
+    "searchHint": "Before reporting a bug, search existing {issues}.",
+    "searchHintLink": "GitHub issues",
     "stepsToReproduce": "Steps to reproduce",
     "subTitleDiscussion": "Describe your problem",
     "subTitleEmail": "Describe your problem",
@@ -1556,6 +1556,7 @@
       "batteryCharge": "Battery charging",
       "batteryChargeHold": "Battery (charge locked)",
       "batteryDischarge": "Battery discharging",
+      "batteryStatus": "Battery status",
       "batteryDischargeHold": "Battery (discharge locked)",
       "batteryGridChargeActive": "Grid charging: active",
       "batteryGridChargeLimit": "Grid charging: when",
