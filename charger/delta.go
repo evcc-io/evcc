@@ -27,6 +27,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/volkszaehler/mbmd/encoding"
@@ -309,7 +310,7 @@ func (wb *Delta) setCurrent(current float64) error {
 	}
 
 	b := make([]byte, 4)
-	encoding.PutUint32(b, uint32(math.Trunc(230.0*current*float64(activePhases))))
+	encoding.PutUint32(b, uint32(math.Trunc(grid.CurrentToPower(current, activePhases))))
 
 	_, err := wb.conn.WriteMultipleRegisters(wb.base+deltaRegEvseChargingPowerLimit, 2, b)
 

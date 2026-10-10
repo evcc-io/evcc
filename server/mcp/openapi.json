@@ -4490,6 +4490,14 @@
           "power"
         ]
       },
+      "GRID_TYPE": {
+        "description": "Grid earthing system.",
+        "type": "string",
+        "enum": [
+          "tn",
+          "it"
+        ]
+      },
       "GenericConfigStatus": {
         "description": "Configuration and runtime status of an integration. Structure depends on configuration.",
         "type": "object",
@@ -5593,6 +5601,14 @@
           "gridConfigured": {
             "description": "A grid meter is configured.",
             "type": "boolean"
+          },
+          "gridType": {
+            "$ref": "#/components/schemas/GRID_TYPE",
+            "description": "Grid earthing system, it for three-wire grids without neutral."
+          },
+          "voltage": {
+            "description": "Nominal grid voltage in V, line-to-line for IT grids.",
+            "type": "number"
           },
           "pv": {
             "description": "Solar generation meters. One entry per configured pv meter.",
