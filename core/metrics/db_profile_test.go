@@ -42,3 +42,39 @@ func TestEnergyProfileWeekday(t *testing.T) {
 		require.Equal(t, 2.0, v, "slot %d", i)
 	}
 }
+
+func TestEnergyProfileActiveDays(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	e := entity{Id: 3, Name: "heater1", Group: Loadpoint}
+	require.NoError(t, db.Instance.Create(&e).Error)
+
+	// 14 past days:
+	// days -14..-8: 7 active days with energy = 0.1 kWh/slot (total 9.6 kWh/day >= 5.0 kWh threshold)
+	// days -7..-1:  7 warm/idle days with energy = 0.001 kWh/slot (total 0.096 kWh/day < 5.0 kWh threshold)
+	for day := -14; day < 0; day++ {
+		base := now.BeginningOfDay().AddDate(0, 0, day)
+		energy := 0.001
+		if day < -7 {
+			energy = 0.1
+		}
+
+		for slot := range 96 {
+			ts := base.Add(time.Duration(slot) * tariff.SlotDuration)
+			require.NoError(t, persist(e, ts, energy, 0, nil, false))
+		}
+	}
+
+	// Active days profile should skip the 7 warm days and average the 7 active days (0.1 kWh/slot)
+	res, err := energyProfileActiveDays(e, 7, 5.0, 0)
+	require.NoError(t, err)
+
+	for i, v := range res {
+		require.InDelta(t, 0.1, v, 1e-6, "slot %d", i)
+	}
+
+	// If threshold is higher than any day (e.g. 50 kWh), ErrIncomplete should be returned
+	_, err = energyProfileActiveDays(e, 7, 50.0, 0)
+	require.ErrorIs(t, err, ErrIncomplete)
+}
