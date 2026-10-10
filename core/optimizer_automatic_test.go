@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/sponsor"
+	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -355,6 +356,61 @@ func TestBatteryModeAutomatic(t *testing.T) {
 	assert.Equal(t, api.BatteryNormal, site.GetBatteryMode())
 
 	ctrl.Finish()
+}
+
+func TestBatteryModeAutomaticGridNoise(t *testing.T) {
+	enableAutomatic(t)
+
+	ctrl := gomock.NewController(t)
+	batCon := batteryControllerMock(ctrl)
+	var bat api.Meter = &struct {
+		api.Meter
+		api.BatteryController
+	}{BatteryController: batCon}
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, bat)},
+	}
+	now := time.Date(2026, 10, 10, 11, 20, 30, 0, time.UTC)
+	schedule := optimizerSchedule{timestamps: []time.Time{now}, dt: []int{570}}
+	req := optimizer.OptimizationInput{
+		TimeSeries: optimizer.TimeSeries{Dt: schedule.dt},
+		Batteries:  []optimizer.BatteryConfig{{SCapacity: 18970, SMin: 2845.5, SMax: 18970}},
+	}
+	details := requestDetails{
+		Timestamps:     schedule.timestamps,
+		BatteryDetails: []batteryDetail{{Type: batteryTypeBattery, Name: "bat", controllable: true}},
+	}
+	res := optimizer.OptimizationResult{
+		Batteries: []optimizer.BatteryResult{{
+			ChargingPower:    []float32{0},
+			DischargingPower: []float32{0},
+			StateOfCharge:    []float32{5501.3},
+		}},
+	}
+
+	gomock.InOrder(
+		batCon.EXPECT().SetBatteryMode(api.BatteryNormal),
+		batCon.EXPECT().SetBatteryMode(api.BatteryHold),
+		batCon.EXPECT().SetBatteryMode(api.BatteryNormal),
+	)
+	for _, tc := range []struct {
+		gridImport, gridExport float32
+		want                   api.BatteryMode
+	}{
+		{4e-05, 0, api.BatteryNormal},
+		{100, 0, api.BatteryHold},
+		{4e-05, 0, api.BatteryNormal},
+		{0, 4e-05, api.BatteryNormal},
+		{0, 0, api.BatteryNormal},
+	} {
+		res.GridImport = []float32{tc.gridImport}
+		res.GridExport = []float32{tc.gridExport}
+		site.applyOptimizerResult(req, details, res, schedule, now, now)
+		assert.Equal(t, tc.want.String(), site.suggestions[batteryKey("bat")].Action)
+		site.updateBatteryMode(false, false, api.Rate{})
+		assert.Equal(t, tc.want, site.GetBatteryMode())
+	}
 }
 
 func TestBatteryGridChargeLimitUnavailable(t *testing.T) {
