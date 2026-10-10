@@ -956,6 +956,7 @@ func mdnsInstances(timeout time.Duration) ([]string, error) {
 	for {
 		select {
 		case se, ok := <-entries:
+			// closed by the client when the context expires, keep reading until then to not block it
 			if !ok {
 				return res, nil
 			}
