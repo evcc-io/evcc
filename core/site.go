@@ -1242,6 +1242,22 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 	return reserved
 }
 
+// batteryBoosted indicates that another loadpoint drains the battery by battery boost.
+// That battery power is not available to support charging at min current (#34449).
+func (site *Site) batteryBoosted(lp updater) bool {
+	for _, other := range site.activeLoadpoints() {
+		if other == lp {
+			continue
+		}
+		if boost := other.GetBatteryBoost(); boost == boostStart || boost == boostContinue {
+			site.log.DEBUG.Printf("lp %s: no battery support while %s boosts", lp.GetTitle(), other.GetTitle())
+			return true
+		}
+	}
+
+	return false
+}
+
 func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
@@ -1351,8 +1367,13 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 			sitePower += res.priorityAdjustment
 		}
 
+		batteryBuffered, batteryStart := res.batteryBuffered, res.batteryStart
+		if (batteryBuffered || batteryStart) && site.batteryBoosted(lp) {
+			batteryBuffered, batteryStart = false, false
+		}
+
 		lp.Update(
-			sitePower, state.battery.Power, consumption, feedin, res.batteryBuffered, res.batteryStart,
+			sitePower, state.battery.Power, consumption, feedin, batteryBuffered, batteryStart,
 			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 			hems.Dimmed(site.hems),
 		)
