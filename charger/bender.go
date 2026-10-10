@@ -24,6 +24,7 @@ package charger
 // * Set 'Allow UID Disclose' to On
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
@@ -37,6 +38,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/hashicorp/go-version"
 )
 
 type sempHandler struct {
@@ -72,6 +74,7 @@ const (
 	bendRegHemsCurrentLimit   = 1000 // HEMS Current Limit (A). Only available on Mennekes Amtron 4You / 4Business chargers.
 	bendRegHemsCurrentLimit10 = 1001 // HEMS Current Limit 1/10 (0.1 A). Only available on Mennekes Amtron 4You / 4Business chargers.
 	bendRegHemsPowerLimit     = 1002 // HEMS Power Limit (W). Only available on Mennekes Amtron 4You / 4Business chargers.
+	bendRegMennekesSoc        = 2200 // Present State of Charge (% 0-100, -101 not available). Mennekes Amtron 4You / 4Business protocol 1.6+.
 
 	bendRegFirmware             = 100 // Application version number
 	bendRegOcppCpStatus         = 104 // Charge Point status according to the OCPP spec. enumaration
@@ -165,6 +168,15 @@ func NewBenderCC(ctx context.Context, settings modbus.TcpSettings, cache time.Du
 		if !wb.legacy && !wb.mennekes4 {
 			if _, err := wb.conn.ReadHoldingRegisters(bendRegEVBatteryState, 1); err == nil {
 				implement.Has(wb, implement.Battery(wb.soc))
+			}
+		}
+	}
+
+	// check vehicle soc by protocol version since unsupported registers close the connection
+	if wb.mennekes4 {
+		if b, err := wb.conn.ReadHoldingRegisters(bendRegProtocolVersion, 2); err == nil {
+			if v, err := version.NewVersion(bytesAsString(bytes.TrimRight(b, "\x00"))); err == nil && v.GreaterThanOrEqual(version.Must(version.NewVersion("1.6"))) {
+				implement.Has(wb, implement.Battery(wb.socMennekes))
 			}
 		}
 	}
@@ -550,6 +562,20 @@ func (wb *BenderCC) soc() (float64, error) {
 		if soc := binary.BigEndian.Uint16(b); soc <= 100 {
 			return float64(soc), nil
 		}
+	}
+
+	return 0, api.ErrNotAvailable
+}
+
+// socMennekes implements the api.Battery interface
+func (wb *BenderCC) socMennekes() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(bendRegMennekesSoc, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	if soc := int16(binary.BigEndian.Uint16(b)); soc >= 0 && soc <= 100 {
+		return float64(soc), nil
 	}
 
 	return 0, api.ErrNotAvailable
