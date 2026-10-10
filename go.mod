@@ -269,6 +269,7 @@ require (
 tool (
 	github.com/dmarkham/enumer
 	github.com/evcc-io/evcc/cmd/implement
+	github.com/getkin/kin-openapi/cmd/validate
 	github.com/gokrazy/tools/cmd/gok
 	github.com/google/go-licenses/v2
 	go.uber.org/mock/mockgen

@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Autorizacija Sėkminga",
     "buttonConnect": "Prisijungti prie {provider}",
     "buttonDisconnect": "Atsijungti",
+    "challenge": {
+      "captcha": {
+        "label": "Įveskite paveikslėlyje pavaizduotus simbolius.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Įklijuokite kodą arba puslapio, į kurį buvote nukreipti, adresą.",
+        "title": "Autorizacijos kodas"
+      },
+      "openLogin": "Atidaryti prisijungimo puslapį",
+      "submit": "Tęsti"
+    },
     "confirmLogout": "Ar tikrai norite atjungti {title}?",
     "connect": "prisijungti",
     "disconnect": "atjungti",
@@ -25,6 +37,7 @@
       "discharging": "iškrauna",
       "energy": "Energija",
       "gridCharge": "įkraunama iš tinklo",
+      "gridDischarge": "iškrova į tinklą",
       "hold": "iškrovimas blokuojamas",
       "holdCharge": "įkrovimas blokuojamas",
       "ofTotal": "iš {total}",
@@ -43,6 +56,12 @@
       "bufferTitle": "Kaupiklis kaip įkrovimo buferis",
       "discharge": "Neleiskite iškrauti kaupiklio greituoju režimu ir planuojamo įkrovimo metu.",
       "gridDischarge": "Leisti kaupikliui išsikrauti į tinklą.",
+      "gridDischargeConfirm": {
+        "country": "Sukonfigūruota šalis: {country}.",
+        "description": "Tai, ar baterijoje sukauptą energiją galima tiekti į elektros tinklą, priklauso nuo šalies ir sudarytos energijos tiekimo į tinklą sutarties. Jei baterija taip pat ir įkraunama iš tinklo, į tinklą tiekiama energija jau nebėra vien tik saulės energija. Pagal daugelį energijos supirkimo tarifų sąlygų dėl to galite prarasti teisę į atlygį arba toks energijos tiekimas gali būti draudžiamas. Pirmiausia peržiūrėkite energijos tiekimo į tinklą sutartį ir tinklo operatoriaus reikalavimus.",
+        "noCountry": "Šalis nesukonfigūruota. Nustatykite ją čia {link}.",
+        "title": "Energijos eksportas iš kaupiklio"
+      },
       "priority": "Kaupiklis turi prioritetą, kol jo įkrova yra mažesnė nei {soc}. Po to įkrovikliai gauna perteklių.",
       "priorityNone": "Saulės energijos perteklius patenka tiesiai į įkroviklius. Nustatykite reikšmę, didesnę nei {soc}, kad pirmenybė būtų teikiama kaupikliui.",
       "priorityTitle": "Kur pirmiausia nukeliaus perteklius?"
@@ -144,10 +163,45 @@
         "switchsocket": "Vartotojo apibrėžta išmanioji rozetė"
       }
     },
+    "circuit": {
+      "addMeter": "Pridėti atskirą energijos skaitiklį",
+      "custom": "Vartotojo apibrėžta grandinė",
+      "deleteChildrenFirst": "Norėdami pašalinti šią grandinę, pirmiausia pašalinkite jos antrines grandines.",
+      "meterDedicated": "Dedikuotas skaitiklis",
+      "meterGrid": "Tinklo skaitiklis",
+      "meterHelp": "Skaitiklis, matuojantis bendrą šios grandinės suvartojimą.",
+      "meterLabel": "Energijos skaitiklis",
+      "meterLabelAdd": "Pridėti Grandinės Matuoklį",
+      "meterLabelEdit": "Koreguoti Grandinės Matuoklį",
+      "meterNone": "Nėra skaitiklio",
+      "meterSelectionHelpDedicatedMeter": "Pridėkite esamą skaitiklį prie šios grandinės.",
+      "meterSelectionHelpGridMeter": "Naudoja esamą jūsų sistemos tinklo skaitiklį.",
+      "meterSelectionHelpNoMeter": "Naudojama visų įkroviklių suma.",
+      "meterSelectionLabel": "Skaitiklio Pasirinkimas",
+      "parentCircuit": "Pagrindinė grandinė",
+      "template": "Grandinė",
+      "titleAdd": "Pridėti grandinę",
+      "titleEdit": "Koreguoti grandinę",
+      "titleLabel": "Pavadinimas"
+    },
     "circuits": {
+      "addMainCircuit": "Pridėti pagrindinę grandinę",
+      "addSubCircuit": "Pridėti papildomą grandinę",
+      "chargingPointsNote": "Grandinei priskirkite įkroviklius ir šildytuvus jų pačių nustatymuose.",
       "description": "Užtikrina, kad naudojant visus į grandinę sujungtus įkroviklius, neviršytumėte sukonfigūruotų galios ir srovės ribų. Grandines galima sudėlioti, kad būtų sukurta hierarchija.",
+      "legacyWarning": "Galima naudoti naują grandinių konfigūracijos metodą. Pašalinkite ir išsaugokite savo konfigūraciją čia, kad galėtumėte pasinaudoti naujuoju vedliu.",
+      "meterDedicated": "Skaitiklis",
+      "meterGrid": "Tinklas",
       "title": "Apkrovos valdymas",
       "usableMeters": "Galimi skaitikliai"
+    },
+    "combobox": {
+      "count": "{count} pasiūlymai",
+      "matching": "Atitinka",
+      "other": "Kiti",
+      "searching": "Ieškoma…",
+      "suggestions": "Pasiūlymai",
+      "used": "jau panaudotas"
     },
     "consumer": {
       "description": "Seka mažesnius, nevaldomus prietaisus (šaldytuvą, skalbimo mašiną ir kt.). Suteikia geresnį supratimą apie jūsų namų suvartojimą.",
@@ -216,6 +270,8 @@
       "identifier": "RFID-Identifikatorius",
       "loginBlocked": "Pasiektas prisijungimų limitas",
       "max": "max",
+      "maxCurrent": "Max. srovė",
+      "maxPower": "Max. galia",
       "messengers": "Paslaugos",
       "no": "ne",
       "odometer": "Odometras",
@@ -352,6 +408,7 @@
       "enable": "Įjungti",
       "error": "Klaida",
       "experimental": "Eksperimentinės",
+      "forceEnable": "Vis tiek įjungti",
       "forceSave": "Vistiek įrašyti",
       "fromYamlHint": "Pastaba: Sukonfigūruota naudojant evcc.yaml. Pašalinkite įrašą iš failo, kad būtų galima redaguoti čia.",
       "hideAdvancedSettings": "Slėpti išplėstinius nustatymus",
@@ -370,6 +427,7 @@
       "saving": "Įrašoma…",
       "selectFile": "Naršyti",
       "showAdvancedSettings": "Rodyti išplėstinius nustatymus",
+      "site": "Vieta",
       "telemetry": "Telemetrija",
       "templateLoading": "Įkrauname...",
       "title": "Pavadinimas",
@@ -879,6 +937,22 @@
       "labelVendorId": "Gamintojo ID",
       "title": "SMA Sunny Home Manager"
     },
+    "site": {
+      "country": {
+        "description": "Naudojama regionui būdingiems patarimams ir numatytiesiems parametrams.",
+        "label": "Šalis"
+      },
+      "currency": {
+        "description": "Naudojamas energijos kainoms, išlaidoms ir sutaupymams formatuoti pagal jūsų tarifą.",
+        "example": "Jūsų mokėjimo kaina buvo {price}. Sutaupėte {amount}.",
+        "label": "Valiuta"
+      },
+      "siteTitle": {
+        "description": "Rodoma pagrindiniame ekrane ir naršyklės skirtuke.",
+        "label": "Pavadinimas"
+      },
+      "title": "Vieta"
+    },
     "sponsor": {
       "addToken": "Įveskite žetoną",
       "changeToken": "Pakeisti žetoną",
@@ -992,8 +1066,8 @@
       "titleChoice": "Ką norite pridėti?",
       "type": {
         "co2": "CO₂ Intensyvumas",
-        "feedIn": "Eksporto kaina",
-        "grid": "Importo kaina",
+        "feedIn": "Tinklo Eksporto Kaina",
+        "grid": "Tinklo Importo Kaina",
         "planner": "Planuoklis",
         "solar": "Saulės",
         "temperature": "Temperatūros Prognozė"
@@ -1046,6 +1120,124 @@
       "titleAdd": "Pridėti Automobilį",
       "titleEdit": "Koreguoti Automobilį"
     }
+  },
+  "energy": {
+    "battery": {
+      "charged": "Įkrauta",
+      "discharged": "Iškrauta"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Stulpeliai",
+        "pattern": "Grafiko modelis"
+      },
+      "cost": "Kaina",
+      "others": "Kiti",
+      "source": {
+        "battery": "kaupiklis",
+        "grid": "tinklas",
+        "pv": "saulė"
+      },
+      "title": "Vartotojai",
+      "view": {
+        "river": "Upė",
+        "treemap": "Medis"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "įkrauta",
+        "returnEnergy": "iškrauta"
+      },
+      "grid": {
+        "energy": "iš tinklo",
+        "returnEnergy": "į tinklą"
+      },
+      "meter": {
+        "energy": "Energija iš tinklo",
+        "returnEnergy": "Energija (patiekta į tinklą)"
+      }
+    },
+    "empty": "Šiam laikotarpiui energijos duomenų nėra.",
+    "flow": {
+      "battery": "Kaupiklis",
+      "batteryCharge": "Kaupiklis įkrauta",
+      "batteryDischarge": "Kaupiklis iškrauta",
+      "charging": "Įkraunama",
+      "export": "Eksportas į tinklą",
+      "grid": "Importas iš tinklo",
+      "heating": "Šildoma",
+      "home": "Suvartojimas",
+      "overview": "Apžvalga",
+      "pv": "Gamyba",
+      "title": "Energijos tėkmė",
+      "usage": "Vartojimas",
+      "withdrawal": "Išimta"
+    },
+    "grid": {
+      "amount": "Kiekis",
+      "cost": "Tinklo kaina",
+      "energy": "Energija",
+      "export": "Eksportas",
+      "exportPrice": "Eksporto kaina",
+      "import": "Importas",
+      "importPrice": "Importo kaina",
+      "price": "Kaina",
+      "revenue": "Pajamos iš eksporto",
+      "title": "Tinklas"
+    },
+    "group": {
+      "battery": "Kaupiklis",
+      "consumer": "Vartojimas",
+      "forecast": "Prognozė",
+      "grid": "Tinklas",
+      "loadpoint": "Įkrovimas ir Šildymas",
+      "meter": "Papildomi skaitikliai",
+      "pv": "Gamyba"
+    },
+    "production": {
+      "above": "{value} virš",
+      "accuracy": "Prognozės tikslumas",
+      "below": "{value} žemiau",
+      "deviation": "Nuokrypis",
+      "expectedTomorrow": "tikimasi rytoj",
+      "exported": "{value} eksportuota",
+      "produced": "Pagaminta",
+      "remainingToday": "likę šiandien",
+      "selfConsumed": "Sunaudota savo reikmėms",
+      "title": "Gamyba"
+    },
+    "socTemp": {
+      "charged": "įkrauta",
+      "soc": "įkrova",
+      "temperature": "temperatūra",
+      "used": "sunaudota"
+    },
+    "sources": {
+      "battery": "Kaupiklis",
+      "cost": "Kaina",
+      "energy": "Energija",
+      "grid": "Tinklas",
+      "hint": "Saulės ir kaupiklio energija įvertinta pagal energijos supirkimo kainą.",
+      "price": "Kaina/kWh",
+      "pv": "Saulė",
+      "share": "Dalis",
+      "source": "Šaltinis",
+      "title": "Šaltiniai",
+      "total": "Viso"
+    },
+    "stat": {
+      "autarky": "Savarankiškumas",
+      "co2Saved": "CO₂ sutaupyta",
+      "co2SavedTooltip": "Palyginus su suvartojimu {energy} iš tinklo.",
+      "configure": "Konfigūruoti dabar",
+      "noCo2": "Nėra CO₂ duomenų.",
+      "noPrice": "Nėra kainos duomenų.",
+      "savings": "Sutaupymai",
+      "savingsTooltip": "Palyginus su suvartotos {energy} pirkimu iš tinklo.",
+      "versus": "{value} vs. {reference}"
+    },
+    "title": "Energija"
   },
   "footer": {
     "community": {
@@ -1184,6 +1376,7 @@
   },
   "general": {
     "back": "Atgal",
+    "cancel": "Atšaukti",
     "download": "Atsisiųsti",
     "error": "Klaida",
     "none": "nė vienas",
@@ -1220,31 +1413,6 @@
     "restartButton": "Restartuoti",
     "restartDescription": "Ar pabandėte išjungti ir vėl įjungti?",
     "secondaryActions": "Vis dar nepavyksta išspręsti problemos? Čia rasite sudėtingesnes opcijas."
-  },
-  "energy": {
-    "direction": {
-      "battery": {
-        "energy": "įkrauta",
-        "returnEnergy": "iškrauta"
-      },
-      "grid": {
-        "energy": "iš tinklo",
-        "returnEnergy": "į tinklą"
-      },
-      "meter": {
-        "energy": "Energija iš tinklo",
-        "returnEnergy": "Energija (patiekta į tinklą)"
-      }
-    },
-    "group": {
-      "battery": "Kaupiklis",
-      "consumer": "Vartojimas",
-      "forecast": "Prognozė",
-      "grid": "Tinklas",
-      "loadpoint": "Įkrovimas ir Šildymas",
-      "meter": "Papildomi skaitikliai",
-      "pv": "Gamyba"
-    }
   },
   "issue": {
     "additional": {
@@ -1395,6 +1563,7 @@
       "batteryDischargeHold": "Kaupiklis (iškrovimas užblokuotas)",
       "batteryGridChargeActive": "Įkrovimas iš tinklo: aktyvus",
       "batteryGridChargeLimit": "Įkrauti iš tinklo: kai",
+      "batteryStatus": "Kaupiklio statusas",
       "batteryTooltip": "{energy} iš {total} ({soc})",
       "forecast": "Prognozė",
       "forecastTooltip": "prognozė: likusi saulės energijos gamyba šiandien",
@@ -1404,7 +1573,7 @@
       "loadpointsLimit": "{limit} limitas",
       "noEnergy": "Nėra skaitiklių duomenų",
       "pv": "Saulės jėgainė",
-      "pvExport": "Eksportas",
+      "pvExport": "Tinklo eksportas",
       "pvProduction": "Gamyba",
       "selfConsumption": "Sunaudojama iškart",
       "toggleDetails": "Energijos srauto detalės"
@@ -1859,6 +2028,7 @@
     "battery": "Kaupiklis",
     "charge": "Įkrovimas",
     "comingSoon": "Šis puslapis yra kuriamas.",
+    "energy": "Energija",
     "forecast": "Prognozė",
     "more": "Daugiau",
     "sessions": "Sesijos"

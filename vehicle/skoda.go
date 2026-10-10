@@ -46,7 +46,6 @@ func NewSkodaFromConfig(other map[string]any) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	var err error
 	log := util.NewLogger("skoda").Redact(cc.User, cc.Password, cc.VIN)
 
 	// use Skoda api to resolve list of vehicles
@@ -64,22 +63,16 @@ func NewSkodaFromConfig(other map[string]any) (api.Vehicle, error) {
 			return v.VIN, nil
 		},
 	)
-
-	if err == nil {
-		vehicle, err = api.VehicleDetails(vehicle.VIN)
+	if err != nil {
+		return nil, err
 	}
 
-	if err == nil {
-		v.fromVehicle(vehicle.Name, float64(vehicle.Specification.Battery.CapacityInKWh))
+	if vehicle, err = api.VehicleDetails(vehicle.VIN); err != nil {
+		return nil, err
 	}
 
-	// reuse tokenService to build provider
-	if err == nil {
-		api := skoda.NewAPI(log, ts)
-		api.Client.Timeout = cc.Timeout
+	v.fromVehicle(vehicle.Name, float64(vehicle.Specification.Battery.CapacityInKWh))
+	v.Provider = skoda.NewProvider(api, vehicle.VIN, cc.Cache)
 
-		v.Provider = skoda.NewProvider(api, vehicle.VIN, cc.Cache)
-	}
-
-	return v, err
+	return v, nil
 }
