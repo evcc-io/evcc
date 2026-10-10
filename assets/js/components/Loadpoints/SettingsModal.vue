@@ -147,6 +147,68 @@
 				</div>
 			</div>
 
+			<div v-if="loadpoint?.chargerPhases1p3p" class="mb-3 row">
+				<label
+					:for="formId(`phasepreset_${phasePresetOptions[0]}`)"
+					class="col-sm-4 col-form-label pt-0"
+				>
+					{{ $t("main.loadpointSettings.phasePreset.label") }}
+				</label>
+				<div class="col-sm-8 pe-0">
+					<p class="mt-0 mb-2">
+						<small> {{ $t("main.loadpointSettings.phasePreset.description") }}</small>
+					</p>
+					<div class="mb-2">
+						<strong>{{ $t("main.loadpointSettings.phasePreset.smart") }}</strong>
+						<div
+							v-for="phases in phasePresetOptions"
+							:key="`smart_${phases}`"
+							class="form-check"
+						>
+							<input
+								:id="formId(`phasepreset_smart_${phases}`)"
+								v-model.number="selectedPhasesSmart"
+								class="form-check-input"
+								type="radio"
+								:name="formId('phasepreset_smart')"
+								:value="phases"
+								@change="setPhasesSmart"
+							/>
+							<label
+								class="form-check-label"
+								:for="formId(`phasepreset_smart_${phases}`)"
+							>
+								{{ $t(`main.loadpointSettings.phasePreset.preset_${phases}`) }}
+							</label>
+						</div>
+					</div>
+					<div>
+						<strong>{{ $t("main.loadpointSettings.phasePreset.now") }}</strong>
+						<div
+							v-for="phases in phasePresetOptions"
+							:key="`now_${phases}`"
+							class="form-check"
+						>
+							<input
+								:id="formId(`phasepreset_now_${phases}`)"
+								v-model.number="selectedPhasesNow"
+								class="form-check-input"
+								type="radio"
+								:name="formId('phasepreset_now')"
+								:value="phases"
+								@change="setPhasesNow"
+							/>
+							<label
+								class="form-check-label"
+								:for="formId(`phasepreset_now_${phases}`)"
+							>
+								{{ $t(`main.loadpointSettings.phasePreset.preset_${phases}`) }}
+							</label>
+						</div>
+					</div>
+				</div>
+			</div>
+
 			<div v-if="!switchDevice" class="mb-3 row">
 				<label :for="formId('maxcurrent')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 					{{ $t("main.loadpointSettings.maxCurrent.label") }}
@@ -248,6 +310,8 @@ export default defineComponent({
 			selectedMinCurrent: undefined as number | undefined,
 			selectedMinTemp: undefined as number | undefined,
 			selectedPhases: undefined as number | undefined,
+			selectedPhasesSmart: undefined as number | undefined,
+			selectedPhasesNow: undefined as number | undefined,
 			selectedSolarShare: 100,
 			isModalVisible: false,
 		};
@@ -288,6 +352,20 @@ export default defineComponent({
 		},
 		phasesConfigured() {
 			return this.loadpoint?.phasesConfigured;
+		},
+		phasesSmart() {
+			return this.loadpoint?.phasesSmart ?? 0;
+		},
+		phasesNow() {
+			return this.loadpoint?.phasesNow ?? 0;
+		},
+		phasePresetOptions() {
+			// 0 = no preset, only fixed presets make sense per mode.
+			// a single-phase connection cannot offer 3 phases.
+			if (this.loadpoint?.chargerSinglePhase) {
+				return [0, 1];
+			}
+			return [0, 1, 3];
 		},
 		phasesOptions() {
 			if (this.loadpoint?.chargerSinglePhase) {
@@ -370,6 +448,12 @@ export default defineComponent({
 		phasesConfigured(value) {
 			this.selectedPhases = value;
 		},
+		phasesSmart(value) {
+			this.selectedPhasesSmart = value ?? 0;
+		},
+		phasesNow(value) {
+			this.selectedPhasesNow = value ?? 0;
+		},
 		solarSharePercent(value) {
 			this.selectedSolarShare = value;
 		},
@@ -378,6 +462,8 @@ export default defineComponent({
 		open(loadpointId: string) {
 			this.id = loadpointId;
 			this.selectedPhases = this.phasesConfigured;
+			this.selectedPhasesSmart = this.phasesSmart;
+			this.selectedPhasesNow = this.phasesNow;
 			this.selectedMaxCurrent = this.maxCurrent;
 			this.selectedMinCurrent = this.minCurrent;
 			this.selectedMinTemp = this.minTemp;
@@ -402,6 +488,12 @@ export default defineComponent({
 		},
 		setPhasesConfigured() {
 			api.post(this.apiPath("phases") + "/" + this.selectedPhases);
+		},
+		setPhasesSmart() {
+			api.post(this.apiPath("phasessmart") + "/" + this.selectedPhasesSmart);
+		},
+		setPhasesNow() {
+			api.post(this.apiPath("phasesnow") + "/" + this.selectedPhasesNow);
 		},
 		setSolarShare() {
 			api.post(this.apiPath("solarshare") + "/" + this.selectedSolarShare / 100);

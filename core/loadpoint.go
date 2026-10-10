@@ -119,6 +119,8 @@ type Loadpoint struct {
 	minCurrent               float64  // PV mode: start current	Min+PV mode: min current
 	maxCurrent               float64  // Max allowed current. Physically ensured by the charger
 	phasesConfigured         int      // Charger configured phase mode 0/1/3
+	phasesSmart              int      // Phase preset applied on switching to smart mode 0/1/3 (0 = no preset)
+	phasesNow                int      // Phase preset applied on switching to now mode 0/1/3 (0 = no preset)
 	limitSoc                 int      // Session limit for soc
 	limitEnergy              float64  // Session limit for energy
 	minSoc                   int      // Forced charging below this soc (heating: temperature), 0=disabled
@@ -388,6 +390,12 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
 		lp.setPhasesConfigured(int(v))
+	}
+	if v, err := lp.settings.Int(keys.PhasesSmart); err == nil {
+		lp.setPhasesSmart(int(v))
+	}
+	if v, err := lp.settings.Int(keys.PhasesNow); err == nil {
+		lp.setPhasesNow(int(v))
 	}
 	if v, err := lp.settings.Float(keys.MinCurrent); err == nil && v > 0 {
 		lp.setMinCurrent(v)
@@ -785,6 +793,14 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	}
 
 	lp.publish(keys.PhasesConfigured, lp.phasesConfigured)
+	lp.publish(keys.PhasesSmart, lp.phasesSmart)
+	lp.publish(keys.PhasesNow, lp.phasesNow)
+
+	// apply the active mode's phase preset (SetMode is not called on startup)
+	if preset := lp.effectiveModePhasePreset(lp.mode); preset != 0 {
+		lp.log.DEBUG.Printf("apply %s phase preset: %dp", string(lp.mode), preset)
+		lp.setPhasesConfigured(preset)
+	}
 	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
 	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
@@ -2450,6 +2466,11 @@ NO_DIM:
 	// update and publish min soc not reached state
 	minSocNotReached := lp.minSocNotReached()
 	lp.publish(keys.MinSocNotReached, minSocNotReached)
+
+	// enforce the governing mode phase preset: fast-equivalent charging
+	// (now mode, planner, minSoc, cheap smart cost) uses the now preset,
+	// pure surplus following uses the smart preset
+	lp.enforcePhasePreset(mode, minSocNotReached, plannerActive, smartCostActive)
 
 	// execute loading strategy
 	switch {

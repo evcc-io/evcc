@@ -1603,6 +1603,15 @@
         "phases_3": "3 fase",
         "phases_3_hint": "({min} tot {max})"
       },
+      "phasePreset": {
+        "label": "Fase-voorkeur per modus",
+        "description": "Forceer fasen bij het wisselen van laadmodus. Het schakelen zelf houdt de gebruikelijke vertragingen.",
+        "smart": "Slim",
+        "now": "Snel (now)",
+        "preset_0": "geen voorkeur",
+        "preset_1": "altijd 1 fase",
+        "preset_3": "altijd 3 fasen"
+      },
       "smartCostCheap": "Goedkoop laden met netstroom",
       "smartCostClean": "Laden met ecologische energie van het net",
       "solar": "Zonneoverschot",

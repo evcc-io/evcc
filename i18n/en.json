@@ -1643,6 +1643,15 @@
         "phases_3": "3 phase",
         "phases_3_hint": "({min} to {max})"
       },
+      "phasePreset": {
+        "label": "Phase preset per mode",
+        "description": "Force phases when switching charge mode. The switch itself keeps the usual delays.",
+        "smart": "Smart",
+        "now": "Fast (now)",
+        "preset_0": "no preset",
+        "preset_1": "always 1 phase",
+        "preset_3": "always 3 phases"
+      },
       "smartCostCheap": "Cheap Grid Charging",
       "smartCostClean": "Clean Grid Charging",
       "solar": "Solar Surplus",

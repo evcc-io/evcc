@@ -859,6 +859,58 @@
         }
       }
     },
+    "/loadpoints/{id}/phasessmart/{phases}": {
+      "post": {
+        "operationId": "setLoadpointPhasesSmart",
+        "summary": "Update smart-mode phase preset",
+        "description": "Sets the phase preset applied when switching to smart mode (0 = no preset, 1 or 3 = force phases). The actual switch happens in the control loop, keeping phase timers and load management intact.",
+        "tags": [
+          "loadpoints"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/phases"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          },
+          "400": {
+            "description": "Invalid phases-value. Allowed values are 0, 1 and 3."
+          }
+        }
+      }
+    },
+    "/loadpoints/{id}/phasesnow/{phases}": {
+      "post": {
+        "operationId": "setLoadpointPhasesNow",
+        "summary": "Update now-mode phase preset",
+        "description": "Sets the phase preset applied when switching to now mode (0 = no preset, 1 or 3 = force phases). The actual switch happens in the control loop, keeping phase timers and load management intact.",
+        "tags": [
+          "loadpoints"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/phases"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          },
+          "400": {
+            "description": "Invalid phases-value. Allowed values are 0, 1 and 3."
+          }
+        }
+      }
+    },
     "/loadpoints/{id}/plan": {
       "get": {
         "operationId": "getLoadpointPlan",
@@ -3810,6 +3862,14 @@
             "description": "Configured phase mode. 0 is automatic switching, 1 and 3 select a fixed phase count.",
             "type": "number"
           },
+          "phasesSmart": {
+            "description": "Smart-mode phase preset. 0 is no preset, 1 and 3 force phases on switching to smart mode.",
+            "type": "number"
+          },
+          "phasesNow": {
+            "description": "Now-mode phase preset. 0 is no preset, 1 and 3 force phases on switching to now mode.",
+            "type": "number"
+          },
           "plan": {
             "description": "Time slots of the current charging plan.",
             "type": "array",
@@ -4047,6 +4107,8 @@
           "phaseRemaining",
           "phasesActive",
           "phasesConfigured",
+          "phasesSmart",
+          "phasesNow",
           "plan",
           "planActive",
           "planEnergy",

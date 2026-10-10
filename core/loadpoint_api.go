@@ -192,6 +192,14 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	if lp.mode != mode {
 		lp.setMode(mode)
 
+		// apply mode phase preset (if any) for chargers with phase switching.
+		// the actual switch happens in the control loop via scalePhasesRequired,
+		// keeping phase timers and load management intact
+		if preset := lp.effectiveModePhasePreset(mode); preset != 0 {
+			lp.log.DEBUG.Printf("apply %s phase preset: %dp", string(mode), preset)
+			lp.setPhasesConfigured(preset)
+		}
+
 		lp.batteryBoost = boostDisabled
 		lp.publish(keys.BatteryBoost, false)
 
@@ -354,6 +362,130 @@ func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 	lp.requestUpdate()
 
 	return nil
+}
+
+// setPhasesSmart sets the smart-mode phase preset without modifying the charger (no mutex)
+func (lp *Loadpoint) setPhasesSmart(phases int) {
+	lp.phasesSmart = phases
+	lp.publish(keys.PhasesSmart, lp.phasesSmart)
+	lp.settings.SetInt(keys.PhasesSmart, int64(lp.phasesSmart))
+}
+
+// GetPhasesSmart returns the smart-mode phase preset (0 = no preset)
+func (lp *Loadpoint) GetPhasesSmart() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.phasesSmart
+}
+
+// SetPhasesSmart sets the smart-mode phase preset (0/1/3, 0 = no preset)
+func (lp *Loadpoint) SetPhasesSmart(phases int) error {
+	if err := validatePhasePreset(phases, lp.getChargerPhysicalPhases()); err != nil {
+		return err
+	}
+
+	lp.log.DEBUG.Println("set smart phases:", phases)
+
+	lp.Lock()
+	lp.setPhasesSmart(phases)
+	lp.Unlock()
+
+	lp.requestUpdate()
+
+	return nil
+}
+
+// setPhasesNow sets the now-mode phase preset without modifying the charger (no mutex)
+func (lp *Loadpoint) setPhasesNow(phases int) {
+	lp.phasesNow = phases
+	lp.publish(keys.PhasesNow, lp.phasesNow)
+	lp.settings.SetInt(keys.PhasesNow, int64(lp.phasesNow))
+}
+
+// GetPhasesNow returns the now-mode phase preset (0 = no preset)
+func (lp *Loadpoint) GetPhasesNow() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.phasesNow
+}
+
+// SetPhasesNow sets the now-mode phase preset (0/1/3, 0 = no preset)
+func (lp *Loadpoint) SetPhasesNow(phases int) error {
+	if err := validatePhasePreset(phases, lp.getChargerPhysicalPhases()); err != nil {
+		return err
+	}
+
+	lp.log.DEBUG.Println("set now phases:", phases)
+
+	lp.Lock()
+	lp.setPhasesNow(phases)
+	lp.Unlock()
+
+	lp.requestUpdate()
+
+	return nil
+}
+
+// validatePhasePreset validates a mode phase preset (0 = no preset, otherwise 1 or 3)
+func validatePhasePreset(phases, physical int) error {
+	if phases != 0 && phases != 1 && phases != 3 {
+		return fmt.Errorf("invalid number of phases: %d", phases)
+	}
+
+	if physical != 0 && phases > physical {
+		return fmt.Errorf("cannot configure more phases than physically connected: %d > %d", phases, physical)
+	}
+
+	return nil
+}
+
+// modePhasePreset returns the phase preset for the given charge mode (0 = no preset)
+func (lp *Loadpoint) modePhasePreset(mode api.ChargeMode) int {
+	switch mode {
+	case api.ModeSmart:
+		return lp.phasesSmart
+	case api.ModeNow:
+		return lp.phasesNow
+	default:
+		return 0
+	}
+}
+
+// enforcePhasePreset applies the governing mode phase preset for the current
+// charging decision (no mutex, call without lock). Fast-equivalent charging
+// inside smart mode (planner, minSoc, cheap smart cost) is treated like now
+// mode. The actual switch happens in the control loop via scalePhasesRequired,
+// keeping phase timers and load management intact.
+func (lp *Loadpoint) enforcePhasePreset(mode api.ChargeMode, minSocNotReached, plannerActive, smartCostActive bool) {
+	preset := 0
+	switch {
+	case mode == api.ModeNow || minSocNotReached || plannerActive || smartCostActive:
+		preset = lp.effectiveModePhasePreset(api.ModeNow)
+	case mode == api.ModeSmart:
+		preset = lp.effectiveModePhasePreset(api.ModeSmart)
+	}
+
+	if preset != 0 && preset != lp.GetPhasesConfigured() {
+		lp.log.DEBUG.Printf("apply governing %s phase preset: %dp", string(mode), preset)
+		lp.setPhasesConfigured(preset)
+	}
+}
+
+// effectiveModePhasePreset returns the applicable phase preset for the given
+// charge mode (0 = none). Presets exceeding the charger's physically connected
+// phases (e.g. after a charger swap) are ignored.
+func (lp *Loadpoint) effectiveModePhasePreset(mode api.ChargeMode) int {
+	preset := lp.modePhasePreset(mode)
+	if preset == 0 || !lp.hasPhaseSwitching() {
+		return 0
+	}
+
+	if physical := lp.getChargerPhysicalPhases(); physical != 0 && preset > physical {
+		lp.log.WARN.Printf("ignoring %s phase preset %dp, charger physically connected with %dp", string(mode), preset, physical)
+		return 0
+	}
+
+	return preset
 }
 
 // GetLimitSoc returns the session limit soc
