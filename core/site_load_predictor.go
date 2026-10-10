@@ -112,8 +112,8 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 	const (
 		tRoom                = 21.0
 		heatingStopThreshold = 18.0
-		minCorrection        = 0.5 // warmer than expected
-		maxCorrection        = 2.0 // colder than expected
+		minCorrection        = 0.1 // warmer than expected / DHW base load floor
+		maxCorrection        = 3.0 // colder than expected
 	)
 
 	currentTime := time.Now()
@@ -156,12 +156,13 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		}
 		tFuture := r.Value
 
-		// above the heating threshold the correction is skipped, keeping the
-		// historical average in the model (e.g. summer DHW still consumes energy)
+		// above the heating threshold space heating is stopped, keeping only the
+		// minimum base load floor (e.g. summer DHW / standby)
 		if tFuture >= heatingStopThreshold {
+			res[i] = profile[i] * minCorrection
 			if logged < 3 && profile[i] > 0 {
-				site.log.DEBUG.Printf("temperature correction: slot %s (h=%02d): forecast=%.1f°C >= threshold=%.1f°C, keeping unscaled profile",
-					ts.Local().Format("15:04"), h, tFuture, heatingStopThreshold)
+				site.log.DEBUG.Printf("temperature correction: slot %s (h=%02d): forecast=%.1f°C >= threshold=%.1f°C, scaled to base load floor (load: %.0fWh -> %.0fWh)",
+					ts.Local().Format("15:04"), h, tFuture, heatingStopThreshold, profile[i]*1e3, res[i]*1e3)
 				logged++
 			}
 			continue
