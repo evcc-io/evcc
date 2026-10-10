@@ -569,6 +569,7 @@ func TestLoadpointRequestChargingState(t *testing.T) {
 			req, _ := site.loadpointRequest(lp, 8, 15*time.Minute, nil)
 
 			assert.Equal(t, want, req.CActive)
+			assert.Len(t, req.RDeparture, 8, "vehicles may leave")
 		})
 	}
 }

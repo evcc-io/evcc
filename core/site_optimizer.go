@@ -905,6 +905,7 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 
 	// vehicle
 	v := lp.GetVehicle()
+	bat.RDeparture = site.departure(lp, minLen)
 
 	capacity := v.Capacity() // kWh
 	soc := lp.GetSoc()       // percent
