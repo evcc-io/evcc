@@ -85,7 +85,7 @@ params:
     description:
       de: Maximale Stromstärke-Entität [A]
       en: Maximum current entity [A]
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=number,input_number
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=number,input_number&unit=A
     example: "number.charger_max_current"
     required: true
     help:
@@ -104,7 +104,7 @@ params:
     description:
       de: Leistungsentität
       en: Power entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=W,kW
     example: "sensor.charger_power"
     advanced: true
     help:
@@ -114,7 +114,7 @@ params:
     description:
       de: Energieentität
       en: Energy entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=Wh,kWh,MWh
     example: "sensor.charger_energy"
     advanced: true
     help:
@@ -124,7 +124,7 @@ params:
     description:
       de: Temperaturentität
       en: Temperature entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor,input_number
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor,input_number&unit=°C,°F,K
     example: "sensor.boiler_temperature"
     advanced: true
     help:
@@ -134,7 +134,7 @@ params:
     description:
       de: L1 Stromentität
       en: L1 current entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=A
     example: "sensor.charger_current_l1"
     advanced: true
     help:
@@ -144,7 +144,7 @@ params:
     description:
       de: L2 Stromentität
       en: L2 current entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=A
     example: "sensor.charger_current_l2"
     advanced: true
     help:
@@ -154,7 +154,7 @@ params:
     description:
       de: L3 Stromentität
       en: L3 current entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=A
     example: "sensor.charger_current_l3"
     advanced: true
     help:
@@ -164,7 +164,7 @@ params:
     description:
       de: L1 Spannungsentität
       en: L1 voltage entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=V
     example: "sensor.charger_voltage_l1"
     advanced: true
     help:
@@ -174,7 +174,7 @@ params:
     description:
       de: L2 Spannungsentität
       en: L2 voltage entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=V
     example: "sensor.charger_voltage_l2"
     advanced: true
     help:
@@ -184,7 +184,7 @@ params:
     description:
       de: L3 Spannungsentität
       en: L3 voltage entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=V
     example: "sensor.charger_voltage_l3"
     advanced: true
     help:

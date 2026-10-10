@@ -149,13 +149,13 @@ func getHosts(w http.ResponseWriter, req *http.Request) {
 
 	used := usedHosts(allDeviceConfigs())
 
-	res := make([]Option, 0)
+	res := make([]service.Option, 0)
 	for _, h := range hosts(w, req, mdnsTypes(all)) {
 		match := func(d templates.Discovery) bool {
 			return d.Match(h.Names(), h.MAC, h.Services)
 		}
 
-		o := Option{
+		o := service.Option{
 			Value: h.IP,
 			Label: h.Hostname,
 			Hint:  discovery.Vendor(h.MAC),

@@ -42,7 +42,7 @@ func getCity(w http.ResponseWriter, req *http.Request) {
 }
 
 func getOptions(w http.ResponseWriter, req *http.Request) {
-	json.NewEncoder(w).Encode([]Option{
+	json.NewEncoder(w).Encode([]service.Option{
 		{Value: "192.0.2.10", Label: "alpha", Hint: "Vendor A", Match: true, Used: true},
 		{Value: "192.0.2.20", Label: "beta", Hint: "Vendor B"},
 		{Value: "192.0.2.30", Label: "gamma", Hint: "Vendor C", Match: true},

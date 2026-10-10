@@ -66,18 +66,20 @@
 						:aria-selected="option.value === activeValue"
 						@click="select(option)"
 					>
-						<div class="fw-bold text-truncate option-value">{{ option.value }}</div>
-						<div
-							v-if="option.label"
-							class="small text-muted text-truncate option-label"
-						>
-							{{ option.label }}
+						<div class="d-flex justify-content-between align-items-center gap-3">
+							<div class="text-truncate option-value">{{ option.value }}</div>
+							<Badge v-if="option.used" variant="muted">
+								{{ $t("config.combobox.used") }}
+							</Badge>
 						</div>
-						<Badge v-if="option.used" variant="muted" class="option-badge">
-							{{ $t("config.combobox.used") }}
-						</Badge>
-						<div v-if="option.hint" class="small text-muted text-truncate option-hint">
-							{{ option.hint }}
+						<div
+							v-if="option.label || option.hint"
+							class="d-flex justify-content-between gap-3 small"
+						>
+							<div class="text-truncate">{{ option.label }}</div>
+							<div v-if="option.hint" class="text-truncate option-hint">
+								{{ option.hint }}
+							</div>
 						</div>
 					</div>
 				</div>
@@ -266,26 +268,13 @@ export default defineComponent({
 .options {
 	max-height: 20rem;
 }
-/* address and name left, badge and brand right, brand is cut first */
-.option {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) fit-content(50%);
-	column-gap: 1rem;
-	align-items: center;
-}
 .option-value {
-	grid-area: 1 / 1;
+	font-size: var(--bs-body-font-size);
 }
-.option-label {
-	grid-area: 2 / 1;
-}
-.option-badge {
-	grid-area: 1 / 2;
-	justify-self: end;
-}
+/* label is cut before the hint, hint never takes more than half the row */
 .option-hint {
-	grid-area: 2 / 2;
-	text-align: end;
+	flex-shrink: 0;
+	max-width: 50%;
 }
 .searching {
 	border-top: var(--bs-dropdown-border-width) solid var(--bs-dropdown-divider-bg);
@@ -294,11 +283,13 @@ export default defineComponent({
 	border-top: var(--bs-dropdown-border-width) solid var(--bs-dropdown-divider-bg);
 }
 .option {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
 	min-height: 44px;
 	cursor: pointer;
 }
 .option--active {
-	color: var(--bs-dropdown-link-hover-color);
-	background-color: var(--bs-dropdown-link-hover-bg);
+	background-color: var(--evcc-gray-25);
 }
 </style>

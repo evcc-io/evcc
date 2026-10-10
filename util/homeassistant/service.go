@@ -28,7 +28,39 @@ func getInstances(w http.ResponseWriter, req *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	jsonWrite(w, slices.Sorted(maps.Values(instances)))
+	res := make([]service.Option, 0, len(instances))
+	for name, uri := range instances {
+		// match keeps the single-instance auto-fill
+		res = append(res, service.Option{Value: uri, Label: name, Match: true})
+	}
+
+	jsonWrite(w, sortOptions(res))
+}
+
+func sortOptions(res []service.Option) []service.Option {
+	slices.SortFunc(res, func(a, b service.Option) int {
+		return strings.Compare(a.Value, b.Value)
+	})
+	return res
+}
+
+func entityOptions(states []StateResponse, domains, units []string) []service.Option {
+	res := make([]service.Option, 0)
+	for _, e := range states {
+		if !matchesDomains(e.EntityId, domains) {
+			continue
+		}
+		o := service.Option{
+			Value: e.EntityId,
+			Label: e.Attributes.FriendlyName,
+			Match: slices.Contains(units, e.Attributes.UnitOfMeasurement),
+		}
+		if e.State != "unavailable" && e.State != "unknown" {
+			o.Hint = strings.TrimSpace(e.State + " " + e.Attributes.UnitOfMeasurement)
+		}
+		res = append(res, o)
+	}
+	return sortOptions(res)
 }
 
 func connectionFromRequest(req *http.Request) (*Connection, error) {
@@ -50,6 +82,14 @@ func connectionFromRequest(req *http.Request) (*Connection, error) {
 func domainsFromRequest(req *http.Request) []string {
 	if domain := req.URL.Query().Get("domain"); domain != "" {
 		return strings.Split(domain, ",")
+	}
+	return nil
+}
+
+// unitsFromRequest parses the comma-separated "unit" query parameter.
+func unitsFromRequest(req *http.Request) []string {
+	if unit := req.URL.Query().Get("unit"); unit != "" {
+		return strings.Split(unit, ",")
 	}
 	return nil
 }
@@ -81,17 +121,8 @@ func getEntities(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	domains := domainsFromRequest(req)
-
-	var result []string
-	for _, e := range states {
-		if matchesDomains(e.EntityId, domains) {
-			result = append(result, e.EntityId)
-		}
-	}
-
 	w.Header().Set("Cache-control", "max-age=300")
-	jsonWrite(w, result)
+	jsonWrite(w, entityOptions(states, domainsFromRequest(req), unitsFromRequest(req)))
 }
 
 func getServices(w http.ResponseWriter, req *http.Request) {
