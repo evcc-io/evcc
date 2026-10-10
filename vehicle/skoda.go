@@ -54,11 +54,11 @@ func NewSkodaFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	client := skoda.NewAPI(log, ts)
-	client.Client.Timeout = cc.Timeout
+	api := skoda.NewAPI(log, ts)
+	api.Client.Timeout = cc.Timeout
 
 	vehicle, err := ensureVehicleEx(
-		cc.VIN, client.Vehicles,
+		cc.VIN, api.Vehicles,
 		func(v skoda.Vehicle) (string, error) {
 			return v.VIN, nil
 		},
@@ -67,12 +67,12 @@ func NewSkodaFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if vehicle, err = client.VehicleDetails(vehicle.VIN); err != nil {
+	if vehicle, err = api.VehicleDetails(vehicle.VIN); err != nil {
 		return nil, err
 	}
 
 	v.fromVehicle(vehicle.Name, float64(vehicle.Specification.Battery.CapacityInKWh))
-	v.Provider = skoda.NewProvider(client, vehicle.VIN, cc.Cache)
+	v.Provider = skoda.NewProvider(api, vehicle.VIN, cc.Cache)
 
 	return v, nil
 }
