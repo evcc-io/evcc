@@ -937,6 +937,44 @@ func networkSettings(conf *globalconfig.Network) error {
 	return nil
 }
 
+// mdnsInstances returns the http service instances announced on the network
+func mdnsInstances(timeout time.Duration) ([]string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	entries := make(chan *zeroconf.ServiceEntry)
+	errC := make(chan error, 1)
+
+	go func() {
+		// ipv4 only, client fails unless all requested protocols are available
+		if err := zeroconf.Browse(ctx, "_http._tcp", "local.", entries, zeroconf.SelectIPTraffic(zeroconf.IPv4)); err != nil {
+			errC <- err
+		}
+	}()
+
+	var res []string
+	for {
+		select {
+		case se, ok := <-entries:
+			if !ok {
+				return res, nil
+			}
+			res = append(res, se.Instance)
+		case err := <-errC:
+			return nil, err
+		}
+	}
+}
+
+// mdnsInstance returns the first evcc instance name that is not taken
+func mdnsInstance(taken []string) string {
+	name := "evcc"
+	for i := 2; slices.ContainsFunc(taken, func(s string) bool { return strings.EqualFold(s, name) }); i++ {
+		name = fmt.Sprintf("evcc-%d", i)
+	}
+	return name
+}
+
 // setup MDNS
 func configureMDNS(conf globalconfig.Network) error {
 	host := strings.TrimSuffix(conf.Host, ".local")
@@ -951,7 +989,18 @@ func configureMDNS(conf globalconfig.Network) error {
 		text = append(text, "external_url="+externalURL)
 	}
 
-	zc, err := zeroconf.RegisterProxy("evcc", "_http._tcp", "local.", conf.Port, host, nil, text, nil)
+	// avoid conflicting with another evcc instance on the network
+	taken, err := mdnsInstances(time.Second)
+	if err != nil {
+		log.WARN.Println("mDNS: cannot check for other evcc instances:", err)
+	}
+
+	instance := mdnsInstance(taken)
+	if instance != "evcc" {
+		log.WARN.Printf("mDNS: another evcc instance found on the network, announcing as %s", instance)
+	}
+
+	zc, err := zeroconf.RegisterProxy(instance, "_http._tcp", "local.", conf.Port, host, nil, text, nil)
 	if err != nil {
 		return err
 	}
