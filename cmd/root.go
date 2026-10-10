@@ -49,6 +49,7 @@ var (
 	log           = util.NewLogger("main")
 	cfgFile       string
 	cfgDatabase   string
+	cfgDeviceHost []string
 	customization server.Customization
 	ignoreEmpty   = ""                                      // ignore empty keys
 	ignoreLogs    = []string{"log"}                         // ignore log messages, including warn/error
@@ -88,6 +89,7 @@ func init() {
 	// global options
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Config file (default \"~/evcc.yaml\" or \"/etc/evcc.yaml\")")
 	rootCmd.PersistentFlags().StringVar(&cfgDatabase, "database", "", "Database location (default \"~/.evcc/evcc.db\")")
+	rootCmd.PersistentFlags().StringArrayVar(&cfgDeviceHost, flagDeviceHost, nil, flagDeviceHostDescription)
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
