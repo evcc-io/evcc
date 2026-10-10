@@ -498,13 +498,15 @@ func TestBatteryGridChargeCircuit(t *testing.T) {
 		circuitPower float64         // circuit power while charging (limit 10 kW)
 		expect       api.BatteryMode
 		expectApply  bool
+		meterless    bool // circuit power sums loadpoints only
 	}{
-		{"start with headroom", api.BatteryNormal, 5000, 0, 5000, 0, api.BatteryCharge, true},
-		{"start without headroom", api.BatteryNormal, 5000, 0, 3000, 0, api.BatteryHold, true},
-		{"start with unknown power", api.BatteryNormal, 0, 0, 0, 0, api.BatteryCharge, true},
-		{"restart after stop needs headroom", api.BatteryHold, 0, 4000, 2000, 0, api.BatteryHold, true},
-		{"stop when over power", api.BatteryCharge, 0, 0, 0, 12000, api.BatteryHold, true},
-		{"keep charging within limit", api.BatteryCharge, 0, 0, 0, 8000, api.BatteryCharge, false},
+		{"start with headroom", api.BatteryNormal, 5000, 0, 5000, 0, api.BatteryCharge, true, false},
+		{"start without headroom", api.BatteryNormal, 5000, 0, 3000, 0, api.BatteryHold, true, false},
+		{"start with unknown power", api.BatteryNormal, 0, 0, 0, 0, api.BatteryCharge, true, false},
+		{"restart after stop needs headroom", api.BatteryHold, 0, 4000, 2000, 0, api.BatteryHold, true, false},
+		{"stop when over power", api.BatteryCharge, 0, 0, 0, 12000, api.BatteryHold, true, false},
+		{"keep charging within limit", api.BatteryCharge, 0, 0, 0, 8000, api.BatteryCharge, false, false},
+		{"keep charging over power without meter", api.BatteryCharge, 0, 0, 0, 12000, api.BatteryCharge, false, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
@@ -525,6 +527,7 @@ func TestBatteryGridChargeCircuit(t *testing.T) {
 			circuit := api.NewMockCircuit(ctrl)
 			circuit.EXPECT().GetMaxPower().Return(10000.0).AnyTimes()
 			circuit.EXPECT().GetChargePower().Return(tc.circuitPower).AnyTimes()
+			circuit.EXPECT().HasMeter().Return(!tc.meterless).AnyTimes()
 			if power := max(tc.chargeLimit, tc.stopPower); power > 0 {
 				circuit.EXPECT().ValidatePower(0.0, power).Return(tc.validated).AnyTimes()
 			}
@@ -545,7 +548,7 @@ func TestBatteryGridChargeCircuit(t *testing.T) {
 			site.updateBatteryMode(true, false, api.Rate{})
 
 			assert.Equal(t, tc.expect, site.GetBatteryMode())
-			if tc.circuitPower > 10000 {
+			if tc.circuitPower > 10000 && !tc.meterless {
 				assert.Equal(t, 4000.0, site.batteryChargeStopPower, "stop power")
 			}
 

@@ -149,8 +149,9 @@ func (site *Site) batteryChargeExceedsCircuit() bool {
 	}
 
 	if site.batteryMode == api.BatteryCharge {
+		// a meterless circuit sums loadpoints only, stopping the battery would not reduce its power
 		maxPower := site.circuit.GetMaxPower()
-		if power := site.circuit.GetChargePower(); maxPower > 0 && power > maxPower {
+		if power := site.circuit.GetChargePower(); site.circuit.HasMeter() && maxPower > 0 && power > maxPower {
 			// restarting needs headroom for at least this power (charging is negative)
 			site.batteryChargeStopPower = max(0, -site.state().battery.Power)
 			site.log.DEBUG.Printf("battery mode: circuit over power %.0fW > %.0fW, stop charging at %.0fW", power, maxPower, site.batteryChargeStopPower)
