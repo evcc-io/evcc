@@ -40,6 +40,8 @@ type SgReady struct {
 	power     int64
 	lp        loadpoint.API
 	maxPowerS func(int64) error
+
+	standbyPower float64
 }
 
 func init() {
@@ -60,6 +62,7 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		SetMode                 plugin.Config
 		GetMode                 *plugin.Config // optional
 		SetMaxPower             *plugin.Config // optional
+		StandbyPower            float64
 		measurement.Temperature `mapstructure:",squash"`
 		measurement.Energy      `mapstructure:",squash"`
 	}{
@@ -67,6 +70,7 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 			Icon_:     "heatpump",
 			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice},
 		},
+		StandbyPower: heatpumpStandbyPower,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -114,6 +118,7 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 	implement.May(res, implement.Meter(powerG))
 	implement.May(res, implement.MeterEnergy(energyG))
 	implement.May(res, implement.MeterReturnEnergy(returnG))
+	res.standbyPower = cc.StandbyPower
 
 	tempG, limitTempG, err := cc.Temperature.Configure(ctx)
 	if err != nil {
@@ -128,12 +133,13 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 // NewSgReady creates SG Ready charger
 func NewSgReady(ctx context.Context, embed *embed, modeS func(int64) error, modeG func() (int64, error), maxPowerS func(int64) error) (*SgReady, error) {
 	res := &SgReady{
-		embed:     embed,
-		Caps:      implement.New(),
-		mode:      Normal,
-		modeS:     modeS,
-		modeG:     modeG,
-		maxPowerS: maxPowerS,
+		embed:        embed,
+		Caps:         implement.New(),
+		mode:         Normal,
+		modeS:        modeS,
+		modeG:        modeG,
+		maxPowerS:    maxPowerS,
+		standbyPower: heatpumpStandbyPower,
 	}
 
 	return res, nil
@@ -153,12 +159,10 @@ func (wb *SgReady) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	status := map[int64]api.ChargeStatus{
-		Dim:    api.StatusB,
-		Normal: api.StatusB,
-		Boost:  api.StatusC,
+	if mode == Boost {
+		return heatingStatus(wb.lp, wb.standbyPower), nil
 	}
-	return status[mode], nil
+	return api.StatusB, nil
 }
 
 // Enabled implements the api.Charger interface
