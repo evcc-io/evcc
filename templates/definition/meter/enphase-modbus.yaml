@@ -36,22 +36,28 @@ render: |
     scale: 0.001
   currents:
     - source: sunspec
+      nan: true
       {{- include "modbus" . | indent 4 }}
       value: 701:AL1
     - source: sunspec
+      nan: true
       {{- include "modbus" . | indent 4 }}
       value: 701:AL2
     - source: sunspec
+      nan: true
       {{- include "modbus" . | indent 4 }}
       value: 701:AL3
   voltages:
     - source: sunspec
+      nan: true
       {{- include "modbus" . | indent 4 }}
       value: 701:VL1
     - source: sunspec
+      nan: true
       {{- include "modbus" . | indent 4 }}
       value: 701:VL2
     - source: sunspec
+      nan: true
       {{- include "modbus" . | indent 4 }}
       value: 701:VL3
   curtail:

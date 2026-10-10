@@ -54,6 +54,7 @@ render: |
     scale: 0.001
   currents:
     - source: sunspec
+      nan: true
       {{- include "modbus" . | indent 4 }}
       value:
         - 201:AphA
@@ -61,6 +62,7 @@ render: |
         - 203:AphA
         - 213:AphA
     - source: sunspec
+      nan: true
       {{- include "modbus" . | indent 4 }}
       value:
         - 201:AphB
@@ -68,6 +70,7 @@ render: |
         - 203:AphB
         - 213:AphB
     - source: sunspec
+      nan: true
       {{- include "modbus" . | indent 4 }}
       value:
         - 201:AphC
@@ -76,6 +79,7 @@ render: |
         - 213:AphC
   voltages:
     - source: sunspec
+      nan: true
       {{- include "modbus" . | indent 4 }}
       value:
         - 201:PhVphA
@@ -83,6 +87,7 @@ render: |
         - 203:PhVphA
         - 213:PhVphA
     - source: sunspec
+      nan: true
       {{- include "modbus" . | indent 4 }}
       value:
         - 201:PhVphB
@@ -90,6 +95,7 @@ render: |
         - 203:PhVphB
         - 213:PhVphB
     - source: sunspec
+      nan: true
       {{- include "modbus" . | indent 4 }}
       value:
         - 201:PhVphC
@@ -98,6 +104,7 @@ render: |
         - 213:PhVphC
   powers:
     - source: sunspec
+      nan: true
       {{- include "modbus" . | indent 4 }}
       value:
         - 201:WphA
@@ -105,6 +112,7 @@ render: |
         - 203:WphA
         - 213:WphA
     - source: sunspec
+      nan: true
       {{- include "modbus" . | indent 4 }}
       value:
         - 201:WphB
@@ -112,6 +120,7 @@ render: |
         - 203:WphB
         - 213:WphB
     - source: sunspec
+      nan: true
       {{- include "modbus" . | indent 4 }}
       value:
         - 201:WphC
