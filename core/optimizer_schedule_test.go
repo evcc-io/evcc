@@ -99,6 +99,7 @@ func TestApplyOptimizerResultSchedule(t *testing.T) {
 			require.True(t, ok)
 			assert.Equal(t, api.BatteryCharge.String(), s.Action)
 			assert.InDelta(t, tc.power, s.Charge, 1e-3)
+			assert.InDelta(t, tc.power, s.Grid, 1e-3)
 			require.NotNil(t, site.battery.Forecast)
 			require.NotNil(t, site.battery.Forecast.Highest)
 			assert.Equal(t, tc.highest, site.battery.Forecast.Highest.Time)
@@ -114,4 +115,26 @@ func TestApplyOptimizerResultSchedule(t *testing.T) {
 			assert.Equal(t, tc.full, batteries[0].Full)
 		})
 	}
+}
+
+func TestLoadpointPlan(t *testing.T) {
+	now := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
+	schedule := optimizerSchedule{
+		timestamps: []time.Time{now.Add(-15 * time.Minute), now, now.Add(15 * time.Minute), now.Add(30 * time.Minute)},
+		dt:         []int{900, 900, 900, 900},
+	}
+
+	// expired slot, charging, noise, charging
+	res := optimizer.BatteryResult{ChargingPower: []float32{1000, 500, 5, 250}}
+	prices := []float32{0.1e-3, 0.2e-3, 0.3e-3, 0.4e-3}
+
+	plan := loadpointPlan(res, prices, schedule, now)
+
+	require.Len(t, plan.rates, 2)
+	assert.Equal(t, now, plan.rates[0].Start)
+	assert.Equal(t, now.Add(15*time.Minute), plan.rates[0].End)
+	assert.InDelta(t, 0.2, plan.rates[0].Value, 1e-6)
+	assert.Equal(t, now.Add(30*time.Minute), plan.rates[1].Start)
+	assert.InDelta(t, 0.4, plan.rates[1].Value, 1e-6)
+	assert.Equal(t, []float64{500, 250}, plan.energy)
 }

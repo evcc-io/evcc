@@ -850,6 +850,30 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/BooleanResult"
+  /config/optimizerautomatic/{value}:
+    post:
+      operationId: setOptimizerAutomatic
+      summary: Set optimizer automatic level
+      description: "Let the optimizer directly control the home battery (`battery`) or home battery and loadpoints (`full`) instead of only advising (`off`). Requires a sponsor token."
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      tags:
+        - experimental
+      parameters:
+        - name: value
+          description: What the optimizer controls.
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - "off"
+              - "battery"
+              - "full"
+      responses:
+        "200":
+          $ref: "#/components/responses/StringResult"
   /smartfeedinprioritylimit:
     delete:
       operationId: removeGlobalSmartFeedInPriorityLimit
@@ -2339,6 +2363,12 @@ components:
         application/json:
           schema:
             type: boolean
+    StringResult:
+      description: Success - String result
+      content:
+        application/json:
+          schema:
+            type: string
     NullResult:
       description: Success - Null result
       content:

@@ -32,6 +32,20 @@
 			:target-offset="targetOffset"
 			@slot-hovered="slotHovered"
 		/>
+		<p
+			v-if="optimizer"
+			class="d-flex gap-3 text-muted small mb-0"
+			data-testid="plan-optimizer-hint"
+		>
+			<OptimizerAuto class="flex-shrink-0" />
+			<i18n-t keypath="main.targetChargePlan.optimizerHint" tag="span" scope="global">
+				<template #optimizer>
+					<router-link to="/optimize" class="text-muted">
+						{{ $t("config.optimizer.linkWord") }}
+					</router-link>
+				</template>
+			</i18n-t>
+		</p>
 	</div>
 </template>
 
@@ -40,17 +54,19 @@ import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import minuteTicker from "@/mixins/minuteTicker";
 import TariffChart from "../Tariff/TariffChart.vue";
+import OptimizerAuto from "../MaterialIcon/OptimizerAuto.vue";
 import { SMART_COST_TYPE, type CURRENCY, type Rate, type Slot } from "@/types/evcc";
 
 export default defineComponent({
 	name: "ChargingPlanPreview",
-	components: { TariffChart },
+	components: { TariffChart, OptimizerAuto },
 	mixins: [formatter, minuteTicker],
 	props: {
 		duration: Number,
 		power: Number,
 		rates: Array as PropType<Rate[]>,
 		plan: Array as PropType<Rate[]>,
+		optimizer: Boolean,
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		targetTime: [Date, null],
 		currency: String as PropType<CURRENCY>,

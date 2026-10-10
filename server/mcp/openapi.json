@@ -1417,6 +1417,45 @@
         }
       }
     },
+    "/config/optimizerautomatic/{value}": {
+      "post": {
+        "operationId": "setOptimizerAutomatic",
+        "summary": "Set optimizer automatic level",
+        "description": "Let the optimizer directly control the home battery (`battery`) or home battery and loadpoints (`full`) instead of only advising (`off`). Requires a sponsor token.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "experimental"
+        ],
+        "parameters": [
+          {
+            "name": "value",
+            "description": "What the optimizer controls.",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "off",
+                "battery",
+                "full"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/StringResult"
+          }
+        }
+      }
+    },
     "/smartfeedinprioritylimit": {
       "delete": {
         "operationId": "removeGlobalSmartFeedInPriorityLimit",
@@ -3521,6 +3560,10 @@
             "description": "Recommended discharge power in W.",
             "type": "number"
           },
+          "grid": {
+            "description": "Planned site grid flow of the slot in W, positive means import.",
+            "type": "number"
+          },
           "actionable": {
             "description": "Suggestion differs from the current operating mode.",
             "type": "boolean"
@@ -3794,6 +3837,10 @@
             "description": "Current offered to the vehicle in A.",
             "type": "number"
           },
+          "optimizerControlled": {
+            "description": "Optimizer decides start/stop for this loadpoint, replacing the price limits.",
+            "type": "boolean"
+          },
           "phaseAction": {
             "$ref": "#/components/schemas/PhaseAction",
             "description": "Pending phase switching action in solar mode."
@@ -4043,6 +4090,7 @@
           "minSocNotReached",
           "mode",
           "offeredCurrent",
+          "optimizerControlled",
           "phaseAction",
           "phaseRemaining",
           "phasesActive",
@@ -4287,6 +4335,10 @@
           },
           "discharge": {
             "description": "Recommended discharge power in W.",
+            "type": "number"
+          },
+          "grid": {
+            "description": "Planned site grid flow of the slot in W, positive means import.",
             "type": "number"
           },
           "actionable": {
@@ -5505,6 +5557,14 @@
           }
         }
       },
+      "OptimizerAutomatic": {
+        "type": "string",
+        "enum": [
+          "off",
+          "battery",
+          "full"
+        ]
+      },
       "State": {
         "description": "Complete system state as returned by /api/state and pushed via websocket and MQTT. This structure mirrors the internal UI state and carries no compatibility promise. Fields may change or disappear between releases.",
         "type": "object",
@@ -5872,6 +5932,10 @@
             "description": "Battery optimizer is enabled.",
             "type": "boolean"
           },
+          "optimizerAutomatic": {
+            "$ref": "#/components/schemas/OptimizerAutomatic",
+            "description": "What the optimizer controls instead of only advising: nothing, the home battery, or battery and loadpoints."
+          },
           "optimizerChargingStrategy": {
             "description": "Selected battery optimizer charging strategy.",
             "type": "string"
@@ -6207,6 +6271,16 @@
           "application/json": {
             "schema": {
               "type": "boolean"
+            }
+          }
+        }
+      },
+      "StringResult": {
+        "description": "Success - String result",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "string"
             }
           }
         }

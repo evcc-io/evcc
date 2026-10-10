@@ -1,10 +1,19 @@
 <template>
 	<div
 		class="container px-4 safe-area-inset d-flex flex-column"
-		:class="{ 'empty-container': !evopt }"
+		:class="{ 'empty-container': !hasResult }"
 	>
 		<TopHeader title="Optimize Debug 🧪" />
-		<div v-if="!evopt" class="flex-grow-1 d-flex" data-testid="optimize-empty">
+		<OptimizerModal :is-sponsor="isSponsor" />
+		<div v-if="!optimizer" class="flex-grow-1 d-flex">
+			<div class="empty-box d-flex flex-column p-5">
+				<p class="text-muted mb-4">The optimizer is disabled.</p>
+				<button type="button" class="btn btn-outline-secondary" @click="openOptimizerModal">
+					Open settings
+				</button>
+			</div>
+		</div>
+		<div v-else-if="!evopt" class="flex-grow-1 d-flex" data-testid="optimize-empty">
 			<div class="empty-box d-flex flex-column p-5">
 				<p class="text-muted">
 					The optimizer is enabled and collecting data. For new installations this can
@@ -34,8 +43,9 @@
 				@optimize="optimizeNow"
 				@change-strategy="changeChargingStrategy"
 			/>
+			<AutomaticModeStrip :automatic="optimizerAutomatic" @change="openOptimizerModal" />
 		</Card>
-		<div v-if="evopt" class="row">
+		<div v-if="hasResult && evopt" class="row">
 			<main class="col-12">
 				<div>
 					<h2 class="mt-2 mb-4">Optimizer Plan</h2>
@@ -94,6 +104,20 @@
 						/>
 					</Card>
 
+					<Card title="Feedback" edge-to-edge class="box-pull-out mb-4">
+						<p>
+							Unexpected results or implausible numbers? Open an issue in the
+							optimizer repository and attach the request and response below.
+						</p>
+						<a
+							href="https://github.com/evcc-io/optimizer/issues"
+							target="_blank"
+							class="btn btn-outline-primary"
+						>
+							Open issue
+						</a>
+					</Card>
+
 					<h2 class="section-title mb-4">Optimizer Inputs</h2>
 
 					<Card
@@ -128,20 +152,6 @@
 						/>
 					</Card>
 
-					<Card title="Feedback" edge-to-edge class="box-pull-out mb-4">
-						<p>
-							Unexpected results or implausible numbers? Open an issue in the
-							optimizer repository and attach the request and response below.
-						</p>
-						<a
-							href="https://github.com/evcc-io/optimizer/issues"
-							target="_blank"
-							class="btn btn-outline-primary"
-						>
-							Open issue
-						</a>
-					</Card>
-
 					<h2 class="section-title mb-4">Raw Data</h2>
 
 					<Card title="Request" edge-to-edge class="box-pull-out mb-4">
@@ -174,6 +184,15 @@ import { defineComponent } from "vue";
 import Header from "../components/Top/Header.vue";
 import Card from "../components/Helper/Card.vue";
 import OptimizeHeader from "../components/Optimize/OptimizeHeader.vue";
+import AutomaticModeStrip from "../components/Optimize/AutomaticModeStrip.vue";
+import OptimizerModal from "../components/Config/OptimizerModal.vue";
+import Modal from "bootstrap/js/dist/modal";
+import {
+	isLoggedIn,
+	openLoginModal,
+	statusUnknown,
+	updateAuthStatus,
+} from "../components/Auth/auth";
 import BatteryConfigurationTable from "../components/Optimize/BatteryConfigurationTable.vue";
 import SocChart, { type SocChartEntry } from "../components/Optimize/SocChart.vue";
 import ChargeChart from "../components/Optimize/ChargeChart.vue";
@@ -185,7 +204,12 @@ import api from "../api";
 import store from "../store";
 import formatter from "../mixins/formatter";
 import { resolveColors, deviceColorMap, batteryColor } from "../colors";
-import { CURRENCY, type BatteryDetail, type DemandDetail } from "../types/evcc";
+import {
+	CURRENCY,
+	OPTIMIZER_AUTOMATIC,
+	type BatteryDetail,
+	type DemandDetail,
+} from "../types/evcc";
 
 export default defineComponent({
 	name: "Optimize",
@@ -198,6 +222,8 @@ export default defineComponent({
 		ChargeChart,
 		TimeSeriesDataTable,
 		CopyButton,
+		AutomaticModeStrip,
+		OptimizerModal,
 	},
 	mixins: [formatter],
 	data() {
@@ -212,6 +238,13 @@ export default defineComponent({
 		evopt() {
 			return store.state.evopt;
 		},
+		optimizer(): boolean {
+			return !!store.state.optimizer;
+		},
+		// a result from before the optimizer got disabled stays in the store
+		hasResult(): boolean {
+			return this.optimizer && !!this.evopt;
+		},
 		currency() {
 			return store.state.currency || CURRENCY.EUR;
 		},
@@ -220,6 +253,12 @@ export default defineComponent({
 		},
 		optimizerChargingStrategy(): string {
 			return store.state.optimizerChargingStrategy || "";
+		},
+		optimizerAutomatic(): OPTIMIZER_AUTOMATIC {
+			return store.state.optimizerAutomatic || OPTIMIZER_AUTOMATIC.OFF;
+		},
+		isSponsor(): boolean {
+			return !!store.state.sponsor?.status?.name;
 		},
 		netCost(): number {
 			return (this.evopt?.res?.objective_value || 0) * -1;
@@ -309,6 +348,18 @@ export default defineComponent({
 		},
 		changeChargingStrategy(value: string) {
 			api.post(`optimizerchargingstrategy/${value}`);
+		},
+		async openOptimizerModal() {
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("optimizerModal") as HTMLElement
+			);
+			// the page has no auth guard, the modal's settings need a login
+			await updateAuthStatus();
+			if (!isLoggedIn() && !statusUnknown()) {
+				openLoginModal(null, modal);
+			} else {
+				modal.show();
+			}
 		},
 	},
 });
