@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/plugin"
 )
 
@@ -59,17 +60,27 @@ func buildPhaseProviders(ctx context.Context, providers []plugin.Config) (func()
 	return CombinePhases(phases), nil
 }
 
-// CombinePhases combines phase getters into combined api function
+// CombinePhases combines phase getters into combined api function.
+// Phases that are not available (e.g. unused phases of single-phase meters) are reported as zero.
 func CombinePhases(g [3]func() (float64, error)) func() (float64, float64, float64, error) {
 	return func() (float64, float64, float64, error) {
 		var res [3]float64
+		var missing int
 		for idx, currentG := range g {
 			c, err := currentG()
+			if errors.Is(err, api.ErrNotAvailable) {
+				missing++
+				continue
+			}
 			if err != nil {
 				return 0, 0, 0, err
 			}
 
 			res[idx] = c
+		}
+
+		if missing == len(g) {
+			return 0, 0, 0, api.ErrNotAvailable
 		}
 
 		return res[0], res[1], res[2], nil
