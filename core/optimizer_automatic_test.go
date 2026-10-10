@@ -165,6 +165,25 @@ func TestOptimizerGate(t *testing.T) {
 	}
 }
 
+// TestOptimizerStopIgnoresBatteryBuffer covers a stop while the home battery is above
+// bufferSoc/bufferStartSoc: the optimizer plans the battery, so the pv loop must not
+// keep charging at min current off the battery (#34606)
+func TestOptimizerStopIgnoresBatteryBuffer(t *testing.T) {
+	enableAutomatic(t)
+
+	lp, charger, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
+	lp.clock.(*clock.Mock).Add(time.Hour) // elapsed must lie in the past
+	lp.pvTimer = elapsed                  // previous grid-fed slot
+	lp.setSuggestion(&types.Suggestion{Action: actionStop})
+
+	charger.EXPECT().Enable(false)
+
+	// the battery discharges into the vehicle, no measured surplus
+	lp.Update(1972, 1737, nil, nil, true, true, 0, nil, nil, nil)
+
+	ctrl.Finish()
+}
+
 // TestOptimizerSurplusRegime covers a charge power matched to the forecast surplus:
 // control falls through to the pv loop and its enable/disable timer keeps running
 // instead of being elapsed on every cycle

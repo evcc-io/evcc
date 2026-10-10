@@ -2544,6 +2544,12 @@ NO_DIM:
 			break
 		}
 
+		// the optimizer plans the home battery- bufferSoc and bufferStartSoc must not
+		// keep charging off the battery against its stop (#34606)
+		if suggestion != nil {
+			batteryBuffered, batteryStart = false, false
+		}
+
 		targetCurrent := lp.pvMaxCurrent(sitePower, batteryPower, batteryBuffered, batteryStart)
 
 		if targetCurrent == 0 && lp.vehicleClimateActive() {
