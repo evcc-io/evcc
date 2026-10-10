@@ -23,14 +23,16 @@ func (lp *Loadpoint) demandProfile() (*[96]float64, bool) {
 
 	temp := lp.chargerHasFeature(api.DemandTemperature)
 
+	const minActiveHeatingEnergy = 8.0 // kWh/day threshold to classify a day as active heating
+
 	var profile *[96]float64
 	var err error
 
 	if temp {
-		// Active heating days baseline (last 7 days with >= 5 kWh/day) to prevent
+		// Active heating days baseline (last 7 days with >= minActiveHeatingEnergy) to prevent
 		// baseline dilution from warm/idle days during seasonal transitions.
 		// Falls back to standard 7-day average if insufficient active days exist.
-		profile, err = lp.chargeEnergy.EnergyProfileActiveDays(7, 5.0)
+		profile, err = lp.chargeEnergy.EnergyProfileActiveDays(7, minActiveHeatingEnergy)
 		if err != nil {
 			lp.log.DEBUG.Printf("active days demand profile: %v, falling back to 7-day average", err)
 			from := now.BeginningOfDay().AddDate(0, 0, -7)

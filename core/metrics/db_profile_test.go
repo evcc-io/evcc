@@ -51,8 +51,8 @@ func TestEnergyProfileActiveDays(t *testing.T) {
 	require.NoError(t, db.Instance.Create(&e).Error)
 
 	// 14 past days:
-	// days -14..-8: 7 active days with energy = 0.1 kWh/slot (total 9.6 kWh/day >= 5.0 kWh threshold)
-	// days -7..-1:  7 warm/idle days with energy = 0.001 kWh/slot (total 0.096 kWh/day < 5.0 kWh threshold)
+	// days -14..-8: 7 active days with energy = 0.1 kWh/slot (total 9.6 kWh/day >= 8.0 kWh threshold)
+	// days -7..-1:  7 warm/idle days with energy = 0.001 kWh/slot (total 0.096 kWh/day < 8.0 kWh threshold)
 	for day := -14; day < 0; day++ {
 		base := now.BeginningOfDay().AddDate(0, 0, day)
 		energy := 0.001
@@ -67,7 +67,7 @@ func TestEnergyProfileActiveDays(t *testing.T) {
 	}
 
 	// Active days profile should skip the 7 warm days and average the 7 active days (0.1 kWh/slot)
-	res, err := energyProfileActiveDays(e, 7, 5.0, 0)
+	res, err := energyProfileActiveDays(e, 7, 8.0, 0)
 	require.NoError(t, err)
 
 	for i, v := range res {
