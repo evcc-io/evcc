@@ -50,14 +50,14 @@ func TestEnergyProfileTemperatureBinned(t *testing.T) {
 	e := entity{Id: 3, Name: "heater1", Group: Loadpoint}
 	require.NoError(t, db.Instance.Create(&e).Error)
 
-	// Populate 7 days with varying temperature and energy
-	for day := -7; day < 0; day++ {
+	// Populate 14 days (2 samples per temperature bin)
+	for day := -14; day < 0; day++ {
 		base := now.BeginningOfDay().AddDate(0, 0, day)
-		temp := 5.0 + float64(day) // 5°C to -1°C
+		temp := float64(day%7 + 5) // temperatures repeat across the 2 weeks
 
 		for slot := range 96 {
 			ts := base.Add(time.Duration(slot) * tariff.SlotDuration)
-			energy := 0.5 - float64(day)*0.05 // colder -> higher energy
+			energy := 0.5 - float64(day%7)*0.05
 
 			require.NoError(t, persist(e, ts, energy, 0, nil, false))
 
@@ -67,6 +67,19 @@ func TestEnergyProfileTemperatureBinned(t *testing.T) {
 			}
 			require.NoError(t, db.Instance.Create(&tv).Error)
 		}
+	}
+
+	// Populate a single-sample bin (temp=20°C on only 1 day); should be excluded by count >= 2
+	singleBase := now.BeginningOfDay().AddDate(0, 0, -20)
+	singleTemp := 20.0
+	for slot := range 96 {
+		ts := singleBase.Add(time.Duration(slot) * tariff.SlotDuration)
+		require.NoError(t, persist(e, ts, 1.0, 0, nil, false))
+		tv := tariffValue{
+			Timestamp:   ts.Unix(),
+			Temperature: &singleTemp,
+		}
+		require.NoError(t, db.Instance.Create(&tv).Error)
 	}
 
 	// Populate data older than 1 year (day=-400) at 10°C; should be ignored
@@ -88,7 +101,9 @@ func TestEnergyProfileTemperatureBinned(t *testing.T) {
 
 	// Verify that temperature bins exist for slot 0
 	require.NotEmpty(t, res[0])
-	require.Contains(t, res[0], -2)
+	require.Contains(t, res[0], 4)
+	// Single-sample data at 20°C must not be included (HAVING count >= 2)
+	require.NotContains(t, res[0], 20)
 	// Old data from day -400 (temp 10°C) must not be included
 	require.NotContains(t, res[0], 10)
 }

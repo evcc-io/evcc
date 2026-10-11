@@ -68,11 +68,19 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
 				if lp.chargeEnergy != nil {
 					binned, _ = lp.chargeEnergy.EnergyProfileTemperatureBinned()
 				}
-				p = site.applyTemperatureCorrection(p, binned)
+				var binnedSlots, fallbackSlots int
+				p, binnedSlots, fallbackSlots = site.applyTemperatureCorrection(p, binned)
+				site.log.DEBUG.Printf("heating demand: added %s forecast for %s (%d slots: %d binned, %d fallback)",
+					predictorType, lp.GetTitle(), len(p), binnedSlots, fallbackSlots)
+			} else {
+				site.log.DEBUG.Printf("heating demand: added %s forecast for %s (%d slots)",
+					predictorType, lp.GetTitle(), len(p))
 			}
 		} else if wp := lp.demandProfileWeekday(minLen); wp != nil {
 			predictorType = "weekday"
 			p = wp
+			site.log.DEBUG.Printf("heating demand: added %s forecast for %s (%d slots)",
+				predictorType, lp.GetTitle(), len(p))
 		} else {
 			continue
 		}
@@ -86,9 +94,6 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
 			gt[i] += p[i]
 		}
 
-		site.log.DEBUG.Printf("heating demand: added %s forecast for %s (%d slots)",
-			predictorType, lp.GetTitle(), len(p))
-
 		res = append(res, heatingDemand{lp, p})
 	}
 
@@ -98,28 +103,27 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
 // applyTemperatureCorrection adjusts heating load based on temperature forecast:
 // It looks up historical consumption for matching temperature bins (±1.5°C), and falls back
 // to linear scaling when historical data is unavailable for a given slot.
-func (site *Site) applyTemperatureCorrection(profile []float64, binned map[int]map[int]float64) []float64 {
+func (site *Site) applyTemperatureCorrection(profile []float64, binned map[int]map[int]float64) ([]float64, int, int) {
 	weatherTariff := site.GetTariff(api.TariffUsageTemperature)
 	if weatherTariff == nil {
 		site.log.WARN.Println("temperature correction: demandtemperature predictor set but no temperature tariff configured")
-		return profile
+		return profile, 0, len(profile)
 	}
 
 	rates, err := weatherTariff.Rates()
 	if err != nil {
 		site.log.ERROR.Printf("temperature correction: no rates available: %v", err)
-		return profile
+		return profile, 0, len(profile)
 	}
 	if len(rates) == 0 {
 		site.log.DEBUG.Println("temperature correction: no rates available")
-		return profile
+		return profile, 0, len(profile)
 	}
 
 	const (
-		tRoom                = 21.0
-		heatingStopThreshold = 18.0
-		minCorrection        = 0.1 // warmer than expected / DHW base load floor
-		maxCorrection        = 3.0 // colder than expected
+		tRoom         = 21.0
+		minCorrection = 0.1 // warmer than expected
+		maxCorrection = 3.0 // colder than expected
 	)
 
 	currentTime := time.Now()
@@ -138,7 +142,7 @@ func (site *Site) applyTemperatureCorrection(profile []float64, binned map[int]m
 
 	res := slices.Clone(profile)
 	slotStart := currentTime.Truncate(tariff.SlotDuration)
-	logged := 0
+	var binnedSlots, fallbackSlots, logged int
 
 	for i := range profile {
 		ts := slotStart.Add(time.Duration(i) * tariff.SlotDuration)
@@ -179,6 +183,7 @@ func (site *Site) applyTemperatureCorrection(profile []float64, binned map[int]m
 
 			if matched {
 				res[i] = binnedVal
+				binnedSlots++
 				if logged < 3 && binnedVal > 0 {
 					site.log.DEBUG.Printf("temperature correction: slot %s (h=%02d): forecast=%.1f°C -> binned match [%d°C]=%.0fWh",
 						ts.Local().Format("15:04"), h, tFuture, tempBin, binnedVal*1e3)
@@ -189,17 +194,7 @@ func (site *Site) applyTemperatureCorrection(profile []float64, binned map[int]m
 		}
 
 		// 2. Fallback: Linear Scaling using historical temperature average
-		// above the heating threshold space heating is stopped, keeping only the
-		// minimum base load floor (e.g. summer DHW / standby)
-		if tFuture >= heatingStopThreshold {
-			res[i] = profile[i] * minCorrection
-			if logged < 3 && profile[i] > 0 {
-				site.log.DEBUG.Printf("temperature correction: slot %s (h=%02d): forecast=%.1f°C >= threshold=%.1f°C, scaled to base load floor (load: %.0fWh -> %.0fWh)",
-					ts.Local().Format("15:04"), h, tFuture, heatingStopThreshold, profile[i]*1e3, res[i]*1e3)
-				logged++
-			}
-			continue
-		}
+		fallbackSlots++
 
 		// require past temperature data for hour h to compute pastAvg and avoid division by zero
 		// (e.g. after startup when the weather source only provides forecast data from today onward)
@@ -226,7 +221,7 @@ func (site *Site) applyTemperatureCorrection(profile []float64, binned map[int]m
 		}
 	}
 
-	return res
+	return res, binnedSlots, fallbackSlots
 }
 
 // tileAndTrim returns minLen slots of the repeating daily profile, starting at the current 15min slot.

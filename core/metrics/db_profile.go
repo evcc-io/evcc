@@ -3,7 +3,6 @@ package metrics
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
@@ -91,14 +90,16 @@ func energyProfileTemperatureBinned(entity entity) (map[int]map[int]float64, err
 
 	from := now.BeginningOfDay().AddDate(-1, 0, 0).Unix()
 	before := now.BeginningOfDay().Unix()
-	query := `SELECT strftime('%H:%M', m.ts, 'unixepoch', 'localtime') AS slot,
+	query := `SELECT (CAST(strftime('%H', m.ts, 'unixepoch', 'localtime') AS INTEGER) * 4 +
+		CAST(strftime('%M', m.ts, 'unixepoch', 'localtime') AS INTEGER) / 15) AS slot_idx,
 		CAST(round(t.temperature) AS INTEGER) AS temp_bin,
 		avg(m.energy) AS energy
 	FROM meters m
 	JOIN tariffs t ON m.ts = t.ts
 	WHERE m.meter = ? AND m.ts >= ? AND m.ts < ? AND COALESCE(m.recovered, 0) = 0
 		AND t.temperature IS NOT NULL
-	GROUP BY slot, temp_bin`
+	GROUP BY slot_idx, temp_bin
+	HAVING count(*) >= 2`
 
 	rows, err := database.Query(query, entity.Id, from, before)
 	if err != nil {
@@ -109,19 +110,14 @@ func energyProfileTemperatureBinned(entity entity) (map[int]map[int]float64, err
 	res := make(map[int]map[int]float64)
 
 	for rows.Next() {
-		var slotStr string
+		var slotIdx int
 		var tempBin int
 		var energy float64
 
-		if err := rows.Scan(&slotStr, &tempBin, &energy); err != nil {
+		if err := rows.Scan(&slotIdx, &tempBin, &energy); err != nil {
 			return nil, err
 		}
 
-		var h, m int
-		if _, err := fmt.Sscanf(slotStr, "%d:%d", &h, &m); err != nil {
-			continue
-		}
-		slotIdx := h*4 + m/15
 		if slotIdx < 0 || slotIdx >= 96 {
 			continue
 		}
