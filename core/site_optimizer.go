@@ -1299,7 +1299,8 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	if vehicle := lp.GetVehicle(); socBased && vehicle != nil {
 		goal *= vehicle.Capacity() * 10
 	} else {
-		goal *= 1000 // Wh
+		// energy plans count from the energy charged since the plan was set, on top of the current state
+		goal = float64(bat.SInitial) + lp.GetPlanRemainingEnergy()*1e3 // Wh
 	}
 
 	ts := lp.EffectivePlanTime()

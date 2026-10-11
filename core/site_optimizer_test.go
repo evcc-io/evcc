@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	optimizer "github.com/evcc-io/optimizer/client"
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -122,6 +123,28 @@ func TestApplyPrecondition(t *testing.T) {
 	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
 	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(time.Duration(0)).Times(1)
 	assert.Nil(t, applyPrecondition(lp, nil, 8))
+}
+
+// TestApplyPlanGoalEnergy guards that an energy plan only asks for the missing energy on top of
+// the current state instead of the full plan energy (optimizer#190)
+func TestApplyPlanGoalEnergy(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	lp := loadpoint.NewMockAPI(ctrl)
+	lp.EXPECT().GetPlanGoal().Return(15.0, false).AnyTimes()
+	lp.EXPECT().GetVehicle().Return(nil).AnyTimes()
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(2 * time.Hour)).AnyTimes()
+	lp.EXPECT().GetPlanRemainingEnergy().Return(11.0).AnyTimes() // 4 kWh charged already
+
+	site := &Site{log: util.NewLogger("foo")}
+
+	for _, sInitial := range []float32{0, 20000} { // offline vehicle, vehicle with soc
+		bat := optimizer.BatteryConfig{SInitial: sInitial, SMax: 66000}
+		site.applyPlanGoal(lp, &bat, 16)
+
+		require.Len(t, bat.SGoal, 16)
+		assert.Equal(t, sInitial+11000, lo.Max(bat.SGoal), "s_initial %.0f", sInitial)
+	}
 }
 
 func TestLoadpointCurrentAction(t *testing.T) {
