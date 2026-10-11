@@ -16,6 +16,7 @@ func TestInstallationLabel(t *testing.T) {
 		label string
 	}{
 		{Installation{Description: "Home", Address: Address{Street: "Main St", City: "Berlin"}}, "Home"},
+		{Installation{Description: "  ", Address: Address{City: "Berlin"}}, "Berlin"},
 		{Installation{Address: Address{Street: "Main St", HouseNumber: "1", City: "Berlin"}}, "Main St 1, Berlin"},
 		{Installation{Address: Address{Street: "Main St"}}, "Main St"},
 		{Installation{Address: Address{City: "Berlin"}}, "Berlin"},
@@ -27,19 +28,22 @@ func TestInstallationLabel(t *testing.T) {
 
 func TestEquipmentOptions(t *testing.T) {
 	installations := []Installation{
-		{ID: 3242119, Description: "Home", Gateways: []Gateway{{Serial: "7472258009383263", GatewayType: "TCU301"}, {Serial: "7472258009383262", GatewayType: "VitoconnectOPTO2"}}},
+		{ID: 3242119, Description: "Home", Gateways: []Gateway{{Serial: "7472258009383263", GatewayType: "TCU301 "}, {Serial: "7472258009383262", GatewayType: "VitoconnectOPTO2"}}},
 		{ID: 1000001, Address: Address{Street: "Main St", HouseNumber: "1", City: "Berlin"}, Gateways: []Gateway{{Serial: "7472258009383262", GatewayType: "VitoconnectOPTO2"}}},
+		{ID: 2000002},
 	}
 
+	// all options match: single-item lists are auto-filled by the config UI
 	assert.Equal(t, []service.Option{
-		{Value: "1000001", Label: "Main St 1, Berlin", Hint: "7472258009383262"},
-		{Value: "3242119", Label: "Home", Hint: "7472258009383263, 7472258009383262"},
+		{Value: "1000001", Label: "Main St 1, Berlin", Hint: "7472258009383262", Match: true},
+		{Value: "2000002", Match: true},
+		{Value: "3242119", Label: "Home", Hint: "7472258009383263, 7472258009383262", Match: true},
 	}, equipmentOptions(installations, false))
 
 	// shared gateway listed once, attributed to the first installation
 	assert.Equal(t, []service.Option{
-		{Value: "7472258009383262", Label: "VitoconnectOPTO2", Hint: "Home"},
-		{Value: "7472258009383263", Label: "TCU301", Hint: "Home"},
+		{Value: "7472258009383262", Label: "VitoconnectOPTO2", Hint: "Home", Match: true},
+		{Value: "7472258009383263", Label: "TCU301", Hint: "Home", Match: true},
 	}, equipmentOptions(installations, true))
 
 	// empty list, not null

@@ -65,8 +65,8 @@ func equipment(req *http.Request) ([]Installation, error) {
 
 // label describes the installation by its description or, if unset, its address.
 func (inst Installation) label() string {
-	if inst.Description != "" {
-		return inst.Description
+	if desc := strings.TrimSpace(inst.Description); desc != "" {
+		return desc
 	}
 
 	street := strings.TrimSpace(inst.Address.Street + " " + inst.Address.HouseNumber)
@@ -75,6 +75,7 @@ func (inst Installation) label() string {
 
 // equipmentOptions lists the installations or, with gateways set, the deduplicated
 // gateways of the given installations, described by location and gateway type.
+// All options are valid choices, match keeps the single-item auto-fill.
 func equipmentOptions(installations []Installation, gateways bool) []service.Option {
 	res := []service.Option{}
 
@@ -82,15 +83,17 @@ func equipmentOptions(installations []Installation, gateways bool) []service.Opt
 		if !gateways {
 			serials := make([]string, 0, len(inst.Gateways))
 			for _, gw := range inst.Gateways {
-				serials = append(serials, gw.Serial)
+				if serial := strings.TrimSpace(gw.Serial); serial != "" {
+					serials = append(serials, serial)
+				}
 			}
-			res = append(res, service.Option{Value: strconv.Itoa(inst.ID), Label: inst.label(), Hint: strings.Join(serials, ", ")})
+			res = append(res, service.Option{Value: strconv.Itoa(inst.ID), Label: inst.label(), Hint: strings.Join(serials, ", "), Match: true})
 			continue
 		}
 
 		for _, gw := range inst.Gateways {
 			if !slices.ContainsFunc(res, func(o service.Option) bool { return o.Value == gw.Serial }) {
-				res = append(res, service.Option{Value: gw.Serial, Label: gw.GatewayType, Hint: inst.label()})
+				res = append(res, service.Option{Value: gw.Serial, Label: strings.TrimSpace(gw.GatewayType), Hint: inst.label(), Match: true})
 			}
 		}
 	}
