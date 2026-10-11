@@ -30,7 +30,7 @@ func (lp *Loadpoint) setOptimizerPlan(plan optimizerPlan) {
 // plan time and its average power, nil if the optimizer is not in charge. Later
 // slots serve surplus, not the plan.
 func (lp *Loadpoint) OptimizerPlan(planTime time.Time) (api.Rates, float64) {
-	if lp.gate() == nil {
+	if lp.activeSuggestion() == nil {
 		return nil, 0
 	}
 
@@ -79,9 +79,9 @@ func (lp *Loadpoint) optimizerControlled() bool {
 	return v != nil && v.Capacity() > 0
 }
 
-// gate returns the optimizer's start/stop decision for the current slot,
+// activeSuggestion returns the optimizer's start/stop decision for the current slot,
 // nil if the optimizer does not control this loadpoint
-func (lp *Loadpoint) gate() *types.Suggestion {
+func (lp *Loadpoint) activeSuggestion() *types.Suggestion {
 	if !lp.optimizerControlled() {
 		return nil
 	}

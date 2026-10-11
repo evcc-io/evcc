@@ -2458,7 +2458,7 @@ NO_DIM:
 
 	// the optimizer schedules the plan itself, the planner only backstops it.
 	// A stalled optimizer has no suggestion and releases the planner again.
-	suggestion := lp.gate()
+	suggestion := lp.activeSuggestion()
 	if suggestion != nil {
 		plannerActive = lp.planDeadlineCritical()
 	}
