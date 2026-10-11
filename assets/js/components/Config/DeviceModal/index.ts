@@ -175,7 +175,8 @@ export async function loadServiceValues(path: string, retry?: (seconds: number) 
     });
     const retryAfter = Number(response.headers["retry-after"]);
     if (retryAfter > 0) retry?.(retryAfter);
-    return (response.data as ServiceValue[]) || [];
+    // 4xx bodies (e.g. a 404 for a path with an empty optional param) are not suggestions
+    return Array.isArray(response.data) ? (response.data as ServiceValue[]) : [];
   } catch {
     return [];
   }
