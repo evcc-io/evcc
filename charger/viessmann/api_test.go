@@ -28,8 +28,8 @@ func TestInstallations(t *testing.T) {
 		require.Equal(t, "true", r.URL.Query().Get("includeGateways"))
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"data":[
-			{"id":3242119,"gateways":[{"serial":"7472258009383262"},{"serial":"7472258009383263"}]},
-			{"id":1000001,"gateways":[{"serial":"9999999999999999"}]}
+			{"id":3242119,"description":"Home","address":{"street":"Main St","houseNumber":"1","zip":"10115","city":"Berlin","country":"de"},"gateways":[{"serial":"7472258009383262","version":"1.4.0.0","gatewayType":"VitoconnectOPTO2"},{"serial":"7472258009383263","gatewayType":"TCU301"}]},
+			{"id":1000001,"description":null,"address":{"street":null,"city":null},"gateways":[{"serial":"9999999999999999"}]}
 		]}`))
 	})
 
@@ -37,8 +37,11 @@ func TestInstallations(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, res, 2)
 	assert.Equal(t, 3242119, res[0].ID)
+	assert.Equal(t, "Home", res[0].Description)
+	assert.Equal(t, Address{Street: "Main St", HouseNumber: "1", City: "Berlin"}, res[0].Address)
 	assert.Len(t, res[0].Gateways, 2)
-	assert.Equal(t, "7472258009383262", res[0].Gateways[0].Serial)
+	assert.Equal(t, Gateway{Serial: "7472258009383262", GatewayType: "VitoconnectOPTO2"}, res[0].Gateways[0])
+	assert.Equal(t, Installation{ID: 1000001, Gateways: []Gateway{{Serial: "9999999999999999"}}}, res[1])
 }
 
 func TestInstallationsError(t *testing.T) {
