@@ -825,8 +825,11 @@ func (site *Site) updateBatteryMeters() {
 			maxDischargePower = -1 // any battery without a limit disables the cap
 		}
 
-		_, controllable := api.Cap[api.BatteryController](meter)
+		ctrl, controllable := api.Cap[api.BatteryController](meter)
 		mm[i].Controllable = new(controllable)
+		if controllable {
+			mm[i].Modes = lo.Map(ctrl.BatteryModes(), func(m api.BatteryMode, _ int) string { return m.String() })
+		}
 	}
 
 	// retain the last known soc when all reads failed, so that a transient
