@@ -69,14 +69,13 @@ params:
     type: string
     advanced: true
   - preset: battery-params
-  - name: capacity
-  - name: minsoc
-  - name: maxsoc
-  - name: maxchargepower
-  - name: maxdischargepower
   - name: maxacpower
 render: |
   type: custom
+  maxacpower: {{ .maxacpower }} # W
+  {{- if eq .usage "battery" }}
+  {{- include "battery-params" . }}
+  {{- end }}
   {{- if .power }}
   power:
     source: http
