@@ -1010,18 +1010,22 @@ func (lp *Loadpoint) GetSmartCostLimit() *float64 {
 func (lp *Loadpoint) SetSmartCostLimit(val *float64) error {
 	if lp.optimizerControlled() {
 		// a config round-trip writing the getter's value back must not change the stored limit
-		lp.RLock()
-		unchanged := val == nil || ptrValueEqual(val, lp.smartCostLimit)
-		lp.RUnlock()
-
-		if !unchanged {
-			return ErrOptimizerAutomatic
-		}
-
-		return nil
+		return lp.rejectLimitChange(val, &lp.smartCostLimit)
 	}
 
 	lp.setSmartCostLimit(val)
+
+	return nil
+}
+
+// rejectLimitChange accepts writing back nil or the stored limit while the optimizer replaces it
+func (lp *Loadpoint) rejectLimitChange(val *float64, stored **float64) error {
+	lp.RLock()
+	defer lp.RUnlock()
+
+	if val != nil && !ptrValueEqual(val, *stored) {
+		return ErrOptimizerAutomatic
+	}
 
 	return nil
 }
@@ -1076,15 +1080,7 @@ func (lp *Loadpoint) GetSmartFeedInPriorityLimit() *float64 {
 // SetSmartFeedInPriorityLimit sets the smart cost feed-in
 func (lp *Loadpoint) SetSmartFeedInPriorityLimit(val *float64) error {
 	if lp.optimizerControlled() {
-		lp.RLock()
-		unchanged := val == nil || ptrValueEqual(val, lp.smartFeedInPriorityLimit)
-		lp.RUnlock()
-
-		if !unchanged {
-			return ErrOptimizerAutomatic
-		}
-
-		return nil
+		return lp.rejectLimitChange(val, &lp.smartFeedInPriorityLimit)
 	}
 
 	lp.setSmartFeedInPriorityLimit(val)
