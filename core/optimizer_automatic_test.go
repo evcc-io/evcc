@@ -225,6 +225,46 @@ func TestOptimizerStopFollowsSurplus(t *testing.T) {
 	assert.True(t, lp.pvTimer.Equal(elapsed))
 }
 
+// TestOptimizerPrioritySoc covers the battery priority of a loadpoint the optimizer
+// controls: prioritySoc does not apply, a stop gives the battery priority and a
+// surplus charge the vehicle (#34606)
+func TestOptimizerPrioritySoc(t *testing.T) {
+	enableAutomatic(t)
+
+	// battery charging 1000W; below prioritySoc the site hides it and forces 100W residual power
+	charging := siteState{battery: types.BatteryState{Power: -1000}}
+	above := sitePowerResult{state: charging, power: -1000}
+	below := sitePowerResult{state: charging, power: 100, priorityAdjustment: -1100}
+
+	for _, tc := range []struct {
+		name      string
+		automatic bool
+		action    string
+		res       sitePowerResult
+		expect    float64
+	}{
+		// the report: above prioritySoc the vehicle took the battery's charge power against the stop
+		{"stop above prioritySoc", true, actionStop, above, 0},
+		{"stop below prioritySoc", true, actionStop, below, 0},
+		{"charge above prioritySoc", true, actionCharge, above, -1000},
+		{"charge below prioritySoc", true, actionCharge, below, -1000},
+		// a discharging battery is not hidden by a stop
+		{"stop while discharging", true, actionStop, sitePowerResult{state: siteState{battery: types.BatteryState{Power: 500}}, power: 500}, 500},
+		// prioritySoc applies to loadpoints the optimizer does not control
+		{"uncontrolled below prioritySoc", false, actionStop, below, 100},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			lp := NewLoadpoint(util.NewLogger("foo"), nil)
+			lp.site = &mockSite{automatic: tc.automatic}
+			lp.vehicle = modelledVehicle(gomock.NewController(t))
+			lp.setSuggestion(&types.Suggestion{Action: tc.action})
+
+			site := &Site{log: util.NewLogger("foo")}
+			assert.Equal(t, tc.expect, site.loadpointSitePower(lp, tc.res))
+		})
+	}
+}
+
 // TestOptimizerFlexibility covers a loadpoint the optimizer pins to a setpoint:
 // it does not yield to a higher priority loadpoint, so its power is not flexible
 func TestOptimizerFlexibility(t *testing.T) {
