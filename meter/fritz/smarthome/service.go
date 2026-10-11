@@ -67,7 +67,18 @@ func getDevices(w http.ResponseWriter, r *http.Request) {
 	jsonWrite(w, deviceOptions(devices))
 }
 
+// deviceOptions lists connected devices first, then by ain
 func deviceOptions(devices []Device) []service.Option {
+	slices.SortFunc(devices, func(a, b Device) int {
+		if a.IsConnected != b.IsConnected {
+			if a.IsConnected {
+				return -1
+			}
+			return 1
+		}
+		return cmp.Compare(a.AIN, b.AIN)
+	})
+
 	res := make([]service.Option, 0, len(devices))
 	for _, d := range devices {
 		// every device is a valid choice, a single one auto-fills the ain
@@ -78,20 +89,6 @@ func deviceOptions(devices []Device) []service.Option {
 			Match: true,
 		})
 	}
-	// connected devices first, then by ain
-	connected := func(o service.Option) bool {
-		i := slices.IndexFunc(devices, func(d Device) bool { return d.AIN == o.Value })
-		return devices[i].IsConnected
-	}
-	slices.SortFunc(res, func(a, b service.Option) int {
-		if ca, cb := connected(a), connected(b); ca != cb {
-			if ca {
-				return -1
-			}
-			return 1
-		}
-		return cmp.Compare(a.Value, b.Value)
-	})
 	return res
 }
 
