@@ -713,6 +713,10 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	res.StateOfCharge[0] = 5000
 	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, 1).Action, "idle within bounds is withheld")
 	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "idle within bounds is withheld")
+
+	// solver noise on the grid is no import/export (#34657)
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 4e-05, 0, 570.0/3600).Action, "idle with import noise")
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 0, 4e-05, 570.0/3600).Action, "idle with export noise")
 }
 
 // TestSuggestionActionable ensures the actionable flag follows the current state
