@@ -2,6 +2,7 @@ package service
 
 import (
 	"cmp"
+	"context"
 	"errors"
 	"net/http"
 
@@ -29,12 +30,13 @@ func parseQuery(expr string) (*gojq.Query, error) {
 	return gojq.Parse(expr)
 }
 
-// first returns the first result of query applied to v, or nil
-func first(query *gojq.Query, v any) any {
+// first returns the first result of query applied to v, or nil. The request
+// context bounds the evaluation like the jq query itself.
+func first(ctx context.Context, query *gojq.Query, v any) any {
 	if query == nil {
 		return nil
 	}
-	res, ok := query.Run(v).Next()
+	res, ok := query.RunWithContext(ctx, v).Next()
 	if !ok {
 		return nil
 	}
@@ -86,7 +88,7 @@ func httpGet(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	val, err := jq.Query(query, body)
+	val, err := jq.QueryContext(req.Context(), query, body)
 	if err != nil {
 		return
 	}
@@ -97,7 +99,7 @@ func httpGet(w http.ResponseWriter, req *http.Request) {
 	}
 
 	for _, v := range slice {
-		val := first(value, v)
+		val := first(req.Context(), value, v)
 		if val == nil {
 			continue
 		}
@@ -105,8 +107,8 @@ func httpGet(w http.ResponseWriter, req *http.Request) {
 		// match keeps the single-value auto-fill
 		res = append(res, service.Option{
 			Value: cast.ToString(val),
-			Label: cast.ToString(first(label, v)),
-			Hint:  cast.ToString(first(hint, v)),
+			Label: cast.ToString(first(req.Context(), label, v)),
+			Hint:  cast.ToString(first(req.Context(), hint, v)),
 			Match: true,
 		})
 	}
