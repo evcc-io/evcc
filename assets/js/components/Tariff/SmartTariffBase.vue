@@ -1,84 +1,106 @@
 <template>
 	<div v-if="possible">
 		<h6 v-if="title" class="mt-0">{{ title }}</h6>
-		<p>
-			{{ description }}
-		</p>
-		<div class="row mb-3 align-items-center" style="max-width: 1000px">
-			<label :for="formId" class="col-sm-4 col-form-label pt-0 pt-sm-2">
-				{{ limitLabel }}
-			</label>
-			<div class="col-sm-8 col-lg-4 pe-lg-0">
-				<div class="input-group input-group-sm mb-1 mb-lg-0">
-					<div class="input-group-text">
-						<div class="form-check form-switch m-0">
-							<input
-								:id="formId + 'Active'"
-								:checked="active"
-								class="form-check-input"
-								type="checkbox"
-								role="switch"
-								:aria-label="$t('smartCost.enable')"
-								@change="toggleActive"
-							/>
+		<div :class="{ 'opacity-25 pe-none': !!disabledHint }">
+			<p>
+				{{ description }}
+			</p>
+			<div class="row mb-3 align-items-center" style="max-width: 1000px">
+				<label :for="formId" class="col-sm-4 col-form-label pt-0 pt-sm-2">
+					{{ limitLabel }}
+				</label>
+				<div class="col-sm-8 col-lg-4 pe-lg-0">
+					<div class="input-group input-group-sm mb-1 mb-lg-0">
+						<div class="input-group-text">
+							<div class="form-check form-switch m-0">
+								<input
+									:id="formId + 'Active'"
+									:checked="active"
+									class="form-check-input"
+									type="checkbox"
+									role="switch"
+									:disabled="!!disabledHint"
+									:aria-label="$t('smartCost.enable')"
+									@change="toggleActive"
+								/>
+							</div>
 						</div>
+						<select
+							:id="formId"
+							v-model.number="selectedLimit"
+							class="form-select form-select-sm"
+							:class="{ disabled: !active }"
+							:disabled="!!disabledHint"
+							:aria-label="limitLabel"
+							@change="changeLimit"
+						>
+							<option
+								v-for="{ value, name } in limitOptions"
+								:key="value"
+								:value="value"
+							>
+								{{ name }}
+							</option>
+						</select>
 					</div>
-					<select
-						:id="formId"
-						v-model.number="selectedLimit"
-						class="form-select form-select-sm"
-						:class="{ disabled: !active }"
-						:aria-label="limitLabel"
-						@change="changeLimit"
-					>
-						<option v-for="{ value, name } in limitOptions" :key="value" :value="value">
-							{{ name }}
-						</option>
-					</select>
+				</div>
+				<div
+					v-if="applyToAllVisible"
+					class="col-sm-8 offset-sm-4 offset-lg-0 col-lg-4 d-flex align-items-baseline"
+				>
+					<div class="text-primary">{{ $t("smartCost.saved") }}</div>
+					<button class="ms-1 btn btn-sm btn-link text-muted p-0" @click="applyToAll">
+						{{ $t("smartCost.applyToAll") }}
+					</button>
 				</div>
 			</div>
-			<div
-				v-if="applyToAllVisible"
-				class="col-sm-8 offset-sm-4 offset-lg-0 col-lg-4 d-flex align-items-baseline"
-			>
-				<div class="text-primary">{{ $t("smartCost.saved") }}</div>
-				<button class="ms-1 btn btn-sm btn-link text-muted p-0" @click="applyToAll">
-					{{ $t("smartCost.applyToAll") }}
-				</button>
+			<div class="justify-content-between mb-2 d-flex justify-content-between">
+				<div class="text-start" data-testid="active-hours">
+					<div class="label">
+						{{ activeHoursLabel }}
+					</div>
+					<div class="value" :class="activeHoursClass">
+						{{ activeHoursText }}
+					</div>
+				</div>
+				<div class="text-end" data-testid="price-range">
+					<div class="label">
+						<span v-if="activeSlot">{{ activeSlotName }}</span>
+						<span v-else>{{ currentPriceLabel }}</span>
+					</div>
+					<div v-if="activeSlot" class="value" :class="highlightColor">
+						{{ activeSlotCost }}
+					</div>
+					<div v-else-if="limitedSlots.length" class="value" :class="activeHoursClass">
+						{{ fmtActiveCostRange }}
+					</div>
+					<div v-else class="value value-inactive">
+						{{ fmtTotalCostRange }}
+					</div>
+				</div>
 			</div>
+			<TariffChart
+				v-if="rates.length"
+				:slots="chartSlots"
+				:inactive="!active"
+				@slot-hovered="slotHovered"
+				@slot-selected="slotSelected"
+			/>
 		</div>
-		<div class="justify-content-between mb-2 d-flex justify-content-between">
-			<div class="text-start" data-testid="active-hours">
-				<div class="label">
-					{{ activeHoursLabel }}
-				</div>
-				<div class="value" :class="activeHoursClass">
-					{{ activeHoursText }}
-				</div>
-			</div>
-			<div class="text-end" data-testid="price-range">
-				<div class="label">
-					<span v-if="activeSlot">{{ activeSlotName }}</span>
-					<span v-else>{{ currentPriceLabel }}</span>
-				</div>
-				<div v-if="activeSlot" class="value" :class="highlightColor">
-					{{ activeSlotCost }}
-				</div>
-				<div v-else-if="limitedSlots.length" class="value" :class="activeHoursClass">
-					{{ fmtActiveCostRange }}
-				</div>
-				<div v-else class="value value-inactive">
-					{{ fmtTotalCostRange }}
-				</div>
-			</div>
-		</div>
-		<TariffChart
-			v-if="rates.length"
-			:slots="chartSlots"
-			:inactive="!active"
-			@slot-hovered="slotHovered"
-			@slot-selected="slotSelected"
-		/>
+		<p
+			v-if="disabledHint"
+			class="d-flex gap-3 text-muted small mt-3 mb-0"
+			data-testid="smart-tariff-disabled-hint"
+		>
+			<OptimizerAuto class="flex-shrink-0" />
+			<i18n-t :keypath="disabledHint" tag="span" scope="global">
+				<template #optimizer>
+					<router-link to="/optimize" class="text-muted">
+						{{ $t("config.optimizer.linkWord") }}
+					</router-link>
+				</template>
+			</i18n-t>
+		</p>
 	</div>
 	<div v-else-if="currentLimit !== null">
 		<div class="alert alert-warning">
@@ -93,6 +115,7 @@
 <script lang="ts">
 import formatter from "@/mixins/formatter";
 import TariffChart from "./TariffChart.vue";
+import OptimizerAuto from "../MaterialIcon/OptimizerAuto.vue";
 import { defineComponent, type PropType } from "vue";
 import { type CURRENCY, type Rate, type SelectOption, type Slot } from "@/types/evcc";
 import { generateRateSlots, calculateCostRange } from "@/utils/tariffSlots";
@@ -102,7 +125,7 @@ type HighlightColor = "text-primary" | "text-warning";
 
 export default defineComponent({
 	name: "SmartTariffBase",
-	components: { TariffChart },
+	components: { TariffChart, OptimizerAuto },
 	mixins: [formatter],
 	props: {
 		currentLimit: {
@@ -114,6 +137,7 @@ export default defineComponent({
 		currency: String as PropType<CURRENCY>,
 		applyAll: Boolean,
 		possible: Boolean,
+		disabledHint: String,
 		tariff: Array,
 		formId: String,
 		title: String,

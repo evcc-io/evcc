@@ -7,6 +7,16 @@
     "authorizationSuccessful": "Autorizzazione riuscita",
     "buttonConnect": "Connettiti a {provider}",
     "buttonDisconnect": "Disconnetti",
+    "challenge": {
+      "captcha": {
+        "label": "Inserisci i caratteri mostrati nell'immagine."
+      },
+      "code": {
+        "title": "Codice di autorizzazione"
+      },
+      "openLogin": "Apri la pagina di login",
+      "submit": "Continua"
+    },
     "confirmLogout": "Sei sicuro di voler disconnettere {title}?",
     "connect": "connetti",
     "disconnect": "disconnetti",
@@ -43,6 +53,11 @@
       "bufferTitle": "Batteria come tampone di carica",
       "discharge": "Prevenire la scarica della batteria domestica in modalità rapida e durante la ricarica programmata.",
       "gridDischarge": "Consenti alla batteria domestica di fornire energia alla rete.",
+      "gridDischargeConfirm": {
+        "country": "Paese configurato: {country}.",
+        "description": "Poter esportare energia dalla batteria alla rete dipende dal tuo paese e dall'accordo di immissione in rete. Se la batteria viene anche caricata dalla rete, l'energia esportata non è più puramente solare. In base a molte tariffe di immissione, questo annulla il tuo compenso o è vietato. Verifica prima il tuo contratto di immissione e gli accordi con il tuo operatore di rete.",
+        "noCountry": "Nessun paese configurato. Impostalo in {link}."
+      },
       "priority": "La batteria domestica ha la priorità finché il suo livello di carica è inferiore a {soc}. Successivamente, le colonnine di ricarica ricevono l'energia in eccesso.",
       "priorityNone": "L'energia solare in eccesso viene inviata direttamente ai punti di ricarica. Imposta un valore superiore a {soc} per dare priorità alla batteria domestica.",
       "priorityTitle": "Dove va a finire prima il surplus?"
@@ -144,10 +159,41 @@
         "switchsocket": "Presa con interruttore definito dall'utente"
       }
     },
+    "circuit": {
+      "addMeter": "Aggiungi un contatore d'energia dedicato",
+      "custom": "Circuito definito dall'utente",
+      "deleteChildrenFirst": "Per eliminare questo circuito, elimina prima i suoi sotto circuiti.",
+      "meterDedicated": "Contatore dedicato",
+      "meterGrid": "Contatore di rete",
+      "meterHelp": "Contatore misurante il consumo totale di questo circuito.",
+      "meterLabel": "Contatore d'energia",
+      "meterLabelAdd": "Aggiungi un Contatore di Circuito",
+      "meterLabelEdit": "Modifica il Contatore di Circuito",
+      "meterNone": "Nessun contatore",
+      "meterSelectionHelpDedicatedMeter": "Aggiungi un contatore esistente al circuito sottostante.",
+      "meterSelectionHelpGridMeter": "Utilizza il contatore di rete esistente della tua installazione.",
+      "meterSelectionHelpNoMeter": "Viene utilizzata la somma di tutti i contatori di carica.",
+      "meterSelectionLabel": "Selezione del contatore",
+      "parentCircuit": "Circuito principale",
+      "template": "Circuito",
+      "titleAdd": "Aggiungi circuito",
+      "titleEdit": "Modifica circuito",
+      "titleLabel": "Titolo"
+    },
     "circuits": {
+      "addMainCircuit": "Aggiungi il circuito principale",
+      "addSubCircuit": "Aggiungi sotto-circuito",
       "description": "Garantisce che la somma dei carichi connessi ad un circuito non superi i limiti di corrente configurati. I circuiti possono essere annidati in una struttura gerarchica.",
+      "legacyWarning": "Nuove configurazioni di circuiti disponibili! Rimuovere e salvare la configurazione qui per utilizzare il nuovo processo guidato.",
+      "meterDedicated": "Contatore",
+      "meterGrid": "Rete",
       "title": "Gestione del carico",
       "usableMeters": "Riferimenti dei contatori utilizzabili"
+    },
+    "combobox": {
+      "count": "{count} suggerimenti",
+      "suggestions": "Suggerimenti",
+      "used": "già usato"
     },
     "consumer": {
       "description": "Monitora elettrodomestici non controllabili (frigorifero, lavatrice, ecc.). Ti offre una migliore panoramica dei consumi domestici.",
@@ -216,6 +262,8 @@
       "identifier": "Identificatore RFID",
       "loginBlocked": "Limite login raggiunto",
       "max": "max",
+      "maxCurrent": "Corrente massima",
+      "maxPower": "Potenza massima",
       "messengers": "Servizi",
       "no": "no",
       "odometer": "Chilometraggio",
@@ -352,6 +400,7 @@
       "enable": "Abilita",
       "error": "Errore",
       "experimental": "Sperimentale",
+      "forceEnable": "Abilitare comunque",
       "forceSave": "Salva comunque",
       "fromYamlHint": "Nota: configurato tramite evcc.yaml. Rimuovere la voce dal file per abilitare la modifica qui.",
       "hideAdvancedSettings": "Nascondi impostazioni avanzate",
@@ -370,6 +419,7 @@
       "saving": "Salvataggio…",
       "selectFile": "Sfoglia",
       "showAdvancedSettings": "Mostra impostazioni avanzate",
+      "site": "Sito",
       "telemetry": "Telemetria",
       "templateLoading": "Caricamento...",
       "title": "Titolo",

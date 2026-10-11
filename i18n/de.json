@@ -1,7 +1,7 @@
 {
   "authProviders": {
-    "authCode": "Autorisierungscode",
-    "authCodeHelp": "Kopiere diesen Code und verwende ihn im nächsten Schritt. Gültig für {duration}.",
+    "authCode": "Authentifizierungscode",
+    "authCodeHelp": "Kopiere diesen Code und verwende ihn im nächsten Schritt. Er ist gültig für {duration}.",
     "authorizationFailed": "Autorisierung fehlgeschlagen",
     "authorizationRequired": "Autorisierung erforderlich",
     "authorizationSuccessful": "Autorisierung erfolgreich",
@@ -62,6 +62,7 @@
         "noCountry": "Kein Land konfiguriert. Lege es unter {link} fest.",
         "title": "Netzeinspeisung aus der Batterie"
       },
+      "optimizerControlledHint": "Für {loadpoints} deaktiviert. Der {optimizer} entscheidet stattdessen.",
       "priority": "Hausbatterie hat Vorrang, solange sie unter {soc} liegt. Dann erhalten die Ladepunkte den Überschuss.",
       "priorityNone": "Sonnenüberschuss geht direkt an die Ladepunkte. Setze einen Wert über {soc}, um die Hausbatterie zu bevorzugen.",
       "priorityTitle": "Wohin geht der Überschuss zuerst?"
@@ -788,7 +789,7 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionExternalUrl": "Adresse, mit der sich andere Geräte mit evcc verbinden und für die Autodiscovery der evcc-App.",
+      "descriptionExternalUrl": "Adresse, mit der sich andere Geräte mit evcc verbinden und für die Auto-Discovery der evcc-App.",
       "descriptionHost": "Wird verwendet, um evcc in deinem lokalen Netzwerk anzukündigen.",
       "descriptionInternalUrl": "Lokale Netzwerkadresse von evcc.",
       "descriptionPort": "Port für die Web-Oberfläche und API. Du musst deine Browser-URL aktualisieren, wenn du dies änderst.",
@@ -840,7 +841,27 @@
       "usernameHelp": "Für HTTP-Basic-Auth am Upstream-Server."
     },
     "optimizer": {
-      "description": "Analysiert Solarprognose, Strompreise und deinen typischen Verbrauch, um Batterie- und Ladestrategie zu optimieren. Daten werden zur Berechnung an den evcc Optimierungsdienst übertragen. Berechnet und visualisiert aktuell nur. Steuert noch keine Geräte.",
+      "automatic": "Automatische Steuerung",
+      "automaticLevel": {
+        "battery": {
+          "description": "Steuert nur die Hausbatterie.",
+          "label": "Hausbatterie",
+          "status": "{automatic} steuert die Hausbatterie."
+        },
+        "full": {
+          "description": "Steuert die Hausbatterie, startet und stoppt das Laden der Fahrzeuge im Smart-Modus, ersetzt Preis- und CO₂-Grenzen und übernimmt Ladepläne. Unverändert: Aus- und Schnellmodus, Heizgeräte, schaltbare Steckdosen, Fahrzeuge mit unbekannter Batteriekapazität.",
+          "label": "Hausbatterie & Ladepunkte",
+          "status": "{automatic} steuert Hausbatterie und Ladepunkte."
+        },
+        "off": {
+          "description": "Der Optimizer schlägt nur vor. Nichts wird gesteuert.",
+          "status": "{automatic} ist aus. Der Optimizer schlägt nur vor."
+        }
+      },
+      "controlled": "Durch automatische Steuerung deaktiviert. Der {optimizer} entscheidet stattdessen.",
+      "controls": "Steuert",
+      "linkWord": "Optimizer",
+      "description": "Nutzt Solarprognose, Strompreise und deinen typischen Verbrauch, um Batterie und Laden zu planen. Daten werden an den evcc Optimierungsdienst übertragen.",
       "enable": "Optimizer aktivieren",
       "info": "Bei neuen Installationen kann es bis zu 24 Stunden dauern, bis evcc genügend Daten gesammelt hat.",
       "title": "Optimizer"
@@ -913,7 +934,7 @@
       "grid": "Netzanschluss",
       "integrations": "Integrationen",
       "loadpoints": "Ladepunkte & Heizungen",
-      "meter": "PV & Batterie",
+      "meter": "PV & Speicher",
       "services": "Dienste",
       "system": "System",
       "vehicles": "Fahrzeuge"
@@ -1728,6 +1749,7 @@
     "targetChargePlan": {
       "chargeDuration": "Ladedauer",
       "co2Label": "CO₂-Emission ⌀",
+      "optimizerHint": "Hinweis: Dieser Plan wurde vom {optimizer} erstellt.",
       "priceLabel": "Energiepreis",
       "timeRange": "{day} {range} Uhr",
       "unknownPrice": "noch unbekannt"
@@ -1785,6 +1807,7 @@
       "feedinPriorityPausing": "Solarladen pausiert, um die Einspeisung zu maximieren.",
       "finished": "Abgeschlossen.",
       "minCharge": "Mindestladung bis {soc}.",
+      "optimizerControlledTooltip": "Automatische Steuerung: Der Optimizer startet und stoppt das Laden.",
       "pvDisable": "Zu wenig Überschuss. Ladung wird gleich pausiert.",
       "pvEnable": "Überschuss verfügbar. Ladung wird gleich fortgesetzt.",
       "scale1p": "Reduziere gleich auf 1-phasiges Laden.",

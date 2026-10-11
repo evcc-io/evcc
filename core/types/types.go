@@ -20,6 +20,7 @@ type Measurement struct {
 	Capacity      *float64    `json:"capacity,omitempty"`
 	Soc           *float64    `json:"soc,omitempty"`
 	Controllable  *bool       `json:"controllable,omitempty"`
+	Modes         []string    `json:"modes,omitempty"`
 	Suggestion    *Suggestion `json:"suggestion,omitempty"`
 }
 
@@ -30,6 +31,7 @@ type Suggestion struct {
 	Action    string  `json:"action"`
 	Charge    float64 `json:"charge"`    // recommended charge power, W
 	Discharge float64 `json:"discharge"` // recommended discharge power, W
+	Grid      float64 `json:"grid"`      // planned site grid flow, positive means import, W
 	// Actionable indicates the suggestion differs from the current operating mode.
 	Actionable bool `json:"actionable"`
 }

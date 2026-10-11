@@ -306,6 +306,7 @@
 									id: temperatureTariff.id,
 								})
 							"
+							@enable="handleDisable('tariff', temperatureTariff.id, false)"
 						/>
 						<TariffCard
 							v-if="plannerTariff"

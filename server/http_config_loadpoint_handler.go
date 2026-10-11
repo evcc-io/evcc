@@ -233,7 +233,7 @@ func newLoadpointHandler() http.HandlerFunc {
 		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
 		if err := dynamic.Apply(instance); err != nil {
 			conf.Delete()
-			jsonError(w, http.StatusBadRequest, err)
+			jsonError(w, errorStatus(err), err)
 			return
 		}
 
@@ -323,7 +323,7 @@ func updateLoadpointHandler() http.HandlerFunc {
 		// dynamic; instance is nil for a disabled loadpoint, takes effect on next restart
 		if instance != nil {
 			if err := dynamic.Apply(instance); err != nil {
-				jsonError(w, http.StatusBadRequest, err)
+				jsonError(w, errorStatus(err), err)
 				return
 			}
 		}
