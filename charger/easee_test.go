@@ -1273,10 +1273,13 @@ func TestEaseeConstructorEnergyRecovery(t *testing.T) {
 					require.NoError(t, err)
 					assert.Equal(t, 10008.0, total)
 				} else {
-					require.Error(t, res.err)
-					if tc.status == http.StatusOK {
-						assert.ErrorIs(t, res.err, context.DeadlineExceeded)
-					}
+					require.NoError(t, res.err)
+					_, err := res.charger.TotalEnergy()
+					assert.ErrorIs(t, err, api.ErrNotAvailable)
+					res.charger.ProductUpdate(easeeSessionPayload(t, easee.CHARGE_SESSION_START, start, easee.ChargingSessionStartData{ID: 42, Start: start, MeterValue: 10000}))
+					total, err := res.charger.TotalEnergy()
+					require.NoError(t, err)
+					assert.Equal(t, 10008.0, total)
 				}
 			case <-ctx.Done():
 				t.Fatal(ctx.Err())
