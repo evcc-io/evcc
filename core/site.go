@@ -1153,7 +1153,7 @@ type sitePowerResult struct {
 	batteryStart bool
 
 	// adjustment applied for battery priority below prioritySoc; adding it back
-	// restores the unadjusted site power for a battery-boosting loadpoint
+	// restores the unadjusted site power for loadpoints prioritySoc does not apply to
 	priorityAdjustment float64
 }
 
@@ -1260,12 +1260,10 @@ func (site *Site) loadpointSitePower(lp updater, res sitePowerResult) float64 {
 	// reserve surplus claimed by higher-priority loadpoints that are starting up (#31194)
 	sitePower += site.reservedPVPower(lp)
 
-	// the optimizer plans the home battery, so prioritySoc does not apply to a loadpoint
-	// it controls: a stop gives the battery priority, a charge takes the surplus (#34606)
+	// prioritySoc does not apply to a boosting loadpoint, which deliberately drains the
+	// battery (#30541), nor to one the optimizer controls, since the optimizer plans the
+	// home battery: a stop gives the battery priority, a charge takes the surplus (#34606)
 	suggestion := lp.activeSuggestion()
-
-	// battery boost deliberately drains the battery, hence battery priority
-	// below prioritySoc does not apply to the boosting loadpoint (#30541)
 	if suggestion != nil || lp.GetBatteryBoost() != boostDisabled {
 		sitePower += res.priorityAdjustment
 	}

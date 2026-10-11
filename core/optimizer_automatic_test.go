@@ -229,8 +229,6 @@ func TestOptimizerStopFollowsSurplus(t *testing.T) {
 // controls: prioritySoc does not apply, a stop gives the battery priority and a
 // surplus charge the vehicle (#34606)
 func TestOptimizerPrioritySoc(t *testing.T) {
-	enableAutomatic(t)
-
 	// battery charging 1000W; below prioritySoc the site hides it and forces 100W residual power
 	charging := siteState{battery: types.BatteryState{Power: -1000}}
 	above := sitePowerResult{state: charging, power: -1000}
