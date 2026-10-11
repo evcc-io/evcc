@@ -135,7 +135,7 @@ func getChannels(w http.ResponseWriter, req *http.Request) {
 	// the logger is shared, a rotating slot keeps the redaction list from growing while typing
 	redactPassword(password)
 
-	res, err := deviceChannels(log, q.Get("uri"), q.Get("user"), password)
+	res, err := deviceChannels(q.Get("uri"), q.Get("user"), password)
 	if err != nil {
 		// form incomplete or device unreachable, the ui polls while typing
 		log.DEBUG.Printf("channels: %v", err)
@@ -147,7 +147,7 @@ func getChannels(w http.ResponseWriter, req *http.Request) {
 	jsonWrite(w, channelOptions(res, metered))
 }
 
-func deviceChannels(log *util.Logger, uri, user, password string) ([]channel, error) {
+func deviceChannels(uri, user, password string) ([]channel, error) {
 	client, uri, info, err := newClient(log, uri, user, password)
 	if err != nil {
 		return nil, err
