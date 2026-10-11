@@ -169,7 +169,7 @@ func TestOptimizerGateInactive(t *testing.T) {
 	lp, _, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, false)
 	lp.setSuggestion(&types.Suggestion{Action: actionCharge})
 
-	assert.Nil(t, lp.gate())
+	assert.Nil(t, lp.activeSuggestion())
 
 	// pv is balanced at zero site power, a gated loadpoint would go to max current
 	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
@@ -185,7 +185,7 @@ func TestOptimizerGateStale(t *testing.T) {
 	lp.setSuggestion(&types.Suggestion{Action: actionCharge})
 	lp.suggestionUpdated = lp.clock.Now().Add(-suggestionMaxAge - time.Minute)
 
-	assert.Nil(t, lp.gate())
+	assert.Nil(t, lp.activeSuggestion())
 
 	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
 
