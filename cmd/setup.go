@@ -3,6 +3,8 @@ package cmd
 import (
 	"cmp"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -937,6 +939,13 @@ func networkSettings(conf *globalconfig.Network) error {
 	return nil
 }
 
+// mdnsInstance returns a stable instance name per installation so multiple evcc instances don't conflict,
+// the machine id is hashed as it must not be published
+func mdnsInstance(id string) string {
+	sum := sha256.Sum256([]byte("mdns:" + id))
+	return "evcc-" + hex.EncodeToString(sum[:2])
+}
+
 // setup MDNS
 func configureMDNS(conf globalconfig.Network) error {
 	host := strings.TrimSuffix(conf.Host, ".local")
@@ -951,7 +960,7 @@ func configureMDNS(conf globalconfig.Network) error {
 		text = append(text, "external_url="+externalURL)
 	}
 
-	zc, err := zeroconf.RegisterProxy("evcc", "_http._tcp", "local.", conf.Port, host, nil, text, nil)
+	zc, err := zeroconf.RegisterProxy(mdnsInstance(machine.ID()), "_http._tcp", "local.", conf.Port, host, nil, text, nil)
 	if err != nil {
 		return err
 	}
