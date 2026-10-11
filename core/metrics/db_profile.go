@@ -97,7 +97,7 @@ func energyProfileTemperatureBinned(entity entity) (map[int]map[int]float64, err
 	FROM meters m
 	JOIN tariffs t ON m.ts = t.ts
 	WHERE m.meter = ? AND m.ts >= ? AND m.ts < ? AND COALESCE(m.recovered, 0) = 0
-		AND t.temperature IS NOT NULL
+		AND m.energy IS NOT NULL AND t.temperature IS NOT NULL
 	GROUP BY slot_idx, temp_bin
 	HAVING count(*) >= 2`
 

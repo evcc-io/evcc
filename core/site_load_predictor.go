@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"math"
 	"slices"
 	"time"
@@ -66,7 +67,11 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
 				predictorType = "temperature"
 				var binned map[int]map[int]float64
 				if lp.chargeEnergy != nil {
-					binned, _ = lp.chargeEnergy.EnergyProfileTemperatureBinned()
+					var err error
+					binned, err = lp.chargeEnergy.EnergyProfileTemperatureBinned()
+					if err != nil && !errors.Is(err, metrics.ErrIncomplete) {
+						site.log.DEBUG.Printf("temperature correction: binned profile unavailable for %s: %v", lp.GetTitle(), err)
+					}
 				}
 				var binnedSlots, fallbackSlots int
 				p, binnedSlots, fallbackSlots = site.applyTemperatureCorrection(p, binned)

@@ -83,10 +83,12 @@ func TestApplyTemperatureCorrection(t *testing.T) {
 	slotInDay8 := (slotInDay + 8) % 96
 	binned := map[int]map[int]float64{
 		slotInDay: {
-			5: 3.5, // 5°C forecast matches 3.5 kWh
+			5:  3.5, // 5°C forecast matches 3.5 kWh
+			12: 1.0, // other temperature bin in same slot
 		},
 		slotInDay8: {
 			20: 0.8, // 20°C forecast matches recorded 0.8 kWh DHW cycle
+			10: 2.2, // other temperature bin in same slot
 		},
 	}
 	resultBinned, binnedCount2, fallbackCount2 := site.applyTemperatureCorrection(profile, binned)

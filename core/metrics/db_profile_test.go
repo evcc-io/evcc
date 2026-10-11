@@ -102,6 +102,7 @@ func TestEnergyProfileTemperatureBinned(t *testing.T) {
 	// Verify that temperature bins exist for slot 0
 	require.NotEmpty(t, res[0])
 	require.Contains(t, res[0], 4)
+	require.InDelta(t, 0.55, res[0][4], 1e-6)
 	// Single-sample data at 20°C must not be included (HAVING count >= 2)
 	require.NotContains(t, res[0], 20)
 	// Old data from day -400 (temp 10°C) must not be included
