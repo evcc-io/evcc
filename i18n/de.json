@@ -444,7 +444,7 @@
         "type": "Typ"
       },
       "customOption": "Benutzerdefinierte Integration",
-      "description": "Leistungsbegrenzung durch externe Systeme (z.B. §14a EnWG, §9 EEG Schnittstelle oder übergeordnetes Energiemanagementsystem). Spielt mit dem Lastmanagement Feature zusammen. Das Abregeln der Solarproduktion wird ebenfalls für ausgewählte Geräte unterstützt. Der konkrete Abregelungswert muss in der jeweiligen Wechselrichter-Konfiguration eingestellt werden.",
+      "description": "Leistungsbegrenzung durch externe Systeme (z.B. §14a EnWG, §9 EEG Schnittstelle oder übergeordnetes Energiemanagementsystem). Spielt mit dem Lastmanagement Feature zusammen. Das Abregeln der Solarerzeugung wird ebenfalls für ausgewählte Geräte unterstützt. Der konkrete Abregelungswert muss in der jeweiligen Wechselrichter-Konfiguration eingestellt werden.",
       "download": "Download",
       "dynamicLimits": "Dynamische Limits",
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
@@ -1076,7 +1076,7 @@
       },
       "services": "Dienste",
       "solar": {
-        "description": "Solarproduktionsprognose für deine PV-Anlage. Wird in der Oberfläche angezeigt und zukünftig für Optimierungsalgorithmen verwendet.",
+        "description": "Solarerzeugungsprognose für deine PV-Anlage. Wird in der Oberfläche angezeigt und zukünftig für Optimierungsalgorithmen verwendet.",
         "titleAdd": "Solar-Vorhersage hinzufügen",
         "titleEdit": "Solar-Vorhersage bearbeiten"
       },
@@ -1241,7 +1241,7 @@
       "co2": "Erfahre, wann Netzstrom in deiner Region sauber ist. Ladepläne werden auf niedrige Emissionen optimiert und CO₂-Einsparungen berechnet.",
       "price": "Dynamischen Stromtarif konfigurieren, um Ladepläne automatisch zu optimieren und Einsparungen zu berechnen.",
       "setup": "Tarife und Vorhersagen einrichten",
-      "solar": "Erwartete Solarproduktion für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet.",
+      "solar": "Erwartete Solarerzeugung für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet.",
       "temperature": "Zeigt die erwartete Außentemperatur am Standort. Wird für die Prognose des Heizbedarfs verwendet."
     },
     "hideLine": "Linie ausblenden",
@@ -1261,8 +1261,8 @@
       "today": "Heute",
       "tomorrow": "Morgen"
     },
-    "solarAdjust": "Solarprognose anhand der realen Produktionsdaten anpassen{percent}.",
-    "solarAdjustMedium": "an reale Produktionsdaten anpassen",
+    "solarAdjust": "Solarprognose anhand der realen Erzeugungsdaten anpassen{percent}.",
+    "solarAdjustMedium": "an reale Erzeugungsdaten anpassen",
     "solarAdjustShort": "anpassen",
     "temperature": {
       "average": "Durchschnitt",
@@ -1271,7 +1271,7 @@
     "type": {
       "co2": "CO₂-Emissionen",
       "price": "Netzpreis",
-      "solar": "Solarproduktion",
+      "solar": "Solarerzeugung",
       "temperature": "Außentemperatur"
     }
   },
@@ -1583,7 +1583,7 @@
       "batteryGridChargeLimit": "Netzladen: wenn",
       "batteryTooltip": "{energy} von {total} ({soc})",
       "forecast": "Vorhersage",
-      "forecastTooltip": "Vorhersage: verbleibende PV-Produktion heute",
+      "forecastTooltip": "Vorhersage: verbleibende PV-Erzeugung heute",
       "gridImport": "Netzbezug",
       "homePower": "Verbrauch",
       "loadpoints": "Ladepunkt | Ladepunkt | {count} Ladepunkte",
