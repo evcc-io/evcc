@@ -87,8 +87,12 @@ func (w *influxSuite) TestSlice() {
 	w.Len(w.p, 0)
 }
 
+// only set numeric fields are written, so adding a field does not change the points
 func (w *influxSuite) TestMeasurement() {
-	w.WriteParam(util.Param{Key: "battery", Val: types.Measurement{Power: 1, Soc: new(10.0)}})
+	w.WriteParam(util.Param{Key: "battery", Val: types.Measurement{
+		Power: 1, Soc: new(10.0),
+		Title: "home", Controllable: new(true), Modes: []string{"normal", "discharge"},
+	}})
 	w.Equal([]*write.Point{
 		inf2.NewPoint("batteryPower", nil, map[string]any{"value": 1.0}, w.clock.Now()),
 		inf2.NewPoint("batterySoc", nil, map[string]any{"value": 10.0}, w.clock.Now()),

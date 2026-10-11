@@ -62,6 +62,7 @@
         "noCountry": "No country configured. Set it under {link}.",
         "title": "Grid export from battery"
       },
+      "optimizerControlledHint": "Disabled for {loadpoints}. The {optimizer} decides instead.",
       "priority": "Home battery has priority while it is below {soc}. Then the charging points receive the surplus.",
       "priorityNone": "Solar surplus goes straight to the charging points. Set a value above {soc} to prioritize the home battery.",
       "priorityTitle": "Where does the surplus go first?"
@@ -840,7 +841,27 @@
       "usernameHelp": "For HTTP Basic Auth to the upstream server."
     },
     "optimizer": {
-      "description": "Analyzes solar forecast, electricity prices, and your consumption patterns to optimize battery and charging strategy. Data is sent to the evcc optimization service for processing. Currently only calculates and visualizes. Does not control devices yet.",
+      "automatic": "Automatic control",
+      "automaticLevel": {
+        "battery": {
+          "description": "Only controls the home battery.",
+          "label": "Home battery",
+          "status": "{automatic} controls the home battery."
+        },
+        "full": {
+          "description": "Controls the home battery, starts and stops vehicle charging in smart mode, replaces price and CO₂ limits and takes over plans. Unchanged: off and fast mode, heating devices, switch sockets, vehicles with unknown capacity.",
+          "label": "Home battery & charging points",
+          "status": "{automatic} controls home battery and charging points."
+        },
+        "off": {
+          "description": "The optimizer only suggests. Nothing is controlled.",
+          "status": "{automatic} is off. The optimizer only suggests."
+        }
+      },
+      "controlled": "Disabled by automatic control. The {optimizer} decides instead.",
+      "controls": "Controls",
+      "linkWord": "optimizer",
+      "description": "Uses solar forecast, electricity prices and your consumption patterns to plan battery and charging. Data is sent to the evcc optimization service.",
       "enable": "Enable Optimizer",
       "info": "For new installations, it may take up to 24 hours until evcc has collected enough data.",
       "title": "Optimizer"
@@ -1712,6 +1733,7 @@
     "targetChargePlan": {
       "chargeDuration": "Charging time",
       "co2Label": "CO₂ emission ⌀",
+      "optimizerHint": "Note: This plan was created by the {optimizer}.",
       "priceLabel": "Energy price",
       "timeRange": "{day} {range} h",
       "unknownPrice": "still unknown"
@@ -1769,6 +1791,7 @@
       "feedinPriorityPausing": "Solar charging paused to maximize feed-in.",
       "finished": "Finished.",
       "minCharge": "Minimum charging to {soc}.",
+      "optimizerControlledTooltip": "Automatic control. The optimizer starts and stops charging.",
       "pvDisable": "Not enough surplus. Pausing soon.",
       "pvEnable": "Surplus available. Starting soon.",
       "scale1p": "Reducing to 1-phase charging soon.",

@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"math/bits"
+	"net"
 
 	"github.com/andig/mbserver"
 	"github.com/evcc-io/evcc/util"
@@ -41,14 +42,21 @@ func (h *handler) logResult(op string, b []byte, err error) {
 	}
 }
 
+// mapError passes device exceptions through and reports upstream timeouts as gateway target failure (0x0B)
+// instead of letting mbserver map them to server device failure (0x04)
+func mapError(err error) error {
+	if me, ok := errors.AsType[*gridx.Error](err); ok {
+		return mbserver.MapExceptionCodeToError(me.ExceptionCode)
+	}
+	if ne, ok := errors.AsType[net.Error](err); ok && ne.Timeout() {
+		return mbserver.ErrGWTargetFailedToRespond
+	}
+	return err
+}
+
 func (h *handler) exceptionToUint16AndError(op string, b []byte, err error) ([]uint16, error) {
 	h.logResult(op, b, err)
-
-	if me, ok := errors.AsType[*gridx.Error](err); ok {
-		err = mbserver.MapExceptionCodeToError(me.ExceptionCode)
-	}
-
-	return bytesAsUint16(b), err
+	return bytesAsUint16(b), mapError(err)
 }
 
 func coilsToBytes(b []bool) []byte {
@@ -73,10 +81,7 @@ func coilsToBytes(b []bool) []byte {
 
 func (h *handler) bytesToBoolResult(op string, qty uint16, b []byte, err error) ([]bool, error) {
 	h.logResult(op, b, err)
-
-	if me, ok := errors.AsType[*gridx.Error](err); ok {
-		err = mbserver.MapExceptionCodeToError(me.ExceptionCode)
-	}
+	err = mapError(err)
 
 	var res []bool
 
