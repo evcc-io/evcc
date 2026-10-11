@@ -20,7 +20,7 @@ params:
     required: true
   - name: siteid
     required: true
-    service: http/get?uri=https://api.pvnode.com/v2/sites/&token={apikey}&jq=[.[].id]
+    service: http/get?uri=https://api.pvnode.com/v2/sites/&token={apikey}&jq=.&value=.id&label=.name
   - name: forecast_days
     description:
       en: Forecast days

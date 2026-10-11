@@ -1,6 +1,7 @@
 package service
 
 import (
+	"cmp"
 	"errors"
 	"net/http"
 
@@ -20,9 +21,31 @@ func init() {
 	service.Register("http", mux)
 }
 
-// httpGet reads uri and extracts the choices using the jq query, driving
-// selection of remote resources in templates. The config UI polls while the
-// form is filled, hence a rejected request yields an empty list.
+// parseQuery compiles a jq expression, an empty expression yields nil
+func parseQuery(expr string) (*gojq.Query, error) {
+	if expr == "" {
+		return nil, nil
+	}
+	return gojq.Parse(expr)
+}
+
+// first returns the first result of query applied to v, or nil
+func first(query *gojq.Query, v any) any {
+	if query == nil {
+		return nil
+	}
+	res, ok := query.Run(v).Next()
+	if !ok {
+		return nil
+	}
+	if _, ok := res.(error); ok {
+		return nil
+	}
+	return res
+}
+
+// httpGet reads uri and maps the jq result elements to options via the optional
+// value, label and hint expressions. The config UI polls, hence errors yield an empty list.
 func httpGet(w http.ResponseWriter, req *http.Request) {
 	q := req.URL.Query()
 
@@ -32,16 +55,20 @@ func httpGet(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	expr := q.Get("jq")
-	if expr == "" {
-		expr = "."
+	var queries [4]*gojq.Query
+	for i, expr := range []string{
+		cmp.Or(q.Get("jq"), "."),
+		cmp.Or(q.Get("value"), "."),
+		q.Get("label"),
+		q.Get("hint"),
+	} {
+		var err error
+		if queries[i], err = parseQuery(expr); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
 	}
-
-	query, err := gojq.Parse(expr)
-	if err != nil {
-		jsonError(w, http.StatusBadRequest, err)
-		return
-	}
+	query, value, label, hint := queries[0], queries[1], queries[2], queries[3]
 
 	log := util.NewLogger("http")
 	client := request.NewHelper(log)
@@ -51,7 +78,7 @@ func httpGet(w http.ResponseWriter, req *http.Request) {
 		client.Transport = transport.BearerAuth(token, client.Transport)
 	}
 
-	res := []string{}
+	res := []service.Option{}
 	defer func() { jsonWrite(w, res) }()
 
 	body, err := client.GetBody(uri)
@@ -64,12 +91,23 @@ func httpGet(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if slice, ok := val.([]any); ok {
-		for _, v := range slice {
-			res = append(res, cast.ToString(v))
-		}
-		return
+	slice, ok := val.([]any)
+	if !ok {
+		slice = []any{val}
 	}
 
-	res = append(res, cast.ToString(val))
+	for _, v := range slice {
+		val := first(value, v)
+		if val == nil {
+			continue
+		}
+
+		// match keeps the single-value auto-fill
+		res = append(res, service.Option{
+			Value: cast.ToString(val),
+			Label: cast.ToString(first(label, v)),
+			Hint:  cast.ToString(first(hint, v)),
+			Match: true,
+		})
+	}
 }
