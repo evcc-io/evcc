@@ -175,7 +175,7 @@ export async function loadServiceValues(path: string, retry?: (seconds: number) 
     });
     const retryAfter = Number(response.headers["retry-after"]);
     if (retryAfter > 0) retry?.(retryAfter);
-    return (response.data as ServiceValue[]) || [];
+    return Array.isArray(response.data) ? (response.data as ServiceValue[]) : [];
   } catch {
     return [];
   }

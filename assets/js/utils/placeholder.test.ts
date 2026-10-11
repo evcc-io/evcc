@@ -10,6 +10,7 @@ describe("placeholder", () => {
     expect(extract("{p1}/{p2}")).toEqual(["p1", "p2"]);
     expect(extract("{a_b}/{c_d}")).toEqual(["a_b", "c_d"]);
     expect(extract("{a}/{a}")).toEqual(["a", "a"]);
+    expect(extract("{a}/{b?}")).toEqual(["a", "b"]);
   });
 
   it("replace", () => {
@@ -22,5 +23,7 @@ describe("placeholder", () => {
     expect(replace("{a}", {})).toBe("{a}");
     expect(replace("{a}", { a: "" })).toBe("");
     expect(replace("{a}/{b}", { a: "x" })).toBe("x/{b}");
+    expect(replace("{a}/{b?}", { a: "x" })).toBe("x/");
+    expect(replace("{a?}", { a: "b c" })).toBe("b%20c");
   });
 });

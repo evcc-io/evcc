@@ -1,19 +1,17 @@
-/** Matches {placeholder} names (letters, numbers, underscores) */
-const PLACEHOLDER_PATTERN = /\{(\w+)\}/g;
+/** Matches {placeholder} names (letters, numbers, underscores); a trailing ? marks it optional */
+const PLACEHOLDER_PATTERN = /\{(\w+)(\??)\}/g;
 
 /** Extract {placeholder} names from template */
 export function extractPlaceholders(template: string): string[] {
-  const matches = template.match(PLACEHOLDER_PATTERN);
-  if (!matches) return [];
-  return matches.map((match) => match.slice(1, -1));
+  return [...template.matchAll(PLACEHOLDER_PATTERN)].map((match) => match[1]!);
 }
 
-/** Replace {placeholders} with URL-encoded values */
+/** Replace {placeholders} with URL-encoded values; missing optional {placeholders?} become empty */
 export function replacePlaceholders(template: string, values: Record<string, string>): string {
-  return template.replace(PLACEHOLDER_PATTERN, (match, key) => {
+  return template.replace(PLACEHOLDER_PATTERN, (match, key, optional) => {
     const value = values[key];
     if (value === undefined) {
-      return match;
+      return optional ? "" : match;
     }
     return encodeURIComponent(value);
   });

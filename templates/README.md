@@ -363,7 +363,7 @@ auth:
 
 **Format**: `service-name/endpoint` or `service-name/endpoint?param1={param1}&param2={param2}`
 
-Parameters from other params can be referenced using `{param-name}` syntax, which will be replaced with the user's input for that parameter. `{template}` is the name of the selected template. The endpoint will only be called once the user has entered values for all referenced parameters. The endpoint is called every time a referenced parameter value changes.
+Parameters from other params can be referenced using `{param-name}` syntax, which will be replaced with the user's input for that parameter. `{template}` is the name of the selected template. The endpoint will only be called once the user has entered values for all referenced parameters; an optional reference `{param-name?}` (e.g. credentials) is replaced with an empty value instead. The endpoint is called every time a referenced parameter value changes.
 
 **Response formats**:
 
@@ -433,6 +433,10 @@ Values are shown as suggestions, not strict selections - users can always enter 
   `homeassistant/instances`: Auto-discovers Home Assistant instances on the network
 
   `homeassistant/entities?uri={uri}&domain=sensor`: Lists entities from a Home Assistant instance filtered by domain(s). Multiple domains can be comma-separated (e.g., `domain=sensor,binary_sensor` or `domain=number,input_number`)
+
+- **Tasmota**
+
+  `tasmota/channels?uri={host}&user={user?}&password={password?}`: Lists the relay and energy channels of a Tasmota device with friendly name and current power. Relays are marked as match; with `meter=true` channels with energy readings are marked instead.
 
 ## `render`
 
