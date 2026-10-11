@@ -78,7 +78,20 @@ func deviceOptions(devices []Device) []service.Option {
 			Match: true,
 		})
 	}
-	slices.SortFunc(res, func(a, b service.Option) int { return cmp.Compare(a.Value, b.Value) })
+	// connected devices first, then by ain
+	connected := func(o service.Option) bool {
+		i := slices.IndexFunc(devices, func(d Device) bool { return d.AIN == o.Value })
+		return devices[i].IsConnected
+	}
+	slices.SortFunc(res, func(a, b service.Option) int {
+		if ca, cb := connected(a), connected(b); ca != cb {
+			if ca {
+				return -1
+			}
+			return 1
+		}
+		return cmp.Compare(a.Value, b.Value)
+	})
 	return res
 }
 
