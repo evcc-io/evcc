@@ -15,6 +15,11 @@ import (
 	"github.com/samber/lo"
 )
 
+var (
+	log            = util.NewLogger("shelly")
+	redactPassword = log.RotatingSlot()
+)
+
 func init() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /channels", getChannels)
@@ -127,7 +132,8 @@ func getChannels(w http.ResponseWriter, req *http.Request) {
 	password := q.Get("password")
 	metered, _ := strconv.ParseBool(q.Get("metered"))
 
-	log := util.NewLogger("shelly").Redact(password)
+	// the logger is shared, a rotating slot keeps the redaction list from growing while typing
+	redactPassword(password)
 
 	res, err := deviceChannels(log, q.Get("uri"), q.Get("user"), password)
 	if err != nil {
