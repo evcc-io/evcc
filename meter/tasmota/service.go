@@ -69,7 +69,8 @@ func channelOptions(st statusResponse, sns StatusSNSResponse, meter bool) []serv
 
 // channels queries the device; unreachable or unauthorized devices yield no options
 func channels(uri, user, password string, meter bool) []service.Option {
-	log := util.NewLogger("tasmota").Redact(user, password)
+	// NewConnection redacts the credentials on the shared logger
+	log := util.NewLogger("tasmota")
 
 	// channel is irrelevant for discovery
 	conn, err := NewConnection(uri, user, password, []int{1}, 0)
