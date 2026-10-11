@@ -1034,8 +1034,8 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 			demand = continuousDemand(lp, minLen)
 		}
 		// add smartcost limit, precondition and plan goal, if configured.
-		// the optimizer replaces the limit in automatic mode
-		if !site.AutomaticLoadpoints() {
+		// the optimizer replaces the limit where it decides for the loadpoint
+		if !lp.OptimizerControlled() {
 			demand = applySmartCostLimit(lp, demand, planner, minLen)
 		}
 		demand = applyPrecondition(lp, demand, minLen)

@@ -66,10 +66,11 @@ func (lp *Loadpoint) OptimizerPlan(planTime time.Time) (api.Rates, float64) {
 	return rates, energy / planner.Duration(rates).Hours()
 }
 
-// optimizerControlled indicates that the optimizer decides for this loadpoint.
+// OptimizerControlled indicates that the optimizer decides for this loadpoint.
 // Heating devices and switch sockets cannot be modelled and keep their limits,
-// as do vehicles without known capacity- optimizerRequest skips them, too.
-func (lp *Loadpoint) optimizerControlled() bool {
+// as do vehicles without known capacity, even where a session energy limit
+// lets optimizerRequest model them.
+func (lp *Loadpoint) OptimizerControlled() bool {
 	if lp.site == nil || !lp.site.AutomaticLoadpoints() ||
 		lp.chargerHasFeature(api.Heating) || lp.chargerHasFeature(api.IntegratedDevice) {
 		return false
@@ -82,7 +83,7 @@ func (lp *Loadpoint) optimizerControlled() bool {
 // activeSuggestion returns the optimizer's start/stop decision for the current slot,
 // nil if the optimizer does not control this loadpoint
 func (lp *Loadpoint) activeSuggestion() *types.Suggestion {
-	if !lp.optimizerControlled() {
+	if !lp.OptimizerControlled() {
 		return nil
 	}
 

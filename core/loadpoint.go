@@ -2451,7 +2451,7 @@ NO_DIM:
 
 	mode := lp.GetMode()
 	lp.publish(keys.Mode, mode)
-	lp.publish(keys.OptimizerControlled, lp.optimizerControlled())
+	lp.publish(keys.OptimizerControlled, lp.OptimizerControlled())
 
 	// update and publish plan without being short-circuited by modes etc.
 	plannerActive := lp.plannerActive()

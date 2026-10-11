@@ -827,6 +827,20 @@ func (mr *MockAPIMockRecorder) IsFastChargingActive() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsFastChargingActive", reflect.TypeOf((*MockAPI)(nil).IsFastChargingActive))
 }
 
+// OptimizerControlled mocks base method.
+func (m *MockAPI) OptimizerControlled() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OptimizerControlled")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// OptimizerControlled indicates an expected call of OptimizerControlled.
+func (mr *MockAPIMockRecorder) OptimizerControlled() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OptimizerControlled", reflect.TypeOf((*MockAPI)(nil).OptimizerControlled))
+}
+
 // PublishEffectiveValues mocks base method.
 func (m *MockAPI) PublishEffectiveValues() {
 	m.ctrl.T.Helper()

@@ -552,6 +552,7 @@ func TestLoadpointRequestChargeGoal(t *testing.T) {
 			lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOff).AnyTimes()
 			lp.EXPECT().GetStatus().Return(api.StatusB).AnyTimes()
 			lp.EXPECT().GetSmartCostLimit().Return(nil).AnyTimes()
+			lp.EXPECT().OptimizerControlled().Return(false).AnyTimes()
 			lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{}).AnyTimes()
 			lp.EXPECT().EffectivePlanTime().Return(time.Time{}).AnyTimes()
 			lp.EXPECT().GetPlanGoal().Return(0.0, false).AnyTimes()
@@ -561,6 +562,50 @@ func TestLoadpointRequestChargeGoal(t *testing.T) {
 			assert.Equal(t, tc.wantInitial, req.SInitial)
 			assert.Equal(t, tc.wantSMax, req.SMax)
 		})
+	}
+}
+
+// TestLoadpointRequestSmartCostLimit guards that the smart cost limit is only left to the optimizer
+// for loadpoints it decides for: a vehicle without capacity but with an energy limit is modelled,
+// yet charges by its stored limit (#34676)
+func TestLoadpointRequestSmartCostLimit(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	now := time.Now().Truncate(15 * time.Minute)
+	planner := make(api.Rates, 8)
+	for i := range planner {
+		planner[i] = api.Rate{Start: now.Add(time.Duration(i) * 15 * time.Minute), End: now.Add(time.Duration(i+1) * 15 * time.Minute), Value: 0.1}
+	}
+	limit := 0.2
+
+	for _, controlled := range []bool{false, true} {
+		ctrl := gomock.NewController(t)
+
+		v := api.NewMockVehicle(ctrl)
+		v.EXPECT().Capacity().Return(0.0).AnyTimes()
+		v.EXPECT().GetTitle().Return("").AnyTimes()
+
+		lp := loadpoint.NewMockAPI(ctrl)
+		lp.EXPECT().GetVehicle().Return(v).AnyTimes()
+		lp.EXPECT().GetSoc().Return(0.0).AnyTimes()
+		lp.EXPECT().EffectiveLimitSoc().Return(100).AnyTimes()
+		lp.EXPECT().GetLimitEnergy().Return(10.0).AnyTimes()
+		lp.EXPECT().GetChargedEnergy().Return(0.0).AnyTimes()
+		lp.EXPECT().GetTitle().Return("lp").AnyTimes()
+		lp.EXPECT().EffectiveMinPower().Return(1380.0).AnyTimes()
+		lp.EXPECT().EffectiveMaxPower().Return(11000.0).AnyTimes()
+		lp.EXPECT().GetMode().Return(api.ModeSmart).AnyTimes()
+		lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOff).AnyTimes()
+		lp.EXPECT().GetStatus().Return(api.StatusB).AnyTimes()
+		lp.EXPECT().GetSmartCostLimit().Return(&limit).AnyTimes()
+		lp.EXPECT().OptimizerControlled().Return(controlled).AnyTimes()
+		lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{}).AnyTimes()
+		lp.EXPECT().EffectivePlanTime().Return(time.Time{}).AnyTimes()
+		lp.EXPECT().GetPlanGoal().Return(0.0, false).AnyTimes()
+
+		req, _ := site.loadpointRequest(lp, 8, 15*time.Minute, planner)
+
+		assert.Equal(t, !controlled, req.PDemand != nil, "controlled %v", controlled)
 	}
 }
 

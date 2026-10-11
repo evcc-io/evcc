@@ -997,7 +997,7 @@ func (lp *Loadpoint) StartVehicleDetection() {
 // GetSmartCostLimit gets the smart cost limit. The optimizer replaces it while
 // it decides for the loadpoint, so it reads as unset and none of its consumers apply it.
 func (lp *Loadpoint) GetSmartCostLimit() *float64 {
-	if lp.gate() != nil {
+	if lp.activeSuggestion() != nil {
 		return nil
 	}
 
@@ -1008,7 +1008,7 @@ func (lp *Loadpoint) GetSmartCostLimit() *float64 {
 
 // SetSmartCostLimit sets the smart cost limit
 func (lp *Loadpoint) SetSmartCostLimit(val *float64) error {
-	if lp.optimizerControlled() {
+	if lp.OptimizerControlled() {
 		// a config round-trip writing the getter's value back must not change the stored limit
 		return lp.rejectLimitChange(val, &lp.smartCostLimit)
 	}
@@ -1068,7 +1068,7 @@ func (lp *Loadpoint) SetSolarShare(val float64) {
 // GetSmartFeedInPriorityLimit gets the smart feed-in limit. The optimizer
 // replaces it while it decides for the loadpoint, so it reads as unset.
 func (lp *Loadpoint) GetSmartFeedInPriorityLimit() *float64 {
-	if lp.gate() != nil {
+	if lp.activeSuggestion() != nil {
 		return nil
 	}
 
@@ -1079,7 +1079,7 @@ func (lp *Loadpoint) GetSmartFeedInPriorityLimit() *float64 {
 
 // SetSmartFeedInPriorityLimit sets the smart cost feed-in
 func (lp *Loadpoint) SetSmartFeedInPriorityLimit(val *float64) error {
-	if lp.optimizerControlled() {
+	if lp.OptimizerControlled() {
 		return lp.rejectLimitChange(val, &lp.smartFeedInPriorityLimit)
 	}
 

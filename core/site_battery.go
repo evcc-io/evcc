@@ -150,7 +150,7 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 // not account for that load, so the battery must be held.
 func (site *Site) unmodelledCharging() bool {
 	for _, lp := range site.activeLoadpoints() {
-		if lp.optimizerControlled() {
+		if lp.OptimizerControlled() {
 			continue
 		}
 

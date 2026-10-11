@@ -207,6 +207,8 @@ type API interface {
 	// smart grid charging
 	//
 
+	// OptimizerControlled indicates that the optimizer decides for this loadpoint
+	OptimizerControlled() bool
 	// GetSmartCostLimit return the smart cost limit
 	GetSmartCostLimit() *float64
 	// SetSmartCostLimit sets the smart cost limit
