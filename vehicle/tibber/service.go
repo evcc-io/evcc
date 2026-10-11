@@ -24,7 +24,8 @@ func vehicleOptions(vehicles []Device) []service.Option {
 	res := make([]service.Option, 0, len(vehicles))
 	for _, v := range vehicles {
 		model := strings.TrimSpace(v.Info.Brand + " " + v.Info.Model)
-		o := service.Option{Value: v.VIN(), Label: v.Info.Name}
+		// every vehicle is a valid choice, a single one auto-fills the vin
+		o := service.Option{Value: v.VIN(), Label: strings.TrimSpace(v.Info.Name), Match: true}
 		if o.Label == "" {
 			o.Label = model
 		} else {
