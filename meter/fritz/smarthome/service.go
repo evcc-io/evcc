@@ -70,11 +70,12 @@ func getDevices(w http.ResponseWriter, r *http.Request) {
 func deviceOptions(devices []Device) []service.Option {
 	res := make([]service.Option, 0, len(devices))
 	for _, d := range devices {
+		// every device is a valid choice, a single one auto-fills the ain
 		res = append(res, service.Option{
 			Value: d.AIN,
-			Label: d.Name,
+			Label: strings.TrimSpace(d.Name),
 			Hint:  strings.TrimSpace(d.ProductName),
-			Match: d.IsConnected,
+			Match: true,
 		})
 	}
 	slices.SortFunc(res, func(a, b service.Option) int { return cmp.Compare(a.Value, b.Value) })
