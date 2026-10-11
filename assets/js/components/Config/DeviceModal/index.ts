@@ -209,6 +209,10 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
       if (!param.Service) {
         return null;
       }
+      // empty optional params (e.g. user/password) must not block the fetch
+      const optional = extractPlaceholders(param.Service).filter((name) =>
+        params.some((p) => p.Name === name && name !== "modbus" && !p.Required)
+      );
       const stringValues = (values: Record<string, any>): Record<string, string> =>
         Object.entries(values).reduce(
           (acc, [key, val]) => {
@@ -216,7 +220,7 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
               acc[key] = String(val);
             return acc;
           },
-          {} as Record<string, string>
+          Object.fromEntries(optional.map((name) => [name, ""])) as Record<string, string>
         );
 
       return {
