@@ -412,6 +412,11 @@ components:
         controllable:
           description: Battery supports external control of its operation mode.
           type: boolean
+        modes:
+          description: Battery modes supported by the device.
+          type: array
+          items:
+            type: string
         capacity:
           description: Battery capacity in kWh. Zero when not specified.
           type: number
