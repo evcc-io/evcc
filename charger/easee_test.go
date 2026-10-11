@@ -1,8 +1,10 @@
 package charger
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"testing"
 	"time"
@@ -509,9 +511,10 @@ func TestLivenessCheck_freshObservations(t *testing.T) {
 
 func TestChargeSessionStart_SetsFields(t *testing.T) {
 	e := newEasee()
+	e.energyMeter.Initialized = true
 	e.totalEnergy = 9100.0
 
-	data := easee.ChargingSessionStartData{ID: 801, MeterValue: 9141.414622}
+	data := easee.ChargingSessionStartData{ID: 801, Start: time.Now(), MeterValue: 9141.414622}
 	jsonData, _ := json.Marshal(data)
 	e.ProductUpdate(createPayload(easee.CHARGE_SESSION_START, time.Now(), easee.String, string(jsonData)))
 
@@ -524,10 +527,11 @@ func TestChargeSessionStart_SetsFields(t *testing.T) {
 
 func TestChargingSession_UpdatesBothWhenIdMatches(t *testing.T) {
 	e := newEasee()
+	e.energyMeter.Initialized = true
 	e.currentSessionID = 801
 	e.totalEnergy = 9100.0
 
-	data := easee.ChargingSessionData{ID: 801, EnergyKwh: 16.2, MeterValueStop: 9173.5}
+	data := easee.ChargingSessionData{ID: 801, Start: time.Now().Add(-time.Hour), Stop: time.Now(), EnergyKwh: 16.2, MeterValueStart: 9157.3, MeterValueStop: 9173.5}
 	jsonData, _ := json.Marshal(data)
 	e.ProductUpdate(createPayload(easee.CHARGING_SESSION, time.Now(), easee.String, string(jsonData)))
 
@@ -542,11 +546,12 @@ func TestChargingSession_UpdatesBothWhenIdMatches(t *testing.T) {
 
 func TestChargingSession_MismatchedId_ProtectsSessionEnergy(t *testing.T) {
 	e := newEasee()
+	e.energyMeter.Initialized = true
 	e.currentSessionID = 100
 	e.sessionEnergy = 5.0
 	e.totalEnergy = 9150.0
 
-	data := easee.ChargingSessionData{ID: 99, EnergyKwh: 7.5, MeterValueStop: 9173.5}
+	data := easee.ChargingSessionData{ID: 99, Start: time.Now().Add(-time.Hour), Stop: time.Now(), EnergyKwh: 7.5, MeterValueStart: 9166, MeterValueStop: 9173.5}
 	jsonData, _ := json.Marshal(data)
 	e.ProductUpdate(createPayload(easee.CHARGING_SESSION, time.Now(), easee.String, string(jsonData)))
 
@@ -561,11 +566,13 @@ func TestChargingSession_MismatchedId_ProtectsSessionEnergy(t *testing.T) {
 
 func TestChargingSession_AtStartup_ProtectsSessionEnergy(t *testing.T) {
 	e := newEasee()
+	now := time.Now().UTC()
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, now.Add(-time.Second), easee.Integer, "1"))
 	// currentSessionId is 0 by default
 	e.sessionEnergy = 0
 	e.totalEnergy = 9150.0
 
-	data := easee.ChargingSessionData{ID: 803, EnergyKwh: 19.08, MeterValueStop: 9173.5}
+	data := easee.ChargingSessionData{ID: 803, Start: now.Add(-time.Hour), Stop: now, EnergyKwh: 19.08, MeterValueStart: 9154.42, MeterValueStop: 9173.5}
 	jsonData, _ := json.Marshal(data)
 	e.ProductUpdate(createPayload(easee.CHARGING_SESSION, time.Now(), easee.String, string(jsonData)))
 
@@ -580,6 +587,7 @@ func TestChargingSession_AtStartup_ProtectsSessionEnergy(t *testing.T) {
 
 func TestLifetimeEnergy_DoesNotDecreaseTotalEnergy(t *testing.T) {
 	e := newEasee()
+	e.energyMeter.Initialized = true
 	e.totalEnergy = 9173.5
 
 	e.ProductUpdate(createPayload(easee.LIFETIME_ENERGY, time.Now(), easee.Double, "9170.0"))
@@ -763,4 +771,380 @@ func TestEasee_Enable_clampsCurrentOnChargeStart(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestEaseeEnergyStartupObservations(t *testing.T) {
+	start := time.Date(2026, 10, 10, 10, 0, 0, 0, time.UTC)
+	anchor := easee.ChargingSessionStartData{ID: 42, Start: start, MeterValue: 10000}
+	stop := easee.ChargingSessionData{ID: 42, Start: start, Stop: start.Add(time.Hour), MeterValueStart: 10000, MeterValueStop: 10008, EnergyKwh: 8}
+	for _, test := range []struct {
+		name      string
+		status    int
+		empty     bool
+		active    bool
+		wantError bool
+	}{
+		{name: "completion"},
+		{name: "fetch fails", status: http.StatusServiceUnavailable, wantError: true},
+		{name: "empty batch", empty: true, wantError: true},
+		{name: "newer live energy", active: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			e := newEasee()
+			e.charger = "TEST"
+			e.ProductUpdate(easeeSessionPayload(t, easee.CHARGE_SESSION_START, start, anchor))
+			e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start.Add(time.Hour), easee.Double, "9"))
+			e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start.Add(time.Hour), easee.Integer, "4"))
+			if test.active {
+				e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start.Add(2*time.Hour), easee.Integer, "3"))
+				e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start.Add(2*time.Hour), easee.Double, "10"))
+			}
+			anchorJSON, err := json.Marshal(anchor)
+			require.NoError(t, err)
+			stopJSON, err := json.Marshal(stop)
+			require.NoError(t, err)
+			body := map[string]any{"observations": []any{
+				map[string]any{"id": 223, "timestamp": start, "dataType": 6, "value": string(anchorJSON)},
+				map[string]any{"id": 121, "timestamp": start.Add(time.Hour), "dataType": 3, "value": 9},
+				map[string]any{"id": 129, "timestamp": start.Add(time.Hour), "dataType": 6, "value": string(stopJSON)},
+			}}
+			if test.empty {
+				body["observations"] = []any{}
+			}
+			if test.active {
+				body["observations"] = []any{
+					map[string]any{"id": 223, "timestamp": start, "dataType": 6, "value": string(anchorJSON)},
+					map[string]any{"id": 121, "timestamp": start.Add(time.Hour), "dataType": 3, "value": 8},
+					map[string]any{"id": 109, "timestamp": start.Add(time.Hour), "dataType": 4, "value": 2},
+				}
+			}
+			status := test.status
+			if status == 0 {
+				status = http.StatusOK
+			}
+			responder, err := httpmock.NewJsonResponder(status, body)
+			require.NoError(t, err)
+			httpmock.ActivateNonDefault(e.Client)
+			t.Cleanup(httpmock.DeactivateAndReset)
+			httpmock.RegisterResponder(http.MethodGet, "https://api.easee.com/state/TEST/observations?ids=109,121,124,129,223", responder)
+			err = e.recoverEnergy(context.Background())
+			if test.wantError {
+				require.Error(t, err)
+				assert.False(t, e.energyMeter.Initialized)
+				return
+			}
+			require.NoError(t, err)
+			total, err := e.TotalEnergy()
+			require.NoError(t, err)
+			want := 10008.0
+			if test.active {
+				want = 10010
+			}
+			assert.Equal(t, want, total)
+		})
+	}
+}
+
+func easeeSessionPayload(t *testing.T, id easee.ObservationID, ts time.Time, data any) json.RawMessage {
+	t.Helper()
+	b, err := json.Marshal(data)
+	require.NoError(t, err)
+	return createPayload(id, ts, easee.String, string(b))
+}
+
+func TestEaseeEnergyRestartReplay(t *testing.T) {
+	start := time.Date(2026, 10, 10, 10, 0, 0, 0, time.UTC)
+	for _, mode := range []int{easee.ModeCharging, easee.ModeAwaitingStart, easee.ModeCompleted} {
+		observations := []json.RawMessage{
+			easeeSessionPayload(t, easee.CHARGE_SESSION_START, start, easee.ChargingSessionStartData{ID: 42, Start: start, MeterValue: 10000}),
+			createPayload(easee.SESSION_ENERGY, start.Add(45*time.Minute), easee.Double, "8"),
+			createPayload(easee.LIFETIME_ENERGY, start.Add(30*time.Minute), easee.Double, "10006"),
+			createPayload(easee.CHARGER_OP_MODE, start.Add(40*time.Minute), easee.Integer, fmt.Sprint(mode)),
+		}
+		for a := range 4 {
+			for b := range 4 {
+				for c := range 4 {
+					for d := range 4 {
+						if a == b || a == c || a == d || b == c || b == d || c == d {
+							continue
+						}
+						t.Run(fmt.Sprintf("%d/%d%d%d%d", mode, a, b, c, d), func(t *testing.T) {
+							e := newEasee()
+							for _, i := range []int{a, b, c, d} {
+								e.ProductUpdate(observations[i])
+							}
+							total, err := e.TotalEnergy()
+							require.NoError(t, err)
+							assert.Equal(t, 10008.0, total)
+							charged, err := e.ChargedEnergy()
+							require.NoError(t, err)
+							assert.Equal(t, 8.0, charged)
+							for _, observation := range observations {
+								e.ProductUpdate(observation)
+							}
+							total, err = e.TotalEnergy()
+							require.NoError(t, err)
+							assert.Equal(t, 10008.0, total)
+						})
+					}
+				}
+			}
+		}
+	}
+}
+
+func TestEaseeEnergyNeedsSessionAnchor(t *testing.T) {
+	e := newEasee()
+	now := time.Now().UTC()
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, now, easee.Integer, "3"))
+	e.ProductUpdate(createPayload(easee.LIFETIME_ENERGY, now.Add(-time.Minute), easee.Double, "10006"))
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, now, easee.Double, "8"))
+	_, err := e.TotalEnergy()
+	assert.ErrorIs(t, err, api.ErrNotAvailable)
+}
+
+func TestEaseeEnergySessionBoundary(t *testing.T) {
+	e := newEasee()
+	start := time.Now().UTC().Add(-time.Hour)
+	e.ProductUpdate(easeeSessionPayload(t, easee.CHARGE_SESSION_START, start, easee.ChargingSessionStartData{ID: 1, Start: start, MeterValue: 10000}))
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start.Add(10*time.Minute), easee.Double, "8"))
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, "3"))
+	_, err := e.TotalEnergy()
+	require.NoError(t, err)
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start.Add(20*time.Minute), easee.Integer, "1"))
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start.Add(30*time.Minute), easee.Integer, "2"))
+	e.ProductUpdate(easeeSessionPayload(t, easee.CHARGE_SESSION_START, start.Add(30*time.Minute), easee.ChargingSessionStartData{ID: 2, Start: start.Add(30 * time.Minute), MeterValue: 10008}))
+	total, err := e.TotalEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 10008.0, total)
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start.Add(31*time.Minute), easee.Double, "2"))
+	total, err = e.TotalEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 10010.0, total)
+}
+
+func TestEaseeEnergyRecovery(t *testing.T) {
+	start := time.Now().UTC().Add(-time.Hour)
+	for _, tc := range []struct {
+		name         string
+		observations []json.RawMessage
+		ready        bool
+	}{
+		{"active session", []json.RawMessage{
+			createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, "3"),
+			easeeSessionPayload(t, easee.CHARGE_SESSION_START, start, easee.ChargingSessionStartData{ID: 42, Start: start, MeterValue: 10000}),
+			createPayload(easee.SESSION_ENERGY, start.Add(time.Minute), easee.Double, "8"),
+		}, true},
+		{"missing anchor", []json.RawMessage{
+			createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, "3"),
+			createPayload(easee.LIFETIME_ENERGY, start.Add(time.Minute), easee.Double, "10000"),
+			createPayload(easee.SESSION_ENERGY, start.Add(time.Minute), easee.Double, "8"),
+		}, false},
+		{"missing energy", []json.RawMessage{
+			createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, "3"),
+			easeeSessionPayload(t, easee.CHARGE_SESSION_START, start, easee.ChargingSessionStartData{ID: 42, Start: start, MeterValue: 10000}),
+		}, false},
+		{"idle physical meter", []json.RawMessage{
+			createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, "1"),
+			createPayload(easee.LIFETIME_ENERGY, start.Add(time.Minute), easee.Double, "10008"),
+		}, true},
+		{"stale idle meter", []json.RawMessage{
+			createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, "1"),
+			createPayload(easee.LIFETIME_ENERGY, start.Add(-time.Minute), easee.Double, "10006"),
+		}, false},
+		{"completed session", []json.RawMessage{
+			createPayload(easee.CHARGER_OP_MODE, start.Add(time.Minute), easee.Integer, "1"),
+			easeeSessionPayload(t, easee.CHARGING_SESSION, start.Add(2*time.Minute), easee.ChargingSessionData{ID: 42, Start: start, Stop: start.Add(time.Minute), MeterValueStop: 10008, EnergyKwh: 8}),
+		}, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			e := newEasee()
+			e.Client.Timeout = time.Millisecond
+			for _, observation := range tc.observations {
+				e.ProductUpdate(observation)
+			}
+			err := e.waitForEnergy(context.Background())
+			if tc.ready {
+				require.NoError(t, err)
+			} else {
+				require.ErrorIs(t, err, context.DeadlineExceeded)
+			}
+		})
+	}
+}
+
+func TestEaseeEnergyCompletedSession(t *testing.T) {
+	e := newEasee()
+	start := time.Now().UTC().Add(-time.Hour)
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start.Add(20*time.Minute), easee.Integer, "1"))
+	e.ProductUpdate(easeeSessionPayload(t, easee.CHARGING_SESSION, start.Add(20*time.Minute), easee.ChargingSessionData{ID: 1, Start: start, Stop: start.Add(20 * time.Minute), MeterValueStart: 10000, MeterValueStop: 10008, EnergyKwh: 8}))
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start.Add(21*time.Minute), easee.Double, "9"))
+	e.ProductUpdate(easeeSessionPayload(t, easee.CHARGE_SESSION_START, start, easee.ChargingSessionStartData{ID: 1, Start: start, MeterValue: 10000}))
+	total, err := e.TotalEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 10008.0, total)
+}
+
+func TestEaseeEnergyCompletionReplayOrder(t *testing.T) {
+	start := time.Now().UTC().Add(-time.Hour)
+	anchor := easeeSessionPayload(t, easee.CHARGE_SESSION_START, start, easee.ChargingSessionStartData{ID: 1, Start: start, MeterValue: 10000})
+	energy := createPayload(easee.SESSION_ENERGY, start.Add(21*time.Minute), easee.Double, "9")
+	stop := easeeSessionPayload(t, easee.CHARGING_SESSION, start.Add(20*time.Minute), easee.ChargingSessionData{ID: 1, Start: start, Stop: start.Add(20 * time.Minute), MeterValueStop: 10008, EnergyKwh: 8})
+	for _, order := range [][]json.RawMessage{
+		{anchor, energy, stop}, {anchor, stop, energy},
+		{energy, anchor, stop}, {energy, stop, anchor},
+		{stop, anchor, energy}, {stop, energy, anchor},
+	} {
+		e := newEasee()
+		e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start.Add(20*time.Minute), easee.Integer, "1"))
+		for _, observation := range order {
+			e.ProductUpdate(observation)
+		}
+		total, err := e.TotalEnergy()
+		require.NoError(t, err)
+		assert.Equal(t, 10008.0, total)
+		charged, err := e.ChargedEnergy()
+		require.NoError(t, err)
+		assert.Equal(t, 8.0, charged)
+	}
+}
+
+func TestEaseeEnergyReconciliation(t *testing.T) {
+	e := newEasee()
+	start := time.Now().UTC().Add(-time.Hour)
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, "3"))
+	e.ProductUpdate(easeeSessionPayload(t, easee.CHARGE_SESSION_START, start, easee.ChargingSessionStartData{ID: 42, Start: start, MeterValue: 10000}))
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start.Add(time.Minute), easee.Double, "8"))
+	total, err := e.TotalEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 10008.0, total)
+	for i, tc := range []struct {
+		id    easee.ObservationID
+		value string
+		want  float64
+	}{
+		{easee.LIFETIME_ENERGY, "10006", 10008},
+		{easee.LIFETIME_ENERGY, "10008", 10008},
+		{easee.SESSION_ENERGY, "0", 10008},
+		{easee.SESSION_ENERGY, "7", 10008},
+		{easee.SESSION_ENERGY, "9", 10009},
+		{easee.LIFETIME_ENERGY, "10010", 10010},
+		{easee.SESSION_ENERGY, "10", 10010},
+		{easee.SESSION_ENERGY, "11", 10011},
+	} {
+		e.ProductUpdate(createPayload(tc.id, start.Add(time.Duration(i+2)*time.Minute), easee.Double, tc.value))
+		total, err := e.TotalEnergy()
+		require.NoError(t, err)
+		assert.Equal(t, tc.want, total)
+	}
+}
+
+func TestEaseeEnergyDelayedPreviousSession(t *testing.T) {
+	e := newEasee()
+	start := time.Now().UTC().Add(-time.Hour)
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, "1"))
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start.Add(20*time.Minute), easee.Integer, "2"))
+	e.ProductUpdate(easeeSessionPayload(t, easee.CHARGE_SESSION_START, start.Add(20*time.Minute), easee.ChargingSessionStartData{ID: 2, Start: start.Add(20 * time.Minute), MeterValue: 10008}))
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start.Add(10*time.Minute), easee.Double, "8"))
+	charged, err := e.ChargedEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 0.0, charged)
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start.Add(21*time.Minute), easee.Double, "2"))
+	total, err := e.TotalEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 10010.0, total)
+}
+
+func TestEaseeEnergyNewSessionBeforeMode(t *testing.T) {
+	e := newEasee()
+	start := time.Now().UTC().Add(-time.Hour)
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, "1"))
+	e.ProductUpdate(easeeSessionPayload(t, easee.CHARGE_SESSION_START, start.Add(20*time.Minute), easee.ChargingSessionStartData{ID: 2, Start: start.Add(20 * time.Minute), MeterValue: 10008}))
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start.Add(21*time.Minute), easee.Double, "2"))
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start.Add(20*time.Minute), easee.Integer, "2"))
+	total, err := e.TotalEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 10010.0, total)
+	charged, err := e.ChargedEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 2.0, charged)
+}
+
+func TestEaseeEnergyRecoveryCancellation(t *testing.T) {
+	e := newEasee()
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	assert.ErrorIs(t, e.waitForEnergy(ctx), context.Canceled)
+}
+
+func TestEaseeEnergyRecoveryAfterLateReplay(t *testing.T) {
+	e := newEasee()
+	e.Client.Timeout = time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	result := make(chan error, 1)
+	go func() { result <- e.waitForEnergy(ctx) }()
+	start := time.Now().UTC().Add(-time.Hour)
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, "3"))
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start.Add(time.Minute), easee.Double, "8"))
+	e.ProductUpdate(easeeSessionPayload(t, easee.CHARGE_SESSION_START, start, easee.ChargingSessionStartData{ID: 42, Start: start, MeterValue: 10000}))
+	select {
+	case err := <-result:
+		require.NoError(t, err)
+	case <-ctx.Done():
+		t.Fatal(ctx.Err())
+	}
+	total, err := e.TotalEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 10008.0, total)
+}
+
+func TestEaseeEnergyUnknownState(t *testing.T) {
+	e := newEasee()
+	_, err := e.TotalEnergy()
+	assert.ErrorIs(t, err, api.ErrNotAvailable)
+}
+
+func TestEaseeEnergySessionStartsBeforeChargingMode(t *testing.T) {
+	e := newEasee()
+	start := time.Now().UTC().Add(-time.Hour)
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, "1"))
+	e.ProductUpdate(easeeSessionPayload(t, easee.CHARGE_SESSION_START, start.Add(time.Minute), easee.ChargingSessionStartData{ID: 42, Start: start.Add(time.Minute), MeterValue: 10000}))
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start.Add(2*time.Minute), easee.Double, "8"))
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start.Add(3*time.Minute), easee.Integer, "3"))
+	total, err := e.TotalEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 10008.0, total)
+}
+
+func TestEaseeEnergyMissingSessionStart(t *testing.T) {
+	start := time.Now().UTC().Add(-time.Hour)
+	e := newEasee()
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, "3"))
+	e.ProductUpdate(easeeSessionPayload(t, easee.CHARGE_SESSION_START, start, easee.ChargingSessionStartData{ID: 42, MeterValue: 10000}))
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start.Add(time.Minute), easee.Double, "8"))
+	_, err := e.TotalEnergy()
+	assert.ErrorIs(t, err, api.ErrNotAvailable)
+}
+
+func TestEaseeEnergyOverflow(t *testing.T) {
+	e := newEasee()
+	start := time.Now().UTC().Add(-time.Hour)
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, "3"))
+	e.ProductUpdate(easeeSessionPayload(t, easee.CHARGE_SESSION_START, start, easee.ChargingSessionStartData{ID: 42, Start: start, MeterValue: math.MaxFloat64}))
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start.Add(time.Minute), easee.Double, fmt.Sprint(math.MaxFloat64)))
+	_, err := e.TotalEnergy()
+	assert.ErrorIs(t, err, api.ErrNotAvailable)
+}
+
+func TestEaseeEnergyRecoveryRetainsUsableMeter(t *testing.T) {
+	e := newEasee()
+	start := time.Now().UTC().Add(-time.Hour)
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, "1"))
+	e.ProductUpdate(createPayload(easee.LIFETIME_ENERGY, start.Add(time.Minute), easee.Double, "10008"))
+	require.NoError(t, e.waitForEnergy(context.Background()))
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start.Add(2*time.Minute), easee.Integer, "3"))
+	total, err := e.TotalEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 10008.0, total)
 }

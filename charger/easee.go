@@ -68,6 +68,7 @@ type Easee struct {
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
 	currentSessionID int
+	energyMeter      easee.EnergyMeter
 	rfid             string
 	lp               loadpoint.API
 
@@ -166,7 +167,8 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 		return nil, err
 	}
 
-	client, err := signalr.NewClient(ctx,
+	streamCtx, cancelStream := context.WithCancel(ctx)
+	client, err := signalr.NewClient(streamCtx,
 		signalr.WithConnector(c.connect(ts)),
 		signalr.WithBackoff(func() backoff.BackOff {
 			return backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0)) // prevents SignalR stack to silently give up after 15 mins
@@ -174,6 +176,11 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 		signalr.WithReceiver(c),
 		signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
 	)
+	defer func() {
+		if err != nil {
+			cancelStream()
+		}
+	}()
 
 	if err == nil {
 		c.subscribe(client)
@@ -196,9 +203,45 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 
 	if err == nil {
 		c.waitForOptionalState()
+		err = c.recoverEnergy(ctx)
 	}
 
 	return c, err
+}
+
+func (c *Easee) recoverEnergy(ctx context.Context) error {
+	observations, err := easee.EnergyObservations(ctx, c.Helper, c.charger)
+	if err != nil {
+		return err
+	}
+	for _, obs := range observations {
+		c.ProductUpdate(obs)
+	}
+	return c.waitForEnergy(ctx)
+}
+
+func (c *Easee) waitForEnergy(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, c.Client.Timeout)
+	defer cancel()
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		c.mux.Lock()
+		ready := c.energyMeter.Ready(c.opMode, c.obsTime[easee.CHARGER_OP_MODE])
+		if ready {
+			c.totalEnergy = max(c.totalEnergy, c.energyMeter.Total())
+			c.energyMeter.Initialized = true
+		}
+		c.mux.Unlock()
+		if ready {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("cannot recover energy meter from cloud: %w", ctx.Err())
+		case <-ticker.C:
+		}
+	}
 }
 
 func (c *Easee) waitForOptionalState() {
@@ -298,10 +341,21 @@ func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error
 // subscribe listen to state changes and sends subscription requests when connection is established
 func (c *Easee) subscribe(client signalr.Client) {
 	stateC := make(chan signalr.ClientState, 1)
-	_ = client.ObserveStateChanged(stateC)
+	cancel := client.ObserveStateChanged(stateC)
 
 	go func() {
-		for state := range stateC {
+		defer cancel()
+		for {
+			var state signalr.ClientState
+			select {
+			case <-client.Context().Done():
+				return
+			case next, ok := <-stateC:
+				if !ok {
+					return
+				}
+				state = next
+			}
 			if state == signalr.ClientConnected {
 				if err := <-client.Send("SubscribeWithCurrentState", c.charger, true); err != nil {
 					c.log.ERROR.Printf("SubscribeWithCurrentState: %v", err)
@@ -338,6 +392,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		return
 	}
 
+	previousModeTime := c.obsTime[easee.CHARGER_OP_MODE]
 	c.obsTime[res.ID] = res.Timestamp
 
 	// Update liveness timestamp for observations with a fresh charger-side timestamp.
@@ -356,15 +411,25 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.TOTAL_POWER:
 		c.currentPower = 1e3 * value.(float64)
 	case easee.SESSION_ENERGY:
+		if res.Timestamp.Before(c.energyMeter.ConnectionStart) ||
+			(c.energyMeter.Start != nil && res.Timestamp.Before(c.energyMeter.Start.Start)) {
+			break
+		}
 		// SESSION_ENERGY must not be set to 0 by Productupdates, they occur erratic
 		// Reset to 0 is done in case CHARGER_OP_MODE
-		if value.(float64) != 0 {
+		if c.energyMeter.Completed() && c.energyMeter.Stop.ID == c.currentSessionID {
+			c.sessionEnergy = c.energyMeter.Stop.EnergyKwh
+		} else if value.(float64) != 0 {
 			c.sessionEnergy = value.(float64)
+		}
+		if v := value.(float64); v != 0 || c.energyMeter.Session.Value == 0 {
+			c.energyMeter.Session = easee.EnergyReading{Value: v, Time: res.Timestamp}
 		}
 	case easee.LIFETIME_ENERGY:
 		if v := value.(float64); v >= c.totalEnergy {
 			c.totalEnergy = v
 		}
+		c.energyMeter.Lifetime = easee.EnergyReading{Value: value.(float64), Time: res.Timestamp}
 	case easee.INT_CURRENT_T3:
 		c.currentL1 = value.(float64)
 	case easee.INT_CURRENT_T4:
@@ -389,9 +454,22 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			c.log.ERROR.Printf("CHARGE_SESSION_START: %v", err)
 			break
 		}
+		if !easee.ValidEnergy(data.MeterValue) {
+			break
+		}
+		if previous := c.energyMeter.Start; previous != nil && data.Start.Before(previous.Start) {
+			break
+		}
+		c.energyMeter.Start = &data
 		c.currentSessionID = data.ID
+		if c.energyMeter.Session.Time.Before(data.Start) {
+			c.sessionEnergy = 0
+		}
 		if data.MeterValue >= c.totalEnergy {
 			c.totalEnergy = data.MeterValue
+		}
+		if c.energyMeter.Completed() && c.energyMeter.Stop.ID == c.currentSessionID {
+			c.sessionEnergy = c.energyMeter.Stop.EnergyKwh
 		}
 
 	case easee.CHARGING_SESSION:
@@ -400,23 +478,35 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			c.log.ERROR.Printf("CHARGING_SESSION: %v", err)
 			break
 		}
+		if !easee.ValidEnergy(data.MeterValueStop) || !easee.ValidEnergy(data.EnergyKwh) {
+			break
+		}
+		c.energyMeter.Stop = &data
+		c.energyMeter.StopTime = res.Timestamp
 		if data.MeterValueStop >= c.totalEnergy {
 			c.totalEnergy = data.MeterValueStop
 		}
-		if data.ID != c.currentSessionID {
-			break
+		if data.ID == c.currentSessionID {
+			c.sessionEnergy = data.EnergyKwh
 		}
-		c.sessionEnergy = data.EnergyKwh
 
 	case easee.CHARGER_OP_MODE:
 		opMode := value.(int)
 
-		// New charging session pending, reset internal value of SESSION_ENERGY to 0, and its observation timestamp to "now".
-		// This should be done in a proper way by the api, but it's not.
-		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
-			c.sessionEnergy = 0
-			c.currentSessionID = 0
-			c.obsTime[easee.SESSION_ENERGY] = time.Now()
+		// Initial cloud state is not a new connection, and replay can precede this transition.
+		if c.opMode == easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
+			disconnectedAt := previousModeTime
+			if disconnectedAt.IsZero() {
+				disconnectedAt = res.Timestamp
+			}
+			c.energyMeter.ConnectionStart = disconnectedAt
+			if c.energyMeter.Session.Time.Before(disconnectedAt) {
+				c.sessionEnergy = 0
+				c.energyMeter.Session = easee.EnergyReading{}
+			}
+			if start := c.energyMeter.Start; start == nil || start.Start.Before(disconnectedAt) {
+				c.currentSessionID = 0
+			}
 		}
 
 		c.opMode = opMode
@@ -714,11 +804,14 @@ var _ api.MeterEnergy = (*Easee)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Easee) TotalEnergy() (float64, error) {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
-	// updates for this are only sent once an hour, so inaccurate by design
-	// see also https://github.com/evcc-io/evcc/issues/20594
-	return c.totalEnergy, nil
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	if c.energyMeter.Initialized || c.energyMeter.Ready(c.opMode, c.obsTime[easee.CHARGER_OP_MODE]) {
+		c.energyMeter.Initialized = true
+		c.totalEnergy = max(c.totalEnergy, c.energyMeter.Total())
+		return c.totalEnergy, nil
+	}
+	return 0, api.ErrNotAvailable
 }
 
 var _ api.PhaseSwitcher = (*Easee)(nil)
