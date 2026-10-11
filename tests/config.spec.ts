@@ -110,6 +110,9 @@ test.describe("network modal", async () => {
     await modal.getByLabel("External URL").fill(NETWORK_EXTERNAL_URL);
     await expect(modal.getByRole("status")).not.toBeVisible();
     await modal.getByLabel("mDNS Hostname").fill(NETWORK_HOST);
+    const mdns = modal.getByLabel("Announce evcc via mDNS");
+    await expect(mdns).toBeChecked();
+    await mdns.uncheck();
 
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
@@ -126,6 +129,7 @@ test.describe("network modal", async () => {
     await expectModalVisible(modal);
 
     await expect(modal.getByLabel("mDNS Hostname")).toHaveValue(NETWORK_HOST);
+    await expect(modal.getByLabel("Announce evcc via mDNS")).not.toBeChecked();
     await expect(modal.getByLabel("Port")).toHaveValue(portValue);
     await expect(modal.getByLabel("External URL")).toHaveValue(NETWORK_EXTERNAL_URL);
     const internalUrl = await modal.getByLabel("Internal URL").inputValue();
