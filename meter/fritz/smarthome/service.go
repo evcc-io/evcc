@@ -1,6 +1,7 @@
 package smarthome
 
 import (
+	"cmp"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,7 +14,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/samber/lo"
 )
 
 func init() {
@@ -63,13 +63,22 @@ func getDevices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ains := lo.Map(devices, func(d Device, _ int) string {
-		return d.AIN
-	})
-	slices.Sort(ains)
-
 	w.Header().Set("Cache-control", "max-age=60")
-	jsonWrite(w, ains)
+	jsonWrite(w, deviceOptions(devices))
+}
+
+func deviceOptions(devices []Device) []service.Option {
+	res := make([]service.Option, 0, len(devices))
+	for _, d := range devices {
+		res = append(res, service.Option{
+			Value: d.AIN,
+			Label: d.Name,
+			Hint:  strings.TrimSpace(d.ProductName),
+			Match: d.IsConnected,
+		})
+	}
+	slices.SortFunc(res, func(a, b service.Option) int { return cmp.Compare(a.Value, b.Value) })
+	return res
 }
 
 func jsonWrite(w http.ResponseWriter, data any) {
