@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"database/sql"
 	"errors"
 	"time"
 
@@ -77,7 +76,35 @@ func energyProfileFiltered(entity entity, from time.Time, weekday *int, percenti
 	}
 	defer rows.Close()
 
-	return scanProfile(rows)
+	var prev time.Time
+	res := make([]float64, 0, 96)
+
+	for rows.Next() {
+		var ts SqlTime
+		var val float64
+
+		if err := rows.Scan(&ts, &val); err != nil {
+			return nil, err
+		}
+
+		// interpolate single missing value, maybe due to regular restarts?
+		if time.Time(ts).Sub(prev) == 2*tariff.SlotDuration {
+			res = append(res, (val+res[len(res)-1])/2)
+		}
+		prev = time.Time(ts)
+
+		res = append(res, val)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(res) != 96 {
+		return nil, ErrIncomplete
+	}
+
+	return (*[96]float64)(res), nil
 }
 
 // energyProfileTemperatureBinned queries the historical average energy per 15-minute slot
@@ -137,36 +164,4 @@ func energyProfileTemperatureBinned(entity entity) (map[int]map[int]float64, err
 	}
 
 	return res, nil
-}
-
-func scanProfile(rows *sql.Rows) (*[96]float64, error) {
-	var prev time.Time
-	res := make([]float64, 0, 96)
-
-	for rows.Next() {
-		var ts SqlTime
-		var val float64
-
-		if err := rows.Scan(&ts, &val); err != nil {
-			return nil, err
-		}
-
-		// interpolate single missing value, maybe due to regular restarts?
-		if time.Time(ts).Sub(prev) == 2*tariff.SlotDuration {
-			res = append(res, (val+res[len(res)-1])/2)
-		}
-		prev = time.Time(ts)
-
-		res = append(res, val)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	if len(res) != 96 {
-		return nil, ErrIncomplete
-	}
-
-	return (*[96]float64)(res), nil
 }
