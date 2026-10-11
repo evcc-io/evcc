@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
@@ -14,8 +16,10 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/jarcoal/httpmock"
+	"github.com/philippseith/signalr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 )
 
 // Helper function to create a payload
@@ -1077,6 +1081,15 @@ func TestEaseeEnergyRecoveryCancellation(t *testing.T) {
 	assert.ErrorIs(t, e.waitForEnergy(ctx), context.Canceled)
 }
 
+func TestEaseeEnergyRecoveryZeroTimeout(t *testing.T) {
+	e := newEasee()
+	e.Client.Timeout = 0
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+	assert.ErrorIs(t, e.waitForEnergy(ctx), context.DeadlineExceeded)
+	assert.ErrorIs(t, ctx.Err(), context.DeadlineExceeded)
+}
+
 func TestEaseeEnergyRecoveryAfterLateReplay(t *testing.T) {
 	e := newEasee()
 	e.Client.Timeout = time.Second
@@ -1147,4 +1160,127 @@ func TestEaseeEnergyRecoveryRetainsUsableMeter(t *testing.T) {
 	total, err := e.TotalEnergy()
 	require.NoError(t, err)
 	assert.Equal(t, 10008.0, total)
+}
+
+type easeeStartupHub struct {
+	signalr.Hub
+	observations []json.RawMessage
+}
+
+func (h *easeeStartupHub) SubscribeWithCurrentState(charger string, currentState bool) {
+	for _, observation := range h.observations {
+		h.Clients().Caller().Send("ProductUpdate", observation)
+	}
+}
+
+type easeeStartupTransport struct {
+	api    *httpmock.MockTransport
+	stream *url.URL
+}
+
+func (tr easeeStartupTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req.URL.Host == "streams.easee.com" {
+		local := req.Clone(req.Context())
+		local.URL.Scheme = tr.stream.Scheme
+		local.URL.Host = tr.stream.Host
+		local.Host = tr.stream.Host
+		return http.DefaultTransport.RoundTrip(local)
+	}
+	return tr.api.RoundTrip(req)
+}
+
+func TestEaseeConstructorEnergyRecovery(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		status     int
+		mode       int
+		anchor     bool
+		wantEnergy bool
+	}{
+		{"active session", http.StatusOK, easee.ModeCharging, true, true},
+		{"stopped while connected", http.StatusOK, easee.ModeCompleted, true, true},
+		{"HTTP failure", http.StatusServiceUnavailable, easee.ModeCharging, true, false},
+		{"missing anchor", http.StatusOK, easee.ModeCharging, false, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			start := time.Now().UTC().Add(-time.Hour)
+			observations := []json.RawMessage{
+				createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, fmt.Sprint(tc.mode)),
+				createPayload(easee.SESSION_ENERGY, start.Add(time.Minute), easee.Double, "8"),
+				createPayload(easee.LIFETIME_ENERGY, start.Add(-time.Minute), easee.Double, "9990"),
+				createPayload(easee.TOTAL_POWER, start, easee.Double, "0"),
+			}
+			hub, err := signalr.NewServer(ctx, signalr.HubFactory(func() signalr.HubInterface {
+				return &easeeStartupHub{observations: observations}
+			}))
+			require.NoError(t, err)
+			mux := http.NewServeMux()
+			hub.MapHTTP(signalr.WithHTTPServeMux(mux), "/hubs/chargers")
+			server := httptest.NewServer(mux)
+			defer server.Close()
+			streamURL, err := url.Parse(server.URL)
+			require.NoError(t, err)
+			mock := httpmock.NewMockTransport()
+			mock.RegisterResponder("GET", easee.API+"/chargers/TEST/site", httpmock.NewStringResponder(200, `{}`))
+			mock.RegisterResponder("GET", easee.API+"/chargers/TEST/config", httpmock.NewStringResponder(200, `{}`))
+			snapshotStarted := make(chan struct{})
+			releaseSnapshot := make(chan struct{})
+			mock.RegisterResponder("GET", "https://api.easee.com/state/TEST/observations?ids=109,121,124,129,223", func(req *http.Request) (*http.Response, error) {
+				close(snapshotStarted)
+				select {
+				case <-releaseSnapshot:
+				case <-req.Context().Done():
+					return nil, req.Context().Err()
+				}
+				items := []map[string]any{{"id": easee.SESSION_ENERGY, "timestamp": start.Add(time.Minute), "dataType": easee.Double, "value": 8}}
+				if tc.anchor {
+					items = append(items, map[string]any{"id": easee.CHARGE_SESSION_START, "timestamp": start, "dataType": easee.String, "value": fmt.Sprintf(`{"id":42,"start":"%s","meterValue":10000}`, start.Format(time.RFC3339Nano))})
+				}
+				return httpmock.NewJsonResponse(tc.status, map[string]any{"observations": items})
+			})
+			log := util.NewLogger("easee")
+			helper := request.NewHelper(log)
+			helper.Client.Transport = easeeStartupTransport{api: mock, stream: streamURL}
+			type result struct {
+				charger *Easee
+				err     error
+			}
+			resultC := make(chan result, 1)
+			go func() {
+				c, err := newEaseeWithClient(ctx, helper, log, oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "test"}), "TEST", 500*time.Millisecond, false)
+				resultC <- result{c, err}
+			}()
+			select {
+			case <-snapshotStarted:
+			case res := <-resultC:
+				t.Fatalf("constructor returned before fetching energy: %v", res.err)
+			case <-ctx.Done():
+				t.Fatal(ctx.Err())
+			}
+			select {
+			case res := <-resultC:
+				t.Fatalf("constructor returned before complete snapshot: %v", res.err)
+			default:
+			}
+			close(releaseSnapshot)
+			select {
+			case res := <-resultC:
+				if tc.wantEnergy {
+					require.NoError(t, res.err)
+					total, err := res.charger.TotalEnergy()
+					require.NoError(t, err)
+					assert.Equal(t, 10008.0, total)
+				} else {
+					require.Error(t, res.err)
+					if tc.status == http.StatusOK {
+						assert.ErrorIs(t, res.err, context.DeadlineExceeded)
+					}
+				}
+			case <-ctx.Done():
+				t.Fatal(ctx.Err())
+			}
+		})
+	}
 }

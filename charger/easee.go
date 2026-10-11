@@ -114,11 +114,18 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
+	ts, err := easee.TokenSource(log, user, password)
+	if err != nil {
+		return nil, err
+	}
+	return newEaseeWithClient(ctx, request.NewHelper(log), log, ts, charger, timeout, authorize)
+}
 
+func newEaseeWithClient(ctx context.Context, helper *request.Helper, log *util.Logger, ts oauth2.TokenSource, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
 	done := make(chan struct{})
 
 	c := &Easee{
-		Helper:    request.NewHelper(log),
+		Helper:    helper,
 		charger:   charger,
 		authorize: authorize,
 		log:       log,
@@ -131,11 +138,6 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 	c.Client.Timeout = timeout
 
 	c.dispatcher = easee.NewCommandDispatcher(c.Helper, log, timeout)
-
-	ts, err := easee.TokenSource(log, user, password)
-	if err != nil {
-		return nil, err
-	}
 
 	// replace client transport with authenticated transport
 	c.Client.Transport = &oauth2.Transport{
@@ -225,8 +227,11 @@ func (c *Easee) recoverEnergy(ctx context.Context) error {
 }
 
 func (c *Easee) waitForEnergy(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, c.Client.Timeout)
-	defer cancel()
+	if c.Client.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, c.Client.Timeout)
+		defer cancel()
+	}
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	for {
