@@ -222,10 +222,11 @@ export default defineComponent({
 				console.log({ message: "Websocket error. Trying to reconnect." });
 				this.ws?.close();
 			};
+			// an open socket proves nothing yet: a proxy may accept it before reaching
+			// evcc and close it again. Only the first message means we are online.
+			let received = false;
 			this.ws.onopen = () => {
 				console.log("websocket connected");
-				this.reconnectAttempts = 0;
-				window.app.setOnline();
 			};
 			this.ws.onclose = () => {
 				window.app.setOffline();
@@ -239,6 +240,12 @@ export default defineComponent({
 					}
 					store.update(msg);
 					lastDataReceived = new Date();
+					// data flows: the connection really reaches evcc
+					if (!received) {
+						received = true;
+						this.reconnectAttempts = 0;
+						window.app.setOnline();
+					}
 				} catch (error) {
 					const e = error as Error;
 					window.app.raise({
