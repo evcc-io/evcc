@@ -29,7 +29,7 @@ meters:
       source: const
       value: 76
     capacity: 13.5
-    batterymodes: ["normal", "hold", "charge", "holdcharge"]
+    batterymodes: ["normal", "hold", "charge", "holdcharge", "discharge"]
     batterymode:
       source: js
       vm: shared

@@ -123,7 +123,7 @@
 					</template>
 				</i18n-t>
 			</p>
-			<div v-if="experimental" class="form-check form-switch mt-2">
+			<div v-if="gridDischargeVisible" class="form-check form-switch mt-2">
 				<input
 					id="batteryGridDischarge"
 					:checked="batteryGridDischarge"
@@ -210,6 +210,13 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		// keep visible while enabled so it can be switched off
+		gridDischargeVisible(): boolean {
+			const supported = (this.battery?.devices ?? []).some((d) =>
+				d.modes?.includes("discharge")
+			);
+			return this.experimental && (supported || this.batteryGridDischarge);
+		},
 		controlledTitleList(): string {
 			return new Intl.ListFormat(this.$i18n?.locale).format(this.optimizerControlledTitles);
 		},
