@@ -940,10 +940,10 @@ func networkSettings(conf *globalconfig.Network) error {
 }
 
 // mdnsInstance returns a stable instance name per installation so multiple evcc instances don't conflict,
-// the machine id is hashed as it must not be published
-func mdnsInstance(id string) string {
-	sum := sha256.Sum256([]byte("mdns:" + id))
-	return "evcc-" + hex.EncodeToString(sum[:2])
+// the machine id is hashed as it must not be published. The port separates instances sharing a host.
+func mdnsInstance(id string, port int) string {
+	sum := sha256.Sum256(fmt.Appendf(nil, "mdns:%s:%d", id, port))
+	return "evcc-" + hex.EncodeToString(sum[:4])
 }
 
 // setup MDNS
@@ -960,7 +960,7 @@ func configureMDNS(conf globalconfig.Network) error {
 		text = append(text, "external_url="+externalURL)
 	}
 
-	zc, err := zeroconf.RegisterProxy(mdnsInstance(machine.ID()), "_http._tcp", "local.", conf.Port, host, nil, text, nil)
+	zc, err := zeroconf.RegisterProxy(mdnsInstance(machine.ID(), conf.Port), "_http._tcp", "local.", conf.Port, host, nil, text, nil)
 	if err != nil {
 		return err
 	}
