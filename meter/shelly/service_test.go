@@ -7,15 +7,14 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/server/service"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestChannelOptions(t *testing.T) {
 	channels := []channel{
-		{id: 0, name: " Garden ", relay: true, power: lo.ToPtr(635.4)},
-		{id: 1, power: lo.ToPtr(12.6)},
+		{id: 0, name: " Garden ", relay: true, metered: true, power: 635.4},
+		{id: 1, metered: true, power: 12.6},
 		{id: 2, relay: true},
 	}
 
@@ -42,8 +41,8 @@ func TestGen1Channels(t *testing.T) {
 	// Shelly EM: one relay, two emeters
 	require.NoError(t, json.Unmarshal([]byte(`{"relays":[{"ison":true}],"emeters":[{"power":100.5},{"power":-20}]}`), &res))
 	assert.Equal(t, []channel{
-		{id: 0, relay: true, power: lo.ToPtr(100.5)},
-		{id: 1, power: lo.ToPtr(-20.0)},
+		{id: 0, relay: true, metered: true, power: 100.5},
+		{id: 1, metered: true, power: -20.0},
 	}, gen1Channels(res))
 
 	// Shelly 1: relay without meter
@@ -63,8 +62,8 @@ func TestGen2Channels(t *testing.T) {
 			`{"sys":{},"switch:0":{"id":0,"output":true,"apower":635.4},"switch:1":{"id":1,"output":false,"apower":0}}`,
 			`{"switch:0":{"id":0,"name":"Garden"},"switch:1":{"id":1,"name":null}}`,
 			[]channel{
-				{id: 0, name: "Garden", relay: true, power: lo.ToPtr(635.4)},
-				{id: 1, relay: true, power: lo.ToPtr(0.0)},
+				{id: 0, name: "Garden", relay: true, metered: true, power: 635.4},
+				{id: 1, relay: true, metered: true, power: 0.0},
 			},
 		},
 		{
@@ -78,21 +77,21 @@ func TestGen2Channels(t *testing.T) {
 			`{"switch:0":{"id":0,"output":true},"em1:0":{"id":0,"act_power":-12.3},"em1:1":{"id":1,"act_power":4.5}}`,
 			`{"switch:0":{"id":0,"name":"Relay"},"em1:0":{"id":0,"name":"Grid"},"em1:1":{"id":1,"name":"PV"}}`,
 			[]channel{
-				{id: 0, name: "Grid", relay: true, power: lo.ToPtr(-12.3)},
-				{id: 1, name: "PV", power: lo.ToPtr(4.5)},
+				{id: 0, name: "Grid", relay: true, metered: true, power: -12.3},
+				{id: 1, name: "PV", metered: true, power: 4.5},
 			},
 		},
 		{
 			"pro 3em triphase",
 			`{"em:0":{"id":0,"total_act_power":1500}}`,
 			`{"em:0":{"id":0,"name":null}}`,
-			[]channel{{id: 0, power: lo.ToPtr(1500.0)}},
+			[]channel{{id: 0, metered: true, power: 1500.0}},
 		},
 		{
 			"pm mini",
 			`{"pm1:0":{"id":0,"apower":42}}`,
 			`{"pm1:0":{"id":0,"name":"Heater"}}`,
-			[]channel{{id: 0, name: "Heater", power: lo.ToPtr(42.0)}},
+			[]channel{{id: 0, name: "Heater", metered: true, power: 42.0}},
 		},
 	}
 

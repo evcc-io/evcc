@@ -29,33 +29,36 @@ func init() {
 
 // channel is a relay/meter slot of a device, merged across components sharing the same id
 type channel struct {
-	id    int
-	name  string
-	relay bool
-	power *float64
+	id      int
+	name    string
+	relay   bool
+	metered bool    // has a power meter
+	power   float64 // W, valid if metered
 }
+
+// gen2Components are the Shelly.GetStatus components that make up a channel
+var gen2Components = []string{"switch", "pm1", "em1", "em"}
 
 // channelOptions maps channels to options. With metered only channels with a power
 // meter match (meter templates), otherwise only relays do (charger templates).
 func channelOptions(channels []channel, metered bool) []service.Option {
 	res := make([]service.Option, 0, len(channels))
 	for _, ch := range channels {
+		kind := "Meter"
+		if ch.relay {
+			kind = "Switch"
+		}
+
 		o := service.Option{
 			Value: strconv.Itoa(ch.id),
-			Label: strings.TrimSpace(ch.name),
+			Label: cmp.Or(strings.TrimSpace(ch.name), fmt.Sprintf("%s %d", kind, ch.id+1)),
 			Match: ch.relay,
 		}
 		if metered {
-			o.Match = ch.power != nil
+			o.Match = ch.metered
 		}
-		if o.Label == "" {
-			o.Label = fmt.Sprintf("Meter %d", ch.id+1)
-			if ch.relay {
-				o.Label = fmt.Sprintf("Switch %d", ch.id+1)
-			}
-		}
-		if ch.power != nil {
-			o.Hint = fmt.Sprintf("%.0f W", *ch.power)
+		if ch.metered {
+			o.Hint = fmt.Sprintf("%.0f W", ch.power)
 		}
 		res = append(res, o)
 	}
@@ -70,9 +73,9 @@ func gen1Channels(res Gen1Status) []channel {
 		ch := channel{id: i, relay: i < len(res.Relays)}
 		switch {
 		case i < len(res.Meters):
-			ch.power = lo.ToPtr(res.Meters[i].Power)
+			ch.metered, ch.power = true, res.Meters[i].Power
 		case i < len(res.EMeters):
-			ch.power = lo.ToPtr(res.EMeters[i].Power)
+			ch.metered, ch.power = true, res.EMeters[i].Power
 		}
 		channels = append(channels, ch)
 	}
@@ -95,7 +98,7 @@ func gen2Channels(status, config map[string]json.RawMessage) []channel {
 			continue
 		}
 
-		if !slices.Contains([]string{"switch", "pm1", "em1", "em"}, typ) {
+		if !slices.Contains(gen2Components, typ) {
 			continue
 		}
 
@@ -114,7 +117,7 @@ func gen2Channels(status, config map[string]json.RawMessage) []channel {
 		ch.id = id
 		ch.relay = ch.relay || typ == "switch"
 		if power := cmp.Or(res.Apower, res.ActPower, res.TotalActPower); power != nil {
-			ch.power = power
+			ch.metered, ch.power = true, *power
 		}
 		if strings.TrimSpace(ch.name) == "" {
 			ch.name = cfg.Name
