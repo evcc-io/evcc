@@ -203,7 +203,11 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 
 	if err == nil {
 		c.waitForOptionalState()
-		err = c.recoverEnergy(ctx)
+
+		// total energy stays unavailable until replay establishes the meter
+		if err := c.recoverEnergy(ctx); err != nil {
+			c.log.WARN.Printf("energy recovery: %v", err)
+		}
 	}
 
 	return c, err
