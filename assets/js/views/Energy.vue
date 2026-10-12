@@ -688,8 +688,8 @@ export default defineComponent({
 			return this.overview === OVERVIEW_VIEW.USAGE ? this.usageSeries : this.flowSeries;
 		},
 		// usage: the overview's column, from minus import and discharge up to production,
-		// as one stack of sinks running through the baseline: batteries at the bottom,
-		// then loadpoints, consumption, export on top. Amounts per sink from usageSplit
+		// as one stack of sinks running through the baseline: loadpoints at the bottom,
+		// then consumption, batteries, export on top. Amounts per sink from usageSplit
 		usageSeries(): HistorySeries[] {
 			const pv = this.slotSum("pv", "energy");
 			const gridIn = this.slotSum("grid", "energy");
@@ -715,7 +715,7 @@ export default defineComponent({
 			// per slot each sink's share above and below the baseline in stack order
 			const bands = usageSplit(input).map((r, t) => {
 				let level = -(input[t]!.gridIn + input[t]!.batOut);
-				return [...r.bats, ...r.lps, r.home, r.export].map((a) => {
+				return [...r.lps, r.home, ...r.bats, r.export].map((a) => {
 					const start = level;
 					level += a;
 					return [
@@ -725,12 +725,12 @@ export default defineComponent({
 				});
 			});
 			const entries: [string, string][] = [
-				...this.batteries.map((s, i): [string, string] => [s.title, batteryColor(i)]),
 				...this.loadpoints.map((s): [string, string] => [
 					s.title,
 					this.loadpointColors[s.title] || "",
 				]),
 				[this.$t("energy.flow.home"), colors.muted || ""],
+				...this.batteries.map((s, i): [string, string] => [s.title, batteryColor(i)]),
 				[this.$t("energy.flow.export"), colors.export || ""],
 			];
 			return entries.map(([title, color], i) => ({
@@ -774,6 +774,7 @@ export default defineComponent({
 			const batUp = (t: string) => Math.min(batIn(t), Math.max(0, pv(t) - gridOut(t)));
 			const selfUp = (t: string) => Math.max(0, pv(t) - gridOut(t) - batIn(t));
 			return [
+				build(this.$t("main.energyflow.selfConsumption"), groupColor("pv"), selfUp),
 				build(this.$t("energy.flow.batteryCharge"), groupColor("battery"), batUp),
 				build(
 					this.$t("energy.flow.batteryDischarge"),
@@ -781,7 +782,6 @@ export default defineComponent({
 					() => 0,
 					batOut
 				),
-				build(this.$t("main.energyflow.selfConsumption"), groupColor("pv"), selfUp),
 				build(this.$t("energy.flow.grid"), colors.grid || "", () => 0, gridIn),
 				build(this.$t("energy.flow.export"), colors.export || "", exportUp),
 			];
@@ -789,12 +789,12 @@ export default defineComponent({
 		stackLegends(): Legend[] {
 			const total = (s: HistorySeries) =>
 				s.data.reduce((acc, slot) => acc + slot.energy + slot.returnEnergy, 0);
-			const [charge, discharge, self, gridImport, gridExport] = this.flowSeries;
+			const [self, charge, discharge, gridImport, gridExport] = this.flowSeries;
 			// both read top down like their stack
 			const ordered =
 				this.overview === OVERVIEW_VIEW.USAGE
 					? [...this.usageSeries].reverse()
-					: [gridExport, self, charge, discharge, gridImport];
+					: [gridExport, charge, self, discharge, gridImport];
 			return ordered
 				.filter((s): s is HistorySeries => !!s)
 				.map((s) => ({
