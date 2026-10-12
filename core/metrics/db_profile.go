@@ -107,8 +107,9 @@ func energyProfileFiltered(entity entity, from time.Time, weekday *int, percenti
 	return (*[96]float64)(res), nil
 }
 
-// energyProfileTemperatureBinned queries the historical average energy per 15-minute slot
-// and rounded temperature (degree Celsius).
+// energyProfileTemperatureBinned queries the historical average energy per 15-minute slot (0..95)
+// grouped by integer outdoor temperature bin (°C) over the past year.
+// Joins recorded meter energy with weather tariff history and filters out single-sample noise (count >= 2).
 func energyProfileTemperatureBinned(entity entity) (map[int]map[int]float64, error) {
 	database, err := db.Instance.DB()
 	if err != nil {

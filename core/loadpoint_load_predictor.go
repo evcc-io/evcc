@@ -8,8 +8,10 @@ import (
 	"github.com/jinzhu/now"
 )
 
-// demandProfile returns the heating demand profile of a heating loadpoint and whether
-// it needs to be scaled by the outdoor temperature forecast. Returns nil when unavailable.
+// demandProfile returns the baseline 96-slot heating demand profile of a heating loadpoint
+// and whether it needs outdoor temperature correction (DemandTemperature).
+// Uses a 7-day rolling window for DemandTemperature (to adapt quickly to recent heating curves)
+// and a 28-day window for default devices. Returns nil when unavailable.
 // For DemandWeekday devices, use demandProfileWeekday instead.
 func (lp *Loadpoint) demandProfile() (*[96]float64, bool) {
 	if lp.chargeEnergy == nil || !lp.chargerHasFeature(api.Heating) {
