@@ -40,15 +40,15 @@ func (cs *CS) Write(id string, data []byte) error {
 	return cs.server.Write(id, data)
 }
 
-type stationStatus struct {
+type StationInfo struct {
 	ID     string        `json:"id"`
 	Status StationStatus `json:"status"`
 }
 
 // Status represents the runtime OCPP status
 type Status struct {
-	ExternalUrl string          `json:"externalUrl,omitempty"`
-	Stations    []stationStatus `json:"stations"`
+	ExternalUrl string        `json:"externalUrl,omitempty"`
+	Stations    []StationInfo `json:"stations"`
 }
 
 // status returns the OCPP runtime status
@@ -56,7 +56,7 @@ func (cs *CS) status() Status {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	stations := []stationStatus{}
+	stations := []StationInfo{}
 
 	for id, reg := range cs.regs {
 		if id == "" {
@@ -72,7 +72,7 @@ func (cs *CS) status() Status {
 			}
 		}
 
-		stations = append(stations, stationStatus{
+		stations = append(stations, StationInfo{
 			ID:     id,
 			Status: state,
 		})
@@ -175,17 +175,7 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 		cp.onTransportConnect()
 	}
 
-	err := init(cp)
-	if err != nil {
-		// allow retry on next call instead of permanently caching a failed setup
-		cs.mu.Lock()
-		if reg.cp == cp {
-			reg.cp = nil
-		}
-		cs.mu.Unlock()
-	}
-
-	return cp, err
+	return cp, init(cp)
 }
 
 // NewChargePoint implements ocpp16.ChargePointConnectionHandler
