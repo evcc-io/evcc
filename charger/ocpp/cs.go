@@ -176,12 +176,12 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 	}
 
 	if err := init(cp); err != nil {
-    	cs.mu.Lock()
-    	reg.cp = nil
-    	cs.mu.Unlock()
-    	return nil, err
-}
-return cp, nil
+		cs.mu.Lock()
+		reg.cp = nil
+		cs.mu.Unlock()
+		return nil, err
+	}
+	return cp, nil
 }
 
 // NewChargePoint implements ocpp16.ChargePointConnectionHandler
