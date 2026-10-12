@@ -48,10 +48,14 @@ export default defineComponent({
 @import "../../../css/breakpoints.css";
 
 /* phones: same small inset as box-pull-out cards, the surrounding row only pulls out from sm up */
-@media (max-width: 575.98px) {
+.stat-cards {
+	margin-left: -1rem;
+	margin-right: -1rem;
+}
+@media (--sm-and-up) {
 	.stat-cards {
-		margin-left: -1rem;
-		margin-right: -1rem;
+		margin-left: 0;
+		margin-right: 0;
 	}
 }
 
