@@ -366,6 +366,8 @@ export type YamlSource = "file" | "db" | undefined;
 export interface OcppConfig {
   /** Port the OCPP server listens on. */
   port: number;
+  /** Port the OCPP 2.0.1 server listens on. */
+  port20: number;
 }
 
 /** A rule forwarding an OCPP station to an upstream backend. */
