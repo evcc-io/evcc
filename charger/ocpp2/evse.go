@@ -35,7 +35,8 @@ type EVSE struct {
 	meterInterval time.Duration
 	measurements  map[types.Measurand]types.SampledValue
 
-	remoteIdToken string
+	remoteIdToken       string
+	remoteStartInFlight bool
 }
 
 func NewEVSE(ctx context.Context, log *util.Logger, id int, st *Station, idToken string, meterInterval time.Duration) (*EVSE, error) {
@@ -138,7 +139,7 @@ func (evse *EVSE) isMeterTimeout() bool {
 	return evse.clock.Since(evse.meterUpdated) > max(evse.meterInterval+10*time.Second, Timeout)
 }
 
-// ── Messwerte ─────────────────────────────────────────────────────────────────
+// ── measurements ─────────────────────────────────────────────────────────────────
 
 func (evse *EVSE) CurrentPower() (float64, error) {
 	if !evse.st.Connected() {
@@ -299,8 +300,14 @@ func (evse *EVSE) OnStatusNotification(req *availability.StatusNotificationReque
 		evse.assumeMeterStopped()
 	}
 
-	if evse.isWaitingForAuth() && evse.remoteIdToken != "" {
+	if evse.isWaitingForAuth() && evse.remoteIdToken != "" && !evse.remoteStartInFlight {
+		evse.remoteStartInFlight = true
 		go func(token string) {
+			defer func() {
+				evse.mu.Lock()
+				evse.remoteStartInFlight = false
+				evse.mu.Unlock()
+			}()
 			idToken := types.IdToken{
 				IdToken: token,
 				Type:    types.IdTokenTypeCentral,
@@ -310,7 +317,6 @@ func (evse *EVSE) OnStatusNotification(req *availability.StatusNotificationReque
 			}
 		}(evse.remoteIdToken)
 	}
-
 	return new(availability.StatusNotificationResponse), nil
 }
 
@@ -330,12 +336,13 @@ func (evse *EVSE) OnTransactionEvent(req *transactions.TransactionEventRequest) 
 		}
 		evse.log.DEBUG.Printf("evse %d: transaction started: %s", evse.id, evse.txnId)
 	case transactions.TransactionEventUpdated:
-		// Messwerte bereits oben verarbeitet
 	case transactions.TransactionEventEnded:
-		evse.log.DEBUG.Printf("evse %d: transaction ended: %s", evse.id, evse.txnId)
-		evse.txnId = ""
-		evse.idToken = ""
-		evse.assumeMeterStopped()
+		if evse.txnId != "" && evse.txnId == req.TransactionInfo.TransactionID {
+			evse.log.DEBUG.Printf("evse %d: transaction ended: %s", evse.id, evse.txnId)
+			evse.txnId = ""
+			evse.idToken = ""
+			evse.assumeMeterStopped()
+		}
 	}
 
 	return &transactions.TransactionEventResponse{
@@ -359,10 +366,11 @@ func (evse *EVSE) applyMeterValue(mv types.MeterValue) {
 	if ts.IsZero() {
 		ts = evse.clock.Now()
 	}
-	if ts.Before(evse.meterUpdated) {
+	now := evse.clock.Now()
+	if now.Before(evse.meterUpdated) {
 		return
 	}
-	evse.meterUpdated = ts
+	evse.meterUpdated = now
 	for _, sv := range mv.SampledValue {
 		key := sv.Measurand
 		if sv.Phase != "" {

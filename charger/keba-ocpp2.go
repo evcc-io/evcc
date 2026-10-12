@@ -85,6 +85,7 @@ func NewKebaOCPP2(ctx context.Context, e embed, stationID string, evseID int, id
 					log.ERROR.Printf("setup failed: %v", err)
 				}
 			}()
+			return nil
 		},
 	)
 	if err != nil {
