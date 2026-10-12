@@ -64,12 +64,12 @@ func TestApplyTemperatureCorrection(t *testing.T) {
 
 	profile := slices.Repeat([]float64{2.0}, 12)
 
-	// 1. Fallback linear scaling (binned == nil)
-	result, binnedCount, fallbackCount := site.applyTemperatureCorrection(profile, nil)
+	// 1. Linear scaling (binned == nil)
+	result, binnedCount, scaledCount := site.applyTemperatureCorrection(profile, nil)
 
 	require.Len(t, result, 12)
 	assert.Equal(t, 0, binnedCount)
-	assert.Equal(t, 12, fallbackCount)
+	assert.Equal(t, 12, scaledCount)
 
 	// Verify correction is applied: first hour should increase, second hour should decrease
 	assert.Greater(t, result[0], 2.0, "first hour should increase (colder forecast)")
@@ -91,11 +91,11 @@ func TestApplyTemperatureCorrection(t *testing.T) {
 			10: 2.2, // other temperature bin in same slot
 		},
 	}
-	resultBinned, binnedCount2, fallbackCount2 := site.applyTemperatureCorrection(profile, binned)
+	resultBinned, binnedCount2, scaledCount2 := site.applyTemperatureCorrection(profile, binned)
 	assert.InDelta(t, 3.5, resultBinned[0], 1e-6, "binned exact match should be used directly")
 	assert.InDelta(t, 0.8, resultBinned[8], 1e-6, "binned exact match for warm temp (>=18°C) should be used directly")
 	assert.Equal(t, 2, binnedCount2)
-	assert.Equal(t, 10, fallbackCount2)
+	assert.Equal(t, 10, scaledCount2)
 }
 
 func TestTileAndTrim(t *testing.T) {
