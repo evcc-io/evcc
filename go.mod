@@ -13,7 +13,7 @@ require (
 	github.com/WulfgarW/sensonet v0.0.8
 	github.com/andig/go-powerwall v0.3.0
 	github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512
-	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
+	github.com/andig/mbserver v0.0.0-20261012132218-a196e033ec39
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/aws/aws-sdk-go-v2 v1.47.1
 	github.com/aws/aws-sdk-go-v2/config v1.33.6
@@ -285,5 +285,3 @@ replace github.com/enbility/spine-go => github.com/andig/spine-go v0.7.1-0.20260
 replace github.com/enbility/eebus-go => github.com/andig/eebus-go v0.0.0-20260930172701-f8d6395986ba
 
 replace github.com/enbility/ship-go => github.com/andig/ship-go v0.6.1-0.20260901124541-3de7acda5f88
-
-replace github.com/andig/mbserver => github.com/TRON4R/mbserver v0.0.0-20261012131924-6b76f690bdf9
