@@ -3,6 +3,11 @@ products:
   - description:
       de: OCPP 2.0.1 kompatibel
       en: OCPP 2.0.1 compatible
+  - brand: KEBA
+    description:
+      generic: KeContact P30 X-Series (OCPP 2.0.1)
+      de: KeContact P30 X-Serie (OCPP 2.0.1)
+      en: KeContact P30 X-Series (OCPP 2.0.1)
 group: generic
 capabilities: ["mA", "rfid", "1p3p"]
 requirements:
