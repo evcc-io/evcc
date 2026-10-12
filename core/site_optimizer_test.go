@@ -714,6 +714,10 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, false, false, 1).Action, "idle within bounds is withheld")
 	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, false, false, 1).Action, "idle within bounds is withheld")
 
+	// solver noise on the grid is no import/export (#34657)
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 4e-05, 0, false, false, 570.0/3600).Action, "idle with import noise")
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 0, 4e-05, false, false, 570.0/3600).Action, "idle with export noise")
+
 	// with balanced grid, another battery's flow tells why this one is idle
 	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, 0, 0, 0, true, false, 1).Action, "idle while another battery discharges")
 	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, 0, 0, 0, false, true, 1).Action, "idle while another battery charges")

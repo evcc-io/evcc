@@ -2,6 +2,7 @@ package modbus
 
 import (
 	"encoding/binary"
+	"errors"
 	"math/rand/v2"
 	"net"
 	"sync"
@@ -11,6 +12,7 @@ import (
 	"github.com/andig/mbserver"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	gridx "github.com/grid-x/modbus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -112,6 +114,55 @@ func TestReadCoils(t *testing.T) {
 			assert.Equal(t, []byte{0x00, 0x09}, b)
 		}
 	}
+}
+
+func TestUpstreamTimeout(t *testing.T) {
+	// downstream server responding slower than the proxy timeout
+	l, err := net.Listen("tcp", "localhost:0")
+	require.NoError(t, err)
+	defer l.Close()
+
+	srv, _ := mbserver.New(&slowHandler{
+		delay:          500 * time.Millisecond,
+		RequestHandler: new(mbserver.DummyHandler),
+	})
+	require.NoError(t, srv.Start(l))
+	defer func() { _ = srv.Stop() }()
+
+	// proxy server
+	pl, err := net.Listen("tcp", "localhost:0")
+	require.NoError(t, err)
+	defer pl.Close()
+
+	downstreamConn, err := modbus.Settings{URI: l.Addr().String(), ID: 1, Timeout: 100 * time.Millisecond}.Connection(t.Context())
+	require.NoError(t, err)
+
+	proxy, _ := mbserver.New(&handler{
+		log:  util.NewLogger("foo"),
+		conn: downstreamConn,
+	})
+	require.NoError(t, proxy.Start(pl))
+	defer func() { _ = proxy.Stop() }()
+
+	// test client
+	conn, err := modbus.NewConnection(t.Context(), pl.Addr().String(), "", "", 0, modbus.Tcp, 1)
+	require.NoError(t, err)
+	conn.Timeout(5 * time.Second)
+
+	_, err = conn.WriteMultipleRegisters(1, 1, []byte{0, 1})
+	me, ok := errors.AsType[*gridx.Error](err)
+	require.True(t, ok, "expected modbus exception, got %v", err)
+	assert.Equal(t, uint8(gridx.ExceptionCodeGatewayTargetDeviceFailedToRespond), me.ExceptionCode)
+}
+
+type slowHandler struct {
+	delay time.Duration
+	mbserver.RequestHandler
+}
+
+func (h *slowHandler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) ([]uint16, error) {
+	time.Sleep(h.delay)
+	return req.Args, nil
 }
 
 type echoHandler struct {

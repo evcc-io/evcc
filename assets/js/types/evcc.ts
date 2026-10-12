@@ -1241,6 +1241,8 @@ export interface BatteryMeter extends Meter {
   soc: number;
   /** Battery supports external control of its operation mode. */
   controllable: boolean;
+  /** Battery modes supported by the device. */
+  modes?: string[];
   /** Battery capacity in kWh. Zero when not specified. */
   capacity: number;
   /** Battery optimizer suggestion. */
