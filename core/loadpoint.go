@@ -1600,6 +1600,12 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 		useful := !lp.enabled || !lp.charging() || !mayDisable || powerToCurrent(availablePower, 1) >= minCurrent || lp.vehicleClimateActive()
 		if insufficient && !useful {
 			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min 1p threshold, disabling instead of scaling down", availablePower, Voltage*minCurrent)
+
+			// the shortfall waited on the phase timer carries over to the disable timer (#34746)
+			if lp.pvTimer.IsZero() && !lp.phaseTimer.IsZero() && !lp.phaseTimer.Equal(elapsed) {
+				lp.log.DEBUG.Printf("pv disable timer continues phase timer")
+				lp.pvTimer = lp.phaseTimer
+			}
 		}
 
 		// scaling down also frees load management headroom for min power on activePhases
@@ -1608,6 +1614,13 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 
 	// scale down phases
 	if scalable {
+		// the shortfall waited on the disable timer carries over to the phase timer (#34746)
+		if lp.enabled && lp.charging() && lp.phaseTimer.IsZero() && !lp.pvTimer.IsZero() {
+			lp.log.DEBUG.Printf("phase %s timer continues pv disable timer", phaseScale1p)
+			lp.phaseTimer = lp.pvTimer
+			lp.resetPVTimer("disable")
+		}
+
 		if lp.phaseTimerElapsed(lp.GetDisableDelay(), phaseScale1p) {
 			if err := lp.scalePhases(1); err != nil {
 				// a charger may report it cannot switch phases right now
@@ -1683,12 +1696,12 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 	}
 }
 
-// projectPhaseSwitch returns site power and phases after a pending scale down to 1p.
-// The phase timer can only be active once the loadpoint is at min current.
+// projectPhaseSwitch returns site power and phases after a pending scale down to 1p:
+// the loadpoint drops from its current draw, at least min power, to min current on 1p.
 func (lp *Loadpoint) projectPhaseSwitch(sitePower, minCurrent float64) (float64, int) {
 	phases := lp.ActivePhases()
 	if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() {
-		sitePower -= Voltage * minCurrent * float64(phases-1)
+		sitePower -= max(lp.chargePower, currentToPower(minCurrent, phases)) - currentToPower(minCurrent, 1)
 		phases = 1
 	}
 	return sitePower, phases
