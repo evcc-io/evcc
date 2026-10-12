@@ -60,7 +60,7 @@ render: |
       block: # 5016-5020
         register: 5016
         count: 5
-    scale: 0.1
+      scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
@@ -70,7 +70,7 @@ render: |
       block: # 5016-5020
         register: 5016
         count: 5
-    scale: 0.1
+      scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
@@ -80,7 +80,7 @@ render: |
       block: # 5016-5020
         register: 5016
         count: 5
-    scale: 0.1
+      scale: 0.1
   powers:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
