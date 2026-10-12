@@ -1,5 +1,5 @@
 <template>
-	<div class="d-flex flex-wrap flex-lg-column gap-3 gap-lg-4 h-100">
+	<div class="stat-cards d-flex flex-wrap flex-lg-column gap-3 gap-lg-4 h-100">
 		<Card
 			v-for="stat in stats"
 			:key="stat.key"
@@ -46,6 +46,14 @@ export default defineComponent({
 
 <style scoped>
 @import "../../../css/breakpoints.css";
+
+/* phones: same small inset as box-pull-out cards, the surrounding row only pulls out from sm up */
+@media (max-width: 575.98px) {
+	.stat-cards {
+		margin-left: -1rem;
+		margin-right: -1rem;
+	}
+}
 
 /* equal widths when wrapping into rows, equal heights when stacked */
 .stat-card {
