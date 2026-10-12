@@ -201,7 +201,8 @@ func TestCoarsenHorizon(t *testing.T) {
 		Batteries:  []optimizer.BatteryConfig{{PDemand: series(10), SGoal: goal}, {}},
 	}
 	details := requestDetails{Timestamps: ts, DemandDetails: []demandDetail{{Values: series(50)}}}
-	gt, ft, pn, demand := lo.Sum(req.TimeSeries.Gt), lo.Sum(req.TimeSeries.Ft), req.TimeSeries.PN, req.Batteries[0].PDemand
+	gt, ft, home := lo.Sum(req.TimeSeries.Gt), lo.Sum(req.TimeSeries.Ft), lo.Sum(details.DemandDetails[0].Values)
+	pn, demand := req.TimeSeries.PN, req.Batteries[0].PDemand
 
 	coarsenHorizon(&req, &details)
 	res := req.TimeSeries
@@ -220,7 +221,7 @@ func TestCoarsenHorizon(t *testing.T) {
 	// energies are preserved, prices averaged by duration, the goal keeps its end
 	assert.InDelta(t, gt, lo.Sum(res.Gt), 0.1)
 	assert.InDelta(t, ft, lo.Sum(res.Ft), 0.1)
-	assert.InDelta(t, lo.Sum(details.DemandDetails[0].Values), float64(50)*float64(minLen)+float64(minLen*(minLen-1))/2, 0.1)
+	assert.InDelta(t, home, lo.Sum(details.DemandDetails[0].Values), 0.1)
 	assert.InDelta(t, lo.Mean(pn[195:199]), res.PN[195], 1e-4)
 	assert.InDelta(t, lo.Sum(demand[195:199]), req.Batteries[0].PDemand[195], 0.01)
 	assert.Equal(t, float32(5000), req.Batteries[0].SGoal[197])
