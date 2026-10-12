@@ -363,7 +363,7 @@ auth:
 
 **Format**: `service-name/endpoint` or `service-name/endpoint?param1={param1}&param2={param2}`
 
-Parameters from other params can be referenced using `{param-name}` syntax, which will be replaced with the user's input for that parameter. `{template}` is the name of the selected template. The endpoint will only be called once the user has entered values for all referenced parameters. The endpoint is called every time a referenced parameter value changes.
+Parameters from other params can be referenced using `{param-name}` syntax, which will be replaced with the user's input for that parameter. `{template}` is the name of the selected template. The endpoint is only called once all referenced required parameters have a value. Referenced optional parameters, e.g. `user` or `password`, are replaced with an empty string while empty, so the service must handle missing values. The endpoint is called every time a referenced parameter value changes.
 
 **Response formats**:
 
