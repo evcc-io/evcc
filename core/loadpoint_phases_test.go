@@ -510,19 +510,22 @@ func TestProjectPhaseSwitch(t *testing.T) {
 
 	for _, tc := range []struct {
 		desc        string
+		phases      int
 		chargePower float64
 		projected   float64
 	}{
-		{"at min current", 3 * Voltage * minA, site - 2*Voltage*minA},
-		{"above min current", 3 * Voltage * (minA + 1), site - 3*Voltage*(minA+1) + Voltage*minA},
-		{"below min power", Voltage * minA, site - 2*Voltage*minA},
+		{"at min current", 3, 3 * Voltage * minA, site - 2*Voltage*minA},
+		{"above min current", 3, 3 * Voltage * (minA + 1), site - 3*Voltage*(minA+1) + Voltage*minA},
+		{"below min power", 3, Voltage * minA, site - 2*Voltage*minA},
+		// a scale up pending at 1p leaves site power alone
+		{"scale up at 1p", 1, Voltage * (minA + 1), site},
 	} {
 		lp := &Loadpoint{
 			log:            util.NewLogger("foo"),
 			clock:          clock.NewMock(),
 			charger:        charger,
-			phases:         3,
-			measuredPhases: 3,
+			phases:         tc.phases,
+			measuredPhases: tc.phases,
 			chargePower:    tc.chargePower,
 			phaseTimer:     time.Unix(1, 0),
 		}
