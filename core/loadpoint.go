@@ -1690,12 +1690,12 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 	}
 }
 
-// projectPhaseSwitch returns site power and phases after a pending scale down to 1p.
-// The phase timer can only be active once the loadpoint is at min current.
+// projectPhaseSwitch returns site power and phases after a pending scale down to 1p:
+// the loadpoint drops from its current draw, at least min power, to min current on 1p.
 func (lp *Loadpoint) projectPhaseSwitch(sitePower, minCurrent float64) (float64, int) {
 	phases := lp.ActivePhases()
 	if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() {
-		sitePower -= Voltage * minCurrent * float64(phases-1)
+		sitePower -= max(lp.chargePower, currentToPower(minCurrent, phases)) - currentToPower(minCurrent, 1)
 		phases = 1
 	}
 	return sitePower, phases
