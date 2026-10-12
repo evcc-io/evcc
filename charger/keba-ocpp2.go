@@ -34,20 +34,18 @@ func init() {
 
 func NewKebaOCPP2FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
-		embed     `mapstructure:",squash"`
-		StationID string
-		EvseID    int
-		IdTag     string
-		Meter     bool
+		embed         `mapstructure:",squash"`
+		StationID     string
+		EvseID        int
+		IdTag         string
+		Meter         bool
+		MeterInterval time.Duration
 	}{
 		EvseID: 1,
 		Meter:  true,
 	}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-	if cc.StationID == "" {
-		return nil, fmt.Errorf("keba-ocpp2: stationid must not be empty")
 	}
 	return NewKebaOCPP2(ctx, cc.embed, cc.StationID, cc.EvseID, cc.IdTag, cc.Meter)
 }
