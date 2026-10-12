@@ -669,6 +669,10 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		details.DemandDetails = nil
 	}
 
+	if optimizerURI() == OPTIMIZER_URI {
+		coarsenHorizon(&req, &details)
+	}
+
 	return req, details, nil
 }
 
@@ -1353,6 +1357,83 @@ func asTimestamps(dt []int, now time.Time) []time.Time {
 	}
 
 	return res
+}
+
+// coarseSlotsAfter is where the request switches from quarter hour to clock hour slots. Hosted
+// optimizer requests beyond 60h are 11% of the traffic but take the slow split path 3.7% of the
+// time at a p99 of 7s, against 1.2% and 1.4s within a day. The split path sets the production p99.
+const coarseSlotsAfter = 48 * time.Hour
+
+// coarsenHorizon merges the quarter hour slots beyond coarseSlotsAfter into clock hours. Quarter
+// slots bridge to the first full hour, and a plan goal ends its slot so the departure keeps its
+// time. Energies are summed, prices averaged by duration.
+func coarsenHorizon(req *optimizer.OptimizationInput, details *requestDetails) {
+	dt, ts := req.TimeSeries.Dt, details.Timestamps
+	if len(dt) == 0 || len(ts) != len(dt) {
+		return
+	}
+
+	goalEnds := func(i int) bool {
+		return slices.ContainsFunc(req.Batteries, func(b optimizer.BatteryConfig) bool {
+			return i < len(b.SGoal) && b.SGoal[i] != 0
+		})
+	}
+
+	// first slot index of every output slot; hourly latches at the first full hour past the boundary
+	starts := make([]int, 0, len(dt))
+	coarse := ts[0].Add(coarseSlotsAfter)
+	var hourly bool
+	for i := range dt {
+		if hourly && ts[i].Minute() != 0 && !goalEnds(i-1) {
+			continue
+		}
+		starts = append(starts, i)
+		hourly = hourly || (!ts[i].Before(coarse) && ts[i].Minute() == 0)
+	}
+	if len(starts) == len(dt) {
+		return
+	}
+
+	end := func(g int) int {
+		if g+1 < len(starts) {
+			return starts[g+1]
+		}
+		return len(dt)
+	}
+	sum := func(v []float32) []float32 {
+		if v == nil {
+			return nil
+		}
+		return lo.Map(starts, func(s, g int) float32 { return lo.Sum(v[s:end(g)]) })
+	}
+	mean := func(v []float32) []float32 {
+		return lo.Map(starts, func(s, g int) float32 {
+			var weighted, secs float32
+			for i := s; i < end(g); i++ {
+				weighted += v[i] * float32(dt[i])
+				secs += float32(dt[i])
+			}
+			return weighted / secs
+		})
+	}
+
+	req.TimeSeries.Gt = sum(req.TimeSeries.Gt)
+	req.TimeSeries.Ft = sum(req.TimeSeries.Ft)
+	req.TimeSeries.PN = mean(req.TimeSeries.PN)
+	req.TimeSeries.PE = mean(req.TimeSeries.PE)
+	for i := range req.Batteries {
+		b := &req.Batteries[i]
+		b.PDemand = sum(b.PDemand)
+		if b.SGoal != nil {
+			// a goal ends its group, so it sits in the group's last slot
+			b.SGoal = lo.Map(starts, func(s, g int) float32 { return b.SGoal[end(g)-1] })
+		}
+	}
+	for i := range details.DemandDetails {
+		details.DemandDetails[i].Values = sum(details.DemandDetails[i].Values)
+	}
+	details.Timestamps = lo.Map(starts, func(s, _ int) time.Time { return ts[s] })
+	req.TimeSeries.Dt = lo.Map(starts, func(s, g int) int { return lo.Sum(dt[s:end(g)]) })
 }
 
 func scaleAndPrune(rates api.Rates, scale float64, maxLen int) []float32 {
