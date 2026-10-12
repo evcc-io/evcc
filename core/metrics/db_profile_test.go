@@ -4,7 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/require"
@@ -107,4 +109,14 @@ func TestEnergyProfileTemperatureBinned(t *testing.T) {
 	require.NotContains(t, res[0], 20)
 	// Old data from day -400 (temp 10°C) must not be included
 	require.NotContains(t, res[0], 10)
+
+	// Verify with percentile > 0
+	settings.SetFloat(keys.ProfilePercentile, 50)
+	defer settings.SetFloat(keys.ProfilePercentile, 0)
+
+	resPerc, err := energyProfileTemperatureBinned(e)
+	require.NoError(t, err)
+	require.Len(t, resPerc, 96)
+	require.Contains(t, resPerc[0], 4)
+	require.InDelta(t, 0.55, resPerc[0][4], 1e-6)
 }

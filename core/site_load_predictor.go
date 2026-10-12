@@ -61,25 +61,18 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
 		var predictorType string
 
 		if profile, correct := lp.demandProfile(); profile != nil {
-			predictorType = "daily"
 			p = tileAndTrim(profile[:], minLen)
 			if correct {
-				predictorType = "temperature"
 				var binned map[int]map[int]float64
-				if lp.chargeEnergy != nil {
-					var err error
-					binned, err = lp.chargeEnergy.EnergyProfileTemperatureBinned()
-					if err != nil && !errors.Is(err, metrics.ErrIncomplete) {
-						site.log.DEBUG.Printf("temperature correction: binned profile unavailable for %s: %v", lp.GetTitle(), err)
-					}
+				var err error
+				binned, err = lp.chargeEnergy.EnergyProfileTemperatureBinned()
+				if err != nil && !errors.Is(err, metrics.ErrNoBinnedData) {
+					site.log.DEBUG.Printf("temperature correction: binned profile unavailable for %s: %v", lp.GetTitle(), err)
 				}
-				var binnedSlots, scaledSlots int
-				p, binnedSlots, scaledSlots = site.applyTemperatureCorrection(p, binned)
-				site.log.DEBUG.Printf("heating demand: added %s forecast for %s (%d slots: %d binned, %d scaled)",
-					predictorType, lp.GetTitle(), len(p), binnedSlots, scaledSlots)
+				p = site.applyTemperatureCorrection(lp.GetTitle(), p, binned)
 			} else {
-				site.log.DEBUG.Printf("heating demand: added %s forecast for %s (%d slots)",
-					predictorType, lp.GetTitle(), len(p))
+				site.log.DEBUG.Printf("heating demand: added daily forecast for %s (%d slots)",
+					lp.GetTitle(), len(p))
 			}
 		} else if wp := lp.demandProfileWeekday(minLen); wp != nil {
 			predictorType = "weekday"
@@ -105,30 +98,59 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
 	return res
 }
 
+// lookupBin returns the historical energy for the given forecast temperature (°C)
+// by checking the exact rounded bin first, then falling back to the average of adjacent ±1°C bins.
+func lookupBin(bins map[int]float64, t float64) (float64, bool) {
+	if bins == nil {
+		return 0, false
+	}
+
+	tempBin := int(math.Round(t))
+
+	if val, ok := bins[tempBin]; ok {
+		return val, true
+	}
+
+	// Check adjacent ±1°C bins
+	valMinus, okMinus := bins[tempBin-1]
+	valPlus, okPlus := bins[tempBin+1]
+	if okMinus && okPlus {
+		return (valMinus + valPlus) / 2, true
+	}
+	if okMinus {
+		return valMinus, true
+	}
+	if okPlus {
+		return valPlus, true
+	}
+
+	return 0, false
+}
+
 // applyTemperatureCorrection adjusts heating load based on temperature forecast:
 // It looks up historical consumption for matching temperature bins (±1.5°C), and falls back
 // to linear scaling when historical data is unavailable for a given slot.
-func (site *Site) applyTemperatureCorrection(profile []float64, binned map[int]map[int]float64) ([]float64, int, int) {
+func (site *Site) applyTemperatureCorrection(lpTitle string, profile []float64, binned map[int]map[int]float64) []float64 {
 	weatherTariff := site.GetTariff(api.TariffUsageTemperature)
 	if weatherTariff == nil {
 		site.log.WARN.Println("temperature correction: demandtemperature predictor set but no temperature tariff configured")
-		return profile, 0, len(profile)
+		return profile
 	}
 
 	rates, err := weatherTariff.Rates()
 	if err != nil {
 		site.log.ERROR.Printf("temperature correction: no rates available: %v", err)
-		return profile, 0, len(profile)
+		return profile
 	}
 	if len(rates) == 0 {
 		site.log.DEBUG.Println("temperature correction: no rates available")
-		return profile, 0, len(profile)
+		return profile
 	}
 
 	const (
 		tRoom         = 21.0
-		minCorrection = 0.1 // warmer than expected
-		maxCorrection = 3.0 // colder than expected
+		minCorrection = 0.1 // warmer than expected: 10% floor for standby and DHW
+		maxCorrection = 3.0 // colder than expected: caps aggressive multipliers on near-zero baselines
 	)
 
 	currentTime := time.Now()
@@ -165,35 +187,12 @@ func (site *Site) applyTemperatureCorrection(profile []float64, binned map[int]m
 		// matches recorded historical consumption per time-of-day slot and ±1°C temperature bin,
 		// capturing non-linear heat pump COP, defrost cycles, and scheduled DHW runs.
 		if binned != nil && binned[slotInDay] != nil {
-			tempBin := int(math.Round(tFuture))
-			var binnedVal float64
-			var matched bool
-
-			if val, ok := binned[slotInDay][tempBin]; ok {
-				binnedVal = val
-				matched = true
-			} else {
-				// Check adjacent ±1°C bins
-				valMinus, okMinus := binned[slotInDay][tempBin-1]
-				valPlus, okPlus := binned[slotInDay][tempBin+1]
-				if okMinus && okPlus {
-					binnedVal = (valMinus + valPlus) / 2
-					matched = true
-				} else if okMinus {
-					binnedVal = valMinus
-					matched = true
-				} else if okPlus {
-					binnedVal = valPlus
-					matched = true
-				}
-			}
-
-			if matched {
+			if binnedVal, ok := lookupBin(binned[slotInDay], tFuture); ok {
 				res[i] = binnedVal
 				binnedSlots++
 				if logged < 3 && binnedVal > 0 {
 					site.log.DEBUG.Printf("temperature correction: slot %s (h=%02d): forecast=%.1f°C -> binned match [%d°C]=%.0fWh",
-						ts.Local().Format("15:04"), h, tFuture, tempBin, binnedVal*1e3)
+						ts.Local().Format("15:04"), h, tFuture, int(math.Round(tFuture)), binnedVal*1e3)
 					logged++
 				}
 				continue
@@ -208,6 +207,8 @@ func (site *Site) applyTemperatureCorrection(profile []float64, binned map[int]m
 		// require past temperature data for hour h to compute pastAvg and avoid division by zero
 		// (e.g. after startup when the weather source only provides forecast data from today onward)
 		if pastCount[h] == 0 {
+			site.log.DEBUG.Printf("temperature correction: slot %s (h=%02d): no historical temperature data, leaving slot unscaled",
+				ts.Local().Format("15:04"), h)
 			continue
 		}
 
@@ -230,7 +231,10 @@ func (site *Site) applyTemperatureCorrection(profile []float64, binned map[int]m
 		}
 	}
 
-	return res, binnedSlots, scaledSlots
+	site.log.DEBUG.Printf("heating demand: added temperature forecast for %s (%d slots: %d binned, %d scaled)",
+		lpTitle, len(res), binnedSlots, scaledSlots)
+
+	return res
 }
 
 // tileAndTrim returns minLen slots of the repeating daily profile, starting at the current 15min slot.

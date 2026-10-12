@@ -65,11 +65,9 @@ func TestApplyTemperatureCorrection(t *testing.T) {
 	profile := slices.Repeat([]float64{2.0}, 12)
 
 	// 1. Linear scaling (binned == nil)
-	result, binnedCount, scaledCount := site.applyTemperatureCorrection(profile, nil)
+	result := site.applyTemperatureCorrection("test", profile, nil)
 
 	require.Len(t, result, 12)
-	assert.Equal(t, 0, binnedCount)
-	assert.Equal(t, 12, scaledCount)
 
 	// Verify correction is applied: first hour should increase, second hour should decrease
 	assert.Greater(t, result[0], 2.0, "first hour should increase (colder forecast)")
@@ -91,11 +89,46 @@ func TestApplyTemperatureCorrection(t *testing.T) {
 			10: 2.2, // other temperature bin in same slot
 		},
 	}
-	resultBinned, binnedCount2, scaledCount2 := site.applyTemperatureCorrection(profile, binned)
+	resultBinned := site.applyTemperatureCorrection("test", profile, binned)
 	assert.InDelta(t, 3.5, resultBinned[0], 1e-6, "binned exact match should be used directly")
 	assert.InDelta(t, 0.8, resultBinned[8], 1e-6, "binned exact match for warm temp (>=18°C) should be used directly")
-	assert.Equal(t, 2, binnedCount2)
-	assert.Equal(t, 10, scaledCount2)
+}
+
+func TestLookupBin(t *testing.T) {
+	bins := map[int]float64{
+		5:  3.0,
+		7:  5.0,
+		10: 2.0,
+		12: 4.0,
+	}
+
+	// Exact match
+	val, ok := lookupBin(bins, 5.2)
+	assert.True(t, ok)
+	assert.InDelta(t, 3.0, val, 1e-6)
+
+	// Adjacent ±1 interpolation (e.g. 11°C interpolates between 10°C and 12°C)
+	val, ok = lookupBin(bins, 11.0)
+	assert.True(t, ok)
+	assert.InDelta(t, 3.0, val, 1e-6) // (2.0 + 4.0) / 2
+
+	// Adjacent single match (e.g. 6°C matches 5°C and 7°C)
+	val, ok = lookupBin(bins, 6.0)
+	assert.True(t, ok)
+	assert.InDelta(t, 4.0, val, 1e-6) // (3.0 + 5.0) / 2
+
+	// Adjacent single +1 match (e.g. 4°C matches bin 5)
+	val, ok = lookupBin(bins, 4.0)
+	assert.True(t, ok)
+	assert.InDelta(t, 3.0, val, 1e-6)
+
+	// No match (e.g. 25°C)
+	_, ok = lookupBin(bins, 25.0)
+	assert.False(t, ok)
+
+	// Nil bins
+	_, ok = lookupBin(nil, 5.0)
+	assert.False(t, ok)
 }
 
 func TestTileAndTrim(t *testing.T) {

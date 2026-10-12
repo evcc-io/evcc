@@ -11,7 +11,10 @@ import (
 	"github.com/jinzhu/now"
 )
 
-var ErrIncomplete = errors.New("meter profile incomplete")
+var (
+	ErrIncomplete   = errors.New("meter profile incomplete")
+	ErrNoBinnedData = errors.New("no temperature-binned data available")
+)
 
 // profilePercentile returns the configured per-slot percentile of the energy profiles (0..1), 0 = average
 func profilePercentile() float64 {
@@ -107,9 +110,11 @@ func energyProfileFiltered(entity entity, from time.Time, weekday *int, percenti
 	return (*[96]float64)(res), nil
 }
 
-// energyProfileTemperatureBinned queries the historical average energy per 15-minute slot (0..95)
-// grouped by integer outdoor temperature bin (°C) over the past year.
-// Joins recorded meter energy with weather tariff history and filters out single-sample noise (count >= 2).
+// energyProfileTemperatureBinned queries historical energy per 15-minute slot (0..95)
+// grouped by integer outdoor temperature bin (°C) over the past year (1-year lookback
+// captures full seasonal temperature extremes across winter and summer).
+// Joins recorded meter energy with weather tariff history, honours profilePercentile,
+// and filters out single-sample noise (count >= 2).
 func energyProfileTemperatureBinned(entity entity) (map[int]map[int]float64, error) {
 	database, err := db.Instance.DB()
 	if err != nil {
@@ -118,18 +123,45 @@ func energyProfileTemperatureBinned(entity entity) (map[int]map[int]float64, err
 
 	from := now.BeginningOfDay().AddDate(-1, 0, 0).Unix()
 	before := now.BeginningOfDay().Unix()
-	query := `SELECT (CAST(strftime('%H', m.ts, 'unixepoch', 'localtime') AS INTEGER) * 4 +
+
+	slots := `SELECT (CAST(strftime('%H', m.ts, 'unixepoch', 'localtime') AS INTEGER) * 4 +
 		CAST(strftime('%M', m.ts, 'unixepoch', 'localtime') AS INTEGER) / 15) AS slot_idx,
 		CAST(round(t.temperature) AS INTEGER) AS temp_bin,
-		avg(m.energy) AS energy
+		m.energy AS energy
 	FROM meters m
 	JOIN tariffs t ON m.ts = t.ts
 	WHERE m.meter = ? AND m.ts >= ? AND m.ts < ? AND COALESCE(m.recovered, 0) = 0
-		AND m.energy IS NOT NULL AND t.temperature IS NOT NULL
-	GROUP BY slot_idx, temp_bin
-	HAVING count(*) >= 2`
+		AND m.energy IS NOT NULL AND t.temperature IS NOT NULL`
 
-	rows, err := database.Query(query, entity.Id, from, before)
+	args := []any{entity.Id, from, before}
+
+	query := `WITH slots AS (` + slots + `)
+		SELECT slot_idx, temp_bin, avg(energy) AS energy
+		FROM slots
+		GROUP BY slot_idx, temp_bin
+		HAVING count(*) >= 2`
+
+	if percentile := profilePercentile(); percentile > 0 {
+		args = append(args, percentile)
+		query = `WITH slots AS (` + slots + `), counts AS (
+			SELECT slot_idx, temp_bin, count(*) AS cnt
+			FROM slots
+			GROUP BY slot_idx, temp_bin
+			HAVING cnt >= 2
+		), ranked AS (
+			SELECT s.slot_idx, s.temp_bin, s.energy,
+				row_number() OVER (PARTITION BY s.slot_idx, s.temp_bin ORDER BY s.energy) AS rn,
+				? * (c.cnt - 1) + 1 AS pos
+			FROM slots s
+			JOIN counts c ON s.slot_idx = c.slot_idx AND s.temp_bin = c.temp_bin
+		)
+		SELECT slot_idx, temp_bin, sum(energy * (1 - abs(rn - pos))) AS energy
+		FROM ranked
+		WHERE abs(rn - pos) < 1
+		GROUP BY slot_idx, temp_bin`
+	}
+
+	rows, err := database.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +193,7 @@ func energyProfileTemperatureBinned(entity entity) (map[int]map[int]float64, err
 	}
 
 	if len(res) == 0 {
-		return nil, ErrIncomplete
+		return nil, ErrNoBinnedData
 	}
 
 	return res, nil
