@@ -994,10 +994,15 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		currentLimit := lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), current)
 
 		activePhases := lp.ActivePhases()
-		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
-		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
+		requestedPower := currentToPower(current, activePhases)
+		powerLimit := lp.circuit.ValidatePower(lp.chargePower, requestedPower)
 
-		limited := lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
+		// avoid float round trip through power if the circuit does not cap
+		limited := currentLimit
+		if powerLimit < requestedPower {
+			limited = min(limited, powerToCurrent(powerLimit, activePhases))
+		}
+		limited = lp.roundedCurrent(limited)
 		if minCurrent := lp.effectiveMinCurrent(); limited < minCurrent && current >= minCurrent {
 			lp.log.DEBUG.Printf("circuit limit %.3gA below min current %.3gA", limited, minCurrent)
 		}
