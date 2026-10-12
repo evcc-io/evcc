@@ -5,6 +5,9 @@ products:
       generic: .Connect (Cloud)
   - brand: SENEC
     description:
+      generic: .Home V4
+  - brand: SENEC
+    description:
       generic: .Home P4
   - brand: SENEC
     description:
