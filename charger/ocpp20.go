@@ -143,8 +143,6 @@ func NewOCPP20FromConfig(ctx context.Context, other map[string]any) (api.Charger
 	return decorateOCPP20(c, powerG, totalEnergyG, currentsG, voltagesG, currentG, phasesS, socG), nil
 }
 
-//go:generate go tool decorate -f decorateOCPP20 -b *OCPP20 -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.CurrentGetter,api.PhaseSwitcher,api.Battery
-
 // NewOCPP20 creates an OCPP 2.0.1 charger
 func NewOCPP20(ctx context.Context,
 	id string, evseID, connectorID int, idTag string,
@@ -427,10 +425,10 @@ var _ api.Identifier = (*OCPP20)(nil)
 //}
 
 func (c *OCPP20) Identify() ([]string, error) {
-    if tag := c.evse.IdTag(); tag != "" {
-        return []string{tag}, nil
-    }
-    return nil, nil
+	if tag := c.evse.IdTag(); tag != "" {
+		return []string{tag}, nil
+	}
+	return nil, nil
 }
 
 var _ api.Diagnosis = (*OCPP20)(nil)
