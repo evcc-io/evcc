@@ -16,16 +16,16 @@
 					:key="provider.id"
 					class="d-flex align-items-baseline justify-content-between mb-2"
 				>
-					<div class="d-flex align-items-baseline">
+					<div class="provider-title d-flex align-items-baseline">
 						<span
-							class="d-inline-block p-1 rounded-circle me-2"
+							class="d-inline-block flex-shrink-0 p-1 rounded-circle me-2"
 							:class="provider.authenticated ? 'bg-success' : 'bg-warning'"
 						></span>
-						<span>{{ provider.title }}</span>
+						<span class="text-break">{{ provider.title }}</span>
 					</div>
 					<button
 						type="button"
-						class="btn btn-link btn-sm p-0 lh-1"
+						class="btn btn-link btn-sm flex-shrink-0 p-0 ms-2 lh-1"
 						:class="provider.authenticated ? 'text-muted' : 'text-warning'"
 						@click="handleProviderAction(provider)"
 					>
@@ -92,5 +92,8 @@ export default defineComponent({
 <style scoped>
 .auth-providers-list {
 	width: 100%;
+}
+.provider-title {
+	min-width: 0;
 }
 </style>
