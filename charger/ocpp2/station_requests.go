@@ -72,7 +72,7 @@ func (st *Station) RequestStopTransactionRequest(transactionId string) error {
 	return wait(err, rc)
 }
 
-// ChangeAvailabilityRequest ändert den Betriebsstatus einer EVSE.
+// ChangeAvailabilityRequest changes the operational status of an EVSE.
 func (st *Station) ChangeAvailabilityRequest(evseId int, status availability.OperationalStatus) error {
 	if !st.Connected() {
 		return api.ErrTimeout

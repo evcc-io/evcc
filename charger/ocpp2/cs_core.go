@@ -96,17 +96,17 @@ func (cs *CS2) OnReportChargingProfiles(id string, req *smartcharging.ReportChar
 }
 
 func (cs *CS2) OnNotifyChargingLimit(id string, req *smartcharging.NotifyChargingLimitRequest) (*smartcharging.NotifyChargingLimitResponse, error) {
-	cs.log.DEBUG.Printf("%s: NotifyChargingLimit evseId=%d", id, req.EvseID)
+	cs.log.DEBUG.Printf("%s: NotifyChargingLimit evseId=%v", id, req.EvseID)
 	return new(smartcharging.NotifyChargingLimitResponse), nil
 }
 
 func (cs *CS2) OnNotifyEVChargingSchedule(id string, req *smartcharging.NotifyEVChargingScheduleRequest) (*smartcharging.NotifyEVChargingScheduleResponse, error) {
-	cs.log.DEBUG.Printf("%s: NotifyEVChargingSchedule evseId=%d", id, req.EvseID)
+	cs.log.DEBUG.Printf("%s: NotifyEVChargingSchedule evseId=%v", id, req.EvseID)
 	return new(smartcharging.NotifyEVChargingScheduleResponse), nil
 }
 
 func (cs *CS2) OnNotifyEVChargingNeeds(id string, req *smartcharging.NotifyEVChargingNeedsRequest) (*smartcharging.NotifyEVChargingNeedsResponse, error) {
-	cs.log.DEBUG.Printf("%s: NotifyEVChargingNeeds evseId=%d", id, req.EvseID)
+	cs.log.DEBUG.Printf("%s: NotifyEVChargingNeeds evseId=%v", id, req.EvseID)
 	return new(smartcharging.NotifyEVChargingNeedsResponse), nil
 }
 

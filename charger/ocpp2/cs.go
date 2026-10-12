@@ -26,13 +26,13 @@ func newRegistration2() *registration2 {
 }
 
 type CS2 struct {
-	ocpp2.CSMS                        // Eingebettetes CSMS-Interface
+	ocpp2.CSMS
 	mu          sync.Mutex
 	log         *util.Logger
 	regs        map[string]*registration2
 	txnId       atomic.Int64
 	publishFunc func()
-	server      ws.Server              // für Addr()-Check in listen()
+	server      ws.Server
 }
 
 func (cs *CS2) errorHandler(errC <-chan error) {

@@ -27,10 +27,10 @@ type Config struct {
 }
 
 var (
-	instance2   *CS2
-	started2    func() error
-	port2       = 8888
-	boundPort2  int
+	instance2    *CS2
+	started2     func() error
+	port2        = 8888
+	boundPort2   int
 	externalUrl2 string
 )
 
@@ -55,26 +55,22 @@ func NewServer2(cfg Config, networkExternalUrl string) {
 
 	log := util.NewLogger("ocpp2")
 
-	// ws.Server erstellen und konfigurieren
 	server := ws.NewServer()
 	server.SetCheckOriginHandler(func(r *http.Request) bool { return true })
 	timeouts := ws.NewServerTimeoutConfig()
 	timeouts.PingWait = pingWait
 	server.SetTimeoutConfig(timeouts)
 
-	// KORRIGIERT: NewCSMS(endpoint *ocppj.Server, server ws.Server)
-	// nil als endpoint → Bibliothek erstellt Standard-Endpoint mit allen Profilen
 	csms := ocpp2.NewCSMS(nil, server)
 
 	inst := &CS2{
 		CSMS:   csms,
 		log:    log,
 		regs:   make(map[string]*registration2),
-		server: server, // ws.Server für Addr()-Check in listen()
+		server: server,
 	}
 	inst.txnId.Store(time.Now().UTC().Unix())
 
-	// Handler registrieren
 	csms.SetProvisioningHandler(inst)
 	csms.SetAvailabilityHandler(inst)
 	csms.SetTransactionsHandler(inst)
@@ -92,13 +88,10 @@ func NewServer2(cfg Config, networkExternalUrl string) {
 }
 
 func (cs *CS2) listen() error {
-	// Fehler-Channel im Hintergrund loggen
 	go cs.errorHandler(cs.CSMS.Errors())
 
-	// CSMS starten
 	go cs.CSMS.Start(port2, "/{ws}")
 
-	// Warten bis Port gebunden (max. 10 Sekunden)
 	tick := time.NewTicker(10 * time.Millisecond)
 	defer tick.Stop()
 	timeout := time.After(10 * time.Second)

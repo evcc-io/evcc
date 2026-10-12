@@ -47,7 +47,7 @@ func NewKebaOCPP2FromConfig(ctx context.Context, other map[string]any) (api.Char
 		return nil, err
 	}
 	if cc.StationID == "" {
-		return nil, fmt.Errorf("keba-ocpp2: stationid darf nicht leer sein")
+		return nil, fmt.Errorf("keba-ocpp2: stationid must not be empty")
 	}
 	return NewKebaOCPP2(ctx, cc.embed, cc.StationID, cc.EvseID, cc.IdTag, cc.Meter)
 }
@@ -82,13 +82,11 @@ func NewKebaOCPP2(ctx context.Context, e embed, stationID string, evseID int, id
 			return ocpp2pkg.NewStation(log, cs, stationID)
 		},
 		func(st *ocpp2pkg.Station) error {
-			// ← NEU: Setup in Goroutine – blockiert evcc-Start NICHT!
 			go func() {
 				if err := wb.setup(ctx, st, hasMeter); err != nil {
 					log.ERROR.Printf("setup failed: %v", err)
 				}
 			}()
-			return nil // ← sofort zurückkehren
 		},
 	)
 	if err != nil {
@@ -109,9 +107,9 @@ func (wb *KebaOCPP2) setup(ctx context.Context, st *ocpp2pkg.Station, hasMeter b
 		wb.log.INFO.Printf("station %s connected", wb.stationID)
 	}
 
-	// wb.st früh setzen damit setTxDefaultProfile() es nutzen kann.
-	// RegisterStation() setzt wb.st erst nach Rückkehr – zu spät!
-	wb.st = st // ← NEU
+	// set wb.st early so setTxDefaultProfile() can use it.
+	// RegisterStation() sets wb.st only after returning - too late!
+	wb.st = st
 
 	evse, err := ocpp2pkg.NewEVSE(ctx, wb.log, wb.evseID, st, wb.idTag, 30*time.Second)
 	if err != nil {
@@ -172,19 +170,7 @@ func (wb *KebaOCPP2) Status() (api.ChargeStatus, error) {
 }
 
 func (wb *KebaOCPP2) Enabled() (bool, error) {
-	if wb.evse == nil {
-		return false, nil
-	}
-	txn, err := wb.evse.TransactionID()
-	if err != nil {
-		return false, err
-	}
-	// Wenn Transaktion läuft → enabled State synchronisieren
-	active := txn != ""
-	if active {
-		wb.enabled = true // ← State synchronisieren
-	}
-	return active || wb.enabled, nil
+	return wb.enabled, nil
 }
 
 func (wb *KebaOCPP2) Enable(enable bool) error {
@@ -207,7 +193,7 @@ var _ api.ChargerEx = (*KebaOCPP2)(nil)
 
 func (wb *KebaOCPP2) MaxCurrentMillis(current float64) error {
 	wb.current = current
-	enabled, _ := wb.Enabled() // ← neu: Enabled() statt wb.enabled
+	enabled, _ := wb.Enabled()
 	if enabled {
 		return wb.setTxDefaultProfile(current)
 	}
@@ -222,16 +208,15 @@ func (wb *KebaOCPP2) setTxDefaultProfile(amps float64) error {
 	}
 
 	schedule := types.ChargingSchedule{
-		ID:               1,                             // ← ID nicht Id
-		ChargingRateUnit: types.ChargingRateUnitAmperes, // ← Amperes mit s!
+		ID: 1,
 		ChargingSchedulePeriod: []types.ChargingSchedulePeriod{
 			{StartPeriod: 0, Limit: amps},
 		},
 	}
 
 	profile := types.ChargingProfile{
-		ID:                     ocpp2pkg.DefaultChargingProfileId, // ← ocpp2pkg. prefix!
-		StackLevel:             ocpp2pkg.DefaultStackLevel,        // ← ocpp2pkg. prefix!
+		ID:                     ocpp2pkg.DefaultChargingProfileId,
+		StackLevel:             ocpp2pkg.DefaultStackLevel,
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
 		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
 		ChargingSchedule:       []types.ChargingSchedule{schedule},
