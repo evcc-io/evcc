@@ -9,7 +9,7 @@ products:
       de: KeContact P30 X-Serie (OCPP 2.0.1)
       en: KeContact P30 X-Series (OCPP 2.0.1)
 group: generic
-capabilities: ["mA", "rfid", "1p3p"]
+capabilities: ["mA", "rfid"]
 requirements:
   description:
     de: |
