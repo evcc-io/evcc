@@ -8,6 +8,8 @@ requirements:
   description:
     en: The wallbox has to be configured as loadpoint.
     de: Die Wallbox muss als Ladepunkt konfiguriert sein.
+discovery:
+  hostname: ["openWB*"]
 params:
   - name: host
   - name: connector

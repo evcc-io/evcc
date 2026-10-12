@@ -16,6 +16,7 @@ jobs:
       contents: read # explore the codebase for the answer; no fix/PR in analyze mode
       issues: write # comment + minimize the calling comment
       pull-requests: write # comment on PR conversations
+      discussions: read # read referenced discussions
       id-token: write
       actions: read
     uses: ./.github/workflows/claude-issue-agent-run.yml

@@ -93,17 +93,6 @@ func (v *Provider) Odometer() (float64, error) {
 	return kmPerMile * res.Response.VehicleState.Odometer, nil
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.dataG()
-	if err != nil {
-		return time.Time{}, err
-	}
-	return time.Now().Add(time.Duration(res.Response.ChargeState.MinutesToFullCharge) * time.Minute), nil
-}
-
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface

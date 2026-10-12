@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden } from "./utils";
+import { expectModalVisible, expectModalHidden, enableExperimental } from "./utils";
 import axios from "axios";
 
 const CONFIG = "config-grid-only.evcc.yaml";
@@ -47,14 +47,7 @@ test.describe("mcp", () => {
     // MCP card not shown yet
     await expect(page.getByTestId("mcp")).toHaveCount(0);
 
-    // enable experimental
-    const experimentalEntry = page.getByTestId("generalconfig-experimental");
-    await experimentalEntry.getByRole("button", { name: "edit" }).click();
-    const experimentalModal = page.getByTestId("experimental-modal");
-    await expectModalVisible(experimentalModal);
-    await experimentalModal.getByLabel("Enable experimental features.").click();
-    await experimentalModal.getByRole("button", { name: "Close" }).click();
-    await expectModalHidden(experimentalModal);
+    await enableExperimental(page);
 
     // MCP card now visible (Services section, gated on experimental)
     const mcpCard = page.getByTestId("mcp");

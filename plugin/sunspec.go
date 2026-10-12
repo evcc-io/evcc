@@ -9,6 +9,7 @@ import (
 
 	sunspec "github.com/andig/gosunspec"
 	"github.com/andig/gosunspec/typelabel"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters"
@@ -23,6 +24,7 @@ type ModbusSunspec struct {
 	op     modbus.SunSpecOperation
 	scale  float64
 	mask   uint64
+	nan    bool
 }
 
 func init() {
@@ -36,6 +38,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		Value           []string
 		Scale           float64
 		BitMask         string
+		Nan             bool // report the not-implemented sentinel as 0, like the modbus *nan encodings
 		ConnectDelay    time.Duration
 	}{
 		Scale: 1,
@@ -109,6 +112,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		device: device,
 		scale:  cc.Scale,
 		mask:   mask,
+		nan:    cc.Nan,
 	}
 
 	device.mu.Lock()
@@ -143,7 +147,15 @@ func (m *ModbusSunspec) floatGetter() (f float64, err error) {
 		m.op.Block,
 		m.op.Point,
 	)
-	if err != nil && !errors.Is(err, meters.ErrNaN) {
+	if err != nil {
+		// not implemented sentinel: report missing so energy totals are not rebased,
+		// unless the template opted into zero (e.g. an unused mppt string)
+		if errors.Is(err, meters.ErrNaN) {
+			if m.nan {
+				return 0, nil
+			}
+			return 0, api.ErrNotAvailable
+		}
 		return 0, fmt.Errorf("model %d block %d point %s: %w", m.op.Model, m.op.Block, m.op.Point, err)
 	}
 

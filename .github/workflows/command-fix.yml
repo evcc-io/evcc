@@ -5,9 +5,10 @@ on:
     types: [created]
 
 # Triggered by a `/fix` comment on any issue or PR conversation, maintainers only.
-# Delegates to the shared issue agent in fix mode, which investigates, pushes a
-# fix branch, opens a PR, comments with the result, then minimizes the calling
-# `/fix` comment as RESOLVED, whether or not a PR was opened.
+# Delegates to the shared issue agent in fix mode, which investigates, commits a
+# fix that a separate job pushes and opens as a PR, comments with the result,
+# then minimizes the calling `/fix` comment as RESOLVED, whether or not a PR was
+# opened.
 jobs:
   fix:
     name: Fix on demand
@@ -15,9 +16,10 @@ jobs:
       startsWith(github.event.comment.body, '/fix') &&
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     permissions:
-      contents: write # create branch + push PR fix
+      contents: write # push the fix branch (open-pr job only, the agent job reduces to read)
       issues: write # comment + minimize the calling comment
       pull-requests: write # open PR fix, comment on PR conversations
+      discussions: read # read referenced discussions
       id-token: write
       actions: read
     uses: ./.github/workflows/claude-issue-agent-run.yml

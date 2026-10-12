@@ -61,6 +61,8 @@
 				type="String"
 				class="me-2"
 				required
+				:service-values="hostServiceValues"
+				:service-loading="hostServiceLoading"
 				:model-value="host"
 				@update:model-value="(v) => $emit('update:host', v)"
 			/>
@@ -166,13 +168,14 @@ import FormRow from "../FormRow.vue";
 import PropertyField from "../PropertyField.vue";
 import type { PropType } from "vue";
 import type { ModbusCapability } from "./index";
-import { loadServiceValues } from "./index";
+import { loadServiceValues, serviceDefaults } from "./index";
 import {
 	MODBUS_BAUDRATE,
 	MODBUS_COMSET,
 	MODBUS_CONNECTION,
 	MODBUS_PROTOCOL,
 	MODBUS_TYPE,
+	type ServiceValue,
 } from "@/types/evcc";
 
 export default defineComponent({
@@ -196,6 +199,8 @@ export default defineComponent({
 		defaultComset: String,
 		defaultBaudrate: Number,
 		hideModbusId: Boolean,
+		hostServiceValues: { type: Array as PropType<ServiceValue[]>, default: () => [] },
+		hostServiceLoading: Boolean,
 	},
 	emits: [
 		"update:modbus",
@@ -212,7 +217,7 @@ export default defineComponent({
 			protocol: MODBUS_PROTOCOL.TCP as MODBUS_PROTOCOL,
 			MODBUS_PROTOCOL,
 			MODBUS_CONNECTION,
-			deviceServiceValues: [] as string[],
+			deviceServiceValues: [] as ServiceValue[],
 			localDevice: undefined as string | undefined,
 		};
 	},
@@ -333,12 +338,13 @@ export default defineComponent({
 		},
 		applyServiceDefault() {
 			// auto-apply device value if it's needed and exactly one option exists
+			const defaults = serviceDefaults(this.deviceServiceValues);
 			if (
 				this.connection === MODBUS_CONNECTION.SERIAL &&
-				this.deviceServiceValues.length === 1 &&
+				defaults.length === 1 &&
 				!this.device
 			) {
-				this.deviceModel = this.deviceServiceValues[0];
+				this.deviceModel = defaults[0];
 			}
 		},
 	},

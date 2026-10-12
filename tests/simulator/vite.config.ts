@@ -4,5 +4,7 @@ import api from "./api";
 
 export default defineConfig({
   plugins: [vue(), api()],
-  server: { port: 7072, host: true },
+  preview: { port: 7072, host: true },
+  // no lightningcss pass: it does not know the @custom-media rules in app.css
+  build: { cssMinify: false },
 });

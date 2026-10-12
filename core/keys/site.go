@@ -5,6 +5,7 @@ const (
 	AuxPower              = "auxPower"
 	Circuits              = "circuits"
 	Consumers             = "consumers"
+	Country               = "country"
 	Currency              = "currency"
 	Ext                   = "ext"
 	GreenShareHome        = "greenShareHome"

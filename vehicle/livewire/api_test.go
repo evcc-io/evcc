@@ -136,18 +136,6 @@ func TestProviderCharging(t *testing.T) {
 	status, err := p.Status()
 	require.NoError(t, err)
 	assert.Equal(t, api.StatusC, status)
-
-	// timeToMaxLimit is minutes: 45 for 65 -> 80 % on the onboard charger
-	fetched := time.Now()
-	finish, err := p.FinishTime()
-	require.NoError(t, err)
-	assert.WithinDuration(t, fetched.Add(45*time.Minute), finish, time.Second)
-
-	// the estimate is anchored to the fetch, not to the call: repeated calls
-	// against the cached response return the same finish time
-	again, err := p.FinishTime()
-	require.NoError(t, err)
-	assert.Equal(t, finish, again)
 }
 
 func TestProviderComplete(t *testing.T) {
@@ -168,9 +156,6 @@ func TestProviderComplete(t *testing.T) {
 	limit, err := p.GetLimitSoc()
 	require.NoError(t, err)
 	assert.Equal(t, float64(limit), soc)
-
-	_, err = p.FinishTime()
-	assert.ErrorIs(t, err, api.ErrNotAvailable)
 }
 
 func TestErrorEnvelopeStatus(t *testing.T) {

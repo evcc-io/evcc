@@ -196,7 +196,7 @@ func (wb *MyPvHea) MaxCurrentMillis(current float64) error {
 
 	phases := int(wb.relays)
 	if wb.lp != nil {
-		if p := wb.lp.GetPhases(); p != 0 {
+		if p := wb.lp.ActivePhases(); p != 0 {
 			phases = p
 		}
 	}

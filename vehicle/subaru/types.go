@@ -23,6 +23,11 @@ type Status struct {
 	} `json:"payload"`
 }
 
+// Incomplete reports a placeholder payload sent before the vehicle reported fresh data
+func (s Status) Incomplete() bool {
+	return s.Payload.LastUpdateTimestamp == "" || s.Payload.EvRangeWithAc.Unit == "" || (s.Payload.BatteryLevel == 0 && s.Payload.EvRangeWithAc.Value == 0)
+}
+
 const kmPerMile = 1.609344
 
 type EvRange struct {

@@ -329,6 +329,7 @@ type Product struct {
 	Brand        string       // product brand
 	Description  TextLanguage // product name
 	Capabilities []Capability `json:",omitempty"` // appended to template-level capabilities
+	Caveats      []Caveat     `json:",omitempty"` // appended to template-level caveats
 	Link         string       `json:",omitempty"` // integration provider link, overrides template-level link
 }
 

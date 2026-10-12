@@ -31,6 +31,10 @@ components:
         currency:
           $ref: "#/components/schemas/Currency"
           description: Configured currency for all monetary values.
+        country:
+          description: Configured site country as ISO 3166-1 alpha-2 code. Empty when not set.
+          type: string
+          example: DE
         fatal:
           description: Fatal startup errors.
           type: array
@@ -189,6 +193,9 @@ components:
           type: object
           additionalProperties:
             $ref: "#/components/schemas/Circuit"
+        circuitsConfig:
+          $ref: "#/components/schemas/GenericConfigStatus"
+          description: Load management configuration.
         bufferSoc:
           description: Battery buffer SoC in %. Energy above this level may be used for charging in solar mode.
           type: number
@@ -268,6 +275,9 @@ components:
         optimizer:
           description: Battery optimizer is enabled.
           type: boolean
+        optimizerAutomatic:
+          $ref: "#/components/schemas/OptimizerAutomatic"
+          description: "What the optimizer controls instead of only advising: nothing, the home battery, or battery and loadpoints."
         optimizerChargingStrategy:
           description: Selected battery optimizer charging strategy.
           type: string
@@ -402,6 +412,11 @@ components:
         controllable:
           description: Battery supports external control of its operation mode.
           type: boolean
+        modes:
+          description: Battery modes supported by the device.
+          type: array
+          items:
+            type: string
         capacity:
           description: Battery capacity in kWh. Zero when not specified.
           type: number
@@ -442,6 +457,9 @@ components:
         discharge:
           description: Recommended discharge power in W.
           type: number
+        grid:
+          description: Planned site grid flow of the slot in W, positive means import.
+          type: number
         actionable:
           description: Suggestion differs from the current operating mode.
           type: boolean
@@ -478,6 +496,9 @@ components:
       description: A load management circuit limiting power and current of its assigned loadpoints.
       type: object
       properties:
+        name:
+          description: Circuit name used as configuration reference.
+          type: string
         title:
           description: Circuit title for UI display.
           type: string
@@ -932,6 +953,9 @@ components:
         offeredCurrent:
           description: Current offered to the vehicle in A.
           type: number
+        optimizerControlled:
+          description: Optimizer decides start/stop for this loadpoint, replacing the price limits.
+          type: boolean
         phaseAction:
           $ref: "#/components/schemas/PhaseAction"
           description: Pending phase switching action in solar mode.
@@ -1133,6 +1157,7 @@ components:
         - minSocNotReached
         - mode
         - offeredCurrent
+        - optimizerControlled
         - phaseAction
         - phaseRemaining
         - phasesActive
@@ -1186,6 +1211,9 @@ components:
           type: number
         discharge:
           description: Recommended discharge power in W.
+          type: number
+        grid:
+          description: Planned site grid flow of the slot in W, positive means import.
           type: number
         actionable:
           description: Suggestion differs from the current operating mode.
@@ -1532,6 +1560,12 @@ components:
             $ref: "#/components/schemas/OcppStationStatus"
       required:
         - stations
+    OptimizerAutomatic:
+      type: string
+      enum:
+        - off
+        - battery
+        - full
     PhaseAction:
       description: Pending phase switching action in solar mode.
       type: string

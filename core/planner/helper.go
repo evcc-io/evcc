@@ -65,15 +65,19 @@ func SlotAt(time time.Time, plan api.Rates) api.Rate {
 	return api.Rate{}
 }
 
-// SlotHasSuccessor returns if the slot has an immediate successor.
+// SlotHasLaterSuccessor returns if the slot has no immediate successor but the plan continues later.
 // Does not require the plan to be sorted by start time.
-func SlotHasSuccessor(r api.Rate, plan api.Rates) bool {
+func SlotHasLaterSuccessor(r api.Rate, plan api.Rates) bool {
+	var later bool
 	for _, slot := range plan {
-		if r.End.Equal(slot.Start) {
-			return true
+		switch {
+		case slot.Start.Equal(r.End):
+			return false
+		case slot.Start.After(r.End):
+			later = true
 		}
 	}
-	return false
+	return later
 }
 
 // IsFirst returns if the slot is the first slot in the plan.

@@ -124,6 +124,26 @@ func TestCachedFreshElapsed(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestCacheKeepsLeadingSlots(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+
+	now := time.Now().Truncate(SlotDuration)
+
+	// the fresh tariff's first fetch starts an hour out, the cache covers the hour before
+	p := &cachingProxy{
+		key:      "test-merge",
+		interval: time.Hour,
+		tariff:   &testTariff{typ: api.TariffTypeCo2, rates: makeRates(now.Add(time.Hour), SlotDuration, 4, 10)},
+		cached:   &cached{Type: api.TariffTypeCo2, Rates: makeRates(now.Add(-time.Hour), SlotDuration, 12, 0), Updated: now.Add(-2 * time.Hour)},
+	}
+
+	rr, err := p.Rates()
+	require.NoError(t, err)
+
+	// elapsed cached slots dropped, the current hour kept, fresh rates appended
+	assert.Equal(t, append(makeRates(now, SlotDuration, 4, 4), makeRates(now.Add(time.Hour), SlotDuration, 4, 10)...), rr)
+}
+
 func TestCacheInterval(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 

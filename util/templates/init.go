@@ -107,9 +107,10 @@ func fromBytes(b []byte) (Template, error) {
 		}
 	}
 
-	// push down capabilities and link to products
+	// push down capabilities, caveats and link to products
 	for i := range tmpl.Products {
 		tmpl.Products[i].Capabilities = append(tmpl.Products[i].Capabilities, tmpl.Capabilities...)
+		tmpl.Products[i].Caveats = append(tmpl.Products[i].Caveats, tmpl.Caveats...)
 
 		if tmpl.Products[i].Link == "" {
 			tmpl.Products[i].Link = tmpl.Link

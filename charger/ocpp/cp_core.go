@@ -28,6 +28,8 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 	// mark charge point as ready for communication
 	cp.connect(true)
 
+	cp.markRebooted()
+
 	// Notify the reboot monitor (and the initial Setup). The channel is
 	// buffered (size 1) and coalescing: if an older notification is still
 	// queued, drop it so the consumer always re-initializes against the most

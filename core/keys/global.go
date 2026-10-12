@@ -19,6 +19,7 @@ const (
 	OcppForwarder      = "ocppforwarder"
 	Tariffs            = "tariffs"
 	TariffRefs         = "tariffRefs"
+	CircuitsConfig     = "circuitsConfig"
 	Version            = "version"
 	Config             = "config"
 	Database           = "database"
@@ -31,6 +32,7 @@ const (
 	Plant              = "plant"
 	Telemetry          = "telemetry"
 	Optimizer          = "optimizer"
+	OptimizerAutomatic = "optimizerAutomatic" // optimizer automatic level: off, battery, full
 	Mcp                = "mcp"
 	DemoMode           = "demoMode"
 	Remote             = "remote"

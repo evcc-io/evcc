@@ -15,6 +15,8 @@ requirements:
       Username and password are identical to Web Portal or My E3/DC App access. Key (=RSCP-Password) must be set in the E3/DC system at Personalize/User Profile.
 
       For phase switching, "Automatic phase switching" must be disabled in E3DC dashboard.
+discovery:
+  mac: ["1CAE3E3", "0C86297"]
 params:
   - name: host
   - name: port

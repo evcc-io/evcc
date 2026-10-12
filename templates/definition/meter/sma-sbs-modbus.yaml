@@ -4,6 +4,9 @@ products:
     description:
       generic: Sunny Boy Storage 3.7/5.0/6.0 (Modbus)
 capabilities: ["battery-control"]
+discovery:
+  hostname: ["sma*"]
+  mac: ["0015BB"]
 params:
   - name: usage
     choice: ["battery"]

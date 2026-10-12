@@ -88,9 +88,6 @@ SuggestionAndForecast.args = {
   forecast: { highest: { soc: 100, time: "2026-07-01T18:00:00+02:00", limit: true } },
 };
 
-// grid of cards whose current mode (gauge) deliberately differs from the suggested action,
-// so the suggestion icon always signals a change.
-// current mode: charge/holdcharge/hold are locked modes; discharging is power-derived (no mode)
 const cards = [
   {
     title: "Sungrow",
@@ -99,13 +96,13 @@ const cards = [
     capacity: 13.5,
     color: "#0BA631",
     controllable: true,
-    batteryMode: BATTERY_MODE.CHARGE, // current: charge
+    batteryMode: BATTERY_MODE.CHARGE,
     suggestion: { action: "normal", actionable: true },
   },
   {
     title: "Anker",
     soc: 40,
-    power: 1200, // current: discharging
+    power: 1200, // discharging
     capacity: 7.5,
     color: "#7FC41B",
     controllable: true,
@@ -118,8 +115,8 @@ const cards = [
     capacity: 10.4,
     color: "#0FD0BF",
     controllable: true,
-    batteryMode: BATTERY_MODE.HOLDCHARGE, // current: holdcharge
-    suggestion: { action: "hold", actionable: true },
+    batteryMode: BATTERY_MODE.HOLDCHARGE,
+    suggestion: { action: "discharge", actionable: true },
   },
   {
     title: "Huawei",
@@ -128,8 +125,36 @@ const cards = [
     capacity: 5,
     color: "#4EABE6",
     controllable: true,
-    batteryMode: BATTERY_MODE.HOLD, // current: hold
+    batteryMode: BATTERY_MODE.HOLD,
     suggestion: { action: "charge", actionable: true },
+  },
+  {
+    title: "Sonnen",
+    soc: 95,
+    power: 0,
+    capacity: 10,
+    color: "#F0A30A",
+    controllable: true,
+    batteryMode: BATTERY_MODE.DISCHARGE,
+    suggestion: { action: "holdcharge", actionable: true },
+  },
+  {
+    title: "BYD",
+    soc: 55,
+    power: -2400, // charging
+    capacity: 12.8,
+    color: "#E0457B",
+    controllable: true,
+    suggestion: { action: "hold", actionable: true },
+  },
+  {
+    title: "Pylontech",
+    soc: 62,
+    power: 0, // idle
+    capacity: 9.6,
+    color: "#8E6CEF",
+    controllable: true,
+    suggestion: { action: "normal", actionable: true },
   },
 ];
 
@@ -142,3 +167,4 @@ export const CurrentVsSuggested = () => ({
     <BatteryStatusCard v-for="c in cards" :key="c.title" v-bind="c" />
   </div>`,
 });
+CurrentVsSuggested.parameters = { layout: "padded" };

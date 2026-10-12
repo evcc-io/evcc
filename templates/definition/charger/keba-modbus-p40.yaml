@@ -20,6 +20,8 @@ requirements:
       * Enable Modbus: The "Enable" and "Enable RFID" options must be activated in the "Modbus" settings. 
       * To use RFID cards, the "Authorization" option must be activated under "Device". 
       * For phase switching the minimum firmware version 1.3.0 must be installed. In the "Photovoltaic Optimized Charging" settings, the phase switching needs to be enabled. The "communication channel" must be set to "Modbus".
+discovery:
+  mac: ["0060B5", "00141D"]
 params:
   - name: modbus
     choice: ["tcpip"]

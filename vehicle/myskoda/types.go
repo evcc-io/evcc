@@ -34,9 +34,8 @@ type AirConditioning struct {
 }
 
 type Charging struct {
-	IsVehicleInSavedLocation bool
-	Status                   *ChargingStatus
-	Settings                 *ChargingSettings
+	Status   *ChargingStatus
+	Settings *ChargingSettings
 }
 
 type ChargingStatus struct {
@@ -46,6 +45,7 @@ type ChargingStatus struct {
 	FullyChargedAt                       time.Time
 	State                                string
 	ChargeType                           string
+	PlugConnectionState                  string
 	Battery                              BatteryStatus
 }
 

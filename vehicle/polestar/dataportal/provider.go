@@ -83,28 +83,6 @@ func (v *Provider) Odometer() (float64, error) {
 	return res.OdometerMeters / 1e3, nil
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.batteryG()
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	if res.EstimatedChargingTimeToFullMinutes <= 0 {
-		return time.Time{}, api.ErrNotAvailable
-	}
-
-	// anchor the relative remaining time to the API's capture timestamp
-	base := res.Timestamp.Time()
-	if base.IsZero() {
-		base = time.Now()
-	}
-
-	return base.Add(time.Duration(res.EstimatedChargingTimeToFullMinutes) * time.Minute), nil
-}
-
 var _ api.SocLimiter = (*Provider)(nil)
 
 // GetLimitSoc implements the api.SocLimiter interface

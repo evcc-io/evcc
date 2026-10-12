@@ -1,9 +1,7 @@
 package dataportal
 
 import (
-	"strconv"
 	"testing"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/stretchr/testify/assert"
@@ -91,33 +89,4 @@ func TestLimitSoc(t *testing.T) {
 	limit, err := v.GetLimitSoc()
 	require.NoError(t, err)
 	assert.Equal(t, int64(80), limit)
-}
-
-func TestFinishTime(t *testing.T) {
-	captured := time.Date(2026, 5, 22, 12, 0, 0, 0, time.UTC)
-
-	v := &Provider{
-		batteryG: func() (Battery, error) {
-			return Battery{
-				EstimatedChargingTimeToFullMinutes: 30,
-				Timestamp:                          Timestamp{Seconds: strconv.FormatInt(captured.Unix(), 10)},
-			}, nil
-		},
-	}
-
-	// finish time is anchored to the API capture timestamp, not time.Now()
-	ft, err := v.FinishTime()
-	require.NoError(t, err)
-	assert.True(t, captured.Add(30*time.Minute).Equal(ft))
-}
-
-func TestFinishTimeNotCharging(t *testing.T) {
-	v := &Provider{
-		batteryG: func() (Battery, error) {
-			return Battery{EstimatedChargingTimeToFullMinutes: 0}, nil
-		},
-	}
-
-	_, err := v.FinishTime()
-	assert.ErrorIs(t, err, api.ErrNotAvailable)
 }

@@ -174,18 +174,18 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 	))
 
 	// site api
-	smartCostLimit := func(lp loadpoint.API, limit *float64) {
-		lp.SetSmartCostLimit(limit)
+	smartCostLimit := func(lp loadpoint.API, limit *float64) error {
+		return lp.SetSmartCostLimit(limit)
 	}
-	smartFeedInPriorityLimit := func(lp loadpoint.API, limit *float64) {
-		lp.SetSmartFeedInPriorityLimit(limit)
+	smartFeedInPriorityLimit := func(lp loadpoint.API, limit *float64) error {
+		return lp.SetSmartFeedInPriorityLimit(limit)
 	}
 
 	routes := map[string]route{
 		"buffersoc":                       {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":                  {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol":         {"POST", "/batterydischargecontrol/{value:[01truefalse]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
-		"batterygriddischarge":            {"POST", "/batterygriddischarge/{value:[01truefalse]+}", boolHandler(site.SetBatteryGridDischarge, site.GetBatteryGridDischarge)},
+		"batterygriddischarge":            {"POST", "/batterygriddischarge/{value:[01truefalse]+}", batteryGridDischargeHandler(site)},
 		"batterygridcharge":               {"POST", "/batterygridchargelimit/{value:-?[0-9.]+}", floatPtrHandler(site.SetBatteryGridChargeLimit, site.GetBatteryGridChargeLimit)},
 		"batterygridchargedelete":         {"DELETE", "/batterygridchargelimit", floatPtrHandler(site.SetBatteryGridChargeLimit, site.GetBatteryGridChargeLimit)},
 		"batterygriddischargelimit":       {"POST", "/batterygriddischargelimit/{value:-?[0-9.]+}", floatPtrHandler(site.SetBatteryGridDischargeLimit, site.GetBatteryGridDischargeLimit)},
@@ -208,6 +208,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"deletesession":                   {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
 		"gridsessions":                    {"GET", "/gridsessions", gridSessionsHandler},
 		"energyhistory":                   {"GET", "/history/energy", energyHistoryHandler},
+		"energyflow":                      {"GET", "/history/flow", energyFlowHandler},
+		"tariffhistory":                   {"GET", "/history/tariffs", tariffHistoryHandler},
 		"optimize":                        {"POST", "/optimize", callHandler(site.Optimize)},
 		"telemetry2":                      {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
 		"devicecolors":                    {"PUT", "/devicecolors", updateDeviceColor(site)},
@@ -263,11 +265,11 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 			"enableDelay":               {"POST", "/enable/delay/{value:[0-9]+}", durationHandler(pass(lp.SetEnableDelay), lp.GetEnableDelay)},
 			"disableThreshold":          {"POST", "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
 			"disableDelay":              {"POST", "/disable/delay/{value:[0-9]+}", durationHandler(pass(lp.SetDisableDelay), lp.GetDisableDelay)},
-			"smartCost":                 {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
-			"smartCostDelete":           {"DELETE", "/smartcostlimit", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
+			"smartCost":                 {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(lp.SetSmartCostLimit, lp.GetSmartCostLimit)},
+			"smartCostDelete":           {"DELETE", "/smartcostlimit", floatPtrHandler(lp.SetSmartCostLimit, lp.GetSmartCostLimit)},
 			"solarShare":                {"POST", "/solarshare/{value:-?[0-9.]+}", floatHandler(pass(lp.SetSolarShare), lp.GetSolarShare)},
-			"smartFeedInPriority":       {"POST", "/smartfeedinprioritylimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
-			"smartFeedInPriorityDelete": {"DELETE", "/smartfeedinprioritylimit", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
+			"smartFeedInPriority":       {"POST", "/smartfeedinprioritylimit/{value:-?[0-9.]+}", floatPtrHandler(lp.SetSmartFeedInPriorityLimit, lp.GetSmartFeedInPriorityLimit)},
+			"smartFeedInPriorityDelete": {"DELETE", "/smartfeedinprioritylimit", floatPtrHandler(lp.SetSmartFeedInPriorityLimit, lp.GetSmartFeedInPriorityLimit)},
 			"priority":                  {"POST", "/priority/{value:[0-9]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
 			"batteryBoost":              {"POST", "/batteryboost/{value:[01truefalse]+}", boolHandler(lp.SetBatteryBoost, func() bool { return lp.GetBatteryBoost() > 0 })},
 			"batteryBoostLimit":         {"POST", "/batteryboostlimit/{value:[0-9]+}", intHandler(pass(lp.SetBatteryBoostLimit), lp.GetBatteryBoostLimit)},
@@ -357,6 +359,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
 			"experimental":       {"POST", "/experimental/{value:[01truefalse]+}", boolHandler(setExperimental(pub), getExperimental)},
 			"optimizer":          {"POST", "/optimizer/{value:[01truefalse]+}", boolHandler(setOptimizer(pub), getOptimizer)},
+			"optimizerAutomatic": {"POST", "/optimizerautomatic/{value:[a-z]+}", stringHandler(setOptimizerAutomatic(pub, site), core.OptimizerAutomatic)},
 			"remote":             {"POST", "/remote/{value:[01truefalse]+}", boolHandler(remoteAccess.Enable, remoteAccess.Enabled)},
 			"remoteclients":      {"GET", "/remote/clients", remoteClientsHandler(remoteAccess)},
 			"createremoteclient": {"POST", "/remote/clients", createRemoteClientHandler(remoteAccess)},
@@ -402,8 +405,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		// site
 		for _, r := range map[string]route{
-			"site":       {"GET", "/site", siteHandler(site)},
-			"updatesite": {"PUT", "/site", updateSiteHandler(site)},
+			"site":          {"GET", "/site", siteHandler(site)},
+			"updatesite":    {"PUT", "/site", updateSiteHandler(site)},
+			"updatecountry": {"PUT", "/country", updateCountryHandler(site)},
 		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
@@ -438,8 +442,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"logareas":   {"GET", "/log/areas", logAreasHandler},
 			"clearcache": {"DELETE", "/cache", clearCacheHandler},
 			"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
-				shutdown()
 				w.WriteHeader(http.StatusNoContent)
+				_ = http.NewResponseController(w).Flush()
+				shutdown()
 			}},
 		}
 

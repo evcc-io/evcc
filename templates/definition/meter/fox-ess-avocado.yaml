@@ -34,6 +34,9 @@ params:
   - name: maxchargepower
     default: 1200
     required: true
+  - name: maxdischargepower
+    default: 800
+    required: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -251,6 +254,37 @@ render: |
                 encoding: uint16
           - source: const
             value: {{ .maxchargepower }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46003 # Remote Active Power
+                type: writemultiple
+                encoding: int32
+      - case: 5 # discharge - force battery discharge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 5 # B01 0 1 //target:battery discharge
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46001 # Remote Control Mode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 60 # Remote timeout 60 seconds
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46002 # Remote Timeout Set
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: {{ .maxdischargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}

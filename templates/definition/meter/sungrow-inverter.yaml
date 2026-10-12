@@ -4,6 +4,9 @@ products:
     description:
       generic: SG Series Inverter
 capabilities: ["curtail"]
+discovery:
+  hostname: ["sungrow*"]
+  mac: ["AC199F"]
 params:
   - name: usage
     choice: ["grid", "pv"]
@@ -37,6 +40,14 @@ render: |
       address: 5030 # Total Active Power
       type: input
       decode: uint32s
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5143 # Total PV generation, 0.1 kWh
+      type: input
+      decode: uint32s
+    scale: 0.1
   # EEG §9 curtailment via the power limitation registers
   #   5006 (doc 5007) power limitation switch, 0xAA enable / 0x55 disable
   #   5007 (doc 5008) power limitation value, 0.1 % of nominal power

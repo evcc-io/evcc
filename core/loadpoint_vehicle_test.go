@@ -587,6 +587,55 @@ func TestStartWakeUpTimerDisabled(t *testing.T) {
 	}
 }
 
+// TestIdentifyVehicleByStatusKeepsAssignedVehicle: the status query takes seconds,
+// a vehicle the user assigned meanwhile must neither be removed nor replaced
+func TestIdentifyVehicleByStatusKeepsAssignedVehicle(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		status api.ChargeStatus // reported by the detectable vehicle
+	}{
+		{"not confirmed", api.StatusA},
+		{"other vehicle detected", api.StatusB},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			type vehicleT struct {
+				*api.MockVehicle
+				*api.MockChargeState
+			}
+
+			detectable := &vehicleT{api.NewMockVehicle(ctrl), api.NewMockChargeState(ctrl)}
+			detectable.MockVehicle.EXPECT().GetTitle().Return("detectable").AnyTimes()
+			detectable.MockVehicle.EXPECT().Features().AnyTimes()
+			detectable.MockChargeState.EXPECT().Status().Return(tc.status, nil)
+
+			assigned := &vehicleT{api.NewMockVehicle(ctrl), api.NewMockChargeState(ctrl)}
+			assigned.MockVehicle.EXPECT().GetTitle().Return("assigned").AnyTimes()
+			assigned.MockVehicle.EXPECT().Features().AnyTimes()
+			assigned.MockChargeState.EXPECT().Status().Return(api.StatusA, nil).AnyTimes()
+
+			charger := api.NewMockCharger(ctrl)
+			charger.EXPECT().Status().Return(api.StatusB, nil).AnyTimes()
+
+			lp := &Loadpoint{
+				log:     util.NewLogger("foo"),
+				bus:     evbus.New(),
+				clock:   clock.NewMock(),
+				charger: charger,
+			}
+			lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{detectable, assigned}))
+
+			// detection running, user assigned a vehicle while the status query was in flight
+			lp.vehicleDetect = lp.clock.Now()
+			lp.vehicle = assigned
+
+			lp.identifyVehicleByStatus()
+			assert.Equal(t, assigned, lp.GetVehicle(), "assigned vehicle must be kept")
+		})
+	}
+}
+
 func TestReconnectVehicle(t *testing.T) {
 	tc := []struct {
 		name      string

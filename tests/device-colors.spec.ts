@@ -28,10 +28,6 @@ async function expectLegendColor(scope: Locator | Page, label: string, rgb: stri
   await expect(dot).toHaveCSS("background-color", rgb);
 }
 
-function chartSection(page: Page, heading: string): Locator {
-  return page.locator("section").filter({ has: page.getByRole("heading", { name: heading }) });
-}
-
 test("device colors: autoassign, override, persistence", async ({ page }) => {
   // ---------- Step 1 — Sessions, by-vehicle view ----------
   await page.goto("/#/sessions?year=2026&month=5");
@@ -57,40 +53,33 @@ test("device colors: autoassign, override, persistence", async ({ page }) => {
   // non-collision: Carport must shift off BLUE to the first free entry (AMBER)
   await expectLegendColor(page, "Carport", AMBER);
 
-  // ---------- Step 3 — History view, same colors ----------
-  await page.goto("/#/history?period=day&year=2026&month=5&day=15");
-  const lpSection = page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: "Charging & Heating" }) });
-  await expect(lpSection).toBeVisible({ timeout: 10000 });
-  await expectLegendColor(lpSection, "Garage", BLUE);
-  await expectLegendColor(lpSection, "Carport", AMBER);
+  // ---------- Step 3 — Energy page, same colors on the loadpoint cards ----------
+  await page.goto("/#/energy?period=day&year=2026&month=5&day=15");
+  await expect(page.getByTestId("energy-loadpoint")).toHaveCount(2);
+  await expectLegendColor(page, "Garage", BLUE);
+  await expectLegendColor(page, "Carport", AMBER);
 
-  // ---------- Step 4 — Custom hex on consumer meter (Consumption chart) ----------
-  const consumerSection = chartSection(page, "Consumption");
-  await expect(consumerSection).toBeVisible();
-  await legendBadge(consumerSection, "Dishwasher").click();
+  // ---------- Step 4 — Custom hex on consumer meter (consumers legend) ----------
+  await legendBadge(page, "Dishwasher").click();
   const popover2 = page.getByRole("dialog");
   await expect(popover2).toBeVisible();
   // save-on-type fires when input matches hex regex
   await popover2.getByLabel("Hex color").fill(CUSTOM_HEX);
   await page.keyboard.press("Escape");
 
-  await expectLegendColor(consumerSection, "Dishwasher", CUSTOM_RGB);
+  await expectLegendColor(page, "Dishwasher", CUSTOM_RGB);
 
-  // ---------- Step 5 — Custom hex on ext meter (Additional meters chart) ----------
-  const meterSection = chartSection(page, "Additional meters");
-  await expect(meterSection).toBeVisible();
-  await legendBadge(meterSection, "Alternative grid").click();
+  // ---------- Step 5 — Custom hex on ext meter (Additional meters card) ----------
+  await legendBadge(page, "Alternative grid").click();
   const popover3 = page.getByRole("dialog");
   await expect(popover3).toBeVisible();
   await popover3.getByLabel("Hex color").fill(CUSTOM_HEX2);
   await page.keyboard.press("Escape");
 
-  await expectLegendColor(meterSection, "Alternative grid", CUSTOM_RGB2);
+  await expectLegendColor(page, "Alternative grid", CUSTOM_RGB2);
 
   // ---------- Step 6 — Reload: both colors persist via settings DB ----------
   await page.reload();
-  await expectLegendColor(chartSection(page, "Consumption"), "Dishwasher", CUSTOM_RGB);
-  await expectLegendColor(chartSection(page, "Additional meters"), "Alternative grid", CUSTOM_RGB2);
+  await expectLegendColor(page, "Dishwasher", CUSTOM_RGB);
+  await expectLegendColor(page, "Alternative grid", CUSTOM_RGB2);
 });

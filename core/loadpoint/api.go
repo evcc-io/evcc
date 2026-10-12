@@ -147,6 +147,8 @@ type API interface {
 	RequestUpdate()
 	// GetPlanGoal returns the plan goal and if the goal is soc based
 	GetPlanGoal() (float64, bool)
+	// GetPlanRemainingEnergy returns the energy plan's missing energy in kWh
+	GetPlanRemainingEnergy() float64
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state
 	GetPlanRequiredDuration(goal, maxPower float64) time.Duration
 	// GetPlanStrategy returns the plan strategy
@@ -157,6 +159,8 @@ type API interface {
 	SocBasedPlanning() bool
 	// GetPlan creates a charging plan
 	GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continuous bool) api.Rates
+	// EffectivePlan returns the charging plan in effect, its average power and true if the optimizer created it
+	EffectivePlan(planTime time.Time, requiredDuration time.Duration, strategy api.PlanStrategy) (api.Rates, float64, bool)
 
 	// GetSocConfig returns the soc poll settings
 	GetSocConfig() SocConfig
@@ -206,7 +210,7 @@ type API interface {
 	// GetSmartCostLimit return the smart cost limit
 	GetSmartCostLimit() *float64
 	// SetSmartCostLimit sets the smart cost limit
-	SetSmartCostLimit(limit *float64)
+	SetSmartCostLimit(limit *float64) error
 
 	// GetSolarShare gets the solar share
 	GetSolarShare() float64
@@ -215,7 +219,7 @@ type API interface {
 	// GetSmartFeedInPriorityLimit return the smart feed-in limit
 	GetSmartFeedInPriorityLimit() *float64
 	// SetSmartFeedInPriorityLimit sets the smart feed-in limit
-	SetSmartFeedInPriorityLimit(limit *float64)
+	SetSmartFeedInPriorityLimit(limit *float64) error
 
 	//
 	// power and energy

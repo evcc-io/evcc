@@ -45,12 +45,11 @@ export function simulatorUrl() {
   return `http://${simulatorHost()}`;
 }
 
-export function simulatorConfig() {
-  const input = "./tests/simulator.evcc.yaml";
+export function simulatorConfig(input = "./tests/simulator.evcc.yaml") {
   const content = fs.readFileSync(input, "utf8");
   const result = content.replace(/localhost:7072/g, simulatorHost());
   // per-worker file name, multiple workers write their own port concurrently
-  const resultName = `simulator-${workerPort()}.evcc.generated.yaml`;
+  const resultName = `${path.basename(input, ".evcc.yaml")}-${workerPort()}.evcc.generated.yaml`;
   const resultPath = path.join(os.tmpdir(), resultName);
   fs.writeFileSync(resultPath, result);
   return resultPath;
@@ -62,7 +61,7 @@ export async function startSimulator() {
   log(`wait until port ${port} is available`);
   await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
 
-  const instance = spawn("vp", ["run", "simulator", "--port", port.toString()]);
+  const instance = spawn("vp", ["preview", "tests/simulator", "--port", port.toString()]);
 
   const steamLog = createSteamLog();
   instance.stdout.pipe(steamLog);

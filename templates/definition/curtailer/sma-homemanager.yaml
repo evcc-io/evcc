@@ -3,6 +3,9 @@ products:
   - brand: SMA
     description:
       generic: Sunny Home Manager 2.0
+discovery:
+  hostname: ["sma*"]
+  mac: ["0015BB"]
 params:
   - name: modbus
     choice: ["tcpip"]
