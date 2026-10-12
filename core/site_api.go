@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"iter"
+	"math"
 	"slices"
 	"strings"
 	"time"
@@ -320,7 +321,7 @@ func (site *Site) SetBatteryPriceSoc(soc float64) error {
 		return ErrBatteryNotConfigured
 	}
 
-	if soc < 0 || soc > 100 {
+	if math.IsNaN(soc) || soc < 0 || soc > 100 {
 		return errors.New("battery price soc must be between 0 and 100")
 	}
 

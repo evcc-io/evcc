@@ -377,6 +377,8 @@ export default defineComponent({
 			try {
 				await api.post(`batterypricesoc/${encodeURIComponent(soc)}`);
 			} catch (err) {
+				// the api interceptor already notifies, restore the server value
+				this.selectedBatteryPriceSoc = this.batteryPriceSoc;
 				console.error(err);
 			}
 		},

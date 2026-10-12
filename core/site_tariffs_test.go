@@ -2,11 +2,13 @@ package core
 
 import (
 	"encoding/json"
+	"math"
 	"testing"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -206,4 +208,19 @@ func TestEffectivePrice(t *testing.T) {
 			assert.InDelta(t, tc.price, *price, 1e-9)
 		})
 	}
+}
+
+func TestSetBatteryPriceSoc(t *testing.T) {
+	site := NewSite()
+	assert.ErrorIs(t, site.SetBatteryPriceSoc(50), ErrBatteryNotConfigured)
+
+	site.batteryMeters = []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, api.Meter(nil))}
+
+	for _, soc := range []float64{-1, 101, math.NaN()} {
+		assert.Error(t, site.SetBatteryPriceSoc(soc), "soc %v", soc)
+	}
+	assert.Zero(t, site.GetBatteryPriceSoc())
+
+	require.NoError(t, site.SetBatteryPriceSoc(50))
+	assert.Equal(t, 50.0, site.GetBatteryPriceSoc())
 }
