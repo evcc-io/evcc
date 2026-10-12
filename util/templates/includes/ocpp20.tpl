@@ -12,10 +12,10 @@ connector: {{ .connector }}
 {{- if .idtag }}
 idtag: {{ .idtag }}
 {{- end }}
-{{- if and .remotestart (ne .remotestart "false") }}
+{{- if and .remotestart (ne (print .remotestart) "false") }}
 remotestart: {{ .remotestart }}
 {{- end }}
-{{- if and .phaseswitching (ne .phaseswitching "false") }}
+{{- if and .phaseswitching (ne (print .phaseswitching) "false") }}
 phaseswitching: {{ .phaseswitching }}
 {{- end }}
 {{- if and .meterinterval (ne .meterinterval "10s") }}
