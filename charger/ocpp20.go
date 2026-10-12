@@ -422,8 +422,15 @@ func (c *OCPP20) MaxCurrentMillis(current float64) error {
 var _ api.Identifier = (*OCPP20)(nil)
 
 // Identify implements the api.Identifier interface
-func (c *OCPP20) Identify() (string, error) {
-	return c.evse.IdTag(), nil
+//func (c *OCPP20) Identify() (string, error) {
+//	return c.evse.IdTag(), nil
+//}
+
+func (c *OCPP20) Identify() ([]string, error) {
+    if tag := c.evse.IdTag(); tag != "" {
+        return []string{tag}, nil
+    }
+    return nil, nil
 }
 
 var _ api.Diagnosis = (*OCPP20)(nil)
