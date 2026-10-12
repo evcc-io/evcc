@@ -200,21 +200,18 @@ func TestRawFunctionCodes(t *testing.T) {
 	t.Run("forwarded", func(t *testing.T) {
 		addr, _ := startRawProxy(t, &rawEchoHandler{RequestHandler: new(mbserver.DummyHandler)}, ReadOnlyFalse)
 
-		fc, b, err := rawClient(t, addr, 16).SendRaw(0x41, req)
+		b, err := rawClient(t, addr, 16).SendRaw(0x41, req)
 		require.NoError(t, err)
-		assert.Equal(t, byte(0x41), fc)
 		// downstream echoes unit id and request data
 		assert.Equal(t, append([]byte{16}, req...), b)
 	})
 
-	t.Run("exception passed through", func(t *testing.T) {
+	t.Run("vendor exception passed through", func(t *testing.T) {
 		// Huawei permission denied
-		addr, _ := startRawProxy(t, &rawExceptionHandler{RequestHandler: new(mbserver.DummyHandler), code: 0x80}, ReadOnlyFalse)
+		addr, _ := startRawProxy(t, &exceptionHandler{RequestHandler: new(mbserver.DummyHandler), code: 0x80}, ReadOnlyFalse)
 
-		fc, b, err := rawClient(t, addr, 16).SendRaw(0x41, req)
-		require.NoError(t, err)
-		assert.Equal(t, byte(0xc1), fc)
-		assert.Equal(t, []byte{0x80}, b)
+		_, err := rawClient(t, addr, 16).SendRaw(0x41, req)
+		assertException(t, err, 0xc1, 0x80)
 	})
 
 	for _, mode := range []ReadOnlyMode{ReadOnlyTrue, ReadOnlyDeny} {
@@ -222,10 +219,8 @@ func TestRawFunctionCodes(t *testing.T) {
 			downstream := &rawEchoHandler{RequestHandler: new(mbserver.DummyHandler)}
 			addr, _ := startRawProxy(t, downstream, mode)
 
-			fc, b, err := rawClient(t, addr, 16).SendRaw(0x41, req)
-			require.NoError(t, err)
-			assert.Equal(t, byte(0xc1), fc)
-			assert.Equal(t, []byte{0x01}, b) // illegal function
+			_, err := rawClient(t, addr, 16).SendRaw(0x41, req)
+			assertException(t, err, 0xc1, gridx.ExceptionCodeIllegalFunction)
 			assert.Zero(t, downstream.calls.Load())
 		})
 	}
@@ -235,10 +230,8 @@ func TestRawFunctionCodes(t *testing.T) {
 		conn, err := modbus.NewConnection(t.Context(), "localhost:1", "", "", 0, modbus.Rtu, 1)
 		require.NoError(t, err)
 
-		fc, b, err := rawClient(t, startProxy(t, conn, ReadOnlyFalse), 16).SendRaw(0x41, req)
-		require.NoError(t, err)
-		assert.Equal(t, byte(0xc1), fc)
-		assert.Equal(t, []byte{0x01}, b) // illegal function
+		_, err = rawClient(t, startProxy(t, conn, ReadOnlyFalse), 16).SendRaw(0x41, req)
+		assertException(t, err, 0xc1, gridx.ExceptionCodeIllegalFunction)
 	})
 
 	t.Run("upstream timeout reported as gateway target failure", func(t *testing.T) {
@@ -261,11 +254,27 @@ func TestRawFunctionCodes(t *testing.T) {
 		conn := rawClient(t, startProxy(t, downstreamConn, ReadOnlyFalse), 16)
 		conn.Timeout(5 * time.Second)
 
-		fc, b, err := conn.SendRaw(0x41, req)
-		require.NoError(t, err)
-		assert.Equal(t, byte(0xc1), fc)
-		assert.Equal(t, []byte{byte(gridx.ExceptionCodeGatewayTargetDeviceFailedToRespond)}, b)
+		_, err = conn.SendRaw(0x41, req)
+		assertException(t, err, 0xc1, gridx.ExceptionCodeGatewayTargetDeviceFailedToRespond)
 	})
+}
+
+func TestVendorExceptionPassedThrough(t *testing.T) {
+	// Huawei permission denied for a standard function code
+	addr, _ := startRawProxy(t, &exceptionHandler{RequestHandler: new(mbserver.DummyHandler), code: 0x80}, ReadOnlyFalse)
+
+	_, err := rawClient(t, addr, 16).ReadInputRegisters(0, 1)
+	assertException(t, err, 0x84, 0x80)
+}
+
+// assertException asserts that err is a modbus exception response
+func assertException(t *testing.T, err error, functionCode, exceptionCode byte) {
+	t.Helper()
+
+	if me, ok := errors.AsType[*gridx.Error](err); assert.True(t, ok, "expected modbus exception, got: %v", err) {
+		assert.Equal(t, functionCode, me.FunctionCode)
+		assert.Equal(t, exceptionCode, me.ExceptionCode)
+	}
 }
 
 func TestRawConcurrentClients(t *testing.T) {
@@ -440,18 +449,23 @@ type rawEchoHandler struct {
 	calls atomic.Int32
 }
 
-func (h *rawEchoHandler) HandleRaw(req *mbserver.RawRequest) (uint8, []byte, error) {
+func (h *rawEchoHandler) HandleRaw(req *mbserver.RawRequest) ([]byte, error) {
 	h.calls.Add(1)
-	return req.FunctionCode, append([]byte{req.UnitId}, req.Payload...), nil
+	return append([]byte{req.UnitId}, req.Payload...), nil
 }
 
-type rawExceptionHandler struct {
+// exceptionHandler answers raw requests and input register reads with an exception
+type exceptionHandler struct {
 	mbserver.RequestHandler
 	code byte
 }
 
-func (h *rawExceptionHandler) HandleRaw(req *mbserver.RawRequest) (uint8, []byte, error) {
-	return 0x80 | req.FunctionCode, []byte{h.code}, nil
+func (h *exceptionHandler) HandleRaw(*mbserver.RawRequest) ([]byte, error) {
+	return nil, mbserver.ExceptionError(h.code)
+}
+
+func (h *exceptionHandler) HandleInputRegisters(*mbserver.InputRegistersRequest) ([]uint16, error) {
+	return nil, mbserver.ExceptionError(h.code)
 }
 
 type slowRawHandler struct {
@@ -459,7 +473,7 @@ type slowRawHandler struct {
 	mbserver.RequestHandler
 }
 
-func (h *slowRawHandler) HandleRaw(req *mbserver.RawRequest) (uint8, []byte, error) {
+func (h *slowRawHandler) HandleRaw(req *mbserver.RawRequest) ([]byte, error) {
 	time.Sleep(h.delay)
-	return req.FunctionCode, req.Payload, nil
+	return req.Payload, nil
 }

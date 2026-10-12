@@ -2,11 +2,14 @@ package modbus
 
 import (
 	"encoding/binary"
+	"errors"
+	"fmt"
 	"io"
 	"net"
 	"sync/atomic"
 	"testing"
 
+	gridx "github.com/grid-x/modbus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -132,7 +135,7 @@ func TestSendRawNotRetried(t *testing.T) {
 	conn, err := NewConnection(t.Context(), addr, "", "", 0, Tcp, 1)
 	require.NoError(t, err)
 
-	_, _, err = conn.SendRaw(0x41, rawRequest)
+	_, err = conn.SendRaw(0x41, rawRequest)
 	require.Error(t, err)
 	assert.EqualValues(t, 1, dev.requests.Load())
 }
@@ -149,17 +152,38 @@ func TestSendRawExceptionKeepsConnection(t *testing.T) {
 	conn, err := NewConnection(t.Context(), addr, "", "", 0, Tcp, 1)
 	require.NoError(t, err)
 
-	fc, b, err := conn.SendRaw(0x41, rawRequest)
-	require.NoError(t, err)
-	assert.Equal(t, byte(0xc1), fc)
-	assert.Equal(t, []byte{0x80}, b)
+	_, err = conn.SendRaw(0x41, rawRequest)
+	me, ok := errors.AsType[*gridx.Error](err)
+	require.True(t, ok, "expected modbus exception, got: %v", err)
+	assert.Equal(t, byte(0xc1), me.FunctionCode)
+	assert.Equal(t, byte(0x80), me.ExceptionCode)
 
-	fc, b, err = conn.SendRaw(0x41, rawRequest)
+	b, err := conn.SendRaw(0x41, rawRequest)
 	require.NoError(t, err)
-	assert.Equal(t, byte(0x41), fc)
 	assert.Equal(t, rawRequest, b)
 
 	assert.EqualValues(t, 1, dev.accepted.Load())
+}
+
+func TestSendRawInvalidResponse(t *testing.T) {
+	for _, res := range [][]byte{
+		{0x03, 0x00},       // other function code
+		{0xc1},             // exception without code
+		{0xc1, 0x80, 0x00}, // exception with trailing data
+	} {
+		t.Run(fmt.Sprintf("% x", res), func(t *testing.T) {
+			addr, _ := startFakeDevice(t, func(int32, []byte) []byte { return res })
+
+			conn, err := NewConnection(t.Context(), addr, "", "", 0, Tcp, 1)
+			require.NoError(t, err)
+
+			_, err = conn.SendRaw(0x41, rawRequest)
+			require.Error(t, err)
+
+			_, ok := errors.AsType[*gridx.Error](err)
+			assert.False(t, ok, "invalid response reported as exception")
+		})
+	}
 }
 
 func TestSendRawUnsupported(t *testing.T) {
@@ -167,7 +191,7 @@ func TestSendRawUnsupported(t *testing.T) {
 	conn, err := NewConnection(t.Context(), "localhost:1", "", "", 0, Rtu, 1)
 	require.NoError(t, err)
 
-	_, _, err = conn.SendRaw(0x41, rawRequest)
+	_, err = conn.SendRaw(0x41, rawRequest)
 	assert.ErrorIs(t, err, ErrRawUnsupported)
 }
 
@@ -177,7 +201,7 @@ func TestSendRawTooLong(t *testing.T) {
 	conn, err := NewConnection(t.Context(), addr, "", "", 0, Tcp, 1)
 	require.NoError(t, err)
 
-	_, _, err = conn.SendRaw(0x41, make([]byte, maxRawDataLength+1))
+	_, err = conn.SendRaw(0x41, make([]byte, maxRawDataLength+1))
 	assert.Error(t, err)
 	assert.Zero(t, dev.requests.Load())
 }
