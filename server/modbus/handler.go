@@ -170,3 +170,24 @@ func (h *handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) 
 	b, err := h.conn.Clone(req.UnitId).ReadHoldingRegisters(req.Addr, req.Quantity)
 	return h.exceptionToUint16AndError("read holding", b, err)
 }
+
+var _ mbserver.RawRequestHandler = (*handler)(nil)
+
+// HandleRaw forwards function codes not handled by mbserver
+func (h *handler) HandleRaw(req *mbserver.RawRequest) (uint8, []byte, error) {
+	// unknown function codes may write to the device
+	if h.readOnly != ReadOnlyFalse {
+		h.log.TRACE.Printf("deny: raw: id %d func %02x", req.UnitId, req.FunctionCode)
+		return 0, nil, mbserver.ErrIllegalFunction
+	}
+
+	h.log.TRACE.Printf("raw: id %d func %02x data % x", req.UnitId, req.FunctionCode, req.Payload)
+	fc, b, err := h.conn.Clone(req.UnitId).SendRaw(req.FunctionCode, req.Payload)
+	h.logResult("raw", b, err)
+
+	if errors.Is(err, modbus.ErrRawUnsupported) {
+		return 0, nil, mbserver.ErrIllegalFunction
+	}
+
+	return fc, b, mapError(err)
+}
