@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/charger/ocpp"
+	ocpp2pkg "github.com/evcc-io/evcc/charger/ocpp2"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/circuit"
@@ -698,6 +699,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 	// setup OCPP server
 	if err == nil {
 		configureOCPP(&conf.Ocpp, conf.Network.ExternalUrl)
+		configureOCPP2(conf.Network.ExternalUrl)
 	}
 
 	// setup EEBus server
@@ -979,6 +981,20 @@ func configureOCPP(cfg *ocpp.Config, externalUrl string) {
 			return
 		}
 		ocpp.ApplyForwarderRules(rules)
+	}
+}
+
+// setup OCPP 2.0.1
+func configureOCPP2(externalUrl string) {
+	ocpp2pkg.NewServer2(ocpp2pkg.Config{Port: 8888}, externalUrl)
+	if _, err := ocpp2pkg.Instance2(); err != nil {
+		log.ERROR.Printf("ocpp2: %v", err)
+		return
+	}
+	log.INFO.Printf("OCPP 2.0.1 local url: ws://127.0.0.1:8888/<stationId>")
+	if externalUrl != "" {
+		log.INFO.Printf("OCPP 2.0.1 external url: %s/<stationId>",
+			ocpp2pkg.ExternalUrl2())
 	}
 }
 

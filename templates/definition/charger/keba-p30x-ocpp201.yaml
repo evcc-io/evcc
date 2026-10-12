@@ -1,0 +1,72 @@
+template: keba-p30x-ocpp2
+
+products:
+  - brand: KEBA
+    description:
+      generic: KeContact P30 X-Series (OCPP 2.0.1)
+      de: KeContact P30 X-Serie (OCPP 2.0.1)
+      en: KeContact P30 X-Series (OCPP 2.0.1)
+
+capabilities: ["mA", "rfid", "1p3p"]
+
+requirements:
+  description:
+    de: |
+      OCPP 2.0.1 Custom-Integration für die KEBA P30X-Serie.
+
+      Die Wallbox verbindet sich als Client zu evcc (Server).
+      Backend-URL in der Wallbox konfigurieren: `ws://<evcc-host>:<port>/`
+
+      * Protokoll: OCPP 2.0.1 / JSON / WebSocket
+      * Stationskennung (`stationid`) wird automatisch erkannt
+      * Für mehrere Wallboxen: `stationid` und `connector` manuell setzen
+    en: |
+      OCPP 2.0.1 custom integration for the KEBA P30X series.
+
+      The charger connects as client to evcc (server).
+      Configure the backend URL in the charger: `ws://<evcc-host>:<port>/`
+
+      * Protocol: OCPP 2.0.1 / JSON / WebSocket
+      * Station ID (`stationid`) is detected automatically
+      * For multiple chargers: set `stationid` and `connector` manually
+
+params:
+  # OCPP-Standardparameter aus defaults.yaml übernehmen
+  - preset: ocpp
+
+  # Falls dein OCPP 2.0.1 Handler eigene spezifische Parameter braucht,
+  # hier ergänzen. Beispiele:
+  # - name: timeout
+  #   advanced: true
+  #   type: duration
+  #   default: 30s
+  #   description:
+  #     de: Verbindungs-Timeout
+  #     en: Connection timeout
+
+render: |
+  type: keba-ocpp2
+  {{- if .stationid }}
+  stationid: {{ .stationid }}
+  {{- end }}
+  {{- if .connector }}
+  connector: {{ .connector }}
+  {{- end }}
+  {{- if .remotestart }}
+  remotestart: {{ .remotestart }}
+  {{- end }}
+  {{- if .idtag }}
+  idtag: {{ .idtag }}
+  {{- end }}
+  {{- if .connecttimeout }}
+  connecttimeout: {{ .connecttimeout }}
+  {{- end }}
+  {{- if .meterinterval }}
+  meterinterval: {{ .meterinterval }}
+  {{- end }}
+  {{- if .metervalues }}
+  metervalues: {{ .metervalues }}
+  {{- end }}
+  {{- if .chargingprofile }}
+  chargingprofile: {{ .chargingprofile }}
+  {{- end }}
