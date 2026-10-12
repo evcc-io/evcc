@@ -47,22 +47,19 @@ export default defineComponent({
 <style scoped>
 @import "../../../css/breakpoints.css";
 
-/* phones: same small inset as box-pull-out cards, the surrounding row only pulls out from sm up */
+/* phones: box-pull-out inset (the row only pulls out from sm up), equal widths when wrapping into rows */
 .stat-cards {
-	margin-left: -1rem;
-	margin-right: -1rem;
+	margin-inline: -1rem;
 }
-@media (--sm-and-up) {
-	.stat-cards {
-		margin-left: 0;
-		margin-right: 0;
-	}
-}
-
-/* equal widths when wrapping into rows, equal heights when stacked */
 .stat-card {
 	flex: 1 1 10rem;
 }
+@media (--sm-and-up) {
+	.stat-cards {
+		margin-inline: 0;
+	}
+}
+/* equal heights when stacked */
 @media (--lg-and-up) {
 	.stat-card {
 		flex: 1 1 0;
