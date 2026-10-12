@@ -286,4 +286,4 @@ replace github.com/enbility/eebus-go => github.com/andig/eebus-go v0.0.0-2026093
 
 replace github.com/enbility/ship-go => github.com/andig/ship-go v0.6.1-0.20260901124541-3de7acda5f88
 
-replace github.com/andig/mbserver => github.com/TRON4R/mbserver v0.0.0-20261012121523-e7a8b1adf8c0
+replace github.com/andig/mbserver => github.com/TRON4R/mbserver v0.0.0-20261012131924-6b76f690bdf9
