@@ -65,6 +65,26 @@ test.describe("battery settings", async () => {
     await expect(buffer).toContainText("not used for the charging points");
   });
 
+  test("battery price", async ({ page }) => {
+    await page.goto("/#/battery");
+
+    const price = page.getByTestId("battery-price");
+    const priceSoc = price.getByRole("combobox");
+
+    await expect(priceSoc).toHaveValue("0");
+    await expect(price).toContainText("priced at the feed-in tariff");
+
+    await priceSoc.selectOption("40");
+    await expect(price).toContainText("is priced like grid energy");
+
+    // persisted
+    await page.reload();
+    await expect(priceSoc).toHaveValue("40");
+
+    await priceSoc.selectOption("0");
+    await expect(price).toContainText("priced at the feed-in tariff");
+  });
+
   test("grid charging", async ({ page }) => {
     await page.goto("/#/battery");
 

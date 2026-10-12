@@ -23,6 +23,7 @@
 						:buffer-soc="state.bufferSoc"
 						:priority-soc="state.prioritySoc"
 						:buffer-start-soc="state.bufferStartSoc"
+						:battery-price-soc="state.batteryPriceSoc"
 						:battery-discharge-control="state.batteryDischargeControl"
 						:battery-grid-discharge="state.batteryGridDischarge"
 						:battery="state.battery"

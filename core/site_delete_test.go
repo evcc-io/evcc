@@ -147,7 +147,7 @@ func TestSiteUpdateAfterTariffDeletion(t *testing.T) {
 	s.tariffs = &tariff.Tariffs{Solar: solar}
 
 	require.NotPanics(t, func() {
-		s.publishTariffs(0, 0)
+		s.publishTariffs(0, 0, 0)
 	}, "tariff publish with a solar tariff")
 
 	require.NotNil(t, s.published()[keys.Forecast], "forecast published while the tariff exists")
@@ -156,6 +156,6 @@ func TestSiteUpdateAfterTariffDeletion(t *testing.T) {
 	s.tariffs = &tariff.Tariffs{}
 
 	require.NotPanics(t, func() {
-		s.publishTariffs(0, 0)
+		s.publishTariffs(0, 0, 0)
 	}, "tariff publish must survive the tariff being deleted")
 }

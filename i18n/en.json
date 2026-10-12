@@ -63,6 +63,9 @@
         "title": "Grid export from battery"
       },
       "optimizerControlledHint": "Disabled for {loadpoints}. The {optimizer} decides instead.",
+      "price": "Battery energy used for charging vehicles below {soc} is priced like grid energy, since the home would otherwise use it later. Energy above is priced at the feed-in tariff.",
+      "priceNone": "Battery energy used for charging vehicles is priced at the feed-in tariff. Set a value above {soc} to price the lower part like grid energy.",
+      "priceTitle": "What does battery energy cost?",
       "priority": "Home battery has priority while it is below {soc}. Then the charging points receive the surplus.",
       "priorityNone": "Solar surplus goes straight to the charging points. Set a value above {soc} to prioritize the home battery.",
       "priorityTitle": "Where does the surplus go first?"

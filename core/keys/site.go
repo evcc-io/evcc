@@ -52,6 +52,7 @@ const (
 	BatteryGridDischargeLimit  = "batteryGridDischargeLimit"
 	BatteryGridDischargeActive = "batteryGridDischargeActive"
 	BatteryGridDischarge       = "batteryGridDischarge"
+	BatteryPriceSoc            = "batteryPriceSoc"
 	BufferSoc                  = "bufferSoc"
 	BufferStartSoc             = "bufferStartSoc"
 

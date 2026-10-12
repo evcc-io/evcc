@@ -138,3 +138,72 @@ func TestPercentileOf(t *testing.T) {
 		assert.Less(t, p50, p90)
 	})
 }
+
+func TestLoadpointShares(t *testing.T) {
+	tc := []struct {
+		name                    string
+		pv, battery, from, to   float64
+		threshold, soc          float64
+		capacity                float64
+		greenShare, feedInShare float64
+	}{
+		{"pv only", 1000, 0, 0, 1000, 50, 30, 10, 1, 1},
+		{"battery charging", 2000, -1000, 0, 1000, 50, 30, 10, 1, 1},
+		{"zero power nothing available", 0, 0, 0, 0, 50, 30, 10, 0, 0},
+		{"threshold off", 0, 1000, 0, 1000, 0, 30, 10, 1, 1},
+		{"soc above threshold", 0, 1000, 0, 1000, 50, 80, 10, 1, 1},
+		{"soc at threshold", 0, 1000, 0, 1000, 50, 50, 10, 1, 1},
+		{"soc below threshold", 0, 1000, 0, 1000, 50, 30, 10, 1, 0},
+		{"soc never read", 0, 1000, 0, 1000, 50, 0, 0, 1, 1},
+		{"pv covers lower consumption, battery the rest", 500, 1000, 500, 1500, 50, 30, 10, 1, 0},
+		{"pv and battery split window", 1000, 1000, 500, 2500, 50, 30, 10, 0.75, 0.25},
+		{"zero power with battery available", 0, 1000, 0, 0, 50, 30, 10, 1, 0},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			var state siteState
+			state.pvPower = tc.pv
+			state.battery.Power = tc.battery
+			state.battery.Soc = tc.soc
+			state.battery.Capacity = tc.capacity
+
+			green, feedIn := loadpointShares(state, tc.threshold, tc.from, tc.to)
+			assert.InDelta(t, tc.greenShare, green, 1e-9, "green share")
+			assert.InDelta(t, tc.feedInShare, feedIn, 1e-9, "feed-in share")
+			assert.InDelta(t, tc.greenShare, greenShare(state, tc.from, tc.to), 1e-9, "green share unaffected by threshold")
+		})
+	}
+}
+
+func TestEffectivePrice(t *testing.T) {
+	grid, err := tariff.NewFixedFromConfig(map[string]any{"price": 0.4})
+	require.NoError(t, err)
+	feedin, err := tariff.NewFixedFromConfig(map[string]any{"price": 0.1})
+	require.NoError(t, err)
+
+	tc := []struct {
+		name        string
+		noFeedIn    bool
+		feedInShare float64
+		price       float64
+	}{
+		{"all feed-in", false, 1, 0.1},
+		{"all grid", false, 0, 0.4},
+		{"mixed", false, 0.25, 0.4*0.75 + 0.1*0.25},
+		{"no feed-in tariff", true, 1, 0},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			site := &Site{tariffs: &tariff.Tariffs{Grid: grid, FeedIn: feedin}}
+			if tc.noFeedIn {
+				site.tariffs.FeedIn = nil
+			}
+
+			price := site.effectivePrice(tc.feedInShare)
+			require.NotNil(t, price)
+			assert.InDelta(t, tc.price, *price, 1e-9)
+		})
+	}
+}

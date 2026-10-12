@@ -192,6 +192,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"batterygriddischargelimitdelete": {"DELETE", "/batterygriddischargelimit", floatPtrHandler(site.SetBatteryGridDischargeLimit, site.GetBatteryGridDischargeLimit)},
 		"batterymode":                     {"POST", "/batterymode/{value:[a-z]+}", updateBatteryMode(site)},
 		"batterymodedelete":               {"DELETE", "/batterymode", updateBatteryMode(site)},
+		"batterypricesoc":                 {"POST", "/batterypricesoc/{value:[0-9.]+}", floatHandler(site.SetBatteryPriceSoc, site.GetBatteryPriceSoc)},
 		"prioritysoc":                     {"POST", "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
 		"residualpower":                   {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
 		"gridexportlimit":                 {"POST", "/gridexportlimit/{value:[0-9.]+}", floatHandler(site.SetGridExportLimit, site.GetGridExportLimit)},

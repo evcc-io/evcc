@@ -88,6 +88,7 @@ type Site struct {
 	prioritySoc               float64  // prefer battery up to this Soc
 	bufferSoc                 float64  // continue charging on battery above this Soc
 	bufferStartSoc            float64  // start charging on battery above this Soc
+	batteryPriceSoc           float64  // price battery discharge like grid energy below this Soc
 	batteryDischargeControl   bool     // prevent battery discharge for fast and planned charging
 	batteryGridChargeLimit    *float64 // grid charging limit
 	batteryGridDischargeLimit *float64 // grid discharging (feed-in) limit
@@ -464,6 +465,11 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Float(keys.PrioritySoc); err == nil {
 		if err := site.SetPrioritySoc(v); err != nil && !errors.Is(err, ErrBatteryNotConfigured) {
+			return err
+		}
+	}
+	if v, err := settings.Float(keys.BatteryPriceSoc); err == nil {
+		if err := site.SetBatteryPriceSoc(v); err != nil && !errors.Is(err, ErrBatteryNotConfigured) {
 			return err
 		}
 	}
@@ -1393,19 +1399,19 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 	// add battery charging power to homePower to ignore all consumption which does not occur on loadpoints
 	// fix for: https://github.com/evcc-io/evcc/issues/11032
 	nonChargePower := homePower + max(0, -state.battery.Power)
-	greenShareHome := site.greenShare(0, homePower)
-	greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
+	greenShareHome := greenShare(state, 0, homePower)
+	greenShareLoadpoints, feedInShareLoadpoints := loadpointShares(state, site.GetBatteryPriceSoc(), nonChargePower, nonChargePower+totalChargePower)
 
 	// TODO
 	if lp != nil {
 		lp.Update(
 			site.loadpointSitePower(lp, res), state.battery.Power, consumption, feedin, res.batteryBuffered, res.batteryStart,
-			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
+			greenShareLoadpoints, site.effectivePrice(feedInShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 			hems.Dimmed(site.hems),
 		)
 	}
 
-	site.publishTariffs(greenShareHome, greenShareLoadpoints)
+	site.publishTariffs(greenShareHome, greenShareLoadpoints, feedInShareLoadpoints)
 
 	if telemetry.Enabled() && totalChargePower > standbyPower {
 		go telemetry.UpdateChargeProgress(site.log, totalChargePower, greenShareLoadpoints)
@@ -1450,6 +1456,7 @@ func (site *Site) prepare() {
 	site.publish(keys.PrioritySoc, site.prioritySoc)
 	site.publish(keys.BufferSoc, site.bufferSoc)
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
+	site.publish(keys.BatteryPriceSoc, site.batteryPriceSoc)
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.BatteryGridDischarge, site.batteryGridDischarge)
@@ -1468,7 +1475,7 @@ func (site *Site) prepare() {
 	}
 
 	site.publishVehicles()
-	site.publishTariffs(0, 0)
+	site.publishTariffs(0, 0, 0)
 	vehicle.Publish = site.publishVehicles
 	vehicle.Owner = site.coordinator.Owner
 }

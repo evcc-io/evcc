@@ -798,6 +798,18 @@ paths:
                 properties:
                   vehicle:
                     $ref: "#/components/schemas/VehicleTitle"
+  /batterypricesoc/{soc}:
+    post:
+      operationId: setBatteryPriceSoc
+      summary: Set battery price SoC
+      description: "Set battery price SoC. Battery energy used for charging vehicles below this level is priced like grid energy. 0 disables."
+      tags:
+        - battery
+      parameters:
+        - $ref: "#/components/parameters/soc"
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
   /prioritysoc/{soc}:
     post:
       operationId: setPrioritySoc

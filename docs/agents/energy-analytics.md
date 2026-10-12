@@ -60,6 +60,7 @@ Per slot with a grid price:
 - Import cost = import × grid price. Export revenue = export × feed-in price.
 - **Consumption cost**: grid energy that reached home or loadpoints at the grid price, plus self-produced energy that reached them at the feed-in price. The feed-in price is the opportunity cost: that kWh could have been sold.
 - Each flow into home or loadpoints carries its own cost and priced energy under the same rule. Consumption cost is the sum of these flows, and it can be split by source.
+- `batteryPriceSoc` only affects the live loadpoint price and session cost. Energy page attribution still prices battery discharge at feed-in, since slot-level SoC is not stored.
 - **Baseline**: the same consumed energy at the period's average grid price, as if there were no PV and no battery. The page derives it from the average grid price and the priced consumption.
 - **Savings** = baseline - consumption cost.
 

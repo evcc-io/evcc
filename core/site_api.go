@@ -304,6 +304,37 @@ func (site *Site) SetPrioritySoc(soc float64) error {
 	return nil
 }
 
+// GetBatteryPriceSoc returns the BatteryPriceSoc
+func (site *Site) GetBatteryPriceSoc() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryPriceSoc
+}
+
+// SetBatteryPriceSoc sets the BatteryPriceSoc
+func (site *Site) SetBatteryPriceSoc(soc float64) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if len(site.batteryMeters) == 0 {
+		return ErrBatteryNotConfigured
+	}
+
+	if soc < 0 || soc > 100 {
+		return errors.New("battery price soc must be between 0 and 100")
+	}
+
+	site.log.DEBUG.Println("set battery price soc:", soc)
+
+	if site.batteryPriceSoc != soc {
+		site.batteryPriceSoc = soc
+		settings.SetFloat(keys.BatteryPriceSoc, site.batteryPriceSoc)
+		site.publish(keys.BatteryPriceSoc, site.batteryPriceSoc)
+	}
+
+	return nil
+}
+
 // GetBufferSoc returns the BufferSoc
 func (site *Site) GetBufferSoc() float64 {
 	site.RLock()

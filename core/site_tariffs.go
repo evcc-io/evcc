@@ -59,20 +59,16 @@ func forecastRates(rr api.Rates) forecastSeries {
 	})
 }
 
-// greenShare returns
-//   - the current green share, calculated for the part of the consumption between powerFrom and powerTo
-//     the consumption below powerFrom will get the available green power first
-func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
-	state := site.state()
-
-	greenPower := math.Max(0, state.pvPower) + math.Max(0, state.battery.Power)
-	greenPowerAvailable := math.Max(0, greenPower-powerFrom)
+// powerShare returns the share of the consumption between powerFrom and powerTo covered by available power.
+// The consumption below powerFrom will get the available power first.
+func powerShare(available, powerFrom, powerTo float64) float64 {
+	availableAbove := math.Max(0, available-powerFrom)
 
 	power := powerTo - powerFrom
-	share := math.Min(greenPowerAvailable, power) / power
+	share := math.Min(availableAbove, power) / power
 
 	if math.IsNaN(share) {
-		if greenPowerAvailable > 0 {
+		if availableAbove > 0 {
 			share = 1
 		} else {
 			share = 0
@@ -82,14 +78,36 @@ func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
 	return share
 }
 
-// effectivePrice calculates the real energy price based on self-produced and grid-imported energy.
-func (site *Site) effectivePrice(greenShare float64) *float64 {
+// greenShare returns
+//   - the current green share, calculated for the part of the consumption between powerFrom and powerTo
+//     the consumption below powerFrom will get the available green power first
+func greenShare(state siteState, powerFrom float64, powerTo float64) float64 {
+	return powerShare(math.Max(0, state.pvPower)+math.Max(0, state.battery.Power), powerFrom, powerTo)
+}
+
+// loadpointShares returns the green share and the share priced at feed-in for the consumption between powerFrom and powerTo.
+// Battery energy below batteryPriceSoc would otherwise be consumed by the home later, so it is priced like grid energy.
+func loadpointShares(state siteState, batteryPriceSoc, powerFrom, powerTo float64) (float64, float64) {
+	green := greenShare(state, powerFrom, powerTo)
+
+	// capacity is only set once a soc was read, failed reads later keep the last soc
+	socKnown := state.battery.Capacity > 0
+	if batteryPriceSoc > 0 && socKnown && state.battery.Soc < batteryPriceSoc {
+		// PV is attributed before the battery, so only the remainder is battery energy
+		return green, powerShare(math.Max(0, state.pvPower), powerFrom, powerTo)
+	}
+
+	return green, green
+}
+
+// effectivePrice calculates the real energy price based on the share of energy priced at the feed-in tariff.
+func (site *Site) effectivePrice(feedInShare float64) *float64 {
 	if grid, err := tariff.Now(site.GetTariff(api.TariffUsageGrid)); err == nil {
 		feedin, err := tariff.Now(site.GetTariff(api.TariffUsageFeedIn))
 		if err != nil {
 			feedin = 0
 		}
-		effPrice := grid*(1-greenShare) + feedin*greenShare
+		effPrice := grid*(1-feedInShare) + feedin*feedInShare
 		return &effPrice
 	}
 	return nil
@@ -104,7 +122,7 @@ func (site *Site) effectiveCo2(greenShare float64) *float64 {
 	return nil
 }
 
-func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints float64) {
+func (site *Site) publishTariffs(greenShareHome, greenShareLoadpoints, feedInShareLoadpoints float64) {
 	site.publish(keys.GreenShareHome, greenShareHome)
 	site.publish(keys.GreenShareLoadpoints, greenShareLoadpoints)
 
@@ -129,7 +147,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	if v := site.effectiveCo2(greenShareHome); v != nil {
 		site.publish(keys.TariffCo2Home, v)
 	}
-	if v := site.effectivePrice(greenShareLoadpoints); v != nil {
+	if v := site.effectivePrice(feedInShareLoadpoints); v != nil {
 		site.publish(keys.TariffPriceLoadpoints, v)
 	}
 	if v := site.effectiveCo2(greenShareLoadpoints); v != nil {

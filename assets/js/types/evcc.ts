@@ -285,6 +285,8 @@ export interface State {
   bufferSoc?: number;
   /** Battery priority SoC in %. Home battery is charged first while below this level. */
   prioritySoc?: number;
+  /** Battery price SoC in %. Battery energy used for charging vehicles below this level is priced like grid energy. 0 disables. */
+  batteryPriceSoc?: number;
   /** Battery buffer start SoC in %. Solar charging starts automatically above this level. */
   bufferStartSoc?: number;
   /** Home battery discharge is prevented during fast charging and planned charging. */

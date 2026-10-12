@@ -62,6 +62,8 @@ type API interface {
 	SetBufferSoc(float64) error
 	GetBufferStartSoc() float64
 	SetBufferStartSoc(float64) error
+	GetBatteryPriceSoc() float64
+	SetBatteryPriceSoc(float64) error
 
 	// GetBatteryGridChargeLimit get the grid charge limit
 	GetBatteryGridChargeLimit() *float64

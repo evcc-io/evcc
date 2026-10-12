@@ -75,6 +75,30 @@
 			</div>
 		</div>
 
+		<div class="d-flex gap-3 mb-4" data-testid="battery-price">
+			<shopicon-regular-money
+				size="s"
+				class="text-primary flex-shrink-0 mt-1"
+			></shopicon-regular-money>
+			<div>
+				<div class="fw-bold mb-1">
+					{{ $t("battery.config.priceTitle") }}
+				</div>
+				<i18n-t :keypath="priceKeypath" tag="p" class="mb-0" scope="global">
+					<template #soc>
+						<InlineSocSelect
+							id="batteryPrice"
+							:options="priceOptions"
+							:selected="selectedBatteryPriceSoc"
+							:label="fmtSoc(selectedBatteryPriceSoc)"
+							nowrap
+							@change="changeBatteryPriceSoc"
+						/>
+					</template>
+				</i18n-t>
+			</div>
+		</div>
+
 		<p
 			v-if="optimizerControlledTitles.length"
 			class="d-flex gap-3 text-muted small mb-0"
@@ -173,6 +197,7 @@
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/lightning";
+import "@h2d2/shopicons/es/regular/money";
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import api from "@/api";
@@ -191,6 +216,7 @@ export default defineComponent({
 		bufferSoc: { type: Number, default: 100 },
 		prioritySoc: { type: Number, default: 0 },
 		bufferStartSoc: { type: Number, default: 0 },
+		batteryPriceSoc: { type: Number, default: 0 },
 		batteryDischargeControl: Boolean,
 		batteryGridDischarge: Boolean,
 		battery: { type: Object as PropType<Battery> },
@@ -207,6 +233,7 @@ export default defineComponent({
 			selectedBufferSoc: 100,
 			selectedPrioritySoc: 0,
 			selectedBufferStartSoc: 0,
+			selectedBatteryPriceSoc: 0,
 		};
 	},
 	computed: {
@@ -266,6 +293,18 @@ export default defineComponent({
 			options.push({ value: 0, name: this.getBufferStartName(0) });
 			return options;
 		},
+		priceOptions() {
+			const options = [];
+			for (let i = 100; i >= 0; i -= 5) {
+				options.push({ value: i, name: this.fmtSoc(i) });
+			}
+			return options;
+		},
+		priceKeypath(): string {
+			return this.selectedBatteryPriceSoc > 0
+				? "battery.config.price"
+				: "battery.config.priceNone";
+		},
 		selectedBufferStartName(): string {
 			return this.getBufferStartName(this.selectedBufferStartSoc);
 		},
@@ -286,6 +325,12 @@ export default defineComponent({
 		bufferStartSoc: {
 			handler(soc) {
 				this.selectedBufferStartSoc = soc;
+			},
+			immediate: true,
+		},
+		batteryPriceSoc: {
+			handler(soc) {
+				this.selectedBatteryPriceSoc = soc;
 			},
 			immediate: true,
 		},
@@ -322,6 +367,15 @@ export default defineComponent({
 			this.selectedPrioritySoc = soc;
 			try {
 				await api.post(`prioritysoc/${encodeURIComponent(soc)}`);
+			} catch (err) {
+				console.error(err);
+			}
+		},
+		async changeBatteryPriceSoc($event: Event) {
+			const soc = parseInt(($event.target as HTMLInputElement).value, 10);
+			this.selectedBatteryPriceSoc = soc;
+			try {
+				await api.post(`batterypricesoc/${encodeURIComponent(soc)}`);
 			} catch (err) {
 				console.error(err);
 			}

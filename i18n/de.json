@@ -63,6 +63,9 @@
         "title": "Netzeinspeisung aus der Batterie"
       },
       "optimizerControlledHint": "Für {loadpoints} deaktiviert. Der {optimizer} entscheidet stattdessen.",
+      "price": "Batterieenergie, die unter {soc} zum Laden von Fahrzeugen genutzt wird, wird wie Netzstrom bewertet, da das Haus sie sonst später verbrauchen würde. Energie darüber wird mit der Einspeisevergütung bewertet.",
+      "priceNone": "Batterieenergie zum Laden von Fahrzeugen wird mit der Einspeisevergütung bewertet. Setze einen Wert über {soc}, um den unteren Teil wie Netzstrom zu bewerten.",
+      "priceTitle": "Was kostet Batterieenergie?",
       "priority": "Hausbatterie hat Vorrang, solange sie unter {soc} liegt. Dann erhalten die Ladepunkte den Überschuss.",
       "priorityNone": "Sonnenüberschuss geht direkt an die Ladepunkte. Setze einen Wert über {soc}, um die Hausbatterie zu bevorzugen.",
       "priorityTitle": "Wohin geht der Überschuss zuerst?"

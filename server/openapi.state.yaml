@@ -202,6 +202,9 @@ components:
         prioritySoc:
           description: Battery priority SoC in %. Home battery is charged first while below this level.
           type: number
+        batteryPriceSoc:
+          description: Battery price SoC in %. Battery energy used for charging vehicles below this level is priced like grid energy. 0 disables.
+          type: number
         bufferStartSoc:
           description: Battery buffer start SoC in %. Solar charging starts automatically above this level.
           type: number

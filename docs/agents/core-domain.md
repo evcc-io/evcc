@@ -109,8 +109,11 @@ None of these apply to a loadpoint the optimizer controls: the optimizer plans t
 
 ```
 greenShare = (max(pvPower,0) + max(batteryPower,0)) / totalChargePower
-effectivePrice = gridPrice * (1 - greenShare) + feedInPrice * greenShare
+feedInShare = greenShare, or the PV-only share for loadpoints while battery soc < batteryPriceSoc
+effectivePrice = gridPrice * (1 - feedInShare) + feedInPrice * feedInShare
 ```
+
+`loadpointShares` computes both shares from the control loop's state snapshot, with PV attributed first. Below `batteryPriceSoc` (0 = off), battery discharge into loadpoints is priced at the grid price, because the home would otherwise consume that energy later. The home price, solar share and CO2 are unaffected. The rule is skipped until a battery SoC has been read.
 
 ## Concurrency Model
 
