@@ -79,6 +79,7 @@ export interface EvoptData {
 			c_min: number;
 			c_max: number;
 			d_max: number;
+			s_initial: number;
 			r_departure?: number[];
 		}>;
 	};
