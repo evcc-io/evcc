@@ -27,7 +27,7 @@ requirements:
       Setup Guide:
       * In the charger web UI, set the OCPP server URL to `ws://<evcc-host>:8887/`. Leave "Data" empty and keep "Station ID" and "Auth key" as-is.
       * Set the minimum charge current to 7 A. The charger ignores lower limits.
-      * Enable "1A current control" for your vehicle. The charger only supports whole amp currents.
+      * Enable "1A current control" for your vehicle. The charger only supports whole-amp currents.
 
       "Start remote transaction on vehicle connection" is always enabled.
 
