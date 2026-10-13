@@ -205,7 +205,7 @@ func NewKathrein(ctx context.Context, settings modbus.TcpSettings) (*Kathrein, e
 	}
 
 	if timeout := time.Duration(binary.BigEndian.Uint16(b)) * time.Second; timeout > 0 {
-		go wb.heartbeat(ctx, max(timeout/2, 5*time.Second))
+		go wb.heartbeat(ctx, timeout/2)
 	}
 
 	return wb, nil
@@ -214,23 +214,35 @@ func NewKathrein(ctx context.Context, settings modbus.TcpSettings) (*Kathrein, e
 // heartbeat rewrites the current setpoint to reset the wallbox EMS timeout
 func (wb *Kathrein) heartbeat(ctx context.Context, interval time.Duration) {
 	for tick := time.Tick(interval); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
 		wb.mu.Lock()
 		b, err := wb.conn.ReadHoldingRegisters(kathreinRegEMSSetpointChargingCurrent, 1)
 		if err == nil {
-			_, err = wb.conn.WriteSingleRegister(kathreinRegEMSSetpointChargingCurrent, binary.BigEndian.Uint16(b))
+			err = wb.setCurrent(binary.BigEndian.Uint16(b))
 		}
 		wb.mu.Unlock()
 
 		if err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
+
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
 	}
+}
+
+// setCurrent writes the setpoint in mA, enabling EMS control first
+func (wb *Kathrein) setCurrent(curr uint16) error {
+	// EMS-Control must be enabled before sending first WriteReg Command
+	if _, err := wb.conn.WriteSingleRegister(kathreinRegEMSControlRegister, 0x8000); err != nil {
+		return err
+	}
+
+	_, err := wb.conn.WriteSingleRegister(kathreinRegEMSSetpointChargingCurrent, curr)
+
+	return err
 }
 
 // getPhaseValues returns 3 sequential register values
@@ -287,14 +299,7 @@ func (wb *Kathrein) Enable(enable bool) error {
 		u = wb.curr
 	}
 
-	// EMS-Control must be enabled before sending first WriteReg Command
-	if _, err := wb.conn.WriteSingleRegister(kathreinRegEMSControlRegister, 0x8000); err != nil {
-		return err
-	}
-
-	_, err := wb.conn.WriteSingleRegister(kathreinRegEMSSetpointChargingCurrent, u)
-
-	return err
+	return wb.setCurrent(u)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -315,7 +320,7 @@ func (wb *Kathrein) MaxCurrentMillis(current float64) error {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 
-	_, err := wb.conn.WriteSingleRegister(kathreinRegEMSSetpointChargingCurrent, curr)
+	err := wb.setCurrent(curr)
 	if err == nil {
 		wb.curr = curr
 	}
