@@ -61,6 +61,39 @@ render: |
       register: 13000
       count: 47
     scale: -1
+  {{- if .directconnection }}
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5740 # Meter phase A voltage, 0.1V
+        decode: int16nan
+      block: # 5740-5745
+        register: 5740
+        count: 6
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5741 # Meter phase B voltage, 0.1V
+        decode: int16nan
+      block: # 5740-5745
+        register: 5740
+        count: 6
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5742 # Meter phase C voltage, 0.1V
+        decode: int16nan
+      block: # 5740-5745
+        register: 5740
+        count: 6
+      scale: 0.1
+  {{- else }}
   voltages:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -92,7 +125,8 @@ render: |
         register: 5016
         count: 5
       scale: 0.1
-  powers:
+  {{- end }}
+  powers: # also signs the unsigned meter currents
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
@@ -120,6 +154,39 @@ render: |
       block: # 5602-5607
         register: 5602
         count: 6
+  {{- if .directconnection }}
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5743 # Meter phase A current, 0.01A
+        decode: uint16nan
+      block: # 5740-5745
+        register: 5740
+        count: 6
+      scale: 0.01
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5744 # Meter phase B current, 0.01A
+        decode: uint16nan
+      block: # 5740-5745
+        register: 5740
+        count: 6
+      scale: 0.01
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 5745 # Meter phase C current, 0.01A
+        decode: uint16nan
+      block: # 5740-5745
+        register: 5740
+        count: 6
+      scale: 0.01
+  {{- else }}
   # Smart meter phase currents (L1-L3), 0.1A
   currents:
     - source: modbus
@@ -152,6 +219,7 @@ render: |
         register: 13000
         count: 47
       scale: 0.1
+  {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -174,98 +242,6 @@ render: |
       register: 13000
       count: 47
     scale: 0.1
-  {{- if .directconnection }}
-  currents:
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      type: input
-      address: 5743 # Meter phase A current, 0.01A
-      decode: uint16nan
-    block: # 5740-5745
-      register: 5740
-      count: 6
-    scale: 0.01
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      type: input
-      address: 5744 # Meter phase B current, 0.01A
-      decode: uint16nan
-    block: # 5740-5745
-      register: 5740
-      count: 6
-    scale: 0.01
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      type: input
-      address: 5745 # Meter phase C current, 0.01A
-      decode: uint16nan
-    block: # 5740-5745
-      register: 5740
-      count: 6
-    scale: 0.01
-  voltages:
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      type: input
-      address: 5740 # Meter phase A voltage, 0.1V
-      decode: int16nan
-    block: # 5740-5745
-      register: 5740
-      count: 6
-    scale: 0.1
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      type: input
-      address: 5741 # Meter phase B voltage, 0.1V
-      decode: int16nan
-    block: # 5740-5745
-      register: 5740
-      count: 6
-    scale: 0.1
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      type: input
-      address: 5742 # Meter phase C voltage, 0.1V
-      decode: int16nan
-    block: # 5740-5745
-      register: 5740
-      count: 6
-    scale: 0.1
-  powers: # signs the unsigned phase currents
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      type: input
-      address: 5602 # Meter phase A active power, 1W
-      decode: int32s
-    block: # 5602-5607
-      register: 5602
-      count: 6
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      type: input
-      address: 5604 # Meter phase B active power, 1W
-      decode: int32s
-    block: # 5602-5607
-      register: 5602
-      count: 6
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      type: input
-      address: 5606 # Meter phase C active power, 1W
-      decode: int32s
-    block: # 5602-5607
-      register: 5602
-      count: 6
-  {{- end }}
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
