@@ -957,7 +957,7 @@
         "label": "Valuta"
       },
       "siteTitle": {
-        "description": "Wordt getoond op het hoofdscherm en in het browsertabblad.",
+        "description": "Weergegeven op het hoofdscherm en in het browsertabblad.",
         "label": "Titel"
       },
       "title": "Locatie"
@@ -1137,7 +1137,7 @@
     },
     "consumers": {
       "chart": {
-        "bars": "Balken",
+        "bars": "Staven",
         "pattern": "Patroon"
       },
       "cost": "Kosten",
@@ -1203,14 +1203,14 @@
       "pv": "Productie"
     },
     "production": {
-      "above": "{value} hoger",
+      "above": "{value} hoger dan",
       "accuracy": "Nauwkeurigheid voorspelling",
-      "below": "{value} lager",
+      "below": "{value} lager dan",
       "deviation": "Afwijking",
       "expectedTomorrow": "verwacht morgen",
       "exported": "{value} geëxporteerd",
       "produced": "Geproduceerd",
-      "remainingToday": "resterend vandaag",
+      "remainingToday": "vandaag resterend",
       "selfConsumed": "Zelf verbruikt",
       "title": "Productie"
     },
@@ -1457,7 +1457,7 @@
     },
     "issueDescription": "Omschrijving",
     "issueTitle": "Titel",
-    "nightlyHint": "Het is misschien al opgelost. Controleer dit eerst met de nieuwste {nightlyVersion}.",
+    "nightlyHint": "Het is mogelijk al opgelost. Controleer dit alsublieft met de nieuwste {nightlyVersion}.",
     "nightlyHintVersion": "nightly-versie",
     "searchHint": "Zoek eerst in de bestaande {issues} voordat je een bug meldt.",
     "stepsToReproduce": "Stappen om te reproduceren",
