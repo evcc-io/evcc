@@ -7,18 +7,6 @@
     "authorizationSuccessful": "Авторизация успешно завершена",
     "buttonConnect": "Подключиться к {provider}",
     "buttonDisconnect": "Отключить",
-    "challenge": {
-      "captcha": {
-        "label": "",
-        "title": ""
-      },
-      "code": {
-        "label": "",
-        "title": ""
-      },
-      "openLogin": "",
-      "submit": ""
-    },
     "confirmLogout": "Вы уверены, что хотите отключить {title}?",
     "connect": "подключить",
     "disconnect": "отключить",
@@ -37,7 +25,6 @@
       "discharging": "разрядка аккумулятора",
       "energy": "Энергия",
       "gridCharge": "зарядка от сети",
-      "gridDischarge": "",
       "hold": "запретить разрядку",
       "holdCharge": "запретить зарядку",
       "ofTotal": "от {total}",
@@ -56,12 +43,6 @@
       "bufferTitle": "Аккумулятор в качестве буфера для зарядки",
       "discharge": "Запретить разрядку домашнего аккумулятора в быстром режиме и во время зарядки по расписанию.",
       "gridDischarge": "Разрешить разрядку домашнего аккумулятора в сеть.",
-      "gridDischargeConfirm": {
-        "country": "",
-        "description": "",
-        "noCountry": "",
-        "title": ""
-      },
       "priority": "Приоритет отдаётся домашнему аккумулятору, пока его заряд ниже {soc}. После этого избыток направляется на зарядные станции.",
       "priorityNone": "Солнечный избыток поступает напрямую на зарядные станции. Установите значение выше {soc} для приоритета домашнего аккумулятора.",
       "priorityTitle": "Куда в первую очередь поступает избыток?"
@@ -83,7 +64,6 @@
   },
   "batterySettings": {
     "gridChargeTab": "Зарядка сети",
-    "gridDischargeTab": "",
     "modalTitle": "Домашний Аккумулятор",
     "noBattery": "Аккумуляторы не настроены.",
     "usageTab": "Использование аккумулятора"
@@ -163,45 +143,10 @@
         "switchsocket": "Пользовательский переключатель"
       }
     },
-    "circuit": {
-      "addMeter": "",
-      "custom": "",
-      "deleteChildrenFirst": "",
-      "meterDedicated": "",
-      "meterGrid": "",
-      "meterHelp": "",
-      "meterLabel": "",
-      "meterLabelAdd": "",
-      "meterLabelEdit": "",
-      "meterNone": "",
-      "meterSelectionHelpDedicatedMeter": "",
-      "meterSelectionHelpGridMeter": "",
-      "meterSelectionHelpNoMeter": "",
-      "meterSelectionLabel": "",
-      "parentCircuit": "",
-      "template": "",
-      "titleAdd": "",
-      "titleEdit": "",
-      "titleLabel": ""
-    },
     "circuits": {
-      "addMainCircuit": "",
-      "addSubCircuit": "",
-      "chargingPointsNote": "",
       "description": "Обеспечивает, чтобы сумма всех точек нагрузки, подключенных к цепи, не превышала настроенные пределы мощности и тока. Цепи могут быть вложенными для построения иерархии.",
-      "legacyWarning": "",
-      "meterDedicated": "",
-      "meterGrid": "",
       "title": "Управление нагрузкой",
       "usableMeters": "Ссылки на доступные счётчики"
-    },
-    "combobox": {
-      "count": "",
-      "matching": "",
-      "other": "",
-      "searching": "",
-      "suggestions": "",
-      "used": ""
     },
     "consumer": {
       "description": "Отслеживает небольшие неуправляемые приборы (холодильник, стиральная машина и т. д.). Даёт более полное представление о потреблении в доме.",
@@ -223,13 +168,7 @@
       "title": "Валюта"
     },
     "curtailer": {
-      "description": "",
-      "generic": "",
-      "specific": "",
-      "template": "Производитель",
-      "title": "",
-      "titleAdd": "",
-      "titleEdit": ""
+      "template": "Производитель"
     },
     "deviceValue": {
       "activeClients": "Активные клиенты",
@@ -270,8 +209,6 @@
       "identifier": "RFID-идентификатор",
       "loginBlocked": "Достигнут лимит входов",
       "max": "максимум",
-      "maxCurrent": "",
-      "maxPower": "",
       "messengers": "Сервисы",
       "no": "нет",
       "odometer": "Одометр",
@@ -295,31 +232,6 @@
       "temp": "Температура",
       "topic": "Топик",
       "url": "URL",
-      "usage": {
-        "aux": {
-          "energy": "",
-          "returnEnergy": ""
-        },
-        "battery": {
-          "energy": "",
-          "returnEnergy": ""
-        },
-        "charge": {
-          "energy": "",
-          "returnEnergy": ""
-        },
-        "consumer": {
-          "energy": "",
-          "returnEnergy": ""
-        },
-        "grid": {
-          "energy": "",
-          "returnEnergy": ""
-        },
-        "pv": {
-          "energy": ""
-        }
-      },
       "vehicleLimitSoc": "Лимит зарядки",
       "yes": "да"
     },
@@ -408,7 +320,6 @@
       "enable": "Включить",
       "error": "Ошибка",
       "experimental": "Экспериментальный",
-      "forceEnable": "",
       "forceSave": "Сохранить в любом случае",
       "fromYamlHint": "Примечание: Настраивается через evcc.yaml. Удалите запись из файла, чтобы включить редактирование здесь.",
       "hideAdvancedSettings": "Скрыть расширенные настройки",
@@ -427,7 +338,6 @@
       "saving": "Сохранение…",
       "selectFile": "Просмотр",
       "showAdvancedSettings": "Показать дополнительные настройки",
-      "site": "",
       "telemetry": "Телеметрия",
       "templateLoading": "Загрузка...",
       "title": "Название",
@@ -519,10 +429,6 @@
         "charging": "Данные зарядной станции сохранены. Идёт создание зарядной станции …",
         "heating": "Данные нагревательного устройства сохранены. Идёт создание нагревателя …"
       },
-      "currentRangeHelp": {
-        "charging": "",
-        "heating": ""
-      },
       "defaultModeHelp": {
         "charging": "Режим зарядки при подключении автомобиля.",
         "heating": "Устанавливается при запуске системы."
@@ -572,8 +478,6 @@
       "solarBehaviorLabel": "Солнечная",
       "solarModeCustom": "пользовательский",
       "solarModeMaximum": "максимальная солнечная",
-      "solarShareNote": "",
-      "solarShareReset": "",
       "temperatureRangeHelp": "Диапазон шкалы температуры для отображения. Не влияет на управление.",
       "temperatureRangeTitle": "Диапазон температур",
       "thresholdDisableDelayLabel": "Отключить задержку",
@@ -611,7 +515,6 @@
     "main": {
       "addAdditional": "Добавить дополнительный счетчик",
       "addConsumer": "Добавить потребителя",
-      "addCurtailer": "",
       "addGrid": "Добавить счетчик электроэнергии",
       "addLoadpoint": "Добавить зарядное устройство или нагреватель",
       "addPvBattery": "Добавить солнечную батарею или аккумулятор",
@@ -946,22 +849,6 @@
       "labelVendorId": "Идентификатор поставщика",
       "title": "SMA Sunny Нome Manager"
     },
-    "site": {
-      "country": {
-        "description": "",
-        "label": ""
-      },
-      "currency": {
-        "description": "",
-        "example": "",
-        "label": ""
-      },
-      "siteTitle": {
-        "description": "",
-        "label": ""
-      },
-      "title": ""
-    },
     "sponsor": {
       "addToken": "Введите токен",
       "changeToken": "Изменить токен",
@@ -1131,23 +1018,6 @@
     }
   },
   "energy": {
-    "battery": {
-      "charged": "",
-      "discharged": ""
-    },
-    "consumers": {
-      "chart": {
-        "bars": "",
-        "pattern": ""
-      },
-      "cost": "",
-      "others": "",
-      "title": "",
-      "view": {
-        "river": "",
-        "treemap": ""
-      }
-    },
     "direction": {
       "battery": {
         "energy": "заряжено",
@@ -1162,34 +1032,6 @@
         "returnEnergy": "Энергия (реверсивная)"
       }
     },
-    "empty": "",
-    "flow": {
-      "battery": "",
-      "batteryCharge": "",
-      "batteryDischarge": "",
-      "charging": "",
-      "export": "",
-      "grid": "",
-      "heating": "",
-      "home": "",
-      "overview": "",
-      "pv": "",
-      "title": "",
-      "usage": "",
-      "withdrawal": ""
-    },
-    "grid": {
-      "amount": "",
-      "cost": "",
-      "energy": "",
-      "export": "",
-      "exportPrice": "",
-      "import": "",
-      "importPrice": "",
-      "price": "",
-      "revenue": "",
-      "title": ""
-    },
     "group": {
       "battery": "Аккумулятор",
       "consumer": "Потребление",
@@ -1198,50 +1040,7 @@
       "loadpoint": "Зарядки и Нагреватели",
       "meter": "Дополнительные счетчики",
       "pv": "Генерация"
-    },
-    "production": {
-      "above": "",
-      "accuracy": "",
-      "below": "",
-      "deviation": "",
-      "expectedTomorrow": "",
-      "exported": "",
-      "produced": "",
-      "remainingToday": "",
-      "selfConsumed": "",
-      "title": ""
-    },
-    "socTemp": {
-      "charged": "",
-      "soc": "",
-      "temperature": "",
-      "used": ""
-    },
-    "sources": {
-      "battery": "",
-      "cost": "",
-      "energy": "",
-      "grid": "",
-      "hint": "",
-      "price": "",
-      "pv": "",
-      "share": "",
-      "source": "",
-      "title": "",
-      "total": ""
-    },
-    "stat": {
-      "autarky": "",
-      "co2Saved": "",
-      "co2SavedTooltip": "",
-      "configure": "",
-      "noCo2": "",
-      "noPrice": "",
-      "savings": "",
-      "savingsTooltip": "",
-      "versus": ""
-    },
-    "title": ""
+    }
   },
   "footer": {
     "community": {
@@ -1380,7 +1179,6 @@
   },
   "general": {
     "back": "Назад",
-    "cancel": "",
     "download": "Загрузить",
     "error": "Ошибка",
     "none": "отсутствует",
@@ -1420,9 +1218,6 @@
   },
   "issue": {
     "additional": {
-      "copied": "",
-      "copy": "",
-      "copySelected": "",
       "description": "Включите конфигурацию и журналы, чтобы помочь нам быстро воспроизвести проблему. Мы рекомендуем предоставить как можно больше информации. Состояние обычно не требуется.",
       "include": "включать",
       "lines": "линии",
@@ -1503,15 +1298,6 @@
     "title": "Аутентификация"
   },
   "main": {
-    "alwaysCharge": {
-      "description": "",
-      "label": "",
-      "labelHeating": "",
-      "minCurrent": "",
-      "once": "",
-      "onceTip": "",
-      "permanent": ""
-    },
     "chargingPlan": {
       "active": "Активный",
       "addRepeatingPlan": "Добавить повторяющийся план",
@@ -1534,7 +1320,6 @@
       "planNumber": "План {number}",
       "precondition": {
         "description": "Сдвигает часть процесса зарядки к моменту выезда — это позволяет прогреть батарею и уменьшить время, в течение которого она находится с высоким уровнем заряда.",
-        "disabledDescription": "",
         "label": "Позднее заряжение",
         "optionAll": "всё",
         "optionNo": "нет",
@@ -1567,7 +1352,6 @@
       "batteryDischargeHold": "Аккумулятор (разрядка заблокирована)",
       "batteryGridChargeActive": "Зарядка от сети: активна",
       "batteryGridChargeLimit": "Зарядка от сети: когда",
-      "batteryStatus": "",
       "batteryTooltip": "{energy} из {total} ({soc})",
       "forecast": "Прогноз",
       "forecastTooltip": "прогноз: оставшееся производство солнечной энергии на сегодня",
@@ -1606,7 +1390,6 @@
       "finished": "Время окончания",
       "last24hEnergy": "Последние 24 часа",
       "last7dEnergy": "Последние 7 дней",
-      "phasesMismatch": "",
       "power": "Мощность",
       "price": "Стоимость",
       "remaining": "Остаток",
@@ -1653,33 +1436,13 @@
       },
       "smartCostCheap": "Дешевая зарядка от электросети",
       "smartCostClean": "Чистая зарядка от сети",
-      "solar": "",
-      "solarShare": {
-        "charging": {
-          "description": "",
-          "descriptionFull": "",
-          "descriptionZero": ""
-        },
-        "heating": {
-          "description": "",
-          "descriptionFull": "",
-          "descriptionZero": ""
-        },
-        "label": "",
-        "thresholdsHint": "",
-        "thresholdsHintYaml": "",
-        "thresholdsLink": ""
-      },
       "title": "Настройки {0}",
       "vehicle": "Автомобиль"
     },
     "mode": {
-      "boost": "",
       "minpv": "Мин+солн. эн",
-      "normal": "",
       "now": "Быстро",
       "off": "Выкл",
-      "on": "",
       "pv": "Солнечная",
       "smart": "Умный"
     },
@@ -1700,7 +1463,6 @@
       "nextPlan": "Следующий план",
       "notReachableInTime": "Цель будет достигнута {overrun} позже.",
       "onlyInPvMode": "План зарядки работает только в солнечном режиме.",
-      "onlyInSmartMode": "",
       "planDuration": "Время зарядки",
       "planPeriodLabel": "Период",
       "planPeriodValue": "{start} до {end}",
@@ -1782,10 +1544,6 @@
       "feedinPriorityPausing": "Солнечная зарядка приостановлена для максимального увеличения подачи энергии.",
       "finished": "Готово.",
       "minCharge": "Минимальная зарядка до {soc}.",
-      "pvDisable": "",
-      "pvEnable": "",
-      "scale1p": "",
-      "scale3p": "",
       "suggestionStartTooltip": "Оптимизатор рекомендует начать зарядку сейчас.",
       "suggestionStopTooltip": "Оптимизатор рекомендует приостановить зарядку.",
       "targetChargeActive": "Плановая зарядка активна. Ориентировочное завершение через {duration}.",
@@ -1932,11 +1690,7 @@
   },
   "settings": {
     "dateFormat": {
-      "auto": "",
-      "dmy": "",
-      "label": "Формат даты",
-      "mdy": "",
-      "ymd": ""
+      "label": "Формат даты"
     },
     "deviceInfo": "Настройки, которые вы выполняете в этом диалоговом окне, влияют только на это устройство.",
     "fullscreen": {
@@ -2008,7 +1762,6 @@
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Приостановленное время",
-    "batteryDescription": "",
     "description": "При высоких ценах приостанавливает зарядку, чтобы приоритезировать прибыльную подачу энергии в сеть.",
     "priceLabel": "Ставка за поставку электроэнергии",
     "priceLimit": "Лимит выдачи в сеть",
@@ -2032,7 +1785,6 @@
     "battery": "Аккумулятор",
     "charge": "Заряд",
     "comingSoon": "Эта страница находится в разработке.",
-    "energy": "",
     "forecast": "Прогноз",
     "more": "Подробнее",
     "sessions": "Сессии"

@@ -7,18 +7,6 @@
     "authorizationSuccessful": "Autoryzacja zakończona sukcesem",
     "buttonConnect": "Połącz się z {provider}",
     "buttonDisconnect": "Odłącz",
-    "challenge": {
-      "captcha": {
-        "label": "",
-        "title": ""
-      },
-      "code": {
-        "label": "",
-        "title": ""
-      },
-      "openLogin": "",
-      "submit": ""
-    },
     "confirmLogout": "Czy na pewno chcesz odłączyć {title}?",
     "connect": "łączyć",
     "disconnect": "odłączyć",
@@ -37,7 +25,6 @@
       "discharging": "rozładowywanie",
       "energy": "Energia",
       "gridCharge": "ładowanie sieciowe",
-      "gridDischarge": "",
       "hold": "rozładowywanie zablokowane",
       "holdCharge": "ładowanie zablokowane",
       "ofTotal": "z {total}",
@@ -56,12 +43,6 @@
       "bufferTitle": "Magazyn energii jako bufor ładowania",
       "discharge": "Zapobiegaj rozładowywaniu domowego magazynu energii w trybie szybkim i w zaplanowanym ładowaniu.",
       "gridDischarge": "Pozwól na rozładowywanie domowego magazynu energii do sieci.",
-      "gridDischargeConfirm": {
-        "country": "",
-        "description": "",
-        "noCountry": "",
-        "title": ""
-      },
       "priority": "Domowy magazyn energii ma priorytet, gdy jego stan jest poniżej {soc}. Wtedy punkty obciążenia otrzymują nadwyżkę.",
       "priorityNone": "Nadwyżka energii słonecznej trafia bezpośrednio do punktów obciążenia. Ustaw wartość powyżej {soc}, aby nadać priorytet domowemu magazynowi energii.",
       "priorityTitle": "Gdzie najpierw trafia nadwyżka?"
@@ -83,7 +64,6 @@
   },
   "batterySettings": {
     "gridChargeTab": "Ładowanie z sieci",
-    "gridDischargeTab": "",
     "modalTitle": "Domowy magazyn energii",
     "noBattery": "Brak skonfigurowanego magazynu energii.",
     "usageTab": "Użycie magazynu"
@@ -94,12 +74,10 @@
   },
   "config": {
     "adminPassword": {
-      "description": "",
       "invalid": "Błędne hasło. Proszę spróbować ponownie.",
       "title": "Możliwa niebezpieczna czynność"
     },
     "apiKey": {
-      "description": "",
       "exampleLabel": "Spróbuj: pobierz kopię zapasową z pomocą curl",
       "generate": "Stwórz klucz API",
       "generateConfirm": "Należy podać hasło administratora, aby wygenerować klucz API.",
@@ -163,45 +141,10 @@
         "switchsocket": "Gniazdo przełączalne zdefiniowane przez użytkownika"
       }
     },
-    "circuit": {
-      "addMeter": "",
-      "custom": "",
-      "deleteChildrenFirst": "",
-      "meterDedicated": "",
-      "meterGrid": "",
-      "meterHelp": "",
-      "meterLabel": "",
-      "meterLabelAdd": "",
-      "meterLabelEdit": "",
-      "meterNone": "",
-      "meterSelectionHelpDedicatedMeter": "",
-      "meterSelectionHelpGridMeter": "",
-      "meterSelectionHelpNoMeter": "",
-      "meterSelectionLabel": "",
-      "parentCircuit": "",
-      "template": "",
-      "titleAdd": "",
-      "titleEdit": "",
-      "titleLabel": ""
-    },
     "circuits": {
-      "addMainCircuit": "",
-      "addSubCircuit": "",
-      "chargingPointsNote": "",
       "description": "Zapewnia, że suma wszystkich punktów odbioru energii podłączonych do obwodu nie przekracza skonfigurowanych limitów mocy i prądu. Obwody można zagnieżdżać, aby zbudować hierarchię.",
-      "legacyWarning": "",
-      "meterDedicated": "",
-      "meterGrid": "",
       "title": "Zarządzanie obciążeniem",
       "usableMeters": "Użyteczne odniesienia licznikowe"
-    },
-    "combobox": {
-      "count": "",
-      "matching": "",
-      "other": "",
-      "searching": "",
-      "suggestions": "",
-      "used": ""
     },
     "consumer": {
       "description": "Monitoruje mniejsze, niesterowalne urządzenia (lodówkę, pralkę itp.). Zapewnia lepszy przegląd zużycia energii w domu.",
@@ -221,15 +164,6 @@
       "example": "Cena ładowania wyniosła {price}. Zaoszczędziłeś {amount}.",
       "label": "Waluta",
       "title": "Waluta"
-    },
-    "curtailer": {
-      "description": "",
-      "generic": "",
-      "specific": "",
-      "template": "",
-      "title": "",
-      "titleAdd": "",
-      "titleEdit": ""
     },
     "deviceValue": {
       "activeClients": "Aktywni klienci",
@@ -253,8 +187,6 @@
       "currency": "Waluta",
       "current": "Prąd",
       "currentRange": "Aktualne",
-      "curtailLimit": "",
-      "curtailable": "",
       "curtailed": "Zasilanie sieci ograniczone",
       "detected": "Wykryto",
       "dimLimit": "Limit zużycia",
@@ -270,8 +202,6 @@
       "identifier": "Identyfikator RFID",
       "loginBlocked": "Osiągnięto limit logowań",
       "max": "maks",
-      "maxCurrent": "",
-      "maxPower": "",
       "messengers": "Usługi",
       "no": "nie",
       "odometer": "Drogomierz",
@@ -287,39 +217,12 @@
       "productionLimited": "Ograniczona produkcja",
       "range": "Zasięg",
       "remoteEnabled": "Włączone",
-      "returnEnergy": "",
       "singlePhase": "Jedna faza",
       "soc": "Stan naładowania",
       "solarForecast": "Prognoza nasłonecznienia",
-      "switchDevice": "",
       "temp": "Temperatura",
       "topic": "Temat",
       "url": "URL",
-      "usage": {
-        "aux": {
-          "energy": "",
-          "returnEnergy": ""
-        },
-        "battery": {
-          "energy": "",
-          "returnEnergy": ""
-        },
-        "charge": {
-          "energy": "",
-          "returnEnergy": ""
-        },
-        "consumer": {
-          "energy": "",
-          "returnEnergy": ""
-        },
-        "grid": {
-          "energy": "",
-          "returnEnergy": ""
-        },
-        "pv": {
-          "energy": ""
-        }
-      },
       "vehicleLimitSoc": "Limit opłat",
       "yes": "tak"
     },
@@ -348,16 +251,13 @@
       "descriptionAdvanced": "Nie są wymagane żadne zmiany. Wprowadzaj zmiany tylko wtedy, gdy naprawdę wiesz, co robisz. Jeśli zmienisz identyfikator SHIP lub certyfikaty, konieczne będzie ponowne sparowanie urządzeń.",
       "interfaces": "Interfejsy",
       "interfacesHelp": "Ogranicz liczbę interfejsów sieciowych, z których EEBus powinien korzystać, aby uniknąć problemów komunikacyjnych. Pozostaw pole puste, aby korzystać ze wszystkich interfejsów. Jeden wpis na wiersz.",
-      "noConfiguredDevices": "",
       "noPairings": "Brak sparowanych urządzeń.",
       "pairings": "Sparowane urządzenia",
       "port": "Port",
       "portHelp": "Port, który ma być użyty.",
       "qr": "Kod parowania",
-      "qrExplain": "",
       "removeConfirm": "Cała konfiguracja EEBus zostanie usunięta. Nowe certyfikaty i identyfikatory zostaną wygenerowane przy następnym uruchomieniu. Czy jesteś pewien?",
       "removePairing": "Usuń parowanie",
-      "removePairingConfirm": "",
       "shipid": "SHIP-ID",
       "shipidExplain": "Trwały identyfikator urządzenia służący do identyfikacji w sieci EEBus.",
       "shipidHelp": "SHIP-ID połączone z poniższymi certyfikatami.",
@@ -390,8 +290,6 @@
       "change": "Zmień",
       "clear": "Wyraźne",
       "close": "Zamknij",
-      "confirmDisable": "",
-      "confirmEnable": "",
       "confirmSave": "Są niezachowane zmiany. Zapisać teraz?",
       "copied": "Skopiowano!",
       "copy": "Kopia",
@@ -405,16 +303,13 @@
       "dragHandle": "Uchwyt do przeciągania",
       "dragItem": "Przeciągalny: {title}",
       "dragList": "Lista do ponownego zamówienia",
-      "enable": "",
       "error": "Błąd",
       "experimental": "Eksperymentalny",
-      "forceEnable": "",
       "forceSave": "Zapisz mimo to",
       "fromYamlHint": "Uwaga: Konfiguracja odbywa się za pomocą pliku evcc.yaml. Aby umożliwić edycję w tym miejscu, usuń wpis z pliku.",
       "hideAdvancedSettings": "Ukryj ustawienia zaawansowane",
       "invalidFileSelected": "Wybrano nieprawidłowy plik",
       "legacy": "starsze",
-      "moreInfo": "",
       "noFileSelected": "Nie wybrano pliku.",
       "off": "wyłączony",
       "on": "włączony",
@@ -427,7 +322,6 @@
       "saving": "Zapisywanie…",
       "selectFile": "Przeglądaj",
       "showAdvancedSettings": "Pokaż ustawienia zaawansowane",
-      "site": "",
       "telemetry": "Telemetria",
       "templateLoading": "Wczytywanie…",
       "title": "Tytuł",
@@ -440,7 +334,6 @@
       "titleEdit": "Edytuj licznik sieciowy"
     },
     "hems": {
-      "changeConfirm": "",
       "csv": {
         "created": "Utworzono",
         "finished": "Gotowe",
@@ -448,26 +341,10 @@
         "limitpower": "Limit (kW)",
         "type": "Typ"
       },
-      "customOption": "",
       "description": "Ograniczenie mocy przez systemy zewnętrzne (np. §14a EnWG, interfejs §9 EEG lub wyższy poziom systemu zarządzania energią). Współpracuje z funkcją zarządzania obciążeniem.",
-      "download": "",
-      "dynamicLimits": "",
       "eventsRecorded": "Zarejestrowano {count} zdarzeń związanych z ograniczeniami sieci.",
-      "exportLimit": "",
-      "exportLimitDescription": "",
-      "exportLimitHint": "",
-      "generic": "",
-      "integrations": "",
       "lastEvent": "Najnowsze {timeAgo}.",
-      "noEvents": "",
-      "recordedEvents": "",
-      "staticLimits": "",
-      "template": "",
-      "title": "Limit zewnętrzny",
-      "type": {
-        "custom": "",
-        "relay": ""
-      }
+      "title": "Limit zewnętrzny"
     },
     "icon": {
       "change": "zmień",
@@ -495,7 +372,6 @@
         "heating": "Dodaj podgrzewacz"
       },
       "addMeter": "Dodaj dedykowany licznik energii",
-      "advancedConfig": "",
       "cancel": "Anuluj",
       "chargerError": {
         "charging": "Wymagana jest konfiguracja ładowarki.",
@@ -516,12 +392,7 @@
         "heating": "Utworzono grzejnik"
       },
       "creating": {
-        "charging": "Zapisano ładowarkę. Tworzenie punktu ładowania…",
-        "heating": ""
-      },
-      "currentRangeHelp": {
-        "charging": "",
-        "heating": ""
+        "charging": "Zapisano ładowarkę. Tworzenie punktu ładowania…"
       },
       "defaultModeHelp": {
         "charging": "Tryb ładowania po podłączeniu pojazdu.",
@@ -538,11 +409,8 @@
       "estimateLabel": "Interpolacja poziomu naładowania między aktualizacjami API",
       "maxCurrentHelp": "Musi być większy niż prąd minimalny.",
       "maxCurrentLabel": "Maksymalny prąd",
-      "maxTempHelp": "",
-      "maxTempLabel": "",
       "minCurrentHelp": "Zmniejsz natężenie prądu poniżej 6 A tylko wtedy, gdy wiesz, co robisz.",
       "minCurrentLabel": "Minimalny prąd",
-      "minTempLabel": "",
       "noVehicles": "Nie skonfigurowano żadnych pojazdów.",
       "option": {
         "charging": "Dodaj punkt ładowania",
@@ -572,9 +440,6 @@
       "solarBehaviorLabel": "Słońce",
       "solarModeCustom": "własne",
       "solarModeMaximum": "maksymalnie słońce",
-      "solarShareNote": "",
-      "solarShareReset": "",
-      "temperatureRangeHelp": "",
       "temperatureRangeTitle": "Zakres temperatur",
       "thresholdDisableDelayLabel": "Wyłącz opóźnienie",
       "thresholdDisableHelpInvalid": "Proszę użyć wartości dodatniej.",
@@ -611,7 +476,6 @@
     "main": {
       "addAdditional": "Dodaj dodatkowy licznik",
       "addConsumer": "Dodaj konsumenta",
-      "addCurtailer": "",
       "addGrid": "Dodaj licznik sieciowy",
       "addLoadpoint": "Dodaj ładowarkę lub podgrzewacz",
       "addPvBattery": "Dodaj licznik energii słonecznej lub magazynu energii",
@@ -630,7 +494,6 @@
     "mcp": {
       "description": "Udostępnia serwer protokołu Model Context Protocol, umożliwiając asystentom AI, takim jak Claude, odczytywanie stanu systemu i kontrolowanie ładowania.",
       "exampleLabel": "Np. Claude CLI",
-      "restartHint": "",
       "title": "Serwer MCP",
       "url": "Adres MCP"
     },
@@ -679,8 +542,6 @@
           "titleDefault": "Ładowanie zakończone"
         },
         "suggestion": {
-          "messageDefault": "",
-          "title": "",
           "titleDefault": "Sugestia optymalizatora"
         }
       },
@@ -702,17 +563,11 @@
     },
     "meter": {
       "cancel": "Anuluj",
-      "convertToConsumer": {
-        "confirm": "",
-        "link": ""
-      },
       "delete": "Usuń",
       "generic": "Integracje podstawowe",
       "option": {
         "aux": "Dodaj samoregulujące się urządzenie konsumujące",
         "battery": "Dodaj licznik magazynu energii",
-        "consumer": "",
-        "grid": "",
         "pv": "Dodaj licznik energii słonecznej"
       },
       "save": "Zapisz",
@@ -738,8 +593,6 @@
       "connectionHintTcpip": "Urządzenie jest dostępne przez sieć (LAN/WiFi).",
       "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Network",
-      "delay": "",
-      "delayHint": "",
       "device": "Nazwa urządzenia",
       "deviceHint": "Przykład: /dev/ttyUSB0",
       "host": "Adres IP lub nazwa hosta",
@@ -750,9 +603,7 @@
       "protocolHintRtu": "Połączenie poprzez adapter RS485 do Ethernet bez translacji protokołu.",
       "protocolHintTcp": "Urządzenie obsługuje natywnie sieć LAN/Wi-Fi lub jest podłączone przez adapter RS485 do Ethernet z translacją protokołów.",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP",
-      "timeout": "",
-      "timeoutHint": ""
+      "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
       "add": "Dodaj połączenie proxy",
@@ -806,12 +657,7 @@
       "warningUrlPath": "Adres URL zazwyczaj nie wymaga ścieżki. Czy napewno jest to poprawne?"
     },
     "ocpp": {
-      "forwardingConfigured": "",
-      "forwardingError": "",
-      "forwardingOff": "",
       "noChargers": "Nie wykryto żadnych ładowarek OCPP.",
-      "stations": "",
-      "stationsHelp": "",
       "status": {
         "configured": "Nie podłączony",
         "connected": "Połączony",
@@ -820,30 +666,6 @@
       "title": "Serwer OCPP",
       "url": "Adres URL serwera",
       "urlHelp": "Skopiuj ten adres URL do konfiguracji ładowarki. Szczegółowe informacje znajdziesz w instrukcji producenta. Ładowarka powinna automatycznie dodać swój unikalny identyfikator (station ID) do adresu URL. W rzadkich przypadkach może być konieczne ręczne podanie identyfikatora. Przykład: `{url}`"
-    },
-    "ocppforwarder": {
-      "description": "",
-      "editTitle": "",
-      "labelCaCert": "",
-      "labelCheckInsecure": "",
-      "labelInsecure": "",
-      "password": "",
-      "passwordHelp": "",
-      "readOnly": {
-        "check": "",
-        "help": {
-          "false": "",
-          "true": ""
-        },
-        "label": ""
-      },
-      "status": "",
-      "upstreamStationId": "",
-      "upstreamStationIdHelp": "",
-      "upstreamUrl": "",
-      "upstreamUrlHelp": "",
-      "username": "",
-      "usernameHelp": ""
     },
     "optimizer": {
       "description": "Analizuje prognozy dotyczące energii słonecznej, cen energii elektrycznej i wzorce zużycia, aby zoptymalizować strategię ładowania akumulatorów. Dane są przesyłane do usługi optymalizacji evcc w celu przetworzenia. Obecnie wykonuje tylko obliczenia i wizualizacje. Nie kontroluje jeszcze urządzeń.",
@@ -878,43 +700,8 @@
       "titleAdd": "Dodaj licznik energii słonecznej",
       "titleEdit": "Edytuj licznik energii słonecznej"
     },
-    "remote": {
-      "active": "",
-      "addClient": "",
-      "addClientDescription": "",
-      "addClientTitle": "",
-      "clientCreated": "",
-      "clients": "",
-      "confirmDelete": "",
-      "connected": "",
-      "createClient": "",
-      "description": "",
-      "deviceName": "",
-      "disconnected": "",
-      "done": "",
-      "enableLabel": "",
-      "expiration": "",
-      "expirationNone": "",
-      "expired": "",
-      "expiresIn": "",
-      "lastActive": "",
-      "loginBlocked": "",
-      "manualLogin": "",
-      "noClients": "",
-      "password": "",
-      "passwordOnce": "",
-      "privacy": "",
-      "privacyLink": "",
-      "qrInstall": "",
-      "qrScan": "",
-      "removeClient": "",
-      "title": "",
-      "url": "",
-      "username": ""
-    },
     "section": {
       "additionalMeter": "Dodatkowy licznik energii",
-      "consumers": "",
       "general": "Ogólne",
       "grid": "Sieć energetyczna",
       "integrations": "Integracje",
@@ -923,14 +710,6 @@
       "services": "Usługi",
       "system": "System",
       "vehicles": "Pojazdy"
-    },
-    "security": {
-      "authDisabledHint": "",
-      "description": "",
-      "passwordDescription": "",
-      "passwordTitle": "",
-      "title": "",
-      "updatePassword": ""
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
@@ -945,22 +724,6 @@
       "labelDeviceSerial": "Nr seryjny urządzenia",
       "labelVendorId": "Identyfikator dostawcy",
       "title": "SMA Sunny Home Manager"
-    },
-    "site": {
-      "country": {
-        "description": "",
-        "label": ""
-      },
-      "currency": {
-        "description": "",
-        "example": "",
-        "label": ""
-      },
-      "siteTitle": {
-        "description": "",
-        "label": ""
-      },
-      "title": ""
     },
     "sponsor": {
       "addToken": "Wprowadź token",
@@ -997,8 +760,6 @@
           "confirmationButton": "Zresetuj i uruchom ponownie",
           "confirmationText": "Spowoduje to trwałe usunięcie wybranych danych. Upewnij się, że najpierw pobrałeś kopię zapasową.",
           "description": "Masz problemy z konfiguracją i chcesz zacząć od nowa? Usuń wszystkie dane i zacznij od nowa.",
-          "remote": "",
-          "remoteDescription": "",
           "sessions": "Sesje ładowania",
           "sessionsDescription": "Usuwa historię sesji ładowania.",
           "settings": "Konfiguracja i ustawienia",
@@ -1050,14 +811,10 @@
         "co2": "Dodaj prognozę CO₂",
         "feedIn": "Dodaj taryfę za zasilanie sieci",
         "grid": "Dodaj taryfę za pobranie energii z sieci",
-        "planner": "",
-        "solar": "Dodaj prognozę nasłonecznienia",
-        "temperature": ""
+        "solar": "Dodaj prognozę nasłonecznienia"
       },
       "planner": {
-        "description": "Ustawienie zaawansowane. Zazwyczaj niepotrzebne, ponieważ dynamiczne taryfy za energię elektryczną lub prognozy emisji CO₂ są używane automatycznie. Włącza dodatkowe źródło danych, które służy wyłącznie do planowania ładowania, a nie do statystyk i obliczania cen.",
-        "titleAdd": "",
-        "titleEdit": ""
+        "description": "Ustawienie zaawansowane. Zazwyczaj niepotrzebne, ponieważ dynamiczne taryfy za energię elektryczną lub prognozy emisji CO₂ są używane automatycznie. Włącza dodatkowe źródło danych, które służy wyłącznie do planowania ładowania, a nie do statystyk i obliczania cen."
       },
       "services": "Usługodawcy",
       "solar": {
@@ -1065,21 +822,13 @@
         "titleAdd": "Dodawanie prognozy nasłonecznienia",
         "titleEdit": "Edytowanie prognozy nasłonecznienia"
       },
-      "temperature": {
-        "description": "",
-        "titleAdd": "",
-        "titleEdit": ""
-      },
       "template": "Dostawca",
       "title": "Taryfy i Prognozy",
       "titleChoice": "Co zamierzasz dodać?",
       "type": {
         "co2": "Intensywność CO₂",
         "feedIn": "Cena za zasilanie sieci",
-        "grid": "Cena za pobranie energii z sieci",
-        "planner": "",
-        "solar": "",
-        "temperature": ""
+        "grid": "Cena za pobranie energii z sieci"
       },
       "zones": {
         "add": "Dodaj przedział",
@@ -1087,7 +836,6 @@
         "allMonths": "Wszystkie miesiące",
         "allTimes": "Cały czas",
         "cancel": "Anuluj",
-        "charge": "",
         "days": "Dni",
         "edit": "Edytuj",
         "hours": "Godziny",
@@ -1131,23 +879,6 @@
     }
   },
   "energy": {
-    "battery": {
-      "charged": "",
-      "discharged": ""
-    },
-    "consumers": {
-      "chart": {
-        "bars": "",
-        "pattern": ""
-      },
-      "cost": "",
-      "others": "",
-      "title": "",
-      "view": {
-        "river": "",
-        "treemap": ""
-      }
-    },
     "direction": {
       "battery": {
         "energy": "naładowane",
@@ -1156,39 +887,7 @@
       "grid": {
         "energy": "zaimportowane",
         "returnEnergy": "wyeksportowane"
-      },
-      "meter": {
-        "energy": "",
-        "returnEnergy": ""
       }
-    },
-    "empty": "",
-    "flow": {
-      "battery": "",
-      "batteryCharge": "",
-      "batteryDischarge": "",
-      "charging": "",
-      "export": "",
-      "grid": "",
-      "heating": "",
-      "home": "",
-      "overview": "",
-      "pv": "",
-      "title": "",
-      "usage": "",
-      "withdrawal": ""
-    },
-    "grid": {
-      "amount": "",
-      "cost": "",
-      "energy": "",
-      "export": "",
-      "exportPrice": "",
-      "import": "",
-      "importPrice": "",
-      "price": "",
-      "revenue": "",
-      "title": ""
     },
     "group": {
       "battery": "Magazyn energii",
@@ -1198,50 +897,7 @@
       "loadpoint": "Ładowanie i ogrzewania",
       "meter": "Dodatkowe liczniki",
       "pv": "Produkcja"
-    },
-    "production": {
-      "above": "",
-      "accuracy": "",
-      "below": "",
-      "deviation": "",
-      "expectedTomorrow": "",
-      "exported": "",
-      "produced": "",
-      "remainingToday": "",
-      "selfConsumed": "",
-      "title": ""
-    },
-    "socTemp": {
-      "charged": "",
-      "soc": "",
-      "temperature": "",
-      "used": ""
-    },
-    "sources": {
-      "battery": "",
-      "cost": "",
-      "energy": "",
-      "grid": "",
-      "hint": "",
-      "price": "",
-      "pv": "",
-      "share": "",
-      "source": "",
-      "title": "",
-      "total": ""
-    },
-    "stat": {
-      "autarky": "",
-      "co2Saved": "",
-      "co2SavedTooltip": "",
-      "configure": "",
-      "noCo2": "",
-      "noPrice": "",
-      "savings": "",
-      "savingsTooltip": "",
-      "versus": ""
-    },
-    "title": ""
+    }
   },
   "footer": {
     "community": {
@@ -1262,15 +918,6 @@
       "configurePriceCo2": "Dowiedz się, jak skonfigurować dane dotyczące cen i emisji CO₂.",
       "footerLong": "{percent} energii słonecznej",
       "footerShort": "{percent} słońce",
-      "indicator": {
-        "co2": "",
-        "co2saved": "",
-        "none": "",
-        "price": "",
-        "savings": "",
-        "solar": ""
-      },
-      "indicatorLabel": "",
       "modalTitle": "Przegląd energii ładowania",
       "moneySaved": "{value} zaoszczędzone",
       "percentGrid": "{grid} kWh sieć",
@@ -1309,28 +956,15 @@
     },
     "version": {
       "availableLong": "dostępna nowa wersja",
-      "community": "",
-      "labelEmail": "",
-      "labelPhone": "",
-      "labelRelease": "",
-      "labelVersion": "",
-      "labelWebsite": "",
-      "latestVersion": "",
-      "madeByCommunity": "",
       "modalCancel": "Anuluj",
       "modalDownload": "Pobierz",
       "modalInstalledVersion": "Zainstalowana wersja",
-      "modalLatest": "",
-      "modalNextRelease": "",
       "modalNoReleaseNotes": "Brak dostępnych notatek. Więcej informacji o nowej wersji:",
       "modalTitle": "Dostępna nowa wersja",
       "modalUpdate": "Instaluj",
       "modalUpdateNow": "Instaluj teraz",
       "modalUpdateStarted": "Nowa wersja evcc uruchamia się…",
-      "modalUpdateStatusStart": "Instalacja rozpoczęta:",
-      "modalViewOnGitHub": "",
-      "openSource": "",
-      "poweredBy": ""
+      "modalUpdateStatusStart": "Instalacja rozpoczęta:"
     }
   },
   "forecast": {
@@ -1340,14 +974,6 @@
       "lowestHour": "Najczystsze godziny",
       "range": "Zakres"
     },
-    "empty": {
-      "co2": "",
-      "price": "",
-      "setup": "",
-      "solar": "",
-      "temperature": ""
-    },
-    "hideLine": "",
     "modalTitle": "Prognoza",
     "price": {
       "average": "Średnia",
@@ -1355,8 +981,6 @@
       "lowestHour": "Najtańsza godzina",
       "range": "Zakres"
     },
-    "priceZoom": "",
-    "showLine": "",
     "solar": {
       "dayAfterTomorrow": "Pojutrze",
       "partly": "częściowo",
@@ -1365,27 +989,14 @@
       "tomorrow": "Jutro"
     },
     "solarAdjust": "Dostosuj prognozę nasłonecznienia na podstawie rzeczywistych danych produkcyjnych{percent}.",
-    "solarAdjustMedium": "",
-    "solarAdjustShort": "",
-    "temperature": {
-      "average": "",
-      "range": ""
-    },
     "type": {
       "co2": "CO₂",
       "price": "Cena",
-      "solar": "Słońce",
-      "temperature": ""
+      "solar": "Słońce"
     }
   },
   "general": {
-    "back": "",
-    "cancel": "",
-    "download": "",
-    "error": "",
-    "none": "",
-    "note": "Uwaga:",
-    "warning": ""
+    "note": "Uwaga:"
   },
   "header": {
     "about": "O evcc",
@@ -1398,7 +1009,6 @@
     "sessions": "Sesje ładowania"
   },
   "help": {
-    "contactButton": "",
     "discussionsButton": "Dyskusje na GitHub'ie",
     "documentationButton": "Dokumentacja",
     "issueButton": "Zgłoś problem",
@@ -1420,9 +1030,6 @@
   },
   "issue": {
     "additional": {
-      "copied": "",
-      "copy": "",
-      "copySelected": "",
       "description": "Dołącz konfigurację i logi, aby pomóc nam szybko odtworzyć problem. Zachęcamy do udostępnienia jak największej ilości informacji. Stan zazwyczaj nie jest potrzebny.",
       "include": "obejmują",
       "lines": "linie",
@@ -1441,11 +1048,8 @@
     "additionalContext": "Dodatkowy kontekst",
     "additionalContextPlaceholder": "Wszelkie dodatkowe informacje, które mogą być pomocne...\n- Szczegóły konfiguracji\n- Co próbowałeś zrobić\n- Szczegóły dotyczące środowiska",
     "createButtonDiscussion": "Rozpocznij dyskusję na GitHubie...",
-    "createButtonEmail": "",
     "createButtonIssue": "Utwórz zgłoszenie GitHub...",
     "description": "Twoja instalacja nie działa zgodnie z oczekiwaniami? Skorzystaj z tej strony, aby uzyskać pomoc lub zgłosić problem. Podaj wystarczającą ilość szczegółów, abyśmy mogli zrozumieć i odtworzyć problem, jednocześnie dbając o to, aby opis był zwięzły, jasny i łatwy do zrozumienia.",
-    "downloadButton": "",
-    "downloadHint": "",
     "helpType": {
       "discussion": "Potrzebuję pomocy przy konfiguracji",
       "discussionDescription": "Odpowiedzi można znaleźć w dyskusjach społeczności.",
@@ -1457,7 +1061,6 @@
     "issueTitle": "Tytuł",
     "stepsToReproduce": "Kroki umożliwiające odtworzenie błędu",
     "subTitleDiscussion": "Opisz swój problem",
-    "subTitleEmail": "",
     "subTitleIssue": "Opisz problem",
     "summary": {
       "confirmationButtonDiscussion": "Rozpocznij dyskusję na GitHubie",
@@ -1503,15 +1106,6 @@
     "title": "Uwierzytelnianie"
   },
   "main": {
-    "alwaysCharge": {
-      "description": "",
-      "label": "",
-      "labelHeating": "",
-      "minCurrent": "",
-      "once": "",
-      "onceTip": "",
-      "permanent": ""
-    },
     "chargingPlan": {
       "active": "Aktywny",
       "addRepeatingPlan": "Dodaj plan powtarzalny",
@@ -1519,55 +1113,34 @@
       "goal": "Cel ładowania",
       "modalTitle": "Plan ładowania",
       "none": "brak",
-      "once": "",
       "optimization": {
         "cheapest": "najtańszy",
-        "cheapestDescription": "",
-        "cleanest": "",
-        "cleanestDescription": "",
         "continuous": "ciągły",
-        "continuousCo2Description": "",
-        "continuousPriceDescription": "",
-        "disabledDescription": "",
         "label": "Optymalizacja"
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "",
-        "disabledDescription": "",
         "label": "Późniejsze ładowanie",
         "optionAll": "wszystko",
-        "optionNo": "nie",
-        "summary": "",
-        "summaryAll": ""
+        "optionNo": "nie"
       },
       "remove": "Wymaż",
       "repeating": "powtórzenie",
       "repeatingPlans": "Powtarzające się plany",
       "selectAll": "Wybierz wszystko",
-      "strategy": {
-        "label": ""
-      },
       "time": "Czas",
       "title": "Plan",
       "unsavedChanges": "Są niezapisane zmiany. Zastosować teraz?",
       "update": "Zastosuj",
       "weekdays": "Dni"
     },
-    "continuousStatus": {
-      "charging": "",
-      "connected": "",
-      "waitForVehicle": ""
-    },
     "energyflow": {
       "battery": "Akumulator",
       "batteryCharge": "Ładowanie magazynu energii",
-      "batteryChargeHold": "",
       "batteryDischarge": "Rozładowywanie magazynu energii",
       "batteryDischargeHold": "Magazyn energii (chroniony)",
       "batteryGridChargeActive": "Ładowanie z sieci: aktywne",
       "batteryGridChargeLimit": "Ładowanie z sieci: gdy",
-      "batteryStatus": "",
       "batteryTooltip": "{energy} z {total} ({soc})",
       "forecast": "Prognoza",
       "forecastTooltip": "prognoza: pozostała na dziś produkcja energii słonecznej",
@@ -1579,15 +1152,11 @@
       "pv": "Instalacja PV",
       "pvExport": "Eksport do sieci",
       "pvProduction": "Produkcja",
-      "selfConsumption": "Zasilanie własne",
-      "toggleDetails": ""
+      "selfConsumption": "Zasilanie własne"
     },
     "heatingStatus": {
       "charging": "Grzeje…",
       "connected": "Oczekuje.",
-      "minTemp": "",
-      "suggestionStartTooltip": "",
-      "suggestionStopTooltip": "",
       "vehicleLimit": "Limit podgrzewacza",
       "waitForVehicle": "Gotowe do grzania…"
     },
@@ -1604,16 +1173,12 @@
       "emission": "Emisyjność",
       "fallbackName": "Punkt odbioru energii",
       "finished": "Godzina zakończenia",
-      "last24hEnergy": "",
-      "last7dEnergy": "",
-      "phasesMismatch": "",
       "power": "Moc",
       "price": "Koszt",
       "remaining": "Pozostało",
       "remoteDisabledHard": "{source}: wyłączone",
       "remoteDisabledSoft": "{source}: adaptacyjne ładowanie słonecznie wyłączone",
-      "solar": "Słońce",
-      "todayEnergy": ""
+      "solar": "Słońce"
     },
     "loadpointSettings": {
       "batteryBoost": {
@@ -1625,13 +1190,11 @@
         "once": "Turbo ładowanie aktywne dla tej sesji.",
         "stateActive": "Turbo ładowanie aktywne",
         "stateBelowLimit": "Magazyn energii zbyt rozładowany dla turbo ładowania",
-        "stateHold": "",
         "stateReady": "Turbo ładowanie gotowe"
       },
       "batteryUsage": "Domowy magazyn energii",
       "currents": "Prąd ładowania",
       "default": "domyślny",
-      "heating": "",
       "maxCurrent": {
         "label": "Maks. prąd"
       },
@@ -1639,7 +1202,6 @@
         "label": "Min. Prąd"
       },
       "minTemp": {
-        "description": "",
         "label": "Min. temperatura"
       },
       "phasesConfigured": {
@@ -1653,33 +1215,13 @@
       },
       "smartCostCheap": "Tanie ładowanie z sieci",
       "smartCostClean": "Czyste ładowanie z sieci",
-      "solar": "",
-      "solarShare": {
-        "charging": {
-          "description": "",
-          "descriptionFull": "",
-          "descriptionZero": ""
-        },
-        "heating": {
-          "description": "",
-          "descriptionFull": "",
-          "descriptionZero": ""
-        },
-        "label": "",
-        "thresholdsHint": "",
-        "thresholdsHintYaml": "",
-        "thresholdsLink": ""
-      },
       "title": "Ustawienia {0}",
       "vehicle": "Pojazd"
     },
     "mode": {
-      "boost": "",
       "minpv": "Min+Słońce",
-      "normal": "",
       "now": "Szybko",
       "off": "Stop",
-      "on": "",
       "pv": "Słońce",
       "smart": "Inteligentny"
     },
@@ -1700,7 +1242,6 @@
       "nextPlan": "Następny plan",
       "notReachableInTime": "Cel zostanie osiągnięty {overrun} później.",
       "onlyInPvMode": "Plan ładowania działa tylko w trybie solarnym.",
-      "onlyInSmartMode": "",
       "planDuration": "Czas ładowania",
       "planPeriodLabel": "Okres",
       "planPeriodValue": "{start} do {end}",
@@ -1747,15 +1288,12 @@
     },
     "vehicleSettings": {
       "connectedTo": "podłączono do {0}",
-      "description": "",
       "editHint": "Dodaj lub usuļ pojazdy w {0}.",
       "keepAsIs": "Zostaw jak jest",
       "learnMore": "Dowiedz się więcej.",
       "limitSoc": "Domyślne ograniczenie",
       "menu": "Pojazdy",
       "minSoc": "Minimalny poziom naładowania",
-      "mode": "",
-      "notConnected": "",
       "title": "Ustawienia pojazdu"
     },
     "vehicleStatus": {
@@ -1764,7 +1302,6 @@
       "batteryBoostBelowLimit": "Magazyn energii zbyt rozładowany dla turbo ładowania.",
       "batteryBoostDisabled": "Turbo ładowanie wyłączone.",
       "batteryBoostEnabled": "Turbo ładowanie, aż do {limit} rozładowania magazynu energii.",
-      "batteryBoostHold": "",
       "charging": "Ładuje się…",
       "cheapEnergyCharging": "Dostępna tania energia.",
       "cheapEnergyNextStart": "Tania energia za {duration}.",
@@ -1784,8 +1321,6 @@
       "pvEnable": "Dostępna nadwyżka. Wkrótce rozpoczęcie.",
       "scale1p": "Wkrótce zredukowanie na ładowanie jednofazowe.",
       "scale3p": "Wkrótce zwiększenie na ładowanie 3-fazowe.",
-      "suggestionStartTooltip": "",
-      "suggestionStopTooltip": "",
       "targetChargeActive": "Plan ładowania aktywny. Szacunkowy czas do zakończenia {duration}.",
       "targetChargePlanned": "Zaplanowane ładowanie zacznie się za {duration}.",
       "targetChargeWaitForVehicle": "Plan ładowania gotowy. Czekam na pojazd…",
@@ -1825,7 +1360,6 @@
   },
   "session": {
     "addOdometer": "Dodaj wartość",
-    "addedRange": "",
     "cancel": "Anuluj",
     "co2": "CO₂",
     "date": "Okres",
@@ -1841,11 +1375,9 @@
     "title": "Sesja ładowania"
   },
   "sessions": {
-    "addedRange": "",
     "avgPower": "⌀ Moc",
     "avgPrice": "⌀ Cena",
     "chargeDuration": "Czas trwania",
-    "chargedSoc": "",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Cena {byGroup}",
@@ -1867,7 +1399,6 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
-      "addedrange": "",
       "chargedenergy": "Energia (kWh)",
       "chargeduration": "Czas trwania",
       "co2perkwh": "CO₂/kWh",
@@ -1886,8 +1417,6 @@
       "vehicle": "Pojazd"
     },
     "date": "Rozpoczęcie",
-    "download": "",
-    "downloadTotal": "",
     "energy": "Zużycie",
     "filter": {
       "allLoadpoints": "wszystkie punkty obciążenia",
@@ -1929,13 +1458,6 @@
     "vehicle": "Pojazd"
   },
   "settings": {
-    "dateFormat": {
-      "auto": "",
-      "dmy": "",
-      "label": "",
-      "mdy": "",
-      "ymd": ""
-    },
     "deviceInfo": "Ustawienia wprowadzone w tym oknie dialogowym dotyczą tylko tego urządzenia.",
     "fullscreen": {
       "enter": "Wejdź w tryb pełnoekranowy",
@@ -1951,7 +1473,6 @@
       "label": "Język"
     },
     "loadpoints": {
-      "disabledDevice": "",
       "help": "Zmień kolejność i widoczność dla interfejsu użytkownika.",
       "hide": "Ukryj {title}",
       "label": "Punkty obciążenia",
@@ -2006,7 +1527,6 @@
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Czas wstrzymany",
-    "batteryDescription": "",
     "description": "Wstrzymuje ładowanie w okresach wysokich cen, aby w pierwszej kolejności skupić się na opłacalnym zasileniu sieci.",
     "priceLabel": "Taryfa za zasilenie sieci",
     "priceLimit": "Limit zasilenia sieci",
@@ -2030,7 +1550,6 @@
     "battery": "Magazyn energii",
     "charge": "Obciążenie",
     "comingSoon": "Strona jest w trakcie budowy.",
-    "energy": "",
     "forecast": "Prognoza",
     "more": "Więcej",
     "sessions": "Sesje"

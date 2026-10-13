@@ -1224,29 +1224,8 @@
     },
     "sources": {
       "battery": "Batterie",
-      "cost": "Käschten",
-      "energy": "",
-      "grid": "",
-      "hint": "",
-      "price": "",
-      "pv": "",
-      "share": "",
-      "source": "",
-      "title": "",
-      "total": ""
-    },
-    "stat": {
-      "autarky": "",
-      "co2Saved": "",
-      "co2SavedTooltip": "",
-      "configure": "",
-      "noCo2": "",
-      "noPrice": "",
-      "savings": "",
-      "savingsTooltip": "",
-      "versus": ""
-    },
-    "title": ""
+      "cost": "Käschten"
+    }
   },
   "footer": {
     "community": {
@@ -1572,7 +1551,6 @@
       "batteryDischargeHold": "Batterie (gespäert)",
       "batteryGridChargeActive": "Oluede vum Netz: aktiv",
       "batteryGridChargeLimit": "Opluede vum Netz: wann",
-      "batteryStatus": "",
       "batteryTooltip": "{energy} vun {total} ({soc})",
       "forecast": "Viraussoen",
       "forecastTooltip": "Prognose: Rescht Solarproduktioun fir haut",
@@ -2036,7 +2014,6 @@
     "battery": "Batterie",
     "charge": "Lueden",
     "comingSoon": "Dës Säit ass amgaang gebaut ze ginn.",
-    "energy": "",
     "forecast": "Viraussoen",
     "more": "Méi",
     "sessions": "Sessiounen"

@@ -7,18 +7,6 @@
     "authorizationSuccessful": "Auktorisering lyckades",
     "buttonConnect": "Anslut till {provider}",
     "buttonDisconnect": "Koppla från",
-    "challenge": {
-      "captcha": {
-        "label": "",
-        "title": ""
-      },
-      "code": {
-        "label": "",
-        "title": ""
-      },
-      "openLogin": "",
-      "submit": ""
-    },
     "confirmLogout": "Är du säker på att du vill koppla från {title}?",
     "connect": "anslut",
     "disconnect": "koppla från",
@@ -37,7 +25,6 @@
       "discharging": "laddar ur",
       "energy": "Energi",
       "gridCharge": "elnätsladdning",
-      "gridDischarge": "",
       "hold": "urladdning låst",
       "holdCharge": "laddning låst",
       "ofTotal": "av {total}",
@@ -56,12 +43,6 @@
       "bufferTitle": "Batteriet som laddningsbuffert",
       "discharge": "Förhindra att hemmabatteriet laddas ur i snabbläge och under planerad laddning.",
       "gridDischarge": "Tillåt hemmabatteriet att återmata till nätet.",
-      "gridDischargeConfirm": {
-        "country": "",
-        "description": "",
-        "noCountry": "",
-        "title": ""
-      },
       "priority": "Hemmabatteriet har prioritet så länge det är under {soc}. Därefter får billaddarna överskottet.",
       "priorityNone": "Solelens överskott går direkt till billaddarna. Ställ in ett värde över {soc} för att prioritera hemmabatteriet.",
       "priorityTitle": "Vart ska överskottet gå i första hand?"
@@ -163,45 +144,10 @@
         "switchsocket": "Egendefinierad strömbrytare"
       }
     },
-    "circuit": {
-      "addMeter": "",
-      "custom": "",
-      "deleteChildrenFirst": "",
-      "meterDedicated": "",
-      "meterGrid": "",
-      "meterHelp": "",
-      "meterLabel": "",
-      "meterLabelAdd": "",
-      "meterLabelEdit": "",
-      "meterNone": "",
-      "meterSelectionHelpDedicatedMeter": "",
-      "meterSelectionHelpGridMeter": "",
-      "meterSelectionHelpNoMeter": "",
-      "meterSelectionLabel": "",
-      "parentCircuit": "",
-      "template": "",
-      "titleAdd": "",
-      "titleEdit": "",
-      "titleLabel": ""
-    },
     "circuits": {
-      "addMainCircuit": "",
-      "addSubCircuit": "",
-      "chargingPointsNote": "",
       "description": "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki.",
-      "legacyWarning": "",
-      "meterDedicated": "",
-      "meterGrid": "",
       "title": "Belastningshantering",
       "usableMeters": "Mätarreferenser som kan användas"
-    },
-    "combobox": {
-      "count": "",
-      "matching": "",
-      "other": "",
-      "searching": "",
-      "suggestions": "",
-      "used": ""
     },
     "consumer": {
       "description": "Spårar mindre apparater som inte kan styras (kylskåp, tvättmaskin, ...). Det ger dig en bättre helhetsbild av din hemförbrukning.",
@@ -270,8 +216,6 @@
       "identifier": "RFID-identifierare",
       "loginBlocked": "Inloggningsgräns nådd",
       "max": "max",
-      "maxCurrent": "",
-      "maxPower": "",
       "messengers": "Tjänster",
       "no": "nej",
       "odometer": "Mätarställning",
@@ -408,7 +352,6 @@
       "enable": "Aktivera",
       "error": "Fel",
       "experimental": "Experimentella funktioner",
-      "forceEnable": "",
       "forceSave": "Spara ändå",
       "fromYamlHint": "Obs: Konfigurerad via evcc.yaml. Ta bort posten från filen för att aktivera redigering här.",
       "hideAdvancedSettings": "Dölj avancerade inställningar",
@@ -427,7 +370,6 @@
       "saving": "Sparar…",
       "selectFile": "Bläddra",
       "showAdvancedSettings": "Visa avancerade inställningar",
-      "site": "",
       "telemetry": "Telemetri",
       "templateLoading": "Laddar...",
       "title": "Titel",
@@ -946,22 +888,6 @@
       "labelVendorId": "Tillverkar-ID",
       "title": "SMA Sunny Home Manager"
     },
-    "site": {
-      "country": {
-        "description": "",
-        "label": ""
-      },
-      "currency": {
-        "description": "",
-        "example": "",
-        "label": ""
-      },
-      "siteTitle": {
-        "description": "",
-        "label": ""
-      },
-      "title": ""
-    },
     "sponsor": {
       "addToken": "Ange sponsor-token",
       "changeToken": "Ändra sponsor-token",
@@ -1131,23 +1057,6 @@
     }
   },
   "energy": {
-    "battery": {
-      "charged": "",
-      "discharged": ""
-    },
-    "consumers": {
-      "chart": {
-        "bars": "",
-        "pattern": ""
-      },
-      "cost": "",
-      "others": "",
-      "title": "",
-      "view": {
-        "river": "",
-        "treemap": ""
-      }
-    },
     "direction": {
       "battery": {
         "energy": "laddad",
@@ -1162,34 +1071,6 @@
         "returnEnergy": "Energi (baklänges)"
       }
     },
-    "empty": "",
-    "flow": {
-      "battery": "",
-      "batteryCharge": "",
-      "batteryDischarge": "",
-      "charging": "",
-      "export": "",
-      "grid": "",
-      "heating": "",
-      "home": "",
-      "overview": "",
-      "pv": "",
-      "title": "",
-      "usage": "",
-      "withdrawal": ""
-    },
-    "grid": {
-      "amount": "",
-      "cost": "",
-      "energy": "",
-      "export": "",
-      "exportPrice": "",
-      "import": "",
-      "importPrice": "",
-      "price": "",
-      "revenue": "",
-      "title": ""
-    },
     "group": {
       "battery": "Batteri",
       "consumer": "Förbrukning",
@@ -1198,50 +1079,7 @@
       "loadpoint": "Laddning & uppvärmning",
       "meter": "Extra mätare",
       "pv": "Produktion"
-    },
-    "production": {
-      "above": "",
-      "accuracy": "",
-      "below": "",
-      "deviation": "",
-      "expectedTomorrow": "",
-      "exported": "",
-      "produced": "",
-      "remainingToday": "",
-      "selfConsumed": "",
-      "title": ""
-    },
-    "socTemp": {
-      "charged": "",
-      "soc": "",
-      "temperature": "",
-      "used": ""
-    },
-    "sources": {
-      "battery": "",
-      "cost": "",
-      "energy": "",
-      "grid": "",
-      "hint": "",
-      "price": "",
-      "pv": "",
-      "share": "",
-      "source": "",
-      "title": "",
-      "total": ""
-    },
-    "stat": {
-      "autarky": "",
-      "co2Saved": "",
-      "co2SavedTooltip": "",
-      "configure": "",
-      "noCo2": "",
-      "noPrice": "",
-      "savings": "",
-      "savingsTooltip": "",
-      "versus": ""
-    },
-    "title": ""
+    }
   },
   "footer": {
     "community": {
@@ -1380,7 +1218,6 @@
   },
   "general": {
     "back": "Tillbaka",
-    "cancel": "",
     "download": "Ladda hem",
     "error": "Fel",
     "none": "inget",
@@ -1567,7 +1404,6 @@
       "batteryDischargeHold": "Batteri (låst)",
       "batteryGridChargeActive": "Nätladdning: aktiv",
       "batteryGridChargeLimit": "Nätladdning: när",
-      "batteryStatus": "",
       "batteryTooltip": "{energy} av {total} ({soc})",
       "forecast": "Prognos",
       "forecastTooltip": "Prognos: återstående solproduktion idag",
@@ -2032,7 +1868,6 @@
     "battery": "Batteri",
     "charge": "Ladda",
     "comingSoon": "Sida under uppbyggnad.",
-    "energy": "",
     "forecast": "Prognos",
     "more": "Mer",
     "sessions": "Laddningar"

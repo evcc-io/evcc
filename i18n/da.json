@@ -37,7 +37,6 @@
       "discharging": "aflader",
       "energy": "Energi",
       "gridCharge": "netladning",
-      "gridDischarge": "",
       "hold": "afladning låst",
       "holdCharge": "ladning låst",
       "ofTotal": "af {total}",
@@ -194,14 +193,6 @@
       "meterGrid": "Elnet",
       "title": "Belastningsstyring",
       "usableMeters": "Gyldige målerreferencer"
-    },
-    "combobox": {
-      "count": "",
-      "matching": "",
-      "other": "",
-      "searching": "",
-      "suggestions": "",
-      "used": ""
     },
     "consumer": {
       "description": "Overvåger mindre enheder, som ikke kan styres, f.eks. køleskab, vaskemaskine osv. Giver et bedre overblik over dit samlede forbrug i hjemmet.",
@@ -1131,23 +1122,6 @@
     }
   },
   "energy": {
-    "battery": {
-      "charged": "",
-      "discharged": ""
-    },
-    "consumers": {
-      "chart": {
-        "bars": "",
-        "pattern": ""
-      },
-      "cost": "",
-      "others": "",
-      "title": "",
-      "view": {
-        "river": "",
-        "treemap": ""
-      }
-    },
     "direction": {
       "battery": {
         "energy": "opladet",
@@ -1162,34 +1136,6 @@
         "returnEnergy": "Energi (eksport)"
       }
     },
-    "empty": "",
-    "flow": {
-      "battery": "",
-      "batteryCharge": "",
-      "batteryDischarge": "",
-      "charging": "",
-      "export": "",
-      "grid": "",
-      "heating": "",
-      "home": "",
-      "overview": "",
-      "pv": "",
-      "title": "",
-      "usage": "",
-      "withdrawal": ""
-    },
-    "grid": {
-      "amount": "",
-      "cost": "",
-      "energy": "",
-      "export": "",
-      "exportPrice": "",
-      "import": "",
-      "importPrice": "",
-      "price": "",
-      "revenue": "",
-      "title": ""
-    },
     "group": {
       "battery": "Batteri",
       "consumer": "Forbrug",
@@ -1198,50 +1144,7 @@
       "loadpoint": "Opladning og opvarmning",
       "meter": "Ekstra målere",
       "pv": "Produktion"
-    },
-    "production": {
-      "above": "",
-      "accuracy": "",
-      "below": "",
-      "deviation": "",
-      "expectedTomorrow": "",
-      "exported": "",
-      "produced": "",
-      "remainingToday": "",
-      "selfConsumed": "",
-      "title": ""
-    },
-    "socTemp": {
-      "charged": "",
-      "soc": "",
-      "temperature": "",
-      "used": ""
-    },
-    "sources": {
-      "battery": "",
-      "cost": "",
-      "energy": "",
-      "grid": "",
-      "hint": "",
-      "price": "",
-      "pv": "",
-      "share": "",
-      "source": "",
-      "title": "",
-      "total": ""
-    },
-    "stat": {
-      "autarky": "",
-      "co2Saved": "",
-      "co2SavedTooltip": "",
-      "configure": "",
-      "noCo2": "",
-      "noPrice": "",
-      "savings": "",
-      "savingsTooltip": "",
-      "versus": ""
-    },
-    "title": ""
+    }
   },
   "footer": {
     "community": {
@@ -1567,7 +1470,6 @@
       "batteryDischargeHold": "Batteri (låst)",
       "batteryGridChargeActive": "Opladning fra elnettet: aktiv",
       "batteryGridChargeLimit": "Opladning fra elnettet: når",
-      "batteryStatus": "",
       "batteryTooltip": "{energy} af {total} ({soc})",
       "forecast": "Prognose",
       "forecastTooltip": "prognose: resterende solenergi produktion i dag",
@@ -2032,7 +1934,6 @@
     "battery": "Batteri",
     "charge": "Oplader",
     "comingSoon": "Siden under opbygning.",
-    "energy": "",
     "forecast": "Prognose",
     "more": "Mere",
     "sessions": "Sessioner"

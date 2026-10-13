@@ -7,18 +7,6 @@
     "authorizationSuccessful": "ஏற்பு செய்",
     "buttonConnect": "{provider} உடன் இணைக்கவும்",
     "buttonDisconnect": "துண்டிக்கவும்",
-    "challenge": {
-      "captcha": {
-        "label": "",
-        "title": ""
-      },
-      "code": {
-        "label": "",
-        "title": ""
-      },
-      "openLogin": "",
-      "submit": ""
-    },
     "confirmLogout": "நிச்சயமாக {title} இணைப்பை துண்டிக்க விரும்புகிறீர்களா?",
     "connect": "இணை",
     "disconnect": "துண்டிக்கவும்",
@@ -31,59 +19,8 @@
     "successCloseTab": "நீங்கள் இப்போது இந்த தாவலை மூடலாம்.",
     "title": "அங்கீகார நிலை"
   },
-  "battery": {
-    "card": {
-      "charging": "",
-      "discharging": "",
-      "energy": "",
-      "gridCharge": "",
-      "gridDischarge": "",
-      "hold": "",
-      "holdCharge": "",
-      "ofTotal": "",
-      "power": "",
-      "soc": ""
-    },
-    "combined": "",
-    "config": {
-      "buffer": "",
-      "bufferNone": "",
-      "bufferStart": {
-        "above": "",
-        "full": "",
-        "never": ""
-      },
-      "bufferTitle": "",
-      "discharge": "",
-      "gridDischarge": "",
-      "gridDischargeConfirm": {
-        "country": "",
-        "description": "",
-        "noCountry": "",
-        "title": ""
-      },
-      "priority": "",
-      "priorityNone": "",
-      "priorityTitle": ""
-    },
-    "optimizer": {
-      "action": {
-        "charge": "",
-        "discharge": "",
-        "hold": "",
-        "holdcharge": "",
-        "normal": ""
-      },
-      "empty": "",
-      "full": "",
-      "highest": "",
-      "lowest": "",
-      "suggestion": ""
-    }
-  },
   "batterySettings": {
     "gridChargeTab": "கட்டம் சார்சிங்",
-    "gridDischargeTab": "",
     "modalTitle": "வீட்டு பேட்டரி",
     "noBattery": "பேட்டரிகள் எதுவும் கட்டமைக்கப்படவில்லை.",
     "usageTab": "பேட்டரி பயன்பாடு"
@@ -119,7 +56,6 @@
       "titleEdit": "சுய-ஒழுங்குபடுத்தும் நுகர்வோர் திருத்தவும்"
     },
     "battery": {
-      "title": "",
       "titleAdd": "பேட்டரியைச் சேர்க்கவும்",
       "titleEdit": "பேட்டரியைத் திருத்து"
     },
@@ -163,45 +99,10 @@
         "switchsocket": "பயனர் வரையறுக்கப்பட்ட சுவிட்ச் சாக்கெட்"
       }
     },
-    "circuit": {
-      "addMeter": "",
-      "custom": "",
-      "deleteChildrenFirst": "",
-      "meterDedicated": "",
-      "meterGrid": "",
-      "meterHelp": "",
-      "meterLabel": "",
-      "meterLabelAdd": "",
-      "meterLabelEdit": "",
-      "meterNone": "",
-      "meterSelectionHelpDedicatedMeter": "",
-      "meterSelectionHelpGridMeter": "",
-      "meterSelectionHelpNoMeter": "",
-      "meterSelectionLabel": "",
-      "parentCircuit": "",
-      "template": "",
-      "titleAdd": "",
-      "titleEdit": "",
-      "titleLabel": ""
-    },
     "circuits": {
-      "addMainCircuit": "",
-      "addSubCircuit": "",
-      "chargingPointsNote": "",
       "description": "ஒரு சுற்றுடன் இணைக்கப்பட்ட அனைத்து ஏற்ற புள்ளிகளின் கூட்டுத்தொகையும் கட்டமைக்கப்பட்ட ஆற்றல் மற்றும் தற்போதைய வரம்புகளை மீறாது என்பதை உறுதி செய்கிறது. ஒரு படிநிலையை உருவாக்க சுற்றுகள் கூடு கட்டப்படலாம்.",
-      "legacyWarning": "",
-      "meterDedicated": "",
-      "meterGrid": "",
       "title": "சுமை மேலாண்மை",
       "usableMeters": "பயன்படுத்தக்கூடிய மீட்டர் குறிப்புகள்"
-    },
-    "combobox": {
-      "count": "",
-      "matching": "",
-      "other": "",
-      "searching": "",
-      "suggestions": "",
-      "used": ""
     },
     "consumer": {
       "description": "சிறிய, கட்டுப்படுத்த முடியாத உபகரணங்களை (குளிர்சாதன பெட்டி, சலவை இயந்திரம், ...) கண்காணிக்கிறது. உங்கள் வீட்டு நுகர்வு பற்றிய சிறந்த கண்ணோட்டத்தை உங்களுக்கு வழங்குகிறது.",
@@ -222,19 +123,9 @@
       "label": "நாணயம்",
       "title": "நாணயம்"
     },
-    "curtailer": {
-      "description": "",
-      "generic": "",
-      "specific": "",
-      "template": "",
-      "title": "",
-      "titleAdd": "",
-      "titleEdit": ""
-    },
     "deviceValue": {
       "activeClients": "செயலில் உள்ள வாடிக்கையாளர்கள்",
       "amount": "தொகை",
-      "asleep": "",
       "broker": "தரகர்",
       "bucket": "வாளி",
       "capacity": "திறன்",
@@ -262,7 +153,6 @@
       "enabled": "இயக்கப்பட்டது",
       "energy": "சக்தி",
       "events": "நிகழ்வுகள்",
-      "exportLimit": "",
       "feedinPrice": "ஃபீட்-இன் விலை",
       "forecast": "முன்னறிவிப்பு",
       "gridPrice": "கட்டம் விலை",
@@ -270,13 +160,10 @@
       "identifier": "RFID-IDENTIFIER",
       "loginBlocked": "உள்நுழைவு வரம்பை அடைந்துவிட்டது",
       "max": "அதிகபட்சம்",
-      "maxCurrent": "",
-      "maxPower": "",
       "messengers": "சேவைகள்",
       "no": "இல்லை",
       "odometer": "ஓடோமீட்டர்",
       "org": "அமைப்பு",
-      "outdoorTemp": "",
       "phaseCurrents": "தற்போதைய",
       "phasePowers": "பவர்",
       "phaseVoltages": "மின்னழுத்தம்",
@@ -286,7 +173,6 @@
       "price": "விலை",
       "productionLimited": "விளைவாக்கம் வரையறுக்கப்பட்டது",
       "range": "வரம்பு",
-      "remoteEnabled": "",
       "returnEnergy": "ஆற்றல் (தலைகீழ்)",
       "singlePhase": "ஒற்றைத் தறுவாய்",
       "soc": "சொக்",
@@ -295,31 +181,6 @@
       "temp": "வெப்பநிலை",
       "topic": "தலைப்பு",
       "url": "முகவரி",
-      "usage": {
-        "aux": {
-          "energy": "",
-          "returnEnergy": ""
-        },
-        "battery": {
-          "energy": "",
-          "returnEnergy": ""
-        },
-        "charge": {
-          "energy": "",
-          "returnEnergy": ""
-        },
-        "consumer": {
-          "energy": "",
-          "returnEnergy": ""
-        },
-        "grid": {
-          "energy": "",
-          "returnEnergy": ""
-        },
-        "pv": {
-          "energy": ""
-        }
-      },
       "vehicleLimitSoc": "கட்டண வரம்பு",
       "yes": "ஆம்"
     },
@@ -343,21 +204,15 @@
         "public": "பொது சான்றிதழ்",
         "title": "சான்றிதழ்கள்"
       },
-      "configuredDevices": "",
       "description": "சார்சர்கள் அல்லது உங்கள் கிரிட் ஆபரேட்டரின் கட்டுப்பாட்டு அலகு போன்ற EEBus இணக்கமான சாதனங்களுடன் தொடர்பு கொள்ள evcc ஐ செயல்படுத்தும் கட்டமைப்பு. அனைத்து தொடர்புடைய துவக்கம் மற்றும் சான்றிதழ் உருவாக்கம் முதல் தொடக்கத்தில் தானாகவே செய்யப்படுகிறது.",
       "descriptionAdvanced": "மாற்றங்கள் தேவையில்லை. நீங்கள் என்ன செய்கிறீர்கள் என்பது உங்களுக்குத் தெரிந்தால் மட்டுமே மாற்றங்களைச் செய்யுங்கள். நீங்கள் SHIP-id அல்லது சான்றிதழ்களை மாற்றினால், உங்கள் சாதனங்களை மீண்டும் இணைக்க வேண்டும்.",
       "interfaces": "இடைமுகங்கள்",
       "interfacesHelp": "தொடர்பு சிக்கல்களைத் தவிர்க்க EEBus பயன்படுத்த வேண்டிய பிணைய இடைமுகங்களை வரம்பிடவும். அனைத்து இடைமுகங்களையும் பயன்படுத்த புலத்தை காலியாக விடவும். ஒரு வரிக்கு ஒரு நுழைவு.",
-      "noConfiguredDevices": "",
-      "noPairings": "",
-      "pairings": "",
       "port": "துறைமுகம்",
       "portHelp": "பயன்படுத்த வேண்டிய துறைமுகம்.",
       "qr": "இணைத்தல் குறியீடு",
       "qrExplain": "SKI ஐ கைமுறையாக உள்ளிடாமல், தானாக இணைக்க நிறுவலின் போது மற்றொரு EEBus சாதனத்திலிருந்து வருடு செய்யவும்.",
       "removeConfirm": "அனைத்து EEBus உள்ளமைவுகளும் அகற்றப்படும். அடுத்த தொடக்கத்தில் புதிய சான்றிதழ்கள் மற்றும் அடையாளங்காட்டிகள் உருவாக்கப்படும். நீங்கள் உறுதியாக இருக்கிறீர்களா?",
-      "removePairing": "",
-      "removePairingConfirm": "",
       "shipid": "கப்பல் அடையாளம்",
       "shipidExplain": "EEBus நெட்வொர்க்கில் அடையாளங்காணுவதற்கான நிரந்தர சாதன அடையாளங்காட்டி.",
       "shipidHelp": "இந்த SHIP-ID கீழே உள்ள சான்றிதழ்களுடன் இணைக்கப்பட்டுள்ளது.",
@@ -377,7 +232,6 @@
     "form": {
       "danger": "இடர்",
       "deprecated": "மதிப்பிடப்பட்டது",
-      "durationUnit": "",
       "example": "எடுத்துக்காட்டு",
       "optional": "விரும்பினால்"
     },
@@ -390,31 +244,24 @@
       "change": "மாற்றவும்",
       "clear": "தெளிவு",
       "close": "மூடு",
-      "confirmDisable": "",
-      "confirmEnable": "",
       "confirmSave": "சேமிக்கப்படாத மாற்றங்கள் உள்ளன. இப்போது சேமிக்கவா?",
       "copied": "நகலெடுக்கப்பட்டது!",
       "copy": "நகலெடு",
       "customHelp": "இவிசிசியின் சொருகி அமைப்பைப் பயன்படுத்தி பயனர் வரையறுக்கப்பட்ட சாதனத்தை உருவாக்கவும்.",
       "customOption": "பயனர் வரையறுக்கப்பட்ட சாதனம்",
       "delete": "நீக்கு",
-      "disable": "",
-      "disabled": "",
       "dismiss": "நிராகரி",
       "docsLink": "ஆவணங்களைக் காண்க.",
       "dragHandle": "கைப்பிடியை இழுக்கவும்",
       "dragItem": "இழுக்கக்கூடியது: {title}",
       "dragList": "மறுவரிசைப்படுத்தக்கூடிய பட்டியல்",
-      "enable": "",
       "error": "பிழை",
       "experimental": "சோதனை",
-      "forceEnable": "",
       "forceSave": "எப்படியும் சேமிக்கவும்",
       "fromYamlHint": "Evcc.yaml இல் கட்டமைக்கப்பட்டுள்ளது. இடைமுகம் இல் திருத்த முடியாது.",
       "hideAdvancedSettings": "மேம்பட்ட அமைப்புகளை மறைக்க",
       "invalidFileSelected": "தவறான கோப்பு தேர்ந்தெடுக்கப்பட்டது",
       "legacy": "மரபு",
-      "moreInfo": "",
       "noFileSelected": "எந்த கோப்பும் தேர்ந்தெடுக்கப்படவில்லை.",
       "off": "ஆஃப்",
       "on": "ஆன்",
@@ -427,7 +274,6 @@
       "saving": "சேமிக்கிறது…",
       "selectFile": "உலாவு",
       "showAdvancedSettings": "மேம்பட்ட அமைப்புகளைக் காட்டு",
-      "site": "",
       "telemetry": "டெலிமெட்ரி",
       "templateLoading": "ஏற்றுகிறது ...",
       "title": "தலைப்பு",
@@ -440,7 +286,6 @@
       "titleEdit": "கட்டம் மீட்டரைத் திருத்து"
     },
     "hems": {
-      "changeConfirm": "",
       "csv": {
         "created": "உருவாக்கப்பட்டது",
         "finished": "முடிந்தது",
@@ -448,26 +293,10 @@
         "limitpower": "வரம்பு (kW)",
         "type": "வகை"
       },
-      "customOption": "",
       "description": "வெளிப்புற அமைப்புகளின் ஆற்றல் வரம்பு (எ.கா. §14a EnWG, §9 EEG இடைமுகம் அல்லது உயர்-நிலை ஆற்றல் மேலாண்மை அமைப்பு). சுமை மேலாண்மை அம்சத்துடன் இணைந்து செயல்படுகிறது.",
-      "download": "",
-      "dynamicLimits": "",
       "eventsRecorded": "பதிவுசெய்யப்பட்ட {count} கட்ட வரம்பு நிகழ்வுகள்.",
-      "exportLimit": "",
-      "exportLimitDescription": "",
-      "exportLimitHint": "",
-      "generic": "",
-      "integrations": "",
       "lastEvent": "மிகச் அண்மைக் கால {timeAgo}.",
-      "noEvents": "",
-      "recordedEvents": "",
-      "staticLimits": "",
-      "template": "",
-      "title": "வெளிப்புற வரம்பு",
-      "type": {
-        "custom": "",
-        "relay": ""
-      }
+      "title": "வெளிப்புற வரம்பு"
     },
     "icon": {
       "change": "மாற்றம்",
@@ -495,7 +324,6 @@
         "heating": "ஈட்டரைச் சேர்க்கவும்"
       },
       "addMeter": "அர்ப்பணிப்பு ஆற்றல் மீட்டரைச் சேர்க்கவும்",
-      "advancedConfig": "",
       "cancel": "ரத்துசெய்",
       "chargerError": {
         "charging": "சார்சரை உள்ளமைப்பது தேவை.",
@@ -510,25 +338,11 @@
       "circuitInvalid": "சர்க்யூட் இல்லை",
       "circuitLabel": "சுற்று",
       "circuitUnassigned": "ஒதுக்கப்படாதது",
-      "created": "",
-      "createdTitle": {
-        "charging": "",
-        "heating": ""
-      },
-      "creating": {
-        "charging": "",
-        "heating": ""
-      },
-      "currentRangeHelp": {
-        "charging": "",
-        "heating": ""
-      },
       "defaultModeHelp": {
         "charging": "வாகனத்தை இணைக்கும்போது சார்சிங் பயன்முறை.",
         "heating": "கணினி தொடங்கும் போது அமைக்கப்படுகிறது."
       },
       "defaultModeHelpKeep": "கடைசியாக தேர்ந்தெடுக்கப்பட்ட பயன்முறையை வைத்திருக்கிறது.",
-      "defaultModeKeep": "",
       "defaultModeLabel": "இயல்புநிலை பயன்முறை",
       "delete": "நீக்கு",
       "electricalSubtitle": "ஐயம் இருக்கும்போது, உங்கள் எலக்ட்ரீசியனிடம் கேளுங்கள்.",
@@ -572,8 +386,6 @@
       "solarBehaviorLabel": "சூரிய",
       "solarModeCustom": "தனிப்பயன்",
       "solarModeMaximum": "அதிகபட்ச சூரிய",
-      "solarShareNote": "",
-      "solarShareReset": "",
       "temperatureRangeHelp": "வெப்பநிலை பட்டிக்கான காட்சி வரம்பு. கட்டுப்பாட்டை பாதிக்காது.",
       "temperatureRangeTitle": "வெப்பநிலை வரம்பு",
       "thresholdDisableDelayLabel": "தாமதத்தை முடக்கு",
@@ -611,7 +423,6 @@
     "main": {
       "addAdditional": "கூடுதல் மீட்டரைச் சேர்க்கவும்",
       "addConsumer": "நுகர்வோரைச் சேர்க்கவும்",
-      "addCurtailer": "",
       "addGrid": "கட்டம் மீட்டரைச் சேர்க்கவும்",
       "addLoadpoint": "சார்சர் அல்லது ஈட்டரைச் சேர்க்கவும்",
       "addPvBattery": "சூரிய அல்லது பேட்டரியைச் சேர்க்கவும்",
@@ -677,11 +488,6 @@
           "messageDefault": "{chargeDuration} இல் {chargedEnergy}kWh சார்ச் முடிந்தது.",
           "title": "சார்ச் நிறுத்தப்படும் போது",
           "titleDefault": "கட்டணம் முடிந்தது"
-        },
-        "suggestion": {
-          "messageDefault": "",
-          "title": "",
-          "titleDefault": ""
         }
       },
       "eventMessage": "செய்தி",
@@ -712,7 +518,6 @@
         "aux": "சுய-ஒழுங்குபடுத்தும் நுகர்வோர் சேர்க்கவும்",
         "battery": "பேட்டரி மீட்டரைச் சேர்க்கவும்",
         "consumer": "வழக்கமான நுகர்வோரைச் சேர்க்கவும்",
-        "grid": "",
         "pv": "சூரிய மீட்டரைச் சேர்க்கவும்"
       },
       "save": "சேமி",
@@ -738,8 +543,6 @@
       "connectionHintTcpip": "பிணையம் (LAN/WiFi) வழியாக சாதனத்தை அணுகலாம்.",
       "connectionValueSerial": "RS485",
       "connectionValueTcpip": "பிணையம்",
-      "delay": "",
-      "delayHint": "",
       "device": "சாதன பெயர்",
       "deviceHint": "எடுத்துக்காட்டு: /dev /ttyusb0",
       "host": "ஐபி முகவரி அல்லது ஓச்ட்பெயர்",
@@ -750,9 +553,7 @@
       "protocolHintRtu": "நெறிமுறை மொழிபெயர்ப்பு இல்லாமல் ஈதர்நெட் அடாப்டருக்கு RS485 மூலம் இணைப்பு.",
       "protocolHintTcp": "சாதனம் சொந்த LAN/WIFI ஆதரவைக் கொண்டுள்ளது அல்லது நெறிமுறை மொழிபெயர்ப்புடன் RS485 மூலம் ஈத்தர்நெட் அடாப்டர் மூலம் இணைக்கப்பட்டுள்ளது.",
       "protocolValueRtu": "Rtu",
-      "protocolValueTcp": "டி.சி.பி.",
-      "timeout": "",
-      "timeoutHint": ""
+      "protocolValueTcp": "டி.சி.பி."
     },
     "modbusproxy": {
       "add": "பதிலாள் இணைப்பைச் சேர்க்கவும்",
@@ -903,8 +704,6 @@
       "noClients": "இன்னும் வாடிக்கையாளர்கள் இல்லை. இதுவரை யாராலும் இணைக்க முடியவில்லை.",
       "password": "கடவுச்சொல்",
       "passwordOnce": "இந்த கடவுச்சொல் ஒருமுறை மட்டுமே காட்டப்படும். QR குறியீட்டை வருடு செய்யவும் அல்லது இப்போது நகலெடுக்கவும். நீங்கள் அதை மீண்டும் பார்க்க முடியாது.",
-      "privacy": "",
-      "privacyLink": "",
       "qrInstall": "{ios} அல்லது {android} க்கான evcc பயன்பாட்டை நிறுவவும்.",
       "qrScan": "இணைக்க உங்கள் மொபைலின் கேமரா மூலம் குறியீட்டை வருடு செய்யவும். நீங்கள் ஏற்கனவே உங்கள் ஃபோனைப் பயன்படுத்தினால், அதைக் சொடுக்கு செய்யவும்.",
       "removeClient": "கிளையண்டை அகற்று",
@@ -946,22 +745,6 @@
       "labelVendorId": "விற்பனையாளர் அடையாளம்",
       "title": "SMA சன்னி ஓம் மேனேசர்"
     },
-    "site": {
-      "country": {
-        "description": "",
-        "label": ""
-      },
-      "currency": {
-        "description": "",
-        "example": "",
-        "label": ""
-      },
-      "siteTitle": {
-        "description": "",
-        "label": ""
-      },
-      "title": ""
-    },
     "sponsor": {
       "addToken": "ஒப்புரவாளர் கிள்ளாக்கை உள்ளிடவும்",
       "changeToken": "ஒப்புரவாளர் கிள்ளாக்கை மாற்றவும்",
@@ -997,8 +780,6 @@
           "confirmationButton": "மீட்டமை மற்றும் மறுதொடக்கம்",
           "confirmationText": "இது நீங்கள் தேர்ந்தெடுத்த தரவை நிரந்தரமாக நீக்கும். நீங்கள் முதலில் ஒரு காப்புப்பிரதியை பதிவிறக்கம் செய்துள்ளீர்கள் என்பதை உறுதிப்படுத்தவும்.",
           "description": "உள்ளமைவில் சிக்கல்கள் மற்றும் தொடங்க விரும்புகிறீர்களா? எல்லா தரவையும் நீக்கி புதியதாகத் தொடங்கவும்.",
-          "remote": "",
-          "remoteDescription": "",
           "sessions": "சார்சிங் அமர்வுகள்",
           "sessionsDescription": "உங்கள் சார்சிங் அமர்வு வரலாற்றை நீக்குகிறது.",
           "settings": "உள்ளமைவு மற்றும் அமைப்புகள்",
@@ -1051,8 +832,7 @@
         "feedIn": "கட்டம் ஏற்றுமதி கட்டணத்தைச் சேர்க்கவும்",
         "grid": "கட்டம் இறக்குமதி கட்டணத்தைச் சேர்க்கவும்",
         "planner": "திட்டமிடுபவர் முன்னறிவிப்பைச் சேர்க்கவும்",
-        "solar": "சூரிய முன்னறிவிப்பைச் சேர்க்கவும்",
-        "temperature": ""
+        "solar": "சூரிய முன்னறிவிப்பைச் சேர்க்கவும்"
       },
       "planner": {
         "description": "மேம்பட்ட setting. Usually not needed அச் dynamic electricity tariffs or CO₂ forecasts அரே used automatically. Enables an additional தகவல்கள் மூலம் that's only used for மின்னூட்டு planning, not for statistics and price calculations.",
@@ -1065,11 +845,6 @@
         "titleAdd": "சூரிய முன்னறிவிப்பைச் சேர்க்கவும்",
         "titleEdit": "சூரிய முன்னறிவிப்பைத் திருத்தவும்"
       },
-      "temperature": {
-        "description": "",
-        "titleAdd": "",
-        "titleEdit": ""
-      },
       "template": "வழங்குபவர்",
       "title": "கட்டணங்கள் மற்றும் முன்னறிவிப்புகள்",
       "titleChoice": "நீங்கள் என்ன சேர்க்க விரும்புகிறீர்கள்?",
@@ -1078,8 +853,7 @@
         "feedIn": "கட்டம் ஏற்றுமதி விலை",
         "grid": "கட்டம் இறக்குமதி விலை",
         "planner": "திட்டமிடுபவர்",
-        "solar": "சூரிய ஒளி",
-        "temperature": ""
+        "solar": "சூரிய ஒளி"
       },
       "zones": {
         "add": "மண்டலத்தைச் சேர்க்கவும்",
@@ -1131,23 +905,6 @@
     }
   },
   "energy": {
-    "battery": {
-      "charged": "",
-      "discharged": ""
-    },
-    "consumers": {
-      "chart": {
-        "bars": "",
-        "pattern": ""
-      },
-      "cost": "",
-      "others": "",
-      "title": "",
-      "view": {
-        "river": "",
-        "treemap": ""
-      }
-    },
     "direction": {
       "battery": {
         "energy": "வசூலிக்கப்பட்டது",
@@ -1156,39 +913,7 @@
       "grid": {
         "energy": "இறக்குமதி செய்யப்பட்டது",
         "returnEnergy": "ஏற்றுமதி செய்யப்பட்டது"
-      },
-      "meter": {
-        "energy": "",
-        "returnEnergy": ""
       }
-    },
-    "empty": "",
-    "flow": {
-      "battery": "",
-      "batteryCharge": "",
-      "batteryDischarge": "",
-      "charging": "",
-      "export": "",
-      "grid": "",
-      "heating": "",
-      "home": "",
-      "overview": "",
-      "pv": "",
-      "title": "",
-      "usage": "",
-      "withdrawal": ""
-    },
-    "grid": {
-      "amount": "",
-      "cost": "",
-      "energy": "",
-      "export": "",
-      "exportPrice": "",
-      "import": "",
-      "importPrice": "",
-      "price": "",
-      "revenue": "",
-      "title": ""
     },
     "group": {
       "battery": "மின்கலம்",
@@ -1198,50 +923,7 @@
       "loadpoint": "சார்சிங் & ஈட்டிங்",
       "meter": "கூடுதல் மீட்டர்",
       "pv": "விளைவாக்கம்"
-    },
-    "production": {
-      "above": "",
-      "accuracy": "",
-      "below": "",
-      "deviation": "",
-      "expectedTomorrow": "",
-      "exported": "",
-      "produced": "",
-      "remainingToday": "",
-      "selfConsumed": "",
-      "title": ""
-    },
-    "socTemp": {
-      "charged": "",
-      "soc": "",
-      "temperature": "",
-      "used": ""
-    },
-    "sources": {
-      "battery": "",
-      "cost": "",
-      "energy": "",
-      "grid": "",
-      "hint": "",
-      "price": "",
-      "pv": "",
-      "share": "",
-      "source": "",
-      "title": "",
-      "total": ""
-    },
-    "stat": {
-      "autarky": "",
-      "co2Saved": "",
-      "co2SavedTooltip": "",
-      "configure": "",
-      "noCo2": "",
-      "noPrice": "",
-      "savings": "",
-      "savingsTooltip": "",
-      "versus": ""
-    },
-    "title": ""
+    }
   },
   "footer": {
     "community": {
@@ -1310,8 +992,6 @@
     "version": {
       "availableLong": "புதிய பதிப்பு கிடைக்கிறது",
       "community": "evcc சமூகம்",
-      "labelEmail": "",
-      "labelPhone": "",
       "labelRelease": "வெளியீடு",
       "labelVersion": "பதிப்பு",
       "labelWebsite": "இணையதளம்",
@@ -1344,8 +1024,7 @@
       "co2": "உங்கள் பகுதியில் உள்ள கிரிட் ஆற்றல் எப்போது சுத்தமாக இருக்கிறது என்பதைப் பார்க்கவும். சார்சிங் திட்டங்கள் குறைந்த உமிழ்வை மேம்படுத்தி CO₂ சேமிப்பைக் கணக்கிடும்.",
       "price": "சார்சிங் திட்டங்களைத் தானாக மேம்படுத்தவும் சேமிப்பைக் கணக்கிடவும் உங்கள் மாறும் மின்சாரக் கட்டணத்தை உள்ளமைக்கவும்.",
       "setup": "கட்டணங்கள் மற்றும் முன்னறிவிப்புகளை அமைக்கவும்",
-      "solar": "இன்று மற்றும் வரும் நாட்களில் எதிர்பார்க்கப்படும் சூரிய ஒளி உற்பத்தியைப் பார்க்கவும். எதிர்காலத்தில் தானியங்கி சார்சிங் மேம்படுத்தலுக்கும் பயன்படுத்தப்படும்.",
-      "temperature": ""
+      "solar": "இன்று மற்றும் வரும் நாட்களில் எதிர்பார்க்கப்படும் சூரிய ஒளி உற்பத்தியைப் பார்க்கவும். எதிர்காலத்தில் தானியங்கி சார்சிங் மேம்படுத்தலுக்கும் பயன்படுத்தப்படும்."
     },
     "hideLine": "மறை வரி",
     "modalTitle": "முன்னறிவிப்பு",
@@ -1367,25 +1046,14 @@
     "solarAdjust": "உண்மையான உற்பத்தித் தரவின் அடிப்படையில் சூரிய முன்னறிவிப்பை சரிசெய்யவும் {percent}.",
     "solarAdjustMedium": "உண்மையான தரவு சரிசெய்தல்",
     "solarAdjustShort": "சரிசெய்ய",
-    "temperature": {
-      "average": "",
-      "range": ""
-    },
     "type": {
       "co2": "CO₂ உமிழ்வுகள்",
       "price": "கட்டம் விலை",
-      "solar": "சூரிய விளைவாக்கம்",
-      "temperature": ""
+      "solar": "சூரிய விளைவாக்கம்"
     }
   },
   "general": {
-    "back": "",
-    "cancel": "",
-    "download": "",
-    "error": "",
-    "none": "",
-    "note": "குறிப்பு:",
-    "warning": ""
+    "note": "குறிப்பு:"
   },
   "header": {
     "about": "பற்றி",
@@ -1398,7 +1066,6 @@
     "sessions": "சார்சிங் அமர்வுகள்"
   },
   "help": {
-    "contactButton": "",
     "discussionsButton": "அறிவிலிமையம் விவாதங்கள்",
     "documentationButton": "ஆவணங்கள்",
     "issueButton": "சிக்கலைப் புகாரளிக்கவும்",
@@ -1420,9 +1087,6 @@
   },
   "issue": {
     "additional": {
-      "copied": "",
-      "copy": "",
-      "copySelected": "",
       "description": "சிக்கலை விரைவாக மீண்டும் உருவாக்க எங்களுக்கு உதவ, உள்ளமைவு மற்றும் பதிவுகளைச் சேர்க்கவும். முடிந்தவரை பகிர்வதை ஊக்குவிக்கிறோம். மாநிலம் பொதுவாக தேவையில்லை.",
       "include": "அடங்கும்",
       "lines": "வரிகள்",
@@ -1441,11 +1105,8 @@
     "additionalContext": "கூடுதல் சூழல்",
     "additionalContextPlaceholder": "உதவியாக இருக்கும் ஏதேனும் கூடுதல் தகவல்... \n- கட்டமைப்பு விவரங்கள் \n- நீங்கள் என்ன முயற்சி செய்தீர்கள் \n- சுற்றுச்சூழல் விவரங்கள்",
     "createButtonDiscussion": "GitHub விவாதத்தைத் தொடங்கு...",
-    "createButtonEmail": "",
     "createButtonIssue": "GitHub சிக்கலை உருவாக்கவும்...",
     "description": "உங்கள் நிறுவல் எதிர்பார்த்தபடி செயல்படவில்லையா? உதவியைப் பெற அல்லது சிக்கல்களைப் புகாரளிக்க இந்தப் பக்கத்தைப் பயன்படுத்தவும். உங்கள் விளக்கத்தை சுருக்கமாகவும், தெளிவாகவும், பின்பற்ற எளிதாகவும் இருக்கும் போது, சிக்கலைப் புரிந்துகொள்ளவும், மீண்டும் உருவாக்கவும் எங்களுக்கு உதவ போதுமான விவரங்களை வழங்கவும்.",
-    "downloadButton": "",
-    "downloadHint": "",
     "helpType": {
       "discussion": "எனது அமைப்பிற்கு உதவி தேவை",
       "discussionDescription": "சமூக விவாதங்கள் பதில்களை அளிக்கின்றன.",
@@ -1457,7 +1118,6 @@
     "issueTitle": "தலைப்பு",
     "stepsToReproduce": "இனப்பெருக்கம் செய்வதற்கான படிகள்",
     "subTitleDiscussion": "உங்கள் பிரச்சனையை விவரிக்கவும்",
-    "subTitleEmail": "",
     "subTitleIssue": "சிக்கலை விவரிக்கவும்",
     "summary": {
       "confirmationButtonDiscussion": "GitHub விவாதத்தைத் தொடங்கவும்",
@@ -1503,15 +1163,6 @@
     "title": "ஏற்பு"
   },
   "main": {
-    "alwaysCharge": {
-      "description": "",
-      "label": "",
-      "labelHeating": "",
-      "minCurrent": "",
-      "once": "",
-      "onceTip": "",
-      "permanent": ""
-    },
     "chargingPlan": {
       "active": "செயலில்",
       "addRepeatingPlan": "மறுநிகழ்வு திட்டத்தைச் சேர்",
@@ -1519,35 +1170,21 @@
       "goal": "மின்சேர்வி இலக்கு",
       "modalTitle": "மின்சேர்வி திட்டம்",
       "none": "எதுவுமில்லை",
-      "once": "",
       "optimization": {
         "cheapest": "மலிவான",
-        "cheapestDescription": "",
-        "cleanest": "",
-        "cleanestDescription": "",
         "continuous": "தொடர்ச்சியான",
-        "continuousCo2Description": "",
-        "continuousPriceDescription": "",
-        "disabledDescription": "",
         "label": "உகப்பாக்கம்"
       },
       "planNumber": "திட்டம் {number}",
       "precondition": {
-        "description": "",
-        "disabledDescription": "",
         "label": "தாமதமாக சார்சிங்",
         "optionAll": "எல்லாம்",
-        "optionNo": "இல்லை",
-        "summary": "",
-        "summaryAll": ""
+        "optionNo": "இல்லை"
       },
       "remove": "அகற்று",
       "repeating": "மறுநிகழ்தல்",
       "repeatingPlans": "மறுநிகழ்வு திட்டங்கள்",
       "selectAll": "அனைத்தையும் தேர்ந்தெடு",
-      "strategy": {
-        "label": ""
-      },
       "time": "நேரம்",
       "title": "திட்டம்",
       "unsavedChanges": "There அரே unsaved changes. இடு now?",
@@ -1567,7 +1204,6 @@
       "batteryDischargeHold": "மின்கலம் (பூட்டபட்டது)",
       "batteryGridChargeActive": "கிரிட் சார்சிங்: செயலில் உள்ளது",
       "batteryGridChargeLimit": "கிரிட் சார்சிங்: எப்போது",
-      "batteryStatus": "",
       "batteryTooltip": "{energy} ({total}) இன் {soc}",
       "forecast": "முன்னறிவிப்பு",
       "forecastTooltip": "முன்னறிவிப்பு: இன்று சூரிய விளைவாக்கம்",
@@ -1579,15 +1215,11 @@
       "pv": "சூரிய குடும்பம்",
       "pvExport": "கட்ட ஏற்றுமதி",
       "pvProduction": "விளைவாக்கம்",
-      "selfConsumption": "தன்-நுகர்வு",
-      "toggleDetails": ""
+      "selfConsumption": "தன்-நுகர்வு"
     },
     "heatingStatus": {
       "charging": "வெப்பமாக்கல்…",
       "connected": "காத்திருப்பு.",
-      "minTemp": "",
-      "suggestionStartTooltip": "",
-      "suggestionStopTooltip": "",
       "vehicleLimit": "ஈட்டர் வரம்பு",
       "waitForVehicle": "சூடாக்க தயார்…"
     },
@@ -1604,16 +1236,12 @@
       "emission": "உமிழ்வு",
       "fallbackName": "மின்சேர்வி புள்ளி",
       "finished": "நேரம் முடிந்தது",
-      "last24hEnergy": "",
-      "last7dEnergy": "",
-      "phasesMismatch": "",
       "power": "ஆற்றல்",
       "price": "செலவு",
       "remaining": "மீதம்",
       "remoteDisabledHard": "{source}: அணைக்கப்பட்டது",
       "remoteDisabledSoft": "{source}: turned அணை adaptive solar-charging",
-      "solar": "ஞாயிறு",
-      "todayEnergy": ""
+      "solar": "ஞாயிறு"
     },
     "loadpointSettings": {
       "batteryBoost": {
@@ -1631,16 +1259,11 @@
       "batteryUsage": "முகப்பு பேட்டரி",
       "currents": "மின்சேர்வி மின்னோட்டம்",
       "default": "இயல்புநிலை",
-      "heating": "",
       "maxCurrent": {
         "label": "அதிக. மின்னோட்டம்"
       },
       "minCurrent": {
         "label": "குறை. மின்னோட்டம்"
-      },
-      "minTemp": {
-        "description": "",
-        "label": ""
       },
       "phasesConfigured": {
         "label": "கட்டங்கள்",
@@ -1653,33 +1276,13 @@
       },
       "smartCostCheap": "Cheap வலைவாய் Charging",
       "smartCostClean": "Clean வலைவாய் Charging",
-      "solar": "",
-      "solarShare": {
-        "charging": {
-          "description": "",
-          "descriptionFull": "",
-          "descriptionZero": ""
-        },
-        "heating": {
-          "description": "",
-          "descriptionFull": "",
-          "descriptionZero": ""
-        },
-        "label": "",
-        "thresholdsHint": "",
-        "thresholdsHintYaml": "",
-        "thresholdsLink": ""
-      },
       "title": "அமைப்புகள் {0}",
       "vehicle": "வண்டி"
     },
     "mode": {
-      "boost": "",
       "minpv": "குறை+ஞாயிறு",
-      "normal": "",
       "now": "வேகமாக",
       "off": "அணை",
-      "on": "",
       "pv": "ஞாயிறு",
       "smart": "அறிவாளி"
     },
@@ -1700,7 +1303,6 @@
       "nextPlan": "அடுத்த திட்டம்",
       "notReachableInTime": "இலக்கு எட்டப்படும் {overrun} பின்னர்.",
       "onlyInPvMode": "கட்டணம் வசூலிக்கும் திட்டம் சூரிய பயன்முறையில் மட்டுமே வேலை செய்கிறது.",
-      "onlyInSmartMode": "",
       "planDuration": "மின்சேர்வி நேரம்",
       "planPeriodLabel": "காலசுழற்சி",
       "planPeriodValue": "{start} பெறுநர் {end}",
@@ -1745,19 +1347,6 @@
       "unknown": "விருந்தினர் வண்டி",
       "vehicleSoc": "கட்டணம்"
     },
-    "vehicleSettings": {
-      "connectedTo": "",
-      "description": "",
-      "editHint": "",
-      "keepAsIs": "",
-      "learnMore": "",
-      "limitSoc": "",
-      "menu": "",
-      "minSoc": "",
-      "mode": "",
-      "notConnected": "",
-      "title": ""
-    },
     "vehicleStatus": {
       "awaitingAuthorization": "அங்கீகாரத்திற்காக காத்திருக்கிறது.",
       "batteryBoost": "பேட்டரி பூச்ட் செயலில்.",
@@ -1784,8 +1373,6 @@
       "pvEnable": "உபரி கிடைக்கிறது. விரைவில் தொடங்குகிறது.",
       "scale1p": "விரைவில் 1-கட்ட கட்டணம் வசூலிப்பதைக் குறைத்தல்.",
       "scale3p": "விரைவில் 3-கட்ட கட்டணம் வசூலிக்கிறது.",
-      "suggestionStartTooltip": "",
-      "suggestionStopTooltip": "",
       "targetChargeActive": "சார்சிங் பிளான் செயலில். மதிப்பிடப்பட்ட பூச்சு {duration}.",
       "targetChargePlanned": "சார்சிங் திட்டம் {duration} இல் தொடங்குகிறது.",
       "targetChargeWaitForVehicle": "திட்டம் தயாராக உள்ளது. வாகனத்திற்காகக் காத்திருக்கிறது …",
@@ -1825,7 +1412,6 @@
   },
   "session": {
     "addOdometer": "மதிப்பைச் சேர்க்கவும்",
-    "addedRange": "",
     "cancel": "ரத்துசெய்",
     "co2": "கோ ₂",
     "date": "காலசுழற்சி",
@@ -1841,7 +1427,6 @@
     "title": "சார்சிங் அமர்வு"
   },
   "sessions": {
-    "addedRange": "",
     "avgPower": "⌀ ஆற்றல்",
     "avgPrice": "⌀ விலை",
     "chargeDuration": "காலம்",
@@ -1867,7 +1452,6 @@
     },
     "co2": "⌀ co₂",
     "csv": {
-      "addedrange": "",
       "chargedenergy": "ஆற்றல் (கிலோவாட்)",
       "chargeduration": "காலம்",
       "co2perkwh": "Co₂/kWh",
@@ -1886,8 +1470,6 @@
       "vehicle": "வண்டி"
     },
     "date": "தொடக்க",
-    "download": "",
-    "downloadTotal": "",
     "energy": "கட்டணம் வசூலிக்கப்பட்டது",
     "filter": {
       "allLoadpoints": "அனைத்து சார்சிங் புள்ளிகளும்",
@@ -1929,13 +1511,6 @@
     "vehicle": "வண்டி"
   },
   "settings": {
-    "dateFormat": {
-      "auto": "",
-      "dmy": "",
-      "label": "",
-      "mdy": "",
-      "ymd": ""
-    },
     "deviceInfo": "இந்த உரையாடலில் நீங்கள் செய்யும் அமைப்புகள் இந்தச் சாதனத்தை மட்டுமே பாதிக்கும்.",
     "fullscreen": {
       "enter": "முழுத் திரையில் உள்ளிடவும்",
@@ -1951,7 +1526,6 @@
       "label": "மொழி"
     },
     "loadpoints": {
-      "disabledDevice": "",
       "help": "UIக்கான வரிசை மற்றும் தெரிவுநிலையை மாற்றவும்.",
       "hide": "மறை {title}",
       "label": "சார்சிங் புள்ளிகள்",
@@ -2006,7 +1580,6 @@
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "இடைநிறுத்தப்பட்ட நேரம்",
-    "batteryDescription": "",
     "description": "இலாபகரமான கட்டம் ஊட்டத்திற்கு முன்னுரிமை அளிக்க அதிக விலையில் கட்டணம் வசூலிப்பதை இடைநிறுத்துகிறது.",
     "priceLabel": "தீவன வீதம்",
     "priceLimit": "தீவன வரம்பு",
@@ -2030,7 +1603,6 @@
     "battery": "மின்கலம்",
     "charge": "மின்னூட்டு",
     "comingSoon": "இந்தப் பக்கம் கட்டுமானத்தில் உள்ளது.",
-    "energy": "",
     "forecast": "முன்னறிவிப்பு",
     "more": "மேலும்",
     "sessions": "அமர்வுகள்"
