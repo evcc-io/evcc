@@ -7,6 +7,18 @@
     "authorizationSuccessful": "授权成功",
     "buttonConnect": "连接到 {provider}",
     "buttonDisconnect": "断开连接",
+    "challenge": {
+      "captcha": {
+        "label": "输入图片中显示的字符。",
+        "title": "验证码"
+      },
+      "code": {
+        "label": "粘贴授权码或您被重定向到的页面地址。",
+        "title": "授权码"
+      },
+      "openLogin": "打开登录页面",
+      "submit": "继续"
+    },
     "confirmLogout": "您确定要断开 {title} 的连接吗？",
     "connect": "连接",
     "disconnect": "断开连接",
@@ -19,18 +31,96 @@
     "successCloseTab": "现在您可以关闭这个标签页了。",
     "title": "授权状态"
   },
+  "battery": {
+    "card": {
+      "charging": "充电中",
+      "discharging": "放电中",
+      "energy": "电能",
+      "gridCharge": "电网充电中",
+      "gridDischarge": "电网放电中",
+      "hold": "放电已锁定",
+      "holdCharge": "充电已锁定",
+      "ofTotal": "/ {total}",
+      "power": "功率",
+      "soc": "电池电量"
+    },
+    "combined": "合计",
+    "config": {
+      "buffer": "住宅电池中高于 {soc} 的电量可用于支持充电点，并在智能模式下延迟关闭。{start}自动开始太阳能充电。",
+      "bufferNone": "住宅电池电量不用于充电点。设置低于 {soc} 的值以启用支持。",
+      "bufferStart": {
+        "above": "当电池电量高于 {soc} 时",
+        "full": "当电池充满时",
+        "never": "仅在有足够余电时"
+      },
+      "bufferTitle": "电池作为充电缓冲",
+      "discharge": "在快速模式和计划充电期间防止住宅电池放电。",
+      "gridDischarge": "允许住宅电池向电网放电。",
+      "gridDischargeConfirm": {
+        "country": "已配置国家：{country}。",
+        "description": "电池电能是否可以输出到电网取决于您所在的国家和上网协议。如果电池也从电网充电，输出的电能就不再是纯太阳能。在许多上网电价政策下，这会导致失去补贴或被禁止。请先查看您的上网合同和电网运营商的要求。",
+        "noCountry": "未配置国家。请在 {link} 下设置。",
+        "title": "电池向电网输出"
+      },
+      "optimizerControlledHint": "已对 {loadpoints} 禁用。改由{optimizer}决定。",
+      "priority": "住宅电池电量低于 {soc} 时优先充电。之后充电点获得余电。",
+      "priorityNone": "太阳能余电直接供给充电点。设置高于 {soc} 的值以优先为住宅电池充电。",
+      "priorityTitle": "余电优先供给哪里？"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "从电网充电",
+        "discharge": "向电网放电",
+        "hold": "禁止放电",
+        "holdcharge": "禁止充电",
+        "normal": "正常运行"
+      },
+      "empty": "空",
+      "full": "满",
+      "highest": "最高 ({value})",
+      "lowest": "最低 ({value})",
+      "suggestion": "建议"
+    }
+  },
   "batterySettings": {
     "gridChargeTab": "电网充电",
+    "gridDischargeTab": "电网放电",
     "modalTitle": "住宅电池",
+    "noBattery": "未配置电池。",
     "usageTab": "电池使用情况"
   },
+  "colors": {
+    "auto": "自动",
+    "hex": "十六进制颜色"
+  },
   "config": {
+    "adminPassword": {
+      "description": "脚本插件执行的系统级命令将以 evcc 进程的权限运行。请重新输入管理员密码以继续。",
+      "invalid": "密码无效。请重试。",
+      "title": "潜在危险操作"
+    },
+    "apiKey": {
+      "description": "为脚本和自动化任务（如定时备份）提供安全访问，无需共享管理员密码。",
+      "exampleLabel": "试一试：使用 curl 下载备份",
+      "generate": "生成 API 密钥",
+      "generateConfirm": "输入管理员密码以生成新的 API 密钥。",
+      "keyLabel": "API 密钥",
+      "regenerate": "重新生成 API 密钥",
+      "regenerateConfirm": "输入管理员密码以重新生成 API 密钥。",
+      "regenerateLink": "重新生成",
+      "regenerateWarning": "重新生成将使现有密钥失效，所有使用该密钥的自动化任务都将停止工作。是否继续？",
+      "revealSuccess": "您的新 API 密钥已可使用。",
+      "revealTitle": "API 密钥已创建",
+      "shownOnce": "此密钥仅显示一次。请妥善保存。之后将无法再次获取。",
+      "title": "API 密钥"
+    },
     "aux": {
       "description": "能够根据可用剩余电力自动调节其功耗的设备（例如智能热水器）。evcc期望此设备在需要时能自动降低其功耗。",
       "titleAdd": "添加智能耗电设备",
       "titleEdit": "编辑智能耗电设备"
     },
     "battery": {
+      "title": "电池",
       "titleAdd": "添加电池",
       "titleEdit": "编辑电池"
     },
@@ -59,12 +149,65 @@
         "heating": "添加加热器"
       },
       "titleEdit": {
-        "charging": "编辑充电桩"
+        "charging": "编辑充电桩",
+        "heating": "编辑加热设备"
+      },
+      "type": {
+        "custom": {
+          "charging": "自定义充电桩",
+          "heating": "自定义加热设备"
+        },
+        "heatpump": "自定义热泵",
+        "sgready": "自定义热泵（通过插件实现 sg-ready）",
+        "sgready-boost": "自定义热泵（sg-ready-boost，已弃用）",
+        "sgready-relay": "自定义热泵（通过继电器实现 sg-ready）",
+        "switchsocket": "自定义可切换插座"
       }
     },
+    "circuit": {
+      "addMeter": "添加专用电能计量表",
+      "custom": "自定义电路",
+      "deleteChildrenFirst": "要删除此电路，请先删除其子电路。",
+      "meterDedicated": "专用计量表",
+      "meterGrid": "电网计量表",
+      "meterHelp": "测量此电路总耗电量的计量表。",
+      "meterLabel": "电能计量表",
+      "meterLabelAdd": "添加电路计量表",
+      "meterLabelEdit": "编辑电路计量表",
+      "meterNone": "无计量表",
+      "meterSelectionHelpDedicatedMeter": "在下方为此电路添加现有计量表。",
+      "meterSelectionHelpGridMeter": "使用您安装中现有的电网计量表。",
+      "meterSelectionHelpNoMeter": "使用所有充电点的总和。",
+      "meterSelectionLabel": "计量表选择",
+      "parentCircuit": "上级电路",
+      "template": "电路",
+      "titleAdd": "添加电路",
+      "titleEdit": "编辑电路",
+      "titleLabel": "标题"
+    },
     "circuits": {
+      "addMainCircuit": "添加主电路",
+      "addSubCircuit": "添加子电路",
+      "chargingPointsNote": "在各充电点和加热器的设置中将其分配到电路。",
       "description": "确保连接到同一电路的所有充电点的总和不超过配置的功率和电流限制。电路可以嵌套以构建层级结构。",
-      "title": "负载管理"
+      "legacyWarning": "新的电路配置可用！在此移除并保存您的配置，以使用新的引导流程。",
+      "meterDedicated": "计量表",
+      "meterGrid": "电网",
+      "title": "负载管理",
+      "usableMeters": "可用的计量表引用"
+    },
+    "combobox": {
+      "count": "{count} 条建议",
+      "matching": "匹配",
+      "other": "其他",
+      "searching": "搜索中…",
+      "suggestions": "建议",
+      "used": "已使用"
+    },
+    "consumer": {
+      "description": "记录较小的、不可控制的电器（冰箱、洗衣机等）。让您更好地了解住宅耗电情况。",
+      "titleAdd": "添加耗电设备计量表",
+      "titleEdit": "编辑耗电设备计量表"
     },
     "control": {
       "description": "通常默认值即可。仅在您清楚了解操作后果时才更改它们。",
@@ -74,8 +217,19 @@
       "labelResidualPower": "剩余功率",
       "title": "控制行为"
     },
+    "curtailer": {
+      "description": "应电网运营商要求限制上网的设备（§ 9 EEG）。许多太阳能逆变器可通过其太阳能计量表配置直接支持此功能。仅部分制造商或多逆变器系统需要单独配置。",
+      "generic": "通用集成",
+      "specific": "特定集成",
+      "template": "制造商",
+      "title": "限发",
+      "titleAdd": "添加限发设备",
+      "titleEdit": "编辑限发设备"
+    },
     "deviceValue": {
+      "activeClients": "活跃客户端",
       "amount": "数量",
+      "asleep": "休眠中",
       "broker": "代理服务器",
       "bucket": "存储桶",
       "capacity": "容量",
@@ -88,32 +242,78 @@
       "chargedEnergy": "已充电量",
       "co2": "电网 CO₂",
       "configured": "已配置",
+      "connected": "已连接",
+      "connections": "连接",
       "controllable": "可控制",
       "currency": "货币",
       "current": "电流",
       "currentRange": "电流",
+      "curtailLimit": "上网上限",
+      "curtailable": "可限发",
+      "curtailed": "上网上限",
+      "detected": "已检测",
+      "dimLimit": "耗电上限",
+      "dimmed": "耗电受限",
       "enabled": "已启用",
       "energy": "电能",
+      "events": "事件",
+      "exportLimit": "电网上网限制",
       "feedinPrice": "上网电价",
+      "forecast": "预测",
       "gridPrice": "电网电价",
       "heaterTempLimit": "加热器限制",
       "identifier": "RFID 标识符",
+      "loginBlocked": "已达登录次数上限",
+      "max": "最大",
+      "maxCurrent": "最大电流",
+      "maxPower": "最大功率",
+      "messengers": "服务",
       "no": "否",
       "odometer": "里程表读数",
       "org": "组织",
+      "outdoorTemp": "室外温度",
       "phaseCurrents": "电流",
       "phasePowers": "功率",
       "phaseVoltages": "电压",
       "phases1p3p": "相数切换",
       "power": "功率",
       "powerRange": "功率",
+      "price": "价格",
+      "productionLimited": "发电受限",
       "range": "续航里程",
+      "remoteEnabled": "已启用",
+      "returnEnergy": "电能（反向）",
       "singlePhase": "单相",
       "soc": "电量",
       "solarForecast": "太阳能预测",
       "temp": "温度",
       "topic": "主题",
       "url": "网址",
+      "usage": {
+        "aux": {
+          "energy": "耗电",
+          "returnEnergy": "发电"
+        },
+        "battery": {
+          "energy": "放电",
+          "returnEnergy": "充电"
+        },
+        "charge": {
+          "energy": "充电",
+          "returnEnergy": "放电"
+        },
+        "consumer": {
+          "energy": "耗电",
+          "returnEnergy": "发电"
+        },
+        "grid": {
+          "energy": "购电",
+          "returnEnergy": "上网"
+        },
+        "pv": {
+          "energy": "发电"
+        }
+      },
       "vehicleLimitSoc": "车辆限制",
       "yes": "是"
     },
@@ -125,14 +325,41 @@
     "devices": {
       "auxMeter": "智能耗电设备",
       "batteryStorage": "储能电池",
+      "consumer": "耗电设备",
       "solarSystem": "太阳能系统"
     },
     "editor": {
       "loading": "正在加载 YAML 编辑器…"
     },
     "eebus": {
+      "certificate": {
+        "private": "私钥",
+        "public": "公共证书",
+        "title": "证书"
+      },
+      "configuredDevices": "已配置设备",
       "description": "此配置使 evcc 能够与其他 EEBus 设备通信。",
+      "descriptionAdvanced": "无需更改。仅在您确实清楚自己在做什么时才进行更改。如果更改 SHIP-ID 或证书，您需要重新配对设备。",
+      "interfaces": "网络接口",
+      "interfacesHelp": "限制 EEBus 使用的网络接口，以避免通信问题。留空则使用所有接口。每行一个条目。",
+      "noConfiguredDevices": "没有通过 SKI 配置的设备。",
+      "noPairings": "没有已配对的设备。",
+      "pairings": "已配对设备",
+      "port": "端口",
+      "portHelp": "要使用的端口。",
+      "qr": "配对码",
+      "qrExplain": "安装期间从另一台 EEBus 设备扫描即可自动配对，无需手动输入 SKI。",
+      "removeConfirm": "所有 EEBus 配置将被移除。下次启动时将生成新的证书和标识符。确定吗？",
+      "removePairing": "移除配对",
+      "removePairingConfirm": "设备将断开连接，必须重新配对。确定吗？",
+      "shipidExplain": "用于在 EEBus 网络中识别的永久设备标识符。",
+      "shipidHelp": "此 SHIP-ID 与下方证书关联。",
+      "skiExplain": "用于配对 EEBus 设备的唯一安全标识符。",
       "title": "EEBus"
+    },
+    "experimental": {
+      "description": "提前体验仍在测试中的功能。这些功能可能不稳定，并可能在未来版本中更改或移除。",
+      "title": "实验性"
     },
     "ext": {
       "description": "可用于负载管理或统计目的。",
@@ -142,27 +369,61 @@
     "form": {
       "danger": "危险",
       "deprecated": "已弃用",
+      "durationUnit": "{label} 的时间单位",
       "example": "示例",
       "optional": "bucket"
     },
     "general": {
+      "applyAndClose": "应用并关闭",
+      "authPerform": "连接 {provider}",
+      "authPerformHint": "将在新标签页中打开。完成后返回此处继续。",
+      "authPrepare": "准备连接",
       "cancel": "取消",
+      "change": "更改",
+      "clear": "清除",
+      "close": "关闭",
+      "confirmDisable": "停用此设备？下次重启后将忽略该设备。",
+      "confirmEnable": "重新启用此设备？",
+      "confirmSave": "有未保存的更改。是否立即保存？",
+      "copied": "已复制！",
+      "copy": "复制",
       "customHelp": "使用 evcc 的插件系统创建用户定义的设备。",
       "customOption": "用户定义的设备",
       "delete": "删除",
+      "disable": "停用",
+      "disabled": "已停用",
+      "dismiss": "忽略",
       "docsLink": "查看文档。",
+      "dragHandle": "拖动手柄",
+      "dragItem": "可拖动：{title}",
+      "dragList": "可排序列表",
+      "enable": "启用",
+      "error": "错误",
       "experimental": "实验性",
+      "forceEnable": "仍然启用",
+      "forceSave": "仍然保存",
       "fromYamlHint": "evcc.yaml 中的设备不可编辑。",
       "hideAdvancedSettings": "隐藏高级设置",
+      "invalidFileSelected": "所选文件无效",
+      "legacy": "旧版",
+      "moreInfo": "更多信息：",
+      "noFileSelected": "未选择文件。",
       "off": "关",
       "on": "开",
       "readFromFile": "从文件读取",
       "remove": "移除",
+      "required": "必填",
+      "reset": "重置",
       "save": "保存",
+      "saved": "已保存。",
+      "saving": "保存中…",
+      "selectFile": "浏览",
       "showAdvancedSettings": "显示高级设置",
+      "site": "站点",
       "telemetry": "遥测",
       "templateLoading": "加载中...",
       "title": "标题",
+      "typeDeprecated": "类型“{type}”已过时，将在未来版本中移除。请查看更新日志并重新创建此设备。",
       "validateSave": "验证并保存"
     },
     "grid": {
@@ -171,11 +432,38 @@
       "titleEdit": "编辑电网计量表"
     },
     "hems": {
+      "changeConfirm": "现有配置将被删除。是否继续？",
+      "csv": {
+        "created": "创建时间",
+        "finished": "结束时间",
+        "gridpower": "电网功率 (kW)",
+        "limitpower": "限值 (kW)",
+        "type": "类型"
+      },
+      "customOption": "自定义集成",
       "description": "将 evcc 连接到其他住宅能源管理系统。",
-      "title": "HEMS"
+      "download": "下载",
+      "dynamicLimits": "动态限制",
+      "eventsRecorded": "已记录 {count} 次电网限制事件。",
+      "exportLimit": "电网上网限制",
+      "exportLimitDescription": "电池优化器会遵守此限制，以避免太阳能损失。来自动态限制集成的有效限发信号优先。",
+      "exportLimitHint": "并网点的静态上网限制。",
+      "generic": "通用集成",
+      "integrations": "集成",
+      "lastEvent": "最近一次：{timeAgo}。",
+      "noEvents": "尚未记录任何事件。",
+      "recordedEvents": "已记录事件",
+      "staticLimits": "静态限制",
+      "template": "集成",
+      "title": "HEMS",
+      "type": {
+        "custom": "自定义集成",
+        "relay": "自定义集成（继电器）"
+      }
     },
     "icon": {
-      "change": "更改"
+      "change": "更改",
+      "label": "图标"
     },
     "influx": {
       "description": "将充电数据和其他指标写入 InfluxDB。使用 Grafana 或其他工具可视化数据。",
@@ -195,24 +483,44 @@
     },
     "loadpoint": {
       "addCharger": {
-        "charging": "添加充电桩"
+        "charging": "添加充电桩",
+        "heating": "添加加热设备"
       },
       "addMeter": "添加专用充电桩计量表",
+      "advancedConfig": "高级配置",
       "cancel": "取消",
       "chargerError": {
-        "charging": "必须配置充电桩。"
+        "charging": "必须配置充电桩。",
+        "heating": "必须配置加热设备。"
       },
       "chargerLabel": {
-        "charging": "充电桩"
+        "charging": "充电桩",
+        "heating": "加热设备"
       },
       "chargingTitle": "充电",
       "circuitHelp": "负载管理分配，以确保不超过功率和电流限制。",
+      "circuitInvalid": "电路不存在",
       "circuitLabel": "电路",
       "circuitUnassigned": "未分配",
+      "created": "“{name}”已创建，并使用合理的默认值。",
+      "createdTitle": {
+        "charging": "充电点已创建",
+        "heating": "加热器已创建"
+      },
+      "creating": {
+        "charging": "充电桩已保存。正在创建充电点 …",
+        "heating": "加热设备已保存。正在创建加热器 …"
+      },
+      "currentRangeHelp": {
+        "charging": "典型值：11 kW 充电桩为 6-16 A，22 kW 充电桩为 6-32 A（三相）。",
+        "heating": "取决于加热设备的额定功率（见数据表）。"
+      },
       "defaultModeHelp": {
-        "charging": "连接车辆时的充电模式。"
+        "charging": "连接车辆时的充电模式。",
+        "heating": "在系统启动时设置。"
       },
       "defaultModeHelpKeep": "保留上次选择的充电模式。",
+      "defaultModeKeep": "保持不变",
       "defaultModeLabel": "默认模式",
       "delete": "删除",
       "electricalSubtitle": "如有疑问，请咨询电工。",
@@ -222,9 +530,16 @@
       "estimateLabel": "在 API 更新之间插值计算充电量",
       "maxCurrentHelp": "必须大于最小电流。",
       "maxCurrentLabel": "最大电流",
+      "maxTempHelp": "必须大于最低温度。",
+      "maxTempLabel": "最高温度",
       "minCurrentHelp": "仅在您清楚操作后果时才设置为低于 6 A。",
       "minCurrentLabel": "最小电流",
+      "minTempLabel": "最低温度",
       "noVehicles": "未配置任何车辆。",
+      "option": {
+        "charging": "添加充电点",
+        "heating": "添加加热器"
+      },
       "phases1p": "单相",
       "phases3p": "三相",
       "phasesAutomatic": "自动相数切换",
@@ -249,6 +564,10 @@
       "solarBehaviorLabel": "太阳能充电行为",
       "solarModeCustom": "自定义",
       "solarModeMaximum": "最大化太阳能",
+      "solarShareNote": "设置了瓦特阈值时，用户设置中的太阳能占比滑块将被禁用。{0}并保存以启用它。",
+      "solarShareReset": "移除阈值",
+      "temperatureRangeHelp": "温度条的显示范围。不影响控制。",
+      "temperatureRangeTitle": "温度范围",
       "thresholdDisableDelayLabel": "停用延迟",
       "thresholdDisableHelpInvalid": "请输入一个正值。",
       "thresholdDisableHelpPositive": "当从电网取电超过 {power} 并持续 {delay} 时，停止充电。",
@@ -259,15 +578,32 @@
       "thresholdEnableHelpNegative": "当有 {surplus} 剩余电力并持续 {delay} 时，开始充电。",
       "thresholdEnableHelpZero": "当满足最小充电功率的剩余电力持续 {delay} 时开始充电。",
       "thresholdEnableLabel": "启用电网功率阈值",
+      "titleAdd": {
+        "charging": "添加充电点",
+        "heating": "添加加热器",
+        "unknown": "添加充电点或加热器"
+      },
+      "titleEdit": {
+        "charging": "编辑充电点",
+        "heating": "编辑加热器",
+        "unknown": "编辑充电点或加热器"
+      },
+      "titleExample": {
+        "charging": "车库、车棚等",
+        "heating": "热泵、加热器等"
+      },
       "titleLabel": "标题",
       "vehicleAutoDetection": "自动检测",
       "vehicleHelpAutoDetection": "自动选择最可能的车辆。可以手动覆盖。",
       "vehicleHelpDefault": "始终假定此车辆在此处充电。自动检测已禁用。可以手动覆盖。",
+      "vehicleInvalid": "车辆不存在",
       "vehicleLabel": "默认车辆",
       "vehiclesTitle": "车辆"
     },
     "main": {
       "addAdditional": "添加额外计量表",
+      "addConsumer": "添加耗电设备",
+      "addCurtailer": "添加限发设备",
       "addGrid": "添加电网计量表",
       "addLoadpoint": "添加充电点",
       "addPvBattery": "添加太阳能或电池",
@@ -279,25 +615,111 @@
       "name": "名称",
       "title": "配置",
       "unconfigured": "未配置",
-      "vehicles": "我的车辆"
+      "vehicles": "我的车辆",
+      "welcomeBannerText": "首先创建至少一个**充电桩**、**加热器**、**电网**、**太阳能**、**电池**或**额外计量表**。如果只是想测试，请选择一个**演示设备**。",
+      "welcomeBannerTitle": "让我们来配置您的系统！"
+    },
+    "mcp": {
+      "description": "提供 Model Context Protocol 服务器，使 Claude 等 AI 助手能够读取系统状态并控制充电。",
+      "exampleLabel": "示例：Claude CLI",
+      "restartHint": "重启后可用。",
+      "title": "MCP 服务器",
+      "url": "MCP 端点"
     },
     "messaging": {
+      "addMessenger": "添加服务",
       "description": "接收有关您充电会话及其他事件的消息。",
+      "event": {
+        "asleep": {
+          "messageDefault": "已允许充电，车辆 {vehicleName} 未在充电。",
+          "title": "等待车辆时",
+          "titleDefault": "车辆休眠"
+        },
+        "connect": {
+          "messageDefault": "车辆已连接，光伏功率 {pvPower}kW",
+          "title": "车辆连接时",
+          "titleDefault": "车辆已连接"
+        },
+        "disconnect": {
+          "messageDefault": "车辆在 {connectedDuration} 后断开连接",
+          "title": "车辆断开连接时",
+          "titleDefault": "车辆已断开"
+        },
+        "guest": {
+          "messageDefault": "未知车辆，访客已连接？",
+          "title": "未知车辆连接时",
+          "titleDefault": "未知车辆"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}：计划将超时。",
+          "title": "计划充电即将超时时",
+          "titleDefault": "计划超时"
+        },
+        "soc": {
+          "messageDefault": "电池已充至 {vehicleSoc}%",
+          "title": "电量更新",
+          "titleDefault": "电量已更新"
+        },
+        "start": {
+          "messageDefault": "已以{mode}模式开始充电。",
+          "title": "充电开始时",
+          "titleDefault": "充电已开始"
+        },
+        "stop": {
+          "messageDefault": "已完成充电 {chargedEnergy}kWh，用时 {chargeDuration}。",
+          "title": "充电停止时",
+          "titleDefault": "充电完成"
+        },
+        "suggestion": {
+          "messageDefault": "针对 {suggestionTitle} 的优化器建议：如果优化器控制处于激活状态，现在将执行“{suggestionAction}”。仅供参考，未做任何更改。实验性功能——欢迎在 https://github.com/evcc-io/evcc/issues/31903 提供反馈",
+          "title": "当优化器的建议操作发生变化时",
+          "titleDefault": "优化器建议"
+        }
+      },
+      "eventMessage": "消息",
+      "eventTitle": "标题",
+      "events": "事件",
+      "legacyWarning": "新的通知配置可用！在此移除并保存您的配置，以使用新的引导流程。",
+      "messengers": "服务",
+      "seePlaceholders": "查看占位符",
       "title": "通知"
+    },
+    "messenger": {
+      "custom": "自定义服务",
+      "generic": "通用服务",
+      "primary": "特定服务",
+      "template": "服务",
+      "titleAdd": "添加服务",
+      "titleEdit": "编辑服务"
     },
     "meter": {
       "cancel": "取消",
+      "convertToConsumer": {
+        "confirm": "将此“额外计量表”转换为“耗电设备”。",
+        "link": "转换为耗电设备"
+      },
       "delete": "删除",
       "generic": "通用集成",
       "option": {
         "aux": "添加智能耗电设备",
         "battery": "添加电池计量表",
+        "consumer": "添加普通耗电设备",
+        "grid": "添加电网计量表",
         "pv": "添加太阳能计量表"
       },
       "save": "保存",
       "specific": "特定集成",
       "template": "制造商",
       "titleChoice": "您想添加什么？",
+      "titleLabel": "标题",
+      "usage": {
+        "aux": "智能耗电设备",
+        "battery": "电池",
+        "charge": "充电桩",
+        "grid": "电网",
+        "label": "用途",
+        "pv": "发电"
+      },
       "validateSave": "验证并保存"
     },
     "modbus": {
@@ -308,6 +730,8 @@
       "connectionHintTcpip": "设备可通过 LAN/Wifi 从 evcc 访问。",
       "connectionValueSerial": "串口 / USB",
       "connectionValueTcpip": "网络",
+      "delay": "延迟",
+      "delayHint": "每次访问寄存器前的可选等待时间。仅适用于响应较慢的设备。",
       "device": "设备名称",
       "deviceHint": "例如: /dev/ttyUSB0",
       "host": "IP 地址或主机名",
@@ -318,10 +742,29 @@
       "protocolHintRtu": "通过 RS485 转以太网适配器连接，无协议转换。",
       "protocolHintTcp": "设备具有原生 LAN/Wifi 支持，或通过带协议转换的 RS485 转以太网适配器连接。",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP"
+      "protocolValueTcp": "TCP",
+      "timeout": "超时",
+      "timeoutHint": "等待设备响应的可选最长时间。"
     },
     "modbusproxy": {
+      "add": "添加代理连接",
+      "connection": "连接 #{number}",
       "description": "允许多个客户端访问单个 Modbus 设备。",
+      "device": "设备",
+      "option": {
+        "deny": "错误",
+        "false": "否",
+        "true": "静默"
+      },
+      "readonly": {
+        "help": {
+          "deny": "写入访问被阻止并返回 Modbus 错误。",
+          "false": "写入访问将被转发。",
+          "true": "写入访问被阻止且不返回响应。"
+        },
+        "label": "只读"
+      },
+      "sourcePortHelp": "传入客户端连接的端口。必须可用。",
       "title": "Modbus 代理"
     },
     "mqtt": {
@@ -343,11 +786,82 @@
       "title": "MQTT"
     },
     "network": {
+      "descriptionExternalUrl": "供其他设备连接 evcc 以及 evcc 应用自动发现所用的地址。",
       "descriptionHost": "使用 .local 后缀启用 mDNS。这对于移动应用程序和某些 OCPP 充电桩的发现功能非常重要。",
+      "descriptionInternalUrl": "evcc 的本地网络地址。",
       "descriptionPort": "Web 界面和 API 的端口。如果更改此设置，您需要更新浏览器 URL。",
+      "labelExternalUrl": "外部 URL",
       "labelHost": "主机名",
+      "labelInternalUrl": "内部 URL",
       "labelPort": "端口",
-      "title": "网络"
+      "title": "网络",
+      "warningUrlPath": "该 URL 通常不需要路径。确定正确吗？"
+    },
+    "ocpp": {
+      "forwardingConfigured": "已配置转发",
+      "forwardingError": "转发错误",
+      "forwardingOff": "未配置转发",
+      "noChargers": "未检测到 OCPP 充电桩。",
+      "stations": "站点 ID",
+      "stationsHelp": "已配置和检测到的 OCPP 充电桩。除本地控制外，您还可以将消息转发到外部服务器（例如用于计费）。",
+      "status": {
+        "configured": "未连接",
+        "connected": "已连接",
+        "unknown": "未知"
+      },
+      "title": "OCPP 服务器",
+      "url": "服务器 URL",
+      "urlHelp": "将此 URL 复制到充电桩的配置中。详情请参阅制造商手册。充电桩应会自动在 URL 后附加其唯一标识符（站点 ID）。在极少数情况下，您可能需要手动指定标识符。示例：`{url}`"
+    },
+    "ocppforwarder": {
+      "description": "除 evcc 外，还将此充电桩的 OCPP 消息转发到外部服务器（计费平台、配电网运营商等）。",
+      "editTitle": "OCPP 转发",
+      "labelCaCert": "服务器证书 (CA)",
+      "labelCheckInsecure": "允许自签名证书",
+      "labelInsecure": "证书验证",
+      "password": "密码",
+      "passwordHelp": "用于上游服务器的 HTTP Basic Auth。",
+      "readOnly": {
+        "check": "阻止来自上游服务器的命令",
+        "help": {
+          "false": "上游服务器可通过 evcc 向充电桩发送命令。",
+          "true": "上游服务器接收所有充电桩消息，但无法发送命令。evcc 保留独占控制权。"
+        },
+        "label": "上游命令"
+      },
+      "status": "状态",
+      "upstreamStationId": "站点 ID",
+      "upstreamStationIdHelp": "发送到上游服务器的充电桩标识符。",
+      "upstreamUrl": "上游服务器 URL",
+      "upstreamUrlHelp": "外部服务器的 OCPP WebSocket URL。",
+      "username": "用户名",
+      "usernameHelp": "用于上游服务器的 HTTP Basic Auth。"
+    },
+    "optimizer": {
+      "automatic": "自动控制",
+      "automaticLevel": {
+        "battery": {
+          "description": "仅控制住宅电池。",
+          "label": "住宅电池",
+          "status": "{automatic}控制住宅电池。"
+        },
+        "full": {
+          "description": "控制住宅电池，在智能模式下启停车辆充电，取代价格和 CO₂ 上限并接管计划。不变：关闭和快速模式、加热设备、可切换插座、容量未知的车辆。",
+          "label": "住宅电池和充电点",
+          "status": "{automatic}控制住宅电池和充电点。"
+        },
+        "off": {
+          "description": "优化器仅提供建议，不进行任何控制。",
+          "status": "{automatic}已关闭。优化器仅提供建议。"
+        }
+      },
+      "controlled": "已被自动控制禁用。改由{optimizer}决定。",
+      "controls": "控制范围",
+      "description": "利用太阳能预测、电价和您的用电模式来规划电池和充电。数据将发送至 evcc 优化服务。",
+      "enable": "启用优化器",
+      "info": "对于新安装，evcc 可能需要长达 24 小时才能收集到足够的数据。",
+      "linkWord": "优化器",
+      "title": "优化器"
     },
     "options": {
       "boolean": {
@@ -357,6 +871,10 @@
       "endianness": {
         "big": "大端字节序",
         "little": "小端字节序"
+      },
+      "operationMode": {
+        "heating": "加热",
+        "standby": "待机"
       },
       "schema": {
         "http": "HTTP (未加密)",
@@ -372,35 +890,231 @@
       "titleAdd": "添加太阳能计量表",
       "titleEdit": "编辑太阳能计量表"
     },
+    "remote": {
+      "active": "活跃",
+      "addClient": "添加客户端",
+      "addClientDescription": "凭据仅在您的 evcc 实例本地存储和验证。",
+      "addClientTitle": "添加远程客户端",
+      "clientCreated": "客户端已创建",
+      "clients": "客户端",
+      "confirmDelete": "删除客户端？",
+      "connected": "已连接",
+      "createClient": "创建客户端",
+      "description": "使用 evcc 移动应用随时随地访问您的 evcc。无需端口转发或 VPN。",
+      "deviceName": "设备名称",
+      "disconnected": "已断开",
+      "done": "完成",
+      "enableLabel": "启用远程访问",
+      "expiration": "有效期",
+      "expirationNone": "永不",
+      "expired": "已过期",
+      "expiresIn": "{time}过期",
+      "lastActive": "{time}活跃",
+      "loginBlocked": "由于登录失败次数过多，远程登录已被阻止一分钟。",
+      "manualLogin": "或在浏览器中访问 {url}，使用以下凭据手动登录：",
+      "noClients": "暂无客户端。目前无人可以连接。",
+      "password": "密码",
+      "passwordOnce": "此密码仅显示一次。请立即扫描二维码或复制。之后将无法再次查看。",
+      "privacy": "启用此功能即表示您同意我们的{0}。",
+      "privacyLink": "隐私政策",
+      "qrInstall": "安装适用于 {ios} 或 {android} 的 evcc 应用。",
+      "qrScan": "用手机相机扫描二维码进行连接。如果您已在使用手机，请点击它。",
+      "removeClient": "移除客户端",
+      "title": "远程访问",
+      "url": "公共 URL",
+      "username": "用户名"
+    },
     "section": {
       "additionalMeter": "额外计量表",
+      "consumers": "耗电设备",
       "general": "常规",
       "grid": "电网",
       "integrations": "集成",
       "loadpoints": "充电点",
       "meter": "太阳能和电池",
+      "services": "服务",
       "system": "系统",
       "vehicles": "车辆"
+    },
+    "security": {
+      "authDisabledHint": "身份验证已禁用。凭据管理不可用。",
+      "description": "管理此实例的身份验证和凭据。",
+      "passwordDescription": "更新用于登录配置界面的密码。",
+      "passwordTitle": "管理员密码",
+      "title": "安全",
+      "updatePassword": "更新密码"
+    },
+    "shm": {
+      "description": "evcc 通过 SEMP 协议集成了 SMA Sunny Home Manager (SHM)。如果它在同一网络中运行，登录 Sunny Portal 账户后，系统应会自动提示您将 evcc 中配置的所有充电桩添加为新发现的耗电设备。一切应可立即使用，无需在下方进行任何调整。",
+      "descriptionDeviceId": "12 位十六进制字符串。所有设备（充电点等）的前缀。",
+      "descriptionDeviceSerial": "12 位十六进制字符串。所有设备（充电点等）的基础序列号。默认情况下，evcc 从主机的 MAC 地址派生。",
+      "descriptionIdPattern": "标识符模式",
+      "descriptionIds": "在 Sunny Portal 中，每个耗电设备都需要唯一标识符。evcc 会根据您的硬件生成唯一标识符。如果将 evcc 迁移到其他硬件，这些标识符可能会改变。如果您想保留历史记录，可以在此处覆盖生成的标识符。打开 SEMP URL (/semp) 查看当前标识符。",
+      "descriptionVendorId": "8 位十六进制字符串。所有实体的通用前缀。默认情况下，evcc 将使用其内部供应商 ID。",
+      "labelDeviceId": "设备 ID",
+      "labelDeviceSerial": "设备序列号",
+      "labelVendorId": "供应商 ID"
+    },
+    "site": {
+      "country": {
+        "description": "用于特定地区的提示和默认值。",
+        "label": "国家"
+      },
+      "currency": {
+        "description": "用于根据您的费率格式化电价、成本和节省金额。",
+        "example": "您的充电价格为 {price}。您节省了 {amount}。",
+        "label": "货币"
+      },
+      "siteTitle": {
+        "description": "显示在主屏幕和浏览器标签页上。",
+        "label": "标题"
+      },
+      "title": "站点"
     },
     "sponsor": {
       "addToken": "输入令牌",
       "changeToken": "更改令牌",
       "description": "赞助模式帮助我们维护项目并可持续地构建新的、令人兴奋的功能。作为赞助者，您可以访问所有充电桩的实现。",
       "descriptionToken": "您可以从 {url} 获取令牌。我们也提供用于测试的试用令牌。 {trialToken}.",
+      "enterYourToken": "您的赞助令牌",
       "error": "赞助令牌无效。",
+      "invalid": "无效",
       "labelToken": "赞助令牌",
       "title": "赞助",
       "tokenRequired": "您必须先配置赞助令牌，然后才能创建此设备。",
+      "tokenRequiredFeature": "此功能需要赞助令牌。",
       "tokenRequiredLearnMore": "了解更多。",
-      "trialToken": "试用令牌"
+      "tokenRequiredShort": "未配置赞助令牌。",
+      "trialToken": "试用令牌",
+      "viaYaml": "通过 evcc.yaml",
+      "yourToken": "赞助令牌"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "下载备份...",
+          "confirmationButton": "下载备份",
+          "confirmationText": "下载数据库文件。",
+          "description": "将数据备份到文件。系统故障时可使用此文件恢复数据。",
+          "title": "备份"
+        },
+        "cancel": "取消",
+        "description": "备份、恢复和重置数据。适用于将数据迁移到另一个系统。",
+        "note": "注意：以上所有操作仅影响数据库数据。evcc.yaml 配置文件保持不变。",
+        "reset": {
+          "action": "重置...",
+          "confirmationButton": "重置并重启",
+          "confirmationText": "这将永久删除所选数据。请确保已先下载备份。",
+          "description": "配置出现问题，想重新开始？删除所有数据并重新开始。",
+          "remote": "远程访问",
+          "remoteDescription": "删除配置和凭据。",
+          "sessions": "充电会话",
+          "sessionsDescription": "删除充电会话历史记录。",
+          "settings": "配置和设置",
+          "settingsDescription": "删除所有已配置的设备、服务、计划、缓存等。",
+          "title": "重置"
+        },
+        "restore": {
+          "action": "恢复...",
+          "confirmationButton": "恢复并重启",
+          "confirmationText": "这将覆盖整个数据库。请确保已先下载备份。",
+          "description": "从备份文件恢复数据。这将覆盖所有当前数据。",
+          "labelFile": "备份文件",
+          "title": "恢复"
+        },
+        "title": "备份与恢复"
+      },
       "logs": "日志",
       "restart": "重启",
       "restartRequiredDescription": "请重启以应用更改。",
       "restartRequiredMessage": "配置已更改。",
       "restartingDescription": "请稍候…",
       "restartingMessage": "正在重启 evcc。"
+    },
+    "tariff": {
+      "addForecast": "添加预测",
+      "addTariff": "添加费率",
+      "co2": {
+        "description": "电网用电的 CO₂ 强度预测。用于 CO₂ 优化充电和计算减排量。",
+        "titleAdd": "添加 CO₂ 预测",
+        "titleEdit": "编辑 CO₂ 预测"
+      },
+      "co2Services": "CO₂ 服务",
+      "customForecast": "自定义预测",
+      "customTariff": "自定义费率",
+      "description": "配置您的能源费率和预测。使用基于设备的配置进行动态管理，或使用 YAML 进行静态设置。",
+      "feedIn": {
+        "description": "向电网输出电力的补偿。用于计算实际充电成本。",
+        "titleAdd": "添加上网电价",
+        "titleEdit": "编辑上网电价"
+      },
+      "generic": "通用集成",
+      "grid": {
+        "description": "电网用电价格。用于计算实际充电成本，以及对车辆、加热设备进行价格优化充电或为住宅电池进行电网充电。",
+        "titleAdd": "添加电网购电费率",
+        "titleEdit": "编辑电网购电费率"
+      },
+      "legacyWarning": "新的费率配置可用！在此移除并保存您的费率，以使用新的引导流程。",
+      "option": {
+        "co2": "添加 CO₂ 预测",
+        "feedIn": "添加上网电价",
+        "grid": "添加购电费率",
+        "planner": "添加规划预测",
+        "solar": "添加太阳能预测",
+        "temperature": "添加温度预测"
+      },
+      "planner": {
+        "description": "此高级设置通常不需要。规划预测是充电计划以及经济或清洁电网充电（车辆、加热设备、住宅电池）的基础。如未配置，将自动使用动态电网电价或 CO₂ 预测。统计数据、成本计算和优化器决策不受影响。",
+        "titleAdd": "添加规划预测",
+        "titleEdit": "编辑规划预测"
+      },
+      "services": "服务",
+      "solar": {
+        "description": "光伏系统的太阳能发电预测。显示在界面中，未来将用于优化算法。",
+        "titleAdd": "添加太阳能预测",
+        "titleEdit": "编辑太阳能预测"
+      },
+      "temperature": {
+        "description": "您所在位置的室外温度预测。显示在界面中，并用于预测供暖需求。",
+        "titleAdd": "添加温度预测",
+        "titleEdit": "编辑温度预测"
+      },
+      "template": "提供商",
+      "title": "费率与预测",
+      "titleChoice": "您想添加什么？",
+      "type": {
+        "co2": "CO₂ 强度",
+        "feedIn": "上网电价",
+        "grid": "购电电价",
+        "planner": "规划",
+        "solar": "太阳能",
+        "temperature": "温度预测"
+      },
+      "zones": {
+        "add": "添加时段",
+        "allDays": "所有日期",
+        "allMonths": "所有月份",
+        "allTimes": "所有时间",
+        "cancel": "取消",
+        "charge": "费用",
+        "days": "日期",
+        "edit": "编辑",
+        "hours": "小时",
+        "months": "月份",
+        "price": "价格",
+        "priceRequired": "价格为必填项",
+        "remove": "移除时段",
+        "save": "保存",
+        "selectAll": "所有日期",
+        "timeFrom": "从",
+        "timeRangeError": "开始时间必须早于结束时间。如需跨越午夜，请创建两个单独的时段。",
+        "timeTo": "至",
+        "weekdays": "工作日"
+      }
+    },
+    "telemetry": {
+      "description": "配置数据分享以帮助改进 evcc。我们重视您的隐私，参与完全自愿。",
+      "title": "遥测"
     },
     "title": {
       "description": "显示在主屏幕和浏览器选项卡上。",
@@ -425,6 +1139,118 @@
       "titleEdit": "编辑车辆"
     }
   },
+  "energy": {
+    "battery": {
+      "charged": "已充电",
+      "discharged": "已放电"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "柱状图",
+        "pattern": "模式"
+      },
+      "cost": "成本",
+      "others": "其他",
+      "title": "耗电设备",
+      "view": {
+        "river": "河流图",
+        "treemap": "矩形树图"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "充电",
+        "returnEnergy": "放电"
+      },
+      "grid": {
+        "energy": "购电",
+        "returnEnergy": "上网"
+      },
+      "meter": {
+        "energy": "电能",
+        "returnEnergy": "电能（反向）"
+      }
+    },
+    "empty": "此时间范围内无电能数据。",
+    "flow": {
+      "battery": "电池",
+      "batteryCharge": "电池充电",
+      "batteryDischarge": "电池放电",
+      "charging": "充电",
+      "export": "输出到电网",
+      "grid": "电网购电",
+      "heating": "加热",
+      "home": "住宅耗电",
+      "overview": "概览",
+      "pv": "发电",
+      "title": "能量流",
+      "usage": "用电",
+      "withdrawal": "取用"
+    },
+    "grid": {
+      "amount": "数量",
+      "cost": "电网成本",
+      "energy": "电能",
+      "export": "上网",
+      "exportPrice": "上网电价",
+      "import": "购电",
+      "importPrice": "购电电价",
+      "price": "价格",
+      "revenue": "上网收益",
+      "title": "电网"
+    },
+    "group": {
+      "battery": "电池",
+      "consumer": "耗电",
+      "forecast": "预测",
+      "grid": "电网",
+      "meter": "额外计量表",
+      "pv": "发电"
+    },
+    "production": {
+      "above": "高出 {value}",
+      "accuracy": "预测准确度",
+      "below": "低于 {value}",
+      "deviation": "偏差",
+      "expectedTomorrow": "明日预计",
+      "exported": "上网 {value}",
+      "produced": "已发电",
+      "remainingToday": "今日剩余",
+      "selfConsumed": "自用",
+      "title": "发电"
+    },
+    "socTemp": {
+      "charged": "已充电",
+      "soc": "电量",
+      "temperature": "温度",
+      "used": "已使用"
+    },
+    "sources": {
+      "battery": "电池",
+      "cost": "成本",
+      "energy": "电能",
+      "grid": "电网",
+      "hint": "太阳能和电池电能按上网电价计算。",
+      "price": "价格/kWh",
+      "pv": "太阳能",
+      "share": "占比",
+      "source": "来源",
+      "title": "来源",
+      "total": "总计"
+    },
+    "stat": {
+      "autarky": "自给率",
+      "co2Saved": "CO₂ 减排",
+      "co2SavedTooltip": "与从电网获取所消耗的 {energy} 相比。",
+      "configure": "立即配置",
+      "noCo2": "无 CO₂ 数据。",
+      "noPrice": "无价格数据。",
+      "savings": "节省",
+      "savingsTooltip": "与从电网购买所消耗的 {energy} 相比。",
+      "versus": "{value} 对比 {reference}"
+    },
+    "title": "能源"
+  },
   "footer": {
     "community": {
       "greenEnergy": "太阳能",
@@ -444,6 +1270,15 @@
       "configurePriceCo2": "了解如何配置价格和 CO₂ 数据。",
       "footerLong": "{percent} 太阳能供电",
       "footerShort": "{percent} 太阳能",
+      "indicator": {
+        "co2": "CO₂ 排放",
+        "co2saved": "CO₂ 减排",
+        "none": "无",
+        "price": "能源价格",
+        "savings": "节省",
+        "solar": "太阳能"
+      },
+      "indicatorLabel": "标题信息",
       "modalTitle": "充电能量概览",
       "moneySaved": "节省 {value}",
       "percentGrid": "{grid} kWh 电网",
@@ -459,6 +1294,7 @@
       "priceTitle": "能源价格",
       "referenceGrid": "电网",
       "referenceLabel": "参考数据：",
+      "sessionInfo": "基于已完成的充电会话。",
       "tabTitle": "我的数据"
     },
     "sponsor": {
@@ -481,29 +1317,54 @@
     },
     "version": {
       "availableLong": "新版本可用",
+      "community": "evcc 社区",
+      "labelEmail": "电子邮件",
+      "labelPhone": "电话",
+      "labelRelease": "发布",
+      "labelVersion": "版本",
+      "labelWebsite": "网站",
+      "latestVersion": "已是最新",
+      "madeByCommunity": "由 {0} 打造。",
       "modalCancel": "取消",
       "modalDownload": "下载",
       "modalInstalledVersion": "已安装版本",
+      "modalLatest": "您正在运行最新版本。",
+      "modalNextRelease": "下一版本的新内容",
       "modalNoReleaseNotes": "没有可用的发行说明。有关新版本的更多信息：",
       "modalTitle": "新版本可用",
       "modalUpdate": "安装",
       "modalUpdateNow": "现在安装",
       "modalUpdateStarted": "正在启动新版 evcc…",
-      "modalUpdateStatusStart": "安装已开始："
+      "modalUpdateStatusStart": "安装已开始：",
+      "modalViewOnGitHub": "在 GitHub 上查看",
+      "openSource": "开源",
+      "poweredBy": "技术支持"
     }
   },
   "forecast": {
     "co2": {
       "average": "平均值",
+      "constant": "CO₂ 强度",
       "lowestHour": "最清洁时段",
       "range": "范围"
     },
+    "empty": {
+      "co2": "查看您所在地区电网电能何时清洁。充电计划将针对低排放进行优化，并计算 CO₂ 减排量。",
+      "price": "配置您的动态电价，自动优化充电计划并计算节省金额。",
+      "setup": "设置费率和预测",
+      "solar": "查看今天及未来几天的预期太阳能发电量。未来还将用于自动充电优化。",
+      "temperature": "查看您所在位置的预期室外温度。用于预测供暖需求。"
+    },
+    "hideLine": "隐藏曲线",
     "modalTitle": "预测",
     "price": {
       "average": "平均值",
+      "constant": "价格",
       "lowestHour": "最便宜时段",
       "range": "范围"
     },
+    "priceZoom": "放大",
+    "showLine": "显示曲线",
     "solar": {
       "dayAfterTomorrow": "后天",
       "partly": "部分",
@@ -512,11 +1373,27 @@
       "tomorrow": "明天"
     },
     "solarAdjust": "根据实际发电数据调整太阳能预测{percent}。",
+    "solarAdjustMedium": "实际数据调整",
+    "solarAdjustShort": "调整",
+    "temperature": {
+      "average": "平均值",
+      "range": "范围"
+    },
     "type": {
       "co2": "CO₂",
       "price": "价格",
-      "solar": "太阳能"
+      "solar": "太阳能",
+      "temperature": "室外温度"
     }
+  },
+  "general": {
+    "back": "返回",
+    "cancel": "取消",
+    "download": "下载",
+    "error": "错误",
+    "none": "无",
+    "note": "注意：",
+    "warning": "警告"
   },
   "header": {
     "about": "关于",
@@ -529,6 +1406,7 @@
     "sessions": "充电会话"
   },
   "help": {
+    "contactButton": "联系我们",
     "discussionsButton": "GitHub 讨论",
     "documentationButton": "文档",
     "issueButton": "报告缺陷",
@@ -548,6 +1426,70 @@
     "restartDescription": "试过先关闭再开启吗？",
     "secondaryActions": "仍然无法解决您的问题？这里还有一些其他选项。"
   },
+  "issue": {
+    "additional": {
+      "copied": "已复制！",
+      "copy": "复制",
+      "copySelected": "复制所选",
+      "description": "附上配置和日志，帮助我们快速重现问题。我们鼓励尽可能多地分享。通常不需要状态信息。",
+      "include": "包含",
+      "lines": "行",
+      "logs": "日志",
+      "logsDescription": "可能有助于识别问题的最近日志条目。",
+      "showDetails": "显示详情",
+      "source": "来源",
+      "state": "状态",
+      "stateDescription": "完整的运行时状态，包括充电点、设备和能量信息。仅在被要求时附上。",
+      "title": "附加信息",
+      "uiConfig": "配置 (UI)",
+      "uiConfigDescription": "通过网页界面进行的配置设置。",
+      "yamlConfig": "配置 (YAML)",
+      "yamlConfigDescription": "您的完整配置文件。"
+    },
+    "additionalContext": "附加背景信息",
+    "additionalContextPlaceholder": "任何可能有帮助的附加信息...\n- 配置详情\n- 您尝试过的方法\n- 环境详情",
+    "createButtonDiscussion": "发起 GitHub 讨论...",
+    "createButtonEmail": "通过电子邮件发送请求",
+    "createButtonIssue": "创建 GitHub Issue...",
+    "description": "您的安装未按预期工作？使用此页面获取帮助或报告问题。请提供足够的细节，帮助我们理解和重现问题，同时保持描述简洁、清晰、易于理解。",
+    "downloadButton": "下载调试信息",
+    "downloadHint": "如需更多信息，请将此文件附加到您的电子邮件中。",
+    "helpType": {
+      "discussion": "我的配置需要帮助",
+      "discussionDescription": "社区讨论可以提供解答。",
+      "issue": "发现了一个错误",
+      "issueDescription": "我确定某些功能已损坏，需要修复。",
+      "title": "您遇到的是什么问题？"
+    },
+    "issueDescription": "描述",
+    "issueTitle": "标题",
+    "nightlyHint": "该问题可能已修复。请先使用最新的{nightlyVersion}进行验证。",
+    "nightlyHintVersion": "Nightly 版本",
+    "searchHint": "报告错误前，请先搜索现有的{issues}。",
+    "searchHintLink": "GitHub Issues",
+    "stepsToReproduce": "重现步骤",
+    "subTitleDiscussion": "描述您的问题",
+    "subTitleEmail": "描述您的问题",
+    "subTitleIssue": "描述该问题",
+    "summary": {
+      "confirmationButtonDiscussion": "发起 GitHub 讨论",
+      "confirmationButtonIssue": "创建 GitHub Issue",
+      "copied": "已复制！",
+      "copyButton": "复制附加信息",
+      "instructions": "由于 GitHub 的 URL 长度限制，需分两步完成：",
+      "singleStepDescription": "点击下方按钮，打开预先填写了问题详情的 GitHub 表单。敏感数据已自动隐去，但分享前请再次检查。",
+      "step1Description": "点击下方按钮，使用您的标题、描述和详情创建一个基本的 GitHub 条目。",
+      "step2Description": "创建条目后，返回此处复制下方的附加信息并粘贴到 GitHub 表单中。敏感数据已隐去，但分享前请再次检查。",
+      "stepOneDiscussion": "第 1 步：创建基本讨论",
+      "stepOneIssue": "第 1 步：创建基本 Issue",
+      "stepTwo": "第 2 步：复制附加信息",
+      "title": "GitHub 问题摘要"
+    },
+    "system": "系统",
+    "timezone": "时区",
+    "title": "报告问题",
+    "version": "版本"
+  },
   "log": {
     "areaLabel": "按区域筛选",
     "areas": "所有区域",
@@ -563,6 +1505,7 @@
   },
   "loginModal": {
     "cancel": "取消",
+    "demoMode": "演示模式下不支持登录。",
     "iframeHint": "在新标签页中打开 evcc。",
     "iframeIssue": "密码正确，但您的浏览器似乎已丢弃身份验证 Cookie。如果您通过 HTTP 在 iframe 中运行 evcc，可能会发生这种情况。",
     "invalid": "密码无效。",
@@ -572,6 +1515,15 @@
     "title": "身份验证"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "不中断",
+      "label": "始终充电",
+      "labelHeating": "始终加热",
+      "minCurrent": "最小 {current}",
+      "once": "直至本次会话结束",
+      "onceTip": "仅限本次会话",
+      "permanent": "永久保持开启"
+    },
     "chargingPlan": {
       "active": "启用",
       "addRepeatingPlan": "添加重复计划",
@@ -579,75 +1531,128 @@
       "goal": "充电目标",
       "modalTitle": "充电计划",
       "none": "无",
+      "once": "一次",
+      "optimization": {
+        "cheapest": "最便宜",
+        "cheapestDescription": "选择最便宜的时段。可能导致多次启停。",
+        "cleanest": "最清洁",
+        "cleanestDescription": "选择最清洁的时段。可能导致多次启停。",
+        "continuous": "连续",
+        "continuousCo2Description": "选择最清洁的连续时段。",
+        "continuousPriceDescription": "选择最便宜的连续时段。",
+        "disabledDescription": "需要动态费率或 CO₂ 预测。",
+        "label": "优化"
+      },
       "planNumber": "计划 {number}",
       "precondition": {
+        "description": "将部分充电移至出发前进行：电池温暖，高电量停留时间更短。",
+        "disabledDescription": "所有充电都在出发前进行。",
         "label": "延迟充电",
         "optionAll": "全部",
-        "optionNo": "否"
+        "optionNo": "否",
+        "summary": "提前 {precondition}",
+        "summaryAll": "出发前"
       },
       "remove": "移除",
       "repeating": "重复",
       "repeatingPlans": "重复计划",
       "selectAll": "全选",
+      "strategy": {
+        "label": "策略"
+      },
       "time": "时间",
       "title": "计划",
       "unsavedChanges": "有未保存的更改。是否立即应用？",
       "update": "应用",
       "weekdays": "天数"
     },
+    "continuousStatus": {
+      "charging": "强化运行已激活。",
+      "connected": "正常运行。",
+      "waitForVehicle": "已请求强化运行…"
+    },
     "energyflow": {
       "battery": "电池",
       "batteryCharge": "电池充电中",
+      "batteryChargeHold": "电池（充电已锁定）",
       "batteryDischarge": "电池放电中",
       "batteryDischargeHold": "电池（已锁定）",
       "batteryGridChargeActive": "电网充电已激活",
       "batteryGridChargeLimit": "电网充电条件",
+      "batteryStatus": "电池状态",
       "batteryTooltip": "{energy} / {total} ({soc})",
+      "forecast": "预测",
       "forecastTooltip": "预测：今日剩余太阳能发电量",
       "gridImport": "电网用电",
       "homePower": "住宅耗电",
       "loadpoints": "充电点 | {count} 个充电点 | {count} 个充电点",
+      "loadpointsLimit": "{limit} 上限",
       "noEnergy": "无计量数据",
       "pv": "太阳能系统",
       "pvExport": "输出到电网",
       "pvProduction": "太阳能发电",
-      "selfConsumption": "太阳能自用"
+      "selfConsumption": "太阳能自用",
+      "toggleDetails": "能量流详情"
     },
     "heatingStatus": {
       "charging": "加热中…",
       "connected": "待机。",
+      "minTemp": "最低加热至 {temp}。",
+      "suggestionStartTooltip": "优化器建议立即加热。",
+      "suggestionStopTooltip": "优化器建议暂停加热。",
       "vehicleLimit": "加热器限制",
       "waitForVehicle": "准备就绪。等待加热器启动…"
+    },
+    "hemsWarning": {
+      "consumption": "耗电",
+      "feedIn": "上网",
+      "title": "外部限制已生效"
     },
     "loadpoint": {
       "avgPrice": "⌀ 电价",
       "charged": "已充电量",
       "co2": "⌀ CO₂",
       "duration": "时长",
+      "emission": "排放",
       "fallbackName": "充电点",
       "finished": "结束时间",
+      "last24hEnergy": "过去 24 小时",
+      "last7dEnergy": "过去 7 天",
+      "phasesMismatch": "激活的相数多于配置。请检查相数配置。",
       "power": "功率",
       "price": "成本",
       "remaining": "剩余时间",
       "remoteDisabledHard": "{source}：已关闭",
       "remoteDisabledSoft": "{source}：已关闭自适应太阳能充电",
-      "solar": "太阳能"
+      "solar": "太阳能",
+      "todayEnergy": "今天"
     },
     "loadpointSettings": {
       "batteryBoost": {
         "description": "使用住宅电池快速充电，直到电量降至 {limit}。",
+        "descriptionDisabled": "选择一个下限以允许使用住宅电池快速充电。",
+        "disabled": "已禁用",
         "label": "电池快充",
         "mode": "仅在太阳能和最小+太阳能模式下可用。",
-        "once": "本次充电会话已启用快充。"
+        "once": "本次充电会话已启用快充。",
+        "stateActive": "电池快充已激活",
+        "stateBelowLimit": "电池电量过低，无法快充",
+        "stateHold": "电池已锁定",
+        "stateReady": "电池快充就绪"
       },
       "batteryUsage": "住宅电池",
       "currents": "充电电流",
       "default": "默认",
+      "heating": "加热",
       "maxCurrent": {
         "label": "最大电流"
       },
       "minCurrent": {
         "label": "最小电流"
+      },
+      "minTemp": {
+        "description": "低于 {0} 时，智能模式下也会使用电池和电网电力来维持此温度。",
+        "label": "最低温度"
       },
       "phasesConfigured": {
         "label": "相数",
@@ -660,13 +1665,33 @@
       },
       "smartCostCheap": "经济型电网充电",
       "smartCostClean": "清洁型电网充电",
+      "solar": "太阳能余电",
+      "solarShare": {
+        "charging": {
+          "description": "最小充电功率中至少 {share} 必须来自太阳能。",
+          "descriptionFull": "余电足以覆盖最小充电功率时即开始充电。",
+          "descriptionZero": "一有余电即开始充电。"
+        },
+        "heating": {
+          "description": "最小加热功率中至少 {share} 必须来自太阳能。",
+          "descriptionFull": "余电足以覆盖最小加热功率时即开始加热。",
+          "descriptionZero": "一有余电即开始加热。"
+        },
+        "label": "太阳能占比",
+        "thresholdsHint": "已配置基于功率的充电阈值。移除它们以使用此滑块。",
+        "thresholdsHintYaml": "已配置基于功率的充电阈值。从 evcc.yaml 中此充电点的配置移除启用/停用阈值，以使用此滑块。",
+        "thresholdsLink": "编辑配置"
+      },
       "title": "设置 {0}",
       "vehicle": "车辆"
     },
     "mode": {
+      "boost": "强化",
       "minpv": "最少+太阳能",
+      "normal": "正常",
       "now": "快速",
       "off": "关闭",
+      "on": "开启",
       "pv": "太阳能",
       "smart": "智能"
     },
@@ -687,6 +1712,7 @@
       "nextPlan": "下一个计划",
       "notReachableInTime": "目标将延迟 {overrun} 达到。",
       "onlyInPvMode": "充电计划仅在太阳能模式下有效。",
+      "onlyInSmartMode": "充电计划仅在智能模式下有效。",
       "planDuration": "充电时长",
       "planPeriodLabel": "时段",
       "planPeriodValue": "{start} 至 {end}",
@@ -709,6 +1735,7 @@
     "targetChargePlan": {
       "chargeDuration": "充电时长",
       "co2Label": "平均 CO₂ 排放量",
+      "optimizerHint": "注意：此计划由{optimizer}创建。",
       "priceLabel": "能源价格",
       "timeRange": "{day} {range} 时",
       "unknownPrice": "仍然未知"
@@ -731,9 +1758,26 @@
       "unknown": "访客车辆",
       "vehicleSoc": "电量"
     },
+    "vehicleSettings": {
+      "connectedTo": "已连接到 {0}",
+      "description": "车辆连接到充电点时将应用这些默认值。",
+      "editHint": "可在 {0} 中编辑车辆。",
+      "keepAsIs": "保持不变",
+      "learnMore": "了解更多。",
+      "limitSoc": "默认上限",
+      "menu": "车辆",
+      "minSoc": "最低电量",
+      "mode": "默认模式",
+      "notConnected": "未连接",
+      "title": "车辆设置"
+    },
     "vehicleStatus": {
       "awaitingAuthorization": "等待授权。",
       "batteryBoost": "电池快充已激活。",
+      "batteryBoostBelowLimit": "电池电量过低，无法快充。",
+      "batteryBoostDisabled": "电池快充已禁用。",
+      "batteryBoostEnabled": "快充至电池电量降至 {limit}。",
+      "batteryBoostHold": "电池已锁定。快充不可用。",
       "charging": "充电中…",
       "cheapEnergyCharging": "经济能源可用。",
       "cheapEnergyNextStart": "经济能源将在 {duration} 后可用。",
@@ -745,16 +1789,23 @@
       "connected": "已连接。",
       "disconnectRequired": "会话已终止。请重新连接。",
       "disconnected": "已断开连接。",
+      "feedinPriorityNextStart": "高上网电价将于 {duration} 后开始。",
+      "feedinPriorityPausing": "太阳能充电已暂停，以最大化上网收益。",
       "finished": "已完成。",
       "minCharge": "最低充电至 {soc}。",
+      "optimizerControlledTooltip": "自动控制。优化器启停充电。",
       "pvDisable": "余电不足。准备暂停。",
       "pvEnable": "余电可用。准备开始。",
       "scale1p": "准备切换为单相充电。",
       "scale3p": "准备切换为三相充电。",
+      "suggestionStartTooltip": "优化器建议立即充电。",
+      "suggestionStopTooltip": "优化器建议暂停充电。",
       "targetChargeActive": "充电计划已激活。预计在 {duration} 内完成。",
       "targetChargePlanned": "充电计划将于 {duration} 后开始。",
       "targetChargeWaitForVehicle": "充电计划准备就绪。等待车辆连接…",
       "vehicleLimit": "车辆充电上限",
+      "vehicleLimitReached": "已达到车辆充电上限。",
+      "waitForAuthorization": "已连接。等待授权…",
       "waitForVehicle": "准备就绪。等待车辆连接…",
       "welcome": "短暂初始充电以确认连接。"
     },
@@ -771,7 +1822,8 @@
     "message": "未连接到服务器。",
     "restart": "重启",
     "restartNeeded": "需要重启以应用更改。",
-    "restarting": "服务器稍后将恢复。"
+    "restarting": "服务器稍后将恢复。",
+    "starting": "正在启动服务器..."
   },
   "passwordModal": {
     "description": "设置密码以保护配置设置。主屏幕仍可在未登录情况下使用。",
@@ -786,6 +1838,8 @@
     "updatePassword": "更新密码"
   },
   "session": {
+    "addOdometer": "添加数值",
+    "addedRange": "增加续航",
     "cancel": "取消",
     "co2": "CO₂",
     "date": "时段",
@@ -796,13 +1850,16 @@
     "meterstop": "结束表显读数",
     "odometer": "里程",
     "price": "价格",
+    "soc": "电量",
     "started": "开始时间",
     "title": "充电会话"
   },
   "sessions": {
+    "addedRange": "续航里程",
     "avgPower": "⌀ 功率",
     "avgPrice": "⌀ 电价",
     "chargeDuration": "时长",
+    "chargedSoc": "电量",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ 电价 {byGroup}",
@@ -824,6 +1881,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "增加续航 (km)",
       "chargedenergy": "电能 (kWh)",
       "chargeduration": "时长",
       "co2perkwh": "CO₂/kWh",
@@ -836,10 +1894,14 @@
       "odometer": "里程 (km)",
       "price": "价格",
       "priceperkwh": "电价/kWh",
+      "socend": "结束 SoC (%)",
+      "socstart": "起始 SoC (%)",
       "solarpercentage": "太阳能 (%)",
       "vehicle": "车辆"
     },
     "date": "开始",
+    "download": "下载{period}",
+    "downloadTotal": "下载全部",
     "energy": "已充电量",
     "filter": {
       "allLoadpoints": "所有充电点",
@@ -859,8 +1921,10 @@
     },
     "loadpoint": "充电点",
     "noData": "本月无充电会话。",
+    "odometer": "里程",
     "overview": "概览",
     "period": {
+      "day": "日",
       "month": "月份",
       "total": "总计",
       "year": "年份"
@@ -879,6 +1943,11 @@
     "vehicle": "车辆"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "自动",
+      "label": "日期格式"
+    },
+    "deviceInfo": "您在此对话框中所做的设置仅影响此设备。",
     "fullscreen": {
       "enter": "进入全屏",
       "exit": "退出全屏",
@@ -891,6 +1960,13 @@
     "language": {
       "auto": "自动",
       "label": "语言"
+    },
+    "loadpoints": {
+      "disabledDevice": "已停用",
+      "help": "更改界面中的顺序和可见性。",
+      "hide": "隐藏 {title}",
+      "label": "充电点",
+      "show": "显示 {title}"
     },
     "sponsorToken": {
       "expires": "您的赞助令牌将在 {inXDays} 后过期。",
@@ -929,6 +2005,7 @@
     "cleanTitle": "清洁型电网充电",
     "co2Label": "CO₂ 排放",
     "co2Limit": "CO₂ 上限",
+    "enable": "启用上限",
     "loadpointDescription": "在太阳能模式下启用临时快速充电。",
     "modalTitle": "智能电网充电",
     "none": "无",
@@ -938,16 +2015,35 @@
     "resetWarning": "未配置动态电网价格或 CO₂ 来源。但是，仍设置了 {limit} 的上限。是否清理配置？",
     "saved": "已保存。"
   },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "生效时间",
+    "batteryDescription": "在上网电价较高时将住宅电池电量放电至电网。",
+    "description": "在高电价期间暂停充电，优先进行有收益的电网上网。",
+    "priceLabel": "上网电价",
+    "priceLimit": "上网上限",
+    "resetWarning": "未配置动态上网电价，但仍存在 {limit} 的上限。是否清理配置？",
+    "title": "上网优先"
+  },
   "startupError": {
     "configFile": "使用的配置文件：",
     "configuration": "配置",
     "description": "请检查您的配置文件。如果错误消息没有帮助，请查看 {0}。",
     "discussions": "GitHub 讨论",
+    "editConfiguration": "编辑配置",
     "fixAndRestart": "请修复问题并重启服务器。",
     "hint": "注意：也可能是您的设备（逆变器、计量表等）出现故障。请检查您的网络连接。",
     "lineError": "{0}中出错。",
     "lineErrorLink": "{0}行",
     "restartButton": "重启",
     "title": "启动错误"
+  },
+  "tabBar": {
+    "battery": "电池",
+    "charge": "充电",
+    "comingSoon": "此页面正在建设中。",
+    "energy": "能源",
+    "forecast": "预测",
+    "more": "更多",
+    "sessions": "会话"
   }
 }

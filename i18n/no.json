@@ -7,6 +7,17 @@
     "authorizationSuccessful": "Autorisasjon vellykket",
     "buttonConnect": "Koble til {provider}",
     "buttonDisconnect": "Koble fra",
+    "challenge": {
+      "captcha": {
+        "label": "Skriv inn tegnene som vises på bildet."
+      },
+      "code": {
+        "label": "Lim inn koden eller adressen til siden du ble videresendt til.",
+        "title": "Autorisasjonskode"
+      },
+      "openLogin": "Åpne innloggingsside",
+      "submit": "Fortsett"
+    },
     "confirmLogout": "Er du sikker på at du vil koble fra {title}?",
     "connect": "koble til",
     "disconnect": "koble fra",
@@ -19,17 +30,87 @@
     "successCloseTab": "Du kan nå lukke denne fanen.",
     "title": "Autorisasjonsstatus"
   },
+  "battery": {
+    "card": {
+      "charging": "lader",
+      "discharging": "utlader",
+      "energy": "Energi",
+      "gridCharge": "nettlading",
+      "gridDischarge": "utlading til nett",
+      "hold": "utlading låst",
+      "holdCharge": "lading låst",
+      "ofTotal": "av {total}",
+      "power": "Effekt",
+      "soc": "Batterinivå"
+    },
+    "combined": "Samlet",
+    "config": {
+      "buffer": "Energi i hjemmebatteriet over {soc} kan brukes til å støtte ladepunktene og forsinker utkobling i smart-modus. Start sollading automatisk {start}.",
+      "bufferNone": "Energi i hjemmebatteriet brukes ikke til ladepunktene. Angi en verdi under {soc} for å aktivere støtte.",
+      "bufferStart": {
+        "above": "når batteriet er over {soc}",
+        "full": "når batteriet er fullt",
+        "never": "bare med nok overskudd"
+      },
+      "bufferTitle": "Batteri som ladebuffer",
+      "discharge": "Hindre utlading av hjemmebatteriet i hurtigmodus og under planlagt lading.",
+      "gridDischarge": "Tillat at hjemmebatteriet utlades til nettet.",
+      "gridDischargeConfirm": {
+        "country": "Konfigurert land: {country}.",
+        "description": "Om batterienergi kan eksporteres til nettet avhenger av landet ditt og innmatingsavtalen din. Hvis batteriet også lades fra nettet, er den eksporterte energien ikke lenger ren solenergi. Under mange innmatingstariffer fører dette til tap av godtgjørelse eller er forbudt. Sjekk først innmatingsavtalen og kravene fra nettoperatøren.",
+        "noCountry": "Ingen land konfigurert. Angi det under {link}.",
+        "title": "Eksport til nettet fra batteri"
+      },
+      "optimizerControlledHint": "Deaktivert for {loadpoints}. Det er {optimizer} som bestemmer i stedet.",
+      "priority": "Hjemmebatteriet har prioritet så lenge det er under {soc}. Deretter får ladepunktene overskuddet.",
+      "priorityNone": "Soloverskuddet går rett til ladepunktene. Angi en verdi over {soc} for å prioritere hjemmebatteriet.",
+      "priorityTitle": "Hvor går overskuddet først?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Lad fra nettet",
+        "discharge": "Utlad til nettet",
+        "hold": "Hindre utlading",
+        "holdcharge": "Hindre lading",
+        "normal": "Normal drift"
+      },
+      "empty": "tomt",
+      "full": "fullt",
+      "highest": "Høyest ({value})",
+      "lowest": "Lavest ({value})",
+      "suggestion": "Forslag"
+    }
+  },
   "batterySettings": {
     "gridChargeTab": "Nettlading",
+    "gridDischargeTab": "Utlading til nettet",
     "modalTitle": "Batteriinnstillinger",
     "noBattery": "Ingen konfigurerte batterier.",
     "usageTab": "Batteribruk"
   },
+  "colors": {
+    "hex": "Hex-farge"
+  },
   "config": {
+    "adminPassword": {
+      "description": "Skript-pluginen kjører en kommando på systemnivå med rettighetene til evcc-prosessen. Skriv inn administratorpassordet ditt på nytt for å fortsette.",
+      "invalid": "Ugyldig passord. Prøv igjen.",
+      "title": "Potensielt farlig operasjon"
+    },
     "apiKey": {
+      "description": "Gi skript og automatiseringer, som planlagte sikkerhetskopier, sikker tilgang uten å dele administratorpassordet ditt.",
+      "exampleLabel": "Prøv det: last ned en sikkerhetskopi med curl",
+      "generate": "Generer API-nøkkel",
+      "generateConfirm": "Skriv inn administratorpassordet ditt for å generere en ny API-nøkkel.",
       "keyLabel": "API-nøkkel",
       "regenerate": "Forny API-nøkkel",
-      "revealTitle": "API-nøkkel generert"
+      "regenerateConfirm": "Skriv inn administratorpassordet ditt for å generere API-nøkkelen på nytt.",
+      "regenerateLink": "Generer ny",
+      "regenerateWarning": "Ny generering gjør den eksisterende nøkkelen ugyldig, og automatiseringer som bruker den slutter å virke. Fortsette?",
+      "revealSuccess": "Den nye API-nøkkelen din er klar til bruk.",
+      "revealTitle": "API-nøkkel generert",
+      "shownOnce": "Denne nøkkelen vises bare én gang. Oppbevar den et trygt sted. Du kan ikke hente den senere.",
+      "title": "API-nøkkel"
     },
     "aux": {
       "description": "Enhet som justerer forbruket basert på tilgjengelig overskudd (som smarte varmtvannsberedere). evcc forventer at denne enheten reduserer strømforbruket ved behov.",
@@ -37,6 +118,7 @@
       "titleEdit": "Rediger selvregulerende forbruker"
     },
     "battery": {
+      "title": "Batteri",
       "titleAdd": "Legg til batteri",
       "titleEdit": "Rediger batteri"
     },
@@ -80,12 +162,48 @@
         "switchsocket": "Brukerdefinert bryterkontakt"
       }
     },
+    "circuit": {
+      "addMeter": "Legg til dedikert energimåler",
+      "custom": "Brukerdefinert krets",
+      "deleteChildrenFirst": "For å slette denne kretsen må du først slette underkretsene.",
+      "meterDedicated": "Dedikert måler",
+      "meterGrid": "Nettmåler",
+      "meterHelp": "Måler som måler det totale forbruket i denne kretsen.",
+      "meterLabel": "Energimåler",
+      "meterLabelAdd": "Legg til kretsmåler",
+      "meterLabelEdit": "Rediger kretsmåler",
+      "meterNone": "Ingen måler",
+      "meterSelectionHelpDedicatedMeter": "Legg til en eksisterende måler for denne kretsen nedenfor.",
+      "meterSelectionHelpGridMeter": "Bruker den eksisterende nettmåleren i installasjonen din.",
+      "meterSelectionHelpNoMeter": "Summen av alle ladepunkter brukes.",
+      "meterSelectionLabel": "Målervalg",
+      "parentCircuit": "Overordnet krets",
+      "template": "Krets",
+      "titleAdd": "Legg til krets",
+      "titleEdit": "Rediger krets",
+      "titleLabel": "Tittel"
+    },
     "circuits": {
+      "addMainCircuit": "Legg til hovedkrets",
+      "addSubCircuit": "Legg til underkrets",
+      "chargingPointsNote": "Tilordne ladepunkter og varmeapparater til en krets i deres egne innstillinger.",
       "description": "Sikrer at summen av alle lastpunkter som er koblet til en krets, ikke overskrider de konfigurerte effekt- og strømgrensene. Kretser kan nestes for å danne en hierarki.",
+      "legacyWarning": "Ny kretskonfigurasjon tilgjengelig! Fjern og lagre konfigurasjonen din her for å bruke den nye veiledede prosessen.",
+      "meterDedicated": "Måler",
+      "meterGrid": "Nett",
       "title": "Laststyring",
       "usableMeters": "Brukbare målerreferanser"
     },
+    "combobox": {
+      "count": "{count} forslag",
+      "matching": "Treff",
+      "other": "Andre",
+      "searching": "Søker…",
+      "suggestions": "Forslag",
+      "used": "allerede i bruk"
+    },
     "consumer": {
+      "description": "Registrerer mindre, ikke-styrbare apparater (kjøleskap, vaskemaskin, ...). Gir deg bedre oversikt over husholdningens forbruk.",
       "titleAdd": "Ny forbruksmåler",
       "titleEdit": "Redigere forbruksmåler"
     },
@@ -103,9 +221,19 @@
       "label": "Valuta",
       "title": "Valuta"
     },
+    "curtailer": {
+      "description": "Enhet som begrenser innmating på forespørsel fra nettoperatøren (§ 9 EEG). Mange solcelle-invertere støtter dette direkte via konfigurasjonen av solenergimåleren. En egen konfigurasjon trengs bare for noen produsenter eller anlegg med flere invertere.",
+      "generic": "Generiske integrasjoner",
+      "specific": "Spesifikke integrasjoner",
+      "template": "Produsent",
+      "title": "Begrensning",
+      "titleAdd": "Legg til begrensningsenhet",
+      "titleEdit": "Rediger begrensningsenhet"
+    },
     "deviceValue": {
       "activeClients": "Aktive tilkoblinger",
       "amount": "Beløp",
+      "asleep": "sover",
       "broker": "Megler",
       "bucket": "Bucket",
       "capacity": "Kapasitet",
@@ -125,21 +253,29 @@
       "current": "Nåværende",
       "currentRange": "Nåværende",
       "curtailLimit": "Grensen for innmatning",
+      "curtailable": "Kan begrenses",
+      "curtailed": "Innmatingsgrense",
       "detected": "Oppdaget",
+      "dimLimit": "Forbruksgrense",
       "dimmed": "Dempet",
       "enabled": "Aktivert",
       "energy": "Energi",
       "events": "Hendelser",
+      "exportLimit": "Eksportgrense",
       "feedinPrice": "Innmatingspris",
       "forecast": "Varsel",
       "gridPrice": "Nettpris",
       "heaterTempLimit": "Varmebegrensning",
       "identifier": "RFID-Identifikator",
+      "loginBlocked": "Innloggingsgrense nådd",
       "max": "maks",
+      "maxCurrent": "Maks. strøm",
+      "maxPower": "Maks. effekt",
       "messengers": "Tjenester",
       "no": "nei",
       "odometer": "Kilometer teller",
       "org": "Organisasjon",
+      "outdoorTemp": "Utetemperatur",
       "phaseCurrents": "Strøm",
       "phasePowers": "Effekt",
       "phaseVoltages": "Spenning",
@@ -149,12 +285,40 @@
       "price": "Pris",
       "productionLimited": "Produksjon begrenset",
       "range": "Rekkevidde",
+      "remoteEnabled": "Aktivert",
+      "returnEnergy": "Energi (retur)",
       "singlePhase": "Enfase",
       "soc": "Lade",
       "solarForecast": "Solprognose",
+      "switchDevice": "Strømstyring",
       "temp": "Temperatur",
       "topic": "Emne",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Forbrukt",
+          "returnEnergy": "Produsert"
+        },
+        "battery": {
+          "energy": "Utladet",
+          "returnEnergy": "Ladet"
+        },
+        "charge": {
+          "energy": "Ladet",
+          "returnEnergy": "Utladet"
+        },
+        "consumer": {
+          "energy": "Forbrukt",
+          "returnEnergy": "Produsert"
+        },
+        "grid": {
+          "energy": "Importert",
+          "returnEnergy": "Eksportert"
+        },
+        "pv": {
+          "energy": "Produsert"
+        }
+      },
       "vehicleLimitSoc": "Ladegrense",
       "yes": "ja"
     },
@@ -178,14 +342,21 @@
         "public": "Offentlig sertifikat",
         "title": "Sertifikater"
       },
+      "configuredDevices": "Konfigurerte enheter",
       "description": "Konfigurasjon som gjør det mulig for evcc å kommunisere med EEBus-kompatible enheter som ladere, eller en kontrollenhet fra nettselskapet ditt. All relevant initialisering og generering av sertifikater gjøres automatisk ved første oppstart.",
       "descriptionAdvanced": "Ingen endringer nødvendig. Bare gjør endringer dersom du virkelig vet hva du driver med. Hvis du endrer enten SHIP-iden eller sertifikatene må du pare enhetene dine på nytt.",
       "interfaces": "Grensesnitt",
       "interfacesHelp": "Begrens nettverksgrensesnittene EEBus bruker for å unngå kommunikasjonsproblemer. La feltet stå tomt for å bruke alle grensesnitt. Kun én oppføring per linje.",
+      "noConfiguredDevices": "Ingen enheter konfigurert via SKI.",
+      "noPairings": "Ingen parede enheter.",
+      "pairings": "Parede enheter",
       "port": "Port",
       "portHelp": "Porten som skal brukes.",
       "qr": "Paringskode",
+      "qrExplain": "Skann fra en annen EEBus-enhet under installasjonen for å pare automatisk, uten å skrive inn SKI manuelt.",
       "removeConfirm": "All konfigurasjon av EEBus vil fjernes. Nye sertifikater og identifikatorer genereres ved neste oppstart. Er du sikker?",
+      "removePairing": "Fjern paring",
+      "removePairingConfirm": "Enheten blir frakoblet og må pares på nytt. Er du sikker?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanent enhetsidentifikator for identifisering på EEBus-nettverket.",
       "shipidHelp": "Denne SHIP-IDen er koblet til sertifikatet under.",
@@ -205,6 +376,7 @@
     "form": {
       "danger": "Fare",
       "deprecated": "utdatert",
+      "durationUnit": "Tidsenhet for {label}",
       "example": "Eksempel",
       "optional": "valgfritt"
     },
@@ -217,23 +389,31 @@
       "change": "Endring",
       "clear": "Tydelig",
       "close": "Lukk",
+      "confirmDisable": "Deaktivere denne enheten? Den blir ignorert etter neste omstart.",
+      "confirmEnable": "Aktivere denne enheten igjen?",
       "confirmSave": "Du har ulagrede endringer. Lagre nå?",
       "copied": "Kopiert!",
       "copy": "Kopier",
       "customHelp": "Opprett en brukerdefinert enhet ved hjelp av evccs plugin-system.",
       "customOption": "Brukerdefinert enhet",
       "delete": "Slett",
+      "disable": "Deaktiver",
+      "disabled": "deaktivert",
       "dismiss": "Avvise",
       "docsLink": "Se documentasjonen.",
       "dragHandle": "Dra i håndtaket",
       "dragItem": "Draggable: {title}",
       "dragList": "Omordningsbar liste",
+      "enable": "Aktiver",
       "error": "Feil",
       "experimental": "Eksperimentell",
+      "forceEnable": "Aktiver likevel",
       "forceSave": "Lagre likevel",
       "fromYamlHint": "Merk: Konfigurert via evcc.yaml. Fjern oppføringen fra filen for å aktivere redigering her.",
       "hideAdvancedSettings": "Skjul avanserte innstillinger",
       "invalidFileSelected": "Ugyldig fil valgt",
+      "legacy": "eldre",
+      "moreInfo": "Mer info:",
       "noFileSelected": "Ingen fil valgt.",
       "off": "av",
       "on": "på",
@@ -246,6 +426,7 @@
       "saving": "Laster…",
       "selectFile": "Bla gjennom",
       "showAdvancedSettings": "Vis avanserte innstillinger",
+      "site": "Anlegg",
       "telemetry": "Telemetri",
       "templateLoading": "Laster...",
       "title": "Tittel",
@@ -258,6 +439,7 @@
       "titleEdit": "Rediger nettmåler"
     },
     "hems": {
+      "changeConfirm": "Eksisterende konfigurasjon blir slettet. Fortsette?",
       "csv": {
         "created": "Opprettet",
         "finished": "Ferdig",
@@ -265,10 +447,26 @@
         "limitpower": "Begrensning (kW)",
         "type": "Type"
       },
+      "customOption": "Brukerdefinert integrasjon",
       "description": "Effektbegrensning ved hjelp av eksterne systemer (f.eks. §14a EnWG, §9 EEG-grensesnitt eller overordnet energistyringssystem). Fungerer sammen med funksjonen for laststyring.",
+      "download": "Last ned",
+      "dynamicLimits": "Dynamiske grenser",
       "eventsRecorded": "Registrerte {count} hendelser med rutenettbegrensning.",
+      "exportLimit": "Eksportgrense",
+      "exportLimitDescription": "Batterioptimereren respekterer denne grensen for å unngå tap av solenergi. Et aktivt begrensningssignal fra en dynamisk grenseintegrasjon har forrang.",
+      "exportLimitHint": "Statisk innmatingsgrense ved nettilknytningspunktet.",
+      "generic": "Generiske integrasjoner",
+      "integrations": "Integrasjoner",
       "lastEvent": "Siste {timeAgo}.",
-      "title": "Ekstern grense"
+      "noEvents": "Ingen hendelser registrert ennå.",
+      "recordedEvents": "Registrerte hendelser",
+      "staticLimits": "Statiske grenser",
+      "template": "Integrasjon",
+      "title": "Ekstern grense",
+      "type": {
+        "custom": "Brukerdefinert integrasjon",
+        "relay": "Brukerdefinert integrasjon (relé)"
+      }
     },
     "icon": {
       "change": "endring",
@@ -296,6 +494,7 @@
         "heating": "Legg til varmeapparat"
       },
       "addMeter": "Legg til dedikert energimåler",
+      "advancedConfig": "Avansert konfigurasjon",
       "cancel": "Avbryt",
       "chargerError": {
         "charging": "Det er nødvendig å konfigurere en lader.",
@@ -310,11 +509,25 @@
       "circuitInvalid": "Kretsen eksisterer ikke",
       "circuitLabel": "Krets",
       "circuitUnassigned": "ikke tildelt",
+      "created": "«{name}» ble opprettet og bruker fornuftige standardverdier.",
+      "createdTitle": {
+        "charging": "Ladepunkt opprettet",
+        "heating": "Varmeapparat opprettet"
+      },
+      "creating": {
+        "charging": "Lader lagret. Oppretter ladepunkt …",
+        "heating": "Varmeenhet lagret. Oppretter varmeapparat …"
+      },
+      "currentRangeHelp": {
+        "charging": "Typisk: 6-16 A for 11 kW-, 6-32 A for 22 kW-ladere (3-fase).",
+        "heating": "Avhenger av varmeapparatets merkeeffekt (se datablad)."
+      },
       "defaultModeHelp": {
         "charging": "Lademodus ved tilkobling av kjøretøyet.",
         "heating": "Blir angitt når systemet starter."
       },
       "defaultModeHelpKeep": "Beholder den sist valgte modusen.",
+      "defaultModeKeep": "behold som den er",
       "defaultModeLabel": "Standartmodus",
       "delete": "Slett",
       "electricalSubtitle": "Hvis du er i tvil, spør elektrikeren din.",
@@ -324,8 +537,11 @@
       "estimateLabel": "Interpoler ladningsnivå mellom API-oppdateringer",
       "maxCurrentHelp": "Må være større enn minimumsstrøm.",
       "maxCurrentLabel": "Maksimal strøm",
+      "maxTempHelp": "Må være høyere enn minimumstemperaturen.",
+      "maxTempLabel": "Maksimal temperatur",
       "minCurrentHelp": "Gå kun under 6 A hvis du vet hva du gjør.",
       "minCurrentLabel": "Minimum strøm",
+      "minTempLabel": "Minimum temperatur",
       "noVehicles": "Ingen kjøretøy er konfigurert.",
       "option": {
         "charging": "Legg til ladepunkt",
@@ -355,6 +571,10 @@
       "solarBehaviorLabel": "Solenergi",
       "solarModeCustom": "tilpasset",
       "solarModeMaximum": "maksimal solenergi",
+      "solarShareNote": "Glidebryteren for solandel i brukerinnstillingene er deaktivert mens watt-terskler er satt. {0} og lagre for å aktivere den.",
+      "solarShareReset": "Fjern terskler",
+      "temperatureRangeHelp": "Visningsområde for temperaturlinjen. Påvirker ikke styringen.",
+      "temperatureRangeTitle": "Temperaturområde",
       "thresholdDisableDelayLabel": "Deaktiver forsinkelse",
       "thresholdDisableHelpInvalid": "Bruk en positiv verdi.",
       "thresholdDisableHelpPositive": "Stopp når mer enn {power} brukes fra strømnettet i {delay}.",
@@ -389,6 +609,8 @@
     },
     "main": {
       "addAdditional": "Legg til ekstra måler",
+      "addConsumer": "Legg til forbruker",
+      "addCurtailer": "Legg til begrensningsenhet",
       "addGrid": "Legg til nettmåler",
       "addLoadpoint": "Legg til lader eller varmeapparat",
       "addPvBattery": "Legg til solcellepanel eller batteri",
@@ -404,17 +626,92 @@
       "welcomeBannerText": "Begynn med å opprette minst én **lader**, **varmeapparat**, **nett**, **solcelle**, **batteri** eller **ekstra måler**. Hvis du bare vil teste, velger du en **demoenhet**.",
       "welcomeBannerTitle": "La oss konfigurere systemet ditt!"
     },
+    "mcp": {
+      "description": "Tilbyr en Model Context Protocol-server som lar AI-assistenter som Claude lese tilstanden til systemet ditt og styre ladingen.",
+      "exampleLabel": "Eksempel: Claude CLI",
+      "restartHint": "Blir tilgjengelig etter omstart.",
+      "title": "MCP-server",
+      "url": "MCP-endepunkt"
+    },
     "messaging": {
+      "addMessenger": "Legg til tjeneste",
       "description": "Motta meldinger om ladingsøktene dine.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Lading frigitt, kjøretøy {vehicleName} lader ikke.",
+          "title": "Når det ventes på kjøretøy",
+          "titleDefault": "Kjøretøy sover"
+        },
+        "connect": {
+          "messageDefault": "Kjøretøy tilkoblet ved {pvPower}kW sol",
+          "title": "Når et kjøretøy kobles til",
+          "titleDefault": "Kjøretøy tilkoblet"
+        },
+        "disconnect": {
+          "messageDefault": "Kjøretøy frakoblet etter {connectedDuration}",
+          "title": "Når et kjøretøy kobles fra",
+          "titleDefault": "Kjøretøy frakoblet"
+        },
+        "guest": {
+          "messageDefault": "Ukjent kjøretøy, gjest tilkoblet?",
+          "title": "Når et ukjent kjøretøy kobles til",
+          "titleDefault": "Ukjent kjøretøy"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: Planen vil overskrides.",
+          "title": "Når planlagt lading vil overskrides",
+          "titleDefault": "Plan overskredet"
+        },
+        "soc": {
+          "messageDefault": "Batteri ladet til {vehicleSoc}%",
+          "title": "Ladenivå endret",
+          "titleDefault": "Ladenivå oppdatert"
+        },
+        "start": {
+          "messageDefault": "Lading startet i {mode}-modus.",
+          "title": "Når ladingen starter",
+          "titleDefault": "Lading startet"
+        },
+        "stop": {
+          "messageDefault": "Ladet {chargedEnergy}kWh på {chargeDuration}.",
+          "title": "Når ladingen stopper",
+          "titleDefault": "Lading fullført"
+        },
+        "suggestion": {
+          "messageDefault": "Optimeringsforslag for {suggestionTitle}: hvis optimeringsstyring var aktiv, ville den brukt '{suggestionAction}' nå. Kun rådgivende, ingenting ble endret. Eksperimentelt — tilbakemeldinger mottas gjerne på https://github.com/evcc-io/evcc/issues/31903",
+          "title": "Når optimererens anbefaling endres",
+          "titleDefault": "Optimeringsforslag"
+        }
+      },
+      "eventMessage": "Melding",
+      "eventTitle": "Tittel",
+      "events": "Hendelser",
+      "legacyWarning": "Ny varslingskonfigurasjon tilgjengelig! Fjern og lagre konfigurasjonen din her for å bruke den nye veiledede prosessen.",
+      "messengers": "Tjenester",
+      "seePlaceholders": "se plassholdere",
       "title": "Varsler"
+    },
+    "messenger": {
+      "custom": "Brukerdefinert tjeneste",
+      "generic": "Generisk tjeneste",
+      "primary": "Spesifikk tjeneste",
+      "template": "Tjeneste",
+      "titleAdd": "Legg til tjeneste",
+      "titleEdit": "Rediger tjeneste"
     },
     "meter": {
       "cancel": "Avbryt",
+      "convertToConsumer": {
+        "confirm": "Konverterer denne \"ekstra måleren\" til en \"forbruker\".",
+        "link": "Konverter til forbruker"
+      },
       "delete": "Slett",
       "generic": "Generiske integrasjoner",
       "option": {
         "aux": "Legg til selvregulerende forbruker",
         "battery": "Legg til batterimåler",
+        "consumer": "Legg til vanlig forbruker",
+        "grid": "Legg til nettmåler",
         "pv": "Legg til solenergimåler"
       },
       "save": "Lagre",
@@ -440,6 +737,8 @@
       "connectionHintTcpip": "Enheten er tilgjengelig via nettverk (LAN/WiFi).",
       "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Nettverk",
+      "delay": "Forsinkelse",
+      "delayHint": "Valgfri ventetid før hver registertilgang. Trengs bare for trege enheter.",
       "device": "Enhetsnavn",
       "deviceHint": "Eksempel: /dev/ttyUSB0",
       "host": "IP-adresse eller vertsnavn",
@@ -450,7 +749,9 @@
       "protocolHintRtu": "Tilkobling via en RS485 til Ethernet-adapter uten protokollkonvertering.",
       "protocolHintTcp": "Enheten har innebygd LAN/Wi-Fi-støtte eller er koblet til via en RS485 til Ethernet-adapter med protokollkonvertering.",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP"
+      "protocolValueTcp": "TCP",
+      "timeout": "Tidsavbrudd",
+      "timeoutHint": "Valgfri maksimal ventetid på svar fra enheten."
     },
     "modbusproxy": {
       "add": "Legg til proxy-tilkobling",
@@ -500,10 +801,16 @@
       "labelHost": "mDNS-vertsnavn",
       "labelInternalUrl": "Intern URL",
       "labelPort": "Havn",
-      "title": "Nettverk"
+      "title": "Nettverk",
+      "warningUrlPath": "URL-en trenger vanligvis ingen sti. Er du sikker på at dette er riktig?"
     },
     "ocpp": {
+      "forwardingConfigured": "Videresending konfigurert",
+      "forwardingError": "Feil ved videresending",
+      "forwardingOff": "Ingen videresending konfigurert",
       "noChargers": "Ingen OCPP-ladere oppdaget.",
+      "stations": "Stasjons-ID-er",
+      "stationsHelp": "Konfigurerte og oppdagede OCPP-ladere. I tillegg til lokal styring kan du videresende meldinger til en ekstern server (f.eks. for fakturering).",
       "status": {
         "configured": "Ikke tilkoblet",
         "connected": "Tilkoblet",
@@ -512,6 +819,55 @@
       "title": "OCPP-server",
       "url": "Server-URL",
       "urlHelp": "Kopier denne URL-adressen til laderen din. Se produsentens bruksanvisning for mer informasjon. Laderen skal automatisk legge til sin unike identifikator (stasjon-ID) til URL-adressen. I sjeldne tilfeller kan det hende du må angi identifikatoren manuelt. Eksempel: `{url}`"
+    },
+    "ocppforwarder": {
+      "description": "Videresend denne laderens OCPP-meldinger til en ekstern server (faktureringsplattform, nettselskap osv.) i tillegg til evcc.",
+      "editTitle": "OCPP-videresending",
+      "labelCaCert": "Server-sertifikat (CA)",
+      "labelCheckInsecure": "Tillat selvsignerte sertifikater",
+      "labelInsecure": "Sertifikatvalidering",
+      "password": "Passord",
+      "passwordHelp": "For HTTP Basic Auth mot oppstrømsserveren.",
+      "readOnly": {
+        "check": "Blokker kommandoer fra oppstrømsserveren",
+        "help": {
+          "false": "Oppstrømsserveren kan sende kommandoer til laderen via evcc.",
+          "true": "Oppstrømsserveren mottar alle meldinger fra laderen, men kan ikke sende kommandoer. evcc beholder eksklusiv kontroll."
+        },
+        "label": "Oppstrømskommandoer"
+      },
+      "upstreamStationId": "Stasjons-ID",
+      "upstreamStationIdHelp": "Laderidentifikator som sendes til oppstrømsserveren.",
+      "upstreamUrl": "URL til oppstrømsserver",
+      "upstreamUrlHelp": "OCPP WebSocket-URL til den eksterne serveren.",
+      "username": "Brukernavn",
+      "usernameHelp": "For HTTP Basic Auth mot oppstrømsserveren."
+    },
+    "optimizer": {
+      "automatic": "Automatisk styring",
+      "automaticLevel": {
+        "battery": {
+          "description": "Styrer bare hjemmebatteriet.",
+          "label": "Hjemmebatteri",
+          "status": "{automatic} styrer hjemmebatteriet."
+        },
+        "full": {
+          "description": "Styrer hjemmebatteriet, starter og stopper lading av kjøretøy i smart-modus, erstatter pris- og CO₂-grenser og overtar planer. Uendret: av- og hurtigmodus, varmeapparater, stikkontakter, kjøretøy med ukjent kapasitet.",
+          "label": "Hjemmebatteri og ladepunkter",
+          "status": "{automatic} styrer hjemmebatteri og ladepunkter."
+        },
+        "off": {
+          "description": "Optimereren gir bare forslag. Ingenting styres.",
+          "status": "{automatic} er av. Optimereren gir bare forslag."
+        }
+      },
+      "controlled": "Deaktivert av automatisk styring. Det er {optimizer} som bestemmer i stedet.",
+      "controls": "Styrer",
+      "description": "Bruker solprognose, strømpriser og forbruksmønsteret ditt til å planlegge batteri og lading. Data sendes til evccs optimeringstjeneste.",
+      "enable": "Aktiver optimerer",
+      "info": "For nye installasjoner kan det ta opptil 24 timer før evcc har samlet inn nok data.",
+      "linkWord": "optimereren",
+      "title": "Optimerer"
     },
     "options": {
       "boolean": {
@@ -540,27 +896,89 @@
       "titleAdd": "Legg til solenergimåler",
       "titleEdit": "Rediger solenergimåler"
     },
+    "remote": {
+      "active": "Aktiv",
+      "addClient": "Legg til klient",
+      "addClientDescription": "Påloggingsdata lagres og verifiseres kun lokalt på evcc-installasjonen din.",
+      "addClientTitle": "Legg til fjernklient",
+      "clientCreated": "Klient opprettet",
+      "clients": "Klienter",
+      "confirmDelete": "Slette klient?",
+      "connected": "Tilkoblet",
+      "createClient": "Opprett klient",
+      "description": "Få tilgang til evcc-installasjonen din hvor som helst med evcc-mobilappen. Ingen portvideresending eller VPN nødvendig.",
+      "deviceName": "Enhetsnavn",
+      "disconnected": "Frakoblet",
+      "done": "Ferdig",
+      "enableLabel": "Aktiver fjerntilgang",
+      "expiration": "Utløp",
+      "expirationNone": "Aldri",
+      "expired": "utløpt",
+      "expiresIn": "utløper {time}",
+      "lastActive": "aktiv {time}",
+      "loginBlocked": "Fjerninnlogging er blokkert i ett minutt på grunn av for mange mislykkede innloggingsforsøk.",
+      "manualLogin": "Eller logg inn manuelt på {url} i nettleseren med disse påloggingsdataene:",
+      "noClients": "Ingen klienter ennå. Ingen kan koble til ennå.",
+      "password": "Passord",
+      "passwordOnce": "Dette passordet vises bare én gang. Skann QR-koden eller kopier det nå. Du vil ikke kunne se det igjen.",
+      "privacy": "Ved å aktivere denne funksjonen godtar du vår {0}.",
+      "privacyLink": "personvernerklæring",
+      "qrInstall": "Installer evcc-appen for {ios} eller {android}.",
+      "qrScan": "Skann koden med telefonens kamera for å koble til. Klikk på den hvis du allerede bruker telefonen.",
+      "removeClient": "Fjern klient",
+      "title": "Fjerntilgang",
+      "url": "Offentlig URL",
+      "username": "Brukernavn"
+    },
     "section": {
       "additionalMeter": "Ekstra målere",
+      "consumers": "Forbrukere",
       "general": "Generelt",
       "grid": "Nett",
       "integrations": "Integrasjoner",
       "loadpoints": "Lading og oppvarming",
       "meter": "Solenergi og batteri",
+      "services": "Tjenester",
       "system": "System",
       "vehicles": "Kjøretøy"
+    },
+    "security": {
+      "authDisabledHint": "Autentisering er deaktivert. Administrasjon av påloggingsdata er ikke tilgjengelig.",
+      "description": "Administrer autentisering og påloggingsdata for denne instansen.",
+      "passwordDescription": "Oppdater passordet som brukes til å logge inn i konfigurasjonsgrensesnittet.",
+      "passwordTitle": "Administratorpassord",
+      "title": "Sikkerhet",
+      "updatePassword": "Oppdater passord"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
       "description": "evcc er utstyrt med integrasjon for SMA Sunny Home Manager (SHM) via SEMP-protokollen. Hvis den kjører på samme nettverk, bør du etter å ha logget inn på Sunny Portal-kontoen din automatisk få tilbud om å legge til alle ladere som er konfigurert i evcc som nyoppdagede forbrukere. Alt skal være klart til bruk umiddelbart, uten at det er nødvendig med noen justeringer nedenfor.",
       "descriptionDeviceId": "12 tegn HEX-streng. Prefiks for alle enheter (ladepunkt, ..).",
+      "descriptionDeviceSerial": "HEX-streng på 12 tegn. Grunnserienummer for alle enheter (ladepunkt, ..). Som standard utleder evcc dette fra vertens MAC-adresse.",
       "descriptionIdPattern": "Identifikasjonsmønster",
       "descriptionIds": "I Sunny Portal trenger hvert forbrukerapparat en unik identifikator. evcc genererer en unik identifikator basert på maskinvaren din. Hvis du migrerer evcc til annen maskinvare, kan disse identifikatorene endres. Hvis du ønsker å beholde historikken, kan du overstyre de genererte identifikatorene her. Åpne SEMP-URL-en (/semp) for å sjekke dine nåværende identifikatorer.",
       "descriptionSempUrl": "Alltid URL",
       "descriptionVendorId": "8 tegn HEX-streng. Generelt prefiks for alle enheter. Som standard vil evcc bruke sin egen interne leverandør-ID.",
       "labelDeviceId": "Enhets-ID",
+      "labelDeviceSerial": "Enhetens serienummer",
       "labelVendorId": "Leverandør-ID",
       "title": "SMA Sunny Home Manager"
+    },
+    "site": {
+      "country": {
+        "description": "Brukes til regionsspesifikke tips og standardverdier.",
+        "label": "Land"
+      },
+      "currency": {
+        "description": "Brukes til å formatere energipriser, kostnader og besparelser basert på tariffen din.",
+        "example": "Ladeprisen din var {price}. Du sparte {amount}.",
+        "label": "Valuta"
+      },
+      "siteTitle": {
+        "description": "Vises på hovedskjermen og i nettleserfanen.",
+        "label": "Tittel"
+      },
+      "title": "Anlegg"
     },
     "sponsor": {
       "addToken": "Angi token",
@@ -597,6 +1015,8 @@
           "confirmationButton": "Tilbakestill og start på nytt",
           "confirmationText": "Dette vil slette de valgte dataene permanent. Sørg for at du har lastet ned en sikkerhetskopi først.",
           "description": "Har du problemer med konfigurasjonen og ønsker å starte på nytt? Slett alle data og start på nytt.",
+          "remote": "Fjerntilgang",
+          "remoteDescription": "Sletter konfigurasjon og påloggingsdata.",
           "sessions": "Ladingsøkter",
           "sessionsDescription": "Sletter historikken for ladingsøktene dine.",
           "settings": "Konfigurasjon og innstillinger",
@@ -619,6 +1039,87 @@
       "restartRequiredMessage": "Konfigurasjonen er endret.",
       "restartingDescription": "Vennligst vent…",
       "restartingMessage": "Starter evcc på nytt."
+    },
+    "tariff": {
+      "addForecast": "Legg til prognose",
+      "addTariff": "Legg til tariff",
+      "co2": {
+        "description": "CO₂-intensitetsprognose for strøm fra nettet. For CO₂-optimert lading og beregning av utslippsbesparelser.",
+        "titleAdd": "Legg til CO₂-prognose",
+        "titleEdit": "Rediger CO₂-prognose"
+      },
+      "co2Services": "CO₂-tjenester",
+      "customForecast": "Brukerdefinert prognose",
+      "customTariff": "Brukerdefinert tariff",
+      "description": "Konfigurer energitariffer og prognoser. Bruk enhetsbasert konfigurasjon for dynamisk styring eller YAML for statiske innstillinger.",
+      "feedIn": {
+        "description": "Godtgjørelse for strøm som eksporteres til nettet. Brukes til å beregne faktiske ladekostnader.",
+        "titleAdd": "Legg til eksporttariff",
+        "titleEdit": "Rediger eksporttariff"
+      },
+      "generic": "Generiske integrasjoner",
+      "grid": {
+        "description": "Strømpris for forbruk fra nettet. For beregning av faktiske ladekostnader og prisoptimert lading av kjøretøy, varmeapparater eller nettlading av hjemmebatteriet.",
+        "titleAdd": "Legg til importtariff",
+        "titleEdit": "Rediger importtariff"
+      },
+      "legacyWarning": "Ny tariffkonfigurasjon tilgjengelig! Fjern og lagre tariffene dine her for å bruke den nye veiledede prosessen.",
+      "option": {
+        "co2": "Legg til CO₂-prognose",
+        "feedIn": "Legg til eksporttariff",
+        "grid": "Legg til importtariff",
+        "planner": "Legg til planprognose",
+        "solar": "Legg til solprognose",
+        "temperature": "Legg til temperaturprognose"
+      },
+      "planner": {
+        "description": "Denne avanserte innstillingen trengs vanligvis ikke. Planleggerprognosen er grunnlaget for ladeplaner og billig eller ren nettlading (kjøretøy, varmeapparater, hjemmebatteri). Uten den brukes den dynamiske nettprisen eller CO₂-prognosen automatisk. Statistikk, kostnadsberegninger og optimeringsbeslutninger påvirkes ikke.",
+        "titleAdd": "Legg til planleggerprognose",
+        "titleEdit": "Rediger planleggerprognose"
+      },
+      "services": "Tjenester",
+      "solar": {
+        "description": "Prognose for solproduksjon fra solcelleanlegget ditt. Vises i grensesnittet og vil i fremtiden brukes i optimeringsalgoritmer.",
+        "titleAdd": "Legg til solprognose",
+        "titleEdit": "Rediger solprognose"
+      },
+      "temperature": {
+        "description": "Prognose for utetemperatur på din lokasjon. Vises i grensesnittet og brukes til å forutsi varmebehov.",
+        "titleAdd": "Legg til temperaturprognose",
+        "titleEdit": "Rediger temperaturprognose"
+      },
+      "template": "Leverandør",
+      "title": "Tariffer og prognoser",
+      "titleChoice": "Hva vil du legge til?",
+      "type": {
+        "co2": "CO₂-intensitet",
+        "feedIn": "Eksportpris",
+        "grid": "Importpris",
+        "planner": "Planlegger",
+        "solar": "Solenergi",
+        "temperature": "Temperaturprognose"
+      },
+      "zones": {
+        "add": "Legg til sone",
+        "allDays": "Alle dager",
+        "allMonths": "Alle måneder",
+        "allTimes": "Hele døgnet",
+        "cancel": "Avbryt",
+        "charge": "Avgift",
+        "days": "Dager",
+        "edit": "Rediger",
+        "hours": "Timer",
+        "months": "Måneder",
+        "price": "Pris",
+        "priceRequired": "Pris er påkrevd",
+        "remove": "Fjern sone",
+        "save": "Lagre",
+        "selectAll": "Alle dager",
+        "timeFrom": "Fra",
+        "timeRangeError": "Starttid må være før sluttid. For å gå over midnatt, opprett to separate soner.",
+        "timeTo": "Til",
+        "weekdays": "Ukedager"
+      }
     },
     "telemetry": {
       "description": "Konfigurer datadeling for å bidra til å forbedre evcc. Vi tar personvernet ditt på alvor, og deltakelse er helt frivillig.",
@@ -647,6 +1148,115 @@
       "titleEdit": "Rediger kjøretøy"
     }
   },
+  "energy": {
+    "battery": {
+      "charged": "Ladet",
+      "discharged": "Utladet"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Søyler",
+        "pattern": "Mønster"
+      },
+      "cost": "Kostnad",
+      "others": "Andre",
+      "title": "Forbrukere",
+      "view": {
+        "river": "Elv",
+        "treemap": "Trekart"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "ladet",
+        "returnEnergy": "utladet"
+      },
+      "grid": {
+        "returnEnergy": "Eksport"
+      },
+      "meter": {
+        "energy": "Energi",
+        "returnEnergy": "Energi (retur)"
+      }
+    },
+    "empty": "Ingen energidata tilgjengelig for denne perioden.",
+    "flow": {
+      "battery": "Batteri",
+      "batteryCharge": "Batterilading",
+      "batteryDischarge": "Batteriutlading",
+      "charging": "Lading",
+      "export": "Eksport til nett",
+      "grid": "Import fra nett",
+      "heating": "Oppvarming",
+      "home": "Forbruk",
+      "overview": "Oversikt",
+      "pv": "Produksjon",
+      "title": "Energiflyt",
+      "usage": "Bruk",
+      "withdrawal": "Uttak"
+    },
+    "grid": {
+      "amount": "Beløp",
+      "cost": "Nettkostnad",
+      "energy": "Energi",
+      "export": "Eksport",
+      "exportPrice": "Eksportpris",
+      "importPrice": "Importpris",
+      "price": "Pris",
+      "revenue": "Innmatingsinntekt",
+      "title": "Nett"
+    },
+    "group": {
+      "battery": "Batteri",
+      "consumer": "Forbruk",
+      "forecast": "Prognose",
+      "grid": "Nett",
+      "meter": "Ekstra målere",
+      "pv": "Produksjon"
+    },
+    "production": {
+      "above": "{value} over",
+      "accuracy": "Prognosenøyaktighet",
+      "below": "{value} under",
+      "deviation": "Avvik",
+      "expectedTomorrow": "forventet i morgen",
+      "exported": "{value} eksportert",
+      "produced": "Produsert",
+      "remainingToday": "gjenstår i dag",
+      "selfConsumed": "Eget forbruk",
+      "title": "Produksjon"
+    },
+    "socTemp": {
+      "charged": "ladet",
+      "soc": "ladenivå",
+      "temperature": "temperatur",
+      "used": "brukt"
+    },
+    "sources": {
+      "battery": "Batteri",
+      "cost": "Kostnad",
+      "energy": "Energi",
+      "grid": "Nett",
+      "hint": "Sol- og batterienergi verdsatt til innmatingspris.",
+      "price": "Pris/kWh",
+      "pv": "Solenergi",
+      "share": "Andel",
+      "source": "Kilde",
+      "title": "Kilder",
+      "total": "Totalt"
+    },
+    "stat": {
+      "autarky": "Selvforsyning",
+      "co2Saved": "CO₂ spart",
+      "co2SavedTooltip": "Sammenlignet med å hente de forbrukte {energy} fra nettet.",
+      "configure": "Konfigurer nå",
+      "noCo2": "Ingen CO₂-data.",
+      "noPrice": "Ingen prisdata.",
+      "savings": "Besparelser",
+      "savingsTooltip": "Sammenlignet med å kjøpe de forbrukte {energy} fra nettet."
+    },
+    "title": "Energi"
+  },
   "footer": {
     "community": {
       "greenEnergy": "Solenergi",
@@ -666,6 +1276,15 @@
       "configurePriceCo2": "Lær hvordan du konfigurerer pris- og CO₂-data.",
       "footerLong": "{percent} solcelleenergi",
       "footerShort": "{percent} solenergi",
+      "indicator": {
+        "co2": "CO₂-utslipp",
+        "co2saved": "CO₂ spart",
+        "none": "ingen",
+        "price": "energipris",
+        "savings": "besparelser",
+        "solar": "solenergi"
+      },
+      "indicatorLabel": "Info i toppfelt",
       "modalTitle": "Oversikt over ladeenergi",
       "moneySaved": "{value} lagret",
       "percentGrid": "{grid} kWh lysnett",
@@ -681,6 +1300,7 @@
       "priceTitle": "Kraftpris",
       "referenceGrid": "rutenett",
       "referenceLabel": "referansedata:",
+      "sessionInfo": "Basert på fullførte ladeøkter.",
       "tabTitle": "Mine data"
     },
     "sponsor": {
@@ -703,29 +1323,54 @@
     },
     "version": {
       "availableLong": "Ny versjon tilgjengelig",
+      "community": "evcc-fellesskapet",
+      "labelEmail": "E-post",
+      "labelPhone": "Telefon",
+      "labelRelease": "Utgivelse",
+      "labelVersion": "Versjon",
+      "labelWebsite": "Nettsted",
+      "latestVersion": "oppdatert",
+      "madeByCommunity": "Laget av {0}.",
       "modalCancel": "Avbryt",
       "modalDownload": "Last ned",
       "modalInstalledVersion": "Installert versjon",
+      "modalLatest": "Du kjører den nyeste versjonen.",
+      "modalNextRelease": "Nytt i neste utgivelse",
       "modalNoReleaseNotes": "Ingen versjonsmerknader tilgjengelig. Mer info om den nye versjonen:",
       "modalTitle": "Ny versjon tilgjengelig",
       "modalUpdate": "Installer",
       "modalUpdateNow": "Installer nå",
       "modalUpdateStarted": "Starter den nye versjonen av evcc…",
-      "modalUpdateStatusStart": "Installasjonen startet:"
+      "modalUpdateStatusStart": "Installasjonen startet:",
+      "modalViewOnGitHub": "Vis på GitHub",
+      "openSource": "åpen kildekode",
+      "poweredBy": "drevet av"
     }
   },
   "forecast": {
     "co2": {
       "average": "Gjennomsnitt",
+      "constant": "CO₂-intensitet",
       "lowestHour": "Reneste time",
       "range": "Rekkevidde"
     },
+    "empty": {
+      "co2": "Se når strømmen fra nettet i din region er ren. Ladeplaner optimeres for lave utslipp og beregner CO₂-besparelser.",
+      "price": "Konfigurer din dynamiske strømtariff for å optimere ladeplaner automatisk og beregne besparelser.",
+      "setup": "Sett opp tariffer og prognoser",
+      "solar": "Se forventet solproduksjon for i dag og de kommende dagene. Vil i fremtiden også brukes til automatisk ladeoptimering.",
+      "temperature": "Se forventet utetemperatur på din lokasjon. Brukes til å forutsi varmebehov."
+    },
+    "hideLine": "skjul linje",
     "modalTitle": "Prognose",
     "price": {
       "average": "Gjennomsnitt",
+      "constant": "Pris",
       "lowestHour": "Billigste time",
       "range": "Rekkevidde"
     },
+    "priceZoom": "zoom inn",
+    "showLine": "vis linje",
     "solar": {
       "dayAfterTomorrow": "Overmorgen",
       "partly": "delvis",
@@ -734,14 +1379,27 @@
       "tomorrow": "I morgen"
     },
     "solarAdjust": "Juster solprognosen basert på reelle produksjonsdata{percent}.",
+    "solarAdjustMedium": "justert etter faktiske data",
+    "solarAdjustShort": "juster",
+    "temperature": {
+      "average": "Gjennomsnitt",
+      "range": "Spenn"
+    },
     "type": {
       "co2": "CO₂-Utslipp",
       "price": "Nettpris",
-      "solar": "Solarproduksjon"
+      "solar": "Solarproduksjon",
+      "temperature": "Utetemperatur"
     }
   },
   "general": {
-    "note": "Merk:"
+    "back": "Tilbake",
+    "cancel": "Avbryt",
+    "download": "Last ned",
+    "error": "Feil",
+    "none": "ingen",
+    "note": "Merk:",
+    "warning": "Advarsel"
   },
   "header": {
     "about": "Om",
@@ -754,6 +1412,7 @@
     "sessions": "Ladeøkter"
   },
   "help": {
+    "contactButton": "Kontakt oss",
     "discussionsButton": "GitHub-diskusjoner",
     "documentationButton": "Dokumentasjon",
     "issueButton": "Rapporter et problem",
@@ -775,6 +1434,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "kopiert!",
+      "copy": "kopier",
+      "copySelected": "kopier valgte",
       "description": "Inkluder konfigurasjon og logger for å hjelpe oss med å gjenskape problemet raskt. Vi oppfordrer til å dele så mye som mulig. Status er vanligvis ikke nødvendig.",
       "include": "inkludere",
       "lines": "linjer",
@@ -793,8 +1455,11 @@
     "additionalContext": "Ytterligere kontekst",
     "additionalContextPlaceholder": "Eventuell tilleggsinformasjon som kan være nyttig...\n- Konfigurasjonsdetaljer\n- Hva du har prøvd\n- Miljødetaljer",
     "createButtonDiscussion": "Start GitHub-diskusjon...",
+    "createButtonEmail": "Send forespørsel på e-post",
     "createButtonIssue": "Opprett GitHub-problem...",
     "description": "Fungerer ikke installasjonen din som forventet? Bruk denne siden for å få hjelp eller rapportere problemer. Gi oss nok detaljer til at vi kan forstå og gjenskape problemet, samtidig som beskrivelsen din er kortfattet, klar og lett å følge.",
+    "downloadButton": "Last ned feilsøkingsinfo",
+    "downloadHint": "Legg ved denne filen i e-posten hvis mer informasjon trengs.",
     "helpType": {
       "discussion": "Trenger hjelp med oppsettet mitt",
       "discussionDescription": "Diskusjoner i fellesskapet gir svar.",
@@ -804,8 +1469,13 @@
     },
     "issueDescription": "Beskrivelse",
     "issueTitle": "Tittel",
+    "nightlyHint": "Det kan allerede være fikset. Sjekk først med den nyeste {nightlyVersion}.",
+    "nightlyHintVersion": "nightly-versjonen",
+    "searchHint": "Før du rapporterer en feil, søk i eksisterende {issues}.",
+    "searchHintLink": "GitHub-saker",
     "stepsToReproduce": "Fremgangsmåte for å gjenskape feilen",
     "subTitleDiscussion": "Beskriv problemet ditt",
+    "subTitleEmail": "Beskriv problemet ditt",
     "subTitleIssue": "Beskriv problemet",
     "summary": {
       "confirmationButtonDiscussion": "Start GitHub-diskusjon",
@@ -851,6 +1521,14 @@
     "title": "Autentisering"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "uten avbrudd",
+      "label": "Lad alltid",
+      "labelHeating": "Varm alltid",
+      "once": "til økten avsluttes",
+      "onceTip": "Kun for denne økten",
+      "permanent": "forblir alltid på"
+    },
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Legg til gjentakende plan",
@@ -858,35 +1536,57 @@
       "goal": "Ladingsmål",
       "modalTitle": "Ladeplan",
       "none": "ingen",
+      "once": "én gang",
       "optimization": {
         "cheapest": "billigste",
+        "cheapestDescription": "Velger de billigste periodene. Kan gi flere starter og stopp.",
+        "cleanest": "renest",
+        "cleanestDescription": "Velger de reneste periodene. Kan gi flere starter og stopp.",
         "continuous": "kontinuerlig",
+        "continuousCo2Description": "Velger den reneste sammenhengende perioden.",
+        "continuousPriceDescription": "Velger den billigste sammenhengende perioden.",
+        "disabledDescription": "Krever en dynamisk tariff eller CO₂-prognose.",
         "label": "Optimalisering"
       },
       "planNumber": "Plan {number}",
       "precondition": {
+        "description": "Flytter en del av ladingen rett før avreise: varmt batteri, kortere tid med høyt ladenivå.",
+        "disabledDescription": "All lading skjer rett før avreise.",
         "label": "Sen betaling",
         "optionAll": "alt",
-        "optionNo": "nei"
+        "optionNo": "nei",
+        "summary": "{precondition} før",
+        "summaryAll": "rett før avreise"
       },
       "remove": "Fjern",
       "repeating": "gjentagende",
       "repeatingPlans": "Gjentatte planer",
       "selectAll": "Velg alt",
+      "strategy": {
+        "label": "Strategi"
+      },
       "time": "Tid",
       "title": "Plan",
       "unsavedChanges": "Det er ubehandlede endringer. Vil du bruke dem nå?",
       "update": "Søk",
       "weekdays": "Dager"
     },
+    "continuousStatus": {
+      "charging": "Boost aktiv.",
+      "connected": "Normal drift.",
+      "waitForVehicle": "Boost forespurt…"
+    },
     "energyflow": {
       "battery": "Batteri",
       "batteryCharge": "Batterilading",
+      "batteryChargeHold": "Batteri (lading låst)",
       "batteryDischarge": "Batteri utlading",
       "batteryDischargeHold": "Batteri (låst)",
       "batteryGridChargeActive": "nettlading aktiv",
       "batteryGridChargeLimit": "nettlading når",
+      "batteryStatus": "Batteristatus",
       "batteryTooltip": "{energy} av {total} ({soc})",
+      "forecast": "Prognose",
       "forecastTooltip": "prognose: gjenværende solenergiproduksjon i dag",
       "gridImport": "Lysnettimport",
       "homePower": "Forbruk",
@@ -896,15 +1596,21 @@
       "pv": "Solsystemet",
       "pvExport": "Lysnetteksport",
       "pvProduction": "Produksjon",
-      "selfConsumption": "Eget forbruk"
+      "selfConsumption": "Eget forbruk",
+      "toggleDetails": "Detaljer om energiflyt"
     },
     "heatingStatus": {
       "charging": "Oppvarming…",
       "connected": "Vent.",
+      "minTemp": "Minimumsoppvarming til {temp}.",
+      "suggestionStartTooltip": "Optimereren anbefaler oppvarming nå.",
+      "suggestionStopTooltip": "Optimereren anbefaler å pause oppvarmingen.",
       "vehicleLimit": "Varmebegrensning",
       "waitForVehicle": "Klar. Venter på varmeapparatet…"
     },
     "hemsWarning": {
+      "consumption": "Forbruk",
+      "feedIn": "Innmating",
       "title": "Ekstern grense aktiv"
     },
     "loadpoint": {
@@ -912,30 +1618,46 @@
       "charged": "Oppladet",
       "co2": "⌀-CO₂",
       "duration": "Varighet",
+      "emission": "Utslipp",
       "fallbackName": "Ladepunkt",
       "finished": "Sluttid",
+      "last24hEnergy": "Siste 24 t",
+      "last7dEnergy": "Siste 7 dager",
+      "phasesMismatch": "Flere faser aktive enn konfigurert. Kontroller fasekonfigurasjonen.",
       "power": "Effekt",
       "price": "Σ-pris",
       "remaining": "Gjenværende",
       "remoteDisabledHard": "{source}: slått av",
       "remoteDisabledSoft": "{source}: slått av adaptiv solcellelading",
-      "solar": "Solenergi"
+      "solar": "Solenergi",
+      "todayEnergy": "I dag"
     },
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Hurtiglading fra hjemmebatteriet til det er utladet til {limit}.",
+        "descriptionDisabled": "Velg en grense for å tillate hurtiglading fra hjemmebatteriet.",
+        "disabled": "Deaktivert",
         "label": "Batteriboost",
         "mode": "Kun tilgjengelig i solenergi- og min+solenergi-modus.",
-        "once": "Boost aktiv for denne ladingsøkten."
+        "once": "Boost aktiv for denne ladingsøkten.",
+        "stateActive": "Batteriboost aktiv",
+        "stateBelowLimit": "Batteriet er for lavt for boost",
+        "stateHold": "Batteri låst",
+        "stateReady": "Batteriboost klar"
       },
       "batteryUsage": "Hjemmebatteri",
       "currents": "Ladestrøm",
       "default": "forvalg",
+      "heating": "Oppvarming",
       "maxCurrent": {
         "label": "Maks. ladestrøm"
       },
       "minCurrent": {
         "label": "Min. ladestrøm"
+      },
+      "minTemp": {
+        "description": "Under {0} brukes også batteri- og nettstrøm i smart-modus for å holde denne temperaturen.",
+        "label": "Min. temperatur"
       },
       "phasesConfigured": {
         "label": "Faser",
@@ -948,6 +1670,23 @@
       },
       "smartCostCheap": "Billig nettlading",
       "smartCostClean": "Ren nettlading",
+      "solar": "Soloverskudd",
+      "solarShare": {
+        "charging": {
+          "description": "Minst {share} av minimum ladeeffekt må komme fra solenergi.",
+          "descriptionFull": "Ladingen starter så snart overskuddet dekker minimum ladeeffekt.",
+          "descriptionZero": "Ladingen starter så snart noe overskudd er tilgjengelig."
+        },
+        "heating": {
+          "description": "Minst {share} av minimum varmeeffekt må komme fra solenergi.",
+          "descriptionFull": "Oppvarmingen starter så snart overskuddet dekker minimum varmeeffekt.",
+          "descriptionZero": "Oppvarmingen starter så snart noe overskudd er tilgjengelig."
+        },
+        "label": "Solandel",
+        "thresholdsHint": "Effektbaserte ladeterskler er konfigurert. Fjern dem for å bruke denne glidebryteren.",
+        "thresholdsHintYaml": "Effektbaserte ladeterskler er konfigurert. Fjern aktiverings-/deaktiveringstersklene for dette ladepunktet i evcc.yaml for å bruke denne glidebryteren.",
+        "thresholdsLink": "Rediger konfigurasjon"
+      },
       "title": "Innstillinger for {0}",
       "vehicle": "Kjøretøy"
     },
@@ -955,6 +1694,7 @@
       "minpv": "Min+Solar",
       "now": "Raskt",
       "off": "Stopp",
+      "on": "På",
       "pv": "Sol",
       "smart": "Smart"
     },
@@ -975,6 +1715,7 @@
       "nextPlan": "Neste plan",
       "notReachableInTime": "Målet vil bli nådd {overrun} senere.",
       "onlyInPvMode": "Ladeplan fungerer kun i solcellemodus.",
+      "onlyInSmartMode": "Ladeplanen fungerer bare i smart-modus.",
       "planDuration": "Ladetid",
       "planPeriodLabel": "Periode",
       "planPeriodValue": "{start} til {end}",
@@ -997,6 +1738,7 @@
     "targetChargePlan": {
       "chargeDuration": "Ladetid",
       "co2Label": "CO₂-utslipp ⌀",
+      "optimizerHint": "Merk: Denne planen ble opprettet av {optimizer}.",
       "priceLabel": "Energipris",
       "timeRange": "{day} {range} t",
       "unknownPrice": "fremdeles ukjent"
@@ -1019,9 +1761,26 @@
       "unknown": "Gjestekjøretøy",
       "vehicleSoc": "Lade"
     },
+    "vehicleSettings": {
+      "connectedTo": "koblet til {0}",
+      "description": "Disse standardverdiene brukes når kjøretøyet kobles til et ladepunkt.",
+      "editHint": "Kjøretøy kan redigeres i {0}.",
+      "keepAsIs": "Behold som den er",
+      "learnMore": "Lær mer.",
+      "limitSoc": "Standardgrense",
+      "menu": "Kjøretøy",
+      "minSoc": "Minimumslading",
+      "mode": "Standardmodus",
+      "notConnected": "ikke tilkoblet",
+      "title": "Kjøretøyinnstillinger"
+    },
     "vehicleStatus": {
       "awaitingAuthorization": "Venter på autorisasjon.",
       "batteryBoost": "Batteriboost aktiv.",
+      "batteryBoostBelowLimit": "Batteriet er for lavt for boost.",
+      "batteryBoostDisabled": "Batteriboost deaktivert.",
+      "batteryBoostEnabled": "Boost til batteriet er på {limit}.",
+      "batteryBoostHold": "Batteri låst. Boost ikke tilgjengelig.",
       "charging": "Lader…",
       "cheapEnergyCharging": "Billig energi tilgjengelig.",
       "cheapEnergyNextStart": "Billig energi i {duration}.",
@@ -1037,10 +1796,19 @@
       "feedinPriorityPausing": "Solcellelading pauset for å maksimere innmatingen.",
       "finished": "Ferdig.",
       "minCharge": "Minimumslading til {soc}.",
+      "optimizerControlledTooltip": "Automatisk styring. Optimereren starter og stopper ladingen.",
+      "pvDisable": "Ikke nok overskudd. Pauser snart.",
+      "pvEnable": "Overskudd tilgjengelig. Starter snart.",
+      "scale1p": "Reduserer snart til 1-fase lading.",
+      "scale3p": "Øker snart til 3-fase lading.",
+      "suggestionStartTooltip": "Optimereren anbefaler lading nå.",
+      "suggestionStopTooltip": "Optimereren anbefaler å pause ladingen.",
       "targetChargeActive": "Målladning aktiv. Estimert ferdig om {duration}.",
       "targetChargePlanned": "Mållading starter på {duration}.",
       "targetChargeWaitForVehicle": "Ladingsplan klar. Venter på kjøretøy…",
       "vehicleLimit": "Kjøretøybegrensning",
+      "vehicleLimitReached": "Kjøretøygrensen er nådd.",
+      "waitForAuthorization": "Tilkoblet. Venter på autorisasjon…",
       "waitForVehicle": "Klar. Venter på kjøretøy…",
       "welcome": "Kort innledende ladning for å bekrefte tilkoblingen."
     },
@@ -1073,6 +1841,8 @@
     "updatePassword": "Oppdater passord"
   },
   "session": {
+    "addOdometer": "Legg til verdi",
+    "addedRange": "Ekstra rekkevidde",
     "cancel": "Avbryt",
     "co2": "CO₂",
     "date": "Tidsrom",
@@ -1083,13 +1853,16 @@
     "meterstop": "Stopp-målerstand",
     "odometer": "Kilometerstand",
     "price": "Pris",
+    "soc": "Lading",
     "started": "Startet",
     "title": "Ladeøkt"
   },
   "sessions": {
+    "addedRange": "Rekkevidde",
     "avgPower": "⌀-effekt",
     "avgPrice": "⌀-pris",
     "chargeDuration": "Varighet",
+    "chargedSoc": "Lading",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Pris {byGroup}",
@@ -1111,6 +1884,7 @@
     },
     "co2": "⌀-CO₂",
     "csv": {
+      "addedrange": "Ekstra rekkevidde (km)",
       "chargedenergy": "Energi (kWh)",
       "chargeduration": "Varighet",
       "co2perkwh": "CO₂/kWh",
@@ -1123,10 +1897,13 @@
       "odometer": "Kilometerstand",
       "price": "Pris",
       "priceperkwh": "Pris/kWh",
+      "socend": "SoC slutt (%)",
       "solarpercentage": "Solenergi (%)",
       "vehicle": "Kjøretøy"
     },
     "date": "Start",
+    "download": "Last ned {period}",
+    "downloadTotal": "Last ned alt",
     "energy": "Oppladet",
     "filter": {
       "allLoadpoints": "alle ladepunkter",
@@ -1146,8 +1923,10 @@
     },
     "loadpoint": "Ladepunkt",
     "noData": "Ingen ladeøkter denne måneden.",
+    "odometer": "Kilometerstand",
     "overview": "Oversikt",
     "period": {
+      "day": "Dag",
       "month": "Måned",
       "total": "Totalt",
       "year": "År"
@@ -1166,6 +1945,12 @@
     "vehicle": "Kjøretøy"
   },
   "settings": {
+    "dateFormat": {
+      "dmy": "DD.MM.ÅÅÅÅ",
+      "label": "Datoformat",
+      "mdy": "MM/DD/ÅÅÅÅ",
+      "ymd": "ÅÅÅÅ-MM-DD"
+    },
     "deviceInfo": "Innstillingene du gjør i denne dialogboksen påvirker bare denne enheten.",
     "fullscreen": {
       "enter": "Gå til fullskjerm",
@@ -1181,6 +1966,7 @@
       "label": "Språk"
     },
     "loadpoints": {
+      "disabledDevice": "deaktivert",
       "help": "Endre rekkefølge og synlighet for brukergrensesnittet.",
       "hide": "Skjul {title}",
       "label": "Ladestasjoner",
@@ -1235,6 +2021,7 @@
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Pauset tid",
+    "batteryDescription": "Utlader hjemmebatteriet til nettet mens innmatingsprisen er høy.",
     "description": "Pauser ladingen når prisene er høye for å prioritere lønnsom nettinnmating.",
     "priceLabel": "Innmatingskurs",
     "priceLimit": "Innmatingsgrense",
@@ -1253,5 +2040,14 @@
     "lineErrorLink": "linje {0}",
     "restartButton": "Omstart",
     "title": "Oppstartsfeil"
+  },
+  "tabBar": {
+    "battery": "Batteri",
+    "charge": "Lading",
+    "comingSoon": "Denne siden er under arbeid.",
+    "energy": "Energi",
+    "forecast": "Prognose",
+    "more": "Mer",
+    "sessions": "Økter"
   }
 }

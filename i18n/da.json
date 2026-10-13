@@ -37,6 +37,7 @@
       "discharging": "aflader",
       "energy": "Energi",
       "gridCharge": "netladning",
+      "gridDischarge": "aflading til elnettet",
       "hold": "afladning låst",
       "holdCharge": "ladning låst",
       "ofTotal": "af {total}",
@@ -61,6 +62,7 @@
         "noCountry": "Intet land er konfigureret. Indstil det under {link}.",
         "title": "Eksporter til nettet fra batteriet"
       },
+      "optimizerControlledHint": "Deaktiveret for {loadpoints}. {optimizer} træffer beslutningen.",
       "priority": "Hjemmebatteriet har prioritet, mens det er under {soc}. Derefter får ladepunkterne overskuddet.",
       "priorityNone": "Soloverskud går direkte til ladepunkterne. Sæt en værdi over {soc} for at prioritere hjemmebatteriet.",
       "priorityTitle": "Hvor sendes overskuddet først hen?"
@@ -193,6 +195,14 @@
       "meterGrid": "Elnet",
       "title": "Belastningsstyring",
       "usableMeters": "Gyldige målerreferencer"
+    },
+    "combobox": {
+      "count": "{count} forslag",
+      "matching": "Matcher",
+      "other": "Andre",
+      "searching": "Søger…",
+      "suggestions": "Forslag",
+      "used": "allerede i brug"
     },
     "consumer": {
       "description": "Overvåger mindre enheder, som ikke kan styres, f.eks. køleskab, vaskemaskine osv. Giver et bedre overblik over dit samlede forbrug i hjemmet.",
@@ -837,9 +847,29 @@
       "usernameHelp": "Til HTTP Basic Authentication mod den overordnede server."
     },
     "optimizer": {
-      "description": "Analyserer sol-prognose, el-priser, og forbrugsmønstre for at optimere batteri og opladning. Data sendes til evcc optimerings-service for at blive beregnet. Aktuelt beregnes og vises data kun, der er ingen styring af enheder endnu.",
+      "automatic": "Automatisk kontrol",
+      "automaticLevel": {
+        "battery": {
+          "description": "Kontrollerer kun hjemmebatteriet.",
+          "label": "Hjemmebatteri",
+          "status": "{automatic} kontrollerer hjemmebatteriet."
+        },
+        "full": {
+          "description": "Styrer hjemmebatteriet, starter og stopper opladning af køretøjer i smarttilstand, erstatter pris- og CO₂-grænser og overtager ladeplaner. Slukket tilstand og hurtigopladning, varmeenheder, stikkontakter med afbryder og køretøjer med ukendt batterikapacitet fungerer uændret.",
+          "label": "Hjemmebatteri og ladepunkter",
+          "status": "{automatic} kontrollerer hjemmebatteri og ladepunkter."
+        },
+        "off": {
+          "description": "Optimizer foreslår kun. Intet styres.",
+          "status": "{automatic} er slukket. Optimizer foreslår kun."
+        }
+      },
+      "controlled": "Deaktiveret af automatisk kontrol. I stedet træffer {optimizer} beslutningen.",
+      "controls": "Styrringer",
+      "description": "Bruger sol-prognose, el-priser, og forbrugsmønstre for at optimere batteri og opladning. Data sendes til evcc optimerings-service.",
       "enable": "Aktiver Optimering",
       "info": "For nye installationer kan det tage op til 24 timer, før der er opsamlet tilstrækkelig med data.",
+      "linkWord": "optimizer",
       "title": "Optimering"
     },
     "options": {
@@ -1046,7 +1076,7 @@
         "temperature": "Tilføj temperaturprognose"
       },
       "planner": {
-        "description": "Avanceret indstilling. Normalt ikke nødvendig, da dynamiske eltariffer eller CO₂-prognoser bruges automatisk. Aktiverer en ekstra datakilde, som kun anvendes til ladeplanlægning – ikke til statistik eller prisberegninger.",
+        "description": "Denne avancerede indstilling er normalt ikke nødvendig. Prognosen fra planlæggeren bruges som grundlag for ladeplaner og billig eller klimavenlig opladning fra elnettet (køretøjer, varmeenheder og hjemmebatteri). Hvis den ikke bruges, anvendes den dynamiske elpris eller CO₂-prognose automatisk. Statistik, omkostningsberegninger og optimeringsbeslutninger påvirkes ikke.",
         "titleAdd": "Tilføj planlægnings prognose",
         "titleEdit": "Juster planlægningsprognose"
       },
@@ -1120,6 +1150,119 @@
       "titleAdd": "Tilføj køretøj",
       "titleEdit": "Rediger køretøj"
     }
+  },
+  "energy": {
+    "battery": {
+      "charged": "Opladet",
+      "discharged": "Afladet"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Søjler",
+        "pattern": "Mønster"
+      },
+      "cost": "Omkostninger",
+      "others": "Andre",
+      "title": "Forbrugsenheder",
+      "view": {
+        "river": "Floddiagram",
+        "treemap": "Trædiagram"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "opladet",
+        "returnEnergy": "afladet"
+      },
+      "grid": {
+        "energy": "importeret",
+        "returnEnergy": "eksporteret"
+      },
+      "meter": {
+        "energy": "Energi",
+        "returnEnergy": "Energi (eksport)"
+      }
+    },
+    "empty": "Der er ingen energidate tilgængelig for denne tidsperiode.",
+    "flow": {
+      "battery": "Batteri",
+      "batteryCharge": "Batteriopladning",
+      "batteryDischarge": "Batteriaflading",
+      "charging": "Oplader",
+      "export": "Eksport til elnettet",
+      "grid": "Import fra elnettet",
+      "heating": "Opvarmning",
+      "home": "Forbrug",
+      "overview": "Overblik",
+      "pv": "Produktion",
+      "title": "Energiflow",
+      "usage": "Forbrugsfordeling,",
+      "withdrawal": "Aftager"
+    },
+    "grid": {
+      "amount": "Mængde",
+      "cost": "Omkostning fra elnettet",
+      "energy": "Energi",
+      "export": "Eksport",
+      "exportPrice": "Eksport pris",
+      "import": "Import",
+      "importPrice": "Import pris",
+      "price": "Pris",
+      "revenue": "Indfødnings fortjeneste",
+      "title": "Elnet"
+    },
+    "group": {
+      "battery": "Batteri",
+      "consumer": "Forbrug",
+      "forecast": "Prognose",
+      "grid": "Elnet",
+      "loadpoint": "Opladning og opvarmning",
+      "meter": "Ekstra målere",
+      "pv": "Produktion"
+    },
+    "production": {
+      "above": "{value} over",
+      "accuracy": "Prognose akkuratesse",
+      "below": "{value} under",
+      "deviation": "Afvigelse",
+      "expectedTomorrow": "Forventet i morgen",
+      "exported": "{value} eksporteret",
+      "produced": "Produceret",
+      "remainingToday": "Resterende i dag",
+      "selfConsumed": "Selv-forbrugt",
+      "title": "Produktion"
+    },
+    "socTemp": {
+      "charged": "opladet",
+      "soc": "lader",
+      "temperature": "temperatur",
+      "used": "brugt"
+    },
+    "sources": {
+      "battery": "Batteri",
+      "cost": "Omkostning",
+      "energy": "Energi",
+      "grid": "Elnettet",
+      "hint": "Sol- og batterienergi værdisat til indfødningsprisen.",
+      "price": "Pris/kWh",
+      "pv": "Sol",
+      "share": "Delt",
+      "source": "Kilde",
+      "title": "Kilder",
+      "total": "Total"
+    },
+    "stat": {
+      "autarky": "Selvforsyningsgrad",
+      "co2Saved": "CO₂ sparet",
+      "co2SavedTooltip": "Sammenlignet med at trække den forbrugte {energy} fra elnettet.",
+      "configure": "Konfigurer nu",
+      "noCo2": "Ingen CO₂ data.",
+      "noPrice": "Ingen pris data.",
+      "savings": "Besparelser",
+      "savingsTooltip": "Sammenlignet med at købe det brugte {energy} fra elnettet.",
+      "versus": "{value} vs. {reference}"
+    },
+    "title": "Energi"
   },
   "footer": {
     "community": {
@@ -1296,31 +1439,6 @@
     "restartDescription": "Har du prøvet at slukke og tænde den igen?",
     "secondaryActions": "Stadig ikke i stand til at løse dit problem? Her er nogle mere ekstreme muligheder."
   },
-  "energy": {
-    "direction": {
-      "battery": {
-        "energy": "opladet",
-        "returnEnergy": "afladet"
-      },
-      "grid": {
-        "energy": "importeret",
-        "returnEnergy": "eksporteret"
-      },
-      "meter": {
-        "energy": "Energi",
-        "returnEnergy": "Energi (eksport)"
-      }
-    },
-    "group": {
-      "battery": "Batteri",
-      "consumer": "Forbrug",
-      "forecast": "Prognose",
-      "grid": "Elnet",
-      "loadpoint": "Opladning og opvarmning",
-      "meter": "Ekstra målere",
-      "pv": "Produktion"
-    }
-  },
   "issue": {
     "additional": {
       "copied": "kopieret!",
@@ -1358,6 +1476,10 @@
     },
     "issueDescription": "Beskrivelse",
     "issueTitle": "Titel",
+    "nightlyHint": "Det er måske allerede fikset. Prøv den seneste {nightlyVersion} først.",
+    "nightlyHintVersion": "Nightly version",
+    "searchHint": "Før du rapporterer en fejl, så søg i eksisterende {issues}.",
+    "searchHintLink": "GitHub problemer",
     "stepsToReproduce": "Trin til at genskabe problemet",
     "subTitleDiscussion": "Beskriv dit problem",
     "subTitleEmail": "Beskriv problemet",
@@ -1470,6 +1592,7 @@
       "batteryDischargeHold": "Batteri (låst)",
       "batteryGridChargeActive": "Opladning fra elnettet: aktiv",
       "batteryGridChargeLimit": "Opladning fra elnettet: når",
+      "batteryStatus": "Batteristatus",
       "batteryTooltip": "{energy} af {total} ({soc})",
       "forecast": "Prognose",
       "forecastTooltip": "prognose: resterende solenergi produktion i dag",
@@ -1625,6 +1748,7 @@
     "targetChargePlan": {
       "chargeDuration": "Opladningstid",
       "co2Label": "CO₂ udledning ⌀",
+      "optimizerHint": "Note: Denne plan er lavet af {optimizer}.",
       "priceLabel": "Energi pris",
       "timeRange": "{day} {range} t",
       "unknownPrice": "stadig ukendt"
@@ -1684,6 +1808,7 @@
       "feedinPriorityPausing": "Solopladning sat på pause for at maksimere nettilførsel.",
       "finished": "Færdig.",
       "minCharge": "Minimum opladning til {soc}.",
+      "optimizerControlledTooltip": "Automatic styring. Optimizer starter og stopper opladning.",
       "pvDisable": "Ikke nok overskud. Holder snart pause.",
       "pvEnable": "Overskud tilgængeligt. Starter snart.",
       "scale1p": "Reducerer snart til 1-faset opladning.",
@@ -1934,6 +2059,7 @@
     "battery": "Batteri",
     "charge": "Oplader",
     "comingSoon": "Siden under opbygning.",
+    "energy": "Energi",
     "forecast": "Prognose",
     "more": "Mere",
     "sessions": "Sessioner"

@@ -7,18 +7,31 @@
     "authorizationSuccessful": "Autoriseerimine õnnestus",
     "buttonConnect": "Ühenda teenusepakkujaga {provider}",
     "buttonDisconnect": "Katkesta ühendus",
+    "challenge": {
+      "captcha": {
+        "label": "Sisesta pildil näidatud tähemärgid.",
+        "title": "Robotilõks"
+      },
+      "openLogin": "Ava sisselogimisleht",
+      "submit": "Jätka"
+    },
     "confirmLogout": "Kas oled kindel, et soovid katkestada {title} ühenduse?",
     "connect": "ühenda",
     "disconnect": "katkesta ühendus",
     "loggedOut": "Väljalogimine õnnestus",
-    "logoutFailed": "Väljalogimine ei õnnestunud"
+    "logoutFailed": "Väljalogimine ei õnnestunud",
+    "success": "{title} on nüüd ühendatud ja valmis kasutamiseks.",
+    "successCloseModal": "Võid selle vaate nüüd sulgeda.",
+    "successCloseTab": "Võid selle vahekaardi nüüd sulgeda."
   },
   "battery": {
     "card": {
       "charging": "laadimas",
       "discharging": "tühjenemas",
-      "energy": "Energia"
+      "energy": "Energia",
+      "soc": "Akutäituvus"
     },
+    "combined": "Kombineeritud",
     "optimizer": {
       "action": {
         "charge": "Laadi võrgust",
@@ -99,7 +112,7 @@
       "chargeStatusC": "laadimas",
       "chargeStatusE": "toide puudub",
       "chargeStatusF": "viga",
-      "chargedEnergy": "Laetud",
+      "chargedEnergy": "Laetud (sessioon)",
       "co2": "Võrgu CO₂",
       "configured": "Seadistatud",
       "connected": "Ühendatud",
