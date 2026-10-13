@@ -22,6 +22,7 @@ import {
 	maxSlotIndex,
 	hoverDot,
 	lineDefaults,
+	type SlotStepPoint,
 } from "./echarts";
 import colors, { lighterColor } from "@/colors";
 import formatter from "@/mixins/formatter";
@@ -102,7 +103,12 @@ export default defineComponent({
 					trigger: "axis",
 					axisPointer: { type: "line", snap: true, lineStyle: { color: "transparent" } },
 					...tooltipStyle(priceColor),
-					formatter(params: { value: [number, number, number]; seriesIndex: number }[]) {
+					formatter(allParams: { value: SlotStepPoint; seriesIndex: number }[]) {
+						// gap breaks share their x with the closing point and would add empty rows
+						const params = allParams.filter(
+							(s): s is { value: [number, number, number]; seriesIndex: number } =>
+								s.value[1] !== null
+						);
 						const p = params[0];
 						if (!p) return "";
 						const d = new Date(p.value[2]);

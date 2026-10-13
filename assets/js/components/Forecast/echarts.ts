@@ -369,23 +369,26 @@ export function clampStart(ts: number, startDate: Date): number {
   return Math.max(ts, startDate.getTime());
 }
 
-// points for a step: "end" line, each value held until the next start. A trailing point
-// closes the last slot; the third value is the slot start for the tooltip
+// [x, value, slot start for the tooltip], or a null value that breaks the line
+export type SlotStepPoint = [number, number, number] | [number, null, null];
+
+// points for a step: "end" line, each value held until the next start. A slot followed
+// by a gap or by nothing gets a closing point at its end, a gap also breaks the line
 export function slotStepData(
   slots: UiForecastSlot[],
   startDate: Date,
   endDate: Date
-): [number, number, number][] {
-  const data = slots.map((s): [number, number, number] => {
+): SlotStepPoint[] {
+  return slots.flatMap((s, i): SlotStepPoint[] => {
     const start = clampStart(s.start, startDate);
-    return [start, s.value, start];
+    const points: SlotStepPoint[] = [[start, s.value, start]];
+    const next = slots[i + 1];
+    if (next && next.start <= s.end) return points;
+    const end = Math.min(s.end, endDate.getTime());
+    if (end > start) points.push([end, s.value, start]);
+    if (next) points.push([s.end, null, null]);
+    return points;
   });
-  const last = data[data.length - 1];
-  const lastSlot = slots[slots.length - 1];
-  if (last && lastSlot) {
-    data.push([Math.min(lastSlot.end, endDate.getTime()), last[1], last[2]]);
-  }
-  return data;
 }
 
 export function filterForecastSlots(

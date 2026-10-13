@@ -28,6 +28,24 @@ describe("slotStepData", () => {
     ]);
   });
 
+  test("ends a slot before a gap", () => {
+    const slots = [slot(at(23), 30), slot(at(23, 30), 10)];
+    expect(slotStepData(slots, start, end)).toEqual([
+      [at(23), 30, at(23)],
+      [at(23, 15), 30, at(23)],
+      [at(23, 15), null, null],
+      [at(23, 30), 10, at(23, 30)],
+      [at(23, 45), 10, at(23, 30)],
+    ]);
+  });
+
+  test("skips the closing point of a slot starting at the chart end", () => {
+    expect(slotStepData([slot(at(23, 45), 30), slot(at(24), 10)], start, end)).toEqual([
+      [at(23, 45), 30, at(23, 45)],
+      [at(24), 10, at(24)],
+    ]);
+  });
+
   test("handles no slots", () => {
     expect(slotStepData([], start, end)).toEqual([]);
   });
