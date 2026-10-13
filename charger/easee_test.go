@@ -915,3 +915,28 @@ func TestTotalEnergy_RestartWhileCharging(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 8.0, charged)
 }
+
+func TestTotalEnergy_PlugInSequence(t *testing.T) {
+	e := newEasee()
+	disconnected := time.Now().Add(-time.Hour)
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, disconnected.Add(-time.Hour), easee.Integer, "3"))
+	e.ProductUpdate(sessionStartPayload(t, disconnected.Add(-time.Hour), easee.ChargingSessionStartData{ID: 41, Start: disconnected.Add(-time.Hour), MeterValue: 9990}))
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, disconnected.Add(-time.Minute), easee.Double, "10"))
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, disconnected, easee.Integer, "1"))
+
+	// observed live order: session start and zero energy precede the mode change
+	start := time.Now().Add(-time.Minute)
+	e.ProductUpdate(sessionStartPayload(t, start, easee.ChargingSessionStartData{ID: 42, Start: start, MeterValue: 10000}))
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start, easee.Double, "0"))
+	total, err := e.TotalEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 10000.0, total)
+
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start.Add(48*time.Second), easee.Integer, "2"))
+	assert.Equal(t, 42, e.sessionStart.ID)
+
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, time.Now().Add(time.Second), easee.Double, "1"))
+	total, err = e.TotalEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 10001.0, total)
+}

@@ -128,11 +128,11 @@ Before a POST to a known 200-returning endpoint, increment the counter. When `Co
 
 ### Session Energy Zero-value Protection
 
-`sessionEnergy` is never set to `0` from a `ProductUpdate` — the API sends spurious zeros erratically. Session reset is driven by op-mode transition: when `CHARGER_OP_MODE` transitions from disconnected to awaiting-start, `sessionEnergy` resets to `0` with a fresh timestamp. The first op mode after startup is replayed state and does not reset, so replayed session energy survives a restart.
+`sessionEnergy` is never set to `0` from a `ProductUpdate` — the API sends spurious zeros erratically. Session reset is driven by op-mode transition: when `CHARGER_OP_MODE` transitions from disconnected to awaiting-start, `sessionEnergy` resets to `0` with a fresh timestamp. The first op mode after startup is replayed state and does not reset, so replayed session energy survives a restart. `CHARGE_SESSION_START` and a zero `SESSION_ENERGY` arrive before the mode change, so the reset is skipped when the cached session started after the previous mode observation.
 
 ### Logical Energy Meter
 
-`LIFETIME_ENERGY` is pushed only ~hourly. `TotalEnergy()` therefore keeps a monotonic max of the lifetime reading, the session meter values from `CHARGE_SESSION_START` and `CHARGING_SESSION`, and `CHARGE_SESSION_START.MeterValue + sessionEnergy`. The session term is only applied while the `SESSION_ENERGY` observation is not older than the session start, so a stale previous-session value cannot inflate the total.
+`LIFETIME_ENERGY` is pushed only ~hourly. `TotalEnergy()` therefore keeps a monotonic max of the lifetime reading, the session meter values from `CHARGE_SESSION_START` and `CHARGING_SESSION`, and `CHARGE_SESSION_START.MeterValue + sessionEnergy`. The session term is only applied while the last nonzero `SESSION_ENERGY` (or session completion) is not older than the session start, so a stale previous-session value cannot inflate the total. Ignored zero observations do not count as fresh readings.
 
 ## Charger Operation Modes
 
