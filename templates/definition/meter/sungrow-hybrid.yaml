@@ -27,7 +27,6 @@ params:
     type: bool
     usages: ["grid"]
     advanced: true
-    default: false
     description:
       de: Direkte Verbindung zum Wechselrichter
       en: Direct connection to inverter
