@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Авторизація успішна",
     "buttonConnect": "Підключитися до {provider}",
     "buttonDisconnect": "Відключитися",
+    "challenge": {
+      "captcha": {
+        "label": "",
+        "title": ""
+      },
+      "code": {
+        "label": "",
+        "title": ""
+      },
+      "openLogin": "",
+      "submit": ""
+    },
     "confirmLogout": "Ви впевнені, що хочете відключити {title}?",
     "connect": "з'єднати",
     "disconnect": "відключитися",
@@ -19,18 +31,95 @@
     "successCloseTab": "Тепер ви можете закрити цю вкладку.",
     "title": "Статус авторизації"
   },
+  "battery": {
+    "card": {
+      "charging": "",
+      "discharging": "",
+      "energy": "",
+      "gridCharge": "",
+      "gridDischarge": "",
+      "hold": "",
+      "holdCharge": "",
+      "ofTotal": "",
+      "power": "",
+      "soc": ""
+    },
+    "combined": "",
+    "config": {
+      "buffer": "",
+      "bufferNone": "",
+      "bufferStart": {
+        "above": "",
+        "full": "",
+        "never": ""
+      },
+      "bufferTitle": "",
+      "discharge": "",
+      "gridDischarge": "",
+      "gridDischargeConfirm": {
+        "country": "",
+        "description": "",
+        "noCountry": "",
+        "title": ""
+      },
+      "priority": "",
+      "priorityNone": "",
+      "priorityTitle": ""
+    },
+    "optimizer": {
+      "action": {
+        "charge": "",
+        "discharge": "",
+        "hold": "",
+        "holdcharge": "",
+        "normal": ""
+      },
+      "empty": "",
+      "full": "",
+      "highest": "",
+      "lowest": "",
+      "suggestion": ""
+    }
+  },
   "batterySettings": {
     "gridChargeTab": "Зарядка від електромережі",
+    "gridDischargeTab": "",
     "modalTitle": "Домашня батарея",
+    "noBattery": "",
     "usageTab": "Використання батареї"
   },
+  "colors": {
+    "auto": "",
+    "hex": ""
+  },
   "config": {
+    "adminPassword": {
+      "description": "",
+      "invalid": "",
+      "title": ""
+    },
+    "apiKey": {
+      "description": "",
+      "exampleLabel": "",
+      "generate": "",
+      "generateConfirm": "",
+      "keyLabel": "",
+      "regenerate": "",
+      "regenerateConfirm": "",
+      "regenerateLink": "",
+      "regenerateWarning": "",
+      "revealSuccess": "",
+      "revealTitle": "",
+      "shownOnce": "",
+      "title": ""
+    },
     "aux": {
       "description": "Пристрій, який регулює споживання на основі наявного надлишку (наприклад, розумні водонагрівачі). evcc очікує, що цей пристрій за потреби зменшить споживання енергії.",
       "titleAdd": "Додайте саморегулюючого споживача",
       "titleEdit": "Редагувати саморегулюючого споживача"
     },
     "battery": {
+      "title": "",
       "titleAdd": "Додати батарею",
       "titleEdit": "Редагувати батарею"
     },
@@ -74,10 +163,50 @@
         "switchsocket": "Користувацький перемикач-розетка"
       }
     },
+    "circuit": {
+      "addMeter": "",
+      "custom": "",
+      "deleteChildrenFirst": "",
+      "meterDedicated": "",
+      "meterGrid": "",
+      "meterHelp": "",
+      "meterLabel": "",
+      "meterLabelAdd": "",
+      "meterLabelEdit": "",
+      "meterNone": "",
+      "meterSelectionHelpDedicatedMeter": "",
+      "meterSelectionHelpGridMeter": "",
+      "meterSelectionHelpNoMeter": "",
+      "meterSelectionLabel": "",
+      "parentCircuit": "",
+      "template": "",
+      "titleAdd": "",
+      "titleEdit": "",
+      "titleLabel": ""
+    },
     "circuits": {
+      "addMainCircuit": "",
+      "addSubCircuit": "",
+      "chargingPointsNote": "",
       "description": "Гарантує, що сума всіх точок навантаження, підключених до ланцюга, не перевищує налаштованих обмежень потужності та струму. Схеми можуть бути вкладеними для побудови ієрархії.",
+      "legacyWarning": "",
+      "meterDedicated": "",
+      "meterGrid": "",
       "title": "Керування навантаженням",
       "usableMeters": "Використовувані посилання на лічильники"
+    },
+    "combobox": {
+      "count": "",
+      "matching": "",
+      "other": "",
+      "searching": "",
+      "suggestions": "",
+      "used": ""
+    },
+    "consumer": {
+      "description": "",
+      "titleAdd": "",
+      "titleEdit": ""
     },
     "control": {
       "description": "Зазвичай стандартні значення підходять. Змінюйте їх, лише якщо знаєте, що робите.",
@@ -87,8 +216,19 @@
       "labelResidualPower": "Залишкова потужність",
       "title": "Контрольна поведінка"
     },
+    "curtailer": {
+      "description": "",
+      "generic": "",
+      "specific": "",
+      "template": "",
+      "title": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
     "deviceValue": {
+      "activeClients": "",
       "amount": "Сума",
+      "asleep": "",
       "broker": "Брокер",
       "bucket": "Відро",
       "capacity": "Ємність",
@@ -101,35 +241,79 @@
       "chargedEnergy": "Заряджений",
       "co2": "Мережа CO₂",
       "configured": "Налаштовано",
+      "connected": "",
       "connections": "З'єднання",
       "controllable": "Контрольована",
       "currency": "Валюта",
       "current": "Cтрум",
       "currentRange": "Струм",
+      "curtailLimit": "",
+      "curtailable": "",
+      "curtailed": "",
       "detected": "Виявлено",
+      "dimLimit": "",
       "dimmed": "Затемнений",
       "enabled": "Ввімкнено",
       "energy": "Енергія",
+      "events": "",
+      "exportLimit": "",
       "feedinPrice": "Збірна ціна",
+      "forecast": "",
       "gridPrice": "Ціна сітки",
       "heaterTempLimit": "Обмеження нагрівача",
       "identifier": "RFID-ідентифікатор",
+      "loginBlocked": "",
+      "max": "",
+      "maxCurrent": "",
+      "maxPower": "",
+      "messengers": "",
       "no": "ні",
       "odometer": "Одометр",
       "org": "Організація",
+      "outdoorTemp": "",
       "phaseCurrents": "Cтрум",
       "phasePowers": "Потужність",
       "phaseVoltages": "Напруга",
       "phases1p3p": "Перемикач фаз",
       "power": "Потужність",
       "powerRange": "Потужність",
+      "price": "",
+      "productionLimited": "",
       "range": "Дальність",
+      "remoteEnabled": "",
+      "returnEnergy": "",
       "singlePhase": "Однофазний",
       "soc": "Зарядити",
       "solarForecast": "Сонячний прогноз",
+      "switchDevice": "",
       "temp": "Температура",
       "topic": "Тема",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "",
+          "returnEnergy": ""
+        },
+        "battery": {
+          "energy": "",
+          "returnEnergy": ""
+        },
+        "charge": {
+          "energy": "",
+          "returnEnergy": ""
+        },
+        "consumer": {
+          "energy": "",
+          "returnEnergy": ""
+        },
+        "grid": {
+          "energy": "",
+          "returnEnergy": ""
+        },
+        "pv": {
+          "energy": ""
+        }
+      },
       "vehicleLimitSoc": "Ліміт платежів",
       "yes": "так"
     },
@@ -148,9 +332,31 @@
       "loading": "Завантаження редактора YAML…"
     },
     "eebus": {
+      "certificate": {
+        "private": "",
+        "public": "",
+        "title": ""
+      },
+      "configuredDevices": "",
       "description": "Конфігурація, яка дозволяє evcc спілкуватися з іншими пристроями EEBus.",
+      "descriptionAdvanced": "",
+      "interfaces": "",
+      "interfacesHelp": "",
+      "noConfiguredDevices": "",
+      "noPairings": "",
+      "pairings": "",
+      "port": "",
+      "portHelp": "",
+      "qr": "",
+      "qrExplain": "",
+      "removeConfirm": "",
+      "removePairing": "",
+      "removePairingConfirm": "",
       "shipid": "SHIP-ID",
+      "shipidExplain": "",
+      "shipidHelp": "",
       "ski": "SKI",
+      "skiExplain": "",
       "title": "EEBus'"
     },
     "experimental": {
@@ -165,6 +371,7 @@
     "form": {
       "danger": "Небезпека",
       "deprecated": "застарілий",
+      "durationUnit": "",
       "example": "Наприклад",
       "optional": "необов'язково"
     },
@@ -174,22 +381,34 @@
       "authPerformHint": "Відкриється в новій вкладці. Поверніться сюди, щоб продовжити.",
       "authPrepare": "Підготовка підключення",
       "cancel": "Скасувати",
+      "change": "",
       "clear": "Очистити",
       "close": "Закрити",
+      "confirmDisable": "",
+      "confirmEnable": "",
+      "confirmSave": "",
       "copied": "Скопійовано!",
       "copy": "Копіювати",
       "customHelp": "Створіть користувацький пристрій за допомогою системи плагінів evcc.",
       "customOption": "Пристрій, визначений користувачем",
       "delete": "Видалити",
+      "disable": "",
+      "disabled": "",
+      "dismiss": "",
       "docsLink": "Переглянути документацію.",
       "dragHandle": "Перетягнути маркер",
       "dragItem": "Перетягується: {title}",
       "dragList": "Список, який можна перевпорядкувати",
+      "enable": "",
+      "error": "",
       "experimental": "Експериментальний",
+      "forceEnable": "",
       "forceSave": "Зберегти все одно",
       "fromYamlHint": "Примітка: Налаштовано через evcc.yaml. Видаліть запис із файлу, щоб дозволити редагування тут.",
       "hideAdvancedSettings": "Приховати розширені налаштування",
       "invalidFileSelected": "Вибрано недійсний файл",
+      "legacy": "",
+      "moreInfo": "",
       "noFileSelected": "Не вибрано файл.",
       "off": "вимкнено",
       "on": "на",
@@ -202,6 +421,7 @@
       "saving": "Збереження…",
       "selectFile": "Переглянути",
       "showAdvancedSettings": "Показати розширені налаштування",
+      "site": "",
       "telemetry": "Телеметрія",
       "templateLoading": "Завантаження...",
       "title": "Назва",
@@ -214,6 +434,7 @@
       "titleEdit": "Редагувати лічильник електромережі"
     },
     "hems": {
+      "changeConfirm": "",
       "csv": {
         "created": "Створено",
         "finished": "Завершено",
@@ -221,10 +442,26 @@
         "limitpower": "Ліміт (кВт)",
         "type": "Тип"
       },
+      "customOption": "",
       "description": "Обмеження потужності зовнішніми системами (наприклад, §14a EnWG, §9 інтерфейс ЕЕГ або система управління енергією вищого рівня). Працює разом із функцією управління навантаженням.",
+      "download": "",
+      "dynamicLimits": "",
       "eventsRecorded": "Записано {count} подій обмеження мережі.",
+      "exportLimit": "",
+      "exportLimitDescription": "",
+      "exportLimitHint": "",
+      "generic": "",
+      "integrations": "",
       "lastEvent": "Найновіші {timeAgo}.",
-      "title": "Зовнішнє обмеження"
+      "noEvents": "",
+      "recordedEvents": "",
+      "staticLimits": "",
+      "template": "",
+      "title": "Зовнішнє обмеження",
+      "type": {
+        "custom": "",
+        "relay": ""
+      }
     },
     "icon": {
       "change": "зміна",
@@ -252,6 +489,7 @@
         "heating": "Додати обігрівач"
       },
       "addMeter": "Додати спеціальний лічильник енергії",
+      "advancedConfig": "",
       "cancel": "Скасувати",
       "chargerError": {
         "charging": "Необхідно налаштувати зарядний пристрій.",
@@ -266,11 +504,25 @@
       "circuitInvalid": "Схема не існує",
       "circuitLabel": "Схема",
       "circuitUnassigned": "непризначений",
+      "created": "",
+      "createdTitle": {
+        "charging": "",
+        "heating": ""
+      },
+      "creating": {
+        "charging": "",
+        "heating": ""
+      },
+      "currentRangeHelp": {
+        "charging": "",
+        "heating": ""
+      },
       "defaultModeHelp": {
         "charging": "Режим зарядки при підключенні автомобіля.",
         "heating": "Встановлюється під час запуску системи."
       },
       "defaultModeHelpKeep": "Зберігає останній вибраний режим.",
+      "defaultModeKeep": "",
       "defaultModeLabel": "Режим за замовчуванням",
       "delete": "Видалити",
       "electricalSubtitle": "Якщо ви сумніваєтеся, запитайте свого електрика.",
@@ -280,8 +532,11 @@
       "estimateLabel": "Інтерполювати рівень оплати між оновленнями API",
       "maxCurrentHelp": "Повинен бути більшим за мінімальний струм.",
       "maxCurrentLabel": "Максимальний струм",
+      "maxTempHelp": "",
+      "maxTempLabel": "",
       "minCurrentHelp": "Опускайтеся нижче 6 А, лише якщо знаєте, що робите.",
       "minCurrentLabel": "Мінімальний струм",
+      "minTempLabel": "",
       "noVehicles": "Транспортні засоби не налаштовані.",
       "option": {
         "charging": "Додати точку заряду",
@@ -311,6 +566,10 @@
       "solarBehaviorLabel": "Солар",
       "solarModeCustom": "звичай",
       "solarModeMaximum": "максимальна сонячна",
+      "solarShareNote": "",
+      "solarShareReset": "",
+      "temperatureRangeHelp": "",
+      "temperatureRangeTitle": "",
       "thresholdDisableDelayLabel": "Вимкнути затримку",
       "thresholdDisableHelpInvalid": "Використовуйте додатне значення.",
       "thresholdDisableHelpPositive": "Зупинка, коли з мережі використовується більше {power} протягом {delay}.",
@@ -345,6 +604,8 @@
     },
     "main": {
       "addAdditional": "Додати додатковий лічильник",
+      "addConsumer": "",
+      "addCurtailer": "",
       "addGrid": "Додати вимірювач сітки",
       "addLoadpoint": "Додати зарядний пристрої або обігрівач",
       "addPvBattery": "Додати сонячну або батарею",
@@ -360,17 +621,92 @@
       "welcomeBannerText": "Почніть зі створення принаймні одного **зарядного пристрою**, **обігрівача**, **мережевої**, **сонячної батареї**, **акумулятора** або **додаткового лічильника**. Якщо ви просто хочете протестувати, виберіть **демонстраційний пристрій**.",
       "welcomeBannerTitle": "Давайте налаштуємо вашу систему!"
     },
+    "mcp": {
+      "description": "",
+      "exampleLabel": "",
+      "restartHint": "",
+      "title": "",
+      "url": ""
+    },
     "messaging": {
+      "addMessenger": "",
       "description": "Отримувати повідомлення про ваші сеанси зарядки.",
+      "event": {
+        "asleep": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "connect": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "disconnect": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "guest": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "planoverrun": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "soc": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "start": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "stop": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "suggestion": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        }
+      },
+      "eventMessage": "",
+      "eventTitle": "",
+      "events": "",
+      "legacyWarning": "",
+      "messengers": "",
+      "seePlaceholders": "",
       "title": "Сповіщення"
+    },
+    "messenger": {
+      "custom": "",
+      "generic": "",
+      "primary": "",
+      "template": "",
+      "titleAdd": "",
+      "titleEdit": ""
     },
     "meter": {
       "cancel": "Скасувати",
+      "convertToConsumer": {
+        "confirm": "",
+        "link": ""
+      },
       "delete": "Видалити",
       "generic": "Загальні інтеграції",
       "option": {
         "aux": "Додайте саморегульованого споживача",
         "battery": "Додати лічильник батареї",
+        "consumer": "",
+        "grid": "",
         "pv": "Додати сонячний лічильник"
       },
       "save": "Зберегти",
@@ -396,6 +732,8 @@
       "connectionHintTcpip": "Пристрій доступний через мережу (LAN/Wi-Fi).",
       "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Мережа",
+      "delay": "",
+      "delayHint": "",
       "device": "Назва пристрою",
       "deviceHint": "Приклад: /dev/ttyUSB0",
       "host": "IP-адреса або ім'я хоста",
@@ -406,7 +744,9 @@
       "protocolHintRtu": "Підключення через адаптер RS485 до Ethernet без трансляції протоколу.",
       "protocolHintTcp": "Пристрій має власну підтримку LAN/Wi-Fi або підключений через адаптер RS485 до Ethernet із трансляцією протоколу.",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP"
+      "protocolValueTcp": "TCP",
+      "timeout": "",
+      "timeoutHint": ""
     },
     "modbusproxy": {
       "add": "Додати проксі-з’єднання",
@@ -456,10 +796,16 @@
       "labelHost": "Ім'я хоста mDNS",
       "labelInternalUrl": "Внутрішня URL-адреса",
       "labelPort": "Порт",
-      "title": "Мережа"
+      "title": "Мережа",
+      "warningUrlPath": ""
     },
     "ocpp": {
+      "forwardingConfigured": "",
+      "forwardingError": "",
+      "forwardingOff": "",
       "noChargers": "Зарядні пристрої OCPP не виявлено.",
+      "stations": "",
+      "stationsHelp": "",
       "status": {
         "configured": "Не підключено",
         "connected": "Підключено",
@@ -468,6 +814,36 @@
       "title": "OCPP-сервер",
       "url": "URL-адреса сервера",
       "urlHelp": "Скопіюйте цю URL-адресу в конфігурацію вашого зарядного пристрою. Перегляньте інструкцію виробника для отримання детальної інформації. Очікується, що зарядний пристрій автоматично додасть свій унікальний (ідентифікатор станції) до URL-адреси. У рідкісних випадках вам може знадобитися вказати ідентифікатор вручну. Приклад: `{url}`"
+    },
+    "ocppforwarder": {
+      "description": "",
+      "editTitle": "",
+      "labelCaCert": "",
+      "labelCheckInsecure": "",
+      "labelInsecure": "",
+      "password": "",
+      "passwordHelp": "",
+      "readOnly": {
+        "check": "",
+        "help": {
+          "false": "",
+          "true": ""
+        },
+        "label": ""
+      },
+      "status": "",
+      "upstreamStationId": "",
+      "upstreamStationIdHelp": "",
+      "upstreamUrl": "",
+      "upstreamUrlHelp": "",
+      "username": "",
+      "usernameHelp": ""
+    },
+    "optimizer": {
+      "description": "",
+      "enable": "",
+      "info": "",
+      "title": ""
     },
     "options": {
       "boolean": {
@@ -496,27 +872,89 @@
       "titleAdd": "Додати сонячний лічильник",
       "titleEdit": "Редагувати сонячний лічильник"
     },
+    "remote": {
+      "active": "",
+      "addClient": "",
+      "addClientDescription": "",
+      "addClientTitle": "",
+      "clientCreated": "",
+      "clients": "",
+      "confirmDelete": "",
+      "connected": "",
+      "createClient": "",
+      "description": "",
+      "deviceName": "",
+      "disconnected": "",
+      "done": "",
+      "enableLabel": "",
+      "expiration": "",
+      "expirationNone": "",
+      "expired": "",
+      "expiresIn": "",
+      "lastActive": "",
+      "loginBlocked": "",
+      "manualLogin": "",
+      "noClients": "",
+      "password": "",
+      "passwordOnce": "",
+      "privacy": "",
+      "privacyLink": "",
+      "qrInstall": "",
+      "qrScan": "",
+      "removeClient": "",
+      "title": "",
+      "url": "",
+      "username": ""
+    },
     "section": {
       "additionalMeter": "Додаткові метри",
+      "consumers": "",
       "general": "Загальний",
       "grid": "Сітка",
       "integrations": "Інтеграції",
       "loadpoints": "Заряджання та нагрівання",
       "meter": "Сонячна енергія та батарея",
+      "services": "",
       "system": "Система",
       "vehicles": "Транспортні засоби"
+    },
+    "security": {
+      "authDisabledHint": "",
+      "description": "",
+      "passwordDescription": "",
+      "passwordTitle": "",
+      "title": "",
+      "updatePassword": ""
     },
     "shm": {
       "cardTitle": "Сонячний домашній менеджер",
       "description": "evcc оснащений інтеграцією для SMA Sunny Home Manager (SHM) через протокол SEMP. Якщо він працює в тій самій мережі, після входу в обліковий запис Sunny Portal вам автоматично буде запропоновано додати всі зарядні пристрої, налаштовані в evcc, як нововиявлені споживачі. Все має бути готове до негайного використання, без необхідності будь-яких налаштувань, зазначених нижче.",
       "descriptionDeviceId": "12-символьний шістнадцятковий рядок. Префікс для всіх пристроїв (точка заряджання тощо).",
+      "descriptionDeviceSerial": "",
       "descriptionIdPattern": "Шаблон ідентифікатора",
       "descriptionIds": "У Sunny Portal кожне споживче обладнання потребує унікального ідентифікатора. evcc генерує унікальний ідентифікатор на основі вашого обладнання. Якщо ви перенесете evcc на інше обладнання, ці ідентифікатори можуть змінитися. Якщо ви хочете зберегти історію, ви можете замінити згенеровані ідентифікатори тут. Відкрийте URL-адресу SEMP (/semp), щоб перевірити ваші поточні ідентифікатори.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8-символьний шістнадцятковий рядок. Загальний префікс усіх об'єктів. За замовчуванням evcc використовуватиме власний внутрішній ідентифікатор постачальника.",
       "labelDeviceId": "Ідентифікатор пристрою",
+      "labelDeviceSerial": "",
       "labelVendorId": "Ідентифікатор постачальника",
       "title": "SMA Сонячний домашній менеджер"
+    },
+    "site": {
+      "country": {
+        "description": "",
+        "label": ""
+      },
+      "currency": {
+        "description": "",
+        "example": "",
+        "label": ""
+      },
+      "siteTitle": {
+        "description": "",
+        "label": ""
+      },
+      "title": ""
     },
     "sponsor": {
       "addToken": "Введіть маркер",
@@ -553,6 +991,8 @@
           "confirmationButton": "Скинути та перезапустити",
           "confirmationText": "Це остаточно видалить вибрані дані. Спочатку переконайтеся, що ви завантажили резервну копію.",
           "description": "Маєте проблеми з конфігурацією та хочете почати спочатку? Видаліть усі дані та почніть з чистого аркуша.",
+          "remote": "",
+          "remoteDescription": "",
           "sessions": "Сеансів зарядки",
           "sessionsDescription": "Видаляє історію сеансів заряджання.",
           "settings": "Конфігурація та налаштування",
@@ -575,6 +1015,87 @@
       "restartRequiredMessage": "Конфігурація змінена.",
       "restartingDescription": "Будь ласка, зачекайте…",
       "restartingMessage": "Перезапуск evcc."
+    },
+    "tariff": {
+      "addForecast": "",
+      "addTariff": "",
+      "co2": {
+        "description": "",
+        "titleAdd": "",
+        "titleEdit": ""
+      },
+      "co2Services": "",
+      "customForecast": "",
+      "customTariff": "",
+      "description": "",
+      "feedIn": {
+        "description": "",
+        "titleAdd": "",
+        "titleEdit": ""
+      },
+      "generic": "",
+      "grid": {
+        "description": "",
+        "titleAdd": "",
+        "titleEdit": ""
+      },
+      "legacyWarning": "",
+      "option": {
+        "co2": "",
+        "feedIn": "",
+        "grid": "",
+        "planner": "",
+        "solar": "",
+        "temperature": ""
+      },
+      "planner": {
+        "description": "",
+        "titleAdd": "",
+        "titleEdit": ""
+      },
+      "services": "",
+      "solar": {
+        "description": "",
+        "titleAdd": "",
+        "titleEdit": ""
+      },
+      "temperature": {
+        "description": "",
+        "titleAdd": "",
+        "titleEdit": ""
+      },
+      "template": "",
+      "title": "",
+      "titleChoice": "",
+      "type": {
+        "co2": "",
+        "feedIn": "",
+        "grid": "",
+        "planner": "",
+        "solar": "",
+        "temperature": ""
+      },
+      "zones": {
+        "add": "",
+        "allDays": "",
+        "allMonths": "",
+        "allTimes": "",
+        "cancel": "",
+        "charge": "",
+        "days": "",
+        "edit": "",
+        "hours": "",
+        "months": "",
+        "price": "",
+        "priceRequired": "",
+        "remove": "",
+        "save": "",
+        "selectAll": "",
+        "timeFrom": "",
+        "timeRangeError": "",
+        "timeTo": "",
+        "weekdays": ""
+      }
     },
     "telemetry": {
       "description": "Налаштуйте обмін даними, щоб покращити evcc. Ваша конфіденційність важлива для нас, і участь у ній абсолютно необов'язкова.",
@@ -603,6 +1124,118 @@
       "titleEdit": "Редагувати Транспорт"
     }
   },
+  "energy": {
+    "battery": {
+      "charged": "",
+      "discharged": ""
+    },
+    "consumers": {
+      "chart": {
+        "bars": "",
+        "pattern": ""
+      },
+      "cost": "",
+      "others": "",
+      "title": "",
+      "view": {
+        "river": "",
+        "treemap": ""
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "",
+        "returnEnergy": ""
+      },
+      "grid": {
+        "energy": "",
+        "returnEnergy": ""
+      },
+      "meter": {
+        "energy": "",
+        "returnEnergy": ""
+      }
+    },
+    "empty": "",
+    "flow": {
+      "battery": "",
+      "batteryCharge": "",
+      "batteryDischarge": "",
+      "charging": "",
+      "export": "",
+      "grid": "",
+      "heating": "",
+      "home": "",
+      "overview": "",
+      "pv": "",
+      "title": "",
+      "usage": "",
+      "withdrawal": ""
+    },
+    "grid": {
+      "amount": "",
+      "cost": "",
+      "energy": "",
+      "export": "",
+      "exportPrice": "",
+      "import": "",
+      "importPrice": "",
+      "price": "",
+      "revenue": "",
+      "title": ""
+    },
+    "group": {
+      "battery": "",
+      "consumer": "",
+      "forecast": "",
+      "grid": "",
+      "meter": "",
+      "pv": ""
+    },
+    "production": {
+      "above": "",
+      "accuracy": "",
+      "below": "",
+      "deviation": "",
+      "expectedTomorrow": "",
+      "exported": "",
+      "produced": "",
+      "remainingToday": "",
+      "selfConsumed": "",
+      "title": ""
+    },
+    "socTemp": {
+      "charged": "",
+      "soc": "",
+      "temperature": "",
+      "used": ""
+    },
+    "sources": {
+      "battery": "",
+      "cost": "",
+      "energy": "",
+      "grid": "",
+      "hint": "",
+      "price": "",
+      "pv": "",
+      "share": "",
+      "source": "",
+      "title": "",
+      "total": ""
+    },
+    "stat": {
+      "autarky": "",
+      "co2Saved": "",
+      "co2SavedTooltip": "",
+      "configure": "",
+      "noCo2": "",
+      "noPrice": "",
+      "savings": "",
+      "savingsTooltip": "",
+      "versus": ""
+    },
+    "title": ""
+  },
   "footer": {
     "community": {
       "greenEnergy": "Сонячна",
@@ -622,6 +1255,15 @@
       "configurePriceCo2": "Дізнайтеся, як налаштувати дані про ціну та CO₂.",
       "footerLong": "{percent} сонячної енергії",
       "footerShort": "{percent} сонячної",
+      "indicator": {
+        "co2": "",
+        "co2saved": "",
+        "none": "",
+        "price": "",
+        "savings": "",
+        "solar": ""
+      },
+      "indicatorLabel": "",
       "modalTitle": "Огляд зарядної енергії",
       "moneySaved": "{value} збережено",
       "percentGrid": "{grid} кВт/год мережі",
@@ -637,6 +1279,7 @@
       "priceTitle": "Ціна енергії",
       "referenceGrid": "сітка",
       "referenceLabel": "Довідкові дані:",
+      "sessionInfo": "",
       "tabTitle": "Мої дані"
     },
     "sponsor": {
@@ -659,29 +1302,54 @@
     },
     "version": {
       "availableLong": "доступна нова версія",
+      "community": "",
+      "labelEmail": "",
+      "labelPhone": "",
+      "labelRelease": "",
+      "labelVersion": "",
+      "labelWebsite": "",
+      "latestVersion": "",
+      "madeByCommunity": "",
       "modalCancel": "Скасувати",
       "modalDownload": "Завантажити",
       "modalInstalledVersion": "Встановлена версія",
+      "modalLatest": "",
+      "modalNextRelease": "",
       "modalNoReleaseNotes": "Жодних нотаток про випуск немає. Детальніше про нову версію:",
       "modalTitle": "Доступна нова версія",
       "modalUpdate": "Встановити",
       "modalUpdateNow": "Встановити зараз",
       "modalUpdateStarted": "Початок нової версії evcc…",
-      "modalUpdateStatusStart": "Встановлення розпочато:"
+      "modalUpdateStatusStart": "Встановлення розпочато:",
+      "modalViewOnGitHub": "",
+      "openSource": "",
+      "poweredBy": ""
     }
   },
   "forecast": {
     "co2": {
       "average": "Середній",
+      "constant": "",
       "lowestHour": "Найчистіша година",
       "range": "Діапазон"
     },
+    "empty": {
+      "co2": "",
+      "price": "",
+      "setup": "",
+      "solar": "",
+      "temperature": ""
+    },
+    "hideLine": "",
     "modalTitle": "Прогноз",
     "price": {
       "average": "Середній",
+      "constant": "",
       "lowestHour": "Найдешевша година",
       "range": "Діапазон"
     },
+    "priceZoom": "",
+    "showLine": "",
     "solar": {
       "dayAfterTomorrow": "Післязавтра",
       "partly": "частково",
@@ -690,14 +1358,27 @@
       "tomorrow": "Завтра"
     },
     "solarAdjust": "Скоригуйте сонячний прогноз на основі реальних даних виробництва{percent}.",
+    "solarAdjustMedium": "",
+    "solarAdjustShort": "",
+    "temperature": {
+      "average": "",
+      "range": ""
+    },
     "type": {
       "co2": "CO₂",
       "price": "Ціна",
-      "solar": "Сонячна"
+      "solar": "Сонячна",
+      "temperature": ""
     }
   },
   "general": {
-    "note": "Примітка:"
+    "back": "",
+    "cancel": "",
+    "download": "",
+    "error": "",
+    "none": "",
+    "note": "Примітка:",
+    "warning": ""
   },
   "header": {
     "about": "Про evcc",
@@ -710,6 +1391,7 @@
     "sessions": "Сеанси Зарядки"
   },
   "help": {
+    "contactButton": "",
     "discussionsButton": "Обговорення GitHub",
     "documentationButton": "Документація",
     "issueButton": "Повідомити про проблему",
@@ -731,6 +1413,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "",
+      "copy": "",
+      "copySelected": "",
       "description": "Додайте конфігурацію та журнали, щоб ми могли швидко відтворити проблему. Ми рекомендуємо ділитися якомога більшою кількістю даних. Зазвичай дані про стан не потрібні.",
       "include": "включають",
       "lines": "лінії",
@@ -749,8 +1434,11 @@
     "additionalContext": "Додатковий контекст",
     "additionalContextPlaceholder": "Будь-яка додаткова інформація, яка може бути корисною...\n- Відомості про конфігурацію\n- Що ви пробували\n- Відомості про середовище",
     "createButtonDiscussion": "Розпочати обговорення на GitHub...",
+    "createButtonEmail": "",
     "createButtonIssue": "Створити проблему на GitHub...",
     "description": "Ваша інсталяція не працює як очікувалося? Скористайтеся цією сторінкою, щоб отримати допомогу або повідомити про проблеми. Надайте достатньо деталей, щоб допомогти нам зрозуміти та відтворити проблему, при цьому описуючи її стисло, чітко та зрозуміло.",
+    "downloadButton": "",
+    "downloadHint": "",
     "helpType": {
       "discussion": "Потрібна допомога з налаштуванням",
       "discussionDescription": "Обговорення в громаді дають відповіді.",
@@ -762,6 +1450,7 @@
     "issueTitle": "Назва",
     "stepsToReproduce": "Кроки для розмноження",
     "subTitleDiscussion": "Опишіть свою проблему",
+    "subTitleEmail": "",
     "subTitleIssue": "Опишіть проблему",
     "summary": {
       "confirmationButtonDiscussion": "Розпочати обговорення на GitHub",
@@ -807,6 +1496,15 @@
     "title": "Аутентифікація"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "",
+      "label": "",
+      "labelHeating": "",
+      "minCurrent": "",
+      "once": "",
+      "onceTip": "",
+      "permanent": ""
+    },
     "chargingPlan": {
       "active": "Активний",
       "addRepeatingPlan": "Додати повторюваний план",
@@ -814,35 +1512,56 @@
       "goal": "Зарядка гол",
       "modalTitle": "Тарифний план",
       "none": "немає",
+      "once": "",
       "optimization": {
         "cheapest": "найдешевший",
+        "cheapestDescription": "",
+        "cleanest": "",
+        "cleanestDescription": "",
         "continuous": "безперервний",
+        "continuousCo2Description": "",
+        "continuousPriceDescription": "",
+        "disabledDescription": "",
         "label": "Оптимізація"
       },
       "planNumber": "План {number}",
       "precondition": {
+        "disabledDescription": "",
         "label": "Пізня зарядка",
         "optionAll": "все",
-        "optionNo": "ні"
+        "optionNo": "ні",
+        "summary": "",
+        "summaryAll": ""
       },
       "remove": "Yсувати",
       "repeating": "повторення",
       "repeatingPlans": "Повторювані плани",
       "selectAll": "Вибрати все",
+      "strategy": {
+        "label": ""
+      },
       "time": "Час",
       "title": "План",
       "unsavedChanges": "Є незбережені зміни. Застосувати зараз?",
       "update": "Застосувати",
       "weekdays": "Днів"
     },
+    "continuousStatus": {
+      "charging": "",
+      "connected": "",
+      "waitForVehicle": ""
+    },
     "energyflow": {
       "battery": "Батарея",
       "batteryCharge": "Зарядження батареї",
+      "batteryChargeHold": "",
       "batteryDischarge": "Розрядження батареї",
       "batteryDischargeHold": "Акумулятор (locked)",
       "batteryGridChargeActive": "активна зарядка мережі",
       "batteryGridChargeLimit": "зарядка мережі коли",
+      "batteryStatus": "",
       "batteryTooltip": "{energy} із {total} ({soc})",
+      "forecast": "",
       "forecastTooltip": "Прогноз: залишкове виробництво сонячної енергії сьогодні",
       "gridImport": "Використання мережі",
       "homePower": "Споживання",
@@ -852,15 +1571,21 @@
       "pv": "Сонячна система",
       "pvExport": "Експорт мережі",
       "pvProduction": "Виробництво",
-      "selfConsumption": "Власне споживання"
+      "selfConsumption": "Власне споживання",
+      "toggleDetails": ""
     },
     "heatingStatus": {
       "charging": "Опалення…",
       "connected": "Режим очікування.",
+      "minTemp": "",
+      "suggestionStartTooltip": "",
+      "suggestionStopTooltip": "",
       "vehicleLimit": "Обмеження нагрівача",
       "waitForVehicle": "Готовий. Очікування обігрівача…"
     },
     "hemsWarning": {
+      "consumption": "",
+      "feedIn": "",
       "title": "Зовнішнє обмеження:"
     },
     "loadpoint": {
@@ -868,30 +1593,46 @@
       "charged": "Заряджено",
       "co2": "⌀ CO₂",
       "duration": "Тривалість",
+      "emission": "",
       "fallbackName": "Точка зарядки",
       "finished": "Час закінчення",
+      "last24hEnergy": "",
+      "last7dEnergy": "",
+      "phasesMismatch": "",
       "power": "Потужність",
       "price": "Вартість",
       "remaining": "Залишилося",
       "remoteDisabledHard": "{source}: вимкнено",
       "remoteDisabledSoft": "{source}: вимкнув адаптивну сонячну зарядку",
-      "solar": "Сонячна"
+      "solar": "Сонячна",
+      "todayEnergy": ""
     },
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Швидка зарядка від домашнього акумулятора, поки він не розрядиться до {limit}.",
+        "descriptionDisabled": "",
+        "disabled": "",
         "label": "Батарея Boost",
         "mode": "Доступно лише в режимі сонячної батареї та режимі min+sonal.",
-        "once": "Boost активний для цього сеансу зарядки."
+        "once": "Boost активний для цього сеансу зарядки.",
+        "stateActive": "",
+        "stateBelowLimit": "",
+        "stateHold": "",
+        "stateReady": ""
       },
       "batteryUsage": "Домашня батарея",
       "currents": "Струм Зарядки",
       "default": "за замовчуванням",
+      "heating": "",
       "maxCurrent": {
         "label": "Макс. струм"
       },
       "minCurrent": {
         "label": "Мін. струм"
+      },
+      "minTemp": {
+        "description": "",
+        "label": ""
       },
       "phasesConfigured": {
         "label": "Фази",
@@ -904,13 +1645,33 @@
       },
       "smartCostCheap": "Дешева зарядка від мережі",
       "smartCostClean": "Чиста зарядка мережі",
+      "solar": "",
+      "solarShare": {
+        "charging": {
+          "description": "",
+          "descriptionFull": "",
+          "descriptionZero": ""
+        },
+        "heating": {
+          "description": "",
+          "descriptionFull": "",
+          "descriptionZero": ""
+        },
+        "label": "",
+        "thresholdsHint": "",
+        "thresholdsHintYaml": "",
+        "thresholdsLink": ""
+      },
       "title": "Налаштування {0}",
       "vehicle": "Транспортний засіб"
     },
     "mode": {
+      "boost": "",
       "minpv": "Мін+Сонце",
+      "normal": "",
       "now": "Швидко",
       "off": "Вимк.",
+      "on": "",
       "pv": "Сонячна",
       "smart": "Розумний"
     },
@@ -931,6 +1692,7 @@
       "nextPlan": "Наступний план",
       "notReachableInTime": "Ціль буде досягнуто {overrun} пізніше.",
       "onlyInPvMode": "План заряджання працює тільки в сонячному режимі.",
+      "onlyInSmartMode": "",
       "planDuration": "Час зарядки",
       "planPeriodLabel": "Період",
       "planPeriodValue": "{start} до {end}",
@@ -975,9 +1737,26 @@
       "unknown": "Гостьовий транспортний засіб",
       "vehicleSoc": "Заряд"
     },
+    "vehicleSettings": {
+      "connectedTo": "",
+      "description": "",
+      "editHint": "",
+      "keepAsIs": "",
+      "learnMore": "",
+      "limitSoc": "",
+      "menu": "",
+      "minSoc": "",
+      "mode": "",
+      "notConnected": "",
+      "title": ""
+    },
     "vehicleStatus": {
       "awaitingAuthorization": "Очікування авторизації.",
       "batteryBoost": "Підвищення заряду батареї активне.",
+      "batteryBoostBelowLimit": "",
+      "batteryBoostDisabled": "",
+      "batteryBoostEnabled": "",
+      "batteryBoostHold": "",
       "charging": "Зарядка…",
       "cheapEnergyCharging": "Доступна дешева енергія.",
       "cheapEnergyNextStart": "Дешева енергія в {duration}.",
@@ -997,11 +1776,14 @@
       "pvEnable": "Надлишки доступні. Скоро почнеться.",
       "scale1p": "Зменшення до 1-фазного живлення скоро.",
       "scale3p": "Збільшення до 3-фазного живлення скоро.",
+      "suggestionStartTooltip": "",
+      "suggestionStopTooltip": "",
       "targetChargeActive": "Запланований заряд активний. Орієнтовний фініш через {duration}.",
       "targetChargePlanned": "Запланована зарядка починається о {duration}.",
       "targetChargeWaitForVehicle": "План заряджання готовий. Очікування на транспортний засіб…",
       "vehicleLimit": "Ліміт транспортного засобу",
       "vehicleLimitReached": "Ліміт транспортного засобу досягнуто.",
+      "waitForAuthorization": "",
       "waitForVehicle": "Готовий. Очікування на транспортний засіб…",
       "welcome": "Короткий початковий заряд для підтвердження підключення."
     },
@@ -1034,6 +1816,8 @@
     "updatePassword": "Оновити пароль"
   },
   "session": {
+    "addOdometer": "",
+    "addedRange": "",
     "cancel": "Скасувати",
     "co2": "CO₂",
     "date": "Період",
@@ -1044,13 +1828,16 @@
     "meterstop": "Зупинка лічильника",
     "odometer": "Пробіг",
     "price": "Ціна",
+    "soc": "",
     "started": "Розпочато",
     "title": "Сеанс зарядки"
   },
   "sessions": {
+    "addedRange": "",
     "avgPower": "⌀ потужність",
     "avgPrice": "⌀ Ціна",
     "chargeDuration": "Тривалість",
+    "chargedSoc": "",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Ціна {byGroup}",
@@ -1072,6 +1859,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "",
       "chargedenergy": "Енергія (кВт/год)",
       "chargeduration": "Тривалість",
       "co2perkwh": "CO₂/kWh'",
@@ -1084,10 +1872,14 @@
       "odometer": "Пробіг (км)",
       "price": "Ціна",
       "priceperkwh": "Ціна/kWh",
+      "socend": "",
+      "socstart": "",
       "solarpercentage": "Соляр (%)",
       "vehicle": "Транспортний засіб"
     },
     "date": "Почати",
+    "download": "",
+    "downloadTotal": "",
     "energy": "Заряджено",
     "filter": {
       "allLoadpoints": "всі точки зарядки",
@@ -1107,8 +1899,10 @@
     },
     "loadpoint": "Точка зарядки",
     "noData": "Ніяких зарядних сесій цього місяця.",
+    "odometer": "",
     "overview": "Огляд",
     "period": {
+      "day": "",
       "month": "Місяць",
       "total": "Всього",
       "year": "Рік"
@@ -1127,6 +1921,13 @@
     "vehicle": "Транспортний засіб"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "",
+      "dmy": "",
+      "label": "",
+      "mdy": "",
+      "ymd": ""
+    },
     "deviceInfo": "Налаштування, які ви виконуєте в цьому діалоговому вікні, впливають лише на цей пристрій.",
     "fullscreen": {
       "enter": "Перейти в повноекранний режим",
@@ -1142,6 +1943,7 @@
       "label": "Мова"
     },
     "loadpoints": {
+      "disabledDevice": "",
       "help": "Змінити порядок та видимість інтерфейсу користувача.",
       "hide": "Приховати {title}",
       "label": "Пункти зарядки",
@@ -1196,6 +1998,7 @@
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Час паузи",
+    "batteryDescription": "",
     "description": "Призупиняє заряджання під час високих цін, щоб надати пріоритет вигідному постачанню електроенергії з мережі.",
     "priceLabel": "Коефіцієнт подачі електроенергії",
     "priceLimit": "Обмеження подачі електроенергії",
@@ -1214,5 +2017,14 @@
     "lineErrorLink": "Лінія {0}",
     "restartButton": "Перезапустити",
     "title": "Помилка запуску"
+  },
+  "tabBar": {
+    "battery": "",
+    "charge": "",
+    "comingSoon": "",
+    "energy": "",
+    "forecast": "",
+    "more": "",
+    "sessions": ""
   }
 }

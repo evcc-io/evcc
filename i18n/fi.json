@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Valtuuttaminen onnistui",
     "buttonConnect": "Yhdistä {provider}:een",
     "buttonDisconnect": "Katkaise yhteys",
+    "challenge": {
+      "captcha": {
+        "label": "",
+        "title": ""
+      },
+      "code": {
+        "label": "",
+        "title": ""
+      },
+      "openLogin": "",
+      "submit": ""
+    },
     "confirmLogout": "Haluatko varmasti katkaista yhteyden {title}:een?",
     "connect": "yhdistä",
     "disconnect": "katkaise yhteys",
@@ -25,6 +37,7 @@
       "discharging": "käytetään",
       "energy": "Energia",
       "gridCharge": "lataus verkosta",
+      "gridDischarge": "",
       "hold": "purku estetty",
       "holdCharge": "lataus estetty",
       "ofTotal": "{total}:sta",
@@ -43,6 +56,12 @@
       "bufferTitle": "Akku latauspuskurina",
       "discharge": "Estä kotiakun purkautuminen välittömässä-tilassa ja suunnitellun latauksen tilassa.",
       "gridDischarge": "Salli kotiakun purkaa varaustaan sähköverkkoon.",
+      "gridDischargeConfirm": {
+        "country": "",
+        "description": "",
+        "noCountry": "",
+        "title": ""
+      },
       "priority": "Kotiakulla on prioriteetti ollessaan alle {soc}. Silloin latauspisteet saavat vain ylijäämän.",
       "priorityNone": "Aurinkoylijäämä käytetään suoraan latauspisteisiin. Aseta arvo yli {soc} priorisoidaksesi kotiakkua.",
       "priorityTitle": "Minne aurinkoylijäämä käytetään ensisijaisesti?"
@@ -144,10 +163,45 @@
         "switchsocket": "Itse määritelty relepistorasia"
       }
     },
+    "circuit": {
+      "addMeter": "",
+      "custom": "",
+      "deleteChildrenFirst": "",
+      "meterDedicated": "",
+      "meterGrid": "",
+      "meterHelp": "",
+      "meterLabel": "",
+      "meterLabelAdd": "",
+      "meterLabelEdit": "",
+      "meterNone": "",
+      "meterSelectionHelpDedicatedMeter": "",
+      "meterSelectionHelpGridMeter": "",
+      "meterSelectionHelpNoMeter": "",
+      "meterSelectionLabel": "",
+      "parentCircuit": "",
+      "template": "",
+      "titleAdd": "",
+      "titleEdit": "",
+      "titleLabel": ""
+    },
     "circuits": {
+      "addMainCircuit": "",
+      "addSubCircuit": "",
+      "chargingPointsNote": "",
       "description": "Varmistaa, että kaikkien piiriin kytkettyjen kuormituspisteiden summa ei ylitä määritettyjä teho- ja virtarajoja. Piirejä voi rakentaa sisäkkäin.",
+      "legacyWarning": "",
+      "meterDedicated": "",
+      "meterGrid": "",
       "title": "Kuormanhallinta",
       "usableMeters": "Käytettävissä olevat mittarit"
+    },
+    "combobox": {
+      "count": "",
+      "matching": "",
+      "other": "",
+      "searching": "",
+      "suggestions": "",
+      "used": ""
     },
     "consumer": {
       "description": "Seuraa pienempiä, ei-hallittuja kodinkoneita (jääkaappi, pesukone, ...). Antaa sinulle paremman yleiskuvan kodin kulutuksesta.",
@@ -216,6 +270,8 @@
       "identifier": "RFID-tunniste",
       "loginBlocked": "Sisäänkirjoitumisyritysten raja saavutettu",
       "max": "maksimi",
+      "maxCurrent": "",
+      "maxPower": "",
       "messengers": "Palvelut",
       "no": "ei",
       "odometer": "Matkamittari",
@@ -352,6 +408,7 @@
       "enable": "Ota käyttöön",
       "error": "Virhe",
       "experimental": "Kokeellinen",
+      "forceEnable": "",
       "forceSave": "Tallenna joka tapauksessa",
       "fromYamlHint": "Huomio: Asetus on evcc.yaml-tiedostosta. Poista asetus tiedostosta, jotta voisit muokata sitä täällä.",
       "hideAdvancedSettings": "Piilota edistyneet asetukset",
@@ -370,6 +427,7 @@
       "saving": "Tallentaa…",
       "selectFile": "Selaa",
       "showAdvancedSettings": "Näytä edistyneet asetukset",
+      "site": "",
       "telemetry": "Telemetria",
       "templateLoading": "Ladataan...",
       "title": "Otsikko",
@@ -888,6 +946,22 @@
       "labelVendorId": "Valmistaja-ID",
       "title": "SMA Sunny Home Manager"
     },
+    "site": {
+      "country": {
+        "description": "",
+        "label": ""
+      },
+      "currency": {
+        "description": "",
+        "example": "",
+        "label": ""
+      },
+      "siteTitle": {
+        "description": "",
+        "label": ""
+      },
+      "title": ""
+    },
     "sponsor": {
       "addToken": "Anna tunnus",
       "changeToken": "Vaihda tunnus",
@@ -1056,6 +1130,119 @@
       "titleEdit": "Muokkaa ajoneuvoa"
     }
   },
+  "energy": {
+    "battery": {
+      "charged": "",
+      "discharged": ""
+    },
+    "consumers": {
+      "chart": {
+        "bars": "",
+        "pattern": ""
+      },
+      "cost": "",
+      "others": "",
+      "title": "",
+      "view": {
+        "river": "",
+        "treemap": ""
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "ladattu",
+        "returnEnergy": "käytetty"
+      },
+      "grid": {
+        "energy": "ladattu verkosta",
+        "returnEnergy": "syötetty verkkoon"
+      },
+      "meter": {
+        "energy": "Energia",
+        "returnEnergy": "Energia (käänteinen)"
+      }
+    },
+    "empty": "",
+    "flow": {
+      "battery": "",
+      "batteryCharge": "",
+      "batteryDischarge": "",
+      "charging": "",
+      "export": "",
+      "grid": "",
+      "heating": "",
+      "home": "",
+      "overview": "",
+      "pv": "",
+      "title": "",
+      "usage": "",
+      "withdrawal": ""
+    },
+    "grid": {
+      "amount": "",
+      "cost": "",
+      "energy": "",
+      "export": "",
+      "exportPrice": "",
+      "import": "",
+      "importPrice": "",
+      "price": "",
+      "revenue": "",
+      "title": ""
+    },
+    "group": {
+      "battery": "Akku",
+      "consumer": "Kulutus",
+      "forecast": "Ennuste",
+      "grid": "Sähköverkko",
+      "loadpoint": "Lataus & lämmitys",
+      "meter": "Lisämittarit",
+      "pv": "Tuotanto"
+    },
+    "production": {
+      "above": "",
+      "accuracy": "",
+      "below": "",
+      "deviation": "",
+      "expectedTomorrow": "",
+      "exported": "",
+      "produced": "",
+      "remainingToday": "",
+      "selfConsumed": "",
+      "title": ""
+    },
+    "socTemp": {
+      "charged": "",
+      "soc": "",
+      "temperature": "",
+      "used": ""
+    },
+    "sources": {
+      "battery": "",
+      "cost": "",
+      "energy": "",
+      "grid": "",
+      "hint": "",
+      "price": "",
+      "pv": "",
+      "share": "",
+      "source": "",
+      "title": "",
+      "total": ""
+    },
+    "stat": {
+      "autarky": "",
+      "co2Saved": "",
+      "co2SavedTooltip": "",
+      "configure": "",
+      "noCo2": "",
+      "noPrice": "",
+      "savings": "",
+      "savingsTooltip": "",
+      "versus": ""
+    },
+    "title": ""
+  },
   "footer": {
     "community": {
       "greenEnergy": "Aurinkoenergiaa",
@@ -1193,6 +1380,7 @@
   },
   "general": {
     "back": "Takaisin",
+    "cancel": "",
     "download": "Lataa",
     "error": "Virhe",
     "none": "ei mitään",
@@ -1229,31 +1417,6 @@
     "restartButton": "Käynnistä uudelleen",
     "restartDescription": "Yrititkö sammuttaa ja käynnistää uudelleen?",
     "secondaryActions": "Etkö vieläkään pysty ratkaisemaan ongelmaasi? Tässä on joitain raskaampia vaihtoehtoja."
-  },
-  "energy": {
-    "direction": {
-      "battery": {
-        "energy": "ladattu",
-        "returnEnergy": "käytetty"
-      },
-      "grid": {
-        "energy": "ladattu verkosta",
-        "returnEnergy": "syötetty verkkoon"
-      },
-      "meter": {
-        "energy": "Energia",
-        "returnEnergy": "Energia (käänteinen)"
-      }
-    },
-    "group": {
-      "battery": "Akku",
-      "consumer": "Kulutus",
-      "forecast": "Ennuste",
-      "grid": "Sähköverkko",
-      "loadpoint": "Lataus & lämmitys",
-      "meter": "Lisämittarit",
-      "pv": "Tuotanto"
-    }
   },
   "issue": {
     "additional": {
@@ -1404,6 +1567,7 @@
       "batteryDischargeHold": "Akku (lukittu)",
       "batteryGridChargeActive": "Ladataan verkosta",
       "batteryGridChargeLimit": "Milloin ladataan verkosta",
+      "batteryStatus": "",
       "batteryTooltip": "{energy} / {total} ({soc})",
       "forecast": "Ennuste",
       "forecastTooltip": "ennuste: jäljellä oleva aurinkotuotanto tänään",
@@ -1868,6 +2032,7 @@
     "battery": "Akku",
     "charge": "Lataus",
     "comingSoon": "Tämä sivu on vielä työn alla.",
+    "energy": "",
     "forecast": "Ennuste",
     "more": "Lisää",
     "sessions": "Tapahtumat"

@@ -37,6 +37,7 @@
       "discharging": "descargando",
       "energy": "Energía",
       "gridCharge": "cargando desde la red",
+      "gridDischarge": "",
       "hold": "descarga bloqueada",
       "holdCharge": "carga bloqueada",
       "ofTotal": "de {total}",
@@ -193,6 +194,14 @@
       "meterGrid": "Red eléctrica",
       "title": "Gestión de carga",
       "usableMeters": "Referencias de contadores utilizables"
+    },
+    "combobox": {
+      "count": "",
+      "matching": "",
+      "other": "",
+      "searching": "",
+      "suggestions": "",
+      "used": ""
     },
     "consumer": {
       "description": "Monitorea electrodomésticos más pequeños que no se pueden controlar (frigorífico, lavadora...). Te ofrece una mejor visión general del consumo de tu hogar.",
@@ -1121,6 +1130,118 @@
       "titleEdit": "Editar el vehículo"
     }
   },
+  "energy": {
+    "battery": {
+      "charged": "",
+      "discharged": ""
+    },
+    "consumers": {
+      "chart": {
+        "bars": "",
+        "pattern": ""
+      },
+      "cost": "",
+      "others": "",
+      "title": "",
+      "view": {
+        "river": "",
+        "treemap": ""
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "",
+        "returnEnergy": ""
+      },
+      "grid": {
+        "energy": "",
+        "returnEnergy": ""
+      },
+      "meter": {
+        "energy": "",
+        "returnEnergy": ""
+      }
+    },
+    "empty": "",
+    "flow": {
+      "battery": "",
+      "batteryCharge": "",
+      "batteryDischarge": "",
+      "charging": "",
+      "export": "",
+      "grid": "",
+      "heating": "",
+      "home": "",
+      "overview": "",
+      "pv": "",
+      "title": "",
+      "usage": "",
+      "withdrawal": ""
+    },
+    "grid": {
+      "amount": "",
+      "cost": "",
+      "energy": "",
+      "export": "",
+      "exportPrice": "",
+      "import": "",
+      "importPrice": "",
+      "price": "",
+      "revenue": "",
+      "title": ""
+    },
+    "group": {
+      "battery": "",
+      "consumer": "",
+      "forecast": "",
+      "grid": "",
+      "meter": "",
+      "pv": ""
+    },
+    "production": {
+      "above": "",
+      "accuracy": "",
+      "below": "",
+      "deviation": "",
+      "expectedTomorrow": "",
+      "exported": "",
+      "produced": "",
+      "remainingToday": "",
+      "selfConsumed": "",
+      "title": ""
+    },
+    "socTemp": {
+      "charged": "",
+      "soc": "",
+      "temperature": "",
+      "used": ""
+    },
+    "sources": {
+      "battery": "",
+      "cost": "",
+      "energy": "",
+      "grid": "",
+      "hint": "",
+      "price": "",
+      "pv": "",
+      "share": "",
+      "source": "",
+      "title": "",
+      "total": ""
+    },
+    "stat": {
+      "autarky": "",
+      "co2Saved": "",
+      "co2SavedTooltip": "",
+      "configure": "",
+      "noCo2": "",
+      "noPrice": "",
+      "savings": "",
+      "savingsTooltip": "",
+      "versus": ""
+    },
+    "title": ""
+  },
   "footer": {
     "community": {
       "greenEnergy": "Energía Solar",
@@ -1445,6 +1566,7 @@
       "batteryDischargeHold": "Batería (bloqueada)",
       "batteryGridChargeActive": "Carga de red activa",
       "batteryGridChargeLimit": "Carga de la red cuando",
+      "batteryStatus": "",
       "batteryTooltip": "{energy} de {total} ({soc})",
       "forecast": "Previsión",
       "forecastTooltip": "Previsión: producción solar restante para hoy",
@@ -1936,6 +2058,7 @@
     "battery": "Batería",
     "charge": "Carga",
     "comingSoon": "Esta página está en construcción.",
+    "energy": "",
     "forecast": "Previsión",
     "more": "Más",
     "sessions": "Sesiones"

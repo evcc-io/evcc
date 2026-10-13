@@ -7,17 +7,64 @@
     "authorizationSuccessful": "Autoriseerimine õnnestus",
     "buttonConnect": "Ühenda teenusepakkujaga {provider}",
     "buttonDisconnect": "Katkesta ühendus",
+    "challenge": {
+      "captcha": {
+        "label": "",
+        "title": ""
+      },
+      "code": {
+        "label": "",
+        "title": ""
+      },
+      "openLogin": "",
+      "submit": ""
+    },
     "confirmLogout": "Kas oled kindel, et soovid katkestada {title} ühenduse?",
     "connect": "ühenda",
     "disconnect": "katkesta ühendus",
     "loggedOut": "Väljalogimine õnnestus",
-    "logoutFailed": "Väljalogimine ei õnnestunud"
+    "logoutFailed": "Väljalogimine ei õnnestunud",
+    "modalDescriptionLogin": "",
+    "modalDescriptionLogout": "",
+    "success": "",
+    "successCloseModal": "",
+    "successCloseTab": "",
+    "title": ""
   },
   "battery": {
     "card": {
       "charging": "laadimas",
       "discharging": "tühjenemas",
-      "energy": "Energia"
+      "energy": "Energia",
+      "gridCharge": "",
+      "gridDischarge": "",
+      "hold": "",
+      "holdCharge": "",
+      "ofTotal": "",
+      "power": "",
+      "soc": ""
+    },
+    "combined": "",
+    "config": {
+      "buffer": "",
+      "bufferNone": "",
+      "bufferStart": {
+        "above": "",
+        "full": "",
+        "never": ""
+      },
+      "bufferTitle": "",
+      "discharge": "",
+      "gridDischarge": "",
+      "gridDischargeConfirm": {
+        "country": "",
+        "description": "",
+        "noCountry": "",
+        "title": ""
+      },
+      "priority": "",
+      "priorityNone": "",
+      "priorityTitle": ""
     },
     "optimizer": {
       "action": {
@@ -35,31 +82,66 @@
     }
   },
   "batterySettings": {
+    "gridChargeTab": "",
+    "gridDischargeTab": "",
     "modalTitle": "Kodu aku",
     "noBattery": "Ühtegi akut pole seadistatud.",
     "usageTab": "Akukasutus"
   },
   "colors": {
-    "auto": "Automaatne"
+    "auto": "Automaatne",
+    "hex": ""
   },
   "config": {
+    "adminPassword": {
+      "description": "",
+      "invalid": "",
+      "title": ""
+    },
     "apiKey": {
+      "description": "",
+      "exampleLabel": "",
+      "generate": "",
       "generateConfirm": "Uue API-võtme loomiseks sisesta oma peakasutaja salasõna.",
       "keyLabel": "API-võti",
       "regenerate": "Loo API-võti uuesti",
       "regenerateConfirm": "API-võtme uuesti loomiseks sisesta oma peakasutaja salasõna.",
       "regenerateLink": "Loo uuesti",
+      "regenerateWarning": "",
       "revealSuccess": "Sinu uus API-võti on valmis kasutamiseks.",
       "revealTitle": "API-võti on loodud",
       "shownOnce": "Seda võtit näidatakse vaid üks kord ja teda ei saa uuesti näidata. Salvesta ta turvaliselt.",
       "title": "API-võti"
+    },
+    "aux": {
+      "description": "",
+      "titleAdd": "",
+      "titleEdit": ""
     },
     "battery": {
       "title": "Aku",
       "titleAdd": "Lisa aku",
       "titleEdit": "Muuda akut"
     },
+    "charge": {
+      "titleAdd": "",
+      "titleEdit": ""
+    },
     "charger": {
+      "chargers": "",
+      "generic": "",
+      "heatingdevices": "",
+      "ocppConfirmContinue": "",
+      "ocppConnected": "",
+      "ocppDescription": "",
+      "ocppHelp": "",
+      "ocppLabel": "",
+      "ocppNextStep": "",
+      "ocppStep1": "",
+      "ocppStep2": "",
+      "ocppStep3": "",
+      "ocppWaiting": "",
+      "switchsockets": "",
       "template": "Tootja",
       "titleAdd": {
         "charging": "Lisa laadija",
@@ -74,24 +156,86 @@
           "charging": "Kasutaja poolt määratletud laadijat",
           "heating": "Kasutaja poolt määratletud soojendusseade"
         },
-        "heatpump": "Kasutaja poolt määratletud soojuspump"
+        "heatpump": "Kasutaja poolt määratletud soojuspump",
+        "sgready": "",
+        "sgready-boost": "",
+        "sgready-relay": "",
+        "switchsocket": ""
       }
     },
+    "circuit": {
+      "addMeter": "",
+      "custom": "",
+      "deleteChildrenFirst": "",
+      "meterDedicated": "",
+      "meterGrid": "",
+      "meterHelp": "",
+      "meterLabel": "",
+      "meterLabelAdd": "",
+      "meterLabelEdit": "",
+      "meterNone": "",
+      "meterSelectionHelpDedicatedMeter": "",
+      "meterSelectionHelpGridMeter": "",
+      "meterSelectionHelpNoMeter": "",
+      "meterSelectionLabel": "",
+      "parentCircuit": "",
+      "template": "",
+      "titleAdd": "",
+      "titleEdit": "",
+      "titleLabel": ""
+    },
     "circuits": {
-      "title": "Koormushaldus"
+      "addMainCircuit": "",
+      "addSubCircuit": "",
+      "chargingPointsNote": "",
+      "description": "",
+      "legacyWarning": "",
+      "meterDedicated": "",
+      "meterGrid": "",
+      "title": "Koormushaldus",
+      "usableMeters": ""
+    },
+    "combobox": {
+      "count": "",
+      "matching": "",
+      "other": "",
+      "searching": "",
+      "suggestions": "",
+      "used": ""
+    },
+    "consumer": {
+      "description": "",
+      "titleAdd": "",
+      "titleEdit": ""
     },
     "control": {
+      "description": "",
+      "descriptionInterval": "",
+      "descriptionResidualPower": "",
       "labelInterval": "Uuenduse välp",
-      "labelResidualPower": "Jääkvõimsus"
+      "labelResidualPower": "Jääkvõimsus",
+      "title": ""
     },
     "currency": {
       "example": "Sinu laadimishind oli {price}. Sa säästsid {amount}.",
       "label": "Valuuta",
       "title": "Valuuta"
     },
+    "curtailer": {
+      "description": "",
+      "generic": "",
+      "specific": "",
+      "template": "",
+      "title": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
     "deviceValue": {
       "activeClients": "Aktiivsed kliendid",
       "amount": "Kogus",
+      "asleep": "",
+      "broker": "",
+      "bucket": "",
       "capacity": "Mahtuvus",
       "chargeStatus": "Olek",
       "chargeStatusA": "pole ühendatud",
@@ -106,12 +250,18 @@
       "connections": "Ühendused",
       "controllable": "Juhitav",
       "currency": "Valuuta",
+      "current": "",
+      "currentRange": "",
+      "curtailLimit": "",
+      "curtailable": "",
       "curtailed": "Piiratud siend",
       "detected": "Tuvastatud",
+      "dimLimit": "",
       "dimmed": "Piiratud tarbimine",
       "enabled": "Kasutusel",
       "energy": "Energia",
       "events": "Sündmused",
+      "exportLimit": "",
       "feedinPrice": "Sisendhind",
       "forecast": "Ennustus",
       "gridPrice": "Võrguhind",
@@ -119,10 +269,1760 @@
       "identifier": "RFID-tunnus",
       "loginBlocked": "Sisselogimiste piir on käes",
       "max": "enim",
+      "maxCurrent": "",
+      "maxPower": "",
       "messengers": "Teenused",
       "no": "ei",
       "odometer": "Odomeeter",
-      "org": "Organisatsioon"
+      "org": "Organisatsioon",
+      "outdoorTemp": "",
+      "phaseCurrents": "",
+      "phasePowers": "",
+      "phaseVoltages": "",
+      "phases1p3p": "",
+      "power": "",
+      "powerRange": "",
+      "price": "",
+      "productionLimited": "",
+      "range": "",
+      "remoteEnabled": "",
+      "returnEnergy": "",
+      "singlePhase": "",
+      "soc": "",
+      "solarForecast": "",
+      "switchDevice": "",
+      "temp": "",
+      "topic": "",
+      "url": "",
+      "usage": {
+        "aux": {
+          "energy": "",
+          "returnEnergy": ""
+        },
+        "battery": {
+          "energy": "",
+          "returnEnergy": ""
+        },
+        "charge": {
+          "energy": "",
+          "returnEnergy": ""
+        },
+        "consumer": {
+          "energy": "",
+          "returnEnergy": ""
+        },
+        "grid": {
+          "energy": "",
+          "returnEnergy": ""
+        },
+        "pv": {
+          "energy": ""
+        }
+      },
+      "vehicleLimitSoc": "",
+      "yes": ""
+    },
+    "deviceValueChargeStatus": {
+      "A": "",
+      "B": "",
+      "C": ""
+    },
+    "devices": {
+      "auxMeter": "",
+      "batteryStorage": "",
+      "consumer": "",
+      "solarSystem": ""
+    },
+    "editor": {
+      "loading": ""
+    },
+    "eebus": {
+      "certificate": {
+        "private": "",
+        "public": "",
+        "title": ""
+      },
+      "configuredDevices": "",
+      "description": "",
+      "descriptionAdvanced": "",
+      "interfaces": "",
+      "interfacesHelp": "",
+      "noConfiguredDevices": "",
+      "noPairings": "",
+      "pairings": "",
+      "port": "",
+      "portHelp": "",
+      "qr": "",
+      "qrExplain": "",
+      "removeConfirm": "",
+      "removePairing": "",
+      "removePairingConfirm": "",
+      "shipid": "",
+      "shipidExplain": "",
+      "shipidHelp": "",
+      "ski": "",
+      "skiExplain": "",
+      "title": ""
+    },
+    "experimental": {
+      "description": "",
+      "title": ""
+    },
+    "ext": {
+      "description": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
+    "form": {
+      "danger": "",
+      "deprecated": "",
+      "durationUnit": "",
+      "example": "",
+      "optional": ""
+    },
+    "general": {
+      "applyAndClose": "",
+      "authPerform": "",
+      "authPerformHint": "",
+      "authPrepare": "",
+      "cancel": "",
+      "change": "",
+      "clear": "",
+      "close": "",
+      "confirmDisable": "",
+      "confirmEnable": "",
+      "confirmSave": "",
+      "copied": "",
+      "copy": "",
+      "customHelp": "",
+      "customOption": "",
+      "delete": "",
+      "disable": "",
+      "disabled": "",
+      "dismiss": "",
+      "docsLink": "",
+      "dragHandle": "",
+      "dragItem": "",
+      "dragList": "",
+      "enable": "",
+      "error": "",
+      "experimental": "",
+      "forceEnable": "",
+      "forceSave": "",
+      "fromYamlHint": "",
+      "hideAdvancedSettings": "",
+      "invalidFileSelected": "",
+      "legacy": "",
+      "moreInfo": "",
+      "noFileSelected": "",
+      "off": "",
+      "on": "",
+      "readFromFile": "",
+      "remove": "",
+      "required": "",
+      "reset": "",
+      "save": "",
+      "saved": "",
+      "saving": "",
+      "selectFile": "",
+      "showAdvancedSettings": "",
+      "site": "",
+      "telemetry": "",
+      "templateLoading": "",
+      "title": "",
+      "typeDeprecated": "",
+      "validateSave": ""
+    },
+    "grid": {
+      "title": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
+    "hems": {
+      "changeConfirm": "",
+      "csv": {
+        "created": "",
+        "finished": "",
+        "gridpower": "",
+        "limitpower": "",
+        "type": ""
+      },
+      "customOption": "",
+      "description": "",
+      "download": "",
+      "dynamicLimits": "",
+      "eventsRecorded": "",
+      "exportLimit": "",
+      "exportLimitDescription": "",
+      "exportLimitHint": "",
+      "generic": "",
+      "integrations": "",
+      "lastEvent": "",
+      "noEvents": "",
+      "recordedEvents": "",
+      "staticLimits": "",
+      "template": "",
+      "title": "",
+      "type": {
+        "custom": "",
+        "relay": ""
+      }
+    },
+    "icon": {
+      "change": "",
+      "label": ""
+    },
+    "influx": {
+      "description": "",
+      "descriptionToken": "",
+      "labelBucket": "",
+      "labelCheckInsecure": "",
+      "labelDatabase": "",
+      "labelInsecure": "",
+      "labelOrg": "",
+      "labelPassword": "",
+      "labelToken": "",
+      "labelUrl": "",
+      "labelUser": "",
+      "title": "",
+      "v1Support": "",
+      "v2Support": ""
+    },
+    "loadpoint": {
+      "addCharger": {
+        "charging": "",
+        "heating": ""
+      },
+      "addMeter": "",
+      "advancedConfig": "",
+      "cancel": "",
+      "chargerError": {
+        "charging": "",
+        "heating": ""
+      },
+      "chargerLabel": {
+        "charging": "",
+        "heating": ""
+      },
+      "chargingTitle": "",
+      "circuitHelp": "",
+      "circuitInvalid": "",
+      "circuitLabel": "",
+      "circuitUnassigned": "",
+      "created": "",
+      "createdTitle": {
+        "charging": "",
+        "heating": ""
+      },
+      "creating": {
+        "charging": "",
+        "heating": ""
+      },
+      "currentRangeHelp": {
+        "charging": "",
+        "heating": ""
+      },
+      "defaultModeHelp": {
+        "charging": "",
+        "heating": ""
+      },
+      "defaultModeHelpKeep": "",
+      "defaultModeKeep": "",
+      "defaultModeLabel": "",
+      "delete": "",
+      "electricalSubtitle": "",
+      "electricalTitle": "",
+      "energyMeterHelp": "",
+      "energyMeterLabel": "",
+      "estimateLabel": "",
+      "maxCurrentHelp": "",
+      "maxCurrentLabel": "",
+      "maxTempHelp": "",
+      "maxTempLabel": "",
+      "minCurrentHelp": "",
+      "minCurrentLabel": "",
+      "minTempLabel": "",
+      "noVehicles": "",
+      "option": {
+        "charging": "",
+        "heating": ""
+      },
+      "phases1p": "",
+      "phases3p": "",
+      "phasesAutomatic": "",
+      "phasesAutomaticHelp": "",
+      "phasesHelp": "",
+      "phasesLabel": "",
+      "pollIntervalDanger": "",
+      "pollIntervalHelp": "",
+      "pollIntervalLabel": "",
+      "pollModeAlways": "",
+      "pollModeAlwaysHelp": "",
+      "pollModeCharging": "",
+      "pollModeChargingHelp": "",
+      "pollModeConnected": "",
+      "pollModeConnectedHelp": "",
+      "pollModeLabel": "",
+      "priorityHelp": "",
+      "priorityLabel": "",
+      "save": "",
+      "solarBehaviorCustomHelp": "",
+      "solarBehaviorDefaultHelp": "",
+      "solarBehaviorLabel": "",
+      "solarModeCustom": "",
+      "solarModeMaximum": "",
+      "solarShareNote": "",
+      "solarShareReset": "",
+      "temperatureRangeHelp": "",
+      "temperatureRangeTitle": "",
+      "thresholdDisableDelayLabel": "",
+      "thresholdDisableHelpInvalid": "",
+      "thresholdDisableHelpPositive": "",
+      "thresholdDisableHelpZero": "",
+      "thresholdDisableLabel": "",
+      "thresholdEnableDelayLabel": "",
+      "thresholdEnableHelpInvalid": "",
+      "thresholdEnableHelpNegative": "",
+      "thresholdEnableHelpZero": "",
+      "thresholdEnableLabel": "",
+      "titleAdd": {
+        "charging": "",
+        "heating": "",
+        "unknown": ""
+      },
+      "titleEdit": {
+        "charging": "",
+        "heating": "",
+        "unknown": ""
+      },
+      "titleExample": {
+        "charging": "",
+        "heating": ""
+      },
+      "titleLabel": "",
+      "vehicleAutoDetection": "",
+      "vehicleHelpAutoDetection": "",
+      "vehicleHelpDefault": "",
+      "vehicleInvalid": "",
+      "vehicleLabel": "",
+      "vehiclesTitle": ""
+    },
+    "main": {
+      "addAdditional": "",
+      "addConsumer": "",
+      "addCurtailer": "",
+      "addGrid": "",
+      "addLoadpoint": "",
+      "addPvBattery": "",
+      "addTariffs": "",
+      "addVehicle": "",
+      "configured": "",
+      "edit": "",
+      "loadpointRequired": "",
+      "name": "",
+      "title": "",
+      "unconfigured": "",
+      "vehicles": "",
+      "welcomeBannerText": "",
+      "welcomeBannerTitle": ""
+    },
+    "mcp": {
+      "description": "",
+      "exampleLabel": "",
+      "restartHint": "",
+      "title": "",
+      "url": ""
+    },
+    "messaging": {
+      "addMessenger": "",
+      "description": "",
+      "event": {
+        "asleep": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "connect": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "disconnect": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "guest": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "planoverrun": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "soc": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "start": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "stop": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        },
+        "suggestion": {
+          "messageDefault": "",
+          "title": "",
+          "titleDefault": ""
+        }
+      },
+      "eventMessage": "",
+      "eventTitle": "",
+      "events": "",
+      "legacyWarning": "",
+      "messengers": "",
+      "seePlaceholders": "",
+      "title": ""
+    },
+    "messenger": {
+      "custom": "",
+      "generic": "",
+      "primary": "",
+      "template": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
+    "meter": {
+      "cancel": "",
+      "convertToConsumer": {
+        "confirm": "",
+        "link": ""
+      },
+      "delete": "",
+      "generic": "",
+      "option": {
+        "aux": "",
+        "battery": "",
+        "consumer": "",
+        "grid": "",
+        "pv": ""
+      },
+      "save": "",
+      "specific": "",
+      "template": "",
+      "titleChoice": "",
+      "titleLabel": "",
+      "usage": {
+        "aux": "",
+        "battery": "",
+        "charge": "",
+        "grid": "",
+        "label": "",
+        "pv": ""
+      },
+      "validateSave": ""
+    },
+    "modbus": {
+      "baudrate": "",
+      "comset": "",
+      "connection": "",
+      "connectionHintSerial": "",
+      "connectionHintTcpip": "",
+      "connectionValueSerial": "",
+      "connectionValueTcpip": "",
+      "delay": "",
+      "delayHint": "",
+      "device": "",
+      "deviceHint": "",
+      "host": "",
+      "hostHint": "",
+      "id": "",
+      "port": "",
+      "protocol": "",
+      "protocolHintRtu": "",
+      "protocolHintTcp": "",
+      "protocolValueRtu": "",
+      "protocolValueTcp": "",
+      "timeout": "",
+      "timeoutHint": ""
+    },
+    "modbusproxy": {
+      "add": "",
+      "connection": "",
+      "description": "",
+      "device": "",
+      "option": {
+        "deny": "",
+        "false": "",
+        "true": ""
+      },
+      "readonly": {
+        "help": {
+          "deny": "",
+          "false": "",
+          "true": ""
+        },
+        "label": ""
+      },
+      "sourcePortHelp": "",
+      "title": ""
+    },
+    "mqtt": {
+      "authentication": "",
+      "description": "",
+      "descriptionClientId": "",
+      "descriptionTopic": "",
+      "labelBroker": "",
+      "labelCaCert": "",
+      "labelCheckInsecure": "",
+      "labelClientCert": "",
+      "labelClientId": "",
+      "labelClientKey": "",
+      "labelInsecure": "",
+      "labelPassword": "",
+      "labelTopic": "",
+      "labelUser": "",
+      "publishing": "",
+      "title": ""
+    },
+    "network": {
+      "descriptionExternalUrl": "",
+      "descriptionHost": "",
+      "descriptionInternalUrl": "",
+      "descriptionPort": "",
+      "labelExternalUrl": "",
+      "labelHost": "",
+      "labelInternalUrl": "",
+      "labelPort": "",
+      "title": "",
+      "warningUrlPath": ""
+    },
+    "ocpp": {
+      "forwardingConfigured": "",
+      "forwardingError": "",
+      "forwardingOff": "",
+      "noChargers": "",
+      "stations": "",
+      "stationsHelp": "",
+      "status": {
+        "configured": "",
+        "connected": "",
+        "unknown": ""
+      },
+      "title": "",
+      "url": "",
+      "urlHelp": ""
+    },
+    "ocppforwarder": {
+      "description": "",
+      "editTitle": "",
+      "labelCaCert": "",
+      "labelCheckInsecure": "",
+      "labelInsecure": "",
+      "password": "",
+      "passwordHelp": "",
+      "readOnly": {
+        "check": "",
+        "help": {
+          "false": "",
+          "true": ""
+        },
+        "label": ""
+      },
+      "status": "",
+      "upstreamStationId": "",
+      "upstreamStationIdHelp": "",
+      "upstreamUrl": "",
+      "upstreamUrlHelp": "",
+      "username": "",
+      "usernameHelp": ""
+    },
+    "optimizer": {
+      "description": "",
+      "enable": "",
+      "info": "",
+      "title": ""
+    },
+    "options": {
+      "boolean": {
+        "no": "",
+        "yes": ""
+      },
+      "endianness": {
+        "big": "",
+        "little": ""
+      },
+      "operationMode": {
+        "heating": "",
+        "standby": ""
+      },
+      "schema": {
+        "http": "",
+        "https": ""
+      },
+      "status": {
+        "A": "",
+        "B": "",
+        "C": ""
+      }
+    },
+    "pv": {
+      "titleAdd": "",
+      "titleEdit": ""
+    },
+    "remote": {
+      "active": "",
+      "addClient": "",
+      "addClientDescription": "",
+      "addClientTitle": "",
+      "clientCreated": "",
+      "clients": "",
+      "confirmDelete": "",
+      "connected": "",
+      "createClient": "",
+      "description": "",
+      "deviceName": "",
+      "disconnected": "",
+      "done": "",
+      "enableLabel": "",
+      "expiration": "",
+      "expirationNone": "",
+      "expired": "",
+      "expiresIn": "",
+      "lastActive": "",
+      "loginBlocked": "",
+      "manualLogin": "",
+      "noClients": "",
+      "password": "",
+      "passwordOnce": "",
+      "privacy": "",
+      "privacyLink": "",
+      "qrInstall": "",
+      "qrScan": "",
+      "removeClient": "",
+      "title": "",
+      "url": "",
+      "username": ""
+    },
+    "section": {
+      "additionalMeter": "",
+      "consumers": "",
+      "general": "",
+      "grid": "",
+      "integrations": "",
+      "loadpoints": "",
+      "meter": "",
+      "services": "",
+      "system": "",
+      "vehicles": ""
+    },
+    "security": {
+      "authDisabledHint": "",
+      "description": "",
+      "passwordDescription": "",
+      "passwordTitle": "",
+      "title": "",
+      "updatePassword": ""
+    },
+    "shm": {
+      "cardTitle": "",
+      "description": "",
+      "descriptionDeviceId": "",
+      "descriptionDeviceSerial": "",
+      "descriptionIdPattern": "",
+      "descriptionIds": "",
+      "descriptionSempUrl": "",
+      "descriptionVendorId": "",
+      "labelDeviceId": "",
+      "labelDeviceSerial": "",
+      "labelVendorId": "",
+      "title": ""
+    },
+    "site": {
+      "country": {
+        "description": "",
+        "label": ""
+      },
+      "currency": {
+        "description": "",
+        "example": "",
+        "label": ""
+      },
+      "siteTitle": {
+        "description": "",
+        "label": ""
+      },
+      "title": ""
+    },
+    "sponsor": {
+      "addToken": "",
+      "changeToken": "",
+      "description": "",
+      "descriptionToken": "",
+      "enterYourToken": "",
+      "error": "",
+      "invalid": "",
+      "labelToken": "",
+      "title": "",
+      "tokenRequired": "",
+      "tokenRequiredFeature": "",
+      "tokenRequiredLearnMore": "",
+      "tokenRequiredShort": "",
+      "trialToken": "",
+      "viaYaml": "",
+      "yourToken": ""
+    },
+    "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "title": ""
+        },
+        "cancel": "",
+        "description": "",
+        "note": "",
+        "reset": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "remote": "",
+          "remoteDescription": "",
+          "sessions": "",
+          "sessionsDescription": "",
+          "settings": "",
+          "settingsDescription": "",
+          "title": ""
+        },
+        "restore": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "labelFile": "",
+          "title": ""
+        },
+        "title": ""
+      },
+      "logs": "",
+      "restart": "",
+      "restartRequiredDescription": "",
+      "restartRequiredMessage": "",
+      "restartingDescription": "",
+      "restartingMessage": ""
+    },
+    "tariff": {
+      "addForecast": "",
+      "addTariff": "",
+      "co2": {
+        "description": "",
+        "titleAdd": "",
+        "titleEdit": ""
+      },
+      "co2Services": "",
+      "customForecast": "",
+      "customTariff": "",
+      "description": "",
+      "feedIn": {
+        "description": "",
+        "titleAdd": "",
+        "titleEdit": ""
+      },
+      "generic": "",
+      "grid": {
+        "description": "",
+        "titleAdd": "",
+        "titleEdit": ""
+      },
+      "legacyWarning": "",
+      "option": {
+        "co2": "",
+        "feedIn": "",
+        "grid": "",
+        "planner": "",
+        "solar": "",
+        "temperature": ""
+      },
+      "planner": {
+        "description": "",
+        "titleAdd": "",
+        "titleEdit": ""
+      },
+      "services": "",
+      "solar": {
+        "description": "",
+        "titleAdd": "",
+        "titleEdit": ""
+      },
+      "temperature": {
+        "description": "",
+        "titleAdd": "",
+        "titleEdit": ""
+      },
+      "template": "",
+      "title": "",
+      "titleChoice": "",
+      "type": {
+        "co2": "",
+        "feedIn": "",
+        "grid": "",
+        "planner": "",
+        "solar": "",
+        "temperature": ""
+      },
+      "zones": {
+        "add": "",
+        "allDays": "",
+        "allMonths": "",
+        "allTimes": "",
+        "cancel": "",
+        "charge": "",
+        "days": "",
+        "edit": "",
+        "hours": "",
+        "months": "",
+        "price": "",
+        "priceRequired": "",
+        "remove": "",
+        "save": "",
+        "selectAll": "",
+        "timeFrom": "",
+        "timeRangeError": "",
+        "timeTo": "",
+        "weekdays": ""
+      }
+    },
+    "telemetry": {
+      "description": "",
+      "title": ""
+    },
+    "validation": {
+      "failed": "",
+      "label": "",
+      "running": "",
+      "success": "",
+      "unknown": "",
+      "validate": ""
+    },
+    "vehicle": {
+      "generic": "",
+      "online": "",
+      "primary": "",
+      "scooter": "",
+      "template": "",
+      "titleAdd": "",
+      "titleEdit": ""
     }
+  },
+  "energy": {
+    "battery": {
+      "charged": "",
+      "discharged": ""
+    },
+    "consumers": {
+      "chart": {
+        "bars": "",
+        "pattern": ""
+      },
+      "cost": "",
+      "others": "",
+      "title": "",
+      "view": {
+        "river": "",
+        "treemap": ""
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "",
+        "returnEnergy": ""
+      },
+      "grid": {
+        "energy": "",
+        "returnEnergy": ""
+      },
+      "meter": {
+        "energy": "",
+        "returnEnergy": ""
+      }
+    },
+    "empty": "",
+    "flow": {
+      "battery": "",
+      "batteryCharge": "",
+      "batteryDischarge": "",
+      "charging": "",
+      "export": "",
+      "grid": "",
+      "heating": "",
+      "home": "",
+      "overview": "",
+      "pv": "",
+      "title": "",
+      "usage": "",
+      "withdrawal": ""
+    },
+    "grid": {
+      "amount": "",
+      "cost": "",
+      "energy": "",
+      "export": "",
+      "exportPrice": "",
+      "import": "",
+      "importPrice": "",
+      "price": "",
+      "revenue": "",
+      "title": ""
+    },
+    "group": {
+      "battery": "",
+      "consumer": "",
+      "forecast": "",
+      "grid": "",
+      "meter": "",
+      "pv": ""
+    },
+    "production": {
+      "above": "",
+      "accuracy": "",
+      "below": "",
+      "deviation": "",
+      "expectedTomorrow": "",
+      "exported": "",
+      "produced": "",
+      "remainingToday": "",
+      "selfConsumed": "",
+      "title": ""
+    },
+    "socTemp": {
+      "charged": "",
+      "soc": "",
+      "temperature": "",
+      "used": ""
+    },
+    "sources": {
+      "battery": "",
+      "cost": "",
+      "energy": "",
+      "grid": "",
+      "hint": "",
+      "price": "",
+      "pv": "",
+      "share": "",
+      "source": "",
+      "title": "",
+      "total": ""
+    },
+    "stat": {
+      "autarky": "",
+      "co2Saved": "",
+      "co2SavedTooltip": "",
+      "configure": "",
+      "noCo2": "",
+      "noPrice": "",
+      "savings": "",
+      "savingsTooltip": "",
+      "versus": ""
+    },
+    "title": ""
+  },
+  "footer": {
+    "community": {
+      "greenEnergy": "",
+      "greenEnergySub1": "",
+      "greenEnergySub2": "",
+      "greenShare": "",
+      "greenShareSub1": "",
+      "greenShareSub2": "",
+      "power": "",
+      "powerSub1": "",
+      "powerSub2": "",
+      "tabTitle": ""
+    },
+    "savings": {
+      "co2Saved": "",
+      "co2Title": "",
+      "configurePriceCo2": "",
+      "footerLong": "",
+      "footerShort": "",
+      "indicator": {
+        "co2": "",
+        "co2saved": "",
+        "none": "",
+        "price": "",
+        "savings": "",
+        "solar": ""
+      },
+      "indicatorLabel": "",
+      "modalTitle": "",
+      "moneySaved": "",
+      "percentGrid": "",
+      "percentSelf": "",
+      "percentTitle": "",
+      "period": {
+        "30d": "",
+        "365d": "",
+        "thisYear": "",
+        "total": ""
+      },
+      "periodLabel": "",
+      "priceTitle": "",
+      "referenceGrid": "",
+      "referenceLabel": "",
+      "sessionInfo": "",
+      "tabTitle": ""
+    },
+    "sponsor": {
+      "becomeSponsor": "",
+      "confetti": "",
+      "confettiPromise": "",
+      "sticker": "",
+      "supportUs": "",
+      "thanks": "",
+      "titleNoSponsor": "",
+      "titleSponsor": "",
+      "titleTrial": "",
+      "trial": ""
+    },
+    "telemetry": {
+      "optIn": "",
+      "optInMoreDetails": "",
+      "optInMoreDetailsLink": "",
+      "optInSponsorship": ""
+    },
+    "version": {
+      "availableLong": "",
+      "community": "",
+      "labelEmail": "",
+      "labelPhone": "",
+      "labelRelease": "",
+      "labelVersion": "",
+      "labelWebsite": "",
+      "latestVersion": "",
+      "madeByCommunity": "",
+      "modalCancel": "",
+      "modalDownload": "",
+      "modalInstalledVersion": "",
+      "modalLatest": "",
+      "modalNextRelease": "",
+      "modalNoReleaseNotes": "",
+      "modalTitle": "",
+      "modalUpdate": "",
+      "modalUpdateNow": "",
+      "modalUpdateStarted": "",
+      "modalUpdateStatusStart": "",
+      "modalViewOnGitHub": "",
+      "openSource": "",
+      "poweredBy": ""
+    }
+  },
+  "forecast": {
+    "co2": {
+      "average": "",
+      "constant": "",
+      "lowestHour": "",
+      "range": ""
+    },
+    "empty": {
+      "co2": "",
+      "price": "",
+      "setup": "",
+      "solar": "",
+      "temperature": ""
+    },
+    "hideLine": "",
+    "modalTitle": "",
+    "price": {
+      "average": "",
+      "constant": "",
+      "lowestHour": "",
+      "range": ""
+    },
+    "priceZoom": "",
+    "showLine": "",
+    "solar": {
+      "dayAfterTomorrow": "",
+      "partly": "",
+      "remaining": "",
+      "today": "",
+      "tomorrow": ""
+    },
+    "solarAdjust": "",
+    "solarAdjustMedium": "",
+    "solarAdjustShort": "",
+    "temperature": {
+      "average": "",
+      "range": ""
+    },
+    "type": {
+      "co2": "",
+      "price": "",
+      "solar": "",
+      "temperature": ""
+    }
+  },
+  "general": {
+    "back": "",
+    "cancel": "",
+    "download": "",
+    "error": "",
+    "none": "",
+    "note": "",
+    "warning": ""
+  },
+  "header": {
+    "about": "",
+    "blog": "",
+    "docs": "",
+    "github": "",
+    "logout": "",
+    "nativeSettings": "",
+    "needHelp": "",
+    "sessions": ""
+  },
+  "help": {
+    "contactButton": "",
+    "discussionsButton": "",
+    "documentationButton": "",
+    "issueButton": "",
+    "issueDescription": "",
+    "logsButton": "",
+    "logsDescription": "",
+    "modalTitle": "",
+    "primaryActions": "",
+    "restart": {
+      "cancel": "",
+      "confirm": "",
+      "description": "",
+      "disclaimer": "",
+      "modalTitle": ""
+    },
+    "restartButton": "",
+    "restartDescription": "",
+    "secondaryActions": ""
+  },
+  "issue": {
+    "additional": {
+      "copied": "",
+      "copy": "",
+      "copySelected": "",
+      "description": "",
+      "include": "",
+      "lines": "",
+      "logs": "",
+      "logsDescription": "",
+      "showDetails": "",
+      "source": "",
+      "state": "",
+      "stateDescription": "",
+      "title": "",
+      "uiConfig": "",
+      "uiConfigDescription": "",
+      "yamlConfig": "",
+      "yamlConfigDescription": ""
+    },
+    "additionalContext": "",
+    "additionalContextPlaceholder": "",
+    "createButtonDiscussion": "",
+    "createButtonEmail": "",
+    "createButtonIssue": "",
+    "description": "",
+    "downloadButton": "",
+    "downloadHint": "",
+    "helpType": {
+      "discussion": "",
+      "discussionDescription": "",
+      "issue": "",
+      "issueDescription": "",
+      "title": ""
+    },
+    "issueDescription": "",
+    "issueTitle": "",
+    "stepsToReproduce": "",
+    "subTitleDiscussion": "",
+    "subTitleEmail": "",
+    "subTitleIssue": "",
+    "summary": {
+      "confirmationButtonDiscussion": "",
+      "confirmationButtonIssue": "",
+      "copied": "",
+      "copyButton": "",
+      "instructions": "",
+      "singleStepDescription": "",
+      "step1Description": "",
+      "step2Description": "",
+      "stepOneDiscussion": "",
+      "stepOneIssue": "",
+      "stepTwo": "",
+      "title": ""
+    },
+    "system": "",
+    "timezone": "",
+    "title": "",
+    "version": ""
+  },
+  "log": {
+    "areaLabel": "",
+    "areas": "",
+    "download": "",
+    "levelLabel": "",
+    "nAreas": "",
+    "noResults": "",
+    "search": "",
+    "selectAll": "",
+    "showAll": "",
+    "title": "",
+    "update": ""
+  },
+  "loginModal": {
+    "cancel": "",
+    "demoMode": "",
+    "iframeHint": "",
+    "iframeIssue": "",
+    "invalid": "",
+    "login": "",
+    "password": "",
+    "reset": "",
+    "title": ""
+  },
+  "main": {
+    "alwaysCharge": {
+      "description": "",
+      "label": "",
+      "labelHeating": "",
+      "minCurrent": "",
+      "once": "",
+      "onceTip": "",
+      "permanent": ""
+    },
+    "chargingPlan": {
+      "active": "",
+      "addRepeatingPlan": "",
+      "day": "",
+      "goal": "",
+      "modalTitle": "",
+      "none": "",
+      "once": "",
+      "optimization": {
+        "cheapest": "",
+        "cheapestDescription": "",
+        "cleanest": "",
+        "cleanestDescription": "",
+        "continuous": "",
+        "continuousCo2Description": "",
+        "continuousPriceDescription": "",
+        "disabledDescription": "",
+        "label": ""
+      },
+      "planNumber": "",
+      "precondition": {
+        "description": "",
+        "disabledDescription": "",
+        "label": "",
+        "optionAll": "",
+        "optionNo": "",
+        "summary": "",
+        "summaryAll": ""
+      },
+      "remove": "",
+      "repeating": "",
+      "repeatingPlans": "",
+      "selectAll": "",
+      "strategy": {
+        "label": ""
+      },
+      "time": "",
+      "title": "",
+      "unsavedChanges": "",
+      "update": "",
+      "weekdays": ""
+    },
+    "continuousStatus": {
+      "charging": "",
+      "connected": "",
+      "waitForVehicle": ""
+    },
+    "energyflow": {
+      "battery": "",
+      "batteryCharge": "",
+      "batteryChargeHold": "",
+      "batteryDischarge": "",
+      "batteryDischargeHold": "",
+      "batteryGridChargeActive": "",
+      "batteryGridChargeLimit": "",
+      "batteryStatus": "",
+      "batteryTooltip": "",
+      "forecast": "",
+      "forecastTooltip": "",
+      "gridImport": "",
+      "homePower": "",
+      "loadpoints": "",
+      "loadpointsLimit": "",
+      "noEnergy": "",
+      "pv": "",
+      "pvExport": "",
+      "pvProduction": "",
+      "selfConsumption": "",
+      "toggleDetails": ""
+    },
+    "heatingStatus": {
+      "charging": "",
+      "connected": "",
+      "minTemp": "",
+      "suggestionStartTooltip": "",
+      "suggestionStopTooltip": "",
+      "vehicleLimit": "",
+      "waitForVehicle": ""
+    },
+    "hemsWarning": {
+      "consumption": "",
+      "feedIn": "",
+      "title": ""
+    },
+    "loadpoint": {
+      "avgPrice": "",
+      "charged": "",
+      "co2": "",
+      "duration": "",
+      "emission": "",
+      "fallbackName": "",
+      "finished": "",
+      "last24hEnergy": "",
+      "last7dEnergy": "",
+      "phasesMismatch": "",
+      "power": "",
+      "price": "",
+      "remaining": "",
+      "remoteDisabledHard": "",
+      "remoteDisabledSoft": "",
+      "solar": "",
+      "todayEnergy": ""
+    },
+    "loadpointSettings": {
+      "batteryBoost": {
+        "description": "",
+        "descriptionDisabled": "",
+        "disabled": "",
+        "label": "",
+        "mode": "",
+        "once": "",
+        "stateActive": "",
+        "stateBelowLimit": "",
+        "stateHold": "",
+        "stateReady": ""
+      },
+      "batteryUsage": "",
+      "currents": "",
+      "default": "",
+      "heating": "",
+      "maxCurrent": {
+        "label": ""
+      },
+      "minCurrent": {
+        "label": ""
+      },
+      "minTemp": {
+        "description": "",
+        "label": ""
+      },
+      "phasesConfigured": {
+        "label": "",
+        "no1p3pSupport": "",
+        "phases_0": "",
+        "phases_1": "",
+        "phases_1_hint": "",
+        "phases_3": "",
+        "phases_3_hint": ""
+      },
+      "smartCostCheap": "",
+      "smartCostClean": "",
+      "solar": "",
+      "solarShare": {
+        "charging": {
+          "description": "",
+          "descriptionFull": "",
+          "descriptionZero": ""
+        },
+        "heating": {
+          "description": "",
+          "descriptionFull": "",
+          "descriptionZero": ""
+        },
+        "label": "",
+        "thresholdsHint": "",
+        "thresholdsHintYaml": "",
+        "thresholdsLink": ""
+      },
+      "title": "",
+      "vehicle": ""
+    },
+    "mode": {
+      "boost": "",
+      "normal": "",
+      "now": "",
+      "off": "",
+      "on": "",
+      "smart": ""
+    },
+    "provider": {
+      "login": "",
+      "logout": ""
+    },
+    "startConfiguration": "",
+    "targetCharge": {
+      "activate": "",
+      "co2Limit": "",
+      "costLimitIgnore": "",
+      "currentPlan": "",
+      "descriptionEnergy": "",
+      "descriptionSoc": "",
+      "goalReached": "",
+      "inactiveLabel": "",
+      "nextPlan": "",
+      "notReachableInTime": "",
+      "onlyInSmartMode": "",
+      "planDuration": "",
+      "planPeriodLabel": "",
+      "planPeriodValue": "",
+      "planUnknown": "",
+      "preview": "",
+      "priceLimit": "",
+      "remove": "",
+      "setTargetTime": "",
+      "targetIsAboveLimit": "",
+      "targetIsAboveVehicleLimit": "",
+      "targetIsInThePast": "",
+      "targetIsTooFarInTheFuture": "",
+      "title": "",
+      "today": "",
+      "tomorrow": "",
+      "update": "",
+      "vehicleCapacityDocs": "",
+      "vehicleCapacityRequired": ""
+    },
+    "targetChargePlan": {
+      "chargeDuration": "",
+      "co2Label": "",
+      "priceLabel": "",
+      "timeRange": "",
+      "unknownPrice": ""
+    },
+    "targetEnergy": {
+      "label": "",
+      "noLimit": ""
+    },
+    "vehicle": {
+      "addVehicle": "",
+      "changeVehicle": "",
+      "detectionActive": "",
+      "fallbackName": "",
+      "moreActions": "",
+      "none": "",
+      "notReachable": "",
+      "targetSoc": "",
+      "temp": "",
+      "tempLimit": "",
+      "unknown": "",
+      "vehicleSoc": ""
+    },
+    "vehicleSettings": {
+      "connectedTo": "",
+      "description": "",
+      "editHint": "",
+      "keepAsIs": "",
+      "learnMore": "",
+      "limitSoc": "",
+      "menu": "",
+      "minSoc": "",
+      "mode": "",
+      "notConnected": "",
+      "title": ""
+    },
+    "vehicleStatus": {
+      "awaitingAuthorization": "",
+      "batteryBoost": "",
+      "batteryBoostBelowLimit": "",
+      "batteryBoostDisabled": "",
+      "batteryBoostEnabled": "",
+      "batteryBoostHold": "",
+      "charging": "",
+      "cheapEnergyCharging": "",
+      "cheapEnergyNextStart": "",
+      "cheapEnergySet": "",
+      "cleanEnergyCharging": "",
+      "cleanEnergyNextStart": "",
+      "cleanEnergySet": "",
+      "climating": "",
+      "connected": "",
+      "disconnectRequired": "",
+      "disconnected": "",
+      "feedinPriorityNextStart": "",
+      "feedinPriorityPausing": "",
+      "finished": "",
+      "minCharge": "",
+      "pvDisable": "",
+      "pvEnable": "",
+      "scale1p": "",
+      "scale3p": "",
+      "suggestionStartTooltip": "",
+      "suggestionStopTooltip": "",
+      "targetChargeActive": "",
+      "targetChargePlanned": "",
+      "targetChargeWaitForVehicle": "",
+      "vehicleLimit": "",
+      "vehicleLimitReached": "",
+      "waitForAuthorization": "",
+      "waitForVehicle": "",
+      "welcome": ""
+    },
+    "vehicles": "",
+    "welcome": ""
+  },
+  "notifications": {
+    "dismissAll": "",
+    "logs": "",
+    "modalTitle": ""
+  },
+  "offline": {
+    "configurationError": "",
+    "message": "",
+    "restart": "",
+    "restartNeeded": "",
+    "restarting": "",
+    "starting": ""
+  },
+  "passwordModal": {
+    "description": "",
+    "empty": "",
+    "labelCurrent": "",
+    "labelNew": "",
+    "labelRepeat": "",
+    "newPassword": "",
+    "noMatch": "",
+    "titleNew": "",
+    "titleUpdate": "",
+    "updatePassword": ""
+  },
+  "session": {
+    "addOdometer": "",
+    "addedRange": "",
+    "cancel": "",
+    "co2": "",
+    "date": "",
+    "delete": "",
+    "finished": "",
+    "meter": "",
+    "meterstart": "",
+    "meterstop": "",
+    "odometer": "",
+    "price": "",
+    "soc": "",
+    "started": "",
+    "title": ""
+  },
+  "sessions": {
+    "addedRange": "",
+    "avgPower": "",
+    "avgPrice": "",
+    "chargeDuration": "",
+    "chargedSoc": "",
+    "chartTitle": {
+      "avgCo2ByGroup": "",
+      "avgPriceByGroup": "",
+      "byGroupLoadpoint": "",
+      "byGroupVehicle": "",
+      "energy": "",
+      "energyGrouped": "",
+      "energyGroupedByGroup": "",
+      "energySubSolar": "",
+      "energySubTotal": "",
+      "groupedCo2ByGroup": "",
+      "groupedPriceByGroup": "",
+      "historyCo2": "",
+      "historyCo2Sub": "",
+      "historyPrice": "",
+      "historyPriceSub": "",
+      "solar": "",
+      "solarByGroup": ""
+    },
+    "co2": "",
+    "csv": {
+      "addedrange": "",
+      "chargedenergy": "",
+      "chargeduration": "",
+      "co2perkwh": "",
+      "created": "",
+      "finished": "",
+      "identifier": "",
+      "loadpoint": "",
+      "meterstart": "",
+      "meterstop": "",
+      "odometer": "",
+      "price": "",
+      "priceperkwh": "",
+      "socend": "",
+      "socstart": "",
+      "solarpercentage": "",
+      "vehicle": ""
+    },
+    "date": "",
+    "download": "",
+    "downloadTotal": "",
+    "energy": "",
+    "filter": {
+      "allLoadpoints": "",
+      "allVehicles": "",
+      "filter": ""
+    },
+    "group": {
+      "co2": "",
+      "grid": "",
+      "price": "",
+      "self": ""
+    },
+    "groupBy": {
+      "loadpoint": "",
+      "none": "",
+      "vehicle": ""
+    },
+    "loadpoint": "",
+    "noData": "",
+    "odometer": "",
+    "overview": "",
+    "period": {
+      "day": "",
+      "month": "",
+      "total": "",
+      "year": ""
+    },
+    "price": "",
+    "reallyDelete": "",
+    "showIndividualEntries": "",
+    "solar": "",
+    "title": "",
+    "total": "",
+    "type": {
+      "co2": "",
+      "price": "",
+      "solar": ""
+    },
+    "vehicle": ""
+  },
+  "settings": {
+    "dateFormat": {
+      "auto": "",
+      "dmy": "",
+      "label": "",
+      "mdy": "",
+      "ymd": ""
+    },
+    "deviceInfo": "",
+    "fullscreen": {
+      "enter": "",
+      "exit": "",
+      "label": ""
+    },
+    "hiddenFeatures": {
+      "label": "",
+      "value": ""
+    },
+    "language": {
+      "auto": "",
+      "label": ""
+    },
+    "loadpoints": {
+      "disabledDevice": "",
+      "help": "",
+      "hide": "",
+      "label": "",
+      "show": ""
+    },
+    "sponsorToken": {
+      "expires": "",
+      "expiresUpdateUi": "",
+      "expiresUpdateYaml": "",
+      "getNewToken": "",
+      "hint": ""
+    },
+    "telemetry": {
+      "label": ""
+    },
+    "theme": {
+      "auto": "",
+      "dark": "",
+      "label": "",
+      "light": ""
+    },
+    "time": {
+      "12h": "",
+      "24h": "",
+      "label": ""
+    },
+    "title": "",
+    "unit": {
+      "km": "",
+      "label": "",
+      "mi": ""
+    }
+  },
+  "smartCost": {
+    "activeHours": "",
+    "activeHoursLabel": "",
+    "applyToAll": "",
+    "batteryDescription": "",
+    "cheapTitle": "",
+    "cleanTitle": "",
+    "co2Label": "",
+    "co2Limit": "",
+    "enable": "",
+    "loadpointDescription": "",
+    "modalTitle": "",
+    "none": "",
+    "priceLabel": "",
+    "priceLimit": "",
+    "resetAction": "",
+    "resetWarning": "",
+    "saved": ""
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "",
+    "batteryDescription": "",
+    "description": "",
+    "priceLabel": "",
+    "priceLimit": "",
+    "resetWarning": "",
+    "title": ""
+  },
+  "startupError": {
+    "configFile": "",
+    "configuration": "",
+    "description": "",
+    "discussions": "",
+    "editConfiguration": "",
+    "fixAndRestart": "",
+    "hint": "",
+    "lineError": "",
+    "lineErrorLink": "",
+    "restartButton": "",
+    "title": ""
+  },
+  "tabBar": {
+    "battery": "",
+    "charge": "",
+    "comingSoon": "",
+    "energy": "",
+    "forecast": "",
+    "more": "",
+    "sessions": ""
   }
 }

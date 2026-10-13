@@ -37,6 +37,7 @@
       "discharging": "ontlaadt",
       "energy": "Energie",
       "gridCharge": "laden met netstroom",
+      "gridDischarge": "",
       "hold": "ontladen gesperd",
       "holdCharge": "opladen gesperd",
       "ofTotal": "van {total}",
@@ -955,6 +956,7 @@
         "label": "Valuta"
       },
       "siteTitle": {
+        "description": "",
         "label": "Titel"
       },
       "title": "Locatie"
@@ -1134,14 +1136,20 @@
     },
     "consumers": {
       "chart": {
+        "bars": "",
         "pattern": "Patroon"
       },
       "cost": "Kosten",
+      "others": "",
       "source": {
         "battery": "batterij",
         "grid": "net"
       },
-      "title": "Verbruikers"
+      "title": "Verbruikers",
+      "view": {
+        "river": "",
+        "treemap": ""
+      }
     },
     "direction": {
       "battery": {
@@ -1163,15 +1171,19 @@
       "batteryCharge": "Batterij laden",
       "batteryDischarge": "Batterij ontladen",
       "charging": "Laden",
+      "export": "",
+      "grid": "",
       "heating": "Verwarming",
       "home": "Verbruik",
       "overview": "Overzicht",
       "pv": "Productie",
       "title": "Energiestroom",
-      "usage": "Verbruik"
+      "usage": "Verbruik",
+      "withdrawal": ""
     },
     "grid": {
       "amount": "Hoeveelheid",
+      "cost": "",
       "energy": "Energie",
       "export": "Export",
       "exportPrice": "Exportprijs",
@@ -1191,10 +1203,48 @@
       "pv": "Productie"
     },
     "production": {
+      "above": "",
+      "accuracy": "",
+      "below": "",
       "deviation": "Afwijking",
+      "expectedTomorrow": "",
+      "exported": "",
       "produced": "Geproduceerd",
+      "remainingToday": "",
+      "selfConsumed": "",
       "title": "Productie"
-    }
+    },
+    "socTemp": {
+      "charged": "",
+      "soc": "",
+      "temperature": "",
+      "used": ""
+    },
+    "sources": {
+      "battery": "",
+      "cost": "",
+      "energy": "",
+      "grid": "",
+      "hint": "",
+      "price": "",
+      "pv": "",
+      "share": "",
+      "source": "",
+      "title": "",
+      "total": ""
+    },
+    "stat": {
+      "autarky": "",
+      "co2Saved": "",
+      "co2SavedTooltip": "",
+      "configure": "",
+      "noCo2": "",
+      "noPrice": "",
+      "savings": "",
+      "savingsTooltip": "",
+      "versus": ""
+    },
+    "title": ""
   },
   "footer": {
     "community": {
@@ -1520,6 +1570,7 @@
       "batteryDischargeHold": "Accu (geblokkeerd)",
       "batteryGridChargeActive": "Net laden: actief",
       "batteryGridChargeLimit": "Net laden: wanneer",
+      "batteryStatus": "",
       "batteryTooltip": "{energy} van {total} ({soc})",
       "forecast": "Voorspelling",
       "forecastTooltip": "voorspelling: resterende zonne-energieproductie voor vandaag",
@@ -1984,6 +2035,7 @@
     "battery": "Batterij",
     "charge": "Laden",
     "comingSoon": "Deze pagina is in ontwikkeling.",
+    "energy": "",
     "forecast": "Voorspelling",
     "more": "Meer",
     "sessions": "Sessies"
