@@ -206,7 +206,6 @@ func TestOptimizerBatteryFed(t *testing.T) {
 	enableAutomatic(t)
 
 	lp, charger, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
-	lp.Disable.Delay = time.Minute
 	lp.offeredCurrent = maxA
 
 	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 1380, Battery: 1000})
