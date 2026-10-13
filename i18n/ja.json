@@ -1533,6 +1533,7 @@
       },
       "planNumber": "プラン {number}",
       "precondition": {
+        "description": "",
         "disabledDescription": "",
         "label": "遅延充電",
         "optionAll": "すべて",

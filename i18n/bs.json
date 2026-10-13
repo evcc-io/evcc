@@ -1521,6 +1521,7 @@
       },
       "planNumber": "Plan {number}",
       "precondition": {
+        "description": "",
         "disabledDescription": "",
         "label": "",
         "optionAll": "",
