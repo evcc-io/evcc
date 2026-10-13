@@ -1664,7 +1664,7 @@
         "phases_3": "3-phasig",
         "phases_3_hint": "({min} bis {max})"
       },
-      "limitSmartPhases": {
+      "limitSolarPhases": {
         "label": "Solar-Folgen max. 1-phasig",
         "description": "Bei Solarüberschuss nie auf 3 Phasen wechseln. Schnellladen ist nicht betroffen."
       },

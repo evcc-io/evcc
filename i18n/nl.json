@@ -1680,9 +1680,9 @@
         "phases_3": "3 fase",
         "phases_3_hint": "({min} tot {max})"
       },
-      "limitSmartPhases": {
+      "limitSolarPhases": {
         "label": "Zon-volgen max 1 fase",
-        "description": "Bij zon-overschot nooit naar 3 fasen schakelen. Snelladen is niet betroffen."
+        "description": "Bij zon-overschot nooit naar 3 fasen schakelen. Snelladen blijft onveranderd."
       },
       "smartCostCheap": "Goedkoop laden met netstroom",
       "smartCostClean": "Laden met ecologische energie van het net",

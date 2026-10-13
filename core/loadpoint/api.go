@@ -94,10 +94,10 @@ type API interface {
 	GetPhasesConfigured() int
 	// SetPhasesConfigured sets the configured phases
 	SetPhasesConfigured(int) error
-	// GetLimitSmartPhases returns if solar surplus charging is limited to 1 phase
-	GetLimitSmartPhases() bool
-	// SetLimitSmartPhases limits solar surplus charging to 1 phase
-	SetLimitSmartPhases(bool) error
+	// GetLimitSolarPhases returns if solar surplus charging is limited to 1 phase
+	GetLimitSolarPhases() bool
+	// SetLimitSolarPhases limits solar surplus charging to 1 phase
+	SetLimitSolarPhases(bool) error
 	// ActivePhases returns the active phases for the current vehicle
 	ActivePhases() int
 

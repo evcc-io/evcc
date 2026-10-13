@@ -968,7 +968,7 @@ components:
         phasesConfigured:
           description: Configured phase mode. 0 is automatic switching, 1 and 3 select a fixed phase count.
           type: number
-        limitSmartPhases:
+        limitSolarPhases:
           description: Limit solar surplus charging to a single phase. Fast charging is not affected.
           type: boolean
         plan:
@@ -1165,7 +1165,7 @@ components:
         - phaseRemaining
         - phasesActive
         - phasesConfigured
-        - limitSmartPhases
+        - limitSolarPhases
         - plan
         - planActive
         - planEnergy

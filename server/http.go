@@ -253,7 +253,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 			"mincurrent":                {"POST", "/mincurrent/{value:[0-9.]+}", floatHandler(lp.SetMinCurrent, lp.GetMinCurrent)},
 			"maxcurrent":                {"POST", "/maxcurrent/{value:[0-9.]+}", floatHandler(lp.SetMaxCurrent, lp.GetMaxCurrent)},
 			"phases":                    {"POST", "/phases/{value:[0-9]+}", intHandler(lp.SetPhasesConfigured, lp.GetPhasesConfigured)},
-			"limitsmartphases":          {"POST", "/limitsmartphases/{value:[01truefalse]+}", boolHandler(lp.SetLimitSmartPhases, lp.GetLimitSmartPhases)},
+			"limitsolarphases":          {"POST", "/limitsolarphases/{value:[01truefalse]+}", boolHandler(lp.SetLimitSolarPhases, lp.GetLimitSolarPhases)},
 			"plan":                      {"GET", "/plan", planHandler(lp)},
 			"staticPlanPreview":         {"GET", "/plan/static/preview/{type:(?:soc|energy)}/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", staticPlanPreviewHandler(lp)},
 			"planenergy":                {"POST", "/plan/energy/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", planEnergyHandler(lp)},

@@ -357,26 +357,26 @@ func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 	return nil
 }
 
-// setLimitSmartPhases sets the solar 1p limit (no mutex)
-func (lp *Loadpoint) setLimitSmartPhases(limit bool) {
-	lp.limitSmartPhases = limit
-	lp.publish(keys.LimitSmartPhases, lp.limitSmartPhases)
-	lp.settings.SetBool(keys.LimitSmartPhases, lp.limitSmartPhases)
+// setLimitSolarPhases sets the solar 1p limit (no mutex)
+func (lp *Loadpoint) setLimitSolarPhases(limit bool) {
+	lp.limitSolarPhases = limit
+	lp.publish(keys.LimitSolarPhases, lp.limitSolarPhases)
+	lp.settings.SetBool(keys.LimitSolarPhases, lp.limitSolarPhases)
 }
 
-// GetLimitSmartPhases returns if solar surplus charging is limited to 1 phase
-func (lp *Loadpoint) GetLimitSmartPhases() bool {
+// GetLimitSolarPhases returns if solar surplus charging is limited to 1 phase
+func (lp *Loadpoint) GetLimitSolarPhases() bool {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.limitSmartPhases
+	return lp.limitSolarPhases
 }
 
-// SetLimitSmartPhases limits solar surplus charging to 1 phase
-func (lp *Loadpoint) SetLimitSmartPhases(limit bool) error {
-	lp.log.DEBUG.Println("set limit smart phases:", limit)
+// SetLimitSolarPhases limits solar surplus charging to 1 phase
+func (lp *Loadpoint) SetLimitSolarPhases(limit bool) error {
+	lp.log.DEBUG.Println("set limit solar phases:", limit)
 
 	lp.Lock()
-	lp.setLimitSmartPhases(limit)
+	lp.setLimitSolarPhases(limit)
 	lp.Unlock()
 
 	lp.requestUpdate()

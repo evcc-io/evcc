@@ -5,10 +5,51 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/settings"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
+
+// TestLimitSolarPhasesPublished asserts that the limit is part of the
+// published loadpoint state (required by the openapi State schema),
+// even on a fresh start without stored settings.
+func TestLimitSolarPhasesPublished(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	uiChan := make(chan util.Param, 256)
+	pushChan := make(chan messenger.Event, 8)
+	lpChan := make(chan *Loadpoint, 8)
+
+	plainCharger := api.NewMockCharger(ctrl)
+	plainCharger.EXPECT().Enabled().Return(false, nil).AnyTimes()
+
+	store := settings.NewMemorySettings()
+	lp := NewLoadpoint(util.NewLogger("foo"), store)
+	lp.charger = struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{plainCharger, api.NewMockPhaseSwitcher(ctrl)}
+	lp.Prepare(new(Site), uiChan, pushChan, lpChan)
+
+	published := make(map[string]any)
+	for {
+		select {
+		case p := <-uiChan:
+			published[p.Key] = p.Val
+		default:
+			goto done
+		}
+	}
+done:
+
+	require.Contains(t, published, keys.LimitSolarPhases)
+	require.Equal(t, false, published[keys.LimitSolarPhases])
+
+	ctrl.Finish()
+}
 
 // TestPvScalePhasesSmartLimit asserts that a configured solar 1p limit keeps
 // surplus charging on a single phase, even with ample surplus that would
@@ -37,7 +78,7 @@ func TestPvScalePhasesSmartLimit(t *testing.T) {
 			phasesConfigured: 0, // allow switching
 			phases:           1,
 			chargePower:      1 * 6 * Voltage,
-			limitSmartPhases: limited,
+			limitSolarPhases: limited,
 			status:           api.StatusC,
 			charger: struct {
 				*api.MockCharger
