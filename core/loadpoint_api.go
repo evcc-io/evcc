@@ -357,6 +357,33 @@ func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 	return nil
 }
 
+// setLimitSmartPhases sets the solar 1p limit (no mutex)
+func (lp *Loadpoint) setLimitSmartPhases(limit bool) {
+	lp.limitSmartPhases = limit
+	lp.publish(keys.LimitSmartPhases, lp.limitSmartPhases)
+	lp.settings.SetBool(keys.LimitSmartPhases, lp.limitSmartPhases)
+}
+
+// GetLimitSmartPhases returns if solar surplus charging is limited to 1 phase
+func (lp *Loadpoint) GetLimitSmartPhases() bool {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.limitSmartPhases
+}
+
+// SetLimitSmartPhases limits solar surplus charging to 1 phase
+func (lp *Loadpoint) SetLimitSmartPhases(limit bool) error {
+	lp.log.DEBUG.Println("set limit smart phases:", limit)
+
+	lp.Lock()
+	lp.setLimitSmartPhases(limit)
+	lp.Unlock()
+
+	lp.requestUpdate()
+
+	return nil
+}
+
 // GetLimitSoc returns the session limit soc
 func (lp *Loadpoint) GetLimitSoc() int {
 	lp.RLock()

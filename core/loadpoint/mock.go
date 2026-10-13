@@ -405,6 +405,20 @@ func (mr *MockAPIMockRecorder) GetLimitEnergy() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLimitEnergy", reflect.TypeOf((*MockAPI)(nil).GetLimitEnergy))
 }
 
+// GetLimitSmartPhases mocks base method.
+func (m *MockAPI) GetLimitSmartPhases() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLimitSmartPhases")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// GetLimitSmartPhases indicates an expected call of GetLimitSmartPhases.
+func (mr *MockAPIMockRecorder) GetLimitSmartPhases() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLimitSmartPhases", reflect.TypeOf((*MockAPI)(nil).GetLimitSmartPhases))
+}
+
 // GetLimitSoc mocks base method.
 func (m *MockAPI) GetLimitSoc() int {
 	m.ctrl.T.Helper()
@@ -1011,6 +1025,20 @@ func (m *MockAPI) SetLimitEnergy(energy float64) {
 func (mr *MockAPIMockRecorder) SetLimitEnergy(energy any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLimitEnergy", reflect.TypeOf((*MockAPI)(nil).SetLimitEnergy), energy)
+}
+
+// SetLimitSmartPhases mocks base method.
+func (m *MockAPI) SetLimitSmartPhases(arg0 bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetLimitSmartPhases", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetLimitSmartPhases indicates an expected call of SetLimitSmartPhases.
+func (mr *MockAPIMockRecorder) SetLimitSmartPhases(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLimitSmartPhases", reflect.TypeOf((*MockAPI)(nil).SetLimitSmartPhases), arg0)
 }
 
 // SetLimitSoc mocks base method.
