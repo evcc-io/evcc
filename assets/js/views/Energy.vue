@@ -688,8 +688,9 @@ export default defineComponent({
 			return this.overview === OVERVIEW_VIEW.USAGE ? this.usageSeries : this.flowSeries;
 		},
 		// usage: the overview's column, from minus import and discharge up to production,
-		// as one stack of sinks running through the baseline: batteries at the bottom,
-		// then loadpoints, consumption, export on top. Amounts per sink from usageSplit
+		// as one stack of sinks running through the baseline. Consumption sits below the
+		// other sinks when it alone covers the withdrawal, otherwise above them: two
+		// series, one of them empty per slot. Export on top
 		usageSeries(): HistorySeries[] {
 			const pv = this.slotSum("pv", "energy");
 			const gridIn = this.slotSum("grid", "energy");
@@ -714,29 +715,42 @@ export default defineComponent({
 			}));
 			// per slot each sink's share above and below the baseline in stack order
 			const bands = usageSplit(input).map((r, t) => {
-				let level = -(input[t]!.gridIn + input[t]!.batOut);
-				return [...r.bats, ...r.lps, r.home, r.export].map((a) => {
+				const withdrawal = input[t]!.gridIn + input[t]!.batOut;
+				let level = -withdrawal;
+				const band = (a: number) => {
 					const start = level;
 					level += a;
 					return [
 						Math.max(0, level) - Math.max(0, start),
 						Math.min(0, level) - Math.min(0, start),
 					];
-				});
+				};
+				const low = r.home >= withdrawal;
+				return [
+					band(low ? r.home : 0),
+					...r.lps.map(band),
+					...r.bats.map(band),
+					band(low ? 0 : r.home),
+					band(r.export),
+				];
 			});
+			const homeEntry: [string, string] = [this.$t("energy.flow.home"), colors.muted || ""];
 			const entries: [string, string][] = [
-				...this.batteries.map((s, i): [string, string] => [s.title, batteryColor(i)]),
+				homeEntry,
 				...this.loadpoints.map((s): [string, string] => [
 					s.title,
 					this.loadpointColors[s.title] || "",
 				]),
-				[this.$t("energy.flow.home"), colors.muted || ""],
+				...this.batteries.map((s, i): [string, string] => [s.title, batteryColor(i)]),
+				homeEntry,
 				[this.$t("energy.flow.export"), colors.export || ""],
 			];
 			return entries.map(([title, color], i) => ({
 				title,
 				group: "meter",
 				color,
+				// both consumption series are one entity in the tooltip
+				paletteIndex: title === homeEntry[0] ? 0 : i,
 				data: slots.map((slot, t) => {
 					const [energy, returnEnergy] = bands[t]![i]!;
 					return { start: slot.start, end: slot.end, energy, returnEnergy };
@@ -774,6 +788,7 @@ export default defineComponent({
 			const batUp = (t: string) => Math.min(batIn(t), Math.max(0, pv(t) - gridOut(t)));
 			const selfUp = (t: string) => Math.max(0, pv(t) - gridOut(t) - batIn(t));
 			return [
+				build(this.$t("main.energyflow.selfConsumption"), groupColor("pv"), selfUp),
 				build(this.$t("energy.flow.batteryCharge"), groupColor("battery"), batUp),
 				build(
 					this.$t("energy.flow.batteryDischarge"),
@@ -781,22 +796,29 @@ export default defineComponent({
 					() => 0,
 					batOut
 				),
-				build(this.$t("main.energyflow.selfConsumption"), groupColor("pv"), selfUp),
 				build(this.$t("energy.flow.grid"), colors.grid || "", () => 0, gridIn),
 				build(this.$t("energy.flow.export"), colors.export || "", exportUp),
 			];
 		},
 		stackLegends(): Legend[] {
+			// the usage stack carries consumption as two series, one entity in the legend
+			const entity = (s: HistorySeries) => s.paletteIndex ?? s.title;
 			const total = (s: HistorySeries) =>
-				s.data.reduce((acc, slot) => acc + slot.energy + slot.returnEnergy, 0);
-			const [charge, discharge, self, gridImport, gridExport] = this.flowSeries;
+				this.stackSeries
+					.filter((x) => entity(x) === entity(s))
+					.flatMap((x) => x.data)
+					.reduce((acc, slot) => acc + slot.energy + slot.returnEnergy, 0);
+			const [self, charge, discharge, gridImport, gridExport] = this.flowSeries;
 			// both read top down like their stack
 			const ordered =
 				this.overview === OVERVIEW_VIEW.USAGE
 					? [...this.usageSeries].reverse()
-					: [gridExport, self, charge, discharge, gridImport];
+					: [gridExport, charge, self, discharge, gridImport];
 			return ordered
-				.filter((s): s is HistorySeries => !!s)
+				.filter(
+					(s, i): s is HistorySeries =>
+						!!s && ordered.findIndex((x) => x && entity(x) === entity(s)) === i
+				)
 				.map((s) => ({
 					label: s.title,
 					color: s.color || "",

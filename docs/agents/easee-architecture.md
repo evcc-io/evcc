@@ -198,7 +198,7 @@ This POST returns HTTP `200` but still fires a `CommandResponse` with `ID=22` (e
 
 ### Charger-Level (fallback)
 
-Uses `PhaseMode` setting: `1` for single-phase, `2` (auto) for 3-phase.
+Uses `PhaseMode` setting: `1` locked single-phase, `3` locked 3-phase. `2` (auto, set by earlier versions) is reported as unknown phases so the loadpoint locks it.
 After changing PhaseMode, `Enable(false)` is called — the loadpoint then re-enables, because PhaseMode changes only take effect after a charging cycle restart.
 
 ## Authorization Mode (`authorize`)

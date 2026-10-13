@@ -209,7 +209,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 
 - Use CSS Custom Properties for theming (semantic names: `--evcc-green`, `--evcc-battery`)
 - No inline `style` attributes; use Bootstrap utility classes or scoped CSS (inline only for truly dynamic values)
-- Use existing custom media queries for responsive breakpoints
+- Use the custom media queries from `assets/css/breakpoints.css` (`@media (--sm-and-up)`) for responsive breakpoints, never raw px `min-width`/`max-width`. Write mobile-first and override upwards instead of adding max-width queries
 - Use `$t()` function for all user-facing strings
 - Update both `i18n/en.json` and `i18n/de.json` for new strings
 - Use hierarchical namespace: `{section}.{component}.{purpose}`
