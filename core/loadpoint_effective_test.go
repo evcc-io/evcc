@@ -249,7 +249,6 @@ func TestPlanLocking(t *testing.T) {
 }
 
 func TestGetChargePowerFlexibility(t *testing.T) {
-
 	for _, tc := range []struct {
 		mode         api.ChargeMode
 		alwaysCharge api.AlwaysCharge

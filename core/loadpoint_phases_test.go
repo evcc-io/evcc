@@ -167,7 +167,6 @@ func TestMinActivePhases(t *testing.T) {
 
 // 1p3p charger pinned to 3p must report the 3p minimum power
 func TestEffectiveMinPowerFixedPhases(t *testing.T) {
-
 	for configured, expected := range map[int]float64{0: 1380, 1: 1380, 3: 4140} {
 		ctrl := gomock.NewController(t)
 
@@ -654,7 +653,6 @@ func TestScalePhasesUpMinCurrent(t *testing.T) {
 // (the absolute minimum) when phase switching is available, so feed-in priority
 // in min+pv mode drops to 1p min current instead of staying on 3p (issue #30298).
 func TestMinChargingPhaseScaling(t *testing.T) {
-
 	tc := []struct {
 		desc             string
 		phasesConfigured int
@@ -707,7 +705,6 @@ func TestMinChargingPhaseScaling(t *testing.T) {
 }
 
 func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
-
 	tc := []struct {
 		desc                  string
 		phasesConfigured      int
@@ -890,7 +887,6 @@ func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
 }
 
 func TestPvScalePhasesCircuitLimits(t *testing.T) {
-
 	tc := []struct {
 		desc           string
 		phases         int
