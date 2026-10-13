@@ -22,7 +22,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"math"
 	"strings"
 	"time"
 
@@ -111,7 +110,7 @@ const hycMinPowerAC = 1547 // W
 
 // hycMinCurrent returns the lowest current exceeding hycMinPowerAC
 func hycMinCurrent() float64 {
-	return math.Ceil(grid.PowerToCurrent(hycMinPowerAC, 3)*100+1e-9) / 100
+	return currentAbovePower(hycMinPowerAC, 3)
 }
 
 func init() {
