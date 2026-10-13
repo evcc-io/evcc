@@ -10,6 +10,13 @@ products:
   - brand: Fronius
     description:
       generic: Smart Meter IP
+  - brand: IAMMETER
+    description:
+      generic: SunSpec
+    caveats:
+      - description:
+          de: Erfordert Firmware i.91.065.18 oder neuer.
+          en: Requires firmware i.91.065.18 or newer.
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]
