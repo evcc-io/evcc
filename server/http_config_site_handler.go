@@ -169,3 +169,23 @@ func updateCountryHandler(site site.API) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 	}
 }
+
+// updateGridTypeHandler sets the grid type, tn (with neutral) or it (without neutral)
+func updateGridTypeHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var val string
+		if err := jsonDecoder(r.Body).Decode(&val); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if val != "tn" && val != "it" {
+			jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid grid type: %s", val))
+			return
+		}
+
+		site.SetGridType(val)
+
+		w.WriteHeader(http.StatusOK)
+	}
+}

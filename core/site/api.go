@@ -30,6 +30,8 @@ type API interface {
 	SetTitle(string)
 	GetCountry() string
 	SetCountry(string)
+	GetGridType() string
+	SetGridType(string)
 
 	// Config
 	GetGridMeterRef() string

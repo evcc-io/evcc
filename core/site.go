@@ -66,7 +66,6 @@ type Site struct {
 	// configuration
 	Title         string       `mapstructure:"title"`         // UI title
 	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany. Line-to-line voltage for IT grids.
-	GridType      string       `mapstructure:"gridType"`      // Grid earthing system: tn (default, with neutral) or it (without neutral)
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
 	CurtailersRef []string     `mapstructure:"curtailers"`    // Curtailment device references
@@ -174,24 +173,9 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 		return nil, fmt.Errorf("invalid voltage: %v", site.Voltage)
 	}
 	grid.Voltage = site.Voltage
-
-	switch strings.ToLower(site.GridType) {
-	case "", "tn", "tt":
-		grid.IT = false
-	case "it":
-		grid.IT = true
-	default:
-		return nil, fmt.Errorf("invalid grid type: %s", site.GridType)
-	}
+	grid.IT = site.GetGridType() == "it"
 
 	return site, nil
-}
-
-func gridType() string {
-	if grid.IT {
-		return "it"
-	}
-	return "tn"
 }
 
 func activeMeters(refs []string) ([]config.Device[api.Meter], error) {
@@ -1464,7 +1448,7 @@ func (site *Site) prepare() {
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
 	site.publish(keys.Voltage, grid.Voltage)
-	site.publish(keys.GridType, gridType())
+	site.publish(keys.GridType, site.GetGridType())
 	site.publish(keys.Grid, api.Meter(nil))
 	site.publish(keys.Pv, []api.Meter{})
 	site.publish(keys.Aux, []api.Meter{})

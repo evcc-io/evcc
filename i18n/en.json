@@ -966,6 +966,15 @@
         "description": "Used for region-specific hints and defaults.",
         "label": "Country"
       },
+      "gridType": {
+        "description": {
+          "it": "Three-wire grid without neutral conductor. Common in Norway and parts of Belgium.",
+          "tn": "Most common, modern grid with neutral conductor."
+        },
+        "it": "3 × {voltage} V (IT)",
+        "label": "Grid type",
+        "tn": "{voltage}/{lineVoltage} V (TN)"
+      },
       "currency": {
         "description": "Used to format energy prices, costs and savings based on your tariff.",
         "example": "Your charging price was {price}. You saved {amount}.",

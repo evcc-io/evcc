@@ -47,6 +47,21 @@
 				</select>
 			</FormRow>
 
+			<PropertyCollapsible>
+				<template #advanced>
+					<FormRow
+						id="siteGridType"
+						:label="$t('config.site.gridType.label')"
+						:help="gridTypeHelp"
+					>
+						<select id="siteGridType" v-model="gridType" class="form-select">
+							<option value="tn">{{ gridTypeTnLabel }}</option>
+							<option value="it">{{ gridTypeItLabel }}</option>
+						</select>
+					</FormRow>
+				</template>
+			</PropertyCollapsible>
+
 			<div class="mt-4 d-flex justify-content-between gap-2 flex-column flex-sm-row">
 				<button
 					type="button"
@@ -78,14 +93,15 @@
 import { defineComponent } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import FormRow from "./FormRow.vue";
+import PropertyCollapsible from "./PropertyCollapsible.vue";
 import store from "@/store";
 import api from "@/api";
-import { COUNTRIES, CURRENCY } from "@/types/evcc";
+import { COUNTRIES, CURRENCY, GRID_TYPE } from "@/types/evcc";
 import formatter from "@/mixins/formatter";
 
 export default defineComponent({
 	name: "SiteModal",
-	components: { FormRow, GenericModal },
+	components: { FormRow, GenericModal, PropertyCollapsible },
 	mixins: [formatter],
 	emits: ["changed"],
 	data() {
@@ -95,7 +111,13 @@ export default defineComponent({
 			title: "",
 			currency: CURRENCY.EUR,
 			country: "",
-			initial: { title: "", currency: CURRENCY.EUR as string, country: "" },
+			gridType: GRID_TYPE.TN,
+			initial: {
+				title: "",
+				currency: CURRENCY.EUR as string,
+				country: "",
+				gridType: GRID_TYPE.TN,
+			},
 		};
 	},
 	computed: {
@@ -123,8 +145,29 @@ export default defineComponent({
 		countryChanged() {
 			return this.country !== this.initial.country;
 		},
+		voltage() {
+			return store.state?.voltage ?? 230;
+		},
+		gridTypeTnLabel() {
+			const lineVoltage = Math.round((this.voltage * Math.sqrt(3)) / 10) * 10;
+			return this.$t("config.site.gridType.tn", { voltage: this.voltage, lineVoltage });
+		},
+		gridTypeItLabel() {
+			return this.$t("config.site.gridType.it", { voltage: this.voltage });
+		},
+		gridTypeChanged() {
+			return this.gridType !== this.initial.gridType;
+		},
+		gridTypeHelp() {
+			return this.$t(`config.site.gridType.description.${this.gridType}`);
+		},
 		changed() {
-			return this.titleChanged || this.currencyChanged || this.countryChanged;
+			return (
+				this.titleChanged ||
+				this.currencyChanged ||
+				this.countryChanged ||
+				this.gridTypeChanged
+			);
 		},
 		currencyExample() {
 			const price = this.fmtPricePerKWh(0.122, this.currency);
@@ -139,7 +182,13 @@ export default defineComponent({
 			this.title = store.state?.siteTitle || "";
 			this.currency = store.state?.currency || CURRENCY.EUR;
 			this.country = store.state?.country || "";
-			this.initial = { title: this.title, currency: this.currency, country: this.country };
+			this.gridType = store.state?.gridType ?? GRID_TYPE.TN;
+			this.initial = {
+				title: this.title,
+				currency: this.currency,
+				country: this.country,
+				gridType: this.gridType,
+			};
 		},
 		async save() {
 			this.saving = true;
@@ -154,6 +203,9 @@ export default defineComponent({
 				}
 				if (this.countryChanged) {
 					requests.push(api.put("/config/country", JSON.stringify(this.country)));
+				}
+				if (this.gridTypeChanged) {
+					requests.push(api.put("/config/gridtype", JSON.stringify(this.gridType)));
 				}
 				await Promise.all(requests);
 				this.$emit("changed");

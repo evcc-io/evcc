@@ -197,10 +197,6 @@
           "type": "number",
           "exclusiveMinimum": 0
         },
-        "gridType": {
-          "type": "string",
-          "enum": ["tn", "tt", "it"]
-        },
         "residualPower": {
           "type": "number"
         },

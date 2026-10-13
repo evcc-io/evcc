@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/samber/lo"
 )
 
@@ -79,6 +80,21 @@ func (site *Site) GetCountry() string {
 func (site *Site) SetCountry(country string) {
 	settings.SetString(keys.Country, country)
 	site.publish(keys.Country, country)
+}
+
+// GetGridType returns the grid type, tn (with neutral, default) or it (without neutral)
+func (site *Site) GetGridType() string {
+	if v, _ := settings.String(keys.GridType); v == "it" {
+		return v
+	}
+	return "tn"
+}
+
+// SetGridType sets the grid type and applies it to the current to power conversion
+func (site *Site) SetGridType(gridType string) {
+	settings.SetString(keys.GridType, gridType)
+	grid.IT = gridType == "it"
+	site.publish(keys.GridType, gridType)
 }
 
 // GetGridMeterRef returns the GridMeterRef

@@ -966,6 +966,15 @@
         "description": "Wird für länderspezifische Hinweise und Voreinstellungen verwendet.",
         "label": "Land"
       },
+      "gridType": {
+        "description": {
+          "it": "Dreileiternetz ohne Neutralleiter. Üblich in Norwegen und Teilen Belgiens.",
+          "tn": "Häufigstes, modernes Netz mit Neutralleiter."
+        },
+        "it": "3 × {voltage} V (IT)",
+        "label": "Netzform",
+        "tn": "{voltage}/{lineVoltage} V (TN)"
+      },
       "currency": {
         "description": "Wird für die Erfassung und Formatierung von Energiepreisen, Kosten und Einsparungen verwendet.",
         "example": "Dein Ladepreis betrug {price}. Du hast {amount} gespart.",

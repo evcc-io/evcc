@@ -405,9 +405,10 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		// site
 		for _, r := range map[string]route{
-			"site":          {"GET", "/site", siteHandler(site)},
-			"updatesite":    {"PUT", "/site", updateSiteHandler(site)},
-			"updatecountry": {"PUT", "/country", updateCountryHandler(site)},
+			"site":           {"GET", "/site", siteHandler(site)},
+			"updatesite":     {"PUT", "/site", updateSiteHandler(site)},
+			"updatecountry":  {"PUT", "/country", updateCountryHandler(site)},
+			"updategridtype": {"PUT", "/gridtype", updateGridTypeHandler(site)},
 		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
