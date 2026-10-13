@@ -37,6 +37,7 @@
       "discharging": "ontlaadt",
       "energy": "Energie",
       "gridCharge": "laden met netstroom",
+      "gridDischarge": "ontladen naar het net",
       "hold": "ontladen gesperd",
       "holdCharge": "opladen gesperd",
       "ofTotal": "van {total}",
@@ -186,6 +187,7 @@
     "circuits": {
       "addMainCircuit": "Hoofdcircuit toevoegen",
       "addSubCircuit": "Onderliggend circuit toevoegen",
+      "chargingPointsNote": "Wijs laadpunten en verwarmers in hun eigen instellingen toe aan een circuit.",
       "description": "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
       "legacyWarning": "Nieuwe circuitconfiguratie beschikbaar! Verwijder en sla uw configuratie hier op om het nieuwe, begeleide proces te gebruiken.",
       "meterDedicated": "Meter",
@@ -955,6 +957,7 @@
         "label": "Valuta"
       },
       "siteTitle": {
+        "description": "Wordt getoond op het hoofdscherm en in het browsertabblad.",
         "label": "Titel"
       },
       "title": "Locatie"
@@ -1134,14 +1137,19 @@
     },
     "consumers": {
       "chart": {
+        "bars": "Balken",
         "pattern": "Patroon"
       },
       "cost": "Kosten",
+      "others": "Overige",
       "source": {
         "battery": "batterij",
         "grid": "net"
       },
-      "title": "Verbruikers"
+      "title": "Verbruikers",
+      "view": {
+        "river": "Stroom"
+      }
     },
     "direction": {
       "battery": {
@@ -1163,15 +1171,19 @@
       "batteryCharge": "Batterij laden",
       "batteryDischarge": "Batterij ontladen",
       "charging": "Laden",
+      "export": "Netinjectie",
+      "grid": "Netafname",
       "heating": "Verwarming",
       "home": "Verbruik",
       "overview": "Overzicht",
       "pv": "Productie",
       "title": "Energiestroom",
-      "usage": "Verbruik"
+      "usage": "Verbruik",
+      "withdrawal": "Afname"
     },
     "grid": {
       "amount": "Hoeveelheid",
+      "cost": "Netkosten",
       "energy": "Energie",
       "export": "Export",
       "exportPrice": "Exportprijs",
@@ -1191,10 +1203,47 @@
       "pv": "Productie"
     },
     "production": {
+      "above": "{value} hoger",
+      "accuracy": "Nauwkeurigheid voorspelling",
+      "below": "{value} lager",
       "deviation": "Afwijking",
+      "expectedTomorrow": "verwacht morgen",
+      "exported": "{value} geëxporteerd",
       "produced": "Geproduceerd",
+      "remainingToday": "resterend vandaag",
+      "selfConsumed": "Zelf verbruikt",
       "title": "Productie"
-    }
+    },
+    "socTemp": {
+      "charged": "geladen",
+      "soc": "lading",
+      "temperature": "temperatuur",
+      "used": "verbruikt"
+    },
+    "sources": {
+      "battery": "Batterij",
+      "cost": "Kosten",
+      "energy": "Energie",
+      "grid": "Net",
+      "hint": "Zonne- en batterij-energie gewaardeerd tegen de terugleververgoeding.",
+      "price": "Prijs/kWh",
+      "pv": "Zonne-energie",
+      "share": "Aandeel",
+      "source": "Bron",
+      "title": "Bronnen",
+      "total": "Totaal"
+    },
+    "stat": {
+      "autarky": "Autarkie",
+      "co2Saved": "CO₂ bespaard",
+      "co2SavedTooltip": "Vergeleken met het afnemen van de verbruikte {energy} van het net.",
+      "configure": "Nu configureren",
+      "noCo2": "Geen CO₂-gegevens.",
+      "noPrice": "Geen prijsgegevens.",
+      "savings": "Besparing",
+      "savingsTooltip": "Vergeleken met het inkopen van de verbruikte {energy} van het net."
+    },
+    "title": "Energie"
   },
   "footer": {
     "community": {
@@ -1408,6 +1457,9 @@
     },
     "issueDescription": "Omschrijving",
     "issueTitle": "Titel",
+    "nightlyHint": "Het is misschien al opgelost. Controleer dit eerst met de nieuwste {nightlyVersion}.",
+    "nightlyHintVersion": "nightly-versie",
+    "searchHint": "Zoek eerst in de bestaande {issues} voordat je een bug meldt.",
     "stepsToReproduce": "Stappen om te reproduceren",
     "subTitleDiscussion": "Omschrijf je probleem",
     "subTitleEmail": "Beschrijf het probleem",
@@ -1520,6 +1572,7 @@
       "batteryDischargeHold": "Accu (geblokkeerd)",
       "batteryGridChargeActive": "Net laden: actief",
       "batteryGridChargeLimit": "Net laden: wanneer",
+      "batteryStatus": "Batterijstatus",
       "batteryTooltip": "{energy} van {total} ({soc})",
       "forecast": "Voorspelling",
       "forecastTooltip": "voorspelling: resterende zonne-energieproductie voor vandaag",
@@ -1984,6 +2037,7 @@
     "battery": "Batterij",
     "charge": "Laden",
     "comingSoon": "Deze pagina is in ontwikkeling.",
+    "energy": "Energie",
     "forecast": "Voorspelling",
     "more": "Meer",
     "sessions": "Sessies"
