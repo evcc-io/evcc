@@ -24,8 +24,11 @@ export function historyToSeries(raw: BatteryHistorySeries[]): KeyedSeries[] {
 // from Wh to percent using the battery capacity (kWh). Points sit at slot end, matching the soc.
 export function forecastToSeries(evopt: EvOpt | undefined, nowMs: number): KeyedSeries[] {
   if (!evopt?.res?.batteries || !evopt.details?.timestamp) return [];
-  const dt = evopt.req.time_series.dt;
-  const ts = evopt.details.timestamp.map((t, i) => new Date(t).getTime() + (dt[i] ?? 0) * 1000);
+  const { dt } = evopt.req.time_series;
+  const ts = evopt.details.timestamp.map((start, i) => {
+    const durationMs = (dt[i] ?? 0) * 1000;
+    return new Date(start).getTime() + durationMs;
+  });
   return evopt.res.batteries.flatMap((bat, i): KeyedSeries[] => {
     const det = evopt.details.batteryDetails?.[i];
     if (!det || det.type !== "battery" || !det.capacity) return [];
