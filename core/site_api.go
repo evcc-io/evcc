@@ -93,7 +93,7 @@ func (site *Site) GetGridType() string {
 // SetGridType sets the grid type and applies it to the current to power conversion
 func (site *Site) SetGridType(gridType string) {
 	settings.SetString(keys.GridType, gridType)
-	grid.IT = gridType == "it"
+	grid.SetIT(gridType == "it")
 	site.publish(keys.GridType, gridType)
 }
 

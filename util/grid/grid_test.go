@@ -7,7 +7,7 @@ import (
 )
 
 func TestConversion(t *testing.T) {
-	t.Cleanup(func() { IT = false })
+	t.Cleanup(func() { SetIT(false) })
 
 	for _, tc := range []struct {
 		it     bool
@@ -19,7 +19,7 @@ func TestConversion(t *testing.T) {
 		{true, 1, 2300},
 		{true, 3, 3983.71},
 	} {
-		IT = tc.it
+		SetIT(tc.it)
 
 		power := CurrentToPower(10, tc.phases)
 		assert.InDelta(t, tc.power, power, 0.01, "it=%v phases=%d", tc.it, tc.phases)
@@ -28,7 +28,7 @@ func TestConversion(t *testing.T) {
 }
 
 func TestCurrentsToPower(t *testing.T) {
-	t.Cleanup(func() { IT = false })
+	t.Cleanup(func() { SetIT(false) })
 
 	for _, tc := range []struct {
 		it         bool
@@ -41,7 +41,7 @@ func TestCurrentsToPower(t *testing.T) {
 		{true, 0, 10, 10, 2300},
 		{true, 10, 10, 10, 3983.71},
 	} {
-		IT = tc.it
+		SetIT(tc.it)
 		assert.InDelta(t, tc.power, CurrentsToPower(tc.l1, tc.l2, tc.l3), 0.01, "%+v", tc)
 	}
 }

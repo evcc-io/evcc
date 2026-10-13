@@ -1,19 +1,32 @@
 // Package grid converts between phase currents and power for the configured grid.
 package grid
 
-import "math"
+import (
+	"math"
+	"sync/atomic"
+)
 
 var (
 	// Voltage is the nominal phase voltage, line-to-line for IT grids
 	Voltage = 230.0
 
-	// IT indicates a three-wire grid without neutral
-	IT bool
+	// it can change at runtime via the UI while the control loop reads it
+	it atomic.Bool
 )
+
+// IT reports a three-wire grid without neutral
+func IT() bool {
+	return it.Load()
+}
+
+// SetIT sets whether the grid is a three-wire grid without neutral
+func SetIT(v bool) {
+	it.Store(v)
+}
 
 // Factor returns the multiplier converting per-phase current times Voltage into total power
 func Factor(phases int) float64 {
-	if IT && phases == 3 {
+	if IT() && phases == 3 {
 		return math.Sqrt(3)
 	}
 	return float64(phases)
@@ -31,7 +44,7 @@ func PowerToCurrent(power float64, phases int) float64 {
 
 // CurrentsToPower estimates total power from line currents
 func CurrentsToPower(l1, l2, l3 float64) float64 {
-	if !IT {
+	if !IT() {
 		return Voltage * (l1 + l2 + l3)
 	}
 

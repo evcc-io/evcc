@@ -2038,7 +2038,7 @@ func (lp *Loadpoint) phasesFromChargeCurrents() {
 		}
 
 		// single phase loads in IT grids draw current on two line conductors
-		if grid.IT && phases == 2 {
+		if grid.IT() && phases == 2 {
 			phases = 1
 		}
 
@@ -2078,7 +2078,7 @@ func (lp *Loadpoint) updateChargeVoltages() {
 	}
 
 	// without neutral, phase voltages don't reveal the connected phases
-	if grid.IT {
+	if grid.IT() {
 		return
 	}
 
