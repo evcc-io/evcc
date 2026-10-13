@@ -1231,6 +1231,8 @@ export interface LoadpointSuggestion {
   discharge?: number;
   /** Planned site grid flow of the slot in W, positive means import. */
   grid?: number;
+  /** Planned home battery discharge feeding the site in W. */
+  battery?: number;
   /** Suggestion differs from the current operating mode. */
   actionable?: boolean;
 }
