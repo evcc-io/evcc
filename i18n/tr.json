@@ -37,6 +37,7 @@
       "discharging": "pilden çalışıyor",
       "energy": "Enerji",
       "gridCharge": "şebekeden şarj",
+      "gridDischarge": "şebekeye boşaltma",
       "hold": "bataryadan kullanım kapalı",
       "holdCharge": "şarj olma kilitli",
       "ofTotal": "{total}'ın",
