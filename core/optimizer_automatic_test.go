@@ -15,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -68,8 +67,6 @@ func automaticLoadpoint(t *testing.T, ac api.AlwaysCharge, automatic bool) (*Loa
 
 	ctrl := gomock.NewController(t)
 	charger := api.NewMockCharger(ctrl)
-
-	grid.Voltage = 230
 
 	lp := &Loadpoint{
 		log:          util.NewLogger("foo"),
@@ -268,7 +265,6 @@ func TestOptimizerPrioritySoc(t *testing.T) {
 // it does not yield to a higher priority loadpoint, so its power is not flexible
 func TestOptimizerFlexibility(t *testing.T) {
 	enableAutomatic(t)
-	grid.Voltage = 230
 
 	for _, tc := range []struct {
 		s    types.Suggestion
@@ -428,8 +424,6 @@ func TestOptimizerPhaseScaleUp(t *testing.T) {
 			clck := clock.NewMock()
 			clck.Add(time.Hour)
 
-			grid.Voltage = 230
-
 			lp := NewLoadpoint(util.NewLogger("foo"), nil)
 			lp.clock = clck
 			lp.minCurrent = minA
@@ -527,8 +521,6 @@ func TestOptimizerPlanClipsAtPlanTime(t *testing.T) {
 func TestOptimizerPlanActive(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	clck := clock.NewMock()
-
-	grid.Voltage = 230
 
 	lp := &Loadpoint{
 		log:        util.NewLogger("foo"),

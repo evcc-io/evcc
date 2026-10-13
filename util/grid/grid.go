@@ -6,10 +6,10 @@ import (
 	"sync/atomic"
 )
 
-var (
-	// Voltage is the nominal phase voltage, line-to-line for IT grids
-	Voltage = 230.0
+// Voltage is the nominal phase voltage, line-to-line for IT grids
+const Voltage = 230.0
 
+var (
 	// noNeutral can change at runtime via the UI while the control loop reads it
 	noNeutral atomic.Bool
 )

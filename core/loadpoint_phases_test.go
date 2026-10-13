@@ -167,7 +167,6 @@ func TestMinActivePhases(t *testing.T) {
 
 // 1p3p charger pinned to 3p must report the 3p minimum power
 func TestEffectiveMinPowerFixedPhases(t *testing.T) {
-	grid.Voltage = 230
 
 	for configured, expected := range map[int]float64{0: 1380, 1: 1380, 3: 4140} {
 		ctrl := gomock.NewController(t)
@@ -344,7 +343,6 @@ func TestPvScalePhasesTimer(t *testing.T) {
 	climater := &climaterVehicle{vehicle}
 
 	dt := time.Minute
-	grid.Voltage = 230 // V
 
 	tc := []struct {
 		desc                   string
@@ -506,7 +504,6 @@ func TestProjectPhaseSwitch(t *testing.T) {
 		api.NewMockPhaseSwitcher(ctrl),
 	}
 
-	grid.Voltage = 100
 	const site = 500.0
 
 	for _, tc := range []struct {
@@ -657,7 +654,6 @@ func TestScalePhasesUpMinCurrent(t *testing.T) {
 // (the absolute minimum) when phase switching is available, so feed-in priority
 // in min+pv mode drops to 1p min current instead of staying on 3p (issue #30298).
 func TestMinChargingPhaseScaling(t *testing.T) {
-	grid.Voltage = 230
 
 	tc := []struct {
 		desc             string
@@ -711,7 +707,6 @@ func TestMinChargingPhaseScaling(t *testing.T) {
 }
 
 func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
-	grid.Voltage = 230
 
 	tc := []struct {
 		desc                  string
@@ -895,7 +890,6 @@ func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
 }
 
 func TestPvScalePhasesCircuitLimits(t *testing.T) {
-	grid.Voltage = 230
 
 	tc := []struct {
 		desc           string

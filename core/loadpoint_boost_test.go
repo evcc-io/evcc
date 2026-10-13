@@ -43,7 +43,6 @@ func (m *mockSite) GetResidualPower() float64 {
 }
 
 func TestBoostPower(t *testing.T) {
-	grid.Voltage = 230
 	lp := &Loadpoint{
 		log:          util.NewLogger("lp"),
 		clock:        clock.New(),
@@ -131,7 +130,6 @@ type phaseSwitchCharger struct {
 func (phaseSwitchCharger) Phases1p3p(int) error { return nil }
 
 func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
-	grid.Voltage = 230
 	lp := &Loadpoint{
 		log:              util.NewLogger("lp"),
 		clock:            clock.New(),
@@ -168,7 +166,6 @@ func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
 }
 
 func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
-	grid.Voltage = 230
 	limit10k := 10000.0
 	now := time.Now()
 

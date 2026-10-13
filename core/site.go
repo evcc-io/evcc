@@ -65,7 +65,7 @@ type Site struct {
 
 	// configuration
 	Title         string       `mapstructure:"title"`         // UI title
-	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany. Line-to-line voltage for IT grids.
+	Voltage       float64      `mapstructure:"voltage"`       // Deprecated: ignored, the nominal voltage is fixed
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
 	CurtailersRef []string     `mapstructure:"curtailers"`    // Curtailment device references
@@ -169,10 +169,9 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	site.restoreMetersAndTitle()
 
 	// TODO title
-	if site.Voltage <= 0 {
-		return nil, fmt.Errorf("invalid voltage: %v", site.Voltage)
+	if site.Voltage != 0 && site.Voltage != grid.Voltage {
+		site.log.WARN.Printf("voltage %.0fV is no longer supported, using %.0fV", site.Voltage, grid.Voltage)
 	}
-	grid.Voltage = site.Voltage
 	grid.SetNoNeutral(site.GetGridType() == "it")
 
 	return site, nil
@@ -405,7 +404,6 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 func NewSite() *Site {
 	site := &Site{
 		log:        util.NewLogger("site"),
-		Voltage:    230, // V
 		collectors: make(map[string]*metrics.Collector),
 	}
 

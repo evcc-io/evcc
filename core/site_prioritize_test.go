@@ -9,7 +9,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/grid"
 )
 
 func newPVLoadpoint(prio int, mode api.ChargeMode, status api.ChargeStatus, enabled bool, timer time.Time) *Loadpoint {
@@ -58,7 +57,6 @@ func TestPvChargeStarting(t *testing.T) {
 }
 
 func TestReservedPVPower(t *testing.T) {
-	grid.Voltage = 230
 
 	// higher-priority loadpoint (prio 1) starting up
 	high := newPVLoadpoint(1, api.ModeSmart, api.StatusB, false, clock.NewMock().Now())

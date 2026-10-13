@@ -193,10 +193,6 @@
             }
           }
         },
-        "voltage": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        },
         "residualPower": {
           "type": "number"
         },

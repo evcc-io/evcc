@@ -12,7 +12,6 @@ import (
 )
 
 func TestEffectivePowerGridIT(t *testing.T) {
-	grid.Voltage = 230
 	grid.SetNoNeutral(true)
 	t.Cleanup(func() { grid.SetNoNeutral(false) })
 
