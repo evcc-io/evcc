@@ -17,6 +17,7 @@ import {
 	forecastYAxis,
 	clampStart,
 	filterForecastSlots,
+	slotStepData,
 	minSlotIndex,
 	maxSlotIndex,
 	hoverDot,
@@ -101,10 +102,10 @@ export default defineComponent({
 					trigger: "axis",
 					axisPointer: { type: "line", snap: true, lineStyle: { color: "transparent" } },
 					...tooltipStyle(priceColor),
-					formatter(params: { value: [string, number]; seriesIndex: number }[]) {
+					formatter(params: { value: [number, number, number]; seriesIndex: number }[]) {
 						const p = params[0];
 						if (!p) return "";
-						const d = new Date(p.value[0]);
+						const d = new Date(p.value[2]);
 						const time = `${vThis.weekdayShort(d)} ${vThis.fmtHourMinute(d)}`;
 						const showLabels = params.length > 1;
 						const labels = [
@@ -154,12 +155,10 @@ export default defineComponent({
 			const gradientDown = avg >= 0;
 			return {
 				type: "line",
-				step: "start",
+				step: "end",
 				cursor: "default",
 				...hoverDot(color),
-				data: slots.map((s) => ({
-					value: [clampStart(s.start, this.startDate), s.value],
-				})),
+				data: slotStepData(slots, this.startDate, this.endDate),
 				lineStyle: { color, ...lineDefaults },
 				areaStyle: {
 					color: new echarts.graphic.LinearGradient(
