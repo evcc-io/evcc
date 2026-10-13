@@ -1532,6 +1532,7 @@
       },
       "planNumber": "Piano {number}",
       "precondition": {
+        "description": "",
         "disabledDescription": "",
         "label": "Carica ritardata",
         "optionAll": "tutto",

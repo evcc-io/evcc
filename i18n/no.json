@@ -1532,6 +1532,7 @@
       },
       "planNumber": "Plan {number}",
       "precondition": {
+        "description": "",
         "disabledDescription": "",
         "label": "Sen betaling",
         "optionAll": "alt",

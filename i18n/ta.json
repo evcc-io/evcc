@@ -1533,6 +1533,7 @@
       },
       "planNumber": "திட்டம் {number}",
       "precondition": {
+        "description": "",
         "disabledDescription": "",
         "label": "தாமதமாக சார்சிங்",
         "optionAll": "எல்லாம்",

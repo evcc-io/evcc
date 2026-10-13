@@ -1526,6 +1526,7 @@
       },
       "planNumber": "План {number}",
       "precondition": {
+        "description": "",
         "disabledDescription": "",
         "label": "Късно зареждане",
         "optionAll": "всичко",

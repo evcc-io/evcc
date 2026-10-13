@@ -1532,6 +1532,7 @@
       },
       "planNumber": "Planul {number}",
       "precondition": {
+        "description": "",
         "disabledDescription": "",
         "label": "Încărcare întârziată",
         "optionAll": "totul",

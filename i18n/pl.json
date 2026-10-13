@@ -1533,6 +1533,7 @@
       },
       "planNumber": "Plan {number}",
       "precondition": {
+        "description": "",
         "disabledDescription": "",
         "label": "Późniejsze ładowanie",
         "optionAll": "wszystko",
