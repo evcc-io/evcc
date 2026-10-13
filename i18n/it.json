@@ -9,7 +9,8 @@
     "buttonDisconnect": "Disconnetti",
     "challenge": {
       "captcha": {
-        "label": "Inserisci i caratteri mostrati nell'immagine."
+        "label": "Inserisci i caratteri mostrati nell'immagine.",
+        "title": "Captcha"
       },
       "code": {
         "title": "Codice di autorizzazione"
