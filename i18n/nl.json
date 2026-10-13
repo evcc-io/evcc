@@ -58,7 +58,7 @@
       "gridDischarge": "Sta ontladen van de batterij naar het net toe.",
       "gridDischargeConfirm": {
         "country": "Geconfigureerd land: {country}.",
-        "description": "Afhankelijk van de reglementen van het land en de afspraken met je energieleverancier is het mogelijk om energie uit de batterij terug te voeden naar het net. Indien de batterij ook vanuit het net geladen werd, is de geëxporteerde energie niet langer puur zonne-energie. Onder veel omstandigheden geeft dit problemen met de terugleververgoeding, of is dit gewoon niet toegestaan. Controleer de reglementen van de netbeheerder en het contract met je energieleverancier.",
+        "description": "Afhankelijk van de reglementen van het land en de afspraken met je energieleverancier is het mogelijk om energie uit de batterij terug te voeden naar het net, de geëxporteerde energie is niet langer puur zonne-energie. Onder veel omstandigheden is dit niet toegestaan. Controleer de reglementen van de netbeheerder en het contract met je energieleverancier.",
         "noCountry": "Geen land geconfigureerd. Stel dit in onder {link}.",
         "title": "Exporteren naar het net vanuit de batterij"
       },
@@ -188,7 +188,7 @@
     "circuits": {
       "addMainCircuit": "Hoofdcircuit toevoegen",
       "addSubCircuit": "Onderliggend circuit toevoegen",
-      "chargingPointsNote": "Ken laadpunten & verwarmers toe aan een circuit via de eigen configuratie.",
+      "chargingPointsNote": "Ken laadpunten en verwarmers toe aan een circuit via de eigen configuratie.",
       "description": "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
       "legacyWarning": "Nieuwe circuitconfiguratie beschikbaar! Verwijder en sla uw configuratie hier op om het nieuwe, begeleide proces te gebruiken.",
       "meterDedicated": "Meter",
@@ -1062,7 +1062,7 @@
       },
       "generic": "Generieke integraties",
       "grid": {
-        "description": "Electriciteits-prijzen voor consumptie van het net. Gebruikt om de werkelijke laadkosten uit te rekenen, en voor het laden van de auto of thuisbatterij en het inschakelen van verwarming tegen de beste prijs.",
+        "description": "Elektriciteitsprijzen voor consumptie van het net. Gebruikt om de werkelijke laadkosten uit te rekenen, voor het laden van de auto of thuisbatterij en het inschakelen van verwarming tegen de beste prijs.",
         "titleAdd": "Net-import Tarief Toevoegen",
         "titleEdit": "Net-import Tarief Aanpassen"
       },
