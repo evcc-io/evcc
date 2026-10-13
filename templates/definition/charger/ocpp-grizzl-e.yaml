@@ -37,6 +37,8 @@ requirements:
       * In the advanced charger settings, set "Authentication token" to `uc_default_auth`.
 params:
   - preset: ocpp
+  - name: idtag
+    default: uc_default_auth
 render: |
   {{ include "ocpp" . }}
   stacklevelzero: true
