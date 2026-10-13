@@ -24,9 +24,9 @@
 							:class="[
 								STATE_FILL[part.bar.state],
 								{
-									'bar-striped': part.unlimited,
+									'bar-striped': part.striped,
 									'bar-export': part.export,
-									'bar-animated': part.unlimited && part.active,
+									'bar-animated': part.striped && part.active,
 								},
 							]"
 							:style="{ width: part.bar.fill + '%' }"
@@ -76,7 +76,7 @@ interface LimitPart {
 	unit: "kW" | "A";
 	label: string;
 	bar: LimitBar;
-	unlimited?: boolean;
+	striped?: boolean;
 	active?: boolean;
 	export?: boolean;
 }
@@ -126,18 +126,19 @@ export default {
 					bar: limitBar(current, node.maxCurrent),
 				});
 			}
-			// power always shown, without limit as full striped bar indicating activity
+			// power always shown, without limit or on feed-in as full striped bar indicating activity
 			const power = node.power ?? 0;
+			const feedIn = power < 0;
 			const powerLabel = this.fmtW(power, this.POWER_UNIT.KW, false);
 			result.push({
 				unit: "kW",
 				label: node.maxPower
 					? `${powerLabel} / ${this.fmtW(node.maxPower, this.POWER_UNIT.KW, false)}`
 					: powerLabel,
-				bar: limitBar(power, node.maxPower),
-				unlimited: !node.maxPower,
+				bar: limitBar(power, feedIn ? undefined : node.maxPower),
+				striped: !node.maxPower || feedIn,
 				active: power !== 0,
-				export: power < 0,
+				export: feedIn,
 			});
 			return result;
 		},
