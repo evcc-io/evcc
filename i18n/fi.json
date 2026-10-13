@@ -1196,7 +1196,8 @@
       "overview": "Yleisnäkymä",
       "pv": "Tuotanto",
       "title": "Energiavirta",
-      "usage": "Käyttö"
+      "usage": "Käyttö",
+      "withdrawal": "Otto"
     },
     "grid": {
       "amount": "Määrä",
@@ -1218,7 +1219,49 @@
       "loadpoint": "Lataus & lämmitys",
       "meter": "Lisämittarit",
       "pv": "Tuotanto"
-    }
+    },
+    "production": {
+      "above": "{value} yli",
+      "accuracy": "Ennusteen tarkkuus",
+      "below": "{value} alle",
+      "deviation": "Poikkeama",
+      "expectedTomorrow": "odotettu huomenna",
+      "exported": "{value} viety verkkoon",
+      "produced": "Tuotettu",
+      "remainingToday": "jäljellä tänään",
+      "selfConsumed": "Itse kulutettu",
+      "title": "Tuotanto"
+    },
+    "socTemp": {
+      "charged": "ladattu",
+      "soc": "varaus",
+      "temperature": "lämpötila",
+      "used": "käytetty"
+    },
+    "sources": {
+      "battery": "Akku",
+      "cost": "Kustannus",
+      "energy": "Energia",
+      "grid": "Sähköverkko",
+      "hint": "Aurinko- ja akkuenergia arvotettu verkkoon syötön hinnalla.",
+      "price": "Hinta/kWh",
+      "pv": "Aurinko",
+      "share": "Osuus",
+      "source": "Lähde",
+      "title": "Lähteet",
+      "total": "Yhteensä"
+    },
+    "stat": {
+      "autarky": "Omavaraisuus",
+      "co2Saved": "CO₂ säästetty",
+      "co2SavedTooltip": "Verrattuna siihen, että kulutettu {energy} olisi otettu sähköverkosta.",
+      "configure": "Määritä nyt",
+      "noCo2": "Ei CO₂-tietoja.",
+      "noPrice": "Ei hintatietoja.",
+      "savings": "Säästöt",
+      "savingsTooltip": "Verrattuna siihen, että kulutettu {energy} olisi ostettu sähköverkosta."
+    },
+    "title": "Energia"
   },
   "footer": {
     "community": {
@@ -1432,6 +1475,10 @@
     },
     "issueDescription": "Kuvaus",
     "issueTitle": "Otsikko",
+    "nightlyHint": "Se saattaa olla jo korjattu. Tarkista ensin uusimmalla {nightlyVersion}.",
+    "nightlyHintVersion": "Nightly-versiolla",
+    "searchHint": "Ennen kuin raportoit ohjelmistovirheestä, hae olemassa olevista {issues}.",
+    "searchHintLink": "GitHub-tiketeistä",
     "stepsToReproduce": "Toisintamisvaiheet",
     "subTitleDiscussion": "Kuvaile ongelmasi",
     "subTitleEmail": "Kuvaile ongelmasi",
@@ -1544,6 +1591,7 @@
       "batteryDischargeHold": "Akku (lukittu)",
       "batteryGridChargeActive": "Ladataan verkosta",
       "batteryGridChargeLimit": "Milloin ladataan verkosta",
+      "batteryStatus": "Akun tila",
       "batteryTooltip": "{energy} / {total} ({soc})",
       "forecast": "Ennuste",
       "forecastTooltip": "ennuste: jäljellä oleva aurinkotuotanto tänään",
@@ -1699,6 +1747,7 @@
     "targetChargePlan": {
       "chargeDuration": "Latausaika",
       "co2Label": "CO₂ päästö ⌀",
+      "optimizerHint": "Huom: Tämän suunnitelman loi {optimizer}.",
       "priceLabel": "Energian hinta",
       "timeRange": "{day} {range} t",
       "unknownPrice": "ei vielä tiedossa"
@@ -1758,6 +1807,7 @@
       "feedinPriorityPausing": "Aurinkoenergialataus tauolla, jotta sähkön myynti verkkoon voidaan maksimoida.",
       "finished": "Valmis.",
       "minCharge": "Ladataan minimissään {soc}.",
+      "optimizerControlledTooltip": "Automaattinen ohjaus. Optimoija käynnistää ja pysäyttää latauksen.",
       "pvDisable": "Ei tarpeeksi ylijäämää. Lataus keskeytetään pian.",
       "pvEnable": "Ylijäämää saatavilla. Lataus alkaa pian.",
       "scale1p": "Siirrytään pian 1-vaihe lataukseen.",
@@ -2008,6 +2058,7 @@
     "battery": "Akku",
     "charge": "Lataus",
     "comingSoon": "Tämä sivu on vielä työn alla.",
+    "energy": "Energia",
     "forecast": "Ennuste",
     "more": "Lisää",
     "sessions": "Tapahtumat"

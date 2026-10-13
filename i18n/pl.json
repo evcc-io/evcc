@@ -61,6 +61,7 @@
         "noCountry": "Nie skonfigurowano kraju. Ustaw go w {link}.",
         "title": "Eksport do sieci z magazynu energii"
       },
+      "optimizerControlledHint": "Wyłączone dla {loadpoints}. Zamiast tego decyduje {optimizer}.",
       "priority": "Domowy magazyn energii ma priorytet, gdy jego stan jest poniżej {soc}. Wtedy punkty obciążenia otrzymują nadwyżkę.",
       "priorityNone": "Nadwyżka energii słonecznej trafia bezpośrednio do punktów obciążenia. Ustaw wartość powyżej {soc}, aby nadać priorytet domowemu magazynowi energii.",
       "priorityTitle": "Gdzie najpierw trafia nadwyżka?"
@@ -844,9 +845,29 @@
       "usernameHelp": "Dla HTTP Basic Auth do serwera nadrzędnego."
     },
     "optimizer": {
+      "automatic": "Sterowanie automatyczne",
+      "automaticLevel": {
+        "battery": {
+          "description": "Steruje tylko domowym magazynem energii.",
+          "label": "Magazyn energii",
+          "status": "{automatic} steruje domowym magazynem energii."
+        },
+        "full": {
+          "description": "Steruje domowym magazynem energii, uruchamia i zatrzymuje ładowanie pojazdów w trybie inteligentnym, zastępuje limity ceny i CO₂ oraz przejmuje plany. Bez zmian: tryb stop i szybki, urządzenia grzewcze, gniazda przełączalne, pojazdy o nieznanej pojemności.",
+          "label": "Magazyn energii i punkty ładowania",
+          "status": "{automatic} steruje domowym magazynem energii i punktami ładowania."
+        },
+        "off": {
+          "description": "Optymalizator tylko sugeruje. Nic nie jest sterowane.",
+          "status": "{automatic} jest wyłączone. Optymalizator tylko sugeruje."
+        }
+      },
+      "controlled": "Wyłączone przez sterowanie automatyczne. Zamiast tego decyduje {optimizer}.",
+      "controls": "Steruje",
       "description": "Analizuje prognozy dotyczące energii słonecznej, cen energii elektrycznej i wzorce zużycia, aby zoptymalizować strategię ładowania akumulatorów. Dane są przesyłane do usługi optymalizacji evcc w celu przetworzenia. Obecnie wykonuje tylko obliczenia i wizualizacje. Nie kontroluje jeszcze urządzeń.",
       "enable": "Włącz optymalizator",
       "info": "Wyświetlenie pozycji menu optymalizatora może potrwać kilka minut. W przypadku nowych instalacji zebranie wystarczającej ilości danych przez evcc może potrwać do 24 godzin.",
+      "linkWord": "optymalizator",
       "title": "Optymalizator"
     },
     "options": {
@@ -1182,6 +1203,7 @@
       "energy": "Energia",
       "export": "Eksport",
       "exportPrice": "Cena eksportu",
+      "import": "Pobór",
       "importPrice": "Cena importu",
       "price": "Cena",
       "revenue": "Przychód z zasilenia sieci",
@@ -1674,6 +1696,7 @@
       "vehicle": "Pojazd"
     },
     "mode": {
+      "boost": "Turbo",
       "minpv": "Min+Słońce",
       "normal": "Normalny",
       "now": "Szybko",
@@ -1722,6 +1745,7 @@
     "targetChargePlan": {
       "chargeDuration": "Czas ładowania",
       "co2Label": "CO₂ emisja ⌀",
+      "optimizerHint": "Uwaga: ten plan został utworzony przez {optimizer}.",
       "priceLabel": "Cena energii",
       "timeRange": "{day} {range} h",
       "unknownPrice": "nadal nieznany"
@@ -1779,6 +1803,7 @@
       "feedinPriorityPausing": "Wstrzymano ładowanie słoneczne w celu zwiększenia zasilania sieci.",
       "finished": "Zakończone.",
       "minCharge": "Minimalne ładowanie do {soc}.",
+      "optimizerControlledTooltip": "Sterowanie automatyczne. Optymalizator uruchamia i zatrzymuje ładowanie.",
       "pvDisable": "Za mało nadwyżki. Wkrótce przerwa.",
       "pvEnable": "Dostępna nadwyżka. Wkrótce rozpoczęcie.",
       "scale1p": "Wkrótce zredukowanie na ładowanie jednofazowe.",
