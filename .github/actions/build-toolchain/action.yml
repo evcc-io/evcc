@@ -20,7 +20,7 @@ runs:
 
     - uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
       with:
-        node-version: "26"
+        node-version-file: ".node-version"
         cache: true
 
     # Writes are namespaced by cache-scope so a PR build cannot poison the

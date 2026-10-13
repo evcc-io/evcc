@@ -179,3 +179,28 @@ func TestTotalPriceFormulaFloatKind(t *testing.T) {
 	// the formula yields float32, so the result only carries float32 precision
 	assert.InDelta(t, 0.20, e.totalPrice(0.20, time.Now()), 1e-6)
 }
+
+func TestTotalPriceFormulaScript(t *testing.T) {
+	e := embed{
+		Tax:     0.1,
+		Formula: "verkko := 0.025; if ts.Hour() < 7 || ts.Hour() >= 22 { verkko = 0.0112 }; math.Max((price + charges + tax)*1.255 + verkko, 0.0)",
+	}
+	require.NoError(t, e.init())
+
+	ts := time.Date(2026, 1, 1, 12, 0, 0, 0, time.Local)
+	assert.InDelta(t, (1+0.1)*1.255+0.025, e.totalPrice(1, ts), 1e-9)
+
+	ts = time.Date(2026, 1, 1, 23, 0, 0, 0, time.Local)
+	assert.InDelta(t, (1+0.1)*1.255+0.0112, e.totalPrice(1, ts), 1e-9)
+}
+
+func TestTotalPriceFormulaMultiline(t *testing.T) {
+	e := embed{Formula: "x := 2.0 // factor\nprice * x // result"}
+	require.NoError(t, e.init())
+	assert.InDelta(t, 0.4, e.totalPrice(0.2, time.Now()), 1e-9)
+}
+
+func TestTotalPriceFormulaNoTrailingExpression(t *testing.T) {
+	e := embed{Formula: "x := price"}
+	require.ErrorContains(t, e.init(), "must end with an expression")
+}

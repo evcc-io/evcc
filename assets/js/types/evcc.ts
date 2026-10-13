@@ -336,6 +336,8 @@ export interface State {
   ocppforwarder?: OcppForwarder;
   /** Battery optimizer is enabled. */
   optimizer?: boolean;
+  /** What the optimizer controls instead of only advising: nothing, the home battery, or battery and loadpoints. */
+  optimizerAutomatic?: OPTIMIZER_AUTOMATIC;
   /** Selected battery optimizer charging strategy. */
   optimizerChargingStrategy?: string;
   /** Available battery optimizer charging strategies. */
@@ -700,6 +702,8 @@ export interface Loadpoint {
   mode: CHARGE_MODE;
   /** Current offered to the vehicle in A. */
   offeredCurrent: number;
+  /** Optimizer decides start/stop for this loadpoint, replacing the price limits. */
+  optimizerControlled: boolean;
   /** Pending phase switching action in solar mode. */
   phaseAction: PHASE_ACTION;
   /** Remaining time until the pending phase switching action executes, in seconds. */
@@ -888,6 +892,12 @@ export enum CHARGE_MODE {
   OFF = "off",
   SMART = "smart",
   NOW = "now",
+}
+
+export enum OPTIMIZER_AUTOMATIC {
+  OFF = "off",
+  BATTERY = "battery",
+  FULL = "full",
 }
 
 /** Always charge state. Smart mode charges continuously at least at minimum power. */
@@ -1215,6 +1225,8 @@ export interface BatterySuggestion {
   charge?: number;
   /** Recommended discharge power in W. */
   discharge?: number;
+  /** Planned site grid flow of the slot in W, positive means import. */
+  grid?: number;
   /** Suggestion differs from the current operating mode. */
   actionable?: boolean;
 }
@@ -1227,6 +1239,8 @@ export interface LoadpointSuggestion {
   charge?: number;
   /** Recommended discharge power in W. */
   discharge?: number;
+  /** Planned site grid flow of the slot in W, positive means import. */
+  grid?: number;
   /** Suggestion differs from the current operating mode. */
   actionable?: boolean;
 }
@@ -1237,6 +1251,8 @@ export interface BatteryMeter extends Meter {
   soc: number;
   /** Battery supports external control of its operation mode. */
   controllable: boolean;
+  /** Battery modes supported by the device. */
+  modes?: string[];
   /** Battery capacity in kWh. Zero when not specified. */
   capacity: number;
   /** Battery optimizer suggestion. */
@@ -1263,6 +1279,7 @@ export interface PlanWrapper {
   duration: number;
   plan: Rate[] | null;
   power: number;
+  optimizer?: boolean;
 }
 
 export interface PlanResponse {
@@ -1557,7 +1574,7 @@ export interface OptimizationResult {
 export interface BatteryResult {
   charging_power: number[]; // Charging energy per step (Wh)
   discharging_power: number[]; // Discharging energy per step (Wh)
-  state_of_charge: number[]; // State of charge per step (Wh)
+  state_of_charge: number[]; // State of charge at the end of each step (Wh)
 }
 
 // Battery detail information for optimization

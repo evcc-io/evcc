@@ -60,13 +60,17 @@ export default defineComponent({
 			const last = this.times[this.times.length - 1];
 			return last === undefined ? 0 : last + (dt[dt.length - 1] || 0) * 1000;
 		},
+		// soc is the value at slot end, prefixed with the initial soc at schedule start
 		socSeries(): [number, number][] {
-			const soc = this.evopt.res.batteries[this.entry.index]?.state_of_charge || [];
+			const soc = [
+				this.evopt.req.batteries?.[this.entry.index]?.s_initial ?? 0,
+				...(this.evopt.res.batteries[this.entry.index]?.state_of_charge || []),
+			];
 			const capacityWh = this.entry.capacity * 1000;
-			return this.times.map((t, i) => {
-				const wh = soc[i] ?? 0;
-				return [t, capacityWh > 0 ? (wh / capacityWh) * 100 : 0] as [number, number];
-			});
+			return [...this.times, this.endTime].map((t, i) => [
+				t,
+				capacityWh > 0 ? ((soc[i] ?? 0) / capacityWh) * 100 : 0,
+			]);
 		},
 		xAxes(): Record<string, unknown>[] {
 			const stepHours = is12hFormat() ? 6 : 4;
@@ -116,7 +120,6 @@ export default defineComponent({
 				series: [
 					{
 						type: "line",
-						step: "start",
 						z: 3,
 						data: this.socSeries,
 						...transientHoverDot(this.entry.color),

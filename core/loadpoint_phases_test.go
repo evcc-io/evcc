@@ -495,6 +495,48 @@ func TestPvScalePhasesTimer(t *testing.T) {
 	}
 }
 
+// the projection drops the loadpoint from its actual draw to 1p min, not from 3p min (#34746)
+func TestProjectPhaseSwitch(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	charger := &struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{
+		api.NewMockCharger(ctrl),
+		api.NewMockPhaseSwitcher(ctrl),
+	}
+
+	grid.Voltage = 100
+	const site = 500.0
+
+	for _, tc := range []struct {
+		desc        string
+		phases      int
+		chargePower float64
+		projected   float64
+	}{
+		{"at min current", 3, 3 * grid.Voltage * minA, site - 2*grid.Voltage*minA},
+		{"above min current", 3, 3 * grid.Voltage * (minA + 1), site - 3*grid.Voltage*(minA+1) + grid.Voltage*minA},
+		{"below min power", 3, grid.Voltage * minA, site - 2*grid.Voltage*minA},
+		// a scale up pending at 1p leaves site power alone
+		{"scale up at 1p", 1, grid.Voltage * (minA + 1), site},
+	} {
+		lp := &Loadpoint{
+			log:            util.NewLogger("foo"),
+			clock:          clock.NewMock(),
+			charger:        charger,
+			phases:         tc.phases,
+			measuredPhases: tc.phases,
+			chargePower:    tc.chargePower,
+			phaseTimer:     time.Unix(1, 0),
+		}
+
+		projected, phases := lp.projectPhaseSwitch(site, minA)
+		require.Equal(t, tc.projected, projected, tc.desc)
+		require.Equal(t, 1, phases, tc.desc)
+	}
+}
+
 func TestScalePhasesIfAvailable(t *testing.T) {
 	ctrl := gomock.NewController(t)
 

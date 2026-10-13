@@ -1,12 +1,24 @@
 {
   "authProviders": {
-    "authCode": "Autoriséierungscode",
+    "authCode": "Authentifikatiounscode",
     "authCodeHelp": "Kopéierem dëse Code a benotz en am nächste Schratt. Gülteg fir {duration}.",
     "authorizationFailed": "Autoriséierung feelgeschloen",
     "authorizationRequired": "Autoriséierung néideg",
     "authorizationSuccessful": "Autoriséierung erfollegräich",
     "buttonConnect": "Mam {provider} verbannen",
     "buttonDisconnect": "Trennen",
+    "challenge": {
+      "captcha": {
+        "label": "Gitt d'Zeechen an, déi am Bild gewise ginn.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Füügt de Code oder d'Adress vun der Säit un, op déi Dir weidergeleet gouft.",
+        "title": "Autoriséierungscode"
+      },
+      "openLogin": "D'Login-Säit opmaachen",
+      "submit": "Weider"
+    },
     "confirmLogout": "Sécher, datt s du {title} trenne wëlls?",
     "connect": "verbannen",
     "disconnect": "trennen",
@@ -25,6 +37,7 @@
       "discharging": "entluet",
       "energy": "Energie",
       "gridCharge": "Luede vum Netz",
+      "gridDischarge": "Entluede vum Netz",
       "hold": "Entluede gespaart",
       "holdCharge": "Luede gespaart",
       "ofTotal": "vun {total}",
@@ -43,6 +56,12 @@
       "bufferTitle": "Batterie als Luedpuffer",
       "discharge": "Verhënnert d'Entluede vun der Batterie am schnelle Modus a wärend dem geplangten Oplueden.",
       "gridDischarge": "Erlaabt der Batterie sech an d'Netz ze entlueden.",
+      "gridDischargeConfirm": {
+        "country": "Konfiguréiert Land: {country}.",
+        "description": "Ob d'Batterieenergie an d'Netz exportéiert ka ginn, hänkt vun Ärem Land an Ärem Einspeisungsvertrag of. Wann d'Batterie och vum Netz opgeluede gëtt, ass déi exportéiert Energie net méi reng Sonnen-Energie. Ënnert ville Einspeisetariffer verléiert Dir dommat Är Revenuen oder et ass verbueden. Iwwerpréift fir d'éischt Äre Vertrag an d'Conditioune vum Netzbedreiwer.",
+        "noCountry": "Kee Land konfiguréiert. Lee et ënner {link} fest.",
+        "title": "Netzaspeisung aus der Batterie"
+      },
       "priority": "D'Batterie huet Prioritéit, soulaang de SOC ënner {soc} ass. Dann kréien d'Opluedpunkten de Rescht.",
       "priorityNone": "Den Iwwerschoss vun der Solaranlag geet direkt op d'Opluedpunkten. Setzt e Wäert iwwer {soc} fir d'Batterie ze prioriséieren.",
       "priorityTitle": "Wou geet den Iwwerschoss fir d'éischt hin?"
@@ -144,10 +163,45 @@
         "switchsocket": "Benotzerdefinéirt schaltbar Steckdous"
       }
     },
+    "circuit": {
+      "addMeter": "Dedidéierten Engergiezieler dobäi fügen",
+      "custom": "Benotzerdefinéierte Stroumkrees",
+      "deleteChildrenFirst": "Fir dëse Stroumkrees ze läschen, läscht fir d'éischt seng ënnergeuerdnet Kreesser.",
+      "meterDedicated": "Dediéierten Zieler",
+      "meterGrid": "Netzzieler",
+      "meterHelp": "Zieler, deen de Gesamtverbrauch vun dësem Stroumkrees moosst.",
+      "meterLabel": "Zieler",
+      "meterLabelAdd": "Stroumkreeszieler derbäi fügen",
+      "meterLabelEdit": "Stroumkreeszieler beaarbechten",
+      "meterNone": "Keen Zieler",
+      "meterSelectionHelpDedicatedMeter": "Füügt e bestoende Zieler an dëse Stroumkrees derbäi.",
+      "meterSelectionHelpGridMeter": "Benotzt de bestoenden Zieler vun Ärer Installatioun.",
+      "meterSelectionHelpNoMeter": "D'Zomm vun alle Luedpunkte gëtt benotzt.",
+      "meterSelectionLabel": "Zielerauswal",
+      "parentCircuit": "Iwwergeuerdnete Stroumkrees",
+      "template": "Stroumkrees",
+      "titleAdd": "Füügt ee Stroumkreess derbäi",
+      "titleEdit": "Stroumkrees editéieren",
+      "titleLabel": "Titel"
+    },
     "circuits": {
+      "addMainCircuit": "Haaptstroumkrees derbäi fügen",
+      "addSubCircuit": "Ënnergeuerdnete Stroumkrees derbäi fügen",
+      "chargingPointsNote": "Luedpunkte & Heizgeräter weist du an de jeeweilege Astellungen engem Stroumkrees zou.",
       "description": "Sécherstellen, datt d'Zomm vun all den Luedstatiounen déi mam Circuit verbonne sinn net déi konfiguréiert Leeschtung an aktuell Grenzen iwwerschreit. Circuiten kënnen agenist ginn fir eng Hierarchie opzebauen.",
+      "legacyWarning": "Nei Konfiguratioun vun de Stroumkreesser verfügbar! Läsch a späicher hei deng Konfiguratioun, fir de neie geleetene Prozess ze benotzen.",
+      "meterDedicated": "Zieler",
+      "meterGrid": "Netz",
       "title": "Management vun der Belaaschtung",
       "usableMeters": "Verwendbar Zielerreferenzen"
+    },
+    "combobox": {
+      "count": "{count} Virschléi",
+      "matching": "Passend",
+      "other": "Aner",
+      "searching": "Sichen…",
+      "suggestions": "Virschléi",
+      "used": "scho benotzt"
     },
     "consumer": {
       "description": "Verfollegt kleng, net-kontrolléierbar Apparater (Frigo, Wäschmaschinn, asw.). Dëst gëtt Iech e besseren Iwwerbléck iwwert Ären Hausenergieverbrauch.",
@@ -216,6 +270,8 @@
       "identifier": "RFID-Identifikatioun",
       "loginBlocked": "Login-Limit erreecht",
       "max": "max",
+      "maxCurrent": "Max. Stroum",
+      "maxPower": "Max. Leeschtung",
       "messengers": "Servicer",
       "no": "nee",
       "odometer": "Kilometerzäler",
@@ -352,6 +408,7 @@
       "enable": "Aktivéieren",
       "error": "Feeler",
       "experimental": "Experimentell",
+      "forceEnable": "Trotzdeem aktivéieren",
       "forceSave": "Trotzdem späicheren",
       "fromYamlHint": "Bemierkung: Konfiguréiert iwwer evcc.yaml. Läscht d'Astellungen aus der Datei fir d'Ännerung hei z'erméiglechen.",
       "hideAdvancedSettings": "Fortgeschratten Astellunge verstoppen",
@@ -370,6 +427,7 @@
       "saving": "Späichert…",
       "selectFile": "Duerchsichen",
       "showAdvancedSettings": "Fortgeschratten Astellungen uweisen",
+      "site": "Standuert",
       "telemetry": "Telemetrie",
       "templateLoading": "Lueden…",
       "title": "Titel",
@@ -736,7 +794,7 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionExternalUrl": "Adresse, mat där sech aner Geräter mam evcc verbannen a fir den Autodiscovery vun der evcc-App.",
+      "descriptionExternalUrl": "Adresse, mat där sech aner Geräter mam evcc verbannen a fir den Auto-Discovery vun der evcc-App.",
       "descriptionHost": "Gëtt verwennt, fir den evcc am lokalen Netzwierk unzekënnegen.",
       "descriptionInternalUrl": "Lokal Netzwierkadress vum evcc.",
       "descriptionPort": "Port fir de Web Interface an d'API. Du muss d'Browser-URL updaten, wann s du dëst änners.",
@@ -790,7 +848,7 @@
     "optimizer": {
       "description": "Analyséiert d'Solarprognos, d'Stroumpräisser an Är Verbrauchssmuster, fir d'Batterie- a Luedstrategie ze optiméieren. D'Donnéeë ginn un den evcc-Optimiséierungsservice fir d'Berechnen geschéckt. Momentan berechent a visualiséiert et nëmmen. Et steiert nach keng Apparater.",
       "enable": "Optimizer aktivéieren",
-      "info": "Et kann e puer Minutten daueren, bis den Optimizer-Menüpunkt sichtbar gëtt. Bei neien Installatiounen kann et bis zu 24 Stonnen daueren, bis evcc genuch Donnéeë gesammelt huet.",
+      "info": "Bei neien Installatiounen kann et bis zu 24 Stonnen daueren, bis evcc genuch Donnéeë gesammelt huet.",
       "title": "Optimizer"
     },
     "options": {
@@ -887,6 +945,22 @@
       "labelDeviceSerial": "Apparat-Seriennummer",
       "labelVendorId": "Hiersteller-ID",
       "title": "SMA Sunny Home Manager"
+    },
+    "site": {
+      "country": {
+        "description": "Gëtt fir regiounsspezifesch Hiweiser a Standardwäerter genotzt.",
+        "label": "Land"
+      },
+      "currency": {
+        "description": "Gëtt benotzt fir d'Energiepräisser, Käschten a Erspuernisser op Basis vun Ärem Tarif ze formatéieren.",
+        "example": "Ären Opluedpräis war {price}. Dir hutt {amount} gespuert.",
+        "label": "Wärung"
+      },
+      "siteTitle": {
+        "description": "Gëtt op dem Haaptbildschierm an am Browser-Tab ugewisen.",
+        "label": "Titel"
+      },
+      "title": "Standuert"
     },
     "sponsor": {
       "addToken": "Token aginn",
@@ -1056,6 +1130,103 @@
       "titleEdit": "Auto beaarbechten"
     }
   },
+  "energy": {
+    "battery": {
+      "charged": "Opgelueden",
+      "discharged": "Entlueden"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Balken",
+        "pattern": "Muster"
+      },
+      "cost": "Käschten",
+      "others": "Anerer",
+      "source": {
+        "battery": "Batterie",
+        "grid": "Netz",
+        "pv": "Solar"
+      },
+      "title": "Verbraucher",
+      "view": {
+        "river": "Floss",
+        "treemap": "Treemap"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "gelueden",
+        "returnEnergy": "entlueden"
+      },
+      "grid": {
+        "energy": "importéiert",
+        "returnEnergy": "agespeist"
+      },
+      "meter": {
+        "energy": "Energie",
+        "returnEnergy": "Energie (ëmgedréint)"
+      }
+    },
+    "empty": "Fir dësen Zäitraum sinn keng Energiedate verfügbar.",
+    "flow": {
+      "battery": "Batterie",
+      "batteryCharge": "Batterieladung",
+      "batteryDischarge": "Batterieentluedung",
+      "charging": "Oplueden",
+      "export": "Export an d'Netz",
+      "grid": "Import vum Netz",
+      "heating": "Heizung",
+      "home": "Verbrauch",
+      "overview": "Iwwersiicht",
+      "pv": "Produktioun",
+      "title": "Energiefloss",
+      "usage": "Benotzung",
+      "withdrawal": "Ofzéien"
+    },
+    "grid": {
+      "amount": "Betrag",
+      "cost": "Netzkäschten",
+      "energy": "Energie",
+      "export": "Export",
+      "exportPrice": "Exportpräis",
+      "import": "Import",
+      "importPrice": "Importpräis",
+      "price": "Präis",
+      "revenue": "Recette vum Aspeisen",
+      "title": "Netz"
+    },
+    "group": {
+      "battery": "Batterie",
+      "consumer": "Verbrauch",
+      "forecast": "Virso",
+      "grid": "Netz",
+      "loadpoint": "Lueden & Heizen",
+      "meter": "Aner Zieler",
+      "pv": "Produktioun"
+    },
+    "production": {
+      "above": "{value} driwwer",
+      "accuracy": "Genauegkeet vun der Prognose",
+      "below": "{value} drënner",
+      "deviation": "Ofwäichung",
+      "expectedTomorrow": "muer erwaart",
+      "exported": "{value} exportéiert",
+      "produced": "Produzéiert",
+      "remainingToday": "haut verbleiwend",
+      "selfConsumed": "Selbstverbrauch",
+      "title": "Produktioun"
+    },
+    "socTemp": {
+      "charged": "opgelueden",
+      "soc": "Opgelueden",
+      "temperature": "Temperatur",
+      "used": "verbraucht"
+    },
+    "sources": {
+      "battery": "Batterie",
+      "cost": "Käschten"
+    }
+  },
   "footer": {
     "community": {
       "greenEnergy": "Solar",
@@ -1193,6 +1364,7 @@
   },
   "general": {
     "back": "Zeréck",
+    "cancel": "Ofbriechen",
     "download": "Eroflueden",
     "error": "Feeler",
     "none": "keng",
@@ -1229,31 +1401,6 @@
     "restartButton": "Nei starten",
     "restartDescription": "Hues du schonns probéiert d'Gerät aus- an erëm unzemaachen?",
     "secondaryActions": "Nach ëmmer keng Léisung fonnt? Hei sinn e puer weider Méiglechkeeten."
-  },
-  "energy": {
-    "direction": {
-      "battery": {
-        "energy": "gelueden",
-        "returnEnergy": "entlueden"
-      },
-      "grid": {
-        "energy": "importéiert",
-        "returnEnergy": "agespeist"
-      },
-      "meter": {
-        "energy": "Energie",
-        "returnEnergy": "Energie (ëmgedréint)"
-      }
-    },
-    "group": {
-      "battery": "Batterie",
-      "consumer": "Verbrauch",
-      "forecast": "Virso",
-      "grid": "Netz",
-      "loadpoint": "Lueden & Heizen",
-      "meter": "Aner Zieler",
-      "pv": "Produktioun"
-    }
   },
   "issue": {
     "additional": {

@@ -49,6 +49,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 type updater interface {
 	loadpoint.API
 	Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
+	activeSuggestion() *types.Suggestion
 }
 
 var _ site.API = (*Site)(nil)
@@ -488,7 +489,7 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.Bool(keys.BatteryDischargeControl); err == nil {
-		if err := site.SetBatteryDischargeControl(v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
+		if err := site.setBatteryDischargeControl(v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
 	}
@@ -503,7 +504,7 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.Float(keys.BatteryGridChargeLimit); err == nil {
-		if err := site.SetBatteryGridChargeLimit(&v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
+		if err := site.setBatteryGridChargeLimit(&v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
 	}
@@ -846,8 +847,11 @@ func (site *Site) updateBatteryMeters() {
 			maxDischargePower = -1 // any battery without a limit disables the cap
 		}
 
-		_, controllable := api.Cap[api.BatteryController](meter)
+		ctrl, controllable := api.Cap[api.BatteryController](meter)
 		mm[i].Controllable = new(controllable)
+		if controllable {
+			mm[i].Modes = lo.Map(ctrl.BatteryModes(), func(m api.BatteryMode, _ int) string { return m.String() })
+		}
 	}
 
 	// retain the last known soc when all reads failed, so that a transient
@@ -1122,6 +1126,38 @@ func optimizerEnabled() bool {
 	return exp && opt
 }
 
+// optimizer automatic levels: what the optimizer controls instead of only advising
+const (
+	OptimizerAutomaticOff     = "off"
+	OptimizerAutomaticBattery = "battery" // home battery only
+	OptimizerAutomaticFull    = "full"    // home battery and loadpoints
+)
+
+var OptimizerAutomaticLevels = []string{OptimizerAutomaticOff, OptimizerAutomaticBattery, OptimizerAutomaticFull}
+
+// OptimizerAutomatic returns the configured optimizer automatic level
+func OptimizerAutomatic() string {
+	switch v, _ := settings.String(keys.OptimizerAutomatic); v {
+	case OptimizerAutomaticBattery, OptimizerAutomaticFull:
+		return v
+	case "true", "1":
+		// stored by the boolean switch before the levels existed
+		return OptimizerAutomaticFull
+	default:
+		return OptimizerAutomaticOff
+	}
+}
+
+// Automatic returns true if the optimizer controls the home battery instead of only advising
+func (site *Site) Automatic() bool {
+	return OptimizerAutomatic() != OptimizerAutomaticOff && optimizerEnabled() && sponsor.IsAuthorized()
+}
+
+// AutomaticLoadpoints returns true if the optimizer controls the loadpoints as well
+func (site *Site) AutomaticLoadpoints() bool {
+	return OptimizerAutomatic() == OptimizerAutomaticFull && site.Automatic()
+}
+
 // sitePowerResult is the outcome of the site power calculation
 type sitePowerResult struct {
 	// measured state, including the estimates for missing meters
@@ -1138,7 +1174,7 @@ type sitePowerResult struct {
 	batteryStart bool
 
 	// adjustment applied for battery priority below prioritySoc; adding it back
-	// restores the unadjusted site power for a battery-boosting loadpoint
+	// restores the unadjusted site power for loadpoints prioritySoc does not apply to
 	priorityAdjustment float64
 }
 
@@ -1237,6 +1273,29 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 	return sum
 }
 
+// loadpointSitePower returns the site power the loadpoint controls against:
+// the surplus reserved for higher-priority loadpoints and its own battery priority
+func (site *Site) loadpointSitePower(lp updater, res sitePowerResult) float64 {
+	sitePower := res.power
+
+	// reserve surplus claimed by higher-priority loadpoints that are starting up (#31194)
+	sitePower += site.reservedPVPower(lp)
+
+	// prioritySoc does not apply to a boosting loadpoint, which deliberately drains the
+	// battery (#30541), nor to one the optimizer controls, since the optimizer plans the
+	// home battery: a stop gives the battery priority, a charge takes the surplus (#34606)
+	suggestion := lp.activeSuggestion()
+	if suggestion != nil || lp.GetBatteryBoost() != boostDisabled {
+		sitePower += res.priorityAdjustment
+	}
+
+	if suggestion != nil && suggestion.Action != actionCharge && res.state.battery.Power < 0 {
+		sitePower -= res.state.battery.Power + res.state.excessDCPower
+	}
+
+	return sitePower
+}
+
 // reservedPVPower returns the anticipated surplus claimed by higher-priority PV loadpoints
 // that are starting up, so lower-priority loadpoints defer enabling against it (#31194).
 func (site *Site) reservedPVPower(lp updater) float64 {
@@ -1292,7 +1351,6 @@ func (site *Site) update(lp updater) {
 			// don't resurrect the pre-disable solve on re-enable
 			site.setLastOptimizerSolve(nil)
 		}
-		go site.optimizerUpdateAsync(tariff.SlotDuration)
 
 		site.updatePower(lp, state, totalChargePower, consumption, feedin)
 	}
@@ -1361,19 +1419,8 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 
 	// TODO
 	if lp != nil {
-		sitePower := res.power
-
-		// reserve surplus claimed by higher-priority loadpoints that are starting up (#31194)
-		sitePower += site.reservedPVPower(lp)
-
-		// battery boost deliberately drains the battery, hence battery priority
-		// below prioritySoc does not apply to the boosting loadpoint (#30541)
-		if lp.GetBatteryBoost() != boostDisabled {
-			sitePower += res.priorityAdjustment
-		}
-
 		lp.Update(
-			sitePower, state.battery.Power, consumption, feedin, res.batteryBuffered, res.batteryStart,
+			site.loadpointSitePower(lp, res), state.battery.Power, consumption, feedin, res.batteryBuffered, res.batteryStart,
 			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 			hems.Dimmed(site.hems),
 		)
@@ -1532,6 +1579,9 @@ func (site *Site) loopLoadpoints(next chan<- updater) {
 	active := site.activeLoadpoints()
 
 	for {
+		// optimizer runs on its own cadence, checked once per loadpoint cycle
+		go site.optimizerUpdateAsync(false)
+
 		if len(active) == 0 {
 			logOnce.Do(func() {
 				site.log.INFO.Println("no loadpoints configured, running in meter-only mode")

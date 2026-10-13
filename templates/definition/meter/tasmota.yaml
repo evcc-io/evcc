@@ -21,6 +21,7 @@ params:
     description:
       de: Messkanal (1-8)
       en: Meter channel (1-8)
+    service: tasmota/channels?uri={host}&user={user}&password={password}&meter=true
 render: |
   type: tasmota
   uri: http://{{ .host }}

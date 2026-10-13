@@ -135,6 +135,27 @@ func (c *Connection) GetFloatState(entity string) (float64, error) {
 	return scale * value, nil
 }
 
+// GetTemperatureState retrieves the state of an entity as temperature in °C.
+// Fahrenheit and Kelvin readings are converted according to the entity's unit.
+func (c *Connection) GetTemperatureState(entity string) (float64, error) {
+	state, err := c.GetState(entity)
+	if err != nil {
+		return 0, err
+	}
+
+	value, err := strconv.ParseFloat(state.State, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state.State, entity, err)
+	}
+
+	res, err := toCelsius(value, state.Attributes.UnitOfMeasurement)
+	if err != nil {
+		return 0, fmt.Errorf("%w for entity %s", err, entity)
+	}
+
+	return res, nil
+}
+
 // GetBoolState retrieves the state of an entity as boolean
 func (c *Connection) GetBoolState(entity string) (bool, error) {
 	state, err := c.GetState(entity)

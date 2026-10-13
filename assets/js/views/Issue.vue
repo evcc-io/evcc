@@ -69,6 +69,26 @@
 						🇬🇧 Please write your issue in English so everyone can participate.
 					</p>
 
+					<div v-if="showBugHints" class="text-muted mb-4 col-lg-6">
+						<i18n-t tag="div" keypath="issue.searchHint" scope="global">
+							<template #issues>
+								<a href="https://github.com/evcc-io/evcc/issues" target="_blank">
+									{{ $t("issue.searchHintLink") }}
+								</a>
+							</template>
+						</i18n-t>
+						<i18n-t
+							v-if="!nightly"
+							tag="div"
+							keypath="issue.nightlyHint"
+							scope="global"
+						>
+							<template #nightlyVersion>
+								<strong>{{ $t("issue.nightlyHintVersion") }}</strong>
+							</template>
+						</i18n-t>
+					</div>
+
 					<!-- Two Column Layout -->
 					<div class="row mb-5 g-5">
 						<!-- Left Column: Form Fields -->
@@ -392,6 +412,7 @@ import {
 import type { HelpType, IssueData, Sections } from "@/components/Issue/types";
 import type { State } from "@/types/evcc";
 import { docsPrefix } from "@/i18n";
+import { isNightly } from "@/utils/version";
 
 // Keys that should be expanded (1-level expansion for arrays and objects)
 const EXPAND_KEYS = [
@@ -475,6 +496,12 @@ export default defineComponent({
 		},
 		versionString(): string {
 			return `v${store.state.version || ""}`;
+		},
+		showBugHints(): boolean {
+			return !this.emailMode && this.helpType === "issue";
+		},
+		nightly(): boolean {
+			return isNightly(store.state.version || "");
 		},
 		systemString(): string {
 			return store.state.system || "";
