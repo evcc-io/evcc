@@ -4,11 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"math"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util/grid"
 	"github.com/samber/lo"
 	"golang.org/x/text/encoding/unicode"
 )
@@ -113,14 +111,4 @@ func whenDisabled(wb api.Charger, fun func() error) error {
 	}
 
 	return wb.Enable(true)
-}
-
-// currentAbovePower returns the lowest current in 0.01A steps whose power, truncated to whole watts, exceeds power
-func currentAbovePower(power float64, phases int) float64 {
-	current := math.Ceil(grid.PowerToCurrent(power, phases)*100) / 100
-	// float products like 2.30*690 truncate to 1586 W; one extra step adds at least 2.3 W
-	if math.Floor(grid.CurrentToPower(current, phases)) <= power {
-		current += 0.01
-	}
-	return current
 }

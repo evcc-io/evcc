@@ -22,6 +22,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -108,9 +109,10 @@ const (
 // for any connector to actually charge- see hycRegMinPowerAbsorption
 const hycMinPowerAC = 1547 // W
 
-// hycMinCurrent returns the lowest current exceeding hycMinPowerAC
+// hycMinCurrent returns the lowest current whose written power exceeds hycMinPowerAC
 func hycMinCurrent() float64 {
-	return currentAbovePower(hycMinPowerAC, 3)
+	// 2 W margin survives float rounding and truncation to whole watts in hycPower
+	return math.Ceil(grid.PowerToCurrent(hycMinPowerAC+2, 3)*100) / 100
 }
 
 func init() {
