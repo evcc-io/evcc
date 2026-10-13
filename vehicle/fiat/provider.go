@@ -13,6 +13,9 @@ import (
 
 const refreshTimeout = 2 * time.Minute
 
+// errNotPluggedIn indicates that the cloud rejected the deep refresh since the vehicle is not plugged in
+var errNotPluggedIn = errors.New("vehicle not plugged in")
+
 type Provider struct {
 	statusG     func() (StatusResponse, error)
 	locationG   func() (LocationResponse, error)
@@ -49,12 +52,14 @@ func NewProvider(api *API, vin, pin string, expiry, cache time.Duration) *Provid
 
 func (v *Provider) deepRefresh() error {
 	res, err := v.action("ev", "DEEPREFRESH")
+
+	// rejected by the deep refresh endpoint itself, not by the pin authentication
+	if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() == http.StatusForbidden && res.Name == "FORBIDDEN" {
+		return errNotPluggedIn
+	}
+
 	if err == nil && res.ResponseStatus != "pending" {
 		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
-	} else {
-		if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() == http.StatusForbidden {
-			err = nil
-		}
 	}
 	return err
 }
@@ -66,9 +71,18 @@ func (v *Provider) status(statusG func() (StatusResponse, error)) (StatusRespons
 	if err == nil {
 		// result expired?
 		if res.Timestamp.Add(v.expiry).Before(time.Now()) {
+			// the cloud only accepts a deep refresh if the last status upload reported the vehicle as plugged in
+			if res.EvInfo != nil && !res.EvInfo.Battery.PlugInStatus {
+				v.refreshTime = time.Time{}
+				return res, nil
+			}
+
 			// start refresh
 			if v.refreshTime.IsZero() {
 				if err = v.deepRefresh(); err != nil {
+					if errors.Is(err, errNotPluggedIn) {
+						return res, nil
+					}
 					return res, err
 				}
 
