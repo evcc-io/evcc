@@ -42,16 +42,27 @@ func PowerToCurrent(power float64, phases int) float64 {
 	return power / (Factor(phases) * Voltage)
 }
 
-// CurrentsToPower estimates total power from line currents
+// CurrentsToPower estimates total power from signed line currents
 func CurrentsToPower(l1, l2, l3 float64) float64 {
 	if !NoNeutral() {
 		return Voltage * (l1 + l2 + l3)
 	}
 
 	// single phase loads draw identical current on two line conductors
-	if min(l1, l2, l3) <= 0 {
-		return Voltage * max(l1, l2, l3)
+	if min(math.Abs(l1), math.Abs(l2), math.Abs(l3)) == 0 {
+		return Voltage * maxAbs(l1, l2, l3)
 	}
 
 	return Voltage * (l1 + l2 + l3) / math.Sqrt(3)
+}
+
+// maxAbs returns the value with the largest magnitude, keeping its sign
+func maxAbs(vals ...float64) float64 {
+	var res float64
+	for _, v := range vals {
+		if math.Abs(v) > math.Abs(res) {
+			res = v
+		}
+	}
+	return res
 }

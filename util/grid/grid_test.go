@@ -41,6 +41,10 @@ func TestCurrentsToPower(t *testing.T) {
 		{true, 0, 10, 10, 2300},
 		{true, 10, 0, 10, 2300},
 		{true, 0, 0, 0, 0},
+		{false, -10, -10, -10, -6900},
+		{true, -10, -10, 0, -2300},
+		{true, 0, -10, -10, -2300},
+		{true, -10, -10, -10, -3983.71},
 		{true, 10, 10, 10, 3983.71},
 	} {
 		SetNoNeutral(tc.it)
