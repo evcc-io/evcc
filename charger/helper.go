@@ -115,7 +115,11 @@ func whenDisabled(wb api.Charger, fun func() error) error {
 	return wb.Enable(true)
 }
 
-// currentAbovePower returns the lowest current in 0.01A steps whose power strictly exceeds power
+// currentAbovePower returns the lowest current in 0.01A steps whose power, truncated to whole watts, exceeds power
 func currentAbovePower(power float64, phases int) float64 {
-	return math.Ceil(grid.PowerToCurrent(power, phases)*100+1e-9) / 100
+	current := math.Ceil(grid.PowerToCurrent(power, phases)*100) / 100
+	for math.Floor(grid.CurrentToPower(current, phases)) <= power {
+		current = math.Round(current*100+1) / 100
+	}
+	return current
 }
