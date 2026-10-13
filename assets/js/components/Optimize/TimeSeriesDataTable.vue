@@ -180,7 +180,7 @@ export default defineComponent({
 			const ts = this.evopt.req.time_series;
 			const priceUnit = this.pricePerKWhUnit(this.currency);
 			const demand = this.powerRow("Household Demand", ts.gt, colors.muted || "");
-			const groups: RowGroup[] = [
+			return [
 				{
 					rows: [
 						this.powerRow("Solar Forecast", ts.ft, colors.forecast || ""),
@@ -194,28 +194,29 @@ export default defineComponent({
 						},
 						this.priceRow("Grid Import", priceUnit, ts.p_N, colors.price || ""),
 						this.priceRow("Grid Export", priceUnit, ts.p_E, colors.export || ""),
+						...this.departureRows(),
 					],
 				},
 			];
-			// probability per slot that the vehicle leaves, the optimizer values its charge by it
-			this.evopt.req.batteries?.forEach((battery, i) => {
-				if (!battery.r_departure) return;
-				const color = this.batteryColors[i] || "";
-				groups.push({
-					title: this.getBatteryTitle(i),
-					color,
-					rows: [
-						{
-							label: "Departure",
-							unit: "%",
-							display: battery.r_departure.map((p) => this.fmtNumber(p * 100, 1)),
-							nums: battery.r_departure,
-							heatColor: color,
-						},
-					],
-				});
+		},
+		// probability per slot that a vehicle leaves, the optimizer values its charge by it
+		departureRows(): Row[] {
+			const batteries = this.evopt.req.batteries || [];
+			const rows: Row[] = batteries.flatMap((battery, i) => {
+				if (!battery.r_departure) return [];
+				return [
+					{
+						label: `↳ ${this.getBatteryTitle(i)}`,
+						unit: "%",
+						display: battery.r_departure.map((p) => this.fmtNumber(p * 100, 1)),
+						nums: battery.r_departure,
+						heatColor: this.batteryColors[i] || "",
+					},
+				];
 			});
-			return groups;
+			if (!rows.length) return [];
+			const blank = Array(this.slotCount).fill("");
+			return [{ label: "Departure Risk", unit: "%", display: blank, nums: [] }, ...rows];
 		},
 		// the profiles the household demand is summarized from, scaled against the total
 		demandRows(total: Row): Row[] {
