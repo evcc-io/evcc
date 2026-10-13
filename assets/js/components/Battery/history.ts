@@ -21,10 +21,12 @@ export function historyToSeries(raw: BatteryHistorySeries[]): KeyedSeries[] {
 }
 
 // Optimizer soc per battery, keyed by the device name; only points at/after now, converted
-// from Wh to percent using the battery capacity (kWh).
+// from Wh to percent using the battery capacity (kWh). The optimizer soc is the value at the
+// end of each slot, so points are placed at slot start plus duration.
 export function forecastToSeries(evopt: EvOpt | undefined, nowMs: number): KeyedSeries[] {
   if (!evopt?.res?.batteries || !evopt.details?.timestamp) return [];
-  const ts = evopt.details.timestamp.map((t) => new Date(t).getTime());
+  const dt = evopt.req?.time_series?.dt ?? [];
+  const ts = evopt.details.timestamp.map((t, i) => new Date(t).getTime() + (dt[i] ?? 0) * 1000);
   return evopt.res.batteries.flatMap((bat, i): KeyedSeries[] => {
     const det = evopt.details.batteryDetails?.[i];
     if (!det || det.type !== "battery" || !det.capacity) return [];
