@@ -36,6 +36,7 @@ describe("historyToSeries", () => {
 
 describe("forecastToSeries", () => {
   const evopt = {
+    req: { time_series: { dt: [3600, 3600, 3600] } },
     res: {
       batteries: [
         { state_of_charge: [4000, 5000, 6000] }, // Wh
@@ -57,14 +58,14 @@ describe("forecastToSeries", () => {
     expect(res[0]!.key).toBe("bat1");
     // 10 kWh -> 5000 Wh = 50 %
     expect(res[0]!.points).toEqual([
-      { t: t("2026-01-01T00:00:00Z"), soc: 40 },
-      { t: t("2026-01-01T01:00:00Z"), soc: 50 },
-      { t: t("2026-01-01T02:00:00Z"), soc: 60 },
+      { t: t("2026-01-01T01:00:00Z"), soc: 40 },
+      { t: t("2026-01-01T02:00:00Z"), soc: 50 },
+      { t: t("2026-01-01T03:00:00Z"), soc: 60 },
     ]);
   });
 
   it("drops points before now", () => {
-    const res = forecastToSeries(evopt, t("2026-01-01T01:00:00Z"));
+    const res = forecastToSeries(evopt, t("2026-01-01T02:00:00Z"));
     expect(res[0]!.points.map((p) => p.soc)).toEqual([50, 60]);
   });
 
