@@ -1121,6 +1121,11 @@
         "titleAdd": "気温予測を追加",
         "titleEdit": "気温予測を編集"
       },
+      "temperature": {
+        "description": "お住まいの地域の外気温予測です。画面に表示され、暖房需要の予測に使用されます。",
+        "titleAdd": "気温予測を追加",
+        "titleEdit": "気温予測を編集"
+      },
       "template": "プロバイダー",
       "title": "料金プラン・予測",
       "titleChoice": "何を追加しますか？",

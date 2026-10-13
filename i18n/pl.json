@@ -1120,6 +1120,11 @@
         "titleAdd": "Dodaj prognozę temperatury",
         "titleEdit": "Edytuj prognozę temperatury"
       },
+      "temperature": {
+        "description": "Prognoza temperatury zewnętrznej dla Twojej lokalizacji. Wyświetlana w interfejsie i używana do przewidywania zapotrzebowania na ciepło.",
+        "titleAdd": "Dodaj prognozę temperatury",
+        "titleEdit": "Edytuj prognozę temperatury"
+      },
       "template": "Dostawca",
       "title": "Taryfy i Prognozy",
       "titleChoice": "Co zamierzasz dodać?",
