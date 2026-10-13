@@ -1617,6 +1617,12 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 		scalable = insufficient || !lp.circuitAllowsPhases(activePhases, minCurrent)
 	}
 
+	// a configured solar 1p limit converges surplus charging to a single phase.
+	// an explicitly fixed phase configuration takes precedence.
+	if !disable && lp.limitSolarPhases && activePhases > 1 && lp.phasesConfigured < 3 {
+		scalable = true
+	}
+
 	// scale down phases. The phase timer keeps running while 3p min is not covered,
 	// whether 1p would be sustainable or not, so passing clouds cannot restart it (#34746)
 	if scalable {

@@ -51,6 +51,46 @@ done:
 	ctrl.Finish()
 }
 
+// TestPvScalePhasesSolarLimitDown asserts that an active 3p session converges
+// to a single phase once the solar 1p limit is enabled, even with ample surplus.
+func TestPvScalePhasesSolarLimitDown(t *testing.T) {
+	Voltage = 230
+
+	ctrl := gomock.NewController(t)
+
+	plainCharger := api.NewMockCharger(ctrl)
+	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Phases().Return(3).AnyTimes()
+	vehicle.EXPECT().Features().AnyTimes()
+
+	lp := &Loadpoint{
+		log:              util.NewLogger("foo"),
+		clock:            clock.NewMock(),
+		wakeUpTimer:      NewTimer(),
+		minCurrent:       6,
+		maxCurrent:       16,
+		vehicle:          vehicle,
+		phasesConfigured: 0, // allow switching
+		phases:           3,
+		chargePower:      3 * 6 * Voltage,
+		limitSolarPhases: true,
+		status:           api.StatusC,
+		charger: struct {
+			*api.MockCharger
+			*api.MockPhaseSwitcher
+		}{plainCharger, phaseCharger},
+	}
+
+	// ample surplus, yet must converge down to 1p
+	phaseCharger.EXPECT().Phases1p3p(1).Return(nil)
+	require.Equal(t, 1, lp.pvScalePhases(-10000, 6, 16, true))
+	require.Equal(t, 1, lp.GetPhases())
+
+	ctrl.Finish()
+}
+
 // TestPvScalePhasesSmartLimit asserts that a configured solar 1p limit keeps
 // surplus charging on a single phase, even with ample surplus that would
 // otherwise scale up to 3 phases. Fast charging paths never reach
