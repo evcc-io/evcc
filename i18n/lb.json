@@ -1259,12 +1259,12 @@
     "stat": {
       "autarky": "Autarkie",
       "co2Saved": "CO₂ gespuert",
-      "co2SavedTooltip": "Am Verglach mam Ofzéie vun der verbrauchter {Energie} aus dem Netz.",
+      "co2SavedTooltip": "Am Verglach mam Ofzéie vun der verbrauchter {energy} aus dem Netz.",
       "configure": "Elo konfiguréieren",
       "noCo2": "Keng CO₂-Daten.",
       "noPrice": "Keng Präisdaten.",
       "savings": "Erspuernisser",
-      "savingsTooltip": "Am Verglach mam Akaf vun der verbrauchter {Energie} aus dem Stroumnetz.",
+      "savingsTooltip": "Am Verglach mam Akaf vun der verbrauchter {energy} aus dem Stroumnetz.",
       "versus": "{value} vs. {reference}"
     },
     "title": "Energie"
