@@ -188,7 +188,7 @@
     "circuits": {
       "addMainCircuit": "Hoofdcircuit toevoegen",
       "addSubCircuit": "Onderliggend circuit toevoegen",
-      "chargingPointsNote": "Wijs laadpunten en verwarmingstoestellen via hun eigen instellingen toe aan een circuit.",
+      "chargingPointsNote": "Ken laadpunten & verwarmers toe aan een circuit via de eigen configuratie.",
       "description": "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
       "legacyWarning": "Nieuwe circuitconfiguratie beschikbaar! Verwijder en sla uw configuratie hier op om het nieuwe, begeleide proces te gebruiken.",
       "meterDedicated": "Meter",
@@ -1062,7 +1062,7 @@
       },
       "generic": "Generieke integraties",
       "grid": {
-        "description": "Elektriciteits-prijzen voor consumptie van het net. Gebruikt om de werkelijke laadkosten uit te rekenen, alsook voor het laden van de auto of thuisbatterij en het inschakelen van verwarming tegen de beste prijs.",
+        "description": "Electriciteits-prijzen voor consumptie van het net. Gebruikt om de werkelijke laadkosten uit te rekenen, en voor het laden van de auto of thuisbatterij en het inschakelen van verwarming tegen de beste prijs.",
         "titleAdd": "Net-import Tarief Toevoegen",
         "titleEdit": "Net-import Tarief Aanpassen"
       },
