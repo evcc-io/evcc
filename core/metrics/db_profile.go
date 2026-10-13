@@ -110,11 +110,8 @@ func energyProfileFiltered(entity entity, from time.Time, weekday *int, percenti
 	return (*[96]float64)(res), nil
 }
 
-// energyProfileTemperatureBinned queries historical energy per 15-minute slot (0..95)
-// grouped by integer outdoor temperature bin (°C) over the past year (1-year lookback
-// captures full seasonal temperature extremes across winter and summer).
-// Joins recorded meter energy with weather tariff history, honours profilePercentile,
-// and filters out single-sample noise (count >= 2).
+// energyProfileTemperatureBinned returns the energy per 15min slot (0..95) and integer outdoor
+// temperature bin (°C) over the past year at profilePercentile, bins with less than 2 samples dropped.
 func energyProfileTemperatureBinned(entity entity) (map[int]map[int]float64, error) {
 	database, err := db.Instance.DB()
 	if err != nil {
@@ -143,21 +140,16 @@ func energyProfileTemperatureBinned(entity entity) (map[int]map[int]float64, err
 
 	if percentile := profilePercentile(); percentile > 0 {
 		args = append(args, percentile)
-		query = `WITH slots AS (` + slots + `), counts AS (
-			SELECT slot_idx, temp_bin, count(*) AS cnt
+		query = `WITH slots AS (` + slots + `), ranked AS (
+			SELECT slot_idx, temp_bin, energy,
+				row_number() OVER (PARTITION BY slot_idx, temp_bin ORDER BY energy) AS rn,
+				count(*) OVER (PARTITION BY slot_idx, temp_bin) AS cnt,
+				? * (count(*) OVER (PARTITION BY slot_idx, temp_bin) - 1) + 1 AS pos
 			FROM slots
-			GROUP BY slot_idx, temp_bin
-			HAVING cnt >= 2
-		), ranked AS (
-			SELECT s.slot_idx, s.temp_bin, s.energy,
-				row_number() OVER (PARTITION BY s.slot_idx, s.temp_bin ORDER BY s.energy) AS rn,
-				? * (c.cnt - 1) + 1 AS pos
-			FROM slots s
-			JOIN counts c ON s.slot_idx = c.slot_idx AND s.temp_bin = c.temp_bin
 		)
 		SELECT slot_idx, temp_bin, sum(energy * (1 - abs(rn - pos))) AS energy
 		FROM ranked
-		WHERE abs(rn - pos) < 1
+		WHERE cnt >= 2 AND abs(rn - pos) < 1
 		GROUP BY slot_idx, temp_bin`
 	}
 
@@ -176,10 +168,6 @@ func energyProfileTemperatureBinned(entity entity) (map[int]map[int]float64, err
 
 		if err := rows.Scan(&slotIdx, &tempBin, &energy); err != nil {
 			return nil, err
-		}
-
-		if slotIdx < 0 || slotIdx >= 96 {
-			continue
 		}
 
 		if res[slotIdx] == nil {

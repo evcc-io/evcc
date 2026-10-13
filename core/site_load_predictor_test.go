@@ -39,7 +39,7 @@ func TestApplyTemperatureCorrection(t *testing.T) {
 	}
 
 	// Future forecast: 12 slots (3 hours)
-	// First hour: 5°C, second hour: 15°C, third hour: 20°C (above heating stop threshold)
+	// First hour: 5°C, second hour: 15°C, third hour: 20°C
 	for i := range 12 {
 		temp := 5.0
 		switch {

@@ -58,27 +58,21 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
 		}
 
 		var p []float64
-		var predictorType string
 
 		if profile, correct := lp.demandProfile(); profile != nil {
 			p = tileAndTrim(profile[:], minLen)
 			if correct {
-				var binned map[int]map[int]float64
-				var err error
-				binned, err = lp.chargeEnergy.EnergyProfileTemperatureBinned()
+				binned, err := lp.chargeEnergy.EnergyProfileTemperatureBinned()
 				if err != nil && !errors.Is(err, metrics.ErrNoBinnedData) {
 					site.log.DEBUG.Printf("temperature correction: binned profile unavailable for %s: %v", lp.GetTitle(), err)
 				}
 				p = site.applyTemperatureCorrection(lp.GetTitle(), p, binned)
 			} else {
-				site.log.DEBUG.Printf("heating demand: added daily forecast for %s (%d slots)",
-					lp.GetTitle(), len(p))
+				site.log.DEBUG.Printf("heating demand: added daily forecast for %s (%d slots)", lp.GetTitle(), len(p))
 			}
 		} else if wp := lp.demandProfileWeekday(minLen); wp != nil {
-			predictorType = "weekday"
 			p = wp
-			site.log.DEBUG.Printf("heating demand: added %s forecast for %s (%d slots)",
-				predictorType, lp.GetTitle(), len(p))
+			site.log.DEBUG.Printf("heating demand: added weekday forecast for %s (%d slots)", lp.GetTitle(), len(p))
 		} else {
 			continue
 		}
@@ -98,20 +92,14 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
 	return res
 }
 
-// lookupBin returns the historical energy for the given forecast temperature (°C)
-// by checking the exact rounded bin first, then falling back to the average of adjacent ±1°C bins.
+// lookupBin returns the historical energy at the rounded forecast temperature (°C),
+// falling back to the average of the adjacent ±1°C bins.
 func lookupBin(bins map[int]float64, t float64) (float64, bool) {
-	if bins == nil {
-		return 0, false
-	}
-
 	tempBin := int(math.Round(t))
-
 	if val, ok := bins[tempBin]; ok {
 		return val, true
 	}
 
-	// Check adjacent ±1°C bins
 	valMinus, okMinus := bins[tempBin-1]
 	valPlus, okPlus := bins[tempBin+1]
 	if okMinus && okPlus {
@@ -127,9 +115,9 @@ func lookupBin(bins map[int]float64, t float64) (float64, bool) {
 	return 0, false
 }
 
-// applyTemperatureCorrection adjusts heating load based on temperature forecast:
-// It looks up historical consumption for matching temperature bins (±1.5°C), and falls back
-// to linear scaling when historical data is unavailable for a given slot.
+// applyTemperatureCorrection adjusts the heating load to the temperature forecast using the
+// recorded consumption at the forecast temperature (±1°C bin), falling back to linear scaling
+// where no historical data is available.
 func (site *Site) applyTemperatureCorrection(lpTitle string, profile []float64, binned map[int]map[int]float64) []float64 {
 	weatherTariff := site.GetTariff(api.TariffUsageTemperature)
 	if weatherTariff == nil {
@@ -183,29 +171,21 @@ func (site *Site) applyTemperatureCorrection(lpTitle string, profile []float64, 
 		}
 		tFuture := r.Value
 
-		// 1. Empirical Temperature Binning (k-NN lookup at forecast temperature):
-		// matches recorded historical consumption per time-of-day slot and ±1°C temperature bin,
-		// capturing non-linear heat pump COP, defrost cycles, and scheduled DHW runs.
-		if binned != nil && binned[slotInDay] != nil {
-			if binnedVal, ok := lookupBin(binned[slotInDay], tFuture); ok {
-				res[i] = binnedVal
-				binnedSlots++
-				if logged < 3 && binnedVal > 0 {
-					site.log.DEBUG.Printf("temperature correction: slot %s (h=%02d): forecast=%.1f°C -> binned match [%d°C]=%.0fWh",
-						ts.Local().Format("15:04"), h, tFuture, int(math.Round(tFuture)), binnedVal*1e3)
-					logged++
-				}
-				continue
+		// recorded consumption at this time of day and temperature captures non-linear
+		// heat pump behaviour (COP, defrost cycles, scheduled DHW)
+		if binnedVal, ok := lookupBin(binned[slotInDay], tFuture); ok {
+			res[i] = binnedVal
+			binnedSlots++
+			if logged < 3 && binnedVal > 0 {
+				site.log.DEBUG.Printf("temperature correction: slot %s (h=%02d): forecast=%.1f°C -> binned match [%d°C]=%.0fWh",
+					ts.Local().Format("15:04"), h, tFuture, int(math.Round(tFuture)), binnedVal*1e3)
+				logged++
 			}
+			continue
 		}
 
-		// 2. Fallback: Linear Scaling based on standard building physics (DIN EN 12831 / degree-day),
-		// where building heat loss is proportional to indoor/outdoor temperature difference:
-		// factor = (T_room - T_forecast) / (T_room - T_past_avg)
-		scaledSlots++
-
-		// require past temperature data for hour h to compute pastAvg and avoid division by zero
-		// (e.g. after startup when the weather source only provides forecast data from today onward)
+		// fallback: degree-day scaling, factor = (T_room - T_forecast) / (T_room - T_past_avg);
+		// needs past temperature data for hour h (missing after startup when the weather source only provides forecasts)
 		if pastCount[h] == 0 {
 			site.log.DEBUG.Printf("temperature correction: slot %s (h=%02d): no historical temperature data, leaving slot unscaled",
 				ts.Local().Format("15:04"), h)
@@ -223,6 +203,7 @@ func (site *Site) applyTemperatureCorrection(lpTitle string, profile []float64, 
 		// clamp to prevent extreme corrections from bad data
 		factor := min(maxCorrection, max(minCorrection, (tRoom-tFuture)/denominator))
 		res[i] = profile[i] * factor
+		scaledSlots++
 
 		if logged < 3 && factor != 1.0 && profile[i] > 0 {
 			site.log.DEBUG.Printf("temperature correction: slot %s (h=%02d): forecast=%.1f°C, hist_avg=%.1f°C -> scaled factor=%.2fx (load: %.0fWh -> %.0fWh)",
