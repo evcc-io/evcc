@@ -1536,6 +1536,8 @@
         "disabledDescription": "Requer uma tarifa dinâmica ou uma previsão de CO₂.",
         "label": "Otimização"
       },
+      "pause": "Pausar",
+      "pausedUntil": "Pausado até {time}",
       "planNumber": "Plano {number}",
       "precondition": {
         "description": "Faz parte do processo de carregamento imediatamente antes da partida: bateria aquecida, menos tempo com um nível de carga elevado.",
@@ -1546,9 +1548,17 @@
         "summary": "{precondition} antes de",
         "summaryAll": "mesmo antes da partida"
       },
+      "preset24h": "+24 horas",
+      "preset48h": "+48 horas",
+      "preset7d": "+7 dias",
+      "presetCustom": "Data/hora personalizada…",
+      "presetFriday": "Até sexta-feira às 18:00",
+      "presetSunday": "Até domingo às 18:00",
+      "presetTomorrow": "Até amanhã às 10:00",
       "remove": "Apagar",
       "repeating": "recorrente",
       "repeatingPlans": "Repetição de planos",
+      "resume": "Retomar",
       "selectAll": "Selecionar tudo",
       "strategy": {
         "label": "Estratégia"

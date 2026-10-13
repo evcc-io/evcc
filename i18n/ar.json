@@ -57,5 +57,19 @@
       "footerLong": "{percent} من الطاقة الشمسية",
       "footerShort": "{percent} شمسي\""
     }
+  },
+  "main": {
+    "chargingPlan": {
+      "pause": "إيقاف مؤقت",
+      "pausedUntil": "متوقف مؤقتاً حتى {time}",
+      "preset24h": "+24 ساعة",
+      "preset48h": "+48 ساعة",
+      "preset7d": "+7 أيام",
+      "presetCustom": "تاريخ/وقت مخصص…",
+      "presetFriday": "حتى الجمعة 18:00",
+      "presetSunday": "حتى الأحد 18:00",
+      "presetTomorrow": "حتى الغد 10:00",
+      "resume": "استئناف"
+    }
   }
 }

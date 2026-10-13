@@ -97,6 +97,20 @@ func (mr *MockAPIMockRecorder) GetMode() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMode", reflect.TypeOf((*MockAPI)(nil).GetMode))
 }
 
+// GetPausedUntil mocks base method.
+func (m *MockAPI) GetPausedUntil() time.Time {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPausedUntil")
+	ret0, _ := ret[0].(time.Time)
+	return ret0
+}
+
+// GetPausedUntil indicates an expected call of GetPausedUntil.
+func (mr *MockAPIMockRecorder) GetPausedUntil() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPausedUntil", reflect.TypeOf((*MockAPI)(nil).GetPausedUntil))
+}
+
 // GetPlanSoc mocks base method.
 func (m *MockAPI) GetPlanSoc() (time.Time, int) {
 	m.ctrl.T.Helper()
@@ -214,6 +228,20 @@ func (m *MockAPI) SetMode(arg0 api.ChargeMode) {
 func (mr *MockAPIMockRecorder) SetMode(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMode", reflect.TypeOf((*MockAPI)(nil).SetMode), arg0)
+}
+
+// SetPausedUntil mocks base method.
+func (m *MockAPI) SetPausedUntil(arg0 time.Time) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetPausedUntil", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetPausedUntil indicates an expected call of SetPausedUntil.
+func (mr *MockAPIMockRecorder) SetPausedUntil(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPausedUntil", reflect.TypeOf((*MockAPI)(nil).SetPausedUntil), arg0)
 }
 
 // SetPlanSoc mocks base method.
