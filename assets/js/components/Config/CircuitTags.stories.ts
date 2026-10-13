@@ -47,6 +47,7 @@ const circuits: Record<string, Circuit> = {
     current: 6,
     maxCurrent: 16,
   },
+  garden: { name: "garden", title: "Garden (feed-in)", parent: "home", power: -1800 },
 };
 
 const loadpoints: CircuitLoadpoint[] = [

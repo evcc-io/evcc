@@ -190,7 +190,7 @@
       "chargingPointsNote": "Ladepunkte & Heizgeräte weist du in ihren jeweiligen Einstellungen einem Stromkreis zu.",
       "addMainCircuit": "Hauptstromkreis hinzufügen",
       "description": "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen.",
-      "legacyWarning": "Neue Stromkreis-Konfiguration verfügbar! Entferne und speichere deine Konfiguration hier, um den neuen geführten Prozess zu verwenden.",
+      "legacyWarning": "Neue Stromkreis-Konfiguration verfügbar! Entferne und speichere deine Konfiguration hier, um den neuen geführten Prozess zu verwenden. Anschließend ist ein Neustart erforderlich.",
       "title": "Lastmanagement",
       "meterDedicated": "Zähler",
       "meterGrid": "Netz",
