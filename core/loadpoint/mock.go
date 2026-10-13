@@ -405,20 +405,6 @@ func (mr *MockAPIMockRecorder) GetLimitEnergy() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLimitEnergy", reflect.TypeOf((*MockAPI)(nil).GetLimitEnergy))
 }
 
-// GetLimitSolarPhases mocks base method.
-func (m *MockAPI) GetLimitSolarPhases() bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLimitSolarPhases")
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// GetLimitSolarPhases indicates an expected call of GetLimitSolarPhases.
-func (mr *MockAPIMockRecorder) GetLimitSolarPhases() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLimitSolarPhases", reflect.TypeOf((*MockAPI)(nil).GetLimitSolarPhases))
-}
-
 // GetLimitSoc mocks base method.
 func (m *MockAPI) GetLimitSoc() int {
 	m.ctrl.T.Helper()
@@ -431,6 +417,20 @@ func (m *MockAPI) GetLimitSoc() int {
 func (mr *MockAPIMockRecorder) GetLimitSoc() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLimitSoc", reflect.TypeOf((*MockAPI)(nil).GetLimitSoc))
+}
+
+// GetLimitSolarPhases mocks base method.
+func (m *MockAPI) GetLimitSolarPhases() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLimitSolarPhases")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// GetLimitSolarPhases indicates an expected call of GetLimitSolarPhases.
+func (mr *MockAPIMockRecorder) GetLimitSolarPhases() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLimitSolarPhases", reflect.TypeOf((*MockAPI)(nil).GetLimitSolarPhases))
 }
 
 // GetMaxCurrent mocks base method.
@@ -1027,6 +1027,18 @@ func (mr *MockAPIMockRecorder) SetLimitEnergy(energy any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLimitEnergy", reflect.TypeOf((*MockAPI)(nil).SetLimitEnergy), energy)
 }
 
+// SetLimitSoc mocks base method.
+func (m *MockAPI) SetLimitSoc(soc int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetLimitSoc", soc)
+}
+
+// SetLimitSoc indicates an expected call of SetLimitSoc.
+func (mr *MockAPIMockRecorder) SetLimitSoc(soc any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLimitSoc", reflect.TypeOf((*MockAPI)(nil).SetLimitSoc), soc)
+}
+
 // SetLimitSolarPhases mocks base method.
 func (m *MockAPI) SetLimitSolarPhases(arg0 bool) error {
 	m.ctrl.T.Helper()
@@ -1039,18 +1051,6 @@ func (m *MockAPI) SetLimitSolarPhases(arg0 bool) error {
 func (mr *MockAPIMockRecorder) SetLimitSolarPhases(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLimitSolarPhases", reflect.TypeOf((*MockAPI)(nil).SetLimitSolarPhases), arg0)
-}
-
-// SetLimitSoc mocks base method.
-func (m *MockAPI) SetLimitSoc(soc int) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetLimitSoc", soc)
-}
-
-// SetLimitSoc indicates an expected call of SetLimitSoc.
-func (mr *MockAPIMockRecorder) SetLimitSoc(soc any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLimitSoc", reflect.TypeOf((*MockAPI)(nil).SetLimitSoc), soc)
 }
 
 // SetMaxCurrent mocks base method.
