@@ -112,7 +112,7 @@ func TestEnergyProfileTemperatureBinned(t *testing.T) {
 
 	// Verify with percentile > 0
 	settings.SetFloat(keys.ProfilePercentile, 50)
-	defer settings.SetFloat(keys.ProfilePercentile, 0)
+	t.Cleanup(func() { require.NoError(t, settings.Delete(keys.ProfilePercentile)) })
 
 	resPerc, err := energyProfileTemperatureBinned(e)
 	require.NoError(t, err)

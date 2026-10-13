@@ -119,7 +119,6 @@ func energyProfileTemperatureBinned(entity entity) (map[int]map[int]float64, err
 	}
 
 	from := now.BeginningOfDay().AddDate(-1, 0, 0).Unix()
-	before := now.BeginningOfDay().Unix()
 
 	slots := `SELECT (CAST(strftime('%H', m.ts, 'unixepoch', 'localtime') AS INTEGER) * 4 +
 		CAST(strftime('%M', m.ts, 'unixepoch', 'localtime') AS INTEGER) / 15) AS slot_idx,
@@ -127,10 +126,10 @@ func energyProfileTemperatureBinned(entity entity) (map[int]map[int]float64, err
 		m.energy AS energy
 	FROM meters m
 	JOIN tariffs t ON m.ts = t.ts
-	WHERE m.meter = ? AND m.ts >= ? AND m.ts < ? AND COALESCE(m.recovered, 0) = 0
+	WHERE m.meter = ? AND m.ts >= ? AND COALESCE(m.recovered, 0) = 0
 		AND m.energy IS NOT NULL AND t.temperature IS NOT NULL`
 
-	args := []any{entity.Id, from, before}
+	args := []any{entity.Id, from}
 
 	query := `WITH slots AS (` + slots + `)
 		SELECT slot_idx, temp_bin, avg(energy) AS energy

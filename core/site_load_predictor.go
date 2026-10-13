@@ -119,6 +119,12 @@ func lookupBin(bins map[int]float64, t float64) (float64, bool) {
 // recorded consumption at the forecast temperature (±1°C bin), falling back to linear scaling
 // where no historical data is available.
 func (site *Site) applyTemperatureCorrection(lpTitle string, profile []float64, binned map[int]map[int]float64) []float64 {
+	var binnedSlots, scaledSlots int
+	defer func() {
+		site.log.DEBUG.Printf("heating demand: added temperature forecast for %s (%d slots: %d binned, %d scaled)",
+			lpTitle, len(profile), binnedSlots, scaledSlots)
+	}()
+
 	weatherTariff := site.GetTariff(api.TariffUsageTemperature)
 	if weatherTariff == nil {
 		site.log.WARN.Println("temperature correction: demandtemperature predictor set but no temperature tariff configured")
@@ -157,7 +163,7 @@ func (site *Site) applyTemperatureCorrection(lpTitle string, profile []float64, 
 
 	res := slices.Clone(profile)
 	slotStart := currentTime.Truncate(tariff.SlotDuration)
-	var binnedSlots, scaledSlots, logged int
+	var logged int
 
 	for i := range profile {
 		ts := slotStart.Add(time.Duration(i) * tariff.SlotDuration)
@@ -211,9 +217,6 @@ func (site *Site) applyTemperatureCorrection(lpTitle string, profile []float64, 
 			logged++
 		}
 	}
-
-	site.log.DEBUG.Printf("heating demand: added temperature forecast for %s (%d slots: %d binned, %d scaled)",
-		lpTitle, len(res), binnedSlots, scaledSlots)
 
 	return res
 }

@@ -76,21 +76,21 @@ func TestApplyTemperatureCorrection(t *testing.T) {
 	// warm forecast scales down naturally and clamps to minCorrection (10%)
 	assert.InDelta(t, 0.2, result[8], 1e-6, "third hour scales to minCorrection floor")
 
-	// 2. Temperature-binned lookup
-	slotInDay := (now.Local().Hour()*60 + now.Local().Minute()) / 15
-	slotInDay8 := (slotInDay + 8) % 96
-	binned := map[int]map[int]float64{
-		slotInDay: {
-			5:  3.5, // 5°C forecast matches 3.5 kWh
-			12: 1.0, // other temperature bin in same slot
-		},
-		slotInDay8: {
-			20: 0.8, // 20°C forecast matches recorded 0.8 kWh DHW cycle
-			10: 2.2, // other temperature bin in same slot
-		},
+	// 2. Temperature-binned lookup: same bins for every slot of the day, so the
+	// result depends on the forecast temperature only
+	bins := map[int]float64{
+		5:  3.5, // 5°C forecast
+		10: 2.2,
+		12: 1.0,
+		20: 0.8, // 20°C forecast, recorded DHW cycle
+	}
+	binned := make(map[int]map[int]float64)
+	for slot := range 96 {
+		binned[slot] = bins
 	}
 	resultBinned := site.applyTemperatureCorrection("test", profile, binned)
 	assert.InDelta(t, 3.5, resultBinned[0], 1e-6, "binned exact match should be used directly")
+	assert.Less(t, resultBinned[4], 2.0, "15°C without bin falls back to scaling")
 	assert.InDelta(t, 0.8, resultBinned[8], 1e-6, "binned exact match for warm temp (>=18°C) should be used directly")
 }
 
