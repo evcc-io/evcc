@@ -13,8 +13,8 @@ import (
 
 func TestEffectivePowerGridIT(t *testing.T) {
 	grid.Voltage = 230
-	grid.SetIT(true)
-	t.Cleanup(func() { grid.SetIT(false) })
+	grid.SetNoNeutral(true)
+	t.Cleanup(func() { grid.SetNoNeutral(false) })
 
 	lp := &Loadpoint{
 		phasesConfigured: 3,
@@ -29,7 +29,7 @@ func TestEffectivePowerGridIT(t *testing.T) {
 }
 
 func TestPhasesFromChargeCurrentsGridIT(t *testing.T) {
-	t.Cleanup(func() { grid.SetIT(false) })
+	t.Cleanup(func() { grid.SetNoNeutral(false) })
 
 	for _, tc := range []struct {
 		it       bool
@@ -41,7 +41,7 @@ func TestPhasesFromChargeCurrentsGridIT(t *testing.T) {
 		{true, []float64{0, 10, 10}, 1},
 		{true, []float64{10, 10, 10}, 3},
 	} {
-		grid.SetIT(tc.it)
+		grid.SetNoNeutral(tc.it)
 
 		lp := &Loadpoint{
 			log:            util.NewLogger("foo"),

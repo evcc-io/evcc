@@ -10,23 +10,23 @@ var (
 	// Voltage is the nominal phase voltage, line-to-line for IT grids
 	Voltage = 230.0
 
-	// it can change at runtime via the UI while the control loop reads it
-	it atomic.Bool
+	// noNeutral can change at runtime via the UI while the control loop reads it
+	noNeutral atomic.Bool
 )
 
-// IT reports a three-wire grid without neutral
-func IT() bool {
-	return it.Load()
+// NoNeutral reports a three-wire grid without neutral (IT grid)
+func NoNeutral() bool {
+	return noNeutral.Load()
 }
 
-// SetIT sets whether the grid is a three-wire grid without neutral
-func SetIT(v bool) {
-	it.Store(v)
+// SetNoNeutral sets whether the grid is a three-wire grid without neutral (IT grid)
+func SetNoNeutral(v bool) {
+	noNeutral.Store(v)
 }
 
 // Factor returns the multiplier converting per-phase current times Voltage into total power
 func Factor(phases int) float64 {
-	if IT() && phases == 3 {
+	if NoNeutral() && phases == 3 {
 		return math.Sqrt(3)
 	}
 	return float64(phases)
@@ -44,7 +44,7 @@ func PowerToCurrent(power float64, phases int) float64 {
 
 // CurrentsToPower estimates total power from line currents
 func CurrentsToPower(l1, l2, l3 float64) float64 {
-	if !IT() {
+	if !NoNeutral() {
 		return Voltage * (l1 + l2 + l3)
 	}
 

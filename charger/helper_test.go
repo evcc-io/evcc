@@ -9,10 +9,10 @@ import (
 )
 
 func TestCurrentAbovePower(t *testing.T) {
-	t.Cleanup(func() { grid.SetIT(false) })
+	t.Cleanup(func() { grid.SetNoNeutral(false) })
 
 	for _, it := range []bool{false, true} {
-		grid.SetIT(it)
+		grid.SetNoNeutral(it)
 
 		for power := 1000.0; power < 2000; power++ {
 			current := currentAbovePower(power, 3)

@@ -173,7 +173,7 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 		return nil, fmt.Errorf("invalid voltage: %v", site.Voltage)
 	}
 	grid.Voltage = site.Voltage
-	grid.SetIT(site.GetGridType() == "it")
+	grid.SetNoNeutral(site.GetGridType() == "it")
 
 	return site, nil
 }

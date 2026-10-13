@@ -297,8 +297,8 @@ func TestAlpitronicMaxCurrent(t *testing.T) {
 }
 
 func TestAlpitronicMinCurrentGridIT(t *testing.T) {
-	grid.SetIT(true)
-	t.Cleanup(func() { grid.SetIT(false) })
+	grid.SetNoNeutral(true)
+	t.Cleanup(func() { grid.SetNoNeutral(false) })
 
 	assert.Greater(t, hycPower(hycMinCurrent()), uint32(hycMinPowerAC))
 	assert.InDelta(t, 3.89, hycMinCurrent(), 1e-9)
