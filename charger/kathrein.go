@@ -214,6 +214,12 @@ func NewKathrein(ctx context.Context, settings modbus.TcpSettings) (*Kathrein, e
 // heartbeat rewrites the current setpoint to reset the wallbox EMS timeout
 func (wb *Kathrein) heartbeat(ctx context.Context, interval time.Duration) {
 	for tick := time.Tick(interval); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
 		wb.mu.Lock()
 		b, err := wb.conn.ReadHoldingRegisters(kathreinRegEMSSetpointChargingCurrent, 1)
 		if err == nil {
@@ -223,12 +229,6 @@ func (wb *Kathrein) heartbeat(ctx context.Context, interval time.Duration) {
 
 		if err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
-		}
-
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
 		}
 	}
 }
