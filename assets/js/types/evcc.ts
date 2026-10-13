@@ -1564,7 +1564,7 @@ export interface OptimizationResult {
 export interface BatteryResult {
   charging_power: number[]; // Charging energy per step (Wh)
   discharging_power: number[]; // Discharging energy per step (Wh)
-  state_of_charge: number[]; // State of charge per step (Wh)
+  state_of_charge: number[]; // State of charge at the end of each step (Wh)
 }
 
 // Battery detail information for optimization
