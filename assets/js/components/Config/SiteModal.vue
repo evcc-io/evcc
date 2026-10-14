@@ -158,26 +158,18 @@ export default defineComponent({
 			return store.state?.voltage ?? 230;
 		},
 		gridConnectionOptions() {
+			const voltage = this.voltage;
+			const lineVoltage = Math.round((voltage * Math.sqrt(3)) / 10) * 10;
 			return [
 				{
 					value: GRID_CONNECTION.THREE_PHASE_FOUR_WIRE,
-					name: this.gridConnectionNeutralLabel,
+					name: this.$t("config.site.gridConnection.3p4w", { voltage, lineVoltage }),
 				},
 				{
 					value: GRID_CONNECTION.THREE_PHASE_THREE_WIRE,
-					name: this.gridConnectionNoNeutralLabel,
+					name: this.$t("config.site.gridConnection.3p3w", { voltage }),
 				},
 			];
-		},
-		gridConnectionNeutralLabel() {
-			const lineVoltage = Math.round((this.voltage * Math.sqrt(3)) / 10) * 10;
-			return this.$t("config.site.gridConnection.3p4w", {
-				voltage: this.voltage,
-				lineVoltage,
-			});
-		},
-		gridConnectionNoNeutralLabel() {
-			return this.$t("config.site.gridConnection.3p3w", { voltage: this.voltage });
 		},
 		gridConnectionChanged() {
 			return this.gridConnection !== this.initial.gridConnection;
