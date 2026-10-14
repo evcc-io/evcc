@@ -534,7 +534,7 @@
 					:circuits="circuits"
 					:hasDeviceError="hasDeviceError"
 					:voltage="voltage"
-					:gridType="gridType"
+					:gridConnection="gridConnection"
 					@changed="loadpointChanged"
 					@dismissed="loadpointDismissed"
 					@disable="({ id, disable }) => handleDisable('loadpoint', id, disable)"
@@ -1007,8 +1007,8 @@ export default defineComponent({
 		voltage() {
 			return store.state?.voltage;
 		},
-		gridType() {
-			return store.state?.gridType;
+		gridConnection() {
+			return store.state?.gridConnection;
 		},
 		siteTitle() {
 			return this.site?.title;

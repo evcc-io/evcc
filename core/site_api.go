@@ -82,19 +82,19 @@ func (site *Site) SetCountry(country string) {
 	site.publish(keys.Country, country)
 }
 
-// GetGridType returns the grid type, tn (with neutral, default) or it (without neutral)
-func (site *Site) GetGridType() string {
-	if v, _ := settings.String(keys.GridType); v == "it" {
+// GetGridConnection returns the grid connection, neutral (default) or no-neutral
+func (site *Site) GetGridConnection() string {
+	if v, _ := settings.String(keys.GridConnection); v == grid.NoNeutralConnection {
 		return v
 	}
-	return "tn"
+	return grid.NeutralConnection
 }
 
-// SetGridType sets the grid type and applies it to the current to power conversion
-func (site *Site) SetGridType(gridType string) {
-	settings.SetString(keys.GridType, gridType)
-	grid.SetNoNeutral(gridType == "it")
-	site.publish(keys.GridType, gridType)
+// SetGridConnection sets the grid connection and applies it to the current to power conversion
+func (site *Site) SetGridConnection(conn string) {
+	settings.SetString(keys.GridConnection, conn)
+	grid.SetNoNeutral(conn == grid.NoNeutralConnection)
+	site.publish(keys.GridConnection, conn)
 }
 
 // GetGridMeterRef returns the GridMeterRef

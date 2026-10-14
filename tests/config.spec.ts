@@ -55,13 +55,13 @@ test.describe("general", async () => {
     await expectModalHidden(modal);
     await expect(page.getByTestId("generalconfig-site")).toContainText("Ahoy World");
 
-    // country and grid type persist
+    // country and grid connection persist
     await page.reload();
     await page.getByTestId("generalconfig-site").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(modal);
     await expect(modal.getByLabel("Country")).toHaveValue("DE");
     await modal.getByRole("button", { name: "Show advanced settings" }).click();
-    await expect(modal.getByLabel("Grid connection")).toHaveValue("it");
+    await expect(modal.getByLabel("Grid connection")).toHaveValue("no-neutral");
     await modal.getByRole("button", { name: "Cancel" }).click();
     await expectModalHidden(modal);
 

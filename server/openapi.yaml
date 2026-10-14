@@ -1056,11 +1056,11 @@ paths:
           $ref: "#/components/responses/BlankResponse"
         "400":
           description: Invalid country code
-  /config/gridtype:
+  /config/gridconnection:
     put:
-      operationId: setGridType
-      summary: Set grid type
-      description: "Set the grid type. tn for grids with neutral (230/400 V), it for three-wire grids without neutral (3 x 230 V)."
+      operationId: setGridConnection
+      summary: Set grid connection
+      description: "Set the grid connection. neutral for grids with neutral conductor (3 x 230/400 V), no-neutral for three-wire grids without neutral (3 x 230 V)."
       tags:
         - general
       requestBody:
@@ -1070,14 +1070,14 @@ paths:
             schema:
               type: string
               enum:
-                - tn
-                - it
-              example: it
+                - neutral
+                - no-neutral
+              example: no-neutral
       responses:
         "200":
           $ref: "#/components/responses/BlankResponse"
         "400":
-          description: Invalid grid type
+          description: Invalid grid connection
   /settings/telemetry/{enable}:
     post:
       operationId: setTelemetryStatus

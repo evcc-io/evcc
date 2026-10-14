@@ -966,14 +966,14 @@
         "description": "Wird für länderspezifische Hinweise und Voreinstellungen verwendet.",
         "label": "Land"
       },
-      "gridType": {
+      "gridConnection": {
         "description": {
-          "it": "Einphasige Verbraucher liegen zwischen zwei Außenleitern. Kommt u. a. in Norwegen und Teilen Belgiens vor.",
-          "tn": "Standard in den meisten Ländern. Einphasige Verbraucher liegen zwischen Außenleiter und Neutralleiter."
+          "neutral": "Standard in den meisten Ländern. Einphasige Verbraucher liegen zwischen Außenleiter und Neutralleiter.",
+          "noNeutral": "Einphasige Verbraucher liegen zwischen zwei Außenleitern. Kommt u. a. in Norwegen und Teilen Belgiens vor."
         },
-        "it": "3 × {voltage} V ohne Neutralleiter",
         "label": "Netzanschluss",
-        "tn": "3 × {voltage}/{lineVoltage} V mit Neutralleiter"
+        "neutral": "3 × {voltage}/{lineVoltage} V mit Neutralleiter",
+        "noNeutral": "3 × {voltage} V ohne Neutralleiter"
       },
       "currency": {
         "description": "Wird für die Erfassung und Formatierung von Energiepreisen, Kosten und Einsparungen verwendet.",

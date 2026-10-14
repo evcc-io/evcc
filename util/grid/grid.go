@@ -9,6 +9,12 @@ import (
 // Voltage is the nominal phase voltage, line-to-line for IT grids
 const Voltage = 230.0
 
+// Grid connection values
+const (
+	NeutralConnection   = "neutral"
+	NoNeutralConnection = "no-neutral"
+)
+
 var (
 	// noNeutral can change at runtime via the UI while the control loop reads it
 	noNeutral atomic.Bool

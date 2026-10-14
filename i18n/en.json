@@ -966,14 +966,14 @@
         "description": "Used for region-specific hints and defaults.",
         "label": "Country"
       },
-      "gridType": {
+      "gridConnection": {
         "description": {
-          "it": "Single-phase loads connect between two lines. Found in Norway and parts of Belgium, among others.",
-          "tn": "Standard in most countries. Single-phase loads connect between line and neutral."
+          "neutral": "Standard in most countries. Single-phase loads connect between line and neutral.",
+          "noNeutral": "Single-phase loads connect between two lines. Found in Norway and parts of Belgium, among others."
         },
-        "it": "3 × {voltage} V without neutral",
         "label": "Grid connection",
-        "tn": "3 × {voltage}/{lineVoltage} V with neutral"
+        "neutral": "3 × {voltage}/{lineVoltage} V with neutral",
+        "noNeutral": "3 × {voltage} V without neutral"
       },
       "currency": {
         "description": "Used to format energy prices, costs and savings based on your tariff.",

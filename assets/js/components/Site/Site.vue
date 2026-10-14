@@ -53,7 +53,7 @@
 				:tariffFeedIn="tariffFeedIn"
 				:currency="currency"
 				:gridConfigured="gridConfigured"
-				:gridType="gridType"
+				:gridConnection="gridConnection"
 				:voltage="voltage"
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
@@ -82,7 +82,7 @@ import type {
 	Battery,
 	Meter,
 	CURRENCY,
-	GRID_TYPE,
+	GRID_CONNECTION,
 	UiForecast,
 	Notification,
 	ConfigStatus,
@@ -117,7 +117,7 @@ export default defineComponent({
 
 		// details
 		gridConfigured: Boolean,
-		gridType: String as PropType<GRID_TYPE>,
+		gridConnection: String as PropType<GRID_CONNECTION>,
 		voltage: Number,
 		grid: Object as PropType<Grid>,
 		homePower: Number,

@@ -219,7 +219,7 @@ import { defineComponent, type PropType } from "vue";
 import {
 	PHASES,
 	CURRENCY,
-	GRID_TYPE,
+	GRID_CONNECTION,
 	SMART_COST_TYPE,
 	type UiForecast,
 	type UiLoadpoint,
@@ -265,7 +265,7 @@ export default defineComponent({
 		multipleLoadpoints: Boolean,
 		forecast: Object as PropType<UiForecast>,
 		voltage: Number,
-		gridType: String as PropType<GRID_TYPE>,
+		gridConnection: String as PropType<GRID_CONNECTION>,
 	},
 	data() {
 		return {
@@ -442,7 +442,7 @@ export default defineComponent({
 			api.post(this.apiPath("batteryboostlimit") + "/" + limit);
 		},
 		phasePower(current?: number, phases?: number) {
-			return this.fmtPhasePower(current, phases, this.voltage, this.gridType);
+			return this.fmtPhasePower(current, phases, this.voltage, this.gridConnection);
 		},
 		currentOption(current: number, isDefault: boolean, phases?: number) {
 			const kw = this.phasePower(current, phases);

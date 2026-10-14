@@ -50,13 +50,22 @@
 			<PropertyCollapsible>
 				<template #advanced>
 					<FormRow
-						id="siteGridType"
-						:label="$t('config.site.gridType.label')"
-						:help="gridTypeHelp"
+						id="siteGridConnection"
+						:label="$t('config.site.gridConnection.label')"
+						:help="gridConnectionHelp"
 					>
-						<select id="siteGridType" v-model="gridType" class="form-select">
-							<option value="tn">{{ gridTypeTnLabel }}</option>
-							<option value="it">{{ gridTypeItLabel }}</option>
+						<select
+							id="siteGridConnection"
+							v-model="gridConnection"
+							class="form-select"
+						>
+							<option
+								v-for="option in gridConnectionOptions"
+								:key="option.value"
+								:value="option.value"
+							>
+								{{ option.name }}
+							</option>
 						</select>
 					</FormRow>
 				</template>
@@ -96,7 +105,7 @@ import FormRow from "./FormRow.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import store from "@/store";
 import api from "@/api";
-import { COUNTRIES, CURRENCY, GRID_TYPE } from "@/types/evcc";
+import { COUNTRIES, CURRENCY, GRID_CONNECTION } from "@/types/evcc";
 import formatter from "@/mixins/formatter";
 
 export default defineComponent({
@@ -111,12 +120,12 @@ export default defineComponent({
 			title: "",
 			currency: CURRENCY.EUR,
 			country: "",
-			gridType: GRID_TYPE.TN,
+			gridConnection: GRID_CONNECTION.NEUTRAL,
 			initial: {
 				title: "",
 				currency: CURRENCY.EUR as string,
 				country: "",
-				gridType: GRID_TYPE.TN,
+				gridConnection: GRID_CONNECTION.NEUTRAL,
 			},
 		};
 	},
@@ -148,25 +157,36 @@ export default defineComponent({
 		voltage() {
 			return store.state?.voltage ?? 230;
 		},
-		gridTypeTnLabel() {
+		gridConnectionOptions() {
+			return [
+				{ value: GRID_CONNECTION.NEUTRAL, name: this.gridConnectionNeutralLabel },
+				{ value: GRID_CONNECTION.NO_NEUTRAL, name: this.gridConnectionNoNeutralLabel },
+			];
+		},
+		gridConnectionNeutralLabel() {
 			const lineVoltage = Math.round((this.voltage * Math.sqrt(3)) / 10) * 10;
-			return this.$t("config.site.gridType.tn", { voltage: this.voltage, lineVoltage });
+			return this.$t("config.site.gridConnection.neutral", {
+				voltage: this.voltage,
+				lineVoltage,
+			});
 		},
-		gridTypeItLabel() {
-			return this.$t("config.site.gridType.it", { voltage: this.voltage });
+		gridConnectionNoNeutralLabel() {
+			return this.$t("config.site.gridConnection.noNeutral", { voltage: this.voltage });
 		},
-		gridTypeChanged() {
-			return this.gridType !== this.initial.gridType;
+		gridConnectionChanged() {
+			return this.gridConnection !== this.initial.gridConnection;
 		},
-		gridTypeHelp() {
-			return this.$t(`config.site.gridType.description.${this.gridType}`);
+		gridConnectionHelp() {
+			const key =
+				this.gridConnection === GRID_CONNECTION.NO_NEUTRAL ? "noNeutral" : "neutral";
+			return this.$t(`config.site.gridConnection.description.${key}`);
 		},
 		changed() {
 			return (
 				this.titleChanged ||
 				this.currencyChanged ||
 				this.countryChanged ||
-				this.gridTypeChanged
+				this.gridConnectionChanged
 			);
 		},
 		currencyExample() {
@@ -182,12 +202,12 @@ export default defineComponent({
 			this.title = store.state?.siteTitle || "";
 			this.currency = store.state?.currency || CURRENCY.EUR;
 			this.country = store.state?.country || "";
-			this.gridType = store.state?.gridType ?? GRID_TYPE.TN;
+			this.gridConnection = store.state?.gridConnection ?? GRID_CONNECTION.NEUTRAL;
 			this.initial = {
 				title: this.title,
 				currency: this.currency,
 				country: this.country,
-				gridType: this.gridType,
+				gridConnection: this.gridConnection,
 			};
 		},
 		async save() {
@@ -204,8 +224,10 @@ export default defineComponent({
 				if (this.countryChanged) {
 					requests.push(api.put("/config/country", JSON.stringify(this.country)));
 				}
-				if (this.gridTypeChanged) {
-					requests.push(api.put("/config/gridtype", JSON.stringify(this.gridType)));
+				if (this.gridConnectionChanged) {
+					requests.push(
+						api.put("/config/gridconnection", JSON.stringify(this.gridConnection))
+					);
 				}
 				await Promise.all(requests);
 				this.$emit("changed");

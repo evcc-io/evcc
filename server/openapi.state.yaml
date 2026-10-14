@@ -69,11 +69,11 @@ components:
         gridConfigured:
           description: A grid meter is configured.
           type: boolean
-        gridType:
-          $ref: "#/components/schemas/GRID_TYPE"
-          description: Grid earthing system, it for three-wire grids without neutral.
+        gridConnection:
+          $ref: "#/components/schemas/GRID_CONNECTION"
+          description: Grid connection, with or without neutral conductor.
         voltage:
-          description: Nominal grid voltage in V, line-to-line for IT grids.
+          description: Nominal grid voltage in V, line-to-line without neutral.
           type: number
         pv:
           description: Solar generation meters. One entry per configured pv meter.
@@ -705,12 +705,12 @@ components:
           enum:
             - file
             - db
-    GRID_TYPE:
-      description: Grid earthing system.
+    GRID_CONNECTION:
+      description: Grid connection, with or without neutral conductor.
       type: string
       enum:
-        - tn
-        - it
+        - neutral
+        - no-neutral
     Hems:
       description: Home energy management system integration.
       type: object

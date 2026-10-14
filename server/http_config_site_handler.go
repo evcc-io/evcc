@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 	"golang.org/x/text/language"
 )
 
@@ -170,8 +171,8 @@ func updateCountryHandler(site site.API) http.HandlerFunc {
 	}
 }
 
-// updateGridTypeHandler sets the grid type, tn (with neutral) or it (without neutral)
-func updateGridTypeHandler(site site.API) http.HandlerFunc {
+// updateGridConnectionHandler sets the grid connection, neutral or no-neutral
+func updateGridConnectionHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var val string
 		if err := jsonDecoder(r.Body).Decode(&val); err != nil {
@@ -179,12 +180,12 @@ func updateGridTypeHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		if val != "tn" && val != "it" {
-			jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid grid type: %s", val))
+		if val != grid.NeutralConnection && val != grid.NoNeutralConnection {
+			jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid grid connection: %s", val))
 			return
 		}
 
-		site.SetGridType(val)
+		site.SetGridConnection(val)
 
 		w.WriteHeader(http.StatusOK)
 	}

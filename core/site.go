@@ -172,7 +172,7 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	if site.Voltage != 0 && site.Voltage != grid.Voltage {
 		site.log.WARN.Printf("voltage %.0fV is no longer supported, using %.0fV", site.Voltage, grid.Voltage)
 	}
-	grid.SetNoNeutral(site.GetGridType() == "it")
+	grid.SetNoNeutral(site.GetGridConnection() == grid.NoNeutralConnection)
 
 	return site, nil
 }
@@ -1446,7 +1446,7 @@ func (site *Site) prepare() {
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
 	site.publish(keys.Voltage, grid.Voltage)
-	site.publish(keys.GridType, site.GetGridType())
+	site.publish(keys.GridConnection, site.GetGridConnection())
 	site.publish(keys.Grid, api.Meter(nil))
 	site.publish(keys.Pv, []api.Meter{})
 	site.publish(keys.Aux, []api.Meter{})

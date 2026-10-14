@@ -207,9 +207,9 @@ export interface State {
   grid?: Meter;
   /** A grid meter is configured. */
   gridConfigured?: boolean;
-  /** Grid earthing system, it for three-wire grids without neutral. */
-  gridType?: GRID_TYPE;
-  /** Nominal grid voltage in V, line-to-line for IT grids. */
+  /** Grid connection, with or without neutral conductor. */
+  gridConnection?: GRID_CONNECTION;
+  /** Nominal grid voltage in V, line-to-line without neutral. */
   voltage?: number;
   /** Solar generation meters. One entry per configured pv meter. */
   pv?: Meter[];
@@ -836,10 +836,10 @@ export enum THEME {
   DARK = "dark",
 }
 
-/** Grid earthing system. */
-export enum GRID_TYPE {
-  TN = "tn",
-  IT = "it",
+/** Grid connection, with or without neutral conductor. */
+export enum GRID_CONNECTION {
+  NEUTRAL = "neutral",
+  NO_NEUTRAL = "no-neutral",
 }
 
 /** Currency in ISO 4217 format. */

@@ -1736,11 +1736,11 @@
         }
       }
     },
-    "/config/gridtype": {
+    "/config/gridconnection": {
       "put": {
-        "operationId": "setGridType",
-        "summary": "Set grid type",
-        "description": "Set the grid type. tn for grids with neutral (230/400 V), it for three-wire grids without neutral (3 x 230 V).",
+        "operationId": "setGridConnection",
+        "summary": "Set grid connection",
+        "description": "Set the grid connection. neutral for grids with neutral conductor (3 x 230/400 V), no-neutral for three-wire grids without neutral (3 x 230 V).",
         "tags": [
           "general"
         ],
@@ -1751,10 +1751,10 @@
               "schema": {
                 "type": "string",
                 "enum": [
-                  "tn",
-                  "it"
+                  "neutral",
+                  "no-neutral"
                 ],
-                "example": "it"
+                "example": "no-neutral"
               }
             }
           }
@@ -1764,7 +1764,7 @@
             "$ref": "#/components/responses/BlankResponse"
           },
           "400": {
-            "description": "Invalid grid type"
+            "description": "Invalid grid connection"
           }
         }
       }
@@ -4582,12 +4582,12 @@
           "power"
         ]
       },
-      "GRID_TYPE": {
-        "description": "Grid earthing system.",
+      "GRID_CONNECTION": {
+        "description": "Grid connection, with or without neutral conductor.",
         "type": "string",
         "enum": [
-          "tn",
-          "it"
+          "neutral",
+          "no-neutral"
         ]
       },
       "GenericConfigStatus": {
@@ -5702,12 +5702,12 @@
             "description": "A grid meter is configured.",
             "type": "boolean"
           },
-          "gridType": {
-            "$ref": "#/components/schemas/GRID_TYPE",
-            "description": "Grid earthing system, it for three-wire grids without neutral."
+          "gridConnection": {
+            "$ref": "#/components/schemas/GRID_CONNECTION",
+            "description": "Grid connection, with or without neutral conductor."
           },
           "voltage": {
-            "description": "Nominal grid voltage in V, line-to-line for IT grids.",
+            "description": "Nominal grid voltage in V, line-to-line without neutral.",
             "type": "number"
           },
           "pv": {

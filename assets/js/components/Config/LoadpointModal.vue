@@ -644,7 +644,7 @@ import { handleError, customChargerName, createDeviceUtils } from "./DeviceModal
 import { getModal, openModal, replaceModal, closeModal } from "@/configModal";
 import {
 	CHARGE_MODE,
-	GRID_TYPE,
+	GRID_CONNECTION,
 	LOADPOINT_TYPE,
 	type DeviceType,
 	type LoadpointType,
@@ -715,7 +715,7 @@ export default {
 			default: () => false,
 		},
 		voltage: Number,
-		gridType: String as PropType<GRID_TYPE>,
+		gridConnection: String as PropType<GRID_CONNECTION>,
 	},
 	emits: ["changed", "dismissed", "disable"],
 	data() {
@@ -847,7 +847,7 @@ export default {
 				this.values.minCurrent,
 				this.minPhases,
 				this.voltage,
-				this.gridType
+				this.gridConnection
 			);
 		},
 		maxPowerHint() {
@@ -855,7 +855,7 @@ export default {
 				this.values.maxCurrent,
 				this.maxPhases,
 				this.voltage,
-				this.gridType
+				this.gridConnection
 			);
 		},
 		phasesOptions() {
