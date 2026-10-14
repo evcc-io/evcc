@@ -37,7 +37,9 @@ This is the same rule the live control loop uses for the green share, so the pag
 
 Everything downstream is built on these flows: the flow chart, the source mix bars (share of PV, battery, grid in what reached a sink), autarky, cost and CO2.
 
-The overview bar chart uses a simpler per-bucket split on the client: production covers export first, then battery charging, the remainder is self-consumption. The usage view keeps that column, from minus import and discharge up to production, and fills it with sinks instead: export on top, then consumers, each loadpoint, each battery at the bottom, each with all it received from production and import alike. The baseline just cuts through the stack. Energy no sink explains stays with consumption, a sink no source covers is not drawn.
+The overview bar chart uses a simpler per-bucket split on the client: production covers export first, then battery charging, the remainder is self-consumption. Stacked from the baseline: self-consumption, battery charge, export above it, battery discharge and grid import below.
+
+The usage view keeps that column, from minus import and discharge up to production, and fills it with sinks instead, each with all it received from production and import alike. The baseline just cuts through the stack, every sink stays one contiguous band. Bottom up: consumption, loadpoints, batteries, consumption again, export. Consumption is two series with one shared entity index (`paletteIndex`), only one carries a slot's value: the lower one when consumption alone covers the slot's withdrawal (it then spans the baseline and the other sinks sit on top), the upper one otherwise. This keeps the house load next to the baseline in pure production and pure withdrawal slots without reordering per slot; in mixed slots where a loadpoint crosses the baseline, consumption sits above it. Tooltip and legend merge the two series into one entry. Energy no sink explains stays with consumption, a sink no source covers is not drawn.
 
 ## Metered versus attributed
 

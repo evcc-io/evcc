@@ -116,7 +116,7 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		if extMode != batMode {
 			res = extMode
 		}
-	case site.Automatic() && site.unmodelledCharging():
+	case site.Automatic() && site.unmodelledCharging(rate):
 		// the suggestion ignores loads the optimizer cannot model as storage
 		res = keepUnlessModified(api.BatteryHold)
 	case site.Automatic():
@@ -149,15 +149,17 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 
 // unmodelledCharging reports a loadpoint charging at full power that the optimizer
 // does not control: it cannot model it as storage (unknown vehicle capacity, see
-// optimizerRequest) or only the battery is automatic. Its battery suggestion does
-// not account for that load, so the battery must be held.
-func (site *Site) unmodelledCharging() bool {
+// optimizerRequest), it is a heater, or only the battery is automatic. Its battery
+// suggestion does not account for that load, so the battery must be held. Like
+// dischargeControlActive this includes charging on the smart cost limit, which is
+// what keeps such a loadpoint running at cheap prices.
+func (site *Site) unmodelledCharging(rate api.Rate) bool {
 	for _, lp := range site.activeLoadpoints() {
 		if lp.optimizerControlled() {
 			continue
 		}
 
-		if lp.GetStatus() == api.StatusC && lp.IsFastChargingActive() {
+		if lp.GetStatus() == api.StatusC && (site.smartCostActive(lp, rate) || lp.IsFastChargingActive()) {
 			return true
 		}
 	}
@@ -329,7 +331,12 @@ func (site *Site) tariffRates(usage api.TariffUsage) (api.Rates, error) {
 	return tariff.Rates()
 }
 
+// smartCostActive reports whether the loadpoint charges on its smart cost limit.
+// The limit only acts in smart mode (see Loadpoint.Update), other modes ignore it.
 func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
+	if lp.GetMode() != api.ModeSmart {
+		return false
+	}
 	limit := lp.GetSmartCostLimit()
 	return limit != nil && !rate.IsZero() && rate.Value <= *limit
 }
