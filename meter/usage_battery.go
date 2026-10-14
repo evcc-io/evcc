@@ -12,7 +12,7 @@ import (
 )
 
 type batteryCapacity struct {
-	Capacity float64
+	Capacity float64 `validate:"gte=0"`
 }
 
 // var _ api.BatteryCapacity = (*batteryCapacity)(nil)
@@ -36,20 +36,24 @@ type batteryCapacityCtx struct {
 // Decorator returns an api.BatteryCapacity decorator. Capacity may be a static
 // number or a float plugin config; nil/zero means not configured.
 func (m *batteryCapacityCtx) Decorator(ctx context.Context) (func() float64, error) {
-	return resolveFloat(ctx, m.Capacity)
+	return resolveFloat(ctx, m.Capacity, "gte=0")
 }
 
 // resolveFloat resolves a static number or float plugin config to a getter.
-// nil/zero static returns a nil getter (not configured).
-func resolveFloat(ctx context.Context, v any) (func() float64, error) {
+// nil/zero static returns a nil getter (not configured). A static number is
+// validated against tag (validator syntax), a plugin value is not.
+func resolveFloat(ctx context.Context, v any, tag string) (func() float64, error) {
 	switch v := v.(type) {
 	case nil:
 		return nil, nil
 	case int:
-		return staticFloat(float64(v)), nil
+		return resolveFloat(ctx, float64(v), tag)
 	case int64:
-		return staticFloat(float64(v)), nil
+		return resolveFloat(ctx, float64(v), tag)
 	case float64:
+		if err := util.Validate(v, tag); err != nil {
+			return nil, err
+		}
 		return staticFloat(v), nil
 	default:
 		var cfg plugin.Config
@@ -86,8 +90,8 @@ func floatOr0(g func() float64) float64 {
 }
 
 type batteryPowerLimits struct {
-	MaxChargePower    float64
-	MaxDischargePower float64
+	MaxChargePower    float64 `validate:"gte=0"`
+	MaxDischargePower float64 `validate:"gte=0"`
 }
 
 // var _ api.BatteryPowerLimiter = (*batteryPowerLimits)(nil)
@@ -112,13 +116,13 @@ type batteryPowerLimitsCtx struct {
 // Decorator returns an api.BatteryPowerLimiter decorator. Each limit may be a
 // static number or a float plugin config; either unset means not configured.
 func (m *batteryPowerLimitsCtx) Decorator(ctx context.Context) (func() (float64, float64), error) {
-	charge, err := resolveFloat(ctx, m.MaxChargePower)
+	charge, err := resolveFloat(ctx, m.MaxChargePower, "gte=0")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("maxChargePower: %w", err)
 	}
-	discharge, err := resolveFloat(ctx, m.MaxDischargePower)
+	discharge, err := resolveFloat(ctx, m.MaxDischargePower, "gte=0")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("maxDischargePower: %w", err)
 	}
 	if charge == nil || discharge == nil {
 		return nil, nil
@@ -129,7 +133,7 @@ func (m *batteryPowerLimitsCtx) Decorator(ctx context.Context) (func() (float64,
 }
 
 type batterySocLimits struct {
-	MinSoc, MaxSoc float64
+	MinSoc, MaxSoc float64 `validate:"gte=0,lte=100"`
 }
 
 // var _ api.BatterySocLimiter = (*batterySocLimits)(nil)
@@ -215,13 +219,13 @@ type batterySocLimitsCtx struct {
 // var _ api.BatterySocLimiter = (*batterySocLimitsCtx)(nil)
 
 func (m *batterySocLimitsCtx) getters(ctx context.Context) (func() float64, func() float64, error) {
-	minG, err := resolveFloat(ctx, m.MinSoc)
+	minG, err := resolveFloat(ctx, m.MinSoc, "gte=0,lte=100")
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("minSoc: %w", err)
 	}
-	maxG, err := resolveFloat(ctx, m.MaxSoc)
+	maxG, err := resolveFloat(ctx, m.MaxSoc, "gte=0,lte=100")
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("maxSoc: %w", err)
 	}
 	return minG, maxG, nil
 }

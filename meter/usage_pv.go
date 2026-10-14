@@ -27,7 +27,7 @@ type pvMaxACPowerCtx struct {
 // float plugin like the SunSpec nameplate rating. Since the rating is constant, the
 // plugin is read once. Unavailable or zero means not configured.
 func (m *pvMaxACPowerCtx) Decorator(ctx context.Context) func() float64 {
-	get, err := resolveFloat(ctx, m.MaxACPower)
+	get, err := resolveFloat(ctx, m.MaxACPower, "gte=0")
 	if err != nil {
 		// not all devices expose the rating- must not fail configuration
 		util.NewLogger("meter").WARN.Printf("maxacpower: %v", err)

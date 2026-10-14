@@ -56,6 +56,44 @@ func TestBatteryCapacity(t *testing.T) {
 	}
 }
 
+// TestBatteryLimitsValidation rejects negative limits (evcc-io/optimizer#209: d_max < 0 is infeasible)
+func TestBatteryLimitsValidation(t *testing.T) {
+	ctx := context.TODO()
+
+	// static values on the configurable meter
+	{
+		var cc batteryPowerLimitsCtx
+		require.NoError(t, util.DecodeOther(map[string]any{"maxchargepower": 2200, "maxdischargepower": -1700}, &cc))
+		_, err := cc.Decorator(ctx)
+		require.ErrorContains(t, err, "maxDischargePower")
+	}
+	{
+		var cc batterySocLimitsCtx
+		require.NoError(t, util.DecodeOther(map[string]any{"minsoc": 10, "maxsoc": 120}, &cc))
+		_, err := cc.Decorator(ctx)
+		require.ErrorContains(t, err, "maxSoc")
+	}
+	{
+		var cc batteryCapacityCtx
+		require.NoError(t, util.DecodeOther(map[string]any{"capacity": -1}, &cc))
+		_, err := cc.Decorator(ctx)
+		require.Error(t, err)
+	}
+
+	// plain structs are validated on decode, also when embedded
+	{
+		var res struct {
+			batteryCapacity    `mapstructure:",squash"`
+			batteryPowerLimits `mapstructure:",squash"`
+			batterySocLimits   `mapstructure:",squash"`
+		}
+		require.Error(t, util.DecodeOther(map[string]any{"maxdischargepower": -1700}, &res))
+		require.Error(t, util.DecodeOther(map[string]any{"maxsoc": 101}, &res))
+		require.Error(t, util.DecodeOther(map[string]any{"capacity": -1}, &res))
+		require.NoError(t, util.DecodeOther(map[string]any{"capacity": 10, "maxchargepower": 5000, "maxdischargepower": 5000, "minsoc": 10, "maxsoc": 100}, &res))
+	}
+}
+
 func TestBatteryModes(t *testing.T) {
 	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold}, batteryModes([]int64{1, 2}))
 

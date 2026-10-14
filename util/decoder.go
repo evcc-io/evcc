@@ -9,6 +9,11 @@ import (
 
 var validate = validator.New()
 
+// Validate validates a single value against a validator tag, e.g. "gte=0"
+func Validate(v any, tag string) error {
+	return validate.Var(v, tag)
+}
+
 // DecodeOther uses mapstructure to decode into target structure. Unused keys cause errors.
 func DecodeOther(other, cc any) error {
 	decoderConfig := &mapstructure.DecoderConfig{
