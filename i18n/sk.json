@@ -62,6 +62,7 @@
         "noCountry": "Krajina nie je nakonfigurovaná. Nastavte ju pod {link}.",
         "title": "Dodávka energie z batérie do siete"
       },
+      "optimizerControlledHint": "Vypnuté pre {loadpoints}. Namiesto toho rozhoduje {optimizer}.",
       "priority": "Domáca batéria má prioritu, kým je pod {soc}. Potom nabíjacie stanice dostanú prebytok.",
       "priorityNone": "Prebytok solárnej energie ide priamo do nabíjacích staníc. Nastavte hodnotu vyššiu ako {soc}, aby ste uprednostnili domácu batériu.",
       "priorityTitle": "Kam ide prebytok ako najprv?"
@@ -846,9 +847,29 @@
       "usernameHelp": "Pre HTTP Basic Auth na upstream server."
     },
     "optimizer": {
+      "automatic": "Automatické riadenie",
+      "automaticLevel": {
+        "battery": {
+          "description": "Riadi iba domácu batériu.",
+          "label": "Domáca batéria",
+          "status": "{automatic} riadi domácu batériu."
+        },
+        "full": {
+          "description": "Riadi domácu batériu, spúšťa a zastavuje nabíjanie vozidiel v inteligentnom režime, nahrádza cenové a CO₂ limity a preberá plány. Bez zmeny: režim vypnuté a rýchlo, ohrievače, spínateľné zásuvky, vozidlá s neznámou kapacitou.",
+          "label": "Domáca batéria a nabíjacie body",
+          "status": "{automatic} riadi domácu batériu a nabíjacie body."
+        },
+        "off": {
+          "description": "Optimalizátor iba navrhuje. Nič sa neriadi.",
+          "status": "{automatic} je vypnuté. Optimalizátor iba navrhuje."
+        }
+      },
+      "controlled": "Vypnuté automatickým riadením. Namiesto toho rozhoduje {optimizer}.",
+      "controls": "Riadi",
       "description": "Analyzuje predpoveď solárnej energie, ceny elektriny a vaše vzorce spotreby s cieľom optimalizovať stratégiu batérie a nabíjania. Dáta sa odosielajú na spracovanie do optimalizačnej služby evcc. Momentálne iba vypočítava a vizualizuje. Zatiaľ neovláda zariadenia.",
       "enable": "Povoliť optimalizátor",
       "info": "V prípade nových inštalácií môže trvať až 24 hodín, kým evcc zhromaždí dostatok údajov.",
+      "linkWord": "optimalizátor",
       "title": "Optimalizátor"
     },
     "options": {
@@ -1460,6 +1481,10 @@
     },
     "issueDescription": "Popis",
     "issueTitle": "Názov",
+    "nightlyHint": "Možno je to už opravené. Najprv to overte s najnovšou {nightlyVersion}.",
+    "nightlyHintVersion": "nočnou verziou",
+    "searchHint": "Pred nahlásením chyby prehľadajte existujúce {issues}.",
+    "searchHintLink": "problémy na GitHube",
     "stepsToReproduce": "Kroky k reprodukcii",
     "subTitleDiscussion": "Popíšte svoj problém",
     "subTitleEmail": "Popíšte svoj problém",
@@ -1728,6 +1753,7 @@
     "targetChargePlan": {
       "chargeDuration": "Doba nabíjania",
       "co2Label": "CO2 emisie ⌀",
+      "optimizerHint": "Poznámka: Tento plán vytvoril {optimizer}.",
       "priceLabel": "Cena energie",
       "timeRange": "{day} {range} h",
       "unknownPrice": "stále neznáme"
@@ -1787,6 +1813,7 @@
       "feedinPriorityPausing": "Nabíjanie solárnou energiou pozastavené, aby sa maximalizoval export energie do siete.",
       "finished": "Dokončené.",
       "minCharge": "Minimálne nabíjanie na {soc}.",
+      "optimizerControlledTooltip": "Automatické riadenie. Optimalizátor spúšťa a zastavuje nabíjanie.",
       "pvDisable": "Nedostatok prebytku. Čoskoro pozastavíme.",
       "pvEnable": "Prebytok k dispozícii. Čoskoro začíname.",
       "scale1p": "Čoskoro prejdeme na jednofázové nabíjanie.",

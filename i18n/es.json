@@ -37,6 +37,7 @@
       "discharging": "descargando",
       "energy": "Energía",
       "gridCharge": "cargando desde la red",
+      "gridDischarge": "vertiendo a la red",
       "hold": "descarga bloqueada",
       "holdCharge": "carga bloqueada",
       "ofTotal": "de {total}",
@@ -61,6 +62,7 @@
         "noCountry": "No hay ningún país configurado. Defínelo en {link}.",
         "title": "Vertido a la red desde la batería"
       },
+      "optimizerControlledHint": "Deshabilitado para {loadpoints}. El {optimizer} decide.",
       "priority": "La batería doméstica tiene prioridad mientras esté por debajo del {soc}. Por encima, los puntos de carga reciben el excedente.",
       "priorityNone": "El excedente solar va directo a los puntos de carga. Configura un valor por encima de {soc} para priorizar la batería doméstica.",
       "priorityTitle": "¿Cuál es el destino prioritario de los excedentes?"
@@ -193,6 +195,14 @@
       "meterGrid": "Red eléctrica",
       "title": "Gestión de carga",
       "usableMeters": "Referencias de contadores utilizables"
+    },
+    "combobox": {
+      "count": "{count} sugerencias",
+      "matching": "Coincidencias",
+      "other": "Otros",
+      "searching": "Buscando…",
+      "suggestions": "Sugerencias",
+      "used": "ya utilizado"
     },
     "consumer": {
       "description": "Monitorea electrodomésticos más pequeños que no se pueden controlar (frigorífico, lavadora...). Te ofrece una mejor visión general del consumo de tu hogar.",
@@ -545,13 +555,13 @@
       "phasesAutomaticHelp": "Su cargador admite el cambio automático entre carga monofásica y trifásica. En la pantalla principal puede ajustar el comportamiento de las fases durante la carga.",
       "phasesHelp": "Número de fases conectadas.",
       "phasesLabel": "Fases",
-      "pollIntervalDanger": "Consultar regularmente el vehículo puede agotar la batería del mismo. Algunos fabricantes de vehículos pueden impedir activamente la carga en este caso. ¡No recomendado! Utilícelo solo si es consciente de los riesgos.",
+      "pollIntervalDanger": "Consultar regularmente el vehículo puede agotar su batería. Algunos fabricantes de vehículos pueden impedir activamente la carga en este caso. ¡No recomendado! Úsalo solo si eres consciente de los riesgos.",
       "pollIntervalHelp": "Tiempo entre actualizaciones de la API del vehículo. Los intervalos cortos pueden agotar la batería del vehículo.",
       "pollIntervalLabel": "Intervalo de actualización",
       "pollModeAlways": "siempre",
-      "pollModeAlwaysHelp": "Solicite siempre actualizaciones de estado a intervalos regulares.",
-      "pollModeCharging": "carga",
-      "pollModeChargingHelp": "Solicite actualizaciones del estado del vehículo solo durante la recarga.",
+      "pollModeAlwaysHelp": "Solicitar siempre actualizaciones de estado a intervalos regulares.",
+      "pollModeCharging": "cargando",
+      "pollModeChargingHelp": "Solicitar actualizaciones del estado del vehículo solo durante la recarga.",
       "pollModeConnected": "conectado",
       "pollModeConnectedHelp": "Actualizar el estado del vehículo a intervalos regulares cuando esté conectado.",
       "pollModeLabel": "Comportamiento de actualización",
@@ -570,12 +580,12 @@
       "thresholdDisableDelayLabel": "Desactivar retraso",
       "thresholdDisableHelpInvalid": "Usa un valor positivo.",
       "thresholdDisableHelpPositive": "Se detiene cuando se utiliza más de {power} de la red durante {delay}.",
-      "thresholdDisableHelpZero": "Se detiene cuando no se puede satisfacer la potencia mínima requerida durante {delay}.",
+      "thresholdDisableHelpZero": "Se detiene cuando no se puede cubrir la potencia mínima necesaria durante {delay}.",
       "thresholdDisableLabel": "Umbral de desactivación de la potencia de red",
       "thresholdEnableDelayLabel": "Habilitar retraso",
       "thresholdEnableHelpInvalid": "Usa un valor negativo.",
       "thresholdEnableHelpNegative": "Comienza cuando hay {surplus} de excedente disponible durante {delay}.",
-      "thresholdEnableHelpZero": "Se inicia cuando se puede satisfacer la potencia mínima requerida durante {delay}.",
+      "thresholdEnableHelpZero": "Se inicia cuando se puede cubrir la potencia mínima necesaria durante {delay}.",
       "thresholdEnableLabel": "Umbral de activación de la potencia de red",
       "titleAdd": {
         "charging": "Añadir punto de recarga",
@@ -837,9 +847,29 @@
       "usernameHelp": "Para la autenticación HTTP Basic con el servidor externo."
     },
     "optimizer": {
-      "description": "Analiza la previsión solar, los precios de la electricidad y tus patrones de consumo para optimizar la estrategia de batería y carga. Los datos se envían al servicio de optimización de evcc para procesarlos. Actualmente solo calcula y muestra los resultados. Aún no controla dispositivos.",
+      "automatic": "Control automático",
+      "automaticLevel": {
+        "battery": {
+          "description": "Solo controla la batería doméstica.",
+          "label": "Batería doméstica",
+          "status": "{automatic} controla la batería doméstica."
+        },
+        "full": {
+          "description": "Controla la batería doméstica, inicia y detiene la carga de los vehículos en modo inteligente, sustituye los límites de precio y de CO₂ y asume los planes. Sin cambios: modos apagado y rápido, dispositivos de calefacción, enchufes conmutables y vehículos con capacidad desconocida.",
+          "label": "Batería doméstica y puntos de carga",
+          "status": "{automatic} controla la batería doméstica y los puntos de carga."
+        },
+        "off": {
+          "description": "El optimizador solo sugiere. No se controla nada.",
+          "status": "{automatic} está deshabilitado. El optimizador solo sugiere."
+        }
+      },
+      "controlled": "Deshabilitado por el control automático. El {optimizer} decide.",
+      "controls": "Controla",
+      "description": "Utiliza la previsión solar, los precios de la electricidad y tus patrones de consumo para planificar la batería y la carga. Los datos se envían al servicio de optimización de evcc.",
       "enable": "Activar optimizador",
       "info": "En instalaciones nuevas, evcc puede tardar hasta 24 horas en recopilar suficientes datos.",
+      "linkWord": "optimizador",
       "title": "Optimizador"
     },
     "options": {
@@ -1046,7 +1076,7 @@
         "temperature": "Añadir previsión de temperatura"
       },
       "planner": {
-        "description": "Ajuste avanzado. Normalmente no es necesario, ya que las tarifas eléctricas dinámicas o las previsiones de CO₂ se utilizan automáticamente. Habilita una fuente de datos adicional que solo se usa para la planificación de la carga, no para estadísticas ni cálculos de precios.",
+        "description": "Este ajuste avanzado normalmente no es necesario. La previsión para la planificación sirve de base para los planes de carga y para la carga barata o limpia desde la red (vehículos, dispositivos de calefacción, batería doméstica). Sin ella, se utiliza automáticamente el precio dinámico de la red o la previsión de CO₂. Las estadísticas, los cálculos de costes y las decisiones del optimizador no se ven afectados.",
         "titleAdd": "Añadir previsión para la planificación",
         "titleEdit": "Editar previsión para la planificación"
       },
@@ -1120,6 +1150,118 @@
       "titleAdd": "Añadir un vehículo",
       "titleEdit": "Editar el vehículo"
     }
+  },
+  "energy": {
+    "battery": {
+      "charged": "Cargado",
+      "discharged": "Descargado"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Barras",
+        "pattern": "Patrón"
+      },
+      "cost": "Coste",
+      "others": "Otros",
+      "title": "Consumidores",
+      "view": {
+        "river": "Río",
+        "treemap": "Treemap"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "cargado",
+        "returnEnergy": "descargado"
+      },
+      "grid": {
+        "energy": "Importación",
+        "returnEnergy": "Exportación"
+      },
+      "meter": {
+        "energy": "Energía",
+        "returnEnergy": "Energía (inversa)"
+      }
+    },
+    "empty": "No hay datos de energía para este periodo.",
+    "flow": {
+      "battery": "Batería",
+      "batteryCharge": "Carga de batería",
+      "batteryDischarge": "Descarga de batería",
+      "charging": "Cargando",
+      "export": "Vertido a la red",
+      "grid": "Consumo de red",
+      "heating": "Calefacción",
+      "home": "Consumo",
+      "overview": "Vista general",
+      "pv": "Producción",
+      "title": "Flujo de energía",
+      "usage": "Uso",
+      "withdrawal": "Retiro"
+    },
+    "grid": {
+      "amount": "Importe",
+      "cost": "Coste de red",
+      "energy": "Energía",
+      "export": "Vertido",
+      "exportPrice": "Precio de vertido",
+      "import": "Consumo",
+      "importPrice": "Precio de consumo",
+      "price": "Precio",
+      "revenue": "Ingresos por vertido",
+      "title": "Red"
+    },
+    "group": {
+      "battery": "Batería",
+      "consumer": "Consumo",
+      "forecast": "Previsión",
+      "grid": "Red",
+      "meter": "Contadores adicionales",
+      "pv": "Producción"
+    },
+    "production": {
+      "above": "{value} por encima",
+      "accuracy": "Precisión de la previsión",
+      "below": "{value} por debajo",
+      "deviation": "Desviación",
+      "expectedTomorrow": "previsto para mañana",
+      "exported": "{value} vertido",
+      "produced": "Producido",
+      "remainingToday": "restante hoy",
+      "selfConsumed": "Autoconsumido",
+      "title": "Producción"
+    },
+    "socTemp": {
+      "charged": "cargado",
+      "soc": "carga",
+      "temperature": "temperatura",
+      "used": "usado"
+    },
+    "sources": {
+      "battery": "Batería",
+      "cost": "Coste",
+      "energy": "Energía",
+      "grid": "Red",
+      "hint": "Energía solar y de batería valorada al precio de vertido.",
+      "price": "Precio/kWh",
+      "pv": "Solar",
+      "share": "Cuota",
+      "source": "Fuente",
+      "title": "Fuentes",
+      "total": "Total"
+    },
+    "stat": {
+      "autarky": "Autosuficiencia",
+      "co2Saved": "CO₂ ahorrado",
+      "co2SavedTooltip": "En comparación con obtener de la red los {energy} consumidos.",
+      "configure": "Configurar ahora",
+      "noCo2": "Sin datos de CO₂.",
+      "noPrice": "Sin datos de precio.",
+      "savings": "Ahorros",
+      "savingsTooltip": "En comparación con comprar a la red los {energy} consumidos.",
+      "versus": "{value} vs. {reference}"
+    },
+    "title": "Energía"
   },
   "footer": {
     "community": {
@@ -1333,6 +1475,10 @@
     },
     "issueDescription": "Descripción",
     "issueTitle": "Título",
+    "nightlyHint": "Puede que ya esté solucionado. Comprueba antes con la última {nightlyVersion}.",
+    "nightlyHintVersion": "versión nightly",
+    "searchHint": "Antes de informar de un error, busca entre las {issues} existentes.",
+    "searchHintLink": "incidencias de GitHub",
     "stepsToReproduce": "Pasos para reproducir",
     "subTitleDiscussion": "Describe tu problema",
     "subTitleEmail": "Describe tu problema",
@@ -1445,6 +1591,7 @@
       "batteryDischargeHold": "Batería (bloqueada)",
       "batteryGridChargeActive": "Carga de red activa",
       "batteryGridChargeLimit": "Carga de la red cuando",
+      "batteryStatus": "Estado de la batería",
       "batteryTooltip": "{energy} de {total} ({soc})",
       "forecast": "Previsión",
       "forecastTooltip": "Previsión: producción solar restante para hoy",
@@ -1629,6 +1776,7 @@
     "targetChargePlan": {
       "chargeDuration": "Tiempo de carga",
       "co2Label": "Emisión de CO₂ ⌀",
+      "optimizerHint": "Nota: Este plan fue creado por el {optimizer}.",
       "priceLabel": "Precio de la energía",
       "timeRange": "{day} {range} hora",
       "unknownPrice": "aún desconocido"
@@ -1686,6 +1834,7 @@
       "feedinPriorityPausing": "Carga solar en pausa para maximizar el vertido.",
       "finished": "Finalizado.",
       "minCharge": "Carga mínima hasta {soc}.",
+      "optimizerControlledTooltip": "Control automático. El optimizador inicia y detiene la carga.",
       "pvDisable": "No hay suficiente excedente. Pausa inminente.",
       "pvEnable": "Excedente disponible. La carga se reanudará en breve.",
       "scale1p": "Próximamente se reducirá a carga monofásica.",
@@ -1936,6 +2085,7 @@
     "battery": "Batería",
     "charge": "Carga",
     "comingSoon": "Esta página está en construcción.",
+    "energy": "Energía",
     "forecast": "Previsión",
     "more": "Más",
     "sessions": "Sesiones"
