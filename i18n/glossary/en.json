@@ -28,7 +28,11 @@
     "other": "charged"
   },
   "chargeLevel": {
-    "description": "State of charge of a vehicle or home battery in percent. Short label charge, in prose charge level. SoC only in code and data exports, never in UI text.",
+    "description": "State of charge of a vehicle or home battery in percent. SoC only in code and data exports, never in UI text.",
+    "other": "charge level"
+  },
+  "chargeLevelShort": {
+    "description": "Short form of charge level for labels and table headers.",
     "other": "charge"
   },
   "charger": {
@@ -42,6 +46,10 @@
   "chargingSession": {
     "description": "One plug-in to unplug cycle, as shown in the sessions log.",
     "other": "charging session"
+  },
+  "chargingSessionShort": {
+    "description": "Short form of charging session for tight spaces such as the tab bar.",
+    "other": "session"
   },
   "cheapEnergy": {
     "description": "Grid energy below the price limit.",
@@ -64,7 +72,7 @@
     "other": "clean energy"
   },
   "co2": {
-    "description": "Carbon dioxide. Written with the Unicode subscript character ₂, not CO2. Never translated.",
+    "description": "Carbon dioxide. Written with the Unicode subscript character ₂ in every language, not CO2.",
     "other": "CO₂"
   },
   "co2Limit": {
@@ -95,13 +103,13 @@
     "description": "Tariff whose prices change over time, e.g. every hour or 15 minutes.",
     "other": "dynamic tariff"
   },
-  "eebus": {
-    "description": "Communication standard for energy devices. All uppercase since the rebranding, not EEBus. Never translated.",
-    "other": "EEBUS"
-  },
   "emissions": {
     "description": "CO₂ caused by charged energy, in kg or g/kWh.",
     "other": "emissions"
+  },
+  "energy": {
+    "description": "Amount over time, in Wh or kWh. Not power.",
+    "other": "energy"
   },
   "energyFlow": {
     "description": "Live diagram of production, grid, battery and consumption.",
@@ -112,7 +120,7 @@
     "other": "energy price"
   },
   "evcc": {
-    "description": "Product name. Always lowercase, also at sentence start. Never translated.",
+    "description": "Product name. Always lowercase in every language, also at sentence start.",
     "other": "evcc"
   },
   "externalLimit": {
@@ -128,15 +136,15 @@
     "other": "grid"
   },
   "gridExport": {
-    "description": "Energy fed into the grid. Always grid export, not feed-in.",
+    "description": "Energy fed into the grid. Short label export inside a grid card. One term throughout, no synonyms such as feed-in.",
     "other": "grid export"
   },
   "gridExportTariff": {
-    "description": "Tariff for energy fed into the grid, i.e. the remuneration. Always grid export, not feed-in.",
+    "description": "Tariff for energy fed into the grid, i.e. the remuneration. Builds on the grid export term; one word for both is fine if the language has no distinction.",
     "other": "grid export tariff"
   },
   "gridImport": {
-    "description": "Energy taken from the grid.",
+    "description": "Energy taken from the grid. Short label import inside a grid card.",
     "other": "grid import"
   },
   "gridImportTariff": {
@@ -212,11 +220,11 @@
     "other": "on"
   },
   "modeSmart": {
-    "description": "Charge mode: surplus plus cheap or clean grid energy, following plans and limits. Keep the word smart untranslated if it works in your language.",
+    "description": "Charge mode: surplus plus cheap or clean grid energy, following plans and limits. Keep the English word in your language. Translate only if the English word would irritate users.",
     "other": "smart"
   },
   "optimizer": {
-    "description": "Battery and charging optimization feature. Spelled with z also in UK English. Never translated.",
+    "description": "Battery and charging optimization feature. Keep the English word in your language. Translate only if the English word would irritate users.",
     "other": "optimizer"
   },
   "page": {
@@ -227,6 +235,10 @@
     "description": "The start page with charging points and energy flow, named after its tab bar label.",
     "other": "Charge page"
   },
+  "power": {
+    "description": "Instantaneous rate, in W or kW. Not energy.",
+    "other": "power"
+  },
   "priceLimit": {
     "description": "Maximum price per kWh at which smart mode charges from the grid.",
     "other": "price limit"
@@ -235,10 +247,6 @@
     "description": "Energy generated on site. Usually PV, deliberately open to other sources like wind.",
     "other": "production"
   },
-  "range": {
-    "description": "Distance a vehicle can drive, in km or mi.",
-    "other": "range"
-  },
   "savings": {
     "description": "Money saved compared to charging everything from the grid at the reference price.",
     "other": "savings"
@@ -246,14 +254,6 @@
   "selfConsumption": {
     "description": "Share of solar production used on site instead of exported.",
     "other": "self-consumption"
-  },
-  "sgReady": {
-    "description": "Standard heat pump control interface with the modes reduced, normal and boost.",
-    "other": "SG Ready"
-  },
-  "smartSwitch": {
-    "description": "Switchable socket or relay integrated as a charger.",
-    "other": "smart switch"
   },
   "solar": {
     "description": "Energy from the PV system. Always solar in English, not PV or photovoltaic.",
@@ -275,13 +275,25 @@
     "description": "Production minus house consumption, available for charging or heating.",
     "other": "surplus"
   },
+  "switchableSocket": {
+    "description": "Socket, plug or relay that is switched on and off, integrated as a charger.",
+    "other": "switchable socket"
+  },
   "tariff": {
     "description": "Price structure over time for grid import or grid export, static or dynamic.",
     "other": "tariff"
   },
+  "tariffSurcharge": {
+    "description": "Fixed amount per kWh added to the energy price, e.g. grid fees or provider margin. Not the charge level.",
+    "other": "surcharge"
+  },
   "usage": {
     "description": "Energy overview view showing where energy went.",
     "other": "usage"
+  },
+  "valueRange": {
+    "description": "Span between lowest and highest value in a forecast or chart, e.g. price or temperature range.",
+    "other": "range"
   },
   "vehicle": {
     "description": "An EV known to evcc, with its battery capacity and charge level.",
@@ -291,8 +303,12 @@
     "description": "Charge limit set in the vehicle itself, not in evcc.",
     "other": "vehicle limit"
   },
+  "vehicleRange": {
+    "description": "Distance a vehicle can drive, in km or mi.",
+    "other": "range"
+  },
   "withdrawal": {
-    "description": "Energy drawn from grid import and battery discharge, i.e. what production could not cover.",
+    "description": "Energy taken from a costly source: grid import and battery discharge. Counterpart of production in the energy chart, which groups energy used directly from own sources. Not a financial term.",
     "other": "withdrawal"
   }
 }
