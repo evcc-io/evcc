@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -13,7 +14,6 @@ import (
 
 const refreshTimeout = 2 * time.Minute
 
-// errNotPluggedIn indicates that the cloud rejected the deep refresh since the vehicle is not plugged in
 var errNotPluggedIn = errors.New("vehicle not plugged in")
 
 type Provider struct {
@@ -53,8 +53,8 @@ func NewProvider(api *API, vin, pin string, expiry, cache time.Duration) *Provid
 func (v *Provider) deepRefresh() error {
 	res, err := v.action("ev", "DEEPREFRESH")
 
-	// rejected by the deep refresh endpoint itself, not by the pin authentication
-	if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() == http.StatusForbidden && res.Name == "FORBIDDEN" {
+	// pin authentication errors leave the response empty
+	if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() == http.StatusForbidden && strings.Contains(res.DebugMsg, "not plugged-in") {
 		return errNotPluggedIn
 	}
 
@@ -71,9 +71,10 @@ func (v *Provider) status(statusG func() (StatusResponse, error)) (StatusRespons
 	if err == nil {
 		// result expired?
 		if res.Timestamp.Add(v.expiry).Before(time.Now()) {
-			// the cloud only accepts a deep refresh if the last status upload reported the vehicle as plugged in
+			// fiat rejects deep refresh when the last upload reported the vehicle as unplugged
 			if res.EvInfo != nil && !res.EvInfo.Battery.PlugInStatus {
 				v.refreshTime = time.Time{}
+				res.unplugged = true
 				return res, nil
 			}
 
@@ -81,6 +82,7 @@ func (v *Provider) status(statusG func() (StatusResponse, error)) (StatusRespons
 			if v.refreshTime.IsZero() {
 				if err = v.deepRefresh(); err != nil {
 					if errors.Is(err, errNotPluggedIn) {
+						res.unplugged = true
 						return res, nil
 					}
 					return res, err
@@ -156,6 +158,10 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	res, err := v.statusG()
 	if err == nil {
+		if res.unplugged {
+			return status, nil
+		}
+
 		if res.EvInfo == nil {
 			return api.StatusNone, api.ErrNotAvailable
 		}
