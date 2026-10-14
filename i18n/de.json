@@ -849,7 +849,7 @@
           "status": "{automatic} steuert die Hausbatterie."
         },
         "full": {
-          "description": "Steuert die Hausbatterie, startet und stoppt das Laden der Fahrzeuge im Smart-Modus, ersetzt Preis- und CO₂-Limits und übernimmt die Ladeplanung. Unverändert: Aus- und Schnell-Modus, Heizgeräte, schaltbare Steckdosen, Fahrzeuge mit unbekannter Batteriekapazität.",
+          "description": "Steuert die Hausbatterie, startet und stoppt das Laden der Fahrzeuge im Smart-Modus, ersetzt Preis- und CO₂-Limits und übernimmt Ladepläne. Unverändert: Aus- und Schnell-Modus, Heizgeräte, schaltbare Steckdosen, Fahrzeuge mit unbekannter Batteriekapazität.",
           "label": "Hausbatterie & Ladepunkte",
           "status": "{automatic} steuert Hausbatterie und Ladepunkte."
         },
@@ -1350,8 +1350,8 @@
       "range": "Bereich"
     },
     "empty": {
-      "co2": "Erfahre, wann Netzstrom in deiner Region sauber ist. Die Ladeplanung wird auf niedrige Emissionen optimiert und CO₂-Einsparungen berechnet.",
-      "price": "Dynamischen Tarif konfigurieren, um die Ladeplanung automatisch zu optimieren und Einsparungen zu berechnen.",
+      "co2": "Erfahre, wann Netzstrom in deiner Region sauber ist. Ladepläne werden auf niedrige Emissionen optimiert und CO₂-Einsparungen berechnet.",
+      "price": "Dynamischen Tarif konfigurieren, um Ladepläne automatisch zu optimieren und Einsparungen zu berechnen.",
       "setup": "Tarife und Vorhersagen einrichten",
       "solar": "Erwartete PV-Erzeugung für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet.",
       "temperature": "Zeigt die erwartete Außentemperatur am Standort. Wird für die Vorhersage des Heizbedarfs verwendet."
@@ -1798,9 +1798,9 @@
       "scale3p": "Erhöhe gleich auf 3-phasiges Laden.",
       "suggestionStartTooltip": "Der Optimizer empfiehlt, jetzt zu laden.",
       "suggestionStopTooltip": "Der Optimizer empfiehlt, das Laden zu pausieren.",
-      "targetChargeActive": "Ladeplanung aktiv. Geschätztes Ende in {duration}.",
-      "targetChargePlanned": "Ladeplanung startet in {duration}.",
-      "targetChargeWaitForVehicle": "Ladeplanung bereit. Warte auf Fahrzeug …",
+      "targetChargeActive": "Ladeplan aktiv. Geschätztes Ende in {duration}.",
+      "targetChargePlanned": "Ladeplan startet in {duration}.",
+      "targetChargeWaitForVehicle": "Ladeplan bereit. Warte auf Fahrzeug …",
       "vehicleLimit": "Fahrzeuglimit",
       "vehicleLimitReached": "Fahrzeuglimit erreicht.",
       "waitForAuthorization": "Verbunden. Warte auf Autorisierung …",
