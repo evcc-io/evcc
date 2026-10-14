@@ -1986,9 +1986,9 @@
     "loadpoints": {
       "disabledDevice": "uitgeschakeld",
       "help": "Wijzig de volgorde en zichtbaarheid in de gebruikersinterface.",
-      "hide": "{title} verbergen",
+      "hide": "verberg {title}",
       "label": "Laadpunten",
-      "show": "{title} tonen"
+      "show": "toon {title}"
     },
     "sponsorToken": {
       "expires": "Je sponsortoken vervalt {inXDays}.",
@@ -2038,8 +2038,8 @@
     "saved": "Opgeslagen."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Aktieve tijd",
-    "batteryDescription": "Ontlaad de thuis accu naar het net wanneer de teruglever verhouding hoog is.",
+    "activeHoursLabel": "Actieve tijd",
+    "batteryDescription": "Ontlaadt de thuis accu naar het net wanneer de teruglever verhouding hoog is.",
     "description": "Pauzeert het opladen als terugleveren aan het net veel oplevert.",
     "priceLabel": "Teruglevertarief",
     "priceLimit": "Terugleverprijs limiet",
