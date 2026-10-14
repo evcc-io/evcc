@@ -50,7 +50,7 @@ test.describe("general", async () => {
     await modal.getByLabel("Title").fill("Ahoy World");
     await modal.getByLabel("Country").selectOption("Germany");
     await modal.getByRole("button", { name: "Show advanced settings" }).click();
-    await modal.getByLabel("Grid connection").selectOption("3 × 230 V without neutral (3P3W)");
+    await modal.getByLabel("Grid connection").selectOption("3 × 230 V without neutral");
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
     await expect(page.getByTestId("generalconfig-site")).toContainText("Ahoy World");

@@ -968,12 +968,12 @@
       },
       "gridConnection": {
         "description": {
-          "3p4w": "Three-phase with neutral conductor (N). {lineVoltage} V between two lines, {voltage} V between line and neutral. Standard in most countries, also known as \"3N 400 V\" (Belgium) or \"400 V TN grid\" (Norway).",
-          "3p3w": "Three-phase without neutral conductor. {voltage} V between two lines, single-phase devices connect across two lines. Also known as \"3 × 230 V\" or delta grid (Belgium) or \"230 V IT grid\" (Norway). If unsure, ask your electrician or grid operator."
+          "3p4w": "Most common grid with neutral conductor.",
+          "3p3w": "Grid without neutral conductor. Common in Norway and parts of Belgium."
         },
         "label": "Grid connection",
-        "3p4w": "3 × {voltage}/{lineVoltage} V with neutral (3P4W)",
-        "3p3w": "3 × {voltage} V without neutral (3P3W)"
+        "3p4w": "{voltage}/{lineVoltage} V with neutral",
+        "3p3w": "3 × {voltage} V without neutral"
       },
       "currency": {
         "description": "Used to format energy prices, costs and savings based on your tariff.",
