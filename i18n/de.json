@@ -860,10 +860,10 @@
       },
       "controlled": "Durch automatische Steuerung deaktiviert. Der {optimizer} entscheidet stattdessen.",
       "controls": "Steuert",
-      "linkWord": "Optimizer",
       "description": "Nutzt Solarprognose, Strompreise und deinen typischen Verbrauch, um Batterie und Laden zu planen. Daten werden an den evcc Optimierungsdienst übertragen.",
       "enable": "Optimizer aktivieren",
       "info": "Bei neuen Installationen kann es bis zu 24 Stunden dauern, bis evcc genügend Daten gesammelt hat.",
+      "linkWord": "Optimizer",
       "title": "Optimizer"
     },
     "options": {
@@ -1070,7 +1070,7 @@
         "temperature": "Temperatur-Vorhersage hinzufügen"
       },
       "planner": {
-        "description": "Erweiterte Einstellung. Normalerweise nicht nötig, da dynamische Stromtarife oder CO₂-Vorhersagen automatisch verwendet werden. Ermöglicht eine zusätzliche Datenquelle, die nur für die Ladeplanung verwendet wird und nicht für Statistiken und Preisberechnungen.",
+        "description": "Diese erweiterte Einstellung ist in der Regel nicht erforderlich. Die Prognose des Planers dient als Grundlage für Ladepläne und das Laden von Fahrzeugen, Heizgeräten und Heimspeichern über das Stromnetz (günstig oder sauber). Ohne diese Einstellung wird automatisch der dynamische Netzpreis oder die CO₂-Prognose verwendet. Statistiken, Kostenberechnungen und Optimierungsentscheidungen bleiben davon unberührt.",
         "titleAdd": "Planer-Vorhersage hinzufügen",
         "titleEdit": "Planer-Vorhersage bearbeiten"
       },
