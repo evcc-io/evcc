@@ -1,6 +1,8 @@
 package util
 
 import (
+	"errors"
+	"fmt"
 	"reflect"
 
 	"github.com/go-playground/validator/v10"
@@ -9,9 +11,16 @@ import (
 
 var validate = validator.New()
 
-// Validate validates a single value against a validator tag, e.g. "gte=0"
+// Validate validates a single value against a validator tag, e.g. "gte=0".
+// The validator's message names no field for a plain value, so report value and rule instead.
 func Validate(v any, tag string) error {
-	return validate.Var(v, tag)
+	var errs validator.ValidationErrors
+	if err := validate.Var(v, tag); errors.As(err, &errs) && len(errs) > 0 {
+		return fmt.Errorf("%v violates %s=%s", v, errs[0].Tag(), errs[0].Param())
+	} else if err != nil {
+		return err
+	}
+	return nil
 }
 
 // DecodeOther uses mapstructure to decode into target structure. Unused keys cause errors.

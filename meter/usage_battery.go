@@ -43,18 +43,16 @@ func (m *batteryCapacityCtx) Decorator(ctx context.Context) (func() float64, err
 // nil/zero static returns a nil getter (not configured). A static number is
 // validated against tag (validator syntax), a plugin value is not.
 func resolveFloat(ctx context.Context, v any, tag string) (func() float64, error) {
+	var f float64
 	switch v := v.(type) {
 	case nil:
 		return nil, nil
 	case int:
-		return resolveFloat(ctx, float64(v), tag)
+		f = float64(v)
 	case int64:
-		return resolveFloat(ctx, float64(v), tag)
+		f = float64(v)
 	case float64:
-		if err := util.Validate(v, tag); err != nil {
-			return nil, err
-		}
-		return staticFloat(v), nil
+		f = v
 	default:
 		var cfg plugin.Config
 		if err := util.DecodeOther(v, &cfg); err != nil {
@@ -72,6 +70,11 @@ func resolveFloat(ctx context.Context, v any, tag string) (func() float64, error
 			return f
 		}, nil
 	}
+
+	if err := util.Validate(f, tag); err != nil {
+		return nil, err
+	}
+	return staticFloat(f), nil
 }
 
 func staticFloat(f float64) func() float64 {

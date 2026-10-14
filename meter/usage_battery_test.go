@@ -65,7 +65,7 @@ func TestBatteryLimitsValidation(t *testing.T) {
 		var cc batteryPowerLimitsCtx
 		require.NoError(t, util.DecodeOther(map[string]any{"maxchargepower": 2200, "maxdischargepower": -1700}, &cc))
 		_, err := cc.Decorator(ctx)
-		require.ErrorContains(t, err, "maxDischargePower")
+		require.EqualError(t, err, "maxDischargePower: -1700 violates gte=0")
 	}
 	{
 		var cc batterySocLimitsCtx
