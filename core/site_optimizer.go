@@ -131,7 +131,7 @@ type batteryResult struct {
 	Empty time.Time `json:"empty,omitzero"`
 }
 
-// suggestionThreshold ignores numerical noise around zero power (W)
+// suggestionThreshold ignores numerical noise in power comparisons (W)
 const suggestionThreshold = 50
 
 // advisory actions for a loadpoint/vehicle slot; battery actions use api.BatteryMode
@@ -172,27 +172,42 @@ func suggestionEvent(detail batteryDetail, s types.Suggestion) messenger.Event {
 // Because the optimization is linear, the slot is at an operating-range extreme, so it
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
-// (hold), exporting means charging is withheld (holdcharge).
-func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, slot int, gridImporting, gridExporting bool, slotHours float64) types.Suggestion {
+// (hold), exporting means charging is withheld (holdcharge). At its soc bound nothing is
+// withheld, the bound does it, so the battery stays in normal mode.
+func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
 	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
 		return types.Suggestion{}
 	}
 
 	charge := float64(res.ChargingPower[slot]) / slotHours
 	discharge := float64(res.DischargingPower[slot]) / slotHours
+	gridImporting := float64(gridImport)/slotHours > suggestionThreshold
+	gridExporting := float64(gridExport)/slotHours > suggestionThreshold
 
-	s := types.Suggestion{Charge: charge, Discharge: discharge}
+	s := types.Suggestion{
+		Charge:    charge,
+		Discharge: discharge,
+		Grid:      float64(gridImport-gridExport) / slotHours,
+	}
 
 	if detail.Type == batteryTypeBattery {
 		idle := charge <= suggestionThreshold && discharge <= suggestionThreshold
+
+		var empty, full bool
+		if slot < len(res.StateOfCharge) {
+			soc := res.StateOfCharge[slot]
+			empty = soc <= req.SMin
+			full = req.SMax > 0 && soc >= req.SMax
+		}
+
 		switch {
 		case charge > suggestionThreshold && gridImporting:
 			// charging while importing means grid charging
 			s.Action = api.BatteryCharge.String()
-		case idle && gridImporting:
+		case idle && gridImporting && !empty:
 			// idle while importing: discharge is deliberately withheld
 			s.Action = api.BatteryHold.String()
-		case idle && gridExporting:
+		case idle && gridExporting && !full:
 			// idle while exporting: surplus is exported instead of charged
 			s.Action = api.BatteryHoldCharge.String()
 		case discharge > suggestionThreshold && gridExporting:
@@ -223,6 +238,41 @@ func loadpointCurrentAction(lp *Loadpoint) string {
 		return actionCharge
 	}
 	return actionStop
+}
+
+// suggestionMaxAge releases a loadpoint gated by a solve the site stopped
+// refreshing; the site itself expires its cached solve in reapplySuggestions
+const suggestionMaxAge = 2 * tariff.SlotDuration
+
+// optimizerPlan is a loadpoint's charging schedule from the last solve
+type optimizerPlan struct {
+	rates  api.Rates // charging slots valued at the grid import price
+	energy []float64 // charge energy per slot, Wh
+}
+
+// loadpointPlan extracts the remaining charging slots of a battery result
+func loadpointPlan(res optimizer.BatteryResult, prices []float32, schedule optimizerSchedule, now time.Time) optimizerPlan {
+	var plan optimizerPlan
+
+	for slot := range schedule.endsAfter(now) {
+		if slot >= len(res.ChargingPower) || slot >= len(prices) {
+			break
+		}
+
+		energy := float64(res.ChargingPower[slot])
+		if energy/schedule.duration(slot).Hours() <= suggestionThreshold {
+			continue
+		}
+
+		plan.energy = append(plan.energy, energy)
+		plan.rates = append(plan.rates, api.Rate{
+			Start: schedule.timestamps[slot],
+			End:   schedule.end(slot),
+			Value: float64(prices[slot]) * 1e3, // per Wh to per kWh
+		})
+	}
+
+	return plan
 }
 
 // setSuggestions replaces the suggestions applied on each publish
@@ -258,18 +308,23 @@ func (site *Site) suggestion(key, currentAction string) *types.Suggestion {
 	return &s
 }
 
-// publishSuggestions publishes the loadpoints' suggestions
+// publishSuggestions publishes the loadpoints' suggestions and hands them to the
+// loadpoints, where they act as start/stop gate while the optimizer is in control
 func (site *Site) publishSuggestions() {
 	for id, lp := range site.loadpoints {
 		if lp == nil {
 			continue
 		}
 
+		s := site.suggestion(loadpointKey(id), loadpointCurrentAction(lp))
+
 		var val any
-		if s := site.suggestion(loadpointKey(id), loadpointCurrentAction(lp)); s != nil {
+		if s != nil {
 			val = *s
 		}
 		site.publishLoadpoint(id, keys.Suggestion, val)
+
+		lp.setSuggestion(s)
 	}
 }
 
@@ -377,12 +432,17 @@ const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 // startup); the slot gate is left open so the next cycle retries.
 var errOptimizerNotReady = errors.New("battery measurements not ready")
 
+// optimizerInterval is the refresh cadence in automatic mode. It divides the
+// slot duration so every slot starts on a fresh result. Advisory suggestions
+// only need one run per slot.
+const optimizerInterval = 5 * time.Minute
+
 // optimizerUpdateAsync runs the optimizer unless the last run is younger than
-// minAge. Pass 0 to force a run, e.g. when a changed setting should take effect
-// without waiting for the next slot. It is a no-op when the optimizer is not
+// the mode's interval. Pass force to run regardless, e.g. when a changed setting
+// should take effect immediately. It is a no-op when the optimizer is not
 // active or a run is already in progress; the running update reflects the
-// change on its next slot.
-func (site *Site) optimizerUpdateAsync(minAge time.Duration) {
+// change on its next run.
+func (site *Site) optimizerUpdateAsync(force bool) {
 	if !sponsor.IsAuthorized() || !optimizerEnabled() {
 		return
 	}
@@ -392,10 +452,15 @@ func (site *Site) optimizerUpdateAsync(minAge time.Duration) {
 	}
 	defer site.optimizerMu.Unlock()
 
-	if minAge == 0 {
+	interval := tariff.SlotDuration
+	if site.Automatic() {
+		interval = optimizerInterval
+	}
+
+	if force {
 		// keep the gate open so a not-ready run is retried on the next cycle
 		site.optimizerUpdated = time.Time{}
-	} else if time.Since(site.optimizerUpdated) < minAge {
+	} else if time.Since(site.optimizerUpdated) < interval {
 		return
 	}
 
@@ -413,11 +478,10 @@ func (site *Site) optimizerUpdateAsync(minAge time.Duration) {
 
 		site.optimizerUpdated = time.Now()
 
+		// a failed run keeps the advice: dropping it would release the controlled
+		// devices for one cycle. reapplySuggestions expires the cached solve.
 		if err != nil {
 			site.log.ERROR.Println("optimizer:", err)
-
-			// stale advice must not linger
-			site.clearSuggestions()
 		}
 	}()
 
@@ -443,7 +507,8 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		minLen = min(minLen, len(solar))
 	}
 
-	if optimizerURI() == OPTIMIZER_URI {
+	hosted := optimizerURI() == OPTIMIZER_URI
+	if hosted {
 		minLen = slotsUntil(grid, optimizerHorizon(time.Now()), minLen)
 	}
 
@@ -605,6 +670,10 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		details.DemandDetails = nil
 	}
 
+	if hosted {
+		coarsenHorizon(&req, &details)
+	}
+
 	return req, details, nil
 }
 
@@ -739,8 +808,23 @@ func (site *Site) reapplySuggestions(now time.Time) {
 func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details requestDetails, res optimizer.OptimizationResult, schedule optimizerSchedule, now time.Time, completed time.Time) {
 	slot := schedule.activeSlot(now)
 	slotHours := schedule.duration(slot).Hours()
-	gridImporting := slot >= 0 && slot < len(res.GridImport) && res.GridImport[slot] > 0
-	gridExporting := slot >= 0 && slot < len(res.GridExport) && res.GridExport[slot] > 0
+	var gridImport, gridExport float32
+	if slot >= 0 && slot < len(res.GridImport) {
+		gridImport = res.GridImport[slot]
+	}
+	if slot >= 0 && slot < len(res.GridExport) {
+		gridExport = res.GridExport[slot]
+	}
+
+	// home battery discharge planned for the slot, a loadpoint charge it covers is no surplus
+	var batteryDischarge float64
+	if slot >= 0 && slotHours > 0 {
+		for i, detail := range details.BatteryDetails {
+			if detail.Type == batteryTypeBattery && slot < len(res.Batteries[i].DischargingPower) {
+				batteryDischarge += float64(res.Batteries[i].DischargingPower[slot]) / slotHours
+			}
+		}
+	}
 
 	var batteries []batteryResult
 	suggestions := make(map[string]types.Suggestion, len(req.Batteries))
@@ -759,14 +843,28 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 			}),
 		})
 
-		suggestion := currentSlotSuggestion(detail, batRes, slot, gridImporting, gridExporting, slotHours)
+		suggestion := currentSlotSuggestion(detail, batReq, batRes, slot, gridImport, gridExport, slotHours)
 		if suggestion.Action == "" {
 			continue
+		}
+
+		if detail.loadpoint != nil {
+			suggestion.Battery = batteryDischarge
 		}
 
 		// uncontrollable devices can't act on a suggestion
 		if key := detail.key(); key != "" && detail.controllable {
 			suggestions[key] = suggestion
+
+			// the schedule is gated by the suggestion, so it needs no clearing.
+			// Without the plan goal in the model its slots are no plan.
+			if detail.loadpoint != nil {
+				var plan optimizerPlan
+				if batReq.SGoal != nil {
+					plan = loadpointPlan(batRes, req.TimeSeries.PN, schedule, now)
+				}
+				site.loadpoints[*detail.loadpoint].setOptimizerPlan(plan)
+			}
 		}
 	}
 
@@ -1276,6 +1374,74 @@ func asTimestamps(dt []int, now time.Time) []time.Time {
 	return res
 }
 
+// coarseSlotsAfter is where the request switches from quarter hour to clock hour slots: the long
+// horizons are the requests that take the hosted optimizer's slow split path and set its p99.
+const coarseSlotsAfter = 48 * time.Hour
+
+// coarsenHorizon merges the quarter hour slots beyond coarseSlotsAfter into clock hours. Quarter
+// slots bridge to the first full hour, and a plan goal ends its slot so the departure keeps its
+// time. Energies are summed, prices averaged by duration.
+func coarsenHorizon(req *optimizer.OptimizationInput, details *requestDetails) {
+	dt, ts := req.TimeSeries.Dt, details.Timestamps
+
+	goalEnds := func(i int) bool {
+		return slices.ContainsFunc(req.Batteries, func(b optimizer.BatteryConfig) bool {
+			return i < len(b.SGoal) && b.SGoal[i] != 0
+		})
+	}
+
+	// first slot index of every output slot; hourly latches at the first full hour past the boundary
+	starts := make([]int, 0, len(dt))
+	coarse := ts[0].Add(coarseSlotsAfter)
+	var hourly bool
+	for i := range dt {
+		if hourly && ts[i].Minute() != 0 && !goalEnds(i-1) {
+			continue
+		}
+		starts = append(starts, i)
+		hourly = hourly || (!ts[i].Before(coarse) && ts[i].Minute() == 0)
+	}
+	if len(starts) == len(dt) {
+		return
+	}
+	ends := append(slices.Clone(starts[1:]), len(dt))
+
+	coarseDt := lo.Map(starts, func(s, g int) int { return lo.Sum(dt[s:ends[g]]) })
+	sum := func(v []float32) []float32 {
+		if v == nil {
+			return nil
+		}
+		return lo.Map(starts, func(s, g int) float32 { return lo.Sum(v[s:ends[g]]) })
+	}
+	mean := func(v []float32) []float32 {
+		return lo.Map(starts, func(s, g int) float32 {
+			var weighted float32
+			for i := s; i < ends[g]; i++ {
+				weighted += v[i] * float32(dt[i])
+			}
+			return weighted / float32(coarseDt[g])
+		})
+	}
+
+	req.TimeSeries.Dt = coarseDt
+	req.TimeSeries.Gt = sum(req.TimeSeries.Gt)
+	req.TimeSeries.Ft = sum(req.TimeSeries.Ft)
+	req.TimeSeries.PN = mean(req.TimeSeries.PN)
+	req.TimeSeries.PE = mean(req.TimeSeries.PE)
+	for i := range req.Batteries {
+		b := &req.Batteries[i]
+		b.PDemand = sum(b.PDemand)
+		if b.SGoal != nil {
+			// a goal ends its group, so it sits in the group's last slot
+			b.SGoal = lo.Map(starts, func(s, g int) float32 { return b.SGoal[ends[g]-1] })
+		}
+	}
+	for i := range details.DemandDetails {
+		details.DemandDetails[i].Values = sum(details.DemandDetails[i].Values)
+	}
+	details.Timestamps = lo.Map(starts, func(s, _ int) time.Time { return ts[s] })
+}
+
 func scaleAndPrune(rates api.Rates, scale float64, maxLen int) []float32 {
 	res := make([]float32, 0, maxLen)
 
@@ -1299,7 +1465,8 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	if vehicle := lp.GetVehicle(); socBased && vehicle != nil {
 		goal *= vehicle.Capacity() * 10
 	} else {
-		goal *= 1000 // Wh
+		// energy plans count from the energy charged since the plan was set, on top of the current state
+		goal = float64(bat.SInitial) + lp.GetPlanRemainingEnergy()*1e3 // Wh
 	}
 
 	ts := lp.EffectivePlanTime()

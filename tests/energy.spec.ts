@@ -138,6 +138,22 @@ test.describe("page", () => {
     await expect(page.getByTestId("energy-stat-co2")).toContainText("1 kg");
   });
 
+  // the overview grid must cover every series, not only the slots of the
+  // first grid/pv series. Solar sorts first and has no rows at night and on
+  // days 16 and 18, where grid import and battery discharge happen
+  test("overview covers slots of every series", async ({ page }) => {
+    const legend = (label: string) =>
+      page.getByTestId("energy-flow").getByRole("listitem").filter({ hasText: label });
+
+    await page.goto("/#/energy?year=2026&month=9&day=15");
+    await expect(legend("Grid import")).toContainText("2.0 kWh");
+    await expect(legend("Battery discharge")).toContainText("1.0 kWh");
+
+    await page.goto("/#/energy?period=month&year=2026&month=9");
+    await expect(legend("Grid import")).toContainText("3.0 kWh");
+    await expect(legend("Battery discharge")).toContainText("2.0 kWh");
+  });
+
   // plot area spans the chart width minus the 36px axes, 96 slots a day
   const slotX = (width: number, slot: number, left = 0) =>
     left + ((width - left - 36) * (slot + 0.5)) / 96;
@@ -257,7 +273,7 @@ test.describe("page", () => {
       const total = modal.getByRole("row", { name: "Total" });
       await expect(total).toContainText("3.0 kWh");
       await expect(total).toContainText("0.70 €");
-      await expect(modal.getByText("valued at feed-in price")).toBeVisible();
+      await expect(modal.getByText("valued at grid export price")).toBeVisible();
     });
 
     test("no price data", async ({ page }) => {
@@ -277,7 +293,7 @@ test.describe("page", () => {
       await expect(modal.getByRole("row", { name: "Battery" })).toHaveCount(0);
       await expect(modal.getByRole("row", { name: "Grid" })).toHaveCount(0);
       await expect(modal.getByRole("columnheader", { name: "Cost" })).toHaveCount(0);
-      await expect(modal.getByText("valued at feed-in price")).toHaveCount(0);
+      await expect(modal.getByText("valued at grid export price")).toHaveCount(0);
     });
 
     test("battery leads without solar", async ({ page }) => {

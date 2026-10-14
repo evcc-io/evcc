@@ -140,6 +140,12 @@ func TestSunspecFloatGetterNaN(t *testing.T) {
 	require.NoError(t, block.Write(model704.WMaxLimPct))
 	_, err = mb.floatGetter()
 	require.ErrorIs(t, err, api.ErrNotAvailable)
+
+	// nan option reports the sentinel as 0, as the modbus *nan encodings do
+	mb.nan = true
+	res, err = mb.floatGetter()
+	require.NoError(t, err)
+	require.Equal(t, 0.0, res)
 }
 
 // TestSunspecConcurrentSharedDevice reads different points of one shared device
