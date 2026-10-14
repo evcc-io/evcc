@@ -54,7 +54,12 @@ var _ api.Tariff = (*FrankEnergie)(nil)
 
 func init() {
 	registry.Add("frank-energie", NewFrankEnergieFromConfig)
-	amsterdamLocation, _ = time.LoadLocation("Europe/Amsterdam")
+
+	// fall back to local time if the system has no timezone database
+	var err error
+	if amsterdamLocation, err = time.LoadLocation("Europe/Amsterdam"); err != nil {
+		amsterdamLocation = time.Local
+	}
 }
 
 func NewFrankEnergieFromConfig(other map[string]any) (api.Tariff, error) {
@@ -111,14 +116,23 @@ func (t *FrankEnergie) run(done chan error) {
 			continue
 		}
 
+		res := t.rates(prices)
+
 		// day-ahead prices for tomorrow are published around 13:00
-		if next, err := t.prices(client, today.AddDate(0, 0, 1)); err == nil {
-			prices = append(prices, next...)
+		next, err := t.prices(client, today.AddDate(0, 0, 1))
+		if err == nil {
+			res = append(res, t.rates(next)...)
 		} else {
 			t.log.TRACE.Println("tomorrow:", err)
 		}
 
-		mergeRates(t.data, t.rates(prices))
+		t.data.SetFunc(func(old api.Rates) api.Rates {
+			// keep previously fetched slots for tomorrow if the update failed
+			if err != nil {
+				res = append(res, ratesAfter(old, res[len(res)-1].End)...)
+			}
+			return mergeAfter(old, res, time.Now().Truncate(SlotDuration))
+		})
 		once.Do(func() { close(done) })
 	}
 }
@@ -143,10 +157,25 @@ func (t *FrankEnergie) prices(client *request.Helper, day time.Time) ([]frankEne
 	}
 
 	if len(res.Errors) > 0 {
-		return nil, backoff.Permanent(errors.New(res.Errors[0].Message))
+		return nil, errors.New(res.Errors[0].Message)
+	}
+
+	if len(res.Data.MarketPrices.ElectricityPrices) == 0 {
+		return nil, errors.New("no prices")
 	}
 
 	return res.Data.MarketPrices.ElectricityPrices, nil
+}
+
+// ratesAfter returns the rates starting at or after ts
+func ratesAfter(rates api.Rates, ts time.Time) api.Rates {
+	var res api.Rates
+	for _, r := range rates {
+		if !r.Start.Before(ts) {
+			res = append(res, r)
+		}
+	}
+	return res
 }
 
 func (t *FrankEnergie) rates(prices []frankEnergiePrice) api.Rates {
