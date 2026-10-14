@@ -588,7 +588,7 @@
 									v-model="values.ui.demandPredictor"
 									class="form-select"
 								>
-									<option value="">
+									<option value="daily">
 										{{ $t("config.loadpoint.demandPredictorOptions.daily") }}
 									</option>
 									<option value="weekday">
@@ -602,6 +602,15 @@
 										}}
 									</option>
 								</select>
+								<div
+									v-if="
+										values.ui.demandPredictor === 'temperature' &&
+										!tariffTemperatureAvailable
+									"
+									class="text-warning mt-1"
+								>
+									<small>{{ $t("config.loadpoint.noTempTariff") }}</small>
+								</div>
 							</FormRow>
 						</div>
 					</div>
@@ -683,6 +692,7 @@ import {
 	type ConfigCircuit,
 	type ConfigLoadpoint,
 } from "@/types/evcc";
+import store from "@/store";
 
 const nsPerMin = 60 * 1e9;
 
@@ -707,7 +717,7 @@ const defaultValues = {
 	ui: {
 		minTemp: 0,
 		maxTemp: 100,
-		demandPredictor: "",
+		demandPredictor: "daily",
 	},
 	vehicle: "",
 	charger: "",
@@ -762,6 +772,9 @@ export default {
 	computed: {
 		id(): number | undefined {
 			return getModal("loadpoint")?.id;
+		},
+		tariffTemperatureAvailable(): boolean {
+			return store.state?.tariffTemperature !== undefined;
 		},
 		thresholdsSet(): boolean {
 			const { enable, disable } = this.values.thresholds;
@@ -972,6 +985,9 @@ export default {
 			try {
 				const res = await api.get(`config/loadpoints/${this.id}`);
 				this.values = deepClone(res.data);
+				if (!this.values.ui?.demandPredictor) {
+					this.values.ui = { ...this.values.ui, demandPredictor: "daily" };
+				}
 				this.updateSolarMode();
 				this.updatePhases();
 				this.rebaseline();

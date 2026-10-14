@@ -541,6 +541,7 @@
         "temperature": "Temperatur",
         "weekday": "Wochentag"
       },
+      "noTempTariff": "Erfordert eine konfigurierte Temperaturvorhersage.",
       "estimateLabel": "Ladestand zwischen API-Updates interpolieren",
       "maxCurrentHelp": "Muss größer als der Mindeststrom sein.",
       "maxCurrentLabel": "Maximaler Strom",

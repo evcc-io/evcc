@@ -541,6 +541,7 @@
         "temperature": "Temperature",
         "weekday": "Weekday"
       },
+      "noTempTariff": "Requires a temperature forecast to be configured.",
       "estimateLabel": "Interpolate charge level between API updates",
       "maxCurrentHelp": "Must be greater than minimum current.",
       "maxCurrentLabel": "Maximum current",
