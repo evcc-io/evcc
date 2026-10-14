@@ -559,6 +559,8 @@ export interface LoadpointUi {
   minTemp: number;
   /** Upper bound of the temperature scale for heating devices, in degrees. */
   maxTemp: number;
+  /** Demand predictor strategy for heating loadpoints. */
+  demandPredictor?: string;
 }
 
 /** Type of the smart charging limit. */

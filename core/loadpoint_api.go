@@ -571,10 +571,21 @@ func (lp *Loadpoint) SetSocConfig(soc loadpoint.SocConfig) {
 func (lp *Loadpoint) GetUI() loadpoint.UIConfig {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.Ui
+	ui := lp.Ui
+	ui.DemandPredictor = lp.demandPredictor
+	return ui
 }
 
 func (lp *Loadpoint) setUI(ui loadpoint.UIConfig) {
+	// DemandPredictor in UIConfig is a configuration bridge; store it in the
+	// dedicated runtime field and clear it from the UI struct so lp.Ui stays
+	// display-only and GetUI always reflects the live runtime value.
+	if ui.DemandPredictor != "" {
+		lp.demandPredictor = ui.DemandPredictor
+		lp.publish(keys.DemandPredictor, ui.DemandPredictor)
+		lp.settings.SetString(keys.DemandPredictor, ui.DemandPredictor)
+	}
+	ui.DemandPredictor = ""
 	lp.Ui = ui
 	lp.publish(keys.UI, ui)
 	lp.settings.SetJson(keys.UI, ui)

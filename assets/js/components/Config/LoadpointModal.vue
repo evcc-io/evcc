@@ -573,6 +573,36 @@
 									/>
 								</FormRow>
 							</div>
+							<FormRow
+								id="loadpointDemandPredictor"
+								:label="$t('config.loadpoint.demandPredictorLabel')"
+								:help="
+									$t(
+										`config.loadpoint.demandPredictor.${values.ui.demandPredictor || 'daily'}`
+									)
+								"
+								class="mt-3"
+							>
+								<select
+									id="loadpointDemandPredictor"
+									v-model="values.ui.demandPredictor"
+									class="form-select"
+								>
+									<option value="">
+										{{ $t("config.loadpoint.demandPredictorOptions.daily") }}
+									</option>
+									<option value="weekday">
+										{{ $t("config.loadpoint.demandPredictorOptions.weekday") }}
+									</option>
+									<option value="temperature">
+										{{
+											$t(
+												"config.loadpoint.demandPredictorOptions.temperature"
+											)
+										}}
+									</option>
+								</select>
+							</FormRow>
 						</div>
 					</div>
 				</div>
@@ -677,6 +707,7 @@ const defaultValues = {
 	ui: {
 		minTemp: 0,
 		maxTemp: 100,
+		demandPredictor: "",
 	},
 	vehicle: "",
 	charger: "",

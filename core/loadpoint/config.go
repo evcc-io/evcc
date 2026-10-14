@@ -47,8 +47,9 @@ type DynamicConfig struct {
 
 // UIConfig holds display-only settings. Not used in control logic.
 type UIConfig struct {
-	MinTemp float64 `json:"minTemp"`
-	MaxTemp float64 `json:"maxTemp"`
+	MinTemp         float64 `json:"minTemp"`
+	MaxTemp         float64 `json:"maxTemp"`
+	DemandPredictor string  `json:"demandPredictor,omitempty"`
 }
 
 func SplitConfig(payload map[string]any) (DynamicConfig, map[string]any, error) {

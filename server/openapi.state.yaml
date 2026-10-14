@@ -1234,6 +1234,9 @@ components:
         maxTemp:
           description: Upper bound of the temperature scale for heating devices, in degrees.
           type: number
+        demandPredictor:
+          description: Demand predictor strategy for heating loadpoints.
+          type: string
       required:
         - minTemp
         - maxTemp
