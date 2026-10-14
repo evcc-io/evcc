@@ -44,8 +44,8 @@ params:
     example: "sensor.house_energy"
     advanced: true
     help:
-      en: Entity ID for total energy in kWh (e.g. grid import or battery charging). No daily or interval values.
-      de: Entitäts-ID für Gesamtenergie in kWh (z.B. Netzbezug oder Batterieladung). Keine täglichen oder Intervallwerte.
+      en: Entity ID for total energy in kWh (e.g. grid import or battery discharging). No daily or interval values.
+      de: Entitäts-ID für Gesamtenergie in kWh (z.B. Netzbezug oder Batterieentladung). Keine täglichen oder Intervallwerte.
   - name: returnEnergy
     description:
       de: Energieentität (Gegenrichtung)
@@ -54,8 +54,8 @@ params:
     example: "sensor.house_return_energy"
     advanced: true
     help:
-      en: Entity ID for total energy in reverse direction in kWh (e.g. grid export or battery discharging). No daily or interval values.
-      de: Entitäts-ID für Gesamtenergie in Gegenrichtung in kWh (z.B. Netzeinspeisung oder Batterieentladung). Keine täglichen oder Intervallwerte.
+      en: Entity ID for total energy in reverse direction in kWh (e.g. grid export or battery charging). No daily or interval values.
+      de: Entitäts-ID für Gesamtenergie in Gegenrichtung in kWh (z.B. Netzeinspeisung oder Batterieladung). Keine täglichen oder Intervallwerte.
   - name: currentL1
     description:
       de: L1 Stromentität

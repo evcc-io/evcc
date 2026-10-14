@@ -15,6 +15,7 @@ func init() {
 	mux.HandleFunc("GET /modbus", getModbus)
 	mux.HandleFunc("GET /insecure", getInsecure)
 	mux.HandleFunc("GET /options", getOptions)
+	mux.HandleFunc("GET /echo", getEcho)
 
 	service.Register("demo", mux)
 }
@@ -53,6 +54,10 @@ func getOptions(w http.ResponseWriter, req *http.Request) {
 
 func getInsecure(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode([]string{"insecure=" + req.URL.Query().Get("insecure")})
+}
+
+func getEcho(w http.ResponseWriter, req *http.Request) {
+	json.NewEncoder(w).Encode([]string{req.URL.RawQuery})
 }
 
 func getModbus(w http.ResponseWriter, req *http.Request) {

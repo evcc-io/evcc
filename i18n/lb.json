@@ -62,6 +62,7 @@
         "noCountry": "Kee Land konfiguréiert. Lee et ënner {link} fest.",
         "title": "Netzaspeisung aus der Batterie"
       },
+      "optimizerControlledHint": "Deaktivéiert fir {loadpoints}. Den {optimizer} decidéiert amplaz.",
       "priority": "D'Batterie huet Prioritéit, soulaang de SOC ënner {soc} ass. Dann kréien d'Opluedpunkten de Rescht.",
       "priorityNone": "Den Iwwerschoss vun der Solaranlag geet direkt op d'Opluedpunkten. Setzt e Wäert iwwer {soc} fir d'Batterie ze prioriséieren.",
       "priorityTitle": "Wou geet den Iwwerschoss fir d'éischt hin?"
@@ -846,9 +847,29 @@
       "usernameHelp": "Fir d'HTTP-Basic-Authentifikatioun um Upstream-Server."
     },
     "optimizer": {
-      "description": "Analyséiert d'Solarprognos, d'Stroumpräisser an Är Verbrauchssmuster, fir d'Batterie- a Luedstrategie ze optiméieren. D'Donnéeë ginn un den evcc-Optimiséierungsservice fir d'Berechnen geschéckt. Momentan berechent a visualiséiert et nëmmen. Et steiert nach keng Apparater.",
+      "automatic": "Automatesch Kontroll",
+      "automaticLevel": {
+        "battery": {
+          "description": "Steiert nëmmen d'Hausbatterie.",
+          "label": "Hausbatterie",
+          "status": "{automatic} kontrolléiert d'Hausbatterie."
+        },
+        "full": {
+          "description": "Steiert d'Hausbatterie, start an stoppt d'Opluedung vum Gefier am Smart-Modus, ersetzt Präis- a CO₂-Limiten an iwwerhëlt Pläng. Onverännert: Aus- a Schnellmodus, Heizgeräter, Steckdousen, Gefierer mat onbekannter Kapazitéit.",
+          "label": "Hausbatterie & Opluedpunkten",
+          "status": "{automatic} kontrolléiert d'Hausbatterie an d'Opluedpunkten."
+        },
+        "off": {
+          "description": "Den Optiméierer proposéiert nëmme Virschléi. Et gëtt näischt kontrolléiert.",
+          "status": "{automatic} ass ausgeschalt. Den Optiméierer proposéiert nëmme Virschléi."
+        }
+      },
+      "controlled": "Duerch déi automatesch Kontroll deaktivéiert. Den {optimizer} decidéiert amplaz.",
+      "controls": "Steiert",
+      "description": "Verwennt d'Solarprognosen, d'Stroumpräisser an Är Verbrauchsmuster fir d'Batterie an d'Opluedung ze plangen. D'Donnéeë ginn un den evcc Optimiséierungsservice geschéckt.",
       "enable": "Optimizer aktivéieren",
       "info": "Bei neien Installatiounen kann et bis zu 24 Stonnen daueren, bis evcc genuch Donnéeë gesammelt huet.",
+      "linkWord": "Optiméierer",
       "title": "Optimizer"
     },
     "options": {
@@ -1055,7 +1076,7 @@
         "temperature": "Eng Temperaturprognos derbäi fügen"
       },
       "planner": {
-        "description": "Erweidert Astellung. Normalerweis net néideg, well déi dynamesch Stroumtariffer oder CO₂-Previsiounen automatesch benotzt ginn. Erlaabt eng zousätzlech Datequell, déi nëmmen fir d'Opluedplangung benotzt gëtt, net fir Statistiken a Präisberechnungen.",
+        "description": "Dës fortgeschratt Astellung ass normalerweis net néideg. D'Plannerprognose déngt als Basis fir Opluedepläng mat bëlleger oder propperem Opluede vum Netz (Gefierer, Heizungsgeräter, Hausbatterie). Ouni dëst, gëtt den dynameschen Netzpräis oder d'CO₂-Prognose automatesch benotzt. Statistiken, Käschteberechnungen an Optimiséierungsentscheedungen ginn net beaflosst.",
         "titleAdd": "Planner-Previsiounen derbäisetzen",
         "titleEdit": "Planer-Previsiounen änneren"
       },
@@ -1224,8 +1245,29 @@
     },
     "sources": {
       "battery": "Batterie",
-      "cost": "Käschten"
-    }
+      "cost": "Käschten",
+      "energy": "Energie",
+      "grid": "Netz",
+      "hint": "Solar- a Batterieenergie zum Aspeisepräis bewäert.",
+      "price": "Präis/kWh",
+      "pv": "Solar",
+      "share": "Undeel",
+      "source": "Quell",
+      "title": "Quellen",
+      "total": "Total"
+    },
+    "stat": {
+      "autarky": "Autarkie",
+      "co2Saved": "CO₂ gespuert",
+      "co2SavedTooltip": "Am Verglach mam Ofzéie vun der verbrauchter {energy} aus dem Netz.",
+      "configure": "Elo konfiguréieren",
+      "noCo2": "Keng CO₂-Daten.",
+      "noPrice": "Keng Präisdaten.",
+      "savings": "Erspuernisser",
+      "savingsTooltip": "Am Verglach mam Akaf vun der verbrauchter {energy} aus dem Stroumnetz.",
+      "versus": "{value} vs. {reference}"
+    },
+    "title": "Energie"
   },
   "footer": {
     "community": {
@@ -1439,6 +1481,10 @@
     },
     "issueDescription": "Beschreiwung",
     "issueTitle": "Titel",
+    "nightlyHint": "Et kéint scho gefléckt sinn. Préift wgl. virdrun mat der neister {nightlyVersion}.",
+    "nightlyHintVersion": "Nightly-Versioun",
+    "searchHint": "Ier Dir e Bug mellt, sicht no existente {issues}.",
+    "searchHintLink": "GitHub-Issues",
     "stepsToReproduce": "Schrëtt fir de Problem ze reproduzéieren",
     "subTitleDiscussion": "Beschreif däi Problem",
     "subTitleEmail": "Beschreif däi Problem",
@@ -1551,6 +1597,7 @@
       "batteryDischargeHold": "Batterie (gespäert)",
       "batteryGridChargeActive": "Oluede vum Netz: aktiv",
       "batteryGridChargeLimit": "Opluede vum Netz: wann",
+      "batteryStatus": "Status vun der Batterie",
       "batteryTooltip": "{energy} vun {total} ({soc})",
       "forecast": "Viraussoen",
       "forecastTooltip": "Prognose: Rescht Solarproduktioun fir haut",
@@ -1706,6 +1753,7 @@
     "targetChargePlan": {
       "chargeDuration": "Dauer vum Oplueden",
       "co2Label": "CO₂ Emissioun ⌀",
+      "optimizerHint": "Bemierkung: Dëse Plang gouf vum {optimizer} erstallt.",
       "priceLabel": "Energiepräis",
       "timeRange": "{day} {range} h",
       "unknownPrice": "nach onbekannt"
@@ -1764,6 +1812,7 @@
       "feedinPriorityPausing": "Solarluede ënnerbrach, fir d'Aspeisen ze maximiséieren.",
       "finished": "Ofgeschloss.",
       "minCharge": "Minimum oplueden bis {soc}.",
+      "optimizerControlledTooltip": "Automatesch Kontroll. Den Optimiséierer start d'Oplueden a stoppt en.",
       "pvDisable": "Net genuch Iwwerschoss. Et gëtt geschwënn pauséiert.",
       "pvEnable": "Iwwerschoss verfügbar. Starte geschwënn.",
       "scale1p": "Reduktioun op eng eenzeg Phase.",
@@ -2014,6 +2063,7 @@
     "battery": "Batterie",
     "charge": "Lueden",
     "comingSoon": "Dës Säit ass amgaang gebaut ze ginn.",
+    "energy": "Energie",
     "forecast": "Viraussoen",
     "more": "Méi",
     "sessions": "Sessiounen"
