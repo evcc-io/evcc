@@ -968,12 +968,12 @@
       },
       "gridType": {
         "description": {
-          "it": "Three-wire grid without neutral conductor. Common in Norway and parts of Belgium.",
-          "tn": "Most common, modern grid with neutral conductor."
+          "it": "Single-phase loads connect between two lines. Found in Norway and parts of Belgium, among others.",
+          "tn": "Standard in most countries. Single-phase loads connect between line and neutral."
         },
-        "it": "3 × {voltage} V (IT)",
-        "label": "Grid type",
-        "tn": "{voltage}/{lineVoltage} V (TN)"
+        "it": "3 × {voltage} V without neutral",
+        "label": "Grid connection",
+        "tn": "3 × {voltage}/{lineVoltage} V with neutral"
       },
       "currency": {
         "description": "Used to format energy prices, costs and savings based on your tariff.",

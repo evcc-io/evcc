@@ -50,7 +50,7 @@ test.describe("general", async () => {
     await modal.getByLabel("Title").fill("Ahoy World");
     await modal.getByLabel("Country").selectOption("Germany");
     await modal.getByRole("button", { name: "Show advanced settings" }).click();
-    await modal.getByLabel("Grid type").selectOption("3 × 230 V (IT)");
+    await modal.getByLabel("Grid connection").selectOption("3 × 230 V without neutral");
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
     await expect(page.getByTestId("generalconfig-site")).toContainText("Ahoy World");
@@ -61,7 +61,7 @@ test.describe("general", async () => {
     await expectModalVisible(modal);
     await expect(modal.getByLabel("Country")).toHaveValue("DE");
     await modal.getByRole("button", { name: "Show advanced settings" }).click();
-    await expect(modal.getByLabel("Grid type")).toHaveValue("it");
+    await expect(modal.getByLabel("Grid connection")).toHaveValue("it");
     await modal.getByRole("button", { name: "Cancel" }).click();
     await expectModalHidden(modal);
 

@@ -968,12 +968,12 @@
       },
       "gridType": {
         "description": {
-          "it": "Dreileiternetz ohne Neutralleiter. Üblich in Norwegen und Teilen Belgiens.",
-          "tn": "Häufigstes, modernes Netz mit Neutralleiter."
+          "it": "Einphasige Verbraucher liegen zwischen zwei Außenleitern. Kommt u. a. in Norwegen und Teilen Belgiens vor.",
+          "tn": "Standard in den meisten Ländern. Einphasige Verbraucher liegen zwischen Außenleiter und Neutralleiter."
         },
-        "it": "3 × {voltage} V (IT)",
-        "label": "Netzform",
-        "tn": "{voltage}/{lineVoltage} V (TN)"
+        "it": "3 × {voltage} V ohne Neutralleiter",
+        "label": "Netzanschluss",
+        "tn": "3 × {voltage}/{lineVoltage} V mit Neutralleiter"
       },
       "currency": {
         "description": "Wird für die Erfassung und Formatierung von Energiepreisen, Kosten und Einsparungen verwendet.",
