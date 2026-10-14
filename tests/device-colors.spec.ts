@@ -64,7 +64,7 @@ test("device colors: autoassign, override, persistence", async ({ page }) => {
   const popover2 = page.getByRole("dialog");
   await expect(popover2).toBeVisible();
   // save-on-type fires when input matches hex regex
-  await popover2.getByLabel("Hex color").fill(CUSTOM_HEX);
+  await popover2.getByLabel("Hex colour").fill(CUSTOM_HEX);
   await page.keyboard.press("Escape");
 
   await expectLegendColor(page, "Dishwasher", CUSTOM_RGB);
@@ -73,7 +73,7 @@ test("device colors: autoassign, override, persistence", async ({ page }) => {
   await legendBadge(page, "Alternative grid").click();
   const popover3 = page.getByRole("dialog");
   await expect(popover3).toBeVisible();
-  await popover3.getByLabel("Hex color").fill(CUSTOM_HEX2);
+  await popover3.getByLabel("Hex colour").fill(CUSTOM_HEX2);
   await page.keyboard.press("Escape");
 
   await expectLegendColor(page, "Alternative grid", CUSTOM_RGB2);

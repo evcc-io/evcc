@@ -1007,10 +1007,15 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		currentLimit := lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), current)
 
 		activePhases := lp.ActivePhases()
-		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
-		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
+		requestedPower := currentToPower(current, activePhases)
+		powerLimit := lp.circuit.ValidatePower(lp.chargePower, requestedPower)
 
-		limited := lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
+		// avoid float round trip through power if the circuit does not cap
+		limited := currentLimit
+		if powerLimit < requestedPower {
+			limited = min(limited, powerToCurrent(powerLimit, activePhases))
+		}
+		limited = lp.roundedCurrent(limited)
 		if minCurrent := lp.effectiveMinCurrent(); limited < minCurrent && current >= minCurrent {
 			lp.log.DEBUG.Printf("circuit limit %.3gA below min current %.3gA", limited, minCurrent)
 		}
@@ -1587,7 +1592,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 		lp.ResetMeasuredPhases()
 	}
 
-	var waiting bool
+	var waiting, disable bool
 	activePhases := lp.ActivePhases()
 	availablePower := lp.chargePower - sitePower
 	scalable := activePhases > 1 && lp.phasesConfigured < 3
@@ -1598,22 +1603,29 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 		}
 
-		// while charging, scaling down only helps if 1p is sustainable, otherwise it
-		// merely delays the pv disable timer by the phase timer duration. Without a
-		// disable to wait for, scaling down is the only way to reduce power (#33208).
+		// while charging, scaling down only helps if 1p is sustainable, otherwise the
+		// loadpoint disables once the phase timer elapses. Without a disable to wait
+		// for, scaling down is the only way to reduce power (#33208).
 		// Climater keep-alive suppresses the disable timer, checked last to avoid vehicle polling.
 		useful := !lp.enabled || !lp.charging() || !mayDisable || powerToCurrent(availablePower, 1) >= minCurrent || lp.vehicleClimateActive()
-		if insufficient && !useful {
+		disable = insufficient && !useful
+		if disable {
 			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min 1p threshold, disabling instead of scaling down", availablePower, Voltage*minCurrent)
 		}
 
 		// scaling down also frees load management headroom for min power on activePhases
-		scalable = insufficient && useful || !lp.circuitAllowsPhases(activePhases, minCurrent)
+		scalable = insufficient || !lp.circuitAllowsPhases(activePhases, minCurrent)
 	}
 
-	// scale down phases
+	// scale down phases. The phase timer keeps running while 3p min is not covered,
+	// whether 1p would be sustainable or not, so passing clouds cannot restart it (#34746)
 	if scalable {
 		if lp.phaseTimerElapsed(lp.GetDisableDelay(), phaseScale1p) {
+			if disable {
+				lp.elapsePVTimer()
+				return 0
+			}
+
 			if err := lp.scalePhases(1); err != nil {
 				// a charger may report it cannot switch phases right now
 				// (api.ErrNotAvailable); assume a failed switch and stay silent
@@ -1688,12 +1700,14 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 	}
 }
 
-// projectPhaseSwitch returns site power and phases after a pending scale down to 1p.
-// The phase timer can only be active once the loadpoint is at min current.
+// projectPhaseSwitch returns site power and phases after a pending scale down to 1p:
+// the loadpoint drops from its current draw, at least min power, to min current on 1p.
+// At 1p the phase timer can only be a scale up, which leaves site power as it is.
 func (lp *Loadpoint) projectPhaseSwitch(sitePower, minCurrent float64) (float64, int) {
 	phases := lp.ActivePhases()
-	if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() {
-		sitePower -= Voltage * minCurrent * float64(phases-1)
+	if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() && phases > 1 {
+		// site power loses the current draw, at least min power on all phases, and gains 1p min power
+		sitePower -= max(lp.chargePower, currentToPower(minCurrent, phases)) - currentToPower(minCurrent, 1)
 		phases = 1
 	}
 	return sitePower, phases

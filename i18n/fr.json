@@ -62,6 +62,7 @@
         "noCountry": "Aucun pays n'est configuré. Configurez-le via {link}.",
         "title": "Exportation vers le réseau à partir de la batterie"
       },
+      "optimizerControlledHint": "Désactivé pour {loadpoints}. C'est l'{optimizer} qui décide.",
       "priority": "La batterie domestique a la priorité tant qu’elle est chargée en dessous de {soc}. Ensuite, les points de charge reçoivent le surplus.",
       "priorityNone": "Le surplus solaire va directement aux points de charge. Définissez une valeur au dessus de {soc} pour prioriser la batterie domestique.",
       "priorityTitle": "Où va le surplus solaire en priorité ?"
@@ -846,9 +847,29 @@
       "usernameHelp": "Pour l’authentification HTTP Basique sur le serveur en amont."
     },
     "optimizer": {
+      "automatic": "Contrôle automatique",
+      "automaticLevel": {
+        "battery": {
+          "description": "Pilote uniquement la batterie domestique.",
+          "label": "Batterie domestique",
+          "status": "{automatic} pilote la batterie domestique."
+        },
+        "full": {
+          "description": "Pilote la batterie domestique, démarre et arrête la recharge des véhicules en mode intelligent, remplace les limites de prix et de CO₂ et prend en charge les plans. Inchangés : modes arrêt et rapide, dispositifs de chauffage, prises de commutation, véhicules de capacité inconnue.",
+          "label": "Batterie et points de charge",
+          "status": "{automatic} pilote la batterie domestique et les points de charge."
+        },
+        "off": {
+          "description": "L'optimiseur fait seulement des suggestions. Rien n'est piloté.",
+          "status": "{automatic} désactivé. L'optimiseur ne fait que suggérer."
+        }
+      },
+      "controlled": "Désactivé par le contrôle automatique. C'est l'{optimizer} qui décide.",
+      "controls": "Pilote",
       "description": "Analyse les prévisions d'ensoleillement, les prix de l'électricité et vos habitudes de consommation afin d'optimiser la stratégie de gestion de la batterie et de recharge. Les données sont transmises au service d'optimisation evcc pour y être traitées. Se contente actuellement de calculer est visualiser les données, il n’y a pas encore de contrôle d’appareils possible.",
       "enable": "Activer l'optimiseur",
       "info": "Pour les nouvelles installations, cela peut prendre jusqu’à 24h avant qu’evcc ne collecte suffisamment de données.",
+      "linkWord": "optimiseur",
       "title": "Optimiseur"
     },
     "options": {
@@ -1460,6 +1481,10 @@
     },
     "issueDescription": "Description",
     "issueTitle": "Titre",
+    "nightlyHint": "Le problème est peut-être déjà corrigé. Veuillez d'abord vérifier avec la dernière {nightlyVersion}.",
+    "nightlyHintVersion": "version nightly",
+    "searchHint": "Avant de signaler un bug, recherchez dans les {issues} existants.",
+    "searchHintLink": "tickets GitHub",
     "stepsToReproduce": "Étapes permettant de reproduire le problème",
     "subTitleDiscussion": "Décrivez votre problème",
     "subTitleEmail": "Décrivez votre problème",
@@ -1728,6 +1753,7 @@
     "targetChargePlan": {
       "chargeDuration": "Durée de charge",
       "co2Label": "Émissions de CO₂ ⌀",
+      "optimizerHint": "Remarque : ce plan a été créé par l'{optimizer}.",
       "priceLabel": "Prix de l'énergie",
       "timeRange": "{day} {range} h",
       "unknownPrice": "encore inconnu"
@@ -1786,6 +1812,7 @@
       "feedinPriorityPausing": "Chargement solaire interrompu pour maximiser l'injection.",
       "finished": "Terminée.",
       "minCharge": "Charge minimale jusqu'à {soc}.",
+      "optimizerControlledTooltip": "Contrôle automatique. L'optimiseur démarre et arrête la recharge.",
       "pvDisable": "Pas assez de surplus. Pause imminente.",
       "pvEnable": "Surplus disponible. Démarrage imminent.",
       "scale1p": "Charge réduite en monophasé imminente.",

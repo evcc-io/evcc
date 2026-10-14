@@ -16,9 +16,7 @@ test.describe("battery settings", async () => {
     await page.goto("/#/battery");
 
     await expect(page.getByTestId("header")).toContainText("Home Battery");
-    await expect(page.getByRole("heading", { name: "Battery usage" })).toContainText(
-      "Battery level 50%"
-    );
+    await expect(page.getByRole("heading", { name: "Battery usage" })).toContainText("Charge 50%");
     await expect(page.getByRole("heading", { name: "Grid charging" })).toBeVisible();
     await expect(page.getByTestId("battery-status-card")).toContainText("10.0 kWh");
   });
