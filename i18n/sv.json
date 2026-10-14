@@ -7,6 +7,17 @@
     "authorizationSuccessful": "Auktorisering lyckades",
     "buttonConnect": "Anslut till {provider}",
     "buttonDisconnect": "Koppla från",
+    "challenge": {
+      "captcha": {
+        "label": "Ange tecknen som visas i bilden."
+      },
+      "code": {
+        "label": "Klistra in koden eller adressen till sidan du omdirigerades till.",
+        "title": "Auktoriseringskod"
+      },
+      "openLogin": "Öppna inloggningssidan",
+      "submit": "Fortsätt"
+    },
     "confirmLogout": "Är du säker på att du vill koppla från {title}?",
     "connect": "anslut",
     "disconnect": "koppla från",
@@ -25,6 +36,7 @@
       "discharging": "laddar ur",
       "energy": "Energi",
       "gridCharge": "elnätsladdning",
+      "gridDischarge": "återmatning till nätet",
       "hold": "urladdning låst",
       "holdCharge": "laddning låst",
       "ofTotal": "av {total}",
@@ -43,6 +55,13 @@
       "bufferTitle": "Batteriet som laddningsbuffert",
       "discharge": "Förhindra att hemmabatteriet laddas ur i snabbläge och under planerad laddning.",
       "gridDischarge": "Tillåt hemmabatteriet att återmata till nätet.",
+      "gridDischargeConfirm": {
+        "country": "Inställt land: {country}.",
+        "description": "Om batterienergi får matas ut till elnätet beror på ditt land och ditt inmatningsavtal. Om batteriet även laddas från elnätet är den exporterade energin inte längre ren solenergi. Med många inmatningstariffer förlorar du då ersättningen eller så är det förbjudet. Kontrollera först ditt inmatningsavtal och nätägarens krav.",
+        "noCountry": "Inget land inställt. Ställ in det under {link}.",
+        "title": "Export till elnätet från batteri"
+      },
+      "optimizerControlledHint": "Avaktiverad för {loadpoints}. Istället bestämmer {optimizer}.",
       "priority": "Hemmabatteriet har prioritet så länge det är under {soc}. Därefter får billaddarna överskottet.",
       "priorityNone": "Solelens överskott går direkt till billaddarna. Ställ in ett värde över {soc} för att prioritera hemmabatteriet.",
       "priorityTitle": "Vart ska överskottet gå i första hand?"
@@ -144,10 +163,45 @@
         "switchsocket": "Egendefinierad strömbrytare"
       }
     },
+    "circuit": {
+      "addMeter": "Lägg till dedikerad energimätare",
+      "custom": "Egendefinierad krets",
+      "deleteChildrenFirst": "Radera först underkretsarna för att kunna radera denna krets.",
+      "meterDedicated": "Dedikerad mätare",
+      "meterGrid": "Elmätare",
+      "meterHelp": "Mätare som mäter den totala förbrukningen i denna krets.",
+      "meterLabel": "Energimätare",
+      "meterLabelAdd": "Lägg till kretsmätare",
+      "meterLabelEdit": "Ändra kretsmätare",
+      "meterNone": "Ingen mätare",
+      "meterSelectionHelpDedicatedMeter": "Lägg till en befintlig mätare till denna krets nedan.",
+      "meterSelectionHelpGridMeter": "Använder installationens befintliga elmätare.",
+      "meterSelectionHelpNoMeter": "Summan av alla laddpunkter används.",
+      "meterSelectionLabel": "Val av mätare",
+      "parentCircuit": "Överordnad krets",
+      "template": "Krets",
+      "titleAdd": "Lägg till krets",
+      "titleEdit": "Ändra krets",
+      "titleLabel": "Titel"
+    },
     "circuits": {
+      "addMainCircuit": "Lägg till huvudkrets",
+      "addSubCircuit": "Lägg till underkrets",
+      "chargingPointsNote": "Tilldela laddplatser och värmare till en krets i deras egna inställningar.",
       "description": "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki.",
+      "legacyWarning": "Ny kretskonfiguration tillgänglig! Ta bort och spara din konfiguration här för att använda den nya guidade processen.",
+      "meterDedicated": "Mätare",
+      "meterGrid": "Elnät",
       "title": "Belastningshantering",
       "usableMeters": "Mätarreferenser som kan användas"
+    },
+    "combobox": {
+      "count": "{count} förslag",
+      "matching": "Matchande",
+      "other": "Övriga",
+      "searching": "Söker…",
+      "suggestions": "Förslag",
+      "used": "används redan"
     },
     "consumer": {
       "description": "Spårar mindre apparater som inte kan styras (kylskåp, tvättmaskin, ...). Det ger dig en bättre helhetsbild av din hemförbrukning.",
@@ -216,6 +270,8 @@
       "identifier": "RFID-identifierare",
       "loginBlocked": "Inloggningsgräns nådd",
       "max": "max",
+      "maxCurrent": "Max. ström",
+      "maxPower": "Max. effekt",
       "messengers": "Tjänster",
       "no": "nej",
       "odometer": "Mätarställning",
@@ -352,6 +408,7 @@
       "enable": "Aktivera",
       "error": "Fel",
       "experimental": "Experimentella funktioner",
+      "forceEnable": "Aktivera ändå",
       "forceSave": "Spara ändå",
       "fromYamlHint": "Obs: Konfigurerad via evcc.yaml. Ta bort posten från filen för att aktivera redigering här.",
       "hideAdvancedSettings": "Dölj avancerade inställningar",
@@ -370,6 +427,7 @@
       "saving": "Sparar…",
       "selectFile": "Bläddra",
       "showAdvancedSettings": "Visa avancerade inställningar",
+      "site": "Anläggning",
       "telemetry": "Telemetri",
       "templateLoading": "Laddar...",
       "title": "Titel",
@@ -788,9 +846,29 @@
       "usernameHelp": "Till HTTP Basic Authentication mot den överordnade servern."
     },
     "optimizer": {
+      "automatic": "Automatisk styrning",
+      "automaticLevel": {
+        "battery": {
+          "description": "Styr endast hembatteriet.",
+          "label": "Hembatteri",
+          "status": "{automatic} styr hembatteriet."
+        },
+        "full": {
+          "description": "Styr hembatteriet, startar och stoppar fordonsladdning i smart läge, ersätter pris- och CO₂-gränser och tar över planer. Oförändrat: av- och snabbläge, värmare, smarta uttag, fordon med okänd kapacitet.",
+          "label": "Hembatteri & laddplatser",
+          "status": "{automatic} styr hembatteri och laddplatser."
+        },
+        "off": {
+          "description": "Optimeraren ger bara förslag. Inget styrs.",
+          "status": "{automatic} är av. Optimeraren ger bara förslag."
+        }
+      },
+      "controlled": "Avaktiverad av automatisk styrning. Istället bestämmer {optimizer}.",
+      "controls": "Styr",
       "description": "Analyserar solprognoser, elpriser och din typiska förbrukning för att optimera batteri- och laddningsstrategi. Data överförs till evcc optimeringstjänst för beräkning. Beräknar och visualiserar för närvarande endast. Styr ännu inga enheter.",
       "enable": "Aktivera optimerare",
       "info": "För nya installationer kan det ta upp till 24 timmar innan evcc har samlat in tillräckligt med data.",
+      "linkWord": "optimeraren",
       "title": "Optimerare"
     },
     "options": {
@@ -887,6 +965,22 @@
       "labelDeviceSerial": "Enhetens serienummer",
       "labelVendorId": "Tillverkar-ID",
       "title": "SMA Sunny Home Manager"
+    },
+    "site": {
+      "country": {
+        "description": "Används för regionspecifika tips och standardvärden.",
+        "label": "Land"
+      },
+      "currency": {
+        "description": "Används för att formatera energipriser, kostnader och besparingar utifrån din tariff.",
+        "example": "Ditt laddpris var {price}. Du sparade {amount}.",
+        "label": "Valuta"
+      },
+      "siteTitle": {
+        "description": "Visas på startsidan och i webbläsarfliken.",
+        "label": "Titel"
+      },
+      "title": "Anläggning"
     },
     "sponsor": {
       "addToken": "Ange sponsor-token",
@@ -1056,6 +1150,117 @@
       "titleEdit": "Ändra fordon"
     }
   },
+  "energy": {
+    "battery": {
+      "charged": "Laddat",
+      "discharged": "Urladdat"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Staplar",
+        "pattern": "Mönster"
+      },
+      "cost": "Kostnad",
+      "others": "Övriga",
+      "title": "Förbrukare",
+      "view": {
+        "river": "Flöde",
+        "treemap": "Trädkarta"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "laddad",
+        "returnEnergy": "urladdad"
+      },
+      "grid": {
+        "energy": "importerad",
+        "returnEnergy": "exporterad"
+      },
+      "meter": {
+        "energy": "Energi",
+        "returnEnergy": "Energi (baklänges)"
+      }
+    },
+    "empty": "Inga energidata tillgängliga för denna period.",
+    "flow": {
+      "battery": "Batteri",
+      "batteryCharge": "Batteriladdning",
+      "batteryDischarge": "Batteriurladdning",
+      "charging": "Laddning",
+      "export": "Export till elnät",
+      "grid": "Import från elnät",
+      "heating": "Uppvärmning",
+      "home": "Förbrukning",
+      "overview": "Översikt",
+      "pv": "Produktion",
+      "title": "Energiflöde",
+      "usage": "Användning",
+      "withdrawal": "Uttag"
+    },
+    "grid": {
+      "amount": "Belopp",
+      "cost": "Nätkostnad",
+      "energy": "Energi",
+      "exportPrice": "Exportpris",
+      "importPrice": "Importpris",
+      "price": "Pris",
+      "revenue": "Inmatningsintäkt",
+      "title": "Elnät"
+    },
+    "group": {
+      "battery": "Batteri",
+      "consumer": "Förbrukning",
+      "forecast": "Prognos",
+      "grid": "Nät",
+      "loadpoint": "Laddning & uppvärmning",
+      "meter": "Extra mätare",
+      "pv": "Produktion"
+    },
+    "production": {
+      "above": "{value} över",
+      "accuracy": "Prognosprecision",
+      "below": "{value} under",
+      "deviation": "Avvikelse",
+      "expectedTomorrow": "förväntat i morgon",
+      "exported": "{value} exporterat",
+      "produced": "Producerat",
+      "remainingToday": "återstår idag",
+      "selfConsumed": "Egenförbrukat",
+      "title": "Produktion"
+    },
+    "socTemp": {
+      "charged": "laddat",
+      "soc": "laddnivå",
+      "temperature": "temperatur",
+      "used": "förbrukat"
+    },
+    "sources": {
+      "battery": "Batteri",
+      "cost": "Kostnad",
+      "energy": "Energi",
+      "grid": "Elnät",
+      "hint": "Sol- och batterienergi värderas till inmatningspriset.",
+      "price": "Pris/kWh",
+      "pv": "Sol",
+      "share": "Andel",
+      "source": "Källa",
+      "title": "Källor",
+      "total": "Totalt"
+    },
+    "stat": {
+      "autarky": "Självförsörjning",
+      "co2Saved": "CO₂ sparat",
+      "co2SavedTooltip": "Jämfört med att ta den förbrukade {energy} från elnätet.",
+      "configure": "Konfigurera nu",
+      "noCo2": "Inga CO₂-data.",
+      "noPrice": "Inga prisdata.",
+      "savings": "Besparing",
+      "savingsTooltip": "Jämfört med att köpa den förbrukade {energy} från elnätet.",
+      "versus": "{value} mot {reference}"
+    },
+    "title": "Energi"
+  },
   "footer": {
     "community": {
       "greenEnergy": "Solenergi",
@@ -1193,6 +1398,7 @@
   },
   "general": {
     "back": "Tillbaka",
+    "cancel": "Avbryt",
     "download": "Ladda hem",
     "error": "Fel",
     "none": "inget",
@@ -1229,31 +1435,6 @@
     "restartButton": "Starta om",
     "restartDescription": "Har du testat att starta om?",
     "secondaryActions": "Lyckas du inte lösa problemet? Här finns mer hjälp."
-  },
-  "energy": {
-    "direction": {
-      "battery": {
-        "energy": "laddad",
-        "returnEnergy": "urladdad"
-      },
-      "grid": {
-        "energy": "importerad",
-        "returnEnergy": "exporterad"
-      },
-      "meter": {
-        "energy": "Energi",
-        "returnEnergy": "Energi (baklänges)"
-      }
-    },
-    "group": {
-      "battery": "Batteri",
-      "consumer": "Förbrukning",
-      "forecast": "Prognos",
-      "grid": "Nät",
-      "loadpoint": "Laddning & uppvärmning",
-      "meter": "Extra mätare",
-      "pv": "Produktion"
-    }
   },
   "issue": {
     "additional": {
@@ -1292,6 +1473,10 @@
     },
     "issueDescription": "Beskrivning",
     "issueTitle": "Titel",
+    "nightlyHint": "Det kan redan vara åtgärdat. Kontrollera först med den senaste {nightlyVersion}.",
+    "nightlyHintVersion": "nightly-versionen",
+    "searchHint": "Sök i befintliga {issues} innan du rapporterar ett fel.",
+    "searchHintLink": "GitHub-ärenden",
     "stepsToReproduce": "Steg för att återskapa",
     "subTitleDiscussion": "Beskriv ditt problem",
     "subTitleEmail": "Beskriv ditt problem",
@@ -1404,6 +1589,7 @@
       "batteryDischargeHold": "Batteri (låst)",
       "batteryGridChargeActive": "Nätladdning: aktiv",
       "batteryGridChargeLimit": "Nätladdning: när",
+      "batteryStatus": "Batteristatus",
       "batteryTooltip": "{energy} av {total} ({soc})",
       "forecast": "Prognos",
       "forecastTooltip": "Prognos: återstående solproduktion idag",
@@ -1559,6 +1745,7 @@
     "targetChargePlan": {
       "chargeDuration": "Laddtid",
       "co2Label": "CO₂-utsläpp ⌀",
+      "optimizerHint": "Obs: Denna plan skapades av {optimizer}.",
       "priceLabel": "Energipris",
       "timeRange": "{day} {range} t",
       "unknownPrice": "fortfarande okänt"
@@ -1618,6 +1805,7 @@
       "feedinPriorityPausing": "Solladdning har pausats för att maximera inmatning.",
       "finished": "Färdig.",
       "minCharge": "Minimiladdning till {soc}.",
+      "optimizerControlledTooltip": "Automatisk styrning. Optimeraren startar och stoppar laddningen.",
       "pvDisable": "Inte tillräckligt med överskott. Pausar strax.",
       "pvEnable": "Överskott tillgängligt. Börjar strax.",
       "scale1p": "Minskar till 1-fas-laddning strax.",
@@ -1868,6 +2056,7 @@
     "battery": "Batteri",
     "charge": "Ladda",
     "comingSoon": "Sida under uppbyggnad.",
+    "energy": "Energi",
     "forecast": "Prognos",
     "more": "Mer",
     "sessions": "Laddningar"

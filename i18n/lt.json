@@ -62,6 +62,7 @@
         "noCountry": "Šalis nesukonfigūruota. Nustatykite ją čia {link}.",
         "title": "Energijos eksportas iš kaupiklio"
       },
+      "optimizerControlledHint": "Išjungta {loadpoints}. Vietoj to nusprendžia {optimizer}.",
       "priority": "Kaupiklis turi prioritetą, kol jo įkrova yra mažesnė nei {soc}. Po to įkrovikliai gauna perteklių.",
       "priorityNone": "Saulės energijos perteklius patenka tiesiai į įkroviklius. Nustatykite reikšmę, didesnę nei {soc}, kad pirmenybė būtų teikiama kaupikliui.",
       "priorityTitle": "Kur pirmiausia nukeliaus perteklius?"
@@ -846,9 +847,29 @@
       "usernameHelp": "Skirta serverio HTTP baziniam autentifikavimui."
     },
     "optimizer": {
-      "description": "Analizuoja saulės energijos prognozę, elektros energijos kainas ir jūsų vartojimo įpročius, kad optimizuotų kaupiklį ir įkrovimo strategiją. Duomenys siunčiami apdorojimui į evcc optimizavimo paslaugą. Šiuo metu tik apskaičiuoja ir vizualizuoja, įrenginių kol kas nevaldo.",
+      "automatic": "Automatinis valdymas",
+      "automaticLevel": {
+        "battery": {
+          "description": "Valdo tik kaupiklį.",
+          "label": "Kaupiklio",
+          "status": "{automatic} valdo kaupiklį."
+        },
+        "full": {
+          "description": "Valdo kaupiklį, išmaniuoju režimu pradeda ir sustabdo automobilių įkrovimą, keičia kainų bei CO₂ ribas ir valdo planus. Nepakito: Išjungta ir Greitas režimai, šildymo įrenginiai, valdomi elektros lizdai, nežinomos talpos automobiliai.",
+          "label": "Kaupiklis ir įkrovikliai",
+          "status": "{automatic} valdo kaupiklį ir įkroviklius."
+        },
+        "off": {
+          "description": "Optimizatorius tik teikia pasiūlymus, bet nieko nevaldo.",
+          "status": "{automatic} išjungtas. Optimizatorius tik teikia pasiūlymus."
+        }
+      },
+      "controlled": "Išjungta dėl automatinio valdymo. Vietoj to sprendimą priima {optimizer}.",
+      "controls": "Valdikliai",
+      "description": "Kaupiklio veikimui ir įkrovimui planuoti naudojamos saulės energijos gamybos prognozės, elektros kainos bei jūsų energijos vartojimo įpročiai. Duomenys siunčiami evcc optimizavimo paslaugai.",
       "enable": "Įjungti Optimizavimą",
       "info": "Naujoms instaliacijoms gali užtrukti iki 24 valandų, kol evcc turės pakankamai duomenų.",
+      "linkWord": "optimizatorius",
       "title": "Optimizavimas"
     },
     "options": {
@@ -1055,7 +1076,7 @@
         "temperature": "Pridėti temperatūros prognozę"
       },
       "planner": {
-        "description": "Išplėstinis nustatymas. Paprastai nereikalingas, nes dinaminiai elektros energijos tarifai arba CO₂ prognozės naudojami automatiškai. Įjungia papildomą duomenų šaltinį, kuris naudojamas tik įkrovimo planavimui, o ne statistikai ar kainų skaičiavimams.",
+        "description": "Šis išplėstinis nustatymas paprastai nereikalingas. Planavimo prognozė yra pagrindas įkrovimo planams ir pigiam arba švariam įkrovimui iš tinklo (automobiliams, šildymo prietaisams, kaupikliui). Be jos, dinaminė tinklo kaina arba CO₂ prognozė yra naudojama automatiškai. Tai neturi įtakos statistikai, išlaidų skaičiavimams ir optimizatoriaus sprendimams.",
         "titleAdd": "Pridėti planavimo prognozę",
         "titleEdit": "Redaguoti planavimo prognozę"
       },
@@ -1460,6 +1481,10 @@
     },
     "issueDescription": "Aprašymas",
     "issueTitle": "Pavadinimas",
+    "nightlyHint": "Gali būti jau sutvarkyta. Prašome prieš tai patikrinti naujausią {nightlyVersion}.",
+    "nightlyHintVersion": "Kasnaktinė versija",
+    "searchHint": "Prieš pranešdami apie klaidą, paieškokite tarp esamų {issues}.",
+    "searchHintLink": "GitHub problemos",
     "stepsToReproduce": "Žingsniai atkartojimui",
     "subTitleDiscussion": "Aprašykite savo problemą",
     "subTitleEmail": "Apibūdinkite problemą",
@@ -1728,6 +1753,7 @@
     "targetChargePlan": {
       "chargeDuration": "Įkrovimo trukmė",
       "co2Label": "CO₂ emisijos ⌀",
+      "optimizerHint": "Pastaba: šį planą sukūrė {optimizer}.",
       "priceLabel": "Energijos kaina",
       "timeRange": "{day} {range} val",
       "unknownPrice": "dar nežinoma"
@@ -1787,6 +1813,7 @@
       "feedinPriorityPausing": "Įkrovimas saulės energija pristabdytas, tam, kad pasinaudoti aukšta energijos pardavimo kaina.",
       "finished": "Baigta.",
       "minCharge": "Minimalus įkrovimas iki {soc}.",
+      "optimizerControlledTooltip": "Automatinis valdymas. Optimizatorius pradeda ir sustabdo įkrovimą.",
       "pvDisable": "Trūksta pertekliaus. Pauzė netrukus.",
       "pvEnable": "Pertekliaus užtenka, įkrovimas netrukus.",
       "scale1p": "Sumažinimas į vienfazį įkrovimą netrukus.",

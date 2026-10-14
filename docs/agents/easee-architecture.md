@@ -116,7 +116,7 @@ Before a POST to a known 200-returning endpoint, increment the counter. When `Co
 | `smartCharging` | `SMART_CHARGING` (102) | LED color mode |
 | `currentPower` | `TOTAL_POWER` (120) | Watts (API sends kW, multiplied by 1000) |
 | `sessionEnergy` | `SESSION_ENERGY` (121) | kWh, special zero-handling |
-| `totalEnergy` | `LIFETIME_ENERGY` (124) | kWh, updated ~hourly |
+| `totalEnergy` | `LIFETIME_ENERGY` (124), `CHARGE_SESSION_START` (223), `CHARGING_SESSION` (129) | kWh, monotonic max, see Logical Energy Meter |
 | `currentL1/L2/L3` | `IN_CURRENT_T3/T4/T5` (183/184/185) | Phase currents in A |
 | `phaseMode` | `PHASE_MODE` (38) | 1=single, 2=auto, 3=locked 3-phase |
 | `dynamicCircuitCurrent[3]` | `DYNAMIC_CIRCUIT_CURRENT_P1/P2/P3` (111/112/113) | Per-phase circuit limit |
@@ -128,7 +128,11 @@ Before a POST to a known 200-returning endpoint, increment the counter. When `Co
 
 ### Session Energy Zero-value Protection
 
-`sessionEnergy` is never set to `0` from a `ProductUpdate` — the API sends spurious zeros erratically. Session reset is driven by op-mode transition: when `CHARGER_OP_MODE` transitions from disconnected to awaiting-start, `sessionEnergy` resets to `0` with a fresh timestamp.
+`sessionEnergy` is never set to `0` from a `ProductUpdate` — the API sends spurious zeros erratically. Session reset is driven by op-mode transition: when `CHARGER_OP_MODE` transitions from disconnected to awaiting-start, `sessionEnergy` resets to `0` with a fresh timestamp. The first op mode after startup is replayed state and does not reset, so replayed session energy survives a restart. `CHARGE_SESSION_START` and a zero `SESSION_ENERGY` arrive before the mode change, so the reset is skipped when the cached session started after the previous mode observation.
+
+### Logical Energy Meter
+
+`LIFETIME_ENERGY` is pushed only ~hourly. `TotalEnergy()` therefore keeps a monotonic max of the lifetime reading, the session meter values from `CHARGE_SESSION_START` and `CHARGING_SESSION`, and `CHARGE_SESSION_START.MeterValue + sessionEnergy`. The session term is only applied while the last nonzero `SESSION_ENERGY` (or session completion) is not older than the session start, so a stale previous-session value cannot inflate the total. Ignored zero observations do not count as fresh readings.
 
 ## Charger Operation Modes
 
@@ -229,7 +233,7 @@ Command dispatch was extracted into `charger/easee/dispatcher.go` (`CommandDispa
 ## Known Design Concerns
 
 1. **SESSION_ENERGY zero-value protection** — defensive measure based on field observations; root cause unverified.
-2. **LIFETIME_ENERGY** — inaccurate by design, API pushes updates ~hourly.
+2. **LIFETIME_ENERGY** — API pushes updates ~hourly; bridged by the logical energy meter, so accuracy between readings depends on `SESSION_ENERGY` and the session start meter value.
 3. **current vs dynamicChargerCurrent drift** — evcc's desired setpoint and charger's confirmed value can drift around pause/resume cycles. Resynced via `MaxCurrent(c.current)` after resume.
 4. **Multi-charger circuits** — only circuit-level phase control when charger is alone on its circuit. Multi-charger circuits fall back to less precise charger-level control.
 5. **Stale CommandResponses after reconnect** — if SignalR drops mid-command, the response may arrive after reconnect with no pending entry, triggering a false-positive rogue WARN. Acceptable trade-off.
