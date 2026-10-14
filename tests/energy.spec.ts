@@ -273,7 +273,7 @@ test.describe("page", () => {
       const total = modal.getByRole("row", { name: "Total" });
       await expect(total).toContainText("3.0 kWh");
       await expect(total).toContainText("0.70 €");
-      await expect(modal.getByText("valued at feed-in price")).toBeVisible();
+      await expect(modal.getByText("valued at grid export price")).toBeVisible();
     });
 
     test("no price data", async ({ page }) => {
@@ -293,7 +293,7 @@ test.describe("page", () => {
       await expect(modal.getByRole("row", { name: "Battery" })).toHaveCount(0);
       await expect(modal.getByRole("row", { name: "Grid" })).toHaveCount(0);
       await expect(modal.getByRole("columnheader", { name: "Cost" })).toHaveCount(0);
-      await expect(modal.getByText("valued at feed-in price")).toHaveCount(0);
+      await expect(modal.getByText("valued at grid export price")).toHaveCount(0);
     });
 
     test("battery leads without solar", async ({ page }) => {

@@ -816,6 +816,16 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 		gridExport = res.GridExport[slot]
 	}
 
+	// home battery discharge planned for the slot, a loadpoint charge it covers is no surplus
+	var batteryDischarge float64
+	if slot >= 0 && slotHours > 0 {
+		for i, detail := range details.BatteryDetails {
+			if detail.Type == batteryTypeBattery && slot < len(res.Batteries[i].DischargingPower) {
+				batteryDischarge += float64(res.Batteries[i].DischargingPower[slot]) / slotHours
+			}
+		}
+	}
+
 	var batteries []batteryResult
 	suggestions := make(map[string]types.Suggestion, len(req.Batteries))
 
@@ -836,6 +846,10 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 		suggestion := currentSlotSuggestion(detail, batReq, batRes, slot, gridImport, gridExport, slotHours)
 		if suggestion.Action == "" {
 			continue
+		}
+
+		if detail.loadpoint != nil {
+			suggestion.Battery = batteryDischarge
 		}
 
 		// uncontrollable devices can't act on a suggestion
