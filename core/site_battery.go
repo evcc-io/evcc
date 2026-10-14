@@ -331,7 +331,12 @@ func (site *Site) tariffRates(usage api.TariffUsage) (api.Rates, error) {
 	return tariff.Rates()
 }
 
+// smartCostActive reports whether the loadpoint charges on its smart cost limit.
+// The limit only acts in smart mode (see Loadpoint.Update), other modes ignore it.
 func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
+	if lp.GetMode() != api.ModeSmart {
+		return false
+	}
 	limit := lp.GetSmartCostLimit()
 	return limit != nil && !rate.IsZero() && rate.Value <= *limit
 }

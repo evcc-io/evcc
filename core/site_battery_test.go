@@ -104,6 +104,7 @@ func TestUnmodelledCharging(t *testing.T) {
 		{"smart cost inactive", api.StatusC, api.ModeSmart, &below, false},
 		{"no limit", api.StatusC, api.ModeSmart, nil, false},
 		{"fast charging", api.StatusC, api.ModeNow, nil, true},
+		{"limit configured but pv mode", api.StatusC, api.ModePV, &above, false},
 		{"smart cost active but not charging", api.StatusB, api.ModeSmart, &above, false},
 	} {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
