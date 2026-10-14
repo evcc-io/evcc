@@ -110,7 +110,27 @@ func ApplyForwarderRules(rules []ForwarderRule) {
 		}
 	}
 
+	reconcileMirrors()
+
 	notifyUpdated()
+}
+
+// reconcileMirrors aligns the mirrors of every connected charger with the current rules.
+func reconcileMirrors() {
+	sidecarsMu.Lock()
+	ids := make([]string, 0, len(connectedChargers))
+	for id := range connectedChargers {
+		ids = append(ids, id)
+	}
+	sidecarsMu.Unlock()
+
+	for _, id := range ids {
+		if rule, ok := resolveRule(id); ok {
+			startMirrors(id, rule.Mirrors)
+		} else {
+			stopMirrors(id)
+		}
+	}
 }
 
 // dialUpstream opens a websocket connection to the rule's upstream server for the given charger.
@@ -309,6 +329,9 @@ func onChargerConnect(ch ws.Channel) {
 	if !ok {
 		return
 	}
+
+	startMirrors(id, rule.Mirrors)
+
 	// open the buffer before dialling so early messages are captured, not dropped
 	pendingMu.Lock()
 	pendingMsgs[id] = nil
@@ -464,6 +487,8 @@ func drainPendingWithErrors(id string, sc *sidecar) {
 func onChargerDisconnect(ch ws.Channel) {
 	id := ch.ID()
 
+	stopMirrors(id)
+
 	// discard pending buffer and cached boot frame
 	pendingMu.Lock()
 	delete(pendingMsgs, id)
@@ -508,6 +533,10 @@ func onChargerMessage(ch ws.Channel, data []byte) bool {
 		bootMu.Lock()
 		lastBoot[id] = slices.Clone(data)
 		bootMu.Unlock()
+	}
+
+	if msgType == ocppj.CALL {
+		mirrorCall(id, action, data)
 	}
 
 	sidecarsMu.Lock()
@@ -681,10 +710,11 @@ func (sc *sidecar) readFromUpstream() {
 
 // ForwarderSessionStatus is the observable state of one forwarder session.
 type ForwarderSessionStatus struct {
-	ChargerID         string `json:"chargerId"`
-	UpstreamURL       string `json:"upstreamUrl"`
-	UpstreamConnected bool   `json:"upstreamConnected"`
-	Error             string `json:"error,omitempty"`
+	ChargerID         string         `json:"chargerId"`
+	UpstreamURL       string         `json:"upstreamUrl"`
+	UpstreamConnected bool           `json:"upstreamConnected"`
+	Error             string         `json:"error,omitempty"`
+	Mirrors           []MirrorStatus `json:"mirrors,omitempty"`
 }
 
 // recordForwarderError stores a charger's last upstream failure; caller must notifyUpdated.
@@ -747,6 +777,9 @@ func GetForwarderStatus() []ForwarderSessionStatus {
 			st.UpstreamConnected = true
 		} else if msg, ok := forwarderErrors[r.StationID]; ok {
 			st.Error = msg
+		}
+		if len(r.Mirrors) > 0 {
+			st.Mirrors = mirrorStatus(r.StationID, r.Mirrors)
 		}
 		out = append(out, st)
 	}

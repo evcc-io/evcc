@@ -368,6 +368,22 @@ export interface OcppConfig {
   port: number;
 }
 
+/** A read-only upstream that receives a copy of a station's OCPP messages. */
+export interface OcppMirrorRule {
+  /** URL of the upstream OCPP backend. */
+  upstreamUrl: string;
+  /** Station id used towards the upstream backend. */
+  upstreamStationId?: string;
+  /** Username for upstream authentication. */
+  username?: string;
+  /** Password for upstream authentication. Redacted. */
+  password?: string;
+  /** Skip TLS certificate verification. */
+  insecure?: boolean;
+  /** CA certificate for TLS connections. */
+  caCert?: string;
+}
+
 /** A rule forwarding an OCPP station to an upstream backend. */
 export interface OcppForwarderRule {
   /** Station id to forward. */
@@ -386,10 +402,22 @@ export interface OcppForwarderRule {
   caCert?: string;
   /** Only forward read operations to the station. */
   readOnly?: boolean;
+  /** Read-only upstreams receiving a copy of the station's messages. */
+  mirrors?: OcppMirrorRule[];
 }
 
 /** OCPP forwarder rules and upstream connection status. */
 export interface OcppForwarder extends ConfigStatus<OcppForwarderRule[], OcppForwarderSession[]> {}
+
+/** Connection status of a read-only upstream. */
+export interface OcppMirrorSession {
+  /** URL of the upstream OCPP backend. */
+  upstreamUrl: string;
+  /** Connection to the upstream backend is established. */
+  upstreamConnected: boolean;
+  /** Last connection error. */
+  error?: string;
+}
 
 /** Connection status of an OCPP forwarder rule. */
 export interface OcppForwarderSession {
@@ -401,6 +429,8 @@ export interface OcppForwarderSession {
   upstreamConnected: boolean;
   /** Last connection error. */
   error?: string;
+  /** Connection status of the read-only upstreams. */
+  mirrors?: OcppMirrorSession[];
 }
 
 /** OCPP server status. */

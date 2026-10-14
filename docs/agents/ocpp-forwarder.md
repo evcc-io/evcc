@@ -37,6 +37,18 @@ Calls (type 2) initiated by upstream are injected into the charger via `CS.Write
 
 When a rule sets `ReadOnly`, upstream may observe but cannot control the charger. Any incoming Call from upstream is answered with a `SecurityError` and not forwarded. `ReadOnly` is applied live per message, so toggling it does not require reconnecting the sidecar.
 
+## Read-only mirrors
+
+A rule can list further upstreams in `Mirrors` (`forwarder_mirror.go`). They are meant for reporting or monitoring, for example a third party that must see the charger's data while another backoffice does the billing. Unlike the main upstream, a mirror only watches:
+
+- Every Call of the charger is copied to it. Nothing is relayed, so its replies never reach the charger and evcc's handler is never bypassed because of it.
+- Calls from the mirror's upstream are answered with a `SecurityError` CallError. Results and errors from it are discarded.
+- On (re)connect it first receives the cached `BootNotification` and the last `StatusNotification` per connector, with fresh message ids.
+- Frames wait in a bounded backlog (oldest dropped first) while the mirror is offline and are delivered in order after it reconnects.
+- Mirrors are dialled with backoff for as long as the charger is connected, are keyed by URL and station id within their rule, and are redialled when their connection parameters change.
+
+Note that the main upstream is not read-only in this sense even with the `ReadOnly` flag: that flag only blocks its commands, it still answers `Authorize`, `StartTransaction`, `StopTransaction` and `DataTransfer` for the charger.
+
 ## Connection lifecycle
 
 Frames that arrive from a charger before its sidecar finishes dialling are buffered (`pendingMsgs`) and flushed in order once the sidecar connects, so early messages such as `BootNotification` still reach upstream. If the dial fails or upstream drops mid-session, any buffered or in-flight relay Calls are answered to the charger with a `CallError` so it is not left hanging, and the failure is surfaced to the UI via `forwarderErrors`.
