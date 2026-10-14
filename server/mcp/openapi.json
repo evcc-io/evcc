@@ -3564,6 +3564,10 @@
             "description": "Planned site grid flow of the slot in W, positive means import.",
             "type": "number"
           },
+          "battery": {
+            "description": "Planned home battery discharge feeding the site in W.",
+            "type": "number"
+          },
           "actionable": {
             "description": "Suggestion differs from the current operating mode.",
             "type": "boolean"
