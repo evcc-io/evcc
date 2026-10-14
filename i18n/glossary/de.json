@@ -10,7 +10,7 @@
   "chargeLevelShort": "Ladestand",
   "charger": "Wallbox",
   "chargingPlan": "Ladeplan",
-  "chargingPlanning": "Ladeplanung",
+  "chargingPlanDialog": "Ladeplanung",
   "chargingSession": "Ladevorgang",
   "chargingSessionShort": "Ladung",
   "cheapEnergy": "günstige Energie",

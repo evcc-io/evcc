@@ -10,7 +10,7 @@
   "chargeLevelShort": "lataus",
   "charger": "laturi",
   "chargingPlan": "lataussuunnitelma",
-  "chargingPlanning": "lataussuunnitelma",
+  "chargingPlanDialog": "lataussuunnitelma",
   "chargingSession": "lataustapahtuma",
   "chargingSessionShort": "tapahtuma",
   "cheapEnergy": "edullinen energia",
