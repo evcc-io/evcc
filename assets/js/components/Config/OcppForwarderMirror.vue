@@ -4,7 +4,11 @@
 			<span :class="statusClass" data-testid="ocppforwarder-mirror-status">{{
 				statusLabel
 			}}</span>
-			<button type="button" class="btn btn-link btn-sm text-danger p-0" @click="$emit('remove')">
+			<button
+				type="button"
+				class="btn btn-link btn-sm text-danger p-0"
+				@click="$emit('remove')"
+			>
 				{{ $t("config.ocppforwarder.mirrors.remove") }}
 			</button>
 		</div>
@@ -78,7 +82,10 @@
 		</FormRow>
 		<PropertyCollapsible>
 			<template #advanced>
-				<FormRow :id="fieldId('Insecure')" :label="$t('config.ocppforwarder.labelInsecure')">
+				<FormRow
+					:id="fieldId('Insecure')"
+					:label="$t('config.ocppforwarder.labelInsecure')"
+				>
 					<div class="d-flex">
 						<input
 							:id="fieldId('Insecure')"
