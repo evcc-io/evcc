@@ -32,6 +32,7 @@ const (
 	Plant              = "plant"
 	Telemetry          = "telemetry"
 	Optimizer          = "optimizer"
+	OptimizerAutomatic = "optimizerAutomatic" // optimizer automatic level: off, battery, full
 	Mcp                = "mcp"
 	DemoMode           = "demoMode"
 	Remote             = "remote"

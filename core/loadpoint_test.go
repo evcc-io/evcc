@@ -84,7 +84,8 @@ func attachListeners(t *testing.T, lp *Loadpoint) {
 	}
 
 	uiChan, pushChan, lpChan := createChannels(t)
-	lp.Prepare(new(Site), uiChan, pushChan, lpChan)
+	// the optimizer runs async- without a logger its panic recovery panics again
+	lp.Prepare(&Site{log: util.NewLogger("site")}, uiChan, pushChan, lpChan)
 }
 
 func TestNew(t *testing.T) {
@@ -771,6 +772,85 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 		}
 
 		ctrl.Finish()
+	}
+}
+
+// the phase timer and the pv disable timer hand their shortfall over to each other, so
+// charging at 3p min stops within one disable delay under passing clouds (#34746)
+func TestPVDisablePhaseTimerHandover(t *testing.T) {
+	const dt = time.Minute
+	Voltage = 100
+
+	// charging 3p at min current: 1p min is not covered at import above 2 * 1p min
+	bad := 2*Voltage*minA + 100 // disable instead of scaling down
+	good := Voltage * minA / 2  // 1p covered, 3p not: scale down
+
+	type se struct {
+		site    float64
+		delay   time.Duration
+		current float64
+	}
+	tc := []struct {
+		name   string
+		series []se
+		scaled bool
+	}{
+		{"disables within one delay", []se{
+			{bad, 0, minA},
+			{good, 20 * time.Second, minA},
+			{bad, 40 * time.Second, minA},
+			{bad, dt + time.Second, 0},
+		}, false},
+		{"scales down within one delay", []se{
+			{bad, 0, minA},
+			{good, 20 * time.Second, minA},
+			{bad, 40 * time.Second, minA},
+			{good, dt + time.Second, minA},
+		}, true},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			clock := clock.NewMock()
+			clock.Add(time.Hour) // avoid time.IsZero
+			ctrl := gomock.NewController(t)
+
+			switcher := api.NewMockPhaseSwitcher(ctrl)
+			if tc.scaled {
+				switcher.EXPECT().Phases1p3p(1)
+			}
+
+			charger := struct {
+				*api.MockCharger
+				*api.MockPhaseSwitcher
+			}{
+				api.NewMockCharger(ctrl), switcher,
+			}
+
+			lp := &Loadpoint{
+				log:            util.NewLogger("foo"),
+				wakeUpTimer:    NewTimer(),
+				clock:          clock,
+				charger:        charger,
+				minCurrent:     minA,
+				maxCurrent:     maxA,
+				phases:         3,
+				measuredPhases: 3,
+				solarShare:     1,
+				Disable: loadpoint.ThresholdConfig{
+					Delay: dt,
+				},
+				status:      api.StatusC,
+				enabled:     true,
+				chargePower: 3 * Voltage * minA,
+			}
+
+			start := clock.Now()
+			for step, se := range tc.series {
+				clock.Set(start.Add(se.delay))
+				assert.Equal(t, se.current, lp.pvMaxCurrent(se.site, 0, false, false), step)
+			}
+		})
 	}
 }
 

@@ -53,6 +53,7 @@ test.describe("charging loadpoint", async () => {
 
     await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     await expect(lpModal.getByLabel("Title")).toHaveValue("Solar Carport");
+    await expect(lpModal.getByLabel("Title")).not.toHaveAttribute("placeholder");
     // verify defaults
     await expect(lpModal.getByLabel("Default mode")).toHaveValue("");
     // mode

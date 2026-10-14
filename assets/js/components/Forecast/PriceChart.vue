@@ -101,9 +101,15 @@ export default defineComponent({
 					trigger: "axis",
 					axisPointer: { type: "line", snap: true, lineStyle: { color: "transparent" } },
 					...tooltipStyle(priceColor),
-					formatter(params: { value: [string, number]; seriesIndex: number }[]) {
+					formatter(
+						params: {
+							value: [string, number];
+							seriesIndex: number;
+							data?: { closing?: boolean };
+						}[]
+					) {
 						const p = params[0];
-						if (!p) return "";
+						if (!p || p.data?.closing) return "";
 						const d = new Date(p.value[0]);
 						const time = `${vThis.weekdayShort(d)} ${vThis.fmtHourMinute(d)}`;
 						const showLabels = params.length > 1;
@@ -152,14 +158,18 @@ export default defineComponent({
 		): Record<string, unknown> {
 			const avg = slots.length ? slots.reduce((a, s) => a + s.value, 0) / slots.length : 0;
 			const gradientDown = avg >= 0;
+			const last = slots[slots.length - 1];
 			return {
 				type: "line",
-				step: "start",
+				step: "end",
 				cursor: "default",
 				...hoverDot(color),
-				data: slots.map((s) => ({
-					value: [clampStart(s.start, this.startDate), s.value],
-				})),
+				data: [
+					...slots.map((s) => ({
+						value: [clampStart(s.start, this.startDate), s.value],
+					})),
+					...(last ? [{ value: [last.end, last.value], closing: true }] : []),
+				],
 				lineStyle: { color, ...lineDefaults },
 				areaStyle: {
 					color: new echarts.graphic.LinearGradient(

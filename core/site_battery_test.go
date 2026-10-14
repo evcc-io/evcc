@@ -85,6 +85,38 @@ func TestApplyBatteryMode(t *testing.T) {
 	}
 }
 
+// TestUnmodelledCharging guards that a loadpoint the optimizer does not control
+// counts as unmodelled while it charges on the smart cost limit, not only while
+// fast charging. A heater on the price limit otherwise drained the battery in
+// automatic mode (evcc-io/optimizer#210).
+func TestUnmodelledCharging(t *testing.T) {
+	above, below := 1.5, 1.0
+	rate := api.Rate{Start: time.Now(), End: time.Now().Add(time.Hour), Value: 1.15}
+
+	for _, tc := range []struct {
+		name     string
+		status   api.ChargeStatus
+		mode     api.ChargeMode
+		limit    *float64
+		expected bool
+	}{
+		{"smart cost active", api.StatusC, api.ModeSmart, &above, true},
+		{"smart cost inactive", api.StatusC, api.ModeSmart, &below, false},
+		{"no limit", api.StatusC, api.ModeSmart, nil, false},
+		{"fast charging", api.StatusC, api.ModeNow, nil, true},
+		{"limit configured but pv mode", api.StatusC, api.ModePV, &above, false},
+		{"smart cost active but not charging", api.StatusB, api.ModeSmart, &above, false},
+	} {
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.status = tc.status
+		lp.mode = tc.mode
+		lp.smartCostLimit = tc.limit
+
+		site := &Site{log: util.NewLogger("foo"), loadpoints: []*Loadpoint{lp}}
+		assert.Equal(t, tc.expected, site.unmodelledCharging(rate), tc.name)
+	}
+}
+
 func TestSupportedBatteryMode(t *testing.T) {
 	all := []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge, api.BatteryDischarge}
 	basic := []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}
