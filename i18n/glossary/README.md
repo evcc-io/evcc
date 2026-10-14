@@ -1,6 +1,6 @@
 # Glossary
 
-Agreed terminology for the evcc UI, the app, the docs, device templates and API descriptions.
+Agreed terminology for the evcc UI, the app, the docs and device templates.
 One entry per concept, not per UI string.
 The same English word may appear under several keys when it covers several concepts (range, charge).
 If the language has only one word for them, repeat it.
