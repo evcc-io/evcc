@@ -234,8 +234,9 @@ func TestCoarsenHorizon(t *testing.T) {
 	short.TimeSeries.Gt = lo.RepeatBy(len(short.TimeSeries.Dt), func(int) float32 { return 1 })
 	before := requestDetails{Timestamps: asTimestamps(short.TimeSeries.Dt, now)}
 	after := before
+	dt = append([]int(nil), short.TimeSeries.Dt...)
 	coarsenHorizon(&short, &after, defaultCoarseSlotsAfter)
-	assert.Equal(t, 4*47, len(short.TimeSeries.Dt))
+	assert.Equal(t, dt, short.TimeSeries.Dt)
 	assert.Equal(t, before, after)
 
 	// an earlier boundary coarsens the same request
