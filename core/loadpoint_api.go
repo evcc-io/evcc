@@ -577,9 +577,8 @@ func (lp *Loadpoint) GetUI() loadpoint.UIConfig {
 }
 
 func (lp *Loadpoint) setUI(ui loadpoint.UIConfig) {
-	// DemandPredictor in UIConfig is a configuration bridge; store it in the
-	// dedicated runtime field and clear it from the UI struct so lp.Ui stays
-	// display-only and GetUI always reflects the live runtime value.
+	// DemandPredictor piggybacks on UIConfig for the config modal; keep it
+	// in the dedicated runtime field so lp.Ui stays display-only.
 	if ui.DemandPredictor != "" {
 		lp.demandPredictor = ui.DemandPredictor
 		lp.publish(keys.DemandPredictor, ui.DemandPredictor)
