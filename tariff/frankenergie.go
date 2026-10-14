@@ -23,12 +23,11 @@ const frankEnergieQuery = `query MarketPrices($date: String!, $resolution: Price
   }
 }`
 
-var amsterdamLocation *time.Location
-
 type FrankEnergie struct {
 	*embed
 	log    *util.Logger
 	export bool
+	loc    *time.Location
 	data   *util.Monitor[api.Rates]
 }
 
@@ -54,12 +53,6 @@ var _ api.Tariff = (*FrankEnergie)(nil)
 
 func init() {
 	registry.Add("frank-energie", NewFrankEnergieFromConfig)
-
-	// fall back to local time if the system has no timezone database
-	var err error
-	if amsterdamLocation, err = time.LoadLocation("Europe/Amsterdam"); err != nil {
-		amsterdamLocation = time.Local
-	}
 }
 
 func NewFrankEnergieFromConfig(other map[string]any) (api.Tariff, error) {
@@ -85,10 +78,16 @@ func NewFrankEnergieFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
+	loc, err := time.LoadLocation("Europe/Amsterdam")
+	if err != nil {
+		return nil, err
+	}
+
 	t := &FrankEnergie{
 		embed:  &cc.embed,
 		log:    util.NewLogger("frank-energie"),
 		export: export,
+		loc:    loc,
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
@@ -100,7 +99,7 @@ func (t *FrankEnergie) run(done chan error) {
 	client := request.NewHelper(t.log)
 
 	for tick := time.Tick(time.Hour); ; <-tick {
-		today := time.Now().In(amsterdamLocation)
+		today := time.Now().In(t.loc)
 
 		var prices []frankEnergiePrice
 		if err := backoff.Retry(func() error {
