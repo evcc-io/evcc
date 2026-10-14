@@ -22,11 +22,11 @@ jobs:
     if: false && (github.event.issue.pull_request || github.event.pull_request)
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Check language
         id: language_check
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         env:
           COMMENT_BODY: ${{ github.event.comment.body }}
           GITHUB_TOKEN: ${{ github.token }}
@@ -84,7 +84,7 @@ jobs:
 
       - name: Post reminder if non-English
         if: steps.language_check.outputs.analysis != ''
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             const analysis = JSON.parse('${{ steps.language_check.outputs.analysis }}');

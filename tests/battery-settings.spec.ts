@@ -16,9 +16,7 @@ test.describe("battery settings", async () => {
     await page.goto("/#/battery");
 
     await expect(page.getByTestId("header")).toContainText("Home Battery");
-    await expect(page.getByRole("heading", { name: "Battery usage" })).toContainText(
-      "Battery level 50%"
-    );
+    await expect(page.getByRole("heading", { name: "Battery usage" })).toContainText("Charge 50%");
     await expect(page.getByRole("heading", { name: "Grid charging" })).toBeVisible();
     await expect(page.getByTestId("battery-status-card")).toContainText("10.0 kWh");
   });
@@ -71,7 +69,7 @@ test.describe("battery settings", async () => {
     await page.getByLabel("Enable limit").check();
     await page.getByLabel("Price limit").selectOption({ label: "≤ 50.0 ct/kWh" });
     await expect(page.getByTestId("active-hours")).toHaveText(["Active time", "96 hr"].join(""));
-    await expect(page.locator("body")).toContainText("5.0 ct – 50.0 ct");
+    await expect(page.locator("body")).toContainText("5.0 – 50.0 ct");
 
     await page.getByRole("link", { name: "Charge" }).click();
     await page.getByTestId("energyflow").click();
@@ -85,6 +83,56 @@ test.describe("battery settings", async () => {
     await expect(
       page.getByRole("button", { name: "Grid charging: when ≤ -10.0 ct" })
     ).toBeVisible();
+  });
+
+  test("optimizer automatic mode", async ({ page }) => {
+    await page.goto("/#/battery");
+
+    const enableLimit = page.getByRole("switch", { name: "Enable limit" });
+    const priceLimit = page.getByRole("combobox", { name: "Price limit" });
+    const dischargeControl = page.getByRole("switch", { name: /Prevent home battery discharge/ });
+    const optimizerHints = page.getByText(
+      "Disabled by automatic control. The optimizer decides instead.",
+      {
+        exact: true,
+      }
+    );
+
+    await expect(enableLimit).toBeEnabled();
+    await expect(priceLimit).toBeEnabled();
+    await expect(dischargeControl).toBeEnabled();
+    await expect(optimizerHints).toHaveCount(0);
+
+    await expect(await page.request.post("/api/config/optimizerautomatic/full")).toBeOK();
+
+    await expect(enableLimit).toBeDisabled();
+    await expect(priceLimit).toBeDisabled();
+    await expect(dischargeControl).toBeDisabled();
+    await expect(optimizerHints).toHaveCount(2);
+    await expect(optimizerHints.first()).toBeVisible();
+    await expect(optimizerHints.last()).toBeVisible();
+    await expect(page.getByTestId("battery-priority").getByRole("combobox")).toBeEnabled();
+    await expect(page.getByTestId("battery-buffer").getByRole("combobox").first()).toBeEnabled();
+
+    // battery only level takes over the battery settings as well
+    await expect(await page.request.post("/api/config/optimizerautomatic/battery")).toBeOK();
+    await expect(enableLimit).toBeDisabled();
+    await expect(dischargeControl).toBeDisabled();
+    await expect(optimizerHints).toHaveCount(2);
+
+    await expect(await page.request.post("/api/config/optimizerautomatic/off")).toBeOK();
+
+    await expect(enableLimit).toBeEnabled();
+    await expect(priceLimit).toBeEnabled();
+    await expect(dischargeControl).toBeEnabled();
+    await expect(optimizerHints).toHaveCount(0);
+
+    // disabling the optimizer releases automatic mode
+    await expect(await page.request.post("/api/config/optimizerautomatic/full")).toBeOK();
+    await expect(enableLimit).toBeDisabled();
+    await expect(await page.request.post("/api/config/optimizer/false")).toBeOK();
+    await expect(enableLimit).toBeEnabled();
+    await expect(optimizerHints).toHaveCount(0);
   });
 
   test("hold mode display", async ({ page }) => {

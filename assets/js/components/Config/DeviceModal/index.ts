@@ -1,4 +1,4 @@
-import type { DeviceType, MODBUS_COMSET, MeterTemplateUsage } from "@/types/evcc";
+import type { DeviceType, MODBUS_COMSET, MeterTemplateUsage, ServiceValue } from "@/types/evcc";
 import { ConfigType } from "@/types/evcc";
 import api from "@/api";
 import { extractPlaceholders, replacePlaceholders } from "@/utils/placeholder";
@@ -167,16 +167,26 @@ export function flattenDeviceConfig(dev: any): Record<string, any> {
   return flat;
 }
 
-export async function loadServiceValues(path: string) {
+// retry is called with seconds if the service announces more values
+export async function loadServiceValues(path: string, retry?: (seconds: number) => void) {
   try {
     const response = await api.get(`/config/service/${path}`, {
       validateStatus: (status) => status >= 200 && status < 500,
     });
-    return (response.data as string[]) || [];
+    const retryAfter = Number(response.headers["retry-after"]);
+    if (retryAfter > 0) retry?.(retryAfter);
+    // 4xx bodies (e.g. a 404 for a path with an empty optional param) are not suggestions
+    return Array.isArray(response.data) ? (response.data as ServiceValue[]) : [];
   } catch {
     return [];
   }
 }
+
+// candidates for auto-fill: plain values, or options that match and are not used elsewhere
+export const serviceDefaults = (values: ServiceValue[] = []): string[] =>
+  values
+    .filter((v) => typeof v === "string" || (v.match && !v.used))
+    .map((v) => (typeof v === "string" ? v : v.value));
 
 // Expand {modbus} to actual connection params based on values
 const expandModbus = (service: string, values: Record<string, any>): string => {
@@ -200,6 +210,10 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
       if (!param.Service) {
         return null;
       }
+      // empty optional params (e.g. user/password) must not block the fetch
+      const optional = extractPlaceholders(param.Service).filter((name) =>
+        params.some((p) => p.Name === name && name !== "modbus" && !p.Required)
+      );
       const stringValues = (values: Record<string, any>): Record<string, string> =>
         Object.entries(values).reduce(
           (acc, [key, val]) => {
@@ -207,7 +221,7 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
               acc[key] = String(val);
             return acc;
           },
-          {} as Record<string, string>
+          Object.fromEntries(optional.map((name) => [name, ""])) as Record<string, string>
         );
 
       return {
@@ -222,10 +236,11 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
 
 export const fetchServiceValues = async (
   templateParams: TemplateParam[],
-  values: DeviceValues
-): Promise<Record<string, string[]>> => {
+  values: DeviceValues,
+  retry?: (name: string, seconds: number) => void
+): Promise<Record<string, ServiceValue[]>> => {
   const endpoints = createServiceEndpoints(templateParams);
-  const result: Record<string, string[]> = {};
+  const result: Record<string, ServiceValue[]> = {};
 
   await Promise.all(
     endpoints.map(async (endpoint) => {
@@ -234,7 +249,7 @@ export const fetchServiceValues = async (
         // missing values, not all placeholders are filled
         return;
       }
-      const data = await loadServiceValues(url);
+      const data = await loadServiceValues(url, (seconds) => retry?.(endpoint.name, seconds));
       if (data) {
         result[endpoint.name] = data;
       }

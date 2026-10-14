@@ -91,6 +91,7 @@ import "@h2d2/shopicons/es/bold/circle";
 import "@h2d2/shopicons/es/filled/lightning";
 
 import Loadpoint from "./Loadpoint.vue";
+import Dropdown from "bootstrap/js/dist/dropdown";
 import { defineComponent, type PropType } from "vue";
 import type {
 	UiLoadpoint,
@@ -194,6 +195,13 @@ export default defineComponent({
 			const carousel = this.$refs["carousel"] as HTMLElement | undefined;
 			if (!carousel || !carousel.children.length) {
 				return;
+			}
+
+			// swiping doesn't fire a click, so bootstrap's own outside-click auto-close
+			// never triggers and an open "always charge" popover would stay put
+			const openToggle = carousel.querySelector('[data-bs-toggle="dropdown"].show');
+			if (openToggle) {
+				Dropdown.getInstance(openToggle)?.hide();
 			}
 
 			const { scrollLeft } = carousel;

@@ -93,7 +93,7 @@ func NewTronityFromConfig(other map[string]any) (api.Vehicle, error) {
 	var ts oauth2.TokenSource
 	token, err := cc.Tokens.Token()
 
-	// https://app.platform.tronity.io/docs#tag/Authentication
+	// https://app.tronity.tech/docs#tag/Authentication
 	if err != nil {
 		// use app flow if we don't have tokens
 		ts = tronity.TokenSource(log, oc)

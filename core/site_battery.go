@@ -116,6 +116,17 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		if extMode != batMode {
 			res = extMode
 		}
+	case site.Automatic() && site.unmodelledCharging(rate):
+		// the suggestion ignores loads the optimizer cannot model as storage
+		res = keepUnlessModified(api.BatteryHold)
+	case site.Automatic():
+		// optimizer decides, replacing grid charge limit and discharge control
+		if mode, ok := site.batterySuggestionMode(); ok {
+			res = keepUnlessModified(mode)
+		} else if batteryModeModified(batMode) {
+			// no suggestion: release the battery
+			res = api.BatteryNormal
+		}
 	case batteryGridChargeActive:
 		// independent limits (buy vs feed-in rate) can both be active at once;
 		// charge wins to avoid buying and immediately selling
@@ -134,6 +145,52 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 	}
 
 	return res
+}
+
+// unmodelledCharging reports a loadpoint charging at full power that the optimizer
+// does not control: it cannot model it as storage (unknown vehicle capacity, see
+// optimizerRequest), it is a heater, or only the battery is automatic. Its battery
+// suggestion does not account for that load, so the battery must be held. Like
+// dischargeControlActive this includes charging on the smart cost limit, which is
+// what keeps such a loadpoint running at cheap prices.
+func (site *Site) unmodelledCharging(rate api.Rate) bool {
+	for _, lp := range site.activeLoadpoints() {
+		if lp.optimizerControlled() {
+			continue
+		}
+
+		if lp.GetStatus() == api.StatusC && (site.smartCostActive(lp, rate) || lp.IsFastChargingActive()) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// batterySuggestionMode returns the optimizer's mode for the first controllable battery.
+// TODO apply per battery once the site tracks more than a single battery mode
+func (site *Site) batterySuggestionMode() (api.BatteryMode, bool) {
+	for _, dev := range site.batteryMeters {
+		if dev == nil {
+			continue
+		}
+
+		s := site.suggestion(batteryKey(dev.Config().Name), site.GetBatteryMode().String())
+		if s == nil {
+			continue
+		}
+
+		mode, err := api.BatteryModeString(s.Action)
+		if err != nil {
+			// unknown action, release the battery
+			site.log.DEBUG.Printf("battery %s: cannot apply suggestion %s", deviceTitleOrName(dev), s.Action)
+			return api.BatteryNormal, true
+		}
+
+		return mode, true
+	}
+
+	return api.BatteryUnknown, false
 }
 
 // batterySocLimitReached reports whether the battery has reached the soc bound
@@ -176,6 +233,24 @@ func (site *Site) batterySocLimitReached(dev config.Device[api.Meter], discharge
 	return false, nil
 }
 
+// batteryModeFallbacks lists the modes applied instead of an unsupported mode, most to least aligned with its intent
+var batteryModeFallbacks = map[api.BatteryMode][]api.BatteryMode{
+	api.BatteryCharge:     {api.BatteryHold, api.BatteryNormal},       // keep the energy while grid power is cheap
+	api.BatteryDischarge:  {api.BatteryHoldCharge, api.BatteryNormal}, // don't store pv, feed the house instead
+	api.BatteryHold:       {api.BatteryNormal},
+	api.BatteryHoldCharge: {api.BatteryNormal},
+}
+
+// supportedBatteryMode returns the requested mode if supported, otherwise the first supported fallback or unknown
+func supportedBatteryMode(supported []api.BatteryMode, mode api.BatteryMode) api.BatteryMode {
+	for _, m := range append([]api.BatteryMode{mode}, batteryModeFallbacks[mode]...) {
+		if slices.Contains(supported, m) {
+			return m
+		}
+	}
+	return api.BatteryUnknown
+}
+
 // applyBatteryMode applies the mode to each battery.
 //
 // A battery that reached the soc bound of the requested mode is held instead:
@@ -212,16 +287,26 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 			}
 		}
 
-		// don't re-apply the mode the battery is already in
-		name := dev.Config().Name
-		if deviceMode == api.BatteryUnknown || deviceMode == site.batteryModeApplied[name] {
+		if deviceMode == api.BatteryUnknown {
 			continue
 		}
 
-		if !slices.Contains(batCtrl.BatteryModes(), deviceMode) {
-			site.log.DEBUG.Printf("battery %s does not support mode: %s", deviceTitleOrName(dev), deviceMode)
+		// an unsupported mode falls back to the closest supported one instead of leaving the battery in the mode applied before
+		applyMode := supportedBatteryMode(batCtrl.BatteryModes(), deviceMode)
+		if applyMode == api.BatteryUnknown {
 			continue
 		}
+
+		// don't re-apply the mode the battery is already in
+		name := dev.Config().Name
+		if applyMode == site.batteryModeApplied[name] {
+			continue
+		}
+
+		if applyMode != deviceMode {
+			site.log.WARN.Printf("battery %s does not support mode %s, using %s", deviceTitleOrName(dev), deviceMode, applyMode)
+		}
+		deviceMode = applyMode
 
 		if err := batCtrl.SetBatteryMode(deviceMode); err != nil {
 			if !errors.Is(err, api.ErrNotAvailable) {
@@ -246,7 +331,12 @@ func (site *Site) tariffRates(usage api.TariffUsage) (api.Rates, error) {
 	return tariff.Rates()
 }
 
+// smartCostActive reports whether the loadpoint charges on its smart cost limit.
+// The limit only acts in smart mode (see Loadpoint.Update), other modes ignore it.
 func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
+	if lp.GetMode() != api.ModeSmart {
+		return false
+	}
 	limit := lp.GetSmartCostLimit()
 	return limit != nil && !rate.IsZero() && rate.Value <= *limit
 }

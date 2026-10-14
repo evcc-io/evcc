@@ -12,6 +12,8 @@ requirements:
       The communication is done locally. evcc must be in the same network as the E3/DC system.
 
       **Note**: Active battery control will override Smart-Power/Operating Range settings.
+discovery:
+  mac: ["1CAE3E3", "0C86297"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

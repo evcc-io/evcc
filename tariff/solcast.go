@@ -78,15 +78,11 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 	var once sync.Once
 
 	for ; true; <-time.Tick(interval) {
-		// ensure we don't run when not needed, but execute once at startup
-		select {
-		case <-t.data.Done():
-			if !t.fromTo.IsActive(time.Now().Hour()) {
-				// keep cached forecast alive while fetching is paused
-				mergeRatesAfter(t.data, nil, beginningOfDay())
-				continue
-			}
-		default:
+		if !t.fromTo.IsActive(time.Now().Hour()) {
+			// keep cached forecast alive while fetching is paused
+			mergeRatesAfter(t.data, nil, beginningOfDay())
+			once.Do(func() { close(done) })
+			continue
 		}
 
 		var res solcast.Forecasts

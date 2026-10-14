@@ -217,12 +217,12 @@ func (c *Collector) SetCapabilities(energy, returnEnergy bool) error {
 	// keyed on the entity, since an incomplete state is left unrestored and would
 	// otherwise resurface once the other direction is checkpointed again
 	if !energy && c.entity.EnergyMeter != nil {
-		c.accu.energyMeter = nil
+		c.accu.energyMeter = meterTotal{}
 		c.entity.EnergyMeter = nil
 		cols["energy_meter"] = nil
 	}
 	if !returnEnergy && c.entity.ReturnEnergyMeter != nil {
-		c.accu.returnEnergyMeter = nil
+		c.accu.returnEnergyMeter = meterTotal{}
 		c.entity.ReturnEnergyMeter = nil
 		cols["return_energy_meter"] = nil
 	}
@@ -233,7 +233,7 @@ func (c *Collector) SetCapabilities(energy, returnEnergy bool) error {
 
 	// a surviving reading still covers the downtime for its own direction, so
 	// keep the restore rather than discarding that delta with the cleared one
-	c.restored = c.accu.energyMeter != nil || c.accu.returnEnergyMeter != nil
+	c.restored = c.accu.energyMeter.last != nil || c.accu.returnEnergyMeter.last != nil
 
 	return db.Instance.Model(&c.entity).UpdateColumns(cols).Error
 }
@@ -258,8 +258,8 @@ func (c *Collector) AddEnergy(energyTotal, returnEnergyTotal *float64, power flo
 	return c.process(func() {
 		// a direction that ever reported a total is metered, so a nil read is a
 		// transient failure rather than a power-only meter
-		hasEnergyMeter := energyTotal != nil || c.accu.energyMeter != nil
-		hasReturnMeter := returnEnergyTotal != nil || c.accu.returnEnergyMeter != nil
+		hasEnergyMeter := energyTotal != nil || c.accu.energyMeter.last != nil
+		hasReturnMeter := returnEnergyTotal != nil || c.accu.returnEnergyMeter.last != nil
 
 		// integrate power for the unmetered direction first, since applying a
 		// meter total advances the accumulator clock

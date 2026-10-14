@@ -1,12 +1,14 @@
 package viessmann
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
@@ -61,35 +63,52 @@ func equipment(req *http.Request) ([]Installation, error) {
 	return api.Installations()
 }
 
-// values extracts the installation ids or, with gateways set, the deduplicated
-// gateway serials of the given installations.
-func values(installations []Installation, gateways bool) []string {
-	res := []string{}
+// label describes the installation by its description or, if unset, its address.
+func (inst Installation) label() string {
+	if desc := strings.TrimSpace(inst.Description); desc != "" {
+		return desc
+	}
+
+	street := strings.TrimSpace(inst.Address.Street + " " + inst.Address.HouseNumber)
+	return strings.Trim(street+", "+inst.Address.City, ", ")
+}
+
+// equipmentOptions lists the installations or, with gateways set, the deduplicated
+// gateways of the given installations, described by location and gateway type.
+// All options are valid choices, match keeps the single-item auto-fill.
+func equipmentOptions(installations []Installation, gateways bool) []service.Option {
+	res := []service.Option{}
 
 	for _, inst := range installations {
 		if !gateways {
-			res = append(res, strconv.Itoa(inst.ID))
+			serials := make([]string, 0, len(inst.Gateways))
+			for _, gw := range inst.Gateways {
+				if serial := strings.TrimSpace(gw.Serial); serial != "" {
+					serials = append(serials, serial)
+				}
+			}
+			res = append(res, service.Option{Value: strconv.Itoa(inst.ID), Label: inst.label(), Hint: strings.Join(serials, ", "), Match: true})
 			continue
 		}
 
 		for _, gw := range inst.Gateways {
-			if !slices.Contains(res, gw.Serial) {
-				res = append(res, gw.Serial)
+			if !slices.ContainsFunc(res, func(o service.Option) bool { return o.Value == gw.Serial }) {
+				res = append(res, service.Option{Value: gw.Serial, Label: strings.TrimSpace(gw.GatewayType), Hint: inst.label(), Match: true})
 			}
 		}
 	}
 
-	slices.Sort(res)
+	slices.SortFunc(res, func(a, b service.Option) int { return cmp.Compare(a.Value, b.Value) })
 
 	return res
 }
 
-// getEquipment lists the account's installation ids or, with detail=gateways,
-// their gateway serials, driving the respective selection in the template.
+// getEquipment lists the account's installations or, with detail=gateways,
+// their gateways, driving the respective selection in the template.
 func getEquipment(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	res := []string{}
+	res := []service.Option{}
 	defer func() { _ = json.NewEncoder(w).Encode(res) }()
 
 	installations, err := equipment(req)
@@ -101,7 +120,7 @@ func getEquipment(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	res = values(installations, req.URL.Query().Get("detail") == "gateways")
+	res = equipmentOptions(installations, req.URL.Query().Get("detail") == "gateways")
 }
 
 // measurementFeatures are the data points the charger template's optional

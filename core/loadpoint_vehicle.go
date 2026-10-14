@@ -349,16 +349,15 @@ func (lp *Loadpoint) identifyVehicleByStatus() {
 		return
 	}
 
-	if vehicle := lp.coordinator.IdentifyVehicleByStatus(); vehicle != nil {
-		lp.stopVehicleDetection()
-		lp.setActiveVehicle(vehicle)
+	vehicle := lp.coordinator.IdentifyVehicleByStatus()
+
+	// the status query is slow, a vehicle assigned meanwhile (user selection) wins
+	if vehicle == nil || lp.GetVehicle() != nil {
 		return
 	}
 
-	// remove previous vehicle if status was not confirmed
-	if api.HasCap[api.ChargeState](lp.GetVehicle()) {
-		lp.setActiveVehicle(nil)
-	}
+	lp.stopVehicleDetection()
+	lp.setActiveVehicle(vehicle)
 }
 
 // vehicleOdometer updates odometer

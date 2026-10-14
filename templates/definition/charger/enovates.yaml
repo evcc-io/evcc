@@ -18,6 +18,8 @@ requirements:
     de: "EMS über Modbus TCP muss auf der Ladestation aktiviert sein (ModBusTCPEMSEnabled und modbus.tcp.enabled = true)."
     en: "EMS over Modbus TCP must be enabled on the charger (ModBusTCPEMSEnabled and modbus.tcp.enabled = true)."
   evcc: ["sponsorship"]
+discovery:
+  mac: ["202BDA1"]
 params:
   - name: modbus
     choice: ["tcpip"]
