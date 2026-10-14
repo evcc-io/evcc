@@ -1,0 +1,81 @@
+template: pypowerwall
+products:
+  - brand: Tesla
+    description:
+      generic: Powerwall (pypowerwall-server)
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Benötigt einen laufenden [pypowerwall-server](https://github.com/jasonacox/pypowerwall-server), der die Daten der Powerwall bereitstellt.
+    en: |
+      Requires a running [pypowerwall-server](https://github.com/jasonacox/pypowerwall-server) providing the Powerwall data.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+  - name: schema
+    default: http
+    advanced: true
+  - name: port
+    default: 8675
+  - name: insecure
+  - name: controlSecret
+    usages: ["battery"]
+    mask: true
+    advanced: true
+    description:
+      de: Control Secret
+      en: Control secret
+    help:
+      de: Wert von `PW_CONTROL_SECRET` des pypowerwall-server. Ermöglicht die Batteriesteuerung über die Backup-Reserve. Wird unverschlüsselt über http gesendet, bei Bedarf https verwenden. Erfordert, dass die Verbindung zur Powerwall Schreibzugriff erlaubt (TEDAPI v1r oder Cloud).
+      en: Value of the pypowerwall-server `PW_CONTROL_SECRET`. Enables battery control via the backup reserve. Sent unencrypted over http, use https where possible. Requires a connection to the Powerwall that allows writing (TEDAPI v1r or cloud).
+  - name: minsoc
+    default: 20
+    advanced: true
+    help:
+      de: Backup-Reserve, die im Normalbetrieb wiederhergestellt wird. Nur mit Control Secret.
+      en: Backup reserve restored in normal operation. Only with control secret.
+  - name: chargemaxsoc
+    type: int
+    unit: "%"
+    default: 100
+    advanced: true
+    usages: ["battery"]
+    description:
+      de: Ziel-Ladestand beim erzwungenen Laden
+      en: Charge target when forced
+    help:
+      de: Backup-Reserve, die beim erzwungenen Laden gesetzt wird, d. h. der Ladestand, bis zu dem die Powerwall lädt. Nur mit Control Secret.
+      en: Backup reserve set while charging is forced, i.e. the soc the Powerwall charges to. Only with control secret.
+  - name: maxchargepower
+    help:
+      de: Ladeleistung aller Powerwalls zusammen, 5000 W pro Powerwall bzw. Erweiterung. Nur nötig, wenn der Server sie nicht meldet (z. B. Powerwall 3).
+      en: Charge power of all Powerwalls combined, 5000 W per Powerwall or expansion pack. Only needed if the server does not report it (e.g. Powerwall 3).
+  - name: maxdischargepower
+    help:
+      de: Entladeleistung aller Powerwalls zusammen. Nur nötig, wenn der Server sie nicht meldet (z. B. Powerwall 3).
+      en: Discharge power of all Powerwalls combined. Only needed if the server does not report it (e.g. Powerwall 3).
+  - name: maxacpower
+    help:
+      de: AC-Leistungsgrenze des Wechselrichters, z. B. 48 A x 240 V = 11520 W. Darüber liegende Produktion wird als DC-Überschuss behandelt.
+      en: AC power limit of the inverter, e.g. 48 A x 240 V = 11520 W. Production above it is treated as excess DC.
+render: |
+  type: pypowerwall
+  uri: {{ .schema }}://{{ .host }}:{{ .port }}
+  insecure: {{ .insecure }}
+  usage: {{ .usage }}
+  {{- if eq .usage "battery" }}
+  controlSecret: {{ .controlSecret }}
+  minsoc: {{ .minsoc }}
+  chargemaxsoc: {{ .chargemaxsoc }}
+  {{- if .maxchargepower }}
+  maxchargepower: {{ .maxchargepower }}
+  {{- end }}
+  {{- if .maxdischargepower }}
+  maxdischargepower: {{ .maxdischargepower }}
+  {{- end }}
+  {{- end }}
+  {{- if and (eq .usage "pv") .maxacpower }}
+  maxacpower: {{ .maxacpower }}
+  {{- end }}
