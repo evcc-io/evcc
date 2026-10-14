@@ -40,7 +40,7 @@
     "other": "charger"
   },
   "chargingPlan": {
-    "description": "Target charge level by a point in time.",
+    "description": "Target charge level by a point in time. Plural also names the feature and its dialog.",
     "other": "charging plan"
   },
   "chargingSession": {
