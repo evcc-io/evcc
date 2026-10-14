@@ -9,10 +9,10 @@ import (
 // Voltage is the nominal phase voltage, line-to-line for IT grids
 const Voltage = 230.0
 
-// Grid connection values
+// Grid connection values: three-phase four-wire (with neutral) or three-wire (without neutral)
 const (
-	NeutralConnection   = "neutral"
-	NoNeutralConnection = "no-neutral"
+	Connection3P4W = "3p4w"
+	Connection3P3W = "3p3w"
 )
 
 var (

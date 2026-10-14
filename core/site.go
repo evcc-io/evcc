@@ -172,7 +172,7 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	if site.Voltage != 0 && site.Voltage != grid.Voltage {
 		site.log.WARN.Printf("voltage %.0fV is no longer supported, using %.0fV", site.Voltage, grid.Voltage)
 	}
-	grid.SetNoNeutral(site.GetGridConnection() == grid.NoNeutralConnection)
+	grid.SetNoNeutral(site.GetGridConnection() == grid.Connection3P3W)
 
 	return site, nil
 }

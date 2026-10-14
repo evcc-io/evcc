@@ -838,8 +838,8 @@ export enum THEME {
 
 /** Grid connection, with or without neutral conductor. */
 export enum GRID_CONNECTION {
-  NEUTRAL = "neutral",
-  NO_NEUTRAL = "no-neutral",
+  THREE_PHASE_FOUR_WIRE = "3p4w",
+  THREE_PHASE_THREE_WIRE = "3p3w",
 }
 
 /** Currency in ISO 4217 format. */

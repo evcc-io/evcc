@@ -120,12 +120,12 @@ export default defineComponent({
 			title: "",
 			currency: CURRENCY.EUR,
 			country: "",
-			gridConnection: GRID_CONNECTION.NEUTRAL,
+			gridConnection: GRID_CONNECTION.THREE_PHASE_FOUR_WIRE,
 			initial: {
 				title: "",
 				currency: CURRENCY.EUR as string,
 				country: "",
-				gridConnection: GRID_CONNECTION.NEUTRAL,
+				gridConnection: GRID_CONNECTION.THREE_PHASE_FOUR_WIRE,
 			},
 		};
 	},
@@ -159,27 +159,31 @@ export default defineComponent({
 		},
 		gridConnectionOptions() {
 			return [
-				{ value: GRID_CONNECTION.NEUTRAL, name: this.gridConnectionNeutralLabel },
-				{ value: GRID_CONNECTION.NO_NEUTRAL, name: this.gridConnectionNoNeutralLabel },
+				{
+					value: GRID_CONNECTION.THREE_PHASE_FOUR_WIRE,
+					name: this.gridConnectionNeutralLabel,
+				},
+				{
+					value: GRID_CONNECTION.THREE_PHASE_THREE_WIRE,
+					name: this.gridConnectionNoNeutralLabel,
+				},
 			];
 		},
 		gridConnectionNeutralLabel() {
 			const lineVoltage = Math.round((this.voltage * Math.sqrt(3)) / 10) * 10;
-			return this.$t("config.site.gridConnection.neutral", {
+			return this.$t("config.site.gridConnection.3p4w", {
 				voltage: this.voltage,
 				lineVoltage,
 			});
 		},
 		gridConnectionNoNeutralLabel() {
-			return this.$t("config.site.gridConnection.noNeutral", { voltage: this.voltage });
+			return this.$t("config.site.gridConnection.3p3w", { voltage: this.voltage });
 		},
 		gridConnectionChanged() {
 			return this.gridConnection !== this.initial.gridConnection;
 		},
 		gridConnectionHelp() {
-			const key =
-				this.gridConnection === GRID_CONNECTION.NO_NEUTRAL ? "noNeutral" : "neutral";
-			return this.$t(`config.site.gridConnection.description.${key}`);
+			return this.$t(`config.site.gridConnection.description.${this.gridConnection}`);
 		},
 		changed() {
 			return (
@@ -202,7 +206,8 @@ export default defineComponent({
 			this.title = store.state?.siteTitle || "";
 			this.currency = store.state?.currency || CURRENCY.EUR;
 			this.country = store.state?.country || "";
-			this.gridConnection = store.state?.gridConnection ?? GRID_CONNECTION.NEUTRAL;
+			this.gridConnection =
+				store.state?.gridConnection ?? GRID_CONNECTION.THREE_PHASE_FOUR_WIRE;
 			this.initial = {
 				title: this.title,
 				currency: this.currency,

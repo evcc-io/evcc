@@ -24,11 +24,11 @@ describe("fmtPhasePower", () => {
   test("should use phase count with neutral", () => {
     expect(fmt.fmtPhasePower(16, 1)).eq("3,7 kW");
     expect(fmt.fmtPhasePower(16, 3)).eq("11,0 kW");
-    expect(fmt.fmtPhasePower(16, 3, 230, GRID_CONNECTION.NEUTRAL)).eq("11,0 kW");
+    expect(fmt.fmtPhasePower(16, 3, 230, GRID_CONNECTION.THREE_PHASE_FOUR_WIRE)).eq("11,0 kW");
   });
   test("should use line-to-line voltage without neutral", () => {
-    expect(fmt.fmtPhasePower(16, 1, 230, GRID_CONNECTION.NO_NEUTRAL)).eq("3,7 kW");
-    expect(fmt.fmtPhasePower(16, 3, 230, GRID_CONNECTION.NO_NEUTRAL)).eq("6,4 kW");
+    expect(fmt.fmtPhasePower(16, 1, 230, GRID_CONNECTION.THREE_PHASE_THREE_WIRE)).eq("3,7 kW");
+    expect(fmt.fmtPhasePower(16, 3, 230, GRID_CONNECTION.THREE_PHASE_THREE_WIRE)).eq("6,4 kW");
   });
 });
 

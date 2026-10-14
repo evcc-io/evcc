@@ -61,7 +61,7 @@ test.describe("general", async () => {
     await expectModalVisible(modal);
     await expect(modal.getByLabel("Country")).toHaveValue("DE");
     await modal.getByRole("button", { name: "Show advanced settings" }).click();
-    await expect(modal.getByLabel("Grid connection")).toHaveValue("no-neutral");
+    await expect(modal.getByLabel("Grid connection")).toHaveValue("3p3w");
     await modal.getByRole("button", { name: "Cancel" }).click();
     await expectModalHidden(modal);
 

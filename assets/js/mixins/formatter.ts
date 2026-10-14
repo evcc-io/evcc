@@ -143,7 +143,9 @@ export default defineComponent({
       gridConnection?: GRID_CONNECTION
     ) {
       const factor =
-        gridConnection === GRID_CONNECTION.NO_NEUTRAL && phases === 3 ? Math.sqrt(3) : phases || 0;
+        gridConnection === GRID_CONNECTION.THREE_PHASE_THREE_WIRE && phases === 3
+          ? Math.sqrt(3)
+          : phases || 0;
       return this.fmtW(voltage * (current || 0) * factor);
     },
     fmtW(watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number, signed = false) {

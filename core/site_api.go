@@ -82,18 +82,18 @@ func (site *Site) SetCountry(country string) {
 	site.publish(keys.Country, country)
 }
 
-// GetGridConnection returns the grid connection, neutral (default) or no-neutral
+// GetGridConnection returns the grid connection, 3p4w (with neutral, default) or 3p3w (without neutral)
 func (site *Site) GetGridConnection() string {
-	if v, _ := settings.String(keys.GridConnection); v == grid.NoNeutralConnection {
+	if v, _ := settings.String(keys.GridConnection); v == grid.Connection3P3W {
 		return v
 	}
-	return grid.NeutralConnection
+	return grid.Connection3P4W
 }
 
 // SetGridConnection sets the grid connection and applies it to the current to power conversion
 func (site *Site) SetGridConnection(conn string) {
 	settings.SetString(keys.GridConnection, conn)
-	grid.SetNoNeutral(conn == grid.NoNeutralConnection)
+	grid.SetNoNeutral(conn == grid.Connection3P3W)
 	site.publish(keys.GridConnection, conn)
 }
 

@@ -968,12 +968,12 @@
       },
       "gridConnection": {
         "description": {
-          "neutral": "Standard in most countries. Single-phase loads connect between line and neutral.",
-          "noNeutral": "Single-phase loads connect between two lines. Found in Norway and parts of Belgium, among others."
+          "3p4w": "Standard in most countries. Single-phase loads connect between line and neutral.",
+          "3p3w": "Single-phase loads connect between two lines. Found in Norway and parts of Belgium, among others."
         },
         "label": "Grid connection",
-        "neutral": "3 × {voltage}/{lineVoltage} V with neutral",
-        "noNeutral": "3 × {voltage} V without neutral"
+        "3p4w": "3 × {voltage}/{lineVoltage} V with neutral",
+        "3p3w": "3 × {voltage} V without neutral"
       },
       "currency": {
         "description": "Used to format energy prices, costs and savings based on your tariff.",

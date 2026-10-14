@@ -1060,7 +1060,7 @@ paths:
     put:
       operationId: setGridConnection
       summary: Set grid connection
-      description: "Set the grid connection. neutral for grids with neutral conductor (3 x 230/400 V), no-neutral for three-wire grids without neutral (3 x 230 V)."
+      description: "Set the grid connection. 3p4w for three-phase four-wire grids with neutral (3 x 230/400 V), 3p3w for three-phase three-wire grids without neutral (3 x 230 V)."
       tags:
         - general
       requestBody:
@@ -1070,9 +1070,9 @@ paths:
             schema:
               type: string
               enum:
-                - neutral
-                - no-neutral
-              example: no-neutral
+                - 3p4w
+                - 3p3w
+              example: 3p3w
       responses:
         "200":
           $ref: "#/components/responses/BlankResponse"

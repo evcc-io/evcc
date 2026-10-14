@@ -171,7 +171,7 @@ func updateCountryHandler(site site.API) http.HandlerFunc {
 	}
 }
 
-// updateGridConnectionHandler sets the grid connection, neutral or no-neutral
+// updateGridConnectionHandler sets the grid connection, 3p4w (with neutral) or 3p3w (without neutral)
 func updateGridConnectionHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var val string
@@ -180,7 +180,7 @@ func updateGridConnectionHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		if val != grid.NeutralConnection && val != grid.NoNeutralConnection {
+		if val != grid.Connection3P4W && val != grid.Connection3P3W {
 			jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid grid connection: %s", val))
 			return
 		}
