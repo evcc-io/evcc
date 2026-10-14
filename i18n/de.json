@@ -1070,7 +1070,7 @@
         "temperature": "Temperatur-Vorhersage hinzufügen"
       },
       "planner": {
-        "description": "Erweiterte Einstellung. Normalerweise nicht nötig, da dynamische Stromtarife oder CO₂-Vorhersagen automatisch verwendet werden. Ermöglicht eine zusätzliche Datenquelle, die nur für die Ladeplanung verwendet wird und nicht für Statistiken und Preisberechnungen.",
+        "description": "Erweiterte Einstellung. Normalerweise nicht nötig, da dynamische Stromtarife oder CO₂-Vorhersagen automatisch verwendet werden. Ermöglicht eine zusätzliche Datenquelle, die nur für Ladepläne verwendet wird und nicht für Statistiken und Preisberechnungen.",
         "titleAdd": "Planer-Vorhersage hinzufügen",
         "titleEdit": "Planer-Vorhersage bearbeiten"
       },
@@ -1530,7 +1530,7 @@
       "addRepeatingPlan": "Wiederholenden Plan hinzufügen",
       "day": "Tag",
       "goal": "Ladeziel",
-      "modalTitle": "Ladeplanung",
+      "modalTitle": "Ladepläne",
       "none": "keiner",
       "once": "einmalig",
       "optimization": {
@@ -1710,7 +1710,7 @@
       "inactiveLabel": "Zielzeit",
       "nextPlan": "Nächster Plan",
       "notReachableInTime": "Zielzeit wird {overrun} später erreicht.",
-      "onlyInSmartMode": "Ladeplanung ist nur im Smart-Modus aktiv.",
+      "onlyInSmartMode": "Ladepläne sind nur im Smart-Modus aktiv.",
       "planDuration": "Ladedauer",
       "planPeriodLabel": "Zeitraum",
       "planPeriodValue": "{start} bis {end}",

@@ -40,11 +40,7 @@
     "other": "charger"
   },
   "chargingPlan": {
-    "description": "One concrete plan: target charge level by a point in time.",
-    "other": "charging plan"
-  },
-  "chargingPlanDialog": {
-    "description": "Dialog on the charging point where the plan is set up, also used as the name of the feature. Same word as charging plan in English; repeat the term if the language does not distinguish.",
+    "description": "Target charge level by a point in time. Plural also names the feature and its dialog.",
     "other": "charging plan"
   },
   "chargingSession": {
