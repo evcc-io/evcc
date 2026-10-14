@@ -1158,7 +1158,7 @@
     },
     "consumers": {
       "chart": {
-        "bars": "Staafdiagram",
+        "bars": "Staaf",
         "pattern": "Patroon"
       },
       "cost": "Kosten",
