@@ -968,12 +968,12 @@
       },
       "gridConnection": {
         "description": {
-          "3p4w": "Standard in den meisten Ländern. Einphasige Verbraucher liegen zwischen Außenleiter und Neutralleiter.",
-          "3p3w": "Einphasige Verbraucher liegen zwischen zwei Außenleitern. Kommt u. a. in Norwegen und Teilen Belgiens vor."
+          "3p4w": "Drehstrom mit Neutralleiter (N, auch „Nullleiter“). Zwischen zwei Außenleitern liegen {lineVoltage} V, zwischen Außenleiter und N {voltage} V. Standard in den meisten Ländern, z. B. auch „3N 400 V“ (Belgien) oder „400 V TN-Netz“ (Norwegen).",
+          "3p3w": "Drehstrom ohne Neutralleiter. Zwischen zwei Außenleitern liegen {voltage} V, einphasige Geräte hängen an zwei Außenleitern. Z. B. „3 × 230 V“ oder Dreiecksnetz (Belgien) bzw. „230 V IT-Netz“ (Norwegen). Im Zweifel beim Elektriker oder Netzbetreiber nachfragen."
         },
         "label": "Netzanschluss",
-        "3p4w": "3 × {voltage}/{lineVoltage} V mit Neutralleiter",
-        "3p3w": "3 × {voltage} V ohne Neutralleiter"
+        "3p4w": "3 × {voltage}/{lineVoltage} V mit Neutralleiter (3P4W)",
+        "3p3w": "3 × {voltage} V ohne Neutralleiter (3P3W)"
       },
       "currency": {
         "description": "Wird für die Erfassung und Formatierung von Energiepreisen, Kosten und Einsparungen verwendet.",

@@ -157,9 +157,11 @@ export default defineComponent({
 		voltage() {
 			return store.state?.voltage ?? 230;
 		},
+		lineVoltage() {
+			return Math.round((this.voltage * Math.sqrt(3)) / 10) * 10;
+		},
 		gridConnectionOptions() {
-			const voltage = this.voltage;
-			const lineVoltage = Math.round((voltage * Math.sqrt(3)) / 10) * 10;
+			const { voltage, lineVoltage } = this;
 			return [
 				{
 					value: GRID_CONNECTION.THREE_PHASE_FOUR_WIRE,
@@ -175,7 +177,11 @@ export default defineComponent({
 			return this.gridConnection !== this.initial.gridConnection;
 		},
 		gridConnectionHelp() {
-			return this.$t(`config.site.gridConnection.description.${this.gridConnection}`);
+			const { voltage, lineVoltage } = this;
+			return this.$t(`config.site.gridConnection.description.${this.gridConnection}`, {
+				voltage,
+				lineVoltage,
+			});
 		},
 		changed() {
 			return (
