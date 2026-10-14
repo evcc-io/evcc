@@ -212,7 +212,7 @@ func (wb *Compleo) MaxCurrentMillis(current float64) error {
 		}
 	}
 
-	power := uint16(voltage * current * float64(phases))
+	power := uint16(grid.CurrentToPower(current, phases))
 
 	err := wb.setPower(power)
 	if err == nil {

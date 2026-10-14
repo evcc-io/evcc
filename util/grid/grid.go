@@ -9,6 +9,9 @@ import (
 // Voltage is the nominal phase voltage, line-to-line for IT grids
 const Voltage = 230.0
 
+// minActiveCurrent is the current below which a line conductor is treated as idle
+const minActiveCurrent = 1.0
+
 // Grid connection values: three-phase four-wire (with neutral) or three-wire (without neutral)
 const (
 	Connection3P4W = "3p4w"
@@ -54,9 +57,10 @@ func CurrentsToPower(l1, l2, l3 float64) float64 {
 		return Voltage * (l1 + l2 + l3)
 	}
 
-	// single phase loads draw identical current on two line conductors
-	if min(math.Abs(l1), math.Abs(l2), math.Abs(l3)) == 0 {
-		return Voltage * maxAbs(l1, l2, l3)
+	// single phase loads draw identical current on two line conductors, the third one only shows measurement noise
+	peak := maxAbs(l1, l2, l3)
+	if idle := min(math.Abs(l1), math.Abs(l2), math.Abs(l3)); idle < minActiveCurrent && idle < math.Abs(peak)/2 {
+		return Voltage * peak
 	}
 
 	return Voltage * (l1 + l2 + l3) / math.Sqrt(3)

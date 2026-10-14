@@ -92,6 +92,9 @@ func (site *Site) GetGridConnection() string {
 
 // SetGridConnection sets the grid connection and applies it to the current to power conversion
 func (site *Site) SetGridConnection(conn string) {
+	site.Lock()
+	defer site.Unlock()
+
 	settings.SetString(keys.GridConnection, conn)
 	grid.SetNoNeutral(conn == grid.Connection3P3W)
 	site.publish(keys.GridConnection, conn)

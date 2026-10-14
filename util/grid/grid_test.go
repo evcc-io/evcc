@@ -46,6 +46,9 @@ func TestCurrentsToPower(t *testing.T) {
 		{true, 0, -10, -10, -2300},
 		{true, -10, -10, -10, -3983.71},
 		{true, 10, 10, 10, 3983.71},
+		{true, 10, 10, 0.2, 2300},
+		{true, -10, -10, 0.2, -2300},
+		{true, 0.5, 0.5, 0.5, 199.19},
 	} {
 		SetNoNeutral(tc.it)
 		assert.InDelta(t, tc.power, CurrentsToPower(tc.l1, tc.l2, tc.l3), 0.01, "%+v", tc)
