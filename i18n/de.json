@@ -1669,12 +1669,12 @@
       "solar": "PV-Überschuss",
       "solarShare": {
         "charging": {
-          "description": "Mindestens {share} der minimalen Ladeleistung muss aus PV-Strom stammen.",
+          "description": "Mindestens {share} der minimalen Ladeleistung muss durch PV-Überschuss gedeckt sein.",
           "descriptionFull": "Laden startet, sobald der Überschuss die minimale Ladeleistung deckt.",
           "descriptionZero": "Laden startet, sobald etwas Überschuss verfügbar ist."
         },
         "heating": {
-          "description": "Mindestens {share} der minimalen Heizleistung muss aus PV-Strom stammen.",
+          "description": "Mindestens {share} der minimalen Heizleistung muss durch PV-Überschuss gedeckt sein.",
           "descriptionFull": "Heizen startet, sobald der Überschuss die minimale Heizleistung deckt.",
           "descriptionZero": "Heizen startet, sobald etwas Überschuss verfügbar ist."
         },
