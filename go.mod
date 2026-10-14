@@ -6,6 +6,7 @@ require (
 	dario.cat/mergo v1.0.2
 	github.com/404GamerNotFound/solarman-go v0.3.0
 	github.com/AlecAivazis/survey/v2 v2.3.7
+	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.2
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/OpenEVSE/go-openevse v0.3.0
 	github.com/PanterSoft/comlynx-go v0.1.0
@@ -33,7 +34,7 @@ require (
 	github.com/enbility/eebus-go v0.7.1-0.20260720111250-363db3c5c262
 	github.com/enbility/ship-go v0.6.1-0.20260720110450-0aa90f64ac76
 	github.com/enbility/spine-go v0.7.1-0.20260629113257-b3bcc643f323
-	github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4
+	github.com/evcc-io/openapi-mcp v0.6.1-0.20260801214504-7023d4167ce3
 	github.com/evcc-io/optimizer v0.0.0-20261004131720-6ba24fca01f5
 	github.com/evcc-io/rct v0.2.0
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20260722080120-05ada06c7368
@@ -98,6 +99,7 @@ require (
 	github.com/stretchr/testify v1.12.1
 	github.com/teslamotors/vehicle-command v0.4.1
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
+	github.com/tmc/langchaingo v0.1.14
 	github.com/traefik/yaegi v0.16.1
 	github.com/volkszaehler/mbmd v0.0.0-20260930172627-7dc9ab786b6f
 	github.com/warthog618/go-gpiocdev v0.9.2
@@ -121,6 +123,7 @@ require (
 )
 
 require (
+	github.com/JohannesKaufmann/dom v0.3.1 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/andybalholm/cascadia v1.3.4 // indirect
@@ -149,6 +152,7 @@ require (
 	github.com/cstockton/go-conv v1.0.0 // indirect
 	github.com/d2r2/go-logger v0.0.0-20210606094344-60e9d1233e22 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/dmarkham/enumer v1.6.3 // indirect
 	github.com/donovanhide/eventsource v0.0.0-20210830082556-c59027999da0 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
@@ -215,6 +219,7 @@ require (
 	github.com/pascaldekloe/name v1.0.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pkoukk/tiktoken-go v0.1.8 // indirect
 	github.com/prometheus/client_model v0.6.3 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
@@ -231,7 +236,7 @@ require (
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3 // indirect
 	github.com/segmentio/asm v1.1.3 // indirect
 	github.com/segmentio/encoding v0.5.4 // indirect
-	github.com/sergi/go-diff v1.2.0 // indirect
+	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/spali/go-slicereader v0.0.0-20201122145524-8e262e1a5127 // indirect
 	github.com/spf13/afero v1.15.0 // indirect

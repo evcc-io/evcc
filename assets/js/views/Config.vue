@@ -489,6 +489,19 @@
 						>
 							<template #icon><McpIcon /></template>
 						</DeviceCard>
+						<DeviceCard
+							v-if="experimental"
+							:title="`${$t('config.assistant.title')} 🧪`"
+							editable
+							:unconfigured="isUnconfigured(assistantTags)"
+							data-testid="assistant"
+							@edit="openModal('assistant')"
+						>
+							<template #icon><AssistantIcon /></template>
+							<template #tags>
+								<DeviceTags :tags="assistantTags" />
+							</template>
+						</DeviceCard>
 					</div>
 				</ConfigSection>
 
@@ -579,6 +592,7 @@
 				<OptimizerModal :is-sponsor="isSponsor" />
 				<McpModal />
 				<DiscoveryModal />
+				<AssistantModal @changed="loadDirty" />
 				<ExperimentalModal :experimental="experimental" />
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" :site-title="siteTitle" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
@@ -674,6 +688,9 @@ import OptimizerModal from "../components/Config/OptimizerModal.vue";
 import McpIcon from "../components/MaterialIcon/Mcp.vue";
 import McpModal from "../components/Config/McpModal.vue";
 import DiscoveryModal from "../components/Config/DiscoveryModal.vue";
+import AssistantIcon from "../components/MaterialIcon/Assistant.vue";
+import AssistantModal from "../components/Config/AssistantModal.vue";
+import { setAssistantContext } from "../components/Assistant/context";
 import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
@@ -789,6 +806,8 @@ export default defineComponent({
 		McpIcon,
 		McpModal,
 		DiscoveryModal,
+		AssistantIcon,
+		AssistantModal,
 		SponsorModal,
 		TariffsLegacyModal,
 		TariffCard,
@@ -1213,6 +1232,19 @@ export default defineComponent({
 		experimental() {
 			return store.state?.experimental;
 		},
+		assistantConfigured(): boolean {
+			return !!store.state?.assistant?.provider;
+		},
+		assistantTags(): DeviceTags {
+			return { configured: { value: this.assistantConfigured } };
+		},
+		assistantContext(): string {
+			const fatals = store.state?.fatal || [];
+			const errors = fatals.length
+				? `Configuration errors currently shown: ${JSON.stringify(fatals)}`
+				: "No configuration errors are shown.";
+			return `The user is on the evcc configuration page. ${errors}`;
+		},
 		eebus() {
 			return store.state?.eebus;
 		},
@@ -1320,6 +1352,10 @@ export default defineComponent({
 				this.loadAll();
 			}
 		},
+		assistantContext: {
+			immediate: true,
+			handler: setAssistantContext,
+		},
 	},
 	mounted() {
 		this.isComponentMounted = true;
@@ -1329,6 +1365,7 @@ export default defineComponent({
 	},
 	unmounted() {
 		this.isComponentMounted = false;
+		setAssistantContext("");
 		document.removeEventListener("visibilitychange", this.handleVisibilityChange);
 		if (this.deviceValueTimeout) {
 			clearTimeout(this.deviceValueTimeout);

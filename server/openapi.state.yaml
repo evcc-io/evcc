@@ -292,6 +292,9 @@ components:
         demoMode:
           description: Instance runs in demo mode.
           type: boolean
+        assistant:
+          $ref: "#/components/schemas/AssistantConfig"
+          description: Built-in AI assistant configuration.
       required:
         - loadpoints
         - forecast
@@ -303,6 +306,26 @@ components:
         - off
         - on
         - once
+    AssistantConfig:
+      type: object
+      properties:
+        provider:
+          $ref: "#/components/schemas/AssistantProvider"
+          description: Unset while the assistant is not configured.
+        model:
+          type: string
+        token:
+          type: string
+        baseUrl:
+          type: string
+    AssistantProvider:
+      type: string
+      enum:
+        - openai
+        - anthropic
+        - azure
+        - ollama
+        - custom
     AuthProviders:
       description: Status of configured vehicle authentication providers, keyed by provider name.
       type: object

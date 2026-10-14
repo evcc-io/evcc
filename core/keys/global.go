@@ -34,6 +34,7 @@ const (
 	Optimizer          = "optimizer"
 	OptimizerAutomatic = "optimizerAutomatic" // optimizer automatic level: off, battery, full
 	Mcp                = "mcp"
+	Assistant          = "assistant"
 	DemoMode           = "demoMode"
 	Remote             = "remote"
 	RemoteClients      = "remoteClients"

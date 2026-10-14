@@ -342,6 +342,56 @@ export interface State {
   mcp?: boolean;
   /** Instance runs in demo mode. */
   demoMode?: boolean;
+  /** Built-in AI assistant configuration. */
+  assistant?: AssistantConfig;
+}
+
+export type AssistantProvider = "openai" | "anthropic" | "azure" | "ollama" | "custom";
+
+// AssistantProviderInfo describes a provider to the config ui, served by the backend
+export interface AssistantProviderInfo {
+  provider: AssistantProvider;
+  models?: string[];
+  baseUrl?: string;
+  needsToken: boolean;
+  needsBaseUrl: boolean;
+}
+
+export interface AssistantConfig {
+  /** Unset while the assistant is not configured. */
+  provider?: AssistantProvider;
+  model?: string;
+  token?: string;
+  baseUrl?: string;
+}
+
+export interface AssistantCall {
+  name: string;
+  arguments?: string;
+}
+
+// AssistantStep is one round of the tool loop, the work done before the answer
+export interface AssistantStep {
+  reasoning?: string;
+  calls?: AssistantCall[];
+}
+
+export interface AssistantMessage {
+  role: "user" | "assistant";
+  content: string;
+  steps?: AssistantStep[];
+}
+
+export interface AssistantResult {
+  content: string;
+  steps?: AssistantStep[];
+}
+
+// AssistantEvent is one line of the streamed answer, steps arrive before the result
+export interface AssistantEvent {
+  step?: AssistantStep;
+  result?: AssistantResult;
+  error?: string;
 }
 
 /** Configuration and runtime status of an integration. */

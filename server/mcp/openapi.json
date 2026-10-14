@@ -1812,11 +1812,16 @@
           {
             "name": "jq",
             "in": "query",
-            "description": "Filter the state with JQ",
+            "description": "Filter the state with JQ. The keys are top level, the state is not nested under a root key. Start with `keys` to see what the state holds and filter from there, a path that does not exist returns null without an error. Pass `.` for the complete state, it is large. Examples: `keys`, `.loadpoints[0]`, `.pv`.",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "default": "keys"
             },
             "examples": {
+              "keys": {
+                "value": "keys",
+                "summary": "available top level keys"
+              },
               "all": {
                 "value": ".",
                 "summary": "complete state"
@@ -5576,6 +5581,34 @@
           "full"
         ]
       },
+      "AssistantProvider": {
+        "type": "string",
+        "enum": [
+          "openai",
+          "anthropic",
+          "azure",
+          "ollama",
+          "custom"
+        ]
+      },
+      "AssistantConfig": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "$ref": "#/components/schemas/AssistantProvider",
+            "description": "Unset while the assistant is not configured."
+          },
+          "model": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          },
+          "baseUrl": {
+            "type": "string"
+          }
+        }
+      },
       "State": {
         "description": "Complete system state as returned by /api/state and pushed via websocket and MQTT. This structure mirrors the internal UI state and carries no compatibility promise. Fields may change or disappear between releases.",
         "type": "object",
@@ -5965,6 +5998,10 @@
           "demoMode": {
             "description": "Instance runs in demo mode.",
             "type": "boolean"
+          },
+          "assistant": {
+            "$ref": "#/components/schemas/AssistantConfig",
+            "description": "Built-in AI assistant configuration."
           }
         },
         "required": [

@@ -115,6 +115,7 @@ import Header from "../components/Top/Header.vue";
 import Play from "../components/MaterialIcon/Play.vue";
 import ProgressRing from "../components/MaterialIcon/ProgressRing.vue";
 import MultiSelect from "../components/Helper/MultiSelect.vue";
+import { setAssistantContext } from "../components/Assistant/context";
 import api from "../api";
 import store from "../store";
 import { defineComponent, type PropType } from "vue";
@@ -172,6 +173,15 @@ export default defineComponent({
 				return { key, className, line };
 			});
 		},
+		assistantContext(): string {
+			const problems = this.filteredLines
+				.filter((line) => /\] (ERROR|WARN)/.test(line))
+				.slice(-30);
+			const errors = problems.length
+				? `Recent error and warning log lines:\n${problems.join("\n")}`
+				: "No errors or warnings in the visible log.";
+			return `The user is on the evcc log page. ${errors}`;
+		},
 		areaOptions() {
 			return this.availableAreas
 				.slice()
@@ -215,6 +225,10 @@ export default defineComponent({
 		level() {
 			this.updateLogs();
 		},
+		assistantContext: {
+			immediate: true,
+			handler: setAssistantContext,
+		},
 	},
 	mounted() {
 		this.startInterval();
@@ -222,6 +236,7 @@ export default defineComponent({
 	},
 	unmounted() {
 		this.stopInterval();
+		setAssistantContext("");
 	},
 	methods: {
 		handleDownloadClick,
