@@ -3,7 +3,6 @@ products:
   - brand: Home Assistant
 group: generic
 requirements:
-  evcc: ["skiptest"]
   description:
     en: Home Assistant instances in your network will be auto-discovered and suitable entities (e.g. `sensor.*`) will be suggested.
     de: Home Assistant Instanzen in deinem Netzwerk werden automatisch erkannt und passende Entitäten (z.B. `sensor.*`) werden vorgeschlagen.
@@ -26,16 +25,14 @@ params:
       de: Temperaturentität
       en: Temperature Entity
     required: true
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor,input_number&unit=°C,°F,K
     example: sensor.boiler_temperature
     help:
-      en: Entity ID for temperature measurement in °C
-      de: Entitäts-ID für Temperaturmessung in °C
+      en: Entity ID for temperature measurement. °F and K readings are converted to °C.
+      de: Entitäts-ID für Temperaturmessung. °F- und K-Werte werden nach °C umgerechnet.
   - name: insecure
 render: |
-  type: custom
-  temp:
-    source: homeassistant
-    uri: {{ .uri }}
-    insecure: {{ .insecure }}
-    entity: {{ .temp }}
+  type: homeassistant
+  uri: {{ .uri }}
+  insecure: {{ .insecure }}
+  temp: {{ .temp }}
