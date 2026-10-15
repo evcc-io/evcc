@@ -306,7 +306,8 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 	{ // /api
 		routes := map[string]route{
-			"state": {"GET", "/state", stateHandler(cache)},
+			"state":            {"GET", "/state", stateHandler(cache)},
+			"optimizerexplain": {"POST", "/optimizer/explain", optimizerExplainHandler(site)},
 		}
 
 		for _, r := range routes {
