@@ -7,8 +7,9 @@ valid. Command-status notifications (17) are acknowledged (19) without
 interpreting or executing commands; vehicle-status updates are acknowledged
 with field 28. Other fields are discarded during decoding.
 
-Regenerate with `go generate ./vehicle/mercedes` using `protoc` and
-`protoc-gen-go` on PATH. The schema is deliberately separate from the existing
+Regenerate with `go generate -tags mercedes_proto ./vehicle/mercedes` using
+`protoc` 36.2 and `protoc-gen-go` 1.36.12 on PATH. Regeneration is opt-in so
+normal asset generation does not require protobuf compiler tools. The schema is deliberately separate from the existing
 REST protobuf definitions, which do not need regeneration.
 
 The initial WebSocket snapshot is read on demand with a 30-second timeout.
