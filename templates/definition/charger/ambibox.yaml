@@ -35,6 +35,14 @@ requirements:
       the box reports `controlMode: LIMITABLE`.
 params:
   - preset: mqtt
+  - name: host
+    default: sid-os.local
+  - name: user
+    required: true
+    advanced: false
+  - name: password
+    required: true
+    advanced: false
   - name: topic
     default: device/evCharger
     description:
@@ -53,6 +61,9 @@ params:
     description:
       de: Kleinste Ladeleistung, die die Box hält
       en: Smallest charge power the box will hold
+    help:
+      de: Meldet die Box `chargePowerMin`, gilt der größere der beiden Werte.
+      en: If the box reports `chargePowerMin`, the larger of both values applies.
   - name: phases
     default: 3
     advanced: true
@@ -60,8 +71,8 @@ params:
       de: Angeschlossene Phasen
       en: Connected phases
     help:
-      de: Firmware 0.4.8 meldet die Phasenzahl nicht selbst, deshalb hier angeben.
-      en: Firmware 0.4.8 does not report the phase count itself, so it is configured here.
+      de: Wird nur verwendet, solange die Box `numberPhases` nicht meldet (Firmware 0.4.8).
+      en: Only used while the box does not report `numberPhases` (firmware 0.4.8).
 render: |
   type: ambibox
   {{- include "mqtt" . }}

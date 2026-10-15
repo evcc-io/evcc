@@ -33,32 +33,31 @@ import (
 
 // Ambibox is the Ambibox ambiCHARGE Home charger implementation.
 //
-// Controlled over the box's own MQTT (IPC) interface; the vendor's
-// specification for it is not publicly available, so the topics, units and
-// directions used below are reproduced from that document rather than
-// linked. Modbus is not usable for control: the setpoint in holding
-// register 3000 is accepted and acknowledged but never acted on while the
-// box reports controlMode: LIMITABLE.
+// Controlled over the box's MQTT (IPC) interface (vendor spec "Ipc 0.4.0",
+// device type EV Charger). Topics below device/evCharger/<id>/:
 //
-// MQTT topics used, all under device/evCharger/<id>/:
+//	limitChargePower  write  int W
+//	stopCharge        write  bool
+//	wakeUp            write  bool
+//	sessionState      read   SESSION_SETUP ... CHARGE_LOOP, POST_CHARGE, PAUSED, STOPPED, ERROR
+//	connected         read   bool
+//	evConnected       read   bool
+//	replugRequired    read   bool
+//	controlMode       read   DISABLED, CONTROLLABLE, LIMITABLE
+//	frequency         read   Hz, used as liveness signal
+//	powerAc           read   int W, negative while charging
+//	energyAcImport    read   Wh
+//	energyAcExport    read   Wh
+//	energyAcImportSession read Wh
+//	soc               read   %
+//	capacity          read   Wh
+//	numberPhases      read   uint
+//	chargePowerMin    read   uint W
+//	chargePowerMax    read   uint W
+//	currentAc1..3     read   A
+//	voltageAc1..3     read   V
 //
-//	limitChargePower  pub, write, W      charge power limit, AC side
-//	stopCharge        pub, write, bool   true ends the session; false is a no-op while one is running
-//	wakeUp            pub, write, bool   true starts a session; no read-back
-//	stopCharge (sub)  sub                mirrors the last stopCharge write, not used here
-//	replugRequired    sub, bool          the box needs a physical unplug/replug before it accepts a wakeUp
-//	wakeUpBlocked     sub, bool          the box is in its own post-wakeUp cooldown
-//	sessionState      sub, string        state machine, see the ambiState* constants
-//	connected         sub, bool          box reachable
-//	evConnected       sub, bool          cable plugged in
-//	frequency         sub, Hz            the one topic that streams reliably; used as the liveness signal
-//	powerAc           sub, W             negative while charging
-//	energyAcImport    sub, Wh            lifetime
-//	energyAcExport    sub, Wh            lifetime, V2H
-//	energyAcImportSession sub, Wh        current session only, absent between sessions
-//	soc, capacity     sub                vehicle battery, percent / Wh
-//	chargePowerMax    sub, W             the box's own ceiling
-//	currentAc1..3, voltageAc1..3 sub     per-phase measurements
+// wakeUpBlocked is not part of the spec but published by firmware 0.4.8.
 type Ambibox struct {
 	log      *util.Logger
 	client   ambiboxPublisher
@@ -83,6 +82,8 @@ type Ambibox struct {
 	energySessImpG func() (float64, error)
 	socG           func() (float64, error)
 	capacityG      func() (float64, error)
+	phasesG        func() (int64, error)
+	chargeMinG     func() (float64, error)
 	chargeMaxG     func() (float64, error)
 	currG          [3]func() (float64, error)
 	voltG          [3]func() (float64, error)
@@ -165,6 +166,9 @@ func NewAmbibox(mqttconf mqtt.Config, topic, id string, minPower float64, phases
 	floatG := func(sub string) (func() (float64, error), error) {
 		return plugin.NewMqtt(log, client, wb.topic(sub), 0).FloatGetter()
 	}
+	intG := func(sub string) (func() (int64, error), error) {
+		return plugin.NewMqtt(log, client, wb.topic(sub), 0).IntGetter()
+	}
 	stringG := func(sub string) (func() (string, error), error) {
 		return plugin.NewMqtt(log, client, wb.topic(sub), 0).StringGetter()
 	}
@@ -213,6 +217,12 @@ func NewAmbibox(mqttconf mqtt.Config, topic, id string, minPower float64, phases
 	if wb.capacityG, err = floatG("capacity"); err != nil {
 		return nil, err
 	}
+	if wb.phasesG, err = intG("numberPhases"); err != nil {
+		return nil, err
+	}
+	if wb.chargeMinG, err = floatG("chargePowerMin"); err != nil {
+		return nil, err
+	}
 	if wb.chargeMaxG, err = floatG("chargePowerMax"); err != nil {
 		return nil, err
 	}
@@ -243,16 +253,21 @@ func (wb *Ambibox) publish(sub string, retained bool, payload string) {
 	wb.client.Publish(wb.topic(sub), retained, payload)
 }
 
-// chargeWatts converts a charging current (AC) into the charge power limit,
-// based on measured voltage and the configured phase count, held between the
-// configured minimum and the maximum the box reports.
+// chargeWatts converts a charging current into the charge power limit, based
+// on measured voltage and phase count, held between the minimum and maximum
+// charge power.
 func (wb *Ambibox) chargeWatts(current float64) float64 {
 	if current <= 0 {
 		return 0
 	}
 
+	phases := wb.phases
+	if p, err := wb.phasesG(); err == nil && p >= 1 && p <= 3 {
+		phases = int(p)
+	}
+
 	var sum float64
-	for i := range wb.phases {
+	for i := range phases {
 		v := 230.0
 		if m, err := wb.voltG[i](); err == nil && m > 0 {
 			v = m
@@ -262,9 +277,11 @@ func (wb *Ambibox) chargeWatts(current float64) float64 {
 
 	power := current * sum
 
-	if power < wb.minPower {
-		power = wb.minPower
+	minPower := wb.minPower
+	if m, err := wb.chargeMinG(); err == nil {
+		minPower = math.Max(minPower, m)
 	}
+	power = math.Max(power, minPower)
 
 	if max, err := wb.chargeMaxG(); err == nil && max > 0 {
 		power = math.Min(power, max)

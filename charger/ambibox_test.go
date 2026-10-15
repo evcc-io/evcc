@@ -79,6 +79,8 @@ func newTestAmbibox() (*Ambibox, *fakePublisher) {
 		sessionStateG: func() (string, error) { return ambiStateStopped, nil },
 		controlModeG:  func() (string, error) { return "LIMITABLE", nil },
 		powerG:        func() (float64, error) { return 0, nil },
+		phasesG:       func() (int64, error) { return 0, api.ErrNotAvailable },
+		chargeMinG:    func() (float64, error) { return 0, api.ErrNotAvailable },
 		chargeMaxG:    func() (float64, error) { return 10500, nil },
 	}
 	for i := range wb.voltG {
@@ -121,6 +123,30 @@ func TestAmbiboxChargeWattsUsesConfiguredPhases(t *testing.T) {
 
 	if p := wb.chargeWatts(6); p != 6*230 {
 		t.Errorf("chargeWatts(6) with phases=1 = %v, want %v", p, 6*230.0)
+	}
+}
+
+func TestAmbiboxChargeWattsPrefersReportedPhases(t *testing.T) {
+	wb, _ := newTestAmbibox()
+	wb.phasesG = func() (int64, error) { return 1, nil }
+
+	if p := wb.chargeWatts(6); p != 6*230 {
+		t.Errorf("chargeWatts(6) with numberPhases=1 = %v, want %v", p, 6*230.0)
+	}
+}
+
+func TestAmbiboxChargeWattsReportedMinimum(t *testing.T) {
+	wb, _ := newTestAmbibox()
+
+	wb.chargeMinG = func() (float64, error) { return 1000, nil }
+	if p := wb.chargeWatts(0.5); p != 1000 {
+		t.Errorf("chargeWatts(0.5) with chargePowerMin=1000 = %v, want 1000", p)
+	}
+
+	// a reported minimum below the configured one does not lower it
+	wb.chargeMinG = func() (float64, error) { return 400, nil }
+	if p := wb.chargeWatts(0.5); p != wb.minPower {
+		t.Errorf("chargeWatts(0.5) with chargePowerMin=400 = %v, want %v", p, wb.minPower)
 	}
 }
 
