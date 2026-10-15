@@ -256,11 +256,12 @@ func TestCoarseSlotsAfter(t *testing.T) {
 	}{
 		{"", false, defaultCoarseSlotsAfter, false},
 		{"", true, defaultCoarseSlotsAfter, false},
-		{"72h", false, 72 * time.Hour, false},
-		{"72h", true, defaultCoarseSlotsAfter, false}, // the hosted optimizer always coarsens after 48h
+		{"72", false, 72 * time.Hour, false},
+		{"72", true, defaultCoarseSlotsAfter, false}, // the hosted optimizer always coarsens after 48h
 		{"0", false, 0, false},
 		{"foo", false, defaultCoarseSlotsAfter, true},
-		{"-1h", false, defaultCoarseSlotsAfter, true},
+		{"72h", false, defaultCoarseSlotsAfter, true},
+		{"-1", false, defaultCoarseSlotsAfter, true},
 	} {
 		t.Setenv("OPTIMIZER_COARSEN_AFTER", tc.env)
 

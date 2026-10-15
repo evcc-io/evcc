@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1383,19 +1384,19 @@ func asTimestamps(dt []int, now time.Time) []time.Time {
 const defaultCoarseSlotsAfter = 48 * time.Hour
 
 // coarseSlotsAfter returns where the request switches to clock hour slots. A self-hosted optimizer
-// may move it with OPTIMIZER_COARSEN_AFTER, 0 keeps quarter hour slots for the full horizon.
+// may move it with OPTIMIZER_COARSEN_AFTER in hours, 0 keeps quarter hour slots for the full horizon.
 func coarseSlotsAfter(hosted bool) (time.Duration, error) {
 	v := os.Getenv("OPTIMIZER_COARSEN_AFTER")
 	if hosted || v == "" {
 		return defaultCoarseSlotsAfter, nil
 	}
 
-	d, err := time.ParseDuration(v)
-	if err != nil || d < 0 {
+	h, err := strconv.Atoi(v)
+	if err != nil || h < 0 {
 		return defaultCoarseSlotsAfter, fmt.Errorf("invalid OPTIMIZER_COARSEN_AFTER %q, using %v", v, defaultCoarseSlotsAfter)
 	}
 
-	return d, nil
+	return time.Duration(h) * time.Hour, nil
 }
 
 // coarsenHorizon merges the quarter hour slots beyond after into clock hours. Quarter slots bridge
