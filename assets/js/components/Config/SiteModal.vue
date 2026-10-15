@@ -82,6 +82,7 @@ import store from "@/store";
 import api from "@/api";
 import { COUNTRIES, CURRENCY } from "@/types/evcc";
 import formatter from "@/mixins/formatter";
+import { timeZoneCountry } from "@/utils/timeZoneCountry";
 
 export default defineComponent({
 	name: "SiteModal",
@@ -110,8 +111,10 @@ export default defineComponent({
 				(a, b) => a.name.localeCompare(b.name, this.$i18n.locale)
 			);
 		},
+		// the clock's zone names the place, the language only hints at it
 		browserCountry() {
-			const region = new Intl.Locale(navigator.language).maximize().region;
+			const region =
+				timeZoneCountry() || new Intl.Locale(navigator.language).maximize().region;
 			return this.countries.find((c) => c.code === region);
 		},
 		titleChanged() {
@@ -138,8 +141,13 @@ export default defineComponent({
 			this.error = "";
 			this.title = store.state?.siteTitle || "";
 			this.currency = store.state?.currency || CURRENCY.EUR;
-			this.country = store.state?.country || "";
-			this.initial = { title: this.title, currency: this.currency, country: this.country };
+			// unset: preselect the browser's country, saving persists it
+			this.country = store.state?.country || this.browserCountry?.code || "";
+			this.initial = {
+				title: this.title,
+				currency: this.currency,
+				country: store.state?.country || "",
+			};
 		},
 		async save() {
 			this.saving = true;
