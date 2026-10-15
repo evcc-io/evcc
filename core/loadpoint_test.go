@@ -900,7 +900,7 @@ func TestConnectionDurationDropDetection(t *testing.T) {
 	assert.NotEqual(t, connectedTime, lp.connectedTime)
 }
 
-func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
+func TestWelcomeChargeExpires(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 	ch := api.NewMockCharger(ctrl)
@@ -937,20 +937,35 @@ func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
 	lp.enabled = true
 	lp.status = api.StatusA
 
-	// No welcome charge when not connected
+	// no welcome charge when not connected
 	ch.EXPECT().Status().Return(api.StatusA, nil)
-	welcomeCharge, _ := lp.updateChargerStatus()
-	assert.False(t, welcomeCharge)
+	require.NoError(t, lp.updateChargerStatus())
+	assert.False(t, lp.welcomeActive())
 
-	// Welcome charge when connected
+	// welcome charge when connected
 	ch.EXPECT().Status().Return(api.StatusC, nil)
-	welcomeCharge, _ = lp.updateChargerStatus()
-	assert.True(t, welcomeCharge)
+	require.NoError(t, lp.updateChargerStatus())
+	assert.True(t, lp.welcomeActive())
 
-	// No welcome charge when still connected
+	// welcome charge remains active for its duration, covering strategies that
+	// would otherwise disable charging in the connect cycle (#32274)
+	clock.Add(welcomeChargeDuration - time.Second)
 	ch.EXPECT().Status().Return(api.StatusB, nil)
-	welcomeCharge, _ = lp.updateChargerStatus()
-	assert.False(t, welcomeCharge)
+	require.NoError(t, lp.updateChargerStatus())
+	assert.True(t, lp.welcomeActive())
+
+	// welcome charge expires
+	clock.Add(time.Second)
+	assert.False(t, lp.welcomeActive())
+
+	// disconnecting clears the deadline
+	ch.EXPECT().Status().Return(api.StatusC, nil)
+	require.NoError(t, lp.updateChargerStatus())
+	assert.False(t, lp.welcomeActive(), "welcome charge requires a connect event")
+
+	ch.EXPECT().Status().Return(api.StatusA, nil)
+	require.NoError(t, lp.updateChargerStatus())
+	assert.True(t, lp.welcomeUntil.IsZero())
 }
 
 // TestBatteryBoostHold verifies that in the hold state (soc limit reached) battery
@@ -1029,6 +1044,45 @@ func TestPVSolarShare(t *testing.T) {
 		"enable threshold should apply despite solar share")
 	assert.Equal(t, minA, newLp(1, true, 0, 5000).pvMaxCurrent(100, 0, false, false),
 		"disable threshold should apply despite solar share")
+}
+
+// TestWelcomeChargeNoBatterySupport verifies that bufferSoc does not sustain a session
+// the welcome charge started until surplus confirms it (#32278)
+func TestWelcomeChargeNoBatterySupport(t *testing.T) {
+	Voltage = 230
+	ctrl := gomock.NewController(t)
+	clck := clock.NewMock()
+
+	lp := &Loadpoint{
+		log:            util.NewLogger("foo"),
+		clock:          clck,
+		charger:        api.NewMockCharger(ctrl),
+		site:           &mockSite{},
+		minCurrent:     minA,
+		maxCurrent:     maxA,
+		phases:         3,
+		measuredPhases: 3,
+		Disable:        loadpoint.ThresholdConfig{Delay: 3 * time.Minute},
+		solarShare:     1,
+		status:         api.StatusC,
+		enabled:        true,
+		welcomeUntil:   clck.Now().Add(-time.Minute), // expired welcome charge
+	}
+
+	minPower := currentToPower(minA, 3)
+
+	// battery covers the car, but the welcome charge started the session: disable timer runs
+	assert.Equal(t, minA, lp.pvMaxCurrent(minPower, minPower, true, false), "disable delay pending")
+	assert.False(t, lp.pvTimer.IsZero(), "welcome charge must not start battery support")
+	assert.False(t, lp.welcomeUntil.IsZero())
+
+	// surplus confirms the session
+	assert.Equal(t, minA, lp.pvMaxCurrent(-minPower, 0, true, false), "surplus charging")
+	assert.True(t, lp.welcomeUntil.IsZero(), "surplus must confirm the session")
+
+	// battery support sustains the confirmed session
+	assert.Equal(t, minA, lp.pvMaxCurrent(minPower, minPower, true, false), "battery covers demand")
+	assert.True(t, lp.pvTimer.IsZero(), "no disable timer while supported")
 }
 
 // TestBatterySupport verifies that battery-supported charging ends once the battery
