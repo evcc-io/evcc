@@ -41,11 +41,7 @@ func (site *Site) ExplainOptimizerResult(ctx context.Context, language string) (
 		body.Currency = site.tariffs.Currency.String()
 	}
 
-	keyJSON, err := json.Marshal(struct {
-		Req      any    `json:"req"`
-		Res      any    `json:"res"`
-		Language string `json:"language"`
-	}{body.Req, body.Res, language})
+	keyJSON, err := json.Marshal([]any{body.Req, body.Res, language})
 	if err != nil {
 		return "", err
 	}
