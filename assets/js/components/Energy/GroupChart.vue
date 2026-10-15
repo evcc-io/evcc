@@ -953,7 +953,11 @@ export default defineComponent({
 				series: [
 					...this.echartsSeries,
 					...(weekMarkers
-						? [boundarySeries(weekBoundaries(this.from, cats.length))]
+						? [
+								boundarySeries(
+									weekBoundaries(this.from, cats.length, store.state?.country)
+								),
+							]
 						: []),
 				],
 			};
