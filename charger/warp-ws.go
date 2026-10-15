@@ -279,6 +279,11 @@ func (w *WarpWS) handleConnection(ctx context.Context, role wsRole, conn *websoc
 				continue
 			}
 
+			// the EM publishes its own meters/* topics which must not overwrite the wallbox meter
+			if role == wsRolePM && !isPmTopic(event.Topic) {
+				continue
+			}
+
 			w.log.TRACE.Printf("websocket: event %s: %s", event.Topic, event.Payload)
 			if err := w.handleEvent(event.Topic, event.Payload); err != nil {
 				w.log.ERROR.Printf("bad payload for topic %s: %v", event.Topic, err)
