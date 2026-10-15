@@ -2,6 +2,8 @@ package core
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"time"
@@ -17,7 +19,14 @@ type explainRequest struct {
 	Language string `json:"language"`
 }
 
-// ExplainOptimizerResult asks the optimizer service why the last plan looks the way it does
+// explainCache keeps the last explanation keyed by request, result and language
+type explainCache struct {
+	key  [sha256.Size]byte
+	text string
+}
+
+// ExplainOptimizerResult asks the optimizer service why the last plan looks the way it does.
+// Repeated calls for the same plan and language return the previous explanation.
 func (site *Site) ExplainOptimizerResult(ctx context.Context, language string) (string, error) {
 	site.RLock()
 	result := site.optimizerResult
@@ -30,6 +39,23 @@ func (site *Site) ExplainOptimizerResult(ctx context.Context, language string) (
 	body := explainRequest{optimizerResult: *result, Language: language}
 	if site.tariffs != nil {
 		body.Currency = site.tariffs.Currency.String()
+	}
+
+	keyJSON, err := json.Marshal(struct {
+		Req      any    `json:"req"`
+		Res      any    `json:"res"`
+		Language string `json:"language"`
+	}{body.Req, body.Res, language})
+	if err != nil {
+		return "", err
+	}
+	key := sha256.Sum256(keyJSON)
+
+	site.explainMu.Lock()
+	defer site.explainMu.Unlock()
+
+	if site.explained.key == key {
+		return site.explained.text, nil
 	}
 
 	req, err := request.New(http.MethodPost, optimizerURI()+"/optimize/explain", request.MarshalJSON(body), request.JSONEncoding)
@@ -55,6 +81,8 @@ func (site *Site) ExplainOptimizerResult(ctx context.Context, language string) (
 		}
 		return "", err
 	}
+
+	site.explained = explainCache{key: key, text: res.Explanation}
 
 	return res.Explanation, nil
 }

@@ -123,6 +123,8 @@ type Site struct {
 	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
 	lastOptimizerSolve       *optimizerSolve             // last successful solve, reapplied to newer slots by the control cycle
 	optimizerResult          *optimizerResult            // last published plan, explained on request
+	explainMu                sync.Mutex                  // serializes explain requests
+	explained                explainCache                // last explanation, guarded by explainMu
 
 	optimizerMu      sync.Mutex // guards optimizer runs
 	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
