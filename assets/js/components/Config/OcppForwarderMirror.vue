@@ -35,7 +35,9 @@
 				/>
 			</div>
 			<details class="mt-2">
-				<summary class="small">{{ $t("config.ocppforwarder.mirrors.stats.table") }}</summary>
+				<summary class="small">
+					{{ $t("config.ocppforwarder.mirrors.stats.table") }}
+				</summary>
 				<table class="table table-sm small mb-0">
 					<thead>
 						<tr>
