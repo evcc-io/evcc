@@ -69,7 +69,6 @@ func newTestAmbibox() (*Ambibox, *fakePublisher) {
 		client:   pub,
 		base:     "device/evCharger/0",
 		minPower: 600,
-		phases:   3,
 
 		liveG:         func() (float64, error) { return 50, nil },
 		connectedG:    func() (bool, error) { return true, nil },
@@ -79,7 +78,6 @@ func newTestAmbibox() (*Ambibox, *fakePublisher) {
 		sessionStateG: func() (string, error) { return ambiStateStopped, nil },
 		controlModeG:  func() (string, error) { return "LIMITABLE", nil },
 		powerG:        func() (float64, error) { return 0, nil },
-		phasesG:       func() (int64, error) { return 0, api.ErrNotAvailable },
 		chargeMinG:    func() (float64, error) { return 0, api.ErrNotAvailable },
 		chargeMaxG:    func() (float64, error) { return 10500, nil },
 	}
@@ -114,24 +112,6 @@ func TestAmbiboxChargeWatts(t *testing.T) {
 	wb.chargeMaxG = func() (float64, error) { return 5000, nil }
 	if p := wb.chargeWatts(32); p != 5000 {
 		t.Errorf("chargeWatts(32) with a 5000W ceiling = %v, want 5000", p)
-	}
-}
-
-func TestAmbiboxChargeWattsUsesConfiguredPhases(t *testing.T) {
-	wb, _ := newTestAmbibox()
-	wb.phases = 1
-
-	if p := wb.chargeWatts(6); p != 6*230 {
-		t.Errorf("chargeWatts(6) with phases=1 = %v, want %v", p, 6*230.0)
-	}
-}
-
-func TestAmbiboxChargeWattsPrefersReportedPhases(t *testing.T) {
-	wb, _ := newTestAmbibox()
-	wb.phasesG = func() (int64, error) { return 1, nil }
-
-	if p := wb.chargeWatts(6); p != 6*230 {
-		t.Errorf("chargeWatts(6) with numberPhases=1 = %v, want %v", p, 6*230.0)
 	}
 }
 

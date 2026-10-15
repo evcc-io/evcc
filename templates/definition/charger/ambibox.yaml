@@ -20,6 +20,10 @@ requirements:
       Die Modbus-Register der Box eignen sich nicht zur Steuerung: der Sollwert in
       Holding-Register 3000 wird entgegengenommen und quittiert, aber nicht
       ausgeführt, solange die Box `controlMode: LIMITABLE` meldet.
+
+      Die Box lädt schon ab wenigen hundert Watt. Damit evcc diesen Bereich nutzt,
+      den Min. Ladestrom des Ladepunkts entsprechend niedrig einstellen
+      (z. B. 1 A ≈ 690 W bei drei Phasen).
     en: |
       Breaking change: this version controls the box through its MQTT (IPC)
       interface instead of Modbus. An existing `modbus`/`connector` configuration
@@ -33,6 +37,10 @@ requirements:
       The box's Modbus registers are not usable for control: the setpoint in
       holding register 3000 is accepted and acknowledged but never acted on while
       the box reports `controlMode: LIMITABLE`.
+
+      The box charges from a few hundred watts. To let evcc use that range, set
+      the loadpoint's min. current accordingly low (e.g. 1 A ≈ 690 W on three
+      phases).
 params:
   - preset: mqtt
   - name: host
@@ -64,19 +72,9 @@ params:
     help:
       de: Meldet die Box `chargePowerMin`, gilt der größere der beiden Werte.
       en: If the box reports `chargePowerMin`, the larger of both values applies.
-  - name: phases
-    default: 3
-    advanced: true
-    description:
-      de: Angeschlossene Phasen
-      en: Connected phases
-    help:
-      de: Wird nur verwendet, solange die Box `numberPhases` nicht meldet (Firmware 0.4.8).
-      en: Only used while the box does not report `numberPhases` (firmware 0.4.8).
 render: |
   type: ambibox
   {{- include "mqtt" . }}
   topic: {{ .topic }}
   id: {{ .id }}
   minpower: {{ .minpower }}
-  phases: {{ .phases }}

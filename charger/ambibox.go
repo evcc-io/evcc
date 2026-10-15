@@ -51,7 +51,6 @@ import (
 //	energyAcImportSession read Wh
 //	soc               read   %
 //	capacity          read   Wh
-//	numberPhases      read   uint
 //	chargePowerMin    read   uint W
 //	chargePowerMax    read   uint W
 //	currentAc1..3     read   A
@@ -64,7 +63,6 @@ type Ambibox struct {
 	base     string
 	current  float64
 	minPower float64
-	phases   int
 
 	mu      sync.Mutex
 	enabled *bool // nil until adopted from sessionState
@@ -82,7 +80,6 @@ type Ambibox struct {
 	energySessImpG func() (float64, error)
 	socG           func() (float64, error)
 	capacityG      func() (float64, error)
-	phasesG        func() (int64, error)
 	chargeMinG     func() (float64, error)
 	chargeMaxG     func() (float64, error)
 	currG          [3]func() (float64, error)
@@ -115,12 +112,10 @@ func NewAmbiboxFromConfig(other map[string]any) (api.Charger, error) {
 		Topic       string
 		ID          string
 		MinPower    float64
-		Phases      int
 		Timeout     time.Duration
 	}{
 		Topic:    "device/evCharger",
 		MinPower: 600,
-		Phases:   3,
 		Timeout:  30 * time.Second,
 	}
 
@@ -132,19 +127,15 @@ func NewAmbiboxFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, fmt.Errorf("missing id")
 	}
 
-	if cc.Phases < 1 || cc.Phases > 3 {
-		return nil, fmt.Errorf("invalid phases: %d", cc.Phases)
-	}
-
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
 
-	return NewAmbibox(cc.Config, cc.Topic, cc.ID, cc.MinPower, cc.Phases, cc.Timeout)
+	return NewAmbibox(cc.Config, cc.Topic, cc.ID, cc.MinPower, cc.Timeout)
 }
 
 // NewAmbibox creates an Ambibox charger
-func NewAmbibox(mqttconf mqtt.Config, topic, id string, minPower float64, phases int, timeout time.Duration) (*Ambibox, error) {
+func NewAmbibox(mqttconf mqtt.Config, topic, id string, minPower float64, timeout time.Duration) (*Ambibox, error) {
 	log := util.NewLogger("ambibox")
 
 	client, err := mqtt.RegisteredClientOrDefault(log, mqttconf)
@@ -157,7 +148,6 @@ func NewAmbibox(mqttconf mqtt.Config, topic, id string, minPower float64, phases
 		client:   client,
 		base:     fmt.Sprintf("%s/%s", topic, id),
 		minPower: minPower,
-		phases:   phases,
 	}
 
 	boolG := func(sub string) (func() (bool, error), error) {
@@ -165,9 +155,6 @@ func NewAmbibox(mqttconf mqtt.Config, topic, id string, minPower float64, phases
 	}
 	floatG := func(sub string) (func() (float64, error), error) {
 		return plugin.NewMqtt(log, client, wb.topic(sub), 0).FloatGetter()
-	}
-	intG := func(sub string) (func() (int64, error), error) {
-		return plugin.NewMqtt(log, client, wb.topic(sub), 0).IntGetter()
 	}
 	stringG := func(sub string) (func() (string, error), error) {
 		return plugin.NewMqtt(log, client, wb.topic(sub), 0).StringGetter()
@@ -217,9 +204,6 @@ func NewAmbibox(mqttconf mqtt.Config, topic, id string, minPower float64, phases
 	if wb.capacityG, err = floatG("capacity"); err != nil {
 		return nil, err
 	}
-	if wb.phasesG, err = intG("numberPhases"); err != nil {
-		return nil, err
-	}
 	if wb.chargeMinG, err = floatG("chargePowerMin"); err != nil {
 		return nil, err
 	}
@@ -254,20 +238,15 @@ func (wb *Ambibox) publish(sub string, retained bool, payload string) {
 }
 
 // chargeWatts converts a charging current into the charge power limit, based
-// on measured voltage and phase count, held between the minimum and maximum
-// charge power.
+// on measured voltage of the three-phase AC connection, held between the
+// minimum and maximum charge power.
 func (wb *Ambibox) chargeWatts(current float64) float64 {
 	if current <= 0 {
 		return 0
 	}
 
-	phases := wb.phases
-	if p, err := wb.phasesG(); err == nil && p >= 1 && p <= 3 {
-		phases = int(p)
-	}
-
 	var sum float64
-	for i := range phases {
+	for i := range wb.voltG {
 		v := 230.0
 		if m, err := wb.voltG[i](); err == nil && m > 0 {
 			v = m
