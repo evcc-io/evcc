@@ -21,6 +21,9 @@ const (
 	// docsSite is the only host tree the fetch tool is allowed to access
 	docsSite = "evcc.io"
 
+	// optimizerRepo is the one page tree outside the docs: its readme explains how the optimizer plans
+	optimizerRepo = "/evcc-io/optimizer"
+
 	// maxFetchSize limits the downloaded document
 	maxFetchSize = 4 << 20
 
@@ -40,7 +43,7 @@ const (
 )
 
 type fetchParams struct {
-	Url     string `json:"url" jsonschema:"URL of the page to read, must be on evcc.io"`
+	Url     string `json:"url" jsonschema:"URL of the page to read, must be on evcc.io or in github.com/evcc-io/optimizer"`
 	Mode    string `json:"mode,omitempty" jsonschema:"markdown (default) converts the page to markdown, raw returns the document unchanged"`
 	Details string `json:"details,omitempty" jsonschema:"summary (default) lists the headings only, full returns the entire page"`
 	Query   string `json:"query,omitempty" jsonschema:"heading to return with its subsections, falls back to the summary if no heading matches"`
@@ -111,10 +114,14 @@ func fetchTool(log *util.Logger) func(context.Context, *mcp.CallToolRequest, fet
 	}
 }
 
-// validateUrl ensures the url points at the evcc website or documentation
+// validateUrl ensures the url points at the evcc website, documentation or the optimizer repository
 func validateUrl(uri *url.URL) error {
 	if uri.Scheme != "https" {
 		return fmt.Errorf("unsupported scheme: %s", uri.Scheme)
+	}
+
+	if uri.Hostname() == "github.com" && (uri.Path == optimizerRepo || strings.HasPrefix(uri.Path, optimizerRepo+"/")) {
+		return nil
 	}
 
 	if host := uri.Hostname(); host != docsSite && !strings.HasSuffix(host, "."+docsSite) {

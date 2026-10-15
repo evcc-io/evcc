@@ -30,11 +30,15 @@ func TestValidateUrl(t *testing.T) {
 		{"https://evcc.io/", true},
 		{"https://docs.evcc.io/en/faq", true},
 		{"https://docs.evcc.io/llms.txt", true},
-		{"http://docs.evcc.io/en/faq", false},  // plain http
-		{"file:///etc/passwd", false},          // local file
-		{"https://notevcc.io/", false},         // suffix without separator
-		{"https://evcc.io.evil.com/", false},   // prefix of another domain
-		{"https://evil.com/?u=evcc.io", false}, // host in query
+		{"https://github.com/evcc-io/optimizer", true},
+		{"https://github.com/evcc-io/optimizer/blob/main/README.md", true},
+		{"https://github.com/evcc-io/optimizer-evil", false}, // prefix of another repository
+		{"https://github.com/evcc-io/evcc", false},           // other repository
+		{"http://docs.evcc.io/en/faq", false},                // plain http
+		{"file:///etc/passwd", false},                        // local file
+		{"https://notevcc.io/", false},                       // suffix without separator
+		{"https://evcc.io.evil.com/", false},                 // prefix of another domain
+		{"https://evil.com/?u=evcc.io", false},               // host in query
 		{"https://127.0.0.1/", false},
 	} {
 		uri, err := url.Parse(tc.uri)

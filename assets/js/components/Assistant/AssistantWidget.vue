@@ -54,7 +54,12 @@
 				<p v-if="!messages.length" class="text-muted mb-0">
 					{{ $t("assistant.placeholder") }}
 				</p>
-				<div v-for="(m, i) in messages" :key="i" class="message" :class="`message-${m.role}`">
+				<div
+					v-for="(m, i) in messages"
+					:key="i"
+					class="message"
+					:class="`message-${m.role}`"
+				>
 					<template v-if="m.role === 'assistant'">
 						<AssistantSteps v-if="showThinking" :steps="m.steps || []" />
 						<Markdown :markdown="m.content" />
@@ -107,6 +112,7 @@ import Markdown from "../Config/Markdown.vue";
 import api from "@/api";
 import { openLoginModal } from "@/components/Auth/auth";
 import settings from "@/settings";
+import { assistantQuestion } from "./context";
 import type {
 	AssistantEvent,
 	AssistantMessage,
@@ -147,8 +153,19 @@ export default defineComponent({
 			this.focusInput();
 			this.scrollDown();
 		},
+		// a question asked by a view is sent right away, or left in the input while another one runs
+		askedQuestion(question: string) {
+			if (!question) return;
+			assistantQuestion.value = "";
+			this.open = true;
+			this.question = question;
+			this.submit();
+		},
 	},
 	computed: {
+		askedQuestion(): string {
+			return assistantQuestion.value;
+		},
 		// ui only, the steps always arrive and are only shown on request
 		showThinking: {
 			get(): boolean {

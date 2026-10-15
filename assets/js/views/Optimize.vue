@@ -48,7 +48,18 @@
 		<div v-if="hasResult && evopt" class="row">
 			<main class="col-12">
 				<div>
-					<h2 class="mt-2 mb-4">Optimizer Plan</h2>
+					<div class="d-flex align-items-center justify-content-between mt-2 mb-4">
+						<h2 class="m-0">Optimizer Plan</h2>
+						<button
+							v-if="assistantConfigured"
+							type="button"
+							class="btn btn-outline-primary btn-sm"
+							data-testid="optimize-explain"
+							@click="explainPlan"
+						>
+							Explain plan
+						</button>
+					</div>
 
 					<Card
 						title="Charging Plan"
@@ -199,6 +210,8 @@ import ChargeChart from "../components/Optimize/ChargeChart.vue";
 import TimeSeriesDataTable from "../components/Optimize/TimeSeriesDataTable.vue";
 import CopyButton from "../components/Optimize/CopyButton.vue";
 import { formatCompactJson } from "../components/Optimize/compactJson";
+import { planContext } from "../components/Optimize/assistantContext";
+import { askAssistant, setAssistantContext } from "../components/Assistant/context";
 import { loadpointTitle, type Titled } from "../components/Optimize/chart";
 import api from "../api";
 import store from "../store";
@@ -331,14 +344,40 @@ export default defineComponent({
 		formattedResponse() {
 			return this.evopt?.res ? formatCompactJson(this.evopt.res) : "";
 		},
+		assistantConfigured(): boolean {
+			return !!store.state.assistant?.provider;
+		},
+		assistantContext(): string {
+			if (!this.hasResult || !this.evopt) {
+				return "The user is on the optimizer page. No optimizer plan is available.";
+			}
+			return planContext(
+				this.evopt,
+				this.currency,
+				this.optimizerChargingStrategy,
+				this.optimizerAutomatic
+			);
+		},
 	},
 	watch: {
 		"evopt.updated"() {
 			// re-enable the refresh action once a fresh optimizer run lands
 			this.pending = false;
 		},
+		assistantContext: {
+			immediate: true,
+			handler: setAssistantContext,
+		},
+	},
+	unmounted() {
+		setAssistantContext("");
 	},
 	methods: {
+		explainPlan() {
+			askAssistant(
+				"Explain the rationale of the current optimizer plan: when and why the batteries charge or discharge, when energy is imported or exported, and which prices, forecasts or constraints drive these decisions."
+			);
+		},
 		loadpointColor(detail: Titled): string {
 			return this.loadpointPalette[loadpointTitle(detail)] || "";
 		},
