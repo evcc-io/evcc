@@ -8,6 +8,9 @@ requirements:
     de: Für Grid-Nutzung ist eine VRM-Instanz notwendig wenn Lastmanagement genutzt werden soll.
     en: For grid usage, a grid meter VRM instance is require to enabled load management.
 capabilities: ["battery-control"]
+discovery:
+  hostname: ["venus"]
+  mac: ["C0619AB"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

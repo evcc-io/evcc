@@ -4,6 +4,8 @@ products:
     description:
       generic: ET/EH/BH/BT/ESA Hybrid Inverter
 capabilities: ["battery-control", "curtail"]
+discovery:
+  mac: ["F0C1CE"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

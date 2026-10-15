@@ -38,7 +38,7 @@ render: |
   {{ include "base" . }}
   forecast:
     source: http
-    uri: https://api.pstryk.pl/integrations/meter-data/unified-metrics/?metrics=pricing&resolution=hour&window_start={{ `{{ now.UTC | mustDateModify "-24h" | date "2006-01-02" }}` }}:00:00Z&window_end={{ `{{ now.UTC | mustDateModify "+72h" | date "2006-01-02" }}` }}:00:00Z
+    uri: https://api.pstryk.pl/integrations/meter-data/unified-metrics/?metrics=pricing&resolution=hour&window_start={{ `{{ dateInZone "2006-01-02" (now.UTC | mustDateModify "-24h") "UTC" }}` }}:00:00Z&window_end={{ `{{ dateInZone "2006-01-02" (now.UTC | mustDateModify "+72h") "UTC" }}` }}:00:00Z
     headers:
       Authorization: {{ .token }}
       Accept: application/json

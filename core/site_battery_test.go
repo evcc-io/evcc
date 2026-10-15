@@ -85,6 +85,94 @@ func TestApplyBatteryMode(t *testing.T) {
 	}
 }
 
+// TestUnmodelledCharging guards that a loadpoint the optimizer does not control
+// counts as unmodelled while it charges on the smart cost limit, not only while
+// fast charging. A heater on the price limit otherwise drained the battery in
+// automatic mode (evcc-io/optimizer#210).
+func TestUnmodelledCharging(t *testing.T) {
+	above, below := 1.5, 1.0
+	rate := api.Rate{Start: time.Now(), End: time.Now().Add(time.Hour), Value: 1.15}
+
+	for _, tc := range []struct {
+		name     string
+		status   api.ChargeStatus
+		mode     api.ChargeMode
+		limit    *float64
+		expected bool
+	}{
+		{"smart cost active", api.StatusC, api.ModeSmart, &above, true},
+		{"smart cost inactive", api.StatusC, api.ModeSmart, &below, false},
+		{"no limit", api.StatusC, api.ModeSmart, nil, false},
+		{"fast charging", api.StatusC, api.ModeNow, nil, true},
+		{"limit configured but pv mode", api.StatusC, api.ModePV, &above, false},
+		{"smart cost active but not charging", api.StatusB, api.ModeSmart, &above, false},
+	} {
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.status = tc.status
+		lp.mode = tc.mode
+		lp.smartCostLimit = tc.limit
+
+		site := &Site{log: util.NewLogger("foo"), loadpoints: []*Loadpoint{lp}}
+		assert.Equal(t, tc.expected, site.unmodelledCharging(rate), tc.name)
+	}
+}
+
+func TestSupportedBatteryMode(t *testing.T) {
+	all := []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge, api.BatteryDischarge}
+	basic := []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}
+
+	tc := []struct {
+		supported      []api.BatteryMode
+		mode, expected api.BatteryMode
+	}{
+		{all, api.BatteryDischarge, api.BatteryDischarge},
+		{basic, api.BatteryCharge, api.BatteryCharge},
+		{basic, api.BatteryHoldCharge, api.BatteryNormal},
+		{basic, api.BatteryDischarge, api.BatteryNormal},
+		{[]api.BatteryMode{api.BatteryNormal, api.BatteryHold}, api.BatteryCharge, api.BatteryHold},
+		{[]api.BatteryMode{api.BatteryNormal, api.BatteryHoldCharge}, api.BatteryDischarge, api.BatteryHoldCharge},
+		{[]api.BatteryMode{api.BatteryHold, api.BatteryCharge}, api.BatteryHoldCharge, api.BatteryUnknown},
+	}
+
+	for _, tc := range tc {
+		assert.Equal(t, tc.expected, supportedBatteryMode(tc.supported, tc.mode), "%v: %s", tc.supported, tc.mode)
+	}
+}
+
+// TestBatteryUnsupportedModeReleases guards that a mode the battery does not
+// support releases it to normal instead of leaving it in the mode applied before
+func TestBatteryUnsupportedModeReleases(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	batCon := api.NewMockBatteryController(ctrl)
+	batCon.EXPECT().BatteryModes().Return([]api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}).AnyTimes()
+
+	var bat api.Meter = &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: batCon,
+	}
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, bat)},
+	}
+
+	gomock.InOrder(
+		batCon.EXPECT().SetBatteryMode(api.BatteryCharge),
+		batCon.EXPECT().SetBatteryMode(api.BatteryNormal),
+	)
+
+	assert.NoError(t, site.applyBatteryMode(api.BatteryCharge))
+	assert.NoError(t, site.applyBatteryMode(api.BatteryHoldCharge))
+
+	// normal is already applied
+	assert.NoError(t, site.applyBatteryMode(api.BatteryHoldCharge))
+
+	ctrl.Finish()
+}
+
 // battery controller supporting the modes a soc limit can implement
 func batteryControllerMock(ctrl *gomock.Controller) *api.MockBatteryController {
 	batCon := api.NewMockBatteryController(ctrl)

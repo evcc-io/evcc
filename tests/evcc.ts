@@ -121,6 +121,8 @@ async function _start(config?: string, flags: string | string[] = []) {
   log("starting evcc", { config, port, ocpp, eebus, additionalFlags });
   const instance = spawn(BINARY, [...configArgs, ...additionalFlags], {
     env: {
+      // no network scan
+      EVCC_DISCOVERY_HOSTS: "[]",
       ...process.env,
       EVCC_NETWORK_PORT: port.toString(),
       EVCC_OCPP_PORT: ocpp.toString(),

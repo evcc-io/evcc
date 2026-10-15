@@ -113,6 +113,11 @@ INSERT INTO `meters` VALUES (6, 1775556000, 0.075, 0);
 INSERT INTO `meters` VALUES (6, 1775556900, 0.075, 0);
 INSERT INTO `meters` VALUES (6, 1775557800, 0.075, 0);
 INSERT INTO `meters` VALUES (6, 1775558700, 0.075, 0);
+-- solar covers the house that hour, so the consumers have a source
+INSERT INTO `meters` VALUES (4, 1775556000, 0.25, 0);
+INSERT INTO `meters` VALUES (4, 1775556900, 0.25, 0);
+INSERT INTO `meters` VALUES (4, 1775557800, 0.25, 0);
+INSERT INTO `meters` VALUES (4, 1775558700, 0.25, 0);
 
 -- 2026-05-02 → multi-entity PV with stacked peak 7.2 kW. Two PV entities
 -- (east + west) plus a forecast overlay. axisPeak comes from the stacked

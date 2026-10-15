@@ -319,6 +319,14 @@ func TestPvScalePhases(t *testing.T) {
 	}
 }
 
+type climaterVehicle struct {
+	*api.MockVehicle
+}
+
+func (v *climaterVehicle) Climater() (bool, error) {
+	return true, nil
+}
+
 func TestPvScalePhasesTimer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := &struct {
@@ -328,6 +336,11 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		api.NewMockCharger(ctrl),
 		api.NewMockPhaseSwitcher(ctrl),
 	}
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Features().Return(nil).AnyTimes()
+	vehicle.EXPECT().Phases().Return(0).AnyTimes()
+	climater := &climaterVehicle{vehicle}
 
 	dt := time.Minute
 	Voltage = 230 // V
@@ -414,6 +427,13 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			lp.mode = api.ModeMinPV
 		}},
 
+		// climater keep-alive never disables, so scale down even if 1p is not sustainable
+		{"3/3->1, insufficient for 1p, charging, climater active", 3, 3, 0.1, 1, 1, func(lp *Loadpoint) {
+			lp.phaseTimer = elapsed
+			lp.enabled = true
+			lp.vehicle = climater
+		}},
+
 		// switch down from 3p/0p while not yet charging
 		{"3/0->1, not enough power, not charging", 3, 0, 0, 1, 1, func(lp *Loadpoint) {
 			lp.status = api.StatusB
@@ -471,6 +491,48 @@ func TestPvScalePhasesTimer(t *testing.T) {
 
 		require.Equal(t, tc.res, res, tc.desc)
 		require.Equal(t, tc.toPhases, lp.phases, tc.desc)
+	}
+}
+
+// the projection drops the loadpoint from its actual draw to 1p min, not from 3p min (#34746)
+func TestProjectPhaseSwitch(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	charger := &struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{
+		api.NewMockCharger(ctrl),
+		api.NewMockPhaseSwitcher(ctrl),
+	}
+
+	Voltage = 100
+	const site = 500.0
+
+	for _, tc := range []struct {
+		desc        string
+		phases      int
+		chargePower float64
+		projected   float64
+	}{
+		{"at min current", 3, 3 * Voltage * minA, site - 2*Voltage*minA},
+		{"above min current", 3, 3 * Voltage * (minA + 1), site - 3*Voltage*(minA+1) + Voltage*minA},
+		{"below min power", 3, Voltage * minA, site - 2*Voltage*minA},
+		// a scale up pending at 1p leaves site power alone
+		{"scale up at 1p", 1, Voltage * (minA + 1), site},
+	} {
+		lp := &Loadpoint{
+			log:            util.NewLogger("foo"),
+			clock:          clock.NewMock(),
+			charger:        charger,
+			phases:         tc.phases,
+			measuredPhases: tc.phases,
+			chargePower:    tc.chargePower,
+			phaseTimer:     time.Unix(1, 0),
+		}
+
+		projected, phases := lp.projectPhaseSwitch(site, minA)
+		require.Equal(t, tc.projected, projected, tc.desc)
+		require.Equal(t, 1, phases, tc.desc)
 	}
 }
 
@@ -556,6 +618,38 @@ func TestScalePhasesNotAvailable(t *testing.T) {
 
 	// switch did not complete - phase count unchanged
 	require.Equal(t, 1, lp.GetPhases())
+}
+
+// TestScalePhasesUpMinCurrent verifies that scaling up drops to min current before
+// switching, so the 1p current is not offered on 3 phases (issue #34450).
+func TestScalePhasesUpMinCurrent(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	plainCharger := api.NewMockCharger(ctrl)
+	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+
+	gomock.InOrder(
+		plainCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil),
+		phaseCharger.EXPECT().Phases1p3p(3).Return(nil),
+	)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.clock = clock.NewMock()
+	lp.wakeUpTimer = NewTimer()
+	lp.charger = struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{plainCharger, phaseCharger}
+	lp.minCurrent = minA
+	lp.maxCurrent = maxA
+	lp.enabled = true
+	lp.offeredCurrent = maxA
+	lp.phases = 1
+
+	require.NoError(t, lp.scalePhases(3))
+	require.Equal(t, 3, lp.GetPhases())
+	require.Equal(t, float64(minA), lp.offeredCurrent)
 }
 
 // TestMinChargingPhaseScaling verifies that minCharging scales down to 1 phase
@@ -705,7 +799,9 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 					return min(new, tc.availableCircuitPower)
 				}).AnyTimes()
 
-				circuit.EXPECT().ValidateCurrent(gomock.Any(), lp.maxCurrent).Return(lp.maxCurrent).AnyTimes()
+				circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any()).DoAndReturn(func(_, new float64) float64 {
+					return new
+				}).AnyTimes()
 			}
 
 			plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()

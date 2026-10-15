@@ -3,6 +3,8 @@ products:
   - brand: Tesla
     description:
       generic: Powerwall
+discovery:
+  hostname: ["1118431-*", "1232100-*", "teslapw_*"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

@@ -14,6 +14,9 @@ requirements:
       For additional meters attached to the GX device that appear as AC load (`com.victronenergy.acload`).
       Grid, PV and battery measurement is covered by the `Victron Energy` template.
       The meter's Modbus unit id can be found on the GX device under Settings / Integrations / Modbus TCP server / Available services.
+discovery:
+  hostname: ["venus"]
+  mac: ["C0619AB"]
 params:
   - name: usage
     choice: ["aux", "charge"]

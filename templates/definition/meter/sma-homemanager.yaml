@@ -5,6 +5,9 @@ products:
       generic: Sunny Home Manager 2.0
 requirements:
   evcc: ["skiptest"]
+discovery:
+  hostname: ["sma*"]
+  mac: ["0015BB"]
 params:
   - name: usage
     choice: ["grid"]

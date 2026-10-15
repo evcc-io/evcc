@@ -306,6 +306,7 @@
 									id: temperatureTariff.id,
 								})
 							"
+							@enable="handleDisable('tariff', temperatureTariff.id, false)"
 						/>
 						<TariffCard
 							v-if="plannerTariff"
@@ -511,6 +512,13 @@
 						>
 							{{ $t("config.system.backupRestore.title") }}
 						</button>
+						<button
+							v-if="experimental"
+							class="btn btn-outline-secondary text-truncate"
+							@click="openModal('discovery')"
+						>
+							Network discovery 🧪
+						</button>
 						<button class="btn btn-outline-danger" @click="restart">
 							{{ $t("config.system.restart") }}
 						</button>
@@ -570,6 +578,7 @@
 				<TelemetryModal :is-sponsor="isSponsor" :telemetry="telemetry" />
 				<OptimizerModal :is-sponsor="isSponsor" />
 				<McpModal />
+				<DiscoveryModal />
 				<ExperimentalModal :experimental="experimental" />
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" :site-title="siteTitle" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
@@ -664,6 +673,7 @@ import OptimizerIcon from "../components/MaterialIcon/Optimizer.vue";
 import OptimizerModal from "../components/Config/OptimizerModal.vue";
 import McpIcon from "../components/MaterialIcon/Mcp.vue";
 import McpModal from "../components/Config/McpModal.vue";
+import DiscoveryModal from "../components/Config/DiscoveryModal.vue";
 import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
@@ -778,6 +788,7 @@ export default defineComponent({
 		OptimizerModal,
 		McpIcon,
 		McpModal,
+		DiscoveryModal,
 		SponsorModal,
 		TariffsLegacyModal,
 		TariffCard,

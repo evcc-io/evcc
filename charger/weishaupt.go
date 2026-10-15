@@ -193,7 +193,7 @@ func (wb *Weishaupt) MaxCurrentMillis(current float64) error {
 
 	phases := 1
 	if wb.lp != nil {
-		if p := wb.lp.GetPhases(); p != 0 {
+		if p := wb.lp.ActivePhases(); p != 0 {
 			phases = p
 		}
 	}

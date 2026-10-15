@@ -7,12 +7,17 @@ products:
   - { brand: Shelly, description: { generic: Plug M } }
 capabilities: ["meter"]
 group: switchsockets
+discovery:
+  mdns: ["_shelly._tcp", "_http._tcp:shelly*"]
+  hostname: ["shelly*"]
+  mac: ["8400EC"]
 params:
   - name: host
   - name: user
   - name: password
   - name: channel
     default: 0
+    service: shelly/channels?uri={host}&user={user}&password={password}
   - preset: switchsocket
 render: |
   type: shelly
