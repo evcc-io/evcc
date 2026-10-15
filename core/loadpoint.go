@@ -178,7 +178,7 @@ type Loadpoint struct {
 	chargeCurrents []float64        // Phase currents
 	connectedTime  time.Time        // Time when vehicle was connected
 	connectPending bool             // connect notification deferred until vehicle detection settles
-	welcomeUntil   time.Time        // welcome charge deadline, zero once surplus confirms the session or the vehicle disconnects
+	welcomeUntil   time.Time        // welcome charge deadline, set until surplus confirms the session
 	pvTimer        time.Time        // PV enabled/disable timer
 	phaseTimer     time.Time        // 1p3p switch timer
 	wakeUpTimer    *Timer           // Vehicle wake-up timeout

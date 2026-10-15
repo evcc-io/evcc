@@ -1052,7 +1052,6 @@ func TestWelcomeChargeNoBatterySupport(t *testing.T) {
 	Voltage = 230
 	ctrl := gomock.NewController(t)
 	clck := clock.NewMock()
-	clck.Add(time.Hour)
 
 	lp := &Loadpoint{
 		log:            util.NewLogger("foo"),
