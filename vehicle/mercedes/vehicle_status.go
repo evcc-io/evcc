@@ -16,18 +16,34 @@ const vehicleStatusInterval = time.Minute
 
 type vehicleStateCache struct {
 	sync.Mutex
-	updated time.Time
-	states  map[string]*VehicleStatusUpdate
-	err     error
+	updated  time.Time
+	states   map[string]*VehicleStatusUpdate
+	vehicles map[string]struct{}
+	err      error
 }
 
-func (c *vehicleStateCache) get(vin string, fetch func() (map[string]*VehicleStatusUpdate, error)) (*VehicleStatusUpdate, error) {
+func (c *vehicleStateCache) register(vin string) {
+	c.Lock()
+	defer c.Unlock()
+	if c.vehicles == nil {
+		c.vehicles = make(map[string]struct{})
+	}
+	c.vehicles[vin] = struct{}{}
+}
+
+func (c *vehicleStateCache) get(vin string, fetch func([]string) (map[string]*VehicleStatusUpdate, error)) (*VehicleStatusUpdate, error) {
 	c.Lock()
 	defer c.Unlock()
 
 	// Account-wide, including failures; detection cache resets must not cause reconnect storms.
 	if time.Since(c.updated) >= vehicleStatusInterval {
-		c.states, c.err = fetch()
+		vins := []string{vin}
+		for other := range c.vehicles {
+			if other != vin {
+				vins = append(vins, other)
+			}
+		}
+		c.states, c.err = fetch(vins)
 		c.updated = time.Now()
 	}
 	if c.err != nil {
@@ -41,7 +57,7 @@ func (c *vehicleStateCache) get(vin string, fetch func() (map[string]*VehicleSta
 }
 
 func (v *Identity) vehicleStatus(vin string) (*VehicleStatusUpdate, error) {
-	return v.vehicleState.get(vin, func() (map[string]*VehicleStatusUpdate, error) {
+	return v.vehicleState.get(vin, func(vins []string) (map[string]*VehicleStatusUpdate, error) {
 		token, err := v.Token()
 		if err != nil {
 			return nil, err
@@ -49,7 +65,7 @@ func (v *Identity) vehicleStatus(vin string) (*VehicleStatusUpdate, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		uri, headers := vehicleStatusConnection(token.AccessToken, v.region)
-		return readVehicleStates(ctx, uri, headers, vin)
+		return readVehicleStates(ctx, uri, headers, vins...)
 	})
 }
 
@@ -58,6 +74,7 @@ func vehicleStatusConnection(token, region string) (string, http.Header) {
 	for k, v := range mbheaders(false, region) {
 		headers.Set(k, v)
 	}
+	// The mobile WebSocket endpoint expects the raw token, unlike the REST API.
 	headers.Set("Authorization", token)
 	headers.Set("APP-SESSION-ID", headers.Get("X-Sessionid"))
 	headers.Set("OUTPUT-FORMAT", "PROTO")
@@ -79,7 +96,7 @@ func vehicleStatusConnection(token, region string) (string, http.Header) {
 }
 
 // readVehicleStates consumes the initial snapshot and closes the connection instead of running a background stream.
-func readVehicleStates(ctx context.Context, uri string, headers http.Header, vin string) (map[string]*VehicleStatusUpdate, error) {
+func readVehicleStates(ctx context.Context, uri string, headers http.Header, vins ...string) (map[string]*VehicleStatusUpdate, error) {
 	conn, _, err := websocket.Dial(ctx, uri, &websocket.DialOptions{HTTPHeader: headers})
 	if err != nil {
 		return nil, err
@@ -91,6 +108,10 @@ func readVehicleStates(ctx context.Context, uri string, headers http.Header, vin
 	for {
 		typ, data, err := conn.Read(ctx)
 		if err != nil {
+			// Keep completed snapshots usable when another configured vehicle is unavailable.
+			if len(states) > 0 {
+				return states, nil
+			}
 			return nil, err
 		}
 		if typ != websocket.MessageBinary {
@@ -104,13 +125,11 @@ func readVehicleStates(ctx context.Context, uri string, headers http.Header, vin
 		if push.CommandUpdates != nil {
 			ack.CommandUpdates = push.CommandUpdates
 		}
-		ready := false
 		if updates := push.Updates; updates != nil {
 			ack.Updates = &Sequence{SequenceNumber: updates.SequenceNumber}
 			for name, update := range updates.Vehicles {
 				if update.FullUpdate {
 					states[name] = update
-					ready = ready || name == vin
 				}
 			}
 		}
@@ -121,6 +140,13 @@ func readVehicleStates(ctx context.Context, uri string, headers http.Header, vin
 			}
 			if err := conn.Write(ctx, websocket.MessageBinary, data); err != nil {
 				return nil, err
+			}
+		}
+		ready := len(vins) > 0
+		for _, vin := range vins {
+			if states[vin] == nil {
+				ready = false
+				break
 			}
 		}
 		if ready {

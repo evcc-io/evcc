@@ -10,15 +10,19 @@ import (
 )
 
 type Provider struct {
-	dataG  func() (StatusResponse, error)
-	stateG func() (*VehicleStatusUpdate, error)
+	dataG      func() (StatusResponse, error)
+	stateG     func() (*VehicleStatusUpdate, error)
+	resetState func()
 }
 
 func NewProvider(client *API, vin string, cache time.Duration) *Provider {
+	client.identity.vehicleState.register(vin)
+	state := util.ResettableCached(func() (*VehicleStatusUpdate, error) {
+		return client.identity.vehicleStatus(vin)
+	}, cache)
 	impl := &Provider{
-		stateG: util.Cached(func() (*VehicleStatusUpdate, error) {
-			return client.identity.vehicleStatus(vin)
-		}, cache),
+		stateG:     state.Get,
+		resetState: state.Reset,
 		dataG: util.Cached(func() (StatusResponse, error) {
 			return client.Status(vin)
 		}, cache),
@@ -49,7 +53,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 	attr := state.GetChargingStatus()
-	if !validMetadata(attr.GetMetadata()) {
+	if !v.validMetadata(attr.GetMetadata()) {
 		return api.StatusNone, api.ErrMustRetry
 	}
 	return mapChargeStatus(attr.GetValue())
@@ -64,7 +68,7 @@ func (v *Provider) Odometer() (float64, error) {
 		return 0, err
 	}
 	attr := state.GetOdometer()
-	if !validMetadata(attr.GetMetadata()) {
+	if !v.validMetadata(attr.GetMetadata()) {
 		return 0, api.ErrMustRetry
 	}
 	value := float64(attr.GetValue())
@@ -90,12 +94,15 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 		return 0, err
 	}
 	attr := state.GetMaxSoc()
-	if !validMetadata(attr.GetMetadata()) {
+	if !v.validMetadata(attr.GetMetadata()) {
 		return 0, api.ErrMustRetry
 	}
 	// Zero can mean a program-specific limit, which this subset does not decode.
-	if attr.GetValue() <= 0 || attr.GetValue() > 100 {
+	if attr.GetValue() == 0 {
 		return 0, api.ErrNotAvailable
+	}
+	if attr.GetValue() < 0 || attr.GetValue() > 100 {
+		return 0, fmt.Errorf("invalid Mercedes SoC limit: %d", attr.GetValue())
 	}
 	return attr.GetValue(), nil
 }
@@ -109,7 +116,7 @@ func (v *Provider) Climater() (bool, error) {
 		return false, err
 	}
 	attr := state.GetPreconditioningActive()
-	if !validMetadata(attr.GetMetadata()) {
+	if !v.validMetadata(attr.GetMetadata()) {
 		return false, api.ErrMustRetry
 	}
 	return attr.GetValue(), nil
@@ -124,7 +131,7 @@ func (v *Provider) Position() (float64, float64, error) {
 		return 0, 0, err
 	}
 	lat, lon := state.GetLatitude(), state.GetLongitude()
-	if !validMetadata(lat.GetMetadata()) || !validMetadata(lon.GetMetadata()) {
+	if !v.validMetadata(lat.GetMetadata()) || !v.validMetadata(lon.GetMetadata()) {
 		return 0, 0, api.ErrMustRetry
 	}
 	x, y := lat.GetValue(), lon.GetValue()
@@ -134,6 +141,13 @@ func (v *Provider) Position() (float64, float64, error) {
 	return x, y, nil
 }
 
-func validMetadata(metadata *AttributeMetadata) bool {
-	return metadata != nil && metadata.Status == 0
+func (v *Provider) validMetadata(metadata *AttributeMetadata) bool {
+	if metadata != nil && metadata.Status == 0 {
+		return true
+	}
+	// Retry invalid attributes without waiting for the longer provider cache to expire.
+	if v.resetState != nil {
+		v.resetState()
+	}
+	return false
 }

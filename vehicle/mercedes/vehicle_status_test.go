@@ -63,8 +63,11 @@ func TestProviderStatus(t *testing.T) {
 func TestVehicleStateCacheSharedAndRateLimited(t *testing.T) {
 	var cache vehicleStateCache
 	calls := 0
-	fetch := func() (map[string]*VehicleStatusUpdate, error) {
+	cache.register("one")
+	cache.register("two")
+	fetch := func(vins []string) (map[string]*VehicleStatusUpdate, error) {
 		calls++
+		assert.ElementsMatch(t, []string{"one", "two"}, vins)
 		return map[string]*VehicleStatusUpdate{
 			"one": {ChargingStatus: &IntegerAttribute{Value: 3, Metadata: &AttributeMetadata{}}},
 			"two": {ChargingStatus: &IntegerAttribute{Value: 13, Metadata: &AttributeMetadata{}}},
@@ -82,7 +85,7 @@ func TestVehicleStateCacheSharedAndRateLimited(t *testing.T) {
 
 	cache.updated = time.Now().Add(-vehicleStatusInterval)
 	failure := errors.New("connection failed")
-	fail := func() (map[string]*VehicleStatusUpdate, error) { calls++; return nil, failure }
+	fail := func([]string) (map[string]*VehicleStatusUpdate, error) { calls++; return nil, failure }
 	for range 2 {
 		got, err = cache.get("one", fail)
 		assert.ErrorIs(t, err, failure)
@@ -155,7 +158,7 @@ func TestReadVehicleStates(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	states, err := readVehicleStates(ctx, "ws"+strings.TrimPrefix(server.URL, "http"), http.Header{"Authorization": {"test-token"}}, "car")
+	states, err := readVehicleStates(ctx, "ws"+strings.TrimPrefix(server.URL, "http"), http.Header{"Authorization": {"test-token"}}, "other", "car")
 	require.NoError(t, err)
 	assert.Equal(t, int64(3), states["other"].ChargingStatus.Value)
 	assert.Equal(t, int64(0), states["car"].ChargingStatus.Value)
@@ -203,13 +206,14 @@ func TestReadVehicleStatesMissingAndMalformed(t *testing.T) {
 				_, _, _ = conn.Read(ctx)
 			}))
 			defer server.Close()
-			states, err := readVehicleStates(ctx, "ws"+strings.TrimPrefix(server.URL, "http"), nil, "car")
+			states, err := readVehicleStates(ctx, "ws"+strings.TrimPrefix(server.URL, "http"), nil, "car", "missing")
 			if tc.wantError {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, states["car"])
 				assert.Nil(t, states["car"].ChargingStatus)
+				assert.Nil(t, states["missing"])
 			}
 		})
 	}

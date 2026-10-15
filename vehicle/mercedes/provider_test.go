@@ -2,8 +2,10 @@ package mercedes
 
 import (
 	"errors"
+	"github.com/evcc-io/evcc/util"
 	"math"
 	"testing"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/stretchr/testify/assert"
@@ -39,8 +41,12 @@ func TestOdometer(t *testing.T) {
 func TestLimitSoc(t *testing.T) {
 	for _, value := range []int64{-1, 0, 1, 80, 100, 101} {
 		got, err := snapshotProvider(&VehicleStatusUpdate{MaxSoc: &IntegerAttribute{Value: value, Metadata: &AttributeMetadata{}}}).GetLimitSoc()
-		if value <= 0 || value > 100 {
+		if value == 0 {
 			assert.ErrorIs(t, err, api.ErrNotAvailable)
+			assert.Zero(t, got)
+		} else if value < 0 || value > 100 {
+			require.Error(t, err)
+			assert.NotErrorIs(t, err, api.ErrNotAvailable)
 			assert.Zero(t, got)
 		} else {
 			require.NoError(t, err)
@@ -103,4 +109,44 @@ func TestSnapshotFailure(t *testing.T) {
 	assert.ErrorIs(t, err, failure)
 	_, _, err = v.Position()
 	assert.ErrorIs(t, err, failure)
+}
+
+func TestInvalidMetadataRefreshesAfterAccountInterval(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		get  func(*Provider) error
+	}{
+		{"status", func(v *Provider) error { _, err := v.Status(); return err }},
+		{"odometer", func(v *Provider) error { _, err := v.Odometer(); return err }},
+		{"limit", func(v *Provider) error { _, err := v.GetLimitSoc(); return err }},
+		{"climate", func(v *Provider) error { _, err := v.Climater(); return err }},
+		{"position", func(v *Provider) error { _, _, err := v.Position(); return err }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var account vehicleStateCache
+			calls := 0
+			state := &VehicleStatusUpdate{}
+			fetch := func([]string) (map[string]*VehicleStatusUpdate, error) {
+				calls++
+				return map[string]*VehicleStatusUpdate{"car": state}, nil
+			}
+			cache := util.ResettableCached(func() (*VehicleStatusUpdate, error) { return account.get("car", fetch) }, time.Hour)
+			v := &Provider{stateG: cache.Get, resetState: cache.Reset}
+			for range 2 {
+				assert.ErrorIs(t, tc.get(v), api.ErrMustRetry)
+			}
+			assert.Equal(t, 1, calls, "metadata errors must not bypass the account rate limit")
+			state = &VehicleStatusUpdate{
+				ChargingStatus:        &IntegerAttribute{Value: 3, Metadata: &AttributeMetadata{}},
+				Odometer:              &IntegerAttribute{Value: 123, Unit: 1, Metadata: &AttributeMetadata{}},
+				MaxSoc:                &IntegerAttribute{Value: 80, Metadata: &AttributeMetadata{}},
+				PreconditioningActive: &BooleanAttribute{Metadata: &AttributeMetadata{}},
+				Latitude:              &DoubleAttribute{Metadata: &AttributeMetadata{}},
+				Longitude:             &DoubleAttribute{Metadata: &AttributeMetadata{}},
+			}
+			account.updated = time.Now().Add(-vehicleStatusInterval)
+			require.NoError(t, tc.get(v), "recover without waiting for the hour-long provider cache")
+			assert.Equal(t, 2, calls)
+		})
+	}
 }
