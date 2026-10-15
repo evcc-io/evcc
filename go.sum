@@ -166,8 +166,8 @@ github.com/evcc-io/optimizer v0.0.0-20261004131720-6ba24fca01f5 h1:kMm3Z11WYZt1Z
 github.com/evcc-io/optimizer v0.0.0-20261004131720-6ba24fca01f5/go.mod h1:cHMeq6GfoXQ8LxqY4LH1wn/hrgYEn+ka5RPI1CF37SY=
 github.com/evcc-io/rct v0.2.0 h1:qjXKI7NKwW5YpEKEb27MwLMBaR4ne2Kd2cPV2PYTKn4=
 github.com/evcc-io/rct v0.2.0/go.mod h1:n6MTBU36QOadGlxxiADu86VaT5l0eYdbmFBHF14AD/s=
-github.com/evcc-io/tesla-proxy-client v0.0.0-20260722080120-05ada06c7368 h1:Vek18PwCpXWBVaNfzq7qwru0VsQgWtlL5yIQbLqFwWg=
-github.com/evcc-io/tesla-proxy-client v0.0.0-20260722080120-05ada06c7368/go.mod h1:L8AR3E7/MbbvCgnrtzsT6YsgQJtN5gk/LumR1gDBeJM=
+github.com/evcc-io/tesla-proxy-client v0.0.0-20261015101137-8db68a0a4eeb h1:KTfg/xokVzGkl2Il6f6QWCUn/TM7lMZQr0bQ8VhBxxk=
+github.com/evcc-io/tesla-proxy-client v0.0.0-20261015101137-8db68a0a4eeb/go.mod h1:L8AR3E7/MbbvCgnrtzsT6YsgQJtN5gk/LumR1gDBeJM=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
 github.com/fatih/color v1.18.0 h1:S8gINlzdQ840/4pfAwic/ZE0djQEH3wM94VfqLTZcOM=
 github.com/fatih/color v1.18.0/go.mod h1:4FelSpRwEGDpQ12mAdzqdOukCy4u8WUtOY6lkT/6HfU=
