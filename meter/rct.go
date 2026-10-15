@@ -359,8 +359,16 @@ func (m *RCT) totalEnergy() (float64, error) {
 			return err
 		})
 
+		if m.externalPower {
+			eg.Go(func() error {
+				var err error
+				c, err = m.queryFloat(rct.TotalExternalEnergyWh)
+				return err
+			})
+		}
+
 		err := eg.Wait()
-		return (a + b) / 1000, err
+		return (a + b + c) / 1000, err
 
 	case "battery":
 		res, err := m.queryFloat(rct.TotalEnergyBattOutWh)
