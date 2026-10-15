@@ -2426,7 +2426,8 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 
 NO_DIM:
 	// read and publish status
-	if err := lp.updateChargerStatus(); err != nil {
+	err := lp.updateChargerStatus()
+	if err != nil {
 		lp.log.ERROR.Println(err)
 		return
 	}
@@ -2488,8 +2489,6 @@ NO_DIM:
 	lp.publish(keys.MinSocNotReached, minSocNotReached)
 
 	// execute loading strategy
-	var err error
-
 	switch {
 	case !lp.connected():
 		// always disable charger if not connected
