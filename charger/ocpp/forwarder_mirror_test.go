@@ -123,3 +123,58 @@ func TestMirrorRedacted(t *testing.T) {
 	assert.NotEqual(t, "secret", redacted.Mirrors[0].Password)
 	assert.Equal(t, "secret", rule.Mirrors[0].Password, "original must stay untouched")
 }
+
+type memMirrorStats struct {
+	data map[string]mirrorStats
+}
+
+func (m *memMirrorStats) load() map[string]mirrorStats  { return m.data }
+func (m *memMirrorStats) save(d map[string]mirrorStats) { m.data = d }
+
+func init() {
+	mirrorStatsBackend = &memMirrorStats{}
+}
+
+func TestMeterEnergyWh(t *testing.T) {
+	wh, ok := meterEnergyWh([]byte(`[2,"m","MeterValues",{"meterValue":[{"sampledValue":[{"value":"7.5","measurand":"Current.Import"},{"value":"15440.5","measurand":"Energy.Active.Import.Register","unit":"kWh"}]}]}]`))
+	assert.True(t, ok)
+	assert.InDelta(t, 15440500, wh, 1e-6)
+
+	wh, ok = meterEnergyWh([]byte(`[2,"m","MeterValues",{"meterValue":[{"sampledValue":[{"value":"1200"}]}]}]`))
+	assert.True(t, ok, "no measurand means the energy register")
+	assert.Equal(t, 1200.0, wh)
+
+	_, ok = meterEnergyWh([]byte(`[2,"m","MeterValues",{"meterValue":[{"sampledValue":[{"value":"5","phase":"L1","measurand":"Energy.Active.Import.Register"}]}]}]`))
+	assert.False(t, ok, "per phase values are not the register")
+
+	_, ok = meterEnergyWh([]byte(`[2,"m","MeterValues",{"meterValue":[{"sampledValue":[{"value":"NaN"}]}]}]`))
+	assert.False(t, ok)
+}
+
+func TestMirrorRecord(t *testing.T) {
+	ms := &mirrorSession{chargerID: "stats-test", rule: MirrorRule{UpstreamURL: "ws://x"}}
+	meter := func(wh string) []byte {
+		return []byte(`[2,"m","MeterValues",{"meterValue":[{"sampledValue":[{"value":"` + wh + `"}]}]}]`)
+	}
+
+	now := time.Date(2026, 10, 15, 10, 5, 0, 0, time.UTC)
+	ms.record(meter("1000"), now)
+	ms.record(meter("1500"), now.Add(time.Minute))
+	ms.record([]byte(`[2,"s","StatusNotification",{"connectorId":1}]`), now.Add(2*time.Minute))
+	ms.record(meter("2000"), now.Add(time.Hour))
+	ms.record(meter("10"), now.Add(time.Hour+time.Minute))
+
+	mirrorsMu.Lock()
+	defer mirrorsMu.Unlock()
+
+	st := statsLocked(mirrorStatsKey("stats-test", ms.rule.Key()))
+	require.Len(t, st.Hours, 2)
+
+	assert.Equal(t, 3, st.Hours[0].Messages)
+	assert.Equal(t, 2, st.Hours[0].MeterValues)
+	assert.Equal(t, 500.0, st.Hours[0].EnergyWh, "the first sample has nothing to step from")
+
+	assert.Equal(t, 2, st.Hours[1].Messages)
+	assert.Equal(t, 500.0, st.Hours[1].EnergyWh, "a register reset adds no energy")
+	assert.Equal(t, 10.0, st.LastWh)
+}

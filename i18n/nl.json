@@ -832,6 +832,17 @@
         "add": "Alleen-lezen upstream toevoegen",
         "description": "Ontvangen een kopie van elk bericht van deze lader, bijvoorbeeld voor rapportage of monitoring. Ze antwoorden de lader nooit en kunnen geen commando's versturen. De hoofd-upstream hierboven is degene die kan autoriseren en afrekenen.",
         "remove": "Verwijderen",
+        "stats": {
+          "disconnects": "Onderbrekingen",
+          "energy": "Energie (kWh)",
+          "hour": "Uur",
+          "last24h": "Laatste 24 uur: {messages} berichten, {energy} kWh gerapporteerd.",
+          "lastSent": "Laatste bericht verstuurd",
+          "messages": "Berichten",
+          "meterValues": "Meetwaarden",
+          "never": "Nog niets verstuurd",
+          "table": "Per uur"
+        },
         "title": "Alleen-lezen upstreams"
       },
       "password": "Wachtwoord",

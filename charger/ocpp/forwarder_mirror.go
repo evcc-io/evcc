@@ -11,6 +11,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -60,9 +61,11 @@ func (m MirrorRule) dialRule(chargerID string) ForwarderRule {
 
 // MirrorStatus is the observable state of one mirror.
 type MirrorStatus struct {
-	UpstreamURL       string `json:"upstreamUrl"`
-	UpstreamConnected bool   `json:"upstreamConnected"`
-	Error             string `json:"error,omitempty"`
+	UpstreamURL       string       `json:"upstreamUrl"`
+	UpstreamConnected bool         `json:"upstreamConnected"`
+	Error             string       `json:"error,omitempty"`
+	LastSent          *time.Time   `json:"lastSent,omitempty"`
+	History           []MirrorHour `json:"history,omitempty"`
 }
 
 type mirrorSession struct {
@@ -70,7 +73,11 @@ type mirrorSession struct {
 	rule      MirrorRule
 	out       chan []byte
 	stop      chan struct{}
-	connected bool // guarded by mirrorsMu
+	connected bool      // guarded by mirrorsMu
+	lastSent  time.Time // guarded by mirrorsMu
+
+	// frame whose write failed, sent first after the next connect; only used by the session's goroutine
+	retry []byte
 }
 
 var (
@@ -113,6 +120,12 @@ func startMirrors(chargerID string, rules []MirrorRule) {
 	for key := range mirrorErrors[chargerID] {
 		if _, ok := wanted[key]; !ok {
 			delete(mirrorErrors[chargerID], key)
+		}
+	}
+	for _, ms := range stale {
+		if _, ok := wanted[ms.rule.Key()]; !ok {
+			delete(mirrorStatsData, mirrorStatsKey(chargerID, ms.rule.Key()))
+			mirrorStatsDirty = true
 		}
 	}
 
@@ -256,6 +269,9 @@ func (ms *mirrorSession) setState(connected bool, err error) {
 	}
 
 	mirrorsMu.Lock()
+	if ms.connected && !connected {
+		ms.recordDisconnectLocked(time.Now())
+	}
 	ms.connected = connected
 
 	if mirrorErrors[ms.chargerID] == nil {
@@ -309,12 +325,25 @@ func (ms *mirrorSession) serve() bool {
 
 	forwarderLog.INFO.Printf("mirror %s → %s (read-only)", ms.chargerID, strings.TrimRight(ms.rule.UpstreamURL, "/")+ms.rule.dialRule(ms.chargerID).upstreamPath(ms.chargerID))
 
+	defer flushMirrorStats()
+
 	for _, frame := range ms.replayFrames() {
 		if err := writeFrame(conn, frame); err != nil {
 			conn.CloseNow()
 			ms.setState(false, err)
 			return true
 		}
+		ms.record(frame, time.Now())
+	}
+
+	if ms.retry != nil {
+		if err := writeFrame(conn, ms.retry); err != nil {
+			conn.CloseNow()
+			ms.setState(false, err)
+			return true
+		}
+		ms.record(ms.retry, time.Now())
+		ms.retry = nil
 	}
 
 	ms.setState(true, nil)
@@ -322,11 +351,17 @@ func (ms *mirrorSession) serve() bool {
 	readErr := make(chan error, 1)
 	go func() { readErr <- ms.rejectCalls(conn) }()
 
+	flush := time.NewTicker(time.Minute)
+	defer flush.Stop()
+
 	for {
 		select {
 		case <-ms.stop:
 			conn.Close(websocket.StatusNormalClosure, "")
 			return true
+
+		case <-flush.C:
+			flushMirrorStats()
 
 		case err := <-readErr:
 			forwarderLog.DEBUG.Printf("mirror %s: upstream disconnected: %v", ms.chargerID, err)
@@ -337,10 +372,12 @@ func (ms *mirrorSession) serve() bool {
 		case frame := <-ms.out:
 			if err := writeFrame(conn, frame); err != nil {
 				forwarderLog.DEBUG.Printf("mirror %s: write: %v", ms.chargerID, err)
+				ms.retry = frame
 				conn.CloseNow()
 				ms.setState(false, err)
 				return true
 			}
+			ms.record(frame, time.Now())
 		}
 	}
 }
@@ -388,6 +425,17 @@ func mirrorStatus(chargerID string, rules []MirrorRule) []MirrorStatus {
 		} else if msg, ok := mirrorErrors[chargerID][r.Key()]; ok {
 			st.Error = msg
 		}
+		if ms, ok := mirrorSessions[chargerID][r.Key()]; ok && !ms.lastSent.IsZero() {
+			lastSent := ms.lastSent
+			st.LastSent = &lastSent
+		}
+
+		hours := statsLocked(mirrorStatsKey(chargerID, r.Key())).Hours
+		if len(hours) > mirrorStatusHours {
+			hours = hours[len(hours)-mirrorStatusHours:]
+		}
+		st.History = slices.Clone(hours)
+
 		out = append(out, st)
 	}
 	return out
