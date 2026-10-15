@@ -896,7 +896,7 @@
       }
     },
     "pv": {
-      "titleAdd": "GES Ekle",
+      "titleAdd": "GES Sayacı Ekle",
       "titleEdit": "GES Sayacını Düzenle"
     },
     "remote": {
@@ -940,7 +940,7 @@
       "grid": "Şebeke",
       "integrations": "Bütünleştirmeler",
       "loadpoints": "Doldurma ve Isıtma",
-      "meter": "GES ve Batarya",
+      "meter": "GES ve batarya",
       "services": "Hizmetler",
       "system": "Sistem",
       "vehicles": "Araçlar"
@@ -1646,7 +1646,7 @@
         "descriptionDisabled": "Ev bataryasından hızlı doldurabilmek için bir sınır seç.",
         "disabled": "Devre dışı",
         "label": "'Batarya Takviyesi”",
-        "mode": "Sadece GES ve Asg.+GES durumunda kullanılabilir.",
+        "mode": "Sadece akıllı modda mevcut.",
         "once": "Bu doldurma oturumu için takviye etkin.",
         "stateActive": "Batarya desteği etkin",
         "stateBelowLimit": "Desdek için batarya çok düşük",
@@ -1701,6 +1701,7 @@
     "mode": {
       "boost": "Hızlandırma",
       "minpv": "Asg.+GES",
+      "normal": "Normal",
       "now": "Hızlı",
       "off": "Kapalı",
       "on": "Açık",
