@@ -671,6 +671,11 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 			Icon:  props.Icon,
 		}
 
+		// disabled at runtime, skipped until restart
+		if meter == nil {
+			return
+		}
+
 		// power
 		var b bytes.Buffer
 		power, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff())
@@ -1012,6 +1017,9 @@ func (site *Site) updateGridMeter() error {
 	mm := types.Measurement{Name: site.gridMeter.Config().Name}
 
 	meter := site.gridMeter.Instance()
+	if meter == nil {
+		return errors.New("grid meter disabled, restart required")
+	}
 
 	if res, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff()); err == nil {
 		mm.Power = res

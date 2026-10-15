@@ -441,8 +441,6 @@ func updateDevice[T any](ctx context.Context, id int, class templates.Class, req
 		if !force || merged == nil {
 			return err
 		}
-		// keep running instance, site still uses it until restart
-		instance = dev.Instance()
 	}
 
 	configurable, ok := dev.(config.ConfigurableDevice[T])
