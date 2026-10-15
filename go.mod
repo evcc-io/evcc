@@ -36,7 +36,7 @@ require (
 	github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4
 	github.com/evcc-io/optimizer v0.0.0-20261004131720-6ba24fca01f5
 	github.com/evcc-io/rct v0.2.0
-	github.com/evcc-io/tesla-proxy-client v0.0.0-20261015082836-83cce7ed57be
+	github.com/evcc-io/tesla-proxy-client v0.0.0-20261015101137-8db68a0a4eeb
 	github.com/fatih/structs v1.1.0
 	github.com/getkin/kin-openapi v0.149.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
