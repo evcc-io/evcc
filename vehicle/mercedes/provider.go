@@ -8,13 +8,17 @@ import (
 )
 
 type Provider struct {
-	dataG func() (StatusResponse, error)
+	dataG   func() (StatusResponse, error)
+	statusG func() (api.ChargeStatus, error)
 }
 
-func NewProvider(api *API, vin string, cache time.Duration) *Provider {
+func NewProvider(client *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
+		statusG: util.Cached(func() (api.ChargeStatus, error) {
+			return client.identity.chargeStatus(vin)
+		}, cache),
 		dataG: util.Cached(func() (StatusResponse, error) {
-			return api.Status(vin)
+			return client.Status(vin)
 		}, cache),
 	}
 	return impl
@@ -48,4 +52,11 @@ var _ api.VehiclePosition = (*Provider)(nil)
 func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.dataG()
 	return res.LocationResponse.Latitude, res.LocationResponse.Longitude, err
+}
+
+var _ api.ChargeState = (*Provider)(nil)
+
+// Status implements the api.ChargeState interface.
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	return v.statusG()
 }

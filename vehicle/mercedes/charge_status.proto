@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package mercedes.charge;
+option go_package = "github.com/evcc-io/evcc/vehicle/mercedes";
+
+// Wire-compatible subset of the Mercedes VehicleStatusUpdate protocol.
+// Field numbers follow ReneNulschDE/mbapi2020's vehicle-events.proto.
+// Unrelated vehicle attributes and command payloads are deliberately omitted.
+message ChargeStatusPush {
+  Sequence command_updates = 17;
+  ChargeStatusUpdates updates = 24;
+}
+
+message ChargeStatusUpdates {
+  int64 sequence_number = 1;
+  map<string, ChargeStatusUpdate> vehicles = 2;
+}
+
+message ChargeStatusUpdate {
+  bool full_update = 2;
+  ChargeStatusAttribute charging_status = 50;
+}
+
+message ChargeStatusAttribute {
+  int32 value = 1;
+  ChargeStatusMetadata metadata = 2;
+}
+
+message ChargeStatusMetadata {
+  int32 status = 2;
+}
+
+message ChargeStatusAck {
+  Sequence command_updates = 19;
+  Sequence updates = 28;
+}
+
+message Sequence {
+  int64 sequence_number = 1;
+}

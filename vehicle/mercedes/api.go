@@ -13,8 +13,9 @@ import (
 
 // API is an api.Vehicle implementation for Mercedes-Benz cars
 type API struct {
-	region string
-	log    *util.Logger
+	identity *Identity
+	region   string
+	log      *util.Logger
 	*request.Helper
 }
 
@@ -30,9 +31,10 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	}
 
 	return &API{
-		Helper: client,
-		region: identity.region,
-		log:    log,
+		identity: identity,
+		Helper:   client,
+		region:   identity.region,
+		log:      log,
 	}
 }
 
