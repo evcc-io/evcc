@@ -11,7 +11,7 @@ This file covers the ground rules and how to develop in this repository.
 - **Discuss first**: Only open a pull request if there is a related issue or discussion where the team has indicated a positive tendency toward the proposed change. Link to it in your pull request description.
 - **Keep it focused**: One topic per pull request, written in English (see [Communication Language](#communication-language)).
 - **Understand your changes**: AI tools are welcome, but you remain responsible for your work regardless of which tools you used. Fully understand all changes and be prepared to answer questions about them.
-- **Use your own words**: Write issue descriptions, pull request explanations and commit messages in a way you understand yourself. Don't blindly trust and post AI-generated text. Keep it clear and concise.
+- **Mark AI-generated text**: Issues, pull request descriptions and comments written by an AI tool must say so, e.g. with the tool's attribution footer. This lets readers decide how to treat them. Keep them clear and concise.
 - **Respect review time**: Ensure contributions justify the review effort required from maintainers.
 
 If a contribution doesn't seem to follow these rules, we'll close it.
