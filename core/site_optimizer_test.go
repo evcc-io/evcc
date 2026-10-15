@@ -204,7 +204,7 @@ func TestCoarsenHorizon(t *testing.T) {
 	gt, ft, home := lo.Sum(req.TimeSeries.Gt), lo.Sum(req.TimeSeries.Ft), lo.Sum(details.DemandDetails[0].Values)
 	pn, demand := req.TimeSeries.PN, req.Batteries[0].PDemand
 
-	coarsenHorizon(&req, &details)
+	coarsenHorizon(&req, &details, defaultCoarseSlotsAfter)
 	res := req.TimeSeries
 
 	// quarter slots up to 48h and on to the full hour, then clock hours, the goal and the end cut short
@@ -234,9 +234,41 @@ func TestCoarsenHorizon(t *testing.T) {
 	short.TimeSeries.Gt = lo.RepeatBy(len(short.TimeSeries.Dt), func(int) float32 { return 1 })
 	before := requestDetails{Timestamps: asTimestamps(short.TimeSeries.Dt, now)}
 	after := before
-	coarsenHorizon(&short, &after)
-	assert.Equal(t, 4*47, len(short.TimeSeries.Dt))
+	dt = append([]int(nil), short.TimeSeries.Dt...)
+	coarsenHorizon(&short, &after, defaultCoarseSlotsAfter)
+	assert.Equal(t, dt, short.TimeSeries.Dt)
 	assert.Equal(t, before, after)
+
+	// an earlier boundary coarsens the same request
+	short.TimeSeries.PN = short.TimeSeries.Gt
+	short.TimeSeries.PE = short.TimeSeries.Gt
+	coarsenHorizon(&short, &after, 24*time.Hour)
+	assert.Less(t, len(short.TimeSeries.Dt), 4*47)
+	assert.InDelta(t, float32(4*47), lo.Sum(short.TimeSeries.Gt), 0.1)
+}
+
+func TestCoarseSlotsAfter(t *testing.T) {
+	for _, tc := range []struct {
+		env     string
+		hosted  bool
+		res     time.Duration
+		invalid bool
+	}{
+		{"", false, defaultCoarseSlotsAfter, false},
+		{"", true, defaultCoarseSlotsAfter, false},
+		{"72", false, 72 * time.Hour, false},
+		{"72", true, defaultCoarseSlotsAfter, false}, // the hosted optimizer always coarsens after 48h
+		{"0", false, 0, false},
+		{"foo", false, defaultCoarseSlotsAfter, true},
+		{"72h", false, defaultCoarseSlotsAfter, true},
+		{"-1", false, defaultCoarseSlotsAfter, true},
+	} {
+		t.Setenv("OPTIMIZER_COARSEN_AFTER", tc.env)
+
+		res, err := coarseSlotsAfter(tc.hosted)
+		assert.Equal(t, tc.res, res, "env %q hosted %v", tc.env, tc.hosted)
+		assert.Equal(t, tc.invalid, err != nil, "env %q hosted %v", tc.env, tc.hosted)
+	}
 }
 
 func TestPlanSlot(t *testing.T) {

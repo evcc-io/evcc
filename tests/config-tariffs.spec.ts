@@ -84,7 +84,7 @@ grid:
     await expect(restartButton).not.toBeVisible();
 
     await expect(page.getByTestId("tariffs-legacy")).toContainText(
-      ["Grid price", "12.3 ct."].join("")
+      ["Grid import price", "12.3 ct."].join("")
     );
   });
 
@@ -96,9 +96,9 @@ grid:
     await expect(page.getByTestId("tariffs-legacy")).toContainText(
       [
         "Tariffs & forecasts",
-        "Grid price",
+        "Grid import price",
         "30.0 öre",
-        "Feed-in price",
+        "Grid export price",
         "-10.0 öre",
         "Grid CO₂",
         "300 g",

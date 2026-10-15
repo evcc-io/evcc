@@ -185,7 +185,7 @@ paths:
     post:
       operationId: setBatteryGridDischarge
       summary: Control battery grid discharge
-      description: "Allow the home battery to discharge to the grid. Enabling may require `force=true` to confirm country-specific feed-in restrictions."
+      description: "Allow the home battery to discharge to the grid. Enabling may require `force=true` to confirm country-specific grid export restrictions."
       externalDocs:
         url: https://docs.evcc.io/en/features/battery
       tags:
@@ -195,7 +195,7 @@ paths:
         - $ref: "#/components/parameters/enable"
         - name: force
           in: query
-          description: Confirm country-specific feed-in restrictions
+          description: Confirm country-specific grid export restrictions
           schema:
             type: boolean
       responses:
@@ -245,7 +245,7 @@ paths:
     post:
       operationId: setBatteryGridDischargeLimit
       summary: Set battery grid discharge limit
-      description: "Discharge home battery to grid when the feed-in price is at or above the threshold (experimental). Requires a feed-in tariff and the battery grid discharge setting. Ignored otherwise."
+      description: "Discharge home battery to grid when the grid export price is at or above the threshold (experimental). Requires a grid export tariff and the battery grid discharge setting. Ignored otherwise."
       externalDocs:
         url: https://docs.evcc.io/en/features/battery
       tags:
@@ -360,7 +360,7 @@ paths:
     post:
       operationId: setLoadpointDisableDelay
       summary: Disable threshold-delay
-      description: "Delay before charging stops in solar mode."
+      description: "Delay before charging stops in smart mode."
       externalDocs:
         url: https://docs.evcc.io/en/reference/configuration/loadpoints
       tags:
@@ -375,7 +375,7 @@ paths:
     post:
       operationId: setLoadpointDisableThreshold
       summary: Disable threshold
-      description: "Specifies the grid draw power to stop charging in solar mode."
+      description: "Specifies the grid draw power to stop charging in smart mode."
       externalDocs:
         url: https://docs.evcc.io/en/reference/configuration/loadpoints#threshold-1
       tags:
@@ -390,7 +390,7 @@ paths:
     post:
       operationId: setLoadpointEnableDelay
       summary: Enable threshold-delay
-      description: "Delay before charging starts in solar mode."
+      description: "Delay before charging starts in smart mode."
       externalDocs:
         url: https://docs.evcc.io/en/reference/configuration/loadpoints#delay
       tags:
@@ -405,7 +405,7 @@ paths:
     post:
       operationId: setLoadpointEnableThreshold
       summary: Enable threshold
-      description: "Specifies the available surplus power to start charging in solar mode."
+      description: "Specifies the available surplus power to start charging in smart mode."
       externalDocs:
         url: https://docs.evcc.io/en/reference/configuration/loadpoints#threshold
       tags:
@@ -522,7 +522,7 @@ paths:
         "200":
           $ref: "#/components/responses/NumberResult"
         "400":
-          description: "Invalid phases-value. You have most likely entered the value 0 for a wallbox that cannot switch phases automatically."
+          description: "Invalid phases-value. You have most likely entered the value 0 for a charger that cannot switch phases automatically."
   /loadpoints/{id}/plan:
     get:
       operationId: getLoadpointPlan
@@ -601,7 +601,7 @@ paths:
   /loadpoints/{id}/plan/static/preview/soc/{soc}/{timestamp}:
     get:
       operationId: previewLoadpointSocPlan
-      summary: Simulate soc-based charging plan
+      summary: Simulate SoC-based charging plan
       description: "Simulate charging plan based on SoC goal. Does not alter the actual charging plan."
       externalDocs:
         url: https://docs.evcc.io/en/features/plans
@@ -1765,7 +1765,7 @@ paths:
                             description: kWh imported where a price exists
                           returnCost:
                             type: number
-                            description: Feed-in revenue, where a price exists
+                            description: Grid export revenue, where a price exists
                           pricedReturnEnergy:
                             type: number
                             description: kWh exported where a price exists
@@ -1778,7 +1778,7 @@ paths:
     get:
       operationId: getEnergyFlow
       summary: Energy flow
-      description: "Returns the energy attributed from sources (pv, battery, grid) to sinks (home, battery, loadpoint, export) over the period, plus grid cost and CO2 sums where tariff data exists."
+      description: "Returns the energy attributed from sources (pv, battery, grid) to sinks (home, battery, loadpoint, export) over the period, plus grid cost and CO₂ sums where tariff data exists."
       tags:
         - experimental
       parameters:
@@ -1830,7 +1830,7 @@ paths:
                         type: number
                   co2:
                     type: object
-                    description: Grid CO2 sums in kg, omitted without CO2 data
+                    description: Grid CO₂ sums in kg, omitted without CO₂ data
                     properties:
                       consumption:
                         type: number
@@ -1885,7 +1885,7 @@ paths:
                       description: Highest slot price in the bucket, aggregated only
                     feedin:
                       type: number
-                      description: Feed-in rate per kWh, the bucket average when aggregated
+                      description: Grid export price per kWh, the bucket average when aggregated
                     feedinMin:
                       type: number
                     feedinMax:
@@ -2096,7 +2096,7 @@ components:
       items:
         $ref: "./openapi.state.yaml#/components/schemas/Rate"
     Soc:
-      description: SOC in %
+      description: SoC in %
       type: number
       example: 60
       minimum: 0
@@ -2227,7 +2227,7 @@ components:
         $ref: "./openapi.state.yaml#/components/schemas/AlwaysCharge"
     soc:
       name: soc
-      description: SOC in %
+      description: SoC in %
       in: path
       required: true
       schema:
@@ -2295,7 +2295,7 @@ components:
         $ref: "./openapi.state.yaml#/components/schemas/BatteryMode"
     costLimit:
       name: cost
-      description: Cost limit in configured currency (default EUR) or CO2 limit in g/kWh
+      description: Cost limit in configured currency (default EUR) or CO₂ limit in g/kWh
       example: 0.25
       in: path
       required: true
@@ -2343,7 +2343,7 @@ components:
           schema:
             type: integer
     SocResult:
-      description: Success - Soc result
+      description: Success - SoC result
       content:
         application/json:
           schema:
