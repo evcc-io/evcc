@@ -6,12 +6,66 @@ products:
 capabilities: ["iso151182", "mA", "meter"]
 requirements:
   evcc: ["sponsorship"]
+  description:
+    de: |
+      Breaking Change: Diese Version steuert die Box über ihre MQTT-Schnittstelle
+      (IPC) statt über Modbus. Eine bestehende Konfiguration mit `modbus`/`connector`
+      funktioniert nicht mehr und muss über die Oberfläche neu angelegt werden.
+
+      Der Broker läuft auf der Wallbox selbst und verlangt die Zugangsdaten des
+      technischen Benutzers; anonyme Verbindungen werden abgewiesen. Die `id` ist
+      die Geräte-ID der Wallbox im Topic `device/evCharger/<id>/…`, bei einer Box
+      mit einem Anschluss `0`.
+
+      Die Modbus-Register der Box eignen sich nicht zur Steuerung: der Sollwert in
+      Holding-Register 3000 wird entgegengenommen und quittiert, aber nicht
+      ausgeführt, solange die Box `controlMode: LIMITABLE` meldet.
+    en: |
+      Breaking change: this version controls the box through its MQTT (IPC)
+      interface instead of Modbus. An existing `modbus`/`connector` configuration
+      no longer works and needs to be set up again through the UI.
+
+      The broker runs on the wallbox itself and requires the technical user's
+      credentials; anonymous connections are refused. The `id` is the wallbox's
+      device id in the `device/evCharger/<id>/…` topic, `0` for a single-connector
+      box.
+
+      The box's Modbus registers are not usable for control: the setpoint in
+      holding register 3000 is accepted and acknowledged but never acted on while
+      the box reports `controlMode: LIMITABLE`.
 params:
-  - name: modbus
-    choice: ["tcpip"]
-    id: 1
-  - name: connector
+  - preset: mqtt
+  - name: topic
+    default: device/evCharger
+    description:
+      de: Basis-Topic der IPC-Schnittstelle
+      en: Base topic of the IPC interface
+  - name: id
+    required: true
+    default: 0
+    description:
+      de: Geräte-ID der Wallbox
+      en: Device id of the wallbox
+  - name: minpower
+    default: 600
+    unit: W
+    advanced: true
+    description:
+      de: Kleinste Ladeleistung, die die Box hält
+      en: Smallest charge power the box will hold
+  - name: phases
+    default: 3
+    advanced: true
+    description:
+      de: Angeschlossene Phasen
+      en: Connected phases
+    help:
+      de: Firmware 0.4.8 meldet die Phasenzahl nicht selbst, deshalb hier angeben.
+      en: Firmware 0.4.8 does not report the phase count itself, so it is configured here.
 render: |
   type: ambibox
-  {{- include "modbus" . }}
-  connector: {{ .connector }}
+  {{- include "mqtt" . }}
+  topic: {{ .topic }}
+  id: {{ .id }}
+  minpower: {{ .minpower }}
+  phases: {{ .phases }}
