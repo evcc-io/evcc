@@ -2,17 +2,9 @@ package tesla
 
 import "errors"
 
-type RegionResponse struct {
-	Response Region
-}
-
 type Region struct {
 	Region          string
 	FleetApiBaseUrl string `json:"fleet_api_base_url"`
-}
-
-type VehiclesResponse struct {
-	Response []Vehicle
 }
 
 type Vehicle struct {
@@ -44,10 +36,13 @@ type VehicleData struct {
 	ErrorDescription string `json:"error_description"`
 }
 
+// CommandResponse covers vehicle commands (reason/result) and energy site commands (code/message)
 type CommandResponse struct {
 	Response struct {
-		Reason string `json:"reason"`
-		Result bool   `json:"result"`
+		Reason  string `json:"reason"`
+		Result  bool   `json:"result"`
+		Code    int    `json:"code"`
+		Message string `json:"message"`
 	}
 	Error string `json:"error"`
 }
@@ -57,31 +52,19 @@ func (res CommandResponse) Reason() error {
 	if !res.Response.Result && res.Response.Reason != "" {
 		return errors.New(res.Response.Reason)
 	}
+	if res.Response.Code != 0 && res.Response.Code != 200 && res.Response.Code != 201 {
+		return errors.New(res.Response.Message)
+	}
 	if res.Error != "" {
 		return errors.New(res.Error)
 	}
 	return nil
 }
 
-type ProductsResponse struct {
-	Response []Product
-}
-
 type Product struct {
 	EnergySiteId int64 `json:"energy_site_id"`
 }
 
-type SiteStatusResponse struct {
-	Response EnergySiteStatus
-}
-
 type EnergySiteStatus struct {
 	PercentageCharged float64 `json:"percentage_charged"`
-}
-
-type SiteCommandResponse struct {
-	Response struct {
-		Code    int    `json:"code"`
-		Message string `json:"message"`
-	}
 }

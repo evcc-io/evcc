@@ -51,14 +51,14 @@ func (v *API) post(uri string, data any) error {
 
 // Region returns the Fleet API region of the account
 func (v *API) Region() (Region, error) {
-	var res RegionResponse
+	var res struct{ Response Region }
 	err := v.GetJSON(v.base+"/users/region", &res)
 	return res.Response, err
 }
 
 // Vehicles returns the account's vehicles
 func (v *API) Vehicles() ([]Vehicle, error) {
-	var res VehiclesResponse
+	var res struct{ Response []Vehicle }
 	err := v.GetJSON(v.base+"/vehicles", &res)
 	return res.Response, err
 }
@@ -91,32 +91,19 @@ func (v *API) Command(vin, command string, data any) error {
 
 // Products returns the account's products
 func (v *API) Products() ([]Product, error) {
-	var res ProductsResponse
+	var res struct{ Response []Product }
 	err := v.GetJSON(v.base+"/products", &res)
 	return res.Response, err
 }
 
 // EnergySiteStatus returns the energy site's live status
 func (v *API) EnergySiteStatus(siteId int64) (EnergySiteStatus, error) {
-	var res SiteStatusResponse
+	var res struct{ Response EnergySiteStatus }
 	err := v.GetJSON(fmt.Sprintf("%s/energy_sites/%d/site_status", v.base, siteId), &res)
 	return res.Response, err
 }
 
 // SetBatteryReserve sets the energy site's backup reserve
 func (v *API) SetBatteryReserve(siteId int64, percent uint64) error {
-	data := map[string]uint64{"backup_reserve_percent": percent}
-	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/energy_sites/%d/backup", v.base, siteId), request.MarshalJSON(data), request.JSONEncoding)
-	if err != nil {
-		return err
-	}
-
-	var res SiteCommandResponse
-	if err := v.DoJSON(req, &res); err != nil {
-		return err
-	}
-	if res.Response.Code != 200 && res.Response.Code != 201 {
-		return fmt.Errorf("batteryReserve failed: %s", res.Response.Message)
-	}
-	return nil
+	return v.post(fmt.Sprintf("%s/energy_sites/%d/backup", v.base, siteId), map[string]uint64{"backup_reserve_percent": percent})
 }

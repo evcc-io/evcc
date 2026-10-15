@@ -1,13 +1,13 @@
 package tesla
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,8 +15,6 @@ func TestCommandResponse(t *testing.T) {
 	sponsor.Subject = "any"
 
 	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.URL.Path)
-
 		switch r.URL.Path {
 		case "/api/1/vehicles/abc/command/charge_start":
 			w.WriteHeader(http.StatusInternalServerError)
@@ -32,7 +30,7 @@ func TestCommandResponse(t *testing.T) {
 
 func TestVehicleDataRequestsLocation(t *testing.T) {
 	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Contains(t, r.URL.Query().Get("endpoints"), "location_data")
+		assert.Contains(t, r.URL.Query().Get("endpoints"), "location_data")
 		w.Write([]byte(`{"response": {"drive_state": {"latitude": 1.5, "longitude": 2.5}}}`))
 	}))
 	srv.Start()
