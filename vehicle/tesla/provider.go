@@ -112,6 +112,10 @@ func (v *Provider) Position() (float64, float64, error) {
 	if err != nil {
 		return 0, 0, err
 	}
+	// position missing without location_data endpoint or location scope
+	if res.Response.DriveState.Latitude == 0 && res.Response.DriveState.Longitude == 0 {
+		return 0, 0, api.ErrNotAvailable
+	}
 	return res.Response.DriveState.Latitude, res.Response.DriveState.Longitude, nil
 }
 
