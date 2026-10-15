@@ -145,6 +145,9 @@ func TestFingerprint(t *testing.T) {
 	assert.Equal(t, "0a3ceccc83823ec0d2c5d39a15dbf722c813e6da48800a0156a7a8459db63337", fingerprint(kia, kiaKey, nil))
 	assert.Equal(t, "df04e3dadd52288ce5b280b368af261272556b5360adbc90a817a167526e2946", fingerprint(hyundai, hyundaiKey, nil))
 
+	// body vector from an independent HMAC computation of the upstream recipe, body in Python json.dumps style
+	assert.Equal(t, "0aae2e0acd5d57bcabba202cc7a839fc90f1d52814091b92e0908be66ed12eef", fingerprint(kia, kiaKey, []byte(`{"refreshToken": "r1", "idToken": "i1"}`)))
+
 	bare := fingerprint(kia, kiaKey, nil)
 	assert.Equal(t, bare, fingerprint(kia, kiaKey, []byte(" \t\r\n\v\f")), "ascii whitespace is not signed")
 	assert.NotEqual(t, bare, fingerprint(kia, kiaKey, []byte("\u00a0")), "non-ascii whitespace is signed")
@@ -180,7 +183,7 @@ func TestLoginCCIPasswordSuccess(t *testing.T) {
 	defer loginSrv.Close()
 
 	cciMux := http.NewServeMux()
-	cciMux.HandleFunc("/auth/v1/token", func(w http.ResponseWriter, r *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token", func(w http.ResponseWriter, r *http.Request) {
 		assertSigned(t, r)
 		assert.Equal(t, "testcode", r.URL.Query().Get("code"))
 		w.Header().Set("Content-Type", "application/json")
@@ -195,7 +198,7 @@ func TestLoginCCIPasswordSuccess(t *testing.T) {
 			"expiresIn":                3599,
 		})
 	})
-	cciMux.HandleFunc("/auth/v1/token-exchange", func(w http.ResponseWriter, r *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token-exchange", func(w http.ResponseWriter, r *http.Request) {
 		assertSigned(t, r)
 		assert.Equal(t, "CCS", r.URL.Query().Get("serviceType"))
 		assert.Equal(t, "Bearer cci-access-1", r.Header.Get("authorization"))
@@ -291,7 +294,7 @@ func TestLoginCCIPasswordConsentRequired(t *testing.T) {
 
 func TestRefreshCCI(t *testing.T) {
 	cciMux := http.NewServeMux()
-	cciMux.HandleFunc("/auth/v2/token-refresh", func(w http.ResponseWriter, r *http.Request) {
+	cciMux.HandleFunc("POST /auth/v2/token-refresh", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "device-abc", r.Header.Get("client-device-id"))
 		body := assertSigned(t, r)
@@ -318,7 +321,7 @@ func TestRefreshCCI(t *testing.T) {
 			"idToken":                  "id-2",
 		})
 	})
-	cciMux.HandleFunc("/auth/v1/token-exchange", func(w http.ResponseWriter, r *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token-exchange", func(w http.ResponseWriter, r *http.Request) {
 		assertSigned(t, r)
 		assert.Equal(t, "Bearer cci-access-2", r.Header.Get("authorization"))
 		_ = json.NewEncoder(w).Encode(map[string]any{
@@ -401,7 +404,7 @@ func TestLoginCCIFallsBackToPasswordLoginWhenPersistedBundleUnusable(t *testing.
 	defer loginSrv.Close()
 
 	cciMux := http.NewServeMux()
-	cciMux.HandleFunc("/auth/v1/token", func(w http.ResponseWriter, r *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token", func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken": "fresh-cci-access", "refreshToken": "fresh-cci-refresh",
 			"nonCcsToken": "fresh-non-ccs", "exchangeableAccessToken": "fresh-exch-access",
@@ -409,7 +412,7 @@ func TestLoginCCIFallsBackToPasswordLoginWhenPersistedBundleUnusable(t *testing.
 			"idToken": "fresh-id", "expiresIn": 3599,
 		})
 	})
-	cciMux.HandleFunc("/auth/v1/token-exchange", func(w http.ResponseWriter, r *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token-exchange", func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken": "fresh-ccs-token",
 			"expiresTime": time.Now().Add(time.Hour).Unix(),
@@ -452,8 +455,8 @@ func gateHandler(code int) http.HandlerFunc {
 
 func TestExchangeCCITokenGateFallback(t *testing.T) {
 	cciMux := http.NewServeMux()
-	cciMux.HandleFunc("/auth/v1/token", gateHandler(9035))
-	cciMux.HandleFunc("/domain/api/v1/auth/token", cciTokenHandler)
+	cciMux.HandleFunc("POST /auth/v1/token", gateHandler(9035))
+	cciMux.HandleFunc("POST /domain/api/v1/auth/token", cciTokenHandler)
 	cciSrv := httptest.NewServer(cciMux)
 	defer cciSrv.Close()
 
@@ -468,8 +471,8 @@ func TestExchangeCCITokenNoFallbackOnOtherErrors(t *testing.T) {
 	var legacyCalls atomic.Int32
 
 	cciMux := http.NewServeMux()
-	cciMux.HandleFunc("/auth/v1/token", gateHandler(9013))
-	cciMux.HandleFunc("/domain/api/v1/auth/token", func(w http.ResponseWriter, r *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token", gateHandler(9013))
+	cciMux.HandleFunc("POST /domain/api/v1/auth/token", func(w http.ResponseWriter, r *http.Request) {
 		legacyCalls.Add(1)
 		cciTokenHandler(w, r)
 	})
@@ -485,10 +488,10 @@ func TestExchangeCCITokenNoFallbackOnOtherErrors(t *testing.T) {
 
 func TestExchangeCCITokenUnsignedBrandUsesLegacy(t *testing.T) {
 	cciMux := http.NewServeMux()
-	cciMux.HandleFunc("/auth/v1/token", func(w http.ResponseWriter, _ *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token", func(w http.ResponseWriter, _ *http.Request) {
 		t.Error("signed route must not be called without a fingerprint key")
 	})
-	cciMux.HandleFunc("/domain/api/v1/auth/token", func(w http.ResponseWriter, r *http.Request) {
+	cciMux.HandleFunc("POST /domain/api/v1/auth/token", func(w http.ResponseWriter, r *http.Request) {
 		assert.Empty(t, r.Header.Get("X-Fingerprint"))
 		cciTokenHandler(w, r)
 	})

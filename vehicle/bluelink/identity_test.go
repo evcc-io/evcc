@@ -157,7 +157,7 @@ func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 	var refreshCalls atomic.Int32
 	var exchangeCalls atomic.Int32
 	cciMux := http.NewServeMux()
-	cciMux.HandleFunc("/auth/v1/token", func(w http.ResponseWriter, _ *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token", func(w http.ResponseWriter, _ *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken": "cci-access", "refreshToken": "cci-refresh",
 			"nonCcsToken": "non-ccs", "exchangeableAccessToken": "exch-access",
@@ -165,7 +165,7 @@ func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 			"idToken": "id-1", "expiresIn": 3599,
 		})
 	})
-	cciMux.HandleFunc("/auth/v1/token-exchange", func(w http.ResponseWriter, _ *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token-exchange", func(w http.ResponseWriter, _ *http.Request) {
 		// the first (login) exchange returns a token expiring inside oauth2's
 		// 10s buffer, so the next Token() call triggers exactly one refresh
 		resp := map[string]any{"accessToken": "ccs-token-2", "expiresTime": time.Now().Add(time.Hour).Unix()}
@@ -175,7 +175,7 @@ func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 		}
 		_ = json.NewEncoder(w).Encode(resp)
 	})
-	cciMux.HandleFunc("/auth/v2/token-refresh", func(w http.ResponseWriter, _ *http.Request) {
+	cciMux.HandleFunc("POST /auth/v2/token-refresh", func(w http.ResponseWriter, _ *http.Request) {
 		refreshCalls.Add(1)
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken": "cci-access-2", "refreshToken": "cci-refresh-2",
