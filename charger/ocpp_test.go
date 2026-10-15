@@ -356,3 +356,34 @@ func (suite *ocppTestSuite) TestTimeout() {
 
 	suite.Require().NoError(err)
 }
+
+func (suite *ocppTestSuite) TestEnabledAvailable() {
+	id := suite.stationID("test-available")
+
+	cp, _, _ := suite.startChargePoint(id, 1)
+	suite.Require().NoError(cp.Start(ocppTestUrl))
+
+	c, err := NewOCPP(suite.T().Context(), id, 1, "", string(types.MeasurandCurrentOffered), 0, false, false, false, false, false, ocppTestConnectTimeout)
+	suite.Require().NoError(err)
+	c.conn.TestClock(suite.clock)
+
+	_, err = cp.StatusNotification(1, core.NoError, core.ChargePointStatusAvailable)
+	suite.Require().NoError(err)
+
+	// idle charger keeps offering its hardware maximum despite the 0A profile
+	_, err = cp.MeterValues(1, []types.MeterValue{{
+		Timestamp: types.NewDateTime(suite.clock.Now()),
+		SampledValue: []types.SampledValue{
+			{Measurand: types.MeasurandCurrentOffered, Value: "32", Unit: types.UnitOfMeasureA},
+		},
+	}})
+	suite.Require().NoError(err)
+
+	for _, enable := range []bool{false, true, false} {
+		suite.Require().NoError(c.Enable(enable))
+
+		enabled, err := c.Enabled()
+		suite.Require().NoError(err)
+		suite.Equal(enable, enabled)
+	}
+}

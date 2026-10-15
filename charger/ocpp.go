@@ -288,6 +288,10 @@ func (c *OCPP) Enabled() (bool, error) {
 			core.ChargePointStatusSuspendedEVSE:
 			return false, nil
 		case
+			// idle chargers may offer their hardware maximum regardless of the profile
+			core.ChargePointStatusAvailable:
+			return c.enabled, nil
+		case
 			core.ChargePointStatusCharging,
 			core.ChargePointStatusSuspendedEV:
 			return true, nil
