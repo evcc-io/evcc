@@ -379,6 +379,11 @@ func (suite *ocppTestSuite) TestEnabledAvailable() {
 	}})
 	suite.Require().NoError(err)
 
+	// before any profile was sent the offered current is the only evidence
+	enabled, err := c.Enabled()
+	suite.Require().NoError(err)
+	suite.True(enabled)
+
 	for _, enable := range []bool{false, true, false} {
 		suite.Require().NoError(c.Enable(enable))
 
