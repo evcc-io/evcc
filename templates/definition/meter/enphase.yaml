@@ -4,6 +4,9 @@ products:
     description:
       generic: IQ Gateway
 requirements:
+discovery:
+  mdns: ["_enphase-envoy._tcp"]
+  mac: ["001DC0"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

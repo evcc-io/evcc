@@ -20,9 +20,9 @@ params:
     default: 15m
 render: |
   type: lexus
-  {{ include "vehicle-common" . }}
+  {{ include "common" . }}
   user: {{ .user }}
   password: {{ .password }}
   vin: {{ .vin }}
   cache: {{ .cache }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

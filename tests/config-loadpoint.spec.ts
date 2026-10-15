@@ -29,6 +29,8 @@ test.describe("charging loadpoint", async () => {
     await page.goto("/#/config");
 
     const lpModal = page.getByTestId("loadpoint-modal");
+    const minCurrent = lpModal.getByLabel("Minimum current");
+    const maxCurrent = lpModal.getByLabel("Maximum current");
     const chargerModal = page.getByTestId("charger-modal");
 
     await expect(page.getByTestId("loadpoint")).toHaveCount(0);
@@ -51,15 +53,24 @@ test.describe("charging loadpoint", async () => {
 
     await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     await expect(lpModal.getByLabel("Title")).toHaveValue("Solar Carport");
+    await expect(lpModal.getByLabel("Title")).not.toHaveAttribute("placeholder");
     // verify defaults
     await expect(lpModal.getByLabel("Default mode")).toHaveValue("");
     // mode
     await expect(lpModal.getByTestId("loadpointSolarMode-default")).toHaveClass(/active/);
     await expect(lpModal.getByTestId("loadpointSolarMode-custom")).not.toHaveClass(/active/);
     // min/max current
-    await expect(lpModal.getByTestId("chargerPower-11kw")).toHaveClass(/active/);
-    await expect(lpModal.getByTestId("chargerPower-22kw")).not.toHaveClass(/active/);
-    await expect(lpModal.getByTestId("chargerPower-other")).not.toHaveClass(/active/);
+    await expect(minCurrent).toHaveValue("6");
+    await expect(maxCurrent).toHaveValue("16");
+    await expect(lpModal).toContainText("≈ 4.1 kW");
+    await expect(lpModal).toContainText("≈ 11.0 kW");
+    await expect(lpModal).toContainText("Typical: 6-16 A for 11 kW");
+    await minCurrent.fill("4");
+    await minCurrent.blur();
+    await expect(lpModal).toContainText("Only go below 6 A");
+    await minCurrent.fill("6");
+    await minCurrent.blur();
+    await expect(lpModal).not.toContainText("Only go below 6 A");
     // phases
     await expect(lpModal.getByTestId("loadpointParamPhases-1")).not.toHaveClass(/active/);
     await expect(lpModal.getByTestId("loadpointParamPhases-3")).toHaveClass(/active/);
@@ -89,6 +100,11 @@ test.describe("charging loadpoint", async () => {
     await expectModalVisible(lpModal);
     await expect(lpModal.getByRole("heading", { name: "Edit Charging Point" })).toBeVisible();
     await lpModal.getByLabel("Title").fill("Solar Carport 2");
+
+    // unsaved changes: backdrop click keeps modal open
+    await lpModal.click({ position: { x: 10, y: 10 } });
+    await expectModalVisible(lpModal);
+
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
     await expect(page.getByTestId("loadpoint")).toContainText("Solar Carport 2");
@@ -102,7 +118,9 @@ test.describe("charging loadpoint", async () => {
     // update loadpoint power
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
-    await lpModal.getByTestId("chargerPower-22kw").click();
+    await maxCurrent.fill("32");
+    await maxCurrent.blur();
+    await expect(lpModal).toContainText("≈ 22.1 kW");
 
     // update charger mode
     await expect(lpModal.getByText("Demo charger")).toBeVisible();
@@ -123,7 +141,7 @@ test.describe("charging loadpoint", async () => {
 
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
-    await expect(lpModal.getByTestId("chargerPower-22kw")).toHaveClass(/active/);
+    await expect(maxCurrent).toHaveValue("32");
     await expect(lpModal.getByLabel("Title")).toHaveValue("Solar Carport 2");
     await lpModal.getByRole("button", { name: "Close" }).click();
 
@@ -329,13 +347,13 @@ test.describe("charging loadpoint", async () => {
     // change on main ui
     await page.goto("/");
     await expect(page.getByRole("button", { name: "Off" })).toHaveClass(/active/);
-    await page.getByRole("button", { name: "Solar", exact: true }).click();
+    await page.getByRole("button", { name: "Smart", exact: true }).click();
     await page.waitForLoadState("networkidle");
-    await expect(page.getByRole("button", { name: "Solar", exact: true })).toHaveClass(/active/);
+    await expect(page.getByRole("button", { name: "Smart", exact: true })).toHaveClass(/active/);
 
     await restart();
     await page.reload();
-    await expect(page.getByRole("button", { name: "Solar", exact: true })).toHaveClass(/active/);
+    await expect(page.getByRole("button", { name: "Smart", exact: true })).toHaveClass(/active/);
 
     // change default mode in config to fast
     await page.goto("/#/config");
@@ -602,11 +620,10 @@ power:
 
     await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     const modeSelect = lpModal.getByLabel("Default mode");
-    await expect(modeSelect.getByRole("option", { name: "Solar", exact: true })).toHaveCount(1);
-    await expect(modeSelect.getByRole("option", { name: "Min+Solar" })).toHaveCount(0);
+    await expect(modeSelect.getByRole("option", { name: "Smart", exact: true })).toHaveCount(1);
 
     await expect(lpModal.getByText("Electrics")).toHaveCount(0);
-    await expect(lpModal.getByText("Charger type", { exact: true })).toHaveCount(0);
+    await expect(lpModal.getByLabel("Maximum current")).toHaveCount(0);
 
     // create
     await lpModal.getByRole("button", { name: "Save" }).click();
@@ -639,6 +656,12 @@ test.describe("heating loadpoint", async () => {
     await lpEntry.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
     await expect(lpModal.getByRole("heading", { name: "Edit Heater" })).toBeVisible();
+
+    // heating specific current hints
+    await expect(lpModal).toContainText("Depends on the rated power of the heating device");
+    await lpModal.getByLabel("Minimum current").fill("4");
+    await lpModal.getByLabel("Minimum current").blur();
+    await expect(lpModal).not.toContainText("Only go below 6 A");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
 
@@ -730,7 +753,7 @@ temp:
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: successful");
     await expect(restResult).toContainText(["Power", "1.0 kW"].join(""));
-    await expect(restResult).toContainText(["Energy", "0.7 kWh"].join(""));
+    await expect(restResult).toContainText(["Consumed", "700 Wh"].join(""));
     await expect(restResult).toContainText(["Temperature", "25.0°C"].join(""));
     await expect(restResult).toContainText(["Heater limit", "50.0°C"].join(""));
 
@@ -738,8 +761,15 @@ temp:
     await expectModalHidden(modal);
     await expectModalVisible(lpModal);
 
+    // heating-specific mode labels
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
+    const modeSelect = lpModal.getByLabel("Default mode");
+    await expect(modeSelect.getByRole("option", { name: "Normal", exact: true })).toHaveCount(1);
+    await expect(modeSelect.getByRole("option", { name: "Boost", exact: true })).toHaveCount(1);
+
     // create
-    await finishLoadpoint(page);
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
 
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     const lpEntry = page.getByTestId("loadpoint").first();

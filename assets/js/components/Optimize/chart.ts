@@ -1,0 +1,100 @@
+import { boundarySeries, hoverDot, xAxisLabelStyle } from "../Forecast/echarts";
+import type { DemandDetail } from "@/types/evcc";
+
+export type Titled = { title?: string; name?: string };
+
+// base load carries no title, loadpoint profiles are named after the loadpoint
+export function demandTitle(detail: DemandDetail, baseLoadLabel: string): string {
+  if (detail.type === "home") return baseLoadLabel;
+  return `${detail.title} (${detail.type})`;
+}
+
+// loadpoint part of a vehicle entry title: "Carport (blue e-Golf)" → "Carport"
+export function loadpointTitle(detail: Titled): string {
+  const title = detail.title || detail.name || "";
+  return title.replace(/\s*\([^)]*\)$/, "");
+}
+
+// slot start times (ms) from the first timestamp plus cumulative dt seconds
+export function slotTimes(timestamp: string, dt: number[]): number[] {
+  const start = new Date(timestamp).getTime();
+  const res: number[] = [];
+  let acc = 0;
+  for (const s of dt) {
+    res.push(start + acc * 1000);
+    acc += s;
+  }
+  return res;
+}
+
+export function isMidnight(time?: number): boolean {
+  if (time === undefined) return false;
+  const d = new Date(time);
+  return d.getHours() === 0 && d.getMinutes() === 0;
+}
+
+// category x axis over slot times, labels at full hours every 4h (6h on mobile),
+// weekday shown at 00:00
+export function slotXAxis(times: number[], weekdayShort: (d: Date) => string) {
+  const step = window.innerWidth < 576 ? 6 : 4;
+  return {
+    type: "category",
+    data: times.map(String),
+    axisLine: { show: false },
+    axisTick: { show: false },
+    splitLine: { show: false },
+    axisLabel: {
+      ...xAxisLabelStyle(),
+      interval: 0,
+      formatter: (value: string) => {
+        const d = new Date(Number(value));
+        if (d.getMinutes() !== 0 || d.getHours() % step !== 0) return "";
+        const label = String(d.getHours());
+        return d.getHours() === 0 ? `${label}\n${weekdayShort(d)}` : label;
+      },
+    },
+  };
+}
+
+const QUARTER_SECONDS = 15 * 60;
+
+// source slot index per chart slot: a slot longer than a quarter hour is shown as equal
+// quarters, so the category axis keeps one width per slot when the request merges its
+// horizon tail into clock hours
+export function slotParents(dt: number[]): number[] {
+  return dt.flatMap((s, i) => Array<number>(Math.max(1, Math.round(s / QUARTER_SECONDS))).fill(i));
+}
+
+// values per chart slot, a split slot shares its value evenly among its quarters: energies
+// and dt both shrink, power per slot stays
+export function splitSlots(values: number[], parents: number[]): number[] {
+  if (!values.length) return [];
+  const count: number[] = [];
+  for (const p of parents) count[p] = (count[p] ?? 0) + 1;
+  return parents.map((p) => (values[p] ?? 0) / (count[p] ?? 1));
+}
+
+export function formatSlotRange(times: number[], dt: number[], index: number): string {
+  const start = new Date(times[index] ?? 0);
+  const end = new Date(start.getTime() + (dt[index] || 0) * 1000);
+  const f = (d: Date) =>
+    `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  return `${f(start)} - ${f(end)}`;
+}
+
+// hover dot created on demand: a hidden symbol per slot makes the svg renderer re-insert all
+// of them on every hover frame. The temporary dot only drops when new data re-renders the chart.
+export function transientHoverDot(color: string) {
+  return { ...hoverDot(color), showSymbol: false };
+}
+
+// slot energy (Wh) to average power (kW)
+export function whToKW(wh: number, dtSeconds: number): number {
+  return wh / (dtSeconds / 3600) / 1000;
+}
+
+// day boundary lines. A category split line would sit in the gap between bars
+// and show as a sliver; this draws them just inside the bar's left edge, behind the bars.
+export function dayBoundarySeries(times: number[]) {
+  return boundarySeries(times.flatMap((t, i) => (i > 0 && isMidnight(t) ? [i - 0.15] : [])));
+}

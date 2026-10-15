@@ -23,7 +23,7 @@ test.describe("boost", async () => {
     const lp = page.getByTestId("loadpoint").first();
     const boostButton = lp.getByTestId("battery-boost-button");
     await expect(boostButton).not.toBeVisible();
-    await lp.getByTestId("mode").getByRole("button", { name: "Solar", exact: true }).click();
+    await lp.getByTestId("mode").getByRole("button", { name: "Smart", exact: true }).click();
     await lp.getByTestId("loadpoint-settings-button").last().click();
     const modal = page.getByTestId("loadpoint-settings-modal").first();
     await expectModalVisible(modal);
@@ -48,7 +48,7 @@ test.describe("boost", async () => {
     await page.goto("/");
     const lp = page.getByTestId("loadpoint").first();
     const boostButton = lp.getByTestId("battery-boost-button");
-    await lp.getByTestId("mode").getByRole("button", { name: "Solar", exact: true }).click();
+    await lp.getByTestId("mode").getByRole("button", { name: "Smart", exact: true }).click();
     await lp.getByTestId("loadpoint-settings-button").last().click();
     const modal = page.getByTestId("loadpoint-settings-modal").first();
     await expectModalVisible(modal);
@@ -67,7 +67,7 @@ test.describe("boost", async () => {
     const lp = page.getByTestId("loadpoint").first();
     const boostButton = lp.getByTestId("battery-boost-button");
     // set a boost limit in solar mode so the boost button appears
-    await lp.getByTestId("mode").getByRole("button", { name: "Solar", exact: true }).click();
+    await lp.getByTestId("mode").getByRole("button", { name: "Smart", exact: true }).click();
     await lp.getByTestId("loadpoint-settings-button").last().click();
     const modal = page.getByTestId("loadpoint-settings-modal").first();
     await expectModalVisible(modal);
@@ -87,7 +87,7 @@ test.describe("boost", async () => {
 
     // LP1: set solar mode, configure boost limit
     const lp1 = page.getByTestId("loadpoint").first();
-    await lp1.getByTestId("mode").getByRole("button", { name: "Solar", exact: true }).click();
+    await lp1.getByTestId("mode").getByRole("button", { name: "Smart", exact: true }).click();
     await lp1.getByTestId("loadpoint-settings-button").last().click();
     const modal = page.getByTestId("loadpoint-settings-modal").first();
     await expectModalVisible(modal);
@@ -97,7 +97,9 @@ test.describe("boost", async () => {
 
     // enable "Prevent discharge in fast mode"
     await page.goto("/#/battery");
-    await page.getByLabel("Prevent discharge in fast mode and planned charging.").check();
+    await page
+      .getByLabel("Prevent home battery discharge in fast mode and during planned charging.")
+      .check();
     await page.waitForLoadState("networkidle");
     await page.goto("/");
 

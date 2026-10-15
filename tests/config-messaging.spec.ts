@@ -111,6 +111,10 @@ test.describe("messaging", async () => {
     await titleInput.fill("event-start-title");
     await messageInput.fill("event-start-message");
 
+    // unsaved changes: ESC keeps modal open
+    await page.keyboard.press("Escape");
+    await expectModalVisible(modal);
+
     // validate connection
     await modal.getByRole("button", { name: "Save", exact: true }).click();
     await expectModalHidden(modal);

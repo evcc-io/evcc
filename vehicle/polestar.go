@@ -8,13 +8,13 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/vehicle/polestar"
+	"github.com/evcc-io/evcc/vehicle/polestar/legacy"
 )
 
 // Polestar is an api.Vehicle implementation for Polestar cars
 type Polestar struct {
 	*embed
-	*polestar.Provider
+	*legacy.Provider
 }
 
 func init() {
@@ -44,23 +44,23 @@ func NewPolestarFromConfig(other map[string]any) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	identity, err := polestar.NewIdentity(log, cc.User, cc.Password)
+	identity, err := legacy.NewIdentity(log, cc.User, cc.Password)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
 
-	api := polestar.NewAPI(log, identity)
+	api := legacy.NewAPI(log, identity)
 
-	vehicle, err := ensureVehicleEx(cc.VIN, func() ([]polestar.ConsumerCar, error) {
+	vehicle, err := ensureVehicleEx(cc.VIN, func() ([]legacy.ConsumerCar, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), cc.Timeout)
 		defer cancel()
 		return api.Vehicles(ctx)
-	}, func(v polestar.ConsumerCar) (string, error) {
+	}, func(v legacy.ConsumerCar) (string, error) {
 		return v.VIN, nil
 	})
 
 	if err == nil {
-		v.Provider = polestar.NewProvider(log, api, vehicle.VIN, cc.Timeout, cc.Cache)
+		v.Provider = legacy.NewProvider(log, api, vehicle.VIN, cc.Timeout, cc.Cache)
 	}
 
 	return v, err

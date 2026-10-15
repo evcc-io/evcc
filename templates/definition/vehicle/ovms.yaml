@@ -28,10 +28,10 @@ params:
     default: 15m
 render: |
   type: ovms
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   user: {{ .user }}
   password: {{ .password }}
   vehicleid: {{ .vehicleid }}
   server: {{ .server }}
   cache: {{ .cache }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

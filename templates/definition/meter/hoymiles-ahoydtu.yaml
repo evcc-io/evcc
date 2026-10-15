@@ -16,13 +16,17 @@ params:
       de: "Falls mehrere vorhanden. Die Nummerierung beginnt bei 0. Siehe AhoyDTU Webinterface -> Inverter #[ID]"
       en: "If multiple exist. The numbering starts at 0. See AhoyDTU webinterface -> Inverter #[ID]"
     default: 0
+  - name: cache
+    default: 1s
 render: |
   type: custom
   power:
     source: http
     uri: http://{{ .host }}/api/inverter/id/{{ .id }}
     jq: .ch[0][2]
+    cache: {{ .cache }}
   energy:
     source: http
     uri: http://{{ .host }}/api/inverter/id/{{ .id }}
     jq: .ch[0][6]
+    cache: {{ .cache }}

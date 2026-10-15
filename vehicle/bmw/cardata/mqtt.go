@@ -205,7 +205,7 @@ func (v *MqttConnector) handler(_ mqtt.Client, m mqtt.Message) {
 		return
 	}
 
-	v.log.TRACE.Println("recv: " + string(m.Payload()))
+	v.log.TRACE.Printf("recv %s: %s", m.Topic(), string(m.Payload()))
 
 	v.mu.RLock()
 	defer v.mu.RUnlock()

@@ -2,7 +2,6 @@ package homeassistant
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
 	"net/url"
@@ -17,34 +16,8 @@ import (
 
 // https://developers.home-assistant.io/docs/auth_api
 
-func init() {
-	auth.Register("homeassistant", NewHomeAssistantFromConfig)
-}
-
-func NewHomeAssistantFromConfig(other map[string]any) (oauth2.TokenSource, error) {
-	var cc struct {
-		URI      string
-		Home     string // TODO remove deprecated
-		Insecure bool
-	}
-
-	if err := util.DecodeOther(other, &cc); err != nil {
-		return nil, err
-	}
-
-	uri := cc.URI
-
-	if uri == "" && cc.Home != "" {
-		uri = instanceUriByName(cc.Home)
-		if uri == "" {
-			return nil, fmt.Errorf("unknown instance: %s", cc.Home)
-		}
-	}
-
-	return NewHomeAssistant(uri, cc.Insecure)
-}
-
-func NewHomeAssistant(uri string, insecure bool) (oauth2.TokenSource, error) {
+// NewOAuth creates a Home Assistant OAuth token source
+func NewOAuth(uri string, insecure bool) (oauth2.TokenSource, error) {
 	uri = strings.TrimRight(uri, "/") // normalize
 
 	extUrl := network.Config().ExternalURL()

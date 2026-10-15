@@ -354,13 +354,13 @@ func (wb *Delta) CurrentPower() (float64, error) {
 var _ api.Identifier = (*Delta)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *Delta) Identify() (string, error) {
+func (wb *Delta) Identify() ([]string, error) {
 	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseRfidUID, 20)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }
 
 var _ api.Diagnosis = (*Delta)(nil)

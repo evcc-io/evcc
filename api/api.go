@@ -85,6 +85,7 @@ type CurrentGetter interface {
 
 // BatteryController optionally allows to control home battery (dis)charging behavior
 type BatteryController interface {
+	BatteryModes() []BatteryMode
 	SetBatteryMode(BatteryMode) error
 }
 
@@ -130,9 +131,10 @@ type ChargeRater interface {
 	ChargedEnergy() (float64, error)
 }
 
-// Identifier identifies a vehicle and is implemented by the charger
+// Identifier identifies a vehicle and is implemented by the charger.
+// A charger may know more than one identity, e.g. an RFID tag and a vehicle id.
 type Identifier interface {
-	Identify() (string, error)
+	Identify() ([]string, error)
 }
 
 // Authorizer authorizes a charging session by supplying RFID credentials
@@ -157,12 +159,6 @@ type Vehicle interface {
 	SetTitle(string)
 	Identifiers() []string
 	OnIdentified() ActionConfig
-}
-
-// VehicleFinishTimer provides estimated charge cycle finish time.
-// Finish time is normalized for charging to 100% and may deviate from vehicle display if soc limit is effective.
-type VehicleFinishTimer interface {
-	FinishTime() (time.Time, error)
 }
 
 // VehicleRange provides the vehicles remaining km range
@@ -235,6 +231,28 @@ type AuthProvider interface {
 	HandleCallback(params url.Values) error
 	Authenticated() bool
 	DisplayName() string
+}
+
+// AuthChallenge is user input a login needs that no browser redirect can
+// deliver, e.g. a captcha or a code copied from the vendor's login page.
+type AuthChallenge struct {
+	Kind  string `json:"kind"`            // AuthChallengeCaptcha or AuthChallengeCode
+	Image string `json:"image,omitempty"` // data URI shown to the user
+	Link  string `json:"link,omitempty"`  // url the user opens to obtain the answer
+}
+
+const (
+	AuthChallengeCaptcha = "captcha"
+	AuthChallengeCode    = "code"
+)
+
+// AuthChallenger is implemented by AuthProviders whose login runs server-side
+// with stored credentials instead of a redirect or device flow.
+type AuthChallenger interface {
+	// StartChallenge begins the login. Returns the first challenge, or nil when no user input is needed.
+	StartChallenge() (*AuthChallenge, error)
+	// SubmitChallenge answers the current challenge. Returns the next challenge, or nil when authenticated.
+	SubmitChallenge(answer string) (*AuthChallenge, error)
 }
 
 // IconDescriber optionally provides an icon

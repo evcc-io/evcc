@@ -6,6 +6,9 @@ products:
   - brand: Kontron Solar
     description:
       generic: Charger
+  - brand: Steca
+    description:
+      generic: StecaCharger
 capabilities: ["iso151182", "mA", "rfid", "1p3p", "meter", "dim"]
 requirements:
   description:

@@ -1,6 +1,55 @@
 import { defineComponent } from "vue";
 import { is12hFormat } from "@/units";
 import { CURRENCY } from "../types/evcc";
+import settings from "@/settings";
+import type { DateFormat } from "@/settings";
+
+// Extract a single part in date context, where names can differ from their
+// standalone forms (German "So.", "Jan." vs "So", "Jan").
+function datePart(
+  date: Date,
+  locale: string | undefined,
+  type: Intl.DateTimeFormatPartTypes
+): string {
+  return (
+    new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short" })
+      .formatToParts(date)
+      .find((part) => part.type === type)?.value ?? ""
+  );
+}
+
+// Day+month(+year) in the user's date order, e.g. "17 Mai" or "Mai 17, 2025".
+// Ordering and punctuation come from a reference locale (en-GB day-first,
+// en-US month-first), month names stay translated. ymd is the full ISO date.
+function formatDayMonth(
+  date: Date,
+  locale: string | undefined,
+  fmt: DateFormat,
+  year = false
+): string {
+  if (fmt === "ymd") return isoDate(date);
+  const orderLocale = fmt === "mdy" ? "en-US" : "en-GB";
+  const month = datePart(date, locale, "month");
+  // some locales (e.g. Czech) use numeric months in date context
+  const name = /\p{L}/u.test(month)
+    ? month
+    : new Intl.DateTimeFormat(locale, { month: "short" }).format(date);
+  return new Intl.DateTimeFormat(orderLocale, {
+    month: "short",
+    day: "numeric",
+    year: year ? "numeric" : undefined,
+  })
+    .formatToParts(date)
+    .map((part) => (part.type === "month" ? name : part.value))
+    .join("");
+}
+
+// local-time ISO date, Intl cannot produce this reliably across locales
+function isoDate(date: Date): string {
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${mm}-${dd}`;
+}
 
 const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   AUD: "$",
@@ -26,6 +75,10 @@ const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   TRY: "₺",
   MYR: "RM",
   THB: "฿",
+  BYN: "Br",
+  UAH: "₴",
+  RUB: "₽",
+  KZT: "₸",
 };
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
@@ -45,6 +98,7 @@ const ENERGY_PRICE_IN_SUBUNIT: Partial<Record<CURRENCY, string>> = {
   SEK: "öre", // Swedish öre
   ZAR: "c", // South African cent
   TRY: "krş", // Türkiye kuruş
+  BYN: "к.", // Belarusian kapeyka
 };
 
 export enum POWER_UNIT {
@@ -62,6 +116,11 @@ export default defineComponent({
       fmtDigits: 1,
     };
   },
+  computed: {
+    dateFormat(): DateFormat {
+      return settings.dateFormat || "";
+    },
+  },
   methods: {
     energyPriceSubunit(currency: CURRENCY): string | undefined {
       if (currency === CURRENCY.CHF) {
@@ -74,9 +133,13 @@ export default defineComponent({
       return (Math.round(num * base) / base).toFixed(precision);
     },
     getPowerUnit(watt: number): POWER_UNIT {
-      return watt >= 10_000_000 ? POWER_UNIT.MW : watt >= 1000 ? POWER_UNIT.KW : POWER_UNIT.W;
+      const abs = Math.abs(watt);
+      return abs >= 10_000_000 ? POWER_UNIT.MW : abs >= 1000 ? POWER_UNIT.KW : POWER_UNIT.W;
     },
-    fmtW(watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
+    fmtPhasePower(current?: number, phases?: number) {
+      return this.fmtW(230 * (current || 0) * (phases || 0));
+    },
+    fmtW(watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number, signed = false) {
       let unit = format;
       let d = digits;
       if (POWER_UNIT.AUTO === unit) {
@@ -93,17 +156,27 @@ export default defineComponent({
           POWER_UNIT.KW === unit || POWER_UNIT.MW === unit || (POWER_UNIT.W !== unit && 0 === watt)
             ? 1
             : 0;
+        // with a free choice of unit, four digits of kW(h) are precise enough: 1,774 kWh.
+        // A forced unit keeps its decimal so columns stay aligned
+        if (POWER_UNIT.AUTO === format && POWER_UNIT.KW === unit && Math.abs(value) >= 1000) {
+          d = 0;
+        }
       }
       return `${new Intl.NumberFormat(this.$i18n?.locale, {
         style: "decimal",
         minimumFractionDigits: d,
         maximumFractionDigits: d,
+        signDisplay: signed ? "exceptZero" : "auto",
       }).format(value)}${withUnit ? ` ${unit}` : ""}`;
     },
-    fmtWh(watt: number, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
-      return this.fmtW(watt, format, withUnit, digits) + (withUnit ? "h" : "");
+    fmtWh(watt: number, format = POWER_UNIT.KW, withUnit = true, digits?: number, signed = false) {
+      return this.fmtW(watt, format, withUnit, digits, signed) + (withUnit ? "h" : "");
     },
-    fmtNumber(number: number, decimals: number | undefined, unit?: string) {
+    // signed: explicit plus for gains, e.g. a difference
+    fmtKWh(kWh: number, signed = false) {
+      return this.fmtWh(kWh * 1000, POWER_UNIT.AUTO, true, undefined, signed);
+    },
+    fmtNumber(number: number, decimals?: number, unit?: string) {
       const style = unit ? "unit" : "decimal";
       return new Intl.NumberFormat(this.$i18n?.locale, {
         style,
@@ -264,15 +337,33 @@ export default defineComponent({
         hour12: is12hFormat(),
       }).format(date);
     },
-    fmtFullDateTime(date: Date, short: boolean) {
-      return new Intl.DateTimeFormat(this.$i18n?.locale, {
-        weekday: short ? undefined : "short",
-        month: short ? "numeric" : "short",
-        day: "numeric",
+    fmtFullDateTime(date: Date) {
+      const locale = this.$i18n?.locale;
+      const fmt = this.dateFormat;
+      if (!fmt) {
+        // auto: single Intl call preserves locale-native separators (e.g. German "So., 15. Jan.,")
+        return new Intl.DateTimeFormat(locale, {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          hour12: is12hFormat(),
+        }).format(date);
+      }
+      const time = new Intl.DateTimeFormat(locale, {
         hour: "numeric",
         minute: "numeric",
         hour12: is12hFormat(),
       }).format(date);
+      const weekday = datePart(date, locale, "weekday");
+      return `${weekday} ${formatDayMonth(date, locale, fmt, true)} ${time}`.trim();
+    },
+    // weekday + day of month + time, for lists within a known month
+    fmtWeekdayDayTime(date: Date) {
+      const weekday = datePart(date, this.$i18n?.locale, "weekday");
+      return `${weekday} ${date.getDate()}, ${this.fmtHourMinute(date)}`;
     },
     fmtWeekdayTime(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
@@ -294,11 +385,17 @@ export default defineComponent({
       }).format(date);
     },
     fmtDayMonth(date: Date) {
-      return new Intl.DateTimeFormat(this.$i18n?.locale, {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-      }).format(date);
+      const locale = this.$i18n?.locale;
+      const fmt = this.dateFormat;
+      if (!fmt) {
+        return new Intl.DateTimeFormat(locale, {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        }).format(date);
+      }
+      const weekday = datePart(date, locale, "weekday");
+      return `${weekday} ${formatDayMonth(date, locale, fmt)}`.trim();
     },
     fmtDayMonthYear(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
@@ -346,6 +443,9 @@ export default defineComponent({
 
       return withSymbol ? result : result.replace(currency, "").trim();
     },
+    fmtMoneyWithSymbol(amount: number, currency = CURRENCY.EUR) {
+      return `${this.fmtMoney(amount, currency)} ${this.fmtCurrencySymbol(currency)}`;
+    },
     fmtCurrencySymbol(currency = CURRENCY.EUR) {
       return CURRENCY_SYMBOLS[currency] || currency;
     },
@@ -353,6 +453,9 @@ export default defineComponent({
       return (
         new Intl.DisplayNames(this.$i18n?.locale, { type: "currency" }).of(currency) || currency
       );
+    },
+    fmtCountryName(country: string) {
+      return new Intl.DisplayNames(this.$i18n?.locale, { type: "region" }).of(country) || country;
     },
     fmtPricePerKWh(amout = 0, currency = CURRENCY.EUR, short = false, withUnit = true) {
       const factor = this.pricePerKWhDisplayFactor(currency);
@@ -368,6 +471,11 @@ export default defineComponent({
         return `${price} ${this.pricePerKWhUnit(currency, short)}`;
       }
       return price;
+    },
+    // "19.4 – 31.3 ct/kWh", a single price when both ends match
+    fmtPriceRange(lo: number, hi: number, currency = CURRENCY.EUR, short = false) {
+      if (lo === hi) return this.fmtPricePerKWh(lo, currency, short);
+      return `${this.fmtPricePerKWh(lo, currency, short, false)} – ${this.fmtPricePerKWh(hi, currency, short)}`;
     },
     timezone() {
       return Intl?.DateTimeFormat?.().resolvedOptions?.().timeZone || "UTC";

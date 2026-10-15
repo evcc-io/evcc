@@ -1,11 +1,13 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/config"
+	"golang.org/x/text/language"
 )
 
 // siteHandler returns a device configurations by class
@@ -19,9 +21,11 @@ func siteHandler(site site.API) http.HandlerFunc {
 			Aux      []string `json:"aux"`
 			Ext      []string `json:"ext"`
 			Consumer []string `json:"consumer"`
+			Curtail  []string `json:"curtail"`
 		}{
 			Title:    site.GetTitle(),
 			Grid:     site.GetGridMeterRef(),
+			Curtail:  site.GetCurtailerRefs(),
 			PV:       site.GetPVMeterRefs(),
 			Battery:  site.GetBatteryMeterRefs(),
 			Aux:      site.GetAuxMeterRefs(),
@@ -54,6 +58,7 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			Aux      *[]string
 			Ext      *[]string
 			Consumer *[]string
+			Curtail  *[]string
 		}
 
 		if err := jsonDecoder(r.Body).Decode(&payload); err != nil {
@@ -119,6 +124,18 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			setConfigDirty()
 		}
 
+		if payload.Curtail != nil {
+			for _, m := range *payload.Curtail {
+				if _, err := config.Curtailers().ByName(m); err != nil {
+					jsonError(w, http.StatusBadRequest, err)
+					return
+				}
+			}
+
+			site.SetCurtailerRefs(*payload.Curtail)
+			setConfigDirty()
+		}
+
 		// persist immediately to keep meter refs consistent with device config on unclean shutdown
 		if err := settings.Persist(); err != nil {
 			jsonError(w, http.StatusInternalServerError, err)
@@ -127,5 +144,28 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 
 		status := map[bool]int{false: http.StatusOK, true: http.StatusAccepted}
 		w.WriteHeader(status[ConfigDirty()])
+	}
+}
+
+// updateCountryHandler sets the site country as ISO 3166-1 alpha-2 code, empty string clears it
+func updateCountryHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var val string
+		if err := jsonDecoder(r.Body).Decode(&val); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if val != "" {
+			region, err := language.ParseRegion(val)
+			if err != nil || !region.IsCountry() || region.String() != val {
+				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid country code: %s", val))
+				return
+			}
+		}
+
+		site.SetCountry(val)
+
+		w.WriteHeader(http.StatusOK)
 	}
 }

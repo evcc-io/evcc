@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _UsageName = "gridpvbatterychargeaux"
+const _UsageName = "gridcurtailpvbatterychargeaux"
 
-var _UsageIndex = [...]uint8{0, 4, 6, 13, 19, 22}
+var _UsageIndex = [...]uint8{0, 4, 11, 13, 20, 26, 29}
 
-const _UsageLowerName = "gridpvbatterychargeaux"
+const _UsageLowerName = "gridcurtailpvbatterychargeaux"
 
 func (i Usage) String() string {
 	if i < 0 || i >= Usage(len(_UsageIndex)-1) {
@@ -25,33 +25,37 @@ func (i Usage) String() string {
 func _UsageNoOp() {
 	var x [1]struct{}
 	_ = x[UsageGrid-(0)]
-	_ = x[UsagePV-(1)]
-	_ = x[UsageBattery-(2)]
-	_ = x[UsageCharge-(3)]
-	_ = x[UsageAux-(4)]
+	_ = x[UsageCurtail-(1)]
+	_ = x[UsagePV-(2)]
+	_ = x[UsageBattery-(3)]
+	_ = x[UsageCharge-(4)]
+	_ = x[UsageAux-(5)]
 }
 
-var _UsageValues = []Usage{UsageGrid, UsagePV, UsageBattery, UsageCharge, UsageAux}
+var _UsageValues = []Usage{UsageGrid, UsageCurtail, UsagePV, UsageBattery, UsageCharge, UsageAux}
 
 var _UsageNameToValueMap = map[string]Usage{
 	_UsageName[0:4]:        UsageGrid,
 	_UsageLowerName[0:4]:   UsageGrid,
-	_UsageName[4:6]:        UsagePV,
-	_UsageLowerName[4:6]:   UsagePV,
-	_UsageName[6:13]:       UsageBattery,
-	_UsageLowerName[6:13]:  UsageBattery,
-	_UsageName[13:19]:      UsageCharge,
-	_UsageLowerName[13:19]: UsageCharge,
-	_UsageName[19:22]:      UsageAux,
-	_UsageLowerName[19:22]: UsageAux,
+	_UsageName[4:11]:       UsageCurtail,
+	_UsageLowerName[4:11]:  UsageCurtail,
+	_UsageName[11:13]:      UsagePV,
+	_UsageLowerName[11:13]: UsagePV,
+	_UsageName[13:20]:      UsageBattery,
+	_UsageLowerName[13:20]: UsageBattery,
+	_UsageName[20:26]:      UsageCharge,
+	_UsageLowerName[20:26]: UsageCharge,
+	_UsageName[26:29]:      UsageAux,
+	_UsageLowerName[26:29]: UsageAux,
 }
 
 var _UsageNames = []string{
 	_UsageName[0:4],
-	_UsageName[4:6],
-	_UsageName[6:13],
-	_UsageName[13:19],
-	_UsageName[19:22],
+	_UsageName[4:11],
+	_UsageName[11:13],
+	_UsageName[13:20],
+	_UsageName[20:26],
+	_UsageName[26:29],
 }
 
 // UsageString retrieves an enum value from the enum constants string name.

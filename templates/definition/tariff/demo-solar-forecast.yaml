@@ -46,7 +46,7 @@ render: |
   forecast:
     source: js
     script: |
-      // Generate realistic solar forecast with bell curve for next 72 hours in 15-minute slots
+      // Generate realistic solar forecast with bell curve for next 120 hours in 15-minute slots
       var now = new Date();
       var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
       var rates = [];
@@ -73,13 +73,13 @@ render: |
         }
       }
 
-      // Generate 15-minute slots for 3 days
+      // Generate 15-minute slots for 5 days
       var slotMinutes = 15;
       var slotDuration = slotMinutes * 60 * 1000;
       var slotsPerHour = 60 / slotMinutes;
       var slotsPerDay = 24 * slotsPerHour;
 
-      for (var day = 0; day < 3; day++) {
+      for (var day = 0; day < 5; day++) {
         for (var slot = 0; slot < slotsPerDay; slot++) {
           var time = new Date(start.getTime() + (day * slotsPerDay + slot) * slotDuration);
           var hour = slot / slotsPerHour;

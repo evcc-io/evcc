@@ -34,6 +34,15 @@
 								{{ $t("help.documentationButton") }}
 							</a>
 							<a
+								v-if="customEmail"
+								:href="`mailto:${customEmail}`"
+								class="btn btn-outline-primary w-100 w-sm-auto flex-grow-1"
+								type="button"
+							>
+								{{ $t("help.contactButton") }}
+							</a>
+							<a
+								v-else
 								href="https://github.com/evcc-io/evcc/discussions"
 								target="_blank"
 								class="btn btn-outline-primary w-100 w-sm-auto flex-grow-1"
@@ -141,7 +150,9 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
 	name: "HelpModal",
-	props: {},
+	props: {
+		customEmail: String,
+	},
 	computed: {
 		docsUrl() {
 			return `${docsPrefix()}/`;

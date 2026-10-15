@@ -4,7 +4,7 @@ import (
 	"maps"
 	"testing"
 
-	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -26,8 +26,8 @@
 				:pvExport="pvExport"
 				:batteryCharge="batteryCharge"
 				:batteryDischarge="batteryDischarge"
-				:batteryGridCharge="batteryGridChargeActive"
-				:batteryHold="batteryHold"
+				:batteryMode="batteryMode"
+				:batteryConfigured="batteryConfigured"
 				:pvProduction="pvProduction"
 				:homePower="homePower"
 				:batterySoc="batterySoc"
@@ -122,11 +122,7 @@
 								icon="battery"
 								:power="batteryDischarge"
 								:powerUnit="powerUnit"
-								:iconProps="{
-									hold: batteryHold,
-									soc: batterySoc,
-									gridCharge: batteryGridChargeActive,
-								}"
+								:iconProps="{ mode: batteryMode, soc: batterySoc }"
 								:details="batterySoc"
 								:detailsFmt="batteryFmt"
 								:expanded="batteryExpanded"
@@ -247,11 +243,7 @@
 								icon="battery"
 								:power="batteryCharge"
 								:powerUnit="powerUnit"
-								:iconProps="{
-									hold: batteryChargeHold,
-									soc: batterySoc,
-									gridCharge: batteryGridChargeActive,
-								}"
+								:iconProps="{ mode: batteryMode, soc: batterySoc }"
 								:details="batterySoc"
 								:detailsFmt="batteryFmt"
 								:expanded="batteryExpanded"
@@ -325,10 +317,11 @@ import collector from "@/mixins/collector.js";
 import { defineComponent, type PropType } from "vue";
 import {
 	SMART_COST_TYPE,
+	type BATTERY_MODE,
 	type Battery,
 	type Meter,
 	type CURRENCY,
-	type Forecast,
+	type UiForecast,
 	type UiLoadpoint,
 } from "@/types/evcc";
 
@@ -358,7 +351,7 @@ export default defineComponent({
 		batteryDischargeControl: { type: Boolean },
 		batteryGridChargeLimit: { type: Number },
 		batteryGridChargeActive: { type: Boolean },
-		batteryMode: { type: String },
+		batteryMode: { type: String as PropType<BATTERY_MODE> },
 		tariffGrid: { type: Number },
 		tariffFeedIn: { type: Number, default: 0 },
 		tariffCo2: { type: Number },
@@ -371,7 +364,7 @@ export default defineComponent({
 		prioritySoc: { type: Number },
 		bufferSoc: { type: Number },
 		bufferStartSoc: { type: Number },
-		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
+		forecast: { type: Object as PropType<UiForecast>, default: () => ({}) },
 	},
 	data: () => {
 		return {
@@ -513,7 +506,7 @@ export default defineComponent({
 		},
 		batteryGridChargeLimitFmt() {
 			if (!this.batteryGridChargeLimitSet) {
-				return;
+				return undefined;
 			}
 			if (this.smartCostCo2) {
 				return this.fmtCo2Short(this.batteryGridChargeLimit);
@@ -656,7 +649,7 @@ export default defineComponent({
 	height: 0;
 	opacity: 0;
 	transform: scale(0.98);
-	overflow: visible;
+	overflow: hidden;
 	transition-property: height, opacity, transform;
 	transition-duration: 0;
 	transition-timing-function: cubic-bezier(0.5, 0.5, 0.5, 1.15);

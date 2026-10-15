@@ -8,7 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/jpfielding/go-http-digest/pkg/digest"
+	"github.com/samber/lo"
 )
 
 // Gen2API endpoint reference: https://shelly-api-docs.shelly.cloud/gen2/
@@ -28,17 +28,34 @@ type Gen2Methods struct {
 	Methods []string
 }
 
+type Gen2Config struct {
+	Reverse bool
+}
+
 type Gen2SwitchStatus struct {
-	Output  bool
-	Apower  float64
-	Voltage float64
+	Output bool
+	Apower float64
+	// nil on switches without power metering (Plus 1, Pro 3)
+	Voltage *float64
 	Current float64
 	Aenergy struct {
 		Total float64
 	}
-	Ret_Aenergy struct {
+	// nil on devices without reverse energy metering- they omit the register entirely
+	Ret_Aenergy *struct {
 		Total float64
 	}
+}
+
+// switchEnergy splits the switch registers into import and return energy (kWh).
+// https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch#status
+// NOTE: energy added to ret_aenergy is also added to aenergy, so aenergy holds
+// both directions. Without the register aenergy is import only.
+func switchEnergy(res Gen2SwitchStatus) (total, ret float64) {
+	if res.Ret_Aenergy == nil {
+		return res.Aenergy.Total / 1000, 0
+	}
+	return max(0, res.Aenergy.Total-res.Ret_Aenergy.Total) / 1000, res.Ret_Aenergy.Total / 1000
 }
 
 type Gen2EMStatus struct {
@@ -84,6 +101,7 @@ type gen2 struct {
 	switchchannel int
 	model         string
 	methods       []string
+	reversed      bool
 	switchstatus  util.Cacheable[Gen2SwitchStatus]
 	em1status     func() (Gen2EM1Status, error)
 	em1data       func() (Gen2EM1Data, error)
@@ -91,7 +109,7 @@ type gen2 struct {
 	emdata        func() (Gen2EMData, error)
 }
 
-func apiCall[T any](c *gen2, id int, method string) func() (T, error) {
+func (c *gen2) apiCall[T any](id int, method string) func() (T, error) {
 	return func() (T, error) {
 		var res T
 		if err := c.execCmd(id, method, &res); err != nil {
@@ -102,7 +120,7 @@ func apiCall[T any](c *gen2, id int, method string) func() (T, error) {
 }
 
 // gen2InitApi initializes the connection to the shelly gen2+ api and sets up the cached gen2SwitchStatus, gen2EM1Status and gen2EMStatus
-func newGen2(helper *request.Helper, uri, model string, channel int, user, password string, cache time.Duration) (*gen2, error) {
+func newGen2(helper *request.Helper, uri, model string, channel int, cache time.Duration) (*gen2, error) {
 	// Shelly GEN 2+ API
 	// https://shelly-api-docs.shelly.cloud/gen2/
 	c := &gen2{
@@ -110,12 +128,6 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 		uri:           fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http")),
 		switchchannel: channel,
 		model:         model,
-	}
-
-	// Shelly gen 2 rfc7616 authentication
-	// https://shelly-api-docs.shelly.cloud/gen2/General/Authentication
-	if user != "" {
-		c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
 	}
 
 	var res Gen2Methods
@@ -135,14 +147,35 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 	}
 
 	if c.hasMethod("PM1.GetStatus") {
-		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, channel, "PM1.GetStatus"), cache)
+		c.switchstatus = util.ResettableCached(c.apiCall[Gen2SwitchStatus](channel, "PM1.GetStatus"), cache)
 	} else {
-		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, c.switchchannel, "Switch.GetStatus"), cache)
+		c.switchstatus = util.ResettableCached(c.apiCall[Gen2SwitchStatus](c.switchchannel, "Switch.GetStatus"), cache)
 	}
-	c.em1status = util.Cached(apiCall[Gen2EM1Status](c, channel, "EM1.GetStatus"), cache)
-	c.em1data = util.Cached(apiCall[Gen2EM1Data](c, channel, "EM1Data.GetStatus"), cache)
-	c.emstatus = util.Cached(apiCall[Gen2EMStatus](c, channel, "EM.GetStatus"), cache)
-	c.emdata = util.Cached(apiCall[Gen2EMData](c, channel, "EMData.GetStatus"), cache)
+	// device-side "Reverse power measurement" setting (requires restart, hence static)
+	var cfgMethod string
+	cfgChannel := channel
+	switch {
+	case c.hasEM1Endpoint():
+		cfgMethod = "EM1.GetConfig"
+	case c.hasMethod("PM1.GetStatus"):
+		cfgMethod = "PM1.GetConfig"
+	case c.hasMethod("Switch.GetStatus"):
+		cfgMethod = "Switch.GetConfig"
+		cfgChannel = c.switchchannel
+	}
+
+	if c.hasMethod(cfgMethod) {
+		var cfg Gen2Config
+		if err := c.execCmd(cfgChannel, cfgMethod, &cfg); err != nil {
+			return nil, err
+		}
+		c.reversed = cfg.Reverse
+	}
+
+	c.em1status = util.Cached(c.apiCall[Gen2EM1Status](channel, "EM1.GetStatus"), cache)
+	c.em1data = util.Cached(c.apiCall[Gen2EM1Data](channel, "EM1Data.GetStatus"), cache)
+	c.emstatus = util.Cached(c.apiCall[Gen2EMStatus](channel, "EM.GetStatus"), cache)
+	c.emdata = util.Cached(c.apiCall[Gen2EMData](channel, "EMData.GetStatus"), cache)
 
 	return c, nil
 }
@@ -232,10 +265,8 @@ func (c *gen2) TotalEnergy() (float64, error) {
 
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
-		// https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch#status
-		// NOTE: ret_aenergy - the active energy added to this container is also added to aenergy container.
-		// All the consumed energy is collected in aenergy regardless of the direction(consumed or returned) of the active energy.
-		return max(0, res.Aenergy.Total-res.Ret_Aenergy.Total) / 1000, err
+		total, _ := switchEnergy(res)
+		return total, err
 
 	default:
 		return 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -255,7 +286,8 @@ func (c *gen2) ReturnEnergy() (float64, error) {
 
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
-		return res.Ret_Aenergy.Total / 1000, err
+		_, ret := switchEnergy(res)
+		return ret, err
 
 	default:
 		return 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -295,7 +327,7 @@ func (c *gen2) Voltages() (float64, float64, float64, error) {
 
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
-		return res.Voltage, 0, 0, err
+		return lo.FromPtr(res.Voltage), 0, 0, err
 
 	default:
 		return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -338,6 +370,39 @@ func (c *gen2) hasEMEndpoint() bool {
 // IsThreePhase reports whether the device is a three-phase energy meter
 func (c *gen2) IsThreePhase() bool {
 	return c.hasEMEndpoint()
+}
+
+// IsReversed reports whether the device-side "Reverse power measurement" setting is enabled
+func (c *gen2) IsReversed() bool {
+	return c.reversed
+}
+
+// HasReturnEnergy reports whether the device measures energy in the return direction.
+// Plain plugs omit ret_aenergy entirely, so the (cached) status decides.
+func (c *gen2) HasReturnEnergy() bool {
+	switch {
+	case c.hasEM1Endpoint(), c.hasEMEndpoint():
+		return true
+	case c.hasSwitchEndpoint():
+		res, err := c.switchstatus.Get()
+		return err == nil && res.Ret_Aenergy != nil
+	default:
+		return false
+	}
+}
+
+// HasPhases reports whether the device provides phase readings.
+// Plain switches (Plus 1, Pro 3) omit voltage entirely, so the (cached) status decides.
+func (c *gen2) HasPhases() bool {
+	switch {
+	case c.hasEM1Endpoint(), c.hasEMEndpoint():
+		return true
+	case c.hasSwitchEndpoint():
+		res, err := c.switchstatus.Get()
+		return err == nil && res.Voltage != nil
+	default:
+		return false
+	}
 }
 
 // Gen2+ models using EM1.GetStatus endpoint for power and EM1Data.GetStatus for energy

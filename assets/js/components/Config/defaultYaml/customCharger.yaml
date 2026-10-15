@@ -13,7 +13,6 @@ maxcurrent: # set maximum charge current in A
   source: js
   script: console.log(maxcurrent) #
 
-
 ## optional attributes (read-only)
 
 #icon: generic # icon for UI purpose only
@@ -66,6 +65,5 @@ maxcurrent: # set maximum charge current in A
 #wakeup: # wake up vehicle
 #  source: js
 #  script: console.log(wakeup);
-#finishtime: # estimated finish time (RFC3339 timestamp, duration string, Unix timestamp, or seconds remaining)
 #  source: const
 #  value: "1h30m"

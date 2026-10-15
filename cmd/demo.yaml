@@ -73,6 +73,7 @@ meters:
         if (state.batterySoc > 100) state.batterySoc = 10;
         state.batterySoc;
     capacity: 13.4
+    batterymodes: ["normal", "hold", "charge", "holdcharge"]
     batterymode:
       source: js
       vm: shared

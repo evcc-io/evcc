@@ -1,4 +1,5 @@
 template: victron
+link: https://www.victronenergy.com/panel-systems-remote-monitoring/vrm
 products:
   - brand: Victron
     description:

@@ -1,0 +1,25 @@
+template: duration-demo
+group: generic
+products:
+  - description:
+      generic: Duration Demo Meter
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: shortduration
+    type: duration
+    default: 30s
+    example: 10s
+    description:
+      generic: Short duration
+  - name: longduration
+    type: duration
+    unit: hour
+    default: 3h
+    description:
+      generic: Long duration
+render: |
+  type: custom
+  power:
+    source: const
+    value: 0

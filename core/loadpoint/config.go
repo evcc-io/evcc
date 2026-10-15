@@ -1,6 +1,8 @@
 package loadpoint
 
 import (
+	"cmp"
+	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -19,12 +21,14 @@ type DynamicConfig struct {
 	// dynamic config
 	Title                    string    `json:"title"`
 	DefaultMode              string    `json:"defaultMode"`
+	AlwaysCharge             string    `json:"alwaysCharge"`
 	Priority                 int       `json:"priority"`
 	PhasesConfigured         int       `json:"phasesConfigured"`
 	MinCurrent               float64   `json:"minCurrent"`
 	MaxCurrent               float64   `json:"maxCurrent"`
 	SmartCostLimit           *float64  `json:"smartCostLimit"`
 	SmartFeedInPriorityLimit *float64  `json:"smartFeedInPriorityLimit"`
+	SolarShare               float64   `json:"solarShare"`
 	PlanEnergy               float64   `json:"planEnergy"`
 	PlanTime                 time.Time `json:"planTime"`
 	PlanPrecondition_        int64     `json:"planPrecondition" mapstructure:"planPrecondition"` // TODO deprecated, keep for compatibility
@@ -53,6 +57,7 @@ func SplitConfig(payload map[string]any) (DynamicConfig, map[string]any, error) 
 		Other         map[string]any `mapstructure:",remain"`
 	}
 	cc.BatteryBoostLimit = 100 // default: disabled
+	cc.SolarShare = 1          // default: full surplus
 
 	if err := util.DecodeOther(payload, &cc); err != nil {
 		return DynamicConfig{}, nil, err
@@ -68,8 +73,13 @@ func SplitConfig(payload map[string]any) (DynamicConfig, map[string]any, error) 
 func (payload DynamicConfig) Apply(lp API) error {
 	lp.SetTitle(payload.Title)
 	lp.SetPriority(payload.Priority)
-	lp.SetSmartCostLimit(payload.SmartCostLimit)
-	lp.SetSmartFeedInPriorityLimit(payload.SmartFeedInPriorityLimit)
+	// limits the optimizer controls are rejected, the remaining config still applies
+	limitErr := errors.Join(
+		lp.SetSmartCostLimit(payload.SmartCostLimit),
+		lp.SetSmartFeedInPriorityLimit(payload.SmartFeedInPriorityLimit),
+	)
+	lp.SetSolarShare(payload.SolarShare)
+
 	lp.SetThresholds(payload.Thresholds)
 	lp.SetPlanEnergy(payload.PlanTime, payload.PlanEnergy)
 	lp.SetPlanStrategy(payload.PlanStrategy)
@@ -85,6 +95,13 @@ func (payload DynamicConfig) Apply(lp API) error {
 	mode, err := api.ChargeModeString(payload.DefaultMode)
 	if err == nil {
 		lp.SetDefaultMode(mode)
+	}
+
+	// always charge is optional; ignore "not supported" for devices without current control
+	if payload.AlwaysCharge != "" {
+		if ac, err := api.AlwaysChargeString(payload.AlwaysCharge); err == nil {
+			_ = lp.SetAlwaysCharge(ac)
+		}
 	}
 
 	if err == nil {
@@ -111,5 +128,5 @@ func (payload DynamicConfig) Apply(lp API) error {
 		}
 	}
 
-	return err
+	return cmp.Or(err, limitErr)
 }

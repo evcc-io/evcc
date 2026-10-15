@@ -9,7 +9,7 @@ import (
 
 	"github.com/denisbrodbeck/machineid"
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/samber/lo"
 )
 

@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/samber/lo"
 )
 
 // Connection is the homewizard connection
@@ -119,10 +120,17 @@ func (c *Connection) TotalEnergy() (float64, error) {
 // Currents implements the api.PhaseCurrents interface
 func (c *Connection) Currents() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
-	if c.usage == "pv" {
-		return -res.ActiveCurrentL1A, -res.ActiveCurrentL2A, -res.ActiveCurrentL3A, err
+
+	// 1p meters report the total instead of per-phase values
+	l1, l2, l3 := res.ActiveCurrentA, 0.0, 0.0
+	if res.ActiveCurrentL1A != nil {
+		l1, l2, l3 = lo.FromPtr(res.ActiveCurrentL1A), lo.FromPtr(res.ActiveCurrentL2A), lo.FromPtr(res.ActiveCurrentL3A)
 	}
-	return res.ActiveCurrentL1A, res.ActiveCurrentL2A, res.ActiveCurrentL3A, err
+
+	if c.usage == "pv" {
+		return -l1, -l2, -l3, err
+	}
+	return l1, l2, l3, err
 }
 
 // Powers implements the api.PhasePowers interface
@@ -137,5 +145,12 @@ func (c *Connection) Powers() (float64, float64, float64, error) {
 // Voltages implements the api.PhaseVoltages interface
 func (c *Connection) Voltages() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
-	return res.ActiveVoltageL1V, res.ActiveVoltageL2V, res.ActiveVoltageL3V, err
+
+	// 1p meters report the total instead of per-phase values
+	l1, l2, l3 := res.ActiveVoltageV, 0.0, 0.0
+	if res.ActiveCurrentL1A != nil {
+		l1, l2, l3 = lo.FromPtr(res.ActiveVoltageL1V), lo.FromPtr(res.ActiveVoltageL2V), lo.FromPtr(res.ActiveVoltageL3V)
+	}
+
+	return l1, l2, l3, err
 }

@@ -1,5 +1,5 @@
 import { mount, config } from "@vue/test-utils";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import Status from "./Status.vue";
 import { CURRENCY } from "@/types/evcc";
 import en from "../../../../i18n/en.json";
@@ -274,6 +274,12 @@ describe("vehicle target soc", () => {
         vehicleSoc: 69,
       },
       { charger: "Finished.", limit: "70 %" }
+    );
+  });
+  test("show limit independent of connection status", () => {
+    expectEntries(
+      { connected: false, vehicleLimitSoc: 70, vehicleSoc: 50 },
+      { charger: "Disconnected.", limit: "70\u00A0%" }
     );
   });
 });

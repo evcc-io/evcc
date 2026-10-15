@@ -11,6 +11,7 @@ params:
   - name: modbus
     choice: ["tcpip", "rs485"]
   - name: maxacpower
+    deprecated: true # read from nameplate
 render: |
   type: custom
   # sunspec model 203 (int+sf)/ 213 (float) meter
@@ -20,9 +21,11 @@ render: |
       - source: sunspec
         {{- include "modbus" . | indent 6 }}
         value: 160:1:DCW # mppt 1
+        nan: true
       - source: sunspec
         {{- include "modbus" . | indent 6 }}
         value: 160:2:DCW # mppt 2
+        nan: true
   energy:
     source: calc
     add:
@@ -88,4 +91,4 @@ render: |
         percent = int(limit)
       }
       percent
-  maxacpower: {{ .maxacpower }} # W
+  {{- include "sunspec-maxacpower" . }}

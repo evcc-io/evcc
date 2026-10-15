@@ -11,7 +11,6 @@ type BluelinkVehicleStatusLatest interface {
 	Updated() (time.Time, error)
 	SoC() (float64, error)
 	Status() (api.ChargeStatus, error)
-	FinishTime() (time.Time, error)
 	Range() (int64, error)
 	Climater() (bool, error)
 	GetLimitSoc() (int64, error)
@@ -131,19 +130,6 @@ func (d VehicleStatus) Status() (api.ChargeStatus, error) {
 	return api.StatusNone, api.ErrNotAvailable
 }
 
-func (d VehicleStatus) FinishTime() (time.Time, error) {
-	if d.EvStatus != nil {
-		remaining := d.EvStatus.RemainTime2.Atc.Value
-
-		if remaining != 0 {
-			ts, err := d.Updated()
-			return ts.Add(time.Duration(remaining) * time.Minute), err
-		}
-	}
-
-	return time.Time{}, api.ErrNotAvailable
-}
-
 func (d VehicleStatus) Range() (int64, error) {
 	if d.EvStatus != nil {
 		if dist := d.EvStatus.DrvDistance; len(dist) == 1 {
@@ -183,10 +169,6 @@ func (d StatusLatestResponse) SoC() (float64, error) {
 
 func (d StatusLatestResponse) Status() (api.ChargeStatus, error) {
 	return d.ResMsg.VehicleStatusInfo.VehicleStatus.Status()
-}
-
-func (d StatusLatestResponse) FinishTime() (time.Time, error) {
-	return d.ResMsg.VehicleStatusInfo.VehicleStatus.FinishTime()
 }
 
 func (d StatusLatestResponse) Range() (int64, error) {
@@ -342,21 +324,6 @@ func (d StatusLatestResponseCCS) Status() (api.ChargeStatus, error) {
 		return api.StatusA, nil
 	}
 	return api.StatusNone, api.ErrNotAvailable
-}
-
-func (d StatusLatestResponseCCS) FinishTime() (time.Time, error) {
-	if d.ResMsg.State.Vehicle.Green != nil {
-		remaining := d.ResMsg.State.Vehicle.Green.ChargingInformation.Charging.RemainTime
-
-		if remaining == 0 {
-			return time.Time{}, api.ErrNotAvailable
-		}
-
-		ts, err := d.Updated()
-		return ts.Add(time.Duration(remaining) * time.Minute), err
-	}
-
-	return time.Now(), api.ErrNotAvailable
 }
 
 func (d StatusLatestResponseCCS) Range() (int64, error) {

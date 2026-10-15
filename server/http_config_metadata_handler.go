@@ -152,6 +152,7 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 					Name:     p.Title(lang),
 					Template: t.Template,
 					Group:    t.Group,
+					Link:     p.Link,
 				})
 			}
 		}

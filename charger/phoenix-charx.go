@@ -267,22 +267,27 @@ func (wb *PhoenixCharx) getPhaseValues(reg uint16) (float64, float64, float64, e
 var _ api.Identifier = (*PhoenixCharx)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *PhoenixCharx) Identify() (string, error) {
+func (wb *PhoenixCharx) Identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegEvid), 10)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	if res := bytesAsString(b); res != "" {
-		return res, nil
+	var ids []string
+	if evid := bytesAsString(b); evid != "" {
+		ids = append(ids, evid)
 	}
 
 	b, err = wb.conn.ReadHoldingRegisters(wb.register(charxRegRfid), 10)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(b), nil
+	if rfid := bytesAsString(b); rfid != "" {
+		ids = append(ids, rfid)
+	}
+
+	return ids, nil
 }
 
 var _ api.Diagnosis = (*PhoenixCharx)(nil)

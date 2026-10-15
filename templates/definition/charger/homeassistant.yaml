@@ -41,8 +41,8 @@ params:
     example: not_plugged, disconnected
     advanced: true
     help:
-      en: Comma-separated list of additional states meaning ready
-      de: Komma-getrennte Liste zusätzlicher Zustände für bereit
+      en: Comma-separated list of additional states meaning ready, see [docs.evcc.io](https://docs.evcc.io/en/smarthome/home-assistant#charge-status)
+      de: Komma-getrennte Liste zusätzlicher Zustände für bereit, siehe [docs.evcc.io](https://docs.evcc.io/de/smarthome/home-assistant#charge-status)
   - name: statusB
     description:
       de: Zustände für Status B
@@ -50,8 +50,8 @@ params:
     example: charging_stopped, charging_completed
     advanced: true
     help:
-      en: Comma-separated list of additional states meaning connected
-      de: Komma-getrennte Liste zusätzlicher Zustände für verbunden
+      en: Comma-separated list of additional states meaning connected, see [docs.evcc.io](https://docs.evcc.io/en/smarthome/home-assistant#charge-status)
+      de: Komma-getrennte Liste zusätzlicher Zustände für verbunden, siehe [docs.evcc.io](https://docs.evcc.io/de/smarthome/home-assistant#charge-status)
   - name: statusC
     description:
       de: Zustände für Status C
@@ -59,8 +59,8 @@ params:
     example: instant_charging, fast_charging
     advanced: true
     help:
-      en: Comma-separated list of additional states meaning charging
-      de: Komma-getrennte Liste zusätzlicher Zustände für laden
+      en: Comma-separated list of additional states meaning charging, see [docs.evcc.io](https://docs.evcc.io/en/smarthome/home-assistant#charge-status)
+      de: Komma-getrennte Liste zusätzlicher Zustände für laden, siehe [docs.evcc.io](https://docs.evcc.io/de/smarthome/home-assistant#charge-status)
   - name: enabled
     description:
       de: Aktivierungsstatus-Sensor
@@ -85,17 +85,26 @@ params:
     description:
       de: Maximale Stromstärke-Entität [A]
       en: Maximum current entity [A]
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=number,input_number
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=number,input_number&unit=A
     example: "number.charger_max_current"
     required: true
     help:
       en: Entity ID for setting maximum current in amperes (`number` or `input_number` entity)
       de: Entitäts-ID zum Setzen der maximalen Stromstärke in Ampere (`number` oder `input_number` Entität)
+  - name: milliamps
+    type: bool
+    description:
+      de: Stromstärke in 0,1A Schritten
+      en: 0.1A current steps
+    advanced: true
+    help:
+      en: Enable if the maximum current entity accepts fractional amperes; otherwise evcc sends whole amperes only
+      de: Aktivieren, wenn die Stromstärke-Entität Nachkommastellen akzeptiert; sonst sendet evcc nur ganze Ampere
   - name: power
     description:
       de: Leistungsentität
       en: Power entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=W,kW
     example: "sensor.charger_power"
     advanced: true
     help:
@@ -105,17 +114,27 @@ params:
     description:
       de: Energieentität
       en: Energy entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=Wh,kWh,MWh
     example: "sensor.charger_energy"
     advanced: true
     help:
       en: Entity ID for cumulative energy measurement in kWh
       de: Entitäts-ID für kumulative Energiemessung in kWh
+  - name: temp
+    description:
+      de: Temperaturentität
+      en: Temperature entity
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor,input_number&unit=°C,°F,K
+    example: "sensor.boiler_temperature"
+    advanced: true
+    help:
+      en: Entity ID for temperature measurement in °C (heating devices)
+      de: Entitäts-ID für Temperaturmessung in °C (Heizgeräte)
   - name: currentL1
     description:
       de: L1 Stromentität
       en: L1 current entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=A
     example: "sensor.charger_current_l1"
     advanced: true
     help:
@@ -125,7 +144,7 @@ params:
     description:
       de: L2 Stromentität
       en: L2 current entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=A
     example: "sensor.charger_current_l2"
     advanced: true
     help:
@@ -135,7 +154,7 @@ params:
     description:
       de: L3 Stromentität
       en: L3 current entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=A
     example: "sensor.charger_current_l3"
     advanced: true
     help:
@@ -145,7 +164,7 @@ params:
     description:
       de: L1 Spannungsentität
       en: L1 voltage entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=V
     example: "sensor.charger_voltage_l1"
     advanced: true
     help:
@@ -155,7 +174,7 @@ params:
     description:
       de: L2 Spannungsentität
       en: L2 voltage entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=V
     example: "sensor.charger_voltage_l2"
     advanced: true
     help:
@@ -165,7 +184,7 @@ params:
     description:
       de: L3 Spannungsentität
       en: L3 voltage entity
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=V
     example: "sensor.charger_voltage_l3"
     advanced: true
     help:
@@ -198,8 +217,10 @@ render: |
   enabled: {{ .enabled }}
   enable: {{ .enable }}
   maxcurrent: {{ .setMaxCurrent }}
+  milliamps: {{ .milliamps }}
   power: {{ .power }}
   energy: {{ .energy }}
+  temp: {{ .temp }}
   {{- if and .currentL1 .currentL2 .currentL3 }}
   currents:
     - {{ .currentL1 }}
@@ -213,4 +234,4 @@ render: |
     - {{ .voltageL3 }}
   {{- end }}
   phases: {{ .phaseswitch }}
-  {{ include "charger-features" . }}
+  {{ include "features" . }}

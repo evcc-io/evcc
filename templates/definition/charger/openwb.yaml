@@ -8,20 +8,17 @@ requirements:
   description:
     en: The wallbox has to be configured as loadpoint.
     de: Die Wallbox muss als Ladepunkt konfiguriert sein.
+discovery:
+  hostname: ["openWB*"]
 params:
   - name: host
   - name: connector
   - name: phases1p3p
-    type: bool
-    description:
-      en: Charger is equipped with phase switching feature
-      de: Phasenumschaltung vorhanden
     advanced: true
-    default: false
 render: |
   type: openwb
   broker: {{ .host }}
   id: {{ .connector }} # loadpoint id
-  {{- if ne .phases1p3p "false" }}
+  {{- if .phases1p3p }}
   phases1p3p: true
   {{- end }}

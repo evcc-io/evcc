@@ -22,6 +22,27 @@ func TestPV(t *testing.T) {
 	_, ok := api.Cap[api.MaxACPowerGetter](m)
 	assert.True(t, ok, "MaxACPowerGetter")
 }
+
+func TestPVMaxACPowerPlugin(t *testing.T) {
+	newMeter := func(maxacpower any) api.Meter {
+		m, err := NewConfigurableFromConfig(t.Context(), map[string]any{
+			"power":      map[string]any{"source": "const", "value": 1000},
+			"maxacpower": maxacpower,
+		})
+		require.NoError(t, err)
+		return m
+	}
+
+	m := newMeter(map[string]any{"source": "const", "value": 5000})
+	mp, ok := api.Cap[api.MaxACPowerGetter](m)
+	require.True(t, ok, "MaxACPowerGetter")
+	assert.Equal(t, 5000.0, mp.MaxACPower())
+
+	// device without rating must not be decorated
+	m = newMeter(map[string]any{"source": "error", "error": "ErrNotAvailable"})
+	_, ok = api.Cap[api.MaxACPowerGetter](m)
+	assert.False(t, ok, "MaxACPowerGetter")
+}
 func TestBattery(t *testing.T) {
 	m, err := NewConfigurableFromConfig(t.Context(), map[string]any{
 		"power": map[string]any{

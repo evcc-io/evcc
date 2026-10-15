@@ -12,6 +12,7 @@ params:
     default: 80
   - name: externalpv
     type: bool
+    default: true
     description:
       de: |
         Benötigt bei ein weiterer Solarwechselrichter.
@@ -37,7 +38,7 @@ render: |
     jq: .["2913"].["0"] # Grid meter (Power Total in W)
   {{- end }}
   {{- if eq .usage "pv" }}
-  {{- if ne .externalpv "false" }}
+  {{- if .externalpv }}
     jq: .["2913"].["3"] + .["1634"].["0"] # External Solar + BatterX Solar (Power Total in W)
   {{- else }}
     jq: .["1634"].["0"] # BatterX Solar (Power Total in W)

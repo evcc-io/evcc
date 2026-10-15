@@ -3,7 +3,7 @@
 		name="mqtt"
 		:title="$t('config.mqtt.title')"
 		:description="$t('config.mqtt.description')"
-		docs="/docs/reference/configuration/mqtt"
+		docs="/reference/configuration/mqtt"
 		endpoint="/config/mqtt"
 		state-key="mqtt"
 		@changed="$emit('changed')"

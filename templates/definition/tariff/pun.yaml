@@ -1,4 +1,5 @@
 template: pun
+link: https://www.mercatoelettrico.org/en-us/Home/Results/Electricity/MGP/Outcomes/PUN-Index-GME
 products:
   - brand: PUN Orario
 requirements:
@@ -21,5 +22,5 @@ params:
       en: Italian electricity market zone. If no zone is specified, the national unit price (PUN) is used.
 render: |
   type: pun
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}
   zone: {{ .zone }}

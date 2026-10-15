@@ -381,13 +381,13 @@ func (wb *SmartEVSE3) statusReason() (api.Reason, error) {
 }
 
 // identify implements the api.Identifier interface
-func (wb *SmartEVSE3) identify() (string, error) {
+func (wb *SmartEVSE3) identify() ([]string, error) {
 	res, err := wb.apiG.Get()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return res.Evse.RFIDLastRead, nil
+	return []string{res.Evse.RFIDLastRead}, nil
 }
 
 var _ api.Diagnosis = (*SmartEVSE3)(nil)

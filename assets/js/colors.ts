@@ -26,7 +26,9 @@ const colors: {
   co2: string | null;
   temperature: string | null;
   export: string | null;
+  forecast: string | null;
   background: string | null;
+  box: string | null;
   light: string | null;
   selfPalette: string[];
   palette: string[];
@@ -43,7 +45,9 @@ const colors: {
   co2: null,
   temperature: null,
   export: null,
+  forecast: null,
   background: null,
+  box: null,
   light: null,
   selfPalette: ["#0FDE41", "#FFBD2F", "#FD6158", "#03C1EF", "#0F662D", "#FF922E"],
   palette: [
@@ -117,7 +121,7 @@ export function resolveColors(ids: string[], overrides: DeviceColors = {}): Devi
   return result;
 }
 
-// dedicated battery palette, assigned by index (battery page + history battery group)
+// dedicated battery palette, assigned by index (battery and energy pages)
 export function batteryColor(index: number): string {
   const p = colors.batteryPalette;
   return p[index % p.length] || "";
@@ -129,16 +133,25 @@ export const lighterColor = (color: string | null) => setAlpha(color, "aa");
 
 export const fullColor = (color: string | null) => setAlpha(color, "ff");
 
-// Darken an opaque hex color: scale rgb toward black by `factor` (0-1), stays opaque.
-export function darken(color: string, factor: number): string {
+// `fn` on each rgb channel of an opaque hex color, anything else passes through
+function mapChannels(color: string, fn: (v: number) => number): string {
   if (!/^#[0-9a-f]{6}$/i.test(color)) return color;
-  const f = Math.max(0, Math.min(1, factor));
   const channel = (o: number) =>
-    Math.round(parseInt(color.slice(o, o + 2), 16) * f)
+    Math.round(fn(parseInt(color.slice(o, o + 2), 16)))
       .toString(16)
       .padStart(2, "0");
   return `#${channel(1)}${channel(3)}${channel(5)}`;
 }
+
+const unit = (factor: number) => Math.max(0, Math.min(1, factor));
+
+// Darken: scale rgb toward black by `factor` (0-1), stays opaque.
+export const darken = (color: string, factor: number) =>
+  mapChannels(color, (v) => v * unit(factor));
+
+// Lighten: move rgb toward white by `factor` (0-1), stays opaque.
+export const lighten = (color: string, factor: number) =>
+  mapChannels(color, (v) => v + (255 - v) * unit(factor));
 
 export function updateCssColors() {
   const style = window.getComputedStyle(document.documentElement);
@@ -151,7 +164,9 @@ export function updateCssColors() {
   colors.co2 = style.getPropertyValue("--evcc-co2");
   colors.temperature = style.getPropertyValue("--evcc-temperature");
   colors.export = style.getPropertyValue("--evcc-export-contrast");
+  colors.forecast = style.getPropertyValue("--evcc-dark-yellow");
   colors.background = style.getPropertyValue("--evcc-background");
+  colors.box = style.getPropertyValue("--evcc-box");
   colors.pricePerKWh = style.getPropertyValue("--bs-gray-medium");
   colors.co2PerKWh = style.getPropertyValue("--bs-gray-medium");
   colors.light = style.getPropertyValue("--bs-gray-light");

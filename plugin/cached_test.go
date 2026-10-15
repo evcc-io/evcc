@@ -15,7 +15,7 @@ func TestCachedHitAndExpiry(t *testing.T) {
 	o := &cachedPlugin{ctx: context.Background(), clock: c, cache: time.Hour}
 
 	var calls int
-	get, err := cachedGetter(o, func(context.Context) (func() (int64, error), error) {
+	get, err := o.cachedGetter(func(context.Context) (func() (int64, error), error) {
 		return func() (int64, error) {
 			calls++
 			return int64(calls), nil
@@ -47,7 +47,7 @@ func TestCachedDoesNotCacheErrors(t *testing.T) {
 	o := &cachedPlugin{ctx: context.Background(), clock: c, cache: time.Hour}
 
 	var calls int
-	get, err := cachedGetter(o, func(context.Context) (func() (int64, error), error) {
+	get, err := o.cachedGetter(func(context.Context) (func() (int64, error), error) {
 		return func() (int64, error) {
 			calls++
 			return 0, errors.New("boom")

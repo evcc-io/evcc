@@ -11,7 +11,7 @@
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<VehicleSettingsModal :vehicles="vehicleList" :loadpoints="state.uiLoadpoints" />
 		<AboutModal v-bind="aboutModalProps" />
-		<HelpModal />
+		<HelpModal :custom-email="custom.email" />
 		<PasswordModal />
 		<LoginModal v-bind="loginModalProps" />
 		<OfflineIndicator v-bind="offlineIndicatorProps" />
@@ -62,6 +62,7 @@ export default defineComponent({
 	data: () => {
 		return {
 			reconnectTimeout: null as number | null,
+			reconnectAttempts: 0,
 			ws: null as WebSocket | null,
 			authNotConfigured: false,
 			currentVersion: undefined as string | undefined,
@@ -73,6 +74,15 @@ export default defineComponent({
 	computed: {
 		version() {
 			return store.state.version;
+		},
+		custom() {
+			return {
+				logo: window.evcc?.customLogo ?? false,
+				brand: window.evcc?.customBrand ?? "",
+				website: window.evcc?.customWebsite ?? "",
+				email: window.evcc?.customEmail ?? "",
+				phone: window.evcc?.customPhone ?? "",
+			};
 		},
 		showRoutes() {
 			return this.state.startupCompleted;
@@ -95,15 +105,20 @@ export default defineComponent({
 		},
 		aboutModalProps() {
 			return {
-				installed: window.evcc.version,
-				commit: window.evcc.commit,
+				installed: window.evcc?.version,
+				commit: window.evcc?.commit,
+				customLogo: this.custom.logo,
+				customBrand: this.custom.brand,
+				customWebsite: this.custom.website,
+				customEmail: this.custom.email,
+				customPhone: this.custom.phone,
 				...this.collectProps(AboutModal, this.state),
 			};
 		},
 		bottomTabBarProps() {
 			return {
-				installed: window.evcc.version,
-				commit: window.evcc.commit,
+				installed: window.evcc?.version,
+				customBrand: this.custom.brand,
 				...this.collectProps(BottomTabBar, this.state),
 			};
 		},
@@ -166,10 +181,13 @@ export default defineComponent({
 		},
 		reconnect() {
 			this.clearReconnectTimeout();
+			// quick first retry, then back off
+			const delay = this.reconnectAttempts === 0 ? 250 : 2500;
 			this.reconnectTimeout = window.setTimeout(() => {
+				this.reconnectAttempts++;
 				this.disconnect();
 				this.connect();
-			}, 2500);
+			}, delay);
 		},
 		disconnect() {
 			if (this.ws) {
@@ -206,6 +224,7 @@ export default defineComponent({
 			};
 			this.ws.onopen = () => {
 				console.log("websocket connected");
+				this.reconnectAttempts = 0;
 				window.app.setOnline();
 			};
 			this.ws.onclose = () => {

@@ -1,5 +1,5 @@
 <template>
-	<!-- eslint-disable-next-line vue/no-v-html -->
+	<!-- oxlint-disable-next-line vue/no-v-html -->
 	<div class="root" v-html="compiledMarkdown"></div>
 </template>
 

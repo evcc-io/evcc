@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/enbility/eebus-go/api"
@@ -30,7 +31,7 @@ type controlbox struct {
 	remoteEntities map[api.EventType][]spineapi.EntityRemoteInterface
 	remoteEventC   chan<- api.EventType
 
-	isConnected bool
+	isConnected atomic.Bool
 }
 
 func createControlbox(ctx context.Context, remoteSki string, port int) (*controlbox, error) {
@@ -126,7 +127,7 @@ func (h *controlbox) registerRemoteEntity(entity spineapi.EntityRemoteInterface,
 
 // LPC
 func (h *controlbox) OnLPCEvent(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event api.EventType) {
-	if !h.isConnected {
+	if !h.isConnected.Load() {
 		return
 	}
 
@@ -146,7 +147,7 @@ func (h *controlbox) OnLPCEvent(ski string, device spineapi.DeviceRemoteInterfac
 
 // LPP
 func (h *controlbox) OnLPPEvent(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event api.EventType) {
-	if !h.isConnected {
+	if !h.isConnected.Load() {
 		return
 	}
 
@@ -165,11 +166,11 @@ func (h *controlbox) OnLPPEvent(ski string, device spineapi.DeviceRemoteInterfac
 // EEBUSServiceHandler
 
 func (h *controlbox) RemoteServiceConnected(service api.ServiceInterface, identity shipapi.ServiceIdentity) {
-	h.isConnected = true
+	h.isConnected.Store(true)
 }
 
 func (h *controlbox) RemoteServiceDisconnected(service api.ServiceInterface, identity shipapi.ServiceIdentity) {
-	h.isConnected = false
+	h.isConnected.Store(false)
 }
 
 func (h *controlbox) VisibleRemoteMdnsServicesUpdated(service api.ServiceInterface, entries []shipapi.RemoteMdnsService) {
