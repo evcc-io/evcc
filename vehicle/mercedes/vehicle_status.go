@@ -12,48 +12,48 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const chargeStatusInterval = time.Minute
+const vehicleStatusInterval = time.Minute
 
-type chargeStateCache struct {
+type vehicleStateCache struct {
 	sync.Mutex
 	updated time.Time
-	states  map[string]*ChargeStatusAttribute
+	states  map[string]*VehicleStatusUpdate
 	err     error
 }
 
-func (c *chargeStateCache) get(vin string, fetch func() (map[string]*ChargeStatusAttribute, error)) (api.ChargeStatus, error) {
+func (c *vehicleStateCache) get(vin string, fetch func() (map[string]*VehicleStatusUpdate, error)) (*VehicleStatusUpdate, error) {
 	c.Lock()
 	defer c.Unlock()
 
 	// Account-wide, including failures; detection cache resets must not cause reconnect storms.
-	if time.Since(c.updated) >= chargeStatusInterval {
+	if time.Since(c.updated) >= vehicleStatusInterval {
 		c.states, c.err = fetch()
 		c.updated = time.Now()
 	}
 	if c.err != nil {
-		return api.StatusNone, c.err
+		return nil, c.err
 	}
-	attr := c.states[vin]
-	if attr == nil || attr.Metadata == nil || attr.Metadata.Status != 0 {
-		return api.StatusNone, api.ErrMustRetry
+	state := c.states[vin]
+	if state == nil {
+		return nil, api.ErrMustRetry
 	}
-	return mapChargeStatus(attr.Value)
+	return state, nil
 }
 
-func (v *Identity) chargeStatus(vin string) (api.ChargeStatus, error) {
-	return v.chargeState.get(vin, func() (map[string]*ChargeStatusAttribute, error) {
+func (v *Identity) vehicleStatus(vin string) (*VehicleStatusUpdate, error) {
+	return v.vehicleState.get(vin, func() (map[string]*VehicleStatusUpdate, error) {
 		token, err := v.Token()
 		if err != nil {
 			return nil, err
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
-		uri, headers := chargeStatusConnection(token.AccessToken, v.region)
-		return readChargeStates(ctx, uri, headers, vin)
+		uri, headers := vehicleStatusConnection(token.AccessToken, v.region)
+		return readVehicleStates(ctx, uri, headers, vin)
 	})
 }
 
-func chargeStatusConnection(token, region string) (string, http.Header) {
+func vehicleStatusConnection(token, region string) (string, http.Header) {
 	headers := make(http.Header)
 	for k, v := range mbheaders(false, region) {
 		headers.Set(k, v)
@@ -78,8 +78,8 @@ func chargeStatusConnection(token, region string) (string, http.Header) {
 	return "wss://websocket." + host + "-prod.mobilesdk.mercedes-benz.com/v2/ws", headers
 }
 
-// readChargeStates consumes the initial snapshot and closes the connection instead of running a background stream.
-func readChargeStates(ctx context.Context, uri string, headers http.Header, vin string) (map[string]*ChargeStatusAttribute, error) {
+// readVehicleStates consumes the initial snapshot and closes the connection instead of running a background stream.
+func readVehicleStates(ctx context.Context, uri string, headers http.Header, vin string) (map[string]*VehicleStatusUpdate, error) {
 	conn, _, err := websocket.Dial(ctx, uri, &websocket.DialOptions{HTTPHeader: headers})
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func readChargeStates(ctx context.Context, uri string, headers http.Header, vin 
 	defer conn.CloseNow()
 	conn.SetReadLimit(8 << 20)
 
-	states := make(map[string]*ChargeStatusAttribute)
+	states := make(map[string]*VehicleStatusUpdate)
 	for {
 		typ, data, err := conn.Read(ctx)
 		if err != nil {
@@ -96,11 +96,11 @@ func readChargeStates(ctx context.Context, uri string, headers http.Header, vin 
 		if typ != websocket.MessageBinary {
 			continue
 		}
-		var push ChargeStatusPush
+		var push VehicleStatusPush
 		if err := (proto.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(data, &push); err != nil {
 			return nil, err
 		}
-		var ack ChargeStatusAck
+		var ack VehicleStatusAck
 		if push.CommandUpdates != nil {
 			ack.CommandUpdates = push.CommandUpdates
 		}
@@ -108,8 +108,8 @@ func readChargeStates(ctx context.Context, uri string, headers http.Header, vin 
 		if updates := push.Updates; updates != nil {
 			ack.Updates = &Sequence{SequenceNumber: updates.SequenceNumber}
 			for name, update := range updates.Vehicles {
-				if update.FullUpdate || update.ChargingStatus != nil {
-					states[name] = update.ChargingStatus
+				if update.FullUpdate {
+					states[name] = update
 					ready = ready || name == vin
 				}
 			}
@@ -129,7 +129,7 @@ func readChargeStates(ctx context.Context, uri string, headers http.Header, vin 
 	}
 }
 
-func mapChargeStatus(value int32) (api.ChargeStatus, error) {
+func mapChargeStatus(value int64) (api.ChargeStatus, error) {
 	switch value {
 	case 0, 5, 6, 9, 10, 11, 13, 14:
 		return api.StatusC, nil

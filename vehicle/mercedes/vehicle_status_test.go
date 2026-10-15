@@ -20,36 +20,36 @@ import (
 
 func TestMapChargeStatus(t *testing.T) {
 	for value, want := range []api.ChargeStatus{"C", "B", "B", "A", "B", "C", "C", "B", "B", "C", "C", "C", "B", "C", "C", "B"} {
-		got, err := mapChargeStatus(int32(value))
+		got, err := mapChargeStatus(int64(value))
 		require.NoError(t, err)
 		assert.Equal(t, want, got)
 	}
-	for _, value := range []int32{-1, 16, 100} {
+	for _, value := range []int64{-1, 16, 100} {
 		got, err := mapChargeStatus(value)
 		require.Error(t, err)
 		assert.Equal(t, api.StatusNone, got)
 	}
 }
 
-func TestChargeStateCache(t *testing.T) {
+func TestProviderStatus(t *testing.T) {
 	for _, tc := range []struct {
 		name string
-		attr *ChargeStatusAttribute
+		attr *IntegerAttribute
 		want api.ChargeStatus
 	}{
 		{"missing", nil, api.StatusNone},
-		{"no metadata", &ChargeStatusAttribute{Value: 3}, api.StatusNone},
-		{"not received", &ChargeStatusAttribute{Metadata: &ChargeStatusMetadata{Status: 1}}, api.StatusNone},
-		{"invalid", &ChargeStatusAttribute{Metadata: &ChargeStatusMetadata{Status: 3}}, api.StatusNone},
-		{"unavailable", &ChargeStatusAttribute{Metadata: &ChargeStatusMetadata{Status: 4}}, api.StatusNone},
-		{"zero means charging", &ChargeStatusAttribute{Metadata: &ChargeStatusMetadata{}}, api.StatusC},
-		{"unplugged", &ChargeStatusAttribute{Value: 3, Metadata: &ChargeStatusMetadata{}}, api.StatusA},
+		{"no metadata", &IntegerAttribute{Value: 3}, api.StatusNone},
+		{"not received", &IntegerAttribute{Metadata: &AttributeMetadata{Status: 1}}, api.StatusNone},
+		{"invalid", &IntegerAttribute{Metadata: &AttributeMetadata{Status: 3}}, api.StatusNone},
+		{"unavailable", &IntegerAttribute{Metadata: &AttributeMetadata{Status: 4}}, api.StatusNone},
+		{"zero means charging", &IntegerAttribute{Metadata: &AttributeMetadata{}}, api.StatusC},
+		{"unplugged", &IntegerAttribute{Value: 3, Metadata: &AttributeMetadata{}}, api.StatusA},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			var cache chargeStateCache
-			got, err := cache.get("car", func() (map[string]*ChargeStatusAttribute, error) {
-				return map[string]*ChargeStatusAttribute{"car": tc.attr}, nil
-			})
+			v := Provider{stateG: func() (*VehicleStatusUpdate, error) {
+				return &VehicleStatusUpdate{ChargingStatus: tc.attr}, nil
+			}}
+			got, err := v.Status()
 			assert.Equal(t, tc.want, got)
 			if tc.want == api.StatusNone {
 				assert.ErrorIs(t, err, api.ErrMustRetry)
@@ -60,14 +60,14 @@ func TestChargeStateCache(t *testing.T) {
 	}
 }
 
-func TestChargeStateCacheSharedAndRateLimited(t *testing.T) {
-	var cache chargeStateCache
+func TestVehicleStateCacheSharedAndRateLimited(t *testing.T) {
+	var cache vehicleStateCache
 	calls := 0
-	fetch := func() (map[string]*ChargeStatusAttribute, error) {
+	fetch := func() (map[string]*VehicleStatusUpdate, error) {
 		calls++
-		return map[string]*ChargeStatusAttribute{
-			"one": {Value: 3, Metadata: &ChargeStatusMetadata{}},
-			"two": {Value: 13, Metadata: &ChargeStatusMetadata{}},
+		return map[string]*VehicleStatusUpdate{
+			"one": {ChargingStatus: &IntegerAttribute{Value: 3, Metadata: &AttributeMetadata{}}},
+			"two": {ChargingStatus: &IntegerAttribute{Value: 13, Metadata: &AttributeMetadata{}}},
 		}, nil
 	}
 	var wg sync.WaitGroup
@@ -77,21 +77,21 @@ func TestChargeStateCacheSharedAndRateLimited(t *testing.T) {
 	wg.Wait()
 	got, err := cache.get("two", fetch)
 	require.NoError(t, err)
-	assert.Equal(t, api.StatusC, got)
+	assert.Equal(t, int64(13), got.GetChargingStatus().GetValue())
 	assert.Equal(t, 1, calls)
 
-	cache.updated = time.Now().Add(-chargeStatusInterval)
+	cache.updated = time.Now().Add(-vehicleStatusInterval)
 	failure := errors.New("connection failed")
-	fail := func() (map[string]*ChargeStatusAttribute, error) { calls++; return nil, failure }
+	fail := func() (map[string]*VehicleStatusUpdate, error) { calls++; return nil, failure }
 	for range 2 {
 		got, err = cache.get("one", fail)
 		assert.ErrorIs(t, err, failure)
-		assert.Equal(t, api.StatusNone, got)
+		assert.Nil(t, got)
 	}
 	assert.Equal(t, 2, calls)
 }
 
-func TestReadChargeStates(t *testing.T) {
+func TestReadVehicleStates(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	done := make(chan struct{})
@@ -109,13 +109,23 @@ func TestReadChargeStates(t *testing.T) {
 		if !assert.NoError(t, conn.Write(ctx, websocket.MessageBinary, []byte{0x08, 0x01})) {
 			return
 		}
-		pushes := []*ChargeStatusPush{
+		pushes := []*VehicleStatusPush{
 			{CommandUpdates: &Sequence{SequenceNumber: 7}},
-			{Updates: &ChargeStatusUpdates{SequenceNumber: 8, Vehicles: map[string]*ChargeStatusUpdate{
-				"other": {ChargingStatus: &ChargeStatusAttribute{Value: 3, Metadata: &ChargeStatusMetadata{}}},
+			{Updates: &VehicleStatusUpdates{SequenceNumber: 6, Vehicles: map[string]*VehicleStatusUpdate{
+				"car": {ChargingStatus: &IntegerAttribute{Value: 3, Metadata: &AttributeMetadata{}}},
 			}}},
-			{Updates: &ChargeStatusUpdates{SequenceNumber: 9, Vehicles: map[string]*ChargeStatusUpdate{
-				"car": {FullUpdate: true, ChargingStatus: &ChargeStatusAttribute{Metadata: &ChargeStatusMetadata{}}},
+			{Updates: &VehicleStatusUpdates{SequenceNumber: 8, Vehicles: map[string]*VehicleStatusUpdate{
+				"other": {FullUpdate: true, ChargingStatus: &IntegerAttribute{Value: 3, Metadata: &AttributeMetadata{}}},
+			}}},
+			{Updates: &VehicleStatusUpdates{SequenceNumber: 9, Vehicles: map[string]*VehicleStatusUpdate{
+				"car": {
+					FullUpdate: true, ChargingStatus: &IntegerAttribute{Metadata: &AttributeMetadata{}},
+					MaxSoc:                &IntegerAttribute{Value: 80, Metadata: &AttributeMetadata{}},
+					Odometer:              &IntegerAttribute{Value: 12408, Unit: 1, Metadata: &AttributeMetadata{}},
+					Latitude:              &DoubleAttribute{Value: 52, Metadata: &AttributeMetadata{}},
+					Longitude:             &DoubleAttribute{Value: 13, Metadata: &AttributeMetadata{}},
+					PreconditioningActive: &BooleanAttribute{Metadata: &AttributeMetadata{}},
+				},
 			}}},
 		}
 		for _, push := range pushes {
@@ -133,7 +143,7 @@ func TestReadChargeStates(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			var ack ChargeStatusAck
+			var ack VehicleStatusAck
 			if !assert.NoError(t, proto.Unmarshal(reply, &ack)) {
 				return
 			}
@@ -145,15 +155,30 @@ func TestReadChargeStates(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	states, err := readChargeStates(ctx, "ws"+strings.TrimPrefix(server.URL, "http"), http.Header{"Authorization": {"test-token"}}, "car")
+	states, err := readVehicleStates(ctx, "ws"+strings.TrimPrefix(server.URL, "http"), http.Header{"Authorization": {"test-token"}}, "car")
 	require.NoError(t, err)
-	assert.Equal(t, int32(3), states["other"].Value)
-	assert.Equal(t, int32(0), states["car"].Value)
-	assert.NotNil(t, states["car"].Metadata)
+	assert.Equal(t, int64(3), states["other"].ChargingStatus.Value)
+	assert.Equal(t, int64(0), states["car"].ChargingStatus.Value)
+	assert.NotNil(t, states["car"].ChargingStatus.Metadata)
+	v := snapshotProvider(states["car"])
+	odo, err := v.Odometer()
+	require.NoError(t, err)
+	assert.Equal(t, float64(12408), odo)
+	limit, err := v.GetLimitSoc()
+	require.NoError(t, err)
+	assert.Equal(t, int64(80), limit)
+	lat, lon, err := v.Position()
+	require.NoError(t, err)
+	assert.Equal(t, float64(52), lat)
+	assert.Equal(t, float64(13), lon)
+	active, err := v.Climater()
+	require.NoError(t, err)
+	assert.False(t, active)
+	assert.Empty(t, states["car"].ProtoReflect().GetUnknown())
 	<-done
 }
 
-func TestReadChargeStatesMissingAndMalformed(t *testing.T) {
+func TestReadVehicleStatesMissingAndMalformed(t *testing.T) {
 	for _, tc := range []struct {
 		name      string
 		data      []byte
@@ -178,18 +203,19 @@ func TestReadChargeStatesMissingAndMalformed(t *testing.T) {
 				_, _, _ = conn.Read(ctx)
 			}))
 			defer server.Close()
-			states, err := readChargeStates(ctx, "ws"+strings.TrimPrefix(server.URL, "http"), nil, "car")
+			states, err := readVehicleStates(ctx, "ws"+strings.TrimPrefix(server.URL, "http"), nil, "car")
 			if tc.wantError {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				assert.Nil(t, states["car"])
+				require.NotNil(t, states["car"])
+				assert.Nil(t, states["car"].ChargingStatus)
 			}
 		})
 	}
 }
 
-func TestReadChargeStatesCancellation(t *testing.T) {
+func TestReadVehicleStatesCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -202,13 +228,13 @@ func TestReadChargeStatesCancellation(t *testing.T) {
 		_, _, _ = conn.Read(context.Background())
 	}))
 	defer server.Close()
-	_, err := readChargeStates(ctx, "ws"+strings.TrimPrefix(server.URL, "http"), nil, "car")
+	_, err := readVehicleStates(ctx, "ws"+strings.TrimPrefix(server.URL, "http"), nil, "car")
 	require.Error(t, err)
 }
 
-func TestChargeStatusConnection(t *testing.T) {
+func TestVehicleStatusConnection(t *testing.T) {
 	for _, region := range []string{"EMEA", "APAC", "NORAM"} {
-		uri, headers := chargeStatusConnection("secret", region)
+		uri, headers := vehicleStatusConnection("secret", region)
 		assert.Equal(t, "secret", headers.Get("Authorization"))
 		assert.Equal(t, "PROTO", headers.Get("OUTPUT-FORMAT"))
 		assert.NotEmpty(t, headers.Get("APP-SESSION-ID"))

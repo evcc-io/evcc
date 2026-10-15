@@ -17,11 +17,11 @@ import (
 type Identity struct {
 	*request.Helper
 	oauth2.TokenSource
-	log         *util.Logger
-	account     string
-	region      string
-	Sessionid   string
-	chargeState chargeStateCache
+	log          *util.Logger
+	account      string
+	region       string
+	Sessionid    string
+	vehicleState vehicleStateCache
 }
 
 // OAuth2Config is the OAuth2 configuration for authenticating with the MercedesAPI.

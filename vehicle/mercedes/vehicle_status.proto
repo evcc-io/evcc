@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package mercedes.vehicle;
+option go_package = "github.com/evcc-io/evcc/vehicle/mercedes";
+
+// Wire-compatible subset of mbapi2020's vehicle-events.proto.
+// Only attributes consumed by existing evcc vehicle interfaces are retained.
+message VehicleStatusPush {
+  Sequence command_updates = 17;
+  VehicleStatusUpdates updates = 24;
+}
+
+message VehicleStatusUpdates {
+  int64 sequence_number = 1;
+  map<string, VehicleStatusUpdate> vehicles = 2;
+}
+
+message VehicleStatusUpdate {
+  bool full_update = 2;
+  IntegerAttribute charging_status = 50;
+  IntegerAttribute max_soc = 138;
+  IntegerAttribute odometer = 147;
+  DoubleAttribute latitude = 165;
+  DoubleAttribute longitude = 166;
+  BooleanAttribute preconditioning_active = 167;
+}
+
+message IntegerAttribute {
+  int64 value = 1;
+  AttributeMetadata metadata = 2;
+  int32 unit = 3;
+}
+
+message DoubleAttribute {
+  double value = 1;
+  AttributeMetadata metadata = 2;
+}
+
+message BooleanAttribute {
+  bool value = 1;
+  AttributeMetadata metadata = 2;
+}
+
+message AttributeMetadata {
+  int32 status = 2;
+}
+
+message VehicleStatusAck {
+  Sequence command_updates = 19;
+  Sequence updates = 28;
+}
+
+message Sequence {
+  int64 sequence_number = 1;
+}
