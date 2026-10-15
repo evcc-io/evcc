@@ -7,5 +7,12 @@ const assistantContext = ref("");
 export default assistantContext;
 
 export function setAssistantContext(context: string) {
-	assistantContext.value = context;
+  assistantContext.value = context;
+}
+
+// a question a view asks on the user's behalf, e.g. from an explain button. The widget sends and clears it.
+export const assistantQuestion = ref("");
+
+export function askAssistant(question: string) {
+  assistantQuestion.value = question;
 }
