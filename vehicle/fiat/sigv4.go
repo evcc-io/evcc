@@ -4,8 +4,9 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"maps"
 	"net/http"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -43,11 +44,7 @@ func signV4(req *http.Request, accessKey, secret, token, region, service, payloa
 		headers[strings.ToLower(k)] = strings.Join(vals, ",")
 	}
 
-	names := make([]string, 0, len(headers))
-	for k := range headers {
-		names = append(names, k)
-	}
-	sort.Strings(names)
+	names := slices.Sorted(maps.Keys(headers))
 
 	var canonicalHeaders strings.Builder
 	for _, k := range names {
@@ -57,7 +54,7 @@ func signV4(req *http.Request, accessKey, secret, token, region, service, payloa
 
 	query := req.URL.Query()
 	for k := range query {
-		sort.Strings(query[k])
+		slices.Sort(query[k])
 	}
 
 	// paths here are plain, the double encoding of reserved characters is not needed

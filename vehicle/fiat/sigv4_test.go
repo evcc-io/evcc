@@ -12,30 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func signedRequest(t *testing.T, method, uri, body string, sign func(*http.Request, string)) *http.Request {
-	t.Helper()
-
-	var rd io.ReadSeeker
-	if body != "" {
-		rd = strings.NewReader(body)
-	}
-	req, err := request.New(method, uri, rd, map[string]string{
-		"Content-Type":        "application/json",
-		"Accept":              "application/json",
-		"X-Clientapp-Version": "1.0",
-		"ClientrequestId":     "abcdefghijklmnop",
-		"X-Api-Key":           XApiKey,
-		"X-Originator-Type":   "web",
-		"locale":              "de_de",
-	})
-	require.NoError(t, err)
-
-	hash, err := hashBody(rd)
-	require.NoError(t, err)
-	sign(req, hash)
-	return req
-}
-
 // expected values recorded from aws-sdk-go-v2 v1.47.1 SignHTTP for the same requests
 func TestSignV4(t *testing.T) {
 	const (
@@ -56,9 +32,24 @@ func TestSignV4(t *testing.T) {
 		{http.MethodPost, AuthURI + "/v1/accounts/0123456789abcdef/ignite/pin/authenticate", `{"pin":"c2VjcmV0"}`,
 			post, "c0a44f05b8573f8415cf4838a42bc0b81703d22f402809cd790f2cd095afada7"},
 	} {
-		req := signedRequest(t, tc.method, tc.uri, tc.body, func(req *http.Request, hash string) {
-			signV4(req, accessKey, secret, token, Region, "execute-api", hash, now)
+		var body io.ReadSeeker
+		if tc.body != "" {
+			body = strings.NewReader(tc.body)
+		}
+		req, err := request.New(tc.method, tc.uri, body, map[string]string{
+			"Content-Type":        "application/json",
+			"Accept":              "application/json",
+			"X-Clientapp-Version": "1.0",
+			"ClientrequestId":     "abcdefghijklmnop",
+			"X-Api-Key":           XApiKey,
+			"X-Originator-Type":   "web",
+			"locale":              "de_de",
 		})
+		require.NoError(t, err)
+
+		hash, err := hashBody(body)
+		require.NoError(t, err)
+		signV4(req, accessKey, secret, token, Region, "execute-api", hash, now)
 
 		assert.Equal(t, "20261015T134500Z", req.Header.Get("X-Amz-Date"), tc.uri)
 		assert.Equal(t, token, req.Header.Get("X-Amz-Security-Token"), tc.uri)
