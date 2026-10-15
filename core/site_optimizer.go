@@ -173,8 +173,8 @@ func suggestionEvent(detail batteryDetail, s types.Suggestion) messenger.Event {
 // Because the optimization is linear, the slot is at an operating-range extreme, so it
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
-// (hold), exporting means charging is withheld (holdcharge). At its soc bound nothing is
-// withheld, the bound does it, so the battery stays in normal mode.
+// (hold), exporting means charging is withheld (holdcharge). This applies at the soc
+// bounds as well, since not every battery enforces them itself.
 func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
 	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
 		return types.Suggestion{}
@@ -194,11 +194,9 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 	if detail.Type == batteryTypeBattery {
 		idle := charge <= suggestionThreshold && discharge <= suggestionThreshold
 
-		var empty, full bool
+		var empty bool
 		if slot < len(res.StateOfCharge) {
-			soc := res.StateOfCharge[slot]
-			empty = soc <= req.SMin
-			full = req.SMax > 0 && soc >= req.SMax
+			empty = res.StateOfCharge[slot] <= req.SMin
 		}
 
 		switch {
@@ -208,7 +206,7 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 		case idle && gridImporting && !empty:
 			// idle while importing: discharge is deliberately withheld
 			s.Action = api.BatteryHold.String()
-		case idle && gridExporting && !full:
+		case idle && gridExporting:
 			// idle while exporting: surplus is exported instead of charged
 			s.Action = api.BatteryHoldCharge.String()
 		case discharge > suggestionThreshold && gridExporting:

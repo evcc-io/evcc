@@ -793,7 +793,7 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	}
 	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, 1).Action, "empty battery idle while importing")
 	res.StateOfCharge[0] = 9000
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "full battery idle while exporting")
+	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "full battery idle while exporting")
 	res.StateOfCharge[0] = 5000
 	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, 1).Action, "idle within bounds is withheld")
 	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "idle within bounds is withheld")
