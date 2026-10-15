@@ -104,7 +104,10 @@ export default defineComponent({
 				},
 				polar: { radius: "95%" },
 				angleAxis: { type: "category", data: labels, show: false, startAngle: 90 },
-				radiusAxis: sqrtRadiusAxis(Math.max(0, ...data), this.formatValue),
+				radiusAxis: sqrtRadiusAxis(
+					Math.max(0, ...data.filter(Number.isFinite)),
+					this.formatValue
+				),
 				series: [
 					{
 						type: "bar",
