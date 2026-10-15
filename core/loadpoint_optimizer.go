@@ -113,11 +113,16 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 	required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower())
 
 	// past the plan time the goal was missed- keep charging like plannerActive does
+	critical := required > 0
 	if remaining := lp.clock.Until(planTime); remaining > 0 {
-		return required >= remaining
+		critical = required >= remaining
 	}
 
-	return required > 0
+	// once critical it stays critical: the soc estimate makes the required duration
+	// shrink faster than the clock while charging, which would stop and restart every cycle
+	lp.planCritical = lp.planCritical || critical
+
+	return lp.planCritical
 }
 
 // surplusRegime indicates that the suggested charge power matches the forecast

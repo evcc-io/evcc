@@ -163,6 +163,7 @@ type Loadpoint struct {
 	planEnergyOffset float64          // already charged energy in kWh when plan was set
 	planSlotEnd      time.Time        // current plan slot end time
 	planActive       bool             // charge plan exists and has a currently active slot
+	planCritical     bool             // plan goal can only be reached by charging now, latched until the plan is done
 	planOverrunSent  bool             // notification has been sent already
 	planLocked       PlanLock         // locked plan
 
@@ -2477,6 +2478,9 @@ NO_DIM:
 		plannerActive = lp.planDeadlineCritical()
 	}
 
+	// a plan goal above the session limits is the optimizer's to reach, like the planner's slot is below
+	optimizerPlan := suggestion != nil && mode == api.ModeSmart && lp.planActive
+
 	// update and publish min soc not reached state
 	minSocNotReached := lp.minSocNotReached()
 	lp.publish(keys.MinSocNotReached, minSocNotReached)
@@ -2509,11 +2513,11 @@ NO_DIM:
 		err = lp.fastCharging()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
-	case lp.LimitEnergyReached():
+	case lp.LimitEnergyReached() && !optimizerPlan:
 		lp.log.DEBUG.Printf("limitEnergy reached: %.0fkWh > %0.1fkWh", lp.GetChargedEnergy()/1e3, lp.limitEnergy)
 		err = lp.disableUnlessClimater()
 
-	case lp.LimitSocReached():
+	case lp.LimitSocReached() && !optimizerPlan:
 		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.EffectiveLimitSoc())
 		err = lp.disableUnlessClimater()
 

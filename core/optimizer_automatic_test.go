@@ -604,8 +604,42 @@ func TestOptimizerPlanActive(t *testing.T) {
 	optimize()
 	assert.True(t, lp.plannerActive())
 
+	// critical stays latched while the soc estimate catches up (#34868)
+	lp.vehicleSoc = 59
+	optimize()
+	assert.True(t, lp.plannerActive())
+	assert.True(t, lp.planCritical)
+
 	// stalled optimizer falls back to the planner
 	clck.Add(time.Hour)
 	_, _, optimized = lp.EffectivePlan(planTime, time.Hour, api.PlanStrategy{})
 	assert.False(t, optimized)
+}
+
+// TestOptimizerPlanAboveLimit covers a plan goal above the session soc limit (#34868):
+// the optimizer's active plan slot charges past the limit instead of being disabled by it
+func TestOptimizerPlanAboveLimit(t *testing.T) {
+	enableAutomatic(t)
+
+	lp, charger, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
+	lp.clock.(*clock.Mock).Add(time.Hour)
+	lp.vehicleSoc = 50
+	lp.limitSoc = 40
+
+	// plan far enough away not to be deadline critical
+	now := lp.clock.Now()
+	lp.planLocked = PlanLock{Time: now.Add(24 * time.Hour), Soc: 100, Id: 1}
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 3680, Grid: 1000})
+	lp.setOptimizerPlan(optimizerPlan{
+		rates:  api.Rates{{Start: now, End: now.Add(15 * time.Minute)}},
+		energy: []float64{920},
+	})
+
+	charger.EXPECT().MaxCurrent(int64(maxA))
+	lp.Update(2000, 0, nil, nil, false, false, 0, nil, nil, nil)
+
+	assert.True(t, lp.planActive)
+	assert.False(t, lp.planCritical)
+
+	ctrl.Finish()
 }
