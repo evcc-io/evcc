@@ -280,7 +280,8 @@ export default defineComponent({
 							{ values: [this.fmtKWh(params.value[1])] },
 						]),
 				},
-				visualMap: this.legend(this.fmtKWh(this.max), 4),
+				// calendar data is [day, energy], the energy sits in dimension 1
+				visualMap: { ...this.legend(this.fmtKWh(this.max), 4), dimension: 1 },
 				calendar: {
 					left: 28,
 					right: 4,
