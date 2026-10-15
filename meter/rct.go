@@ -345,7 +345,7 @@ func (m *RCT) totalEnergy() (float64, error) {
 
 	case "pv":
 		var eg errgroup.Group
-		var a, b float64
+		var a, b, c float64
 
 		eg.Go(func() error {
 			var err error
