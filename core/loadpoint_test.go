@@ -1046,6 +1046,46 @@ func TestPVSolarShare(t *testing.T) {
 		"disable threshold should apply despite solar share")
 }
 
+// TestWelcomeChargeNoBatterySupport verifies that bufferSoc does not sustain a session
+// the welcome charge started until surplus confirms it (#32278)
+func TestWelcomeChargeNoBatterySupport(t *testing.T) {
+	Voltage = 230
+	ctrl := gomock.NewController(t)
+	clck := clock.NewMock()
+	clck.Add(time.Hour)
+
+	lp := &Loadpoint{
+		log:            util.NewLogger("foo"),
+		clock:          clck,
+		charger:        api.NewMockCharger(ctrl),
+		site:           &mockSite{},
+		minCurrent:     minA,
+		maxCurrent:     maxA,
+		phases:         3,
+		measuredPhases: 3,
+		Disable:        loadpoint.ThresholdConfig{Delay: 3 * time.Minute},
+		solarShare:     1,
+		status:         api.StatusC,
+		enabled:        true,
+		welcomeUntil:   clck.Now().Add(-time.Minute), // expired welcome charge
+	}
+
+	minPower := currentToPower(minA, 3)
+
+	// battery covers the car, but the welcome charge started the session: disable timer runs
+	assert.Equal(t, minA, lp.pvMaxCurrent(minPower, minPower, true, false), "disable delay pending")
+	assert.False(t, lp.pvTimer.IsZero(), "welcome charge must not start battery support")
+	assert.False(t, lp.welcomeUntil.IsZero())
+
+	// surplus confirms the session
+	assert.Equal(t, minA, lp.pvMaxCurrent(-minPower, 0, true, false), "surplus charging")
+	assert.True(t, lp.welcomeUntil.IsZero(), "surplus must confirm the session")
+
+	// battery support sustains the confirmed session
+	assert.Equal(t, minA, lp.pvMaxCurrent(minPower, minPower, true, false), "battery covers demand")
+	assert.True(t, lp.pvTimer.IsZero(), "no disable timer while supported")
+}
+
 // TestBatterySupport verifies that battery-supported charging ends once the battery
 // is maxed out and grid import takes over (issue #32151)
 func TestBatterySupport(t *testing.T) {

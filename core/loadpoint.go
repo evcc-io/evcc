@@ -178,7 +178,7 @@ type Loadpoint struct {
 	chargeCurrents []float64        // Phase currents
 	connectedTime  time.Time        // Time when vehicle was connected
 	connectPending bool             // connect notification deferred until vehicle detection settles
-	welcomeUntil   time.Time        // welcome charge deadline, zero if inactive
+	welcomeUntil   time.Time        // welcome charge deadline, zero once surplus confirms the session or the vehicle disconnects
 	pvTimer        time.Time        // PV enabled/disable timer
 	phaseTimer     time.Time        // 1p3p switch timer
 	wakeUpTimer    *Timer           // Vehicle wake-up timeout
@@ -1778,7 +1778,8 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 // Support ends once the battery is maxed out: the balance it has to cover exceeds
 // the pv disable threshold or its discharge limit would be exceeded (issue #32151).
 func (lp *Loadpoint) batterySupported(sitePower, batteryPower float64, batteryBuffered, batteryStart bool) bool {
-	if !batteryStart && !(batteryBuffered && lp.charging()) {
+	// a session the welcome charge started is not surplus charging the battery should sustain
+	if !batteryStart && !(batteryBuffered && lp.charging() && lp.welcomeUntil.IsZero()) {
 		return false
 	}
 
@@ -1877,6 +1878,11 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	availableCurrent := effectiveCurrent + deltaCurrent
 	targetCurrent := max(availableCurrent, 0)
 
+	// surplus confirms a session the welcome charge started
+	if targetCurrent >= minCurrent {
+		lp.welcomeUntil = time.Time{}
+	}
+
 	// with always charge or under special conditions return at least minCurrent
 	if (alwaysCharge || battery) && targetCurrent < minCurrent {
 		lp.log.DEBUG.Printf("pv charge current: min %.3gA > %.3gA (%.0fW @ %dp, battery: %t)", minCurrent, targetCurrent, sitePower, activePhases, battery)
@@ -1926,6 +1932,7 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 		} else {
 			// reset timer
 			lp.resetPVTimer("disable")
+			lp.welcomeUntil = time.Time{}
 		}
 
 		// lp.log.DEBUG.Println("pv disable timer: keep enabled")
