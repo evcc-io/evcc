@@ -430,6 +430,8 @@ export interface OcppMirrorHour {
 export interface OcppMirrorSession {
   /** URL of the upstream OCPP backend. */
   upstreamUrl: string;
+  /** Station id used towards the upstream backend. */
+  upstreamStationId?: string;
   /** Connection to the upstream backend is established. */
   upstreamConnected: boolean;
   /** Last connection error. */

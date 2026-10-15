@@ -41,9 +41,44 @@ func (m MirrorRule) Redacted() MirrorRule {
 	return m
 }
 
-// Key identifies a mirror within its rule.
+// Key identifies a mirror within its rule as configured.
 func (m MirrorRule) Key() string {
 	return strings.TrimRight(m.UpstreamURL, "/") + "|" + m.UpstreamStationID
+}
+
+// ConnectionKey identifies the upstream station the mirror reaches for a charger. An
+// omitted station id means the charger's own id.
+func (m MirrorRule) ConnectionKey(chargerID string) string {
+	return strings.TrimRight(m.UpstreamURL, "/") + "|" + strings.TrimLeft(m.dialRule(chargerID).upstreamPath(chargerID), "/")
+}
+
+// ConnectionKey identifies the upstream station the rule's main connection reaches for a charger.
+func (r ForwarderRule) ConnectionKey(chargerID string) string {
+	return strings.TrimRight(r.UpstreamURL, "/") + "|" + strings.TrimLeft(r.upstreamPath(chargerID), "/")
+}
+
+// effectiveMirrors are the mirrors that actually connect for a charger: those without
+// a URL, those reaching the same upstream station as the main connection and repeats
+// are left out, since a second connection under the same identity would displace the first.
+func (r ForwarderRule) effectiveMirrors(chargerID string) []MirrorRule {
+	seen := map[string]bool{r.ConnectionKey(chargerID): true}
+
+	var res []MirrorRule
+	for _, m := range r.Mirrors {
+		if m.UpstreamURL == "" {
+			continue
+		}
+
+		key := m.ConnectionKey(chargerID)
+		if seen[key] {
+			continue
+		}
+
+		seen[key] = true
+		res = append(res, m)
+	}
+
+	return res
 }
 
 // dialRule is the forwarder rule used to open the mirror's connection for a charger.
@@ -62,22 +97,35 @@ func (m MirrorRule) dialRule(chargerID string) ForwarderRule {
 // MirrorStatus is the observable state of one mirror.
 type MirrorStatus struct {
 	UpstreamURL       string       `json:"upstreamUrl"`
+	UpstreamStationID string       `json:"upstreamStationId,omitempty"`
 	UpstreamConnected bool         `json:"upstreamConnected"`
 	Error             string       `json:"error,omitempty"`
 	LastSent          *time.Time   `json:"lastSent,omitempty"`
 	History           []MirrorHour `json:"history,omitempty"`
 }
 
+// mirrorFrame is a Call of the charger waiting to be written to a mirror.
+type mirrorFrame struct {
+	seq    uint64
+	action string
+	data   []byte
+}
+
+// superseded reports whether the frame carries state that the replay snapshot taken
+// at snapshot already represents, so sending it again would repeat it or reorder it.
+func (f mirrorFrame) superseded(snapshot uint64) bool {
+	return f.seq <= snapshot && (f.action == "BootNotification" || f.action == "StatusNotification")
+}
+
 type mirrorSession struct {
 	chargerID string
 	rule      MirrorRule
-	out       chan []byte
+	out       chan mirrorFrame
 	stop      chan struct{}
-	connected bool      // guarded by mirrorsMu
-	lastSent  time.Time // guarded by mirrorsMu
+	connected bool // guarded by mirrorsMu
 
 	// frame whose write failed, sent first after the next connect; only used by the session's goroutine
-	retry []byte
+	retry *mirrorFrame
 }
 
 var (
@@ -91,26 +139,52 @@ var (
 
 	// last StatusNotification frame per charger id and connector, replayed on (re)connect
 	lastStatus = make(map[string]map[int][]byte)
+
+	// number of the last frame copied to the mirrors
+	mirrorSeq uint64
 )
 
-// startMirrors reconciles the running mirrors of a charger with the rule's list:
-// new ones are dialled, changed ones redialled and removed ones closed.
-func startMirrors(chargerID string, rules []MirrorRule) {
-	wanted := make(map[string]MirrorRule, len(rules))
-	for _, r := range rules {
-		if r.UpstreamURL != "" {
-			wanted[r.Key()] = r
-		}
-	}
+// startMirrors aligns the mirrors of a charger with its current rule: new ones are
+// dialled, changed ones redialled and removed ones closed. The rule is resolved and
+// the sessions are installed under the same locks that guard the charger's
+// connection state and the other reconciliations, so a charger that disconnected
+// meanwhile gets none and an older reconciliation cannot overwrite a newer one.
+func startMirrors(chargerID string) {
+	sidecarsMu.Lock()
+	connected := connectedChargers[chargerID]
 
 	mirrorsMu.Lock()
+	var rules []MirrorRule
+	if rule, ok := resolveRule(chargerID); ok && connected {
+		rules = rule.effectiveMirrors(chargerID)
+	}
+	stale, fresh := syncMirrorsLocked(chargerID, rules)
+	mirrorsMu.Unlock()
+	sidecarsMu.Unlock()
+
+	for _, ms := range stale {
+		close(ms.stop)
+	}
+	for _, ms := range fresh {
+		go ms.run()
+	}
+
+	notifyUpdated()
+}
+
+// syncMirrorsLocked installs the sessions for the wanted rules. Caller holds mirrorsMu.
+func syncMirrorsLocked(chargerID string, rules []MirrorRule) (stale, fresh []*mirrorSession) {
+	wanted := make(map[string]MirrorRule, len(rules))
+	for _, r := range rules {
+		wanted[r.Key()] = r
+	}
+
 	running := mirrorSessions[chargerID]
 	if running == nil {
 		running = make(map[string]*mirrorSession)
 		mirrorSessions[chargerID] = running
 	}
 
-	var stale []*mirrorSession
 	for key, ms := range running {
 		if r, ok := wanted[key]; !ok || r != ms.rule {
 			stale = append(stale, ms)
@@ -122,37 +196,23 @@ func startMirrors(chargerID string, rules []MirrorRule) {
 			delete(mirrorErrors[chargerID], key)
 		}
 	}
-	for _, ms := range stale {
-		if _, ok := wanted[ms.rule.Key()]; !ok {
-			delete(mirrorStatsData, mirrorStatsKey(chargerID, ms.rule.Key()))
-			mirrorStatsDirty = true
-		}
-	}
 
-	var fresh []*mirrorSession
 	for key, r := range wanted {
 		if _, ok := running[key]; ok {
 			continue
 		}
+
 		ms := &mirrorSession{
 			chargerID: chargerID,
 			rule:      r,
-			out:       make(chan []byte, mirrorBacklog),
+			out:       make(chan mirrorFrame, mirrorBacklog),
 			stop:      make(chan struct{}),
 		}
 		running[key] = ms
 		fresh = append(fresh, ms)
 	}
-	mirrorsMu.Unlock()
 
-	for _, ms := range stale {
-		close(ms.stop)
-	}
-	for _, ms := range fresh {
-		go ms.run()
-	}
-
-	notifyUpdated()
+	return stale, fresh
 }
 
 // stopMirrors closes all mirrors of a charger.
@@ -178,22 +238,24 @@ func mirrorCall(chargerID, action string, frame []byte) {
 	mirrorsMu.Lock()
 	defer mirrorsMu.Unlock()
 
+	mirrorSeq++
+
 	if action == "StatusNotification" {
 		if connector, ok := statusConnector(frame); ok {
 			if lastStatus[chargerID] == nil {
 				lastStatus[chargerID] = make(map[int][]byte)
 			}
-			lastStatus[chargerID][connector] = append([]byte(nil), frame...)
+			lastStatus[chargerID][connector] = slices.Clone(frame)
 		}
 	}
 
 	for _, ms := range mirrorSessions[chargerID] {
-		ms.enqueue(append([]byte(nil), frame...))
+		ms.enqueue(mirrorFrame{seq: mirrorSeq, action: action, data: slices.Clone(frame)})
 	}
 }
 
 // enqueue queues a frame, dropping the oldest when the backlog is full.
-func (ms *mirrorSession) enqueue(frame []byte) {
+func (ms *mirrorSession) enqueue(frame mirrorFrame) {
 	for {
 		select {
 		case ms.out <- frame:
@@ -226,13 +288,14 @@ func statusConnector(frame []byte) (int, bool) {
 
 // replayFrames are the frames a freshly connected mirror gets first: the charger's boot
 // and its last status per connector, with fresh message ids since backends expect a
-// boot before anything else.
-func (ms *mirrorSession) replayFrames() [][]byte {
+// boot before anything else. The returned number is the last frame the snapshot covers.
+func (ms *mirrorSession) replayFrames() ([][]byte, uint64) {
 	bootMu.Lock()
 	boot := lastBoot[ms.chargerID]
 	bootMu.Unlock()
 
 	mirrorsMu.Lock()
+	snapshot := mirrorSeq
 	statuses := make([][]byte, 0, len(lastStatus[ms.chargerID]))
 	for _, frame := range lastStatus[ms.chargerID] {
 		statuses = append(statuses, frame)
@@ -251,7 +314,7 @@ func (ms *mirrorSession) replayFrames() [][]byte {
 		}
 	}
 
-	return frames
+	return frames, snapshot
 }
 
 func (ms *mirrorSession) stopped() bool {
@@ -327,7 +390,8 @@ func (ms *mirrorSession) serve() bool {
 
 	defer flushMirrorStats()
 
-	for _, frame := range ms.replayFrames() {
+	frames, snapshot := ms.replayFrames()
+	for _, frame := range frames {
 		if err := writeFrame(conn, frame); err != nil {
 			conn.CloseNow()
 			ms.setState(false, err)
@@ -336,15 +400,15 @@ func (ms *mirrorSession) serve() bool {
 		ms.record(frame, time.Now())
 	}
 
-	if ms.retry != nil {
-		if err := writeFrame(conn, ms.retry); err != nil {
+	if retry := ms.retry; retry != nil && !retry.superseded(snapshot) {
+		if err := writeFrame(conn, retry.data); err != nil {
 			conn.CloseNow()
 			ms.setState(false, err)
 			return true
 		}
-		ms.record(ms.retry, time.Now())
-		ms.retry = nil
+		ms.record(retry.data, time.Now())
 	}
+	ms.retry = nil
 
 	ms.setState(true, nil)
 
@@ -370,14 +434,18 @@ func (ms *mirrorSession) serve() bool {
 			return true
 
 		case frame := <-ms.out:
-			if err := writeFrame(conn, frame); err != nil {
+			if frame.superseded(snapshot) {
+				continue
+			}
+
+			if err := writeFrame(conn, frame.data); err != nil {
 				forwarderLog.DEBUG.Printf("mirror %s: write: %v", ms.chargerID, err)
-				ms.retry = frame
+				ms.retry = &frame
 				conn.CloseNow()
 				ms.setState(false, err)
 				return true
 			}
-			ms.record(frame, time.Now())
+			ms.record(frame.data, time.Now())
 		}
 	}
 }
@@ -419,18 +487,24 @@ func mirrorStatus(chargerID string, rules []MirrorRule) []MirrorStatus {
 
 	out := make([]MirrorStatus, 0, len(rules))
 	for _, r := range rules {
-		st := MirrorStatus{UpstreamURL: strings.TrimRight(r.UpstreamURL, "/")}
+		st := MirrorStatus{
+			UpstreamURL:       strings.TrimRight(r.UpstreamURL, "/"),
+			UpstreamStationID: r.UpstreamStationID,
+		}
+
 		if ms, ok := mirrorSessions[chargerID][r.Key()]; ok && ms.connected {
 			st.UpstreamConnected = true
 		} else if msg, ok := mirrorErrors[chargerID][r.Key()]; ok {
 			st.Error = msg
 		}
-		if ms, ok := mirrorSessions[chargerID][r.Key()]; ok && !ms.lastSent.IsZero() {
-			lastSent := ms.lastSent
+
+		stats := statsLocked(mirrorStatsKey(chargerID, r.Key()))
+		if !stats.LastSent.IsZero() {
+			lastSent := stats.LastSent
 			st.LastSent = &lastSent
 		}
 
-		hours := statsLocked(mirrorStatsKey(chargerID, r.Key())).Hours
+		hours := stats.Hours
 		if len(hours) > mirrorStatusHours {
 			hours = hours[len(hours)-mirrorStatusHours:]
 		}
@@ -438,5 +512,6 @@ func mirrorStatus(chargerID string, rules []MirrorRule) []MirrorStatus {
 
 		out = append(out, st)
 	}
+
 	return out
 }

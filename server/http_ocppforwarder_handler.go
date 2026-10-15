@@ -59,19 +59,22 @@ func updateOcppForwarderHandler(w http.ResponseWriter, r *http.Request) {
 
 // validateMirrors checks the read-only upstreams of a rule.
 func validateMirrors(rule ocpp.ForwarderRule) error {
+	// compare the stations the connections reach, an omitted station id being the charger's own
+	primary := rule.ConnectionKey(rule.StationID)
 	seen := make(map[string]bool, len(rule.Mirrors))
-	primary := strings.TrimRight(rule.UpstreamURL, "/") + "|" + rule.UpstreamStationID
 
 	for _, m := range rule.Mirrors {
+		key := m.ConnectionKey(rule.StationID)
+
 		switch {
 		case m.UpstreamURL == "":
 			return fmt.Errorf("%s: read-only upstream needs a URL", rule.StationID)
-		case seen[m.Key()]:
-			return fmt.Errorf("%s: read-only upstream %s is listed twice", rule.StationID, m.UpstreamURL)
-		case m.Key() == primary:
+		case key == primary:
 			return fmt.Errorf("%s: read-only upstream %s is the same connection as the main upstream", rule.StationID, m.UpstreamURL)
+		case seen[key]:
+			return fmt.Errorf("%s: read-only upstream %s is listed twice", rule.StationID, m.UpstreamURL)
 		}
-		seen[m.Key()] = true
+		seen[key] = true
 	}
 
 	return nil
@@ -80,13 +83,24 @@ func validateMirrors(rule ocpp.ForwarderRule) error {
 // restoreMaskedMirrors fills masked secrets of the submitted mirrors from the stored ones.
 func restoreMaskedMirrors(stored, submitted []ocpp.MirrorRule) {
 	byKey := make(map[string]ocpp.MirrorRule, len(stored))
+	byURL := make(map[string][]ocpp.MirrorRule, len(stored))
 	for _, m := range stored {
 		byKey[m.Key()] = m
+
+		url := strings.TrimRight(m.UpstreamURL, "/")
+		byURL[url] = append(byURL[url], m)
 	}
 
 	for i := range submitted {
-		// a mirror whose URL changed has no stored secrets to restore; never persist the mask
-		o := byKey[submitted[i].Key()]
+		// editing the station id keeps the upstream, so its secrets still apply if it is unambiguous;
+		// a mirror whose URL changed has none to restore, and the mask is never persisted
+		o, ok := byKey[submitted[i].Key()]
+		if !ok {
+			if same := byURL[strings.TrimRight(submitted[i].UpstreamURL, "/")]; len(same) == 1 {
+				o = same[0]
+			}
+		}
+
 		if submitted[i].Password == masked {
 			submitted[i].Password = o.Password
 		}

@@ -5,9 +5,12 @@ package ocpp
 
 import (
 	"encoding/json"
+	"errors"
 	"math"
 	"slices"
 	"strconv"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
@@ -32,14 +35,15 @@ type MirrorHour struct {
 }
 
 type mirrorStats struct {
-	Hours  []MirrorHour `json:"hours"`
-	LastWh float64      `json:"lastWh,omitempty"`
+	Hours    []MirrorHour `json:"hours"`
+	LastWh   float64      `json:"lastWh,omitempty"`
+	LastSent time.Time    `json:"lastSent,omitzero"`
 }
 
 // mirrorStatsStore persists the statistics of all mirrors
 type mirrorStatsStore interface {
-	load() map[string]mirrorStats
-	save(map[string]mirrorStats)
+	load() (map[string]mirrorStats, error)
+	save(map[string]mirrorStats) error
 }
 
 // mirrorStatsBackend is the store in use; tests replace it
@@ -47,18 +51,19 @@ var mirrorStatsBackend mirrorStatsStore = settingsMirrorStats{}
 
 type settingsMirrorStats struct{}
 
-func (settingsMirrorStats) load() map[string]mirrorStats {
+func (settingsMirrorStats) load() (map[string]mirrorStats, error) {
 	var res map[string]mirrorStats
 	if err := settings.Json(keys.OcppMirrorStats, &res); err != nil {
-		return nil
+		if errors.Is(err, settings.ErrNotFound) {
+			return nil, nil
+		}
+		return nil, err
 	}
-	return res
+	return res, nil
 }
 
-func (settingsMirrorStats) save(stats map[string]mirrorStats) {
-	if err := settings.SetJson(keys.OcppMirrorStats, stats); err != nil {
-		forwarderLog.ERROR.Printf("mirror: save statistics: %v", err)
-	}
+func (settingsMirrorStats) save(stats map[string]mirrorStats) error {
+	return settings.SetJson(keys.OcppMirrorStats, stats)
 }
 
 // guarded by mirrorsMu
@@ -66,20 +71,41 @@ var (
 	mirrorStatsData   = make(map[string]*mirrorStats)
 	mirrorStatsLoaded bool
 	mirrorStatsDirty  bool
+
+	// set when the stored statistics could not be read: what is recorded stays in memory
+	// and the stored data is left alone instead of being replaced by a fraction of it
+	mirrorStatsReadOnly bool
 )
+
+// serializes saving, so that an older snapshot cannot overwrite a newer one
+var mirrorStatsSaveMu sync.Mutex
 
 func mirrorStatsKey(chargerID, mirrorKey string) string {
 	return chargerID + "|" + mirrorKey
 }
 
+// loadStatsLocked reads the stored statistics once. Caller holds mirrorsMu.
+func loadStatsLocked() {
+	if mirrorStatsLoaded {
+		return
+	}
+	mirrorStatsLoaded = true
+
+	stored, err := mirrorStatsBackend.load()
+	if err != nil {
+		mirrorStatsReadOnly = true
+		forwarderLog.ERROR.Printf("mirror: read statistics, keeping stored data untouched: %v", err)
+		return
+	}
+
+	for k, v := range stored {
+		mirrorStatsData[k] = &mirrorStats{Hours: v.Hours, LastWh: v.LastWh, LastSent: v.LastSent}
+	}
+}
+
 // statsLocked returns the statistics of a mirror. Caller holds mirrorsMu.
 func statsLocked(key string) *mirrorStats {
-	if !mirrorStatsLoaded {
-		mirrorStatsLoaded = true
-		for k, v := range mirrorStatsBackend.load() {
-			mirrorStatsData[k] = &mirrorStats{Hours: v.Hours, LastWh: v.LastWh}
-		}
-	}
+	loadStatsLocked()
 
 	st := mirrorStatsData[key]
 	if st == nil {
@@ -140,7 +166,7 @@ func (ms *mirrorSession) record(frame []byte, now time.Time) {
 		st.LastWh = wh
 	}
 
-	ms.lastSent = now
+	st.LastSent = now
 	mirrorStatsDirty = true
 }
 
@@ -192,21 +218,67 @@ func meterEnergyWh(frame []byte) (float64, bool) {
 	return 0, false
 }
 
-// flushMirrorStats persists the statistics and republishes the status if anything changed.
-func flushMirrorStats() {
+// mirrorListed reports whether the rule of a charger lists a mirror. Caller holds mirrorsMu.
+func mirrorListed(chargerID, mirrorKey string) bool {
+	rule, ok := resolveRule(chargerID)
+	if !ok {
+		return false
+	}
+
+	return slices.ContainsFunc(rule.Mirrors, func(m MirrorRule) bool { return m.Key() == mirrorKey })
+}
+
+// pruneMirrorStats drops the statistics of mirrors that no rule lists anymore, whether or
+// not their charger is connected, so a mirror that is added again starts empty.
+func pruneMirrorStats() {
 	mirrorsMu.Lock()
-	if !mirrorStatsDirty {
+	defer mirrorsMu.Unlock()
+
+	loadStatsLocked()
+
+	for key := range mirrorStatsData {
+		chargerID, mirrorKey, ok := strings.Cut(key, "|")
+		if !ok || !mirrorListed(chargerID, mirrorKey) {
+			delete(mirrorStatsData, key)
+			mirrorStatsDirty = true
+		}
+	}
+}
+
+// flushMirrorStats persists the statistics and republishes the status if anything changed.
+// A failed save keeps the statistics dirty so the next flush retries it.
+func flushMirrorStats() {
+	mirrorStatsSaveMu.Lock()
+	saved := saveMirrorStats()
+	mirrorStatsSaveMu.Unlock()
+
+	if saved {
+		notifyUpdated()
+	}
+}
+
+func saveMirrorStats() bool {
+	mirrorsMu.Lock()
+	if !mirrorStatsDirty || mirrorStatsReadOnly {
 		mirrorsMu.Unlock()
-		return
+		return false
 	}
 	mirrorStatsDirty = false
 
 	snapshot := make(map[string]mirrorStats, len(mirrorStatsData))
 	for k, v := range mirrorStatsData {
-		snapshot[k] = mirrorStats{Hours: slices.Clone(v.Hours), LastWh: v.LastWh}
+		snapshot[k] = mirrorStats{Hours: slices.Clone(v.Hours), LastWh: v.LastWh, LastSent: v.LastSent}
 	}
 	mirrorsMu.Unlock()
 
-	mirrorStatsBackend.save(snapshot)
-	notifyUpdated()
+	if err := mirrorStatsBackend.save(snapshot); err != nil {
+		forwarderLog.ERROR.Printf("mirror: save statistics: %v", err)
+
+		mirrorsMu.Lock()
+		mirrorStatsDirty = true
+		mirrorsMu.Unlock()
+		return false
+	}
+
+	return true
 }

@@ -46,6 +46,9 @@ A rule can list further upstreams in `Mirrors` (`forwarder_mirror.go`). They are
 - On (re)connect it first receives the cached `BootNotification` and the last `StatusNotification` per connector, with fresh message ids.
 - Frames wait in a bounded backlog (oldest dropped first) while the mirror is offline and are delivered in order after it reconnects.
 - Mirrors are dialled with backoff for as long as the charger is connected, are keyed by URL and station id within their rule, and are redialled when their connection parameters change.
+- A mirror that reaches the same upstream station as the main connection (an omitted station id means the charger's own) or as another mirror is not started, since a second connection under one identity would displace the first. The rule is resolved and the sessions are installed under the locks that guard the charger's connection state, so reconciliations cannot overwrite each other and a charger that just disconnected gets none.
+- Queued `BootNotification` and `StatusNotification` frames that the replay snapshot already covers are dropped, so a reconnect does not repeat or reorder state.
+- Per mirror and hour, what was written is counted (messages, meter values, reported energy, disconnects) and persisted, together with the time of the last message. Statistics of mirrors that no rule lists anymore are removed. If the stored statistics cannot be read they are left untouched instead of being overwritten, and a failed save is retried.
 
 Note that the main upstream is not read-only in this sense even with the `ReadOnly` flag: that flag only blocks its commands, it still answers `Authorize`, `StartTransaction`, `StopTransaction` and `DataTransfer` for the charger.
 

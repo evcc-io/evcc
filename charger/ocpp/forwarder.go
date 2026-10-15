@@ -111,6 +111,8 @@ func ApplyForwarderRules(rules []ForwarderRule) {
 	}
 
 	reconcileMirrors()
+	pruneMirrorStats()
+	flushMirrorStats()
 
 	notifyUpdated()
 }
@@ -125,11 +127,7 @@ func reconcileMirrors() {
 	sidecarsMu.Unlock()
 
 	for _, id := range ids {
-		if rule, ok := resolveRule(id); ok {
-			startMirrors(id, rule.Mirrors)
-		} else {
-			stopMirrors(id)
-		}
+		startMirrors(id)
 	}
 }
 
@@ -330,7 +328,7 @@ func onChargerConnect(ch ws.Channel) {
 		return
 	}
 
-	startMirrors(id, rule.Mirrors)
+	startMirrors(id)
 
 	// open the buffer before dialling so early messages are captured, not dropped
 	pendingMu.Lock()
@@ -487,8 +485,6 @@ func drainPendingWithErrors(id string, sc *sidecar) {
 func onChargerDisconnect(ch ws.Channel) {
 	id := ch.ID()
 
-	stopMirrors(id)
-
 	// discard pending buffer and cached boot frame
 	pendingMu.Lock()
 	delete(pendingMsgs, id)
@@ -506,6 +502,10 @@ func onChargerDisconnect(ch ws.Channel) {
 	_, hadErr := forwarderErrors[id]
 	delete(forwarderErrors, id)
 	sidecarsMu.Unlock()
+
+	// after the connection state changed, so a reconciliation racing with the disconnect cannot start mirrors again
+	stopMirrors(id)
+
 	if ok {
 		sc.conn.CloseNow()
 		forwarderLog.DEBUG.Printf("forwarder: %s upstream connection closed", id)
@@ -764,25 +764,51 @@ func GetForwarderStatus() []ForwarderSessionStatus {
 
 	sidecarsMu.Lock()
 	defer sidecarsMu.Unlock()
-	out := make([]ForwarderSessionStatus, 0, len(rules))
-	for _, r := range rules {
-		if r.StationID == "*" {
-			continue
-		}
+
+	status := func(chargerID string, r ForwarderRule) ForwarderSessionStatus {
 		st := ForwarderSessionStatus{
-			ChargerID:   r.StationID,
+			ChargerID:   chargerID,
 			UpstreamURL: strings.TrimRight(r.UpstreamURL, "/"),
 		}
-		if _, ok := sidecars[r.StationID]; ok {
+		if _, ok := sidecars[chargerID]; ok {
 			st.UpstreamConnected = true
-		} else if msg, ok := forwarderErrors[r.StationID]; ok {
+		} else if msg, ok := forwarderErrors[chargerID]; ok {
 			st.Error = msg
 		}
 		if len(r.Mirrors) > 0 {
-			st.Mirrors = mirrorStatus(r.StationID, r.Mirrors)
+			st.Mirrors = mirrorStatus(chargerID, r.Mirrors)
 		}
-		out = append(out, st)
+		return st
 	}
+
+	out := make([]ForwarderSessionStatus, 0, len(rules))
+	explicit := make(map[string]bool, len(rules))
+	var wildcard *ForwarderRule
+	for i, r := range rules {
+		if r.StationID == "*" {
+			wildcard = &rules[i]
+			continue
+		}
+
+		explicit[r.StationID] = true
+		out = append(out, status(r.StationID, r))
+	}
+
+	// chargers served by the wildcard rule have no rule of their own
+	if wildcard != nil {
+		ids := make([]string, 0, len(connectedChargers))
+		for id := range connectedChargers {
+			if !explicit[id] {
+				ids = append(ids, id)
+			}
+		}
+		slices.Sort(ids)
+
+		for _, id := range ids {
+			out = append(out, status(id, *wildcard))
+		}
+	}
+
 	return out
 }
 

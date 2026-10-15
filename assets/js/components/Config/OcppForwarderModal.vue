@@ -262,7 +262,11 @@ export default defineComponent({
 	methods: {
 		mirrorStatus(mirror: OcppMirrorRule): OcppMirrorSession | undefined {
 			const url = (mirror.upstreamUrl || "").replace(/\/+$/, "");
-			return this.session?.mirrors?.find((m) => m.upstreamUrl === url);
+			return this.session?.mirrors?.find(
+				(m) =>
+					m.upstreamUrl === url &&
+					(m.upstreamStationId || "") === (mirror.upstreamStationId || "")
+			);
 		},
 		mirrorsIncomplete(rule: OcppForwarderRule): boolean {
 			return (rule.mirrors || []).some((m) => !m.upstreamUrl);

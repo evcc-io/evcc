@@ -1603,6 +1603,9 @@ components:
         upstreamUrl:
           description: URL of the upstream OCPP backend.
           type: string
+        upstreamStationId:
+          description: Station id used towards the upstream backend.
+          type: string
         upstreamConnected:
           description: Connection to the upstream backend is established.
           type: boolean
