@@ -1,5 +1,10 @@
 import PlanExplanation from "./PlanExplanation.vue";
+import api from "@/api";
+import { onMounted, ref } from "vue";
 import type { Meta, StoryFn } from "@storybook/vue3";
+
+// votes go nowhere in storybook, so Yes, No and Send can be clicked through
+api.post = (() => Promise.resolve({ data: {} })) as unknown as typeof api.post;
 
 export default {
   title: "Optimize/PlanExplanation",
@@ -63,3 +68,33 @@ Outdated.args = { sponsor: true, explained: explained(90) };
 // the optimizer service could not ask the model
 export const Error = Template.bind({});
 Error.args = { sponsor: true, error: "model returned 429: slow down" };
+
+type VoteState = Partial<{ vote: string; voteComment: string; voteSent: boolean }>;
+
+// the vote lives in the component, these stories set it after mounting
+const WithVote =
+  (state: VoteState): StoryFn<typeof PlanExplanation> =>
+  (args) => ({
+    components: { PlanExplanation },
+    setup() {
+      const card = ref();
+      onMounted(() => Object.assign(card.value, state));
+      return { args, card };
+    },
+    template: '<div class="container px-0"><PlanExplanation ref="card" v-bind="args" /></div>',
+  });
+
+// Yes was clicked
+export const VotedYes = WithVote({ vote: "up", voteSent: true }).bind({});
+VotedYes.args = { sponsor: true, explained: explained(1), plan };
+
+// No was clicked, it counts already, a comment can follow
+export const VotedNo = WithVote({ vote: "down" }).bind({});
+VotedNo.args = { sponsor: true, explained: explained(1), plan };
+
+// No with a comment typed, ready to send
+export const VotedNoComment = WithVote({
+  vote: "down",
+  voteComment: "the times are off by an hour",
+}).bind({});
+VotedNoComment.args = { sponsor: true, explained: explained(1), plan };

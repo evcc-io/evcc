@@ -35,10 +35,41 @@ func (e Explanation) MarshalBytes() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-// explainCache keeps the last explanation keyed by request, result and language
+// explainCache keeps the last explanation keyed by request, result and language, with the
+// payload it was asked for, which goes along with the feedback on it
 type explainCache struct {
-	key [sha256.Size]byte
+	key  [sha256.Size]byte
+	body explainRequest
 	Explanation
+}
+
+// optimizerPost posts body to the optimizer service path and decodes the answer into res.
+// An error message from the service replaces the transport error.
+func (site *Site) optimizerPost(ctx context.Context, path string, body, res any) error {
+	req, err := request.New(http.MethodPost, optimizerURI()+path, request.MarshalJSON(body), request.JSONEncoding)
+	if err != nil {
+		return err
+	}
+
+	if sponsor.IsAuthorizedForApi() {
+		req.Header.Set("Authorization", "Bearer "+sponsor.Token)
+	}
+
+	client := request.NewHelper(site.log)
+	client.Timeout = 60 * time.Second
+
+	var raw json.RawMessage
+	if err := client.DoJSON(req.WithContext(ctx), &raw); err != nil {
+		var msg struct {
+			Message string `json:"message"` // optimizer error
+		}
+		if json.Unmarshal(raw, &msg) == nil && msg.Message != "" {
+			return errors.New(msg.Message)
+		}
+		return err
+	}
+
+	return json.Unmarshal(raw, res)
 }
 
 // ExplainOptimizerResult asks the optimizer service why the last plan looks the way it does.
@@ -73,36 +104,39 @@ func (site *Site) ExplainOptimizerResult(ctx context.Context, language string) e
 		return nil
 	}
 
-	req, err := request.New(http.MethodPost, optimizerURI()+"/optimize/explain", request.MarshalJSON(body), request.JSONEncoding)
-	if err != nil {
+	var res Explanation
+	if err := site.optimizerPost(ctx, "/optimize/explain", body, &res); err != nil {
 		return err
 	}
 
-	if sponsor.IsAuthorizedForApi() {
-		req.Header.Set("Authorization", "Bearer "+sponsor.Token)
-	}
-
-	client := request.NewHelper(site.log)
-	client.Timeout = 60 * time.Second
-
-	var res struct {
-		Explanation string `json:"explanation"`
-		Message     string `json:"message"` // optimizer error
-	}
-
-	if err := client.DoJSON(req.WithContext(ctx), &res); err != nil {
-		if res.Message != "" {
-			return errors.New(res.Message)
-		}
-		return err
-	}
-
-	site.explained = explainCache{key: key, Explanation: Explanation{
-		Text:    res.Explanation,
-		Created: time.Now(),
-		Plan:    result.Updated,
-	}}
-	site.publish("evopt-explanation", site.explained.Explanation)
+	res.Created, res.Plan = time.Now(), result.Updated
+	site.explained = explainCache{key: key, body: body, Explanation: res}
+	site.publish("evopt-explanation", res)
 
 	return nil
+}
+
+// ExplainFeedback votes on the last explanation: up or down, with an optional comment.
+// The plan and the explanation go along, the optimizer service stores nothing before a vote.
+func (site *Site) ExplainFeedback(ctx context.Context, vote, comment string) error {
+	if vote != "up" && vote != "down" {
+		return errors.New("vote must be up or down")
+	}
+
+	site.explainMu.Lock()
+	defer site.explainMu.Unlock()
+
+	if site.explained.Text == "" {
+		return errors.New("nothing explained yet")
+	}
+
+	body := struct {
+		explainRequest
+		Explanation string `json:"explanation"`
+		Vote        string `json:"vote"`
+		Comment     string `json:"comment,omitempty"`
+	}{site.explained.body, site.explained.Text, vote, comment}
+
+	var res struct{}
+	return site.optimizerPost(ctx, "/optimize/explain/feedback", body, &res)
 }
