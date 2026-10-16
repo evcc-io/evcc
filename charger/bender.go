@@ -179,18 +179,18 @@ func NewBenderCC(ctx context.Context, settings modbus.TcpSettings, cache time.Du
 	if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsPowerLimit, 1); err == nil {
 		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3pMennekes))
 		implement.Has(wb, implement.PhaseGetter(wb.getPhasesMennekes))
-	} else {
-		// check feature semp phase switching
-		if wb.supportsSEMPPhaseSwitching(settings.URI, cache) {
-			// set initial SEMP power limit to max so modbus control from 6 to 16 A is possible
-			if err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, 0xffff); err == nil {
+	} else if wb.connectSEMP(settings.URI, cache) {
+		// set initial SEMP power limit to max so modbus control from 6 to 16 A is possible
+		if err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, 0xffff); err == nil {
+			if wb.supportsSEMPPhaseSwitching() {
 				implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3pSEMP))
 				implement.Has(wb, implement.PhaseGetter(wb.getPhases))
-				// start heartbeat to keep connection alive
-				go wb.heartbeat(ctx)
-			} else {
-				log.ERROR.Println("SEMP phase switching: could not set initial SEMP power limit:", err)
 			}
+			// start heartbeat to keep connection alive, even without phase switching,
+			// otherwise the charger falls back to its SEMP connection loss current
+			go wb.heartbeat(ctx)
+		} else {
+			log.ERROR.Println("SEMP: could not set initial SEMP power limit:", err)
 		}
 	}
 
@@ -222,8 +222,8 @@ func (wb *BenderCC) heartbeat(ctx context.Context) {
 	}
 }
 
-// supportsSEMPPhaseSwitching checks if SEMP phase switching is supported by querying device info
-func (wb *BenderCC) supportsSEMPPhaseSwitching(uri string, cache time.Duration) bool {
+// connectSEMP checks if the charger has SEMP enabled and selects its device
+func (wb *BenderCC) connectSEMP(uri string, cache time.Duration) bool {
 	wb.semp.conn = semp.NewConnection(wb.log, "http://"+strings.Split(uri, ":")[0]+":8888/SimpleEnergyManagementProtocol")
 	wb.semp.deviceG = util.ResettableCached(func() (semp.Device2EM, error) {
 		return wb.semp.conn.GetDeviceXML()
@@ -231,18 +231,23 @@ func (wb *BenderCC) supportsSEMPPhaseSwitching(uri string, cache time.Duration) 
 
 	doc, err := wb.semp.deviceG.Get()
 	if err != nil {
-		wb.log.DEBUG.Println("SEMP phase switching: cannot get XML", err)
+		wb.log.DEBUG.Println("SEMP: cannot get XML", err)
 		return false
 	}
 	if len(doc.DeviceInfo) == 0 {
-		wb.log.DEBUG.Println("SEMP phase switching: no devices found")
+		wb.log.DEBUG.Println("SEMP: no devices found")
 		return false
 	}
 
 	// Use first device ID found
 	wb.semp.deviceID = doc.DeviceInfo[0].Identification.DeviceID
-	wb.log.DEBUG.Printf("SEMP phase switching: found device ID: %s", wb.semp.deviceID)
+	wb.log.DEBUG.Printf("SEMP: found device ID: %s", wb.semp.deviceID)
 
+	return true
+}
+
+// supportsSEMPPhaseSwitching checks if SEMP phase switching is supported by querying device info
+func (wb *BenderCC) supportsSEMPPhaseSwitching() bool {
 	// Check if device supports phase switching by checking power characteristics
 	info, err := wb.getDeviceInfo()
 	if err != nil {
@@ -250,14 +255,23 @@ func (wb *BenderCC) supportsSEMPPhaseSwitching(uri string, cache time.Duration) 
 		return false
 	}
 
-	// Assume Phase switching support if MinPowerConsumption < 4140W and MaxPowerConsumption > 4600W
-	if info.Characteristics.MinPowerConsumption > 0 && info.Characteristics.MinPowerConsumption < 4140 &&
-		info.Characteristics.MaxPowerConsumption > 4600 {
+	if sempPhaseSwitching(info.Characteristics) {
 		return true
+	}
+
+	// the charger reports the min power of its active phases, which is ambiguous while charging on 3 phases
+	if b, err := wb.conn.ReadHoldingRegisters(bendRegRelayState, 1); err == nil && binary.BigEndian.Uint16(b) == 1 {
+		wb.log.WARN.Println("SEMP phase switching: cannot be detected while 3 phases are active, restart when the charger is idle")
+		return false
 	}
 
 	wb.log.DEBUG.Println("SEMP phase switching: not supported")
 	return false
+}
+
+// sempPhaseSwitching assumes phase switching support if MinPowerConsumption < 4140W and MaxPowerConsumption > 4600W
+func sempPhaseSwitching(c semp.Characteristics) bool {
+	return c.MinPowerConsumption > 0 && c.MinPowerConsumption < 4140 && c.MaxPowerConsumption > 4600
 }
 
 // getDeviceInfo retrieves device info from cached document
