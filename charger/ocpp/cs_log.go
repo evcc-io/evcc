@@ -31,6 +31,20 @@ func (cs *CS) print(s string) {
 	}
 }
 
+// traceRecv logs a received frame in the ocpp-go library format
+func (cs *CS) traceRecv(id string, data []byte) {
+	cs.log.TRACE.Printf("recv %s: %s", id, data)
+}
+
+// traceSend logs a sent frame, annotated with its origin if not evcc
+func (cs *CS) traceSend(id, origin string, data []byte) {
+	if origin != "" {
+		cs.log.TRACE.Printf("send %s (%s): %s", id, origin, data)
+		return
+	}
+	cs.log.TRACE.Printf("send %s: %s", id, data)
+}
+
 func (cs *CS) Debug(args ...any) {
 	cs.print(fmt.Sprintln(args...))
 }
