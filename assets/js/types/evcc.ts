@@ -185,6 +185,8 @@ export interface State {
   authProviders?: AuthProviders;
   /** @internal */
   evopt?: EvOpt;
+  /** @internal */
+  "evopt-explanation"?: EvOptExplanation;
   /** Running evcc version. */
   version?: string;
   /** Latest available evcc version. */
@@ -1503,6 +1505,13 @@ export interface EvOpt {
   req: OptimizationInput;
   res: OptimizationResult;
   details: OptimizationDetails;
+}
+
+// last plan explanation, plan is the updated time of the explained plan
+export interface EvOptExplanation {
+  explanation: string;
+  created: string;
+  plan: string;
 }
 
 // Request payload for /optimize/charge-schedule
