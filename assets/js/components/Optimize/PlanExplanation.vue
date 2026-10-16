@@ -9,21 +9,71 @@
 			<p v-if="error" class="text-danger">{{ error }}</p>
 			<template v-if="recent">
 				<MarkdownRenderer :markdown="explanation" class="explanation mb-3" />
-				<small class="text-muted">
-					{{ status }}
+				<div
+					class="d-flex flex-wrap justify-content-between column-gap-3 row-gap-1 small text-muted"
+				>
+					<span>
+						{{ status }}
+						<button
+							v-if="explaining || !planExplained"
+							type="button"
+							class="btn-reset text-decoration-underline text-primary"
+							:class="{ sweep: explaining }"
+							:disabled="explaining"
+							:aria-busy="explaining"
+							data-testid="optimize-explain"
+							@click="$emit('explain')"
+						>
+							{{ explaining ? "Updating explanation…" : "Update explanation" }}
+						</button>
+					</span>
+					<span class="text-nowrap">
+						<template v-if="voteSent">Thanks for the feedback.</template>
+						<template v-else-if="!vote">
+							Helpful?
+							<button
+								type="button"
+								class="btn-reset text-decoration-underline"
+								:disabled="voting"
+								data-testid="optimize-explain-vote-up"
+								@click="sendFeedback('up')"
+							>
+								Yes
+							</button>
+							<span class="mx-1" aria-hidden="true">·</span>
+							<button
+								type="button"
+								class="btn-reset text-decoration-underline"
+								:disabled="voting"
+								data-testid="optimize-explain-vote-down"
+								@click="sendFeedback('down')"
+							>
+								No
+							</button>
+						</template>
+					</span>
+				</div>
+				<small v-if="voteError" class="d-block text-danger mt-2">{{ voteError }}</small>
+				<form
+					v-if="vote === 'down' && !voteSent"
+					class="d-flex gap-2 mt-3"
+					@submit.prevent="sendFeedback('down')"
+				>
+					<input
+						v-model="voteComment"
+						type="text"
+						class="form-control form-control-sm"
+						placeholder="What was off? (optional)"
+						maxlength="1000"
+					/>
 					<button
-						v-if="explaining || !planExplained"
-						type="button"
-						class="btn btn-link btn-sm text-primary p-0 align-baseline"
-						:class="{ sweep: explaining }"
-						:disabled="explaining"
-						:aria-busy="explaining"
-						data-testid="optimize-explain"
-						@click="$emit('explain')"
+						type="submit"
+						class="btn btn-sm btn-outline-primary"
+						:disabled="voting || !voteComment"
 					>
-						{{ explaining ? "Updating explanation…" : "Update explanation" }}
+						Send
 					</button>
-				</small>
+				</form>
 			</template>
 			<template v-else>
 				<div class="d-flex flex-wrap align-items-center column-gap-3 row-gap-2">
@@ -59,6 +109,7 @@
 import { defineComponent, type PropType } from "vue";
 import Card from "../Helper/Card.vue";
 import MarkdownRenderer from "../Config/Markdown.vue";
+import api from "@/api";
 import formatter from "@/mixins/formatter";
 import minuteTicker from "@/mixins/minuteTicker";
 import type { EvOptExplanation } from "@/types/evcc";
@@ -79,6 +130,15 @@ export default defineComponent({
 		error: { type: String, default: "" },
 	},
 	emits: ["explain"],
+	data() {
+		return {
+			vote: "",
+			voteComment: "",
+			voting: false,
+			voteSent: false,
+			voteError: "",
+		};
+	},
 	computed: {
 		explanation(): string {
 			return this.explained?.explanation ?? "";
@@ -104,6 +164,24 @@ export default defineComponent({
 				: `${written} for an earlier plan.`;
 		},
 	},
+	methods: {
+		// No counts at once, a comment follows as a repeat of the vote
+		async sendFeedback(vote: string) {
+			this.voting = true;
+			this.voteError = "";
+			try {
+				await api.post("optimizer/explain/feedback", {
+					vote,
+					comment: this.voteComment,
+				});
+				this.vote = vote;
+				this.voteSent = vote === "up" || !!this.voteComment;
+			} catch (e: any) {
+				this.voteError = e.response?.data?.error || e.message;
+			}
+			this.voting = false;
+		},
+	},
 });
 </script>
 
@@ -115,6 +193,7 @@ export default defineComponent({
 .explanation :deep(ul + br) {
 	display: none;
 }
+
 /* busy state of the update link: a light sweeps across the text, same box as the idle link */
 .sweep {
 	background: linear-gradient(

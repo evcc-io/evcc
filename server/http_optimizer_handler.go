@@ -23,3 +23,25 @@ func optimizerExplainHandler(site *core.Site) http.HandlerFunc {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
+
+// optimizerExplainFeedbackHandler relays a vote on the last explanation to the optimizer service
+func optimizerExplainFeedbackHandler(site *core.Site) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			Vote    string `json:"vote"`
+			Comment string `json:"comment"`
+		}
+
+		if err := jsonDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := site.ExplainFeedback(r.Context(), req.Vote, req.Comment); err != nil {
+			jsonError(w, http.StatusBadGateway, err)
+			return
+		}
+
+		jsonWrite(w, struct{}{})
+	}
+}
