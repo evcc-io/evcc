@@ -80,6 +80,7 @@ export interface EvoptData {
 			c_max: number;
 			d_max: number;
 			s_initial: number;
+			r_departure?: number[];
 		}>;
 	};
 	res: {
@@ -194,9 +195,29 @@ export default defineComponent({
 						},
 						this.priceRow("Grid Import", priceUnit, ts.p_N, colors.price || ""),
 						this.priceRow("Grid Export", priceUnit, ts.p_E, colors.export || ""),
+						...this.departureRows(),
 					],
 				},
 			];
+		},
+		// probability per slot that a vehicle leaves, the optimizer values its charge by it
+		departureRows(): Row[] {
+			const batteries = this.evopt.req.batteries || [];
+			const rows: Row[] = batteries.flatMap((battery, i) => {
+				if (!battery.r_departure) return [];
+				return [
+					{
+						label: `↳ ${this.getBatteryTitle(i)}`,
+						unit: "%",
+						display: battery.r_departure.map((p) => this.fmtNumber(p * 100, 1)),
+						nums: battery.r_departure,
+						heatColor: this.batteryColors[i] || "",
+					},
+				];
+			});
+			if (!rows.length) return [];
+			const blank = Array(this.slotCount).fill("");
+			return [{ label: "Departure Risk", unit: "%", display: blank, nums: [] }, ...rows];
 		},
 		// the profiles the household demand is summarized from, scaled against the total
 		demandRows(total: Row): Row[] {
