@@ -17,6 +17,9 @@ params:
   - name: schema
     default: http
     advanced: true
+    help:
+      de: Mit Control Secret https verwenden, da das Secret sonst unverschlüsselt übertragen wird.
+      en: Use https with a control secret, otherwise the secret is sent unencrypted.
   - name: port
     default: 8675
   - name: insecure
@@ -28,14 +31,14 @@ params:
       de: Control Secret
       en: Control secret
     help:
-      de: Wert von `PW_CONTROL_SECRET` des pypowerwall-server. Ermöglicht die Batteriesteuerung über die Backup-Reserve. Wird unverschlüsselt über http gesendet, bei Bedarf https verwenden. Erfordert, dass die Verbindung zur Powerwall Schreibzugriff erlaubt (TEDAPI v1r oder Cloud).
-      en: Value of the pypowerwall-server `PW_CONTROL_SECRET`. Enables battery control via the backup reserve. Sent unencrypted over http, use https where possible. Requires a connection to the Powerwall that allows writing (TEDAPI v1r or cloud).
+      de: Wert von `PW_CONTROL_SECRET` des pypowerwall-server. Ermöglicht die Batteriesteuerung über die Backup-Reserve. Über http wird das Secret unverschlüsselt gesendet und kann im Netzwerk mitgelesen werden, womit Dritte die Batterie steuern können. Empfohlen wird, pypowerwall-server mit https (TLS) zu betreiben und das Schema https zu wählen. Erfordert, dass die Verbindung zur Powerwall Schreibzugriff erlaubt (TEDAPI v1r oder Cloud).
+      en: Value of the pypowerwall-server `PW_CONTROL_SECRET`. Enables battery control via the backup reserve. Over http the secret is sent unencrypted and can be captured on the network, allowing others to control the battery. Setting up pypowerwall-server with https (TLS) and selecting the https schema is recommended. Requires a connection to the Powerwall that allows writing (TEDAPI v1r or cloud).
   - name: minsoc
     default: 20
     advanced: true
     help:
-      de: Backup-Reserve, die im Normalbetrieb wiederhergestellt wird. Nur mit Control Secret.
-      en: Backup reserve restored in normal operation. Only with control secret.
+      de: Backup-Reserve, die im Normalbetrieb wiederhergestellt wird. 0-100, bei Cloud-Verbindung nur 0-80 oder 100. Nur mit Control Secret.
+      en: Backup reserve restored in normal operation. 0-100, with a cloud connection only 0-80 or 100. Only with control secret.
   - name: chargemaxsoc
     type: int
     unit: "%"
@@ -46,8 +49,8 @@ params:
       de: Ziel-Ladestand beim erzwungenen Laden
       en: Charge target when forced
     help:
-      de: Backup-Reserve, die beim erzwungenen Laden gesetzt wird, d. h. der Ladestand, bis zu dem die Powerwall lädt. Nur mit Control Secret.
-      en: Backup reserve set while charging is forced, i.e. the soc the Powerwall charges to. Only with control secret.
+      de: Backup-Reserve, die beim erzwungenen Laden gesetzt wird, d. h. der Ladestand, bis zu dem die Powerwall lädt. 0-100, bei Cloud-Verbindung nur 0-80 oder 100. Nur mit Control Secret.
+      en: Backup reserve set while charging is forced, i.e. the soc the Powerwall charges to. 0-100, with a cloud connection only 0-80 or 100. Only with control secret.
   - name: maxchargepower
     help:
       de: Ladeleistung aller Powerwalls zusammen, 5000 W pro Powerwall bzw. Erweiterung. Nur nötig, wenn der Server sie nicht meldet (z. B. Powerwall 3).

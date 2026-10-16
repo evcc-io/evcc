@@ -222,7 +222,7 @@ func TestPyPowerwallBatteryUnknownValues(t *testing.T) {
 	limiter, ok := api.Cap[api.BatterySocLimiter](m)
 	require.True(t, ok)
 	minSoc, maxSoc := limiter.GetSocLimits()
-	assert.Equal(t, []float64{0, 100}, []float64{minSoc, maxSoc})
+	assert.Equal(t, []float64{20, 100}, []float64{minSoc, maxSoc}, "configured reserve if unknown")
 }
 
 func TestPyPowerwallBatteryControl(t *testing.T) {
@@ -325,4 +325,71 @@ func TestPyPowerwallTLS(t *testing.T) {
 
 	_, err = NewPyPowerwallFromConfig(map[string]any{"uri": srv.URL, "usage": "grid", "insecure": true})
 	assert.NoError(t, err)
+}
+
+func TestPyPowerwallBatteryReserveReadError(t *testing.T) {
+	s := newPypowerwallServer(t)
+	m := s.meter(t, "battery", map[string]any{"minsoc": 15, "cache": "0s"})
+
+	limiter, ok := api.Cap[api.BatterySocLimiter](m)
+	require.True(t, ok)
+
+	delete(s.responses, "/api/operation")
+	minSoc, _ := limiter.GetSocLimits()
+	assert.Equal(t, 15.0, minSoc, "configured reserve before first read")
+
+	s.responses["/api/operation"] = `{"backup_reserve_percent": 30.0}`
+	minSoc, _ = limiter.GetSocLimits()
+	assert.Equal(t, 30.0, minSoc)
+
+	delete(s.responses, "/api/operation")
+	minSoc, _ = limiter.GetSocLimits()
+	assert.Equal(t, 30.0, minSoc, "last known reserve")
+
+	s.responses["/api/operation"] = `{"backup_reserve_percent": null}`
+	minSoc, _ = limiter.GetSocLimits()
+	assert.Equal(t, 30.0, minSoc, "last known reserve if null")
+}
+
+func TestPyPowerwallBatteryReserveRefresh(t *testing.T) {
+	s := newPypowerwallServer(t)
+	m := s.meter(t, "battery", map[string]any{"controlSecret": "secret", "cache": "1h"})
+
+	limiter, ok := api.Cap[api.BatterySocLimiter](m)
+	require.True(t, ok)
+	minSoc, _ := limiter.GetSocLimits()
+	assert.Equal(t, 20.0, minSoc)
+
+	ctrl, ok := api.Cap[api.BatteryController](m)
+	require.True(t, ok)
+
+	s.responses["/api/operation"] = `{"backup_reserve_percent": 100.0}`
+	require.NoError(t, ctrl.SetBatteryMode(api.BatteryCharge))
+
+	minSoc, _ = limiter.GetSocLimits()
+	assert.Equal(t, 100.0, minSoc, "reserve refreshed after write")
+}
+
+func TestPyPowerwallBatteryReserveRange(t *testing.T) {
+	s := newPypowerwallServer(t)
+
+	for _, config := range []map[string]any{
+		{"minsoc": 101},
+		{"minsoc": -1},
+		{"minsoc": 20.5},
+		{"chargemaxsoc": 110},
+	} {
+		config["uri"], config["usage"] = s.URL, "battery"
+		_, err := NewPyPowerwallFromConfig(config)
+		assert.Error(t, err, config)
+	}
+
+	s.responses["/api/system_status/soe"] = `{"percentage": 85.5}`
+	ctrl, ok := api.Cap[api.BatteryController](s.meter(t, "battery", map[string]any{"controlSecret": "secret"}))
+	require.True(t, ok)
+
+	require.NoError(t, ctrl.SetBatteryMode(api.BatteryHold))
+	assert.JSONEq(t, `{"value":86}`, s.body, "local connections accept 81-99")
+
+	s.meter(t, "battery", map[string]any{"controlSecret": "secret", "minsoc": 90, "chargemaxsoc": 95})
 }

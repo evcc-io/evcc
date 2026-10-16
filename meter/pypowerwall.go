@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -119,6 +120,12 @@ func NewPyPowerwallFromConfig(other map[string]any) (api.Meter, error) {
 	}
 	uri := strings.TrimRight(util.DefaultScheme(cc.URI, "http"), "/")
 
+	for name, v := range map[string]float64{"minsoc": cc.MinSoc, "chargemaxsoc": cc.ChargeMaxSoc} {
+		if !pypowerwallValidReserve(v) {
+			return nil, fmt.Errorf("invalid %s: %v, must be 0-100", name, v)
+		}
+	}
+
 	m := &PyPowerwall{
 		Caps:        implement.New(),
 		usage:       usage,
@@ -176,13 +183,29 @@ func NewPyPowerwallFromConfig(other map[string]any) (api.Meter, error) {
 		}
 
 		// backup reserve is the lower discharge limit, the powerwall has no upper soc limit
-		operationG := pypowerwallGetter[pypowerwallOperation](helper, uri+"/api/operation", cc.Cache)
+		operation := util.ResettableCached(func() (pypowerwallOperation, error) {
+			var res pypowerwallOperation
+			err := helper.GetJSON(uri+"/api/operation", &res)
+			return res, err
+		}, cc.Cache)
+
+		// if unknown keep the last known reserve, never expose a lower discharge limit than the device enforces
+		var mu sync.Mutex
+		reserve := cc.MinSoc
+
 		implement.Has(m, implement.BatterySocLimiter(func() (float64, float64) {
-			res, err := operationG()
-			if err != nil {
+			mu.Lock()
+			defer mu.Unlock()
+
+			res, err := operation.Get()
+			switch {
+			case err != nil:
 				log.ERROR.Println("battery soc limits:", err)
+			case res.BackupReservePercent != nil:
+				reserve = *res.BackupReservePercent
 			}
-			return floatOrZero(res.BackupReservePercent), 100
+
+			return reserve, 100
 		}))
 
 		if charge, discharge := status.powerLimits(cc.MaxChargePower, cc.MaxDischargePower); charge > 0 && discharge > 0 {
@@ -203,7 +226,7 @@ func NewPyPowerwallFromConfig(other map[string]any) (api.Meter, error) {
 			limits := batterySocLimits{MinSoc: cc.MinSoc, MaxSoc: cc.ChargeMaxSoc}
 
 			implement.Has(m, implement.BatteryController(batteryModesSocLimit, limits.LimitController(
-				soc, pypowerwallReserveSetter(helper, uri, cc.ControlSecret),
+				soc, pypowerwallReserveSetter(helper, uri, cc.ControlSecret, operation.Reset),
 			)))
 		}
 	}
@@ -221,7 +244,7 @@ func pypowerwallGetter[T any](helper *request.Helper, uri string, cache time.Dur
 }
 
 // pypowerwallReserveSetter returns a setter for the backup reserve using the control api
-func pypowerwallReserveSetter(helper *request.Helper, uri, secret string) func(float64) error {
+func pypowerwallReserveSetter(helper *request.Helper, uri, secret string, written func()) func(float64) error {
 	auth := map[string]string{"Authorization": "Bearer " + secret}
 
 	return func(limit float64) error {
@@ -229,7 +252,7 @@ func pypowerwallReserveSetter(helper *request.Helper, uri, secret string) func(f
 		data := struct {
 			Value int `json:"value"`
 		}{
-			Value: int(math.Round(limit)),
+			Value: int(math.Round(max(0, min(100, limit)))),
 		}
 
 		req, err := request.New(http.MethodPost, uri+"/control/reserve", request.MarshalJSON(data), request.JSONEncoding, auth)
@@ -241,8 +264,16 @@ func pypowerwallReserveSetter(helper *request.Helper, uri, secret string) func(f
 			return fmt.Errorf("set backup reserve: %w", err)
 		}
 
+		written()
+
 		return nil
 	}
+}
+
+// pypowerwallValidReserve reports whether the control api accepts the reserve.
+// Local TEDAPI v1r accepts 0-100, cloud connections reject 81-99.
+func pypowerwallValidReserve(v float64) bool {
+	return v >= 0 && v <= 100
 }
 
 func floatOrZero(v *float64) float64 {
