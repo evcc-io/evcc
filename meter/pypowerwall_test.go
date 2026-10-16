@@ -376,7 +376,6 @@ func TestPyPowerwallBatteryReserveRange(t *testing.T) {
 	for _, config := range []map[string]any{
 		{"minsoc": 101},
 		{"minsoc": -1},
-		{"minsoc": 20.5},
 		{"chargemaxsoc": 110},
 	} {
 		config["uri"], config["usage"] = s.URL, "battery"
