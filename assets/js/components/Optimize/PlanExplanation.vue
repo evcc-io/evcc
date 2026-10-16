@@ -1,5 +1,10 @@
 <template>
 	<Card :title="sponsor ? 'Explanation' : 'Feedback'" edge-to-edge class="box-pull-out">
+		<template v-if="sponsor" #actions>
+			<a href="https://evcc.io/en/datenschutz/" target="_blank" class="small text-muted"
+				>Privacy</a
+			>
+		</template>
 		<template v-if="sponsor">
 			<p v-if="error" class="text-danger">{{ error }}</p>
 			<template v-if="recent">
