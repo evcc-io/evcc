@@ -246,10 +246,9 @@
 						:title="lp.title"
 						:color="loadpointColors[lp.title] || ''"
 						:device-color="deviceColors[lp.title] || ''"
-						:price="loadpointPrice"
+						:flows="loadpointFlows(lp.title)"
 						:series="lp"
 						:daily="loadpointDaily(lp.title) ?? undefined"
-						:flow="flow ?? undefined"
 						:period="effectivePeriod"
 						:from="from"
 						:to="to"
@@ -287,7 +286,7 @@
 						:consumers="consumers"
 						:others="others"
 						:device-colors="deviceColors"
-						:price="homePrice"
+						:others-cost="othersCost"
 						:currency="currency"
 						:selected="consumer"
 						@select="selectConsumer"
@@ -312,10 +311,9 @@
 							:pickable="consumerPickable"
 							:device-color="deviceColors[consumerTitle] || ''"
 							sink="home"
-							:price="homePrice"
+							:flows="consumerFlows"
 							:title="consumerTitle"
 							:color="consumerColor"
-							:flow="flow ?? undefined"
 							:series="consumerSeries ?? undefined"
 							:period="effectivePeriod"
 							:from="from"
@@ -341,10 +339,9 @@
 				>
 					<EntityDetail
 						sink="home"
-						:price="homePrice"
+						:flows="consumerFlows"
 						:title="consumerTitle"
 						:color="consumerColor"
-						:flow="flow ?? undefined"
 						:series="consumerSeries ?? undefined"
 						:period="effectivePeriod"
 						:from="from"
@@ -412,9 +409,9 @@ import MixBar from "../components/Energy/MixBar.vue";
 import GridStats from "../components/Energy/GridStats.vue";
 import ForecastDeviation from "../components/Energy/ForecastDeviation.vue";
 import CostStats from "../components/Energy/CostStats.vue";
-import ConsumerTreemap, { OTHERS } from "../components/Energy/ConsumerTreemap.vue";
+import ConsumerTreemap from "../components/Energy/ConsumerTreemap.vue";
 import EntityDetail from "../components/Energy/EntityDetail.vue";
-import { sinkCost, sumEnergy, type SourceRow } from "../components/Energy/mix";
+import { entityFlows, sinkPrice, sumEnergy, type SourceRow } from "../components/Energy/mix";
 import { usageSplit } from "../components/Energy/usage";
 import { SLOT_MS } from "../components/Energy/slots";
 import MetersCard from "../components/Energy/MetersCard.vue";
@@ -430,6 +427,7 @@ import {
 	ENTITY_CHART,
 	OVERVIEW_VIEW,
 	type ConsumerEnergy,
+	type EntityFlows,
 	type Flow,
 	type FlowResult,
 	type FlowSink,
@@ -438,6 +436,7 @@ import {
 	type PriceBand,
 	type PriceOverlay,
 	type TariffSlot,
+	OTHERS,
 } from "../components/Energy/types";
 import type { DeviceColors, UiSolarDetails } from "@/types/evcc";
 import { CURRENCY } from "@/types/evcc";
@@ -548,8 +547,12 @@ export default defineComponent({
 			}
 			return out;
 		},
+		// each consumer priced by the slots it ran in
 		consumers(): ConsumerEnergy[] {
-			return this.entityTotals["consumer"] || [];
+			return (this.entityTotals["consumer"] || []).map((e) => ({
+				...e,
+				cost: this.entityCost("consumer", e.title, e.energy),
+			}));
 		},
 		homeEnergy(): number {
 			return (this.entityTotals["home"] || []).reduce((acc, e) => acc + e.energy, 0);
@@ -584,13 +587,17 @@ export default defineComponent({
 			if (this.hasGrid) sources.push("grid");
 			return sources;
 		},
-		// average price of home consumption, applied to every consumer
+		// average price of home consumption over its priced slots
 		homePrice(): number | undefined {
-			return this.sinkPrice("home");
+			return sinkPrice(this.flows, "home");
 		},
-		// loadpoints are what consumption prices beyond home
-		loadpointPrice(): number | undefined {
-			return this.sinkPrice("loadpoint");
+		othersCost(): number | undefined {
+			return this.entityCost("consumer", OTHERS, this.others);
+		},
+		// the consumer in detail, or all of home when there is none to pick from
+		consumerFlows(): Flow[] {
+			if (!this.consumers.length) return this.flows;
+			return entityFlows(this.flow?.entities, "consumer", this.activeConsumer ?? "");
 		},
 		// unknown stored values fall back to the treemap
 		consumerView(): CONSUMER_VIEW {
@@ -1474,10 +1481,14 @@ export default defineComponent({
 			}
 		},
 		// a bar in the year view opens that month, a day bar opens that day
-		// average price of the priced energy that reached the sink, undefined without any
-		sinkPrice(sink: FlowSink): number | undefined {
-			const { cost, energy } = sinkCost(this.flows, sink);
-			return energy ? cost / energy : undefined;
+		loadpointFlows(title: string): Flow[] {
+			return entityFlows(this.flow?.entities, "loadpoint", title);
+		},
+		// the entity's metered energy at its own average price, undefined without priced slots
+		entityCost(group: EntityFlows["group"], title: string, energy: number): number | undefined {
+			const sink: FlowSink = group === "loadpoint" ? "loadpoint" : "home";
+			const price = sinkPrice(entityFlows(this.flow?.entities, group, title), sink);
+			return price === undefined ? undefined : energy * price;
 		},
 		showSources(detail: { title: string; rows: SourceRow[] }) {
 			this.sourcesDetail = detail;

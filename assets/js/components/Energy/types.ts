@@ -24,11 +24,23 @@ export interface FlowCo2 {
   avgCo2: number; // g/kWh
 }
 
+// one consumer or loadpoint: its sink's split per slot, scaled to its energy and priced per slot
+export interface EntityFlows {
+  group: "consumer" | "loadpoint";
+  title: string;
+  virtual?: boolean; // home minus the tracked consumers
+  flows: Flow[];
+}
+
 export interface FlowResult {
   flows: Flow[];
+  entities?: EntityFlows[];
   cost?: FlowCost;
   co2?: FlowCo2;
 }
+
+// key of the virtual consumer: home minus the tracked consumers
+export const OTHERS = "others";
 
 export interface TariffSlot {
   start: string;
@@ -58,6 +70,7 @@ export interface PriceOverlay {
 export interface ConsumerEnergy {
   title: string;
   energy: number; // kWh
+  cost?: number; // undefined without price data
 }
 
 // loadpoint and consumer charts
