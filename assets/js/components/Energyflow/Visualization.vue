@@ -169,7 +169,9 @@ export default defineComponent({
 			return this.total > 0 && this.width > 0;
 		},
 		batteryModeNormal() {
-			return [undefined, BATTERY_MODE.NORMAL, BATTERY_MODE.UNKNOWN].includes(this.batteryMode);
+			return [undefined, BATTERY_MODE.NORMAL, BATTERY_MODE.UNKNOWN].includes(
+				this.batteryMode
+			);
 		},
 	},
 
