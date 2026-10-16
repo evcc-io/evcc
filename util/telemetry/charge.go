@@ -123,7 +123,7 @@ func upload(log *util.Logger, chargePower, greenPower float64) error {
 
 	uri := fmt.Sprintf("%s/v1/charge", api)
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
-		"Authorization": "Bearer " + sponsor.Token,
+		"Authorization": "Bearer " + sponsor.Token(),
 	})
 
 	// request timeout

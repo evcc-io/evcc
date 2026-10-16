@@ -52,7 +52,7 @@ func main() {
 			key = ""
 		case "token":
 			sponsor.Subject = arg // TODO placeholder
-			sponsor.Token = arg
+			sponsor.SetToken(arg)
 			key = ""
 		default:
 			params[key] = arg
