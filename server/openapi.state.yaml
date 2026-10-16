@@ -1456,8 +1456,12 @@ components:
         port:
           description: Port the OCPP server listens on.
           type: number
+        port20:
+          description: Port the OCPP 2.0.1 server listens on.
+          type: number
       required:
         - port
+        - port20
     OcppConnectionStatus:
       description: Connection status of an OCPP station.
       type: string
