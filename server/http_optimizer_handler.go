@@ -13,13 +13,13 @@ func optimizerExplainHandler(site *core.Site) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		lang := cmp.Or(r.URL.Query().Get("lang"), getPreferredLanguage(r.Header.Get("Accept-Language")))
 
-		explanation, err := site.ExplainOptimizerResult(r.Context(), lang)
-		if err != nil {
+		if err := site.ExplainOptimizerResult(r.Context(), lang); err != nil {
 			// relayed from the optimizer service, the ui shows the message in place
 			jsonError(w, http.StatusBadGateway, err)
 			return
 		}
 
-		jsonWrite(w, map[string]string{"explanation": explanation})
+		// the explanation is published as evopt-explanation
+		w.WriteHeader(http.StatusNoContent)
 	}
 }

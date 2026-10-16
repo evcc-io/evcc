@@ -67,6 +67,16 @@
 						/>
 					</Card>
 
+					<PlanExplanation
+						class="mb-4"
+						:sponsor="isSponsor"
+						:explained="explained"
+						:plan="evopt?.updated"
+						:explaining="explaining"
+						:error="explainError"
+						@explain="explainPlan"
+					/>
+
 					<Card
 						v-if="socEntries.length"
 						title="SoC Projections"
@@ -102,49 +112,6 @@
 							:currency="currency"
 							:battery-colors="batteryColors"
 						/>
-					</Card>
-
-					<Card
-						v-if="isSponsor"
-						title="Explanation"
-						subtitle="AI generated"
-						edge-to-edge
-						class="box-pull-out mb-4"
-					>
-						<p v-if="!explanation" class="text-muted">
-							Let a language model explain why the plan looks the way it does. The
-							request and response below are sent to the evcc optimizer service.
-						</p>
-						<MarkdownRenderer v-else :markdown="explanation" class="mb-3" />
-						<p v-if="explainError" class="text-danger">{{ explainError }}</p>
-						<button
-							type="button"
-							class="btn btn-outline-primary"
-							:disabled="explaining"
-							data-testid="optimize-explain"
-							@click="explainPlan"
-						>
-							<span
-								v-if="explaining"
-								class="spinner-border spinner-border-sm me-2"
-								role="status"
-							></span>
-							Explain plan
-						</button>
-					</Card>
-
-					<Card title="Feedback" edge-to-edge class="box-pull-out mb-4">
-						<p>
-							Unexpected results or implausible numbers? Open an issue in the
-							optimizer repository and attach the request and response below.
-						</p>
-						<a
-							href="https://github.com/evcc-io/optimizer/issues"
-							target="_blank"
-							class="btn btn-outline-primary"
-						>
-							Open issue
-						</a>
 					</Card>
 
 					<h2 class="section-title mb-4">Optimizer Inputs</h2>
@@ -227,7 +194,7 @@ import SocChart, { type SocChartEntry } from "../components/Optimize/SocChart.vu
 import ChargeChart from "../components/Optimize/ChargeChart.vue";
 import TimeSeriesDataTable from "../components/Optimize/TimeSeriesDataTable.vue";
 import CopyButton from "../components/Optimize/CopyButton.vue";
-import MarkdownRenderer from "../components/Config/Markdown.vue";
+import PlanExplanation from "../components/Optimize/PlanExplanation.vue";
 import { formatCompactJson } from "../components/Optimize/compactJson";
 import { loadpointTitle, type Titled } from "../components/Optimize/chart";
 import api from "../api";
@@ -239,6 +206,7 @@ import {
 	OPTIMIZER_AUTOMATIC,
 	type BatteryDetail,
 	type DemandDetail,
+	type EvOptExplanation,
 } from "../types/evcc";
 
 export default defineComponent({
@@ -252,7 +220,7 @@ export default defineComponent({
 		ChargeChart,
 		TimeSeriesDataTable,
 		CopyButton,
-		MarkdownRenderer,
+		PlanExplanation,
 		AutomaticModeStrip,
 		OptimizerModal,
 	},
@@ -261,7 +229,6 @@ export default defineComponent({
 		return {
 			pending: false,
 			explaining: false,
-			explanation: "",
 			explainError: "",
 		};
 	},
@@ -269,6 +236,10 @@ export default defineComponent({
 		return { title: "Optimize Debug" };
 	},
 	computed: {
+		// the last explanation evcc published, in the language it was requested in
+		explained(): EvOptExplanation | undefined {
+			return store.state["evopt-explanation"];
+		},
 		evopt() {
 			return store.state.evopt;
 		},
@@ -387,10 +358,10 @@ export default defineComponent({
 			this.explaining = true;
 			this.explainError = "";
 			try {
-				const res = await api.post("optimizer/explain", null, {
+				// the explanation arrives as evopt-explanation in the state
+				await api.post("optimizer/explain", null, {
 					params: { lang: this.$i18n.locale },
 				});
-				this.explanation = res.data.explanation;
 			} catch (e: any) {
 				// relay errors come back as 502, which the api client leaves to the caller
 				this.explainError = e.response?.data?.error || e.message;
