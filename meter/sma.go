@@ -143,49 +143,59 @@ var _ api.MeterEnergy = (*SMA)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (sm *SMA) TotalEnergy() (float64, error) {
 	values, err := sm.device.Values()
+	if err != nil {
+		return 0, err
+	}
 
 	if !sm.device.IsEnergyMeter() {
 		switch sm.usage {
 		case "grid":
-			return sma.AsFloat(values[sunny.GridEnergyImportKWh]), err
+			return sma.AsEnergy(values, sunny.GridEnergyImportKWh)
 		case "pv":
 			if sm.dc {
-				return sma.AsFloat(values[sunny.PvEnergyTotalKWh]), err
+				return sma.AsEnergy(values, sunny.PvEnergyTotalKWh)
 			}
 		case "battery":
 			if sm.dc {
-				return sma.AsFloat(values[sunny.BatteryEnergyDischargeKWh]), err
+				return sma.AsEnergy(values, sunny.BatteryEnergyDischargeKWh)
 			}
 		}
 	}
 
+	id := sunny.ActiveEnergyPlus
 	if sm.scale < 0 {
-		return sma.AsFloat(values[sunny.ActiveEnergyMinus]) / 3600000, err
+		id = sunny.ActiveEnergyMinus
 	}
 
-	return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
+	f, err := sma.AsEnergy(values, id)
+	return f / 3600000, err
 }
 
 // returnEnergy implements the api.MeterReturnEnergy interface
 func (sm *SMA) returnEnergy() (float64, error) {
 	values, err := sm.device.Values()
+	if err != nil {
+		return 0, err
+	}
 
 	if !sm.device.IsEnergyMeter() {
 		switch sm.usage {
 		case "grid":
-			return sma.AsFloat(values[sunny.GridEnergyExportKWh]), err
+			return sma.AsEnergy(values, sunny.GridEnergyExportKWh)
 		case "battery":
 			if sm.dc {
-				return sma.AsFloat(values[sunny.BatteryEnergyChargeKWh]), err
+				return sma.AsEnergy(values, sunny.BatteryEnergyChargeKWh)
 			}
 		}
 	}
 
+	id := sunny.ActiveEnergyMinus
 	if sm.scale < 0 {
-		return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
+		id = sunny.ActiveEnergyPlus
 	}
 
-	return sma.AsFloat(values[sunny.ActiveEnergyMinus]) / 3600000, err
+	f, err := sma.AsEnergy(values, id)
+	return f / 3600000, err
 }
 
 var _ api.PhaseVoltages = (*SMA)(nil)
