@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+// protoc proto/devicehost.proto --go_out=. --go-grpc_out=.
+
+package devicehost;
+
+option go_package = "proto/pb";
+
+// DeviceHost is a host exposing device types that evcc configures and instantiates
+service DeviceHost {
+	// Types returns the device types this host can instantiate
+	rpc Types (TypesRequest) returns (TypesReply) {}
+
+	// New instantiates a device type from configuration properties
+	rpc New (NewRequest) returns (NewReply) {}
+
+	// Call invokes a capability method on an instantiated device
+	rpc Call (CallRequest) returns (CallReply) {}
+}
+
+message TypesRequest {}
+
+message TypesReply {
+	repeated DeviceType types = 1;
+}
+
+// DeviceType describes an instantiable device type
+message DeviceType {
+	string device_class = 1; // charger, meter, vehicle, tariff
+	string type = 2;  // type name, host-local
+	string title = 3;
+	repeated Property properties = 4;
+}
+
+// Property describes a single configuration property of a device type.
+// Replaces the template yaml: the host describes its properties, evcc renders
+// the configuration ui and validates against them.
+message Property {
+	string name = 1;
+	PropertyType type = 2;
+	string title = 3;
+	string help = 4;
+	bool required = 5;
+	bool mask = 6; // secret, e.g. password
+	bool advanced = 7;
+	string default_value = 8;
+	string example = 9;
+	string unit = 10;
+	repeated string choice = 11; // valid values for PROPERTY_TYPE_CHOICE
+}
+
+enum PropertyType {
+	PROPERTY_TYPE_STRING = 0;
+	PROPERTY_TYPE_BOOL = 1;
+	PROPERTY_TYPE_INT = 2;
+	PROPERTY_TYPE_FLOAT = 3;
+	PROPERTY_TYPE_DURATION = 4;
+	PROPERTY_TYPE_CHOICE = 5;
+}
+
+message NewRequest {
+	string device_class = 1;
+	string type = 2;
+	map<string,string> properties = 3;
+}
+
+message NewReply {
+	string id = 1;
+	repeated string capabilities = 2; // api interface names, e.g. "api.MeterEnergy"
+}
+
+// CallRequest invokes a method. Arguments and return values are json encoded,
+// their Go types follow from the capability's api interface.
+message CallRequest {
+	string id = 1;
+	string capability = 2;
+	string method = 3;
+	repeated bytes args = 4;
+}
+
+message CallReply {
+	repeated bytes ret = 1;
+}

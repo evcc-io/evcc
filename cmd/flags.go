@@ -18,6 +18,9 @@ const (
 	flagIgnoreDatabase            = "ignore-db"
 	flagIgnoreDatabaseDescription = "Run command ignoring service database"
 
+	flagDeviceHost            = "device-host"
+	flagDeviceHostDescription = "Device host providing device types, as name=uri (can be repeated)"
+
 	flagTemplate            = "template"
 	flagTemplateDescription = "Add custom template file (debug only)"
 	flagTemplateType        = "template-type"
