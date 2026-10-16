@@ -571,10 +571,20 @@ func (lp *Loadpoint) SetSocConfig(soc loadpoint.SocConfig) {
 func (lp *Loadpoint) GetUI() loadpoint.UIConfig {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.Ui
+	ui := lp.Ui
+	ui.DemandPredictor = lp.demandPredictor
+	return ui
 }
 
 func (lp *Loadpoint) setUI(ui loadpoint.UIConfig) {
+	// DemandPredictor piggybacks on UIConfig for the config modal; keep it
+	// in the dedicated runtime field so lp.Ui stays display-only.
+	if ui.DemandPredictor != "" {
+		lp.demandPredictor = ui.DemandPredictor
+		lp.publish(keys.DemandPredictor, ui.DemandPredictor)
+		lp.settings.SetString(keys.DemandPredictor, ui.DemandPredictor)
+	}
+	ui.DemandPredictor = ""
 	lp.Ui = ui
 	lp.publish(keys.UI, ui)
 	lp.settings.SetJson(keys.UI, ui)

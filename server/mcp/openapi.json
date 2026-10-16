@@ -3588,6 +3588,10 @@
           "maxTemp": {
             "description": "Upper bound of the temperature scale for heating devices, in degrees.",
             "type": "number"
+          },
+          "demandPredictor": {
+            "description": "Demand predictor strategy for heating loadpoints.",
+            "type": "string"
           }
         },
         "required": [
@@ -3980,6 +3984,10 @@
             "description": "Required solar share. Usually 0 to 1; values outside that range are possible via API for special cases.",
             "type": "number"
           },
+          "demandPredictor": {
+            "description": "Runtime demand predictor override. Empty string means template default.",
+            "type": "string"
+          },
           "suggestion": {
             "description": "Charging suggestion from the battery optimizer.",
             "nullable": true,
@@ -4122,6 +4130,7 @@
           "smartFeedInPriorityLimit",
           "smartFeedInPriorityNextStart",
           "solarShare",
+          "demandPredictor",
           "title",
           "vehicleClimaterActive",
           "vehicleDetectionActive",

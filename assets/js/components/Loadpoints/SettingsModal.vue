@@ -114,7 +114,6 @@
 					</small>
 				</div>
 			</div>
-
 			<h6>
 				{{ $t("main.loadpointSettings.currents") }}
 			</h6>

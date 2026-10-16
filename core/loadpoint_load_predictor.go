@@ -4,24 +4,66 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/jinzhu/now"
 )
 
+// GetDemandPredictor returns the runtime demand predictor override.
+// Empty string means use the charger template default.
+func (lp *Loadpoint) GetDemandPredictor() string {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.demandPredictor
+}
+
+// SetDemandPredictor sets the demand predictor override ("daily", "weekday", "temperature", or "").
+func (lp *Loadpoint) SetDemandPredictor(predictor string) {
+	switch predictor {
+	case "daily", "weekday", "temperature":
+	default:
+		return
+	}
+	lp.Lock()
+	lp.demandPredictor = predictor
+	lp.Unlock()
+	lp.publish(keys.DemandPredictor, predictor)
+	lp.settings.SetString(keys.DemandPredictor, predictor)
+	lp.triggerOptimizer()
+}
+
+// effectiveDemandPredictor returns the active predictor, consulting the runtime override
+// first and falling back to the charger feature flags.
+func (lp *Loadpoint) effectiveDemandPredictor() string {
+	if p := lp.GetDemandPredictor(); p != "" {
+		return p
+	}
+	switch {
+	case lp.chargerHasFeature(api.DemandTemperature):
+		return "temperature"
+	case lp.chargerHasFeature(api.DemandWeekday):
+		return "weekday"
+	default:
+		return "daily"
+	}
+}
+
 // demandProfile returns the heating demand profile of a heating loadpoint and whether
 // it needs to be scaled by the outdoor temperature forecast. Returns nil when unavailable.
-// For DemandWeekday devices, use demandProfileWeekday instead.
+// For weekday devices, use demandProfileWeekday instead.
 func (lp *Loadpoint) demandProfile() (*[96]float64, bool) {
 	if lp.chargeEnergy == nil || !lp.chargerHasFeature(api.Heating) {
 		return nil, false
 	}
 
-	// DemandWeekday profiles are assembled per-day in demandProfileWeekday
-	if lp.chargerHasFeature(api.DemandWeekday) {
+	predictor := lp.effectiveDemandPredictor()
+
+	// weekday profiles are assembled per-day in demandProfileWeekday
+	if predictor == "weekday" {
 		return nil, false
 	}
 
-	temp := lp.chargerHasFeature(api.DemandTemperature)
+	temp := predictor == "temperature"
 
 	var from = now.BeginningOfDay().AddDate(0, 0, -28) // default: 28-day daily average
 	if temp {
@@ -37,10 +79,13 @@ func (lp *Loadpoint) demandProfile() (*[96]float64, bool) {
 	return profile, temp
 }
 
-// demandProfileWeekday builds a minLen-slot demand forecast for a DemandWeekday device
+// demandProfileWeekday builds a minLen-slot demand forecast for a weekday-predictor device
 // by fetching the correct weekday profile for each calendar day in the horizon.
 func (lp *Loadpoint) demandProfileWeekday(minLen int) []float64 {
-	if lp.chargeEnergy == nil || !lp.chargerHasFeature(api.DemandWeekday) {
+	if lp.chargeEnergy == nil || !lp.chargerHasFeature(api.Heating) {
+		return nil
+	}
+	if lp.effectiveDemandPredictor() != "weekday" {
 		return nil
 	}
 

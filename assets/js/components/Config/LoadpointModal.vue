@@ -573,6 +573,45 @@
 									/>
 								</FormRow>
 							</div>
+							<FormRow
+								id="loadpointDemandPredictor"
+								:label="$t('config.loadpoint.demandPredictorLabel')"
+								:help="
+									$t(
+										`config.loadpoint.demandPredictor.${values.ui.demandPredictor || 'daily'}`
+									)
+								"
+								class="mt-3"
+							>
+								<select
+									id="loadpointDemandPredictor"
+									v-model="values.ui.demandPredictor"
+									class="form-select"
+								>
+									<option value="daily">
+										{{ $t("config.loadpoint.demandPredictorOptions.daily") }}
+									</option>
+									<option value="weekday">
+										{{ $t("config.loadpoint.demandPredictorOptions.weekday") }}
+									</option>
+									<option value="temperature">
+										{{
+											$t(
+												"config.loadpoint.demandPredictorOptions.temperature"
+											)
+										}}
+									</option>
+								</select>
+								<div
+									v-if="
+										values.ui.demandPredictor === 'temperature' &&
+										!tariffTemperatureAvailable
+									"
+									class="text-warning mt-1"
+								>
+									<small>{{ $t("config.loadpoint.noTempTariff") }}</small>
+								</div>
+							</FormRow>
 						</div>
 					</div>
 				</div>
@@ -653,6 +692,7 @@ import {
 	type ConfigCircuit,
 	type ConfigLoadpoint,
 } from "@/types/evcc";
+import store from "@/store";
 
 const nsPerMin = 60 * 1e9;
 
@@ -677,6 +717,7 @@ const defaultValues = {
 	ui: {
 		minTemp: 0,
 		maxTemp: 100,
+		demandPredictor: "daily",
 	},
 	vehicle: "",
 	charger: "",
@@ -731,6 +772,9 @@ export default {
 	computed: {
 		id(): number | undefined {
 			return getModal("loadpoint")?.id;
+		},
+		tariffTemperatureAvailable(): boolean {
+			return store.state?.tariffTemperature !== undefined;
 		},
 		thresholdsSet(): boolean {
 			const { enable, disable } = this.values.thresholds;
@@ -941,6 +985,9 @@ export default {
 			try {
 				const res = await api.get(`config/loadpoints/${this.id}`);
 				this.values = deepClone(res.data);
+				if (!this.values.ui?.demandPredictor) {
+					this.values.ui = { ...this.values.ui, demandPredictor: "daily" };
+				}
 				this.updateSolarMode();
 				this.updatePhases();
 				this.rebaseline();
