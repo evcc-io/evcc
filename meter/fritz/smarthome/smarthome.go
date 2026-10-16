@@ -156,6 +156,20 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
+// Temperature returns the temperature in °C
+func (c *Connection) Temperature() (float64, error) {
+	unit, err := c.unitG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	if unit.Interfaces == nil || unit.Interfaces.TemperatureInterface == nil {
+		return 0, api.ErrNotAvailable
+	}
+
+	return unit.Interfaces.TemperatureInterface.Celsius, nil
+}
+
 // SwitchPresent checks if the device is connected
 func (c *Connection) SwitchPresent() (bool, error) {
 	unit, err := c.unitG.Get()

@@ -81,7 +81,7 @@
 				<FormRow
 					v-if="values.meter"
 					id="loadpointParamMeter"
-					class="mb-6"
+					:class="{ 'mb-6': !showAddLinks && !showTempSensor }"
 					:label="$t('config.loadpoint.energyMeterLabel')"
 					:help="$t('config.loadpoint.energyMeterHelp')"
 				>
@@ -92,17 +92,40 @@
 						@edit="editMeter"
 					/>
 				</FormRow>
-				<p v-else>
+				<FormRow
+					v-if="showTempSensor"
+					id="loadpointParamTempSensor"
+					:class="{ 'mb-6': !showAddLinks }"
+					:label="$t('config.loadpoint.tempSensorLabel')"
+					:help="$t('config.loadpoint.tempSensorHelp')"
+				>
+					<DeviceRefBox
+						compact
+						:title="tempSensorTitle"
+						:error="hasDeviceError('tempsensor', values.tempSensor)"
+						@edit="editTempSensor"
+					/>
+				</FormRow>
+				<div v-if="showAddLinks" class="d-flex flex-column align-items-start mb-3 addLinks">
 					<button
+						v-if="!values.meter"
 						class="btn btn-link btn-sm text-gray px-0"
-						style="margin-top: -1rem"
 						type="button"
 						tabindex="0"
 						@click="editMeter"
 					>
 						{{ $t(`config.loadpoint.addMeter`) }}
 					</button>
-				</p>
+					<button
+						v-if="showAddTempSensor"
+						class="btn btn-link btn-sm text-gray px-0"
+						type="button"
+						tabindex="0"
+						@click="editTempSensor"
+					>
+						{{ $t("config.loadpoint.addTempSensor") }}
+					</button>
+				</div>
 			</div>
 
 			<div v-if="values.charger || !isNew">
@@ -649,6 +672,7 @@ import {
 	type LoadpointType,
 	type ConfigCharger,
 	type ConfigMeter,
+	type ConfigTempSensor,
 	type VehicleOption,
 	type ConfigCircuit,
 	type ConfigLoadpoint,
@@ -682,6 +706,7 @@ const defaultValues = {
 	charger: "",
 	circuit: "",
 	meter: "",
+	tempSensor: "",
 } as ConfigLoadpoint;
 
 const defaultThresholds = {
@@ -708,6 +733,7 @@ export default {
 		chargers: { type: Array as PropType<ConfigCharger[]>, default: () => [] },
 		chargerValues: { type: Object, default: () => {} },
 		meters: { type: Array as PropType<ConfigMeter[]>, default: () => [] },
+		tempSensors: { type: Array as PropType<ConfigTempSensor[]>, default: () => [] },
 		circuits: { type: Array as PropType<ConfigCircuit[]>, default: () => [] },
 		hasDeviceError: {
 			type: Function as PropType<(type: DeviceType, name: string) => boolean>,
@@ -804,6 +830,25 @@ export default {
 				meter?.config?.template ||
 				this.$t("config.general.customOption");
 			return title;
+		},
+		tempSensorTitle() {
+			const name = this.values.tempSensor;
+			if (!name) return "";
+			const tempSensor = this.tempSensors.find((t) => t.name === name);
+			return (
+				tempSensor?.deviceProduct ||
+				tempSensor?.config?.template ||
+				this.$t("config.general.customOption")
+			);
+		},
+		showTempSensor() {
+			return this.chargerIsHeating && !!this.values.tempSensor;
+		},
+		showAddTempSensor() {
+			return this.chargerIsHeating && !this.values.tempSensor;
+		},
+		showAddLinks() {
+			return !this.values.meter || this.showAddTempSensor;
 		},
 		isDeletable() {
 			return !this.isNew;
@@ -1015,6 +1060,7 @@ export default {
 			if (!this.values.id && !this.autoCreate) {
 				await this.cleanupDevice("charger", this.values.charger, this.chargers);
 				await this.cleanupDevice("meter", this.values.meter, this.meters);
+				await this.cleanupDevice("tempsensor", this.values.tempSensor, this.tempSensors);
 				this.$emit("dismissed");
 				this.reset();
 				return;
@@ -1060,6 +1106,15 @@ export default {
 				this.values.meter = "";
 			}
 		},
+		async editTempSensor() {
+			const tempSensor = this.tempSensors.find((t) => t.name === this.values.tempSensor);
+			const result = await openModal("tempsensor", { id: tempSensor?.id });
+			if (result.action === "added" && result.name) {
+				this.values.tempSensor = result.name;
+			} else if (result.action === "removed") {
+				this.values.tempSensor = "";
+			}
+		},
 		updateSolarMode() {
 			const { thresholds } = this.values;
 			if (deepEqual(thresholds, defaultThresholds)) {
@@ -1097,6 +1152,9 @@ export default {
 }
 .addButton {
 	min-height: auto;
+}
+.addLinks {
+	margin-top: -1rem;
 }
 h6 {
 	margin-top: 4rem;

@@ -65,6 +65,7 @@ type All struct {
 	Loadpoints      []config.Named
 	Circuits        []config.Named
 	Curtailers      []config.Named
+	TempSensors     []config.Named
 }
 
 type Javascript struct {

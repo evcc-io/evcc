@@ -144,5 +144,9 @@ func runDump(cmd *cobra.Command, args []string) {
 		if name := lp.ChargerRef; name != "" {
 			d.DumpWithHeader(fmt.Sprintf("charger: %s", name), handle(name, config.Chargers()))
 		}
+
+		if name := lp.TempSensorRef; name != "" {
+			d.DumpWithHeader(fmt.Sprintf("tempsensor: %s", name), handle(name, config.TempSensors()))
+		}
 	}
 }

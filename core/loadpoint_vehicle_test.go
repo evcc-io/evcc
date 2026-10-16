@@ -193,6 +193,50 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 	}
 }
 
+// limitSocCharger is a minimal heating charger with static temperature and limit temperature.
+type limitSocCharger struct {
+	integratedDeviceCharger
+	limitCalled bool
+}
+
+func (c *limitSocCharger) Soc() (float64, error) { return 40, nil }
+func (c *limitSocCharger) GetLimitSoc() (int64, error) {
+	c.limitCalled = true
+	return 55, nil
+}
+
+// TestPublishSocAndRangeTempSensor ensures a loadpoint temp sensor overrides the
+// charger temperature while the charger's limit temperature is still used.
+func TestPublishSocAndRangeTempSensor(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	tempSensor := api.NewMockBattery(ctrl)
+	tempSensor.EXPECT().Soc().Return(48.0, nil).AnyTimes()
+
+	charger := new(limitSocCharger)
+
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock.NewMock(),
+		charger:     charger,
+		tempSensor:  tempSensor,
+		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+		chargeRater: &Null{},                 // silence nil panics
+		chargeTimer: &Null{},                 // silence nil panics
+		status:      api.StatusC,
+		mode:        api.ModeNow,
+	}
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	lp.publishSocAndRange()
+
+	assert.Equal(t, 48.0, lp.vehicleSoc, "temp sensor must override charger temperature")
+	assert.True(t, charger.limitCalled, "charger limit temperature must still be used")
+}
+
 // https://github.com/evcc-io/evcc/issues/33627
 func TestPublishSocAndRangeEnergyLimit(t *testing.T) {
 	ctrl := gomock.NewController(t)

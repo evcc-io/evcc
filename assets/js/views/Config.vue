@@ -531,6 +531,7 @@
 					:chargers="chargers"
 					:chargerValues="deviceValues['charger']"
 					:meters="meters"
+					:tempSensors="tempSensors"
 					:circuits="circuits"
 					:hasDeviceError="hasDeviceError"
 					@changed="loadpointChanged"
@@ -546,6 +547,11 @@
 					:is-sponsor="isSponsor"
 					@changed="meterChanged"
 					@disable="({ id, disable }) => handleDisable('meter', id, disable)"
+				/>
+				<TempSensorModal
+					:is-sponsor="isSponsor"
+					@changed="tempSensorChanged"
+					@disable="({ id, disable }) => handleDisable('tempsensor', id, disable)"
 				/>
 				<ChargerModal :is-sponsor="isSponsor" :ocpp="ocpp" @changed="chargerChanged" />
 				<InfluxModal @changed="loadDirty" />
@@ -684,6 +690,7 @@ import TelemetryModal from "../components/Config/TelemetryModal.vue";
 import ExperimentalModal from "../components/Config/ExperimentalModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
+import TempSensorModal from "../components/Config/TempSensorModal.vue";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import { defineComponent, markRaw, type PropType } from "vue";
 import type {
@@ -691,6 +698,7 @@ import type {
 	ConfigVehicle,
 	ConfigCircuit,
 	ConfigCurtailer,
+	ConfigTempSensor,
 	ConfigMessenger,
 	ConfigHems,
 	ConfigLoadpoint,
@@ -797,6 +805,7 @@ export default defineComponent({
 		ExperimentalModal,
 		TopHeader: Header,
 		VehicleIcon,
+		TempSensorModal,
 		VehicleModal,
 		WelcomeBanner,
 		AuthSuccessBanner,
@@ -816,6 +825,7 @@ export default defineComponent({
 			curtailers: [] as ConfigCurtailer[],
 			vehicles: [] as ConfigVehicle[],
 			meters: [] as ConfigMeter[],
+			tempSensors: [] as ConfigTempSensor[],
 			loadpoints: [] as ConfigLoadpoint[],
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
@@ -848,6 +858,7 @@ export default defineComponent({
 				messenger: {},
 				tariff: {},
 				curtailer: {},
+				tempsensor: {},
 			} as DeviceValuesMap,
 			isComponentMounted: true,
 			isPageVisible: true,
@@ -1358,6 +1369,7 @@ export default defineComponent({
 				meter: () => this.meterChanged({ action: "updated" }),
 				tariff: () => this.tariffChanged({ action: "updated" }),
 				vehicle: () => this.vehicleChanged(),
+				tempsensor: () => this.tempSensorChanged(),
 				loadpoint: () => this.loadpointChanged(),
 				messenger: () => this.messengerChanged(),
 			};
@@ -1385,6 +1397,7 @@ export default defineComponent({
 		async loadAll() {
 			await this.loadVehicles();
 			await this.loadMeters();
+			await this.loadTempSensors();
 			await this.loadSite();
 			await this.loadChargers();
 			await this.loadCircuits();
@@ -1422,6 +1435,9 @@ export default defineComponent({
 		},
 		async loadMeters() {
 			this.meters = (await this.loadConfig("devices/meter")) || [];
+		},
+		async loadTempSensors() {
+			this.tempSensors = (await this.loadConfig("devices/tempsensor")) || [];
 		},
 		async loadHems() {
 			this.hemsDevices = (await this.loadConfig("devices/hems")) || [];
@@ -1534,6 +1550,12 @@ export default defineComponent({
 		async loadpointDismissed() {
 			await this.loadChargers();
 			await this.loadMeters();
+			await this.loadTempSensors();
+			this.updateValues();
+		},
+		async tempSensorChanged() {
+			await this.loadTempSensors();
+			await this.loadDirty();
 			this.updateValues();
 		},
 		vehicleChanged() {
@@ -1635,6 +1657,7 @@ export default defineComponent({
 					charger: this.chargers,
 					tariff: this.tariffs,
 					curtailer: this.curtailers,
+					tempsensor: this.tempSensors,
 				} as Record<DeviceType, any[]>;
 				for (const type in devices) {
 					for (const device of devices[type as DeviceType]) {
@@ -1662,10 +1685,11 @@ export default defineComponent({
 				: undefined;
 		},
 		loadpointTags(loadpoint: ConfigLoadpoint) {
-			const { charger, meter } = loadpoint;
+			const { charger, meter, tempSensor } = loadpoint;
 			const chargerTags = charger ? this.deviceTags("charger", charger) : {};
 			const meterTags = meter ? this.deviceTags("meter", meter) : {};
-			return { ...chargerTags, ...meterTags };
+			const tempSensorTags = tempSensor ? this.deviceTags("tempsensor", tempSensor) : {};
+			return { ...chargerTags, ...meterTags, ...tempSensorTags };
 		},
 		openModal,
 		loadpointError(loadpoint: ConfigLoadpoint): boolean {
@@ -1673,6 +1697,7 @@ export default defineComponent({
 				this.hasDeviceError("loadpoint", loadpoint.name) ||
 				this.hasDeviceError("charger", loadpoint.charger) ||
 				this.hasDeviceError("meter", loadpoint.meter) ||
+				this.hasDeviceError("tempsensor", loadpoint.tempSensor) ||
 				this.loadpointCircuitInvalid(loadpoint)
 			);
 		},
