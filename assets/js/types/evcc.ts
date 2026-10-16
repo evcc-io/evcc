@@ -1560,6 +1560,13 @@ export interface EvOptExplanation {
   plan: string;
 }
 
+// last plan explanation, plan is the updated time of the explained plan
+export interface EvOptExplanation {
+  explanation: string;
+  created: string;
+  plan: string;
+}
+
 // Request payload for /optimize/charge-schedule
 export interface OptimizationInput {
   batteries: BatteryConfig[]; // Battery configurations

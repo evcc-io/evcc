@@ -15,7 +15,9 @@ export default {
 		compiledMarkdown() {
 			const html = marked.parse(this.markdown ?? "", { async: false });
 			// open all links in new window
-			return html.replace(/<a href=/g, '<a target="_blank" rel="noopener noreferrer" href=');
+			return html
+				.replace(/\uE000/g, "_")
+				.replace(/<a href=/g, '<a target="_blank" rel="noopener noreferrer" href=');
 		},
 	},
 };
