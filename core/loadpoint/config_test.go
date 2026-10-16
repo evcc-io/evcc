@@ -40,3 +40,15 @@ func TestSplitConfigAlwaysCharge(t *testing.T) {
 	assert.Equal(t, "on", dynamic.AlwaysCharge)
 	assert.NotContains(t, other, "alwaysCharge")
 }
+
+func TestSplitConfigPriority(t *testing.T) {
+	payload := map[string]any{
+		"priority": 3,
+	}
+
+	dynamic, other, err := SplitConfig(payload)
+	require.NoError(t, err)
+
+	assert.Equal(t, 3, dynamic.Priority)
+	assert.NotContains(t, other, "priority")
+}

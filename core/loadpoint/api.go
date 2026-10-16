@@ -116,6 +116,8 @@ type API interface {
 
 	// EffectivePriority returns the effective priority
 	EffectivePriority() int
+	// PriorityGap returns the strategy gap in soc-% or kWh per basis, false without a comparable gap
+	PriorityGap(strategy api.PriorityStrategy, basis api.PriorityBasis) (float64, bool)
 	// EffectiveLimitSoc returns the effective session limit soc
 	EffectiveLimitSoc() int
 	// EffectivePlanId returns the effective plan id
