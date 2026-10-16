@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
@@ -23,8 +24,9 @@ func profilePercentile() float64 {
 
 // energyProfileFiltered queries the 96-slot profile at the given percentile
 // (0..1, linear interpolation between ranks; 0 = average), optionally
-// restricted to a single weekday (strftime %w, 0=Sunday).
-func energyProfileFiltered(entity entity, from time.Time, weekday *int, percentile float64) (*[96]float64, error) {
+// restricted to a single weekday (strftime %w, 0=Sunday) and excluding
+// the given local days (YYYY-MM-DD).
+func energyProfileFiltered(entity entity, from time.Time, weekday *int, percentile float64, exclude ...string) (*[96]float64, error) {
 	database, err := db.Instance.DB()
 	if err != nil {
 		return nil, err
@@ -32,17 +34,24 @@ func energyProfileFiltered(entity entity, from time.Time, weekday *int, percenti
 
 	args := []any{entity.Id, from.Unix()}
 
-	var weekdayFilter string
+	var filter string
 	if weekday != nil {
 		// CAST is required, strftime returns TEXT which never compares equal to an integer
-		weekdayFilter = ` AND CAST(strftime('%w', ts, 'unixepoch', 'localtime') AS INTEGER) = ?`
+		filter = ` AND CAST(strftime('%w', ts, 'unixepoch', 'localtime') AS INTEGER) = ?`
 		args = append(args, *weekday)
+	}
+
+	if len(exclude) > 0 {
+		filter += ` AND date(ts, 'unixepoch', 'localtime') NOT IN (?` + strings.Repeat(`, ?`, len(exclude)-1) + `)`
+		for _, day := range exclude {
+			args = append(args, day)
+		}
 	}
 
 	// COALESCE guards against legacy rows with NULL energy
 	slots := `SELECT ts, COALESCE(energy, 0) AS energy, strftime('%H:%M', ts, 'unixepoch', 'localtime') AS slot
 		FROM meters
-		WHERE meter = ? AND ts >= ? AND COALESCE(recovered, 0) = 0` + weekdayFilter
+		WHERE meter = ? AND ts >= ? AND COALESCE(recovered, 0) = 0` + filter
 
 	query := `WITH slots AS (` + slots + `)
 		SELECT min(ts) AS ts, avg(energy) AS energy

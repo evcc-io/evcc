@@ -127,6 +127,9 @@ type Site struct {
 	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
 
 	solarScaleCached func() (float64, error) // util.Cached wrapper around querySolarScale
+
+	homeExclusionMu sync.Mutex
+	homeExclusion   *homeExclusion // home profile day exclusion of the current day, guarded by homeExclusionMu
 }
 
 // siteState is the site's cached measurement state, updated once per meter cycle

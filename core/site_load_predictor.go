@@ -12,18 +12,118 @@ import (
 	"github.com/samber/lo"
 )
 
+const (
+	// homeProfileDays is the number of days the home profile is built from
+	homeProfileDays = 28
+	// homeProfileLookback is how far back days are searched to replace excluded days
+	homeProfileLookback = 56
+	// homeProfileMinDays is the minimum number of remaining days to use an excluding profile
+	homeProfileMinDays = 7
+)
+
+// homeExclusionSettle delays caching after midnight until the last slot of the previous day is persisted
+const homeExclusionSettle = 2 * tariff.SlotDuration
+
+// homeExclusion holds the days excluded from the home profile, computed once per day
+type homeExclusion struct {
+	day     time.Time // beginning of the day the exclusion was computed for
+	from    time.Time // start of the profile window
+	exclude []string  // excluded local days (YYYY-MM-DD)
+}
+
 // homeProfile returns the predicted home base load in Wh for minLen 15min slots
 // starting now.
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	col := site.collectors[metrics.Home]
 
-	base, err := col.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -28))
+	base, err := site.homeProfileExcluding(col, time.Now())
 	if err != nil {
-		return nil, err
+		site.log.WARN.Printf("home profile: %v, using all days", err)
+	}
+
+	if base == nil {
+		if base, err = col.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -homeProfileDays)); err != nil {
+			return nil, err
+		}
 	}
 
 	// convert to Wh
 	return lo.Map(tileAndTrim(base[:], minLen), func(v float64, _ int) float64 { return v * 1e3 }), nil
+}
+
+// homeProfileExcluding returns the home profile without absent and outlier days, or nil
+// when no day is excluded. Vacation days would otherwise bias the forecast low for weeks.
+func (site *Site) homeProfileExcluding(col *metrics.Collector, ts time.Time) (*[96]float64, error) {
+	ex, err := site.homeDayExclusion(col, ts)
+	if err != nil || len(ex.exclude) == 0 {
+		return nil, err
+	}
+
+	return col.EnergyProfileExcluding(ex.from, ex.exclude)
+}
+
+// homeDayExclusion returns the day exclusion of ts' day, cached once the previous day has settled
+func (site *Site) homeDayExclusion(col *metrics.Collector, ts time.Time) (*homeExclusion, error) {
+	site.homeExclusionMu.Lock()
+	defer site.homeExclusionMu.Unlock()
+
+	bod := now.With(ts).BeginningOfDay()
+	if ex := site.homeExclusion; ex != nil && ex.day.Equal(bod) {
+		return ex, nil
+	}
+
+	classes, err := col.ClassifyDays(bod.AddDate(0, 0, -homeProfileLookback), bod)
+	if err != nil {
+		return nil, err
+	}
+
+	ex := excludeDays(classes, bod)
+	if ts.Sub(bod) >= homeExclusionSettle {
+		site.homeExclusion = ex
+	}
+
+	if len(ex.exclude) > 0 {
+		site.log.DEBUG.Printf("home profile: excluding %d absent/outlier days since %s: %v", len(ex.exclude), ex.from.Format(time.DateOnly), ex.exclude)
+	}
+
+	return ex, nil
+}
+
+// excludeDays walks back from the day before bod until homeProfileDays days with data are
+// kept, at most homeProfileLookback days. Incomplete days are kept as before, days without
+// data are not counted. Nothing is excluded when fewer than homeProfileMinDays days remain.
+func excludeDays(classes map[string]metrics.DayClass, bod time.Time) *homeExclusion {
+	res := &homeExclusion{
+		day:  bod,
+		from: bod.AddDate(0, 0, -homeProfileLookback),
+	}
+
+	var kept int
+	for i := 1; i <= homeProfileLookback; i++ {
+		day := bod.AddDate(0, 0, -i)
+		key := day.Format(time.DateOnly)
+
+		class, ok := classes[key]
+		if !ok {
+			continue
+		}
+
+		if class == metrics.DayAbsent || class == metrics.DayOutlier {
+			res.exclude = append(res.exclude, key)
+			continue
+		}
+
+		if kept++; kept == homeProfileDays {
+			res.from = day
+			break
+		}
+	}
+
+	if kept < homeProfileMinDays {
+		res.exclude = nil
+	}
+
+	return res
 }
 
 // heatingDemand is the forecast demand in Wh a single heating loadpoint contributes
