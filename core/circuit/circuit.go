@@ -34,10 +34,15 @@ type Circuit struct {
 	getMaxCurrent func() (float64, error) // dynamic max allowed current
 	getMaxPower   func() (float64, error) // dynamic max allowed power
 
-	current float64
-	power   float64
+	current  float64
+	power    float64
+	currents [3]float64 // measured phase currents, only with meter
 
 	hems api.HEMS // only set on the root circuit, supplies the HEMS consumption cap
+
+	batteryLimitsGridImport bool       // opt-in: the battery keeps grid import under the limit itself
+	batteryPower            float64    // battery grid charge power, only set on the root circuit
+	batteryCurrents         [3]float64 // battery grid charge phase currents, only set on the root circuit
 
 	currentUpdated time.Time
 	powerUpdated   time.Time
@@ -58,6 +63,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		GetMaxCurrent *plugin.Config // dynamic max allowed current
 		GetMaxPower   *plugin.Config // dynamic max allowed power
 		Timeout       time.Duration  // timeout between meter updates
+
+		BatteryLimitsGridImport bool // the battery keeps grid import under the limit itself
 	}{
 		Timeout: time.Minute,
 	}
@@ -83,6 +90,17 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	circuit, err := New(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
 	if err != nil {
 		return nil, err
+	}
+
+	if cc.BatteryLimitsGridImport {
+		// only the root circuit meter sees the battery
+		if cc.ParentRef != "" {
+			return nil, errors.New("batteryLimitsGridImport is only supported on the root circuit")
+		}
+		if meter == nil {
+			return nil, errors.New("batteryLimitsGridImport requires a meter")
+		}
+		circuit.batteryLimitsGridImport = true
 	}
 
 	circuit.getMaxPower, err = cc.GetMaxPower.FloatGetter(ctx)
@@ -178,6 +196,41 @@ func (c *Circuit) SetHEMS(hems api.HEMS) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.hems = hems
+}
+
+// SetBatteryCharge sets the battery grid charge power and phase currents. Valid on root circuit only.
+// Unknown phase currents are zero, the battery then does not free any current.
+func (c *Circuit) SetBatteryCharge(power, l1, l2, l3 float64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.batteryPower = max(0, power)
+	c.batteryCurrents = [3]float64{max(0, l1), max(0, l2), max(0, l3)}
+}
+
+// managedLoad returns the measured power and max phase current without the battery
+// grid charging, which yields to managed loadpoints. Without the user opt-in this is
+// the measured load, since only a battery that caps its own grid import protects the
+// fuse. The battery share is limited to the measured values per phase, so a managed
+// loadpoint never gets more than the circuit limit.
+func (c *Circuit) managedLoad() (float64, float64) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if !c.batteryLimitsGridImport || c.meter == nil {
+		return c.power, c.current
+	}
+
+	power := c.power - min(c.batteryPower, max(0, c.power))
+
+	current := c.current
+	if c.batteryCurrents != [3]float64{} {
+		current = -math.MaxFloat64
+		for i, ci := range c.currents {
+			current = max(current, ci-min(c.batteryCurrents[i], max(0, ci)))
+		}
+	}
+
+	return power, current
 }
 
 // HasMeter returns the max power setting
@@ -306,7 +359,8 @@ func (c *Circuit) updateMeters() error {
 			}
 		}
 
-		c.current = max(util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3))
+		c.currents = [3]float64{util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3)}
+		c.current = max(c.currents[0], c.currents[1], c.currents[2])
 		c.currentUpdated = time.Now()
 	}
 
@@ -365,21 +419,40 @@ func (c *Circuit) GetMaxPhaseCurrent() float64 {
 
 // ValidatePower validates power request
 func (c *Circuit) ValidatePower(old, new float64) float64 {
+	return c.validatePower(old, new, false)
+}
+
+// ValidateManagedPower validates power request of a loadpoint managed by the optimizer.
+// Battery grid charging counts as flexible if the battery caps its own grid import.
+func (c *Circuit) ValidateManagedPower(old, new float64) float64 {
+	return c.validatePower(old, new, true)
+}
+
+func (c *Circuit) validatePower(old, new float64, managed bool) float64 {
 	if maxPower := c.effectiveMaxPower(); maxPower != 0 {
+		power := c.power
+		if managed {
+			power, _ = c.managedLoad()
+		}
+
 		delta := max(0, new-old)
-		potential := maxPower - c.power
+		potential := maxPower - power
 
 		if delta > potential {
 			capped := min(new, max(0, old+potential))
-			c.log.DEBUG.Printf("validate power: %.0fW + (%.0fW -> %.0fW) > %.0fW capped at %.0fW", c.power, old, new, maxPower, capped)
+			c.log.DEBUG.Printf("validate power: %.0fW + (%.0fW -> %.0fW) > %.0fW capped at %.0fW", power, old, new, maxPower, capped)
 			new = capped
 		} else {
-			c.log.TRACE.Printf("validate power: %.0fW + (%.0fW -> %.0fW) <= %.0fW ok", c.power, old, new, maxPower)
+			c.log.TRACE.Printf("validate power: %.0fW + (%.0fW -> %.0fW) <= %.0fW ok", power, old, new, maxPower)
 		}
 	}
 
 	if c.parent == nil {
 		return new
+	}
+
+	if managed {
+		return c.parent.ValidateManagedPower(old, new)
 	}
 
 	return c.parent.ValidatePower(old, new)
@@ -387,21 +460,40 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 
 // ValidateCurrent validates current request
 func (c *Circuit) ValidateCurrent(old, new float64) float64 {
+	return c.validateCurrent(old, new, false)
+}
+
+// ValidateManagedCurrent validates current request of a loadpoint managed by the optimizer.
+// Battery grid charging counts as flexible if the battery caps its own grid import.
+func (c *Circuit) ValidateManagedCurrent(old, new float64) float64 {
+	return c.validateCurrent(old, new, true)
+}
+
+func (c *Circuit) validateCurrent(old, new float64, managed bool) float64 {
 	if maxCurrent := c.GetMaxCurrent(); maxCurrent != 0 {
+		current := c.current
+		if managed {
+			_, current = c.managedLoad()
+		}
+
 		delta := max(0, new-old)
-		potential := maxCurrent - c.current
+		potential := maxCurrent - current
 
 		if delta > potential {
 			capped := min(new, max(0, old+potential))
-			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current, old, new, maxCurrent, capped)
+			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", current, old, new, maxCurrent, capped)
 			new = capped
 		} else {
-			c.log.TRACE.Printf("validate current: %.3gA + (%.3gA -> %.3gA) <= %.3gA ok", c.current, old, new, maxCurrent)
+			c.log.TRACE.Printf("validate current: %.3gA + (%.3gA -> %.3gA) <= %.3gA ok", current, old, new, maxCurrent)
 		}
 	}
 
 	if c.parent == nil {
 		return new
+	}
+
+	if managed {
+		return c.parent.ValidateManagedCurrent(old, new)
 	}
 
 	return c.parent.ValidateCurrent(old, new)
