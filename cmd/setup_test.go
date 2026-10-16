@@ -32,3 +32,22 @@ func TestYamlOff(t *testing.T) {
 		t.Errorf("expected `off`, got %s", lp.DefaultMode)
 	}
 }
+
+func TestYamlMdnsDisabled(t *testing.T) {
+	var conf globalconfig.All
+	viper.SetConfigType("yaml")
+	if err := viper.ReadConfig(strings.NewReader(`network:
+  mdns:
+    disabled: true
+`)); err != nil {
+		t.Error(err)
+	}
+
+	if err := viper.UnmarshalExact(&conf); err != nil {
+		t.Error(err)
+	}
+
+	if !conf.Network.Mdns.Disabled {
+		t.Error("expected mdns disabled")
+	}
+}

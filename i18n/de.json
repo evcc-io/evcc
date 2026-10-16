@@ -792,10 +792,13 @@
       "descriptionExternalUrl": "Adresse, mit der sich andere Geräte mit evcc verbinden und für die Auto-Discovery der evcc-App.",
       "descriptionHost": "Wird verwendet, um evcc in deinem lokalen Netzwerk anzukündigen.",
       "descriptionInternalUrl": "Lokale Netzwerkadresse von evcc.",
+      "descriptionMdns": "Darüber finden die evcc-App und andere Geräte dein evcc. Die Suche von evcc nach deinen Geräten bleibt davon unberührt.",
       "descriptionPort": "Port für die Web-Oberfläche und API. Du musst deine Browser-URL aktualisieren, wenn du dies änderst.",
+      "labelCheckMdns": "evcc im lokalen Netzwerk ankündigen",
       "labelExternalUrl": "Externe URL",
       "labelHost": "mDNS-Hostname",
       "labelInternalUrl": "Interne URL",
+      "labelMdns": "mDNS",
       "labelPort": "Port",
       "title": "Netzwerk",
       "warningUrlPath": "Die URL benötigt normalerweise keinen Pfad. Bist du dir sicher?"

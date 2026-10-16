@@ -71,6 +71,24 @@
 					placeholder="evcc"
 				/>
 			</FormRow>
+			<FormRow
+				id="networkMdns"
+				:label="$t('config.network.labelMdns')"
+				:help="$t('config.network.descriptionMdns')"
+			>
+				<div class="d-flex">
+					<input
+						id="networkMdns"
+						:checked="!values.mdns?.disabled"
+						class="form-check-input"
+						type="checkbox"
+						@change="values.mdns = { disabled: !$event.target.checked }"
+					/>
+					<label class="form-check-label ms-2" for="networkMdns">
+						{{ $t("config.network.labelCheckMdns") }}
+					</label>
+				</div>
+			</FormRow>
 		</template>
 	</JsonModal>
 </template>

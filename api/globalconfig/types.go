@@ -210,6 +210,11 @@ type Network struct {
 	ExternalUrl string `json:"externalUrl"`
 	Host        string `json:"host"`
 	Port        int    `json:"port"`
+	Mdns        Mdns   `json:"mdns"`
+}
+
+type Mdns struct {
+	Disabled bool `json:"disabled"`
 }
 
 func (c Network) HostPort() string {
