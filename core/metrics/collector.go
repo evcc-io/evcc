@@ -177,6 +177,11 @@ func (c *Collector) EnergyProfile(from time.Time) (*[96]float64, error) {
 	return energyProfileFiltered(c.entity, from, nil, profilePercentile())
 }
 
+// EnergyProfileExcluding returns the profile since from without the given local days (YYYY-MM-DD)
+func (c *Collector) EnergyProfileExcluding(from time.Time, exclude []string) (*[96]float64, error) {
+	return energyProfileFiltered(c.entity, from, nil, profilePercentile(), exclude...)
+}
+
 func (c *Collector) EnergyProfileWeekday(weekday time.Weekday) (*[96]float64, error) {
 	wd := int(weekday)
 	from := now.BeginningOfDay().AddDate(0, 0, -28)
