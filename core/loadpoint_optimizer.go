@@ -118,8 +118,8 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 		critical = required >= remaining
 	}
 
-	// once critical it stays critical: the soc estimate makes the required duration
-	// shrink faster than the clock while charging, which would stop and restart every cycle
+	// once critical it stays critical: while charging the soc estimate may shrink the required
+	// duration faster than the clock (taper model), which would stop and restart every cycle
 	lp.planCritical = lp.planCritical || critical
 
 	return lp.planCritical
