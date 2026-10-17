@@ -1460,6 +1460,7 @@
     "nightlyHint": "Може вече да е поправено. Моля, първо проверете с най-новата {nightlyVersion}.",
     "nightlyHintVersion": "нощна версия",
     "searchHint": "Преди да докладвате грешка, потърсете в съществуващите {issues}.",
+    "searchHintLink": "проблеми в GitHub",
     "stepsToReproduce": "Стъпки за възпроизвеждане",
     "subTitleDiscussion": "Опишете проблема си",
     "subTitleEmail": "Опишете проблема си",
