@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/samber/lo"
 )
 
 var ErrIncomplete = errors.New("meter profile incomplete")
@@ -43,9 +44,7 @@ func energyProfileFiltered(entity entity, from time.Time, weekday *int, percenti
 
 	if len(exclude) > 0 {
 		filter += ` AND date(ts, 'unixepoch', 'localtime') NOT IN (?` + strings.Repeat(`, ?`, len(exclude)-1) + `)`
-		for _, day := range exclude {
-			args = append(args, day)
-		}
+		args = append(args, lo.ToAnySlice(exclude)...)
 	}
 
 	// COALESCE guards against legacy rows with NULL energy
