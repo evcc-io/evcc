@@ -30,9 +30,36 @@ type batteryCapacityCtx struct {
 // var _ api.BatteryCapacity = (*batteryCapacityCtx)(nil)
 
 // Decorator returns an api.BatteryCapacity decorator. Capacity may be a static
-// number or a float plugin config; nil/zero means not configured.
+// number or a float plugin config; nil/zero means not configured. A plugin
+// capacity is read once, then cached.
 func (m *batteryCapacityCtx) Decorator(ctx context.Context) (func() (float64, error), error) {
-	return resolveFloat(ctx, m.Capacity)
+	get, err := resolveFloat(ctx, m.Capacity)
+	if err != nil || get == nil {
+		return nil, err
+	}
+	return readOnce(get), nil
+}
+
+// readOnce serves the first successful read forever
+func readOnce(get func() (float64, error)) func() (float64, error) {
+	var (
+		mu   sync.Mutex
+		val  float64
+		read bool
+	)
+	return func() (float64, error) {
+		mu.Lock()
+		defer mu.Unlock()
+
+		if !read {
+			v, err := get()
+			if err != nil {
+				return 0, err
+			}
+			val, read = v, true
+		}
+		return val, nil
+	}
 }
 
 // resolveFloat resolves a static number or float plugin config to a getter.

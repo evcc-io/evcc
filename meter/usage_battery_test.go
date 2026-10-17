@@ -79,6 +79,27 @@ func TestBatteryPowerLimitsPluginError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestReadOnce(t *testing.T) {
+	var reads int
+	g := readOnce(func() (float64, error) {
+		reads++
+		if reads == 1 {
+			return 0, errors.New("read failed")
+		}
+		return 42, nil
+	})
+
+	_, err := g()
+	require.Error(t, err)
+
+	for range 2 {
+		v, err := g()
+		require.NoError(t, err)
+		require.Equal(t, 42.0, v)
+	}
+	require.Equal(t, 2, reads, "cached after first success")
+}
+
 func TestLastGood(t *testing.T) {
 	var fail bool
 	g := lastGood(func() (float64, error) {
