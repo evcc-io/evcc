@@ -215,7 +215,10 @@ func (site *Site) batterySocLimitReached(dev config.Device[api.Meter], discharge
 		return false, err
 	}
 
-	minSoc, maxSoc := batLimiter.GetSocLimits()
+	minSoc, maxSoc, err := batLimiter.GetSocLimits()
+	if err != nil {
+		return false, err
+	}
 
 	if discharge {
 		if minSoc > 0 && soc <= minSoc {

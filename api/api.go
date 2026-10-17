@@ -46,17 +46,17 @@ type Battery interface {
 
 // BatteryCapacity provides a capacity in kWh
 type BatteryCapacity interface {
-	Capacity() float64
+	Capacity() (float64, error)
 }
 
 // BatteryPowerLimiter provides max AC charge- and discharge power in W
 type BatteryPowerLimiter interface {
-	GetPowerLimits() (charge, discharge float64)
+	GetPowerLimits() (charge, discharge float64, err error)
 }
 
 // BatterySocLimiter provides min/max battery soc in %
 type BatterySocLimiter interface {
-	GetSocLimits() (min, max float64)
+	GetSocLimits() (min, max float64, err error)
 }
 
 // MaxACPowerGetter provides max AC power in W
@@ -151,12 +151,12 @@ type PhaseDescriber interface {
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
 	Battery
-	BatteryCapacity
 	IconDescriber
 	FeatureDescriber
 	PhaseDescriber
 	TitleDescriber
 	SetTitle(string)
+	Capacity() float64 // kWh, static configuration
 	Identifiers() []string
 	OnIdentified() ActionConfig
 }

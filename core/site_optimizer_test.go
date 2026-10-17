@@ -535,7 +535,7 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 
 		var meter api.Meter
 		batSocLimit := api.NewMockBatterySocLimiter(ctrl)
-		batSocLimit.EXPECT().GetSocLimits().Return(minSoc, maxSoc).AnyTimes()
+		batSocLimit.EXPECT().GetSocLimits().Return(minSoc, maxSoc, nil).AnyTimes()
 
 		bat := &struct {
 			api.Meter

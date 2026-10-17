@@ -911,12 +911,13 @@ func (m *MockBatterySocLimiter) EXPECT() *MockBatterySocLimiterMockRecorder {
 }
 
 // GetSocLimits mocks base method.
-func (m *MockBatterySocLimiter) GetSocLimits() (float64, float64) {
+func (m *MockBatterySocLimiter) GetSocLimits() (float64, float64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSocLimits")
 	ret0, _ := ret[0].(float64)
 	ret1, _ := ret[1].(float64)
-	return ret0, ret1
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetSocLimits indicates an expected call of GetSocLimits.
