@@ -47,10 +47,6 @@ github.com/apapsch/go-jsonmerge/v2 v2.0.0 h1:axGnT1gRIfimI7gJifB699GoE/oq+F2MU7D
 github.com/apapsch/go-jsonmerge/v2 v2.0.0/go.mod h1:lvDnEdqiQrp0O42VQGgmlKpxL1AP2+08jFMw88y4klk=
 github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef h1:2JGTg6JapxP9/R33ZaagQtAM4EkkSYnIAlOG5EI8gkM=
 github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef/go.mod h1:JS7hed4L1fj0hXcyEejnW57/7LCetXggd+vwrRnYeII=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.42.4 h1:2weQbWJjkeToXuHpHv0Qw3aPHSq7Z0I0jrcMKY7QZ74=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.42.4/go.mod h1:cMAkS5KZWWFd+T+aAINpO9QblyLWuyuLk1PXxkLR3/c=
-github.com/aws/smithy-go v1.28.5 h1:OqbqKtzY9NUnr2yAe9+hiTdFb20tNaK/lI0PMOGXX9k=
-github.com/aws/smithy-go v1.28.5/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
 github.com/azihsoyn/rijndael256 v0.0.0-20200316065338-d14eefa2b66b h1:/2dABok/UswXOj5rjbR5bZ411ApGBq1pAEZdy5rvFrY=
 github.com/azihsoyn/rijndael256 v0.0.0-20200316065338-d14eefa2b66b/go.mod h1:ef+2vMUkiKcy2Tz7HykB01KbgUnkK4gQKq4ZeR4RYVs=
 github.com/basgys/goxml2json v1.1.0 h1:4ln5i4rseYfXNd86lGEB+Vi652IsIXIvggKM/BhUKVw=
