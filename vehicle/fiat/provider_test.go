@@ -1,7 +1,6 @@
 package fiat
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -123,12 +121,9 @@ func (f roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 func TestControllerUnplugged(t *testing.T) {
 	var paths []string
 
-	key, secret, token := "key", "secret", "token"
-	expiry := time.Now().Add(time.Hour)
-
 	fiat := &API{
-		identity: &Identity{ctx: context.Background(), uid: "uid", creds: &types.Credentials{
-			AccessKeyId: &key, SecretKey: &secret, SessionToken: &token, Expiration: &expiry,
+		identity: &Identity{uid: "uid", creds: &credentials{
+			AccessKeyId: "key", SecretKey: "secret", SessionToken: "token", Expiration: float64(time.Now().Add(time.Hour).Unix()),
 		}},
 		Helper: &request.Helper{Client: &http.Client{Transport: roundTripper(func(req *http.Request) (*http.Response, error) {
 			paths = append(paths, req.URL.Path)
