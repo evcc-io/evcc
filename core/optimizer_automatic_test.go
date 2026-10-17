@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/messenger"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -604,8 +605,46 @@ func TestOptimizerPlanActive(t *testing.T) {
 	optimize()
 	assert.True(t, lp.plannerActive())
 
+	// critical holds while the soc estimate catches up (#34868)
+	lp.vehicleSoc = 59
+	optimize()
+	assert.True(t, lp.plannerActive())
+
+	// the hold ends one slot after the last critical cycle
+	clck.Add(tariff.SlotDuration)
+	optimize()
+	assert.False(t, lp.plannerActive())
+
 	// stalled optimizer falls back to the planner
 	clck.Add(time.Hour)
 	_, _, optimized = lp.EffectivePlan(planTime, time.Hour, api.PlanStrategy{})
 	assert.False(t, optimized)
+}
+
+// TestOptimizerPlanAboveLimit covers a plan goal above the session soc limit (#34868):
+// the optimizer's active plan slot charges past the limit instead of being disabled by it
+func TestOptimizerPlanAboveLimit(t *testing.T) {
+	enableAutomatic(t)
+
+	lp, charger, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
+	lp.clock.(*clock.Mock).Add(time.Hour)
+	lp.vehicleSoc = 50
+	lp.limitSoc = 40
+
+	// plan far enough away not to be deadline critical
+	now := lp.clock.Now()
+	lp.planLocked = PlanLock{Time: now.Add(24 * time.Hour), Soc: 100, Id: 1}
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 3680, Grid: 1000})
+	lp.setOptimizerPlan(optimizerPlan{
+		rates:  api.Rates{{Start: now, End: now.Add(15 * time.Minute)}},
+		energy: []float64{920},
+	})
+
+	charger.EXPECT().MaxCurrent(int64(maxA))
+	lp.Update(2000, 0, nil, nil, false, false, 0, nil, nil, nil)
+
+	assert.True(t, lp.planActive)
+	assert.True(t, lp.planSlotEnd.IsZero())
+
+	ctrl.Finish()
 }

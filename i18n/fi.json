@@ -1227,14 +1227,14 @@
       "charged": "ladattu",
       "soc": "varaus",
       "temperature": "lämpötila",
-      "used": "käytetty"
+      "used": "kulutettu"
     },
     "sources": {
       "battery": "Akku",
       "cost": "Kustannus",
       "energy": "Energia",
       "grid": "Sähköverkko",
-      "hint": "Aurinko- ja akkuenergia arvotettu verkkoon syötön hinnalla.",
+      "hint": "Aurinko- ja akkuenergia hinnoiteltu verkkoon syötön hinnalla.",
       "price": "Hinta/kWh",
       "pv": "Aurinko",
       "share": "Osuus",
@@ -1247,7 +1247,7 @@
       "co2Saved": "CO₂ säästetty",
       "co2SavedTooltip": "Verrattuna siihen, että kulutettu {energy} olisi otettu sähköverkosta.",
       "configure": "Määritä nyt",
-      "noCo2": "Ei CO₂-tietoja.",
+      "noCo2": "Ei CO₂-tilastotietoja.",
       "noPrice": "Ei hintatietoja.",
       "savings": "Säästöt",
       "savingsTooltip": "Verrattuna siihen, että kulutettu {energy} olisi ostettu sähköverkosta.",
@@ -1467,8 +1467,8 @@
     },
     "issueDescription": "Kuvaus",
     "issueTitle": "Otsikko",
-    "nightlyHint": "Se saattaa olla jo korjattu. Tarkista ensin uusimmalla {nightlyVersion}.",
-    "nightlyHintVersion": "Nightly-versiolla",
+    "nightlyHint": "Voi olla jo korjattu. Tarkistathan ensin uusimmalla {nightlyVersion}.",
+    "nightlyHintVersion": "Nightly-kehitysversiolla",
     "searchHint": "Ennen kuin raportoit ohjelmistovirheestä, hae olemassa olevista {issues}.",
     "searchHintLink": "GitHub-tiketeistä",
     "stepsToReproduce": "Toisintamisvaiheet",
@@ -1672,12 +1672,12 @@
       "solar": "Aurinkotuotannon ylijäämä",
       "solarShare": {
         "charging": {
-          "description": "Vähintään {share} vähimmäislataustehosta on tultava aurinkopaneleista.",
+          "description": "Vähintään {share} vähimmäislataustehosta on tultava aurinkopaneleiden tuotannon ylijäämästä.",
           "descriptionFull": "Lataus alkaa heti kun ylijäämä kattaa vähimmäislataustehon.",
           "descriptionZero": "Lataus alkaa heti, kun ylijäämätehoa on saatavilla."
         },
         "heating": {
-          "description": "Vähintään {share} vähimmäislämmitystehosta täytyy tulla aurinkopaneleista.",
+          "description": "Vähintään {share} vähimmäislämmitystehosta täytyy tulla aurinkopaneleiden tuotannon ylijäämästä.",
           "descriptionFull": "Lämmitys alkaa heti, kun ylijäämä kattaa vähimmäislämmitystehon.",
           "descriptionZero": "Lämmitys alkaa heti, kun ylijäämää on saatavilla."
         },
@@ -1738,8 +1738,8 @@
     },
     "targetChargePlan": {
       "chargeDuration": "Latausaika",
-      "co2Label": "CO₂ päästö ⌀",
-      "optimizerHint": "Huom: Tämän suunnitelman loi {optimizer}.",
+      "co2Label": "CO₂-päästöjen ⌀",
+      "optimizerHint": "Huom: {optimizer} teki tämän suunnitelman.",
       "priceLabel": "Energian hinta",
       "timeRange": "{day} {range} t",
       "unknownPrice": "ei vielä tiedossa"
@@ -1851,7 +1851,7 @@
     "date": "Ajanjakso",
     "delete": "Poista",
     "finished": "Valmis",
-    "meter": "Mittari",
+    "meter": "Mittarilukema",
     "meterstart": "Mittarin käynnistys",
     "meterstop": "Mittarin pysähdys",
     "odometer": "Ajokilometrit",
@@ -2012,7 +2012,7 @@
     "batteryDescription": "Lataa kodin akun sähköverkosta.",
     "cheapTitle": "Lataaminen edullisesti sähköverkosta",
     "cleanTitle": "Viheränenergian lataminen verkosta",
-    "co2Label": "CO₂ päästö",
+    "co2Label": "CO₂-päästö",
     "co2Limit": "CO₂ raja",
     "enable": "Kytke rajoitus",
     "loadpointDescription": "Mahdollistaa välittömän lataamisen väliaikaisesti älykäs-tilassa kun sähkö on halpaa.",
