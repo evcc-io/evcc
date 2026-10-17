@@ -190,7 +190,7 @@
       "addSubCircuit": "Ajouter un sous-circuit",
       "chargingPointsNote": "Attribuer les bornes de recharge et les radiateurs à un circuit dans leurs propres paramètres.",
       "description": "Vérifiez que la somme de tous les points de charges connectés à un circuit ne dépassent pas les limites de puissance et de courant. Les circuits peuvent être combinés pour construire une hiérarchie.",
-      "legacyWarning": "Une nouvelle configuration des circuits est disponible ! Supprimez et enregistrez votre configuration ici pour utiliser la nouvelle procédure guidée.",
+      "legacyWarning": "Une nouvelle configuration des circuits est disponible ! Supprimez et enregistrez votre configuration ici pour utiliser la nouvelle procédure guidée. Un redémarrage est requis.",
       "meterDedicated": "Compteur",
       "meterGrid": "Réseau",
       "title": "Gestion de la charge",
@@ -205,7 +205,7 @@
       "used": "déjà utilisé"
     },
     "consumer": {
-      "description": "Permet de suivre la consommation des petits appareils électroménagers non contrôlables (réfrigérateur, lave-linge, etc.). Vous offre une meilleure vue d'ensemble de la consommation de votre foyer.",
+      "description": "Permet de suivre la consommation des petits appareils électroménagers non contrôlables (réfrigérateur, lave-linge, etc.). Vous offre une meilleure vue d'ensemble de votre consommation.",
       "titleAdd": "Ajouter un compteur de consommation",
       "titleEdit": "Modifier le compteur de consommation"
     },
@@ -224,7 +224,7 @@
       "title": "Devise"
     },
     "curtailer": {
-      "description": "Dispositif qui limite l'alimentation sur demande de l'opérateur de réseau (§ 9 EEG). Beaucoup d’onduleurs supportent cela directement via leur configuration de compteur solaire. Une configuration séparée n'est nécessaire que pour certains fabricants ou systèmes multi-onduleurs.",
+      "description": "Dispositif qui limite l’export sur demande de l'opérateur de réseau (§ 9 EEG). Beaucoup d’onduleurs solaires supportent cela directement via leur configuration de compteur solaire. Une configuration séparée n'est nécessaire que pour certains fabricants ou systèmes multi-onduleurs.",
       "generic": "Intégration générique",
       "specific": "Intégration spécifique",
       "template": "Fabricant",
@@ -254,9 +254,9 @@
       "currency": "Devise",
       "current": "Courant",
       "currentRange": "Courant",
-      "curtailLimit": "Limite d’entrée",
+      "curtailLimit": "Limite d’export",
       "curtailable": "Suspendable",
-      "curtailed": "Limitation de l'injection",
+      "curtailed": "Limitation d’export vers le réseau",
       "detected": "Détecté",
       "dimLimit": "Limite de consommation",
       "dimmed": "Consommation limitée",
