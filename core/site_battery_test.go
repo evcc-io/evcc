@@ -187,7 +187,7 @@ func batteryControlMock(ctrl *gomock.Controller, soc, maxSoc float64) (api.Meter
 	batSoc.EXPECT().Soc().Return(soc, nil).AnyTimes()
 
 	batSocLimit := api.NewMockBatterySocLimiter(ctrl)
-	batSocLimit.EXPECT().GetSocLimits().Return(0.0, maxSoc).AnyTimes()
+	batSocLimit.EXPECT().GetSocLimits().Return(0.0, maxSoc, nil).AnyTimes()
 
 	batCon := batteryControllerMock(ctrl)
 
@@ -409,7 +409,7 @@ func TestForcedBatteryChargeLimits(t *testing.T) {
 		}
 
 		batSoc.EXPECT().Soc().Return(tc.soc, nil).Times(1)
-		batSocLimit.EXPECT().GetSocLimits().Return(0.0, limit).Times(1)
+		batSocLimit.EXPECT().GetSocLimits().Return(0.0, limit, nil).Times(1)
 
 		if tc.expected != api.BatteryUnknown {
 			batCon.EXPECT().SetBatteryMode(tc.expected).Times(1)
@@ -470,7 +470,7 @@ func TestForcedBatteryDischargeLimits(t *testing.T) {
 		}
 
 		batSoc.EXPECT().Soc().Return(tc.soc, nil).Times(1)
-		batSocLimit.EXPECT().GetSocLimits().Return(reserve, 0.0).Times(1)
+		batSocLimit.EXPECT().GetSocLimits().Return(reserve, 0.0, nil).Times(1)
 
 		if tc.expected != api.BatteryUnknown {
 			batCon.EXPECT().SetBatteryMode(tc.expected).Times(1)

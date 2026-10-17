@@ -1,10 +1,14 @@
 package bluelink
 
 import (
+	"bytes"
+	"crypto/hmac"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +16,8 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"slices"
+	"strconv"
 	"strings"
 	"time"
 	"uuid"
@@ -32,12 +38,28 @@ type CCIConfig struct {
 	ClientName           string // "client-name" header value
 	OSVersion            string // "client-os-version" header value
 	NotificationProvider string // "client-notification-provider-type" header value
+
+	// X-Fingerprint signing of the auth endpoints. An empty FingerprintKey
+	// skips the signed routes and only uses the legacy unsigned ones.
+	FingerprintClientName string // "client-name" header value of the signed identity
+	FingerprintKey        string // HMAC key suffix (secret + piece + suffix) of the signing app build
+	BrandLabel            string // "X-Brand" header value
 }
 
 const (
 	cciClientVersion   = "1.3.3"
 	cciMobileUserAgent = "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS"
 	cciSettingsKeyFmt  = "bluelink-cci.%s.%s"
+)
+
+// Android OneApp build identity the X-Fingerprint is validated against
+const (
+	fpClientVersion        = "1.4.0"
+	fpOSCode               = "android"
+	fpOSVersion            = "14"
+	fpDeviceModel          = "SM-S918B"
+	fpNotificationProvider = "FCM"
+	fpUserAgent            = "okhttp/4.12.0"
 )
 
 // cciBundle is the CCI/CCS token state. AccessToken is the CCS token used on
@@ -235,9 +257,8 @@ func (v *Identity) refreshCCI(_ *oauth2.Token) (*oauth2.Token, error) {
 	v.log.DEBUG.Println("cci: refreshing token")
 
 	bundle := v.bundle
-	headers := v.cciHeaders(bundle.DeviceID, bundle.CCIAccessToken, bundle.NonCcsToken, bundle.ExchangeableToken, request.JSONContent)
 
-	body := map[string]string{
+	payload, err := json.Marshal(map[string]string{
 		"accessToken":              bundle.CCIAccessToken,
 		"refreshToken":             bundle.RefreshToken,
 		"exchangeableAccessToken":  bundle.ExchangeableToken,
@@ -245,16 +266,23 @@ func (v *Identity) refreshCCI(_ *oauth2.Token) (*oauth2.Token, error) {
 		"nonCcsToken":              bundle.NonCcsToken,
 		"nonCcsRefreshToken":       bundle.NonCcsRefreshToken,
 		"idToken":                  bundle.IDToken,
-	}
-
-	uri := v.config.CCI.APIURL + "/domain/api/v2/auth/token-refresh"
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(body), headers)
+	})
 	if err != nil {
 		return nil, err
 	}
 
+	signed := func() (*http.Request, error) {
+		headers := v.fpHeaders(bundle.DeviceID, payload)
+		headers["Content-Type"] = request.JSONContent
+		return request.New(http.MethodPost, v.config.CCI.APIURL+"/auth/v2/token-refresh", bytes.NewReader(payload), headers)
+	}
+	legacy := func() (*http.Request, error) {
+		headers := v.cciHeaders(bundle.DeviceID, bundle.CCIAccessToken, bundle.NonCcsToken, bundle.ExchangeableToken, request.JSONContent)
+		return request.New(http.MethodPost, v.config.CCI.APIURL+"/domain/api/v2/auth/token-refresh", bytes.NewReader(payload), headers)
+	}
+
 	var res cciTokenResponse
-	if err := v.DoJSON(req, &res); err != nil {
+	if err := v.cciPost("token refresh", signed, legacy, &res); err != nil {
 		return nil, fmt.Errorf("cci token refresh failed: %w", err)
 	}
 
@@ -311,14 +339,17 @@ func (res cciTokenResponse) apply(bundle *cciBundle) {
 
 // exchangeCCIToken exchanges an authorization code for the CCI token set
 func (v *Identity) exchangeCCIToken(deviceID, code string) (cciBundle, error) {
-	uri := v.config.CCI.APIURL + "/domain/api/v1/auth/token?code=" + url.QueryEscape(code)
-	req, err := request.New(http.MethodPost, uri, nil, v.cciHeaders(deviceID, "", "", "", ""))
-	if err != nil {
-		return cciBundle{}, err
+	query := "?code=" + url.QueryEscape(code)
+
+	signed := func() (*http.Request, error) {
+		return request.New(http.MethodPost, v.config.CCI.APIURL+"/auth/v1/token"+query, nil, v.fpHeaders(deviceID, nil))
+	}
+	legacy := func() (*http.Request, error) {
+		return request.New(http.MethodPost, v.config.CCI.APIURL+"/domain/api/v1/auth/token"+query, nil, v.cciHeaders(deviceID, "", "", "", ""))
 	}
 
 	var res cciTokenResponse
-	if err := v.DoJSON(req, &res); err != nil {
+	if err := v.cciPost("token exchange", signed, legacy, &res); err != nil {
 		return cciBundle{}, fmt.Errorf("cci token exchange failed: %w", err)
 	}
 
@@ -331,19 +362,21 @@ func (v *Identity) exchangeCCIToken(deviceID, code string) (cciBundle, error) {
 // exchangeCCSToken exchanges a CCI access token for a CCS token, which the
 // legacy ccapi vehicle/control endpoints accept as Bearer access_token
 func (v *Identity) exchangeCCSToken(deviceID, cciAccessToken, nonCcsToken, exchangeableToken string) (string, time.Time, error) {
-	uri := v.config.CCI.APIURL + "/domain/api/v1/auth/token-exchange?serviceType=CCS"
-	headers := v.cciHeaders(deviceID, cciAccessToken, nonCcsToken, exchangeableToken, "")
-
-	req, err := request.New(http.MethodPost, uri, nil, headers)
-	if err != nil {
-		return "", time.Time{}, err
+	signed := func() (*http.Request, error) {
+		headers := v.fpHeaders(deviceID, nil)
+		addCCITokenHeaders(headers, cciAccessToken, nonCcsToken, exchangeableToken)
+		return request.New(http.MethodPost, v.config.CCI.APIURL+"/auth/v1/token-exchange?serviceType=CCS", nil, headers)
+	}
+	legacy := func() (*http.Request, error) {
+		headers := v.cciHeaders(deviceID, cciAccessToken, nonCcsToken, exchangeableToken, "")
+		return request.New(http.MethodPost, v.config.CCI.APIURL+"/domain/api/v1/auth/token-exchange?serviceType=CCS", nil, headers)
 	}
 
 	var res struct {
 		AccessToken string `json:"accessToken"`
 		ExpiresTime int64  `json:"expiresTime"` // unix seconds
 	}
-	if err := v.DoJSON(req, &res); err != nil {
+	if err := v.cciPost("ccs token exchange", signed, legacy, &res); err != nil {
 		return "", time.Time{}, fmt.Errorf("ccs token exchange failed: %w", err)
 	}
 
@@ -392,6 +425,17 @@ func (v *Identity) cciHeaders(deviceID, cciAccessToken, nonCcsToken, exchangeabl
 		"User-Agent":                        cciMobileUserAgent,
 	}
 
+	addCCITokenHeaders(headers, cciAccessToken, nonCcsToken, exchangeableToken)
+
+	if contentType != "" {
+		headers["Content-Type"] = contentType
+	}
+
+	return headers
+}
+
+// addCCITokenHeaders adds the CCI token headers, skipping empty tokens
+func addCCITokenHeaders(headers map[string]string, cciAccessToken, nonCcsToken, exchangeableToken string) {
 	if nonCcsToken != "" {
 		headers["Authentication"] = nonCcsToken
 	}
@@ -402,12 +446,105 @@ func (v *Identity) cciHeaders(deviceID, cciAccessToken, nonCcsToken, exchangeabl
 		headers["exchangeable-token"] = exchangeableToken
 		headers["non-ccs-token"] = nonCcsToken
 	}
+}
 
-	if contentType != "" {
-		headers["Content-Type"] = contentType
+// fpHeaders builds the headers of the fingerprint-gated CCI auth endpoints,
+// signed over body which must be the exact bytes sent
+func (v *Identity) fpHeaders(deviceID string, body []byte) map[string]string {
+	c := v.config.CCI
+
+	requestID := make([]byte, 12)
+	_, _ = rand.Read(requestID)
+
+	headers := map[string]string{
+		"client-id":                         c.PackageID,
+		"client-name":                       c.FingerprintClientName,
+		"client-version":                    fpClientVersion,
+		"client-os-code":                    fpOSCode,
+		"client-os-version":                 fpOSVersion,
+		"client-device-id":                  deviceID,
+		"client-device-model":               fpDeviceModel,
+		"client-notification-provider-type": fpNotificationProvider,
+		"locale":                            strings.ToUpper(v.language),
+		"timezone":                          time.Now().Format("-07:00"),
+		"App-Request-Id":                    strings.ToUpper(hex.EncodeToString(requestID)) + "_" + strings.ReplaceAll(deviceID, "-", "") + "_AOS",
+		"X-Brand":                           c.BrandLabel,
+		"X-Region":                          "eu",
+		"User-Agent":                        fpUserAgent,
+		"Accept":                            "*/*",
+		"Accept-Language":                   strings.ToLower(v.language),
+		"X-Timestamp":                       strconv.FormatInt(time.Now().UnixMilli(), 10),
 	}
 
+	headers["X-Fingerprint"] = fingerprint(headers, c.FingerprintKey, body)
+
 	return headers
+}
+
+// fingerprint computes the OneApp X-Fingerprint HMAC-SHA256 over the client
+// identity, timestamp and body. Only ASCII whitespace is stripped from the body.
+func fingerprint(headers map[string]string, key string, body []byte) string {
+	identity := headers["client-id"] + headers["client-name"] + headers["client-version"] + headers["client-os-code"]
+
+	msg := identity + headers["client-os-version"] + headers["X-Timestamp"] + string(bytes.Map(func(r rune) rune {
+		switch r {
+		case ' ', '\t', '\n', '\v', '\f', '\r':
+			return -1
+		}
+		return r
+	}, body))
+
+	mac := hmac.New(sha256.New, []byte(identity+key))
+	mac.Write([]byte(msg))
+
+	return hex.EncodeToString(mac.Sum(nil))
+}
+
+// fpGateCodes are the fingerprint gate rejections: header missing, bad
+// signature, timestamp out of window
+var fpGateCodes = []int{9035, 9036, 9037}
+
+// gateRejection returns the code of a 4xx fingerprint gate rejection
+func gateRejection(err error) (int, bool) {
+	se, ok := errors.AsType[*request.StatusError](err)
+	if !ok || se.StatusCode() < 400 || se.StatusCode() >= 500 {
+		return 0, false
+	}
+
+	var res struct {
+		Code int `json:"code"`
+	}
+	if json.Unmarshal(se.Body(), &res) != nil {
+		return 0, false
+	}
+
+	return res.Code, slices.Contains(fpGateCodes, res.Code)
+}
+
+// cciPost executes the signed request and falls back to the legacy unsigned
+// route only if the fingerprint gate rejects it, keeping other errors intact
+func (v *Identity) cciPost(name string, signed, legacy func() (*http.Request, error), res any) error {
+	if v.config.CCI.FingerprintKey != "" {
+		req, err := signed()
+		if err != nil {
+			return err
+		}
+
+		err = v.DoJSON(req, res)
+		code, ok := gateRejection(err)
+		if !ok {
+			return err
+		}
+
+		v.log.WARN.Printf("cci: fingerprint gate rejected signed %s (code %d), using legacy route", name, code)
+	}
+
+	req, err := legacy()
+	if err != nil {
+		return err
+	}
+
+	return v.DoJSON(req, res)
 }
 
 // encryptCCIPassword RSA/PKCS1v15-encrypts password using the JWK public key
