@@ -122,7 +122,8 @@ type mirrorSession struct {
 	rule      MirrorRule
 	out       chan mirrorFrame
 	stop      chan struct{}
-	connected bool // guarded by mirrorsMu
+	done      chan struct{} // closed when the session's goroutine has ended
+	connected bool          // guarded by mirrorsMu
 
 	// only used by the session's goroutine
 	retry   *mirrorFrame // frame whose write failed, sent first after the next connect
@@ -206,6 +207,7 @@ func syncMirrorsLocked(chargerID string, rules []MirrorRule) (stale, fresh []*mi
 			rule:      r,
 			out:       make(chan mirrorFrame, mirrorBacklog),
 			stop:      make(chan struct{}),
+			done:      make(chan struct{}),
 		}
 		running[key] = ms
 		fresh = append(fresh, ms)
@@ -353,6 +355,8 @@ func (ms *mirrorSession) setState(connected bool, err error) {
 
 // run keeps the mirror connected until it is stopped, redialling with backoff.
 func (ms *mirrorSession) run() {
+	defer close(ms.done)
+
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithInitialInterval(reconnectInitialDelay),
 		backoff.WithMaxInterval(reconnectMaxDelay),

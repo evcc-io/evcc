@@ -1,8 +1,10 @@
 package ocpp
 
 import (
+	"maps"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -12,6 +14,20 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// stopMirrorsAndWait stops the mirrors of a charger and waits for their goroutines, so they
+// are gone before a test restores the package settings they read
+func stopMirrorsAndWait(id string) {
+	mirrorsMu.Lock()
+	running := slices.Collect(maps.Values(mirrorSessions[id]))
+	mirrorsMu.Unlock()
+
+	stopMirrors(id)
+
+	for _, ms := range running {
+		<-ms.done
+	}
+}
 
 // setMirrorRules installs a forwarder rule with the given mirrors for the charger and reconciles them
 func setMirrorRules(t *testing.T, id string, mirrors ...MirrorRule) {
@@ -54,7 +70,7 @@ func TestMirrorReceivesCopyAndRejectsCalls(t *testing.T) {
 	defer cleanup()
 
 	setMirrorRules(t, id, MirrorRule{UpstreamURL: "ws" + strings.TrimPrefix(srv.URL, "http")})
-	defer stopMirrors(id)
+	defer stopMirrorsAndWait(id)
 
 	mirrorCall(id, "MeterValues", []byte(testMeterFrame))
 
@@ -105,7 +121,7 @@ func TestMirrorReconcile(t *testing.T) {
 	b := MirrorRule{UpstreamURL: url + "/b"}
 
 	setMirrorRules(t, id, a, b)
-	defer stopMirrors(id)
+	defer stopMirrorsAndWait(id)
 
 	count := func() int {
 		mirrorsMu.Lock()
