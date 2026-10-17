@@ -290,6 +290,7 @@ type Circuit interface {
 	GetParent() Circuit
 	RegisterChild(child Circuit)
 	SetHEMS(HEMS)
+	SetBatteryCharge(power, l1, l2, l3 float64)
 	HasMeter() bool
 	GetMaxPower() float64
 	GetMaxCurrent() float64
@@ -298,6 +299,8 @@ type Circuit interface {
 	Update([]CircuitLoad) error
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
+	ValidateManagedCurrent(old, new float64) float64
+	ValidateManagedPower(old, new float64) float64
 }
 
 // HEMS exposes the runtime state of the home energy management system.

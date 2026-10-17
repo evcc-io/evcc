@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
+	"math"
 	"slices"
 	"sync"
 
@@ -38,6 +39,54 @@ func (site *Site) updateCircuits() {
 	}
 
 	site.publishCircuits()
+}
+
+// updateCircuitBattery passes the battery grid charge power to the root circuit.
+// Only batteries that evcc put into charge mode count, the circuit decides if the
+// power is flexible for managed loadpoints.
+func (site *Site) updateCircuitBattery() {
+	if site.circuit == nil {
+		return
+	}
+
+	var power float64
+	var charging []api.Meter
+
+	site.RLock()
+	for i, dev := range site.batteryMeters {
+		if i < len(site.battery.Devices) && site.batteryModeApplied[dev.Config().Name] == api.BatteryCharge {
+			// negative battery power is charging
+			if p := -site.battery.Devices[i].Power; p > 0 {
+				power += p
+				charging = append(charging, dev.Instance())
+			}
+		}
+	}
+	site.RUnlock()
+
+	// the phases of the battery are unknown without measured currents, assuming
+	// a symmetric split would free current on phases the battery does not load
+	var currents [3]float64
+	for _, meter := range charging {
+		pc, ok := api.Cap[api.PhaseCurrents](meter)
+		if !ok {
+			currents = [3]float64{}
+			break
+		}
+
+		i1, i2, i3, err := pc.Currents()
+		if err != nil {
+			site.log.DEBUG.Printf("battery currents: %v", err)
+			currents = [3]float64{}
+			break
+		}
+
+		currents[0] += math.Abs(i1)
+		currents[1] += math.Abs(i2)
+		currents[2] += math.Abs(i3)
+	}
+
+	site.circuit.SetBatteryCharge(power, currents[0], currents[1], currents[2])
 }
 
 // applyHemsLimits applies the HEMS dim and curtail state to the site's devices

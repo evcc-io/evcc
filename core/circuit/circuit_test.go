@@ -173,3 +173,80 @@ func TestHEMSConsumptionClamp(t *testing.T) {
 		})
 	}
 }
+
+// TestBatteryLimitsGridImport verifies that battery grid charging only yields to
+// managed loadpoints and only if the user opted in.
+func TestBatteryLimitsGridImport(t *testing.T) {
+	log := util.NewLogger("foo")
+
+	type combined struct {
+		*api.MockMeter
+		*api.MockPhaseCurrents
+	}
+
+	for _, tc := range []struct {
+		name                 string
+		optIn                bool
+		power                float64 // measured power
+		currents             [3]float64
+		batPower             float64
+		batCurrents          [3]float64
+		managedP, unmanagedP float64 // allowed power from 0 to 11000W
+		managedC, unmanagedC float64 // allowed current from 0 to 16A
+	}{
+		{"no opt-in", false, 10000, [3]float64{14, 14, 14}, 9000, [3]float64{13, 13, 13}, 1000, 1000, 2, 2},
+		{"opt-in", true, 10000, [3]float64{14, 14, 14}, 9000, [3]float64{13, 13, 13}, 10000, 1000, 15, 2},
+		{"opt-in, battery partly from pv", true, 2000, [3]float64{3, 3, 3}, 9000, [3]float64{13, 13, 13}, 11000, 9000, 16, 13},
+		{"opt-in, unknown battery currents", true, 10000, [3]float64{14, 14, 14}, 9000, [3]float64{}, 10000, 1000, 2, 2},
+		{"opt-in, 1p battery", true, 7000, [3]float64{14, 4, 4}, 3000, [3]float64{13, 0, 0}, 7000, 4000, 12, 2},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			m := combined{api.NewMockMeter(ctrl), api.NewMockPhaseCurrents(ctrl)}
+			m.MockMeter.EXPECT().CurrentPower().Return(tc.power, nil)
+			m.MockPhaseCurrents.EXPECT().Currents().Return(tc.currents[0], tc.currents[1], tc.currents[2], nil)
+
+			c, err := New(log, "root", 16, 11000, m, 0)
+			require.NoError(t, err)
+			c.batteryLimitsGridImport = tc.optIn
+			require.NoError(t, c.Update(nil))
+
+			c.SetBatteryCharge(tc.batPower, tc.batCurrents[0], tc.batCurrents[1], tc.batCurrents[2])
+
+			assert.Equal(t, tc.managedP, c.ValidateManagedPower(0, 11000), "managed power")
+			assert.Equal(t, tc.unmanagedP, c.ValidatePower(0, 11000), "unmanaged power")
+			assert.Equal(t, tc.managedC, c.ValidateManagedCurrent(0, 16), "managed current")
+			assert.Equal(t, tc.unmanagedC, c.ValidateCurrent(0, 16), "unmanaged current")
+		})
+	}
+}
+
+// TestBatteryLimitsGridImportRootOnly verifies that a child circuit does not free battery power.
+func TestBatteryLimitsGridImportRootOnly(t *testing.T) {
+	log := util.NewLogger("foo")
+	ctrl := gomock.NewController(t)
+
+	pm := api.NewMockMeter(ctrl)
+	cm := api.NewMockMeter(ctrl)
+	pm.EXPECT().CurrentPower().Return(10000.0, nil)
+	cm.EXPECT().CurrentPower().Return(9000.0, nil)
+
+	parent, err := New(log, "root", 0, 11000, pm, 0)
+	require.NoError(t, err)
+	parent.batteryLimitsGridImport = true
+
+	child, err := New(log, "child", 0, 11000, cm, 0)
+	require.NoError(t, err)
+	require.NoError(t, child.setParent(parent))
+
+	require.NoError(t, parent.Update(nil))
+
+	// battery set on child is ignored, the parent without battery charge limits
+	child.SetBatteryCharge(9000, 0, 0, 0)
+	assert.Equal(t, 1000.0, child.ValidateManagedPower(0, 11000))
+
+	// battery on root frees the parent, the child limit remains
+	parent.SetBatteryCharge(9000, 0, 0, 0)
+	assert.Equal(t, 2000.0, child.ValidateManagedPower(0, 11000))
+}

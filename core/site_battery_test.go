@@ -2,10 +2,12 @@ package core
 
 import (
 	"errors"
+	"math"
 	"testing"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
@@ -587,4 +589,55 @@ func TestEvFastChargingActiveDisabledLoadpoint(t *testing.T) {
 	site := &Site{loadpoints: []*Loadpoint{nil}}
 
 	assert.False(t, site.evFastChargingActive())
+}
+
+// TestUpdateCircuitBattery verifies that only batteries in charge mode pass their
+// grid charge power to the circuit, and phase currents only if all are measured
+func TestUpdateCircuitBattery(t *testing.T) {
+	Voltage = 230
+
+	type phaseBattery struct {
+		*api.MockMeter
+		*api.MockPhaseCurrents
+	}
+
+	for _, tc := range []struct {
+		name     string
+		measured bool
+		currents [3]float64
+	}{
+		{"measured currents", true, [3]float64{-13, -13, -13}},
+		{"unknown currents", false, [3]float64{}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			var charging api.Meter = api.NewMockMeter(ctrl)
+			if tc.measured {
+				pc := api.NewMockPhaseCurrents(ctrl)
+				pc.EXPECT().Currents().Return(-13.0, -13.0, -13.0, nil)
+				charging = phaseBattery{api.NewMockMeter(ctrl), pc}
+			}
+
+			circuit := api.NewMockCircuit(ctrl)
+			site := &Site{
+				log:     util.NewLogger("foo"),
+				circuit: circuit,
+				batteryMeters: []config.Device[api.Meter]{
+					config.NewStaticDevice(config.Named{Name: "charging"}, charging),
+					config.NewStaticDevice(config.Named{Name: "held"}, api.Meter(api.NewMockMeter(ctrl))),
+				},
+				batteryModeApplied: map[string]api.BatteryMode{
+					"charging": api.BatteryCharge,
+					"held":     api.BatteryHold,
+				},
+			}
+			site.battery.Devices = []types.Measurement{{Power: -9000}, {Power: -2000}}
+
+			l1, l2, l3 := math.Abs(tc.currents[0]), math.Abs(tc.currents[1]), math.Abs(tc.currents[2])
+			circuit.EXPECT().SetBatteryCharge(9000.0, l1, l2, l3)
+
+			site.updateCircuitBattery()
+		})
+	}
 }

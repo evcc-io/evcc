@@ -1368,6 +1368,7 @@ func (site *Site) update(lp updater) {
 	site.publish(keys.BatteryGridDischargeActive, batteryGridDischargeActive)
 
 	site.updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate)
+	site.updateCircuitBattery()
 
 	// re-evaluate against the updated loadpoint state
 	site.publishSuggestions()

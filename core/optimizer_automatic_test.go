@@ -609,3 +609,50 @@ func TestOptimizerPlanActive(t *testing.T) {
 	_, _, optimized = lp.EffectivePlan(planTime, time.Hour, api.PlanStrategy{})
 	assert.False(t, optimized)
 }
+
+// TestOptimizerCircuitManaged verifies that only a loadpoint charging on a suggestion
+// validates as managed, which lets it use the battery grid charge power
+func TestOptimizerCircuitManaged(t *testing.T) {
+	enableAutomatic(t)
+
+	for _, tc := range []struct {
+		name       string
+		automatic  bool
+		suggestion *types.Suggestion
+		managed    bool
+	}{
+		{"charge suggestion", true, &types.Suggestion{Action: actionCharge}, true},
+		{"stop suggestion", true, &types.Suggestion{Action: "stop"}, false},
+		{"no suggestion", true, nil, false},
+		{"automatic disabled", false, &types.Suggestion{Action: actionCharge}, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			lp := &Loadpoint{
+				log:     util.NewLogger("foo"),
+				clock:   clock.NewMock(),
+				charger: api.NewMockCharger(ctrl),
+				vehicle: modelledVehicle(ctrl),
+				site:    &mockSite{automatic: tc.automatic},
+			}
+			if tc.suggestion != nil {
+				lp.setSuggestion(tc.suggestion)
+			}
+
+			circuit := api.NewMockCircuit(ctrl)
+			lp.circuit = circuit
+
+			if tc.managed {
+				circuit.EXPECT().ValidateManagedPower(1.0, 2.0).Return(2.0)
+				circuit.EXPECT().ValidateManagedCurrent(1.0, 2.0).Return(2.0)
+			} else {
+				circuit.EXPECT().ValidatePower(1.0, 2.0).Return(2.0)
+				circuit.EXPECT().ValidateCurrent(1.0, 2.0).Return(2.0)
+			}
+
+			assert.Equal(t, 2.0, lp.validateCircuitPower(1, 2))
+			assert.Equal(t, 2.0, lp.validateCircuitCurrent(1, 2))
+		})
+	}
+}
