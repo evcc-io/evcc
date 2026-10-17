@@ -14,8 +14,8 @@ type mockBatteryPowerLimiter struct {
 	charge, discharge float64
 }
 
-func (m *mockBatteryPowerLimiter) GetPowerLimits() (float64, float64) {
-	return m.charge, m.discharge
+func (m *mockBatteryPowerLimiter) GetPowerLimits() (float64, float64, error) {
+	return m.charge, m.discharge, nil
 }
 
 func (m *mockBatteryPowerLimiter) Soc() (float64, error) {
@@ -73,8 +73,8 @@ func (m *mockBatterySocLimiter) Soc() (float64, error) {
 	return m.soc, nil
 }
 
-func (m *mockBatterySocLimiter) GetSocLimits() (float64, float64) {
-	return m.min, m.max
+func (m *mockBatterySocLimiter) GetSocLimits() (float64, float64, error) {
+	return m.min, m.max, nil
 }
 
 type mockLimiter struct {
@@ -82,8 +82,8 @@ type mockLimiter struct {
 	discharge float64
 }
 
-func (m *mockLimiter) GetPowerLimits() (float64, float64) {
-	return 0, m.discharge
+func (m *mockLimiter) GetPowerLimits() (float64, float64, error) {
+	return 0, m.discharge, nil
 }
 
 func TestBatteryMaxDischargePowerWithMinSoc(t *testing.T) {

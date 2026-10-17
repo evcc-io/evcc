@@ -136,8 +136,6 @@ github.com/evcc-io/optimizer v0.0.0-20261004131720-6ba24fca01f5 h1:kMm3Z11WYZt1Z
 github.com/evcc-io/optimizer v0.0.0-20261004131720-6ba24fca01f5/go.mod h1:cHMeq6GfoXQ8LxqY4LH1wn/hrgYEn+ka5RPI1CF37SY=
 github.com/evcc-io/rct v0.2.0 h1:qjXKI7NKwW5YpEKEb27MwLMBaR4ne2Kd2cPV2PYTKn4=
 github.com/evcc-io/rct v0.2.0/go.mod h1:n6MTBU36QOadGlxxiADu86VaT5l0eYdbmFBHF14AD/s=
-github.com/evcc-io/tesla-proxy-client v0.0.0-20261015101137-8db68a0a4eeb h1:KTfg/xokVzGkl2Il6f6QWCUn/TM7lMZQr0bQ8VhBxxk=
-github.com/evcc-io/tesla-proxy-client v0.0.0-20261015101137-8db68a0a4eeb/go.mod h1:L8AR3E7/MbbvCgnrtzsT6YsgQJtN5gk/LumR1gDBeJM=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
 github.com/fatih/color v1.18.0 h1:S8gINlzdQ840/4pfAwic/ZE0djQEH3wM94VfqLTZcOM=
 github.com/fatih/color v1.18.0/go.mod h1:4FelSpRwEGDpQ12mAdzqdOukCy4u8WUtOY6lkT/6HfU=
@@ -259,8 +257,6 @@ github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+
 github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/gopherjs/gopherjs v1.17.2 h1:fQnZVsXk8uxXIStYb0N4bGk7jeyTalG/wsZjQ25dO0g=
-github.com/gopherjs/gopherjs v1.17.2/go.mod h1:pRRIvn/QzFLrKfvEz3qUuEhtE/zLCWfreZ6J5gM2i+k=
 github.com/gorilla/handlers v1.5.2 h1:cLTUSsNkgcwhgRqvCNmdbRWG0A3N4F+M2nWKdScwyEE=
 github.com/gorilla/handlers v1.5.2/go.mod h1:dX+xVpaxdSw+q0Qek8SSsl3dfMk3jNddUkMzo0GtH0w=
 github.com/gorilla/mux v1.8.1 h1:TuBL49tXwgrFYWhqrNgrUNEY92u81SPhu7sTdzQEiWY=
@@ -323,8 +319,6 @@ github.com/jpillora/backoff v1.0.0 h1:uvFg412JmmHBHw7iwprIxkPMI+sGQ4kzOWsMeHnm2E
 github.com/jpillora/backoff v1.0.0/go.mod h1:J/6gKK9jxlEcS3zixgDgUAsiuZ7yrSoa/FX5e0EB2j4=
 github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnrnM=
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
-github.com/jtolds/gls v4.20.0+incompatible h1:xdiiI2gbIgH/gLH7ADydsJ1uDOEzR8yvV7C0MuV77Wo=
-github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
 github.com/juju/gnuflag v0.0.0-20171113085948-2ce1bb71843d/go.mod h1:2PavIy+JPciBPrBUjwbNvtwB6RQlve+hkpll6QSNmOE=
 github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 h1:Z9n2FFNUXsshfwJMBgNA0RU6/i7WVaAegv3PtuIHPMs=
 github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51/go.mod h1:CzGEWj7cYgsdH8dAjBGEr58BoE7ScuLd+fwFZ44+/x8=
@@ -512,10 +506,6 @@ github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966 h1:JIAuq3EE
 github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966/go.mod h1:sUM3LWHvSMaG192sy56D9F7CNvL7jUJVXoqM1QKLnog=
 github.com/smallnest/chanx v1.2.0 h1:RLyldZBbQZ4O0dSvdkTMHo4+mDw20Bc1jXXTHf+ymZo=
 github.com/smallnest/chanx v1.2.0/go.mod h1:+4nWMF0+CqEcU74SnX2NxaGqZ8zX4pcQ8Jcs77DbX5A=
-github.com/smarty/assertions v1.15.0 h1:cR//PqUBUiQRakZWqBiFFQ9wb8emQGDb0HeGdqGByCY=
-github.com/smarty/assertions v1.15.0/go.mod h1:yABtdzeQs6l1brC900WlRNwj6ZR55d7B+E8C6HtKdec=
-github.com/smartystreets/goconvey v1.8.1 h1:qGjIddxOk4grTu9JPOU31tVfq3cNdBlNa5sSznIX1xY=
-github.com/smartystreets/goconvey v1.8.1/go.mod h1:+/u4qLyY6x1jReYOp7GOM2FSt8aP9CzCZL03bI28W60=
 github.com/spali/go-rscp v0.2.2 h1:+3dBED09ZD5Hf9Kt9Etm9Yv7M43E5KPxDAZdFBUIRpc=
 github.com/spali/go-rscp v0.2.2/go.mod h1:rFBvIWKN4D36zA9YR6enXz1sLr0DmvSWR8kN4UFln0s=
 github.com/spali/go-slicereader v0.0.0-20201122145524-8e262e1a5127 h1:YDqvwAH/l3S4ZULmKlUYszPyLBjHq73CLuUPU+2jJeE=
@@ -585,8 +575,8 @@ github.com/yosida95/uritemplate/v3 v3.0.2 h1:Ed3Oyj9yrmi9087+NczuL5BwkIc4wvTb5zI
 github.com/yosida95/uritemplate/v3 v3.0.2/go.mod h1:ILOh0sOhIJR3+L/8afwt/kE++YT040gmv5BQTMR2HP4=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
-gitlab.com/bboehmke/sunny v0.17.0 h1:WuEcs7Rq44FawiYk+UQmmr0oEBRcM6PgijXD8daGgvs=
-gitlab.com/bboehmke/sunny v0.17.0/go.mod h1:+Rme+hPiAtKfS3Ri+bXmUG+eRRHsdxie3M9cTtCU5Hc=
+gitlab.com/bboehmke/sunny v0.17.1-0.20261015191717-0ae8d5ef9152 h1:fh/IL9Yu1ivSTwYSoTSFBG2Oi14/GdFqVv/sCVmrTUw=
+gitlab.com/bboehmke/sunny v0.17.1-0.20261015191717-0ae8d5ef9152/go.mod h1:+Rme+hPiAtKfS3Ri+bXmUG+eRRHsdxie3M9cTtCU5Hc=
 gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a h1:DxppxFKRqJ8WD6oJ3+ZXKDY0iMONQDl5UTg2aTyHh8k=
 gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a/go.mod h1:NREvu3a57BaK0R1+ztrEzHWiZAihohNLQ6trPxlIqZI=
 go.bug.st/serial v1.8.0 h1:ZtnmN8aYXtPlTghwSvDWPHKBHL9TM6oFDa+KpSn4SQE=
