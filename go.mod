@@ -13,7 +13,7 @@ require (
 	github.com/WulfgarW/sensonet v0.0.8
 	github.com/andig/go-powerwall v0.3.0
 	github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512
-	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
+	github.com/andig/mbserver v0.0.0-20261012132218-a196e033ec39
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/basgys/goxml2json v1.1.0
 	github.com/benbjohnson/clock v1.3.5
