@@ -29,22 +29,29 @@ func updateOcppForwarderHandler(w http.ResponseWriter, r *http.Request) {
 
 	// restore masked secrets (password, caCert) from stored rules by station id
 	var old []ocpp.ForwarderRule
-	if err := settings.Json(keys.OcppForwarder, &old); err == nil {
-		stored := make(map[string]ocpp.ForwarderRule, len(old))
-		for _, o := range old {
-			stored[o.StationID] = o
-		}
-		for i := range rules {
-			if o, ok := stored[rules[i].StationID]; ok {
-				restoreMaskedMirrors(o.Mirrors, rules[i].Mirrors)
+	_ = settings.Json(keys.OcppForwarder, &old) // without stored rules there is nothing to restore
 
-				// mirrors are restored above; merging would resurrect removed ones
-				o.Mirrors = nil
-				if err := mergeMaskedAny(&o, &rules[i]); err != nil {
-					jsonError(w, http.StatusInternalServerError, err)
-					return
-				}
-			}
+	stored := make(map[string]ocpp.ForwarderRule, len(old))
+	for _, o := range old {
+		stored[o.StationID] = o
+	}
+
+	for i := range rules {
+		o, known := stored[rules[i].StationID]
+
+		if err := restoreMaskedMirrors(rules[i].StationID, o.Mirrors, rules[i].Mirrors); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+		if !known {
+			continue
+		}
+
+		// mirrors are restored above; merging would resurrect removed ones
+		o.Mirrors = nil
+		if err := mergeMaskedAny(&o, &rules[i]); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
 		}
 	}
 
@@ -80,8 +87,11 @@ func validateMirrors(rule ocpp.ForwarderRule) error {
 	return nil
 }
 
-// restoreMaskedMirrors fills masked secrets of the submitted mirrors from the stored ones.
-func restoreMaskedMirrors(stored, submitted []ocpp.MirrorRule) {
+// restoreMaskedMirrors fills masked secrets of the submitted mirrors from the stored ones. Editing
+// the station id keeps the upstream, so its secrets still apply if the stored mirror is unambiguous.
+// Where no stored mirror can be told, the save is rejected: the mask must not be stored and
+// an empty secret would silently break the connection.
+func restoreMaskedMirrors(stationID string, stored, submitted []ocpp.MirrorRule) error {
 	byKey := make(map[string]ocpp.MirrorRule, len(stored))
 	byURL := make(map[string][]ocpp.MirrorRule, len(stored))
 	for _, m := range stored {
@@ -92,13 +102,17 @@ func restoreMaskedMirrors(stored, submitted []ocpp.MirrorRule) {
 	}
 
 	for i := range submitted {
-		// editing the station id keeps the upstream, so its secrets still apply if it is unambiguous;
-		// a mirror whose URL changed has none to restore, and the mask is never persisted
+		if submitted[i].Password != masked && submitted[i].CaCert != masked {
+			continue
+		}
+
 		o, ok := byKey[submitted[i].Key()]
 		if !ok {
-			if same := byURL[strings.TrimRight(submitted[i].UpstreamURL, "/")]; len(same) == 1 {
-				o = same[0]
+			same := byURL[strings.TrimRight(submitted[i].UpstreamURL, "/")]
+			if len(same) != 1 {
+				return fmt.Errorf("%s: read-only upstream %s: enter the password and certificate again", stationID, submitted[i].UpstreamURL)
 			}
+			o = same[0]
 		}
 
 		if submitted[i].Password == masked {
@@ -108,4 +122,6 @@ func restoreMaskedMirrors(stored, submitted []ocpp.MirrorRule) {
 			submitted[i].CaCert = o.CaCert
 		}
 	}
+
+	return nil
 }
