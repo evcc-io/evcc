@@ -6,12 +6,75 @@ products:
 capabilities: ["iso151182", "mA", "meter"]
 requirements:
   evcc: ["sponsorship"]
+  description:
+    de: |
+      Breaking Change: Diese Version steuert die Box über ihre MQTT-Schnittstelle
+      (IPC) statt über Modbus. Eine bestehende Konfiguration mit `modbus`/`connector`
+      funktioniert nicht mehr und muss über die Oberfläche neu angelegt werden.
+
+      Der Broker läuft auf der Wallbox selbst und verlangt die Zugangsdaten des
+      technischen Benutzers; anonyme Verbindungen werden abgewiesen. Die `id` ist
+      die Geräte-ID der Wallbox im Topic `device/evCharger/<id>/…`, bei einer Box
+      mit einem Anschluss `0`.
+
+      Die Modbus-Register der Box eignen sich nicht zur Steuerung: der Sollwert in
+      Holding-Register 3000 wird entgegengenommen und quittiert, aber nicht
+      ausgeführt, solange die Box `controlMode: LIMITABLE` meldet.
+
+      Die Box lädt schon ab wenigen hundert Watt. Damit evcc diesen Bereich nutzt,
+      den Min. Ladestrom des Ladepunkts entsprechend niedrig einstellen
+      (z. B. 1 A ≈ 690 W bei drei Phasen).
+    en: |
+      Breaking change: this version controls the box through its MQTT (IPC)
+      interface instead of Modbus. An existing `modbus`/`connector` configuration
+      no longer works and needs to be set up again through the UI.
+
+      The broker runs on the wallbox itself and requires the technical user's
+      credentials; anonymous connections are refused. The `id` is the wallbox's
+      device id in the `device/evCharger/<id>/…` topic, `0` for a single-connector
+      box.
+
+      The box's Modbus registers are not usable for control: the setpoint in
+      holding register 3000 is accepted and acknowledged but never acted on while
+      the box reports `controlMode: LIMITABLE`.
+
+      The box charges from a few hundred watts. To let evcc use that range, set
+      the loadpoint's min. current accordingly low (e.g. 1 A ≈ 690 W on three
+      phases).
 params:
-  - name: modbus
-    choice: ["tcpip"]
-    id: 1
-  - name: connector
+  - preset: mqtt
+  - name: host
+    default: sid-os.local
+  - name: user
+    required: true
+    advanced: false
+  - name: password
+    required: true
+    advanced: false
+  - name: topic
+    default: device/evCharger
+    description:
+      de: Basis-Topic der IPC-Schnittstelle
+      en: Base topic of the IPC interface
+  - name: id
+    required: true
+    default: 0
+    description:
+      de: Geräte-ID der Wallbox
+      en: Device id of the wallbox
+  - name: minpower
+    default: 600
+    unit: W
+    advanced: true
+    description:
+      de: Kleinste Ladeleistung, die die Box hält
+      en: Smallest charge power the box will hold
+    help:
+      de: Meldet die Box `chargePowerMin`, gilt der größere der beiden Werte.
+      en: If the box reports `chargePowerMin`, the larger of both values applies.
 render: |
   type: ambibox
-  {{- include "modbus" . }}
-  connector: {{ .connector }}
+  {{- include "mqtt" . }}
+  topic: {{ .topic }}
+  id: {{ .id }}
+  minpower: {{ .minpower }}
