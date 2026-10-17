@@ -17,7 +17,6 @@ const (
 	ModbusProxy        = "modbusproxy"
 	Ocpp               = "ocpp"
 	OcppForwarder      = "ocppforwarder"
-	OcppMirrorStats    = "ocppMirrorStats"
 	Tariffs            = "tariffs"
 	TariffRefs         = "tariffRefs"
 	CircuitsConfig     = "circuitsConfig"

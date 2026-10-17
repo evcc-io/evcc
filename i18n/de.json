@@ -826,17 +826,6 @@
         "add": "Lesenden Upstream hinzufügen",
         "description": "Erhalten eine Kopie aller Nachrichten dieser Wallbox, zum Beispiel für Reporting oder Monitoring. Sie antworten der Wallbox nie und können keine Befehle senden. Der Haupt-Upstream oben kann autorisieren und abrechnen.",
         "remove": "Entfernen",
-        "stats": {
-          "disconnects": "Unterbrechungen",
-          "energy": "Energie (kWh)",
-          "hour": "Stunde",
-          "last24h": "Letzte 24 Stunden: {messages} Nachrichten, {energy} kWh gemeldet.",
-          "lastSent": "Letzte Nachricht gesendet",
-          "messages": "Nachrichten",
-          "meterValues": "Messwerte",
-          "never": "Noch nichts gesendet",
-          "table": "Pro Stunde"
-        },
         "title": "Lesende Upstreams"
       },
       "password": "Passwort",

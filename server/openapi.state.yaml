@@ -1546,32 +1546,6 @@ components:
         - chargerId
         - upstreamUrl
         - upstreamConnected
-    OcppMirrorHour:
-      description: What was written to a read-only upstream within one hour.
-      type: object
-      properties:
-        start:
-          description: Start of the hour.
-          type: string
-          format: date-time
-        messages:
-          description: Number of messages written.
-          type: number
-        meterValues:
-          description: Number of meter value messages written.
-          type: number
-        energyWh:
-          description: Energy reported in Wh, the sum of the steps of the energy register.
-          type: number
-        disconnects:
-          description: Number of lost connections.
-          type: number
-      required:
-        - start
-        - messages
-        - meterValues
-        - energyWh
-        - disconnects
     OcppMirrorRule:
       description: A read-only upstream that receives a copy of a station's OCPP messages.
       type: object
@@ -1612,15 +1586,6 @@ components:
         error:
           description: Last connection error.
           type: string
-        lastSent:
-          description: Time of the last message written.
-          type: string
-          format: date-time
-        history:
-          description: What was written per hour, oldest first.
-          type: array
-          items:
-            $ref: "#/components/schemas/OcppMirrorHour"
       required:
         - upstreamUrl
         - upstreamConnected

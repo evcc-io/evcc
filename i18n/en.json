@@ -826,17 +826,6 @@
         "add": "Add read-only upstream",
         "description": "Receive a copy of every message of this charger, for example for reporting or monitoring. They never answer the charger and cannot send commands. The main upstream above is the one that can authorize and bill.",
         "remove": "Remove",
-        "stats": {
-          "disconnects": "Disconnects",
-          "energy": "Energy (kWh)",
-          "hour": "Hour",
-          "last24h": "Last 24 hours: {messages} messages, {energy} kWh reported.",
-          "lastSent": "Last message sent",
-          "messages": "Messages",
-          "meterValues": "Meter values",
-          "never": "Nothing sent yet",
-          "table": "Per hour"
-        },
         "title": "Read-only upstreams"
       },
       "password": "Password",

@@ -111,8 +111,6 @@ func ApplyForwarderRules(rules []ForwarderRule) {
 	}
 
 	reconcileMirrors()
-	pruneMirrorStats()
-	flushMirrorStats()
 
 	notifyUpdated()
 }

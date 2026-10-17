@@ -409,23 +409,6 @@ export interface OcppForwarderRule {
 /** OCPP forwarder rules and upstream connection status. */
 export interface OcppForwarder extends ConfigStatus<OcppForwarderRule[], OcppForwarderSession[]> {}
 
-/** What was written to a read-only upstream within one hour. */
-export interface OcppMirrorHour {
-  /**
-   * Start of the hour.
-   * @format date-time
-   */
-  start: string;
-  /** Number of messages written. */
-  messages: number;
-  /** Number of meter value messages written. */
-  meterValues: number;
-  /** Energy reported in Wh, the sum of the steps of the energy register. */
-  energyWh: number;
-  /** Number of lost connections. */
-  disconnects: number;
-}
-
 /** Connection status of a read-only upstream. */
 export interface OcppMirrorSession {
   /** URL of the upstream OCPP backend. */
@@ -436,13 +419,6 @@ export interface OcppMirrorSession {
   upstreamConnected: boolean;
   /** Last connection error. */
   error?: string;
-  /**
-   * Time of the last message written.
-   * @format date-time
-   */
-  lastSent?: string;
-  /** What was written per hour, oldest first. */
-  history?: OcppMirrorHour[];
 }
 
 /** Connection status of an OCPP forwarder rule. */

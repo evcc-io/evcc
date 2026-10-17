@@ -138,20 +138,6 @@ func TestMirrorRedacted(t *testing.T) {
 	assert.Equal(t, "secret", rule.Mirrors[0].Password, "original must stay untouched")
 }
 
-type memMirrorStats struct {
-	data map[string]mirrorStats
-}
-
-func (m *memMirrorStats) load() (map[string]mirrorStats, error) { return m.data, nil }
-func (m *memMirrorStats) save(d map[string]mirrorStats) error {
-	m.data = d
-	return nil
-}
-
-func init() {
-	mirrorStatsBackend = &memMirrorStats{}
-}
-
 func TestMeterEnergyWh(t *testing.T) {
 	wh, ok := meterEnergyWh([]byte(`[2,"m","MeterValues",{"meterValue":[{"sampledValue":[{"value":"7.5","measurand":"Current.Import"},{"value":"15440.5","measurand":"Energy.Active.Import.Register","unit":"kWh"}]}]}]`))
 	assert.True(t, ok)
@@ -168,32 +154,31 @@ func TestMeterEnergyWh(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestMirrorRecord(t *testing.T) {
-	ms := &mirrorSession{chargerID: "stats-test", rule: MirrorRule{UpstreamURL: "ws://x"}}
+func TestMirrorCount(t *testing.T) {
+	ms := &mirrorSession{chargerID: "count-test"}
 	meter := func(wh string) []byte {
 		return []byte(`[2,"m","MeterValues",{"meterValue":[{"sampledValue":[{"value":"` + wh + `"}]}]}]`)
 	}
 
 	now := time.Date(2026, 10, 15, 10, 5, 0, 0, time.UTC)
-	ms.record(meter("1000"), now)
-	ms.record(meter("1500"), now.Add(time.Minute))
-	ms.record([]byte(`[2,"s","StatusNotification",{"connectorId":1}]`), now.Add(2*time.Minute))
-	ms.record(meter("2000"), now.Add(time.Hour))
-	ms.record(meter("10"), now.Add(time.Hour+time.Minute))
+	ms.count(meter("1000"), now)
+	ms.count(meter("1500"), now.Add(time.Minute))
+	ms.count([]byte(`[2,"s","StatusNotification",{"connectorId":1}]`), now.Add(2*time.Minute))
+	ms.countDisconnect(now.Add(3 * time.Minute))
 
-	mirrorsMu.Lock()
-	defer mirrorsMu.Unlock()
+	assert.Equal(t, 3, ms.counter.messages)
+	assert.Equal(t, 2, ms.counter.meterValues)
+	assert.Equal(t, 500.0, ms.counter.energyWh, "the first sample has nothing to step from")
+	assert.Equal(t, 1, ms.counter.disconnects)
 
-	st := statsLocked(mirrorStatsKey("stats-test", ms.rule.Key()))
-	require.Len(t, st.Hours, 2)
+	ms.count(meter("2000"), now.Add(time.Hour))
+	assert.Equal(t, 1, ms.counter.messages, "a new hour starts counting again")
+	assert.Equal(t, 500.0, ms.counter.energyWh, "the step continues from the previous hour")
+	assert.Equal(t, 0, ms.counter.disconnects)
 
-	assert.Equal(t, 3, st.Hours[0].Messages)
-	assert.Equal(t, 2, st.Hours[0].MeterValues)
-	assert.Equal(t, 500.0, st.Hours[0].EnergyWh, "the first sample has nothing to step from")
-
-	assert.Equal(t, 2, st.Hours[1].Messages)
-	assert.Equal(t, 500.0, st.Hours[1].EnergyWh, "a register reset adds no energy")
-	assert.Equal(t, 10.0, st.LastWh)
+	ms.count(meter("10"), now.Add(time.Hour+time.Minute))
+	assert.Equal(t, 500.0, ms.counter.energyWh, "a register reset adds no energy")
+	assert.Equal(t, 10.0, ms.counter.lastWh)
 }
 
 func TestMirrorNotStartedForDisconnectedCharger(t *testing.T) {
@@ -242,108 +227,4 @@ func TestMirrorFrameSuperseded(t *testing.T) {
 
 	meter := mirrorFrame{seq: 3, action: "MeterValues"}
 	assert.False(t, meter.superseded(9), "samples are never replayed")
-}
-
-type failingMirrorStats struct {
-	loadErr error
-	saveErr error
-	saved   int
-}
-
-func (f *failingMirrorStats) load() (map[string]mirrorStats, error) { return nil, f.loadErr }
-func (f *failingMirrorStats) save(map[string]mirrorStats) error {
-	f.saved++
-	return f.saveErr
-}
-
-func useMirrorStats(t *testing.T, backend mirrorStatsStore) {
-	t.Helper()
-
-	previous := mirrorStatsBackend
-
-	mirrorsMu.Lock()
-	mirrorStatsBackend = backend
-	mirrorStatsData = make(map[string]*mirrorStats)
-	mirrorStatsLoaded, mirrorStatsDirty, mirrorStatsReadOnly = false, false, false
-	mirrorsMu.Unlock()
-
-	t.Cleanup(func() {
-		mirrorsMu.Lock()
-		mirrorStatsBackend = previous
-		mirrorStatsData = make(map[string]*mirrorStats)
-		mirrorStatsLoaded, mirrorStatsDirty, mirrorStatsReadOnly = false, false, false
-		mirrorsMu.Unlock()
-	})
-}
-
-func TestMirrorStatsFailedSaveStaysDirty(t *testing.T) {
-	backend := &failingMirrorStats{saveErr: assert.AnError}
-	useMirrorStats(t, backend)
-
-	ms := &mirrorSession{chargerID: "stats-save-test", rule: MirrorRule{UpstreamURL: "ws://x"}}
-	ms.record([]byte(`[2,"s","StatusNotification",{"connectorId":1}]`), time.Now())
-
-	flushMirrorStats()
-	assert.Equal(t, 1, backend.saved)
-
-	backend.saveErr = nil
-	flushMirrorStats()
-	assert.Equal(t, 2, backend.saved, "the failed save is retried")
-
-	flushMirrorStats()
-	assert.Equal(t, 2, backend.saved, "nothing left to save")
-}
-
-func TestMirrorStatsUnreadableStoreIsNotOverwritten(t *testing.T) {
-	backend := &failingMirrorStats{loadErr: assert.AnError}
-	useMirrorStats(t, backend)
-
-	ms := &mirrorSession{chargerID: "stats-corrupt-test", rule: MirrorRule{UpstreamURL: "ws://x"}}
-	ms.record([]byte(`[2,"s","StatusNotification",{"connectorId":1}]`), time.Now())
-
-	flushMirrorStats()
-	assert.Zero(t, backend.saved)
-}
-
-func TestMirrorStatsKeepLastSent(t *testing.T) {
-	useMirrorStats(t, &memMirrorStats{})
-
-	rule := MirrorRule{UpstreamURL: "ws://x"}
-	ms := &mirrorSession{chargerID: "stats-lastsent-test", rule: rule}
-	at := time.Date(2026, 10, 15, 10, 5, 0, 0, time.UTC)
-	ms.record([]byte(`[2,"s","StatusNotification",{"connectorId":1}]`), at)
-
-	status := mirrorStatus("stats-lastsent-test", []MirrorRule{rule})
-	require.Len(t, status, 1)
-	require.NotNil(t, status[0].LastSent, "without a running session")
-	assert.True(t, status[0].LastSent.Equal(at))
-}
-
-func TestPruneMirrorStats(t *testing.T) {
-	const id = "stats-prune-test"
-	useMirrorStats(t, &memMirrorStats{})
-
-	kept := MirrorRule{UpstreamURL: "ws://kept"}
-	removed := MirrorRule{UpstreamURL: "ws://removed"}
-
-	for _, r := range []MirrorRule{kept, removed} {
-		ms := &mirrorSession{chargerID: id, rule: r}
-		ms.record([]byte(`[2,"s","StatusNotification",{"connectorId":1}]`), time.Now())
-	}
-
-	forwarderMu.Lock()
-	forwarderRules = []ForwarderRule{{StationID: id, UpstreamURL: "ws://main.invalid", Mirrors: []MirrorRule{kept}}}
-	forwarderMu.Unlock()
-	defer func() {
-		forwarderMu.Lock()
-		forwarderRules = nil
-		forwarderMu.Unlock()
-	}()
-
-	pruneMirrorStats()
-
-	mirrorsMu.Lock()
-	defer mirrorsMu.Unlock()
-	assert.Contains(t, mirrorStatsData, mirrorStatsKey(id, kept.Key()))
-	assert.NotContains(t, mirrorStatsData, mirrorStatsKey(id, removed.Key()))
 }
