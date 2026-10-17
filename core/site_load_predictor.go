@@ -17,8 +17,8 @@ import (
 const (
 	// homeProfileDays is the number of days the home profile is built from
 	homeProfileDays = 28
-	// homeProfileLookback is how far back days are searched to replace excluded days
-	homeProfileLookback = 56
+	// homeClassifyDays covers long vacations when deriving the base load for classifying days
+	homeClassifyDays = 56
 	// homeProfileMinDays is the minimum number of remaining days to use an excluding profile
 	homeProfileMinDays = 7
 )
@@ -29,7 +29,6 @@ const homeExclusionSettle = 2 * tariff.SlotDuration
 // homeExclusion holds the days excluded from the home profile, computed once per day
 type homeExclusion struct {
 	day     time.Time // beginning of the day the exclusion was computed for
-	from    time.Time // start of the profile window
 	exclude []string  // excluded local days (YYYY-MM-DD)
 }
 
@@ -61,7 +60,7 @@ func (site *Site) homeProfileExcluding(col *metrics.Collector, ts time.Time) (*[
 		return nil, err
 	}
 
-	return col.EnergyProfileExcluding(ex.from, ex.exclude)
+	return col.EnergyProfileExcluding(ex.day.AddDate(0, 0, -homeProfileDays), ex.exclude)
 }
 
 // homeDayExclusion returns the day exclusion of ts' day, cached once the previous day has settled
@@ -74,7 +73,7 @@ func (site *Site) homeDayExclusion(col *metrics.Collector, ts time.Time) (*homeE
 		return ex, nil
 	}
 
-	classes, err := col.ClassifyDays(bod.AddDate(0, 0, -homeProfileLookback), bod)
+	classes, err := col.ClassifyDays(bod.AddDate(0, 0, -homeClassifyDays), bod)
 	if err != nil {
 		return nil, err
 	}
@@ -85,39 +84,28 @@ func (site *Site) homeDayExclusion(col *metrics.Collector, ts time.Time) (*homeE
 	}
 
 	if len(ex.exclude) > 0 {
-		site.log.DEBUG.Printf("home profile: excluding %d absent/outlier days since %s: %v", len(ex.exclude), ex.from.Format(time.DateOnly), ex.exclude)
+		site.log.DEBUG.Printf("home profile: excluding %d absent/outlier days: %v", len(ex.exclude), ex.exclude)
 	}
 
 	return ex, nil
 }
 
-// excludeDays walks back from the day before bod until homeProfileDays days with data are
-// kept, at most homeProfileLookback days. Incomplete days are kept as before, days without
-// data are not counted. Nothing is excluded when fewer than homeProfileMinDays days remain.
+// excludeDays returns the absent and outlier days of the profile window. Nothing is excluded
+// when fewer than homeProfileMinDays days with data would remain.
 func excludeDays(classes map[string]metrics.DayClass, bod time.Time) *homeExclusion {
-	res := &homeExclusion{
-		day:  bod,
-		from: bod.AddDate(0, 0, -homeProfileLookback),
-	}
+	res := &homeExclusion{day: bod}
 
 	var kept int
-	for i := 1; i <= homeProfileLookback; i++ {
-		day := bod.AddDate(0, 0, -i)
-		key := day.Format(time.DateOnly)
+	for i := 1; i <= homeProfileDays; i++ {
+		key := bod.AddDate(0, 0, -i).Format(time.DateOnly)
 
-		class, ok := classes[key]
-		if !ok {
-			continue
-		}
-
-		if class == metrics.DayAbsent || class == metrics.DayOutlier {
+		switch class, ok := classes[key]; {
+		case !ok:
+			// no data
+		case class == metrics.DayAbsent || class == metrics.DayOutlier:
 			res.exclude = append(res.exclude, key)
-			continue
-		}
-
-		if kept++; kept == homeProfileDays {
-			res.from = day
-			break
+		default:
+			kept++
 		}
 	}
 

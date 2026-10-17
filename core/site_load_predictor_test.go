@@ -151,68 +151,53 @@ func TestExcludeDays(t *testing.T) {
 	bod := now.BeginningOfDay()
 	key := func(i int) string { return bod.AddDate(0, 0, -i).Format(time.DateOnly) }
 
-	t.Run("no absent days", func(t *testing.T) {
+	normal := func() map[string]metrics.DayClass {
 		classes := make(map[string]metrics.DayClass)
-		for i := 1; i <= homeProfileLookback; i++ {
+		for i := 1; i <= homeClassifyDays; i++ {
 			classes[key(i)] = metrics.DayNormal
 		}
+		return classes
+	}
 
-		ex := excludeDays(classes, bod)
-		assert.Empty(t, ex.exclude)
-		assert.Equal(t, bod.AddDate(0, 0, -homeProfileDays), ex.from)
+	t.Run("no absent days", func(t *testing.T) {
+		assert.Empty(t, excludeDays(normal(), bod).exclude)
 	})
 
-	t.Run("vacation is replaced by older days", func(t *testing.T) {
-		classes := make(map[string]metrics.DayClass)
-		for i := 1; i <= homeProfileLookback; i++ {
-			classes[key(i)] = metrics.DayNormal
-		}
+	t.Run("absent and outlier days within the profile window", func(t *testing.T) {
+		classes := normal()
 
-		// 14 days vacation ending 3 days ago, one outlier
+		// 14 days vacation ending 3 days ago, one outlier, one incomplete day
 		for i := 4; i < 18; i++ {
 			classes[key(i)] = metrics.DayAbsent
 		}
 		classes[key(20)] = metrics.DayOutlier
+		classes[key(21)] = metrics.DayIncomplete
+
+		// outside the profile window
+		classes[key(homeProfileDays+5)] = metrics.DayAbsent
 
 		ex := excludeDays(classes, bod)
 		assert.Len(t, ex.exclude, 15)
-		assert.Equal(t, bod.AddDate(0, 0, -(homeProfileDays+15)), ex.from, "window extends by the excluded days")
+		assert.NotContains(t, ex.exclude, key(21), "incomplete days are kept")
+		assert.NotContains(t, ex.exclude, key(homeProfileDays+5), "no days outside the profile window")
 	})
 
-	t.Run("incomplete days are kept, days without data are skipped", func(t *testing.T) {
-		classes := map[string]metrics.DayClass{key(1): metrics.DayAbsent}
-		for i := 2; i <= 40; i++ {
-			if i%2 == 0 {
-				classes[key(i)] = metrics.DayIncomplete
-			}
-		}
-
-		ex := excludeDays(classes, bod)
-		assert.Equal(t, []string{key(1)}, ex.exclude)
-		assert.Equal(t, bod.AddDate(0, 0, -homeProfileLookback), ex.from, "fewer than 28 days with data: full lookback")
-	})
-
-	t.Run("only days with data count towards the minimum", func(t *testing.T) {
+	t.Run("days without data do not count towards the minimum", func(t *testing.T) {
 		classes := map[string]metrics.DayClass{key(1): metrics.DayAbsent}
 		for i := 2; i < 2+homeProfileMinDays-1; i++ {
 			classes[key(i)] = metrics.DayNormal
 		}
 
-		ex := excludeDays(classes, bod)
-		assert.Empty(t, ex.exclude)
+		assert.Empty(t, excludeDays(classes, bod).exclude)
 	})
 
 	t.Run("too few remaining days", func(t *testing.T) {
-		classes := make(map[string]metrics.DayClass)
-		for i := 1; i <= homeProfileLookback; i++ {
+		classes := normal()
+		for i := homeProfileMinDays; i <= homeProfileDays; i++ {
 			classes[key(i)] = metrics.DayAbsent
 		}
-		for i := 1; i < homeProfileMinDays; i++ {
-			classes[key(i)] = metrics.DayNormal
-		}
 
-		ex := excludeDays(classes, bod)
-		assert.Empty(t, ex.exclude, "nothing excluded below minimum days")
+		assert.Empty(t, excludeDays(classes, bod).exclude)
 	})
 }
 
@@ -228,12 +213,12 @@ func TestHomeProfileExcludesVacation(t *testing.T) {
 
 	bod := now.BeginningOfDay()
 
-	// 6 weeks: 2 weeks vacation ending yesterday, normal days before with an evening peak
-	for day := -42; day < 0; day++ {
+	// 8 weeks: 3 weeks vacation ending yesterday, normal days before with an evening peak
+	for day := -homeClassifyDays; day < 0; day++ {
 		for slot := range 96 {
 			energy := 0.1 // kWh per slot
 			switch {
-			case day >= -14:
+			case day >= -21:
 				energy = 0.09
 			case slot/4 == 18:
 				energy = 0.5
@@ -252,7 +237,7 @@ func TestHomeProfileExcludesVacation(t *testing.T) {
 	res, err := site.homeProfile(96)
 	require.NoError(t, err)
 
-	// profile only contains the 28 normal days before the vacation
+	// profile only contains the 7 normal days of the 4 week window
 	firstSlot := int(time.Now().Truncate(tariff.SlotDuration).Sub(bod) / tariff.SlotDuration)
 	for i, v := range res {
 		expected := 100.0 // Wh
@@ -266,11 +251,11 @@ func TestHomeProfileExcludesVacation(t *testing.T) {
 	site.homeExclusion = nil
 	ex, err := site.homeDayExclusion(col, bod.Add(tariff.SlotDuration))
 	require.NoError(t, err)
-	assert.Len(t, ex.exclude, 14)
+	assert.Len(t, ex.exclude, 21)
 	assert.Nil(t, site.homeExclusion)
 
 	_, err = site.homeDayExclusion(col, bod.Add(time.Hour))
 	require.NoError(t, err)
 	require.NotNil(t, site.homeExclusion)
-	assert.Len(t, site.homeExclusion.exclude, 14)
+	assert.Len(t, site.homeExclusion.exclude, 21)
 }
