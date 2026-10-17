@@ -85,7 +85,6 @@ export default defineConfig({
     ignorePatterns: ["tests/custom-css.css"],
     overrides: [
       { files: ["**/*.vue"], options: { tabWidth: 4 } },
-      // Weblate writes the go-i18n-json-v2 glossary files with 4 spaces
       { files: ["i18n/glossary/*.json"], options: { tabWidth: 4 } },
     ],
   },
