@@ -75,6 +75,8 @@ type StatusResponse struct {
 		Timestamp TimeMillis
 	} `json:",omitempty"`
 	Timestamp TimeMillis
+
+	unplugged bool // outdated status, cloud rejects deep refresh since vehicle is not plugged in
 }
 
 type LocationResponse struct {
@@ -87,7 +89,7 @@ type LocationResponse struct {
 }
 
 type ActionResponse struct {
-	Name, Message string
+	Name, Message, DebugMsg string
 
 	// deep refresh
 	Command          string
