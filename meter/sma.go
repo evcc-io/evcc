@@ -52,7 +52,7 @@ func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 }
 
 // NewSMA creates an SMA meter
-func NewSMA(uri, password, iface string, serial uint32, scale float64, usage string, dc bool, capacity func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*SMA, error) {
+func NewSMA(uri, password, iface string, serial uint32, scale float64, usage string, dc bool, capacity func() (float64, error), batterySocLimits, batteryPowerLimits func() (float64, float64, error)) (*SMA, error) {
 	sm := &SMA{
 		Caps:  implement.New(),
 		uri:   uri,
