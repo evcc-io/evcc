@@ -41,29 +41,32 @@ func _MonthNoOp() {
 var _MonthValues = []Month{January, February, March, April, May, June, July, August, September, October, November, December}
 
 var _MonthNameToValueMap = map[string]Month{
-	_MonthName[0:7]:        January,
+	_MonthName[0:7]:   January,
+	_MonthName[7:15]:  February,
+	_MonthName[15:20]: March,
+	_MonthName[20:25]: April,
+	_MonthName[25:28]: May,
+	_MonthName[28:32]: June,
+	_MonthName[32:36]: July,
+	_MonthName[36:42]: August,
+	_MonthName[42:51]: September,
+	_MonthName[51:58]: October,
+	_MonthName[58:66]: November,
+	_MonthName[66:74]: December,
+}
+
+var _MonthLowerNameToValueMap = map[string]Month{
 	_MonthLowerName[0:7]:   January,
-	_MonthName[7:15]:       February,
 	_MonthLowerName[7:15]:  February,
-	_MonthName[15:20]:      March,
 	_MonthLowerName[15:20]: March,
-	_MonthName[20:25]:      April,
 	_MonthLowerName[20:25]: April,
-	_MonthName[25:28]:      May,
 	_MonthLowerName[25:28]: May,
-	_MonthName[28:32]:      June,
 	_MonthLowerName[28:32]: June,
-	_MonthName[32:36]:      July,
 	_MonthLowerName[32:36]: July,
-	_MonthName[36:42]:      August,
 	_MonthLowerName[36:42]: August,
-	_MonthName[42:51]:      September,
 	_MonthLowerName[42:51]: September,
-	_MonthName[51:58]:      October,
 	_MonthLowerName[51:58]: October,
-	_MonthName[58:66]:      November,
 	_MonthLowerName[58:66]: November,
-	_MonthName[66:74]:      December,
 	_MonthLowerName[66:74]: December,
 }
 
@@ -89,7 +92,7 @@ func MonthString(s string) (Month, error) {
 		return val, nil
 	}
 
-	if val, ok := _MonthNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _MonthLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to Month values", s)
