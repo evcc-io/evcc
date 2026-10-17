@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -51,7 +52,34 @@ func resolveFloat(ctx context.Context, v any) (func() (float64, error), error) {
 		if err := util.DecodeOther(v, &cfg); err != nil {
 			return nil, err
 		}
-		return cfg.FloatGetter(ctx)
+		get, err := cfg.FloatGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return lastGood(get), nil
+	}
+}
+
+// lastGood keeps the last successful read alive: the settings are semi-static, so a
+// transient read failure must not change them. Only a value never read errors.
+func lastGood(get func() (float64, error)) func() (float64, error) {
+	var (
+		mu   sync.Mutex
+		val  float64
+		read bool
+	)
+	return func() (float64, error) {
+		v, err := get()
+
+		mu.Lock()
+		defer mu.Unlock()
+
+		if err == nil {
+			val, read = v, true
+		} else if read {
+			return val, nil
+		}
+		return val, err
 	}
 }
 

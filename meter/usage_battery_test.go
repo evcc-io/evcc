@@ -2,6 +2,7 @@ package meter
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -76,6 +77,26 @@ func TestBatteryPowerLimitsPluginError(t *testing.T) {
 	// a failed read must surface as error, not as a 0 limit
 	_, _, err = g()
 	require.Error(t, err)
+}
+
+func TestLastGood(t *testing.T) {
+	var fail bool
+	g := lastGood(func() (float64, error) {
+		if fail {
+			return 0, errors.New("read failed")
+		}
+		return 42, nil
+	})
+
+	v, err := g()
+	require.NoError(t, err)
+	require.Equal(t, 42.0, v)
+
+	// a failed read keeps the last value
+	fail = true
+	v, err = g()
+	require.NoError(t, err)
+	require.Equal(t, 42.0, v)
 }
 
 func TestBatteryModes(t *testing.T) {
