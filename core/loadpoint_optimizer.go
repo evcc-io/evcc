@@ -111,13 +111,16 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 	}
 
 	required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower())
+	remaining := lp.clock.Until(planTime)
 
 	// past the plan time the goal was missed- keep charging like plannerActive does
-	if remaining := lp.clock.Until(planTime); remaining > 0 {
-		return required >= remaining
+	if required <= 0 || (remaining > 0 && required < remaining) {
+		return false
 	}
 
-	return required > 0
+	lp.log.DEBUG.Printf("plan: deadline critical (required %v >= remaining %v), planner takes over", required.Round(time.Second), remaining.Round(time.Second))
+
+	return true
 }
 
 // surplusRegime indicates that the suggested charge power matches the forecast
@@ -142,7 +145,7 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion) (bool, error) {
 			lp.resetPVTimer()
 		}
 
-		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), following pv surplus", s.Charge)
+		lp.log.DEBUG.Printf("optimizer: charge %.0fW (grid %.0fW, battery %.0fW), following pv surplus", s.Charge, s.Grid, s.Battery)
 		return false, nil
 	}
 
@@ -163,21 +166,21 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion) (bool, error) {
 	// up and owns the phase timer, resetting it here would restart the delay every cycle
 	full := s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold
 	if s.Action == actionCharge && (full || s.Charge > currentToPower(lp.effectiveMaxCurrent(), lp.ActivePhases())) {
-		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), full power", s.Charge)
+		lp.log.DEBUG.Printf("optimizer: charge %.0fW (grid %.0fW, battery %.0fW), full power", s.Charge, s.Grid, s.Battery)
 		return true, lp.fastCharging()
 	}
 
 	lp.resetPhaseTimer()
 
 	if s.Action == actionCharge {
-		// a limited setpoint, e.g. a minimum demand or a grid import limit
+		// a limited setpoint, e.g. a battery-fed charge, a minimum demand or a grid import limit
 		if current := powerToCurrent(s.Charge, lp.ActivePhases()); current >= lp.effectiveMinCurrent() {
-			lp.log.DEBUG.Printf("optimizer: charge (%.0fW)", s.Charge)
+			lp.log.DEBUG.Printf("optimizer: charge %.0fW (grid %.0fW, battery %.0fW), setpoint %.3gA", s.Charge, s.Grid, s.Battery, current)
 			return true, lp.setLimit(current)
 		}
 
 		// below what the active phases can deliver, minCharging scales down instead
-		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), minimum power", s.Charge)
+		lp.log.DEBUG.Printf("optimizer: charge %.0fW (grid %.0fW, battery %.0fW), minimum power", s.Charge, s.Grid, s.Battery)
 		return true, lp.minCharging()
 	}
 
