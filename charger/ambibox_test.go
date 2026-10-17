@@ -240,6 +240,20 @@ func TestAmbiboxEnabledPropagatesSessionStateErrorWithoutCaching(t *testing.T) {
 	}
 }
 
+func TestAmbiboxEnabledWithoutVehicleIsNotAnError(t *testing.T) {
+	// Without a vehicle the box never publishes sessionState at all - a
+	// permanent, not transient, getter error. Must read as "no session",
+	// not get propagated as if the retained message were merely delayed.
+	wb, _ := newTestAmbibox()
+	wb.evConnectedG = func() (bool, error) { return false, nil }
+	wb.sessionStateG = func() (string, error) { return "", errors.New("no retained message") }
+
+	enabled, err := wb.Enabled()
+	if err != nil || enabled {
+		t.Fatalf("Enabled() = %v, %v, want false, nil (no vehicle, not a race)", enabled, err)
+	}
+}
+
 func TestAmbiboxStatusPropagatesSessionStateError(t *testing.T) {
 	wb, _ := newTestAmbibox()
 	wantErr := errors.New("sessionState not delivered yet")

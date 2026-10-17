@@ -285,15 +285,18 @@ func (wb *Ambibox) tryWake() {
 }
 
 // sessionActive reports whether the box has a session running or starting
-// up. Without a vehicle it publishes no sessionState at all, and a retained
-// value cleared on unplug arrives here as "" - both read as no session. A
-// getter error is reported rather than folded into "no session", so a caller
-// adopting this at startup does not lock in a false guess while the retained
-// message is still in flight.
+// up. Without a vehicle it publishes no sessionState at all - that is a
+// steady state, not a race, so it reads as no session rather than an error.
+// While a vehicle is connected, a sessionState read error is reported rather
+// than folded into "no session", so a caller adopting this at startup does
+// not lock in a false guess while the retained message is still in flight.
 func (wb *Ambibox) sessionActive() (bool, error) {
 	s, err := wb.sessionStateG()
 	if err != nil {
-		return false, err
+		if ev, evErr := wb.evConnectedG(); evErr == nil && ev {
+			return false, err
+		}
+		return false, nil
 	}
 	if s == "" {
 		return false, nil
