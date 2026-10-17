@@ -286,13 +286,19 @@ func (wb *Ambibox) tryWake() {
 
 // sessionActive reports whether the box has a session running or starting
 // up. Without a vehicle it publishes no sessionState at all, and a retained
-// value cleared on unplug arrives here as "" - both read as no session.
-func (wb *Ambibox) sessionActive() bool {
+// value cleared on unplug arrives here as "" - both read as no session. A
+// getter error is reported rather than folded into "no session", so a caller
+// adopting this at startup does not lock in a false guess while the retained
+// message is still in flight.
+func (wb *Ambibox) sessionActive() (bool, error) {
 	s, err := wb.sessionStateG()
-	if err != nil || s == "" {
-		return false
+	if err != nil {
+		return false, err
 	}
-	return s != ambiStateStopped && s != ambiStateError && s != ambiStatePostCharge
+	if s == "" {
+		return false, nil
+	}
+	return s != ambiStateStopped && s != ambiStateError && s != ambiStatePostCharge, nil
 }
 
 func (wb *Ambibox) assertLive() error {
@@ -322,7 +328,11 @@ func (wb *Ambibox) Status() (api.ChargeStatus, error) {
 		return api.StatusA, nil
 	}
 
-	if s, err := wb.sessionStateG(); err == nil && s == ambiStateChargeLoop {
+	s, err := wb.sessionStateG()
+	if err != nil {
+		return api.StatusNone, err
+	}
+	if s == ambiStateChargeLoop {
 		return api.StatusC, nil
 	}
 
@@ -353,9 +363,15 @@ func (wb *Ambibox) Enabled() (bool, error) {
 
 	if wb.enabled == nil {
 		// Nothing was commanded yet - adopt whatever the box is doing, so a
-		// restart mid-session does not report a charging box as disabled.
-		enabled := wb.sessionActive()
-		wb.enabled = &enabled
+		// restart mid-session does not report a charging box as disabled. A
+		// getter error here (sessionState not delivered yet) is returned
+		// without caching, so the next call retries adoption instead of
+		// locking in a false "disabled".
+		active, err := wb.sessionActive()
+		if err != nil {
+			return false, err
+		}
+		wb.enabled = &active
 	}
 
 	return *wb.enabled, nil
@@ -446,11 +462,15 @@ func (wb *Ambibox) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	// Between sessions the box publishes no session energy at all. Liveness
-	// is already established above, so the value being absent means there is
-	// nothing to report rather than that something went wrong.
+	// Between sessions the box publishes no session energy at all, which
+	// reads back as the same getter error as a genuine delivery problem.
+	// sessionActive disambiguates: silently report zero only when there is
+	// really no session to have a reading for, propagate anything else.
 	f, err := wb.energySessImpG()
 	if err != nil {
+		if active, activeErr := wb.sessionActive(); activeErr != nil || active {
+			return 0, err
+		}
 		return 0, nil
 	}
 	return f / 1e3, nil
@@ -508,6 +528,10 @@ var _ api.BatteryCapacity = (*Ambibox)(nil)
 
 // Capacity implements the api.BatteryCapacity interface
 func (wb *Ambibox) Capacity() (float64, error) {
+	if err := wb.assertLive(); err != nil {
+		return 0, err
+	}
+
 	f, err := wb.capacityG()
 	if err != nil {
 		return 0, err

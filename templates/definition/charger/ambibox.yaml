@@ -15,7 +15,8 @@ requirements:
       Der Broker läuft auf der Wallbox selbst und verlangt die Zugangsdaten des
       technischen Benutzers; anonyme Verbindungen werden abgewiesen. Die `id` ist
       die Geräte-ID der Wallbox im Topic `device/evCharger/<id>/…`, bei einer Box
-      mit einem Anschluss `0`.
+      mit einem Anschluss `0`. Die Verbindung läuft unverschlüsselt im lokalen
+      Netz, wie bei der Box selbst üblich.
 
       Die Modbus-Register der Box eignen sich nicht zur Steuerung: der Sollwert in
       Holding-Register 3000 wird entgegengenommen und quittiert, aber nicht
@@ -32,7 +33,8 @@ requirements:
       The broker runs on the wallbox itself and requires the technical user's
       credentials; anonymous connections are refused. The `id` is the wallbox's
       device id in the `device/evCharger/<id>/…` topic, `0` for a single-connector
-      box.
+      box. The connection is unencrypted on the local network, same as the box's
+      own broker.
 
       The box's Modbus registers are not usable for control: the setpoint in
       holding register 3000 is accepted and acknowledged but never acted on while

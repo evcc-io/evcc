@@ -134,8 +134,8 @@ func TestAmbiboxTryWake(t *testing.T) {
 	t.Run("idle - wakes", func(t *testing.T) {
 		wb, pub := newTestAmbibox()
 		wb.tryWake()
-		if _, ok := pub.last("wakeUp"); !ok {
-			t.Error("wakeUp was not published")
+		if msg, ok := pub.last("wakeUp"); !ok || msg.payload != "true" {
+			t.Errorf("published %+v, want wakeUp=true", msg)
 		}
 	})
 
@@ -221,6 +221,65 @@ func TestAmbiboxEnabledAdoptsRunningSession(t *testing.T) {
 	}
 }
 
+func TestAmbiboxEnabledPropagatesSessionStateErrorWithoutCaching(t *testing.T) {
+	wb, _ := newTestAmbibox()
+	wantErr := errors.New("sessionState not delivered yet")
+	wb.sessionStateG = func() (string, error) { return "", wantErr }
+
+	if _, err := wb.Enabled(); !errors.Is(err, wantErr) {
+		t.Fatalf("Enabled() err = %v, want %v (not silently adopted as disabled)", err, wantErr)
+	}
+	if wb.enabled != nil {
+		t.Fatalf("Enabled() cached %v after a getter error, want no adoption so the next read retries", *wb.enabled)
+	}
+
+	// once the retained message arrives, adoption succeeds normally
+	wb.sessionStateG = func() (string, error) { return ambiStateChargeLoop, nil }
+	if enabled, err := wb.Enabled(); err != nil || !enabled {
+		t.Fatalf("Enabled() after recovery = %v, %v, want true, nil", enabled, err)
+	}
+}
+
+func TestAmbiboxStatusPropagatesSessionStateError(t *testing.T) {
+	wb, _ := newTestAmbibox()
+	wantErr := errors.New("sessionState not delivered yet")
+	wb.sessionStateG = func() (string, error) { return "", wantErr }
+
+	if _, err := wb.Status(); !errors.Is(err, wantErr) {
+		t.Fatalf("Status() err = %v, want %v (not silently reported as StatusB)", err, wantErr)
+	}
+}
+
+func TestAmbiboxCapacityRequiresLiveness(t *testing.T) {
+	wb, _ := newTestAmbibox()
+	wb.capacityG = func() (float64, error) { return 50000, nil }
+	wb.liveG = func() (float64, error) { return 0, errors.New("timeout") }
+
+	if _, err := wb.Capacity(); !errors.Is(err, api.ErrTimeout) {
+		t.Errorf("Capacity() err = %v, want ErrTimeout (an offline box must not report its last cached capacity)", err)
+	}
+}
+
+func TestAmbiboxChargedEnergy(t *testing.T) {
+	t.Run("no session - suppresses the missing-value error", func(t *testing.T) {
+		wb, _ := newTestAmbibox()
+		wb.energySessImpG = func() (float64, error) { return 0, api.ErrNotAvailable }
+		if f, err := wb.ChargedEnergy(); err != nil || f != 0 {
+			t.Errorf("ChargedEnergy() = %v, %v, want 0, nil between sessions", f, err)
+		}
+	})
+
+	t.Run("active session - propagates a real getter error", func(t *testing.T) {
+		wb, _ := newTestAmbibox()
+		wb.sessionStateG = func() (string, error) { return ambiStateChargeLoop, nil }
+		wantErr := errors.New("broker read failed")
+		wb.energySessImpG = func() (float64, error) { return 0, wantErr }
+		if _, err := wb.ChargedEnergy(); !errors.Is(err, wantErr) {
+			t.Errorf("ChargedEnergy() err = %v, want %v (must not report a failed reading as a valid zero)", err, wantErr)
+		}
+	})
+}
+
 func TestAmbiboxEnable(t *testing.T) {
 	t.Run("true - publishes limit, clears stopCharge, wakes", func(t *testing.T) {
 		wb, pub := newTestAmbibox()
@@ -235,8 +294,8 @@ func TestAmbiboxEnable(t *testing.T) {
 		if msg, ok := pub.last("stopCharge"); !ok || msg.payload != "false" {
 			t.Errorf("published %+v, want stopCharge=false", msg)
 		}
-		if _, ok := pub.last("wakeUp"); !ok {
-			t.Error("wakeUp was not published")
+		if msg, ok := pub.last("wakeUp"); !ok || msg.payload != "true" {
+			t.Errorf("published %+v, want wakeUp=true", msg)
 		}
 		if enabled, err := wb.Enabled(); err != nil || !enabled {
 			t.Errorf("Enabled() = %v, %v, want true, nil", enabled, err)
