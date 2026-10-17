@@ -176,7 +176,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits.Decorator()))
 
 		if capacity != 0 {
-			implement.Has(m, implement.BatteryCapacity(func() float64 { return capacity + capacity2 }))
+			implement.Has(m, implement.BatteryCapacity(func() (float64, error) { return capacity + capacity2, nil }))
 		}
 
 		batteryMode := func(mode api.BatteryMode) error {

@@ -42,6 +42,7 @@ require (
 	github.com/gokrazy/updater v0.0.0-20260620140544-0a84d8ab3878
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-github/v32 v32.1.0
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/gosimple/slug v1.15.0
@@ -97,7 +98,7 @@ require (
 	github.com/volkszaehler/mbmd v0.0.0-20260930172627-7dc9ab786b6f
 	github.com/warthog618/go-gpiocdev v0.9.2
 	github.com/xuri/excelize/v2 v2.11.0
-	gitlab.com/bboehmke/sunny v0.17.0
+	gitlab.com/bboehmke/sunny v0.17.1-0.20261015191717-0ae8d5ef9152
 	go.bug.st/serial v1.8.0
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v4 v4.0.0-rc.6
@@ -164,7 +165,6 @@ require (
 	github.com/google/jsonschema-go v0.4.3 // indirect
 	github.com/google/licenseclassifier/v2 v2.0.0 // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/govalues/decimal v0.1.36 // indirect
