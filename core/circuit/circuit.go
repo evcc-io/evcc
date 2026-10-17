@@ -220,15 +220,13 @@ func (c *Circuit) SetHEMS(hems api.HEMS) {
 // The battery keeps grid import under the limit itself, so loadpoints may use the
 // power it draws. The battery share is limited to the measured values per phase,
 // so a loadpoint never gets more than the circuit limit. The buffer keeps part of
-// the battery share as load, it is never stricter than the measured load.
+// the battery phase current as load, it is never stricter than the measured load.
 func (c *Circuit) load() (float64, float64) {
 	if len(c.batteryMeters) == 0 {
 		return c.power, c.current
 	}
 
-	// nominal 230V on all phases, a higher buffer is the safe side
-	bufferPower := c.batteryBuffer * 230 * 3
-	power := c.power - max(0, min(c.batteryPower, max(0, c.power))-bufferPower)
+	power := c.power - min(c.batteryPower, max(0, c.power))
 
 	current := c.current
 	if c.batteryCurrents != [3]float64{} {

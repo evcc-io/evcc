@@ -285,7 +285,7 @@ func TestSelfLimitingBatteriesChildLimit(t *testing.T) {
 }
 
 // TestSelfLimitingBatteriesBuffer verifies that the buffer keeps part of the battery
-// share as load, but never more than the measured load.
+// phase current as load, but never more than the measured load. Power is not buffered.
 func TestSelfLimitingBatteriesBuffer(t *testing.T) {
 	log := util.NewLogger("foo")
 
@@ -295,8 +295,8 @@ func TestSelfLimitingBatteriesBuffer(t *testing.T) {
 		batCurrent float64
 		resP, resC float64 // allowed power from 0 to 11000W, current from 0 to 16A
 	}{
-		{"buffer below battery share", -9000, 13, 8620, 13},
-		{"buffer above battery share", -1000, 1, 1000, 2},
+		{"buffer below battery share", -9000, 13, 10000, 13},
+		{"buffer above battery share", -1000, 1, 2000, 2},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
