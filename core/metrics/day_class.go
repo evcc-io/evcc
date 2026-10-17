@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/samber/lo"
 )
 
 // DayClass is the classification of a completed day of an energy profile
@@ -39,11 +40,7 @@ type dayEnergy struct {
 }
 
 func (d dayEnergy) total() float64 {
-	var sum float64
-	for _, v := range d.hours {
-		sum += v
-	}
-	return sum
+	return lo.Sum(d.hours[:])
 }
 
 func (d dayEnergy) peak() float64 {
@@ -78,19 +75,11 @@ func median(values []float64) float64 {
 // classifyDays classifies complete days relative to the household's own base load,
 // derived from the night hours of all complete days
 func classifyDays(days []dayEnergy) map[string]DayClass {
-	var nights, totals []float64
-	for _, d := range days {
-		if !d.complete() {
-			continue
-		}
-		nights = append(nights, d.hours[:nightHours]...)
-		totals = append(totals, d.total())
-	}
+	complete := lo.Filter(days, func(d dayEnergy, _ int) bool { return d.complete() })
+	base := median(lo.FlatMap(complete, func(d dayEnergy, _ int) []float64 { return d.hours[:nightHours] }))
+	typical := median(lo.Map(complete, func(d dayEnergy, _ int) float64 { return d.total() }))
 
 	res := make(map[string]DayClass, len(days))
-
-	base := median(nights)
-	typical := median(totals)
 
 	for _, d := range days {
 		if !d.complete() {
