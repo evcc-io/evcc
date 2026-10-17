@@ -22,6 +22,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -34,27 +35,35 @@ import (
 // Amperfied charger implementation
 type Amperfied struct {
 	implement.Caps
-	log     *util.Logger
-	conn    *modbus.Connection
-	current uint16
-	phases  int
-	wakeup  bool
+	log  *util.Logger
+	conn *modbus.Connection
+
+	mu          sync.Mutex // guards the fields below and all writes to ampRegAmpsConfig
+	enabled     bool
+	current     uint16
+	phases      int
+	switchEnd   time.Time
+	switchTimer *time.Timer
+
+	wakeup bool
 }
 
 const (
-	ampRegChargingState      = 5    // Input
-	ampRegCurrents           = 6    // Input 6,7,8
-	ampRegTemperature        = 9    // Input
-	ampRegVoltages           = 10   // Input 10,11,12
-	ampRegPower              = 14   // Input
-	ampRegEnergy             = 17   // Input
-	ampRegTimeoutConfig      = 257  // Holding
-	ampRegRemoteLock         = 259  // Holding
-	ampRegAmpsConfig         = 261  // Holding
-	ampRegFailSafeConfig     = 262  // Holding
-	ampRegPhaseSwitchControl = 501  // Holding
-	ampRegPhaseSwitchState   = 5001 // Input
-	ampRegRfidUID            = 2002 // Input
+	ampRegChargingState          = 5    // Input   (uint16)
+	ampRegCurrents               = 6    // Input   (uint16*3)
+	ampRegTemperature            = 9    // Input   (int16)
+	ampRegVoltages               = 10   // Input   (uint16*3)
+	ampRegPower                  = 14   // Input   (uint16)
+	ampRegEnergy                 = 17   // Input   (uint32)
+	ampRegTimeoutConfig          = 257  // Holding (uint16)
+	ampRegRemoteLock             = 259  // Holding (uint16)
+	ampRegAmpsConfig             = 261  // Holding (uint16)
+	ampRegFailSafeConfig         = 262  // Holding (uint16)
+	ampRegPhaseSwitchControl     = 501  // Holding (uint16)
+	ampRegPhaseSwitchDuration    = 503  // Holding (uint16)
+	ampRegPhaseSwitchWaitingTime = 504  // Holding (uint16)
+	ampRegPhaseSwitchState       = 5001 // Input   (uint16)
+	ampRegRfidUID                = 2002 // Input   (uint16*6)
 )
 
 func init() {
@@ -109,7 +118,21 @@ func NewAmperfied(ctx context.Context, settings modbus.TcpSettings, phases bool)
 		go wb.heartbeat(ctx, time.Duration(u)*time.Millisecond/2)
 	}
 
+	// sync enabled state and current from charger
+	if _, err := wb.Enabled(); err != nil {
+		return nil, err
+	}
+
 	if phases {
+		// disable wallbox-side phase-switch waiting time, evcc maintains its own timers
+		if b, err := wb.conn.ReadHoldingRegisters(ampRegPhaseSwitchWaitingTime, 1); err != nil {
+			log.WARN.Printf("phase-switch waiting time: %v", err)
+		} else if binary.BigEndian.Uint16(b) != 0 {
+			if err := wb.set(ampRegPhaseSwitchWaitingTime, 0); err != nil {
+				log.WARN.Printf("phase-switch waiting time: %v", err)
+			}
+		}
+
 		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
@@ -185,8 +208,40 @@ func (wb *Amperfied) Status() (api.ChargeStatus, error) {
 	}
 }
 
+// inPhaseSwitch returns true while the charger rejects current changes due to an ongoing phase switch.
+// Must be called with mu held.
+func (wb *Amperfied) inPhaseSwitch() bool {
+	return time.Now().Before(wb.switchEnd)
+}
+
+// applyAmps writes the desired enabled state and current to the charger.
+// Rejected writes during a phase switch are tolerated and re-applied once the switch completes.
+// Must be called with mu held.
+func (wb *Amperfied) applyAmps() error {
+	var cur uint16
+	if wb.enabled {
+		cur = wb.current
+	}
+
+	err := wb.set(ampRegAmpsConfig, cur)
+	if err != nil && wb.inPhaseSwitch() {
+		wb.log.DEBUG.Printf("amps config during phase switch (will re-apply): %v", err)
+		return nil
+	}
+
+	return err
+}
+
 // Enabled implements the api.Charger interface
 func (wb *Amperfied) Enabled() (bool, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	// charger state may lag behind while writes are rejected
+	if wb.inPhaseSwitch() {
+		return wb.enabled, nil
+	}
+
 	b, err := wb.conn.ReadHoldingRegisters(ampRegAmpsConfig, 1)
 	if err != nil {
 		return false, err
@@ -194,25 +249,26 @@ func (wb *Amperfied) Enabled() (bool, error) {
 
 	cur := binary.BigEndian.Uint16(b)
 
-	enabled := cur != 0
-	if enabled {
+	wb.enabled = cur != 0
+	if wb.enabled {
 		wb.current = cur
 	}
 
-	return enabled, nil
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Amperfied) Enable(enable bool) error {
-	var cur uint16
-	if enable {
-		cur = wb.current
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	prev := wb.enabled
+	wb.enabled = enable
+
+	err := wb.applyAmps()
+	if err != nil {
+		wb.enabled = prev
 	}
-
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, cur)
-
-	_, err := wb.conn.WriteMultipleRegisters(ampRegAmpsConfig, 1, b)
 
 	return err
 }
@@ -230,14 +286,20 @@ func (wb *Amperfied) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	curr := uint16(10 * current)
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
 
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, curr)
+	prev := wb.current
+	wb.current = uint16(10 * current)
 
-	_, err := wb.conn.WriteMultipleRegisters(ampRegAmpsConfig, 1, b)
-	if err == nil {
-		wb.current = curr
+	// current is applied on enable
+	if !wb.enabled {
+		return nil
+	}
+
+	err := wb.applyAmps()
+	if err != nil {
+		wb.current = prev
 	}
 
 	return err
@@ -324,6 +386,18 @@ func (wb *Amperfied) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(ampRegFailSafeConfig, 1); err == nil {
 		fmt.Printf("FailSafe:\t%d\n", binary.BigEndian.Uint16(b))
 	}
+	if b, err := wb.conn.ReadHoldingRegisters(ampRegAmpsConfig, 1); err == nil {
+		fmt.Printf("Amps Config:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(ampRegPhaseSwitchDuration, 1); err == nil {
+		fmt.Printf("Phase Switch Duration:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(ampRegPhaseSwitchWaitingTime, 1); err == nil {
+		fmt.Printf("Phase Switch Waiting Time:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(ampRegPhaseSwitchState, 1); err == nil {
+		fmt.Printf("Phase Switch State:\t%d\n", binary.BigEndian.Uint16(b))
+	}
 }
 
 var _ api.Resurrector = (*Amperfied)(nil)
@@ -343,13 +417,45 @@ func (wb *Amperfied) WakeUp() error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Amperfied) phases1p3p(phases int) error {
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, uint16(phases))
+	// phase-switch duration during which no current changes are accepted
+	b, err := wb.conn.ReadHoldingRegisters(ampRegPhaseSwitchDuration, 1)
+	if err != nil {
+		return fmt.Errorf("phase-switch duration: %w", err)
+	}
+	duration := time.Duration(binary.BigEndian.Uint16(b)) * time.Second
+
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	if err := wb.set(ampRegPhaseSwitchControl, uint16(phases)); err != nil {
+		return err
+	}
 
 	wb.phases = phases
+	wb.switchEnd = time.Now().Add(duration)
 
-	_, err := wb.conn.WriteMultipleRegisters(ampRegPhaseSwitchControl, 1, b)
-	return err
+	// re-apply desired state after phase switch completes to honor interim changes
+	if wb.switchTimer != nil {
+		wb.switchTimer.Stop()
+	}
+	wb.switchTimer = time.AfterFunc(duration, wb.phaseSwitchCompleted)
+
+	return nil
+}
+
+// phaseSwitchCompleted re-applies the desired enabled state and current after a phase switch
+func (wb *Amperfied) phaseSwitchCompleted() {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	// superseded by a later phase switch
+	if wb.inPhaseSwitch() {
+		return
+	}
+
+	if err := wb.applyAmps(); err != nil {
+		wb.log.ERROR.Printf("re-apply amps config after phase switch: %v", err)
+	}
 }
 
 // getPhases implements the api.PhaseGetter interface
@@ -361,6 +467,8 @@ func (wb *Amperfied) getPhases() (int, error) {
 
 	phases := int(binary.BigEndian.Uint16(b))
 	if phases == 0 {
+		wb.mu.Lock()
+		defer wb.mu.Unlock()
 		return wb.phases, nil
 	}
 
