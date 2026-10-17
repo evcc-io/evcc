@@ -37,11 +37,13 @@ func (m *batteryCapacityCtx) Decorator(ctx context.Context) (func() (float64, er
 	if err != nil || get == nil {
 		return nil, err
 	}
-	return readOnce(get), nil
+	return keep(get, true), nil
 }
 
-// readOnce serves the first successful read forever
-func readOnce(get func() (float64, error)) func() (float64, error) {
+// keep serves the last successful read when get fails: the settings are semi-static,
+// so a transient failure must not change them. Only a value never read errors.
+// With once the first successful read is final and get is not called again.
+func keep(get func() (float64, error), once bool) func() (float64, error) {
 	var (
 		mu   sync.Mutex
 		val  float64
@@ -51,14 +53,16 @@ func readOnce(get func() (float64, error)) func() (float64, error) {
 		mu.Lock()
 		defer mu.Unlock()
 
-		if !read {
-			v, err := get()
-			if err != nil {
-				return 0, err
-			}
-			val, read = v, true
+		if read && once {
+			return val, nil
 		}
-		return val, nil
+		v, err := get()
+		if err == nil {
+			val, read = v, true
+		} else if read {
+			return val, nil
+		}
+		return val, err
 	}
 }
 
@@ -83,30 +87,7 @@ func resolveFloat(ctx context.Context, v any) (func() (float64, error), error) {
 		if err != nil {
 			return nil, err
 		}
-		return lastGood(get), nil
-	}
-}
-
-// lastGood keeps the last successful read alive: the settings are semi-static, so a
-// transient read failure must not change them. Only a value never read errors.
-func lastGood(get func() (float64, error)) func() (float64, error) {
-	var (
-		mu   sync.Mutex
-		val  float64
-		read bool
-	)
-	return func() (float64, error) {
-		v, err := get()
-
-		mu.Lock()
-		defer mu.Unlock()
-
-		if err == nil {
-			val, read = v, true
-		} else if read {
-			return val, nil
-		}
-		return val, err
+		return keep(get, false), nil
 	}
 }
 
