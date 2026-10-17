@@ -821,6 +821,12 @@
       "labelCaCert": "Server certificate (CA)",
       "labelCheckInsecure": "Allow self-signed certificates",
       "labelInsecure": "Certificate validation",
+      "mirrors": {
+        "add": "Add read-only upstream",
+        "description": "Receive a copy of every message of this charger, for example for reporting or monitoring. They never answer the charger and cannot send commands. The main upstream above is the one that can authorize and bill.",
+        "remove": "Remove",
+        "title": "Read-only upstreams"
+      },
       "password": "Password",
       "passwordHelp": "For HTTP Basic Auth to the upstream server.",
       "readOnly": {
