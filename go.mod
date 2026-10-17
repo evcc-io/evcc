@@ -97,7 +97,7 @@ require (
 	github.com/volkszaehler/mbmd v0.0.0-20260930172627-7dc9ab786b6f
 	github.com/warthog618/go-gpiocdev v0.9.2
 	github.com/xuri/excelize/v2 v2.11.0
-	gitlab.com/bboehmke/sunny v0.17.0
+	gitlab.com/bboehmke/sunny v0.17.1-0.20261015191717-0ae8d5ef9152
 	go.bug.st/serial v1.8.0
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v4 v4.0.0-rc.6

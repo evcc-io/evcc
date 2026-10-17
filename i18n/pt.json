@@ -856,7 +856,7 @@
         },
         "full": {
           "description": "Controla a bateria doméstica, inicia e para o carregamento de veículos no modo inteligente, substitui os limites de preço e de CO₂ e assume os planos. Sem alteração: modo desligado e rápido, dispositivos de aquecimento, tomadas comandadas, veículos com capacidade desconhecida.",
-          "label": "Bateria doméstica e pontos de carga",
+          "label": "Bateria doméstica & pontos de carga",
           "status": "{automatic} controla a bateria doméstica e os pontos de carregamento."
         },
         "off": {
@@ -866,7 +866,7 @@
       },
       "controlled": "Desativado pelo controlo automático. Quem decide é o {optimizer}.",
       "controls": "Controla",
-      "description": "Analisa as previsões de energia solar, os preços da eletricidade e os seus padrões de consumo para otimizar a estratégia de utilização da bateria e de carregamento. Os dados são enviados para o serviço de otimização evcc para serem processados. Atualmente, apenas calcula e apresenta os dados. Ainda não controla dispositivos.",
+      "description": "Utiliza previsões de energia solar, preços de eletricidade e seus padrões de consumo para planejar o uso da bateria e o carregamento. Os dados são enviados para o serviço de otimização evcc.",
       "enable": "Ativar o Otimizador",
       "info": "Em instalações novas, pode demorar até 24 horas até que o evcc tenha recolhido dados suficientes.",
       "linkWord": "otimizador",
@@ -1076,7 +1076,7 @@
         "temperature": "Adicionar previsão de temperatura"
       },
       "planner": {
-        "description": "Configuração avançada. Normalmente não é necessária, pois as tarifas dinâmicas de eletricidade ou as previsões de CO₂ são utilizadas automaticamente. Ativa uma fonte de dados adicional que é utilizada apenas para o planeamento de carregamentos, não para estatísticas e cálculos de preços.",
+        "description": "Essa configuração avançada geralmente não é necessária. A previsão do planejador serve como base para os planos de carregamento e para o carregamento de baixo custo ou limpo na rede elétrica (veículos, aquecedores, baterias residenciais). Sem ela, o preço dinâmico da rede ou a previsão de CO₂ são usados automaticamente. As estatísticas, os cálculos de custos e as decisões do otimizador não são afetados.",
         "titleAdd": "Adicionar previsão do planeador",
         "titleEdit": "Editar previsão do planeador"
       },
@@ -1482,9 +1482,9 @@
     "issueDescription": "Descrição",
     "issueTitle": "Título",
     "nightlyHint": "Pode já estar corrigido. Verifique primeiro com a {nightlyVersion} mais recente.",
-    "nightlyHintVersion": "versão nightly",
+    "nightlyHintVersion": "Versão nightly",
     "searchHint": "Antes de comunicar um erro, pesquise os {issues} existentes.",
-    "searchHintLink": "problemas no GitHub",
+    "searchHintLink": "Problemas no GitHub",
     "stepsToReproduce": "Passos para reproduzir",
     "subTitleDiscussion": "Descreva o seu problema",
     "subTitleEmail": "Descreva o seu problema",

@@ -62,7 +62,7 @@
         "noCountry": "Aucun pays n'est configuré. Configurez-le via {link}.",
         "title": "Exportation vers le réseau à partir de la batterie"
       },
-      "optimizerControlledHint": "Désactivé pour {loadpoints}. C'est l'{optimizer} qui décide.",
+      "optimizerControlledHint": "Désactivé pour {loadpoints}. L' {optimizer} choisit.",
       "priority": "La batterie domestique a la priorité tant qu’elle est chargée en dessous de {soc}. Ensuite, les points de charge reçoivent le surplus.",
       "priorityNone": "Le surplus solaire va directement aux points de charge. Définissez une valeur au dessus de {soc} pour prioriser la batterie domestique.",
       "priorityTitle": "Où va le surplus solaire en priorité ?"
@@ -855,18 +855,18 @@
           "status": "{automatic} pilote la batterie domestique."
         },
         "full": {
-          "description": "Pilote la batterie domestique, démarre et arrête la recharge des véhicules en mode intelligent, remplace les limites de prix et de CO₂ et prend en charge les plans. Inchangés : modes arrêt et rapide, dispositifs de chauffage, prises de commutation, véhicules de capacité inconnue.",
-          "label": "Batterie et points de charge",
+          "description": "Pilote la batterie domestique, démarre et arrête la recharge des véhicules en mode intelligent, remplace les limites de prix et de CO₂ et prend en charge les programmations. Non modifiés : les modes Arrêt et Recharge rapide, les appareils de chauffage, les prises connectées et les véhicules dont la capacité de batterie est inconnue.",
+          "label": "Batterie & points de charge",
           "status": "{automatic} pilote la batterie domestique et les points de charge."
         },
         "off": {
-          "description": "L'optimiseur fait seulement des suggestions. Rien n'est piloté.",
-          "status": "{automatic} désactivé. L'optimiseur ne fait que suggérer."
+          "description": "L’optimiseur se contente de proposer des recommandations. Aucun équipement n’est piloté.",
+          "status": "{automatic} est désactivé. L’optimiseur se contente de proposer des recommandations."
         }
       },
-      "controlled": "Désactivé par le contrôle automatique. C'est l'{optimizer} qui décide.",
+      "controlled": "Désactivé par le contrôle automatique. L’{optimizer} décide à la place.",
       "controls": "Pilote",
-      "description": "Analyse les prévisions d'ensoleillement, les prix de l'électricité et vos habitudes de consommation afin d'optimiser la stratégie de gestion de la batterie et de recharge. Les données sont transmises au service d'optimisation evcc pour y être traitées. Se contente actuellement de calculer est visualiser les données, il n’y a pas encore de contrôle d’appareils possible.",
+      "description": "Utilise les prévisions solaires, les prix de l'électricité et vos habitudes de consommation pour optimiser la gestion des batteries et leur recharge. Les données sont transmises au service d'optimisation evcc.",
       "enable": "Activer l'optimiseur",
       "info": "Pour les nouvelles installations, cela peut prendre jusqu’à 24h avant qu’evcc ne collecte suffisamment de données.",
       "linkWord": "optimiseur",
@@ -1076,7 +1076,7 @@
         "temperature": "Ajouter les prévisions de température"
       },
       "planner": {
-        "description": "Paramètre avancé. Généralement superflu, car les tarifs d'électricité dynamiques et les prévisions de CO₂ sont utilisés automatiquement. Active une source de données supplémentaire qui n'est utilisée que pour la planification de la recharge, et non pour les statistiques et les calculs de prix.",
+        "description": "Ce paramètre avancé n'est généralement pas nécessaire. Les prévisions du planificateur servent de base à l'élaboration des plans de recharge et à la recharge économique ou propre sur le réseau (véhicules, appareils de chauffage, batteries domestiques). Sans ce paramètre, le prix dynamique du réseau ou les prévisions d'émissions de CO₂ sont utilisés automatiquement. Les statistiques, les calculs de coûts et les décisions de l'optimiseur restent inchangés.",
         "titleAdd": "Ajouter prévisions du planificateur",
         "titleEdit": "Modifier prévisions du planificateur"
       },
@@ -1481,10 +1481,10 @@
     },
     "issueDescription": "Description",
     "issueTitle": "Titre",
-    "nightlyHint": "Le problème est peut-être déjà corrigé. Veuillez d'abord vérifier avec la dernière {nightlyVersion}.",
-    "nightlyHintVersion": "version nightly",
-    "searchHint": "Avant de signaler un bug, recherchez dans les {issues} existants.",
-    "searchHintLink": "tickets GitHub",
+    "nightlyHint": "Le problème est peut-être déjà corrigé. Vérifiez d’abord avec la dernière version {nightlyVersion} avant.",
+    "nightlyHintVersion": "Version nightly",
+    "searchHint": "Avant de signaler un bug, recherchez avant dans les {issues} existants.",
+    "searchHintLink": "Tickets GitHub",
     "stepsToReproduce": "Étapes permettant de reproduire le problème",
     "subTitleDiscussion": "Décrivez votre problème",
     "subTitleEmail": "Décrivez votre problème",
@@ -1753,7 +1753,7 @@
     "targetChargePlan": {
       "chargeDuration": "Durée de charge",
       "co2Label": "Émissions de CO₂ ⌀",
-      "optimizerHint": "Remarque : ce plan a été créé par l'{optimizer}.",
+      "optimizerHint": "Remarque : ce plan a été créé par l’{optimizer}.",
       "priceLabel": "Prix de l'énergie",
       "timeRange": "{day} {range} h",
       "unknownPrice": "encore inconnu"
@@ -1812,7 +1812,7 @@
       "feedinPriorityPausing": "Chargement solaire interrompu pour maximiser l'injection.",
       "finished": "Terminée.",
       "minCharge": "Charge minimale jusqu'à {soc}.",
-      "optimizerControlledTooltip": "Contrôle automatique. L'optimiseur démarre et arrête la recharge.",
+      "optimizerControlledTooltip": "Pilotage automatique. L’optimiseur démarre et arrête la recharge.",
       "pvDisable": "Pas assez de surplus. Pause imminente.",
       "pvEnable": "Surplus disponible. Démarrage imminent.",
       "scale1p": "Charge réduite en monophasé imminente.",
