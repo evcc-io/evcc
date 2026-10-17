@@ -1,0 +1,26 @@
+template: deye-evse
+products:
+  - brand: Deye
+    description:
+      generic: SUN-EVSE11K01-EU-AC
+  - brand: Deye
+    description:
+      generic: SUN-EVSE22K01-EU-AC
+capabilities: ["mA", "meter"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: |
+      Die Modbus-Register sind nicht offiziell dokumentiert, sondern per Reverse Engineering ermittelt. Die Wallbox verwendet Modbus-ID 3.
+      Der Kommunikationsmodus der Wallbox muss auf "WiFi" stehen, im Modus "LoRa" überschreibt der Wechselrichter die Leistungsvorgabe von evcc.
+    en: |
+      The Modbus registers are not officially documented but reverse engineered. The charger uses Modbus ID 3.
+      The charger's communication mode must be set to "WiFi", in "LoRa" mode the inverter overrides the power setpoint written by evcc.
+params:
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 3
+render: |
+  type: deye-evse
+  {{- include "modbus" . }}
