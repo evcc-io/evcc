@@ -1001,11 +1001,11 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 	// apply circuit limits
 	if lp.circuit != nil {
-		currentLimit := lp.validateCircuitCurrent(lp.actualMaxChargeCurrent(), current)
+		currentLimit := lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), current)
 
 		activePhases := lp.ActivePhases()
 		requestedPower := currentToPower(current, activePhases)
-		powerLimit := lp.validateCircuitPower(lp.chargePower, requestedPower)
+		powerLimit := lp.circuit.ValidatePower(lp.chargePower, requestedPower)
 
 		// avoid float round trip through power if the circuit does not cap
 		limited := currentLimit
@@ -1484,7 +1484,7 @@ func (lp *Loadpoint) circuitAllowsPhases(phases int, minCurrent float64) bool {
 	}
 
 	minPower := currentToPower(minCurrent, phases)
-	powerLimit := lp.validateCircuitPower(lp.chargePower, minPower)
+	powerLimit := lp.circuit.ValidatePower(lp.chargePower, minPower)
 	if powerLimit < minPower {
 		lp.log.DEBUG.Printf("available circuit power %.0fW < %.0fW min %dp power", powerLimit, minPower, phases)
 		return false
@@ -1645,7 +1645,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 
 	// load management may cap the 1p current far below the theoretical maximum
 	if lp.circuit != nil {
-		maxCurrent = lp.validateCircuitCurrent(lp.actualMaxChargeCurrent(), maxCurrent)
+		maxCurrent = lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), maxCurrent)
 	}
 
 	maxPhases := lp.MaxActivePhases()

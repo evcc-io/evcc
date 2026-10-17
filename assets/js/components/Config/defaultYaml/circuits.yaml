@@ -4,7 +4,8 @@
 #  maxPower: 30000 # 30kW (optional)
 #  meter: grid # associated meter to monitor the power consumption (optional)
 #  parent: # no parent, this is the root circuit
-#  batteryLimitsGridImport: false # only enable if the battery itself keeps grid import below the limits (experimental)
+#  selfLimitingBatteries: [battery] # batteries that keep grid import below the limits themselves, their charging is ignored (optional, root only)
+#  selfLimitingBatteryBuffer: 2 # phase current in A kept from the battery charging as margin (optional)
 #- name: garage # unique name, used as reference, e.g. to associate loadpoints
 #  title: Garage # used in the UI
 #  maxcurrent: 24 # allow individual phase use up to 24A

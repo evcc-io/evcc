@@ -1059,18 +1059,6 @@ func (mr *MockCircuitMockRecorder) RegisterChild(child any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterChild", reflect.TypeOf((*MockCircuit)(nil).RegisterChild), child)
 }
 
-// SetBatteryCharge mocks base method.
-func (m *MockCircuit) SetBatteryCharge(power, l1, l2, l3 float64) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetBatteryCharge", power, l1, l2, l3)
-}
-
-// SetBatteryCharge indicates an expected call of SetBatteryCharge.
-func (mr *MockCircuitMockRecorder) SetBatteryCharge(power, l1, l2, l3 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBatteryCharge", reflect.TypeOf((*MockCircuit)(nil).SetBatteryCharge), power, l1, l2, l3)
-}
-
 // SetHEMS mocks base method.
 func (m *MockCircuit) SetHEMS(arg0 HEMS) {
 	m.ctrl.T.Helper()
@@ -1145,34 +1133,6 @@ func (m *MockCircuit) ValidateCurrent(old, new float64) float64 {
 func (mr *MockCircuitMockRecorder) ValidateCurrent(old, new any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateCurrent", reflect.TypeOf((*MockCircuit)(nil).ValidateCurrent), old, new)
-}
-
-// ValidateManagedCurrent mocks base method.
-func (m *MockCircuit) ValidateManagedCurrent(old, new float64) float64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateManagedCurrent", old, new)
-	ret0, _ := ret[0].(float64)
-	return ret0
-}
-
-// ValidateManagedCurrent indicates an expected call of ValidateManagedCurrent.
-func (mr *MockCircuitMockRecorder) ValidateManagedCurrent(old, new any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateManagedCurrent", reflect.TypeOf((*MockCircuit)(nil).ValidateManagedCurrent), old, new)
-}
-
-// ValidateManagedPower mocks base method.
-func (m *MockCircuit) ValidateManagedPower(old, new float64) float64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateManagedPower", old, new)
-	ret0, _ := ret[0].(float64)
-	return ret0
-}
-
-// ValidateManagedPower indicates an expected call of ValidateManagedPower.
-func (mr *MockCircuitMockRecorder) ValidateManagedPower(old, new any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateManagedPower", reflect.TypeOf((*MockCircuit)(nil).ValidateManagedPower), old, new)
 }
 
 // ValidatePower mocks base method.

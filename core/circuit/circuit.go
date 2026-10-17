@@ -40,9 +40,10 @@ type Circuit struct {
 
 	hems api.HEMS // only set on the root circuit, supplies the HEMS consumption cap
 
-	batteryLimitsGridImport bool       // opt-in: the battery keeps grid import under the limit itself
-	batteryPower            float64    // battery grid charge power, only set on the root circuit
-	batteryCurrents         [3]float64 // battery grid charge phase currents, only set on the root circuit
+	batteryMeters   []api.Meter // batteries that keep grid import under the limit themselves, root circuit only
+	batteryBuffer   float64     // phase current not released from battery charging
+	batteryPower    float64     // measured battery charge power
+	batteryCurrents [3]float64  // measured battery charge phase currents, zero if unknown
 
 	currentUpdated time.Time
 	powerUpdated   time.Time
@@ -64,7 +65,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		GetMaxPower   *plugin.Config // dynamic max allowed power
 		Timeout       time.Duration  // timeout between meter updates
 
-		BatteryLimitsGridImport bool // the battery keeps grid import under the limit itself
+		SelfLimitingBatteries     []string // batteries that keep grid import under the limit themselves
+		SelfLimitingBatteryBuffer float64  // phase current not released from battery charging
 	}{
 		Timeout: time.Minute,
 	}
@@ -92,15 +94,31 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
-	if cc.BatteryLimitsGridImport {
+	if cc.SelfLimitingBatteryBuffer < 0 {
+		return nil, errors.New("selfLimitingBatteryBuffer must not be negative")
+	}
+
+	if len(cc.SelfLimitingBatteries) > 0 {
 		// only the root circuit meter sees the battery
 		if cc.ParentRef != "" {
-			return nil, errors.New("batteryLimitsGridImport is only supported on the root circuit")
+			return nil, errors.New("selfLimitingBatteries is only supported on the root circuit")
 		}
 		if meter == nil {
-			return nil, errors.New("batteryLimitsGridImport requires a meter")
+			return nil, errors.New("selfLimitingBatteries requires a meter")
 		}
-		circuit.batteryLimitsGridImport = true
+
+		circuit.batteryBuffer = cc.SelfLimitingBatteryBuffer
+
+		for _, ref := range cc.SelfLimitingBatteries {
+			dev, err := config.Meters().ByName(ref)
+			if err != nil {
+				return nil, err
+			}
+			// disabled battery has no instance and no charge to ignore
+			if bat := dev.Instance(); bat != nil {
+				circuit.batteryMeters = append(circuit.batteryMeters, bat)
+			}
+		}
 	}
 
 	circuit.getMaxPower, err = cc.GetMaxPower.FloatGetter(ctx)
@@ -198,35 +216,25 @@ func (c *Circuit) SetHEMS(hems api.HEMS) {
 	c.hems = hems
 }
 
-// SetBatteryCharge sets the battery grid charge power and phase currents. Valid on root circuit only.
-// Unknown phase currents are zero, the battery then does not free any current.
-func (c *Circuit) SetBatteryCharge(power, l1, l2, l3 float64) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.batteryPower = max(0, power)
-	c.batteryCurrents = [3]float64{max(0, l1), max(0, l2), max(0, l3)}
-}
-
-// managedLoad returns the measured power and max phase current without the battery
-// grid charging, which yields to managed loadpoints. Without the user opt-in this is
-// the measured load, since only a battery that caps its own grid import protects the
-// fuse. The battery share is limited to the measured values per phase, so a managed
-// loadpoint never gets more than the circuit limit.
-func (c *Circuit) managedLoad() (float64, float64) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	if !c.batteryLimitsGridImport || c.meter == nil {
+// load returns the measured power and max phase current without the battery charging.
+// The battery keeps grid import under the limit itself, so loadpoints may use the
+// power it draws. The battery share is limited to the measured values per phase,
+// so a loadpoint never gets more than the circuit limit. The buffer keeps part of
+// the battery share as load, it is never stricter than the measured load.
+func (c *Circuit) load() (float64, float64) {
+	if len(c.batteryMeters) == 0 {
 		return c.power, c.current
 	}
 
-	power := c.power - min(c.batteryPower, max(0, c.power))
+	// nominal 230V on all phases, a higher buffer is the safe side
+	bufferPower := c.batteryBuffer * 230 * 3
+	power := c.power - max(0, min(c.batteryPower, max(0, c.power))-bufferPower)
 
 	current := c.current
 	if c.batteryCurrents != [3]float64{} {
 		current = -math.MaxFloat64
 		for i, ci := range c.currents {
-			current = max(current, ci-min(c.batteryCurrents[i], max(0, ci)))
+			current = max(current, ci-max(0, min(c.batteryCurrents[i], max(0, ci))-c.batteryBuffer))
 		}
 	}
 
@@ -364,7 +372,57 @@ func (c *Circuit) updateMeters() error {
 		c.currentUpdated = time.Now()
 	}
 
+	c.updateBatteries()
+
 	return nil
+}
+
+// updateBatteries reads the battery charge. On any error the battery counts as
+// fixed load. Phase currents are only used if every charging battery supplies
+// them, assuming a symmetric split would free current on phases it does not load.
+func (c *Circuit) updateBatteries() {
+	c.batteryPower = 0
+	c.batteryCurrents = [3]float64{}
+
+	var power float64
+	var currents [3]float64
+	currentsKnown := true
+
+	for _, bat := range c.batteryMeters {
+		p, err := backoff.RetryWithData(bat.CurrentPower, modbus.Backoff())
+		if err != nil {
+			c.log.WARN.Printf("battery power: %v", err)
+			return
+		}
+
+		// negative battery power is charging
+		if p >= 0 {
+			continue
+		}
+		power -= p
+
+		pc, ok := api.Cap[api.PhaseCurrents](bat)
+		if !ok {
+			currentsKnown = false
+			continue
+		}
+
+		i1, i2, i3, err := pc.Currents()
+		if err != nil {
+			c.log.DEBUG.Printf("battery currents: %v", err)
+			currentsKnown = false
+			continue
+		}
+
+		currents[0] += math.Abs(i1)
+		currents[1] += math.Abs(i2)
+		currents[2] += math.Abs(i3)
+	}
+
+	c.batteryPower = power
+	if currentsKnown {
+		c.batteryCurrents = currents
+	}
 }
 
 func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
@@ -419,21 +477,8 @@ func (c *Circuit) GetMaxPhaseCurrent() float64 {
 
 // ValidatePower validates power request
 func (c *Circuit) ValidatePower(old, new float64) float64 {
-	return c.validatePower(old, new, false)
-}
-
-// ValidateManagedPower validates power request of a loadpoint managed by the optimizer.
-// Battery grid charging counts as flexible if the battery caps its own grid import.
-func (c *Circuit) ValidateManagedPower(old, new float64) float64 {
-	return c.validatePower(old, new, true)
-}
-
-func (c *Circuit) validatePower(old, new float64, managed bool) float64 {
 	if maxPower := c.effectiveMaxPower(); maxPower != 0 {
-		power := c.power
-		if managed {
-			power, _ = c.managedLoad()
-		}
+		power, _ := c.load()
 
 		delta := max(0, new-old)
 		potential := maxPower - power
@@ -451,30 +496,13 @@ func (c *Circuit) validatePower(old, new float64, managed bool) float64 {
 		return new
 	}
 
-	if managed {
-		return c.parent.ValidateManagedPower(old, new)
-	}
-
 	return c.parent.ValidatePower(old, new)
 }
 
 // ValidateCurrent validates current request
 func (c *Circuit) ValidateCurrent(old, new float64) float64 {
-	return c.validateCurrent(old, new, false)
-}
-
-// ValidateManagedCurrent validates current request of a loadpoint managed by the optimizer.
-// Battery grid charging counts as flexible if the battery caps its own grid import.
-func (c *Circuit) ValidateManagedCurrent(old, new float64) float64 {
-	return c.validateCurrent(old, new, true)
-}
-
-func (c *Circuit) validateCurrent(old, new float64, managed bool) float64 {
 	if maxCurrent := c.GetMaxCurrent(); maxCurrent != 0 {
-		current := c.current
-		if managed {
-			_, current = c.managedLoad()
-		}
+		_, current := c.load()
 
 		delta := max(0, new-old)
 		potential := maxCurrent - current
@@ -490,10 +518,6 @@ func (c *Circuit) validateCurrent(old, new float64, managed bool) float64 {
 
 	if c.parent == nil {
 		return new
-	}
-
-	if managed {
-		return c.parent.ValidateManagedCurrent(old, new)
 	}
 
 	return c.parent.ValidateCurrent(old, new)

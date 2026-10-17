@@ -1,8 +1,10 @@
 package circuit
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
@@ -174,67 +176,102 @@ func TestHEMSConsumptionClamp(t *testing.T) {
 	}
 }
 
-// TestBatteryLimitsGridImport verifies that battery grid charging only yields to
-// managed loadpoints and only if the user opted in.
-func TestBatteryLimitsGridImport(t *testing.T) {
+type phaseMeter struct {
+	*api.MockMeter
+	*api.MockPhaseCurrents
+}
+
+func newPhaseMeter(ctrl *gomock.Controller, power float64, currents [3]float64) phaseMeter {
+	m := phaseMeter{api.NewMockMeter(ctrl), api.NewMockPhaseCurrents(ctrl)}
+	m.MockMeter.EXPECT().CurrentPower().Return(power, nil).AnyTimes()
+	m.MockPhaseCurrents.EXPECT().Currents().Return(currents[0], currents[1], currents[2], nil).AnyTimes()
+	return m
+}
+
+// TestSelfLimitingBatteries verifies that loadpoints may use the power of a battery that
+// keeps grid import under the limit itself, but never more than the circuit limit.
+func TestSelfLimitingBatteries(t *testing.T) {
 	log := util.NewLogger("foo")
 
-	type combined struct {
-		*api.MockMeter
-		*api.MockPhaseCurrents
-	}
-
 	for _, tc := range []struct {
-		name                 string
-		optIn                bool
-		power                float64 // measured power
-		currents             [3]float64
-		batPower             float64
-		batCurrents          [3]float64
-		managedP, unmanagedP float64 // allowed power from 0 to 11000W
-		managedC, unmanagedC float64 // allowed current from 0 to 16A
+		name        string
+		power       float64 // measured power
+		currents    [3]float64
+		batPower    float64 // negative is charging
+		batCurrents *[3]float64
+		resP        float64 // allowed power from 0 to 11000W
+		resC        float64 // allowed current from 0 to 16A
 	}{
-		{"no opt-in", false, 10000, [3]float64{14, 14, 14}, 9000, [3]float64{13, 13, 13}, 1000, 1000, 2, 2},
-		{"opt-in", true, 10000, [3]float64{14, 14, 14}, 9000, [3]float64{13, 13, 13}, 10000, 1000, 15, 2},
-		{"opt-in, battery partly from pv", true, 2000, [3]float64{3, 3, 3}, 9000, [3]float64{13, 13, 13}, 11000, 9000, 16, 13},
-		{"opt-in, unknown battery currents", true, 10000, [3]float64{14, 14, 14}, 9000, [3]float64{}, 10000, 1000, 2, 2},
-		{"opt-in, 1p battery", true, 7000, [3]float64{14, 4, 4}, 3000, [3]float64{13, 0, 0}, 7000, 4000, 12, 2},
+		{"no battery", 10000, [3]float64{14, 14, 14}, 0, nil, 1000, 2},
+		{"charging", 10000, [3]float64{14, 14, 14}, -9000, &[3]float64{13, 13, 13}, 10000, 15},
+		{"charging partly from pv", 2000, [3]float64{3, 3, 3}, -9000, &[3]float64{13, 13, 13}, 11000, 16},
+		{"charging, unknown currents", 10000, [3]float64{14, 14, 14}, -9000, nil, 10000, 2},
+		{"charging 1p", 7000, [3]float64{14, 4, 4}, -3000, &[3]float64{13, 0, 0}, 7000, 12},
+		{"discharging", 10000, [3]float64{14, 14, 14}, 3000, &[3]float64{4, 4, 4}, 1000, 2},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
-			m := combined{api.NewMockMeter(ctrl), api.NewMockPhaseCurrents(ctrl)}
-			m.MockMeter.EXPECT().CurrentPower().Return(tc.power, nil)
-			m.MockPhaseCurrents.EXPECT().Currents().Return(tc.currents[0], tc.currents[1], tc.currents[2], nil)
-
-			c, err := New(log, "root", 16, 11000, m, 0)
+			c, err := New(log, "root", 16, 11000, newPhaseMeter(ctrl, tc.power, tc.currents), 0)
 			require.NoError(t, err)
-			c.batteryLimitsGridImport = tc.optIn
+
+			if tc.name != "no battery" {
+				var bat api.Meter
+				if tc.batCurrents != nil {
+					bat = newPhaseMeter(ctrl, tc.batPower, *tc.batCurrents)
+				} else {
+					m := api.NewMockMeter(ctrl)
+					m.EXPECT().CurrentPower().Return(tc.batPower, nil)
+					bat = m
+				}
+				c.batteryMeters = []api.Meter{bat}
+			}
+
 			require.NoError(t, c.Update(nil))
 
-			c.SetBatteryCharge(tc.batPower, tc.batCurrents[0], tc.batCurrents[1], tc.batCurrents[2])
+			assert.Equal(t, tc.resP, c.ValidatePower(0, 11000), "power")
+			assert.Equal(t, tc.resC, c.ValidateCurrent(0, 16), "current")
 
-			assert.Equal(t, tc.managedP, c.ValidateManagedPower(0, 11000), "managed power")
-			assert.Equal(t, tc.unmanagedP, c.ValidatePower(0, 11000), "unmanaged power")
-			assert.Equal(t, tc.managedC, c.ValidateManagedCurrent(0, 16), "managed current")
-			assert.Equal(t, tc.unmanagedC, c.ValidateCurrent(0, 16), "unmanaged current")
+			// published values remain measured values
+			assert.Equal(t, tc.power, c.GetChargePower())
 		})
 	}
 }
 
-// TestBatteryLimitsGridImportRootOnly verifies that a child circuit does not free battery power.
-func TestBatteryLimitsGridImportRootOnly(t *testing.T) {
+// TestSelfLimitingBatteriesError verifies that an unreadable battery counts as fixed load.
+func TestSelfLimitingBatteriesError(t *testing.T) {
+	log := util.NewLogger("foo")
+	ctrl := gomock.NewController(t)
+
+	c, err := New(log, "root", 16, 11000, newPhaseMeter(ctrl, 10000, [3]float64{14, 14, 14}), 0)
+	require.NoError(t, err)
+
+	charging := newPhaseMeter(ctrl, -4000, [3]float64{6, 6, 6})
+	broken := api.NewMockMeter(ctrl)
+	broken.EXPECT().CurrentPower().Return(0.0, backoff.Permanent(errors.New("timeout")))
+	c.batteryMeters = []api.Meter{charging, broken}
+
+	require.NoError(t, c.Update(nil))
+
+	assert.Equal(t, 1000.0, c.ValidatePower(0, 11000))
+	assert.Equal(t, 2.0, c.ValidateCurrent(0, 16))
+}
+
+// TestSelfLimitingBatteriesChildLimit verifies that a child circuit keeps its own limit.
+func TestSelfLimitingBatteriesChildLimit(t *testing.T) {
 	log := util.NewLogger("foo")
 	ctrl := gomock.NewController(t)
 
 	pm := api.NewMockMeter(ctrl)
 	cm := api.NewMockMeter(ctrl)
+	bat := api.NewMockMeter(ctrl)
 	pm.EXPECT().CurrentPower().Return(10000.0, nil)
 	cm.EXPECT().CurrentPower().Return(9000.0, nil)
+	bat.EXPECT().CurrentPower().Return(-9000.0, nil)
 
 	parent, err := New(log, "root", 0, 11000, pm, 0)
 	require.NoError(t, err)
-	parent.batteryLimitsGridImport = true
+	parent.batteryMeters = []api.Meter{bat}
 
 	child, err := New(log, "child", 0, 11000, cm, 0)
 	require.NoError(t, err)
@@ -242,11 +279,37 @@ func TestBatteryLimitsGridImportRootOnly(t *testing.T) {
 
 	require.NoError(t, parent.Update(nil))
 
-	// battery set on child is ignored, the parent without battery charge limits
-	child.SetBatteryCharge(9000, 0, 0, 0)
-	assert.Equal(t, 1000.0, child.ValidateManagedPower(0, 11000))
+	// the battery frees the parent, the child limit remains
+	assert.Equal(t, 2000.0, child.ValidatePower(0, 11000))
+	assert.Equal(t, 10000.0, parent.ValidatePower(0, 11000))
+}
 
-	// battery on root frees the parent, the child limit remains
-	parent.SetBatteryCharge(9000, 0, 0, 0)
-	assert.Equal(t, 2000.0, child.ValidateManagedPower(0, 11000))
+// TestSelfLimitingBatteriesBuffer verifies that the buffer keeps part of the battery
+// share as load, but never more than the measured load.
+func TestSelfLimitingBatteriesBuffer(t *testing.T) {
+	log := util.NewLogger("foo")
+
+	for _, tc := range []struct {
+		name       string
+		batPower   float64
+		batCurrent float64
+		resP, resC float64 // allowed power from 0 to 11000W, current from 0 to 16A
+	}{
+		{"buffer below battery share", -9000, 13, 8620, 13},
+		{"buffer above battery share", -1000, 1, 1000, 2},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			c, err := New(log, "root", 16, 11000, newPhaseMeter(ctrl, 10000, [3]float64{14, 14, 14}), 0)
+			require.NoError(t, err)
+			c.batteryMeters = []api.Meter{newPhaseMeter(ctrl, tc.batPower, [3]float64{tc.batCurrent, tc.batCurrent, tc.batCurrent})}
+			c.batteryBuffer = 2
+
+			require.NoError(t, c.Update(nil))
+
+			assert.Equal(t, tc.resP, c.ValidatePower(0, 11000), "power")
+			assert.Equal(t, tc.resC, c.ValidateCurrent(0, 16), "current")
+		})
+	}
 }

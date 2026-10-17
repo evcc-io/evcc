@@ -66,30 +66,6 @@ func (lp *Loadpoint) OptimizerPlan(planTime time.Time) (api.Rates, float64) {
 	return rates, energy / planner.Duration(rates).Hours()
 }
 
-// circuitManaged reports whether the loadpoint charges on an optimizer suggestion.
-// Only then may load management count battery grid charging as flexible, since
-// the optimizer planned the battery and the loadpoint together.
-func (lp *Loadpoint) circuitManaged() bool {
-	s := lp.activeSuggestion()
-	return s != nil && s.Action == actionCharge
-}
-
-// validateCircuitCurrent validates the current request against the circuit
-func (lp *Loadpoint) validateCircuitCurrent(old, new float64) float64 {
-	if lp.circuitManaged() {
-		return lp.circuit.ValidateManagedCurrent(old, new)
-	}
-	return lp.circuit.ValidateCurrent(old, new)
-}
-
-// validateCircuitPower validates the power request against the circuit
-func (lp *Loadpoint) validateCircuitPower(old, new float64) float64 {
-	if lp.circuitManaged() {
-		return lp.circuit.ValidateManagedPower(old, new)
-	}
-	return lp.circuit.ValidatePower(old, new)
-}
-
 // optimizerControlled indicates that the optimizer decides for this loadpoint.
 // Heating devices and switch sockets cannot be modelled and keep their limits,
 // as do vehicles without known capacity- optimizerRequest skips them, too.
