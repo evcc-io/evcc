@@ -965,6 +965,15 @@
         "description": "Wird für länderspezifische Hinweise und Voreinstellungen verwendet.",
         "label": "Land"
       },
+      "gridConnection": {
+        "description": {
+          "3p4w": "Häufigstes Netz mit Neutralleiter.",
+          "3p3w": "Netz ohne Neutralleiter. Üblich in Norwegen und Teilen Belgiens."
+        },
+        "label": "Netzanschluss",
+        "3p4w": "{voltage}/{lineVoltage} V mit Neutralleiter",
+        "3p3w": "3 × {voltage} V ohne Neutralleiter"
+      },
       "currency": {
         "description": "Wird für die Erfassung und Formatierung von Energiepreisen, Kosten und Einsparungen verwendet.",
         "example": "Dein Ladepreis betrug {price}. Du hast {amount} gespart.",

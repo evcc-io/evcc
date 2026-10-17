@@ -69,6 +69,12 @@ components:
         gridConfigured:
           description: A grid meter is configured.
           type: boolean
+        gridConnection:
+          $ref: "#/components/schemas/GRID_CONNECTION"
+          description: Grid connection, with or without neutral conductor.
+        voltage:
+          description: Nominal grid voltage in V, line-to-line without neutral.
+          type: number
         pv:
           description: Solar meters. One entry per configured meter.
           type: array
@@ -699,6 +705,12 @@ components:
           enum:
             - file
             - db
+    GRID_CONNECTION:
+      description: Grid connection, with or without neutral conductor.
+      type: string
+      enum:
+        - 3p4w
+        - 3p3w
     Hems:
       description: Home energy management system integration.
       type: object

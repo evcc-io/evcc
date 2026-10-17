@@ -965,6 +965,15 @@
         "description": "Used for region-specific hints and defaults.",
         "label": "Country"
       },
+      "gridConnection": {
+        "description": {
+          "3p4w": "Most common grid with neutral conductor.",
+          "3p3w": "Grid without neutral conductor. Common in Norway and parts of Belgium."
+        },
+        "label": "Grid connection",
+        "3p4w": "{voltage}/{lineVoltage} V with neutral",
+        "3p3w": "3 × {voltage} V without neutral"
+      },
       "currency": {
         "description": "Used to format energy prices, costs and savings based on your tariff.",
         "example": "Your charging price was {price}. You saved {amount}.",

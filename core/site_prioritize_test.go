@@ -57,8 +57,6 @@ func TestPvChargeStarting(t *testing.T) {
 }
 
 func TestReservedPVPower(t *testing.T) {
-	Voltage = 230
-
 	// higher-priority loadpoint (prio 1) starting up
 	high := newPVLoadpoint(1, api.ModeSmart, api.StatusB, false, clock.NewMock().Now())
 	// lower-priority loadpoint (prio 0) in PV mode

@@ -29,6 +29,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -361,7 +362,7 @@ func (wb *FoxESSEVC) calcSetpoint(enabled bool, current float64, phases int) uin
 	}
 
 	lo, hi := wb.powerLimits(phases)
-	power := 230 * float64(phases) * min(max(current, wb.minCurrent), wb.maxCurrent)
+	power := grid.CurrentToPower(min(max(current, wb.minCurrent), wb.maxCurrent), phases)
 
 	return min(max(uint16(math.Round(power/100)), lo), hi)
 }
@@ -380,7 +381,7 @@ func (wb *FoxESSEVC) decodeSetpoint(setpoint uint16) (float64, int) {
 		}
 	}
 
-	return min(float64(setpoint)*100/(230*float64(phases)), wb.maxCurrent), phases
+	return min(grid.PowerToCurrent(float64(setpoint)*100, phases), wb.maxCurrent), phases
 }
 
 // applySetpoint writes the combined enable state and charging limit. Callers must hold mu.
