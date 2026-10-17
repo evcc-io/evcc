@@ -1201,6 +1201,7 @@
       "energy": "Energi",
       "export": "Eksport",
       "exportPrice": "Eksportpris",
+      "import": "Nettimport",
       "importPrice": "Importpris",
       "price": "Pris",
       "revenue": "Innmatingsinntekt",
@@ -1525,6 +1526,7 @@
       "description": "uten avbrudd",
       "label": "Lad alltid",
       "labelHeating": "Varm alltid",
+      "minCurrent": "min. {current}",
       "once": "til økten avsluttes",
       "onceTip": "Kun for denne økten",
       "permanent": "forblir alltid på"
@@ -1898,6 +1900,7 @@
       "price": "Pris",
       "priceperkwh": "Pris/kWh",
       "socend": "SoC slutt (%)",
+      "socstart": "SoC ved start (%)",
       "solarpercentage": "Solenergi (%)",
       "vehicle": "Kjøretøy"
     },
@@ -1946,6 +1949,7 @@
   },
   "settings": {
     "dateFormat": {
+      "auto": "Automatisk",
       "dmy": "DD.MM.ÅÅÅÅ",
       "label": "Datoformat",
       "mdy": "MM/DD/ÅÅÅÅ",

@@ -831,6 +831,7 @@
         },
         "label": "Ukazi nadrejenega strežnika"
       },
+      "status": "Stanje",
       "upstreamStationId": "ID postaje",
       "upstreamStationIdHelp": "Identifikator polnilnice, poslan nadrejenemu strežniku.",
       "upstreamUrl": "URL nadrejenega strežnika",
@@ -1155,7 +1156,11 @@
       },
       "cost": "Stroški",
       "others": "Drugi",
-      "title": "Porabniki"
+      "title": "Porabniki",
+      "view": {
+        "river": "Reka",
+        "treemap": "Drevesni zemljevid"
+      }
     },
     "direction": {
       "battery": {
@@ -1519,6 +1524,7 @@
       "description": "brez prekinitev",
       "label": "Vedno polni",
       "labelHeating": "Vedno ogrevaj",
+      "minCurrent": "min. {current}",
       "once": "do konca seje",
       "onceTip": "Samo za to sejo",
       "permanent": "ostane trajno vklopljeno"

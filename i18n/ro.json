@@ -1314,6 +1314,7 @@
     "version": {
       "availableLong": "versiune nouă disponibilă",
       "community": "comunitatea evcc",
+      "labelEmail": "E-mail",
       "labelPhone": "Telefon",
       "labelRelease": "Lansare",
       "labelVersion": "Versiune",
@@ -1460,6 +1461,7 @@
     "nightlyHint": "Este posibil să fi fost deja rezolvat. Vă rugăm să verificați mai întâi cu cea mai recentă {nightlyVersion}.",
     "nightlyHintVersion": "versiune nightly",
     "searchHint": "Înainte de a raporta o eroare, căutați în {issues} existente.",
+    "searchHintLink": "problemele GitHub",
     "stepsToReproduce": "Pași pentru reproducere",
     "subTitleDiscussion": "Descrieți problema dumneavoastră",
     "subTitleEmail": "Descrieți problema",
@@ -1512,6 +1514,7 @@
       "description": "fără întreruperi",
       "label": "Încarcă mereu",
       "labelHeating": "Încălzește mereu",
+      "minCurrent": "min. {current}",
       "once": "până la sfârșitul sesiunii",
       "onceTip": "Doar această sesiune",
       "permanent": "rămâne activ permanent"
@@ -1934,6 +1937,7 @@
   },
   "settings": {
     "dateFormat": {
+      "auto": "Automat",
       "dmy": "ZZ/LL/AAAA",
       "label": "Format dată",
       "mdy": "LL/ZZ/AAAA",

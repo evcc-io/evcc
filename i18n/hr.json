@@ -827,6 +827,7 @@
         },
         "label": "Naredbe nadređenog poslužitelja"
       },
+      "status": "Stanje",
       "upstreamStationId": "ID stanice",
       "upstreamStationIdHelp": "Identifikator punjača koji se šalje nadređenom poslužitelju.",
       "upstreamUrl": "URL nadređenog poslužitelja",
@@ -1519,6 +1520,7 @@
       "description": "bez prekida",
       "label": "Uvijek puni",
       "labelHeating": "Uvijek grij",
+      "minCurrent": "min. {current}",
       "once": "do kraja sesije",
       "onceTip": "Samo za ovu sesiju",
       "permanent": "trajno uključeno"
@@ -1943,6 +1945,7 @@
   },
   "settings": {
     "dateFormat": {
+      "auto": "Automatski",
       "dmy": "DD/MM/GGGG",
       "label": "Format datuma",
       "mdy": "MM/DD/GGGG",

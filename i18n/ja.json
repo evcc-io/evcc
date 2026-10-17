@@ -1196,7 +1196,8 @@
       "overview": "概要",
       "pv": "発電",
       "title": "エネルギーフロー",
-      "usage": "使用量"
+      "usage": "使用量",
+      "withdrawal": "消費"
     },
     "grid": {
       "amount": "金額",
@@ -1956,7 +1957,10 @@
   "settings": {
     "dateFormat": {
       "auto": "自動",
-      "label": "日付形式"
+      "dmy": "日/月/年",
+      "label": "日付形式",
+      "mdy": "月/日/年",
+      "ymd": "年-月-日"
     },
     "deviceInfo": "この画面での設定は、このデバイスにのみ適用されます。",
     "fullscreen": {

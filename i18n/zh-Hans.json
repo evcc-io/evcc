@@ -286,6 +286,7 @@
       "singlePhase": "单相",
       "soc": "电量",
       "solarForecast": "太阳能预测",
+      "switchDevice": "电流控制",
       "temp": "温度",
       "topic": "主题",
       "url": "网址",
@@ -455,7 +456,7 @@
       "recordedEvents": "已记录事件",
       "staticLimits": "静态限制",
       "template": "集成",
-      "title": "HEMS",
+      "title": "外部限制",
       "type": {
         "custom": "自定义集成",
         "relay": "自定义集成（继电器）"
@@ -1945,7 +1946,10 @@
   "settings": {
     "dateFormat": {
       "auto": "自动",
-      "label": "日期格式"
+      "dmy": "日/月/年",
+      "label": "日期格式",
+      "mdy": "月/日/年",
+      "ymd": "年-月-日"
     },
     "deviceInfo": "您在此对话框中所做的设置仅影响此设备。",
     "fullscreen": {

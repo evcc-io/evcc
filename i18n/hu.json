@@ -262,6 +262,7 @@
       "heaterTempLimit": "Fűtés limit",
       "identifier": "RFID-Azonosító",
       "loginBlocked": "Bejelentkezési limit elérve",
+      "max": "max.",
       "maxCurrent": "Max. áram",
       "maxPower": "Max. teljesítmény",
       "messengers": "Szolgáltatások",
@@ -1163,6 +1164,10 @@
         "energy": "töltve",
         "returnEnergy": "kisütve"
       },
+      "grid": {
+        "energy": "Vételezés",
+        "returnEnergy": "Betáplálás"
+      },
       "meter": {
         "energy": "Energia",
         "returnEnergy": "Energia (visszirány)"
@@ -1188,7 +1193,9 @@
       "amount": "Összeg",
       "cost": "Hálózati költség",
       "energy": "Energia",
+      "export": "Betáplálás",
       "exportPrice": "Export ár",
+      "import": "Vételezés",
       "importPrice": "Import ár",
       "price": "Ár",
       "revenue": "Betáplálási bevétel",
@@ -1513,6 +1520,7 @@
       "description": "megszakítás nélkül",
       "label": "Mindig tölt",
       "labelHeating": "Mindig fűt",
+      "minCurrent": "min. {current}",
       "once": "a folyamat végéig",
       "onceTip": "Csak erre a folyamatra",
       "permanent": "tartósan bekapcsolva marad"
@@ -1937,6 +1945,7 @@
   },
   "settings": {
     "dateFormat": {
+      "auto": "Automatikus",
       "dmy": "NN/HH/ÉÉÉÉ",
       "label": "Dátumformátum",
       "mdy": "HH/NN/ÉÉÉÉ",
