@@ -336,8 +336,10 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 
 	wg.Go(func() {
 		if dev, ok := api.Cap[api.BatteryCapacity](instance); ok {
-			val := dev.Capacity()
-			makeResult("capacity", val, nil)
+			val, err := dev.Capacity()
+			makeResult("capacity", val, err)
+		} else if dev, ok := instance.(api.Vehicle); ok {
+			makeResult("capacity", dev.Capacity(), nil)
 		}
 	})
 

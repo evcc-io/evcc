@@ -500,7 +500,6 @@
         "charging": "Wallbox",
         "heating": "Heizgerät"
       },
-      "chargingTitle": "Verhalten",
       "circuitHelp": "Lastmanagement-Zuordnung, um die Leistungs- und Stromgrenzen nicht zu überschreiten.",
       "circuitInvalid": "Stromkreis existiert nicht",
       "circuitLabel": "Stromkreis",
@@ -562,25 +561,25 @@
       "priorityHelp": "Höherer Prioritäten haben Vorrang beim PV-Überschuss.",
       "priorityLabel": "Priorität",
       "save": "Speichern",
-      "solarBehaviorCustomHelp": "Definiere eigene Ein- und Ausschaltschwellen und Verzögerungen.",
-      "solarBehaviorDefaultHelp": "Start nach {enableDelay} ausreichend vorhandenem Überschuss. Stop wenn für {disableDelay} nicht genug Überschuss vorhanden ist.",
-      "solarBehaviorLabel": "PV-Überschuss",
-      "solarModeCustom": "manuell",
-      "solarModeMaximum": "nur Sonne",
-      "solarShareNote": "Der PV-Anteil-Regler in den Nutzereinstellungen ist deaktiviert, solange Watt-Schwellen gesetzt sind. {0} und speichern, um ihn zu aktivieren.",
       "solarShareReset": "Schwellwerte entfernen",
+      "solarTitle": "PV-Überschussverhalten",
       "temperatureRangeHelp": "Anzeigebereich für den Temperaturbalken. Beeinflusst die Regelung nicht.",
       "temperatureRangeTitle": "Temperaturbereich",
+      "thresholdDisableDelayHelp": "Stoppt, wenn für {delay} nicht genug Überschuss vorhanden ist.",
       "thresholdDisableDelayLabel": "Ausschaltverzögerung",
       "thresholdDisableHelpInvalid": "Bitte verwende einen positiven Wert.",
-      "thresholdDisableHelpPositive": "Laden stoppen, wenn mehr als {power} für {delay} aus dem Netz bezogen wird.",
-      "thresholdDisableHelpZero": "Stoppen, wenn minimale Mindestleistung für {delay} nicht erreicht werden kann.",
+      "thresholdDisableHelpPositive": "Stoppt, wenn mehr als {power} für {delay} aus dem Netz bezogen wird.",
       "thresholdDisableLabel": "Netzleistung ausschalten",
+      "thresholdEnableDelayHelp": "Startet, wenn für {delay} ausreichend Überschuss vorhanden ist.",
       "thresholdEnableDelayLabel": "Einschaltverzögerung",
       "thresholdEnableHelpInvalid": "Bitte verwende einen negativen Wert.",
-      "thresholdEnableHelpNegative": "Starten, wenn {surplus} Überschuss für {delay} verfügbar ist.",
-      "thresholdEnableHelpZero": "Starten, wenn erforderliche Mindestleistung für {delay} als Überschuss verfügbar ist.",
+      "thresholdEnableHelpNegative": "Startet, wenn {surplus} Überschuss für {delay} verfügbar ist.",
       "thresholdEnableLabel": "Netzleistung einschalten",
+      "thresholdsNote": {
+        "charging": "Um den Netzanteil beim PV-Laden zu steuern, nutze bitte den {slider}-Regler in den Ladepunkt-Einstellungen auf der Seite {page}. Trage hier nur in Sonderfällen Werte ein.",
+        "heating": "Um den Netzanteil beim PV-Heizen zu steuern, nutze bitte den {slider}-Regler in den Heizungs-Einstellungen auf der Seite {page}. Trage hier nur in Sonderfällen Werte ein."
+      },
+      "thresholdsSliderDisabled": "Der {slider}-Regler ist aktuell deaktiviert, da hier Werte gesetzt sind.",
       "titleAdd": {
         "charging": "Ladepunkt hinzufügen",
         "heating": "Heizung hinzufügen",
@@ -860,10 +859,10 @@
       },
       "controlled": "Durch automatische Steuerung deaktiviert. Der {optimizer} entscheidet stattdessen.",
       "controls": "Steuert",
-      "linkWord": "Optimizer",
       "description": "Nutzt PV-Vorhersage, Energiepreise und deinen typischen Verbrauch, um Batterie und Laden zu planen. Daten werden an den evcc Optimierungsdienst übertragen.",
       "enable": "Optimizer aktivieren",
       "info": "Bei neuen Installationen kann es bis zu 24 Stunden dauern, bis evcc genügend Daten gesammelt hat.",
+      "linkWord": "Optimizer",
       "title": "Optimizer"
     },
     "options": {
@@ -1079,7 +1078,7 @@
         "temperature": "Temperatur-Vorhersage hinzufügen"
       },
       "planner": {
-        "description": "Erweiterte Einstellung. Normalerweise nicht nötig, da dynamische Stromtarife oder CO₂-Vorhersagen automatisch verwendet werden. Ermöglicht eine zusätzliche Datenquelle, die nur für Ladepläne verwendet wird und nicht für Statistiken und Preisberechnungen.",
+        "description": "Diese erweiterte Einstellung ist in der Regel nicht erforderlich. Die Prognose des Planers dient als Grundlage für Ladepläne und das Laden von Fahrzeugen, Heizgeräten und Heimspeichern über das Stromnetz (günstig oder sauber). Ohne diese Einstellung wird automatisch der dynamische Netzpreis oder die CO₂-Prognose verwendet. Statistiken, Kostenberechnungen und Optimierungsentscheidungen bleiben davon unberührt.",
         "titleAdd": "Planer-Vorhersage hinzufügen",
         "titleEdit": "Planer-Vorhersage bearbeiten"
       },
@@ -1678,12 +1677,12 @@
       "solar": "PV-Überschuss",
       "solarShare": {
         "charging": {
-          "description": "Mindestens {share} der minimalen Ladeleistung muss aus PV-Strom stammen.",
+          "description": "Mindestens {share} der minimalen Ladeleistung muss durch PV-Überschuss gedeckt sein.",
           "descriptionFull": "Laden startet, sobald der Überschuss die minimale Ladeleistung deckt.",
           "descriptionZero": "Laden startet, sobald etwas Überschuss verfügbar ist."
         },
         "heating": {
-          "description": "Mindestens {share} der minimalen Heizleistung muss aus PV-Strom stammen.",
+          "description": "Mindestens {share} der minimalen Heizleistung muss durch PV-Überschuss gedeckt sein.",
           "descriptionFull": "Heizen startet, sobald der Überschuss die minimale Heizleistung deckt.",
           "descriptionZero": "Heizen startet, sobald etwas Überschuss verfügbar ist."
         },

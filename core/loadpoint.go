@@ -61,6 +61,7 @@ const (
 
 	chargerSwitchDuration = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchDuration   = 60 * time.Second // allow out of sync and do not measure phases during this timespan
+	welcomeChargeDuration = 60 * time.Second // keep charging enabled after connect for vehicles requiring it
 
 	phaseScaleUpBuffer = 1.1 // min current headroom required before load management allows scaling up again
 
@@ -178,6 +179,7 @@ type Loadpoint struct {
 	chargeCurrents []float64        // Phase currents
 	connectedTime  time.Time        // Time when vehicle was connected
 	connectPending bool             // connect notification deferred until vehicle detection settles
+	welcomeUntil   time.Time        // welcome charge deadline, set until surplus confirms the session
 	pvTimer        time.Time        // PV enabled/disable timer
 	phaseTimer     time.Time        // 1p3p switch timer
 	wakeUpTimer    *Timer           // Vehicle wake-up timeout
@@ -1241,13 +1243,11 @@ func statusEvents(prevStatus, status api.ChargeStatus) []string {
 }
 
 // updateChargerStatus updates charger status and detects car connected/disconnected events
-func (lp *Loadpoint) updateChargerStatus() (bool, error) {
+func (lp *Loadpoint) updateChargerStatus() error {
 	statusChanges, err := lp.getStatusChanges()
 	if err != nil || len(statusChanges) == 0 {
-		return false, err
+		return err
 	}
-
-	var welcomeCharge bool
 
 	for _, status := range statusChanges {
 		prevStatus := lp.GetStatus()
@@ -1262,7 +1262,9 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 				case evVehicleConnect:
 					// defer notification until vehicle detection settles
 					lp.connectPending = true
-					welcomeCharge = lp.needsWelcomeCharge()
+					if lp.needsWelcomeCharge() {
+						lp.welcomeUntil = lp.clock.Now().Add(welcomeChargeDuration)
+					}
 				case evVehicleDisconnect:
 					// a still-pending connect means the vehicle disconnected before
 					// its notification was confirmed; omit both connect and disconnect
@@ -1271,7 +1273,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 					} else {
 						lp.pushEvent(evVehicleDisconnect)
 					}
-					welcomeCharge = false
+					lp.welcomeUntil = time.Time{}
 				}
 			}
 		}
@@ -1280,7 +1282,12 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 	// update whenever there is a state change
 	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 
-	return welcomeCharge, nil
+	return nil
+}
+
+// welcomeActive reports a running welcome charge
+func (lp *Loadpoint) welcomeActive() bool {
+	return lp.clock.Now().Before(lp.welcomeUntil)
 }
 
 // getStatusChanges checks charger status and returns a chronological list of status changes
@@ -1772,7 +1779,8 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 // Support ends once the battery is maxed out: the balance it has to cover exceeds
 // the pv disable threshold or its discharge limit would be exceeded (issue #32151).
 func (lp *Loadpoint) batterySupported(sitePower, batteryPower float64, batteryBuffered, batteryStart bool) bool {
-	if !batteryStart && !(batteryBuffered && lp.charging()) {
+	// a session the welcome charge started is not surplus charging the battery should sustain
+	if !batteryStart && !(batteryBuffered && lp.charging() && lp.welcomeUntil.IsZero()) {
 		return false
 	}
 
@@ -1871,6 +1879,11 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	availableCurrent := effectiveCurrent + deltaCurrent
 	targetCurrent := max(availableCurrent, 0)
 
+	// surplus confirms a session the welcome charge started
+	if targetCurrent >= minCurrent {
+		lp.welcomeUntil = time.Time{}
+	}
+
 	// with always charge or under special conditions return at least minCurrent
 	if (alwaysCharge || battery) && targetCurrent < minCurrent {
 		lp.log.DEBUG.Printf("pv charge current: min %.3gA > %.3gA (%.0fW @ %dp, battery: %t)", minCurrent, targetCurrent, sitePower, activePhases, battery)
@@ -1920,6 +1933,7 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 		} else {
 			// reset timer
 			lp.resetPVTimer("disable")
+			lp.welcomeUntil = time.Time{}
 		}
 
 		// lp.log.DEBUG.Println("pv disable timer: keep enabled")
@@ -2430,13 +2444,13 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 
 NO_DIM:
 	// read and publish status
-	welcomeCharge, err := lp.updateChargerStatus()
+	err := lp.updateChargerStatus()
 	if err != nil {
 		lp.log.ERROR.Println(err)
 		return
 	}
 
-	lp.publish(keys.VehicleWelcomeActive, welcomeCharge)
+	lp.publish(keys.VehicleWelcomeActive, lp.welcomeActive())
 	lp.publish(keys.Connected, lp.connected())
 	lp.publish(keys.Charging, lp.charging())
 
@@ -2488,6 +2502,9 @@ NO_DIM:
 		plannerActive = lp.planDeadlineCritical()
 	}
 
+	// a plan goal above the session limits is the optimizer's to reach, like the planner's slot is below
+	optimizerPlan := suggestion != nil && mode == api.ModeSmart && lp.planActive
+
 	// update and publish min soc not reached state
 	minSocNotReached := lp.minSocNotReached()
 	lp.publish(keys.MinSocNotReached, minSocNotReached)
@@ -2508,24 +2525,24 @@ NO_DIM:
 			err = nil
 		}
 
+	// welcome charge takes precedence over mode and limits
+	case lp.welcomeActive():
+		err = lp.setLimit(lp.effectiveMinCurrent())
+
 	case mode == api.ModeOff:
-		var current float64
-		if welcomeCharge {
-			current = lp.effectiveMinCurrent()
-		}
-		err = lp.setLimit(current)
+		err = lp.setLimit(0)
 
 	// minimum or target charging
 	case minSocNotReached || plannerActive:
 		err = lp.fastCharging()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
-	case lp.LimitEnergyReached():
+	case lp.LimitEnergyReached() && !optimizerPlan:
 		lp.log.DEBUG.Printf("limitEnergy reached: %.0fkWh > %0.1fkWh", lp.GetChargedEnergy()/1e3, lp.limitEnergy)
 		err = lp.disableUnlessClimater()
 
-	case lp.LimitSocReached():
-		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.EffectiveLimitSoc())
+	case lp.LimitSocReached() && !optimizerPlan:
+		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% >= %d%%", lp.vehicleSoc, lp.EffectiveLimitSoc())
 		err = lp.disableUnlessClimater()
 
 	// immediate charging- must be placed after limits are evaluated
@@ -2579,11 +2596,6 @@ NO_DIM:
 
 		if targetCurrent == 0 && lp.vehicleClimateActive() {
 			targetCurrent = lp.effectiveMinCurrent()
-		}
-
-		if targetCurrent == 0 && welcomeCharge {
-			targetCurrent = lp.effectiveMinCurrent()
-			lp.resetPVTimer()
 		}
 
 		err = lp.setLimit(targetCurrent)

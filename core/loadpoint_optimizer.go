@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/grid"
 )
 
@@ -114,11 +115,18 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 	required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower())
 
 	// past the plan time the goal was missed- keep charging like plannerActive does
+	critical := required > 0
 	if remaining := lp.clock.Until(planTime); remaining > 0 {
-		return required >= remaining
+		critical = required >= remaining
 	}
 
-	return required > 0
+	// hold a critical verdict for one slot, like the planner holds its slot: while charging
+	// the soc estimate may shrink the required duration faster than the clock (taper model)
+	if critical {
+		lp.planSlotEnd = lp.clock.Now().Add(tariff.SlotDuration)
+	}
+
+	return critical || lp.clock.Now().Before(lp.planSlotEnd)
 }
 
 // surplusRegime indicates that the suggested charge power matches the forecast

@@ -286,6 +286,7 @@
       "singlePhase": "单相",
       "soc": "电量",
       "solarForecast": "太阳能预测",
+      "switchDevice": "电流控制",
       "temp": "温度",
       "topic": "主题",
       "url": "网址",
@@ -455,7 +456,7 @@
       "recordedEvents": "已记录事件",
       "staticLimits": "静态限制",
       "template": "集成",
-      "title": "HEMS",
+      "title": "外部限制",
       "type": {
         "custom": "自定义集成",
         "relay": "自定义集成（继电器）"
@@ -497,7 +498,6 @@
         "charging": "充电桩",
         "heating": "加热设备"
       },
-      "chargingTitle": "充电",
       "circuitHelp": "负载管理分配，以确保不超过功率和电流限制。",
       "circuitInvalid": "电路不存在",
       "circuitLabel": "电路",
@@ -559,24 +559,16 @@
       "priorityHelp": "较高优先级的充电点优先使用太阳能余电。",
       "priorityLabel": "优先级",
       "save": "保存",
-      "solarBehaviorCustomHelp": "自定义启用和禁用阈值及延迟时间。",
-      "solarBehaviorDefaultHelp": "仅使用太阳能余电充电。当余电持续 {enableDelay} 后开始充电。当余电不足持续 {disableDelay} 后停止充电。",
-      "solarBehaviorLabel": "太阳能充电行为",
-      "solarModeCustom": "自定义",
-      "solarModeMaximum": "最大化太阳能",
-      "solarShareNote": "设置了瓦特阈值时，用户设置中的太阳能占比滑块将被禁用。{0}并保存以启用它。",
       "solarShareReset": "移除阈值",
       "temperatureRangeHelp": "温度条的显示范围。不影响控制。",
       "temperatureRangeTitle": "温度范围",
       "thresholdDisableDelayLabel": "停用延迟",
       "thresholdDisableHelpInvalid": "请输入一个正值。",
       "thresholdDisableHelpPositive": "当从电网取电超过 {power} 并持续 {delay} 时，停止充电。",
-      "thresholdDisableHelpZero": "当最小充电功率持续 {delay} 无法满足时停止充电。",
       "thresholdDisableLabel": "停用电网功率阈值",
       "thresholdEnableDelayLabel": "启用延迟",
       "thresholdEnableHelpInvalid": "请输入一个负值。",
       "thresholdEnableHelpNegative": "当有 {surplus} 剩余电力并持续 {delay} 时，开始充电。",
-      "thresholdEnableHelpZero": "当满足最小充电功率的剩余电力持续 {delay} 时开始充电。",
       "thresholdEnableLabel": "启用电网功率阈值",
       "titleAdd": {
         "charging": "添加充电点",
@@ -1945,7 +1937,10 @@
   "settings": {
     "dateFormat": {
       "auto": "自动",
-      "label": "日期格式"
+      "dmy": "日/月/年",
+      "label": "日期格式",
+      "mdy": "月/日/年",
+      "ymd": "年-月-日"
     },
     "deviceInfo": "您在此对话框中所做的设置仅影响此设备。",
     "fullscreen": {

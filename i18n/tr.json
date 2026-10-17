@@ -506,7 +506,6 @@
         "charging": "“Doldurma cihazı”",
         "heating": "Isıtıcı"
       },
-      "chargingTitle": "Davranış",
       "circuitHelp": "Güç ve akım limitlerinin aşılmaması için yük yönetim ataması.",
       "circuitInvalid": "Devre mevcut değil",
       "circuitLabel": "“Devre”",
@@ -568,24 +567,16 @@
       "priorityHelp": "Öncelikli olanlar güneş enerjisi fazlasına öncelikli erişir.",
       "priorityLabel": "“Öncelik”",
       "save": "“Kaydet”",
-      "solarBehaviorCustomHelp": "Kendi açma, kapama eşiklerini ve gecikmeleri tanımla.",
-      "solarBehaviorDefaultHelp": "Yeterli fazlalığın {enableDelay} ardından başla. {disableDelay} için yeterli fazlalık olmadığında dur.",
-      "solarBehaviorLabel": "Güneş enerjisi fazlalığı",
-      "solarModeCustom": "“özel”",
-      "solarModeMaximum": "“sadece güneş”",
-      "solarShareNote": "Watt eşikleri ayarlıyken kullanıcı ayarlarındaki güneş payı kaydırıcısı devre dışıdır. Etkinleştirmek için {0} ve kaydet.",
       "solarShareReset": "Eşikleri kaldır",
       "temperatureRangeHelp": "Sıcaklık çubuğunun gösterim aralığı. Kontrolü etkilemez.",
       "temperatureRangeTitle": "Sıcaklık aralığı",
       "thresholdDisableDelayLabel": "“Kapatma gecikmesi”",
       "thresholdDisableHelpInvalid": "Lütfen pozitif bir değer kullan.",
       "thresholdDisableHelpPositive": "{delay} süresince şebekeden {power} değerinden fazla güç kullanıldığında durdur.",
-      "thresholdDisableHelpZero": "{delay} süresince asgari gerekli güç karşılanamadığında durdur.",
       "thresholdDisableLabel": "“Şebeke elektriğini kapat”",
       "thresholdEnableDelayLabel": "“Açma gecikmesi”",
       "thresholdEnableHelpInvalid": "Lütfen negatif bir değer kullan.",
       "thresholdEnableHelpNegative": "{delay} için {surplus} fazlalık varsa doldurmaya başla.",
-      "thresholdEnableHelpZero": "{delay} için asgari doldurma gücü fazlası mevcut olduğunda başlat.",
       "thresholdEnableLabel": "“Şebeke gücünü aç”",
       "titleAdd": {
         "charging": "Doldurma Noktası Ekle",
@@ -896,7 +887,7 @@
       }
     },
     "pv": {
-      "titleAdd": "GES Ekle",
+      "titleAdd": "GES Sayacı Ekle",
       "titleEdit": "GES Sayacını Düzenle"
     },
     "remote": {
@@ -940,7 +931,7 @@
       "grid": "Şebeke",
       "integrations": "Bütünleştirmeler",
       "loadpoints": "Doldurma ve Isıtma",
-      "meter": "GES ve Batarya",
+      "meter": "GES ve batarya",
       "services": "Hizmetler",
       "system": "Sistem",
       "vehicles": "Araçlar"
@@ -1646,7 +1637,7 @@
         "descriptionDisabled": "Ev bataryasından hızlı doldurabilmek için bir sınır seç.",
         "disabled": "Devre dışı",
         "label": "'Batarya Takviyesi”",
-        "mode": "Sadece GES ve Asg.+GES durumunda kullanılabilir.",
+        "mode": "Sadece akıllı modda mevcut.",
         "once": "Bu doldurma oturumu için takviye etkin.",
         "stateActive": "Batarya desteği etkin",
         "stateBelowLimit": "Desdek için batarya çok düşük",
@@ -1701,6 +1692,7 @@
     "mode": {
       "boost": "Hızlandırma",
       "minpv": "Asg.+GES",
+      "normal": "Normal",
       "now": "Hızlı",
       "off": "Kapalı",
       "on": "Açık",
