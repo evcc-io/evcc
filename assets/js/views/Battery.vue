@@ -151,7 +151,8 @@ export default defineComponent({
 			return this.devices.some(({ controllable }) => controllable);
 		},
 		gridChargePossible(): boolean {
-			return this.batteryControllable && !!this.state.smartCostAvailable;
+			const supported = this.devices.some((d) => d.modes?.includes("charge"));
+			return supported && !!this.state.smartCostAvailable;
 		},
 		gridChargeLimit(): number | null {
 			return this.state.batteryGridChargeLimit ?? null;
