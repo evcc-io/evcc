@@ -28,7 +28,7 @@ render: |
         {{- include "modbus" . | indent 6 }}
         register:
           address: 2201 # SUR Überschussleistung Auflösung 1 W
-          type: writeholding
+          type: writesingle
           decode: int16
   temp:
     source: modbus

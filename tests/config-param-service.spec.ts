@@ -65,6 +65,18 @@ test.describe("config param service", async () => {
     await expectDatalistOptions(city, []);
   });
 
+  test("optional placeholders", async ({ page }) => {
+    const meterModal = await openMeterModal(page);
+    const credentials = meterModal.getByLabel("Credentials");
+
+    // empty optional params are sent as empty strings
+    await expect(credentials).toHaveValue("user=");
+
+    await credentials.fill("");
+    await meterModal.getByLabel("Username").fill("admin");
+    await expect(credentials).toHaveValue("user=admin");
+  });
+
   test("auto-apply single service value", async ({ page }) => {
     const meterModal = await openMeterModal(page);
 

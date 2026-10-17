@@ -62,6 +62,7 @@
         "noCountry": "Não foi definido nenhum país. Defina-o em {link}.",
         "title": "Exportação de energia para a rede a partir da bateria"
       },
+      "optimizerControlledHint": "Desativado para {loadpoints}. Quem decide é o {optimizer}.",
       "priority": "A bateria doméstica tem prioridade enquanto o seu nível de carga (SOC) estiver abaixo de {soc}. Depois, os pontos de carregamento recebem o excedente.",
       "priorityNone": "O excedente de energia solar é encaminhado diretamente para os pontos de carregamento. Defina um valor superior a {soc} para dar prioridade à bateria doméstica.",
       "priorityTitle": "Para onde vai o excedente primeiro?"
@@ -837,9 +838,29 @@
       "usernameHelp": "Para a autenticação HTTP básica no servidor upstream."
     },
     "optimizer": {
-      "description": "Analisa as previsões de energia solar, os preços da eletricidade e os seus padrões de consumo para otimizar a estratégia de utilização da bateria e de carregamento. Os dados são enviados para o serviço de otimização evcc para serem processados. Atualmente, apenas calcula e apresenta os dados. Ainda não controla dispositivos.",
+      "automatic": "Controlo automático",
+      "automaticLevel": {
+        "battery": {
+          "description": "Controla apenas a bateria doméstica.",
+          "label": "Bateria doméstica",
+          "status": "{automatic} controla a bateria doméstica."
+        },
+        "full": {
+          "description": "Controla a bateria doméstica, inicia e para o carregamento de veículos no modo inteligente, substitui os limites de preço e de CO₂ e assume os planos. Sem alteração: modo desligado e rápido, dispositivos de aquecimento, tomadas comandadas, veículos com capacidade desconhecida.",
+          "label": "Bateria doméstica & pontos de carga",
+          "status": "{automatic} controla a bateria doméstica e os pontos de carregamento."
+        },
+        "off": {
+          "description": "O otimizador apenas sugere. Nada é controlado.",
+          "status": "{automatic} está desligado. O otimizador apenas sugere."
+        }
+      },
+      "controlled": "Desativado pelo controlo automático. Quem decide é o {optimizer}.",
+      "controls": "Controla",
+      "description": "Utiliza previsões de energia solar, preços de eletricidade e seus padrões de consumo para planejar o uso da bateria e o carregamento. Os dados são enviados para o serviço de otimização evcc.",
       "enable": "Ativar o Otimizador",
       "info": "Em instalações novas, pode demorar até 24 horas até que o evcc tenha recolhido dados suficientes.",
+      "linkWord": "otimizador",
       "title": "Otimizador"
     },
     "options": {
@@ -1046,7 +1067,7 @@
         "temperature": "Adicionar previsão de temperatura"
       },
       "planner": {
-        "description": "Configuração avançada. Normalmente não é necessária, pois as tarifas dinâmicas de eletricidade ou as previsões de CO₂ são utilizadas automaticamente. Ativa uma fonte de dados adicional que é utilizada apenas para o planeamento de carregamentos, não para estatísticas e cálculos de preços.",
+        "description": "Essa configuração avançada geralmente não é necessária. A previsão do planejador serve como base para os planos de carregamento e para o carregamento de baixo custo ou limpo na rede elétrica (veículos, aquecedores, baterias residenciais). Sem ela, o preço dinâmico da rede ou a previsão de CO₂ são usados automaticamente. As estatísticas, os cálculos de custos e as decisões do otimizador não são afetados.",
         "titleAdd": "Adicionar previsão do planeador",
         "titleEdit": "Editar previsão do planeador"
       },
@@ -1451,6 +1472,10 @@
     },
     "issueDescription": "Descrição",
     "issueTitle": "Título",
+    "nightlyHint": "Pode já estar corrigido. Verifique primeiro com a {nightlyVersion} mais recente.",
+    "nightlyHintVersion": "Versão nightly",
+    "searchHint": "Antes de comunicar um erro, pesquise os {issues} existentes.",
+    "searchHintLink": "Problemas no GitHub",
     "stepsToReproduce": "Passos para reproduzir",
     "subTitleDiscussion": "Descreva o seu problema",
     "subTitleEmail": "Descreva o seu problema",
@@ -1719,6 +1744,7 @@
     "targetChargePlan": {
       "chargeDuration": "Tempo de carga",
       "co2Label": "Emissão de CO₂",
+      "optimizerHint": "Nota: este plano foi criado pelo {optimizer}.",
       "priceLabel": "Preço da energia",
       "timeRange": "{day} {range} h",
       "unknownPrice": "ainda desconhecido"
@@ -1777,6 +1803,7 @@
       "feedinPriorityPausing": "Carregamento solar pausado para maximizar a alimentação.",
       "finished": "Concluído.",
       "minCharge": "Recarga mínima até {soc}.",
+      "optimizerControlledTooltip": "Controlo automático. O otimizador inicia e para o carregamento.",
       "pvDisable": "Excedente insuficiente. Pausa em breve.",
       "pvEnable": "Excesso disponível. Carregamento em breve.",
       "scale1p": "Reduzindo para carregamento monofásico em breve.",
