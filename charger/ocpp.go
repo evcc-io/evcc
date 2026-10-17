@@ -47,6 +47,8 @@ type OCPP struct {
 	current float64
 	lp      loadpoint.API
 
+	enableSet bool // enabled reflects a profile actually sent
+
 	stackLevelZero      bool
 	profileKindRelative bool
 	txProfile           bool
@@ -288,6 +290,12 @@ func (c *OCPP) Enabled() (bool, error) {
 			core.ChargePointStatusSuspendedEVSE:
 			return false, nil
 		case
+			// idle chargers may offer their hardware maximum regardless of the profile
+			core.ChargePointStatusAvailable:
+			if c.enableSet {
+				return c.enabled, nil
+			}
+		case
 			core.ChargePointStatusCharging,
 			core.ChargePointStatusSuspendedEV:
 			return true, nil
@@ -326,6 +334,7 @@ func (c *OCPP) Enable(enable bool) error {
 	if err == nil {
 		// cache enabled state as last fallback option
 		c.enabled = enable
+		c.enableSet = true
 	}
 
 	return err
