@@ -18,6 +18,10 @@ func TestPersistentUUID(t *testing.T) {
 		t.Errorf("expected node %x, got %x", uuid.NodeID(), uid[10:])
 	}
 
+	if s, _ := settings.String(keys.ShmUuid); s != uid.String() {
+		t.Errorf("expected setting %s, got %s", uid, s)
+	}
+
 	if again := persistentUUID(); again != uid {
 		t.Errorf("expected persisted %s, got %s", uid, again)
 	}
