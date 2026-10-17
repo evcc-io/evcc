@@ -356,6 +356,13 @@ func (wb *BenderCC) maxCurrentMillis(current float64) error {
 // removed: https://github.com/evcc-io/evcc/issues/13555
 // var _ api.ChargeTimer = (*BenderCC)(nil)
 
+// meterValue decodes a 32-bit meter register. The highest bit marks unavailable data:
+// 0xffffffff per Bender Modbus API, lower values were seen while the charger restarts.
+func meterValue(b []byte) (uint32, bool) {
+	u := binary.BigEndian.Uint32(b)
+	return u, u < 1<<31
+}
+
 // CurrentPower implements the api.Meter interface
 func (wb *BenderCC) currentPower() (float64, error) {
 	if wb.legacy {
@@ -368,12 +375,11 @@ func (wb *BenderCC) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	u := binary.BigEndian.Uint32(b)
-
 	// some Bender chargers temporarily return 0xffffffff
 	// return error in this case to trigger retry and avoid wrong power readings
 	// https://github.com/evcc-io/evcc/discussions/27736
-	if u == math.MaxUint32 {
+	u, ok := meterValue(b)
+	if !ok {
 		return 0, api.ErrMustRetry
 	}
 
@@ -393,7 +399,9 @@ func (wb *BenderCC) totalEnergy() (float64, error) {
 
 		var total float64
 		for l := range 3 {
-			total += float64(binary.BigEndian.Uint32(b[4*l:4*(l+1)])) / 1e3
+			if u, ok := meterValue(b[4*l:]); ok {
+				total += float64(u) / 1e3
+			}
 		}
 
 		return total, nil
@@ -404,13 +412,12 @@ func (wb *BenderCC) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	// 0xFFFFFFFF marks unavailable data
-	v := binary.BigEndian.Uint32(b)
-	if v == 0xffffffff {
+	u, ok := meterValue(b)
+	if !ok {
 		return 0, api.ErrNotAvailable
 	}
 
-	return float64(v) / 1e3, nil
+	return float64(u) / 1e3, nil
 }
 
 // getPhaseValues returns 3 sequential register values
@@ -422,11 +429,9 @@ func (wb *BenderCC) getPhaseValues(reg uint16, divider float64) (float64, float6
 
 	var res [3]float64
 	for i := range res {
-		u32 := binary.BigEndian.Uint32(b[4*i:])
-		if u32 == math.MaxUint32 {
-			u32 = 0
+		if u, ok := meterValue(b[4*i:]); ok {
+			res[i] = float64(u) / divider
 		}
-		res[i] = float64(u32) / divider
 	}
 
 	return res[0], res[1], res[2], nil
