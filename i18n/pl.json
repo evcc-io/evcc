@@ -828,6 +828,7 @@
         },
         "label": "Polecenia serwera nadrzędnego"
       },
+      "status": "Stan",
       "upstreamStationId": "Identyfikator stacji",
       "upstreamStationIdHelp": "Identyfikator ładowarki wysyłany do serwera nadrzędnego.",
       "upstreamUrl": "Adres URL serwera nadrzędnego",
@@ -1339,6 +1340,7 @@
       "modalUpdateStarted": "Nowa wersja evcc uruchamia się…",
       "modalUpdateStatusStart": "Instalacja rozpoczęta:",
       "modalViewOnGitHub": "Zobacz na GitHubie",
+      "openSource": "otwarte oprogramowanie",
       "poweredBy": "obsługiwane przez"
     }
   },
