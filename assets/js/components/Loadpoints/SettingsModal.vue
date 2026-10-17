@@ -159,6 +159,28 @@
 				</div>
 			</div>
 
+			<div v-if="loadpoint?.chargerPhases1p3p" class="mb-3 row">
+				<div class="col-sm-4"></div>
+				<div class="col-sm-8 pe-0">
+					<div class="form-check form-switch">
+						<input
+							:id="formId('limitsolarphases')"
+							v-model="selectedLimitSolarPhases"
+							class="form-check-input"
+							type="checkbox"
+							role="switch"
+							@change="setLimitSolarPhases"
+						/>
+						<label class="form-check-label" :for="formId('limitsolarphases')">
+							{{ $t("main.loadpointSettings.limitSolarPhases.label") }}
+							<small class="text-muted d-block">
+								{{ $t("main.loadpointSettings.limitSolarPhases.description") }}
+							</small>
+						</label>
+					</div>
+				</div>
+			</div>
+
 			<div v-if="!switchDevice" class="mb-3 row">
 				<label :for="formId('maxcurrent')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 					{{ $t("main.loadpointSettings.maxCurrent.label") }}
@@ -265,6 +287,7 @@ export default defineComponent({
 			selectedMinCurrent: undefined as number | undefined,
 			selectedMinTemp: undefined as number | undefined,
 			selectedPhases: undefined as number | undefined,
+			selectedLimitSolarPhases: false,
 			selectedSolarShare: 100,
 			isModalVisible: false,
 		};
@@ -308,6 +331,9 @@ export default defineComponent({
 		},
 		phasesConfigured() {
 			return this.loadpoint?.phasesConfigured;
+		},
+		limitSolarPhases() {
+			return this.loadpoint?.limitSolarPhases ?? false;
 		},
 		phasesOptions() {
 			if (this.loadpoint?.chargerSinglePhase) {
@@ -390,6 +416,9 @@ export default defineComponent({
 		phasesConfigured(value) {
 			this.selectedPhases = value;
 		},
+		limitSolarPhases(value: boolean) {
+			this.selectedLimitSolarPhases = value ?? false;
+		},
 		solarSharePercent(value) {
 			this.selectedSolarShare = value;
 		},
@@ -398,6 +427,7 @@ export default defineComponent({
 		open(loadpointId: string) {
 			this.id = loadpointId;
 			this.selectedPhases = this.phasesConfigured;
+			this.selectedLimitSolarPhases = this.limitSolarPhases;
 			this.selectedMaxCurrent = this.maxCurrent;
 			this.selectedMinCurrent = this.minCurrent;
 			this.selectedMinTemp = this.minTemp;
@@ -422,6 +452,9 @@ export default defineComponent({
 		},
 		setPhasesConfigured() {
 			api.post(this.apiPath("phases") + "/" + this.selectedPhases);
+		},
+		setLimitSolarPhases() {
+			api.post(this.apiPath("limitsolarphases") + "/" + this.selectedLimitSolarPhases);
 		},
 		setSolarShare() {
 			api.post(this.apiPath("solarshare") + "/" + this.selectedSolarShare / 100);

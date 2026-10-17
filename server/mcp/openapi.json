@@ -830,6 +830,29 @@
         }
       }
     },
+    "/loadpoints/{id}/limitsolarphases/{enable}": {
+      "post": {
+        "operationId": "setLoadpointLimitSolarPhases",
+        "summary": "Limit solar surplus charging to 1 phase",
+        "description": "When enabled, solar surplus charging stays on a single phase and never scales up to 3 phases. Fast charging (now mode, planner, minSoc, cheap grid price) is not affected.",
+        "tags": [
+          "loadpoints"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/enable"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BooleanResult"
+          }
+        }
+      }
+    },
     "/loadpoints/{id}/phases/{phases}": {
       "post": {
         "operationId": "setLoadpointPhases",
@@ -3861,6 +3884,10 @@
             "description": "Configured phase mode. 0 is automatic switching, 1 and 3 select a fixed phase count.",
             "type": "number"
           },
+          "limitSolarPhases": {
+            "description": "Limit solar surplus charging to a single phase. Fast charging is not affected.",
+            "type": "boolean"
+          },
           "plan": {
             "description": "Time slots of the current charging plan.",
             "type": "array",
@@ -4099,6 +4126,7 @@
           "phaseRemaining",
           "phasesActive",
           "phasesConfigured",
+          "limitSolarPhases",
           "plan",
           "planActive",
           "planEnergy",
