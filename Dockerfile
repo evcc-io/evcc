@@ -1,5 +1,5 @@
 # STEP 1 build ui
-FROM --platform=$BUILDPLATFORM ghcr.io/voidzero-dev/vite-plus:1.0.0@sha256:8d788678fb9783ba8994c4fe5652af3316bfc414f7ef6ead0136932ee6075b8b AS node
+FROM --platform=$BUILDPLATFORM ghcr.io/voidzero-dev/vite-plus:1.3.0@sha256:61860c1b58bf35878605280802809973c668f1594675298c3be553a98ac06e59 AS node
 
 USER root
 

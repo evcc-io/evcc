@@ -57,7 +57,7 @@ func (lp *Loadpoint) demandProfileWeekday(minLen int) []float64 {
 		weekday := now.BeginningOfDay().AddDate(0, 0, day).Weekday()
 		profile, err := lp.chargeEnergy.EnergyProfileWeekday(weekday)
 		if err != nil {
-			lp.log.DEBUG.Printf("demand profile weekday: %v", err)
+			lp.log.DEBUG.Printf("demand profile weekday (%s): %v", weekday, err)
 			return nil
 		}
 

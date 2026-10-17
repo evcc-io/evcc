@@ -17,6 +17,7 @@ params:
   - name: password
   - name: channel
     default: 0
+    service: shelly/channels?uri={host}&user={user}&password={password}
   - preset: switchsocket
 render: |
   type: shelly

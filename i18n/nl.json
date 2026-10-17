@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Autorisatie gelukt",
     "buttonConnect": "Verbind met {provider}",
     "buttonDisconnect": "Verbinding verbreken",
+    "challenge": {
+      "captcha": {
+        "label": "Voer de tekens in zoals getoond in de afbeelding.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Plak de code of het adres van de pagina waarnaar je bent doorverwezen.",
+        "title": "Autorisatiecode"
+      },
+      "openLogin": "Open inlogpagina",
+      "submit": "Doorgaan"
+    },
     "confirmLogout": "Weet u zeker dat u de verbinding met {title} wilt verbreken?",
     "connect": "verbinding maken",
     "disconnect": "verbinding verbreken",
@@ -25,6 +37,7 @@
       "discharging": "ontlaadt",
       "energy": "Energie",
       "gridCharge": "laden met netstroom",
+      "gridDischarge": "ontladen naar het net",
       "hold": "ontladen gesperd",
       "holdCharge": "opladen gesperd",
       "ofTotal": "van {total}",
@@ -43,6 +56,13 @@
       "bufferTitle": "Batterij als laadbuffer",
       "discharge": "Blokkeer het ontladen van de thuisbatterij in snelle modus en bij gepland laden.",
       "gridDischarge": "Sta ontladen van de batterij naar het net toe.",
+      "gridDischargeConfirm": {
+        "country": "Geconfigureerd land: {country}.",
+        "description": "Afhankelijk van de reglementen van het land en de afspraken met je energieleverancier is het mogelijk om energie uit de batterij terug te voeden naar het net, de geëxporteerde energie is niet langer puur zonne-energie. Onder veel omstandigheden is dit niet toegestaan. Controleer de reglementen van de netbeheerder en het contract met je energieleverancier.",
+        "noCountry": "Geen land geconfigureerd. Stel dit in onder {link}.",
+        "title": "Exporteren naar het net vanuit de batterij"
+      },
+      "optimizerControlledHint": "Uitgeschakeld voor {loadpoints}. De {optimizer} beslist zelf.",
       "priority": "Thuisbatterij heeft voorrang tot {soc} gehaald wordt. Na het behalen van het ingestelde percentage gaat het overschot naar de laadpunten.",
       "priorityNone": "Zon-overschot gaat rechtstreeks naar de laadpunten. Stel een waarde boven {soc} in om de thuisbatterij voorrang te geven.",
       "priorityTitle": "Waar gaat het overschot als eerst heen?"
@@ -66,7 +86,7 @@
     "gridChargeTab": "Netladen",
     "gridDischargeTab": "Netontlading",
     "modalTitle": "Thuisbatterij",
-    "noBattery": "Geen accu geconfigureerd.",
+    "noBattery": "Geen batterij geconfigureerd.",
     "usageTab": "Batterijgebruik"
   },
   "colors": {
@@ -134,20 +154,55 @@
       },
       "type": {
         "custom": {
-          "charging": "Gebruikersgedefinieerde lader",
-          "heating": "Gebruikergedefinieerde verwarmer"
+          "charging": "Gebruikersgedefiniëerde lader",
+          "heating": "Gebruikersgedefiniëerde verwarmer"
         },
-        "heatpump": "Gebruikersgedefinieerde warmtepomp",
-        "sgready": "Gebruikersgedefinieerde warmtepomp (sg-ready via plugins)",
-        "sgready-boost": "Gebruikersgedefinieerde verwarmer (sg-ready-boost, verouderd)",
-        "sgready-relay": "Gebruikersgedefinieerde warmtepomp (sg-ready via relais)",
-        "switchsocket": "Gebruikersgedefinieerd schakelbaar stopcontact"
+        "heatpump": "Gebruikersgedefiniëerde warmtepomp",
+        "sgready": "Gebruikersgedefiniëerde warmtepomp (sg-ready via plugins)",
+        "sgready-boost": "Gebruikersgedefiniëerde verwarmer (sg-ready-boost, verouderd)",
+        "sgready-relay": "Gebruikersgedefiniëerde warmtepomp (sg-ready via relais)",
+        "switchsocket": "Gebruikersgedefiniëerd schakelbaar stopcontact"
       }
     },
+    "circuit": {
+      "addMeter": "Voeg een toegewijde energiemeter toe",
+      "custom": "Gebruikersgedefiniëerd circuit",
+      "deleteChildrenFirst": "Verwijder eerst de onderliggende circuits, alvorens dit circuit te verwijderen.",
+      "meterDedicated": "Toegewijde meter",
+      "meterGrid": "Netmeter",
+      "meterHelp": "Meter die het totale verbruik van het circuit meet.",
+      "meterLabel": "Energiemeter",
+      "meterLabelAdd": "Circuitmeter toevoegen",
+      "meterLabelEdit": "Circuitmeter wijzigen",
+      "meterNone": "Geen meter",
+      "meterSelectionHelpDedicatedMeter": "Voeg een bestaande meter toe aan dit circuit.",
+      "meterSelectionHelpGridMeter": "Gebruikt de bestaande netmeter van uw installatie.",
+      "meterSelectionHelpNoMeter": "De som van alle laadpunten wordt gebruikt.",
+      "meterSelectionLabel": "Meterselectie",
+      "parentCircuit": "Bovenliggend circuit",
+      "template": "Circuit",
+      "titleAdd": "Circuit toevoegen",
+      "titleEdit": "Circuit wijzigen",
+      "titleLabel": "Titel"
+    },
     "circuits": {
+      "addMainCircuit": "Hoofdcircuit toevoegen",
+      "addSubCircuit": "Onderliggend circuit toevoegen",
+      "chargingPointsNote": "Ken laadpunten en verwarmers toe aan een circuit via de eigen configuratie.",
       "description": "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
+      "legacyWarning": "Nieuwe circuitconfiguratie beschikbaar! Verwijder en sla uw configuratie hier op om het nieuwe, begeleide proces te gebruiken.",
+      "meterDedicated": "Meter",
+      "meterGrid": "Net",
       "title": "Load Balancing",
       "usableMeters": "Bruikbare meterreferenties"
+    },
+    "combobox": {
+      "count": "{count} suggesties",
+      "matching": "Overeenkomstig",
+      "other": "Anders",
+      "searching": "Bezig met zoeken…",
+      "suggestions": "Suggesties",
+      "used": "reeds in gebruik"
     },
     "consumer": {
       "description": "Verschaft inzicht in kleinere, niet aanstuurbare apparaten (koelkasten, wasmachines, ...). Dit geeft een mooier overzicht van het verbruik in een huishouden.",
@@ -216,6 +271,8 @@
       "identifier": "RFID-Nummer",
       "loginBlocked": "Inloglimiet bereikt",
       "max": "max",
+      "maxCurrent": "Max. stroomsterkte",
+      "maxPower": "Max. vermogen",
       "messengers": "Diensten",
       "no": "nee",
       "odometer": "Kilometerstand",
@@ -233,7 +290,7 @@
       "remoteEnabled": "Ingeschakeld",
       "returnEnergy": "Energie (teruglevering)",
       "singlePhase": "Monofase",
-      "soc": "Laden",
+      "soc": "Lading",
       "solarForecast": "Voorspelling van zonne-energie",
       "switchDevice": "Stroomsterkte regeling",
       "temp": "Temperatuur",
@@ -339,8 +396,8 @@
       "confirmSave": "Er zijn niet-opgeslagen wijzigingen. Nu opslaan?",
       "copied": "Gekopieerd!",
       "copy": "Kopieer",
-      "customHelp": "Creëer een gebruiker-gedefinieerd apparaat met evcc’s plugin systeem.",
-      "customOption": "Gebruiker-gedefinieerd apparaat",
+      "customHelp": "Creëer een gebruikersgedefiniëerd apparaat met evcc’s plugin systeem.",
+      "customOption": "Gebruikersgedefiniëerd apparaat",
       "delete": "Wissen",
       "disable": "Uitschakelen",
       "disabled": "uitgeschakeld",
@@ -352,6 +409,7 @@
       "enable": "Inschakelen",
       "error": "Fout",
       "experimental": "Experimenteel",
+      "forceEnable": "Toch activeren",
       "forceSave": "Toch opslaan",
       "fromYamlHint": "Opmerking: Geconfigureerd via evcc.yaml. Verwijder de betreffende regels uit het bestand om hier bewerkingen mogelijk te maken.",
       "hideAdvancedSettings": "Geavanceerde instellingen verbergen",
@@ -370,6 +428,7 @@
       "saving": "Bezig met opslaan…",
       "selectFile": "Bladeren",
       "showAdvancedSettings": "Toon geavanceerde instellingen",
+      "site": "Locatie",
       "telemetry": "Telemetrie",
       "templateLoading": "Laden...",
       "title": "Titel",
@@ -390,7 +449,7 @@
         "limitpower": "Limiet (kW)",
         "type": "Type"
       },
-      "customOption": "Door de gebruiker aangemaakte integratie",
+      "customOption": "Gebruikersgedefiniëerde integratie",
       "description": "Vermogensbeperking door externe systemen (bijv. §14a EnWG, §9 EEG-interface of hoger niveau energiebeheersysteem). Werkt samen met de functie voor Load Balancing. Sommige meters ondersteunen ook curtailment van de zonne-energieopbrengst. Het curtailmentlimiet moet op elke omvormerconfiguratie ingesteld worden.",
       "download": "Download",
       "dynamicLimits": "Dynamische limieten",
@@ -407,8 +466,8 @@
       "template": "Integratie",
       "title": "Externe limiet",
       "type": {
-        "custom": "Gebruikergedefinieerde integratie",
-        "relay": "Gebruikergedefinieerde integratie (relais)"
+        "custom": "Gebruikersgedefiniëerde integratie",
+        "relay": "Gebruikersgedefiniëerde integratie (relais)"
       }
     },
     "icon": {
@@ -635,7 +694,7 @@
       "title": "Meldingen"
     },
     "messenger": {
-      "custom": "Gebruiker gedefinieerde dienst",
+      "custom": "Gebruikersgedefiniëerde dienst",
       "generic": "Algemene dienst",
       "primary": "Specifieke dienst",
       "template": "Dienst",
@@ -736,7 +795,7 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionExternalUrl": "Adres voor andere apparaten die willen verbinden met evcc en voor het automatisch ontdekken van de evcc app.",
+      "descriptionExternalUrl": "Adres voor andere apparaten die willen verbinden met evcc en voor het automatisch ontdekken door de evcc app.",
       "descriptionHost": "Gebruikt om evcc in je lokale netwerk aan te kondigen.",
       "descriptionInternalUrl": "Lokaal netwerk adres van evcc.",
       "descriptionPort": "Poort voor de web interface en API. Update de browser url wanneer u dit aanpast.",
@@ -788,9 +847,29 @@
       "usernameHelp": "Voor HTTP Basic Auth richting de upstream server."
     },
     "optimizer": {
-      "description": "Analyseert zonne-energieprognoses, elektriciteitsprijzen en je verbruikspatronen om de batterij- en laadstrategie te optimaliseren. Gegevens worden naar de evcc-optimalisatiedienst gestuurd voor verwerking. Momenteel worden alleen berekeningen en visualisaties gemaakt, maar nog geen apparaten aangestuurd.",
+      "automatic": "Automatische controle",
+      "automaticLevel": {
+        "battery": {
+          "description": "Controleert alleen de thuisbatterij.",
+          "label": "Thuisbatterij",
+          "status": "{automatic} controleert de thuisbatterij."
+        },
+        "full": {
+          "description": "Controleert de thuisbatterij, start en stopt het laden van de wagen in slimme modus, vervangt prijs en CO₂ limieten en neemt de planningen over. Ongewijzigd: uit en snelle modus, verwarmingstoestellen, schakelbare stopcontacten, voertuigen met ongekende capaciteit.",
+          "label": "Thuisbatterij & laadpunten",
+          "status": "{automatic} controleert de thuisbatterij en laadpunten."
+        },
+        "off": {
+          "description": "De optimizer stelt alleen voor. Er wordt niets gecontroleerd.",
+          "status": "{automatic} staat uit. De optimizer stelt alleen voor."
+        }
+      },
+      "controlled": "Uitgeschakeld door automatische controle. De {optimizer} beslist.",
+      "controls": "Controles",
+      "description": "Gebruikt zonne-energieprognoses, elektriciteitsprijzen en je verbruikspatronen om de batterij en het opladen te plannen. Gegevens worden naar de evcc-optimalisatiedienst gestuurd.",
       "enable": "Activeer optimizer",
       "info": "Voor nieuwe installaties kan het tot 24 uur duren alvorens evcc voldoende data verzameld heeft.",
+      "linkWord": "optimizer",
       "title": "Optimizer"
     },
     "options": {
@@ -888,6 +967,22 @@
       "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
     },
+    "site": {
+      "country": {
+        "description": "Wordt gebruikt voor regio-specifieke hints en standaardwaarden.",
+        "label": "Land"
+      },
+      "currency": {
+        "description": "Voor het opmaken van energieprijzen, kosten en besparingen gebaseerd op uw tarief.",
+        "example": "Uw laadkosten bedroegen {price}. U heeft {amount} bespaard.",
+        "label": "Valuta"
+      },
+      "siteTitle": {
+        "description": "Weergegeven op het hoofdscherm en in het browsertabblad.",
+        "label": "Titel"
+      },
+      "title": "Locatie"
+    },
     "sponsor": {
       "addToken": "Token invoeren",
       "changeToken": "Token bewerken",
@@ -967,7 +1062,7 @@
       },
       "generic": "Generieke integraties",
       "grid": {
-        "description": "Electriciteits-prijzen voor consumptie van het net. Gebruikt om de werkelijke laadkosten uit te rekenen, en voor het laden van de auto of thuis-accu en het inschakelen van verwarming tegen de beste prijs.",
+        "description": "Elektriciteitsprijzen voor consumptie van het net. Gebruikt om de werkelijke laadkosten uit te rekenen, voor het laden van de auto of thuisbatterij en het inschakelen van verwarming tegen de beste prijs.",
         "titleAdd": "Net-import Tarief Toevoegen",
         "titleEdit": "Net-import Tarief Aanpassen"
       },
@@ -981,7 +1076,7 @@
         "temperature": "Voeg temperatuurvoorspelling toe"
       },
       "planner": {
-        "description": "Geavanceerde instelling. Doorgaans niet nodig omdat dynamische energieprijzen en CO₂ voorspellingen gebruikt worden. Deze instelling voegt een extra methode toe die het laden planbaar maakt. Deze methode is niet voor statistieken of prijsberekeningen.",
+        "description": "Deze geavanceerde instelling is doorgaans overbodig.De voorspellingen van de planner worden als basis gebruikt voor de laadplannen en het goedkope of het zuivere netladen.Zonder deze worden dynamische energieprijzen en CO₂ voorspellingen automatisch gebruikt. Deze methode wijzigt geen statistieken, prijsberekeningen of optimizer beslissingen.",
         "titleAdd": "Planner voorspelling toevoegen",
         "titleEdit": "Planner voorspelling aanpassen"
       },
@@ -1056,6 +1151,123 @@
       "titleEdit": "Voertuig bewerken"
     }
   },
+  "energy": {
+    "battery": {
+      "charged": "Geladen",
+      "discharged": "Ontladen"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Staaf",
+        "pattern": "Patroon"
+      },
+      "cost": "Kosten",
+      "others": "Overige",
+      "source": {
+        "battery": "batterij",
+        "grid": "net"
+      },
+      "title": "Verbruikers",
+      "view": {
+        "river": "Rivier",
+        "treemap": "boomstructuur"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "geladen",
+        "returnEnergy": "ontladen"
+      },
+      "grid": {
+        "energy": "geimporteerd",
+        "returnEnergy": "geexporteerd"
+      },
+      "meter": {
+        "energy": "Energie",
+        "returnEnergy": "Energie (omgekeerd)"
+      }
+    },
+    "empty": "Geen energiegegevens beschikbaar voor het gekozen tijdsvenster.",
+    "flow": {
+      "battery": "Batterij",
+      "batteryCharge": "Batterijniveau",
+      "batteryDischarge": "Batterij ontladen",
+      "charging": "Laden",
+      "export": "Netinjectie",
+      "grid": "Netafname",
+      "heating": "Verwarming",
+      "home": "Verbruik",
+      "overview": "Overzicht",
+      "pv": "Productie",
+      "title": "Energiestroom",
+      "usage": "Verbruik",
+      "withdrawal": "Afname"
+    },
+    "grid": {
+      "amount": "Hoeveelheid",
+      "cost": "Netkosten",
+      "energy": "Energie",
+      "export": "Export",
+      "exportPrice": "Exportprijs",
+      "import": "Import",
+      "importPrice": "Importprijs",
+      "price": "Prijs",
+      "revenue": "Terugleververgoeding",
+      "title": "Net"
+    },
+    "group": {
+      "battery": "Batterij",
+      "consumer": "Verbruik",
+      "forecast": "Voorspelling",
+      "grid": "Net",
+      "loadpoint": "Laden & Verwarmen",
+      "meter": "Extra meters",
+      "pv": "Productie"
+    },
+    "production": {
+      "above": "{value} hoger dan",
+      "accuracy": "Nauwkeurigheid van de voorspelling",
+      "below": "{value} lager dan",
+      "deviation": "Afwijking",
+      "expectedTomorrow": "verwacht morgen",
+      "exported": "{value} geëxporteerd",
+      "produced": "Geproduceerd",
+      "remainingToday": "vandaag resterend",
+      "selfConsumed": "Zelf verbruikt",
+      "title": "Productie"
+    },
+    "socTemp": {
+      "charged": "geladen",
+      "soc": "lading",
+      "temperature": "temperatuur",
+      "used": "verbruikt"
+    },
+    "sources": {
+      "battery": "Batterij",
+      "cost": "Kosten",
+      "energy": "Energie",
+      "grid": "Net",
+      "hint": "Zonne- en batterij-energie gewaardeerd tegen de terugleververgoeding.",
+      "price": "Prijs/kWh",
+      "pv": "Zonne-energie",
+      "share": "Aandeel",
+      "source": "Bron",
+      "title": "Bronnen",
+      "total": "Totaal"
+    },
+    "stat": {
+      "autarky": "Zelfvoorziening",
+      "co2Saved": "CO₂ bespaard",
+      "co2SavedTooltip": "Vergeleken met het afnemen van de verbruikte {energy} van het net.",
+      "configure": "Nu configureren",
+      "noCo2": "Geen CO₂-gegevens.",
+      "noPrice": "Geen prijsgegevens.",
+      "savings": "Besparing",
+      "savingsTooltip": "Vergeleken met het inkopen van de verbruikte {energy} van het net.",
+      "versus": "{value} vs. {reference}"
+    },
+    "title": "Energie"
+  },
   "footer": {
     "community": {
       "greenEnergy": "Zon",
@@ -1080,7 +1292,7 @@
         "co2saved": "CO₂ bespaart",
         "none": "Geen",
         "price": "Energie prijs",
-        "savings": "Besparing",
+        "savings": "Besparingen",
         "solar": "Zonne-Energie"
       },
       "indicatorLabel": "Hoofding info",
@@ -1193,6 +1405,7 @@
   },
   "general": {
     "back": "Terug",
+    "cancel": "Annuleren",
     "download": "Download",
     "error": "Fout",
     "none": "geen",
@@ -1229,31 +1442,6 @@
     "restartButton": "Herstart",
     "restartDescription": "Geprobeerd om het uit en weer aan te zetten?",
     "secondaryActions": "Nog niet gelukt om je probleem op te lossen? Hier zijn enkele hardhandige opties."
-  },
-  "energy": {
-    "direction": {
-      "battery": {
-        "energy": "geladen",
-        "returnEnergy": "ontladen"
-      },
-      "grid": {
-        "energy": "geimporteerd",
-        "returnEnergy": "geexporteerd"
-      },
-      "meter": {
-        "energy": "Energie",
-        "returnEnergy": "Energie (omgekeerd)"
-      }
-    },
-    "group": {
-      "battery": "Batterij",
-      "consumer": "Verbruik",
-      "forecast": "Voorspelling",
-      "grid": "Net",
-      "loadpoint": "Laden & Verwarmen",
-      "meter": "Extra meters",
-      "pv": "Productie"
-    }
   },
   "issue": {
     "additional": {
@@ -1292,6 +1480,10 @@
     },
     "issueDescription": "Omschrijving",
     "issueTitle": "Titel",
+    "nightlyHint": "Het is mogelijk al opgelost. Controleer dit alsublieft met de nieuwste {nightlyVersion}.",
+    "nightlyHintVersion": "nightly-versie",
+    "searchHint": "Zoek eerst in de bestaande {issues} voordat je een bug meldt.",
+    "searchHintLink": "GitHub problemen",
     "stepsToReproduce": "Stappen om te reproduceren",
     "subTitleDiscussion": "Omschrijf je probleem",
     "subTitleEmail": "Beschrijf het probleem",
@@ -1404,6 +1596,7 @@
       "batteryDischargeHold": "Accu (geblokkeerd)",
       "batteryGridChargeActive": "Net laden: actief",
       "batteryGridChargeLimit": "Net laden: wanneer",
+      "batteryStatus": "Batterijstatus",
       "batteryTooltip": "{energy} van {total} ({soc})",
       "forecast": "Voorspelling",
       "forecastTooltip": "voorspelling: resterende zonne-energieproductie voor vandaag",
@@ -1559,6 +1752,7 @@
     "targetChargePlan": {
       "chargeDuration": "Oplaadtijd",
       "co2Label": "CO₂ emissie ⌀",
+      "optimizerHint": "Nota: Deze planning werd door de {optimizer} gemaakt.",
       "priceLabel": "Energieprijs",
       "timeRange": "{day} {range} h",
       "unknownPrice": "nog onbekend"
@@ -1618,6 +1812,7 @@
       "feedinPriorityPausing": "Zonne opladen gepauzeerd om terugleveren te maximaliseren.",
       "finished": "Beëindigd.",
       "minCharge": "Minimaal opladen naar {soc}.",
+      "optimizerControlledTooltip": "Automatische controle. De optimizer start en stopt het opladen.",
       "pvDisable": "Onvoldoende PV overschot. Laden wordt binnenkort gepauzeerd.",
       "pvEnable": "Voldoende PV overschot beschikbaar. Laden wordt binnenkort gestart.",
       "scale1p": "Wordt gereduceerd naar laden op 1 fase.",
@@ -1791,9 +1986,9 @@
     "loadpoints": {
       "disabledDevice": "uitgeschakeld",
       "help": "Wijzig de volgorde en zichtbaarheid in de gebruikersinterface.",
-      "hide": "{title} verbergen",
+      "hide": "verberg {title}",
       "label": "Laadpunten",
-      "show": "{title} tonen"
+      "show": "toon {title}"
     },
     "sponsorToken": {
       "expires": "Je sponsortoken vervalt {inXDays}.",
@@ -1843,8 +2038,8 @@
     "saved": "Opgeslagen."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Aktieve tijd",
-    "batteryDescription": "Ontlaad de thuis accu naar het net wanneer de teruglever verhouding hoog is.",
+    "activeHoursLabel": "Actieve tijd",
+    "batteryDescription": "Ontlaadt de thuis accu naar het net wanneer de teruglever verhouding hoog is.",
     "description": "Pauzeert het opladen als terugleveren aan het net veel oplevert.",
     "priceLabel": "Teruglevertarief",
     "priceLimit": "Terugleverprijs limiet",
@@ -1868,6 +2063,7 @@
     "battery": "Batterij",
     "charge": "Laden",
     "comingSoon": "Deze pagina is in ontwikkeling.",
+    "energy": "Energie",
     "forecast": "Voorspelling",
     "more": "Meer",
     "sessions": "Sessies"

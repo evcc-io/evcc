@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vite-plus/test";
 import { applyDefaultsFromTemplate, createServiceEndpoints, type TemplateParam } from "./index";
 
-const buildParam = (name: string, service?: string): TemplateParam => ({
+const buildParam = (name: string, service?: string, required = false): TemplateParam => ({
   Name: name,
-  Required: false,
+  Required: required,
   Advanced: false,
   Deprecated: false,
   Service: service,
@@ -17,7 +17,7 @@ describe("createServiceEndpoints", () => {
   });
 
   it("replaces single placeholder", () => {
-    const params = [buildParam("home", "homes"), buildParam("power", "homes/{home}/sensors")];
+    const params = [buildParam("home", "homes", true), buildParam("power", "homes/{home}/sensors")];
     const endpoints = createServiceEndpoints(params);
     const homeEndpoint = endpoints.find(({ name }) => name === "home")!;
     const powerEndpoint = endpoints.find(({ name }) => name === "power")!;
@@ -38,7 +38,7 @@ describe("createServiceEndpoints", () => {
   });
 
   it("encodes replacements", () => {
-    const params = [buildParam("token", "homes/{home}/sensors/{sensor}?token={token}")];
+    const params = [buildParam("token", "homes/{home}/sensors/{sensor}?token={token}", true)];
     const endpoints = createServiceEndpoints(params);
     const tokenEndpoint = endpoints[0]!;
     expect(tokenEndpoint.url({ home: "hq", sensor: "bat/tery", token: "a+b c" })).toBe(
@@ -98,6 +98,23 @@ describe("createServiceEndpoints", () => {
     expect(endpoints[0]!.url({ home: "" })).toBe("homes/{home}/sensors");
     // Non-empty value should replace placeholder
     expect(endpoints[0]!.url({ home: "main" })).toBe("homes/main/sensors");
+  });
+
+  it("fills empty optional params, required ones keep blocking", () => {
+    const params = [
+      buildParam("host", undefined, true),
+      buildParam("user"),
+      buildParam("password"),
+      buildParam("channel", "shelly/channels?uri={host}&user={user}&password={password}"),
+    ];
+    const endpoints = createServiceEndpoints(params);
+    const channel = endpoints.find(({ name }) => name === "channel")!;
+
+    expect(channel.url({ host: "shelly" })).toBe("shelly/channels?uri=shelly&user=&password=");
+    expect(channel.url({ host: "shelly", user: "admin", password: "" })).toBe(
+      "shelly/channels?uri=shelly&user=admin&password="
+    );
+    expect(channel.url({ user: "admin" })).toBe("shelly/channels?uri={host}&user=admin&password=");
   });
 });
 

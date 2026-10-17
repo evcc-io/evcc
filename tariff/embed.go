@@ -1,7 +1,11 @@
 package tariff
 
 import (
+	"errors"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"reflect"
 	"slices"
 	"time"
@@ -56,8 +60,13 @@ func (t *embed) init() (err error) {
 	}
 	vm.ImportUsed()
 
+	body, err := formulaBody(t.Formula)
+	if err != nil {
+		return err
+	}
+
 	// Compile the formula into a callable function, avoiding any per-call parsing
-	src := fmt.Sprintf(`var calc = func(price, charges, tax float64, ts time.Time) float64 { return float64(%s) }`, t.Formula)
+	src := fmt.Sprintf("var calc = func(price, charges, tax float64, ts time.Time) float64 {\n%s\n}", body)
 	if _, err := vm.Eval(src); err != nil {
 		return err
 	}
@@ -93,6 +102,32 @@ func (t *embed) init() (err error) {
 	_, err = t.calc(0, t.Charges, time.Now())
 
 	return err
+}
+
+// formulaBody turns the formula's trailing expression into the return statement,
+// allowing multi-statement formulas like `x := 1; if ... { x = 2 }; price + x`
+func formulaBody(formula string) (string, error) {
+	const prefix = "package p; func _() {\n"
+
+	f, err := parser.ParseFile(token.NewFileSet(), "", prefix+formula+"\n}", 0)
+	if err != nil {
+		return "", err
+	}
+
+	stmts := f.Decls[0].(*ast.FuncDecl).Body.List
+	if len(stmts) == 0 {
+		return "", errors.New("empty formula")
+	}
+
+	last, ok := stmts[len(stmts)-1].(*ast.ExprStmt)
+	if !ok {
+		return "", errors.New("formula must end with an expression")
+	}
+
+	// file base is 1, offsets are relative to the formula
+	start, end := int(last.Pos())-1-len(prefix), int(last.End())-1-len(prefix)
+
+	return formula[:start] + "return float64(" + formula[start:end] + ")" + formula[end:], nil
 }
 
 // effectiveCharges resolves the charge for ts in local time; later zones win.

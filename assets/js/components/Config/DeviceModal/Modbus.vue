@@ -217,7 +217,7 @@ export default defineComponent({
 			protocol: MODBUS_PROTOCOL.TCP as MODBUS_PROTOCOL,
 			MODBUS_PROTOCOL,
 			MODBUS_CONNECTION,
-			deviceServiceValues: [] as string[],
+			deviceServiceValues: [] as ServiceValue[],
 			localDevice: undefined as string | undefined,
 		};
 	},
@@ -333,17 +333,18 @@ export default defineComponent({
 			return `${name}-${this.componentId}`;
 		},
 		async updateServiceValues() {
-			this.deviceServiceValues = serviceDefaults(await loadServiceValues("hardware/serial"));
+			this.deviceServiceValues = await loadServiceValues("hardware/serial");
 			this.applyServiceDefault();
 		},
 		applyServiceDefault() {
 			// auto-apply device value if it's needed and exactly one option exists
+			const defaults = serviceDefaults(this.deviceServiceValues);
 			if (
 				this.connection === MODBUS_CONNECTION.SERIAL &&
-				this.deviceServiceValues.length === 1 &&
+				defaults.length === 1 &&
 				!this.device
 			) {
-				this.deviceModel = this.deviceServiceValues[0];
+				this.deviceModel = defaults[0];
 			}
 		},
 	},

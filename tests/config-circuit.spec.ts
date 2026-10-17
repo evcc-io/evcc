@@ -169,7 +169,7 @@ test.describe("circuit", async () => {
 
     const circuitsModal = page.getByTestId("circuits-modal");
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
 
     const circuitModal = page.getByTestId("circuit-modal");
     await expectModalVisible(circuitModal);
@@ -288,7 +288,7 @@ test.describe("circuit", async () => {
 
     await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
     await expectModalVisible(circuitModal);
     await circuitModal.getByLabel("Title").fill("House");
     await circuitModal
@@ -361,7 +361,7 @@ test.describe("circuit meter", async () => {
 
     await circuitsCard.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
     await expectModalVisible(circuitModal);
     await circuitModal.getByLabel("Title").fill("Main");
     await circuitModal
@@ -423,7 +423,7 @@ test.describe("circuit meter", async () => {
     // unreachable host
     await circuitsCard.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
     await expectModalVisible(circuitModal);
     await circuitModal.getByLabel("Title").fill("Main");
     await circuitModal
@@ -497,7 +497,7 @@ test.describe("circuit test result", async () => {
     await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
     const circuitsModal = page.getByTestId("circuits-modal");
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
 
     const circuitModal = page.getByTestId("circuit-modal");
     await expectModalVisible(circuitModal);
@@ -520,7 +520,7 @@ test.describe("circuit test result", async () => {
     await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
     const circuitsModal = page.getByTestId("circuits-modal");
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
 
     const circuitModal = page.getByTestId("circuit-modal");
     await expectModalVisible(circuitModal);
@@ -585,7 +585,7 @@ test.describe("circuit grid meter", async () => {
     // no grid meter: option not offered
     await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
     await expectModalVisible(circuitModal);
     await expect(meterSelection.getByRole("option")).toHaveText(["No meter", "Dedicated meter"]);
     await circuitModal.getByRole("button", { name: "Close" }).first().click();
@@ -604,7 +604,7 @@ test.describe("circuit grid meter", async () => {
     // root circuit using grid meter
     await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
     await expectModalVisible(circuitModal);
     await circuitModal.getByLabel("Title").fill("House");
     await circuitModal

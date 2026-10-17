@@ -10,6 +10,7 @@ on:
       - "server/openapi.yaml"
       - "server/openapi.state.yaml"
       - ".github/workflows/openapi-validate.yml"
+      - "go.mod" # validator version follows go.mod
 
 jobs:
   validate-openapi:
@@ -23,4 +24,4 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Validate OpenAPI spec
-        run: go run github.com/getkin/kin-openapi/cmd/validate@v0.133.0 -ext -- server/openapi.yaml
+        run: go tool validate -ext -- server/openapi.yaml

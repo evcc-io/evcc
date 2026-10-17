@@ -175,7 +175,8 @@ export async function loadServiceValues(path: string, retry?: (seconds: number) 
     });
     const retryAfter = Number(response.headers["retry-after"]);
     if (retryAfter > 0) retry?.(retryAfter);
-    return (response.data as ServiceValue[]) || [];
+    // 4xx bodies (e.g. a 404 for a path with an empty optional param) are not suggestions
+    return Array.isArray(response.data) ? (response.data as ServiceValue[]) : [];
   } catch {
     return [];
   }
@@ -209,6 +210,10 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
       if (!param.Service) {
         return null;
       }
+      // empty optional params (e.g. user/password) must not block the fetch
+      const optional = extractPlaceholders(param.Service).filter((name) =>
+        params.some((p) => p.Name === name && name !== "modbus" && !p.Required)
+      );
       const stringValues = (values: Record<string, any>): Record<string, string> =>
         Object.entries(values).reduce(
           (acc, [key, val]) => {
@@ -216,7 +221,7 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
               acc[key] = String(val);
             return acc;
           },
-          {} as Record<string, string>
+          Object.fromEntries(optional.map((name) => [name, ""])) as Record<string, string>
         );
 
       return {
