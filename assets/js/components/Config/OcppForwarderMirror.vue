@@ -173,6 +173,7 @@ import { defineComponent, type PropType } from "vue";
 import FormRow from "./FormRow.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import PropertyCertField from "./PropertyCertField.vue";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import type { OcppMirrorHour, OcppMirrorRule, OcppMirrorSession } from "@/types/evcc";
 
 const HOUR = 3600 * 1000;
@@ -181,6 +182,7 @@ const HOURS_SHOWN = 24;
 export default defineComponent({
 	name: "OcppForwarderMirror",
 	components: { FormRow, PropertyCollapsible, PropertyCertField },
+	mixins: [formatter],
 	props: {
 		modelValue: { type: Object as PropType<OcppMirrorRule>, required: true },
 		status: { type: Object as PropType<OcppMirrorSession>, default: undefined },
@@ -202,7 +204,7 @@ export default defineComponent({
 		lastSentLabel(): string {
 			const { lastSent } = this.status || {};
 			return lastSent
-				? this.formatTime(lastSent, { dateStyle: "short", timeStyle: "medium" })
+				? this.fmtFullDateTime(new Date(lastSent))
 				: this.$t("config.ocppforwarder.mirrors.stats.never");
 		},
 		// the last hours up to now, hours without history count as zero
@@ -229,7 +231,7 @@ export default defineComponent({
 			const energyWh = this.hours.reduce((sum, h) => sum + h.energyWh, 0);
 			return this.$t("config.ocppforwarder.mirrors.stats.last24h", {
 				messages,
-				energy: this.formatKWh(energyWh),
+				energy: this.fmtWh(energyWh, POWER_UNIT.KW, false, 3),
 			});
 		},
 		bars(): { start: string; height: number; energyWh: number; title: string }[] {
@@ -238,7 +240,7 @@ export default defineComponent({
 				start: h.start,
 				energyWh: h.energyWh,
 				height: Math.max((h.energyWh / max) * 100, 2),
-				title: `${this.formatHour(h.start)}: ${this.formatKWh(h.energyWh)} kWh, ${h.messages}`,
+				title: `${this.fmtDayTime(new Date(h.start))}: ${this.fmtWh(h.energyWh, POWER_UNIT.KW, true, 3)}, ${h.messages}`,
 			}));
 		},
 		rows(): {
@@ -252,8 +254,8 @@ export default defineComponent({
 			return this.hours
 				.map((h) => ({
 					start: h.start,
-					label: this.formatHour(h.start),
-					energy: this.formatKWh(h.energyWh),
+					label: this.fmtDayTime(new Date(h.start)),
+					energy: this.fmtWh(h.energyWh, POWER_UNIT.KW, false, 3),
 					messages: h.messages,
 					meterValues: h.meterValues,
 					disconnects: h.disconnects,
@@ -267,20 +269,6 @@ export default defineComponent({
 		},
 		update(field: keyof OcppMirrorRule, value: string | boolean | undefined) {
 			this.$emit("update:modelValue", { ...this.modelValue, [field]: value });
-		},
-		formatTime(value: string, options: Intl.DateTimeFormatOptions): string {
-			return new Date(value).toLocaleString(this.$i18n.locale, options);
-		},
-		formatHour(value: string): string {
-			return this.formatTime(value, {
-				day: "2-digit",
-				month: "short",
-				hour: "2-digit",
-				minute: "2-digit",
-			});
-		},
-		formatKWh(wh: number): string {
-			return (wh / 1e3).toFixed(3);
 		},
 		updateText(field: keyof OcppMirrorRule, event: Event) {
 			this.update(field, (event.target as HTMLInputElement).value);

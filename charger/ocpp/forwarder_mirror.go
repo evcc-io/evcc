@@ -49,7 +49,7 @@ func (m MirrorRule) Key() string {
 // ConnectionKey identifies the upstream station the mirror reaches for a charger. An
 // omitted station id means the charger's own id.
 func (m MirrorRule) ConnectionKey(chargerID string) string {
-	return strings.TrimRight(m.UpstreamURL, "/") + "|" + strings.TrimLeft(m.dialRule(chargerID).upstreamPath(chargerID), "/")
+	return m.dialRule(chargerID).ConnectionKey(chargerID)
 }
 
 // ConnectionKey identifies the upstream station the rule's main connection reaches for a charger.
@@ -144,11 +144,9 @@ var (
 	mirrorSeq uint64
 )
 
-// startMirrors aligns the mirrors of a charger with its current rule: new ones are
-// dialled, changed ones redialled and removed ones closed. The rule is resolved and
-// the sessions are installed under the same locks that guard the charger's
-// connection state and the other reconciliations, so a charger that disconnected
-// meanwhile gets none and an older reconciliation cannot overwrite a newer one.
+// startMirrors aligns the mirrors of a charger with its current rule. Rule lookup and
+// installation happen under the connection-state locks, so a disconnected charger gets
+// none and reconciliations cannot overwrite each other.
 func startMirrors(chargerID string) {
 	sidecarsMu.Lock()
 	connected := connectedChargers[chargerID]
@@ -390,23 +388,27 @@ func (ms *mirrorSession) serve() bool {
 
 	defer flushMirrorStats()
 
-	frames, snapshot := ms.replayFrames()
-	for _, frame := range frames {
+	// send writes a frame and tears the connection down on failure
+	send := func(frame []byte) bool {
 		if err := writeFrame(conn, frame); err != nil {
+			forwarderLog.DEBUG.Printf("mirror %s: write: %v", ms.chargerID, err)
 			conn.CloseNow()
 			ms.setState(false, err)
-			return true
+			return false
 		}
 		ms.record(frame, time.Now())
+		return true
 	}
 
-	if retry := ms.retry; retry != nil && !retry.superseded(snapshot) {
-		if err := writeFrame(conn, retry.data); err != nil {
-			conn.CloseNow()
-			ms.setState(false, err)
+	frames, snapshot := ms.replayFrames()
+	for _, frame := range frames {
+		if !send(frame) {
 			return true
 		}
-		ms.record(retry.data, time.Now())
+	}
+
+	if retry := ms.retry; retry != nil && !retry.superseded(snapshot) && !send(retry.data) {
+		return true
 	}
 	ms.retry = nil
 
@@ -438,14 +440,10 @@ func (ms *mirrorSession) serve() bool {
 				continue
 			}
 
-			if err := writeFrame(conn, frame.data); err != nil {
-				forwarderLog.DEBUG.Printf("mirror %s: write: %v", ms.chargerID, err)
+			if !send(frame.data) {
 				ms.retry = &frame
-				conn.CloseNow()
-				ms.setState(false, err)
 				return true
 			}
-			ms.record(frame.data, time.Now())
 		}
 	}
 }
