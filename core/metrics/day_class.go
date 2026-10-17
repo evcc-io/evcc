@@ -32,10 +32,10 @@ const (
 
 // dayEnergy holds the hourly energy of a single local calendar day
 type dayEnergy struct {
-	day    string          // local date YYYY-MM-DD
-	hours  map[int]float64 // hour of day -> energy
-	slots  int             // persisted slots
-	broken bool            // contains recovered downtime energy
+	day    string      // local date YYYY-MM-DD
+	hours  [24]float64 // energy per hour of day
+	slots  int         // persisted slots
+	broken bool        // contains recovered downtime energy
 }
 
 func (d dayEnergy) total() float64 {
@@ -47,11 +47,7 @@ func (d dayEnergy) total() float64 {
 }
 
 func (d dayEnergy) peak() float64 {
-	var res float64
-	for _, v := range d.hours {
-		res = max(res, v)
-	}
-	return res
+	return slices.Max(d.hours[:])
 }
 
 // complete checks that every slot of the local day is persisted, DST days included
@@ -87,11 +83,7 @@ func classifyDays(days []dayEnergy) map[string]DayClass {
 		if !d.complete() {
 			continue
 		}
-		for h := range nightHours {
-			if v, ok := d.hours[h]; ok {
-				nights = append(nights, v)
-			}
-		}
+		nights = append(nights, d.hours[:nightHours]...)
 		totals = append(totals, d.total())
 	}
 
@@ -164,7 +156,7 @@ func dailyEnergy(entity entity, from, to time.Time) ([]dayEnergy, error) {
 		day := fmt.Sprintf("%04d-%02d-%02d", ymd/10000, ymd/100%100, ymd%100)
 
 		if len(res) == 0 || res[len(res)-1].day != day {
-			res = append(res, dayEnergy{day: day, hours: make(map[int]float64, 24)})
+			res = append(res, dayEnergy{day: day})
 		}
 
 		d := &res[len(res)-1]

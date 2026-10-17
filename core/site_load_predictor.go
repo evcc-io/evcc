@@ -37,37 +37,25 @@ type homeExclusion struct {
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	col := site.collectors[metrics.Home]
 
-	base, err := site.homeProfileExcluding(col, time.Now())
-	if err != nil {
+	// vacation days would otherwise bias the forecast low for weeks
+	var exclude []string
+	if ex, err := site.homeDayExclusion(col, time.Now()); err != nil {
 		site.log.WARN.Printf("home profile: %v, using all days", err)
+	} else {
+		exclude = ex.exclude
 	}
 
-	if base == nil {
-		if base, err = col.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -homeProfileDays)); err != nil {
-			return nil, err
-		}
+	base, err := col.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -homeProfileDays), exclude...)
+	if err != nil {
+		return nil, err
 	}
 
 	// convert to Wh
 	return lo.Map(tileAndTrim(base[:], minLen), func(v float64, _ int) float64 { return v * 1e3 }), nil
 }
 
-// homeProfileExcluding returns the home profile without absent and outlier days, or nil
-// when no day is excluded. Vacation days would otherwise bias the forecast low for weeks.
-func (site *Site) homeProfileExcluding(col *metrics.Collector, ts time.Time) (*[96]float64, error) {
-	ex, err := site.homeDayExclusion(col, ts)
-	if err != nil || len(ex.exclude) == 0 {
-		return nil, err
-	}
-
-	return col.EnergyProfileExcluding(ex.day.AddDate(0, 0, -homeProfileDays), ex.exclude)
-}
-
 // homeDayExclusion returns the day exclusion of ts' day, cached once the previous day has settled
 func (site *Site) homeDayExclusion(col *metrics.Collector, ts time.Time) (*homeExclusion, error) {
-	site.homeExclusionMu.Lock()
-	defer site.homeExclusionMu.Unlock()
-
 	bod := now.With(ts).BeginningOfDay()
 	if ex := site.homeExclusion; ex != nil && ex.day.Equal(bod) {
 		return ex, nil

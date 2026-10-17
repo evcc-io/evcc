@@ -14,7 +14,7 @@ import (
 // testDay builds a complete day with the given night and day energy per hour (kWh)
 // and an optional peak hour
 func testDay(day string, night, daytime, peak float64) dayEnergy {
-	d := dayEnergy{day: day, hours: make(map[int]float64, 24), slots: 96}
+	d := dayEnergy{day: day, slots: 96}
 	for h := range 24 {
 		switch {
 		case h < nightHours:
