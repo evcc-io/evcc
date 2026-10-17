@@ -70,6 +70,18 @@ func floatOr0(g func() (float64, error)) (float64, error) {
 	return g()
 }
 
+// floatPair joins two getters into one, a nil getter reads as 0 (not configured)
+func floatPair(a, b func() (float64, error)) func() (float64, float64, error) {
+	return func() (float64, float64, error) {
+		x, err := floatOr0(a)
+		if err != nil {
+			return 0, 0, err
+		}
+		y, err := floatOr0(b)
+		return x, y, err
+	}
+}
+
 type batteryPowerLimits struct {
 	MaxChargePower    float64
 	MaxDischargePower float64
@@ -108,17 +120,7 @@ func (m *batteryPowerLimitsCtx) Decorator(ctx context.Context) (func() (float64,
 	if charge == nil || discharge == nil {
 		return nil, nil
 	}
-	return func() (float64, float64, error) {
-		c, err := charge()
-		if err != nil {
-			return 0, 0, err
-		}
-		d, err := discharge()
-		if err != nil {
-			return 0, 0, err
-		}
-		return c, d, nil
-	}, nil
+	return floatPair(charge, discharge), nil
 }
 
 type batterySocLimits struct {
@@ -229,17 +231,7 @@ func (m *batterySocLimitsCtx) Decorator(ctx context.Context) (func() (float64, f
 	if minG == nil && maxG == nil {
 		return nil, nil
 	}
-	return func() (float64, float64, error) {
-		minSoc, err := floatOr0(minG)
-		if err != nil {
-			return 0, 0, err
-		}
-		maxSoc, err := floatOr0(maxG)
-		if err != nil {
-			return 0, 0, err
-		}
-		return minSoc, maxSoc, nil
-	}, nil
+	return floatPair(minG, maxG), nil
 }
 
 // LimitController returns an api.BatteryController decorator
