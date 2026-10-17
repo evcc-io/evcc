@@ -164,7 +164,6 @@ type Loadpoint struct {
 	planEnergyOffset float64          // already charged energy in kWh when plan was set
 	planSlotEnd      time.Time        // current plan slot end time
 	planActive       bool             // charge plan exists and has a currently active slot
-	planCritical     bool             // plan goal can only be reached by charging now, latched until the plan is done
 	planOverrunSent  bool             // notification has been sent already
 	planLocked       PlanLock         // locked plan
 

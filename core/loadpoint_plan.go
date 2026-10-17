@@ -28,7 +28,6 @@ type PlanLock struct {
 // clearPlanLock clears the locked plan goal
 func (lp *Loadpoint) clearPlanLock() {
 	lp.planLocked = PlanLock{}
-	lp.planCritical = false
 }
 
 // ClearPlanLock clears the locked plan goal

@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/messenger"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -604,11 +605,15 @@ func TestOptimizerPlanActive(t *testing.T) {
 	optimize()
 	assert.True(t, lp.plannerActive())
 
-	// critical stays latched while the soc estimate catches up (#34868)
+	// critical holds while the soc estimate catches up (#34868)
 	lp.vehicleSoc = 59
 	optimize()
 	assert.True(t, lp.plannerActive())
-	assert.True(t, lp.planCritical)
+
+	// the hold ends one slot after the last critical cycle
+	clck.Add(tariff.SlotDuration)
+	optimize()
+	assert.False(t, lp.plannerActive())
 
 	// stalled optimizer falls back to the planner
 	clck.Add(time.Hour)
@@ -639,7 +644,7 @@ func TestOptimizerPlanAboveLimit(t *testing.T) {
 	lp.Update(2000, 0, nil, nil, false, false, 0, nil, nil, nil)
 
 	assert.True(t, lp.planActive)
-	assert.False(t, lp.planCritical)
+	assert.True(t, lp.planSlotEnd.IsZero())
 
 	ctrl.Finish()
 }

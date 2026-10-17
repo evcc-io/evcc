@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/tariff"
 )
 
 // setSuggestion stores the optimizer suggestion for the current slot
@@ -118,11 +119,13 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 		critical = required >= remaining
 	}
 
-	// once critical it stays critical: while charging the soc estimate may shrink the required
-	// duration faster than the clock (taper model), which would stop and restart every cycle
-	lp.planCritical = lp.planCritical || critical
+	// hold a critical verdict for one slot, like the planner holds its slot: while charging
+	// the soc estimate may shrink the required duration faster than the clock (taper model)
+	if critical {
+		lp.planSlotEnd = lp.clock.Now().Add(tariff.SlotDuration)
+	}
 
-	return lp.planCritical
+	return critical || lp.clock.Now().Before(lp.planSlotEnd)
 }
 
 // surplusRegime indicates that the suggested charge power matches the forecast
