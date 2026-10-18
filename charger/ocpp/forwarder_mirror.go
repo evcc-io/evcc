@@ -166,7 +166,13 @@ func startMirrors(chargerID string) {
 		close(ms.stop)
 	}
 	for _, ms := range fresh {
-		go ms.run()
+		// the delays are read here, so a test may restore them once the caller returns
+		bo := backoff.NewExponentialBackOff(
+			backoff.WithInitialInterval(reconnectInitialDelay),
+			backoff.WithMaxInterval(reconnectMaxDelay),
+			backoff.WithMaxElapsedTime(0),
+		)
+		go ms.run(bo)
 	}
 
 	notifyUpdated()
@@ -354,14 +360,8 @@ func (ms *mirrorSession) setState(connected bool, err error) {
 }
 
 // run keeps the mirror connected until it is stopped, redialling with backoff.
-func (ms *mirrorSession) run() {
+func (ms *mirrorSession) run(bo backoff.BackOff) {
 	defer close(ms.done)
-
-	bo := backoff.NewExponentialBackOff(
-		backoff.WithInitialInterval(reconnectInitialDelay),
-		backoff.WithMaxInterval(reconnectMaxDelay),
-		backoff.WithMaxElapsedTime(0),
-	)
 
 	for !ms.stopped() {
 		if ms.serve() {
