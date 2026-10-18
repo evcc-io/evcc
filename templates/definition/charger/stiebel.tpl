@@ -96,7 +96,47 @@ temp:
     type: input
     encoding: int16
   scale: 0.1
+limittemp:
+  source: modbus
+  {{- include "modbus" . | indent 2 }}
+  register:
+    address: {{ if eq .tempsource "warmwater" -}} 522 {{ else }} 518 {{- end }} # 523 WW-Solltemperatur / 519 Puffer-Solltemperatur (1-based)
+    type: input
+    encoding: int16
+  scale: 0.1
 {{- end }}
+{{- end }}
+
+{{ define "stiebel-wpm-energy" }}
+energy: # LA Verdichter Heizen + Warmwasser in kWh, each split into kWh and MWh registers
+  source: calc
+  add:
+  - source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register:
+      address: 3511 # 3512 LA Heizen Summe kWh (1-based)
+      type: input
+      encoding: uint16
+  - source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register:
+      address: 3512 # 3513 LA Heizen Summe MWh (1-based)
+      type: input
+      encoding: uint16
+    scale: 1000
+  - source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register:
+      address: 3514 # 3515 LA Warmwasser Summe kWh (1-based)
+      type: input
+      encoding: uint16
+  - source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register:
+      address: 3515 # 3516 LA Warmwasser Summe MWh (1-based)
+      type: input
+      encoding: uint16
+    scale: 1000
 {{- end }}
 
 {{ define "stiebel-wpm-power" }}
