@@ -68,3 +68,9 @@ type Product struct {
 type EnergySiteStatus struct {
 	PercentageCharged float64 `json:"percentage_charged"`
 }
+
+type EnergySiteInfo struct {
+	Components struct {
+		DisallowChargeFromGridWithSolarInstalled bool `json:"disallow_charge_from_grid_with_solar_installed"`
+	}
+}
