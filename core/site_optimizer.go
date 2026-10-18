@@ -1128,17 +1128,15 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 		}
 	}
 
-	if m, ok := api.Cap[api.BatterySocLimiter](instance); ok {
-		if minSoc, maxSoc, err := m.GetSocLimits(); err == nil {
-			if maxSoc == 0 {
-				maxSoc = 100 // empty/unset maxsoc means no upper limit
-			}
-			// clamp against current soc to prevent infeasible if it is outside the configured limits
-			bat.SMin = min(bat.SInitial, float32(*b.Capacity*minSoc*10)) // Wh
-			bat.SMax = max(bat.SInitial, float32(*b.Capacity*maxSoc*10)) // Wh
-		} else {
-			site.log.WARN.Printf("optimizer: battery %s soc limits: %v", deviceTitleOrName(dev), err)
+	// soc limits measured by updateBatteryMeters; a failed read keeps the defaults
+	if b.MinSoc != nil && b.MaxSoc != nil {
+		minSoc, maxSoc := *b.MinSoc, *b.MaxSoc
+		if maxSoc == 0 {
+			maxSoc = 100 // empty/unset maxsoc means no upper limit
 		}
+		// clamp against current soc to prevent infeasible if it is outside the configured limits
+		bat.SMin = min(bat.SInitial, float32(*b.Capacity*minSoc*10)) // Wh
+		bat.SMax = max(bat.SInitial, float32(*b.Capacity*maxSoc*10)) // Wh
 	}
 
 	detail := batteryDetail{
