@@ -200,22 +200,12 @@ func (site *Site) batterySuggestionMode() (api.BatteryMode, bool) {
 // respective check (max is also disabled at 100). Soc and limits come from the
 // cycle's measurement so the device is not read again.
 func (site *Site) batterySocLimitReached(dev config.Device[api.Meter], m types.Measurement, discharge bool) (bool, error) {
-	meter := dev.Instance()
-
-	if _, ok := api.Cap[api.BatterySocLimiter](meter); !ok {
+	if _, ok := api.Cap[api.BatterySocLimiter](dev.Instance()); !ok {
 		return false, nil
 	}
 
-	if _, ok := api.Cap[api.Battery](meter); !ok {
-		return false, errors.New("battery with soc limits must have soc")
-	}
-
-	if m.Soc == nil {
-		return false, errors.New("battery soc not available")
-	}
-
-	if m.MinSoc == nil || m.MaxSoc == nil {
-		return false, errors.New("battery soc limits not available")
+	if m.Soc == nil || m.MinSoc == nil || m.MaxSoc == nil {
+		return false, errors.New("battery soc or soc limits not available")
 	}
 
 	soc, minSoc, maxSoc := *m.Soc, *m.MinSoc, *m.MaxSoc
