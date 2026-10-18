@@ -3,12 +3,13 @@ package batterycontrol
 import (
 	"context"
 	"errors"
-	"github.com/evcc-io/evcc/api"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/evcc-io/evcc/api"
+	"github.com/stretchr/testify/require"
 )
 
 type memoryJournal struct {

@@ -1,9 +1,10 @@
 package core
 
 import (
-	"github.com/stretchr/testify/require"
 	"math"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestPVStartThresholdValidation(t *testing.T) {

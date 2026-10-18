@@ -8,10 +8,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/evcc-io/evcc/db"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/batterycontrol"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/hems/hems"
 )
 
