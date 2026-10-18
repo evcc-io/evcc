@@ -134,8 +134,8 @@ github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4 h1:aGM3NwDsK
 github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4/go.mod h1:YyOx4zwr6xVUcchAETHERZ+75cZMIrdcjVIZFwBlE1Q=
 github.com/evcc-io/optimizer v0.0.0-20261016150110-df9cc5563f7a h1:Hqbo5OOUE9vw6ZL4ZDRcQL1nw3TiuC71BRI2VF6U8S8=
 github.com/evcc-io/optimizer v0.0.0-20261016150110-df9cc5563f7a/go.mod h1:xpgtmxTi0OUd3PBFwSz6KaA8/CZln9bpiEmN5RBzg1I=
-github.com/evcc-io/rct v0.2.0 h1:qjXKI7NKwW5YpEKEb27MwLMBaR4ne2Kd2cPV2PYTKn4=
-github.com/evcc-io/rct v0.2.0/go.mod h1:n6MTBU36QOadGlxxiADu86VaT5l0eYdbmFBHF14AD/s=
+github.com/evcc-io/rct v0.3.0 h1:BZ0QCG72G1AcOk+RXE/vbJ4O7n0zA5ka3zntClzcYBI=
+github.com/evcc-io/rct v0.3.0/go.mod h1:n6MTBU36QOadGlxxiADu86VaT5l0eYdbmFBHF14AD/s=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
 github.com/fatih/color v1.18.0 h1:S8gINlzdQ840/4pfAwic/ZE0djQEH3wM94VfqLTZcOM=
 github.com/fatih/color v1.18.0/go.mod h1:4FelSpRwEGDpQ12mAdzqdOukCy4u8WUtOY6lkT/6HfU=
