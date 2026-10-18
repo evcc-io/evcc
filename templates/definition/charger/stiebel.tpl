@@ -108,35 +108,30 @@ limittemp:
 {{- end }}
 
 {{ define "stiebel-wpm-energy" }}
-energy: # LA Verdichter Heizen + Warmwasser in kWh, each split into kWh and MWh registers
-  source: calc
-  add:
-  - source: modbus
-    {{- include "modbus" . | indent 4 }}
-    register:
-      address: 3511 # 3512 LA Heizen Summe kWh (1-based)
-      type: input
-      encoding: uint16
-  - source: modbus
-    {{- include "modbus" . | indent 4 }}
-    register:
-      address: 3512 # 3513 LA Heizen Summe MWh (1-based)
-      type: input
-      encoding: uint16
-    scale: 1000
-  - source: modbus
-    {{- include "modbus" . | indent 4 }}
-    register:
-      address: 3514 # 3515 LA Warmwasser Summe kWh (1-based)
-      type: input
-      encoding: uint16
-  - source: modbus
-    {{- include "modbus" . | indent 4 }}
-    register:
-      address: 3515 # 3516 LA Warmwasser Summe MWh (1-based)
-      type: input
-      encoding: uint16
-    scale: 1000
+energy: # LA Verdichter Heizen + Warmwasser in kWh
+  source: go
+  in:
+  # kWh and MWh parts are read as one uint32 per counter so a 999 -> 1000 kWh rollover cannot mix both sides
+  - name: heating
+    type: int
+    config:
+      source: modbus
+      {{- include "modbus" . | indent 6 }}
+      register:
+        address: 3511 # 3512 LA Heizen Summe kWh, 3513 MWh (1-based)
+        type: input
+        encoding: uint32s
+  - name: dhw
+    type: int
+    config:
+      source: modbus
+      {{- include "modbus" . | indent 6 }}
+      register:
+        address: 3514 # 3515 LA Warmwasser Summe kWh, 3516 MWh (1-based)
+        type: input
+        encoding: uint32s
+  script: |
+    float64((heating>>16)*1000 + (heating & 0xffff) + (dhw>>16)*1000 + (dhw & 0xffff))
 {{- end }}
 
 {{ define "stiebel-wpm-power" }}
