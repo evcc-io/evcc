@@ -279,7 +279,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 			}
 
 			hold, err := site.batterySocLimitReached(dev, m, fromToDischarge)
-			if err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			if err != nil {
 				return err
 			}
 			if hold {
