@@ -255,6 +255,41 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+  /batterypvcontrol:
+    post:
+      operationId: resolveBatteryPVControl
+      summary: Resolve a battery PV control conflict
+      description: Persist an explicit decision for the displayed journal revision. Recovery is reconciled during the next control cycle.
+      tags:
+        - battery
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [battery, action, revision]
+              properties:
+                battery:
+                  type: string
+                action:
+                  type: string
+                  enum: [disable, recover]
+                revision:
+                  type: string
+      responses:
+        "200":
+          description: Decision persisted
+        "400":
+          description: Invalid decision
+        "401":
+          description: Authentication required
+        "409":
+          description: Stale revision, unavailable journal or recovery refused
   /batterymode:
     delete:
       operationId: disableExternalBatteryControl
@@ -1733,7 +1768,8 @@ paths:
                       description: Entity title, omitted when grouped
                     group:
                       type: string
-                      enum: [pv, battery, grid, loadpoint, consumer, meter, home, forecast, temperature]
+                      enum:
+                        [pv, battery, grid, loadpoint, consumer, meter, home, forecast, temperature]
                     isTemp:
                       type: boolean
                       description: socTemp values are temperatures, not state of charge

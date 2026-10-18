@@ -10,6 +10,8 @@
 						:battery-mode="state.batteryMode"
 					/>
 
+					<BatteryControlJournal :controls="state.batteryPVControl" />
+
 					<BatteryHistoryCard
 						class="mb-4 box-pull-out"
 						:batteries="chartBatteries"
@@ -24,6 +26,10 @@
 						:priority-soc="state.prioritySoc"
 						:buffer-start-soc="state.bufferStartSoc"
 						:battery-discharge-control="state.batteryDischargeControl"
+						:battery-pv-start-power="state.batteryPVStartPower ?? 500"
+						:battery-pv-charging-supported="state.batteryPVChargingSupported"
+						:battery-pv-control-unavailable="state.batteryPVControlUnavailable"
+						:coordinated-pv="coordinatedPv"
 						:battery-grid-discharge="state.batteryGridDischarge"
 						:battery="state.battery"
 						:experimental="state.experimental"
@@ -68,6 +74,7 @@ import Card from "../components/Helper/Card.vue";
 import SmartCostLimit from "../components/Tariff/SmartCostLimit.vue";
 import SmartFeedInPriority from "../components/Tariff/SmartFeedInPriority.vue";
 import BatteryStatusCards from "../components/Battery/BatteryStatusCards.vue";
+import BatteryControlJournal from "../components/Battery/BatteryControlJournal.vue";
 import BatteryConfigCard from "../components/Battery/BatteryConfigCard.vue";
 import BatteryHistoryCard from "../components/Battery/BatteryHistoryCard.vue";
 import {
@@ -88,6 +95,7 @@ export default defineComponent({
 		SmartFeedInPriority,
 		BatteryStatusCards,
 		BatteryConfigCard,
+		BatteryControlJournal,
 		BatteryHistoryCard,
 	},
 	head() {
@@ -105,6 +113,11 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		coordinatedPv(): boolean {
+			return Object.values(this.state.batteryPVControl ?? {}).some(
+				(c) => c.journalStage !== undefined
+			);
+		},
 		state() {
 			return store.state;
 		},

@@ -13,6 +13,21 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
+type batteryChargePowerSetter func(float64) error
+
+func (f batteryChargePowerSetter) SetBatteryChargePower(power float64) error {
+	return f(power)
+}
+
+type batteryChargePowerControl struct {
+	batteryChargePowerSetter
+	update func(float64) error
+}
+
+func (c batteryChargePowerControl) UpdateBatteryChargePower(power float64) error {
+	return c.update(power)
+}
+
 func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
@@ -35,11 +50,20 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		Soc                   *plugin.Config // optional
 		LimitSoc              *plugin.Config // optional
 		BatteryMode           *plugin.Config // optional
+		ChargePower           *plugin.Config // optional dynamic charge power setter
+		ChargePowerUpdate     *plugin.Config // optional setpoint-only update for owned manual control
+		BatteryRestoreMode    *plugin.Config
+		BatteryRestoreModes   []string
+		BatteryRestoreDefault string
+		BatteryControlState   *plugin.Config // optional read-only operating state
 		BatteryModes          []string       // optional, modes supported by batteryMode if it cannot report them itself
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+	if cc.ChargePowerUpdate != nil && cc.ChargePower == nil {
+		return nil, errors.New("battery charge power update requires chargepower")
 	}
 
 	// default soc limits (nil-preset avoids mapstructure coercing plugin config into the default's type)
@@ -93,6 +117,37 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		implement.May(m, implement.BatteryCapacity(capacity))
 		implement.May(m, implement.BatterySocLimiter(socLimiter))
 		implement.May(m, implement.BatteryPowerLimiter(powerLimiter))
+
+		if cc.BatteryControlState != nil {
+			get, err := cc.BatteryControlState.StringGetter(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("battery control state: %w", err)
+			}
+			implement.Has[api.BatteryControlStateReader](m, &batteryControlStateReader{get: get})
+		}
+
+		if cc.BatteryRestoreMode != nil {
+			set, err := cc.BatteryRestoreMode.StringSetter(ctx, "nativeMode")
+			if err != nil {
+				return nil, fmt.Errorf("battery restore mode: %w", err)
+			}
+			implement.Has[api.BatteryControlRestorer](m, batteryModeRestorer{set: set, modes: cc.BatteryRestoreModes, fallback: cc.BatteryRestoreDefault})
+		}
+		if cc.ChargePower != nil {
+			setPower, err := cc.ChargePower.FloatSetter(ctx, "chargePower")
+			if err != nil {
+				return nil, fmt.Errorf("battery charge power: %w", err)
+			}
+			var control api.BatteryChargePowerController = batteryChargePowerSetter(setPower)
+			if cc.ChargePowerUpdate != nil {
+				update, err := cc.ChargePowerUpdate.FloatSetter(ctx, "chargePower")
+				if err != nil {
+					return nil, fmt.Errorf("battery charge power update: %w", err)
+				}
+				control = batteryChargePowerControl{batteryChargePowerSetter(setPower), update}
+			}
+			implement.Has(m, control)
+		}
 
 		// limitSoc expresses normal/hold/charge through the reserve soc (hold uses the live soc),
 		// batteryMode switches the device's operating mode. Configured together the limit is written first.
@@ -175,4 +230,22 @@ type Meter struct {
 // CurrentPower implements the api.Meter interface
 func (m *Meter) CurrentPower() (float64, error) {
 	return m.currentPowerG()
+}
+
+// Only explicitly configured automatic modes may be restored; a GUI decision
+// cannot inject arbitrary text into the device's HTTP command.
+type batteryModeRestorer struct {
+	set      func(string) error
+	modes    []string
+	fallback string
+}
+
+func (r batteryModeRestorer) RestoreBatteryMode(mode string) error {
+	if mode == "" {
+		mode = r.fallback
+	}
+	if mode == "" || !slices.Contains(r.modes, mode) {
+		return fmt.Errorf("unsupported automatic mode")
+	}
+	return r.set(mode)
 }

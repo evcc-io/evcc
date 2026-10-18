@@ -377,6 +377,34 @@ func (site *Site) GetGridPower() float64 {
 	return site.gridPower
 }
 
+// GetBatteryPVStartPower returns the PV battery charging start threshold in W.
+func (site *Site) GetBatteryPVStartPower() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.BatteryPVStartPower
+}
+
+// SetBatteryPVStartPower updates and persists the start threshold.
+func (site *Site) SetBatteryPVStartPower(power float64) error {
+	if !finiteBatteryPVValue(power) || power < 1 || power > 20000 {
+		return fmt.Errorf("invalid battery PV start power: %g", power)
+	}
+
+	site.Lock()
+	changed := site.BatteryPVStartPower != power
+	if changed {
+		site.BatteryPVStartPower = power
+	}
+	site.Unlock()
+
+	if changed {
+		settings.SetFloat(keys.BatteryPVStartPower, power)
+		site.publish(keys.BatteryPVStartPower, power)
+	}
+
+	return nil
+}
+
 // GetResidualPower returns the ResidualPower
 func (site *Site) GetResidualPower() float64 {
 	site.RLock()

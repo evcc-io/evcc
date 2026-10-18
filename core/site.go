@@ -14,6 +14,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
+	"github.com/evcc-io/evcc/core/batterycontrol"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
@@ -63,11 +64,12 @@ type Site struct {
 	log *util.Logger
 
 	// configuration
-	Title         string       `mapstructure:"title"`         // UI title
-	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
-	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
-	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
-	CurtailersRef []string     `mapstructure:"curtailers"`    // Curtailment device references
+	Title               string       `mapstructure:"title"`               // UI title
+	Voltage             float64      `mapstructure:"voltage"`             // Operating voltage. 230V for Germany.
+	ResidualPower       float64      `mapstructure:"residualPower"`       // PV meter only: household usage. Grid meter: household safety margin
+	BatteryPVStartPower float64      `mapstructure:"batteryPVStartPower"` // PV start threshold in W
+	Meters              MetersConfig `mapstructure:"meters"`              // Meter references
+	CurtailersRef       []string     `mapstructure:"curtailers"`          // Curtailment device references
 
 	// meters
 	circuit        api.Circuit                // Circuit
@@ -114,11 +116,15 @@ type Site struct {
 	// cached measurement state, guarded by RWMutex
 	siteState
 
-	batteryMaxDischargePower *float64                    // Max discharge power of all battery meters
-	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
-	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
-	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
-	batteryModeApplied       map[string]api.BatteryMode  // Battery mode last applied per battery meter
+	batteryMaxDischargePower *float64                   // Max discharge power of all battery meters
+	batteryMode              api.BatteryMode            // Battery mode (runtime only, not persisted)
+	batteryModeExternal      api.BatteryMode            // Battery mode (external, runtime only, not persisted)
+	batteryModeExternalTimer time.Time                  // Battery mode timer for external control
+	batteryModeApplied       map[string]api.BatteryMode // Battery mode last applied per battery meter
+	batteryPVMu              sync.Mutex                 // serializes PV updates with shutdown
+	batteryPVStopped         bool
+	batteryPVSessions        map[string]*batterycontrol.Session
+	batteryPVJournals        map[string]*batterycontrol.JournalSession
 	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
 	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
 	lastOptimizerSolve       *optimizerSolve             // last successful solve, reapplied to newer slots by the control cycle
@@ -134,11 +140,12 @@ type Site struct {
 
 // siteState is the site's cached measurement state, updated once per meter cycle
 type siteState struct {
-	gridPower     float64            // Grid power
-	pvPower       float64            // PV power
-	excessDCPower float64            // PV excess DC charge power (hybrid only)
-	auxPower      float64            // Aux power
-	battery       types.BatteryState // Battery cached and published state
+	batteryFixedChargePower float64            // Manual or unobserved charging cannot be reclaimed for EVs
+	gridPower               float64            // Grid power
+	pvPower                 float64            // PV power
+	excessDCPower           float64            // PV excess DC charge power (hybrid only)
+	auxPower                float64            // Aux power
+	battery                 types.BatteryState // Battery cached and published state
 }
 
 // state returns a copy of the cached measurement state
@@ -389,6 +396,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 
 	// revert battery mode on shutdown
 	shutdown.Register(func() {
+		site.stopPVBatteryControl()
 		if mode := site.GetBatteryMode(); batteryModeModified(mode) {
 			if err := site.applyBatteryMode(api.BatteryNormal); err != nil {
 				site.log.ERROR.Println("battery mode:", err)
@@ -402,9 +410,10 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:        util.NewLogger("site"),
-		Voltage:    230, // V
-		collectors: make(map[string]*metrics.Collector),
+		log:                 util.NewLogger("site"),
+		Voltage:             230, // V
+		BatteryPVStartPower: 500,
+		collectors:          make(map[string]*metrics.Collector),
 	}
 
 	// the result only depends on completed days, so it cannot change within a day
@@ -477,6 +486,11 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Bool(keys.BatteryGridDischarge); err == nil {
 		if err := site.SetBatteryGridDischarge(v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
+			return err
+		}
+	}
+	if v, err := settings.Float(keys.BatteryPVStartPower); err == nil {
+		if err := site.SetBatteryPVStartPower(v); err != nil {
 			return err
 		}
 	}
@@ -797,7 +811,7 @@ func (site *Site) updateBatteryMeters() {
 
 	mm := site.collectMeters("battery", site.batteryMeters)
 
-	var maxDischargePower float64
+	var maxDischargePower, fixedChargePower float64
 	for i, dev := range site.batteryMeters {
 		meter := dev.Instance()
 
@@ -821,8 +835,13 @@ func (site *Site) updateBatteryMeters() {
 			}
 		}
 
+		automatic := batteryAutomaticOperation(meter)
+		if !automatic {
+			fixedChargePower += max(0, -mm[i].Power)
+		}
 		if bpl, ok := api.Cap[api.BatteryPowerLimiter](meter); ok && maxDischargePower >= 0 {
-			var empty bool
+			// A stale display SoC is not permission to keep discharging.
+			empty := mm[i].Soc == nil || !automatic
 			if bsl, ok := api.Cap[api.BatterySocLimiter](meter); ok {
 				minSoc, _, err := bsl.GetSocLimits()
 				if err != nil {
@@ -858,6 +877,7 @@ func (site *Site) updateBatteryMeters() {
 
 	// written from the meter goroutine, read via state and GetBatteryMaxDischargePower
 	site.Lock()
+	site.batteryFixedChargePower = fixedChargePower
 
 	if maxDischargePower >= 0 {
 		site.batteryMaxDischargePower = &maxDischargePower
@@ -1161,6 +1181,7 @@ func (site *Site) AutomaticLoadpoints() bool {
 
 // sitePowerResult is the outcome of the site power calculation
 type sitePowerResult struct {
+	flexiblePower float64
 	// measured state, including the estimates for missing meters
 	state siteState
 
@@ -1212,7 +1233,7 @@ func (site *Site) sitePower(state siteState, totalChargePower, flexiblePower flo
 	}
 
 	// honour battery priority
-	batteryPower := state.battery.Power
+	batteryPower := state.battery.Power + state.batteryFixedChargePower
 	excessDCPower := state.excessDCPower
 
 	// handed to loadpoint
@@ -1243,6 +1264,7 @@ func (site *Site) sitePower(state siteState, totalChargePower, flexiblePower flo
 	site.log.DEBUG.Printf("site power: %.0fW"+flexStr, sitePower)
 
 	return sitePowerResult{
+		flexiblePower:      flexiblePower,
 		state:              state,
 		power:              sitePower,
 		batteryBuffered:    batteryBuffered,
@@ -1286,8 +1308,18 @@ func (site *Site) loadpointSitePower(lp updater, res sitePowerResult) float64 {
 	// battery (#30541), nor to one the optimizer controls, since the optimizer plans the
 	// home battery: a stop gives the battery priority, a charge takes the surplus (#34606)
 	suggestion := lp.activeSuggestion()
-	if suggestion != nil || lp.GetBatteryBoost() != boostDisabled {
+	coordinated := false
+	if real, ok := lp.(*Loadpoint); ok {
+		coordinated = real.coordinatedPV() && suggestion == nil
+		if coordinated {
+			sitePower += site.pendingVehiclePowerExcept(real) + site.pendingBatteryPower()
+		}
+	}
+	if suggestion != nil || (lp.GetBatteryBoost() != boostDisabled && !coordinated) {
 		sitePower += res.priorityAdjustment
+	}
+	if suggestion == nil && (lp.GetBatteryBoost() != boostDisabled || coordinated) {
+		sitePower += res.state.auxPower + res.flexiblePower
 	}
 
 	if suggestion != nil && suggestion.Action != actionCharge && res.state.battery.Power < 0 {
@@ -1343,9 +1375,12 @@ func (site *Site) update(lp updater) {
 	site.updateCircuits()
 	site.applyHemsLimits()
 
+	var pvState siteState
+	var pvValid bool
 	if state, err := site.updateMeters(); err != nil {
 		site.log.ERROR.Println(err)
 	} else {
+		pvState, pvValid = state, true
 		if sponsor.IsAuthorized() && optimizerEnabled() {
 			site.reapplySuggestions(time.Now())
 		} else {
@@ -1373,8 +1408,10 @@ func (site *Site) update(lp updater) {
 		batteryGridDischargeActive = site.batteryGridDischargeActive(feedinRate)
 	}
 	site.publish(keys.BatteryGridDischargeActive, batteryGridDischargeActive)
-	site.publish(keys.BatteryGridDischargeActive, batteryGridDischargeActive)
 
+	pvAllowed := !batteryGridChargeActive && !batteryGridDischargeActive &&
+		site.GetBatteryModeExternal() == api.BatteryUnknown && !site.dischargeControlActive(rate) && !site.evFastChargingActive() && !site.evBatteryBoostActive()
+	site.updatePVBatteryControl(pvState, pvValid, pvAllowed)
 	site.updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate)
 
 	// re-evaluate against the updated loadpoint state
@@ -1473,10 +1510,22 @@ func (site *Site) prepare() {
 	site.publish(keys.BufferSoc, site.bufferSoc)
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
 	site.publish(keys.BatteryMode, site.batteryMode)
+	pvChargeSupported := false
+	pvControlUnavailable := false
+	for _, dev := range site.batteryMeters {
+		if api.HasCap[api.BatteryPVLeaseController](dev.Instance()) || (api.HasCap[api.BatteryControlRestorer](dev.Instance()) && api.HasCap[api.BatteryControlStateReader](dev.Instance()) && api.HasCap[api.BatteryChargePowerController](dev.Instance())) {
+			pvChargeSupported = true
+		} else if api.HasCap[api.BatteryControlStateReader](dev.Instance()) || api.HasCap[api.BatteryChargePowerController](dev.Instance()) {
+			pvControlUnavailable = true
+		}
+	}
+	site.publish(keys.BatteryPVChargingSupported, pvChargeSupported)
+	site.publish(keys.BatteryPVControlUnavailable, pvControlUnavailable)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.BatteryGridDischarge, site.batteryGridDischarge)
 	site.publish(keys.SolarAdjusted, site.solarAdjusted)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
+	site.publish(keys.BatteryPVStartPower, site.GetBatteryPVStartPower())
 	site.publish(keys.GridExportLimit, site.GetGridExportLimit())
 	site.publish(keys.ProfilePercentile, site.GetProfilePercentile())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))

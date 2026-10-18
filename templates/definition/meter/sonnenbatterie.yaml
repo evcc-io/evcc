@@ -59,6 +59,34 @@ render: |
     cache: {{ .cache }}
     jq: .USOC
   {{- if .token }}
+  batterycontrolstate:
+    source: http
+    uri: http://{{ .host }}/api/v2/status
+    cache: 0s
+    jq: |
+      (.OperatingMode | tostring) as $mode |
+      {
+        Mode: (if .SystemStatus != "OnGrid" then "unknown"
+          elif $mode == "1" then "manual"
+          elif $mode == "2" or $mode == "10" then "automatic"
+          else "unknown" end),
+        NativeMode: $mode,
+        Identity: "sonnen:{{ .host }}",
+        Power: .Pac_total_W,
+        Soc: .USOC,
+        NativeCharging: .BatteryCharging,
+        Sample: .Timestamp
+      } | @json
+  batteryrestoremodes: ["2", "10"]
+  batteryrestoredefault: {{ if eq .defaultmode "time-of-use" }}"10"{{ else }}"2"{{ end }}
+  batteryrestoremode:
+    source: http
+    uri: http://{{ .host }}/api/v2/configurations
+    method: PUT
+    headers:
+    - content-type: application/json
+    - Auth-Token: {{ .token }}
+    body: '{"EM_OperatingMode":"${nativeMode}"}'
   batterymode:
     source: switch
     switch:
@@ -128,6 +156,38 @@ render: |
           headers:
           - content-type: application/json
           - Auth-Token: {{ .token }}
+  chargepowerupdate:
+    source: http
+    uri: http://{{ .host }}/api/v2/setpoint/charge/${chargePower:%.0f}
+    method: POST
+    headers:
+    - content-type: application/json
+    - Auth-Token: {{ .token }}
+  chargepower:
+    source: sequence
+    set:
+    - source: http
+      uri: http://{{ .host }}/api/v2/configurations
+      insecure: true
+      method: PUT
+      headers:
+      - content-type: application/json
+      - Auth-Token: {{ .token }}
+      body: '{"EM_OperatingMode":"1"}'
+    - source: http
+      uri: http://{{ .host }}/api/v2/setpoint/discharge/0
+      insecure: true
+      method: POST
+      headers:
+      - content-type: application/json
+      - Auth-Token: {{ .token }}
+    - source: http
+      uri: http://{{ .host }}/api/v2/setpoint/charge/${chargePower:%.0f}
+      insecure: true
+      method: POST
+      headers:
+      - content-type: application/json
+      - Auth-Token: {{ .token }}
   {{- end }}
   {{- include "battery-params" . }}
   {{- end }}

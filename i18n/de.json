@@ -32,6 +32,25 @@
     "title": "Autorisierungsstatus"
   },
   "battery": {
+    "control": {
+      "conflict": "Unbekannte manuelle Batteriesteuerung",
+      "disabled": "Aktive PV-Steuerung deaktiviert",
+      "unavailable": "Aktive PV-Steuerung pausiert",
+      "description": "EVCC hat die aktive PV-Ladung für Speicher {battery} gesperrt oder wartet auf eine bestätigte Rückgabe der Steuerung.",
+      "question": "Verwendet eine andere Anwendung oder Person die manuelle Steuerung deiner Batterie?",
+      "details": "Beobachtung und Aufzeichnungen anzeigen",
+      "observed": "Zuletzt beobachteter Betriebsmodus",
+      "expected": "Zuletzt protokollierte Ladeanforderung",
+      "restoreNotice": "Mit der Freigabe erlaubst du EVCC ausdrücklich, den Speicher in den vorherigen Automatikmodus zurückzusetzen. Wenn dieser unbekannt ist, wird der konfigurierte Automatikmodus verwendet. Erst danach werden die normalen Ladestartbedingungen erneut geprüft.",
+      "disable": "Ja / ich bin unsicher – deaktivieren",
+      "recover": "Nein – Wiederherstellung durch EVCC erlauben",
+      "failed": "Die Entscheidung konnte nicht gespeichert werden. Prüfe die Anmeldung und lade den aktuellen Batteriezustand neu. Die Sperre bleibt bestehen.",
+      "accepted": "Entscheidung gespeichert. Die Rückmeldung des Speichers kann bis zum nächsten Regelzyklus dauern.",
+      "confirming": "Umschaltung für Speicher {battery} angefordert. Bestätigung ausstehend.",
+      "observedAt": "Zeitpunkt der letzten gültigen Beobachtung",
+      "stale": "Keine aktuelle gültige Rückmeldung. Die angezeigten Werte sind keine Bestätigung des aktuellen Zustands.",
+      "confirmingTitle": "Bestätigung der Umschaltung ausstehend"
+    },
     "card": {
       "charging": "lädt",
       "discharging": "entlädt",
@@ -54,6 +73,7 @@
         "never": "nur mit genug Überschuss"
       },
       "bufferTitle": "Batterie als Ladepuffer",
+      "bufferCoordinated": "Energie der Hausbatterie oberhalb von {soc} darf laufende Fahrzeugladungen unterstützen. Ladepunkte mit fester Phasenzahl starten im PV-Betrieb erst, wenn der freigebbare Sonnenüberschuss für ihre Mindestladeleistung reicht. Der Speicherstand allein löst keinen Start aus. An der SoC-Grenze endet die Unterstützung; reicht Sonne allein nicht mehr, pausiert die Ladung.",
       "discharge": "Entladung der Hausbatterie im Schnell-Modus und bei geplantem Laden verhindern.",
       "gridDischarge": "Die Entladung der Hausbatterie ins Stromnetz zulassen.",
       "gridDischargeConfirm": {
@@ -65,7 +85,10 @@
       "optimizerControlledHint": "Für {loadpoints} deaktiviert. Der {optimizer} entscheidet stattdessen.",
       "priority": "Hausbatterie hat Vorrang, solange sie unter {soc} liegt. Dann erhalten die Ladepunkte den Überschuss.",
       "priorityNone": "Sonnenüberschuss geht direkt an die Ladepunkte. Setze einen Wert über {soc}, um die Hausbatterie zu bevorzugen.",
-      "priorityTitle": "Wohin geht der Überschuss zuerst?"
+      "priorityTitle": "Wohin geht der Überschuss zuerst?",
+      "pvStartPowerTitle": "Aktive PV-Batterieladung starten ab",
+      "pvControlUnavailable": "Aktive PV-Ladung für mindestens einen Speicher gesperrt: Seine Anbindung unterstützt noch keine sichere Übernahme und automatische Rückgabe der Steuerung. EVCC beobachtet diesen Speicher nur; auch andere EVCC-Batteriebefehle sind für ihn gesperrt.",
+      "pvStartPowerHelp": "EVCC startet die aktive Batterieladung, sobald ungenutzter Solarüberschuss diesen Wert erreicht. Danach wird auch unterhalb dieser Schwelle weitergeladen, solange nutzbarer Überschuss vorhanden ist. Eine bereits selbstständig ladende Batterie wird berücksichtigt."
     },
     "optimizer": {
       "action": {
