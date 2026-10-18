@@ -92,8 +92,8 @@ func TestBatteryMaxDischargePowerWithMinSoc(t *testing.T) {
 	}
 
 	// one battery empty (soc <= min), one normal
-	m1 := &mockLimiter{mockBatterySocLimiter: mockBatterySocLimiter{Meter: &mockMeter{}, soc: 10, min: 20}, discharge: 2000}
-	m2 := &mockLimiter{mockBatterySocLimiter: mockBatterySocLimiter{Meter: &mockMeter{}, soc: 50, min: 20}, discharge: 3000}
+	m1 := &mockLimiter{mockBatterySocLimiter: mockBatterySocLimiter{Meter: &mockMeter{}, soc: 10, min: 20, max: 90}, discharge: 2000}
+	m2 := &mockLimiter{mockBatterySocLimiter: mockBatterySocLimiter{Meter: &mockMeter{}, soc: 50, min: 20, max: 90}, discharge: 3000}
 
 	site.batteryMeters = []config.Device[api.Meter]{
 		config.NewStaticDevice[api.Meter](config.Named{Name: "bat1"}, m1),
@@ -104,6 +104,14 @@ func TestBatteryMaxDischargePowerWithMinSoc(t *testing.T) {
 	// Only m2 should contribute
 	if res := site.GetBatteryMaxDischargePower(); assert.NotNil(t, res) {
 		assert.Equal(t, 3000.0, *res)
+	}
+
+	// soc limits are published per battery
+	for _, d := range site.battery.Devices {
+		if assert.NotNil(t, d.MinSoc) && assert.NotNil(t, d.MaxSoc) {
+			assert.Equal(t, 20.0, *d.MinSoc)
+			assert.Equal(t, 90.0, *d.MaxSoc)
+		}
 	}
 
 	// Both empty

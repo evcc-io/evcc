@@ -409,6 +409,12 @@ components:
         soc:
           description: Charge level in %.
           type: number
+        minSoc:
+          description: Battery minimum charge level in %, when the device reports it.
+          type: number
+        maxSoc:
+          description: Battery maximum charge level in %, when the device reports it.
+          type: number
         controllable:
           description: Battery supports external control of its operation mode.
           type: boolean

@@ -821,17 +821,19 @@ func (site *Site) updateBatteryMeters() {
 			}
 		}
 
-		if bpl, ok := api.Cap[api.BatteryPowerLimiter](meter); ok && maxDischargePower >= 0 {
-			var empty bool
-			if bsl, ok := api.Cap[api.BatterySocLimiter](meter); ok {
-				minSoc, _, err := bsl.GetSocLimits()
-				if err != nil {
-					site.log.ERROR.Printf("battery %d soc limits: %v", i+1, err)
-				} else if mm[i].Soc != nil && *mm[i].Soc <= minSoc {
-					empty = true
-				}
+		var empty bool
+		if bsl, ok := api.Cap[api.BatterySocLimiter](meter); ok {
+			minSoc, maxSoc, err := bsl.GetSocLimits()
+			if err != nil {
+				site.log.ERROR.Printf("battery %d soc limits: %v", i+1, err)
+			} else {
+				mm[i].MinSoc = new(minSoc)
+				mm[i].MaxSoc = new(maxSoc)
+				empty = mm[i].Soc != nil && *mm[i].Soc <= minSoc
 			}
+		}
 
+		if bpl, ok := api.Cap[api.BatteryPowerLimiter](meter); ok && maxDischargePower >= 0 {
 			if !empty {
 				_, discharge, err := bpl.GetPowerLimits()
 				if err != nil {
