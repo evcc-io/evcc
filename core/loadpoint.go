@@ -1830,17 +1830,16 @@ func (lp *Loadpoint) pvDisableThreshold(minCurrent float64, phases int) float64 
 
 // pvEnableDecision returns the pv enable switch point and whether charging should start,
 // derived from the solar share unless custom thresholds are configured.
-// availableCurrent is the loadpoint's own current plus the surplus, unclamped.
-func (lp *Loadpoint) pvEnableDecision(availableCurrent, minCurrent, sitePower float64, phases int) (float64, bool) {
+// The threshold accounts for the loadpoint's own current, so site power <= threshold is the decision.
+func (lp *Loadpoint) pvEnableDecision(effectiveCurrent, minCurrent, sitePower float64, phases int) (float64, bool) {
+	threshold := lp.Enable.Threshold
 	if !lp.customThresholds() {
 		// require the solar share of the min current to come from surplus
-		share := lp.GetSolarShare()
-		return -share * currentToPower(minCurrent, phases), availableCurrent >= share*minCurrent
+		threshold = currentToPower(effectiveCurrent-lp.GetSolarShare()*minCurrent, phases)
+	} else if threshold == 0 {
+		threshold = currentToPower(effectiveCurrent-minCurrent, phases)
 	}
-
-	threshold := lp.Enable.Threshold
-	return threshold, (threshold == 0 && availableCurrent >= minCurrent) ||
-		(threshold != 0 && sitePower <= threshold)
+	return threshold, sitePower <= threshold
 }
 
 // pvMaxCurrent calculates the maximum target current for smart mode
@@ -1940,7 +1939,7 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	}
 
 	if !alwaysCharge && !lp.enabled {
-		enableThreshold, shouldEnable := lp.pvEnableDecision(availableCurrent, minCurrent, sitePower, activePhases)
+		enableThreshold, shouldEnable := lp.pvEnableDecision(effectiveCurrent, minCurrent, sitePower, activePhases)
 
 		// kick off enable sequence
 		if shouldEnable {
