@@ -9,7 +9,8 @@
     "buttonDisconnect": "துண்டிக்கவும்",
     "challenge": {
       "captcha": {
-        "label": "படத்தில் காட்டப்படும் எழுத்துகளை உள்ளிடவும்."
+        "label": "படத்தில் காட்டப்படும் எழுத்துகளை உள்ளிடவும்.",
+        "title": "கேப்ட்சா"
       },
       "code": {
         "label": "குறியீட்டை அல்லது நீங்கள் திருப்பிவிடப்பட்ட பக்கத்தின் முகவரியை ஒட்டவும்.",
@@ -505,7 +506,6 @@
         "charging": "மின்னூட்டி",
         "heating": "ஈட்டர்"
       },
-      "chargingTitle": "நடத்தை",
       "circuitHelp": "ஆற்றல் மற்றும் தற்போதைய வரம்புகள் மீறப்படுவதில்லை என்பதை உறுதிப்படுத்த சுமை மேலாண்மை பணி.",
       "circuitInvalid": "சர்க்யூட் இல்லை",
       "circuitLabel": "சுற்று",
@@ -567,24 +567,16 @@
       "priorityHelp": "அதிக முன்னுரிமை சூரிய உபளிக்கு விருப்பமான அணுகலைப் பெறுங்கள்.",
       "priorityLabel": "முன்னுரிமை",
       "save": "சேமி",
-      "solarBehaviorCustomHelp": "உங்கள் சொந்தத்தை வரையறுக்கவும், வாசல்கள் மற்றும் தாமதங்களை முடக்கவும்.",
-      "solarBehaviorDefaultHelp": "போதுமான உபரி {enableDelay} க்குப் பிறகு தொடங்கவும். {disableDelay} க்கு போதுமான உபரி இல்லாதபோது நிறுத்துங்கள்.",
-      "solarBehaviorLabel": "சூரிய",
-      "solarModeCustom": "தனிப்பயன்",
-      "solarModeMaximum": "அதிகபட்ச சூரிய",
-      "solarShareNote": "வாட் வரம்புகள் அமைக்கப்பட்டிருக்கும்போது பயனர் அமைப்புகளில் உள்ள சூரிய பங்கு ஸ்லைடர் முடக்கப்படும். அதை இயக்க {0} செய்து சேமிக்கவும்.",
       "solarShareReset": "வரம்புகளை அகற்று",
       "temperatureRangeHelp": "வெப்பநிலை பட்டிக்கான காட்சி வரம்பு. கட்டுப்பாட்டை பாதிக்காது.",
       "temperatureRangeTitle": "வெப்பநிலை வரம்பு",
       "thresholdDisableDelayLabel": "தாமதத்தை முடக்கு",
       "thresholdDisableHelpInvalid": "நேர்மறையான மதிப்பைப் பயன்படுத்தவும்.",
       "thresholdDisableHelpPositive": "நிறுத்த, {power} ஐ விட அதிகமாக {delay} க்கு பயன்படுத்தப்படும்போது.",
-      "thresholdDisableHelpZero": "குறைந்தபட்ச தேவையான சக்தியை {delay} க்கு நிறைவு செய்ய முடியாது.",
       "thresholdDisableLabel": "கட்டம் சக்தியை முடக்கு",
       "thresholdEnableDelayLabel": "தாமதத்தை இயக்கவும்",
       "thresholdEnableHelpInvalid": "எதிர்மறை மதிப்பைப் பயன்படுத்தவும்.",
       "thresholdEnableHelpNegative": "{surplus} உபரி {delay} தாமதத்திற்கு கிடைக்கும்போது தொடங்குங்கள்.",
-      "thresholdEnableHelpZero": "{delay} க்கு குறைந்தபட்ச தேவையான சக்தியை நிறைவு செய்யும்போது தொடங்கவும்.",
       "thresholdEnableLabel": "கட்டம் சக்தியை இயக்கவும்",
       "titleAdd": {
         "charging": "சார்சிங் புள்ளியைச் சேர்க்கவும்",
@@ -1258,7 +1250,8 @@
       "noCo2": "CO₂ தரவு இல்லை.",
       "noPrice": "விலைத் தரவு இல்லை.",
       "savings": "சேமிப்பு",
-      "savingsTooltip": "நுகரப்பட்ட {energy} ஐ கிரிட்டிலிருந்து வாங்குவதுடன் ஒப்பிடும்போது."
+      "savingsTooltip": "நுகரப்பட்ட {energy} ஐ கிரிட்டிலிருந்து வாங்குவதுடன் ஒப்பிடும்போது.",
+      "versus": "{value} எதிர் {reference}"
     },
     "title": "ஆற்றல்"
   },
@@ -1477,6 +1470,7 @@
     "nightlyHint": "இது ஏற்கனவே சரிசெய்யப்பட்டிருக்கலாம். முதலில் சமீபத்திய {nightlyVersion} உடன் சரிபார்க்கவும்.",
     "nightlyHintVersion": "Nightly பதிப்பு",
     "searchHint": "பிழையைப் புகாரளிக்கும் முன், ஏற்கனவே உள்ள {issues} ஐத் தேடவும்.",
+    "searchHintLink": "GitHub சிக்கல்கள்",
     "stepsToReproduce": "இனப்பெருக்கம் செய்வதற்கான படிகள்",
     "subTitleDiscussion": "உங்கள் பிரச்சனையை விவரிக்கவும்",
     "subTitleEmail": "உங்கள் சிக்கலை விவரிக்கவும்",

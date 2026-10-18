@@ -721,12 +721,18 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	// publish before the status check so the optimizer page stays available
 	// for diagnosing non-optimal results
-	site.publish("evopt", optimizerResult{
+	result := optimizerResult{
 		Updated: time.Now(),
 		Req:     req,
 		Res:     *resp.JSON200,
 		Details: details,
-	})
+	}
+
+	site.Lock()
+	site.optimizerResult = &result
+	site.Unlock()
+
+	site.publish("evopt", result)
 
 	// feasible results are usable, they are just not proven optimal
 	if status := resp.JSON200.Status; status != optimizer.Optimal && status != optimizer.Feasible {
@@ -1112,14 +1118,19 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 		bat.DischargeToGrid = site.GetBatteryGridDischarge() && slices.Contains(modes, api.BatteryDischarge)
 	}
 
+	// a failed limit read keeps the defaults: a 0 limit would model a battery that never moves
 	if m, ok := api.Cap[api.BatteryPowerLimiter](instance); ok {
-		charge, discharge := m.GetPowerLimits()
-		bat.CMax = float32(charge)
-		bat.DMax = float32(discharge)
+		if charge, discharge, err := m.GetPowerLimits(); err == nil {
+			bat.CMax = float32(charge)
+			bat.DMax = float32(discharge)
+		} else {
+			site.log.WARN.Printf("optimizer: battery %s power limits: %v", deviceTitleOrName(dev), err)
+		}
 	}
 
-	if m, ok := api.Cap[api.BatterySocLimiter](instance); ok {
-		minSoc, maxSoc := m.GetSocLimits()
+	// soc limits measured by updateBatteryMeters; a failed read keeps the defaults
+	if b.MinSoc != nil && b.MaxSoc != nil {
+		minSoc, maxSoc := *b.MinSoc, *b.MaxSoc
 		if maxSoc == 0 {
 			maxSoc = 100 // empty/unset maxsoc means no upper limit
 		}
