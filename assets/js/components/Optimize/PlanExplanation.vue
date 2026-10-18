@@ -46,7 +46,7 @@
 								class="btn-reset text-decoration-underline"
 								:disabled="voting"
 								data-testid="optimize-explain-vote-down"
-								@click="sendFeedback('down')"
+								@click="vote = 'down'"
 							>
 								No
 							</button>
@@ -63,7 +63,7 @@
 						v-model="voteComment"
 						type="text"
 						class="form-control form-control-sm"
-						placeholder="What was off? (optional)"
+						placeholder="What was off?"
 						maxlength="1000"
 					/>
 					<button
@@ -165,7 +165,8 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		// No counts at once, a comment follows as a repeat of the vote
+		// Yes is sent at once. No only opens the comment field and is sent together with
+		// the comment, so every down vote says what was off.
 		async sendFeedback(vote: string) {
 			this.voting = true;
 			this.voteError = "";
@@ -174,8 +175,7 @@ export default defineComponent({
 					vote,
 					comment: this.voteComment,
 				});
-				this.vote = vote;
-				this.voteSent = vote === "up" || !!this.voteComment;
+				this.voteSent = true;
 			} catch (e: any) {
 				this.voteError = e.response?.data?.error || e.message;
 			}
