@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/tariff"
 )
 
 // setSuggestion stores the optimizer suggestion for the current slot
@@ -113,19 +114,27 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 	required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower())
 
 	// past the plan time the goal was missed- keep charging like plannerActive does
+	critical := required > 0
 	if remaining := lp.clock.Until(planTime); remaining > 0 {
-		return required >= remaining
+		critical = required >= remaining
 	}
 
-	return required > 0
+	// hold a critical verdict for one slot, like the planner holds its slot: while charging
+	// the soc estimate may shrink the required duration faster than the clock (taper model)
+	if critical {
+		lp.planSlotEnd = lp.clock.Now().Add(tariff.SlotDuration)
+	}
+
+	return critical || lp.clock.Now().Before(lp.planSlotEnd)
 }
 
 // surplusRegime indicates that the suggested charge power matches the forecast
 // surplus, leaving the loadpoint to the pv loop instead of pinning it to a setpoint.
-// Full power is grid-fed by definition and never counts as surplus.
+// Full power is grid-fed by definition and never counts as surplus, nor does a
+// charge the home battery covers: the pv loop sees its discharge as deficit.
 func (lp *Loadpoint) surplusRegime(s *types.Suggestion) bool {
 	full := s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold
-	return s.Action == actionCharge && !full && math.Abs(s.Grid) <= suggestionThreshold
+	return s.Action == actionCharge && !full && math.Abs(s.Grid) <= suggestionThreshold && s.Battery <= suggestionThreshold
 }
 
 // optimizerCharging applies the optimizer's charging decision. It returns false

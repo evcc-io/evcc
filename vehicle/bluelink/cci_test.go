@@ -7,9 +7,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -29,21 +32,16 @@ const unreachable = "http://127.0.0.1:1"
 func newTestIdentity(t *testing.T, loginURL, cciURL string) *Identity {
 	t.Helper()
 
+	cci := testCCIConfig()
+	cci.APIURL = cciURL
+
 	config := Config{
 		// Brand carries the test name so each (sub)test gets its own
 		// db/settings key (see settingsKey), without changing the
 		// username actually sent in login requests.
 		Brand:         "kia-test:" + t.Name(),
 		LoginFormHost: loginURL,
-		CCI: &CCIConfig{
-			OneAppClientID:       "test-client-id",
-			OneAppRedirectURI:    "https://oneapp.kia.com/redirect",
-			APIURL:               cciURL,
-			PackageID:            "com.kia.oneapp.eu",
-			ClientName:           "kia",
-			OSVersion:            "27",
-			NotificationProvider: "IOS_APPSTORE",
-		},
+		CCI:           cci,
 	}
 
 	identity := NewIdentity(util.NewLogger("test"), config)
@@ -57,6 +55,30 @@ func newTestIdentity(t *testing.T, loginURL, cciURL string) *Identity {
 	t.Cleanup(func() { settings.SetString(identity.settingsKey(), "") })
 
 	return identity
+}
+
+// assertSigned verifies the X-Fingerprint of a request against the test
+// config's signing key and returns the request body
+func assertSigned(t *testing.T, r *http.Request) []byte {
+	t.Helper()
+
+	body, err := io.ReadAll(r.Body)
+	require.NoError(t, err)
+
+	headers := make(map[string]string)
+	for _, k := range []string{"client-id", "client-name", "client-version", "client-os-code", "client-os-version", "X-Timestamp"} {
+		headers[k] = r.Header.Get(k)
+	}
+
+	assert.Equal(t, "android", headers["client-os-code"])
+	assert.Equal(t, "KiaEU", headers["client-name"])
+	assert.Equal(t, fingerprint(headers, testCCIConfig().FingerprintKey, body), r.Header.Get("X-Fingerprint"))
+
+	ts, err := strconv.ParseInt(headers["X-Timestamp"], 10, 64)
+	require.NoError(t, err)
+	assert.WithinDuration(t, time.Now(), time.UnixMilli(ts), time.Minute)
+
+	return body
 }
 
 func jwkParam(b []byte) string {
@@ -102,6 +124,37 @@ func TestParseCCSExpiry(t *testing.T) {
 	}
 }
 
+func TestFingerprint(t *testing.T) {
+	identity := func(pkg, name, ts string) map[string]string {
+		return map[string]string{
+			"client-id":         pkg,
+			"client-name":       name,
+			"client-version":    "1.4.0",
+			"client-os-code":    "android",
+			"client-os-version": "14",
+			"X-Timestamp":       ts,
+		}
+	}
+
+	kia := identity("com.kia.oneapp.eu", "KiaEU", "1700000000123")
+	kiaKey := "yb4Z1n2nlKe" + "ukNilE7QEdb" + "KB34nStPVa"
+	hyundai := identity("com.hyundai.oneapp.eu", "HyundaiEU", "1792000084084")
+	hyundaiKey := "OsZDfDuCyVX" + "yfqjCoA2JbX" + "2MrLpGwNBC"
+
+	// golden vectors from hyundai_kia_connect_api, verified against the live gate
+	assert.Equal(t, "0a3ceccc83823ec0d2c5d39a15dbf722c813e6da48800a0156a7a8459db63337", fingerprint(kia, kiaKey, nil))
+	assert.Equal(t, "df04e3dadd52288ce5b280b368af261272556b5360adbc90a817a167526e2946", fingerprint(hyundai, hyundaiKey, nil))
+
+	// body vector from an independent HMAC computation of the upstream recipe, body in Python json.dumps style
+	assert.Equal(t, "0aae2e0acd5d57bcabba202cc7a839fc90f1d52814091b92e0908be66ed12eef", fingerprint(kia, kiaKey, []byte(`{"refreshToken": "r1", "idToken": "i1"}`)))
+
+	bare := fingerprint(kia, kiaKey, nil)
+	assert.Equal(t, bare, fingerprint(kia, kiaKey, []byte(" \t\r\n\v\f")), "ascii whitespace is not signed")
+	assert.NotEqual(t, bare, fingerprint(kia, kiaKey, []byte("\u00a0")), "non-ascii whitespace is signed")
+	assert.Equal(t, fingerprint(kia, kiaKey, []byte(`{"a":1}`)), fingerprint(kia, kiaKey, []byte(`{ "a": 1 }`)))
+	assert.NotEqual(t, bare, fingerprint(kia, kiaKey, []byte(`{"a":1}`)), "body is signed")
+}
+
 func TestLoginCCIPasswordSuccess(t *testing.T) {
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(t, err)
@@ -130,7 +183,8 @@ func TestLoginCCIPasswordSuccess(t *testing.T) {
 	defer loginSrv.Close()
 
 	cciMux := http.NewServeMux()
-	cciMux.HandleFunc("/domain/api/v1/auth/token", func(w http.ResponseWriter, r *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token", func(w http.ResponseWriter, r *http.Request) {
+		assertSigned(t, r)
 		assert.Equal(t, "testcode", r.URL.Query().Get("code"))
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
@@ -144,7 +198,8 @@ func TestLoginCCIPasswordSuccess(t *testing.T) {
 			"expiresIn":                3599,
 		})
 	})
-	cciMux.HandleFunc("/domain/api/v1/auth/token-exchange", func(w http.ResponseWriter, r *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token-exchange", func(w http.ResponseWriter, r *http.Request) {
+		assertSigned(t, r)
 		assert.Equal(t, "CCS", r.URL.Query().Get("serviceType"))
 		assert.Equal(t, "Bearer cci-access-1", r.Header.Get("authorization"))
 		assert.Equal(t, "non-ccs-1", r.Header.Get("Authentication"))
@@ -239,12 +294,22 @@ func TestLoginCCIPasswordConsentRequired(t *testing.T) {
 
 func TestRefreshCCI(t *testing.T) {
 	cciMux := http.NewServeMux()
-	cciMux.HandleFunc("/domain/api/v2/auth/token-refresh", func(w http.ResponseWriter, r *http.Request) {
+	cciMux.HandleFunc("POST /auth/v2/token-refresh", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "device-abc", r.Header.Get("client-device-id"))
+		body := assertSigned(t, r)
 
-		var body map[string]string
-		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
-		assert.Equal(t, "old-cci-refresh", body["refreshToken"])
+		var fields map[string]string
+		require.NoError(t, json.Unmarshal(body, &fields))
+		assert.Equal(t, map[string]string{
+			"accessToken":              "old-cci-access",
+			"refreshToken":             "old-cci-refresh",
+			"exchangeableAccessToken":  "old-exch",
+			"exchangeableRefreshToken": "old-exch-refresh",
+			"nonCcsToken":              "old-non-ccs",
+			"nonCcsRefreshToken":       "old-non-ccs-refresh",
+			"idToken":                  "old-id",
+		}, fields)
 
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken":              "cci-access-2",
@@ -256,7 +321,8 @@ func TestRefreshCCI(t *testing.T) {
 			"idToken":                  "id-2",
 		})
 	})
-	cciMux.HandleFunc("/domain/api/v1/auth/token-exchange", func(w http.ResponseWriter, r *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token-exchange", func(w http.ResponseWriter, r *http.Request) {
+		assertSigned(t, r)
 		assert.Equal(t, "Bearer cci-access-2", r.Header.Get("authorization"))
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken": "ccs-token-2",
@@ -338,7 +404,7 @@ func TestLoginCCIFallsBackToPasswordLoginWhenPersistedBundleUnusable(t *testing.
 	defer loginSrv.Close()
 
 	cciMux := http.NewServeMux()
-	cciMux.HandleFunc("/domain/api/v1/auth/token", func(w http.ResponseWriter, r *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token", func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken": "fresh-cci-access", "refreshToken": "fresh-cci-refresh",
 			"nonCcsToken": "fresh-non-ccs", "exchangeableAccessToken": "fresh-exch-access",
@@ -346,7 +412,7 @@ func TestLoginCCIFallsBackToPasswordLoginWhenPersistedBundleUnusable(t *testing.
 			"idToken": "fresh-id", "expiresIn": 3599,
 		})
 	})
-	cciMux.HandleFunc("/domain/api/v1/auth/token-exchange", func(w http.ResponseWriter, r *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token-exchange", func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken": "fresh-ccs-token",
 			"expiresTime": time.Now().Add(time.Hour).Unix(),
@@ -374,4 +440,68 @@ func TestLoginCCIFallsBackToPasswordLoginWhenPersistedBundleUnusable(t *testing.
 	require.NoError(t, settings.Json(identity.settingsKey(), &persisted))
 	assert.Equal(t, "fresh-ccs-token", persisted.AccessToken)
 	assert.NotEqual(t, "stale-device-id", persisted.DeviceID, "a fresh login must not carry over the stale bundle's device id")
+}
+
+func cciTokenHandler(w http.ResponseWriter, _ *http.Request) {
+	_ = json.NewEncoder(w).Encode(map[string]any{"accessToken": "cci-access", "refreshToken": "cci-refresh"})
+}
+
+func gateHandler(code int) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, `{"code":%d,"message":"Unusual activity has been detected"}`, code)
+	}
+}
+
+func TestExchangeCCITokenGateFallback(t *testing.T) {
+	cciMux := http.NewServeMux()
+	cciMux.HandleFunc("POST /auth/v1/token", gateHandler(9035))
+	cciMux.HandleFunc("POST /domain/api/v1/auth/token", cciTokenHandler)
+	cciSrv := httptest.NewServer(cciMux)
+	defer cciSrv.Close()
+
+	identity := newTestIdentity(t, unreachable, cciSrv.URL)
+
+	bundle, err := identity.exchangeCCIToken("device-abc", "testcode")
+	require.NoError(t, err)
+	assert.Equal(t, "cci-access", bundle.CCIAccessToken)
+}
+
+func TestExchangeCCITokenNoFallbackOnOtherErrors(t *testing.T) {
+	var legacyCalls atomic.Int32
+
+	cciMux := http.NewServeMux()
+	cciMux.HandleFunc("POST /auth/v1/token", gateHandler(9013))
+	cciMux.HandleFunc("POST /domain/api/v1/auth/token", func(w http.ResponseWriter, r *http.Request) {
+		legacyCalls.Add(1)
+		cciTokenHandler(w, r)
+	})
+	cciSrv := httptest.NewServer(cciMux)
+	defer cciSrv.Close()
+
+	identity := newTestIdentity(t, unreachable, cciSrv.URL)
+
+	_, err := identity.exchangeCCIToken("device-abc", "testcode")
+	require.Error(t, err)
+	assert.Zero(t, legacyCalls.Load())
+}
+
+func TestExchangeCCITokenUnsignedBrandUsesLegacy(t *testing.T) {
+	cciMux := http.NewServeMux()
+	cciMux.HandleFunc("POST /auth/v1/token", func(w http.ResponseWriter, _ *http.Request) {
+		t.Error("signed route must not be called without a fingerprint key")
+	})
+	cciMux.HandleFunc("POST /domain/api/v1/auth/token", func(w http.ResponseWriter, r *http.Request) {
+		assert.Empty(t, r.Header.Get("X-Fingerprint"))
+		cciTokenHandler(w, r)
+	})
+	cciSrv := httptest.NewServer(cciMux)
+	defer cciSrv.Close()
+
+	identity := newTestIdentity(t, unreachable, cciSrv.URL)
+	identity.config.CCI.FingerprintKey = ""
+
+	bundle, err := identity.exchangeCCIToken("device-abc", "testcode")
+	require.NoError(t, err)
+	assert.Equal(t, "cci-access", bundle.CCIAccessToken)
 }

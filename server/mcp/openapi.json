@@ -287,7 +287,7 @@
       "post": {
         "operationId": "setBatteryGridDischarge",
         "summary": "Control battery grid discharge",
-        "description": "Allow the home battery to discharge to the grid. Enabling may require `force=true` to confirm country-specific feed-in restrictions.",
+        "description": "Allow the home battery to discharge to the grid. Enabling may require `force=true` to confirm country-specific grid export restrictions.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/features/battery"
         },
@@ -302,7 +302,7 @@
           {
             "name": "force",
             "in": "query",
-            "description": "Confirm country-specific feed-in restrictions",
+            "description": "Confirm country-specific grid export restrictions",
             "schema": {
               "type": "boolean"
             }
@@ -381,7 +381,7 @@
       "post": {
         "operationId": "setBatteryGridDischargeLimit",
         "summary": "Set battery grid discharge limit",
-        "description": "Discharge home battery to grid when the feed-in price is at or above the threshold (experimental). Requires a feed-in tariff and the battery grid discharge setting. Ignored otherwise.",
+        "description": "Discharge home battery to grid when the grid export price is at or above the threshold (experimental). Requires a grid export tariff and the battery grid discharge setting. Ignored otherwise.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/features/battery"
         },
@@ -573,7 +573,7 @@
       "post": {
         "operationId": "setLoadpointDisableDelay",
         "summary": "Disable threshold-delay",
-        "description": "Delay before charging stops in solar mode.",
+        "description": "Delay before charging stops in smart mode.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/reference/configuration/loadpoints"
         },
@@ -599,7 +599,7 @@
       "post": {
         "operationId": "setLoadpointDisableThreshold",
         "summary": "Disable threshold",
-        "description": "Specifies the grid draw power to stop charging in solar mode.",
+        "description": "Specifies the grid draw power to stop charging in smart mode.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/reference/configuration/loadpoints#threshold-1"
         },
@@ -625,7 +625,7 @@
       "post": {
         "operationId": "setLoadpointEnableDelay",
         "summary": "Enable threshold-delay",
-        "description": "Delay before charging starts in solar mode.",
+        "description": "Delay before charging starts in smart mode.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/reference/configuration/loadpoints#delay"
         },
@@ -651,7 +651,7 @@
       "post": {
         "operationId": "setLoadpointEnableThreshold",
         "summary": "Enable threshold",
-        "description": "Specifies the available surplus power to start charging in solar mode.",
+        "description": "Specifies the available surplus power to start charging in smart mode.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/reference/configuration/loadpoints#threshold"
         },
@@ -854,7 +854,7 @@
             "$ref": "#/components/responses/NumberResult"
           },
           "400": {
-            "description": "Invalid phases-value. You have most likely entered the value 0 for a wallbox that cannot switch phases automatically."
+            "description": "Invalid phases-value. You have most likely entered the value 0 for a charger that cannot switch phases automatically."
           }
         }
       }
@@ -998,7 +998,7 @@
     "/loadpoints/{id}/plan/static/preview/soc/{soc}/{timestamp}": {
       "get": {
         "operationId": "previewLoadpointSocPlan",
-        "summary": "Simulate soc-based charging plan",
+        "summary": "Simulate SoC-based charging plan",
         "description": "Simulate charging plan based on SoC goal. Does not alter the actual charging plan.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/features/plans"
@@ -2878,7 +2878,7 @@
                             },
                             "returnCost": {
                               "type": "number",
-                              "description": "Feed-in revenue, where a price exists"
+                              "description": "Grid export revenue, where a price exists"
                             },
                             "pricedReturnEnergy": {
                               "type": "number",
@@ -2908,7 +2908,7 @@
       "get": {
         "operationId": "getEnergyFlow",
         "summary": "Energy flow",
-        "description": "Returns the energy attributed from sources (pv, battery, grid) to sinks (home, battery, loadpoint, export) over the period, plus grid cost and CO2 sums where tariff data exists.",
+        "description": "Returns the energy attributed from sources (pv, battery, grid) to sinks (home, battery, loadpoint, export) over the period, plus grid cost and CO₂ sums where tariff data exists.",
         "tags": [
           "experimental"
         ],
@@ -2990,7 +2990,7 @@
                     },
                     "co2": {
                       "type": "object",
-                      "description": "Grid CO2 sums in kg, omitted without CO2 data",
+                      "description": "Grid CO₂ sums in kg, omitted without CO₂ data",
                       "properties": {
                         "consumption": {
                           "type": "number",
@@ -3078,7 +3078,7 @@
                       },
                       "feedin": {
                         "type": "number",
-                        "description": "Feed-in rate per kWh, the bucket average when aggregated"
+                        "description": "Grid export price per kWh, the bucket average when aggregated"
                       },
                       "feedinMin": {
                         "type": "number"
@@ -3372,7 +3372,7 @@
         }
       },
       "Soc": {
-        "description": "SOC in %",
+        "description": "SoC in %",
         "type": "number",
         "example": 60,
         "minimum": 0,
@@ -3523,7 +3523,7 @@
         ]
       },
       "PhaseAction": {
-        "description": "Pending phase switching action in solar mode.",
+        "description": "Pending phase switching action in smart mode.",
         "type": "string",
         "enum": [
           "inactive",
@@ -3532,7 +3532,7 @@
         ]
       },
       "PvAction": {
-        "description": "Pending charge start or stop action in solar mode.",
+        "description": "Pending charge start or stop action in smart mode.",
         "type": "string",
         "enum": [
           "inactive",
@@ -3562,6 +3562,10 @@
           },
           "grid": {
             "description": "Planned site grid flow of the slot in W, positive means import.",
+            "type": "number"
+          },
+          "battery": {
+            "description": "Planned home battery discharge feeding the site in W.",
             "type": "number"
           },
           "actionable": {
@@ -3748,11 +3752,11 @@
             "type": "boolean"
           },
           "disableDelay": {
-            "description": "Delay before charging stops in solar mode, in seconds.",
+            "description": "Delay before charging stops in smart mode, in seconds.",
             "type": "number"
           },
           "disableThreshold": {
-            "description": "Grid draw power above which charging stops in solar mode, in W.",
+            "description": "Grid draw power above which charging stops in smart mode, in W.",
             "type": "number"
           },
           "effectiveLimitSoc": {
@@ -3794,11 +3798,11 @@
             "type": "number"
           },
           "enableDelay": {
-            "description": "Delay before charging starts in solar mode, in seconds.",
+            "description": "Delay before charging starts in smart mode, in seconds.",
             "type": "number"
           },
           "enableThreshold": {
-            "description": "Available surplus power above which charging starts in solar mode, in W.",
+            "description": "Available surplus power above which charging starts in smart mode, in W.",
             "type": "number"
           },
           "enabled": {
@@ -3843,7 +3847,7 @@
           },
           "phaseAction": {
             "$ref": "#/components/schemas/PhaseAction",
-            "description": "Pending phase switching action in solar mode."
+            "description": "Pending phase switching action in smart mode."
           },
           "phaseRemaining": {
             "description": "Remaining time until the pending phase switching action executes, in seconds.",
@@ -3905,7 +3909,7 @@
           },
           "pvAction": {
             "$ref": "#/components/schemas/PvAction",
-            "description": "Pending charge start or stop action in solar mode."
+            "description": "Pending charge start or stop action in smart mode."
           },
           "pvRemaining": {
             "description": "Remaining time until the pending charge start or stop action executes, in seconds.",
@@ -4226,7 +4230,7 @@
             }
           },
           "feedin": {
-            "description": "Feed-in rate forecast. Rate per kWh in the configured currency per time slot.",
+            "description": "Grid export price forecast. Price per kWh in the configured currency per time slot.",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ForecastSlot"
@@ -4706,7 +4710,7 @@
             "type": "boolean"
           },
           "curtailed": {
-            "description": "Allowed feed-in in %. Values below 100 mean production is curtailed.",
+            "description": "Allowed grid export in %. Values below 100 mean production is curtailed.",
             "type": "number"
           },
           "maxConsumptionPower": {
@@ -4830,15 +4834,15 @@
         ]
       },
       "EebusConfig": {
-        "description": "EEBus integration configuration.",
+        "description": "EEBUS integration configuration.",
         "type": "object",
         "properties": {
           "uri": {
-            "description": "URI the EEBus service listens on.",
+            "description": "URI the EEBUS service listens on.",
             "type": "string"
           },
           "port": {
-            "description": "Port the EEBus service listens on.",
+            "description": "Port the EEBUS service listens on.",
             "type": "number"
           },
           "shipid": {
@@ -4846,7 +4850,7 @@
             "type": "string"
           },
           "interfaces": {
-            "description": "Network interfaces the EEBus service uses.",
+            "description": "Network interfaces the EEBUS service uses.",
             "type": "array",
             "items": {
               "type": "string"
@@ -4863,7 +4867,7 @@
         ]
       },
       "EebusStatus": {
-        "description": "EEBus runtime status.",
+        "description": "EEBUS runtime status.",
         "type": "object",
         "properties": {
           "ski": {
@@ -4880,7 +4884,7 @@
         ]
       },
       "Eebus": {
-        "description": "EEBus integration configuration and status.",
+        "description": "EEBUS integration configuration and status.",
         "type": "object",
         "properties": {
           "config": {
@@ -5662,18 +5666,18 @@
             "type": "boolean"
           },
           "pv": {
-            "description": "Solar generation meters. One entry per configured pv meter.",
+            "description": "Solar meters. One entry per configured meter.",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Meter"
             }
           },
           "pvPower": {
-            "description": "Total solar generation power in W. Sum of all pv meters.",
+            "description": "Total solar power in W. Sum of all solar meters.",
             "type": "number"
           },
           "pvEnergy": {
-            "description": "Total solar generation energy in kWh.",
+            "description": "Total solar production in kWh.",
             "type": "number"
           },
           "aux": {
@@ -5735,7 +5739,7 @@
             "type": "number"
           },
           "tariffFeedIn": {
-            "description": "Current feed-in rate per kWh in the configured currency.",
+            "description": "Current grid export price per kWh in the configured currency.",
             "type": "number"
           },
           "tariffCo2": {
@@ -5743,7 +5747,7 @@
             "type": "number"
           },
           "tariffSolar": {
-            "description": "Current cost of solar generation per kWh in the configured currency.",
+            "description": "Current cost of solar production per kWh in the configured currency.",
             "type": "number"
           },
           "tariffPriceHome": {
@@ -5792,7 +5796,7 @@
           },
           "eebus": {
             "$ref": "#/components/schemas/Eebus",
-            "description": "EEBus integration configuration and status."
+            "description": "EEBUS integration configuration and status."
           },
           "remote": {
             "$ref": "#/components/schemas/Remote",
@@ -5835,7 +5839,7 @@
             "description": "Load management configuration."
           },
           "bufferSoc": {
-            "description": "Battery buffer SoC in %. Energy above this level may be used for charging in solar mode.",
+            "description": "Battery buffer SoC in %. Energy above this level may be used for charging in smart mode.",
             "type": "number"
           },
           "prioritySoc": {
@@ -5868,7 +5872,7 @@
             "type": "boolean"
           },
           "batteryGridDischargeLimit": {
-            "description": "Feed-in price limit for discharging the home battery to the grid (experimental).",
+            "description": "Grid export price limit for discharging the home battery to the grid (experimental).",
             "type": "number",
             "nullable": true
           },
@@ -5885,7 +5889,7 @@
             "description": "Type of the smart charging limit, price based or emission based."
           },
           "smartFeedInPriorityAvailable": {
-            "description": "A feed-in tariff with forecast is configured.",
+            "description": "A grid export tariff with forecast is configured.",
             "type": "boolean"
           },
           "historyUpdated": {
@@ -6088,7 +6092,7 @@
       },
       "soc": {
         "name": "soc",
-        "description": "SOC in %",
+        "description": "SoC in %",
         "in": "path",
         "required": true,
         "schema": {
@@ -6176,7 +6180,7 @@
       },
       "costLimit": {
         "name": "cost",
-        "description": "Cost limit in configured currency (default EUR) or CO2 limit in g/kWh",
+        "description": "Cost limit in configured currency (default EUR) or CO₂ limit in g/kWh",
         "example": 0.25,
         "in": "path",
         "required": true,
@@ -6248,7 +6252,7 @@
         }
       },
       "SocResult": {
-        "description": "Success - Soc result",
+        "description": "Success - SoC result",
         "content": {
           "application/json": {
             "schema": {

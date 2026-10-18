@@ -14,18 +14,20 @@
 				<div
 					v-for="provider in providerList"
 					:key="provider.id"
-					class="d-flex align-items-baseline justify-content-between mb-2"
+					class="d-flex align-items-baseline justify-content-between gap-2 mb-2"
 				>
-					<div class="d-flex align-items-baseline">
+					<div class="d-flex align-items-baseline min-w-0">
 						<span
-							class="d-inline-block p-1 rounded-circle me-2"
+							class="d-inline-block flex-shrink-0 p-1 rounded-circle me-2"
 							:class="provider.authenticated ? 'bg-success' : 'bg-warning'"
 						></span>
-						<span>{{ provider.title }}</span>
+						<span class="text-truncate" :title="provider.title">{{
+							provider.title
+						}}</span>
 					</div>
 					<button
 						type="button"
-						class="btn btn-link btn-sm p-0 lh-1"
+						class="btn btn-link btn-sm flex-shrink-0 p-0 lh-1"
 						:class="provider.authenticated ? 'text-muted' : 'text-warning'"
 						@click="handleProviderAction(provider)"
 					>

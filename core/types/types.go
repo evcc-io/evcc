@@ -32,6 +32,7 @@ type Suggestion struct {
 	Charge    float64 `json:"charge"`    // recommended charge power, W
 	Discharge float64 `json:"discharge"` // recommended discharge power, W
 	Grid      float64 `json:"grid"`      // planned site grid flow, positive means import, W
+	Battery   float64 `json:"battery"`   // planned home battery discharge feeding the site, W
 	// Actionable indicates the suggestion differs from the current operating mode.
 	Actionable bool `json:"actionable"`
 }

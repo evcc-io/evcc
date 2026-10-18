@@ -56,6 +56,24 @@ export function slotXAxis(times: number[], weekdayShort: (d: Date) => string) {
   };
 }
 
+const QUARTER_SECONDS = 15 * 60;
+
+// source slot index per chart slot: a slot longer than a quarter hour is shown as equal
+// quarters, so the category axis keeps one width per slot when the request merges its
+// horizon tail into clock hours
+export function slotParents(dt: number[]): number[] {
+  return dt.flatMap((s, i) => Array<number>(Math.max(1, Math.round(s / QUARTER_SECONDS))).fill(i));
+}
+
+// values per chart slot, a split slot shares its value evenly among its quarters: energies
+// and dt both shrink, power per slot stays
+export function splitSlots(values: number[], parents: number[]): number[] {
+  if (!values.length) return [];
+  const count: number[] = [];
+  for (const p of parents) count[p] = (count[p] ?? 0) + 1;
+  return parents.map((p) => (values[p] ?? 0) / (count[p] ?? 1));
+}
+
 export function formatSlotRange(times: number[], dt: number[], index: number): string {
   const start = new Date(times[index] ?? 0);
   const end = new Date(start.getTime() + (dt[index] || 0) * 1000);

@@ -103,7 +103,7 @@ optimal current, sends single command. Resilient to restarts and missed updates.
 | `bufferSoc` | Above this: EV can draw from battery reserves |
 | `bufferStartSoc` | Above this: EV charging can begin even if importing |
 
-None of these apply to a loadpoint the optimizer controls: the optimizer plans the home battery, so a stop gives the battery priority and a charge takes the surplus (`loadpointSitePower`, `#34606`).
+None of these apply to a loadpoint the optimizer controls: the optimizer plans the home battery, so a stop gives the battery priority and a charge takes the surplus (`loadpointSitePower`, `#34606`). A charge the home battery covers is pinned to its setpoint instead, the pv loop would count the discharge as deficit (`surplusRegime`, `#34809`).
 
 ## Effective Price Calculation
 

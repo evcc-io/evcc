@@ -187,6 +187,90 @@ func TestAsTimestamps(t *testing.T) {
 	}, got)
 }
 
+func TestCoarsenHorizon(t *testing.T) {
+	now := time.Date(2025, 1, 1, 7, 23, 0, 0, time.Local)
+	minLen := 1 + 4*60 // 07:23 until Jan 3rd 19:30
+	dt := timeSteps(minLen, now)
+	ts := asTimestamps(dt, now)
+
+	series := func(v float32) []float32 { return lo.RepeatBy(minLen, func(i int) float32 { return v + float32(i) }) }
+	goal := make([]float32, minLen)
+	goal[204] = 5000 // slot 10:15-10:30 on Jan 3rd, the departure
+	req := optimizer.OptimizationInput{
+		TimeSeries: optimizer.TimeSeries{Dt: dt, Gt: series(100), Ft: series(200), PN: series(0.3), PE: series(0.1)},
+		Batteries:  []optimizer.BatteryConfig{{PDemand: series(10), SGoal: goal}, {}},
+	}
+	details := requestDetails{Timestamps: ts, DemandDetails: []demandDetail{{Values: series(50)}}}
+	gt, ft, home := lo.Sum(req.TimeSeries.Gt), lo.Sum(req.TimeSeries.Ft), lo.Sum(details.DemandDetails[0].Values)
+	pn, demand := req.TimeSeries.PN, req.Batteries[0].PDemand
+
+	coarsenHorizon(&req, &details, defaultCoarseSlotsAfter)
+	res := req.TimeSeries
+
+	// quarter slots up to 48h and on to the full hour, then clock hours, the goal and the end cut short
+	require.Len(t, res.Dt, 195+13)
+	assert.Equal(t, 420, res.Dt[0])
+	assert.Equal(t, lo.RepeatBy(194, func(int) int { return 900 }), res.Dt[1:195], "quarter slots until 08:00 on Jan 3rd")
+	assert.Equal(t, time.Date(2025, 1, 3, 8, 0, 0, 0, time.Local), details.Timestamps[195])
+	assert.Equal(t, []int{3600, 3600, 1800, 1800, 3600}, res.Dt[195:200], "goal at 10:30 ends its hour early")
+	assert.Equal(t, 1800, res.Dt[len(res.Dt)-1], "last hour ends with the forecast at 19:30")
+	schedule := optimizerSchedule{timestamps: details.Timestamps, dt: res.Dt}
+	assert.Equal(t, time.Date(2025, 1, 3, 10, 30, 0, 0, time.Local), schedule.end(197))
+	assert.Equal(t, time.Date(2025, 1, 3, 19, 30, 0, 0, time.Local), schedule.end(len(res.Dt)-1))
+
+	// energies are preserved, prices averaged by duration, the goal keeps its end
+	assert.InDelta(t, gt, lo.Sum(res.Gt), 0.1)
+	assert.InDelta(t, ft, lo.Sum(res.Ft), 0.1)
+	assert.InDelta(t, home, lo.Sum(details.DemandDetails[0].Values), 0.1)
+	assert.InDelta(t, lo.Mean(pn[195:199]), res.PN[195], 1e-4)
+	assert.InDelta(t, lo.Sum(demand[195:199]), req.Batteries[0].PDemand[195], 0.01)
+	assert.Equal(t, float32(5000), req.Batteries[0].SGoal[197])
+	assert.Equal(t, 1, lo.CountBy(req.Batteries[0].SGoal, func(v float32) bool { return v != 0 }))
+	assert.Nil(t, req.Batteries[1].PDemand)
+	assert.Nil(t, req.Batteries[1].SGoal)
+
+	// within 48h nothing changes
+	short := optimizer.OptimizationInput{TimeSeries: optimizer.TimeSeries{Dt: timeSteps(4*47, now)}}
+	short.TimeSeries.Gt = lo.RepeatBy(len(short.TimeSeries.Dt), func(int) float32 { return 1 })
+	before := requestDetails{Timestamps: asTimestamps(short.TimeSeries.Dt, now)}
+	after := before
+	dt = append([]int(nil), short.TimeSeries.Dt...)
+	coarsenHorizon(&short, &after, defaultCoarseSlotsAfter)
+	assert.Equal(t, dt, short.TimeSeries.Dt)
+	assert.Equal(t, before, after)
+
+	// an earlier boundary coarsens the same request
+	short.TimeSeries.PN = short.TimeSeries.Gt
+	short.TimeSeries.PE = short.TimeSeries.Gt
+	coarsenHorizon(&short, &after, 24*time.Hour)
+	assert.Less(t, len(short.TimeSeries.Dt), 4*47)
+	assert.InDelta(t, float32(4*47), lo.Sum(short.TimeSeries.Gt), 0.1)
+}
+
+func TestCoarseSlotsAfter(t *testing.T) {
+	for _, tc := range []struct {
+		env     string
+		hosted  bool
+		res     time.Duration
+		invalid bool
+	}{
+		{"", false, defaultCoarseSlotsAfter, false},
+		{"", true, defaultCoarseSlotsAfter, false},
+		{"72", false, 72 * time.Hour, false},
+		{"72", true, defaultCoarseSlotsAfter, false}, // the hosted optimizer always coarsens after 48h
+		{"0", false, 0, false},
+		{"foo", false, defaultCoarseSlotsAfter, true},
+		{"72h", false, defaultCoarseSlotsAfter, true},
+		{"-1", false, defaultCoarseSlotsAfter, true},
+	} {
+		t.Setenv("OPTIMIZER_COARSEN_AFTER", tc.env)
+
+		res, err := coarseSlotsAfter(tc.hosted)
+		assert.Equal(t, tc.res, res, "env %q hosted %v", tc.env, tc.hosted)
+		assert.Equal(t, tc.invalid, err != nil, "env %q hosted %v", tc.env, tc.hosted)
+	}
+}
+
 func TestPlanSlot(t *testing.T) {
 	// now aligned to a 15-minute boundary: s_goal[i] models the SoC at the END of slot i,
 	// so a plan 2h out (exactly 8 slots away) must land on slot 7, not 8 (#33831)
@@ -451,7 +535,7 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 
 		var meter api.Meter
 		batSocLimit := api.NewMockBatterySocLimiter(ctrl)
-		batSocLimit.EXPECT().GetSocLimits().Return(minSoc, maxSoc).AnyTimes()
+		batSocLimit.EXPECT().GetSocLimits().Return(minSoc, maxSoc, nil).AnyTimes()
 
 		bat := &struct {
 			api.Meter

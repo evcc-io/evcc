@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/messenger"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -199,6 +200,27 @@ func TestOptimizerSurplusRegime(t *testing.T) {
 	ctrl.Finish()
 }
 
+// TestOptimizerBatteryFed covers a minimum charge the home battery covers (#34809):
+// the pv loop would count the discharge as deficit and stop after the disable delay,
+// so the loadpoint is pinned to the setpoint instead
+func TestOptimizerBatteryFed(t *testing.T) {
+	enableAutomatic(t)
+
+	lp, charger, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
+	lp.offeredCurrent = maxA
+
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 1380, Battery: 1000})
+
+	// grid balanced, battery discharging into the site
+	charger.EXPECT().MaxCurrent(int64(minA))
+	lp.Update(2700, 2700, nil, nil, false, false, 0, nil, nil, nil)
+
+	assert.True(t, lp.pvTimer.Equal(elapsed), "pv timer must be elapsed, not running towards disable")
+	assert.True(t, lp.enabled)
+
+	ctrl.Finish()
+}
+
 // TestOptimizerStopFollowsSurplus covers a stop based on a forecast surplus that is
 // too low: the pv loop still enables on measured surplus after the enable delay
 func TestOptimizerStopFollowsSurplus(t *testing.T) {
@@ -273,10 +295,11 @@ func TestOptimizerFlexibility(t *testing.T) {
 		s    types.Suggestion
 		want float64
 	}{
-		{types.Suggestion{Action: actionCharge, Charge: 3680, Grid: 1000}, 0}, // full power
-		{types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, 0}, // grid-fed setpoint
-		{types.Suggestion{Action: actionCharge, Charge: 2300}, 2700},          // surplus regime, pv loop yields
-		{types.Suggestion{Action: actionStop}, 2700},                          // stop, pv loop yields
+		{types.Suggestion{Action: actionCharge, Charge: 3680, Grid: 1000}, 0},    // full power
+		{types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, 0},    // grid-fed setpoint
+		{types.Suggestion{Action: actionCharge, Charge: 2300}, 2700},             // surplus regime, pv loop yields
+		{types.Suggestion{Action: actionCharge, Charge: 2300, Battery: 1000}, 0}, // battery-fed setpoint
+		{types.Suggestion{Action: actionStop}, 2700},                             // stop, pv loop yields
 	} {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
 		lp.mode = api.ModeSmart
@@ -582,6 +605,16 @@ func TestOptimizerPlanActive(t *testing.T) {
 	optimize()
 	assert.True(t, lp.plannerActive())
 
+	// critical holds while the soc estimate catches up (#34868)
+	lp.vehicleSoc = 59
+	optimize()
+	assert.True(t, lp.plannerActive())
+
+	// the hold ends one slot after the last critical cycle
+	clck.Add(tariff.SlotDuration)
+	optimize()
+	assert.False(t, lp.plannerActive())
+
 	// stalled optimizer falls back to the planner
 	clck.Add(time.Hour)
 	_, _, optimized = lp.EffectivePlan(planTime, time.Hour, api.PlanStrategy{})
@@ -672,4 +705,32 @@ func TestBatteryModesHemsCurtailed(t *testing.T) {
 	idleCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
 
 	site.updateBatteryMode(false, false, api.Rate{})
+}
+
+// TestOptimizerPlanAboveLimit covers a plan goal above the session soc limit (#34868):
+// the optimizer's active plan slot charges past the limit instead of being disabled by it
+func TestOptimizerPlanAboveLimit(t *testing.T) {
+	enableAutomatic(t)
+
+	lp, charger, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
+	lp.clock.(*clock.Mock).Add(time.Hour)
+	lp.vehicleSoc = 50
+	lp.limitSoc = 40
+
+	// plan far enough away not to be deadline critical
+	now := lp.clock.Now()
+	lp.planLocked = PlanLock{Time: now.Add(24 * time.Hour), Soc: 100, Id: 1}
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 3680, Grid: 1000})
+	lp.setOptimizerPlan(optimizerPlan{
+		rates:  api.Rates{{Start: now, End: now.Add(15 * time.Minute)}},
+		energy: []float64{920},
+	})
+
+	charger.EXPECT().MaxCurrent(int64(maxA))
+	lp.Update(2000, 0, nil, nil, false, false, 0, nil, nil, nil)
+
+	assert.True(t, lp.planActive)
+	assert.True(t, lp.planSlotEnd.IsZero())
+
+	ctrl.Finish()
 }
