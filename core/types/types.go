@@ -19,6 +19,8 @@ type Measurement struct {
 	ExcessDCPower float64     `json:"excessdcpower,omitempty"`
 	Capacity      *float64    `json:"capacity,omitempty"`
 	Soc           *float64    `json:"soc,omitempty"`
+	MinSoc        *float64    `json:"-"` // battery soc limits, read once per cycle
+	MaxSoc        *float64    `json:"-"`
 	Controllable  *bool       `json:"controllable,omitempty"`
 	Modes         []string    `json:"modes,omitempty"`
 	Suggestion    *Suggestion `json:"suggestion,omitempty"`
