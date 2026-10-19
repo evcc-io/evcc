@@ -186,9 +186,9 @@ render: |
       clientid: {{ .clientid }}
       redirecturi: {{ .redirecturi }}
       gateway_serial: {{ .gateway_serial }}
-    jq: 'any(.data[]; .feature == "heating.dhw.oneTimeCharge" and .properties.active.value == true) | if . then 3 else 2 end'
+    jq: '[.data[] | select(.feature == "heating.dhw.oneTimeCharge") | .properties.active.value | booleans] | if length == 0 then error("heating.dhw.oneTimeCharge not supported by device") elif .[0] then 3 else 2 end'
+    # false -> oneTimeCharge is disabled -> normal mode -> 2
     # true -> oneTimeCharge is enabled -> boost mode -> 3
-    # false or missing -> normal mode -> 2
     # some devices (e.g. Vitocal 150-A) report the feature with isEnabled: false and no properties
   setmode:
     source: watchdog
