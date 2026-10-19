@@ -69,8 +69,6 @@ func automaticLoadpoint(t *testing.T, ac api.AlwaysCharge, automatic bool) (*Loa
 	ctrl := gomock.NewController(t)
 	charger := api.NewMockCharger(ctrl)
 
-	Voltage = 230
-
 	lp := &Loadpoint{
 		log:          util.NewLogger("foo"),
 		bus:          evbus.New(),
@@ -289,7 +287,6 @@ func TestOptimizerPrioritySoc(t *testing.T) {
 // it does not yield to a higher priority loadpoint, so its power is not flexible
 func TestOptimizerFlexibility(t *testing.T) {
 	enableAutomatic(t)
-	Voltage = 230
 
 	for _, tc := range []struct {
 		s    types.Suggestion
@@ -450,8 +447,6 @@ func TestOptimizerPhaseScaleUp(t *testing.T) {
 			clck := clock.NewMock()
 			clck.Add(time.Hour)
 
-			Voltage = 230
-
 			lp := NewLoadpoint(util.NewLogger("foo"), nil)
 			lp.clock = clck
 			lp.minCurrent = minA
@@ -549,8 +544,6 @@ func TestOptimizerPlanClipsAtPlanTime(t *testing.T) {
 func TestOptimizerPlanActive(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	clck := clock.NewMock()
-
-	Voltage = 230
 
 	lp := &Loadpoint{
 		log:        util.NewLogger("foo"),

@@ -209,6 +209,10 @@ export interface State {
   grid?: Meter;
   /** A grid meter is configured. */
   gridConfigured?: boolean;
+  /** Grid connection, with or without neutral conductor. */
+  gridConnection?: GRID_CONNECTION;
+  /** Nominal grid voltage in V, line-to-line without neutral. */
+  voltage?: number;
   /** Solar meters. One entry per configured meter. */
   pv?: Meter[];
   /** Total solar power in W. Sum of all solar meters. */
@@ -832,6 +836,12 @@ export enum THEME {
   AUTO = "auto",
   LIGHT = "light",
   DARK = "dark",
+}
+
+/** Grid connection, with or without neutral conductor. */
+export enum GRID_CONNECTION {
+  THREE_PHASE_FOUR_WIRE = "3p4w",
+  THREE_PHASE_THREE_WIRE = "3p3w",
 }
 
 /** Currency in ISO 4217 format. */
