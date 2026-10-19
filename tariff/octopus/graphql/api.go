@@ -14,7 +14,7 @@ import (
 )
 
 // BaseURI is Octopus Energy's core API root.
-const BaseURI = "https://api.octopus.energy"
+const BaseURI = "https://api.oegb-kraken.energy"
 
 // URI is the GraphQL query endpoint for Octopus Energy.
 const URI = BaseURI + "/v1/graphql/"

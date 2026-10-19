@@ -499,7 +499,6 @@
         "charging": "Polnilnica",
         "heating": "Grelec"
       },
-      "chargingTitle": "Vedenje",
       "circuitHelp": "Dodelitev upravljanja obremenitve, da se zagotovi, da omejitve moči in toka niso presežene.",
       "circuitInvalid": "Vezje ne obstaja",
       "circuitLabel": "Krog",
@@ -561,24 +560,16 @@
       "priorityHelp": "Višja prioriteta ima prednostni dostop do presežka sončne energije.",
       "priorityLabel": "Prioriteta",
       "save": "Shrani",
-      "solarBehaviorCustomHelp": "Določite lastne pragove za omogočanje in onemogočanje ter zakasnitve.",
-      "solarBehaviorDefaultHelp": "Začni po {enableDelay} zadostnega presežka. Ustavi, ko presežek ni dovolj za {disableDelay}.",
-      "solarBehaviorLabel": "Sončna energija",
-      "solarModeCustom": "po meri",
-      "solarModeMaximum": "maksimalno sončno polnjenje",
-      "solarShareNote": "Drsnik za sončni delež v uporabniških nastavitvah je onemogočen, dokler so nastavljeni pragovi v vatih. {0} in shranite, da ga omogočite.",
       "solarShareReset": "Odstranite pragove",
       "temperatureRangeHelp": "Območje prikaza za temperaturno vrstico. Ne vpliva na krmiljenje.",
       "temperatureRangeTitle": "Temperaturno območje",
       "thresholdDisableDelayLabel": "Onemogoči zakasnitev",
       "thresholdDisableHelpInvalid": "Prosimo, uporabite pozitivno vrednost.",
       "thresholdDisableHelpPositive": "Ustavi se, ko se iz omrežja porabi več kot {power} za {delay}.",
-      "thresholdDisableHelpZero": "Ustavi se, ko minimalne zahtevane moči ni mogoče doseči za {delay}.",
       "thresholdDisableLabel": "Onemogoči napajanje iz omrežja",
       "thresholdEnableDelayLabel": "Omogoči zakasnitev",
       "thresholdEnableHelpInvalid": "Prosimo, uporabite negativno vrednost.",
       "thresholdEnableHelpNegative": "Začni, ko je {surplus} presežek na voljo za {delay}.",
-      "thresholdEnableHelpZero": "Začnite, ko je minimalna zahtevana moč dosežena za {delay}.",
       "thresholdEnableLabel": "Omogoči polnjenje iz omrežja",
       "titleAdd": {
         "charging": "Dodaj polnilno mesto",
@@ -831,6 +822,7 @@
         },
         "label": "Ukazi nadrejenega strežnika"
       },
+      "status": "Stanje",
       "upstreamStationId": "ID postaje",
       "upstreamStationIdHelp": "Identifikator polnilnice, poslan nadrejenemu strežniku.",
       "upstreamUrl": "URL nadrejenega strežnika",
@@ -1155,7 +1147,11 @@
       },
       "cost": "Stroški",
       "others": "Drugi",
-      "title": "Porabniki"
+      "title": "Porabniki",
+      "view": {
+        "river": "Reka",
+        "treemap": "Drevesni zemljevid"
+      }
     },
     "direction": {
       "battery": {
@@ -1519,6 +1515,7 @@
       "description": "brez prekinitev",
       "label": "Vedno polni",
       "labelHeating": "Vedno ogrevaj",
+      "minCurrent": "min. {current}",
       "once": "do konca seje",
       "onceTip": "Samo za to sejo",
       "permanent": "ostane trajno vklopljeno"

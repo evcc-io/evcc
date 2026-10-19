@@ -19,6 +19,8 @@ type Measurement struct {
 	ExcessDCPower float64     `json:"excessdcpower,omitempty"`
 	Capacity      *float64    `json:"capacity,omitempty"`
 	Soc           *float64    `json:"soc,omitempty"`
+	MinSoc        *float64    `json:"minSoc,omitempty"` // battery soc limits
+	MaxSoc        *float64    `json:"maxSoc,omitempty"`
 	Controllable  *bool       `json:"controllable,omitempty"`
 	Modes         []string    `json:"modes,omitempty"`
 	Suggestion    *Suggestion `json:"suggestion,omitempty"`
@@ -32,6 +34,7 @@ type Suggestion struct {
 	Charge    float64 `json:"charge"`    // recommended charge power, W
 	Discharge float64 `json:"discharge"` // recommended discharge power, W
 	Grid      float64 `json:"grid"`      // planned site grid flow, positive means import, W
+	Battery   float64 `json:"battery"`   // planned home battery discharge feeding the site, W
 	// Actionable indicates the suggestion differs from the current operating mode.
 	Actionable bool `json:"actionable"`
 }

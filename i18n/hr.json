@@ -495,7 +495,6 @@
         "charging": "Punjač",
         "heating": "Grijač"
       },
-      "chargingTitle": "Način rada",
       "circuitHelp": "Dodjela upravljanja opterećenjem kako bi se osiguralo da se ne prekorače ograničenja snage i struje.",
       "circuitInvalid": "Kružni tok ne postoji",
       "circuitLabel": "Strujni krug",
@@ -557,24 +556,16 @@
       "priorityHelp": "Viši prioritet ima prednost pri korištenju viškova iz solarne elektrane.",
       "priorityLabel": "Prioritet",
       "save": "Spremi",
-      "solarBehaviorCustomHelp": "Definiraj vlastite pragove isključivanja i uključivanja te odgode.",
-      "solarBehaviorDefaultHelp": "Pokreće se nakon {enableDelay} dovoljnog viška. Zaustavlja se kada nema dovoljno viška tijekom {disableDelay}.",
-      "solarBehaviorLabel": "Solarno",
-      "solarModeCustom": "prilagođeno",
-      "solarModeMaximum": "maksimum solarne energije",
-      "solarShareNote": "Klizač solarnog udjela u korisničkim postavkama onemogućen je dok su postavljeni pragovi u vatima. {0} i spremite kako biste ga omogućili.",
       "solarShareReset": "Uklonite pragove",
       "temperatureRangeHelp": "Raspon prikaza za traku temperature. Ne utječe na upravljanje.",
       "temperatureRangeTitle": "Raspon temperature",
       "thresholdDisableDelayLabel": "Onemogući odgodu",
       "thresholdDisableHelpInvalid": "Koristite pozitivnu vrijednost.",
       "thresholdDisableHelpPositive": "Zaustavi kada se više od {power} koristi iz mreže tijekom {delay}.",
-      "thresholdDisableHelpZero": "Zaustavi kada se minimalna potrebna snaga ne može osigurati tijekom {delay}.",
       "thresholdDisableLabel": "Onemogući energiju iz mreže",
       "thresholdEnableDelayLabel": "Omogući odgodu",
       "thresholdEnableHelpInvalid": "Koristi negativnu vrijednost.",
       "thresholdEnableHelpNegative": "Pokreni kada je dostupno {surplus} viška tijekom {delay}.",
-      "thresholdEnableHelpZero": "Pokreni kada se minimalna potrebna snaga može osigurati tijekom {delay}.",
       "thresholdEnableLabel": "Omogući energiju iz mreže",
       "titleAdd": {
         "charging": "Dodaj točku punjenja",
@@ -827,6 +818,7 @@
         },
         "label": "Naredbe nadređenog poslužitelja"
       },
+      "status": "Stanje",
       "upstreamStationId": "ID stanice",
       "upstreamStationIdHelp": "Identifikator punjača koji se šalje nadređenom poslužitelju.",
       "upstreamUrl": "URL nadređenog poslužitelja",
@@ -1519,6 +1511,7 @@
       "description": "bez prekida",
       "label": "Uvijek puni",
       "labelHeating": "Uvijek grij",
+      "minCurrent": "min. {current}",
       "once": "do kraja sesije",
       "onceTip": "Samo za ovu sesiju",
       "permanent": "trajno uključeno"
@@ -1943,6 +1936,7 @@
   },
   "settings": {
     "dateFormat": {
+      "auto": "Automatski",
       "dmy": "DD/MM/GGGG",
       "label": "Format datuma",
       "mdy": "MM/DD/GGGG",
