@@ -27,6 +27,17 @@ Two surfaces, sharing the same components for the three login shapes (connect li
 
 The callback of a redirect login lands back on the config page with a success or error banner and reopens the device modal that started it.
 
+## Public reachability
+
+Some vendors only accept a public https redirect uri, or fetch files from the integrating domain. evcc offers shared mechanisms for this, so a template does not need its own url handling.
+
+- **Public origin**: `network.PublicOrigin()` is the public https address of this instance. It is the remote access url if remote access is enabled, otherwise the external url if it is explicitly configured as https. Integrations derive their redirect uri and registered domain from it.
+- **Origin services**: `auth/origin` and `auth/redirecturi` return the instance url and the callback url. With `?public` they return the public origin instead, or nothing if there is none. Templates show them as readonly params for the user to copy into the vendor portal.
+- **Public routes**: `service.RegisterPublic(path, handler)` exposes an unauthenticated GET route on the root router, e.g. a `.well-known` file the vendor fetches. The remote access tunnel lets public routes and the OAuth callback through without remote credentials, since the vendor and the user's browser call them directly.
+- **Remote access requirement**: templates that need a public origin declare the `remoteaccess` requirement. The device modal then shows a hint linking to the remote access setup. It does not block saving, so a self-hosted public https external url works as well.
+- **Return to the starting page**: the UI sends the full page url as `return` when starting a login. The callback redirects there, with `callbackCompleted` or `callbackError` in the fragment query, so a user on `evcc.local` returns to `evcc.local` with their session even if the callback ran on the public domain. The return url must match the browser's referer of the login request, which proxies don't rewrite. Anything else falls back to the config page. The callback checks the state first and answers a plain 400 otherwise.
+- **Form state across the login**: entered device values are stashed in local storage before the vendor login opens (`assets/js/utils/authStash.ts`), because the callback may return in a new tab.
+
 ## Flow types
 
 |     | Flow                                | Where the user enters credentials                                                                                   | evcc reachable from the browser                                         | Prerequisites outside evcc                                                                                       | UI support |
@@ -67,7 +78,7 @@ Without device context, the card or the hamburger menu opens the provider modal,
 
 ## Known gaps
 
-- Redirect flows require the browser to reach evcc at the redirect uri. Local http works for most vendors, some require public https.
+- Redirect flows require the browser to reach evcc at the redirect uri. Local http works for most vendors. Vendors that require public https need remote access or a self-hosted https external url (see Public reachability).
 - Vendors with a browser login but a fixed redirect (custom app scheme, void url) can only be completed by pasting the code or the redirect url back into evcc. The challenge contract covers this (link plus code answer), the CLI and third-party tools do it today, no provider uses it in the UI yet.
 - Some template descriptions still document manual procedures (token tools, terminal commands) for vendors that could use one of the UI flows.
 - No cleanup of providers or tokens on device deletion or config change.

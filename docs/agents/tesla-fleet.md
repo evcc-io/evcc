@@ -1,75 +1,79 @@
-# Tesla Fleet Integration
+# Tesla Fleet
 
-The `tesla-fleet` vehicle template connects evcc directly to the official Tesla Fleet API with the user's own Tesla developer app. Onboarding happens entirely in the evcc UI, without a terminal or third-party proxy. It complements the older `tesla` template, which uses static tokens and a command proxy (e.g. MyTeslaMate).
+The `tesla-fleet` vehicle template connects evcc directly to the official Tesla Fleet API. The user brings their own Tesla developer app, and evcc acts as that app's backend. Setup, login and key pairing all happen in the evcc UI, without a terminal or a third-party service.
 
-## Modes
+The older `tesla` template uses the same Fleet API with static tokens and an external command proxy (e.g. MyTeslaMate). Both render `type: tesla` (`vehicle/tesla.go`).
 
-Both templates render `type: tesla` (`vehicle/tesla.go`). `FleetConfig.Interactive()` selects the mode:
+Generic building blocks (public origin, public routes, return to the starting page, readonly copy fields) are described in [provider-auth.md](provider-auth.md) and `templates/README.md`.
 
-| Mode        | Config                        | Tokens                      | Commands                                 |
-| ----------- | ----------------------------- | --------------------------- | ---------------------------------------- |
-| Interactive | client id + secret, no tokens | OAuth login in the UI       | signed in-process (`SignedController`)   |
-| Static      | client id + access/refresh    | from config (`NewIdentity`) | via command proxy (`Controller` + proxy) |
+## Concepts
 
-Both modes read data with the inlined Fleet API client (`vehicle/tesla/api.go`). `FleetConfig.Client()` resolves the account region via `/users/region` and returns an `*API` bound to the regional base url.
+### The instance is the app's domain
 
-## Interactive onboarding
+A Tesla developer app is bound to one https domain. The allowed origin, the redirect uri and the domain hosting the command signing key must all match. evcc uses its public origin (`network.PublicOrigin()`) for all three: the remote access url, or an https external url. The template shows the origin and redirect uri as readonly fields to copy into the Tesla portal.
 
-1. The template shows two readonly copy fields, _Allowed Origin URL_ and _Allowed Redirect URI_ (services `auth/origin?public`, `auth/redirecturi?public`). The user enters them in the Tesla developer portal and copies the client id and secret back.
-2. Login uses the generic provider auth (`plugin/auth`, see [provider-auth.md](provider-auth.md)). Auth params are the client id and secret. The redirect uri is `<origin>/providerauth/callback`.
-3. A login hook runs before the redirect. It ensures the signing key exists and registers the origin host as partner domain via `partner_accounts` in both EU and NA, since the account region is unknown before login. One successful region is enough.
-4. After login, `/users/region` picks the regional Fleet API host for data and commands.
+Because the domain is part of the app registration, changing the public origin later means updating the Tesla app and logging in again.
 
-The token request uses `audience` without a trailing slash (`FleetBaseUrl`, `FleetBaseUrlEU`).
+### Partner registration
 
-## Signing key and public path
+Before the first login, Tesla requires the app's domain to be registered as a partner. evcc does this in a login hook, right before redirecting the browser to Tesla:
 
-- One evcc instance has one P-256 key, stored in settings as `tesla.privateKey` (`vehicle/tesla/key.go`).
-- Tesla fetches the public key from `https://<origin host>/.well-known/appspecific/com.tesla.3p.public-key.pem` during partner registration. The path is registered with `service.RegisterPublic`, mounted on the root router in `server/http.go`, without authentication.
-- The remote access tunnel lets public routes and `network.CallbackPath` through without remote credentials (`server/remote/tunnel.go`), because Tesla and the user's browser reach them directly.
-- Tesla binds a public key hash to one app and domain. On `Public key hash has already been taken`, evcc rotates the key and registers again once. Vehicles must then pair the new key.
-- Pairing link: readonly advanced param `virtualkey` (service `tesla/virtualkey`), `https://tesla.com/_ak/<origin host>`. Pairing is only needed for vehicle-side charge control, e.g. with a Tesla Wall Connector.
+- It ensures the signing key exists.
+- It registers the domain via `partner_accounts` with a client credentials token. Tesla fetches the public key from the domain during this call, so the domain must already be reachable.
+- The account region is unknown before login, so registration runs against both regions (EU and NA). One success is enough.
 
-## Commands
+Registration is idempotent and runs on every login.
 
-- `SignedController` (`vehicle/tesla/signed.go`) uses `teslamotors/vehicle-command`: token from `API.TokenSource()`, host from `API.Host()`. Nominal errors (already charging, etc.) are ignored.
-- Vehicles without protocol support (pre-2021 Model S/X) fall back to the REST `Controller` against the Fleet API.
-- `vehicle-command` derives the host from the token audience. The interactive login only requests the NA audience, so the host is overridden with the region host.
+### Signing key
 
-## Provider auth details
+Each evcc instance has one P-256 key, stored in the settings table. The public key is served on a public route at `/.well-known/appspecific/com.tesla.3p.public-key.pem`.
 
-- The UI sends the full page url as `return` on `providerauth/login`. The handler only accepts it on the host the login was requested from and appends `callbackCompleted`/`callbackError`. Users on `evcc.local` land back on `evcc.local` with their session.
-- The callback validates the state first and answers a plain 400 otherwise.
-- Entered form values are stashed across the external login (`assets/js/utils/authStash.ts`), because the callback may return in a new tab.
+Tesla binds a public key to one app and domain. If registration fails because the key is already taken (other app or old domain), evcc generates a new key and registers once more. Vehicles paired with the old key must pair again.
 
-## Generic template mechanisms
+### Region
 
-- `readonly: true` params: display-only copy fields fed by `service:`. They are listed in `auth.params`, never posted or persisted, and excluded from docs and required validation.
-- Requirement `remoteaccess`: shows `RemoteAccessRequired.vue`, a warning linking to the remote access modal. It does not block saving.
+After login, evcc asks the Fleet API for the account region. All data and command requests go to that regional host. Tokens are requested for the NA audience, which is valid for both regions.
 
-## Public origin
+### Commands
 
-`network.PublicOrigin()` (`server/network/service.go`) is the single source for the origin:
+The two modes differ in how commands reach the vehicle:
 
-1. Remote access url, if remote access is enabled.
-2. External url, if explicitly configured as https.
-3. Remote access url of a disabled remote access, so devices set up through it keep working.
+| Mode        | Selected by                        | Tokens                   | Commands                            |
+| ----------- | ---------------------------------- | ------------------------ | ----------------------------------- |
+| Interactive | client id + secret, no tokens      | UI login (provider auth) | signed in-process (vehicle-command) |
+| Static      | access and refresh token in config | from config              | external command proxy              |
 
-The `?public` copy fields follow steps 1 and 2 only and stay empty otherwise. `FleetConfig.Origin` overrides it for yaml configs, but the template does not expose it.
+In interactive mode, evcc signs commands itself with Tesla's `vehicle-command` library. The vehicle only accepts them once the user has added evcc's key to the car ("virtual key"). The template offers the pairing link `https://tesla.com/_ak/<domain>` as a readonly advanced field. Pairing is only needed for vehicle-side charge control, e.g. with a Tesla Wall Connector. Data access works without it.
 
-## Using without remote access
+Vehicles without command protocol support (pre-2021 Model S/X) fall back to plain REST commands.
 
-Remote access is the documented path. Users with their own public reverse proxy can use the same in-app flow:
+## Code map
 
-- **External url:** set `network.externalUrl` to the public https address, e.g. `https://evcc.example.com`. http and the internal url fallback are ignored.
-- **Valid certificate:** Tesla only accepts https with a CA-signed certificate for non-localhost origins.
-- **Public paths:** the proxy must forward these without authentication:
-  - `/.well-known/appspecific/com.tesla.3p.public-key.pem`, fetched by Tesla during partner registration
-  - `/providerauth/callback`, the browser redirect target after login
-- **Host header:** the proxy should keep the original `Host` header. Otherwise the return url check fails and the callback falls back to `/#/config`, losing the open modal.
-- **Setup via public url:** configure the device while browsing evcc on the public url, so login and callback run on the same host.
-- **Ignore the warning:** the `remoteaccess` warning still shows by design (advanced use case). It never blocks the setup.
-- **Origin change:** changing the external url later requires logging in again, and may rotate the key so vehicles must pair again.
+| Area                          | Location                                        |
+| ----------------------------- | ----------------------------------------------- |
+| Vehicle, mode selection       | `vehicle/tesla.go`                              |
+| Fleet API client, region      | `vehicle/tesla/api.go`, `fleet.go`              |
+| OAuth and login hook          | `vehicle/tesla/oauth.go`                        |
+| Partner registration          | `vehicle/tesla/partner.go`                      |
+| Signing key, public key route | `vehicle/tesla/key.go`                          |
+| Signed commands               | `vehicle/tesla/signed.go`                       |
+| Pairing link service          | `vehicle/tesla/service.go`                      |
+| Template                      | `templates/definition/vehicle/tesla-fleet.yaml` |
+
+## Self-hosting without remote access
+
+Remote access is the documented path: it provides the public https domain and forwards the public routes automatically. Users who run their own public reverse proxy can use the same in-app setup:
+
+1. Make evcc reachable at a public https domain with a certificate from a public CA, e.g. `https://evcc.example.com`. Tesla rejects plain http and self-signed certificates.
+2. Forward at least these paths to evcc without extra authentication:
+   - `/.well-known/appspecific/com.tesla.3p.public-key.pem`: Tesla fetches the public key here during login.
+   - `/providerauth/callback`: the browser returns here after the Tesla login.
+3. In evcc, open "Network" in the configuration and set "External URL" to the public address. It must start with `https://`.
+4. Add the vehicle "Tesla". The "requires Remote Access" hint can be ignored. The copy fields now show the public address. Continue with the setup steps in the template description.
+
+The setup itself can be done from any address, e.g. `http://evcc.local:7070`. After the Tesla login, the browser is sent back to the page the login started from.
+
+Changing the external url later requires updating the Tesla app and logging in again. If the key was registered for the old domain, evcc replaces it and vehicles must pair again.
 
 ## Follow-ups
 

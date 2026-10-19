@@ -121,6 +121,7 @@ products:
 **Possible Values**:
 
 - `sponsorship`: If the device requires a sponsorship token
+- `remoteaccess`: If the device needs this instance publicly reachable over https, e.g. for an OAuth callback or a file the vendor fetches. Shows a hint linking to the remote access setup, saving is not blocked
 - `eebus`: If the device is accessed via the EEBus protocol and thus requires the corresponding setup
 - `mqtt`: If the device a MQTT setup
 
@@ -222,7 +223,7 @@ Guidelines:
 
 `type` specifies the OAuth provider type. This must reference a dedicated OAuth implementation.
 
-**Available types**: `homeassistant`, `ford-connect`, `viessmann`, `cardata`, `volvo-connected`
+**Available types**: `homeassistant`, `ford-connect`, `viessmann`, `cardata`, `volvo-connected`, `tesla`
 
 ### `params`
 
@@ -353,6 +354,10 @@ auth:
 
 `advanced: true` marks a parameter as advanced. Advanced parameters are hidden by default in the UI and can be expanded by the user. Mostly used for non-required params that are meant for users with advanced needs and knowledge.
 
+### `readonly`
+
+`readonly: true` marks a display-only parameter whose value comes from its `service`, e.g. a value the user copies into another system. It is shown with a copy button, never saved in the device config and not validated as required. Templates with an `auth` block list it in `auth.params` to show it in the login step.
+
 ### `help`
 
 `help` expects language specific help texts via `generic` (language independent), `de`, `en`
@@ -362,6 +367,8 @@ auth:
 `service` specifies an API endpoint that provides dynamic data or suggestions for this parameter during configuration. When set, the UI will call this service to provide auto-completion or pre-populated options to the user.
 
 **Format**: `service-name/endpoint` or `service-name/endpoint?param1={param1}&param2={param2}`
+
+Built-in `auth/origin` and `auth/redirecturi` return the url and OAuth callback url of this instance. With `?public` they return the public https origin (remote access, or an https external url) and nothing if there is none.
 
 Parameters from other params can be referenced using `{param-name}` syntax, which will be replaced with the user's input for that parameter. `{template}` is the name of the selected template. The endpoint is only called once all referenced required parameters have a value. Referenced optional parameters, e.g. `user` or `password`, are replaced with an empty string while empty, so the service must handle missing values. The endpoint is called every time a referenced parameter value changes.
 
