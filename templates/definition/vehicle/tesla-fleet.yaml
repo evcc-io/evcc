@@ -7,19 +7,37 @@ requirements:
     de: |
       Direkte Anbindung an die offizielle Tesla Fleet API mit eigenem Developer Account.
 
-      1. Kostenlosen Developer Account auf [developer.tesla.com](https://developer.tesla.com/) erstellen und eine Anwendung anlegen.
-      2. Genehmigungstyp *Autorisierungscode und Maschine-zu-Maschine* wählen. Die beiden URLs unten als *Zulässige Herkunfts-URL* und *Zulässige Weiterleitungs-URI* eintragen.
-      3. Berechtigungen *Profilinformationen*, *Fahrzeugdaten*, *Fahrzeugstandort*, *Fahrzeugbefehle* und *Fahrzeug-Ladeverwaltung* auswählen.
-      4. Rechnungsinfos überspringen.
-      5. *Einzelheiten ansehen* der Anwendung öffnen und *Kunden-ID* und *Kundengeheimnis* in die Felder unten kopieren.
+      1. Kostenlosen Developer Account auf [developer.tesla.com](https://developer.tesla.com/) erstellen und eine Fleet API Anwendung anlegen.
+      2. "Zulassung" und "Anwendungsdetails": Name, Beschreibung und Zweck frei wählen.
+      3. "Kundendetails": Genehmigungstyp "Autorisierungscode und Maschine-zu-Maschine" wählen. Herkunfts- und Weiterleitungs-URL von unten übernehmen, Rücksende-URL leer lassen.
+      4. "API & Arbeitsumfänge": die unten aufgeführten Berechtigungen auswählen.
+      5. "Rechnungsdetails": überspringen und absenden.
+      6. "Einzelheiten ansehen" der Anwendung öffnen und "Kunden-ID" und "Kundengeheimnis" in die Felder unten kopieren.
+
+      Berechtigungen:
+
+      - Profilinformationen
+      - Fahrzeugdaten
+      - Fahrzeugstandort
+      - Fahrzeugbefehle
+      - Fahrzeug-Ladeverwaltung
     en: |
       Direct connection to the official Tesla Fleet API with your own developer account.
 
-      1. Create a free developer account at [developer.tesla.com](https://developer.tesla.com/) and add an application.
-      2. Select grant type *Authorization Code and Machine-to-Machine*. Enter the two URLs below as *Allowed Origin URL* and *Allowed Redirect URI*.
-      3. Select the scopes *Profile Information*, *Vehicle Information*, *Vehicle Location*, *Vehicle Commands* and *Vehicle Charging Management*.
-      4. Skip billing info.
-      5. Open *View details* of the application and copy *Client ID* and *Client Secret* into the fields below.
+      1. Create a free developer account at [developer.tesla.com](https://developer.tesla.com/) and create a Fleet API application.
+      2. "Registration" and "Application Details": choose any name, description and purpose.
+      3. "Client Details": select OAuth grant type "Authorization Code and Machine-to-Machine". Copy origin and redirect URL from below, leave returned URL empty.
+      4. "API & Scopes": select the scopes listed below.
+      5. "Billing Details": click "Skip and Submit".
+      6. Open the application, tab "Credentials & APIs", and copy "Client ID" and "Client Secret" into the fields below.
+
+      Scopes:
+
+      - Profile Information
+      - Vehicle Information
+      - Vehicle Location
+      - Vehicle Commands
+      - Vehicle Charging Management
 params:
   - preset: vehicle-common
   - preset: vehicle-online
