@@ -29,13 +29,13 @@ params:
     description:
       de: Zulässige Herkunfts-URL
       en: Allowed Origin URL
-    service: auth/origin?remote
+    service: auth/origin?public
   - name: redirecturi
     readonly: true
     description:
       de: Zulässige Weiterleitungs-URI
       en: Allowed Redirect URI
-    service: auth/redirecturi?remote
+    service: auth/redirecturi?public
   - name: clientid
     help:
       de: Kunden-ID der Anwendung auf [developer.tesla.com](https://developer.tesla.com/dashboard).
@@ -44,14 +44,6 @@ params:
     help:
       de: Kundengeheimnis der Anwendung auf [developer.tesla.com](https://developer.tesla.com/dashboard).
       en: Client Secret of the application at [developer.tesla.com](https://developer.tesla.com/dashboard).
-  - name: origin
-    advanced: true
-    description:
-      generic: Origin URL
-    help:
-      de: Eigene öffentliche https-Adresse dieser evcc-Instanz statt der Remotezugriff-Adresse. Eine Änderung erfordert eine erneute Anmeldung.
-      en: Own public https address of this evcc instance instead of the Remote Access address. Changing it requires logging in again.
-    example: https://evcc.example.com
   - name: vin
   - name: cache
     default: 15m
@@ -67,10 +59,9 @@ params:
     service: tesla/virtualkey
 auth:
   type: tesla
-  params: [allowedorigin, redirecturi, clientid, clientsecret, origin]
+  params: [allowedorigin, redirecturi, clientid, clientsecret]
 render: |
   type: tesla
-  origin: {{ .origin }}
   credentials:
     id: {{ .clientid }}
     secret: {{ .clientsecret }}

@@ -17,7 +17,7 @@ import (
 type FleetConfig struct {
 	Credentials oauth.ClientCredentials
 	Tokens      oauth.Tokens
-	Origin      string // public https address, defaults to the remote access url
+	Origin      string // public https address, defaults to network.PublicOrigin
 }
 
 // Interactive returns true when tokens are obtained via UI login instead of static config

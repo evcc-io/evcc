@@ -12,7 +12,10 @@ import (
 )
 
 func TestOriginHandlerPublic(t *testing.T) {
-	t.Cleanup(func() { settings.SetString(keys.Remote, "") })
+	t.Cleanup(func() {
+		settings.SetString(keys.Remote, "")
+		config.ExternalUrl = ""
+	})
 
 	get := func(url string) string {
 		rec := httptest.NewRecorder()
@@ -20,13 +23,25 @@ func TestOriginHandlerPublic(t *testing.T) {
 		return rec.Body.String()
 	}
 
-	assert.JSONEq(t, `[]`, get("/origin?remote"), "disabled remote access yields no remote origin")
+	assert.JSONEq(t, `[]`, get("/origin?public"), "disabled remote access yields no remote origin")
 
 	require.NoError(t, settings.SetJson(keys.Remote, map[string]any{"enabled": true, "url": "https://foo.evcc.io/"}))
-	assert.JSONEq(t, `["https://foo.evcc.io/x"]`, get("/origin?remote"))
+	assert.JSONEq(t, `["https://foo.evcc.io/x"]`, get("/origin?public"))
 	assert.NotContains(t, get("/origin"), "foo.evcc.io", "local origin unaffected")
 
 	require.NoError(t, settings.SetJson(keys.Remote, map[string]any{"enabled": false, "url": "https://foo.evcc.io/"}))
-	assert.JSONEq(t, `[]`, get("/origin?remote"), "disabled remote access yields no remote origin")
-	assert.Equal(t, "https://foo.evcc.io", RemoteOrigin(), "origin survives disabling for existing devices")
+	assert.JSONEq(t, `[]`, get("/origin?public"), "disabled remote access yields no remote origin")
+	assert.Equal(t, "https://foo.evcc.io", PublicOrigin(), "origin survives disabling for existing devices")
+
+	// reverse proxy
+	config.ExternalUrl = "http://evcc.local:7070"
+	assert.JSONEq(t, `[]`, get("/origin?public"), "http external url is not public")
+
+	config.ExternalUrl = "https://evcc.example.com/"
+	assert.JSONEq(t, `["https://evcc.example.com/x"]`, get("/origin?public"))
+	assert.Equal(t, "https://evcc.example.com", PublicOrigin())
+
+	require.NoError(t, settings.SetJson(keys.Remote, map[string]any{"enabled": true, "url": "https://foo.evcc.io/"}))
+	assert.JSONEq(t, `["https://foo.evcc.io/x"]`, get("/origin?public"), "remote access wins")
+	assert.Equal(t, "https://foo.evcc.io", PublicOrigin())
 }

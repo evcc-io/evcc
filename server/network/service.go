@@ -3,6 +3,7 @@ package network
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/evcc-io/evcc/api/globalconfig"
@@ -43,21 +44,34 @@ func remoteSettings() (enabled bool, origin string) {
 	return remote.Enabled, strings.TrimRight(remote.URL, "/")
 }
 
-// RemoteOrigin returns the remote access url as public https origin of this instance.
-// The url is kept while remote access is disabled, so devices set up through it keep working.
-func RemoteOrigin() string {
-	_, origin := remoteSettings()
-	return origin
+// httpsExternalURL returns the external url if explicitly configured as https, e.g. behind a reverse proxy
+func httpsExternalURL() string {
+	if u, err := url.Parse(config.ExternalUrl); err != nil || u.Scheme != "https" || u.Host == "" {
+		return ""
+	}
+	return strings.TrimRight(config.ExternalUrl, "/")
 }
 
-// originHandler serves f(origin). With ?remote the origin is the remote access url, none while disabled.
+// PublicOrigin returns the public https origin of this instance: the remote access url, else an https external url.
+// The remote access url is kept while remote access is disabled, so devices set up through it keep working.
+func PublicOrigin() string {
+	enabled, remote := remoteSettings()
+	if enabled {
+		return remote
+	}
+	if origin := httpsExternalURL(); origin != "" {
+		return origin
+	}
+	return remote
+}
+
+// originHandler serves f(origin). With ?public the origin is the public origin for new setups, none if unavailable.
 func originHandler(f func(origin string) string) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		origin := config.ExternalURL()
-		if req.URL.Query().Has("remote") {
-			enabled, remote := remoteSettings()
-			origin = ""
-			if enabled {
+		if req.URL.Query().Has("public") {
+			origin = httpsExternalURL()
+			if enabled, remote := remoteSettings(); enabled {
 				origin = remote
 			}
 		}

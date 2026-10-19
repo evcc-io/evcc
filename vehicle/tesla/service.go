@@ -14,7 +14,7 @@ func init() {
 	// virtual key link the user opens on the phone, derived from the domain registered with tesla
 	mux.HandleFunc("GET /virtualkey", func(w http.ResponseWriter, req *http.Request) {
 		res := []string{}
-		if host, err := originHost(network.RemoteOrigin()); err == nil {
+		if host, err := originHost(network.PublicOrigin()); err == nil {
 			res = append(res, "https://tesla.com/_ak/"+host)
 		}
 		_ = json.NewEncoder(w).Encode(res)

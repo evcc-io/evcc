@@ -15,7 +15,7 @@ import (
 func init() {
 	auth.Register("tesla", func(other map[string]any) (oauth2.TokenSource, error) {
 		var cc struct {
-			ClientID, ClientSecret, Origin string
+			ClientID, ClientSecret string
 		}
 
 		if err := util.DecodeOther(other, &cc); err != nil {
@@ -25,7 +25,7 @@ func init() {
 		log := util.NewLogger("tesla").Redact(cc.ClientID, cc.ClientSecret)
 		ctx := util.WithLogger(context.Background(), log)
 
-		return NewOAuth(ctx, cc.ClientID, cc.ClientSecret, cc.Origin)
+		return NewOAuth(ctx, cc.ClientID, cc.ClientSecret, "")
 	})
 }
 
@@ -59,13 +59,13 @@ func OAuthConfig(clientID, clientSecret, origin string) *oauth2.Config {
 }
 
 // NewOAuth creates the Fleet API token source. Login registers the origin host with Tesla first.
-// An empty origin defaults to the remote access url.
+// An empty origin defaults to the public origin of this instance.
 func NewOAuth(ctx context.Context, clientID, clientSecret, origin string) (oauth2.TokenSource, error) {
 	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("tesla"))
 
 	if origin == "" {
-		if origin = network.RemoteOrigin(); origin == "" {
-			return nil, errors.New("missing origin, enable remote access or configure a public https address")
+		if origin = network.PublicOrigin(); origin == "" {
+			return nil, errors.New("missing origin, enable remote access or set an https external url")
 		}
 	}
 
