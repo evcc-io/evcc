@@ -186,9 +186,10 @@ render: |
       clientid: {{ .clientid }}
       redirecturi: {{ .redirecturi }}
       gateway_serial: {{ .gateway_serial }}
-    jq: '.data[] | select(.feature == "heating.dhw.oneTimeCharge") | .properties.active.value | if . == false then 2 elif . == true then 3 else . end'
+    jq: '[.data[] | select(.feature == "heating.dhw.oneTimeCharge")][0].properties.active.value | if . == false then 2 elif . == true then 3 else error("one-time hot water charge (heating.dhw.oneTimeCharge) is not available on this device") end'
     # false -> oneTimeCharge is disabled -> normal mode -> 2
     # true -> oneTimeCharge is enabled -> boost mode -> 3
+    # missing or not enabled (e.g. heat pump without hot water) -> error
   setmode:
     source: watchdog
     timeout: 60m # re-write at timeout/2
