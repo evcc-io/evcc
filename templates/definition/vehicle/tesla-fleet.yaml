@@ -1,6 +1,8 @@
 template: tesla-fleet
 products:
   - brand: Tesla
+    description:
+      generic: Fleet API
 requirements:
   evcc: ["skiptest", "remoteaccess"]
   description:
