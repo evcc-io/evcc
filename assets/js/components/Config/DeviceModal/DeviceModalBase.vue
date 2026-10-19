@@ -65,7 +65,7 @@
 				<div v-else>
 					<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 					<SponsorTokenRequired v-if="sponsorTokenRequired" />
-					<RemoteAccessRequired v-if="remoteAccessRequired" @navigate="stashValues" />
+					<RemoteAccessRequired v-if="remoteAccessRequired" />
 					<slot name="template-description">
 						<Markdown
 							v-if="description && (authRequired || !template?.Auth)"
@@ -616,6 +616,8 @@ export default defineComponent({
 				if (this.coveredByNested) {
 					// was just hidden by a nested modal, it wasn't actually reopened
 					this.coveredByNested = false;
+					// the nested modal may have changed service results, e.g. enabled remote access
+					this.updateServiceValues();
 					return;
 				}
 				this.templateName =

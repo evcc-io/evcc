@@ -13,10 +13,8 @@ import { openModal } from "@/configModal";
 
 export default defineComponent({
 	name: "RemoteAccessRequired",
-	emits: ["navigate"],
 	methods: {
 		open() {
-			this.$emit("navigate");
 			openModal("remote");
 		},
 	},
