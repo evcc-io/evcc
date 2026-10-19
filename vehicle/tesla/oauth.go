@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/server/network"
@@ -48,6 +49,8 @@ func OAuthConfig(clientID, clientSecret, origin string) *oauth2.Config {
 	}
 }
 
+var registerMu sync.Mutex
+
 // NewOAuth creates the Fleet API token source for the public url of this instance. Login registers its host with Tesla first.
 func NewOAuth(ctx context.Context, clientID, clientSecret string) (oauth2.TokenSource, error) {
 	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("tesla"))
@@ -62,6 +65,10 @@ func NewOAuth(ctx context.Context, clientID, clientSecret string) (oauth2.TokenS
 		// region is resolved from the account after login
 		auth.WithExchangeOptions(oauth2.SetAuthURLParam("audience", FleetBaseUrl)),
 		auth.WithLoginHook(func(ctx context.Context) error {
+			// concurrent logins must not replace the key tesla is fetching
+			registerMu.Lock()
+			defer registerMu.Unlock()
+
 			if _, err := ensurePrivateKey(); err != nil {
 				return err
 			}

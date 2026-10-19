@@ -111,7 +111,6 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		a.challengeResponse(w, id, challenge, err)
 		return
 	}
-	defer a.mu.Unlock()
 
 	// Generate a new state and store the provider
 	state := NewState()
@@ -124,7 +123,9 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		defer a.mu.Unlock()
 		delete(a.states, encryptedState)
 	})
+	a.mu.Unlock()
 
+	// outside the lock: login may do network i/o
 	uri, da, err := provider.Login(encryptedState)
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err.Error())
