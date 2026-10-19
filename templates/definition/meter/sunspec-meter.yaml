@@ -88,24 +88,18 @@ render: |
       value:
         - 203:PhVphA
         - 213:PhVphA
-        - 204:PhVphA
-        - 214:PhVphA
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
         - 203:PhVphB
         - 213:PhVphB
-        - 204:PhVphB
-        - 214:PhVphB
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
         - 203:PhVphC
         - 213:PhVphC
-        - 204:PhVphC
-        - 214:PhVphC
       nan: true
   powers:
     - source: sunspec
