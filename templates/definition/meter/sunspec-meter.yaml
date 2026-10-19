@@ -107,24 +107,18 @@ render: |
       value:
         - 203:WphA
         - 213:WphA
-        - 204:WphA
-        - 214:WphA
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
         - 203:WphB
         - 213:WphB
-        - 204:WphB
-        - 214:WphB
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
         - 203:WphC
         - 213:WphC
-        - 204:WphC
-        - 214:WphC
       nan: true
   {{- end }}
   {{- if eq .usage "pv" }}
