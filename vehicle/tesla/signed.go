@@ -44,7 +44,16 @@ func NewSignedController(fleet *API, key protocol.ECDHPrivateKey, vin string) (*
 	}, nil
 }
 
-func (v *SignedController) exec(fn func(context.Context, *vehicle.Vehicle) error) error {
+// exec runs fn signed, or rest if the vehicle does not support the command protocol
+func (v *SignedController) exec(fn func(context.Context, *vehicle.Vehicle) error, rest func() error) error {
+	err := v.execSigned(fn)
+	if errors.Is(err, protocol.ErrProtocolNotSupported) {
+		return rest()
+	}
+	return apiError(err)
+}
+
+func (v *SignedController) execSigned(fn func(context.Context, *vehicle.Vehicle) error) error {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
@@ -91,15 +100,9 @@ var _ Commander = (*SignedController)(nil)
 
 // MaxCurrent implements the api.CurrentController interface
 func (v *SignedController) MaxCurrent(current int64) error {
-	err := v.exec(func(ctx context.Context, car *vehicle.Vehicle) error {
+	return v.exec(func(ctx context.Context, car *vehicle.Vehicle) error {
 		return car.SetChargingAmps(ctx, int32(current))
-	})
-
-	if errors.Is(err, protocol.ErrProtocolNotSupported) {
-		return v.rest.MaxCurrent(current)
-	}
-
-	return apiError(err)
+	}, func() error { return v.rest.MaxCurrent(current) })
 }
 
 // ChargeEnable implements the api.ChargeController interface
@@ -109,13 +112,7 @@ func (v *SignedController) ChargeEnable(enable bool) error {
 			return car.ChargeStart(ctx)
 		}
 		return car.ChargeStop(ctx)
-	})
-
-	if errors.Is(err, protocol.ErrProtocolNotSupported) {
-		return v.rest.ChargeEnable(enable)
-	}
-
-	err = apiError(err)
+	}, func() error { return v.rest.ChargeEnable(enable) })
 
 	// ignore sleeping vehicle
 	if !enable && errors.Is(err, api.ErrAsleep) {

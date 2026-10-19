@@ -86,14 +86,6 @@ func SigningKey() (protocol.ECDHPrivateKey, error) {
 	return skey, nil
 }
 
-func publicKeyPEM(key *ecdsa.PrivateKey) ([]byte, error) {
-	der, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
-	if err != nil {
-		return nil, err
-	}
-	return pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: der}), nil
-}
-
 func publicKeyHandler(w http.ResponseWriter, r *http.Request) {
 	key, err := loadPrivateKey()
 	if err != nil {
@@ -101,12 +93,12 @@ func publicKeyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := publicKeyPEM(key)
+	der, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/x-pem-file")
-	_, _ = w.Write(b)
+	_ = pem.Encode(w, &pem.Block{Type: "PUBLIC KEY", Bytes: der})
 }
