@@ -158,7 +158,7 @@ render: |
     register:
       address: 3823
       type: input
-      encoding: uint32
+      encoding: uint16
     scale: 0.01
   {{- if .powercontrol }}
   setmaxpower:
