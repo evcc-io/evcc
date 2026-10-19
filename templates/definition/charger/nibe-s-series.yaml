@@ -9,7 +9,7 @@ requirements:
   description:
     de: |
       Modbus Verbindung zur NIBE S Wärmepumpe.
-      Firmware 4.7.5 oder neuer benötigt.
+      Firmware 4.13.12 oder neuer benötigt.
       Benötigte Einstellungen in der Steuereinheit:
       - In der Inneneinheit muss im Menü 7.5.9 Modbus aktiviert sein.
       - Zur Verwendung der Leistungssteuerung muss im Menü 7.4 unter dem Punkt AUX von Modbus ext. Leistungsbegrenzung ausgewählt sein. In den Ladepunkteinstellungen muss die minimale Leistung des Heizstabs eingestellt werden.
@@ -17,7 +17,7 @@ requirements:
       - Im Menü 4.2.3 muss die Option "SG-Ready via API aktivieren" aktiv sein.
     en: |
       Modbus connection to the NIBE S heat pump.
-      Firmware version 4.7.5 or newer is required.
+      Firmware version 4.13.12 or newer is required.
       Required settings in the control unit:
       - In the indoor unit, Modbus must be enabled in menu 7.5.9
       - To use power control, select Modbus ext. power limitation under AUX in menu 7.4. Set the minimum output of the immersion heater in the charging point settings.
