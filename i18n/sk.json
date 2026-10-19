@@ -568,8 +568,10 @@
       "priorityLabel": "Priorita",
       "save": "Uložiť",
       "solarShareReset": "Odstráňte prahové hodnoty",
+      "solarTitle": "Správanie sa solárneho prebytku",
       "temperatureRangeHelp": "Rozsah zobrazenia pre teplotu. Neovplyvňuje ovládanie.",
       "temperatureRangeTitle": "Teplotný rozsah",
+      "thresholdDisableDelayHelp": "Zastaví, keď nie je dostatok prebytku na {delay}.",
       "thresholdDisableDelayLabel": "Zakázať oneskorenie",
       "thresholdDisableHelpInvalid": "Použite pozitívnu hodnotu.",
       "thresholdDisableHelpPositive": "Zastaviť, keď sa používa viac ako {power} zo siete pre {delay}.",
@@ -636,7 +638,7 @@
           "titleDefault": "Vozidlo spí"
         },
         "connect": {
-          "messageDefault": "Vozidlo pripojené na {pvPower}kW PV",
+          "messageDefault": "Vozidlo pripojené na {pvPower}kW solár",
           "title": "Keď sa vozidlo pripojí",
           "titleDefault": "Vozidlo pripojené"
         },

@@ -205,7 +205,7 @@
       "used": "bereits verwendet"
     },
     "consumer": {
-      "description": "Erfasst kleinere, nicht steuerbare Verbraucher (Kühlschrank, Waschmaschine, ...). So bekommst du einen besseren Überblick über deinen Hausverbrauch.",
+      "description": "Erfasst kleinere, nicht steuerbare Verbraucher (Kühlschrank, Waschmaschine, ...). So bekommst du einen besseren Überblick über deinen Verbrauch.",
       "titleAdd": "Verbrauchszähler hinzufügen",
       "titleEdit": "Verbrauchszähler bearbeiten"
     },
