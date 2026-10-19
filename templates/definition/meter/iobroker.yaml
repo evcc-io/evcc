@@ -40,7 +40,7 @@ params:
         als Web Extension installiert ist.
         Sollten 404 Fehler auftreten, ändern Sie versuchsweise den Wert.
       en: |
-        Determines whether the rest adapter is installed 
+        Determines whether the REST adapter is installed 
         stand alone or as a web extension.
         Should 404 errors occur, try changing the value.
   - name: cache
