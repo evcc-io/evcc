@@ -22,7 +22,8 @@ type VehicleApi struct {
 	geofenceEnabled        bool
 	lat, lon, radius       float64
 	cacheRefreshExpectedAt time.Time
-	status                 api.ChargeStatus // last status reported by an awake vehicle
+	vehicle                api.Vehicle
+	status                 api.ChargeStatus // last status reported by the awake vehicle
 }
 
 func init() {
@@ -116,6 +117,11 @@ func (c *VehicleApi) Status() (api.ChargeStatus, error) {
 	vehicle := c.lp.GetVehicle()
 	if vehicle == nil {
 		return api.StatusA, nil // No vehicle = disconnected
+	}
+
+	// forget the status of a previous vehicle
+	if vehicle != c.vehicle {
+		c.vehicle, c.status = vehicle, api.StatusNone
 	}
 
 	// Check if vehicle is at the charger (trying to use geofencing)

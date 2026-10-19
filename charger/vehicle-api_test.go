@@ -74,7 +74,8 @@ func TestVehicleApiStatusAsleep(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	lp := loadpoint.NewMockAPI(ctrl)
 	cs := api.NewMockChargeState(ctrl)
-	lp.EXPECT().GetVehicle().Return(asleepVehicle{api.NewMockVehicle(ctrl), cs}).AnyTimes()
+	vehicle := api.Vehicle(asleepVehicle{api.NewMockVehicle(ctrl), cs})
+	lp.EXPECT().GetVehicle().DoAndReturn(func() api.Vehicle { return vehicle }).AnyTimes()
 
 	c := &VehicleApi{lp: lp}
 
@@ -103,6 +104,20 @@ func TestVehicleApiStatusAsleep(t *testing.T) {
 	require.Equal(t, api.StatusB, status)
 
 	// asleep after connected: wake vehicle
+	cs.EXPECT().Status().Return(api.StatusNone, api.ErrAsleep)
+	status, err = c.Status()
+	require.NoError(t, err)
+	require.Equal(t, api.StatusB, status)
+
+	// awake and disconnected
+	cs.EXPECT().Status().Return(api.StatusA, nil)
+	status, err = c.Status()
+	require.NoError(t, err)
+	require.Equal(t, api.StatusA, status)
+
+	// other vehicle asleep: don't inherit disconnected status, wake vehicle
+	cs = api.NewMockChargeState(ctrl)
+	vehicle = asleepVehicle{api.NewMockVehicle(ctrl), cs}
 	cs.EXPECT().Status().Return(api.StatusNone, api.ErrAsleep)
 	status, err = c.Status()
 	require.NoError(t, err)
