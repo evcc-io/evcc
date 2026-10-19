@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
@@ -181,14 +182,9 @@ func batteryControllerMock(ctrl *gomock.Controller) *api.MockBatteryController {
 	return batCon
 }
 
-// battery meter with soc, controller and soc limits
-func batteryControlMock(ctrl *gomock.Controller, soc, maxSoc float64) (api.Meter, *api.MockBatteryController) {
-	batSoc := api.NewMockBattery(ctrl)
-	batSoc.EXPECT().Soc().Return(soc, nil).AnyTimes()
-
-	batSocLimit := api.NewMockBatterySocLimiter(ctrl)
-	batSocLimit.EXPECT().GetSocLimits().Return(0.0, maxSoc).AnyTimes()
-
+// battery meter with soc, controller and soc limits capabilities. Soc and limits
+// are not read from the device, they come from the measurement.
+func batteryControlMock(ctrl *gomock.Controller) (api.Meter, *api.MockBatteryController) {
 	batCon := batteryControllerMock(ctrl)
 
 	return &struct {
@@ -197,10 +193,56 @@ func batteryControlMock(ctrl *gomock.Controller, soc, maxSoc float64) (api.Meter
 		api.BatteryController
 		api.BatterySocLimiter
 	}{
+		Battery:           api.NewMockBattery(ctrl),
+		BatteryController: batCon,
+		BatterySocLimiter: api.NewMockBatterySocLimiter(ctrl),
+	}, batCon
+}
+
+// battery measurement with soc and soc limits
+func batteryMeasurement(soc, minSoc, maxSoc float64) types.Measurement {
+	return types.Measurement{Soc: &soc, MinSoc: &minSoc, MaxSoc: &maxSoc}
+}
+
+// TestBatterySocLimitsReadOnce guards that soc and soc limits are read once per
+// cycle by updateBatteryMeters and reused when the battery mode is applied
+func TestBatterySocLimitsReadOnce(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	meter := api.NewMockMeter(ctrl)
+	meter.EXPECT().CurrentPower().Return(0.0, nil).AnyTimes()
+
+	batSoc := api.NewMockBattery(ctrl)
+	batSoc.EXPECT().Soc().Return(90.0, nil).Times(1)
+
+	batSocLimit := api.NewMockBatterySocLimiter(ctrl)
+	batSocLimit.EXPECT().GetSocLimits().Return(0.0, 80.0, nil).Times(1)
+
+	batCon := batteryControllerMock(ctrl)
+	batCon.EXPECT().SetBatteryMode(api.BatteryHold).Times(1)
+
+	var bat api.Meter = &struct {
+		api.Meter
+		api.Battery
+		api.BatteryController
+		api.BatterySocLimiter
+	}{
+		Meter:             meter,
 		Battery:           batSoc,
 		BatteryController: batCon,
 		BatterySocLimiter: batSocLimit,
-	}, batCon
+	}
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, bat)},
+		batteryMode:   api.BatteryCharge,
+	}
+
+	site.updateBatteryMeters()
+	site.updateBatteryMode(true, false, api.Rate{})
+
+	ctrl.Finish()
 }
 
 // TestBatteryHoldAppliedOnce guards that reaching max soc during grid charge switches
@@ -208,13 +250,14 @@ func batteryControlMock(ctrl *gomock.Controller, soc, maxSoc float64) (api.Meter
 func TestBatteryHoldAppliedOnce(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	bat, batCon := batteryControlMock(ctrl, 90, 80)
+	bat, batCon := batteryControlMock(ctrl)
 
 	site := &Site{
 		log:           util.NewLogger("foo"),
 		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, bat)},
 		batteryMode:   api.BatteryCharge,
 	}
+	site.battery.Devices = []types.Measurement{batteryMeasurement(90, 0, 80)}
 
 	batCon.EXPECT().SetBatteryMode(api.BatteryHold).Times(1)
 
@@ -230,8 +273,8 @@ func TestBatteryHoldAppliedOnce(t *testing.T) {
 func TestBatteryHoldNotShared(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	full, fullCon := batteryControlMock(ctrl, 90, 80)
-	empty, emptyCon := batteryControlMock(ctrl, 50, 80)
+	full, fullCon := batteryControlMock(ctrl)
+	empty, emptyCon := batteryControlMock(ctrl)
 
 	site := &Site{
 		log: util.NewLogger("foo"),
@@ -241,6 +284,7 @@ func TestBatteryHoldNotShared(t *testing.T) {
 		},
 		batteryMode: api.BatteryCharge,
 	}
+	site.battery.Devices = []types.Measurement{batteryMeasurement(90, 0, 80), batteryMeasurement(50, 0, 80)}
 
 	fullCon.EXPECT().SetBatteryMode(api.BatteryHold).Times(1)
 	emptyCon.EXPECT().SetBatteryMode(gomock.Any()).Times(0)
@@ -408,8 +452,7 @@ func TestForcedBatteryChargeLimits(t *testing.T) {
 			batteryMode:   tc.internal,
 		}
 
-		batSoc.EXPECT().Soc().Return(tc.soc, nil).Times(1)
-		batSocLimit.EXPECT().GetSocLimits().Return(0.0, limit).Times(1)
+		site.battery.Devices = []types.Measurement{batteryMeasurement(tc.soc, 0, limit)}
 
 		if tc.expected != api.BatteryUnknown {
 			batCon.EXPECT().SetBatteryMode(tc.expected).Times(1)
@@ -469,8 +512,7 @@ func TestForcedBatteryDischargeLimits(t *testing.T) {
 			batteryMode:   tc.internal,
 		}
 
-		batSoc.EXPECT().Soc().Return(tc.soc, nil).Times(1)
-		batSocLimit.EXPECT().GetSocLimits().Return(reserve, 0.0).Times(1)
+		site.battery.Devices = []types.Measurement{batteryMeasurement(tc.soc, reserve, 0)}
 
 		if tc.expected != api.BatteryUnknown {
 			batCon.EXPECT().SetBatteryMode(tc.expected).Times(1)

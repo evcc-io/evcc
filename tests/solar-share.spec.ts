@@ -46,10 +46,21 @@ test.describe("solar share", async () => {
     await newLoadpoint(page, "Carport");
     await addDemoCharger(page);
     await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
-    await lpModal.getByTestId("loadpointSolarMode-custom").click();
+    await lpModal.getByRole("button", { name: "Show advanced settings" }).click();
+    // empty value behaves like 0
+    await lpModal.getByLabel("Enable grid power").fill("");
+    await lpModal.getByLabel("Enable grid power").blur();
+    await expect(lpModal.getByText("Starts when -")).not.toBeVisible();
+    await expect(lpModal.getByText("slider is currently disabled")).not.toBeVisible();
     await lpModal.getByLabel("Enable grid power").fill("-500");
     await lpModal.getByLabel("Disable grid power").fill("300");
-    await expect(lpModal.getByText("disabled while watt thresholds are set")).toBeVisible();
+    await expect(
+      lpModal.getByText("use the Solar Share slider in the charging point settings")
+    ).toBeVisible();
+    await lpModal.getByLabel("Disable grid power").blur();
+    await expect(
+      lpModal.getByText("Solar Share slider is currently disabled because values are set here")
+    ).toBeVisible();
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
     await restart();
@@ -59,13 +70,15 @@ test.describe("solar share", async () => {
     await expect(modal.getByLabel("Solar Share")).toBeDisabled();
     await modal.getByRole("link", { name: "Edit configuration" }).click();
 
-    // remove thresholds via hint link
+    // thresholds expanded, remove them
     await expectModalVisible(lpModal);
-    await expect(lpModal.getByText("disabled while watt thresholds are set")).toBeVisible();
+    await expect(lpModal.getByLabel("Enable grid power")).toHaveValue("-500");
     await lpModal.getByRole("link", { name: "Remove thresholds" }).click();
     await expect(lpModal.getByLabel("Enable grid power")).toHaveValue("0");
     await expect(lpModal.getByLabel("Disable grid power")).toHaveValue("0");
-    await expect(lpModal.getByText("disabled while watt thresholds are set")).not.toBeVisible();
+    await expect(
+      lpModal.getByText("Solar Share slider is currently disabled because values are set here")
+    ).not.toBeVisible();
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
 

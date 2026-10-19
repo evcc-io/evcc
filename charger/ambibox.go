@@ -356,13 +356,13 @@ func (wb *Ambibox) Soc() (float64, error) {
 var _ api.BatteryCapacity = (*Ambibox)(nil)
 
 // Capacity implements the api.BatteryCapacity interface
-func (wb *Ambibox) Capacity() float64 {
+func (wb *Ambibox) Capacity() (float64, error) {
 	b, err := wb.input()
 	if err != nil {
-		return 0
+		return 0, err
 	}
 
-	return f32(b, ambiCapacity) / 1e3
+	return f32(b, ambiCapacity) / 1e3, nil
 }
 
 var _ api.Resurrector = (*Ambibox)(nil)

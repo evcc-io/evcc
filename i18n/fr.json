@@ -190,7 +190,7 @@
       "addSubCircuit": "Ajouter un sous-circuit",
       "chargingPointsNote": "Attribuer les bornes de recharge et les radiateurs à un circuit dans leurs propres paramètres.",
       "description": "Vérifiez que la somme de tous les points de charges connectés à un circuit ne dépassent pas les limites de puissance et de courant. Les circuits peuvent être combinés pour construire une hiérarchie.",
-      "legacyWarning": "Une nouvelle configuration des circuits est disponible ! Supprimez et enregistrez votre configuration ici pour utiliser la nouvelle procédure guidée.",
+      "legacyWarning": "Une nouvelle configuration des circuits est disponible !. Supprimez et enregistrez votre configuration ici pour utiliser la nouvelle procédure guidée. Un redémarrage sera nécessaire.",
       "meterDedicated": "Compteur",
       "meterGrid": "Réseau",
       "title": "Gestion de la charge",
@@ -205,7 +205,7 @@
       "used": "déjà utilisé"
     },
     "consumer": {
-      "description": "Permet de suivre la consommation des petits appareils électroménagers non contrôlables (réfrigérateur, lave-linge, etc.). Vous offre une meilleure vue d'ensemble de la consommation de votre foyer.",
+      "description": "Permet de suivre la consommation des petits appareils électroménagers non contrôlables (réfrigérateur, lave-linge, etc.). Vous offre une meilleure vue d'ensemble de votre consommation.",
       "titleAdd": "Ajouter un compteur de consommation",
       "titleEdit": "Modifier le compteur de consommation"
     },
@@ -224,7 +224,7 @@
       "title": "Devise"
     },
     "curtailer": {
-      "description": "Dispositif qui limite l'alimentation sur demande de l'opérateur de réseau (§ 9 EEG). Beaucoup d’onduleurs supportent cela directement via leur configuration de compteur solaire. Une configuration séparée n'est nécessaire que pour certains fabricants ou systèmes multi-onduleurs.",
+      "description": "Dispositif qui limite l’export sur demande de l'opérateur de réseau (§ 9 EEG). Beaucoup d’onduleurs solaires supportent cela directement via leur configuration de compteur solaire. Une configuration séparée n'est nécessaire que pour certains fabricants ou systèmes multi-onduleurs.",
       "generic": "Intégration générique",
       "specific": "Intégration spécifique",
       "template": "Fabricant",
@@ -254,9 +254,9 @@
       "currency": "Devise",
       "current": "Courant",
       "currentRange": "Courant",
-      "curtailLimit": "Limite d’entrée",
+      "curtailLimit": "Limite d’export",
       "curtailable": "Suspendable",
-      "curtailed": "Limitation de l'injection",
+      "curtailed": "Limitation d’export vers le réseau",
       "detected": "Détecté",
       "dimLimit": "Limite de consommation",
       "dimmed": "Consommation limitée",
@@ -264,9 +264,9 @@
       "energy": "Énergie",
       "events": "Evénements",
       "exportLimit": "Limite d'exportation du réseau",
-      "feedinPrice": "Prix de vente",
+      "feedinPrice": "Prix d’export vers le réseau",
       "forecast": "Prévisions",
-      "gridPrice": "Prix du réseau",
+      "gridPrice": "Prix d’import du réseau",
       "heaterTempLimit": "Limite du chauffage",
       "identifier": "Identifiant RFID",
       "loginBlocked": "Limit de login atteinte",
@@ -275,7 +275,7 @@
       "maxPower": "Puissance maximale",
       "messengers": "Services",
       "no": "non",
-      "odometer": "Compteur kilométrique",
+      "odometer": "Kilométrage",
       "org": "Organisation",
       "outdoorTemp": "Température extérieure",
       "phaseCurrents": "Courant",
@@ -321,7 +321,7 @@
           "energy": "Produit"
         }
       },
-      "vehicleLimitSoc": "Limite de charge",
+      "vehicleLimitSoc": "Limite du véhicule",
       "yes": "oui"
     },
     "deviceValueChargeStatus": {
@@ -330,8 +330,8 @@
       "C": "C (en charge)"
     },
     "devices": {
-      "auxMeter": "Consommateur intelligent",
-      "batteryStorage": "Stockage batterie",
+      "auxMeter": "Consommateur auto-régulé",
+      "batteryStorage": "Batterie domestique",
       "consumer": "Consommateur",
       "solarSystem": "Système photovoltaïque"
     },
@@ -345,26 +345,26 @@
         "title": "Certificats"
       },
       "configuredDevices": "Appareils configurés",
-      "description": "Configuration permettant à evcc de communiquer avec des appareils compatibles EEBus comme des chargeurs ou un compteur de votre opérateur réseau. Toutes les initialisations nécessaires et la génération de certificat sont faites automatiquement au premier démarrage.",
+      "description": "Configuration permettant à evcc de communiquer avec des appareils compatibles EEBUS comme des chargeurs ou un compteur de votre opérateur réseau. Toutes les initialisations nécessaires et la génération de certificat sont faites automatiquement au premier démarrage.",
       "descriptionAdvanced": "Aucun changement nécessaire. Ne faire des modifications que si vous savez ce que vous faites. Si vous changez le SHIP-id ou les certificats, vous aurez besoin d'appairer à nouveau vos appareils.",
       "interfaces": "Interfaces",
-      "interfacesHelp": "Limiter les interfaces réseaux utilisées par EEBus afin de limiter des problèmes de communication. Laissez le champ vide pour utiliser toutes les interfaces. Une entrée par ligne.",
+      "interfacesHelp": "Limiter les interfaces réseaux utilisées par EEBUS afin de limiter des problèmes de communication. Laissez le champ vide pour utiliser toutes les interfaces. Une entrée par ligne.",
       "noConfiguredDevices": "Aucun appareil configuré par SKI.",
       "noPairings": "Aucun appareil appairé.",
       "pairings": "Appareils appairés",
       "port": "Port",
       "portHelp": "Le port a utiliser.",
       "qr": "Code de couplage",
-      "qrExplain": "Scannez un autre appareil EEBus pendant l'installation pour effectuer le couplage automatiquement, sans avoir à saisir manuellement le code SKI.",
-      "removeConfirm": "Toutes les configurations EEBus seront supprimées. De nouveaux certificats et identifiants seront générés au prochain démarrage. Êtes-vous sûr ?",
+      "qrExplain": "Scannez un autre appareil EEBUS pendant l'installation pour effectuer le couplage automatiquement, sans avoir à saisir manuellement le code SKI.",
+      "removeConfirm": "Toutes les configurations EEBUS seront supprimées. De nouveaux certificats et identifiants seront générés au prochain démarrage. Êtes-vous sûr ?",
       "removePairing": "Enlever l’appairage",
       "removePairingConfirm": "Cet appareil va être déconnecté et devra être appairé à nouveau. Etes-vous sûrs ?",
       "shipid": "SHIP-ID",
-      "shipidExplain": "Identifiant permanent de l'appareil, le désignant sur le réseau EEBus.",
+      "shipidExplain": "Identifiant permanent de l'appareil, le désignant sur le réseau EEBUS.",
       "shipidHelp": "Ce SHIP-ID est lié au certificat ci-dessous.",
       "ski": "SKI",
-      "skiExplain": "Identifiant unique de sécurité pour appairer des appareils EEBus.",
-      "title": "EEBus"
+      "skiExplain": "Identifiant unique de sécurité pour appairer des appareils EEBUS.",
+      "title": "EEBUS"
     },
     "experimental": {
       "description": "Permet d'accéder en avant-première à des fonctionnalités encore en phase de test. Celles-ci peuvent être instables et susceptibles d'être modifiées ou supprimées dans les versions futures.",
@@ -455,8 +455,8 @@
       "dynamicLimits": "Limites dynamiques",
       "eventsRecorded": "Enregistrement de {count} événements liés à la limitation de la grille.",
       "exportLimit": "Limite d'exportation du réseau",
-      "exportLimitDescription": "L'optimiseur de batterie respecte cette limite afin d'éviter les pertes d'énergie solaire. Un signal de limitation actif issu d'une intégration dynamique des limites prévaut.",
-      "exportLimitHint": "Limite statique d'injection au point de raccordement au réseau.",
+      "exportLimitDescription": "L'optimiseur respecte cette limite afin d'éviter les pertes d'énergie solaire. Un signal de limitation actif issu d'une intégration dynamique des limites prévaut.",
+      "exportLimitHint": "Limite statique d’export au point de raccordement au réseau.",
       "generic": "Intégrations génériques",
       "integrations": "Intégrations",
       "lastEvent": "Le plus récent {timeAgo}.",
@@ -506,7 +506,6 @@
         "charging": "Chargeur",
         "heating": "Dispositif de chauffage"
       },
-      "chargingTitle": "Comportement",
       "circuitHelp": "Assignation de la gestion de charge afin d’assurer que les limites de puissance et de courant ne sont pas dépassées.",
       "circuitInvalid": "Le circuit n'existe pas",
       "circuitLabel": "Circuit",
@@ -568,25 +567,25 @@
       "priorityHelp": "Une priorité plus élevée permet d'obtenir un accès privilégié au surplus solaire.",
       "priorityLabel": "Priorité",
       "save": "Enregistrer",
-      "solarBehaviorCustomHelp": "Définir vos propres seuils et délais d’activation.",
-      "solarBehaviorDefaultHelp": "Démarrer après {enableDelay} de surplus suffisant. S'arrête lorsque le surplus n'est pas suffisant pour {disableDelay}.",
-      "solarBehaviorLabel": "Solaire",
-      "solarModeCustom": "personnalisé",
-      "solarModeMaximum": "mode solaire maximum",
-      "solarShareNote": "Le curseur de partage solaire dans les paramètres de l'utilisateur est désactivé alors que les seuils de watt sont définis. {0} et sauver pour le permettre.",
       "solarShareReset": "Supprimer les seuils",
+      "solarTitle": "Comportement du surplus solaire",
       "temperatureRangeHelp": "Plage d'affichage de la barre de température. N'a aucune incidence sur le contrôle.",
       "temperatureRangeTitle": "Plage de températures",
+      "thresholdDisableDelayHelp": "Arrête quand il n'y a pas assez de surplus pendant {delay}.",
       "thresholdDisableDelayLabel": "Délai de désactivation",
       "thresholdDisableHelpInvalid": "Veuillez entrer une valeur positive.",
-      "thresholdDisableHelpPositive": "Arrêter lorsque plus de {power} est utilisé depuis le réseau depuis {delay}.",
-      "thresholdDisableHelpZero": "Arrêter lorsque la puissance minimale requise ne peut être assurée pendant {delay}.",
+      "thresholdDisableHelpPositive": "Arrête lorsque plus de {power} est utilisé depuis le réseau depuis {delay}.",
       "thresholdDisableLabel": "Seuil de désactivation (W)",
+      "thresholdEnableDelayHelp": "Commence quand il y a assez de surplus pendant {delay}.",
       "thresholdEnableDelayLabel": "Délai d’activation",
       "thresholdEnableHelpInvalid": "Veuillez utiliser une valeur négative.",
-      "thresholdEnableHelpNegative": "Démarrer lorsqu’un surplus de {surplus} est disponible depuis {delay}.",
-      "thresholdEnableHelpZero": "Démarrer lorsque la puissance minimale requise peut être assurée pendant {delay}.",
+      "thresholdEnableHelpNegative": "Démarre lorsqu’un surplus de {surplus} est disponible depuis {delay}.",
       "thresholdEnableLabel": "Seuil d’activation (W)",
+      "thresholdsNote": {
+        "charging": "Pour contrôler l’import depuis le réseau lors de la recharge solaire, veuillez utiliser le curseur {slider} dans les réglages du point de charge sur la page {page}. Définir des valeurs ici uniquement dans des cas particuliers.",
+        "heating": "Pour contrôler l’import depuis le réseau pendant le chauffage solaire, veuillez utiliser le curseur {slider} dans les réglages de chauffe sur la page {page}. Définir des valeurs ici uniquement dans des cas particuliers."
+      },
+      "thresholdsSliderDisabled": "Le curseur {slider} est actuellement désactivé parce que les valeurs sont définies ici.",
       "titleAdd": {
         "charging": "Ajouter point de charge",
         "heating": "Ajouter chauffage",
@@ -645,7 +644,7 @@
           "titleDefault": "Véhicule en veille"
         },
         "connect": {
-          "messageDefault": "Véhicule connecté à {pvPower}kW PV",
+          "messageDefault": "Véhicule connecté à {pvPower}kW solaire",
           "title": "Quand un véhicule se connecte",
           "titleDefault": "Véhicule connecté"
         },
@@ -866,7 +865,7 @@
       },
       "controlled": "Désactivé par le contrôle automatique. L’{optimizer} décide à la place.",
       "controls": "Pilote",
-      "description": "Utilise les prévisions solaires, les prix de l'électricité et vos habitudes de consommation pour optimiser la gestion des batteries et leur recharge. Les données sont transmises au service d'optimisation evcc.",
+      "description": "Utilise les prévisions solaires, les prix de l’énergie et vos habitudes de consommation pour optimiser la gestion des batteries et leur recharge. Les données sont transmises au service d'optimisation evcc.",
       "enable": "Activer l'optimiseur",
       "info": "Pour les nouvelles installations, cela peut prendre jusqu’à 24h avant qu’evcc ne collecte suffisamment de données.",
       "linkWord": "optimiseur",
@@ -1062,7 +1061,7 @@
       },
       "generic": "Intégrations génériques",
       "grid": {
-        "description": "Prix de l'électricité pour la consommation du réseau. Pour calculer les coûts de recharge réels et optimiser le prix de la recharge des véhicules, des appareils de chauffage ou de la recharge de votre batterie domestique à partir du réseau.",
+        "description": "Prix de l’énergie pour l’import du réseau. Pour calculer les coûts de recharge réels et optimiser le prix de la recharge des véhicules, des appareils de chauffage ou de la recharge de votre batterie domestique à partir du réseau.",
         "titleAdd": "Ajouter un tarif pour l'import du réseau",
         "titleEdit": "Modifier le tarif pour l’import du réseau"
       },
@@ -1082,7 +1081,7 @@
       },
       "services": "Services",
       "solar": {
-        "description": "Prévisions de production solaire pour votre système photovoltaïque. Affichées dans l'interface, elles seront utilisées à l'avenir pour les algorithmes d'optimisation.",
+        "description": "Prévisions de production solaire pour votre installation photovoltaïque. Affichées dans l'interface, elles seront utilisées à l'avenir pour les algorithmes d'optimisation.",
         "titleAdd": "Ajouter prévisions solaires",
         "titleEdit": "Modifier les prévisions solaires"
       },
@@ -1213,7 +1212,7 @@
       "import": "Importation",
       "importPrice": "Prix d'importation",
       "price": "Prix",
-      "revenue": "Revenus de rachat",
+      "revenue": "Revenus d’export",
       "title": "Réseau"
     },
     "group": {
@@ -1248,7 +1247,7 @@
       "cost": "Coûts",
       "energy": "Énergie",
       "grid": "Réseau",
-      "hint": "Énergie solaire et énergie stockée dans les batteries valorisée au prix de rachat.",
+      "hint": "Énergie solaire et énergie stockée dans les batteries valorisée au prix d’export.",
       "price": "Prix/kWh",
       "pv": "Solaire",
       "share": "Parts",
@@ -1276,7 +1275,7 @@
       "greenEnergySub2": "depuis octobre 2022",
       "greenShare": "Part solaire",
       "greenShareSub1": "puissance fournie par",
-      "greenShareSub2": "solaire et stockage batterie",
+      "greenShareSub2": "solaire et batterie domestique",
       "power": "Puissance de charge",
       "powerSub1": "{activeClients} de {totalClients} participants",
       "powerSub2": "sont en train de charger.",
@@ -1284,7 +1283,7 @@
     },
     "savings": {
       "co2Saved": "{value} économisés",
-      "co2Title": "Emissions de CO₂",
+      "co2Title": "Émissions de CO₂",
       "configurePriceCo2": "Infos sur la configuration du prix et des données de CO₂.",
       "footerLong": "{percent} énergie solaire",
       "footerShort": "{percent} solaire",
@@ -1368,7 +1367,7 @@
     },
     "empty": {
       "co2": "Découvrez quand l'électricité du réseau dans votre région est verte. Les plans de recharge seront optimisés pour réduire les émissions et calculeront les économies de CO₂ réalisées.",
-      "price": "Configurez votre tarif d'électricité dynamique pour optimiser automatiquement vos plans de recharge et calculer vos économies.",
+      "price": "Configurez votre tarif dynamique d’énergie pour optimiser automatiquement vos plans de recharge et calculer vos économies.",
       "setup": "Définir les tarifs et les prévisions",
       "solar": "Consultez les prévisions de production solaire pour aujourd'hui et les prochains jours. Ces données serviront également, à l'avenir, à optimiser automatiquement la recharge.",
       "temperature": "Consultez la température extérieure prévue pour votre localité. Cette donnée sert à prévoir les besoins en chauffage."
@@ -1623,7 +1622,7 @@
     },
     "hemsWarning": {
       "consumption": "Consommation",
-      "feedIn": "Entrée",
+      "feedIn": "Export vers le réseau",
       "title": "Limite externe active"
     },
     "loadpoint": {
@@ -1631,7 +1630,7 @@
       "charged": "Chargé",
       "co2": "CO₂ ⌀",
       "duration": "Durée",
-      "emission": "Emission",
+      "emission": "Émissions",
       "fallbackName": "Point de chargement",
       "finished": "Heure de fin",
       "last24hEnergy": "24 dernières heures",
@@ -1686,12 +1685,12 @@
       "solar": "Surplus solaire",
       "solarShare": {
         "charging": {
-          "description": "Au moins {share} de la puissance de charge minimale doit venir du solaire.",
+          "description": "Au moins {share} de la puissance de charge minimale doit être couverte par le surplus solaire.",
           "descriptionFull": "La recharge commence dès que le surplus couvre la puissance de charge minimale.",
           "descriptionZero": "La recharge commence dès qu'un surplus est disponible."
         },
         "heating": {
-          "description": "Au moins {share} de la puissance de chauffage minimale doit venir du solaire.",
+          "description": "Au moins {share} de la puissance de chauffage minimale doit être couverte par le surplus solaire.",
           "descriptionFull": "Le chauffage commence dès que le surplus couvre la puissance minimale de chauffage.",
           "descriptionZero": "Le chauffage commence dès qu'un surplus est disponible."
         },
@@ -1864,7 +1863,7 @@
     "date": "Période",
     "delete": "Supprimer",
     "finished": "Terminé",
-    "meter": "Compteur",
+    "meter": "Index du compteur",
     "meterstart": "Début du Compteur",
     "meterstop": "Fin du Compteur",
     "odometer": "Kilométrage",
@@ -1907,7 +1906,7 @@
       "created": "Créé",
       "finished": "Terminé",
       "identifier": "Identifiant",
-      "loadpoint": "Point de charge",
+      "loadpoint": "Borne de recharge",
       "meterstart": "Début de Compteur (kWh)",
       "meterstop": "Fin de Compteur (kWh)",
       "odometer": "Kilométrage (km)",
@@ -1934,11 +1933,11 @@
       "self": "Solaire"
     },
     "groupBy": {
-      "loadpoint": "Point de charge",
+      "loadpoint": "Borne de recharge",
       "none": "Solaire",
       "vehicle": "Véhicule"
     },
-    "loadpoint": "Point de charge",
+    "loadpoint": "Borne de recharge",
     "noData": "Pas de session de charge ce mois-ci.",
     "odometer": "Kilométrage",
     "overview": "Aperçu",
