@@ -2,7 +2,8 @@ package ocpp
 
 import (
 	"errors"
-	"fmt"
+        "net"
+        "fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -203,7 +204,17 @@ func (cs *CS) listen() error {
 	cs.dispatcher.SetTimeout(Timeout)
 
 	go cs.errorHandler(cs.Errors())
-	go cs.CentralSystem.Start(port, "/{ws}")
+        ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+        if err != nil {
+            return fmt.Errorf("failed to listen: %w", err)
+        }
+        m := initSharedMux(cs.server, "/{ws}", ln.Addr().(*net.TCPAddr))
+        httpSrv := &http.Server{Handler: m}
+        go func() {
+            if err := httpSrv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
+                cs.log.ERROR.Printf("ocpp mux server error: %v", err)
+            }
+        }()
 
 	// wait for server to bind
 	tick := time.Tick(10 * time.Millisecond)

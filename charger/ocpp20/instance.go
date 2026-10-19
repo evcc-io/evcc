@@ -98,7 +98,7 @@ func Instance() *CSMS {
 		csms.SetChargingStationDisconnectedHandler(instance.ChargingStationDisconnected)
 
 		go instance.errorHandler(csms.Errors())
-		go csms.Start(ocpp.Port20(), "/{ws}")
+                ocpp.RegisterMuxServer20(server, "/{ws}")
 
 		// wait for server to start
 		for range time.Tick(10 * time.Millisecond) {
