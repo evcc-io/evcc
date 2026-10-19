@@ -18,20 +18,27 @@ type sunspecDevice struct {
 }
 
 var sunspecDevices = sunspecDeviceCache{
-	data: make(map[string][]gosunspec.Device),
+	data: make(map[string]sunspecTree),
+}
+
+// sunspecTree is a device tree, partial if the model scan was incomplete
+type sunspecTree struct {
+	devices []gosunspec.Device
+	partial bool
 }
 
 // sunspecDeviceCache is a cache for sunspec connection's device tree
 type sunspecDeviceCache struct {
-	data map[string][]gosunspec.Device
+	data map[string]sunspecTree
 }
 
-func (c *sunspecDeviceCache) Get(conn *modbus.Connection) []gosunspec.Device {
-	return c.data[conn.Addr()]
+func (c *sunspecDeviceCache) Get(conn *modbus.Connection) ([]gosunspec.Device, bool) {
+	tree := c.data[conn.Addr()]
+	return tree.devices, tree.partial
 }
 
-func (c *sunspecDeviceCache) Put(conn *modbus.Connection, devices []gosunspec.Device) {
-	c.data[conn.Addr()] = devices
+func (c *sunspecDeviceCache) Put(conn *modbus.Connection, devices []gosunspec.Device, partial bool) {
+	c.data[conn.Addr()] = sunspecTree{devices: devices, partial: partial}
 }
 
 var sunspecSubDevices = sunspecSubDeviceCache{
