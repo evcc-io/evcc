@@ -36,7 +36,7 @@ params:
       en: Rest as web extension
     help:
       de: |
-        Legt fest, ob der rest Adapter stand alone oder 
+        Legt fest, ob der REST Adapter stand alone oder 
         als Web Extension installiert ist.
         Sollten 404 Fehler auftreten, ändern Sie versuchsweise den Wert.
       en: |
