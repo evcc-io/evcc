@@ -4,15 +4,15 @@ The `tesla-fleet` vehicle template connects evcc directly to the official Tesla 
 
 The older `tesla` template uses the same Fleet API with static tokens and an external command proxy (e.g. MyTeslaMate). Both render `type: tesla` (`vehicle/tesla.go`).
 
-Generic building blocks (public origin, public routes, return to the starting page, readonly copy fields) are described in [provider-auth.md](provider-auth.md) and `templates/README.md`.
+Generic building blocks (public url, public routes, return to the starting page, readonly copy fields) are described in [provider-auth.md](provider-auth.md) and `templates/README.md`.
 
 ## Concepts
 
 ### The instance is the app's domain
 
-A Tesla developer app is bound to one https domain. The allowed origin, the redirect uri and the domain hosting the command signing key must all match. evcc uses its public origin (`network.PublicOrigin()`) for all three: the remote access url, or an https external url. The template shows the origin and redirect uri as readonly fields to copy into the Tesla portal.
+A Tesla developer app is bound to one https domain. The allowed origin, the redirect uri and the domain hosting the command signing key must all match. evcc uses its public url (`network.PublicURL()`) for all three: the remote access url, or an https external url. The template shows the origin and redirect uri as readonly fields to copy into the Tesla portal.
 
-Because the domain is part of the app registration, changing the public origin later means updating the Tesla app and logging in again.
+Because the domain is part of the app registration, changing the public url later means updating the Tesla app and logging in again.
 
 ### Partner registration
 
@@ -68,7 +68,7 @@ Remote access is the documented path: it provides the public https domain and fo
 2. Forward at least these paths to evcc without extra authentication:
    - `/.well-known/appspecific/com.tesla.3p.public-key.pem`: Tesla fetches the public key here during login.
    - `/providerauth/callback`: the browser returns here after the Tesla login.
-3. In evcc, open "Network" in the configuration and set "External URL" to the public address. It must start with `https://`.
+3. In evcc, open "Network" in the configuration and set "External URL" to the public address. It must start with `https://` and have no path, since Tesla expects the key at the domain root.
 4. Add the vehicle "Tesla". The "requires Remote Access" hint can be ignored. The copy fields now show the public address. Continue with the setup steps in the template description.
 
 The setup itself can be done from any address, e.g. `http://evcc.local:7070`. After the Tesla login, the browser is sent back to the page the login started from.

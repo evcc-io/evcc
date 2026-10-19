@@ -31,7 +31,7 @@ func TestOriginHandlerPublic(t *testing.T) {
 
 	require.NoError(t, settings.SetJson(keys.Remote, map[string]any{"enabled": false, "url": "https://foo.evcc.io/"}))
 	assert.JSONEq(t, `[]`, get("/origin?public"), "disabled remote access yields no remote origin")
-	assert.Equal(t, "https://foo.evcc.io", PublicOrigin(), "origin survives disabling for existing devices")
+	assert.Empty(t, PublicURL())
 
 	// reverse proxy
 	config.ExternalUrl = "http://evcc.local:7070"
@@ -39,9 +39,12 @@ func TestOriginHandlerPublic(t *testing.T) {
 
 	config.ExternalUrl = "https://evcc.example.com/"
 	assert.JSONEq(t, `["https://evcc.example.com/x"]`, get("/origin?public"))
-	assert.Equal(t, "https://evcc.example.com", PublicOrigin())
+	assert.Equal(t, "https://evcc.example.com", PublicURL())
+
+	config.ExternalUrl = "https://evcc.example.com/evcc"
+	assert.Empty(t, PublicURL(), "public routes must be served at the domain root")
 
 	require.NoError(t, settings.SetJson(keys.Remote, map[string]any{"enabled": true, "url": "https://foo.evcc.io/"}))
 	assert.JSONEq(t, `["https://foo.evcc.io/x"]`, get("/origin?public"), "remote access wins")
-	assert.Equal(t, "https://foo.evcc.io", PublicOrigin())
+	assert.Equal(t, "https://foo.evcc.io", PublicURL())
 }

@@ -3,8 +3,7 @@ package tesla
 import (
 	"context"
 	"errors"
-	"fmt"
-	"net/url"
+	"strings"
 
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/server/network"
@@ -25,17 +24,8 @@ func init() {
 		log := util.NewLogger("tesla").Redact(cc.ClientID, cc.ClientSecret)
 		ctx := util.WithLogger(context.Background(), log)
 
-		return NewOAuth(ctx, cc.ClientID, cc.ClientSecret, "")
+		return NewOAuth(ctx, cc.ClientID, cc.ClientSecret)
 	})
-}
-
-// originHost returns the host of the public https origin, which is the domain registered with Tesla
-func originHost(origin string) (string, error) {
-	u, err := url.Parse(origin)
-	if err != nil || u.Scheme != "https" || u.Host == "" {
-		return "", fmt.Errorf("invalid origin, expected https://host: %s", origin)
-	}
-	return u.Host, nil
 }
 
 // OAuthConfig returns the Fleet API OAuth2 config for a third-party app
@@ -58,30 +48,25 @@ func OAuthConfig(clientID, clientSecret, origin string) *oauth2.Config {
 	}
 }
 
-// NewOAuth creates the Fleet API token source. Login registers the origin host with Tesla first.
-// An empty origin defaults to the public origin of this instance.
-func NewOAuth(ctx context.Context, clientID, clientSecret, origin string) (oauth2.TokenSource, error) {
+// NewOAuth creates the Fleet API token source for the public url of this instance. Login registers its host with Tesla first.
+func NewOAuth(ctx context.Context, clientID, clientSecret string) (oauth2.TokenSource, error) {
 	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("tesla"))
 
+	origin := network.PublicURL()
 	if origin == "" {
-		if origin = network.PublicOrigin(); origin == "" {
-			return nil, errors.New("missing origin, enable remote access or set an https external url")
-		}
+		return nil, errors.New("missing public url, enable remote access or set an https external url")
 	}
+	domain := strings.TrimPrefix(origin, "https://")
 
 	return auth.NewOAuth(ctx, "Tesla", "", OAuthConfig(clientID, clientSecret, origin),
 		// region is resolved from the account after login
 		auth.WithExchangeOptions(oauth2.SetAuthURLParam("audience", FleetBaseUrl)),
 		auth.WithLoginHook(func(ctx context.Context) error {
-			domain, err := originHost(origin)
-			if err != nil {
-				return err
-			}
 			if _, err := ensurePrivateKey(); err != nil {
 				return err
 			}
 
-			err = registerPartner(ctx, log, clientID, clientSecret, domain)
+			err := registerPartner(ctx, log, clientID, clientSecret, domain)
 			if errors.Is(err, errKeyTaken) {
 				log.WARN.Printf("signing key is registered for another app or domain, replacing it, vehicles must pair again")
 				if _, err := generatePrivateKey(); err != nil {

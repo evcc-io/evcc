@@ -17,7 +17,6 @@ import (
 type FleetConfig struct {
 	Credentials oauth.ClientCredentials
 	Tokens      oauth.Tokens
-	Origin      string // public https address, defaults to network.PublicOrigin
 }
 
 // Interactive returns true when tokens are obtained via UI login instead of static config
@@ -32,11 +31,7 @@ func (c FleetConfig) Validate() error {
 	}
 
 	if c.Interactive() {
-		if c.Origin == "" {
-			return nil
-		}
-		_, err := originHost(c.Origin)
-		return err
+		return nil
 	}
 
 	if c.Tokens.Access == "" || c.Tokens.Refresh == "" {
@@ -49,7 +44,7 @@ func (c FleetConfig) Validate() error {
 func (c FleetConfig) tokenSource(log *util.Logger) (oauth2.TokenSource, error) {
 	if c.Interactive() {
 		ctx := util.WithLogger(context.Background(), log)
-		return NewOAuth(ctx, c.Credentials.ID, c.Credentials.Secret, c.Origin)
+		return NewOAuth(ctx, c.Credentials.ID, c.Credentials.Secret)
 	}
 
 	token, err := c.Tokens.Token()

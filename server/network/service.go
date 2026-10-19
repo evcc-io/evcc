@@ -33,47 +33,33 @@ func Config() globalconfig.Network {
 	return config
 }
 
-func remoteSettings() (enabled bool, origin string) {
+// httpsRoot returns scheme and host of an https url served at the domain root, else empty
+func httpsRoot(s string) string {
+	u, err := url.Parse(s)
+	if err != nil || u.Scheme != "https" || u.Host == "" || strings.Trim(u.Path, "/") != "" {
+		return ""
+	}
+	return u.Scheme + "://" + u.Host
+}
+
+// PublicURL returns the public https url of this instance (scheme and host only): the enabled remote access url, else an https external url.
+func PublicURL() string {
 	var remote struct {
 		Enabled bool   `json:"enabled"`
 		URL     string `json:"url"`
 	}
-	if err := settings.Json(keys.Remote, &remote); err != nil {
-		return false, ""
+	if err := settings.Json(keys.Remote, &remote); err == nil && remote.Enabled {
+		return httpsRoot(remote.URL)
 	}
-	return remote.Enabled, strings.TrimRight(remote.URL, "/")
+	return httpsRoot(config.ExternalUrl)
 }
 
-// httpsExternalURL returns the external url if explicitly configured as https, e.g. behind a reverse proxy
-func httpsExternalURL() string {
-	if u, err := url.Parse(config.ExternalUrl); err != nil || u.Scheme != "https" || u.Host == "" {
-		return ""
-	}
-	return strings.TrimRight(config.ExternalUrl, "/")
-}
-
-// PublicOrigin returns the public https origin of this instance: the remote access url, else an https external url.
-// The remote access url is kept while remote access is disabled, so devices set up through it keep working.
-func PublicOrigin() string {
-	enabled, remote := remoteSettings()
-	if enabled {
-		return remote
-	}
-	if origin := httpsExternalURL(); origin != "" {
-		return origin
-	}
-	return remote
-}
-
-// originHandler serves f(origin). With ?public the origin is the public origin for new setups, none if unavailable.
+// originHandler serves f(origin). With ?public the origin is the public url, none if unavailable.
 func originHandler(f func(origin string) string) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		origin := config.ExternalURL()
 		if req.URL.Query().Has("public") {
-			origin = httpsExternalURL()
-			if enabled, remote := remoteSettings(); enabled {
-				origin = remote
-			}
+			origin = PublicURL()
 		}
 
 		res := []string{}
