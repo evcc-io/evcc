@@ -4448,6 +4448,14 @@
             "description": "Battery capacity in kWh. Zero when not specified.",
             "type": "number"
           },
+          "minSoc": {
+            "description": "Minimum soc (reserve) in % as configured on the device.",
+            "type": "number"
+          },
+          "maxSoc": {
+            "description": "Maximum soc (charge limit) in % as configured on the device.",
+            "type": "number"
+          },
           "suggestion": {
             "$ref": "#/components/schemas/BatterySuggestion",
             "description": "Battery optimizer suggestion."

@@ -1033,6 +1033,18 @@ func TestPVSolarShare(t *testing.T) {
 	assert.Equal(t, 0.0, newLp(0.5, true, 0, 0).pvMaxCurrent(minPower/2+100, 0, false, false),
 		"should disable above allowed grid import")
 
+	// enable: an integrated device's own draw counts towards the surplus
+	newIntegrated := func() *Loadpoint {
+		lp := newLp(1, false, 0, 0)
+		lp.charger = &integratedDeviceCharger{}
+		lp.chargePower = minPower / 2
+		return lp
+	}
+	assert.Equal(t, minA, newIntegrated().pvMaxCurrent(-minPower/2, 0, false, false),
+		"should enable when own draw covers half the min power")
+	assert.Equal(t, 0.0, newIntegrated().pvMaxCurrent(-minPower/2+100, 0, false, false),
+		"must not enable when own draw and surplus fall short")
+
 	// configured thresholds take precedence over solar share
 	assert.Equal(t, minA, newLp(1, false, 5000, 0).pvMaxCurrent(4000, 0, false, false),
 		"enable threshold should apply despite solar share")

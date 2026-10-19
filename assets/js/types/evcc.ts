@@ -1259,6 +1259,10 @@ export interface BatteryMeter extends Meter {
   modes?: string[];
   /** Battery capacity in kWh. Zero when not specified. */
   capacity: number;
+  /** Minimum soc (reserve) in % as configured on the device. */
+  minSoc?: number;
+  /** Maximum soc (charge limit) in % as configured on the device. */
+  maxSoc?: number;
   /** Battery optimizer suggestion. */
   suggestion?: BatterySuggestion;
 }

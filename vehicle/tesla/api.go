@@ -103,6 +103,13 @@ func (v *API) EnergySiteStatus(siteId int64) (EnergySiteStatus, error) {
 	return res.Response, err
 }
 
+// EnergySiteInfo returns the energy site's configuration
+func (v *API) EnergySiteInfo(siteId int64) (EnergySiteInfo, error) {
+	var res struct{ Response EnergySiteInfo }
+	err := v.GetJSON(fmt.Sprintf("%s/energy_sites/%d/site_info", v.base, siteId), &res)
+	return res.Response, err
+}
+
 // SetBatteryReserve sets the energy site's backup reserve
 func (v *API) SetBatteryReserve(siteId int64, percent uint64) error {
 	return v.post(fmt.Sprintf("%s/energy_sites/%d/backup", v.base, siteId), map[string]uint64{"backup_reserve_percent": percent})
