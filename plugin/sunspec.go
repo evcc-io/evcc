@@ -125,7 +125,22 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		}
 	}
 
+	// none of the models present, callers may treat this as an unsupported feature
+	if !hasSunspecModel(devices[cc.SubDevice], ops) {
+		return nil, fmt.Errorf("sunspec model not found: %v: %w", cc.Value, api.ErrNotAvailable)
+	}
+
 	return nil, fmt.Errorf("sunspec model not found: %v", ops)
+}
+
+// hasSunspecModel checks if the device provides any of the operations' models
+func hasSunspecModel(device sunspec.Device, ops []modbus.SunSpecOperation) bool {
+	ids := make([]sunspec.ModelId, 0, len(ops))
+	for _, op := range ops {
+		ids = append(ids, sunspec.ModelId(op.Model))
+	}
+
+	return len(device.Collect(sunspec.OneOfSeveralModelIds(ids))) > 0
 }
 
 // recoverToError converts a panic into *err, for sunspec point access that panics on type mismatch.

@@ -176,3 +176,17 @@ func TestSunspecConcurrentSharedDevice(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+func TestSunspecHasModel(t *testing.T) {
+	slab, err := memory.NewSlabBuilder().AddModel(model704.ModelID).Build()
+	require.NoError(t, err)
+
+	arr, err := memory.Open(slab)
+	require.NoError(t, err)
+
+	devices := arr.Collect(sunspec.AllDevices)
+	require.NotEmpty(t, devices)
+
+	assert.True(t, hasSunspecModel(devices[0], []modbus.SunSpecOperation{{Model: 203}, {Model: model704.ModelID}}))
+	assert.False(t, hasSunspecModel(devices[0], []modbus.SunSpecOperation{{Model: 203}, {Model: 213}}))
+}

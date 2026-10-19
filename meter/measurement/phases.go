@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/plugin"
 )
 
@@ -49,6 +50,10 @@ func buildPhaseProviders(ctx context.Context, providers []plugin.Config) (func()
 	var phases [3]func() (float64, error)
 	for idx, prov := range providers {
 		c, err := prov.FloatGetter(ctx)
+		// device without phase measurements, e.g. single-phase SunSpec meter
+		if errors.Is(err, api.ErrNotAvailable) {
+			return nil, nil
+		}
 		if err != nil {
 			return nil, fmt.Errorf("[%d] %w", idx, err)
 		}
