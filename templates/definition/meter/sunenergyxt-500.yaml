@@ -36,6 +36,15 @@ caveats:
       en: |
         `maxacpower` and `maxdischargepower` are derived from the selected `model` when left empty.
         An explicitly configured value takes precedence and is not clamped to the model limit.
+  - description:
+      de: |
+        Sind die Solarmodule nicht am Speicher, sondern an einem separaten Wechselrichter angeschlossen (AC-gekoppelt), pausiert der Standard-Haltemodus die Nulleinspeise-Regelung und damit auch das Laden mit Überschuss.
+        Mit der Option `accoupled` bleibt die Nulleinspeise-Regelung aktiv und die maximale netzgekoppelte Ausgangsleistung (`MG`) wird auf 1 W begrenzt. Dadurch wird nicht entladen, Überschuss aber weiter geladen.
+        Dieses Verhalten wurde gemessen und ist vom Hersteller nicht dokumentiert. Setze `maxgridoutput` auf den normalen Wert, damit er in den Modi normal und charge wiederhergestellt wird.
+      en: |
+        If the solar panels are not connected to the storage but to a separate inverter (AC-coupled), the default hold mode pauses the zero feed-in regulation and with it charging from surplus.
+        With the `accoupled` option the zero feed-in regulation stays active and the maximum grid-connected output power (`MG`) is limited to 1 W. This blocks discharging while surplus is still charged.
+        This behavior was measured and is not documented by the vendor. Set `maxgridoutput` to your normal value so it is restored in the normal and charge modes.
 params:
   - name: usage
     type: choice
@@ -77,6 +86,31 @@ params:
   - name: maxchargepower
     default: 2400
   - name: maxdischargepower
+  - name: accoupled
+    type: bool
+    advanced: true
+    usages: ["battery"]
+    description:
+      de: AC-gekoppelter Speicher
+      en: AC-coupled storage
+    help:
+      de: |
+        Für Speicher ohne Solarmodule am Gerät (PV an separatem Wechselrichter). Halten sperrt nur das Entladen (`MM:1`, `MG` auf 1 W) und lädt weiter mit Überschuss. Gemessenes Verhalten, vom Hersteller nicht dokumentiert. Ohne diese Option pausiert Halten das Gerät.
+      en: |
+        For storage without solar panels on the device (PV on a separate inverter). Hold only blocks discharging (`MM:1`, `MG` set to 1 W) and keeps charging from surplus. Measured behavior, not documented by the vendor. Without this option hold pauses the device.
+  - name: maxgridoutput
+    type: int
+    advanced: true
+    usages: ["battery"]
+    description:
+      de: Maximale netzgekoppelte Ausgangsleistung (MG)
+      en: Max grid-connected output power (MG)
+    help:
+      de: |
+        Normalwert für `MG` in W. Wenn gesetzt, schreiben die Modi normal und charge ihn zurück, damit die Begrenzung nach dem Halten nicht bei 1 W bleibt. Bei Verwendung von `accoupled` setzen. Leer lassen, um `MG` nicht zu verändern.
+      en: |
+        Normal value for `MG` in W. If set, the normal and charge modes write it back so the limit does not stay at 1 W after hold. Set it when using `accoupled`. Leave empty to not touch `MG`.
+    example: 800
   - name: cache
     advanced: true
     default: 2s
@@ -120,7 +154,7 @@ render: |
           - Content-Type: application/json
         # GS must be reset explicitly: MM (zero feed-in regulation) and GS (manual
         # setpoint) are independent, so a leftover GS would keep grid charging.
-        body: '{"state":{"MM":1,"GS":0}}'
+        body: '{"state":{"MM":1,"GS":0{{ if gt (.maxgridoutput | int) 0 }},"MG":{{ .maxgridoutput | int }}{{ end }}}}'
     - case: 2 # hold
       set:
         source: http
@@ -128,7 +162,8 @@ render: |
         uri: http://{{ .host }}/write
         headers:
           - Content-Type: application/json
-        body: '{"state":{"MM":0,"GS":0}}'
+        # AC-coupled: keep zero feed-in regulation (MM:1) to charge from surplus and block discharge via MG
+        body: '{{ if .accoupled }}{"state":{"MM":1,"GS":0,"MG":1}}{{ else }}{"state":{"MM":0,"GS":0}}{{ end }}'
     - case: 3 # charges
       set:
         source: http
@@ -137,7 +172,7 @@ render: |
         headers:
           - Content-Type: application/json
         # GS < 0 means grid import / grid charging
-        body: '{"state":{"MM":0,"GS":-{{ .maxchargepower | int }}}}'
+        body: '{"state":{"MM":0,"GS":-{{ .maxchargepower | int }}{{ if gt (.maxgridoutput | int) 0 }},"MG":{{ .maxgridoutput | int }}{{ end }}}}'
   {{- include "battery-capacity" . }}
   {{- include "battery-minmaxsoc" . }}
   maxchargepower: {{ .maxchargepower | int }} # W
