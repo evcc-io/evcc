@@ -7,8 +7,8 @@ group: heating
 capabilities: ["dim"]
 requirements:
   description:
-    de: Die SG Ready Steuerung über Modbus mit einem ISG funktioniert nur im Warmwasserbetrieb sowie im Automatik-/Programmbetrieb. Im Komfortbetrieb werden die SG Ready Befehle ignoriert. Der WPM 3/3i liefert keine momentane Leistungsaufnahme über Modbus, nur Energiezähler in ganzen kWh. Ohne zusätzlichen Zähler wird die Leistung aus dem Ladestrom geschätzt.
-    en: SG Ready control via Modbus with the ISG only works in domestic hot water (DHW) mode and in automatic/programmed mode. In comfort mode, SG Ready commands are ignored. The WPM 3/3i does not provide instantaneous power consumption via Modbus, only energy counters in full kWh. Without an additional meter, power is estimated from the charge current.
+    de: Die SG Ready Steuerung über Modbus mit einem ISG funktioniert nur im Warmwasserbetrieb sowie im Automatik-/Programmbetrieb. Im Komfortbetrieb werden die SG Ready Befehle ignoriert. Der WPM 3/3i liefert keine Leistungsaufnahme über Modbus. Ohne zusätzlichen Zähler wird die Leistung aus dem Ladestrom geschätzt.
+    en: SG Ready control via Modbus with the ISG only works in domestic hot water (DHW) mode and in automatic/programmed mode. In comfort mode, SG Ready commands are ignored. The WPM 3/3i does not provide power consumption via Modbus. Without an additional meter, power is estimated from the charge current.
 #   evcc: ["sponsorship"]
 discovery:
   hostname: ["servicewelt*"]
@@ -24,7 +24,6 @@ params:
     deprecated: true
 render: |
   {{- include "stiebel-wpm-base" . }}
-  {{- include "stiebel-wpm-energy" . }}
   {{- if .power }}
   {{- include "stiebel-wpm-power" . }}
   {{- end }}
