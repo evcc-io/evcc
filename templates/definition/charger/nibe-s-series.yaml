@@ -159,7 +159,7 @@ render: |
       address: 3823
       type: input
       encoding: uint16
-    scale: 0.01
+    scale: 0.1
   {{- if .powercontrol }}
   setmaxpower:
     source: modbus
