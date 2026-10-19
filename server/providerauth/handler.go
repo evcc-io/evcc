@@ -116,7 +116,7 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	// Generate a new state and store the provider
 	state := NewState()
 	encryptedState := state.Encrypt(a.secret)
-	a.states[encryptedState] = stateEntry{id: id, returnTo: returnURL(r.URL.Query().Get("return"), r.Host)}
+	a.states[encryptedState] = stateEntry{id: id, returnTo: returnURL(r.URL.Query().Get("return"), r.Referer())}
 
 	// Schedule cleanup for stale state entries after state becomes invalid
 	time.AfterFunc(stateValidity, func() {
@@ -208,9 +208,14 @@ func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 // returnURL validates the page to return to after the callback, empty if unusable.
-// The page must live on the host the login was requested from, the callback is reachable without session.
-func returnURL(s, host string) string {
-	if u, err := url.Parse(s); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host != host {
+// The page must be the one the login was requested from, the callback is reachable without session.
+// The browser-set referer is used since proxies (e.g. dev server) may rewrite the host.
+func returnURL(s, referer string) string {
+	ref, err := url.Parse(referer)
+	if err != nil {
+		return ""
+	}
+	if u, err := url.Parse(s); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host != ref.Host || u.Scheme != ref.Scheme {
 		return ""
 	}
 	return s

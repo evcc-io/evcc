@@ -65,9 +65,14 @@ func TestCallbackRedirectsToOrigin(t *testing.T) {
 	_, err := h.register("fake", provider)
 	require.NoError(t, err)
 
-	login := func(returnTo string) string {
+	login := func(returnTo string, referer ...string) string {
+		req := httptest.NewRequest(http.MethodGet, "http://evcc.local:7070/login?id=fake&return="+url.QueryEscape(returnTo), nil)
+		req.Header.Set("Referer", "http://evcc.local:7070/")
+		if len(referer) > 0 {
+			req.Header.Set("Referer", referer[0])
+		}
 		rec := httptest.NewRecorder()
-		h.handleLogin(rec, httptest.NewRequest(http.MethodGet, "http://evcc.local:7070/login?id=fake&return="+url.QueryEscape(returnTo), nil))
+		h.handleLogin(rec, req)
 		require.Equal(t, http.StatusOK, rec.Code)
 
 		var res loginResponse
@@ -102,8 +107,13 @@ func TestCallbackRedirectsToOrigin(t *testing.T) {
 	rec = callback("state=" + state + "&code=abc")
 	assert.Equal(t, "http://evcc.local:7070/?x=1#/config?callbackCompleted=fake", rec.Header().Get("Location"))
 
+	// page behind a host-rewriting proxy, e.g. dev server
+	state = login("http://localhost:7071/#/config", "http://localhost:7071/")
+	rec = callback("state=" + state + "&code=abc")
+	assert.Equal(t, "http://localhost:7071/#/config?callbackCompleted=fake", rec.Header().Get("Location"))
+
 	// unusable return urls and foreign hosts fall back to the config page
-	for _, returnTo := range []string{"", "evcc.local", "javascript:alert(1)", "/#/config?vehicle=1", "https://evil.example/#/config", "http://evcc.local:7071/#/config"} {
+	for _, returnTo := range []string{"", "evcc.local", "javascript:alert(1)", "/#/config?vehicle=1", "https://evil.example/#/config", "http://evcc.local:7071/#/config", "https://evcc.local:7070/#/config"} {
 		state = login(returnTo)
 		rec = callback("state=" + state + "&code=abc")
 		require.Equal(t, http.StatusFound, rec.Code, returnTo)
