@@ -303,15 +303,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.empty-container {
-	min-height: calc(100dvh - var(--bottom-space));
-}
-.empty-box {
-	background-color: var(--evcc-box);
-	margin: auto;
-	border-radius: 2rem;
-	max-width: 480px;
-}
 @media (max-width: 575.98px) {
 	/* cancel the card's padding for full-bleed charts */
 	.chart-edge {

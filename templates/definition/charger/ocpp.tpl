@@ -6,6 +6,9 @@ stationid: {{ .stationid }}
 {{- if ne .connector "1" }}
 connector: {{ .connector }}
 {{- end }}
+{{- if and .chargingprofile (ne .chargingprofile "TxDefaultProfile") }}
+chargingprofile: {{ .chargingprofile }}
+{{- end }}
 {{- if .idtag }}
 idtag: {{ .idtag }}
 {{- end }}

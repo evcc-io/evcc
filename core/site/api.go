@@ -20,10 +20,16 @@ type API interface {
 	ActiveLoadpoints() iter.Seq2[int, loadpoint.API]
 	Vehicles() Vehicles
 	Optimize()
+	// Automatic returns true if the optimizer controls the home battery instead of only advising
+	Automatic() bool
+	// AutomaticLoadpoints returns true if the optimizer controls the loadpoints as well
+	AutomaticLoadpoints() bool
 
 	// Meta
 	GetTitle() string
 	SetTitle(string)
+	GetCountry() string
+	SetCountry(string)
 
 	// Config
 	GetGridMeterRef() string
@@ -80,6 +86,8 @@ type API interface {
 	SetResidualPower(float64) error
 	GetGridExportLimit() float64
 	SetGridExportLimit(float64) error
+	GetProfilePercentile() *float64
+	SetProfilePercentile(*float64) error
 
 	//
 	// tariffs and costs

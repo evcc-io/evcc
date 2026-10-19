@@ -176,7 +176,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits.Decorator()))
 
 		if capacity != 0 {
-			implement.Has(m, implement.BatteryCapacity(func() float64 { return capacity + capacity2 }))
+			implement.Has(m, implement.BatteryCapacity(func() (float64, error) { return capacity + capacity2, nil }))
 		}
 
 		batteryMode := func(mode api.BatteryMode) error {
@@ -268,6 +268,15 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MinSoc/100))
 				})
 
+			case api.BatteryDischarge:
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(batteryPowerLimits.MaxDischargePower))
+				})
+
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
+				})
+
 			default:
 				return errInvalidBatteryMode(mode)
 			}
@@ -283,7 +292,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 // getBatteryModes are the modes the batteryMode setter implements
 func (m *RCT) getBatteryModes() []api.BatteryMode {
-	return []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge}
+	return []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge, api.BatteryDischarge}
 }
 
 // CurrentPower implements the api.Meter interface

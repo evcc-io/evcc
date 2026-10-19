@@ -4,14 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
-	"net/url"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	teslaclient "github.com/evcc-io/tesla-proxy-client"
 	"golang.org/x/oauth2"
 )
 
@@ -26,14 +23,6 @@ type FleetConfig struct {
 // Interactive returns true when tokens are obtained via UI login instead of static config
 func (c FleetConfig) Interactive() bool {
 	return c.Tokens.Access == "" && c.Tokens.Refresh == "" && c.Credentials.Secret != ""
-}
-
-// FleetClient provides authenticated access to the Tesla Fleet API
-type FleetClient struct {
-	Client      *teslaclient.Client
-	HTTPClient  *http.Client
-	TokenSource oauth2.TokenSource
-	Host        string // Fleet API host of the account region
 }
 
 // Validate checks that the required Tesla Fleet API credentials are configured
@@ -72,7 +61,7 @@ func (c FleetConfig) tokenSource(log *util.Logger) (oauth2.TokenSource, error) {
 }
 
 // Client creates a Tesla Fleet API client for the configured account
-func (c FleetConfig) Client(log *util.Logger) (*FleetClient, error) {
+func (c FleetConfig) Client(log *util.Logger) (*API, error) {
 	if err := c.Validate(); err != nil {
 		return nil, err
 	}
@@ -85,21 +74,10 @@ func (c FleetConfig) Client(log *util.Logger) (*FleetClient, error) {
 	hc := request.NewClient(log)
 	hc.Transport = &oauth2.Transport{Source: identity, Base: hc.Transport}
 
-	tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(hc))
-	if err != nil {
-		return nil, fmt.Errorf("create Fleet client: %w", err)
-	}
-
-	region, err := tc.UserRegion()
-	if err != nil {
-		return nil, fmt.Errorf("get Fleet API region: %w", err)
-	}
-	tc.SetBaseUrl(region.FleetApiBaseUrl)
-
-	host, err := url.Parse(region.FleetApiBaseUrl)
+	region, err := NewAPI(hc, FleetBaseUrl).Region()
 	if err != nil {
 		return nil, fmt.Errorf("get Fleet API region: %w", err)
 	}
 
-	return &FleetClient{Client: tc, HTTPClient: hc, TokenSource: identity, Host: host.Host}, nil
+	return NewAPI(hc, region.FleetApiBaseUrl), nil
 }

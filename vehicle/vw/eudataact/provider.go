@@ -105,24 +105,6 @@ func (v *Provider) Range() (int64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	data, err := v.statusG()
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	if p := lookup(data, FieldRemainingTime); p != nil && p.Value != "65535" {
-		if v, err := strconv.ParseInt(p.Value, 0, 64); err == nil {
-			return p.Timestamp.Add(time.Duration(v) * time.Minute), nil
-		}
-	}
-
-	return time.Time{}, api.ErrNotAvailable
-}
-
 var _ api.VehicleOdometer = (*Provider)(nil)
 
 // Odometer implements the api.VehicleOdometer interface

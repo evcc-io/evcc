@@ -23,6 +23,7 @@ import (
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
@@ -59,6 +60,7 @@ const (
 
 	chargerSwitchDuration = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchDuration   = 60 * time.Second // allow out of sync and do not measure phases during this timespan
+	welcomeChargeDuration = 60 * time.Second // keep charging enabled after connect for vehicles requiring it
 
 	phaseScaleUpBuffer = 1.1 // min current headroom required before load management allows scaling up again
 
@@ -147,7 +149,7 @@ type Loadpoint struct {
 	chargedAtStartup float64 // session energy at startup
 
 	circuit        api.Circuit        // Circuit
-	chargeMeter    api.Meter          // Charger usage meter
+	chargeMeter    *chargeMeter       // Charger usage meter
 	chargeEnergy   *metrics.Collector // Charger usage collector
 	vehicle        api.Vehicle        // Currently active vehicle
 	defaultVehicle api.Vehicle        // Default vehicle (disables detection)
@@ -165,12 +167,18 @@ type Loadpoint struct {
 	planOverrunSent  bool             // notification has been sent already
 	planLocked       PlanLock         // locked plan
 
+	// optimizer
+	suggestion        *types.Suggestion // optimizer suggestion for the current slot
+	suggestionUpdated time.Time         // time the suggestion was received
+	optimizerPlan     optimizerPlan     // optimizer charging schedule
+
 	// cached state
 	status         api.ChargeStatus // Charger status
 	chargePower    float64          // Charging power
 	chargeCurrents []float64        // Phase currents
 	connectedTime  time.Time        // Time when vehicle was connected
 	connectPending bool             // connect notification deferred until vehicle detection settles
+	welcomeUntil   time.Time        // welcome charge deadline, set until surplus confirms the session
 	pvTimer        time.Time        // PV enabled/disable timer
 	phaseTimer     time.Time        // 1p3p switch timer
 	wakeUpTimer    *Timer           // Vehicle wake-up timeout
@@ -242,10 +250,11 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		if err != nil {
 			return lp, fmt.Errorf("meter: %w", err)
 		}
-		lp.chargeMeter = dev.Instance()
-		if lp.chargeMeter == nil {
+		mt := dev.Instance()
+		if mt == nil {
 			return lp, errors.New("missing charge meter instance")
 		}
+		lp.chargeMeter = newChargeMeter(mt)
 	}
 
 	// default vehicle
@@ -404,13 +413,13 @@ func (lp *Loadpoint) restoreSettings() {
 		lp.setLimitEnergy(v)
 	}
 	if v, err := lp.settings.Float(keys.SmartCostLimit); err == nil {
-		lp.SetSmartCostLimit(&v)
+		lp.setSmartCostLimit(&v)
 	}
 	if v, err := lp.settings.Float(keys.SolarShare); err == nil {
 		lp.SetSolarShare(v)
 	}
 	if v, err := lp.settings.Float(keys.SmartFeedInPriorityLimit); err == nil {
-		lp.SetSmartFeedInPriorityLimit(&v)
+		lp.setSmartFeedInPriorityLimit(&v)
 	}
 	if v, err := lp.settings.Int(keys.BatteryBoostLimit); err == nil {
 		lp.SetBatteryBoostLimit(int(v))
@@ -444,6 +453,11 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 }
 
+// RequestUpdate requests site to update this loadpoint
+func (lp *Loadpoint) RequestUpdate() {
+	lp.requestUpdate()
+}
+
 // requestUpdate requests site to update this loadpoint
 func (lp *Loadpoint) requestUpdate() {
 	select {
@@ -460,19 +474,10 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	if lp.chargeMeter == nil {
 		integrated = true
 
-		if mt, ok := api.Cap[api.Meter](charger); ok {
-			// preserve charger's capability registry and static interface
-			// implementations so that subsequent capability checks on
-			// chargeMeter (e.g. MeterEnergy, PhaseCurrents) still work for
-			// decorated chargers (https://github.com/evcc-io/evcc/issues/28915)
-			// and for chargers that statically implement these interfaces
-			// (https://github.com/evcc-io/evcc/issues/29877).
-			lp.chargeMeter = &capableMeter{Meter: mt, source: charger}
-		} else {
-			mt := new(wrapper.ChargeMeter)
+		lp.chargeMeter = newChargeMeter(charger)
+		if lp.chargeMeter.fake != nil {
 			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
-			_ = lp.bus.Subscribe(evChargeStop, func() { mt.SetPower(0) })
-			lp.chargeMeter = mt
+			_ = lp.bus.Subscribe(evChargeStop, func() { lp.chargeMeter.fake.SetPower(0) })
 		}
 	}
 
@@ -691,7 +696,9 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.triggerOptimizer()
 }
 
-// triggerOptimizer re-runs the optimizer when the loadpoint's profile changed
+// triggerOptimizer re-runs the optimizer when the loadpoint's profile changed.
+// A burst of setters, e.g. on disconnect, is coalesced by optimizerUpdateAsync's
+// TryLock- only the first call gets through while a run is in flight.
 func (lp *Loadpoint) triggerOptimizer() {
 	if lp.site != nil {
 		lp.site.Optimize()
@@ -727,7 +734,7 @@ func (lp *Loadpoint) evChargeCurrentWrappedMeterHandler(current float64) {
 	}
 
 	// handler only called if charge meter was replaced by dummy
-	lp.chargeMeter.(*wrapper.ChargeMeter).SetPower(power)
+	lp.chargeMeter.fake.SetPower(power)
 }
 
 // defaultMode executes the action
@@ -881,8 +888,9 @@ func (lp *Loadpoint) syncCharger() error {
 		}()
 	}
 
-	// #1: check charger logic, fix charger state if necessary (for chargers that start charging while being disabled)
-	if !enabled && lp.charging() && lp.phaseSwitchCompleted() {
+	// #1: check charger logic, fix charger state if necessary (for chargers that start charging while being disabled).
+	// A continuous device runs on its own schedule, so status C without evcc's enable is normal there.
+	if !enabled && lp.charging() && lp.phaseSwitchCompleted() && !lp.chargerHasFeature(api.Continuous) {
 		lp.log.WARN.Println("charger logic error: disabled but charging")
 
 		// treat as enabled when charging for further validations
@@ -996,10 +1004,19 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		currentLimit := lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), current)
 
 		activePhases := lp.ActivePhases()
-		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
-		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
+		requestedPower := currentToPower(current, activePhases)
+		powerLimit := lp.circuit.ValidatePower(lp.chargePower, requestedPower)
 
-		current = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
+		// avoid float round trip through power if the circuit does not cap
+		limited := currentLimit
+		if powerLimit < requestedPower {
+			limited = min(limited, powerToCurrent(powerLimit, activePhases))
+		}
+		limited = lp.roundedCurrent(limited)
+		if minCurrent := lp.effectiveMinCurrent(); limited < minCurrent && current >= minCurrent {
+			lp.log.DEBUG.Printf("circuit limit %.3gA below min current %.3gA", limited, minCurrent)
+		}
+		current = limited
 	}
 
 	// https://github.com/evcc-io/evcc/issues/16309
@@ -1225,13 +1242,11 @@ func statusEvents(prevStatus, status api.ChargeStatus) []string {
 }
 
 // updateChargerStatus updates charger status and detects car connected/disconnected events
-func (lp *Loadpoint) updateChargerStatus() (bool, error) {
+func (lp *Loadpoint) updateChargerStatus() error {
 	statusChanges, err := lp.getStatusChanges()
 	if err != nil || len(statusChanges) == 0 {
-		return false, err
+		return err
 	}
-
-	var welcomeCharge bool
 
 	for _, status := range statusChanges {
 		prevStatus := lp.GetStatus()
@@ -1246,7 +1261,9 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 				case evVehicleConnect:
 					// defer notification until vehicle detection settles
 					lp.connectPending = true
-					welcomeCharge = lp.needsWelcomeCharge()
+					if lp.needsWelcomeCharge() {
+						lp.welcomeUntil = lp.clock.Now().Add(welcomeChargeDuration)
+					}
 				case evVehicleDisconnect:
 					// a still-pending connect means the vehicle disconnected before
 					// its notification was confirmed; omit both connect and disconnect
@@ -1255,7 +1272,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 					} else {
 						lp.pushEvent(evVehicleDisconnect)
 					}
-					welcomeCharge = false
+					lp.welcomeUntil = time.Time{}
 				}
 			}
 		}
@@ -1264,7 +1281,12 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 	// update whenever there is a state change
 	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 
-	return welcomeCharge, nil
+	return nil
+}
+
+// welcomeActive reports a running welcome charge
+func (lp *Loadpoint) welcomeActive() bool {
+	return lp.clock.Now().Before(lp.welcomeUntil)
 }
 
 // getStatusChanges checks charger status and returns a chronological list of status changes
@@ -1428,6 +1450,13 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 	}
 
 	if lp.GetPhases() != phases {
+		// drop to min current before scaling up so the 1p current is not applied to all phases
+		if lp.enabled && phases > 1 {
+			if err := lp.setLimit(lp.effectiveMinCurrent()); err != nil {
+				return err
+			}
+		}
+
 		// switch phases
 		if err := cp.Phases1p3p(phases); err != nil {
 			return fmt.Errorf("switch phases: %w", err)
@@ -1565,7 +1594,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 		lp.ResetMeasuredPhases()
 	}
 
-	var waiting bool
+	var waiting, disable bool
 	activePhases := lp.ActivePhases()
 	availablePower := lp.chargePower - sitePower
 	scalable := activePhases > 1 && lp.phasesConfigured < 3
@@ -1576,21 +1605,29 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 		}
 
-		// while charging, scaling down only helps if 1p is sustainable, otherwise it
-		// merely delays the pv disable timer by the phase timer duration. Without a
-		// disable to wait for, scaling down is the only way to reduce power (#33208).
-		useful := !lp.enabled || !lp.charging() || !mayDisable || powerToCurrent(availablePower, 1) >= minCurrent
-		if insufficient && !useful {
+		// while charging, scaling down only helps if 1p is sustainable, otherwise the
+		// loadpoint disables once the phase timer elapses. Without a disable to wait
+		// for, scaling down is the only way to reduce power (#33208).
+		// Climater keep-alive suppresses the disable timer, checked last to avoid vehicle polling.
+		useful := !lp.enabled || !lp.charging() || !mayDisable || powerToCurrent(availablePower, 1) >= minCurrent || lp.vehicleClimateActive()
+		disable = insufficient && !useful
+		if disable {
 			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min 1p threshold, disabling instead of scaling down", availablePower, Voltage*minCurrent)
 		}
 
 		// scaling down also frees load management headroom for min power on activePhases
-		scalable = insufficient && useful || !lp.circuitAllowsPhases(activePhases, minCurrent)
+		scalable = insufficient || !lp.circuitAllowsPhases(activePhases, minCurrent)
 	}
 
-	// scale down phases
+	// scale down phases. The phase timer keeps running while 3p min is not covered,
+	// whether 1p would be sustainable or not, so passing clouds cannot restart it (#34746)
 	if scalable {
 		if lp.phaseTimerElapsed(lp.GetDisableDelay(), phaseScale1p) {
+			if disable {
+				lp.elapsePVTimer()
+				return 0
+			}
+
 			if err := lp.scalePhases(1); err != nil {
 				// a charger may report it cannot switch phases right now
 				// (api.ErrNotAvailable); assume a failed switch and stay silent
@@ -1665,6 +1702,24 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 	}
 }
 
+// projectPhaseSwitch returns site power and phases after a pending scale down to 1p:
+// the loadpoint drops from its current draw, at least min power, to min current on 1p.
+// At 1p the phase timer can only be a scale up, which leaves site power as it is.
+func (lp *Loadpoint) projectPhaseSwitch(sitePower, minCurrent float64) (float64, int) {
+	phases := lp.ActivePhases()
+	if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() && phases > 1 {
+		// site power loses the current draw, at least min power on all phases, and gains 1p min power
+		sitePower -= max(lp.chargePower, currentToPower(minCurrent, phases)) - currentToPower(minCurrent, 1)
+		phases = 1
+	}
+	return sitePower, phases
+}
+
+// batteryTolerance returns the power margin covering the battery controller's regulation accuracy
+func (lp *Loadpoint) batteryTolerance() float64 {
+	return math.Max(100, math.Abs(lp.site.GetResidualPower()))
+}
+
 // boostPower returns the additional power that the loadpoint should draw from the battery
 func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 	boost := lp.GetBatteryBoost()
@@ -1673,7 +1728,7 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 	}
 
 	// push demand to drain battery (at least 100W)
-	delta := math.Max(100, math.Abs(lp.site.GetResidualPower()))
+	delta := lp.batteryTolerance()
 
 	if lp.coarseCurrent() {
 		// add effective step power to delta to make sure to step up to the next full amp
@@ -1719,6 +1774,44 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 	return res
 }
 
+// batterySupported indicates that the home battery holds charging at min current.
+// Support ends once the battery is maxed out: the balance it has to cover exceeds
+// the pv disable threshold or its discharge limit would be exceeded (issue #32151).
+func (lp *Loadpoint) batterySupported(sitePower, batteryPower float64, batteryBuffered, batteryStart bool) bool {
+	// a session the welcome charge started is not surplus charging the battery should sustain
+	if !batteryStart && !(batteryBuffered && lp.charging() && lp.welcomeUntil.IsZero()) {
+		return false
+	}
+
+	minCurrent := lp.effectiveMinCurrent()
+
+	// grid import while the battery discharges, net of residual power and controller tolerance
+	demand, phases := lp.projectPhaseSwitch(sitePower-batteryPower-lp.site.GetResidualPower()-lp.batteryTolerance(), minCurrent)
+	if demand > lp.pvDisableThreshold(minCurrent, phases) {
+		lp.log.DEBUG.Printf("battery support: %.0fW grid import", demand)
+		return false
+	}
+
+	if maxPower := lp.site.GetBatteryMaxDischargePower(); maxPower != nil {
+		expected := batteryPower
+		if !lp.charging() {
+			expected += currentToPower(minCurrent, phases)
+		}
+
+		if expected > *maxPower {
+			lp.log.DEBUG.Printf("battery support: %.0fW exceeds %.0fW max discharge power", expected, *maxPower)
+			return false
+		}
+	}
+
+	// the disable timer only runs while enabled, a disabled loadpoint shares the timer with enable
+	if lp.enabled {
+		lp.resetPVTimer("disable")
+	}
+
+	return true
+}
+
 // customThresholds indicates manually configured enable/disable thresholds that take precedence over the solar share
 func (lp *Loadpoint) customThresholds() bool {
 	return lp.Enable.Threshold != 0 || lp.Disable.Threshold != 0
@@ -1737,17 +1830,16 @@ func (lp *Loadpoint) pvDisableThreshold(minCurrent float64, phases int) float64 
 
 // pvEnableDecision returns the pv enable switch point and whether charging should start,
 // derived from the solar share unless custom thresholds are configured.
-// availableCurrent is the loadpoint's own current plus the surplus, unclamped.
-func (lp *Loadpoint) pvEnableDecision(availableCurrent, minCurrent, sitePower float64, phases int) (float64, bool) {
+// The threshold accounts for the loadpoint's own current, so site power <= threshold is the decision.
+func (lp *Loadpoint) pvEnableDecision(effectiveCurrent, minCurrent, sitePower float64, phases int) (float64, bool) {
+	threshold := lp.Enable.Threshold
 	if !lp.customThresholds() {
 		// require the solar share of the min current to come from surplus
-		share := lp.GetSolarShare()
-		return -share * currentToPower(minCurrent, phases), availableCurrent >= share*minCurrent
+		threshold = currentToPower(effectiveCurrent-lp.GetSolarShare()*minCurrent, phases)
+	} else if threshold == 0 {
+		threshold = currentToPower(effectiveCurrent-minCurrent, phases)
 	}
-
-	threshold := lp.Enable.Threshold
-	return threshold, (threshold == 0 && availableCurrent >= minCurrent) ||
-		(threshold != 0 && sitePower <= threshold)
+	return threshold, sitePower <= threshold
 }
 
 // pvMaxCurrent calculates the maximum target current for smart mode
@@ -1757,12 +1849,12 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	maxCurrent := lp.effectiveMaxCurrent()
 	alwaysCharge := lp.GetAlwaysCharge().Active()
 
+	// always charge and the battery conditions hold charging at min current, no disable can follow
+	battery := lp.GetBatteryBoost() == boostContinue || lp.batterySupported(sitePower, batteryPower, batteryBuffered, batteryStart)
+	mayDisable := !alwaysCharge && !battery
+
 	// push demand to drain battery
 	sitePower -= lp.boostPower(batteryPower)
-
-	// always charge and the battery conditions hold charging at min current, no disable can follow
-	battery := batteryStart || batteryBuffered && lp.charging() || lp.GetBatteryBoost() == boostContinue
-	mayDisable := !alwaysCharge && !battery
 
 	// switch phases up/down
 	var scaledTo int
@@ -1774,8 +1866,8 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	activePhases := lp.ActivePhases()
 	effectiveCurrent := lp.effectiveCurrent()
 	if scaledTo == 3 {
-		// if we did scale, adjust the effective current to the new phase count
-		effectiveCurrent /= float64(lp.maxActivePhases())
+		// if we did scale, spread the power measured before the switch over the new phase count
+		effectiveCurrent = powerToCurrent(lp.chargePower, lp.maxActivePhases())
 	}
 	if lp.chargerHasFeature(api.IntegratedDevice) {
 		// for slow-acting heating devices, only take actually consumed power into account
@@ -1784,6 +1876,11 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	deltaCurrent := powerToCurrent(-sitePower, activePhases)
 	availableCurrent := effectiveCurrent + deltaCurrent
 	targetCurrent := max(availableCurrent, 0)
+
+	// surplus confirms a session the welcome charge started
+	if targetCurrent >= minCurrent {
+		lp.welcomeUntil = time.Time{}
+	}
 
 	// with always charge or under special conditions return at least minCurrent
 	if (alwaysCharge || battery) && targetCurrent < minCurrent {
@@ -1794,14 +1891,7 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
 
 	if !alwaysCharge && lp.enabled && targetCurrent < minCurrent {
-		projectedSitePower := sitePower
-		projectedPhases := activePhases
-		if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() {
-			// calculate site power after a phase switch from activePhases phases -> 1 phase
-			// notes: activePhases can be 1, 2 or 3 and phaseTimer can only be active if lp current is already at minCurrent
-			projectedSitePower -= Voltage * minCurrent * float64(activePhases-1)
-			projectedPhases = 1
-		}
+		projectedSitePower, projectedPhases := lp.projectPhaseSwitch(sitePower, minCurrent)
 		// a continuous device consuming less than its min power demand keeps the
 		// remainder out of site power, hiding insufficient surplus until it ramps
 		// up (#32282). Project the shortfall towards min power into the gate.
@@ -1841,6 +1931,7 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 		} else {
 			// reset timer
 			lp.resetPVTimer("disable")
+			lp.welcomeUntil = time.Time{}
 		}
 
 		// lp.log.DEBUG.Println("pv disable timer: keep enabled")
@@ -1848,7 +1939,7 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	}
 
 	if !alwaysCharge && !lp.enabled {
-		enableThreshold, shouldEnable := lp.pvEnableDecision(availableCurrent, minCurrent, sitePower, activePhases)
+		enableThreshold, shouldEnable := lp.pvEnableDecision(effectiveCurrent, minCurrent, sitePower, activePhases)
 
 		// kick off enable sequence
 		if shouldEnable {
@@ -2182,16 +2273,27 @@ func (lp *Loadpoint) publishSocAndRange() {
 	limitSoc := min(apiLimitSoc, lp.EffectiveLimitSoc())
 	v := lp.GetVehicle()
 
+	lp.RLock()
+	limitEnergy, energyLimited := lp.remainingLimitEnergy()
+	lp.RUnlock()
+
 	var d time.Duration
 	var e float64
 	switch {
+	case energyLimited:
+		// energy-limited session without soc: remaining energy and duration follow
+		// the limit, not the full capacity (#33627)
+		e = limitEnergy
+		if lp.charging() && lp.chargePower > 0 {
+			d = time.Duration(e * 1e3 / lp.chargePower * float64(time.Hour)).Round(time.Second)
+		}
 	case socEstimator != nil:
-		if lp.charging() {
+		if lp.charging() && lp.chargePower > 0 {
 			d = socEstimator.RemainingChargeDuration(float64(limitSoc), lp.chargePower)
 		}
 		e = socEstimator.RemainingChargeEnergy(limitSoc)
 	case v != nil && v.Capacity() > 0 && lp.vehicleSoc > 0:
-		if lp.charging() {
+		if lp.charging() && lp.chargePower > 0 {
 			d = soc.RemainingChargeDuration(float64(limitSoc), lp.chargePower, lp.vehicleSoc, v.Capacity())
 		}
 		e = soc.RemainingChargeEnergy(limitSoc, lp.vehicleSoc, v.Capacity())
@@ -2330,13 +2432,13 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 
 NO_DIM:
 	// read and publish status
-	welcomeCharge, err := lp.updateChargerStatus()
+	err := lp.updateChargerStatus()
 	if err != nil {
 		lp.log.ERROR.Println(err)
 		return
 	}
 
-	lp.publish(keys.VehicleWelcomeActive, welcomeCharge)
+	lp.publish(keys.VehicleWelcomeActive, lp.welcomeActive())
 	lp.publish(keys.Connected, lp.connected())
 	lp.publish(keys.Charging, lp.charging())
 
@@ -2376,9 +2478,20 @@ NO_DIM:
 
 	mode := lp.GetMode()
 	lp.publish(keys.Mode, mode)
+	lp.publish(keys.OptimizerControlled, lp.optimizerControlled())
 
 	// update and publish plan without being short-circuited by modes etc.
 	plannerActive := lp.plannerActive()
+
+	// the optimizer schedules the plan itself, the planner only backstops it.
+	// A stalled optimizer has no suggestion and releases the planner again.
+	suggestion := lp.activeSuggestion()
+	if suggestion != nil {
+		plannerActive = lp.planDeadlineCritical()
+	}
+
+	// a plan goal above the session limits is the optimizer's to reach, like the planner's slot is below
+	optimizerPlan := suggestion != nil && mode == api.ModeSmart && lp.planActive
 
 	// update and publish min soc not reached state
 	minSocNotReached := lp.minSocNotReached()
@@ -2400,24 +2513,24 @@ NO_DIM:
 			err = nil
 		}
 
+	// welcome charge takes precedence over mode and limits
+	case lp.welcomeActive():
+		err = lp.setLimit(lp.effectiveMinCurrent())
+
 	case mode == api.ModeOff:
-		var current float64
-		if welcomeCharge {
-			current = lp.effectiveMinCurrent()
-		}
-		err = lp.setLimit(current)
+		err = lp.setLimit(0)
 
 	// minimum or target charging
 	case minSocNotReached || plannerActive:
 		err = lp.fastCharging()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
-	case lp.LimitEnergyReached():
+	case lp.LimitEnergyReached() && !optimizerPlan:
 		lp.log.DEBUG.Printf("limitEnergy reached: %.0fkWh > %0.1fkWh", lp.GetChargedEnergy()/1e3, lp.limitEnergy)
 		err = lp.disableUnlessClimater()
 
-	case lp.LimitSocReached():
-		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.EffectiveLimitSoc())
+	case lp.LimitSocReached() && !optimizerPlan:
+		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% >= %d%%", lp.vehicleSoc, lp.EffectiveLimitSoc())
 		err = lp.disableUnlessClimater()
 
 	// immediate charging- must be placed after limits are evaluated
@@ -2425,8 +2538,17 @@ NO_DIM:
 		err = lp.fastCharging()
 
 	case mode == api.ModeSmart:
+		// optimizer decides start/stop and level, replacing the price limits
+		if suggestion != nil {
+			if handled, e := lp.optimizerCharging(suggestion); handled {
+				err = e
+				break
+			}
+			// surplus regime or stop: the pv loop below tracks the measured surplus
+		}
+
 		// cheap tariff
-		if smartCostActive {
+		if suggestion == nil && smartCostActive {
 			rate, _ := consumption.At(time.Now())
 			lp.log.DEBUG.Printf("smart consumption active: %.2f", rate.Value)
 			err = lp.fastCharging()
@@ -2435,7 +2557,7 @@ NO_DIM:
 		}
 
 		// attractive feedin
-		if smartFeedInPriorityActive {
+		if suggestion == nil && smartFeedInPriorityActive {
 			rate, _ := feedin.At(time.Now())
 			lp.log.DEBUG.Printf("smart feed-in active: %.2f", rate.Value)
 
@@ -2452,15 +2574,16 @@ NO_DIM:
 			break
 		}
 
+		// the optimizer plans the home battery- bufferSoc and bufferStartSoc must not
+		// keep charging off the battery against its stop (#34606)
+		if suggestion != nil {
+			batteryBuffered, batteryStart = false, false
+		}
+
 		targetCurrent := lp.pvMaxCurrent(sitePower, batteryPower, batteryBuffered, batteryStart)
 
 		if targetCurrent == 0 && lp.vehicleClimateActive() {
 			targetCurrent = lp.effectiveMinCurrent()
-		}
-
-		if targetCurrent == 0 && welcomeCharge {
-			targetCurrent = lp.effectiveMinCurrent()
-			lp.resetPVTimer()
 		}
 
 		err = lp.setLimit(targetCurrent)

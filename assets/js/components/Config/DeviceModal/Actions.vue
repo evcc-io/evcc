@@ -3,7 +3,7 @@
 		<slot name="before-test"></slot>
 
 		<TestResult
-			v-if="testState"
+			v-if="Object.keys(testState).length > 0"
 			v-bind="testState"
 			:sponsor-token-required="sponsorTokenRequired"
 			:currency="currency"
@@ -81,11 +81,10 @@ export default defineComponent({
 		canDisable: { type: Boolean as PropType<boolean>, default: true },
 		testState: {
 			type: Object as PropType<TestState>,
-			default: () => {},
+			default: {},
 		},
 		isSaving: Boolean as PropType<boolean>,
 		isSucceeded: Boolean as PropType<boolean>,
-		isNew: Boolean as PropType<boolean>,
 		sponsorTokenRequired: Boolean as PropType<boolean>,
 		currency: String as PropType<CURRENCY>,
 		usage: String as PropType<string>,

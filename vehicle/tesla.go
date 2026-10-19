@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -9,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/tesla"
-	teslaclient "github.com/evcc-io/tesla-proxy-client"
 )
 
 // Tesla is an api.Vehicle implementation for Tesla cars using the official Tesla vehicle-command api.
@@ -56,11 +54,10 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 	if err != nil {
 		return nil, err
 	}
-	tc := fleet.Client
 
 	vehicle, err := ensureVehicleEx(
-		cc.VIN, tc.Vehicles,
-		func(v *tesla.Vehicle) (string, error) {
+		cc.VIN, fleet.Vehicles,
+		func(v tesla.Vehicle) (string, error) {
 			return v.Vin, nil
 		},
 	)
@@ -76,7 +73,9 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 			return nil, err
 		}
 
-		controller = tesla.NewSignedController(fleet.TokenSource, key, vehicle, fleet.Host)
+		if controller, err = tesla.NewSignedController(fleet, key, vehicle.Vin); err != nil {
+			return nil, err
+		}
 	} else {
 		// proxy client
 		pc := request.NewClient(log)
@@ -84,21 +83,15 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 			Decorator: transport.DecorateHeaders(map[string]string{
 				"X-Authorization": "Bearer " + cc.ProxyToken,
 			}),
-			Base: fleet.HTTPClient.Transport,
+			Base: fleet.Transport,
 		}
 
-		tcc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(pc))
-		if err != nil {
-			return nil, err
-		}
-		tcc.SetBaseUrl(cc.CommandProxy)
-
-		controller = tesla.NewController(vehicle.WithClient(tcc))
+		controller = tesla.NewController(tesla.NewAPI(pc, cc.CommandProxy), vehicle.Vin)
 	}
 
 	v := &Tesla{
 		embed:     &cc.embed,
-		Provider:  tesla.NewProvider(vehicle, cc.Cache),
+		Provider:  tesla.NewProvider(fleet, vehicle.Vin, cc.Cache),
 		Commander: controller,
 	}
 

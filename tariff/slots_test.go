@@ -53,7 +53,7 @@ func TestBasicSlotConversionCounts(t *testing.T) {
 	for _, tc := range cases {
 		// Create a single rate of length tc.dur starting at "now"
 		rates := makeRates(now, tc.dur, 1, 5.0)
-		w := &SlotWrapper{&testTariff{
+		w := &SlotWrapper{Tariff: &testTariff{
 			rates: rates,
 			typ:   api.TariffTypePriceStatic,
 		}}
@@ -95,7 +95,7 @@ func TestMixedSlots(t *testing.T) {
 		Value: 3.0,
 	}
 
-	w := &SlotWrapper{&testTariff{
+	w := &SlotWrapper{Tariff: &testTariff{
 		rates: api.Rates{r0, r1},
 		typ:   api.TariffTypePriceStatic,
 	}}
@@ -131,7 +131,7 @@ func TestDropOldRates(t *testing.T) {
 		Value: 0.5,
 	}
 
-	w := &SlotWrapper{&testTariff{
+	w := &SlotWrapper{Tariff: &testTariff{
 		rates: api.Rates{old},
 		typ:   api.TariffTypeSolar,
 	}}
@@ -168,7 +168,7 @@ func TestSolarInterpolation(t *testing.T) {
 		Value: 4.0,
 	}
 
-	w := &SlotWrapper{&testTariff{
+	w := &SlotWrapper{Tariff: &testTariff{
 		rates: api.Rates{r0, r1},
 		typ:   api.TariffTypeSolar,
 	}}
@@ -199,7 +199,7 @@ func TestSolarInterpolationInterior(t *testing.T) {
 		rr[i] = api.Rate{Start: start, End: start.Add(time.Hour), Value: v}
 	}
 
-	w := &SlotWrapper{&testTariff{rates: rr, typ: api.TariffTypeSolar}}
+	w := &SlotWrapper{Tariff: &testTariff{rates: rr, typ: api.TariffTypeSolar}}
 
 	res, err := w.Rates()
 	require.NoError(t, err)
@@ -224,7 +224,7 @@ func TestSolarInterpolationGap(t *testing.T) {
 		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour), Value: 8},
 	}
 
-	w := &SlotWrapper{&testTariff{rates: rr, typ: api.TariffTypeSolar}}
+	w := &SlotWrapper{Tariff: &testTariff{rates: rr, typ: api.TariffTypeSolar}}
 
 	res, err := w.Rates()
 	require.NoError(t, err)
@@ -245,7 +245,7 @@ func TestSolarNegativeSlot(t *testing.T) {
 		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 4},
 	}
 
-	w := &SlotWrapper{&testTariff{rates: rr, typ: api.TariffTypeSolar}}
+	w := &SlotWrapper{Tariff: &testTariff{rates: rr, typ: api.TariffTypeSolar}}
 
 	res, err := w.Rates()
 	require.NoError(t, err)

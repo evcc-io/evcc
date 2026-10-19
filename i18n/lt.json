@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Autorizacija Sėkminga",
     "buttonConnect": "Prisijungti prie {provider}",
     "buttonDisconnect": "Atsijungti",
+    "challenge": {
+      "captcha": {
+        "label": "Įveskite paveikslėlyje pavaizduotus simbolius.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Įklijuokite kodą arba puslapio, į kurį buvote nukreipti, adresą.",
+        "title": "Autorizacijos kodas"
+      },
+      "openLogin": "Atidaryti prisijungimo puslapį",
+      "submit": "Tęsti"
+    },
     "confirmLogout": "Ar tikrai norite atjungti {title}?",
     "connect": "prisijungti",
     "disconnect": "atjungti",
@@ -25,6 +37,7 @@
       "discharging": "iškrauna",
       "energy": "Energija",
       "gridCharge": "įkraunama iš tinklo",
+      "gridDischarge": "iškrova į tinklą",
       "hold": "iškrovimas blokuojamas",
       "holdCharge": "įkrovimas blokuojamas",
       "ofTotal": "iš {total}",
@@ -33,7 +46,7 @@
     },
     "combined": "Sudėta",
     "config": {
-      "buffer": "Kaupiklio energija, viršijanti {soc}, gali būti naudojama įkrovikliams palaikyti ir saulės energijos režime atidėti įkrovimo išjungimą. Saulės energijos įkrovimas pradedamas automatiškai {start}.",
+      "buffer": "Kaupiklio energija, viršijanti {soc}, gali būti naudojama įkrovikliams palaikyti bei išmaniame režime atidėti įkrovimo išjungimą. Saulės energijos įkrovimas pradedamas automatiškai {start}.",
       "bufferNone": "Kaupiklio energija nenaudojama automobilio įkrovimui. Norėdami įjungti šią funkciją, nustatykite mažesnę nei {soc} reikšmę.",
       "bufferStart": {
         "above": "kai kaupiklio įkrovos lygis viršija {soc}",
@@ -43,6 +56,13 @@
       "bufferTitle": "Kaupiklis kaip įkrovimo buferis",
       "discharge": "Neleiskite iškrauti kaupiklio greituoju režimu ir planuojamo įkrovimo metu.",
       "gridDischarge": "Leisti kaupikliui išsikrauti į tinklą.",
+      "gridDischargeConfirm": {
+        "country": "Sukonfigūruota šalis: {country}.",
+        "description": "Tai, ar baterijoje sukauptą energiją galima tiekti į elektros tinklą, priklauso nuo šalies ir sudarytos energijos tiekimo į tinklą sutarties. Jei baterija taip pat ir įkraunama iš tinklo, į tinklą tiekiama energija jau nebėra vien tik saulės energija. Pagal daugelį energijos supirkimo tarifų sąlygų dėl to galite prarasti teisę į atlygį arba toks energijos tiekimas gali būti draudžiamas. Pirmiausia peržiūrėkite energijos tiekimo į tinklą sutartį ir tinklo operatoriaus reikalavimus.",
+        "noCountry": "Šalis nesukonfigūruota. Nustatykite ją čia {link}.",
+        "title": "Energijos eksportas iš kaupiklio"
+      },
+      "optimizerControlledHint": "Išjungta {loadpoints}. Vietoj to nusprendžia {optimizer}.",
       "priority": "Kaupiklis turi prioritetą, kol jo įkrova yra mažesnė nei {soc}. Po to įkrovikliai gauna perteklių.",
       "priorityNone": "Saulės energijos perteklius patenka tiesiai į įkroviklius. Nustatykite reikšmę, didesnę nei {soc}, kad pirmenybė būtų teikiama kaupikliui.",
       "priorityTitle": "Kur pirmiausia nukeliaus perteklius?"
@@ -64,6 +84,7 @@
   },
   "batterySettings": {
     "gridChargeTab": "Įkrovimas iš tinklo",
+    "gridDischargeTab": "Iškraunama į tinklą",
     "modalTitle": "Namų kaupiklis",
     "noBattery": "Nėra sukonfigūruotų kaupiklių.",
     "usageTab": "Kaupiklio naudojimas"
@@ -143,10 +164,45 @@
         "switchsocket": "Vartotojo apibrėžta išmanioji rozetė"
       }
     },
+    "circuit": {
+      "addMeter": "Pridėti atskirą energijos skaitiklį",
+      "custom": "Vartotojo apibrėžta grandinė",
+      "deleteChildrenFirst": "Norėdami pašalinti šią grandinę, pirmiausia pašalinkite jos antrines grandines.",
+      "meterDedicated": "Dedikuotas skaitiklis",
+      "meterGrid": "Tinklo skaitiklis",
+      "meterHelp": "Skaitiklis, matuojantis bendrą šios grandinės suvartojimą.",
+      "meterLabel": "Energijos skaitiklis",
+      "meterLabelAdd": "Pridėti Grandinės Matuoklį",
+      "meterLabelEdit": "Koreguoti Grandinės Matuoklį",
+      "meterNone": "Nėra skaitiklio",
+      "meterSelectionHelpDedicatedMeter": "Pridėkite esamą skaitiklį prie šios grandinės.",
+      "meterSelectionHelpGridMeter": "Naudoja esamą jūsų sistemos tinklo skaitiklį.",
+      "meterSelectionHelpNoMeter": "Naudojama visų įkroviklių suma.",
+      "meterSelectionLabel": "Skaitiklio Pasirinkimas",
+      "parentCircuit": "Pagrindinė grandinė",
+      "template": "Grandinė",
+      "titleAdd": "Pridėti grandinę",
+      "titleEdit": "Koreguoti grandinę",
+      "titleLabel": "Pavadinimas"
+    },
     "circuits": {
+      "addMainCircuit": "Pridėti pagrindinę grandinę",
+      "addSubCircuit": "Pridėti papildomą grandinę",
+      "chargingPointsNote": "Grandinei priskirkite įkroviklius ir šildytuvus jų pačių nustatymuose.",
       "description": "Užtikrina, kad naudojant visus į grandinę sujungtus įkroviklius, neviršytumėte sukonfigūruotų galios ir srovės ribų. Grandines galima sudėlioti, kad būtų sukurta hierarchija.",
+      "legacyWarning": "Galima naudoti naują grandinių konfigūracijos metodą. Pašalinkite ir išsaugokite savo konfigūraciją čia, kad galėtumėte pasinaudoti naujuoju vedliu.",
+      "meterDedicated": "Skaitiklis",
+      "meterGrid": "Tinklas",
       "title": "Apkrovos valdymas",
       "usableMeters": "Galimi skaitikliai"
+    },
+    "combobox": {
+      "count": "{count} pasiūlymai",
+      "matching": "Atitinka",
+      "other": "Kiti",
+      "searching": "Ieškoma…",
+      "suggestions": "Pasiūlymai",
+      "used": "jau panaudotas"
     },
     "consumer": {
       "description": "Seka mažesnius, nevaldomus prietaisus (šaldytuvą, skalbimo mašiną ir kt.). Suteikia geresnį supratimą apie jūsų namų suvartojimą.",
@@ -189,7 +245,7 @@
       "chargeStatusC": "įkraunama",
       "chargeStatusE": "nėra elektros",
       "chargeStatusF": "klaida",
-      "chargedEnergy": "Įkrauta",
+      "chargedEnergy": "Įkrauta (sesija)",
       "co2": "Tinklo CO₂",
       "configured": "Sukonfigūruota",
       "connected": "Prisijungta",
@@ -215,6 +271,8 @@
       "identifier": "RFID-Identifikatorius",
       "loginBlocked": "Pasiektas prisijungimų limitas",
       "max": "max",
+      "maxCurrent": "Max. srovė",
+      "maxPower": "Max. galia",
       "messengers": "Paslaugos",
       "no": "ne",
       "odometer": "Odometras",
@@ -238,6 +296,31 @@
       "temp": "Temperatūra",
       "topic": "Tema",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Suvartota",
+          "returnEnergy": "Pagaminta"
+        },
+        "battery": {
+          "energy": "Iškrauta",
+          "returnEnergy": "Įkrauta"
+        },
+        "charge": {
+          "energy": "Įkrauta",
+          "returnEnergy": "Iškrauta"
+        },
+        "consumer": {
+          "energy": "Suvartota",
+          "returnEnergy": "Pagaminta"
+        },
+        "grid": {
+          "energy": "Importuota",
+          "returnEnergy": "Eksportuota"
+        },
+        "pv": {
+          "energy": "Pagaminta"
+        }
+      },
       "vehicleLimitSoc": "Įkrovimo limitas",
       "yes": "taip"
     },
@@ -317,7 +400,7 @@
       "customOption": "Vartotojo apibrėžtas įrenginys",
       "delete": "Ištrinti",
       "disable": "Išjungti",
-      "disabled": "Išjungta",
+      "disabled": "išjungta",
       "dismiss": "Atmesti",
       "docsLink": "Žiūrėkite dokumentaciją.",
       "dragHandle": "Vilkti",
@@ -326,6 +409,7 @@
       "enable": "Įjungti",
       "error": "Klaida",
       "experimental": "Eksperimentinės",
+      "forceEnable": "Vis tiek įjungti",
       "forceSave": "Vistiek įrašyti",
       "fromYamlHint": "Pastaba: Sukonfigūruota naudojant evcc.yaml. Pašalinkite įrašą iš failo, kad būtų galima redaguoti čia.",
       "hideAdvancedSettings": "Slėpti išplėstinius nustatymus",
@@ -344,6 +428,7 @@
       "saving": "Įrašoma…",
       "selectFile": "Naršyti",
       "showAdvancedSettings": "Rodyti išplėstinius nustatymus",
+      "site": "Vieta",
       "telemetry": "Telemetrija",
       "templateLoading": "Įkrauname...",
       "title": "Pavadinimas",
@@ -421,7 +506,6 @@
         "charging": "Įkroviklis",
         "heating": "Šildytuvas"
       },
-      "chargingTitle": "Elgesys",
       "circuitHelp": "Apkrovos valdymo priskyrimas, siekiant užtikrinti, kad nebūtų viršytos galios ir srovės ribos.",
       "circuitInvalid": "Tokios grandinės nėra",
       "circuitLabel": "Grandinė",
@@ -434,6 +518,10 @@
       "creating": {
         "charging": "Įkrovimo aparatas išsaugotas. Kuriamas įkroviklis …",
         "heating": "Šildymo aparatas išsaugotas. Kuriamas šildytuvas…"
+      },
+      "currentRangeHelp": {
+        "charging": "Tipiškai: 6-16A - 11 kW, 6-32A - 22 kW įkrovikliai (3-fazių).",
+        "heating": "Priklauso nuo šildymo įrenginio vardinės galios (žr. duomenų lapą)."
       },
       "defaultModeHelp": {
         "charging": "Įkrovimo režimas prijungus automobilį.",
@@ -479,22 +567,16 @@
       "priorityHelp": "Aukštesnis prioritetas gauna pirmenybę naudoti saulės energijos perteklių.",
       "priorityLabel": "Pirmenybė",
       "save": "Išsaugoti",
-      "solarBehaviorCustomHelp": "Apibrėžkite savo įjungimo ir išjungimo slenksčius ir delsas.",
-      "solarBehaviorDefaultHelp": "Pradėti po {enableDelay} esant pertekliui. Sustoti, kai nepakanka pertekliaus {disableDelay}.",
-      "solarBehaviorLabel": "Saulės",
-      "solarModeCustom": "pritaikytas",
-      "solarModeMaximum": "saulės maksimumas",
+      "solarShareReset": "Pašalinti slenksčius",
       "temperatureRangeHelp": "Temperatūros juostos rodymo diapazonas. Neturi įtakos valdymui.",
       "temperatureRangeTitle": "Temperatūros diapazonas",
       "thresholdDisableDelayLabel": "Išjungimo delsa",
       "thresholdDisableHelpInvalid": "Prašome naudoti teigiamą vertę.",
       "thresholdDisableHelpPositive": "Sustoti, kai iš tinklo ilgiau nei {delay} naudojama daugiau nei {power}.",
-      "thresholdDisableHelpZero": "Sustoti, kai minimalios reikalingos galios trūksta ilgiau nei {delay}.",
       "thresholdDisableLabel": "Tinklo galia išjungimui",
       "thresholdEnableDelayLabel": "Įjungimo delsa",
       "thresholdEnableHelpInvalid": "Prašome naudoti neigiamą reikšmę.",
       "thresholdEnableHelpNegative": "Pradėti, kai {surplus} perteklius yra ilgiau nei {delay}.",
-      "thresholdEnableHelpZero": "Pradėti po {delay} esant minimaliam reikalingam energijos pertekliui.",
       "thresholdEnableLabel": "Tinklo galia įjungimui",
       "titleAdd": {
         "charging": "Pridėti Įkrovimo Vietą",
@@ -756,9 +838,29 @@
       "usernameHelp": "Skirta serverio HTTP baziniam autentifikavimui."
     },
     "optimizer": {
-      "description": "Analizuoja saulės energijos prognozę, elektros energijos kainas ir jūsų vartojimo įpročius, kad optimizuotų kaupiklį ir įkrovimo strategiją. Duomenys siunčiami apdorojimui į evcc optimizavimo paslaugą. Šiuo metu tik apskaičiuoja ir vizualizuoja, įrenginių kol kas nevaldo.",
+      "automatic": "Automatinis valdymas",
+      "automaticLevel": {
+        "battery": {
+          "description": "Valdo tik kaupiklį.",
+          "label": "Kaupiklio",
+          "status": "{automatic} valdo kaupiklį."
+        },
+        "full": {
+          "description": "Valdo kaupiklį, išmaniuoju režimu pradeda ir sustabdo automobilių įkrovimą, keičia kainų bei CO₂ ribas ir valdo planus. Nepakito: Išjungta ir Greitas režimai, šildymo įrenginiai, valdomi elektros lizdai, nežinomos talpos automobiliai.",
+          "label": "Kaupiklis ir įkrovikliai",
+          "status": "{automatic} valdo kaupiklį ir įkroviklius."
+        },
+        "off": {
+          "description": "Optimizatorius tik teikia pasiūlymus, bet nieko nevaldo.",
+          "status": "{automatic} išjungtas. Optimizatorius tik teikia pasiūlymus."
+        }
+      },
+      "controlled": "Išjungta dėl automatinio valdymo. Vietoj to sprendimą priima {optimizer}.",
+      "controls": "Valdikliai",
+      "description": "Kaupiklio veikimui ir įkrovimui planuoti naudojamos saulės energijos gamybos prognozės, elektros kainos bei jūsų energijos vartojimo įpročiai. Duomenys siunčiami evcc optimizavimo paslaugai.",
       "enable": "Įjungti Optimizavimą",
-      "info": "Gali užtrukti kelias minutes, kol meniu pasirodys optimizatoriaus eilutė. Naujoms evcc instaliacijoms gali užtrukti iki 24 valandų, kol evcc turės pakankamai duomenų veikimui.",
+      "info": "Naujoms instaliacijoms gali užtrukti iki 24 valandų, kol evcc turės pakankamai duomenų.",
+      "linkWord": "optimizatorius",
       "title": "Optimizavimas"
     },
     "options": {
@@ -856,6 +958,22 @@
       "labelVendorId": "Gamintojo ID",
       "title": "SMA Sunny Home Manager"
     },
+    "site": {
+      "country": {
+        "description": "Naudojama regionui būdingiems patarimams ir numatytiesiems parametrams.",
+        "label": "Šalis"
+      },
+      "currency": {
+        "description": "Naudojamas energijos kainoms, išlaidoms ir sutaupymams formatuoti pagal jūsų tarifą.",
+        "example": "Jūsų mokėjimo kaina buvo {price}. Sutaupėte {amount}.",
+        "label": "Valiuta"
+      },
+      "siteTitle": {
+        "description": "Rodoma pagrindiniame ekrane ir naršyklės skirtuke.",
+        "label": "Pavadinimas"
+      },
+      "title": "Vieta"
+    },
     "sponsor": {
       "addToken": "Įveskite žetoną",
       "changeToken": "Pakeisti žetoną",
@@ -949,7 +1067,7 @@
         "temperature": "Pridėti temperatūros prognozę"
       },
       "planner": {
-        "description": "Išplėstinis nustatymas. Paprastai nereikalingas, nes dinaminiai elektros energijos tarifai arba CO₂ prognozės naudojami automatiškai. Įjungia papildomą duomenų šaltinį, kuris naudojamas tik įkrovimo planavimui, o ne statistikai ar kainų skaičiavimams.",
+        "description": "Šis išplėstinis nustatymas paprastai nereikalingas. Planavimo prognozė yra pagrindas įkrovimo planams ir pigiam arba švariam įkrovimui iš tinklo (automobiliams, šildymo prietaisams, kaupikliui). Be jos, dinaminė tinklo kaina arba CO₂ prognozė yra naudojama automatiškai. Tai neturi įtakos statistikai, išlaidų skaičiavimams ir optimizatoriaus sprendimams.",
         "titleAdd": "Pridėti planavimo prognozę",
         "titleEdit": "Redaguoti planavimo prognozę"
       },
@@ -969,8 +1087,8 @@
       "titleChoice": "Ką norite pridėti?",
       "type": {
         "co2": "CO₂ Intensyvumas",
-        "feedIn": "Eksporto kaina",
-        "grid": "Importo kaina",
+        "feedIn": "Tinklo Eksporto Kaina",
+        "grid": "Tinklo Importo Kaina",
         "planner": "Planuoklis",
         "solar": "Saulės",
         "temperature": "Temperatūros Prognozė"
@@ -1024,6 +1142,124 @@
       "titleEdit": "Koreguoti Automobilį"
     }
   },
+  "energy": {
+    "battery": {
+      "charged": "Įkrauta",
+      "discharged": "Iškrauta"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Stulpeliai",
+        "pattern": "Grafiko modelis"
+      },
+      "cost": "Kaina",
+      "others": "Kiti",
+      "source": {
+        "battery": "kaupiklis",
+        "grid": "tinklas",
+        "pv": "saulė"
+      },
+      "title": "Vartotojai",
+      "view": {
+        "river": "Upė",
+        "treemap": "Medis"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "įkrauta",
+        "returnEnergy": "iškrauta"
+      },
+      "grid": {
+        "energy": "iš tinklo",
+        "returnEnergy": "į tinklą"
+      },
+      "meter": {
+        "energy": "Energija iš tinklo",
+        "returnEnergy": "Energija (patiekta į tinklą)"
+      }
+    },
+    "empty": "Šiam laikotarpiui energijos duomenų nėra.",
+    "flow": {
+      "battery": "Kaupiklis",
+      "batteryCharge": "Kaupiklis įkrauta",
+      "batteryDischarge": "Kaupiklis iškrauta",
+      "charging": "Įkraunama",
+      "export": "Eksportas į tinklą",
+      "grid": "Importas iš tinklo",
+      "heating": "Šildoma",
+      "home": "Suvartojimas",
+      "overview": "Apžvalga",
+      "pv": "Gamyba",
+      "title": "Energijos tėkmė",
+      "usage": "Vartojimas",
+      "withdrawal": "Išimta"
+    },
+    "grid": {
+      "amount": "Kiekis",
+      "cost": "Tinklo kaina",
+      "energy": "Energija",
+      "export": "Eksportas",
+      "exportPrice": "Eksporto kaina",
+      "import": "Importas",
+      "importPrice": "Importo kaina",
+      "price": "Kaina",
+      "revenue": "Pajamos iš eksporto",
+      "title": "Tinklas"
+    },
+    "group": {
+      "battery": "Kaupiklis",
+      "consumer": "Vartojimas",
+      "forecast": "Prognozė",
+      "grid": "Tinklas",
+      "loadpoint": "Įkrovimas ir Šildymas",
+      "meter": "Papildomi skaitikliai",
+      "pv": "Gamyba"
+    },
+    "production": {
+      "above": "{value} virš",
+      "accuracy": "Prognozės tikslumas",
+      "below": "{value} žemiau",
+      "deviation": "Nuokrypis",
+      "expectedTomorrow": "tikimasi rytoj",
+      "exported": "{value} eksportuota",
+      "produced": "Pagaminta",
+      "remainingToday": "likę šiandien",
+      "selfConsumed": "Sunaudota savo reikmėms",
+      "title": "Gamyba"
+    },
+    "socTemp": {
+      "charged": "įkrauta",
+      "soc": "įkrova",
+      "temperature": "temperatūra",
+      "used": "sunaudota"
+    },
+    "sources": {
+      "battery": "Kaupiklis",
+      "cost": "Kaina",
+      "energy": "Energija",
+      "grid": "Tinklas",
+      "hint": "Saulės ir kaupiklio energija įvertinta pagal energijos supirkimo kainą.",
+      "price": "Kaina/kWh",
+      "pv": "Saulė",
+      "share": "Dalis",
+      "source": "Šaltinis",
+      "title": "Šaltiniai",
+      "total": "Viso"
+    },
+    "stat": {
+      "autarky": "Savarankiškumas",
+      "co2Saved": "CO₂ sutaupyta",
+      "co2SavedTooltip": "Palyginus su suvartojimu {energy} iš tinklo.",
+      "configure": "Konfigūruoti dabar",
+      "noCo2": "Nėra CO₂ duomenų.",
+      "noPrice": "Nėra kainos duomenų.",
+      "savings": "Sutaupymai",
+      "savingsTooltip": "Palyginus su suvartotos {energy} pirkimu iš tinklo.",
+      "versus": "{value} vs. {reference}"
+    },
+    "title": "Energija"
+  },
   "footer": {
     "community": {
       "greenEnergy": "Saulės energija",
@@ -1072,7 +1308,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Tapkite rėmėju",
-      "becomeSponsorExtended": "Paremkite mus tiesiogiai ir gaukite lipdukų.",
       "confetti": "Norite konfeti?",
       "confettiPromise": "Gausite lipdukų ir skaitmeninių konfeti",
       "sticker": "… ar evcc lipdukų?",
@@ -1081,9 +1316,7 @@
       "titleNoSponsor": "Paremkite mus",
       "titleSponsor": "Remiate projektą",
       "titleTrial": "Bandomasis režimas",
-      "titleVictron": "Rėmėjas - Victron Energy",
-      "trial": "Jūs naudojate bandomąjį režimą ir galite naudoti visas funkcijas. Apsvarstykite galimybę paremti projektą.",
-      "victron": "Naudojate evcc Victron Energy aparatinę įrangą ir turite prieigą prie visų funkcijų."
+      "trial": "Jūs naudojate bandomąjį režimą ir galite naudoti visas funkcijas. Apsvarstykite galimybę paremti projektą."
     },
     "telemetry": {
       "optIn": "Noriu prisidėti savo duomenimis.",
@@ -1164,6 +1397,7 @@
   },
   "general": {
     "back": "Atgal",
+    "cancel": "Atšaukti",
     "download": "Atsisiųsti",
     "error": "Klaida",
     "none": "nė vienas",
@@ -1203,6 +1437,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "nukopijuota!",
+      "copy": "kopijuoti",
+      "copySelected": "kopijuoti pasirinktus",
       "description": "Įtraukite konfigūraciją ir žurnalus, kad galėtume greitai atkartoti problemą. Raginame kuo daugiau dalytis. Paprastai nereikia nurodyti būsenos.",
       "include": "įtraukti",
       "lines": "eilutės",
@@ -1235,6 +1472,10 @@
     },
     "issueDescription": "Aprašymas",
     "issueTitle": "Pavadinimas",
+    "nightlyHint": "Gali būti jau sutvarkyta. Prašome prieš tai patikrinti naujausią {nightlyVersion}.",
+    "nightlyHintVersion": "Kasnaktinė versija",
+    "searchHint": "Prieš pranešdami apie klaidą, paieškokite tarp esamų {issues}.",
+    "searchHintLink": "GitHub problemos",
     "stepsToReproduce": "Žingsniai atkartojimui",
     "subTitleDiscussion": "Aprašykite savo problemą",
     "subTitleEmail": "Apibūdinkite problemą",
@@ -1283,6 +1524,15 @@
     "title": "Autentifikavimas"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "be pertraukimų",
+      "label": "Nuolat įkraukti",
+      "labelHeating": "Visada šildyti",
+      "minCurrent": "min {current}",
+      "once": "iki sesijos pabaigos",
+      "onceTip": "Tik šiai sesijai",
+      "permanent": "lieka įjungta visam laikui"
+    },
     "chargingPlan": {
       "active": "Aktyvus",
       "addRepeatingPlan": "Pridėti pasikartojantį įkrovimo planą",
@@ -1338,6 +1588,7 @@
       "batteryDischargeHold": "Kaupiklis (iškrovimas užblokuotas)",
       "batteryGridChargeActive": "Įkrovimas iš tinklo: aktyvus",
       "batteryGridChargeLimit": "Įkrauti iš tinklo: kai",
+      "batteryStatus": "Kaupiklio statusas",
       "batteryTooltip": "{energy} iš {total} ({soc})",
       "forecast": "Prognozė",
       "forecastTooltip": "prognozė: likusi saulės energijos gamyba šiandien",
@@ -1347,7 +1598,7 @@
       "loadpointsLimit": "{limit} limitas",
       "noEnergy": "Nėra skaitiklių duomenų",
       "pv": "Saulės jėgainė",
-      "pvExport": "Eksportas",
+      "pvExport": "Tinklo eksportas",
       "pvProduction": "Gamyba",
       "selfConsumption": "Sunaudojama iškart",
       "toggleDetails": "Energijos srauto detalės"
@@ -1365,35 +1616,6 @@
       "consumption": "Vartojimas",
       "feedIn": "Atidavimas į tinklą",
       "title": "Išorinis ribojimas aktyvuotas"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "įkrauta",
-          "returnEnergy": "iškrauta"
-        },
-        "grid": {
-          "energy": "iš tinklo",
-          "returnEnergy": "į tinklą"
-        },
-        "meter": {
-          "energy": "Energija iš tinklo",
-          "returnEnergy": "Energija (patiekta į tinklą)"
-        }
-      },
-      "download": "Atsisiųsti",
-      "empty": "Šio laikotarpio istorijos duomenų nėra.",
-      "group": {
-        "battery": "Kaupiklis",
-        "consumer": "Vartojimas",
-        "forecast": "Prognozė",
-        "grid": "Tinklas",
-        "loadpoint": "Įkrovimas ir Šildymas",
-        "meter": "Papildomi skaitikliai",
-        "pv": "Gamyba"
-      },
-      "otherConsumers": "Kiti",
-      "title": "Istorija"
     },
     "loadpoint": {
       "avgPrice": "⌀ Kaina",
@@ -1420,7 +1642,7 @@
         "descriptionDisabled": "Pasirinkite limitą greitam įkrovimui iš namų kaupiklio.",
         "disabled": "Išjungtas",
         "label": "Kaupikliu paspartintas įkrovimas",
-        "mode": "Galimas tik Saulė ir Min+Saulė režimuose.",
+        "mode": "Galimas tik išmaniame režime.",
         "once": "Paspartinimas aktyvuotas šiai įkrovimo sesijai.",
         "stateActive": "Įkrovimo pastiprinimas kaupiklio pagalba aktyvus",
         "stateBelowLimit": "Kaupiklis išsikrovęs, jo panaudoti įkrovimo spartinimui neina",
@@ -1438,7 +1660,7 @@
         "label": "Min. Srovė"
       },
       "minTemp": {
-        "description": "Žemiau {0} saulės režime, kaupiklio ir tinklo energija irgi naudojama temperatūrai palaikyti.",
+        "description": "Žemiau {0} išmaniame režime, kaupiklio ir tinklo energija irgi naudojama temperatūrai palaikyti.",
         "label": "Min. temperatūra"
       },
       "phasesConfigured": {
@@ -1452,13 +1674,33 @@
       },
       "smartCostCheap": "Įkrovimas pigiai iš tinklo",
       "smartCostClean": "Įkrovimas švariai iš tinklo",
+      "solar": "Saulės Perteklius",
+      "solarShare": {
+        "charging": {
+          "description": "Bent {share} minimalios įkrovimo galios turi būti gaunama iš saulės.",
+          "descriptionFull": "Įkrovimas prasideda, kai tik perteklius padengia minimalią įkrovimo galią.",
+          "descriptionZero": "Įkrovimas prasideda, kai tik atsiranda tam tikras perteklius."
+        },
+        "heating": {
+          "description": "Bent {share} minimalios šildymo galios turi būti gaunama iš saulės.",
+          "descriptionFull": "Šildymas prasideda, kai tik perteklius padengia minimalią šildymo galią.",
+          "descriptionZero": "Šildymas pradedamas, kai tik atsiranda tam tikras perteklius."
+        },
+        "label": "Saulės Dalis",
+        "thresholdsHint": "Sukonfigūruoti įkrovimo slenksčiai pagal galią. Norėdami naudoti šį slankiklį, pašalinkite juos.",
+        "thresholdsHintYaml": "Sukonfigūruotos įkrovimo ribos pagal galią. Norėdami naudoti šį slankiklį, pašalinkite šio įkroviklio įjungimo / išjungimo ribas savo evcc.yaml faile.",
+        "thresholdsLink": "Redaguoti konfigūraciją"
+      },
       "title": "Nustatymai {0}",
       "vehicle": "Automobilis"
     },
     "mode": {
+      "boost": "Padidinti",
       "minpv": "Min+Saulė",
+      "normal": "Normalus",
       "now": "Greitas",
-      "off": "Stop",
+      "off": "Išjungta",
+      "on": "Įjungta",
       "pv": "Saulė",
       "smart": "Išmanus"
     },
@@ -1479,6 +1721,7 @@
       "nextPlan": "Kitas planas",
       "notReachableInTime": "Tikslas bus pasiektas {overrun} vėliau.",
       "onlyInPvMode": "Įkrovimo planas veikia tik nustatyme Saulė.",
+      "onlyInSmartMode": "Įkrovimo planas veikia tik išmaniuoju režimu.",
       "planDuration": "Įkrovimo laikas",
       "planPeriodLabel": "Periodas",
       "planPeriodValue": "{start} iki {end}",
@@ -1501,6 +1744,7 @@
     "targetChargePlan": {
       "chargeDuration": "Įkrovimo trukmė",
       "co2Label": "CO₂ emisijos ⌀",
+      "optimizerHint": "Pastaba: šį planą sukūrė {optimizer}.",
       "priceLabel": "Energijos kaina",
       "timeRange": "{day} {range} val",
       "unknownPrice": "dar nežinoma"
@@ -1560,6 +1804,7 @@
       "feedinPriorityPausing": "Įkrovimas saulės energija pristabdytas, tam, kad pasinaudoti aukšta energijos pardavimo kaina.",
       "finished": "Baigta.",
       "minCharge": "Minimalus įkrovimas iki {soc}.",
+      "optimizerControlledTooltip": "Automatinis valdymas. Optimizatorius pradeda ir sustabdo įkrovimą.",
       "pvDisable": "Trūksta pertekliaus. Pauzė netrukus.",
       "pvEnable": "Pertekliaus užtenka, įkrovimas netrukus.",
       "scale1p": "Sumažinimas į vienfazį įkrovimą netrukus.",
@@ -1775,7 +2020,7 @@
     "co2Label": "CO₂ emisijos",
     "co2Limit": "CO₂ limitas",
     "enable": "Įjungti limitą",
-    "loadpointDescription": "Laikinai aktyvuoja greitą įkrovimą (režime Saulė, kai energija pigi).",
+    "loadpointDescription": "Laikinai aktyvuoja greitą įkrovimą išmaniame režime.",
     "modalTitle": "Išmanaus tinklo įkrovimas",
     "none": "nėra",
     "priceLabel": "Energijos kaina",
@@ -1785,7 +2030,8 @@
     "saved": "Išsaugota."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pristabdymo laikas",
+    "activeHoursLabel": "Aktyvus laikas",
+    "batteryDescription": "Iškrauna namų kaupiklį į tinklą, kai eksporto kaina didelė.",
     "description": "Pristabdo įkrovimą aukštos energijos kainos periodu, prioritetas - pelningam energijos pardavimui.",
     "priceLabel": "Pardavimo kaina",
     "priceLimit": "Pardavimo limitas",
@@ -1809,6 +2055,7 @@
     "battery": "Kaupiklis",
     "charge": "Įkrovimas",
     "comingSoon": "Šis puslapis yra kuriamas.",
+    "energy": "Energija",
     "forecast": "Prognozė",
     "more": "Daugiau",
     "sessions": "Sesijos"

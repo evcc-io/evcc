@@ -44,7 +44,9 @@ test.describe("opening logs", async () => {
 
 test.describe("features", async () => {
   test("content", async ({ page }) => {
-    await page.goto("/#/log");
+    // the page shows the latest 1000 lines only; at debug level the 0.1s
+    // interval pushes the startup line out within seconds, info keeps it
+    await page.goto("/#/log?level=info");
     await page.getByTestId("log-search").fill("UI local");
     await expect(page.getByTestId("log-content")).toContainText("UI local");
   });

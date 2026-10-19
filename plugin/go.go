@@ -14,10 +14,16 @@ import (
 
 // Go implements Go request provider
 type Go struct {
-	vm     func() (*interp.Interpreter, error)
+	vm     *golang.VM
 	script string
 	in     []inputTransformation
 	out    []outputTransformation
+	prg    map[string]*interp.Program // compiled script by setter parameter
+}
+
+type goParam struct {
+	name string
+	val  any
 }
 
 func init() {
@@ -37,7 +43,8 @@ func NewGoPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 		return nil, err
 	}
 
-	_, err := golang.RegisteredVM(cc.VM, "")
+	// the script is compiled once, repeated Eval leaks memory (https://github.com/traefik/yaegi/issues/1678)
+	vm, err := golang.RegisteredVM(cc.VM, "")
 	if err != nil {
 		return nil, err
 	}
@@ -53,11 +60,11 @@ func NewGoPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 	}
 
 	p := &Go{
-		// recreate VM on each invocation
-		vm:     func() (*interp.Interpreter, error) { return golang.RegisteredVM(cc.VM, "") },
+		vm:     vm,
 		script: cc.Script,
 		in:     in,
 		out:    out,
+		prg:    make(map[string]*interp.Program),
 	}
 
 	return p, nil
@@ -139,36 +146,32 @@ func (p *Go) BoolGetter() (func() (bool, error), error) {
 	}, nil
 }
 
+// inputs reads the input values outside the interpreter lock
+func (p *Go) inputs() ([]goParam, error) {
+	var res []goParam
+	err := transformInputs(p.in, func(name string, val any) error {
+		res = append(res, goParam{name, val})
+		return nil
+	})
+	return res, err
+}
+
 func (p *Go) handleGetter() (any, error) {
-	vm, err := p.vm()
+	params, err := p.inputs()
 	if err != nil {
 		return nil, err
 	}
 
-	if err := transformInputs(p.in, p.setParam(vm)); err != nil {
-		return nil, err
-	}
-
-	return p.evaluate(vm)
+	return p.evaluate("", params)
 }
 
 func (p *Go) handleSetter(param string, val any) error {
-	vm, err := p.vm()
+	params, err := p.inputs()
 	if err != nil {
 		return err
 	}
 
-	setParam := p.setParam(vm)
-
-	if err := transformInputs(p.in, setParam); err != nil {
-		return err
-	}
-
-	if err := setParam(param, val); err != nil {
-		return err
-	}
-
-	vv, err := p.evaluate(vm)
+	vv, err := p.evaluate(param, append(params, goParam{param, val}))
 	if err != nil {
 		return err
 	}
@@ -176,7 +179,39 @@ func (p *Go) handleSetter(param string, val any) error {
 	return transformOutputs(p.out, vv)
 }
 
-func (p *Go) evaluate(vm *interp.Interpreter) (res any, err error) {
+// goType is the interpreter type of a parameter. Integers have always been
+// handed to scripts as untyped constants, i.e. int.
+func goType(val any) reflect.Type {
+	if _, ok := val.(int64); ok {
+		return reflect.TypeFor[int]()
+	}
+	return reflect.TypeOf(val)
+}
+
+// declare declares the parameters as globals
+func (p *Go) declare(params []goParam) error {
+	g := p.vm.Globals()
+
+	for _, param := range params {
+		typ := goType(param.val)
+
+		// parameters of the same name share one global on a shared VM
+		if v, ok := g[param.name]; ok {
+			if v.Type() != typ {
+				return fmt.Errorf("%s: type %s conflicts with %s", param.name, typ, v.Type())
+			}
+			continue
+		}
+
+		if _, err := p.vm.Eval(fmt.Sprintf("var %s %s", param.name, typ)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (p *Go) evaluate(key string, params []goParam) (res any, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic: %v", r)
@@ -184,7 +219,33 @@ func (p *Go) evaluate(vm *interp.Interpreter) (res any, err error) {
 		err = backoff.Permanent(err)
 	}()
 
-	v, err := vm.Eval(p.script)
+	// named VMs are shared between plugins
+	p.vm.Lock()
+	defer p.vm.Unlock()
+
+	prg, ok := p.prg[key]
+	if !ok {
+		if err := p.declare(params); err != nil {
+			return nil, err
+		}
+	}
+
+	// Globals panics between Compile and Execute of a script declaring new variables
+	g := p.vm.Globals()
+
+	if !ok {
+		if prg, err = p.vm.Compile(p.script); err != nil {
+			return nil, err
+		}
+		p.prg[key] = prg
+	}
+
+	for _, param := range params {
+		v := g[param.name]
+		v.Set(reflect.ValueOf(param.val).Convert(v.Type()))
+	}
+
+	v, err := p.vm.Execute(prg)
 	if err != nil {
 		return nil, err
 	}
@@ -198,27 +259,6 @@ func (p *Go) evaluate(vm *interp.Interpreter) (res any, err error) {
 	}
 
 	return normalizeValue(v.Interface())
-}
-
-func (p *Go) setParam(vm *interp.Interpreter) func(param string, val any) error {
-	return func(param string, val any) error {
-		_, err := vm.Eval(fmt.Sprintf("%s := %s;", param, goLiteral(val)))
-		return err
-	}
-}
-
-// goLiteral renders val as Go source. Floats need their type spelled out:
-// %#v prints float64(100) as `100`, which the interpreter infers as int. Any
-// arithmetic mixing the parameter with a float constant then fails to compile.
-func goLiteral(val any) string {
-	switch v := val.(type) {
-	case float32:
-		return fmt.Sprintf("float32(%v)", v)
-	case float64:
-		return fmt.Sprintf("float64(%v)", v)
-	default:
-		return fmt.Sprintf("%#v", val)
-	}
 }
 
 var _ IntSetter = (*Go)(nil)

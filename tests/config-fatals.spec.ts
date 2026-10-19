@@ -1,7 +1,15 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { startSimulator, stopSimulator, simulatorHost } from "./simulator";
+import {
+  startSimulator,
+  stopSimulator,
+  simulatorHost,
+  simulatorUrl,
+  simulatorApply,
+} from "./simulator";
 import { expectModalVisible, expectModalHidden, addDemoCharger, newLoadpoint } from "./utils";
+
+const CONFIG_FAST = "fast.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
@@ -155,5 +163,46 @@ test.describe("fatal config handling", async () => {
     await page.reload();
     await expect(page.getByTestId("grid")).toHaveCount(0);
     await expect(page.getByTestId("fatal-error")).not.toBeVisible(); // error should be gone
+  });
+
+  test("force-saved broken pv meter keeps site running", async ({ page }) => {
+    await startSimulator();
+    await start(CONFIG_FAST);
+    await page.goto(simulatorUrl());
+    await page.getByLabel("PV Power").fill("5000");
+    await simulatorApply(page);
+    await page.goto("/#/config");
+
+    const meterModal = page.getByTestId("meter-modal");
+    const production = page.getByTestId("energyflow-entry-production");
+
+    // create meter
+    await page.getByRole("button", { name: "Add solar or battery" }).click();
+    await meterModal.getByRole("button", { name: "Add solar meter" }).click();
+    await meterModal.getByLabel("Title").fill("North Roof");
+    await meterModal.getByLabel("Manufacturer").selectOption("Shelly 1PM");
+    await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
+    await meterModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(meterModal);
+
+    // meter live in site loop
+    await restart(CONFIG_FAST);
+    await page.goto("/");
+    await expect(production).toContainText(["Production", "5.0 kW"].join(""));
+    await page.goto("/#/config");
+
+    // force-save unreachable host, no new instance can be created
+    await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(meterModal);
+    await meterModal.getByLabel("IP address or hostname").fill("localhost:1");
+    await meterModal.getByRole("button", { name: "Validate & save" }).click();
+    await meterModal.getByRole("button", { name: "Save anyway" }).click();
+    await expectModalHidden(meterModal);
+
+    // site loop keeps running and skips the meter until restart
+    await page.goto("/");
+    await expect(production).toContainText(["Production", "0 W"].join(""));
+
+    await stopSimulator();
   });
 });

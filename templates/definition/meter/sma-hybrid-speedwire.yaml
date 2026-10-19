@@ -11,6 +11,9 @@ requirements:
     en: |
       For active battery control use the Modbus-based SMA Smart Energy Hybrid Inverter template instead.
   evcc: ["skiptest"]
+discovery:
+  hostname: ["sma*"]
+  mac: ["0015BB"]
 params:
   - name: usage
     choice: ["pv", "battery", "grid"]

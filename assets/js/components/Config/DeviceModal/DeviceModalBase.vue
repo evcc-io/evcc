@@ -82,6 +82,7 @@
 							v-bind="param"
 							v-model="values[param.Name]"
 							:service-values="serviceValues[param.Name]"
+							:service-loading="serviceLoading[param.Name]"
 							:currency="currency"
 						/>
 						<PropertyCollapsible v-if="authAdvancedParams.length">
@@ -93,6 +94,7 @@
 									v-bind="param"
 									v-model="values[param.Name]"
 									:service-values="serviceValues[param.Name]"
+									:service-loading="serviceLoading[param.Name]"
 									:currency="currency"
 								/>
 							</template>
@@ -104,6 +106,16 @@
 								:id="`${deviceType}AuthCode`"
 								:code="auth.code"
 								:expiry="auth.expiry"
+							/>
+						</div>
+
+						<div v-if="auth.challenge">
+							<hr class="my-5" />
+							<AuthChallenge
+								:id="`${deviceType}AuthChallenge`"
+								v-model="challengeAnswer"
+								:challenge="auth.challenge"
+								@submit="submitChallenge"
 							/>
 						</div>
 
@@ -132,7 +144,23 @@
 								{{ $t("config.general.cancel") }}
 							</button>
 							<!-- perform auth -->
+							<button
+								v-if="auth.challenge"
+								type="button"
+								class="btn btn-primary"
+								:disabled="auth.loading || !challengeAnswer"
+								@click="submitChallenge"
+							>
+								<span
+									v-if="auth.loading"
+									class="spinner-border spinner-border-sm me-2"
+									role="status"
+									aria-hidden="true"
+								></span>
+								{{ $t("authProviders.challenge.submit") }}
+							</button>
 							<AuthConnectButton
+								v-else
 								:provider-url="auth.providerUrl ?? undefined"
 								:loading="auth.loading"
 								@prepare="checkAuthStatus"
@@ -159,6 +187,8 @@
 								:defaultBaudrate="modbus.Baudrate"
 								:defaultPort="modbus.Port"
 								:capabilities="modbusCapabilities"
+								:hostServiceValues="serviceValues['host']"
+								:hostServiceLoading="serviceLoading['host']"
 							/>
 
 							<PropertyEntry
@@ -168,6 +198,7 @@
 								v-bind="param"
 								v-model="values[param.Name]"
 								:service-values="serviceValues[param.Name]"
+								:service-loading="serviceLoading[param.Name]"
 								:currency="currency"
 							/>
 
@@ -186,6 +217,7 @@
 										v-bind="param"
 										v-model="values[param.Name]"
 										:service-values="serviceValues[param.Name]"
+										:service-loading="serviceLoading[param.Name]"
 										:currency="currency"
 									/>
 								</template>
@@ -196,6 +228,8 @@
 						</div>
 					</div>
 				</div>
+
+				<slot name="before-actions" :values="values"></slot>
 
 				<DeviceModalActions
 					v-if="showActions"
@@ -248,15 +282,16 @@ import RemoteAccessRequired from "./RemoteAccessRequired.vue";
 import TemplateSelector, { type TemplateGroup } from "./TemplateSelector.vue";
 import YamlEntry from "./YamlEntry.vue";
 import AuthCodeDisplay from "../AuthCodeDisplay.vue";
+import AuthChallenge from "../AuthChallenge.vue";
 import AuthConnectButton from "../AuthConnectButton.vue";
 import { initialTestState, performTest } from "../utils/test";
 import { reportValidityInModal } from "../utils/reportValidityInModal";
-import { initialAuthState, prepareAuthLogin } from "../utils/authProvider";
+import { initialAuthState, prepareAuthLogin, submitAuthChallenge } from "../utils/authProvider";
 import { popAuthValues, stashAuthValues } from "@/utils/authStash";
 import AdminPasswordPrompt from "@/components/Auth/AdminPasswordPrompt.vue";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
-import type { DeviceType, Timeout } from "@/types/evcc";
+import type { DeviceType, ServiceValue, Timeout } from "@/types/evcc";
 import { CURRENCY } from "@/types/evcc";
 import {
 	handleError,
@@ -270,6 +305,7 @@ import {
 	applyDefaultsFromTemplate,
 	createDeviceUtils,
 	fetchServiceValues,
+	serviceDefaults,
 	ADMIN_PASSWORD_REQUIRED,
 } from "./index";
 
@@ -292,6 +328,7 @@ export default defineComponent({
 		TemplateSelector,
 		YamlEntry,
 		AuthCodeDisplay,
+		AuthChallenge,
 		AuthConnectButton,
 		AdminPasswordPrompt,
 	},
@@ -348,6 +385,8 @@ export default defineComponent({
 		hideDelete: { type: Boolean, default: false },
 		// Optional: hide the info button in the header (e.g. for singleton devices like hems)
 		hideInfo: { type: Boolean, default: false },
+		// Optional: hide the bottom-middle disable button
+		hideDisable: { type: Boolean, default: false },
 	},
 	emits: [
 		"added",
@@ -368,16 +407,20 @@ export default defineComponent({
 			template: null as Template | null,
 			saving: false,
 			auth: initialAuthState(),
+			challengeAnswer: "",
 			succeeded: false,
 			loadingTemplate: false,
 			values: { ...this.initialValues } as DeviceValues,
 			baseline: JSON.stringify({ ...this.initialValues }),
 			test: initialTestState(),
-			serviceValues: {} as Record<string, string[]>,
+			serviceValues: {} as Record<string, ServiceValue[]>,
 			serviceValuesTimer: null as Timeout | null,
+			// params whose service announced more values
+			serviceLoading: {} as Record<string, boolean>,
 			adminPasswordValue: "",
 			adminPasswordRequired: false,
 			adminPasswordInvalid: false,
+			coveredByNested: false,
 		};
 	},
 	computed: {
@@ -429,6 +472,12 @@ export default defineComponent({
 		},
 		visibleParams() {
 			return this.authRequired ? this.authParams : this.templateParams;
+		},
+		serviceParams(): TemplateParam[] {
+			if (!this.modbus) return this.visibleParams;
+			// modbus host is not a regular param
+			const host = { Name: "host", Service: "network/hosts?template={template}" };
+			return [...this.visibleParams, host as TemplateParam];
 		},
 		modbus(): ModbusParam | undefined {
 			const params = this.template?.Params || [];
@@ -519,7 +568,7 @@ export default defineComponent({
 			return Boolean(this.values.deviceDisable);
 		},
 		canDisable(): boolean {
-			return !isNestedIn("loadpoint");
+			return !isNestedIn("loadpoint") && !this.hideDisable;
 		},
 		showActions() {
 			// explicitly hide template fields (ocpp step 1)
@@ -564,6 +613,11 @@ export default defineComponent({
 	watch: {
 		isModalVisible(visible) {
 			if (visible) {
+				if (this.coveredByNested) {
+					// was just hidden by a nested modal, it wasn't actually reopened
+					this.coveredByNested = false;
+					return;
+				}
 				this.templateName =
 					this.isNew && this.defaultTemplate ? this.defaultTemplate : null;
 				this.reset();
@@ -577,6 +631,9 @@ export default defineComponent({
 					this.applyDefaults();
 					this.restoreStash();
 				}
+			} else {
+				// check whether we were just hidden (child modal open) or actually closed
+				this.coveredByNested = !!this.name && isNestedIn(this.name);
 			}
 		},
 		id(newVal, oldVal) {
@@ -671,6 +728,14 @@ export default defineComponent({
 		authRequired() {
 			// update on auth state change
 			this.updateServiceValues();
+		},
+		"auth.challenge"() {
+			// a wrong answer comes back as a fresh challenge
+			this.challengeAnswer = "";
+		},
+		challengeAnswer() {
+			// outdated errors must not persist while typing
+			this.auth.error = null;
 		},
 	},
 	methods: {
@@ -801,6 +866,10 @@ export default defineComponent({
 		},
 		async prepareAuthLogin(authId: string) {
 			await prepareAuthLogin(this.auth, authId);
+		},
+		async submitChallenge() {
+			if (!this.challengeAnswer) return;
+			await submitAuthChallenge(this.auth, this.challengeAnswer);
 		},
 		async create(force = false) {
 			if (this.test.isUnknown && !force) {
@@ -934,6 +1003,8 @@ export default defineComponent({
 			this.remove();
 		},
 		handleVisibilityChange() {
+			// a pending challenge must survive the user looking something up in another tab
+			if (this.auth.challenge) return;
 			this.checkAuthStatus();
 		},
 		isYamlInputTypeByValue(value: ConfigType): boolean {
@@ -947,22 +1018,35 @@ export default defineComponent({
 				clearTimeout(this.serviceValuesTimer);
 			}
 			this.serviceValuesTimer = setTimeout(async () => {
+				const loading: Record<string, boolean> = {};
 				// Fetch only visible params to prevent premature auth instance creation
-				this.serviceValues = await fetchServiceValues(this.visibleParams, {
-					...this.modbusDefaults,
-					...this.values,
-				});
+				this.serviceValues = await fetchServiceValues(
+					this.serviceParams,
+					{ ...this.modbusDefaults, ...this.values, template: this.templateName },
+					(name, seconds) => {
+						loading[name] = true;
+						this.retryServiceValues(seconds);
+					}
+				);
+				this.serviceLoading = loading;
 				// values may have been reloaded since the last fetch
 				Object.keys(this.serviceValues).forEach((name) => this.applyServiceDefault(name));
 			}, 500);
 		},
+		retryServiceValues(seconds: number) {
+			if (!this.isModalVisible) return;
+			if (this.serviceValuesTimer) {
+				clearTimeout(this.serviceValuesTimer);
+			}
+			this.serviceValuesTimer = setTimeout(this.updateServiceValues, seconds * 1000);
+		},
 		applyServiceDefault(paramName: string) {
 			// Auto-apply single service value when field is empty and required
-			const values = this.serviceValues[paramName];
+			const values = serviceDefaults(this.serviceValues[paramName]);
 			const param = this.templateParams.find((p) => p.Name === paramName);
 			// single service value only, readonly fields always mirror it
 			if (
-				values?.length === 1 &&
+				values.length === 1 &&
 				(param?.Readonly || (!this.values[paramName] && param?.Required))
 			) {
 				// debounced auto-fill must not mark a clean form dirty

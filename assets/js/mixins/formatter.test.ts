@@ -23,7 +23,7 @@ const fmt = mount(
 describe("fmtW", () => {
   test("should format with units", () => {
     expect(fmt.fmtW(0, POWER_UNIT.AUTO)).eq("0,0 kW");
-    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO)).eq("1.200,0 kW");
+    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO)).eq("1.200 kW");
     expect(fmt.fmtW(0, POWER_UNIT.MW)).eq("0,0 MW");
     expect(fmt.fmtW(1200000, POWER_UNIT.MW)).eq("1,2 MW");
     expect(fmt.fmtW(0, POWER_UNIT.KW)).eq("0,0 kW");
@@ -38,7 +38,7 @@ describe("fmtW", () => {
   });
   test("should format without units", () => {
     expect(fmt.fmtW(0, POWER_UNIT.AUTO, false)).eq("0,0");
-    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO, false)).eq("1.200,0");
+    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO, false)).eq("1.200");
     expect(fmt.fmtW(0, POWER_UNIT.MW, false)).eq("0,0");
     expect(fmt.fmtW(1200000, POWER_UNIT.MW, false)).eq("1,2");
     expect(fmt.fmtW(0, POWER_UNIT.KW, false)).eq("0,0");
@@ -75,7 +75,7 @@ describe("getPowerUnit", () => {
 describe("fmtWh", () => {
   test("should format with units", () => {
     expect(fmt.fmtWh(0, POWER_UNIT.AUTO)).eq("0,0 kWh");
-    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO)).eq("1.200,0 kWh");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO)).eq("1.200 kWh");
     expect(fmt.fmtWh(0, POWER_UNIT.MW)).eq("0,0 MWh");
     expect(fmt.fmtWh(1200000, POWER_UNIT.MW)).eq("1,2 MWh");
     expect(fmt.fmtWh(0, POWER_UNIT.KW)).eq("0,0 kWh");
@@ -85,7 +85,7 @@ describe("fmtWh", () => {
   });
   test("should format without units", () => {
     expect(fmt.fmtWh(0, POWER_UNIT.AUTO, false)).eq("0,0");
-    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO, false)).eq("1.200,0");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO, false)).eq("1.200");
     expect(fmt.fmtWh(0, POWER_UNIT.MW, false)).eq("0,0");
     expect(fmt.fmtWh(1200000, POWER_UNIT.MW, false)).eq("1,2");
     expect(fmt.fmtWh(0, POWER_UNIT.KW, false)).eq("0,0");

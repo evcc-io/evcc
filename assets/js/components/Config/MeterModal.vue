@@ -174,6 +174,9 @@ export default defineComponent({
 			return (getModal("meter")?.choices as string[]) || [];
 		},
 		modalTitle(): string {
+			if (this.selectedType === "circuit") {
+				return this.$t(`config.circuit.${this.isNew ? "meterLabelAdd" : "meterLabelEdit"}`);
+			}
 			if (this.isNew) {
 				if (this.selectedType) {
 					return this.$t(`config.${this.selectedType}.titleAdd`);
@@ -193,6 +196,10 @@ export default defineComponent({
 			// consumers are always charge meters
 			if (this.selectedType === "consumer") {
 				return "charge";
+			}
+			// circuit meters measure total consumption like a grid meter
+			if (this.selectedType === "circuit") {
+				return "grid";
 			}
 			return this.selectedType;
 		},

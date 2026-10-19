@@ -36,7 +36,7 @@ Site (orchestrator — core/site.go)
 
 ### Vehicle
 - `Vehicle` — `Soc()`, `Capacity()`, `Identifiers()`, `Phases()`, `OnIdentified()`
-- `VehicleRange`, `VehicleOdometer`, `VehicleClimater`, `VehicleFinishTimer`, `VehiclePosition`
+- `VehicleRange`, `VehicleOdometer`, `VehicleClimater`, `VehiclePosition`
 - `ChargeController` — remote start/stop on vehicle
 - `CurrentLimiter` — `GetMinMaxCurrent()` for vehicle-side current limits
 - `CurrentController` — some vehicles (Tesla, Fiat) also implement `MaxCurrent()` to set charge current from the vehicle side
@@ -102,6 +102,8 @@ optimal current, sends single command. Resilient to restarts and missed updates.
 | `prioritySoc` | Below this: battery charges first, EV gets 0 |
 | `bufferSoc` | Above this: EV can draw from battery reserves |
 | `bufferStartSoc` | Above this: EV charging can begin even if importing |
+
+None of these apply to a loadpoint the optimizer controls: the optimizer plans the home battery, so a stop gives the battery priority and a charge takes the surplus (`loadpointSitePower`, `#34606`). A charge the home battery covers is pinned to its setpoint instead, the pv loop would count the discharge as deficit (`surplusRegime`, `#34809`).
 
 ## Effective Price Calculation
 

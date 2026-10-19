@@ -1,5 +1,6 @@
 <template>
 	<button
+		type="button"
 		class="root d-flex align-items-center justify-content-center"
 		tabindex="0"
 		@click="$emit('click')"

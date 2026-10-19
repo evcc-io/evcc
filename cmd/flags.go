@@ -101,6 +101,7 @@ const (
 	flagDigits = "digits"
 	flagDelay  = "delay"
 	flagForce  = "force"
+	flagFull   = "full"
 )
 
 var flagTemplateTypeDescription = "Custom template type (" + strings.Join(

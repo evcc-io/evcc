@@ -3,6 +3,9 @@ products:
   - brand: SMA
     description:
       generic: WebBox
+discovery:
+  hostname: ["sma*"]
+  mac: ["0015BB"]
 params:
   - name: usage
     choice: ["pv"]

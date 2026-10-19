@@ -1,5 +1,11 @@
 import { describe, expect, test } from "vite-plus/test";
-import { parseKey, parseQueryString, buildQuery, extractQueryString } from "./configModal";
+import {
+  parseKey,
+  parseQueryString,
+  buildQuery,
+  extractQueryString,
+  fadeDirections,
+} from "./configModal";
 
 describe("parseKey", () => {
   test("parses bracket notation", () => {
@@ -72,5 +78,28 @@ describe("extractQueryString", () => {
     expect(extractQueryString("/#/config?meter=1")).toBe("meter=1");
     expect(extractQueryString("/config?meter=1&vehicle=2")).toBe("meter=1&vehicle=2");
     expect(extractQueryString("/config?meter=1#vehicles")).toBe("meter=1");
+  });
+});
+
+describe("fadeDirections", () => {
+  const a = { name: "a" };
+  const b = { name: "b" };
+
+  test("root open/close keeps vertical fade", () => {
+    expect(fadeDirections([], [a])).toEqual({});
+    expect(fadeDirections([a], [])).toEqual({});
+  });
+
+  test("nested open slides forward", () => {
+    expect(fadeDirections([a], [a, b])).toEqual({ a: "left", b: "right" });
+  });
+
+  test("nested close slides backward", () => {
+    expect(fadeDirections([a, b], [a])).toEqual({ b: "right", a: "left" });
+  });
+
+  test("same top keeps running transition", () => {
+    expect(fadeDirections([a], [{ name: "a", id: 1 }])).toBeUndefined();
+    expect(fadeDirections([a, b], [a, b])).toBeUndefined();
   });
 });

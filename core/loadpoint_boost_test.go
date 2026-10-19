@@ -18,10 +18,19 @@ type mockSite struct {
 	maxDischargePower *float64
 	residualPower     float64
 	optimized         int
+	automatic         bool
 }
 
 func (m *mockSite) Optimize() {
 	m.optimized++
+}
+
+func (m *mockSite) Automatic() bool {
+	return m.automatic
+}
+
+func (m *mockSite) AutomaticLoadpoints() bool {
+	return m.automatic
 }
 
 func (m *mockSite) GetBatteryMaxDischargePower() *float64 {

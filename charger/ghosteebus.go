@@ -14,7 +14,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"golang.org/x/oauth2"
 )
 
 // GhostEEBus charger implementation combining EEBus protocol for EV communication
@@ -53,7 +52,7 @@ func NewGhostEEBusFromConfig(ctx context.Context, other map[string]any) (api.Cha
 
 // NewGhostEEBus creates a GhostEEBus charger combining EEBus with Ghost REST API
 func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter, hasChargedEnergy bool) (api.Charger, error) {
-	eb, err := newEEBus(ctx, ski, ip)
+	eb, err := newEEBus(ctx, ski, ip, false)
 	if err != nil {
 		return nil, err
 	}
@@ -70,15 +69,12 @@ func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter
 
 	// REST API features require IP and credentials
 	if ip != "" && user != "" && password != "" {
-		ts, err := ghostone.TokenSource(ctx, log, wb.uri, user, password)
+		tr, err := ghostone.Transport(ctx, log, wb.uri, user, password, transport.Insecure())
 		if err != nil {
 			return nil, err
 		}
 
-		wb.Client.Transport = &oauth2.Transport{
-			Source: ts,
-			Base:   transport.Insecure(),
-		}
+		wb.Client.Transport = tr
 
 		// warn if PV optimization is active
 		var pvMode ghostone.PvOptimizationMode

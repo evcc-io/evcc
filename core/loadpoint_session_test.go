@@ -49,7 +49,7 @@ func TestSession(t *testing.T) {
 		log:         util.NewLogger("foo"),
 		clock:       clock,
 		db:          db,
-		chargeMeter: cm,
+		chargeMeter: newChargeMeter(cm),
 	}
 
 	// create session
@@ -227,7 +227,7 @@ func TestResetHeatingSession(t *testing.T) {
 		clock:       clock,
 		db:          db,
 		charger:     charger,
-		chargeMeter: cm,
+		chargeMeter: newChargeMeter(cm),
 	}
 
 	// create session
@@ -288,7 +288,7 @@ func TestFinalizeSessionEnergy(t *testing.T) {
 			clock:       clock.NewMock(),
 			db:          db,
 			chargeRater: rater,
-			chargeMeter: cm,
+			chargeMeter: newChargeMeter(cm),
 		}
 		return lp, me, rater
 	}

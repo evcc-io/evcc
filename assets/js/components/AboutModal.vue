@@ -157,7 +157,7 @@ import Logo from "./Footer/Logo.vue";
 import Badge from "./Helper/Badge.vue";
 import api from "@/api";
 import settings from "@/settings";
-import { extractDomain } from "@/utils/extractDomain";
+import { extractHostname } from "@/utils/extractDomain";
 import { isDevelopment, isNightly, getReleaseName, isNewVersionAvailable } from "@/utils/version";
 import { defineComponent } from "vue";
 
@@ -201,7 +201,7 @@ export default defineComponent({
 			return this.customWebsite || EVCC_WEBSITE;
 		},
 		websiteDomain() {
-			return extractDomain(this.websiteUrl);
+			return extractHostname(this.websiteUrl);
 		},
 		phoneUrl() {
 			// strip separators for RFC 3966 tel: uri

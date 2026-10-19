@@ -134,9 +134,9 @@ func TestReservedPVPowerSmartFeedInPause(t *testing.T) {
 			car.bus = evbus.New()
 			car.clock = clck
 			car.charger = &feedInCharger{status: tc.status, enabled: tc.enabled}
-			car.chargeMeter = &Null{} // silence nil panics
-			car.chargeRater = &Null{} // silence nil panics
-			car.chargeTimer = &Null{} // silence nil panics
+			car.chargeMeter = newChargeMeter(&Null{}) // silence nil panics
+			car.chargeRater = &Null{}                 // silence nil panics
+			car.chargeTimer = &Null{}                 // silence nil panics
 			car.wakeUpTimer = NewTimer()
 			car.smartFeedInPriorityLimit = &limit
 			car.vehicleSoc = 20

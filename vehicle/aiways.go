@@ -10,7 +10,6 @@ import (
 	"github.com/evcc-io/evcc/vehicle/aiways"
 )
 
-// https://github.com/davidgiga1993/AiwaysAPI
 // https://github.com/TA2k/ioBroker.vw-connect
 
 // Aiways is an api.Vehicle implementation for Aiways cars

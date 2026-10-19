@@ -62,6 +62,7 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		Ip            string
 		Meter         bool
 		ChargedEnergy *bool
+		CoarseCurrent bool
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -71,12 +72,12 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 	// default true
 	hasChargedEnergy := cc.ChargedEnergy == nil || *cc.ChargedEnergy
 
-	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Meter, hasChargedEnergy)
+	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Meter, hasChargedEnergy, cc.CoarseCurrent)
 }
 
 // newEEBus creates and initializes a raw *EEBus charger.
 // It registers the device with the EEBus instance and waits for the connection.
-func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
+func newEEBus(ctx context.Context, ski, ip string, coarseCurrent bool) (*EEBus, error) {
 	inst, err := eebus.Instance()
 	if err != nil {
 		return nil, err
@@ -91,6 +92,11 @@ func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
 
 	c.connector = eebus.NewConnector()
 	c.minMaxG = util.Cached(c.minMax, time.Second)
+
+	// chargers rounding to full amps internally must not be offered milli amp control
+	if !coarseCurrent {
+		implement.Has(c, implement.ChargerEx(c.maxCurrentMillis))
+	}
 
 	if err := inst.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
@@ -111,8 +117,8 @@ func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
 }
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ctx context.Context, ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, error) {
-	c, err := newEEBus(ctx, ski, ip)
+func NewEEBus(ctx context.Context, ski, ip string, hasMeter, hasChargedEnergy, coarseCurrent bool) (api.Charger, error) {
+	c, err := newEEBus(ctx, ski, ip, coarseCurrent)
 	if err != nil {
 		return nil, err
 	}
@@ -417,13 +423,11 @@ func (c *EEBus) writeOscevLimits(evEntity spineapi.EntityRemoteInterface, curren
 
 // MaxCurrent implements the api.Charger interface
 func (c *EEBus) MaxCurrent(current int64) error {
-	return c.MaxCurrentMillis(float64(current))
+	return c.maxCurrentMillis(float64(current))
 }
 
-var _ api.ChargerEx = (*EEBus)(nil)
-
-// MaxCurrentMillis implements the api.ChargerEx interface
-func (c *EEBus) MaxCurrentMillis(current float64) error {
+// maxCurrentMillis implements the api.ChargerEx interface
+func (c *EEBus) maxCurrentMillis(current float64) error {
 	evEntity, ok := c.isEvConnected()
 	if !ok {
 		c.current = current

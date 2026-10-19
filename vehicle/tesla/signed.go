@@ -8,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	teslaclient "github.com/evcc-io/tesla-proxy-client"
 	"github.com/teslamotors/vehicle-command/pkg/account"
 	"github.com/teslamotors/vehicle-command/pkg/cache"
 	"github.com/teslamotors/vehicle-command/pkg/protocol"
@@ -29,15 +28,20 @@ type SignedController struct {
 }
 
 // NewSignedController creates a signing vehicle current and charge controller
-func NewSignedController(ts oauth2.TokenSource, key protocol.ECDHPrivateKey, vehicle *teslaclient.Vehicle, host string) *SignedController {
+func NewSignedController(fleet *API, key protocol.ECDHPrivateKey, vin string) (*SignedController, error) {
+	ts, err := fleet.TokenSource()
+	if err != nil {
+		return nil, err
+	}
+
 	return &SignedController{
 		ts:       ts,
 		key:      key,
-		vin:      vehicle.Vin,
-		host:     host,
+		vin:      vin,
+		host:     fleet.Host(),
 		sessions: cache.New(1),
-		rest:     NewController(vehicle),
-	}
+		rest:     NewController(fleet, vin),
+	}, nil
 }
 
 func (v *SignedController) exec(fn func(context.Context, *vehicle.Vehicle) error) error {

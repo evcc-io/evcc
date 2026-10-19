@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Autorisation réussie",
     "buttonConnect": "Se connecter à {provider}",
     "buttonDisconnect": "Déconnecter",
+    "challenge": {
+      "captcha": {
+        "label": "Saisissez les caractères affichés dans l'image.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Collez le code ou l'adresse de la page vers laquelle vous avez été redirigé.",
+        "title": "Code d'autorisation"
+      },
+      "openLogin": "Ouvrir la page de connexion",
+      "submit": "Continuer"
+    },
     "confirmLogout": "Êtes-vous sûr de vouloir déconnecter {title} ?",
     "connect": "Connecter",
     "disconnect": "déconnecter",
@@ -25,6 +37,7 @@
       "discharging": "en décharge",
       "energy": "Energie",
       "gridCharge": "charge depuis le réseau",
+      "gridDischarge": "décharge du réseau",
       "hold": "décharge verrouillée",
       "holdCharge": "charge verrouillée",
       "ofTotal": "de {total}",
@@ -33,7 +46,7 @@
     },
     "combined": "Combinée",
     "config": {
-      "buffer": "Si le niveau de la batterie domestique est supérieur à {soc}, la batterie sera utilisée pour charger les points de charge et repousser le passage en mode solaire. La charge solaire démarre automatiquement à {start}.",
+      "buffer": "Si le niveau de la batterie domestique est supérieur à {soc}, la batterie sera utilisée pour charger les points de charge et repousser le passage en mode intelligent. La charge solaire démarre automatiquement à {start}.",
       "bufferNone": "La batterie domestique n’est pas utilisée pour charger les points de charge. Définissez une valeur en dessous de {soc} pour activer le support.",
       "bufferStart": {
         "above": "dès que la batterie est chargée à plus de {soc}",
@@ -43,6 +56,13 @@
       "bufferTitle": "Batterie en tant que tampon de charge",
       "discharge": "Empêche la batterie domestique de se décharger en mode rapide pendant une recharge planifiée.",
       "gridDischarge": "Autoriser la batterie domestique à se décharger vers le réseau.",
+      "gridDischargeConfirm": {
+        "country": "Pays configuré : {country}.",
+        "description": "La possibilité d'injecter l'énergie stockée dans la batterie vers le réseau dépend de votre pays et de votre contrat de rachat. Si la batterie est également rechargée à partir du réseau, l'énergie injectée n'est plus exclusivement d'origine solaire. Dans le cadre de nombreux tarifs de rachat, cela entraîne la perte de votre rémunération ou est tout simplement interdit. Vérifiez au préalable les conditions de votre contrat de rachat et les exigences du gestionnaire de réseau.",
+        "noCountry": "Aucun pays n'est configuré. Configurez-le via {link}.",
+        "title": "Exportation vers le réseau à partir de la batterie"
+      },
+      "optimizerControlledHint": "Désactivé pour {loadpoints}. L' {optimizer} choisit.",
       "priority": "La batterie domestique a la priorité tant qu’elle est chargée en dessous de {soc}. Ensuite, les points de charge reçoivent le surplus.",
       "priorityNone": "Le surplus solaire va directement aux points de charge. Définissez une valeur au dessus de {soc} pour prioriser la batterie domestique.",
       "priorityTitle": "Où va le surplus solaire en priorité ?"
@@ -64,6 +84,7 @@
   },
   "batterySettings": {
     "gridChargeTab": "Chargement réseau",
+    "gridDischargeTab": "Décharge vers le réseau",
     "modalTitle": "Batterie domestique",
     "noBattery": "Aucune batterie n'est configurée.",
     "usageTab": "Utilisation batterie"
@@ -143,13 +164,48 @@
         "switchsocket": "Prise de commutation personnalisée"
       }
     },
+    "circuit": {
+      "addMeter": "Ajouter un compteur d'énergie dédié",
+      "custom": "Circuit défini par l'utilisateur",
+      "deleteChildrenFirst": "Pour supprimer ce circuit, commencez par supprimer ses circuits secondaires.",
+      "meterDedicated": "Compteur dédié",
+      "meterGrid": "Compteur de réseau",
+      "meterHelp": "Compteur mesurant la consommation totale de ce circuit.",
+      "meterLabel": "Compteur",
+      "meterLabelAdd": "Ajouter un compteur de circuit",
+      "meterLabelEdit": "Modifier le compteur de circuit",
+      "meterNone": "Pas de compteur",
+      "meterSelectionHelpDedicatedMeter": "Ajoutez un compteur existant au circuit ci-dessous.",
+      "meterSelectionHelpGridMeter": "Utilise le compteur de réseau déjà en place dans votre installation.",
+      "meterSelectionHelpNoMeter": "C'est la somme de tous les points de recharge qui est prise en compte.",
+      "meterSelectionLabel": "Choix du compteur",
+      "parentCircuit": "Circuit principal",
+      "template": "Circuit",
+      "titleAdd": "Ajouter un circuit",
+      "titleEdit": "Modifier le circuit",
+      "titleLabel": "Titre"
+    },
     "circuits": {
+      "addMainCircuit": "Ajouter le circuit principal",
+      "addSubCircuit": "Ajouter un sous-circuit",
+      "chargingPointsNote": "Attribuer les bornes de recharge et les radiateurs à un circuit dans leurs propres paramètres.",
       "description": "Vérifiez que la somme de tous les points de charges connectés à un circuit ne dépassent pas les limites de puissance et de courant. Les circuits peuvent être combinés pour construire une hiérarchie.",
+      "legacyWarning": "Une nouvelle configuration des circuits est disponible ! Supprimez et enregistrez votre configuration ici pour utiliser la nouvelle procédure guidée. Un redémarrage est requis.",
+      "meterDedicated": "Compteur",
+      "meterGrid": "Réseau",
       "title": "Gestion de la charge",
       "usableMeters": "Références des compteurs utilisables"
     },
+    "combobox": {
+      "count": "{count} suggestions",
+      "matching": "Correspondance",
+      "other": "Autre",
+      "searching": "Recherche…",
+      "suggestions": "Suggestions",
+      "used": "déjà utilisé"
+    },
     "consumer": {
-      "description": "Permet de suivre la consommation des petits appareils électroménagers non contrôlables (réfrigérateur, lave-linge, etc.). Vous offre une meilleure vue d'ensemble de la consommation de votre foyer.",
+      "description": "Permet de suivre la consommation des petits appareils électroménagers non contrôlables (réfrigérateur, lave-linge, etc.). Vous offre une meilleure vue d'ensemble de votre consommation.",
       "titleAdd": "Ajouter un compteur de consommation",
       "titleEdit": "Modifier le compteur de consommation"
     },
@@ -167,6 +223,15 @@
       "label": "Devise",
       "title": "Devise"
     },
+    "curtailer": {
+      "description": "Dispositif qui limite l’export sur demande de l'opérateur de réseau (§ 9 EEG). Beaucoup d’onduleurs solaires supportent cela directement via leur configuration de compteur solaire. Une configuration séparée n'est nécessaire que pour certains fabricants ou systèmes multi-onduleurs.",
+      "generic": "Intégration générique",
+      "specific": "Intégration spécifique",
+      "template": "Fabricant",
+      "title": "Limitation de l'injection",
+      "titleAdd": "Ajouter un appareil limitant",
+      "titleEdit": "Modifier un appareil limitant"
+    },
     "deviceValue": {
       "activeClients": "Clients actifs",
       "amount": "Montant",
@@ -180,7 +245,7 @@
       "chargeStatusC": "en charge",
       "chargeStatusE": "pas de courant",
       "chargeStatusF": "erreur",
-      "chargedEnergy": "Chargé",
+      "chargedEnergy": "Chargé (session)",
       "co2": "CO₂ du réseau",
       "configured": "Configuré",
       "connected": "Connecté",
@@ -189,9 +254,9 @@
       "currency": "Devise",
       "current": "Courant",
       "currentRange": "Courant",
-      "curtailLimit": "Limite d’entrée",
+      "curtailLimit": "Limite d’export",
       "curtailable": "Suspendable",
-      "curtailed": "Limitation de l'injection",
+      "curtailed": "Limitation d’export vers le réseau",
       "detected": "Détecté",
       "dimLimit": "Limite de consommation",
       "dimmed": "Consommation limitée",
@@ -206,6 +271,8 @@
       "identifier": "Identifiant RFID",
       "loginBlocked": "Limit de login atteinte",
       "max": "max",
+      "maxCurrent": "Courant max.",
+      "maxPower": "Puissance maximale",
       "messengers": "Services",
       "no": "non",
       "odometer": "Compteur kilométrique",
@@ -229,6 +296,31 @@
       "temp": "Température",
       "topic": "Sujet",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Consommé",
+          "returnEnergy": "Produit"
+        },
+        "battery": {
+          "energy": "Déchargé",
+          "returnEnergy": "Chargé"
+        },
+        "charge": {
+          "energy": "Chargé",
+          "returnEnergy": "Déchargé"
+        },
+        "consumer": {
+          "energy": "Consommé",
+          "returnEnergy": "Produit"
+        },
+        "grid": {
+          "energy": "Importé",
+          "returnEnergy": "Exporté"
+        },
+        "pv": {
+          "energy": "Produit"
+        }
+      },
       "vehicleLimitSoc": "Limite de charge",
       "yes": "oui"
     },
@@ -299,24 +391,31 @@
       "change": "Changer",
       "clear": "Effacer",
       "close": "Fermer",
+      "confirmDisable": "Désactiver cet équipement ? Il sera ignoré dès le prochain redémarrage.",
+      "confirmEnable": "Réactiver cet appareil ?",
       "confirmSave": "Il y a des modifications. Enregistrer maintenant ?",
       "copied": "Copié !",
       "copy": "Copier",
       "customHelp": "Créer un appareil personnalisé en utilisant le système de greffons d’evcc.",
       "customOption": "Appareil personnalisé",
       "delete": "Supprimer",
+      "disable": "Désactiver",
+      "disabled": "désactivé",
       "dismiss": "Ignorer",
       "docsLink": "Se référer à la documentation.",
       "dragHandle": "Poignée de déplacement",
       "dragItem": "Déplaçable : {title}",
       "dragList": "Liste à ordonner",
+      "enable": "Activer",
       "error": "Erreur",
       "experimental": "Expérimental",
+      "forceEnable": "Activer quand même",
       "forceSave": "Enregistrer quand même",
       "fromYamlHint": "Remarque : configuré via evcc.yaml. Supprimez l'entrée du fichier pour pouvoir effectuer des modifications.",
       "hideAdvancedSettings": "Masquer les paramètres avancés",
       "invalidFileSelected": "Fichier sélectionné non valide",
       "legacy": "historique",
+      "moreInfo": "Plus d'infos :",
       "noFileSelected": "Aucun fichier sélectionné.",
       "off": "désactivé",
       "on": "activé",
@@ -329,6 +428,7 @@
       "saving": "Enregistrement en cours…",
       "selectFile": "Parcourir",
       "showAdvancedSettings": "Afficher les paramètres avancés",
+      "site": "Localisation",
       "telemetry": "Télémétrie",
       "templateLoading": "Chargement...",
       "title": "Titre",
@@ -406,7 +506,6 @@
         "charging": "Chargeur",
         "heating": "Dispositif de chauffage"
       },
-      "chargingTitle": "Comportement",
       "circuitHelp": "Assignation de la gestion de charge afin d’assurer que les limites de puissance et de courant ne sont pas dépassées.",
       "circuitInvalid": "Le circuit n'existe pas",
       "circuitLabel": "Circuit",
@@ -419,6 +518,10 @@
       "creating": {
         "charging": "Chargeur enregistré. Création d'un point de recharge…",
         "heating": "Dispositif de chauffage enregistré. Création du chauffage…"
+      },
+      "currentRangeHelp": {
+        "charging": "Typiquement : 6-16 A pour 11 kW, 6-32 A pour 22 kW chargeurs (3-phase).",
+        "heating": "Dépend de la puissance nominale du dispositif de chauffage (selon la fiche technique)."
       },
       "defaultModeHelp": {
         "charging": "Mode de charge lors de la connexion du véhicule.",
@@ -464,22 +567,16 @@
       "priorityHelp": "Une priorité plus élevée permet d'obtenir un accès privilégié au surplus solaire.",
       "priorityLabel": "Priorité",
       "save": "Enregistrer",
-      "solarBehaviorCustomHelp": "Définir vos propres seuils et délais d’activation.",
-      "solarBehaviorDefaultHelp": "Démarrer après {enableDelay} de surplus suffisant. S'arrête lorsque le surplus n'est pas suffisant pour {disableDelay}.",
-      "solarBehaviorLabel": "Solaire",
-      "solarModeCustom": "personnalisé",
-      "solarModeMaximum": "mode solaire maximum",
+      "solarShareReset": "Supprimer les seuils",
       "temperatureRangeHelp": "Plage d'affichage de la barre de température. N'a aucune incidence sur le contrôle.",
       "temperatureRangeTitle": "Plage de températures",
       "thresholdDisableDelayLabel": "Délai de désactivation",
       "thresholdDisableHelpInvalid": "Veuillez entrer une valeur positive.",
       "thresholdDisableHelpPositive": "Arrêter lorsque plus de {power} est utilisé depuis le réseau depuis {delay}.",
-      "thresholdDisableHelpZero": "Arrêter lorsque la puissance minimale requise ne peut être assurée pendant {delay}.",
       "thresholdDisableLabel": "Seuil de désactivation (W)",
       "thresholdEnableDelayLabel": "Délai d’activation",
       "thresholdEnableHelpInvalid": "Veuillez utiliser une valeur négative.",
       "thresholdEnableHelpNegative": "Démarrer lorsqu’un surplus de {surplus} est disponible depuis {delay}.",
-      "thresholdEnableHelpZero": "Démarrer lorsque la puissance minimale requise peut être assurée pendant {delay}.",
       "thresholdEnableLabel": "Seuil d’activation (W)",
       "titleAdd": {
         "charging": "Ajouter point de charge",
@@ -506,6 +603,7 @@
     "main": {
       "addAdditional": "Ajouter un compteur supplémentaire",
       "addConsumer": "Ajouter un consommateur",
+      "addCurtailer": "Ajouter un appareil limitant",
       "addGrid": "Ajouter un compteur pour le réseau",
       "addLoadpoint": "Ajouter un point de charge ou un chauffage",
       "addPvBattery": "Ajouter du solaire ou une batterie",
@@ -606,6 +704,7 @@
         "aux": "Ajouter un consommateur auto-regulé",
         "battery": "Ajouter un compteur de batterie",
         "consumer": "Ajouter un consommateur régulier",
+        "grid": "Ajouter un compteur pour le réseau",
         "pv": "Ajouter un compteur solaire"
       },
       "save": "Enregistrer",
@@ -739,9 +838,29 @@
       "usernameHelp": "Pour l’authentification HTTP Basique sur le serveur en amont."
     },
     "optimizer": {
-      "description": "Analyse les prévisions d'ensoleillement, les prix de l'électricité et vos habitudes de consommation afin d'optimiser la stratégie de gestion de la batterie et de recharge. Les données sont transmises au service d'optimisation evcc pour y être traitées. Se contente actuellement de calculer est visualiser les données, il n’y a pas encore de contrôle d’appareils possible.",
+      "automatic": "Contrôle automatique",
+      "automaticLevel": {
+        "battery": {
+          "description": "Pilote uniquement la batterie domestique.",
+          "label": "Batterie domestique",
+          "status": "{automatic} pilote la batterie domestique."
+        },
+        "full": {
+          "description": "Pilote la batterie domestique, démarre et arrête la recharge des véhicules en mode intelligent, remplace les limites de prix et de CO₂ et prend en charge les programmations. Non modifiés : les modes Arrêt et Recharge rapide, les appareils de chauffage, les prises connectées et les véhicules dont la capacité de batterie est inconnue.",
+          "label": "Batterie & points de charge",
+          "status": "{automatic} pilote la batterie domestique et les points de charge."
+        },
+        "off": {
+          "description": "L’optimiseur se contente de proposer des recommandations. Aucun équipement n’est piloté.",
+          "status": "{automatic} est désactivé. L’optimiseur se contente de proposer des recommandations."
+        }
+      },
+      "controlled": "Désactivé par le contrôle automatique. L’{optimizer} décide à la place.",
+      "controls": "Pilote",
+      "description": "Utilise les prévisions solaires, les prix de l'électricité et vos habitudes de consommation pour optimiser la gestion des batteries et leur recharge. Les données sont transmises au service d'optimisation evcc.",
       "enable": "Activer l'optimiseur",
-      "info": "Cela peut prendre quelques minutes avant que le menu apparaisse. Pour les nouvelles installations, cela peut prendre jusqu’à 24h avant qu’evcc ne collecte suffisamment de données.",
+      "info": "Pour les nouvelles installations, cela peut prendre jusqu’à 24h avant qu’evcc ne collecte suffisamment de données.",
+      "linkWord": "optimiseur",
       "title": "Optimiseur"
     },
     "options": {
@@ -796,6 +915,8 @@
       "noClients": "Aucun client pour l’instant. Personne ne peut encore se connecter.",
       "password": "Mot de passe",
       "passwordOnce": "Ce mot de passe n’est affiché qu’une seule fois. Scannez le code QR ou copiez-le maintenant dans votre gestionnaire de mots de passe. Vous ne pourrez plus le ré-afficher.",
+      "privacy": "En activant cette fonctionnalité, vous acceptez notre {0}.",
+      "privacyLink": "politique de confidentialité",
       "qrInstall": "Installer l’app evcc pour {ios} ou {android}.",
       "qrScan": "Scannez le code avec l’appareil photo de votre téléphone pour vous connecter. Si vous êtes déjà sur votre téléphone, cliquez sur le code pour ouvrir l’application.",
       "removeClient": "Supprimer le client",
@@ -810,7 +931,7 @@
       "grid": "Réseau électrique",
       "integrations": "Intégrations",
       "loadpoints": "Bornes de recharge et chauffages",
-      "meter": "Solaire & Batterie",
+      "meter": "Solaire & batterie",
       "services": "Services",
       "system": "Système",
       "vehicles": "Véhicules"
@@ -836,6 +957,22 @@
       "labelDeviceSerial": "Numéro de série de l'appareil",
       "labelVendorId": "Identifiant du fournisseur",
       "title": "SMA Sunny Home Manager"
+    },
+    "site": {
+      "country": {
+        "description": "Utilisé pour les indications et les valeurs par défaut spécifiques à une région.",
+        "label": "Pays"
+      },
+      "currency": {
+        "description": "Permet de calculer les prix de l'énergie, les coûts et les économies en fonction de votre tarif.",
+        "example": "Le prix facturé s'élevait à {price}. Vous avez économisé {amount}.",
+        "label": "Devise"
+      },
+      "siteTitle": {
+        "description": "Affiché sur l'écran principal et dans l'onglet du navigateur.",
+        "label": "Titre"
+      },
+      "title": "Localisation"
     },
     "sponsor": {
       "addToken": "Entrer le jeton",
@@ -872,6 +1009,8 @@
           "confirmationButton": "Réinitialisation et redémarrage",
           "confirmationText": "Cette opération supprimera définitivement les données sélectionnées. Assurez-vous d'avoir téléchargé une copie de sauvegarde au préalable.",
           "description": "Vous avez des problèmes de configuration et vous voulez tout recommencer ? Effacez toutes les données et recommencez à zéro.",
+          "remote": "Accès à distance",
+          "remoteDescription": "Efface la configuration et les identifiants.",
           "sessions": "Sessions de charge",
           "sessionsDescription": "Supprime l'historique des sessions de charge.",
           "settings": "Configuration et réglages",
@@ -928,7 +1067,7 @@
         "temperature": "Ajouter les prévisions de température"
       },
       "planner": {
-        "description": "Paramètre avancé. Généralement superflu, car les tarifs d'électricité dynamiques et les prévisions de CO₂ sont utilisés automatiquement. Active une source de données supplémentaire qui n'est utilisée que pour la planification de la recharge, et non pour les statistiques et les calculs de prix.",
+        "description": "Ce paramètre avancé n'est généralement pas nécessaire. Les prévisions du planificateur servent de base à l'élaboration des plans de recharge et à la recharge économique ou propre sur le réseau (véhicules, appareils de chauffage, batteries domestiques). Sans ce paramètre, le prix dynamique du réseau ou les prévisions d'émissions de CO₂ sont utilisés automatiquement. Les statistiques, les calculs de coûts et les décisions de l'optimiseur restent inchangés.",
         "titleAdd": "Ajouter prévisions du planificateur",
         "titleEdit": "Modifier prévisions du planificateur"
       },
@@ -1003,6 +1142,124 @@
       "titleEdit": "Modifier le véhicule"
     }
   },
+  "energy": {
+    "battery": {
+      "charged": "Chargé",
+      "discharged": "Déchargé"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Barres",
+        "pattern": "Modèle"
+      },
+      "cost": "Coûts",
+      "others": "Autre",
+      "source": {
+        "battery": "batterie",
+        "grid": "réseau",
+        "pv": "solaire"
+      },
+      "title": "Consommateurs",
+      "view": {
+        "river": "Rivière",
+        "treemap": "Treemap"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "chargée",
+        "returnEnergy": "déchargée"
+      },
+      "grid": {
+        "energy": "importée",
+        "returnEnergy": "exportée"
+      },
+      "meter": {
+        "energy": "Énergie",
+        "returnEnergy": "Énergie (inversée)"
+      }
+    },
+    "empty": "Aucune donnée énergétique disponible pour cette période.",
+    "flow": {
+      "battery": "Batterie",
+      "batteryCharge": "Charge de la batterie",
+      "batteryDischarge": "Décharge de la batterie",
+      "charging": "Chargement",
+      "export": "Exportation vers le réseau",
+      "grid": "Importation du réseau",
+      "heating": "Chauffage",
+      "home": "Consommation",
+      "overview": "Aperçu",
+      "pv": "Production",
+      "title": "Flux d'énergie",
+      "usage": "Usage",
+      "withdrawal": "Retrait"
+    },
+    "grid": {
+      "amount": "Montant",
+      "cost": "Coût du réseau",
+      "energy": "Énergie",
+      "export": "Exportation",
+      "exportPrice": "Prix à l'exportation",
+      "import": "Importation",
+      "importPrice": "Prix d'importation",
+      "price": "Prix",
+      "revenue": "Revenus de rachat",
+      "title": "Réseau"
+    },
+    "group": {
+      "battery": "Batterie",
+      "consumer": "Consommation",
+      "forecast": "Prévisions",
+      "grid": "Réseau",
+      "loadpoint": "Chargement & Chauffage",
+      "meter": "Compteurs supplémentaires",
+      "pv": "Production"
+    },
+    "production": {
+      "above": "{value} au dessus",
+      "accuracy": "Précision des prévisions",
+      "below": "{value} en dessous",
+      "deviation": "Déviation",
+      "expectedTomorrow": "prévu demain",
+      "exported": "{value} exporté",
+      "produced": "Produit",
+      "remainingToday": "restant aujourd'hui",
+      "selfConsumed": "Autoconsommation",
+      "title": "Production"
+    },
+    "socTemp": {
+      "charged": "chargé",
+      "soc": "charge",
+      "temperature": "température",
+      "used": "utilisé"
+    },
+    "sources": {
+      "battery": "Batterie",
+      "cost": "Coûts",
+      "energy": "Énergie",
+      "grid": "Réseau",
+      "hint": "Énergie solaire et énergie stockée dans les batteries valorisée au prix de rachat.",
+      "price": "Prix/kWh",
+      "pv": "Solaire",
+      "share": "Parts",
+      "source": "Source",
+      "title": "Sources",
+      "total": "Total"
+    },
+    "stat": {
+      "autarky": "Autarcie",
+      "co2Saved": "CO₂ économisé",
+      "co2SavedTooltip": "Comparé au prélèvement de l'{energy} consommée sur le réseau.",
+      "configure": "Configurer maintenant",
+      "noCo2": "Aucune donnée sur le CO₂.",
+      "noPrice": "Aucune donnée de prix.",
+      "savings": "Économies",
+      "savingsTooltip": "Par rapport à l'achat de l'{energy} consommée auprès du réseau.",
+      "versus": "{value} par rapport {reference}"
+    },
+    "title": "Énergie"
+  },
   "footer": {
     "community": {
       "greenEnergy": "Solaire",
@@ -1051,7 +1308,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Devenir parrain",
-      "becomeSponsorExtended": "Soutenez-nous directement pour obtenir des autocollants.",
       "confetti": "Prêt pour les confettis ?",
       "confettiPromise": "Vous obtenez des autocollants et des confettis numériques",
       "sticker": "… ou des autocollants evcc ?",
@@ -1060,9 +1316,7 @@
       "titleNoSponsor": "Soutenez-nous",
       "titleSponsor": "Vous êtes un soutien",
       "titleTrial": "Mode d'essai",
-      "titleVictron": "Parrainé par Victron Energy",
-      "trial": "Vous êtes en mode essai et pouvez utiliser toutes les fonctionnalités. Pensez à soutenir le projet.",
-      "victron": "Vous utilisez evcc sur le matériel Victron Energy et avez accès à toutes les fonctionnalités."
+      "trial": "Vous êtes en mode essai et pouvez utiliser toutes les fonctionnalités. Pensez à soutenir le projet."
     },
     "telemetry": {
       "optIn": "Je souhaite partager mes données.",
@@ -1142,9 +1396,13 @@
     }
   },
   "general": {
+    "back": "Retour",
+    "cancel": "Annuler",
     "download": "Télécharger",
+    "error": "Erreur",
     "none": "aucun",
-    "note": "Remarque :"
+    "note": "Remarque :",
+    "warning": "Avertissement"
   },
   "header": {
     "about": "À propos",
@@ -1179,6 +1437,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "copié !",
+      "copy": "copier",
+      "copySelected": "copie sélectionnée",
       "description": "Merci d’inclure la configuration et les journaux afin de nous permettre de reproduire le problème rapidement. Nous vous encourageons à partager autant d’information que possible. L’état n’est normalement pas nécessaire.",
       "include": "inclure",
       "lines": "lignes",
@@ -1211,6 +1472,10 @@
     },
     "issueDescription": "Description",
     "issueTitle": "Titre",
+    "nightlyHint": "Le problème est peut-être déjà corrigé. Vérifiez d’abord avec la dernière version {nightlyVersion} avant.",
+    "nightlyHintVersion": "Version nightly",
+    "searchHint": "Avant de signaler un bug, recherchez avant dans les {issues} existants.",
+    "searchHintLink": "Tickets GitHub",
     "stepsToReproduce": "Étapes permettant de reproduire le problème",
     "subTitleDiscussion": "Décrivez votre problème",
     "subTitleEmail": "Décrivez votre problème",
@@ -1259,6 +1524,15 @@
     "title": "Authentification"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "sans interruptions",
+      "label": "Toujours en charge",
+      "labelHeating": "Toujours en chauffe",
+      "minCurrent": "min {current}",
+      "once": "jusqu'à la fin de la session",
+      "onceTip": "Seulement pour cette session",
+      "permanent": "activé en permanence"
+    },
     "chargingPlan": {
       "active": "Actif",
       "addRepeatingPlan": "Ajouter un plan récurrent",
@@ -1275,15 +1549,18 @@
         "continuous": "continu",
         "continuousCo2Description": "Sélectionne la série de créneaux la plus propre et sans interruption.",
         "continuousPriceDescription": "Sélectionne la série de créneaux horaires sans interruption et la moins chère.",
+        "disabledDescription": "Nécessite un tarif dynamique ou une prévision de CO2.",
         "label": "Optimisation"
       },
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Effectuer une partie de la recharge juste avant le départ : la batterie est chaude et reste moins longtemps à un niveau de charge élevé.",
+        "disabledDescription": "Toute la recharge se produit juste avant le départ.",
         "label": "Chargement tardif",
         "optionAll": "tous",
         "optionNo": "non",
-        "summary": "{precondition} avant"
+        "summary": "{precondition} avant",
+        "summaryAll": "juste avant le départ"
       },
       "remove": "Enlever",
       "repeating": "récurrent",
@@ -1311,6 +1588,7 @@
       "batteryDischargeHold": "Batterie (verrouillée)",
       "batteryGridChargeActive": "Charge réseau : active",
       "batteryGridChargeLimit": "Charge réseau : quand",
+      "batteryStatus": "État de la batterie",
       "batteryTooltip": "{energy} sur {total} ({soc})",
       "forecast": "Prévisions",
       "forecastTooltip": "prévision : production solaire restante aujourd’hui",
@@ -1339,35 +1617,6 @@
       "feedIn": "Entrée",
       "title": "Limite externe active"
     },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "chargée",
-          "returnEnergy": "déchargée"
-        },
-        "grid": {
-          "energy": "importée",
-          "returnEnergy": "exportée"
-        },
-        "meter": {
-          "energy": "Énergie",
-          "returnEnergy": "Énergie (inversée)"
-        }
-      },
-      "download": "Télécharger",
-      "empty": "Pas de données historiques pour cette intervalle de temps.",
-      "group": {
-        "battery": "Batterie",
-        "consumer": "Consommation",
-        "forecast": "Prévisions",
-        "grid": "Réseau",
-        "loadpoint": "Chargement & Chauffage",
-        "meter": "Compteurs supplémentaires",
-        "pv": "Production"
-      },
-      "otherConsumers": "Autres",
-      "title": "Historique"
-    },
     "loadpoint": {
       "avgPrice": "Prix ⌀",
       "charged": "Chargé",
@@ -1378,6 +1627,7 @@
       "finished": "Heure de fin",
       "last24hEnergy": "24 dernières heures",
       "last7dEnergy": "7 derniers jours",
+      "phasesMismatch": "Plus de phases actives que configurées. Vérifiez la configuration de phase.",
       "power": "Puissance",
       "price": "Coût",
       "remaining": "Temps restant",
@@ -1392,7 +1642,7 @@
         "descriptionDisabled": "Sélectionnez une limite pour autoriser la charge rapide depuis la batterie résidentielle.",
         "disabled": "Désactivé",
         "label": "Boost Batterie",
-        "mode": "Uniquement disponible en mode solaire et min+solaire ».",
+        "mode": "Uniquement disponible en mode intelligent.",
         "once": "Boost actif pour cette session de charge.",
         "stateActive": "Boost batterie activé",
         "stateBelowLimit": "Niveau de batterie trop bas pour le boost",
@@ -1410,7 +1660,7 @@
         "label": "Courant min."
       },
       "minTemp": {
-        "description": "En dessous de {0}, la batterie et le réseau électrique sont également utilisés en mode solaire pour maintenir cette température.",
+        "description": "En dessous de {0}, la batterie et le réseau électrique sont également utilisés en mode intelligent pour maintenir cette température.",
         "label": "Température minimale"
       },
       "phasesConfigured": {
@@ -1424,13 +1674,33 @@
       },
       "smartCostCheap": "Chargement bon marché depuis le réseau",
       "smartCostClean": "Chargement propre depuis le réseau",
+      "solar": "Surplus solaire",
+      "solarShare": {
+        "charging": {
+          "description": "Au moins {share} de la puissance de charge minimale doit venir du solaire.",
+          "descriptionFull": "La recharge commence dès que le surplus couvre la puissance de charge minimale.",
+          "descriptionZero": "La recharge commence dès qu'un surplus est disponible."
+        },
+        "heating": {
+          "description": "Au moins {share} de la puissance de chauffage minimale doit venir du solaire.",
+          "descriptionFull": "Le chauffage commence dès que le surplus couvre la puissance minimale de chauffage.",
+          "descriptionZero": "Le chauffage commence dès qu'un surplus est disponible."
+        },
+        "label": "Part solaire",
+        "thresholdsHint": "Les seuils de charge basés sur la puissance sont configurés. Retirez-les pour utiliser ce curseur.",
+        "thresholdsHintYaml": "Les seuils de charge basés sur la puissance sont configurés. Retirer les seuils d'activation/désactivation de ce point de charge dans votre evcc.yaml pour utiliser ce curseur.",
+        "thresholdsLink": "Modifier la configuration"
+      },
       "title": "Réglages {0}",
       "vehicle": "Véhicule"
     },
     "mode": {
+      "boost": "Boost",
       "minpv": "Min+Solaire",
+      "normal": "Normal",
       "now": "Rapide",
       "off": "Arrêté",
+      "on": "Enclenché",
       "pv": "Solaire",
       "smart": "Intelligent"
     },
@@ -1451,6 +1721,7 @@
       "nextPlan": "Prochain plan",
       "notReachableInTime": "L’objectif sera atteint avec un retard de {overrun}.",
       "onlyInPvMode": "Le plan de charge ne fonctionne qu’en mode solaire.",
+      "onlyInSmartMode": "Le plan de recharge ne fonctionne qu’en mode intelligent.",
       "planDuration": "Durée de charge",
       "planPeriodLabel": "Période",
       "planPeriodValue": "{start} à {end}",
@@ -1473,6 +1744,7 @@
     "targetChargePlan": {
       "chargeDuration": "Durée de charge",
       "co2Label": "Émissions de CO₂ ⌀",
+      "optimizerHint": "Remarque : ce plan a été créé par l’{optimizer}.",
       "priceLabel": "Prix de l'énergie",
       "timeRange": "{day} {range} h",
       "unknownPrice": "encore inconnu"
@@ -1498,7 +1770,7 @@
     "vehicleSettings": {
       "connectedTo": "connecté à {0}",
       "description": "Ces paramètres par défaut s'appliquent lorsque le véhicule se connecte à une borne de recharge.",
-      "editHint": "Ajouter ou modifier des véhicules dans {0}.",
+      "editHint": "Les véhicules peuvent être modifiés dans {0}.",
       "keepAsIs": "Garder tel quel",
       "learnMore": "En savoir plus.",
       "limitSoc": "Limite par défaut",
@@ -1531,6 +1803,7 @@
       "feedinPriorityPausing": "Chargement solaire interrompu pour maximiser l'injection.",
       "finished": "Terminée.",
       "minCharge": "Charge minimale jusqu'à {soc}.",
+      "optimizerControlledTooltip": "Pilotage automatique. L’optimiseur démarre et arrête la recharge.",
       "pvDisable": "Pas assez de surplus. Pause imminente.",
       "pvEnable": "Surplus disponible. Démarrage imminent.",
       "scale1p": "Charge réduite en monophasé imminente.",
@@ -1680,6 +1953,13 @@
     "vehicle": "Véhicule"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Auto",
+      "dmy": "JJ/MM/AAAA",
+      "label": "Format de date",
+      "mdy": "MM/JJ/AAAA",
+      "ymd": "AAAA-MM-JJ"
+    },
     "deviceInfo": "Les réglages effectués dans cette fenêtre n’affectent que cet appareil.",
     "fullscreen": {
       "enter": "Passer en plein écran",
@@ -1695,6 +1975,7 @@
       "label": "Langue"
     },
     "loadpoints": {
+      "disabledDevice": "désactivé",
       "help": "Changer l’ordre et la visibilité dans l’interface utilisateur.",
       "hide": "Cacher {title}",
       "label": "Points de charge",
@@ -1738,7 +2019,7 @@
     "co2Label": "Émissions de CO₂",
     "co2Limit": "Limite CO₂",
     "enable": "Activer la limite",
-    "loadpointDescription": "Autorise la charge rapide temporaire en mode solaire.",
+    "loadpointDescription": "Autorise la charge rapide temporaire en mode intelligent.",
     "modalTitle": "Charge réseau intelligente",
     "none": "aucune",
     "priceLabel": "Prix de l'énergie",
@@ -1748,7 +2029,8 @@
     "saved": "Enregistré."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Temps de pause",
+    "activeHoursLabel": "Temps actif",
+    "batteryDescription": "Décharge la batterie domestique vers le réseau tandis que le taux d'alimentation est élevé.",
     "description": "La charge est interrompue lorsque les prix sont élevés afin de donner la priorité à l'injection rentable dans le réseau.",
     "priceLabel": "Prix d'injection",
     "priceLimit": "Limite d'injection",
@@ -1772,6 +2054,7 @@
     "battery": "Batterie",
     "charge": "Charger",
     "comingSoon": "Cette page est en cours de construction.",
+    "energy": "Énergie",
     "forecast": "Prévisions",
     "more": "Plus",
     "sessions": "Sessions"

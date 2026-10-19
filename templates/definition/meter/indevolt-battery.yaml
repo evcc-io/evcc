@@ -22,7 +22,7 @@ requirements:
 
       Vorzeichenkonvention der Batterieleistung sowie Verfügbarkeit eines Netzbezugs-/-einspeisepunktes (Register 2101/2108) hängen von der Installation (CT-Klemme) ab und sind ggf. zu prüfen.
 
-      Siehe [docs.indevolt.com](https://docs.indevolt.com/docs/hardware/geek/open-data/).
+      Siehe [docs.indevolt.com](https://docs.indevolt.com/docs/hardware/open-data/http-api/).
     en: |
       Local direct access to Indevolt battery storage devices (Non-PV variants) via HTTP API on port 8080.
 
@@ -30,7 +30,7 @@ requirements:
 
       Battery power sign convention and availability of grid import/export readings (registers 2101/2108) depend on installation (CT clamp) and should be verified.
 
-      See [docs.indevolt.com](https://docs.indevolt.com/docs/hardware/geek/open-data/).
+      See [docs.indevolt.com](https://docs.indevolt.com/docs/hardware/open-data/http-api/).
 params:
   - name: usage
     choice: ["grid", "battery"]

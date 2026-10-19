@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
@@ -83,6 +84,18 @@ func mqttTagAttribute(attr string, f reflect.StructField) bool {
 	return tagAttribute("mqtt", attr, f)
 }
 
+// mqttTopicLevel makes a dynamic map key usable as a single topic level.
+// Wildcards and level separators are not allowed in published topics, and some
+// brokers (e.g. NATS) reject topics containing whitespace.
+func mqttTopicLevel(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r == '+' || r == '#' || r == '/' || unicode.IsSpace(r) {
+			return '_'
+		}
+		return r
+	}, s)
+}
+
 func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
 	if _, ok := payload.(fmt.Stringer); ok || payload == nil {
 		m.publishSingleValue(topic, retained, payload)
@@ -122,7 +135,7 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
 	case reflect.Map:
 		// loop map
 		for iter := reflect.ValueOf(payload).MapRange(); iter.Next(); {
-			k := iter.Key().String()
+			k := mqttTopicLevel(iter.Key().String())
 			m.publishComplex(fmt.Sprintf("%s/%s", topic, k), retained, iter.Value().Interface())
 		}
 
@@ -220,16 +233,12 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 		{"residualPower", floatSetter(site.SetResidualPower)},
 		{"gridExportLimit", floatSetter(site.SetGridExportLimit)},
 		{"solarAdjusted", boolSetter(pass(site.SetSolarAdjusted))},
-		{"smartCostLimit", floatPtrSetter(pass(func(limit *float64) {
-			for _, lp := range site.ActiveLoadpoints() {
-				lp.SetSmartCostLimit(limit)
-			}
-		}))},
-		{"smartFeedInPriorityLimit", floatPtrSetter(pass(func(limit *float64) {
-			for _, lp := range site.ActiveLoadpoints() {
-				lp.SetSmartFeedInPriorityLimit(limit)
-			}
-		}))},
+		{"smartCostLimit", floatPtrSetter(func(limit *float64) error {
+			return setLoadpointsLimit(site, loadpoint.API.SetSmartCostLimit, limit)
+		})},
+		{"smartFeedInPriorityLimit", floatPtrSetter(func(limit *float64) error {
+			return setLoadpointsLimit(site, loadpoint.API.SetSmartFeedInPriorityLimit, limit)
+		})},
 		{"batteryGridChargeLimit", floatPtrSetter(site.SetBatteryGridChargeLimit)},
 		{"batteryGridDischargeLimit", floatPtrSetter(site.SetBatteryGridDischargeLimit)},
 		{"batteryMode", ptrSetter(api.BatteryModeString, func(m *api.BatteryMode) error {
@@ -262,9 +271,9 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"disableThreshold", floatSetter(pass(lp.SetDisableThreshold))},
 		{"enableDelay", durationSetter(pass(lp.SetEnableDelay))},
 		{"disableDelay", durationSetter(pass(lp.SetDisableDelay))},
-		{"smartCostLimit", floatPtrSetter(pass(lp.SetSmartCostLimit))},
+		{"smartCostLimit", floatPtrSetter(lp.SetSmartCostLimit)},
 		{"solarShare", floatSetter(pass(lp.SetSolarShare))},
-		{"smartFeedInPriorityLimit", floatPtrSetter(pass(lp.SetSmartFeedInPriorityLimit))},
+		{"smartFeedInPriorityLimit", floatPtrSetter(lp.SetSmartFeedInPriorityLimit)},
 		{"batteryBoost", boolSetter(lp.SetBatteryBoost)},
 		{"batteryBoostLimit", intSetter(pass(lp.SetBatteryBoostLimit))},
 		{"planStrategy", planStrategySetter(lp.SetPlanStrategy)},

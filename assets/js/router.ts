@@ -125,15 +125,16 @@ export default function setupRouter(i18n: VueI18nInstance) {
         props: true,
       },
       {
-        path: "/history",
-        component: () => import("./views/History.vue"),
+        path: "/energy",
+        component: () => import("./views/Energy.vue"),
         props: (route) => {
-          const { day, month, year, period } = route.query;
+          const { day, month, year, period, consumer } = route.query;
           return {
             day: day ? parseInt(day as string, 10) : undefined,
             month: month ? parseInt(month as string, 10) : undefined,
             year: year ? parseInt(year as string, 10) : undefined,
             period: period ?? undefined,
+            consumer: consumer ?? null,
           };
         },
       },
@@ -147,10 +148,11 @@ export default function setupRouter(i18n: VueI18nInstance) {
         component: () => import("./views/Log.vue"),
         beforeEnter: ensureAuth,
         props: (route) => {
-          const { areas, level } = route.query;
+          const { areas, level, q } = route.query;
           return {
             areas: typeof areas === "string" ? areas.split(",") : undefined,
             level: typeof level === "string" ? level : undefined,
+            q: typeof q === "string" ? q : undefined,
           };
         },
       },

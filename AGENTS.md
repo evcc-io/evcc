@@ -39,7 +39,10 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 | [Plugin System](docs/agents/plugin-system.md)                 | Plugin layer (HTTP, MQTT, Modbus, SunSpec, JS)                               |
 | [Web UI & API](docs/agents/web-ui-api.md)                     | REST API, WebSocket, Vue frontend, authentication                            |
 | [API Security](docs/agents/api-security.md)                   | Auth modes, JWT/API key/session, two-tier checks, credential storage         |
+| [Provider Auth](docs/agents/provider-auth.md)                 | Third-party logins (OAuth, device code, tokens), template `auth` block, UI   |
 | [Chart Conventions](docs/agents/charts.md)                    | ECharts charts: axis units and scale rules, tooltips, layout                 |
+| [Energy Analytics](docs/agents/energy-analytics.md)           | Energy page metrics: attribution, cost/CO2, forecast accuracy, missing data  |
+| [Discovery Hints](docs/agents/discovery-hints.md)             | Vendor registry update, adding and reviewing template `discovery` hints      |
 
 ### Loading guide by task type
 
@@ -51,8 +54,11 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - **Chart work (ECharts, axes, tooltips)** — charts + web-ui-api
 - **API endpoint work** — web-ui-api + core-domain
 - **Auth / login / API key / permissions** — api-security + web-ui-api
+- **Vehicle or device cloud login (OAuth, tokens, captcha)** — provider-auth + hardware-integrations
 - **Config/template work** — plugin-system
+- **Discovery hints / vendor registry update** — discovery-hints + plugin-system
 - **Control loop / charging logic** — core-domain
+- **Energy page metrics (attribution, savings, accuracy)** — energy-analytics + charts
 - **Bug in any area** — core-domain + relevant topic file(s)
 
 ## Architecture Guidelines
@@ -96,8 +102,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Project name is `evcc`, always lowercase
 - In user-facing strings, only mention `evcc` when needed to understand the context. Inside evcc's own UI the self-reference is usually redundant
 - Acronyms uppercase in prose: OCPP, MQTT, HEMS, SoC
-- Terminology: German "Phasensaldierung" (meter netting signed power across phases each instant) is "summative energy measurement" in English. Avoid "phase balancing" (means load balancing) and "net metering" (a billing scheme)
-- Terminology: the top-level load management circuit is "root circuit" in English, "Hauptstromkreis" in German
+- Terminology: agreed terms per language with explanations live in `i18n/glossary/` (`en.json` + `<lang>.json`, rules in `README.md`). Check it before wording user-facing strings (including API descriptions in `assets/js/types/evcc.ts` and `server/openapi.yaml`), and extend it when a new concept gets a name
 - Commit subjects: `Component: short description`, no trailing period. Sub-scope in parens: `Meter (Home Assistant): ...`. Use `chore:`/`fix:`/`docs:` only for non-feature changes
 
 ## Comment Style
@@ -203,7 +208,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 
 - Use CSS Custom Properties for theming (semantic names: `--evcc-green`, `--evcc-battery`)
 - No inline `style` attributes; use Bootstrap utility classes or scoped CSS (inline only for truly dynamic values)
-- Use existing custom media queries for responsive breakpoints
+- Use the custom media queries from `assets/css/breakpoints.css` (`@media (--sm-and-up)`) for responsive breakpoints, never raw px `min-width`/`max-width`. Write mobile-first and override upwards instead of adding max-width queries
 - Use `$t()` function for all user-facing strings
 - Update both `i18n/en.json` and `i18n/de.json` for new strings
 - Use hierarchical namespace: `{section}.{component}.{purpose}`

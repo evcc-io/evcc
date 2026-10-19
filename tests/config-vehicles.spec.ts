@@ -183,10 +183,11 @@ test.describe("vehicles", async () => {
     await page.getByRole("button", { name: "Hide advanced settings" }).click();
     await expect(vehicleModal.getByLabel("Maximum number of phases")).not.toBeVisible();
 
-    // polestar template
+    // polestar data portal template
     await vehicleModal.getByLabel("Manufacturer").selectOption("Polestar");
-    await expect(vehicleModal.getByLabel("Username")).toBeVisible();
-    await expect(vehicleModal.getByLabel("Password")).toBeVisible();
+    await expect(vehicleModal.getByLabel("Client ID")).toBeVisible();
+    await expect(vehicleModal.getByLabel("Client Secret")).toBeVisible();
+    await expect(vehicleModal.getByLabel("Account ID")).toBeVisible();
     await expect(vehicleModal.getByLabel("Cache optional")).not.toBeVisible();
     await expect(vehicleModal.getByLabel("Default charging mode")).not.toBeVisible();
 

@@ -5,12 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"strings"
 
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/util"
-	teslaclient "github.com/evcc-io/tesla-proxy-client"
 	"golang.org/x/oauth2"
 )
 
@@ -73,7 +71,7 @@ func NewOAuth(ctx context.Context, clientID, clientSecret, origin string) (oauth
 
 	return auth.NewOAuth(ctx, "Tesla", "", OAuthConfig(clientID, clientSecret, origin),
 		// region is resolved from the account after login
-		auth.WithExchangeOptions(oauth2.SetAuthURLParam("audience", strings.TrimSuffix(teslaclient.FleetAudienceNA, "/"))),
+		auth.WithExchangeOptions(oauth2.SetAuthURLParam("audience", FleetBaseUrl)),
 		auth.WithLoginHook(func(ctx context.Context) error {
 			domain, err := originHost(origin)
 			if err != nil {

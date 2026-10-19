@@ -158,8 +158,11 @@ export default defineComponent({
 		loadpoints() {
 			return store.uiLoadpoints.value || [];
 		},
+		enabledLoadpoints() {
+			return this.loadpoints.filter((lp) => !lp.disabled);
+		},
 		orderedVisibleLoadpoints() {
-			return this.loadpoints.filter((lp) => lp.visible && !lp.disabled);
+			return this.enabledLoadpoints.filter((lp) => lp.visible);
 		},
 		batterySoc() {
 			return this.battery?.soc;
@@ -177,7 +180,7 @@ export default defineComponent({
 			return store.state?.experimental;
 		},
 		energyflow() {
-			return this.collectProps(Energyflow);
+			return { ...this.collectProps(Energyflow), loadpoints: this.enabledLoadpoints };
 		},
 		vehicleList() {
 			return vehicleList(this.vehicles);

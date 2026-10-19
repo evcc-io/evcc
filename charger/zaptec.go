@@ -150,6 +150,17 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 		return nil, err
 	}
 
+	// in stand-alone mode the charger keeps the current limit set in the Zaptec app
+	// and silently ignores current and phase updates from the API
+	res, err := c.statusG.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	if res.ObservationByID(zaptec.IsStandAlone).Bool() {
+		return nil, errors.New("charger is in stand-alone mode: current and phase settings are ignored, disable stand-alone mode in the Zaptec app")
+	}
+
 	inst, err := c.installation()
 
 	switch {
@@ -280,8 +291,9 @@ func (c *Zaptec) Enable(enable bool) error {
 
 	err := c.DoJSON(req, &res)
 
-	// ignore 528: Charging is not Paused nor Scheduled; Resume command cannot be sent
-	if err == nil || res.Code == 528 {
+	// ignore 528 (Go 2) and 520 (Pro): command rejected as it would not change the charger state,
+	// e.g. "Charging is not Paused nor Scheduled; Resume command cannot be sent"
+	if err == nil || res.Code == 520 || res.Code == 528 {
 		c.enabled = enable
 		c.statusG.Reset()
 		return nil
@@ -377,12 +389,14 @@ func (c *Zaptec) ConnectionDuration() (time.Duration, error) {
 		session = o.ValueAsString
 	}
 
-	if session != c.session {
+	// an empty identifier carries no swap information: the observation may be missing
+	// from a single state response or the session may have ended while still plugged in
+	if session != "" && session != c.session {
 		c.session = session
 		c.sessionStart = time.Now()
 	}
 
-	if session == "" {
+	if c.sessionStart.IsZero() {
 		return 0, nil
 	}
 

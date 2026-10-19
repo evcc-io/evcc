@@ -8,7 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
+	"github.com/samber/lo"
 )
 
 // Gen2API endpoint reference: https://shelly-api-docs.shelly.cloud/gen2/
@@ -33,9 +33,10 @@ type Gen2Config struct {
 }
 
 type Gen2SwitchStatus struct {
-	Output  bool
-	Apower  float64
-	Voltage float64
+	Output bool
+	Apower float64
+	// nil on switches without power metering (Plus 1, Pro 3)
+	Voltage *float64
 	Current float64
 	Aenergy struct {
 		Total float64
@@ -119,7 +120,7 @@ func (c *gen2) apiCall[T any](id int, method string) func() (T, error) {
 }
 
 // gen2InitApi initializes the connection to the shelly gen2+ api and sets up the cached gen2SwitchStatus, gen2EM1Status and gen2EMStatus
-func newGen2(helper *request.Helper, uri, model string, channel int, user, password string, cache time.Duration) (*gen2, error) {
+func newGen2(helper *request.Helper, uri, model string, channel int, cache time.Duration) (*gen2, error) {
 	// Shelly GEN 2+ API
 	// https://shelly-api-docs.shelly.cloud/gen2/
 	c := &gen2{
@@ -127,12 +128,6 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 		uri:           fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http")),
 		switchchannel: channel,
 		model:         model,
-	}
-
-	// Shelly gen 2 rfc7616 authentication
-	// https://shelly-api-docs.shelly.cloud/gen2/General/Authentication
-	if user != "" {
-		c.Client.Transport = transport.Digest(user, password, c.Client.Transport)
 	}
 
 	var res Gen2Methods
@@ -332,7 +327,7 @@ func (c *gen2) Voltages() (float64, float64, float64, error) {
 
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
-		return res.Voltage, 0, 0, err
+		return lo.FromPtr(res.Voltage), 0, 0, err
 
 	default:
 		return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -391,6 +386,20 @@ func (c *gen2) HasReturnEnergy() bool {
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
 		return err == nil && res.Ret_Aenergy != nil
+	default:
+		return false
+	}
+}
+
+// HasPhases reports whether the device provides phase readings.
+// Plain switches (Plus 1, Pro 3) omit voltage entirely, so the (cached) status decides.
+func (c *gen2) HasPhases() bool {
+	switch {
+	case c.hasEM1Endpoint(), c.hasEMEndpoint():
+		return true
+	case c.hasSwitchEndpoint():
+		res, err := c.switchstatus.Get()
+		return err == nil && res.Voltage != nil
 	default:
 		return false
 	}

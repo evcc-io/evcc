@@ -10,7 +10,6 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	teslaclient "github.com/evcc-io/tesla-proxy-client"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -21,7 +20,7 @@ var (
 	tokenURL = "https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token"
 
 	// the account region is unknown before login, register everywhere
-	fleetAudiences = []string{teslaclient.FleetAudienceEU, teslaclient.FleetAudienceNA}
+	fleetAudiences = []string{FleetBaseUrlEU, FleetBaseUrl}
 )
 
 // tesla binds a public key to a single app and domain
@@ -62,7 +61,7 @@ func registerPartnerRegion(ctx context.Context, log *util.Logger, clientID, clie
 		ClientSecret:   clientSecret,
 		TokenURL:       tokenURL,
 		Scopes:         []string{"openid", "vehicle_device_data", "vehicle_cmds", "vehicle_charging_cmds"},
-		EndpointParams: url.Values{"audience": {strings.TrimSuffix(audience, "/")}},
+		EndpointParams: url.Values{"audience": {audience}},
 		AuthStyle:      oauth2.AuthStyleInParams,
 	}
 
@@ -72,7 +71,7 @@ func registerPartnerRegion(ctx context.Context, log *util.Logger, clientID, clie
 		Base:   helper.Transport,
 	}
 
-	req, err := request.New(http.MethodPost, audience+"api/1/partner_accounts", request.MarshalJSON(map[string]string{
+	req, err := request.New(http.MethodPost, audience+"/api/1/partner_accounts", request.MarshalJSON(map[string]string{
 		"domain": domain,
 	}), request.JSONEncoding)
 	if err != nil {

@@ -40,6 +40,7 @@ func Setup(router *mux.Router, paramC chan<- util.Param, authMiddleware mux.Midd
 	router.Methods(http.MethodGet).Path("/callback").HandlerFunc(instance.handleCallback)
 	router.Methods(http.MethodGet).Path("/login").Handler(gate(instance.handleLogin))
 	router.Methods(http.MethodGet).Path("/logout").Handler(gate(instance.handleLogout))
+	router.Methods(http.MethodPost).Path("/submit").Handler(gate(instance.handleSubmit))
 
 	go instance.run(paramC)
 }

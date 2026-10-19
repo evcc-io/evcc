@@ -46,7 +46,7 @@ func TestRegisterPartner(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	audience := srv.URL + "/"
+	audience := srv.URL
 	tokenURL, fleetAudiences = srv.URL+"/token", []string{audience}
 
 	log := util.NewLogger("test")
@@ -59,7 +59,7 @@ func TestRegisterPartner(t *testing.T) {
 	require.Equal(t, srv.URL, tokenForm.Get("audience"), "audience without trailing slash")
 
 	// one region is enough
-	fleetAudiences = []string{srv.URL + "/missing/", audience}
+	fleetAudiences = []string{srv.URL + "/missing", audience}
 	require.NoError(t, registerPartner(t.Context(), log, "id", "secret", "evcc.example"))
 
 	// tesla rejects the domain, its explanation is passed on

@@ -48,6 +48,8 @@ modbusproxy:
   #    uri: solar-edge:502
   #    # rtu: true
   #    # readonly: true # use `deny` to raise modbus errors
+  #    # function codes the proxy doesn't implement itself, like Huawei's 0x41 for optimizer data,
+  #    # may write and are only forwarded with `readonly: false` (Modbus TCP downstream only)
 
 # meter definitions
 # name can be freely chosen and is used as reference when assigning meters to site and loadpoints
@@ -149,12 +151,12 @@ tariffs:
         price: 0.2 # EUR/kWh
       - days: Sat,Sun
         price: 0.15 # EUR/kWh
-    # see: https://docs.evcc.io/en/docs/devices/tariffs
+    # see: https://docs.evcc.io/en/tariffs/
   feedin:
     # rate for feeding excess (pv) energy to the grid
     type: fixed
     price: 0.08 # EUR/kWh
-    # see: https://docs.evcc.io/en/docs/devices/tariffs
+    # see: https://docs.evcc.io/en/tariffs/
   co2:
     # co2 tariff provides co2 intensity forecast and is for co2-optimized target charging if no variable grid tariff is specified
     # type: template
