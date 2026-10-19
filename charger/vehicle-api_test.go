@@ -7,8 +7,10 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 // statusErr builds the error a plugin returns for the given response
@@ -60,4 +62,49 @@ func TestAsleepTeslaMate(t *testing.T) {
 	} {
 		require.Same(t, err, asleep(err))
 	}
+}
+
+// asleepVehicle is a vehicle whose charge state can be queried
+type asleepVehicle struct {
+	*api.MockVehicle
+	*api.MockChargeState
+}
+
+func TestVehicleApiStatusAsleep(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	lp := loadpoint.NewMockAPI(ctrl)
+	cs := api.NewMockChargeState(ctrl)
+	lp.EXPECT().GetVehicle().Return(asleepVehicle{api.NewMockVehicle(ctrl), cs}).AnyTimes()
+
+	c := &VehicleApi{lp: lp}
+
+	// unknown last status: wake vehicle
+	cs.EXPECT().Status().Return(api.StatusNone, api.ErrAsleep)
+	status, err := c.Status()
+	require.NoError(t, err)
+	require.Equal(t, api.StatusB, status)
+
+	// awake and disconnected
+	cs.EXPECT().Status().Return(api.StatusA, nil)
+	status, err = c.Status()
+	require.NoError(t, err)
+	require.Equal(t, api.StatusA, status)
+
+	// asleep after disconnected: stay disconnected, don't wake
+	cs.EXPECT().Status().Return(api.StatusNone, api.ErrAsleep)
+	status, err = c.Status()
+	require.NoError(t, err)
+	require.Equal(t, api.StatusA, status)
+
+	// awake and connected
+	cs.EXPECT().Status().Return(api.StatusB, nil)
+	status, err = c.Status()
+	require.NoError(t, err)
+	require.Equal(t, api.StatusB, status)
+
+	// asleep after connected: wake vehicle
+	cs.EXPECT().Status().Return(api.StatusNone, api.ErrAsleep)
+	status, err = c.Status()
+	require.NoError(t, err)
+	require.Equal(t, api.StatusB, status)
 }

@@ -22,6 +22,7 @@ type VehicleApi struct {
 	geofenceEnabled        bool
 	lat, lon, radius       float64
 	cacheRefreshExpectedAt time.Time
+	status                 api.ChargeStatus // last status reported by an awake vehicle
 }
 
 func init() {
@@ -96,6 +97,16 @@ func (c *VehicleApi) isVehicleAtHome(vehicle api.Vehicle) (bool, error) {
 	return c.distance(lat, lon) <= c.radius, nil
 }
 
+// asleepStatus is the status reported while the vehicle sleeps: a vehicle last seen
+// disconnected stays disconnected (plugging in wakes it), otherwise report connected
+// so the loadpoint wakes it
+func (c *VehicleApi) asleepStatus() api.ChargeStatus {
+	if c.status == api.StatusA {
+		return api.StatusA
+	}
+	return api.StatusB
+}
+
 // Status implements the api.Charger interface
 func (c *VehicleApi) Status() (api.ChargeStatus, error) {
 	if c.lp == nil {
@@ -110,10 +121,9 @@ func (c *VehicleApi) Status() (api.ChargeStatus, error) {
 	// Check if vehicle is at the charger (trying to use geofencing)
 	atHome, err := c.isVehicleAtHome(vehicle)
 	if err != nil {
-		// position unknown while asleep: report connected so the loadpoint wakes the
-		// vehicle, the geofence is re-evaluated once it responds again
+		// position unknown while asleep, the geofence is re-evaluated once it responds again
 		if errors.Is(err, api.ErrAsleep) {
-			return api.StatusB, nil
+			return c.asleepStatus(), nil
 		}
 		return api.StatusA, err
 	}
@@ -137,16 +147,17 @@ func (c *VehicleApi) Status() (api.ChargeStatus, error) {
 
 	status, err := v.Status()
 	if err != nil {
-		// asleep: report connected so the loadpoint's setLimit path can wake the vehicle
 		if errors.Is(asleep(err), api.ErrAsleep) {
-			return api.StatusB, nil
+			return c.asleepStatus(), nil
 		}
 		return api.StatusNone, err
 	}
 
 	if status == api.StatusA || !atHome {
-		return api.StatusA, nil
+		status = api.StatusA
 	}
+
+	c.status = status
 
 	return status, nil
 }
