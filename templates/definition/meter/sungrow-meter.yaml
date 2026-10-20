@@ -40,16 +40,18 @@ render: |
       type: holding
       decode: uint32
     scale: 0.01
-  {{- if eq .usage "grid" }}
   returnenergy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
+      {{- if eq .usage "pv" }}
+      address: 0x000A # Forward active energy
+      {{- else }}
       address: 0x0014 # Reverse active energy
+      {{- end }}
       type: holding
       decode: uint32
     scale: 0.01
-  {{- end }}
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
