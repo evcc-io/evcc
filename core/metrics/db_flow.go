@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/db"
+	"golang.org/x/sync/errgroup"
 )
 
 // flow sinks; sources reuse the group names PV, Battery, Grid
@@ -148,7 +149,7 @@ func entitySlots(entities map[int]*flowEntity, from, to time.Time) (map[int64][]
 
 	tx := db.Instance.Table("meters").
 		Select("ts, meter, energy").
-		Where("meter IN ?", slices.Collect(maps.Keys(entities)))
+		Where("meter IN ? AND energy <> 0", slices.Collect(maps.Keys(entities)))
 
 	if !from.IsZero() {
 		tx = tx.Where("ts >= ?", from.Unix())
@@ -199,10 +200,13 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 		entities[e.Id] = byTitle[key]
 	}
 
-	perSlot, err := entitySlots(entities, from, to)
-	if err != nil {
-		return FlowResult{}, err
-	}
+	// both reads are bound by page lookups and run side by side on WAL readers
+	var perSlot map[int64][]slotEnergy
+	var eg errgroup.Group
+	eg.Go(func() (err error) {
+		perSlot, err = entitySlots(entities, from, to)
+		return err
+	})
 
 	// home minus the tracked consumers, per slot like the UI's residual
 	others := &flowEntity{}
@@ -231,25 +235,34 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 		tx = tx.Where("m.ts < ?", to.Unix())
 	}
 
-	// stream slots to keep memory flat for long periods
 	rows, err := tx.Rows()
 	if err != nil {
 		return FlowResult{}, err
 	}
 	defer rows.Close()
 
-	sums := make(map[[2]string]flowSum)
-	var cost FlowCost
-	var co2 FlowCo2
-	var costSlots, co2Slots float64
-
+	var slots []flowSlot
 	for rows.Next() {
 		var s flowSlot
 		// scanned by hand: gorm's reflective ScanRows dominates long periods
 		if err := rows.Scan(&s.Ts, &s.PV, &s.GridIn, &s.GridOut, &s.BatIn, &s.BatOut, &s.Home, &s.Grid, &s.FeedIn, &s.Co2); err != nil {
 			return FlowResult{}, err
 		}
+		slots = append(slots, s)
+	}
+	if err := rows.Err(); err != nil {
+		return FlowResult{}, err
+	}
+	if err := eg.Wait(); err != nil {
+		return FlowResult{}, err
+	}
 
+	sums := make(map[[2]string]flowSum)
+	var cost FlowCost
+	var co2 FlowCo2
+	var costSlots, co2Slots float64
+
+	for _, s := range slots {
 		// the slot's loadpoints add up to their sink
 		slotEntities := perSlot[s.Ts]
 		for _, se := range slotEntities {
@@ -316,10 +329,6 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 			co2.AvgCo2 += *s.Co2
 			co2Slots++
 		}
-	}
-
-	if err := rows.Err(); err != nil {
-		return FlowResult{}, err
 	}
 
 	var res FlowResult
