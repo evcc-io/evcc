@@ -15,6 +15,7 @@ caveats:
       en: For correct operation, maximum charge and discharge power must not be set too high.
     link: https://github.com/evcc-io/evcc/discussions/23557
 discovery:
+  mdns: ["_http._tcp:WiNet-WebServer"]
   hostname: ["sungrow*"]
   mac: ["AC199F"]
 params:
@@ -517,6 +518,55 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 33047 # Battery max discharge power
+              type: writesingle
+              decode: uint16
+    - case: 5 # discharge (discharge battery to grid)
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 2 # Forced mode (charge/discharge/stop)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13049 # EMS mode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0xBB # Discharge
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13050 # Charge/discharge command
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: {{ div .maxchargepower 10 }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33046 # Battery max charge power
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: {{ div .maxdischargepower 10 }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33047 # Battery max discharge power
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: {{ .maxdischargepower }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13051 # Battery max forced (dis)charge power
               type: writesingle
               decode: uint16
   {{- include "battery-params" . }}

@@ -134,7 +134,7 @@ render: |
         {{- else }}
         address: 40048 # Discharge Cut-Off SoC
         {{- end }}
-        type: writeholding
+        type: writesingle
         decode: uint16
       scale: 10
   {{- include "battery-params" . }}

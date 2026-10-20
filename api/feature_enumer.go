@@ -46,37 +46,40 @@ func _FeatureNoOp() {
 var _FeatureValues = []Feature{CoarseCurrent, IntegratedDevice, SwitchDevice, Heating, DemandWeekday, DemandTemperature, Continuous, Average, Cacheable, Offline, Retryable, Streaming, WelcomeCharge, ClimaterDisabled, AutodetectDisabled, WakeUpDisabled}
 
 var _FeatureNameToValueMap = map[string]Feature{
-	_FeatureName[0:13]:         CoarseCurrent,
+	_FeatureName[0:13]:    CoarseCurrent,
+	_FeatureName[13:29]:   IntegratedDevice,
+	_FeatureName[29:41]:   SwitchDevice,
+	_FeatureName[41:48]:   Heating,
+	_FeatureName[48:61]:   DemandWeekday,
+	_FeatureName[61:78]:   DemandTemperature,
+	_FeatureName[78:88]:   Continuous,
+	_FeatureName[88:95]:   Average,
+	_FeatureName[95:104]:  Cacheable,
+	_FeatureName[104:111]: Offline,
+	_FeatureName[111:120]: Retryable,
+	_FeatureName[120:129]: Streaming,
+	_FeatureName[129:142]: WelcomeCharge,
+	_FeatureName[142:158]: ClimaterDisabled,
+	_FeatureName[158:176]: AutodetectDisabled,
+	_FeatureName[176:190]: WakeUpDisabled,
+}
+
+var _FeatureLowerNameToValueMap = map[string]Feature{
 	_FeatureLowerName[0:13]:    CoarseCurrent,
-	_FeatureName[13:29]:        IntegratedDevice,
 	_FeatureLowerName[13:29]:   IntegratedDevice,
-	_FeatureName[29:41]:        SwitchDevice,
 	_FeatureLowerName[29:41]:   SwitchDevice,
-	_FeatureName[41:48]:        Heating,
 	_FeatureLowerName[41:48]:   Heating,
-	_FeatureName[48:61]:        DemandWeekday,
 	_FeatureLowerName[48:61]:   DemandWeekday,
-	_FeatureName[61:78]:        DemandTemperature,
 	_FeatureLowerName[61:78]:   DemandTemperature,
-	_FeatureName[78:88]:        Continuous,
 	_FeatureLowerName[78:88]:   Continuous,
-	_FeatureName[88:95]:        Average,
 	_FeatureLowerName[88:95]:   Average,
-	_FeatureName[95:104]:       Cacheable,
 	_FeatureLowerName[95:104]:  Cacheable,
-	_FeatureName[104:111]:      Offline,
 	_FeatureLowerName[104:111]: Offline,
-	_FeatureName[111:120]:      Retryable,
 	_FeatureLowerName[111:120]: Retryable,
-	_FeatureName[120:129]:      Streaming,
 	_FeatureLowerName[120:129]: Streaming,
-	_FeatureName[129:142]:      WelcomeCharge,
 	_FeatureLowerName[129:142]: WelcomeCharge,
-	_FeatureName[142:158]:      ClimaterDisabled,
 	_FeatureLowerName[142:158]: ClimaterDisabled,
-	_FeatureName[158:176]:      AutodetectDisabled,
 	_FeatureLowerName[158:176]: AutodetectDisabled,
-	_FeatureName[176:190]:      WakeUpDisabled,
 	_FeatureLowerName[176:190]: WakeUpDisabled,
 }
 
@@ -106,7 +109,7 @@ func FeatureString(s string) (Feature, error) {
 		return val, nil
 	}
 
-	if val, ok := _FeatureNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _FeatureLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to Feature values", s)

@@ -506,7 +506,6 @@
         "charging": "充電器",
         "heating": "ヒーター"
       },
-      "chargingTitle": "挙動",
       "circuitHelp": "電力および電流の上限値を超えないようにするための、負荷管理の割り当てです。",
       "circuitInvalid": "指定された回路が存在しません",
       "circuitLabel": "回路",
@@ -568,24 +567,16 @@
       "priorityHelp": "優先度が高いほど、太陽光の余剰電力が優先的に割り当てられます。",
       "priorityLabel": "優先度",
       "save": "保存",
-      "solarBehaviorCustomHelp": "充電の開始・停止に関するしきい値と遅延時間をカスタム設定します。",
-      "solarBehaviorDefaultHelp": "太陽光の余剰電力が十分な状態が {enableDelay} 継続すると開始し、不足した状態が {disableDelay} 継続すると停止します。",
-      "solarBehaviorLabel": "太陽光",
-      "solarModeCustom": "カスタム",
-      "solarModeMaximum": "太陽光のみ",
-      "solarShareNote": "ワットのしきい値が設定されている間、ユーザー設定の太陽光比率スライダーは無効です。有効にするには{0}して保存してください。",
       "solarShareReset": "しきい値を削除",
       "temperatureRangeHelp": "温度バーの表示範囲です。制御には影響しません。",
       "temperatureRangeTitle": "温度範囲",
       "thresholdDisableDelayLabel": "無効化の遅延",
       "thresholdDisableHelpInvalid": "正の値を入力してください。",
       "thresholdDisableHelpPositive": "系統からの買電が {power} を超えて {delay} 継続した場合、充電を停止します。",
-      "thresholdDisableHelpZero": "最低限必要な電力を{delay}の間確保できない場合に停止します。",
       "thresholdDisableLabel": "系統電力の停止しきい値",
       "thresholdEnableDelayLabel": "有効化の遅延",
       "thresholdEnableHelpInvalid": "負の値を入力してください。",
       "thresholdEnableHelpNegative": "{surplus} の余剰電力が {delay} 継続したときに開始します。",
-      "thresholdEnableHelpZero": "必要最小限の電力を確保できる状態が {delay} 継続したときに開始します。",
       "thresholdEnableLabel": "系統電力の開始しきい値",
       "titleAdd": {
         "charging": "充電ポイントを追加",
@@ -1196,7 +1187,8 @@
       "overview": "概要",
       "pv": "発電",
       "title": "エネルギーフロー",
-      "usage": "使用量"
+      "usage": "使用量",
+      "withdrawal": "消費"
     },
     "grid": {
       "amount": "金額",
@@ -1956,7 +1948,10 @@
   "settings": {
     "dateFormat": {
       "auto": "自動",
-      "label": "日付形式"
+      "dmy": "日/月/年",
+      "label": "日付形式",
+      "mdy": "月/日/年",
+      "ymd": "年-月-日"
     },
     "deviceInfo": "この画面での設定は、このデバイスにのみ適用されます。",
     "fullscreen": {

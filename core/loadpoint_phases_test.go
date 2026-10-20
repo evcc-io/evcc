@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -166,8 +167,6 @@ func TestMinActivePhases(t *testing.T) {
 
 // 1p3p charger pinned to 3p must report the 3p minimum power
 func TestEffectiveMinPowerFixedPhases(t *testing.T) {
-	Voltage = 230
-
 	for configured, expected := range map[int]float64{0: 1380, 1: 1380, 3: 4140} {
 		ctrl := gomock.NewController(t)
 
@@ -200,7 +199,7 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 	if testDirection == "u" && strings.Contains(testExpectation, testDirection) {
 		// scale-up should only execute when the 1p max current is exceeded
 		// we're testing this here and remove the upscale expectation for the following test below 1p max current
-		if maxAmp := -sitePower / Voltage; maxAmp < maxA {
+		if maxAmp := -sitePower / grid.Voltage; maxAmp < maxA {
 			if scaled := lp.pvScalePhases(sitePower, minA, maxAmp-0.0001, true); scaled != 3 {
 				t.Errorf("%v act=%d max=%d missing scale %s at reduced max current %.1fA", tc, act, max, direction, maxAmp)
 			}
@@ -294,7 +293,7 @@ func TestPvScalePhases(t *testing.T) {
 			// scale down
 			min1p := 0.1
 			lp.phaseTimer = time.Time{}
-			lp.chargePower = float64(lp.ActivePhases()) * minA * Voltage // charging at min current
+			lp.chargePower = float64(lp.ActivePhases()) * minA * grid.Voltage // charging at min current
 
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(1).Return(nil).MaxTimes(1)
@@ -303,7 +302,7 @@ func TestPvScalePhases(t *testing.T) {
 			ctrl.Finish()
 
 			// scale up
-			min3p := float64(tc.maxExpected) * minA * Voltage
+			min3p := float64(tc.maxExpected) * minA * grid.Voltage
 			lp.phaseTimer = time.Time{}
 
 			// reset to initial state
@@ -343,7 +342,6 @@ func TestPvScalePhasesTimer(t *testing.T) {
 	climater := &climaterVehicle{vehicle}
 
 	dt := time.Minute
-	Voltage = 230 // V
 
 	tc := []struct {
 		desc                   string
@@ -355,37 +353,37 @@ func TestPvScalePhasesTimer(t *testing.T) {
 	}{
 		// switch up from 1p/1p configured/active
 		{"1/1->3, not enough power", 1, 1, 0, 1, 0, nil},
-		{"1/1->3, kickoff", 1, 1, -3 * Voltage * minA, 1, 0, func(lp *Loadpoint) {
+		{"1/1->3, kickoff", 1, 1, -3 * grid.Voltage * minA, 1, 0, func(lp *Loadpoint) {
 			lp.phaseTimer = time.Time{}
 		}},
-		{"1/1->3, timer running", 1, 1, -3 * Voltage * minA, 1, 0, func(lp *Loadpoint) {
+		{"1/1->3, timer running", 1, 1, -3 * grid.Voltage * minA, 1, 0, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
-		{"1/1->3, timer elapsed", 1, 1, -3 * Voltage * minA, 3, 3, func(lp *Loadpoint) {
+		{"1/1->3, timer elapsed", 1, 1, -3 * grid.Voltage * minA, 3, 3, func(lp *Loadpoint) {
 			lp.phaseTimer = elapsed
 		}},
 
 		// omit to switch up (again) from 3p/1p configured/a0ctive
 		{"3/1->3, not enough power", 3, 1, 0, 3, 0, nil},
-		{"3/1->3, kickoff", 3, 1, -3 * Voltage * minA, 3, 0, func(lp *Loadpoint) {
+		{"3/1->3, kickoff", 3, 1, -3 * grid.Voltage * minA, 3, 0, func(lp *Loadpoint) {
 			lp.phaseTimer = time.Time{}
 		}},
-		{"3/1->3, timer running", 3, 1, -3 * Voltage * minA, 3, 0, func(lp *Loadpoint) {
+		{"3/1->3, timer running", 3, 1, -3 * grid.Voltage * minA, 3, 0, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
-		{"3/1->3, timer elapsed", 3, 1, -3 * Voltage * minA, 3, 0, func(lp *Loadpoint) {
+		{"3/1->3, timer elapsed", 3, 1, -3 * grid.Voltage * minA, 3, 0, func(lp *Loadpoint) {
 			lp.phaseTimer = elapsed
 		}},
 
 		// omit to switch down from 3p/1p configured/active
 		{"3/1->1, not enough power", 3, 1, 0, 3, 0, nil},
-		{"3/1->1, kickoff", 3, 1, -1 * Voltage * minA, 3, 0, func(lp *Loadpoint) {
+		{"3/1->1, kickoff", 3, 1, -1 * grid.Voltage * minA, 3, 0, func(lp *Loadpoint) {
 			lp.phaseTimer = time.Time{}
 		}},
-		{"3/1->1, timer running", 3, 1, -1 * Voltage * minA, 3, 0, func(lp *Loadpoint) {
+		{"3/1->1, timer running", 3, 1, -1 * grid.Voltage * minA, 3, 0, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
-		{"3/1->1, timer elapsed", 3, 1, -1 * Voltage * minA, 3, 0, func(lp *Loadpoint) {
+		{"3/1->1, timer elapsed", 3, 1, -1 * grid.Voltage * minA, 3, 0, func(lp *Loadpoint) {
 			lp.phaseTimer = elapsed
 		}},
 
@@ -414,10 +412,10 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			lp.phaseTimer = elapsed
 			lp.enabled = true
 		}},
-		{"3/3->1, sufficient for 1p, charging", 3, 3, 3 * Voltage * minA / 2, 1, 1, func(lp *Loadpoint) {
+		{"3/3->1, sufficient for 1p, charging", 3, 3, 3 * grid.Voltage * minA / 2, 1, 1, func(lp *Loadpoint) {
 			lp.phaseTimer = elapsed
 			lp.enabled = true
-			lp.chargePower = 3 * Voltage * minA
+			lp.chargePower = 3 * grid.Voltage * minA
 		}},
 
 		// minpv never disables, so scale down even if 1p is not sustainable (#33208)
@@ -439,12 +437,12 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			lp.status = api.StatusB
 		}},
 		// switch up from 1p/0p while not yet charging
-		{"1/0->3, enough power, not charging", 1, 0, -3 * Voltage * minA, 3, 3, func(lp *Loadpoint) {
+		{"1/0->3, enough power, not charging", 1, 0, -3 * grid.Voltage * minA, 3, 3, func(lp *Loadpoint) {
 			lp.status = api.StatusB
 		}},
 
 		// error states from 1p/3p misconfiguration - no correction for time being (stay at 1p)
-		{"1/3->1, enough power", 1, 3, -1 * Voltage * maxA, 1, 0, nil},
+		{"1/3->1, enough power", 1, 3, -1 * grid.Voltage * maxA, 1, 0, nil},
 		{"1/3->1, kickoff, correct phase setting", 1, 3, 0.1, 1, 0, func(lp *Loadpoint) {
 			lp.phaseTimer = time.Time{}
 		}},
@@ -505,7 +503,6 @@ func TestProjectPhaseSwitch(t *testing.T) {
 		api.NewMockPhaseSwitcher(ctrl),
 	}
 
-	Voltage = 100
 	const site = 500.0
 
 	for _, tc := range []struct {
@@ -514,11 +511,11 @@ func TestProjectPhaseSwitch(t *testing.T) {
 		chargePower float64
 		projected   float64
 	}{
-		{"at min current", 3, 3 * Voltage * minA, site - 2*Voltage*minA},
-		{"above min current", 3, 3 * Voltage * (minA + 1), site - 3*Voltage*(minA+1) + Voltage*minA},
-		{"below min power", 3, Voltage * minA, site - 2*Voltage*minA},
+		{"at min current", 3, 3 * grid.Voltage * minA, site - 2*grid.Voltage*minA},
+		{"above min current", 3, 3 * grid.Voltage * (minA + 1), site - 3*grid.Voltage*(minA+1) + grid.Voltage*minA},
+		{"below min power", 3, grid.Voltage * minA, site - 2*grid.Voltage*minA},
 		// a scale up pending at 1p leaves site power alone
-		{"scale up at 1p", 1, Voltage * (minA + 1), site},
+		{"scale up at 1p", 1, grid.Voltage * (minA + 1), site},
 	} {
 		lp := &Loadpoint{
 			log:            util.NewLogger("foo"),
@@ -656,8 +653,6 @@ func TestScalePhasesUpMinCurrent(t *testing.T) {
 // (the absolute minimum) when phase switching is available, so feed-in priority
 // in min+pv mode drops to 1p min current instead of staying on 3p (issue #30298).
 func TestMinChargingPhaseScaling(t *testing.T) {
-	Voltage = 230
-
 	tc := []struct {
 		desc             string
 		phasesConfigured int
@@ -710,8 +705,6 @@ func TestMinChargingPhaseScaling(t *testing.T) {
 }
 
 func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
-	Voltage = 230
-
 	tc := []struct {
 		desc                  string
 		phasesConfigured      int
@@ -894,8 +887,6 @@ func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
 }
 
 func TestPvScalePhasesCircuitLimits(t *testing.T) {
-	Voltage = 230
-
 	tc := []struct {
 		desc           string
 		phases         int

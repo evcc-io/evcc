@@ -204,7 +204,7 @@ func TestCoarsenHorizon(t *testing.T) {
 	gt, ft, home := lo.Sum(req.TimeSeries.Gt), lo.Sum(req.TimeSeries.Ft), lo.Sum(details.DemandDetails[0].Values)
 	pn, demand := req.TimeSeries.PN, req.Batteries[0].PDemand
 
-	coarsenHorizon(&req, &details)
+	coarsenHorizon(&req, &details, defaultCoarseSlotsAfter)
 	res := req.TimeSeries
 
 	// quarter slots up to 48h and on to the full hour, then clock hours, the goal and the end cut short
@@ -234,9 +234,41 @@ func TestCoarsenHorizon(t *testing.T) {
 	short.TimeSeries.Gt = lo.RepeatBy(len(short.TimeSeries.Dt), func(int) float32 { return 1 })
 	before := requestDetails{Timestamps: asTimestamps(short.TimeSeries.Dt, now)}
 	after := before
-	coarsenHorizon(&short, &after)
-	assert.Equal(t, 4*47, len(short.TimeSeries.Dt))
+	dt = append([]int(nil), short.TimeSeries.Dt...)
+	coarsenHorizon(&short, &after, defaultCoarseSlotsAfter)
+	assert.Equal(t, dt, short.TimeSeries.Dt)
 	assert.Equal(t, before, after)
+
+	// an earlier boundary coarsens the same request
+	short.TimeSeries.PN = short.TimeSeries.Gt
+	short.TimeSeries.PE = short.TimeSeries.Gt
+	coarsenHorizon(&short, &after, 24*time.Hour)
+	assert.Less(t, len(short.TimeSeries.Dt), 4*47)
+	assert.InDelta(t, float32(4*47), lo.Sum(short.TimeSeries.Gt), 0.1)
+}
+
+func TestCoarseSlotsAfter(t *testing.T) {
+	for _, tc := range []struct {
+		env     string
+		hosted  bool
+		res     time.Duration
+		invalid bool
+	}{
+		{"", false, defaultCoarseSlotsAfter, false},
+		{"", true, defaultCoarseSlotsAfter, false},
+		{"72", false, 72 * time.Hour, false},
+		{"72", true, defaultCoarseSlotsAfter, false}, // the hosted optimizer always coarsens after 48h
+		{"0", false, 0, false},
+		{"foo", false, defaultCoarseSlotsAfter, true},
+		{"72h", false, defaultCoarseSlotsAfter, true},
+		{"-1", false, defaultCoarseSlotsAfter, true},
+	} {
+		t.Setenv("OPTIMIZER_COARSEN_AFTER", tc.env)
+
+		res, err := coarseSlotsAfter(tc.hosted)
+		assert.Equal(t, tc.res, res, "env %q hosted %v", tc.env, tc.hosted)
+		assert.Equal(t, tc.invalid, err != nil, "env %q hosted %v", tc.env, tc.hosted)
+	}
 }
 
 func TestPlanSlot(t *testing.T) {
@@ -498,33 +530,16 @@ func TestBatteryRequestWithoutSocLimiter(t *testing.T) {
 // limits (e.g. right after a firmware update changed the reported soc or the min/max
 // soc settings) - otherwise the optimizer is infeasible from the first slot.
 func TestBatteryRequestSocLimitsClamp(t *testing.T) {
-	newBatteryDevice := func(t *testing.T, minSoc, maxSoc float64) config.Device[api.Meter] {
-		ctrl := gomock.NewController(t)
-
-		var meter api.Meter
-		batSocLimit := api.NewMockBatterySocLimiter(ctrl)
-		batSocLimit.EXPECT().GetSocLimits().Return(minSoc, maxSoc).AnyTimes()
-
-		bat := &struct {
-			api.Meter
-			api.BatterySocLimiter
-		}{
-			Meter:             meter,
-			BatterySocLimiter: batSocLimit,
-		}
-
-		return config.NewStaticDevice(config.Named{}, api.Meter(bat))
-	}
-
 	site := &Site{log: util.NewLogger("foo")}
+	dev := config.NewStaticDevice(config.Named{}, api.Meter(&struct{ api.Meter }{}))
 	capacity := 10.0 // kWh
 
-	t.Run("soc below minSoc", func(t *testing.T) {
-		soc := 15.0
-		dev := newBatteryDevice(t, 20, 100)
-		m := types.Measurement{Capacity: &capacity, Soc: &soc}
+	measurement := func(soc, minSoc, maxSoc float64) types.Measurement {
+		return types.Measurement{Capacity: &capacity, Soc: &soc, MinSoc: &minSoc, MaxSoc: &maxSoc}
+	}
 
-		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+	t.Run("soc below minSoc", func(t *testing.T) {
+		req, _ := site.batteryRequest(dev, measurement(15, 20, 100), nil, 8, 15*time.Minute)
 
 		assert.Equal(t, float32(1500), req.SMin)
 		assert.Equal(t, float32(10000), req.SMax)
@@ -532,11 +547,7 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 	})
 
 	t.Run("soc above maxSoc", func(t *testing.T) {
-		soc := 95.0
-		dev := newBatteryDevice(t, 0, 80)
-		m := types.Measurement{Capacity: &capacity, Soc: &soc}
-
-		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+		req, _ := site.batteryRequest(dev, measurement(95, 0, 80), nil, 8, 15*time.Minute)
 
 		assert.Equal(t, float32(0), req.SMin)
 		assert.Equal(t, float32(9500), req.SMax)
@@ -544,22 +555,14 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 	})
 
 	t.Run("soc within limits", func(t *testing.T) {
-		soc := 50.0
-		dev := newBatteryDevice(t, 20, 80)
-		m := types.Measurement{Capacity: &capacity, Soc: &soc}
-
-		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+		req, _ := site.batteryRequest(dev, measurement(50, 20, 80), nil, 8, 15*time.Minute)
 
 		assert.Equal(t, float32(2000), req.SMin)
 		assert.Equal(t, float32(8000), req.SMax)
 	})
 
 	t.Run("empty maxSoc defaults to 100%", func(t *testing.T) {
-		soc := 50.0
-		dev := newBatteryDevice(t, 20, 0)
-		m := types.Measurement{Capacity: &capacity, Soc: &soc}
-
-		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+		req, _ := site.batteryRequest(dev, measurement(50, 20, 0), nil, 8, 15*time.Minute)
 
 		assert.Equal(t, float32(2000), req.SMin)
 		assert.Equal(t, float32(10000), req.SMax)

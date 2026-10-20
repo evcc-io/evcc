@@ -9,7 +9,8 @@
     "buttonDisconnect": "Відключитися",
     "challenge": {
       "captcha": {
-        "label": "Введіть символи, показані на зображенні."
+        "label": "Введіть символи, показані на зображенні.",
+        "title": "Капча"
       },
       "code": {
         "label": "Вставте код або адресу сторінки, на яку вас було перенаправлено.",
@@ -499,7 +500,6 @@
         "charging": "Зарядний пристрій",
         "heating": "Обігрівач"
       },
-      "chargingTitle": "Поведінка",
       "circuitHelp": "Призначення керування навантаженням для забезпечення неперевищення обмежень потужності та струму.",
       "circuitInvalid": "Схема не існує",
       "circuitLabel": "Схема",
@@ -561,24 +561,16 @@
       "priorityHelp": "Вищий пріоритет – отримання переважного доступу до надлишку сонячної енергії.",
       "priorityLabel": "Пріоритет",
       "save": "Зберегти",
-      "solarBehaviorCustomHelp": "Визначте власні порогові значення ввімкнення та вимкнення та затримки.",
-      "solarBehaviorDefaultHelp": "Почати після {enableDelay} достатнього надлишку. Зупинити, коли надлишку недостатньо для {disableDelay}.",
-      "solarBehaviorLabel": "Солар",
-      "solarModeCustom": "звичай",
-      "solarModeMaximum": "максимальна сонячна",
-      "solarShareNote": "Повзунок сонячної частки в налаштуваннях користувача вимкнено, поки задано порогові значення у ватах. {0} і збережіть, щоб увімкнути його.",
       "solarShareReset": "Видаліть порогові значення",
       "temperatureRangeHelp": "Діапазон відображення для шкали температури. Не впливає на керування.",
       "temperatureRangeTitle": "Діапазон температури",
       "thresholdDisableDelayLabel": "Вимкнути затримку",
       "thresholdDisableHelpInvalid": "Використовуйте додатне значення.",
       "thresholdDisableHelpPositive": "Зупинка, коли з мережі використовується більше {power} протягом {delay}.",
-      "thresholdDisableHelpZero": "Зупинитися, коли мінімальна необхідна потужність не може бути задоволена протягом {delay}.",
       "thresholdDisableLabel": "Вимкніть електромережу",
       "thresholdEnableDelayLabel": "Увімкнути затримку",
       "thresholdEnableHelpInvalid": "Використовуйте від’ємне значення.",
       "thresholdEnableHelpNegative": "Початок, коли надлишок {surplus} буде доступний протягом {delay}.",
-      "thresholdEnableHelpZero": "Починати, коли може бути задоволена мінімальна необхідна потужність для {delay}.",
       "thresholdEnableLabel": "Увімкнути живлення мережі",
       "titleAdd": {
         "charging": "Додати точку зарядки",
@@ -1323,6 +1315,7 @@
     "version": {
       "availableLong": "доступна нова версія",
       "community": "спільнотою evcc",
+      "labelEmail": "Ел. пошта",
       "labelPhone": "Телефон",
       "labelRelease": "Випуск",
       "labelVersion": "Версія",
