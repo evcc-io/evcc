@@ -307,7 +307,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 	{ // /api
 		routes := map[string]route{
-			"state": {"GET", "/state", stateHandler(cache)},
+			"state":                    {"GET", "/state", stateHandler(cache)},
+			"optimizerexplain":         {"POST", "/optimizer/explain", optimizerExplainHandler(site)},
+			"optimizerexplainfeedback": {"POST", "/optimizer/explain/feedback", optimizerExplainFeedbackHandler(site)},
 		}
 
 		for _, r := range routes {
@@ -406,9 +408,10 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		// site
 		for _, r := range map[string]route{
-			"site":          {"GET", "/site", siteHandler(site)},
-			"updatesite":    {"PUT", "/site", updateSiteHandler(site)},
-			"updatecountry": {"PUT", "/country", updateCountryHandler(site)},
+			"site":                 {"GET", "/site", siteHandler(site)},
+			"updatesite":           {"PUT", "/site", updateSiteHandler(site)},
+			"updatecountry":        {"PUT", "/country", updateCountryHandler(site)},
+			"updategridconnection": {"PUT", "/gridconnection", updateGridConnectionHandler(site)},
 		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}

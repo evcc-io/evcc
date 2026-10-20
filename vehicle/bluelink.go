@@ -60,6 +60,10 @@ func NewHyundaiFromConfig(other map[string]any) (api.Vehicle, error) {
 				ClientName:           "hyundai",
 				OSVersion:            "18.7",
 				NotificationProvider: "APNS",
+				// signing constants of the Android OneApp 1.4.0 build, they rotate with app releases
+				FingerprintClientName: "HyundaiEU",
+				FingerprintKey:        "OsZDfDuCyVX" + "yfqjCoA2JbX" + "2MrLpGwNBC",
+				BrandLabel:            "Hyundai",
 			},
 		}
 	case "australia", "new zealand":
@@ -105,6 +109,10 @@ func NewKiaFromConfig(other map[string]any) (api.Vehicle, error) {
 			ClientName:           "kia",
 			OSVersion:            "27",
 			NotificationProvider: "IOS_APPSTORE",
+			// signing constants of the Android OneApp 1.4.0 build, they rotate with app releases
+			FingerprintClientName: "KiaEU",
+			FingerprintKey:        "yb4Z1n2nlKe" + "ukNilE7QEdb" + "KB34nStPVa",
+			BrandLabel:            "Kia",
 		},
 	}
 
@@ -134,6 +142,7 @@ func NewGenesisFromConfig(other map[string]any) (api.Vehicle, error) {
 			ClientName:           "genesis",
 			OSVersion:            "18.7",
 			NotificationProvider: "APNS",
+			// X-Fingerprint signing constants unknown, so only the unsigned legacy routes
 		},
 	}
 

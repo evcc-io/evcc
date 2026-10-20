@@ -47,6 +47,30 @@
 				</select>
 			</FormRow>
 
+			<PropertyCollapsible>
+				<template #advanced>
+					<FormRow
+						id="siteGridConnection"
+						:label="$t('config.site.gridConnection.label')"
+						:help="gridConnectionHelp"
+					>
+						<select
+							id="siteGridConnection"
+							v-model="gridConnection"
+							class="form-select"
+						>
+							<option
+								v-for="option in gridConnectionOptions"
+								:key="option.value"
+								:value="option.value"
+							>
+								{{ option.name }}
+							</option>
+						</select>
+					</FormRow>
+				</template>
+			</PropertyCollapsible>
+
 			<div class="mt-4 d-flex justify-content-between gap-2 flex-column flex-sm-row">
 				<button
 					type="button"
@@ -78,14 +102,15 @@
 import { defineComponent } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import FormRow from "./FormRow.vue";
+import PropertyCollapsible from "./PropertyCollapsible.vue";
 import store from "@/store";
 import api from "@/api";
-import { COUNTRIES, CURRENCY } from "@/types/evcc";
+import { COUNTRIES, CURRENCY, GRID_CONNECTION } from "@/types/evcc";
 import formatter from "@/mixins/formatter";
 
 export default defineComponent({
 	name: "SiteModal",
-	components: { FormRow, GenericModal },
+	components: { FormRow, GenericModal, PropertyCollapsible },
 	mixins: [formatter],
 	emits: ["changed"],
 	data() {
@@ -95,7 +120,13 @@ export default defineComponent({
 			title: "",
 			currency: CURRENCY.EUR,
 			country: "",
-			initial: { title: "", currency: CURRENCY.EUR as string, country: "" },
+			gridConnection: GRID_CONNECTION.THREE_PHASE_FOUR_WIRE,
+			initial: {
+				title: "",
+				currency: CURRENCY.EUR as string,
+				country: "",
+				gridConnection: GRID_CONNECTION.THREE_PHASE_FOUR_WIRE,
+			},
 		};
 	},
 	computed: {
@@ -123,8 +154,42 @@ export default defineComponent({
 		countryChanged() {
 			return this.country !== this.initial.country;
 		},
+		voltage() {
+			return store.state?.voltage ?? 230;
+		},
+		lineVoltage() {
+			return Math.round((this.voltage * Math.sqrt(3)) / 10) * 10;
+		},
+		gridConnectionOptions() {
+			const { voltage, lineVoltage } = this;
+			return [
+				{
+					value: GRID_CONNECTION.THREE_PHASE_FOUR_WIRE,
+					name: this.$t("config.site.gridConnection.3p4w", { voltage, lineVoltage }),
+				},
+				{
+					value: GRID_CONNECTION.THREE_PHASE_THREE_WIRE,
+					name: this.$t("config.site.gridConnection.3p3w", { voltage }),
+				},
+			];
+		},
+		gridConnectionChanged() {
+			return this.gridConnection !== this.initial.gridConnection;
+		},
+		gridConnectionHelp() {
+			const { voltage, lineVoltage } = this;
+			return this.$t(`config.site.gridConnection.description.${this.gridConnection}`, {
+				voltage,
+				lineVoltage,
+			});
+		},
 		changed() {
-			return this.titleChanged || this.currencyChanged || this.countryChanged;
+			return (
+				this.titleChanged ||
+				this.currencyChanged ||
+				this.countryChanged ||
+				this.gridConnectionChanged
+			);
 		},
 		currencyExample() {
 			const price = this.fmtPricePerKWh(0.122, this.currency);
@@ -139,7 +204,14 @@ export default defineComponent({
 			this.title = store.state?.siteTitle || "";
 			this.currency = store.state?.currency || CURRENCY.EUR;
 			this.country = store.state?.country || "";
-			this.initial = { title: this.title, currency: this.currency, country: this.country };
+			this.gridConnection =
+				store.state?.gridConnection ?? GRID_CONNECTION.THREE_PHASE_FOUR_WIRE;
+			this.initial = {
+				title: this.title,
+				currency: this.currency,
+				country: this.country,
+				gridConnection: this.gridConnection,
+			};
 		},
 		async save() {
 			this.saving = true;
@@ -154,6 +226,11 @@ export default defineComponent({
 				}
 				if (this.countryChanged) {
 					requests.push(api.put("/config/country", JSON.stringify(this.country)));
+				}
+				if (this.gridConnectionChanged) {
+					requests.push(
+						api.put("/config/gridconnection", JSON.stringify(this.gridConnection))
+					);
 				}
 				await Promise.all(requests);
 				this.$emit("changed");

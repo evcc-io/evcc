@@ -7,6 +7,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util/grid"
 )
 
 // setSuggestion stores the optimizer suggestion for the current slot
@@ -113,11 +115,18 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 	required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower())
 
 	// past the plan time the goal was missed- keep charging like plannerActive does
+	critical := required > 0
 	if remaining := lp.clock.Until(planTime); remaining > 0 {
-		return required >= remaining
+		critical = required >= remaining
 	}
 
-	return required > 0
+	// hold a critical verdict for one slot, like the planner holds its slot: while charging
+	// the soc estimate may shrink the required duration faster than the clock (taper model)
+	if critical {
+		lp.planSlotEnd = lp.clock.Now().Add(tariff.SlotDuration)
+	}
+
+	return critical || lp.clock.Now().Before(lp.planSlotEnd)
 }
 
 // surplusRegime indicates that the suggested charge power matches the forecast
@@ -162,7 +171,7 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion) (bool, error) {
 	// full power, or more than the active phases can deliver: fastCharging scales
 	// up and owns the phase timer, resetting it here would restart the delay every cycle
 	full := s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold
-	if s.Action == actionCharge && (full || s.Charge > currentToPower(lp.effectiveMaxCurrent(), lp.ActivePhases())) {
+	if s.Action == actionCharge && (full || s.Charge > grid.CurrentToPower(lp.effectiveMaxCurrent(), lp.ActivePhases())) {
 		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), full power", s.Charge)
 		return true, lp.fastCharging()
 	}
@@ -171,7 +180,7 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion) (bool, error) {
 
 	if s.Action == actionCharge {
 		// a limited setpoint, e.g. a minimum demand or a grid import limit
-		if current := powerToCurrent(s.Charge, lp.ActivePhases()); current >= lp.effectiveMinCurrent() {
+		if current := grid.PowerToCurrent(s.Charge, lp.ActivePhases()); current >= lp.effectiveMinCurrent() {
 			lp.log.DEBUG.Printf("optimizer: charge (%.0fW)", s.Charge)
 			return true, lp.setLimit(current)
 		}

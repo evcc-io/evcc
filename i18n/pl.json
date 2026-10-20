@@ -505,7 +505,6 @@
         "charging": "Ładowarka",
         "heating": "Podgrzewacz"
       },
-      "chargingTitle": "Postępowanie",
       "circuitHelp": "Przypisanie zarządzania obciążeniem w celu zapewnienia, że nie zostaną przekroczone limity mocy i prądu.",
       "circuitInvalid": "Obwód nie istnieje",
       "circuitLabel": "Obwód",
@@ -567,24 +566,16 @@
       "priorityHelp": "Wyższy priorytet zapewnia preferowany dostęp do nadwyżek energii słonecznej.",
       "priorityLabel": "Priorytet",
       "save": "Zapisz",
-      "solarBehaviorCustomHelp": "Zdefiniuj własne progi włączania i wyłączania oraz opóźnienia.",
-      "solarBehaviorDefaultHelp": "Rozpocznij po {enableDelay} wystarczającej nadwyżki. Zatrzymaj, gdy nadwyżka nie będzie wystarczająca dla {disableDelay}.",
-      "solarBehaviorLabel": "Słońce",
-      "solarModeCustom": "własne",
-      "solarModeMaximum": "maksymalnie słońce",
-      "solarShareNote": "Suwak udziału energii słonecznej w ustawieniach użytkownika jest wyłączony, gdy ustawione są progi w watach. {0} i zapisz, aby go włączyć.",
       "solarShareReset": "Usuń progi",
       "temperatureRangeHelp": "Zakres wyświetlania paska temperatury. Nie wpływa na sterowanie.",
       "temperatureRangeTitle": "Zakres temperatur",
       "thresholdDisableDelayLabel": "Wyłącz opóźnienie",
       "thresholdDisableHelpInvalid": "Proszę użyć wartości dodatniej.",
       "thresholdDisableHelpPositive": "Zatrzymaj, gdy z sieci zostanie zużyte więcej niż {power} przez {delay}.",
-      "thresholdDisableHelpZero": "Zatrzymaj, gdy minimalna wymagana moc nie może zostać osiągnięta przez {delay}.",
       "thresholdDisableLabel": "Wyłącz zasilanie z sieci",
       "thresholdEnableDelayLabel": "Włącz opóźnienie",
       "thresholdEnableHelpInvalid": "Proszę użyć wartości ujemnej.",
       "thresholdEnableHelpNegative": "Rozpocznij, gdy nadwyżka {surplus} będzie dostępna przez {delay}.",
-      "thresholdEnableHelpZero": "Rozpocznij, gdy minimalna wymagana moc będzie osiągnięta przez {delay}.",
       "thresholdEnableLabel": "Pozwól na zasilanie z sieci",
       "titleAdd": {
         "charging": "Dodaj punkt ładowania",
@@ -837,6 +828,7 @@
         },
         "label": "Polecenia serwera nadrzędnego"
       },
+      "status": "Stan",
       "upstreamStationId": "Identyfikator stacji",
       "upstreamStationIdHelp": "Identyfikator ładowarki wysyłany do serwera nadrzędnego.",
       "upstreamUrl": "Adres URL serwera nadrzędnego",
@@ -1348,6 +1340,7 @@
       "modalUpdateStarted": "Nowa wersja evcc uruchamia się…",
       "modalUpdateStatusStart": "Instalacja rozpoczęta:",
       "modalViewOnGitHub": "Zobacz na GitHubie",
+      "openSource": "otwarte oprogramowanie",
       "poweredBy": "obsługiwane przez"
     }
   },

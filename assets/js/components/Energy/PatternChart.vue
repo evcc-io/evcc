@@ -27,6 +27,7 @@ import type { HistorySeries } from "./GroupChart.vue";
 import { PERIODS } from "../Sessions/types";
 import { labelStep, DAY_STEPS, MONTH_STEPS } from "@/utils/labelStep";
 import { is12hFormat, weekStart } from "@/units";
+import store from "@/store";
 import { PANEL_EXTRA, panelGrids, socTempPanel, type SubPanel } from "./subPanel";
 
 const DAY_SLOTS = 96;
@@ -260,7 +261,7 @@ export default defineComponent({
 						},
 						emphasis: { disabled: true },
 					},
-					boundarySeries(weekBoundaries(this.from, days)),
+					boundarySeries(weekBoundaries(this.from, days, store.state?.country)),
 				],
 			};
 		},
@@ -279,7 +280,8 @@ export default defineComponent({
 							{ values: [this.fmtKWh(params.value[1])] },
 						]),
 				},
-				visualMap: this.legend(this.fmtKWh(this.max), 4),
+				// calendar data is [day, energy], the energy sits in dimension 1
+				visualMap: { ...this.legend(this.fmtKWh(this.max), 4), dimension: 1 },
 				calendar: {
 					left: 28,
 					right: 4,
@@ -295,7 +297,7 @@ export default defineComponent({
 						borderColor: colors.box || "",
 					},
 					dayLabel: {
-						firstDay: weekStart(),
+						firstDay: weekStart(store.state?.country),
 						nameMap: this.dayNames,
 						fontSize: 10,
 						color: colors.muted || "",

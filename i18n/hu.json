@@ -262,6 +262,7 @@
       "heaterTempLimit": "Fűtés limit",
       "identifier": "RFID-Azonosító",
       "loginBlocked": "Bejelentkezési limit elérve",
+      "max": "max.",
       "maxCurrent": "Max. áram",
       "maxPower": "Max. teljesítmény",
       "messengers": "Szolgáltatások",
@@ -495,7 +496,6 @@
         "charging": "Töltő",
         "heating": "Fűtőberendezés"
       },
-      "chargingTitle": "Viselkedés",
       "circuitHelp": "Terheléskezelési hozzárendelés a teljesítmény- és áramkorlátok túllépésének biztosítására.",
       "circuitInvalid": "Az áramkör nem létezik",
       "circuitLabel": "Áramkör",
@@ -557,24 +557,16 @@
       "priorityHelp": "Magasabb prioritás esetén elsőbbségi hozzáférést biztosít a napenergia-többlethez.",
       "priorityLabel": "Prioritás",
       "save": "Mentés",
-      "solarBehaviorCustomHelp": "Definiálja a saját engedélyezési és letiltási küszöbértékeit és késleltetéseit.",
-      "solarBehaviorDefaultHelp": "Indítás elegendő többlet után {enableDelay} idő elteltével. Megállítás, ha nincs elegendő többlet a következőhöz: {disableDelay}.",
-      "solarBehaviorLabel": "Szolár",
-      "solarModeCustom": "egyedi",
-      "solarModeMaximum": "maximum szolár",
-      "solarShareNote": "A felhasználói beállításokban a napenergia arány csúszka le van tiltva, amíg watt küszöbértékek vannak beállítva. {0} és mentsd el az engedélyezéshez.",
       "solarShareReset": "Küszöbértékek eltávolítása",
       "temperatureRangeHelp": "A hőmérsékletsáv megjelenítési tartománya. A vezérlést nem befolyásolja.",
       "temperatureRangeTitle": "Hőmérséklet-tartomány",
       "thresholdDisableDelayLabel": "Késleletetés letiltása",
       "thresholdDisableHelpInvalid": "Kérlek használj pozitív értéket.",
       "thresholdDisableHelpPositive": "Megállítás, amikor több mint {power} lett a hálózatból vételezve {delay} ideig.",
-      "thresholdDisableHelpZero": "Megállítás, ha a minimálisan szükséges teljesítmény nem biztosítható {delay} időtartamig.",
       "thresholdDisableLabel": "Hálózati áramellátás letiltása",
       "thresholdEnableDelayLabel": "Késleltetés engedélyezése",
       "thresholdEnableHelpInvalid": "Kérlek használj negatív értéket.",
       "thresholdEnableHelpNegative": "Indulás, amikor {surplus} többlet áll rendelkezésre {delay} esetén.",
-      "thresholdEnableHelpZero": "Akkor induljon el, amikor a minimálisan szükséges teljesítmény kielégíthető a {delay} időtartamra.",
       "thresholdEnableLabel": "Hálózati áramellátás engedélyezése",
       "titleAdd": {
         "charging": "Töltőpont hozzáadása",
@@ -1163,6 +1155,10 @@
         "energy": "töltve",
         "returnEnergy": "kisütve"
       },
+      "grid": {
+        "energy": "Vételezés",
+        "returnEnergy": "Betáplálás"
+      },
       "meter": {
         "energy": "Energia",
         "returnEnergy": "Energia (visszirány)"
@@ -1188,7 +1184,9 @@
       "amount": "Összeg",
       "cost": "Hálózati költség",
       "energy": "Energia",
+      "export": "Betáplálás",
       "exportPrice": "Export ár",
+      "import": "Vételezés",
       "importPrice": "Import ár",
       "price": "Ár",
       "revenue": "Betáplálási bevétel",
@@ -1513,6 +1511,7 @@
       "description": "megszakítás nélkül",
       "label": "Mindig tölt",
       "labelHeating": "Mindig fűt",
+      "minCurrent": "min. {current}",
       "once": "a folyamat végéig",
       "onceTip": "Csak erre a folyamatra",
       "permanent": "tartósan bekapcsolva marad"
@@ -1937,6 +1936,7 @@
   },
   "settings": {
     "dateFormat": {
+      "auto": "Automatikus",
       "dmy": "NN/HH/ÉÉÉÉ",
       "label": "Dátumformátum",
       "mdy": "HH/NN/ÉÉÉÉ",
