@@ -163,9 +163,9 @@ jobs:
                branches included, with
                `git log --tags --format=%h -F --grep="(#<pr>)"` and, for each
                sha, the releases that ship it with
-               `git tag --contains <sha> --sort=creatordate`. Only plain
+               `git tag --contains <sha> --sort=version:refname`. Only plain
                `X.Y.Z` tags are releases, ignore suffixed tags like
-               `0.300.8-lurtz`. The earliest release over all shas is the first
+               `0.300.8-lurtz`. The lowest version over all shas is the first
                with the fix; none means nightly only. If the reporter's
                version is older than that release, the problem is already fixed:
                say so in step 2. If their version already contains it, analyze it
