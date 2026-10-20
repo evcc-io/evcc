@@ -24,7 +24,7 @@ func (site *Site) pendingVehiclePower() float64 {
 
 func (site *Site) pendingVehiclePowerExcept(except *Loadpoint) float64 {
 	var pending float64
-	for _, lp := range site.loadpoints {
+	for _, lp := range site.activeLoadpoints() {
 		if lp == except || !lp.enabled || !lp.connected() {
 			continue
 		}
@@ -74,7 +74,7 @@ func (site *Site) pvVehiclePriority(state siteState) bool {
 		ownCharge += max(0, -power)
 	}
 	available := -state.gridPower + ownCharge - max(100, site.GetResidualPower())
-	for _, lp := range site.loadpoints {
+	for _, lp := range site.activeLoadpoints() {
 		if !lp.coordinatedPV() || lp.GetMode() != api.ModeSmart || !lp.connected() || lp.LimitSocReached() || lp.LimitEnergyReached() {
 			continue
 		}

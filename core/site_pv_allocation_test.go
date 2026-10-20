@@ -133,3 +133,22 @@ func TestPVAllocationReservesPendingBatteryCommands(t *testing.T) {
 	b.state.Power = 0
 	require.Zero(t, s.pendingBatteryPower())
 }
+
+func TestPVAllocationIgnoresDisabledLoadpoints(t *testing.T) {
+	b := &journalSiteBattery{observedPVBattery{state: api.BatteryControlState{Mode: api.BatteryOperatingAuto, Soc: 70}}}
+	s := guardedSite(&b.observedPVBattery)
+	s.batteryMeters = []config.Device[api.Meter]{config.NewStaticDevice[api.Meter](config.Named{Name: "battery"}, b)}
+	lp, _ := cloudLoadpoint()
+	lp.site, lp.mode, lp.offeredCurrent, lp.chargePower = s, api.ModeSmart, 8, 4140
+	s.loadpoints = []*Loadpoint{nil, lp, nil}
+	require.Equal(t, 1380.0, s.pendingVehiclePower())
+	require.Zero(t, s.pendingVehiclePowerExcept(lp))
+	require.False(t, s.evBatteryBoostActive())
+	state := siteState{gridPower: -5000}
+	state.battery.Soc = 70
+	require.True(t, s.pvVehiclePriority(state))
+	s.loadpoints = []*Loadpoint{nil}
+	require.Zero(t, s.pendingVehiclePower())
+	require.False(t, s.evBatteryBoostActive())
+	require.False(t, s.pvVehiclePriority(state))
+}
