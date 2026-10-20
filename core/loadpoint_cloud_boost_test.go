@@ -27,7 +27,6 @@ func (s *cloudSite) GetBufferSoc() float64      { return s.buffer }
 func (s *cloudSite) GetBatterySoc() float64 { return s.soc }
 
 func cloudLoadpoint() (*Loadpoint, *cloudSite) {
-	Voltage = 230
 	limit := 3300.0
 	s := &cloudSite{mockSite: mockSite{maxDischargePower: &limit}, soc: 70}
 	lp := &Loadpoint{
@@ -139,8 +138,8 @@ func TestCloudBoostHouseDemandAndDischargeAreNotDoubleCounted(t *testing.T) {
 		// PV 3kW, house 1.5kW, EV 4.8kW. Whatever part the battery
 		// already supplies, EV budget must remain 1.5 + 3.3 = 4.8kW.
 		lp.chargePower = 4800
-		grid := 1500 + lp.chargePower - 3000 - battery
-		current := lp.pvMaxCurrent(grid+battery, battery, false, false)
+		gridPower := 1500 + lp.chargePower - 3000 - battery
+		current := lp.pvMaxCurrent(gridPower+battery, battery, false, false)
 		require.InDelta(t, 4800.0, grid.CurrentToPower(current, 3), 0.0001)
 	}
 	lp, _ := cloudLoadpoint()
