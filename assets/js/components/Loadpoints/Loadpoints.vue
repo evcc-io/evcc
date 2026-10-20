@@ -80,6 +80,8 @@
 				:smartCostType="smartCostType"
 				:battery-configured="batteryConfigured"
 				:forecast="forecast"
+				:voltage="voltage"
+				:grid-connection="gridConnection"
 			/>
 		</div>
 	</div>
@@ -101,6 +103,7 @@ import type {
 	BATTERY_MODE,
 	UiForecast,
 	CURRENCY,
+	GRID_CONNECTION,
 } from "@/types/evcc";
 import ChargingPlanModal from "../ChargingPlans/ChargingPlanModal.vue";
 import SettingsModal from "../Loadpoints/SettingsModal.vue";
@@ -120,6 +123,8 @@ export default defineComponent({
 		currency: String as PropType<CURRENCY>,
 		selectedId: String,
 		gridConfigured: Boolean,
+		gridConnection: String as PropType<GRID_CONNECTION>,
+		voltage: Number,
 		pvConfigured: Boolean,
 		batteryConfigured: Boolean,
 		batterySoc: Number,

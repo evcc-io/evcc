@@ -33,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -64,7 +65,7 @@ type Site struct {
 
 	// configuration
 	Title         string       `mapstructure:"title"`         // UI title
-	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
+	Voltage       float64      `mapstructure:"voltage"`       // Deprecated: ignored, the nominal voltage is fixed
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
 	CurtailersRef []string     `mapstructure:"curtailers"`    // Curtailment device references
@@ -171,7 +172,10 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	site.restoreMetersAndTitle()
 
 	// TODO title
-	Voltage = site.Voltage
+	if site.Voltage != 0 && site.Voltage != grid.Voltage {
+		site.log.WARN.Printf("voltage %.0fV is no longer supported, using %.0fV", site.Voltage, grid.Voltage)
+	}
+	grid.SetNoNeutral(site.GetGridConnection() == grid.Connection3P3W)
 
 	return site, nil
 }
@@ -403,7 +407,6 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 func NewSite() *Site {
 	site := &Site{
 		log:        util.NewLogger("site"),
-		Voltage:    230, // V
 		collectors: make(map[string]*metrics.Collector),
 	}
 
@@ -1466,6 +1469,8 @@ func (site *Site) prepare() {
 	site.publish(keys.Country, site.GetCountry())
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
+	site.publish(keys.Voltage, grid.Voltage)
+	site.publish(keys.GridConnection, site.GetGridConnection())
 	site.publish(keys.Grid, api.Meter(nil))
 	site.publish(keys.Pv, []api.Meter{})
 	site.publish(keys.Aux, []api.Meter{})
