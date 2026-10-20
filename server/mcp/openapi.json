@@ -2964,36 +2964,34 @@
                     "flows": {
                       "type": "array",
                       "items": {
+                        "$ref": "#/components/schemas/Flow"
+                      }
+                    },
+                    "entities": {
+                      "type": "array",
+                      "description": "Flows into each consumer and loadpoint, priced per slot",
+                      "items": {
                         "type": "object",
                         "properties": {
-                          "from": {
+                          "group": {
                             "type": "string",
                             "enum": [
-                              "pv",
-                              "battery",
-                              "grid"
+                              "consumer",
+                              "loadpoint"
                             ]
                           },
-                          "to": {
-                            "type": "string",
-                            "enum": [
-                              "home",
-                              "battery",
-                              "loadpoint",
-                              "export"
-                            ]
+                          "title": {
+                            "type": "string"
                           },
-                          "energy": {
-                            "type": "number",
-                            "description": "kWh"
+                          "virtual": {
+                            "type": "boolean",
+                            "description": "Home consumption not covered by a consumer"
                           },
-                          "cost": {
-                            "type": "number",
-                            "description": "Cost of the energy, for home and loadpoint"
-                          },
-                          "pricedEnergy": {
-                            "type": "number",
-                            "description": "kWh where a price exists"
+                          "flows": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/Flow"
+                            }
                           }
                         }
                       }
@@ -3279,6 +3277,40 @@
         "type": "number",
         "example": 25.5,
         "minimum": 0
+      },
+      "Flow": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "enum": [
+              "pv",
+              "battery",
+              "grid"
+            ]
+          },
+          "to": {
+            "type": "string",
+            "enum": [
+              "home",
+              "battery",
+              "loadpoint",
+              "export"
+            ]
+          },
+          "energy": {
+            "type": "number",
+            "description": "kWh"
+          },
+          "cost": {
+            "type": "number",
+            "description": "Cost of the energy, for home and loadpoint"
+          },
+          "pricedEnergy": {
+            "type": "number",
+            "description": "kWh where a price exists"
+          }
+        }
       },
       "Delay": {
         "description": "Duration in seconds.",
