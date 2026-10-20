@@ -4,6 +4,7 @@ import (
 	"math"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/grid"
 )
 
 // CoordinatedPVBattery enables PV-only vehicle starts with the existing site buffer reserve.
@@ -28,7 +29,7 @@ func (site *Site) pendingVehiclePowerExcept(except *Loadpoint) float64 {
 		if lp == except || !lp.enabled || !lp.connected() {
 			continue
 		}
-		power := currentToPower(lp.offeredCurrent, lp.ActivePhases())
+		power := grid.CurrentToPower(lp.offeredCurrent, lp.ActivePhases())
 		if !finiteBatteryPVValue(power) || !finiteBatteryPVValue(lp.chargePower) {
 			return math.Inf(1)
 		}
@@ -82,7 +83,7 @@ func (site *Site) pvVehiclePriority(state siteState) bool {
 			if available > 0 && lp.offeredCurrent < lp.effectiveMaxCurrent() {
 				return true
 			}
-		} else if available >= currentToPower(lp.effectiveMinCurrent(), lp.ActivePhases()) {
+		} else if available >= grid.CurrentToPower(lp.effectiveMinCurrent(), lp.ActivePhases()) {
 			return true
 		}
 	}

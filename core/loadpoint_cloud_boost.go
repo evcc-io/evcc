@@ -1,6 +1,10 @@
 package core
 
-import "math"
+import (
+	"math"
+
+	"github.com/evcc-io/evcc/util/grid"
+)
 
 func (lp *Loadpoint) usesCloudBoost() bool {
 	return lp.activeSuggestion() == nil && (lp.coordinatedPV() || lp.GetBatteryBoost() != boostDisabled) && (!lp.hasPhaseSwitching() || lp.phasesConfigured != 0)
@@ -18,7 +22,7 @@ func (lp *Loadpoint) coordinatedPV() bool {
 func (lp *Loadpoint) pvCloudBoostCurrent(sitePower float64) float64 {
 	minCurrent, maxCurrent := lp.effectiveMinCurrent(), lp.effectiveMaxCurrent()
 	phases := lp.ActivePhases()
-	minimum := currentToPower(minCurrent, phases)
+	minimum := grid.CurrentToPower(minCurrent, phases)
 	if !finiteBatteryPVValue(sitePower) || !finiteBatteryPVValue(lp.chargePower) || minimum <= 0 {
 		lp.resetPVTimer()
 		return 0
@@ -71,5 +75,5 @@ func (lp *Loadpoint) pvCloudBoostCurrent(sitePower float64) float64 {
 		return minCurrent
 	}
 	lp.resetPVTimer()
-	return min(maxCurrent, powerToCurrent(budget, phases))
+	return min(maxCurrent, grid.PowerToCurrent(budget, phases))
 }

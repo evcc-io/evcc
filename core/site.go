@@ -34,6 +34,7 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -65,7 +66,7 @@ type Site struct {
 
 	// configuration
 	Title               string       `mapstructure:"title"`               // UI title
-	Voltage             float64      `mapstructure:"voltage"`             // Operating voltage. 230V for Germany.
+	Voltage             float64      `mapstructure:"voltage"`             // Deprecated: ignored, the nominal voltage is fixed
 	ResidualPower       float64      `mapstructure:"residualPower"`       // PV meter only: household usage. Grid meter: household safety margin
 	BatteryPVStartPower float64      `mapstructure:"batteryPVStartPower"` // PV start threshold in W
 	Meters              MetersConfig `mapstructure:"meters"`              // Meter references
@@ -178,7 +179,10 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	site.restoreMetersAndTitle()
 
 	// TODO title
-	Voltage = site.Voltage
+	if site.Voltage != 0 && site.Voltage != grid.Voltage {
+		site.log.WARN.Printf("voltage %.0fV is no longer supported, using %.0fV", site.Voltage, grid.Voltage)
+	}
+	grid.SetNoNeutral(site.GetGridConnection() == grid.Connection3P3W)
 
 	return site, nil
 }
@@ -411,7 +415,6 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 func NewSite() *Site {
 	site := &Site{
 		log:                 util.NewLogger("site"),
-		Voltage:             230, // V
 		BatteryPVStartPower: 500,
 		collectors:          make(map[string]*metrics.Collector),
 	}
@@ -839,17 +842,19 @@ func (site *Site) updateBatteryMeters() {
 		if !automatic {
 			fixedChargePower += max(0, -mm[i].Power)
 		}
+		// battery soc limits, read once per cycle for mode control and optimizer
+		if bsl, ok := api.Cap[api.BatterySocLimiter](meter); ok {
+			if minSoc, maxSoc, err := bsl.GetSocLimits(); err == nil {
+				mm[i].MinSoc = new(minSoc)
+				mm[i].MaxSoc = new(maxSoc)
+			} else {
+				site.log.ERROR.Printf("battery %d soc limits: %v", i+1, err)
+			}
+		}
+
 		if bpl, ok := api.Cap[api.BatteryPowerLimiter](meter); ok && maxDischargePower >= 0 {
 			// A stale display SoC is not permission to keep discharging.
-			empty := mm[i].Soc == nil || !automatic
-			if bsl, ok := api.Cap[api.BatterySocLimiter](meter); ok {
-				minSoc, _, err := bsl.GetSocLimits()
-				if err != nil {
-					site.log.ERROR.Printf("battery %d soc limits: %v", i+1, err)
-				} else if mm[i].Soc != nil && *mm[i].Soc <= minSoc {
-					empty = true
-				}
-			}
+			empty := mm[i].Soc == nil || !automatic || (mm[i].MinSoc != nil && *mm[i].Soc <= *mm[i].MinSoc)
 
 			if !empty {
 				_, discharge, err := bpl.GetPowerLimits()
@@ -1501,6 +1506,8 @@ func (site *Site) prepare() {
 	site.publish(keys.Country, site.GetCountry())
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
+	site.publish(keys.Voltage, grid.Voltage)
+	site.publish(keys.GridConnection, site.GetGridConnection())
 	site.publish(keys.Grid, api.Meter(nil))
 	site.publish(keys.Pv, []api.Meter{})
 	site.publish(keys.Aux, []api.Meter{})

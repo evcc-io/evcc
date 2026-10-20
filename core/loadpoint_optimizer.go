@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util/grid"
 )
 
 // setSuggestion stores the optimizer suggestion for the current slot
@@ -170,7 +171,7 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion) (bool, error) {
 	// full power, or more than the active phases can deliver: fastCharging scales
 	// up and owns the phase timer, resetting it here would restart the delay every cycle
 	full := s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold
-	if s.Action == actionCharge && (full || s.Charge > currentToPower(lp.effectiveMaxCurrent(), lp.ActivePhases())) {
+	if s.Action == actionCharge && (full || s.Charge > grid.CurrentToPower(lp.effectiveMaxCurrent(), lp.ActivePhases())) {
 		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), full power", s.Charge)
 		return true, lp.fastCharging()
 	}
@@ -179,7 +180,7 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion) (bool, error) {
 
 	if s.Action == actionCharge {
 		// a limited setpoint, e.g. a minimum demand or a grid import limit
-		if current := powerToCurrent(s.Charge, lp.ActivePhases()); current >= lp.effectiveMinCurrent() {
+		if current := grid.PowerToCurrent(s.Charge, lp.ActivePhases()); current >= lp.effectiveMinCurrent() {
 			lp.log.DEBUG.Printf("optimizer: charge (%.0fW)", s.Charge)
 			return true, lp.setLimit(current)
 		}

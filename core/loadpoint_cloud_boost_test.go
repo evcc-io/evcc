@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -63,7 +64,7 @@ func TestCloudBoostWeatherSequence(t *testing.T) {
 		{4500, 7800}, {3000, 6300}, {1500, 4800}, {500, 0},
 	} {
 		current := lp.pvMaxCurrent(lp.chargePower-tc.pv, 3300, false, false)
-		require.InDelta(t, tc.want, currentToPower(current, 3), 0.0001)
+		require.InDelta(t, tc.want, grid.CurrentToPower(current, 3), 0.0001)
 		if tc.want > 0 {
 			lp.chargePower = tc.want
 		}
@@ -79,7 +80,7 @@ func TestCoordinatedPVUsesBufferWithoutBoost(t *testing.T) {
 		lp.batteryBoost, lp.batteryBoostLimit = boostDisabled, 5
 		lp.Disable.Delay = 3 * time.Minute
 		got := lp.pvMaxCurrent(lp.chargePower-tc.pv, 2700, true, true)
-		require.InDelta(t, tc.want, currentToPower(got, 3), 0.001)
+		require.InDelta(t, tc.want, grid.CurrentToPower(got, 3), 0.001)
 		require.Equal(t, boostDisabled, lp.GetBatteryBoost())
 	}
 }
@@ -100,7 +101,7 @@ func TestCoordinatedPVNeverStartsFromBufferSoc(t *testing.T) {
 func TestCloudBoostZeroLimitPreservesExplicitBoost(t *testing.T) {
 	lp, s := cloudLoadpoint()
 	lp.batteryBoostLimit = 0
-	require.InDelta(t, 4800.0, currentToPower(lp.pvMaxCurrent(lp.chargePower-1500, 0, false, false), 3), 0.001)
+	require.InDelta(t, 4800.0, grid.CurrentToPower(lp.pvMaxCurrent(lp.chargePower-1500, 0, false, false), 3), 0.001)
 	s.coordinated, s.buffer = true, 0
 	require.Zero(t, lp.pvMaxCurrent(lp.chargePower-1500, 0, false, false))
 }
@@ -109,7 +110,7 @@ func TestCloudBoostStartAndRestartRequirePV(t *testing.T) {
 	lp, _ := cloudLoadpoint()
 	lp.enabled, lp.status, lp.chargePower = false, api.StatusB, 0
 	lp.batteryBoost = boostStart
-	minimum := currentToPower(6, 3)
+	minimum := grid.CurrentToPower(6, 3)
 	require.Zero(t, lp.pvMaxCurrent(-(minimum-1), 0, true, true))
 	require.Equal(t, 6.0, lp.pvMaxCurrent(-minimum, 0, true, true))
 	// A previous active boost cannot use the battery to pass the restart gate.
@@ -125,7 +126,7 @@ func TestCloudBoostSocBoundaryAndPVOnlyContinuation(t *testing.T) {
 		lp, s := cloudLoadpoint()
 		s.soc = tc.soc
 		current := lp.pvMaxCurrent(lp.chargePower-tc.pv, 3300, true, true)
-		require.InDelta(t, tc.want, currentToPower(current, 3), 0.0001)
+		require.InDelta(t, tc.want, grid.CurrentToPower(current, 3), 0.0001)
 		if tc.soc <= 50 {
 			require.Equal(t, boostHold, lp.GetBatteryBoost())
 		}
@@ -140,7 +141,7 @@ func TestCloudBoostHouseDemandAndDischargeAreNotDoubleCounted(t *testing.T) {
 		lp.chargePower = 4800
 		grid := 1500 + lp.chargePower - 3000 - battery
 		current := lp.pvMaxCurrent(grid+battery, battery, false, false)
-		require.InDelta(t, 4800.0, currentToPower(current, 3), 0.0001)
+		require.InDelta(t, 4800.0, grid.CurrentToPower(current, 3), 0.0001)
 	}
 	lp, _ := cloudLoadpoint()
 	// PV does not even cover the house: 1.5kW of battery capacity belongs
@@ -161,7 +162,7 @@ func TestCloudBoostReserveUnknownLimitsAndNoDisableDelay(t *testing.T) {
 	s.residualPower = 0
 	s.maxDischargePower = nil
 	require.Zero(t, lp.pvMaxCurrent(lp.chargePower-1500, 0, false, false))
-	require.InDelta(t, 4500.0, currentToPower(lp.pvMaxCurrent(lp.chargePower-4500, 0, false, false), 3), 0.0001)
+	require.InDelta(t, 4500.0, grid.CurrentToPower(lp.pvMaxCurrent(lp.chargePower-4500, 0, false, false), 3), 0.0001)
 	s.soc = math.NaN()
 	require.Zero(t, lp.pvMaxCurrent(lp.chargePower-1500, 0, false, false))
 	require.Zero(t, lp.pvMaxCurrent(math.NaN(), 0, false, false))
