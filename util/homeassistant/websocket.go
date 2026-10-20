@@ -57,23 +57,24 @@ func (c *Connection) SolarForecasts(ctx context.Context) (map[string]SolarForeca
 	// a week of hourly values per config entry exceeds the 32 KiB default
 	conn.SetReadLimit(1 << 20)
 
-	var msg wsMessage
-	if err := wsjson.Read(ctx, conn, &msg); err != nil {
+	var hello wsMessage
+	if err := wsjson.Read(ctx, conn, &hello); err != nil {
 		return nil, err
 	}
-	if msg.Type != "auth_required" {
-		return nil, fmt.Errorf("unexpected message: %s", msg.Type)
+	if hello.Type != "auth_required" {
+		return nil, fmt.Errorf("unexpected message: %s", hello.Type)
 	}
 
 	if err := wsjson.Write(ctx, conn, wsMessage{Type: "auth", AccessToken: token.AccessToken}); err != nil {
 		return nil, err
 	}
 
-	if err := wsjson.Read(ctx, conn, &msg); err != nil {
+	var auth wsMessage
+	if err := wsjson.Read(ctx, conn, &auth); err != nil {
 		return nil, err
 	}
-	if msg.Type != "auth_ok" {
-		return nil, fmt.Errorf("authentication failed: %s", msg.Message)
+	if auth.Type != "auth_ok" {
+		return nil, fmt.Errorf("authentication failed: %s", auth.Message)
 	}
 
 	if err := wsjson.Write(ctx, conn, wsMessage{ID: 1, Type: "energy/solar_forecast"}); err != nil {

@@ -66,25 +66,19 @@ func (t *HomeAssistant) run(interval time.Duration, done chan error) {
 	var once sync.Once
 
 	for ; true; <-time.Tick(interval) {
-		var res map[string]homeassistant.SolarForecast
+		var data api.Rates
 
 		if err := backoff.Retry(func() error {
-			var err error
-			res, err = t.conn.SolarForecasts(context.Background())
-			if err == nil && len(res) == 0 {
-				err = backoff.Permanent(errors.New("no solar forecast configured in the energy dashboard"))
+			res, err := t.conn.SolarForecasts(context.Background())
+			if err != nil {
+				return err
 			}
-			return err
+			if len(res) == 0 {
+				return backoff.Permanent(errors.New("no solar forecast configured in the energy dashboard"))
+			}
+			data, err = solarForecastRates(res)
+			return backoff.Permanent(err)
 		}, bo()); err != nil {
-			if reportError(&once, done, err) {
-				return
-			}
-			t.log.ERROR.Println(err)
-			continue
-		}
-
-		data, err := solarForecastRates(res)
-		if err != nil {
 			if reportError(&once, done, err) {
 				return
 			}
