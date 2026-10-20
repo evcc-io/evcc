@@ -31,7 +31,7 @@ package charger
 //	                                                             503 residual current self test failed, 504 control pilot error,
 //	                                                             505 other error, 506 diode failure, 507 earthing protection
 //	102  x_metrics           ro      metrics                     {"L1":[V,A,P],"L2":[...],"L3":[...],"t":280,"p":39,"d":20110,"e":22}
-//	                                                             V 0.1 V, A 0.1 A, P 0.1 kW, t 0.1 °C, p 0.1 kW, d session s, e session 0.1 kWh
+//	                                                             V 0.1 V, A 0.1 A, P 0.1 kW, t 0.1 °C, p 0.1 kW, d session s, e session 0.1 kWh, not reset on pause
 //	103  x_selftest          ro      power-on self test result   unused according to vendor
 //	104  x_alarm             ro      alarm                       {"t":"2025-10-23 21:30:00","v":<error code>}
 //	105  x_charge_history    ro      charge history              last session {"t":"2026-09-05 13:15:20","s":"13:15","e":"10:50","d":77732,"c":62}, c 0.1 kWh
@@ -40,7 +40,7 @@ package charger
 //	107  x_adjust_current    ro      selectable currents         "[6, 8, 10, 13, 16]"
 //	108  x_downcounter       ro      countdown remaining         s
 //	109  x_work_st_debug     ro      work state (debug)          SLEEP, IDLE, IDLEINS, WORKING, WAIT, ERRORPAUSE, PAUSE, STOP, EMPTY
-//	110  x_single_fase_mode  rw      single/three phase mode     bool, not seen on firmware 2.9.3
+//	110  x_single_fase_mode  rw      single/three phase mode     bool, not seen on firmware 2.9.3 and 9.2.9
 //	111  x_debug             rw      spare                       string
 //	140  x_do_charge         wr      enable/disable charging     write-only trigger, true start, false stop
 //	141  x_do_reset          wr      factory reset               write-only trigger
@@ -54,7 +54,7 @@ package charger
 //	156  x_earch_free_cfg    rw      earth-free option           bool
 //	157  x_product_variant   ro      product variant             0 default, 1 without NFC
 //	188  x_heartbeat         rw      host heartbeat              true enables fast metrics updates for ~30 s
-//	189  dp_num              ro      number of reported DPs
+//	189  dp_num              ro      counter                     meaning unknown
 //	190  x_plug_charge       rw      plug and charge             bool, start charging when a vehicle is plugged in, user setting
 
 import (

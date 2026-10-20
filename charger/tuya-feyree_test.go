@@ -55,3 +55,11 @@ func TestTuyaFeyreeValue(t *testing.T) {
 	_, err = tuyaFeyreeValue(map[string]any{}, "109")
 	assert.ErrorIs(t, err, api.ErrNotAvailable)
 }
+
+func TestTuyaFeyreeClamp(t *testing.T) {
+	c := tuyaFeyreeCurrents["Max40A"]
+	assert.Equal(t, int64(8), c.clamp(0))
+	assert.Equal(t, int64(8), c.clamp(6))
+	assert.Equal(t, int64(20), c.clamp(20))
+	assert.Equal(t, int64(40), c.clamp(63))
+}

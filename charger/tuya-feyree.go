@@ -61,7 +61,7 @@ package charger
 //	121  CTime2              ro      charging time               0.1 h
 //	122  IDVerificationSet   rw      identity verification       bool, require RFID
 //	123  RFID                rw      card swipe                  bool
-//	124  ChargingOperation   rw      charging operation          OpenCharging, CloseCharging, WaitOperation. Not used: sessions are started by the device
+//	124  ChargingOperation   rw      charging operation          OpenCharging, CloseCharging, WaitOperation. Starts and stops charging, reported value unreliable
 
 import (
 	"context"
@@ -79,6 +79,7 @@ const (
 	tuyaFeyreeDpPower      = "109"
 	tuyaFeyreeDpEnergy     = "112"
 	tuyaFeyreeDpMaxSetting = "113"
+	tuyaFeyreeDpOperation  = "124"
 )
 
 var (
@@ -145,6 +146,7 @@ type TuyaFeyree struct {
 	setting tuyaFeyreeCurrent
 
 	mu      sync.Mutex
+	enabled bool
 	current int64
 }
 
@@ -183,6 +185,7 @@ func NewTuyaFeyree(ctx context.Context, cc tuya.Config) (*TuyaFeyree, error) {
 	wb := &TuyaFeyree{
 		conn:    conn,
 		setting: setting,
+		enabled: dps[tuyaFeyreeDpState] == "charing",
 		current: setting.min,
 	}
 
@@ -267,22 +270,43 @@ func (wb *TuyaFeyree) StatusReason() (api.Reason, error) {
 	}
 }
 
+// clamp limits the current to the supported range
+func (c tuyaFeyreeCurrent) clamp(current int64) int64 {
+	return min(max(current, c.min), c.max)
+}
+
 // Enabled implements the api.Charger interface
 func (wb *TuyaFeyree) Enabled() (bool, error) {
-	dps, err := wb.conn.Dps()
-	return tuyaFeyreeFloat(dps[wb.setting.dp]) > 0, err
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *TuyaFeyree) Enable(enable bool) error {
-	var current int64
-	if enable {
-		wb.mu.Lock()
-		current = wb.current
-		wb.mu.Unlock()
+	dps, err := wb.conn.Dps()
+	if err != nil {
+		return err
 	}
 
-	return wb.conn.Set(map[string]any{wb.setting.dp: current})
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	// the reported charging operation is unreliable, the charging current must stay within its range
+	set := map[string]any{tuyaFeyreeDpOperation: "CloseCharging"}
+	if enable {
+		set[tuyaFeyreeDpOperation] = "OpenCharging"
+		if int64(tuyaFeyreeFloat(dps[wb.setting.dp])) != wb.current {
+			set[wb.setting.dp] = wb.current
+		}
+	}
+
+	if err := wb.conn.Set(set); err != nil {
+		return err
+	}
+
+	wb.enabled = enable
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -292,14 +316,13 @@ func (wb *TuyaFeyree) MaxCurrent(current int64) error {
 		return err
 	}
 
-	current = min(max(current, wb.setting.min), wb.setting.max)
+	current = wb.setting.clamp(current)
 
 	wb.mu.Lock()
 	wb.current = current
 	wb.mu.Unlock()
 
-	// current 0 means disabled, keep until enabled
-	if actual := int64(tuyaFeyreeFloat(dps[wb.setting.dp])); actual == 0 || actual == current {
+	if int64(tuyaFeyreeFloat(dps[wb.setting.dp])) == current {
 		return nil
 	}
 
