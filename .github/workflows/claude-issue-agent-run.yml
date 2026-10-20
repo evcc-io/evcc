@@ -340,34 +340,6 @@ jobs:
             Follow the repository's AGENTS.md conventions for commit/PR style. Do not
             touch unrelated files.
 
-      # the agent cannot edit issue texts itself. Its proposals apply only to
-      # this issue, and only when they add nothing but fences and blank lines
-      - name: Apply code fences
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE: ${{ inputs.issue_number }}
-        run: |
-          shopt -s nullglob
-          strip() { tr -d '\r' | grep -v -E '^[[:space:]]*(```[[:alnum:]_+-]*)?[[:space:]]*$'; }
-          for f in .fence/*.md; do
-            id=$(basename "$f" .md)
-            if [ "$id" = body ]; then
-              url="repos/$GITHUB_REPOSITORY/issues/$ISSUE"
-            elif [[ "$id" =~ ^IC_[A-Za-z0-9_-]+$ ]]; then
-              num=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$ISSUE/comments" \
-                --jq ".[] | select(.node_id == \"$id\") | .id")
-              [ -n "$num" ] && url="repos/$GITHUB_REPOSITORY/issues/comments/$num"
-            fi
-            if [ -z "${url:-}" ]; then
-              echo "::warning::$f is not a text of #$ISSUE"
-            elif ! diff <(gh api "$url" --jq '.body // ""' | strip) <(strip < "$f") > /dev/null; then
-              echo "::warning::$f changes more than code fences"
-            else
-              gh api -X PATCH "$url" -F body=@"$f" > /dev/null
-            fi
-            unset url
-          done
-
       # git runs in the agent-touched checkout here, but with the read-only token
       - name: Export fix
         id: fix
@@ -388,6 +360,37 @@ jobs:
         with:
           name: fix-${{ inputs.issue_number }}
           path: ${{ runner.temp }}/fix.patch
+
+      # the agent cannot edit issue texts itself. Its proposals apply only to
+      # this issue, and only when they add nothing but fences and blank lines.
+      # Runs after the fix export so a failed API call cannot drop the fix
+      - name: Apply code fences
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ inputs.issue_number }}
+        run: |
+          shopt -s nullglob
+          strip() { tr -d '\r' | grep -v -E '^[[:space:]]*(```[[:alnum:]_+-]*)?[[:space:]]*$'; }
+          for f in .fence/*.md; do
+            id=$(basename "$f" .md)
+            url=
+            if [ "$id" = body ]; then
+              url="repos/$GITHUB_REPOSITORY/issues/$ISSUE"
+            elif [[ "$id" =~ ^IC_[A-Za-z0-9_-]+$ ]]; then
+              num=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$ISSUE/comments" \
+                --jq ".[] | select(.node_id == \"$id\") | .id") || num=
+              if [ -n "$num" ]; then url="repos/$GITHUB_REPOSITORY/issues/comments/$num"; fi
+            fi
+            # a failed read must not pass as an empty text
+            if [ -z "$url" ] || ! old=$(gh api "$url" --jq '.body // ""'); then
+              echo "::warning::$f is not a readable text of #$ISSUE"
+            elif ! diff <(printf '%s\n' "$old" | strip) <(strip < "$f") > /dev/null; then
+              echo "::warning::$f changes more than code fences"
+            elif ! gh api -X PATCH "$url" -F body=@"$f" > /dev/null; then
+              echo "::warning::$f could not be applied"
+            fi
+          done
 
       # the agent posts its result as a comment, so the command has been answered
       # whatever that result was. only a failed run leaves it open, there is no
