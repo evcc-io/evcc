@@ -70,7 +70,7 @@ body:
         - Linux
         - Windows
         - Docker container
-        - HomeAssistant app
+        - Home Assistant app
         - macOS
         - other
 
