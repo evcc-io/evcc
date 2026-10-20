@@ -1736,6 +1736,39 @@
         }
       }
     },
+    "/config/gridconnection": {
+      "put": {
+        "operationId": "setGridConnection",
+        "summary": "Set grid connection",
+        "description": "Set the grid connection. 3p4w for three-phase four-wire grids with neutral (3 x 230/400 V), 3p3w for three-phase three-wire grids without neutral (3 x 230 V).",
+        "tags": [
+          "general"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "3p4w",
+                  "3p3w"
+                ],
+                "example": "3p3w"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BlankResponse"
+          },
+          "400": {
+            "description": "Invalid grid connection"
+          }
+        }
+      }
+    },
     "/settings/telemetry/{enable}": {
       "post": {
         "operationId": "setTelemetryStatus",
@@ -2931,36 +2964,34 @@
                     "flows": {
                       "type": "array",
                       "items": {
+                        "$ref": "#/components/schemas/Flow"
+                      }
+                    },
+                    "entities": {
+                      "type": "array",
+                      "description": "Flows into each consumer and loadpoint, priced per slot",
+                      "items": {
                         "type": "object",
                         "properties": {
-                          "from": {
+                          "group": {
                             "type": "string",
                             "enum": [
-                              "pv",
-                              "battery",
-                              "grid"
+                              "consumer",
+                              "loadpoint"
                             ]
                           },
-                          "to": {
-                            "type": "string",
-                            "enum": [
-                              "home",
-                              "battery",
-                              "loadpoint",
-                              "export"
-                            ]
+                          "title": {
+                            "type": "string"
                           },
-                          "energy": {
-                            "type": "number",
-                            "description": "kWh"
+                          "virtual": {
+                            "type": "boolean",
+                            "description": "Home consumption not covered by a consumer"
                           },
-                          "cost": {
-                            "type": "number",
-                            "description": "Cost of the energy, for home and loadpoint"
-                          },
-                          "pricedEnergy": {
-                            "type": "number",
-                            "description": "kWh where a price exists"
+                          "flows": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/Flow"
+                            }
                           }
                         }
                       }
@@ -3246,6 +3277,40 @@
         "type": "number",
         "example": 25.5,
         "minimum": 0
+      },
+      "Flow": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "enum": [
+              "pv",
+              "battery",
+              "grid"
+            ]
+          },
+          "to": {
+            "type": "string",
+            "enum": [
+              "home",
+              "battery",
+              "loadpoint",
+              "export"
+            ]
+          },
+          "energy": {
+            "type": "number",
+            "description": "kWh"
+          },
+          "cost": {
+            "type": "number",
+            "description": "Cost of the energy, for home and loadpoint"
+          },
+          "pricedEnergy": {
+            "type": "number",
+            "description": "kWh where a price exists"
+          }
+        }
       },
       "Delay": {
         "description": "Duration in seconds.",
@@ -4561,6 +4626,14 @@
           "power"
         ]
       },
+      "GRID_CONNECTION": {
+        "description": "Grid connection, with or without neutral conductor.",
+        "type": "string",
+        "enum": [
+          "3p4w",
+          "3p3w"
+        ]
+      },
       "GenericConfigStatus": {
         "description": "Configuration and runtime status of an integration. Structure depends on configuration.",
         "type": "object",
@@ -5672,6 +5745,14 @@
           "gridConfigured": {
             "description": "A grid meter is configured.",
             "type": "boolean"
+          },
+          "gridConnection": {
+            "$ref": "#/components/schemas/GRID_CONNECTION",
+            "description": "Grid connection, with or without neutral conductor."
+          },
+          "voltage": {
+            "description": "Nominal grid voltage in V, line-to-line without neutral.",
+            "type": "number"
           },
           "pv": {
             "description": "Solar meters. One entry per configured meter.",

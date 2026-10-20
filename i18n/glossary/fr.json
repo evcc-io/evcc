@@ -14,7 +14,7 @@
     "chargingSessionShort": "session",
     "cheapEnergy": "énergie bon marché",
     "circuit": "circuit",
-    "circuitRoot": "circuit principal",
+    "circuitRoot": "circuit racine",
     "circuitSub": "sous-circuit",
     "cleanEnergy": "énergie propre",
     "co2": "CO₂",
@@ -64,9 +64,9 @@
     "savings": "économies",
     "selfConsumption": "autoconsommation",
     "solar": "solaire",
-    "solarSystem": "système photovoltaïque",
+    "solarSystem": "installation photovoltaïque",
     "sponsorToken": "jeton de parrain",
-    "summativeEnergyMeasurement": "cumul des phases",
+    "summativeEnergyMeasurement": "mesure de l’ensemble des phases",
     "surplus": "surplus",
     "switchableSocket": "prise commutable",
     "tariff": "tarif",
@@ -76,5 +76,5 @@
     "vehicle": "véhicule",
     "vehicleLimit": "limite du véhicule",
     "vehicleRange": "autonomie",
-    "withdrawal": "soutirage"
+    "withdrawal": "retrait"
 }

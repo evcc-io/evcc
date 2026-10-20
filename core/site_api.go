@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/samber/lo"
 )
 
@@ -79,6 +80,24 @@ func (site *Site) GetCountry() string {
 func (site *Site) SetCountry(country string) {
 	settings.SetString(keys.Country, country)
 	site.publish(keys.Country, country)
+}
+
+// GetGridConnection returns the grid connection, 3p4w (with neutral, default) or 3p3w (without neutral)
+func (site *Site) GetGridConnection() string {
+	if v, _ := settings.String(keys.GridConnection); v == grid.Connection3P3W {
+		return v
+	}
+	return grid.Connection3P4W
+}
+
+// SetGridConnection sets the grid connection and applies it to the current to power conversion
+func (site *Site) SetGridConnection(conn string) {
+	site.Lock()
+	defer site.Unlock()
+
+	settings.SetString(keys.GridConnection, conn)
+	grid.SetNoNeutral(conn == grid.Connection3P3W)
+	site.publish(keys.GridConnection, conn)
 }
 
 // GetGridMeterRef returns the GridMeterRef

@@ -533,6 +533,8 @@
 					:meters="meters"
 					:circuits="circuits"
 					:hasDeviceError="hasDeviceError"
+					:voltage="voltage"
+					:gridConnection="gridConnection"
 					@changed="loadpointChanged"
 					@dismissed="loadpointDismissed"
 					@disable="({ id, disable }) => handleDisable('loadpoint', id, disable)"
@@ -1008,6 +1010,12 @@ export default defineComponent({
 		},
 		currency(): CURRENCY {
 			return store.state?.currency ?? CURRENCY.EUR;
+		},
+		voltage() {
+			return store.state?.voltage;
+		},
+		gridConnection() {
+			return store.state?.gridConnection;
 		},
 		siteTitle() {
 			return this.site?.title;
