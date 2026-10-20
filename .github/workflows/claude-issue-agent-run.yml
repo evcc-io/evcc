@@ -71,6 +71,10 @@ jobs:
         id: window
         run: echo "since=$(date -d '3 months ago' +%F)" >> "$GITHUB_OUTPUT"
 
+      # the agent proposes fenced texts here, keep them out of any fix commit
+      - name: Exclude format proposals
+        run: echo '.fence/' >> .git/info/exclude
+
       - name: Run Claude
         # pinned: v1 (Claude Code 2.1.216) fails every Bash call with
         # "bwrap: Can't create file at /home/.mcp.json: Permission denied"
@@ -87,7 +91,8 @@ jobs:
           additional_permissions: |
             actions: read
           # No mode may push or open a PR, the open-pr job does that. Triage and
-          # fix get Edit/Write + git add/commit/diff/status, analyze reads only.
+          # fix get Edit/Write + git add/commit/diff/status, analyze reads only
+          # plus Write for the format proposals (analyze exports no patch).
           # analyze/fix read their invoking comment with one exact gh api command
           # (no wildcard, so the token cannot be used for arbitrary API calls).
           # Task is blocked in all modes so the agent can't offload work to a
@@ -98,7 +103,7 @@ jobs:
           # may close a duplicate. Triage and analyze run on Sonnet, it spends
           # less of the subscription quota; a maintainer's fix keeps the default
           # model.
-          claude_args: ${{ inputs.mode == 'analyze' && format('--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh issue edit {2} --add-label:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh api repos/{0}/issues/comments/{1} --jq .body),Bash(git log:*)" --disallowed-tools "Task"', github.repository, inputs.comment_id, inputs.issue_number) || (inputs.mode == 'fix' && format('--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh issue comment:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git status),Bash(gh api repos/{0}/issues/comments/{1} --jq .body)" --disallowed-tools "Task"', github.repository, inputs.comment_id) || '--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git status)" --disallowed-tools "Task"') }}
+          claude_args: ${{ inputs.mode == 'analyze' && format('--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh issue edit {2} --add-label:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh api repos/{0}/issues/comments/{1} --jq .body),Bash(git log:*)" --disallowed-tools "Task"', github.repository, inputs.comment_id, inputs.issue_number) || (inputs.mode == 'fix' && format('--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh issue comment:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git status),Bash(gh api repos/{0}/issues/comments/{1} --jq .body)" --disallowed-tools "Task"', github.repository, inputs.comment_id) || '--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git status)" --disallowed-tools "Task"') }}
           prompt: |
             You are the issue triage, analysis and fix agent for the evcc repository.
             MODE = "${{ inputs.mode }}". Work on issue/PR #${{ inputs.issue_number }}.
@@ -190,6 +195,20 @@ jobs:
                you mean a real issue/PR — otherwise escape it (e.g. `\#3`). Wrap file
                paths, code and identifiers in backticks. Always end the comment with:
                "🤖 Generated with [Claude Code](https://claude.com/claude-code)".
+
+            FORMAT: Logs, configuration and code pasted without a fenced code
+            block render as one run of flowing text. For the issue/PR body and each
+            comment of #${{ inputs.issue_number }} that contains such unfenced
+            content, propose a fenced version: wrap each block in a ``` fence with
+            a language hint where obvious (`yaml`, `json`, `log`, `go`). Change
+            nothing else, keep every other character as it is: you may only add
+            fence lines and blank lines, the workflow rejects any other change.
+            Take the raw text from
+            `gh issue view ${{ inputs.issue_number }} --json body,comments`, not from
+            the `--comments` rendering. Write the body as `.fence/body.md` and a
+            comment as `.fence/<comment id>.md`, using the comment's `id` from that
+            JSON (`IC_...`). Skip texts that need no fences; never commit these
+            files. The workflow applies them after you finish.
 
             If MODE is "triage", first check completeness, then close duplicates, label
             and fix:
@@ -341,6 +360,37 @@ jobs:
         with:
           name: fix-${{ inputs.issue_number }}
           path: ${{ runner.temp }}/fix.patch
+
+      # the agent cannot edit issue texts itself. Its proposals apply only to
+      # this issue, and only when they add nothing but fences and blank lines.
+      # Runs after the fix export so a failed API call cannot drop the fix
+      - name: Apply code fences
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ inputs.issue_number }}
+        run: |
+          shopt -s nullglob
+          strip() { tr -d '\r' | grep -v -E '^[[:space:]]*(```[[:alnum:]_+-]*)?[[:space:]]*$'; }
+          for f in .fence/*.md; do
+            id=$(basename "$f" .md)
+            url=
+            if [ "$id" = body ]; then
+              url="repos/$GITHUB_REPOSITORY/issues/$ISSUE"
+            elif [[ "$id" =~ ^IC_[A-Za-z0-9_-]+$ ]]; then
+              num=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$ISSUE/comments" \
+                --jq ".[] | select(.node_id == \"$id\") | .id") || num=
+              if [ -n "$num" ]; then url="repos/$GITHUB_REPOSITORY/issues/comments/$num"; fi
+            fi
+            # a failed read must not pass as an empty text
+            if [ -z "$url" ] || ! old=$(gh api "$url" --jq '.body // ""'); then
+              echo "::warning::$f is not a readable text of #$ISSUE"
+            elif ! diff <(printf '%s\n' "$old" | strip) <(strip < "$f") > /dev/null; then
+              echo "::warning::$f changes more than code fences"
+            elif ! gh api -X PATCH "$url" -F body=@"$f" > /dev/null; then
+              echo "::warning::$f could not be applied"
+            fi
+          done
 
       # the agent posts its result as a comment, so the command has been answered
       # whatever that result was. only a failed run leaves it open, there is no
