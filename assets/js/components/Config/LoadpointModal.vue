@@ -961,7 +961,6 @@ export default {
 					this.values.ui = { ...this.values.ui, demandPredictor: "daily" };
 				}
 				this.thresholdsExpanded = this.thresholdsSet;
-				this.updateSolarMode();
 				this.updatePhases();
 				this.rebaseline();
 			} catch (e) {
