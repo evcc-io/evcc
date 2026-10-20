@@ -154,16 +154,19 @@ jobs:
                  device, cause or request.
                A fix often lands without an issue, so also search merged pull
                requests with the same terms:
-               `gh pr list --state merged --limit 10 --search "<terms> merged:>=${{ steps.window.outputs.since }}" --json number,title,url`
+               `gh pr list --state merged --limit 20 --search "<terms> merged:>=${{ steps.window.outputs.since }}" --json number,title,url`
                and check promising hits with `gh pr view`/`gh pr diff`.
                FIXED: for a closed DUPLICATE, read its fixing pull request with
                `gh issue view <number> --json closedByPullRequestsReferences`.
                For that PR, or a merged PR whose diff fixes the reported cause,
-               read its merge commit with
-               `gh pr view <pr> --json mergeCommit --jq .mergeCommit.oid` and the
-               releases that ship it with
-               `git tag --contains <sha> --sort=creatordate` (first line = first
-               release with the fix; empty = nightly only). If the reporter's
+               list its commits in released history, the backports to release
+               branches included, with
+               `git log --tags --format=%h -F --grep="(#<pr>)"` and, for each
+               sha, the releases that ship it with
+               `git tag --contains <sha> --sort=version:refname`. Only plain
+               `X.Y.Z` tags are releases, ignore suffixed tags like
+               `0.300.8-lurtz`. The lowest version over all shas is the first
+               with the fix; none means nightly only. If the reporter's
                version is older than that release, the problem is already fixed:
                say so in step 2. If their version already contains it, analyze it
                as a regression.
@@ -259,6 +262,9 @@ jobs:
                them for that. Never close when the issue already carries a label or
                has a comment from anyone but the reporter and github-actions: a
                maintainer has it.
+               Right before closing, re-read the issue with
+               `gh issue view ${{ inputs.issue_number }} --json labels,comments`
+               and do not close if a maintainer took it over meanwhile.
                To close, post the comment and close in one command:
                `gh issue close ${{ inputs.issue_number }} --reason "not planned" --comment "<text>"`
                The text names the missing items, links the reporting guide
@@ -286,7 +292,8 @@ jobs:
                Any doubt means: do not close. Mention the candidate as a likely
                duplicate in your step 2 comment instead and continue. Never close
                when the issue already carries a label or has a comment from anyone
-               but the reporter and github-actions: a maintainer has it.
+               but the reporter and github-actions: a maintainer has it. Re-read
+               labels and comments right before closing, as in step 0.
 
             3. LABEL: Based on your investigation, ALWAYS apply exactly one area label
                from the repository's existing labels (`gh label list`) with
@@ -331,7 +338,8 @@ jobs:
                following HOW TO FIX below; the workflow opens the PR ready for review.
                If the fix needs design discussion, spans too many files, or you
                cannot determine the correct change with confidence, commit nothing
-               and explain why in your step 2 comment instead.
+               and explain why in your step 2 comment instead. The same applies
+               when step 1 found the problem FIXED already: commit nothing.
 
             HOW TO FIX: You cannot push or open a pull request; the workflow does
             that from your commit once you are done, on a branch it names itself.
