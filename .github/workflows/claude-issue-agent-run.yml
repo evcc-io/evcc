@@ -138,7 +138,7 @@ jobs:
                SIMILAR ISSUES: search for earlier reports of the same problem.
                Run one or two searches with the distinctive terms of the report
                (device/template name, error message, feature), e.g.
-               `gh issue list --state all --limit 20 --search "<terms> created:>=${{ steps.window.outputs.since }}" --json number,title,state,url`
+               `gh issue list --state all --limit 50 --search "<terms> created:>=${{ steps.window.outputs.since }}" --json number,title,state,url`
                and keep the `created:>=` qualifier: only issues opened in the last
                3 months count, do not dig further back and do not paginate. Open
                the few promising hits with `gh issue view <number>` and compare
@@ -154,7 +154,7 @@ jobs:
                  device, cause or request.
                A fix often lands without an issue, so also search merged pull
                requests with the same terms:
-               `gh pr list --state merged --limit 20 --search "<terms> merged:>=${{ steps.window.outputs.since }}" --json number,title,url`
+               `gh pr list --state merged --limit 50 --search "<terms> merged:>=${{ steps.window.outputs.since }}" --json number,title,url`
                and check promising hits with `gh pr view`/`gh pr diff`.
                FIXED: for a closed DUPLICATE, read its fixing pull request with
                `gh issue view <number> --json closedByPullRequestsReferences`.
