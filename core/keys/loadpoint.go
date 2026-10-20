@@ -48,7 +48,8 @@ const (
 	OfferedCurrent = "offeredCurrent" // offered current
 
 	// optimizer
-	Suggestion = "suggestion" // optimizer's advisory suggestion for the current slot
+	Suggestion                 = "suggestion"                 // optimizer's advisory suggestion for the current slot
+	OptimizerRemainingDuration = "optimizerRemainingDuration" // time until the optimizer reaches the vehicle limit
 
 	// smart charging
 	OptimizerControlled = "optimizerControlled" // optimizer decides start/stop
