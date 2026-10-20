@@ -3,8 +3,6 @@ package metrics
 import (
 	"maps"
 	"slices"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/db"
@@ -123,7 +121,8 @@ type flowEntity struct {
 }
 
 // share gives the entity its energy in the sink's source split of the slot
-func (e *flowEntity) share(s flowSlot, energy float64, sink [3]float64, total float64) {
+func (e *flowEntity) share(s flowSlot, energy float64, sink [3]float64) {
+	total := sink[0] + sink[1] + sink[2]
 	if energy <= 0 || total <= 0 {
 		return
 	}
@@ -132,25 +131,30 @@ func (e *flowEntity) share(s flowSlot, energy float64, sink [3]float64, total fl
 	}
 }
 
-// entitySlots returns the energy of the given meters per slot as "id:energy,...".
-// Without the entities join this reads their rows (the bulk of the table) about
-// twice as fast as pivoting them along with the groups.
-func entitySlots(ids []int, from, to time.Time) (map[int64]string, error) {
-	res := make(map[int64]string)
-	if len(ids) == 0 {
+// slotEnergy is the energy of a consumer or loadpoint in one slot
+type slotEnergy struct {
+	*flowEntity
+	energy float64
+}
+
+// entitySlots returns the energy of the given entities per slot. Without the
+// entities join this reads their rows (the bulk of the table) about twice as
+// fast as pivoting them along with the groups.
+func entitySlots(entities map[int]*flowEntity, from, to time.Time) (map[int64][]slotEnergy, error) {
+	res := make(map[int64][]slotEnergy)
+	if len(entities) == 0 {
 		return res, nil
 	}
 
-	tx := db.Instance.Table("meters m").
-		Select(`m.ts, group_concat(m.meter || ':' || m.energy)`).
-		Where("m.meter IN ?", ids).
-		Group("m.ts")
+	tx := db.Instance.Table("meters").
+		Select("ts, meter, energy").
+		Where("meter IN ?", slices.Collect(maps.Keys(entities)))
 
 	if !from.IsZero() {
-		tx = tx.Where("m.ts >= ?", from.Unix())
+		tx = tx.Where("ts >= ?", from.Unix())
 	}
 	if !to.IsZero() {
-		tx = tx.Where("m.ts < ?", to.Unix())
+		tx = tx.Where("ts < ?", to.Unix())
 	}
 
 	rows, err := tx.Rows()
@@ -161,11 +165,12 @@ func entitySlots(ids []int, from, to time.Time) (map[int64]string, error) {
 
 	for rows.Next() {
 		var ts int64
-		var s string
-		if err := rows.Scan(&ts, &s); err != nil {
+		var id int
+		var energy float64
+		if err := rows.Scan(&ts, &id, &energy); err != nil {
 			return nil, err
 		}
-		res[ts] = s
+		res[ts] = append(res[ts], slotEnergy{entities[id], energy})
 	}
 
 	return res, rows.Err()
@@ -191,7 +196,7 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 		hasConsumers = hasConsumers || e.Group == Consumer
 	}
 
-	perSlot, err := entitySlots(slices.Collect(maps.Keys(entities)), from, to)
+	perSlot, err := entitySlots(entities, from, to)
 	if err != nil {
 		return FlowResult{}, err
 	}
@@ -230,12 +235,6 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 	}
 	defer rows.Close()
 
-	type slotEntity struct {
-		*flowEntity
-		energy float64
-	}
-	var slotEntities []slotEntity
-
 	sums := make(map[[2]string]flowSum)
 	var cost FlowCost
 	var co2 FlowCo2
@@ -248,26 +247,18 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 			return FlowResult{}, err
 		}
 
-		// the slot's consumers and loadpoints; the loadpoints add up to their sink
-		slotEntities = slotEntities[:0]
-		for part := range strings.SplitSeq(perSlot[s.Ts], ",") {
-			idStr, val, ok := strings.Cut(part, ":")
-			id, _ := strconv.Atoi(idStr)
-			e := entities[id]
-			if !ok || e == nil {
-				continue
-			}
-			energy, _ := strconv.ParseFloat(val, 64)
-			slotEntities = append(slotEntities, slotEntity{e, energy})
-			if e.Group == Loadpoint {
-				s.Loadpoint += energy
+		// the slot's loadpoints add up to their sink
+		slotEntities := perSlot[s.Ts]
+		for _, se := range slotEntities {
+			if se.Group == Loadpoint {
+				s.Loadpoint += se.energy
 			}
 		}
 
 		// energy that reached home and loadpoints, and the grid's part of it.
 		// Consumption a slot's sources cannot cover (meter mismatch, coarse
 		// counters) stays out of the cost model on both sides.
-		var consumption, gridToConsumption, homeTotal, lpTotal float64
+		var consumption, gridToConsumption float64
 		var homeSink, lpSink [3]float64 // per flowSources entry
 		attribute(s, func(from, to string, energy float64) {
 			key := [2]string{from, to}
@@ -289,24 +280,22 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 			i := slices.Index(flowSources, from)
 			if to == Home {
 				homeSink[i] += energy
-				homeTotal += energy
 			} else {
 				lpSink[i] += energy
-				lpTotal += energy
 			}
 		})
 
 		var tracked float64
 		for _, se := range slotEntities {
 			if se.Group == Loadpoint {
-				se.share(s, se.energy, lpSink, lpTotal)
+				se.share(s, se.energy, lpSink)
 			} else {
-				se.share(s, se.energy, homeSink, homeTotal)
+				se.share(s, se.energy, homeSink)
 				tracked += se.energy
 			}
 		}
 		if hasConsumers {
-			others.share(s, max(0, s.Home-tracked), homeSink, homeTotal)
+			others.share(s, max(0, s.Home-tracked), homeSink)
 		}
 
 		if s.Grid != nil {

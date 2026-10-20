@@ -1795,23 +1795,7 @@ paths:
                   flows:
                     type: array
                     items:
-                      type: object
-                      properties:
-                        from:
-                          type: string
-                          enum: [pv, battery, grid]
-                        to:
-                          type: string
-                          enum: [home, battery, loadpoint, export]
-                        energy:
-                          type: number
-                          description: kWh
-                        cost:
-                          type: number
-                          description: Cost of the energy, for home and loadpoint
-                        pricedEnergy:
-                          type: number
-                          description: kWh where a price exists
+                      $ref: "#/components/schemas/Flow"
                   entities:
                     type: array
                     description: Flows into each consumer and loadpoint, priced per slot
@@ -1829,22 +1813,7 @@ paths:
                         flows:
                           type: array
                           items:
-                            type: object
-                            properties:
-                              from:
-                                type: string
-                                enum: [pv, battery, grid]
-                              to:
-                                type: string
-                                enum: [home, loadpoint]
-                              energy:
-                                type: number
-                                description: kWh
-                              cost:
-                                type: number
-                              pricedEnergy:
-                                type: number
-                                description: kWh where a price exists
+                            $ref: "#/components/schemas/Flow"
                   cost:
                     type: object
                     description: Grid cost sums, omitted without grid price data
@@ -2034,6 +2003,24 @@ components:
       type: number
       example: 25.5
       minimum: 0
+    Flow:
+      type: object
+      properties:
+        from:
+          type: string
+          enum: [pv, battery, grid]
+        to:
+          type: string
+          enum: [home, battery, loadpoint, export]
+        energy:
+          type: number
+          description: kWh
+        cost:
+          type: number
+          description: Cost of the energy, for home and loadpoint
+        pricedEnergy:
+          type: number
+          description: kWh where a price exists
     Delay:
       description: "Duration in seconds."
       type: integer

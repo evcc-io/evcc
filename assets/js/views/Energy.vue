@@ -427,10 +427,8 @@ import {
 	ENTITY_CHART,
 	OVERVIEW_VIEW,
 	type ConsumerEnergy,
-	type EntityFlows,
 	type Flow,
 	type FlowResult,
-	type FlowSink,
 	type FlowSource,
 	type StatItem,
 	type PriceBand,
@@ -551,7 +549,7 @@ export default defineComponent({
 		consumers(): ConsumerEnergy[] {
 			return (this.entityTotals["consumer"] || []).map((e) => ({
 				...e,
-				cost: this.entityCost("consumer", e.title, e.energy),
+				cost: this.consumerCost(e.title, e.energy),
 			}));
 		},
 		homeEnergy(): number {
@@ -592,7 +590,7 @@ export default defineComponent({
 			return sinkPrice(this.flows, "home");
 		},
 		othersCost(): number | undefined {
-			return this.entityCost("consumer", OTHERS, this.others);
+			return this.consumerCost(OTHERS, this.others);
 		},
 		// the consumer in detail, or all of home when there is none to pick from
 		consumerFlows(): Flow[] {
@@ -1484,10 +1482,9 @@ export default defineComponent({
 		loadpointFlows(title: string): Flow[] {
 			return entityFlows(this.flow?.entities, "loadpoint", title);
 		},
-		// the entity's metered energy at its own average price, undefined without priced slots
-		entityCost(group: EntityFlows["group"], title: string, energy: number): number | undefined {
-			const sink: FlowSink = group === "loadpoint" ? "loadpoint" : "home";
-			const price = sinkPrice(entityFlows(this.flow?.entities, group, title), sink);
+		// the consumer's metered energy at its own average price, undefined without priced slots
+		consumerCost(title: string, energy: number): number | undefined {
+			const price = sinkPrice(entityFlows(this.flow?.entities, "consumer", title), "home");
 			return price === undefined ? undefined : energy * price;
 		},
 		showSources(detail: { title: string; rows: SourceRow[] }) {
