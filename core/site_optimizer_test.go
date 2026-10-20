@@ -756,16 +756,26 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 
 	// an idle battery at its soc bound withholds nothing: normal instead of hold/holdcharge
 	battery := batteryDetail{Type: batteryTypeBattery}
-	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000}
+	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000, SInitial: 1000}
 	res = optimizer.BatteryResult{
 		ChargingPower:    []float32{0},
 		DischargingPower: []float32{0},
 		StateOfCharge:    []float32{1000},
 	}
 	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, 1).Action, "empty battery idle while importing")
-	res.StateOfCharge[0] = 9000
+	res.StateOfCharge[0] = 1000.7
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, 1).Action, "empty battery with solver drift")
+	req.SInitial, res.StateOfCharge[0] = 9000, 9000
 	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "full battery idle while exporting")
-	res.StateOfCharge[0] = 5000
+	res.StateOfCharge[0] = 8999.3
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "full battery with solver drift")
+	res = optimizer.BatteryResult{
+		ChargingPower:    []float32{0, 0},
+		DischargingPower: []float32{0, 0},
+		StateOfCharge:    []float32{9000, 8999.5},
+	}
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 1, 0, 1000, 1).Action, "full at the start of a later slot")
+	req.SInitial, res.StateOfCharge = 5000, []float32{5000}
 	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, 1).Action, "idle within bounds is withheld")
 	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "idle within bounds is withheld")
 
