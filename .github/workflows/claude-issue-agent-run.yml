@@ -98,12 +98,13 @@ jobs:
           # Task is blocked in all modes so the agent can't offload work to a
           # background sub-agent and exit before it returns. All modes get
           # read-only git log and gh pr view/diff to trace a regression to its
-          # pull request, gh issue list to find similar issues, and gh api graphql
-          # to read a referenced discussion (no gh subcommand exists). Only triage
-          # may close a duplicate. Triage and analyze run on Sonnet, it spends
+          # pull request, gh issue list and gh pr list to find similar issues and
+          # their fixes, git tag --contains for the release shipping a fix, and
+          # gh api graphql to read a referenced discussion (no gh subcommand
+          # exists). Only triage may close a duplicate. Triage and analyze run on Sonnet, it spends
           # less of the subscription quota; a maintainer's fix keeps the default
           # model.
-          claude_args: ${{ inputs.mode == 'analyze' && format('--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh issue edit {2} --add-label:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh api repos/{0}/issues/comments/{1} --jq .body),Bash(git log:*)" --disallowed-tools "Task"', github.repository, inputs.comment_id, inputs.issue_number) || (inputs.mode == 'fix' && format('--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh issue comment:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git status),Bash(gh api repos/{0}/issues/comments/{1} --jq .body)" --disallowed-tools "Task"', github.repository, inputs.comment_id) || '--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git status)" --disallowed-tools "Task"') }}
+          claude_args: ${{ inputs.mode == 'analyze' && format('--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr list:*),Bash(gh issue comment:*),Bash(gh issue edit {2} --add-label:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh api repos/{0}/issues/comments/{1} --jq .body),Bash(git log:*),Bash(git tag --contains:*)" --disallowed-tools "Task"', github.repository, inputs.comment_id, inputs.issue_number) || (inputs.mode == 'fix' && format('--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh issue comment:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git tag --contains:*),Bash(git status),Bash(gh api repos/{0}/issues/comments/{1} --jq .body)" --disallowed-tools "Task"', github.repository, inputs.comment_id) || '--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr list:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git tag --contains:*),Bash(git status)" --disallowed-tools "Task"') }}
           prompt: |
             You are the issue triage, analysis and fix agent for the evcc repository.
             MODE = "${{ inputs.mode }}". Work on issue/PR #${{ inputs.issue_number }}.
@@ -151,6 +152,21 @@ jobs:
                  a possible regression, analyze it as such.
                - RELATED: same area or overlapping symptom, but a different
                  device, cause or request.
+               A fix often lands without an issue, so also search merged pull
+               requests with the same terms:
+               `gh pr list --state merged --limit 10 --search "<terms> merged:>=${{ steps.window.outputs.since }}" --json number,title,url`
+               and check promising hits with `gh pr view`/`gh pr diff`.
+               FIXED: for a closed DUPLICATE, read its fixing pull request with
+               `gh issue view <number> --json closedByPullRequestsReferences`.
+               For that PR, or a merged PR whose diff fixes the reported cause,
+               read its merge commit with
+               `gh pr view <pr> --json mergeCommit --jq .mergeCommit.oid` and the
+               releases that ship it with
+               `git tag --contains <sha> --sort=creatordate` (first line = first
+               release with the fix; empty = nightly only). If the reporter's
+               version is older than that release, the problem is already fixed:
+               say so in step 2. If their version already contains it, analyze it
+               as a regression.
                No hits is a normal outcome, do not force a match.
                In "analyze" or "fix" mode you were usually invoked by a `/analyze`
                or `/fix` comment (id `${{ inputs.comment_id }}`). When that id is not
@@ -175,6 +191,10 @@ jobs:
                  line as `#<number>` with a few words each on how they relate. A
                  DUPLICATE found outside triage mode is listed the same way,
                  marked as a likely duplicate, since only triage closes.
+               - If step 1 found the problem FIXED, name the fixing PR as
+                 `#<number>` and the first release that ships it, or the nightly
+                 build when no release has it yet, and ask the reporter to update
+                 and confirm. Do not analyze the cause any further.
                - PUSH FOR MISSING INFORMATION. If anything needed to diagnose is
                  missing or incomplete — no log, no reproduction steps, no config, no
                  version, or a screenshot in place of data — do NOT assert a root
@@ -254,7 +274,8 @@ jobs:
                The text starts with `Duplicate of #<original>` on its own line so
                GitHub links the two, says in one or two sentences why they are the
                same, asks the reporter to continue in the original issue (and to
-               add their log/config there if it adds information), says that a
+               add their log/config there if it adds information), names the
+               fixing PR and release when the original is FIXED, says that a
                reply here reopens the issue if it is not a duplicate, and ends
                with the footer from step 2. Then give the closed issue the original's
                labels so both show up in the same filters: read them with
