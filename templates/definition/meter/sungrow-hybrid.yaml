@@ -15,6 +15,7 @@ caveats:
       en: For correct operation, maximum charge and discharge power must not be set too high.
     link: https://github.com/evcc-io/evcc/discussions/23557
 discovery:
+  mdns: ["_http._tcp:WiNet-WebServer"]
   hostname: ["sungrow*"]
   mac: ["AC199F"]
 params:
