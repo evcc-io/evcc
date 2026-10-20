@@ -813,9 +813,13 @@ type optimizerSolve struct {
 // setLastOptimizerSolve remembers a solve's inputs for reapplySuggestions
 func (site *Site) setLastOptimizerSolve(solve *optimizerSolve) {
 	site.Lock()
-	defer site.Unlock()
-
 	site.lastOptimizerSolve = solve
+	site.Unlock()
+
+	// a dropped solve no longer reaches the vehicle limit
+	if solve == nil {
+		site.publishRemainingDurations(nil)
+	}
 }
 
 // reapplySuggestions re-derives the last solve's suggestions for the slot covering now
