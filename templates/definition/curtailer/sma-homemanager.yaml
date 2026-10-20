@@ -5,7 +5,7 @@ products:
       generic: Sunny Home Manager 2.0
 discovery:
   hostname: ["sma*"]
-  mac: ["0015BB"]
+  mac: ["0015BB", "0040AD"]
 params:
   - name: modbus
     choice: ["tcpip"]
