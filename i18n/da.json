@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Godkendelse lykkedes",
     "buttonConnect": "Opret forbindelse til {provider}",
     "buttonDisconnect": "Afbryd forbindelse",
+    "challenge": {
+      "captcha": {
+        "label": "Indtast tegnene, der vises på billedet.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Indsæt koden eller adressen på siden som du blev videresendt til.",
+        "title": "Autorisationskode"
+      },
+      "openLogin": "Åbn login-side",
+      "submit": "Fortsæt"
+    },
     "confirmLogout": "Er du sikker på, at du vil afbryde {title}?",
     "connect": "forbind",
     "disconnect": "afbryd",
@@ -25,6 +37,7 @@
       "discharging": "aflader",
       "energy": "Energi",
       "gridCharge": "netladning",
+      "gridDischarge": "aflading til elnettet",
       "hold": "afladning låst",
       "holdCharge": "ladning låst",
       "ofTotal": "af {total}",
@@ -43,6 +56,13 @@
       "bufferTitle": "Batteri som opladningsbuffer",
       "discharge": "Forhindrer hjemmebatteriet at aflade i hurtig mode og ved planlagt opladning.",
       "gridDischarge": "Tillad hjemmebatteriet at aflade til elnettet.",
+      "gridDischargeConfirm": {
+        "country": "Konfigureret land: {country}.",
+        "description": "Om batterienergi må leveres til elnettet afhænger af dit land og din indfødningsaftale. Hvis batteriet også oplades fra elnettet, er den eksporterede energi ikke længere udelukkende solenergi. I mange indfødningsordninger betyder det, at du mister din betaling, eller at det er forbudt. Kontrollér først din indfødningsaftale og netoperatørens krav.",
+        "noCountry": "Intet land er konfigureret. Indstil det under {link}.",
+        "title": "Eksporter til nettet fra batteriet"
+      },
+      "optimizerControlledHint": "Deaktiveret for {loadpoints}. {optimizer} træffer beslutningen.",
       "priority": "Hjemmebatteriet har prioritet, mens det er under {soc}. Derefter får ladepunkterne overskuddet.",
       "priorityNone": "Soloverskud går direkte til ladepunkterne. Sæt en værdi over {soc} for at prioritere hjemmebatteriet.",
       "priorityTitle": "Hvor sendes overskuddet først hen?"
@@ -144,13 +164,48 @@
         "switchsocket": "Brugerdefineret stikkontakt"
       }
     },
+    "circuit": {
+      "addMeter": "Tilføj dedikeret energimåler",
+      "custom": "Bruger-defineret kredsløb",
+      "deleteChildrenFirst": "For at slette dette kredsløb, skal det underordnede kredsløb først slettes.",
+      "meterDedicated": "Dedikeret måler",
+      "meterGrid": "Elnetsmåler",
+      "meterHelp": "Måler, der måler det samlede forbrug i dette kredsløb.",
+      "meterLabel": "Energimåler",
+      "meterLabelAdd": "Tilføj kredsløbs-måler",
+      "meterLabelEdit": "Juster kredsløbs-måler",
+      "meterNone": "Ingen måler",
+      "meterSelectionHelpDedicatedMeter": "Tilføj en eksisterende måler til nedenstående kredsløb.",
+      "meterSelectionHelpGridMeter": "Bruger den eksisterende elnetsmåler i installationen.",
+      "meterSelectionHelpNoMeter": "Summen af alle ladepunkter bruges.",
+      "meterSelectionLabel": "Vælg måler",
+      "parentCircuit": "Overordnet kredsløb",
+      "template": "Kredsløb",
+      "titleAdd": "Tilføj kredsløb",
+      "titleEdit": "Tilpas kredsløb",
+      "titleLabel": "Titel"
+    },
     "circuits": {
-      "description": "Sikrer, at summen af alle ladepunkter forbundet til et kredsløb ikke overstiger de konfigurerede effekt- og strømgrænser. Kredsløb kan indlejres for at opbygge et hierarki.",
+      "addMainCircuit": "Tilføj hovedkredsløb",
+      "addSubCircuit": "Tilføj underkredsløb",
+      "chargingPointsNote": "Tildel ladepunkter og varmere til et kredsløb i deres egne indstillinger.",
+      "description": "Sikrer, at summen af alle ladepunkter og varmere forbundet til et kredsløb ikke overstiger de konfigurerede effekt- og strømgrænser. Kredsløb kan indlejres for at opbygge et hierarki.",
+      "legacyWarning": "Ny konfiguration af kredsløb tilgængelig! Fjern og gem din konfiguration her for at bruge den nye guidede proces. En genstart er nødvendig bagefter.",
+      "meterDedicated": "Måler",
+      "meterGrid": "Elnet",
       "title": "Belastningsstyring",
       "usableMeters": "Gyldige målerreferencer"
     },
+    "combobox": {
+      "count": "{count} forslag",
+      "matching": "Matcher",
+      "other": "Andre",
+      "searching": "Søger…",
+      "suggestions": "Forslag",
+      "used": "allerede i brug"
+    },
     "consumer": {
-      "description": "Overvåger mindre enheder, som ikke kan styres, f.eks. køleskab, vaskemaskine osv. Giver et bedre overblik over dit samlede forbrug i hjemmet.",
+      "description": "Overvåger mindre enheder, som ikke kan styres, f.eks. køleskab, vaskemaskine osv. Giver et bedre overblik over dit samlede forbrug.",
       "titleAdd": "Tilføj forbrugsmåler",
       "titleEdit": "Juster forbrugsmåler"
     },
@@ -160,7 +215,7 @@
       "descriptionResidualPower": "Forskubber reguleringspunktet. Hvis du har et hjemmebatteri anbefales det at sætte værdien til 100 W. Derved får hjemmebatteriet let prioritet over elnettet.",
       "labelInterval": "Opdateringsinterval",
       "labelResidualPower": "Tilbageværende effekt",
-      "title": "kontrol adfærd"
+      "title": "Kontrol adfærd"
     },
     "currency": {
       "description": "Bruges til at formatere energipriser, omkostninger og besparelser baseret på din tarif.",
@@ -169,7 +224,7 @@
       "title": "Møntfod"
     },
     "curtailer": {
-      "description": "Enhed, der begrænser indfødningen efter anmodning fra netoperatøren (§ 9 EEG). Mange solcelleinvertere understøtter dette direkte via konfigurationen af deres solmåler. En separat konfiguration er kun nødvendig for visse producenter eller systemer med flere invertere.",
+      "description": "Enhed, der begrænser elnet eksport efter anmodning fra netoperatøren (§ 9 EEG). Mange solcelleinvertere understøtter dette direkte via konfigurationen af deres solmåler. En separat konfiguration er kun nødvendig for visse producenter eller systemer med flere invertere.",
       "generic": "Generelle integrationer",
       "specific": "Specifikke integrationer",
       "template": "Fremstiller",
@@ -199,9 +254,9 @@
       "currency": "Møntenhed",
       "current": "Ström",
       "currentRange": "Strømstyrke",
-      "curtailLimit": "Indfødnings begrænsning",
+      "curtailLimit": "Elnet eksport begrænsning",
       "curtailable": "Kan begrænses",
-      "curtailed": "Indfødningsgrænse",
+      "curtailed": "Elnet eksport begrænsning",
       "detected": "Registreret",
       "dimLimit": "Forbrugsgrænse",
       "dimmed": "Forbrug begrænset",
@@ -209,13 +264,15 @@
       "energy": "Energi",
       "events": "Begivenheder",
       "exportLimit": "Eksportgrænse til nettet",
-      "feedinPrice": "Indfødningstarif",
+      "feedinPrice": "Elnet eksport pris",
       "forecast": "Prognose",
-      "gridPrice": "God pris",
+      "gridPrice": "Elnet import pris",
       "heaterTempLimit": "Opvarmning begrænsning",
       "identifier": "RFID-identifikator",
       "loginBlocked": "Grænsen for loginforsøg er nået",
       "max": "max",
+      "maxCurrent": "Max. strøm",
+      "maxPower": "Max. effekt",
       "messengers": "Tjenester",
       "no": "nej",
       "odometer": "Kilometertæller",
@@ -264,7 +321,7 @@
           "energy": "Produceret"
         }
       },
-      "vehicleLimitSoc": "Ladegrænse",
+      "vehicleLimitSoc": "Køretøjets grænse",
       "yes": "ja"
     },
     "deviceValueChargeStatus": {
@@ -273,8 +330,8 @@
       "C": "C (oplader)"
     },
     "devices": {
-      "auxMeter": "Smart forbrugsenhed",
-      "batteryStorage": "Batterilagring",
+      "auxMeter": "Selvregulerende forbrugsenhed",
+      "batteryStorage": "Hjemmebatteri",
       "consumer": "Forbrugsenhed",
       "solarSystem": "Solcelleanlæg"
     },
@@ -288,26 +345,26 @@
         "title": "Certifikater"
       },
       "configuredDevices": "Konfigurerede enheder",
-      "description": "Konfiguration, der gør det muligt for evcc at kommunikere med EEBus-kompatible enheder som ladere eller en styreenhed fra din netoperatør. Al nødvendig initialisering og dannelse af certifikater udføres automatisk ved første opstart.",
+      "description": "Konfiguration, der gør det muligt for evcc at kommunikere med EEBUS-kompatible enheder som ladere eller en styreenhed fra din netoperatør. Al nødvendig initialisering og dannelse af certifikater udføres automatisk ved første opstart.",
       "descriptionAdvanced": "Ingen ændringer nødvendige. Foretag kun ændringer, hvis du virkelig ved, hvad du laver. Hvis du ændrer enten SHIP-id’et eller certifikaterne, skal dine enheder parres igen.",
       "interfaces": "Grænseflader",
-      "interfacesHelp": "Begræns de netværksgrænseflader, som EEBus skal bruge, for at undgå kommunikationsproblemer. Lad feltet stå tomt for at bruge alle grænseflader. Én indtastning pr. linje.",
+      "interfacesHelp": "Begræns de netværksgrænseflader, som EEBUS skal bruge, for at undgå kommunikationsproblemer. Lad feltet stå tomt for at bruge alle grænseflader. Én indtastning pr. linje.",
       "noConfiguredDevices": "Ingen enheder konfigureret af SKI.",
       "noPairings": "Ingen enheder tilknyttet.",
       "pairings": "Tilknyttede enheder",
       "port": "Port",
       "portHelp": "Porten, der skal bruges.",
       "qr": "koblingskode",
-      "qrExplain": "Skan fra en anden EEBus-enhed under installationen for automatisk parring uden manuel indtastning af SKI.",
-      "removeConfirm": "Hele EEBus-konfigurationen fjernes. Nye certifikater og identifikatorer genereres ved næste opstart. Er du sikker på, at du vil fortsætte?",
+      "qrExplain": "Skan fra en anden EEBUS-enhed under installationen for automatisk parring uden manuel indtastning af SKI.",
+      "removeConfirm": "Hele EEBUS-konfigurationen fjernes. Nye certifikater og identifikatorer genereres ved næste opstart. Er du sikker på, at du vil fortsætte?",
       "removePairing": "Fjern tilknytning",
       "removePairingConfirm": "Forbindelsen til enheden brydes, og skal tilknyttes igen. Er du sikker?",
       "shipid": "SHIP-ID",
-      "shipidExplain": "Permanent enhedsidentifikator til identifikation i EEBus-netværket.",
+      "shipidExplain": "Permanent enhedsidentifikator til identifikation i EEBUS-netværket.",
       "shipidHelp": "Dette SHIP-id er knyttet til certifikaterne nedenfor.",
       "ski": "SKI",
-      "skiExplain": "Unik sikkerhedsidentifikator til parring af EEBus-enheder.",
-      "title": "EEBus"
+      "skiExplain": "Unik sikkerhedsidentifikator til parring af EEBUS-enheder.",
+      "title": "EEBUS"
     },
     "experimental": {
       "description": "Giver tidlig adgang til funktioner, der stadig testes. Disse kan være ustabile og kan blive ændret eller fjernet i fremtidige versioner.",
@@ -352,6 +409,7 @@
       "enable": "Aktiver",
       "error": "Fejl",
       "experimental": "Eksperimentel",
+      "forceEnable": "Aktiver alligevel",
       "forceSave": "Gem alligevel",
       "fromYamlHint": "Bemærk: Er konfigureret via evcc.yaml. Fjern indtastningen fra filen for at aktivere redigering her.",
       "hideAdvancedSettings": "Skjul avancerede indstillinger",
@@ -370,6 +428,7 @@
       "saving": "Gemmer…",
       "selectFile": "Gennemse",
       "showAdvancedSettings": "Vis avancerede indstillinger",
+      "site": "Anlæg",
       "telemetry": "Telemetri",
       "templateLoading": "Indlæser...",
       "title": "Titel",
@@ -396,8 +455,8 @@
       "dynamicLimits": "Dynamisk grænse",
       "eventsRecorded": "Registrerede {count} netbegrænsningshændelser.",
       "exportLimit": "Eksportgrænse til nettet",
-      "exportLimitDescription": "Batterioptimeringen respekterer denne grænse for at undgå tab af solenergi. En aktivt begrænsning fra en integration med en dynamisk grænse har forrang.",
-      "exportLimitHint": "Statisk grænse for indfødning ved nettilslutningspunktet.",
+      "exportLimitDescription": "Optimeringen respekterer denne grænse for at undgå tab af solenergi. En aktivt begrænsning fra en integration med en dynamisk grænse har forrang.",
+      "exportLimitHint": "Statisk eksport grænse ved elnettilslutningspunktet.",
       "generic": "Generelle integrationer",
       "integrations": "Integrationer",
       "lastEvent": "Sidst {timeAgo}.",
@@ -447,7 +506,6 @@
         "charging": "Oplader",
         "heating": "Varmelegeme"
       },
-      "chargingTitle": "Tilstand",
       "circuitHelp": "Belastningsstyring som sikrer, at effekt- og strømgrænser ikke overskrides.",
       "circuitInvalid": "Kredsløbet findes ikke",
       "circuitLabel": "Kredsløb",
@@ -509,25 +567,25 @@
       "priorityHelp": "Højere prioriterede får fortrin til solenergioverskud.",
       "priorityLabel": "Prioritet",
       "save": "Gem",
-      "solarBehaviorCustomHelp": "Definer dine egne aktiverings- og deaktiveringstærskler samt forsinkelser.",
-      "solarBehaviorDefaultHelp": "Start efter {enableDelay} af tilstrækkeligt overskud. Stop, når der ikke er nok overskud i {disableDelay}.",
-      "solarBehaviorLabel": "Solar",
-      "solarModeCustom": "egen",
-      "solarModeMaximum": "max solenergi",
-      "solarShareNote": "Skyder til solandel i brugerindstillingerne er deaktiveret, når wattgrænser er angivet. {0} og gem for at aktivere den.",
       "solarShareReset": "Fjern grænser",
+      "solarTitle": "Sol overskud opførsel",
       "temperatureRangeHelp": "Visningsområde for temperaturbjælken. Påvirker ikke styringen.",
       "temperatureRangeTitle": "Temperatur område",
+      "thresholdDisableDelayHelp": "Stopper når der ikke er nok overskud i {delay}.",
       "thresholdDisableDelayLabel": "Deaktiver forsinkelse",
       "thresholdDisableHelpInvalid": "Brug en positiv værdi.",
-      "thresholdDisableHelpPositive": "Stop, når der bruges mere end {power} fra elnettet i {delay}.",
-      "thresholdDisableHelpZero": "Stop, når den minimale effekt ikke kan opfyldes i {delay}.",
+      "thresholdDisableHelpPositive": "Stopper når der bruges mere end {power} fra elnettet i {delay}.",
       "thresholdDisableLabel": "Deaktiver strøm fra elnettet",
+      "thresholdEnableDelayHelp": "Starter når der er nok overskud i {delay}.",
       "thresholdEnableDelayLabel": "Aktiver forsinkelse",
       "thresholdEnableHelpInvalid": "Brug en negativ værdi.",
-      "thresholdEnableHelpNegative": "Start når {surplus} overskud er tilgængelig i {delay}.",
-      "thresholdEnableHelpZero": "Start når den minimale nødvendige effekt kan opfyldes i {delay}.",
+      "thresholdEnableHelpNegative": "Starter når {surplus} overskud er tilgængelig i {delay}.",
       "thresholdEnableLabel": "Brug elnettet",
+      "thresholdsNote": {
+        "charging": "For at kontrollere elnettets brug ved sol opladning, brug venligst {slider} slider i ladepunkt indstillinger på {page} siden. Sæt kun værdier her i særtilfælde.",
+        "heating": "For at kontrollere elnettets brug ved sol opvarmning, brug venligst {slider} slider i varmer indstillinger på {page} siden. Sæt kun værdier her i særtilfælde."
+      },
+      "thresholdsSliderDisabled": "Slideren {slider} er deaktiveret fordi værdier er sat her.",
       "titleAdd": {
         "charging": "Tilføj ladepunkt",
         "heating": "Tilføj varmeenhed",
@@ -586,7 +644,7 @@
           "titleDefault": "Køretøjet sover"
         },
         "connect": {
-          "messageDefault": "Køretøj forbundet med {pvPower}kW PV",
+          "messageDefault": "Køretøj forbundet med {pvPower}kW sol",
           "title": "Når køretøjet forbindes",
           "titleDefault": "Køretøj forbundet"
         },
@@ -788,9 +846,29 @@
       "usernameHelp": "Til HTTP Basic Authentication mod den overordnede server."
     },
     "optimizer": {
-      "description": "Analyserer sol-prognose, el-priser, og forbrugsmønstre for at optimere batteri og opladning. Data sendes til evcc optimerings-service for at blive beregnet. Aktuelt beregnes og vises data kun, der er ingen styring af enheder endnu.",
+      "automatic": "Automatisk kontrol",
+      "automaticLevel": {
+        "battery": {
+          "description": "Kontrollerer kun hjemmebatteriet.",
+          "label": "Hjemmebatteri",
+          "status": "{automatic} kontrollerer hjemmebatteriet."
+        },
+        "full": {
+          "description": "Styrer hjemmebatteriet, starter og stopper opladning af køretøjer i smarttilstand, erstatter pris- og CO₂-grænser og overtager ladeplaner. Slukket tilstand og hurtigopladning, varmeenheder, stikkontakter med afbryder og køretøjer med ukendt batterikapacitet fungerer uændret.",
+          "label": "Hjemmebatteri og ladepunkter",
+          "status": "{automatic} kontrollerer hjemmebatteri og ladepunkter."
+        },
+        "off": {
+          "description": "Optimizer foreslår kun. Intet styres.",
+          "status": "{automatic} er slukket. Optimizer foreslår kun."
+        }
+      },
+      "controlled": "Deaktiveret af automatisk kontrol. I stedet træffer {optimizer} beslutningen.",
+      "controls": "Styrringer",
+      "description": "Bruger sol-prognose, energi-priser, og forbrugsmønstre for at optimere batteri og opladning. Data sendes til evcc optimerings-service.",
       "enable": "Aktiver Optimering",
       "info": "For nye installationer kan det tage op til 24 timer, før der er opsamlet tilstrækkelig med data.",
+      "linkWord": "optimizer",
       "title": "Optimering"
     },
     "options": {
@@ -888,6 +966,22 @@
       "labelVendorId": "Leverandør-ID",
       "title": "SMA Sunny Home Manager"
     },
+    "site": {
+      "country": {
+        "description": "Bruges til regionsspecifikke oplysninger og standardindstillinger.",
+        "label": "Land"
+      },
+      "currency": {
+        "description": "Bruges til at formatere pris, omkostninger og besparelser baseret på dine tariffer.",
+        "example": "Din opladningspris var {price}. Du sparede {amount}.",
+        "label": "Valuta"
+      },
+      "siteTitle": {
+        "description": "Vises på hovedskærmen og i browserfanen.",
+        "label": "Titel"
+      },
+      "title": "Anlæg"
+    },
     "sponsor": {
       "addToken": "Indtast token",
       "changeToken": "Udskift token",
@@ -967,7 +1061,7 @@
       },
       "generic": "Generiske integrationer",
       "grid": {
-        "description": "Elpris for strøm fra el-nettet. Bruges til beregning af faktiske opladningsomkostninger og prisoptimeret opladning af køretøjer, varmeenheder eller opladning af hjemmebatteriet fra el-nettet.",
+        "description": "Energipris for import fra elnettet. Bruges til beregning af faktiske opladningsomkostninger og prisoptimeret opladning af køretøjer, varmeenheder eller opladning af hjemmebatteriet fra elnettet.",
         "titleAdd": "Tilføj elnet import tarif",
         "titleEdit": "Juster elnet import tarif"
       },
@@ -981,7 +1075,7 @@
         "temperature": "Tilføj temperaturprognose"
       },
       "planner": {
-        "description": "Avanceret indstilling. Normalt ikke nødvendig, da dynamiske eltariffer eller CO₂-prognoser bruges automatisk. Aktiverer en ekstra datakilde, som kun anvendes til ladeplanlægning – ikke til statistik eller prisberegninger.",
+        "description": "Denne avancerede indstilling er normalt ikke nødvendig. Prognosen fra planlæggeren bruges som grundlag for ladeplaner og billig eller klimavenlig opladning fra elnettet (køretøjer, varmeenheder og hjemmebatteri). Hvis den ikke bruges, anvendes den dynamiske elpris eller CO₂-prognose automatisk. Statistik, omkostningsberegninger og optimeringsbeslutninger påvirkes ikke.",
         "titleAdd": "Tilføj planlægnings prognose",
         "titleEdit": "Juster planlægningsprognose"
       },
@@ -1056,6 +1150,119 @@
       "titleEdit": "Rediger køretøj"
     }
   },
+  "energy": {
+    "battery": {
+      "charged": "Opladet",
+      "discharged": "Afladet"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Søjler",
+        "pattern": "Mønster"
+      },
+      "cost": "Omkostninger",
+      "others": "Andre",
+      "title": "Forbrugsenheder",
+      "view": {
+        "river": "Floddiagram",
+        "treemap": "Trædiagram"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "opladet",
+        "returnEnergy": "afladet"
+      },
+      "grid": {
+        "energy": "importeret",
+        "returnEnergy": "eksporteret"
+      },
+      "meter": {
+        "energy": "Energi",
+        "returnEnergy": "Energi (eksport)"
+      }
+    },
+    "empty": "Der er ingen energidate tilgængelig for denne tidsperiode.",
+    "flow": {
+      "battery": "Batteri",
+      "batteryCharge": "Batteriopladning",
+      "batteryDischarge": "Batteriaflading",
+      "charging": "Oplader",
+      "export": "Eksport til elnettet",
+      "grid": "Import fra elnettet",
+      "heating": "Opvarmning",
+      "home": "Forbrug",
+      "overview": "Overblik",
+      "pv": "Produktion",
+      "title": "Energiflow",
+      "usage": "Forbrugsfordeling,",
+      "withdrawal": "Aftager"
+    },
+    "grid": {
+      "amount": "Mængde",
+      "cost": "Omkostning fra elnettet",
+      "energy": "Energi",
+      "export": "Eksport",
+      "exportPrice": "Eksport pris",
+      "import": "Import",
+      "importPrice": "Import pris",
+      "price": "Pris",
+      "revenue": "Eksport fortjeneste",
+      "title": "Elnet"
+    },
+    "group": {
+      "battery": "Batteri",
+      "consumer": "Forbrug",
+      "forecast": "Prognose",
+      "grid": "Elnet",
+      "loadpoint": "Opladning og opvarmning",
+      "meter": "Ekstra målere",
+      "pv": "Produktion"
+    },
+    "production": {
+      "above": "{value} over",
+      "accuracy": "Prognose akkuratesse",
+      "below": "{value} under",
+      "deviation": "Afvigelse",
+      "expectedTomorrow": "Forventet i morgen",
+      "exported": "{value} eksporteret",
+      "produced": "Produceret",
+      "remainingToday": "Resterende i dag",
+      "selfConsumed": "Selv-forbrugt",
+      "title": "Produktion"
+    },
+    "socTemp": {
+      "charged": "opladet",
+      "soc": "lader",
+      "temperature": "temperatur",
+      "used": "brugt"
+    },
+    "sources": {
+      "battery": "Batteri",
+      "cost": "Omkostning",
+      "energy": "Energi",
+      "grid": "Elnettet",
+      "hint": "Sol- og batterienergi værdisat til elnet eksport pris.",
+      "price": "Pris/kWh",
+      "pv": "Sol",
+      "share": "Delt",
+      "source": "Kilde",
+      "title": "Kilder",
+      "total": "Total"
+    },
+    "stat": {
+      "autarky": "Selvforsyningsgrad",
+      "co2Saved": "CO₂ sparet",
+      "co2SavedTooltip": "Sammenlignet med at trække den forbrugte {energy} fra elnettet.",
+      "configure": "Konfigurer nu",
+      "noCo2": "Ingen CO₂ data.",
+      "noPrice": "Ingen pris data.",
+      "savings": "Besparelser",
+      "savingsTooltip": "Sammenlignet med at købe det brugte {energy} fra elnettet.",
+      "versus": "{value} vs. {reference}"
+    },
+    "title": "Energi"
+  },
   "footer": {
     "community": {
       "greenEnergy": "Solenergi",
@@ -1063,7 +1270,7 @@
       "greenEnergySub2": "siden oktober 2022",
       "greenShare": "Solandel",
       "greenShareSub1": "strøm leveret af",
-      "greenShareSub2": "sol, og batteriopbevaring",
+      "greenShareSub2": "sol og hjemmebatteri",
       "power": "Opladningsstrøm",
       "powerSub1": "{activeClients} af {totalClients} deltagere",
       "powerSub2": "oplader.",
@@ -1155,7 +1362,7 @@
     },
     "empty": {
       "co2": "Se når strøm i din region er grøn. Opladningsplaner bliver optimeret til lav-emission og sparet CO₂ beregnes.",
-      "price": "Konfigurér din dynamiske eltarif for automatisk at optimere ladeplaner og beregne besparelser.",
+      "price": "Konfigurér din dynamiske tarif for automatisk at optimere ladeplaner og beregne besparelser.",
       "setup": "Indstil tariffer og prognoser",
       "solar": "Vis forventet solenergi produceret i dag og de nærmeste dage. Bliver også brugt til automatisk optimering af opladninger i fremtiden.",
       "temperature": "Se den forventede udendørstemperatur for din placering. Bruges til at forudsige varmebehovet."
@@ -1193,6 +1400,7 @@
   },
   "general": {
     "back": "Tilbage",
+    "cancel": "Afbryd",
     "download": "Download",
     "error": "Fejl",
     "none": "ingen",
@@ -1229,31 +1437,6 @@
     "restartButton": "Genstart",
     "restartDescription": "Har du prøvet at slukke og tænde den igen?",
     "secondaryActions": "Stadig ikke i stand til at løse dit problem? Her er nogle mere ekstreme muligheder."
-  },
-  "energy": {
-    "direction": {
-      "battery": {
-        "energy": "opladet",
-        "returnEnergy": "afladet"
-      },
-      "grid": {
-        "energy": "importeret",
-        "returnEnergy": "eksporteret"
-      },
-      "meter": {
-        "energy": "Energi",
-        "returnEnergy": "Energi (eksport)"
-      }
-    },
-    "group": {
-      "battery": "Batteri",
-      "consumer": "Forbrug",
-      "forecast": "Prognose",
-      "grid": "Elnet",
-      "loadpoint": "Opladning og opvarmning",
-      "meter": "Ekstra målere",
-      "pv": "Produktion"
-    }
   },
   "issue": {
     "additional": {
@@ -1292,6 +1475,10 @@
     },
     "issueDescription": "Beskrivelse",
     "issueTitle": "Titel",
+    "nightlyHint": "Det er måske allerede fikset. Prøv den seneste {nightlyVersion} først.",
+    "nightlyHintVersion": "Nightly version",
+    "searchHint": "Før du rapporterer en fejl, så søg i eksisterende {issues}.",
+    "searchHintLink": "GitHub problemer",
     "stepsToReproduce": "Trin til at genskabe problemet",
     "subTitleDiscussion": "Beskriv dit problem",
     "subTitleEmail": "Beskriv problemet",
@@ -1404,6 +1591,7 @@
       "batteryDischargeHold": "Batteri (låst)",
       "batteryGridChargeActive": "Opladning fra elnettet: aktiv",
       "batteryGridChargeLimit": "Opladning fra elnettet: når",
+      "batteryStatus": "Batteristatus",
       "batteryTooltip": "{energy} af {total} ({soc})",
       "forecast": "Prognose",
       "forecastTooltip": "prognose: resterende solenergi produktion i dag",
@@ -1429,7 +1617,7 @@
     },
     "hemsWarning": {
       "consumption": "Forbrug",
-      "feedIn": "Indfødning",
+      "feedIn": "Elnet eksport",
       "title": "Ekstern begrænsning er aktiv"
     },
     "loadpoint": {
@@ -1492,12 +1680,12 @@
       "solar": "Sol overskud",
       "solarShare": {
         "charging": {
-          "description": "Mindst {share} af den minimale ladeeffekt skal komme fra solenergi.",
+          "description": "Mindst {share} af den minimale ladeeffekt skal komme fra solenergi overskud.",
           "descriptionFull": "Opladning starter når overskuddet dækker den minimale ladningseffekt.",
           "descriptionZero": "Opladning starter så snart der er noget overskud."
         },
         "heating": {
-          "description": "Mindst {share} af den minimale varmeeffekt skal komme fra solenergi.",
+          "description": "Mindst {share} af den minimale varmeeffekt skal komme fra solenergi overskud.",
           "descriptionFull": "Opvarmningen starter, så snart soloverskuddet dækker den minimale varmeeffekt.",
           "descriptionZero": "Opvarmning starter så snart der er et overskud."
         },
@@ -1559,6 +1747,7 @@
     "targetChargePlan": {
       "chargeDuration": "Opladningstid",
       "co2Label": "CO₂ udledning ⌀",
+      "optimizerHint": "Note: Denne plan er lavet af {optimizer}.",
       "priceLabel": "Energi pris",
       "timeRange": "{day} {range} t",
       "unknownPrice": "stadig ukendt"
@@ -1618,6 +1807,7 @@
       "feedinPriorityPausing": "Solopladning sat på pause for at maksimere nettilførsel.",
       "finished": "Færdig.",
       "minCharge": "Minimum opladning til {soc}.",
+      "optimizerControlledTooltip": "Automatic styring. Optimizer starter og stopper opladning.",
       "pvDisable": "Ikke nok overskud. Holder snart pause.",
       "pvEnable": "Overskud tilgængeligt. Starter snart.",
       "scale1p": "Reducerer snart til 1-faset opladning.",
@@ -1669,7 +1859,7 @@
     "date": "Tidsrum",
     "delete": "Slet",
     "finished": "Fuldført",
-    "meter": "Kilometertælller",
+    "meter": "Målerstand",
     "meterstart": "kilometertælleraflæsning",
     "meterstop": "Meter slut",
     "odometer": "Kilometerstand",
@@ -1696,7 +1886,7 @@
       "energySubTotal": "{value} total",
       "groupedCo2ByGroup": "CO₂-mængde {byGroup}",
       "groupedPriceByGroup": "Total pris {byGroup}",
-      "historyCo2": "CO₂-Emission",
+      "historyCo2": "CO₂-Udledning",
       "historyCo2Sub": "{value} total",
       "historyPrice": "Opladningspris",
       "historyPriceSub": "{value} total",
@@ -1868,6 +2058,7 @@
     "battery": "Batteri",
     "charge": "Oplader",
     "comingSoon": "Siden under opbygning.",
+    "energy": "Energi",
     "forecast": "Prognose",
     "more": "Mere",
     "sessions": "Sessioner"

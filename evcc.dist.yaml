@@ -48,6 +48,8 @@ modbusproxy:
   #    uri: solar-edge:502
   #    # rtu: true
   #    # readonly: true # use `deny` to raise modbus errors
+  #    # function codes the proxy doesn't implement itself, like Huawei's 0x41 for optimizer data,
+  #    # may write and are only forwarded with `readonly: false` (Modbus TCP downstream only)
 
 # meter definitions
 # name can be freely chosen and is used as reference when assigning meters to site and loadpoints

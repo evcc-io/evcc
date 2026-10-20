@@ -102,8 +102,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Project name is `evcc`, always lowercase
 - In user-facing strings, only mention `evcc` when needed to understand the context. Inside evcc's own UI the self-reference is usually redundant
 - Acronyms uppercase in prose: OCPP, MQTT, HEMS, SoC
-- Terminology: German "Phasensaldierung" (meter netting signed power across phases each instant) is "summative energy measurement" in English. Avoid "phase balancing" (means load balancing) and "net metering" (a billing scheme)
-- Terminology: the top-level load management circuit is "root circuit" in English, "Hauptstromkreis" in German
+- Terminology: agreed terms per language with explanations live in `i18n/glossary/` (`en.json` + `<lang>.json`, rules in `README.md`). Check it before wording user-facing strings (including API descriptions in `assets/js/types/evcc.ts` and `server/openapi.yaml`), and extend it when a new concept gets a name
 - Commit subjects: `Component: short description`, no trailing period. Sub-scope in parens: `Meter (Home Assistant): ...`. Use `chore:`/`fix:`/`docs:` only for non-feature changes
 
 ## Comment Style
@@ -209,7 +208,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 
 - Use CSS Custom Properties for theming (semantic names: `--evcc-green`, `--evcc-battery`)
 - No inline `style` attributes; use Bootstrap utility classes or scoped CSS (inline only for truly dynamic values)
-- Use existing custom media queries for responsive breakpoints
+- Use the custom media queries from `assets/css/breakpoints.css` (`@media (--sm-and-up)`) for responsive breakpoints, never raw px `min-width`/`max-width`. Write mobile-first and override upwards instead of adding max-width queries
 - Use `$t()` function for all user-facing strings
 - Update both `i18n/en.json` and `i18n/de.json` for new strings
 - Use hierarchical namespace: `{section}.{component}.{purpose}`

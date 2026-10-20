@@ -27,6 +27,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
@@ -198,7 +199,7 @@ func (wb *Weishaupt) MaxCurrentMillis(current float64) error {
 		}
 	}
 
-	power := uint16(min(voltage*current*float64(phases), 65535))
+	power := uint16(min(grid.CurrentToPower(current, phases), 65535))
 
 	err := wb.setPowerSetpoint(power)
 	if err == nil {

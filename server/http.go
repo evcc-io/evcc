@@ -174,11 +174,11 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 	))
 
 	// site api
-	smartCostLimit := func(lp loadpoint.API, limit *float64) {
-		lp.SetSmartCostLimit(limit)
+	smartCostLimit := func(lp loadpoint.API, limit *float64) error {
+		return lp.SetSmartCostLimit(limit)
 	}
-	smartFeedInPriorityLimit := func(lp loadpoint.API, limit *float64) {
-		lp.SetSmartFeedInPriorityLimit(limit)
+	smartFeedInPriorityLimit := func(lp loadpoint.API, limit *float64) error {
+		return lp.SetSmartFeedInPriorityLimit(limit)
 	}
 
 	routes := map[string]route{
@@ -265,11 +265,11 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 			"enableDelay":               {"POST", "/enable/delay/{value:[0-9]+}", durationHandler(pass(lp.SetEnableDelay), lp.GetEnableDelay)},
 			"disableThreshold":          {"POST", "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
 			"disableDelay":              {"POST", "/disable/delay/{value:[0-9]+}", durationHandler(pass(lp.SetDisableDelay), lp.GetDisableDelay)},
-			"smartCost":                 {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
-			"smartCostDelete":           {"DELETE", "/smartcostlimit", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
+			"smartCost":                 {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(lp.SetSmartCostLimit, lp.GetSmartCostLimit)},
+			"smartCostDelete":           {"DELETE", "/smartcostlimit", floatPtrHandler(lp.SetSmartCostLimit, lp.GetSmartCostLimit)},
 			"solarShare":                {"POST", "/solarshare/{value:-?[0-9.]+}", floatHandler(pass(lp.SetSolarShare), lp.GetSolarShare)},
-			"smartFeedInPriority":       {"POST", "/smartfeedinprioritylimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
-			"smartFeedInPriorityDelete": {"DELETE", "/smartfeedinprioritylimit", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
+			"smartFeedInPriority":       {"POST", "/smartfeedinprioritylimit/{value:-?[0-9.]+}", floatPtrHandler(lp.SetSmartFeedInPriorityLimit, lp.GetSmartFeedInPriorityLimit)},
+			"smartFeedInPriorityDelete": {"DELETE", "/smartfeedinprioritylimit", floatPtrHandler(lp.SetSmartFeedInPriorityLimit, lp.GetSmartFeedInPriorityLimit)},
 			"priority":                  {"POST", "/priority/{value:[0-9]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
 			"batteryBoost":              {"POST", "/batteryboost/{value:[01truefalse]+}", boolHandler(lp.SetBatteryBoost, func() bool { return lp.GetBatteryBoost() > 0 })},
 			"batteryBoostLimit":         {"POST", "/batteryboostlimit/{value:[0-9]+}", intHandler(pass(lp.SetBatteryBoostLimit), lp.GetBatteryBoostLimit)},
@@ -306,7 +306,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 	{ // /api
 		routes := map[string]route{
-			"state": {"GET", "/state", stateHandler(cache)},
+			"state":                    {"GET", "/state", stateHandler(cache)},
+			"optimizerexplain":         {"POST", "/optimizer/explain", optimizerExplainHandler(site)},
+			"optimizerexplainfeedback": {"POST", "/optimizer/explain/feedback", optimizerExplainFeedbackHandler(site)},
 		}
 
 		for _, r := range routes {
@@ -359,6 +361,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
 			"experimental":       {"POST", "/experimental/{value:[01truefalse]+}", boolHandler(setExperimental(pub), getExperimental)},
 			"optimizer":          {"POST", "/optimizer/{value:[01truefalse]+}", boolHandler(setOptimizer(pub), getOptimizer)},
+			"optimizerAutomatic": {"POST", "/optimizerautomatic/{value:[a-z]+}", stringHandler(setOptimizerAutomatic(pub, site), core.OptimizerAutomatic)},
 			"remote":             {"POST", "/remote/{value:[01truefalse]+}", boolHandler(remoteAccess.Enable, remoteAccess.Enabled)},
 			"remoteclients":      {"GET", "/remote/clients", remoteClientsHandler(remoteAccess)},
 			"createremoteclient": {"POST", "/remote/clients", createRemoteClientHandler(remoteAccess)},
@@ -404,9 +407,10 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		// site
 		for _, r := range map[string]route{
-			"site":          {"GET", "/site", siteHandler(site)},
-			"updatesite":    {"PUT", "/site", updateSiteHandler(site)},
-			"updatecountry": {"PUT", "/country", updateCountryHandler(site)},
+			"site":                 {"GET", "/site", siteHandler(site)},
+			"updatesite":           {"PUT", "/site", updateSiteHandler(site)},
+			"updatecountry":        {"PUT", "/country", updateCountryHandler(site)},
+			"updategridconnection": {"PUT", "/gridconnection", updateGridConnectionHandler(site)},
 		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}

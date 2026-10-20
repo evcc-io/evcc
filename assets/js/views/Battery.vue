@@ -27,6 +27,8 @@
 						:battery-grid-discharge="state.batteryGridDischarge"
 						:battery="state.battery"
 						:experimental="state.experimental"
+						:optimizer-automatic="optimizerAutomatic"
+						:optimizer-controlled-titles="optimizerControlledTitles"
 						:country="state.country"
 					/>
 
@@ -47,7 +49,9 @@
 						<SmartFeedInPriority v-bind="smartFeedInPriorityProps" />
 					</Card>
 				</template>
-				<p v-else class="my-4 text-muted">{{ $t("batterySettings.noBattery") }}</p>
+				<p v-else class="my-4 text-muted">
+					{{ $t("batterySettings.noBattery") }}
+				</p>
 			</main>
 		</div>
 	</div>
@@ -58,7 +62,7 @@ import { defineComponent } from "vue";
 import store from "@/store";
 import settings from "@/settings";
 import api from "@/api";
-import { CURRENCY, type BatteryMeter } from "@/types/evcc";
+import { BATTERY_MODE, CURRENCY, OPTIMIZER_AUTOMATIC, type BatteryMeter } from "@/types/evcc";
 import Header from "../components/Top/Header.vue";
 import Card from "../components/Helper/Card.vue";
 import SmartCostLimit from "../components/Tariff/SmartCostLimit.vue";
@@ -113,6 +117,17 @@ export default defineComponent({
 		batteryAvailable(): boolean {
 			return this.devices.length > 0;
 		},
+		optimizerAutomatic(): boolean {
+			return (
+				!!this.state.optimizerAutomatic &&
+				this.state.optimizerAutomatic !== OPTIMIZER_AUTOMATIC.OFF
+			);
+		},
+		optimizerControlledTitles(): string[] {
+			return (this.state.loadpoints ?? [])
+				.filter((lp) => lp.optimizerControlled)
+				.map((lp) => lp.title);
+		},
 		evopt() {
 			return this.state.evopt;
 		},
@@ -132,11 +147,8 @@ export default defineComponent({
 				forecastToSeries(this.evopt, this.now.getTime())
 			);
 		},
-		batteryControllable(): boolean {
-			return this.devices.some(({ controllable }) => controllable);
-		},
 		gridChargePossible(): boolean {
-			return this.batteryControllable && !!this.state.smartCostAvailable;
+			return this.supportsMode(BATTERY_MODE.CHARGE) && !!this.state.smartCostAvailable;
 		},
 		gridChargeLimit(): number | null {
 			return this.state.batteryGridChargeLimit ?? null;
@@ -155,6 +167,7 @@ export default defineComponent({
 				currency: this.state.currency || CURRENCY.EUR,
 				tariff: this.gridChargeTariff,
 				possible: this.gridChargePossible,
+				disabledHint: this.optimizerAutomatic ? "config.optimizer.controlled" : "",
 			};
 		},
 		gridDischargeLimit(): number | null {
@@ -162,7 +175,10 @@ export default defineComponent({
 		},
 		// needs a dynamic feed-in tariff, the grid price is irrelevant here
 		gridDischargePossible(): boolean {
-			return this.batteryControllable && !!this.state.smartFeedInPriorityAvailable;
+			return (
+				this.supportsMode(BATTERY_MODE.DISCHARGE) &&
+				!!this.state.smartFeedInPriorityAvailable
+			);
 		},
 		// requires opt-in; a set limit stays visible so it can be removed
 		gridDischargeVisible(): boolean {
@@ -198,6 +214,9 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		supportsMode(mode: BATTERY_MODE): boolean {
+			return this.devices.some((d) => d.modes?.includes(mode));
+		},
 		onRangeStart(start: Date) {
 			this.rangeStart = start;
 		},

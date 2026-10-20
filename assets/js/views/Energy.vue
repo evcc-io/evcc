@@ -246,10 +246,9 @@
 						:title="lp.title"
 						:color="loadpointColors[lp.title] || ''"
 						:device-color="deviceColors[lp.title] || ''"
-						:price="loadpointPrice"
+						:flows="loadpointFlows(lp.title)"
 						:series="lp"
 						:daily="loadpointDaily(lp.title) ?? undefined"
-						:flow="flow ?? undefined"
 						:period="effectivePeriod"
 						:from="from"
 						:to="to"
@@ -287,7 +286,7 @@
 						:consumers="consumers"
 						:others="others"
 						:device-colors="deviceColors"
-						:price="homePrice"
+						:others-cost="othersCost"
 						:currency="currency"
 						:selected="consumer"
 						@select="selectConsumer"
@@ -312,10 +311,9 @@
 							:pickable="consumerPickable"
 							:device-color="deviceColors[consumerTitle] || ''"
 							sink="home"
-							:price="homePrice"
+							:flows="consumerFlows"
 							:title="consumerTitle"
 							:color="consumerColor"
-							:flow="flow ?? undefined"
 							:series="consumerSeries ?? undefined"
 							:period="effectivePeriod"
 							:from="from"
@@ -341,10 +339,9 @@
 				>
 					<EntityDetail
 						sink="home"
-						:price="homePrice"
+						:flows="consumerFlows"
 						:title="consumerTitle"
 						:color="consumerColor"
-						:flow="flow ?? undefined"
 						:series="consumerSeries ?? undefined"
 						:period="effectivePeriod"
 						:from="from"
@@ -412,9 +409,9 @@ import MixBar from "../components/Energy/MixBar.vue";
 import GridStats from "../components/Energy/GridStats.vue";
 import ForecastDeviation from "../components/Energy/ForecastDeviation.vue";
 import CostStats from "../components/Energy/CostStats.vue";
-import ConsumerTreemap, { OTHERS } from "../components/Energy/ConsumerTreemap.vue";
+import ConsumerTreemap from "../components/Energy/ConsumerTreemap.vue";
 import EntityDetail from "../components/Energy/EntityDetail.vue";
-import { sinkCost, sumEnergy, type SourceRow } from "../components/Energy/mix";
+import { entityFlows, sinkPrice, sumEnergy, type SourceRow } from "../components/Energy/mix";
 import { usageSplit } from "../components/Energy/usage";
 import { SLOT_MS } from "../components/Energy/slots";
 import MetersCard from "../components/Energy/MetersCard.vue";
@@ -422,7 +419,7 @@ import SourcesModal from "../components/Energy/SourcesModal.vue";
 import ConsumerRiver, { type RiverLayer } from "../components/Energy/ConsumerRiver.vue";
 import TreemapIcon from "../components/MaterialIcon/Treemap.vue";
 import StreamIcon from "../components/MaterialIcon/Stream.vue";
-import type { HistorySeries } from "../components/Energy/GroupChart.vue";
+import type { HistorySeries, HistorySlot } from "../components/Energy/GroupChart.vue";
 import colors, { batteryColor, darken, deviceColorMap, resolveColors } from "../colors";
 import { PERIODS } from "../components/Sessions/types";
 import {
@@ -432,12 +429,12 @@ import {
 	type ConsumerEnergy,
 	type Flow,
 	type FlowResult,
-	type FlowSink,
 	type FlowSource,
 	type StatItem,
 	type PriceBand,
 	type PriceOverlay,
 	type TariffSlot,
+	OTHERS,
 } from "../components/Energy/types";
 import type { DeviceColors, UiSolarDetails } from "@/types/evcc";
 import { CURRENCY } from "@/types/evcc";
@@ -548,8 +545,12 @@ export default defineComponent({
 			}
 			return out;
 		},
+		// each consumer priced by the slots it ran in
 		consumers(): ConsumerEnergy[] {
-			return this.entityTotals["consumer"] || [];
+			return (this.entityTotals["consumer"] || []).map((e) => ({
+				...e,
+				cost: this.consumerCost(e.title, e.energy),
+			}));
 		},
 		homeEnergy(): number {
 			return (this.entityTotals["home"] || []).reduce((acc, e) => acc + e.energy, 0);
@@ -584,13 +585,16 @@ export default defineComponent({
 			if (this.hasGrid) sources.push("grid");
 			return sources;
 		},
-		// average price of home consumption, applied to every consumer
+		// average price of home consumption over its priced slots
 		homePrice(): number | undefined {
-			return this.sinkPrice("home");
+			return sinkPrice(this.flows, "home");
 		},
-		// loadpoints are what consumption prices beyond home
-		loadpointPrice(): number | undefined {
-			return this.sinkPrice("loadpoint");
+		othersCost(): number | undefined {
+			return this.consumerCost(OTHERS, this.others);
+		},
+		// the consumer in detail, Others being all of home when there is none to pick from
+		consumerFlows(): Flow[] {
+			return entityFlows(this.flow?.entities, "consumer", this.activeConsumer ?? "");
 		},
 		// unknown stored values fall back to the treemap
 		consumerView(): CONSUMER_VIEW {
@@ -672,16 +676,25 @@ export default defineComponent({
 		overviewTitle(): string {
 			return this.overviewOptions.find((o) => o.value === this.overview)?.name || "";
 		},
-		// the buckets every stack is built on
-		flowSlots() {
-			return this.series.find((s) => s.group === "grid" || s.group === "pv")?.data || [];
+		// the buckets every stack is built on: union of all series, a newly added
+		// meter alone would only cover the slots since it was added
+		flowSlots(): HistorySlot[] {
+			const slots = new Map<string, HistorySlot>();
+			for (const s of this.series) {
+				if (s.group === "forecast") continue;
+				for (const slot of s.data) {
+					if (!slots.has(slot.start)) slots.set(slot.start, slot);
+				}
+			}
+			return [...slots.values()].sort((a, b) => a.start.localeCompare(b.start));
 		},
 		stackSeries(): HistorySeries[] {
 			return this.overview === OVERVIEW_VIEW.USAGE ? this.usageSeries : this.flowSeries;
 		},
 		// usage: the overview's column, from minus import and discharge up to production,
-		// as one stack of sinks running through the baseline: batteries at the bottom,
-		// then loadpoints, consumption, export on top. Amounts per sink from usageSplit
+		// as one stack of sinks running through the baseline. Consumption sits below the
+		// other sinks when it alone covers the withdrawal, otherwise above them: two
+		// series, one of them empty per slot. Export on top
 		usageSeries(): HistorySeries[] {
 			const pv = this.slotSum("pv", "energy");
 			const gridIn = this.slotSum("grid", "energy");
@@ -706,29 +719,42 @@ export default defineComponent({
 			}));
 			// per slot each sink's share above and below the baseline in stack order
 			const bands = usageSplit(input).map((r, t) => {
-				let level = -(input[t]!.gridIn + input[t]!.batOut);
-				return [...r.bats, ...r.lps, r.home, r.export].map((a) => {
+				const withdrawal = input[t]!.gridIn + input[t]!.batOut;
+				let level = -withdrawal;
+				const band = (a: number) => {
 					const start = level;
 					level += a;
 					return [
 						Math.max(0, level) - Math.max(0, start),
 						Math.min(0, level) - Math.min(0, start),
 					];
-				});
+				};
+				const low = r.home >= withdrawal;
+				return [
+					band(low ? r.home : 0),
+					...r.lps.map(band),
+					...r.bats.map(band),
+					band(low ? 0 : r.home),
+					band(r.export),
+				];
 			});
+			const homeEntry: [string, string] = [this.$t("energy.flow.home"), colors.muted || ""];
 			const entries: [string, string][] = [
-				...this.batteries.map((s, i): [string, string] => [s.title, batteryColor(i)]),
+				homeEntry,
 				...this.loadpoints.map((s): [string, string] => [
 					s.title,
 					this.loadpointColors[s.title] || "",
 				]),
-				[this.$t("energy.flow.home"), colors.muted || ""],
+				...this.batteries.map((s, i): [string, string] => [s.title, batteryColor(i)]),
+				homeEntry,
 				[this.$t("energy.flow.export"), colors.export || ""],
 			];
 			return entries.map(([title, color], i) => ({
 				title,
 				group: "meter",
 				color,
+				// both consumption series are one entity in the tooltip
+				paletteIndex: title === homeEntry[0] ? 0 : i,
 				data: slots.map((slot, t) => {
 					const [energy, returnEnergy] = bands[t]![i]!;
 					return { start: slot.start, end: slot.end, energy, returnEnergy };
@@ -766,6 +792,7 @@ export default defineComponent({
 			const batUp = (t: string) => Math.min(batIn(t), Math.max(0, pv(t) - gridOut(t)));
 			const selfUp = (t: string) => Math.max(0, pv(t) - gridOut(t) - batIn(t));
 			return [
+				build(this.$t("main.energyflow.selfConsumption"), groupColor("pv"), selfUp),
 				build(this.$t("energy.flow.batteryCharge"), groupColor("battery"), batUp),
 				build(
 					this.$t("energy.flow.batteryDischarge"),
@@ -773,22 +800,29 @@ export default defineComponent({
 					() => 0,
 					batOut
 				),
-				build(this.$t("main.energyflow.selfConsumption"), groupColor("pv"), selfUp),
 				build(this.$t("energy.flow.grid"), colors.grid || "", () => 0, gridIn),
 				build(this.$t("energy.flow.export"), colors.export || "", exportUp),
 			];
 		},
 		stackLegends(): Legend[] {
+			// the usage stack carries consumption as two series, one entity in the legend
+			const entity = (s: HistorySeries) => s.paletteIndex ?? s.title;
 			const total = (s: HistorySeries) =>
-				s.data.reduce((acc, slot) => acc + slot.energy + slot.returnEnergy, 0);
-			const [charge, discharge, self, gridImport, gridExport] = this.flowSeries;
+				this.stackSeries
+					.filter((x) => entity(x) === entity(s))
+					.flatMap((x) => x.data)
+					.reduce((acc, slot) => acc + slot.energy + slot.returnEnergy, 0);
+			const [self, charge, discharge, gridImport, gridExport] = this.flowSeries;
 			// both read top down like their stack
 			const ordered =
 				this.overview === OVERVIEW_VIEW.USAGE
 					? [...this.usageSeries].reverse()
-					: [gridExport, self, charge, discharge, gridImport];
+					: [gridExport, charge, self, discharge, gridImport];
 			return ordered
-				.filter((s): s is HistorySeries => !!s)
+				.filter(
+					(s, i): s is HistorySeries =>
+						!!s && ordered.findIndex((x) => x && entity(x) === entity(s)) === i
+				)
 				.map((s) => ({
 					label: s.title,
 					color: s.color || "",
@@ -1444,10 +1478,13 @@ export default defineComponent({
 			}
 		},
 		// a bar in the year view opens that month, a day bar opens that day
-		// average price of the priced energy that reached the sink, undefined without any
-		sinkPrice(sink: FlowSink): number | undefined {
-			const { cost, energy } = sinkCost(this.flows, sink);
-			return energy ? cost / energy : undefined;
+		loadpointFlows(title: string): Flow[] {
+			return entityFlows(this.flow?.entities, "loadpoint", title);
+		},
+		// the consumer's metered energy at its own average price, undefined without priced slots
+		consumerCost(title: string, energy: number): number | undefined {
+			const price = sinkPrice(entityFlows(this.flow?.entities, "consumer", title), "home");
+			return price === undefined ? undefined : energy * price;
 		},
 		showSources(detail: { title: string; rows: SourceRow[] }) {
 			this.sourcesDetail = detail;
