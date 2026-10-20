@@ -177,6 +177,49 @@ func entitySlots(entities map[int]*flowEntity, from, to time.Time) (map[int64][]
 	return res, rows.Err()
 }
 
+// sinkSlots returns the source and home meters pivoted per slot, with the slot's tariff
+func sinkSlots(from, to time.Time) ([]flowSlot, error) {
+	tx := db.Instance.Table("meters m").
+		Select(`
+			m.ts,
+			COALESCE(SUM(CASE WHEN e."group" = 'pv' THEN m.energy END), 0) AS pv,
+			COALESCE(SUM(CASE WHEN e."group" = 'grid' THEN m.energy END), 0) AS grid_in,
+			COALESCE(SUM(CASE WHEN e."group" = 'grid' THEN m.return_energy END), 0) AS grid_out,
+			COALESCE(SUM(CASE WHEN e."group" = 'battery' THEN m.energy END), 0) AS bat_in,
+			COALESCE(SUM(CASE WHEN e."group" = 'battery' THEN m.return_energy END), 0) AS bat_out,
+			COALESCE(SUM(CASE WHEN e."group" = 'home' THEN m.energy END), 0) AS home,
+			t.grid, t.feedin, t.co2`).
+		Joins("JOIN entities e ON m.meter = e.id").
+		Joins("LEFT JOIN tariffs t ON t.ts = m.ts").
+		Where(`e."group" IN ?`, []string{PV, Grid, Battery, Home}).
+		Group("m.ts")
+
+	if !from.IsZero() {
+		tx = tx.Where("m.ts >= ?", from.Unix())
+	}
+	if !to.IsZero() {
+		tx = tx.Where("m.ts < ?", to.Unix())
+	}
+
+	rows, err := tx.Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var res []flowSlot
+	for rows.Next() {
+		var s flowSlot
+		// scanned by hand: gorm's reflective ScanRows dominates long periods
+		if err := rows.Scan(&s.Ts, &s.PV, &s.GridIn, &s.GridOut, &s.BatIn, &s.BatOut, &s.Home, &s.Grid, &s.FeedIn, &s.Co2); err != nil {
+			return nil, err
+		}
+		res = append(res, s)
+	}
+
+	return res, rows.Err()
+}
+
 // QueryFlow attributes the energy of [from,to) from sources to sinks per 15min
 // slot and sums the result. Zero bounds are open ended.
 func QueryFlow(from, to time.Time) (FlowResult, error) {
@@ -202,60 +245,26 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 
 	// both reads are bound by page lookups and run side by side on WAL readers
 	var perSlot map[int64][]slotEnergy
+	var slots []flowSlot
 	var eg errgroup.Group
-	eg.Go(func() (err error) {
+	eg.Go(func() error {
+		var err error
 		perSlot, err = entitySlots(entities, from, to)
 		return err
 	})
+	eg.Go(func() error {
+		var err error
+		slots, err = sinkSlots(from, to)
+		return err
+	})
+	if err := eg.Wait(); err != nil {
+		return FlowResult{}, err
+	}
 
 	// home minus the tracked consumers, per slot like the UI's residual
 	others := &flowEntity{}
 	others.Group = Consumer
 	list = append(list, others)
-
-	tx := db.Instance.Table("meters m").
-		Select(`
-			m.ts,
-			COALESCE(SUM(CASE WHEN e."group" = 'pv' THEN m.energy END), 0) AS pv,
-			COALESCE(SUM(CASE WHEN e."group" = 'grid' THEN m.energy END), 0) AS grid_in,
-			COALESCE(SUM(CASE WHEN e."group" = 'grid' THEN m.return_energy END), 0) AS grid_out,
-			COALESCE(SUM(CASE WHEN e."group" = 'battery' THEN m.energy END), 0) AS bat_in,
-			COALESCE(SUM(CASE WHEN e."group" = 'battery' THEN m.return_energy END), 0) AS bat_out,
-			COALESCE(SUM(CASE WHEN e."group" = 'home' THEN m.energy END), 0) AS home,
-			t.grid, t.feedin, t.co2`).
-		Joins("JOIN entities e ON m.meter = e.id").
-		Joins("LEFT JOIN tariffs t ON t.ts = m.ts").
-		Where(`e."group" IN ?`, []string{PV, Grid, Battery, Home}).
-		Group("m.ts")
-
-	if !from.IsZero() {
-		tx = tx.Where("m.ts >= ?", from.Unix())
-	}
-	if !to.IsZero() {
-		tx = tx.Where("m.ts < ?", to.Unix())
-	}
-
-	rows, err := tx.Rows()
-	if err != nil {
-		return FlowResult{}, err
-	}
-	defer rows.Close()
-
-	var slots []flowSlot
-	for rows.Next() {
-		var s flowSlot
-		// scanned by hand: gorm's reflective ScanRows dominates long periods
-		if err := rows.Scan(&s.Ts, &s.PV, &s.GridIn, &s.GridOut, &s.BatIn, &s.BatOut, &s.Home, &s.Grid, &s.FeedIn, &s.Co2); err != nil {
-			return FlowResult{}, err
-		}
-		slots = append(slots, s)
-	}
-	if err := rows.Err(); err != nil {
-		return FlowResult{}, err
-	}
-	if err := eg.Wait(); err != nil {
-		return FlowResult{}, err
-	}
 
 	sums := make(map[[2]string]flowSum)
 	var cost FlowCost
