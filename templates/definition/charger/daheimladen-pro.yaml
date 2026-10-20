@@ -4,8 +4,8 @@ products:
   - { brand: DaheimLaden, description: { generic: Business Pro} }
 requirements:
   description:
-    de: Firmware-Anforderungen= Smart/Touch Pro ab "3.11STP", Business Pro ab "4.03PTB". Während der Phasen-Umschaltung pausiert die Ladung standardmäßig für zwei Minuten. Mit neuerer Firmware lässt sich die Pause über den Parameter "Phasenumschaltpause" verkürzen. Informationen zur Ladefreigabe (AutoStart, App, RFID, Button), bitte der Wallbox Dokumentation von DaheimLaden entnehmen.
-    en: Firmware requirements= Smart/Touch Pro from "3.11STP", Business Pro from "4.03PTB". Charging pauses for two minutes by default during phase switching. With newer firmware, the pause can be adjusted via the "Phase switching pause" parameter. For information regarding charging authorization (AutoStart, App, RFID, Button), please refer to the DaheimLaden wallbox documentation.
+    de: Firmware-Anforderungen= Smart/Touch Pro ab "3.11STP", Business Pro ab "4.03PTB". Während der Phasen-Umschaltung pausiert die Ladung standardmäßig für zwei Minuten. Mit Firmware Smart/Touch Pro ab "4.08STP, Business Pro ab "4.07PTB" lässt sich die Pause über den Parameter "Phasenumschaltpause" verkürzen. Informationen zur Ladefreigabe (AutoStart, App, RFID, Button), bitte der Wallbox Dokumentation von DaheimLaden entnehmen.
+    en: Firmware requirements= Smart/Touch Pro from "3.11STP", Business Pro from "4.03PTB". Charging pauses for two minutes by default during phase switching. With firmware Smart/Touch Pro from "4.08STP" and Business Pro from "4.07PTB", the pause can be adjusted via the "Phase switching pause" parameter. For information regarding charging authorization (AutoStart, App, RFID, Button), please refer to the DaheimLaden wallbox documentation.
 capabilities: ["mA", "rfid", "1p3p", "meter", "dim"]
 params:
   - name: host
@@ -18,8 +18,8 @@ params:
       de: Phasenumschaltpause
       en: Phase switching pause
     help:
-      de: Achtung - eine zu kurze Pause kann unter Umständen zu Schäden am Fahrzeug führen. Vor einer Änderung die Spezifikation des Fahrzeugs prüfen. Pause bei der Phasenumschaltung in Sekunden (30-120, andere Werte werden begrenzt). Erforderliche Firmware= Smart/Touch Pro ab "4.08STP", Business Pro ab "4.07PTB". Wird der Wert nicht geändert, gilt Firmware-Standard von 120 s.
-      en: Warning - a pause that is too short may damage the vehicle under some circumstances. Check the vehicle specification before changing this value. Pause during phase switching in seconds (30-120, other values are clamped). Required firmware= Smart/Touch Pro from "4.08STP", Business Pro from "4.07PTB". If the value is not changed, the firmware default of 120 s applies.
+      de: Achtung - eine zu kurze Pause kann unter Umständen zu Schäden am Fahrzeug führen. Vor einer Änderung die Spezifikation des Fahrzeugs prüfen. Pause bei der Phasenumschaltung in Sekunden (30-120, andere Werte werden begrenzt). Wird der Wert nicht geändert, gilt Firmware-Standard von 120 s.
+      en: Warning - a pause that is too short may damage the vehicle under some circumstances. Check the vehicle specification before changing this value. Pause during phase switching in seconds (30-120, other values are clamped). If the value is not changed, the firmware default of 120 s applies.
     example: 60
 render: |
   type: daheimladen
