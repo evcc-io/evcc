@@ -73,11 +73,13 @@ func (t *HomeAssistant) run(interval time.Duration, done chan error) {
 			if err != nil {
 				return err
 			}
-			if len(res) == 0 {
+			if data, err = solarForecastRates(res); err != nil {
+				return backoff.Permanent(err)
+			}
+			if len(data) == 0 {
 				return backoff.Permanent(errors.New("no solar forecast configured in the energy dashboard"))
 			}
-			data, err = solarForecastRates(res)
-			return backoff.Permanent(err)
+			return nil
 		}, bo()); err != nil {
 			if reportError(&once, done, err) {
 				return
