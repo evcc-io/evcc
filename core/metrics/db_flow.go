@@ -120,14 +120,14 @@ type flowEntity struct {
 	flows [3]flowSum // per flowSources entry
 }
 
-// share gives the entity its energy in the sink's source split of the slot
-func (e *flowEntity) share(s flowSlot, energy float64, sink [3]float64) {
-	total := sink[0] + sink[1] + sink[2]
-	if energy <= 0 || total <= 0 {
+// share gives the entity its energy in the sink's source split of the slot.
+// Dividing by the metered sink leaves out the part its sources cannot cover.
+func (e *flowEntity) share(s flowSlot, energy float64, sink [3]float64, metered float64) {
+	if energy <= 0 || metered <= 0 {
 		return
 	}
 	for i, from := range flowSources {
-		e.flows[i].add(s, from, energy*sink[i]/total)
+		e.flows[i].add(s, from, energy*sink[i]/metered)
 	}
 }
 
@@ -186,14 +186,17 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 		return FlowResult{}, err
 	}
 
+	// meters sharing a title are one entity, as in the history
 	entities := make(map[int]*flowEntity, len(ents))
+	byTitle := make(map[[2]string]*flowEntity)
 	list := make([]*flowEntity, 0, len(ents)+1)
-	var hasConsumers bool
 	for _, e := range ents {
-		fe := &flowEntity{entity: e}
-		entities[e.Id] = fe
-		list = append(list, fe)
-		hasConsumers = hasConsumers || e.Group == Consumer
+		key := [2]string{e.Group, e.Title}
+		if byTitle[key] == nil {
+			byTitle[key] = &flowEntity{entity: e}
+			list = append(list, byTitle[key])
+		}
+		entities[e.Id] = byTitle[key]
 	}
 
 	perSlot, err := entitySlots(entities, from, to)
@@ -288,15 +291,13 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 		var tracked float64
 		for _, se := range slotEntities {
 			if se.Group == Loadpoint {
-				se.share(s, se.energy, lpSink)
+				se.share(s, se.energy, lpSink, s.Loadpoint)
 			} else {
-				se.share(s, se.energy, homeSink)
+				se.share(s, se.energy, homeSink, s.Home)
 				tracked += se.energy
 			}
 		}
-		if hasConsumers {
-			others.share(s, max(0, s.Home-tracked), homeSink)
-		}
+		others.share(s, max(0, s.Home-tracked), homeSink, s.Home)
 
 		if s.Grid != nil {
 			cost.Import += s.GridIn * *s.Grid

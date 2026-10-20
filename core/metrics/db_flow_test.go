@@ -117,6 +117,8 @@ func TestQueryFlowEntities(t *testing.T) {
 	pv, grid, home := create(PV, PV), create(Grid, Grid), create(Home, Home)
 	carport, garage := create(Loadpoint, "carport"), create(Loadpoint, "garage")
 	noon, evening := create(Consumer, "noon"), create(Consumer, "evening")
+	noon2 := entity{Name: "noon2", Group: Consumer, Title: "noon"}
+	require.NoError(t, db.Instance.Create(&noon2).Error)
 
 	base := time.Date(2026, 9, 1, 12, 0, 0, 0, time.Now().Location())
 	slot := func(i int) time.Time { return base.Add(time.Duration(i) * 15 * time.Minute) }
@@ -146,7 +148,13 @@ func TestQueryFlowEntities(t *testing.T) {
 	require.NoError(t, persist(evening, slot(2), 0.4, 0, nil, false))
 	tariff(2, 0.2)
 
-	res, err := QueryFlow(slot(0), slot(3))
+	// slot 3: grid covers half of home, a second "noon" meter runs
+	require.NoError(t, persist(grid, slot(3), 0.5, 0, nil, false))
+	require.NoError(t, persist(home, slot(3), 1, 0, nil, false))
+	require.NoError(t, persist(noon2, slot(3), 0.4, 0, nil, false))
+	tariff(3, 0.5)
+
+	res, err := QueryFlow(slot(0), slot(4))
 	require.NoError(t, err)
 
 	round := func(flows []Flow) []Flow {
@@ -161,11 +169,12 @@ func TestQueryFlowEntities(t *testing.T) {
 	assert.Equal(t, []Flow{
 		{From: PV, To: Home, Energy: 1, Cost: 0.1, PricedEnergy: 1},
 		{From: PV, To: Loadpoint, Energy: 1, Cost: 0.1, PricedEnergy: 1},
-		{From: Grid, To: Home, Energy: 1.5, Cost: 0.5, PricedEnergy: 1.5},
+		{From: Grid, To: Home, Energy: 2, Cost: 0.75, PricedEnergy: 2},
 		{From: Grid, To: Loadpoint, Energy: 1, Cost: 0.4, PricedEnergy: 1},
 	}, round(res.Flows))
 
-	// each entity priced by the slots it ran in, not the sink average
+	// each entity priced by the slots it ran in, not the sink average, and only
+	// for the part its sink's sources covered
 	require.Len(t, res.Entities, 5)
 	for i := range res.Entities {
 		round(res.Entities[i].Flows)
@@ -176,7 +185,7 @@ func TestQueryFlowEntities(t *testing.T) {
 		}},
 		{Group: Consumer, Title: "noon", Flows: []Flow{
 			{From: PV, To: Home, Energy: 0.4, Cost: 0.04, PricedEnergy: 0.4},
-			{From: Grid, To: Home, Energy: 0.4, Cost: 0.08, PricedEnergy: 0.4},
+			{From: Grid, To: Home, Energy: 0.6, Cost: 0.18, PricedEnergy: 0.6},
 		}},
 		{Group: Loadpoint, Title: "carport", Flows: []Flow{
 			{From: PV, To: Loadpoint, Energy: 1, Cost: 0.1, PricedEnergy: 1},
@@ -186,7 +195,7 @@ func TestQueryFlowEntities(t *testing.T) {
 		}},
 		{Group: Consumer, Virtual: true, Flows: []Flow{
 			{From: PV, To: Home, Energy: 0.6, Cost: 0.06, PricedEnergy: 0.6},
-			{From: Grid, To: Home, Energy: 0.6, Cost: 0.24, PricedEnergy: 0.6},
+			{From: Grid, To: Home, Energy: 0.9, Cost: 0.39, PricedEnergy: 0.9},
 		}},
 	}, res.Entities)
 }

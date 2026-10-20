@@ -592,9 +592,8 @@ export default defineComponent({
 		othersCost(): number | undefined {
 			return this.consumerCost(OTHERS, this.others);
 		},
-		// the consumer in detail, or all of home when there is none to pick from
+		// the consumer in detail, Others being all of home when there is none to pick from
 		consumerFlows(): Flow[] {
-			if (!this.consumers.length) return this.flows;
 			return entityFlows(this.flow?.entities, "consumer", this.activeConsumer ?? "");
 		},
 		// unknown stored values fall back to the treemap
