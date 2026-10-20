@@ -2,7 +2,7 @@ template: sungrow-meter
 products:
   - brand: Sungrow
     description:
-      generic: DTSU666
+      generic: DTSU666 (80 A)
   - brand: CHINT
     description:
       generic: DTSU666 (Sungrow firmware)
