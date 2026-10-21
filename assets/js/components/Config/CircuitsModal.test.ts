@@ -66,7 +66,9 @@ describe("circuit assignment", () => {
   it("selects a device first, then assigns, and keeps assigned rows before children", async () => {
     const wrapper = setup();
     const row = wrapper.get('[data-loadpoint="13"]');
-    expect(wrapper.get('[data-testid="assignment-pool"] h6').classes()).toContain("m-0");
+    expect(wrapper.get('[data-testid="assignment-pool"] h6').classes()).toContain("mt-0");
+    expect(row.classes()).toContain("mb-2");
+    expect(row.classes()).not.toContain("mb-0");
     await row.trigger("click");
     expect(wrapper.emitted("assign")).toBeUndefined();
     await wrapper.get('[data-circuit="db:9"] button').trigger("click");

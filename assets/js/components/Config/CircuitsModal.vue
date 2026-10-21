@@ -38,7 +38,7 @@
 					/>
 				</div>
 				<DragDropList
-					class="assignment-pool d-flex flex-column gap-2"
+					class="assignment-pool d-flex flex-column"
 					data-testid="assignment-pool"
 					:class="{
 						'assignment-target': canRemove,
@@ -60,7 +60,7 @@
 					@dragstart="startDrag"
 					@dragend="endDrag"
 				>
-					<h6 class="small evcc-gray text-uppercase m-0 px-1">
+					<h6 class="small evcc-gray text-uppercase mt-0 mb-2 px-1">
 						{{ $t("config.circuits.notAssigned") }}
 					</h6>
 					<DragDropItem
@@ -69,7 +69,7 @@
 						:title="lp.title"
 						:data-loadpoint="lp.id"
 						interactive
-						class="pool-row mb-0 py-0"
+						class="pool-row py-0"
 						:selected="selectedId !== undefined && lp.id === selectedId"
 						:disabled="pending || !lp.editable"
 						:class="{
