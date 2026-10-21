@@ -3,6 +3,7 @@ package util
 import (
 	"io"
 	"log"
+	"maps"
 	"os"
 	"regexp"
 	"strconv"
@@ -18,6 +19,11 @@ var (
 	levels  = map[string]jww.Threshold{}
 
 	loggersMux sync.Mutex
+
+	baseLevel   = "info"
+	baseAreas   map[string]string
+	activeLevel = "info"
+	activeAreas = map[string]string{}
 
 	// OutThreshold is the default console log level
 	OutThreshold = jww.LevelInfo
@@ -101,20 +107,55 @@ func logLevelForArea(area string) jww.Threshold {
 	return level
 }
 
-// LogLevel sets log level for all loggers
+// LogLevel sets default and area log levels for all loggers, replacing previously set area levels
 func LogLevel(defaultLevel string, areaLevels map[string]string) {
-	// default level
+	loggersMux.Lock()
+	defer loggersMux.Unlock()
+
+	applyLogLevel(defaultLevel, areaLevels)
+}
+
+// LogLevelDefaults sets the log levels from command line and yaml. They are applied immediately
+// and restored by ResetLogLevel.
+func LogLevelDefaults(defaultLevel string, areaLevels map[string]string) {
+	loggersMux.Lock()
+	defer loggersMux.Unlock()
+
+	baseLevel, baseAreas = defaultLevel, maps.Clone(areaLevels)
+	applyLogLevel(defaultLevel, areaLevels)
+}
+
+// ResetLogLevel restores the levels set by LogLevelDefaults and returns them
+func ResetLogLevel() (string, map[string]string) {
+	loggersMux.Lock()
+	defer loggersMux.Unlock()
+
+	applyLogLevel(baseLevel, baseAreas)
+	return activeLevel, maps.Clone(activeAreas)
+}
+
+// ActiveLogLevel returns the currently applied default and area log levels
+func ActiveLogLevel() (string, map[string]string) {
+	loggersMux.Lock()
+	defer loggersMux.Unlock()
+
+	return activeLevel, maps.Clone(activeAreas)
+}
+
+func applyLogLevel(defaultLevel string, areaLevels map[string]string) {
+	activeLevel, activeAreas = strings.ToUpper(defaultLevel), make(map[string]string, len(areaLevels))
 	OutThreshold = logstash.LogLevelToThreshold(defaultLevel)
 
-	// area levels
+	clear(levels)
 	for area, level := range areaLevels {
 		area = strings.ToLower(area)
+		activeAreas[area] = strings.ToUpper(level)
 		levels[area] = logstash.LogLevelToThreshold(level)
 	}
 
-	Loggers(func(name string, logger *Logger) {
+	for name, logger := range loggers {
 		logger.SetStdoutThreshold(logLevelForArea(name))
-	})
+	}
 }
 
 var uiChan chan<- Param

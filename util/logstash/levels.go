@@ -1,10 +1,19 @@
 package logstash
 
 import (
+	"slices"
 	"strings"
 
 	jww "github.com/spf13/jwalterweatherman"
 )
+
+// Levels lists all valid log level names, ordered from most to least severe
+var Levels = []string{"fatal", "error", "warn", "info", "debug", "trace"}
+
+// ValidLevel reports whether level is a recognized log level name
+func ValidLevel(level string) bool {
+	return slices.Contains(Levels, strings.ToLower(level))
+}
 
 // LogLevelToThreshold converts log level string to a jww Threshold
 func LogLevelToThreshold(level string) jww.Threshold {

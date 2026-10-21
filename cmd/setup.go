@@ -661,6 +661,10 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 		err = networkSettings(&conf.Network)
 	}
 
+	if err == nil {
+		err = configureLogLevels(cmd)
+	}
+
 	// setup additional templates
 	if err == nil {
 		if cmd.Flags().Changed(flagTemplate) {
@@ -1604,4 +1608,27 @@ func isOptimizer() bool {
 // isMcp returns if MCP service is enabled
 func isMcp() bool {
 	return isExperimental()
+}
+
+// configureLogLevels applies the log levels persisted in the database. If none exist, levels
+// from the yaml configuration are migrated, command line levels stay a runtime-only default.
+func configureLogLevels(cmd *cobra.Command) error {
+	if settings.Exists(keys.LogLevels) {
+		var conf globalconfig.LogLevels
+		if err := settings.Json(keys.LogLevels, &conf); err != nil {
+			return err
+		}
+
+		util.LogLevel(conf.Default, conf.Levels)
+		return nil
+	}
+
+	if cmd.Flag("log").Changed || !(viper.InConfig("log") || viper.InConfig("levels")) {
+		return nil
+	}
+
+	level, levels := util.ActiveLogLevel()
+	log.WARN.Println("migrating log levels from yaml to database, remove them from the configuration file")
+
+	return settings.SetJson(keys.LogLevels, globalconfig.LogLevels{Default: level, Levels: levels})
 }

@@ -1736,6 +1736,65 @@
         }
       }
     },
+    "/config/logLevels": {
+      "post": {
+        "operationId": "setLogLevels",
+        "summary": "Set log levels",
+        "description": "Persist the default log level and the area overrides and apply them immediately. Omitting `levels` keeps the current overrides, an empty object removes them.",
+        "tags": [
+          "general"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "default": {
+                    "$ref": "#/components/schemas/LogLevel"
+                  },
+                  "levels": {
+                    "description": "Log level overrides by log area.",
+                    "type": "object",
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/LogLevel"
+                    },
+                    "example": {
+                      "lp-1": "TRACE"
+                    }
+                  }
+                },
+                "required": [
+                  "default"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BlankResponse"
+          },
+          "400": {
+            "description": "Invalid log level or area"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "resetLogLevels",
+        "summary": "Reset log levels",
+        "description": "Remove the persisted log levels and restore the levels from startup (command line) immediately.",
+        "tags": [
+          "general"
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BlankResponse"
+          }
+        }
+      }
+    },
     "/config/gridconnection": {
       "put": {
         "operationId": "setGridConnection",
@@ -3366,6 +3425,7 @@
         }
       },
       "LogLevel": {
+        "description": "Log level name. Case-insensitive.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/reference/configuration/log#log"
         },
@@ -5201,6 +5261,27 @@
         ],
         "additionalProperties": false
       },
+      "LogLevels": {
+        "description": "Log levels.",
+        "type": "object",
+        "properties": {
+          "default": {
+            "description": "Default log level.",
+            "type": "string"
+          },
+          "levels": {
+            "description": "Log level overrides by log area.",
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "default",
+          "levels"
+        ]
+      },
       "Circuit": {
         "description": "A load management circuit limiting power and current of its assigned loadpoints.",
         "type": "object",
@@ -5915,6 +5996,10 @@
           "interval": {
             "description": "Update interval of the control loop in seconds.",
             "type": "number"
+          },
+          "logLevels": {
+            "$ref": "#/components/schemas/LogLevels",
+            "description": "Active default and per-area log levels."
           },
           "circuits": {
             "description": "Load management circuits, keyed by circuit name.",

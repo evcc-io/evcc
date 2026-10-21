@@ -20,7 +20,7 @@ func parseLogLevels() {
 		levels = make(map[string]string)
 	}
 
-	var level string
+	level := "info"
 	for kv := range strings.SplitSeq(viper.GetString("log"), ",") {
 		areaLevel := strings.SplitN(kv, ":", 2)
 		if len(areaLevel) == 1 {
@@ -30,7 +30,7 @@ func parseLogLevels() {
 		}
 	}
 
-	util.LogLevel(level, levels)
+	util.LogLevelDefaults(level, levels)
 }
 
 // unwrap converts a wrapped error into slice of strings
