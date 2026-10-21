@@ -70,9 +70,11 @@
 						:data-loadpoint="lp.id"
 						interactive
 						class="pool-row mb-0 py-0"
-						:selected="lp.id === selectedId"
+						:selected="selectedId !== undefined && lp.id === selectedId"
 						:disabled="pending || !lp.editable"
-						:class="{ 'assignment-dragged': lp.id === draggedId }"
+						:class="{
+							'assignment-dragged': draggedId !== undefined && lp.id === draggedId,
+						}"
 						@activate="selectLoadpoint(lp.id)"
 					>
 						<span class="d-flex align-items-center gap-2 min-w-0"
@@ -166,7 +168,9 @@ export default {
 			return this.unassignedLoadpoints.map((lp) => lp.id ?? lp.name);
 		},
 		activeLoadpoint(): CircuitAssignmentLoadpoint | undefined {
-			return this.loadpoints.find((lp) => lp.id === (this.draggedId ?? this.selectedId));
+			const id = this.draggedId ?? this.selectedId;
+			if (id === undefined) return undefined;
+			return this.loadpoints.find((lp) => lp.id === id && lp.editable);
 		},
 		canRemove(): boolean {
 			return !!this.activeLoadpoint?.circuit;

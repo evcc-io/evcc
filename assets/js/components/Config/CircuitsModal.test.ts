@@ -27,6 +27,28 @@ const setup = () =>
     },
   });
 describe("circuit assignment", () => {
+  it("does not highlight YAML loadpoints without an active device", async () => {
+    const wrapper = setup();
+    await wrapper.setProps({
+      loadpoints: [
+        {
+          name: "yaml-assigned",
+          title: "YAML assigned",
+          circuit: "db:8",
+          editable: false,
+          heating: false,
+        },
+        { name: "yaml-pool", title: "YAML pool", circuit: null, editable: false, heating: false },
+      ],
+    });
+    expect(
+      wrapper.findAll(
+        ".drag-drop-item--selected, .assignment-dragged, .assignment-flash, .assignment-target"
+      )
+    ).toHaveLength(0);
+    expect(wrapper.findAll('[aria-selected="true"]')).toHaveLength(0);
+    wrapper.unmount();
+  });
   it("uses one continuous branch guide through nested loadpoints", async () => {
     const wrapper = setup();
     await wrapper.setProps({

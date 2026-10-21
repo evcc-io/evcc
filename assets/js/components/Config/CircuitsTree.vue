@@ -53,10 +53,10 @@
 				interactive
 				assigned
 				:disabled="pending || !lp.editable"
-				:selected="lp.id === selectedId"
+				:selected="selectedId !== undefined && lp.id === selectedId"
 				:class="{
-					'assignment-flash': lp.id === flashId,
-					'assignment-dragged': lp.id === draggedId,
+					'assignment-flash': flashId !== undefined && lp.id === flashId,
+					'assignment-dragged': draggedId !== undefined && lp.id === draggedId,
 				}"
 				class="assigned-row py-0"
 				@activate="$emit('select', lp.id)"
