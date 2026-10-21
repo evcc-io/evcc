@@ -572,7 +572,20 @@ func (lp *Loadpoint) GetUI() loadpoint.UIConfig {
 	lp.RLock()
 	defer lp.RUnlock()
 	ui := lp.Ui
-	ui.DemandPredictor = lp.demandPredictor
+	// Return the effective predictor so the config modal always shows and
+	// round-trips a concrete value, never silently promoting "" to "daily".
+	if lp.demandPredictor != "" {
+		ui.DemandPredictor = lp.demandPredictor
+	} else {
+		switch {
+		case lp.chargerHasFeature(api.DemandTemperature):
+			ui.DemandPredictor = "temperature"
+		case lp.chargerHasFeature(api.DemandWeekday):
+			ui.DemandPredictor = "weekday"
+		default:
+			ui.DemandPredictor = "daily"
+		}
+	}
 	return ui
 }
 

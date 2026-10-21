@@ -957,9 +957,6 @@ export default {
 			try {
 				const res = await api.get(`config/loadpoints/${this.id}`);
 				this.values = deepClone(res.data);
-				if (!this.values.ui?.demandPredictor) {
-					this.values.ui = { ...this.values.ui, demandPredictor: "daily" };
-				}
 				this.thresholdsExpanded = this.thresholdsSet;
 				this.updatePhases();
 				this.rebaseline();
