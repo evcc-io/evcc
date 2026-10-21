@@ -1,26 +1,84 @@
 <template>
 	<div data-testid="circuit-node">
-		<div class="d-flex align-items-stretch row-spacing">
-			<template v-if="depth > 0">
-				<span v-for="i in depth - 1" :key="i" class="tree-col">
-					<span class="tree-line" />
-				</span>
-				<span class="tree-col">
-					<span class="tree-line" />
-					<span class="tree-knick" />
-				</span>
-			</template>
-			<DeviceRefBox compact class="flex-grow-1 min-w-0" @edit="editCircuit">
-				<span class="d-flex align-items-center gap-2 min-w-0">
-					<span class="fw-bold text-truncate">{{ circuitsTree?.deviceTitle }}</span>
-					<span class="ms-auto me-2 evcc-gray small tabular d-flex gap-1 min-w-0">
-						<span class="text-nowrap">{{ limitsLabel }}</span>
-						<span v-if="limitsLabel && meterLabel" aria-hidden="true">·</span>
-						<span class="text-truncate">{{ meterLabel }}</span>
+		<DragDropList
+			:values="assignedValues"
+			transfer
+			group="circuit-assignment"
+			:name="circuitsTree?.name"
+			:disabled="pending"
+			:draggable-value="isEditable"
+			@transfer="$emit('transfer', $event)"
+			@hover="$emit('hover', $event)"
+			@dragstart="$emit('dragstart', $event)"
+			@dragend="$emit('dragend')"
+		>
+			<div class="d-flex align-items-stretch row-spacing">
+				<template v-if="depth > 0">
+					<span v-for="i in depth - 1" :key="i" class="tree-col">
+						<span class="tree-line" />
 					</span>
-				</span>
-			</DeviceRefBox>
-		</div>
+					<span class="tree-col">
+						<span class="tree-line" />
+						<span class="tree-knick" />
+					</span>
+				</template>
+				<div
+					:data-circuit="circuitsTree?.name"
+					class="assignment-circuit border rounded d-flex flex-grow-1 min-w-0 align-items-center px-2"
+					:class="{ 'assignment-target': isCandidate, 'assignment-hover': isHoverTarget }"
+				>
+					<button
+						type="button"
+						class="btn border-0 p-0 d-flex align-items-center gap-2 min-w-0 flex-grow-1 text-start"
+						:aria-label="
+							$t('config.circuits.destination', { title: circuitsTree?.deviceTitle })
+						"
+						:disabled="pending"
+						@click="activateCircuit"
+					>
+						<span class="fw-bold text-truncate">{{ circuitsTree?.deviceTitle }}</span>
+						<span
+							v-if="targetLabel"
+							class="ms-auto me-2 text-primary fw-bold small text-truncate"
+							>{{ targetLabel }}</span
+						>
+						<span
+							v-else
+							class="ms-auto me-2 evcc-gray small tabular d-flex gap-1 min-w-0"
+						>
+							<span class="text-nowrap">{{ limitsLabel }}</span>
+							<span v-if="limitsLabel && meterLabel" aria-hidden="true">·</span>
+							<span class="text-truncate">{{ meterLabel }}</span>
+						</span>
+					</button>
+					<DeviceCardEditIcon :editable="true" @edit="editCircuit" />
+				</div>
+			</div>
+			<DragDropItem
+				v-for="lp in assignedLoadpoints"
+				:key="lp.id ?? lp.name"
+				:title="lp.title"
+				:data-loadpoint="lp.id"
+				interactive
+				assigned
+				:disabled="pending || !lp.editable"
+				:selected="lp.id === selectedId"
+				:class="{
+					'assignment-flash': lp.id === flashId,
+					'assignment-dragged': lp.id === draggedId,
+				}"
+				class="assigned-row"
+				:style="{ marginLeft: `${(depth + 1) * 22}px` }"
+				@activate="$emit('select', lp.id)"
+			>
+				<span class="d-flex align-items-center gap-2 min-w-0"
+					><Heatpump v-if="lp.heating" class="device-icon" /><shopicon-regular-cablecharge
+						v-else
+						class="device-icon"
+					/><span class="text-truncate">{{ lp.title }}</span></span
+				>
+			</DragDropItem>
+		</DragDropList>
 
 		<CircuitsTree
 			v-for="child in circuitsTree?.children"
@@ -28,6 +86,18 @@
 			:circuits-tree="child"
 			:depth="depth + 1"
 			:gridMeter="gridMeter"
+			:loadpoints="loadpoints"
+			:selected-id="selectedId"
+			:dragged-id="draggedId"
+			:hover-target="hoverTarget"
+			:pending="pending"
+			:flash-id="flashId"
+			@select="$emit('select', $event)"
+			@assign="$emit('assign', $event)"
+			@transfer="$emit('transfer', $event)"
+			@hover="$emit('hover', $event)"
+			@dragstart="$emit('dragstart', $event)"
+			@dragend="$emit('dragend')"
 		/>
 
 		<div class="d-flex align-items-stretch row-spacing">
@@ -55,17 +125,22 @@
 
 <script lang="ts">
 import type { PropType } from "vue";
-import DeviceRefBox from "./DeviceRefBox.vue";
+import DeviceCardEditIcon from "./DeviceCardEditIcon.vue";
+import DragDropList from "../Helper/DragDropList.vue";
+import DragDropItem from "../Helper/DragDropItem.vue";
+import Heatpump from "../VehicleIcon/Heatpump.vue";
+import "@h2d2/shopicons/es/regular/cablecharge";
 import AddIcon from "../MaterialIcon/Add.vue";
 import formatter from "@/mixins/formatter.ts";
 import { openModal } from "@/configModal.ts";
-import type { ConfigCircuitNode } from "@/utils/circuits.ts";
+import type { ConfigCircuitNode, CircuitAssignmentLoadpoint } from "@/utils/circuits.ts";
 import { ICON_SIZE, type ConfigMeter } from "@/types/evcc";
 
 export default {
 	name: "CircuitsTree",
 	mixins: [formatter],
-	components: { DeviceRefBox, AddIcon },
+	components: { DeviceCardEditIcon, AddIcon, DragDropList, DragDropItem, Heatpump },
+	emits: ["select", "assign", "transfer", "hover", "dragstart", "dragend"],
 	props: {
 		circuitsTree: {
 			type: Object as PropType<ConfigCircuitNode>,
@@ -73,8 +148,28 @@ export default {
 		/** Nesting depth from root (0 = root, no indentation/lines). */
 		depth: { type: Number, default: 0 },
 		gridMeter: { type: Object as PropType<ConfigMeter> },
+		loadpoints: { type: Array as PropType<CircuitAssignmentLoadpoint[]>, default: () => [] },
+		selectedId: Number,
+		draggedId: Number,
+		hoverTarget: String,
+		pending: Boolean,
+		flashId: Number,
 	},
 	methods: {
+		isEditable(value: unknown): boolean {
+			return this.assignedLoadpoints.some(
+				(lp) => (lp.id ?? lp.name) === value && lp.editable
+			);
+		},
+		activateCircuit() {
+			if (this.pending) return;
+			if (this.selectedId !== undefined) {
+				if (this.isCandidate)
+					this.$emit("assign", { id: this.selectedId, circuit: this.circuitsTree?.name });
+				return;
+			}
+			this.editCircuit();
+		},
 		addSub() {
 			openModal("circuit", { parent: this.circuitsTree?.id });
 		},
@@ -86,6 +181,35 @@ export default {
 		return { ICON_SIZE };
 	},
 	computed: {
+		assignedLoadpoints(): CircuitAssignmentLoadpoint[] {
+			return this.loadpoints.filter((lp) => lp.circuit === this.circuitsTree?.name);
+		},
+		assignedValues(): (number | string | undefined)[] {
+			return this.assignedLoadpoints.map((lp) => lp.id ?? lp.name);
+		},
+		activeLoadpoint(): CircuitAssignmentLoadpoint | undefined {
+			return this.loadpoints.find(
+				(lp) => lp.id === (this.draggedId ?? this.selectedId) && lp.editable
+			);
+		},
+		isCandidate(): boolean {
+			return (
+				!!this.activeLoadpoint && this.activeLoadpoint.circuit !== this.circuitsTree?.name
+			);
+		},
+		isHoverTarget(): boolean {
+			return this.isCandidate && this.hoverTarget === this.circuitsTree?.name;
+		},
+		targetLabel(): string {
+			if (!this.isCandidate) return "";
+			if (this.selectedId !== undefined)
+				return this.$t(
+					this.activeLoadpoint?.circuit
+						? "config.circuits.moveHere"
+						: "config.circuits.assignHere"
+				);
+			return this.isHoverTarget ? this.$t("config.circuits.dropAssign") : "";
+		},
 		limitsLabel(): string {
 			if (!this.circuitsTree) return "";
 			const maxpower = Number(this.circuitsTree.config.maxpower);
@@ -112,6 +236,35 @@ export default {
 <style scoped>
 .row-spacing {
 	margin-bottom: 8px;
+}
+
+.assignment-circuit {
+	min-height: 42px;
+}
+.assigned-row {
+	position: relative;
+}
+.assigned-row::before {
+	content: "";
+	position: absolute;
+	left: -12px;
+	top: -8px;
+	bottom: -8px;
+	width: 12px;
+	border-left: 1px solid var(--evcc-gray-25);
+}
+.assigned-row::after {
+	content: "";
+	position: absolute;
+	left: -12px;
+	top: 50%;
+	width: 12px;
+	border-top: 1px solid var(--evcc-gray-25);
+}
+.device-icon {
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
 }
 
 .tree-col {

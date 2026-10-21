@@ -1,6 +1,8 @@
 package server
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -275,7 +277,34 @@ func updateLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
-		dynamic, static, payload, disable, err := loadpointSplitConfig(r.Body)
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+		var fields map[string]json.RawMessage
+		if err := json.Unmarshal(body, &fields); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+		if raw, ok := fields["circuit"]; ok && len(fields) == 1 {
+			var circuit string
+			if err := json.Unmarshal(raw, &circuit); err != nil || string(raw) == "null" {
+				jsonError(w, http.StatusBadRequest, errors.New("circuit must be a string"))
+				return
+			}
+			other := configurable.Config().Other
+			other["circuit"] = circuit
+			// Static references take effect after restart; do not replay dynamic setters.
+			if err := configurable.Update(other, dev.Instance()); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+			setConfigDirty()
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		dynamic, static, payload, disable, err := loadpointSplitConfig(bytes.NewReader(body))
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
