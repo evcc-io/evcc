@@ -32,6 +32,25 @@ declare global {
 export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
 
 export type DeviceColors = Record<string, string>;
+
+/** Setup checklist item. */
+export type OnboardingItem =
+  | "battery"
+  | "pv"
+  | "grid"
+  | "loadpoint"
+  | "heater"
+  | "consumer"
+  | "tariff"
+  | "co2"
+  | "solar";
+/** Setup wizard and checklist state. */
+export interface OnboardingState {
+  /** Setup wizard was finished or skipped. */
+  done: boolean;
+  /** Dismissed setup checklist items. */
+  dismissed: OnboardingItem[];
+}
 /** Color assigned to a device for consistent UI display. */
 export type DeviceColorEntry = {
   /** Device title the color is assigned to. */
@@ -164,6 +183,8 @@ export interface State {
   experimental?: boolean;
   /** Initial setup is required. */
   setupRequired?: boolean;
+  /** Setup wizard and checklist state. */
+  onboarding?: OnboardingState;
   /** Startup has completed. */
   startupCompleted?: boolean;
   /** HTTP API is ready to accept requests. */

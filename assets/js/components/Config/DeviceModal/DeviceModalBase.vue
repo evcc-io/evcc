@@ -64,7 +64,7 @@
 
 				<div v-else>
 					<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
-					<SponsorTokenRequired v-if="sponsorTokenRequired" />
+					<SponsorTokenRequired v-if="sponsorshipTemplate" :is-sponsor="isSponsor" />
 					<slot name="template-description">
 						<Markdown v-if="description" :markdown="description" class="my-4" />
 					</slot>
@@ -264,6 +264,7 @@ import { defineComponent, type PropType } from "vue";
 import GenericModal from "../../Helper/GenericModal.vue";
 import DeviceInfoButton from "./DeviceInfoButton.vue";
 import { closeModal, isNestedIn } from "@/configModal";
+import { remember } from "@/onboarding";
 import ErrorMessage from "../../Helper/ErrorMessage.vue";
 import PropertyEntry from "../PropertyEntry.vue";
 import PropertyCollapsible from "../PropertyCollapsible.vue";
@@ -506,9 +507,12 @@ export default defineComponent({
 				return "";
 			}
 		},
-		sponsorTokenRequired() {
+		sponsorshipTemplate(): boolean {
 			const requirements = this.template?.Requirements as any;
-			return requirements?.EVCC?.includes("sponsorship") && !this.isSponsor;
+			return !!requirements?.EVCC?.includes("sponsorship");
+		},
+		sponsorTokenRequired(): boolean {
+			return this.sponsorshipTemplate && !this.isSponsor;
 		},
 		apiData(): ApiData {
 			let data: ApiData = {
@@ -620,6 +624,12 @@ export default defineComponent({
 			} else {
 				// check whether we were just hidden (child modal open) or actually closed
 				this.coveredByNested = !!this.name && isNestedIn(this.name);
+			}
+		},
+		// type picked after opening (e.g. tariff chooser) brings its own default
+		defaultTemplate(value) {
+			if (this.isModalVisible && this.isNew && value && !this.templateName) {
+				this.templateName = value;
 			}
 		},
 		id(newVal, oldVal) {
@@ -815,6 +825,14 @@ export default defineComponent({
 			}
 			this.loadingTemplate = false;
 		},
+		// values of a device saved earlier in this session (e.g. hybrid inverter as battery, now as pv);
+		// template defaults only fill gaps, so this survives the template loading afterwards
+		async prefill(values: Record<string, any>) {
+			this.templateName = values["template"];
+			await this.$nextTick(); // the template watcher resets the form first
+			Object.assign(this.values, values);
+			this.rebaseline();
+		},
 		resetAuthStatus() {
 			this.auth = initialAuthState();
 		},
@@ -885,6 +903,7 @@ export default defineComponent({
 				}
 				this.saving = false;
 				this.succeeded = true;
+				remember(this.deviceType, this.productName, this.template, this.apiData);
 				await sleep(500);
 				this.$emit("added", res.data.name);
 				await closeModal({ action: "added", name: res.data.name });

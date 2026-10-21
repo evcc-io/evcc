@@ -17,6 +17,14 @@ export async function expectModalHidden(modal: Locator): Promise<void> {
   await expect(modal).toHaveAttribute("aria-hidden", "true");
 }
 
+export async function skipOnboarding(page: Page): Promise<void> {
+  const wizard = page.getByTestId("onboarding-modal");
+  await expectModalVisible(wizard);
+  await wizard.getByRole("button", { name: "Get started" }).click();
+  await wizard.getByRole("button", { name: "Skip setup" }).click();
+  await expectModalHidden(wizard);
+}
+
 export async function editorClear(editor: Locator): Promise<void> {
   const content = editor.locator(".cm-content");
   // wait for the async content load, otherwise clearing races the arriving text
@@ -111,7 +119,7 @@ export async function newLoadpoint(
 
 export async function finishLoadpoint(page: Page): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
-  await lpModal.getByText("Close", { exact: true }).click();
+  await lpModal.getByRole("button", { name: "Continue" }).click();
   await expectModalHidden(lpModal);
 }
 

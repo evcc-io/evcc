@@ -1055,6 +1055,20 @@ input::-webkit-date-and-time-value {
 		visibility var(--evcc-transition-fast) ease var(--evcc-transition-fast);
 }
 
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		animation: none !important;
+	}
+}
+
+/* shopicons are inline and size by font, component icons are block: same 24px row height for both */
+.icon-row {
+	font-size: 24px;
+	line-height: 0;
+}
+
 /* clearance so overflow-hidden containers don't clip focus rings */
 .ring-space {
 	padding: 0.5rem;

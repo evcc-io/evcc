@@ -21,18 +21,14 @@ export default {
       },
     },
     backgrounds: {
-      default: "default",
-      values: [
-        {
-          name: "default",
-          value: "var(--evcc-background)",
-        },
-        {
-          name: "box",
-          value: "var(--evcc-box)",
-        },
-      ],
+      options: {
+        default: { name: "default", value: "var(--evcc-background)" },
+        box: { name: "box", value: "var(--evcc-box)" },
+      },
     },
+  },
+  initialGlobals: {
+    backgrounds: { value: "default" },
   },
 } satisfies Preview;
 

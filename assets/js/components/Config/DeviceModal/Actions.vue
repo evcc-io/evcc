@@ -13,38 +13,28 @@
 
 		<slot name="after-test"></slot>
 
-		<div class="mt-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
-			<div class="d-flex flex-wrap align-items-center gap-1">
-				<button
-					v-if="isDeletable"
-					type="button"
-					class="btn btn-link text-danger"
-					tabindex="0"
-					@click.prevent="$emit('remove')"
-				>
-					{{ $t("config.general.delete") }}
-				</button>
-				<button
-					v-else
-					type="button"
-					class="btn btn-link text-muted"
-					data-bs-dismiss="modal"
-					tabindex="0"
-				>
-					{{ $t("config.general.cancel") }}
-				</button>
-				<button
-					v-if="isDeletable && canDisable"
-					type="button"
-					class="btn btn-link text-muted"
-					tabindex="0"
-					@click.prevent="$emit('disable', !isDisabled)"
-				>
-					{{ isDisabled ? $t("config.general.enable") : $t("config.general.disable") }}
-				</button>
-			</div>
+		<div class="mt-4 d-flex justify-content-between align-items-center gap-2">
+			<button
+				v-if="isDeletable && canDisable"
+				type="button"
+				class="btn btn-link text-muted"
+				tabindex="0"
+				@click.prevent="$emit('disable', !isDisabled)"
+			>
+				{{ isDisabled ? $t("config.general.enable") : $t("config.general.disable") }}
+			</button>
+			<button
+				v-else-if="!isDeletable"
+				type="button"
+				class="btn btn-link text-muted"
+				data-bs-dismiss="modal"
+				tabindex="0"
+			>
+				{{ $t("config.general.cancel") }}
+			</button>
 			<button
 				type="submit"
+				class="ms-auto flex-shrink-0 text-nowrap"
 				:class="buttonClass"
 				:disabled="testState.isRunning || isSaving || isSucceeded || sponsorTokenRequired"
 				tabindex="0"
@@ -60,6 +50,15 @@
 				<template v-else>{{ saveButtonLabel }}</template>
 			</button>
 		</div>
+		<button
+			v-if="isDeletable"
+			type="button"
+			class="btn btn-link text-danger mt-2"
+			tabindex="0"
+			@click.prevent="$emit('remove')"
+		>
+			{{ $t("config.general.delete") }}
+		</button>
 	</div>
 </template>
 

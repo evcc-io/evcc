@@ -1456,6 +1456,49 @@
         }
       }
     },
+    "/config/onboarding": {
+      "put": {
+        "operationId": "setOnboarding",
+        "summary": "Set onboarding state",
+        "description": "Setup wizard completion and dismissed setup checklist items.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "general"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardingState"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated onboarding state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingState"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid item"
+          }
+        }
+      }
+    },
     "/smartfeedinprioritylimit": {
       "delete": {
         "operationId": "removeGlobalSmartFeedInPriorityLimit",
@@ -3578,6 +3621,42 @@
           "precondition"
         ]
       },
+      "OnboardingItem": {
+        "description": "Setup checklist item.",
+        "type": "string",
+        "enum": [
+          "battery",
+          "pv",
+          "grid",
+          "loadpoint",
+          "heater",
+          "consumer",
+          "tariff",
+          "co2",
+          "solar"
+        ]
+      },
+      "OnboardingState": {
+        "description": "Setup wizard and checklist state.",
+        "type": "object",
+        "properties": {
+          "done": {
+            "description": "Setup wizard was finished or skipped.",
+            "type": "boolean"
+          },
+          "dismissed": {
+            "description": "Dismissed setup checklist items.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OnboardingItem"
+            }
+          }
+        },
+        "required": [
+          "done",
+          "dismissed"
+        ]
+      },
       "ChargerStatusReason": {
         "description": "Reason why the charger is waiting.",
         "type": "string",
@@ -5672,6 +5751,10 @@
           "setupRequired": {
             "description": "Initial setup is required.",
             "type": "boolean"
+          },
+          "onboarding": {
+            "$ref": "#/components/schemas/OnboardingState",
+            "description": "Setup wizard and checklist state."
           },
           "startupCompleted": {
             "description": "Startup has completed.",

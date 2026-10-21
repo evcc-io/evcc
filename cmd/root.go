@@ -103,6 +103,7 @@ func init() {
 	bind(rootCmd, "profile")
 
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
+	rootCmd.Flags().Bool(flagDisableOnboarding, false, flagDisableOnboardingDescription)
 	rootCmd.Flags().Bool(flagDemoMode, false, flagDemoModeDescription)
 
 	// UI customization, flags default to environment variables
@@ -340,6 +341,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.StartupCompleted, Val: true}
 	// show onboarding UI
 	valueChan <- util.Param{Key: keys.SetupRequired, Val: site == nil || !site.IsConfigured()}
+	onboarding := server.OnboardingSettings()
+	if ok, _ := cmd.Flags().GetBool(flagDisableOnboarding); ok {
+		onboarding.Done = true
+	}
+	valueChan <- util.Param{Key: keys.Onboarding, Val: onboarding}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" && conf.Mqtt.Topic != "" {
