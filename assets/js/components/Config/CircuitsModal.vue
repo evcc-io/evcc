@@ -136,7 +136,7 @@ export default {
 		DragDropItem,
 		Heatpump,
 	},
-	emits: ["changed", "assign"],
+	emits: ["assign"],
 	props: {
 		circuits: { type: Array as PropType<ConfigCircuit[]>, required: true },
 		gridMeter: { type: Object as PropType<ConfigMeter> },
@@ -243,6 +243,11 @@ export default {
 </script>
 
 <style>
+#circuitsModal .device-icon {
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
+}
 .assignment-target {
 	box-shadow: 0 0 0 1px var(--bs-primary-dim);
 }
@@ -270,10 +275,5 @@ export default {
 }
 .pool-row {
 	min-height: 44px;
-}
-.device-icon {
-	width: 20px;
-	height: 20px;
-	flex-shrink: 0;
 }
 </style>

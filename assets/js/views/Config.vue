@@ -598,7 +598,6 @@
 					:revision="circuitAssignmentRevision"
 					:flash-id="circuitAssignmentFlash"
 					@assign="circuitAssignmentChanged"
-					@changed="loadDirty"
 				/>
 				<CircuitModal
 					:circuits="circuits"

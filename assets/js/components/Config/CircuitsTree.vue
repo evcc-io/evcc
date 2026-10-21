@@ -1,5 +1,5 @@
 <template>
-	<div data-testid="circuit-node" class="circuit-branch">
+	<div data-testid="circuit-node" class="circuit-branch position-relative">
 		<DragDropList
 			:values="assignedValues"
 			transfer
@@ -58,7 +58,7 @@
 					'assignment-flash': flashId !== undefined && lp.id === flashId,
 					'assignment-dragged': draggedId !== undefined && lp.id === draggedId,
 				}"
-				class="assigned-row py-0"
+				class="assigned-row position-relative py-0"
 				@activate="$emit('select', lp.id)"
 			>
 				<span class="d-flex align-items-center gap-2 min-w-0"
@@ -75,7 +75,6 @@
 			:key="child.name"
 			class="child-circuit"
 			:circuits-tree="child"
-			:depth="depth + 1"
 			:gridMeter="gridMeter"
 			:loadpoints="loadpoints"
 			:selected-id="selectedId"
@@ -91,7 +90,7 @@
 			@dragend="$emit('dragend')"
 		/>
 
-		<div class="d-flex align-items-stretch row-spacing branch-action">
+		<div class="d-flex align-items-stretch row-spacing branch-action position-relative">
 			<button
 				type="button"
 				class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
@@ -129,8 +128,7 @@ export default {
 		circuitsTree: {
 			type: Object as PropType<ConfigCircuitNode>,
 		},
-		/** Nesting depth from root (0 = root, no indentation/lines). */
-		depth: { type: Number, default: 0 },
+
 		gridMeter: { type: Object as PropType<ConfigMeter> },
 		loadpoints: { type: Array as PropType<CircuitAssignmentLoadpoint[]>, default: () => [] },
 		selectedId: Number,
@@ -226,12 +224,8 @@ export default {
 	min-height: 42px;
 }
 .assigned-row {
-	position: relative;
 	margin-left: 22px;
 	min-height: 40px;
-}
-.circuit-branch {
-	position: relative;
 }
 .circuit-branch::before {
 	content: "";
@@ -244,7 +238,6 @@ export default {
 }
 .child-circuit,
 .branch-action {
-	position: relative;
 	margin-left: 22px;
 }
 .assigned-row::after,
@@ -257,22 +250,15 @@ export default {
 	border-top: 1px solid var(--evcc-gray-25);
 	pointer-events: none;
 }
-.assigned-row::after {
+.assigned-row::after,
+.branch-action::after {
 	top: 50%;
 }
 .child-circuit::after {
 	top: 21px;
 }
-.branch-action::after {
-	top: 50%;
-}
 .branch-action {
 	min-height: 32px;
 	margin-bottom: 0;
-}
-.device-icon {
-	width: 20px;
-	height: 20px;
-	flex-shrink: 0;
 }
 </style>
