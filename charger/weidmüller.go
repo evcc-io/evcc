@@ -98,7 +98,7 @@ func NewWeidmüller(ctx context.Context, settings modbus.TcpSettings) (api.Charg
 	}
 
 	if err := wb.setup(); err != nil {
-		wb.log.WARN.Println("setup:", err)
+		return nil, fmt.Errorf("setup: %w", err)
 	}
 
 	// get initial state from charger
