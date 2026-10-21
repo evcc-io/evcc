@@ -3,6 +3,7 @@ package vehicle
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -82,6 +83,8 @@ func newMazdaIdentity(log *util.Logger, user, password string) (*mazdaIdentity, 
 	subject := "mazda." + strings.ToLower(user)
 
 	if o, ok := mazdaIdentities[subject]; ok {
+		o.log.Redact(user, password)
+
 		o.mu.Lock()
 		o.password = password
 		o.mu.Unlock()
@@ -102,8 +105,8 @@ func newMazdaIdentity(log *util.Logger, user, password string) (*mazdaIdentity, 
 		if err := settings.Json(o.deviceKey, &o.deviceID); err != nil {
 			return nil, err
 		}
-	} else {
-		o.persistDeviceID()
+	} else if err := o.persistDeviceID(); err != nil {
+		return nil, err
 	}
 
 	authHTTP := &http.Client{
@@ -189,8 +192,7 @@ func (o *mazdaIdentity) Refresh(ctx context.Context) error {
 
 	res, err := o.client.Refresh(ctx, token.AccessToken, token.RefreshToken)
 	if err != nil {
-		var ae *mazda.APIError
-		if errors.As(err, &ae) || errors.Is(err, mazda.ErrInvalidToken) {
+		if mazda.IsAuthError(err) {
 			o.log.DEBUG.Printf("token refresh rejected: %v", err)
 			o.clearLocked()
 			return api.LoginRequiredError(o.subject)
@@ -213,8 +215,7 @@ func (o *mazdaIdentity) Refresh(ctx context.Context) error {
 func (o *mazdaIdentity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	res, err := o.client.Refresh(context.Background(), token.AccessToken, token.RefreshToken)
 	if err != nil {
-		var ae *mazda.APIError
-		if errors.As(err, &ae) || errors.Is(err, mazda.ErrInvalidToken) {
+		if mazda.IsAuthError(err) {
 			return nil, &oauth2.RetrieveError{
 				ErrorCode:        "invalid_grant",
 				ErrorDescription: err.Error(),
@@ -228,11 +229,17 @@ func (o *mazdaIdentity) refreshToken(token *oauth2.Token) (*oauth2.Token, error)
 
 // replaceTokenLocked replaces the persisted token. Caller must hold o.mu.
 func (o *mazdaIdentity) replaceTokenLocked(token *oauth2.Token) (oauth2.TokenSource, error) {
-	if err := settings.Delete(o.tokenKey); err != nil {
+	// persist before the source reads the token back; a failed write leaves the
+	// previous token in the settings database
+	if err := settings.SetJson(o.tokenKey, token); err != nil {
 		return nil, err
 	}
 
-	return oauth.PersistentTokenSource(o.log, o.tokenKey, token, o.refreshToken)
+	if err := settings.Persist(); err != nil {
+		return nil, err
+	}
+
+	return oauth.PersistentTokenSource(o.log, o.tokenKey, nil, o.refreshToken)
 }
 
 // clearLocked drops the token in memory and in settings. Caller must hold o.mu.
@@ -349,7 +356,9 @@ func (o *mazdaIdentity) finishToken(token *oauth2.Token) error {
 		return api.LoginRequiredError(o.subject)
 	}
 
-	o.persistDeviceID()
+	if err := o.persistDeviceID(); err != nil {
+		return err
+	}
 
 	o.mu.Lock()
 	defer o.mu.Unlock()
@@ -365,15 +374,16 @@ func (o *mazdaIdentity) finishToken(token *oauth2.Token) error {
 	return nil
 }
 
-func (o *mazdaIdentity) persistDeviceID() {
+func (o *mazdaIdentity) persistDeviceID() error {
 	if err := settings.SetJson(o.deviceKey, o.deviceID); err != nil {
-		o.log.ERROR.Printf("saving device id: %v", err)
-		return
+		return fmt.Errorf("saving device id: %w", err)
 	}
 
 	if err := settings.Persist(); err != nil {
-		o.log.ERROR.Printf("persisting device id: %v", err)
+		return fmt.Errorf("persisting device id: %w", err)
 	}
+
+	return nil
 }
 
 // setOnlineLocked signals the auth handler. Caller must hold o.mu. The send is
