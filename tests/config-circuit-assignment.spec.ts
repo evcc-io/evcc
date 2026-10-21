@@ -4,10 +4,13 @@ import os from "node:os";
 import path from "node:path";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { expectModalVisible } from "./utils";
+
 test.use({ baseURL: baseUrl() });
+
 test.afterEach(async () => {
   await stop();
 });
+
 const open = async (page: Page) => {
   await page.goto("/#/config");
   const modal = page.getByTestId("circuits-modal");
@@ -16,6 +19,7 @@ const open = async (page: Page) => {
   await expectModalVisible(modal);
   return modal;
 };
+
 const stored = () =>
   JSON.parse(
     execFileSync(
@@ -28,11 +32,13 @@ const stored = () =>
       { encoding: "utf8" }
     )
   )[0].value;
+
 test("device-first assignment, rollback and restart persistence", async ({ page }) => {
   await start("fast.evcc.yaml", "config-circuit-assignment.sql");
   const modal = await open(page);
   const pool = modal.getByRole("list", { name: "Not assigned", exact: true });
   const row = modal.getByRole("listitem", { name: "Wallbox left" });
+
   await row.click();
   await expect(pool.getByRole("listitem", { name: "Wallbox left" })).toBeVisible();
   await modal.getByRole("button", { name: "Circuit Garage", exact: true }).click();
@@ -43,6 +49,7 @@ test("device-first assignment, rollback and restart persistence", async ({ page 
     priority: 4,
     solarShare: 0.6,
   });
+
   await row.press("Enter");
   await expect(row).toHaveAttribute("aria-selected", "true");
   await page.route("**/api/config/loadpoints/13", (route) =>
@@ -52,19 +59,24 @@ test("device-first assignment, rollback and restart persistence", async ({ page 
   await expect(modal.getByRole("alert")).toContainText("Could not save assignment");
   expect(JSON.parse(stored()).circuit).toBe("db:9");
   await expect(row).not.toHaveClass(/assignment-flash/);
+
   await page.unroute("**/api/config/loadpoints/13");
   await pool.press("Space");
   await expect(pool.getByRole("listitem", { name: "Wallbox left" })).toBeVisible();
   await row.click();
   await modal.getByRole("button", { name: "Circuit Home", exact: true }).click();
   expect(JSON.parse(stored()).circuit).toBe("db:8");
+
   await row.dragTo(modal.getByRole("button", { name: "Circuit Garage", exact: true }));
   await expect.poll(() => JSON.parse(stored()).circuit).toBe("db:9");
+
   await row.dragTo(pool);
   await expect(pool.getByRole("listitem", { name: "Wallbox left" })).toBeVisible();
   expect(JSON.parse(stored()).circuit).toBe("");
+
   await row.dragTo(modal.getByRole("button", { name: "Circuit Home", exact: true }));
   await expect.poll(() => JSON.parse(stored()).circuit).toBe("db:8");
+
   await modal.getByRole("button", { name: "Close", exact: true }).last().click();
   await expect(modal).not.toBeVisible();
   await page.goto("about:blank");
@@ -72,6 +84,7 @@ test("device-first assignment, rollback and restart persistence", async ({ page 
   await page.goto("/#/config");
   await page.reload();
   await open(page);
+
   await expect(
     page.getByTestId("assignment-pool").getByRole("listitem", { name: "Wallbox left" })
   ).toHaveCount(0);

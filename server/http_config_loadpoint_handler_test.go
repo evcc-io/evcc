@@ -21,9 +21,13 @@ func TestUpdateLoadpointCircuitOnly(t *testing.T) {
 	for _, live := range []bool{false, true} {
 		t.Run(strconv.FormatBool(live), func(t *testing.T) {
 			require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-			data := map[string]any{"title": "Garage", "charger": "wallbox", "circuit": "old", "minSoc": 35, "priority": 4, "solarShare": 0.6}
+			data := map[string]any{
+				"title": "Garage", "charger": "wallbox", "circuit": "old",
+				"minSoc": 35, "priority": 4, "solarShare": 0.6,
+			}
 			conf, err := config.AddConfig(templates.Loadpoint, data, config.WithProperties(config.Properties{Disable: !live}))
 			require.NoError(t, err)
+
 			var instance loadpoint.API
 			if live {
 				instance = loadpoint.NewMockAPI(gomock.NewController(t))
@@ -31,27 +35,33 @@ func TestUpdateLoadpointCircuitOnly(t *testing.T) {
 			dev := config.NewConfigurableDevice(&conf, instance)
 			require.NoError(t, config.Loadpoints().Add(dev))
 			t.Cleanup(func() { _ = config.Loadpoints().Delete(config.NameForID(conf.ID)) })
-			for _, circuit := range []string{"new", ""} {
-				req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(`{"circuit":"`+circuit+`"}`))
+
+			put := func(body string) *httptest.ResponseRecorder {
+				t.Helper()
+				req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(body))
 				req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(conf.ID)})
 				rec := httptest.NewRecorder()
 				updateLoadpointHandler()(rec, req)
+				return rec
+			}
+
+			for _, circuit := range []string{"new", ""} {
+				rec := put(`{"circuit":"` + circuit + `"}`)
 				require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+
 				data["circuit"] = circuit
 				assert.Equal(t, data, dev.Config().Other)
 				assert.Equal(t, !live, dev.Properties().Disable)
 				assert.Equal(t, instance, dev.Instance())
+
 				var stored config.Config
 				require.NoError(t, db.Instance.First(&stored, conf.ID).Error)
 				assert.Equal(t, circuit, stored.Data["circuit"])
 				assert.EqualValues(t, 35, stored.Data["minSoc"])
 			}
+
 			for _, body := range []string{`{"circuit":null}`, `{"circuit":12}`, `{"circuit":{}}`, `{"circuit":true}`} {
-				req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(body))
-				req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(conf.ID)})
-				rec := httptest.NewRecorder()
-				updateLoadpointHandler()(rec, req)
-				assert.Equal(t, http.StatusBadRequest, rec.Code, body)
+				assert.Equal(t, http.StatusBadRequest, put(body).Code, body)
 				assert.Equal(t, data, dev.Config().Other)
 			}
 		})
