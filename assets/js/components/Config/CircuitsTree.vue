@@ -237,7 +237,7 @@ export default {
 	content: "";
 	position: absolute;
 	left: 10px;
-	top: 50px;
+	top: 42px;
 	bottom: 16px;
 	border-left: 1px solid var(--evcc-gray-25);
 	pointer-events: none;
