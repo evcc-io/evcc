@@ -61,7 +61,7 @@
 					@dragstart="startDrag"
 					@dragend="endDrag"
 				>
-					<h6 class="small evcc-gray text-uppercase mt-0 mb-2 px-1">
+					<h6 class="pool-title evcc-gray text-uppercase mt-0 mb-2 px-1">
 						{{ $t("config.circuits.notAssigned") }}
 					</h6>
 					<DragDropItem
@@ -269,6 +269,9 @@ export default {
 }
 </style>
 <style scoped>
+.assignment-pool .pool-title {
+	font-size: 0.75rem;
+}
 .assignment-pool {
 	border: 2px dashed var(--evcc-gray-25);
 	border-radius: 12px;
