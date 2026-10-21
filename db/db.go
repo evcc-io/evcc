@@ -51,7 +51,8 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		// WAL with synchronous NORMAL syncs to disk on checkpoint instead of every commit,
 		// a power loss may drop the latest commits but cannot corrupt the database.
 		// It creates evcc.db-wal and evcc.db-shm next to the database.
-		for _, pragma := range []string{"busy_timeout(5000)", "journal_mode(WAL)", "synchronous(NORMAL)", "foreign_keys(1)", "auto_vacuum(INCREMENTAL)"} {
+		// A 16 MB page cache per connection (default 2 MB) speeds up long history reads.
+		for _, pragma := range []string{"busy_timeout(5000)", "journal_mode(WAL)", "synchronous(NORMAL)", "foreign_keys(1)", "auto_vacuum(INCREMENTAL)", "cache_size(-16384)"} {
 			// add pragma if not already present
 			if short, _, _ := strings.Cut(pragma, "("); strings.Contains(params, "_pragma="+short) {
 				continue

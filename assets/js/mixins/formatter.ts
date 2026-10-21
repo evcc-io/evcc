@@ -1,6 +1,6 @@
 import { defineComponent } from "vue";
 import { is12hFormat } from "@/units";
-import { CURRENCY } from "../types/evcc";
+import { CURRENCY, GRID_CONNECTION } from "../types/evcc";
 import settings from "@/settings";
 import type { DateFormat } from "@/settings";
 
@@ -136,8 +136,17 @@ export default defineComponent({
       const abs = Math.abs(watt);
       return abs >= 10_000_000 ? POWER_UNIT.MW : abs >= 1000 ? POWER_UNIT.KW : POWER_UNIT.W;
     },
-    fmtPhasePower(current?: number, phases?: number) {
-      return this.fmtW(230 * (current || 0) * (phases || 0));
+    fmtPhasePower(
+      current?: number,
+      phases?: number,
+      voltage = 230,
+      gridConnection?: GRID_CONNECTION
+    ) {
+      const factor =
+        gridConnection === GRID_CONNECTION.THREE_PHASE_THREE_WIRE && phases === 3
+          ? Math.sqrt(3)
+          : phases || 0;
+      return this.fmtW(voltage * (current || 0) * factor);
     },
     fmtW(watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number, signed = false) {
       let unit = format;

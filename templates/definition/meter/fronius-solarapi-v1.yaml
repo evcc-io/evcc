@@ -19,6 +19,8 @@ requirements:
 
       **Attention**: Active battery control should only be used if no other settings for time-dependent battery control were made in the inverter configuration under "Energy Management" - "Battery Management", as existing settings will be overwritten. Choose corresponding configuration URI!
 discovery:
+  mdns: ["_Fronius-SE-Inverter._tcp"]
+  hostname: ["fronius*"]
   mac: ["0003AC"]
 params:
   - name: usage

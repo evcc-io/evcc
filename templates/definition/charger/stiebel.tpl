@@ -96,6 +96,14 @@ temp:
     type: input
     encoding: int16
   scale: 0.1
+limittemp:
+  source: modbus
+  {{- include "modbus" . | indent 2 }}
+  register:
+    address: {{ if eq .tempsource "warmwater" -}} 522 {{ else }} 518 {{- end }} # 523 WW-Solltemperatur / 519 Puffer-Solltemperatur (1-based)
+    type: input
+    encoding: int16
+  scale: 0.1
 {{- end }}
 {{- end }}
 

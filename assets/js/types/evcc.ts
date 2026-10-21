@@ -209,6 +209,10 @@ export interface State {
   grid?: Meter;
   /** A grid meter is configured. */
   gridConfigured?: boolean;
+  /** Grid connection, with or without neutral conductor. */
+  gridConnection?: GRID_CONNECTION;
+  /** Nominal grid voltage in V, line-to-line without neutral. */
+  voltage?: number;
   /** Solar meters. One entry per configured meter. */
   pv?: Meter[];
   /** Total solar power in W. Sum of all solar meters. */
@@ -866,6 +870,12 @@ export enum THEME {
   DARK = "dark",
 }
 
+/** Grid connection, with or without neutral conductor. */
+export enum GRID_CONNECTION {
+  THREE_PHASE_FOUR_WIRE = "3p4w",
+  THREE_PHASE_THREE_WIRE = "3p3w",
+}
+
 /** Currency in ISO 4217 format. */
 export enum CURRENCY {
   AUD = "AUD",
@@ -1281,6 +1291,10 @@ export interface BatteryMeter extends Meter {
   modes?: string[];
   /** Battery capacity in kWh. Zero when not specified. */
   capacity: number;
+  /** Minimum soc (reserve) in % as configured on the device. */
+  minSoc?: number;
+  /** Maximum soc (charge limit) in % as configured on the device. */
+  maxSoc?: number;
   /** Battery optimizer suggestion. */
   suggestion?: BatterySuggestion;
 }

@@ -28,32 +28,30 @@ render: |
       type: holding
       decode: int16
   currents:
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x4032 # RGridCurr
-      type: holding
-      decode: int16
-    scale: 0.01
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x4039 # SGridCurr
-      type: holding
-      decode: int16
-    scale: 0.01
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x4040 # TGridCurr
-      type: holding
-      decode: int16
-    scale: 0.01
+  {{- range $i := until 3 }}
+  - source: calc
+    mul:
+    - source: calc
+      sign:
+        source: modbus
+        {{- include "modbus" $ | indent 6 }}
+        register:
+          address: {{ add 41023 (mul 6 $i) }} # 0xA03F/0xA045/0xA04B R/S/T GridActivePower (+import/-export)
+          type: holding
+          decode: int16
+    - source: modbus
+      {{- include "modbus" $ | indent 4 }}
+      register:
+        address: {{ add 41022 (mul 6 $i) }} # 0xA03E/0xA044/0xA04A R/S/T meter current
+        type: holding
+        decode: uint16
+      scale: 0.01
+  {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x40FD # Total_FeedInEnergy
+      address: 0x416D # Sum All Phases Feed-In Total
       type: holding
       decode: uint32
     scale: 0.01
