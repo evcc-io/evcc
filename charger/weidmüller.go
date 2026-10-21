@@ -154,8 +154,10 @@ func (wb *Weidmüller) setup() error {
 }
 
 func (wb *Weidmüller) heartbeat(ctx context.Context, timeout time.Duration) {
+	// uint32 with least significant word first
 	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, wmTimeout)
+	binary.BigEndian.PutUint16(b[0:], wmTimeout&0xffff)
+	binary.BigEndian.PutUint16(b[2:], wmTimeout>>16)
 
 	for tick := time.Tick(timeout); ; {
 		select {
