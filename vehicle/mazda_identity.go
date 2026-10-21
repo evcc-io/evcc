@@ -146,8 +146,6 @@ func (o *mazdaIdentity) Token() (*oauth2.Token, error) {
 		return nil, api.LoginRequiredError(o.subject)
 	}
 
-	o.setOnlineLocked(true)
-
 	return o.token, nil
 }
 
