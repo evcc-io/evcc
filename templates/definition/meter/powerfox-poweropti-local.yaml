@@ -13,14 +13,9 @@ params:
     choice: ["grid", "pv"]
   - name: host
     example: poweropti
-  - name: token
+  - name: apikey
     required: true
-    description:
-      de: API-Key
-      en: API key
-    help:
-      de: Initial die Geräte-ID des Poweropti, z.B. 1097bd725557.
-      en: Initially the Poweropti device id, e.g. 1097bd725557.
+    example: 1097bd725557
   - name: cache
     default: 5s
 render: |
@@ -29,7 +24,7 @@ render: |
     source: http
     uri: http://{{ .host }}/value
     headers:
-      - X-API-KEY: "{{ .token }}"
+      - X-API-KEY: "{{ .apikey }}"
     jq: .values[] | select(.obis == "1.7.0") | .value
     cache: {{ .cache }}
   {{- if eq .usage "pv" }}
@@ -40,7 +35,7 @@ render: |
     source: http
     uri: http://{{ .host }}/value
     headers:
-      - X-API-KEY: "{{ .token }}"
+      - X-API-KEY: "{{ .apikey }}"
     jq: .values[] | select(.obis == "1.8.0") | .value
     scale: 0.001
     cache: {{ .cache }}
@@ -48,7 +43,7 @@ render: |
     source: http
     uri: http://{{ .host }}/value
     headers:
-      - X-API-KEY: "{{ .token }}"
+      - X-API-KEY: "{{ .apikey }}"
     jq: .values[] | select(.obis == "2.8.0") | .value
     scale: 0.001
     cache: {{ .cache }}
