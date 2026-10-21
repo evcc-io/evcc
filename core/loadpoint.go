@@ -184,6 +184,9 @@ type Loadpoint struct {
 	phaseTimer     time.Time        // 1p3p switch timer
 	wakeUpTimer    *Timer           // Vehicle wake-up timeout
 
+	// estimated charge power the measured supply does not cover, left out of the recorded energy
+	chargeExcess float64
+
 	// charge progress
 	vehicleSoc              float64       // Vehicle or charger soc
 	vehicleRange            int64         // Vehicle range in km
@@ -1985,6 +1988,27 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	return targetCurrent
 }
 
+// chargePowerEstimated reports whether the loadpoint charges with its power estimated
+// from the offered current for lack of a charge meter
+func (lp *Loadpoint) chargePowerEstimated() bool {
+	return !lp.HasChargeMeter() && lp.GetChargePower() > 0
+}
+
+// setChargeExcess sets the estimated charge power the measured supply does not cover
+func (lp *Loadpoint) setChargeExcess(power float64) {
+	lp.Lock()
+	defer lp.Unlock()
+	lp.chargeExcess = power
+}
+
+// recordedChargePower is the charge power recorded as charged energy, without the estimated
+// part the measured supply does not cover. Control keeps using chargePower.
+func (lp *Loadpoint) recordedChargePower() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return max(0, lp.chargePower-lp.chargeExcess)
+}
+
 // UpdateChargePowerAndCurrents updates charge meter power and currents for load management
 func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 	power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, modbus.Backoff())
@@ -2164,7 +2188,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 	}
 
 	if lp.chargeEnergy != nil {
-		lp.chargeEnergy.AddEnergy(importTotal, nil, lp.chargePower)
+		lp.chargeEnergy.AddEnergy(importTotal, nil, lp.recordedChargePower())
 		if v := lp.GetSoc(); v > 0 {
 			lp.chargeEnergy.SetSocTemp(v, lp.chargerHasFeature(api.Heating))
 		}
@@ -2407,7 +2431,7 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 
 	// update ChargeRater here to make sure initial meter update is caught
 	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
-	lp.bus.Publish(evChargePower, lp.chargePower)
+	lp.bus.Publish(evChargePower, lp.recordedChargePower())
 
 	// update progress and soc before status is updated
 	lp.publishChargeProgress()

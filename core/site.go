@@ -1388,6 +1388,24 @@ func (site *Site) update(lp updater) {
 	site.stats.Update(site)
 }
 
+// boundEstimatedCharging limits the energy recorded for a charge power estimated from the offered
+// current to the measured supply, as no more can have been charged. It needs grid and pv meters,
+// without them the supply is itself derived from the charge power, and a single estimated
+// loadpoint, with more the measured supply does not tell which one drew less.
+func (site *Site) boundEstimatedCharging(balance float64) {
+	lps := lo.Compact(site.loadpoints)
+	estimated := lo.Filter(lps, func(lp *Loadpoint, _ int) bool { return lp.chargePowerEstimated() })
+	measured := site.gridMeter != nil && site.pvMeters != nil
+
+	for _, lp := range lps {
+		var excess float64
+		if measured && len(estimated) == 1 && lp == estimated[0] {
+			excess = max(0, -balance)
+		}
+		lp.setChargeExcess(excess)
+	}
+}
+
 // updatePower calculates the site power balance and updates the given loadpoint
 func (site *Site) updatePower(lp updater, state siteState, totalChargePower float64, consumption, feedin api.Rates) {
 	// prioritize if possible
@@ -1408,6 +1426,7 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 
 	// ignore negative pvPower values as that means it is not an energy source but consumption
 	homePower := state.gridPower + max(0, state.pvPower) + state.battery.Power - totalChargePower
+	site.boundEstimatedCharging(homePower)
 	homePower = max(homePower, 0)
 	site.publish(keys.HomePower, homePower)
 
