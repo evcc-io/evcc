@@ -54,12 +54,12 @@ export default defineComponent({
 	transition: opacity var(--evcc-transition-fast) ease-in-out;
 	cursor: grab;
 	touch-action: none;
-	/* larger touch target, vertical margin cancels the item padding. Left edge stays free for scrolling */
+	/* larger touch target, margins cancel the item padding. Left edge stays free for scrolling */
 	align-self: stretch;
 	display: flex;
 	align-items: center;
-	padding: 0.5rem 0.75rem 0.5rem 0.5rem;
-	margin: -0.5rem 0;
+	padding: 0.5rem 0.75rem 0.5rem 2px;
+	margin: -0.5rem 0 -0.5rem calc(0.5rem - 2px);
 }
 
 .drag-handle:active {
