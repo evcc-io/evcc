@@ -95,8 +95,8 @@ func (v *Mazda) resolve() (*mazda.Vehicle, error) {
 
 	veh, err := ensureVehicleEx(v.vin, func() ([]mazda.Vehicle, error) {
 		return v.client.Vehicles(context.Background())
-	}, func(v mazda.Vehicle) (string, error) {
-		return v.VIN, nil
+	}, func(veh mazda.Vehicle) (string, error) {
+		return veh.VIN, nil
 	})
 	if err != nil {
 		return nil, err
