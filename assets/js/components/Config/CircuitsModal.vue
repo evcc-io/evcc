@@ -38,7 +38,7 @@
 					/>
 				</div>
 				<DragDropList
-					class="assignment-pool rounded p-3"
+					class="assignment-pool d-flex flex-column gap-2"
 					data-testid="assignment-pool"
 					:class="{
 						'assignment-target': canRemove,
@@ -60,7 +60,7 @@
 					@dragstart="startDrag"
 					@dragend="endDrag"
 				>
-					<h6 class="small evcc-gray text-uppercase">
+					<h6 class="small evcc-gray text-uppercase m-0 px-1">
 						{{ $t("config.circuits.notAssigned") }}
 					</h6>
 					<DragDropItem
@@ -69,6 +69,7 @@
 						:title="lp.title"
 						:data-loadpoint="lp.id"
 						interactive
+						class="pool-row mb-0 py-0"
 						:selected="lp.id === selectedId"
 						:disabled="pending || !lp.editable"
 						:class="{ 'assignment-dragged': lp.id === draggedId }"
@@ -84,7 +85,7 @@
 							></span
 						>
 					</DragDropItem>
-					<div class="d-flex gap-2 align-items-center">
+					<div class="d-flex gap-2 align-items-center px-1">
 						<span class="small evcc-gray flex-grow-1" aria-live="polite">{{
 							poolHint
 						}}</span
@@ -260,7 +261,11 @@ export default {
 <style scoped>
 .assignment-pool {
 	border: 2px dashed var(--evcc-gray-25);
-	min-height: 100px;
+	border-radius: 12px;
+	padding: 12px;
+}
+.pool-row {
+	min-height: 44px;
 }
 .device-icon {
 	width: 20px;

@@ -58,7 +58,7 @@
 					'assignment-flash': lp.id === flashId,
 					'assignment-dragged': lp.id === draggedId,
 				}"
-				class="assigned-row"
+				class="assigned-row py-0"
 				@activate="$emit('select', lp.id)"
 			>
 				<span class="d-flex align-items-center gap-2 min-w-0"
@@ -228,6 +228,7 @@ export default {
 .assigned-row {
 	position: relative;
 	margin-left: 22px;
+	min-height: 40px;
 }
 .circuit-branch {
 	position: relative;
