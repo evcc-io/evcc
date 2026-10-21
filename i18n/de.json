@@ -536,6 +536,7 @@
       },
       "demandPredictorLabel": "Verbrauchsprognose",
       "demandPredictorOptions": {
+        "default": "Gerätevorgabe",
         "daily": "Durchschnitt",
         "temperature": "Temperatur",
         "weekday": "Wochentag"

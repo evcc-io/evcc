@@ -536,6 +536,7 @@
       },
       "demandPredictorLabel": "Demand forecast",
       "demandPredictorOptions": {
+        "default": "Device default",
         "daily": "Average",
         "temperature": "Temperature",
         "weekday": "Weekday"

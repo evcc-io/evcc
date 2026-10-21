@@ -578,10 +578,10 @@ func (lp *Loadpoint) GetUI() loadpoint.UIConfig {
 		ui.DemandPredictor = lp.demandPredictor
 	} else {
 		switch {
-		case lp.chargerHasFeature(api.DemandTemperature):
-			ui.DemandPredictor = "temperature"
 		case lp.chargerHasFeature(api.DemandWeekday):
 			ui.DemandPredictor = "weekday"
+		case lp.chargerHasFeature(api.DemandTemperature):
+			ui.DemandPredictor = "temperature"
 		default:
 			ui.DemandPredictor = "daily"
 		}

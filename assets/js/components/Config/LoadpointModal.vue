@@ -491,9 +491,11 @@
 								id="loadpointDemandPredictor"
 								:label="$t('config.loadpoint.demandPredictorLabel')"
 								:help="
-									$t(
-										`config.loadpoint.demandPredictor.${values.ui.demandPredictor || 'daily'}`
-									)
+									values.ui.demandPredictor
+										? $t(
+												`config.loadpoint.demandPredictor.${values.ui.demandPredictor}`
+											)
+										: undefined
 								"
 								class="mt-3"
 							>
@@ -502,6 +504,9 @@
 									v-model="values.ui.demandPredictor"
 									class="form-select"
 								>
+									<option v-if="!values.ui.demandPredictor" value="">
+										{{ $t("config.loadpoint.demandPredictorOptions.default") }}
+									</option>
 									<option value="daily">
 										{{ $t("config.loadpoint.demandPredictorOptions.daily") }}
 									</option>
@@ -633,7 +638,7 @@ const defaultValues = {
 	ui: {
 		minTemp: 0,
 		maxTemp: 100,
-		demandPredictor: "daily",
+		demandPredictor: "",
 	},
 	vehicle: "",
 	charger: "",
@@ -687,7 +692,9 @@ export default {
 			return getModal("loadpoint")?.id;
 		},
 		tariffTemperatureAvailable(): boolean {
-			return store.state?.tariffTemperature !== undefined;
+			// Check forecast data presence rather than the current-slot value, which
+			// can be undefined even when a temperature tariff is configured.
+			return (store.state?.forecast?.temperature?.length ?? 0) > 0;
 		},
 		thresholdsSet(): boolean {
 			const { enable, disable } = this.values.thresholds;

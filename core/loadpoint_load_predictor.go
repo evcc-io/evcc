@@ -39,10 +39,10 @@ func (lp *Loadpoint) effectiveDemandPredictor() string {
 		return p
 	}
 	switch {
-	case lp.chargerHasFeature(api.DemandTemperature):
-		return "temperature"
 	case lp.chargerHasFeature(api.DemandWeekday):
 		return "weekday"
+	case lp.chargerHasFeature(api.DemandTemperature):
+		return "temperature"
 	default:
 		return "daily"
 	}
