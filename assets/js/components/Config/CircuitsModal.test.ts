@@ -27,6 +27,20 @@ const setup = () =>
     },
   });
 describe("circuit assignment", () => {
+  it("uses one continuous branch guide through nested loadpoints", async () => {
+    const wrapper = setup();
+    await wrapper.setProps({
+      loadpoints: [
+        { id: 14, title: "Heater", circuit: "db:8", editable: true, heating: true },
+        { id: 15, title: "Wallbox", circuit: "db:9", editable: true, heating: false },
+      ],
+    });
+    expect(wrapper.findAll(".circuit-branch")).toHaveLength(2);
+    expect(wrapper.findAll(".tree-col")).toHaveLength(0);
+    expect(wrapper.get('[data-loadpoint="15"]').classes()).toContain("assigned-row");
+    expect(wrapper.get('[data-loadpoint="15"]').attributes("style") ?? "").not.toContain("44px");
+    wrapper.unmount();
+  });
   it("selects a device first, then assigns, and keeps assigned rows before children", async () => {
     const wrapper = setup();
     const row = wrapper.get('[data-loadpoint="13"]');

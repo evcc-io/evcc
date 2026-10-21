@@ -1,5 +1,5 @@
 <template>
-	<div data-testid="circuit-node">
+	<div data-testid="circuit-node" class="circuit-branch">
 		<DragDropList
 			:values="assignedValues"
 			transfer
@@ -13,15 +13,6 @@
 			@dragend="$emit('dragend')"
 		>
 			<div class="d-flex align-items-stretch row-spacing">
-				<template v-if="depth > 0">
-					<span v-for="i in depth - 1" :key="i" class="tree-col">
-						<span class="tree-line" />
-					</span>
-					<span class="tree-col">
-						<span class="tree-line" />
-						<span class="tree-knick" />
-					</span>
-				</template>
 				<div
 					:data-circuit="circuitsTree?.name"
 					class="assignment-circuit border rounded d-flex flex-grow-1 min-w-0 align-items-center px-2"
@@ -68,7 +59,6 @@
 					'assignment-dragged': lp.id === draggedId,
 				}"
 				class="assigned-row"
-				:style="{ marginLeft: `${(depth + 1) * 22}px` }"
 				@activate="$emit('select', lp.id)"
 			>
 				<span class="d-flex align-items-center gap-2 min-w-0"
@@ -83,6 +73,7 @@
 		<CircuitsTree
 			v-for="child in circuitsTree?.children"
 			:key="child.name"
+			class="child-circuit"
 			:circuits-tree="child"
 			:depth="depth + 1"
 			:gridMeter="gridMeter"
@@ -100,14 +91,7 @@
 			@dragend="$emit('dragend')"
 		/>
 
-		<div class="d-flex align-items-stretch row-spacing">
-			<span v-for="i in depth" :key="i" class="tree-col">
-				<span class="tree-line" />
-			</span>
-			<span class="tree-col">
-				<span class="tree-line tree-line--half" />
-				<span class="tree-knick" />
-			</span>
+		<div class="d-flex align-items-stretch row-spacing branch-action">
 			<button
 				type="button"
 				class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
@@ -243,56 +227,51 @@ export default {
 }
 .assigned-row {
 	position: relative;
+	margin-left: 22px;
 }
-.assigned-row::before {
+.circuit-branch {
+	position: relative;
+}
+.circuit-branch::before {
 	content: "";
 	position: absolute;
-	left: -12px;
-	top: -8px;
-	bottom: -8px;
-	width: 12px;
+	left: 10px;
+	top: 50px;
+	bottom: 16px;
 	border-left: 1px solid var(--evcc-gray-25);
+	pointer-events: none;
 }
-.assigned-row::after {
+.child-circuit,
+.branch-action {
+	position: relative;
+	margin-left: 22px;
+}
+.assigned-row::after,
+.child-circuit::after,
+.branch-action::after {
 	content: "";
 	position: absolute;
 	left: -12px;
-	top: 50%;
 	width: 12px;
 	border-top: 1px solid var(--evcc-gray-25);
+	pointer-events: none;
+}
+.assigned-row::after {
+	top: 50%;
+}
+.child-circuit::after {
+	top: 21px;
+}
+.branch-action::after {
+	top: 50%;
+}
+.branch-action {
+	min-height: 32px;
+	margin-bottom: 0;
 }
 .device-icon {
 	width: 20px;
 	height: 20px;
 	flex-shrink: 0;
-}
-
-.tree-col {
-	width: 22px;
-	position: relative;
-	flex: 0 0 auto;
-}
-
-.tree-line {
-	position: absolute;
-	left: 10px;
-	top: -8px;
-	bottom: -8px;
-	width: 1px;
-	background: var(--evcc-gray-25);
-}
-
-.tree-line--half {
-	bottom: auto;
-	height: calc(50% + 8px);
-}
-
-.tree-knick {
-	position: absolute;
-	left: 10px;
-	top: 50%;
-	width: 12px;
-	height: 1px;
-	background: var(--evcc-gray-25);
 }
 </style>
