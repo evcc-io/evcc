@@ -67,7 +67,11 @@ test.describe("loadpoint ordering and hiding", async () => {
       name: "Draggable: Third Loadpoint",
     });
 
-    await dragElement(page, firstLoadpointDragItem, thirdLoadpointDragItem);
+    await dragElement(
+      page,
+      firstLoadpointDragItem.getByTestId("drag-handle"),
+      thirdLoadpointDragItem
+    );
 
     await closeModal(modal);
 
@@ -90,7 +94,11 @@ test.describe("loadpoint ordering and hiding", async () => {
       name: "Draggable: Third Loadpoint",
     });
 
-    await dragElement(page, firstLoadpointDragItem, thirdLoadpointDragItem);
+    await dragElement(
+      page,
+      firstLoadpointDragItem.getByTestId("drag-handle"),
+      thirdLoadpointDragItem
+    );
 
     await modal.getByRole("button", { name: "Reset" }).click();
 
