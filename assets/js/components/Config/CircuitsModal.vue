@@ -160,9 +160,9 @@ export default {
 			return `${docsPrefix()}/features/loadmanagement`;
 		},
 		unassignedLoadpoints(): CircuitAssignmentLoadpoint[] {
-			return this.loadpoints.filter(
-				(lp) => !this.circuits.some((c) => c.name === lp.circuit)
-			);
+			return this.loadpoints
+				.filter((lp) => !this.circuits.some((c) => c.name === lp.circuit))
+				.sort((a, b) => Number(a.id === undefined) - Number(b.id === undefined));
 		},
 		poolValues(): (number | string | undefined)[] {
 			return this.unassignedLoadpoints.map((lp) => lp.id ?? lp.name);

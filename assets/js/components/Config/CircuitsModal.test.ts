@@ -39,6 +39,7 @@ describe("circuit assignment", () => {
           heating: false,
         },
         { name: "yaml-pool", title: "YAML pool", circuit: null, editable: false, heating: false },
+        { id: 13, title: "DB pool", circuit: null, editable: true, heating: false },
       ],
     });
     expect(
@@ -47,6 +48,12 @@ describe("circuit assignment", () => {
       )
     ).toHaveLength(0);
     expect(wrapper.findAll('[aria-selected="true"]')).toHaveLength(0);
+    expect(
+      wrapper
+        .get('[data-testid="assignment-pool"]')
+        .findAll('[role="listitem"]')
+        .map((row) => row.text())
+    ).toEqual(["DB pool", "YAML pool"]);
     wrapper.unmount();
   });
   it("uses one continuous branch guide through nested loadpoints", async () => {
