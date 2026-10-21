@@ -270,7 +270,7 @@ func TestBoundEstimatedCharging(t *testing.T) {
 	site := &Site{gridMeter: meter, pvMeters: meters, loadpoints: []*Loadpoint{measured, nil, estimated, idle}}
 
 	// the single estimated loadpoint records only what the measured supply covers
-	site.boundEstimatedCharging(-3290)
+	assert.Equal(t, 3290.0, site.boundEstimatedCharging(-3290))
 	assert.Equal(t, 7750.0, estimated.recordedChargePower())
 	assert.Equal(t, 11040.0, estimated.GetChargePower(), "control keeps the estimate")
 	assert.Equal(t, 7400.0, measured.recordedChargePower())
@@ -280,7 +280,7 @@ func TestBoundEstimatedCharging(t *testing.T) {
 	assert.Equal(t, 0.0, estimated.recordedChargePower())
 
 	// supply covers the estimate
-	site.boundEstimatedCharging(400)
+	assert.Equal(t, 0.0, site.boundEstimatedCharging(400))
 	assert.Equal(t, 11040.0, estimated.recordedChargePower())
 
 	for _, tc := range []struct {
@@ -290,12 +290,18 @@ func TestBoundEstimatedCharging(t *testing.T) {
 		{"two estimated loadpoints", &Site{gridMeter: meter, pvMeters: meters, loadpoints: []*Loadpoint{
 			estimated, {chargeMeter: newChargeMeter(struct{}{}), chargePower: 3680},
 		}}},
+		{"no estimated loadpoint", &Site{gridMeter: meter, pvMeters: meters, loadpoints: []*Loadpoint{measured, idle}}},
 		{"no grid meter", &Site{pvMeters: meters, loadpoints: []*Loadpoint{estimated}}},
 		{"no pv meter", &Site{gridMeter: meter, loadpoints: []*Loadpoint{estimated}}},
 	} {
 		t.Run(tc.title, func(t *testing.T) {
-			tc.site.boundEstimatedCharging(-3290)
+			assert.Equal(t, 0.0, tc.site.boundEstimatedCharging(-3290))
 			assert.Equal(t, 11040.0, estimated.recordedChargePower())
 		})
 	}
+
+	// energy returned by a measured bidirectional loadpoint is recorded as is
+	returning := &Loadpoint{chargeMeter: newChargeMeter(api.NewMockMeter(ctrl)), chargePower: -3000}
+	(&Site{gridMeter: meter, pvMeters: meters, loadpoints: []*Loadpoint{returning, estimated}}).boundEstimatedCharging(-3290)
+	assert.Equal(t, -3000.0, returning.recordedChargePower())
 }
