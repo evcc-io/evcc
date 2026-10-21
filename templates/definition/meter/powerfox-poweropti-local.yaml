@@ -19,8 +19,9 @@ params:
       de: API-Key
       en: API key
     help:
-      de: Initial die Geräte-ID des Poweropti, z.B. 1097bd725557.
-      en: Initially the Poweropti device id, e.g. 1097bd725557.
+      de: Initial die Geräte-ID
+      en: Initially the device id
+    example: 1097bd725557
   - name: cache
     default: 5s
 render: |
