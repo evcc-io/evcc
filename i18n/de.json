@@ -602,6 +602,19 @@
       "vehicleLabel": "Standard-Fahrzeug",
       "vehiclesTitle": "Fahrzeuge"
     },
+    "logLevels": {
+      "add": "Bereichs-Override hinzufügen",
+      "areaLabel": "Bereich",
+      "areaPlaceholder": "Bereich wählen",
+      "areaUnavailable": "{area} (nicht verfügbar)",
+      "defaultLabel": "Standard-Level",
+      "description": "Legt die Ausführlichkeit der Logs fest. Mehr Details (debug, trace) helfen bei der Fehlersuche, erzeugen aber viel Ausgabe. Änderungen gelten sofort. Zurücksetzen stellt die Start-Level (Kommandozeile) wieder her.",
+      "levelLabel": "Level",
+      "levelPlaceholder": "Level wählen",
+      "overridesLabel": "Bereichs-Overrides",
+      "reset": "Zurücksetzen",
+      "title": "Log-Level"
+    },
     "main": {
       "addAdditional": "Zusätzlichen Zähler hinzufügen",
       "addConsumer": "Verbraucher hinzufügen",
@@ -1500,6 +1513,7 @@
     "version": "Version"
   },
   "log": {
+    "activeOverrides": "{count} Log-Level-Überschreibungen aktiv",
     "areaLabel": "Nach Bereich filtern",
     "areas": "Alle Bereiche",
     "download": "Komplettes Log herunterladen",

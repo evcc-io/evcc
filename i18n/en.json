@@ -602,6 +602,19 @@
       "vehicleLabel": "Default vehicle",
       "vehiclesTitle": "Vehicles"
     },
+    "logLevels": {
+      "add": "Add area override",
+      "areaLabel": "Area",
+      "areaPlaceholder": "Select area",
+      "areaUnavailable": "{area} (not available)",
+      "defaultLabel": "Default level",
+      "description": "Set the log verbosity. More detail (debug, trace) helps with troubleshooting but produces a lot of output. Changes apply immediately. Reset restores the startup levels (command line).",
+      "levelLabel": "Level",
+      "levelPlaceholder": "Select level",
+      "overridesLabel": "Area overrides",
+      "reset": "Reset",
+      "title": "Log levels"
+    },
     "main": {
       "addAdditional": "Add additional meter",
       "addConsumer": "Add consumer",
@@ -1500,6 +1513,7 @@
     "version": "Version"
   },
   "log": {
+    "activeOverrides": "{count} log level overrides active",
     "areaLabel": "Filter by area",
     "areas": "All areas",
     "download": "Download complete log",

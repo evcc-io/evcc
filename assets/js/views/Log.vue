@@ -3,7 +3,7 @@
 		<div class="container d-flex h-100 flex-column px-0 pb-0 pb-md-3">
 			<TopHeader :title="$t('log.title')" class="mx-4" />
 			<div class="logs d-flex flex-column overflow-hidden flex-grow-1 px-4 mx-2 mx-sm-4">
-				<div class="flex-grow-0 row py-4">
+				<div class="flex-grow-0 row pt-4" :class="overrideCount ? 'pb-2' : 'pb-4'">
 					<div class="col-6 col-lg-3 mb-4 mb-lg-0 d-flex gap-2">
 						<div class="btn-group w-100 w-lg-auto d-flex">
 							<button
@@ -35,6 +35,18 @@
 									class="icon"
 								></shopicon-regular-download>
 							</a>
+							<button
+								type="button"
+								class="btn btn-outline-secondary flex-grow-0"
+								:aria-label="$t('config.logLevels.title')"
+								data-testid="log-levels-button"
+								@click="openLogLevels"
+							>
+								<shopicon-regular-adjust
+									size="s"
+									class="icon"
+								></shopicon-regular-adjust>
+							</button>
 						</div>
 					</div>
 					<div class="col-6 offset-lg-1 col-lg-4 mb-4 mb-lg-0">
@@ -73,6 +85,15 @@
 						</MultiSelect>
 					</div>
 				</div>
+				<div v-if="overrideCount" class="pb-2">
+					<button
+						type="button"
+						class="btn btn-link btn-sm text-gray px-0"
+						@click="openLogLevels"
+					>
+						{{ $t("log.activeOverrides", { count: overrideCount }) }}
+					</button>
+				</div>
 				<hr class="my-0" />
 				<div
 					ref="log"
@@ -105,16 +126,19 @@
 					<p v-else class="my-4">{{ $t("log.noResults") }}</p>
 				</div>
 			</div>
+			<LogLevelsModal ref="logLevelsModal" :log-levels="logLevels" />
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/download";
+import "@h2d2/shopicons/es/regular/adjust";
 import Header from "../components/Top/Header.vue";
 import Play from "../components/MaterialIcon/Play.vue";
 import ProgressRing from "../components/MaterialIcon/ProgressRing.vue";
 import MultiSelect from "../components/Helper/MultiSelect.vue";
+import LogLevelsModal from "../components/Config/LogLevelsModal.vue";
 import api from "../api";
 import store from "../store";
 import { defineComponent, type PropType } from "vue";
@@ -132,6 +156,7 @@ export default defineComponent({
 		Play,
 		ProgressRing,
 		MultiSelect,
+		LogLevelsModal,
 	},
 	props: {
 		areas: { type: Array as PropType<string[]>, default: () => [] },
@@ -171,6 +196,12 @@ export default defineComponent({
 
 				return { key, className, line };
 			});
+		},
+		logLevels() {
+			return store.state?.logLevels;
+		},
+		overrideCount() {
+			return Object.keys(this.logLevels?.levels || {}).length;
 		},
 		areaOptions() {
 			return this.availableAreas
@@ -224,6 +255,9 @@ export default defineComponent({
 		this.stopInterval();
 	},
 	methods: {
+		openLogLevels() {
+			(this.$refs["logLevelsModal"] as unknown as InstanceType<typeof LogLevelsModal>).open();
+		},
 		handleDownloadClick,
 		async updateLogs(showAll: boolean = false) {
 			// prevent concurrent requests
