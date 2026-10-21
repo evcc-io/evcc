@@ -47,9 +47,12 @@ type EEBus struct {
 	enabled   bool
 	reconnect bool
 	current   float64
+	phases    int
 
 	connector *eebus.Connector
 }
+
+var _ api.PhaseDescriber = (*EEBus)(nil)
 
 func init() {
 	registry.AddCtx("eebus-evse", NewEEBusFromConfig)
@@ -63,6 +66,7 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		Meter         bool
 		ChargedEnergy *bool
 		CoarseCurrent bool
+		Phases        int
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -72,7 +76,20 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 	// default true
 	hasChargedEnergy := cc.ChargedEnergy == nil || *cc.ChargedEnergy
 
-	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Meter, hasChargedEnergy, cc.CoarseCurrent)
+	charger, err := NewEEBus(ctx, cc.Ski, cc.Ip, cc.Meter, hasChargedEnergy, cc.CoarseCurrent)
+	if err != nil {
+		return nil, err
+	}
+
+	if cc.Phases > 0 {
+		if c, ok := charger.(*EEBus); ok {
+			c.phases = min(cc.Phases, len(ucapi.PhaseNameMapping))
+			implement.Has(c, implement.PhaseGetter(c.getPhases))
+			implement.Has[api.PhaseDescriber](c, c)
+		}
+	}
+
+	return charger, nil
 }
 
 // newEEBus creates and initializes a raw *EEBus charger.
@@ -332,6 +349,35 @@ func (c *EEBus) Enable(enable bool) error {
 	return err
 }
 
+// Phases implements the api.PhaseDescriber interface
+func (c *EEBus) Phases() int {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	return c.phases
+}
+
+func (c *EEBus) activePhases(limitSlices ...[]float64) int {
+	phases := len(ucapi.PhaseNameMapping)
+	for _, limits := range limitSlices {
+		if len(limits) > 0 && len(limits) < phases {
+			phases = len(limits)
+		}
+	}
+	c.mux.RLock()
+	configured := c.phases
+	c.mux.RUnlock()
+	if configured > 0 && configured < phases {
+		phases = configured
+	}
+	return phases
+}
+
+func (c *EEBus) getPhases() (int, error) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	return c.phases, nil
+}
+
 // send current charging power limits to the EV
 func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, current float64) error {
 	// check if the EVSE supports overload protection limits
@@ -339,14 +385,16 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 		return api.ErrNotAvailable
 	}
 
-	_, maxLimits, _, err := c.cem.OpEV.CurrentLimits(evEntity)
+	minLimits, maxLimits, _, err := c.cem.OpEV.CurrentLimits(evEntity)
 	if err != nil {
 		c.log.DEBUG.Println("no limits from the EVSE are provided:", err)
 	}
 
+	numPhases := c.activePhases(minLimits, maxLimits)
+
 	// setup the obligation limit data structure
 	var limits []ucapi.LoadLimitsPhase
-	for phase := range len(ucapi.PhaseNameMapping) {
+	for phase := 0; phase < numPhases; phase++ {
 		limit := ucapi.LoadLimitsPhase{
 			Phase:    ucapi.PhaseNameMapping[phase],
 			IsActive: true,
@@ -392,13 +440,15 @@ func (c *EEBus) writeOscevLimits(evEntity spineapi.EntityRemoteInterface, curren
 		return
 	}
 
-	minLimits, _, _, err := c.cem.OscEV.CurrentLimits(evEntity)
+	minLimits, maxLimits, _, err := c.cem.OscEV.CurrentLimits(evEntity)
 	if err != nil {
 		return
 	}
 
+	numPhases := c.activePhases(minLimits, maxLimits)
+
 	var limits []ucapi.LoadLimitsPhase
-	for phase := range len(ucapi.PhaseNameMapping) {
+	for phase := 0; phase < numPhases; phase++ {
 		limit := ucapi.LoadLimitsPhase{
 			Phase:    ucapi.PhaseNameMapping[phase],
 			IsActive: false,
