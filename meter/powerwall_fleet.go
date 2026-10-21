@@ -54,10 +54,22 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
+	// regulation (e.g. California) may forbid charging a solar-coupled battery from the grid
+	info, err := fleet.EnergySiteInfo(siteId)
+	if err != nil {
+		return nil, fmt.Errorf("get energy site info: %w", err)
+	}
+
+	modes := batteryModesSocLimit
+	if info.Components.DisallowChargeFromGridWithSolarInstalled {
+		log.INFO.Println("grid charging not allowed by site configuration")
+		modes = implement.BatteryModes(api.BatteryNormal, api.BatteryHold)
+	}
+
 	// charge mode raises the reserve to full, normal mode restores the configured minimum
 	limits := batterySocLimits{MinSoc: cc.MinSoc, MaxSoc: 100}
 
-	implement.Has(m, implement.BatteryController(batteryModesSocLimit, limits.LimitController(func() (float64, error) {
+	implement.Has(m, implement.BatteryController(modes, limits.LimitController(func() (float64, error) {
 		ess, err := fleet.EnergySiteStatus(siteId)
 		if err != nil {
 			return 0, fmt.Errorf("get energy site status: %w", err)

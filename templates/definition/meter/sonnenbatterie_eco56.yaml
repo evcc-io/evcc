@@ -12,6 +12,8 @@ products:
   - brand: Sonnen
     description:
       generic: oem 6.5
+discovery:
+  hostname: ["sb-*"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

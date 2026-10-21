@@ -176,7 +176,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits.Decorator()))
 
 		if capacity != 0 {
-			implement.Has(m, implement.BatteryCapacity(func() float64 { return capacity + capacity2 }))
+			implement.Has(m, implement.BatteryCapacity(func() (float64, error) { return capacity + capacity2, nil }))
 		}
 
 		batteryMode := func(mode api.BatteryMode) error {
@@ -345,7 +345,7 @@ func (m *RCT) totalEnergy() (float64, error) {
 
 	case "pv":
 		var eg errgroup.Group
-		var a, b float64
+		var a, b, c float64
 
 		eg.Go(func() error {
 			var err error
@@ -359,8 +359,16 @@ func (m *RCT) totalEnergy() (float64, error) {
 			return err
 		})
 
+		if m.externalPower {
+			eg.Go(func() error {
+				var err error
+				c, err = m.queryFloat(rct.TotalExternalEnergyWh)
+				return err
+			})
+		}
+
 		err := eg.Wait()
-		return (a + b) / 1000, err
+		return (a + b + c) / 1000, err
 
 	case "battery":
 		res, err := m.queryFloat(rct.TotalEnergyBattOutWh)
