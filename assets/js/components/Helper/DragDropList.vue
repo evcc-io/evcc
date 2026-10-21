@@ -19,6 +19,7 @@ export default defineComponent({
 		if (container) {
 			dragAndDrop({
 				parent: container,
+				dragHandle: ".drag-handle",
 				getValues: () => this.values,
 				setValues: (newOrder: unknown[]) => this.$emit("reorder", newOrder),
 			});
