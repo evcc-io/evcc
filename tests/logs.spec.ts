@@ -52,6 +52,16 @@ test.describe("features", async () => {
   });
 });
 
+test.describe("areas", async () => {
+  test("loadpoint title", async ({ page }) => {
+    await page.goto("/#/log?level=info");
+    await page.getByRole("button", { name: "All areas" }).click();
+    await page.getByRole("checkbox", { name: "Carport (lp-1)" }).check();
+    await expect(page).toHaveURL(/areas=lp-1/);
+    await expect(page.getByRole("button", { name: "Carport (lp-1)" })).toBeVisible();
+  });
+});
+
 test.describe("log download in app context", async () => {
   test("dispatches download event", async ({ page }) => {
     await enableAppContext(page);

@@ -176,13 +176,13 @@ export default defineComponent({
 			return this.availableAreas
 				.slice()
 				.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-				.map((area) => ({ name: area, value: area }));
+				.map((area) => ({ name: this.areaName(area), value: area }));
 		},
 		areasLabel() {
 			if (this.areas.length === 0) {
 				return this.$t("log.areas");
 			} else if (this.areas.length === 1) {
-				return this.areas[0];
+				return this.areaName(this.areas[0] as string);
 			} else {
 				return this.$t("log.nAreas", { count: this.areas.length });
 			}
@@ -225,6 +225,11 @@ export default defineComponent({
 	},
 	methods: {
 		handleDownloadClick,
+		areaName(area: string) {
+			const index = /^lp-(\d+)$/.exec(area)?.[1];
+			const title = index ? store.state?.loadpoints?.[Number(index) - 1]?.title : "";
+			return title ? `${title} (${area})` : area;
+		},
 		async updateLogs(showAll: boolean = false) {
 			// prevent concurrent requests
 			if (this.busy) return;
