@@ -38,6 +38,7 @@
 					/>
 				</div>
 				<DragDropList
+					v-if="circuits.length > 0"
 					class="assignment-pool d-flex flex-column"
 					data-testid="assignment-pool"
 					:class="{
