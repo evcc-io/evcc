@@ -15,6 +15,9 @@ params:
     example: poweropti
   - name: apikey
     required: true
+    help:
+      de: Initial die Geräte-ID
+      en: Initially the device id
     example: 1097bd725557
   - name: cache
     default: 5s
