@@ -107,13 +107,7 @@ func (v *Mazda) resolve() (*mazda.Vehicle, error) {
 	return v.vehicle, nil
 }
 
-var (
-	_ api.Battery         = (*Mazda)(nil)
-	_ api.ChargeState     = (*Mazda)(nil)
-	_ api.VehicleRange    = (*Mazda)(nil)
-	_ api.VehicleOdometer = (*Mazda)(nil)
-	_ api.VehicleClimater = (*Mazda)(nil)
-)
+var _ api.Battery = (*Mazda)(nil)
 
 // Soc implements the api.Battery interface.
 func (v *Mazda) Soc() (float64, error) {
@@ -128,6 +122,8 @@ func (v *Mazda) Soc() (float64, error) {
 
 	return *res.VehicleStatus.Soc, nil
 }
+
+var _ api.ChargeState = (*Mazda)(nil)
 
 // Status implements the api.ChargeState interface. The vehicle reports the plug
 // separately from the charging state.
@@ -152,6 +148,8 @@ func (v *Mazda) Status() (api.ChargeStatus, error) {
 	return api.StatusB, nil
 }
 
+var _ api.VehicleRange = (*Mazda)(nil)
+
 // Range implements the api.VehicleRange interface.
 func (v *Mazda) Range() (int64, error) {
 	res, err := v.statusG()
@@ -166,6 +164,8 @@ func (v *Mazda) Range() (int64, error) {
 	return int64(*res.VehicleStatus.Range), nil
 }
 
+var _ api.VehicleOdometer = (*Mazda)(nil)
+
 // Odometer implements the api.VehicleOdometer interface.
 func (v *Mazda) Odometer() (float64, error) {
 	res, err := v.statusG()
@@ -179,6 +179,8 @@ func (v *Mazda) Odometer() (float64, error) {
 
 	return *res.VehicleStatus.Odometer, nil
 }
+
+var _ api.VehicleClimater = (*Mazda)(nil)
 
 // Climater implements the api.VehicleClimater interface.
 func (v *Mazda) Climater() (bool, error) {
