@@ -33,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -64,7 +65,7 @@ type Site struct {
 
 	// configuration
 	Title         string       `mapstructure:"title"`         // UI title
-	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
+	Voltage       float64      `mapstructure:"voltage"`       // Deprecated: ignored, the nominal voltage is fixed
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
 	CurtailersRef []string     `mapstructure:"curtailers"`    // Curtailment device references
@@ -122,6 +123,9 @@ type Site struct {
 	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
 	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
 	lastOptimizerSolve       *optimizerSolve             // last successful solve, reapplied to newer slots by the control cycle
+	optimizerResult          *optimizerResult            // last published plan, explained on request
+	explainMu                sync.Mutex                  // serializes explain requests
+	explained                explainCache                // last explanation, guarded by explainMu
 
 	optimizerMu      sync.Mutex // guards optimizer runs
 	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
@@ -168,7 +172,10 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	site.restoreMetersAndTitle()
 
 	// TODO title
-	Voltage = site.Voltage
+	if site.Voltage != 0 && site.Voltage != grid.Voltage {
+		site.log.WARN.Printf("voltage %.0fV is no longer supported, using %.0fV", site.Voltage, grid.Voltage)
+	}
+	grid.SetNoNeutral(site.GetGridConnection() == grid.Connection3P3W)
 
 	return site, nil
 }
@@ -400,7 +407,6 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 func NewSite() *Site {
 	site := &Site{
 		log:        util.NewLogger("site"),
-		Voltage:    230, // V
 		collectors: make(map[string]*metrics.Collector),
 	}
 
@@ -672,6 +678,11 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 			Icon:  props.Icon,
 		}
 
+		// disabled at runtime, skipped until restart
+		if meter == nil {
+			return
+		}
+
 		// power
 		var b bytes.Buffer
 		power, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff())
@@ -800,7 +811,11 @@ func (site *Site) updateBatteryMeters() {
 				mm[i].Soc = new(batSoc)
 
 				if bc, ok := api.Cap[api.BatteryCapacity](meter); ok {
-					mm[i].Capacity = new(bc.Capacity())
+					if capacity, err := bc.Capacity(); err == nil {
+						mm[i].Capacity = new(capacity)
+					} else {
+						site.log.ERROR.Printf("battery %d capacity: %v", i+1, err)
+					}
 				}
 
 				site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
@@ -809,18 +824,27 @@ func (site *Site) updateBatteryMeters() {
 			}
 		}
 
-		if bpl, ok := api.Cap[api.BatteryPowerLimiter](meter); ok && maxDischargePower >= 0 {
-			var empty bool
-			if bsl, ok := api.Cap[api.BatterySocLimiter](meter); ok {
-				minSoc, _ := bsl.GetSocLimits()
-				if mm[i].Soc != nil && *mm[i].Soc <= minSoc {
-					empty = true
-				}
+		// battery soc limits, read once per cycle for mode control and optimizer
+		if bsl, ok := api.Cap[api.BatterySocLimiter](meter); ok {
+			if minSoc, maxSoc, err := bsl.GetSocLimits(); err == nil {
+				mm[i].MinSoc = new(minSoc)
+				mm[i].MaxSoc = new(maxSoc)
+			} else {
+				site.log.ERROR.Printf("battery %d soc limits: %v", i+1, err)
 			}
+		}
+
+		if bpl, ok := api.Cap[api.BatteryPowerLimiter](meter); ok && maxDischargePower >= 0 {
+			empty := mm[i].Soc != nil && mm[i].MinSoc != nil && *mm[i].Soc <= *mm[i].MinSoc
 
 			if !empty {
-				_, discharge := bpl.GetPowerLimits()
-				maxDischargePower += discharge
+				_, discharge, err := bpl.GetPowerLimits()
+				if err != nil {
+					site.log.ERROR.Printf("battery %d power limits: %v", i+1, err)
+					maxDischargePower = -1 // unknown limit disables the cap
+				} else {
+					maxDischargePower += discharge
+				}
 			}
 		} else {
 			maxDischargePower = -1 // any battery without a limit disables the cap
@@ -1016,6 +1040,9 @@ func (site *Site) updateGridMeter() error {
 	mm := types.Measurement{Name: site.gridMeter.Config().Name}
 
 	meter := site.gridMeter.Instance()
+	if meter == nil {
+		return errors.New("grid meter disabled, restart required")
+	}
 
 	if res, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff()); err == nil {
 		mm.Power = res
@@ -1442,6 +1469,8 @@ func (site *Site) prepare() {
 	site.publish(keys.Country, site.GetCountry())
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
+	site.publish(keys.Voltage, grid.Voltage)
+	site.publish(keys.GridConnection, site.GetGridConnection())
 	site.publish(keys.Grid, api.Meter(nil))
 	site.publish(keys.Pv, []api.Meter{})
 	site.publish(keys.Aux, []api.Meter{})

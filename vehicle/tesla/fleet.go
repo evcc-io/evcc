@@ -1,16 +1,13 @@
 package tesla
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"net/http"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	teslaclient "github.com/evcc-io/tesla-proxy-client"
 	"golang.org/x/oauth2"
 )
 
@@ -18,12 +15,6 @@ import (
 type FleetConfig struct {
 	Credentials oauth.ClientCredentials
 	Tokens      oauth.Tokens
-}
-
-// FleetClient provides authenticated access to the Tesla Fleet API
-type FleetClient struct {
-	Client     *teslaclient.Client
-	HTTPClient *http.Client
 }
 
 // Validate checks that the required Tesla Fleet API credentials are configured
@@ -39,7 +30,7 @@ func (c FleetConfig) Validate() error {
 }
 
 // Client creates a Tesla Fleet API client for the configured account
-func (c FleetConfig) Client(log *util.Logger) (*FleetClient, error) {
+func (c FleetConfig) Client(log *util.Logger) (*API, error) {
 	if err := c.Validate(); err != nil {
 		return nil, err
 	}
@@ -57,16 +48,10 @@ func (c FleetConfig) Client(log *util.Logger) (*FleetClient, error) {
 	hc := request.NewClient(log)
 	hc.Transport = &oauth2.Transport{Source: identity, Base: hc.Transport}
 
-	tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(hc))
-	if err != nil {
-		return nil, fmt.Errorf("create Fleet client: %w", err)
-	}
-
-	region, err := tc.UserRegion()
+	region, err := NewAPI(hc, FleetBaseUrl).Region()
 	if err != nil {
 		return nil, fmt.Errorf("get Fleet API region: %w", err)
 	}
-	tc.SetBaseUrl(region.FleetApiBaseUrl)
 
-	return &FleetClient{Client: tc, HTTPClient: hc}, nil
+	return NewAPI(hc, region.FleetApiBaseUrl), nil
 }

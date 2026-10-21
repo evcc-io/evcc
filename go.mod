@@ -4,7 +4,7 @@ go 1.27.0
 
 require (
 	dario.cat/mergo v1.0.2
-	github.com/404GamerNotFound/solarman-go v0.3.0
+	github.com/404GamerNotFound/solarman-go v0.3.1
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/OpenEVSE/go-openevse v0.3.0
@@ -13,12 +13,8 @@ require (
 	github.com/WulfgarW/sensonet v0.0.8
 	github.com/andig/go-powerwall v0.3.0
 	github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512
-	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
+	github.com/andig/mbserver v0.0.0-20261012132218-a196e033ec39
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
-	github.com/aws/aws-sdk-go-v2 v1.47.1
-	github.com/aws/aws-sdk-go-v2/config v1.33.6
-	github.com/aws/aws-sdk-go-v2/credentials v1.20.6
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.42.1
 	github.com/basgys/goxml2json v1.1.0
 	github.com/benbjohnson/clock v1.3.5
 	github.com/cenkalti/backoff/v4 v4.3.0
@@ -34,19 +30,19 @@ require (
 	github.com/enbility/ship-go v0.6.1-0.20260720110450-0aa90f64ac76
 	github.com/enbility/spine-go v0.7.1-0.20260629113257-b3bcc643f323
 	github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4
-	github.com/evcc-io/optimizer v0.0.0-20261004131720-6ba24fca01f5
-	github.com/evcc-io/rct v0.2.0
-	github.com/evcc-io/tesla-proxy-client v0.0.0-20260722080120-05ada06c7368
+	github.com/evcc-io/optimizer v0.0.0-20261018143112-8d68a91ebba7
+	github.com/evcc-io/rct v0.3.0
 	github.com/fatih/structs v1.1.0
-	github.com/getkin/kin-openapi v0.149.0
+	github.com/getkin/kin-openapi v0.151.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/go-telegram/bot v1.27.0
 	github.com/go-viper/mapstructure/v2 v2.5.0
-	github.com/godbus/dbus/v5 v5.2.2
+	github.com/godbus/dbus/v5 v5.2.4
 	github.com/gokrazy/updater v0.0.0-20260620140544-0a84d8ab3878
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-github/v32 v32.1.0
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/gosimple/slug v1.15.0
@@ -76,16 +72,16 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/modelcontextprotocol/go-sdk v1.8.0
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
-	github.com/nicholas-fedor/shoutrrr v0.21.1
+	github.com/nicholas-fedor/shoutrrr v0.22.0
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/olekukonko/tablewriter v1.1.5
 	github.com/philippseith/signalr v0.11.0
 	github.com/prometheus-community/pro-bing v0.9.1
-	github.com/prometheus/client_golang v1.24.1
-	github.com/prometheus/common v0.72.0
+	github.com/prometheus/client_golang v1.25.0
+	github.com/prometheus/common v0.72.1
 	github.com/robertkrimen/otto v0.5.1
 	github.com/samber/lo v1.53.0
-	github.com/sandrolain/httpcache v1.4.2
+	github.com/sandrolain/httpcache v1.4.3
 	github.com/sethvargo/go-password v0.4.0
 	github.com/sirupsen/logrus v1.10.2
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
@@ -96,24 +92,25 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
+	github.com/tah78/mazda-go v0.1.1
 	github.com/teslamotors/vehicle-command v0.4.1
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
 	github.com/traefik/yaegi v0.16.1
-	github.com/volkszaehler/mbmd v0.0.0-20260930172627-7dc9ab786b6f
-	github.com/warthog618/go-gpiocdev v0.9.2
-	github.com/xuri/excelize/v2 v2.11.0
-	gitlab.com/bboehmke/sunny v0.17.0
+	github.com/volkszaehler/mbmd v0.0.0-20261012103919-af19f17edbe0
+	github.com/warthog618/go-gpiocdev v0.10.0
+	github.com/xuri/excelize/v2 v2.11.1-0.20261003002531-6258dcebc4e2
+	gitlab.com/bboehmke/sunny v0.17.1
 	go.bug.st/serial v1.8.0
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v4 v4.0.0-rc.6
-	golang.org/x/crypto v0.57.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20261004121123-8f0f1112abdb
-	golang.org/x/exp v0.0.0-20260908205506-85c1c2202aba
-	golang.org/x/net v0.59.0
+	golang.org/x/crypto v0.58.0
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20261016151342-0ae6809b7559
+	golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e
+	golang.org/x/net v0.61.0
 	golang.org/x/oauth2 v0.37.0
-	golang.org/x/sync v0.23.0
-	golang.org/x/text v0.42.0
-	golang.org/x/tools v0.51.0
+	golang.org/x/sync v0.24.0
+	golang.org/x/text v0.43.0
+	golang.org/x/tools v0.52.0
 	google.golang.org/grpc v1.84.0
 	google.golang.org/protobuf v1.36.12
 	gorm.io/gorm v1.31.2
@@ -126,17 +123,6 @@ require (
 	github.com/andybalholm/cascadia v1.3.4 // indirect
 	github.com/antihax/optional v1.0.0 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.1 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.4 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.4 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.19 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.10.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.38.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.43.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.51.1 // indirect
-	github.com/aws/smithy-go v1.28.1 // indirect
 	github.com/azihsoyn/rijndael256 v0.0.0-20200316065338-d14eefa2b66b // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.1 // indirect
@@ -149,7 +135,7 @@ require (
 	github.com/cstockton/go-conv v1.0.0 // indirect
 	github.com/d2r2/go-logger v0.0.0-20210606094344-60e9d1233e22 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/dmarkham/enumer v1.6.3 // indirect
+	github.com/dmarkham/enumer v1.7.2 // indirect
 	github.com/donovanhide/eventsource v0.0.0-20210830082556-c59027999da0 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -180,7 +166,6 @@ require (
 	github.com/google/jsonschema-go v0.4.3 // indirect
 	github.com/google/licenseclassifier/v2 v2.0.0 // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/govalues/decimal v0.1.36 // indirect
@@ -193,7 +178,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.5.0 // indirect
-	github.com/mattn/go-colorable v0.1.15 // indirect
+	github.com/mattn/go-colorable v0.1.16 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mattn/go-runewidth v0.0.19 // indirect
 	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9 // indirect
@@ -216,13 +201,13 @@ require (
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.6.3 // indirect
-	github.com/prometheus/procfs v0.21.1 // indirect
+	github.com/prometheus/procfs v0.22.0 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/quic-go/quic-go v0.61.0 // indirect
 	github.com/quic-go/webtransport-go v0.12.0 // indirect
 	github.com/relvacode/iso8601 v1.6.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	github.com/richardlehane/mscfb v1.0.7 // indirect
+	github.com/richardlehane/mscfb v1.0.8 // indirect
 	github.com/richardlehane/msoleps v1.0.6 // indirect
 	github.com/rickb777/period v1.0.22 // indirect
 	github.com/rickb777/plural v1.4.7 // indirect
@@ -236,21 +221,21 @@ require (
 	github.com/spali/go-slicereader v0.0.0-20201122145524-8e262e1a5127 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	github.com/stretchr/objx v0.5.3 // indirect
+	github.com/stretchr/objx v0.7.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/teivah/onecontext v1.3.0 // indirect
 	github.com/tiendc/go-deepcopy v1.7.2 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
-	github.com/xuri/efp v0.0.1 // indirect
+	github.com/xuri/efp v0.0.2 // indirect
 	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/mod v0.41.0 // indirect
-	golang.org/x/sys v0.48.0 // indirect
-	golang.org/x/term v0.46.0 // indirect
+	golang.org/x/mod v0.42.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/term v0.47.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools/gopls v0.21.1 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260706201446-f0a921348800 // indirect

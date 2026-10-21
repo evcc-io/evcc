@@ -71,6 +71,10 @@ jobs:
         id: window
         run: echo "since=$(date -d '3 months ago' +%F)" >> "$GITHUB_OUTPUT"
 
+      # the agent proposes fenced texts here, keep them out of any fix commit
+      - name: Exclude format proposals
+        run: echo '.fence/' >> .git/info/exclude
+
       - name: Run Claude
         # pinned: v1 (Claude Code 2.1.216) fails every Bash call with
         # "bwrap: Can't create file at /home/.mcp.json: Permission denied"
@@ -87,18 +91,20 @@ jobs:
           additional_permissions: |
             actions: read
           # No mode may push or open a PR, the open-pr job does that. Triage and
-          # fix get Edit/Write + git add/commit/diff/status, analyze reads only.
+          # fix get Edit/Write + git add/commit/diff/status, analyze reads only
+          # plus Write for the format proposals (analyze exports no patch).
           # analyze/fix read their invoking comment with one exact gh api command
           # (no wildcard, so the token cannot be used for arbitrary API calls).
           # Task is blocked in all modes so the agent can't offload work to a
           # background sub-agent and exit before it returns. All modes get
           # read-only git log and gh pr view/diff to trace a regression to its
-          # pull request, gh issue list to find similar issues, and gh api graphql
-          # to read a referenced discussion (no gh subcommand exists). Only triage
-          # may close a duplicate. Triage and analyze run on Sonnet, it spends
+          # pull request, gh issue list and gh pr list to find similar issues and
+          # their fixes, git tag --contains for the release shipping a fix, and
+          # gh api graphql to read a referenced discussion (no gh subcommand
+          # exists). Only triage may close a duplicate. Triage and analyze run on Sonnet, it spends
           # less of the subscription quota; a maintainer's fix keeps the default
           # model.
-          claude_args: ${{ inputs.mode == 'analyze' && format('--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh issue edit {2} --add-label:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh api repos/{0}/issues/comments/{1} --jq .body),Bash(git log:*)" --disallowed-tools "Task"', github.repository, inputs.comment_id, inputs.issue_number) || (inputs.mode == 'fix' && format('--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh issue comment:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git status),Bash(gh api repos/{0}/issues/comments/{1} --jq .body)" --disallowed-tools "Task"', github.repository, inputs.comment_id) || '--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git status)" --disallowed-tools "Task"') }}
+          claude_args: ${{ inputs.mode == 'analyze' && format('--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr list:*),Bash(gh issue comment:*),Bash(gh issue edit {2} --add-label:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh api repos/{0}/issues/comments/{1} --jq .body),Bash(git log:*),Bash(git tag --contains:*)" --disallowed-tools "Task"', github.repository, inputs.comment_id, inputs.issue_number) || (inputs.mode == 'fix' && format('--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh issue comment:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git tag --contains:*),Bash(git status),Bash(gh api repos/{0}/issues/comments/{1} --jq .body)" --disallowed-tools "Task"', github.repository, inputs.comment_id) || '--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr list:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git tag --contains:*),Bash(git status)" --disallowed-tools "Task"') }}
           prompt: |
             You are the issue triage, analysis and fix agent for the evcc repository.
             MODE = "${{ inputs.mode }}". Work on issue/PR #${{ inputs.issue_number }}.
@@ -146,6 +152,24 @@ jobs:
                  a possible regression, analyze it as such.
                - RELATED: same area or overlapping symptom, but a different
                  device, cause or request.
+               A fix often lands without an issue, so also search merged pull
+               requests with the same terms:
+               `gh pr list --state merged --limit 20 --search "<terms> merged:>=${{ steps.window.outputs.since }}" --json number,title,url`
+               and check promising hits with `gh pr view`/`gh pr diff`.
+               FIXED: for a closed DUPLICATE, read its fixing pull request with
+               `gh issue view <number> --json closedByPullRequestsReferences`.
+               For that PR, or a merged PR whose diff fixes the reported cause,
+               list its commits in released history, the backports to release
+               branches included, with
+               `git log --tags --format=%h -F --grep="(#<pr>)"` and, for each
+               sha, the releases that ship it with
+               `git tag --contains <sha> --sort=version:refname`. Only plain
+               `X.Y.Z` tags are releases, ignore suffixed tags like
+               `0.300.8-lurtz`. The lowest version over all shas is the first
+               with the fix; none means nightly only. If the reporter's
+               version is older than that release, the problem is already fixed:
+               say so in step 2. If their version already contains it, analyze it
+               as a regression.
                No hits is a normal outcome, do not force a match.
                In "analyze" or "fix" mode you were usually invoked by a `/analyze`
                or `/fix` comment (id `${{ inputs.comment_id }}`). When that id is not
@@ -170,6 +194,10 @@ jobs:
                  line as `#<number>` with a few words each on how they relate. A
                  DUPLICATE found outside triage mode is listed the same way,
                  marked as a likely duplicate, since only triage closes.
+               - If step 1 found the problem FIXED, name the fixing PR as
+                 `#<number>` and the first release that ships it, or the nightly
+                 build when no release has it yet, and ask the reporter to update
+                 and confirm. Do not analyze the cause any further.
                - PUSH FOR MISSING INFORMATION. If anything needed to diagnose is
                  missing or incomplete — no log, no reproduction steps, no config, no
                  version, or a screenshot in place of data — do NOT assert a root
@@ -190,6 +218,20 @@ jobs:
                you mean a real issue/PR — otherwise escape it (e.g. `\#3`). Wrap file
                paths, code and identifiers in backticks. Always end the comment with:
                "🤖 Generated with [Claude Code](https://claude.com/claude-code)".
+
+            FORMAT: Logs, configuration and code pasted without a fenced code
+            block render as one run of flowing text. For the issue/PR body and each
+            comment of #${{ inputs.issue_number }} that contains such unfenced
+            content, propose a fenced version: wrap each block in a ``` fence with
+            a language hint where obvious (`yaml`, `json`, `log`, `go`). Change
+            nothing else, keep every other character as it is: you may only add
+            fence lines and blank lines, the workflow rejects any other change.
+            Take the raw text from
+            `gh issue view ${{ inputs.issue_number }} --json body,comments`, not from
+            the `--comments` rendering. Write the body as `.fence/body.md` and a
+            comment as `.fence/<comment id>.md`, using the comment's `id` from that
+            JSON (`IC_...`). Skip texts that need no fences; never commit these
+            files. The workflow applies them after you finish.
 
             If MODE is "triage", first check completeness, then close duplicates, label
             and fix:
@@ -220,6 +262,9 @@ jobs:
                them for that. Never close when the issue already carries a label or
                has a comment from anyone but the reporter and github-actions: a
                maintainer has it.
+               Right before closing, re-read the issue with
+               `gh issue view ${{ inputs.issue_number }} --json labels,comments`
+               and do not close if a maintainer took it over meanwhile.
                To close, post the comment and close in one command:
                `gh issue close ${{ inputs.issue_number }} --reason "not planned" --comment "<text>"`
                The text names the missing items, links the reporting guide
@@ -235,7 +280,8 @@ jobs:
                The text starts with `Duplicate of #<original>` on its own line so
                GitHub links the two, says in one or two sentences why they are the
                same, asks the reporter to continue in the original issue (and to
-               add their log/config there if it adds information), says that a
+               add their log/config there if it adds information), names the
+               fixing PR and release when the original is FIXED, says that a
                reply here reopens the issue if it is not a duplicate, and ends
                with the footer from step 2. Then give the closed issue the original's
                labels so both show up in the same filters: read them with
@@ -246,7 +292,8 @@ jobs:
                Any doubt means: do not close. Mention the candidate as a likely
                duplicate in your step 2 comment instead and continue. Never close
                when the issue already carries a label or has a comment from anyone
-               but the reporter and github-actions: a maintainer has it.
+               but the reporter and github-actions: a maintainer has it. Re-read
+               labels and comments right before closing, as in step 0.
 
             3. LABEL: Based on your investigation, ALWAYS apply exactly one area label
                from the repository's existing labels (`gh label list`) with
@@ -291,7 +338,8 @@ jobs:
                following HOW TO FIX below; the workflow opens the PR ready for review.
                If the fix needs design discussion, spans too many files, or you
                cannot determine the correct change with confidence, commit nothing
-               and explain why in your step 2 comment instead.
+               and explain why in your step 2 comment instead. The same applies
+               when step 1 found the problem FIXED already: commit nothing.
 
             HOW TO FIX: You cannot push or open a pull request; the workflow does
             that from your commit once you are done, on a branch it names itself.
@@ -341,6 +389,37 @@ jobs:
         with:
           name: fix-${{ inputs.issue_number }}
           path: ${{ runner.temp }}/fix.patch
+
+      # the agent cannot edit issue texts itself. Its proposals apply only to
+      # this issue, and only when they add nothing but fences and blank lines.
+      # Runs after the fix export so a failed API call cannot drop the fix
+      - name: Apply code fences
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ inputs.issue_number }}
+        run: |
+          shopt -s nullglob
+          strip() { tr -d '\r' | grep -v -E '^[[:space:]]*(```[[:alnum:]_+-]*)?[[:space:]]*$'; }
+          for f in .fence/*.md; do
+            id=$(basename "$f" .md)
+            url=
+            if [ "$id" = body ]; then
+              url="repos/$GITHUB_REPOSITORY/issues/$ISSUE"
+            elif [[ "$id" =~ ^IC_[A-Za-z0-9_-]+$ ]]; then
+              num=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$ISSUE/comments" \
+                --jq ".[] | select(.node_id == \"$id\") | .id") || num=
+              if [ -n "$num" ]; then url="repos/$GITHUB_REPOSITORY/issues/comments/$num"; fi
+            fi
+            # a failed read must not pass as an empty text
+            if [ -z "$url" ] || ! old=$(gh api "$url" --jq '.body // ""'); then
+              echo "::warning::$f is not a readable text of #$ISSUE"
+            elif ! diff <(printf '%s\n' "$old" | strip) <(strip < "$f") > /dev/null; then
+              echo "::warning::$f changes more than code fences"
+            elif ! gh api -X PATCH "$url" -F body=@"$f" > /dev/null; then
+              echo "::warning::$f could not be applied"
+            fi
+          done
 
       # the agent posts its result as a comment, so the command has been answered
       # whatever that result was. only a failed run leaves it open, there is no
