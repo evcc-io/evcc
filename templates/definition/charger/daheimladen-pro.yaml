@@ -1,7 +1,7 @@
 template: daheimladen-pro
 products:
   - { brand: DaheimLaden, description: { generic: Smart/Touch Pro } }
-  - { brand: DaheimLaden, description: { generic: Business Pro} }
+  - { brand: DaheimLaden, description: { generic: Business Pro } }
 requirements:
   description:
     de: Firmware-Anforderungen= Smart/Touch Pro ab "3.11STP", Business Pro ab "4.03PTB". Während der Phasen-Umschaltung pausiert die Ladung standardmäßig für zwei Minuten. Mit Firmware Smart/Touch Pro ab "4.08STP, Business Pro ab "4.07PTB" lässt sich die Pause über den Parameter "Phasenumschaltpause" verkürzen. Informationen zur Ladefreigabe (AutoStart, App, RFID, Button), bitte der Wallbox Dokumentation von DaheimLaden entnehmen.
