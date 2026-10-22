@@ -30,5 +30,7 @@ requirements:
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
+  - name: metervalues
+    default: -Current.Offered
 render: |
   {{ include "ocpp" . }}
