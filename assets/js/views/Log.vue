@@ -232,7 +232,7 @@ export default defineComponent({
 		handleDownloadClick,
 		areaName(area: string) {
 			const title = this.loadpointTitles[area];
-			return title ? `${title} (${area})` : area;
+			return title ? `${area} (${title})` : area;
 		},
 		async updateLogs(showAll: boolean = false) {
 			// prevent concurrent requests
