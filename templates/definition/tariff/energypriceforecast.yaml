@@ -31,6 +31,7 @@ countries:
     "PT",
     "GR",
     "BG",
+    "GB",
   ]
 params:
   - name: region
@@ -71,10 +72,14 @@ params:
         "PT",
         "GR",
         "BG",
+        "GB",
       ]
+    help:
+      en: "GB is a beta with hourly wholesale prices, not an exact half-hourly household tariff. Select GBP for prices in pounds."
+      de: "GB ist eine Beta mit stündlichen Börsenpreisen, kein exakter halbstündlicher Haushaltstarif. Für Preise in Pfund GBP auswählen."
     required: true
   - name: currency
-    choice: ["EUR", "DKK", "CZK", "PLN", "SEK", "NOK", "CHF", "RON"]
+    choice: ["EUR", "DKK", "CZK", "PLN", "SEK", "NOK", "CHF", "RON", "GBP"]
   - name: apikey
     help:
       en: "Optional for forecasts up to 120 hours. [Get an API key](https://energypriceforecast.eu/en/api-early-access/)."
