@@ -3631,7 +3631,8 @@
           "loadpoint",
           "heater",
           "consumer",
-          "tariff",
+          "gridImport",
+          "gridExport",
           "co2",
           "solar"
         ]

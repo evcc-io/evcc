@@ -12,7 +12,8 @@ export const ONBOARDING_ITEMS: OnboardingItem[] = [
   "loadpoint",
   "heater",
   "consumer",
-  "tariff",
+  "gridImport",
+  "gridExport",
   "co2",
   "solar",
 ];
@@ -36,8 +37,11 @@ async function save(patch: Partial<OnboardingState>) {
   store.state.onboarding = res.data;
 }
 
+// no solar system means no export tariff and no solar forecast either
 export function dismiss(item: OnboardingItem) {
-  return save({ dismissed: [...current().dismissed, item] });
+  const implied: OnboardingItem[] = item === "pv" ? ["gridExport", "solar"] : [];
+  const dismissed = new Set([...current().dismissed, item, ...implied]);
+  return save({ dismissed: [...dismissed] });
 }
 
 export function finish() {

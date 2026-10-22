@@ -612,7 +612,7 @@
 				<SecurityModal :auth-disabled="authDisabled" />
 				<ApiKeyModal :auth-disabled="authDisabled" />
 				<PasswordModal />
-				<OnboardingModal v-bind="onboardingModalProps" :pv="configuredItems['pv']" />
+				<OnboardingModal v-bind="onboardingModalProps" />
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 			</div>
 		</div>
@@ -1041,7 +1041,8 @@ export default defineComponent({
 				loadpoint: this.chargingLoadpoints.length > 0,
 				heater: this.heaterLoadpoints.length > 0,
 				consumer: (this.site.consumer?.length ?? 0) > 0,
-				tariff: !!(this.tariffRefs.grid || this.tariffRefs.feedIn),
+				gridImport: !!this.tariffRefs.grid,
+				gridExport: !!this.tariffRefs.feedIn,
 				co2: !!this.tariffRefs.co2,
 				solar: this.tariffRefs.solar.length > 0,
 			};

@@ -19,7 +19,7 @@
 				</Transition>
 			</div>
 			<div class="small fw-bold text-uppercase evcc-gray mt-3 mb-2">
-				{{ $t("onboarding.step", { step: stepIndex + 1, total: steps.length }) }}
+				{{ $t("onboarding.step", { step: stepIndex + 1, total: STEPS.length }) }}
 			</div>
 		</template>
 
@@ -27,13 +27,18 @@
 			<div :key="step">
 				<!-- welcome -->
 				<div v-if="step === 'welcome'" class="text-center">
-					<div class="d-flex justify-content-between evcc-gray mb-5 icon-row">
+					<div
+						ref="band"
+						class="band position-relative d-flex justify-content-between evcc-gray mb-5 icon-row"
+						:class="{ bar: starting }"
+					>
 						<component
 							:is="bandIcon"
-							v-for="(bandIcon, i) in bandIcons"
+							v-for="(bandIcon, i) in BAND_ICONS"
 							:key="i"
-							:class="{ morph: i === startIconIndex }"
+							:class="{ current: i === startIconIndex }"
 						/>
+						<div class="line"></div>
 					</div>
 					<div class="d-flex justify-content-center mb-4">
 						<BrandLogo />
@@ -42,14 +47,20 @@
 					<button type="button" class="btn btn-primary px-4 mt-3 mb-2" @click="start">
 						{{ $t("onboarding.welcome.start") }}
 					</button>
+					<div v-if="canSkip" class="mt-2">
+						<button
+							type="button"
+							class="btn btn-link btn-sm evcc-gray text-decoration-none p-0"
+							@click="skipSetup"
+						>
+							{{ $t("onboarding.skip") }}
+						</button>
+					</div>
 				</div>
 
 				<!-- done -->
 				<div v-else-if="step === 'done'" class="text-center pt-3">
-					<shopicon-regular-checkmark
-						size="xl"
-						class="text-primary d-block mx-auto mb-2"
-					></shopicon-regular-checkmark>
+					<CheckIcon :size="ICON_SIZE.XL" class="text-primary mx-auto mb-2" />
 					<h2 class="mb-2">{{ $t("onboarding.done.title") }}</h2>
 					<p class="mx-auto description">{{ $t("onboarding.done.description") }}</p>
 					<div class="d-flex flex-column align-items-center gap-3 mt-4">
@@ -81,43 +92,37 @@
 							:is="icon"
 							v-if="icon"
 							size="m"
-							class="icon text-primary flex-shrink-0 morph"
+							class="icon text-primary flex-shrink-0"
 						/>
 						{{ $t(`onboarding.${step}.title`) }}
 					</h2>
 
 					<!-- password -->
 					<template v-if="step === 'password'">
-						<p>{{ $t("onboarding.password.description") }}</p>
-						<PasswordStep @saved="next" />
+						<template v-if="authDisabled">
+							<i18n-t
+								keypath="onboarding.password.disabled"
+								tag="div"
+								class="alert alert-warning"
+								role="alert"
+								scope="global"
+							>
+								<template #flag><code>--disable-auth</code></template>
+							</i18n-t>
+						</template>
+						<template v-else>
+							<p>{{ $t("onboarding.password.description") }}</p>
+							<PasswordStep @saved="next" />
+						</template>
 					</template>
 
 					<!-- site -->
 					<template v-else-if="step === 'site'">
 						<p>{{ $t("onboarding.site.description") }}</p>
-						<SiteForm compact id-prefix="onboardingSite" @saved="next">
-							<template #default="{ saving }">
-								<div class="d-flex justify-content-end align-items-center gap-4">
-									<button
-										type="button"
-										class="btn btn-link btn-sm evcc-gray text-decoration-none p-0"
-										@click="skipSetup"
-									>
-										{{ $t("onboarding.skip") }}
-									</button>
-									<button
-										type="submit"
-										class="btn btn-primary"
-										:disabled="saving"
-									>
-										{{ $t("config.general.continue") }}
-									</button>
-								</div>
-							</template>
-						</SiteForm>
+						<SiteForm compact id-prefix="onboardingSite" @saved="next" />
 					</template>
 
-					<!-- battery, pv, grid, consumer, charging point or heater -->
+					<!-- battery, pv, grid, charging point or heater -->
 					<template v-else-if="meterItem || step === 'control'">
 						<p>{{ $t(`onboarding.${step}.description`) }}</p>
 						<template v-if="configuredDevices.length">
@@ -205,21 +210,11 @@
 							</button>
 						</template>
 					</template>
-
-					<!-- tariffs -->
-					<template v-else-if="step === 'tariff'">
-						<p>{{ $t("onboarding.tariff.description") }}</p>
-						<DeviceList
-							:items="tariffRows"
-							@add="(type) => openModal('tariff', { type })"
-							@edit="editTariff"
-						/>
-					</template>
 				</template>
 			</div>
 		</div>
 
-		<div v-if="canGoBack" class="d-flex justify-content-between align-items-center gap-3 mt-4">
+		<div v-if="footer" class="d-flex justify-content-between align-items-center gap-3 mt-4">
 			<button
 				type="button"
 				class="btn btn-link btn-sm evcc-gray text-decoration-none p-0"
@@ -227,18 +222,23 @@
 			>
 				{{ $t("onboarding.back") }}
 			</button>
-			<button v-if="canContinue" type="button" class="btn btn-primary" @click="next">
-				{{ $t("config.general.continue") }}
+			<button
+				v-if="canContinue"
+				:type="form ? 'submit' : 'button'"
+				:form="form"
+				class="btn btn-primary"
+				@click="continueStep"
+			>
+				{{ continueLabel }}
 			</button>
 		</div>
 	</GenericModal>
 </template>
 
 <script lang="ts">
-import "@h2d2/shopicons/es/regular/checkmark";
 import "@h2d2/shopicons/es/regular/plus";
 import "@h2d2/shopicons/es/regular/home";
-import { defineComponent, type Component, type PropType } from "vue";
+import { defineComponent, markRaw, type PropType } from "vue";
 import confetti from "canvas-confetti";
 import GenericModal from "../../Helper/GenericModal.vue";
 import SiteForm from "../SiteForm.vue";
@@ -247,49 +247,37 @@ import DeviceList, { type DeviceListItem } from "../DeviceList.vue";
 import LoadpointIcon from "../../MaterialIcon/Loadpoint.vue";
 import HeaterIcon from "../../VehicleIcon/Heater.vue";
 import KeyIcon from "../../MaterialIcon/Key.vue";
+import CheckIcon from "../../MaterialIcon/Check.vue";
 import BrandLogo from "../../BrandLogo.vue";
 import { ONBOARDING_ICONS } from "./icons";
 import { closeModal, getModal, openModal, replaceModal } from "@/configModal";
-import { clearSession, dismiss, finish, ONBOARDING_ITEMS } from "@/onboarding";
+import { clearSession, dismiss, finish } from "@/onboarding";
 import auth from "../../Auth/auth";
 import restart, { performRestart } from "@/restart";
 import {
-	CURRENCY,
 	ICON_SIZE,
 	type ConfigLoadpoint,
 	type ConfigMeter,
-	type Entity,
 	type OnboardingItem,
 } from "@/types/evcc";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 
 type DeviceValues = Record<string, Record<string, Record<string, { value?: unknown }>>>;
 
-type Step =
-	| "welcome"
-	| "password"
-	| "site"
-	| "battery"
-	| "pv"
-	| "grid"
-	| "control"
-	| "consumer"
-	| "tariff"
-	| "done";
+type Step = "welcome" | "password" | "site" | "battery" | "pv" | "grid" | "control" | "done";
 
-const STEPS: Step[] = [
-	"password",
-	"site",
-	"battery",
-	"pv",
-	"grid",
-	"control",
-	"consumer",
-	"tariff",
-	"done",
-];
+const STEPS: Step[] = ["password", "site", "battery", "pv", "grid", "control", "done"];
 
-const METER_ITEMS: Step[] = ["battery", "pv", "grid", "consumer"];
+const METER_ITEMS: Step[] = ["battery", "pv", "grid"];
+// what lies ahead, in step order
+const BAND_ICONS = markRaw([
+	KeyIcon,
+	"shopicon-regular-home",
+	...["battery", "pv", "grid", "loadpoint", "heater"].map(
+		(i) => ONBOARDING_ICONS[i as OnboardingItem]
+	),
+	CheckIcon,
+]);
 
 export default defineComponent({
 	name: "OnboardingModal",
@@ -302,74 +290,64 @@ export default defineComponent({
 		LoadpointIcon,
 		HeaterIcon,
 		BrandLogo,
+		CheckIcon,
 	},
 	props: {
-		// solar decides whether the export tariff row is shown
-		pv: Boolean,
 		batteryMeters: { type: Array as PropType<ConfigMeter[]>, default: () => [] },
 		pvMeters: { type: Array as PropType<ConfigMeter[]>, default: () => [] },
 		gridMeter: Object as PropType<ConfigMeter>,
-		consumerMeters: { type: Array as PropType<ConfigMeter[]>, default: () => [] },
 		chargingLoadpoints: { type: Array as PropType<ConfigLoadpoint[]>, default: () => [] },
 		heaterLoadpoints: { type: Array as PropType<ConfigLoadpoint[]>, default: () => [] },
-		gridTariff: Object as PropType<Entity | null>,
-		feedInTariff: Object as PropType<Entity | null>,
 		// live readings per device type and name, one is shown per row as proof of life
 		deviceValues: { type: Object as PropType<DeviceValues>, default: () => ({}) },
-		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		authDisabled: Boolean,
 	},
 	data() {
 		return {
 			ICON_SIZE,
+			STEPS,
+			BAND_ICONS,
 			// skipping the grid meter asks twice, it is the basis for surplus charging
 			confirmSkip: false,
+			starting: false,
 		};
 	},
 	computed: {
-		steps(): Step[] {
-			return STEPS.filter((s) => s !== "password" || !this.authDisabled);
-		},
 		step(): Step {
 			const type = getModal("onboarding")?.type as Step | undefined;
-			return type && this.steps.includes(type) ? type : "welcome";
+			return type && STEPS.includes(type) ? type : "welcome";
 		},
 		stepIndex(): number {
-			return this.steps.indexOf(this.step);
+			return STEPS.indexOf(this.step);
 		},
 		progress(): number {
-			return Math.round(((this.stepIndex + 1) / this.steps.length) * 100);
+			return Math.round(((this.stepIndex + 1) / STEPS.length) * 100);
 		},
 		icon() {
 			if (this.step === "password") return KeyIcon;
 			if (this.step === "site") return "shopicon-regular-home";
-			const item = this.step === "tariff" ? "tariff" : this.meterItem;
-			return item ? ONBOARDING_ICONS[item] : null;
+			return this.meterItem ? ONBOARDING_ICONS[this.meterItem] : null;
 		},
 		// a configured password keeps its place in the count but is not shown again
+		passwordShown(): boolean {
+			return !auth.configured || this.authDisabled;
+		},
 		startStep(): Step {
-			return this.steps.find((s) => s !== "password" || !auth.configured)!;
+			return this.passwordShown ? "password" : "site";
 		},
-		// the band icon that morphs into the first step's heading icon
+		// a missing password is mandatory, a disabled one only warns
+		canSkip(): boolean {
+			return auth.configured || this.authDisabled;
+		},
+		// the band icon of the first step lights up before the band turns into the progress bar
 		startIconIndex(): number {
-			return this.bandIcons.indexOf(
-				this.startStep === "site" ? "shopicon-regular-home" : KeyIcon
-			);
-		},
-		// what lies ahead, in step order
-		bandIcons(): (string | Component)[] {
-			const items = ONBOARDING_ITEMS.filter((i) => i !== "co2" && i !== "solar");
-			return [
-				...(this.authDisabled ? [] : [KeyIcon]),
-				"shopicon-regular-home",
-				...items.map((i) => ONBOARDING_ICONS[i]),
-			];
+			return this.startStep === "site" ? 1 : 0;
 		},
 		// steps that add a meter, the step name doubles as checklist item and meter type
 		meterItem(): OnboardingItem | undefined {
 			return METER_ITEMS.includes(this.step) ? (this.step as OnboardingItem) : undefined;
 		},
-		// item (or tariffGrid / tariffFeedIn) -> configured devices with one formatted live value
+		// item -> configured devices with one formatted live value
 		devices(): Record<string, DeviceListItem[]> {
 			const meterRow = (m: ConfigMeter, tag: string) => ({
 				id: m.id,
@@ -381,20 +359,12 @@ export default defineComponent({
 				title: lp.title,
 				value: this.liveValue("charger", lp.charger, "power"),
 			});
-			const tariffRow = (t: Entity) => ({
-				id: t.id,
-				title: t.name,
-				value: this.liveValue("tariff", t.name, "price"),
-			});
 			return {
 				battery: this.batteryMeters.map((m) => meterRow(m, "soc")),
 				pv: this.pvMeters.map((m) => meterRow(m, "power")),
 				grid: this.gridMeter ? [meterRow(this.gridMeter, "power")] : [],
-				consumer: this.consumerMeters.map((m) => meterRow(m, "power")),
 				loadpoint: this.chargingLoadpoints.map(loadpointRow),
 				heater: this.heaterLoadpoints.map(loadpointRow),
-				tariffGrid: this.gridTariff ? [tariffRow(this.gridTariff)] : [],
-				tariffFeedIn: this.feedInTariff ? [tariffRow(this.feedInTariff)] : [],
 			};
 		},
 		configuredDevices(): DeviceListItem[] {
@@ -403,26 +373,23 @@ export default defineComponent({
 			}
 			return this.meterItem ? this.devices[this.meterItem]! : [];
 		},
-		// export tariff only makes sense with solar
-		tariffRows(): DeviceListItem[] {
-			const types = this.pv ? ["grid", "feedIn"] : ["grid"];
-			return types.map((type) => {
-				const device = this.tariffDevice(type);
-				return {
-					id: type,
-					title: this.$t(`onboarding.tariff.${type}`),
-					value: device?.value,
-					add: !device,
-				};
-			});
+		footer(): boolean {
+			return this.step !== "welcome" && this.step !== "done";
 		},
-		canGoBack(): boolean {
-			const previous = this.steps[this.stepIndex - 1];
-			return !!previous && previous !== "password" && this.step !== "done";
+		// the form the continue button submits, password and site live in one
+		form(): string | undefined {
+			if (this.step === "password" && !this.authDisabled) return "onboardingPassword";
+			if (this.step === "site") return "onboardingSiteForm";
+			return undefined;
 		},
-		// device steps continue once something exists, the tariff step is optional
+		continueLabel(): string {
+			return this.form === "onboardingPassword"
+				? this.$t("passwordModal.newPassword")
+				: this.$t("config.general.continue");
+		},
+		// device steps continue once something exists
 		canContinue(): boolean {
-			return this.step === "tariff" || this.configuredDevices.length > 0;
+			return ["password", "site"].includes(this.step) || this.configuredDevices.length > 0;
 		},
 		restartNeeded(): boolean {
 			return restart.restartNeeded;
@@ -449,16 +416,28 @@ export default defineComponent({
 				await this.$nextTick();
 			});
 		},
+		// the band collapses into a line first, then the line slides into place as the progress bar
 		async start() {
+			this.starting = true;
+			await this.$nextTick();
+			const band = this.$refs["band"] as HTMLElement;
+			await Promise.all(band.getAnimations({ subtree: true }).map((a) => a.finished));
 			document.documentElement.classList.add("onboarding-start");
 			await this.goTo(this.startStep)?.finished;
 			document.documentElement.classList.remove("onboarding-start");
+			this.starting = false;
 		},
 		next() {
-			this.goTo(this.steps[this.stepIndex + 1]!);
+			this.goTo(STEPS[this.stepIndex + 1]!);
+		},
+		// forms advance through their saved event
+		continueStep() {
+			if (!this.form) this.next();
 		},
 		prev() {
-			this.goTo(this.steps[this.stepIndex - 1]!);
+			const previous = STEPS[this.stepIndex - 1];
+			const shown = previous && (previous !== "password" || this.passwordShown);
+			this.goTo(shown ? previous : "welcome");
 		},
 		// form field or primary action, never a text link or a "none" button
 		focusFirst() {
@@ -467,7 +446,6 @@ export default defineComponent({
 				.querySelector<HTMLElement>("input, select, .btn-primary, .btn-outline-primary")
 				?.focus({ preventScroll: true });
 		},
-		openModal,
 		closeModal,
 		addLoadpoint(type: string) {
 			openModal("loadpoint", { type });
@@ -486,15 +464,7 @@ export default defineComponent({
 			const value = this.deviceValues[type]?.[name]?.[tag]?.value;
 			if (typeof value !== "number") return "";
 			if (tag === "soc") return this.fmtPercentage(value, 1);
-			if (tag === "price") return this.fmtPricePerKWh(value, this.currency, true);
 			return this.fmtW(value, POWER_UNIT.AUTO);
-		},
-		// devices are keyed tariffGrid / tariffFeedIn
-		tariffDevice(type: string): DeviceListItem | undefined {
-			return this.devices[`tariff${type[0]!.toUpperCase()}${type.slice(1)}`]?.[0];
-		},
-		editTariff(type: string) {
-			openModal("tariff", { type, id: this.tariffDevice(type)!.id as number });
 		},
 		async skipMeter() {
 			if (this.step === "grid" && !this.confirmSkip) {
@@ -554,6 +524,34 @@ export default defineComponent({
 	font-size: 32px;
 	line-height: 0;
 }
+/* one icon per step: the first lights up, then the icons dissolve into a line, the box keeps its height */
+.band {
+	height: 24px;
+}
+.band > :not(.line) {
+	transition:
+		color var(--evcc-transition-fast) ease,
+		opacity var(--evcc-transition-fast) ease var(--evcc-transition-fast);
+}
+.band.bar > :not(.line) {
+	opacity: 0;
+}
+.band.bar > .current {
+	color: var(--bs-primary);
+}
+/* sits exactly where the progress bar lands, so the view transition only crossfades in place */
+.line {
+	position: absolute;
+	inset: 0 0 auto;
+	height: 4px;
+	border-radius: var(--bs-border-radius);
+	background-color: var(--evcc-gray-25);
+	opacity: 0;
+	transition: opacity var(--evcc-transition-fast) ease var(--evcc-transition-fast);
+}
+.band.bar > .line {
+	opacity: 1;
+}
 </style>
 
 <style>
@@ -564,20 +562,16 @@ export default defineComponent({
 #onboardingModal .modal-body {
 	view-transition-name: onboarding-body;
 }
-/* leaving the welcome step: old out, the band icon flies into the heading, new in, so it never crosses content */
-html.onboarding-start .morph {
-	view-transition-name: onboarding-icon;
+/* leaving the welcome step: old out, the collapsed icon band continues as the progress bar, new in */
+html.onboarding-start #onboardingModal .line,
+html.onboarding-start #onboardingModal .progress {
+	view-transition-name: onboarding-progress;
 }
 html.onboarding-start::view-transition-old(onboarding-body) {
 	animation: 100ms ease-out both vt-fade-out;
 }
 html.onboarding-start::view-transition-new(onboarding-body) {
 	animation: 150ms 200ms ease-in both vt-fade-in;
-}
-::view-transition-group(onboarding-icon) {
-	animation-duration: 250ms;
-	animation-delay: 60ms;
-	animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 @keyframes vt-fade-out {
 	to {

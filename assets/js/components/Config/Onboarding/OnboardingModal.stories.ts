@@ -36,6 +36,9 @@ const Template: StoryFn<Args> = (args) => ({
 export const Password = Template.bind({});
 Password.args = { step: "password", passwordMissing: true };
 
+export const AuthDisabled = Template.bind({});
+AuthDisabled.args = { step: "password", authDisabled: true };
+
 export const Site = Template.bind({});
 Site.args = { step: "site" };
 
@@ -51,9 +54,6 @@ GridConfigured.args = {
 
 export const Control = Template.bind({});
 Control.args = { step: "control" };
-
-export const Tariffs = Template.bind({});
-Tariffs.args = { step: "tariff", pv: true };
 
 export const Done = Template.bind({});
 Done.args = { step: "done" };

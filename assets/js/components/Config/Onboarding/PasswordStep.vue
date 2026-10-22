@@ -1,5 +1,10 @@
 <template>
-	<form :class="{ 'was-validated': showValidation }" novalidate @submit="setPassword">
+	<form
+		id="onboardingPassword"
+		:class="{ 'was-validated': showValidation }"
+		novalidate
+		@submit="setPassword"
+	>
 		<ErrorMessage :error="error" />
 		<!-- password manager hint -->
 		<input
@@ -34,17 +39,6 @@
 				{{ $t("passwordModal.noMatch") }}
 			</div>
 		</FormRow>
-		<div class="d-flex justify-content-end">
-			<button type="submit" class="btn btn-primary" :disabled="loading">
-				<span
-					v-if="loading"
-					class="spinner-border spinner-border-sm"
-					role="status"
-					aria-hidden="true"
-				></span>
-				{{ $t("passwordModal.newPassword") }}
-			</button>
-		</div>
 	</form>
 </template>
 
@@ -64,7 +58,6 @@ export default defineComponent({
 			passwordNew: "",
 			passwordRepeat: "",
 			showValidation: false,
-			loading: false,
 			error: "",
 		};
 	},
@@ -81,7 +74,6 @@ export default defineComponent({
 			this.showValidation = true;
 			if (!(e.target as HTMLFormElement).checkValidity()) return;
 
-			this.loading = true;
 			this.error = "";
 			try {
 				await api.put("/auth/password", { current: "", new: this.passwordNew });
@@ -91,7 +83,6 @@ export default defineComponent({
 				this.error = error.response?.data ?? error.message;
 				this.showValidation = false;
 			}
-			this.loading = false;
 		},
 	},
 });

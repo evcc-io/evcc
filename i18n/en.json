@@ -1858,12 +1858,6 @@
       "progress": "{done} of {total} done",
       "title": "Complete your setup"
     },
-    "consumer": {
-      "add": "Add consumer",
-      "description": "Consumers with their own meter, such as smart sockets, show up separately in the energy statistics.",
-      "none": "No consumers",
-      "title": "Do you want to track consumers?"
-    },
     "control": {
       "description": "Start with your first one. More can be added later on the configuration page.",
       "none": "Nothing yet",
@@ -1881,21 +1875,23 @@
       "confirmNone": "Continue without",
       "description": "Measures grid import and grid export at the connection point. Makes surplus charging precise.",
       "none": "No grid meter",
-      "title": "Grid meter"
+      "title": "Do you have a grid meter?"
     },
     "item": {
       "battery": "Home battery",
       "co2": "CO₂ forecast",
       "consumer": "Consumer",
       "grid": "Grid meter",
+      "gridExport": "Grid export tariff",
+      "gridImport": "Grid import tariff",
       "heater": "Heater",
       "loadpoint": "Charging point",
       "pv": "Solar system",
-      "solar": "Solar forecast",
-      "tariff": "Grid tariffs"
+      "solar": "Solar forecast"
     },
     "password": {
       "description": "Protects the configuration settings from unauthorized changes. Remember it, there is no easy way to reset it.",
+      "disabled": "Authentication is disabled ({flag}). Anyone with network access can change the configuration, read stored credentials and run scripts. Secure access by other means.",
       "title": "Set Administrator Password"
     },
     "pv": {
@@ -1912,12 +1908,6 @@
     },
     "skip": "Skip setup",
     "step": "Step {step} of {total}",
-    "tariff": {
-      "description": "Price for grid import and remuneration for grid export. Needed for cost statistics and charging on cheap energy.",
-      "feedIn": "Export tariff",
-      "grid": "Import tariff",
-      "title": "Grid tariffs"
-    },
     "welcome": {
       "description": "Set up the most important parts of your home installation to start smart charging.",
       "start": "Get started"

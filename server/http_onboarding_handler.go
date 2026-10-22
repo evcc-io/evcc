@@ -11,7 +11,7 @@ import (
 )
 
 // onboardingItems are the setup checklist rows a user can dismiss
-var onboardingItems = []string{"battery", "pv", "grid", "loadpoint", "heater", "consumer", "tariff", "co2", "solar"}
+var onboardingItems = []string{"battery", "pv", "grid", "loadpoint", "heater", "consumer", "gridImport", "gridExport", "co2", "solar"}
 
 type onboardingState struct {
 	Done      bool     `json:"done"`

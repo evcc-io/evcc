@@ -38,11 +38,7 @@
 						>
 							{{ $t(`onboarding.item.${row.item}`) }}
 						</span>
-						<shopicon-regular-checkmark
-							v-if="row.done"
-							size="s"
-							class="text-primary flex-shrink-0"
-						></shopicon-regular-checkmark>
+						<CheckIcon v-if="row.done" class="text-primary flex-shrink-0" />
 						<template v-else>
 							<button
 								type="button"
@@ -70,7 +66,7 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/close";
-import "@h2d2/shopicons/es/regular/checkmark";
+import CheckIcon from "../MaterialIcon/Check.vue";
 import { defineComponent, type PropType } from "vue";
 import type { OnboardingItem } from "@/types/evcc";
 import { openModal } from "@/configModal";
@@ -78,10 +74,15 @@ import { dismiss, ONBOARDING_ITEMS } from "@/onboarding";
 import { ONBOARDING_ICONS } from "./Onboarding/icons";
 
 const METER_ITEMS = ["battery", "pv", "grid", "consumer"];
+const TARIFF_TYPES: Partial<Record<OnboardingItem, string>> = {
+	gridImport: "grid",
+	gridExport: "feedIn",
+};
 
 // rows stay once done (configured or dismissed), the card collapses when nothing is left
 export default defineComponent({
 	name: "SetupChecklist",
+	components: { CheckIcon },
 	props: {
 		configured: { type: Object as PropType<Record<string, boolean>>, required: true },
 		dismissed: { type: Array as PropType<OnboardingItem[]>, default: () => [] },
@@ -122,7 +123,7 @@ export default defineComponent({
 			} else if (item === "loadpoint" || item === "heater") {
 				openModal("loadpoint", { type: item === "heater" ? "heating" : "charging" });
 			} else {
-				openModal("tariff", { type: item === "tariff" ? "grid" : item });
+				openModal("tariff", { type: TARIFF_TYPES[item] ?? item });
 			}
 		},
 	},

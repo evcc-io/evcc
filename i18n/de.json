@@ -1849,7 +1849,7 @@
     "back": "Zurück",
     "battery": {
       "add": "Hausbatterie hinzufügen",
-      "description": "Füge deine Batterie hinzu, damit das Laden sie berücksichtigt und du siehst, was sie tut.",
+      "description": "Die Batterie hinzufügen, damit das Laden sie berücksichtigt und sichtbar ist, was sie tut.",
       "none": "Keine Hausbatterie",
       "title": "Gibt es eine Hausbatterie?"
     },
@@ -1857,12 +1857,6 @@
       "dismiss": "Ausblenden",
       "progress": "{done} von {total} erledigt",
       "title": "Einrichtung abschließen"
-    },
-    "consumer": {
-      "add": "Verbraucher hinzufügen",
-      "description": "Verbraucher mit eigenem Zähler, z. B. smarte Steckdosen, erscheinen separat in der Energiestatistik.",
-      "none": "Keine Verbraucher",
-      "title": "Sollen Verbraucher erfasst werden?"
     },
     "control": {
       "description": "Beginne mit dem ersten. Weitere lassen sich später auf der Konfigurationsseite ergänzen.",
@@ -1881,21 +1875,23 @@
       "confirmNone": "Trotzdem weiter",
       "description": "Misst Netzbezug und Einspeisung am Netzanschluss. Macht das Überschussladen präzise.",
       "none": "Kein Netzzähler",
-      "title": "Netzzähler"
+      "title": "Gibt es einen Netzzähler?"
     },
     "item": {
       "battery": "Hausbatterie",
       "co2": "CO₂-Vorhersage",
       "consumer": "Verbraucher",
       "grid": "Netzzähler",
+      "gridExport": "Einspeisetarif",
+      "gridImport": "Netzbezugstarif",
       "heater": "Heizung",
       "loadpoint": "Ladepunkt",
       "pv": "PV-Anlage",
-      "solar": "PV-Vorhersage",
-      "tariff": "Netztarife"
+      "solar": "PV-Vorhersage"
     },
     "password": {
       "description": "Schützt die Konfiguration vor unbefugten Änderungen. Gut merken, ein Zurücksetzen ist nicht ohne Weiteres möglich.",
+      "disabled": "Die Authentifizierung ist deaktiviert ({flag}). Jeder mit Netzwerkzugriff kann die Konfiguration ändern, gespeicherte Zugangsdaten lesen und Skripte ausführen. Der Zugriff muss anderweitig abgesichert werden.",
       "title": "Administrator-Passwort festlegen"
     },
     "pv": {
@@ -1907,17 +1903,11 @@
     "site": {
       "currencyHint": "z.B. {price}, {amount}",
       "defaultTitle": "Zuhause",
-      "description": "Ein paar Grundlagen zu deinem Zuhause. Du kannst sie jederzeit ändern.",
-      "title": "Dein Standort"
+      "description": "Ein paar Grundlagen zum Zuhause. Alles lässt sich jederzeit ändern.",
+      "title": "Standort"
     },
     "skip": "Einrichtung überspringen",
     "step": "Schritt {step} von {total}",
-    "tariff": {
-      "description": "Preis für Netzbezug und Vergütung für Einspeisung. Nötig für Kostenstatistiken und das Laden bei günstigem Strom.",
-      "feedIn": "Einspeisetarif",
-      "grid": "Bezugstarif",
-      "title": "Netztarife"
-    },
     "welcome": {
       "description": "Die wichtigsten Teile der Hausinstallation einrichten, um mit dem smarten Laden zu starten.",
       "start": "Los geht's"

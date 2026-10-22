@@ -5,10 +5,7 @@
 	</div>
 	<div v-else class="d-flex flex-column gap-4">
 		<div class="d-flex align-items-center gap-3">
-			<shopicon-regular-checkmark
-				size="m"
-				class="text-primary flex-shrink-0"
-			></shopicon-regular-checkmark>
+			<CheckIcon :size="ICON_SIZE.M" class="text-primary flex-shrink-0" />
 			<p class="mb-0">{{ successText }}</p>
 		</div>
 		<div class="d-flex align-items-center justify-content-between gap-3">
@@ -19,15 +16,20 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import "@h2d2/shopicons/es/regular/checkmark";
+import CheckIcon from "../MaterialIcon/Check.vue";
+import { ICON_SIZE } from "@/types/evcc";
 
 // Reusable creating -> created status for device creation flows.
 export default defineComponent({
 	name: "CreateFlowStatus",
+	components: { CheckIcon },
 	props: {
 		inProgress: Boolean,
 		creatingText: String,
 		successText: String,
+	},
+	data() {
+		return { ICON_SIZE };
 	},
 });
 </script>

@@ -1,4 +1,5 @@
 import "@h2d2/shopicons/es/regular/powersupply";
+import "@h2d2/shopicons/es/regular/invoice";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/batterythreequarters";
 import "@h2d2/shopicons/es/regular/receivepayment";
@@ -18,7 +19,8 @@ export const ONBOARDING_ICONS: Record<OnboardingItem, string | Component> = {
   loadpoint: markRaw(LoadpointIcon),
   heater: markRaw(HeaterIcon),
   consumer: markRaw(ConsumerIcon),
-  tariff: "shopicon-regular-receivepayment",
+  gridImport: "shopicon-regular-invoice",
+  gridExport: "shopicon-regular-receivepayment",
   co2: "shopicon-regular-eco1",
   solar: markRaw(ForecastGraphIcon),
 };

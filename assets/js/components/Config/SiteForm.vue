@@ -1,5 +1,5 @@
 <template>
-	<form class="container mx-0 px-0" @submit.prevent="save">
+	<form :id="`${idPrefix}Form`" class="container mx-0 px-0" @submit.prevent="save">
 		<p v-if="error" class="text-danger">{{ error }}</p>
 		<component
 			:is="row"

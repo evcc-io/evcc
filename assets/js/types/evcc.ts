@@ -41,7 +41,8 @@ export type OnboardingItem =
   | "loadpoint"
   | "heater"
   | "consumer"
-  | "tariff"
+  | "gridImport"
+  | "gridExport"
   | "co2"
   | "solar";
 /** Setup wizard and checklist state. */

@@ -26,5 +26,14 @@ Partial.args = { configured: configured(["pv", "grid"]), dismissed: ["loadpoint"
 
 export const OneLeft = Template.bind({});
 OneLeft.args = {
-  configured: configured(["battery", "pv", "grid", "loadpoint", "consumer", "tariff", "co2"]),
+  configured: configured([
+    "battery",
+    "pv",
+    "grid",
+    "loadpoint",
+    "consumer",
+    "gridImport",
+    "gridExport",
+    "co2",
+  ]),
 };
