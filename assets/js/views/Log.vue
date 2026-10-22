@@ -172,6 +172,11 @@ export default defineComponent({
 				return { key, className, line };
 			});
 		},
+		loadpointTitles(): Record<string, string> {
+			return Object.fromEntries(
+				(store.state?.loadpoints || []).map((lp, i) => [`lp-${i + 1}`, lp.title])
+			);
+		},
 		areaOptions() {
 			return this.availableAreas
 				.slice()
@@ -226,8 +231,7 @@ export default defineComponent({
 	methods: {
 		handleDownloadClick,
 		areaName(area: string) {
-			const index = /^lp-(\d+)$/.exec(area)?.[1];
-			const title = index ? store.state?.loadpoints?.[Number(index) - 1]?.title : "";
+			const title = this.loadpointTitles[area];
 			return title ? `${title} (${area})` : area;
 		},
 		async updateLogs(showAll: boolean = false) {
