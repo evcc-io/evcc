@@ -39,6 +39,7 @@ func OAuth2Config(id, secret, redirectUri string) *oauth2.Config {
 		},
 		RedirectURL: redirectUri,
 		Scopes: []string{
+			id,
 			oidc.ScopeOpenID,
 			oidc.ScopeOfflineAccess,
 		},
