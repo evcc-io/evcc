@@ -32,7 +32,7 @@
 							>
 								<shopicon-regular-download
 									size="s"
-									class="icon"
+									class="icon d-flex"
 								></shopicon-regular-download>
 							</a>
 						</div>
@@ -73,7 +73,7 @@
 						>
 							<shopicon-regular-bookmark
 								size="s"
-								class="icon"
+								class="icon d-flex"
 							></shopicon-regular-bookmark>
 						</button>
 					</div>
@@ -100,7 +100,7 @@
 						>
 							<shopicon-regular-bookmark
 								size="s"
-								class="icon"
+								class="icon d-flex"
 							></shopicon-regular-bookmark>
 						</button>
 					</div>
