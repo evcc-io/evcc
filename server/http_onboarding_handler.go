@@ -10,8 +10,8 @@ import (
 	"github.com/evcc-io/evcc/db/settings"
 )
 
-// onboardingItems are the setup checklist rows a user can dismiss
-var onboardingItems = []string{"battery", "pv", "grid", "loadpoint", "heater", "consumer", "gridImport", "gridExport", "co2", "solar"}
+// OnboardingItems are the setup checklist rows a user can dismiss
+var OnboardingItems = []string{"battery", "pv", "grid", "loadpoint", "heater", "consumer", "gridImport", "gridExport", "co2", "solar"}
 
 type onboardingState struct {
 	Done      bool     `json:"done"`
@@ -41,7 +41,7 @@ func updateOnboardingHandler(pub publisher) http.HandlerFunc {
 			req.Dismissed = []string{}
 		}
 		for _, item := range req.Dismissed {
-			if !slices.Contains(onboardingItems, item) {
+			if !slices.Contains(OnboardingItems, item) {
 				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid item: %s", item))
 				return
 			}

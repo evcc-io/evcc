@@ -256,7 +256,7 @@ test.describe("existing configuration", async () => {
   });
 
   test("checklist without wizard", async ({ page }) => {
-    await start("config-grid-only.evcc.yaml");
+    await start("config-grid-only.evcc.yaml", undefined, ["--disable-auth"]);
     await page.goto("/#/config");
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
     await expectModalHidden(page.getByTestId("onboarding-modal"));
@@ -264,6 +264,14 @@ test.describe("existing configuration", async () => {
     await expect(checklist.getByTestId("checklist-grid").getByRole("button")).toHaveCount(0);
     await expect(checklist.getByTestId("checklist-heater").getByRole("button")).toHaveCount(0);
     await expect(checklist.getByTestId("checklist-pv")).toBeVisible();
+  });
+
+  test("disabled onboarding", async ({ page }) => {
+    await start(undefined, undefined, ["--disable-auth", "--disable-onboarding"]);
+    await page.goto("/#/config");
+    await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
+    await expectModalHidden(page.getByTestId("onboarding-modal"));
+    await expect(page.getByTestId("setup-checklist")).not.toBeVisible();
   });
 
   test("meter only", async ({ page }) => {

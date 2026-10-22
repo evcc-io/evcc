@@ -344,6 +344,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	onboarding := server.OnboardingSettings()
 	if ok, _ := cmd.Flags().GetBool(flagDisableOnboarding); ok {
 		onboarding.Done = true
+		onboarding.Dismissed = server.OnboardingItems
 	}
 	valueChan <- util.Param{Key: keys.Onboarding, Val: onboarding}
 

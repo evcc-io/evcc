@@ -26,7 +26,7 @@ const (
 	flagDisableAuthDescription = "Disable authentication (dangerous)"
 
 	flagDisableOnboarding            = "disable-onboarding"
-	flagDisableOnboardingDescription = "Skip the setup wizard (testing)"
+	flagDisableOnboardingDescription = "Skip the setup wizard and checklist"
 
 	flagCustomCss            = "custom-css"
 	flagCustomCssDescription = "Additional user-defined CSS file for custom styling. No compatibility guarantees."
