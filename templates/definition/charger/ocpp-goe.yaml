@@ -25,7 +25,7 @@ products:
   - brand: Fronius
     description:
       generic: Wattpilot (OCPP)
-capabilities: ["rfid", "1p3p", "dim"]
+capabilities: ["mA", "rfid", "1p3p", "meter", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:
