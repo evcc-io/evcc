@@ -159,6 +159,8 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	var planOverrun time.Duration
 
 	defer func() {
+		lp.planStart = planStart
+
 		lp.publish(keys.Plan, plan)
 		lp.publish(keys.PlanProjectedStart, planStart)
 		lp.publish(keys.PlanProjectedEnd, planEnd)
@@ -283,4 +285,15 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	}
 
 	return active
+}
+
+// planPending returns true if a plan exists without a currently active slot
+func (lp *Loadpoint) planPending() bool {
+	return !lp.planActive && !lp.planStart.IsZero()
+}
+
+// pvEnable1p returns true if measured surplus enables charging on 1p
+func (lp *Loadpoint) pvEnable1p(minCurrent, sitePower float64) bool {
+	_, enable := lp.pvEnableDecision(0, minCurrent, sitePower, 1)
+	return enable
 }

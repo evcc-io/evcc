@@ -164,6 +164,7 @@ type Loadpoint struct {
 	planEnergy       float64          // Plan charge energy in kWh (dumb vehicles)
 	planEnergyOffset float64          // already charged energy in kWh when plan was set
 	planSlotEnd      time.Time        // current plan slot end time
+	planStart        time.Time        // start of the plan's first slot, zero without plan
 	planActive       bool             // charge plan exists and has a currently active slot
 	planOverrunSent  bool             // notification has been sent already
 	planLocked       PlanLock         // locked plan
@@ -1617,7 +1618,17 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 		}
 
 		// scaling down also frees load management headroom for min power on activePhases
-		scalable = insufficient || !lp.circuitAllowsPhases(activePhases, minCurrent)
+		circuitAllows := lp.circuitAllowsPhases(activePhases, minCurrent)
+		scalable = insufficient || !circuitAllows
+
+		// a pending plan slot usually scales up again, scaling down in the pause only adds a switch cycle
+		// unless measured surplus enables 1p. Climater checked last to avoid vehicle polling.
+		if scalable && circuitAllows && !lp.enabled && mayDisable && lp.planPending() &&
+			!lp.pvEnable1p(minCurrent, sitePower) && !lp.vehicleClimateActive() {
+			lp.log.DEBUG.Printf("plan pending, keeping %dp until %v", activePhases, lp.planStart.Round(time.Second).Local())
+			lp.resetPhaseTimer()
+			scalable = false
+		}
 	}
 
 	// scale down phases. The phase timer keeps running while 3p min is not covered,

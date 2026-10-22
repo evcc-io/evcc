@@ -965,3 +965,99 @@ func TestPvScalePhasesCircuitLimits(t *testing.T) {
 		})
 	}
 }
+
+func TestPvScalePhasesPlanPending(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	charger := &struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{
+		api.NewMockCharger(ctrl),
+		api.NewMockPhaseSwitcher(ctrl),
+	}
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Features().Return(nil).AnyTimes()
+	vehicle.EXPECT().Phases().Return(0).AnyTimes()
+	climater := &climaterVehicle{vehicle}
+
+	min1p := grid.CurrentToPower(minA, 1)
+
+	tc := []struct {
+		desc       string
+		sitePower  float64
+		mayDisable bool
+		toPhases   int
+		prepare    func(lp *Loadpoint)
+	}{
+		{"no plan", 0, true, 1, nil},
+		{"plan pending", 0, true, 3, func(lp *Loadpoint) {
+			lp.planStart = lp.clock.Now().Add(time.Hour)
+		}},
+		{"plan pending, phase timer reset", 0, true, 3, func(lp *Loadpoint) {
+			lp.planStart = lp.clock.Now().Add(time.Hour)
+			lp.phaseTimer = lp.clock.Now()
+		}},
+		{"plan pending, short slot ignored", 0, true, 3, func(lp *Loadpoint) {
+			lp.planStart = lp.clock.Now().Add(-time.Minute)
+		}},
+		{"plan pending, measured surplus enables 1p", -min1p, true, 1, func(lp *Loadpoint) {
+			lp.planStart = lp.clock.Now().Add(time.Hour)
+		}},
+		{"plan pending, custom enable threshold not reached", -min1p, true, 3, func(lp *Loadpoint) {
+			lp.planStart = lp.clock.Now().Add(time.Hour)
+			lp.Enable.Threshold = -2 * min1p
+		}},
+		{"plan active", 0, true, 1, func(lp *Loadpoint) {
+			lp.planStart = lp.clock.Now()
+			lp.planActive = true
+		}},
+		{"plan pending, enabled", 0.1, true, 1, func(lp *Loadpoint) {
+			lp.planStart = lp.clock.Now().Add(time.Hour)
+			lp.enabled = true
+		}},
+		{"plan pending, may not disable", 0, false, 1, func(lp *Loadpoint) {
+			lp.planStart = lp.clock.Now().Add(time.Hour)
+		}},
+		{"plan pending, climater active", 0, true, 1, func(lp *Loadpoint) {
+			lp.planStart = lp.clock.Now().Add(time.Hour)
+			lp.vehicle = climater
+			lp.Soc.Poll.Mode = loadpoint.PollConnected
+		}},
+	}
+
+	for _, tc := range tc {
+		t.Log(tc.desc)
+
+		clock := clock.NewMock()
+		clock.Add(time.Hour) // avoid time.IsZero
+
+		lp := &Loadpoint{
+			log:            util.NewLogger("foo"),
+			wakeUpTimer:    NewTimer(),
+			clock:          clock,
+			charger:        charger,
+			minCurrent:     minA,
+			maxCurrent:     maxA,
+			phases:         3,
+			measuredPhases: 3,
+			status:         api.StatusB,
+			solarShare:     1,
+		}
+
+		if tc.prepare != nil {
+			tc.prepare(lp)
+		}
+
+		if tc.toPhases == 1 {
+			charger.MockPhaseSwitcher.EXPECT().Phases1p3p(1).Return(nil)
+		}
+
+		lp.pvScalePhases(tc.sitePower, minA, maxA, tc.mayDisable)
+
+		require.Equal(t, tc.toPhases, lp.phases, tc.desc)
+		if tc.toPhases == 3 {
+			require.True(t, lp.phaseTimer.IsZero(), tc.desc)
+		}
+	}
+}
