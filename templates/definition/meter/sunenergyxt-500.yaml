@@ -45,12 +45,12 @@ caveats:
         Standardmäßig pausiert der Haltemodus die Nulleinspeise-Regelung (`MM:0`). Sind am Speicher keine Solarmodule angeschlossen (AC-gekoppelt), wird dann auch kein Überschuss geladen.
         Mit „Ohne Solarmodule am Speicher (AC-gekoppelt)“ und „Maximale netzgekoppelte Ausgangsleistung (MG)“ bleibt die Regelung beim Halten aktiv und die maximale netzgekoppelte Ausgangsleistung (`MG`) wird auf 1 W begrenzt: Der Speicher entlädt nicht, lädt Überschuss aber weiter. In den anderen Modi wird `MG` wieder auf diesen Wert gesetzt.
         Dieses Verhalten wurde an einem AC-gekoppelten 500 gemessen und ist vom Hersteller nicht dokumentiert.
-        Mit Solarmodulen direkt am Speicher ist es nicht getestet. Da `MG` die gesamte AC-Ausgangsleistung des Geräts begrenzt, gelangt deren Solarstrom beim Halten dann voraussichtlich nicht ins Haus. Laut Herstellerdoku (`GS:0` bedeutet „neutral“) gilt das aber vermutlich auch für den Standard-Haltemodus.
+        Mit Solarmodulen direkt am Speicher ist es nicht getestet. Da `MG` die gesamte AC-Ausgangsleistung des Geräts begrenzt, gelangt deren Solarstrom beim Halten dann voraussichtlich nicht ins Haus. Wie sich der Standard-Haltemodus (`MM:0`, `GS:0`) in diesem Fall verhält, ist ebenfalls nicht getestet.
       en: |
         By default, hold pauses the zero feed-in regulation (`MM:0`). If no solar panels are connected to the storage (AC-coupled), surplus is then not charged either.
         With "No solar panels on the storage (AC-coupled)" and "Maximum grid-connected output power (MG)", hold keeps the regulation active and limits the maximum grid-connected output power (`MG`) to 1 W: the storage does not discharge but still charges from surplus. The other modes set `MG` back to this value.
         This behavior was measured on an AC-coupled 500 and is not documented by the vendor.
-        It is not tested with solar panels connected directly to the storage. Since `MG` limits the device's total AC output, their solar power would then most likely not reach the house during hold. Per the vendor docs (`GS:0` means "neutral"), this probably applies to the default hold as well.
+        It is not tested with solar panels connected directly to the storage. Since `MG` limits the device's total AC output, their solar power would then most likely not reach the house during hold. How the default hold (`MM:0`, `GS:0`) behaves in this case is not tested either.
 params:
   - name: usage
     type: choice
