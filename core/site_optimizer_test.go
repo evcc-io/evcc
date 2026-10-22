@@ -792,7 +792,7 @@ func TestCurrentSlotSuggestionHoldWorthwhile(t *testing.T) {
 	res.ChargingPower[0], res.ChargingPower[1] = 0, 0
 	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25).Action, "idle balanced before expensive discharge")
 
-	// the kept energy would be discharged at the same or a lower price
+	// the kept energy would be discharged at the same price
 	ts.PN[2] = 0.26
 	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25).Action, "discharge at same price")
 
