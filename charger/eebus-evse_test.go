@@ -271,33 +271,6 @@ func TestWriteCurrentLimitData_SinglePhaseAutoDetect(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestWriteCurrentLimitData_ConfiguredPhases(t *testing.T) {
-	eebus, opev, oscev, evEntity := newTestEEBus(t)
-	eebus.phases = 1
-
-	// OPEV available, 3-phase reported but charger configured for 1 phase
-	opev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
-	opev.EXPECT().CurrentLimits(evEntity).Return(opevLimits3p(6, 16, 0))
-	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
-		return len(limits) == 1 && limits[0].Phase == ucapi.PhaseNameMapping[0] && limits[0].IsActive && limits[0].Value == 10
-	}), mock.Anything).Run(ackWrite).Return(nil, nil)
-
-	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(false)
-
-	err := eebus.writeCurrentLimitData(evEntity, 10)
-	require.NoError(t, err)
-}
-
-func TestEEBus_PhaseDescriber(t *testing.T) {
-	eebus := &EEBus{phases: 1}
-	var _ api.PhaseDescriber = eebus
-	require.Equal(t, 1, eebus.Phases())
-
-	phases, err := eebus.getPhases()
-	require.NoError(t, err)
-	require.Equal(t, 1, phases)
-}
-
 func TestWriteCurrentLimitData_PartialLimitsAutoDetect(t *testing.T) {
 	eebus, opev, oscev, evEntity := newTestEEBus(t)
 
