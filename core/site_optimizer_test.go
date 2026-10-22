@@ -721,12 +721,12 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 		want             string
 	}{
 		{"battery grid charge", batteryTypeBattery, 3000, 0, 1000, 0, "charge"},
-		{"battery pv charge (no import)", batteryTypeBattery, 3000, 0, 0, 1000, "normal"},
+		{"battery pv charge (no import)", batteryTypeBattery, 3000, 0, 0, 1000, "hold"},
 		{"battery hold (idle while importing)", batteryTypeBattery, 0, 0, 1000, 0, "hold"},
 		{"battery holdcharge (idle while exporting)", batteryTypeBattery, 0, 0, 0, 1000, "holdcharge"},
 		{"battery discharge (self-consumption while importing)", batteryTypeBattery, 0, 2000, 1000, 0, "normal"},
 		{"battery grid discharge (discharge while exporting)", batteryTypeBattery, 0, 2000, 0, 1000, "discharge"},
-		{"battery idle balanced", batteryTypeBattery, 0, 0, 0, 0, "normal"},
+		{"battery idle balanced", batteryTypeBattery, 0, 0, 0, 0, "hold"},
 		{"loadpoint charge", batteryTypeLoadpoint, 11000, 0, 0, 0, "charge"},
 		{"loadpoint stop", batteryTypeLoadpoint, 0, 0, 0, 0, "stop"},
 		{"vehicle below threshold is stop", batteryTypeVehicle, 40, 0, 0, 0, "stop"},
@@ -754,7 +754,7 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, res, 1, 1000, 0, 1)
 	assert.Equal(t, api.BatteryHold.String(), s.Action)
 
-	// an idle battery at its soc bound withholds nothing: normal instead of hold/holdcharge
+	// an idle battery at its soc bound withholds nothing: the bound does it
 	battery := batteryDetail{Type: batteryTypeBattery}
 	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000}
 	res = optimizer.BatteryResult{
@@ -764,14 +764,14 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	}
 	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, 1).Action, "empty battery idle while importing")
 	res.StateOfCharge[0] = 9000
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "full battery idle while exporting")
+	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "full battery idle while exporting")
 	res.StateOfCharge[0] = 5000
 	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, 1).Action, "idle within bounds is withheld")
 	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "idle within bounds is withheld")
 
 	// solver noise on the grid is no import/export (#34657)
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 4e-05, 0, 570.0/3600).Action, "idle with import noise")
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 0, 4e-05, 570.0/3600).Action, "idle with export noise")
+	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, 0, 4e-05, 0, 570.0/3600).Action, "idle with import noise")
+	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, 0, 0, 4e-05, 570.0/3600).Action, "idle with export noise")
 }
 
 // TestSuggestionActionable ensures the actionable flag follows the current state
@@ -895,8 +895,9 @@ func reapplyFixture(site *Site, batteries []optimizer.BatteryConfig, res []optim
 }
 
 var (
-	reapplyMidGap      = time.Date(2025, 1, 1, 12, 20, 0, 0, time.UTC) // slot 0 ended, next solve not due before 12:23
-	reapplyIdleBattery = optimizer.BatteryResult{ChargingPower: []float32{0, 0, 0}, DischargingPower: []float32{0, 0, 0}}
+	reapplyMidGap = time.Date(2025, 1, 1, 12, 20, 0, 0, time.UTC) // slot 0 ended, next solve not due before 12:23
+	// discharging in slot 0, idle afterwards
+	reapplyBattery     = optimizer.BatteryResult{ChargingPower: []float32{0, 0, 0}, DischargingPower: []float32{500, 0, 0}}
 	reapplyHomeBattery = batteryDetail{Type: batteryTypeBattery, Name: "home", controllable: true}
 )
 
@@ -908,7 +909,7 @@ func TestReapplySuggestionAcrossSlotBoundary(t *testing.T) {
 	reapplyFixture(site,
 		[]optimizer.BatteryConfig{{}, {}},
 		[]optimizer.BatteryResult{
-			reapplyIdleBattery, // hold/normal follows grid import
+			reapplyBattery, // normal while discharging, hold once idle
 			{ChargingPower: []float32{0, 11000, 0}, DischargingPower: []float32{0, 0, 0}}, // loadpoint: stop, then charge
 		},
 		[]batteryDetail{reapplyHomeBattery, {Type: batteryTypeLoadpoint, loadpoint: new(int), controllable: true}},
@@ -967,7 +968,7 @@ func TestReapplySuggestionsExcludeDisconnectedLoadpoint(t *testing.T) {
 func TestReapplySuggestionsExpireAfterOutage(t *testing.T) {
 	site := &Site{log: util.NewLogger("foo")}
 
-	completed := reapplyFixture(site, []optimizer.BatteryConfig{{}}, []optimizer.BatteryResult{reapplyIdleBattery}, []batteryDetail{reapplyHomeBattery})
+	completed := reapplyFixture(site, []optimizer.BatteryConfig{{}}, []optimizer.BatteryResult{reapplyBattery}, []batteryDetail{reapplyHomeBattery})
 	require.NotNil(t, site.suggestion(batteryKey("home"), api.BatteryNormal.String()))
 
 	site.reapplySuggestions(completed.Add(2*tariff.SlotDuration + time.Minute))

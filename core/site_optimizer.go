@@ -172,9 +172,11 @@ func suggestionEvent(detail batteryDetail, s types.Suggestion) messenger.Event {
 // currentSlotSuggestion maps the optimizer's active-slot result onto an advisory action.
 // Because the optimization is linear, the slot is at an operating-range extreme, so it
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
-// An idle battery is interpreted from the grid flow: importing means discharge is withheld
-// (hold), exporting means charging is withheld (holdcharge). At its soc bound nothing is
-// withheld, the bound does it, so the battery stays in normal mode.
+// A battery without planned discharge is held: normal mode would let the inverter's
+// self-consumption control discharge on intra-slot dips the plan did not account for,
+// while hold still permits pv charging. An idle battery while exporting withholds
+// charging (holdcharge). At its lower soc bound nothing is withheld, the bound does it,
+// so the battery stays in normal mode.
 func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
 	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
 		return types.Suggestion{}
@@ -205,15 +207,15 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 		case charge > suggestionThreshold && gridImporting:
 			// charging while importing means grid charging
 			s.Action = api.BatteryCharge.String()
-		case idle && gridImporting && !empty:
-			// idle while importing: discharge is deliberately withheld
-			s.Action = api.BatteryHold.String()
 		case idle && gridExporting && !full:
 			// idle while exporting: surplus is exported instead of charged
 			s.Action = api.BatteryHoldCharge.String()
 		case discharge > suggestionThreshold && gridExporting:
 			// discharging while exporting means battery-to-grid discharge
 			s.Action = api.BatteryDischarge.String()
+		case discharge <= suggestionThreshold && !(idle && empty):
+			// no planned discharge: hold keeps it for later slots, pv charging stays possible
+			s.Action = api.BatteryHold.String()
 		default:
 			s.Action = api.BatteryNormal.String()
 		}
