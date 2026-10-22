@@ -1506,9 +1506,12 @@
     "levelLabel": "Filter by log level",
     "nAreas": "{count} areas",
     "noResults": "No matching log entries.",
+    "saveAreas": "Save this level for the selected areas in the system log",
+    "saveDefault": "Save this level as default for the system log",
     "search": "Search",
     "selectAll": "select all",
     "showAll": "Show all entries",
+    "storedLevel": "Stored level: {level}",
     "title": "Logs",
     "update": "Auto update"
   },
