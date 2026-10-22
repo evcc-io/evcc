@@ -153,7 +153,7 @@ Device key (`batteryDetail.key()`): `battery:<name>` or `loadpoint:<id>`; empty 
 
 ### Result side: `applyOptimizerResult`
 
-Runs after each solve, and again every cycle via `reapplySuggestions` when the active slot changes (re-derived from the cached solve, no new request). The cached solve expires when the horizon is passed or no completed solve for `2 * tariff.SlotDuration`; then `clearSuggestions()` drops suggestions, battery forecast and notification state. A failed solve keeps the previous advice so controlled devices are not released for one cycle.
+Runs after each solve, and again every cycle via `reapplySuggestions` when the active slot changes (re-derived from the cached solve, no new request). Expiry is only evaluated on that slot change: if the horizon is passed or no solve completed for `2 * tariff.SlotDuration`, `clearSuggestions()` drops suggestions, battery forecast and notification state. Within an unchanged slot the cached advice stays active regardless of age. A failed solve keeps the previous advice so controlled devices are not released for one cycle.
 
 1. `slot = schedule.activeSlot(now)`, `slotHours` = its duration. Grid import/export and all home-battery discharge for that slot are summed.
 2. `currentSlotSuggestion(detail, req, res, slot, gridImport, gridExport, slotHours)` per battery. Because the LP is linear, the slot result sits at an operating-range extreme and maps cleanly onto discrete modes. All thresholds use `suggestionThreshold = 50 W` to ignore solver noise.
@@ -173,7 +173,7 @@ Runs after each solve, and again every cycle via `reapplySuggestions` when the a
 **Loadpoint/vehicle**: `charge` if charge > thr, else `stop`. `Suggestion.Battery` is set to the planned home-battery discharge so the loadpoint can tell surplus from battery-fed charging.
 
 3. Suggestions are stored only for controllable devices with a key (`site.suggestions`). Loadpoints with a plan goal (`SGoal`) also receive `optimizerPlan` (the remaining charging slots priced at `PN`) via `setOptimizerPlan`, used by `OptimizerPlan()` for the planner UI.
-4. `publishBattery` / `publishSuggestions` publish to UI and hand loadpoint suggestions to `lp.setSuggestion`. `Actionable` is evaluated on every read (`site.suggestion`) as `Action != currentAction`, where the current action is `site.GetBatteryMode()` for batteries and `loadpointCurrentAction` (`charge` when enabled and goal not reached, else `stop`).
+4. `publishBattery` / `publishSuggestions` publish to UI and hand loadpoint suggestions to `lp.setSuggestion`. `Actionable` is evaluated on every read (`site.suggestion`) as `Action != currentAction`, where the current action is `site.batteryAction()` for batteries (the battery mode, `unknown` reads as `normal`) and `loadpointCurrentAction` (`charge` when enabled and goal not reached, else `stop`).
 5. `diffSuggestions` emits one `suggestion` messenger event per device whose actionable action changed since the last run; non-actionable or vanished devices are pruned so a later change re-notifies.
 
 ### Control side: where suggestions take effect
@@ -184,7 +184,7 @@ Gated by `OptimizerAutomatic()`: `off` (advisory only), battery-only, or `full` 
 
 - external mode (API) wins.
 - `Automatic()` and `unmodelledCharging(rate)`: a loadpoint the optimizer does not control is fast charging or on the smart cost limit. The suggestion did not account for that load, so force `hold`.
-- `Automatic()`: `batterySuggestionMode()` takes the first controllable battery's suggestion (`api.BatteryModeString(s.Action)`); unknown action or no suggestion releases to `normal`. This replaces the grid charge limit and discharge control. TODO: per-battery modes.
+- `Automatic()`: `batterySuggestionMode()` takes the first controllable battery's suggestion (`api.BatteryModeString(s.Action)`); an unknown action releases to `normal`; no suggestion releases to `normal` only if evcc had modified the mode (`batteryModeModified`), otherwise the mode is left untouched. This replaces the grid charge limit and discharge control. TODO: per-battery modes.
 - not automatic: legacy grid charge / discharge control / feed-in discharge rules.
 
 **Loadpoint** (`activeSuggestion`, `core/loadpoint_optimizer.go`): non-nil only if `optimizerControlled()` (full automatic, not a heater or integrated device, vehicle with capacity > 0) and the suggestion is younger than `suggestionMaxAge = 2 * SlotDuration` (a stalled optimizer must not keep the loadpoint gated). With an active suggestion:
