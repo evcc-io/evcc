@@ -38,17 +38,20 @@ const (
 	batteryPower = 6000
 )
 
+// chargeBeforeExport is no optimizer charging strategy but charging strategy none with charge_early
+const chargeBeforeExport = "charge_before_export"
+
 // optimizerChargingStrategies are the valid grid charging strategies; the first
 // entry is the default and preserves the previous hard-coded behavior.
 var optimizerChargingStrategies = []string{
-	string(optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport),
+	chargeBeforeExport,
 	string(optimizer.OptimizerStrategyChargingStrategyAttenuateDemandPeaks),
 	string(optimizer.OptimizerStrategyChargingStrategyAttenuateFeedinPeaks),
 	string(optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks),
 	string(optimizer.OptimizerStrategyChargingStrategyNone),
 }
 
-const defaultOptimizerChargingStrategy = string(optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport)
+const defaultOptimizerChargingStrategy = chargeBeforeExport
 
 // optimizerDecaySlots is the number of slots over which measured values decay into the forecast
 const optimizerDecaySlots = 4
@@ -560,9 +563,16 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		ft = prorate(scaleAndPrune(solarEnergy, site.effectiveSolarScale(), minLen), firstSlotDuration)
 	}
 
+	chargingStrategy := site.GetOptimizerChargingStrategy()
+	chargeEarly := chargingStrategy == chargeBeforeExport
+	if chargeEarly {
+		chargingStrategy = string(optimizer.OptimizerStrategyChargingStrategyNone)
+	}
+
 	req = optimizer.OptimizationInput{
 		Strategy: optimizer.OptimizerStrategy{
-			ChargingStrategy:    optimizer.OptimizerStrategyChargingStrategy(site.GetOptimizerChargingStrategy()),
+			ChargingStrategy:    optimizer.OptimizerStrategyChargingStrategy(chargingStrategy),
+			ChargeEarly:         chargeEarly,
 			DischargingStrategy: optimizer.OptimizerStrategyDischargingStrategyDischargeBeforeImport,
 		},
 		EtaC: eta,

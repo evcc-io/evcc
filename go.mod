@@ -30,7 +30,7 @@ require (
 	github.com/enbility/ship-go v0.6.1-0.20260720110450-0aa90f64ac76
 	github.com/enbility/spine-go v0.7.1-0.20260629113257-b3bcc643f323
 	github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4
-	github.com/evcc-io/optimizer v0.0.0-20261018143112-8d68a91ebba7
+	github.com/evcc-io/optimizer v0.0.0-20261023161120-2be54b66dc46
 	github.com/evcc-io/rct v0.3.0
 	github.com/fatih/structs v1.1.0
 	github.com/getkin/kin-openapi v0.151.0
