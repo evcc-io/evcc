@@ -147,8 +147,9 @@ render: |
   {{- end }}
   {{- if $primary }}
   type: merged
-  {{- /* average applies to the whole merged series, so Nord Pool quarters are averaged too */}}
-  {{ include "features" (merge (dict "basefeatures" (list "cacheable")) .) }}
+  {{- /* merged accepts no features of its own below the proxy, so average goes to the
+         primary template; the forecast-only series is hourly already */}}
+  {{ include "features" (merge (dict "basefeatures" (list "cacheable")) (omit . "average")) }}
   primary:
     type: template
     template: {{ $primary }}
@@ -158,6 +159,9 @@ render: |
     {{- else }}
     securitytoken: {{ .entsoetoken }}
     domain: "{{ get $entsoe .region }}"
+    {{- end }}
+    {{- if .average }}
+    average: true
     {{- end }}
     {{- include "base" . | trim | nindent 2 }}
   secondary:
