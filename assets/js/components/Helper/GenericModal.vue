@@ -13,7 +13,10 @@
 		>
 			<div class="modal-dialog modal-dialog-centered" :class="sizeClass" role="document">
 				<div class="modal-content">
-					<div class="modal-header d-flex justify-content-between align-items-start">
+					<div
+						v-if="!hideHeader"
+						class="modal-header d-flex justify-content-between align-items-start"
+					>
 						<h5 class="modal-title">
 							<slot name="title">{{ title }}</slot>
 						</h5>
@@ -28,7 +31,7 @@
 							></button>
 						</div>
 					</div>
-					<div ref="modalBody" class="modal-body">
+					<div ref="modalBody" class="modal-body" :class="{ 'pt-0': hideHeader }">
 						<slot />
 					</div>
 				</div>
@@ -55,6 +58,7 @@ export default defineComponent({
 		title: String,
 		dataTestid: String,
 		uncloseable: Boolean,
+		hideHeader: Boolean,
 		preventDismiss: Boolean,
 		size: String,
 		autofocus: { type: Boolean, default: true },
@@ -140,6 +144,11 @@ export default defineComponent({
 		handleHide() {
 			this.$emit("close");
 			this.isModalVisible = false;
+			// a focused element inside a hidden modal breaks aria-hidden
+			const active = document.activeElement;
+			if (active instanceof HTMLElement && this.$refs["modal"]?.contains(active)) {
+				active.blur();
+			}
 			if (this.configModalName) {
 				onModalHide(this.configModalName);
 			}

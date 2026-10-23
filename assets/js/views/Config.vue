@@ -1,6 +1,6 @@
 <template>
 	<div class="root safe-area-inset">
-		<div class="container px-4">
+		<div v-show="!wizardPending" class="container px-4">
 			<TopHeader
 				ref="header"
 				:title="headerTitle"
@@ -18,7 +18,12 @@
 
 				<Transition name="fade-swap-left">
 					<div v-if="!mobile || !activeSlug">
-						<WelcomeBanner v-if="setupRequired" class="my-4" />
+						<SetupChecklist
+							v-if="loaded"
+							class="box-pull-out"
+							:configured="configuredItems"
+							:dismissed="dismissed"
+						/>
 						<ConfigSectionNav
 							v-if="mobile"
 							class="my-4"
@@ -615,7 +620,8 @@
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<SecurityModal :auth-disabled="authDisabled" />
 				<ApiKeyModal :auth-disabled="authDisabled" />
-				<PasswordModal update-mode />
+				<PasswordModal />
+				<OnboardingModal v-bind="onboardingModalProps" />
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 			</div>
 		</div>
@@ -670,7 +676,7 @@ import MessagingLegacyModal from "@/components/Config/Messaging/MessagingLegacyM
 import MeterModal from "../components/Config/MeterModal.vue";
 import MeterCard from "../components/Config/MeterCard.vue";
 import { createDeviceUtils } from "../components/Config/DeviceModal";
-import { openModal, type ModalResult } from "@/configModal";
+import configModal, { openModal, type ModalResult } from "@/configModal";
 import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
 import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
@@ -714,6 +720,7 @@ import type {
 	DeviceType,
 	Notification,
 	Remote,
+	OnboardingItem,
 } from "@/types/evcc";
 import { ConfigType, CURRENCY } from "@/types/evcc";
 import { circuitTree, type CircuitNode, type CircuitAssignmentLoadpoint } from "@/utils/circuits";
@@ -741,7 +748,10 @@ type DeviceTags = Record<
 >;
 
 import BackupRestoreModal from "@/components/Config/BackupRestoreModal.vue";
-import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
+import SetupChecklist from "../components/Config/SetupChecklist.vue";
+import OnboardingModal from "../components/Config/Onboarding/OnboardingModal.vue";
+import { wizardPending } from "@/onboarding";
+import auth from "../components/Auth/auth";
 import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import SecurityModal from "../components/Config/Security/SecurityModal.vue";
@@ -809,7 +819,8 @@ export default defineComponent({
 		TopHeader: Header,
 		VehicleIcon,
 		VehicleModal,
-		WelcomeBanner,
+		SetupChecklist,
+		OnboardingModal,
 		AuthSuccessBanner,
 		PasswordModal,
 		SecurityModal,
@@ -833,6 +844,8 @@ export default defineComponent({
 			circuitAssignmentError: "",
 			circuitAssignmentRevision: 0,
 			circuitAssignmentFlash: undefined as number | undefined,
+			// checklist state is derived from loaded config, keep it hidden until then
+			loaded: false,
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
 			hemsDevices: [] as ConfigHems[],
@@ -1025,8 +1038,41 @@ export default defineComponent({
 		authProviders() {
 			return store.state?.authProviders;
 		},
-		setupRequired() {
-			return store.state?.setupRequired;
+		authConfigured(): boolean {
+			return auth.configured;
+		},
+		wizardPending(): boolean {
+			return wizardPending();
+		},
+		// reopen whenever the stack empties, e.g. browser back past the first step
+		wizardOpen(): boolean {
+			return this.wizardPending && configModal.stack.length === 0;
+		},
+		dismissed(): OnboardingItem[] {
+			return store.state?.onboarding?.dismissed ?? [];
+		},
+		onboardingModalProps() {
+			return this.collectProps(OnboardingModal);
+		},
+		chargingLoadpoints(): ConfigLoadpoint[] {
+			return this.loadpoints.filter((lp) => !this.isHeater(lp.charger));
+		},
+		heaterLoadpoints(): ConfigLoadpoint[] {
+			return this.loadpoints.filter((lp) => this.isHeater(lp.charger));
+		},
+		configuredItems(): Record<string, boolean> {
+			return {
+				battery: (this.site.battery?.length ?? 0) > 0,
+				pv: (this.site.pv?.length ?? 0) > 0,
+				grid: !!this.site.grid,
+				loadpoint: this.chargingLoadpoints.length > 0,
+				heater: this.heaterLoadpoints.length > 0,
+				consumer: (this.site.consumer?.length ?? 0) > 0,
+				gridImport: !!this.tariffRefs.grid,
+				gridExport: !!this.tariffRefs.feedIn,
+				co2: !!this.tariffRefs.co2,
+				solar: this.tariffRefs.solar.length > 0,
+			};
 		},
 		currency(): CURRENCY {
 			return store.state?.currency ?? CURRENCY.EUR;
@@ -1355,12 +1401,24 @@ export default defineComponent({
 				this.loadAll();
 			}
 		},
+		// config api needs the admin password, set by the wizard on first run
+		authConfigured: {
+			immediate: true,
+			handler(configured: boolean) {
+				if (configured) this.loadAll();
+			},
+		},
+		wizardOpen: {
+			immediate: true,
+			handler(open: boolean) {
+				if (open) openModal("onboarding");
+			},
+		},
 	},
 	mounted() {
 		this.isComponentMounted = true;
 		document.addEventListener("visibilitychange", this.handleVisibilityChange);
 		this.isPageVisible = document.visibilityState === "visible";
-		this.loadAll();
 	},
 	unmounted() {
 		this.isComponentMounted = false;
@@ -1449,6 +1507,7 @@ export default defineComponent({
 			await this.loadTariffRefs();
 			await this.loadHems();
 			await this.loadDirty();
+			this.loaded = true;
 			this.updateValues();
 		},
 		async loadDirty() {
@@ -1503,6 +1562,13 @@ export default defineComponent({
 		},
 		async loadLoadpoints() {
 			this.loadpoints = (await this.loadConfig("loadpoints")) || [];
+		},
+		isHeater(chargerName: string): boolean {
+			const charger = this.chargers.find((c) => c.name === chargerName);
+			return !!(
+				charger?.config?.["heating"] ||
+				this.deviceTags("charger", chargerName)["heating"]?.value
+			);
 		},
 		getMetersByNames(names: string[] | null): ConfigMeter[] {
 			if (!names || !this.meters) {

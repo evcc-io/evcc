@@ -47,6 +47,10 @@ params:
     advanced: true
     usages: ["pv"]
   - preset: battery-params
+  - name: maxchargepower
+    required: true
+  - name: maxdischargepower
+    required: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -210,6 +214,8 @@ render: |
       {{- end }}
       type: holding
       decode: uint16
+  {{- $charge := .maxchargepower | int }}
+  {{- $discharge := sub 4294967296 (.maxdischargepower | int) }}
   batterymode:
     source: switch
     switch:
@@ -247,7 +253,7 @@ render: |
           convert: int2bytes
           set:
             source: const
-            value: '0x00000000_00000000_7FFFFFFF'
+            value: '{{ printf "0x00000000_00000000_%08X" $charge }}' # battery max power
             set:
               source: ignore
               error: "modbus: response data size '18' does not match count '4'"
@@ -278,7 +284,7 @@ render: |
           convert: int2bytes
           set:
             source: const
-            value: '0x00000000_7FFFFFFF_7FFFFFFF'
+            value: '{{ printf "0x00000000_%08X_%08X" $charge $charge }}' # battery min/max power
             set:
               source: ignore
               error: "modbus: response data size '18' does not match count '4'"
@@ -309,7 +315,7 @@ render: |
           convert: int2bytes
           set:
             source: const
-            value: '0x00000000_80000001_80000001' # battery min/max power -0x7FFFFFFF
+            value: '{{ printf "0x00000000_%08X_%08X" $discharge $discharge }}' # battery min/max power, negative int32
             set:
               source: ignore
               error: "modbus: response data size '18' does not match count '4'"

@@ -13,7 +13,7 @@
 	>
 		<template #default="{ values }: { values: ModbusProxy[] }">
 			<div class="mb-3">
-				<SponsorTokenRequired v-if="!isSponsor" feature />
+				<SponsorTokenRequired :is-sponsor="isSponsor" feature />
 				<pre class="text-monospace my-5">{{ ASCII_DIAGRAM }}</pre>
 				<div v-for="(c, index) in values" :key="index" data-testid="modbusproxy-connection">
 					<div class="d-block">

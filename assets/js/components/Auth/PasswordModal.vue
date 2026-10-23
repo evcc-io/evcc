@@ -1,16 +1,14 @@
 <template>
 	<GenericModal
-		:id="modalId"
+		id="passwordUpdateModal"
 		ref="modal"
-		:title="title"
-		:data-testid="dataTestId"
-		:config-modal-name="configModalName"
-		:uncloseable="isUncloseable"
+		:title="$t('passwordModal.titleUpdate')"
+		data-testid="password-update-modal"
+		config-modal-name="passwordupdate"
 		@open="open"
 		@closed="closed"
 	>
 		<ErrorMessage :error="error" />
-		<p v-if="isSetupMode" class="mb-4">{{ $t("passwordModal.description") }}</p>
 		<form
 			v-if="modalVisible"
 			ref="form"
@@ -20,29 +18,25 @@
 		>
 			<!-- password manager hint -->
 			<input
-				:id="formId('Username')"
+				id="passwordUpdateUsername"
 				class="d-none"
 				type="text"
 				name="username"
 				autocomplete="username"
 				value="admin"
 			/>
-			<FormRow
-				v-if="updateMode"
-				:id="formId('Current')"
-				:label="$t('passwordModal.labelCurrent')"
-			>
+			<FormRow id="passwordUpdateCurrent" :label="$t('passwordModal.labelCurrent')">
 				<input
-					:id="formId('Current')"
+					id="passwordUpdateCurrent"
 					v-model="passwordCurrent"
 					type="password"
 					class="form-control"
 					autocomplete="current-password"
 				/>
 			</FormRow>
-			<FormRow :id="formId('New')" :label="$t('passwordModal.labelNew')">
+			<FormRow id="passwordUpdateNew" :label="$t('passwordModal.labelNew')">
 				<input
-					:id="formId('New')"
+					id="passwordUpdateNew"
 					v-model="passwordNew"
 					type="password"
 					class="form-control"
@@ -53,9 +47,9 @@
 					{{ $t("passwordModal.empty") }}
 				</div>
 			</FormRow>
-			<FormRow :id="formId('Repeat')" :label="$t('passwordModal.labelRepeat')">
+			<FormRow id="passwordUpdateRepeat" :label="$t('passwordModal.labelRepeat')">
 				<input
-					:id="formId('Repeat')"
+					id="passwordUpdateRepeat"
 					ref="passwordRepeat"
 					v-model="passwordRepeat"
 					type="password"
@@ -79,7 +73,7 @@
 						role="status"
 						aria-hidden="true"
 					></span>
-					{{ submitText }}
+					{{ $t("passwordModal.updatePassword") }}
 				</button>
 			</div>
 		</form>
@@ -97,9 +91,6 @@ import { defineComponent } from "vue";
 export default defineComponent({
 	name: "PasswordModal",
 	components: { FormRow, GenericModal, ErrorMessage },
-	props: {
-		updateMode: Boolean,
-	},
 	data() {
 		return {
 			modalVisible: false,
@@ -112,43 +103,14 @@ export default defineComponent({
 		};
 	},
 	computed: {
-		modalId() {
-			return this.updateMode ? "passwordUpdateModal" : "passwordSetupModal";
-		},
-		configModalName() {
-			return this.updateMode ? "passwordupdate" : undefined;
-		},
-		dataTestId() {
-			return this.updateMode ? "password-update-modal" : "password-setup-modal";
-		},
-		isSetupMode() {
-			return !this.updateMode;
-		},
-		isUncloseable() {
-			return !this.updateMode;
-		},
 		passwordsMatch() {
 			return this.passwordNew === this.passwordRepeat;
 		},
 		passwordEmpty() {
 			return this.passwordNew.length === 0;
 		},
-		title() {
-			return this.updateMode
-				? this.$t("passwordModal.titleUpdate")
-				: this.$t("passwordModal.titleNew");
-		},
-		submitText() {
-			return this.updateMode
-				? this.$t("passwordModal.updatePassword")
-				: this.$t("passwordModal.newPassword");
-		},
 	},
 	methods: {
-		formId(name: string) {
-			const prefix = this.updateMode ? "passwordUpdate" : "passwordSetup";
-			return `${prefix}_${name}`;
-		},
 		open() {
 			this.modalVisible = true;
 		},
