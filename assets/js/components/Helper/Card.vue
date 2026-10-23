@@ -34,6 +34,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import "../../../css/breakpoints.css";
 @media (--below-sm) {
 	/* app sets .safe-area-side when a side inset exists (e.g. iPhone Duo), keep rounded cards then */
 	:root:not(.safe-area-side) .evcc-card--edge {

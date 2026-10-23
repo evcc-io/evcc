@@ -303,6 +303,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import "../../css/breakpoints.css";
 @media (--below-sm) {
 	/* cancel the card's padding for full-bleed charts (cards stay rounded with side insets) */
 	:root:not(.safe-area-side) .chart-edge {

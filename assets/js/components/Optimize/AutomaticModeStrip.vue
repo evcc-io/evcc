@@ -46,6 +46,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import "../../../css/breakpoints.css";
 /* full-bleed strip flush with the card bottom: square edge-to-edge card below sm, rounded above */
 .strip {
 	margin: 1rem -1.5rem -1rem;
