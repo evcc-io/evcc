@@ -1118,3 +1118,75 @@ func TestPvEnablePhasesBatteryStart(t *testing.T) {
 	require.Equal(t, minA, lp.pvMaxCurrent(0, 1000, false, true))
 	require.Equal(t, 1, lp.phases)
 }
+
+// battery support does not start on phases it was not budgeted for
+func TestPvEnablePhasesBatteryStartSwitchFailed(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	charger := &struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{
+		api.NewMockCharger(ctrl),
+		api.NewMockPhaseSwitcher(ctrl),
+	}
+
+	maxDischarge := 5000.0
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		clock:       clock.NewMock(),
+		charger:     charger,
+		site:        &mockSite{maxDischargePower: &maxDischarge},
+		wakeUpTimer: NewTimer(),
+		minCurrent:  minA,
+		maxCurrent:  maxA,
+		phases:      3,
+		solarShare:  1,
+		status:      api.StatusB,
+	}
+
+	charger.MockPhaseSwitcher.EXPECT().Phases1p3p(1).Return(api.ErrNotAvailable)
+	require.Equal(t, 0.0, lp.pvMaxCurrent(0, 1000, false, true))
+	require.Equal(t, 3, lp.phases)
+}
+
+// the enable timer stays elapsed until a previous switch has settled
+func TestPvEnablePhasesSwitchSettling(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	clck := clock.NewMock()
+
+	charger := &struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{
+		api.NewMockCharger(ctrl),
+		api.NewMockPhaseSwitcher(ctrl),
+	}
+
+	lp := &Loadpoint{
+		log:            util.NewLogger("foo"),
+		clock:          clck,
+		charger:        charger,
+		site:           &mockSite{},
+		wakeUpTimer:    NewTimer(),
+		minCurrent:     minA,
+		maxCurrent:     maxA,
+		phases:         3,
+		phasesSwitched: clck.Now(),
+		Enable:         loadpoint.ThresholdConfig{Delay: 30 * time.Second},
+		solarShare:     1,
+		status:         api.StatusB,
+	}
+
+	surplus := -grid.CurrentToPower(minA, 1)
+	require.Equal(t, 0.0, lp.pvMaxCurrent(surplus, 0, false, false))
+
+	clck.Add(30 * time.Second)
+	require.Equal(t, 0.0, lp.pvMaxCurrent(surplus, 0, false, false), "switch not settled")
+	require.Equal(t, 3, lp.phases)
+
+	charger.MockPhaseSwitcher.EXPECT().Phases1p3p(1).Return(nil)
+	clck.Add(31 * time.Second)
+	require.Equal(t, minA, lp.pvMaxCurrent(surplus, 0, false, false), "enable timer must not restart")
+	require.Equal(t, 1, lp.phases)
+}

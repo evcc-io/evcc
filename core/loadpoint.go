@@ -1905,7 +1905,10 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	// with always charge or under special conditions return at least minCurrent
 	if (alwaysCharge || battery) && targetCurrent < minCurrent {
 		lp.log.DEBUG.Printf("pv charge current: min %.3gA > %.3gA (%.0fW @ %dp, battery: %t)", minCurrent, targetCurrent, sitePower, activePhases, battery)
-		lp.pvEnableScalePhases(enablePhases)
+		// battery support is budgeted for the start phases, always charge starts on any phases
+		if !lp.pvEnableScalePhases(enablePhases) && !alwaysCharge {
+			return 0
+		}
 		return minCurrent
 	}
 
@@ -1975,15 +1978,16 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 
 			elapsed := lp.clock.Since(lp.pvTimer)
 			if elapsed >= lp.GetEnableDelay() {
+				// enabling on the wrong phases would draw more than the surplus allows, retry next cycle
+				if !lp.pvEnableScalePhases(enablePhases) {
+					return 0
+				}
+
 				lp.log.DEBUG.Println("pv enable timer elapsed")
 
 				// reset timer to prevent immediate charger re-disabling
 				lp.resetPVTimer()
 
-				// enabling on the wrong phases would draw more than the surplus allows
-				if !lp.pvEnableScalePhases(enablePhases) {
-					return 0
-				}
 				return minCurrent
 			}
 
@@ -2019,7 +2023,7 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 // or 0 to keep its phases. Like scaling while charging, 3p needs its min current covered
 // and 1p capped at max current, 1p is used otherwise.
 func (lp *Loadpoint) pvEnablePhases(sitePower, minCurrent, maxCurrent float64) int {
-	if lp.enabled || !lp.hasPhaseSwitching() || !lp.phaseSwitchCompleted() || lp.phasesConfigured != 0 {
+	if lp.enabled || !lp.hasPhaseSwitching() || lp.phasesConfigured != 0 {
 		return 0
 	}
 
@@ -2052,6 +2056,11 @@ func (lp *Loadpoint) pvEnablePhases(sitePower, minCurrent, maxCurrent float64) i
 func (lp *Loadpoint) pvEnableScalePhases(phases int) bool {
 	if phases == 0 {
 		return true
+	}
+
+	// the previous switch has not settled yet
+	if !lp.phaseSwitchCompleted() {
+		return false
 	}
 
 	err := lp.scalePhases(phases)
