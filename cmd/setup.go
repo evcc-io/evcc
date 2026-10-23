@@ -661,6 +661,10 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 		err = networkSettings(&conf.Network)
 	}
 
+	if err == nil {
+		err = configureLogLevels(cmd)
+	}
+
 	// setup additional templates
 	if err == nil {
 		if cmd.Flags().Changed(flagTemplate) {
@@ -1604,4 +1608,44 @@ func isOptimizer() bool {
 // isMcp returns if MCP service is enabled
 func isMcp() bool {
 	return isExperimental()
+}
+
+// logLevelsOverridden reports whether the log level was set on the command line or by environment
+func logLevelsOverridden(cmd *cobra.Command) bool {
+	_, env := os.LookupEnv("EVCC_LOG")
+	return cmd.Flag("log").Changed || env
+}
+
+// configureLogLevels applies the log levels persisted in the database. Command line levels
+// override them temporarily without being stored. If none are persisted, levels from the yaml
+// configuration are migrated once.
+func configureLogLevels(cmd *cobra.Command) error {
+	overridden := logLevelsOverridden(cmd)
+
+	if settings.Exists(keys.LogLevels) {
+		if overridden {
+			return nil
+		}
+
+		var conf globalconfig.LogLevels
+		if err := settings.Json(keys.LogLevels, &conf); err != nil {
+			return err
+		}
+
+		util.LogLevel(conf.Default, conf.Levels)
+		return nil
+	}
+
+	if overridden || !(viper.InConfig("log") || viper.InConfig("levels")) {
+		return nil
+	}
+
+	level, levels := parseLogLevels()
+	for area, l := range levels {
+		levels[area] = strings.ToUpper(l)
+	}
+
+	log.WARN.Println("migrating log levels from yaml to database, remove them from the configuration file")
+
+	return settings.SetJson(keys.LogLevels, globalconfig.LogLevels{Default: strings.ToUpper(level), Levels: levels})
 }

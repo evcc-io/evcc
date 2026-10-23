@@ -101,10 +101,12 @@ func logLevelForArea(area string) jww.Threshold {
 	return level
 }
 
-// LogLevel sets log level for all loggers
+// LogLevel sets default and area log levels for all loggers, replacing previously set area levels
 func LogLevel(defaultLevel string, areaLevels map[string]string) {
 	// default level
 	OutThreshold = logstash.LogLevelToThreshold(defaultLevel)
+
+	clear(levels)
 
 	// area levels
 	for area, level := range areaLevels {
