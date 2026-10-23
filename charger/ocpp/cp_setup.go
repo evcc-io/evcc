@@ -45,6 +45,10 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 
 	resp, err := cp.GetConfigurationRequest()
 	if err != nil {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+
 		// some chargers never answer the unrestricted request but support key-based ones
 		cp.log.DEBUG.Printf("failed getting configuration, retrying with specific keys: %v", err)
 		if resp, err = cp.GetConfigurationRequest(setupConfigurationKeys...); err != nil {
