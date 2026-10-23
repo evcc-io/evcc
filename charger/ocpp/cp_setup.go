@@ -23,8 +23,6 @@ var setupConfigurationKeys = []string{
 	KeyMeterValuesSampledDataMaxLength,
 	KeyNumberOfConnectors,
 	KeySupportedFeatureProfiles,
-	KeyAlfenPlugAndChargeIdentifier,
-	KeyEvBoxSupportedMeasurands,
 }
 
 func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.Duration, forcePowerCtrl, noChangeAvailability bool) error {
