@@ -31,8 +31,9 @@
 						<span
 							v-if="targetLabel"
 							class="ms-auto me-2 text-primary fw-bold small text-truncate"
-							>{{ targetLabel }}</span
 						>
+							{{ targetLabel }}
+						</span>
 						<span
 							v-else
 							class="ms-auto me-2 evcc-gray small tabular d-flex gap-1 min-w-0"
@@ -61,12 +62,11 @@
 				class="assigned-row position-relative py-0"
 				@activate="$emit('select', lp.id)"
 			>
-				<span class="d-flex align-items-center gap-2 min-w-0"
-					><Heatpump v-if="lp.heating" class="device-icon" /><shopicon-regular-cablecharge
-						v-else
-						class="device-icon"
-					/><span class="text-truncate">{{ lp.title }}</span></span
-				>
+				<span class="d-flex align-items-center gap-2 min-w-0">
+					<Heatpump v-if="lp.heating" class="device-icon" />
+					<shopicon-regular-cablecharge v-else class="device-icon" />
+					<span class="text-truncate">{{ lp.title }} </span>
+				</span>
 			</DragDropItem>
 		</DragDropList>
 

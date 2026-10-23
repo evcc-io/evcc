@@ -78,21 +78,17 @@
 						}"
 						@activate="selectLoadpoint(lp.id)"
 					>
-						<span class="d-flex align-items-center gap-2 min-w-0"
-							><Heatpump
-								v-if="lp.heating"
-								class="device-icon"
-							/><shopicon-regular-cablecharge v-else class="device-icon" /><span
-								class="text-truncate"
-								>{{ lp.title }}</span
-							></span
-						>
+						<span class="d-flex align-items-center gap-2 min-w-0">
+							<Heatpump v-if="lp.heating" class="device-icon" />
+							<shopicon-regular-cablecharge v-else class="device-icon" />
+							<span class="text-truncate">{{ lp.title }} </span>
+						</span>
 					</DragDropItem>
 					<div class="d-flex gap-2 align-items-center px-1">
-						<span class="small evcc-gray flex-grow-1" aria-live="polite">{{
-							poolHint
-						}}</span
-						><button
+						<span class="small evcc-gray flex-grow-1" aria-live="polite">
+							{{ poolHint }}
+						</span>
+						<button
 							v-if="selectedId !== undefined"
 							type="button"
 							class="btn btn-sm btn-link"
