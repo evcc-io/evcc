@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from "vite-plus/test";
 import api from "@/api";
 import { assignCircuit } from "./index";
-vi.mock("@/api", () => ({ default: { put: vi.fn() } }));
+vi.mock("@/api", () => ({ default: { patch: vi.fn() } }));
 
 describe("assignCircuit", () => {
-  it("writes only the circuit and explicitly clears assignments", async () => {
+  it("patches only the circuit and explicitly clears assignments", async () => {
     await assignCircuit(13, "db:9");
-    expect(api.put).toHaveBeenLastCalledWith("config/loadpoints/13", { circuit: "db:9" });
+    expect(api.patch).toHaveBeenLastCalledWith("config/loadpoints/13", { circuit: "db:9" });
     await assignCircuit(13, null);
-    expect(api.put).toHaveBeenLastCalledWith("config/loadpoints/13", { circuit: "" });
+    expect(api.patch).toHaveBeenLastCalledWith("config/loadpoints/13", { circuit: "" });
   });
 });
 import { applyDefaultsFromTemplate, createServiceEndpoints, type TemplateParam } from "./index";

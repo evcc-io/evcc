@@ -3,7 +3,7 @@ import { ConfigType } from "@/types/evcc";
 import api from "@/api";
 
 export const assignCircuit = (id: number, circuit: string | null) =>
-  api.put(`config/loadpoints/${id}`, { circuit: circuit ?? "" });
+  api.patch(`config/loadpoints/${id}`, { circuit: circuit ?? "" });
 import { extractPlaceholders, replacePlaceholders } from "@/utils/placeholder";
 
 // config write needs the admin password (script plugin)
