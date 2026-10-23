@@ -624,6 +624,8 @@ export interface Loadpoint {
   chargePower: number;
   /** Estimated remaining charging time in seconds. */
   chargeRemainingDuration?: number;
+  /** Time in seconds until the optimizer plan reaches the vehicle limit, including pauses. */
+  optimizerRemainingDuration?: number | null;
   /** Estimated remaining energy in kWh. */
   chargeRemainingEnergy?: number;
   /** Total energy imported by the charge meter in kWh. */
