@@ -196,9 +196,14 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 
 		var empty, full bool
 		if slot < len(res.StateOfCharge) {
-			soc := res.StateOfCharge[slot]
-			empty = soc <= req.SMin
-			full = req.SMax > 0 && soc >= req.SMax
+			// a bound reached at either end of the slot counts, the solver drifts by a few Wh
+			start := req.SInitial
+			if slot > 0 {
+				start = res.StateOfCharge[slot-1]
+			}
+			end := res.StateOfCharge[slot]
+			empty = min(start, end) <= req.SMin+1
+			full = req.SMax > 0 && max(start, end) >= req.SMax-1
 		}
 
 		switch {
