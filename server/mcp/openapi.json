@@ -771,6 +771,98 @@
         }
       }
     },
+    "/loadpoints/{id}/mincurrentpv/{current}": {
+      "post": {
+        "operationId": "setLoadpointMinCurrentPv",
+        "summary": "Update smart/PV minimum current preset",
+        "description": "Optional minimum current while smart/surplus following. Zero disables the preset.",
+        "tags": [
+          "loadpoints"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/current"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        }
+      }
+    },
+    "/loadpoints/{id}/maxcurrentpv/{current}": {
+      "post": {
+        "operationId": "setLoadpointMaxCurrentPv",
+        "summary": "Update smart/PV maximum current preset",
+        "description": "Optional maximum current while smart/surplus following. Zero disables the preset.",
+        "tags": [
+          "loadpoints"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/current"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        }
+      }
+    },
+    "/loadpoints/{id}/mincurrentnow/{current}": {
+      "post": {
+        "operationId": "setLoadpointMinCurrentNow",
+        "summary": "Update Now/fast minimum current preset",
+        "description": "Optional minimum current while Now mode or other fast charging. Zero disables the preset.",
+        "tags": [
+          "loadpoints"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/current"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        }
+      }
+    },
+    "/loadpoints/{id}/maxcurrentnow/{current}": {
+      "post": {
+        "operationId": "setLoadpointMaxCurrentNow",
+        "summary": "Update Now/fast maximum current preset",
+        "description": "Optional maximum current while Now mode or other fast charging. Zero disables the preset.",
+        "tags": [
+          "loadpoints"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/current"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        }
+      }
+    },
     "/loadpoints/{id}/mintemp/{temp}": {
       "post": {
         "operationId": "setLoadpointMinTemp",
@@ -3890,6 +3982,22 @@
             "description": "Minimum charging current in A.",
             "type": "number"
           },
+          "minCurrentPv": {
+            "description": "Optional min current in A while smart/surplus following. Zero means unused.",
+            "type": "number"
+          },
+          "maxCurrentPv": {
+            "description": "Optional max current in A while smart/surplus following. Zero means unused.",
+            "type": "number"
+          },
+          "minCurrentNow": {
+            "description": "Optional min current in A while now/fast charging. Zero means unused.",
+            "type": "number"
+          },
+          "maxCurrentNow": {
+            "description": "Optional max current in A while now/fast charging. Zero means unused.",
+            "type": "number"
+          },
           "minSoc": {
             "description": "Minimum SoC in %. Vehicle is fast-charged until this level is reached.",
             "type": "number"
@@ -4155,6 +4263,10 @@
           "limitSoc",
           "maxCurrent",
           "minCurrent",
+          "minCurrentPv",
+          "maxCurrentPv",
+          "minCurrentNow",
+          "maxCurrentNow",
           "minSoc",
           "minSocNotReached",
           "mode",
