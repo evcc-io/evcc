@@ -84,7 +84,7 @@ export default defineComponent({
 							this.$emit("dragstart", draggedNode.data.value),
 						onDragend: () => this.$emit("dragend"),
 					}
-				: {};
+				: { dragHandle: ".drag-handle" };
 			dragAndDrop({
 				parent: container,
 				getValues: () => [...this.values],

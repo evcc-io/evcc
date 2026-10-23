@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="drag-drop-item d-flex align-items-center p-2 mb-2 border rounded"
+		class="drag-drop-item d-flex mb-2 border rounded"
 		:class="{
 			'drag-drop-item--hidden': !visible,
 			'drag-drop-item--assigned': assigned,
@@ -16,15 +16,19 @@
 		@keydown.enter.self="activate"
 		@keydown.space.self="activate"
 	>
-		<div class="drag-handle me-2" aria-hidden="true">
+		<div
+			class="drag-handle d-flex align-items-center px-2"
+			aria-hidden="true"
+			data-testid="drag-handle"
+		>
 			<shopicon-regular-menu></shopicon-regular-menu>
 		</div>
-		<div class="flex-grow-1 min-w-0 text-truncate">
+		<div class="flex-grow-1 min-w-0 text-truncate d-flex align-items-center py-2">
 			<slot>
 				{{ title }}
 			</slot>
 		</div>
-		<div v-if="$slots['actions']" class="drag-drop-item__actions">
+		<div v-if="$slots['actions']" class="d-flex align-items-center py-2 pe-2">
 			<slot name="actions"></slot>
 		</div>
 	</div>
@@ -57,16 +61,11 @@ export default defineComponent({
 
 <style scoped>
 .drag-drop-item {
-	cursor: grab;
 	user-select: none;
 	background-color: var(--evcc-box);
 	border-color: var(--bs-border-color-translucent) !important;
 	transition: all var(--evcc-transition-fast) ease-in-out;
 	transform: translate(0, 0);
-}
-
-.drag-drop-item:active {
-	cursor: grabbing;
 }
 
 .drag-drop-item--assigned {
@@ -85,19 +84,19 @@ export default defineComponent({
 	color: var(--bs-secondary);
 	opacity: 0.7;
 	transition: opacity var(--evcc-transition-fast) ease-in-out;
-	cursor: inherit;
+	cursor: grab;
+	touch-action: none;
+}
+
+.drag-handle:active {
+	cursor: grabbing;
 }
 
 .drag-handle > * {
 	pointer-events: none;
 }
 
-.drag-drop-item:hover .drag-handle {
+.drag-handle:hover {
 	opacity: 1;
-}
-
-.drag-drop-item__actions {
-	display: flex;
-	align-items: center;
 }
 </style>

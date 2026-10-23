@@ -122,7 +122,7 @@ export async function dragElement(
 ): Promise<void> {
   // hover() waits for animations to settle before grabbing the source —
   // avoids stale coordinates during the modal slide-in.
-  await sourceElement.hover();
+  await sourceElement.getByTestId("drag-handle").hover();
   await page.mouse.down();
 
   const targetBox = await targetElement.boundingBox();

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: evcc
-  description: Solar charging. Super simple.
+  description: smart charging. open source energy management.
   version: "0.2.0"
   contact:
     url: https://github.com/evcc-io/evcc

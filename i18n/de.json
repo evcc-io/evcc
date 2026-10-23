@@ -46,8 +46,8 @@
     },
     "combined": "Gesamt",
     "config": {
-      "buffer": "Energie der Hausbatterie oberhalb von {soc} darf für die Unterstützung der Ladepunkte genutzt werden und zögert die Abschaltung im Smart-Modus hinaus. PV-Ladung automatisch starten {start}.",
-      "bufferNone": "Energie der Hausbatterie wird nicht für die Ladepunkte genutzt. Setze einen Wert unter {soc}, um die Unterstützung zu aktivieren.",
+      "buffer": "Energie der Hausbatterie oberhalb von {soc} darf für die Unterstützung der Ladepunkte genutzt werden und zögert die Abschaltung im Smart-Modus hinaus. PV-Ladung automatisch starten {start}. Hinweis: „Dauerhaft laden“ ignoriert diese Einstellung.",
+      "bufferNone": "Energie der Hausbatterie wird nicht für die Ladepunkte genutzt. Setze einen Wert unter {soc}, um die Unterstützung im Smart-Modus zu aktivieren. Hinweis: „Dauerhaft laden“ ignoriert diese Einstellung.",
       "bufferStart": {
         "above": "ab einem Ladestand von {soc}",
         "full": "erst, wenn die Hausbatterie voll ist",
