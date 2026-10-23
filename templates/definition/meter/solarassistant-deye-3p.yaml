@@ -1,0 +1,101 @@
+template: solarassistant-deye-3p
+products:
+  - brand: Deye
+    description:
+      generic: 3p LV hybrid inverter (SolarAssistant)
+  - brand: Sunsynk
+    description:
+      generic: 3p LV hybrid inverter (SolarAssistant)
+capabilities: ["battery-control"]
+requirements:
+  description:
+    en: |
+      For 3-phase inverters with a low-voltage (48 V) battery. Connects through SolarAssistant's MQTT broker (or a broker it bridges to) instead of Modbus. Battery control needs "Allow setting changes" in the SolarAssistant MQTT configuration and a one-time inverter setup: all six time points at 00:00, "Use timer" on and "Grid charge" enabled. Battery control overwrites program 6 of the time-of-use schedule. In hold charge mode solar power is only exported when "Solar sell" is enabled.
+    de: |
+      Für 3-phasige Wechselrichter mit Niedervolt-Batterie (48 V). Verbindet sich über den MQTT-Broker von SolarAssistant (oder einen verbundenen Broker) statt über Modbus. Die Batteriesteuerung erfordert "Allow setting changes" in der MQTT-Konfiguration von SolarAssistant und eine einmalige Einrichtung des Wechselrichters: alle sechs Zeitpunkte auf 00:00, "Use timer" an und "Grid charge" aktiviert. Die Batteriesteuerung überschreibt Programm 6 des Zeitplans. Im Modus Ladesperre wird Solarstrom nur eingespeist, wenn "Solar sell" aktiviert ist.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - preset: mqtt
+  - name: topic
+    default: solar_assistant/inverter_1
+  - name: excludeaux
+    type: bool
+    usages: ["pv"]
+    advanced: true
+    description:
+      en: Exclude auxiliary port
+      de: Hilfsanschluss ausschließen
+    help:
+      en: Subtract the auxiliary (GEN) port from the PV power, e.g. when an AC-coupled inverter on that port is configured as its own PV meter.
+      de: Zieht den Hilfsanschluss (GEN) von der PV-Leistung ab, z.B. wenn ein dort angeschlossener AC-gekoppelter Wechselrichter als eigener PV-Zähler eingerichtet ist.
+  - preset: battery-params
+  # battery control writes these into program 6 and the charge current settings
+  - name: minsoc
+    required: true
+  - name: maxsoc
+    required: true
+  - name: maxdischargepower
+    required: true
+  - name: workmode
+    type: choice
+    choice: ["Zero export to CT", "Zero export to load", "Selling first"]
+    default: Zero export to CT
+    usages: ["battery"]
+    advanced: true
+    description:
+      en: Work mode outside discharge
+      de: Arbeitsmodus außerhalb der Entladung
+    help:
+      en: Work mode for all battery modes except discharge, which always uses "Selling first". "Zero export to CT" prevents battery export, solar export follows the inverter's "Solar sell" setting.
+      de: Arbeitsmodus für alle Batteriemodi außer Entladen, das immer "Selling first" verwendet. "Zero export to CT" verhindert Batterieeinspeisung, die Solareinspeisung folgt der Einstellung "Solar sell" des Wechselrichters.
+  - name: gridchargecurrent
+    type: int
+    required: true
+    unit: A
+    usages: ["battery"]
+    description:
+      en: Grid charge current
+      de: Netzladestrom
+    help:
+      en: Ceiling on the total battery charge current while charging from the grid. The grid only supplies what PV does not, so a value at or below the PV charge current gives no grid import.
+      de: Obergrenze des gesamten Batterieladestroms beim Netzladen. Das Netz liefert nur, was PV nicht liefert. Ein Wert bis zum PV-Ladestrom führt zu keinem Netzbezug.
+  - name: maxchargecurrent
+    type: int
+    required: true
+    unit: A
+    usages: ["battery"]
+    description:
+      en: Max charge current
+      de: Max Ladestrom
+    help:
+      en: Battery charge current restored after a mode that blocks charging.
+      de: Batterieladestrom, der nach einem Modus ohne Laden wiederhergestellt wird.
+  - name: gridpeakshavingpower
+    type: int
+    unit: W
+    usages: ["battery"]
+    advanced: true
+    description:
+      en: Grid peak shaving power
+      de: Netz-Lastspitzenkappung
+    help:
+      en: Grid import limit of the inverter's peak shaving, enabled in all modes except discharge. Caps the grid import while charging from the grid. Without a value peak shaving is not changed, except that discharge disables it.
+      de: Netzbezugsgrenze der Lastspitzenkappung des Wechselrichters, aktiv in allen Modi außer Entladen. Begrenzt den Netzbezug beim Netzladen. Ohne Wert wird die Lastspitzenkappung nicht geändert, nur Entladen deaktiviert sie.
+  - name: writedelay
+    type: duration
+    default: 1s
+    usages: ["battery"]
+    advanced: true
+    description:
+      en: Delay between settings
+      de: Verzögerung zwischen Einstellungen
+    help:
+      en: Pause after each setting change sent to SolarAssistant.
+      de: Pause nach jeder an SolarAssistant gesendeten Einstellungsänderung.
+render: |
+  type: custom
+  {{- include "solarassistant-meter" . }}
+  {{- if eq .usage "battery" }}
+  {{- include "solarassistant-batterymode" . }}
+  {{- end }}

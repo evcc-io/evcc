@@ -1,0 +1,29 @@
+template: solarassistant
+products:
+  - brand: SolarAssistant
+    description:
+      generic: MQTT
+requirements:
+  description:
+    en: Reads grid, PV and battery values that SolarAssistant publishes on its MQTT broker (or a broker it bridges to). Works for all inverters supported by SolarAssistant. For battery control of Deye/Sunsynk 3-phase low-voltage hybrid inverters use the "Deye 3p LV hybrid inverter (SolarAssistant)" template.
+    de: Liest Netz-, PV- und Batteriewerte, die SolarAssistant auf seinem MQTT-Broker (oder einem verbundenen Broker) veröffentlicht. Funktioniert mit allen von SolarAssistant unterstützten Wechselrichtern. Für die Batteriesteuerung von Deye/Sunsynk 3-phasigen Niedervolt-Hybrid-Wechselrichtern die Vorlage "Deye 3p LV hybrid inverter (SolarAssistant)" verwenden.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - preset: mqtt
+  - name: topic
+    default: solar_assistant/inverter_1
+  - name: excludeaux
+    type: bool
+    usages: ["pv"]
+    advanced: true
+    description:
+      en: Exclude auxiliary port
+      de: Hilfsanschluss ausschließen
+    help:
+      en: Subtract the auxiliary (GEN) port from the PV power, e.g. when an AC-coupled inverter on that port is configured as its own PV meter.
+      de: Zieht den Hilfsanschluss (GEN) von der PV-Leistung ab, z.B. wenn ein dort angeschlossener AC-gekoppelter Wechselrichter als eigener PV-Zähler eingerichtet ist.
+  - preset: battery-params
+render: |
+  type: custom
+  {{- include "solarassistant-meter" . }}
