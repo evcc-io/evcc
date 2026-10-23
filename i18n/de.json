@@ -829,6 +829,12 @@
       "labelCaCert": "Serverzertifikat (CA)",
       "labelCheckInsecure": "Selbstsignierte Zertifikate erlauben",
       "labelInsecure": "Zertifikatsprüfung",
+      "mirrors": {
+        "add": "Lesenden Upstream hinzufügen",
+        "description": "Erhalten eine Kopie aller Nachrichten dieser Wallbox, zum Beispiel für Reporting oder Monitoring. Sie antworten der Wallbox nie und können keine Befehle senden. Der Haupt-Upstream oben kann autorisieren und abrechnen.",
+        "remove": "Entfernen",
+        "title": "Lesende Upstreams"
+      },
       "password": "Passwort",
       "passwordHelp": "Für HTTP-Basic-Auth am Upstream-Server.",
       "readOnly": {
