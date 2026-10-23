@@ -536,6 +536,7 @@ export interface ConfigLoadpoint {
   planStrategy?: PlanStrategy;
   limitEnergy?: number;
   limitSoc?: number;
+  minSoc?: number;
   circuit?: string;
   thresholds: {
     enable: LoadpointThreshold;
