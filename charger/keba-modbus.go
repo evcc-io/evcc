@@ -412,7 +412,7 @@ func (wb *Keba) phases1p3p(phases int) error {
 
 	// P30 x-series clears the external enable shortly after a phase toggle, re-apply disable
 	if !wb.enabled {
-		time.Sleep(time.Second)
+		time.Sleep(2 * time.Second)
 		_, err := wb.conn.WriteSingleRegister(wb.regEnable, 0)
 		return err
 	}
