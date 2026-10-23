@@ -26,6 +26,7 @@ params:
       de: Captcha Token
       en: Captcha Token
     required: true
+    private: true
   - preset: vehicle-features
 render: |
   type: mini
