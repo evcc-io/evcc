@@ -34,14 +34,21 @@ export default defineComponent({
 </script>
 
 <style scoped>
-@media (max-width: 575.98px) {
-	.evcc-card--edge {
+@import "../../../css/breakpoints.css";
+@media (--below-sm) {
+	/* app sets .safe-area-side when a side inset exists (e.g. iPhone Duo), keep rounded cards then */
+	:root:not(.safe-area-side) .evcc-card--edge {
 		margin-left: -1.5rem;
 		margin-right: -1.5rem;
 		border-width: 1px 0;
 		border-radius: 0;
 		padding-left: 1.5rem !important;
 		padding-right: 1.5rem !important;
+	}
+	/* small side margin like .box-pull-out, also for cards without it */
+	:root.safe-area-side .evcc-card--edge {
+		margin-left: -1rem;
+		margin-right: -1rem;
 	}
 }
 </style>
