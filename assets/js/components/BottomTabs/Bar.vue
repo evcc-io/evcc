@@ -86,6 +86,7 @@ export default defineComponent({
 		authDisabled: Boolean,
 		offline: Boolean,
 		startupCompleted: Boolean,
+		wizardPending: Boolean,
 		optimizer: Boolean,
 		installed: String,
 		availableVersion: String,
@@ -93,7 +94,7 @@ export default defineComponent({
 	},
 	computed: {
 		hidden() {
-			return this.offline || this.startupCompleted === false;
+			return this.offline || this.startupCompleted === false || this.wizardPending;
 		},
 		batterySoc() {
 			return this.battery?.soc;
