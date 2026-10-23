@@ -1,0 +1,81 @@
+template: calendrier-tempo
+link: https://www.calendrier-tempo.fr
+products:
+  - brand: EDF
+    description:
+      generic: Tempo (Calendrier Tempo)
+requirements:
+  description:
+    en: "EDF Tempo prices based on the official day colour (blue, white, red), announced the day before, read from the free public API of [calendrier-tempo.fr](https://www.calendrier-tempo.fr). No account or API key needed. Peak hours 06:00–22:00, off-peak 22:00–06:00. Prices incl. taxes are parameters, defaults are the regulated EDF prices from 1 August 2026: check them against your current EDF price list."
+    de: "EDF-Tempo-Preise auf Basis der offiziellen Tagesfarbe (blau, weiß, rot), die am Vortag bekanntgegeben wird, abgerufen über die kostenlose öffentliche API von [calendrier-tempo.fr](https://www.calendrier-tempo.fr). Kein Konto und kein API-Schlüssel nötig. Hochtarif 06:00–22:00, Niedertarif 22:00–06:00. Die Preise inkl. Steuern sind Parameter, Standardwerte sind die regulierten EDF-Preise ab 1. August 2026: bitte mit der aktuellen EDF-Preisliste abgleichen."
+  evcc: ["skiptest"]
+group: price
+countries: ["FR"]
+params:
+  - name: bluehp
+    type: pricePerKWh
+    default: 0.1654
+    description:
+      en: Blue day, peak hours
+      de: Blauer Tag, Hochtarif
+  - name: bluehc
+    type: pricePerKWh
+    default: 0.1356
+    description:
+      en: Blue day, off-peak hours
+      de: Blauer Tag, Niedertarif
+  - name: whitehp
+    type: pricePerKWh
+    default: 0.1921
+    description:
+      en: White day, peak hours
+      de: Weißer Tag, Hochtarif
+  - name: whitehc
+    type: pricePerKWh
+    default: 0.1536
+    description:
+      en: White day, off-peak hours
+      de: Weißer Tag, Niedertarif
+  - name: redhp
+    type: pricePerKWh
+    default: 0.7295
+    description:
+      en: Red day, peak hours
+      de: Roter Tag, Hochtarif
+  - name: redhc
+    type: pricePerKWh
+    default: 0.1615
+    description:
+      en: Red day, off-peak hours
+      de: Roter Tag, Niedertarif
+  - preset: tariff-base
+  - preset: tariff-features
+render: |
+  type: custom
+  features: ["cacheable"]
+  {{ include "base" . }}
+  {{ include "features" . }}
+  forecast:
+    source: http
+    # official colours only: yesterday, today and tomorrow once announced (usually around 11:00)
+    # a Tempo day runs from 06:00 to 06:00 Europe/Paris, so yesterday's colour sets the 00:00-06:00 off-peak price
+    uri: https://www.calendrier-tempo.fr/api/history?days=1
+    jq: |
+      def wday($y; $md): ($y + "-" + $md | strptime("%Y-%m-%d") | mktime | gmtime | .[6]);
+      def offset:
+        (.[0:4]) as $y | (.[5:7] | tonumber) as $m | (.[8:10] | tonumber) as $d
+        | if ($m > 3 and $m < 10)
+            or ($m == 3 and $d >= 31 - wday($y; "03-31"))
+            or ($m == 10 and $d < 31 - wday($y; "10-31"))
+          then 2 else 1 end;
+      def utc($h): . as $s | ($s | strptime("%Y-%m-%d") | mktime) + ($h - ($s | offset)) * 3600;
+      def next: strptime("%Y-%m-%d") | mktime + 86400 | todate | .[0:10];
+      {
+        "BLEU":  [{{ .bluehp }}, {{ .bluehc }}],
+        "BLANC": [{{ .whitehp }}, {{ .whitehc }}],
+        "ROUGE": [{{ .redhp }}, {{ .redhc }}]
+      } as $p
+      | [ .history[] | .date as $d | $p[.couleur_reelle] as $c | select($c != null)
+          | { start: ($d | utc(6) | todate), end: ($d | utc(22) | todate), value: $c[0] },
+            { start: ($d | utc(22) | todate), end: ($d | next | utc(6) | todate), value: $c[1] }
+        ] | tostring
