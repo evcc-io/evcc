@@ -157,10 +157,12 @@ export default {
 			return `${docsPrefix()}/features/loadmanagement`;
 		},
 		unassignedLoadpoints(): CircuitAssignmentLoadpoint[] {
-			return this.loadpoints
-				.filter((lp) => !this.circuits.some((c) => c.name === lp.circuit))
-				// YAML-backed loadpoints have no DB ID and belong at the end of the pool
-				.sort((a, b) => Number(a.id === undefined) - Number(b.id === undefined));
+			return (
+				this.loadpoints
+					.filter((lp) => !this.circuits.some((c) => c.name === lp.circuit))
+					// YAML-backed loadpoints have no DB ID and belong at the end of the pool
+					.sort((a, b) => Number(a.id === undefined) - Number(b.id === undefined))
+			);
 		},
 		poolValues(): (number | string | undefined)[] {
 			return this.unassignedLoadpoints.map((lp) => lp.id ?? lp.name);
