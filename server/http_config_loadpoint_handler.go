@@ -295,7 +295,7 @@ func updateLoadpointHandler() http.HandlerFunc {
 			}
 			other := configurable.Config().Other
 			other["circuit"] = circuit
-			// Static references take effect after restart; do not replay dynamic setters.
+			// Static references take effect after restart; do not replay dynamic setters
 			if err := configurable.Update(other, dev.Instance()); err != nil {
 				jsonError(w, http.StatusBadRequest, err)
 				return

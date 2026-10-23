@@ -47,7 +47,7 @@ export default defineComponent({
 	watch: {
 		disabled(disabled: boolean) {
 			const container = this.$refs["container"] as HTMLElement;
-			// updateConfig re-registers with defaults rather than merging its argument.
+			// updateConfig re-registers with defaults rather than merging its argument
 			updateConfig(container, { ...parents.get(container)?.config, disabled });
 		},
 	},
@@ -69,7 +69,7 @@ export default defineComponent({
 						handleNodePointerdown: (data, state) => {
 							if (data.e.pointerType !== "touch") handleNodePointerdown(data, state);
 						},
-						// FormKit transfers during hover; keep parent-owned values until a real drop.
+						// FormKit transfers during hover; keep parent-owned values until a real drop
 						performTransfer: ({ targetParent }) =>
 							this.$emit("hover", targetParent.data.config.name),
 						handleParentDrop: (data, state) => {

@@ -1378,7 +1378,7 @@ export default defineComponent({
 			this.circuitAssignmentError = "";
 			try {
 				await assignCircuit(id, circuit);
-				// Live static references remain unchanged until restart.
+				// Live static references remain unchanged until restart
 				this.circuitAssignments[id] = circuit;
 				this.circuitAssignmentFlash = circuit === null ? undefined : id;
 				this.circuitAssignmentRevision++;
