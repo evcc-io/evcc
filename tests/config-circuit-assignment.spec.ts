@@ -43,7 +43,14 @@ test("device-first assignment, rollback and restart persistence", async ({ page 
 
   await row.click();
   await expect(pool.getByRole("listitem", { name: "Wallbox left" })).toBeVisible();
+
+  const assignmentResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/config/loadpoints/13") &&
+      response.request().method() === "PATCH"
+  );
   await modal.getByRole("button", { name: "Circuit Garage", exact: true }).click();
+  expect((await assignmentResponse).status()).toBe(200);
   await expect(pool.getByRole("listitem", { name: "Wallbox left" })).toHaveCount(0);
   expect(stored()).toMatchObject({
     circuit: "db:9",
