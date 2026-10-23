@@ -46,6 +46,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import "../../../css/breakpoints.css";
 /* full-bleed strip flush with the card bottom: square edge-to-edge card below sm, rounded above */
 .strip {
 	margin: 1rem -1.5rem -1rem;
@@ -54,6 +55,13 @@ export default defineComponent({
 @media (min-width: 576px) {
 	.strip {
 		margin: 1.5rem -1.5rem -1.5rem;
+		border-radius: 0 0 1rem 1rem;
+	}
+}
+/* card stays rounded with side insets (see Card.vue) */
+@media (--below-sm) {
+	:root.safe-area-side .strip {
+		margin: 1rem -1rem -1rem;
 		border-radius: 0 0 1rem 1rem;
 	}
 }

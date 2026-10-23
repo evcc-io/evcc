@@ -93,11 +93,11 @@ test.describe("reset", async () => {
     await expectModalHidden(modal);
     await expect(page.getByTestId("offline-indicator")).toHaveAttribute("aria-hidden", "false");
 
-    await restart(undefined, undefined, true);
+    await restart(undefined, ["--disable-auth"], true);
 
     // verify welcome message
     await expect(page.getByTestId("offline-indicator")).toHaveAttribute("aria-hidden", "true");
-    await expect(page.getByRole("heading", { name: "Hello aboard!" })).toBeVisible();
+    await expect(page.getByTestId("onboarding-modal")).toBeVisible();
 
     // verify sessions
     await page.goto("/#/sessions?year=2023&month=5");
@@ -217,7 +217,7 @@ test.describe("backup and restore", async () => {
 
   test("backup with authentication", async ({ page }) => {
     // start with auth enabled
-    await start(undefined, "password.sql", "");
+    await start(undefined, "password.sql", ["--disable-onboarding"]);
     await page.goto("/#/config");
 
     // login to access config

@@ -64,7 +64,7 @@ const rootName = "evcc"
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:     rootName,
-	Short:   "evcc - open source solar charging",
+	Short:   "evcc - smart charging",
 	Version: util.FormattedVersion(),
 	Run:     runRoot,
 	// always allow Ctrl-C in child commands
@@ -103,6 +103,7 @@ func init() {
 	bind(rootCmd, "profile")
 
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
+	rootCmd.Flags().Bool(flagDisableOnboarding, false, flagDisableOnboardingDescription)
 	rootCmd.Flags().Bool(flagDemoMode, false, flagDemoModeDescription)
 
 	// UI customization, flags default to environment variables
@@ -340,6 +341,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.StartupCompleted, Val: true}
 	// show onboarding UI
 	valueChan <- util.Param{Key: keys.SetupRequired, Val: site == nil || !site.IsConfigured()}
+	onboarding := server.OnboardingSettings()
+	if ok, _ := cmd.Flags().GetBool(flagDisableOnboarding); ok {
+		onboarding.Done = true
+		onboarding.Dismissed = server.OnboardingItems
+	}
+	valueChan <- util.Param{Key: keys.Onboarding, Val: onboarding}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" && conf.Mqtt.Topic != "" {

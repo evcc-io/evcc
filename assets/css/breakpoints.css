@@ -5,6 +5,7 @@
 @custom-media --lg-and-up (min-width: 992px);
 @custom-media --xl-and-up (min-width: 1200px);
 @custom-media --xxl-and-up (min-width: 1400px);
+@custom-media --below-sm (max-width: 575.98px);
 
 /* Range Breakpoints */
 @custom-media --xs-to-sm (min-width: 400px) and (max-width: 575.98px);
