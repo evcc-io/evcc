@@ -64,7 +64,7 @@ const rootName = "evcc"
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:     rootName,
-	Short:   "evcc - open source solar charging",
+	Short:   "evcc - smart charging",
 	Version: util.FormattedVersion(),
 	Run:     runRoot,
 	// always allow Ctrl-C in child commands
