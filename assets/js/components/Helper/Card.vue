@@ -45,5 +45,10 @@ export default defineComponent({
 		padding-left: 1.5rem !important;
 		padding-right: 1.5rem !important;
 	}
+	/* small side margin like .box-pull-out, also for cards without it */
+	:root.safe-area-side .evcc-card--edge {
+		margin-left: -1rem;
+		margin-right: -1rem;
+	}
 }
 </style>
