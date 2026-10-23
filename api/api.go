@@ -89,6 +89,12 @@ type BatteryController interface {
 	SetBatteryMode(BatteryMode) error
 }
 
+// BatteryChargePowerController optionally controls home battery charging power in W.
+// The device must support dynamic charge setpoints.
+type BatteryChargePowerController interface {
+	SetBatteryChargePower(power float64) error
+}
+
 // Charger provides current charging status and enable/disable charging
 type Charger interface {
 	ChargeState

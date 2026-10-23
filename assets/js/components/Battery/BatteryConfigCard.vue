@@ -39,19 +39,8 @@
 				class="text-primary flex-shrink-0 mt-1"
 			></shopicon-regular-lightning>
 			<div>
-				<div class="fw-bold mb-1">
-					{{ $t("battery.config.bufferTitle") }}
-				</div>
-				<i18n-t
-					:keypath="
-						selectedBufferSoc < 100
-							? 'battery.config.buffer'
-							: 'battery.config.bufferNone'
-					"
-					tag="p"
-					class="mb-0"
-					scope="global"
-				>
+				<div class="fw-bold mb-1">{{ $t("battery.config.bufferTitle") }}</div>
+				<i18n-t :keypath="bufferDescriptionKey" tag="p" class="mb-0" scope="global">
 					<template #soc>
 						<InlineSocSelect
 							id="batteryBuffer"
@@ -90,6 +79,45 @@
 				</template>
 			</i18n-t>
 		</p>
+
+		<div
+			v-if="batteryPvChargingSupported || batteryPvControlUnavailable"
+			class="d-flex gap-3 mb-4"
+			data-testid="battery-pv-start"
+		>
+			<shopicon-regular-sun
+				size="s"
+				class="text-primary flex-shrink-0 mt-1"
+			></shopicon-regular-sun>
+			<div>
+				<p v-if="batteryPvControlUnavailable" class="text-warning" role="status">
+					{{ $t("battery.config.pvControlUnavailable") }}
+				</p>
+				<label for="batteryPVStartPower" class="fw-bold mb-2">
+					{{ $t("battery.config.pvStartPowerTitle") }}
+				</label>
+				<span
+					class="ms-2 text-muted"
+					tabindex="0"
+					:title="$t('battery.config.pvStartPowerHelp')"
+					:aria-label="$t('battery.config.pvStartPowerHelp')"
+					>ⓘ</span
+				>
+				<div class="input-group input-group-sm" style="max-width: 12rem">
+					<input
+						id="batteryPVStartPower"
+						class="form-control"
+						type="number"
+						min="1"
+						max="20000"
+						step="50"
+						:value="batteryPvStartPower"
+						@change="changePvStartPower"
+					/>
+					<span class="input-group-text">W</span>
+				</div>
+			</div>
+		</div>
 
 		<template v-if="controllable">
 			<hr class="my-3" />
@@ -193,6 +221,10 @@ export default defineComponent({
 		bufferStartSoc: { type: Number, default: 0 },
 		batteryDischargeControl: Boolean,
 		batteryGridDischarge: Boolean,
+		batteryPvChargingSupported: Boolean,
+		batteryPvControlUnavailable: Boolean,
+		coordinatedPv: Boolean,
+		batteryPvStartPower: { type: Number, default: 500 },
 		battery: { type: Object as PropType<Battery> },
 		experimental: Boolean,
 		optimizerAutomatic: Boolean,
@@ -219,6 +251,12 @@ export default defineComponent({
 		},
 		controlledTitleList(): string {
 			return new Intl.ListFormat(this.$i18n?.locale).format(this.optimizerControlledTitles);
+		},
+		bufferDescriptionKey(): string {
+			if (this.selectedBufferSoc >= 100) return "battery.config.bufferNone";
+			return this.coordinatedPv
+				? "battery.config.bufferCoordinated"
+				: "battery.config.buffer";
 		},
 		siteConfigRoute() {
 			return { path: "/config", query: { site: "" } };
@@ -291,6 +329,20 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		async changePvStartPower(e: Event) {
+			const input = e.target as HTMLInputElement;
+			const power = Number(input.value);
+			if (!Number.isInteger(power) || power < 1 || power > 20000) {
+				input.value = String(this.batteryPvStartPower);
+				return;
+			}
+			try {
+				await api.post(`batterypvstartpower/${power}`);
+			} catch (err) {
+				input.value = String(this.batteryPvStartPower);
+				console.error(err);
+			}
+		},
 		changePrioritySoc($event: Event) {
 			const soc = parseInt(($event.target as HTMLInputElement).value, 10);
 			if (soc > (this.bufferSoc || 100)) {

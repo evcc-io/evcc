@@ -20,6 +20,7 @@ const (
 	PvEnergy              = "pvEnergy"
 	PvPower               = "pvPower"
 	ResidualPower         = "residualPower"
+	BatteryPVStartPower   = "batteryPVStartPower"
 	SiteTitle             = "siteTitle"
 	SmartCostType         = "smartCostType"
 	Statistics            = "statistics"
@@ -48,14 +49,16 @@ const (
 	Curtailers = "curtailers"
 
 	// battery settings
-	BatteryDischargeControl    = "batteryDischargeControl"
-	BatteryGridChargeLimit     = "batteryGridChargeLimit"
-	BatteryGridChargeActive    = "batteryGridChargeActive"
-	BatteryGridDischargeLimit  = "batteryGridDischargeLimit"
-	BatteryGridDischargeActive = "batteryGridDischargeActive"
-	BatteryGridDischarge       = "batteryGridDischarge"
-	BufferSoc                  = "bufferSoc"
-	BufferStartSoc             = "bufferStartSoc"
+	BatteryDischargeControl     = "batteryDischargeControl"
+	BatteryGridChargeLimit      = "batteryGridChargeLimit"
+	BatteryPVChargingSupported  = "batteryPVChargingSupported"
+	BatteryPVControlUnavailable = "batteryPVControlUnavailable"
+	BatteryGridChargeActive     = "batteryGridChargeActive"
+	BatteryGridDischargeLimit   = "batteryGridDischargeLimit"
+	BatteryGridDischargeActive  = "batteryGridDischargeActive"
+	BatteryGridDischarge        = "batteryGridDischarge"
+	BufferSoc                   = "bufferSoc"
+	BufferStartSoc              = "bufferStartSoc"
 
 	// grid settings
 	GridExportLimit = "gridExportLimit"

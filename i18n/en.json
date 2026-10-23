@@ -32,6 +32,25 @@
     "title": "Authorization Status"
   },
   "battery": {
+    "control": {
+      "conflict": "Unknown manual battery control",
+      "disabled": "Active PV control disabled",
+      "unavailable": "Active PV control paused",
+      "description": "EVCC has blocked active PV charging for battery {battery} or is waiting for confirmation that control has been returned.",
+      "question": "Is another application or person using manual control of your battery?",
+      "details": "Show observations and journal",
+      "observed": "Last observed operating mode",
+      "expected": "Last recorded charge request",
+      "restoreNotice": "Approving explicitly allows EVCC to restore the previous automatic mode. If unknown, the configured automatic mode is used. Normal charging start conditions are checked again afterwards.",
+      "disable": "Yes / unsure – disable control",
+      "recover": "No – allow EVCC to restore automatic mode",
+      "failed": "The decision could not be saved. Check authentication and reload the current battery state. The lock remains in place.",
+      "accepted": "Decision saved. Confirmation may take until the next control cycle.",
+      "confirming": "Control change requested for battery {battery}. Waiting for confirmation.",
+      "observedAt": "Last valid observation time",
+      "stale": "No current valid response. Displayed values do not confirm the present device state.",
+      "confirmingTitle": "Waiting for control confirmation"
+    },
     "card": {
       "charging": "charging",
       "discharging": "discharging",
@@ -54,6 +73,7 @@
         "never": "only with enough surplus"
       },
       "bufferTitle": "Battery as charging buffer",
+      "bufferCoordinated": "Home battery energy above {soc} may support ongoing vehicle charging. In PV operation, loadpoints with fixed phases start only when available solar surplus covers their minimum charging power. Battery SoC alone does not start charging. Support ends at the SoC limit; charging pauses if solar power alone is insufficient.",
       "discharge": "Prevent home battery discharge in fast mode and during planned charging.",
       "gridDischarge": "Allow home battery to discharge to the grid.",
       "gridDischargeConfirm": {
@@ -65,7 +85,10 @@
       "optimizerControlledHint": "Disabled for {loadpoints}. The {optimizer} decides instead.",
       "priority": "Home battery has priority while it is below {soc}. Then the charging points receive the surplus.",
       "priorityNone": "Solar surplus goes straight to the charging points. Set a value above {soc} to prioritize the home battery.",
-      "priorityTitle": "Where does the surplus go first?"
+      "priorityTitle": "Where does the surplus go first?",
+      "pvStartPowerTitle": "Start active PV battery charging at",
+      "pvControlUnavailable": "Active PV charging is blocked for at least one battery: its integration does not yet support safe control acquisition and automatic release. EVCC only observes this battery; other EVCC battery commands are blocked for it as well.",
+      "pvStartPowerHelp": "EVCC starts active battery charging when unused solar surplus reaches this value. Once started, charging continues below this threshold while usable surplus remains. Existing independent battery charging is respected."
     },
     "optimizer": {
       "action": {
