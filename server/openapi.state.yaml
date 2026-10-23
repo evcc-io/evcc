@@ -194,6 +194,9 @@ components:
         interval:
           description: Update interval of the control loop in seconds.
           type: number
+        logLevels:
+          $ref: "#/components/schemas/LogLevels"
+          description: Persisted default and per-area log levels.
         circuits:
           description: Load management circuits, keyed by circuit name.
           type: object
@@ -1254,6 +1257,21 @@ components:
       required:
         - minTemp
         - maxTemp
+    LogLevels:
+      description: Persisted log levels.
+      type: object
+      properties:
+        default:
+          description: Default log level.
+          type: string
+        levels:
+          description: Log level overrides by log area.
+          type: object
+          additionalProperties:
+            type: string
+      required:
+        - default
+        - levels
     MessagingEvent:
       description: A configured notification message.
       type: object

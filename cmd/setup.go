@@ -1649,3 +1649,17 @@ func configureLogLevels(cmd *cobra.Command) error {
 
 	return settings.SetJson(keys.LogLevels, globalconfig.LogLevels{Default: strings.ToUpper(level), Levels: levels})
 }
+
+// storedLogLevels returns the persisted log levels for the ui
+func storedLogLevels() globalconfig.LogLevels {
+	conf := globalconfig.LogLevels{Default: "INFO"}
+	if settings.Exists(keys.LogLevels) {
+		if err := settings.Json(keys.LogLevels, &conf); err != nil {
+			log.ERROR.Println("log levels:", err)
+		}
+	}
+	if conf.Levels == nil {
+		conf.Levels = make(map[string]string)
+	}
+	return conf
+}
