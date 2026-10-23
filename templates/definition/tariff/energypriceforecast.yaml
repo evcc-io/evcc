@@ -6,8 +6,14 @@ products:
       generic: Predicted spot prices
 requirements:
   description:
-    de: "Day-Ahead-Strompreise plus 4 Tage Prognose [energypriceforecast.eu](https://energypriceforecast.eu/de/evcc-strompreis-co2-prognose/)"
-    en: "Day-ahead spot prices plus a 4-day forecast [energypriceforecast.eu](https://energypriceforecast.eu/en/evcc-electricity-price-co2-forecast/)"
+    de: |
+      Day-Ahead-Strompreise plus 4 Tage Prognose [energypriceforecast.eu](https://energypriceforecast.eu/de/evcc-strompreis-co2-prognose/).
+      Für FI, NO1, NO3, NO4, NO5, SE1, SE2 und RO lädt evcc die veröffentlichten Preise selbst von Nord Pool, die Prognose schließt daran an.
+      Für SK, GR, BG und die italienischen Zonen außer Nord geht das mit eigenem ENTSO-E-Token, sonst wird für alle Stunden die Prognose verwendet.
+    en: |
+      Day-ahead spot prices plus a 4-day forecast [energypriceforecast.eu](https://energypriceforecast.eu/en/evcc-electricity-price-co2-forecast/).
+      For FI, NO1, NO3, NO4, NO5, SE1, SE2 and RO evcc loads the published prices from Nord Pool itself and the forecast continues after them.
+      SK, GR, BG and the Italian zones except North do the same with your own ENTSO-E token, otherwise the forecast is used for all hours.
   evcc: ["skiptest"]
 group: price
 countries:
@@ -95,17 +101,86 @@ params:
       en: Anonymous access is limited to 48 hours from October 1, 2026. An API key allows up to 120 hours.
       de: Anonymer Zugriff ist ab 1. Oktober 2026 auf 48 Stunden begrenzt. Mit API-Key sind bis zu 120 Stunden möglich.
     required: true
+  - name: entsoetoken
+    type: string
+    mask: true
+    description:
+      en: ENTSO-E token for published prices
+      de: ENTSO-E-Token für veröffentlichte Preise
+    help:
+      en: "Only for SK, GR, BG and the Italian zones except North. With your own [ENTSO-E token](https://transparencyplatform.zendesk.com/hc/en-us/articles/12845911031188-How-to-get-security-token) evcc loads the published prices itself and uses the forecast for the hours after. Without it, the forecast is used for all hours."
+      de: "Nur für SK, GR, BG und die italienischen Zonen außer Nord. Mit eigenem [ENTSO-E-Token](https://transparencyplatform.zendesk.com/hc/en-us/articles/12845911031188-How-to-get-security-token) lädt evcc die veröffentlichten Preise selbst und nutzt die Prognose für die Stunden danach. Ohne Token wird für alle Stunden die Prognose verwendet."
+  - name: forecastonly
+    type: bool
+    advanced: true
+    description:
+      en: Forecast only
+      de: Nur Prognose
+    help:
+      en: "Return the forecast for every hour and no published prices, e.g. as secondary tariff of your own merged configuration."
+      de: "Liefert für jede Stunde die Prognose und keine veröffentlichten Preise, z. B. als zweiten Tarif einer eigenen merged-Konfiguration."
   - preset: tariff-base
   - preset: tariff-features
 render: |
+  {{- /* Published prices are only served for zones whose source allows redistribution.
+         For the others evcc loads them itself (Nord Pool, or ENTSO-E with the user's
+         own token) and the forecast fills the hours after. */}}
+  {{- $nordpool := dict "FI" "FI" "SE1" "SE1" "SE2" "SE2" "NO1" "NO1" "NO3" "NO3" "NO4" "NO4" "NO5" "NO5" "RO" "TEL" }}
+  {{- $entsoe := dict "IT_CNOR" "BZN|IT-Centre-North" "IT_CSUD" "BZN|IT-Centre-South" "IT_SUD" "BZN|IT-South" "IT_CALA" "BZN|IT-Calabria" "IT_SICI" "BZN|IT-Sicily" "IT_SARD" "BZN|IT-Sardinia" "SK" "BZN|SK" "GR" "BZN|GR" "BG" "BZN|BG" }}
+  {{- $currency := .currency }}
+  {{- if hasKey $nordpool .region }}
+  {{- if not (has $currency (list "DKK" "EUR" "NOK" "PLN" "RON" "SEK")) }}
+  {{- $currency = ternary "NOK" (ternary "RON" "EUR" (eq .region "RO")) (hasPrefix "NO" .region) }}
+  {{- end }}
+  {{- else if hasKey $entsoe .region }}
+  {{- $currency = "EUR" }}
+  {{- end }}
+  {{- $uri := printf "https://api.energypriceforecast.eu/api/v1/evcc/tariff?country=%s&type=grid&currency=%s&hours=%v" .region $currency .horizon }}
+  {{- $forecastonly := or .forecastonly (hasKey $nordpool .region) (hasKey $entsoe .region) }}
+  {{- $primary := "" }}
+  {{- if not .forecastonly }}
+  {{- if hasKey $nordpool .region }}
+  {{- $primary = "nordpool" }}
+  {{- else if and (hasKey $entsoe .region) .entsoetoken }}
+  {{- $primary = "entsoe" }}
+  {{- end }}
+  {{- end }}
+  {{- if $primary }}
+  type: merged
+  {{- /* average applies to the whole merged series, so Nord Pool quarters are averaged too */}}
+  {{ include "features" (merge (dict "basefeatures" (list "cacheable")) .) }}
+  primary:
+    type: template
+    template: {{ $primary }}
+    {{- if eq $primary "nordpool" }}
+    region: {{ get $nordpool .region }}
+    currency: {{ $currency }}
+    {{- else }}
+    securitytoken: {{ .entsoetoken }}
+    domain: "{{ get $entsoe .region }}"
+    {{- end }}
+    {{- include "base" . | trim | nindent 2 }}
+  secondary:
+    type: custom
+    {{- include "base" . | trim | nindent 2 }}
+    forecast:
+      source: http
+      uri: {{ $uri }}&mode=forecast_only
+      {{- if .apikey }}
+      auth:
+        type: bearer
+        token: {{ .apikey }}
+      {{- end }}
+  {{- else }}
   type: custom
   {{ include "base" . }}
   {{ include "features" (merge (dict "basefeatures" (list "cacheable")) (omit . "average")) }}
   forecast:
     source: http
-    uri: https://api.energypriceforecast.eu/api/v1/evcc/tariff?country={{.region}}&type=grid&currency={{.currency}}&hours={{.horizon}}{{ if .average }}&resolution=hourly{{ end }}
+    uri: {{ $uri }}{{ if $forecastonly }}&mode=forecast_only{{ else if .average }}&resolution=hourly{{ end }}
     {{ if .apikey }}
     auth:
       type: bearer
       token: {{ .apikey }}
     {{- end }}
+  {{- end }}
