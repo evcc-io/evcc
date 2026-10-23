@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/keys"
@@ -12,6 +13,9 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/logstash"
 )
+
+// logLevelsMux keeps stored and active levels in sync across concurrent updates
+var logLevelsMux sync.Mutex
 
 // updateLogLevelsHandler persists the log levels and applies them without restart
 func updateLogLevelsHandler(pub publisher) http.HandlerFunc {
@@ -40,7 +44,15 @@ func updateLogLevelsHandler(pub publisher) http.HandlerFunc {
 		}
 		conf.Levels = levels
 
+		logLevelsMux.Lock()
+		defer logLevelsMux.Unlock()
+
 		if err := settings.SetJson(keys.LogLevels, conf); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		if err := settings.Persist(); err != nil {
 			jsonError(w, http.StatusInternalServerError, err)
 			return
 		}
