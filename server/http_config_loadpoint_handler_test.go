@@ -17,7 +17,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestUpdateLoadpointCircuitOnly(t *testing.T) {
+func TestPatchLoadpointStaticConfig(t *testing.T) {
 	for _, live := range []bool{false, true} {
 		t.Run(strconv.FormatBool(live), func(t *testing.T) {
 			require.NoError(t, db.NewInstance("sqlite", ":memory:"))
@@ -36,17 +36,17 @@ func TestUpdateLoadpointCircuitOnly(t *testing.T) {
 			require.NoError(t, config.Loadpoints().Add(dev))
 			t.Cleanup(func() { _ = config.Loadpoints().Delete(config.NameForID(conf.ID)) })
 
-			put := func(body string) *httptest.ResponseRecorder {
+			patch := func(body string) *httptest.ResponseRecorder {
 				t.Helper()
-				req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(body))
+				req := httptest.NewRequest(http.MethodPatch, "/", strings.NewReader(body))
 				req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(conf.ID)})
 				rec := httptest.NewRecorder()
-				updateLoadpointHandler()(rec, req)
+				patchLoadpointHandler()(rec, req)
 				return rec
 			}
 
 			for _, circuit := range []string{"new", ""} {
-				rec := put(`{"circuit":"` + circuit + `"}`)
+				rec := patch(`{"circuit":"` + circuit + `"}`)
 				require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 
 				data["circuit"] = circuit
@@ -60,10 +60,39 @@ func TestUpdateLoadpointCircuitOnly(t *testing.T) {
 				assert.EqualValues(t, 35, stored.Data["minSoc"])
 			}
 
-			for _, body := range []string{`{"circuit":null}`, `{"circuit":12}`, `{"circuit":{}}`, `{"circuit":true}`} {
-				assert.Equal(t, http.StatusBadRequest, put(body).Code, body)
+			for _, body := range []string{
+				``, `[]`, `{"circuit":12}`,
+				`{"circuit":{}}`, `{"circuit":true}`, `{"circuit":"new","priority":2}`,
+				`{"unknown":"value"}`, `{"circuit":"new"} {}`,
+			} {
+				assert.Equal(t, http.StatusBadRequest, patch(body).Code, body)
+				assert.Equal(t, data, dev.Config().Other)
+				var stored config.Config
+				require.NoError(t, db.Instance.First(&stored, conf.ID).Error)
+				assert.Equal(t, "", stored.Data["circuit"])
+				assert.EqualValues(t, 35, stored.Data["minSoc"])
+			}
+
+			for _, body := range []string{`{}`, `null`, `{"circuit":null}`} {
+				require.Equal(t, http.StatusOK, patch(body).Code, body)
 				assert.Equal(t, data, dev.Config().Other)
 			}
+
+			rec := patch(`{"charger":"new-wallbox","meter":"new-meter","vehicle":"new-car"}`)
+			require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+			data["charger"] = "new-wallbox"
+			data["meter"] = "new-meter"
+			data["vehicle"] = "new-car"
+			assert.Equal(t, data, dev.Config().Other)
+			assert.Equal(t, !live, dev.Properties().Disable)
+			assert.Equal(t, instance, dev.Instance())
+			var stored config.Config
+			require.NoError(t, db.Instance.First(&stored, conf.ID).Error)
+			assert.Equal(t, "new-wallbox", stored.Data["charger"])
+			assert.Equal(t, "new-meter", stored.Data["meter"])
+			assert.Equal(t, "new-car", stored.Data["vehicle"])
+			assert.Equal(t, "", stored.Data["circuit"])
+			assert.EqualValues(t, 35, stored.Data["minSoc"])
 		})
 	}
 }

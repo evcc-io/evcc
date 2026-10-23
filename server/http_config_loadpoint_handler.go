@@ -1,8 +1,6 @@
 package server
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -252,6 +250,59 @@ func newLoadpointHandler() http.HandlerFunc {
 	}
 }
 
+// patchLoadpointHandler updates persisted static loadpoint references
+func patchLoadpointHandler() http.HandlerFunc {
+	h := config.Loadpoints()
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.Atoi(mux.Vars(r)["id"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+		dev, err := configurableDevice(config.NameForID(id), h)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+		other := dev.Config().Other
+		var static loadpoint.StaticConfig
+		if err := mapstructure.Decode(other, &static); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+		dec := jsonDecoder(r.Body)
+		if err := dec.Decode(&static); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+		var extra any
+		if err := dec.Decode(&extra); err != io.EOF {
+			jsonError(w, http.StatusBadRequest, errors.New("expected a single JSON object"))
+			return
+		}
+
+		for key, value := range map[string]string{
+			"charger": static.Charger,
+			"meter":   static.Meter,
+			"circuit": static.Circuit,
+			"vehicle": static.Vehicle,
+		} {
+			if _, exists := other[key]; exists || value != "" {
+				other[key] = value
+			}
+		}
+
+		// Static references take effect after restart without replaying dynamic setters
+		if err := dev.Update(other, dev.Instance()); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+		setConfigDirty()
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
 // updateLoadpointHandler returns a device configurations by class
 func updateLoadpointHandler() http.HandlerFunc {
 	h := config.Loadpoints()
@@ -277,34 +328,7 @@ func updateLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-		var fields map[string]json.RawMessage
-		if err := json.Unmarshal(body, &fields); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-		if raw, ok := fields["circuit"]; ok && len(fields) == 1 {
-			var circuit string
-			if err := json.Unmarshal(raw, &circuit); err != nil || string(raw) == "null" {
-				jsonError(w, http.StatusBadRequest, errors.New("circuit must be a string"))
-				return
-			}
-			other := configurable.Config().Other
-			other["circuit"] = circuit
-			// Static references take effect after restart; do not replay dynamic setters
-			if err := configurable.Update(other, dev.Instance()); err != nil {
-				jsonError(w, http.StatusBadRequest, err)
-				return
-			}
-			setConfigDirty()
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-		dynamic, static, payload, disable, err := loadpointSplitConfig(bytes.NewReader(body))
+		dynamic, static, payload, disable, err := loadpointSplitConfig(r.Body)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
