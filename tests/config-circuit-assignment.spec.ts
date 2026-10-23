@@ -20,8 +20,8 @@ const open = async (page: Page) => {
   return modal;
 };
 
-const stored = () =>
-  JSON.parse(
+const stored = () => {
+  const rows = JSON.parse(
     execFileSync(
       "sqlite3",
       [
@@ -31,7 +31,9 @@ const stored = () =>
       ],
       { encoding: "utf8" }
     )
-  )[0].value;
+  );
+  return JSON.parse(rows[0].value);
+};
 
 test("device-first assignment, rollback and restart persistence", async ({ page }) => {
   await start("fast.evcc.yaml", "config-circuit-assignment.sql");
@@ -43,7 +45,7 @@ test("device-first assignment, rollback and restart persistence", async ({ page 
   await expect(pool.getByRole("listitem", { name: "Wallbox left" })).toBeVisible();
   await modal.getByRole("button", { name: "Circuit Garage", exact: true }).click();
   await expect(pool.getByRole("listitem", { name: "Wallbox left" })).toHaveCount(0);
-  expect(JSON.parse(stored())).toMatchObject({
+  expect(stored()).toMatchObject({
     circuit: "db:9",
     minSoc: 35,
     priority: 4,
@@ -57,7 +59,7 @@ test("device-first assignment, rollback and restart persistence", async ({ page 
   );
   await modal.getByRole("button", { name: "Circuit Home", exact: true }).click();
   await expect(modal.getByRole("alert")).toContainText("Could not save assignment");
-  expect(JSON.parse(stored()).circuit).toBe("db:9");
+  expect(stored().circuit).toBe("db:9");
   await expect(row).not.toHaveClass(/assignment-flash/);
 
   await page.unroute("**/api/config/loadpoints/13");
@@ -65,17 +67,17 @@ test("device-first assignment, rollback and restart persistence", async ({ page 
   await expect(pool.getByRole("listitem", { name: "Wallbox left" })).toBeVisible();
   await row.click();
   await modal.getByRole("button", { name: "Circuit Home", exact: true }).click();
-  expect(JSON.parse(stored()).circuit).toBe("db:8");
+  expect(stored().circuit).toBe("db:8");
 
   await row.dragTo(modal.getByRole("button", { name: "Circuit Garage", exact: true }));
-  await expect.poll(() => JSON.parse(stored()).circuit).toBe("db:9");
+  await expect.poll(() => stored().circuit).toBe("db:9");
 
   await row.dragTo(pool);
   await expect(pool.getByRole("listitem", { name: "Wallbox left" })).toBeVisible();
-  expect(JSON.parse(stored()).circuit).toBe("");
+  expect(stored().circuit).toBe("");
 
   await row.dragTo(modal.getByRole("button", { name: "Circuit Home", exact: true }));
-  await expect.poll(() => JSON.parse(stored()).circuit).toBe("db:8");
+  await expect.poll(() => stored().circuit).toBe("db:8");
 
   await modal.getByRole("button", { name: "Close", exact: true }).last().click();
   await expect(modal).not.toBeVisible();
