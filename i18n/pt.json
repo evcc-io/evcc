@@ -188,7 +188,6 @@
     "circuits": {
       "addMainCircuit": "Adicionar circuito raiz",
       "addSubCircuit": "Adicionar circuito secundário",
-      "chargingPointsNote": "Atribuir pontos de carregamento e aquecedores a um circuito nas respetivas definições.",
       "description": "Garante que a soma de todos os pontos de carregamento e aquecedores conectados a um circuito não exceda os limites de potência e corrente configurados. Os circuitos podem ser aninhados para criar uma hierarquia.",
       "legacyWarning": "Nova configuração de circuitos disponível! Remova e salve sua configuração aqui para usar o novo processo guiado. Será depois necessário reiniciar o sistema.",
       "meterDedicated": "Contador",

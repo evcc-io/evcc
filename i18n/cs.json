@@ -187,7 +187,6 @@
     "circuits": {
       "addMainCircuit": "Přidat hlavní okruh",
       "addSubCircuit": "Přidat podřízený okruh",
-      "chargingPointsNote": "Nabíjecí body a topení přiřaďte k okruhu v jejich vlastním nastavení.",
       "description": "Zajišťuje, že součet všech nabíjecích bodů připojených k danému okruhu nepřekročí nastavené limity výkonu a proudu. Okruhy lze vnořovat a vytvářet tak hierarchii.",
       "legacyWarning": "K dispozici je nová konfigurace okruhů! Odeberte a uložte zde svou konfiguraci, abyste mohli použít nový průvodce.",
       "meterDedicated": "Měřič",

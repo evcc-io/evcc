@@ -63,7 +63,7 @@ func TestPatchLoadpointStaticConfig(t *testing.T) {
 			for _, body := range []string{
 				``, `[]`, `{"circuit":12}`,
 				`{"circuit":{}}`, `{"circuit":true}`, `{"circuit":"new","priority":2}`,
-				`{"unknown":"value"}`, `{"circuit":"new"} {}`,
+				`{"unknown":"value"}`, `{"charger":"new-wallbox"}`,
 			} {
 				assert.Equal(t, http.StatusBadRequest, patch(body).Code, body)
 				assert.Equal(t, data, dev.Config().Other)
@@ -77,22 +77,6 @@ func TestPatchLoadpointStaticConfig(t *testing.T) {
 				require.Equal(t, http.StatusOK, patch(body).Code, body)
 				assert.Equal(t, data, dev.Config().Other)
 			}
-
-			rec := patch(`{"charger":"new-wallbox","meter":"new-meter","vehicle":"new-car"}`)
-			require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
-			data["charger"] = "new-wallbox"
-			data["meter"] = "new-meter"
-			data["vehicle"] = "new-car"
-			assert.Equal(t, data, dev.Config().Other)
-			assert.Equal(t, !live, dev.Properties().Disable)
-			assert.Equal(t, instance, dev.Instance())
-			var stored config.Config
-			require.NoError(t, db.Instance.First(&stored, conf.ID).Error)
-			assert.Equal(t, "new-wallbox", stored.Data["charger"])
-			assert.Equal(t, "new-meter", stored.Data["meter"])
-			assert.Equal(t, "new-car", stored.Data["vehicle"])
-			assert.Equal(t, "", stored.Data["circuit"])
-			assert.EqualValues(t, 35, stored.Data["minSoc"])
 		})
 	}
 }

@@ -188,7 +188,6 @@
     "circuits": {
       "addMainCircuit": "Hoofdcircuit toevoegen",
       "addSubCircuit": "Onderliggend circuit toevoegen",
-      "chargingPointsNote": "Ken laadpunten en verwarmers toe aan een circuit via de eigen configuratie.",
       "description": "Zorgt ervoor dat de som van alle laadpunten en verwarmers die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
       "legacyWarning": "Nieuwe circuitconfiguratie beschikbaar! Verwijder en sla uw configuratie hier op om het nieuwe, begeleide proces te gebruiken. Een herstart is daarna vereist.",
       "meterDedicated": "Meter",

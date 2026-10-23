@@ -669,7 +669,7 @@ import MessengerModal from "@/components/Config/Messaging/MessengerModal.vue";
 import MessagingLegacyModal from "@/components/Config/Messaging/MessagingLegacyModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import MeterCard from "../components/Config/MeterCard.vue";
-import { createDeviceUtils, assignCircuit } from "../components/Config/DeviceModal";
+import { createDeviceUtils } from "../components/Config/DeviceModal";
 import { openModal, type ModalResult } from "@/configModal";
 import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
@@ -880,7 +880,7 @@ export default defineComponent({
 				title: lp.title,
 				circuit:
 					lp.id !== undefined && lp.id in this.circuitAssignments
-						? (this.circuitAssignments[lp.id] ?? null)
+						? this.circuitAssignments[lp.id]
 						: lp.circuit || null,
 				editable: lp.id !== undefined && !lp.disable,
 				heating: this.deviceValues.charger[lp.charger]?.heating?.value === true,
@@ -1373,11 +1373,10 @@ export default defineComponent({
 		async circuitAssignmentChanged({ id, circuit }: { id: number; circuit: string | null }) {
 			const lp = this.assignmentLoadpoints.find((lp) => lp.id === id);
 			if (this.circuitAssignmentPending || !lp?.editable || lp.circuit === circuit) return;
-			if (circuit !== null && !this.circuits.some((c) => c.name === circuit)) return;
 			this.circuitAssignmentPending = true;
 			this.circuitAssignmentError = "";
 			try {
-				await assignCircuit(id, circuit);
+				await api.patch(`config/loadpoints/${id}`, { circuit: circuit ?? "" });
 				// Live static references remain unchanged until restart
 				this.circuitAssignments[id] = circuit;
 				this.circuitAssignmentFlash = circuit === null ? undefined : id;

@@ -265,32 +265,17 @@ func patchLoadpointHandler() http.HandlerFunc {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
-		other := dev.Config().Other
-		var static loadpoint.StaticConfig
-		if err := mapstructure.Decode(other, &static); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
+		var patch struct {
+			Circuit *string `json:"circuit"`
 		}
-		dec := jsonDecoder(r.Body)
-		if err := dec.Decode(&static); err != nil {
+		if err := jsonDecoder(r.Body).Decode(&patch); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-		var extra any
-		if err := dec.Decode(&extra); err != io.EOF {
-			jsonError(w, http.StatusBadRequest, errors.New("expected a single JSON object"))
 			return
 		}
 
-		for key, value := range map[string]string{
-			"charger": static.Charger,
-			"meter":   static.Meter,
-			"circuit": static.Circuit,
-			"vehicle": static.Vehicle,
-		} {
-			if _, exists := other[key]; exists || value != "" {
-				other[key] = value
-			}
+		other := dev.Config().Other
+		if patch.Circuit != nil {
+			other["circuit"] = *patch.Circuit
 		}
 
 		// Static references take effect after restart without replaying dynamic setters

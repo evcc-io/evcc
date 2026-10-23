@@ -186,7 +186,6 @@
     "circuits": {
       "addMainCircuit": "Nou circuit principal",
       "addSubCircuit": "Afegeix subcircuit",
-      "chargingPointsNote": "Assigneu els punts de recàrrega i escalfadors a un circuit des de la seva pròpia configuració.",
       "description": "Assegura que la suma de tots els punts de recàrrega connectats a un circuit no superi els límits de potència i corrent configurats. Els circuits es poden imbricar per a crear jerarquies.",
       "legacyWarning": "Hi ha disponible una nova configuració de circuits! Elimineu i deseu aquí la vostra configuració per a utilitzar el nou procés guiat.",
       "meterDedicated": "Comptador",

@@ -188,7 +188,6 @@
     "circuits": {
       "addMainCircuit": "Aggiungi il circuito principale",
       "addSubCircuit": "Aggiungi sotto-circuito",
-      "chargingPointsNote": "Assegna i punti di ricarica e i dispositivi di riscaldamento a un circuito nelle rispettive impostazioni.",
       "description": "Garantisce che la somma dei carichi connessi ad un circuito non superi i limiti di corrente configurati. I circuiti possono essere annidati in una struttura gerarchica.",
       "legacyWarning": "Nuove configurazioni di circuiti disponibili! Rimuovere e salvare la configurazione qui per utilizzare il nuovo processo guidato.",
       "meterDedicated": "Contatore",

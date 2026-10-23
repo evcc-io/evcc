@@ -187,7 +187,6 @@
     },
     "circuits": {
       "addSubCircuit": "Add sub-circuit",
-      "chargingPointsNote": "Assign charging points & heaters to a circuit in their own settings.",
       "notAssigned": "Not assigned",
       "destination": "Circuit {title}",
       "assignHere": "Assign here",

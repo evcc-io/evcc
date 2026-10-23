@@ -90,8 +90,6 @@ test("device-first assignment, rollback and restart persistence", async ({ page 
   await expect(modal).not.toBeVisible();
   await page.goto("about:blank");
   await restart("fast.evcc.yaml");
-  await page.goto("/#/config");
-  await page.reload();
   await open(page);
 
   await expect(

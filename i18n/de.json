@@ -188,7 +188,6 @@
     "circuits": {
       "addMainCircuit": "Hauptstromkreis hinzufügen",
       "addSubCircuit": "Unterstromkreis hinzufügen",
-      "chargingPointsNote": "Ladepunkte & Heizgeräte weist du in ihren jeweiligen Einstellungen einem Stromkreis zu.",
       "notAssigned": "Nicht zugeordnet",
       "destination": "Stromkreis {title}",
       "assignHere": "Hier zuordnen",

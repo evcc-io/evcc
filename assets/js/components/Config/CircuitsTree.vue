@@ -82,6 +82,7 @@
 			:hover-target="hoverTarget"
 			:pending="pending"
 			:flash-id="flashId"
+			:active-loadpoint="activeLoadpoint"
 			@select="$emit('select', $event)"
 			@assign="$emit('assign', $event)"
 			@transfer="$emit('transfer', $event)"
@@ -136,12 +137,11 @@ export default {
 		hoverTarget: String,
 		pending: Boolean,
 		flashId: Number,
+		activeLoadpoint: Object as PropType<CircuitAssignmentLoadpoint>,
 	},
 	methods: {
 		isEditable(value: unknown): boolean {
-			return this.assignedLoadpoints.some(
-				(lp) => (lp.id ?? lp.name) === value && lp.editable
-			);
+			return this.loadpoints.some((lp) => lp.editable && lp.id === value);
 		},
 		activateCircuit() {
 			if (this.pending) return;
@@ -168,11 +168,6 @@ export default {
 		},
 		assignedValues(): (number | string | undefined)[] {
 			return this.assignedLoadpoints.map((lp) => lp.id ?? lp.name);
-		},
-		activeLoadpoint(): CircuitAssignmentLoadpoint | undefined {
-			return this.loadpoints.find(
-				(lp) => lp.id === (this.draggedId ?? this.selectedId) && lp.editable
-			);
 		},
 		isCandidate(): boolean {
 			return (

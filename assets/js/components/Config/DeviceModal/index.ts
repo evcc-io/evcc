@@ -1,9 +1,6 @@
 import type { DeviceType, MODBUS_COMSET, MeterTemplateUsage, ServiceValue } from "@/types/evcc";
 import { ConfigType } from "@/types/evcc";
 import api from "@/api";
-
-export const assignCircuit = (id: number, circuit: string | null) =>
-  api.patch(`config/loadpoints/${id}`, { circuit: circuit ?? "" });
 import { extractPlaceholders, replacePlaceholders } from "@/utils/placeholder";
 
 // config write needs the admin password (script plugin)

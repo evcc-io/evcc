@@ -12,7 +12,11 @@
 				{{ $t("config.circuits.description") }}
 				<a :href="docsLink" target="_blank">{{ $t("config.general.docsLink") }}</a>
 			</p>
-			<div :aria-busy="pending" @keydown.esc.stop="cancelSelection">
+			<div
+				:aria-busy="pending"
+				@keydown.esc.stop="cancelSelection"
+				@animationend="visibleFlashId = undefined"
+			>
 				<NewDeviceButton
 					v-if="circuits.length === 0"
 					:title="$t('config.circuits.addMainCircuit')"
@@ -29,8 +33,9 @@
 						:hover-target="hoverTarget"
 						:pending="pending"
 						:flash-id="visibleFlashId"
+						:active-loadpoint="activeLoadpoint"
 						@select="selectLoadpoint"
-						@assign="requestAssignment($event.id, $event.circuit)"
+						@assign="$emit('assign', $event)"
 						@transfer="transfer"
 						@hover="hoverTarget = $event"
 						@dragstart="startDrag"
@@ -149,7 +154,6 @@ export default {
 			draggedId: undefined as number | undefined,
 			hoverTarget: undefined as string | undefined,
 			visibleFlashId: undefined as number | undefined,
-			flashTimer: undefined as ReturnType<typeof setTimeout> | undefined,
 		};
 	},
 	computed: {
@@ -190,35 +194,22 @@ export default {
 		revision() {
 			this.cancelSelection();
 			this.visibleFlashId = this.flashId;
-			this.flashTimer = setTimeout(() => {
-				this.visibleFlashId = undefined;
-			}, 1400);
 		},
-	},
-	beforeUnmount() {
-		clearTimeout(this.flashTimer);
 	},
 	methods: {
 		isEditable(value: unknown): boolean {
-			return this.unassignedLoadpoints.some(
-				(lp) => (lp.id ?? lp.name) === value && lp.editable
-			);
+			return this.loadpoints.some((lp) => lp.editable && lp.id === value);
 		},
 		selectLoadpoint(id?: number) {
 			if (this.pending || !this.loadpoints.some((lp) => lp.id === id && lp.editable)) return;
 			this.selectedId = this.selectedId === id ? undefined : id;
 		},
-		requestAssignment(id: number, circuit: string | null) {
-			const lp = this.loadpoints.find((lp) => lp.id === id);
-			if (this.pending || !lp?.editable || lp.circuit === circuit) return;
-			this.$emit("assign", { id, circuit });
-		},
 		transfer({ value, to }: { value: number; to: string }) {
-			this.requestAssignment(value, to === "unassigned" ? null : to);
+			this.$emit("assign", { id: value, circuit: to === "unassigned" ? null : to });
 		},
 		activatePool() {
 			if (this.selectedId !== undefined && this.canRemove)
-				this.requestAssignment(this.selectedId, null);
+				this.$emit("assign", { id: this.selectedId, circuit: null });
 		},
 		startDrag(id: number) {
 			this.selectedId = undefined;
@@ -232,7 +223,6 @@ export default {
 			this.selectedId = undefined;
 			this.endDrag();
 			this.visibleFlashId = undefined;
-			clearTimeout(this.flashTimer);
 		},
 		configCircuitTree,
 		async openCircuit() {

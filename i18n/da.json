@@ -188,7 +188,6 @@
     "circuits": {
       "addMainCircuit": "Tilføj hovedkredsløb",
       "addSubCircuit": "Tilføj underkredsløb",
-      "chargingPointsNote": "Tildel ladepunkter og varmere til et kredsløb i deres egne indstillinger.",
       "description": "Sikrer, at summen af alle ladepunkter og varmere forbundet til et kredsløb ikke overstiger de konfigurerede effekt- og strømgrænser. Kredsløb kan indlejres for at opbygge et hierarki.",
       "legacyWarning": "Ny konfiguration af kredsløb tilgængelig! Fjern og gem din konfiguration her for at bruge den nye guidede proces. En genstart er nødvendig bagefter.",
       "meterDedicated": "Måler",
