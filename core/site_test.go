@@ -257,3 +257,51 @@ func TestSiteSkipsDisabledDevices(t *testing.T) {
 	assert.Error(t, site.updateGridMeter())
 	assert.Empty(t, site.curtailables())
 }
+
+func TestBoundEstimatedCharging(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	meter := config.NewStaticDevice(config.Named{Name: "meter"}, api.Meter(nil))
+	meters := []config.Device[api.Meter]{meter}
+
+	measured := &Loadpoint{chargeMeter: newChargeMeter(api.NewMockMeter(ctrl)), chargePower: 7400}
+	estimated := &Loadpoint{chargeMeter: newChargeMeter(struct{}{}), chargePower: 11040}
+	idle := &Loadpoint{chargeMeter: newChargeMeter(struct{}{})}
+
+	site := &Site{gridMeter: meter, pvMeters: meters, loadpoints: []*Loadpoint{measured, nil, estimated, idle}}
+
+	// the single estimated loadpoint records only what the measured supply covers
+	assert.Equal(t, 3290.0, site.boundEstimatedCharging(-3290))
+	assert.Equal(t, 7750.0, estimated.recordedChargePower())
+	assert.Equal(t, 11040.0, estimated.GetChargePower(), "control keeps the estimate")
+	assert.Equal(t, 7400.0, measured.recordedChargePower())
+
+	// never below zero
+	site.boundEstimatedCharging(-1e5)
+	assert.Equal(t, 0.0, estimated.recordedChargePower())
+
+	// supply covers the estimate
+	assert.Equal(t, 0.0, site.boundEstimatedCharging(400))
+	assert.Equal(t, 11040.0, estimated.recordedChargePower())
+
+	for _, tc := range []struct {
+		title string
+		site  *Site
+	}{
+		{"two estimated loadpoints", &Site{gridMeter: meter, pvMeters: meters, loadpoints: []*Loadpoint{
+			estimated, {chargeMeter: newChargeMeter(struct{}{}), chargePower: 3680},
+		}}},
+		{"no estimated loadpoint", &Site{gridMeter: meter, pvMeters: meters, loadpoints: []*Loadpoint{measured, idle}}},
+		{"no grid meter", &Site{pvMeters: meters, loadpoints: []*Loadpoint{estimated}}},
+		{"no pv meter", &Site{gridMeter: meter, loadpoints: []*Loadpoint{estimated}}},
+	} {
+		t.Run(tc.title, func(t *testing.T) {
+			assert.Equal(t, 0.0, tc.site.boundEstimatedCharging(-3290))
+			assert.Equal(t, 11040.0, estimated.recordedChargePower())
+		})
+	}
+
+	// energy returned by a measured bidirectional loadpoint is recorded as is
+	returning := &Loadpoint{chargeMeter: newChargeMeter(api.NewMockMeter(ctrl)), chargePower: -3000}
+	(&Site{gridMeter: meter, pvMeters: meters, loadpoints: []*Loadpoint{returning, estimated}}).boundEstimatedCharging(-3290)
+	assert.Equal(t, -3000.0, returning.recordedChargePower())
+}
