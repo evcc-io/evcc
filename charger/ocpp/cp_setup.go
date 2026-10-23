@@ -13,6 +13,20 @@ import (
 	"github.com/samber/lo"
 )
 
+var setupConfigurationKeys = []string{
+	KeyChargeProfileMaxStackLevel,
+	KeyChargingScheduleAllowedChargingRateUnit,
+	KeyConnectorSwitch3to1PhaseSupported,
+	KeyChargeAmpsPhaseSwitchingSupported,
+	KeyMaxChargingProfilesInstalled,
+	KeyMeterValuesSampledData,
+	KeyMeterValuesSampledDataMaxLength,
+	KeyNumberOfConnectors,
+	KeySupportedFeatureProfiles,
+	KeyAlfenPlugAndChargeIdentifier,
+	KeyEvBoxSupportedMeasurands,
+}
+
 func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.Duration, forcePowerCtrl, noChangeAvailability bool) error {
 	if !noChangeAvailability {
 		if err := cp.ChangeAvailabilityRequest(0, core.AvailabilityTypeOperative); err != nil {
@@ -33,7 +47,11 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 
 	resp, err := cp.GetConfigurationRequest()
 	if err != nil {
-		return err
+		// some chargers never answer the unrestricted request but support key-based ones
+		cp.log.DEBUG.Printf("failed getting configuration, retrying with specific keys: %v", err)
+		if resp, err = cp.GetConfigurationRequest(setupConfigurationKeys...); err != nil {
+			return err
+		}
 	}
 
 	for _, opt := range resp.ConfigurationKey {
