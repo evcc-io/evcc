@@ -1,0 +1,53 @@
+template: powerfox-poweropti-local
+products:
+  - brand: Powerfox
+    description:
+      de: Poweropti (lokal)
+      en: Poweropti (local)
+requirements:
+  description:
+    de: Die lokale Schnittstelle erfordert den powerfox PRO Service und Firmware v2.02.07 oder neuer.
+    en: The local interface requires the powerfox PRO service and firmware v2.02.07 or newer.
+params:
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: host
+    example: poweropti
+  - name: apikey
+    required: true
+    help:
+      de: Initial die Geräte-ID
+      en: Initially the device id
+    example: 1097bd725557
+  - name: cache
+    default: 5s
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/value
+    headers:
+      - X-API-KEY: "{{ .apikey }}"
+    jq: .values[] | select(.obis == "1.7.0") | .value
+    cache: {{ .cache }}
+  {{- if eq .usage "pv" }}
+    scale: -1
+  {{- end }}
+  {{- if eq .usage "grid" }}
+  energy:
+    source: http
+    uri: http://{{ .host }}/value
+    headers:
+      - X-API-KEY: "{{ .apikey }}"
+    jq: .values[] | select(.obis == "1.8.0") | .value
+    scale: 0.001
+    cache: {{ .cache }}
+  returnenergy:
+    source: http
+    uri: http://{{ .host }}/value
+    headers:
+      - X-API-KEY: "{{ .apikey }}"
+    jq: .values[] | select(.obis == "2.8.0") | .value
+    scale: 0.001
+    cache: {{ .cache }}
+  {{- end }}
