@@ -15,13 +15,12 @@ const base = {
   horizonHours: 47,
   currency: CURRENCY.EUR,
   chargingStrategies: [
-    "charge_before_export",
+    "none",
     "attenuate_demand_peaks",
     "attenuate_feedin_peaks",
     "attenuate_grid_peaks",
-    "none",
   ],
-  selectedStrategy: "charge_before_export",
+  selectedStrategy: "none",
   pending: false,
 };
 
