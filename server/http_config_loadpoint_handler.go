@@ -250,44 +250,6 @@ func newLoadpointHandler() http.HandlerFunc {
 	}
 }
 
-// patchLoadpointHandler updates persisted static loadpoint references
-func patchLoadpointHandler() http.HandlerFunc {
-	h := config.Loadpoints()
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := strconv.Atoi(mux.Vars(r)["id"])
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-		dev, err := configurableDevice(config.NameForID(id), h)
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-		var patch struct {
-			Circuit *string `json:"circuit"`
-		}
-		if err := jsonDecoder(r.Body).Decode(&patch); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		other := dev.Config().Other
-		if patch.Circuit != nil {
-			other["circuit"] = *patch.Circuit
-		}
-
-		// Static references take effect after restart without replaying dynamic setters
-		if err := dev.Update(other, dev.Instance()); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-		setConfigDirty()
-		w.WriteHeader(http.StatusOK)
-	}
-}
-
 // updateLoadpointHandler returns a device configurations by class
 func updateLoadpointHandler() http.HandlerFunc {
 	h := config.Loadpoints()

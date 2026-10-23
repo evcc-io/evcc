@@ -25,7 +25,7 @@ INSERT INTO configs VALUES(8, 6, 'template', 'Home', '', 'Static circuit', '{"te
 INSERT INTO configs VALUES(9, 6, 'template', 'Garage', '', 'Static circuit', '{"template":"static","parent":"db:8","maxpower":11000,"maxcurrent":16}');
 
 -- loadpoints
-INSERT INTO configs VALUES(13, 5, '', '', '', '', '{"title":"Wallbox left","charger":"db:4","circuit":"","minSoc":35,"priority":4,"solarShare":0.6,"phasesConfigured":3,"minCurrent":6,"maxCurrent":16,"soc":{"poll":{"mode":"charging","interval":3600000000000},"estimate":true},"thresholds":{"enable":{"delay":60000000000,"threshold":0},"disable":{"delay":180000000000,"threshold":0}}}');
+INSERT INTO configs VALUES(13, 5, '', '', '', '', '{"title":"Wallbox left","charger":"db:4","circuit":"","phasesConfigured":3,"minCurrent":6,"maxCurrent":16,"soc":{"poll":{"mode":"charging","interval":3600000000000},"estimate":true},"thresholds":{"enable":{"delay":60000000000,"threshold":0},"disable":{"delay":180000000000,"threshold":0}}}');
 INSERT INTO configs VALUES(14, 5, '', '', '', '', '{"title":"Heat pump","charger":"db:5","circuit":"db:8","phasesConfigured":3,"minCurrent":6,"maxCurrent":16,"soc":{"poll":{"mode":"charging","interval":3600000000000},"estimate":true},"thresholds":{"enable":{"delay":60000000000,"threshold":0},"disable":{"delay":180000000000,"threshold":0}}}');
 
 COMMIT;

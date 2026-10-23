@@ -5,6 +5,7 @@
 			transfer
 			group="circuit-assignment"
 			:name="circuitsTree?.name"
+			:aria-label="circuitsTree?.deviceTitle"
 			:disabled="pending"
 			:draggable-value="isEditable"
 			@transfer="$emit('transfer', $event)"

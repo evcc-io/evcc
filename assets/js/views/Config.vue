@@ -1376,7 +1376,8 @@ export default defineComponent({
 			this.circuitAssignmentPending = true;
 			this.circuitAssignmentError = "";
 			try {
-				await api.patch(`config/loadpoints/${id}`, { circuit: circuit ?? "" });
+				const { data } = await api.get(`config/loadpoints/${id}`);
+				await api.put(`config/loadpoints/${id}`, { ...data, circuit: circuit ?? "" });
 				// Live static references remain unchanged until restart
 				this.circuitAssignments[id] = circuit;
 				this.circuitAssignmentFlash = circuit === null ? undefined : id;

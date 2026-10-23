@@ -34,10 +34,6 @@
 - Site, loadpoint, circuit, HEMS, messaging config
 - `GET /config/evcc.yaml` — YAML export
 
-### Partial loadpoint configuration
-
-`PATCH /config/loadpoints/{id}` with `{"circuit": "..."}` sets the persisted circuit, an empty string clears it. Other fields are rejected, the change takes effect after restart.
-
 ### System (`/system/...`, auth required)
 - Log viewing (`/log`, `/log/areas`), cache clear, shutdown
 
