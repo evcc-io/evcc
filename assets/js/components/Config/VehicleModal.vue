@@ -4,6 +4,7 @@
 		name="vehicle"
 		device-type="vehicle"
 		:is-sponsor="isSponsor"
+		:remote-enabled="remoteEnabled"
 		:modal-title="$t(`config.vehicle.${isNew ? 'titleAdd' : 'titleEdit'}`)"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
@@ -43,6 +44,7 @@ export default defineComponent({
 	},
 	props: {
 		isSponsor: Boolean,
+		remoteEnabled: Boolean,
 	},
 	emits: ["vehicle-changed", "disable"],
 	data() {

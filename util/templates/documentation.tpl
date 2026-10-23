@@ -110,7 +110,7 @@ render:
 {{- end }}
 params:
   {{- range .Params }}
-  {{- if and (not (eq .Name "usage")) (not .IsDeprecated) }}
+  {{- if and (not (eq .Name "usage")) (not .IsDeprecated) (not .Readonly) }}
   - name: {{ .Name | quote }}
     example: {{ .Example | quote }}
     default: {{ .Default | quote }}
