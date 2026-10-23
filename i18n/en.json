@@ -1659,6 +1659,23 @@
       "minCurrent": {
         "label": "Min. Current"
       },
+      "modeCurrentPresets": {
+        "label": "Current by charge mode",
+        "description": "Optional. Zero uses the global min/max current above. Smart/PV applies while surplus following; Now applies for Now mode, planner and min SoC."
+      },
+      "minCurrentPv": {
+        "label": "Smart/PV min"
+      },
+      "maxCurrentPv": {
+        "label": "Smart/PV max"
+      },
+      "minCurrentNow": {
+        "label": "Now min"
+      },
+      "maxCurrentNow": {
+        "label": "Now max"
+      },
+      "unused": "unused",
       "minTemp": {
         "description": "Below {0} battery and grid power are also used in smart mode to maintain this temperature.",
         "label": "Min. temperature"

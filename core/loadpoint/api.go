@@ -75,6 +75,22 @@ type API interface {
 	GetMaxCurrent() float64
 	// SetMaxCurrent sets the max charging current
 	SetMaxCurrent(float64) error
+	// GetMinCurrentPv returns the optional smart/surplus min current (0=unused)
+	GetMinCurrentPv() float64
+	// SetMinCurrentPv sets the optional smart/surplus min current (0=unused)
+	SetMinCurrentPv(float64) error
+	// GetMaxCurrentPv returns the optional smart/surplus max current (0=unused)
+	GetMaxCurrentPv() float64
+	// SetMaxCurrentPv sets the optional smart/surplus max current (0=unused)
+	SetMaxCurrentPv(float64) error
+	// GetMinCurrentNow returns the optional now/fast min current (0=unused)
+	GetMinCurrentNow() float64
+	// SetMinCurrentNow sets the optional now/fast min current (0=unused)
+	SetMinCurrentNow(float64) error
+	// GetMaxCurrentNow returns the optional now/fast max current (0=unused)
+	GetMaxCurrentNow() float64
+	// SetMaxCurrentNow sets the optional now/fast max current (0=unused)
+	SetMaxCurrentNow(float64) error
 
 	// GetMode returns the current charge mode
 	GetMode() api.ChargeMode

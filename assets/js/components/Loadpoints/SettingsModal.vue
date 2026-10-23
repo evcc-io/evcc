@@ -202,6 +202,97 @@
 					</select>
 				</div>
 			</div>
+
+			<div v-if="!switchDevice" class="mb-2 row">
+				<div class="col-sm-4 col-form-label pt-0">
+					{{ $t("main.loadpointSettings.modeCurrentPresets.label") }}
+					<small class="d-block text-muted">
+						{{ $t("main.loadpointSettings.modeCurrentPresets.description") }}
+					</small>
+				</div>
+				<div class="col-sm-8 pe-0">
+					<div class="row g-2 mb-2">
+						<div class="col-6">
+							<label class="form-label small mb-1" :for="formId('mincurrentpv')">
+								{{ $t("main.loadpointSettings.minCurrentPv.label") }}
+							</label>
+							<select
+								:id="formId('mincurrentpv')"
+								v-model.number="selectedMinCurrentPv"
+								class="form-select form-select-sm"
+								@change="setMinCurrentPv"
+							>
+								<option
+									v-for="{ value, name } in modeCurrentOptions"
+									:key="'pvmin-' + value"
+									:value="value"
+								>
+									{{ name }}
+								</option>
+							</select>
+						</div>
+						<div class="col-6">
+							<label class="form-label small mb-1" :for="formId('maxcurrentpv')">
+								{{ $t("main.loadpointSettings.maxCurrentPv.label") }}
+							</label>
+							<select
+								:id="formId('maxcurrentpv')"
+								v-model.number="selectedMaxCurrentPv"
+								class="form-select form-select-sm"
+								@change="setMaxCurrentPv"
+							>
+								<option
+									v-for="{ value, name } in modeCurrentOptions"
+									:key="'pvmax-' + value"
+									:value="value"
+								>
+									{{ name }}
+								</option>
+							</select>
+						</div>
+					</div>
+					<div class="row g-2">
+						<div class="col-6">
+							<label class="form-label small mb-1" :for="formId('mincurrentnow')">
+								{{ $t("main.loadpointSettings.minCurrentNow.label") }}
+							</label>
+							<select
+								:id="formId('mincurrentnow')"
+								v-model.number="selectedMinCurrentNow"
+								class="form-select form-select-sm"
+								@change="setMinCurrentNow"
+							>
+								<option
+									v-for="{ value, name } in modeCurrentOptions"
+									:key="'nowmin-' + value"
+									:value="value"
+								>
+									{{ name }}
+								</option>
+							</select>
+						</div>
+						<div class="col-6">
+							<label class="form-label small mb-1" :for="formId('maxcurrentnow')">
+								{{ $t("main.loadpointSettings.maxCurrentNow.label") }}
+							</label>
+							<select
+								:id="formId('maxcurrentnow')"
+								v-model.number="selectedMaxCurrentNow"
+								class="form-select form-select-sm"
+								@change="setMaxCurrentNow"
+							>
+								<option
+									v-for="{ value, name } in modeCurrentOptions"
+									:key="'nowmax-' + value"
+									:value="value"
+								>
+									{{ name }}
+								</option>
+							</select>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	</GenericModal>
 </template>
@@ -272,6 +363,10 @@ export default defineComponent({
 			id: undefined as string | undefined,
 			selectedMaxCurrent: undefined as number | undefined,
 			selectedMinCurrent: undefined as number | undefined,
+			selectedMinCurrentPv: 0 as number,
+			selectedMaxCurrentPv: 0 as number,
+			selectedMinCurrentNow: 0 as number,
+			selectedMaxCurrentNow: 0 as number,
 			selectedMinTemp: undefined as number | undefined,
 			selectedPhases: undefined as number | undefined,
 			selectedSolarShare: 100,
@@ -290,6 +385,18 @@ export default defineComponent({
 		},
 		minCurrent() {
 			return this.loadpoint?.minCurrent;
+		},
+		minCurrentPv() {
+			return this.loadpoint?.minCurrentPv ?? 0;
+		},
+		maxCurrentPv() {
+			return this.loadpoint?.maxCurrentPv ?? 0;
+		},
+		minCurrentNow() {
+			return this.loadpoint?.minCurrentNow ?? 0;
+		},
+		maxCurrentNow() {
+			return this.loadpoint?.maxCurrentNow ?? 0;
 		},
 		switchDevice() {
 			return this.loadpoint?.chargerFeatureSwitchDevice;
@@ -356,6 +463,17 @@ export default defineComponent({
 			const opt2 = insertSorted(opt1, this.maxCurrent ?? 0);
 			return opt2.map((value) => this.currentOption(value, value === 16, this.maxPhases));
 		},
+		modeCurrentOptions() {
+			const opt1 = range(Math.floor(this.maxCurrent ?? 16), Math.ceil(this.minCurrent ?? 6));
+			const values = [0, ...insertSorted(opt1, this.minCurrent ?? 0)];
+			const unique = [...new Set(values)].sort((a, b) => b - a);
+			return unique.map((value) => {
+				if (value === 0) {
+					return { value: 0, name: this.$t("main.loadpointSettings.unused") };
+				}
+				return this.currentOption(value, false, this.maxPhases);
+			});
+		},
 		batteryBoostAvailable() {
 			return this.batteryConfigured;
 		},
@@ -393,6 +511,18 @@ export default defineComponent({
 		minCurrent(value) {
 			this.selectedMinCurrent = value;
 		},
+		minCurrentPv(value: number) {
+			this.selectedMinCurrentPv = value ?? 0;
+		},
+		maxCurrentPv(value: number) {
+			this.selectedMaxCurrentPv = value ?? 0;
+		},
+		minCurrentNow(value: number) {
+			this.selectedMinCurrentNow = value ?? 0;
+		},
+		maxCurrentNow(value: number) {
+			this.selectedMaxCurrentNow = value ?? 0;
+		},
 		minTemp(value) {
 			this.selectedMinTemp = value;
 		},
@@ -409,6 +539,10 @@ export default defineComponent({
 			this.selectedPhases = this.phasesConfigured;
 			this.selectedMaxCurrent = this.maxCurrent;
 			this.selectedMinCurrent = this.minCurrent;
+			this.selectedMinCurrentPv = this.minCurrentPv;
+			this.selectedMaxCurrentPv = this.maxCurrentPv;
+			this.selectedMinCurrentNow = this.minCurrentNow;
+			this.selectedMaxCurrentNow = this.maxCurrentNow;
 			this.selectedMinTemp = this.minTemp;
 			this.selectedSolarShare = this.solarSharePercent;
 			const modalRef = this.$refs["modal"] as InstanceType<typeof GenericModal> | undefined;
@@ -425,6 +559,18 @@ export default defineComponent({
 		},
 		setMinCurrent() {
 			api.post(this.apiPath("mincurrent") + "/" + this.selectedMinCurrent);
+		},
+		setMinCurrentPv() {
+			api.post(this.apiPath("mincurrentpv") + "/" + this.selectedMinCurrentPv);
+		},
+		setMaxCurrentPv() {
+			api.post(this.apiPath("maxcurrentpv") + "/" + this.selectedMaxCurrentPv);
+		},
+		setMinCurrentNow() {
+			api.post(this.apiPath("mincurrentnow") + "/" + this.selectedMinCurrentNow);
+		},
+		setMaxCurrentNow() {
+			api.post(this.apiPath("maxcurrentnow") + "/" + this.selectedMaxCurrentNow);
 		},
 		setMinTemp() {
 			api.post(this.apiPath("mintemp") + "/" + this.selectedMinTemp);

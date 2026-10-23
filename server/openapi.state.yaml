@@ -959,6 +959,18 @@ components:
         minCurrent:
           description: Minimum charging current in A.
           type: number
+        minCurrentPv:
+          description: Optional minimum charging current in A while smart/surplus following. Zero means unused.
+          type: number
+        maxCurrentPv:
+          description: Optional maximum charging current in A while smart/surplus following. Zero means unused.
+          type: number
+        minCurrentNow:
+          description: Optional minimum charging current in A while now/fast charging. Zero means unused.
+          type: number
+        maxCurrentNow:
+          description: Optional maximum charging current in A while now/fast charging. Zero means unused.
+          type: number
         minSoc:
           description: Minimum SoC in %. Vehicle is fast-charged until this level is reached.
           type: number
@@ -1171,6 +1183,10 @@ components:
         - limitSoc
         - maxCurrent
         - minCurrent
+        - minCurrentPv
+        - maxCurrentPv
+        - minCurrentNow
+        - maxCurrentNow
         - minSoc
         - minSocNotReached
         - mode

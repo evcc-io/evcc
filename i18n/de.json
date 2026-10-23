@@ -1659,6 +1659,23 @@
       "minCurrent": {
         "label": "Min. Ladestrom"
       },
+      "modeCurrentPresets": {
+        "label": "Strom nach Lademodus",
+        "description": "Optional. Null nutzt den globalen Min-/Max-Strom oben. Smart/PV gilt beim Überschussladen; Now gilt für Sofortladen, Planner und Min-SoC."
+      },
+      "minCurrentPv": {
+        "label": "Smart/PV min"
+      },
+      "maxCurrentPv": {
+        "label": "Smart/PV max"
+      },
+      "minCurrentNow": {
+        "label": "Now min"
+      },
+      "maxCurrentNow": {
+        "label": "Now max"
+      },
+      "unused": "unbenutzt",
       "minTemp": {
         "description": "Unter {0} wird im Smart-Modus auch mit Batterie- und Netzstrom geheizt, um diese Temperatur zu halten.",
         "label": "Min. Temperatur"

@@ -15,6 +15,10 @@ const (
 	Priority          = "priority"         // priority
 	MinCurrent        = "minCurrent"       // min current
 	MaxCurrent        = "maxCurrent"       // max current
+	MinCurrentPv      = "minCurrentPv"     // optional min current while smart/surplus following (0=unused)
+	MaxCurrentPv      = "maxCurrentPv"     // optional max current while smart/surplus following (0=unused)
+	MinCurrentNow     = "minCurrentNow"    // optional min current while now/fast charging (0=unused)
+	MaxCurrentNow     = "maxCurrentNow"    // optional max current while now/fast charging (0=unused)
 	MinSoc            = "minSoc"           // min soc (heating: min temperature)
 	MinSocNotReached  = "minSocNotReached" // min soc not reached
 	LimitSoc          = "limitSoc"         // limit soc

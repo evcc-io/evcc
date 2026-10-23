@@ -26,6 +26,10 @@ type DynamicConfig struct {
 	PhasesConfigured         int       `json:"phasesConfigured"`
 	MinCurrent               float64   `json:"minCurrent"`
 	MaxCurrent               float64   `json:"maxCurrent"`
+	MinCurrentPv             float64   `json:"minCurrentPv"`
+	MaxCurrentPv             float64   `json:"maxCurrentPv"`
+	MinCurrentNow            float64   `json:"minCurrentNow"`
+	MaxCurrentNow            float64   `json:"maxCurrentNow"`
 	SmartCostLimit           *float64  `json:"smartCostLimit"`
 	SmartFeedInPriorityLimit *float64  `json:"smartFeedInPriorityLimit"`
 	SolarShare               float64   `json:"solarShare"`
@@ -125,6 +129,23 @@ func (payload DynamicConfig) Apply(lp API) error {
 			err = lp.SetMinCurrent(payload.MinCurrent)
 		case payload.MaxCurrent != 0:
 			err = lp.SetMaxCurrent(payload.MaxCurrent)
+		}
+	}
+
+	// apply mode presets after global min/max so validation sees the final window.
+	// clear mins first so lowering a mode max cannot fail against a stale min.
+	if err == nil {
+		if err = lp.SetMinCurrentPv(0); err == nil {
+			if err = lp.SetMaxCurrentPv(payload.MaxCurrentPv); err == nil {
+				err = lp.SetMinCurrentPv(payload.MinCurrentPv)
+			}
+		}
+	}
+	if err == nil {
+		if err = lp.SetMinCurrentNow(0); err == nil {
+			if err = lp.SetMaxCurrentNow(payload.MaxCurrentNow); err == nil {
+				err = lp.SetMinCurrentNow(payload.MinCurrentNow)
+			}
 		}
 	}
 

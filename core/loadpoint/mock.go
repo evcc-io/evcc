@@ -433,6 +433,34 @@ func (mr *MockAPIMockRecorder) GetMaxCurrent() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxCurrent", reflect.TypeOf((*MockAPI)(nil).GetMaxCurrent))
 }
 
+// GetMaxCurrentNow mocks base method.
+func (m *MockAPI) GetMaxCurrentNow() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaxCurrentNow")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetMaxCurrentNow indicates an expected call of GetMaxCurrentNow.
+func (mr *MockAPIMockRecorder) GetMaxCurrentNow() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxCurrentNow", reflect.TypeOf((*MockAPI)(nil).GetMaxCurrentNow))
+}
+
+// GetMaxCurrentPv mocks base method.
+func (m *MockAPI) GetMaxCurrentPv() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaxCurrentPv")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetMaxCurrentPv indicates an expected call of GetMaxCurrentPv.
+func (mr *MockAPIMockRecorder) GetMaxCurrentPv() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxCurrentPv", reflect.TypeOf((*MockAPI)(nil).GetMaxCurrentPv))
+}
+
 // GetMaxPhaseCurrent mocks base method.
 func (m *MockAPI) GetMaxPhaseCurrent() float64 {
 	m.ctrl.T.Helper()
@@ -473,6 +501,34 @@ func (m *MockAPI) GetMinCurrent() float64 {
 func (mr *MockAPIMockRecorder) GetMinCurrent() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinCurrent", reflect.TypeOf((*MockAPI)(nil).GetMinCurrent))
+}
+
+// GetMinCurrentNow mocks base method.
+func (m *MockAPI) GetMinCurrentNow() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMinCurrentNow")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetMinCurrentNow indicates an expected call of GetMinCurrentNow.
+func (mr *MockAPIMockRecorder) GetMinCurrentNow() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinCurrentNow", reflect.TypeOf((*MockAPI)(nil).GetMinCurrentNow))
+}
+
+// GetMinCurrentPv mocks base method.
+func (m *MockAPI) GetMinCurrentPv() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMinCurrentPv")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetMinCurrentPv indicates an expected call of GetMinCurrentPv.
+func (mr *MockAPIMockRecorder) GetMinCurrentPv() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinCurrentPv", reflect.TypeOf((*MockAPI)(nil).GetMinCurrentPv))
 }
 
 // GetMinSoc mocks base method.
@@ -1039,6 +1095,34 @@ func (mr *MockAPIMockRecorder) SetMaxCurrent(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxCurrent", reflect.TypeOf((*MockAPI)(nil).SetMaxCurrent), arg0)
 }
 
+// SetMaxCurrentNow mocks base method.
+func (m *MockAPI) SetMaxCurrentNow(arg0 float64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetMaxCurrentNow", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetMaxCurrentNow indicates an expected call of SetMaxCurrentNow.
+func (mr *MockAPIMockRecorder) SetMaxCurrentNow(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxCurrentNow", reflect.TypeOf((*MockAPI)(nil).SetMaxCurrentNow), arg0)
+}
+
+// SetMaxCurrentPv mocks base method.
+func (m *MockAPI) SetMaxCurrentPv(arg0 float64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetMaxCurrentPv", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetMaxCurrentPv indicates an expected call of SetMaxCurrentPv.
+func (mr *MockAPIMockRecorder) SetMaxCurrentPv(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxCurrentPv", reflect.TypeOf((*MockAPI)(nil).SetMaxCurrentPv), arg0)
+}
+
 // SetMeterRef mocks base method.
 func (m *MockAPI) SetMeterRef(arg0 string) {
 	m.ctrl.T.Helper()
@@ -1063,6 +1147,34 @@ func (m *MockAPI) SetMinCurrent(arg0 float64) error {
 func (mr *MockAPIMockRecorder) SetMinCurrent(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMinCurrent", reflect.TypeOf((*MockAPI)(nil).SetMinCurrent), arg0)
+}
+
+// SetMinCurrentNow mocks base method.
+func (m *MockAPI) SetMinCurrentNow(arg0 float64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetMinCurrentNow", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetMinCurrentNow indicates an expected call of SetMinCurrentNow.
+func (mr *MockAPIMockRecorder) SetMinCurrentNow(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMinCurrentNow", reflect.TypeOf((*MockAPI)(nil).SetMinCurrentNow), arg0)
+}
+
+// SetMinCurrentPv mocks base method.
+func (m *MockAPI) SetMinCurrentPv(arg0 float64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetMinCurrentPv", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetMinCurrentPv indicates an expected call of SetMinCurrentPv.
+func (mr *MockAPIMockRecorder) SetMinCurrentPv(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMinCurrentPv", reflect.TypeOf((*MockAPI)(nil).SetMinCurrentPv), arg0)
 }
 
 // SetMinSoc mocks base method.

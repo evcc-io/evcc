@@ -147,9 +147,42 @@ func (lp *Loadpoint) SocBasedPlanning() bool {
 	return lp.socBasedPlanning()
 }
 
+// modeConfiguredMinCurrent returns the configured min current for the active
+// charge path. Optional mode presets (0 = unused) override the global min while
+// fast charging (IsFastChargingActive) or smart/surplus following.
+func (lp *Loadpoint) modeConfiguredMinCurrent() float64 {
+	min := lp.getMinCurrent()
+	if lp.isFastChargingActive() {
+		if lp.minCurrentNow > 0 {
+			return lp.minCurrentNow
+		}
+		return min
+	}
+	if lp.mode == api.ModeSmart && lp.minCurrentPv > 0 {
+		return lp.minCurrentPv
+	}
+	return min
+}
+
+// modeConfiguredMaxCurrent returns the configured max current for the active
+// charge path. Optional mode presets (0 = unused) override the global max.
+func (lp *Loadpoint) modeConfiguredMaxCurrent() float64 {
+	maxCurrent := lp.getMaxCurrent()
+	if lp.isFastChargingActive() {
+		if lp.maxCurrentNow > 0 {
+			return lp.maxCurrentNow
+		}
+		return maxCurrent
+	}
+	if lp.mode == api.ModeSmart && lp.maxCurrentPv > 0 {
+		return lp.maxCurrentPv
+	}
+	return maxCurrent
+}
+
 // effectiveMinCurrent returns the effective min current
 func (lp *Loadpoint) effectiveMinCurrent() float64 {
-	lpMin := lp.getMinCurrent()
+	lpMin := lp.modeConfiguredMinCurrent()
 	var vehicleMin, chargerMin float64
 
 	if v := lp.GetVehicle(); v != nil {
@@ -189,7 +222,7 @@ func (lp *Loadpoint) effectiveMinCurrent() float64 {
 
 // effectiveMaxCurrent returns the effective max current
 func (lp *Loadpoint) effectiveMaxCurrent() float64 {
-	maxCurrent := lp.getMaxCurrent()
+	maxCurrent := lp.modeConfiguredMaxCurrent()
 
 	if v := lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetMaxCurrent(); ok && res > 0 {

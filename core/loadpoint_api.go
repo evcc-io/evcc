@@ -903,12 +903,159 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	return nil
 }
 
+// validateModeCurrentPreset validates an optional mode current preset (0 = unused).
+// When set, the value must stay within the global min/max current window.
+func (lp *Loadpoint) validateModeCurrentPreset(current float64) error {
+	if current < 0 {
+		return errors.New("current must be greater or equal than zero")
+	}
+	if current == 0 {
+		return nil
+	}
+	if current < lp.minCurrent || current > lp.maxCurrent {
+		return errors.New("mode current preset must be within global min/max current")
+	}
+	return nil
+}
+
+func (lp *Loadpoint) validateModeCurrentPair(min, max float64) error {
+	if min > 0 && max > 0 && min > max {
+		return errors.New("mode min current must be smaller or equal than mode max current")
+	}
+	return nil
+}
+
+func (lp *Loadpoint) setMinCurrentPv(current float64) {
+	lp.minCurrentPv = current
+	lp.publish(keys.MinCurrentPv, lp.minCurrentPv)
+	lp.settings.SetFloat(keys.MinCurrentPv, lp.minCurrentPv)
+}
+
+func (lp *Loadpoint) GetMinCurrentPv() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.minCurrentPv
+}
+
+func (lp *Loadpoint) SetMinCurrentPv(current float64) error {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if err := lp.validateModeCurrentPreset(current); err != nil {
+		return err
+	}
+	if err := lp.validateModeCurrentPair(current, lp.maxCurrentPv); err != nil {
+		return err
+	}
+
+	lp.log.DEBUG.Println("set min current pv:", current)
+	if current != lp.minCurrentPv {
+		lp.setMinCurrentPv(current)
+	}
+	return nil
+}
+
+func (lp *Loadpoint) setMaxCurrentPv(current float64) {
+	lp.maxCurrentPv = current
+	lp.publish(keys.MaxCurrentPv, lp.maxCurrentPv)
+	lp.settings.SetFloat(keys.MaxCurrentPv, lp.maxCurrentPv)
+}
+
+func (lp *Loadpoint) GetMaxCurrentPv() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.maxCurrentPv
+}
+
+func (lp *Loadpoint) SetMaxCurrentPv(current float64) error {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if err := lp.validateModeCurrentPreset(current); err != nil {
+		return err
+	}
+	if err := lp.validateModeCurrentPair(lp.minCurrentPv, current); err != nil {
+		return err
+	}
+
+	lp.log.DEBUG.Println("set max current pv:", current)
+	if current != lp.maxCurrentPv {
+		lp.setMaxCurrentPv(current)
+	}
+	return nil
+}
+
+func (lp *Loadpoint) setMinCurrentNow(current float64) {
+	lp.minCurrentNow = current
+	lp.publish(keys.MinCurrentNow, lp.minCurrentNow)
+	lp.settings.SetFloat(keys.MinCurrentNow, lp.minCurrentNow)
+}
+
+func (lp *Loadpoint) GetMinCurrentNow() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.minCurrentNow
+}
+
+func (lp *Loadpoint) SetMinCurrentNow(current float64) error {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if err := lp.validateModeCurrentPreset(current); err != nil {
+		return err
+	}
+	if err := lp.validateModeCurrentPair(current, lp.maxCurrentNow); err != nil {
+		return err
+	}
+
+	lp.log.DEBUG.Println("set min current now:", current)
+	if current != lp.minCurrentNow {
+		lp.setMinCurrentNow(current)
+	}
+	return nil
+}
+
+func (lp *Loadpoint) setMaxCurrentNow(current float64) {
+	lp.maxCurrentNow = current
+	lp.publish(keys.MaxCurrentNow, lp.maxCurrentNow)
+	lp.settings.SetFloat(keys.MaxCurrentNow, lp.maxCurrentNow)
+}
+
+func (lp *Loadpoint) GetMaxCurrentNow() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.maxCurrentNow
+}
+
+func (lp *Loadpoint) SetMaxCurrentNow(current float64) error {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if err := lp.validateModeCurrentPreset(current); err != nil {
+		return err
+	}
+	if err := lp.validateModeCurrentPair(lp.minCurrentNow, current); err != nil {
+		return err
+	}
+
+	lp.log.DEBUG.Println("set max current now:", current)
+	if current != lp.maxCurrentNow {
+		lp.setMaxCurrentNow(current)
+	}
+	return nil
+}
+
+// isFastChargingActive indicates if fast charging with maximum power is active (no mutex)
+func (lp *Loadpoint) isFastChargingActive() bool {
+	return lp.mode == api.ModeNow || lp.planActive || lp.minSocNotReached()
+}
+
 // IsFastChargingActive indicates if fast charging with maximum power is active
 func (lp *Loadpoint) IsFastChargingActive() bool {
 	lp.RLock()
 	defer lp.RUnlock()
 
-	return lp.mode == api.ModeNow || lp.planActive || lp.minSocNotReached()
+	return lp.isFastChargingActive()
 }
 
 // GetRemainingDuration is the estimated remaining charging duration

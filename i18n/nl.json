@@ -1662,6 +1662,23 @@
       "minCurrent": {
         "label": "Min. Stroomsterkte"
       },
+      "modeCurrentPresets": {
+        "label": "Stroom per laadmodus",
+        "description": "Optioneel. Nul gebruikt de globale min/max-stroom hierboven. Smart/PV geldt bij overschot; Now geldt voor Nu-modus, planner en min-SoC."
+      },
+      "minCurrentPv": {
+        "label": "Smart/PV min"
+      },
+      "maxCurrentPv": {
+        "label": "Smart/PV max"
+      },
+      "minCurrentNow": {
+        "label": "Now min"
+      },
+      "maxCurrentNow": {
+        "label": "Now max"
+      },
+      "unused": "ongebruikt",
       "minTemp": {
         "description": "Onder {0} worden accu en netstroom ook gebruikt in slimme modus om deze temperatuur te behouden.",
         "label": "Min. temperatuur"

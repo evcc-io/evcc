@@ -121,6 +121,10 @@ type Loadpoint struct {
 	priority                 int      // Priority
 	minCurrent               float64  // PV mode: start current	Min+PV mode: min current
 	maxCurrent               float64  // Max allowed current. Physically ensured by the charger
+	minCurrentPv             float64  // optional min while smart/surplus following (0=unused)
+	maxCurrentPv             float64  // optional max while smart/surplus following (0=unused)
+	minCurrentNow            float64  // optional min while now/fast charging (0=unused)
+	maxCurrentNow            float64  // optional max while now/fast charging (0=unused)
 	phasesConfigured         int      // Charger configured phase mode 0/1/3
 	limitSoc                 int      // Session limit for soc
 	limitEnergy              float64  // Session limit for energy
@@ -403,6 +407,18 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 	if v, err := lp.settings.Float(keys.MaxCurrent); err == nil && v > 0 {
 		lp.setMaxCurrent(v)
+	}
+	if v, err := lp.settings.Float(keys.MinCurrentPv); err == nil {
+		lp.setMinCurrentPv(v)
+	}
+	if v, err := lp.settings.Float(keys.MaxCurrentPv); err == nil {
+		lp.setMaxCurrentPv(v)
+	}
+	if v, err := lp.settings.Float(keys.MinCurrentNow); err == nil {
+		lp.setMinCurrentNow(v)
+	}
+	if v, err := lp.settings.Float(keys.MaxCurrentNow); err == nil {
+		lp.setMaxCurrentNow(v)
 	}
 	if v, err := lp.settings.Int(keys.LimitSoc); err == nil && v > 0 {
 		lp.setLimitSoc(int(v))
@@ -779,6 +795,10 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.Priority, lp.GetPriority())
 	lp.publish(keys.MinCurrent, lp.GetMinCurrent())
 	lp.publish(keys.MaxCurrent, lp.GetMaxCurrent())
+	lp.publish(keys.MinCurrentPv, lp.GetMinCurrentPv())
+	lp.publish(keys.MaxCurrentPv, lp.GetMaxCurrentPv())
+	lp.publish(keys.MinCurrentNow, lp.GetMinCurrentNow())
+	lp.publish(keys.MaxCurrentNow, lp.GetMaxCurrentNow())
 
 	lp.publish(keys.EnableThreshold, lp.Enable.Threshold)
 	lp.publish(keys.DisableThreshold, lp.Disable.Threshold)

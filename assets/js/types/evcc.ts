@@ -538,6 +538,10 @@ export interface ConfigLoadpoint {
   phasesConfigured: number;
   minCurrent: number;
   maxCurrent: number;
+  minCurrentPv: number;
+  maxCurrentPv: number;
+  minCurrentNow: number;
+  maxCurrentNow: number;
   smartCostLimit: number | null;
   planEnergy?: number;
   planTime?: string;
@@ -697,6 +701,14 @@ export interface Loadpoint {
   maxCurrent: number;
   /** Minimum charging current in A. */
   minCurrent: number;
+  /** Optional min current in A while smart/surplus following. Zero means unused. */
+  minCurrentPv: number;
+  /** Optional max current in A while smart/surplus following. Zero means unused. */
+  maxCurrentPv: number;
+  /** Optional min current in A while now/fast charging. Zero means unused. */
+  minCurrentNow: number;
+  /** Optional max current in A while now/fast charging. Zero means unused. */
+  maxCurrentNow: number;
   /** Minimum SoC in %. Vehicle is fast-charged until this level is reached. */
   minSoc: number;
   /** Vehicle SoC is below the configured minimum SoC. */

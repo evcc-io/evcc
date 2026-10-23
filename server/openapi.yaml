@@ -472,6 +472,58 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+  /loadpoints/{id}/mincurrentpv/{current}:
+    post:
+      operationId: setLoadpointMinCurrentPv
+      summary: Update smart/PV minimum current preset
+      description: "Optional minimum current while smart/surplus following. Zero disables the preset."
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/current"
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
+  /loadpoints/{id}/maxcurrentpv/{current}:
+    post:
+      operationId: setLoadpointMaxCurrentPv
+      summary: Update smart/PV maximum current preset
+      description: "Optional maximum current while smart/surplus following. Zero disables the preset."
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/current"
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
+  /loadpoints/{id}/mincurrentnow/{current}:
+    post:
+      operationId: setLoadpointMinCurrentNow
+      summary: Update Now/fast minimum current preset
+      description: "Optional minimum current while Now mode or other fast charging. Zero disables the preset."
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/current"
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
+  /loadpoints/{id}/maxcurrentnow/{current}:
+    post:
+      operationId: setLoadpointMaxCurrentNow
+      summary: Update Now/fast maximum current preset
+      description: "Optional maximum current while Now mode or other fast charging. Zero disables the preset."
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/current"
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/mintemp/{temp}:
     post:
       operationId: setLoadpointMinTemp
