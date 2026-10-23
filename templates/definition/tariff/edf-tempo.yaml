@@ -1,13 +1,13 @@
-template: calendrier-tempo
-link: https://www.calendrier-tempo.fr
+template: edf-tempo
+link: https://particulier.edf.fr/fr/accueil/gestion-contrat/options/tempo.html
 products:
   - brand: EDF
     description:
-      generic: Tempo (Calendrier Tempo)
+      generic: Tempo
 requirements:
   description:
-    en: "EDF Tempo prices based on the official day colour (blue, white, red), announced the day before, read from the free public API of [calendrier-tempo.fr](https://www.calendrier-tempo.fr). No account or API key needed. Peak hours 06:00–22:00, off-peak 22:00–06:00. Prices incl. taxes are parameters, defaults are the regulated EDF prices from 1 August 2026: check them against your current EDF price list."
-    de: "EDF-Tempo-Preise auf Basis der offiziellen Tagesfarbe (blau, weiß, rot), die am Vortag bekanntgegeben wird, abgerufen über die kostenlose öffentliche API von [calendrier-tempo.fr](https://www.calendrier-tempo.fr). Kein Konto und kein API-Schlüssel nötig. Hochtarif 06:00–22:00, Niedertarif 22:00–06:00. Die Preise inkl. Steuern sind Parameter, Standardwerte sind die regulierten EDF-Preise ab 1. August 2026: bitte mit der aktuellen EDF-Preisliste abgleichen."
+    en: "EDF Tempo prices based on the daily colour (blue, white, red) announced the day before. Defaults are the regulated EDF prices incl. taxes from 1 August 2026. Check them against your current price list."
+    de: "EDF-Tempo-Preise auf Basis der Tagesfarbe (blau, weiß, rot), die am Vortag bekanntgegeben wird. Standardwerte sind die regulierten EDF-Preise inkl. Steuern ab 1. August 2026. Bitte mit der aktuellen Preisliste abgleichen."
   evcc: ["skiptest"]
 group: price
 countries: ["FR"]
@@ -18,36 +18,48 @@ params:
     description:
       en: Blue day, peak hours
       de: Blauer Tag, Hochtarif
+    help:
+      generic: "06:00 – 22:00"
   - name: bluehc
     type: pricePerKWh
     default: 0.1356
     description:
       en: Blue day, off-peak hours
       de: Blauer Tag, Niedertarif
+    help:
+      generic: "22:00 – 06:00"
   - name: whitehp
     type: pricePerKWh
     default: 0.1921
     description:
       en: White day, peak hours
       de: Weißer Tag, Hochtarif
+    help:
+      generic: "06:00 – 22:00"
   - name: whitehc
     type: pricePerKWh
     default: 0.1536
     description:
       en: White day, off-peak hours
       de: Weißer Tag, Niedertarif
+    help:
+      generic: "22:00 – 06:00"
   - name: redhp
     type: pricePerKWh
     default: 0.7295
     description:
       en: Red day, peak hours
       de: Roter Tag, Hochtarif
+    help:
+      generic: "06:00 – 22:00"
   - name: redhc
     type: pricePerKWh
     default: 0.1615
     description:
       en: Red day, off-peak hours
       de: Roter Tag, Niedertarif
+    help:
+      generic: "22:00 – 06:00"
   - preset: tariff-base
   - preset: tariff-features
 render: |
