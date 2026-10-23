@@ -57,6 +57,13 @@ export default defineComponent({
 		border-radius: 0 0 1rem 1rem;
 	}
 }
+/* card stays rounded with side insets (see Card.vue) */
+@media (--below-sm) {
+	:root.safe-area-side .strip {
+		margin: 1rem -1rem -1rem;
+		border-radius: 0 0 1rem 1rem;
+	}
+}
 .strip--on {
 	background: var(--evcc-success-bg);
 	color: var(--evcc-success-text);

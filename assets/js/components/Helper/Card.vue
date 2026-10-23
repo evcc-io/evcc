@@ -34,8 +34,9 @@ export default defineComponent({
 </script>
 
 <style scoped>
-@media (max-width: 575.98px) {
-	.evcc-card--edge {
+@media (--below-sm) {
+	/* app sets .safe-area-side when a side inset exists (e.g. iPhone Duo), keep rounded cards then */
+	:root:not(.safe-area-side) .evcc-card--edge {
 		margin-left: -1.5rem;
 		margin-right: -1.5rem;
 		border-width: 1px 0;
