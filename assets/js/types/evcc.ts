@@ -566,6 +566,8 @@ export interface LoadpointUi {
   minTemp: number;
   /** Upper bound of the temperature scale for heating devices, in degrees. */
   maxTemp: number;
+  /** Demand predictor strategy for heating loadpoints. */
+  demandPredictor?: string;
 }
 
 /** Type of the smart charging limit. */
@@ -780,6 +782,8 @@ export interface Loadpoint {
   smartFeedInPriorityNextStart: string | null;
   /** Required solar share. Usually 0 to 1; values outside that range are possible via API for special cases. */
   solarShare: number;
+  /** Runtime demand predictor override. Empty string means template default. */
+  demandPredictor: string;
   /** Charging suggestion from the battery optimizer. */
   suggestion?: LoadpointSuggestion | null;
   /** Loadpoint title for UI display. */

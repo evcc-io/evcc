@@ -34,6 +34,7 @@ const (
 
 	ChargerIcon         = "chargerIcon"         // charger icon for ui
 	ChargerFeature      = "chargerFeature"      // charger feature
+	DemandPredictor     = "demandPredictor"     // active demand predictor for heating loadpoints
 	ChargerSinglePhase  = "chargerSinglePhase"  // api.PhaseDescriber: charger physical phases, sockets only
 	ChargerPhases1p3p   = "chargerPhases1p3p"   // api.PhaseSwitcher: 1p3p chargers
 	ChargerStatusReason = "chargerStatusReason" // either awaiting authorization or disconnect required

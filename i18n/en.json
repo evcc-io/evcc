@@ -529,6 +529,19 @@
       "electricalTitle": "Electrics",
       "energyMeterHelp": "Additional meter if the charger doesn't have an integrated one.",
       "energyMeterLabel": "Energy meter",
+      "demandPredictor": {
+        "daily": "Best for devices with consistent daily usage, regardless of the day of the week.",
+        "temperature": "Best for room heating where load changes with outdoor temperature, like heat pumps or electrical room heaters.",
+        "weekday": "Best for devices where load follows a same weekday pattern, like warm water or pool heaters."
+      },
+      "demandPredictorLabel": "Demand forecast",
+      "demandPredictorOptions": {
+        "default": "Device default",
+        "daily": "Average",
+        "temperature": "Temperature",
+        "weekday": "Weekday"
+      },
+      "noTempTariff": "Requires a temperature forecast to be configured.",
       "estimateLabel": "Interpolate charge level between API updates",
       "maxCurrentHelp": "Must be greater than minimum current.",
       "maxCurrentLabel": "Maximum current",

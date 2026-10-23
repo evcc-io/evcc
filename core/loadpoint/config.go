@@ -29,6 +29,7 @@ type DynamicConfig struct {
 	SmartCostLimit           *float64  `json:"smartCostLimit"`
 	SmartFeedInPriorityLimit *float64  `json:"smartFeedInPriorityLimit"`
 	SolarShare               float64   `json:"solarShare"`
+	DemandPredictor          string    `json:"demandPredictor"`
 	PlanEnergy               float64   `json:"planEnergy"`
 	PlanTime                 time.Time `json:"planTime"`
 	PlanPrecondition_        int64     `json:"planPrecondition" mapstructure:"planPrecondition"` // TODO deprecated, keep for compatibility
@@ -46,8 +47,9 @@ type DynamicConfig struct {
 
 // UIConfig holds display-only settings. Not used in control logic.
 type UIConfig struct {
-	MinTemp float64 `json:"minTemp"`
-	MaxTemp float64 `json:"maxTemp"`
+	MinTemp         float64 `json:"minTemp"`
+	MaxTemp         float64 `json:"maxTemp"`
+	DemandPredictor string  `json:"demandPredictor,omitempty"`
 }
 
 func SplitConfig(payload map[string]any) (DynamicConfig, map[string]any, error) {
@@ -79,7 +81,9 @@ func (payload DynamicConfig) Apply(lp API) error {
 		lp.SetSmartFeedInPriorityLimit(payload.SmartFeedInPriorityLimit),
 	)
 	lp.SetSolarShare(payload.SolarShare)
-
+	if payload.DemandPredictor != "" {
+		lp.SetDemandPredictor(payload.DemandPredictor)
+	}
 	lp.SetThresholds(payload.Thresholds)
 	lp.SetPlanEnergy(payload.PlanTime, payload.PlanEnergy)
 	lp.SetPlanStrategy(payload.PlanStrategy)
