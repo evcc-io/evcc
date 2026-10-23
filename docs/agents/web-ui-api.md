@@ -34,6 +34,16 @@
 - Site, loadpoint, circuit, HEMS, messaging config
 - `GET /config/evcc.yaml` — YAML export
 
+### Partial loadpoint configuration
+
+`PATCH /config/loadpoints/{id}` updates persisted static references only: `charger`,
+`meter`, `circuit`, and `vehicle`. String values replace references; omitted fields
+and null values remain unchanged, and an empty string clears a reference. Unknown
+or dynamic fields are rejected. The live instance and dynamic settings
+remain unchanged; references take effect after restart. The endpoint uses the same
+authentication as other configuration writes. Continue using PUT for the full editor
+update flow.
+
 ### System (`/system/...`, auth required)
 - Log viewing (`/log`, `/log/areas`), cache clear, shutdown
 
