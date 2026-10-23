@@ -144,6 +144,6 @@ homebrew_casks:
       name: andig
       email: info@evcc.io
     homepage: "https://evcc.io"
-    description: "Smart charging"
+    description: "smart charging"
     binaries:
       - evcc
