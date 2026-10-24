@@ -775,7 +775,7 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 				ChargingPower:    []float32{tc.charge},
 				DischargingPower: []float32{tc.disch},
 			}
-			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, optimizer.BatteryConfig{}, res, 0, tc.gridImp, tc.gridExp, 1)
+			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, optimizer.BatteryConfig{}, res, optimizer.TimeSeries{}, 0, tc.gridImp, tc.gridExp, 1)
 			assert.Equal(t, tc.want, s.Action)
 			assert.InDelta(t, tc.charge, s.Charge, 1e-3)
 			assert.InDelta(t, tc.disch, s.Discharge, 1e-3)
@@ -784,13 +784,13 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	}
 
 	// no result yields an empty suggestion
-	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, optimizer.BatteryResult{}, 0, 1000, 0, 1))
+	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, optimizer.BatteryResult{}, optimizer.TimeSeries{}, 0, 1000, 0, 1))
 
 	res := optimizer.BatteryResult{
 		ChargingPower:    []float32{100, 0},
 		DischargingPower: []float32{0, 0},
 	}
-	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, res, 1, 1000, 0, 1)
+	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, res, optimizer.TimeSeries{}, 1, 1000, 0, 1)
 	assert.Equal(t, api.BatteryHold.String(), s.Action)
 
 	// an idle battery at its soc bound withholds nothing: normal instead of hold/holdcharge
@@ -801,16 +801,52 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 		DischargingPower: []float32{0},
 		StateOfCharge:    []float32{1000},
 	}
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, 1).Action, "empty battery idle while importing")
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 1000, 0, 1).Action, "empty battery idle while importing")
 	res.StateOfCharge[0] = 9000
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "full battery idle while exporting")
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 0, 1000, 1).Action, "full battery idle while exporting")
 	res.StateOfCharge[0] = 5000
-	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, 1).Action, "idle within bounds is withheld")
-	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "idle within bounds is withheld")
+	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 1000, 0, 1).Action, "idle within bounds is withheld")
+	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 0, 1000, 1).Action, "idle within bounds is withheld")
 
 	// solver noise on the grid is no import/export (#34657)
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 4e-05, 0, 570.0/3600).Action, "idle with import noise")
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 0, 4e-05, 570.0/3600).Action, "idle with export noise")
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 4e-05, 0, 570.0/3600).Action, "idle with import noise")
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 0, 4e-05, 570.0/3600).Action, "idle with export noise")
+}
+
+// TestCurrentSlotSuggestionHoldWorthwhile covers holding a battery without planned
+// discharge when the kept energy is discharged later at a higher price
+func TestCurrentSlotSuggestionHoldWorthwhile(t *testing.T) {
+	battery := batteryDetail{Type: batteryTypeBattery}
+	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000}
+	ts := optimizer.TimeSeries{Dt: []int{900, 900, 900}, PN: []float32{0.26, 0.26, 0.29}}
+
+	// pv charging now, discharge at a higher price later
+	res := optimizer.BatteryResult{
+		ChargingPower:    []float32{500, 500, 0},
+		DischargingPower: []float32{0, 0, 500},
+		StateOfCharge:    []float32{5000, 5500, 5000},
+	}
+	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25).Action, "pv charge before expensive discharge")
+
+	res.ChargingPower[0], res.ChargingPower[1] = 0, 0
+	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25).Action, "idle balanced before expensive discharge")
+
+	// the kept energy would be discharged at the same price
+	ts.PN[2] = 0.26
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25).Action, "discharge at same price")
+
+	// battery fills up before its next discharge: kept energy only displaces pv
+	ts.PN[2] = 0.29
+	res.StateOfCharge[1] = 9000
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25).Action, "full before discharge")
+
+	// no later discharge at all
+	res.StateOfCharge[1] = 5500
+	res.DischargingPower[2] = 0
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25).Action, "no later discharge")
+
+	// idle while importing is withheld regardless of what comes later
+	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, ts, 0, 1000, 0, 0.25).Action, "idle while importing")
 }
 
 // TestSuggestionActionable ensures the actionable flag follows the current state
