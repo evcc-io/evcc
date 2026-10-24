@@ -452,6 +452,13 @@ func optimizerURI() string {
 	return cmp.Or(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
 }
 
+// optimizerAuth adds the sponsor token for the hosted optimizer only, a custom OPTIMIZER_URI must not receive it
+func optimizerAuth(req *http.Request) {
+	if optimizerURI() == OPTIMIZER_URI && sponsor.IsAuthorizedForApi() {
+		req.Header.Set("Authorization", "Bearer "+sponsor.Token)
+	}
+}
+
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 
 // errOptimizerNotReady means battery measurements aren't available yet (e.g. at
@@ -731,9 +738,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	resp, err := apiClient.PostOptimizeChargeScheduleWithResponse(context.TODO(), req, func(_ context.Context, req *http.Request) error {
-		if sponsor.IsAuthorizedForApi() {
-			req.Header.Set("Authorization", "Bearer "+sponsor.Token)
-		}
+		optimizerAuth(req)
 		return nil
 	})
 	if err != nil {
