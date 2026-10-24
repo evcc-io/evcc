@@ -4,8 +4,10 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"math/rand/v2"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -46,7 +48,7 @@ type Client struct {
 	client   paho.Client
 	broker   string
 	Qos      byte
-	listener map[string][]func(string)
+	listener map[string][]*func(string)
 	inflight *semaphore.Weighted
 
 	connMu     sync.Mutex
@@ -71,7 +73,7 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	mc := &Client{
 		log:      log,
 		Qos:      qos,
-		listener: make(map[string][]func(string)),
+		listener: make(map[string][]*func(string)),
 		inflight: semaphore.NewWeighted(parallelInflightLimit),
 	}
 
@@ -183,7 +185,7 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 			token := m.listen(topic)
 			if !token.WaitTimeout(request.Timeout) {
 				m.log.ERROR.Printf("subscribe %s: timeout", topic)
-			} else if err := token.Error(); err != nil {
+			} else if err := subscribeError(token); err != nil {
 				m.log.ERROR.Printf("subscribe %s: %v", topic, err)
 			}
 		}
@@ -260,18 +262,52 @@ func (m *Client) Publish(topic string, retained bool, payload string) {
 
 // Listen attaches listener to slice of listeners for given topic
 func (m *Client) Listen(topic string, callback func(string)) error {
+	cb := &callback
+
 	m.mux.Lock()
-	m.listener[topic] = append(m.listener[topic], callback)
+	m.listener[topic] = append(m.listener[topic], cb)
 	m.mux.Unlock()
 
 	token := m.listen(topic)
 
+	var err error
 	select {
 	case <-time.After(request.Timeout):
-		return fmt.Errorf("subscribe: %s: %w", topic, api.ErrTimeout)
+		err = api.ErrTimeout
 	case <-token.Done():
-		return nil
+		err = subscribeError(token)
 	}
+
+	if err != nil {
+		// failed listen must not leave the callback registered
+		m.mux.Lock()
+		m.listener[topic] = slices.DeleteFunc(m.listener[topic], func(c *func(string)) bool { return c == cb })
+		if len(m.listener[topic]) == 0 {
+			delete(m.listener, topic)
+		}
+		m.mux.Unlock()
+
+		return fmt.Errorf("subscribe: %s: %w", topic, err)
+	}
+
+	return nil
+}
+
+// subscribeError returns the token error or an error if the broker refused the subscription
+func subscribeError(token paho.Token) error {
+	if err := token.Error(); err != nil {
+		return err
+	}
+
+	if st, ok := token.(*paho.SubscribeToken); ok {
+		for _, rc := range st.Result() {
+			if rc == 0x80 {
+				return errors.New("refused by broker")
+			}
+		}
+	}
+
+	return nil
 }
 
 // ListenSetter creates a /set listener that resets the payload after handling
@@ -297,7 +333,7 @@ func (m *Client) listen(topic string) paho.Token {
 			m.mux.Unlock()
 
 			for _, cb := range callbacks {
-				cb(payload)
+				(*cb)(payload)
 			}
 		}
 	})
