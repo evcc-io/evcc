@@ -89,3 +89,14 @@ func TestBatteryModePower(t *testing.T) {
 	require.Equal(t, float64(1234), charge)
 	require.Equal(t, float64(567), discharge)
 }
+
+func TestNewFromConfigKeepsMasterOutOfDriverConfig(t *testing.T) {
+	other := map[string]any{
+		"master": "db:2",
+		"power":  map[string]any{"source": "const", "value": 0},
+	}
+
+	_, err := NewFromConfig(context.TODO(), api.Custom, other)
+	require.NoError(t, err)
+	require.Equal(t, "db:2", other["master"])
+}
