@@ -116,3 +116,14 @@ func TestBatteryModePowerRequiresBothSetters(t *testing.T) {
 		})
 	}
 }
+
+func TestNewFromConfigKeepsMasterOutOfDriverConfig(t *testing.T) {
+	other := map[string]any{
+		"master": "db:2",
+		"power":  map[string]any{"source": "const", "value": 0},
+	}
+
+	_, err := NewFromConfig(context.TODO(), api.Custom, other)
+	require.NoError(t, err)
+	require.Equal(t, "db:2", other["master"])
+}
