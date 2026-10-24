@@ -188,7 +188,6 @@
     "circuits": {
       "addMainCircuit": "Lisää päävirtapiiri",
       "addSubCircuit": "Lisää alivirtapiiri",
-      "chargingPointsNote": "Määritä latauspisteet ja lämmittimet virtapiiriin niiden omissa asetuksissaan.",
       "description": "Varmistaa, että kaikki piiriin kytketyt latauspisteeet ja lämmittimet eivät ylitä määritettyjä teho- ja virtarajoja. Piirejä voi rakentaa sisäkkäin.",
       "legacyWarning": "Lisää virtapiirien määrityksiä saatavilla. Poista ja tallenna asetuksesi täällä käyttääksesi uutta määrittelyprosessia. Muutosten jälkeen uudelleenkäynnistys on välttämätön.",
       "meterDedicated": "Mittari",

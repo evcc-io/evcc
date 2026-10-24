@@ -188,7 +188,6 @@
     "circuits": {
       "addMainCircuit": "Ajouter le circuit principal",
       "addSubCircuit": "Ajouter un sous-circuit",
-      "chargingPointsNote": "Attribuer les bornes de recharge et les radiateurs à un circuit dans leurs propres paramètres.",
       "description": "Vérifiez que la somme de tous les points de charges connectés à un circuit ne dépassent pas les limites de puissance et de courant. Les circuits peuvent être combinés pour construire une hiérarchie.",
       "legacyWarning": "Une nouvelle configuration des circuits est disponible !. Supprimez et enregistrez votre configuration ici pour utiliser la nouvelle procédure guidée. Un redémarrage sera nécessaire.",
       "meterDedicated": "Compteur",

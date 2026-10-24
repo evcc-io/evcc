@@ -188,7 +188,6 @@
     "circuits": {
       "addMainCircuit": "Ana devreyi ekle",
       "addSubCircuit": "Alt devre ekle",
-      "chargingPointsNote": "Doldurma noktalarını ve ısıtıcıları, kendi ayarları dahilinde bir devreye ata.",
       "description": "Bir devreye bağlı tüm yük noktalarının toplamının, yapılandırılan güç ve akım limitlerini aşmamasını sağlar. Devreler, bir hiyerarşi oluşturacak şekilde iç içe yerleştirilebilir.",
       "legacyWarning": "Yeni devre yapılandırması kullanıma sunuldu! Yeni adım adım kılavuzlu süreci kullanmak için yapılandırmanı buradan sil ve kaydet.",
       "meterDedicated": "Sayaç",

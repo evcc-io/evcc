@@ -187,7 +187,6 @@
     "circuits": {
       "addMainCircuit": "Lägg till huvudkrets",
       "addSubCircuit": "Lägg till underkrets",
-      "chargingPointsNote": "Tilldela laddplatser och värmare till en krets i deras egna inställningar.",
       "description": "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki.",
       "legacyWarning": "Ny kretskonfiguration tillgänglig! Ta bort och spara din konfiguration här för att använda den nya guidade processen.",
       "meterDedicated": "Mätare",

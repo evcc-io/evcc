@@ -188,7 +188,6 @@
     "circuits": {
       "addMainCircuit": "Pievienot saknes ķēdi",
       "addSubCircuit": "Pievienot apakšķēdi",
-      "chargingPointsNote": "Piešķiriet uzlādes punktus un sildītājus ķēdei to attiecīgajos iestatījumos.",
       "description": "Nodrošina, ka visu ķēdei pievienoto uzlādes punktu un sildītāju kopsumma nepārsniedz konfigurētos jaudas un strāvas ierobežojumus. Ķēdes var ligzdot, veidojot hierarhiju.",
       "legacyWarning": "Pieejama jauna ķēžu konfigurācija! Noņemiet un saglabājiet savu konfigurāciju šeit, lai izmantotu jauno vadīto procesu. Pēc tam nepieciešama restartēšana.",
       "meterDedicated": "Skaitītājs",
