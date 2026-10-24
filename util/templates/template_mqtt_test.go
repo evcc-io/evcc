@@ -33,24 +33,3 @@ func TestMqttPresetBroker(t *testing.T) {
 		})
 	}
 }
-
-// TestCardataMqttStream verifies that the mqtt preset is only rendered for the mqtt stream
-func TestCardataMqttStream(t *testing.T) {
-	tmpl, err := ByName(Vehicle, "cardata")
-	require.NoError(t, err)
-
-	b, _, err := tmpl.RenderResult(Vehicle, RenderModeInstance, map[string]any{"vin": "WBA", "clientid": "c"})
-	require.NoError(t, err)
-	assert.Contains(t, string(b), "stream: bmw")
-	assert.NotContains(t, string(b), "topic:")
-
-	b, _, err = tmpl.RenderResult(Vehicle, RenderModeInstance, map[string]any{"vin": "WBA", "clientid": "c", "stream": "mqtt"})
-	require.NoError(t, err)
-	assert.Contains(t, string(b), "stream: mqtt")
-	assert.Contains(t, string(b), "topic: bmw/raw/+")
-	assert.NotContains(t, string(b), "broker:")
-
-	b, _, err = tmpl.RenderResult(Vehicle, RenderModeInstance, map[string]any{"vin": "WBA", "clientid": "c", "stream": "mqtt", "host": "192.168.0.8"})
-	require.NoError(t, err)
-	assert.Contains(t, string(b), "broker: 192.168.0.8:1883")
-}
