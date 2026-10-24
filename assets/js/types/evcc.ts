@@ -558,6 +558,7 @@ export interface ConfigLoadpoint {
   defaultMode: string;
   priority: number;
   phasesConfigured: number;
+  limitSolarPhases: boolean;
   minCurrent: number;
   maxCurrent: number;
   smartCostLimit: number | null;
@@ -737,6 +738,8 @@ export interface Loadpoint {
   phasesActive: number;
   /** Configured phase mode. 0 is automatic switching, 1 and 3 select a fixed phase count. */
   phasesConfigured: number;
+  /** Limit solar surplus charging to a single phase. Fast charging is not affected. */
+  limitSolarPhases: boolean;
   /** Time slots of the current charging plan. */
   plan: Rate[] | null;
   /** The current time slot is an active charging slot of the plan. */

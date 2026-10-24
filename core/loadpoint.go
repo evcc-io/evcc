@@ -122,6 +122,7 @@ type Loadpoint struct {
 	minCurrent               float64  // PV mode: start current	Min+PV mode: min current
 	maxCurrent               float64  // Max allowed current. Physically ensured by the charger
 	phasesConfigured         int      // Charger configured phase mode 0/1/3
+	limitSolarPhases         bool     // Limit solar surplus charging to 1 phase
 	limitSoc                 int      // Session limit for soc
 	limitEnergy              float64  // Session limit for energy
 	minSoc                   int      // Forced charging below this soc (heating: temperature), 0=disabled
@@ -397,6 +398,9 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
 		lp.setPhasesConfigured(int(v))
+	}
+	if v, err := lp.settings.Bool(keys.LimitSolarPhases); err == nil {
+		lp.setLimitSolarPhases(v)
 	}
 	if v, err := lp.settings.Float(keys.MinCurrent); err == nil && v > 0 {
 		lp.setMinCurrent(v)
@@ -796,6 +800,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	}
 
 	lp.publish(keys.PhasesConfigured, lp.phasesConfigured)
+	lp.publish(keys.LimitSolarPhases, lp.limitSolarPhases)
 	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
 	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
@@ -1628,6 +1633,12 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 		scalable = insufficient || !lp.circuitAllowsPhases(activePhases, minCurrent)
 	}
 
+	// a configured solar 1p limit converges surplus charging to a single phase.
+	// an explicitly fixed phase configuration takes precedence.
+	if !disable && lp.limitSolarPhases && activePhases > 1 && lp.phasesConfigured < 3 {
+		scalable = true
+	}
+
 	// scale down phases. The phase timer keeps running while 3p min is not covered,
 	// whether 1p would be sustainable or not, so passing clouds cannot restart it (#34746)
 	if scalable {
@@ -1660,9 +1671,10 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 	maxPhases := lp.MaxActivePhases()
 	target1pCurrent := grid.PowerToCurrent(availablePower, 1)
 
-	// scaling up is pointless unless load management allows min current and power on maxPhases
+	// scaling up is pointless unless load management allows min current and power on maxPhases.
+	// a configured solar 1p limit keeps surplus charging on a single phase.
 	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent &&
-		maxCurrent >= minCurrent && lp.circuitAllowsPhases(maxPhases, minCurrent)
+		maxCurrent >= minCurrent && lp.circuitAllowsPhases(maxPhases, minCurrent) && !lp.limitSolarPhases
 
 	// scale up phases
 	if targetCurrent := grid.PowerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {

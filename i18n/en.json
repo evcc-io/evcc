@@ -1690,6 +1690,10 @@
         "phases_3": "3 phase",
         "phases_3_hint": "({min} to {max})"
       },
+      "limitSolarPhases": {
+        "label": "Solar following max 1 phase",
+        "description": "Never switch to 3 phases on solar surplus. Fast charging is not affected."
+      },
       "smartCostCheap": "Cheap Grid Charging",
       "smartCostClean": "Clean Grid Charging",
       "solar": "Solar Surplus",
