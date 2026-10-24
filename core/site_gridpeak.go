@@ -12,15 +12,12 @@ import (
 // gridPeakCountries bill the month's highest clock-aligned 15-min average grid import
 var gridPeakCountries = []string{"AT", "BE"}
 
-const (
-	gridPeakInterval    = 15 * time.Minute
-	gridPeakMonthFormat = "2006-01"
-)
+const gridPeakInterval = 15 * time.Minute
 
 // gridPeak tracks the month's highest clock-aligned 15-min average grid import
 type gridPeak struct {
-	Month string  `json:"month"` // calendar month of the peak
-	Power float64 `json:"power"` // peak in W
+	Time  time.Time `json:"time"`  // start of the peak interval
+	Power float64   `json:"power"` // peak in W
 
 	ts       time.Time // last sample
 	power    float64   // last sample grid import in W
@@ -62,24 +59,27 @@ func (p *gridPeak) add(ts time.Time, power float64) bool {
 
 // raise records the average of the interval starting at start if it exceeds its month's peak
 func (p *gridPeak) raise(start time.Time, power float64) bool {
-	if month := start.Format(gridPeakMonthFormat); month != p.Month {
-		p.Month, p.Power = month, 0
-	}
-
-	if power <= p.Power {
+	if power <= p.peak(start) {
 		return false
 	}
 
-	p.Power = power
+	p.Time, p.Power = start, power
 	return true
 }
 
 // peak returns the peak of the month of ts
 func (p *gridPeak) peak(ts time.Time) float64 {
-	if ts.Format(gridPeakMonthFormat) != p.Month {
+	if !sameMonth(ts, p.Time) {
 		return 0
 	}
 	return p.Power
+}
+
+// sameMonth reports whether a and b fall in the same calendar month in the location of a
+func sameMonth(a, b time.Time) bool {
+	ay, am, _ := a.Date()
+	by, bm, _ := b.In(a.Location()).Date()
+	return ay == by && am == bm
 }
 
 // updateGridPeak tracks the month's grid import peak and the resulting import target
