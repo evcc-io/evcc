@@ -1,0 +1,62 @@
+template: ecoflow-powerpulse
+products:
+  - brand: EcoFlow
+    description:
+      generic: PowerPulse 2
+capabilities: ["1p3p"]
+requirements:
+  description:
+    de: Die Wallbox muss an einem EcoFlow PowerOcean betrieben werden. Die Anmeldung erfolgt mit den Zugangsdaten der EcoFlow-App.
+    en: The wallbox must be connected to an EcoFlow PowerOcean. Login uses the EcoFlow app credentials.
+params:
+  - name: user
+    required: true
+  - name: password
+    required: true
+  - name: appkey
+    required: true
+    description:
+      de: App-Key
+      en: App key
+    help:
+      de: Ein appKey der EcoFlow-Web-App, z. B. der erste Wert eines Paars aus https://github.com/shuette42/ecoflow-energy-ha/blob/a6a3200e069f6d5217db3a7a6a89be5d16eb8598/custom_components/ecoflow_energy/ecoflow/clientid.py#L18-L51
+      en: An appKey of the EcoFlow web app, e.g. the first value of a pair from https://github.com/shuette42/ecoflow-energy-ha/blob/a6a3200e069f6d5217db3a7a6a89be5d16eb8598/custom_components/ecoflow_energy/ecoflow/clientid.py#L18-L51
+  - name: appsecret
+    required: true
+    mask: true
+    description:
+      de: App-Secret
+      en: App secret
+    help:
+      de: Das zum appKey gehörende Secret, der zweite Wert desselben Paars.
+      en: The secret belonging to the appKey, the second value of the same pair.
+  - name: serial
+    required: true
+    description:
+      de: Seriennummer der Wallbox
+      en: Wallbox serial number
+  - name: gateway
+    advanced: true
+    description:
+      de: Seriennummer des PowerOcean
+      en: PowerOcean serial number
+    help:
+      de: Nur nötig, wenn das Konto mehrere PowerOcean enthält. Bei genau einem PowerOcean wird dessen Seriennummer automatisch ermittelt.
+      en: Only needed when the account has several PowerOcean. With exactly one PowerOcean its serial number is detected automatically.
+  - name: timeout
+    default: 3m
+    advanced: true
+    help:
+      de: Maximales Alter der Telemetrie der Wallbox. Die Wallbox meldet sich mindestens einmal pro Minute.
+      en: Maximum age of the wallbox telemetry. The wallbox reports at least once a minute.
+render: |
+  type: ecoflow-powerpulse
+  user: {{ .user }}
+  password: {{ .password }}
+  appkey: {{ .appkey }}
+  appsecret: {{ .appsecret }}
+  serial: {{ .serial }}
+  {{- if .gateway }}
+  gateway: {{ .gateway }}
+  {{- end }}
+  timeout: {{ .timeout }}
