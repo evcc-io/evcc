@@ -121,6 +121,7 @@ type Site struct {
 	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
 	batteryModeApplied       map[string]api.BatteryMode  // Battery mode last applied per battery meter
+	batterySlaveModeApplied  map[string]api.BatteryMode  // Battery mode last applied by slave control per battery meter
 	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
 	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
 	lastOptimizerSolve       *optimizerSolve             // last successful solve, reapplied to newer slots by the control cycle
@@ -403,6 +404,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 				site.log.ERROR.Println("battery mode:", err)
 			}
 		}
+		site.releaseBatterySlaves()
 	})
 
 	return nil
@@ -671,7 +673,13 @@ func (site *Site) publishLoadpoint(id int, key string, val any) {
 }
 
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []types.Measurement {
+	mm, _ := site.collectMetersWithPowerValidity(key, meters)
+	return mm
+}
+
+func (site *Site) collectMetersWithPowerValidity(key string, meters []config.Device[api.Meter]) ([]types.Measurement, []bool) {
 	mm := make([]types.Measurement, len(meters))
+	powerValid := make([]bool, len(meters))
 
 	fun := func(i int, dev config.Device[api.Meter]) {
 		meter := dev.Instance()
@@ -693,6 +701,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 		power, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff())
 		if err == nil {
 			mm[i].Power = power
+			powerValid[i] = true
 			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			if b.Len() > 0 {
@@ -729,7 +738,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 	}
 	wg.Wait()
 
-	return mm
+	return mm, powerValid
 }
 
 // updatePvMeters updates pv meters. All measurements are optional.
@@ -803,7 +812,10 @@ func (site *Site) updateBatteryMeters() {
 		return
 	}
 
-	mm := site.collectMeters("battery", site.batteryMeters)
+	mm, powerValid := site.collectMetersWithPowerValidity("battery", site.batteryMeters)
+	for i, dev := range site.batteryMeters {
+		mm[i].Master, _ = dev.Config().Property("master").(string)
+	}
 	prev := site.state().battery.Devices
 
 	var maxDischargePower float64
@@ -867,6 +879,8 @@ func (site *Site) updateBatteryMeters() {
 			mm[i].Modes = lo.Map(ctrl.BatteryModes(), func(m api.BatteryMode, _ int) string { return m.String() })
 		}
 	}
+
+	site.updateBatterySlavePower(mm, powerValid)
 
 	// retain the last known soc when all reads failed, so that a transient
 	// meter error does not report the pack as empty (0%)

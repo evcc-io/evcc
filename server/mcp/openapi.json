@@ -4541,6 +4541,18 @@
               "type": "number"
             }
           },
+          "master": {
+            "description": "Configured master battery name for this slave battery.",
+            "type": "string"
+          },
+          "powerControlStatus": {
+            "description": "Result of the latest runtime power-control attempt.",
+            "type": "string",
+            "enum": [
+              "applied",
+              "failed"
+            ]
+          },
           "soc": {
             "description": "Charge level in %.",
             "type": "number"
