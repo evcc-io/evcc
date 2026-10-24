@@ -158,6 +158,12 @@ func TestForwarderTrackTransaction(t *testing.T) {
 		instance.mu.Unlock()
 	}()
 
+	// rejected start is not tracked
+	trackTransaction(instance, id,
+		[]byte(`[2,"0","StartTransaction",{"connectorId":1,"idTag":"BLOCKED","meterStart":0,"timestamp":"2026-10-20T17:38:50Z"}]`),
+		[]byte(`[3,"0",{"idTagInfo":{"status":"Blocked"},"transactionId":5}]`))
+	assert.Empty(t, conn.IdTag())
+
 	// upstream issues the transaction id, the charger's request carries the idTag
 	trackTransaction(instance, id,
 		[]byte(`[2,"1","StartTransaction",{"connectorId":1,"idTag":"04373B1A7F6F80","meterStart":0,"timestamp":"2026-10-20T17:39:50Z"}]`),

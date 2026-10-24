@@ -28,6 +28,7 @@ import (
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 	"github.com/lorenzodonini/ocpp-go/ocppj"
 	"github.com/lorenzodonini/ocpp-go/ws"
 )
@@ -668,12 +669,13 @@ func (sc *sidecar) readFromUpstream() {
 			sc.pendingChargerCallsMu.Unlock()
 
 			if isChargerCall {
+				// track before relaying so the charger's follow-up Call sees updated state
+				if msgType == ocppj.CALL_RESULT {
+					trackTransaction(cs, sc.chargerID, call, msg)
+				}
 				// relay to charger; its handler was bypassed and it awaits this reply
 				if err := cs.Write(sc.chargerID, msg); err != nil {
 					forwarderLog.ERROR.Printf("forwarder: relay upstream response to charger %s: %v", sc.chargerID, err)
-				}
-				if msgType == ocppj.CALL_RESULT {
-					trackTransaction(cs, sc.chargerID, call, msg)
 				}
 				continue
 			}
@@ -704,7 +706,8 @@ func trackTransaction(cs *CS, chargerID string, call, result []byte) {
 	case "StartTransaction":
 		var request core.StartTransactionRequest
 		var conf core.StartTransactionConfirmation
-		if json.Unmarshal(req[3], &request) != nil || json.Unmarshal(res[2], &conf) != nil {
+		if json.Unmarshal(req[3], &request) != nil || json.Unmarshal(res[2], &conf) != nil ||
+			conf.IdTagInfo == nil || conf.IdTagInfo.Status != types.AuthorizationStatusAccepted {
 			return
 		}
 		if conn := cp.connectorByID(request.ConnectorId); conn != nil {
