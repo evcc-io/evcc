@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"math/rand/v2"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -48,7 +47,7 @@ type Client struct {
 	client   paho.Client
 	broker   string
 	Qos      byte
-	listener map[string][]*func(string)
+	listener map[string][]func(string)
 	inflight *semaphore.Weighted
 
 	connMu     sync.Mutex
@@ -73,7 +72,7 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	mc := &Client{
 		log:      log,
 		Qos:      qos,
-		listener: make(map[string][]*func(string)),
+		listener: make(map[string][]func(string)),
 		inflight: semaphore.NewWeighted(parallelInflightLimit),
 	}
 
@@ -262,32 +261,21 @@ func (m *Client) Publish(topic string, retained bool, payload string) {
 
 // Listen attaches listener to slice of listeners for given topic
 func (m *Client) Listen(topic string, callback func(string)) error {
-	cb := &callback
-
 	m.mux.Lock()
-	m.listener[topic] = append(m.listener[topic], cb)
+	m.listener[topic] = append(m.listener[topic], callback)
 	m.mux.Unlock()
 
 	token := m.listen(topic)
 
-	err := api.ErrTimeout
-	if token.WaitTimeout(request.Timeout) {
-		err = subscribeError(token, topic)
-	}
-
-	if err != nil {
-		// unregister callback; clone as message handlers may iterate the current slice unlocked
-		m.mux.Lock()
-		m.listener[topic] = slices.DeleteFunc(slices.Clone(m.listener[topic]), func(c *func(string)) bool { return c == cb })
-		if len(m.listener[topic]) == 0 {
-			delete(m.listener, topic)
+	select {
+	case <-time.After(request.Timeout):
+		return fmt.Errorf("subscribe: %s: %w", topic, api.ErrTimeout)
+	case <-token.Done():
+		if err := subscribeError(token, topic); err != nil {
+			return fmt.Errorf("subscribe: %s: %w", topic, err)
 		}
-		m.mux.Unlock()
-
-		return fmt.Errorf("subscribe: %s: %w", topic, err)
+		return nil
 	}
-
-	return nil
 }
 
 // subscribeError returns the token error or an error if the broker refused the subscription
@@ -326,7 +314,7 @@ func (m *Client) listen(topic string) paho.Token {
 			m.mux.Unlock()
 
 			for _, cb := range callbacks {
-				(*cb)(payload)
+				cb(payload)
 			}
 		}
 	})
