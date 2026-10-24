@@ -207,29 +207,29 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			case api.BatteryNormal:
 				if strategy := m.takeRSocStrategy(); strategy != nil {
 					eg.Go(func() error {
-						return m.conn.Write(rct.PowerMngSocStrategy, []byte{*strategy})
+						return m.conn.WriteVerified(rct.PowerMngSocStrategy, []byte{*strategy})
 					})
 				}
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
+					return m.conn.WriteVerified(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MaxSoc/100))
+					return m.conn.WriteVerified(rct.PowerMngSocMax, floatVal(batterySocLimits.MaxSoc/100))
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(0))
+					return m.conn.WriteVerified(rct.PowerMngBatteryPowerExternW, floatVal(0))
 				})
 
 			case api.BatteryHold:
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
+					return m.conn.WriteVerified(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MaxSoc/100))
+					return m.conn.WriteVerified(rct.PowerMngSocMax, floatVal(batterySocLimits.MaxSoc/100))
 				})
 
 				eg.Go(func() error {
@@ -239,42 +239,42 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 					if err != nil {
 						return err
 					}
-					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(soc))
+					return m.conn.WriteVerified(rct.BatterySoCTargetMin, floatVal(soc))
 				})
 
 			case api.BatteryCharge:
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngUseGridPowerEnable, []byte{1})
+					return m.conn.WriteVerified(rct.PowerMngUseGridPowerEnable, []byte{1})
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(-batteryPowerLimits.MaxChargePower))
+					return m.conn.WriteVerified(rct.PowerMngBatteryPowerExternW, floatVal(-batteryPowerLimits.MaxChargePower))
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
+					return m.conn.WriteVerified(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
 				})
 
 			case api.BatteryHoldCharge:
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
+					return m.conn.WriteVerified(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
+					return m.conn.WriteVerified(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MinSoc/100))
+					return m.conn.WriteVerified(rct.PowerMngSocMax, floatVal(batterySocLimits.MinSoc/100))
 				})
 
 			case api.BatteryDischarge:
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(batteryPowerLimits.MaxDischargePower))
+					return m.conn.WriteVerified(rct.PowerMngBatteryPowerExternW, floatVal(batteryPowerLimits.MaxDischargePower))
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
+					return m.conn.WriteVerified(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
 				})
 
 			default:
