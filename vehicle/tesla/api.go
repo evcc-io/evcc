@@ -14,11 +14,7 @@ import (
 
 const FleetBaseUrl = "https://fleet-api.prd.na.vn.cloud.tesla.com"
 
-// vehicle_data omits latitude/longitude unless location_data is requested (firmware 2023.38+)
-const (
-	vehicleDataEndpoints         = "charge_state;climate_state;drive_state;vehicle_state"
-	vehicleDataLocationEndpoints = "charge_state;climate_state;drive_state;location_data;vehicle_state"
-)
+const vehicleDataEndpoints = "charge_state;climate_state;drive_state;vehicle_state"
 
 // API is a minimal Tesla Fleet API client, also used against a command proxy
 type API struct {
@@ -72,11 +68,14 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 	return res.Response, err
 }
 
-// VehicleData returns the vehicle state including location
+// VehicleData returns the vehicle state including location if the app has the location scope
 func (v *API) VehicleData(vin string) (*VehicleData, error) {
-	endpoints := vehicleDataLocationEndpoints
-	if v.noLocation.Load() {
-		endpoints = vehicleDataEndpoints
+	endpoints := vehicleDataEndpoints
+
+	// vehicle_data omits latitude/longitude unless location_data is requested (firmware 2023.38+)
+	location := !v.noLocation.Load()
+	if location {
+		endpoints += ";location_data"
 	}
 
 	var res VehicleData
@@ -84,7 +83,7 @@ func (v *API) VehicleData(vin string) (*VehicleData, error) {
 	if err := v.GetJSON(uri, &res); err != nil {
 		// Tesla rejects the whole request with 403 if the location scope is missing
 		var se *request.StatusError
-		if endpoints == vehicleDataLocationEndpoints && errors.As(err, &se) && se.HasStatus(http.StatusForbidden) {
+		if location && errors.As(err, &se) && se.HasStatus(http.StatusForbidden) {
 			v.log.WARN.Println("vehicle location unavailable: Fleet API app lacks the vehicle_location scope")
 			v.noLocation.Store(true)
 			return v.VehicleData(vin)
