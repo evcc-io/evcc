@@ -32,7 +32,7 @@ requirements:
 
       Sollte die Fahrzeugerkennung nicht zuverlässig funktionieren, sollte `welcomecharge` (Laden bei Verbindung) aktiviert werden.
 
-      BMW erlaubt nur eine Streaming-Verbindung pro Konto. Wird diese bereits von einem anderen Tool genutzt, können die Streamingdaten optional von einem lokalen MQTT-Broker gelesen werden. Das Tool muss die CarData-Nachrichten unverändert veröffentlichen, z.B. [bmw-mqtt-bridge](https://github.com/dj0abr/bmw-mqtt-bridge) mit Standardeinstellungen. Die Anmeldung mit `clientid` wird weiterhin für die REST-Abfragen benötigt.
+      BMW erlaubt nur eine Streaming-Verbindung pro Konto. Wird diese bereits von einem anderen Tool genutzt, können die Streamingdaten optional von einem lokalen MQTT-Broker gelesen werden. Das Tool muss die CarData-Nachrichten unverändert veröffentlichen, z.B. [bmw-mqtt-bridge](https://github.com/dj0abr/bmw-mqtt-bridge) mit Standardeinstellungen. Nur dieses Tool sollte auf dem Topic veröffentlichen dürfen, z.B. per ACL des MQTT-Brokers. Die Anmeldung mit `clientid` wird weiterhin für die REST-Abfragen benötigt.
     en: |
       Requires CarData activation in BMW/Mini portal. The following data points need to be configured for streaming access (the availability of data points may vary depending on the vehicle model):
 
@@ -57,7 +57,7 @@ requirements:
 
       In case the vehicle detection does not work reliably, `welcomecharge` (charge on connection) should be enabled.
 
-      BMW allows only one streaming connection per account. If another tool already uses it, the streaming data can optionally be read from a local MQTT broker. The tool must publish the unmodified CarData messages, e.g. [bmw-mqtt-bridge](https://github.com/dj0abr/bmw-mqtt-bridge) with its default settings. Login with `clientid` is still required for REST requests.
+      BMW allows only one streaming connection per account. If another tool already uses it, the streaming data can optionally be read from a local MQTT broker. The tool must publish the unmodified CarData messages, e.g. [bmw-mqtt-bridge](https://github.com/dj0abr/bmw-mqtt-bridge) with its default settings. Only this tool should be allowed to publish to the topic, e.g. using broker ACLs. Login with `clientid` is still required for REST requests.
 params:
   - preset: vehicle-common
   - name: vin
