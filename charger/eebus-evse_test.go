@@ -255,6 +255,38 @@ func TestWriteCurrentLimitData_OpevNotAvailable(t *testing.T) {
 	require.ErrorIs(t, err, api.ErrNotAvailable)
 }
 
+func TestWriteCurrentLimitData_SinglePhaseAutoDetect(t *testing.T) {
+	eebus, opev, oscev, evEntity := newTestEEBus(t)
+
+	// OPEV available with 1 phase limit (e.g. EVBox Livo / North America 1-phase)
+	opev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
+	opev.EXPECT().CurrentLimits(evEntity).Return([]float64{6}, []float64{48}, []float64{0}, nil)
+	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
+		return len(limits) == 1 && limits[0].Phase == ucapi.PhaseNameMapping[0] && limits[0].IsActive && limits[0].Value == 10
+	}), mock.Anything).Run(ackWrite).Return(nil, nil)
+
+	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(false)
+
+	err := eebus.writeCurrentLimitData(evEntity, 10)
+	require.NoError(t, err)
+}
+
+func TestWriteCurrentLimitData_PartialLimitsAutoDetect(t *testing.T) {
+	eebus, opev, oscev, evEntity := newTestEEBus(t)
+
+	// OPEV returns minLimits with 1 phase and empty maxLimits
+	opev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
+	opev.EXPECT().CurrentLimits(evEntity).Return([]float64{6}, nil, nil, nil)
+	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
+		return len(limits) == 1 && limits[0].Phase == ucapi.PhaseNameMapping[0] && limits[0].IsActive && limits[0].Value == 10
+	}), mock.Anything).Run(ackWrite).Return(nil, nil)
+
+	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(false)
+
+	err := eebus.writeCurrentLimitData(evEntity, 10)
+	require.NoError(t, err)
+}
+
 func TestEnabledAlwaysReadsOpev(t *testing.T) {
 	evcc := mocks.NewCemEVCCInterface(t)
 	opev := mocks.NewCemOPEVInterface(t)
