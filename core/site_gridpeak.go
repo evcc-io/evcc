@@ -82,29 +82,47 @@ func (p *gridPeak) peak(ts time.Time) float64 {
 	return p.Power
 }
 
-// updateGridPeak tracks the month's grid import peak and the resulting target
+// updateGridPeak tracks the month's grid import peak and the resulting import target
 func (site *Site) updateGridPeak(now time.Time) {
-	if slices.Contains(gridPeakCountries, site.GetCountry()) {
-		site.Lock()
-		raised := site.gridPeak.add(now, site.gridPower)
-		peak := site.gridPeak
-		site.Unlock()
+	regime := slices.Contains(gridPeakCountries, site.GetCountry())
+	baseline := site.GetGridPeakBaseline()
 
-		if raised {
-			site.log.DEBUG.Printf("grid peak: %.0fW", peak.Power)
-			if err := settings.SetJson(keys.GridPeak, peak); err != nil {
-				site.log.ERROR.Printf("grid peak: %v", err)
-			}
-		}
-
-		site.publish(keys.GridPeak, peak.peak(now))
-	}
-
-	target := site.gridPeakLimit(now)
+	// fast charging accepts a higher peak
+	fast := slices.ContainsFunc(site.loadpoints, func(lp *Loadpoint) bool {
+		return lp.GetMode() == api.ModeNow
+	})
 
 	site.Lock()
-	site.gridPeakTarget = target
+	var raised bool
+	if regime {
+		raised = site.gridPeak.add(now, site.gridPower)
+	}
+	peak := site.gridPeak
+	site.gridPeakTarget = 0
+	if regime && baseline > 0 && !fast {
+		site.gridPeakTarget = max(baseline, peak.peak(now))
+	}
 	site.Unlock()
+
+	if !regime {
+		return
+	}
+
+	if raised {
+		site.log.DEBUG.Printf("grid peak: %.0fW", peak.Power)
+		if err := settings.SetJson(keys.GridPeak, peak); err != nil {
+			site.log.ERROR.Printf("grid peak: %v", err)
+		}
+	}
+
+	site.publish(keys.GridPeak, peak.peak(now))
+}
+
+// getGridPeakTarget returns the grid import target in W, 0 = none
+func (site *Site) getGridPeakTarget() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.gridPeakTarget
 }
 
 // gridPeakLimiter supplies the grid import target to the root circuit
@@ -112,31 +130,6 @@ type gridPeakLimiter struct {
 	site *Site
 }
 
-var _ api.ConsumptionLimiter = gridPeakLimiter{}
-
 func (l gridPeakLimiter) MaxConsumptionPower() *float64 {
-	l.site.RLock()
-	defer l.site.RUnlock()
-	res := l.site.gridPeakTarget
-	return &res
-}
-
-// gridPeakLimit returns the grid import target, the month's peak floored at the baseline, 0 = none
-func (site *Site) gridPeakLimit(now time.Time) float64 {
-	baseline := site.GetGridPeakBaseline()
-	if baseline <= 0 || !slices.Contains(gridPeakCountries, site.GetCountry()) {
-		return 0
-	}
-
-	// fast charging accepts a higher peak
-	if slices.ContainsFunc(site.loadpoints, func(lp *Loadpoint) bool {
-		return lp.GetMode() == api.ModeNow
-	}) {
-		return 0
-	}
-
-	site.RLock()
-	defer site.RUnlock()
-
-	return max(baseline, site.gridPeak.peak(now))
+	return new(l.site.getGridPeakTarget())
 }
