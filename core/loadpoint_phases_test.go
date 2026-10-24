@@ -672,37 +672,6 @@ func TestScalePhasesUpMinCurrent(t *testing.T) {
 	require.Equal(t, float64(minA), lp.offeredCurrent)
 }
 
-// TestScalePhasesDefersWelcomeCharge verifies that a phase switch in the connect
-// cycle keeps the welcome charge for the next loadpoint cycle (issue #34853).
-func TestScalePhasesDefersWelcomeCharge(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	plainCharger := api.NewMockCharger(ctrl)
-	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
-	phaseCharger.EXPECT().Phases1p3p(1).Return(nil)
-
-	clck := clock.NewMock()
-	lp := NewLoadpoint(util.NewLogger("foo"), nil)
-	lp.clock = clck
-	lp.wakeUpTimer = NewTimer()
-	lp.charger = struct {
-		*api.MockCharger
-		*api.MockPhaseSwitcher
-	}{plainCharger, phaseCharger}
-	lp.phases = 3
-	lp.welcomeUntil = clck.Now().Add(welcomeChargeDuration)
-
-	require.NoError(t, lp.scalePhases(1))
-
-	// next cycle of 3 loadpoints at 30s interval
-	clck.Add(90 * time.Second)
-	require.True(t, lp.welcomeActive())
-
-	clck.Add(phaseSwitchDuration + welcomeChargeDuration - 90*time.Second)
-	require.False(t, lp.welcomeActive())
-}
-
 // TestMinChargingPhaseScaling verifies that minCharging scales down to 1 phase
 // (the absolute minimum) when phase switching is available, so feed-in priority
 // in min+pv mode drops to 1p min current instead of staying on 3p (issue #30298).
@@ -939,6 +908,57 @@ func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
 	// second cycle must not attempt the switch again (Phases1p3p .Times(1))
 	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
 	require.Equal(t, 3, lp.GetPhases())
+}
+
+// TestUpdatePhaseSwitchWelcomeCharge verifies that a required phase switch in the
+// connect cycle is followed by the welcome charge on the new phases (issue #34853).
+func TestUpdatePhaseSwitchWelcomeCharge(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	plainCharger := api.NewMockCharger(ctrl)
+	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+
+	plainCharger.EXPECT().Status().Return(api.StatusB, nil).AnyTimes()
+	plainCharger.EXPECT().Enabled().Return(false, nil).AnyTimes()
+
+	gomock.InOrder(
+		phaseCharger.EXPECT().Phases1p3p(1).Return(nil),
+		plainCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil),
+		plainCharger.EXPECT().Enable(true).Return(nil),
+	)
+
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock,
+		chargeMeter: newChargeMeter(&Null{}),
+		chargeRater: &Null{},
+		chargeTimer: &Null{},
+		progress:    NewProgress(0, 10),
+		wakeUpTimer: NewTimer(),
+		mode:        api.ModePV,
+		minCurrent:  minA,
+		maxCurrent:  maxA,
+		status:      api.StatusB,
+		charger: struct {
+			*api.MockCharger
+			*api.MockPhaseSwitcher
+		}{
+			plainCharger,
+			phaseCharger,
+		},
+		phasesConfigured: 1, // fixed 1p
+		phases:           3,
+		welcomeUntil:     clock.Now().Add(welcomeChargeDuration),
+	}
+
+	attachListeners(t, lp)
+
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
+	require.Equal(t, 1, lp.GetPhases())
+	require.True(t, lp.enabled)
 }
 
 func TestPvScalePhasesCircuitLimits(t *testing.T) {

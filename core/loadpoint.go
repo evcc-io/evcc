@@ -1473,11 +1473,6 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 
 		// some vehicles may hang on phase switch
 		lp.startWakeUpTimer()
-
-		// run a pending welcome charge on the new phases once the switch has settled (#34853)
-		if lp.welcomeActive() {
-			lp.welcomeUntil = lp.clock.Now().Add(phaseSwitchDuration + welcomeChargeDuration)
-		}
 	}
 
 	return nil
@@ -2615,6 +2610,12 @@ NO_DIM:
 			lp.SetPhases(lp.phasesConfigured)
 			err = nil
 		}
+
+		// the welcome charge must not miss its connect cycle on the new phases (#34853)
+		if err != nil || !lp.welcomeActive() {
+			break
+		}
+		fallthrough
 
 	// welcome charge takes precedence over mode and limits
 	case lp.welcomeActive():
