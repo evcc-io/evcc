@@ -509,7 +509,10 @@ func (site *Site) restoreSettings() error {
 		site.SetSolarAdjusted(v)
 	}
 	if v, err := settings.String(keys.OptimizerChargingStrategy); err == nil && v != "" {
-		if err := site.SetOptimizerChargingStrategy(v); err != nil {
+		// charge_before_export is no strategy anymore, charge_early is always sent
+		if v == "charge_before_export" {
+			settings.Delete(keys.OptimizerChargingStrategy)
+		} else if err := site.SetOptimizerChargingStrategy(v); err != nil {
 			site.log.WARN.Printf("optimizer charging strategy: %v", err)
 		}
 	}

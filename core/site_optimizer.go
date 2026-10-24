@@ -39,16 +39,15 @@ const (
 )
 
 // optimizerChargingStrategies are the valid grid charging strategies; the first
-// entry is the default and preserves the previous hard-coded behavior.
+// entry is the default.
 var optimizerChargingStrategies = []string{
-	string(optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport),
+	string(optimizer.OptimizerStrategyChargingStrategyNone),
 	string(optimizer.OptimizerStrategyChargingStrategyAttenuateDemandPeaks),
 	string(optimizer.OptimizerStrategyChargingStrategyAttenuateFeedinPeaks),
 	string(optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks),
-	string(optimizer.OptimizerStrategyChargingStrategyNone),
 }
 
-const defaultOptimizerChargingStrategy = string(optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport)
+const defaultOptimizerChargingStrategy = string(optimizer.OptimizerStrategyChargingStrategyNone)
 
 // optimizerDecaySlots is the number of slots over which measured values decay into the forecast
 const optimizerDecaySlots = 4
@@ -563,6 +562,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	req = optimizer.OptimizationInput{
 		Strategy: optimizer.OptimizerStrategy{
 			ChargingStrategy:    optimizer.OptimizerStrategyChargingStrategy(site.GetOptimizerChargingStrategy()),
+			ChargeEarly:         true,
 			DischargingStrategy: optimizer.OptimizerStrategyDischargingStrategyDischargeBeforeImport,
 		},
 		EtaC: eta,
