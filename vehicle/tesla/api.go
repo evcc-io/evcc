@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync/atomic"
 
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -13,12 +14,17 @@ import (
 const FleetBaseUrl = "https://fleet-api.prd.na.vn.cloud.tesla.com"
 
 // vehicle_data omits latitude/longitude unless location_data is requested (firmware 2023.38+)
-const vehicleDataEndpoints = "charge_state;climate_state;drive_state;location_data;vehicle_state"
+const (
+	vehicleDataEndpoints         = "charge_state;climate_state;drive_state;vehicle_state"
+	vehicleDataLocationEndpoints = "charge_state;climate_state;drive_state;location_data;vehicle_state"
+)
 
 // API is a minimal Tesla Fleet API client, also used against a command proxy
 type API struct {
 	*request.Helper
 	base string
+
+	noLocation atomic.Bool // app lacks the vehicle location scope
 }
 
 // NewAPI creates a Fleet API client; the http client carries authentication
@@ -65,9 +71,20 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 
 // VehicleData returns the vehicle state including location
 func (v *API) VehicleData(vin string) (*VehicleData, error) {
+	endpoints := vehicleDataLocationEndpoints
+	if v.noLocation.Load() {
+		endpoints = vehicleDataEndpoints
+	}
+
 	var res VehicleData
-	uri := fmt.Sprintf("%s/vehicles/%s/vehicle_data?endpoints=%s", v.base, vin, url.QueryEscape(vehicleDataEndpoints))
+	uri := fmt.Sprintf("%s/vehicles/%s/vehicle_data?endpoints=%s", v.base, vin, url.QueryEscape(endpoints))
 	if err := v.GetJSON(uri, &res); err != nil {
+		// Tesla rejects the whole request with 403 if the location scope is missing
+		var se *request.StatusError
+		if endpoints == vehicleDataLocationEndpoints && errors.As(err, &se) && se.HasStatus(http.StatusForbidden) {
+			v.noLocation.Store(true)
+			return v.VehicleData(vin)
+		}
 		return nil, err
 	}
 	if res.Error != "" {

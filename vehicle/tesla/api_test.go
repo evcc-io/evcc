@@ -3,6 +3,7 @@ package tesla
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -38,4 +39,28 @@ func TestVehicleDataRequestsLocation(t *testing.T) {
 	res, err := NewAPI(srv.Client(), srv.URL).VehicleData("abc")
 	require.NoError(t, err)
 	require.Equal(t, 1.5, res.Response.DriveState.Latitude)
+}
+
+func TestVehicleDataWithoutLocationScope(t *testing.T) {
+	var calls int
+	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if strings.Contains(r.URL.Query().Get("endpoints"), "location_data") {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		w.Write([]byte(`{"response": {"charge_state": {"battery_level": 42}}}`))
+	}))
+	srv.Start()
+
+	api := NewAPI(srv.Client(), srv.URL)
+
+	res, err := api.VehicleData("abc")
+	require.NoError(t, err)
+	require.Equal(t, 2, calls)
+	require.EqualValues(t, 42, res.Response.ChargeState.BatteryLevel)
+
+	_, err = api.VehicleData("abc")
+	require.NoError(t, err)
+	require.Equal(t, 3, calls)
 }
