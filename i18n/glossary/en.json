@@ -19,6 +19,10 @@
         "description": "Energy flowing out of the home battery.",
         "other": "battery discharge"
     },
+    "batteryMaster": {
+        "description": "Home battery referenced as the master by another battery.",
+        "other": "master battery"
+    },
     "card": {
         "description": "A boxed UI panel on a page. Not tile or panel.",
         "other": "card"

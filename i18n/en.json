@@ -275,6 +275,7 @@
       "heaterTempLimit": "Heater limit",
       "identifier": "RFID-Identifier",
       "loginBlocked": "Login limit reached",
+      "master": "Master",
       "max": "max",
       "maxCurrent": "Max. current",
       "maxPower": "Max. power",
@@ -742,6 +743,8 @@
       },
       "delete": "Delete",
       "generic": "Generic integrations",
+      "master": "Master battery",
+      "masterInUse": "This battery already has slaves and cannot itself be assigned to a master.",
       "option": {
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",

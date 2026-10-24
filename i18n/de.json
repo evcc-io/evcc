@@ -275,6 +275,7 @@
       "heaterTempLimit": "Heizungslimit",
       "identifier": "RFID-Kennung",
       "loginBlocked": "Login-Limit erreicht",
+      "master": "Master",
       "max": "max",
       "maxCurrent": "Max. Stromstärke",
       "maxPower": "Max. Leistung",
@@ -742,6 +743,8 @@
       },
       "delete": "Löschen",
       "generic": "Generische Integrationen",
+      "master": "Master-Batterie",
+      "masterInUse": "Diese Batterie steuert bereits andere Batterien und kann nicht selbst einem Master zugeordnet werden.",
       "option": {
         "aux": "Selbstregelnden Verbraucher hinzufügen",
         "battery": "Hausbatterie hinzufügen",

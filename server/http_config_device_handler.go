@@ -171,6 +171,13 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T], hidePri
 		if icon, ok := conf.Other["icon"].(string); ok {
 			config["icon"] = icon
 		}
+		if class == templates.Meter {
+			for k, v := range conf.Other {
+				if master, ok := v.(string); ok && master != "" && strings.EqualFold(k, "master") {
+					config["master"] = master
+				}
+			}
+		}
 		if len(config) > 0 {
 			dc["config"] = config
 		}
