@@ -74,11 +74,6 @@ func ApplyForwarderRules(rules []ForwarderRule) {
 			delete(forwarderErrors, id)
 		}
 	}
-	for id, l := range sidecarLoops {
-		if !ruleCurrent(id, l.rule) {
-			stopReconnectLoop(id)
-		}
-	}
 	sidecarsMu.Unlock()
 	for _, sc := range stale {
 		sc.conn.CloseNow()
@@ -228,7 +223,8 @@ var (
 	forwarderErrors = make(map[string]string)
 
 	// current re-dial loop per charger; guarded by sidecarsMu
-	sidecarLoops = make(map[string]*reconnectLoop)
+	sidecarLoops   = make(map[string]uint64)
+	sidecarLoopSeq uint64
 
 	// raw frames buffered per charger while the sidecar dials; flushed in order
 	// on connect so BootNotification reaches upstream
@@ -248,27 +244,19 @@ var (
 	stableSessionDuration = time.Minute
 )
 
-// reconnectLoop is a charger's re-dial loop. stop is closed once the loop is
-// superseded, the charger disconnects or the rule no longer applies.
-type reconnectLoop struct {
-	rule ForwarderRule
-	stop chan struct{}
-}
-
 // runUpstreamSidecar dials a charger's upstream sidecar and re-dials with
 // exponential backoff for as long as the charger stays connected and the rule
 // remains in effect.
 func runUpstreamSidecar(id string, rule ForwarderRule) {
-	l := &reconnectLoop{rule: rule, stop: make(chan struct{})}
-
 	// a loop started with an outdated rule must not take over from the current one
 	sidecarsMu.Lock()
 	if !connectedChargers[id] || !ruleCurrent(id, rule) {
 		sidecarsMu.Unlock()
 		return
 	}
-	stopReconnectLoop(id)
-	sidecarLoops[id] = l
+	sidecarLoopSeq++
+	loop := sidecarLoopSeq
+	sidecarLoops[id] = loop
 	sidecarsMu.Unlock()
 
 	bo := backoff.NewExponentialBackOff(
@@ -278,10 +266,7 @@ func runUpstreamSidecar(id string, rule ForwarderRule) {
 	)
 
 	for {
-		session, connected := dialUpstreamSidecar(id, l)
-		if !l.wanted(id) {
-			return
-		}
+		session, connected := dialUpstreamSidecar(id, rule, loop)
 
 		// an upstream that accepts and drops at once must not cause a tight re-dial loop
 		if session >= stableSessionDuration {
@@ -290,13 +275,9 @@ func runUpstreamSidecar(id string, rule ForwarderRule) {
 
 		delay := bo.NextBackOff()
 		forwarderLog.DEBUG.Printf("forwarder: reconnecting upstream for %s in %v", id, delay)
-		select {
-		case <-time.After(delay):
-		case <-l.stop:
-			return
-		}
+		time.Sleep(delay)
 
-		if !l.wanted(id) {
+		if !sidecarWanted(id, rule, loop) {
 			return
 		}
 
@@ -308,22 +289,13 @@ func runUpstreamSidecar(id string, rule ForwarderRule) {
 	}
 }
 
-// wanted reports whether the loop should keep re-dialling: it is still the
+// sidecarWanted reports whether the loop should keep re-dialling: it is still the
 // charger's current loop, its rule applies and no sidecar is active.
-func (l *reconnectLoop) wanted(id string) bool {
+func sidecarWanted(id string, rule ForwarderRule, loop uint64) bool {
 	sidecarsMu.Lock()
 	defer sidecarsMu.Unlock()
 	_, active := sidecars[id]
-	return sidecarLoops[id] == l && connectedChargers[id] && !active && ruleCurrent(id, l.rule)
-}
-
-// stopReconnectLoop ends the charger's re-dial loop, waking it from a backoff wait.
-// sidecarsMu must be held.
-func stopReconnectLoop(id string) {
-	if l, ok := sidecarLoops[id]; ok {
-		close(l.stop)
-		delete(sidecarLoops, id)
-	}
+	return sidecarLoops[id] == loop && connectedChargers[id] && !active && ruleCurrent(id, rule)
 }
 
 // ruleCurrent reports whether rule still is the rule in effect for id.
@@ -373,8 +345,7 @@ func onChargerConnect(ch ws.Channel) {
 
 // dialUpstreamSidecar dials and runs the loop's sidecar until upstream drops.
 // It returns how long the connection stayed up and whether it was established.
-func dialUpstreamSidecar(id string, l *reconnectLoop) (time.Duration, bool) {
-	rule := l.rule
+func dialUpstreamSidecar(id string, rule ForwarderRule, loop uint64) (time.Duration, bool) {
 	conn, err := dialUpstream(id, rule)
 	if err != nil {
 		forwarderLog.WARN.Printf("forwarder: dial upstream for %s: %v", id, err)
@@ -396,7 +367,7 @@ func dialUpstreamSidecar(id string, l *reconnectLoop) (time.Duration, bool) {
 
 	// install sidecar and drain the pending buffer, unless the loop was superseded while dialling
 	sidecarsMu.Lock()
-	if sidecarLoops[id] != l || !ruleCurrent(id, rule) {
+	if sidecarLoops[id] != loop || !ruleCurrent(id, rule) {
 		sidecarsMu.Unlock()
 		conn.CloseNow()
 		return 0, false
@@ -537,7 +508,7 @@ func onChargerDisconnect(ch ws.Channel) {
 
 	sidecarsMu.Lock()
 	delete(connectedChargers, id)
-	stopReconnectLoop(id)
+	delete(sidecarLoops, id)
 	sc, ok := sidecars[id]
 	if ok {
 		delete(sidecars, id)
