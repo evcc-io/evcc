@@ -2377,7 +2377,12 @@ func (lp *Loadpoint) publishSocAndRange() {
 		lp.publish(keys.VehicleLimitSoc, float64(*limitR))
 	}
 
-	limitSoc := min(apiLimitSoc, lp.EffectiveLimitSoc())
+	limitSoc := lp.EffectiveLimitSoc()
+	// an active plan slot charges past the session limit, see Update()
+	if lp.planActive {
+		limitSoc = max(limitSoc, lp.EffectivePlanSoc())
+	}
+	limitSoc = min(apiLimitSoc, limitSoc)
 	v := lp.GetVehicle()
 
 	lp.RLock()
