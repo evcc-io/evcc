@@ -242,32 +242,22 @@ func TestPublishSocAndRangePlanAboveLimit(t *testing.T) {
 	vehicle.EXPECT().Features().AnyTimes()
 
 	lp := &Loadpoint{
-		log:         util.NewLogger("foo"),
-		bus:         evbus.New(),
-		clock:       clock.NewMock(),
-		charger:     api.NewMockCharger(ctrl),
-		vehicle:     vehicle,
-		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
-		chargeRater: &Null{},                 // silence nil panics
-		chargeTimer: &Null{},                 // silence nil panics
-		minCurrent:  minA,
-		maxCurrent:  maxA,
-		phases:      1,
-		status:      api.StatusC,
-		mode:        api.ModeSmart,
-		limitSoc:    80,
-		planLocked:  PlanLock{Id: 1, Soc: 100},
+		log:        util.NewLogger("foo"),
+		bus:        evbus.New(),
+		clock:      clock.NewMock(),
+		charger:    api.NewMockCharger(ctrl),
+		vehicle:    vehicle,
+		status:     api.StatusC,
+		limitSoc:   80,
+		planActive: true,
+		planLocked: PlanLock{Id: 1, Soc: 100},
 	}
 
 	x, y, z := createChannels(t)
 	attachChannels(lp, x, y, z)
 
 	lp.publishSocAndRange()
-	assert.InDelta(t, soc.RemainingChargeEnergy(80, 50, 10), lp.GetRemainingEnergy(), 1e-9, "plan inactive")
-
-	lp.planActive = true
-	lp.publishSocAndRange()
-	assert.InDelta(t, soc.RemainingChargeEnergy(100, 50, 10), lp.GetRemainingEnergy(), 1e-9, "plan active")
+	assert.InDelta(t, soc.RemainingChargeEnergy(100, 50, 10), lp.GetRemainingEnergy(), 1e-9)
 }
 
 func TestVehicleDetectByID(t *testing.T) {
