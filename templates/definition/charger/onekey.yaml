@@ -22,6 +22,7 @@ requirements:
       broker is `localhost`.
 params:
   - preset: mqtt
+  - preset: mqtt-timeout
   - name: timeout
     default: 90s
     help:

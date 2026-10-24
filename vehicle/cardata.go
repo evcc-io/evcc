@@ -33,7 +33,6 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 		Stream        string
 		mqtt.Config   `mapstructure:",squash"`
 		Topic         string
-		Timeout       time.Duration // rendered by the mqtt template preset, unused
 	}{
 		Stream: "bmw",
 		Topic:  "bmw/raw/+",
