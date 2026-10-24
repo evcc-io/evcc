@@ -1016,12 +1016,12 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		limited = lp.roundedCurrent(limited)
 		if minCurrent := lp.effectiveMinCurrent(); limited < minCurrent && current >= minCurrent {
 			// a charging loadpoint measures below its nominal request, so on a full circuit the gap
-			// alone would cap it below min current; keep min current unless the circuit is actually over limit (#34845)
+			// alone would cap it below min current; keep min current unless the circuit is actually over limit
 			minPower := grid.CurrentToPower(minCurrent, activePhases)
 			if lp.charging() && lp.offeredCurrent >= minCurrent &&
 				lp.circuit.ValidateCurrent(minCurrent, minCurrent) >= minCurrent &&
 				lp.circuit.ValidatePower(minPower, minPower) >= minPower {
-				limited = minCurrent
+				limited = lp.roundedCurrent(minCurrent)
 			} else {
 				lp.log.DEBUG.Printf("circuit limit %.3gA below min current %.3gA", limited, minCurrent)
 			}

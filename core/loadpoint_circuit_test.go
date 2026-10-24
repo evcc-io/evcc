@@ -11,7 +11,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// A charging loadpoint measuring below its offer on a full circuit keeps its min current (#34845)
+// A charging loadpoint measuring below its offer on a full circuit keeps its min current
 func TestSetLimitCircuitKeepsMinCurrent(t *testing.T) {
 	for _, tc := range []struct {
 		name     string
