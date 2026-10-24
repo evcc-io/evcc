@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/bmw/cardata"
 )
@@ -24,10 +25,13 @@ func init() {
 
 // NewCardataFromConfig creates a new BMW/Mini CarData vehicle
 func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
-	var cc struct {
-		embed         `mapstructure:",squash"`
-		ClientID, VIN string
-		Cache         time.Duration // 50 requests per day
+	cc := struct {
+		embed                         `mapstructure:",squash"`
+		ClientID, VIN                 string
+		Cache                         time.Duration // 50 requests per day
+		Broker, User, Password, Topic string
+	}{
+		Topic: "bmw/raw/+",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -44,16 +48,14 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 	}
 
 	if cc.Cache == 0 {
-		// for non-streaming use 15m, access controlled by loadpoint
-		isStreaming := slices.Contains(cc.embed.Features(), api.Streaming)
-		cc.Cache = map[bool]time.Duration{false: 15 * time.Minute, true: 30 * time.Minute}[isStreaming]
+		cc.Cache = cardataCache(cc.Broker != "", slices.Contains(cc.embed.Features(), api.Streaming))
 	}
 
 	v := &Cardata{
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("cardata").Redact(cc.ClientID, cc.VIN)
+	log := util.NewLogger("cardata").Redact(cc.ClientID, cc.VIN, cc.Password)
 
 	authCtx := util.WithLogger(context.Background(), log)
 	ts, err := cardata.NewOAuth(authCtx, cc.ClientID, cc.embed.GetTitle())
@@ -63,7 +65,36 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 
 	api := cardata.NewAPI(log, ts)
 
-	v.Provider = cardata.NewProvider(ctx, log, api, ts, cc.ClientID, cc.VIN, cc.Cache)
+	var conn *cardata.MqttConnector
+	if cc.Broker != "" {
+		conn, err = cardata.NewBrokerConnector(log, mqtt.Config{
+			Broker:   cc.Broker,
+			User:     cc.User,
+			Password: cc.Password,
+		}, cc.Topic)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		conn = cardata.NewMqttConnector(context.Background(), log, cc.ClientID, ts)
+	}
+
+	v.Provider = cardata.NewProvider(ctx, log, api, ts, conn, cc.VIN, cc.Cache)
 
 	return v, nil
+}
+
+// cardataCache returns the default REST cache duration
+func cardataCache(broker, streaming bool) time.Duration {
+	// the tool feeding the broker shares the 50 requests per day
+	if broker {
+		return 2 * time.Hour
+	}
+
+	// for non-streaming use 15m, access controlled by loadpoint
+	if streaming {
+		return 30 * time.Minute
+	}
+
+	return 15 * time.Minute
 }

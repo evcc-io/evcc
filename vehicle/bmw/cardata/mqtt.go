@@ -15,7 +15,9 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/eclipse/paho.mqtt.golang/packets"
 	"github.com/evcc-io/evcc/api"
+	pluginmqtt "github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
@@ -91,6 +93,38 @@ func NewMqttConnector(ctx context.Context, log *util.Logger, clientID string, ts
 	mqttConnections[clientID] = v
 
 	return v
+}
+
+// NewBrokerConnector creates a connector that reads the unmodified CarData stream from a local broker
+func NewBrokerConnector(log *util.Logger, cc pluginmqtt.Config, topic string) (*MqttConnector, error) {
+	mqttMu.Lock()
+	defer mqttMu.Unlock()
+
+	// prefix keeps broker connectors apart from BMW connectors keyed by client id
+	key := fmt.Sprintf("broker:%s.%s:%s", cc.Broker, cc.User, topic)
+	if conn, ok := mqttConnections[key]; ok {
+		return conn, nil
+	}
+
+	v := &MqttConnector{
+		log:           log,
+		subscriptions: make(map[string][]subscription),
+	}
+
+	if !testing.Testing() {
+		client, err := pluginmqtt.RegisteredClientOrDefault(log, cc)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := client.Listen(topic, v.brokerHandler); err != nil {
+			return nil, err
+		}
+	}
+
+	mqttConnections[key] = v
+
+	return v, nil
 }
 
 func (v *MqttConnector) Subscribe(vin string) <-chan StreamingMessage {
@@ -207,6 +241,21 @@ func (v *MqttConnector) handler(_ mqtt.Client, m mqtt.Message) {
 
 	v.log.TRACE.Printf("recv %s: %s", m.Topic(), string(m.Payload()))
 
+	v.dispatch(res)
+}
+
+// brokerHandler skips foreign payloads quietly since a local broker topic may carry more than CarData envelopes
+func (v *MqttConnector) brokerHandler(payload string) {
+	var res StreamingMessage
+	if err := json.Unmarshal([]byte(payload), &res); err != nil || res.Vin == "" {
+		v.log.DEBUG.Printf("skip invalid message: %s", request.Truncate(payload))
+		return
+	}
+
+	v.dispatch(res)
+}
+
+func (v *MqttConnector) dispatch(res StreamingMessage) {
 	v.mu.RLock()
 	defer v.mu.RUnlock()
 

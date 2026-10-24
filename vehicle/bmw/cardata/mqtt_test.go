@@ -7,6 +7,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	pluginmqtt "github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
 )
@@ -63,6 +64,40 @@ func TestMqttMultiSubscribe(t *testing.T) {
 
 	conn.Unsubscribe("wba12345", ch2)
 	require.Empty(t, conn.subscriptions)
+}
+
+func TestBrokerConnector(t *testing.T) {
+	cc := pluginmqtt.Config{Broker: t.Name()}
+
+	conn, err := NewBrokerConnector(util.NewLogger("foo"), cc, "bmw/raw/+")
+	require.NoError(t, err)
+
+	same, err := NewBrokerConnector(util.NewLogger("foo"), cc, "bmw/raw/+")
+	require.NoError(t, err)
+	require.Same(t, conn, same, "connector not shared")
+
+	// a bmw connector using the broker url as client id must not share the entry
+	require.NotSame(t, conn, NewMqttConnector(context.TODO(), util.NewLogger("foo"), t.Name(), nil))
+
+	ch := conn.Subscribe("wba12345")
+
+	for _, payload := range []string{
+		"online",
+		`{"status":"connected"}`,
+		`{"vin":`,
+	} {
+		conn.brokerHandler(payload)
+	}
+
+	conn.brokerHandler(string(message(t, "WBA12345").payload))
+
+	// invalid payloads are skipped, so the first message received is the valid one
+	require.Equal(t, "WBA12345", recv(t, ch).Vin)
+
+	conn.Unsubscribe("WBA12345", ch)
+
+	_, ok := <-ch
+	require.False(t, ok, "unexpected message")
 }
 
 func TestMqttUnboundedQueue(t *testing.T) {

@@ -31,6 +31,8 @@ requirements:
       Aktualisierung der Daten erfolgt einmalig bei Neustart und wenn Streamingdaten eingehen. Dies ist ausschließlich der Fall, wenn das Fahrzeug aktiv Daten erzeugt.
 
       Sollte die Fahrzeugerkennung nicht zuverlässig funktionieren, sollte `welcomecharge` (Laden bei Verbindung) aktiviert werden.
+
+      BMW erlaubt nur eine Streaming-Verbindung pro Konto. Wird diese bereits von einem anderen Tool genutzt, können die Streamingdaten optional von einem lokalen MQTT-Broker gelesen werden. Das Tool muss die CarData Nachrichten unverändert veröffentlichen, z.B. [bmw-mqtt-bridge](https://github.com/dj0abr/bmw-mqtt-bridge) mit Standardeinstellungen. Die Anmeldung mit `clientid` wird weiterhin für die REST-Abfragen benötigt.
     en: |
       Requires CarData activation in BMW/Mini portal. The following data points need to be configured for streaming access (the availability of data points may vary depending on the vehicle model):
 
@@ -54,6 +56,8 @@ requirements:
       Data will be updated on restart and when received using streaming. This only happens when the vehicle actively creates new updates.
 
       In case the vehicle detection does not work reliably, `welcomecharge` (charge on connection) should be enabled.
+
+      BMW allows only one streaming connection per account. If another tool already uses it, the streaming data can optionally be read from a local MQTT broker. The tool must publish the unmodified CarData messages, e.g. [bmw-mqtt-bridge](https://github.com/dj0abr/bmw-mqtt-bridge) with its default settings. Login with `clientid` is still required for REST requests.
 params:
   - preset: vehicle-common
   - name: vin
@@ -65,6 +69,38 @@ params:
     help:
       en: Enable if vehicle sends streaming updates during charging.
       de: Aktivieren falls das Fahrzeug Streaming Updates während des Ladevorgangs schickt.
+  - name: broker
+    advanced: true
+    description:
+      en: MQTT broker
+      de: MQTT-Broker
+    help:
+      en: Read the streaming data from this local MQTT broker instead of BMW. Leave empty to connect to BMW directly.
+      de: Streamingdaten von diesem lokalen MQTT-Broker statt von BMW lesen. Leer lassen, um direkt mit BMW zu verbinden.
+    example: 192.168.1.10:1883
+  - name: user
+    advanced: true
+    help:
+      en: MQTT broker username
+      de: Benutzername für den MQTT-Broker
+  - name: password
+    advanced: true
+    help:
+      en: MQTT broker password
+      de: Passwort für den MQTT-Broker
+  - name: topic
+    advanced: true
+    default: bmw/raw/+
+    description:
+      generic: Topic
+    help:
+      en: Topic on the MQTT broker carrying the unmodified CarData messages
+      de: Topic auf dem MQTT-Broker mit den unveränderten CarData Nachrichten
+  - name: cache
+    example: 2h
+    help:
+      en: Time interval for REST data refresh. BMW allows 50 requests per day, shared with other tools using the same account. Default 15m, 30m with streaming, 2h with MQTT broker.
+      de: Zeitintervall für erneute REST-Datenabfrage. BMW erlaubt 50 Abfragen pro Tag, die mit anderen Tools am selben Konto geteilt werden. Standard 15m, 30m mit Streaming, 2h mit MQTT-Broker.
 auth:
   type: cardata
   params: [clientid]
@@ -72,5 +108,18 @@ render: |
   type: cardata
   vin: {{ .vin }}
   clientid: {{ .clientid }}
+  {{- if .broker }}
+  broker: {{ .broker }}
+  {{- if .user }}
+  user: {{ .user }}
+  {{- end }}
+  {{- if .password }}
+  password: {{ .password }}
+  {{- end }}
+  topic: {{ .topic }}
+  {{- end }}
+  {{- if .cache }}
+  cache: {{ .cache }}
+  {{- end }}
   {{ include "common" . }}
   {{ include "features" . }}
