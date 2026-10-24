@@ -7,19 +7,31 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestMqttPresetDefaultBroker verifies that an empty mqtt host omits the broker
-// so the evcc MQTT broker is used
-func TestMqttPresetDefaultBroker(t *testing.T) {
+// TestMqttPresetBroker verifies the rendered broker. An empty host omits the
+// broker so the evcc MQTT broker is used, a host with port or scheme is kept.
+func TestMqttPresetBroker(t *testing.T) {
 	tmpl, err := ByName(Charger, "tinkerforge-warp3")
 	require.NoError(t, err)
 
-	b, _, err := tmpl.RenderResult(Charger, RenderModeInstance, map[string]any{"host": "192.168.0.8"})
-	require.NoError(t, err)
-	assert.Contains(t, string(b), "broker: 192.168.0.8:1883")
+	for _, tc := range []struct {
+		host, broker string
+	}{
+		{"", ""},
+		{"192.168.0.8", "192.168.0.8:1883"},
+		{"192.168.0.8:1884", "192.168.0.8:1884"},
+		{"tls://mqtt.example.com:8883", "tls://mqtt.example.com:8883"},
+	} {
+		t.Run(tc.host, func(t *testing.T) {
+			b, _, err := tmpl.RenderResult(Charger, RenderModeInstance, map[string]any{"host": tc.host})
+			require.NoError(t, err)
 
-	b, _, err = tmpl.RenderResult(Charger, RenderModeInstance, nil)
-	require.NoError(t, err)
-	assert.NotContains(t, string(b), "broker:")
+			if tc.broker == "" {
+				assert.NotContains(t, string(b), "broker:")
+			} else {
+				assert.Contains(t, string(b), "\nbroker: "+tc.broker+"\n")
+			}
+		})
+	}
 }
 
 // TestCardataMqttStream verifies that the mqtt preset is only rendered for the mqtt stream
