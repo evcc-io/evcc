@@ -48,7 +48,9 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 	}
 
 	if cc.Cache == 0 {
-		cc.Cache = cardataCache(cc.Broker != "", slices.Contains(cc.embed.Features(), api.Streaming))
+		// for non-streaming use 15m, access controlled by loadpoint
+		isStreaming := slices.Contains(cc.embed.Features(), api.Streaming)
+		cc.Cache = map[bool]time.Duration{false: 15 * time.Minute, true: 30 * time.Minute}[isStreaming]
 	}
 
 	v := &Cardata{
@@ -79,19 +81,4 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 	v.Provider = cardata.NewProvider(ctx, log, api, ts, conn, cc.VIN, cc.Cache)
 
 	return v, nil
-}
-
-// cardataCache returns the default REST cache duration
-func cardataCache(broker, streaming bool) time.Duration {
-	// the tool feeding the broker shares the 50 requests per day
-	if broker {
-		return 2 * time.Hour
-	}
-
-	// for non-streaming use 15m, access controlled by loadpoint
-	if streaming {
-		return 30 * time.Minute
-	}
-
-	return 15 * time.Minute
 }

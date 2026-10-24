@@ -97,10 +97,10 @@ params:
       en: Topic on the MQTT broker carrying the unmodified CarData messages
       de: Topic auf dem MQTT-Broker mit den unveränderten CarData-Nachrichten
   - name: cache
-    example: 2h
+    example: 30m
     help:
-      en: Time interval for REST data refresh. BMW allows 50 requests per day, shared with other tools using the same account. Default 15m, 30m with streaming, 2h with MQTT broker.
-      de: Zeitintervall für erneute REST-Datenabfrage. BMW erlaubt 50 Abfragen pro Tag, die mit anderen Tools am selben Konto geteilt werden. Standard 15m, 30m mit Streaming, 2h mit MQTT-Broker.
+      en: Time interval for REST data refresh. Default 15m, 30m with streaming. BMW allows 50 requests per day per account, raise it if other tools also use REST requests on the same account.
+      de: Zeitintervall für erneute REST-Datenabfrage. Standard 15m, 30m mit Streaming. BMW erlaubt 50 Abfragen pro Tag und Konto, bei REST-Abfragen weiterer Tools am selben Konto erhöhen.
 auth:
   type: cardata
   params: [clientid]
