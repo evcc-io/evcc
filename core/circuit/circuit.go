@@ -37,8 +37,8 @@ type Circuit struct {
 	current float64
 	power   float64
 
-	hems      api.HEMS // only set on the root circuit, supplies the HEMS consumption cap
-	peakLimit float64  // only set on the root circuit, grid import peak target
+	hems api.HEMS               // only set on the root circuit, supplies the HEMS consumption cap
+	peak api.ConsumptionLimiter // only set on the root circuit, supplies the grid import peak target
 
 	currentUpdated time.Time
 	powerUpdated   time.Time
@@ -210,30 +210,27 @@ func (c *Circuit) effectiveMaxPower() float64 {
 	res := c.GetMaxPower()
 
 	c.mu.RLock()
-	limits := []float64{c.peakLimit}
+	limiters := []api.ConsumptionLimiter{c.hems, c.peak}
 	c.mu.RUnlock()
 
-	if c.hems != nil {
-		if limit := c.hems.MaxConsumptionPower(); limit != nil {
-			limits = append(limits, *limit)
-		}
-	}
-
 	// unconfigured max power or limit means unlimited
-	for _, limit := range limits {
-		if limit > 0 && (res <= 0 || limit < res) {
-			res = limit
+	for _, l := range limiters {
+		if l == nil {
+			continue
+		}
+		if limit := l.MaxConsumptionPower(); limit != nil && *limit > 0 && (res <= 0 || *limit < res) {
+			res = *limit
 		}
 	}
 
 	return res
 }
 
-// SetPeakLimit sets the grid import peak target, 0 = none. Valid on root circuit only.
-func (c *Circuit) SetPeakLimit(power float64) {
+// SetPeakLimiter attaches the grid import peak target. Valid on root circuit only.
+func (c *Circuit) SetPeakLimiter(peak api.ConsumptionLimiter) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.peakLimit = power
+	c.peak = peak
 }
 
 // SetMaxPower sets the max power

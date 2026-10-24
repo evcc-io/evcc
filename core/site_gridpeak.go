@@ -82,7 +82,7 @@ func (p *gridPeak) peak(ts time.Time) float64 {
 	return p.Power
 }
 
-// updateGridPeak tracks the month's grid import peak and limits the root circuit to the resulting target
+// updateGridPeak tracks the month's grid import peak and the resulting target
 func (site *Site) updateGridPeak(now time.Time) {
 	if slices.Contains(gridPeakCountries, site.GetCountry()) {
 		site.Lock()
@@ -100,9 +100,25 @@ func (site *Site) updateGridPeak(now time.Time) {
 		site.publish(keys.GridPeak, peak.peak(now))
 	}
 
-	if site.circuit != nil {
-		site.circuit.SetPeakLimit(site.gridPeakLimit(now))
-	}
+	target := site.gridPeakLimit(now)
+
+	site.Lock()
+	site.gridPeakTarget = target
+	site.Unlock()
+}
+
+// gridPeakLimiter supplies the grid import target to the root circuit
+type gridPeakLimiter struct {
+	site *Site
+}
+
+var _ api.ConsumptionLimiter = gridPeakLimiter{}
+
+func (l gridPeakLimiter) MaxConsumptionPower() *float64 {
+	l.site.RLock()
+	defer l.site.RUnlock()
+	res := l.site.gridPeakTarget
+	return &res
 }
 
 // gridPeakLimit returns the grid import target, the month's peak floored at the baseline, 0 = none
