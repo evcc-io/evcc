@@ -364,10 +364,11 @@ func TestFilterValidTemplateParams(t *testing.T) {
 		"usage":         "grid",
 		"capacity":      50.0,
 		"power":         100.0,
+		"master":        "db:2",
 		"outdatedField": "should-be-removed",
 	}
 
-	result := filterValidTemplateParams(&templates.Template{
+	result := filterValidTemplateParams(templates.Meter, &templates.Template{
 		Params: []templates.Param{
 			{Name: "usage"},
 			{Name: "power"},
@@ -377,5 +378,6 @@ func TestFilterValidTemplateParams(t *testing.T) {
 
 	assert.Equal(t, "generic", result["template"], "template")
 	assert.Equal(t, "grid", result["usage"], "usage")
+	assert.Equal(t, "db:2", result["master"], "master")
 	assert.NotContains(t, result, "outdatedField")
 }
