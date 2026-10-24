@@ -37,7 +37,8 @@ type Circuit struct {
 	current float64
 	power   float64
 
-	hems api.HEMS // only set on the root circuit, supplies the HEMS consumption cap
+	hems      api.HEMS // only set on the root circuit, supplies the HEMS consumption cap
+	peakLimit float64  // only set on the root circuit, grid import peak target
 
 	currentUpdated time.Time
 	powerUpdated   time.Time
@@ -203,25 +204,36 @@ func (c *Circuit) GetMaxPower() float64 {
 }
 
 // EffectiveMaxPower returns the configured max power clamped by the HEMS
-// consumption limit. Only the root circuit applies the HEMS clamp; non-root
-// callers walk up the parent chain via ValidatePower.
+// consumption limit and the grid import peak target. Only the root circuit
+// applies these clamps; non-root callers walk up the parent chain via ValidatePower.
 func (c *Circuit) EffectiveMaxPower() float64 {
-	maxPower := c.GetMaxPower()
-	if c.hems == nil {
-		return maxPower
+	res := c.GetMaxPower()
+
+	c.mu.RLock()
+	limits := []float64{c.peakLimit}
+	c.mu.RUnlock()
+
+	if c.hems != nil {
+		if limit := c.hems.MaxConsumptionPower(); limit != nil {
+			limits = append(limits, *limit)
+		}
 	}
 
-	hemsLimit := c.hems.MaxConsumptionPower()
-	if hemsLimit == nil || *hemsLimit <= 0 {
-		return maxPower
+	// unconfigured max power or limit means unlimited
+	for _, limit := range limits {
+		if limit > 0 && (res <= 0 || limit < res) {
+			res = limit
+		}
 	}
 
-	// unconfigured maxPower means unlimited, so the HEMS limit applies alone
-	if maxPower <= 0 {
-		return *hemsLimit
-	}
+	return res
+}
 
-	return min(*hemsLimit, maxPower)
+// SetPeakLimit sets the grid import peak target, 0 = none. Valid on root circuit only.
+func (c *Circuit) SetPeakLimit(power float64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.peakLimit = power
 }
 
 // SetMaxPower sets the max power

@@ -419,6 +419,33 @@ func (site *Site) SetResidualPower(power float64) error {
 	return nil
 }
 
+// GetGridPeakBaseline returns the grid import peak target floor in W (0 = disabled)
+func (site *Site) GetGridPeakBaseline() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.gridPeakBaseline
+}
+
+// SetGridPeakBaseline sets the grid import peak target floor in W (0 = disabled)
+func (site *Site) SetGridPeakBaseline(power float64) error {
+	if power < 0 {
+		return fmt.Errorf("invalid grid peak baseline: %g", power)
+	}
+
+	site.Lock()
+	changed := site.gridPeakBaseline != power
+	site.gridPeakBaseline = power
+	site.Unlock()
+
+	if changed {
+		site.log.DEBUG.Println("set grid peak baseline:", power)
+		settings.SetFloat(keys.GridPeakBaseline, power)
+		site.publish(keys.GridPeakBaseline, power)
+	}
+
+	return nil
+}
+
 // GetGridExportLimit returns the static grid export power limit in W (0 = disabled)
 func (site *Site) GetGridExportLimit() float64 {
 	site.RLock()
