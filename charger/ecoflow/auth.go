@@ -48,10 +48,10 @@ func (r response) error() error {
 }
 
 // Login authenticates like the EcoFlow app and fetches the MQTT credentials.
-// The token and the MQTT credentials are added to the logger's redaction list.
-func Login(log *util.Logger, email, password string) (*Session, error) {
+// redact receives the token and the MQTT credentials of each login, replacing
+// those of the previous one; the caller redacts email and password.
+func Login(log *util.Logger, redact func(...string), email, password string) (*Session, error) {
 	encoded := base64.StdEncoding.EncodeToString([]byte(password))
-	log.Redact(email, password, encoded)
 
 	// request.Helper would trace the token and user ID before they are redacted
 	client := &request.Helper{Client: &http.Client{Timeout: request.Timeout, Transport: transport.Default()}}
@@ -63,13 +63,13 @@ func Login(log *util.Logger, email, password string) (*Session, error) {
 			errs = append(errs, fmt.Errorf("%s: %w", base, err))
 			continue
 		}
-		log.Redact(token)
+		redact(token)
 
 		account, mqttPassword, err := certificate(client, base, token)
 		if err != nil {
 			return nil, fmt.Errorf("certificate: %w", err)
 		}
-		log.Redact(account, mqttPassword)
+		redact(token, account, mqttPassword)
 		log.DEBUG.Printf("logged in at %s", base)
 
 		return &Session{UserID: userID, Account: account, Password: mqttPassword, Base: base, Token: token}, nil

@@ -3,6 +3,7 @@
 package ecoflow
 
 import (
+	"context"
 	"crypto/md5"
 	"errors"
 	"fmt"
@@ -56,8 +57,21 @@ func dial(log *util.Logger, session *Session, app AppKey, onLost func(error)) (T
 	})
 
 	client := paho.NewClient(opts)
+	if err := connect(client, request.Timeout); err != nil {
+		return nil, err
+	}
+	log.DEBUG.Printf("connected to %s", brokerURL)
+
+	return &pahoTransport{client: client}, nil
+}
+
+// connect connects client within timeout. On failure it disconnects the
+// client, which would otherwise finish connecting in the background and hold
+// a second session of the account.
+func connect(client paho.Client, timeout time.Duration) error {
 	token := client.Connect()
-	if err := wait(token); err != nil {
+	if err := waitTimeout(token, timeout); err != nil {
+		client.Disconnect(0)
 		if ct, ok := token.(*paho.ConnectToken); ok {
 			switch code := ct.ReturnCode(); code {
 			case packets.Accepted, packets.ErrNetworkError, packets.ErrProtocolViolation:
@@ -66,18 +80,25 @@ func dial(log *util.Logger, session *Session, app AppKey, onLost func(error)) (T
 				err = &ConnackError{Code: code}
 			}
 		}
-		return nil, fmt.Errorf("connect: %w", err)
+		return fmt.Errorf("connect: %w", err)
 	}
-	log.DEBUG.Printf("connected to %s", brokerURL)
-
-	return &pahoTransport{client: client}, nil
+	return nil
 }
 
-func wait(token paho.Token) error {
-	if !token.WaitTimeout(request.Timeout) {
+func waitTimeout(token paho.Token, timeout time.Duration) error {
+	if !token.WaitTimeout(timeout) {
 		return errors.New("timeout")
 	}
 	return token.Error()
+}
+
+func wait(ctx context.Context, token paho.Token) error {
+	select {
+	case <-token.Done():
+		return token.Error()
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 // Close disconnects from the broker.
@@ -87,12 +108,12 @@ func (t *pahoTransport) Close() {
 
 // Subscribe implements Transport.
 func (t *pahoTransport) Subscribe(topic string, qos byte, handler func([]byte)) error {
-	return wait(t.client.Subscribe(topic, qos, func(_ paho.Client, msg paho.Message) {
+	return waitTimeout(t.client.Subscribe(topic, qos, func(_ paho.Client, msg paho.Message) {
 		handler(msg.Payload())
-	}))
+	}), request.Timeout)
 }
 
 // Publish implements Transport.
-func (t *pahoTransport) Publish(topic string, qos byte, payload []byte) error {
-	return wait(t.client.Publish(topic, qos, false, payload))
+func (t *pahoTransport) Publish(ctx context.Context, topic string, qos byte, payload []byte) error {
+	return wait(ctx, t.client.Publish(topic, qos, false, payload))
 }

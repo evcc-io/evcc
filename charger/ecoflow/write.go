@@ -3,7 +3,6 @@ package ecoflow
 import (
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -15,68 +14,34 @@ type Update struct {
 	Settings  *Settings  // 241/44, only while the EcoFlow app is active
 }
 
-// Confirmation reports whether an update shows that a write took effect.
-type Confirmation func(Update) bool
+// Settle times after a command, during which telemetry may still show the old
+// state. On hardware a start showed after 4-13 s (44 s after a phase switch), a
+// stop under 2 s and a setting after 1.5 s in 241/44, with stale reports before.
+const (
+	startSettle    = 60 * time.Second
+	stopSettle     = 30 * time.Second
+	settingsSettle = 10 * time.Second
+)
 
-// waiters are the writes waiting for their confirmation.
-type waiters struct {
-	mu   sync.Mutex
-	list []*waiter
+// command is the last value written to the wallbox.
+type command[T comparable] struct {
+	value T
+	at    time.Time
+	ok    bool
+	open  bool // neither confirmed nor contradicted yet
 }
 
-type waiter struct {
-	confirmed Confirmation
-	done      chan struct{}
+// overrides reports whether telemetry received at is late enough to show the
+// outcome of the command.
+func (c command[T]) overrides(at time.Time, settle time.Duration) bool {
+	return !c.ok || at.Sub(c.at) >= settle
 }
 
-// add registers a waiter that is released by the first matching update.
-func (ws *waiters) add(confirmed Confirmation) *waiter {
-	w := &waiter{confirmed: confirmed, done: make(chan struct{})}
-	ws.mu.Lock()
-	defer ws.mu.Unlock()
-	ws.list = append(ws.list, w)
-	return w
-}
-
-// remove unregisters w.
-func (ws *waiters) remove(w *waiter) {
-	ws.mu.Lock()
-	defer ws.mu.Unlock()
-	for i, x := range ws.list {
-		if x == w {
-			ws.list = append(ws.list[:i], ws.list[i+1:]...)
-			return
-		}
-	}
-}
-
-// notify releases and removes every waiter the update confirms.
-func (ws *waiters) notify(u Update) {
-	ws.mu.Lock()
-	defer ws.mu.Unlock()
-	keep := ws.list[:0]
-	for _, w := range ws.list {
-		if w.confirmed(u) {
-			close(w.done)
-		} else {
-			keep = append(keep, w)
-		}
-	}
-	ws.list = keep
-}
-
-// write publishes a command to the gateway and, unless confirmed is nil, waits
-// for telemetry after the publish that satisfies it; else api.ErrTimeout.
-func (wb *Wallbox) write(name string, payload func(seq uint64) []byte, confirmed Confirmation, timeout time.Duration) error {
+// write publishes a command to the gateway. It returns once the broker has
+// accepted it; the wallbox sends no reply, its effect shows in later telemetry.
+func (wb *Wallbox) write(name string, payload func(seq uint64) []byte) error {
 	if wb.gateway == "" {
 		return errors.New("missing gateway serial")
-	}
-
-	// register before publishing, the confirmation may arrive before Publish returns
-	var w *waiter
-	if confirmed != nil {
-		w = wb.waiters.add(confirmed)
-		defer wb.waiters.remove(w)
 	}
 
 	seq := wb.conn.nextSeq()
@@ -85,32 +50,18 @@ func (wb *Wallbox) write(name string, payload func(seq uint64) []byte, confirmed
 	wb.log.TRACE.Printf("%s: send %x", wb.serial, frame)
 
 	topic := fmt.Sprintf("/app/%s/%s/thing/property/set", wb.conn.userID, wb.gateway)
-	if err := wb.conn.transport.Publish(topic, 1, frame); err != nil {
-		return fmt.Errorf("publish: %w", err)
+	if err := wb.conn.publish(topic, frame); err != nil {
+		return fmt.Errorf("publish %s: %w", name, err)
 	}
 
-	if w == nil {
-		wb.log.DEBUG.Printf("%s: %s sent, not awaiting confirmation", wb.serial, name)
-		return nil
-	}
-
-	start := time.Now()
-	select {
-	case <-w.done:
-		wb.log.DEBUG.Printf("%s: %s confirmed after %v", wb.serial, name, time.Since(start).Round(time.Millisecond))
-		return nil
-	case <-time.After(timeout):
-		wb.log.WARN.Printf("%s: %s not confirmed within %v", wb.serial, name, timeout)
-		return api.ErrTimeout
-	}
+	return nil
 }
 
-// StartStop starts (241/100 selector 2) or stops (selector 1) charging and waits
-// for a heartbeat showing it. It does not write when already in that state.
-func (wb *Wallbox) StartStop(start bool, timeout time.Duration) error {
-	hb, ok := wb.latest()
-	if ok && hb.State.Enabled() == start {
-		wb.log.DEBUG.Printf("%s: already enabled=%t (state %d), not sending", wb.serial, start, hb.State)
+// StartStop starts (241/100 selector 2) or stops (selector 1) charging. It
+// does not write when Enabled already reports that state.
+func (wb *Wallbox) StartStop(start bool) error {
+	if enabled, err := wb.Enabled(); err == nil && enabled == start {
+		wb.log.DEBUG.Printf("%s: already enabled=%t, not sending", wb.serial, start)
 		return nil
 	}
 
@@ -118,50 +69,97 @@ func (wb *Wallbox) StartStop(start bool, timeout time.Duration) error {
 	if start {
 		selector = 2
 	}
-	payload := func(seq uint64) []byte {
+
+	if err := wb.write(fmt.Sprintf("enable=%t", start), func(seq uint64) []byte {
 		return BuildStartStop(wb.serial, selector, seq)
+	}); err != nil {
+		return err
 	}
 
-	// without a vehicle the start cannot show, so it is not awaited
-	name := fmt.Sprintf("enable=%t", start)
-	if ok && hb.State == StateUnplugged {
-		return wb.write(name, payload, nil, 0)
+	wb.mu.Lock()
+	wb.release = command[bool]{value: start, at: wb.conn.clock.Now(), ok: true}
+	wb.mu.Unlock()
+
+	return nil
+}
+
+// Enabled reports whether charging is released. It follows the last start or
+// stop until a later heartbeat shows charging or a stop unambiguously; a
+// plugged, idle wallbox (state 2) may be either.
+func (wb *Wallbox) Enabled() (bool, error) {
+	hb, err := wb.heartbeat.Get()
+	if err != nil {
+		return false, err
 	}
 
-	return wb.write(name, payload, func(u Update) bool {
-		return u.Heartbeat != nil && u.Heartbeat.State.Enabled() == start
-	}, timeout)
+	wb.mu.Lock()
+	cmd, at := wb.release, wb.seen
+	wb.mu.Unlock()
+
+	settle := stopSettle
+	if cmd.value {
+		settle = startSettle
+	}
+
+	if cmd.overrides(at, settle) {
+		switch {
+		case hb.State.Enabled():
+			return true, nil
+		case hb.State == StateStoppedByWallbox:
+			return false, nil
+		}
+	}
+
+	return cmd.ok && cmd.value, nil
 }
 
 // SetMaxCurrent writes the maximum charge current in 0.1 A (241/102 settings
-// field 3) and waits for 241/44 or heartbeat field 18 to show it.
-func (wb *Wallbox) SetMaxCurrent(raw uint64, timeout time.Duration) error {
-	return wb.write(fmt.Sprintf("maxcurrent=%.1fA", float64(raw)/10), func(seq uint64) []byte {
+// field 3).
+func (wb *Wallbox) SetMaxCurrent(raw uint64) error {
+	if err := wb.write(fmt.Sprintf("maxcurrent=%.1fA", float64(raw)/10), func(seq uint64) []byte {
 		return BuildMaxCurrentSet(wb.serial, wb.gateway, raw, seq)
-	}, func(u Update) bool {
-		switch {
-		case u.Settings != nil:
-			return u.Settings.MaxCurrentRaw == raw
-		case u.Heartbeat != nil:
-			return u.Heartbeat.MaxCurrentRaw == raw
-		default:
-			return false
-		}
-	}, timeout)
+	}); err != nil {
+		return err
+	}
+
+	wb.mu.Lock()
+	wb.current = command[uint64]{value: raw, at: wb.conn.clock.Now(), ok: true}
+	wb.mu.Unlock()
+
+	return nil
 }
 
-// SetPhaseMode writes PhaseOne or PhaseThree (241/102 settings field 5) and waits
-// for 241/44 or heartbeat field 21 to show it. It does not write when already set.
-func (wb *Wallbox) SetPhaseMode(mode uint64, timeout time.Duration) error {
-	// field 21 is the phase count in effect: 1 = one phase, 0 = three phases
-	// (on hardware 2026-10-24 also after a written 3p)
-	var effective uint64
-	switch mode {
-	case PhaseOne:
-		effective = 1
-	case PhaseThree:
-		effective = 0
+// MaxCurrent returns the maximum charge current in 0.1 A: from 241/44 or
+// heartbeat field 18 once they can show the last write, else the written value.
+func (wb *Wallbox) MaxCurrent() (uint64, error) {
+	hb, err := wb.heartbeat.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	wb.mu.Lock()
+	cmd, hbAt := wb.current, wb.seen
+	wb.mu.Unlock()
+
+	if s, at, ok := wb.latestSettings(); ok && cmd.overrides(at, settingsSettle) {
+		return s.MaxCurrentRaw, nil
+	}
+
+	switch {
+	case hb.MaxCurrentRaw > 0 && cmd.overrides(hbAt, settingsSettle):
+		return hb.MaxCurrentRaw, nil
+	case cmd.ok:
+		return cmd.value, nil
 	default:
+		return 0, api.ErrNotAvailable
+	}
+}
+
+// SetPhaseMode writes PhaseOne or PhaseThree (241/102 settings field 5). It
+// does not write when telemetry already shows the mode. Whether the write took
+// effect is logged once telemetry shows it.
+func (wb *Wallbox) SetPhaseMode(mode uint64) error {
+	if mode != PhaseOne && mode != PhaseThree {
 		return fmt.Errorf("invalid phase mode: %d", mode)
 	}
 
@@ -170,24 +168,57 @@ func (wb *Wallbox) SetPhaseMode(mode uint64, timeout time.Duration) error {
 		return nil
 	}
 
-	return wb.write(fmt.Sprintf("phasemode=%d", mode), func(seq uint64) []byte {
+	if err := wb.write(fmt.Sprintf("phasemode=%d", mode), func(seq uint64) []byte {
 		return BuildPhaseSet(wb.serial, wb.gateway, mode, seq)
-	}, func(u Update) bool {
-		switch {
-		case u.Settings != nil:
-			return u.Settings.PhaseModeRaw == mode
-		case u.Heartbeat != nil:
-			return u.Heartbeat.HasPhaseMode && u.Heartbeat.PhaseModeRaw == effective
-		default:
-			return false
+	}); err != nil {
+		return err
+	}
+
+	wb.mu.Lock()
+	wb.phases = command[uint64]{value: mode, at: wb.conn.clock.Now(), ok: true, open: true}
+	wb.mu.Unlock()
+
+	return nil
+}
+
+// verifyPhases logs whether telemetry received at confirms or contradicts the
+// last phase write. Field 21 = 0 is reported in auto and in 3p alike, so
+// without 241/44 a 3p write can only be contradicted, never confirmed.
+func (wb *Wallbox) verifyPhases(u Update, at time.Time) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	cmd := wb.phases
+	if !cmd.open || !cmd.overrides(at, settingsSettle) {
+		return
+	}
+
+	var applied bool
+	switch {
+	case u.Settings != nil:
+		applied = u.Settings.PhaseModeRaw == cmd.value
+	case u.Heartbeat != nil && u.Heartbeat.HasPhaseMode:
+		one := u.Heartbeat.PhaseModeRaw == 1
+		if cmd.value == PhaseThree && !one {
+			return
 		}
-	}, timeout)
+		applied = one == (cmd.value == PhaseOne)
+	default:
+		return
+	}
+
+	wb.phases.open = false
+	if applied {
+		wb.log.DEBUG.Printf("%s: phase mode %d confirmed", wb.serial, cmd.value)
+	} else {
+		wb.log.WARN.Printf("%s: phase mode %d not applied by the wallbox", wb.serial, cmd.value)
+	}
 }
 
 // hasPhaseMode reports whether fresh telemetry shows mode selected. Field 21 = 0
 // is reported in auto and in 3p alike, so only a 241/44 report shows three phases.
 func (wb *Wallbox) hasPhaseMode(mode uint64) bool {
-	if s, ok := wb.latestSettings(); ok {
+	if s, _, ok := wb.latestSettings(); ok {
 		return s.PhaseModeRaw == mode
 	}
 

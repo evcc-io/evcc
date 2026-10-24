@@ -15,10 +15,6 @@ import (
 // gateway, controlled through the EcoFlow app MQTT broker.
 type EcoflowPowerPulse struct {
 	wb *ecoflow.Wallbox
-
-	// readback windows, on hardware: start 4-13 s, stop under 2 s, settings up to the next heartbeat (60 s)
-	startTimeout, stopTimeout        time.Duration
-	maxCurrentTimeout, phasesTimeout time.Duration
 }
 
 func init() {
@@ -75,13 +71,7 @@ func NewEcoflowPowerPulse(conn *ecoflow.Connection, serial, gateway string, time
 		return nil, err
 	}
 
-	return &EcoflowPowerPulse{
-		wb:                wb,
-		startTimeout:      60 * time.Second,
-		stopTimeout:       30 * time.Second,
-		maxCurrentTimeout: 70 * time.Second,
-		phasesTimeout:     70 * time.Second,
-	}, nil
+	return &EcoflowPowerPulse{wb: wb}, nil
 }
 
 // Status implements the api.Charger interface
@@ -99,7 +89,8 @@ func (c *EcoflowPowerPulse) Status() (api.ChargeStatus, error) {
 	case ecoflow.StateCharging:
 		return api.StatusC, nil
 	case ecoflow.StateError:
-		return api.StatusNone, errors.New("wallbox reports an error")
+		// evcc has no fault status, other chargers report faults as error too
+		return api.StatusNone, errors.New("wallbox fault (state 9)")
 	default:
 		return api.StatusNone, fmt.Errorf("unknown state: %d", hb.State)
 	}
@@ -107,31 +98,34 @@ func (c *EcoflowPowerPulse) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *EcoflowPowerPulse) Enabled() (bool, error) {
-	hb, err := c.wb.Heartbeat()
-	if err != nil {
-		return false, err
-	}
-
-	return hb.State.Enabled(), nil
+	return c.wb.Enabled()
 }
 
 // Enable implements the api.Charger interface
 func (c *EcoflowPowerPulse) Enable(enable bool) error {
-	timeout := c.stopTimeout
-	if enable {
-		timeout = c.startTimeout
-	}
-
-	return c.wb.StartStop(enable, timeout)
+	return c.wb.StartStop(enable)
 }
 
 // MaxCurrent implements the api.Charger interface
 func (c *EcoflowPowerPulse) MaxCurrent(current int64) error {
-	if current < 6 || current > 16 {
-		return fmt.Errorf("invalid current %d A, must be 6-16 A", current)
+	// 32 A as in 241/44; a lower limit of the wallbox shows in GetMaxCurrent
+	if current < 6 || current > 32 {
+		return fmt.Errorf("invalid current %d A, must be 6-32 A", current)
 	}
 
-	return c.wb.SetMaxCurrent(uint64(current*10), c.maxCurrentTimeout)
+	return c.wb.SetMaxCurrent(uint64(current * 10))
+}
+
+var _ api.CurrentGetter = (*EcoflowPowerPulse)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (c *EcoflowPowerPulse) GetMaxCurrent() (float64, error) {
+	raw, err := c.wb.MaxCurrent()
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(raw) / 10, nil
 }
 
 var _ api.PhaseSwitcher = (*EcoflowPowerPulse)(nil)
@@ -157,7 +151,7 @@ func (c *EcoflowPowerPulse) Phases1p3p(phases int) error {
 		return errors.New("cannot switch phases while charging")
 	}
 
-	return c.wb.SetPhaseMode(mode, c.phasesTimeout)
+	return c.wb.SetPhaseMode(mode)
 }
 
 var _ api.Meter = (*EcoflowPowerPulse)(nil)

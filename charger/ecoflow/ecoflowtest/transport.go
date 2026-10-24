@@ -3,6 +3,7 @@
 package ecoflowtest
 
 import (
+	"context"
 	_ "embed"
 	"encoding/hex"
 	"encoding/json"
@@ -47,7 +48,7 @@ func (t *Transport) Subscribe(topic string, qos byte, handler func([]byte)) erro
 }
 
 // Publish implements ecoflow.Transport.
-func (t *Transport) Publish(topic string, qos byte, payload []byte) error {
+func (t *Transport) Publish(_ context.Context, topic string, qos byte, payload []byte) error {
 	msg := Message{Topic: topic, Qos: qos, Payload: payload}
 
 	t.mu.Lock()

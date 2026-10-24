@@ -2,7 +2,6 @@ package charger
 
 import (
 	"bytes"
-	"strings"
 	"testing"
 	"time"
 
@@ -97,7 +96,7 @@ func TestEcoflowPowerPulseUnobservedStates(t *testing.T) {
 		require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.HeartbeatWithState(9)))
 
 		_, err := wb.Status()
-		assert.Error(t, err)
+		assert.ErrorContains(t, err, "fault")
 	}
 }
 
@@ -241,20 +240,6 @@ func TestEcoflowPowerPulseWithoutChargeReadings(t *testing.T) {
 	assert.Error(t, err)
 }
 
-// answerWrites makes the fake wallbox report telemetry (heartbeats or 241/44
-// settings reports) after every write, as the real one does once it executed
-// a command.
-func answerWrites(transport *ecoflowtest.Transport, heartbeats ...[]byte) {
-	transport.OnPublish(func(m ecoflowtest.Message) {
-		if !strings.HasSuffix(m.Topic, "/thing/property/set") {
-			return
-		}
-		for _, hb := range heartbeats {
-			_ = transport.Feed(powerPulseTelemetry, hb)
-		}
-	})
-}
-
 // writes returns the publishes after the initial get-all.
 func writes(transport *ecoflowtest.Transport) []ecoflowtest.Message {
 	return transport.Published()[1:]
@@ -263,7 +248,6 @@ func writes(transport *ecoflowtest.Transport) []ecoflowtest.Message {
 func TestEcoflowPowerPulseStop(t *testing.T) {
 	wb, transport := newTestPowerPulse(t, time.Minute)
 	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state3-3p")))
-	answerWrites(transport, ecoflowtest.Heartbeat("state6-3p"))
 
 	require.NoError(t, wb.Enable(false))
 
@@ -275,10 +259,8 @@ func TestEcoflowPowerPulseStopThenStart(t *testing.T) {
 	wb, transport := newTestPowerPulse(t, time.Minute)
 	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state3-3p")))
 
-	answerWrites(transport, ecoflowtest.Heartbeat("state6-3p"))
 	require.NoError(t, wb.Enable(false))
-
-	answerWrites(transport, ecoflowtest.Heartbeat("state3-3p"))
+	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state6-3p")))
 	require.NoError(t, wb.Enable(true))
 
 	assert.Equal(t, []ecoflowtest.Message{
@@ -288,77 +270,82 @@ func TestEcoflowPowerPulseStopThenStart(t *testing.T) {
 
 	enabled, err := wb.Enabled()
 	require.NoError(t, err)
-	assert.True(t, enabled)
+	assert.True(t, enabled, "the start is in effect before the wallbox reports it")
 }
 
-func TestEcoflowPowerPulseEnableReadback(t *testing.T) {
+// Enable publishes and returns: the loadpoint must not stall until the
+// wallbox reports the new state, which may take a minute.
+func TestEcoflowPowerPulseEnableDoesNotWait(t *testing.T) {
+	wb, transport := newTestPowerPulse(t, time.Minute)
+	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state6-3p")))
+
+	start := time.Now()
+	require.NoError(t, wb.Enable(true))
+	assert.Less(t, time.Since(start), 100*time.Millisecond)
+	assert.Len(t, writes(transport), 1)
+}
+
+// Enabled follows the last command. Telemetry overrides it only once the
+// wallbox had time to act and only when it shows charging or a stop: a
+// plugged, idle wallbox (state 2) may be released but not drawing.
+func TestEcoflowPowerPulseEnabledFollowsCommand(t *testing.T) {
 	tests := []struct {
 		name    string
-		before  string // heartbeat before the write
+		before  string // heartbeat before the command
 		enable  bool
-		answers []string // heartbeats after the write
-		err     error
+		after   time.Duration // when the next heartbeat arrives
+		answer  string
+		enabled bool
 	}{
-		{"stop confirmed", "state3-3p", false, []string{"state6-3p"}, nil},
-		{"start confirmed", "state6-3p", true, []string{"state3-3p"}, nil},
-		{"start confirmed by paused vehicle", "state6-3p", true, []string{"state5-3p"}, nil},
-		{"stale heartbeat, then confirmed", "state3-3p", false, []string{"state3-3p", "state6-3p"}, nil},
-		{"stop not confirmed", "state3-3p", false, nil, api.ErrTimeout},
-		{"start not confirmed", "state6-3p", true, nil, api.ErrTimeout},
-		{"only stale heartbeat", "state6-3p", true, []string{"state6-3p"}, api.ErrTimeout},
+		{"start, charging", "state6-3p", true, 10 * time.Second, "state3-3p", true},
+		{"start, not drawing yet", "state6-3p", true, 44 * time.Second, "state2-3p", true},
+		{"start, idle for long", "state6-3p", true, 5 * time.Minute, "state2-3p", true},
+		{"start, stale stop report", "state6-3p", true, 10 * time.Second, "state6-3p", true},
+		{"start, still stopped after 60 s", "state6-3p", true, 60 * time.Second, "state6-3p", false},
+		{"start, unplugged", "state6-3p", true, 5 * time.Minute, "state1-3p", true},
+		{"stop, stopped", "state3-3p", false, 2 * time.Second, "state6-3p", false},
+		{"stop, idle", "state3-3p", false, 2 * time.Second, "state2-3p", false},
+		{"stop, stale charging report", "state3-3p", false, 2 * time.Second, "state3-3p", false},
+		{"stop, still charging after 30 s", "state3-3p", false, 30 * time.Second, "state3-3p", true},
+		{"stop, paused by vehicle after 30 s", "state3-3p", false, 30 * time.Second, "state5-3p", true},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			wb, transport := newTestPowerPulse(t, time.Minute)
-			wb.startTimeout = 50 * time.Millisecond
-			wb.stopTimeout = 50 * time.Millisecond
-
+			clk := clock.NewMock()
+			wb, transport := newTestPowerPulseWithClock(t, 10*time.Minute, clk)
 			require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat(tc.before)))
 
-			var answers [][]byte
-			for _, name := range tc.answers {
-				answers = append(answers, ecoflowtest.Heartbeat(name))
-			}
-			answerWrites(transport, answers...)
+			require.NoError(t, wb.Enable(tc.enable))
+			require.Len(t, writes(transport), 1)
 
-			err := wb.Enable(tc.enable)
-			if tc.err == nil {
-				assert.NoError(t, err)
-			} else {
-				assert.ErrorIs(t, err, tc.err)
-			}
+			enabled, err := wb.Enabled()
+			require.NoError(t, err)
+			assert.Equal(t, tc.enable, enabled, "right after the command")
+
+			clk.Add(tc.after)
+			require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat(tc.answer)))
+
+			enabled, err = wb.Enabled()
+			require.NoError(t, err)
+			assert.Equal(t, tc.enabled, enabled)
 		})
 	}
 }
 
-// Start and stop have their own readback windows: on hardware a start took
-// up to 13 s to show, a stop under 2 s.
-func TestEcoflowPowerPulseEnableTimeouts(t *testing.T) {
-	wb, transport := newTestPowerPulse(t, time.Minute)
-	assert.Equal(t, 60*time.Second, wb.startTimeout)
-	assert.Equal(t, 30*time.Second, wb.stopTimeout)
-
-	// each command must give up after its own window, not the other one
-	expectTimeoutWithin := func(enable bool) {
-		t.Helper()
-		start := time.Now()
-		assert.ErrorIs(t, wb.Enable(enable), api.ErrTimeout)
-		assert.Less(t, time.Since(start), time.Second)
-	}
-
-	wb.startTimeout = 3 * time.Second
-	wb.stopTimeout = 10 * time.Millisecond
-	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state3-3p")))
-	expectTimeoutWithin(false)
-
-	wb.startTimeout = 10 * time.Millisecond
-	wb.stopTimeout = 3 * time.Second
+func TestEcoflowPowerPulseEnabledOutdated(t *testing.T) {
+	clk := clock.NewMock()
+	wb, transport := newTestPowerPulseWithClock(t, time.Minute, clk)
 	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state6-3p")))
-	expectTimeoutWithin(true)
+	require.NoError(t, wb.Enable(true))
+
+	clk.Add(time.Minute + time.Second)
+	_, err := wb.Enabled()
+	assert.ErrorIs(t, err, api.ErrOutdated)
 }
 
-// A wallbox already in the requested state gets no write, so no confirmation is awaited.
+// Without a command the state decides, and a wallbox already in the requested
+// state gets no write.
 func TestEcoflowPowerPulseEnableAlreadyInState(t *testing.T) {
 	tests := []struct {
 		before string
@@ -374,8 +361,6 @@ func TestEcoflowPowerPulseEnableAlreadyInState(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.before, func(t *testing.T) {
 			wb, transport := newTestPowerPulse(t, time.Minute)
-			wb.startTimeout = 200 * time.Millisecond
-			wb.stopTimeout = 200 * time.Millisecond
 			require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat(tc.before)))
 
 			require.NoError(t, wb.Enable(tc.enable))
@@ -384,22 +369,34 @@ func TestEcoflowPowerPulseEnableAlreadyInState(t *testing.T) {
 	}
 }
 
-// Without a vehicle the wallbox cannot start, so the start is sent but not awaited.
+// A released wallbox that does not draw (state 2) must still get the stop.
+func TestEcoflowPowerPulseStopReleasedIdleWallbox(t *testing.T) {
+	wb, transport := newTestPowerPulse(t, time.Minute)
+	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state6-3p")))
+	require.NoError(t, wb.Enable(true))
+	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state2-3p")))
+
+	require.NoError(t, wb.Enable(false))
+	assert.Equal(t, []ecoflowtest.Message{
+		ecoflowtest.Write("start", 2),
+		ecoflowtest.Write("stop", 3),
+	}, writes(transport))
+}
+
+// Without a vehicle the wallbox cannot start; the start is sent all the same.
 func TestEcoflowPowerPulseStartWithoutVehicle(t *testing.T) {
 	wb, transport := newTestPowerPulse(t, time.Minute)
-	wb.startTimeout = 200 * time.Millisecond
 	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state1-3p")))
 
 	require.NoError(t, wb.Enable(true))
 	assert.Equal(t, []ecoflowtest.Message{ecoflowtest.Write("start", 2)}, writes(transport))
 }
 
-// The wallbox sends no set_reply; a confirming heartbeat alone suffices and
-// the charger subscribes to nothing but the telemetry topic.
+// The wallbox sends no set_reply; the charger subscribes to nothing but the
+// telemetry topic.
 func TestEcoflowPowerPulseNoSetReply(t *testing.T) {
 	wb, transport := newTestPowerPulse(t, time.Minute)
 	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state3-3p")))
-	answerWrites(transport, ecoflowtest.Heartbeat("state6-3p"))
 
 	require.NoError(t, wb.Enable(false))
 	assert.Equal(t, map[string]byte{powerPulseTelemetry: 0}, transport.Subscriptions())
@@ -410,98 +407,105 @@ func TestEcoflowPowerPulseMaxCurrent(t *testing.T) {
 		name    string
 		current int64
 		before  string // heartbeat before the write
-		answer  []byte // settings report after the write
 	}{
 		// 15 -> 10 A while charging, stage 4a
-		{"max-current-10", 10, "state3-3p-15a", ecoflowtest.Settings("max10")},
+		{"max-current-10", 10, "state3-3p-15a"},
 		// 10 -> 16 A while charging, stage 4b-7
-		{"max-current-16", 16, "state3-1p", ecoflowtest.Settings("max16")},
+		{"max-current-16", 16, "state3-1p"},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			wb, transport := newTestPowerPulse(t, time.Minute)
-			wb.maxCurrentTimeout = time.Second
 			require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat(tc.before)))
-			answerWrites(transport, tc.answer)
 
+			start := time.Now()
 			require.NoError(t, wb.MaxCurrent(tc.current))
+			assert.Less(t, time.Since(start), 100*time.Millisecond, "no wait for the readback")
 			assert.Equal(t, []ecoflowtest.Message{ecoflowtest.Write(tc.name, 2)}, writes(transport))
 		})
 	}
 }
 
-func TestEcoflowPowerPulseMaxCurrentOutOfRange(t *testing.T) {
-	for _, current := range []int64{0, 5, 17, 32} {
+// 6-32 A as 241/44 accepts it; the wallbox applies its own lower limit.
+func TestEcoflowPowerPulseMaxCurrentRange(t *testing.T) {
+	for current, valid := range map[int64]bool{0: false, 5: false, 6: true, 16: true, 20: true, 32: true, 33: false} {
 		wb, transport := newTestPowerPulse(t, time.Minute)
-		wb.maxCurrentTimeout = 50 * time.Millisecond
 		require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state3-3p")))
-		answerWrites(transport, ecoflowtest.Settings("max16"))
 
-		assert.Error(t, wb.MaxCurrent(current), "%d A", current)
-		assert.Empty(t, writes(transport), "%d A", current)
+		err := wb.MaxCurrent(current)
+		if valid {
+			assert.NoError(t, err, "%d A", current)
+			assert.Len(t, writes(transport), 1, "%d A", current)
+		} else {
+			assert.Error(t, err, "%d A", current)
+			assert.Empty(t, writes(transport), "%d A", current)
+		}
 	}
 }
 
-func TestEcoflowPowerPulseMaxCurrentReadback(t *testing.T) {
+// GetMaxCurrent reports the written current until telemetry can show the
+// write, then what the wallbox reports, so the loadpoint sees a dropped write.
+func TestEcoflowPowerPulseGetMaxCurrent(t *testing.T) {
 	tests := []struct {
 		name    string
-		current int64
-		before  string   // heartbeat before the write
-		answers [][]byte // telemetry after the write
-		err     error
+		write   int64         // 0: no write
+		after   time.Duration // from the write to the telemetry
+		answers [][]byte
+		current float64
 	}{
-		{"241/44", 10, "state3-3p-15a", [][]byte{ecoflowtest.Settings("max10")}, nil},
-		{"241/44 after stale report", 10, "state3-3p-15a", [][]byte{
-			ecoflowtest.Settings("max15"), ecoflowtest.Settings("no-params"), ecoflowtest.Settings("max10"),
-		}, nil},
-		{"heartbeat only, no 241/44", 16, "state3-1p", [][]byte{ecoflowtest.Heartbeat("state3-3p")}, nil},
-		{"heartbeat only, 10 A", 10, "state3-3p", [][]byte{ecoflowtest.Heartbeat("state3-1p")}, nil},
-		{"no readback", 10, "state3-3p-15a", nil, api.ErrTimeout},
-		{"only stale telemetry", 10, "state3-3p-15a", [][]byte{
-			ecoflowtest.Settings("max15"), ecoflowtest.Settings("no-params"), ecoflowtest.Heartbeat("state3-3p-15a"),
-		}, api.ErrTimeout},
-		// a matching heartbeat from before the write is no confirmation
-		{"already set, no telemetry after write", 10, "state3-1p", nil, api.ErrTimeout},
+		{"heartbeat field 18", 0, 0, [][]byte{ecoflowtest.Heartbeat("state3-1p")}, 10},
+		{"241/44 wins", 0, 0, [][]byte{ecoflowtest.Heartbeat("state3-3p"), ecoflowtest.Settings("max15")}, 15},
+		{"written, no telemetry yet", 10, 0, nil, 10},
+		{"written, stale 241/44", 10, time.Second, [][]byte{ecoflowtest.Settings("max15")}, 10},
+		{"written, stale heartbeat", 10, time.Second, [][]byte{ecoflowtest.Heartbeat("state3-3p")}, 10},
+		{"written, 241/44 confirms", 10, 10 * time.Second, [][]byte{ecoflowtest.Settings("max10")}, 10},
+		{"written, 241/44 contradicts", 10, 10 * time.Second, [][]byte{ecoflowtest.Settings("max15")}, 15},
+		{"written, next heartbeat confirms", 16, time.Minute, [][]byte{ecoflowtest.Heartbeat("state3-3p")}, 16},
+		{"written, next heartbeat contradicts", 10, time.Minute, [][]byte{ecoflowtest.Heartbeat("state3-3p")}, 16},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			wb, transport := newTestPowerPulse(t, time.Minute)
-			wb.maxCurrentTimeout = 50 * time.Millisecond
+			clk := clock.NewMock()
+			wb, transport := newTestPowerPulseWithClock(t, 10*time.Minute, clk)
+			require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state3-3p-15a")))
 
-			require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat(tc.before)))
-			answerWrites(transport, tc.answers...)
-
-			err := wb.MaxCurrent(tc.current)
-			if tc.err == nil {
-				assert.NoError(t, err)
-			} else {
-				assert.ErrorIs(t, err, tc.err)
+			if tc.write > 0 {
+				require.NoError(t, wb.MaxCurrent(tc.write))
 			}
+
+			clk.Add(tc.after)
+			for _, p := range tc.answers {
+				require.NoError(t, transport.Feed(powerPulseTelemetry, p))
+			}
+
+			current, err := wb.GetMaxCurrent()
+			require.NoError(t, err)
+			assert.Equal(t, tc.current, current)
 		})
 	}
 }
 
-// Without 241/44 the next heartbeat may take up to 60 s.
-func TestEcoflowPowerPulseMaxCurrentTimeout(t *testing.T) {
-	wb, _ := newTestPowerPulse(t, time.Minute)
-	assert.Equal(t, 70*time.Second, wb.maxCurrentTimeout)
+func TestEcoflowPowerPulseGetMaxCurrentUnknown(t *testing.T) {
+	wb, transport := newTestPowerPulse(t, time.Minute)
+	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.HeartbeatWithState(3)))
+
+	_, err := wb.GetMaxCurrent()
+	assert.ErrorIs(t, err, api.ErrNotAvailable)
 }
 
 func TestEcoflowPowerPulsePhases1p(t *testing.T) {
 	wb, transport := newTestPowerPulse(t, time.Minute)
-	wb.phasesTimeout = time.Second
 	// stopped at 3p, stage 4b-2
 	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state6-3p")))
-	answerWrites(transport, ecoflowtest.Settings("phase1p"))
 
 	require.NoError(t, wb.Phases1p3p(1))
 	assert.Equal(t, []ecoflowtest.Message{ecoflowtest.Write("phase-1p", 2)}, writes(transport))
 }
 
-// No 3p write was captured. The phase-auto capture differs from it only in
-// settings field 5, so the expected frame is that capture with 0 replaced by 2.
+// The phase-auto capture differs from a 3p write only in settings field 5,
+// so the expected frame is that capture with 0 replaced by 2.
 func TestEcoflowPowerPulsePhases3p(t *testing.T) {
 	want := ecoflowtest.Write("phase-auto", 2)
 	settingsAuto := []byte{0x22, 0x02, 0x28, 0x00} // field 4 { field 5 = 0 }
@@ -509,10 +513,7 @@ func TestEcoflowPowerPulsePhases3p(t *testing.T) {
 	want.Payload = bytes.Replace(want.Payload, settingsAuto, []byte{0x22, 0x02, 0x28, 0x02}, 1)
 
 	wb, transport := newTestPowerPulse(t, time.Minute)
-	wb.phasesTimeout = time.Second
 	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state2-1p")))
-	// field 21 = 0: all three phases in effect
-	answerWrites(transport, ecoflowtest.Heartbeat("state2-3p"))
 
 	require.NoError(t, wb.Phases1p3p(3))
 	assert.Equal(t, []ecoflowtest.Message{want}, writes(transport))
@@ -523,9 +524,7 @@ func TestEcoflowPowerPulsePhasesRefusedWhileCharging(t *testing.T) {
 	for _, phases := range []int{1, 3} {
 		for _, before := range []string{"state3-3p", "state3-1p"} {
 			wb, transport := newTestPowerPulse(t, time.Minute)
-			wb.phasesTimeout = 50 * time.Millisecond
 			require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat(before)))
-			answerWrites(transport, ecoflowtest.Settings("phase1p"), ecoflowtest.Heartbeat("state2-3p"))
 
 			assert.Error(t, wb.Phases1p3p(phases), "%dp from %s", phases, before)
 			assert.Empty(t, writes(transport), "%dp from %s", phases, before)
@@ -536,9 +535,7 @@ func TestEcoflowPowerPulsePhasesRefusedWhileCharging(t *testing.T) {
 func TestEcoflowPowerPulsePhasesInvalid(t *testing.T) {
 	for _, phases := range []int{0, 2, 4} {
 		wb, transport := newTestPowerPulse(t, time.Minute)
-		wb.phasesTimeout = 50 * time.Millisecond
 		require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state6-3p")))
-		answerWrites(transport, ecoflowtest.Settings("phase1p"), ecoflowtest.Heartbeat("state2-1p"))
 
 		assert.Error(t, wb.Phases1p3p(phases), "%d phases", phases)
 		assert.Empty(t, writes(transport), "%d phases", phases)
@@ -548,60 +545,9 @@ func TestEcoflowPowerPulsePhasesInvalid(t *testing.T) {
 // Without telemetry the charger cannot tell whether it is charging.
 func TestEcoflowPowerPulsePhasesWithoutTelemetry(t *testing.T) {
 	wb, transport := newTestPowerPulse(t, time.Millisecond)
-	wb.phasesTimeout = 50 * time.Millisecond
 
 	assert.ErrorIs(t, wb.Phases1p3p(1), api.ErrOutdated)
 	assert.Empty(t, writes(transport))
-}
-
-func TestEcoflowPowerPulsePhasesReadback(t *testing.T) {
-	tests := []struct {
-		name    string
-		phases  int
-		before  string   // heartbeat before the write
-		answers [][]byte // telemetry after the write
-		err     error
-	}{
-		// right after the write the wallbox still reports the old mode, stage 4b-2
-		{"1p: 241/44 after stale report", 1, "state6-3p", [][]byte{
-			ecoflowtest.Settings("max10"), ecoflowtest.Settings("phase1p"),
-		}, nil},
-		{"1p: heartbeat only", 1, "state6-3p", [][]byte{ecoflowtest.Heartbeat("state2-1p")}, nil},
-		{"3p: heartbeat only", 3, "state2-1p", [][]byte{ecoflowtest.Heartbeat("state6-3p")}, nil},
-		{"1p: only stale telemetry", 1, "state6-3p", [][]byte{
-			ecoflowtest.Settings("phaseauto"), ecoflowtest.Heartbeat("state6-3p"),
-		}, api.ErrTimeout},
-		// auto is not three phases, and 1p is the old mode
-		{"3p: 241/44 reports auto or 1p", 3, "state2-1p", [][]byte{
-			ecoflowtest.Settings("phaseauto"), ecoflowtest.Settings("phase1p"),
-		}, api.ErrTimeout},
-		// field 21 absent must not read as 0 = three phases
-		{"3p: heartbeat without phase mode", 3, "state2-1p", [][]byte{ecoflowtest.HeartbeatWithState(2)}, api.ErrTimeout},
-		{"no readback", 1, "state6-3p", nil, api.ErrTimeout},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			wb, transport := newTestPowerPulse(t, time.Minute)
-			wb.phasesTimeout = 50 * time.Millisecond
-
-			require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat(tc.before)))
-			answerWrites(transport, tc.answers...)
-
-			err := wb.Phases1p3p(tc.phases)
-			if tc.err == nil {
-				assert.NoError(t, err)
-			} else {
-				assert.ErrorIs(t, err, tc.err)
-			}
-		})
-	}
-}
-
-// Without 241/44 the next heartbeat may take up to 60 s.
-func TestEcoflowPowerPulsePhasesTimeout(t *testing.T) {
-	wb, _ := newTestPowerPulse(t, time.Minute)
-	assert.Equal(t, 70*time.Second, wb.phasesTimeout)
 }
 
 // A wallbox already in the requested phase mode gets no write.
@@ -615,12 +561,12 @@ func TestEcoflowPowerPulsePhasesAlreadySet(t *testing.T) {
 		{"1p by heartbeat", 1, [][]byte{ecoflowtest.Heartbeat("state2-1p")}},
 		// 241/44 wins over field 21 = 0
 		{"1p by 241/44", 1, [][]byte{ecoflowtest.Heartbeat("state6-3p"), ecoflowtest.Settings("phase1p")}},
+		{"3p by 241/44", 3, [][]byte{ecoflowtest.Heartbeat("state6-3p"), ecoflowtest.Settings("phase3p")}},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			wb, transport := newTestPowerPulse(t, time.Minute)
-			wb.phasesTimeout = 200 * time.Millisecond
 			for _, p := range tc.before {
 				require.NoError(t, transport.Feed(powerPulseTelemetry, p))
 			}
@@ -634,10 +580,9 @@ func TestEcoflowPowerPulsePhasesAlreadySet(t *testing.T) {
 // Field 21 = 0 may mean auto, so 3p is written unless 241/44 reports three phases.
 func TestEcoflowPowerPulsePhases3pWrittenFromAuto(t *testing.T) {
 	wb, transport := newTestPowerPulse(t, time.Minute)
-	wb.phasesTimeout = 50 * time.Millisecond
 	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state6-3p")))
 	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Settings("phaseauto")))
 
-	assert.ErrorIs(t, wb.Phases1p3p(3), api.ErrTimeout)
+	require.NoError(t, wb.Phases1p3p(3))
 	assert.Len(t, writes(transport), 1)
 }

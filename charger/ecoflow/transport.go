@@ -1,6 +1,7 @@
 package ecoflow
 
 import (
+	"context"
 	"errors"
 	"slices"
 	"sync"
@@ -103,7 +104,7 @@ func (s *switchTransport) Subscribe(topic string, qos byte, handler func([]byte)
 }
 
 // Publish implements Transport.
-func (s *switchTransport) Publish(topic string, qos byte, payload []byte) error {
+func (s *switchTransport) Publish(ctx context.Context, topic string, qos byte, payload []byte) error {
 	s.mu.Lock()
 	t := s.current
 	s.mu.Unlock()
@@ -111,5 +112,5 @@ func (s *switchTransport) Publish(topic string, qos byte, payload []byte) error 
 	if t == nil {
 		return ErrNotConnected
 	}
-	return t.Publish(topic, qos, payload)
+	return t.Publish(ctx, topic, qos, payload)
 }

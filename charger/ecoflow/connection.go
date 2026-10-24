@@ -3,6 +3,7 @@ package ecoflow
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"slices"
@@ -18,7 +19,7 @@ import (
 // EcoFlow app broker; tests use ecoflowtest.Transport.
 type Transport interface {
 	Subscribe(topic string, qos byte, handler func(payload []byte)) error
-	Publish(topic string, qos byte, payload []byte) error
+	Publish(ctx context.Context, topic string, qos byte, payload []byte) error
 }
 
 // sharedConn is a connection in use by refs chargers of one account.
@@ -31,6 +32,7 @@ type sharedConn struct {
 var (
 	mu          sync.Mutex
 	connections = make(map[string]*sharedConn)
+	redacted    = make(map[[32]byte]bool) // static secrets already on the shared logger
 )
 
 // Dialer connects to the broker with the session's credentials. onLost is
@@ -47,6 +49,8 @@ type Connection struct {
 
 	mu        sync.Mutex
 	wallboxes []*Wallbox
+	traffic   time.Time // last payload from any device
+	probed    time.Time // last get-all of the watchdog
 
 	// reconnect, nil for a connection on a fixed transport
 	login        func() (*Session, error)
@@ -56,19 +60,27 @@ type Connection struct {
 	session      *Session
 	loggedIn     time.Time
 	reconnecting atomic.Bool
+	revived      time.Time // last reconnect of the watchdog
+	strikes      int       // watchdog reconnects without traffic since
 
-	done      chan struct{}
-	closeOnce sync.Once
+	ctx    context.Context // cancelled by Close, bounds every publish
+	cancel context.CancelFunc
 }
 
 // NewSharedConnection returns the connection of the account, logging in and
 // connecting on first use. It closes once the contexts of all its users are done.
 func NewSharedConnection(ctx context.Context, user, password string, app AppKey) (*Connection, error) {
 	return sharedConnection(ctx, user, password, func() (*Connection, error) {
-		log := util.NewLogger("ecoflow").Redact(user, password, app.Secret)
+		// the logger is shared: static secrets are added once, the session ones replace their predecessors
+		log := util.NewLogger("ecoflow")
+		if key := sha256.Sum256([]byte(user + "\x00" + password + "\x00" + app.Secret)); !redacted[key] {
+			log.Redact(user, password, base64.StdEncoding.EncodeToString([]byte(password)), app.Secret)
+			redacted[key] = true
+		}
+		redactSession := log.RotatingSlot()
 
 		login := func() (*Session, error) {
-			return Login(log, user, password)
+			return Login(log, redactSession, user, password)
 		}
 		dial := func(session *Session, onLost func(error)) (Transport, error) {
 			return dial(log, session, app, onLost)
@@ -126,12 +138,14 @@ func sharedConnection(ctx context.Context, user, password string, connect func()
 // NewConnection creates a connection on an established transport. It does not
 // reconnect.
 func NewConnection(log *util.Logger, transport Transport, userID string) *Connection {
+	ctx, cancel := context.WithCancel(context.Background())
 	return &Connection{
 		log:       log,
 		transport: newSwitchTransport(transport),
 		userID:    userID,
 		clock:     clock.New(),
-		done:      make(chan struct{}),
+		ctx:       ctx,
+		cancel:    cancel,
 	}
 }
 
@@ -143,6 +157,7 @@ func Connect(log *util.Logger, login func() (*Session, error), dial Dialer, clk 
 		return nil, err
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
 	c := &Connection{
 		log:       log,
 		transport: newSwitchTransport(nil),
@@ -153,10 +168,13 @@ func Connect(log *util.Logger, login func() (*Session, error), dial Dialer, clk 
 		sleep:     sleep,
 		session:   session,
 		loggedIn:  clk.Now(),
-		done:      make(chan struct{}),
+		traffic:   clk.Now(),
+		ctx:       ctx,
+		cancel:    cancel,
 	}
 
 	if err := c.connect(); err != nil {
+		cancel()
 		return nil, err
 	}
 
@@ -215,23 +233,34 @@ const (
 	loginRenewal  = 20 * time.Hour
 	staleAfter    = 1200 * time.Second // heartbeats normally arrive every 60 s
 	snapshotGrace = 5 * time.Minute    // wait for an answer to the get-all
+	maxRevival    = 6 * time.Hour      // longest wait between watchdog reconnects
 )
+
+// publishTimeout bounds the wait for the broker's PUBACK.
+const publishTimeout = 10 * time.Second
 
 // Close stops reconnecting and watching and drops the broker connection.
 func (c *Connection) Close() {
-	c.closeOnce.Do(func() {
-		close(c.done)
-		c.transport.close()
-	})
+	c.cancel()
+	c.transport.close()
 }
 
 func (c *Connection) isClosed() bool {
-	select {
-	case <-c.done:
-		return true
-	default:
-		return false
-	}
+	return c.ctx.Err() != nil
+}
+
+// publish sends a payload, waiting at most publishTimeout for the broker.
+func (c *Connection) publish(topic string, payload []byte) error {
+	ctx, cancel := context.WithTimeout(c.ctx, publishTimeout)
+	defer cancel()
+	return c.transport.Publish(ctx, topic, 1, payload)
+}
+
+// received records traffic on the connection.
+func (c *Connection) received() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.traffic = c.clock.Now()
 }
 
 // watch runs check periodically until Close.
@@ -241,7 +270,7 @@ func (c *Connection) watch() {
 
 	for {
 		select {
-		case <-c.done:
+		case <-c.ctx.Done():
 			return
 		case <-ticker.C:
 			c.check()
@@ -250,7 +279,9 @@ func (c *Connection) watch() {
 }
 
 // check renews the login for the next connect and revives silent telemetry:
-// get-all after staleAfter, a new connection when that stays unanswered.
+// a get-all to every device silent for staleAfter, a new connection only when
+// no device answers. A device that is offline must not reconnect the account
+// every few minutes, so watchdog reconnects back off while nothing arrives.
 func (c *Connection) check() {
 	if c.login == nil || c.isClosed() {
 		return
@@ -275,30 +306,40 @@ func (c *Connection) check() {
 		return
 	}
 
-	var dead bool
 	for _, wb := range wallboxes {
-		seen, requested := wb.activity()
-		if c.clock.Since(seen) < staleAfter {
-			continue
-		}
-
-		if !requested.After(seen) {
-			c.log.DEBUG.Printf("%s: no heartbeat since %v, requesting snapshot", wb.serial, seen)
-			if err := wb.requestAll(); err != nil {
-				c.log.ERROR.Printf("%s: get-all: %v", wb.serial, err)
-			}
-			continue
-		}
-
-		if c.clock.Since(requested) >= snapshotGrace {
-			c.log.ERROR.Printf("%s: snapshot unanswered, reconnecting", wb.serial)
-			dead = true
+		if wb.probe() {
+			c.mu.Lock()
+			c.probed = c.clock.Now()
+			c.mu.Unlock()
 		}
 	}
 
-	if dead {
-		go c.reconnect()
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.traffic.After(c.revived) {
+		c.strikes = 0
 	}
+
+	silent := c.clock.Since(c.traffic) >= staleAfter
+	unanswered := c.probed.After(c.traffic) && c.clock.Since(c.probed) >= snapshotGrace
+	if !silent || !unanswered || c.clock.Since(c.revived) < revival(c.strikes) {
+		return
+	}
+
+	c.log.ERROR.Printf("no telemetry since %v, reconnecting", c.traffic.Round(time.Second))
+	c.revived = c.clock.Now()
+	c.strikes++
+	go c.reconnect()
+}
+
+// revival is the wait after n watchdog reconnects without traffic: none at
+// first, then staleAfter·2ⁿ, at most maxRevival.
+func revival(n int) time.Duration {
+	if n == 0 {
+		return 0
+	}
+	return min(staleAfter<<n, maxRevival)
 }
 
 // backoff is the wait before reconnect attempt n: 5·2ⁿ s, at most 60 s.
@@ -354,7 +395,7 @@ func (c *Connection) pause(d time.Duration) bool {
 	} else {
 		select {
 		case <-c.clock.After(d):
-		case <-c.done:
+		case <-c.ctx.Done():
 		}
 	}
 	return !c.isClosed()
@@ -380,13 +421,17 @@ type Wallbox struct {
 	gateway   string // PowerOcean that writes go through
 	timeout   time.Duration
 	heartbeat *util.Monitor[Heartbeat]
-	waiters   waiters
 
 	mu         sync.Mutex
 	seen       time.Time // last heartbeat, or creation
-	requested  time.Time // last get-all
+	probed     time.Time // last get-all of the watchdog
 	settings   Settings  // last 241/44
 	settingsAt time.Time
+
+	// last commands, telemetry may lag behind them
+	release command[bool]
+	current command[uint64]
+	phases  command[uint64]
 }
 
 // Wallbox subscribes to the telemetry of the PowerPulse with the given serial
@@ -419,31 +464,44 @@ func (c *Connection) Wallbox(serial, gateway string, timeout time.Duration) (*Wa
 	return wb, nil
 }
 
-// activity returns when the last heartbeat arrived and when a snapshot was
-// last requested.
-func (wb *Wallbox) activity() (seen, requested time.Time) {
+// probe sends a get-all when the wallbox has been silent for staleAfter and
+// the last probe is as old, and reports whether it did.
+func (wb *Wallbox) probe() bool {
+	c := wb.conn
+
 	wb.mu.Lock()
-	defer wb.mu.Unlock()
-	return wb.seen, wb.requested
+	seen, probed := wb.seen, wb.probed
+	due := c.clock.Since(seen) >= staleAfter && c.clock.Since(probed) >= staleAfter
+	if due {
+		wb.probed = c.clock.Now()
+	}
+	wb.mu.Unlock()
+
+	if !due {
+		return false
+	}
+
+	c.log.DEBUG.Printf("%s: no heartbeat since %v, requesting snapshot", wb.serial, seen.Round(time.Second))
+	if err := wb.requestAll(); err != nil {
+		c.log.ERROR.Printf("%s: get-all: %v", wb.serial, err)
+	}
+	return true
 }
 
 // requestAll asks the wallbox for a full snapshot.
 func (wb *Wallbox) requestAll() error {
 	c := wb.conn
 
-	wb.mu.Lock()
-	wb.requested = c.clock.Now()
-	wb.mu.Unlock()
-
 	seq := c.nextSeq()
 	wb.log.TRACE.Printf("%s: get-all seq=%d", wb.serial, seq)
 	topic := fmt.Sprintf("/app/%s/%s/thing/property/get", c.userID, wb.serial)
-	return c.transport.Publish(topic, 1, BuildGetAll(seq))
+	return c.publish(topic, BuildGetAll(seq))
 }
 
 // handle decodes one telemetry payload. Payloads that are not heartbeats are
 // ignored.
 func (wb *Wallbox) handle(payload []byte) {
+	wb.conn.received()
 	wb.log.TRACE.Printf("%s: recv %x", wb.serial, payload)
 	headers, err := ParseMessage(payload)
 	if err != nil {
@@ -466,13 +524,18 @@ func (wb *Wallbox) handle(payload []byte) {
 	}
 }
 
-// handleHeartbeat stores a 2/33 heartbeat and offers it to pending writes.
+// handleHeartbeat stores a 2/33 heartbeat.
 func (wb *Wallbox) handleHeartbeat(pdata []byte) {
 	hb, err := DecodeHeartbeat(pdata)
 	if err != nil {
 		wb.log.DEBUG.Printf("%s: heartbeat: %v", wb.serial, err)
 		return
 	}
+	now := wb.conn.clock.Now()
+	wb.mu.Lock()
+	wb.seen = now
+	wb.mu.Unlock()
+
 	wb.heartbeat.SetFunc(func(prev Heartbeat) Heartbeat {
 		// some heartbeats carry no energy counter, keep the last one
 		if hb.TotalEnergyWh == 0 {
@@ -481,14 +544,10 @@ func (wb *Wallbox) handleHeartbeat(pdata []byte) {
 		return hb
 	})
 	wb.log.TRACE.Printf("%s: heartbeat %s", wb.serial, hb)
-	wb.waiters.notify(Update{Heartbeat: &hb})
-
-	wb.mu.Lock()
-	wb.seen = wb.conn.clock.Now()
-	wb.mu.Unlock()
+	wb.verifyPhases(Update{Heartbeat: &hb}, now)
 }
 
-// handleSettings records a 241/44 report and offers it to pending writes. It
+// handleSettings records a 241/44 report. It
 // only flows while the EcoFlow app is active, so it is no sign of life for the watchdog.
 func (wb *Wallbox) handleSettings(pdata []byte) {
 	s, err := DecodeSettings(pdata)
@@ -497,12 +556,13 @@ func (wb *Wallbox) handleSettings(pdata []byte) {
 		wb.log.TRACE.Printf("%s: settings: %v", wb.serial, err)
 		return
 	}
-	wb.waiters.notify(Update{Settings: &s})
-
+	now := wb.conn.clock.Now()
 	wb.mu.Lock()
 	changed := s != wb.settings || wb.settingsAt.IsZero()
-	wb.settings, wb.settingsAt = s, wb.conn.clock.Now()
+	wb.settings, wb.settingsAt = s, now
 	wb.mu.Unlock()
+
+	wb.verifyPhases(Update{Settings: &s}, now)
 
 	// 241/44 arrives at about 1 Hz, log changes only
 	if changed {
@@ -510,14 +570,15 @@ func (wb *Wallbox) handleSettings(pdata []byte) {
 	}
 }
 
-// latestSettings returns the last 241/44 report unless it is older than the timeout.
-func (wb *Wallbox) latestSettings() (Settings, bool) {
+// latestSettings returns the last 241/44 report and when it arrived unless it
+// is older than the timeout.
+func (wb *Wallbox) latestSettings() (Settings, time.Time, bool) {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 	if wb.settingsAt.IsZero() || wb.conn.clock.Since(wb.settingsAt) > wb.timeout {
-		return Settings{}, false
+		return Settings{}, time.Time{}, false
 	}
-	return wb.settings, true
+	return wb.settings, wb.settingsAt, true
 }
 
 // latest returns the latest fresh heartbeat without waiting for a first one.

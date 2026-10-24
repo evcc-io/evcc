@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -64,7 +65,7 @@ func TestLoginFallsBackToSecondHostAndDecryptsCertificate(t *testing.T) {
 	defer func(orig []string) { apiBases = orig }(apiBases)
 	apiBases = []string{failing.URL, working.URL}
 
-	session, err := Login(util.NewLogger("test"), "user@example.com", "secret")
+	session, err := Login(util.NewLogger("test"), func(...string) {}, "user@example.com", "secret")
 	require.NoError(t, err)
 
 	assert.Equal(t, map[string]string{
@@ -94,7 +95,7 @@ func TestLoginFailsOnAllHosts(t *testing.T) {
 	defer func(orig []string) { apiBases = orig }(apiBases)
 	apiBases = []string{srv.URL}
 
-	_, err := Login(util.NewLogger("test"), "user@example.com", "secret")
+	_, err := Login(util.NewLogger("test"), func(...string) {}, "user@example.com", "secret")
 	assert.ErrorContains(t, err, "bad credentials")
 	assert.NotContains(t, err.Error(), "secret")
 }
@@ -117,7 +118,7 @@ func TestLoginDoesNotTraceTokenOrUserID(t *testing.T) {
 	defer func(orig []string) { apiBases = orig }(apiBases)
 	apiBases = []string{srv.URL}
 
-	_, err := Login(util.NewLogger("test"), "user@example.com", "secret")
+	_, err := Login(util.NewLogger("test"), func(...string) {}, "user@example.com", "secret")
 	require.NoError(t, err)
 
 	for _, line := range logstash.All(nil, jww.LevelTrace, 0) {
@@ -125,4 +126,36 @@ func TestLoginDoesNotTraceTokenOrUserID(t *testing.T) {
 			assert.NotContains(t, line, secret)
 		}
 	}
+}
+
+// Each login replaces the session secrets of the previous one instead of
+// adding to the shared logger's redaction list.
+func TestLoginRedactsSessionSecretsInSlot(t *testing.T) {
+	var logins int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token := fmt.Sprintf("token-%d", logins)
+		switch r.URL.Path {
+		case "/auth/login":
+			logins++
+			token = fmt.Sprintf("token-%d", logins)
+			_, _ = w.Write([]byte(`{"code":"0","data":{"token":"` + token + `","user":{"userId":"42"}}}`))
+		case "/iot-auth/enterprise-development/user/certification":
+			cert := encryptCertificate(t, token, []byte(fmt.Sprintf(`{"userName":"account-%d","password":"mqtt-%d"}`, logins, logins)))
+			_, _ = w.Write([]byte(`{"code":"0","data":"` + cert + `"}`))
+		}
+	}))
+	defer srv.Close()
+
+	defer func(orig []string) { apiBases = orig }(apiBases)
+	apiBases = []string{srv.URL}
+
+	var slot []string
+	redact := func(s ...string) { slot = s }
+
+	for range 2 {
+		_, err := Login(util.NewLogger("test"), redact, "user@example.com", "secret")
+		require.NoError(t, err)
+	}
+
+	assert.Equal(t, []string{"token-2", "account-2", "mqtt-2"}, slot)
 }

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/ecoflow/ecoflowtest"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
@@ -472,4 +473,96 @@ func TestSharedConnectionChangedPasswordReconnects(t *testing.T) {
 	assert.NotSame(t, a, b)
 	assert.True(t, a.isClosed(), "EcoFlow allows one session per account")
 	assert.Equal(t, 2, s.connects)
+}
+
+// The get-all on connect is younger than the creation time of the wallbox, so
+// it must not count as the watchdog's unanswered get-all.
+func TestStaleTelemetryRequestsSnapshotFirstAfterReconnect(t *testing.T) {
+	clk := clock.NewMock()
+	broker := &fakeBroker{}
+	conn, _ := newTestConnection(t, broker, clk)
+
+	clk.Add(time.Second)
+	conn.reconnect()
+	assert.Equal(t, []string{"sleep 5s", "dial account-1"}, broker.Events())
+	transport := broker.Transport()
+
+	clk.Add(staleAfter)
+	conn.check()
+	assert.Equal(t, 2, getAlls(transport), "get-all before giving up on the connection")
+	assert.Empty(t, broker.Events(), "no reconnect yet")
+}
+
+// runChecks runs the watchdog once a minute for d and returns when it
+// reconnected, waiting for each reconnect to finish.
+func runChecks(t *testing.T, conn *Connection, broker *fakeBroker, clk *clock.Mock, d time.Duration) []time.Duration {
+	t.Helper()
+
+	var dials []time.Duration
+	start := clk.Now()
+	for clk.Since(start) < d {
+		clk.Add(checkInterval)
+		n := broker.Dials()
+		conn.check()
+
+		conn.mu.Lock()
+		revived := conn.revived.Equal(clk.Now())
+		conn.mu.Unlock()
+		if revived {
+			require.Eventually(t, func() bool { return broker.Dials() == n+1 && !conn.reconnecting.Load() }, time.Second, time.Millisecond)
+			dials = append(dials, clk.Since(start))
+		}
+	}
+	return dials
+}
+
+// A wallbox that is offline must not make the shared connection reconnect
+// every few minutes; the wait between watchdog reconnects doubles up to 6 h.
+func TestSilentWallboxBacksOffReconnects(t *testing.T) {
+	clk := clock.NewMock()
+	broker := &fakeBroker{}
+	conn, wb := newTestConnection(t, broker, clk)
+	require.NoError(t, broker.Transport().Feed(testTelemetry, ecoflowtest.Heartbeat("state2-3p")))
+
+	dials := runChecks(t, conn, broker, clk, 24*time.Hour)
+	assert.Equal(t, []time.Duration{
+		25 * time.Minute,   // 20 min silence, get-all unanswered for 5 min
+		65 * time.Minute,   // +40 min
+		145 * time.Minute,  // +80 min
+		305 * time.Minute,  // +160 min
+		625 * time.Minute,  // +320 min
+		985 * time.Minute,  // +6 h
+		1345 * time.Minute, // +6 h
+	}, dials)
+
+	_, err := wb.Heartbeat()
+	assert.ErrorIs(t, err, api.ErrOutdated, "the silent wallbox is outdated")
+
+	// telemetry resets the backoff
+	require.NoError(t, broker.Transport().Feed(testTelemetry, ecoflowtest.Heartbeat("state2-3p")))
+	dials = runChecks(t, conn, broker, clk, 30*time.Minute)
+	assert.Equal(t, []time.Duration{25 * time.Minute}, dials)
+}
+
+// A silent wallbox on a connection that carries telemetry of another device
+// gets a get-all every 20 min, but the connection stays.
+func TestSilentWallboxKeepsWorkingConnection(t *testing.T) {
+	const other = "C376000000000002"
+
+	clk := clock.NewMock()
+	broker := &fakeBroker{}
+	conn, _ := newTestConnection(t, broker, clk)
+	_, err := conn.Wallbox(other, ecoflowtest.Gateway, time.Minute)
+	require.NoError(t, err)
+	transport := broker.Transport()
+
+	start := clk.Now()
+	for clk.Since(start) < 2*time.Hour {
+		clk.Add(checkInterval)
+		require.NoError(t, transport.Feed("/app/device/property/"+other, ecoflowtest.HeartbeatWithState(2)))
+		conn.check()
+	}
+
+	assert.Equal(t, 1, broker.Dials(), "no reconnect")
+	assert.Equal(t, 1+6, getAlls(transport), "get-all on start and every 20 min")
 }

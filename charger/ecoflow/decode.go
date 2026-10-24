@@ -217,9 +217,9 @@ func DecodeSettings(pdata []byte) (Settings, error) {
 		{1, &s.SwitchBits, 0, 0xFFFF},
 		{2, &s.WorkMode, 1, 4},
 		{4, &s.MaxCurrentRaw, 60, 320},
-		{6, &s.SolarMinRaw, 60, 160},
+		{6, &s.SolarMinRaw, 60, 320},
 		{7, &s.PhaseModeRaw, 0, 3},
-		{8, &s.UserCurrentRaw, 60, 160},
+		{8, &s.UserCurrentRaw, 60, 320},
 	} {
 		v, ok := varintField(params, t.num)
 		if !ok {

@@ -208,6 +208,27 @@ func TestDecodeSettings(t *testing.T) {
 	}, s)
 }
 
+// Every current field accepts up to 32 A, so a 20 A custom current does not
+// drop the whole report.
+func TestDecodeSettingsCurrentsUpTo32A(t *testing.T) {
+	settings := func(user uint64) []byte {
+		var p []byte
+		for _, f := range [][2]uint64{{1, 0x12}, {2, 3}, {4, 320}, {6, 200}, {7, 2}, {8, user}} {
+			p = varint(p, protowire.Number(f[0]), f[1])
+		}
+		return reportPdata(p)
+	}
+
+	s, err := DecodeSettings(settings(200))
+	require.NoError(t, err)
+	assert.Equal(t, uint64(320), s.MaxCurrentRaw)
+	assert.Equal(t, uint64(200), s.SolarMinRaw)
+	assert.Equal(t, uint64(200), s.UserCurrentRaw)
+
+	_, err = DecodeSettings(settings(330))
+	assert.ErrorContains(t, err, "field 8", "above 32 A")
+}
+
 // The gate stops a differently shaped 241/44 variant from being half-decoded
 // into plausible-looking values.
 func TestDecodeSettingsRejects(t *testing.T) {
