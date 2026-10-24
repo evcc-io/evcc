@@ -123,18 +123,11 @@ func (site *Site) updateGridPeak(now time.Time) {
 	site.publish(keys.GridPeak, peak.peak(now))
 }
 
-// getGridPeakTarget returns the grid import target in W, 0 = none
-func (site *Site) getGridPeakTarget() float64 {
-	site.RLock()
-	defer site.RUnlock()
-	return site.gridPeakTarget
-}
-
 // gridPeakLimiter supplies the grid import target to the root circuit
 type gridPeakLimiter struct {
 	site *Site
 }
 
 func (l gridPeakLimiter) MaxConsumptionPower() *float64 {
-	return new(l.site.getGridPeakTarget())
+	return new(l.site.GetGridPeakTarget())
 }
