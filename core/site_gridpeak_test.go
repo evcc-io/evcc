@@ -66,7 +66,7 @@ func TestGridPeakTarget(t *testing.T) {
 	lp := &Loadpoint{mode: api.ModePV}
 	site := &Site{
 		log:        util.NewLogger("foo"),
-		loadpoints: []*Loadpoint{lp},
+		loadpoints: []*Loadpoint{nil, lp}, // nil = disabled loadpoint
 		gridPeak:   gridPeak{Time: now.Add(-time.Hour), Power: 6000},
 	}
 
