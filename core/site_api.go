@@ -739,6 +739,9 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) error {
 		site.batteryModeExternal = mode
 		site.publish(keys.BatteryModeExternal, mode)
 
+		// re-run the optimizer so its plan follows the external mode
+		go site.optimizerUpdateAsync(true)
+
 		// start watchdog if not running
 		if !disable && site.batteryModeExternalTimer.IsZero() {
 			go func() {

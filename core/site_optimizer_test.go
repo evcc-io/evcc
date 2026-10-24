@@ -512,6 +512,45 @@ func TestBatteryRequestGridModes(t *testing.T) {
 	assert.False(t, req.DischargeToGrid, "grid discharge requires the opt-in")
 }
 
+// TestBatteryRequestExternalMode ensures an external battery mode is relayed as power limits
+func TestBatteryRequestExternalMode(t *testing.T) {
+	batCon := api.NewMockBatteryController(gomock.NewController(t))
+	batCon.EXPECT().BatteryModes().Return([]api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}).AnyTimes()
+	dev := config.NewStaticDevice(config.Named{}, api.Meter(&struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: batCon,
+	}))
+
+	limit := 0.5
+	site := &Site{log: util.NewLogger("foo"), batteryGridChargeLimit: &limit}
+	capacity, soc := 10.0, 50.0
+	m := types.Measurement{Capacity: &capacity, Soc: &soc}
+	rates := api.Rates{{Value: 0.1}, {Value: 1}}
+
+	for _, tc := range []struct {
+		mode       api.BatteryMode
+		cMax, dMax float32
+		fromGrid   bool
+		demand     []float32
+	}{
+		{api.BatteryUnknown, batteryPower, batteryPower, true, []float32{batteryPower / 4, 0}},
+		{api.BatteryNormal, batteryPower, batteryPower, false, nil},
+		{api.BatteryHold, batteryPower, 0, false, nil},
+		{api.BatteryCharge, batteryPower, 0, true, []float32{batteryPower / 4, batteryPower / 4}},
+		{api.BatteryDischarge, batteryPower, batteryPower, false, nil}, // unsupported, falls back to normal
+	} {
+		site.batteryModeExternal = tc.mode
+		req, _ := site.batteryRequest(dev, m, rates, 2, 15*time.Minute)
+
+		assert.Equal(t, tc.cMax, req.CMax, tc.mode)
+		assert.Equal(t, tc.dMax, req.DMax, tc.mode)
+		assert.Equal(t, tc.fromGrid, req.ChargeFromGrid, tc.mode)
+		assert.Equal(t, tc.demand, req.PDemand, tc.mode)
+	}
+}
+
 // Batteries without soc limits must still get the full capacity as SMax, otherwise the
 // optimizer treats any charge as exceeding the limit and never charges the battery.
 func TestBatteryRequestWithoutSocLimiter(t *testing.T) {

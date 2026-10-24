@@ -1156,6 +1156,27 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 		}
 	}
 
+	// an external mode overrides evcc's battery control and is assumed to hold over the horizon
+	if controllable {
+		if mode := supportedBatteryMode(ctrl.BatteryModes(), site.GetBatteryModeExternal()); mode != api.BatteryUnknown {
+			bat.ChargeFromGrid = mode == api.BatteryCharge
+			bat.DischargeToGrid = mode == api.BatteryDischarge
+			bat.PDemand = nil
+
+			switch mode {
+			case api.BatteryHold:
+				bat.DMax = 0
+			case api.BatteryHoldCharge, api.BatteryDischarge:
+				bat.CMax = 0
+			case api.BatteryCharge:
+				bat.DMax = 0
+				bat.PDemand = prorate(lo.RepeatBy(minLen, func(int) float32 {
+					return float32(float64(bat.CMax) / slotsPerHour)
+				}), firstSlotDuration)
+			}
+		}
+	}
+
 	return bat, detail
 }
 
