@@ -50,30 +50,18 @@ render: |
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:AphA
-        - 211:AphA
-        - 202:AphA
-        - 212:AphA
         - 203:AphA
         - 213:AphA
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:AphB
-        - 211:AphB
-        - 202:AphB
-        - 212:AphB
         - 203:AphB
         - 213:AphB
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:AphC
-        - 211:AphC
-        - 202:AphC
-        - 212:AphC
         - 203:AphC
         - 213:AphC
       nan: true
@@ -81,30 +69,18 @@ render: |
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:PhVphA
-        - 211:PhVphA
-        - 202:PhVphA
-        - 212:PhVphA
         - 203:PhVphA
         - 213:PhVphA
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:PhVphB
-        - 211:PhVphB
-        - 202:PhVphB
-        - 212:PhVphB
         - 203:PhVphB
         - 213:PhVphB
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:PhVphC
-        - 211:PhVphC
-        - 202:PhVphC
-        - 212:PhVphC
         - 203:PhVphC
         - 213:PhVphC
       nan: true
@@ -112,30 +88,18 @@ render: |
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:WphA
-        - 211:WphA
-        - 202:WphA
-        - 212:WphA
         - 203:WphA
         - 213:WphA
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:WphB
-        - 211:WphB
-        - 202:WphB
-        - 212:WphB
         - 203:WphB
         - 213:WphB
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:WphC
-        - 211:WphC
-        - 202:WphC
-        - 212:WphC
         - 203:WphC
         - 213:WphC
       nan: true

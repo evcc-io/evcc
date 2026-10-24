@@ -17,7 +17,7 @@ params:
     choice: ["tcpip"]
 render: |
   type: custom
-  # sunspec model 201 or 203 (int+sf)/ 211 or 213 (float) meter
+  # sunspec model 201-204 (int+sf) / 211-214 (float) meter, phase values for three-phase models only
   {{- if or (eq .usage "grid") (eq .usage "charge") }}
   power:
     source: sunspec
@@ -29,6 +29,8 @@ render: |
       - 212:W
       - 203:W
       - 213:W
+      - 204:W
+      - 214:W
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
@@ -39,6 +41,8 @@ render: |
       - 212:TotWhImp
       - 203:TotWhImp
       - 213:TotWhImp
+      - 204:TotWhImp
+      - 214:TotWhImp
     scale: 0.001
   returnenergy:
     source: sunspec
@@ -50,66 +54,50 @@ render: |
       - 212:TotWhExp
       - 203:TotWhExp
       - 213:TotWhExp
+      - 204:TotWhExp
+      - 214:TotWhExp
     scale: 0.001
   currents:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:AphA
-        - 211:AphA
-        - 202:AphA
-        - 212:AphA
         - 203:AphA
         - 213:AphA
+        - 204:AphA
+        - 214:AphA
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:AphB
-        - 211:AphB
-        - 202:AphB
-        - 212:AphB
         - 203:AphB
         - 213:AphB
+        - 204:AphB
+        - 214:AphB
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:AphC
-        - 211:AphC
-        - 202:AphC
-        - 212:AphC
         - 203:AphC
         - 213:AphC
+        - 204:AphC
+        - 214:AphC
       nan: true
   voltages:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:PhVphA
-        - 211:PhVphA
-        - 202:PhVphA
-        - 212:PhVphA
         - 203:PhVphA
         - 213:PhVphA
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:PhVphB
-        - 211:PhVphB
-        - 202:PhVphB
-        - 212:PhVphB
         - 203:PhVphB
         - 213:PhVphB
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:PhVphC
-        - 211:PhVphC
-        - 202:PhVphC
-        - 212:PhVphC
         - 203:PhVphC
         - 213:PhVphC
       nan: true
@@ -117,30 +105,18 @@ render: |
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:WphA
-        - 211:WphA
-        - 202:WphA
-        - 212:WphA
         - 203:WphA
         - 213:WphA
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:WphB
-        - 211:WphB
-        - 202:WphB
-        - 212:WphB
         - 203:WphB
         - 213:WphB
       nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 201:WphC
-        - 211:WphC
-        - 202:WphC
-        - 212:WphC
         - 203:WphC
         - 213:WphC
       nan: true
@@ -156,6 +132,8 @@ render: |
       - 212:W
       - 203:W
       - 213:W
+      - 204:W
+      - 214:W
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
@@ -166,6 +144,8 @@ render: |
       - 212:TotWhExp
       - 203:TotWhExp
       - 213:TotWhExp
+      - 204:TotWhExp
+      - 214:TotWhExp
     scale: 0.001
   returnenergy:
     source: sunspec
@@ -177,5 +157,7 @@ render: |
       - 212:TotWhImp
       - 203:TotWhImp
       - 213:TotWhImp
+      - 204:TotWhImp
+      - 214:TotWhImp
     scale: 0.001
   {{- end }}
