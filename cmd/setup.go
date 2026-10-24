@@ -367,6 +367,15 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 
 func configureMeters(static []config.Named, names ...string) error {
 	var eg errgroup.Group
+	// Load DB meters before starting goroutines so master references can be validated across both config sources.
+	configurable, err := config.ConfigurationsByClass(templates.Meter)
+	if err != nil {
+		return err
+	}
+	meters := combineBatteryMeterConfigs(static, configurable)
+	if len(references.battery) > 0 {
+		normalizeBatteryMasters(meters, references.battery)
+	}
 
 	for i, cc := range static {
 		if cc.Name == "" {
@@ -387,12 +396,6 @@ func configureMeters(static []config.Named, names ...string) error {
 		})
 	}
 
-	// append devices from database
-	configurable, err := config.ConfigurationsByClass(templates.Meter)
-	if err != nil {
-		return err
-	}
-
 	for _, conf := range configurable {
 		eg.Go(func() error {
 			cc := conf.Named()
@@ -406,7 +409,13 @@ func configureMeters(static []config.Named, names ...string) error {
 		})
 	}
 
-	return eg.Wait()
+	if err := eg.Wait(); err != nil {
+		return err
+	}
+	if len(references.battery) > 0 {
+		clearMastersOfUncontrollableBatterySlaves(meters, references.battery)
+	}
+	return nil
 }
 
 func configureCurtailers(static []config.Named, names ...string) error {
