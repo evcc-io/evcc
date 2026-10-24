@@ -74,34 +74,21 @@ var (
 )
 
 func NewMqttConnector(ctx context.Context, log *util.Logger, clientID string, ts oauth2.TokenSource) *MqttConnector {
-	mqttMu.Lock()
-	defer mqttMu.Unlock()
-
-	if conn, ok := mqttConnections[clientID]; ok {
-		return conn
-	}
-
-	v := &MqttConnector{
-		log:           log,
-		subscriptions: make(map[string][]subscription),
-	}
-
-	if !testing.Testing() {
-		go v.run(ctx, ts)
-	}
-
-	mqttConnections[clientID] = v
-
-	return v
+	return connector(log, clientID, func(v *MqttConnector) { v.run(ctx, ts) })
 }
 
 // NewBrokerConnector creates a connector that reads the unmodified CarData stream from a local broker
 func NewBrokerConnector(ctx context.Context, log *util.Logger, cc pluginmqtt.Config, topic string) *MqttConnector {
+	// prefix keeps broker connectors apart from BMW connectors keyed by client id
+	key := fmt.Sprintf("broker:%s.%s:%s:%s", cc.Broker, cc.User, cc.Password, topic)
+	return connector(log, key, func(v *MqttConnector) { v.runBroker(ctx, cc, topic) })
+}
+
+// connector returns the shared connector for key, starting run for a new one
+func connector(log *util.Logger, key string, run func(*MqttConnector)) *MqttConnector {
 	mqttMu.Lock()
 	defer mqttMu.Unlock()
 
-	// prefix keeps broker connectors apart from BMW connectors keyed by client id
-	key := fmt.Sprintf("broker:%s.%s:%s:%s", cc.Broker, cc.User, cc.Password, topic)
 	if conn, ok := mqttConnections[key]; ok {
 		return conn
 	}
@@ -112,7 +99,7 @@ func NewBrokerConnector(ctx context.Context, log *util.Logger, cc pluginmqtt.Con
 	}
 
 	if !testing.Testing() {
-		go v.runBroker(ctx, cc, topic)
+		go run(v)
 	}
 
 	mqttConnections[key] = v
@@ -124,20 +111,18 @@ func NewBrokerConnector(ctx context.Context, log *util.Logger, cc pluginmqtt.Con
 func (v *MqttConnector) runBroker(ctx context.Context, cc pluginmqtt.Config, topic string) {
 	bo := backoff.NewExponentialBackOff(backoff.WithInitialInterval(time.Second), backoff.WithMaxInterval(time.Minute), backoff.WithMaxElapsedTime(0))
 
-	for ctx.Err() == nil {
-		client, err := pluginmqtt.RegisteredClientOrDefault(v.log, cc)
-		if err != nil {
-			v.log.ERROR.Println(err)
-			time.Sleep(bo.NextBackOff())
-			continue
-		}
-
-		// listener stays registered and is resubscribed on reconnect, so retrying would duplicate it
-		if err := client.Listen(topic, v.brokerHandler); err != nil {
-			v.log.ERROR.Println(err)
-		}
-
+	client, err := backoff.RetryNotifyWithData(func() (*pluginmqtt.Client, error) {
+		return pluginmqtt.RegisteredClientOrDefault(v.log, cc)
+	}, backoff.WithContext(bo, ctx), func(err error, _ time.Duration) {
+		v.log.ERROR.Println(err)
+	})
+	if err != nil {
 		return
+	}
+
+	// listener stays registered and is resubscribed on reconnect, so retrying would duplicate it
+	if err := client.Listen(topic, v.brokerHandler); err != nil {
+		v.log.ERROR.Println(err)
 	}
 }
 
