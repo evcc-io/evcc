@@ -33,7 +33,7 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.TokenSource, clientID, vin string, cache time.Duration) *Provider {
+func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.TokenSource, mqtt *MqttConnector, vin string, cache time.Duration) *Provider {
 	v := &Provider{
 		log:       log,
 		api:       api,
@@ -44,7 +44,6 @@ func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.Toke
 		streaming: make(map[string]StreamingData),
 	}
 
-	mqtt := NewMqttConnector(context.Background(), log, clientID, ts)
 	recvC := mqtt.Subscribe(vin)
 
 	go func() {
