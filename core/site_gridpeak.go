@@ -30,8 +30,8 @@ func (p *gridPeak) add(ts time.Time, power float64) bool {
 	var raised bool
 
 	if ts.Sub(p.ts) > gridPeakInterval {
-		// gap, current interval cannot be trusted
-		p.energy, p.complete = 0, false
+		// gap, current interval cannot be trusted unless it starts now
+		p.energy, p.complete = 0, ts.Equal(ts.Truncate(gridPeakInterval))
 	} else {
 		for t := p.ts; t.Before(ts); {
 			end := t.Truncate(gridPeakInterval).Add(gridPeakInterval)
@@ -95,7 +95,12 @@ func (site *Site) updateGridPeak(now time.Time) {
 	site.Lock()
 	var raised bool
 	if regime {
-		raised = site.gridPeak.add(now, site.gridPower)
+		if site.gridPowerUpdated.After(site.gridPeak.ts) {
+			raised = site.gridPeak.add(now, site.gridPower)
+		} else {
+			// no fresh grid meter reading, current interval cannot be trusted
+			site.gridPeak.ts = time.Time{}
+		}
 	}
 	peak := site.gridPeak
 	site.gridPeakTarget = 0
