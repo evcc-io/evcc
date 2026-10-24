@@ -62,6 +62,7 @@ type optimizerResult struct {
 	Req     optimizer.OptimizationInput  `json:"req"`
 	Res     optimizer.OptimizationResult `json:"res"`
 	Details requestDetails               `json:"details"`
+	Hosted  bool                         `json:"hosted"` // explain needs the hosted optimizer
 }
 
 var _ api.BytesMarshaler = (*optimizerResult)(nil)
@@ -726,6 +727,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		Req:     req,
 		Res:     *resp.JSON200,
 		Details: details,
+		Hosted:  optimizerURI() == OPTIMIZER_URI,
 	}
 
 	site.Lock()

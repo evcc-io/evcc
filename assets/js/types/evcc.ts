@@ -1540,6 +1540,7 @@ export interface EvOpt {
   req: OptimizationInput;
   res: OptimizationResult;
   details: OptimizationDetails;
+  hosted: boolean;
 }
 
 // last plan explanation, plan is the updated time of the explained plan
