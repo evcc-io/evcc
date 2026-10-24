@@ -357,6 +357,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler(site, auth)},
 			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler(site, auth)},
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval, pub)},
+			"updateloglevels":    {"POST", "/" + keys.LogLevels, updateLogLevelsHandler(pub)},
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(pub)},
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
 			"onboarding":         {"PUT", "/onboarding", updateOnboardingHandler(pub)},
