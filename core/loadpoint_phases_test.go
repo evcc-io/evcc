@@ -910,6 +910,56 @@ func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
 	require.Equal(t, 3, lp.GetPhases())
 }
 
+// TestUpdatePhaseSwitchWelcomeCharge verifies that a required phase switch in the
+// connect cycle is followed by the welcome charge on the new phases (issue #34853).
+func TestUpdatePhaseSwitchWelcomeCharge(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	plainCharger := api.NewMockCharger(ctrl)
+	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+
+	plainCharger.EXPECT().Status().Return(api.StatusB, nil).AnyTimes()
+	plainCharger.EXPECT().Enabled().Return(false, nil).AnyTimes()
+
+	gomock.InOrder(
+		phaseCharger.EXPECT().Phases1p3p(1).Return(nil),
+		plainCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil),
+		plainCharger.EXPECT().Enable(true).Return(nil),
+	)
+
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock,
+		chargeMeter: newChargeMeter(&Null{}),
+		chargeRater: &Null{},
+		chargeTimer: &Null{},
+		progress:    NewProgress(0, 10),
+		wakeUpTimer: NewTimer(),
+		mode:        api.ModePV,
+		minCurrent:  minA,
+		maxCurrent:  maxA,
+		status:      api.StatusB,
+		charger: struct {
+			*api.MockCharger
+			*api.MockPhaseSwitcher
+		}{
+			plainCharger,
+			phaseCharger,
+		},
+		phasesConfigured: 1, // fixed 1p
+		phases:           3,
+		welcomeUntil:     clock.Now().Add(welcomeChargeDuration),
+	}
+
+	attachListeners(t, lp)
+
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
+	require.Equal(t, 1, lp.GetPhases())
+}
+
 func TestPvScalePhasesCircuitLimits(t *testing.T) {
 	tc := []struct {
 		desc           string

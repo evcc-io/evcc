@@ -2611,6 +2611,12 @@ NO_DIM:
 			err = nil
 		}
 
+		// the welcome charge must not miss its connect cycle on the new phases (#34853)
+		if err != nil || !lp.welcomeActive() {
+			break
+		}
+		fallthrough
+
 	// welcome charge takes precedence over mode and limits
 	case lp.welcomeActive():
 		err = lp.setLimit(lp.effectiveMinCurrent())
