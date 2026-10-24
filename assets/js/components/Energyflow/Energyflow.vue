@@ -136,14 +136,24 @@
 								</template>
 								<template v-if="hasMultipleBatteries" #expanded>
 									<EnergyflowEntry
-										v-for="(b, index) in batteryDevices"
-										:key="index"
-										:name="b.title || b.name"
-										:details="b.soc"
+										v-for="(row, index) in batteryDevices"
+										:key="row.device.name || index"
+										:class="{
+											'ms-4': row.depth > 0,
+											'text-success':
+												row.device.powerControlStatus === 'applied' &&
+												row.device.power > 0,
+											'text-danger':
+												row.device.powerControlStatus === 'failed',
+										}"
+										:aria-label="batteryControlAriaLabel(row.device)"
+										:name="row.device.title || row.device.name"
+										:details="row.device.soc"
 										:detailsFmt="batteryFmt"
-										:power="dischargePower(b.power)"
+										:power="dischargePower(row.device.power)"
 										:powerUnit="powerUnit"
-									/>
+									>
+									</EnergyflowEntry>
 								</template>
 							</EnergyflowEntry>
 							<EnergyflowEntry
@@ -283,14 +293,24 @@
 								</template>
 								<template v-if="hasMultipleBatteries" #expanded>
 									<EnergyflowEntry
-										v-for="(b, index) in batteryDevices"
-										:key="index"
-										:name="b.title || b.name"
-										:details="b.soc"
+										v-for="(row, index) in batteryDevices"
+										:key="row.device.name || index"
+										:class="{
+											'ms-4': row.depth > 0,
+											'text-success':
+												row.device.powerControlStatus === 'applied' &&
+												row.device.power < 0,
+											'text-danger':
+												row.device.powerControlStatus === 'failed',
+										}"
+										:aria-label="batteryControlAriaLabel(row.device)"
+										:name="row.device.title || row.device.name"
+										:details="row.device.soc"
 										:detailsFmt="batteryFmt"
-										:power="chargePower(b.power)"
+										:power="chargePower(row.device.power)"
 										:powerUnit="powerUnit"
-									/>
+									>
+									</EnergyflowEntry>
 								</template>
 							</EnergyflowEntry>
 							<EnergyflowEntry
@@ -323,10 +343,12 @@ import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import settings from "@/settings";
 import collector from "@/mixins/collector.js";
 import { defineComponent, type PropType } from "vue";
+import { batteryDeviceRows, type BatteryDeviceRow } from "./batteryDevices";
 import {
 	SMART_COST_TYPE,
 	type BATTERY_MODE,
 	type Battery,
+	type BatteryMeter,
 	type Meter,
 	type CURRENCY,
 	type UiForecast,
@@ -409,8 +431,8 @@ export default defineComponent({
 		batteryPower() {
 			return this.battery?.power ?? 0;
 		},
-		batteryDevices() {
-			return this.battery?.devices ?? [];
+		batteryDevices(): BatteryDeviceRow[] {
+			return batteryDeviceRows(this.battery?.devices ?? []);
 		},
 		hasMultipleBatteries() {
 			return this.batteryDevices.length > 1;
@@ -601,6 +623,14 @@ export default defineComponent({
 		window.removeEventListener("resize", this.updateHeight);
 	},
 	methods: {
+		batteryControlLabel(status?: BatteryMeter["powerControlStatus"]) {
+			return status ? this.$t(`main.energyflow.batteryPowerControl.${status}`) : undefined;
+		},
+		batteryControlAriaLabel(device: BatteryMeter) {
+			const label = this.batteryControlLabel(device.powerControlStatus);
+			const name = device.title || device.name;
+			return label && name ? `${name}: ${label}` : label;
+		},
 		detailsValue(price?: number, co2?: number) {
 			return this.showCo2 ? co2 : price;
 		},

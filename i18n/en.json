@@ -1652,6 +1652,10 @@
       "batteryDischargeHold": "Battery (discharge locked)",
       "batteryGridChargeActive": "Grid charging: active",
       "batteryGridChargeLimit": "Grid charging: when",
+      "batteryPowerControl": {
+        "applied": "Power control applied",
+        "failed": "Power control failed"
+      },
       "batteryTooltip": "{energy} of {total} ({soc})",
       "forecast": "Forecast",
       "forecastTooltip": "forecast: remaining solar production today",

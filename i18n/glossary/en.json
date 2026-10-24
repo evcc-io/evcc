@@ -23,6 +23,10 @@
         "description": "Home battery referenced as the master by another battery.",
         "other": "master battery"
     },
+    "batteryPowerControl": {
+        "description": "Setting a forced charge or discharge power on a home battery.",
+        "other": "battery power control"
+    },
     "card": {
         "description": "A boxed UI panel on a page. Not tile or panel.",
         "other": "card"
