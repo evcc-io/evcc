@@ -36,6 +36,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		LimitSoc              *plugin.Config // optional
 		BatteryMode           *plugin.Config // optional
 		BatteryModes          []string       // optional, modes supported by batteryMode if it cannot report them itself
+		BatteryModePower      *batteryModePowerConfig
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -88,11 +89,16 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		if err != nil {
 			return nil, err
 		}
+		modePowerController, err := cc.BatteryModePower.Controller(ctx)
+		if err != nil {
+			return nil, err
+		}
 
 		implement.Has(m, implement.Battery(socG))
 		implement.May(m, implement.BatteryCapacity(capacity))
 		implement.May(m, implement.BatterySocLimiter(socLimiter))
 		implement.May(m, implement.BatteryPowerLimiter(powerLimiter))
+		implement.May(m, modePowerController)
 
 		// limitSoc expresses normal/hold/charge through the reserve soc (hold uses the live soc),
 		// batteryMode switches the device's operating mode. Configured together the limit is written first.
