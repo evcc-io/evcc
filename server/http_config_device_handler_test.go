@@ -89,6 +89,28 @@ func TestDeleteCircuitMeter(t *testing.T) {
 	}
 }
 
+func TestDeviceConfigMapYamlMeterMaster(t *testing.T) {
+	for name, tc := range map[string]struct {
+		other map[string]any
+		want  any
+	}{
+		"master":  {map[string]any{"master": "battery"}, "battery"},
+		"cleared": {map[string]any{"master": nil}, nil},
+		"empty":   {map[string]any{"master": ""}, nil},
+	} {
+		t.Run(name, func(t *testing.T) {
+			var meter api.Meter
+			dev := config.NewStaticDevice(config.Named{Name: "slave", Other: tc.other}, meter)
+
+			dc, err := deviceConfigMap(templates.Meter, dev, false)
+			require.NoError(t, err)
+
+			conf, _ := dc["config"].(map[string]any)
+			assert.Equal(t, tc.want, conf["master"])
+		})
+	}
+}
+
 func TestDeviceConfigMapCustomYamlRedacted(t *testing.T) {
 	const yamlStr = "type: template\ntemplate: foo\nmaxPower: 2760\npassword: secret123\n"
 
