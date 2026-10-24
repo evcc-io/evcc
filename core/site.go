@@ -95,10 +95,11 @@ type Site struct {
 	batteryGridDischarge      bool     // allow battery discharge to grid (experimental)
 
 	// grid settings
-	gridExportLimit  float64  // static grid export power limit in W, 0 = disabled
-	gridPeakBaseline float64  // grid import peak target floor in W, 0 = disabled
-	gridPeak         gridPeak // month's grid import peak
-	gridPeakTarget   float64  // grid import target from the month's peak in W, 0 = none
+	gridExportLimit  float64   // static grid export power limit in W, 0 = disabled
+	gridPeakBaseline float64   // grid import peak target floor in W, 0 = disabled
+	gridPeak         gridPeak  // month's grid import peak
+	gridPeakTarget   float64   // grid import target from the month's peak in W, 0 = none
+	gridPowerUpdated time.Time // last grid meter reading
 
 	// forecast settings
 	solarAdjusted bool // adjust solar forecast to real production data
@@ -1061,6 +1062,7 @@ func (site *Site) updateGridMeter() error {
 
 		site.Lock()
 		site.gridPower = res
+		site.gridPowerUpdated = time.Now()
 		site.Unlock()
 
 		site.log.DEBUG.Printf("grid power: %.0fW", res)
@@ -1371,8 +1373,9 @@ func (site *Site) update(lp updater) {
 		}
 
 		site.updatePower(lp, state, totalChargePower, consumption, feedin)
-		site.updateGridPeak(time.Now())
 	}
+
+	site.updateGridPeak(time.Now())
 
 	// smart grid charging
 	rate := site.currentRate(consumption)

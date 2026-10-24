@@ -40,7 +40,7 @@ func TestGridPeak(t *testing.T) {
 	assert.Equal(t, 0.0, p.peak(nov))
 
 	// gap invalidates the interval
-	assert.False(t, p.add(nov.Add(time.Hour), 2000))
+	assert.False(t, p.add(nov.Add(time.Hour+5*time.Minute), 2000))
 	assert.False(t, p.add(nov.Add(time.Hour+8*time.Minute), 2000))
 	assert.Equal(t, 0.0, p.peak(nov))
 
@@ -49,6 +49,11 @@ func TestGridPeak(t *testing.T) {
 	assert.True(t, p.add(nov.Add(time.Hour+30*time.Minute), 2000))
 	assert.InDelta(t, 2000, p.peak(nov), 1e-6)
 	assert.Equal(t, nov.Add(time.Hour+15*time.Minute), p.Time)
+
+	// gap ending on an interval boundary starts a complete interval
+	assert.False(t, p.add(nov.Add(2*time.Hour), 3000))
+	assert.True(t, p.add(nov.Add(2*time.Hour+15*time.Minute), 0))
+	assert.InDelta(t, 3000, p.peak(nov), 1e-6)
 }
 
 func TestGridPeakTarget(t *testing.T) {
