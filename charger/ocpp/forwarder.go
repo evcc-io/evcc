@@ -685,18 +685,18 @@ func (sc *sidecar) readFromUpstream() {
 // trackTransaction mirrors a relayed Start/StopTransaction into evcc's connector
 // state so idTag and transaction id stay known while upstream decides and replies.
 func trackTransaction(cs *CS, chargerID string, call, result []byte) {
-	_, _, action, _ := parseOCPPFrame(call)
-	if action != "StartTransaction" && action != "StopTransaction" {
+	var req, res []json.RawMessage
+	if json.Unmarshal(call, &req) != nil || len(req) < 4 || json.Unmarshal(result, &res) != nil || len(res) < 3 {
+		return
+	}
+
+	var action string
+	if json.Unmarshal(req[2], &action) != nil || action != "StartTransaction" && action != "StopTransaction" {
 		return
 	}
 
 	cp, err := cs.ChargepointByID(chargerID)
 	if err != nil {
-		return
-	}
-
-	var req, res []json.RawMessage
-	if json.Unmarshal(call, &req) != nil || len(req) < 4 || json.Unmarshal(result, &res) != nil || len(res) < 3 {
 		return
 	}
 
