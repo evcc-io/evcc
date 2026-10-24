@@ -1052,6 +1052,45 @@ func TestPVSolarShare(t *testing.T) {
 		"disable threshold should apply despite solar share")
 }
 
+// TestPVSolarSharePrioritySoc verifies that below prioritySoc a discharging battery
+// does not cover the non-solar part of the min power (#34332)
+func TestPVSolarSharePrioritySoc(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	newLp := func(enabled bool, soc float64) *Loadpoint {
+		lp := &Loadpoint{
+			log:            util.NewLogger("foo"),
+			clock:          clock.NewMock(),
+			charger:        api.NewMockCharger(ctrl),
+			site:           &mockSite{batterySoc: soc, prioritySoc: 80},
+			minCurrent:     minA,
+			maxCurrent:     maxA,
+			phases:         3,
+			measuredPhases: 3,
+			solarShare:     0.5,
+		}
+		lp.status = api.StatusC
+		lp.enabled = enabled
+		return lp
+	}
+
+	minPower := grid.CurrentToPower(minA, 3)
+
+	// below prioritySoc a discharging battery drops the grid allowance
+	assert.Equal(t, 0.0, newLp(true, 50).pvMaxCurrent(minPower/2-100, 1000, false, false),
+		"should disable while battery discharges below prioritySoc")
+	assert.Equal(t, 0.0, newLp(false, 50).pvMaxCurrent(-minPower/2, 1000, false, false),
+		"must not enable while battery discharges below prioritySoc")
+
+	// a charging battery or one above prioritySoc keeps the allowance
+	assert.Equal(t, minA, newLp(true, 50).pvMaxCurrent(minPower/2-100, -1000, false, false),
+		"must not disable while battery charges")
+	assert.Equal(t, minA, newLp(true, 90).pvMaxCurrent(minPower/2-100, 1000, false, false),
+		"must not disable above prioritySoc")
+	assert.Equal(t, minA, newLp(false, 90).pvMaxCurrent(-minPower/2, 1000, false, false),
+		"should enable above prioritySoc")
+}
+
 // TestWelcomeChargeNoBatterySupport verifies that bufferSoc does not sustain a session
 // the welcome charge started until surplus confirms it (#32278)
 func TestWelcomeChargeNoBatterySupport(t *testing.T) {

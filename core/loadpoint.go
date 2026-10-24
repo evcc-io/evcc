@@ -1810,7 +1810,7 @@ func (lp *Loadpoint) batterySupported(sitePower, batteryPower float64, batteryBu
 
 	// grid import while the battery discharges, net of residual power and controller tolerance
 	demand, phases := lp.projectPhaseSwitch(sitePower-batteryPower-lp.site.GetResidualPower()-lp.batteryTolerance(), minCurrent)
-	if demand > lp.pvDisableThreshold(minCurrent, phases) {
+	if demand > lp.pvDisableThreshold(minCurrent, batteryPower, phases) {
 		lp.log.DEBUG.Printf("battery support: %.0fW grid import", demand)
 		return false
 	}
@@ -1840,25 +1840,37 @@ func (lp *Loadpoint) customThresholds() bool {
 	return lp.Enable.Threshold != 0 || lp.Disable.Threshold != 0
 }
 
+// effectiveSolarShare returns the solar share. Below prioritySoc a discharging battery
+// must not cover the non-solar part of the min power, so all of it must be surplus.
+// Like prioritySoc itself, this does not apply to boost or optimizer control (#34606).
+func (lp *Loadpoint) effectiveSolarShare(batteryPower float64) float64 {
+	share := lp.GetSolarShare()
+	if share < 1 && batteryPower > 0 && lp.GetBatteryBoost() == boostDisabled && lp.activeSuggestion() == nil &&
+		lp.site.GetBatterySoc() < lp.site.GetPrioritySoc() {
+		return 1
+	}
+	return share
+}
+
 // pvDisableThreshold returns the pv disable switch point, derived from the solar share
 // unless custom thresholds are configured. Phases is the number of phases charging is
 // expected to continue on, which may differ from the active phases if a scale down is pending.
-func (lp *Loadpoint) pvDisableThreshold(minCurrent float64, phases int) float64 {
+func (lp *Loadpoint) pvDisableThreshold(minCurrent, batteryPower float64, phases int) float64 {
 	if lp.customThresholds() {
 		return lp.Disable.Threshold
 	}
 	// allow grid import for the non-solar part of the min power
-	return (1 - lp.GetSolarShare()) * grid.CurrentToPower(minCurrent, phases)
+	return (1 - lp.effectiveSolarShare(batteryPower)) * grid.CurrentToPower(minCurrent, phases)
 }
 
 // pvEnableDecision returns the pv enable switch point and whether charging should start,
 // derived from the solar share unless custom thresholds are configured.
 // The threshold accounts for the loadpoint's own current, so site power <= threshold is the decision.
-func (lp *Loadpoint) pvEnableDecision(effectiveCurrent, minCurrent, sitePower float64, phases int) (float64, bool) {
+func (lp *Loadpoint) pvEnableDecision(effectiveCurrent, minCurrent, sitePower, batteryPower float64, phases int) (float64, bool) {
 	threshold := lp.Enable.Threshold
 	if !lp.customThresholds() {
 		// require the solar share of the min current to come from surplus
-		threshold = grid.CurrentToPower(effectiveCurrent-lp.GetSolarShare()*minCurrent, phases)
+		threshold = grid.CurrentToPower(effectiveCurrent-lp.effectiveSolarShare(batteryPower)*minCurrent, phases)
 	} else if threshold == 0 {
 		threshold = grid.CurrentToPower(effectiveCurrent-minCurrent, phases)
 	}
@@ -1932,7 +1944,7 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 			projectedSitePower += max(0, grid.CurrentToPower(minCurrent, lp.minActivePhases())-lp.chargePower)
 		}
 
-		disableThreshold := lp.pvDisableThreshold(minCurrent, projectedPhases)
+		disableThreshold := lp.pvDisableThreshold(minCurrent, batteryPower, projectedPhases)
 
 		// kick off disable sequence, unless climater keep-alive is holding
 		// charging at minCurrent — otherwise the "pausing soon" badge would
@@ -1972,7 +1984,7 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	}
 
 	if !alwaysCharge && !lp.enabled {
-		enableThreshold, shouldEnable := lp.pvEnableDecision(effectiveCurrent, minCurrent, sitePower, activePhases)
+		enableThreshold, shouldEnable := lp.pvEnableDecision(effectiveCurrent, minCurrent, sitePower, batteryPower, activePhases)
 
 		// kick off enable sequence
 		if shouldEnable {
