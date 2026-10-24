@@ -95,7 +95,11 @@ type Site struct {
 	batteryGridDischarge      bool     // allow battery discharge to grid (experimental)
 
 	// grid settings
-	gridExportLimit float64 // static grid export power limit in W, 0 = disabled
+	gridExportLimit  float64   // static grid export power limit in W, 0 = disabled
+	gridPeakBaseline float64   // grid import peak target floor in W, 0 = disabled
+	gridPeak         gridPeak  // month's grid import peak
+	gridPeakTarget   float64   // grid import target from the month's peak in W, 0 = none
+	gridPowerUpdated time.Time // last grid meter reading
 
 	// forecast settings
 	solarAdjusted bool // adjust solar forecast to real production data
@@ -267,6 +271,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	// circuit
 	if c := circuit.Root(); c != nil {
 		site.circuit = c
+		c.SetPeakLimiter(gridPeakLimiter{site})
 	}
 
 	// grid meter
@@ -497,6 +502,14 @@ func (site *Site) restoreSettings() error {
 		if err := site.SetGridExportLimit(v); err != nil {
 			return err
 		}
+	}
+	if v, err := settings.Float(keys.GridPeakBaseline); err == nil {
+		if err := site.SetGridPeakBaseline(v); err != nil {
+			return err
+		}
+	}
+	if err := settings.Json(keys.GridPeak, &site.gridPeak); err != nil && !errors.Is(err, settings.ErrNotFound) {
+		site.log.WARN.Printf("grid peak: %v", err)
 	}
 	// restored after keys.BatteryGridDischarge above - a stored limit stays dormant
 	// while the opt-in is off
@@ -1049,6 +1062,7 @@ func (site *Site) updateGridMeter() error {
 
 		site.Lock()
 		site.gridPower = res
+		site.gridPowerUpdated = time.Now()
 		site.Unlock()
 
 		site.log.DEBUG.Printf("grid power: %.0fW", res)
@@ -1361,6 +1375,8 @@ func (site *Site) update(lp updater) {
 		site.updatePower(lp, state, totalChargePower, consumption, feedin)
 	}
 
+	site.updateGridPeak(time.Now())
+
 	// smart grid charging
 	rate := site.currentRate(consumption)
 
@@ -1485,6 +1501,7 @@ func (site *Site) prepare() {
 	site.publish(keys.SolarAdjusted, site.solarAdjusted)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
 	site.publish(keys.GridExportLimit, site.GetGridExportLimit())
+	site.publish(keys.GridPeakBaseline, site.GetGridPeakBaseline())
 	site.publish(keys.ProfilePercentile, site.GetProfilePercentile())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))

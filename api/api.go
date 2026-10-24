@@ -7,7 +7,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,PowerLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,MeterReturnEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,HEMS,Tariff
+//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,PowerLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,MeterReturnEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,ConsumptionLimiter,Dimmer,HEMS,Tariff
 
 // Meter provides total active power in W
 type Meter interface {
@@ -290,6 +290,7 @@ type Circuit interface {
 	GetParent() Circuit
 	RegisterChild(child Circuit)
 	SetHEMS(HEMS)
+	SetPeakLimiter(ConsumptionLimiter)
 	HasMeter() bool
 	GetMaxPower() float64
 	GetMaxCurrent() float64
@@ -300,12 +301,17 @@ type Circuit interface {
 	ValidatePower(old, new float64) float64
 }
 
+// ConsumptionLimiter supplies a grid consumption limit
+type ConsumptionLimiter interface {
+	MaxConsumptionPower() *float64 // nil = limiting undefined, else active limit (0 = none)
+}
+
 // HEMS exposes the runtime state of the home energy management system.
 type HEMS interface {
+	ConsumptionLimiter
 	SetUpdated(func())
-	CurtailedPercent() *int        // allowed feed-in percent of nominal production power (0..100), nil = no statement
-	MaxProductionPower() *float64  // nil = limiting undefined, else active limit
-	MaxConsumptionPower() *float64 // nil = limiting undefined, else active limit (0 = none)
+	CurtailedPercent() *int       // allowed feed-in percent of nominal production power (0..100), nil = no statement
+	MaxProductionPower() *float64 // nil = limiting undefined, else active limit
 }
 
 // Redactor is an interface to redact sensitive data
