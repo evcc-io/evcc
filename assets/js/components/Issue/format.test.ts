@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vite-plus/test";
-import { formatJson } from "./format";
+import { formatJson, redactEebus } from "./format";
 
 describe("formatJson", () => {
   it("formats basic object with sorted keys", () => {
@@ -128,5 +128,30 @@ describe("formatJson", () => {
     {"id":1,"name":"db:1","type":"template","config":{"template":"tesla","host":"192.168.1.1"}}
   ]
 }`);
+  });
+});
+
+describe("redactEebus", () => {
+  it("shortens ids and masks pairing payloads", () => {
+    const result = redactEebus({
+      config: {
+        port: 4712,
+        shipid: "EVCC-3137323634653062",
+        certificate: { public: "-----BEGIN CERTIFICATE-----", private: "***" },
+      },
+      status: {
+        ski: "b3009da7d35aa40f6cb25fc34be0224268d341ed",
+        qr: "SHIP;SKI:b3009da7;ENDSHIP;",
+      },
+    });
+
+    expect(result).toEqual({
+      config: {
+        port: 4712,
+        shipid: "***3062",
+        certificate: { public: "***", private: "***" },
+      },
+      status: { ski: "***41ed", qr: "***" },
+    });
   });
 });

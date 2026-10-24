@@ -77,7 +77,7 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 	v := &Tesla{
 		embed:      &cc.embed,
 		Provider:   tesla.NewProvider(fleet, vehicle.Vin, cc.Cache),
-		Controller: tesla.NewController(tesla.NewAPI(pc, cc.CommandProxy), vehicle.Vin),
+		Controller: tesla.NewController(tesla.NewAPI(log, pc, cc.CommandProxy), vehicle.Vin),
 	}
 
 	v.fromVehicle(vehicle.DisplayName, 0)

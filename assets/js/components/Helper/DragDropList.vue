@@ -21,6 +21,7 @@ export default defineComponent({
 				parent: container,
 				getValues: () => this.values,
 				setValues: (newOrder: unknown[]) => this.$emit("reorder", newOrder),
+				config: { dragHandle: ".drag-handle" },
 			});
 		}
 	},

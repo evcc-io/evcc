@@ -3,11 +3,13 @@ package vehicle
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/bmw/cardata"
 )
@@ -24,14 +26,27 @@ func init() {
 
 // NewCardataFromConfig creates a new BMW/Mini CarData vehicle
 func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
-	var cc struct {
+	cc := struct {
 		embed         `mapstructure:",squash"`
 		ClientID, VIN string
 		Cache         time.Duration // 50 requests per day
+		Stream        string
+		mqtt.Config   `mapstructure:",squash"`
+		Topic         string
+	}{
+		Stream: "bmw",
+		Topic:  "bmw/raw/+",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	// clientid is the BMW client id, not the mqtt one
+	cc.Config.ClientID = ""
+
+	if cc.Stream != "bmw" && cc.Stream != "mqtt" {
+		return nil, fmt.Errorf("invalid stream: %s", cc.Stream)
 	}
 
 	if cc.VIN == "" {
@@ -53,7 +68,7 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("cardata").Redact(cc.ClientID, cc.VIN)
+	log := util.NewLogger("cardata").Redact(cc.ClientID, cc.VIN, cc.Password)
 
 	authCtx := util.WithLogger(context.Background(), log)
 	ts, err := cardata.NewOAuth(authCtx, cc.ClientID, cc.embed.GetTitle())
@@ -63,7 +78,14 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 
 	api := cardata.NewAPI(log, ts)
 
-	v.Provider = cardata.NewProvider(ctx, log, api, ts, cc.ClientID, cc.VIN, cc.Cache)
+	var conn *cardata.MqttConnector
+	if cc.Stream == "mqtt" {
+		conn = cardata.NewBrokerConnector(context.Background(), log, cc.Config, cc.Topic)
+	} else {
+		conn = cardata.NewMqttConnector(context.Background(), log, cc.ClientID, ts)
+	}
+
+	v.Provider = cardata.NewProvider(ctx, log, api, ts, conn, cc.VIN, cc.Cache)
 
 	return v, nil
 }

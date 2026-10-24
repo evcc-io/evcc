@@ -280,3 +280,12 @@ func TestPoints(t *testing.T) {
 	assert.Equal(t, "317", find(data, "value").Value, "found by generic name")
 	assert.Equal(t, "22164", find(data, FieldOdometer).Value, "named field found by name")
 }
+
+func TestKeepData(t *testing.T) {
+	data := []point{{Value: "1"}}
+
+	assert.True(t, keepData(data, time.Now()), "recent success")
+	assert.False(t, keepData(data, time.Now().Add(-2*errorGrace)), "persistent failure")
+	assert.False(t, keepData(data, time.Time{}), "never succeeded")
+	assert.False(t, keepData(nil, time.Now()), "no data")
+}
