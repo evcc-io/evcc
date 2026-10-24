@@ -46,6 +46,7 @@ func TestCardataMqttStream(t *testing.T) {
 
 	b, _, err = tmpl.RenderResult(Vehicle, RenderModeInstance, map[string]any{"vin": "WBA", "clientid": "c", "stream": "mqtt"})
 	require.NoError(t, err)
+	assert.Contains(t, string(b), "stream: mqtt")
 	assert.Contains(t, string(b), "topic: bmw/raw/+")
 	assert.NotContains(t, string(b), "broker:")
 
