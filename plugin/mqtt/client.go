@@ -270,18 +270,25 @@ func (m *Client) Listen(topic string, callback func(string)) error {
 
 	token := m.listen(topic)
 
+	select {
+	case <-token.Done():
+	case <-time.After(request.Timeout):
+	}
+
+	// recheck completion as SUBACK may race the timeout
 	var err error
 	select {
-	case <-time.After(request.Timeout):
-		err = api.ErrTimeout
 	case <-token.Done():
 		err = subscribeError(token)
+	default:
+		err = api.ErrTimeout
 	}
 
 	if err != nil {
 		// failed listen must not leave the callback registered
 		m.mux.Lock()
-		m.listener[topic] = slices.DeleteFunc(m.listener[topic], func(c *func(string)) bool { return c == cb })
+		// clone as message handlers may iterate the current slice unlocked
+		m.listener[topic] = slices.DeleteFunc(slices.Clone(m.listener[topic]), func(c *func(string)) bool { return c == cb })
 		if len(m.listener[topic]) == 0 {
 			delete(m.listener, topic)
 		}
