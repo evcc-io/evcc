@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
 
@@ -22,15 +23,17 @@ const (
 // API is a minimal Tesla Fleet API client, also used against a command proxy
 type API struct {
 	*request.Helper
+	log  *util.Logger
 	base string
 
 	noLocation atomic.Bool // app lacks the vehicle location scope
 }
 
 // NewAPI creates a Fleet API client; the http client carries authentication
-func NewAPI(client *http.Client, base string) *API {
+func NewAPI(log *util.Logger, client *http.Client, base string) *API {
 	return &API{
 		Helper: &request.Helper{Client: client},
+		log:    log,
 		base:   strings.TrimSuffix(base, "/") + "/api/1",
 	}
 }
@@ -82,6 +85,7 @@ func (v *API) VehicleData(vin string) (*VehicleData, error) {
 		// Tesla rejects the whole request with 403 if the location scope is missing
 		var se *request.StatusError
 		if endpoints == vehicleDataLocationEndpoints && errors.As(err, &se) && se.HasStatus(http.StatusForbidden) {
+			v.log.WARN.Println("vehicle location unavailable: Fleet API app lacks the vehicle_location scope")
 			v.noLocation.Store(true)
 			return v.VehicleData(vin)
 		}
