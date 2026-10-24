@@ -270,14 +270,9 @@ func (m *Client) Listen(topic string, callback func(string)) error {
 
 	token := m.listen(topic)
 
-	token.WaitTimeout(request.Timeout)
-
-	// recheck completion as SUBACK may race the timeout
 	err := api.ErrTimeout
-	select {
-	case <-token.Done():
+	if token.WaitTimeout(request.Timeout) {
 		err = subscribeError(token, topic)
-	default:
 	}
 
 	if err != nil {
