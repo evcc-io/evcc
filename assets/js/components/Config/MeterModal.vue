@@ -75,6 +75,21 @@
 				/>
 			</FormRow>
 			<FormRow
+				v-if="selectedType === 'battery'"
+				id="meterParamMaster"
+				:label="$t('config.meter.master')"
+				:warning="isMasterInUse ? $t('config.meter.masterInUse') : undefined"
+			>
+				<PropertyField
+					id="meterParamMaster"
+					v-model="values.master"
+					:choice="masterChoices"
+					:disabled="isMasterInUse"
+					property="master"
+					type="String"
+				/>
+			</FormRow>
+			<FormRow
 				v-if="hasDeviceIcon"
 				id="meterParamDeviceIcon"
 				:label="$t('config.icon.label')"
@@ -120,13 +135,18 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import { ICONS } from "../VehicleIcon/VehicleIcon.vue";
-import { ConfigType, type MeterType, type MeterTemplateUsage } from "@/types/evcc";
+import {
+	ConfigType,
+	type ConfigMeter,
+	type MeterType,
+	type MeterTemplateUsage,
+} from "@/types/evcc";
 import {
 	type DeviceValues,
 	type Template,
@@ -147,6 +167,7 @@ const initialValues = {
 	deviceProduct: undefined,
 	yaml: undefined,
 	template: null,
+	master: "",
 };
 
 const CUSTOM_FIELDS = ["usage", "modbus"];
@@ -167,6 +188,7 @@ export default defineComponent({
 	},
 	props: {
 		isSponsor: Boolean,
+		batteryMeters: { type: Array as PropType<ConfigMeter[]>, default: () => [] },
 	},
 	emits: ["changed", "disable", "close"],
 	data() {
@@ -176,7 +198,7 @@ export default defineComponent({
 			iconChoices: ICONS,
 			initialValues,
 			customFields: CUSTOM_FIELDS,
-			preserveFields: ["deviceTitle", "deviceIcon"],
+			preserveFields: ["deviceTitle", "deviceIcon", "master"],
 		};
 	},
 	computed: {
@@ -240,6 +262,13 @@ export default defineComponent({
 		isNew(): boolean {
 			return this.id === undefined;
 		},
+		isMasterInUse(): boolean {
+			const battery = this.batteryMeters.find((meter) => meter.id === this.id);
+			return (
+				!!battery &&
+				this.batteryMeters.some((meter) => meter.config?.master === battery.name)
+			);
+		},
 		canConvertToConsumer(): boolean {
 			return !this.isNew && this.selectedType === "ext" && this.extMeterUsage === "charge";
 		},
@@ -248,6 +277,18 @@ export default defineComponent({
 				name: this.$t(`config.meter.usage.${key}`),
 				key,
 			}));
+		},
+		masterChoices(): { key: string | null; name: string | null }[] {
+			const choices = this.batteryMeters
+				.filter(
+					(meter) =>
+						(this.id === undefined || meter.id !== this.id) && !meter.config?.master
+				)
+				.map((meter) => ({
+					key: meter.name,
+					name: meter.deviceTitle || meter.name,
+				}));
+			return choices.length ? choices : [{ key: null, name: null }];
 		},
 	},
 	methods: {

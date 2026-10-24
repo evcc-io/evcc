@@ -524,7 +524,11 @@ export interface ConfigCharger extends Omit<Entity, "type"> {
   type: ConfigType;
 }
 
-export interface ConfigMeter extends Entity {
+export interface ConfigMeter extends Entity<{
+  master?: string;
+  template?: string;
+  usage?: string;
+}> {
   deviceProduct: string;
   deviceTitle?: string;
   deviceIcon?: string;
