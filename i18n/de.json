@@ -211,14 +211,14 @@
     },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
-      "descriptionInterval": "Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest und die Ladung anpasst. Die Standardeinstellung von 30 Sekunden ist eine sichere Wahl. Geräte wie Fahrzeuge, Wallbox und Wechselrichter brauchen in der Regel mehrere Sekunden um ihr Verhalten anzupassen. Wenn deine Komponenten schnell reagieren kannst du niedrigere Werte verwenden. Wir empfehlen dringend nicht unter 10 Sekunden zu gehen. Wenn du komisches Regelverhalten oder springende Leistungswerte beobachtest wähle ein größeres Intervall.",
+      "descriptionInterval": "Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest und die Ladung anpasst. Die Standardeinstellung von 30 Sekunden ist eine sichere Wahl. Geräte wie Fahrzeuge, Ladegeräte und Wechselrichter brauchen in der Regel mehrere Sekunden um ihr Verhalten anzupassen. Wenn deine Komponenten schnell reagieren kannst du niedrigere Werte verwenden. Wir empfehlen dringend nicht unter 10 Sekunden zu gehen. Wenn du komisches Regelverhalten oder springende Leistungswerte beobachtest wähle ein größeres Intervall.",
       "descriptionResidualPower": "Verschiebt den Betriebspunkt des Regelkreises. Wenn du eine Hausbatterie hast, wird empfohlen, einen Wert von 100 W einzustellen. Auf diese Weise erhält die Batterie eine leichte Priorität gegenüber dem Netzbezug.",
       "labelInterval": "Aktualisierungsintervall",
       "labelResidualPower": "Residualleistung",
       "title": "Regelverhalten"
     },
     "curtailer": {
-      "description": "Gerät, das die Einspeisung auf Anforderung des Netzbetreibers begrenzt (§ 9 EEG). Viele Wechselrichter unterstützen dies direkt über ihre PV-Zähler-Konfiguration. Eine separate Konfiguration ist nur bei manchen Herstellern oder Anlagen mit mehreren Wechselrichtern nötig.",
+      "description": "Gerät, das die Netz-Einspeisung auf Anforderung des Netzbetreibers begrenzt (§ 9 EEG). Viele Wechselrichter unterstützen dies direkt über ihre PV-Zähler-Konfiguration. Eine separate Konfiguration ist nur bei manchen Herstellern oder Anlagen mit mehreren Wechselrichtern nötig.",
       "generic": "Generische Integrationen",
       "specific": "Spezifische Integrationen",
       "template": "Hersteller",
@@ -250,7 +250,7 @@
       "currentRange": "Strom",
       "curtailLimit": "Einspeiselimit",
       "curtailable": "Abregelbar",
-      "curtailed": "Einspeiselimit",
+      "curtailed": "Netz-Einspeiselimit",
       "detected": "Erkannt",
       "dimLimit": "Verbrauchslimit",
       "dimmed": "Verbrauch begrenzt",
@@ -327,7 +327,7 @@
       "auxMeter": "Selbstregelnder Verbraucher",
       "batteryStorage": "Hausbatterie",
       "consumer": "Verbraucher",
-      "solarSystem": "PV-Anlage"
+      "solarSystem": "Solar-Anlage"
     },
     "editor": {
       "loading": "Lade YAML-Editor …"
@@ -973,19 +973,19 @@
         "description": "Wird für länderspezifische Hinweise und Voreinstellungen verwendet.",
         "label": "Land"
       },
-      "gridConnection": {
-        "description": {
-          "3p4w": "Häufigstes Netz mit Neutralleiter.",
-          "3p3w": "Netz ohne Neutralleiter. Üblich in Norwegen und Teilen Belgiens."
-        },
-        "label": "Netzanschluss",
-        "3p4w": "{voltage}/{lineVoltage} V mit Neutralleiter (3P4W)",
-        "3p3w": "3 × {voltage} V ohne Neutralleiter (3P3W)"
-      },
       "currency": {
         "description": "Wird für die Erfassung und Formatierung von Energiepreisen, Kosten und Einsparungen verwendet.",
         "example": "Dein Ladepreis betrug {price}. Du hast {amount} gespart.",
         "label": "Währung"
+      },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V ohne Neutralleiter (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V mit Neutralleiter (3P4W)",
+        "description": {
+          "3p3w": "Netz ohne Neutralleiter. Üblich in Norwegen und Teilen Belgiens.",
+          "3p4w": "Häufigstes Netz mit Neutralleiter."
+        },
+        "label": "Netzanschluss"
       },
       "siteTitle": {
         "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",
@@ -1119,7 +1119,7 @@
         "feedIn": "Einspeisetarif",
         "grid": "Netzbezugspreis",
         "planner": "Planer",
-        "solar": "PV",
+        "solar": "Solar",
         "temperature": "Temperaturvorhersage"
       },
       "zones": {
@@ -1128,7 +1128,7 @@
         "allMonths": "Alle Monate",
         "allTimes": "Alle Zeiten",
         "cancel": "Abbrechen",
-        "charge": "Aufschlag",
+        "charge": "Ladung",
         "days": "Tage",
         "edit": "Bearbeiten",
         "hours": "Stunden",
@@ -1204,7 +1204,7 @@
       "batteryCharge": "Batterieladung",
       "batteryDischarge": "Batterieentladung",
       "charging": "Laden",
-      "export": "Einspeisung",
+      "export": "Export ins Netz",
       "grid": "Netzbezug",
       "heating": "Heizen",
       "home": "Verbrauch",
@@ -1218,12 +1218,12 @@
       "amount": "Betrag",
       "cost": "Netzkosten",
       "energy": "Energie",
-      "export": "Einspeisung",
+      "export": "Export",
       "exportPrice": "Einspeisepreis",
       "import": "Bezug",
       "importPrice": "Bezugspreis",
       "price": "Preis",
-      "revenue": "Einspeisevergütung",
+      "revenue": "Exportvergütung",
       "title": "Netz"
     },
     "group": {
@@ -1257,9 +1257,9 @@
       "cost": "Kosten",
       "energy": "Energie",
       "grid": "Netz",
-      "hint": "PV- und Batteriestrom zum Einspeisepreis bewertet.",
+      "hint": "Solar- und Batterieenergie zum Netzexportpreis bewertet.",
       "price": "Preis/kWh",
-      "pv": "PV",
+      "pv": "Solar",
       "share": "Anteil",
       "source": "Quelle",
       "title": "Quellen",
@@ -1280,10 +1280,10 @@
   },
   "footer": {
     "community": {
-      "greenEnergy": "PV",
+      "greenEnergy": "Solar",
       "greenEnergySub1": "über evcc geladen",
       "greenEnergySub2": "seit Oktober 2022",
-      "greenShare": "PV-Anteil",
+      "greenShare": "Sonnen-Anteil",
       "greenShareSub1": "Leistung bereitgestellt durch",
       "greenShareSub2": "PV und Hausbatterie",
       "power": "Ladeleistung",
@@ -1615,8 +1615,8 @@
       "loadpoints": "Ladepunkt | Ladepunkt | {count} Ladepunkte",
       "loadpointsLimit": "{limit} Limit",
       "noEnergy": "Keine Messwerte",
-      "pv": "PV-Anlage",
-      "pvExport": "Einspeisung",
+      "pv": "Solar-Anlage",
+      "pvExport": "Netzexport",
       "pvProduction": "Erzeugung",
       "selfConsumption": "Eigenverbrauch",
       "toggleDetails": "Energiefluss-Details"
@@ -1632,7 +1632,7 @@
     },
     "hemsWarning": {
       "consumption": "Verbrauch",
-      "feedIn": "Einspeisung",
+      "feedIn": "Netz-Einspeisung",
       "title": "Externe Begrenzung aktiv"
     },
     "loadpoint": {
@@ -1651,7 +1651,7 @@
       "remaining": "Restzeit",
       "remoteDisabledHard": "{source}: Deaktiviert",
       "remoteDisabledSoft": "{source}: Adaptives PV-Laden deaktiviert",
-      "solar": "PV",
+      "solar": "Solar",
       "todayEnergy": "Heute"
     },
     "loadpointSettings": {
@@ -1692,19 +1692,19 @@
       },
       "smartCostCheap": "günstige Netzladung",
       "smartCostClean": "Grünes Netzladen",
-      "solar": "PV-Überschuss",
+      "solar": "Solar-Überschuss",
       "solarShare": {
         "charging": {
-          "description": "Mindestens {share} der minimalen Ladeleistung muss durch PV-Überschuss gedeckt sein.",
+          "description": "Mindestens {share} der minimalen Ladeleistung muss durch Solar-Überschuss gedeckt sein.",
           "descriptionFull": "Laden startet, sobald der Überschuss die minimale Ladeleistung deckt.",
           "descriptionZero": "Laden startet, sobald etwas Überschuss verfügbar ist."
         },
         "heating": {
-          "description": "Mindestens {share} der minimalen Heizleistung muss durch PV-Überschuss gedeckt sein.",
+          "description": "Mindestens {share} der minimalen Heizleistung muss durch Solar-Überschuss gedeckt sein.",
           "descriptionFull": "Heizen startet, sobald der Überschuss die minimale Heizleistung deckt.",
           "descriptionZero": "Heizen startet, sobald etwas Überschuss verfügbar ist."
         },
-        "label": "PV-Anteil",
+        "label": "Sonnen-Anteil",
         "thresholdsHint": "Leistungsbasierte Ladeschwellen sind konfiguriert. Entferne sie, um diesen Regler zu nutzen.",
         "thresholdsHintYaml": "Leistungsbasierte Ladeschwellen sind konfiguriert. Entferne die Ein-/Ausschaltschwellen dieses Ladepunkts in deiner evcc.yaml, um diesen Regler zu nutzen.",
         "thresholdsLink": "Konfiguration bearbeiten"
@@ -1990,7 +1990,7 @@
       "priceperkwh": "Preis/kWh",
       "socend": "Ladestand Ende (%)",
       "socstart": "Ladestand Start (%)",
-      "solarpercentage": "PV (%)",
+      "solarpercentage": "Solar (%)",
       "vehicle": "Fahrzeug"
     },
     "date": "Anfang",
@@ -2006,11 +2006,11 @@
       "co2": "Emissionen",
       "grid": "Netz",
       "price": "Kosten",
-      "self": "PV"
+      "self": "Solar"
     },
     "groupBy": {
       "loadpoint": "Ladepunkt",
-      "none": "PV",
+      "none": "Solar",
       "vehicle": "Fahrzeug"
     },
     "loadpoint": "Ladepunkt",
@@ -2026,7 +2026,7 @@
     "price": "Kosten",
     "reallyDelete": "Möchtest du diesen Ladevorgang wirklich löschen?",
     "showIndividualEntries": "Einzelne Ladevorgänge anzeigen",
-    "solar": "PV",
+    "solar": "Solar",
     "title": "Ladevorgänge",
     "total": "Gesamt",
     "type": {

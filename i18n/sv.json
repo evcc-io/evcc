@@ -36,12 +36,12 @@
       "discharging": "laddar ur",
       "energy": "Energi",
       "gridCharge": "elnätsladdning",
-      "gridDischarge": "återmatning till nätet",
+      "gridDischarge": "utmatning till nätet",
       "hold": "urladdning låst",
       "holdCharge": "laddning låst",
       "ofTotal": "av {total}",
       "power": "Effekt",
-      "soc": "Batterinivå"
+      "soc": "Laddningladdnivå"
     },
     "combined": "Sammanlagt",
     "config": {

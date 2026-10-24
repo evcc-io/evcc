@@ -46,8 +46,8 @@
     },
     "combined": "Samlet",
     "config": {
-      "buffer": "Energi i hjemmets batteri over {soc} kan bruges til at understøtte ladestederne og forsinke frakobling i smart mode. Start solopladning automatisk {start}.",
-      "bufferNone": "Hjemmets batteri bruges ikke til ladestederne. Sæt en værdi under {soc} for at aktivere støtte.",
+      "buffer": "Energi i hjemmets batteri over {soc} kan bruges til at understøtte ladestederne og forsinke frakobling i smart mode. Start solopladning automatisk {start}. Note: “Oplad altid” påvirkes ikke af denne indstilling.",
+      "bufferNone": "Hjemmets batteri bruges ikke til ladestederne. Sæt en værdi under {soc} for at aktivere støtte i smatmode. Note \"Oplad altid\" påvirkes ikke af denne indstilling.",
       "bufferStart": {
         "above": "når batteriet er over {soc}",
         "full": "når batteriet er fyldt",
@@ -975,6 +975,15 @@
         "description": "Bruges til at formatere pris, omkostninger og besparelser baseret på dine tariffer.",
         "example": "Din opladningspris var {price}. Du sparede {amount}.",
         "label": "Valuta"
+      },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V uden nulleder (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V med nulleder (3P4W)",
+        "description": {
+          "3p3w": "Elnet uden nulleder. Almindelig i Norge og dele ag Belgien.",
+          "3p4w": "Mest almindelige elnet med nulleder."
+        },
+        "label": "Elnet forbindelse"
       },
       "siteTitle": {
         "description": "Vises på hovedskærmen og i browserfanen.",

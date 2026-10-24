@@ -46,8 +46,8 @@
     },
     "combined": "Gecombineerd",
     "config": {
-      "buffer": "Energie in de thuisbatterij boven {soc} mag gebruikt worden om laadpunten te ondersteunen en stelt het uitschakelen van laadpunten uit in smart modus. Start het zonladen automatisch {start}.",
-      "bufferNone": "Energie in de thuisbatterij wordt niet gebruikt voor de laadpunten. Stel een waarde onder {soc} in om dit in te schakelen.",
+      "buffer": "Energie in de thuisbatterij boven {soc} mag gebruikt worden om laadpunten te ondersteunen en stelt het uitschakelen van laadpunten uit in smart modus. Start het zonladen automatisch {start}. Let op: “Altijd opladen” negeert deze instelling.",
+      "bufferNone": "Energie in de thuisbatterij wordt niet gebruikt voor de laadpunten. Stel een waarde onder {soc} in om dit in te schakelen. Let op: “Altijd opladen” negeert deze instelling.",
       "bufferStart": {
         "above": "eens de batterij boven {soc} is",
         "full": "eens de batterij volledig vol is",
@@ -266,7 +266,7 @@
       "exportLimit": "Exportlimiet",
       "feedinPrice": "Terugleververgoeding",
       "forecast": "Voorspelling",
-      "gridPrice": "Netprijs",
+      "gridPrice": "Netimportprijs",
       "heaterTempLimit": "Verwarming limiet",
       "identifier": "RFID-Nummer",
       "loginBlocked": "Inloglimiet bereikt",
@@ -330,7 +330,7 @@
       "C": "C (opladen)"
     },
     "devices": {
-      "auxMeter": "Slimme verbruiker",
+      "auxMeter": "Zelf-regulerende verbruiker",
       "batteryStorage": "Thuisbatterij",
       "consumer": "Verbruiker",
       "solarSystem": "Zonnepanelen systeem"
@@ -383,6 +383,7 @@
       "optional": "optioneel"
     },
     "general": {
+      "add": "Toevoegen",
       "applyAndClose": "Toepassen & sluiten",
       "authPerform": "Verbinden met {provider}",
       "authPerformHint": "Wordt in een nieuw tabblad geopend. Ga terug naar deze pagina om verder te gaan.",
@@ -394,6 +395,7 @@
       "confirmDisable": "Dit apparaat deactiveren? Het zal genegeerd worden na de volgende herstart.",
       "confirmEnable": "Dit apparaat heractiveren?",
       "confirmSave": "Er zijn niet-opgeslagen wijzigingen. Nu opslaan?",
+      "continue": "Doorgaan",
       "copied": "Gekopieerd!",
       "copy": "Kopieer",
       "customHelp": "Creëer een gebruiker-gedefiniëerd apparaat met evcc’s plugin systeem.",
@@ -581,6 +583,10 @@
       "thresholdEnableHelpInvalid": "Gebruik alstublieft een negatieve waarde.",
       "thresholdEnableHelpNegative": "Begint wanneer het overschot van {surplus} beschikbaar is voor {delay}.",
       "thresholdEnableLabel": "Netstroom inschakelen",
+      "thresholdsNote": {
+        "charging": "Om het netverbruik tijdens zonneladen te regelen, gebruik de {slider} regelaar bij de laadpuntinstellingen op de {page} pagina. Configureer waarden hier enkel in speciale gevallen.",
+        "heating": "Om het netverbruik tijdens zonneverwarmen te regelen, gebruik de {slider} regelaar bij de verwarmerinstellingen op de {page} pagina. Configureer waarden hier enkel in speciale gevallen."
+      },
       "thresholdsSliderDisabled": "De {slider} regelaar is momenteel uitgeschakeld omdat hier waarden zijn geconfigureerd.",
       "titleAdd": {
         "charging": "Laadpunt Toevoegen",
@@ -711,10 +717,18 @@
         "grid": "Voeg netmeter toe",
         "pv": "Zonne-energie meter toevoegen"
       },
+      "reuseApply": "Gebruik de instellingen ervan.",
+      "reuseHint": "{device} kan ook gebruikt worden als \"{target}\".",
       "save": "Opslaan",
       "specific": "Specifieke integraties",
       "template": "Fabrikant",
       "titleChoice": "Wat wilt u toevoegen?",
+      "titleExample": {
+        "aux": "Slimme waterverwarmer, etc.",
+        "battery": "Kelder, garage, electrische centrale, etc.",
+        "consumer": "Vaatwasser, wasmachine, zwembadpomp, etc.",
+        "pv": "Zuidelijk dak, carport, etc."
+      },
       "titleLabel": "Titel",
       "usage": {
         "aux": "Zelf regulerende verbruiker",
@@ -932,7 +946,7 @@
       "additionalMeter": "Extra meters",
       "consumers": "Verbruikers",
       "general": "Algemeen",
-      "grid": "Netaansluiting",
+      "grid": "Net",
       "integrations": "Integraties",
       "loadpoints": "Laadpunten & verwarmers",
       "meter": "PV & thuisbatterij",
@@ -972,6 +986,15 @@
         "example": "Uw laadkosten bedroegen {price}. U heeft {amount} bespaard.",
         "label": "Valuta"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V zonder nulleider (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V met nulleider (3P4W)",
+        "description": {
+          "3p3w": "Netaansluiting zonder nulleider. Gebruikelijk in Noorwegen en delen van België.",
+          "3p4w": "Meest voorkomende netaansluiting met nulleider."
+        },
+        "label": "Netaansluiting"
+      },
       "siteTitle": {
         "description": "Weergegeven op het hoofdscherm en in het browsertabblad.",
         "label": "Titel"
@@ -985,6 +1008,18 @@
       "descriptionToken": "Als GitHub-sponsor vind je jouw token op {url}. Om aan de slag te kunnen, bieden we een {trialToken}.",
       "enterYourToken": "Jouw sponsortoken",
       "error": "De sponsortoken is ongeldig.",
+      "inline": {
+        "applied": "Token toegepast. Bedankt voor het ondersteunen van het project!",
+        "apply": "Toepassen",
+        "becomeSponsor": "wordt een sponsor",
+        "device": "Dit apparaat is alleen beschikbaar voor sponsoren.",
+        "feature": "Deze functie is alleen beschikbaar voor sponsoren.",
+        "learn": "Kom meer te weten en {becomeSponsor}.",
+        "placeholder": "Plak token",
+        "title": "Sponsortoken vereist",
+        "trial": "Ga snel aan de slag.",
+        "trialLink": "Vraag een proeftoken aan"
+      },
       "invalid": "ongeldig",
       "labelToken": "Sponsortoken",
       "title": "Sponsoring",
@@ -1057,7 +1092,7 @@
       },
       "generic": "Generieke integraties",
       "grid": {
-        "description": "Elektriciteitsprijzen voor consumptie van het net. Gebruikt om de werkelijke laadkosten uit te rekenen, voor het laden van de auto of thuisbatterij en het inschakelen van verwarming tegen de beste prijs.",
+        "description": "Energieprijs voor netconsumptie. Gebruikt om de werkelijke laadkosten en beste prijs uit te rekenen, voor het laden van de auto of thuisbatterij en het inschakelen van verwarming.",
         "titleAdd": "Net-import Tarief Toevoegen",
         "titleEdit": "Net-import Tarief Aanpassen"
       },
@@ -1079,7 +1114,8 @@
       "solar": {
         "description": "Voorspelling van zonne-energie van uw PV. Wordt weergegeven in de interface en gebruikt voor optimalisaties in de toekomst.",
         "titleAdd": "Zonne-energie Voorspelling Toevoegen",
-        "titleEdit": "Zonne-energie Voorspelling Aanpassen"
+        "titleEdit": "Zonne-energie Voorspelling Aanpassen",
+        "titleExample": "Zuidelijk dak, carport, etc."
       },
       "temperature": {
         "description": "Buitentemperatuurvoorspelling voor jouw locatie. Wordt weergegeven in de interface en wordt gebruikt om de vewarmingsbehoefte te bepalen.",
@@ -1711,6 +1747,11 @@
       "login": "log in",
       "logout": "afmelden"
     },
+    "setup": {
+      "description": "Voeg je apparaten toe om de energiestromen te zien en te start met zonneladen.",
+      "start": "Configuratie starten",
+      "title": "Welkom!"
+    },
     "startConfiguration": "Laten we beginnen met de configuratie",
     "targetCharge": {
       "activate": "Activeren",
@@ -1838,6 +1879,47 @@
     "restartNeeded": "Benodigd om aanpassingen door te voeren.",
     "restarting": "Server is binnenkort weer beschikbaar.",
     "starting": "Server wordt gestart..."
+  },
+  "onboarding": {
+    "another": "Voeg meer toe",
+    "back": "Terug",
+    "battery": {
+      "add": "Voeg thuisbatterij toe",
+      "description": "Voeg je batterij toe, zodat het opladen hier rekening mee kan houden en je kunt zien wat het effect is.",
+      "none": "Geen thuisbatterij",
+      "title": "Heb je een thuisbatterij?"
+    },
+    "checklist": {
+      "dismiss": "Afwijzen",
+      "progress": "{done} uit {total} voltooid",
+      "title": "Configuratie afronden"
+    },
+    "control": {
+      "description": "Begin met de eerste. Meer exemplaren kunnen later toegevoegd worden op de configuratiepagina.",
+      "none": "Nog niets",
+      "title": "Wat wil je aansturen?"
+    },
+    "done": {
+      "close": "Ga naar configuratie",
+      "description": "Een herstart activeert de configuratie. Verken daarna de functies. Voertuigen, tarieven en meer kunnen op elk gewenst moment worden toegevoegd.",
+      "restart": "Herstart",
+      "title": "Gereed"
+    },
+    "grid": {
+      "add": "Netmeter toevoegen",
+      "confirm": "De netmeter vormt de basis voor het laden overtollige energie en voor energiestatistieken. Een netmeter wordt aanbevolen.",
+      "confirmNone": "Doorgaan zonder",
+      "none": "Geen netmeter"
+    },
+    "item": {
+      "battery": "Thuisbatterij",
+      "co2": "CO₂ voorspelling",
+      "consumer": "Verbruiker",
+      "grid": "Netmeter",
+      "heater": "Verwarmer",
+      "loadpoint": "Laadpunt",
+      "pv": "PV-systeem"
+    }
   },
   "passwordModal": {
     "description": "Stel een wachtwoord in voor het afschermen van de instellingen. Het hoofdscherm blijft beschikbaar zonder wachtwoord.",
