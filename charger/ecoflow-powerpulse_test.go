@@ -519,16 +519,150 @@ func TestEcoflowPowerPulsePhases3p(t *testing.T) {
 	assert.Equal(t, []ecoflowtest.Message{want}, writes(transport))
 }
 
-// Switching under load is refused; nothing is sent.
-func TestEcoflowPowerPulsePhasesRefusedWhileCharging(t *testing.T) {
-	for _, phases := range []int{1, 3} {
-		for _, before := range []string{"state3-3p", "state3-1p"} {
-			wb, transport := newTestPowerPulse(t, time.Minute)
+// newChargingPowerPulse returns a wallbox charging on three phases, on a mock clock.
+func newChargingPowerPulse(t *testing.T) (*EcoflowPowerPulse, *ecoflowtest.Transport, *clock.Mock) {
+	t.Helper()
+	clk := clock.NewMock()
+	wb, transport := newTestPowerPulseWithClock(t, 10*time.Minute, clk)
+	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state3-3p")))
+	return wb, transport, clk
+}
+
+// awaitWrites waits for the phase switch running in the background to publish
+// want, advancing the mock clock so that its waits can elapse.
+func awaitWrites(t *testing.T, transport *ecoflowtest.Transport, clk *clock.Mock, want []ecoflowtest.Message) {
+	t.Helper()
+	require.Eventually(t, func() bool {
+		if len(writes(transport)) >= len(want) {
+			return true
+		}
+		clk.Add(time.Second)
+		return false
+	}, 5*time.Second, time.Millisecond)
+	assert.Equal(t, want, writes(transport))
+}
+
+func assertEnabled(t *testing.T, wb *EcoflowPowerPulse, want bool, msg string) {
+	t.Helper()
+	enabled, err := wb.Enabled()
+	require.NoError(t, err)
+	assert.Equal(t, want, enabled, msg)
+}
+
+// evcc switches phases while charging. The wallbox stops first, gets the phase
+// mode once it reports the stop and is started again. The call returns after
+// the stop; Enabled reports the restart that is to come throughout, so the
+// loadpoint does not enable the wallbox before the phase mode is written.
+func TestEcoflowPowerPulsePhasesWhileCharging(t *testing.T) {
+	wb, transport, clk := newChargingPowerPulse(t)
+
+	require.NoError(t, wb.Phases1p3p(1))
+	assert.Equal(t, []ecoflowtest.Message{ecoflowtest.Write("stop", 2)}, writes(transport))
+	assertEnabled(t, wb, true, "restarts after the switch")
+
+	// a stale report from before the stop does not release the phase write
+	clk.Add(time.Second)
+	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state3-3p")))
+	assert.Len(t, writes(transport), 1)
+
+	// the loadpoint re-enables a disabled charger during a phase switch
+	require.NoError(t, wb.Enable(true))
+	assert.Len(t, writes(transport), 1, "the start waits for the phase write")
+
+	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state6-3p")))
+	awaitWrites(t, transport, clk, []ecoflowtest.Message{
+		ecoflowtest.Write("stop", 2),
+		ecoflowtest.Write("phase-1p", 3),
+		ecoflowtest.Write("start", 4),
+	})
+	assertEnabled(t, wb, true, "started again")
+}
+
+// A stop requested during the switch cancels the restart.
+func TestEcoflowPowerPulsePhasesWhileChargingDisabled(t *testing.T) {
+	wb, transport, clk := newChargingPowerPulse(t)
+
+	require.NoError(t, wb.Phases1p3p(1))
+	require.NoError(t, wb.Enable(false))
+	assert.Len(t, writes(transport), 1, "the stop is already sent")
+	assertEnabled(t, wb, false, "no restart")
+
+	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state6-3p")))
+	awaitWrites(t, transport, clk, []ecoflowtest.Message{
+		ecoflowtest.Write("stop", 2),
+		ecoflowtest.Write("phase-1p", 3),
+	})
+
+	clk.Add(time.Minute)
+	assert.Len(t, writes(transport), 2, "not started again")
+	assertEnabled(t, wb, false, "stays stopped")
+}
+
+// A wallbox that evcc stopped but that still reports charging gets no second
+// stop and is not started after the switch.
+func TestEcoflowPowerPulsePhasesWhileStopping(t *testing.T) {
+	wb, transport, clk := newChargingPowerPulse(t)
+	require.NoError(t, wb.Enable(false))
+
+	require.NoError(t, wb.Phases1p3p(1))
+	assert.Equal(t, []ecoflowtest.Message{ecoflowtest.Write("stop", 2)}, writes(transport))
+
+	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state6-3p")))
+	awaitWrites(t, transport, clk, []ecoflowtest.Message{
+		ecoflowtest.Write("stop", 2),
+		ecoflowtest.Write("phase-1p", 3),
+	})
+
+	clk.Add(time.Minute)
+	assert.Len(t, writes(transport), 2, "not started")
+	assertEnabled(t, wb, false, "stays stopped")
+}
+
+// Without a reported stop the phase mode is not written under load; the
+// wallbox is started again in the old mode.
+func TestEcoflowPowerPulsePhasesWhileChargingStopNotReported(t *testing.T) {
+	wb, transport, clk := newChargingPowerPulse(t)
+
+	require.NoError(t, wb.Phases1p3p(1))
+	awaitWrites(t, transport, clk, []ecoflowtest.Message{
+		ecoflowtest.Write("stop", 2),
+		ecoflowtest.Write("start", 3),
+	})
+	assertEnabled(t, wb, true, "started again")
+}
+
+// Max current is written right away during the switch.
+func TestEcoflowPowerPulsePhasesWhileChargingMaxCurrent(t *testing.T) {
+	wb, transport, clk := newChargingPowerPulse(t)
+
+	require.NoError(t, wb.Phases1p3p(1))
+	require.NoError(t, wb.MaxCurrent(10))
+	assert.Equal(t, []ecoflowtest.Message{
+		ecoflowtest.Write("stop", 2),
+		ecoflowtest.Write("max-current-10", 3),
+	}, writes(transport))
+
+	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state6-3p")))
+	awaitWrites(t, transport, clk, []ecoflowtest.Message{
+		ecoflowtest.Write("stop", 2),
+		ecoflowtest.Write("max-current-10", 3),
+		ecoflowtest.Write("phase-1p", 4),
+		ecoflowtest.Write("start", 5),
+	})
+}
+
+// A wallbox that does not charge only gets the phase mode.
+func TestEcoflowPowerPulsePhasesNotCharging(t *testing.T) {
+	for _, before := range []string{"state1-3p", "state2-3p", "state5-3p", "state6-3p"} {
+		t.Run(before, func(t *testing.T) {
+			clk := clock.NewMock()
+			wb, transport := newTestPowerPulseWithClock(t, 10*time.Minute, clk)
 			require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat(before)))
 
-			assert.Error(t, wb.Phases1p3p(phases), "%dp from %s", phases, before)
-			assert.Empty(t, writes(transport), "%dp from %s", phases, before)
-		}
+			require.NoError(t, wb.Phases1p3p(1))
+			clk.Add(time.Minute)
+			assert.Equal(t, []ecoflowtest.Message{ecoflowtest.Write("phase-1p", 2)}, writes(transport))
+		})
 	}
 }
 

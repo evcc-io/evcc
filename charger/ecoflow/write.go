@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 )
 
@@ -22,6 +23,10 @@ const (
 	stopSettle     = 30 * time.Second
 	settingsSettle = 10 * time.Second
 )
+
+// phaseSettle is the wait between the phase write of a switch while charging
+// and the start. On hardware 241/44 showed 1p after 1.1 s and 3p after 5 s.
+const phaseSettle = 5 * time.Second
 
 // command is the last value written to the wallbox.
 type command[T comparable] struct {
@@ -58,13 +63,34 @@ func (wb *Wallbox) write(name string, payload func(seq uint64) []byte) error {
 }
 
 // StartStop starts (241/100 selector 2) or stops (selector 1) charging. It
-// does not write when Enabled already reports that state.
+// does not write when Enabled already reports that state. During a phase
+// switch it only decides whether the switch ends with a start.
 func (wb *Wallbox) StartStop(start bool) error {
+	wb.cmd.Lock()
+	defer wb.cmd.Unlock()
+
+	wb.mu.Lock()
+	sw := wb.switching
+	if sw != nil {
+		sw.restart = start
+	}
+	wb.mu.Unlock()
+
+	if sw != nil {
+		wb.log.DEBUG.Printf("%s: phase switch under way, enable=%t after it", wb.serial, start)
+		return nil
+	}
+
 	if enabled, err := wb.Enabled(); err == nil && enabled == start {
 		wb.log.DEBUG.Printf("%s: already enabled=%t, not sending", wb.serial, start)
 		return nil
 	}
 
+	return wb.startStop(start)
+}
+
+// startStop writes a start or stop. The caller holds wb.cmd.
+func (wb *Wallbox) startStop(start bool) error {
 	var selector uint64 = 1
 	if start {
 		selector = 2
@@ -85,7 +111,8 @@ func (wb *Wallbox) StartStop(start bool) error {
 
 // Enabled reports whether charging is released. It follows the last start or
 // stop until a later heartbeat shows charging or a stop unambiguously; a
-// plugged, idle wallbox (state 2) may be either.
+// plugged, idle wallbox (state 2) may be either. During a phase switch it
+// reports whether the switch ends with a start.
 func (wb *Wallbox) Enabled() (bool, error) {
 	hb, err := wb.heartbeat.Get()
 	if err != nil {
@@ -94,7 +121,16 @@ func (wb *Wallbox) Enabled() (bool, error) {
 
 	wb.mu.Lock()
 	cmd, at := wb.release, wb.seen
+	sw := wb.switching
+	var restart bool
+	if sw != nil {
+		restart = sw.restart
+	}
 	wb.mu.Unlock()
+
+	if sw != nil {
+		return restart, nil
+	}
 
 	settle := stopSettle
 	if cmd.value {
@@ -157,10 +193,31 @@ func (wb *Wallbox) MaxCurrent() (uint64, error) {
 
 // SetPhaseMode writes PhaseOne or PhaseThree (241/102 settings field 5). It
 // does not write when telemetry already shows the mode. Whether the write took
-// effect is logged once telemetry shows it.
+// effect is logged once telemetry shows it. A charging wallbox is stopped
+// first, see switchWhileCharging.
 func (wb *Wallbox) SetPhaseMode(mode uint64) error {
 	if mode != PhaseOne && mode != PhaseThree {
 		return fmt.Errorf("invalid phase mode: %d", mode)
+	}
+
+	hb, err := wb.heartbeat.Get()
+	if err != nil {
+		return err
+	}
+
+	wb.cmd.Lock()
+	defer wb.cmd.Unlock()
+
+	wb.mu.Lock()
+	sw := wb.switching
+	pending := sw != nil && !sw.written
+	if pending {
+		sw.mode = mode
+	}
+	wb.mu.Unlock()
+
+	if pending {
+		return nil
 	}
 
 	if wb.hasPhaseMode(mode) {
@@ -168,6 +225,15 @@ func (wb *Wallbox) SetPhaseMode(mode uint64) error {
 		return nil
 	}
 
+	if hb.State == StateCharging {
+		return wb.switchWhileCharging(mode)
+	}
+
+	return wb.writePhaseMode(mode)
+}
+
+// writePhaseMode writes the phase mode. The caller holds wb.cmd.
+func (wb *Wallbox) writePhaseMode(mode uint64) error {
 	if err := wb.write(fmt.Sprintf("phasemode=%d", mode), func(seq uint64) []byte {
 		return BuildPhaseSet(wb.serial, wb.gateway, mode, seq)
 	}); err != nil {
@@ -179,6 +245,122 @@ func (wb *Wallbox) SetPhaseMode(mode uint64) error {
 	wb.mu.Unlock()
 
 	return nil
+}
+
+// phaseSwitch is a phase switch while charging.
+type phaseSwitch struct {
+	mode    uint64
+	restart bool          // start once the phase mode is written
+	written bool          // phase mode written, start pending
+	stop    chan struct{} // telemetry shows the stop
+}
+
+// switchWhileCharging stops the wallbox and returns. The phase mode is written
+// in the background once a heartbeat shows the stop, the start follows after
+// phaseSettle when charging was released. The wallbox was only seen switching
+// after a stop, and a start ends the stop. The caller holds wb.cmd.
+func (wb *Wallbox) switchWhileCharging(mode uint64) error {
+	restart, err := wb.Enabled()
+	if err != nil {
+		return err
+	}
+
+	sw := &phaseSwitch{mode: mode, restart: restart, stop: make(chan struct{}, 1)}
+	timeout := wb.conn.clock.Timer(stopSettle)
+
+	wb.mu.Lock()
+	wb.switching = sw
+	wb.mu.Unlock()
+
+	// a released wallbox needs the stop, a stopped one still reporting charging has it
+	if restart {
+		if err := wb.startStop(false); err != nil {
+			timeout.Stop()
+			wb.mu.Lock()
+			wb.switching = nil
+			wb.mu.Unlock()
+			return err
+		}
+	}
+
+	wb.log.DEBUG.Printf("%s: charging, phase mode %d after the stop", wb.serial, mode)
+	go wb.finishSwitch(sw, timeout)
+
+	return nil
+}
+
+// stopped tells a phase switch that telemetry shows the wallbox not charging.
+func (wb *Wallbox) stopped(state State) {
+	if state == StateCharging {
+		return
+	}
+
+	wb.mu.Lock()
+	sw := wb.switching
+	wb.mu.Unlock()
+
+	if sw != nil {
+		select {
+		case sw.stop <- struct{}{}:
+		default:
+		}
+	}
+}
+
+// finishSwitch writes the phase mode of sw once the wallbox reports the stop
+// and starts it again if wanted. Without a reported stop within the timeout it
+// does not write the phase mode under load.
+func (wb *Wallbox) finishSwitch(sw *phaseSwitch, timeout *clock.Timer) {
+	defer timeout.Stop()
+	done := wb.conn.ctx.Done()
+
+	select {
+	case <-sw.stop:
+		wb.cmd.Lock()
+		wb.mu.Lock()
+		mode := sw.mode
+		sw.written = true
+		wb.mu.Unlock()
+
+		settle := wb.conn.clock.Timer(phaseSettle)
+		defer settle.Stop()
+
+		if !wb.hasPhaseMode(mode) {
+			if err := wb.writePhaseMode(mode); err != nil {
+				wb.log.ERROR.Printf("%s: phase switch: %v", wb.serial, err)
+			}
+		}
+		wb.cmd.Unlock()
+
+		select {
+		case <-settle.C:
+		case <-done:
+			return
+		}
+
+	case <-timeout.C:
+		wb.log.WARN.Printf("%s: stop not reported within %v, phase mode not written", wb.serial, stopSettle)
+
+	case <-done:
+		return
+	}
+
+	wb.cmd.Lock()
+	defer wb.cmd.Unlock()
+
+	wb.mu.Lock()
+	restart := sw.restart
+	wb.mu.Unlock()
+
+	if restart {
+		if err := wb.startStop(true); err != nil {
+			wb.log.ERROR.Printf("%s: phase switch: %v", wb.serial, err)
+		}
+	}
+
+	wb.mu.Lock()
+	wb.switching = nil
+	wb.mu.Unlock()
 }
 
 // verifyPhases logs whether telemetry received at confirms or contradicts the

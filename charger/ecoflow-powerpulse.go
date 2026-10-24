@@ -142,15 +142,7 @@ func (c *EcoflowPowerPulse) Phases1p3p(phases int) error {
 		return fmt.Errorf("invalid phases: %d", phases)
 	}
 
-	hb, err := c.wb.Heartbeat()
-	if err != nil {
-		return err
-	}
-
-	if hb.State == ecoflow.StateCharging {
-		return errors.New("cannot switch phases while charging")
-	}
-
+	// while charging the wallbox stops, switches and starts again
 	return c.wb.SetPhaseMode(mode)
 }
 

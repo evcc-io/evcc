@@ -422,6 +422,8 @@ type Wallbox struct {
 	timeout   time.Duration
 	heartbeat *util.Monitor[Heartbeat]
 
+	cmd sync.Mutex // serializes start, stop and phase writes
+
 	mu         sync.Mutex
 	seen       time.Time // last heartbeat, or creation
 	probed     time.Time // last get-all of the watchdog
@@ -432,6 +434,8 @@ type Wallbox struct {
 	release command[bool]
 	current command[uint64]
 	phases  command[uint64]
+
+	switching *phaseSwitch // phase switch under way while charging
 }
 
 // Wallbox subscribes to the telemetry of the PowerPulse with the given serial
@@ -545,6 +549,7 @@ func (wb *Wallbox) handleHeartbeat(pdata []byte) {
 	})
 	wb.log.TRACE.Printf("%s: heartbeat %s", wb.serial, hb)
 	wb.verifyPhases(Update{Heartbeat: &hb}, now)
+	wb.stopped(hb.State)
 }
 
 // handleSettings records a 241/44 report. It

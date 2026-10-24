@@ -30,6 +30,7 @@ func TestWriteDoesNotWaitForTelemetry(t *testing.T) {
 	start := time.Now()
 	require.NoError(t, wb.SetMaxCurrent(100))
 	require.NoError(t, wb.StartStop(false))
+	require.NoError(t, transport.Feed(testTelemetry, ecoflowtest.Heartbeat("state6-3p")))
 	require.NoError(t, wb.SetPhaseMode(PhaseOne))
 	assert.Less(t, time.Since(start), 100*time.Millisecond)
 	assert.Len(t, transport.Published(), 4, "get-all and three writes")
