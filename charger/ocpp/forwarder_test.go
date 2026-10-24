@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
+	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocppj"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -136,6 +137,51 @@ func TestForwarderUpstreamReconnect(t *testing.T) {
 
 	expectBootReplay(t, frames)
 	assert.GreaterOrEqual(t, conns.Load(), int32(2))
+}
+
+func TestForwarderTrackTransaction(t *testing.T) {
+	const id = "fwd-track-txn-test"
+
+	cp := NewChargePoint(util.NewLogger("foo"), instance, id)
+	cp.connected = true
+	conn, err := NewConnector(t.Context(), util.NewLogger("foo"), 1, cp, "", Timeout)
+	require.NoError(t, err)
+
+	reg := newRegistration()
+	reg.cp = cp
+	instance.mu.Lock()
+	instance.regs[id] = reg
+	instance.mu.Unlock()
+	defer func() {
+		instance.mu.Lock()
+		delete(instance.regs, id)
+		instance.mu.Unlock()
+	}()
+
+	// rejected start is not tracked
+	trackTransaction(instance, id,
+		[]byte(`[2,"0","StartTransaction",{"connectorId":1,"idTag":"BLOCKED","meterStart":0,"timestamp":"2026-10-20T17:38:50Z"}]`),
+		[]byte(`[3,"0",{"idTagInfo":{"status":"Blocked"},"transactionId":5}]`))
+	assert.Empty(t, conn.IdTag())
+
+	// upstream issues the transaction id, the charger's request carries the idTag
+	trackTransaction(instance, id,
+		[]byte(`[2,"1","StartTransaction",{"connectorId":1,"idTag":"04373B1A7F6F80","meterStart":0,"timestamp":"2026-10-20T17:39:50Z"}]`),
+		[]byte(`[3,"1",{"idTagInfo":{"status":"Accepted"},"transactionId":6}]`))
+
+	txn, err := conn.TransactionID()
+	require.NoError(t, err)
+	assert.Equal(t, 6, txn)
+	assert.Equal(t, "04373B1A7F6F80", conn.IdTag())
+
+	trackTransaction(instance, id,
+		[]byte(`[2,"2","StopTransaction",{"transactionId":6,"meterStop":1000,"timestamp":"2026-10-20T18:39:50Z"}]`),
+		[]byte(`[3,"2",{}]`))
+
+	txn, err = conn.TransactionID()
+	require.NoError(t, err)
+	assert.Zero(t, txn)
+	assert.Empty(t, conn.IdTag())
 }
 
 func TestForwarderDialRetry(t *testing.T) {

@@ -28,6 +28,7 @@ import (
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 	"github.com/lorenzodonini/ocpp-go/ocppj"
 	"github.com/lorenzodonini/ocpp-go/ws"
 )
@@ -202,9 +203,9 @@ type sidecar struct {
 	pendingUpstreamCallsMu sync.Mutex
 	pendingUpstreamCalls   map[string]struct{}
 
-	// message IDs of charger Calls whose evcc handler was bypassed; upstream's reply is relayed to the charger
+	// charger Calls by message ID whose evcc handler was bypassed; upstream's reply is relayed to the charger
 	pendingChargerCallsMu sync.Mutex
-	pendingChargerCalls   map[string]struct{}
+	pendingChargerCalls   map[string][]byte
 
 	// when > 0, forward at most one MeterValues per interval to upstream; evcc still sees every frame
 	meterInterval  time.Duration
@@ -333,7 +334,7 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) bool {
 		rule:                 rule,
 		conn:                 conn,
 		pendingUpstreamCalls: make(map[string]struct{}),
-		pendingChargerCalls:  make(map[string]struct{}),
+		pendingChargerCalls:  make(map[string][]byte),
 	}
 
 	// install sidecar and drain the pending buffer
@@ -378,7 +379,7 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) bool {
 		}
 		if actionsRelayedToUpstream[action] {
 			sc.pendingChargerCallsMu.Lock()
-			sc.pendingChargerCalls[msgID] = struct{}{}
+			sc.pendingChargerCalls[msgID] = frame
 			sc.pendingChargerCallsMu.Unlock()
 		}
 		writeCtx, writeCancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -455,7 +456,7 @@ func drainPendingWithErrors(id string, sc *sidecar) {
 				forwarderLog.WARN.Printf("forwarder: send disconnect error for %s to %s: %v", msgID, sc.chargerID, writeErr)
 			}
 		}
-		sc.pendingChargerCalls = make(map[string]struct{})
+		sc.pendingChargerCalls = make(map[string][]byte)
 		sc.pendingChargerCallsMu.Unlock()
 	}
 }
@@ -532,7 +533,7 @@ func onChargerMessage(ch ws.Channel, data []byte) bool {
 			}
 			if relay {
 				sc.pendingChargerCallsMu.Lock()
-				sc.pendingChargerCalls[msgID] = struct{}{}
+				sc.pendingChargerCalls[msgID] = slices.Clone(data)
 				sc.pendingChargerCallsMu.Unlock()
 			}
 			if err := sc.conn.Write(context.Background(), websocket.MessageText, data); err != nil {
@@ -661,13 +662,17 @@ func (sc *sidecar) readFromUpstream() {
 		case ocppj.CALL_RESULT, ocppj.CALL_ERROR:
 			// upstream's authoritative response to a bypassed charger Call?
 			sc.pendingChargerCallsMu.Lock()
-			_, isChargerCall := sc.pendingChargerCalls[msgID]
+			call, isChargerCall := sc.pendingChargerCalls[msgID]
 			if isChargerCall {
 				delete(sc.pendingChargerCalls, msgID)
 			}
 			sc.pendingChargerCallsMu.Unlock()
 
 			if isChargerCall {
+				// track before relaying so the charger's follow-up Call sees updated state
+				if msgType == ocppj.CALL_RESULT {
+					trackTransaction(cs, sc.chargerID, call, msg)
+				}
 				// relay to charger; its handler was bypassed and it awaits this reply
 				if err := cs.Write(sc.chargerID, msg); err != nil {
 					forwarderLog.ERROR.Printf("forwarder: relay upstream response to charger %s: %v", sc.chargerID, err)
@@ -675,6 +680,44 @@ func (sc *sidecar) readFromUpstream() {
 				continue
 			}
 			// discard: evcc already replied for non-relay Calls
+		}
+	}
+}
+
+// trackTransaction mirrors a relayed Start/StopTransaction into evcc's connector
+// state so idTag and transaction id stay known while upstream decides and replies.
+func trackTransaction(cs *CS, chargerID string, call, result []byte) {
+	var req, res []json.RawMessage
+	if json.Unmarshal(call, &req) != nil || len(req) < 4 || json.Unmarshal(result, &res) != nil || len(res) < 3 {
+		return
+	}
+
+	var action string
+	if json.Unmarshal(req[2], &action) != nil || action != "StartTransaction" && action != "StopTransaction" {
+		return
+	}
+
+	cp, err := cs.ChargepointByID(chargerID)
+	if err != nil {
+		return
+	}
+
+	switch action {
+	case "StartTransaction":
+		var request core.StartTransactionRequest
+		var conf core.StartTransactionConfirmation
+		if json.Unmarshal(req[3], &request) != nil || json.Unmarshal(res[2], &conf) != nil ||
+			conf.IdTagInfo == nil || conf.IdTagInfo.Status != types.AuthorizationStatusAccepted {
+			return
+		}
+		if conn := cp.connectorByID(request.ConnectorId); conn != nil {
+			conn.startTransaction(conf.TransactionId, request.IdTag)
+		}
+
+	case "StopTransaction":
+		var request core.StopTransactionRequest
+		if json.Unmarshal(req[3], &request) == nil {
+			_, _ = cp.OnStopTransaction(&request)
 		}
 	}
 }
