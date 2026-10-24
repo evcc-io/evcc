@@ -18,7 +18,7 @@ For the actions in `actionsRelayedToUpstream` (`Authorize`, `StartTransaction`, 
 
 evcc's handler is never invoked for these. This lets the pay backend control authorization, issue its own transaction IDs, and see consistent Start/Stop pairs.
 
-evcc still observes the outcome: on upstream's `CallResult` for `StartTransaction`, the charger's `idTag` and upstream's `transactionId` are recorded on the connector (`trackTransaction`), and `StopTransaction` clears them. This keeps RFID-based vehicle identification working without evcc answering or influencing authorization.
+evcc still observes the outcome: when upstream accepts a `StartTransaction`, the charger's `idTag` and upstream's `transactionId` are recorded on the connector (`trackTransaction`), and `StopTransaction` clears them. This keeps RFID-based vehicle identification working without evcc answering or influencing authorization.
 
 ### Sidecar observation (informational)
 
