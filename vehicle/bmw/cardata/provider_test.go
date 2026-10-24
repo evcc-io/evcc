@@ -46,6 +46,47 @@ func TestCardataStreaming(t *testing.T) {
 	}, time.Second, 10*time.Millisecond, "streaming update not applied")
 }
 
+func TestStreamingTimestamps(t *testing.T) {
+	ctx := t.Context()
+
+	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
+		AccessToken: "[REDACTED:API key param]",
+	}), t.Name(), "vin", time.Hour)
+
+	dataC := mqttConnections[t.Name()].subscriptions["VIN"][0].in
+
+	keySoc := "vehicle.drivetrain.batteryManagement.header"
+	msg := func(ts time.Time, soc string) StreamingMessage {
+		return StreamingMessage{Vin: "vin", TimeStamp: ts, Data: map[string]StreamingData{
+			keySoc: {TimeStamp: ts, Value: soc},
+		}}
+	}
+
+	streamed := func() (time.Time, any) {
+		p.mu.Lock()
+		defer p.mu.Unlock()
+		return p.updated, p.streaming[keySoc].Value
+	}
+
+	// a retained message replayed on subscribe leaves the rest refresh due
+	old := time.Now().Add(-3 * time.Hour).Truncate(time.Second)
+	dataC <- msg(old, "40")
+
+	require.Eventually(t, func() bool {
+		updated, soc := streamed()
+		return updated.Equal(old) && soc == "40"
+	}, time.Second, 10*time.Millisecond, "old message not applied")
+
+	now := time.Now().Truncate(time.Second)
+	dataC <- msg(now, "47")
+	dataC <- msg(now.Add(-time.Minute), "45")
+
+	require.Eventually(t, func() bool {
+		updated, soc := streamed()
+		return updated.Equal(now) && soc == "47"
+	}, time.Second, 10*time.Millisecond, "delayed message overwrote newer data")
+}
+
 func TestSocFallback(t *testing.T) {
 	ctx := t.Context()
 
