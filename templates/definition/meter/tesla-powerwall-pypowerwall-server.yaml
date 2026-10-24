@@ -1,0 +1,98 @@
+template: tesla-powerwall-pypowerwall-server
+products:
+  - brand: Tesla
+    description:
+      generic: Powerwall (pypowerwall-server)
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Nutzt [pypowerwall-server](https://github.com/jasonacox/pypowerwall-server) als Backend. Die Lesezugriffe kommen über dessen Proxy-API, die Batteriesteuerung über die authentifizierten `/control/*`-Routen. Für die Batteriesteuerung muss im Server `PW_CONTROL_SECRET` gesetzt sein; `reserve_hold` benötigt pypowerwall-server v0.10.0 oder neuer. Der Server selbst spricht ausschließlich HTTP; HTTPS ist nur über einen vorgeschalteten TLS-Reverse-Proxy möglich, der TLS terminiert.
+    en: |
+      Uses [pypowerwall-server](https://github.com/jasonacox/pypowerwall-server) as backend. Reads come from its proxy API, battery control uses its authenticated `/control/*` routes. For battery control, `PW_CONTROL_SECRET` must be set on the server; `reserve_hold` requires pypowerwall-server v0.10.0 or later. The server itself only serves plain HTTP; HTTPS is only possible through a reverse proxy in front of it that terminates TLS.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+    help:
+      en: IP address or hostname of pypowerwall-server, e.g. 192.0.2.2
+      de: IP-Adresse oder Hostname von pypowerwall-server, z.B. 192.0.2.2
+  - name: port
+    default: 8675
+    help:
+      en: pypowerwall-server port
+      de: pypowerwall-server Port
+  - name: schema
+    default: http
+    advanced: true
+    help:
+      en: |
+        pypowerwall-server only serves plain HTTP. HTTPS can only be used when the server is behind a TLS reverse proxy that terminates TLS; without such a proxy, use http.
+        With controlSecret, prefer https behind that proxy so the secret is not sent unencrypted.
+      de: |
+        pypowerwall-server bietet selbst nur HTTP. HTTPS ist nur möglich, wenn der Server hinter einem TLS-Reverse-Proxy betrieben wird, der TLS terminiert; ohne einen solchen Proxy http verwenden.
+        Mit controlSecret möglichst https über diesen Proxy wählen, damit das Secret nicht unverschlüsselt übertragen wird.
+  - name: insecure
+    advanced: true
+    help:
+      en: Allow self-signed TLS certificates of the TLS reverse proxy (https only).
+      de: Selbstsignierte TLS-Zertifikate des TLS-Reverse-Proxy erlauben (nur bei https).
+  - name: controlSecret
+    usages: ["battery"]
+    mask: true
+    advanced: true
+    description:
+      de: Control Secret
+      en: Control secret
+    help:
+      en: Value of PW_CONTROL_SECRET. Required for battery control, omit for read-only use.
+      de: Wert von PW_CONTROL_SECRET. Für Batteriesteuerung nötig, weglassen für reinen Lesezugriff.
+  - name: minsoc
+    advanced: true
+    default: 0
+    usages: ["battery"]
+    help:
+      en: Backup reserve restored in normal mode (0-100).
+      de: Backup-Reserve, die im Normalbetrieb wiederhergestellt wird (0-100).
+  - name: chargemaxsoc
+    type: int
+    unit: "%"
+    default: 100
+    advanced: true
+    usages: ["battery"]
+    description:
+      de: Ziel-Ladestand beim erzwungenen Laden
+      en: Charge target when forced
+    help:
+      en: Charge target written as backup reserve in charge mode (0-100).
+      de: Ladeziel, das im Lademodus als Backup-Reserve gesetzt wird (0-100).
+  - name: maxchargepower
+    usages: ["battery"]
+    help:
+      en: Max charge power in W, overrides the inverter rating when set.
+      de: Max. Ladeleistung in W, überschreibt den Wechselrichter-Wert, falls gesetzt.
+  - name: maxdischargepower
+    usages: ["battery"]
+    help:
+      en: Max discharge power in W, overrides the inverter rating when set.
+      de: Max. Entladeleistung in W, überschreibt den Wechselrichter-Wert, falls gesetzt.
+render: |
+  type: powerwall
+  uri: {{ .host }}:{{ .port }}
+  scheme: {{ .schema }}
+  insecure: {{ .insecure }}
+  skipLogin: true
+  usage: {{ .usage }}
+  {{- if eq .usage "battery" }}
+  minsoc: {{ .minsoc }}
+  chargemaxsoc: {{ .chargemaxsoc }}
+  {{- if .controlSecret }}
+  controlSecret: {{ .controlSecret }}
+  {{- end }}
+  {{- if .maxchargepower }}
+  maxchargepower: {{ .maxchargepower }}
+  {{- end }}
+  {{- if .maxdischargepower }}
+  maxdischargepower: {{ .maxdischargepower }}
+  {{- end }}
+  {{- end }}
