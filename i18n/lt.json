@@ -46,8 +46,8 @@
     },
     "combined": "Sudėta",
     "config": {
-      "buffer": "Kaupiklio energija, viršijanti {soc}, gali būti naudojama įkrovikliams palaikyti bei išmaniame režime atidėti įkrovimo išjungimą. Saulės energijos įkrovimas pradedamas automatiškai {start}.",
-      "bufferNone": "Kaupiklio energija nenaudojama automobilio įkrovimui. Norėdami įjungti šią funkciją, nustatykite mažesnę nei {soc} reikšmę.",
+      "buffer": "Kaupiklio energija, viršijanti {soc}, gali būti naudojama įkrovikliams palaikyti bei išmaniame režime atidėti įkrovimo išjungimą. Saulės energijos įkrovimas pradedamas automatiškai {start}. Šis nustatymas ignoruojamas įjungus \"Nuolat įkrauti\".",
+      "bufferNone": "Kaupiklio energija nenaudojama automobilio įkrovimui. Norėdami įjungti šią funkciją, nustatykite mažesnę nei {soc} reikšmę. Šis nustatymas ignoruojamas įjungus \"Nuolat įkrauti\".",
       "bufferStart": {
         "above": "kai kaupiklio įkrovos lygis viršija {soc}",
         "full": "kai kaupiklis pilnas",
@@ -121,7 +121,7 @@
     },
     "battery": {
       "title": "Kaupiklis",
-      "titleAdd": "Pridėti kaupiklį",
+      "titleAdd": "Pridėti Kaupiklį",
       "titleEdit": "Redaguoti kaupiklį"
     },
     "charge": {
@@ -383,6 +383,7 @@
       "optional": "pasirinktinai"
     },
     "general": {
+      "add": "Pridėti",
       "applyAndClose": "Pritaikyti ir uždaryti",
       "authPerform": "Jungtis naudojant {provider}",
       "authPerformHint": "Bus atidaryta naujame skirtuke. Pratęsimui grįžkite čia.",
@@ -394,6 +395,7 @@
       "confirmDisable": "Išjungti šį įrenginį? Jis bus ignoruojamas po evcc paleidimo iš naujo.",
       "confirmEnable": "Vėl įjungti šį įrenginį?",
       "confirmSave": "Yra neišsaugotų pakeitimų. Išsaugoti dabar ?",
+      "continue": "Tęsti",
       "copied": "Nukopijuota!",
       "copy": "Kopijuoti",
       "customHelp": "Sukurkite vartotojo apibrėžtą įrenginį naudodami evcc įskiepių sistemą.",
@@ -715,10 +717,18 @@
         "grid": "Pridėti tinklo skaitiklį",
         "pv": "Pridėti saulės elektrinės skaitiklį"
       },
+      "reuseApply": "Naudoti jo nustatymus.",
+      "reuseHint": "{device} gali taipogi būti naudojamas kaip \"{target}\".",
       "save": "Išsaugoti",
       "specific": "Specifinės integracijos",
       "template": "Gamintojas",
       "titleChoice": "Ką norite pridėti?",
+      "titleExample": {
+        "aux": "Išmanus vandens šildytuvas ir pan.",
+        "battery": "Rūsys, garažas, kaupiklis ir pan.",
+        "consumer": "Indaplovė, skalbyklė, baseino siurblys ir pan.",
+        "pv": "Pietinis stogas, pastogė ir pan."
+      },
       "titleLabel": "Pavadinimas",
       "usage": {
         "aux": "Savireguliuojantis įrenginys",
@@ -976,6 +986,15 @@
         "example": "Jūsų mokėjimo kaina buvo {price}. Sutaupėte {amount}.",
         "label": "Valiuta"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V be neutralės (3 fazės 3 laidai)",
+        "3p4w": "{voltage}/{lineVoltage} V su neutrale (3 fazės 4 laidai)",
+        "description": {
+          "3p3w": "Įvadas be neutralaus laidininko. Dažnas Norvegijoje ir dalyje Belgijos.",
+          "3p4w": "Dažniausiai pasitaikantis įvado tipas su neutraliu laidininku."
+        },
+        "label": "Tinklo įvadas"
+      },
       "siteTitle": {
         "description": "Rodoma pagrindiniame ekrane ir naršyklės skirtuke.",
         "label": "Pavadinimas"
@@ -983,14 +1002,26 @@
       "title": "Vieta"
     },
     "sponsor": {
-      "addToken": "Įveskite žetoną",
-      "changeToken": "Pakeisti žetoną",
+      "addToken": "Įveskite žetoną (token)",
+      "changeToken": "Pakeisti žetoną (token)",
       "description": "Rėmimo modelis padeda mums išlaikyti projektą ir tvariai kurti naujas, įdomias funkcijas. Kaip rėmėjas jūs galite valdyti įkroviklius, kurių naudojimui reikia rėmimo.",
       "descriptionToken": "GitHub rėmėjai gali matyti savo žetoną (token) {url}. Pradžiai - pasibandymui siūlome {trialToken}.",
-      "enterYourToken": "Jūsų rėmėjo žetonas",
+      "enterYourToken": "Jūsų rėmėjo žetonas (token)",
       "error": "Rėmėjo žetonas (token) negalioja.",
+      "inline": {
+        "applied": "Žetonas (token) pritaikytas. Ačiū, kad remiate projektą!",
+        "apply": "Taikyti",
+        "becomeSponsor": "tapkite rėmėju",
+        "device": "Šis įrenginys prieinamas tik rėmėjams.",
+        "feature": "Ši funkcija prieinama tik rėmėjams.",
+        "learn": "Sužinokite daugiau ir {becomeSponsor}.",
+        "placeholder": "Įklijuoti žetoną (token)",
+        "title": "Reikalingas rėmėjo žetonas (token)",
+        "trial": "Pradėkite.",
+        "trialLink": "Gauti bandomąjį žetoną (token)"
+      },
       "invalid": "negalioja",
-      "labelToken": "Rėmėjo žetonas",
+      "labelToken": "Rėmėjo žetonas (token)",
       "title": "Rėmimas",
       "tokenRequired": "Prieš konfigūruodami šį įrenginį turite sukonfigūruoti rėmėjo žetoną.",
       "tokenRequiredFeature": "Šiai funkcijai reikalingas rėmėjo žetonas.",
@@ -998,7 +1029,7 @@
       "tokenRequiredShort": "Trūksta rėmėjo žetono (token).",
       "trialToken": "bandomasis žetonas (token)",
       "viaYaml": "per evcc.yaml",
-      "yourToken": "Rėmėjo Žetonas"
+      "yourToken": "Rėmėjo Žetonas (token)"
     },
     "system": {
       "backupRestore": {
@@ -1083,7 +1114,8 @@
       "solar": {
         "description": "Jūsų saulės elektrinės energijos gamybos prognozė. Rodoma sąsajoje o ateityje bus naudojama optimizavimo algoritmams.",
         "titleAdd": "Pridėti Saulės Prognozę",
-        "titleEdit": "Redaguoti Saulės Prognozę"
+        "titleEdit": "Redaguoti Saulės Prognozę",
+        "titleExample": "Pietinis stogas, pastogė, ir pan."
       },
       "temperature": {
         "description": "Lauko temperatūros prognozė jūsų vietovėje. Rodoma sąsajoje ir naudojama šildymo poreikiui prognozuoti.",
@@ -1716,6 +1748,11 @@
       "login": "prisijungti",
       "logout": "atsijungti"
     },
+    "setup": {
+      "description": "Pridėję savo įrenginius matysite energijos srautą ir įkrausite saulės energija.",
+      "start": "Pradėti nustatymą",
+      "title": "Sveiki!"
+    },
     "startConfiguration": "Pradėkime konfigūruoti",
     "targetCharge": {
       "activate": "Aktyvuoti",
@@ -1843,6 +1880,75 @@
     "restartNeeded": "Būtina, kad pakeitimai įsigaliotų.",
     "restarting": "Serveris netrukus vėl veiks.",
     "starting": "Paleidžiamas serveris..."
+  },
+  "onboarding": {
+    "another": "Pridėti kitą",
+    "back": "Atgal",
+    "battery": {
+      "add": "Pridėti kaupiklį",
+      "description": "Pridėję kaupiklį matysite ką jis daro bei valdysite įkrovimą.",
+      "none": "Nėra kaupiklio",
+      "title": "Ar turite kaupiklį?"
+    },
+    "checklist": {
+      "dismiss": "Atmesti",
+      "progress": "{done} iš {total} atlikta",
+      "title": "Užbaikite nustatymus"
+    },
+    "control": {
+      "description": "Pradėkite nuo pirmojo. Vėliau konfigūracijos puslapyje bus galima pridėti daugiau.",
+      "none": "Kol kas nieko",
+      "title": "Ką norite valdyti?"
+    },
+    "done": {
+      "close": "Eiti į konfigūraciją",
+      "description": "Konfigūracija pritaikoma iš naujo paleidus sistemą. Po to susipažinkite su funkcijomis. Automobilius, tarifus ir kt. galima pridėti bet kuriuo metu.",
+      "restart": "Paleisti iš naujo",
+      "title": "Esate pasiruošę"
+    },
+    "grid": {
+      "add": "Pridėti tinklo skaitiklį",
+      "confirm": "Elektros tinklo skaitiklis yra pagrindas apskaičiuojant energijos perteklių bei renkant energijos vartojimo statistiką. Rekomenduojame jį įsirengti.",
+      "confirmNone": "Tęsti be",
+      "description": "Matuoja energijos paėmimą iš tinklo ir atidavimą į tinklą prijungimo taške. Užtikrina tikslų įkrovimą naudojant energijos perteklių.",
+      "none": "Nėra elektros tinklo skaitiklio",
+      "title": "Ar turite elektros tinklo skaitiklį?"
+    },
+    "item": {
+      "battery": "Kaupiklis",
+      "co2": "CO₂ prognozė",
+      "consumer": "Vartotojas",
+      "grid": "Tinklo skaitiklis",
+      "gridExport": "Eksporto tarifas",
+      "gridImport": "Importo tarifas",
+      "heater": "Šildytuvas",
+      "loadpoint": "Įkroviklis",
+      "pv": "Saulės elektrinė",
+      "solar": "Saulės prognozė"
+    },
+    "password": {
+      "description": "Apsaugo konfigūracijos parametrus nuo neleistinų pakeitimų. Įsidėmėkite jį – nėra paprasto būdo jam iš naujo nustatyti.",
+      "disabled": "Autentifikavimas išjungtas ({flag}). Kiekvienas, turintis prieigą prie tinklo, gali keisti konfigūraciją, nuskaityti saugomus prisijungimo duomenis ir vykdyti scenarijus. Užtikrinkite prieigos saugumą kitomis priemonėmis.",
+      "title": "Nustatyti Administratoriaus Slaptažodį"
+    },
+    "pv": {
+      "add": "Pridėti saulės elektrinę",
+      "description": "Matuoja saulės energijos gamybą. Reikalinga nustatant saulės energijos dalį ir įkraunant energijos perteklių.",
+      "none": "Nėra saulės elektrinės",
+      "title": "Ar turite saulės elektrinę?"
+    },
+    "site": {
+      "currencyHint": "pvz. {price}, {amount}",
+      "defaultTitle": "Namai",
+      "description": "Keletas pagrindinių dalykų apie jūsų namus. Juos galite bet kada pakeisti.",
+      "title": "Jūsų vieta"
+    },
+    "skip": "Praleisti nustatymą",
+    "step": "Žingsnis {step} iš {total}",
+    "welcome": {
+      "description": "Nustatykite svarbiausias sistemos dalis, kad pradėtumėte išmanųjį įkrovimą.",
+      "start": "Pradėkite"
+    }
   },
   "passwordModal": {
     "description": "Nustatykite slaptažodį konfigūracijos apsaugai. Pagrindiniu ekranu galima naudotis ir neprisijungus.",
@@ -1991,7 +2097,7 @@
       "show": "Rodyti {title}"
     },
     "sponsorToken": {
-      "expires": "Jūsų rėmėjo žetonas baigsis {inXDays}.",
+      "expires": "Jūsų rėmėjo žetonas (token) baigsis {inXDays}.",
       "expiresUpdateUi": "{getNewToken} ir išsaugokite jį čia.",
       "expiresUpdateYaml": "{getNewToken} ir išsaugokite jį savo evcc.yaml faile.",
       "getNewToken": "Gaukite naują",

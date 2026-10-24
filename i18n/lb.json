@@ -42,7 +42,7 @@
       "holdCharge": "Luede gespaart",
       "ofTotal": "vun {total}",
       "power": "Leeschtung",
-      "soc": "Luedestand"
+      "soc": "Lueden"
     },
     "combined": "Combinéiert",
     "config": {
@@ -91,7 +91,7 @@
   },
   "colors": {
     "auto": "Auto",
-    "hex": "Hex Faarw"
+    "hex": "Hex Faarf"
   },
   "config": {
     "adminPassword": {
@@ -189,8 +189,8 @@
       "addMainCircuit": "Haaptstroumkrees derbäi fügen",
       "addSubCircuit": "Ënnergeuerdnete Stroumkrees derbäi fügen",
       "chargingPointsNote": "Luedpunkte & Heizgeräter weist du an de jeeweilege Astellungen engem Stroumkrees zou.",
-      "description": "Sécherstellen, datt d'Zomm vun all den Luedstatiounen déi mam Circuit verbonne sinn net déi konfiguréiert Leeschtung an aktuell Grenzen iwwerschreit. Circuiten kënnen agenist ginn fir eng Hierarchie opzebauen.",
-      "legacyWarning": "Nei Konfiguratioun vun de Stroumkreesser verfügbar! Läsch a späicher hei deng Konfiguratioun, fir de neie geleetene Prozess ze benotzen.",
+      "description": "Sécherstellen, datt d'Zomm vun all den Luedstatiounen an Heizungen déi mam Circuit verbonne sinn net déi konfiguréiert Leeschtung an aktuell Grenzen iwwerschreit. Circuiten kënnen agenist ginn fir eng Hierarchie opzebauen.",
+      "legacyWarning": "Nei Konfiguratioun vun de Stroumkreesser verfügbar! Läsch a späicher hei deng Konfiguratioun, fir de neie geleetene Prozess ze benotzen. Duerno ass e Neistart néideg.",
       "meterDedicated": "Zieler",
       "meterGrid": "Netz",
       "title": "Management vun der Belaaschtung",
@@ -205,13 +205,13 @@
       "used": "scho benotzt"
     },
     "consumer": {
-      "description": "Verfollegt kleng, net-kontrolléierbar Apparater (Frigo, Wäschmaschinn, asw.). Dëst gëtt Iech e besseren Iwwerbléck iwwert Ären Hausenergieverbrauch.",
+      "description": "Verfollegt kleng, net-kontrolléierbar Apparater (Frigo, Wäschmaschinn, asw.). Dëst gëtt Iech e besseren Iwwerbléck iwwert Ären Energieverbrauch.",
       "titleAdd": "Füügt een Zieler derbäi",
       "titleEdit": "Verbrauchszieler änneren"
     },
     "control": {
       "description": "Normalerweis sinn d'Standardwäerter gutt. Veränner se nëmmen wann s du weess wat s du mëss.",
-      "descriptionInterval": "Aktualiséierungszyklus a Sekonnen. Definéiert wéi dacks den evcc d'Zielerdaten liest an d'Luedzäit upasst. Déi Standardzäit vun 30 Sekonnen ass eng sécher Wiel. Apparater wéi Gefierer, Wallboxen an Inverter brauchen typescherweis e puer Sekonnen fir hiert Verhalen unzepassen. Wann Är Komponenten séier reagéieren, kënnt Dir méi niddreg Wäerter benotzen. Mir recommandéieren staark, net ënner 10 Sekonnen ze goen. Wann Dir e onreegelméissegt Kontrollverhalen oder schwankend Leeschtungswäerter bemierkt, wielt en méi groussen Intervall.",
+      "descriptionInterval": "Aktualiséierungszyklus a Sekonnen. Definéiert wéi dacks den evcc d'Zielerdaten liest an d'Luedzäit upasst. Déi Standardzäit vun 30 Sekonnen ass eng sécher Wiel. Apparater wéi Gefierer, Lueder an Inverter brauchen typescherweis e puer Sekonnen fir hiert Verhalen unzepassen. Wann Är Komponenten séier reagéieren, kënnt Dir méi niddreg Wäerter benotzen. Mir recommandéieren staark, net ënner 10 Sekonnen ze goen. Wann Dir e onreegelméissegt Kontrollverhalen oder schwankend Leeschtungswäerter bemierkt, wielt en méi groussen Intervall.",
       "descriptionResidualPower": "Verännert de Betribspunkt vun der Regelungsschläif. Wann Dir eng Heembatterie hutt, gëtt et recommandéiert, e Wäert vun 100 W anzestellen. Op dës Manéier kritt d'Batterie eng liicht Prioritéit géint d'Notzung vum Netz.",
       "labelInterval": "Aktualiséierungsintervall",
       "labelResidualPower": "Residuell Leeschtung",
@@ -224,7 +224,7 @@
       "title": "Wärung"
     },
     "curtailer": {
-      "description": "Apparat, deen op Ufro vum Netzbetreiber (§ 9 EEG) d'Aspeisung limitéiert. Vill Solarinvertere ënnerstëtzen dëst direkt iwwer hir Solarmeter-Konfiguratioun. Eng separat Konfiguratioun ass nëmme fir e puer Hiersteller oder Multi-Inverter-Systemer néideg.",
+      "description": "Apparat, deen op Ufro vum Netzbetreiber (§ 9 EEG) den Export an d'Netz limitéiert. Vill Solarinvertere ënnerstëtzen dëst direkt iwwer hir Solarmeter-Konfiguratioun. Eng separat Konfiguratioun ass nëmme fir e puer Hiersteller oder Multi-Inverter-Systemer néideg.",
       "generic": "Generesch Integratiounen",
       "specific": "Spezifesch Integratiounen",
       "template": "Hiersteller",
@@ -254,9 +254,9 @@
       "currency": "Wärung",
       "current": "Stroum",
       "currentRange": "Stroum",
-      "curtailLimit": "Begrenzung fir anzespeisen",
+      "curtailLimit": "Begrenzung fir an d'Netz ze exportéieren",
       "curtailable": "Ofregelbar",
-      "curtailed": "Aspeisungs-Limitt",
+      "curtailed": "Limitt fir an d'Netz ze exportéieren",
       "detected": "Erkannt",
       "dimLimit": "Benotzungslimit",
       "dimmed": "Verbrauch limitéiert",
@@ -264,9 +264,9 @@
       "energy": "Energie",
       "events": "Evenementer",
       "exportLimit": "Limitt vum Netz-Export",
-      "feedinPrice": "Präis fir anzespeisen",
+      "feedinPrice": "Präis fir an d'Netz ze exportéieren",
       "forecast": "Previsioun",
-      "gridPrice": "Netz Präis",
+      "gridPrice": "Präis fir vum Netz ze importéieren",
       "heaterTempLimit": "Limitt vun der Heizung",
       "identifier": "RFID-Identifikatioun",
       "loginBlocked": "Login-Limit erreecht",
@@ -275,7 +275,7 @@
       "maxPower": "Max. Leeschtung",
       "messengers": "Servicer",
       "no": "nee",
-      "odometer": "Kilometerzäler",
+      "odometer": "Kilometerstand",
       "org": "Organisatioun",
       "outdoorTemp": "Baussentemperatur",
       "phaseCurrents": "Stroum",
@@ -321,7 +321,7 @@
           "energy": "Produzéiert"
         }
       },
-      "vehicleLimitSoc": "Luedlimit",
+      "vehicleLimitSoc": "Limitt vum Gefier",
       "yes": "jo"
     },
     "deviceValueChargeStatus": {
@@ -330,8 +330,8 @@
       "C": "C (luet)"
     },
     "devices": {
-      "auxMeter": "Smarte Verbraucher",
-      "batteryStorage": "Batterie stockage",
+      "auxMeter": "Selbstreguléierende Verbraucher",
+      "batteryStorage": "Hausbatterie",
       "consumer": "Verbraucher",
       "solarSystem": "PV Anlag"
     },
@@ -345,26 +345,26 @@
         "title": "Zertifikater"
       },
       "configuredDevices": "Konfiguréiert Geräter",
-      "description": "Konfiguratioun, déi et dem evcc erlaabt, mat EEBus-kompatiblen Apparater wéi Ladegeräter oder enger Kontroll-Eenheet vun Ärem Netzbetreiber ze kommunizéieren. All relevant Initialiséierung an d'Generéiere vun Zertifikater gëtt beim éischte Start automatesch duerchgefouert.",
+      "description": "Konfiguratioun, déi et dem evcc erlaabt, mat EEBUS-kompatiblen Apparater wéi Ladegeräter oder enger Kontroll-Eenheet vun Ärem Netzbetreiber ze kommunizéieren. All relevant Initialiséierung an d'Generéiere vun Zertifikater gëtt beim éischte Start automatesch duerchgefouert.",
       "descriptionAdvanced": "Keng Ännerungen néideg. Maacht Ännerungen nëmmen wann Dir wierklech wësst, wat Dir maacht. Wann Dir entweder d'SHIP-ID oder d'Zertifikater ännert, musst Dir Är Apparater erëm koppelen.",
       "interfaces": "Schnëttstellen",
-      "interfacesHelp": "Limitéiert d'Netzwierkschnëttstellen, déi EEBus soll benotzen, fir Kommunikatiounsproblemer ze vermeiden. Loosst d'Feld eidel, fir all Schnëttstellen ze benotzen. Eng Entrée pro Zeil.",
+      "interfacesHelp": "Limitéiert d'Netzwierkschnëttstellen, déi EEBUS soll benotzen, fir Kommunikatiounsproblemer ze vermeiden. Loosst d'Feld eidel, fir all Schnëttstellen ze benotzen. Eng Entrée pro Zeil.",
       "noConfiguredDevices": "Keng per SKI konfiguréiert Geräter.",
       "noPairings": "Keng gekoppelt Geräter.",
       "pairings": "Gekoppelt Geräter",
       "port": "Port",
       "portHelp": "De Port, deen ze benotzen ass.",
       "qr": "Kopplungscode",
-      "qrExplain": "Wärend der Installatioun no engem aneren EEBus-Apparat scannen, fir en automatesch ze koppelen, ouni den SKI manuell aginn ze mussen.",
-      "removeConfirm": "All EEBus-Konfiguratioun gëtt ewechgeholl. Nei Zertifikater a Identifikateuren ginn beim nächsten Start generéiert. Sidd Dir sécher?",
+      "qrExplain": "Wärend der Installatioun no engem aneren EEBUS-Apparat scannen, fir en automatesch ze koppelen, ouni den SKI manuell aginn ze mussen.",
+      "removeConfirm": "All EEBUS-Konfiguratioun gëtt ewechgeholl. Nei Zertifikater a Identifikateuren ginn beim nächsten Start generéiert. Sidd Dir sécher?",
       "removePairing": "Kopplung ewechhuelen",
       "removePairingConfirm": "D'Verbindung zum Gerät gëtt getrennt a muss nei gekoppelt ginn. Bass du sécher?",
       "shipid": "SHIP-ID",
-      "shipidExplain": "Permanente Apparat-Identifikator fir d'Identifikatioun am EEBus-Netzwierk.",
+      "shipidExplain": "Permanente Apparat-Identifikator fir d'Identifikatioun am EEBUS-Netzwierk.",
       "shipidHelp": "Dës SHIP-ID ass mat deenen ënnen genannten Zertifikater verbonnen.",
       "ski": "SKI",
-      "skiExplain": "Eenzegaartege Sécherheetsidentifikator fir d'Paarung vun EEBus-Geräter.",
-      "title": "EEBus"
+      "skiExplain": "Eenzegaartege Sécherheetsidentifikator fir d'Paarung vun EEBUS-Geräter.",
+      "title": "EEBUS"
     },
     "experimental": {
       "description": "Bitt fréien Zougang zu Funktiounen, déi nach getest ginn. Dës kënnen onstabil sinn a kéinten an zukünftege Versioune geännert oder ewechgeholl ginn.",
@@ -455,8 +455,8 @@
       "dynamicLimits": "Dynamesch Limitten",
       "eventsRecorded": "{count} gespäichert Limitatiounen vum Netz.",
       "exportLimit": "Limitt vum Netz-Export",
-      "exportLimitDescription": "De Batterieoptimiséierer respektéiert dës Limitte fir Solarveeloschter ze vermeiden. En aktiven Ofschalt-Signal aus enger dynamescher Limitt-Integratioun huet Prioritéit.",
-      "exportLimitHint": "Statesche Einspeise-Limitt um Netzuschlosspunkt.",
+      "exportLimitDescription": "De Optimiséierer respektéiert dës Limitte fir Solarveeloschter ze vermeiden. En aktiven Ofschalt-Signal aus enger dynamescher Limitt-Integratioun huet Prioritéit.",
+      "exportLimitHint": "Statesche Export-Limitt um Netzuschlosspunkt.",
       "generic": "Generesch Integratiounen",
       "integrations": "Integratiounen",
       "lastEvent": "Méi rezent {timeAgo}.",
@@ -568,16 +568,24 @@
       "priorityLabel": "Prioritéit",
       "save": "Späicheren",
       "solarShareReset": "Schwellen ewechhuelen",
+      "solarTitle": "Verhale bei Solariwwerschoss",
       "temperatureRangeHelp": "Beräich fir d'Temperatur deen ugewise gëtt. Beaflosst net d'Steierung.",
       "temperatureRangeTitle": "Temperaturberäich",
+      "thresholdDisableDelayHelp": "Stoppt, wann et net genuch Iwwerschoss verfügbar ass fir {delay}.",
       "thresholdDisableDelayLabel": "Verzögerung fir d'Ausschalten",
       "thresholdDisableHelpInvalid": "Wgl. ee positive Wäert verwennen.",
-      "thresholdDisableHelpPositive": "Stoppen, wa méi {power} fir {delay} aus dem Netz bezu ginn.",
+      "thresholdDisableHelpPositive": "Stopp, wa méi {power} fir {delay} aus dem Netz bezu ginn.",
       "thresholdDisableLabel": "Netzstroum ausschalten",
+      "thresholdEnableDelayHelp": "Fänkt un wa genuch Iwwerschoss do ass fir {delay}.",
       "thresholdEnableDelayLabel": "Verzögerung fir d'Aschalten",
       "thresholdEnableHelpInvalid": "Wgi. een negative Wäert verwennen.",
-      "thresholdEnableHelpNegative": "Starten, wa {surplus} Iwwerschoss fir {delay} verfügbar ass.",
+      "thresholdEnableHelpNegative": "Start, wa {surplus} Iwwerschoss fir {delay} verfügbar ass.",
       "thresholdEnableLabel": "Netzstroum aschalten",
+      "thresholdsNote": {
+        "charging": "Fir d'Netzbenotzung beim Solaroplueden ze kontrolléieren, benotzt wgl. de {slider}-Schieber an den Astellungen vun den Opluedstatiounen op der {page}-Säit. Setzt Wäerter hei nëmmen a spezielle Fäll an.",
+        "heating": "Fir d'Netznotzung wärend der Solarheizung ze kontrolléieren, benotzt wgl. de {slider}-Schieber an den Heizungsastellungen op der {page}-Säit. Setzt hei nëmmen a spezielle Fäll Wäerter an."
+      },
+      "thresholdsSliderDisabled": "De Schieberegler {slider} ass de Moment deaktivéiert, well Wäerter hei festgeluecht gi sinn.",
       "titleAdd": {
         "charging": "Luedepunkt derbäi fügen",
         "heating": "Heizung derbäi fügen",
@@ -590,7 +598,7 @@
       },
       "titleExample": {
         "charging": "Garage, Carport, etc.",
-        "heating": "Wärmepompel, Heizung, etc."
+        "heating": "Wärmepompel, heizung, etc."
       },
       "titleLabel": "Titel",
       "vehicleAutoDetection": "automatesch Erkennung",
@@ -636,7 +644,7 @@
           "titleDefault": "Gefier schléift"
         },
         "connect": {
-          "messageDefault": "Gefier ugeschloss mat {pvPower} kW PV",
+          "messageDefault": "Gefier ugeschloss mat {pvPower} kW solar",
           "title": "Wann ee Gefier sech verbënnt",
           "titleDefault": "Gefier ass verbonnen"
         },
@@ -857,7 +865,7 @@
       },
       "controlled": "Duerch déi automatesch Kontroll deaktivéiert. Den {optimizer} decidéiert amplaz.",
       "controls": "Steiert",
-      "description": "Verwennt d'Solarprognosen, d'Stroumpräisser an Är Verbrauchsmuster fir d'Batterie an d'Opluedung ze plangen. D'Donnéeë ginn un den evcc Optimiséierungsservice geschéckt.",
+      "description": "Verwennt d'Solarprognosen, d'Energiepräisser an Är Verbrauchsmuster fir d'Batterie an d'Opluedung ze plangen. D'Donnéeë ginn un den evcc Optimiséierungsservice geschéckt.",
       "enable": "Optimizer aktivéieren",
       "info": "Bei neien Installatiounen kann et bis zu 24 Stonnen daueren, bis evcc genuch Donnéeë gesammelt huet.",
       "linkWord": "Optiméierer",
@@ -968,6 +976,15 @@
         "example": "Ären Opluedpräis war {price}. Dir hutt {amount} gespuert.",
         "label": "Wärung"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V ouni Nullleiter (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V mat Nullpunkt (3P4W)",
+        "description": {
+          "3p3w": "Netz ouni Nullleiter. Heefeg an Norwegen an Deeler vu Belsch.",
+          "3p4w": "Am meeschte verbreeten Netz mat Nullleiter."
+        },
+        "label": "Netzuschloss"
+      },
       "siteTitle": {
         "description": "Gëtt op dem Haaptbildschierm an am Browser-Tab ugewisen.",
         "label": "Titel"
@@ -1053,7 +1070,7 @@
       },
       "generic": "Generesch Integratiounen",
       "grid": {
-        "description": "Stroumpräis fir Netzkonsum. Fir déi tatsächlech Opluedkäschten ze berechnen an dat präisoptiméiert Opluede vu Gefierer, Heizapparater oder d'Opluede vun der Hausbatterie iwwer d'Netz ze optiméieren.",
+        "description": "Energiepräis fir Netzimport. Fir déi tatsächlech Opluedkäschten ze berechnen an dat präisoptiméiert Opluede vu Gefierer, Heizapparater oder d'Opluede vun der Hausbatterie iwwer d'Netz ze optiméieren.",
         "titleAdd": "Netz-Import-Tarif derbäifügen",
         "titleEdit": "Netz-Import-Tarif upassen"
       },
@@ -1073,7 +1090,7 @@
       },
       "services": "Servicer",
       "solar": {
-        "description": "Previsioun vun der Solarproduktioun fir Äere PV-System. Am Interface ugewisen a gëtt an Zukunft fir Optimiséierungsalgorithmen benotzt.",
+        "description": "Previsioun vun der Solarproduktioun fir Äere Solar-System. Am Interface ugewisen a gëtt an Zukunft fir Optimiséierungsalgorithmen benotzt.",
         "titleAdd": "Solarprevisioun derbäifügen",
         "titleEdit": "Solarprevisioun beaarbechten"
       },
@@ -1204,7 +1221,7 @@
       "import": "Import",
       "importPrice": "Importpräis",
       "price": "Präis",
-      "revenue": "Recette vum Aspeisen",
+      "revenue": "Recette vum Export",
       "title": "Netz"
     },
     "group": {
@@ -1239,7 +1256,7 @@
       "cost": "Käschten",
       "energy": "Energie",
       "grid": "Netz",
-      "hint": "Solar- a Batterieenergie zum Aspeisepräis bewäert.",
+      "hint": "Solar- a Batterieenergie zum Exportpräis an d'Netz bewäert.",
       "price": "Präis/kWh",
       "pv": "Solar",
       "share": "Undeel",
@@ -1267,7 +1284,7 @@
       "greenEnergySub2": "zënter Oktober 2022",
       "greenShare": "Sonnenundeel",
       "greenShareSub1": "Stroum gëtt bereetgestallt vun",
-      "greenShareSub2": "Solar- & Batteriespäicher",
+      "greenShareSub2": "Solar- & Hausbatterie",
       "power": "Luedeleeschtung",
       "powerSub1": "{activeClients} vu {totalClients} Participanten",
       "powerSub2": "gëtt gelueden.",
@@ -1359,7 +1376,7 @@
     },
     "empty": {
       "co2": "Iwwerpréiwt, wéini d'Netzenergie an Ärer Regioun propper ass. Luedpläng ginn optimiséiert fir d'Emissiounen ze reduzéieren an CO₂ anzespueren.",
-      "price": "Konfiguréiert Ären dynameschen Stromtarif, fir d'Luedpläng automatesch ze optiméieren an d'Erspuernësser ze berechnen.",
+      "price": "Konfiguréiert Ären dynameschen Tarif, fir d'Luedpläng automatesch ze optiméieren an d'Erspuernësser ze berechnen.",
       "setup": "Tariffer a Prognosen opstellen",
       "solar": "Kuckt déi erwaart Solarproduktioun fir haut an déi nächst Deeg. Et gëtt och an der Zukunft fir d'automatiséiert Luedoptimiséierung benotzt.",
       "temperature": "Kuckt déierwaart Baussentemperatur fir Äre Standuert. Gëtt benotzt fir den Heizungsbedarf virauszesoen."
@@ -1614,7 +1631,7 @@
     },
     "hemsWarning": {
       "consumption": "Verbrauch",
-      "feedIn": "Aspeisung",
+      "feedIn": "Netz Export",
       "title": "Extern Begrenzung aktiv"
     },
     "loadpoint": {
@@ -1622,7 +1639,7 @@
       "charged": "Opgelueden",
       "co2": "⌀ CO₂",
       "duration": "Dauer",
-      "emission": "Emissioun",
+      "emission": "Emissiounen",
       "fallbackName": "Luedstatioun",
       "finished": "Fäerdeg um",
       "last24hEnergy": "Lescht 24h",
@@ -1677,12 +1694,12 @@
       "solar": "Solariwwerschoss",
       "solarShare": {
         "charging": {
-          "description": "Mindestens {share} vun der minimaler Opluede-Leeschtung muss aus der Sonn kommen.",
+          "description": "Op d'mannst {share} vun der minimaler Opluedleeschtung muss duerch Solariwwerschoss ofgedeckt ginn.",
           "descriptionFull": "D'Opluede fänkt un, esoubal den Iwwerschoss déi minimal Luedeffizienz ofdeckt.",
           "descriptionZero": "D'Opluede fänkt un, esoubal e gewëssenen Iwwerschoss disponibel ass."
         },
         "heating": {
-          "description": "Mindestens {share} vun der minimaler Heizleeschtung muss aus der Sonn kommen.",
+          "description": "Op d'mannst {share} vun der minimaler Heizleeschtung muss duerch Solariwwerschoss ofgedeckt ginn.",
           "descriptionFull": "D'Heizung start, esoubal den Iwwerschoss déi minimal Heizleeschtung deckt.",
           "descriptionZero": "D'Heizung start, esoubal e bëssen Iwwerschoss disponibel ass."
         },
@@ -1743,7 +1760,7 @@
     },
     "targetChargePlan": {
       "chargeDuration": "Dauer vum Oplueden",
-      "co2Label": "CO₂ Emissioun ⌀",
+      "co2Label": "CO₂ Emissiounen ⌀",
       "optimizerHint": "Bemierkung: Dëse Plang gouf vum {optimizer} erstallt.",
       "priceLabel": "Energiepräis",
       "timeRange": "{day} {range} h",
