@@ -23,6 +23,7 @@
 							class="box-pull-out"
 							:configured="configuredItems"
 							:dismissed="dismissed"
+							:legacy-tariffs="tariffsYamlVisible"
 						/>
 						<ConfigSectionNav
 							v-if="mobile"
@@ -1034,6 +1035,9 @@ export default defineComponent({
 			return this.loadpoints.filter((lp) => this.isHeater(lp.charger));
 		},
 		configuredItems(): Record<string, boolean> {
+			// legacy tariffs have no refs, their live values only exist when configured
+			const { tariffGrid, tariffFeedIn, tariffCo2, tariffSolar } = store.state;
+			const yaml = this.tariffsYamlVisible;
 			return {
 				battery: (this.site.battery?.length ?? 0) > 0,
 				pv: (this.site.pv?.length ?? 0) > 0,
@@ -1041,10 +1045,10 @@ export default defineComponent({
 				loadpoint: this.chargingLoadpoints.length > 0,
 				heater: this.heaterLoadpoints.length > 0,
 				consumer: (this.site.consumer?.length ?? 0) > 0,
-				gridImport: !!this.tariffRefs.grid,
-				gridExport: !!this.tariffRefs.feedIn,
-				co2: !!this.tariffRefs.co2,
-				solar: this.tariffRefs.solar.length > 0,
+				gridImport: yaml ? tariffGrid !== undefined : !!this.tariffRefs.grid,
+				gridExport: yaml ? tariffFeedIn !== undefined : !!this.tariffRefs.feedIn,
+				co2: yaml ? tariffCo2 !== undefined : !!this.tariffRefs.co2,
+				solar: yaml ? tariffSolar !== undefined : this.tariffRefs.solar.length > 0,
 			};
 		},
 		currency(): CURRENCY {

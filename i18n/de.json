@@ -1855,6 +1855,7 @@
     },
     "checklist": {
       "dismiss": "Ausblenden",
+      "legacyTariffs": "Veraltete Tarifkonfiguration aktiv.",
       "progress": "{done} von {total} erledigt",
       "title": "Einrichtung abschließen"
     },
