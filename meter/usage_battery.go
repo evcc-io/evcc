@@ -172,6 +172,52 @@ func warnPartialPowerLimits(ctx context.Context) {
 	util.ContextLoggerWithDefault(ctx, util.NewLogger("battery")).WARN.Println("maxchargepower and maxdischargepower must both be configured, ignoring power limit")
 }
 
+type batteryModePowerConfig struct {
+	Charge    *plugin.Config
+	Discharge *plugin.Config
+}
+
+func (m *batteryModePowerConfig) Controller(ctx context.Context) (api.BatteryModePowerController, error) {
+	if m == nil {
+		return nil, nil
+	}
+
+	charge, err := m.Charge.FloatSetter(ctx, "batteryChargePower")
+	if err != nil {
+		return nil, fmt.Errorf("battery charge power: %w", err)
+	}
+	discharge, err := m.Discharge.FloatSetter(ctx, "batteryDischargePower")
+	if err != nil {
+		return nil, fmt.Errorf("battery discharge power: %w", err)
+	}
+	if charge == nil && discharge == nil {
+		return nil, nil
+	}
+
+	return &batteryModePowerController{charge: charge, discharge: discharge}, nil
+}
+
+type batteryModePowerController struct {
+	charge    func(float64) error
+	discharge func(float64) error
+}
+
+func (m *batteryModePowerController) SetBatteryModePower(mode api.BatteryMode, power float64) error {
+	var set func(float64) error
+	switch mode {
+	case api.BatteryCharge:
+		set = m.charge
+	case api.BatteryDischarge:
+		set = m.discharge
+	default:
+		return fmt.Errorf("battery mode power: unsupported mode %s", mode)
+	}
+	if set == nil {
+		return fmt.Errorf("battery mode power: mode %s not configured", mode)
+	}
+	return set(power)
+}
+
 type batterySocLimits struct {
 	MinSoc, MaxSoc float64
 }

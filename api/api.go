@@ -89,6 +89,11 @@ type BatteryController interface {
 	SetBatteryMode(BatteryMode) error
 }
 
+// BatteryModePowerController optionally sets the power for forced charge or discharge.
+type BatteryModePowerController interface {
+	SetBatteryModePower(BatteryMode, float64) error
+}
+
 // Charger provides current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
