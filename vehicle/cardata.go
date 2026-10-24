@@ -3,6 +3,7 @@ package vehicle
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
 	"strings"
 	"time"
@@ -26,16 +27,27 @@ func init() {
 // NewCardataFromConfig creates a new BMW/Mini CarData vehicle
 func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
-		embed                         `mapstructure:",squash"`
-		ClientID, VIN                 string
-		Cache                         time.Duration // 50 requests per day
-		Broker, User, Password, Topic string
+		embed         `mapstructure:",squash"`
+		ClientID, VIN string
+		Cache         time.Duration // 50 requests per day
+		Stream        string
+		mqtt.Config   `mapstructure:",squash"`
+		Topic         string
+		Timeout       time.Duration // rendered by the mqtt template preset, unused
 	}{
-		Topic: "bmw/raw/+",
+		Stream: "bmw",
+		Topic:  "bmw/raw/+",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	// clientid is the BMW client id, not the mqtt one
+	cc.Config.ClientID = ""
+
+	if cc.Stream != "bmw" && cc.Stream != "mqtt" {
+		return nil, fmt.Errorf("invalid stream: %s", cc.Stream)
 	}
 
 	if cc.VIN == "" {
@@ -68,12 +80,8 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 	api := cardata.NewAPI(log, ts)
 
 	var conn *cardata.MqttConnector
-	if cc.Broker != "" {
-		conn = cardata.NewBrokerConnector(context.Background(), log, mqtt.Config{
-			Broker:   cc.Broker,
-			User:     cc.User,
-			Password: cc.Password,
-		}, cc.Topic)
+	if cc.Stream == "mqtt" {
+		conn = cardata.NewBrokerConnector(context.Background(), log, cc.Config, cc.Topic)
 	} else {
 		conn = cardata.NewMqttConnector(context.Background(), log, cc.ClientID, ts)
 	}
