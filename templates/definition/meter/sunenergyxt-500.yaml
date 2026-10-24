@@ -11,14 +11,18 @@ requirements:
     en: |
       The battery's local mode must be enabled in the manufacturer's app.
       Furthermore, the device's IP address must be set to a fixed, permanent IP address in the router.
-      An external meter (e.g., Shelly) measuring the grid connection point must be connected to the battery via the manufacturer's app.
-      It is required for the `grid` usage, and also for the `battery` usage, because the normal battery mode enables the device's
+      A local meter at the grid connection point (e.g. Shelly 3EM / Pro 3EM, EcoTracker or Tasmota) must be connected to the battery.
+      It is stored on the device and can be set up in the manufacturer's app before enabling local mode (Smart Strategy with communication mode "Local Network (WLAN)"),
+      or via the local API (field `MD`, e.g. with the Home Assistant integration).
+      The meter is required for the `grid` usage, and also for the `battery` usage, because the normal battery mode enables the device's
       zero feed-in regulation, which reads this meter.
     de: |
       Der lokale Modus der Batterie muss in der Hersteller-App aktiviert werden.
       Des Weiteren muss die IP-Adresse des Geräts im Router auf eine feste, dauerhafte IP-Adresse eingestellt werden.
-      Mit der Batterie muss ein externer Zähler (z. B. Shelly) verbunden sein, der den Hausanschlusspunkt misst (dieser wird über die Hersteller-App hinzugefügt).
-      Er wird für die Verwendung `grid` benötigt und ebenso für die Verwendung `battery`, da der normale Batteriemodus die
+      Mit der Batterie muss ein lokaler Zähler am Hausanschlusspunkt verbunden sein (z. B. Shelly 3EM / Pro 3EM, EcoTracker oder Tasmota).
+      Er wird im Gerät gespeichert und kann vor dem Aktivieren des lokalen Modus in der Hersteller-App eingerichtet werden (Smarte Strategie mit Kommunikationsmodus „Lokales Netzwerk (WLAN)“)
+      oder über die lokale API (Feld `MD`, z. B. mit der Home-Assistant-Integration).
+      Der Zähler wird für die Verwendung `grid` benötigt und ebenso für die Verwendung `battery`, da der normale Batteriemodus die
       Nulleinspeise-Regelung des Geräts aktiviert, die diesen Zähler ausliest.
 caveats:
   - description:
@@ -36,6 +40,17 @@ caveats:
       en: |
         `maxacpower` and `maxdischargepower` are derived from the selected `model` when left empty.
         An explicitly configured value takes precedence and is not clamped to the model limit.
+  - description:
+      de: |
+        Standardmäßig pausiert der Haltemodus die Nulleinspeise-Regelung (`MM:0`). Sind am Speicher keine Solarmodule angeschlossen (AC-gekoppelt), wird dann auch kein Überschuss geladen.
+        Mit „Ohne Solarmodule am Speicher (AC-gekoppelt)“ und „Maximale netzgekoppelte Ausgangsleistung (MG)“ bleibt die Regelung beim Halten aktiv und die maximale netzgekoppelte Ausgangsleistung (`MG`) wird auf 1 W begrenzt: Der Speicher entlädt nicht, lädt Überschuss aber weiter. In den anderen Modi wird `MG` wieder auf diesen Wert gesetzt.
+        Dieses Verhalten wurde an einem AC-gekoppelten 500 gemessen und ist vom Hersteller nicht dokumentiert.
+        Mit Solarmodulen direkt am Speicher ist es nicht getestet. Da `MG` die gesamte AC-Ausgangsleistung des Geräts begrenzt, gelangt deren Solarstrom beim Halten dann voraussichtlich nicht ins Haus. Wie sich der Standard-Haltemodus (`MM:0`, `GS:0`) in diesem Fall verhält, ist ebenfalls nicht getestet.
+      en: |
+        By default, hold pauses the zero feed-in regulation (`MM:0`). If no solar panels are connected to the storage (AC-coupled), surplus is then not charged either.
+        With "No solar panels on the storage (AC-coupled)" and "Maximum grid-connected output power (MG)", hold keeps the regulation active and limits the maximum grid-connected output power (`MG`) to 1 W: the storage does not discharge but still charges from surplus. The other modes set `MG` back to this value.
+        This behavior was measured on an AC-coupled 500 and is not documented by the vendor.
+        It is not tested with solar panels connected directly to the storage. Since `MG` limits the device's total AC output, their solar power would then most likely not reach the house during hold. How the default hold (`MM:0`, `GS:0`) behaves in this case is not tested either.
 params:
   - name: usage
     type: choice
@@ -77,6 +92,41 @@ params:
   - name: maxchargepower
     default: 2400
   - name: maxdischargepower
+  # AC-coupled hold needs both: the flag keeps it opt-in (untested with panels on the device),
+  # the MG value is required to restore the limit after hold
+  - name: accoupled
+    type: bool
+    default: false
+    advanced: true
+    usages: ["battery"]
+    description:
+      de: Ohne Solarmodule am Speicher (AC-gekoppelt)
+      en: No solar panels on the storage (AC-coupled)
+    help:
+      de: |
+        Aktivieren, wenn am Speicher keine Solarmodule angeschlossen sind (z. B. ein 500 oder 500 PRO ohne eigene Module oder ein 500 PRO AC Core). Der Haltemodus sperrt dann nur das Entladen und lädt weiter mit Überschuss.
+        Erfordert einen Wert für „Maximale netzgekoppelte Ausgangsleistung (MG)“.
+      en: |
+        Enable if no solar panels are connected to the storage (e.g. a 500 or 500 PRO without panels of its own, or a 500 PRO AC Core). Hold then only blocks discharging and keeps charging from surplus.
+        Requires a value for "Maximum grid-connected output power (MG)".
+  - name: maxgridoutput
+    type: int
+    unit: W
+    advanced: true
+    usages: ["battery"]
+    description:
+      de: Maximale netzgekoppelte Ausgangsleistung (MG)
+      en: Maximum grid-connected output power (MG)
+    help:
+      de: |
+        Dein normaler Wert für die maximale netzgekoppelte Ausgangsleistung (`MG`) des Geräts. Außerhalb des Haltemodus setzt evcc `MG` auf diesen Wert. Änderungen an `MG` außerhalb von evcc (z. B. in Home Assistant) werden dabei überschrieben.
+        Nur zusammen mit „Ohne Solarmodule am Speicher (AC-gekoppelt)“ wirksam. Ohne diesen Wert bleibt der Haltemodus unverändert.
+        Nicht zu verwechseln mit der maximalen Entladeleistung: Diese wird von evcc genutzt, aber von diesem Template nicht an das Gerät geschrieben. `MG` ist eine Ausgangsbegrenzung, die du selbst im Gerät einstellst (z. B. 800 W bei einem Balkonkraftwerk).
+      en: |
+        Your normal value for the device's maximum grid-connected output power (`MG`). Outside of hold, evcc sets `MG` to this value. Changes to `MG` made outside evcc (e.g. in Home Assistant) are overwritten.
+        Only effective together with "No solar panels on the storage (AC-coupled)". Without this value hold stays unchanged.
+        Not to be confused with the maximum discharge power: it is used by evcc, but this template does not write it to the device. `MG` is an output limit you set yourself in the device (e.g. 800 W for a balcony power plant).
+    example: 800
   - name: cache
     advanced: true
     default: 2s
@@ -95,6 +145,9 @@ render: |
     scale: -1
   {{- end }}
   {{- if eq .usage "battery" }}
+  {{- /* MG value to restore after AC-coupled hold, 0 = AC-coupled hold disabled */}}
+  {{- $mg := 0 }}
+  {{- if .accoupled }}{{ $mg = .maxgridoutput | int }}{{ end }}
   power:
     source: http
     uri: http://{{ .host }}/read
@@ -120,7 +173,7 @@ render: |
           - Content-Type: application/json
         # GS must be reset explicitly: MM (zero feed-in regulation) and GS (manual
         # setpoint) are independent, so a leftover GS would keep grid charging.
-        body: '{"state":{"MM":1,"GS":0}}'
+        body: '{"state":{"MM":1,"GS":0{{ if gt $mg 0 }},"MG":{{ $mg }}{{ end }}}}'
     - case: 2 # hold
       set:
         source: http
@@ -128,7 +181,9 @@ render: |
         uri: http://{{ .host }}/write
         headers:
           - Content-Type: application/json
-        body: '{"state":{"MM":0,"GS":0}}'
+        # AC-coupled: keep zero feed-in regulation (MM:1) to charge from surplus and block discharging via MG
+        # (1 W is the minimum), otherwise pause the device (MM:0)
+        body: '{{ if gt $mg 0 }}{"state":{"MM":1,"GS":0,"MG":1}}{{ else }}{"state":{"MM":0,"GS":0}}{{ end }}'
     - case: 3 # charges
       set:
         source: http
@@ -137,7 +192,7 @@ render: |
         headers:
           - Content-Type: application/json
         # GS < 0 means grid import / grid charging
-        body: '{"state":{"MM":0,"GS":-{{ .maxchargepower | int }}}}'
+        body: '{"state":{"MM":0,"GS":-{{ .maxchargepower | int }}{{ if gt $mg 0 }},"MG":{{ $mg }}{{ end }}}}'
   {{- include "battery-capacity" . }}
   {{- include "battery-minmaxsoc" . }}
   maxchargepower: {{ .maxchargepower | int }} # W
