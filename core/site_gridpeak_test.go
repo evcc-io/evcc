@@ -48,7 +48,7 @@ func TestGridPeak(t *testing.T) {
 	assert.False(t, p.add(nov.Add(time.Hour+23*time.Minute), 2000))
 	assert.True(t, p.add(nov.Add(time.Hour+30*time.Minute), 2000))
 	assert.InDelta(t, 2000, p.peak(nov), 1e-6)
-	assert.Equal(t, "2026-11", p.Month)
+	assert.Equal(t, nov.Add(time.Hour+15*time.Minute), p.Time)
 }
 
 func TestGridPeakTarget(t *testing.T) {
@@ -62,7 +62,7 @@ func TestGridPeakTarget(t *testing.T) {
 	site := &Site{
 		log:        util.NewLogger("foo"),
 		loadpoints: []*Loadpoint{lp},
-		gridPeak:   gridPeak{Month: "2026-10", Power: 6000},
+		gridPeak:   gridPeak{Time: now.Add(-time.Hour), Power: 6000},
 	}
 
 	// no regime
