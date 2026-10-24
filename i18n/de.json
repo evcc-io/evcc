@@ -1651,6 +1651,10 @@
       "batteryDischargeHold": "Batterie (Entladesperre)",
       "batteryGridChargeActive": "Netzladen: aktiv",
       "batteryGridChargeLimit": "Netzladen: wenn",
+      "batteryPowerControl": {
+        "applied": "Leistungssteuerung angewendet",
+        "failed": "Leistungssteuerung fehlgeschlagen"
+      },
       "batteryStatus": "Batteriestatus",
       "batteryTooltip": "{energy} von {total} ({soc})",
       "forecast": "Vorhersage",
