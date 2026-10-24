@@ -89,7 +89,7 @@ func (site *Site) updateGridPeak(now time.Time) {
 
 	// fast charging accepts a higher peak
 	fast := slices.ContainsFunc(site.loadpoints, func(lp *Loadpoint) bool {
-		return lp.GetMode() == api.ModeNow
+		return lp != nil && lp.GetMode() == api.ModeNow
 	})
 
 	site.Lock()
