@@ -34,10 +34,11 @@ import (
 // DaheimLaden charger implementation
 type DaheimLaden struct {
 	implement.Caps
-	log    *util.Logger
-	conn   *modbus.Connection
-	curr   uint16
-	phases uint16
+	log              *util.Logger
+	conn             *modbus.Connection
+	curr             uint16
+	phases           uint16
+	phaseSwitchPause uint16
 }
 
 const (
@@ -66,6 +67,7 @@ const (
 	dlRegPhaseSwitchState   = 184
 	dlRegPhaseSwitchControl = 186
 	dlRegPhaseSwitchAction  = 188
+	dlRegPhaseSwitchPause   = 190
 )
 
 func init() {
@@ -77,6 +79,7 @@ func NewDaheimLadenFromConfig(ctx context.Context, other map[string]any) (api.Ch
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Phases1p3p         bool
+		PhaseSwitchPause   int
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 255,
@@ -87,11 +90,11 @@ func NewDaheimLadenFromConfig(ctx context.Context, other map[string]any) (api.Ch
 		return nil, err
 	}
 
-	return NewDaheimLaden(ctx, cc.TcpSettings, cc.Phases1p3p)
+	return NewDaheimLaden(ctx, cc.TcpSettings, cc.Phases1p3p, cc.PhaseSwitchPause)
 }
 
 // NewDaheimLaden creates DaheimLaden charger
-func NewDaheimLaden(ctx context.Context, settings modbus.TcpSettings, phases bool) (api.Charger, error) {
+func NewDaheimLaden(ctx context.Context, settings modbus.TcpSettings, phases bool, phaseSwitchPause int) (api.Charger, error) {
 	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
@@ -100,18 +103,32 @@ func NewDaheimLaden(ctx context.Context, settings modbus.TcpSettings, phases boo
 	log := util.NewLogger("daheimladen")
 	conn.Logger(log.TRACE)
 
+	// firmware limits the phase switch pause to 30-120s
+	if phaseSwitchPause != 0 {
+		if p := min(max(phaseSwitchPause, 30), 120); p != phaseSwitchPause {
+			log.WARN.Printf("phase switch pause %ds out of range, using %ds", phaseSwitchPause, p)
+			phaseSwitchPause = p
+		}
+	}
+
 	wb := &DaheimLaden{
-		Caps:   implement.New(),
-		log:    log,
-		conn:   conn,
-		curr:   60, // assume min current
-		phases: 3,  // assume 3p
+		Caps:             implement.New(),
+		log:              log,
+		conn:             conn,
+		curr:             60, // assume min current
+		phases:           3,  // assume 3p
+		phaseSwitchPause: uint16(phaseSwitchPause),
 	}
 
 	if !sponsor.IsAuthorized() {
 		if err := wb.checkStation(); err != nil {
 			return nil, err
 		}
+	}
+
+	// set configured phase switch pause
+	if err := wb.checkPhaseSwitchPause(); err != nil {
+		return nil, fmt.Errorf("phase switch pause: %w", err)
 	}
 
 	// get initial state from charger
@@ -394,6 +411,28 @@ func (wb *DaheimLaden) checkStation() error {
 	}
 
 	return api.ErrSponsorRequired
+}
+
+// checkPhaseSwitchPause writes the configured phase switch pause if it differs from the charger value
+func (wb *DaheimLaden) checkPhaseSwitchPause() error {
+	if wb.phaseSwitchPause == 0 {
+		return nil
+	}
+
+	b, err := wb.conn.ReadHoldingRegisters(dlRegPhaseSwitchPause, 1)
+	if err != nil {
+		return err
+	}
+
+	if binary.BigEndian.Uint16(b) == wb.phaseSwitchPause {
+		return nil
+	}
+
+	b = make([]byte, 2)
+	binary.BigEndian.PutUint16(b, wb.phaseSwitchPause)
+
+	_, err = wb.conn.WriteMultipleRegisters(dlRegPhaseSwitchPause, 1, b)
+	return err
 }
 
 var _ api.Diagnosis = (*DaheimLaden)(nil)
