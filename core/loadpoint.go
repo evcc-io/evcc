@@ -1473,6 +1473,11 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 
 		// some vehicles may hang on phase switch
 		lp.startWakeUpTimer()
+
+		// run a pending welcome charge on the new phases once the switch has settled (#34853)
+		if lp.welcomeActive() {
+			lp.welcomeUntil = lp.clock.Now().Add(phaseSwitchDuration + welcomeChargeDuration)
+		}
 	}
 
 	return nil

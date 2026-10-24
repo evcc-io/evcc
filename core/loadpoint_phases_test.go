@@ -672,6 +672,37 @@ func TestScalePhasesUpMinCurrent(t *testing.T) {
 	require.Equal(t, float64(minA), lp.offeredCurrent)
 }
 
+// TestScalePhasesDefersWelcomeCharge verifies that a phase switch in the connect
+// cycle keeps the welcome charge for the next loadpoint cycle (issue #34853).
+func TestScalePhasesDefersWelcomeCharge(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	plainCharger := api.NewMockCharger(ctrl)
+	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+	phaseCharger.EXPECT().Phases1p3p(1).Return(nil)
+
+	clck := clock.NewMock()
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.clock = clck
+	lp.wakeUpTimer = NewTimer()
+	lp.charger = struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{plainCharger, phaseCharger}
+	lp.phases = 3
+	lp.welcomeUntil = clck.Now().Add(welcomeChargeDuration)
+
+	require.NoError(t, lp.scalePhases(1))
+
+	// next cycle of 3 loadpoints at 30s interval
+	clck.Add(90 * time.Second)
+	require.True(t, lp.welcomeActive())
+
+	clck.Add(phaseSwitchDuration + welcomeChargeDuration - 90*time.Second)
+	require.False(t, lp.welcomeActive())
+}
+
 // TestMinChargingPhaseScaling verifies that minCharging scales down to 1 phase
 // (the absolute minimum) when phase switching is available, so feed-in priority
 // in min+pv mode drops to 1p min current instead of staying on 3p (issue #30298).
