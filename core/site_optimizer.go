@@ -175,8 +175,10 @@ func suggestionEvent(detail batteryDetail, s types.Suggestion) messenger.Event {
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
 // (hold), exporting means charging is withheld (holdcharge). At its soc bound nothing is
-// withheld, the bound does it, so the battery stays in normal mode.
-func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
+// withheld, the bound does it, so the battery stays in normal mode. Without planned
+// discharge the battery is held when holdWorthwhile, since normal mode would let the
+// inverter cover intra-slot dips from the battery.
+func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
 	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
 		return types.Suggestion{}
 	}
@@ -215,6 +217,8 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 		case discharge > suggestionThreshold && gridExporting:
 			// discharging while exporting means battery-to-grid discharge
 			s.Action = api.BatteryDischarge.String()
+		case discharge <= suggestionThreshold && !(idle && empty) && holdWorthwhile(req, res, ts, slot):
+			s.Action = api.BatteryHold.String()
 		default:
 			s.Action = api.BatteryNormal.String()
 		}
@@ -225,6 +229,26 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 	}
 
 	return s
+}
+
+// holdWorthwhile reports whether energy kept in the battery now is discharged later at a
+// higher price. A battery that fills up before its next discharge only displaces pv
+// charging with the kept energy, so holding it would trade a battery dip for a grid import.
+func holdWorthwhile(req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, slot int) bool {
+	if slot >= len(ts.PN) {
+		return false
+	}
+
+	for i := slot + 1; i < min(len(res.DischargingPower), len(ts.PN), len(ts.Dt)); i++ {
+		if slotHours := float64(ts.Dt[i]) / 3600; slotHours > 0 && float64(res.DischargingPower[i])/slotHours > suggestionThreshold {
+			return ts.PN[i] > ts.PN[slot]
+		}
+		if req.SMax > 0 && i < len(res.StateOfCharge) && res.StateOfCharge[i] >= req.SMax {
+			return false
+		}
+	}
+
+	return false
 }
 
 // loadpointCurrentAction returns the loadpoint's current operating mode for
@@ -856,7 +880,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 			}),
 		})
 
-		suggestion := currentSlotSuggestion(detail, batReq, batRes, slot, gridImport, gridExport, slotHours)
+		suggestion := currentSlotSuggestion(detail, batReq, batRes, req.TimeSeries, slot, gridImport, gridExport, slotHours)
 		if suggestion.Action == "" {
 			continue
 		}
