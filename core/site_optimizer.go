@@ -624,7 +624,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		pMaxImp := site.circuit.GetMaxPower()
 
 		// the month's peak target caps import below the fuse
-		if target := site.getGridPeakTarget(); target > 0 && (pMaxImp <= 0 || target < pMaxImp) {
+		if target := site.GetGridPeakTarget(); target > 0 && (pMaxImp <= 0 || target < pMaxImp) {
 			pMaxImp = target
 		}
 

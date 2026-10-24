@@ -426,6 +426,13 @@ func (site *Site) GetGridPeakBaseline() float64 {
 	return site.gridPeakBaseline
 }
 
+// GetGridPeakTarget returns the grid import target from the month's peak in W (0 = none)
+func (site *Site) GetGridPeakTarget() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.gridPeakTarget
+}
+
 // SetGridPeakBaseline sets the grid import peak target floor in W (0 = disabled)
 func (site *Site) SetGridPeakBaseline(power float64) error {
 	if power < 0 {

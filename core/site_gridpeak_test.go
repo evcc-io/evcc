@@ -74,26 +74,26 @@ func TestGridPeakTarget(t *testing.T) {
 	settings.SetString(keys.Country, "DE")
 	require.NoError(t, site.SetGridPeakBaseline(4000))
 	site.updateGridPeak(now)
-	assert.Equal(t, 0.0, site.getGridPeakTarget())
+	assert.Equal(t, 0.0, site.GetGridPeakTarget())
 
 	// month's peak above baseline
 	settings.SetString(keys.Country, "AT")
 	site.updateGridPeak(now)
-	assert.Equal(t, 6000.0, site.getGridPeakTarget())
+	assert.Equal(t, 6000.0, site.GetGridPeakTarget())
 
 	// baseline above month's peak
 	require.NoError(t, site.SetGridPeakBaseline(8000))
 	site.updateGridPeak(now)
-	assert.Equal(t, 8000.0, site.getGridPeakTarget())
+	assert.Equal(t, 8000.0, site.GetGridPeakTarget())
 
 	// fast charging accepts a higher peak
 	lp.mode = api.ModeNow
 	site.updateGridPeak(now)
-	assert.Equal(t, 0.0, site.getGridPeakTarget())
+	assert.Equal(t, 0.0, site.GetGridPeakTarget())
 
 	// disabled
 	lp.mode = api.ModePV
 	require.NoError(t, site.SetGridPeakBaseline(0))
 	site.updateGridPeak(now)
-	assert.Equal(t, 0.0, site.getGridPeakTarget())
+	assert.Equal(t, 0.0, site.GetGridPeakTarget())
 }
