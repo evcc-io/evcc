@@ -621,7 +621,14 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	}
 
 	if site.circuit != nil {
-		if pMaxImp := site.circuit.GetMaxPower(); pMaxImp > 0 {
+		pMaxImp := site.circuit.GetMaxPower()
+
+		// the month's peak target caps import below the fuse
+		if target := site.getGridPeakTarget(); target > 0 && (pMaxImp <= 0 || target < pMaxImp) {
+			pMaxImp = target
+		}
+
+		if pMaxImp > 0 {
 			// hard grid import limit if no price penalty is set by PrcPExcImp
 			req.Grid.PMaxImp = float32(pMaxImp)
 		}
