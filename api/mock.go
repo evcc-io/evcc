@@ -1096,6 +1096,18 @@ func (mr *MockCircuitMockRecorder) SetMaxPower(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxPower", reflect.TypeOf((*MockCircuit)(nil).SetMaxPower), arg0)
 }
 
+// SetPeakLimit mocks base method.
+func (m *MockCircuit) SetPeakLimit(arg0 float64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetPeakLimit", arg0)
+}
+
+// SetPeakLimit indicates an expected call of SetPeakLimit.
+func (mr *MockCircuitMockRecorder) SetPeakLimit(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPeakLimit", reflect.TypeOf((*MockCircuit)(nil).SetPeakLimit), arg0)
+}
+
 // SetTitle mocks base method.
 func (m *MockCircuit) SetTitle(arg0 string) {
 	m.ctrl.T.Helper()

@@ -290,6 +290,7 @@ type Circuit interface {
 	GetParent() Circuit
 	RegisterChild(child Circuit)
 	SetHEMS(HEMS)
+	SetPeakLimit(float64)
 	HasMeter() bool
 	GetMaxPower() float64
 	GetMaxCurrent() float64

@@ -95,7 +95,9 @@ type Site struct {
 	batteryGridDischarge      bool     // allow battery discharge to grid (experimental)
 
 	// grid settings
-	gridExportLimit float64 // static grid export power limit in W, 0 = disabled
+	gridExportLimit  float64  // static grid export power limit in W, 0 = disabled
+	gridPeakBaseline float64  // grid import peak target floor in W, 0 = disabled
+	gridPeak         gridPeak // month's grid import peak
 
 	// forecast settings
 	solarAdjusted bool // adjust solar forecast to real production data
@@ -497,6 +499,14 @@ func (site *Site) restoreSettings() error {
 		if err := site.SetGridExportLimit(v); err != nil {
 			return err
 		}
+	}
+	if v, err := settings.Float(keys.GridPeakBaseline); err == nil {
+		if err := site.SetGridPeakBaseline(v); err != nil {
+			return err
+		}
+	}
+	if err := settings.Json(keys.GridPeak, &site.gridPeak); err != nil && !errors.Is(err, settings.ErrNotFound) {
+		site.log.WARN.Printf("grid peak: %v", err)
 	}
 	// restored after keys.BatteryGridDischarge above - a stored limit stays dormant
 	// while the opt-in is off
@@ -1359,6 +1369,7 @@ func (site *Site) update(lp updater) {
 		}
 
 		site.updatePower(lp, state, totalChargePower, consumption, feedin)
+		site.updateGridPeak(time.Now())
 	}
 
 	// smart grid charging
@@ -1485,6 +1496,7 @@ func (site *Site) prepare() {
 	site.publish(keys.SolarAdjusted, site.solarAdjusted)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
 	site.publish(keys.GridExportLimit, site.GetGridExportLimit())
+	site.publish(keys.GridPeakBaseline, site.GetGridPeakBaseline())
 	site.publish(keys.ProfilePercentile, site.GetProfilePercentile())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))

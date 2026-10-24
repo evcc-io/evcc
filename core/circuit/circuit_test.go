@@ -149,14 +149,20 @@ func TestHEMSConsumptionClamp(t *testing.T) {
 		name      string
 		maxPower  float64
 		hemsLimit float64
+		peakLimit float64
 		request   float64
 		want      float64
 	}{
-		{"no hems, no max", 0, 0, 9000, 9000},
-		{"no hems, max set", 5000, 0, 9000, 5000},
-		{"hems below max", 5000, 4200, 9000, 4200},
-		{"hems above max", 5000, 9000, 9000, 5000},
-		{"hems but no user max", 0, 4200, 9000, 4200},
+		{"no hems, no max", 0, 0, 0, 9000, 9000},
+		{"no hems, max set", 5000, 0, 0, 9000, 5000},
+		{"hems below max", 5000, 4200, 0, 9000, 4200},
+		{"hems above max", 5000, 9000, 0, 9000, 5000},
+		{"hems but no user max", 0, 4200, 0, 9000, 4200},
+		{"peak below max", 5000, 0, 3000, 9000, 3000},
+		{"peak above max", 5000, 0, 7000, 9000, 5000},
+		{"peak but no user max", 0, 0, 3000, 9000, 3000},
+		{"peak below hems", 5000, 4200, 3000, 9000, 3000},
+		{"hems below peak", 5000, 4200, 4500, 9000, 4200},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			c, err := New(log, "root", 0, tc.maxPower, nil, 0)
@@ -168,6 +174,7 @@ func TestHEMSConsumptionClamp(t *testing.T) {
 				hems.EXPECT().MaxConsumptionPower().Return(&tc.hemsLimit).AnyTimes()
 				c.hems = hems
 			}
+			c.SetPeakLimit(tc.peakLimit)
 
 			assert.Equal(t, tc.want, c.ValidatePower(0, tc.request))
 		})

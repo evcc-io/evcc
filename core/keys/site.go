@@ -58,7 +58,9 @@ const (
 	BufferStartSoc             = "bufferStartSoc"
 
 	// grid settings
-	GridExportLimit = "gridExportLimit"
+	GridExportLimit  = "gridExportLimit"
+	GridPeak         = "gridPeak"
+	GridPeakBaseline = "gridPeakBaseline"
 
 	// forecast settings
 	SolarAdjusted     = "solarAdjusted"

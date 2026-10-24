@@ -255,6 +255,10 @@ export interface State {
   residualPower?: number;
   /** Static grid export power limit in W used as optimizer constraint, 0 = disabled. An active HEMS curtailment takes precedence. */
   gridExportLimit?: number;
+  /** Highest clock-aligned 15-min average grid import in W of the current month. Only tracked in countries billing the monthly peak (AT, BE). */
+  gridPeak?: number;
+  /** Floor in W of the grid import peak target, 0 = disabled. */
+  gridPeakBaseline?: number;
   /** Percentile of the historic energy profiles used for demand prediction in %, e.g. 50 = median. Null uses the average. */
   profilePercentile?: number | null;
   /** Share of green energy in home consumption, between 0 and 1. */
