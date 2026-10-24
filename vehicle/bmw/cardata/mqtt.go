@@ -96,14 +96,14 @@ func NewMqttConnector(ctx context.Context, log *util.Logger, clientID string, ts
 }
 
 // NewBrokerConnector creates a connector that reads the unmodified CarData stream from a local broker
-func NewBrokerConnector(log *util.Logger, cc pluginmqtt.Config, topic string) (*MqttConnector, error) {
+func NewBrokerConnector(ctx context.Context, log *util.Logger, cc pluginmqtt.Config, topic string) *MqttConnector {
 	mqttMu.Lock()
 	defer mqttMu.Unlock()
 
 	// prefix keeps broker connectors apart from BMW connectors keyed by client id
-	key := fmt.Sprintf("broker:%s.%s:%s", cc.Broker, cc.User, topic)
+	key := fmt.Sprintf("broker:%s.%s:%s:%s", cc.Broker, cc.User, cc.Password, topic)
 	if conn, ok := mqttConnections[key]; ok {
-		return conn, nil
+		return conn
 	}
 
 	v := &MqttConnector{
@@ -112,19 +112,33 @@ func NewBrokerConnector(log *util.Logger, cc pluginmqtt.Config, topic string) (*
 	}
 
 	if !testing.Testing() {
-		client, err := pluginmqtt.RegisteredClientOrDefault(log, cc)
-		if err != nil {
-			return nil, err
-		}
-
-		if err := client.Listen(topic, v.brokerHandler); err != nil {
-			return nil, err
-		}
+		go v.runBroker(ctx, cc, topic)
 	}
 
 	mqttConnections[key] = v
 
-	return v, nil
+	return v
+}
+
+// runBroker retries until the broker is first reached, the mqtt client reconnects and resubscribes on its own afterwards
+func (v *MqttConnector) runBroker(ctx context.Context, cc pluginmqtt.Config, topic string) {
+	bo := backoff.NewExponentialBackOff(backoff.WithInitialInterval(time.Second), backoff.WithMaxInterval(time.Minute), backoff.WithMaxElapsedTime(0))
+
+	for ctx.Err() == nil {
+		client, err := pluginmqtt.RegisteredClientOrDefault(v.log, cc)
+		if err != nil {
+			v.log.ERROR.Println(err)
+			time.Sleep(bo.NextBackOff())
+			continue
+		}
+
+		// listener stays registered and is resubscribed on reconnect, so retrying would duplicate it
+		if err := client.Listen(topic, v.brokerHandler); err != nil {
+			v.log.ERROR.Println(err)
+		}
+
+		return
+	}
 }
 
 func (v *MqttConnector) Subscribe(vin string) <-chan StreamingMessage {
@@ -247,7 +261,7 @@ func (v *MqttConnector) handler(_ mqtt.Client, m mqtt.Message) {
 // brokerHandler skips foreign payloads quietly since a local broker topic may carry more than CarData envelopes
 func (v *MqttConnector) brokerHandler(payload string) {
 	var res StreamingMessage
-	if err := json.Unmarshal([]byte(payload), &res); err != nil || res.Vin == "" {
+	if err := json.Unmarshal([]byte(payload), &res); err != nil || res.Vin == "" || len(res.Data) == 0 {
 		v.log.DEBUG.Printf("skip invalid message: %s", request.Truncate(payload))
 		return
 	}

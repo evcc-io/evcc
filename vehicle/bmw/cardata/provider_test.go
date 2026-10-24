@@ -50,8 +50,7 @@ func TestCardataStreaming(t *testing.T) {
 func TestBrokerStreaming(t *testing.T) {
 	ctx := t.Context()
 
-	conn, err := NewBrokerConnector(util.NewLogger("foo"), pluginmqtt.Config{Broker: t.Name()}, "bmw/raw/+")
-	require.NoError(t, err)
+	conn := NewBrokerConnector(ctx, util.NewLogger("foo"), pluginmqtt.Config{Broker: t.Name()}, "bmw/raw/+")
 
 	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: "at",

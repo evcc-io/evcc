@@ -32,7 +32,7 @@ requirements:
 
       Sollte die Fahrzeugerkennung nicht zuverlässig funktionieren, sollte `welcomecharge` (Laden bei Verbindung) aktiviert werden.
 
-      BMW erlaubt nur eine Streaming-Verbindung pro Konto. Wird diese bereits von einem anderen Tool genutzt, können die Streamingdaten optional von einem lokalen MQTT-Broker gelesen werden. Das Tool muss die CarData Nachrichten unverändert veröffentlichen, z.B. [bmw-mqtt-bridge](https://github.com/dj0abr/bmw-mqtt-bridge) mit Standardeinstellungen. Die Anmeldung mit `clientid` wird weiterhin für die REST-Abfragen benötigt.
+      BMW erlaubt nur eine Streaming-Verbindung pro Konto. Wird diese bereits von einem anderen Tool genutzt, können die Streamingdaten optional von einem lokalen MQTT-Broker gelesen werden. Das Tool muss die CarData-Nachrichten unverändert veröffentlichen, z.B. [bmw-mqtt-bridge](https://github.com/dj0abr/bmw-mqtt-bridge) mit Standardeinstellungen. Die Anmeldung mit `clientid` wird weiterhin für die REST-Abfragen benötigt.
     en: |
       Requires CarData activation in BMW/Mini portal. The following data points need to be configured for streaming access (the availability of data points may vary depending on the vehicle model):
 
@@ -95,7 +95,7 @@ params:
       generic: Topic
     help:
       en: Topic on the MQTT broker carrying the unmodified CarData messages
-      de: Topic auf dem MQTT-Broker mit den unveränderten CarData Nachrichten
+      de: Topic auf dem MQTT-Broker mit den unveränderten CarData-Nachrichten
   - name: cache
     example: 2h
     help:

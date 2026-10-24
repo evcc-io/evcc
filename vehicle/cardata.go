@@ -67,14 +67,11 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 
 	var conn *cardata.MqttConnector
 	if cc.Broker != "" {
-		conn, err = cardata.NewBrokerConnector(log, mqtt.Config{
+		conn = cardata.NewBrokerConnector(context.Background(), log, mqtt.Config{
 			Broker:   cc.Broker,
 			User:     cc.User,
 			Password: cc.Password,
 		}, cc.Topic)
-		if err != nil {
-			return nil, err
-		}
 	} else {
 		conn = cardata.NewMqttConnector(context.Background(), log, cc.ClientID, ts)
 	}

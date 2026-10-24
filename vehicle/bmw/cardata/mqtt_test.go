@@ -67,37 +67,44 @@ func TestMqttMultiSubscribe(t *testing.T) {
 }
 
 func TestBrokerConnector(t *testing.T) {
-	cc := pluginmqtt.Config{Broker: t.Name()}
+	cc := pluginmqtt.Config{Broker: t.Name(), Password: "secret"}
 
-	conn, err := NewBrokerConnector(util.NewLogger("foo"), cc, "bmw/raw/+")
-	require.NoError(t, err)
+	conn := NewBrokerConnector(context.TODO(), util.NewLogger("foo"), cc, "bmw/raw/+")
+	require.Same(t, conn, NewBrokerConnector(context.TODO(), util.NewLogger("foo"), cc, "bmw/raw/+"), "connector not shared")
 
-	same, err := NewBrokerConnector(util.NewLogger("foo"), cc, "bmw/raw/+")
-	require.NoError(t, err)
-	require.Same(t, conn, same, "connector not shared")
+	other := cc
+	other.Password = "other"
+	require.NotSame(t, conn, NewBrokerConnector(context.TODO(), util.NewLogger("foo"), other, "bmw/raw/+"), "credentials share connector")
 
 	// a bmw connector using the broker url as client id must not share the entry
 	require.NotSame(t, conn, NewMqttConnector(context.TODO(), util.NewLogger("foo"), t.Name(), nil))
 
 	ch := conn.Subscribe("wba12345")
+	empty := conn.Subscribe("")
 
 	for _, payload := range []string{
 		"online",
 		`{"status":"connected"}`,
 		`{"vin":`,
+		`{"vin":"WBA12345"}`,
 	} {
 		conn.brokerHandler(payload)
 	}
 
-	conn.brokerHandler(string(message(t, "WBA12345").payload))
+	b, err := json.Marshal(StreamingMessage{Vin: "WBA12345", Data: map[string]StreamingData{"key": {Value: "1"}}})
+	require.NoError(t, err)
+	conn.brokerHandler(string(b))
 
 	// invalid payloads are skipped, so the first message received is the valid one
 	require.Equal(t, "WBA12345", recv(t, ch).Vin)
 
 	conn.Unsubscribe("WBA12345", ch)
+	conn.Unsubscribe("", empty)
 
-	_, ok := <-ch
-	require.False(t, ok, "unexpected message")
+	for _, c := range []<-chan StreamingMessage{ch, empty} {
+		_, ok := <-c
+		require.False(t, ok, "unexpected message")
+	}
 }
 
 func TestMqttUnboundedQueue(t *testing.T) {
