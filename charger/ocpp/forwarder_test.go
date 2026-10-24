@@ -172,3 +172,90 @@ func TestForwarderDialRetry(t *testing.T) {
 	expectBootReplay(t, frames)
 	assert.GreaterOrEqual(t, reqs.Load(), int32(3))
 }
+
+func TestForwarderReconnectStopsOnRuleRemoval(t *testing.T) {
+	const id = "fwd-rule-removal-test"
+
+	var dials atomic.Int32
+	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// remove the rule while the second dial is in flight
+		if dials.Add(1) == 2 {
+			ApplyForwarderRules(nil)
+		}
+		http.NotFound(w, r)
+	}))
+	srv.Start()
+
+	cleanup := forwarderTestSetup(t, id)
+	defer cleanup()
+
+	ApplyForwarderRules([]ForwarderRule{{StationID: id, UpstreamURL: "ws" + strings.TrimPrefix(srv.URL, "http")}})
+	require.Eventually(t, func() bool { return dials.Load() >= 2 }, 5*time.Second, 5*time.Millisecond)
+
+	assert.Never(t, func() bool { return dials.Load() > 2 }, 200*time.Millisecond, 10*time.Millisecond)
+}
+
+func TestForwarderReconnectFollowsRuleChange(t *testing.T) {
+	const id = "fwd-rule-change-test"
+
+	frames := make(chan []byte, 1)
+	newSrv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{Subprotocols: []string{"ocpp1.6"}})
+		if err != nil {
+			return
+		}
+		if _, data, err := c.Read(r.Context()); err == nil {
+			select {
+			case frames <- data:
+			default:
+			}
+		}
+		c.CloseNow()
+	}))
+	newSrv.Start()
+	newRule := ForwarderRule{StationID: id, UpstreamURL: "ws" + strings.TrimPrefix(newSrv.URL, "http")}
+
+	var oldDials atomic.Int32
+	oldSrv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// change the rule while the second dial is in flight
+		if oldDials.Add(1) == 2 {
+			ApplyForwarderRules([]ForwarderRule{newRule})
+		}
+		http.NotFound(w, r)
+	}))
+	oldSrv.Start()
+
+	cleanup := forwarderTestSetup(t, id)
+	defer cleanup()
+
+	ApplyForwarderRules([]ForwarderRule{{StationID: id, UpstreamURL: "ws" + strings.TrimPrefix(oldSrv.URL, "http")}})
+
+	expectBootReplay(t, frames)
+	assert.Never(t, func() bool { return oldDials.Load() > 2 }, 200*time.Millisecond, 10*time.Millisecond)
+}
+
+func TestForwarderReconnectBacksOffOnInstantDrop(t *testing.T) {
+	const id = "fwd-instant-drop-test"
+
+	var conns atomic.Int32
+	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{Subprotocols: []string{"ocpp1.6"}})
+		if err != nil {
+			return
+		}
+		conns.Add(1)
+		c.CloseNow()
+	}))
+	srv.Start()
+
+	cleanup := forwarderTestSetup(t, id)
+	defer cleanup()
+
+	ApplyForwarderRules([]ForwarderRule{{StationID: id, UpstreamURL: "ws" + strings.TrimPrefix(srv.URL, "http")}})
+	require.Eventually(t, func() bool { return conns.Load() >= 2 }, 5*time.Second, 5*time.Millisecond)
+
+	// a growing backoff from 10ms allows at most ~8 dials in 300ms, one stuck at 10ms ~30
+	start := conns.Load()
+	time.Sleep(300 * time.Millisecond)
+	assert.Less(t, conns.Load()-start, int32(12))
+}

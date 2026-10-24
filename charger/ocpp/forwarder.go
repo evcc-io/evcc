@@ -222,6 +222,10 @@ var (
 	// last upstream failure per charger, surfaced to the UI; guarded by sidecarsMu
 	forwarderErrors = make(map[string]string)
 
+	// current re-dial loop per charger; guarded by sidecarsMu
+	sidecarLoops   = make(map[string]uint64)
+	sidecarLoopSeq uint64
+
 	// raw frames buffered per charger while the sidecar dials; flushed in order
 	// on connect so BootNotification reaches upstream
 	pendingMu   sync.Mutex
@@ -237,12 +241,24 @@ var (
 var (
 	reconnectInitialDelay = 5 * time.Second
 	reconnectMaxDelay     = 5 * time.Minute
+	stableSessionDuration = time.Minute
 )
 
 // runUpstreamSidecar dials a charger's upstream sidecar and re-dials with
 // exponential backoff for as long as the charger stays connected and the rule
 // remains in effect.
 func runUpstreamSidecar(id string, rule ForwarderRule) {
+	// a loop started with an outdated rule must not take over from the current one
+	sidecarsMu.Lock()
+	if !connectedChargers[id] || !ruleCurrent(id, rule) {
+		sidecarsMu.Unlock()
+		return
+	}
+	sidecarLoopSeq++
+	loop := sidecarLoopSeq
+	sidecarLoops[id] = loop
+	sidecarsMu.Unlock()
+
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithInitialInterval(reconnectInitialDelay),
 		backoff.WithMaxInterval(reconnectMaxDelay),
@@ -250,32 +266,42 @@ func runUpstreamSidecar(id string, rule ForwarderRule) {
 	)
 
 	for {
-		if !dialUpstreamSidecar(id, rule) {
-			delay := bo.NextBackOff()
-			forwarderLog.DEBUG.Printf("forwarder: reconnecting upstream for %s in %v", id, delay)
-			time.Sleep(delay)
-			continue
+		session, connected := dialUpstreamSidecar(id, rule, loop)
+
+		// an upstream that accepts and drops at once must not cause a tight re-dial loop
+		if session >= stableSessionDuration {
+			bo.Reset()
 		}
 
-		bo.Reset()
+		delay := bo.NextBackOff()
+		forwarderLog.DEBUG.Printf("forwarder: reconnecting upstream for %s in %v", id, delay)
+		time.Sleep(delay)
 
-		if current, ok := resolveRule(id); !ok || current.UpstreamURL == "" || !current.sameConnection(rule) {
+		if !sidecarWanted(id, rule, loop) {
 			return
 		}
 
-		sidecarsMu.Lock()
-		connected := connectedChargers[id]
-		_, active := sidecars[id]
-		sidecarsMu.Unlock()
-
-		if !connected || active {
-			return
+		if connected {
+			pendingMu.Lock()
+			pendingMsgs[id] = nil
+			pendingMu.Unlock()
 		}
-
-		pendingMu.Lock()
-		pendingMsgs[id] = nil
-		pendingMu.Unlock()
 	}
+}
+
+// sidecarWanted reports whether the loop should keep re-dialling: it is still the
+// charger's current loop, its rule applies and no sidecar is active.
+func sidecarWanted(id string, rule ForwarderRule, loop uint64) bool {
+	sidecarsMu.Lock()
+	defer sidecarsMu.Unlock()
+	_, active := sidecars[id]
+	return sidecarLoops[id] == loop && connectedChargers[id] && !active && ruleCurrent(id, rule)
+}
+
+// ruleCurrent reports whether rule still is the rule in effect for id.
+func ruleCurrent(id string, rule ForwarderRule) bool {
+	current, ok := resolveRule(id)
+	return ok && current.UpstreamURL != "" && current.sameConnection(rule)
 }
 
 // resolveRule returns the forwarding rule for chargerID, or the "*" fallback.
@@ -317,15 +343,18 @@ func onChargerConnect(ch ws.Channel) {
 	go runUpstreamSidecar(id, rule)
 }
 
-func dialUpstreamSidecar(id string, rule ForwarderRule) bool {
+// dialUpstreamSidecar dials and runs the loop's sidecar until upstream drops.
+// It returns how long the connection stayed up and whether it was established.
+func dialUpstreamSidecar(id string, rule ForwarderRule, loop uint64) (time.Duration, bool) {
 	conn, err := dialUpstream(id, rule)
 	if err != nil {
 		forwarderLog.WARN.Printf("forwarder: dial upstream for %s: %v", id, err)
 		recordForwarderError(id, err.Error())
 		notifyUpdated()
 		drainPendingWithErrors(id, nil)
-		return false
+		return 0, false
 	}
+	established := time.Now()
 	conn.SetReadLimit(-1) // no limit; OCPP frames can be large
 
 	sc := &sidecar{
@@ -336,8 +365,13 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) bool {
 		pendingChargerCalls:  make(map[string]struct{}),
 	}
 
-	// install sidecar and drain the pending buffer
+	// install sidecar and drain the pending buffer, unless the loop was superseded while dialling
 	sidecarsMu.Lock()
+	if sidecarLoops[id] != loop || !ruleCurrent(id, rule) {
+		sidecarsMu.Unlock()
+		conn.CloseNow()
+		return 0, false
+	}
 	pendingMu.Lock()
 	old := sidecars[id]
 	sidecars[id] = sc
@@ -394,7 +428,7 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) bool {
 			sidecarsMu.Unlock()
 			recordForwarderError(id, writeErr.Error())
 			notifyUpdated()
-			return false
+			return 0, false
 		}
 		flushed++
 	}
@@ -409,7 +443,7 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) bool {
 
 	sc.readFromUpstream()
 
-	return true
+	return time.Since(established), true
 }
 
 // drainPendingWithErrors discards charger id's pending buffer, sending a CallError
@@ -474,6 +508,7 @@ func onChargerDisconnect(ch ws.Channel) {
 
 	sidecarsMu.Lock()
 	delete(connectedChargers, id)
+	delete(sidecarLoops, id)
 	sc, ok := sidecars[id]
 	if ok {
 		delete(sidecars, id)
