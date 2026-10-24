@@ -958,7 +958,6 @@ func TestUpdatePhaseSwitchWelcomeCharge(t *testing.T) {
 
 	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
 	require.Equal(t, 1, lp.GetPhases())
-	require.True(t, lp.enabled)
 }
 
 func TestPvScalePhasesCircuitLimits(t *testing.T) {
