@@ -218,8 +218,6 @@ func TestSocBatteryStateReportField(t *testing.T) {
 	assert.Equal(t, 36.0, soc)
 }
 
-// TestOdometerMileageKey reproduces #35100: duplicate mileage.value entries are
-// delivered in random order, only one key holds the current mileage.
 func TestOdometerMileageKey(t *testing.T) {
 	data := []point{
 		{Key: "30cc36fd-71ca-3c09-9296-e94ebd47bd2b", Name: FieldOdometerValue, Value: "1875"},
