@@ -272,19 +272,25 @@ func computeHorizon(now time.Time, agreement krakengql.Agreement, planDays int) 
 // computePeriod converts day-relative time offsets into absolute start/end times,
 // handling the midnight-wrapping convention ("00:00:00" means end-of-day).
 func computePeriod(day time.Time, fromOffset, toOffset time.Duration) (time.Time, time.Time) {
-	start := day.Add(fromOffset)
+	start := wallClock(day, 0, fromOffset)
 	var end time.Time
 	switch {
 	case toOffset == 0:
 		// "00:00:00" as end means end of day (midnight)
-		end = day.Add(24 * time.Hour)
+		end = wallClock(day, 1, 0)
 	case toOffset < fromOffset:
 		// wraps past midnight
-		end = day.Add(toOffset).Add(24 * time.Hour)
+		end = wallClock(day, 1, toOffset)
 	default:
-		end = day.Add(toOffset)
+		end = wallClock(day, 0, toOffset)
 	}
 	return start, end
+}
+
+// wallClock returns local midnight of day plus addDays plus offset as wall-clock time,
+// independent of DST changes (a day may be 23 or 25 hours long).
+func wallClock(day time.Time, addDays int, offset time.Duration) time.Time {
+	return time.Date(day.Year(), day.Month(), day.Day()+addDays, 0, 0, int(offset/time.Second), 0, day.Location())
 }
 
 // ratePeriodsForDay expands one TouRate slot for a single day into RatePeriods,
@@ -332,7 +338,7 @@ func generateTouRates(rates []krakengql.TouRate, horizon planningHorizon) ([]Rat
 	startDay := now.With(horizon.start).BeginningOfDay()
 
 	var result []RatePeriod
-	for day := startDay; day.Before(horizon.end); day = day.Add(24 * time.Hour) {
+	for day := startDay; day.Before(horizon.end); day = wallClock(day, 1, 0) {
 		for _, r := range rates {
 			dayPeriods, err := ratePeriodsForDay(day, horizon, r)
 			if err != nil {

@@ -257,3 +257,16 @@ func TestRatesForAgreement_InvalidAgreement_AlreadyCompleted(t *testing.T) {
 	assert.Contains(t, err.Error(), "agreement is not valid for the planning horizon")
 	assert.Nil(t, rates)
 }
+
+func TestComputePeriodDSTChange(t *testing.T) {
+	loc, err := time.LoadLocation("Europe/Berlin")
+	require.NoError(t, err)
+
+	// 25 hour day (end of DST)
+	next := wallClock(time.Date(2026, 10, 25, 0, 0, 0, 0, loc), 1, 0)
+	assert.Equal(t, time.Date(2026, 10, 26, 0, 0, 0, 0, loc), next)
+
+	start, end := computePeriod(next, 0, 5*time.Hour)
+	assert.Equal(t, time.Date(2026, 10, 26, 0, 0, 0, 0, loc), start)
+	assert.Equal(t, time.Date(2026, 10, 26, 5, 0, 0, 0, loc), end)
+}
