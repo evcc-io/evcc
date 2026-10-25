@@ -217,6 +217,7 @@ type Param struct {
 	Help        TextLanguage // cli configuration help
 	Preset      string       `json:"-"`          // Reference a predefined set of params
 	Required    bool         `json:",omitempty"` // cli if the user has to provide a non empty value
+	Optional    bool         `json:"-"`          // template override to drop the required flag inherited from defaults
 	Mask        bool         `json:",omitempty"` // cli if the value should be masked, e.g. for passwords
 	Private     bool         `json:",omitempty"` // value should be redacted in bug reports, e.g. email, locations, ...
 	Advanced    bool         `json:",omitempty"` // cli if the user does not need to be asked. Requires a "Default" to be defined.

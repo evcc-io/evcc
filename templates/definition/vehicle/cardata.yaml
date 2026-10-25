@@ -83,6 +83,7 @@ params:
   - preset: mqtt
   - name: host
     advanced: true
+    optional: true
     example: 192.168.1.10
   - name: port
     advanced: true

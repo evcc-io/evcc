@@ -37,6 +37,9 @@ func (t *Template) UpdateParamsWithDefaults() error {
 	for i, p := range t.Params {
 		if index, resultMapItem := ConfigDefaults.ParamByName(strings.ToLower(p.Name)); index > -1 {
 			t.Params[i].OverwriteProperties(resultMapItem)
+			if t.Params[i].Optional {
+				t.Params[i].Required = false
+			}
 		}
 	}
 
