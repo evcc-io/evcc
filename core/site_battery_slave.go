@@ -23,6 +23,15 @@ func SupportsBatterySlaveControl(meter api.Meter) bool {
 		api.HasCap[api.BatteryModePowerController](meter)
 }
 
+func (site *Site) batterySlaveModeAllowed(name string) bool {
+	switch site.batteryModeApplied[name] {
+	case api.BatteryUnknown, api.BatteryNormal:
+		return true
+	default:
+		return false
+	}
+}
+
 type batterySlaveSetpoint struct {
 	mode  api.BatteryMode
 	power float64
@@ -96,7 +105,9 @@ func (site *Site) updateBatterySlavePower(mm []types.Measurement, powerValid []b
 
 	markSlavesFailed := func(slaves []int) {
 		for _, slaveIndex := range slaves {
-			mm[slaveIndex].PowerControlStatus = "failed"
+			if mm[slaveIndex].PowerControlStatus != "overridden" {
+				mm[slaveIndex].PowerControlStatus = "failed"
+			}
 		}
 	}
 
@@ -111,6 +122,14 @@ func (site *Site) updateBatterySlavePower(mm []types.Measurement, powerValid []b
 		slaves := slavesByMaster[dev.Config().Name]
 		if len(slaves) == 0 {
 			continue
+		}
+		for _, slaveIndex := range slaves {
+			slave := site.batteryMeters[slaveIndex]
+			name := slave.Config().Name
+			if !site.batterySlaveModeAllowed(name) {
+				delete(site.batterySlaveModeApplied, name)
+				mm[slaveIndex].PowerControlStatus = "overridden"
+			}
 		}
 
 		masterTitle := deviceTitleOrName(dev)
@@ -150,6 +169,11 @@ func (site *Site) updateBatterySlavePower(mm []types.Measurement, powerValid []b
 			setpoint := plan.setpoints[i]
 			slave := site.batteryMeters[slaveIndex]
 			slaveTitle := deviceTitleOrName(slave)
+			if mm[slaveIndex].PowerControlStatus == "overridden" {
+				site.log.TRACE.Printf("battery slave %s: skipping power control, global battery mode is active", slaveTitle)
+				continue
+			}
+
 			meter := slave.Instance()
 			if !SupportsBatterySlaveControl(meter) {
 				site.log.WARN.Printf("battery slave %s: cannot set power, charge/discharge power control is not supported", slaveTitle)

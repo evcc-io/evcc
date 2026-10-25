@@ -1654,7 +1654,8 @@
       "batteryGridChargeLimit": "Grid charging: when",
       "batteryPowerControl": {
         "applied": "Power control applied",
-        "failed": "Power control failed"
+        "failed": "Power control failed",
+        "overridden": "Global battery control active"
       },
       "batteryTooltip": "{energy} of {total} ({soc})",
       "forecast": "Forecast",

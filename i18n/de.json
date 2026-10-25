@@ -1653,7 +1653,8 @@
       "batteryGridChargeLimit": "Netzladen: wenn",
       "batteryPowerControl": {
         "applied": "Leistungssteuerung angewendet",
-        "failed": "Leistungssteuerung fehlgeschlagen"
+        "failed": "Leistungssteuerung fehlgeschlagen",
+        "overridden": "Globale Batteriesteuerung aktiv"
       },
       "batteryStatus": "Batteriestatus",
       "batteryTooltip": "{energy} von {total} ({soc})",

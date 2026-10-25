@@ -72,6 +72,35 @@ func TestSupportsBatterySlaveControl(t *testing.T) {
 	}
 }
 
+func TestBatterySlaveModeAllowed(t *testing.T) {
+	tests := []struct {
+		name        string
+		initialize  bool
+		appliedMode api.BatteryMode
+		want        bool
+	}{
+		{name: "nil cache", want: true},
+		{name: "missing entry", initialize: true, want: true},
+		{name: "unknown mode", initialize: true, appliedMode: api.BatteryUnknown, want: true},
+		{name: "normal mode", initialize: true, appliedMode: api.BatteryNormal, want: true},
+		{name: "charge mode", initialize: true, appliedMode: api.BatteryCharge},
+		{name: "discharge mode", initialize: true, appliedMode: api.BatteryDischarge},
+		{name: "hold mode", initialize: true, appliedMode: api.BatteryHold},
+		{name: "hold charge mode", initialize: true, appliedMode: api.BatteryHoldCharge},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			site := &Site{}
+			if tc.initialize {
+				site.batteryModeApplied = map[string]api.BatteryMode{"slave": tc.appliedMode}
+			}
+
+			assert.Equal(t, tc.want, site.batterySlaveModeAllowed("slave"))
+		})
+	}
+}
+
 type batteryPowerControlMeter struct {
 	power          float64
 	readErr        error
@@ -113,27 +142,33 @@ func (m *batteryPowerControlMeter) SetBatteryMode(mode api.BatteryMode) error {
 
 func TestUpdateBatterySlavePower(t *testing.T) {
 	for _, tc := range []struct {
-		name          string
-		master        float64
-		slaves        []float64
-		slaveModes    []api.BatteryMode
-		readErr       bool
-		setErr        bool
-		modeErr       bool
-		mode          api.BatteryMode
-		wantSlaveMode api.BatteryMode
-		setpoint      float64
-		wantCalls     int
-		wantModeCalls int
-		wantStatus    string
+		name             string
+		master           float64
+		slaves           []float64
+		slaveModes       []api.BatteryMode
+		readErr          bool
+		setErr           bool
+		modeErr          bool
+		mode             api.BatteryMode
+		appliedMode      api.BatteryMode
+		slaveAppliedMode api.BatteryMode
+		wantSlaveMode    api.BatteryMode
+		setpoint         float64
+		wantCalls        int
+		wantModeCalls    int
+		wantStatus       string
 	}{
-		{name: "charge", master: -600, slaves: []float64{-300, -300}, mode: api.BatteryCharge, wantSlaveMode: api.BatteryCharge, setpoint: 400, wantCalls: 1, wantModeCalls: 1, wantStatus: "applied"},
-		{name: "discharge", master: 900, slaves: []float64{300, 0}, mode: api.BatteryDischarge, wantSlaveMode: api.BatteryDischarge, setpoint: 400, wantCalls: 1, wantModeCalls: 1, wantStatus: "applied"},
-		{name: "zero average", master: 0, slaves: []float64{0, 0}, mode: api.BatteryDischarge, wantSlaveMode: api.BatteryDischarge, setpoint: 0, wantCalls: 1, wantModeCalls: 1, wantStatus: "applied"},
+		{name: "charge", master: -600, slaves: []float64{-300, -300}, mode: api.BatteryCharge, setpoint: 400, wantCalls: 1, wantModeCalls: 1, wantStatus: "applied", wantSlaveMode: api.BatteryCharge},
+		{name: "discharge", master: 900, slaves: []float64{300, 0}, mode: api.BatteryDischarge, setpoint: 400, wantCalls: 1, wantModeCalls: 1, wantStatus: "applied", wantSlaveMode: api.BatteryDischarge},
+		{name: "zero average", master: 0, slaves: []float64{0, 0}, mode: api.BatteryDischarge, setpoint: 0, wantCalls: 1, wantModeCalls: 1, wantStatus: "applied", wantSlaveMode: api.BatteryDischarge},
 		{name: "incomplete readings", master: 900, slaves: []float64{300, 300}, readErr: true, wantStatus: "failed"},
-		{name: "setter error", master: 600, slaves: []float64{300}, setErr: true, mode: api.BatteryDischarge, wantSlaveMode: api.BatteryDischarge, setpoint: 450, wantCalls: 1, wantModeCalls: 1, wantStatus: "failed"},
+		{name: "setter error", master: 600, slaves: []float64{300}, setErr: true, mode: api.BatteryDischarge, setpoint: 450, wantCalls: 1, wantModeCalls: 1, wantStatus: "failed", wantSlaveMode: api.BatteryDischarge},
 		{name: "mode setter error", master: 600, slaves: []float64{300}, modeErr: true, mode: api.BatteryDischarge, setpoint: 450, wantModeCalls: 1, wantStatus: "failed"},
 		{name: "unsupported slave mode", master: 600, slaves: []float64{300}, slaveModes: []api.BatteryMode{api.BatteryNormal, api.BatteryCharge}, wantStatus: "failed"},
+		{name: "global normal mode", master: -600, slaves: []float64{-300}, mode: api.BatteryCharge, appliedMode: api.BatteryNormal, setpoint: 450, wantCalls: 1, wantModeCalls: 1, wantStatus: "applied", wantSlaveMode: api.BatteryCharge},
+		{name: "global charge mode", master: -600, slaves: []float64{-300}, appliedMode: api.BatteryCharge, slaveAppliedMode: api.BatteryCharge, wantStatus: "overridden"},
+		{name: "global hold mode", master: -600, slaves: []float64{-300}, appliedMode: api.BatteryHold, slaveAppliedMode: api.BatteryCharge, wantStatus: "overridden"},
+		{name: "global override with zero average", master: 0, slaves: []float64{0}, appliedMode: api.BatteryCharge, slaveAppliedMode: api.BatteryCharge, wantStatus: "overridden"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			master := &batteryPowerControlMeter{power: tc.master}
@@ -164,12 +199,19 @@ func TestUpdateBatterySlavePower(t *testing.T) {
 			}
 
 			site := &Site{log: util.NewLogger("foo"), batteryMeters: meters}
+			if tc.appliedMode != api.BatteryUnknown {
+				site.batteryModeApplied = map[string]api.BatteryMode{"slave-1": tc.appliedMode}
+			}
+			if tc.slaveAppliedMode != api.BatteryUnknown {
+				site.batterySlaveModeApplied = map[string]api.BatteryMode{"slave-1": tc.slaveAppliedMode}
+			}
 			site.updateBatteryMeters()
 
 			for i, slave := range slaves {
 				assert.Equal(t, tc.wantCalls, slave.setpointCalls, "slave %d calls", i+1)
 				assert.Equal(t, tc.wantModeCalls, slave.modeCalls, "slave %d mode calls", i+1)
-				assert.Equal(t, tc.wantSlaveMode, site.batterySlaveModeApplied[fmt.Sprintf("slave-%d", i+1)], "slave %d slave mode cache", i+1)
+				assert.Equal(t, tc.appliedMode, site.batteryModeApplied[fmt.Sprintf("slave-%d", i+1)], "slave %d global applied mode", i+1)
+				assert.Equal(t, tc.wantSlaveMode, site.batterySlaveModeApplied[fmt.Sprintf("slave-%d", i+1)], "slave %d resulting mode cache", i+1)
 				assert.Equal(t, "master", site.battery.Devices[i+1].Master, "slave %d master", i+1)
 				assert.Equal(t, tc.wantStatus, site.battery.Devices[i+1].PowerControlStatus, "slave %d power control status", i+1)
 				if tc.wantModeCalls > 0 {
@@ -282,6 +324,54 @@ func TestReleaseBatterySlaves(t *testing.T) {
 			}
 			_, cached := site.batterySlaveModeApplied["slave"]
 			assert.Equal(t, tc.wantCached || tc.cached == api.BatteryNormal, cached)
+		})
+	}
+}
+
+func TestApplyBatteryModeDoesNotClearSlaveModeCache(t *testing.T) {
+	for _, tc := range []struct {
+		name                string
+		previousGlobalMode  api.BatteryMode
+		requestedGlobalMode api.BatteryMode
+		slaveMode           api.BatteryMode
+		wantModeCalls       int
+		wantSlaveCache      bool
+	}{
+		{
+			name:                "unchanged normal leaves slave mode active",
+			previousGlobalMode:  api.BatteryNormal,
+			requestedGlobalMode: api.BatteryNormal,
+			slaveMode:           api.BatteryCharge,
+			wantSlaveCache:      true,
+		},
+		{
+			name:                "active global mode transition overrides slave",
+			previousGlobalMode:  api.BatteryNormal,
+			requestedGlobalMode: api.BatteryCharge,
+			slaveMode:           api.BatteryDischarge,
+			wantModeCalls:       1,
+			wantSlaveCache:      true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			slave := &batteryPowerControlMeter{}
+			var slaveMeter api.Meter = slave
+			site := &Site{
+				log: util.NewLogger("foo"),
+				batteryMeters: []config.Device[api.Meter]{
+					config.NewStaticDevice(config.Named{Name: "slave"}, slaveMeter),
+				},
+				batteryModeApplied:      map[string]api.BatteryMode{"slave": tc.previousGlobalMode},
+				batterySlaveModeApplied: map[string]api.BatteryMode{"slave": tc.slaveMode},
+			}
+
+			assert.NoError(t, site.applyBatteryMode(tc.requestedGlobalMode))
+			assert.Equal(t, tc.wantModeCalls, slave.modeCalls)
+			_, slaveModeCached := site.batterySlaveModeApplied["slave"]
+			assert.Equal(t, tc.wantSlaveCache, slaveModeCached)
+			if tc.wantModeCalls > 0 {
+				assert.Equal(t, tc.requestedGlobalMode, slave.modeSet)
+			}
 		})
 	}
 }
