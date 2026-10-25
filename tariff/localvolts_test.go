@@ -11,10 +11,11 @@ import (
 
 func TestLocalVoltsRates(t *testing.T) {
 	// three 5-minute import intervals of one slot plus a fourth in the next slot, export interleaved
+	// intervalDuration is sent as number or string
 	const body = `[
 		{"NMI":"4100000000","circuit":"Import","direction":"Buy","intervalEnd":"2026-10-19T00:05:00Z","intervalDuration":5,"flexUp":30,"flexUnits":"c/kWh","quality":"Exp"},
 		{"NMI":"4100000000","circuit":"Export","direction":"Sell","intervalEnd":"2026-10-19T00:05:00Z","intervalDuration":5,"flexUp":5,"flexUnits":"c/kWh","quality":"Exp"},
-		{"NMI":"4100000000","circuit":"Import","direction":"Buy","intervalEnd":"2026-10-19T00:10:00Z","intervalDuration":5,"flexUp":40,"flexUnits":"c/kWh","quality":"Fcst"},
+		{"NMI":"4100000000","circuit":"Import","direction":"Buy","intervalEnd":"2026-10-19T00:10:00Z","intervalDuration":"5","flexUp":40,"flexUnits":"c/kWh","quality":"Fcst"},
 		{"NMI":"4100000000","circuit":"Import","direction":"Buy","intervalEnd":"2026-10-19T00:15:00Z","intervalDuration":5,"flexUp":50,"flexUnits":"c/kWh","quality":"Fcst"},
 		{"NMI":"4100000000","circuit":"Import","direction":"Buy","intervalEnd":"2026-10-19T00:20:00Z","intervalDuration":5,"flexUp":-10,"flexUnits":"c/kWh","quality":"Fcst"}
 	]`
