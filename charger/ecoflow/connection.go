@@ -231,6 +231,7 @@ func (c *Connection) setSession(session *Session) {
 const (
 	checkInterval = time.Minute
 	loginRenewal  = 20 * time.Hour
+	probeAfter    = 90 * time.Second   // heartbeat gap after which a wallbox gets a get-all
 	staleAfter    = 1200 * time.Second // heartbeats normally arrive every 60 s
 	snapshotGrace = 5 * time.Minute    // wait for an answer to the get-all
 	maxRevival    = 6 * time.Hour      // longest wait between watchdog reconnects
@@ -279,8 +280,9 @@ func (c *Connection) watch() {
 }
 
 // check renews the login for the next connect and revives silent telemetry:
-// a get-all to every device silent for staleAfter, a new connection only when
-// no device answers. A device that is offline must not reconnect the account
+// a get-all to every device whose heartbeat is missing for probeAfter, a new
+// connection only when no device answers within snapshotGrace after staleAfter
+// of silence. A device that is offline must not reconnect the account
 // every few minutes, so watchdog reconnects back off while nothing arrives.
 func (c *Connection) check() {
 	if c.login == nil || c.isClosed() {
@@ -468,14 +470,16 @@ func (c *Connection) Wallbox(serial, gateway string, timeout time.Duration) (*Wa
 	return wb, nil
 }
 
-// probe sends a get-all when the wallbox has been silent for staleAfter and
-// the last probe is as old, and reports whether it did.
+// probe sends a get-all when the wallbox has been silent for probeAfter, once
+// per silence and again every staleAfter while it lasts. A get-all brings back
+// heartbeats that stopped while other frames kept arriving. It reports whether
+// it sent one.
 func (wb *Wallbox) probe() bool {
 	c := wb.conn
 
 	wb.mu.Lock()
 	seen, probed := wb.seen, wb.probed
-	due := c.clock.Since(seen) >= staleAfter && c.clock.Since(probed) >= staleAfter
+	due := c.clock.Since(seen) >= probeAfter && (probed.Before(seen) || c.clock.Since(probed) >= staleAfter)
 	if due {
 		wb.probed = c.clock.Now()
 	}

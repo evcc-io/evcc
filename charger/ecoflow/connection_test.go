@@ -285,18 +285,18 @@ func TestStaleTelemetryRequestsSnapshotThenReconnects(t *testing.T) {
 	clk.Add(20 * time.Minute)
 	require.NoError(t, transport.Feed(testTelemetry, ecoflowtest.Heartbeat("state2-3p")))
 
-	clk.Add(1200*time.Second - time.Second)
+	clk.Add(probeAfter - time.Second)
 	conn.check()
-	assert.Equal(t, 1, getAlls(transport), "heartbeat younger than 1200 s")
+	assert.Equal(t, 1, getAlls(transport), "heartbeat younger than probeAfter")
 
 	clk.Add(time.Second)
 	conn.check()
-	assert.Equal(t, 2, getAlls(transport), "get-all after 1200 s")
+	assert.Equal(t, 2, getAlls(transport), "get-all after probeAfter")
 
-	clk.Add(5*time.Minute - time.Second)
+	clk.Add(staleAfter - probeAfter - time.Second)
 	conn.check()
 	assert.Equal(t, 2, getAlls(transport), "get-all only once")
-	assert.Empty(t, broker.Events(), "waiting for the snapshot")
+	assert.Empty(t, broker.Events(), "silent for less than staleAfter")
 
 	clk.Add(time.Second)
 	conn.check() // reconnects in the background
@@ -304,6 +304,46 @@ func TestStaleTelemetryRequestsSnapshotThenReconnects(t *testing.T) {
 		return broker.Dials() == 2 && getAlls(broker.Transport()) == 1
 	}, time.Second, time.Millisecond, "get-all on the new connection")
 	assert.Equal(t, []string{"sleep 5s", "dial account-1"}, broker.Events())
+}
+
+// Heartbeats regularly stop for minutes while other frames keep arriving; a
+// get-all brings them back. One get-all per silence, repeated every staleAfter.
+func TestHeartbeatGapRequestsSnapshotOncePerSilence(t *testing.T) {
+	clk := clock.NewMock()
+	broker := &fakeBroker{}
+	conn, _ := newTestConnection(t, broker, clk)
+	transport := broker.Transport()
+	require.NoError(t, transport.Feed(testTelemetry, ecoflowtest.Heartbeat("state2-3p")))
+
+	clk.Add(probeAfter - time.Second)
+	conn.check()
+	assert.Equal(t, 1, getAlls(transport), "heartbeat younger than probeAfter")
+
+	clk.Add(time.Second)
+	conn.check()
+	assert.Equal(t, 2, getAlls(transport), "get-all after probeAfter")
+
+	// other frames keep arriving, only the heartbeats are missing
+	gap := func(d time.Duration) {
+		for end := clk.Now().Add(d); clk.Now().Before(end); {
+			clk.Add(checkInterval)
+			require.NoError(t, transport.Feed(testTelemetry, ecoflowtest.Settings("max16")))
+			conn.check()
+		}
+	}
+
+	gap(staleAfter - checkInterval)
+	assert.Equal(t, 2, getAlls(transport), "get-all only once per silence")
+
+	gap(checkInterval)
+	assert.Equal(t, 3, getAlls(transport), "repeated after staleAfter")
+
+	clk.Add(time.Second)
+	require.NoError(t, transport.Feed(testTelemetry, ecoflowtest.Heartbeat("state2-3p")))
+	clk.Add(probeAfter)
+	conn.check()
+	assert.Equal(t, 4, getAlls(transport), "a new silence gets its own get-all")
+	assert.Empty(t, broker.Events(), "no reconnect")
 }
 
 func TestSnapshotAfterStaleTelemetryKeepsConnection(t *testing.T) {
@@ -322,7 +362,7 @@ func TestSnapshotAfterStaleTelemetryKeepsConnection(t *testing.T) {
 	clk.Add(10 * time.Minute)
 	conn.check()
 	assert.Empty(t, broker.Events())
-	assert.Equal(t, 2, getAlls(transport))
+	assert.Equal(t, 3, getAlls(transport), "the new gap gets a get-all, no reconnect")
 }
 
 func TestClosedConnectionDoesNotReconnect(t *testing.T) {
@@ -526,13 +566,13 @@ func TestSilentWallboxBacksOffReconnects(t *testing.T) {
 
 	dials := runChecks(t, conn, broker, clk, 24*time.Hour)
 	assert.Equal(t, []time.Duration{
-		25 * time.Minute,   // 20 min silence, get-all unanswered for 5 min
-		65 * time.Minute,   // +40 min
-		145 * time.Minute,  // +80 min
-		305 * time.Minute,  // +160 min
-		625 * time.Minute,  // +320 min
-		985 * time.Minute,  // +6 h
-		1345 * time.Minute, // +6 h
+		20 * time.Minute,   // 20 min silence, get-all of the first gap unanswered since 90 s
+		60 * time.Minute,   // +40 min
+		140 * time.Minute,  // +80 min
+		300 * time.Minute,  // +160 min
+		620 * time.Minute,  // +320 min
+		980 * time.Minute,  // +6 h
+		1340 * time.Minute, // +6 h
 	}, dials)
 
 	_, err := wb.Heartbeat()
@@ -541,11 +581,11 @@ func TestSilentWallboxBacksOffReconnects(t *testing.T) {
 	// telemetry resets the backoff
 	require.NoError(t, broker.Transport().Feed(testTelemetry, ecoflowtest.Heartbeat("state2-3p")))
 	dials = runChecks(t, conn, broker, clk, 30*time.Minute)
-	assert.Equal(t, []time.Duration{25 * time.Minute}, dials)
+	assert.Equal(t, []time.Duration{20 * time.Minute}, dials)
 }
 
 // A silent wallbox on a connection that carries telemetry of another device
-// gets a get-all every 20 min, but the connection stays.
+// gets a get-all after 90 s and then every 20 min, but the connection stays.
 func TestSilentWallboxKeepsWorkingConnection(t *testing.T) {
 	const other = "C376000000000002"
 
@@ -564,5 +604,5 @@ func TestSilentWallboxKeepsWorkingConnection(t *testing.T) {
 	}
 
 	assert.Equal(t, 1, broker.Dials(), "no reconnect")
-	assert.Equal(t, 1+6, getAlls(transport), "get-all on start and every 20 min")
+	assert.Equal(t, 1+6, getAlls(transport), "get-all on start, after the first gap and every 20 min")
 }
