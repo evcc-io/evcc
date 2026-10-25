@@ -841,8 +841,6 @@ presets:
       help:
         de: Topic (ohne / am Anfang)
         en: Topic (omit leading /)
-
-  mqtt-timeout:
     - name: timeout
       default: 30s
       help:
