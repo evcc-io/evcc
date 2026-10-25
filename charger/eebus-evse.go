@@ -18,13 +18,11 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/samber/lo"
 )
 
-const (
-	idleFactor         = 0.6
-	voltage    float64 = 230
-)
+const idleFactor = 0.6
 
 type minMax struct {
 	min, max float64
@@ -217,7 +215,7 @@ func (c *EEBus) isCharging(evEntity spineapi.EntityRemoteInterface) bool {
 			// sometimes a min limit is not provided by the EVSE, and we can't take it from the loadpoint
 			return false
 		}
-		minPower = limitsMin[0] * voltage
+		minPower = grid.CurrentToPower(limitsMin[0], 1)
 	}
 
 	return power > minPower*idleFactor
@@ -463,7 +461,7 @@ func (c *EEBus) currentPower() (float64, error) {
 		// no power provided, calculate from current
 		if currents, err := c.cem.EvCem.CurrentPerPhase(evEntity); err == nil {
 			for _, current := range currents {
-				powers = append(powers, current*voltage)
+				powers = append(powers, grid.CurrentToPower(current, 1))
 			}
 		}
 	}
