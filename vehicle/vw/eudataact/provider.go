@@ -100,7 +100,7 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyBatteryStateReportSoc, KeyEnyaqSoc); p != nil {
+	if p := lookup(data, KeyBatteryStateReportSoc, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyEnyaqSoc); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
