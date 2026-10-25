@@ -119,6 +119,7 @@ type Site struct {
 	batteryMode              api.BatteryMode            // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode            // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time                  // Battery mode timer for external control
+	batteryControlMu         sync.Mutex                 // guards applied battery modes and slave control state
 	batteryModeApplied       map[string]api.BatteryMode // Battery mode last applied per battery meter
 	batterySlaveModeApplied  map[string]api.BatteryMode // Battery mode last applied by slave control per battery meter
 

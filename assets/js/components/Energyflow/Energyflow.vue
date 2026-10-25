@@ -145,6 +145,8 @@
 												row.device.power > 0,
 											'text-danger':
 												row.device.powerControlStatus === 'failed',
+											'text-body-secondary':
+												row.device.powerControlStatus === 'overridden',
 										}"
 										:aria-label="batteryControlAriaLabel(row.device)"
 										:name="row.device.title || row.device.name"
@@ -153,6 +155,12 @@
 										:power="dischargePower(row.device.power)"
 										:powerUnit="powerUnit"
 									>
+										<template
+											v-if="row.device.powerControlStatus === 'overridden'"
+											#subline
+										>
+											{{ batteryControlLabel(row.device.powerControlStatus) }}
+										</template>
 									</EnergyflowEntry>
 								</template>
 							</EnergyflowEntry>
@@ -302,6 +310,8 @@
 												row.device.power < 0,
 											'text-danger':
 												row.device.powerControlStatus === 'failed',
+											'text-body-secondary':
+												row.device.powerControlStatus === 'overridden',
 										}"
 										:aria-label="batteryControlAriaLabel(row.device)"
 										:name="row.device.title || row.device.name"
@@ -310,6 +320,12 @@
 										:power="chargePower(row.device.power)"
 										:powerUnit="powerUnit"
 									>
+										<template
+											v-if="row.device.powerControlStatus === 'overridden'"
+											#subline
+										>
+											{{ batteryControlLabel(row.device.powerControlStatus) }}
+										</template>
 									</EnergyflowEntry>
 								</template>
 							</EnergyflowEntry>
