@@ -50,14 +50,9 @@ func generateRequired() error {
 	b.WriteString("# Required params per template. A new required param breaks configurations stored without it.\n")
 
 	for _, class := range templates.ClassValues() {
-		tmpls := templates.ByClass(class, templates.WithDeprecated())
-		if len(tmpls) == 0 {
-			continue
-		}
+		var section strings.Builder
 
-		fmt.Fprintf(&b, "%s:\n", strings.ToLower(class.String()))
-
-		for _, tmpl := range tmpls {
+		for _, tmpl := range templates.ByClass(class, templates.WithDeprecated()) {
 			// unnamed templates cannot be referenced by configurations
 			if tmpl.Template == "" {
 				continue
@@ -76,14 +71,17 @@ func generateRequired() error {
 			}
 
 			if len(params) == 0 {
-				fmt.Fprintf(&b, "  %s: []\n", tmpl.Template)
 				continue
 			}
 
-			fmt.Fprintf(&b, "  %s:\n", tmpl.Template)
+			fmt.Fprintf(&section, "  %s:\n", tmpl.Template)
 			for _, p := range params {
-				fmt.Fprintf(&b, "    - %s\n", p)
+				fmt.Fprintf(&section, "    - %s\n", p)
 			}
+		}
+
+		if section.Len() > 0 {
+			fmt.Fprintf(&b, "%s:\n%s", strings.ToLower(class.String()), section.String())
 		}
 	}
 

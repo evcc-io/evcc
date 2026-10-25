@@ -201,7 +201,6 @@ charger:
     - modbus
   neoom-n:
     - modbus
-  nexblue: []
   nibe-s-series:
     - modbus
     - tempsource
@@ -219,37 +218,6 @@ charger:
     - modbus
   ochsner-bwwp:
     - modbus
-  ocpp-abb-tac: []
-  ocpp-abl: []
-  ocpp-alfen: []
-  ocpp-autel: []
-  ocpp-autoaid: []
-  ocpp-beny: []
-  ocpp-chargeamps: []
-  ocpp-easee: []
-  ocpp-elecq: []
-  ocpp-enercab: []
-  ocpp-enplus: []
-  ocpp-entratek: []
-  ocpp-esolutions: []
-  ocpp-evbox-elvi: []
-  ocpp-foxess: []
-  ocpp-goe: []
-  ocpp-grizzl-e: []
-  ocpp-hager: []
-  ocpp-homecharge: []
-  ocpp-huawei: []
-  ocpp-kathrein: []
-  ocpp-mennekes-4you: []
-  ocpp-mennekes-acu: []
-  ocpp-necharge: []
-  ocpp-orbis: []
-  ocpp-solaredge: []
-  ocpp-sungrow: []
-  wallbox-fw5: []
-  ocpp-wallbox: []
-  ocpp-zaptec: []
-  ocpp: []
   onekey:
     - host
   openevse:
@@ -376,12 +344,6 @@ charger:
     - host
   v2c:
     - host
-  vaillant-bulex: []
-  vaillant-demirdokum: []
-  vaillant-glow-worm: []
-  vaillant-saunier-duval: []
-  vaillant: []
-  vehicle-api: []
   versicharge:
     - modbus
   vestel:
@@ -411,7 +373,6 @@ charger:
     - modbus
   xtherma:
     - modbus
-  zaptec: []
 meter:
   abb-ab:
     - modbus
@@ -448,7 +409,6 @@ meter:
     - modbus
   bgetech-ws100:
     - modbus
-  bosch-bpt: []
   cfos:
     - modbus
   cg-em24:
@@ -465,11 +425,8 @@ meter:
     - modbus
   cozify:
     - host
-  danfoss-triplelynx-tlx: []
   ddm-18sd:
     - modbus
-  demo-battery: []
-  demo-meter: []
   deye-hybrid-3p:
     - modbus
     - maxacpower (pv)
@@ -1067,7 +1024,6 @@ vehicle:
   ioBroker.bmw:
     - vin
     - uri
-  iso15118: []
   jaguar-landrover:
     - user
     - password
@@ -1125,12 +1081,10 @@ vehicle:
   octopus-it:
     - email
     - password
-  offline: []
   opel:
     - user
     - accessToken
     - refreshToken
-  outlanderphev: []
   ovms:
     - user
     - password
@@ -1187,7 +1141,6 @@ vehicle:
     - apikey
   teslalogger:
     - url
-  teslamate: []
   tessie:
     - vin
     - token
@@ -1215,7 +1168,6 @@ vehicle:
     - user
     - password
 tariff:
-  allinpower: []
   amber:
     - token
     - siteid
@@ -1228,17 +1180,11 @@ tariff:
     - kwp
   awattar:
     - region
-  bkw: []
   ckw:
     - tariff
-  demo-co2-forecast: []
-  demo-dynamic-grid: []
-  demo-solar-forecast: []
-  demo-temperature-forecast: []
   dwd-temperature:
     - lat
     - lon
-  edf-tempo: []
   ekz:
     - tariff_name
   electricitymaps-free:
@@ -1302,12 +1248,10 @@ tariff:
     - az
     - dec
     - kwp
-  frank-energie: []
   green-grid-compass:
     - clientid
     - clientsecret
     - zone
-  groupe-e: []
   grünstromindex:
     - zip
   homeassistant:
@@ -1316,7 +1260,6 @@ tariff:
     - token
   ned:
     - apiKey
-  ngeso: []
   nordpool:
     - currency
   octopus-api:
@@ -1350,7 +1293,6 @@ tariff:
   pstryk:
     - token
     - plan
-  pun: []
   pvnode-v2-temperature:
     - apikey
     - siteid
@@ -1364,7 +1306,6 @@ tariff:
     - dec
     - kwp
     - apikey
-  smartenergy: []
   solarprognose:
     - token
   solcast:
@@ -1391,8 +1332,6 @@ tariff:
     - token
   voltcast:
     - apikey
-circuit:
-  static: []
 messenger:
   email:
     - host
