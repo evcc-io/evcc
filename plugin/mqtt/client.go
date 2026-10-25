@@ -25,7 +25,7 @@ const parallelInflightLimit int64 = 32
 
 // cleanupMaxDuration stops Cleanup from blocking forever on brokers that never
 // stop delivering non-empty messages for the cleaned topic
-var cleanupMaxDuration = 30 * time.Second
+const cleanupMaxDuration = 30 * time.Second
 
 // ClientID created unique mqtt client id
 func ClientID() string {
