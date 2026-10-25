@@ -1766,8 +1766,8 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 		if activePhases, maxPhases := lp.ActivePhases(), lp.MaxActivePhases(); activePhases < maxPhases &&
 			lp.circuitAllowsPhases(maxPhases, lp.effectiveMinCurrent()) {
 			// max power actually achievable on the active phases
-			activeMaxPower := min(lp.EffectiveMaxPower(), grid.Voltage*lp.effectiveMaxCurrent()*grid.Factor(activePhases))
-			delta += max(0, grid.Voltage*lp.effectiveMinCurrent()*grid.Factor(maxPhases)-activeMaxPower)
+			activeMaxPower := min(lp.EffectiveMaxPower(), grid.CurrentToPower(lp.effectiveMaxCurrent(), activePhases))
+			delta += max(0, grid.CurrentToPower(lp.effectiveMinCurrent(), maxPhases)-activeMaxPower)
 		}
 	}
 
