@@ -1063,7 +1063,7 @@ func TestCircuitMaxImport(t *testing.T) {
 	} {
 		ctrl := gomock.NewController(t)
 		c := api.NewMockCircuit(ctrl)
-		c.EXPECT().GetMaxPower().Return(tc.power)
+		c.EXPECT().EffectiveMaxPower().Return(tc.power)
 		c.EXPECT().GetMaxCurrent().Return(tc.current)
 
 		assert.Equal(t, tc.expected, circuitMaxImport(c), "power %.0f current %.0f", tc.power, tc.current)

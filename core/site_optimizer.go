@@ -1109,9 +1109,9 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	return bat, detail
 }
 
-// circuitMaxImport returns the circuit's import limit from max power and three-phase max current, 0 if unlimited
+// circuitMaxImport returns the circuit's import limit from max power incl. HEMS limit and three-phase max current, 0 if unlimited
 func circuitMaxImport(c api.Circuit) float64 {
-	res := c.GetMaxPower()
+	res := c.EffectiveMaxPower()
 	if current := c.GetMaxCurrent(); current > 0 {
 		if power := grid.CurrentToPower(current, 3); res <= 0 || power < res {
 			res = power
