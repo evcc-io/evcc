@@ -228,9 +228,6 @@ wait:
 		select {
 		case t := <-topics:
 			m.log.TRACE.Printf("delete: %s", t)
-			// Delete synchronously at QoS 0 so the cleanup burst self-throttles
-			// to one in-flight message at a time and avoids overwhelming the
-			// broker (see #30086).
 			token := m.client.Publish(t, 0, true, "")
 			token.WaitTimeout(request.Timeout)
 
