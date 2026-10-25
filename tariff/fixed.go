@@ -65,7 +65,14 @@ func NewFixedFromConfig(other map[string]any) (api.Tariff, error) {
 
 // wallClock returns the local time the given minutes after midnight, independent of DST offset changes
 func wallClock(dayStart time.Time, minutes int) time.Time {
-	return time.Date(dayStart.Year(), dayStart.Month(), dayStart.Day(), 0, minutes, 0, 0, dayStart.Location())
+	ts := time.Date(dayStart.Year(), dayStart.Month(), dayStart.Day(), 0, minutes, 0, 0, dayStart.Location())
+
+	// dst spring forward: map wall times inside the skipped hour to its end, keeping markers ordered
+	if 60*ts.Hour()+ts.Minute() != minutes {
+		ts, _ = ts.ZoneBounds()
+	}
+
+	return ts
 }
 
 // Rates implements the api.Tariff interface
