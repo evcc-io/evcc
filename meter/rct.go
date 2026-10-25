@@ -252,7 +252,6 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				})
 
 				eg.Go(func() error {
-					// see https://github.com/evcc-io/evcc/discussions/35013
 					// can't go lower than 5%
 					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(0.05))
 				})
