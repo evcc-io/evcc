@@ -212,6 +212,12 @@ BatteryMasterSlaves.args = {
       master: "battery-master",
       powerControlStatus: "failed",
     },
+    {
+      ...dev("Slave C", -800, 56),
+      name: "battery-slave-c",
+      master: "battery-master",
+      powerControlStatus: "overridden",
+    },
   ]),
 } as any;
 

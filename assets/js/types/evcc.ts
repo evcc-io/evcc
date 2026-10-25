@@ -1284,8 +1284,8 @@ export interface LoadpointSuggestion {
 export interface BatteryMeter extends Meter {
   /** Configured master battery name for this slave battery. */
   master?: string;
-  /** Result of the latest runtime power-control attempt. */
-  powerControlStatus?: "applied" | "failed";
+  /** Status of the latest runtime power-control update. */
+  powerControlStatus?: "applied" | "failed" | "overridden";
   /** Charge level in %. */
   soc: number;
   /** Battery supports external control of its operation mode. */

@@ -251,6 +251,9 @@ func supportedBatteryMode(supported []api.BatteryMode, mode api.BatteryMode) api
 // is decided per device, so one battery reaching its bound does not force the
 // others into hold.
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
+	site.batteryControlMu.Lock()
+	defer site.batteryControlMu.Unlock()
+
 	fromToCharge := site.fromTo(mode, api.BatteryCharge)
 	fromToDischarge := site.fromTo(mode, api.BatteryDischarge)
 
@@ -315,7 +318,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 			continue
 		}
 
-		site.batteryModeApplied[name] = deviceMode
+		site.recordBatteryModeApplied(name, deviceMode)
 		site.log.DEBUG.Printf("set battery %s mode: %s", deviceTitleOrName(dev), deviceMode)
 	}
 

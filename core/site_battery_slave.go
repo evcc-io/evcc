@@ -24,6 +24,21 @@ func SupportsBatterySlaveControl(meter api.Meter) bool {
 		api.HasCap[api.BatteryModePowerController](meter)
 }
 
+// recordBatteryModeApplied updates global mode state and invalidates the slave state it supersedes.
+func (site *Site) recordBatteryModeApplied(name string, mode api.BatteryMode) {
+	site.batteryModeApplied[name] = mode
+	delete(site.batterySlaveModeApplied, name)
+}
+
+func (site *Site) batterySlaveModeAllowed(name string) bool {
+	switch site.batteryModeApplied[name] {
+	case api.BatteryUnknown, api.BatteryNormal:
+		return true
+	default:
+		return false
+	}
+}
+
 type batterySlaveSetpoint struct {
 	mode  api.BatteryMode
 	power float64
@@ -67,6 +82,9 @@ func calculateBatterySlaveSetpoints(masterPower float64, slavePowers []float64) 
 
 // releaseBatterySlaves returns slaves under power control to normal operation.
 func (site *Site) releaseBatterySlaves() {
+	site.batteryControlMu.Lock()
+	defer site.batteryControlMu.Unlock()
+
 	for _, dev := range site.batteryMeters {
 		name := dev.Config().Name
 		if !batteryModeModified(site.batterySlaveModeApplied[name]) {
@@ -91,13 +109,18 @@ func (site *Site) updateBatterySlavePower(mm []types.Measurement, powerValid []b
 		site.log.ERROR.Printf("battery slave power: inconsistent input lengths: %d measurements, %d power-valid flags, %d batteries", len(mm), len(powerValid), len(site.batteryMeters))
 		return
 	}
+	site.batteryControlMu.Lock()
+	defer site.batteryControlMu.Unlock()
+
 	if site.batterySlaveModeApplied == nil {
 		site.batterySlaveModeApplied = make(map[string]api.BatteryMode)
 	}
 
 	markSlavesFailed := func(slaves []int) {
 		for _, slaveIndex := range slaves {
-			mm[slaveIndex].PowerControlStatus = "failed"
+			if mm[slaveIndex].PowerControlStatus != "overridden" {
+				mm[slaveIndex].PowerControlStatus = "failed"
+			}
 		}
 	}
 
@@ -112,6 +135,14 @@ func (site *Site) updateBatterySlavePower(mm []types.Measurement, powerValid []b
 		slaves := slavesByMaster[dev.Config().Name]
 		if len(slaves) == 0 {
 			continue
+		}
+		for _, slaveIndex := range slaves {
+			slave := site.batteryMeters[slaveIndex]
+			name := slave.Config().Name
+			if !site.batterySlaveModeAllowed(name) {
+				delete(site.batterySlaveModeApplied, name)
+				mm[slaveIndex].PowerControlStatus = "overridden"
+			}
 		}
 
 		masterTitle := deviceTitleOrName(dev)
@@ -151,6 +182,11 @@ func (site *Site) updateBatterySlavePower(mm []types.Measurement, powerValid []b
 			setpoint := plan.setpoints[i]
 			slave := site.batteryMeters[slaveIndex]
 			slaveTitle := deviceTitleOrName(slave)
+			if mm[slaveIndex].PowerControlStatus == "overridden" {
+				site.log.TRACE.Printf("battery slave %s: skipping power control, global battery mode is active", slaveTitle)
+				continue
+			}
+
 			meter := slave.Instance()
 			if !SupportsBatterySlaveControl(meter) {
 				site.log.WARN.Printf("battery slave %s: cannot set power, charge/discharge power control is not supported", slaveTitle)
