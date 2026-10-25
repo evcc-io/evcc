@@ -22,6 +22,7 @@ import (
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	optimizer "github.com/evcc-io/optimizer/client"
@@ -621,7 +622,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	}
 
 	if site.circuit != nil {
-		if pMaxImp := site.circuit.GetMaxPower(); pMaxImp > 0 {
+		if pMaxImp := circuitMaxImport(site.circuit); pMaxImp > 0 {
 			// hard grid import limit if no price penalty is set by PrcPExcImp
 			req.Grid.PMaxImp = float32(pMaxImp)
 		}
@@ -1106,6 +1107,17 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	}
 
 	return bat, detail
+}
+
+// circuitMaxImport returns the circuit's import limit from max power and three-phase max current, 0 if unlimited
+func circuitMaxImport(c api.Circuit) float64 {
+	res := c.GetMaxPower()
+	if current := c.GetMaxCurrent(); current > 0 {
+		if power := grid.CurrentToPower(current, 3); res <= 0 || power < res {
+			res = power
+		}
+	}
+	return res
 }
 
 // clearDemandWhenFull zeroes the charge demand from the slot the accumulated energy fills the
