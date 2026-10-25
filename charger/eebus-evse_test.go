@@ -302,6 +302,7 @@ func TestEnabledAlwaysReadsOpev(t *testing.T) {
 	}
 
 	evcc.EXPECT().EVConnected(evEntity).Return(true)
+	opev.EXPECT().CurrentLimits(evEntity).Return([]float64{6, 6, 6}, []float64{16, 16, 16}, []float64{0, 0, 0}, nil)
 	opev.EXPECT().LoadControlLimits(evEntity).Return([]ucapi.LoadLimitsPhase{
 		{Phase: model.ElectricalConnectionPhaseNameTypeA, IsActive: true, Value: 10},
 		{Phase: model.ElectricalConnectionPhaseNameTypeB, IsActive: true, Value: 10},
@@ -311,6 +312,35 @@ func TestEnabledAlwaysReadsOpev(t *testing.T) {
 	enabled, err := eebus.Enabled()
 	require.NoError(t, err)
 	assert.True(t, enabled)
+}
+
+func TestEnabledSinglePhaseLingeringThreePhaseLimits(t *testing.T) {
+	evcc := mocks.NewCemEVCCInterface(t)
+	opev := mocks.NewCemOPEVInterface(t)
+
+	evEntity := spinemocks.NewEntityRemoteInterface(t)
+	eebus := &EEBus{
+		cem: &eebus.CustomerEnergyManagement{
+			EvCC: evcc,
+			OpEV: opev,
+		},
+		ev:  evEntity,
+		log: util.NewLogger("test"),
+	}
+
+	evcc.EXPECT().EVConnected(evEntity).Return(true)
+	// EVSE reports single-phase limits
+	opev.EXPECT().CurrentLimits(evEntity).Return([]float64{6}, []float64{32}, []float64{0}, nil)
+	// EVSE table retains lingering 16A limits on phases B and C from an earlier 3-phase write
+	opev.EXPECT().LoadControlLimits(evEntity).Return([]ucapi.LoadLimitsPhase{
+		{Phase: model.ElectricalConnectionPhaseNameTypeA, IsActive: true, Value: 0},
+		{Phase: model.ElectricalConnectionPhaseNameTypeB, IsActive: true, Value: 16},
+		{Phase: model.ElectricalConnectionPhaseNameTypeC, IsActive: true, Value: 16},
+	}, nil)
+
+	enabled, err := eebus.Enabled()
+	require.NoError(t, err)
+	assert.False(t, enabled)
 }
 
 func TestEEBusIsCharging(t *testing.T) {

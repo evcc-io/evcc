@@ -288,7 +288,10 @@ func (c *EEBus) Enabled() (bool, error) {
 		return c.enabled, nil
 	}
 
-	for _, limit := range limits {
+	minLimits, maxLimits, _, _ := c.cem.OpEV.CurrentLimits(evEntity)
+	numPhases := min(len(limits), c.activePhases(minLimits, maxLimits))
+
+	for _, limit := range limits[:numPhases] {
 		// for IEC61851 the pause limit is 0A, for ISO15118-2 it is 0.1A
 		// instead of checking for the actual data, hardcode this, so we might run into less
 		// timing issues as the data might not be received yet
