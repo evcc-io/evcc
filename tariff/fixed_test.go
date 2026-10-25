@@ -200,6 +200,41 @@ func TestFixedDstSpringForward(t *testing.T) {
 	assert.False(t, short)
 }
 
+func TestFixedDstSpringForwardSkippedMarker(t *testing.T) {
+	loc, err := time.LoadLocation("Europe/Berlin")
+	require.NoError(t, err)
+
+	zones, err := fixed.ParseZones([]fixed.ZoneSpec{{Price: 0.1, Hours: "00:00-02:30"}})
+	require.NoError(t, err)
+
+	tf := &Fixed{
+		embed: &embed{},
+		clock: clock.NewMock(),
+		zones: append([]fixed.Zone{{Price: 0.3}}, zones...),
+	}
+
+	// 2026-03-29 02:00 -> 03:00, 02:30 does not exist
+	tf.clock.(*clock.Mock).Set(time.Date(2026, 3, 29, 0, 30, 0, 0, loc))
+
+	rates, err := tf.Rates()
+	require.NoError(t, err)
+
+	for i, r := range rates {
+		require.True(t, r.End.After(r.Start), "invalid rate %d: %v", i, r)
+		if i > 0 {
+			require.Equal(t, rates[i-1].End, r.Start, "non-contiguous rate %d: %v", i, r)
+		}
+	}
+
+	r, err := rates.At(time.Date(2026, 3, 29, 1, 30, 0, 0, loc))
+	require.NoError(t, err)
+	assert.Equal(t, 0.1, r.Value)
+
+	r, err = rates.At(time.Date(2026, 3, 29, 3, 0, 0, 0, loc))
+	require.NoError(t, err)
+	assert.Equal(t, 0.3, r.Value)
+}
+
 func TestFixedDstFallBack(t *testing.T) {
 	loc, err := time.LoadLocation("Europe/Berlin")
 	require.NoError(t, err)
