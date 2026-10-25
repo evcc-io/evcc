@@ -16,6 +16,12 @@ const gridSlots = async (request: any): Promise<number> => {
   return Number(await res.text());
 };
 
+// slots are published as [start, end, value]
+const gridValues = async (request: any): Promise<number[]> => {
+  const res = await request.get("/api/state?jq=.forecast.grid");
+  return ((await res.json()) as number[][]).map((r) => r[2]!);
+};
+
 test.describe("planner extends grid", () => {
   test("switch", async ({ page, request }) => {
     await page.goto("/#/config");
@@ -30,6 +36,9 @@ test.describe("planner extends grid", () => {
     await toggle.click();
     await expect(toggle).toBeChecked();
     await expect.poll(() => gridSlots(request)).toBeGreaterThan(4 * 12);
+    const values = await gridValues(request);
+    expect(values[0]).toBe(0.3);
+    expect(values[values.length - 1]).toBe(0.305);
 
     await toggle.click();
     await expect(toggle).not.toBeChecked();

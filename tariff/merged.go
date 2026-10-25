@@ -72,6 +72,10 @@ func NewMergedFromConfig(ctx context.Context, other map[string]any) (api.Tariff,
 func (t *Merged) Rates() (api.Rates, error) {
 	result, err := t.primary.Rates()
 	if err != nil {
+		// unverified secondary prices must not replace the primary
+		if t.tolerance > 0 {
+			return nil, err
+		}
 		t.log.DEBUG.Printf("primary tariff failed, falling back to secondary: %v", err)
 		return t.secondary.Rates()
 	}
@@ -82,8 +86,11 @@ func (t *Merged) Rates() (api.Rates, error) {
 		return result, nil
 	}
 
-	// If primary is empty, use all secondary rates
+	// If primary is empty, use all secondary rates unless they must be verified against it
 	if len(result) == 0 {
+		if t.tolerance > 0 {
+			return result, nil
+		}
 		return secondaryRates, nil
 	}
 

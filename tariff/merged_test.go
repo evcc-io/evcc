@@ -205,8 +205,26 @@ func TestMergedTolerance(t *testing.T) {
 			require.NoError(t, err)
 			assert.Len(t, res, tc.expected)
 			assert.Equal(t, rates(8, 0), res[:8], "primary rates are kept")
+			assert.Equal(t, rates(12, tc.offset)[8:tc.expected], res[8:], "secondary rates are appended")
 		})
 	}
+}
+
+func TestMergedToleranceWithoutPrimary(t *testing.T) {
+	secondary := &mockTariff{rates: api.Rates{{Start: time.Now(), End: time.Now().Add(SlotDuration), Value: 0.3}}, typ: api.TariffTypePriceForecast}
+
+	m, err := NewMerged(&mockTariff{typ: api.TariffTypePriceForecast}, secondary, 0.01)
+	require.NoError(t, err)
+
+	res, err := m.Rates()
+	require.NoError(t, err)
+	assert.Empty(t, res, "unverified secondary rates are not used without primary")
+
+	m, err = NewMerged(&mockTariff{err: assert.AnError, typ: api.TariffTypePriceForecast}, secondary, 0.01)
+	require.NoError(t, err)
+
+	_, err = m.Rates()
+	assert.ErrorIs(t, err, assert.AnError, "primary error is not replaced by secondary rates")
 }
 
 func TestNewMergedIncompatibleTypes(t *testing.T) {

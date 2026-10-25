@@ -162,7 +162,7 @@ func TestPlannerExtendsGrid(t *testing.T) {
 
 	planner := api.NewMockTariff(ctrl)
 	planner.EXPECT().Type().Return(api.TariffTypePriceForecast).AnyTimes()
-	planner.EXPECT().Rates().Return(rates(0, 20, 0.30), nil).AnyTimes()
+	planner.EXPECT().Rates().Return(rates(0, 20, 0.305), nil).AnyTimes()
 
 	site := &Site{
 		log:     util.NewLogger("foo"),
@@ -182,7 +182,9 @@ func TestPlannerExtendsGrid(t *testing.T) {
 	t.Cleanup(func() { settings.SetBool(keys.Experimental, false) })
 	res, err := site.GetTariff(api.TariffUsageGrid).Rates()
 	require.NoError(t, err)
-	assert.Len(t, res, 20)
+	require.Len(t, res, 20)
+	assert.Equal(t, 0.30, res[7].Value, "grid price kept where known")
+	assert.Equal(t, 0.305, res[8].Value, "planner price appended")
 	assert.Equal(t, planner, site.GetTariff(api.TariffUsagePlanner))
 
 	// co2 planner is not used to extend the grid price

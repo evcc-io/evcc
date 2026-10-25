@@ -41,7 +41,7 @@ tariffs:
           rates.push({
             start: new Date(start + i * 900000).toISOString(),
             end: new Date(start + (i + 1) * 900000).toISOString(),
-            value: 0.3
+            value: 0.305
           });
         }
         JSON.stringify(rates);
