@@ -18,10 +18,13 @@ package charger
 // SOFTWARE.
 
 import (
+	"cmp"
 	"context"
 	"encoding/binary"
 	"fmt"
+	"time"
 
+	"github.com/404GamerNotFound/solarman-go"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
@@ -34,8 +37,28 @@ import (
 // The charger takes a power setpoint in W; writing 0 stops charging.
 type DeyeEvse struct {
 	lp    loadpoint.API
-	conn  *modbus.Connection
+	conn  deyeEvseConn
 	power uint16
+}
+
+// deyeEvseConn is implemented by *modbus.Connection and the Solarman V5 logger
+type deyeEvseConn interface {
+	ReadHoldingRegisters(address, quantity uint16) ([]byte, error)
+	WriteSingleRegister(address, value uint16) ([]byte, error)
+}
+
+type deyeEvseSolarman struct {
+	ctx    context.Context
+	client *solarman.Client
+	id     byte
+}
+
+func (s *deyeEvseSolarman) ReadHoldingRegisters(address, quantity uint16) ([]byte, error) {
+	return s.client.ReadHoldingRegisters(s.ctx, s.id, address, quantity)
+}
+
+func (s *deyeEvseSolarman) WriteSingleRegister(address, value uint16) ([]byte, error) {
+	return nil, s.client.WriteSingleRegister(s.ctx, s.id, address, value)
 }
 
 const (
@@ -53,30 +76,51 @@ func init() {
 
 // NewDeyeEvseFromConfig creates a Deye EVSE charger from generic config
 func NewDeyeEvseFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	cc := modbus.Settings{
-		ID: 3,
+	cc := struct {
+		modbus.Settings `mapstructure:",squash"`
+		Host            string
+		Port            int
+		Serial          uint32
+	}{
+		Settings: modbus.Settings{
+			ID: 3,
+		},
+		Port: 8899,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewDeyeEvse(ctx, cc)
+	log := util.NewLogger("deye-evse")
+
+	// Solarman V5 logger if serial is given, Modbus otherwise
+	var conn deyeEvseConn
+	if cc.Serial != 0 {
+		client, err := solarman.New(cc.Host, cc.Port, cc.Serial, cmp.Or(cc.Timeout, 10*time.Second), solarman.WithLogger(log.TRACE.Printf))
+		if err != nil {
+			return nil, err
+		}
+
+		conn = &deyeEvseSolarman{ctx: ctx, client: client, id: cc.ID}
+	} else {
+		mc, err := cc.Settings.Connection(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		mc.Logger(log.TRACE)
+		conn = mc
+	}
+
+	return NewDeyeEvse(conn)
 }
 
 // NewDeyeEvse creates Deye EVSE charger
-func NewDeyeEvse(ctx context.Context, settings modbus.Settings) (api.Charger, error) {
-	conn, err := settings.Connection(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+func NewDeyeEvse(conn deyeEvseConn) (api.Charger, error) {
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
-
-	log := util.NewLogger("deye-evse")
-	conn.Logger(log.TRACE)
 
 	wb := &DeyeEvse{
 		conn:  conn,

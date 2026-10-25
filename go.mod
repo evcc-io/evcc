@@ -270,3 +270,5 @@ replace github.com/enbility/spine-go => github.com/andig/spine-go v0.7.1-0.20260
 replace github.com/enbility/eebus-go => github.com/andig/eebus-go v0.0.0-20260930172701-f8d6395986ba
 
 replace github.com/enbility/ship-go => github.com/andig/ship-go v0.6.1-0.20260901124541-3de7acda5f88
+
+replace github.com/404GamerNotFound/solarman-go => github.com/andig/solarman-go v0.3.1-0.20261025111333-130e59f82df7

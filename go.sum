@@ -1,8 +1,6 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 dario.cat/mergo v1.0.2 h1:85+piFYR1tMbRrLcDwR18y4UKJ3aH1Tbzi24VRW1TK8=
 dario.cat/mergo v1.0.2/go.mod h1:E/hbnu0NxMFBjpMIE34DRGLWqDy0g5FuKDhCb31ngxA=
-github.com/404GamerNotFound/solarman-go v0.3.1 h1:DSS6HoR7aQ0dg6uJRQxIdb/gevRyw3P5+kfbOLkuIGE=
-github.com/404GamerNotFound/solarman-go v0.3.1/go.mod h1:eoQx2JmIo2xahIumCzOyl/f7STXFsxDvowFsQ1kr+JQ=
 github.com/AlecAivazis/survey/v2 v2.3.7 h1:6I/u8FvytdGsgonrYsVn2t8t4QiRnh6QSTqkkhIiSjQ=
 github.com/AlecAivazis/survey/v2 v2.3.7/go.mod h1:xUTIdE4KCOIjsBAE1JYsUPoCqYdZ1reCfTwbto0Fduo=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
@@ -37,6 +35,8 @@ github.com/andig/mbserver v0.0.0-20261012132218-a196e033ec39 h1:iQDM/EaY5WvFF7e3
 github.com/andig/mbserver v0.0.0-20261012132218-a196e033ec39/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
 github.com/andig/ship-go v0.6.1-0.20260901124541-3de7acda5f88 h1:OgRi1nQkFJMauJfPg9QdU7RahhaYSb1UZRjUgv5B7Mc=
 github.com/andig/ship-go v0.6.1-0.20260901124541-3de7acda5f88/go.mod h1:EvRFx83phCwPQrOuWw2CX5t0c6mcFVzIk6gQEz4Lijg=
+github.com/andig/solarman-go v0.3.1-0.20261025111333-130e59f82df7 h1:XhBdp8xLuoTdAMJkIvJUtcL+tjiMs9bfiQDOoLd6MCI=
+github.com/andig/solarman-go v0.3.1-0.20261025111333-130e59f82df7/go.mod h1:eoQx2JmIo2xahIumCzOyl/f7STXFsxDvowFsQ1kr+JQ=
 github.com/andig/spine-go v0.7.1-0.20260831161702-3757d61432fb h1:HKar7XQiiOFlJczv4dII3LiwQ1XhMhihc59kIsdQ1e8=
 github.com/andig/spine-go v0.7.1-0.20260831161702-3757d61432fb/go.mod h1:ddWZU5BQGyzRGF20Z7rUKFFzbCp+cfu9mZgYtOMW/fM=
 github.com/andybalholm/cascadia v1.3.4 h1:vM2lgh0Vru9Vwyfm4cQqWP2HHMW0u0+2PAW7Q38Qufg=
