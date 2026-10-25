@@ -215,7 +215,7 @@ render: |
       type: holding
       decode: uint16
   {{- $charge := .maxchargepower | int }}
-  {{- $discharge := sub 4294967296 (.maxdischargepower | int) }}
+  {{- $discharge := mod (sub 4294967296 (.maxdischargepower | int)) 4294967296 }}
   batterymode:
     source: switch
     switch:
