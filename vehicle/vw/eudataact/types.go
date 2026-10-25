@@ -148,6 +148,7 @@ const (
 	// odo
 	FieldOdometer      = "mileage"
 	FieldOdometerValue = "mileage.value"
+	KeyMileageValue    = "69d437d3-7baa-38bc-b842-f5baf99ddade" // current mileage; other mileage.value keys may be stale
 
 	// time
 	FieldRemainingTime = "remaining_charging_time"
