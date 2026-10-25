@@ -38,6 +38,7 @@ params:
         "ZP",
       ]
     required: true
+    example: AA
   - name: resolution
     description:
       en: Price resolution
