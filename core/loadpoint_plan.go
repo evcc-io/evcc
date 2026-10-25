@@ -90,6 +90,22 @@ func (lp *Loadpoint) GetPlanRequiredDuration(goal, maxPower float64) time.Durati
 	return lp.getPlanRequiredDuration(goal, maxPower)
 }
 
+// unsampledSoc returns the SoC derived from charged energy and true while no valid SoC was received this session.
+// Assuming 0% at plug-in keeps a stale SoC from charging beyond the goal's energy or skipping a plan.
+func (lp *Loadpoint) unsampledSoc() (float64, bool) {
+	if lp.socEstimator == nil || lp.socEstimator.Sampled() {
+		return 0, false
+	}
+
+	// energy of the previous session must not count before the next one starts
+	if lp.status != api.StatusB && lp.status != api.StatusC {
+		return 0, true
+	}
+
+	capacity := lp.GetVehicle().Capacity()
+	return lp.getChargedEnergy() / (capacity * 1e3 / soc.ChargeEfficiency) * 100, true
+}
+
 // getPlanRequiredDuration is the estimated total charging duration
 func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Duration {
 	if lp.socBasedPlanning() {
@@ -97,12 +113,8 @@ func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Durati
 			return soc.RemainingChargeDuration(goal, maxPower, lp.vehicleSoc, lp.GetVehicle().Capacity())
 		}
 
-		// without a valid soc this session assume 0% at plug-in and derive the soc from charged energy,
-		// so a stale soc can't keep the plan charging beyond the goal's energy
-		if !lp.socEstimator.Sampled() {
-			capacity := lp.GetVehicle().Capacity()
-			chargedSoc := lp.getChargedEnergy() / (capacity * 1e3 / soc.ChargeEfficiency) * 100
-			return soc.RemainingChargeDuration(goal, maxPower, chargedSoc, capacity)
+		if chargedSoc, ok := lp.unsampledSoc(); ok {
+			return soc.RemainingChargeDuration(goal, maxPower, chargedSoc, lp.GetVehicle().Capacity())
 		}
 
 		return lp.socEstimator.RemainingChargeDuration(goal, maxPower)

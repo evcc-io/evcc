@@ -49,7 +49,7 @@ func (s *Estimator) virtualCapacity() float64 {
 	return max(s.capacity, s.energyPerSocStep*100)
 }
 
-// Sampled returns true once a valid vehicle soc was received
+// Sampled returns true once a valid vehicle SoC was received
 func (s *Estimator) Sampled() bool {
 	return s.sampled
 }
