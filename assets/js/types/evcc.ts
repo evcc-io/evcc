@@ -321,6 +321,8 @@ export interface State {
   batteryGridDischarge?: boolean;
   /** Solar forecast is adjusted to real production data (experimental). */
   solarAdjusted?: boolean;
+  /** Grid price is extended with the planner forecast (experimental). */
+  plannerExtendsGrid?: boolean;
   /** Price or emission limit for charging the home battery from grid. */
   batteryGridChargeLimit?: number | null;
   /** Home battery is currently charged from grid. */

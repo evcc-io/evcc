@@ -334,6 +334,32 @@ func percentileOf(values []float64, p float64, minSamples int) (float64, bool) {
 	return s[int(p*float64(len(s)-1))], true
 }
 
+// plannerExtendsGridTolerance is the max mean price deviation of the slots grid and planner both cover
+const plannerExtendsGridTolerance = 0.01
+
+// extendedGridTariff returns the grid tariff extended by the planner forecast, or nil if both
+// are not price forecasts. Must be called with the site lock held.
+func (site *Site) extendedGridTariff() api.Tariff {
+	grid, planner := site.tariffs.Grid, site.tariffs.Planner
+	if grid == nil || planner == nil || grid == planner ||
+		grid.Type() != api.TariffTypePriceForecast || planner.Type() != api.TariffTypePriceForecast {
+		return nil
+	}
+
+	site.extendedGridMu.Lock()
+	defer site.extendedGridMu.Unlock()
+
+	if from := [2]api.Tariff{grid, planner}; site.extendedGrid == nil || site.extendedGridFor != from {
+		t, err := tariff.NewMerged(grid, planner, plannerExtendsGridTolerance)
+		if err != nil {
+			return nil
+		}
+		site.extendedGrid, site.extendedGridFor = t, from
+	}
+
+	return site.extendedGrid
+}
+
 func (site *Site) isDynamicTariff(usage api.TariffUsage) bool {
 	tariff := site.GetTariff(usage)
 	return tariff != nil && tariff.Type() != api.TariffTypePriceStatic

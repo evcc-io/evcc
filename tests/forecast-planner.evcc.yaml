@@ -1,0 +1,47 @@
+interval: 0.1s
+
+site:
+  title: Planner Extension
+  meters:
+    grid: grid
+
+meters:
+  - name: grid
+    type: custom
+    power:
+      source: js
+      script: |
+        1000
+
+tariffs:
+  currency: EUR
+  grid:
+    type: custom
+    forecast:
+      source: js
+      script: |
+        var start = Math.floor(Date.now() / 900000) * 900000;
+        var rates = [];
+        for (var i = 0; i < 4 * 12; i++) {
+          rates.push({
+            start: new Date(start + i * 900000).toISOString(),
+            end: new Date(start + (i + 1) * 900000).toISOString(),
+            value: 0.3
+          });
+        }
+        JSON.stringify(rates);
+  planner:
+    type: custom
+    forecast:
+      source: js
+      script: |
+        var start = Math.floor(Date.now() / 900000) * 900000;
+        var rates = [];
+        for (var i = 0; i < 4 * 48; i++) {
+          rates.push({
+            start: new Date(start + i * 900000).toISOString(),
+            end: new Date(start + (i + 1) * 900000).toISOString(),
+            value: 0.3
+          });
+        }
+        JSON.stringify(rates);

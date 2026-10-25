@@ -484,6 +484,14 @@ func (site *Site) SetProfilePercentile(percentile *float64) error {
 func (site *Site) GetTariff(tariff api.TariffUsage) api.Tariff {
 	site.RLock()
 	defer site.RUnlock()
+
+	// experimental: only active while experimental features are enabled
+	if tariff == api.TariffUsageGrid && site.plannerExtendsGrid && experimentalEnabled() {
+		if t := site.extendedGridTariff(); t != nil {
+			return t
+		}
+	}
+
 	return site.tariffs.Get(tariff)
 }
 
@@ -562,6 +570,30 @@ func (site *Site) SetBatteryGridDischarge(val bool) error {
 	}
 
 	return nil
+}
+
+// GetPlannerExtendsGrid returns if the grid price is extended with the planner forecast
+func (site *Site) GetPlannerExtendsGrid() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.plannerExtendsGrid
+}
+
+// SetPlannerExtendsGrid sets if the grid price is extended with the planner forecast
+func (site *Site) SetPlannerExtendsGrid(val bool) {
+	site.log.DEBUG.Println("set planner extends grid:", val)
+
+	site.Lock()
+	defer site.Unlock()
+
+	if site.plannerExtendsGrid != val {
+		site.plannerExtendsGrid = val
+		settings.SetBool(keys.PlannerExtendsGrid, val)
+		site.publish(keys.PlannerExtendsGrid, val)
+
+		// re-run the optimizer so the longer horizon takes effect immediately
+		go site.optimizerUpdateAsync(true)
+	}
 }
 
 // GetSolarAdjusted returns if the solar forecast is adjusted to real production data

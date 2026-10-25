@@ -223,6 +223,9 @@ components:
         solarAdjusted:
           description: Solar forecast is adjusted to real production data (experimental).
           type: boolean
+        plannerExtendsGrid:
+          description: Grid price is extended with the planner forecast (experimental).
+          type: boolean
         batteryGridChargeLimit:
           description: Price or emission limit for charging the home battery from grid.
           type: number

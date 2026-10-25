@@ -102,6 +102,22 @@
 						:show-feedin="showFeedin"
 						@toggle-feedin="toggleFeedin"
 					/>
+					<div v-if="showPlannerExtend" class="form-check form-switch mt-3 mb-0">
+						<input
+							id="plannerExtendsGrid"
+							:checked="plannerExtendsGrid"
+							class="form-check-input"
+							type="checkbox"
+							role="switch"
+							@change="changePlannerExtendsGrid"
+						/>
+						<label class="form-check-label" for="plannerExtendsGrid">
+							{{ $t("forecast.plannerExtendsGrid") }}
+						</label>
+						<div class="form-text">
+							{{ $t("forecast.plannerExtendsGridHelp") }}
+						</div>
+					</div>
 				</Card>
 
 				<Card
@@ -147,6 +163,7 @@ import api from "@/api";
 import settings from "@/settings";
 import store from "../store";
 import { adjustedSolar, ForecastType, isStaticTariff } from "@/utils/forecast";
+import { SMART_COST_TYPE } from "@/types/evcc";
 
 const MIN_HOURS = 76;
 const MAX_HOURS = 96;
@@ -240,6 +257,23 @@ export default defineComponent({
 		solarAdjusted() {
 			return store.state?.solarAdjusted;
 		},
+		plannerExtendsGrid() {
+			return store.state?.plannerExtendsGrid;
+		},
+		showPlannerExtend(): boolean {
+			if (!this.experimental) return false;
+			if (this.plannerExtendsGrid) return true;
+			// only offer when a price planner reaches beyond the grid price
+			const { grid, planner } = this.forecast;
+			if (
+				store.state?.smartCostType !== SMART_COST_TYPE.PRICE_FORECAST ||
+				!grid?.length ||
+				!planner?.length
+			) {
+				return false;
+			}
+			return new Date(planner.at(-1)!.end) > new Date(grid.at(-1)!.end);
+		},
 		priceZoom() {
 			return settings.priceZoom;
 		},
@@ -279,6 +313,15 @@ export default defineComponent({
 			try {
 				await api.post(
 					`solaradjusted/${(e.target as HTMLInputElement).checked ? "true" : "false"}`
+				);
+			} catch (err) {
+				console.error(err);
+			}
+		},
+		async changePlannerExtendsGrid(e: Event) {
+			try {
+				await api.post(
+					`plannerextendsgrid/${(e.target as HTMLInputElement).checked ? "true" : "false"}`
 				);
 			} catch (err) {
 				console.error(err);

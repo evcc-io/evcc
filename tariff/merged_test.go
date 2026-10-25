@@ -167,3 +167,53 @@ func TestMergedGapBetweenPrimaryAndSecondary(t *testing.T) {
 	// Secondary should be ignored since it would create a gap
 	assert.Equal(t, primaryRates, rates)
 }
+
+func TestMergedTolerance(t *testing.T) {
+	now := clock.NewMock().Now()
+
+	// 8 slots primary, secondary overlaps all of them and adds 4 more
+	rates := func(n int, offset float64) api.Rates {
+		var res api.Rates
+		for i := range n {
+			start := now.Add(time.Duration(i) * SlotDuration)
+			res = append(res, api.Rate{Start: start, End: start.Add(SlotDuration), Value: 0.30 + float64(i)*0.01 + offset})
+		}
+		return res
+	}
+
+	for _, tc := range []struct {
+		name     string
+		offset   float64
+		overlap  int
+		expected int
+	}{
+		{"matching", 0.005, 8, 12},
+		{"deviating", 0.05, 8, 8},
+		{"too little overlap", 0, mergedMinOverlap - 1, 8},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			secondary := rates(12, tc.offset)[8-tc.overlap:]
+
+			m, err := NewMerged(
+				&mockTariff{rates: rates(8, 0), typ: api.TariffTypePriceForecast},
+				&mockTariff{rates: secondary, typ: api.TariffTypePriceForecast},
+				0.01,
+			)
+			require.NoError(t, err)
+
+			res, err := m.Rates()
+			require.NoError(t, err)
+			assert.Len(t, res, tc.expected)
+			assert.Equal(t, rates(8, 0), res[:8], "primary rates are kept")
+		})
+	}
+}
+
+func TestNewMergedIncompatibleTypes(t *testing.T) {
+	_, err := NewMerged(
+		&mockTariff{typ: api.TariffTypePriceForecast},
+		&mockTariff{typ: api.TariffTypeCo2},
+		0.01,
+	)
+	require.Error(t, err)
+}

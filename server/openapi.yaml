@@ -850,6 +850,18 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/BooleanResult"
+  /plannerextendsgrid/{enable}:
+    post:
+      operationId: setPlannerExtendsGrid
+      summary: Extend grid price with planner forecast
+      description: "Extend the grid price with the planner forecast for the optimizer and the price forecast. Only applies if both are price forecasts that match in the overlapping slots."
+      tags:
+        - experimental
+      parameters:
+        - $ref: "#/components/parameters/enable"
+      responses:
+        "200":
+          $ref: "#/components/responses/BooleanResult"
   /config/optimizerautomatic/{value}:
     post:
       operationId: setOptimizerAutomatic

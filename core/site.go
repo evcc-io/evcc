@@ -98,7 +98,12 @@ type Site struct {
 	gridExportLimit float64 // static grid export power limit in W, 0 = disabled
 
 	// forecast settings
-	solarAdjusted bool // adjust solar forecast to real production data
+	solarAdjusted      bool // adjust solar forecast to real production data
+	plannerExtendsGrid bool // extend the grid price with the planner forecast
+
+	extendedGridMu  sync.Mutex
+	extendedGrid    *tariff.Merged // grid price extended by the planner forecast, guarded by extendedGridMu
+	extendedGridFor [2]api.Tariff  // grid and planner tariff extendedGrid was built from
 
 	// optimizer settings
 	optimizerChargingStrategy string // optimizer grid charging strategy
@@ -507,6 +512,9 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Bool(keys.SolarAdjusted); err == nil {
 		site.SetSolarAdjusted(v)
+	}
+	if v, err := settings.Bool(keys.PlannerExtendsGrid); err == nil {
+		site.SetPlannerExtendsGrid(v)
 	}
 	if v, err := settings.String(keys.OptimizerChargingStrategy); err == nil && v != "" {
 		if err := site.SetOptimizerChargingStrategy(v); err != nil {
@@ -1132,10 +1140,14 @@ func (site *Site) updateMeters() (siteState, error) {
 	return site.state(), nil
 }
 
-func optimizerEnabled() bool {
+func experimentalEnabled() bool {
 	exp, _ := settings.Bool(keys.Experimental)
+	return exp
+}
+
+func optimizerEnabled() bool {
 	opt, _ := settings.Bool(keys.Optimizer)
-	return exp && opt
+	return experimentalEnabled() && opt
 }
 
 // optimizer automatic levels: what the optimizer controls instead of only advising
@@ -1489,6 +1501,7 @@ func (site *Site) prepare() {
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.BatteryGridDischarge, site.batteryGridDischarge)
 	site.publish(keys.SolarAdjusted, site.solarAdjusted)
+	site.publish(keys.PlannerExtendsGrid, site.plannerExtendsGrid)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
 	site.publish(keys.GridExportLimit, site.GetGridExportLimit())
 	site.publish(keys.ProfilePercentile, site.GetProfilePercentile())

@@ -61,8 +61,9 @@ const (
 	GridExportLimit = "gridExportLimit"
 
 	// forecast settings
-	SolarAdjusted     = "solarAdjusted"
-	ProfilePercentile = "profilePercentile"
+	SolarAdjusted      = "solarAdjusted"
+	ProfilePercentile  = "profilePercentile"
+	PlannerExtendsGrid = "plannerExtendsGrid"
 
 	// optimizer
 	OptimizerChargingStrategy   = "optimizerChargingStrategy"

@@ -1272,6 +1272,8 @@
     },
     "hideLine": "hide line",
     "modalTitle": "Forecast",
+    "plannerExtendsGrid": "Extend with planner forecast",
+    "plannerExtendsGridHelp": "Uses the planner forecast after the last known grid import price, for the optimizer and this view. The planner forecast must provide end customer prices including surcharges and taxes. Ignored if both prices differ by more than 1 ct/kWh on average.",
     "price": {
       "average": "Average",
       "constant": "Price",

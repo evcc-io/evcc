@@ -6,9 +6,13 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestForecastSlotEnergy(t *testing.T) {
@@ -137,4 +141,57 @@ func TestPercentileOf(t *testing.T) {
 		p90, _ := percentileOf(ratios, 0.9, solarScaleMinSamples)
 		assert.Less(t, p50, p90)
 	})
+}
+
+func TestPlannerExtendsGrid(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	start := time.Now().Truncate(tariff.SlotDuration)
+	rates := func(from, to int, value float64) api.Rates {
+		var res api.Rates
+		for i := from; i < to; i++ {
+			ts := start.Add(time.Duration(i) * tariff.SlotDuration)
+			res = append(res, api.Rate{Start: ts, End: ts.Add(tariff.SlotDuration), Value: value})
+		}
+		return res
+	}
+
+	grid := api.NewMockTariff(ctrl)
+	grid.EXPECT().Type().Return(api.TariffTypePriceForecast).AnyTimes()
+	grid.EXPECT().Rates().Return(rates(0, 8, 0.30), nil).AnyTimes()
+
+	planner := api.NewMockTariff(ctrl)
+	planner.EXPECT().Type().Return(api.TariffTypePriceForecast).AnyTimes()
+	planner.EXPECT().Rates().Return(rates(0, 20, 0.30), nil).AnyTimes()
+
+	site := &Site{
+		log:     util.NewLogger("foo"),
+		tariffs: &tariff.Tariffs{Grid: grid, Planner: planner},
+	}
+
+	// off: grid only
+	assert.Equal(t, grid, site.GetTariff(api.TariffUsageGrid))
+
+	// on, but experimental disabled: grid only
+	site.plannerExtendsGrid = true
+	settings.SetBool(keys.Experimental, false)
+	assert.Equal(t, grid, site.GetTariff(api.TariffUsageGrid))
+
+	// on: grid extended by planner, planner itself unchanged
+	settings.SetBool(keys.Experimental, true)
+	t.Cleanup(func() { settings.SetBool(keys.Experimental, false) })
+	res, err := site.GetTariff(api.TariffUsageGrid).Rates()
+	require.NoError(t, err)
+	assert.Len(t, res, 20)
+	assert.Equal(t, planner, site.GetTariff(api.TariffUsagePlanner))
+
+	// co2 planner is not used to extend the grid price
+	co2 := api.NewMockTariff(ctrl)
+	co2.EXPECT().Type().Return(api.TariffTypeCo2).AnyTimes()
+	site.tariffs.Planner = co2
+	assert.Equal(t, grid, site.GetTariff(api.TariffUsageGrid))
+
+	// no planner
+	site.tariffs.Planner = nil
+	assert.Equal(t, grid, site.GetTariff(api.TariffUsageGrid))
 }

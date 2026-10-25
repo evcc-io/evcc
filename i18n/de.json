@@ -1384,6 +1384,8 @@
     },
     "hideLine": "Linie ausblenden",
     "modalTitle": "Vorhersage",
+    "plannerExtendsGrid": "Mit Planer-Vorhersage verlängern",
+    "plannerExtendsGridHelp": "Nutzt die Planer-Vorhersage nach dem letzten bekannten Netzbezugspreis, für den Optimizer und diese Ansicht. Die Planer-Vorhersage muss dafür Endkundenpreise inklusive Aufschlägen und Steuern liefern. Wird ignoriert, wenn beide Preise im Mittel mehr als 1 ct/kWh abweichen.",
     "price": {
       "average": "Durchschnitt",
       "constant": "Preis",

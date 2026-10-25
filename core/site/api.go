@@ -102,6 +102,11 @@ type API interface {
 	// forecast
 	//
 
+	// GetPlannerExtendsGrid returns if the grid price is extended with the planner forecast
+	GetPlannerExtendsGrid() bool
+	// SetPlannerExtendsGrid sets if the grid price is extended with the planner forecast
+	SetPlannerExtendsGrid(bool)
+
 	// GetSolarAdjusted returns if the solar forecast is adjusted to real production data
 	GetSolarAdjusted() bool
 	// SetSolarAdjusted sets if the solar forecast is adjusted to real production data
