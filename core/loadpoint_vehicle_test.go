@@ -235,40 +235,14 @@ func TestPublishSocAndRangeEnergyLimit(t *testing.T) {
 }
 
 func TestPublishSocAndRangePlanAboveLimit(t *testing.T) {
-	ctrl := gomock.NewController(t)
-
-	vehicle := api.NewMockVehicle(ctrl)
-	vehicle.EXPECT().Soc().Return(50.0, nil).AnyTimes()
-	vehicle.EXPECT().Capacity().Return(10.0).AnyTimes()
-	vehicle.EXPECT().Features().AnyTimes()
-
-	lp := &Loadpoint{
-		log:        util.NewLogger("foo"),
-		bus:        evbus.New(),
-		clock:      clock.NewMock(),
-		charger:    api.NewMockCharger(ctrl),
-		vehicle:    vehicle,
-		status:     api.StatusC,
-		limitSoc:   80,
-		planActive: true,
-		planLocked: PlanLock{Id: 1, Soc: 100},
-	}
-
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
-
-	lp.publishSocAndRange()
-	assert.InDelta(t, soc.RemainingChargeEnergy(100, 50, 10), lp.GetRemainingEnergy(), 1e-9)
-}
-
-// the optimizer only charges past the limit in smart mode
-func TestPublishSocAndRangePlanAboveLimitOptimizer(t *testing.T) {
 	for _, tc := range []struct {
-		mode api.ChargeMode
-		goal int
+		optimizer bool
+		mode      api.ChargeMode
+		goal      int
 	}{
-		{api.ModeSmart, 100},
-		{api.ModeNow, 80},
+		{false, api.ModeNow, 100},
+		{true, api.ModeSmart, 100},
+		{true, api.ModeNow, 80}, // the optimizer only charges past the limit in smart mode
 	} {
 		ctrl := gomock.NewController(t)
 
@@ -282,7 +256,7 @@ func TestPublishSocAndRangePlanAboveLimitOptimizer(t *testing.T) {
 			log:               util.NewLogger("foo"),
 			bus:               evbus.New(),
 			clock:             clck,
-			site:              &mockSite{automatic: true},
+			site:              &mockSite{automatic: tc.optimizer},
 			charger:           api.NewMockCharger(ctrl),
 			vehicle:           vehicle,
 			status:            api.StatusC,
@@ -298,7 +272,7 @@ func TestPublishSocAndRangePlanAboveLimitOptimizer(t *testing.T) {
 		attachChannels(lp, x, y, z)
 
 		lp.publishSocAndRange()
-		assert.InDelta(t, soc.RemainingChargeEnergy(tc.goal, 50, 10), lp.GetRemainingEnergy(), 1e-9, tc.mode)
+		assert.InDelta(t, soc.RemainingChargeEnergy(tc.goal, 50, 10), lp.GetRemainingEnergy(), 1e-9, tc)
 	}
 }
 
