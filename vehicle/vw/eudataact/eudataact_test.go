@@ -218,6 +218,17 @@ func TestSocBatteryStateReportField(t *testing.T) {
 	assert.Equal(t, 36.0, soc)
 }
 
+func TestOdometerMileageKey(t *testing.T) {
+	data := []point{
+		{Key: "30cc36fd-71ca-3c09-9296-e94ebd47bd2b", Name: FieldOdometerValue, Value: "1875"},
+		{Key: KeyMileageValue, Name: FieldOdometerValue, Value: "1879"},
+	}
+
+	odo, err := testProvider(data).Odometer()
+	require.NoError(t, err)
+	assert.Equal(t, 1879.0, odo)
+}
+
 func TestSocEnyaqField(t *testing.T) {
 	data := []point{{Key: KeyEnyaqSoc, Name: "currentSoc", Value: "60"}}
 
@@ -226,15 +237,18 @@ func TestSocEnyaqField(t *testing.T) {
 	assert.Equal(t, 60.0, soc)
 }
 
-func TestSocBatteryStateReportOnlyFallbackField(t *testing.T) {
+// TestSocBatteryStateReportPreferred reproduces #35100: battery_level_HV.value
+// stays stale while the car sleeps, the current soc key keeps updating.
+func TestSocBatteryStateReportPreferred(t *testing.T) {
 	data := []point{
-		{Key: KeyBatteryStateReportSoc, Name: "battery_state_report.soc", Value: "36"},
-		{Name: FieldHvBatteryLevelValue, Value: "40"},
+		{Name: FieldHvBatteryLevelValue, Value: "94.0"},
+		{Key: "7bddd5e7-43a4-3878-bd63-9502782f77a5", Name: "battery_state_report.soc", Value: "77"}, // soc at charge start
+		{Key: KeyBatteryStateReportSoc, Name: "battery_state_report.soc", Value: "100"},
 	}
 
 	soc, err := testProvider(data).Soc()
 	require.NoError(t, err)
-	assert.Equal(t, 40.0, soc)
+	assert.Equal(t, 100.0, soc)
 }
 
 // TestGetLimitSocBcamThreshold reproduces issue #32241: the Audi Q4 e-tron
