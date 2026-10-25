@@ -32,6 +32,10 @@ type Template struct {
 	Render       string         `json:"-"` // rendering template
 }
 
+// strictRequired validates required params of instances in test binaries too.
+// Device tests instantiate all templates from examples and stay lenient.
+var strictRequired bool
+
 // UpdateParamWithDefaults adds default values to specific param name entries
 func (t *Template) UpdateParamsWithDefaults() error {
 	for i, p := range t.Params {
@@ -434,7 +438,7 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 				}
 
 				// validate required fields from yaml
-				if p.IsRequired() && p.IsZero(s) && (renderMode == RenderModeUnitTest || renderMode == RenderModeInstance && !testing.Testing()) {
+				if p.IsRequired() && p.IsZero(s) && (renderMode == RenderModeUnitTest || renderMode == RenderModeInstance && (!testing.Testing() || strictRequired)) {
 					// validate required per usage
 					if len(p.Usages) == 0 || slices.Contains(p.Usages, usage) {
 						return nil, nil, fmt.Errorf("missing required `%s`", p.Name)

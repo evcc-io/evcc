@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -309,7 +310,7 @@ func TestAllTemplatesRenderWithBoolParams(t *testing.T) {
 				for _, val := range []bool{true, false} {
 					for _, usage := range usages {
 						for _, variant := range variants {
-							values := tmpl.Defaults(RenderModeUnitTest)
+							values := testDefaults(tmpl)
 							values["template"] = tmpl.Template
 							values[p.Name] = val
 							if usage != "" {
@@ -327,4 +328,32 @@ func TestAllTemplatesRenderWithBoolParams(t *testing.T) {
 			}
 		}
 	}
+}
+
+// testDefaults returns the unit test defaults with placeholders for required params left empty
+func testDefaults(tmpl Template) map[string]any {
+	values := tmpl.Defaults(RenderModeUnitTest)
+
+	for _, p := range tmpl.Params {
+		if !p.IsRequired() || !p.IsZero(fmt.Sprint(values[p.Name])) {
+			continue
+		}
+
+		switch p.Type {
+		case TypeBool:
+			values[p.Name] = true
+		case TypeInt, TypeFloat, TypePricePerKWh:
+			values[p.Name] = 1
+		case TypeDuration:
+			values[p.Name] = "1m"
+		case TypeChoice:
+			if len(p.Choice) > 0 {
+				values[p.Name] = p.Choice[0]
+			}
+		default:
+			values[p.Name] = "foo"
+		}
+	}
+
+	return values
 }
