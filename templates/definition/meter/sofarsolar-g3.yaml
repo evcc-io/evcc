@@ -295,6 +295,37 @@ render: |
                   address: 0x1187
                   type: writemultiple
                   decode: bytes
+    - case: 4 # holdcharge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 3 # passive
+          set:
+            source: ignore
+            error: "modbus: response data size '18' does not match count '4'"
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x1110
+                type: writemultiple
+                decode: int16
+        - source: convert
+          convert: int2bytes
+          set:
+            source: const
+            value: '{{ printf "0x00000000_%08X_00000000" $discharge }}' # battery min power, negative int32, max 0
+            set:
+              source: ignore
+              error: "modbus: response data size '18' does not match count '4'"
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 0x1187
+                  type: writemultiple
+                  decode: bytes
     - case: 5 # discharge
       set:
         source: sequence
