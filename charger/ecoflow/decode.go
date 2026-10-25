@@ -43,7 +43,11 @@ func (s State) Enabled() bool {
 type Heartbeat struct {
 	State State // field 1
 
-	// MaxCurrentRaw is field 18 in 0.1 A. Field 17 mirrored it after every write and is not read.
+	// ChargeCurrentRaw is field 17 in 0.1 A, the session current setpoint. It may differ from
+	// the written value by 0.1 A (160 written, 159 reported).
+	ChargeCurrentRaw uint64
+
+	// MaxCurrentRaw is field 18 in 0.1 A, the configured maximum.
 	MaxCurrentRaw uint64
 
 	PhaseModeRaw uint64 // field 21, the phase mode in effect
@@ -59,8 +63,8 @@ type Heartbeat struct {
 
 // String formats the heartbeat for the trace log.
 func (h Heartbeat) String() string {
-	return fmt.Sprintf("state=%d power=%.0fW volts=%v amps=%v maxCurrent(f18)=%d phaseMode(f21)=%d/%t energy=%dWh layout=%s",
-		h.State, h.PowerW, h.Volts, h.Amps, h.MaxCurrentRaw, h.PhaseModeRaw, h.HasPhaseMode, h.TotalEnergyWh, h.Layout)
+	return fmt.Sprintf("state=%d power=%.0fW volts=%v amps=%v current(f17)=%d maxCurrent(f18)=%d phaseMode(f21)=%d/%t energy=%dWh layout=%s",
+		h.State, h.PowerW, h.Volts, h.Amps, h.ChargeCurrentRaw, h.MaxCurrentRaw, h.PhaseModeRaw, h.HasPhaseMode, h.TotalEnergyWh, h.Layout)
 }
 
 // DecodeHeartbeat parses 2/33 pdata. Charge readings in the nested record at
@@ -83,6 +87,8 @@ func DecodeHeartbeat(pdata []byte) (Heartbeat, error) {
 			h.State, haveState = State(f.V), true
 		case f.Num == 8 && f.Wire == protowire.BytesType:
 			nested = h.readChargeRecord(f.B)
+		case f.Num == 17 && f.Wire == protowire.VarintType:
+			h.ChargeCurrentRaw = f.V
 		case f.Num == 18 && f.Wire == protowire.VarintType:
 			h.MaxCurrentRaw = f.V
 		case f.Num == 21 && f.Wire == protowire.VarintType:
@@ -178,6 +184,9 @@ const (
 	PhaseThree = 2
 )
 
+// WorkModeCustom is Settings.WorkMode after a 2/81 current write.
+const WorkModeCustom = 3
+
 // Settings is a 241/44 configuration report, currents in 0.1 A. Field numbers
 // differ from the 241/102 write: max current 3 -> 4, phase mode 5 -> 7.
 type Settings struct {
@@ -186,7 +195,7 @@ type Settings struct {
 	MaxCurrentRaw  uint64 // field 4
 	SolarMinRaw    uint64 // field 6
 	PhaseModeRaw   uint64 // field 7: PhaseAuto, PhaseOne or PhaseThree
-	UserCurrentRaw uint64 // field 8
+	UserCurrentRaw uint64 // field 8: the custom current, written by 2/81 (WorkModeCustom)
 }
 
 // DecodeSettings parses the settings at pdata -> 1 -> 4 -> 8. Any other shape, a

@@ -106,26 +106,40 @@ func (c *EcoflowPowerPulse) Enable(enable bool) error {
 	return c.wb.StartStop(enable)
 }
 
-// MaxCurrent implements the api.Charger interface
+// MaxCurrent implements the api.Charger interface. It sets the session
+// current of the wallbox, not its configured maximum; see Wallbox.SetCurrent.
 func (c *EcoflowPowerPulse) MaxCurrent(current int64) error {
 	// 32 A as in 241/44; a lower limit of the wallbox shows in GetMaxCurrent
 	if current < 6 || current > 32 {
 		return fmt.Errorf("invalid current %d A, must be 6-32 A", current)
 	}
 
-	return c.wb.SetMaxCurrent(uint64(current * 10))
+	return c.wb.SetCurrent(uint64(current * 10))
 }
 
 var _ api.CurrentGetter = (*EcoflowPowerPulse)(nil)
 
 // GetMaxCurrent implements the api.CurrentGetter interface
 func (c *EcoflowPowerPulse) GetMaxCurrent() (float64, error) {
-	raw, err := c.wb.MaxCurrent()
+	raw, err := c.wb.Current()
 	if err != nil {
 		return 0, err
 	}
 
 	return float64(raw) / 10, nil
+}
+
+var _ api.CurrentLimiter = (*EcoflowPowerPulse)(nil)
+
+// GetMinMaxCurrent implements the api.CurrentLimiter interface. The maximum of
+// the wallbox caps the loadpoint, which keeps its own minimum (0 here).
+func (c *EcoflowPowerPulse) GetMinMaxCurrent() (float64, float64, error) {
+	raw := c.wb.Maximum()
+	if raw == 0 {
+		return 0, 0, api.ErrNotAvailable
+	}
+
+	return 0, float64(raw) / 10, nil
 }
 
 var _ api.PhaseSwitcher = (*EcoflowPowerPulse)(nil)

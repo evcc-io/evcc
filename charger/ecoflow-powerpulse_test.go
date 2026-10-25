@@ -402,16 +402,17 @@ func TestEcoflowPowerPulseNoSetReply(t *testing.T) {
 	assert.Equal(t, map[string]byte{powerPulseTelemetry: 0}, transport.Subscriptions())
 }
 
+// The setpoint is written as 2/81 to the wallbox; the maximum is left alone.
 func TestEcoflowPowerPulseMaxCurrent(t *testing.T) {
 	tests := []struct {
 		name    string
 		current int64
 		before  string // heartbeat before the write
 	}{
-		// 15 -> 10 A while charging, stage 4a
-		{"max-current-10", 10, "state3-3p-15a"},
-		// 10 -> 16 A while charging, stage 4b-7
-		{"max-current-16", 16, "state3-1p"},
+		// 16 -> 13 A while charging, the change that faulted via the maximum
+		{"current-13", 13, "state3-3p"},
+		// 13 -> 16 A while charging
+		{"current-16", 16, "state3-3p-set13"},
 	}
 
 	for _, tc := range tests {
@@ -429,7 +430,7 @@ func TestEcoflowPowerPulseMaxCurrent(t *testing.T) {
 
 // 6-32 A as 241/44 accepts it; the wallbox applies its own lower limit.
 func TestEcoflowPowerPulseMaxCurrentRange(t *testing.T) {
-	for current, valid := range map[int64]bool{0: false, 5: false, 6: true, 16: true, 20: true, 32: true, 33: false} {
+	for current, valid := range map[int64]bool{0: false, 5: false, 6: true, 16: true, 33: false} {
 		wb, transport := newTestPowerPulse(t, time.Minute)
 		require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state3-3p")))
 
@@ -444,7 +445,33 @@ func TestEcoflowPowerPulseMaxCurrentRange(t *testing.T) {
 	}
 }
 
-// GetMaxCurrent reports the written current until telemetry can show the
+// A current above the maximum of the wallbox is refused, not written.
+func TestEcoflowPowerPulseMaxCurrentAboveMaximum(t *testing.T) {
+	wb, transport := newTestPowerPulse(t, time.Minute)
+	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state3-3p")))
+
+	err := wb.MaxCurrent(20)
+	assert.ErrorContains(t, err, "20.0 A")
+	assert.ErrorContains(t, err, "16.0 A")
+	assert.Empty(t, writes(transport))
+}
+
+// The maximum of the wallbox caps the loadpoint, so it never asks for a
+// setpoint the wallbox refuses. No minimum, the loadpoint keeps its own.
+func TestEcoflowPowerPulseGetMinMaxCurrent(t *testing.T) {
+	wb, transport := newTestPowerPulse(t, time.Minute)
+
+	_, _, err := wb.GetMinMaxCurrent()
+	assert.ErrorIs(t, err, api.ErrNotAvailable, "no telemetry yet")
+
+	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state3-3p")))
+	lo, hi, err := wb.GetMinMaxCurrent()
+	require.NoError(t, err)
+	assert.Equal(t, 0.0, lo)
+	assert.Equal(t, 16.0, hi)
+}
+
+// GetMaxCurrent reports the written setpoint until telemetry can show the
 // write, then what the wallbox reports, so the loadpoint sees a dropped write.
 func TestEcoflowPowerPulseGetMaxCurrent(t *testing.T) {
 	tests := []struct {
@@ -454,14 +481,16 @@ func TestEcoflowPowerPulseGetMaxCurrent(t *testing.T) {
 		answers [][]byte
 		current float64
 	}{
-		{"heartbeat field 18", 0, 0, [][]byte{ecoflowtest.Heartbeat("state3-1p")}, 10},
-		{"241/44 wins", 0, 0, [][]byte{ecoflowtest.Heartbeat("state3-3p"), ecoflowtest.Settings("max15")}, 15},
+		{"heartbeat field 17", 0, 0, [][]byte{ecoflowtest.Heartbeat("state3-1p")}, 10},
+		{"241/44 custom wins", 0, 0, [][]byte{ecoflowtest.Heartbeat("state3-3p"), ecoflowtest.Settings("custom13")}, 13},
+		{"241/44 without custom mode is ignored", 0, 0, [][]byte{ecoflowtest.Settings("max10")}, 16},
 		{"written, no telemetry yet", 10, 0, nil, 10},
-		{"written, stale 241/44", 10, time.Second, [][]byte{ecoflowtest.Settings("max15")}, 10},
-		{"written, stale heartbeat", 10, time.Second, [][]byte{ecoflowtest.Heartbeat("state3-3p")}, 10},
-		{"written, 241/44 confirms", 10, 10 * time.Second, [][]byte{ecoflowtest.Settings("max10")}, 10},
-		{"written, 241/44 contradicts", 10, 10 * time.Second, [][]byte{ecoflowtest.Settings("max15")}, 15},
-		{"written, next heartbeat confirms", 16, time.Minute, [][]byte{ecoflowtest.Heartbeat("state3-3p")}, 16},
+		{"written, stale 241/44", 13, time.Second, [][]byte{ecoflowtest.Settings("custom16")}, 13},
+		{"written, stale heartbeat", 13, time.Second, [][]byte{ecoflowtest.Heartbeat("state3-3p")}, 13},
+		{"written, 241/44 confirms", 13, 10 * time.Second, [][]byte{ecoflowtest.Settings("custom13")}, 13},
+		{"written, 241/44 contradicts", 13, 10 * time.Second, [][]byte{ecoflowtest.Settings("custom16")}, 16},
+		{"written, next heartbeat confirms", 13, time.Minute, [][]byte{ecoflowtest.Heartbeat("state3-3p-set13")}, 13},
+		{"written, next heartbeat 0.1 A below", 16, time.Minute, [][]byte{ecoflowtest.Heartbeat("state3-3p-set159")}, 16},
 		{"written, next heartbeat contradicts", 10, time.Minute, [][]byte{ecoflowtest.Heartbeat("state3-3p")}, 16},
 	}
 
@@ -469,7 +498,7 @@ func TestEcoflowPowerPulseGetMaxCurrent(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			clk := clock.NewMock()
 			wb, transport := newTestPowerPulseWithClock(t, 10*time.Minute, clk)
-			require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state3-3p-15a")))
+			require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state3-3p")))
 
 			if tc.write > 0 {
 				require.NoError(t, wb.MaxCurrent(tc.write))
@@ -631,21 +660,21 @@ func TestEcoflowPowerPulsePhasesWhileChargingStopNotReported(t *testing.T) {
 	assertEnabled(t, wb, true, "started again")
 }
 
-// Max current is written right away during the switch.
+// The current is written right away during the switch.
 func TestEcoflowPowerPulsePhasesWhileChargingMaxCurrent(t *testing.T) {
 	wb, transport, clk := newChargingPowerPulse(t)
 
 	require.NoError(t, wb.Phases1p3p(1))
-	require.NoError(t, wb.MaxCurrent(10))
+	require.NoError(t, wb.MaxCurrent(13))
 	assert.Equal(t, []ecoflowtest.Message{
 		ecoflowtest.Write("stop", 2),
-		ecoflowtest.Write("max-current-10", 3),
+		ecoflowtest.Write("current-13", 3),
 	}, writes(transport))
 
 	require.NoError(t, transport.Feed(powerPulseTelemetry, ecoflowtest.Heartbeat("state6-3p")))
 	awaitWrites(t, transport, clk, []ecoflowtest.Message{
 		ecoflowtest.Write("stop", 2),
-		ecoflowtest.Write("max-current-10", 3),
+		ecoflowtest.Write("current-13", 3),
 		ecoflowtest.Write("phase-1p", 4),
 		ecoflowtest.Write("start", 5),
 	})

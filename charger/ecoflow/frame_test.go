@@ -28,9 +28,8 @@ func TestDescriptorBytes(t *testing.T) {
 	assert.Len(t, descriptor(testSerial), 21)
 }
 
-// 241/102 is a real app capture (ecoflow-energy-ha fixture
-// c376_param_set_writes_20260824.json, serials masked as X). Start and stop
-// are the frames that worked on the wallbox on 2026-10-23, serial masked.
+// 2/81 is a real app capture (ecoflow-energy-ha, serial masked as X). Start and
+// stop are the frames that worked on the wallbox on 2026-10-23, serial masked.
 func TestBuildMatchesCapturedAppFrames(t *testing.T) {
 	tests := []struct {
 		name string
@@ -38,10 +37,10 @@ func TestBuildMatchesCapturedAppFrames(t *testing.T) {
 		want string
 	}{
 		{
-			name: "241/102 max current 110 seq 149 (captured)",
-			got:  BuildMaxCurrentSet("XXXXXXXXXXXXXXXX", "XXXXXXXXXXXXXXXX", 110, 149),
-			want: "0a520a1b0a1508d7011210585858585858585858585858585858582202186e" +
-				"1020186020012801380340f1014866501b5801709501800103880101ba0103696f73" +
+			// ecoflow-energy-ha tests/fixtures/powerpulse/c376_standalone_current_ctrl_20260914.json
+			name: "2/81 charge current 100 seq 205 (captured)",
+			got:  BuildChargeCurrent("XXXXXXXXXXXXXXXX", 100, 205),
+			want: "0a3a0a042864380210201802200128013803400248515004580170cd01800103880101ba0103696f73" +
 				"ca011058585858585858585858585858585858",
 		},
 		{
@@ -61,6 +60,18 @@ func TestBuildMatchesCapturedAppFrames(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, hex.EncodeToString(tc.got))
+		})
+	}
+}
+
+// Current writes as the wallbox executed them: 2/81 to the wallbox topic with
+// the wallbox serial in the envelope, 13 A and 16 A while charging.
+func TestBuildChargeCurrentMatchesCapturedFrames(t *testing.T) {
+	for name, raw := range map[string]uint64{"current-13": 130, "current-16": 160} {
+		t.Run(name, func(t *testing.T) {
+			want := ecoflowtest.Write(name, 77)
+			got := BuildChargeCurrent(ecoflowtest.Serial, raw, 77)
+			assert.Equal(t, hex.EncodeToString(want.Payload), hex.EncodeToString(got))
 		})
 	}
 }

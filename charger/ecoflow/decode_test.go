@@ -140,9 +140,9 @@ func TestDecodeHeartbeatNestedWinsOverTopLevel(t *testing.T) {
 	assert.InDelta(t, 4.5, h.Amps[0], 0.01)
 }
 
-// Field 18 is the configured maximum. Field 17 is not read: on an idle
-// wallbox it may sit at 6 A whatever limit is configured.
-func TestDecodeHeartbeatReadsMaxCurrentFromField18(t *testing.T) {
+// Field 17 is the session setpoint, field 18 the configured maximum: on an
+// idle wallbox the setpoint may sit at 6 A whatever maximum is configured.
+func TestDecodeHeartbeatReadsSetpointAndMaximum(t *testing.T) {
 	var p []byte
 	p = varint(p, 1, 1)
 	p = varint(p, 17, 60)
@@ -150,6 +150,7 @@ func TestDecodeHeartbeatReadsMaxCurrentFromField18(t *testing.T) {
 
 	h, err := DecodeHeartbeat(p)
 	require.NoError(t, err)
+	assert.Equal(t, uint64(60), h.ChargeCurrentRaw)
 	assert.Equal(t, uint64(160), h.MaxCurrentRaw)
 }
 

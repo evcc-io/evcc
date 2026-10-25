@@ -434,7 +434,7 @@ type Wallbox struct {
 
 	// last commands, telemetry may lag behind them
 	release command[bool]
-	current command[uint64]
+	current command[uint64] // session setpoint, 0.1 A
 	phases  command[uint64]
 
 	switching *phaseSwitch // phase switch under way while charging
@@ -553,6 +553,7 @@ func (wb *Wallbox) handleHeartbeat(pdata []byte) {
 	})
 	wb.log.TRACE.Printf("%s: heartbeat %s", wb.serial, hb)
 	wb.verifyPhases(Update{Heartbeat: &hb}, now)
+	wb.verifyCurrent(Update{Heartbeat: &hb}, now)
 	wb.stopped(hb.State)
 }
 
@@ -572,6 +573,7 @@ func (wb *Wallbox) handleSettings(pdata []byte) {
 	wb.mu.Unlock()
 
 	wb.verifyPhases(Update{Settings: &s}, now)
+	wb.verifyCurrent(Update{Settings: &s}, now)
 
 	// 241/44 arrives at about 1 Hz, log changes only
 	if changed {

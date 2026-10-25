@@ -42,10 +42,20 @@ func (c command[T]) overrides(at time.Time, settle time.Duration) bool {
 	return !c.ok || at.Sub(c.at) >= settle
 }
 
-// write publishes a command to the gateway. It returns once the broker has
-// accepted it; the wallbox sends no reply, its effect shows in later telemetry.
-func (wb *Wallbox) write(name string, payload func(seq uint64) []byte) error {
-	if wb.gateway == "" {
+// reading returns the written current when v is within 0.1 A of it, else v.
+// Heartbeat field 17 showed 159 after a write of 160.
+func reading(cmd command[uint64], v uint64) uint64 {
+	if cmd.ok && (v == cmd.value || v+1 == cmd.value || v == cmd.value+1) {
+		return cmd.value
+	}
+	return v
+}
+
+// write publishes a command to the device with the serial target, the gateway
+// or the wallbox itself. It returns once the broker has accepted it; the
+// wallbox sends no reply, its effect shows in later telemetry.
+func (wb *Wallbox) write(name, target string, payload func(seq uint64) []byte) error {
+	if target == "" {
 		return errors.New("missing gateway serial")
 	}
 
@@ -54,7 +64,7 @@ func (wb *Wallbox) write(name string, payload func(seq uint64) []byte) error {
 	wb.log.DEBUG.Printf("%s: send %s seq=%d", wb.serial, name, seq)
 	wb.log.TRACE.Printf("%s: send %x", wb.serial, frame)
 
-	topic := fmt.Sprintf("/app/%s/%s/thing/property/set", wb.conn.userID, wb.gateway)
+	topic := fmt.Sprintf("/app/%s/%s/thing/property/set", wb.conn.userID, target)
 	if err := wb.conn.publish(topic, frame); err != nil {
 		return fmt.Errorf("publish %s: %w", name, err)
 	}
@@ -96,7 +106,7 @@ func (wb *Wallbox) startStop(start bool) error {
 		selector = 2
 	}
 
-	if err := wb.write(fmt.Sprintf("enable=%t", start), func(seq uint64) []byte {
+	if err := wb.write(fmt.Sprintf("enable=%t", start), wb.gateway, func(seq uint64) []byte {
 		return BuildStartStop(wb.serial, selector, seq)
 	}); err != nil {
 		return err
@@ -149,25 +159,48 @@ func (wb *Wallbox) Enabled() (bool, error) {
 	return cmd.ok && cmd.value, nil
 }
 
-// SetMaxCurrent writes the maximum charge current in 0.1 A (241/102 settings
-// field 3).
-func (wb *Wallbox) SetMaxCurrent(raw uint64) error {
-	if err := wb.write(fmt.Sprintf("maxcurrent=%.1fA", float64(raw)/10), func(seq uint64) []byte {
-		return BuildMaxCurrentSet(wb.serial, wb.gateway, raw, seq)
+// SetCurrent writes the session current setpoint in 0.1 A (ChargerCtrl 2/81 to
+// the topic of the wallbox, shown in heartbeat field 17 and 241/44 UserCurrentRaw).
+// The configured maximum (field 18) is not written: lowering it while charging
+// faulted the wallbox on hardware (state 9, fault 603, only a power cycle
+// clears it), whereas the setpoint follows within a minute. The write switches
+// the work mode to custom. Written while unplugged, it is stored and applies
+// on the next plug-in, where the wallbox starts charging by itself. The
+// wallbox does not store a setpoint above its maximum, so that is refused.
+func (wb *Wallbox) SetCurrent(raw uint64) error {
+	if max := wb.Maximum(); max > 0 && raw > max {
+		return fmt.Errorf("current %.1f A above the wallbox maximum %.1f A", float64(raw)/10, float64(max)/10)
+	}
+
+	if err := wb.write(fmt.Sprintf("current=%.1fA", float64(raw)/10), wb.serial, func(seq uint64) []byte {
+		return BuildChargeCurrent(wb.serial, raw, seq)
 	}); err != nil {
 		return err
 	}
 
 	wb.mu.Lock()
-	wb.current = command[uint64]{value: raw, at: wb.conn.clock.Now(), ok: true}
+	wb.current = command[uint64]{value: raw, at: wb.conn.clock.Now(), ok: true, open: true}
 	wb.mu.Unlock()
 
 	return nil
 }
 
-// MaxCurrent returns the maximum charge current in 0.1 A: from 241/44 or
-// heartbeat field 18 once they can show the last write, else the written value.
-func (wb *Wallbox) MaxCurrent() (uint64, error) {
+// Maximum returns the configured maximum current in 0.1 A from fresh 241/44 or
+// heartbeat field 18, or 0 when unknown.
+func (wb *Wallbox) Maximum() uint64 {
+	if s, _, ok := wb.latestSettings(); ok {
+		return s.MaxCurrentRaw
+	}
+	if hb, ok := wb.latest(); ok {
+		return hb.MaxCurrentRaw
+	}
+	return 0
+}
+
+// Current returns the session current setpoint in 0.1 A: from 241/44 (custom
+// mode) or heartbeat field 17 once they can show the last write, else the
+// written value. Telemetry within 0.1 A of the write counts as the write.
+func (wb *Wallbox) Current() (uint64, error) {
 	hb, err := wb.heartbeat.Get()
 	if err != nil {
 		return 0, err
@@ -177,17 +210,46 @@ func (wb *Wallbox) MaxCurrent() (uint64, error) {
 	cmd, hbAt := wb.current, wb.seen
 	wb.mu.Unlock()
 
-	if s, at, ok := wb.latestSettings(); ok && cmd.overrides(at, settingsSettle) {
-		return s.MaxCurrentRaw, nil
+	if s, at, ok := wb.latestSettings(); ok && s.WorkMode == WorkModeCustom && cmd.overrides(at, settingsSettle) {
+		return reading(cmd, s.UserCurrentRaw), nil
 	}
 
 	switch {
-	case hb.MaxCurrentRaw > 0 && cmd.overrides(hbAt, settingsSettle):
-		return hb.MaxCurrentRaw, nil
+	case hb.ChargeCurrentRaw > 0 && cmd.overrides(hbAt, settingsSettle):
+		return reading(cmd, hb.ChargeCurrentRaw), nil
 	case cmd.ok:
 		return cmd.value, nil
 	default:
 		return 0, api.ErrNotAvailable
+	}
+}
+
+// verifyCurrent logs whether telemetry received at confirms or contradicts the
+// last current write. The wallbox sends no reply to it.
+func (wb *Wallbox) verifyCurrent(u Update, at time.Time) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	cmd := wb.current
+	if !cmd.open || !cmd.overrides(at, settingsSettle) {
+		return
+	}
+
+	var shown uint64
+	switch {
+	case u.Settings != nil && u.Settings.WorkMode == WorkModeCustom:
+		shown = u.Settings.UserCurrentRaw
+	case u.Heartbeat != nil && u.Heartbeat.ChargeCurrentRaw > 0:
+		shown = u.Heartbeat.ChargeCurrentRaw
+	default:
+		return
+	}
+
+	wb.current.open = false
+	if reading(cmd, shown) == cmd.value {
+		wb.log.DEBUG.Printf("%s: current %.1f A confirmed", wb.serial, float64(cmd.value)/10)
+	} else {
+		wb.log.WARN.Printf("%s: current %.1f A not applied by the wallbox, shows %.1f A", wb.serial, float64(cmd.value)/10, float64(shown)/10)
 	}
 }
 
@@ -234,7 +296,7 @@ func (wb *Wallbox) SetPhaseMode(mode uint64) error {
 
 // writePhaseMode writes the phase mode. The caller holds wb.cmd.
 func (wb *Wallbox) writePhaseMode(mode uint64) error {
-	if err := wb.write(fmt.Sprintf("phasemode=%d", mode), func(seq uint64) []byte {
+	if err := wb.write(fmt.Sprintf("phasemode=%d", mode), wb.gateway, func(seq uint64) []byte {
 		return BuildPhaseSet(wb.serial, wb.gateway, mode, seq)
 	}); err != nil {
 		return err

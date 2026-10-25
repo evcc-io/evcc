@@ -32,6 +32,13 @@ const (
 // even when enc_type is 1.
 const srcApp = 32
 
+// Destinations of a write: the PowerOcean gateway the settings and start/stop
+// commands go through, or the wallbox itself (ChargerCtrl 2/81).
+const (
+	destGateway = 96
+	destWallbox = 2
+)
+
 // descriptorMarker is the device address of the PowerPulse behind the gateway.
 const descriptorMarker = 215
 
@@ -176,8 +183,8 @@ func descriptor(serial string) []byte {
 // envelope wraps a pdata body in the header the app uses for writes. The field
 // order reproduces captured app frames byte for byte; enc_type stays absent
 // because outgoing bodies are never masked. devSN is omitted when empty: the
-// app sends it on 241/102 but not on 241/100.
-func envelope(pdata []byte, cmdFunc, cmdID, seq uint64, devSN string) []byte {
+// app sends it on 241/102 (the gateway) and 2/81 (the wallbox), not on 241/100.
+func envelope(pdata []byte, dest, cmdFunc, cmdID, seq uint64, devSN string) []byte {
 	h := protowire.AppendTag(nil, fPdata, protowire.BytesType)
 	h = protowire.AppendBytes(h, pdata)
 
@@ -186,7 +193,7 @@ func envelope(pdata []byte, cmdFunc, cmdID, seq uint64, devSN string) []byte {
 		h = protowire.AppendVarint(h, v)
 	}
 	put(fSrc, srcApp)
-	put(fDest, 96)
+	put(fDest, dest)
 	put(fDSrc, 1)
 	put(fDDest, 1)
 	put(fCheck, 3)
@@ -215,15 +222,19 @@ func envelope(pdata []byte, cmdFunc, cmdID, seq uint64, devSN string) []byte {
 func BuildPhaseSet(serial, gateway string, mode, seq uint64) []byte {
 	settings := protowire.AppendTag(nil, 5, protowire.VarintType)
 	settings = protowire.AppendVarint(settings, mode)
-	return envelope(settingsPdata(serial, settings), 241, 102, seq, gateway)
+	return envelope(settingsPdata(serial, settings), destGateway, 241, 102, seq, gateway)
 }
 
-// BuildMaxCurrentSet returns a 241/102 settings write for the maximum output
-// current. raw is in tenths of an ampere, so 16 A is 160.
-func BuildMaxCurrentSet(serial, gateway string, raw, seq uint64) []byte {
-	settings := protowire.AppendTag(nil, 3, protowire.VarintType)
-	settings = protowire.AppendVarint(settings, raw)
-	return envelope(settingsPdata(serial, settings), 241, 102, seq, gateway)
+// BuildChargeCurrent returns a ChargerCtrl 2/81 write for the session current
+// setpoint (heartbeat field 17). raw is in tenths of an ampere, so 16 A is 160.
+// It goes to the wallbox's own topic, not through the gateway. Field 7 = 2 is a
+// fixed companion that every recorded app write carries.
+func BuildChargeCurrent(serial string, raw, seq uint64) []byte {
+	p := protowire.AppendTag(nil, 5, protowire.VarintType)
+	p = protowire.AppendVarint(p, raw)
+	p = protowire.AppendTag(p, 7, protowire.VarintType)
+	p = protowire.AppendVarint(p, 2)
+	return envelope(p, destWallbox, 2, 81, seq, serial)
 }
 
 // settingsPdata assembles descriptor plus the field 4 settings sub-message.
@@ -240,7 +251,7 @@ func BuildStartStop(serial string, selector, seq uint64) []byte {
 	p = protowire.AppendBytes(p, descriptor(serial))
 	p = protowire.AppendTag(p, 2, protowire.VarintType)
 	p = protowire.AppendVarint(p, selector)
-	return envelope(p, 241, 100, seq, "")
+	return envelope(p, destGateway, 241, 100, seq, "")
 }
 
 // BuildGetAll returns the app's protobuf "get everything" request. The wallbox
