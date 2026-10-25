@@ -228,6 +228,24 @@ func TestWriteCurrentLimitData_Disable(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestWriteCurrentLimitData_DisableWhenMaxLimitsZero(t *testing.T) {
+	eebus, opev, oscev, evEntity := newTestEEBus(t)
+	_ = eebus
+
+	// When EVSE reports max limit as 0 (e.g. idle before charging starts)
+	// disabling (0A) must still produce an active obligation limit
+	opev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
+	opev.EXPECT().CurrentLimits(evEntity).Return([]float64{6}, []float64{0}, []float64{0}, nil)
+	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
+		return len(limits) == 1 && limits[0].IsActive && limits[0].Value == 0
+	}), mock.Anything).Run(ackWrite).Return(nil, nil)
+
+	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(false)
+
+	err := eebus.writeCurrentLimitData(evEntity, 0)
+	require.NoError(t, err)
+}
+
 func TestWriteCurrentLimitData_OscevNoLimitData(t *testing.T) {
 	eebus, opev, oscev, evEntity := newTestEEBus(t)
 	_ = eebus

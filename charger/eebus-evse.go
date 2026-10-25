@@ -372,7 +372,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 		}
 
 		// if the limit equals to the max allowed, then the obligation limit is actually inactive
-		if phase < len(maxLimits) && current >= maxLimits[phase] {
+		if current > 0 && phase < len(maxLimits) && maxLimits[phase] > 0 && current >= maxLimits[phase] {
 			limit.IsActive = false
 		}
 
