@@ -199,9 +199,21 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 func (m *Client) Cleanup(topic string, retained bool) error {
 	timer := time.NewTimer(time.Second)
 
+	// done stops late callbacks from deleting values published after cleanup
+	var (
+		mu   sync.Mutex
+		done bool
+	)
+
 	statusTopic := topic + "/status"
 	if !m.client.Subscribe(topic+"/#", m.Qos, func(c paho.Client, msg paho.Message) {
 		if len(msg.Payload()) == 0 || msg.Topic() == statusTopic {
+			return
+		}
+
+		mu.Lock()
+		defer mu.Unlock()
+		if done {
 			return
 		}
 
@@ -227,6 +239,11 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 	case <-deadline.C:
 		m.log.WARN.Printf("cleanup %s: broker still sending retained messages after %v, continuing", topic, cleanupMaxDuration)
 	}
+
+	// waits for an in-flight delete to finish
+	mu.Lock()
+	done = true
+	mu.Unlock()
 
 	if !m.client.Unsubscribe(topic + "/#").WaitTimeout(request.Timeout) {
 		return api.ErrTimeout
