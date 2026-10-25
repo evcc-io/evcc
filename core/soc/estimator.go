@@ -49,6 +49,11 @@ func (s *Estimator) virtualCapacity() float64 {
 	return max(s.capacity, s.energyPerSocStep*100)
 }
 
+// Sampled returns true once a valid vehicle soc was received
+func (s *Estimator) Sampled() bool {
+	return s.sampled
+}
+
 // RemainingChargeDuration returns the estimated remaining duration
 func (s *Estimator) RemainingChargeDuration(targetSoc, chargePower float64) time.Duration {
 	return remainingChargeDuration(targetSoc, chargePower, s.vehicleSoc, s.virtualCapacity())
