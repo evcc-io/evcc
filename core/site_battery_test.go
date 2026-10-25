@@ -667,12 +667,22 @@ func TestEvFastChargingActiveDisabledLoadpoint(t *testing.T) {
 	assert.False(t, site.evFastChargingActive())
 }
 
-// TestUnmodelledChargingVehicle guards that a vehicle the optimizer request models as
-// storage does not force hold, also when only the battery is automatic: its demand is
-// already part of the battery suggestion.
+// TestUnmodelledChargingVehicle guards that a vehicle modelled as storage does not force hold,
+// also in battery-only mode.
 func TestUnmodelledChargingVehicle(t *testing.T) {
 	above := 1.5
 	rate := api.Rate{Start: time.Now(), End: time.Now().Add(time.Hour), Value: 1.15}
+
+	noCapacity := func(c *gomock.Controller) api.Vehicle {
+		v := api.NewMockVehicle(c)
+		v.EXPECT().Capacity().Return(0.0).AnyTimes()
+		v.EXPECT().Phases().Return(0).AnyTimes()
+		v.EXPECT().Features().Return(nil).AnyTimes()
+		v.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+		v.EXPECT().GetTitle().Return("").AnyTimes()
+		v.EXPECT().Identifiers().Return(nil).AnyTimes()
+		return v
+	}
 
 	for _, tc := range []struct {
 		name      string
@@ -680,28 +690,25 @@ func TestUnmodelledChargingVehicle(t *testing.T) {
 		features  []api.Feature
 		vehicle   func(*gomock.Controller) api.Vehicle
 		limit     float64
+		minSoc    int
 		expected  bool
 	}{
-		{"battery only, vehicle with capacity", false, nil, modelledVehicle, 0, false},
-		{"full, vehicle with capacity", true, nil, modelledVehicle, 0, false},
-		{"vehicle without capacity", false, nil, func(c *gomock.Controller) api.Vehicle {
-			v := api.NewMockVehicle(c)
-			v.EXPECT().Capacity().Return(0.0).AnyTimes()
-			return v
-		}, 0, true},
-		{"vehicle without capacity, energy limit", false, nil, func(c *gomock.Controller) api.Vehicle {
-			v := api.NewMockVehicle(c)
-			v.EXPECT().Capacity().Return(0.0).AnyTimes()
-			return v
-		}, 10, false},
-		{"no vehicle", false, nil, func(*gomock.Controller) api.Vehicle { return nil }, 0, true},
-		{"heater", false, []api.Feature{api.Heating}, modelledVehicle, 0, true},
+		{"battery only, vehicle with capacity", false, nil, modelledVehicle, 0, 0, false},
+		{"full, vehicle with capacity", true, nil, modelledVehicle, 0, 0, false},
+		{"integrated device, vehicle with capacity", false, []api.Feature{api.IntegratedDevice}, modelledVehicle, 0, 0, false},
+		{"vehicle without capacity", false, nil, noCapacity, 0, 0, true},
+		{"vehicle without capacity, energy limit", false, nil, noCapacity, 10, 0, false},
+		{"no vehicle", false, nil, func(*gomock.Controller) api.Vehicle { return nil }, 0, 0, true},
+		{"heater", false, []api.Feature{api.Heating}, modelledVehicle, 0, 0, true},
+		{"min soc not reached", false, nil, modelledVehicle, 0, 60, true},
 	} {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
 		lp.status = api.StatusC
 		lp.mode = api.ModeSmart
 		lp.smartCostLimit = &above
 		lp.limitEnergy = tc.limit
+		lp.minSoc = tc.minSoc
+		lp.vehicleSoc = 50
 		lp.site = &mockSite{automatic: tc.automatic}
 		if v := tc.vehicle(gomock.NewController(t)); v != nil {
 			lp.vehicle = v

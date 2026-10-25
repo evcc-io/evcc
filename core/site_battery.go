@@ -148,15 +148,11 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 	return res
 }
 
-// unmodelledCharging reports a loadpoint charging at full power that the optimizer
-// does not control and cannot model as storage (unknown vehicle capacity, see
-// optimizerRequest) or that is a heater. Its battery suggestion does not account
-// for that load, so the battery must be held. Like dischargeControlActive this
-// includes charging on the smart cost limit, which is what keeps such a loadpoint
-// running at cheap prices.
+// unmodelledCharging reports a loadpoint charging at full power that the battery suggestion
+// does not account for. Like dischargeControlActive this includes the smart cost limit.
 func (site *Site) unmodelledCharging(rate api.Rate) bool {
 	for _, lp := range site.activeLoadpoints() {
-		if lp.modelledAsStorage() {
+		if lp.modelledAsStorage() && !lp.minSocCharging() {
 			continue
 		}
 

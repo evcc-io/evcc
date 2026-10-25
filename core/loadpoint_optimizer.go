@@ -81,17 +81,22 @@ func (lp *Loadpoint) optimizerControlled() bool {
 	return v != nil && v.Capacity() > 0
 }
 
-// modelledAsStorage indicates that optimizerRequest models the connected vehicle as
-// storage, so its demand is part of the home battery suggestion even if the optimizer
-// does not control the loadpoint. Heating devices and vehicles without capacity or
-// session energy limit are not modelled.
+// modelledAsStorage indicates that optimizerRequest includes the vehicle as storage,
+// whether or not the optimizer controls the loadpoint. Heaters are modelled by demand profile.
 func (lp *Loadpoint) modelledAsStorage() bool {
-	if lp.chargerHasFeature(api.Heating) || lp.chargerHasFeature(api.IntegratedDevice) {
+	if lp.chargerHasFeature(api.Heating) || lp.EffectiveMaxPower() <= 0 {
 		return false
 	}
 
 	v := lp.GetVehicle()
 	return v != nil && (v.Capacity() > 0 || lp.GetLimitEnergy() > 0)
+}
+
+// minSocCharging indicates forced charging below min soc, which the optimizer request does not model.
+func (lp *Loadpoint) minSocCharging() bool {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.minSocNotReached()
 }
 
 // activeSuggestion returns the optimizer's start/stop decision for the current slot,
