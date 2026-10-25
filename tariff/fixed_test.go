@@ -199,3 +199,34 @@ func TestFixedDstSpringForward(t *testing.T) {
 	_, short := shortSlot(rates)
 	assert.False(t, short)
 }
+
+func TestFixedDstFallBack(t *testing.T) {
+	loc, err := time.LoadLocation("Europe/Berlin")
+	require.NoError(t, err)
+
+	zones, err := fixed.ParseZones([]fixed.ZoneSpec{{Price: 0.1, Hours: "19:00-20:00"}})
+	require.NoError(t, err)
+
+	tf := &Fixed{
+		embed: &embed{},
+		clock: clock.NewMock(),
+		zones: append([]fixed.Zone{{Price: 0.3}}, zones...),
+	}
+
+	// 2026-10-25 03:00 -> 02:00
+	tf.clock.(*clock.Mock).Set(time.Date(2026, 10, 25, 12, 0, 0, 0, loc))
+
+	rates, err := tf.Rates()
+	require.NoError(t, err)
+
+	var cheap int
+	for _, r := range rates {
+		if r.Value != 0.1 {
+			continue
+		}
+		cheap++
+		assert.Equal(t, 19, r.Start.In(loc).Hour(), "start %v", r.Start)
+		assert.Equal(t, time.Hour, r.End.Sub(r.Start), "duration %v", r)
+	}
+	assert.Equal(t, 7, cheap)
+}
