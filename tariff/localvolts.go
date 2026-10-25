@@ -1,7 +1,6 @@
 package tariff
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
@@ -20,10 +19,10 @@ import (
 const localVoltsURI = "https://api.localvolts.com/v2/customer/interval?NMI=%s&from=current&to=1day"
 
 type localVoltsInterval struct {
-	Circuit          string      `json:"circuit"`
-	IntervalEnd      time.Time   `json:"intervalEnd"`
-	IntervalDuration json.Number `json:"intervalDuration"` // minutes, sent as string despite the docs
-	FlexUp           float64     `json:"flexUp"`           // c/kWh
+	Circuit          string    `json:"circuit"`
+	IntervalEnd      time.Time `json:"intervalEnd"`
+	IntervalDuration int       `json:"intervalDuration,string"` // minutes, sent as string despite the docs
+	FlexUp           float64   `json:"flexUp"`                  // c/kWh
 }
 
 type LocalVolts struct {
@@ -140,12 +139,7 @@ func (t *LocalVolts) rates(res []localVoltsInterval) api.Rates {
 			continue
 		}
 
-		duration, err := r.IntervalDuration.Int64()
-		if err != nil {
-			continue
-		}
-
-		start := r.IntervalEnd.Add(-time.Duration(duration) * time.Minute).Local()
+		start := r.IntervalEnd.Add(-time.Duration(r.IntervalDuration) * time.Minute).Local()
 		slot := start.Truncate(SlotDuration)
 
 		b, ok := buckets[slot]
