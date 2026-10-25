@@ -1820,10 +1820,13 @@ func (lp *Loadpoint) customThresholds() bool {
 
 // effectiveSolarShare returns the solar share. Below prioritySoc a discharging battery
 // must not cover the non-solar part of the min power, so all of it must be surplus.
-// Like prioritySoc itself, this does not apply to boost or optimizer control (#34606).
 func (lp *Loadpoint) effectiveSolarShare(batteryPower float64) float64 {
+	// the optimizer plans grid use itself, the solar share setting is disabled then
+	if lp.activeSuggestion() != nil {
+		return 1
+	}
 	share := lp.GetSolarShare()
-	if share < 1 && batteryPower > 0 && lp.GetBatteryBoost() == boostDisabled && lp.activeSuggestion() == nil &&
+	if share < 1 && batteryPower > 0 && lp.GetBatteryBoost() == boostDisabled &&
 		lp.site.GetBatterySoc() < lp.site.GetPrioritySoc() {
 		return 1
 	}

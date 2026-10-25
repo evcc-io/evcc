@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -1089,6 +1090,22 @@ func TestPVSolarSharePrioritySoc(t *testing.T) {
 		"must not disable above prioritySoc")
 	assert.Equal(t, minA, newLp(false, 90).pvMaxCurrent(-minPower/2, 1000, false, false),
 		"should enable above prioritySoc")
+
+	// the solar share setting is disabled under optimizer control
+	optimizerLp := func(enabled bool) *Loadpoint {
+		lp := newLp(enabled, 90)
+		lp.site = &mockSite{automatic: true}
+		lp.vehicle = modelledVehicle(ctrl)
+		lp.setSuggestion(&types.Suggestion{Action: actionStop})
+		return lp
+	}
+
+	assert.Equal(t, 0.0, optimizerLp(false).pvMaxCurrent(-minPower/2, 0, false, false),
+		"must not enable on half surplus under optimizer")
+	assert.Equal(t, minA, optimizerLp(false).pvMaxCurrent(-minPower, 0, false, false),
+		"should enable on full surplus under optimizer")
+	assert.Equal(t, 0.0, optimizerLp(true).pvMaxCurrent(100, 0, false, false),
+		"should disable on grid import under optimizer")
 }
 
 // TestWelcomeChargeNoBatterySupport verifies that bufferSoc does not sustain a session
