@@ -580,17 +580,13 @@ func (w *WarpWS) soc() (float64, error) {
 }
 
 // capacity implements the api.BatteryCapacity interface
-func (w *WarpWS) capacity() float64 {
-	// TODO: why does api.BatteryCapacity not support returning errors?
-	// Throwing it away for now, capacity will be 0 if any error occurs.
-	cap, _ := w.readWSData(func() (float64, error) {
+func (w *WarpWS) capacity() (float64, error) {
+	return w.readWSData(func() (float64, error) {
 		if w.evState.Capacity != nil {
 			return *w.evState.Capacity, nil
 		}
 		return 0, api.ErrNotAvailable
 	})
-
-	return cap
 }
 
 func (w *WarpWS) chargedEnergy() (float64, error) {
