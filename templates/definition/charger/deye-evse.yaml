@@ -29,7 +29,7 @@ params:
       de: Seriennummer des WLAN-Loggers. Sie wird auf dessen Statusseite unter Geräteinformationen angezeigt.
       en: WiFi logger serial number. It is shown under device information on the logger status page.
   - name: id
-    default: 3
+    default: 162
     advanced: true
 render: |
   type: deye-evse
