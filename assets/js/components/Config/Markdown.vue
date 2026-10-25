@@ -15,7 +15,7 @@ export default {
 		compiledMarkdown() {
 			// snarkdown takes every underscore as emphasis; keep the ones inside words
 			// like charge_before_export as text (private use char, restored after rendering)
-			const html = snarkdown(this.markdown.replace(/(?<=[^\W_])_(?=[^\W_])/g, "\uE000"));
+			const html = snarkdown(this.markdown.replace(/([^\W_])_(?=[^\W_])/g, "$1\uE000"));
 			// open all links in new window
 			return html
 				.replace(/\uE000/g, "_")
