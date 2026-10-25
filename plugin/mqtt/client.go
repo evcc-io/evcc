@@ -23,6 +23,10 @@ var Instance *Client
 
 const parallelInflightLimit int64 = 32
 
+// cleanupMaxDuration stops Cleanup from blocking forever on brokers that never
+// stop delivering non-empty messages for the cleaned topic
+var cleanupMaxDuration = 30 * time.Second
+
 // ClientID created unique mqtt client id
 func ClientID() string {
 	return fmt.Sprintf("evcc-%d", rand.Int32())
@@ -214,8 +218,15 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 		return api.ErrTimeout
 	}
 
+	deadline := time.NewTimer(cleanupMaxDuration)
+	defer deadline.Stop()
+
 	// wait for cleanup to finish
-	<-timer.C
+	select {
+	case <-timer.C:
+	case <-deadline.C:
+		m.log.WARN.Printf("cleanup %s: broker still sending retained messages after %v, continuing", topic, cleanupMaxDuration)
+	}
 
 	if !m.client.Unsubscribe(topic + "/#").WaitTimeout(request.Timeout) {
 		return api.ErrTimeout
