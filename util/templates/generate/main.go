@@ -14,10 +14,10 @@ import (
 )
 
 const (
-	docsPath     = "../../../templates/docs"
-	websitePath  = "../../../templates/evcc.io"
-	iconsPath    = "../../../templates/icons"
-	requiredPath = "../../../templates/required"
+	docsPath       = "../../../templates/docs"
+	websitePath    = "../../../templates/evcc.io"
+	iconsPath      = "../../../templates/icons"
+	definitionPath = "../../../templates/definition"
 )
 
 //go:generate go run main.go
@@ -46,10 +46,6 @@ func main() {
 
 // generateRequired lists the required params per template and class, so that a new required param shows up in review
 func generateRequired() error {
-	if err := os.MkdirAll(requiredPath, 0o755); err != nil {
-		return err
-	}
-
 	for _, class := range templates.ClassValues() {
 		required := make(map[string][]string)
 
@@ -67,7 +63,7 @@ func generateRequired() error {
 			}
 		}
 
-		filename := fmt.Sprintf("%s/%s.yaml", requiredPath, strings.ToLower(class.String()))
+		filename := fmt.Sprintf("%s/%s/_required.yaml", definitionPath, strings.ToLower(class.String()))
 		if len(required) == 0 {
 			if err := os.Remove(filename); err != nil && !os.IsNotExist(err) {
 				return err
