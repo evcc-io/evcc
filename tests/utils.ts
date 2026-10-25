@@ -20,6 +20,8 @@ export async function expectModalHidden(modal: Locator): Promise<void> {
 export async function skipOnboarding(page: Page): Promise<void> {
   const wizard = page.getByTestId("onboarding-modal");
   await expectModalVisible(wizard);
+  await wizard.getByRole("button", { name: "Get started" }).click();
+  await wizard.getByRole("button", { name: "Continue" }).click();
   await wizard.getByRole("button", { name: "Skip setup" }).click();
   await expectModalHidden(wizard);
 }
