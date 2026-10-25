@@ -218,6 +218,17 @@ func TestSocBatteryStateReportField(t *testing.T) {
 	assert.Equal(t, 36.0, soc)
 }
 
+func TestOdometerMileageKey(t *testing.T) {
+	data := []point{
+		{Key: "30cc36fd-71ca-3c09-9296-e94ebd47bd2b", Name: FieldOdometerValue, Value: "1875"},
+		{Key: KeyMileageValue, Name: FieldOdometerValue, Value: "1879"},
+	}
+
+	odo, err := testProvider(data).Odometer()
+	require.NoError(t, err)
+	assert.Equal(t, 1879.0, odo)
+}
+
 func TestSocEnyaqField(t *testing.T) {
 	data := []point{{Key: KeyEnyaqSoc, Name: "currentSoc", Value: "60"}}
 

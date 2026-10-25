@@ -133,7 +133,7 @@ func (v *Provider) Odometer() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldOdometer, FieldOdometerValue); p != nil {
+	if p := lookup(data, KeyMileageValue, FieldOdometer, FieldOdometerValue); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
