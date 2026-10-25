@@ -61,14 +61,16 @@ function dbPath() {
   return path.join(os.tmpdir(), file);
 }
 
+const DEFAULT_FLAGS = ["--disable-auth", "--disable-onboarding"];
+
 export async function start(
   config?: string,
-  sqlDumps?: string | null,
-  flags: string | string[] = "--disable-auth"
+  sqlDump?: string | null,
+  flags: string[] = DEFAULT_FLAGS
 ) {
   await _clean();
-  if (sqlDumps) {
-    await _restoreDatabase(sqlDumps);
+  if (sqlDump) {
+    await _restoreDatabase(sqlDump);
   }
   return await _start(config, flags);
 }
@@ -80,7 +82,7 @@ export async function stop(instance?: ChildProcess) {
 
 export async function restart(
   config?: string,
-  flags: string | string[] = "--disable-auth",
+  flags: string[] = DEFAULT_FLAGS,
   alreadyStopped = false
 ) {
   if (!alreadyStopped) {
@@ -89,24 +91,12 @@ export async function restart(
   await _start(config, flags);
 }
 
-export async function cleanRestart(config: string, sqlDumps: string) {
-  await _stop();
-  await _clean();
-  if (sqlDumps) {
-    await _restoreDatabase(sqlDumps);
-  }
-  await _start(config);
+async function _restoreDatabase(sqlDump: string) {
+  log("loading database", dbPath(), sqlDump);
+  execSync(`sqlite3 ${dbPath()} < tests/${sqlDump}`);
 }
 
-async function _restoreDatabase(sqlDumps: string) {
-  const dumps = Array.isArray(sqlDumps) ? sqlDumps : [sqlDumps];
-  for (const dump of dumps) {
-    log("loading database", dbPath(), dump);
-    execSync(`sqlite3 ${dbPath()} < tests/${dump}`);
-  }
-}
-
-async function _start(config?: string, flags: string | string[] = []) {
+async function _start(config?: string, flags: string[] = []) {
   const configArgs = config ? ["--config", config.includes("/") ? config : `tests/${config}`] : [];
   const port = workerPort();
   const ocpp = ocppPort();
@@ -116,8 +106,7 @@ async function _start(config?: string, flags: string | string[] = []) {
   // wait for port to be available
   await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
   log(`starting evcc on ports ${port} (HTTP), ${ocpp} (OCPP) and ${eebus} (EEBus)`);
-  const additionalFlags = typeof flags === "string" ? [flags] : flags;
-  additionalFlags.push("--log", "debug,httpd:trace");
+  const additionalFlags = [...flags, "--log", "debug,httpd:trace"];
   log("starting evcc", { config, port, ocpp, eebus, additionalFlags });
   const instance = spawn(BINARY, [...configArgs, ...additionalFlags], {
     env: {

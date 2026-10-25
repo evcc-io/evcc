@@ -6,7 +6,7 @@ products:
 capabilities: ["battery-control"]
 discovery:
   hostname: ["sma*"]
-  mac: ["0015BB"]
+  mac: ["0015BB", "0040AD"]
 params:
   - name: usage
     choice: ["battery"]

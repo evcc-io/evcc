@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "evcc",
-    "description": "Solar charging. Super simple.",
+    "description": "smart charging. open source energy management.",
     "version": "0.2.0",
     "contact": {
       "url": "https://github.com/evcc-io/evcc"
@@ -1452,6 +1452,49 @@
         "responses": {
           "200": {
             "$ref": "#/components/responses/StringResult"
+          }
+        }
+      }
+    },
+    "/config/onboarding": {
+      "put": {
+        "operationId": "setOnboarding",
+        "summary": "Set onboarding state",
+        "description": "Setup wizard completion and dismissed setup checklist items.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "general"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardingState"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated onboarding state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingState"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid item"
           }
         }
       }
@@ -2964,36 +3007,34 @@
                     "flows": {
                       "type": "array",
                       "items": {
+                        "$ref": "#/components/schemas/Flow"
+                      }
+                    },
+                    "entities": {
+                      "type": "array",
+                      "description": "Flows into each consumer and loadpoint, priced per slot",
+                      "items": {
                         "type": "object",
                         "properties": {
-                          "from": {
+                          "group": {
                             "type": "string",
                             "enum": [
-                              "pv",
-                              "battery",
-                              "grid"
+                              "consumer",
+                              "loadpoint"
                             ]
                           },
-                          "to": {
-                            "type": "string",
-                            "enum": [
-                              "home",
-                              "battery",
-                              "loadpoint",
-                              "export"
-                            ]
+                          "title": {
+                            "type": "string"
                           },
-                          "energy": {
-                            "type": "number",
-                            "description": "kWh"
+                          "virtual": {
+                            "type": "boolean",
+                            "description": "Home consumption not covered by a consumer"
                           },
-                          "cost": {
-                            "type": "number",
-                            "description": "Cost of the energy, for home and loadpoint"
-                          },
-                          "pricedEnergy": {
-                            "type": "number",
-                            "description": "kWh where a price exists"
+                          "flows": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/Flow"
+                            }
                           }
                         }
                       }
@@ -3280,6 +3321,40 @@
         "example": 25.5,
         "minimum": 0
       },
+      "Flow": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "enum": [
+              "pv",
+              "battery",
+              "grid"
+            ]
+          },
+          "to": {
+            "type": "string",
+            "enum": [
+              "home",
+              "battery",
+              "loadpoint",
+              "export"
+            ]
+          },
+          "energy": {
+            "type": "number",
+            "description": "kWh"
+          },
+          "cost": {
+            "type": "number",
+            "description": "Cost of the energy, for home and loadpoint"
+          },
+          "pricedEnergy": {
+            "type": "number",
+            "description": "kWh where a price exists"
+          }
+        }
+      },
       "Delay": {
         "description": "Duration in seconds.",
         "type": "integer",
@@ -3544,6 +3619,43 @@
         "required": [
           "continuous",
           "precondition"
+        ]
+      },
+      "OnboardingItem": {
+        "description": "Setup checklist item.",
+        "type": "string",
+        "enum": [
+          "battery",
+          "pv",
+          "grid",
+          "loadpoint",
+          "heater",
+          "consumer",
+          "gridImport",
+          "gridExport",
+          "co2",
+          "solar"
+        ]
+      },
+      "OnboardingState": {
+        "description": "Setup wizard and checklist state.",
+        "type": "object",
+        "properties": {
+          "done": {
+            "description": "Setup wizard was finished or skipped.",
+            "type": "boolean"
+          },
+          "dismissed": {
+            "description": "Dismissed setup checklist items.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OnboardingItem"
+            }
+          }
+        },
+        "required": [
+          "done",
+          "dismissed"
         ]
       },
       "ChargerStatusReason": {
@@ -5640,6 +5752,10 @@
           "setupRequired": {
             "description": "Initial setup is required.",
             "type": "boolean"
+          },
+          "onboarding": {
+            "$ref": "#/components/schemas/OnboardingState",
+            "description": "Setup wizard and checklist state."
           },
           "startupCompleted": {
             "description": "Startup has completed.",

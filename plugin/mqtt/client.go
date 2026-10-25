@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"math/rand/v2"
 	"strings"
@@ -183,7 +184,7 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 			token := m.listen(topic)
 			if !token.WaitTimeout(request.Timeout) {
 				m.log.ERROR.Printf("subscribe %s: timeout", topic)
-			} else if err := token.Error(); err != nil {
+			} else if err := subscribeError(token, topic); err != nil {
 				m.log.ERROR.Printf("subscribe %s: %v", topic, err)
 			}
 		}
@@ -270,8 +271,24 @@ func (m *Client) Listen(topic string, callback func(string)) error {
 	case <-time.After(request.Timeout):
 		return fmt.Errorf("subscribe: %s: %w", topic, api.ErrTimeout)
 	case <-token.Done():
+		if err := subscribeError(token, topic); err != nil {
+			return fmt.Errorf("subscribe: %s: %w", topic, err)
+		}
 		return nil
 	}
+}
+
+// subscribeError returns the token error or an error if the broker refused the subscription
+func subscribeError(token paho.Token, topic string) error {
+	if err := token.Error(); err != nil {
+		return err
+	}
+
+	if st, ok := token.(*paho.SubscribeToken); ok && st.Result()[topic] == 0x80 {
+		return errors.New("refused by broker")
+	}
+
+	return nil
 }
 
 // ListenSetter creates a /set listener that resets the payload after handling
