@@ -138,9 +138,9 @@ func (wb *DeyeEvse) Status() (api.ChargeStatus, error) {
 	}
 
 	switch s := binary.BigEndian.Uint16(b) & 0x7F; s {
-	case 0x01, 0x02: // available, finishing
+	case 0x01: // available
 		return api.StatusA, nil
-	case 0x04, 0x08, 0x10: // preparing, suspended by EV, suspended by EVSE
+	case 0x02, 0x04, 0x08, 0x10: // finishing, preparing, suspended by EV, suspended by EVSE
 		return api.StatusB, nil
 	case 0x20: // charging
 		return api.StatusC, nil
