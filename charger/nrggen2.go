@@ -32,7 +32,7 @@ import (
 	"github.com/volkszaehler/mbmd/encoding"
 )
 
-// https://www.nrgkick.com/wp-content/uploads/2024/07/local_api_docu_simulate.html
+// https://nrgkick.com/en/products/nrgkick/api/
 
 // NRGKickGen2 charger implementation
 type NRGKickGen2 struct {

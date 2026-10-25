@@ -53,3 +53,30 @@ func TestPersistTariffs(t *testing.T) {
 	require.InDelta(t, 250, *res.Co2, 0.001)
 	require.InDelta(t, 21.5, *res.Temperature, 0.001)
 }
+
+func TestQueryTariffs(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, db.Instance.AutoMigrate(new(tariffValue)))
+
+	slot := time.Date(2026, 4, 15, 16, 0, 0, 0, time.UTC)
+	grid := 0.3
+	for i := range 3 {
+		v := grid + float64(i)/10
+		require.NoError(t, PersistTariffs(slot.Add(time.Duration(i)*15*time.Minute), &v, nil, nil, nil))
+	}
+
+	res, err := QueryTariffs(slot.Add(15*time.Minute), slot.Add(45*time.Minute), "")
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+	require.Equal(t, slot.Add(15*time.Minute).Unix(), res[0].Start.Unix())
+	require.InDelta(t, 0.4, *res[0].Grid, 0.001)
+	require.Nil(t, res[0].FeedIn)
+
+	// one hour bucket: average with the slot range
+	agg, err := QueryTariffs(slot, slot.Add(time.Hour), "hour")
+	require.NoError(t, err)
+	require.Len(t, agg, 1)
+	require.InDelta(t, 0.4, *agg[0].Grid, 0.001)
+	require.InDelta(t, 0.3, *agg[0].GridMin, 0.001)
+	require.InDelta(t, 0.5, *agg[0].GridMax, 0.001)
+}

@@ -1,6 +1,6 @@
 import { defineComponent } from "vue";
 import { is12hFormat } from "@/units";
-import { CURRENCY } from "../types/evcc";
+import { CURRENCY, GRID_CONNECTION } from "../types/evcc";
 import settings from "@/settings";
 import type { DateFormat } from "@/settings";
 
@@ -136,10 +136,19 @@ export default defineComponent({
       const abs = Math.abs(watt);
       return abs >= 10_000_000 ? POWER_UNIT.MW : abs >= 1000 ? POWER_UNIT.KW : POWER_UNIT.W;
     },
-    fmtPhasePower(current?: number, phases?: number) {
-      return this.fmtW(230 * (current || 0) * (phases || 0));
+    fmtPhasePower(
+      current?: number,
+      phases?: number,
+      voltage = 230,
+      gridConnection?: GRID_CONNECTION
+    ) {
+      const factor =
+        gridConnection === GRID_CONNECTION.THREE_PHASE_THREE_WIRE && phases === 3
+          ? Math.sqrt(3)
+          : phases || 0;
+      return this.fmtW(voltage * (current || 0) * factor);
     },
-    fmtW(watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
+    fmtW(watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number, signed = false) {
       let unit = format;
       let d = digits;
       if (POWER_UNIT.AUTO === unit) {
@@ -156,15 +165,25 @@ export default defineComponent({
           POWER_UNIT.KW === unit || POWER_UNIT.MW === unit || (POWER_UNIT.W !== unit && 0 === watt)
             ? 1
             : 0;
+        // with a free choice of unit, four digits of kW(h) are precise enough: 1,774 kWh.
+        // A forced unit keeps its decimal so columns stay aligned
+        if (POWER_UNIT.AUTO === format && POWER_UNIT.KW === unit && Math.abs(value) >= 1000) {
+          d = 0;
+        }
       }
       return `${new Intl.NumberFormat(this.$i18n?.locale, {
         style: "decimal",
         minimumFractionDigits: d,
         maximumFractionDigits: d,
+        signDisplay: signed ? "exceptZero" : "auto",
       }).format(value)}${withUnit ? ` ${unit}` : ""}`;
     },
-    fmtWh(watt: number, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
-      return this.fmtW(watt, format, withUnit, digits) + (withUnit ? "h" : "");
+    fmtWh(watt: number, format = POWER_UNIT.KW, withUnit = true, digits?: number, signed = false) {
+      return this.fmtW(watt, format, withUnit, digits, signed) + (withUnit ? "h" : "");
+    },
+    // signed: explicit plus for gains, e.g. a difference
+    fmtKWh(kWh: number, signed = false) {
+      return this.fmtWh(kWh * 1000, POWER_UNIT.AUTO, true, undefined, signed);
     },
     fmtNumber(number: number, decimals?: number, unit?: string) {
       const style = unit ? "unit" : "decimal";
@@ -433,6 +452,9 @@ export default defineComponent({
 
       return withSymbol ? result : result.replace(currency, "").trim();
     },
+    fmtMoneyWithSymbol(amount: number, currency = CURRENCY.EUR) {
+      return `${this.fmtMoney(amount, currency)} ${this.fmtCurrencySymbol(currency)}`;
+    },
     fmtCurrencySymbol(currency = CURRENCY.EUR) {
       return CURRENCY_SYMBOLS[currency] || currency;
     },
@@ -458,6 +480,11 @@ export default defineComponent({
         return `${price} ${this.pricePerKWhUnit(currency, short)}`;
       }
       return price;
+    },
+    // "19.4 – 31.3 ct/kWh", a single price when both ends match
+    fmtPriceRange(lo: number, hi: number, currency = CURRENCY.EUR, short = false) {
+      if (lo === hi) return this.fmtPricePerKWh(lo, currency, short);
+      return `${this.fmtPricePerKWh(lo, currency, short, false)} – ${this.fmtPricePerKWh(hi, currency, short)}`;
     },
     timezone() {
       return Intl?.DateTimeFormat?.().resolvedOptions?.().timeZone || "UTC";

@@ -5,6 +5,8 @@ products:
   - brand: GoodWe
     description:
       generic: SDT/DT Inverter (WiFi)
+discovery:
+  mac: ["F0C1CE"]
 params:
   - name: usage
     choice: ["pv"]

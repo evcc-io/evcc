@@ -50,7 +50,7 @@ async function generateKey(
 }
 
 test("generate first key", async ({ page }) => {
-  await start(BASIC, "password.sql", "");
+  await start(BASIC, "password.sql", ["--disable-onboarding"]);
   const modal = await loginAndOpenApiKey(page);
 
   await expect(modal.getByRole("button", { name: "Generate API Key" })).toBeVisible();
@@ -70,7 +70,7 @@ test("generate first key", async ({ page }) => {
 });
 
 test("regenerate replaces old key", async ({ page, request }) => {
-  await start(BASIC, "password.sql", "");
+  await start(BASIC, "password.sql", ["--disable-onboarding"]);
   const modal = await loginAndOpenApiKey(page);
 
   const first = await generateKey(page, modal, "Generate API Key");
@@ -102,7 +102,7 @@ test("api key authenticates protected endpoints and bypasses backup pw", async (
   page,
   request,
 }) => {
-  await start(BASIC, "password.sql", "");
+  await start(BASIC, "password.sql", ["--disable-onboarding"]);
   const modal = await loginAndOpenApiKey(page);
   const key = await generateKey(page, modal, "Generate API Key");
 
@@ -125,7 +125,7 @@ test("api key authenticates protected endpoints and bypasses backup pw", async (
 });
 
 test("api key cannot rotate itself without admin password", async ({ page, request }) => {
-  await start(BASIC, "password.sql", "");
+  await start(BASIC, "password.sql", ["--disable-onboarding"]);
   const modal = await loginAndOpenApiKey(page);
   const key = await generateKey(page, modal, "Generate API Key");
 
@@ -148,7 +148,7 @@ test("api key cannot rotate itself without admin password", async ({ page, reque
 });
 
 test("api key cannot change admin password without correct current", async ({ page, request }) => {
-  await start(BASIC, "password.sql", "");
+  await start(BASIC, "password.sql", ["--disable-onboarding"]);
   const modal = await loginAndOpenApiKey(page);
   const key = await generateKey(page, modal, "Generate API Key");
 
@@ -162,7 +162,7 @@ test("api key cannot change admin password without correct current", async ({ pa
 });
 
 test("disable-auth shows banner and disables actions", async ({ page }) => {
-  await start(BASIC, null, "--disable-auth");
+  await start(BASIC, null, ["--disable-auth", "--disable-onboarding"]);
   await page.goto("/#/config");
 
   await page.getByTestId("generalconfig-security").getByRole("button", { name: "edit" }).click();

@@ -21,8 +21,7 @@ render: |
   {{- if or (eq .usage "grid") (eq .usage "charge") }}
   power:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     value:
       - 201:W
       - 211:W
@@ -32,8 +31,7 @@ render: |
       - 213:W
   energy:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     value:
       - 201:TotWhImp
       - 211:TotWhImp
@@ -44,8 +42,7 @@ render: |
     scale: 0.001
   returnenergy:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     value:
       - 201:TotWhExp
       - 211:TotWhExp
@@ -56,8 +53,7 @@ render: |
     scale: 0.001
   currents:
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:AphA
         - 211:AphA
@@ -65,9 +61,9 @@ render: |
         - 212:AphA
         - 203:AphA
         - 213:AphA
+      nan: true
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:AphB
         - 211:AphB
@@ -75,9 +71,9 @@ render: |
         - 212:AphB
         - 203:AphB
         - 213:AphB
+      nan: true
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:AphC
         - 211:AphC
@@ -85,10 +81,10 @@ render: |
         - 212:AphC
         - 203:AphC
         - 213:AphC
+      nan: true
   voltages:
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:PhVphA
         - 211:PhVphA
@@ -96,9 +92,9 @@ render: |
         - 212:PhVphA
         - 203:PhVphA
         - 213:PhVphA
+      nan: true
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:PhVphB
         - 211:PhVphB
@@ -106,9 +102,9 @@ render: |
         - 212:PhVphB
         - 203:PhVphB
         - 213:PhVphB
+      nan: true
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:PhVphC
         - 211:PhVphC
@@ -116,10 +112,10 @@ render: |
         - 212:PhVphC
         - 203:PhVphC
         - 213:PhVphC
+      nan: true
   powers:
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:WphA
         - 211:WphA
@@ -127,9 +123,9 @@ render: |
         - 212:WphA
         - 203:WphA
         - 213:WphA
+      nan: true
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:WphB
         - 211:WphB
@@ -137,9 +133,9 @@ render: |
         - 212:WphB
         - 203:WphB
         - 213:WphB
+      nan: true
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:WphC
         - 211:WphC
@@ -147,12 +143,12 @@ render: |
         - 212:WphC
         - 203:WphC
         - 213:WphC
+      nan: true
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     value:
       - 201:W
       - 211:W
@@ -162,8 +158,7 @@ render: |
       - 213:W
   energy:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     value:
       - 201:TotWhExp
       - 211:TotWhExp
@@ -174,8 +169,7 @@ render: |
     scale: 0.001
   returnenergy:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     value:
       - 201:TotWhImp
       - 211:TotWhImp

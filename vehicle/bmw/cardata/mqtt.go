@@ -15,7 +15,9 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/eclipse/paho.mqtt.golang/packets"
 	"github.com/evcc-io/evcc/api"
+	pluginmqtt "github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
@@ -72,10 +74,22 @@ var (
 )
 
 func NewMqttConnector(ctx context.Context, log *util.Logger, clientID string, ts oauth2.TokenSource) *MqttConnector {
+	return connector(log, clientID, func(v *MqttConnector) { v.run(ctx, ts) })
+}
+
+// NewBrokerConnector creates a connector that reads the unmodified CarData stream from a local broker
+func NewBrokerConnector(ctx context.Context, log *util.Logger, cc pluginmqtt.Config, topic string) *MqttConnector {
+	// prefix keeps broker connectors apart from BMW connectors keyed by client id
+	key := fmt.Sprintf("broker:%s.%s:%s:%s", cc.Broker, cc.User, cc.Password, topic)
+	return connector(log, key, func(v *MqttConnector) { v.runBroker(ctx, cc, topic) })
+}
+
+// connector returns the shared connector for key, starting run for a new one
+func connector(log *util.Logger, key string, run func(*MqttConnector)) *MqttConnector {
 	mqttMu.Lock()
 	defer mqttMu.Unlock()
 
-	if conn, ok := mqttConnections[clientID]; ok {
+	if conn, ok := mqttConnections[key]; ok {
 		return conn
 	}
 
@@ -85,12 +99,31 @@ func NewMqttConnector(ctx context.Context, log *util.Logger, clientID string, ts
 	}
 
 	if !testing.Testing() {
-		go v.run(ctx, ts)
+		go run(v)
 	}
 
-	mqttConnections[clientID] = v
+	mqttConnections[key] = v
 
 	return v
+}
+
+// runBroker retries until the broker is first reached, the mqtt client reconnects and resubscribes on its own afterwards
+func (v *MqttConnector) runBroker(ctx context.Context, cc pluginmqtt.Config, topic string) {
+	bo := backoff.NewExponentialBackOff(backoff.WithInitialInterval(time.Second), backoff.WithMaxInterval(time.Minute), backoff.WithMaxElapsedTime(0))
+
+	client, err := backoff.RetryNotifyWithData(func() (*pluginmqtt.Client, error) {
+		return pluginmqtt.RegisteredClientOrDefault(v.log, cc)
+	}, backoff.WithContext(bo, ctx), func(err error, _ time.Duration) {
+		v.log.ERROR.Println(err)
+	})
+	if err != nil {
+		return
+	}
+
+	// listener stays registered and is resubscribed on reconnect, so retrying would duplicate it
+	if err := client.Listen(topic, v.brokerHandler); err != nil {
+		v.log.ERROR.Println(err)
+	}
 }
 
 func (v *MqttConnector) Subscribe(vin string) <-chan StreamingMessage {
@@ -207,6 +240,21 @@ func (v *MqttConnector) handler(_ mqtt.Client, m mqtt.Message) {
 
 	v.log.TRACE.Printf("recv %s: %s", m.Topic(), string(m.Payload()))
 
+	v.dispatch(res)
+}
+
+// brokerHandler skips foreign payloads quietly since a local broker topic may carry more than CarData envelopes
+func (v *MqttConnector) brokerHandler(payload string) {
+	var res StreamingMessage
+	if err := json.Unmarshal([]byte(payload), &res); err != nil || res.Vin == "" || len(res.Data) == 0 {
+		v.log.DEBUG.Printf("skip invalid message: %s", request.Truncate(payload))
+		return
+	}
+
+	v.dispatch(res)
+}
+
+func (v *MqttConnector) dispatch(res StreamingMessage) {
 	v.mu.RLock()
 	defer v.mu.RUnlock()
 

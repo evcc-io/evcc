@@ -26,6 +26,27 @@ Dropdown.Default.popperConfig = (defaultConfig) => {
   };
 };
 
+// Chrome Android with inline time segments only opens the picker via its icon
+document.addEventListener("click", (e) => {
+  const input = e.target;
+  if (!(input instanceof HTMLInputElement) || input.type !== "time") return;
+  if ((e as PointerEvent).pointerType !== "touch") return;
+  try {
+    input.showPicker();
+  } catch {
+    // disabled, readonly or cross-origin iframe (e.g. Home Assistant panel)
+  }
+});
+
+// after an update the old hashed chunks are gone, a reload picks up the new index
+// https://vite.dev/guide/build#load-error-handling
+window.addEventListener("vite:preloadError", () => {
+  const last = Number(sessionStorage.getItem("chunkReload"));
+  if (Date.now() - last < 10_000) return;
+  sessionStorage.setItem("chunkReload", String(Date.now()));
+  window.location.reload();
+});
+
 // lazy load smoothscroll polyfill. mainly for safari < 15.4
 if (!window.CSS.supports("scroll-behavior", "smooth")) {
   console.log("no native smoothscroll support. polyfilling...");

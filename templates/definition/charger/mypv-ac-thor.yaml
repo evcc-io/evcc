@@ -27,6 +27,9 @@ requirements:
       If the heater at the controlled output has < 9 kW, AC•THOR firmware a0022401 or higher is required and the value for "Load at relay" must be converted using the scaling factor as follows:
       Load at relay = nominal power of the heater at the relay * scale factor
   evcc: ["sponsorship"]
+discovery:
+  mdns: ["_mypv._tcp"]
+  mac: ["986D35C"]
 params:
   - name: modbus
     choice: ["tcpip"]

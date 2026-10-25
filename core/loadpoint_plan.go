@@ -75,6 +75,14 @@ func (lp *Loadpoint) remainingPlanEnergy(planEnergy float64) float64 {
 	return max(0, planEnergy-(lp.getChargedEnergy()/1e3-lp.planEnergyOffset))
 }
 
+// GetPlanRemainingEnergy returns the energy plan's missing energy in kWh
+func (lp *Loadpoint) GetPlanRemainingEnergy() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	_, energy := lp.getPlanEnergy()
+	return lp.remainingPlanEnergy(energy)
+}
+
 // GetPlanRequiredDuration is the estimated total charging duration
 func (lp *Loadpoint) GetPlanRequiredDuration(goal, maxPower float64) time.Duration {
 	lp.RLock()
@@ -125,6 +133,19 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preconditio
 		continuous, pc, requiredDuration.Round(time.Second), targetTime.Round(time.Second).Local())
 
 	return lp.planner.Plan(requiredDuration, precondition, targetTime, continuous)
+}
+
+// EffectivePlan returns the charging plan in effect. While in control the
+// optimizer schedules the plan itself, returned with its average power and
+// true. Everything else is the planner's.
+func (lp *Loadpoint) EffectivePlan(planTime time.Time, requiredDuration time.Duration, strategy api.PlanStrategy) (api.Rates, float64, bool) {
+	if requiredDuration > 0 {
+		if plan, power := lp.OptimizerPlan(planTime); plan != nil {
+			return plan, power, true
+		}
+	}
+
+	return lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous), 0, false
 }
 
 // plannerActive checks if the charging plan has a currently active slot
@@ -178,10 +199,13 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	strategy := lp.getEffectivePlanStrategy()
 
-	plan = lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
+	plan, power, optimized := lp.EffectivePlan(planTime, requiredDuration, strategy)
 	if plan == nil {
 		lp.log.DEBUG.Println("!! plan: plan nil")
 		return false
+	}
+	if optimized {
+		maxPower = power
 	}
 
 	var overrun string
@@ -208,9 +232,19 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	activeSlot := planner.SlotAt(lp.clock.Now(), plan)
 	active = !activeSlot.End.IsZero()
 
+	// the optimizer starts and stops by itself, the planner's rules below don't
+	// apply. Its plan is active during a slot and while the deadline is critical.
+	if optimized {
+		active = active || lp.planDeadlineCritical()
+		if active && lp.planLocked.Id == 0 && isSocBased {
+			lp.lockPlanGoal(planTime, int(goal), lp.getPlanId())
+		}
+		return active
+	}
+
 	if active {
-		// ignore short plans if not already active
-		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < tariff.SlotDuration-time.Minute && !planner.SlotHasSuccessor(activeSlot, plan) {
+		// short slots cost an extra start/stop cycle, defer them if a later slot follows anyway
+		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < tariff.SlotDuration-time.Minute && planner.SlotHasLaterSuccessor(activeSlot, plan) {
 			lp.log.DEBUG.Printf("plan: slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
 		}

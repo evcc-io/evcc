@@ -18,6 +18,8 @@ requirements:
   description:
     de: Es muss eine sogenannte UDP Funktion über den DIP Schalter 1.3 eingeschaltet (ON) werden. Die Installationsanleitung der Wallbox hilft hier weiter.
     en: This requires the UDP function to be enabled with DIP 1.3 = ON, see the installation manual.
+discovery:
+  mac: ["0060B5", "00141D"]
 params:
   - name: host
   - name: rfid

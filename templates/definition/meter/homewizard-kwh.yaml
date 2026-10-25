@@ -3,6 +3,9 @@ products:
   - brand: HomeWizard
     description:
       generic: kWh Meter
+discovery:
+  mdns: ["_hwenergy._tcp", "_homewizard._tcp"]
+  mac: ["5C2FAF", "3C39E72"]
 params:
   - name: usage
     choice: ["pv", "charge"]

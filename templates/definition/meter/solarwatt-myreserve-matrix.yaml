@@ -3,6 +3,8 @@ products:
   - brand: Solarwatt
     description:
       generic: MyReserve Matrix (LAN oder PowerGateway)
+discovery:
+  mac: ["4C52EC"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

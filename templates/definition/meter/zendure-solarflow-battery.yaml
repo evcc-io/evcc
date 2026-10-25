@@ -5,6 +5,9 @@ products:
     description:
       generic: Solarflow AC / Pro
 capabilities: ["battery-control"]
+discovery:
+  mdns: ["_http._tcp:Zendure-solarFlow*"]
+  hostname: ["Zendure-solarFlow*"]
 requirements:
   description:
     de: |

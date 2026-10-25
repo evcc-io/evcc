@@ -27,6 +27,7 @@ import (
 	meter "github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 )
 
 // Heatpump charger implementation
@@ -169,9 +170,9 @@ var _ api.ChargerEx = (*Heatpump)(nil)
 func (wb *Heatpump) MaxCurrentMillis(current float64) error {
 	phases := 1
 	if wb.lp != nil {
-		phases = wb.lp.GetPhases()
+		phases = wb.lp.ActivePhases()
 	}
-	return wb.setMaxPower(int64(230 * current * float64(phases)))
+	return wb.setMaxPower(int64(grid.CurrentToPower(current, phases)))
 }
 
 var _ loadpoint.Controller = (*Heatpump)(nil)

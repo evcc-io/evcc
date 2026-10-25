@@ -18,6 +18,7 @@
 					:effectivePlanTime="loadpoint?.effectivePlanTime ?? undefined"
 					:effectivePlanSoc="loadpoint?.effectivePlanSoc"
 					:effectivePlanStrategy="loadpoint?.effectivePlanStrategy"
+					:activePlan="loadpoint?.plan"
 					:planEnergy="loadpoint?.planEnergy"
 					:limitEnergy="loadpoint?.limitEnergy"
 					:socBasedPlanning="!!loadpoint?.socBasedPlanning"

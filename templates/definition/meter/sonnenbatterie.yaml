@@ -15,6 +15,8 @@ requirements:
       For active battery control, the "JSON Write API" must be activated via the sonnenBatterie web interface (under Software-Integration) and the API token generated there must be entered in the battery configuration under `token`.
       The two operating modes supported for the sonnenBatterie are "self-consumption" (default) and "time-of-use". The mode can be adapted to the configuration of the sonnenBatterie via the 'defaultmode' parameter.
       The power for grid charging can be adapted to the inverter power of the sonnenBatterie via the `maxchargepower` parameter.
+discovery:
+  hostname: ["sb-*"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

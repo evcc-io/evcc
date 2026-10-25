@@ -43,8 +43,11 @@ test.describe("always charge", async () => {
     await toggle.click();
     await expect(toggle).toBeChecked();
 
-    await dropdown.getByRole("button", { name: "Only for this session" }).click();
+    const once = dropdown.getByRole("button", { name: "Only for this session" });
+    await once.click();
     await expect(dropdown).toContainText("until end of session");
+    // hint is local, wait for server state before the next request
+    await expect(once).toHaveAttribute("aria-pressed", "true");
 
     await toggle.click();
     await expect(toggle).not.toBeChecked();

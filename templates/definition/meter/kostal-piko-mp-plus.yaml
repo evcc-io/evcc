@@ -6,6 +6,8 @@ products:
   - brand: Steca
     description:
       generic: coolcept fleX
+discovery:
+  mac: ["1897F1", "240BB1"]
 params:
   - name: usage
     choice: ["grid", "pv"]

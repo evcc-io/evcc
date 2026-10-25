@@ -9,7 +9,7 @@ import (
 )
 
 // demandProfile returns the heating demand profile of a heating loadpoint and whether
-// it needs to be scaled by the outdoor temperature forecast. Returns nil when unavailable.
+// it needs to be corrected by the outdoor temperature forecast. Returns nil when unavailable.
 // For DemandWeekday devices, use demandProfileWeekday instead.
 func (lp *Loadpoint) demandProfile() (*[96]float64, bool) {
 	if lp.chargeEnergy == nil || !lp.chargerHasFeature(api.Heating) {
@@ -57,7 +57,7 @@ func (lp *Loadpoint) demandProfileWeekday(minLen int) []float64 {
 		weekday := now.BeginningOfDay().AddDate(0, 0, day).Weekday()
 		profile, err := lp.chargeEnergy.EnergyProfileWeekday(weekday)
 		if err != nil {
-			lp.log.DEBUG.Printf("demand profile weekday: %v", err)
+			lp.log.DEBUG.Printf("demand profile weekday (%s): %v", weekday, err)
 			return nil
 		}
 

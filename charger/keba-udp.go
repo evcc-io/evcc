@@ -13,7 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// https://www.keba.com/file/downloads/e-mobility/KeContact_P20_P30_UDP_ProgrGuide_en.pdf
+// https://www.keba.com/download/x/4aab015706/kecontactp30udp_pgen.pdf
 
 const (
 	udpTimeout = time.Second
