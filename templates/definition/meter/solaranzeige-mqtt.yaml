@@ -9,7 +9,6 @@ params:
   - name: usage
     choice: ["grid", "pv"]
   - preset: mqtt
-  - preset: mqtt-timeout
   - name: topic
     default: solaranzeige/box1
 render: |

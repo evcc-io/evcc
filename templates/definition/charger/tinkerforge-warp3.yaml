@@ -12,7 +12,6 @@ requirements:
   evcc: ["skiptest"]
 params:
   - preset: mqtt
-  - preset: mqtt-timeout
   - name: topic
     default: warp
 render: |
