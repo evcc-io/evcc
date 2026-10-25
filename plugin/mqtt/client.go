@@ -198,12 +198,11 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 // Cleanup recursively removes a topic
 func (m *Client) Cleanup(topic string, retained bool) error {
 	timer := time.NewTimer(time.Second)
+	defer timer.Stop()
 
-	// done stops late callbacks from deleting values published after cleanup
-	var (
-		mu   sync.Mutex
-		done bool
-	)
+	// callbacks hand topics to the loop below, so no delete runs after cleanup returns
+	topics := make(chan string)
+	done := make(chan struct{})
 
 	statusTopic := topic + "/status"
 	if !m.client.Subscribe(topic+"/#", m.Qos, func(c paho.Client, msg paho.Message) {
@@ -211,22 +210,12 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 			return
 		}
 
-		mu.Lock()
-		defer mu.Unlock()
-		if done {
-			return
+		select {
+		case topics <- msg.Topic():
+		case <-done:
 		}
-
-		m.log.TRACE.Printf("delete: %s", msg.Topic())
-		// Delete synchronously at QoS 0 so the cleanup burst self-throttles
-		// to one in-flight message at a time and avoids overwhelming the
-		// broker (see #30086).
-		token := m.client.Publish(msg.Topic(), 0, true, "")
-		token.WaitTimeout(request.Timeout)
-
-		// reset timeout
-		timer.Reset(time.Second)
 	}).WaitTimeout(request.Timeout) {
+		close(done)
 		return api.ErrTimeout
 	}
 
@@ -234,16 +223,31 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 	defer deadline.Stop()
 
 	// wait for cleanup to finish
-	select {
-	case <-timer.C:
-	case <-deadline.C:
-		m.log.WARN.Printf("cleanup %s: broker still sending retained messages after %v, continuing", topic, cleanupMaxDuration)
+wait:
+	for {
+		select {
+		case t := <-topics:
+			m.log.TRACE.Printf("delete: %s", t)
+			// Delete synchronously at QoS 0 so the cleanup burst self-throttles
+			// to one in-flight message at a time and avoids overwhelming the
+			// broker (see #30086).
+			token := m.client.Publish(t, 0, true, "")
+			token.WaitTimeout(request.Timeout)
+
+			// reset timeout
+			timer.Reset(time.Second)
+
+		case <-timer.C:
+			break wait
+
+		case <-deadline.C:
+			m.log.WARN.Printf("cleanup %s: broker still sending retained messages after %v, continuing", topic, cleanupMaxDuration)
+			break wait
+		}
 	}
 
-	// waits for an in-flight delete to finish
-	mu.Lock()
-	done = true
-	mu.Unlock()
+	// release blocked callbacks before unsubscribing, they hold up paho's message routing
+	close(done)
 
 	if !m.client.Unsubscribe(topic + "/#").WaitTimeout(request.Timeout) {
 		return api.ErrTimeout
