@@ -68,8 +68,7 @@ func wallClock(dayStart time.Time, minutes int) time.Time {
 	ts := time.Date(dayStart.Year(), dayStart.Month(), dayStart.Day(), 0, minutes, 0, 0, dayStart.Location())
 
 	// dst spring forward: map wall times inside the skipped hour to its end, keeping markers ordered
-	want := time.Date(dayStart.Year(), dayStart.Month(), dayStart.Day(), 0, minutes, 0, 0, time.UTC)
-	if got := time.Date(ts.Year(), ts.Month(), ts.Day(), ts.Hour(), ts.Minute(), 0, 0, time.UTC); !got.Equal(want) {
+	if 60*ts.Hour()+ts.Minute() != minutes {
 		ts, _ = ts.ZoneBounds()
 	}
 
