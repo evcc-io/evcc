@@ -2392,12 +2392,19 @@ func (lp *Loadpoint) publishSocAndRange() {
 		lp.publish(keys.VehicleLimitSoc, float64(*limitR))
 	}
 
-	limitSoc := min(apiLimitSoc, lp.EffectiveLimitSoc())
 	v := lp.GetVehicle()
 
 	lp.RLock()
+	planActive := lp.planActive
 	limitEnergy, energyLimited := lp.remainingLimitEnergy()
 	lp.RUnlock()
+
+	limitSoc := lp.EffectiveLimitSoc()
+	// an active plan slot charges past the session limit, unless the optimizer controls a non-smart mode
+	if planActive && (lp.GetMode() == api.ModeSmart || lp.activeSuggestion() == nil) {
+		limitSoc = max(limitSoc, lp.EffectivePlanSoc())
+	}
+	limitSoc = min(apiLimitSoc, limitSoc)
 
 	var d time.Duration
 	var e float64
