@@ -1050,3 +1050,22 @@ func TestReapplySuggestionsExpireAfterOutage(t *testing.T) {
 	assert.Nil(t, site.suggestion(batteryKey("home"), api.BatteryNormal.String()))
 	assert.Nil(t, site.lastOptimizerSolve)
 }
+
+func TestCircuitMaxImport(t *testing.T) {
+	for _, tc := range []struct {
+		power, current, expected float64
+	}{
+		{0, 0, 0},
+		{10000, 0, 10000},
+		{0, 20, 13800},
+		{10000, 20, 10000},
+		{20000, 20, 13800},
+	} {
+		ctrl := gomock.NewController(t)
+		c := api.NewMockCircuit(ctrl)
+		c.EXPECT().GetMaxPower().Return(tc.power)
+		c.EXPECT().GetMaxCurrent().Return(tc.current)
+
+		assert.Equal(t, tc.expected, circuitMaxImport(c), "power %.0f current %.0f", tc.power, tc.current)
+	}
+}
