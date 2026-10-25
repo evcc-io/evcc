@@ -36,6 +36,8 @@ func NewWrapper(ctx context.Context, typ string, other map[string]any, err error
 		typ:    typ,
 		config: other,
 		err:    err,
+		// creation has just failed, so the first retry waits for retryInterval
+		retriedAt: time.Now(),
 	}
 }
 

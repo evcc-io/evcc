@@ -58,11 +58,14 @@ func TestWrapperRetry(t *testing.T) {
 	res := NewWrapper(context.TODO(), "test-retry", nil, err)
 	w := res.(*Wrapper)
 
-	// first call retries immediately and fails
+	// creation has just failed: no immediate retry
+	assert.False(t, w.retriedAt.IsZero())
+	retriedAt := w.retriedAt
+
 	_, err = res.Rates()
 	require.ErrorContains(t, err, "tariff not available")
 	assert.Equal(t, api.TariffType(0), res.Type())
-	assert.False(t, w.retriedAt.IsZero())
+	assert.Equal(t, retriedAt, w.retriedAt)
 
 	// tariff becomes available but retry interval not elapsed: still unavailable
 	retryable.setErr(nil)
