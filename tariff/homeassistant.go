@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
 	"sync"
 	"time"
@@ -93,11 +94,14 @@ func (t *HomeAssistant) run(interval time.Duration, done chan error) {
 	}
 }
 
-// solarForecastRates sums the hourly energy of all forecasts, which equals the average power in W
+// solarForecastRates converts the energy per slot of all forecasts to average power in W.
+// The slot length of a forecast is its smallest timestamp distance, defaulting to one hour.
 func solarForecastRates(res map[string]homeassistant.SolarForecast) (api.Rates, error) {
-	energy := make(map[time.Time]float64)
+	var slots api.Rates
+	bounds := make(map[time.Time]struct{})
 
 	for _, f := range res {
+		energy := make(map[time.Time]float64, len(f.WhHours))
 		for k, wh := range f.WhHours {
 			ts, err := time.Parse(time.RFC3339, k)
 			if err != nil {
@@ -105,18 +109,45 @@ func solarForecastRates(res map[string]homeassistant.SolarForecast) (api.Rates, 
 			}
 			energy[ts.Local()] += wh
 		}
+
+		ts := slices.SortedFunc(maps.Keys(energy), time.Time.Compare)
+
+		d := time.Hour
+		for i := 1; i < len(ts); i++ {
+			if delta := ts[i].Sub(ts[i-1]); delta < d {
+				d = delta
+			}
+		}
+
+		for _, t := range ts {
+			end := t.Add(d)
+			slots = append(slots, api.Rate{Start: t, End: end, Value: energy[t] / d.Hours()})
+			bounds[t], bounds[end] = struct{}{}, struct{}{}
+		}
 	}
 
-	data := make(api.Rates, 0, len(energy))
-	for ts, wh := range energy {
-		data = append(data, api.Rate{
-			Start: ts,
-			End:   ts.Add(time.Hour),
-			Value: wh,
-		})
-	}
+	// sum slots of different granularity on the common time grid
+	edges := slices.SortedFunc(maps.Keys(bounds), time.Time.Compare)
 
-	data.Sort()
+	data := make(api.Rates, 0, len(edges))
+	for i := 0; i+1 < len(edges); i++ {
+		start, end := edges[i], edges[i+1]
+
+		var (
+			sum   float64
+			found bool
+		)
+		for _, s := range slots {
+			if !s.Start.After(start) && !s.End.Before(end) {
+				sum += s.Value
+				found = true
+			}
+		}
+
+		if found {
+			data = append(data, api.Rate{Start: start, End: end, Value: sum})
+		}
+	}
 
 	return data, nil
 }
