@@ -352,6 +352,9 @@ func testDefaults(tmpl Template) map[string]any {
 			}
 		default:
 			values[p.Name] = "foo"
+			if p.Pattern != nil && len(p.Pattern.Examples) > 0 {
+				values[p.Name] = p.Pattern.Examples[0]
+			}
 		}
 	}
 
