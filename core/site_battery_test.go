@@ -666,3 +666,54 @@ func TestEvFastChargingActiveDisabledLoadpoint(t *testing.T) {
 
 	assert.False(t, site.evFastChargingActive())
 }
+
+// TestUnmodelledChargingVehicle guards that a vehicle the optimizer request models as
+// storage does not force hold, also when only the battery is automatic: its demand is
+// already part of the battery suggestion.
+func TestUnmodelledChargingVehicle(t *testing.T) {
+	above := 1.5
+	rate := api.Rate{Start: time.Now(), End: time.Now().Add(time.Hour), Value: 1.15}
+
+	for _, tc := range []struct {
+		name      string
+		automatic bool
+		features  []api.Feature
+		vehicle   func(*gomock.Controller) api.Vehicle
+		limit     float64
+		expected  bool
+	}{
+		{"battery only, vehicle with capacity", false, nil, modelledVehicle, 0, false},
+		{"full, vehicle with capacity", true, nil, modelledVehicle, 0, false},
+		{"vehicle without capacity", false, nil, func(c *gomock.Controller) api.Vehicle {
+			v := api.NewMockVehicle(c)
+			v.EXPECT().Capacity().Return(0.0).AnyTimes()
+			return v
+		}, 0, true},
+		{"vehicle without capacity, energy limit", false, nil, func(c *gomock.Controller) api.Vehicle {
+			v := api.NewMockVehicle(c)
+			v.EXPECT().Capacity().Return(0.0).AnyTimes()
+			return v
+		}, 10, false},
+		{"no vehicle", false, nil, func(*gomock.Controller) api.Vehicle { return nil }, 0, true},
+		{"heater", false, []api.Feature{api.Heating}, modelledVehicle, 0, true},
+	} {
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.status = api.StatusC
+		lp.mode = api.ModeSmart
+		lp.smartCostLimit = &above
+		lp.limitEnergy = tc.limit
+		lp.site = &mockSite{automatic: tc.automatic}
+		if v := tc.vehicle(gomock.NewController(t)); v != nil {
+			lp.vehicle = v
+		}
+		if tc.features != nil {
+			lp.charger = struct {
+				api.Charger
+				api.FeatureDescriber
+			}{FeatureDescriber: &featureCharger{features: tc.features}}
+		}
+
+		site := &Site{log: util.NewLogger("foo"), loadpoints: []*Loadpoint{lp}}
+		assert.Equal(t, tc.expected, site.unmodelledCharging(rate), tc.name)
+	}
+}
