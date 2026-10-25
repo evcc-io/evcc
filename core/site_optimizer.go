@@ -62,6 +62,7 @@ type optimizerResult struct {
 	Req     optimizer.OptimizationInput  `json:"req"`
 	Res     optimizer.OptimizationResult `json:"res"`
 	Details requestDetails               `json:"details"`
+	Hosted  bool                         `json:"hosted"` // explain needs the hosted optimizer
 }
 
 var _ api.BytesMarshaler = (*optimizerResult)(nil)
@@ -174,8 +175,10 @@ func suggestionEvent(detail batteryDetail, s types.Suggestion) messenger.Event {
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
 // (hold), exporting means charging is withheld (holdcharge). At its soc bound nothing is
-// withheld, the bound does it, so the battery stays in normal mode.
-func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
+// withheld, the bound does it, so the battery stays in normal mode. Without planned
+// discharge the battery is held when holdWorthwhile, since normal mode would let the
+// inverter cover intra-slot dips from the battery.
+func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
 	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
 		return types.Suggestion{}
 	}
@@ -214,6 +217,8 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 		case discharge > suggestionThreshold && gridExporting:
 			// discharging while exporting means battery-to-grid discharge
 			s.Action = api.BatteryDischarge.String()
+		case discharge <= suggestionThreshold && !(idle && empty) && holdWorthwhile(req, res, ts, slot):
+			s.Action = api.BatteryHold.String()
 		default:
 			s.Action = api.BatteryNormal.String()
 		}
@@ -224,6 +229,26 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 	}
 
 	return s
+}
+
+// holdWorthwhile reports whether energy kept in the battery now is discharged later at a
+// higher price. A battery that fills up before its next discharge only displaces pv
+// charging with the kept energy, so holding it would trade a battery dip for a grid import.
+func holdWorthwhile(req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, slot int) bool {
+	if slot >= len(ts.PN) {
+		return false
+	}
+
+	for i := slot + 1; i < min(len(res.DischargingPower), len(ts.PN), len(ts.Dt)); i++ {
+		if slotHours := float64(ts.Dt[i]) / 3600; slotHours > 0 && float64(res.DischargingPower[i])/slotHours > suggestionThreshold {
+			return ts.PN[i] > ts.PN[slot]
+		}
+		if req.SMax > 0 && i < len(res.StateOfCharge) && res.StateOfCharge[i] >= req.SMax {
+			return false
+		}
+	}
+
+	return false
 }
 
 // loadpointCurrentAction returns the loadpoint's current operating mode for
@@ -425,6 +450,13 @@ type optimizerBattery struct {
 
 func optimizerURI() string {
 	return cmp.Or(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
+}
+
+// optimizerAuth adds the sponsor token for the hosted optimizer only, a custom OPTIMIZER_URI must not receive it
+func optimizerAuth(req *http.Request) {
+	if optimizerURI() == OPTIMIZER_URI && sponsor.IsAuthorizedForApi() {
+		req.Header.Set("Authorization", "Bearer "+sponsor.Token)
+	}
 }
 
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
@@ -706,9 +738,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	resp, err := apiClient.PostOptimizeChargeScheduleWithResponse(context.TODO(), req, func(_ context.Context, req *http.Request) error {
-		if sponsor.IsAuthorizedForApi() {
-			req.Header.Set("Authorization", "Bearer "+sponsor.Token)
-		}
+		optimizerAuth(req)
 		return nil
 	})
 	if err != nil {
@@ -726,6 +756,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		Req:     req,
 		Res:     *resp.JSON200,
 		Details: details,
+		Hosted:  optimizerURI() == OPTIMIZER_URI,
 	}
 
 	site.Lock()
@@ -854,7 +885,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 			}),
 		})
 
-		suggestion := currentSlotSuggestion(detail, batReq, batRes, slot, gridImport, gridExport, slotHours)
+		suggestion := currentSlotSuggestion(detail, batReq, batRes, req.TimeSeries, slot, gridImport, gridExport, slotHours)
 		if suggestion.Action == "" {
 			continue
 		}
@@ -1151,6 +1182,27 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	if bat.ChargeFromGrid {
 		if demand := site.applyBatteryGridChargeLimit(bat.CMax, planner, minLen); demand != nil {
 			bat.PDemand = prorate(demand, firstSlotDuration)
+		}
+	}
+
+	// an external mode overrides evcc's battery control and is assumed to hold over the horizon
+	if controllable {
+		if mode := supportedBatteryMode(ctrl.BatteryModes(), site.GetBatteryModeExternal()); mode != api.BatteryUnknown {
+			bat.ChargeFromGrid = mode == api.BatteryCharge
+			bat.DischargeToGrid = mode == api.BatteryDischarge
+			bat.PDemand = nil
+
+			switch mode {
+			case api.BatteryHold:
+				bat.DMax = 0
+			case api.BatteryHoldCharge, api.BatteryDischarge:
+				bat.CMax = 0
+			case api.BatteryCharge:
+				bat.DMax = 0
+				bat.PDemand = prorate(lo.RepeatBy(minLen, func(int) float32 {
+					return float32(float64(bat.CMax) / slotsPerHour)
+				}), firstSlotDuration)
+			}
 		}
 	}
 

@@ -47,9 +47,14 @@ render: |
     headers:
       - X-Authorization: "Token {{ .token }}"
     jq: |
-      .records.solar_yield_forecast | map({
-         "start": ((.[0] / 1000) | todateiso8601),
-         "end":   (((.[0] + 3600000) / 1000 ) | todateiso8601),
-         "value": .[1]
-       }) | tostring
+      # values are the energy of the hour starting at the timestamp. evcc expects the
+      # power at the timestamp, which is the mean of the hours meeting there.
+      .records.solar_yield_forecast as $s
+      | [ range(0; $s|length) as $i |
+          {
+            start: (($s[$i][0] / 1000) | todateiso8601),
+            end:   ((($s[$i][0] + 3600000) / 1000) | todateiso8601),
+            value: (($s[[$i-1, 0] | max][1] + $s[$i][1]) / 2)
+          }
+        ] | tostring
   interval: {{ .interval }}
