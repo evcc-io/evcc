@@ -76,7 +76,9 @@ func (t *Tibber) run(done chan error) {
 		"id": graphql.ID(t.homeID),
 	}
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	delay := time.Hour
+
+	for ; ; <-time.After(delay) {
 		var res struct {
 			Viewer struct {
 				Home struct {
@@ -105,7 +107,34 @@ func (t *Tibber) run(done chan error) {
 
 		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
+
+		delay = tibberRefreshDelay(time.Now(), res.Viewer.Home.TimeZone, len(pi.Tomorrow) > 0)
 	}
+}
+
+// tibberRefreshDelay returns the time until the next price update.
+// Tibber publishes tomorrow's prices around 13:00 local time. Until they are
+// available, refresh at 13:00 and then every few minutes instead of hourly.
+func tibberRefreshDelay(now time.Time, timeZone string, tomorrow bool) time.Duration {
+	if tomorrow {
+		return time.Hour
+	}
+
+	loc := time.Local
+	if timeZone != "" {
+		if l, err := time.LoadLocation(timeZone); err == nil {
+			loc = l
+		}
+	}
+
+	local := now.In(loc)
+	publish := time.Date(local.Year(), local.Month(), local.Day(), 13, 0, 0, 0, loc)
+
+	if local.Before(publish) {
+		return min(time.Hour, publish.Sub(local))
+	}
+
+	return 5 * time.Minute
 }
 
 func (t *Tibber) rates(pi []tibber.Price) api.Rates {
