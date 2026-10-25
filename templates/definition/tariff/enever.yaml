@@ -37,6 +37,7 @@ params:
         "ZG",
         "ZP",
       ]
+    required: true
   - name: resolution
     description:
       en: Price resolution
