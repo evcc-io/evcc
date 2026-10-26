@@ -12,7 +12,7 @@ const LOG_ENABLED = !process.env["GITHUB_ACTIONS"];
 
 function workerPort() {
   const index = parseInt(process.env["TEST_WORKER_INDEX"] ?? "-1");
-  return 13000 + index;
+  return 15000 + index;
 }
 
 function logPrefix() {
