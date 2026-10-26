@@ -195,7 +195,7 @@ func (lp *Loadpoint) syncChargerPhases(disabled bool) error {
 		return nil
 	}
 
-	// no currents to measure while disabled
+	// measured phases are stale while disabled, keep the enabled-only fallback
 	if disabled {
 		return nil
 	}
