@@ -12,7 +12,7 @@ const BINARY = "./evcc";
 const IS_CI = !!process.env["GITHUB_ACTIONS"];
 const LOG_ENABLED = !IS_CI;
 // wait-on polls every 250ms by default, which adds up over hundreds of start/stop cycles
-const WAIT_OPTS = { interval: 50, window: 50, log: LOG_ENABLED };
+export const WAIT_OPTS = { interval: 50, window: 50, log: LOG_ENABLED };
 
 // sometimes evcc startup fails due to infra issues in runner ususally fixed by retry. allowing some fails to avoid github annotations clutter
 let allowedStartupFails = IS_CI ? 2 : 0;
