@@ -456,7 +456,11 @@ func configureCurtailers(static []config.Named, names ...string) error {
 func staticRefs(cc config.Named, static []config.Named) []string {
 	var res []string
 	for _, v := range cc.Other {
-		if name, ok := v.(string); ok && slices.ContainsFunc(static, func(s config.Named) bool { return s.Name == name }) {
+		name, ok := v.(string)
+		if !ok || name == cc.Name {
+			continue
+		}
+		if slices.ContainsFunc(static, func(s config.Named) bool { return s.Name == name }) {
 			res = append(res, name)
 		}
 	}

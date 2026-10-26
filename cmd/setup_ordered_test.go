@@ -5,6 +5,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -51,4 +52,12 @@ func TestRunOrdered(t *testing.T) {
 		assert.ErrorIs(t, err, failed)
 		assert.Equal(t, []string{"parent"}, order)
 	})
+}
+
+func TestStaticRefs(t *testing.T) {
+	static := []config.Named{
+		{Name: "heatpump", Other: map[string]any{"icon": "heatpump", "boost": "relay", "title": "Heat"}},
+		{Name: "relay"},
+	}
+	assert.Equal(t, []string{"relay"}, staticRefs(static[0], static))
 }
