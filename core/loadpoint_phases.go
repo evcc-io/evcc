@@ -185,7 +185,7 @@ func (lp *Loadpoint) syncChargerPhases(disabled bool) error {
 		}
 
 		if chargerPhases > 0 && chargerPhases != phases {
-			// a disabled charger may switch phases without the loadpoint, e.g. Keba driver back to 1p
+			// a disabled charger may switch phases without the loadpoint
 			if phases > 0 && !disabled {
 				lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
 			}
