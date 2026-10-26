@@ -174,46 +174,58 @@ func (v *API) login(gen uint64) error {
 		return err
 	}
 
-	// email/identifier step
-	vars, err := vwidentity.FormValues(bytes.NewReader(body), "form#emailPasswordForm")
-	if err != nil {
-		return fmt.Errorf("identifier form: %w (portal layout may have changed)", err)
-	}
+	if vars, err := vwidentity.FormValues(bytes.NewReader(body), "form#emailPasswordForm"); err == nil {
+		// legacy two-step flow (pre-Auth0)
+		uri := vwidentity.BaseURL + vars.Action
+		resp, err = client.PostForm(uri, url.Values{
+			"_csrf":      {vars.Inputs["_csrf"]},
+			"relayState": {vars.Inputs["relayState"]},
+			"hmac":       {vars.Inputs["hmac"]},
+			"email":      {v.user},
+		})
+		if err != nil {
+			return err
+		}
 
-	uri := vwidentity.BaseURL + vars.Action
-	resp, err = client.PostForm(uri, url.Values{
-		"_csrf":      {vars.Inputs["_csrf"]},
-		"relayState": {vars.Inputs["relayState"]},
-		"hmac":       {vars.Inputs["hmac"]},
-		"email":      {v.user},
-	})
-	if err != nil {
-		return err
-	}
+		params, err := vwidentity.ParseCredentialsPage(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return fmt.Errorf("credentials page: %w", err)
+		}
+		if params.TemplateModel.Error != "" {
+			return errors.New(params.TemplateModel.Error)
+		}
 
-	params, err := vwidentity.ParseCredentialsPage(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		return fmt.Errorf("credentials page: %w", err)
-	}
-	if params.TemplateModel.Error != "" {
-		return errors.New(params.TemplateModel.Error)
-	}
+		uri = strings.ReplaceAll(uri, params.TemplateModel.IdentifierUrl, params.TemplateModel.PostAction)
+		resp, err = client.PostForm(uri, url.Values{
+			"_csrf":      {params.CsrfToken},
+			"relayState": {params.TemplateModel.RelayState},
+			"hmac":       {params.TemplateModel.Hmac},
+			"email":      {v.user},
+			"password":   {v.password},
+		})
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+	} else {
+		// Auth0 Universal Login Page: read state hidden input, single POST
+		state, err := vwidentity.ExtractState(body)
+		if err != nil {
+			return fmt.Errorf("identifier form: %w (portal layout may have changed)", err)
+		}
 
-	// password/authenticate step - the client follows the redirect chain back to
-	// the portal which sets the session cookie
-	uri = strings.ReplaceAll(uri, params.TemplateModel.IdentifierUrl, params.TemplateModel.PostAction)
-	resp, err = client.PostForm(uri, url.Values{
-		"_csrf":      {params.CsrfToken},
-		"relayState": {params.TemplateModel.RelayState},
-		"hmac":       {params.TemplateModel.Hmac},
-		"email":      {v.user},
-		"password":   {v.password},
-	})
-	if err != nil {
-		return err
+		loginURL := resp.Request.URL.String()
+		resp, err = client.PostForm(loginURL, url.Values{
+			"state":    {state},
+			"username": {v.user},
+			"password": {v.password},
+		})
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
 	}
-	defer resp.Body.Close()
 
 	final, err := loginLocation(resp)
 	if err != nil {

@@ -246,7 +246,7 @@ func (v *Service) skipMarketingConsent(resp *http.Response) (*url.URL, bool, err
 
 // loginNew performs the new VW identity login flow
 func (v *Service) loginNew(body []byte, user, password string) (url.Values, error) {
-	state, err := extractState(body)
+	state, err := ExtractState(body)
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +323,8 @@ func parseAuthLocation(u *url.URL) (url.Values, error) {
 	return u.Query(), nil
 }
 
-func extractState(body []byte) (string, error) {
+// ExtractState extracts the Auth0 ULP state hidden input value from body.
+func ExtractState(body []byte) (string, error) {
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(body))
 	if err != nil {
 		return "", err
