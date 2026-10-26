@@ -274,8 +274,14 @@ func TestConfigHasCriticalPlugin(t *testing.T) {
 	assert.True(t, configHasCriticalPlugin(templates.Charger, configReq{
 		Other: map[string]any{"power": map[string]any{"source": "script", "cmd": "echo 1"}},
 	}))
+	// benign template renders without a critical source
 	assert.False(t, configHasCriticalPlugin(templates.Charger, configReq{
-		Other: map[string]any{"template": "tesla"},
+		Other: map[string]any{"template": "demo-charger", "status": "A"},
+	}))
+	// fail closed: a template we cannot render to verify requires the admin password,
+	// since force-save would persist it and instantiate it on the next start
+	assert.True(t, configHasCriticalPlugin(templates.Charger, configReq{
+		Other: map[string]any{"template": "does-not-exist"},
 	}))
 }
 

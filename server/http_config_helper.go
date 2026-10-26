@@ -596,9 +596,13 @@ func configUnchanged(id int, req configReq) bool {
 }
 
 func configHasCriticalPlugin(class templates.Class, req configReq) bool {
-	// critical sources may only appear after rendering. render errors fall through, such configs are never instantiated
-	if instance, err := templates.RenderInstance(class, req.Other); err == nil && valueHasCriticalSource(instance.Other) {
-		return true
+	// a critical source may only appear after rendering the template. fail closed:
+	// a config we cannot render to verify may still be force-saved and instantiated later
+	if _, ok := req.Other[typeTemplate]; ok {
+		instance, err := templates.RenderInstance(class, req.Other)
+		if err != nil || valueHasCriticalSource(instance.Other) {
+			return true
+		}
 	}
 
 	if req.Yaml != "" {
