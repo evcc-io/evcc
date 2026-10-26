@@ -183,7 +183,7 @@ Gated by `OptimizerAutomatic()`: `off` (advisory only), battery-only, or `full` 
 **Home battery** (`requiredBatteryMode`, `core/site_battery.go`), in priority order:
 
 - external mode (API) wins.
-- `Automatic()` and `unmodelledCharging(rate)`: a loadpoint the optimizer request does not model as storage (`modelledAsStorage`: heater, no vehicle, vehicle without capacity and session energy limit, or no max power) is fast charging or on the smart cost limit, as is forced min soc charging of any loadpoint. The suggestion did not account for that load, so force `hold`. A vehicle with capacity is modelled even in battery-only mode, so it does not force `hold`.
+- `Automatic()` and `unmodelledCharging(rate)`: a loadpoint the optimizer does not control is fast charging or on the smart cost limit. The suggestion did not account for that load, so force `hold`, unless the suggestion is `charge`: grid charging cannot drain the battery into that load.
 - `Automatic()`: `batterySuggestionMode()` takes the first controllable battery's suggestion (`api.BatteryModeString(s.Action)`); an unknown action releases to `normal`; no suggestion releases to `normal` only if evcc had modified the mode (`batteryModeModified`), otherwise the mode is left untouched. This replaces the grid charge limit and discharge control. TODO: per-battery modes.
 - not automatic: legacy grid charge / discharge control / feed-in discharge rules.
 

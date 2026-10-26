@@ -415,6 +415,40 @@ func TestBatteryModeAutomatic(t *testing.T) {
 	ctrl.Finish()
 }
 
+// TestBatteryModeUnmodelledCharging guards that an uncontrolled loadpoint on the smart cost
+// limit holds the battery but does not block a grid charge suggestion (#35337)
+func TestBatteryModeUnmodelledCharging(t *testing.T) {
+	enableAutomatic(t)
+	settings.SetString(keys.OptimizerAutomatic, OptimizerAutomaticBattery)
+
+	above := 1.5
+	rate := api.Rate{Start: time.Now(), End: time.Now().Add(time.Hour), Value: 1.15}
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.status = api.StatusC
+	lp.mode = api.ModeSmart
+	lp.smartCostLimit = &above
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, api.Meter(nil))},
+		loadpoints:    []*Loadpoint{lp},
+	}
+
+	for _, tc := range []struct {
+		suggestion, res api.BatteryMode
+	}{
+		{api.BatteryCharge, api.BatteryCharge},
+		{api.BatteryNormal, api.BatteryHold},
+		{api.BatteryDischarge, api.BatteryHold},
+	} {
+		site.setSuggestions(map[string]types.Suggestion{
+			batteryKey("bat"): {Action: tc.suggestion.String()},
+		})
+		assert.Equal(t, tc.res, site.requiredBatteryMode(false, false, rate), tc.suggestion.String())
+	}
+}
+
 func TestBatteryGridChargeLimitUnavailable(t *testing.T) {
 	enableAutomatic(t)
 
