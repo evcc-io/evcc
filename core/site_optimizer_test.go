@@ -625,7 +625,7 @@ func TestLoadpointRequestChargeGoal(t *testing.T) {
 		{"no capacity, limit exceeded", 0, 0, 100, 10, 11000, 11000, 11000},
 		{"capacity but no soc, energy limit", 50, 0, 100, 10, 0, 0, 10000},
 		{"capacity but no soc, no energy limit", 50, 0, 100, 0, 0, 0, 50000},
-		{"capacity but no soc, partially charged", 50, 0, 100, 0, 10000, 8500, 50000},
+		{"capacity but no soc, partially charged", 50, 0, 100, 0, 10000, 9000, 50000},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
