@@ -812,6 +812,11 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	// solver noise on the grid is no import/export (#34657)
 	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 4e-05, 0, 570.0/3600).Action, "idle with import noise")
 	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 0, 4e-05, 570.0/3600).Action, "idle with export noise")
+
+	// an unsupported mode is suggested as the mode control applies instead (#35379)
+	battery.modes = []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 0, 1000, 1).Action, "holdcharge unsupported")
+	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 1000, 0, 1).Action, "hold supported")
 }
 
 // TestCurrentSlotSuggestionHoldWorthwhile covers holding a battery without planned
