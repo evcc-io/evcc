@@ -256,6 +256,7 @@ func TestSyncChargerPhasesDisabled(t *testing.T) {
 	assert.Equal(t, 1, lp.phases)
 
 	// measured currents are stale while disabled
+	lp.measuredPhases = 3
 	ch.EXPECT().Enabled().Return(false, nil)
 	lp.charger = struct {
 		api.Charger
