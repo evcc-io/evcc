@@ -25,6 +25,14 @@ params:
     help:
       en: Battery max discharge current in A, written back when leaving hold mode. Inverter default is 50 A for H3-Pro/Smart (26 A for H3).
       de: Maximaler Batterieentladestrom in A, wird beim Verlassen des Haltemodus zurückgeschrieben. Werkseinstellung 50 A bei H3-Pro/Smart (26 A bei H3).
+  - name: maxchargecurrent
+    default: 50
+    description:
+      en: Max Charge Current
+      de: Max Ladestrom
+    help:
+      en: Battery max charge current in A, written back when leaving holdcharge mode. Inverter default is 50 A for H3-Pro/Smart.
+      de: Maximaler Batterieladestrom in A, wird beim Verlassen der Ladesperre zurückgeschrieben. Werkseinstellung 50 A bei H3-Pro/Smart.
   - name: minsoc
     default: 10
   - name: maxsoc
@@ -206,6 +214,15 @@ render: |
                 address: 46608 # Battery max discharge current
                 type: writesingle
                 encoding: uint16
+          - source: const
+            value: {{ mul .maxchargecurrent 10 }} # 0.1 A, restores the limit after holdcharge
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46607 # Battery max charge current
+                type: writesingle
+                encoding: uint16
       - case: 2 # hold - stop battery discharge
         set:
           source: sequence
@@ -242,6 +259,15 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 46608 # Battery max discharge current
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: {{ mul .maxchargecurrent 10 }} # restores the limit when switching from holdcharge
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46607 # Battery max charge current
                 type: writesingle
                 encoding: uint16
       - case: 3 # charge - force battery charge
@@ -284,5 +310,45 @@ render: |
                 address: 46003 # Remote Active Power, int32 across 46003 (high word) and 46004 (low word)
                 type: writemultiple
                 encoding: int32
+      - case: 4 # holdcharge - stop battery charge, discharge allowed
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 0 # Disabled
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46001 # Remote Control
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 1 # Self Use
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 49203 # Work Mode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # blocks charging, PV surplus is exported
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46607 # Battery max charge current
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: {{ mul .maxdischargecurrent 10 }} # restores the limit when switching from hold
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46608 # Battery max discharge current
+                type: writesingle
+                encoding: uint16
   {{- include "battery-params" . }}
   {{- end }}
