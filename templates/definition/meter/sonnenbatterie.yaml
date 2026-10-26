@@ -61,75 +61,97 @@ render: |
     cache: {{ .cache }}
     jq: .USOC
   {{- if .token }}
+  # the sequence hides the switch, so the modes are declared here
+  batterymodes: ["normal", "hold", "charge"]
   batterymode:
-    source: switch
-    switch:
-    - case: 1 # normal
-      set:
-        source: http
-        uri: http://{{ .host }}/api/v2/configurations
-        insecure: true
-        method: PUT
-        headers:
-        - content-type: application/json
-        - Auth-Token: {{ .token }}
-        {{- if eq .defaultmode "time-of-use" }}
-        body: '{"EM_OperatingMode":"10"}' # Time-of-use
-        {{- else }}
-        body: '{"EM_OperatingMode":"2"}'  # Self-consumption
-        {{- end }}
-    - case: 2 # hold
-      set:
-        source: sequence
+    # use a sequence to propagate resets to the watchdog
+    source: sequence
+    set:
+    - source: switch
+      switch:
+      - case: 1 # normal
         set:
-        - source: http
+          source: http
           uri: http://{{ .host }}/api/v2/configurations
           insecure: true
           method: PUT
           headers:
           - content-type: application/json
           - Auth-Token: {{ .token }}
-          body: '{"EM_OperatingMode":"1"}'  # Manual
-        - source: http
-          uri: http://{{ .host }}/api/v2/setpoint/discharge/0
-          insecure: true
-          method: POST
-          headers:
-          - content-type: application/json
-          - Auth-Token: {{ .token }}
-        - source: http
-          uri: http://{{ .host }}/api/v2/setpoint/charge/0
-          insecure: true
-          method: POST
-          headers:
-          - content-type: application/json
-          - Auth-Token: {{ .token }}
-    - case: 3 # charge
-      set:
-        source: sequence
+          {{- if eq .defaultmode "time-of-use" }}
+          body: '{"EM_OperatingMode":"10"}' # Time-of-use
+          {{- else }}
+          body: '{"EM_OperatingMode":"2"}'  # Self-consumption
+          {{- end }}
+      - case: 2 # hold
         set:
-        - source: http
-          uri: http://{{ .host }}/api/v2/configurations
-          insecure: true
-          method: PUT
-          headers:
-          - content-type: application/json
-          - Auth-Token: {{ .token }}
-          body: '{"EM_OperatingMode":"1"}'  # manual
-        - source: http
-          uri: http://{{ .host }}/api/v2/setpoint/discharge/0
-          insecure: true
-          method: POST
-          headers:
-          - content-type: application/json
-          - Auth-Token: {{ .token }}
-        - source: http
-          uri: http://{{ .host }}/api/v2/setpoint/charge/{{ .maxchargepower }}
-          insecure: true
-          method: POST
-          headers:
-          - content-type: application/json
-          - Auth-Token: {{ .token }}
+          source: sequence
+          set:
+          - source: http
+            uri: http://{{ .host }}/api/v2/configurations
+            insecure: true
+            method: PUT
+            headers:
+            - content-type: application/json
+            - Auth-Token: {{ .token }}
+            body: '{"EM_OperatingMode":"1"}' # manual
+          - source: http
+            uri: http://{{ .host }}/api/v2/setpoint/discharge/0
+            insecure: true
+            method: POST
+            headers:
+            - content-type: application/json
+            - Auth-Token: {{ .token }}
+          - source: http
+            uri: http://{{ .host }}/api/v2/setpoint/charge/0
+            insecure: true
+            method: POST
+            headers:
+            - content-type: application/json
+            - Auth-Token: {{ .token }}
+      - case: 3 # charge
+        set:
+          source: sequence
+          set:
+          - source: http
+            uri: http://{{ .host }}/api/v2/configurations
+            insecure: true
+            method: PUT
+            headers:
+            - content-type: application/json
+            - Auth-Token: {{ .token }}
+            body: '{"EM_OperatingMode":"1"}' # manual
+          - source: http
+            uri: http://{{ .host }}/api/v2/setpoint/discharge/0
+            insecure: true
+            method: POST
+            headers:
+            - content-type: application/json
+            - Auth-Token: {{ .token }}
+    # the charge setpoint is ignored when it follows the switch from hold, so it is repeated while charging
+    - source: watchdog
+      timeout: 30s
+      reset: [1, 2]
+      set:
+        source: switch
+        switch:
+        - case: 1 # normal
+          set:
+            source: sleep
+            duration: 0s
+        - case: 2 # hold
+          set:
+            source: sleep
+            duration: 0s
+        - case: 3 # charge
+          set:
+            source: http
+            uri: http://{{ .host }}/api/v2/setpoint/charge/{{ .maxchargepower }}
+            insecure: true
+            method: POST
+            headers:
+            - content-type: application/json
+            - Auth-Token: {{ .token }}
   {{- end }}
   {{- include "battery-params" . }}
   {{- end }}
