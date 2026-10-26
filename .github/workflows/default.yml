@@ -183,7 +183,7 @@ jobs:
           test -z "$(git status --porcelain)" || (git status; git diff; false)
 
   integration-shard:
-    name: Integration ${{ matrix.shard }}/2
+    name: Integration ${{ matrix.shard }}/3
     runs-on: depot-ubuntu-24.04-arm-32
 
     permissions:
@@ -194,7 +194,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -258,7 +258,7 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
 
       - name: Run tests
-        run: vpx playwright test --shard=${{ matrix.shard }}/2
+        run: vpx playwright test --shard=${{ matrix.shard }}/3
         timeout-minutes: 20
         env:
           TZ: Europe/Berlin
