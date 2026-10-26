@@ -261,6 +261,7 @@ func TestConfigHasCriticalPlugin(t *testing.T) {
 		{"plain template", "power: 100", false},
 		{"script in yaml list", "- name: main\n  getmaxcurrent:\n    source: script\n    cmd: echo 1", true},
 		{"benign yaml list", "- name: main\n  maxcurrent: 16", false},
+		{"script with non-string sibling key", "power:\n  source: script\n  cmd: echo 1\n~: x", true},
 	}
 
 	for _, tc := range tc {

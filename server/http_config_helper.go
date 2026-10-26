@@ -618,12 +618,15 @@ func valueHasCriticalSource(v any) bool {
 	switch t := v.(type) {
 	case map[string]any:
 		for k, val := range t {
-			if strings.EqualFold(k, "source") {
-				if s, ok := val.(string); ok && slices.Contains(criticalPluginSources, strings.ToLower(strings.TrimSpace(s))) {
-					return true
-				}
+			if mapEntryIsCriticalSource(k, val) || valueHasCriticalSource(val) {
+				return true
 			}
-			if valueHasCriticalSource(val) {
+		}
+	case map[any]any:
+		// yaml decodes any mapping with a non-string key into map[any]any, which
+		// would otherwise slip past the string-keyed scan
+		for k, val := range t {
+			if mapEntryIsCriticalSource(fmt.Sprint(k), val) || valueHasCriticalSource(val) {
 				return true
 			}
 		}
@@ -631,6 +634,14 @@ func valueHasCriticalSource(v any) bool {
 		return slices.ContainsFunc(t, valueHasCriticalSource)
 	}
 	return false
+}
+
+func mapEntryIsCriticalSource(key string, val any) bool {
+	if !strings.EqualFold(strings.TrimSpace(key), "source") {
+		return false
+	}
+	s, ok := val.(string)
+	return ok && slices.Contains(criticalPluginSources, strings.ToLower(strings.TrimSpace(s)))
 }
 
 // decodeDeviceConfig extracts device configuration and yaml details
