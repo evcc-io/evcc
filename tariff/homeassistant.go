@@ -107,6 +107,10 @@ func solarForecastRates(res map[string]homeassistant.SolarForecast) (api.Rates, 
 			if err != nil {
 				return nil, fmt.Errorf("invalid timestamp: %w", err)
 			}
+			// skip off-grid keys like Forecast.Solar sunrise/sunset that would shrink the slot length
+			if !ts.Equal(ts.Truncate(15 * time.Minute)) {
+				continue
+			}
 			energy[ts.Local()] += wh
 		}
 
