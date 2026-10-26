@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
+	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -18,13 +21,14 @@ import (
 // EcoFlow represents the EcoFlow  meter
 type EcoFlow struct {
 	implement.Caps
-	log    *util.Logger
-	usage  string
-	serial string
-	cache  time.Duration
-	client *ecoflow.Client
-	dataG  func() (*ecoflow.GetCmdResponse, error)
-	limitG func() (float64, error)
+	log     *util.Logger
+	usage   string
+	serials []string
+	leader  atomic.Int32
+	cache   time.Duration
+	client  *ecoflow.Client
+	dataG   func() (*ecoflow.GetCmdResponse, error)
+	limitG  func() (float64, error)
 
 	power, batterySoc string
 }
@@ -75,20 +79,31 @@ func NewEcoFlowFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, fmt.Errorf("invalid region: %s", cc.Region)
 	}
 
-	return NewEcoFlow(cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits, cc.batteryPowerLimits.Decorator())
+	var serials []string
+	for sn := range strings.SplitSeq(cc.Serial, ",") {
+		if sn = strings.TrimSpace(sn); sn != "" {
+			serials = append(serials, sn)
+		}
+	}
+
+	return NewEcoFlow(cc.AccessKey, cc.SecretKey, serials, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits, cc.batteryPowerLimits.Decorator())
 }
 
 // NewEcoFlow constructs the EcoFlow struct
-func NewEcoFlow(accessKey, secretKey, serial, usage, uri string,
+func NewEcoFlow(accessKey, secretKey string, serials []string, usage, uri string,
 	power, soc string, cache time.Duration, capacity func() (float64, error), batterySocLimits batterySocLimits, batteryPowerLimits func() (float64, float64, error)) (*EcoFlow, error) {
-	log := util.NewLogger("ecoflow").Redact(accessKey, secretKey, serial)
+	if len(serials) == 0 {
+		return nil, errors.New("missing serial")
+	}
+
+	log := util.NewLogger("ecoflow").Redact(append([]string{accessKey, secretKey}, serials...)...)
 
 	m := &EcoFlow{
-		Caps:   implement.New(),
-		log:    log,
-		serial: serial,
-		usage:  usage,
-		cache:  cache,
+		Caps:    implement.New(),
+		log:     log,
+		serials: serials,
+		usage:   usage,
+		cache:   cache,
 		client: ecoflow.NewEcoflowClient(accessKey, secretKey,
 			ecoflow.WithBaseUrl(uri),
 			ecoflow.WithHttpClient(request.NewClient(log)),
@@ -115,18 +130,60 @@ func NewEcoFlow(accessKey, secretKey, serial, usage, uri string,
 	return m, nil
 }
 
-// getData retrieves device parameters from EcoFlow API
-func (m *EcoFlow) getData() (*ecoflow.GetCmdResponse, error) {
+// ecoflowLeaderKey is only reported non-zero by the elected leader of a Stream system
+const ecoflowLeaderKey = "cmsBattSoc"
+
+// serial returns the serial of the current leader
+func (m *EcoFlow) serial() string {
+	return m.serials[m.leader.Load()]
+}
+
+func (m *EcoFlow) query(serial string, params []string) (*ecoflow.GetCmdResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
+	return m.client.GetDeviceParameters(ctx, serial, params)
+}
+
+// isLeader reports whether the response comes from the leader of a Stream system
+func isLeader(res *ecoflow.GetCmdResponse) bool {
+	v, err := ecoflowValue(res.Data, ecoflowLeaderKey)
+	return err == nil && v > 0
+}
+
+// getData retrieves device parameters from EcoFlow API
+func (m *EcoFlow) getData() (*ecoflow.GetCmdResponse, error) {
 	params := []string{m.power}
 
 	if m.usage == "battery" {
 		params = append(params, m.batterySoc)
 	}
 
-	return m.client.GetDeviceParameters(ctx, m.serial, params)
+	if len(m.serials) > 1 && !slices.Contains(params, ecoflowLeaderKey) {
+		params = append(params, ecoflowLeaderKey)
+	}
+
+	cur := int(m.leader.Load())
+
+	res, err := m.query(m.serials[cur], params)
+	if err != nil || len(m.serials) == 1 || isLeader(res) {
+		return res, err
+	}
+
+	// leader may have been re-elected, followers report zero values
+	for i, sn := range m.serials {
+		if i == cur {
+			continue
+		}
+
+		if r, err := m.query(sn, params); err == nil && isLeader(r) {
+			m.log.DEBUG.Printf("leader changed to %s", sn)
+			m.leader.Store(int32(i))
+			return r, nil
+		}
+	}
+
+	return res, nil
 }
 
 var _ api.Meter = (*EcoFlow)(nil)
@@ -182,7 +239,7 @@ func (m *EcoFlow) dischargeLimit() (float64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	res, err := m.client.GetDeviceParameters(ctx, m.serial, []string{"cmsMinDsgSoc"})
+	res, err := m.client.GetDeviceParameters(ctx, m.serial(), []string{"cmsMinDsgSoc"})
 	if err != nil {
 		return 0, err
 	}
@@ -207,7 +264,7 @@ func (m *EcoFlow) setBackupReserve(limit float64) error {
 
 	// cfgBackupReverseSoc is the vendor's spelling of the backup reserve
 	res, err := m.client.SetDeviceParameter(ctx, map[string]any{
-		"sn": m.serial, "cmdId": 17, "cmdFunc": 254,
+		"sn": m.serial(), "cmdId": 17, "cmdFunc": 254,
 		"dirDest": 1, "dirSrc": 1, "dest": 2, "needAck": true,
 		"params": map[string]any{"cfgBackupReverseSoc": int(math.Round(limit))},
 	})
