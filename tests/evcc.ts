@@ -11,6 +11,8 @@ import { test } from "@playwright/test";
 const BINARY = "./evcc";
 const IS_CI = !!process.env["GITHUB_ACTIONS"];
 const LOG_ENABLED = !IS_CI;
+// wait-on polls every 250ms by default, which adds up over hundreds of start/stop cycles
+const WAIT_OPTS = { interval: 50, window: 50, log: LOG_ENABLED };
 
 // sometimes evcc startup fails due to infra issues in runner ususally fixed by retry. allowing some fails to avoid github annotations clutter
 let allowedStartupFails = IS_CI ? 2 : 0;
@@ -104,7 +106,7 @@ async function _start(config?: string, flags: string[] = []) {
 
   log(`wait until port ${port} is available`);
   // wait for port to be available
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, ...WAIT_OPTS });
   log(`starting evcc on ports ${port} (HTTP), ${ocpp} (OCPP) and ${eebus} (EEBus)`);
   const additionalFlags = [...flags, "--log", "debug,httpd:trace"];
   log("starting evcc", { config, port, ocpp, eebus, additionalFlags });
@@ -131,7 +133,7 @@ async function _start(config?: string, flags: string[] = []) {
     // wait for apiReady so tests don't race a half-started backend
     const jq = encodeURIComponent(".apiReady|select(.)");
     const ready = `${baseUrl().replace(/^http/, "http-get")}/api/state?jq=${jq}`;
-    await waitOn({ resources: [ready], log: LOG_ENABLED, timeout: 90000 });
+    await waitOn({ resources: [ready], ...WAIT_OPTS, timeout: 90000 });
   } catch (error) {
     instance.kill("SIGKILL");
     console.error(logPrefix(), `evcc startup failed: ${error}`);
@@ -151,7 +153,7 @@ async function _stop(instance?: ChildProcess) {
   if (instance) {
     log("shutting down evcc hard", { port });
     instance.kill("SIGKILL");
-    await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED, timeout: 5000 });
+    await waitOn({ resources: [`tcp:${port}`], reverse: true, ...WAIT_OPTS, timeout: 5000 });
     log("evcc is down", { port });
     return;
   }
@@ -179,7 +181,7 @@ async function _stop(instance?: ChildProcess) {
     }
   }
   log(`wait until port ${port} is closed`);
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED, timeout: 5000 });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, ...WAIT_OPTS, timeout: 5000 });
   log("evcc is down", { port });
 }
 
