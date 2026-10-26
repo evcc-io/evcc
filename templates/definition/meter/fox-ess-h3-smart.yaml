@@ -293,6 +293,15 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
+            value: {{ mul .maxchargecurrent 10 }} # restores the limit when switching from holdcharge
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46607 # Battery max charge current
+                type: writesingle
+                encoding: uint16
+          - source: const
             value: 1 # Enabled
             set:
               source: modbus
