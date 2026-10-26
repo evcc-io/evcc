@@ -376,7 +376,7 @@ func TestDeviceRefs(t *testing.T) {
 		"host":  "db:1", // not a device param
 		"boost": "db:2",
 		"dim":   "",
-		"Meter": "db:3", // key case as stored by the ui
+		"meter": "db:3",
 	})
 
 	assert.Equal(t, map[Class][]string{

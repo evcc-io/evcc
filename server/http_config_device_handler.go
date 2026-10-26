@@ -707,10 +707,6 @@ func deleteOwnedDevice(site site.API, class templates.Class, name string) error 
 		return err
 	}
 
-	if conf, err := config.ConfigByID(id); err == nil {
-		deleteOwnedDevices(site, class, conf.Named())
-	}
-
 	switch class {
 	case templates.Charger:
 		return deleteDevice(id, config.Chargers())

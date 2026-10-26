@@ -497,10 +497,8 @@ func (t *Template) DeviceRefs(values map[string]any) map[Class][]string {
 			continue
 		}
 
-		for k, v := range values {
-			if name, ok := v.(string); ok && name != "" && strings.EqualFold(k, p.Name) {
-				res[class] = append(res[class], name)
-			}
+		if name, ok := values[p.Name].(string); ok && name != "" {
+			res[class] = append(res[class], name)
 		}
 	}
 

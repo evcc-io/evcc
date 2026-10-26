@@ -59,22 +59,30 @@ func collectRefs(conf globalconfig.All) error {
 		return err
 	}
 
-	collectDeviceRefs(templates.Charger, slices.Values(conf.Chargers))
+	collectDeviceRefs(templates.Charger, slices.Values(conf.Chargers), nil)
 
-	for _, class := range []templates.Class{templates.Charger, templates.Tariff} {
-		configurable, err := config.ConfigurationsByClass(class)
-		if err != nil {
-			return err
-		}
-
-		collectDeviceRefs(class, namedSeq(configurable))
+	chargers, err := config.ConfigurationsByClass(templates.Charger)
+	if err != nil {
+		return err
 	}
+	collectDeviceRefs(templates.Charger, namedSeq(chargers), references.charger)
+
+	tariffs, err := config.ConfigurationsByClass(templates.Tariff)
+	if err != nil {
+		return err
+	}
+	collectDeviceRefs(templates.Tariff, namedSeq(tariffs), references.tariff)
 
 	return nil
 }
 
-func collectDeviceRefs(class templates.Class, named iter.Seq[config.Named]) {
+// collectDeviceRefs adds the devices referenced by template params of the given parents.
+// Static parents are always instantiated, db parents only when referenced themselves.
+func collectDeviceRefs(class templates.Class, named iter.Seq[config.Named], referenced []string) {
 	for cc := range named {
+		if referenced != nil && !slices.Contains(referenced, cc.Name) {
+			continue
+		}
 		for refClass, refs := range config.DeviceRefs(class, cc) {
 			switch refClass {
 			case templates.Meter:
