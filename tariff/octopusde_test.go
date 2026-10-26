@@ -263,10 +263,17 @@ func TestComputePeriodDSTChange(t *testing.T) {
 	require.NoError(t, err)
 
 	// 25 hour day (end of DST)
-	next := wallClock(time.Date(2026, 10, 25, 0, 0, 0, 0, loc), 1, 0)
-	assert.Equal(t, time.Date(2026, 10, 26, 0, 0, 0, 0, loc), next)
+	day := time.Date(2026, 10, 25, 0, 0, 0, 0, loc)
 
-	start, end := computePeriod(next, 0, 5*time.Hour)
-	assert.Equal(t, time.Date(2026, 10, 26, 0, 0, 0, 0, loc), start)
+	start, end := computePeriod(day, 0, 5*time.Hour)
+	assert.Equal(t, time.Date(2026, 10, 25, 0, 0, 0, 0, loc), start)
+	assert.Equal(t, time.Date(2026, 10, 25, 5, 0, 0, 0, loc), end)
+
+	start, end = computePeriod(day, 5*time.Hour, 0)
+	assert.Equal(t, time.Date(2026, 10, 25, 5, 0, 0, 0, loc), start)
+	assert.Equal(t, time.Date(2026, 10, 26, 0, 0, 0, 0, loc), end)
+
+	start, end = computePeriod(day, 22*time.Hour, 5*time.Hour)
+	assert.Equal(t, time.Date(2026, 10, 25, 22, 0, 0, 0, loc), start)
 	assert.Equal(t, time.Date(2026, 10, 26, 5, 0, 0, 0, loc), end)
 }
