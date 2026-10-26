@@ -265,17 +265,29 @@ func TestConfigHasCriticalPlugin(t *testing.T) {
 
 	for _, tc := range tc {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.want, configHasCriticalPlugin(configReq{Yaml: tc.yaml}))
+			assert.Equal(t, tc.want, configHasCriticalPlugin(templates.Charger, configReq{Yaml: tc.yaml}))
 		})
 	}
 
 	// non-yaml custom config carried in Other
-	assert.True(t, configHasCriticalPlugin(configReq{
+	assert.True(t, configHasCriticalPlugin(templates.Charger, configReq{
 		Other: map[string]any{"power": map[string]any{"source": "script", "cmd": "echo 1"}},
 	}))
-	assert.False(t, configHasCriticalPlugin(configReq{
+	assert.False(t, configHasCriticalPlugin(templates.Charger, configReq{
 		Other: map[string]any{"template": "tesla"},
 	}))
+}
+
+func TestConfigHasCriticalPluginRendersTemplate(t *testing.T) {
+	// a param value can expand into a critical source that is only visible after
+	// rendering; the raw request has no `source` key, so the guard must scan the output
+	req := configReq{Other: map[string]any{
+		"template": "demo-charger",
+		"status":   "A\nx:\n  source: script\n",
+	}}
+
+	assert.False(t, valueHasCriticalSource(req.Other), "raw request has no critical source")
+	assert.True(t, configHasCriticalPlugin(templates.Charger, req), "rendered template exposes the source")
 }
 
 func TestFilterValidTemplateParams(t *testing.T) {

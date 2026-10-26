@@ -595,7 +595,12 @@ func configUnchanged(id int, req configReq) bool {
 	return err == nil && reflect.DeepEqual(req.Serialise(), stored.Data)
 }
 
-func configHasCriticalPlugin(req configReq) bool {
+func configHasCriticalPlugin(class templates.Class, req configReq) bool {
+	// critical sources may only appear after rendering. render errors fall through, such configs are never instantiated
+	if instance, err := templates.RenderInstance(class, req.Other); err == nil && valueHasCriticalSource(instance.Other) {
+		return true
+	}
+
 	if req.Yaml != "" {
 		// any, not map: global yaml configs (circuits) are a list
 		var m any

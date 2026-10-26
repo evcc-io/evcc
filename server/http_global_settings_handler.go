@@ -74,8 +74,8 @@ func settingsSetYamlHandler(key string, other, struc any, authObject auth.Auth) 
 			return
 		}
 
-		// script plugins need the admin password
-		if !requireCriticalConfigAuth(w, r, authObject, configReq{Yaml: string(b)}) {
+		// script plugins need the admin password (class unused on the yaml path)
+		if !requireCriticalConfigAuth(w, r, authObject, 0, configReq{Yaml: string(b)}) {
 			return
 		}
 
