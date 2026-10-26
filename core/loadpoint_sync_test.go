@@ -222,6 +222,50 @@ func TestSyncChargerPhasesByGetter(t *testing.T) {
 	}
 }
 
+// a disabled charger switching phases on its own (Keba back to 1p) is adopted without warning,
+// so the next enable switches phases before starting instead of starting on the wrong phases
+func TestSyncChargerPhasesDisabled(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	ch := api.NewMockCharger(ctrl)
+	ps := api.NewMockPhaseSwitcher(ctrl)
+	pg := api.NewMockPhaseGetter(ctrl)
+
+	charger := struct {
+		api.Charger
+		api.PhaseSwitcher
+		api.PhaseGetter
+	}{
+		ch, ps, pg,
+	}
+
+	ch.EXPECT().Enabled().Return(false, nil)
+	pg.EXPECT().GetPhases().Return(1, nil)
+
+	lp := &Loadpoint{
+		log:            util.NewLogger("foo"),
+		bus:            evbus.New(),
+		clock:          clock.New(),
+		charger:        charger,
+		status:         api.StatusB,
+		phases:         3,
+		measuredPhases: 3,
+	}
+
+	require.NoError(t, lp.syncCharger())
+	assert.Equal(t, 1, lp.phases)
+
+	// measured currents are stale while disabled
+	ch.EXPECT().Enabled().Return(false, nil)
+	lp.charger = struct {
+		api.Charger
+		api.PhaseSwitcher
+	}{ch, ps}
+
+	require.NoError(t, lp.syncCharger())
+	assert.Equal(t, 1, lp.phases)
+}
+
 func TestSyncChargerPhasesByMeasurement(t *testing.T) {
 	tc := []struct {
 		lpPhases, actualPhases, outPhases int

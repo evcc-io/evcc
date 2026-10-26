@@ -169,7 +169,7 @@ func (lp *Loadpoint) hasPhaseSwitching() bool {
 // syncChargerPhases synchronizes the assumed phase state with the charger's actual state.
 // Chargers may reconfigure phases internally, i.e. when the vehicle is (dis)connected.
 // Unknown phases (0, i.e. after startup) are seeded from the charger without warning.
-func (lp *Loadpoint) syncChargerPhases() error {
+func (lp *Loadpoint) syncChargerPhases(disabled bool) error {
 	phases := lp.GetPhases()
 	if !lp.hasPhaseSwitching() {
 		return nil
@@ -185,12 +185,18 @@ func (lp *Loadpoint) syncChargerPhases() error {
 		}
 
 		if chargerPhases > 0 && chargerPhases != phases {
-			if phases > 0 {
+			// a disabled charger may switch phases on its own, i.e. Keba back to 1p
+			if phases > 0 && !disabled {
 				lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
 			}
 			lp.SetPhases(chargerPhases)
 		}
 
+		return nil
+	}
+
+	// no currents to measure while disabled
+	if disabled {
 		return nil
 	}
 
