@@ -258,22 +258,28 @@ func TestRatesForAgreement_InvalidAgreement_AlreadyCompleted(t *testing.T) {
 	assert.Nil(t, rates)
 }
 
-func TestComputePeriodDSTChange(t *testing.T) {
+// TestRatesForAgreement_TimeOfUseDSTChange verifies that slots stay on wall clock time
+// across the 25 hour day at the end of DST.
+func TestRatesForAgreement_TimeOfUseDSTChange(t *testing.T) {
 	loc, err := time.LoadLocation("Europe/Berlin")
 	require.NoError(t, err)
 
-	// 25 hour day (end of DST)
-	day := time.Date(2026, 10, 25, 0, 0, 0, 0, loc)
+	rates, err := ratesForAgreement(touAgreement(), time.Date(2026, 10, 25, 0, 0, 0, 0, loc))
+	require.NoError(t, err)
+	require.Len(t, rates, 14)
 
-	start, end := computePeriod(day, 0, 5*time.Hour)
-	assert.Equal(t, time.Date(2026, 10, 25, 0, 0, 0, 0, loc), start)
-	assert.Equal(t, time.Date(2026, 10, 25, 5, 0, 0, 0, loc), end)
+	at := func(day, hour int) time.Time {
+		return time.Date(2026, 10, 25+day, hour, 0, 0, 0, loc)
+	}
 
-	start, end = computePeriod(day, 5*time.Hour, 0)
-	assert.Equal(t, time.Date(2026, 10, 25, 5, 0, 0, 0, loc), start)
-	assert.Equal(t, time.Date(2026, 10, 26, 0, 0, 0, 0, loc), end)
-
-	start, end = computePeriod(day, 22*time.Hour, 5*time.Hour)
-	assert.Equal(t, time.Date(2026, 10, 25, 22, 0, 0, 0, loc), start)
-	assert.Equal(t, time.Date(2026, 10, 26, 5, 0, 0, 0, loc), end)
+	for i, r := range rates {
+		day := i / 2
+		if i%2 == 0 {
+			assert.Equal(t, at(day, 6), r.ValidFrom, "day slot %d", i)
+			assert.Equal(t, at(day, 22), r.ValidTo, "day slot %d", i)
+		} else {
+			assert.Equal(t, at(day, 22), r.ValidFrom, "night slot %d", i)
+			assert.Equal(t, at(day+1, 6), r.ValidTo, "night slot %d", i)
+		}
+	}
 }
