@@ -1058,7 +1058,11 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	} else {
 		maxSoc := capacity * float64(lp.EffectiveLimitSoc()) * 10 // Wh
 		bat.SInitial = float32(capacity * soc * 10)               // Wh
-		bat.SMax = max(bat.SInitial, float32(maxSoc))             // prevent infeasible if current soc above maximum
+		if soc == 0 {
+			// vehicle without soc: estimate stored energy from session charged energy
+			bat.SInitial = float32(lp.GetChargedEnergy() * eta) // Wh
+		}
+		bat.SMax = max(bat.SInitial, float32(maxSoc)) // prevent infeasible if current soc above maximum
 	}
 
 	detail.Type = batteryTypeVehicle
