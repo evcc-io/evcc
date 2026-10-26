@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 )
 
 // Merged combines a primary tariff with a secondary (forecast) tariff.
@@ -24,24 +25,24 @@ func init() {
 
 func NewMergedFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	var cc struct {
-		Primary, Secondary Typed
+		Primary, Secondary config.Ref
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	primary, err := NewFromConfig(ctx, cc.Primary.Type, cc.Primary.Other)
+	primary, err := config.Resolve(ctx, config.Tariffs(), cc.Primary, NewFromConfig)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("primary: %w", err)
 	}
 
-	secondary, err := NewFromConfig(ctx, cc.Secondary.Type, cc.Secondary.Other)
+	secondary, err := config.Resolve(ctx, config.Tariffs(), cc.Secondary, NewFromConfig)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("secondary: %w", err)
 	}
 
-	if pType, sType := primary.Type(), secondary.Type(); pType != sType {
+	if pType, sType := primary.Type(), secondary.Type(); !compatibleTariffTypes(pType, sType) {
 		return nil, fmt.Errorf("primary and secondary tariff types are not compatible: %v vs %v", pType, sType)
 	}
 
@@ -52,6 +53,14 @@ func NewMergedFromConfig(ctx context.Context, other map[string]any) (api.Tariff,
 	}
 
 	return t, nil
+}
+
+// compatibleTariffTypes allows merging any price tariffs, other types only with their own kind
+func compatibleTariffTypes(a, b api.TariffType) bool {
+	isPrice := func(t api.TariffType) bool {
+		return slices.Contains([]api.TariffType{api.TariffTypePriceStatic, api.TariffTypePriceDynamic, api.TariffTypePriceForecast}, t)
+	}
+	return a == b || isPrice(a) && isPrice(b)
 }
 
 // Rates implements the api.Tariff interface

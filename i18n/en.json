@@ -146,11 +146,13 @@
       "template": "Manufacturer",
       "titleAdd": {
         "charging": "Add Charger",
-        "heating": "Add Heating Device"
+        "heating": "Add Heating Device",
+        "switch": "Add Switchable Socket"
       },
       "titleEdit": {
         "charging": "Edit Charger",
-        "heating": "Edit Heating Device"
+        "heating": "Edit Heating Device",
+        "switch": "Edit Switchable Socket"
       },
       "type": {
         "custom": {
@@ -225,6 +227,14 @@
       "title": "Curtailment",
       "titleAdd": "Add Curtailment Device",
       "titleEdit": "Edit Curtailment Device"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Add charger",
+        "switch": "Add switchable socket",
+        "tariff": "Add tariff"
+      },
+      "noNesting": "Nesting is limited to one level. Please pick another option."
     },
     "deviceValue": {
       "activeClients": "Active clients",
@@ -304,8 +314,16 @@
           "returnEnergy": "Discharged"
         },
         "consumer": {
+          "chargeStatusB": "standby",
+          "chargeStatusC": "heating",
           "energy": "Consumed",
           "returnEnergy": "Produced"
+        },
+        "continuous": {
+          "chargeStatusB": "normal",
+          "chargeStatusC": "boost",
+          "dimmed": "Dimmed",
+          "enabled": "Boosted"
         },
         "grid": {
           "energy": "Imported",
@@ -491,7 +509,7 @@
         "charging": "Add charger",
         "heating": "Add heating device"
       },
-      "addMeter": "Add dedicated energy meter",
+      "addMeter": "Add meter",
       "advancedConfig": "Advanced configuration",
       "cancel": "Cancel",
       "chargerError": {
@@ -530,7 +548,7 @@
       "electricalSubtitle": "When in doubt, ask your electrician.",
       "electricalTitle": "Electrics",
       "energyMeterHelp": "Additional meter if the charger doesn't have an integrated one.",
-      "energyMeterLabel": "Energy meter",
+      "energyMeterLabel": "Dedicated energy meter",
       "estimateLabel": "Interpolate charge level between API updates",
       "maxCurrentHelp": "Must be greater than minimum current.",
       "maxCurrentLabel": "Maximum current",
@@ -1114,6 +1132,7 @@
       "template": "Provider",
       "title": "Tariffs & forecasts",
       "titleChoice": "What Do You Want To Add?",
+      "titleSub": "Sub tariff",
       "type": {
         "co2": "CO₂ Intensity",
         "feedIn": "Grid Export Price",

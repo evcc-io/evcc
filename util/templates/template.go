@@ -136,6 +136,12 @@ func (t *Template) Validate() error {
 			}
 		}
 
+		if p.Type == TypeDevice {
+			if _, err := ClassString(p.Class); err != nil {
+				return fmt.Errorf("param %s: device param needs a valid class, got '%s'", p.Name, p.Class)
+			}
+		}
+
 		maxLength := 50
 		actualLength := max(len(p.Description.String("en")), len(p.Description.String("de")))
 		if actualLength > maxLength {
@@ -475,4 +481,28 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 	err = tmpl.Execute(out, res)
 
 	return bytes.TrimSpace(out.Bytes()), res, err
+}
+
+// DeviceRefs returns the names of other devices referenced by device params, keyed by class
+func (t *Template) DeviceRefs(values map[string]any) map[Class][]string {
+	res := make(map[Class][]string)
+
+	for _, p := range t.Params {
+		if p.Type != TypeDevice {
+			continue
+		}
+
+		class, err := ClassString(p.Class)
+		if err != nil {
+			continue
+		}
+
+		for k, v := range values {
+			if name, ok := v.(string); ok && name != "" && strings.EqualFold(k, p.Name) {
+				res[class] = append(res[class], name)
+			}
+		}
+	}
+
+	return res
 }

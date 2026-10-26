@@ -146,11 +146,13 @@
       "template": "Hersteller",
       "titleAdd": {
         "charging": "Wallbox hinzufügen",
-        "heating": "Heizgerät hinzufügen"
+        "heating": "Heizgerät hinzufügen",
+        "switch": "Schaltbare Steckdose hinzufügen"
       },
       "titleEdit": {
         "charging": "Wallbox bearbeiten",
-        "heating": "Heizgerät bearbeiten"
+        "heating": "Heizgerät bearbeiten",
+        "switch": "Schaltbare Steckdose bearbeiten"
       },
       "type": {
         "custom": {
@@ -225,6 +227,14 @@
       "title": "Einspeisebegrenzung",
       "titleAdd": "Einspeisebegrenzung hinzufügen",
       "titleEdit": "Einspeisebegrenzung bearbeiten"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Wallbox hinzufügen",
+        "switch": "Schaltbare Steckdose hinzufügen",
+        "tariff": "Tarif hinzufügen"
+      },
+      "noNesting": "Verschachtelung ist nur eine Ebene tief möglich. Bitte eine andere Option wählen."
     },
     "deviceValue": {
       "activeClients": "Aktive Clients",
@@ -304,8 +314,16 @@
           "returnEnergy": "Entladen"
         },
         "consumer": {
+          "chargeStatusB": "Standby",
+          "chargeStatusC": "heizt",
           "energy": "Verbraucht",
           "returnEnergy": "Erzeugt"
+        },
+        "continuous": {
+          "chargeStatusB": "Normal",
+          "chargeStatusC": "Boost",
+          "dimmed": "Gedimmt",
+          "enabled": "Boost"
         },
         "grid": {
           "energy": "Bezogen",
@@ -491,7 +509,7 @@
         "charging": "Wallbox hinzufügen",
         "heating": "Heizgerät hinzufügen"
       },
-      "addMeter": "Zusätzlichen Energiezähler hinzufügen",
+      "addMeter": "Zähler hinzufügen",
       "advancedConfig": "Erweiterte Konfiguration",
       "cancel": "Abbrechen",
       "chargerError": {
@@ -530,7 +548,7 @@
       "electricalSubtitle": "Im Zweifelsfall Elektriker fragen.",
       "electricalTitle": "Elektrik",
       "energyMeterHelp": "Zusätzlicher Zähler, wenn die Wallbox keinen integrierten hat.",
-      "energyMeterLabel": "Energiezähler",
+      "energyMeterLabel": "Dedizierter Energiezähler",
       "estimateLabel": "Ladestand zwischen API-Updates interpolieren",
       "maxCurrentHelp": "Muss größer als der Mindeststrom sein.",
       "maxCurrentLabel": "Maximaler Strom",
@@ -1114,6 +1132,7 @@
       "template": "Anbieter",
       "title": "Tarife & Vorhersagen",
       "titleChoice": "Was möchtest du hinzufügen?",
+      "titleSub": "Untertarif",
       "type": {
         "co2": "CO₂ Vorhersage",
         "feedIn": "Einspeisetarif",

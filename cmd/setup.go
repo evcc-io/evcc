@@ -453,7 +453,7 @@ func configureCurtailers(static []config.Named, names ...string) error {
 }
 
 func configureChargers(static []config.Named, names ...string) error {
-	var eg errgroup.Group
+	var items []orderedItem
 
 	for i, cc := range static {
 		if cc.Name == "" {
@@ -469,8 +469,12 @@ func configureChargers(static []config.Named, names ...string) error {
 			log.WARN.Printf("create charger %d: %v", i+1, err)
 		}
 
-		eg.Go(func() error {
-			return staticInstance("charger", cc, charger.NewFromConfig, config.Chargers())
+		items = append(items, orderedItem{
+			name: cc.Name,
+			refs: config.DeviceRefs(templates.Charger, cc)[templates.Charger],
+			run: func() error {
+				return staticInstance("charger", cc, charger.NewFromConfig, config.Chargers())
+			},
 		})
 	}
 
@@ -481,19 +485,23 @@ func configureChargers(static []config.Named, names ...string) error {
 	}
 
 	for _, conf := range configurable {
-		eg.Go(func() error {
-			cc := conf.Named()
+		cc := conf.Named()
 
-			// always skip unreferenced db devices
-			if !slices.Contains(names, cc.Name) {
-				return nil
-			}
+		// always skip unreferenced db devices
+		if !slices.Contains(names, cc.Name) {
+			continue
+		}
 
-			return configurableInstance("charger", &conf, charger.NewFromConfig, config.Chargers())
+		items = append(items, orderedItem{
+			name: cc.Name,
+			refs: config.DeviceRefs(templates.Charger, cc)[templates.Charger],
+			run: func() error {
+				return configurableInstance("charger", &conf, charger.NewFromConfig, config.Chargers())
+			},
 		})
 	}
 
-	return eg.Wait()
+	return runOrdered(items)
 }
 
 func vehicleInstance(cc config.Named) (api.Vehicle, error) {
@@ -1263,39 +1271,43 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 		return &tariffs, err
 	}
 
-	var eg errgroup.Group
+	var items []orderedItem
 
 	for _, conf := range configurable {
-		eg.Go(func() error {
-			cc := conf.Named()
+		cc := conf.Named()
 
-			if len(names) > 0 && !slices.Contains(names, cc.Name) {
-				return nil
-			}
+		if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			continue
+		}
 
-			var instance api.Tariff
-			if !conf.Disable {
-				var err error
-				instance, err = tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
-				if err != nil {
-					return err
+		items = append(items, orderedItem{
+			name: cc.Name,
+			refs: config.DeviceRefs(templates.Tariff, cc)[templates.Tariff],
+			run: func() error {
+				var instance api.Tariff
+				if !conf.Disable {
+					var err error
+					instance, err = tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
+					if err != nil {
+						return err
+					}
 				}
-			}
 
-			if e := config.Tariffs().Add(config.NewConfigurableDevice(&conf, instance)); e != nil {
-				return &DeviceError{cc.Name, e}
-			}
+				if e := config.Tariffs().Add(config.NewConfigurableDevice(&conf, instance)); e != nil {
+					return &DeviceError{cc.Name, e}
+				}
 
-			return nil
+				return nil
+			},
 		})
 	}
 
-	if err := eg.Wait(); err != nil {
+	if err := runOrdered(items); err != nil {
 		return &tariffs, err
 	}
 
 	// resolve tariff roles
-	eg = errgroup.Group{}
+	var eg errgroup.Group
 	eg.Go(func() error { return configureTariff(conf.Grid, refs.Grid, &tariffs.Grid) })
 	eg.Go(func() error { return configureTariff(conf.FeedIn, refs.FeedIn, &tariffs.FeedIn) })
 	eg.Go(func() error { return configureTariff(conf.Co2, refs.Co2, &tariffs.Co2) })

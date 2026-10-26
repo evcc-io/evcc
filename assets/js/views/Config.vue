@@ -555,7 +555,20 @@
 					@changed="meterChanged"
 					@disable="({ id, disable }) => handleDisable('meter', id, disable)"
 				/>
-				<ChargerModal :is-sponsor="isSponsor" :ocpp="ocpp" @changed="chargerChanged" />
+				<ChargerModal
+					:is-sponsor="isSponsor"
+					:ocpp="ocpp"
+					:has-device-error="hasDeviceError"
+					@changed="chargerChanged"
+				/>
+				<ChargerModal
+					name="subcharger"
+					hide-disable
+					:is-sponsor="isSponsor"
+					:ocpp="ocpp"
+					:has-device-error="hasDeviceError"
+					@changed="chargerChanged"
+				/>
 				<InfluxModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
@@ -580,8 +593,16 @@
 				<TariffsLegacyModal @changed="loadDirty" />
 				<TariffModal
 					:currency="currency"
+					:has-device-error="hasDeviceError"
 					@changed="tariffChanged"
 					@disable="({ id, disable }) => handleDisable('tariff', id, disable)"
+				/>
+				<TariffModal
+					name="subtariff"
+					hide-disable
+					:currency="currency"
+					:has-device-error="hasDeviceError"
+					@changed="subTariffChanged"
 				/>
 				<TelemetryModal :is-sponsor="isSponsor" :telemetry="telemetry" />
 				<OptimizerModal :is-sponsor="isSponsor" />
@@ -1634,6 +1655,12 @@ export default defineComponent({
 			}
 			await this.loadTariffs();
 			await this.loadTariffRefs();
+			await this.loadDirty();
+			this.updateValues();
+		},
+		// nested tariffs belong to their parent and get no usage of their own
+		async subTariffChanged() {
+			await this.loadTariffs();
 			await this.loadDirty();
 			this.updateValues();
 		},

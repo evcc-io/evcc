@@ -27,6 +27,7 @@
 					ref="templateSelect"
 					v-model="templateName"
 					:device-type="deviceType"
+					:id-prefix="idPrefix"
 					:is-new="isNew"
 					:product-name="productName"
 					:groups="computedTemplateOptions"
@@ -65,6 +66,9 @@
 				<div v-else>
 					<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 					<SponsorTokenRequired v-if="sponsorshipTemplate" :is-sponsor="isSponsor" />
+					<div v-if="nestingUnsupported" class="alert alert-warning my-4" role="alert">
+						{{ $t("config.deviceRef.noNesting") }}
+					</div>
 					<slot name="template-description">
 						<Markdown v-if="description" :markdown="description" class="my-4" />
 					</slot>
@@ -72,7 +76,7 @@
 					<div v-if="authRequired">
 						<PropertyEntry
 							v-for="param in authNormalParams"
-							:id="`${deviceType}Param${param.Name}`"
+							:id="`${idPrefix}Param${param.Name}`"
 							:key="param.Name"
 							v-bind="param"
 							v-model="values[param.Name]"
@@ -84,7 +88,7 @@
 							<template #advanced>
 								<PropertyEntry
 									v-for="param in authAdvancedParams"
-									:id="`${deviceType}Param${param.Name}`"
+									:id="`${idPrefix}Param${param.Name}`"
 									:key="param.Name"
 									v-bind="param"
 									v-model="values[param.Name]"
@@ -98,7 +102,7 @@
 						<div v-if="auth.code">
 							<hr class="my-5" />
 							<AuthCodeDisplay
-								:id="`${deviceType}AuthCode`"
+								:id="`${idPrefix}AuthCode`"
 								:code="auth.code"
 								:expiry="auth.expiry"
 							/>
@@ -107,7 +111,7 @@
 						<div v-if="auth.challenge">
 							<hr class="my-5" />
 							<AuthChallenge
-								:id="`${deviceType}AuthChallenge`"
+								:id="`${idPrefix}AuthChallenge`"
 								v-model="challengeAnswer"
 								:challenge="auth.challenge"
 								@submit="submitChallenge"
@@ -165,7 +169,7 @@
 					<div v-else>
 						<slot name="after-template-info" :values="values"></slot>
 
-						<div v-if="!hideTemplateFields">
+						<div v-if="!hideTemplateFields && !nestingUnsupported">
 							<Modbus
 								v-if="modbus"
 								v-model:modbus="values['modbus']"
@@ -187,9 +191,10 @@
 
 							<PropertyEntry
 								v-for="param in normalParams"
-								:id="`${deviceType}Param${param.Name}`"
+								:id="`${idPrefix}Param${param.Name}`"
 								:key="param.Name"
 								v-bind="param"
+								:has-device-error="hasDeviceError"
 								v-model="values[param.Name]"
 								:service-values="serviceValues[param.Name]"
 								:service-loading="serviceLoading[param.Name]"
@@ -206,9 +211,10 @@
 									/>
 									<PropertyEntry
 										v-for="param in advancedParams"
-										:id="`${deviceType}Param${param.Name}`"
+										:id="`${idPrefix}Param${param.Name}`"
 										:key="param.Name"
 										v-bind="param"
+										:has-device-error="hasDeviceError"
 										v-model="values[param.Name]"
 										:service-values="serviceValues[param.Name]"
 										:service-loading="serviceLoading[param.Name]"
@@ -263,7 +269,7 @@
 import { defineComponent, type PropType } from "vue";
 import GenericModal from "../../Helper/GenericModal.vue";
 import DeviceInfoButton from "./DeviceInfoButton.vue";
-import { closeModal, isNestedIn } from "@/configModal";
+import { closeModal, isNestedIn, getModal } from "@/configModal";
 import { remember } from "@/onboarding";
 import ErrorMessage from "../../Helper/ErrorMessage.vue";
 import PropertyEntry from "../PropertyEntry.vue";
@@ -379,6 +385,10 @@ export default defineComponent({
 		hideInfo: { type: Boolean, default: false },
 		// Optional: hide the bottom-middle disable button
 		hideDisable: { type: Boolean, default: false },
+		hasDeviceError: {
+			type: Function as PropType<(type: DeviceType, name: string) => boolean>,
+			default: () => false,
+		},
 	},
 	emits: [
 		"added",
@@ -413,9 +423,13 @@ export default defineComponent({
 			adminPasswordRequired: false,
 			adminPasswordInvalid: false,
 			coveredByNested: false,
+			savedConfig: {} as Record<string, any>,
 		};
 	},
 	computed: {
+		idPrefix(): string {
+			return this.name || this.deviceType;
+		},
 		device() {
 			return createDeviceUtils(this.deviceType);
 		},
@@ -554,9 +568,19 @@ export default defineComponent({
 		canDisable(): boolean {
 			return !isNestedIn("loadpoint") && !this.hideDisable;
 		},
+		// the modal stack holds one nested instance per device type
+		nestingUnsupported(): boolean {
+			const nested = this.name !== this.deviceType && !!getModal(this.deviceType);
+			return (
+				nested &&
+				this.templateParams.some(
+					(p: TemplateParam) => p.Type === "Device" && p.Class === this.deviceType
+				)
+			);
+		},
 		showActions() {
 			// explicitly hide template fields (ocpp step 1)
-			if (this.hideTemplateFields) {
+			if (this.hideTemplateFields || this.nestingUnsupported) {
 				return false;
 			}
 			// yaml input type
@@ -748,6 +772,7 @@ export default defineComponent({
 	methods: {
 		reset() {
 			this.values = { ...this.initialValues } as DeviceValues;
+			this.savedConfig = {};
 			this.test = initialTestState();
 			this.resetAuthStatus();
 			this.rebaseline();
@@ -760,6 +785,7 @@ export default defineComponent({
 			try {
 				const device = await this.device.load(this.id!);
 				this.values = device.config;
+				this.savedConfig = { ...device.config };
 				// convert structure to flat list
 				// TODO: adjust GET response to match POST/PUT formats
 				this.values.type = device.type;
@@ -987,6 +1013,21 @@ export default defineComponent({
 		handleClose() {
 			this.$emit("close");
 			this.isModalVisible = false;
+			if (!this.succeeded && !(this.name && isNestedIn(this.name))) {
+				this.removeUnsavedDevices();
+			}
+		},
+		async removeUnsavedDevices() {
+			for (const param of this.templateParams) {
+				const name = this.values[param.Name];
+				if (param.Type !== "Device" || !param.Class || typeof name !== "string") continue;
+				if (!name.startsWith("db:") || this.savedConfig[param.Name] === name) continue;
+				try {
+					await createDeviceUtils(param.Class).remove(parseInt(name.slice(3)));
+				} catch (e) {
+					console.error(e);
+				}
+			}
 		},
 		handleTemplateChange(value: string | null) {
 			// ensure this triggers after tempateName watcher

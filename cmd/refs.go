@@ -55,7 +55,37 @@ func collectRefs(conf globalconfig.All) error {
 		return err
 	}
 
-	return collectLoadpointRefs(namedSeq(configurable))
+	if err := collectLoadpointRefs(namedSeq(configurable)); err != nil {
+		return err
+	}
+
+	collectDeviceRefs(templates.Charger, slices.Values(conf.Chargers))
+
+	for _, class := range []templates.Class{templates.Charger, templates.Tariff} {
+		configurable, err := config.ConfigurationsByClass(class)
+		if err != nil {
+			return err
+		}
+
+		collectDeviceRefs(class, namedSeq(configurable))
+	}
+
+	return nil
+}
+
+func collectDeviceRefs(class templates.Class, named iter.Seq[config.Named]) {
+	for cc := range named {
+		for refClass, refs := range config.DeviceRefs(class, cc) {
+			switch refClass {
+			case templates.Meter:
+				references.meter = append(references.meter, refs...)
+			case templates.Charger:
+				references.charger = append(references.charger, refs...)
+			case templates.Tariff:
+				references.tariff = append(references.tariff, refs...)
+			}
+		}
+	}
 }
 
 func namedSeq(configurable []config.Config) iter.Seq[config.Named] {

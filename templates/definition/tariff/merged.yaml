@@ -1,0 +1,30 @@
+template: merged
+products:
+  - description:
+      de: Kombinierter Tarif
+      en: Merged tariff
+requirements:
+  description:
+    de: Nutzt die Preise des primären Tarifs und setzt sie mit dem sekundären Tarif fort, wo sie enden. Zum Beispiel echte Marktpreise kombiniert mit einer längerfristigen Prognose.
+    en: Uses the prices of the primary tariff and continues with the secondary tariff where they end. For example real market prices combined with a longer-term forecast.
+  evcc: ["skiptest"]
+group: price
+params:
+  - name: primary
+    type: device
+    class: tariff
+    required: true
+    description:
+      de: Primärer Tarif
+      en: Primary tariff
+  - name: secondary
+    type: device
+    class: tariff
+    required: true
+    description:
+      de: Sekundärer Tarif
+      en: Secondary tariff
+render: |
+  type: merged
+  primary: {{ .primary }}
+  secondary: {{ .secondary }}

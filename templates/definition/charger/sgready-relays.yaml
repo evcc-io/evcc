@@ -1,0 +1,33 @@
+template: sgready-relays
+products:
+  - description:
+      de: SG-Ready über Relais
+      en: SG Ready via relays
+requirements:
+  description:
+    de: Wärmepumpe mit SG-Ready-Kontakten, die über Relais (z. B. Shelly) geschaltet werden.
+    en: Heat pump with SG Ready contacts switched by relays (e.g. Shelly).
+  evcc: ["skiptest"]
+group: heatinggeneric
+params:
+  - name: boost
+    type: device
+    class: charger
+    usage: switch
+    required: true
+    description:
+      de: Boost-Relais
+      en: Boost relay
+  - name: dim
+    type: device
+    class: charger
+    usage: switch
+    description:
+      de: Dimm-Relais
+      en: Dim relay
+render: |
+  type: sgready-relay
+  boost: {{ .boost }}
+  {{- if .dim }}
+  dim: {{ .dim }}
+  {{- end }}

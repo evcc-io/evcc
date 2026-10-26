@@ -109,6 +109,68 @@ grid:
     );
   });
 
+  test("merged tariff owns its nested tariffs", async ({ page }) => {
+    await start();
+    await page.goto("/#/config");
+
+    const modal = page.getByTestId("tariff-modal");
+    const subModal = page.getByTestId("subtariff-modal");
+    const tariffGrid = page.getByTestId("tariff-grid");
+    const addTariff = page.getByRole("button", { name: "Add tariff" });
+    const primary = modal.getByTestId("device-ref-primary");
+    const secondary = modal.getByTestId("device-ref-secondary");
+
+    await addTariff.click();
+    await expectModalVisible(modal);
+    await modal.getByRole("button", { name: "Add grid import tariff" }).click();
+    await modal.getByLabel("Provider").selectOption("Merged tariff");
+
+    // nested tariffs inherit the grid type
+    await modal.getByLabel("Primary tariff").click();
+    await expectModalVisible(subModal);
+    await expect(subModal.getByRole("heading", { name: "Sub tariff" })).toBeVisible();
+
+    // no second nesting level
+    await subModal.getByLabel("Provider").selectOption("Merged tariff");
+    await expect(
+      subModal.getByText("Nesting is limited to one level. Please pick another option.")
+    ).toBeVisible();
+    await expect(subModal.getByRole("button", { name: "Validate & save" })).toHaveCount(0);
+
+    await subModal.getByLabel("Provider").selectOption("Fixed Price");
+    await subModal.getByLabel("Price").fill("30");
+    await subModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(subModal);
+    await expectModalVisible(modal);
+    await expect(primary).toContainText("Fixed Price");
+
+    await modal.getByLabel("Secondary tariff").click();
+    await expectModalVisible(subModal);
+    await subModal.getByLabel("Provider").selectOption("Fixed Price");
+    await subModal.getByLabel("Price").fill("20");
+    await subModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(subModal);
+    await expectModalVisible(modal);
+    await expect(secondary).toContainText("Fixed Price");
+
+    await modal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(modal);
+    await expect(tariffGrid).toContainText(["Price", "30.0 ct"].join(""));
+
+    // nested tariffs are not shown as own cards and survive a restart
+    await expect(page.getByTestId("tariff-planner")).toHaveCount(0);
+    await restart();
+    await page.reload();
+    await expect(tariffGrid).toContainText(["Price", "30.0 ct"].join(""));
+
+    // deleting the merged tariff removes the nested ones
+    await tariffGrid.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+    await modal.getByRole("button", { name: "Delete" }).click();
+    await expectModalHidden(modal);
+    await expect(addTariff).toBeVisible();
+  });
+
   test("create, verify, delete all types", async ({ page }) => {
     await start();
     await page.goto("/#/config");

@@ -328,3 +328,59 @@ func TestAllTemplatesRenderWithBoolParams(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateDeviceParam(t *testing.T) {
+	tmpl := func(class string) *Template {
+		return &Template{
+			Params: []Param{{
+				Name: "boost", Type: TypeDevice, Class: class, Usage: "switch",
+				Description: TextLanguage{DE: "Relais", EN: "Relay"},
+			}},
+		}
+	}
+
+	require.NoError(t, tmpl("charger").Validate())
+	require.Error(t, tmpl("").Validate(), "missing class")
+	require.Error(t, tmpl("foo").Validate(), "invalid class")
+}
+
+func TestDeviceParamRendersName(t *testing.T) {
+	tmpl := &Template{
+		Params: []Param{
+			{Name: "boost", Type: TypeDevice, Class: "charger", Required: true},
+			{Name: "dim", Type: TypeDevice, Class: "charger"},
+		},
+		Render: "boost: {{ .boost }}\n{{- if .dim }}\ndim: {{ .dim }}\n{{- end }}",
+	}
+
+	b, _, err := tmpl.RenderResult(Charger, RenderModeInstance, map[string]any{"boost": "db:12"})
+	require.NoError(t, err)
+	assert.Equal(t, "boost: db:12", string(b))
+
+	// required validation is skipped in instance mode while testing
+	_, _, err = tmpl.RenderResult(Charger, RenderModeUnitTest, map[string]any{})
+	require.Error(t, err, "required device param")
+}
+
+func TestDeviceRefs(t *testing.T) {
+	tmpl := &Template{
+		Params: []Param{
+			{Name: "host"},
+			{Name: "boost", Type: TypeDevice, Class: "charger"},
+			{Name: "dim", Type: TypeDevice, Class: "charger"},
+			{Name: "meter", Type: TypeDevice, Class: "meter"},
+		},
+	}
+
+	refs := tmpl.DeviceRefs(map[string]any{
+		"host":  "db:1", // not a device param
+		"boost": "db:2",
+		"dim":   "",
+		"Meter": "db:3", // key case as stored by the ui
+	})
+
+	assert.Equal(t, map[Class][]string{
+		Charger: {"db:2"},
+		Meter:   {"db:3"},
+	}, refs)
+}

@@ -28,8 +28,8 @@ func init() {
 func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed                   `mapstructure:",squash"`
-		Boost                   config.Typed
-		Dim                     *config.Typed
+		Boost                   config.Ref
+		Dim                     *config.Ref
 		measurement.Temperature `mapstructure:",squash"`
 		measurement.Energy      `mapstructure:",squash"`
 	}{
@@ -43,16 +43,16 @@ func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
-	boost, err := NewFromConfig(ctx, cc.Boost.Type, cc.Boost.Other)
+	boost, err := config.Resolve(ctx, config.Chargers(), cc.Boost, NewFromConfig)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("boost: %w", err)
 	}
 
 	var dim api.Charger
 	if cc.Dim != nil {
-		dim, err = NewFromConfig(ctx, cc.Dim.Type, cc.Dim.Other)
+		dim, err = config.Resolve(ctx, config.Chargers(), *cc.Dim, NewFromConfig)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("dim: %w", err)
 		}
 	}
 
