@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
+	socEstimator "github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/messenger"
@@ -1058,7 +1059,11 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	} else {
 		maxSoc := capacity * float64(lp.EffectiveLimitSoc()) * 10 // Wh
 		bat.SInitial = float32(capacity * soc * 10)               // Wh
-		bat.SMax = max(bat.SInitial, float32(maxSoc))             // prevent infeasible if current soc above maximum
+		if soc == 0 {
+			// vehicle without soc: estimate stored energy from session charged energy
+			bat.SInitial = float32(lp.GetChargedEnergy() * socEstimator.ChargeEfficiency) // Wh
+		}
+		bat.SMax = max(bat.SInitial, float32(maxSoc)) // prevent infeasible if current soc above maximum
 	}
 
 	detail.Type = batteryTypeVehicle
