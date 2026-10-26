@@ -223,8 +223,8 @@ func TestSyncChargerPhasesByGetter(t *testing.T) {
 	}
 }
 
-// a disabled charger switching phases on its own (Keba back to 1p) is adopted without warning,
-// so the next enable switches phases before starting instead of starting on the wrong phases
+// phases a disabled charger switched without the loadpoint (Keba driver back to 1p) are adopted
+// without warning, ignoring stale measured phases
 func TestSyncChargerPhasesDisabled(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
