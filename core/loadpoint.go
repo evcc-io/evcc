@@ -602,7 +602,7 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	lp.socUpdated = time.Time{}
 
 	// charger may have reconfigured phases internally while disconnected
-	if err := lp.syncChargerPhases(); err != nil {
+	if err := lp.syncChargerPhases(!lp.enabled); err != nil {
 		lp.log.ERROR.Println(err)
 	}
 
@@ -947,13 +947,19 @@ func (lp *Loadpoint) syncCharger() error {
 
 		// sync phases
 		if shouldBeConsistent {
-			if err := lp.syncChargerPhases(); err != nil {
+			if err := lp.syncChargerPhases(false); err != nil {
 				return err
 			}
 		}
 
 	case enabled == lp.enabled:
-		// sync disabled state
+		// sync disabled state, adopt phases so the next enable switches them
+		// fixed phases would be switched back right away, see scalePhasesRequired
+		if lp.phasesConfigured == 0 && lp.phaseSwitchCompleted() {
+			if err := lp.syncChargerPhases(true); err != nil {
+				lp.log.ERROR.Println(err)
+			}
+		}
 
 	case !enabled && !lp.phaseSwitchCompleted():
 		// some chargers (i.E. Easee in some configurations) disable themselves to be able to switch phases
