@@ -40,6 +40,7 @@
       "gridDischarge": "grid discharging",
       "hold": "discharge locked",
       "holdCharge": "charge locked",
+      "master": "Master",
       "ofTotal": "of {total}",
       "power": "Power",
       "soc": "Charge"
