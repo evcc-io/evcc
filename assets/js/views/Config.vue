@@ -111,20 +111,10 @@
 				<ConfigSection v-bind="sectionProps('consumers')">
 					<div class="p-0 config-list box-pull-out">
 						<MeterCard
-							v-for="meter in consumerMeters"
+							v-for="{ meter, meterType } in consumerAndAuxMeters"
 							:key="meter.name"
 							:meter="meter"
-							meter-type="consumer"
-							:has-error="hasDeviceError('meter', meter.name)"
-							:tags="deviceTags('meter', meter.name)"
-							@edit="(type, id) => openModal('meter', { type, id })"
-							@enable="handleDisable('meter', meter.id, false)"
-						/>
-						<MeterCard
-							v-for="meter in auxMeters"
-							:key="meter.name"
-							:meter="meter"
-							meter-type="aux"
+							:meter-type="meterType"
 							:has-error="hasDeviceError('meter', meter.name)"
 							:tags="deviceTags('meter', meter.name)"
 							@edit="(type, id) => openModal('meter', { type, id })"
@@ -1076,10 +1066,7 @@ export default defineComponent({
 			return this.getMetersByNames(names);
 		},
 		auxMeters() {
-			return this.sortByTitle(
-				this.getMetersByNames(this.site?.aux),
-				this.$t("config.devices.auxMeter")
-			);
+			return this.getMetersByNames(this.site?.aux);
 		},
 		extMeters() {
 			const names = this.site?.ext;
@@ -1092,10 +1079,19 @@ export default defineComponent({
 				.filter((c): c is ConfigCurtailer => c !== undefined);
 		},
 		consumerMeters() {
-			return this.sortByTitle(
-				this.getMetersByNames(this.site?.consumer),
-				this.$t("config.devices.consumer")
-			);
+			return this.getMetersByNames(this.site?.consumer);
+		},
+		consumerAndAuxMeters(): { meter: ConfigMeter; meterType: MeterType; label: string }[] {
+			const entries = (meters: ConfigMeter[], meterType: MeterType, fallback: string) =>
+				meters.map((meter) => ({
+					meter,
+					meterType,
+					label: meter.deviceTitle || meter.config?.template || fallback,
+				}));
+			return [
+				...entries(this.consumerMeters, "consumer", this.$t("config.devices.consumer")),
+				...entries(this.auxMeters, "aux", this.$t("config.devices.auxMeter")),
+			].sort((a, b) => a.label.localeCompare(b.label, this.$i18n.locale));
 		},
 		gridTariff() {
 			const name = this.tariffRefs?.grid;
@@ -1532,11 +1528,6 @@ export default defineComponent({
 				charger?.config?.["heating"] ||
 				this.deviceTags("charger", chargerName)["heating"]?.value
 			);
-		},
-		// mirrors MeterCard.cardTitle so the list is ordered by what is displayed
-		sortByTitle(meters: ConfigMeter[], fallback: string): ConfigMeter[] {
-			const label = (m: ConfigMeter) => m.deviceTitle || m.config?.template || fallback;
-			return meters.sort((a, b) => label(a).localeCompare(label(b), this.$i18n.locale));
 		},
 		getMetersByNames(names: string[] | null): ConfigMeter[] {
 			if (!names || !this.meters) {
