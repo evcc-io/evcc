@@ -72,12 +72,15 @@ func TestClearMasterOfUncontrollableBatterySlave(t *testing.T) {
 			}
 
 			values := map[string]any{"master": test.master}
-			cleared := clearMasterOfUncontrollableBatterySlave("slave", values, meter)
-			if cleared != test.wantCleared {
-				t.Fatalf("clear result: got %t, want %t", cleared, test.wantCleared)
+			warning := clearMasterOfUncontrollableBatterySlave("slave", values, meter)
+			if (warning != nil) != test.wantCleared {
+				t.Fatalf("warning presence: got %t, want %t", warning != nil, test.wantCleared)
 			}
 			if test.wantCleared && values["master"] != nil {
 				t.Fatalf("master was not cleared: got %v", values["master"])
+			}
+			if test.wantCleared && (warning.Device != "slave" || warning.Master != test.master || warning.Reason != batteryConfigWarningUnsupportedSlave) {
+				t.Fatalf("unexpected warning: %+v", warning)
 			}
 			if !test.wantCleared && values["master"] != test.master {
 				t.Fatalf("master changed: got %v, want %v", values["master"], test.master)

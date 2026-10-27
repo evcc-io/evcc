@@ -44,3 +44,5 @@ const (
 	DeviceColors       = "deviceColors"
 	Onboarding         = "onboarding" // setup wizard and checklist state
 )
+
+const BatteryConfigWarnings = "batteryConfigWarnings"
