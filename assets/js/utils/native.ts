@@ -20,6 +20,8 @@ function receiveFromApp(message: FromAppMessage) {
 
 export function appDetection(r: Router) {
   router = r;
+  // WebKit hands subframes the root insets; the embedding page already pads for them
+  document.documentElement.classList.toggle("embedded", window.self !== window.top);
   if (!isApp()) return;
   document.querySelector("html")?.classList.add("app");
 
