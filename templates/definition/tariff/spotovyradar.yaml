@@ -1,0 +1,57 @@
+template: spotovyradar
+link: https://spotovyradar.cz/ucet/api
+products:
+  - brand: Spotový Radar
+    description:
+      generic: Predicted spot prices
+requirements:
+  description:
+    en: "Czech OTE day-ahead prices in 15-minute intervals plus a 72-hour forecast. Optionally the final price including distribution and VAT from your tariff settings at spotovyradar.cz. Requires an API key from [spotovyradar.cz](https://spotovyradar.cz/ucet/api) (Smart Home plan)."
+    de: "Tschechische OTE Day-Ahead-Preise in 15-Minuten-Intervallen plus 72-Stunden-Prognose. Optional der Endpreis inklusive Netzentgelte und Mehrwertsteuer aus den Tarifeinstellungen auf spotovyradar.cz. Benötigt einen API-Key von [spotovyradar.cz](https://spotovyradar.cz/ucet/api) (Tarif Smart Home)."
+  evcc: ["skiptest"]
+group: price
+countries: ["CZ"]
+params:
+  - name: apikey
+    type: string
+    mask: true
+    required: true
+    description:
+      generic: API Key
+    example: sr_live_abcdefgh_…
+    help:
+      en: "Create a key at [spotovyradar.cz/ucet/api](https://spotovyradar.cz/ucet/api)."
+      de: "Key erstellen unter [spotovyradar.cz/ucet/api](https://spotovyradar.cz/ucet/api)."
+  - name: price
+    type: choice
+    choice: ["spot", "final"]
+    default: spot
+    description:
+      en: Price
+      de: Preis
+    help:
+      en: "spot = spot price in CZK/kWh excluding VAT and charges (add them with charges and tax). final = final price according to the tariff saved at spotovyradar.cz (supplier fee, distribution peak/off-peak, other charges, VAT). Do not combine final with charges or tax."
+      de: "spot = Börsenpreis in CZK/kWh ohne Mehrwertsteuer und Gebühren (über charges und tax ergänzen). final = Endpreis gemäß dem auf spotovyradar.cz gespeicherten Tarif (Händleraufschlag, Netzentgelt HT/NT, weitere Umlagen, Mehrwertsteuer). final nicht mit charges oder tax kombinieren."
+  - preset: tariff-base
+  - preset: tariff-features
+render: |
+  type: custom
+  {{ include "base" . }}
+  {{ include "features" (merge (dict "basefeatures" (list "cacheable")) .) }}
+  forecast:
+    source: http
+    uri: https://spotovyradar.cz/api/v1/forecast?hours=72
+    auth:
+      type: bearer
+      token: {{ .apikey }}
+    jq: |
+      [.points[] | {
+        "start": .start,
+        "end": .end,
+        {{- if eq .price "final" }}
+        "value": (.final // .spot)
+        {{- else }}
+        "value": .spot
+        {{- end }}
+      }] | tostring
+    cache: 15m
