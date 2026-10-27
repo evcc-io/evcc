@@ -531,6 +531,27 @@
       "electricalTitle": "Elektrik",
       "energyMeterHelp": "Zusätzlicher Zähler, wenn die Wallbox keinen integrierten hat.",
       "energyMeterLabel": "Energiezähler",
+      "demandPredictor": {
+        "daily": {
+          "description": "Durchschnitt der letzten Tage. Für Geräte mit täglich gleichem Verbrauch.",
+          "label": "Tagesdurchschnitt"
+        },
+        "defaultGroup": "Gerätestandard",
+        "description": "Wie der Optimizer den Verbrauch aus der Vergangenheit vorhersagt.",
+        "label": "Profil",
+        "noTempTariff": "Erfordert eine Temperaturvorhersage.",
+        "noTempTariffLink": "Vorhersage hinzufügen",
+        "profilesGroup": "Profile",
+        "temperature": {
+          "description": "Verbrauch bei ähnlicher Außentemperatur. Für Raumheizung, z. B. Wärmepumpen.",
+          "label": "Temperatur"
+        },
+        "title": "Verbrauchsprognose",
+        "weekday": {
+          "description": "Durchschnitt des gleichen Wochentags. Für Geräte mit Wochenrhythmus, z. B. Warmwasser oder Pool.",
+          "label": "Wochentag"
+        }
+      },
       "estimateLabel": "Ladestand zwischen API-Updates interpolieren",
       "maxCurrentHelp": "Muss größer als der Mindeststrom sein.",
       "maxCurrentLabel": "Maximaler Strom",

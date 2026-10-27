@@ -531,6 +531,7 @@
 					:hasDeviceError="hasDeviceError"
 					:voltage="voltage"
 					:gridConnection="gridConnection"
+					:temperatureTariffConfigured="temperatureTariffConfigured"
 					@changed="loadpointChanged"
 					@dismissed="loadpointDismissed"
 					@disable="({ id, disable }) => handleDisable('loadpoint', id, disable)"
@@ -1112,6 +1113,11 @@ export default defineComponent({
 		temperatureTariff() {
 			const name = this.tariffRefs?.temperature;
 			return name ? this.tariffs.find((t) => t.name === name) : null;
+		},
+		temperatureTariffConfigured(): boolean {
+			return this.tariffsYamlVisible
+				? store.state?.tariffTemperature !== undefined
+				: !!this.temperatureTariff;
 		},
 		solarTariffs() {
 			const names = this.tariffRefs?.solar || [];
