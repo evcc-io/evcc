@@ -33,14 +33,6 @@ export default defineComponent({
 			return wizardPending();
 		},
 	},
-	watch: {
-		wizardPending: {
-			immediate: true,
-			handler(pending: boolean) {
-				if (pending) this.$router.replace("/config");
-			},
-		},
-	},
 	head() {
 		const title = store.state.siteTitle;
 		if (title) {
@@ -56,6 +48,12 @@ export default defineComponent({
 		return { title: "evcc", titleTemplate: null };
 	},
 	watch: {
+		wizardPending: {
+			immediate: true,
+			handler(pending: boolean) {
+				if (pending) this.$router.replace("/config");
+			},
+		},
 		'state.siteTitle': {
 			handler(newTitle) {
 				// Only create manifest when we have the final configured title
@@ -63,8 +61,8 @@ export default defineComponent({
 				if (newTitle && newTitle !== "...") {
 					this.updateManifest();
 				}
-			}
-		}
+			},
+		},
 	},
 	mounted() {
 		// Only create manifest when final title is loaded
@@ -116,7 +114,7 @@ export default defineComponent({
 			link.rel = 'manifest';
 			link.href = manifestURL;
 			document.head.appendChild(link);
-		}
+		},
 	},
 });
 </script>
