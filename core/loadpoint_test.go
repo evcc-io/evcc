@@ -1396,3 +1396,19 @@ func TestPVDisableContinuousDeviceShortfall(t *testing.T) {
 		})
 	}
 }
+
+func TestRequestUpdateNotDroppedWhenQueueFull(t *testing.T) {
+	ch := make(chan *Loadpoint, 1)
+	lp1 := &Loadpoint{lpChan: ch}
+	lp2 := &Loadpoint{lpChan: ch}
+
+	lp1.requestUpdate()
+	lp2.requestUpdate() // queue is full, must be delivered once there is room
+	lp2.requestUpdate() // already pending, must not queue a second time
+
+	got := []*Loadpoint{<-ch, <-ch}
+	assert.ElementsMatch(t, []*Loadpoint{lp1, lp2}, got)
+
+	assert.Eventually(t, func() bool { return !lp2.lpRetry.Load() }, time.Second, time.Millisecond)
+	assert.Empty(t, ch)
+}

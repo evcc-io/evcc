@@ -36,6 +36,8 @@ type Connector struct {
 	remoteIdTag string
 
 	meterInterval time.Duration
+
+	onStatus func()
 }
 
 func NewConnector(ctx context.Context, log *util.Logger, id int, cp *CP, idTag string, meterInterval time.Duration) (*Connector, error) {
@@ -85,6 +87,13 @@ func (conn *Connector) TestClock(clock clock.Clock) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 	conn.clock = clock
+}
+
+// OnStatusChange registers a non-blocking callback invoked after each applied status notification
+func (conn *Connector) OnStatusChange(f func()) {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+	conn.onStatus = f
 }
 
 func (conn *Connector) ID() int {

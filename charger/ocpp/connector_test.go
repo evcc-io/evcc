@@ -467,3 +467,49 @@ func (suite *connTestSuite) TestOnStopTransactionResetsReportedPower() {
 	suite.NoError(err, "CurrentPower")
 	suite.Equal(res, 0.0, "CurrentPower")
 }
+
+func (suite *connTestSuite) TestOnStatusChangeCallback() {
+	var calls int
+	suite.conn.OnStatusChange(func() { calls++ })
+
+	status := func(s core.ChargePointStatus, ts time.Time) {
+		_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+			ConnectorId: 1,
+			Status:      s,
+			Timestamp:   types.NewDateTime(ts),
+		})
+		suite.NoError(err)
+	}
+
+	now := suite.clock.Now()
+	status(core.ChargePointStatusSuspendedEV, now)
+	suite.Equal(1, calls)
+
+	status(core.ChargePointStatusCharging, now.Add(time.Second))
+	suite.Equal(2, calls)
+
+	// outdated status is ignored and must not trigger an update
+	status(core.ChargePointStatusSuspendedEVSE, now.Add(-time.Hour))
+	suite.Equal(2, calls)
+
+	status(core.ChargePointStatusSuspendedEVSE, now.Add(2*time.Second))
+	suite.Equal(3, calls)
+
+	// same class, e.g. flapping between the suspended states
+	status(core.ChargePointStatusSuspendedEV, now.Add(3*time.Second))
+	status(core.ChargePointStatusSuspendedEVSE, now.Add(4*time.Second))
+	status(core.ChargePointStatusPreparing, now.Add(5*time.Second))
+	suite.Equal(3, calls)
+
+	status(core.ChargePointStatusAvailable, now.Add(6*time.Second))
+	suite.Equal(4, calls)
+
+	_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusAvailable,
+		ErrorCode:   core.GroundFailure,
+		Timestamp:   types.NewDateTime(now.Add(7 * time.Second)),
+	})
+	suite.NoError(err)
+	suite.Equal(5, calls)
+}

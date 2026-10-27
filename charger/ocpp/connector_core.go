@@ -24,11 +24,29 @@ func (conn *Connector) timestampValid(t time.Time) bool {
 	return !t.Before(conn.status.Timestamp.Time)
 }
 
+// statusClass maps a status to the coarse state evcc reacts to: not plugged, plugged, charging or error.
+// Changes within a class, e.g. SuspendedEV to SuspendedEVSE, are not relevant for a loadpoint update.
+func statusClass(s *core.StatusNotificationRequest) string {
+	switch {
+	case s == nil:
+		return ""
+	case s.ErrorCode != "" && s.ErrorCode != core.NoError:
+		return "error"
+	case s.Status == core.ChargePointStatusCharging:
+		return "charging"
+	case s.Status == core.ChargePointStatusAvailable, s.Status == core.ChargePointStatusUnavailable:
+		return "idle"
+	default:
+		return "plugged"
+	}
+}
+
 func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
 	var applied bool
+	prev := conn.status
 	if conn.status == nil {
 		conn.status = request
 		close(conn.statusC) // signal initial status received
@@ -56,6 +74,10 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 			core.ChargePointStatusSuspendedEV, core.ChargePointStatusSuspendedEVSE:
 			conn.rebooted = false
 		}
+	}
+
+	if applied && conn.onStatus != nil && statusClass(prev) != statusClass(request) {
+		conn.onStatus()
 	}
 
 	if conn.isWaitingForAuth() {
