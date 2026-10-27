@@ -111,20 +111,10 @@
 				<ConfigSection v-bind="sectionProps('consumers')">
 					<div class="p-0 config-list box-pull-out">
 						<MeterCard
-							v-for="meter in consumerMeters"
+							v-for="{ meter, meterType } in consumerAndAuxMeters"
 							:key="meter.name"
 							:meter="meter"
-							meter-type="consumer"
-							:has-error="hasDeviceError('meter', meter.name)"
-							:tags="deviceTags('meter', meter.name)"
-							@edit="(type, id) => openModal('meter', { type, id })"
-							@enable="handleDisable('meter', meter.id, false)"
-						/>
-						<MeterCard
-							v-for="meter in auxMeters"
-							:key="meter.name"
-							:meter="meter"
-							meter-type="aux"
+							:meter-type="meterType"
 							:has-error="hasDeviceError('meter', meter.name)"
 							:tags="deviceTags('meter', meter.name)"
 							@edit="(type, id) => openModal('meter', { type, id })"
@@ -1076,8 +1066,7 @@ export default defineComponent({
 			return this.getMetersByNames(names);
 		},
 		auxMeters() {
-			const names = this.site?.aux;
-			return this.getMetersByNames(names);
+			return this.getMetersByNames(this.site?.aux);
 		},
 		extMeters() {
 			const names = this.site?.ext;
@@ -1091,6 +1080,18 @@ export default defineComponent({
 		},
 		consumerMeters() {
 			return this.getMetersByNames(this.site?.consumer);
+		},
+		consumerAndAuxMeters(): { meter: ConfigMeter; meterType: MeterType; label: string }[] {
+			const entries = (meters: ConfigMeter[], meterType: MeterType, fallback: string) =>
+				meters.map((meter) => ({
+					meter,
+					meterType,
+					label: meter.deviceTitle || meter.config?.template || fallback,
+				}));
+			return [
+				...entries(this.consumerMeters, "consumer", this.$t("config.devices.consumer")),
+				...entries(this.auxMeters, "aux", this.$t("config.devices.auxMeter")),
+			].sort((a, b) => a.label.localeCompare(b.label, this.$i18n.locale));
 		},
 		gridTariff() {
 			const name = this.tariffRefs?.grid;
