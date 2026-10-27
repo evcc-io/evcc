@@ -1,0 +1,24 @@
+interval: 0.1s
+
+site:
+  title: Battery Warning
+  meters:
+    grid: grid
+    battery: battery
+
+meters:
+  - name: grid
+    type: custom
+    power:
+      source: const
+      value: 0
+  - name: battery
+    type: custom
+    master: missing
+    power:
+      source: const
+      value: 0
+    soc:
+      source: const
+      value: 50
+    capacity: 10

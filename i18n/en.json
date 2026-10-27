@@ -1595,6 +1595,13 @@
       "onceTip": "Only for this session",
       "permanent": "stays on permanently"
     },
+    "batteryConfigWarnings": {
+      "invalidMaster": "Battery {device}: master reference \"{master}\" is invalid and has been ignored.",
+      "masterIsSlave": "Battery {device}: master reference \"{master}\" is itself a slave, so the assignment was ignored.",
+      "review": "Review configuration",
+      "title": "Battery configuration warning",
+      "unsupportedSlave": "Battery {device}: master reference \"{master}\" is ignored because charge/discharge power control is not supported."
+    },
     "chargingPlan": {
       "active": "Active",
       "addRepeatingPlan": "Add repeating plan",

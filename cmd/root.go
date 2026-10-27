@@ -305,9 +305,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup site and loadpoints
 	var site *core.Site
+	var batteryConfigWarnings []batteryConfigWarning
 	if err == nil {
-		site, err = configureSiteAndLoadpoints(&conf)
+		site, batteryConfigWarnings, err = configureSiteAndLoadpoints(&conf)
 	}
+	if batteryConfigWarnings == nil {
+		batteryConfigWarnings = []batteryConfigWarning{}
+	}
+	valueChan <- util.Param{Key: keys.BatteryConfigWarnings, Val: batteryConfigWarnings}
 
 	// setup influx
 	if err == nil {

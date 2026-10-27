@@ -2,6 +2,30 @@
 	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
 			<TopHeader :title="headerTitle" :notifications="notifications" />
+			<div
+				v-if="batteryConfigWarnings.length && !batteryConfigWarningsDismissed"
+				class="alert alert-warning mt-2 mb-3"
+				role="alert"
+				data-testid="battery-config-warnings"
+			>
+				<div class="d-flex justify-content-between align-items-start gap-3 mb-1">
+					<strong>{{ $t("main.batteryConfigWarnings.title") }}</strong>
+					<button
+						type="button"
+						class="btn-close flex-shrink-0"
+						:aria-label="$t('config.general.close')"
+						@click="dismissBatteryConfigWarnings"
+					></button>
+				</div>
+				<ul class="mb-2 ps-3">
+					<li v-for="warning in batteryConfigWarnings" :key="warningKey(warning)">
+						{{ warningMessage(warning) }}
+					</li>
+				</ul>
+				<router-link to="/config" class="alert-link">
+					{{ $t("main.batteryConfigWarnings.review") }}
+				</router-link>
+			</div>
 			<HemsWarning :status="hems?.status" />
 			<Energyflow v-if="!setupRequired && !hasFatalError" v-bind="energyflow" />
 		</div>
@@ -80,7 +104,7 @@ import Loadpoints from "../Loadpoints/Loadpoints.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector.ts";
 import { ONBOARDING_ICONS } from "../Config/Onboarding/icons";
-import { defineComponent, type PropType } from "vue";
+import { defineComponent, reactive, type PropType } from "vue";
 import type {
 	AuthProviders,
 	Battery,
@@ -97,10 +121,18 @@ import type {
 	EvOpt,
 	BATTERY_MODE,
 	Vehicle,
+	BatteryConfigWarning,
 } from "@/types/evcc";
 import vehicleList from "@/utils/vehicleList";
 import store from "@/store";
 import type { Grid } from "./types";
+
+const batteryConfigWarningState = reactive({ dismissed: false });
+const BATTERY_CONFIG_WARNING_KEYS: Record<BatteryConfigWarning["reason"], string> = {
+	invalidMaster: "main.batteryConfigWarnings.invalidMaster",
+	masterIsSlave: "main.batteryConfigWarnings.masterIsSlave",
+	unsupportedSlave: "main.batteryConfigWarnings.unsupportedSlave",
+};
 
 export default defineComponent({
 	name: "Site",
@@ -155,6 +187,10 @@ export default defineComponent({
 		smartCostAvailable: Boolean,
 		smartFeedInPriorityAvailable: Boolean,
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
+		batteryConfigWarnings: {
+			type: Array as PropType<BatteryConfigWarning[]>,
+			default: () => [],
+		},
 		forecast: Object as PropType<UiForecast>,
 		hems: Object as PropType<ConfigStatus<HemsConfig, HemsStatus>>,
 		evopt: { type: Object as PropType<EvOpt> },
@@ -183,6 +219,9 @@ export default defineComponent({
 		},
 		batteryConfigured() {
 			return (this.battery?.devices?.length ?? 0) > 0;
+		},
+		batteryConfigWarningsDismissed() {
+			return batteryConfigWarningState.dismissed;
 		},
 		pvConfigured() {
 			return this.pv?.length > 0;
@@ -213,6 +252,18 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		dismissBatteryConfigWarnings() {
+			batteryConfigWarningState.dismissed = true;
+		},
+		warningKey(warning: BatteryConfigWarning) {
+			return `${warning.device}:${warning.master}:${warning.reason}`;
+		},
+		warningMessage(warning: BatteryConfigWarning) {
+			return this.$t(BATTERY_CONFIG_WARNING_KEYS[warning.reason], {
+				device: warning.device,
+				master: warning.master,
+			});
+		},
 		selectedLoadpointChanged(id: string | undefined) {
 			this.$router.push({ query: { lp: id } });
 		},

@@ -152,6 +152,13 @@ export interface FatalError {
   device?: string;
 }
 
+/** Non-fatal battery configuration issue detected during startup. */
+export interface BatteryConfigWarning {
+  device: string;
+  master: string;
+  reason: "invalidMaster" | "masterIsSlave" | "unsupportedSlave";
+}
+
 export type StatisticsPeriod = "30d" | "365d" | "thisYear" | "total";
 export type StatisticsIndicator = "none" | "solar" | "price" | "savings" | "co2" | "co2saved";
 
@@ -203,6 +210,8 @@ export interface State {
   country?: string;
   /** Fatal startup errors. */
   fatal?: FatalError[];
+  /** Battery master assignments ignored during setup. */
+  batteryConfigWarnings?: BatteryConfigWarning[];
   /** Status of configured vehicle authentication providers, keyed by provider name. */
   authProviders?: AuthProviders;
   /** @internal */
