@@ -1076,7 +1076,10 @@ export default defineComponent({
 			return this.getMetersByNames(names);
 		},
 		auxMeters() {
-			return this.sortByTitle(this.getMetersByNames(this.site?.aux));
+			return this.sortByTitle(
+				this.getMetersByNames(this.site?.aux),
+				this.$t("config.devices.auxMeter")
+			);
 		},
 		extMeters() {
 			const names = this.site?.ext;
@@ -1089,7 +1092,10 @@ export default defineComponent({
 				.filter((c): c is ConfigCurtailer => c !== undefined);
 		},
 		consumerMeters() {
-			return this.sortByTitle(this.getMetersByNames(this.site?.consumer));
+			return this.sortByTitle(
+				this.getMetersByNames(this.site?.consumer),
+				this.$t("config.devices.consumer")
+			);
 		},
 		gridTariff() {
 			const name = this.tariffRefs?.grid;
@@ -1527,8 +1533,9 @@ export default defineComponent({
 				this.deviceTags("charger", chargerName)["heating"]?.value
 			);
 		},
-		sortByTitle(meters: ConfigMeter[]): ConfigMeter[] {
-			const label = (m: ConfigMeter) => m.deviceTitle || m.name;
+		// mirrors MeterCard.cardTitle so the list is ordered by what is displayed
+		sortByTitle(meters: ConfigMeter[], fallback: string): ConfigMeter[] {
+			const label = (m: ConfigMeter) => m.deviceTitle || m.config?.template || fallback;
 			return meters.sort((a, b) => label(a).localeCompare(label(b), this.$i18n.locale));
 		},
 		getMetersByNames(names: string[] | null): ConfigMeter[] {
