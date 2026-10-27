@@ -5,7 +5,7 @@ site:
     consumer:
       - fridge
     aux:
-      - heater
+      - boiler
     ext:
       - submeter
 
@@ -20,7 +20,7 @@ meters:
     power:
       source: js
       script: "200"
-  - name: heater
+  - name: boiler
     type: custom
     power:
       source: js

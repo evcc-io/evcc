@@ -1076,8 +1076,7 @@ export default defineComponent({
 			return this.getMetersByNames(names);
 		},
 		auxMeters() {
-			const names = this.site?.aux;
-			return this.getMetersByNames(names);
+			return this.sortByTitle(this.getMetersByNames(this.site?.aux));
 		},
 		extMeters() {
 			const names = this.site?.ext;
@@ -1090,7 +1089,7 @@ export default defineComponent({
 				.filter((c): c is ConfigCurtailer => c !== undefined);
 		},
 		consumerMeters() {
-			return this.getMetersByNames(this.site?.consumer);
+			return this.sortByTitle(this.getMetersByNames(this.site?.consumer));
 		},
 		gridTariff() {
 			const name = this.tariffRefs?.grid;
@@ -1527,6 +1526,10 @@ export default defineComponent({
 				charger?.config?.["heating"] ||
 				this.deviceTags("charger", chargerName)["heating"]?.value
 			);
+		},
+		sortByTitle(meters: ConfigMeter[]): ConfigMeter[] {
+			const label = (m: ConfigMeter) => m.deviceTitle || m.name;
+			return meters.sort((a, b) => label(a).localeCompare(label(b), this.$i18n.locale));
 		},
 		getMetersByNames(names: string[] | null): ConfigMeter[] {
 			if (!names || !this.meters) {
