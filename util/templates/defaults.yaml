@@ -692,6 +692,7 @@ presets:
       example: "math.Max((price + charges) * (1 + tax), 0.0)"
     - name: earlyRefresh
       type: duration
+      unit: minute
       advanced: true
       description:
         en: Fetch tomorrow's prices early
