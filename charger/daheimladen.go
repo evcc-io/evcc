@@ -430,8 +430,7 @@ func (wb *DaheimLaden) Diagnose() {
 		fmt.Printf("\tCable Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegStationId, 16); err == nil {
-		s, _ := utf16BEBytesAsString(b)
-		fmt.Printf("\tStation ID:\t%s\n", s)
+		fmt.Printf("\tStation ID:\t%s\n", decodeStationID(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16); err == nil {
 		s, _ := utf16BEBytesAsString(b)

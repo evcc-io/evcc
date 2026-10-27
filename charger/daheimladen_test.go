@@ -23,7 +23,7 @@ func TestDecodeStationID(t *testing.T) {
 		want string
 	}{
 		{"utf16be original firmware", utf16BE(id), id},
-		// replacement comm module writes the id as raw ASCII (issue #32907)
+		// replacement comm module writes the id as raw ASCII
 		{"raw ascii replacement module", []byte(id), id},
 		{"heidelbridge utf16be", utf16BE("HeidelBridge"), "HeidelBridge"},
 		{"empty register map", make([]byte, 32), ""},
