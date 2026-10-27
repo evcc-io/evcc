@@ -13,6 +13,9 @@ products:
       generic: AMTRON 4You 500 22 kW (OCPP)
   - brand: Mennekes
     description:
+      generic: AMTRON 4Business 600 22 kW (OCPP)
+  - brand: Mennekes
+    description:
       generic: AMTRON 4Business 700 11 kW (OCPP)
     capabilities: ["1p3p"]
   - brand: Mennekes
