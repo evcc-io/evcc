@@ -3,6 +3,7 @@ import { start, stop, restart, baseUrl } from "./evcc";
 import { expectModalHidden, expectModalVisible, finishLoadpoint, skipOnboarding } from "./utils";
 
 test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
 
 const PASSWORD = "secret";
 

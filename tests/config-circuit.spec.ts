@@ -15,6 +15,7 @@ const CONFIG_FAST = "fast.evcc.yaml";
 const CONFIG_CIRCUIT_TREE = "config-circuit-tree.sql";
 
 test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
 
 test.afterEach(async () => {
   await stop();

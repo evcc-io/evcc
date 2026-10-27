@@ -22,6 +22,7 @@ import (
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	optimizer "github.com/evcc-io/optimizer/client"
@@ -87,8 +88,9 @@ type batteryDetail struct {
 	Name     string      `json:"name,omitempty"`
 	Capacity float64     `json:"capacity,omitempty"`
 
-	loadpoint    *int // originating loadpoint id for loadpoint/vehicle entries
-	controllable bool // device can act on suggestions
+	loadpoint    *int              // originating loadpoint id for loadpoint/vehicle entries
+	controllable bool              // device can act on suggestions
+	modes        []api.BatteryMode // modes the battery controller supports
 }
 
 // batteryKey and loadpointKey build the canonical device keys used for
@@ -221,6 +223,13 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 			s.Action = api.BatteryHold.String()
 		default:
 			s.Action = api.BatteryNormal.String()
+		}
+
+		// suggest the mode control applies instead of one the battery does not support
+		if mode, err := api.BatteryModeString(s.Action); err == nil && detail.modes != nil {
+			if mode = supportedBatteryMode(detail.modes, mode); mode != api.BatteryUnknown {
+				s.Action = mode.String()
+			}
 		}
 	} else if charge > suggestionThreshold {
 		s.Action = actionCharge
@@ -621,7 +630,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	}
 
 	if site.circuit != nil {
-		if pMaxImp := site.circuit.GetMaxPower(); pMaxImp > 0 {
+		if pMaxImp := circuitMaxImport(site.circuit); pMaxImp > 0 {
 			// hard grid import limit if no price penalty is set by PrcPExcImp
 			req.Grid.PMaxImp = float32(pMaxImp)
 		}
@@ -1057,7 +1066,11 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	} else {
 		maxSoc := capacity * float64(lp.EffectiveLimitSoc()) * 10 // Wh
 		bat.SInitial = float32(capacity * soc * 10)               // Wh
-		bat.SMax = max(bat.SInitial, float32(maxSoc))             // prevent infeasible if current soc above maximum
+		if soc == 0 {
+			// vehicle without soc: estimate stored energy from session charged energy
+			bat.SInitial = float32(lp.GetChargedEnergy() * eta) // Wh
+		}
+		bat.SMax = max(bat.SInitial, float32(maxSoc)) // prevent infeasible if current soc above maximum
 	}
 
 	detail.Type = batteryTypeVehicle
@@ -1106,6 +1119,17 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	}
 
 	return bat, detail
+}
+
+// circuitMaxImport returns the circuit's import limit from max power incl. HEMS limit and three-phase max current, 0 if unlimited
+func circuitMaxImport(c api.Circuit) float64 {
+	res := c.EffectiveMaxPower()
+	if current := c.GetMaxCurrent(); current > 0 {
+		if power := grid.CurrentToPower(current, 3); res <= 0 || power < res {
+			res = power
+		}
+	}
+	return res
 }
 
 // clearDemandWhenFull zeroes the charge demand from the slot the accumulated energy fills the
@@ -1176,6 +1200,9 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 		Title:        deviceProperties(dev).Title,
 		Capacity:     *b.Capacity,
 		controllable: controllable,
+	}
+	if controllable {
+		detail.modes = ctrl.BatteryModes()
 	}
 
 	// tariff forecast-based grid charging demand

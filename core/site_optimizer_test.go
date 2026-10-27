@@ -625,6 +625,7 @@ func TestLoadpointRequestChargeGoal(t *testing.T) {
 		{"no capacity, limit exceeded", 0, 0, 100, 10, 11000, 11000, 11000},
 		{"capacity but no soc, energy limit", 50, 0, 100, 10, 0, 0, 10000},
 		{"capacity but no soc, no energy limit", 50, 0, 100, 0, 0, 0, 50000},
+		{"capacity but no soc, partially charged", 50, 0, 100, 0, 10000, 9000, 50000},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
@@ -811,6 +812,11 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	// solver noise on the grid is no import/export (#34657)
 	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 4e-05, 0, 570.0/3600).Action, "idle with import noise")
 	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 0, 4e-05, 570.0/3600).Action, "idle with export noise")
+
+	// an unsupported mode is suggested as the mode control applies instead (#35379)
+	battery.modes = []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 0, 1000, 1).Action, "holdcharge unsupported")
+	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 1000, 0, 1).Action, "hold supported")
 }
 
 // TestCurrentSlotSuggestionHoldWorthwhile covers holding a battery without planned
@@ -1049,4 +1055,23 @@ func TestReapplySuggestionsExpireAfterOutage(t *testing.T) {
 
 	assert.Nil(t, site.suggestion(batteryKey("home"), api.BatteryNormal.String()))
 	assert.Nil(t, site.lastOptimizerSolve)
+}
+
+func TestCircuitMaxImport(t *testing.T) {
+	for _, tc := range []struct {
+		power, current, expected float64
+	}{
+		{0, 0, 0},
+		{10000, 0, 10000},
+		{0, 20, 13800},
+		{10000, 20, 10000},
+		{20000, 20, 13800},
+	} {
+		ctrl := gomock.NewController(t)
+		c := api.NewMockCircuit(ctrl)
+		c.EXPECT().EffectiveMaxPower().Return(tc.power)
+		c.EXPECT().GetMaxCurrent().Return(tc.current)
+
+		assert.Equal(t, tc.expected, circuitMaxImport(c), "power %.0f current %.0f", tc.power, tc.current)
+	}
 }
