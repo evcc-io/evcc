@@ -879,7 +879,8 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 			}
 		}
 
-		// PV surplus over home demand charges the home batteries first, grid import feeds other consumers (#35416)
+		// PV surplus over home demand (gt, excluding loadpoints) covers home battery charging without grid charging (#35416).
+		// Loadpoints are not deducted: the optimizer splits PV between them and the battery arbitrarily.
 		if ts := req.TimeSeries; slot < len(ts.Ft) && slot < len(ts.Gt) {
 			pvSurplus = max(0, float64(ts.Ft[slot]-ts.Gt[slot])/slotHours)
 		}
