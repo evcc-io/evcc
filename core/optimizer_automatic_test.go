@@ -449,6 +449,52 @@ func TestBatteryModeUnmodelledCharging(t *testing.T) {
 	}
 }
 
+// TestBatteryModeFixedDemandModelled guards that a vehicle whose smart cost or fast charging
+// is fixed demand in the optimizer request does not hold the battery in battery-only mode,
+// while plan and min soc charging still do (#35337)
+func TestBatteryModeFixedDemandModelled(t *testing.T) {
+	enableAutomatic(t)
+	settings.SetString(keys.OptimizerAutomatic, OptimizerAutomaticBattery)
+
+	ctrl := gomock.NewController(t)
+
+	above := 1.5
+	rate := api.Rate{Start: time.Now(), End: time.Now().Add(time.Hour), Value: 1.15}
+
+	for _, tc := range []struct {
+		name       string
+		mode       api.ChargeMode
+		planActive bool
+		minSoc     int
+		res        api.BatteryMode
+	}{
+		{"smart cost", api.ModeSmart, false, 0, api.BatteryDischarge},
+		{"fast", api.ModeNow, false, 0, api.BatteryDischarge},
+		{"plan", api.ModeSmart, true, 0, api.BatteryHold},
+		{"min soc", api.ModeSmart, false, 80, api.BatteryHold},
+	} {
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.status = api.StatusC
+		lp.mode = tc.mode
+		lp.smartCostLimit = &above
+		lp.vehicle = modelledVehicle(ctrl)
+		lp.vehicleSoc = 50
+		lp.planActive = tc.planActive
+		lp.minSoc = tc.minSoc
+
+		site := &Site{
+			log:           util.NewLogger("foo"),
+			batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, api.Meter(nil))},
+			loadpoints:    []*Loadpoint{lp},
+		}
+		site.setSuggestions(map[string]types.Suggestion{
+			batteryKey("bat"): {Action: api.BatteryDischarge.String()},
+		})
+
+		assert.Equal(t, tc.res, site.requiredBatteryMode(false, false, rate), tc.name)
+	}
+}
+
 func TestBatteryGridChargeLimitUnavailable(t *testing.T) {
 	enableAutomatic(t)
 
