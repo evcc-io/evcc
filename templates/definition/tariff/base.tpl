@@ -23,4 +23,7 @@ tax: {{ .tax }}
 {{- if .formula }}
 formula: {{ .formula }}
 {{- end }}
+{{- if .earlyRefresh }}
+earlyRefresh: {{ .earlyRefresh }}
+{{- end }}
 {{- end }}
