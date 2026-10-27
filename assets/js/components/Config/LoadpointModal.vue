@@ -21,7 +21,7 @@
 					{{ $t("config.loadpoint.advancedConfig") }}
 				</a>
 				<button type="button" class="btn btn-primary" @click="finish">
-					{{ $t("config.general.close") }}
+					{{ $t("config.general.continue") }}
 				</button>
 			</template>
 		</CreateFlowStatus>

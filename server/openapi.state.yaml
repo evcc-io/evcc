@@ -14,6 +14,9 @@ components:
         setupRequired:
           description: Initial setup is required.
           type: boolean
+        onboarding:
+          $ref: "#/components/schemas/OnboardingState"
+          description: Setup wizard and checklist state.
         startupCompleted:
           description: Startup has completed.
           type: boolean
@@ -1588,6 +1591,35 @@ components:
             $ref: "#/components/schemas/OcppStationStatus"
       required:
         - stations
+    OnboardingItem:
+      description: Setup checklist item.
+      type: string
+      enum:
+        - battery
+        - pv
+        - grid
+        - loadpoint
+        - heater
+        - consumer
+        - gridImport
+        - gridExport
+        - co2
+        - solar
+    OnboardingState:
+      description: Setup wizard and checklist state.
+      type: object
+      properties:
+        done:
+          description: Setup wizard was finished or skipped.
+          type: boolean
+        dismissed:
+          description: Dismissed setup checklist items.
+          type: array
+          items:
+            $ref: "#/components/schemas/OnboardingItem"
+      required:
+        - done
+        - dismissed
     OptimizerAutomatic:
       type: string
       enum:

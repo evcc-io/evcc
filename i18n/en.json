@@ -46,8 +46,8 @@
     },
     "combined": "Combined",
     "config": {
-      "buffer": "Home battery energy above {soc} may be used to support the charging points and delays switching off in smart mode. Start solar charging automatically {start}.",
-      "bufferNone": "Home battery energy is not used for the charging points. Set a value below {soc} to enable support.",
+      "buffer": "Home battery energy above {soc} may be used to support the charging points and delays switching off in smart mode. Start solar charging automatically {start}. Note: “Always charge” ignores this setting.",
+      "bufferNone": "Home battery energy is not used for the charging points. Set a value below {soc} to enable support in smart mode. Note: “Always charge” ignores this setting.",
       "bufferStart": {
         "above": "once the battery is above {soc}",
         "full": "once the battery is full",
@@ -377,11 +377,13 @@
       "optional": "optional"
     },
     "general": {
+      "add": "Add",
       "applyAndClose": "Apply & close",
       "authPerform": "Connect with {provider}",
       "authPerformHint": "Will open in a new tab. Return here to continue.",
       "authPrepare": "Prepare connection",
       "cancel": "Cancel",
+      "continue": "Continue",
       "change": "Change",
       "clear": "Clear",
       "close": "Close",
@@ -616,11 +618,11 @@
       "vehiclesTitle": "Vehicles"
     },
     "main": {
+      "addLoadpoint": "Add charging point or heater",
       "addAdditional": "Add additional meter",
       "addConsumer": "Add consumer",
       "addCurtailer": "Add curtailment device",
       "addGrid": "Add grid meter",
-      "addLoadpoint": "Add charging point or heater",
       "addPvBattery": "Add solar or battery",
       "addTariffs": "Add tariffs",
       "addVehicle": "Add vehicle",
@@ -630,9 +632,7 @@
       "name": "Name",
       "title": "Configuration",
       "unconfigured": "not configured",
-      "vehicles": "My Vehicles",
-      "welcomeBannerText": "Start with creating at least one **charger**, **heater**, **grid**, **solar**, **battery** or **additional meter**. If you just want to test, pick a **demo device**.",
-      "welcomeBannerTitle": "Let's configure your system!"
+      "vehicles": "My Vehicles"
     },
     "mcp": {
       "description": "Exposes a Model Context Protocol server, allowing AI assistants like Claude to read the state of your system and control charging.",
@@ -726,6 +726,14 @@
       "specific": "Specific integrations",
       "template": "Manufacturer",
       "titleChoice": "What Do You Want To Add?",
+      "titleExample": {
+        "aux": "Smart water heater, etc.",
+        "battery": "Basement, garage, power station, etc.",
+        "consumer": "Dishwasher, washing machine, pool pump, etc.",
+        "pv": "South roof, carport, etc."
+      },
+      "reuseApply": "Use its settings.",
+      "reuseHint": "{device} can also be used as \"{target}\".",
       "titleLabel": "Title",
       "usage": {
         "aux": "Self-regulating consumer",
@@ -1005,12 +1013,21 @@
       "descriptionToken": "As GitHub Sponsor you find your token on {url}. For getting-started, we offer a {trialToken}.",
       "enterYourToken": "Your Sponsor Token",
       "error": "The sponsor token is not valid.",
+      "inline": {
+        "applied": "Token applied. Thanks for supporting the project!",
+        "apply": "Apply",
+        "becomeSponsor": "become a sponsor",
+        "device": "This device is only available to sponsors.",
+        "feature": "This feature is only available to sponsors.",
+        "learn": "Learn more and {becomeSponsor}.",
+        "placeholder": "Paste token",
+        "title": "Sponsor token required",
+        "trial": "Get started quickly.",
+        "trialLink": "Get a trial token"
+      },
       "invalid": "invalid",
       "labelToken": "Sponsor token",
       "title": "Sponsorship",
-      "tokenRequired": "You must configure a sponsor token before you can create this device.",
-      "tokenRequiredFeature": "This feature requires a sponsor token.",
-      "tokenRequiredLearnMore": "Learn more.",
       "tokenRequiredShort": "No sponsor token configured.",
       "trialToken": "trial token",
       "viaYaml": "via evcc.yaml",
@@ -1099,7 +1116,8 @@
       "solar": {
         "description": "Solar production forecast for your solar system. Displayed in the interface and will be used for optimization algorithms in the future.",
         "titleAdd": "Add Solar Forecast",
-        "titleEdit": "Edit Solar Forecast"
+        "titleEdit": "Edit Solar Forecast",
+        "titleExample": "South roof, carport, etc."
       },
       "temperature": {
         "description": "Outdoor temperature forecast for your location. Displayed in the interface and used to predict heating demand.",
@@ -1719,7 +1737,11 @@
       "login": "log in",
       "logout": "log out"
     },
-    "startConfiguration": "Let's start configuration",
+    "setup": {
+      "description": "Add your devices to see the energy flow and start charging with solar power.",
+      "start": "Start setup",
+      "title": "Welcome!"
+    },
     "targetCharge": {
       "activate": "Activate",
       "co2Limit": "CO₂ limit of {co2}",
@@ -1828,13 +1850,82 @@
       "waitForVehicle": "Ready. Waiting for vehicle…",
       "welcome": "Short initial charge to confirm connection."
     },
-    "vehicles": "Parking",
-    "welcome": "Hello aboard!"
+    "vehicles": "Parking"
   },
   "notifications": {
     "dismissAll": "Dismiss all",
     "logs": "View full logs",
     "modalTitle": "Notifications"
+  },
+  "onboarding": {
+    "another": "Add another",
+    "back": "Back",
+    "battery": {
+      "add": "Add home battery",
+      "description": "Add your battery so charging takes it into account and you can see what it does.",
+      "none": "No home battery",
+      "title": "Do you have a home battery?"
+    },
+    "checklist": {
+      "dismiss": "Dismiss",
+      "legacyTariffs": "Legacy tariff configuration in use.",
+      "progress": "{done} of {total} done",
+      "title": "Complete your setup"
+    },
+    "control": {
+      "description": "Start with your first one. More can be added later on the configuration page.",
+      "none": "Nothing yet",
+      "title": "What do you want to control?"
+    },
+    "done": {
+      "close": "Go to configuration",
+      "description": "A restart applies the configuration. Then explore the features. Vehicles, tariffs and more can be added at any time.",
+      "restart": "Restart",
+      "title": "You're ready"
+    },
+    "grid": {
+      "add": "Add grid meter",
+      "confirm": "The grid meter is the basis for surplus charging and energy statistics. Adding one is recommended.",
+      "confirmNone": "Continue without",
+      "description": "Measures grid import and grid export at the connection point. Makes surplus charging precise.",
+      "none": "No grid meter",
+      "title": "Do you have a grid meter?"
+    },
+    "item": {
+      "battery": "Home battery",
+      "co2": "CO₂ forecast",
+      "consumer": "Consumer",
+      "grid": "Grid meter",
+      "gridExport": "Grid export tariff",
+      "gridImport": "Grid import tariff",
+      "heater": "Heater",
+      "loadpoint": "Charging point",
+      "pv": "Solar system",
+      "solar": "Solar forecast"
+    },
+    "password": {
+      "description": "Protects the configuration settings from unauthorized changes. Remember it, there is no easy way to reset it.",
+      "disabled": "Authentication is disabled ({flag}). Anyone with network access can change the configuration, read stored credentials and run scripts. Secure access by other means.",
+      "title": "Set Administrator Password"
+    },
+    "pv": {
+      "add": "Add solar system",
+      "description": "Measures solar production. Needed for the solar share and surplus charging.",
+      "none": "No solar system",
+      "title": "Do you have a solar system?"
+    },
+    "site": {
+      "currencyHint": "e.g. {price}, {amount}",
+      "defaultTitle": "Home",
+      "description": "A few basics about your home. You can change them at any time.",
+      "title": "Your site"
+    },
+    "skip": "Skip setup",
+    "step": "Step {step} of {total}",
+    "welcome": {
+      "description": "Set up the most important parts of your home installation to start smart charging.",
+      "start": "Get started"
+    }
   },
   "offline": {
     "configurationError": "Error during startup. Check your configuration and restart.",
@@ -1845,14 +1936,12 @@
     "starting": "Starting server..."
   },
   "passwordModal": {
-    "description": "Set a password to protect the configuration settings. Using the main screen is still possible without login.",
     "empty": "Password should not be empty",
     "labelCurrent": "Current password",
     "labelNew": "New password",
     "labelRepeat": "Repeat password",
     "newPassword": "Create password",
     "noMatch": "Passwords do not match",
-    "titleNew": "Set Administrator Password",
     "titleUpdate": "Update Administrator Password",
     "updatePassword": "Update password"
   },

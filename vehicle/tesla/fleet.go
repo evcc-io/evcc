@@ -48,10 +48,10 @@ func (c FleetConfig) Client(log *util.Logger) (*API, error) {
 	hc := request.NewClient(log)
 	hc.Transport = &oauth2.Transport{Source: identity, Base: hc.Transport}
 
-	region, err := NewAPI(hc, FleetBaseUrl).Region()
+	region, err := NewAPI(log, hc, FleetBaseUrl).Region()
 	if err != nil {
 		return nil, fmt.Errorf("get Fleet API region: %w", err)
 	}
 
-	return NewAPI(hc, region.FleetApiBaseUrl), nil
+	return NewAPI(log, hc, region.FleetApiBaseUrl), nil
 }

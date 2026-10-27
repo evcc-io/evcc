@@ -454,6 +454,7 @@ func TestOptimizerPhaseScaleUp(t *testing.T) {
 			lp.Enable.Delay = 3 * time.Minute
 			lp.phases = 1
 			lp.status = api.StatusC
+			lp.enabled = true
 			lp.chargePower = 3680
 			lp.wakeUpTimer = NewTimer()
 

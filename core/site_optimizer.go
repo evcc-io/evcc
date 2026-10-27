@@ -22,6 +22,7 @@ import (
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	optimizer "github.com/evcc-io/optimizer/client"
@@ -62,6 +63,7 @@ type optimizerResult struct {
 	Req     optimizer.OptimizationInput  `json:"req"`
 	Res     optimizer.OptimizationResult `json:"res"`
 	Details requestDetails               `json:"details"`
+	Hosted  bool                         `json:"hosted"` // explain needs the hosted optimizer
 }
 
 var _ api.BytesMarshaler = (*optimizerResult)(nil)
@@ -86,8 +88,9 @@ type batteryDetail struct {
 	Name     string      `json:"name,omitempty"`
 	Capacity float64     `json:"capacity,omitempty"`
 
-	loadpoint    *int // originating loadpoint id for loadpoint/vehicle entries
-	controllable bool // device can act on suggestions
+	loadpoint    *int              // originating loadpoint id for loadpoint/vehicle entries
+	controllable bool              // device can act on suggestions
+	modes        []api.BatteryMode // modes the battery controller supports
 }
 
 // batteryKey and loadpointKey build the canonical device keys used for
@@ -174,8 +177,10 @@ func suggestionEvent(detail batteryDetail, s types.Suggestion) messenger.Event {
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
 // (hold), exporting means charging is withheld (holdcharge). At its soc bound nothing is
-// withheld, the bound does it, so the battery stays in normal mode.
-func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
+// withheld, the bound does it, so the battery stays in normal mode. Without planned
+// discharge the battery is held when holdWorthwhile, since normal mode would let the
+// inverter cover intra-slot dips from the battery.
+func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
 	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
 		return types.Suggestion{}
 	}
@@ -214,8 +219,17 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 		case discharge > suggestionThreshold && gridExporting:
 			// discharging while exporting means battery-to-grid discharge
 			s.Action = api.BatteryDischarge.String()
+		case discharge <= suggestionThreshold && !(idle && empty) && holdWorthwhile(req, res, ts, slot):
+			s.Action = api.BatteryHold.String()
 		default:
 			s.Action = api.BatteryNormal.String()
+		}
+
+		// suggest the mode control applies instead of one the battery does not support
+		if mode, err := api.BatteryModeString(s.Action); err == nil && detail.modes != nil {
+			if mode = supportedBatteryMode(detail.modes, mode); mode != api.BatteryUnknown {
+				s.Action = mode.String()
+			}
 		}
 	} else if charge > suggestionThreshold {
 		s.Action = actionCharge
@@ -224,6 +238,26 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 	}
 
 	return s
+}
+
+// holdWorthwhile reports whether energy kept in the battery now is discharged later at a
+// higher price. A battery that fills up before its next discharge only displaces pv
+// charging with the kept energy, so holding it would trade a battery dip for a grid import.
+func holdWorthwhile(req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, slot int) bool {
+	if slot >= len(ts.PN) {
+		return false
+	}
+
+	for i := slot + 1; i < min(len(res.DischargingPower), len(ts.PN), len(ts.Dt)); i++ {
+		if slotHours := float64(ts.Dt[i]) / 3600; slotHours > 0 && float64(res.DischargingPower[i])/slotHours > suggestionThreshold {
+			return ts.PN[i] > ts.PN[slot]
+		}
+		if req.SMax > 0 && i < len(res.StateOfCharge) && res.StateOfCharge[i] >= req.SMax {
+			return false
+		}
+	}
+
+	return false
 }
 
 // loadpointCurrentAction returns the loadpoint's current operating mode for
@@ -427,6 +461,13 @@ func optimizerURI() string {
 	return cmp.Or(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
 }
 
+// optimizerAuth adds the sponsor token for the hosted optimizer only, a custom OPTIMIZER_URI must not receive it
+func optimizerAuth(req *http.Request) {
+	if optimizerURI() == OPTIMIZER_URI && sponsor.IsAuthorizedForApi() {
+		req.Header.Set("Authorization", "Bearer "+sponsor.Token)
+	}
+}
+
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 
 // errOptimizerNotReady means battery measurements aren't available yet (e.g. at
@@ -589,7 +630,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	}
 
 	if site.circuit != nil {
-		if pMaxImp := site.circuit.GetMaxPower(); pMaxImp > 0 {
+		if pMaxImp := circuitMaxImport(site.circuit); pMaxImp > 0 {
 			// hard grid import limit if no price penalty is set by PrcPExcImp
 			req.Grid.PMaxImp = float32(pMaxImp)
 		}
@@ -706,9 +747,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	resp, err := apiClient.PostOptimizeChargeScheduleWithResponse(context.TODO(), req, func(_ context.Context, req *http.Request) error {
-		if sponsor.IsAuthorizedForApi() {
-			req.Header.Set("Authorization", "Bearer "+sponsor.Token)
-		}
+		optimizerAuth(req)
 		return nil
 	})
 	if err != nil {
@@ -726,6 +765,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		Req:     req,
 		Res:     *resp.JSON200,
 		Details: details,
+		Hosted:  optimizerURI() == OPTIMIZER_URI,
 	}
 
 	site.Lock()
@@ -854,7 +894,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 			}),
 		})
 
-		suggestion := currentSlotSuggestion(detail, batReq, batRes, slot, gridImport, gridExport, slotHours)
+		suggestion := currentSlotSuggestion(detail, batReq, batRes, req.TimeSeries, slot, gridImport, gridExport, slotHours)
 		if suggestion.Action == "" {
 			continue
 		}
@@ -1026,7 +1066,11 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	} else {
 		maxSoc := capacity * float64(lp.EffectiveLimitSoc()) * 10 // Wh
 		bat.SInitial = float32(capacity * soc * 10)               // Wh
-		bat.SMax = max(bat.SInitial, float32(maxSoc))             // prevent infeasible if current soc above maximum
+		if soc == 0 {
+			// vehicle without soc: estimate stored energy from session charged energy
+			bat.SInitial = float32(lp.GetChargedEnergy() * eta) // Wh
+		}
+		bat.SMax = max(bat.SInitial, float32(maxSoc)) // prevent infeasible if current soc above maximum
 	}
 
 	detail.Type = batteryTypeVehicle
@@ -1075,6 +1119,17 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	}
 
 	return bat, detail
+}
+
+// circuitMaxImport returns the circuit's import limit from max power incl. HEMS limit and three-phase max current, 0 if unlimited
+func circuitMaxImport(c api.Circuit) float64 {
+	res := c.EffectiveMaxPower()
+	if current := c.GetMaxCurrent(); current > 0 {
+		if power := grid.CurrentToPower(current, 3); res <= 0 || power < res {
+			res = power
+		}
+	}
+	return res
 }
 
 // clearDemandWhenFull zeroes the charge demand from the slot the accumulated energy fills the
@@ -1146,11 +1201,35 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 		Capacity:     *b.Capacity,
 		controllable: controllable,
 	}
+	if controllable {
+		detail.modes = ctrl.BatteryModes()
+	}
 
 	// tariff forecast-based grid charging demand
 	if bat.ChargeFromGrid {
 		if demand := site.applyBatteryGridChargeLimit(bat.CMax, planner, minLen); demand != nil {
 			bat.PDemand = prorate(demand, firstSlotDuration)
+		}
+	}
+
+	// an external mode overrides evcc's battery control and is assumed to hold over the horizon
+	if controllable {
+		if mode := supportedBatteryMode(ctrl.BatteryModes(), site.GetBatteryModeExternal()); mode != api.BatteryUnknown {
+			bat.ChargeFromGrid = mode == api.BatteryCharge
+			bat.DischargeToGrid = mode == api.BatteryDischarge
+			bat.PDemand = nil
+
+			switch mode {
+			case api.BatteryHold:
+				bat.DMax = 0
+			case api.BatteryHoldCharge, api.BatteryDischarge:
+				bat.CMax = 0
+			case api.BatteryCharge:
+				bat.DMax = 0
+				bat.PDemand = prorate(lo.RepeatBy(minLen, func(int) float32 {
+					return float32(float64(bat.CMax) / slotsPerHour)
+				}), firstSlotDuration)
+			}
 		}
 	}
 
