@@ -54,7 +54,7 @@ export default defineComponent({
 				if (pending) this.$router.replace("/config");
 			},
 		},
-		'state.siteTitle': {
+		"state.siteTitle": {
 			handler(newTitle) {
 				// Only create manifest when we have the final configured title
 				// Skip App.vue's temporary "..." placeholder
@@ -87,31 +87,63 @@ export default defineComponent({
 
 			// Create new manifest with custom title
 			const manifest = {
+				start_url: "/",
 				name: title,
 				short_name: title,
-				start_url: "/",
-				display: "standalone",
-				theme_color: "#1d1d1b",
-				background_color: "#1d1d1b",
-				icons: [
+				"theme_color": "#18191a",
+				"background_color": "#18191a",
+				"display": "standalone",
+				"icons": [
 					{
-						src: "/meta/android-chrome-192x192.png",
-						sizes: "192x192",
-						type: "image/png"
+						"src": "/meta/android-chrome-192x192.png",
+						"sizes": "192x192",
+						"type": "image/png",
+						"purpose": "any",
 					},
 					{
-						src: "/meta/android-chrome-512x512.png",
-						sizes: "512x512",
-						type: "image/png"
-					}
-				]
+						"src": "/meta/android-chrome-192x192-maskable.png",
+						"sizes": "192x192",
+						"type": "image/png",
+						"purpose": "maskable",
+					},
+					{
+						"src": "/meta/android-chrome-512x512.png",
+						"sizes": "512x512",
+						"type": "image/png",
+						"purpose": "any",
+					},
+					{
+						"src": "/meta/android-chrome-512x512-maskable.png",
+						"sizes": "512x512",
+						"type": "image/png",
+						"purpose": "maskable",
+					},
+					{
+						"src": "/meta/android-chrome.svg",
+						"sizes": "any",
+						"type": "image/svg+xml",
+						"purpose": "any",
+					},
+					{
+						"src": "/meta/android-chrome-maskable.svg",
+						"sizes": "any",
+						"type": "image/svg+xml",
+						"purpose:": "maskable",
+					},
+					{
+						"src": "/meta/android-chrome-monochrome.svg",
+						"sizes": "any",
+						"type": "image/svg+xml",
+						"purpose:": "monochrome",
+					},
+				],
 			};
 
-			const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+			const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
 			const manifestURL = URL.createObjectURL(blob);
 
-			const link = document.createElement('link');
-			link.rel = 'manifest';
+			const link = document.createElement("link");
+			link.rel = "manifest";
 			link.href = manifestURL;
 			document.head.appendChild(link);
 		},
