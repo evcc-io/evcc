@@ -447,7 +447,51 @@
 						</div>
 
 						<div v-if="chargerIsHeating">
-							<h6>{{ $t("config.loadpoint.temperatureRangeTitle") }}</h6>
+							<h6 class="mb-2">{{ $t("config.loadpoint.demandPredictor.title") }}</h6>
+							<p class="text-muted">
+								{{ $t("config.loadpoint.demandPredictor.description") }}
+							</p>
+							<FormRow
+								id="loadpointDemandPredictor"
+								:label="$t('config.loadpoint.demandPredictor.label')"
+								:help="demandPredictorHelp"
+							>
+								<select
+									id="loadpointDemandPredictor"
+									v-model="demandPredictorSelection"
+									class="form-select"
+								>
+									<optgroup
+										v-for="group in demandPredictorGroups"
+										:key="group.label"
+										:label="group.label"
+									>
+										<option
+											v-for="option in group.options"
+											:key="option.value"
+											:value="option.value"
+										>
+											{{ option.label }}
+										</option>
+									</optgroup>
+								</select>
+								<template #footer>
+									<div v-if="temperatureTariffMissing" class="text-warning mt-1">
+										{{ $t("config.loadpoint.demandPredictor.noTempTariff") }}
+										<a href="#" @click.prevent="addTemperatureTariff">
+											{{
+												$t(
+													"config.loadpoint.demandPredictor.noTempTariffLink"
+												)
+											}}
+										</a>
+									</div>
+								</template>
+							</FormRow>
+						</div>
+
+						<div v-if="chargerIsHeating">
+							<h6 class="mb-2">{{ $t("config.loadpoint.temperatureRangeTitle") }}</h6>
 							<p class="text-muted">
 								{{ $t("config.loadpoint.temperatureRangeHelp") }}
 							</p>
@@ -487,50 +531,6 @@
 									/>
 								</FormRow>
 							</div>
-							<FormRow
-								id="loadpointDemandPredictor"
-								:label="$t('config.loadpoint.demandPredictorLabel')"
-								:help="
-									values.ui.demandPredictor
-										? $t(
-												`config.loadpoint.demandPredictor.${values.ui.demandPredictor}`
-											)
-										: undefined
-								"
-								class="mt-3"
-							>
-								<select
-									id="loadpointDemandPredictor"
-									v-model="values.ui.demandPredictor"
-									class="form-select"
-								>
-									<option v-if="!values.ui.demandPredictor" value="">
-										{{ $t("config.loadpoint.demandPredictorOptions.default") }}
-									</option>
-									<option value="daily">
-										{{ $t("config.loadpoint.demandPredictorOptions.daily") }}
-									</option>
-									<option value="weekday">
-										{{ $t("config.loadpoint.demandPredictorOptions.weekday") }}
-									</option>
-									<option value="temperature">
-										{{
-											$t(
-												"config.loadpoint.demandPredictorOptions.temperature"
-											)
-										}}
-									</option>
-								</select>
-								<div
-									v-if="
-										values.ui.demandPredictor === 'temperature' &&
-										!tariffTemperatureAvailable
-									"
-									class="text-warning mt-1"
-								>
-									<small>{{ $t("config.loadpoint.noTempTariff") }}</small>
-								</div>
-							</FormRow>
 						</div>
 					</div>
 				</div>
@@ -612,10 +612,12 @@ import {
 	type VehicleOption,
 	type ConfigCircuit,
 	type ConfigLoadpoint,
+	type DemandPredictor,
 } from "@/types/evcc";
-import store from "@/store";
 
 const nsPerMin = 60 * 1e9;
+
+const DEMAND_PREDICTORS: DemandPredictor[] = ["daily", "weekday", "temperature"];
 
 const { OFF, SMART, NOW } = CHARGE_MODE;
 
@@ -638,7 +640,6 @@ const defaultValues = {
 	ui: {
 		minTemp: 0,
 		maxTemp: 100,
-		demandPredictor: "",
 	},
 	vehicle: "",
 	charger: "",
@@ -673,6 +674,7 @@ export default {
 		},
 		voltage: Number,
 		gridConnection: String as PropType<GRID_CONNECTION>,
+		temperatureTariffConfigured: Boolean,
 	},
 	emits: ["changed", "dismissed", "disable"],
 	data() {
@@ -691,10 +693,43 @@ export default {
 		id(): number | undefined {
 			return getModal("loadpoint")?.id;
 		},
-		tariffTemperatureAvailable(): boolean {
-			// Check forecast data presence rather than the current-slot value, which
-			// can be undefined even when a temperature tariff is configured.
-			return (store.state?.forecast?.temperature?.length ?? 0) > 0;
+		defaultDemandPredictor(): DemandPredictor {
+			return this.chargerStatus?.demandPredictor?.value ?? "daily";
+		},
+		demandPredictorGroups() {
+			const t = (key: string) => this.$t(`config.loadpoint.demandPredictor.${key}`);
+			const label = (profile: DemandPredictor) => t(`${profile}.label`);
+			return [
+				{
+					label: t("defaultGroup"),
+					options: [{ value: "", label: label(this.defaultDemandPredictor) }],
+				},
+				{
+					label: t("profilesGroup"),
+					options: DEMAND_PREDICTORS.map((value) => ({ value, label: label(value) })),
+				},
+			];
+		},
+		demandPredictorSelection: {
+			get(): string {
+				return this.values.demandPredictor ?? "";
+			},
+			set(value: string) {
+				this.values.demandPredictor = (value as DemandPredictor) || undefined;
+			},
+		},
+		activeDemandPredictor(): DemandPredictor {
+			return this.values.demandPredictor || this.defaultDemandPredictor;
+		},
+		demandPredictorHelp(): string {
+			return this.$t(
+				`config.loadpoint.demandPredictor.${this.activeDemandPredictor}.description`
+			);
+		},
+		temperatureTariffMissing(): boolean {
+			return (
+				this.activeDemandPredictor === "temperature" && !this.temperatureTariffConfigured
+			);
 		},
 		thresholdsSet(): boolean {
 			const { enable, disable } = this.values.thresholds;
@@ -1070,6 +1105,9 @@ export default {
 			} else if (result.action === "removed") {
 				this.values.charger = "";
 			}
+		},
+		addTemperatureTariff() {
+			openModal("tariff", { type: "temperature" });
 		},
 		async editMeter() {
 			const meter = this.meters.find((m) => m.name === this.values.meter);

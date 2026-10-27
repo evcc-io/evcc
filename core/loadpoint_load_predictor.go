@@ -1,6 +1,7 @@
 package core
 
 import (
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -9,56 +10,63 @@ import (
 	"github.com/jinzhu/now"
 )
 
-// GetDemandPredictor returns the runtime demand predictor override.
-// Empty string means use the charger template default.
-func (lp *Loadpoint) GetDemandPredictor() string {
-	lp.RLock()
-	defer lp.RUnlock()
-	return lp.demandPredictor
-}
+var demandPredictors = []string{"daily", "weekday", "temperature"}
 
-// SetDemandPredictor sets the demand predictor override ("daily", "weekday", "temperature", or "").
-func (lp *Loadpoint) SetDemandPredictor(predictor string) {
-	switch predictor {
-	case "daily", "weekday", "temperature":
-	default:
-		return
-	}
-	lp.Lock()
-	lp.demandPredictor = predictor
-	lp.Unlock()
-	lp.publish(keys.DemandPredictor, predictor)
-	lp.settings.SetString(keys.DemandPredictor, predictor)
-	lp.triggerOptimizer()
-}
-
-// effectiveDemandPredictor returns the active predictor, consulting the runtime override
-// first and falling back to the charger feature flags.
-func (lp *Loadpoint) effectiveDemandPredictor() string {
-	if p := lp.GetDemandPredictor(); p != "" {
-		return p
-	}
+// DefaultDemandPredictor returns the demand predictor a heating charger declares via its predictor feature
+func DefaultDemandPredictor(charger any) string {
 	switch {
-	case lp.chargerHasFeature(api.DemandWeekday):
+	case hasFeature(charger, api.DemandWeekday):
 		return "weekday"
-	case lp.chargerHasFeature(api.DemandTemperature):
+	case hasFeature(charger, api.DemandTemperature):
 		return "temperature"
 	default:
 		return "daily"
 	}
 }
 
+// GetDemandPredictor returns the configured demand predictor, empty for the charger default
+func (lp *Loadpoint) GetDemandPredictor() string {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.predictor
+}
+
+// SetDemandPredictor sets the demand predictor ("daily", "weekday", "temperature" or empty for the charger default), other values are ignored
+func (lp *Loadpoint) SetDemandPredictor(predictor string) {
+	if predictor != "" && !slices.Contains(demandPredictors, predictor) {
+		return
+	}
+
+	lp.Lock()
+	changed := lp.predictor != predictor
+	lp.predictor = predictor
+	lp.Unlock()
+
+	if changed {
+		lp.log.DEBUG.Printf("set demand predictor: %q", predictor)
+		lp.settings.SetString(keys.DemandPredictor, predictor)
+		lp.triggerOptimizer()
+	}
+}
+
+func (lp *Loadpoint) activeDemandPredictor() string {
+	if p := lp.GetDemandPredictor(); p != "" {
+		return p
+	}
+	return DefaultDemandPredictor(lp.charger)
+}
+
 // demandProfile returns the heating demand profile of a heating loadpoint and whether
-// it needs to be scaled by the outdoor temperature forecast. Returns nil when unavailable.
-// For weekday devices, use demandProfileWeekday instead.
+// it needs to be corrected by the outdoor temperature forecast. Returns nil when unavailable.
+// For weekday predictor devices, use demandProfileWeekday instead.
 func (lp *Loadpoint) demandProfile() (*[96]float64, bool) {
 	if lp.chargeEnergy == nil || !lp.chargerHasFeature(api.Heating) {
 		return nil, false
 	}
 
-	predictor := lp.effectiveDemandPredictor()
+	predictor := lp.activeDemandPredictor()
 
-	// weekday profiles are assembled per-day in demandProfileWeekday
+	// weekday predictor profiles are assembled per-day in demandProfileWeekday
 	if predictor == "weekday" {
 		return nil, false
 	}
@@ -79,13 +87,10 @@ func (lp *Loadpoint) demandProfile() (*[96]float64, bool) {
 	return profile, temp
 }
 
-// demandProfileWeekday builds a minLen-slot demand forecast for a weekday-predictor device
+// demandProfileWeekday builds a minLen-slot demand forecast for a weekday predictor device
 // by fetching the correct weekday profile for each calendar day in the horizon.
 func (lp *Loadpoint) demandProfileWeekday(minLen int) []float64 {
-	if lp.chargeEnergy == nil || !lp.chargerHasFeature(api.Heating) {
-		return nil
-	}
-	if lp.effectiveDemandPredictor() != "weekday" {
+	if lp.chargeEnergy == nil || !lp.chargerHasFeature(api.Heating) || lp.activeDemandPredictor() != "weekday" {
 		return nil
 	}
 

@@ -107,9 +107,10 @@ type Loadpoint struct {
 	Ui              loadpoint.UIConfig // display-only, not used in control logic
 
 	// from yaml
-	DefaultMode api.ChargeMode `mapstructure:"mode"`     // Default charge mode, used for disconnect
-	Title       string         `mapstructure:"title"`    // UI title
-	Priority    int            `mapstructure:"priority"` // Priority
+	DefaultMode     api.ChargeMode `mapstructure:"mode"`            // Default charge mode, used for disconnect
+	Title           string         `mapstructure:"title"`           // UI title
+	Priority        int            `mapstructure:"priority"`        // Priority
+	DemandPredictor string         `mapstructure:"demandPredictor"` // Heating demand predictor, empty: charger default
 
 	// from yaml, deprecated
 	GuardDuration_ time.Duration `mapstructure:"guardduration"` // ignored, present for compatibility
@@ -127,7 +128,7 @@ type Loadpoint struct {
 	minSoc                   int      // Forced charging below this soc (heating: temperature), 0=disabled
 	smartCostLimit           *float64 // always charge if consumption cost is below this value
 	solarShare               float64  // share of min charging power that must be solar in pv mode (0..1)
-	demandPredictor          string   // runtime override for heating demand predictor ("daily"/"weekday"/"temperature"/"")
+	predictor                string   // heating demand predictor ("daily"/"weekday"/"temperature"), empty: charger default
 	smartFeedInPriorityLimit *float64 // prevent charging if feed-in cost is above this value
 	batteryBoost             int      // battery boost state
 	batteryBoostLimit        int      // battery boost soc limit (0-100, 100=disabled)
@@ -313,6 +314,13 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		lp.setTitle(lp.Title)
 	}
 
+	if p := lp.DemandPredictor; p != "" {
+		if !slices.Contains(demandPredictors, p) {
+			return lp, fmt.Errorf("invalid demand predictor: %s", p)
+		}
+		lp.predictor = p
+	}
+
 	// phase switching defaults based on charger capabilities
 	if !lp.hasPhaseSwitching() {
 		phases := lp.getChargerPhysicalPhases()
@@ -421,7 +429,7 @@ func (lp *Loadpoint) restoreSettings() {
 		lp.SetSolarShare(v)
 	}
 	if v, err := lp.settings.String(keys.DemandPredictor); err == nil {
-		lp.demandPredictor = v
+		lp.predictor = v
 	}
 	if v, err := lp.settings.Float(keys.SmartFeedInPriorityLimit); err == nil {
 		lp.setSmartFeedInPriorityLimit(&v)
@@ -805,7 +813,6 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publish(keys.SmartCostLimit, lp.smartCostLimit)
 	lp.publish(keys.SolarShare, lp.solarShare)
-	lp.publish(keys.DemandPredictor, lp.demandPredictor)
 	lp.publish(keys.SmartFeedInPriorityLimit, lp.smartFeedInPriorityLimit)
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)

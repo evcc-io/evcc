@@ -217,10 +217,9 @@ type API interface {
 	// SetSolarShare sets the solar share
 	SetSolarShare(share float64)
 
-	// GetDemandPredictor returns the runtime demand predictor override.
-	// Empty string means use the charger template default.
+	// GetDemandPredictor returns the heating demand predictor, empty for the charger default
 	GetDemandPredictor() string
-	// SetDemandPredictor sets the demand predictor override ("daily", "weekday", "temperature", or "").
+	// SetDemandPredictor sets the heating demand predictor, empty for the charger default
 	SetDemandPredictor(predictor string)
 
 	// GetSmartFeedInPriorityLimit return the smart feed-in limit
