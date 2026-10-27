@@ -79,7 +79,7 @@ func TestNormalizeBatteryMasters(t *testing.T) {
 	}
 
 	meters := combineBatteryMeterConfigs(static, database)
-	normalizeBatteryMasters(meters, []string{"slave", "later", "db-slave", "invalid", "self", "empty", "unassigned-master", "nested-slave", "nested-master", "db:42", "db:43", "db:44", "db:45", "db:46"})
+	warnings := normalizeBatteryMasters(meters, []string{"slave", "later", "db-slave", "invalid", "self", "empty", "unassigned-master", "nested-slave", "nested-master", "db:42", "db:43", "db:44", "db:45", "db:46"})
 
 	if got := static[0].Other["master"]; got != "later" {
 		t.Fatalf("forward reference was not retained: got %v", got)
@@ -116,5 +116,28 @@ func TestNormalizeBatteryMasters(t *testing.T) {
 	}
 	if got := database[4].Data["master"]; got != nil {
 		t.Fatalf("nested UI slave assignment was not cleared: got %v", got)
+	}
+	wantWarnings := map[string]struct {
+		master string
+		reason string
+	}{
+		"invalid":           {master: "missing", reason: batteryConfigWarningInvalidMaster},
+		"self":              {master: "self", reason: batteryConfigWarningInvalidMaster},
+		"unassigned-master": {master: "unassigned", reason: batteryConfigWarningInvalidMaster},
+		"db:44":             {master: "missing", reason: batteryConfigWarningInvalidMaster},
+		"nested-slave":      {master: "nested-master", reason: batteryConfigWarningMasterIsSlave},
+		"db:46":             {master: "db:45", reason: batteryConfigWarningMasterIsSlave},
+	}
+	if len(warnings) != len(wantWarnings) {
+		t.Fatalf("warning count: got %d, want %d: %+v", len(warnings), len(wantWarnings), warnings)
+	}
+	for _, warning := range warnings {
+		if want, ok := wantWarnings[warning.Device]; !ok || warning.Master != want.master || warning.Reason != want.reason {
+			t.Errorf("unexpected warning: %+v", warning)
+		}
+		delete(wantWarnings, warning.Device)
+	}
+	if len(wantWarnings) != 0 {
+		t.Errorf("missing warnings: %v", wantWarnings)
 	}
 }

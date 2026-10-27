@@ -42,7 +42,7 @@ func runMeter(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	if err := configureMeters(conf.Meters, args...); err != nil {
+	if _, err := configureMeters(conf.Meters, args...); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
