@@ -13,11 +13,7 @@ group: price
 countries: ["CZ"]
 params:
   - name: apikey
-    type: string
-    mask: true
     required: true
-    description:
-      generic: API Key
     example: sr_live_abcdefgh_…
     help:
       en: "Create a key at [spotovyradar.cz/ucet/api](https://spotovyradar.cz/ucet/api)."
@@ -54,4 +50,3 @@ render: |
         "value": .spot
         {{- end }}
       }] | tostring
-    cache: 15m
