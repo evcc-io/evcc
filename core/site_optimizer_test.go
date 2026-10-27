@@ -817,6 +817,17 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	battery.modes = []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}
 	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 0, 1000, 1).Action, "holdcharge unsupported")
 	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 1000, 0, 1).Action, "hold supported")
+
+	// pv charging while the import feeds a vehicle is no grid charging (#35416)
+	battery = batteryDetail{Type: batteryTypeBattery}
+	res = optimizer.BatteryResult{
+		ChargingPower:    []float32{562},
+		DischargingPower: []float32{0},
+	}
+	ts := optimizer.TimeSeries{Ft: []float32{792}, Gt: []float32{200}}
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, ts, 0, 802, 0, 0.25).Action, "pv charge while vehicle imports")
+	res.ChargingPower[0] = 1000
+	assert.Equal(t, api.BatteryCharge.String(), currentSlotSuggestion(battery, req, res, ts, 0, 802, 0, 0.25).Action, "charge beyond pv surplus")
 }
 
 // TestCurrentSlotSuggestionHoldWorthwhile covers holding a battery without planned

@@ -206,9 +206,16 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 			full = req.SMax > 0 && soc >= req.SMax
 		}
 
+		// pv surplus over home demand charges the battery while the import feeds other consumers (#35416)
+		// shortcut: surplus is not split across several batteries, upgrade when multi-battery sites misreport
+		var surplus float64
+		if slot < len(ts.Ft) && slot < len(ts.Gt) {
+			surplus = max(0, float64(ts.Ft[slot]-ts.Gt[slot])/slotHours)
+		}
+
 		switch {
-		case charge > suggestionThreshold && gridImporting:
-			// charging while importing means grid charging
+		case charge > surplus+suggestionThreshold && gridImporting:
+			// charging beyond pv surplus while importing means grid charging
 			s.Action = api.BatteryCharge.String()
 		case idle && gridImporting && !empty:
 			// idle while importing: discharge is deliberately withheld
