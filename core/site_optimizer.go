@@ -180,7 +180,7 @@ func suggestionEvent(detail batteryDetail, s types.Suggestion) messenger.Event {
 // withheld, the bound does it, so the battery stays in normal mode. Without planned
 // discharge the battery is held when holdWorthwhile, since normal mode would let the
 // inverter cover intra-slot dips from the battery.
-func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
+func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, slot int, gridImport, gridExport float32, slotHours, pvShare float64) types.Suggestion {
 	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
 		return types.Suggestion{}
 	}
@@ -207,8 +207,8 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 		}
 
 		switch {
-		case charge > suggestionThreshold && gridImporting:
-			// charging while importing means grid charging
+		case charge > pvShare+suggestionThreshold && gridImporting:
+			// charging beyond its PV surplus share while importing means grid charging
 			s.Action = api.BatteryCharge.String()
 		case idle && gridImporting && !empty:
 			// idle while importing: discharge is deliberately withheld
@@ -868,12 +868,21 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 	}
 
 	// home battery discharge planned for the slot, a loadpoint charge it covers is no surplus
-	var batteryDischarge float64
+	var batteryDischarge, batteryCharge, pvSurplus float64
 	if slot >= 0 && slotHours > 0 {
 		for i, detail := range details.BatteryDetails {
 			if detail.Type == batteryTypeBattery && slot < len(res.Batteries[i].DischargingPower) {
 				batteryDischarge += float64(res.Batteries[i].DischargingPower[slot]) / slotHours
 			}
+			if detail.Type == batteryTypeBattery && slot < len(res.Batteries[i].ChargingPower) {
+				batteryCharge += float64(res.Batteries[i].ChargingPower[slot]) / slotHours
+			}
+		}
+
+		// PV surplus over home demand (gt, excluding loadpoints) covers home battery charging without grid charging (#35416).
+		// Loadpoints are not deducted: the optimizer splits PV between them and the battery arbitrarily.
+		if ts := req.TimeSeries; slot < len(ts.Ft) && slot < len(ts.Gt) {
+			pvSurplus = max(0, float64(ts.Ft[slot]-ts.Gt[slot])/slotHours)
 		}
 	}
 
@@ -894,7 +903,13 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 			}),
 		})
 
-		suggestion := currentSlotSuggestion(detail, batReq, batRes, req.TimeSeries, slot, gridImport, gridExport, slotHours)
+		// home batteries share the PV surplus in proportion to their charge
+		var pvShare float64
+		if batteryCharge > 0 && slot >= 0 && slot < len(batRes.ChargingPower) {
+			pvShare = pvSurplus * float64(batRes.ChargingPower[slot]) / slotHours / batteryCharge
+		}
+
+		suggestion := currentSlotSuggestion(detail, batReq, batRes, req.TimeSeries, slot, gridImport, gridExport, slotHours, pvShare)
 		if suggestion.Action == "" {
 			continue
 		}
