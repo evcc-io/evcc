@@ -26,5 +26,9 @@ params:
       en: Secondary tariff
 render: |
   type: merged
-  primary: {{ .primary }}
-  secondary: {{ .secondary }}
+  primary:
+    type: device
+    name: {{ .primary }}
+  secondary:
+    type: device
+    name: {{ .secondary }}

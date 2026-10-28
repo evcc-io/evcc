@@ -29,8 +29,8 @@ func TestSgReadyRelayFromConfig(t *testing.T) {
 
 	t.Run("referenced relays", func(t *testing.T) {
 		wb, err := NewSgReadyRelayFromConfig(ctx, map[string]any{
-			"boost": "boost-relay",
-			"dim":   "dim-relay",
+			"boost": map[string]any{"type": "device", "name": "boost-relay"},
+			"dim":   map[string]any{"type": "device", "name": "dim-relay"},
 		})
 		require.NoError(t, err)
 
@@ -41,7 +41,7 @@ func TestSgReadyRelayFromConfig(t *testing.T) {
 
 	t.Run("inline dim config", func(t *testing.T) {
 		wb, err := NewSgReadyRelayFromConfig(ctx, map[string]any{
-			"boost": "boost-relay",
+			"boost": map[string]any{"type": "device", "name": "boost-relay"},
 			"dim":   map[string]any{"type": "test-relay"},
 		})
 		require.NoError(t, err)
@@ -52,7 +52,9 @@ func TestSgReadyRelayFromConfig(t *testing.T) {
 	})
 
 	t.Run("unknown reference", func(t *testing.T) {
-		_, err := NewSgReadyRelayFromConfig(ctx, map[string]any{"boost": "missing"})
+		_, err := NewSgReadyRelayFromConfig(ctx, map[string]any{
+			"boost": map[string]any{"type": "device", "name": "missing"},
+		})
 		assert.ErrorIs(t, err, config.ErrNotFound)
 	})
 }

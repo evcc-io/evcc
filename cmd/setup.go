@@ -452,16 +452,14 @@ func configureCurtailers(static []config.Named, names ...string) error {
 	return eg.Wait()
 }
 
-// staticRefs returns the names of other static devices a static device references by value
-func staticRefs(cc config.Named, static []config.Named) []string {
+// staticRefs returns the names of devices a static device references via `type: device`
+func staticRefs(cc config.Named) []string {
 	var res []string
 	for _, v := range cc.Other {
-		name, ok := v.(string)
-		if !ok || name == cc.Name {
-			continue
-		}
-		if slices.ContainsFunc(static, func(s config.Named) bool { return s.Name == name }) {
-			res = append(res, name)
+		if m, ok := v.(map[string]any); ok && m["type"] == "device" {
+			if name, ok := m["name"].(string); ok {
+				res = append(res, name)
+			}
 		}
 	}
 	return res
@@ -486,7 +484,7 @@ func configureChargers(static []config.Named, names ...string) error {
 
 		items = append(items, orderedItem{
 			name: cc.Name,
-			refs: staticRefs(cc, static),
+			refs: staticRefs(cc),
 			run: func() error {
 				return staticInstance("charger", cc, charger.NewFromConfig, config.Chargers())
 			},

@@ -8,7 +8,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/config"
 )
 
 // Merged combines a primary tariff with a secondary (forecast) tariff.
@@ -25,21 +24,21 @@ func init() {
 
 func NewMergedFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	var cc struct {
-		Primary, Secondary config.Ref
+		Primary, Secondary Typed
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	primary, err := config.Resolve(ctx, config.Tariffs(), cc.Primary, NewFromConfig)
+	primary, err := NewFromConfig(ctx, cc.Primary.Type, cc.Primary.Other)
 	if err != nil {
-		return nil, fmt.Errorf("primary: %w", err)
+		return nil, err
 	}
 
-	secondary, err := config.Resolve(ctx, config.Tariffs(), cc.Secondary, NewFromConfig)
+	secondary, err := NewFromConfig(ctx, cc.Secondary.Type, cc.Secondary.Other)
 	if err != nil {
-		return nil, fmt.Errorf("secondary: %w", err)
+		return nil, err
 	}
 
 	if pType, sType := primary.Type(), secondary.Type(); !compatibleTariffTypes(pType, sType) {

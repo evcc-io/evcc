@@ -27,7 +27,11 @@ params:
       en: Dim relay
 render: |
   type: sgready-relay
-  boost: {{ .boost }}
+  boost:
+    type: device
+    name: {{ .boost }}
   {{- if .dim }}
-  dim: {{ .dim }}
+  dim:
+    type: device
+    name: {{ .dim }}
   {{- end }}

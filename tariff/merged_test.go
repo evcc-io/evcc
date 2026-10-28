@@ -171,13 +171,14 @@ func TestMergedGapBetweenPrimaryAndSecondary(t *testing.T) {
 }
 
 func TestMergedFromConfigReferences(t *testing.T) {
-	now := clock.NewMock().Now()
+	// current 15m slots pass NewFromConfig unwrapped
+	now := time.Now().Truncate(SlotDuration)
 
 	primary := &mockTariff{typ: api.TariffTypePriceForecast, rates: api.Rates{
-		{Start: now, End: now.Add(time.Hour), Value: 0.10},
+		{Start: now, End: now.Add(SlotDuration), Value: 0.10},
 	}}
 	secondary := &mockTariff{typ: api.TariffTypePriceForecast, rates: api.Rates{
-		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 0.20},
+		{Start: now.Add(SlotDuration), End: now.Add(2 * SlotDuration), Value: 0.20},
 	}}
 
 	config.Reset()
@@ -186,21 +187,21 @@ func TestMergedFromConfigReferences(t *testing.T) {
 	require.NoError(t, config.Tariffs().Add(config.NewStaticDevice[api.Tariff](config.Named{Name: "db:2"}, secondary)))
 
 	tariff, err := NewMergedFromConfig(context.Background(), map[string]any{
-		"primary":   "db:1",
-		"secondary": "db:2",
+		"primary":   map[string]any{"type": "device", "name": "db:1"},
+		"secondary": map[string]any{"type": "device", "name": "db:2"},
 	})
 	require.NoError(t, err)
 
 	rates, err := tariff.Rates()
 	require.NoError(t, err)
 	assert.Equal(t, api.Rates{
-		{Start: now, End: now.Add(time.Hour), Value: 0.10},
-		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 0.20},
+		{Start: now, End: now.Add(SlotDuration), Value: 0.10},
+		{Start: now.Add(SlotDuration), End: now.Add(2 * SlotDuration), Value: 0.20},
 	}, rates)
 
 	_, err = NewMergedFromConfig(context.Background(), map[string]any{
-		"primary":   "db:1",
-		"secondary": "db:3",
+		"primary":   map[string]any{"type": "device", "name": "db:1"},
+		"secondary": map[string]any{"type": "device", "name": "db:3"},
 	})
 	assert.ErrorIs(t, err, config.ErrNotFound)
 }

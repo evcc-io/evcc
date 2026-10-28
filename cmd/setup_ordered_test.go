@@ -55,9 +55,10 @@ func TestRunOrdered(t *testing.T) {
 }
 
 func TestStaticRefs(t *testing.T) {
-	static := []config.Named{
-		{Name: "heatpump", Other: map[string]any{"icon": "heatpump", "boost": "relay", "title": "Heat"}},
-		{Name: "relay"},
-	}
-	assert.Equal(t, []string{"relay"}, staticRefs(static[0], static))
+	cc := config.Named{Name: "heatpump", Other: map[string]any{
+		"icon":  "heatpump",
+		"boost": map[string]any{"type": "device", "name": "relay"},
+		"dim":   map[string]any{"type": "shelly", "host": "relay"},
+	}}
+	assert.Equal(t, []string{"relay"}, staticRefs(cc))
 }
