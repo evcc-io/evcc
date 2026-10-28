@@ -196,7 +196,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 31401 # SMA Modbus Profile: CmpBMS.GetBatDschWh
+      address: 34665 # SMA Modbus Profile: BatDsch.ActBatDsch, the BMS's own counter
       type: holding
       decode: uint64nan
     scale: 0.001
