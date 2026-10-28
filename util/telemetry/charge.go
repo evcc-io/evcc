@@ -143,6 +143,18 @@ func upload(log *util.Logger, chargePower, greenPower float64) error {
 		}
 	}
 
+	// retrying a rejected payload cannot succeed, drop it
+	var se *request.StatusError
+	if errors.As(err, &se) && se.StatusCode() == http.StatusBadRequest {
+		err = fmt.Errorf("%w: %s (dropping %.0fWh)", err, se.Body(), accChargeEnergy*1e3)
+		updated = time.Now()
+
+		accChargeEnergy = 0
+		accGreenEnergy = 0
+
+		return err
+	}
+
 	if err == nil {
 		updated = time.Now()
 
