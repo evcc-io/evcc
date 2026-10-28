@@ -1253,7 +1253,7 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	if bat.ChargeFromGrid {
 		if demand := site.applyBatteryGridChargeLimit(bat.CMax, planner, minLen); demand != nil {
 			bat.PDemand = prorate(demand, firstSlotDuration)
-			// uncapped demand puts the hosted optimizer on its slow split path (optimizer#275)
+			// uncapped demand puts the hosted optimizer on its slow split path
 			if optimizerURI() == OPTIMIZER_URI {
 				bat.PDemand = clearDemandWhenFullPerWindow(bat.PDemand, bat.SMax-bat.SInitial, bat.SMax-bat.SMin)
 			}
