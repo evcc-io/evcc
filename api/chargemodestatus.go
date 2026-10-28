@@ -44,7 +44,7 @@ type AlwaysCharge string
 const (
 	AlwaysChargeOff  AlwaysCharge = "off"
 	AlwaysChargeOn   AlwaysCharge = "on"
-	AlwaysChargeOnce AlwaysCharge = "once" // resets on disconnect
+	AlwaysChargeOnce AlwaysCharge = "once" // resets on disconnect or when leaving smart mode
 )
 
 // Active reports if always charge is currently in effect

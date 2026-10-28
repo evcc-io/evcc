@@ -309,7 +309,7 @@ paths:
     post:
       operationId: setLoadpointAlwaysCharge
       summary: Set always charge
-      description: "Updates the always charge state. When active, smart mode charges continuously at least at minimum power. The once state resets when the vehicle is disconnected."
+      description: "Updates the always charge state. When active, smart mode charges continuously at least at minimum power. The once state resets when the vehicle is disconnected or the mode changes to off or fast."
       externalDocs:
         url: https://docs.evcc.io/en/features/solar-charging
       tags:

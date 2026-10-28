@@ -46,12 +46,10 @@ func TestSetModeLegacyAliases(t *testing.T) {
 		lp.SetMode(api.ModeSmart)
 		require.NoError(t, lp.SetAlwaysCharge(api.AlwaysChargeOnce))
 		lp.SetMode(mode)
-		lp.SetMode(api.ModeSmart)
 		assert.Equal(t, api.AlwaysChargeOff, lp.GetAlwaysCharge(), mode)
 
 		require.NoError(t, lp.SetAlwaysCharge(api.AlwaysChargeOn))
 		lp.SetMode(mode)
-		lp.SetMode(api.ModeSmart)
 		assert.Equal(t, api.AlwaysChargeOn, lp.GetAlwaysCharge(), mode)
 	}
 }
