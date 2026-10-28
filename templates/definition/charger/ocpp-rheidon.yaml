@@ -3,7 +3,7 @@ products:
   - brand: Rheidon
     description:
       generic: PC200 Pro
-capabilities: ["dim"]
+capabilities: ["mA", "dim"]
 requirements:
   description:
     de: |
