@@ -161,12 +161,12 @@ render: |
   batterymode:
     source: switch
     switch:
-    - case: 1 # normal -> restore discharge cut soc, then disable time period control
+    - case: 1 # normal -> restore discharge cut SoC, then disable time period control
       set:
         source: sequence
         set:
         - source: const
-          value: 3 # 2128 (discharge cut soc) is only accepted while bit 1 of 2127 is set
+          value: 3 # 2128 (discharge cut SoC) is only accepted while bit 1 of 2127 is set
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -192,7 +192,7 @@ render: |
               address: 2127 # 0x84F Time period control flag
               type: writemultiple
               decode: uint16
-    - case: 2 # hold -> enable discharge time control with 100% discharge cut soc -> prevents discharging of battery
+    - case: 2 # hold -> enable discharge time control with 100% discharge cut SoC -> prevents discharging of battery
       set:
         source: sequence
         set:
