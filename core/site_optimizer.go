@@ -1172,7 +1172,7 @@ func clearDemandWhenFull(demand []float32, headroom float32) []float32 {
 // clearDemandWhenFullPerWindow applies clearDemandWhenFull to each run of non-zero demand. A window
 // starting now is cut at the current headroom, later ones at the full soc range since the battery
 // may have discharged in between.
-func clearDemandWhenFullPerWindow(demand []float32, headroom, capacity float32) []float32 {
+func clearDemandWhenFullPerWindow(demand []float32, headroom, socRange float32) []float32 {
 	res := slices.Clone(demand)
 
 	for start := 0; start < len(res); {
@@ -1186,7 +1186,7 @@ func clearDemandWhenFullPerWindow(demand []float32, headroom, capacity float32) 
 			end++
 		}
 
-		room := capacity
+		room := socRange
 		if start == 0 {
 			room = headroom
 		}
