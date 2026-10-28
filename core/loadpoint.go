@@ -151,13 +151,14 @@ type Loadpoint struct {
 	chargeRater      api.ChargeRater
 	chargedAtStartup float64 // session energy at startup
 
-	circuit        api.Circuit        // Circuit
-	chargeMeter    *chargeMeter       // Charger usage meter
-	chargeEnergy   *metrics.Collector // Charger usage collector
-	vehicle        api.Vehicle        // Currently active vehicle
-	defaultVehicle api.Vehicle        // Default vehicle (disables detection)
-	coordinator    coordinator.API
-	socEstimator   *soc.Estimator
+	circuit               api.Circuit        // Circuit
+	chargeMeter           *chargeMeter       // Charger usage meter
+	chargeMeterIntegrated bool               // charge meter is the charger itself
+	chargeEnergy          *metrics.Collector // Charger usage collector
+	vehicle               api.Vehicle        // Currently active vehicle
+	defaultVehicle        api.Vehicle        // Default vehicle (disables detection)
+	coordinator           coordinator.API
+	socEstimator          *soc.Estimator
 
 	// charge planning
 	planner          *planner.Planner
@@ -486,6 +487,7 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	// ensure charge meter exists
 	if lp.chargeMeter == nil {
 		integrated = true
+		lp.chargeMeterIntegrated = true
 
 		lp.chargeMeter = newChargeMeter(charger)
 		if lp.chargeMeter.fake != nil {

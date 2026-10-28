@@ -472,6 +472,9 @@ func (suite *connTestSuite) TestChargeEndEnergy() {
 	_, err := suite.conn.ChargeEndEnergy()
 	suite.Equal(api.ErrNotAvailable, err, "no transaction stopped yet")
 
+	suite.conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{Value: "1899.53", Unit: types.UnitOfMeasureKWh}
+	suite.conn.meterUpdated = suite.clock.Now()
+
 	suite.conn.startTransaction(1, "evcc")
 	_, err = suite.conn.OnStopTransaction(&core.StopTransactionRequest{TransactionId: 1, MeterStop: 1899600})
 	suite.NoError(err)
@@ -479,6 +482,11 @@ func (suite *connTestSuite) TestChargeEndEnergy() {
 	res, err := suite.conn.ChargeEndEnergy()
 	suite.NoError(err)
 	suite.Equal(1899.6, res)
+
+	// register is brought up to the final reading
+	res, err = suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.InDelta(1899.6, res, 1e-9)
 
 	// a new transaction discards the previous reading
 	suite.conn.startTransaction(2, "evcc")

@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
@@ -229,6 +230,16 @@ func (conn *Connector) OnStopTransaction(request *core.StopTransactionRequest) (
 	if request != nil {
 		meterStop := float64(request.MeterStop) / 1e3
 		conn.meterStop = &meterStop
+
+		// the final reading is more recent than the last periodic sample
+		if m, ok := conn.measurements[types.MeasurandEnergyActiveImportRegister]; ok {
+			if f, err := strconv.ParseFloat(m.Value, 64); err == nil && scale(f, m.Unit)/1e3 < meterStop {
+				conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{
+					Value: strconv.FormatFloat(meterStop*1e3, 'f', -1, 64),
+					Unit:  types.UnitOfMeasureWh,
+				}
+			}
+		}
 	}
 
 	res := &core.StopTransactionConfirmation{

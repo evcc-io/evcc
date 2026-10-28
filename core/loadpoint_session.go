@@ -147,7 +147,8 @@ func (lp *Loadpoint) finalizeSessionEnergy() {
 	}
 
 	// the final meter reading may only be reported after the charger changed its status
-	if rater, ok := lp.chargeRater.(interface{ ExtendCharge(float64) }); ok {
+	// only valid if charger and rater share the same meter
+	if rater, ok := lp.chargeRater.(interface{ ExtendCharge(float64) }); ok && lp.chargeMeterIntegrated {
 		if cm, ok := api.Cap[api.ChargeEndMeter](lp.charger); ok {
 			if total, err := cm.ChargeEndEnergy(); err == nil {
 				rater.ExtendCharge(total)
