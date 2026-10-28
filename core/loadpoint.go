@@ -482,13 +482,10 @@ func (lp *Loadpoint) requestUpdate() {
 
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
 func (lp *Loadpoint) configureChargerType(charger api.Charger) {
-	var integrated bool
+	lp.chargeMeterIntegrated = lp.chargeMeter == nil
 
 	// ensure charge meter exists
 	if lp.chargeMeter == nil {
-		integrated = true
-		lp.chargeMeterIntegrated = true
-
 		lp.chargeMeter = newChargeMeter(charger)
 		if lp.chargeMeter.fake != nil {
 			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
@@ -499,7 +496,7 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	// ensure charge rater exists
 	// measurement are obtained from separate charge meter if defined
 	// (https://github.com/evcc-io/evcc/issues/2469)
-	if rt, ok := api.Cap[api.ChargeRater](charger); ok && integrated {
+	if rt, ok := api.Cap[api.ChargeRater](charger); ok && lp.chargeMeterIntegrated {
 		lp.chargeRater = rt
 
 		// when restarting in the middle of charging session, use this as negative offset
