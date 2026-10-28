@@ -201,6 +201,11 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 			lp.resetPhaseTimer()
 			lp.resetPVTimer()
 			lp.setPlanActive(false)
+
+			// once ends when leaving smart mode
+			if lp.alwaysCharge == api.AlwaysChargeOnce {
+				lp.setAlwaysCharge(api.AlwaysChargeOff)
+			}
 		case api.ModeSmart:
 			if lp.alwaysCharge.Active() {
 				lp.resetPVTimer()

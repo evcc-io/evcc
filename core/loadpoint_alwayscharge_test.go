@@ -41,10 +41,19 @@ func TestSetModeLegacyAliases(t *testing.T) {
 	assert.Equal(t, api.ModeSmart, lp.GetMode())
 	assert.Equal(t, api.AlwaysChargeOff, lp.GetAlwaysCharge())
 
-	// mode change does not clear always charge
-	require.NoError(t, lp.SetAlwaysCharge(api.AlwaysChargeOnce))
-	lp.SetMode(api.ModeNow)
-	assert.Equal(t, api.AlwaysChargeOnce, lp.GetAlwaysCharge())
+	// off and now clear once, but keep on
+	for _, mode := range []api.ChargeMode{api.ModeOff, api.ModeNow} {
+		lp.SetMode(api.ModeSmart)
+		require.NoError(t, lp.SetAlwaysCharge(api.AlwaysChargeOnce))
+		lp.SetMode(mode)
+		lp.SetMode(api.ModeSmart)
+		assert.Equal(t, api.AlwaysChargeOff, lp.GetAlwaysCharge(), mode)
+
+		require.NoError(t, lp.SetAlwaysCharge(api.AlwaysChargeOn))
+		lp.SetMode(mode)
+		lp.SetMode(api.ModeSmart)
+		assert.Equal(t, api.AlwaysChargeOn, lp.GetAlwaysCharge(), mode)
+	}
 }
 
 func TestSetModeLegacyAliasesSwitchDevice(t *testing.T) {
