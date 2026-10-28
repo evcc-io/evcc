@@ -177,20 +177,21 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: calc
-    add:
+    mul: # DC side, so the inverter's own consumption counts as home power
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 31395 # SMA Modbus Profile: BatDsch.CurBatDsch
-          type: input
-          decode: uint32nan
+          address: 30843 # SMA Modbus Profile: Bat.Amp, positive while discharging
+          type: holding
+          decode: int32nan
+        scale: 0.001
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 31393 # SMA Modbus Profile: BatChrg.CurBatCha
-          type: input
+          address: 30851 # SMA Modbus Profile: Bat.Vol
+          type: holding
           decode: uint32nan
-        scale: -1
+        scale: 0.01
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
