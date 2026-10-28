@@ -331,6 +331,14 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	// logging might be slow or block, execute outside lock
 	c.log.TRACE.Printf("ProductUpdate %s: (%v) %s %v", res.Mid, res.Timestamp, res.ID, value)
 
+	// request loadpoint update after releasing the lock, deferred calls run in reverse order
+	var requestUpdate loadpoint.API
+	defer func() {
+		if requestUpdate != nil {
+			requestUpdate.RequestUpdate()
+		}
+	}()
+
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
@@ -426,6 +434,11 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			c.obsTime[easee.SESSION_ENERGY] = time.Now()
 		}
 
+		// update the loadpoint immediately on status changes instead of waiting for its turn in the site cycle
+		if c.lp != nil && opModeStatus(c.opMode) != opModeStatus(opMode) {
+			requestUpdate = c.lp
+		}
+
 		c.opMode = opMode
 
 		// startup completed
@@ -469,6 +482,21 @@ func (c *Easee) chargers() ([]easee.Charger, error) {
 	uri := fmt.Sprintf("%s/chargers", easee.API)
 	err := c.GetJSON(uri, &res)
 	return res, err
+}
+
+// opModeStatus maps the charger operation mode to the charge status, api.StatusNone for unknown modes
+func opModeStatus(opMode int) api.ChargeStatus {
+	switch opMode {
+	case easee.ModeDisconnected:
+		return api.StatusA
+	case easee.ModeAwaitingStart, easee.ModeCompleted, easee.ModeReadyToCharge,
+		easee.ModeAwaitingAuthentication, easee.ModeDeauthenticating:
+		return api.StatusB
+	case easee.ModeCharging:
+		return api.StatusC
+	default:
+		return api.StatusNone
+	}
 }
 
 // Status implements the api.Charger interface
