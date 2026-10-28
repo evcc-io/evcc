@@ -869,11 +869,15 @@ func (c *Easee) Identify() ([]string, error) {
 
 // Set smart charging status to update the chargers led (smart=blue, fast=white)
 func (c *Easee) updateSmartCharging() {
-	if c.lp == nil {
+	c.mux.RLock()
+	lp := c.lp
+	c.mux.RUnlock()
+
+	if lp == nil {
 		return
 	}
 
-	mode := c.lp.GetMode()
+	mode := lp.GetMode()
 	isSmartCharging := mode == api.ModeSmart
 
 	c.mux.Lock()
@@ -902,5 +906,7 @@ var _ loadpoint.Controller = (*Easee)(nil)
 
 // LoadpointControl implements loadpoint.Controller
 func (c *Easee) LoadpointControl(lp loadpoint.API) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	c.lp = lp
 }
