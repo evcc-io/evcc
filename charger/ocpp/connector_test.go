@@ -513,3 +513,39 @@ func (suite *connTestSuite) TestOnStatusChangeCallback() {
 	suite.NoError(err)
 	suite.Equal(5, calls)
 }
+
+func (suite *connTestSuite) TestPowerZeroedWhenChargingStops() {
+	suite.conn.txnId = 1
+	suite.conn.measurements[types.MeasurandPowerActiveImport] = types.SampledValue{Value: "11319", Unit: types.UnitOfMeasureW}
+	suite.conn.measurements[types.MeasurandCurrentImport+".L1"] = types.SampledValue{Value: "16", Unit: types.UnitOfMeasureA}
+	suite.conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{Value: "1899530", Unit: types.UnitOfMeasureWh}
+	suite.conn.meterUpdated = suite.clock.Now()
+
+	now := suite.clock.Now()
+	status := func(s core.ChargePointStatus, d time.Duration) {
+		_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+			ConnectorId: 1,
+			Status:      s,
+			Timestamp:   types.NewDateTime(now.Add(d)),
+		})
+		suite.NoError(err)
+	}
+
+	status(core.ChargePointStatusCharging, 0)
+	p, _ := suite.conn.CurrentPower()
+	suite.Equal(11319.0, p, "charging keeps reported power")
+
+	status(core.ChargePointStatusSuspendedEV, time.Second)
+
+	p, err := suite.conn.CurrentPower()
+	suite.NoError(err)
+	suite.Equal(0.0, p, "power after charging stopped")
+
+	i1, _, _, err := suite.conn.Currents()
+	suite.NoError(err)
+	suite.Equal(0.0, i1, "current after charging stopped")
+
+	e, err := suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.Equal(1899.53, e, "energy register is kept")
+}

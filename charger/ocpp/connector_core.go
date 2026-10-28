@@ -76,6 +76,11 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		}
 	}
 
+	// the last periodic sample still shows the charging power until the next meter values arrive
+	if applied && prev != nil && prev.Status == core.ChargePointStatusCharging && request.Status != core.ChargePointStatusCharging {
+		conn.zeroPowerMeasurements()
+	}
+
 	var notify func()
 	if applied && statusClass(prev) != statusClass(request) {
 		notify = conn.onStatus
@@ -217,6 +222,12 @@ func (conn *Connector) assumeMeterStopped() {
 	conn.meterUpdated = conn.clock.Now()
 	conn.meterTimestamp = conn.meterUpdated
 
+	conn.zeroPowerMeasurements()
+}
+
+// zeroPowerMeasurements replaces the last reported power and currents with zero.
+// Must be called with conn.mu held.
+func (conn *Connector) zeroPowerMeasurements() {
 	if _, ok := conn.measurements[types.MeasurandPowerActiveImport]; ok {
 		conn.measurements[types.MeasurandPowerActiveImport] = types.SampledValue{
 			Value: "0",
