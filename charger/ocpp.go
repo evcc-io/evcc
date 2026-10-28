@@ -218,6 +218,13 @@ func NewOCPP(ctx context.Context,
 	return c, conn.Initialized()
 }
 
+var _ api.ChargeEndMeter = (*OCPP)(nil)
+
+// ChargeEndEnergy implements the api.ChargeEndMeter interface
+func (c *OCPP) ChargeEndEnergy() (float64, error) {
+	return c.conn.ChargeEndEnergy()
+}
+
 // Connector returns the connector instance
 func (c *OCPP) Connector() *ocpp.Connector {
 	return c.conn

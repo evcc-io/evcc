@@ -131,6 +131,13 @@ type ChargeRater interface {
 	ChargedEnergy() (float64, error)
 }
 
+// ChargeEndMeter provides the final meter reading in kWh of the charge that has just ended.
+// It may become available after the charger already reported the end of charging.
+// Returns ErrNotAvailable if there is none.
+type ChargeEndMeter interface {
+	ChargeEndEnergy() (float64, error)
+}
+
 // Identifier identifies a vehicle and is implemented by the charger.
 // A charger may know more than one identity, e.g. an RFID tag and a vehicle id.
 type Identifier interface {

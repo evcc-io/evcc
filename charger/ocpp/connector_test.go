@@ -467,3 +467,21 @@ func (suite *connTestSuite) TestOnStopTransactionResetsReportedPower() {
 	suite.NoError(err, "CurrentPower")
 	suite.Equal(res, 0.0, "CurrentPower")
 }
+
+func (suite *connTestSuite) TestChargeEndEnergy() {
+	_, err := suite.conn.ChargeEndEnergy()
+	suite.Equal(api.ErrNotAvailable, err, "no transaction stopped yet")
+
+	suite.conn.startTransaction(1, "evcc")
+	_, err = suite.conn.OnStopTransaction(&core.StopTransactionRequest{TransactionId: 1, MeterStop: 1899600})
+	suite.NoError(err)
+
+	res, err := suite.conn.ChargeEndEnergy()
+	suite.NoError(err)
+	suite.Equal(1899.6, res)
+
+	// a new transaction discards the previous reading
+	suite.conn.startTransaction(2, "evcc")
+	_, err = suite.conn.ChargeEndEnergy()
+	suite.Equal(api.ErrNotAvailable, err, "new transaction")
+}

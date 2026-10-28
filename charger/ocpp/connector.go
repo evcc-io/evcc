@@ -31,7 +31,9 @@ type Connector struct {
 	measurements   map[types.Measurand]types.SampledValue
 
 	txnId int
-	idTag string
+
+	meterStop *float64 // final meter reading of the last stopped transaction in kWh
+	idTag     string
 
 	remoteIdTag string
 
@@ -344,6 +346,18 @@ func (conn *Connector) TotalEnergy() (float64, error) {
 	}
 
 	return 0, api.ErrNotAvailable
+}
+
+// ChargeEndEnergy returns the meter reading reported with the last StopTransaction in kWh
+func (conn *Connector) ChargeEndEnergy() (float64, error) {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	if conn.meterStop == nil {
+		return 0, api.ErrNotAvailable
+	}
+
+	return *conn.meterStop, nil
 }
 
 func (conn *Connector) Soc() (float64, error) {

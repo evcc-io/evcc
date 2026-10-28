@@ -168,3 +168,50 @@ func TestDeferredBaseline(t *testing.T) {
 		t.Errorf("final energy: %.1f %v", f, err)
 	}
 }
+
+func TestExtendCharge(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	total := 100.0
+	m := api.NewMockMeter(ctrl)
+	me := struct {
+		api.Meter
+		api.MeterEnergy
+	}{m, &stubMeterEnergy{total: &total}}
+
+	cr := NewChargeRater(util.NewLogger("foo"), me)
+
+	cr.StartCharge(true)
+	total = 110
+	cr.StopCharge()
+
+	// final reading reported by the charger after stop
+	cr.ExtendCharge(110.07)
+	if f, _ := cr.ChargedEnergy(); f < 10.069 || f > 10.071 {
+		t.Errorf("energy: %.3f", f)
+	}
+
+	// repeated or lower readings are ignored
+	cr.ExtendCharge(110.07)
+	cr.ExtendCharge(109)
+	if f, _ := cr.ChargedEnergy(); f < 10.069 || f > 10.071 {
+		t.Errorf("energy: %.3f", f)
+	}
+
+	// implausible jump
+	cr.ExtendCharge(150)
+	if f, _ := cr.ChargedEnergy(); f < 10.069 || f > 10.071 {
+		t.Errorf("energy: %.3f", f)
+	}
+
+	// no effect while charging
+	cr.StartCharge(true)
+	cr.ExtendCharge(111)
+	if f, _ := cr.ChargedEnergy(); f < 10.069 || f > 10.071 {
+		t.Errorf("energy: %.3f", f)
+	}
+}
+
+type stubMeterEnergy struct{ total *float64 }
+
+func (s *stubMeterEnergy) TotalEnergy() (float64, error) { return *s.total, nil }

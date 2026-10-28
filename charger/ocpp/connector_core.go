@@ -157,6 +157,7 @@ func (conn *Connector) startTransaction(txnId int, idTag string) {
 
 	conn.txnId = txnId
 	conn.idTag = idTag
+	conn.meterStop = nil
 
 	// a transaction started after the boot is fresh and must survive the first status
 	conn.rebooted = false
@@ -224,6 +225,11 @@ func (conn *Connector) OnStopTransaction(request *core.StopTransactionRequest) (
 
 	conn.txnId = 0
 	conn.idTag = ""
+
+	if request != nil {
+		meterStop := float64(request.MeterStop) / 1e3
+		conn.meterStop = &meterStop
+	}
 
 	res := &core.StopTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{

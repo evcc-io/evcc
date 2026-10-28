@@ -22,6 +22,7 @@ type ChargeRater struct {
 	charging      bool
 	start         time.Time
 	startEnergy   *float64 // nil until baseline successfully read from meter
+	stopEnergy    *float64 // meter reading when charging stopped
 	chargedEnergy float64
 }
 
@@ -48,6 +49,7 @@ func (cr *ChargeRater) StartCharge(continued bool) {
 	// time is needed if MeterEnergy is not supported
 	cr.start = cr.clck.Now()
 	cr.startEnergy = nil
+	cr.stopEnergy = nil
 
 	// get end energy amount
 	if m, ok := api.Cap[api.MeterEnergy](cr.meter); ok {
@@ -79,11 +81,32 @@ func (cr *ChargeRater) StopCharge() {
 		if f, err := m.TotalEnergy(); err == nil {
 			if cr.startEnergy != nil {
 				cr.chargedEnergy += f - *cr.startEnergy
+				cr.stopEnergy = &f
 			}
 			cr.log.DEBUG.Printf("charge final energy: %.3fkWh", cr.chargedEnergy)
 		} else if !loadpoint.AcceptableError(err) {
 			cr.log.ERROR.Printf("charge total import: %v", err)
 		}
+	}
+}
+
+// maxTailEnergy bounds the energy that may be added after charging stopped
+const maxTailEnergy = 1.0
+
+// ExtendCharge adds energy delivered after charging stopped, i.e. until the final meter
+// reading of the charger is known. Readings not above the stop reading are ignored.
+func (cr *ChargeRater) ExtendCharge(total float64) {
+	cr.Lock()
+	defer cr.Unlock()
+
+	if cr.charging || cr.stopEnergy == nil {
+		return
+	}
+
+	if tail := total - *cr.stopEnergy; tail > 0 && tail <= maxTailEnergy {
+		cr.chargedEnergy += tail
+		cr.stopEnergy = &total
+		cr.log.DEBUG.Printf("charge tail energy: %.3fkWh", tail)
 	}
 }
 
