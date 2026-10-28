@@ -828,7 +828,12 @@ func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	if lp.chargeCurrents == nil {
 		return lp.offeredCurrent
 	}
-	return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+	current := max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+	// measurements drop to ~0 while phases switch, reserve the offered current
+	if lp.enabled && !lp.phaseSwitchCompleted() {
+		current = max(current, lp.offeredCurrent)
+	}
+	return current
 }
 
 // GetMinCurrent returns the min loadpoint current

@@ -127,11 +127,11 @@ func (c *ShellyTopAC) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	// Possible states: charger_free, charger_wait, charger_pause, charger_charging, charger_complete, charger_error
+	// Possible states: charger_free, charger_insert, charger_wait, charger_pause, charger_charging, charger_complete, charger_end, charger_error
 	switch res.Result.Value {
 	case "charger_free":
 		return api.StatusA, nil
-	case "charger_wait", "charger_pause", "charger_complete", "charger_end":
+	case "charger_insert", "charger_wait", "charger_pause", "charger_complete", "charger_end":
 		return api.StatusB, nil
 	case "charger_charging":
 		return api.StatusC, nil

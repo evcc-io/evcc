@@ -20,6 +20,8 @@ function receiveFromApp(message: FromAppMessage) {
 
 export function appDetection(r: Router) {
   router = r;
+  // Safari applies root safe-area insets inside iframes, see https://github.com/w3c/csswg-drafts/issues/10506
+  document.documentElement.classList.toggle("embedded", window.self !== window.top);
   if (!isApp()) return;
   document.querySelector("html")?.classList.add("app");
 
