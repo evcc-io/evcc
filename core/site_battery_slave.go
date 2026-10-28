@@ -5,10 +5,15 @@ import (
 	"math"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/util/config"
 )
+
+// batterySlaveOutageTimeout is how long slaves keep their last setpoint without readings.
+const batterySlaveOutageTimeout = 3 * time.Minute
 
 // SupportsBatterySlaveControl reports whether a meter supports the modes and setpoint control required for battery slave control.
 func SupportsBatterySlaveControl(meter api.Meter) bool {
@@ -73,24 +78,31 @@ func calculateBatterySlaveSetpoints(masterPower float64, slavePowers []float64) 
 	return plan, true
 }
 
-// releaseBatterySlaves returns slaves under power control to normal operation.
+// releaseBatterySlave returns a slave under power control to normal operation.
+func (site *Site) releaseBatterySlave(dev config.Device[api.Meter]) bool {
+	name := dev.Config().Name
+	if !batteryModeModified(site.batterySlaveModeApplied[name]) {
+		return false
+	}
+
+	ctrl, ok := api.Cap[api.BatteryController](dev.Instance())
+	if !ok {
+		return false
+	}
+
+	if err := ctrl.SetBatteryMode(api.BatteryNormal); err != nil {
+		site.log.ERROR.Printf("battery %s mode: %v", deviceTitleOrName(dev), err)
+		return false
+	}
+
+	delete(site.batterySlaveModeApplied, name)
+	return true
+}
+
+// releaseBatterySlaves returns all slaves under power control to normal operation.
 func (site *Site) releaseBatterySlaves() {
 	for _, dev := range site.batteryMeters {
-		name := dev.Config().Name
-		if !batteryModeModified(site.batterySlaveModeApplied[name]) {
-			continue
-		}
-
-		ctrl, ok := api.Cap[api.BatteryController](dev.Instance())
-		if !ok {
-			continue
-		}
-
-		if err := ctrl.SetBatteryMode(api.BatteryNormal); err != nil {
-			site.log.ERROR.Printf("battery %s mode: %v", deviceTitleOrName(dev), err)
-			continue
-		}
-		delete(site.batterySlaveModeApplied, name)
+		site.releaseBatterySlave(dev)
 	}
 }
 
@@ -102,11 +114,36 @@ func (site *Site) updateBatterySlavePower(mm []types.Measurement, powerValid []b
 	if site.batterySlaveModeApplied == nil {
 		site.batterySlaveModeApplied = make(map[string]api.BatteryMode)
 	}
+	if site.batterySlaveOutageSince == nil {
+		site.batterySlaveOutageSince = make(map[string]time.Time)
+	}
 
 	markSlavesFailed := func(slaves []int) {
 		for _, slaveIndex := range slaves {
 			if mm[slaveIndex].PowerControlStatus != "overridden" {
 				mm[slaveIndex].PowerControlStatus = "failed"
+			}
+		}
+	}
+
+	// slaves keep their last setpoint during an outage until the timeout releases them
+	handleOutage := func(master string, slaves []int) {
+		markSlavesFailed(slaves)
+
+		now := site.clock.Now()
+		since, ok := site.batterySlaveOutageSince[master]
+		if !ok {
+			site.batterySlaveOutageSince[master] = now
+			return
+		}
+		if now.Sub(since) < batterySlaveOutageTimeout {
+			return
+		}
+
+		for _, slaveIndex := range slaves {
+			slave := site.batteryMeters[slaveIndex]
+			if site.releaseBatterySlave(slave) {
+				site.log.WARN.Printf("battery slave %s: released to normal mode, no readings for %s", deviceTitleOrName(slave), batterySlaveOutageTimeout)
 			}
 		}
 	}
@@ -119,7 +156,8 @@ func (site *Site) updateBatterySlavePower(mm []types.Measurement, powerValid []b
 	}
 
 	for masterIndex, dev := range site.batteryMeters {
-		slaves := slavesByMaster[dev.Config().Name]
+		masterName := dev.Config().Name
+		slaves := slavesByMaster[masterName]
 		if len(slaves) == 0 {
 			continue
 		}
@@ -135,7 +173,7 @@ func (site *Site) updateBatterySlavePower(mm []types.Measurement, powerValid []b
 		masterTitle := deviceTitleOrName(dev)
 		if !powerValid[masterIndex] {
 			site.log.WARN.Printf("battery master %s: cannot set slave power, master power unavailable", masterTitle)
-			markSlavesFailed(slaves)
+			handleOutage(masterName, slaves)
 			continue
 		}
 
@@ -154,16 +192,17 @@ func (site *Site) updateBatterySlavePower(mm []types.Measurement, powerValid []b
 			powerParts = append(powerParts, fmt.Sprintf("%s=%.0fW", deviceTitleOrName(site.batteryMeters[slaveIndex]), mm[slaveIndex].Power))
 		}
 		if !readingsValid {
-			markSlavesFailed(slaves)
+			handleOutage(masterName, slaves)
 			continue
 		}
 
 		plan, valid := calculateBatterySlaveSetpoints(masterPower, slavePowers)
 		if !valid {
 			site.log.WARN.Printf("battery master %s: cannot set slave power, invalid total %.0fW", masterTitle, plan.totalPower)
-			markSlavesFailed(slaves)
+			handleOutage(masterName, slaves)
 			continue
 		}
+		delete(site.batterySlaveOutageSince, masterName)
 		site.log.TRACE.Printf("battery master %s: [%s] total %.0fW, average %.0fW across %d slaves", masterTitle, strings.Join(powerParts, ", "), plan.totalPower, plan.averagePower, len(plan.setpoints))
 		for i, slaveIndex := range slaves {
 			setpoint := plan.setpoints[i]

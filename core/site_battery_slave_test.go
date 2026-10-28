@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util"
@@ -198,7 +200,7 @@ func TestUpdateBatterySlavePower(t *testing.T) {
 				}, slaveMeter))
 			}
 
-			site := &Site{log: util.NewLogger("foo"), batteryMeters: meters}
+			site := &Site{log: util.NewLogger("foo"), clock: clock.NewMock(), batteryMeters: meters}
 			if tc.appliedMode != api.BatteryUnknown {
 				site.batteryModeApplied = map[string]api.BatteryMode{"slave-1": tc.appliedMode}
 			}
@@ -285,6 +287,58 @@ func TestUpdateBatterySlavePowerSkipsUnchangedMode(t *testing.T) {
 
 	assert.Equal(t, []api.BatteryMode{api.BatteryCharge}, slave.modeSetHistory)
 	assert.Equal(t, 2, slave.setpointCalls)
+	assert.Equal(t, api.BatteryCharge, site.batterySlaveModeApplied["slave"])
+}
+
+func TestUpdateBatterySlavePowerOutage(t *testing.T) {
+	master := &batteryPowerControlMeter{}
+	slave := &batteryPowerControlMeter{}
+	var masterMeter api.Meter = master
+	var slaveMeter api.Meter = slave
+	clck := clock.NewMock()
+	site := &Site{
+		log:   util.NewLogger("foo"),
+		clock: clck,
+		batteryMeters: []config.Device[api.Meter]{
+			config.NewStaticDevice(config.Named{Name: "master"}, masterMeter),
+			config.NewStaticDevice(config.Named{Name: "slave", Other: map[string]any{"master": "master"}}, slaveMeter),
+		},
+	}
+
+	update := func(slaveValid bool) types.Measurement {
+		mm := []types.Measurement{{Power: -600}, {Power: -300}}
+		site.updateBatterySlavePower(mm, []bool{true, slaveValid})
+		return mm[1]
+	}
+
+	update(true)
+	assert.Equal(t, []api.BatteryMode{api.BatteryCharge}, slave.modeSetHistory)
+
+	// outage within the timeout keeps the last setpoint
+	assert.Equal(t, "failed", update(false).PowerControlStatus)
+	clck.Add(batterySlaveOutageTimeout - time.Second)
+	update(false)
+	assert.Equal(t, []api.BatteryMode{api.BatteryCharge}, slave.modeSetHistory)
+
+	// recovery restarts the timeout
+	update(true)
+	assert.Empty(t, site.batterySlaveOutageSince)
+	update(false)
+	clck.Add(batterySlaveOutageTimeout - time.Second)
+	update(false)
+	assert.Equal(t, []api.BatteryMode{api.BatteryCharge}, slave.modeSetHistory)
+
+	// timeout releases the slave once
+	clck.Add(time.Second)
+	update(false)
+	assert.Equal(t, []api.BatteryMode{api.BatteryCharge, api.BatteryNormal}, slave.modeSetHistory)
+	assert.NotContains(t, site.batterySlaveModeApplied, "slave")
+	update(false)
+	assert.Equal(t, []api.BatteryMode{api.BatteryCharge, api.BatteryNormal}, slave.modeSetHistory)
+
+	// readings return: control resumes
+	update(true)
+	assert.Equal(t, []api.BatteryMode{api.BatteryCharge, api.BatteryNormal, api.BatteryCharge}, slave.modeSetHistory)
 	assert.Equal(t, api.BatteryCharge, site.batterySlaveModeApplied["slave"])
 }
 
