@@ -91,6 +91,7 @@ type Loadpoint struct {
 	uiChan   chan<- util.Param      // client push messages
 	lpChan   chan<- *Loadpoint      // update requests
 	lpRetry  atomic.Bool            // deferred update request pending
+	lpDirty  atomic.Bool            // update requested while a deferred one was pending
 	log      *util.Logger
 
 	rwMutex      atomic.Int64 // count reentrant RWMutex
@@ -482,11 +483,29 @@ func (lp *Loadpoint) requestUpdate() {
 	case lp.lpChan <- lp: // request loadpoint update
 	default:
 		// the shared queue is full: hand over later instead of dropping the request
+		lp.lpDirty.Store(true)
 		if lp.lpRetry.CompareAndSwap(false, true) {
-			go func() {
-				defer lp.lpRetry.Store(false)
-				lp.lpChan <- lp
-			}()
+			go lp.retryUpdate()
+		}
+	}
+}
+
+// retryUpdate delivers a rejected update request. Requests arriving while it is
+// pending or just consumed set lpDirty and are delivered by another round.
+func (lp *Loadpoint) retryUpdate() {
+	for {
+		lp.lpDirty.Store(false)
+		lp.lpChan <- lp
+
+		if lp.lpDirty.Load() {
+			continue
+		}
+
+		lp.lpRetry.Store(false)
+
+		// a request may have slipped in between the check and the reset
+		if !lp.lpDirty.Load() || !lp.lpRetry.CompareAndSwap(false, true) {
+			return
 		}
 	}
 }

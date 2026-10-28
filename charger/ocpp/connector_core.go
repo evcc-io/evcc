@@ -76,8 +76,9 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		}
 	}
 
-	if applied && conn.onStatus != nil && statusClass(prev) != statusClass(request) {
-		conn.onStatus()
+	var notify func()
+	if applied && statusClass(prev) != statusClass(request) {
+		notify = conn.onStatus
 	}
 
 	if conn.isWaitingForAuth() {
@@ -94,6 +95,12 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		} else {
 			conn.log.DEBUG.Printf("waiting for local authentication")
 		}
+	}
+
+	if notify != nil {
+		conn.mu.Unlock()
+		notify()
+		conn.mu.Lock()
 	}
 
 	return new(core.StatusNotificationConfirmation), nil

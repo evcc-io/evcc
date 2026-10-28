@@ -521,4 +521,7 @@ var _ loadpoint.Controller = (*OCPP)(nil)
 func (c *OCPP) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
 	c.conn.OnStatusChange(lp.RequestUpdate)
+
+	// the initial status arrived before the loadpoint was attached
+	lp.RequestUpdate()
 }

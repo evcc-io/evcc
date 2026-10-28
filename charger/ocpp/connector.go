@@ -89,7 +89,8 @@ func (conn *Connector) TestClock(clock clock.Clock) {
 	conn.clock = clock
 }
 
-// OnStatusChange registers a non-blocking callback invoked after each applied status notification
+// OnStatusChange registers a callback invoked when an applied status notification changes the
+// status class. The callback runs without the connector lock held and must not block.
 func (conn *Connector) OnStatusChange(f func()) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
