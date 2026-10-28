@@ -1,0 +1,20 @@
+template: ocpp-rheidon
+products:
+  - brand: Rheidon
+    description:
+      generic: PC200 Pro
+requirements:
+  description:
+    de: |
+      Firmware ab 2.1.7.2.1.9 erforderlich (Pausieren per 0-A-Ladeprofil).
+      In der App unter „Externe Verwaltung“ den Schalter „Externe Steuerung“ aktivieren und als Adresse `ws://<evcc-host>:8887/<stationid>` eintragen.
+      Die erweiterte Option `remotestart` muss aktiviert werden.
+    en: |
+      Requires firmware 2.1.7.2.1.9 or later (pausing via 0 A charging profile).
+      In the app under "External management", enable "External control" and enter `ws://<evcc-host>:8887/<stationid>` as address.
+      The advanced option `remotestart` must be enabled.
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}
