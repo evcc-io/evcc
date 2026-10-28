@@ -193,6 +193,4 @@ Heating.args = {
   effectiveLimitSoc: 60,
   vehicleLimitSoc: 65,
   todayEnergy: 3200,
-  last24hEnergy: 4100,
-  last7dEnergy: 26500,
 };

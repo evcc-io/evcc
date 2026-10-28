@@ -628,13 +628,13 @@ export interface Loadpoint {
   chargePower: number;
   /** Estimated remaining charging time in seconds. */
   chargeRemainingDuration?: number;
-  /** Estimated remaining energy in kWh. */
+  /** Estimated remaining energy in Wh. */
   chargeRemainingEnergy?: number;
   /** Total energy imported by the charge meter in kWh. */
   chargeTotalImport?: number;
   /** Charging voltage per phase in V. */
   chargeVoltages?: number[];
-  /** Energy charged in the current charging session in kWh. */
+  /** Energy charged in the current charging session in Wh. */
   chargedEnergy: number;
   /** The connected vehicle is not identified automatically by its status. */
   chargerFeatureAutodetectDisabled: boolean;
@@ -772,13 +772,13 @@ export interface Loadpoint {
   pvAction: PV_ACTION;
   /** Remaining time until the pending charge start or stop action executes, in seconds. */
   pvRemaining: number;
-  /** Energy used in the last 24 hours in kWh. */
-  last24hEnergy?: number;
-  /** Energy used in the last 7 days in kWh. */
-  last7dEnergy?: number;
+  /** Energy stats of the last 24 hours. */
+  last24h?: PeriodStats;
+  /** Energy stats of the last 7 days. */
+  last7d?: PeriodStats;
   /** Average CO₂ emissions of the current charging session in g/kWh. */
   sessionCo2PerKWh: number | null;
-  /** Energy charged in the current charging session in kWh. */
+  /** Energy charged in the current charging session in Wh. */
   sessionEnergy: number;
   /** Total cost of the current charging session in the configured currency. */
   sessionPrice: number | null;
@@ -810,7 +810,7 @@ export interface Loadpoint {
   suggestion?: LoadpointSuggestion | null;
   /** Loadpoint title for UI display. */
   title: string;
-  /** Energy used since midnight in kWh. */
+  /** Energy used since midnight in Wh. */
   todayEnergy?: number;
   /** Climater of the connected vehicle is active. */
   vehicleClimaterActive: boolean | null;
@@ -834,6 +834,18 @@ export interface Loadpoint {
   batteryBoostLimit: number;
   /** Display-only UI settings. */
   ui?: LoadpointUi;
+}
+
+/** Energy stats of a loadpoint over a period, attributed per 15-minute slot like the energy page. */
+export interface PeriodStats {
+  /** Energy used in Wh. */
+  energy: number;
+  /** Autarky in %, the share not drawn from the grid. */
+  autarky: number | null;
+  /** Average energy price per kWh in the configured currency. */
+  pricePerKWh: number | null;
+  /** Total cost in the configured currency. */
+  price: number | null;
 }
 
 export interface UiLoadpoint extends Loadpoint {
@@ -990,8 +1002,11 @@ export type SessionInfoKey =
   | "price"
   | "emission"
   | "co2"
-  | "last24hEnergy"
-  | "last7dEnergy";
+  | `${SessionInfoPeriod}${SessionInfoPeriodValue}`;
+
+export type SessionInfoPeriod = "last24h" | "last7d";
+
+export type SessionInfoPeriodValue = "Energy" | "Autarky" | "AvgPrice" | "Price";
 
 /** Sponsorship status. */
 export interface SponsorStatus {
@@ -1497,6 +1512,7 @@ export interface SelectOption<T> {
   value: T;
   count?: number;
   disabled?: boolean;
+  group?: string;
 }
 
 export type DeviceType =

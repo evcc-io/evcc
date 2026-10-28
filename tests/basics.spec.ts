@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
+import { enableExperimental } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -50,9 +51,9 @@ test.describe("session info", async () => {
       .getByRole("combobox")
       .selectOption({ label: "Solar" });
     await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Solar");
-    // by click on value
+    // by click on value, wraps around
     await page.getByTestId("sessionInfoValue").first().click();
-    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Last 24h");
+    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Duration");
   });
   test("keep selection on reload", async ({ page }) => {
     await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Duration");
@@ -96,5 +97,25 @@ test.describe("network requests", async () => {
     await page.waitForLoadState("networkidle");
 
     expect(failedRequests).toHaveLength(0);
+  });
+});
+
+test.describe("session info experimental", async () => {
+  test("period groups", async ({ page }) => {
+    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Duration");
+    await page.goto("/#/config");
+    await enableExperimental(page);
+    await page.goto("/");
+
+    // session, 24h and 7d groups; the collapsed select hides its groups
+    const select = page.getByTestId("sessionInfoSelect").first().getByRole("combobox");
+    await expect(select.getByRole("group", { includeHidden: true })).toHaveCount(3);
+    await expect(select.getByRole("option", { name: "Solar" })).toHaveCount(1);
+    await expect(select.getByRole("option", { name: "Charged" })).toHaveCount(2);
+
+    await select.selectOption("last7dEnergy");
+    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Charged (7d)");
+    await page.reload();
+    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Charged (7d)");
   });
 });

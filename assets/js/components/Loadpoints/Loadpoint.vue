@@ -122,6 +122,7 @@ import SettingsButton from "./SettingsButton.vue";
 import SettingsModal from "./SettingsModal.vue";
 import VehicleIcon from "../VehicleIcon";
 import SessionInfo from "./SessionInfo.vue";
+import store from "@/store";
 import { defineComponent, type PropType } from "vue";
 import type {
 	CHARGE_MODE,
@@ -132,6 +133,7 @@ import type {
 	Timeout,
 	Vehicle,
 	UiForecast,
+	PeriodStats,
 	SMART_COST_TYPE,
 	BATTERY_MODE,
 	LoadpointUi,
@@ -222,8 +224,8 @@ export default defineComponent({
 		chargePower: { type: Number, default: 0 },
 		chargedEnergy: { type: Number, default: 0 },
 		todayEnergy: { type: Number, default: 0 },
-		last24hEnergy: Number,
-		last7dEnergy: Number,
+		last24h: Object as PropType<PeriodStats>,
+		last7d: Object as PropType<PeriodStats>,
 		chargeRemainingDuration: { type: Number, default: 0 },
 
 		// other information
@@ -298,6 +300,9 @@ export default defineComponent({
 		},
 		integratedDevice() {
 			return this.chargerFeatureIntegratedDevice;
+		},
+		experimental() {
+			return store.state.experimental;
 		},
 		heating() {
 			return this.chargerFeatureHeating;

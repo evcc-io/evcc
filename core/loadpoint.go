@@ -2302,7 +2302,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 	lp.publishEnergyStats()
 }
 
-// publishEnergyStats publishes time-based energy statistics in Wh
+// publishEnergyStats publishes time-based energy statistics
 func (lp *Loadpoint) publishEnergyStats() {
 	if lp.chargeEnergy == nil {
 		return
@@ -2314,9 +2314,9 @@ func (lp *Loadpoint) publishEnergyStats() {
 		return
 	}
 
-	lp.publish(keys.TodayEnergy, math.Round(stats.Today*1e3))
-	lp.publish(keys.Last24hEnergy, math.Round(stats.Last24h*1e3))
-	lp.publish(keys.Last7dEnergy, math.Round(stats.Last7d*1e3))
+	lp.publish(keys.TodayEnergy, stats.Today)
+	lp.publish(keys.Last24h, stats.Last24h)
+	lp.publish(keys.Last7d, stats.Last7d)
 }
 
 // publish state of charge, remaining charge duration and range
