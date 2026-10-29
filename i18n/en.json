@@ -531,6 +531,27 @@
       "electricalTitle": "Electrics",
       "energyMeterHelp": "Additional meter if the charger doesn't have an integrated one.",
       "energyMeterLabel": "Energy meter",
+      "demandPredictor": {
+        "daily": {
+          "description": "Average of recent days. For devices with the same pattern every day.",
+          "label": "Daily average"
+        },
+        "defaultGroup": "Device default",
+        "description": "How the optimizer predicts demand from past consumption.",
+        "label": "Profile",
+        "noTempTariff": "Requires a temperature forecast.",
+        "noTempTariffLink": "Add forecast",
+        "profilesGroup": "Profiles",
+        "temperature": {
+          "description": "Past consumption at similar outdoor temperatures. For room heating, like heat pumps.",
+          "label": "Temperature"
+        },
+        "title": "Demand forecast",
+        "weekday": {
+          "description": "Average of the same weekday. For devices on a weekly schedule, like water or pool heaters.",
+          "label": "Weekday"
+        }
+      },
       "estimateLabel": "Interpolate charge level between API updates",
       "maxCurrentHelp": "Must be greater than minimum current.",
       "maxCurrentLabel": "Maximum current",
@@ -1855,6 +1876,7 @@
     },
     "checklist": {
       "dismiss": "Dismiss",
+      "legacyTariffs": "Legacy tariff configuration in use.",
       "progress": "{done} of {total} done",
       "title": "Complete your setup"
     },

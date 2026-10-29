@@ -47,15 +47,6 @@
 					<button type="button" class="btn btn-primary px-4 mt-3 mb-2" @click="start">
 						{{ $t("onboarding.welcome.start") }}
 					</button>
-					<div v-if="canSkip" class="mt-2">
-						<button
-							type="button"
-							class="btn btn-link btn-sm evcc-gray text-decoration-none p-0"
-							@click="skipSetup"
-						>
-							{{ $t("onboarding.skip") }}
-						</button>
-					</div>
 				</div>
 
 				<!-- done -->
@@ -222,15 +213,26 @@
 			>
 				{{ $t("onboarding.back") }}
 			</button>
-			<button
-				v-if="canContinue"
-				:type="form ? 'submit' : 'button'"
-				:form="form"
-				class="btn btn-primary"
-				@click="continueStep"
-			>
-				{{ continueLabel }}
-			</button>
+			<div class="d-flex align-items-center gap-3">
+				<!-- the password step before is mandatory, skipping starts here -->
+				<button
+					v-if="step === 'site'"
+					type="button"
+					class="btn btn-link btn-sm evcc-gray text-decoration-none p-0"
+					@click="skipSetup"
+				>
+					{{ $t("onboarding.skip") }}
+				</button>
+				<button
+					v-if="canContinue"
+					:type="form ? 'submit' : 'button'"
+					:form="form"
+					class="btn btn-primary"
+					@click="continueStep"
+				>
+					{{ continueLabel }}
+				</button>
+			</div>
 		</div>
 	</GenericModal>
 </template>
@@ -334,10 +336,6 @@ export default defineComponent({
 		},
 		startStep(): Step {
 			return this.passwordShown ? "password" : "site";
-		},
-		// a missing password is mandatory, a disabled one only warns
-		canSkip(): boolean {
-			return auth.configured || this.authDisabled;
 		},
 		// the band icon of the first step lights up before the band turns into the progress bar
 		startIconIndex(): number {

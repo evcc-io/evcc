@@ -22,6 +22,7 @@ import (
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	optimizer "github.com/evcc-io/optimizer/client"
@@ -87,8 +88,9 @@ type batteryDetail struct {
 	Name     string      `json:"name,omitempty"`
 	Capacity float64     `json:"capacity,omitempty"`
 
-	loadpoint    *int // originating loadpoint id for loadpoint/vehicle entries
-	controllable bool // device can act on suggestions
+	loadpoint    *int              // originating loadpoint id for loadpoint/vehicle entries
+	controllable bool              // device can act on suggestions
+	modes        []api.BatteryMode // modes the battery controller supports
 }
 
 // batteryKey and loadpointKey build the canonical device keys used for
@@ -178,7 +180,7 @@ func suggestionEvent(detail batteryDetail, s types.Suggestion) messenger.Event {
 // withheld, the bound does it, so the battery stays in normal mode. Without planned
 // discharge the battery is held when holdWorthwhile, since normal mode would let the
 // inverter cover intra-slot dips from the battery.
-func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
+func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, slot int, gridImport, gridExport float32, slotHours, pvShare float64) types.Suggestion {
 	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
 		return types.Suggestion{}
 	}
@@ -205,8 +207,8 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 		}
 
 		switch {
-		case charge > suggestionThreshold && gridImporting:
-			// charging while importing means grid charging
+		case charge > pvShare+suggestionThreshold && gridImporting:
+			// charging beyond its PV surplus share while importing means grid charging
 			s.Action = api.BatteryCharge.String()
 		case idle && gridImporting && !empty:
 			// idle while importing: discharge is deliberately withheld
@@ -221,6 +223,13 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 			s.Action = api.BatteryHold.String()
 		default:
 			s.Action = api.BatteryNormal.String()
+		}
+
+		// suggest the mode control applies instead of one the battery does not support
+		if mode, err := api.BatteryModeString(s.Action); err == nil && detail.modes != nil {
+			if mode = supportedBatteryMode(detail.modes, mode); mode != api.BatteryUnknown {
+				s.Action = mode.String()
+			}
 		}
 	} else if charge > suggestionThreshold {
 		s.Action = actionCharge
@@ -621,7 +630,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	}
 
 	if site.circuit != nil {
-		if pMaxImp := site.circuit.GetMaxPower(); pMaxImp > 0 {
+		if pMaxImp := circuitMaxImport(site.circuit); pMaxImp > 0 {
 			// hard grid import limit if no price penalty is set by PrcPExcImp
 			req.Grid.PMaxImp = float32(pMaxImp)
 		}
@@ -859,12 +868,21 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 	}
 
 	// home battery discharge planned for the slot, a loadpoint charge it covers is no surplus
-	var batteryDischarge float64
+	var batteryDischarge, batteryCharge, pvSurplus float64
 	if slot >= 0 && slotHours > 0 {
 		for i, detail := range details.BatteryDetails {
 			if detail.Type == batteryTypeBattery && slot < len(res.Batteries[i].DischargingPower) {
 				batteryDischarge += float64(res.Batteries[i].DischargingPower[slot]) / slotHours
 			}
+			if detail.Type == batteryTypeBattery && slot < len(res.Batteries[i].ChargingPower) {
+				batteryCharge += float64(res.Batteries[i].ChargingPower[slot]) / slotHours
+			}
+		}
+
+		// PV surplus over home demand (gt, excluding loadpoints) covers home battery charging without grid charging (#35416).
+		// Loadpoints are not deducted: the optimizer splits PV between them and the battery arbitrarily.
+		if ts := req.TimeSeries; slot < len(ts.Ft) && slot < len(ts.Gt) {
+			pvSurplus = max(0, float64(ts.Ft[slot]-ts.Gt[slot])/slotHours)
 		}
 	}
 
@@ -885,7 +903,13 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 			}),
 		})
 
-		suggestion := currentSlotSuggestion(detail, batReq, batRes, req.TimeSeries, slot, gridImport, gridExport, slotHours)
+		// home batteries share the PV surplus in proportion to their charge
+		var pvShare float64
+		if batteryCharge > 0 && slot >= 0 && slot < len(batRes.ChargingPower) {
+			pvShare = pvSurplus * float64(batRes.ChargingPower[slot]) / slotHours / batteryCharge
+		}
+
+		suggestion := currentSlotSuggestion(detail, batReq, batRes, req.TimeSeries, slot, gridImport, gridExport, slotHours, pvShare)
 		if suggestion.Action == "" {
 			continue
 		}
@@ -1057,7 +1081,11 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	} else {
 		maxSoc := capacity * float64(lp.EffectiveLimitSoc()) * 10 // Wh
 		bat.SInitial = float32(capacity * soc * 10)               // Wh
-		bat.SMax = max(bat.SInitial, float32(maxSoc))             // prevent infeasible if current soc above maximum
+		if soc == 0 {
+			// vehicle without soc: estimate stored energy from session charged energy
+			bat.SInitial = float32(lp.GetChargedEnergy() * eta) // Wh
+		}
+		bat.SMax = max(bat.SInitial, float32(maxSoc)) // prevent infeasible if current soc above maximum
 	}
 
 	detail.Type = batteryTypeVehicle
@@ -1106,6 +1134,17 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	}
 
 	return bat, detail
+}
+
+// circuitMaxImport returns the circuit's import limit from max power incl. HEMS limit and three-phase max current, 0 if unlimited
+func circuitMaxImport(c api.Circuit) float64 {
+	res := c.EffectiveMaxPower()
+	if current := c.GetMaxCurrent(); current > 0 {
+		if power := grid.CurrentToPower(current, 3); res <= 0 || power < res {
+			res = power
+		}
+	}
+	return res
 }
 
 // clearDemandWhenFull zeroes the charge demand from the slot the accumulated energy fills the
@@ -1176,6 +1215,9 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 		Title:        deviceProperties(dev).Title,
 		Capacity:     *b.Capacity,
 		controllable: controllable,
+	}
+	if controllable {
+		detail.modes = ctrl.BatteryModes()
 	}
 
 	// tariff forecast-based grid charging demand

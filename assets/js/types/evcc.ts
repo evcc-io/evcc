@@ -547,6 +547,9 @@ export interface LoadpointThreshold {
   threshold: number;
 }
 
+/** Demand forecast strategy of a heating loadpoint. */
+export type DemandPredictor = "daily" | "weekday" | "temperature";
+
 export interface ConfigLoadpoint {
   id?: number;
   name?: string;
@@ -567,6 +570,7 @@ export interface ConfigLoadpoint {
   limitEnergy?: number;
   limitSoc?: number;
   minSoc?: number;
+  demandPredictor?: DemandPredictor;
   circuit?: string;
   thresholds: {
     enable: LoadpointThreshold;

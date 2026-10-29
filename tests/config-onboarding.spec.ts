@@ -3,6 +3,7 @@ import { start, stop, restart, baseUrl } from "./evcc";
 import { expectModalHidden, expectModalVisible, finishLoadpoint, skipOnboarding } from "./utils";
 
 test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
 
 const PASSWORD = "secret";
 
@@ -264,6 +265,21 @@ test.describe("existing configuration", async () => {
     await expect(checklist.getByTestId("checklist-grid").getByRole("button")).toHaveCount(0);
     await expect(checklist.getByTestId("checklist-heater").getByRole("button")).toHaveCount(0);
     await expect(checklist.getByTestId("checklist-pv")).toBeVisible();
+  });
+
+  test("yaml tariffs", async ({ page }) => {
+    await start("config-with-tariffs.evcc.yaml", undefined, ["--disable-auth"]);
+    await page.goto("/#/config");
+    const checklist = page.getByTestId("setup-checklist");
+    await expect(
+      checklist.getByTestId("checklist-pv").getByRole("button", { name: "Add" })
+    ).toBeEnabled();
+    for (const item of ["gridImport", "gridExport", "co2"]) {
+      await expect(checklist.getByTestId(`checklist-${item}`).getByRole("button")).toHaveCount(0);
+    }
+    await expect(
+      checklist.getByTestId("checklist-solar").getByRole("button", { name: "Add" })
+    ).toBeDisabled();
   });
 
   test("disabled onboarding", async ({ page }) => {

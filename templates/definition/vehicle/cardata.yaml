@@ -32,7 +32,7 @@ requirements:
 
       Sollte die Fahrzeugerkennung nicht zuverlässig funktionieren, sollte `welcomecharge` (Laden bei Verbindung) aktiviert werden.
 
-      BMW erlaubt nur eine Streaming-Verbindung pro Konto. Wird diese bereits von einem anderen Tool genutzt, können die Streamingdaten optional von einem MQTT-Broker gelesen werden (Streaming-Quelle `mqtt`, ohne Host wird der MQTT-Broker von evcc verwendet). Das Tool muss die CarData-Nachrichten unverändert veröffentlichen, z.B. [bmw-mqtt-bridge](https://github.com/dj0abr/bmw-mqtt-bridge) mit Standardeinstellungen. Nur dieses Tool sollte auf dem Topic veröffentlichen dürfen, z.B. per ACL des MQTT-Brokers. Die Anmeldung mit `clientid` wird weiterhin für die REST-Abfragen benötigt.
+      BMW erlaubt nur eine Streaming-Verbindung pro Konto. Wird diese bereits von einem anderen Tool genutzt, können die Streamingdaten optional von einem lokalen MQTT-Broker gelesen werden. Das Tool muss die CarData-Nachrichten unverändert veröffentlichen, z.B. [bmw-mqtt-bridge](https://github.com/dj0abr/bmw-mqtt-bridge) mit Standardeinstellungen. Nur dieses Tool sollte auf dem Topic veröffentlichen dürfen, z.B. per ACL des MQTT-Brokers. Die Anmeldung mit `clientid` wird weiterhin für die REST-Abfragen benötigt.
     en: |
       Requires CarData activation in BMW/Mini portal. The following data points need to be configured for streaming access (the availability of data points may vary depending on the vehicle model):
 
@@ -57,7 +57,7 @@ requirements:
 
       In case the vehicle detection does not work reliably, `welcomecharge` (charge on connection) should be enabled.
 
-      BMW allows only one streaming connection per account. If another tool already uses it, the streaming data can optionally be read from an MQTT broker (streaming source `mqtt`, the evcc MQTT broker is used if host is empty). The tool must publish the unmodified CarData messages, e.g. [bmw-mqtt-bridge](https://github.com/dj0abr/bmw-mqtt-bridge) with its default settings. Only this tool should be allowed to publish to the topic, e.g. using broker ACLs. Login with `clientid` is still required for REST requests.
+      BMW allows only one streaming connection per account. If another tool already uses it, the streaming data can optionally be read from a local MQTT broker. The tool must publish the unmodified CarData messages, e.g. [bmw-mqtt-bridge](https://github.com/dj0abr/bmw-mqtt-bridge) with its default settings. Only this tool should be allowed to publish to the topic, e.g. using broker ACLs. Login with `clientid` is still required for REST requests.
 params:
   - preset: vehicle-common
   - name: vin
@@ -69,23 +69,25 @@ params:
     help:
       en: Enable if vehicle sends streaming updates during charging.
       de: Aktivieren falls das Fahrzeug Streaming Updates während des Ladevorgangs schickt.
-  - name: stream
-    type: choice
-    choice: ["bmw", "mqtt"]
-    default: bmw
+  - name: broker
     advanced: true
     description:
-      en: Streaming source
-      de: Streaming-Quelle
+      en: MQTT broker
+      de: MQTT-Broker
     help:
-      en: Read the streaming data from BMW or from an MQTT broker
-      de: Streamingdaten von BMW oder von einem MQTT-Broker lesen
-  - preset: mqtt
-  - name: host
+      en: Read the streaming data from this local MQTT broker instead of BMW. Leave empty to connect to BMW directly.
+      de: Streamingdaten von diesem lokalen MQTT-Broker statt von BMW lesen. Leer lassen, um direkt mit BMW zu verbinden.
+    example: 192.168.1.10:1883
+  - name: user
     advanced: true
-    example: 192.168.1.10
-  - name: port
+    help:
+      en: MQTT broker username
+      de: Benutzername für den MQTT-Broker
+  - name: password
     advanced: true
+    help:
+      en: MQTT broker password
+      de: Passwort für den MQTT-Broker
   - name: topic
     advanced: true
     default: bmw/raw/+
@@ -106,9 +108,14 @@ render: |
   type: cardata
   vin: {{ .vin }}
   clientid: {{ .clientid }}
-  stream: {{ .stream }}
-  {{- if eq .stream "mqtt" }}
-  {{- include "mqtt" . }}
+  {{- if .broker }}
+  broker: {{ .broker }}
+  {{- if .user }}
+  user: {{ .user }}
+  {{- end }}
+  {{- if .password }}
+  password: {{ .password }}
+  {{- end }}
   topic: {{ .topic }}
   {{- end }}
   {{- if .cache }}

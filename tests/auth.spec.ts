@@ -36,7 +36,6 @@ test("set initial password", async ({ page }) => {
   await modal.getByLabel("Repeat password").fill("secret");
   await modal.getByRole("button", { name: "Create password" }).click();
   await expect(modal.getByRole("heading", { name: "Your site" })).toBeVisible();
-  await modal.getByRole("button", { name: "Back" }).click();
   await modal.getByRole("button", { name: "Skip setup" }).click();
   await expectModalHidden(modal);
 
