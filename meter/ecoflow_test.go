@@ -52,7 +52,7 @@ func TestEcoflowLeaderChange(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	m, err := NewEcoFlow("key", "secret", []string{"A", "B", "C"}, "grid", srv.URL, "powGetSysGrid", "", time.Nanosecond, nil, batterySocLimits{}, nil)
+	m, err := NewEcoFlow(t.Context(), "key", "secret", []string{"A", "B", "C"}, "grid", srv.URL, "powGetSysGrid", "", time.Nanosecond, nil, batterySocLimits{}, nil)
 	require.NoError(t, err)
 
 	p, err := m.CurrentPower()

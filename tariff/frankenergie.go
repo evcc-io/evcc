@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -52,10 +53,10 @@ type frankEnergieResponse struct {
 var _ api.Tariff = (*FrankEnergie)(nil)
 
 func init() {
-	registry.Add("frank-energie", NewFrankEnergieFromConfig)
+	registry.AddCtx("frank-energie", NewFrankEnergieFromConfig)
 }
 
-func NewFrankEnergieFromConfig(other map[string]any) (api.Tariff, error) {
+func NewFrankEnergieFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed           `mapstructure:",squash"`
 		TariffDirection string
@@ -85,7 +86,7 @@ func NewFrankEnergieFromConfig(other map[string]any) (api.Tariff, error) {
 
 	t := &FrankEnergie{
 		embed:  &cc.embed,
-		log:    util.NewLogger("frank-energie"),
+		log:    util.LoggerFromContext(ctx, "frank-energie"),
 		export: export,
 		loc:    loc,
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),

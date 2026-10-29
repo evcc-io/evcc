@@ -92,8 +92,8 @@ func NewChargeX(ctx context.Context, settings modbus.TcpSettings, connector uint
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("chargex")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "chargex")
+	conn.Logger(log)
 
 	wb := &ChargeX{
 		log:       log,

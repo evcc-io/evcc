@@ -171,6 +171,10 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	// add meters from config
 	site.restoreMetersAndTitle()
 
+	if site.Title != "" {
+		site.log = site.log.With(util.TitleKey, site.Title)
+	}
+
 	// TODO title
 	if site.Voltage != 0 && site.Voltage != grid.Voltage {
 		site.log.WARN.Printf("voltage %.0fV is no longer supported, using %.0fV", site.Voltage, grid.Voltage)
@@ -406,7 +410,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:        util.NewLogger("site"),
+		log:        util.NewLogger("site").With(util.ComponentKey, "site"),
 		collectors: make(map[string]*metrics.Collector),
 	}
 

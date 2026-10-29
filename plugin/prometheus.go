@@ -23,10 +23,10 @@ type Prometheus struct {
 }
 
 func init() {
-	registry.Add("prometheus", NewPrometheusFromConfig)
+	registry.AddCtx("prometheus", NewPrometheusFromConfig)
 }
 
-func NewPrometheusFromConfig(other map[string]any) (Plugin, error) {
+func NewPrometheusFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		Uri, Query string
 		Timeout    time.Duration
@@ -38,7 +38,7 @@ func NewPrometheusFromConfig(other map[string]any) (Plugin, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("prometheus")
+	log := util.PluginLoggerFromContext(ctx, "prometheus")
 
 	config := api.Config{
 		Address:      cc.Uri,

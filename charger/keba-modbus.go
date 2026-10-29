@@ -195,8 +195,8 @@ func NewKeba(ctx context.Context, embed embed, settings modbus.TcpSettings) (*Ke
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("keba")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "keba")
+	conn.Logger(log)
 
 	wb := &Keba{
 		embed:        &embed,

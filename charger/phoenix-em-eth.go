@@ -69,8 +69,8 @@ func NewPhoenixEMEth(ctx context.Context, settings modbus.TcpSettings) (*Phoenix
 		return nil, err
 	}
 
-	log := util.NewLogger("em-eth")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "em-eth")
+	conn.Logger(log)
 
 	wb := &PhoenixEMEth{
 		Caps: implement.New(),

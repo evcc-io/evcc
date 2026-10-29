@@ -61,7 +61,7 @@ func NewSolarmanFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 		return nil, errors.New("Solarman supports holding and input registers only")
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("solarman"))
+	log := util.PluginLoggerFromContext(ctx, "solarman")
 	client, err := solarman.New(cc.Host, cc.Port, cc.Serial, cc.Timeout, solarman.WithLogger(log.TRACE.Printf))
 	if err != nil {
 		return nil, err

@@ -35,7 +35,7 @@ func NewTelegramFromConfig(ctx context.Context, other map[string]any) (api.Messe
 		return nil, err
 	}
 
-	log := util.NewLogger("telegram").Redact(cc.Token)
+	log := util.LoggerFromContext(ctx, "telegram").Redact(cc.Token)
 
 	m := &Telegram{
 		log:   log,

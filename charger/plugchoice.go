@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -47,11 +48,11 @@ type Plugchoice struct {
 }
 
 func init() {
-	registry.Add("plugchoice", NewPlugchoiceFromConfig)
+	registry.AddCtx("plugchoice", NewPlugchoiceFromConfig)
 }
 
 // NewPlugchoiceFromConfig creates a Plugchoice charger from generic config
-func NewPlugchoiceFromConfig(other map[string]any) (api.Charger, error) {
+func NewPlugchoiceFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI       string
 		UUID      string // kept for backward compatibility
@@ -69,12 +70,12 @@ func NewPlugchoiceFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewPlugchoice(cc.URI, cc.UUID, cc.Identity, cc.Connector, cc.Token, cc.Cache)
+	return NewPlugchoice(ctx, cc.URI, cc.UUID, cc.Identity, cc.Connector, cc.Token, cc.Cache)
 }
 
 // NewPlugchoice creates a Plugchoice charger
-func NewPlugchoice(uri, uuid, identity string, connector int, token string, cache time.Duration) (api.Charger, error) {
-	log := util.NewLogger("plugchoice")
+func NewPlugchoice(ctx context.Context, uri, uuid, identity string, connector int, token string, cache time.Duration) (api.Charger, error) {
+	log := util.LoggerFromContext(ctx, "plugchoice")
 	helper := request.NewHelper(log)
 	uri = strings.TrimRight(uri, "/")
 

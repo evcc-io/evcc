@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -105,11 +106,11 @@ const (
 )
 
 func init() {
-	registry.Add("smart-evse", NewSmartEVSE3FromConfig)
+	registry.AddCtx("smart-evse", NewSmartEVSE3FromConfig)
 }
 
 // NewSmartEVSE3FromConfig creates a SmartEVSE-3.5 REST charger from generic config
-func NewSmartEVSE3FromConfig(other map[string]any) (api.Charger, error) {
+func NewSmartEVSE3FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI        string
 		Cache      time.Duration
@@ -132,12 +133,12 @@ func NewSmartEVSE3FromConfig(other map[string]any) (api.Charger, error) {
 		mode = smartEvse3ModeSmart
 	}
 
-	return NewSmartEVSE3(cc.URI, cc.Cache, mode)
+	return NewSmartEVSE3(ctx, cc.URI, cc.Cache, mode)
 }
 
 // NewSmartEVSE3 creates a new SmartEVSE-3.5 REST charger
-func NewSmartEVSE3(uri string, cache time.Duration, mode int) (api.Charger, error) {
-	log := util.NewLogger("smart-evse")
+func NewSmartEVSE3(ctx context.Context, uri string, cache time.Duration, mode int) (api.Charger, error) {
+	log := util.LoggerFromContext(ctx, "smart-evse")
 
 	wb := &SmartEVSE3{
 		Helper: request.NewHelper(log),

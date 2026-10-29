@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -16,10 +17,10 @@ type BluelinkUS struct {
 }
 
 func init() {
-	registry.Add("hyundai-us", NewHyundaiUSFromConfig)
+	registry.AddCtx("hyundai-us", NewHyundaiUSFromConfig)
 }
 
-func NewHyundaiUSFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewHyundaiUSFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
@@ -40,7 +41,7 @@ func NewHyundaiUSFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, errors.New("PIN is required")
 	}
 
-	log := util.NewLogger("hyundai-us").Redact(cc.User, cc.Password, cc.VIN, cc.Pin)
+	log := util.LoggerFromContext(ctx, "hyundai-us").Redact(cc.User, cc.Password, cc.VIN, cc.Pin)
 
 	identity := bluelink_us.NewIdentity(log, cc.User, cc.Password)
 	if err := identity.Login(); err != nil {

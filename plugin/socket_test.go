@@ -39,7 +39,7 @@ func TestSockePlugin(t *testing.T) {
 	srv.Start()
 
 	addr := "ws://" + srv.Listener.Addr().String()
-	p, err := NewSocketPluginFromConfig(map[string]any{
+	p, err := NewSocketPluginFromConfig(t.Context(), map[string]any{
 		"uri": addr,
 		"jq":  `.data | select(.uuid=="bar") .tuples[0][1]`,
 	})

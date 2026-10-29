@@ -3,6 +3,7 @@ package tariff
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -58,17 +59,17 @@ type Rate struct {
 var _ api.Tariff = (*Pun)(nil)
 
 func init() {
-	registry.Add("pun", NewPunFromConfig)
+	registry.AddCtx("pun", NewPunFromConfig)
 	romeLocation, _ = time.LoadLocation("Europe/Rome")
 }
 
-func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
+func NewPunFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed `mapstructure:",squash"`
 		Zone  string
 	}
 
-	logger := util.NewLogger("pun")
+	logger := util.LoggerFromContext(ctx, "pun")
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

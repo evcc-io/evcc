@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -16,11 +17,11 @@ type Mercedes struct {
 }
 
 func init() {
-	registry.Add("mercedes", NewMercedesFromConfig)
+	registry.AddCtx("mercedes", NewMercedesFromConfig)
 }
 
 // NewMercedesFromConfig creates a new vehicle
-func NewMercedesFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewMercedesFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
 		Tokens   oauth.Tokens
@@ -46,7 +47,7 @@ func NewMercedesFromConfig(other map[string]any) (api.Vehicle, error) {
 		cc.User = cc.Account_
 	}
 
-	log := util.NewLogger("mercedes").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
+	log := util.LoggerFromContext(ctx, "mercedes").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
 	identity, err := mercedes.NewIdentity(log, token, cc.User, cc.Region)
 	if err != nil {
 		return nil, err

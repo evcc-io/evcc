@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -36,12 +37,12 @@ type Warp2 struct {
 }
 
 func init() {
-	registry.Add("warp2", NewWarp2FromConfig)
-	registry.Add("warp-fw2", NewWarp2FromConfig) // deprecated
+	registry.AddCtx("warp2", NewWarp2FromConfig)
+	registry.AddCtx("warp-fw2", NewWarp2FromConfig) // deprecated
 }
 
 // NewWarpFromConfig creates a new configurable charger
-func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {
+func NewWarp2FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		mqtt.Config   `mapstructure:",squash"`
 		Topic         string
@@ -56,7 +57,7 @@ func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	wb, err := NewWarp2(cc.Config, cc.Topic, cc.EnergyManager, cc.Timeout)
+	wb, err := NewWarp2(ctx, cc.Config, cc.Topic, cc.EnergyManager, cc.Timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +87,8 @@ func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {
 }
 
 // NewWarp2 creates a new configurable charger
-func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration) (*Warp2, error) {
-	log := util.NewLogger("warp")
+func NewWarp2(ctx context.Context, mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration) (*Warp2, error) {
+	log := util.LoggerFromContext(ctx, "warp")
 
 	client, err := mqtt.RegisteredClientOrDefault(log, mqttconf)
 	if err != nil {

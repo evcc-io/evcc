@@ -90,8 +90,8 @@ func NewSchneiderV3(ctx context.Context, settings modbus.TcpSettings) (api.Charg
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("schneider")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "schneider")
+	conn.Logger(log)
 
 	wb := &Schneider{
 		log:  log,

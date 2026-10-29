@@ -97,8 +97,8 @@ func NewDaheimLaden(ctx context.Context, settings modbus.TcpSettings, phases boo
 		return nil, err
 	}
 
-	log := util.NewLogger("daheimladen")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "daheimladen")
+	conn.Logger(log)
 
 	wb := &DaheimLaden{
 		Caps:   implement.New(),

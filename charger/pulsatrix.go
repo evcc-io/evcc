@@ -92,11 +92,11 @@ type pulsatrixData struct {
 }
 
 func init() {
-	registry.Add("pulsatrix", NewPulsatrixFromConfig)
+	registry.AddCtx("pulsatrix", NewPulsatrixFromConfig)
 }
 
 // NewPulsatrixFromConfig creates a pulsatrix charger from generic config
-func NewPulsatrixFromConfig(other map[string]any) (api.Charger, error) {
+func NewPulsatrixFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
 		Host string
 	}
@@ -105,18 +105,18 @@ func NewPulsatrixFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewPulsatrix(cc.Host)
+	return NewPulsatrix(ctx, cc.Host)
 }
 
 // NewPulsatrix creates pulsatrix charger
-func NewPulsatrix(hostname string) (*Pulsatrix, error) {
+func NewPulsatrix(ctx context.Context, hostname string) (*Pulsatrix, error) {
 	// check sponsor authorization early (fail fast)
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
 
 	wb := &Pulsatrix{
-		log:      util.NewLogger("pulsatrix"),
+		log:      util.LoggerFromContext(ctx, "pulsatrix"),
 		hostname: hostname,
 		uri:      fmt.Sprintf("ws://%s/api/ws", hostname),
 		data:     util.NewMonitor[pulsatrixData](dataTimeout),

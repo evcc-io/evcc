@@ -67,7 +67,7 @@ func NewOpenEVSEFromConfig(ctx context.Context, other map[string]any) (api.Charg
 
 // NewOpenEVSE creates OpenEVSE charger
 func NewOpenEVSE(ctx context.Context, uri, user, password string, phases1p3p bool) (api.Charger, error) {
-	log := util.NewLogger("openevse").Redact(user, password, transport.BasicAuthHeader(user, password))
+	log := util.LoggerFromContext(ctx, "openevse").Redact(user, password, transport.BasicAuthHeader(user, password))
 
 	client := request.NewClient(log)
 	if user != "" && password != "" {

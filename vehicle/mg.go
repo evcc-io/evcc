@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -16,11 +17,11 @@ type MG struct {
 }
 
 func init() {
-	registry.Add("mg", NewMGFromConfig)
+	registry.AddCtx("mg", NewMGFromConfig)
 }
 
 // NewBMWFromConfig creates a new vehicle
-func NewMGFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewMGFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -47,7 +48,7 @@ func NewMGFromConfig(other map[string]any) (api.Vehicle, error) {
 		baseUrl = saic.RegionEU
 	}
 
-	log := util.NewLogger("mg").Redact(cc.User, cc.Password, cc.VIN)
+	log := util.LoggerFromContext(ctx, "mg").Redact(cc.User, cc.Password, cc.VIN)
 	identity := saic.NewIdentity(log, cc.User, cc.Password, baseUrl)
 
 	if err := identity.Login(); err != nil {

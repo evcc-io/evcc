@@ -33,7 +33,7 @@ func NewHomeAssistantPluginFromConfig(ctx context.Context, other map[string]any)
 		return nil, errors.New("missing entity")
 	}
 
-	conn, err := homeassistant.NewConnection(util.NewLogger("homeassistant"), cc.URI, cc.Home_, cc.Insecure)
+	conn, err := homeassistant.NewConnection(util.PluginLoggerFromContext(ctx, "homeassistant"), cc.URI, cc.Home_, cc.Insecure)
 	if err != nil {
 		return nil, err
 	}

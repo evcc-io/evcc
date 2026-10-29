@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -19,11 +20,11 @@ type HomeWizard struct {
 }
 
 func init() {
-	registry.Add("homewizard", NewHomeWizardFromConfig)
+	registry.AddCtx("homewizard", NewHomeWizardFromConfig)
 }
 
 // NewHomeWizardFromConfig creates a HomeWizard charger from generic config
-func NewHomeWizardFromConfig(other map[string]any) (api.Charger, error) {
+func NewHomeWizardFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
 		URI          string

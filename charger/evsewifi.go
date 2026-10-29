@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -25,12 +26,12 @@ type EVSEWifi struct {
 }
 
 func init() {
-	registry.Add("smartwb", NewEVSEWifiFromConfig)
-	registry.Add("evsewifi", NewEVSEWifiFromConfig)
+	registry.AddCtx("smartwb", NewEVSEWifiFromConfig)
+	registry.AddCtx("evsewifi", NewEVSEWifiFromConfig)
 }
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
-func NewEVSEWifiFromConfig(other map[string]any) (api.Charger, error) {
+func NewEVSEWifiFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Meter struct {
@@ -45,7 +46,7 @@ func NewEVSEWifiFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	wb, err := NewEVSEWifi(util.DefaultScheme(cc.URI, "http"), cc.Cache)
+	wb, err := NewEVSEWifi(ctx, util.DefaultScheme(cc.URI, "http"), cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +101,8 @@ func NewEVSEWifiFromConfig(other map[string]any) (api.Charger, error) {
 }
 
 // NewEVSEWifi creates EVSEWifi charger
-func NewEVSEWifi(uri string, cache time.Duration) (*EVSEWifi, error) {
-	log := util.NewLogger("evse")
+func NewEVSEWifi(ctx context.Context, uri string, cache time.Duration) (*EVSEWifi, error) {
+	log := util.LoggerFromContext(ctx, "evse")
 
 	wb := &EVSEWifi{
 		Helper:  request.NewHelper(log),

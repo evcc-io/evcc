@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -12,7 +13,7 @@ import (
 )
 
 func init() {
-	registry.Add("zendure", NewZendureFromConfig)
+	registry.AddCtx("zendure", NewZendureFromConfig)
 }
 
 type Zendure struct {
@@ -22,7 +23,7 @@ type Zendure struct {
 }
 
 // NewZendureFromConfig creates a Zendure meter from generic config
-func NewZendureFromConfig(other map[string]any) (api.Meter, error) {
+func NewZendureFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity                `mapstructure:",squash"`
 		batteryPowerLimits             `mapstructure:",squash"`

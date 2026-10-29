@@ -50,6 +50,7 @@ package charger
 //   }
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -107,11 +108,11 @@ type Lektrico struct {
 var _ api.Charger = (*Lektrico)(nil)
 
 func init() {
-	registry.Add("lektrico", NewLektricoFromConfig)
+	registry.AddCtx("lektrico", NewLektricoFromConfig)
 }
 
 // NewLektricoFromConfig creates a Lektrico charger from evcc configuration
-func NewLektricoFromConfig(other map[string]any) (api.Charger, error) {
+func NewLektricoFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Host  string
 		Cache time.Duration
@@ -131,15 +132,15 @@ func NewLektricoFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	return NewLektrico(cc.Host, cc.Cache)
+	return NewLektrico(ctx, cc.Host, cc.Cache)
 }
 
 // NewLektrico creates a Lektrico charger and verifies connectivity
-func NewLektrico(host string, cache time.Duration) (*Lektrico, error) {
+func NewLektrico(ctx context.Context, host string, cache time.Duration) (*Lektrico, error) {
 	uri := fmt.Sprintf("http://%s/rpc", strings.TrimSuffix(host, "/"))
 
 	wb := &Lektrico{
-		Helper:  request.NewHelper(util.NewLogger("lektrico")),
+		Helper:  request.NewHelper(util.LoggerFromContext(ctx, "lektrico")),
 		uri:     uri,
 		current: 6,
 	}

@@ -84,8 +84,8 @@ func NewCfosPowerBrain(ctx context.Context, settings modbus.TcpSettings) (api.Ch
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("cfos")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "cfos")
+	conn.Logger(log)
 
 	wb := &CfosPowerBrain{
 		Caps: implement.New(),

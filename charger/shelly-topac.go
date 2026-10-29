@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -41,11 +42,11 @@ type ShellyTopAC struct {
 }
 
 func init() {
-	registry.Add("shelly-topac", NewShellyTopACFromConfig)
+	registry.AddCtx("shelly-topac", NewShellyTopACFromConfig)
 }
 
 // NewShellyTopACFromConfig creates a Shelly Top AC charger from generic config
-func NewShellyTopACFromConfig(other map[string]any) (api.Charger, error) {
+func NewShellyTopACFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI      string
 		User     string
@@ -56,11 +57,11 @@ func NewShellyTopACFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewShellyTopAC(cc.URI, cc.User, cc.Password)
+	return NewShellyTopAC(ctx, cc.URI, cc.User, cc.Password)
 }
 
 // NewShellyTopAC creates Shelly Top AC charger
-func NewShellyTopAC(uri, user, password string) (api.Charger, error) {
+func NewShellyTopAC(ctx context.Context, uri, user, password string) (api.Charger, error) {
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
@@ -71,7 +72,7 @@ func NewShellyTopAC(uri, user, password string) (api.Charger, error) {
 	}
 	uri = util.DefaultScheme(uri, "http")
 
-	log := util.NewLogger("topac")
+	log := util.LoggerFromContext(ctx, "topac")
 	helper := request.NewHelper(log)
 	helper.Transport = request.NewTripper(log, transport.Insecure())
 

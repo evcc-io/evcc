@@ -149,8 +149,8 @@ func NewAlpitronicHYC(ctx context.Context, settings modbus.TcpSettings, connecto
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("alpitronic")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "alpitronic")
+	conn.Logger(log)
 
 	return newAlpitronicHYC(conn, connector)
 }

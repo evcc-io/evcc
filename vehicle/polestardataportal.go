@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -17,11 +18,11 @@ type PolestarDataPortal struct {
 }
 
 func init() {
-	registry.Add("polestar-data-portal", NewPolestarDataPortalFromConfig)
+	registry.AddCtx("polestar-data-portal", NewPolestarDataPortalFromConfig)
 }
 
 // NewPolestarDataPortalFromConfig creates a new vehicle
-func NewPolestarDataPortalFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewPolestarDataPortalFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed                             `mapstructure:",squash"`
 		ClientID, ClientSecret, AccountID string
@@ -39,7 +40,7 @@ func NewPolestarDataPortalFromConfig(other map[string]any) (api.Vehicle, error) 
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.NewLogger("polestar").Redact(cc.ClientID, cc.ClientSecret, cc.AccountID, cc.VIN)
+	log := util.LoggerFromContext(ctx, "polestar").Redact(cc.ClientID, cc.ClientSecret, cc.AccountID, cc.VIN)
 
 	identity := dataportal.NewIdentity(log, cc.ClientID, cc.ClientSecret)
 	api := dataportal.NewAPI(log, identity, cc.AccountID)

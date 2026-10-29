@@ -79,8 +79,8 @@ func NewPrachtAlpha(ctx context.Context, settings modbus.Settings, vehicle uint1
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("pracht")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "pracht")
+	conn.Logger(log)
 
 	wb := &PrachtAlpha{
 		conn:    conn,

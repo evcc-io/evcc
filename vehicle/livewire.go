@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -18,11 +19,11 @@ type LiveWire struct {
 }
 
 func init() {
-	registry.Add("livewire", NewLiveWireFromConfig)
+	registry.AddCtx("livewire", NewLiveWireFromConfig)
 }
 
 // NewLiveWireFromConfig creates a new vehicle
-func NewLiveWireFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewLiveWireFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -48,7 +49,7 @@ func NewLiveWireFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, fmt.Errorf("invalid deviceUUID: %w", err)
 	}
 
-	log := util.NewLogger("livewire").Redact(cc.User, cc.Password, cc.DeviceUUID)
+	log := util.LoggerFromContext(ctx, "livewire").Redact(cc.User, cc.Password, cc.DeviceUUID)
 
 	identity := livewire.NewIdentity(log, cc.User, cc.Password, cc.DeviceUUID)
 	if err := identity.Login(); err != nil {

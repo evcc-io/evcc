@@ -83,8 +83,8 @@ func NewHesotec(ctx context.Context, settings modbus.TcpSettings) (api.Charger, 
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("hesotec")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "hesotec")
+	conn.Logger(log)
 
 	wb := &Hesotec{
 		conn: conn,

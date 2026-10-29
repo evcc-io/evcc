@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"slices"
@@ -28,10 +29,10 @@ type Amber struct {
 var _ api.Tariff = (*Amber)(nil)
 
 func init() {
-	registry.Add("amber", NewAmberFromConfig)
+	registry.AddCtx("amber", NewAmberFromConfig)
 }
 
-func NewAmberFromConfig(other map[string]any) (api.Tariff, error) {
+func NewAmberFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed   `mapstructure:",squash"`
 		Token   string
@@ -55,7 +56,7 @@ func NewAmberFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, errors.New("missing channel")
 	}
 
-	log := util.NewLogger("amber").Redact(cc.Token)
+	log := util.LoggerFromContext(ctx, "amber").Redact(cc.Token)
 
 	t := &Amber{
 		embed:   &cc.embed,

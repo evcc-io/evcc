@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -28,11 +29,11 @@ type Sonoff struct {
 }
 
 func init() {
-	registry.Add("sonoff", NewSonoffFromConfig)
+	registry.AddCtx("sonoff", NewSonoffFromConfig)
 }
 
 // NewSonoffFromConfig creates a Sonoff charger from generic config
-func NewSonoffFromConfig(other map[string]any) (api.Charger, error) {
+func NewSonoffFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
 		URI          string
@@ -51,16 +52,16 @@ func NewSonoffFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewSonoff(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower, cc.Cache)
+	return NewSonoff(ctx, cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower, cc.Cache)
 }
 
 // NewSonoff creates a Sonoff charger
-func NewSonoff(embed embed, uri, user, password string, channel int, standbypower float64, cache time.Duration) (api.Charger, error) {
+func NewSonoff(ctx context.Context, embed embed, uri, user, password string, channel int, standbypower float64, cache time.Duration) (api.Charger, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
 	}
 
-	log := util.NewLogger("sonoff").Redact(user, password)
+	log := util.LoggerFromContext(ctx, "sonoff").Redact(user, password)
 
 	c := &Sonoff{
 		Caps:    implement.New(),

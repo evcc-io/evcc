@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"io"
 	"io/fs"
+	"log/slog"
 	"net/http"
 	"os"
 	"slices"
@@ -462,14 +463,19 @@ func clearCacheHandler(w http.ResponseWriter, r *http.Request) {
 	jsonWrite(w, "OK")
 }
 
-func logHandler(w http.ResponseWriter, r *http.Request) {
-	a := r.URL.Query()["area"]
-	l := logstash.LogLevelToThreshold(r.URL.Query().Get("level"))
-
+// logQuery returns the level and count filters of a log request
+func logQuery(r *http.Request) (slog.Level, int) {
 	var count int
 	if v := r.URL.Query().Get("count"); v != "" {
 		count, _ = strconv.Atoi(v)
 	}
+
+	return logstash.LogLevelToThreshold(r.URL.Query().Get("level")), count
+}
+
+func logHandler(w http.ResponseWriter, r *http.Request) {
+	a := r.URL.Query()["area"]
+	l, count := logQuery(r)
 
 	log := logstash.All(a, l, count)
 
@@ -478,8 +484,8 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
 
-		for _, s := range log {
-			if _, err := w.Write([]byte(s)); err != nil {
+		for _, e := range log {
+			if _, err := w.Write([]byte(e.String())); err != nil {
 				return
 			}
 		}

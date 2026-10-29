@@ -93,7 +93,7 @@ func NewDeyeEvseFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
-	log := util.NewLogger("deye-evse")
+	log := util.LoggerFromContext(ctx, "deye-evse")
 
 	// Solarman V5 logger if serial is given, Modbus otherwise
 	var conn deyeEvseConn
@@ -110,7 +110,7 @@ func NewDeyeEvseFromConfig(ctx context.Context, other map[string]any) (api.Charg
 			return nil, err
 		}
 
-		mc.Logger(log.TRACE)
+		mc.Logger(log)
 		conn = mc
 	}
 

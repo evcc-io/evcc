@@ -89,8 +89,8 @@ func NewEm2GoDuo(ctx context.Context, settings modbus.TcpSettings, connector int
 		return nil, err
 	}
 
-	log := util.NewLogger("em2go-duo")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "em2go-duo")
+	conn.Logger(log)
 
 	wb := &Em2GoDuo{
 		log:       log,

@@ -51,14 +51,14 @@ func NewEvseDINFromConfig(ctx context.Context, other map[string]any) (api.Charge
 
 // NewEvseDIN creates EVSE DIN charger
 func NewEvseDIN(ctx context.Context, settings modbus.Settings) (api.Charger, error) {
-	log := util.NewLogger("evse")
+	log := util.LoggerFromContext(ctx, "evse")
 
 	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	evse := &EvseDIN{
 		Caps:    implement.New(),

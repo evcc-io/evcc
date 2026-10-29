@@ -26,7 +26,7 @@ func TestNRGKickConnectSinglePut(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	nrg, err := NewNRGKickConnect(srv.URL, "mac", "pw", time.Second)
+	nrg, err := NewNRGKickConnect(t.Context(), srv.URL, "mac", "pw", time.Second)
 	require.NoError(t, err)
 
 	// current while disabled is deferred to the enable request

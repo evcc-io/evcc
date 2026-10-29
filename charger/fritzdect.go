@@ -1,6 +1,8 @@
 package charger
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/fritz"
 	"github.com/evcc-io/evcc/meter/fritz/aha"
@@ -19,11 +21,11 @@ type FritzDECT struct {
 }
 
 func init() {
-	registry.Add("fritzdect", NewFritzDECTFromConfig)
+	registry.AddCtx("fritzdect", NewFritzDECTFromConfig)
 }
 
 // NewFritzDECTFromConfig creates a fritzdect charger from generic config
-func NewFritzDECTFromConfig(other map[string]any) (api.Charger, error) {
+func NewFritzDECTFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
 		embed          `mapstructure:",squash"`
 		fritz.Settings `mapstructure:",squash"`

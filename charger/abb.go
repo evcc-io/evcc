@@ -80,8 +80,8 @@ func NewABB(ctx context.Context, settings modbus.Settings) (api.Charger, error) 
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("abb")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "abb")
+	conn.Logger(log)
 
 	wb := &ABB{
 		conn: conn,

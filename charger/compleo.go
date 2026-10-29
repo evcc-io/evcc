@@ -91,8 +91,8 @@ func NewCompleo(ctx context.Context, settings modbus.TcpSettings, connector uint
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("compleo")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "compleo")
+	conn.Logger(log)
 
 	b, err := conn.ReadInputRegisters(compleoRegConnectors, 1)
 	if err != nil {

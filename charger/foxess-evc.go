@@ -165,8 +165,8 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("foxess-evc")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "foxess-evc")
+	conn.Logger(log)
 
 	wb := &FoxESSEVC{
 		Caps: implement.New(),

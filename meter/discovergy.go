@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 )
 
 func init() {
-	registry.Add("discovergy", NewDiscovergyFromConfig)
+	registry.AddCtx("discovergy", NewDiscovergyFromConfig)
 }
 
 type Discovergy struct {
@@ -22,7 +23,7 @@ type Discovergy struct {
 }
 
 // NewDiscovergyFromConfig creates a new configurable meter
-func NewDiscovergyFromConfig(other map[string]any) (api.Meter, error) {
+func NewDiscovergyFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		User     string
 		Password string
@@ -45,7 +46,7 @@ func NewDiscovergyFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	basicAuth := transport.BasicAuthHeader(cc.User, cc.Password)
-	log := util.NewLogger("discgy").Redact(cc.User, cc.Password, cc.Meter, basicAuth)
+	log := util.LoggerFromContext(ctx, "discgy").Redact(cc.User, cc.Password, cc.Meter, basicAuth)
 
 	client := request.NewHelper(log)
 	client.Transport = transport.BasicAuth(cc.User, cc.Password, client.Transport)

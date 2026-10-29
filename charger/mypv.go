@@ -110,8 +110,8 @@ func NewMyPv(ctx context.Context, name string, settings modbus.TcpSettings, temp
 		return nil, fmt.Errorf("invalid temp source: %d", tempSource)
 	}
 
-	log := util.NewLogger(name)
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, name)
+	conn.Logger(log)
 
 	wb := &MyPv{
 		myPvBase: newMyPvBase(conn, elwaTemp[tempSource-1]),

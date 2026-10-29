@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -17,11 +18,11 @@ type TPLink struct {
 }
 
 func init() {
-	registry.Add("tplink", NewTPLinkFromConfig)
+	registry.AddCtx("tplink", NewTPLinkFromConfig)
 }
 
 // NewTPLinkFromConfig creates a TP-Link charger from generic config
-func NewTPLinkFromConfig(other map[string]any) (api.Charger, error) {
+func NewTPLinkFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
 		URI          string

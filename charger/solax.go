@@ -114,8 +114,8 @@ func NewSolax(ctx context.Context, settings modbus.Settings, isLegacyHw bool) (a
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("solax")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "solax")
+	conn.Logger(log)
 
 	wb := &Solax{
 		Caps:       implement.New(),

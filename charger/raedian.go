@@ -72,8 +72,8 @@ func NewRaedian(ctx context.Context, settings modbus.Settings) (*Raedian, error)
 		return nil, err
 	}
 
-	log := util.NewLogger("raedian")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "raedian")
+	conn.Logger(log)
 
 	wb := &Raedian{
 		log:  log,

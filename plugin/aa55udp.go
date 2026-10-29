@@ -72,7 +72,7 @@ func NewAA55UDPFromConfig(ctx context.Context, other map[string]any) (Plugin, er
 		return nil, err
 	}
 
-	log := util.NewLogger("aa55udp")
+	log := util.PluginLoggerFromContext(ctx, "aa55udp")
 
 	// write register type selects the setter, otherwise a (block) reader
 	if strings.HasPrefix(strings.ToLower(cc.Register.Type), "write") {

@@ -29,7 +29,7 @@ func init() {
 }
 
 // NewMazdaFromConfig creates a new vehicle
-func NewMazdaFromConfig(_ context.Context, other map[string]any) (api.Vehicle, error) {
+func NewMazdaFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
@@ -47,7 +47,7 @@ func NewMazdaFromConfig(_ context.Context, other map[string]any) (api.Vehicle, e
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.NewLogger("mazda").Redact(cc.VIN)
+	log := util.LoggerFromContext(ctx, "mazda").Redact(cc.VIN)
 
 	identity, err := newMazdaIdentity(log, cc.User, cc.Password)
 	if err != nil {

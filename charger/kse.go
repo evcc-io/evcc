@@ -84,8 +84,8 @@ func NewKSE(ctx context.Context, settings modbus.Settings) (api.Charger, error) 
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("kse")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "kse")
+	conn.Logger(log)
 
 	wb := &KSE{
 		Caps: implement.New(),

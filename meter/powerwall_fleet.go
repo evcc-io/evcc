@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -18,11 +19,11 @@ type fleetConfig struct {
 }
 
 func init() {
-	registry.Add("powerwall-fleet", NewPowerWallFleetFromConfig)
+	registry.AddCtx("powerwall-fleet", NewPowerWallFleetFromConfig)
 }
 
 // NewPowerWallFleetFromConfig creates a PowerWall meter with Fleet API battery control
-func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
+func NewPowerWallFleetFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := fleetConfig{powerWallConfig: defaultPowerWallConfig()}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -36,7 +37,7 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("powerwall").Redact(
+	log := util.LoggerFromContext(ctx, "powerwall").Redact(
 		cc.User,
 		cc.Password,
 		cc.Credentials.ID,

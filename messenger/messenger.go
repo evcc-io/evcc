@@ -32,13 +32,13 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		return nil, err
 	}
 
-	return NewConfigurable(send, cc.Encoding)
+	return NewConfigurable(ctx, send, cc.Encoding)
 }
 
 // NewConfigurable creates a new Messenger
-func NewConfigurable(send func(string) error, encoding string) (*Push, error) {
+func NewConfigurable(ctx context.Context, send func(string) error, encoding string) (*Push, error) {
 	m := &Push{
-		log:      util.NewLogger("push"),
+		log:      util.LoggerFromContext(ctx, "push"),
 		send:     send,
 		encoding: strings.ToLower(encoding),
 	}

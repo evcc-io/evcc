@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -15,7 +16,7 @@ import (
 )
 
 func init() {
-	registry.Add("openwb", NewOpenWBFromConfig)
+	registry.AddCtx("openwb", NewOpenWBFromConfig)
 }
 
 // OpenWB configures generic charger and charge meter for an openWB loadpoint
@@ -33,7 +34,7 @@ type OpenWB struct {
 }
 
 // NewOpenWBFromConfig creates a new configurable charger
-func NewOpenWBFromConfig(other map[string]any) (api.Charger, error) {
+func NewOpenWBFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		mqtt.Config    `mapstructure:",squash"`
 		Topic          string
@@ -50,7 +51,7 @@ func NewOpenWBFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("openwb")
+	log := util.LoggerFromContext(ctx, "openwb")
 
 	return NewOpenWB(log, cc.Config, cc.ID, cc.Topic, cc.Phases1p3p, cc.DC, cc.Timeout)
 }

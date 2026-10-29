@@ -48,7 +48,7 @@ func TestSonoff(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c, err := NewSonoff(embed{}, srv.URL, "", "", 1, 0, 0)
+	c, err := NewSonoff(t.Context(), embed{}, srv.URL, "", "", 1, 0, 0)
 	require.NoError(t, err)
 
 	enabled, err := c.Enabled()

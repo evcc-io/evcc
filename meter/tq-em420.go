@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
@@ -13,7 +14,7 @@ import (
 )
 
 func init() {
-	registry.Add("tq-em420", NewTqEm420FromConfig)
+	registry.AddCtx("tq-em420", NewTqEm420FromConfig)
 }
 
 type TqEm420Data struct {
@@ -93,7 +94,7 @@ type TqEM420 struct {
 }
 
 // NewTqEm420FromConfig creates a new configurable meter
-func NewTqEm420FromConfig(other map[string]any) (api.Meter, error) {
+func NewTqEm420FromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI    string
 		Token  string
@@ -107,7 +108,7 @@ func NewTqEm420FromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("tq-em420").Redact(cc.Token)
+	log := util.LoggerFromContext(ctx, "tq-em420").Redact(cc.Token)
 
 	client := request.NewHelper(log)
 	client.Jar, _ = cookiejar.New(nil)

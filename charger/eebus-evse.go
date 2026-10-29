@@ -83,7 +83,7 @@ func newEEBus(ctx context.Context, ski, ip string, coarseCurrent bool) (*EEBus, 
 
 	c := &EEBus{
 		Caps:    implement.New(),
-		log:     util.NewLogger("eebus"),
+		log:     util.LoggerFromContext(ctx, "eebus"),
 		current: 6,
 		cem:     inst.CustomerEnergyManagement(),
 	}

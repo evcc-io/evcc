@@ -89,8 +89,8 @@ func NewsmartEVSE(ctx context.Context, settings modbus.Settings) (*smartEVSE, er
 		return nil, err
 	}
 
-	log := util.NewLogger("smartevse")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "smartevse")
+	conn.Logger(log)
 
 	wb := &smartEVSE{
 		log:  log,

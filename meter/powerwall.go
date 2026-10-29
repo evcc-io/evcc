@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -62,12 +63,12 @@ func (cc *powerWallConfig) validate() error {
 }
 
 func init() {
-	registry.Add("tesla", NewPowerWallFromConfig)
-	registry.Add("powerwall", NewPowerWallFromConfig)
+	registry.AddCtx("tesla", NewPowerWallFromConfig)
+	registry.AddCtx("powerwall", NewPowerWallFromConfig)
 }
 
 // NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
-func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
+func NewPowerWallFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := defaultPowerWallConfig()
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -77,7 +78,7 @@ func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("powerwall").Redact(cc.User, cc.Password)
+	log := util.LoggerFromContext(ctx, "powerwall").Redact(cc.User, cc.Password)
 
 	if cc.RefreshToken_ != "" {
 		log.WARN.Println("refreshToken is deprecated, use the Powerwall (Fleet API) template for battery control")

@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"errors"
 	"slices"
@@ -29,10 +30,10 @@ type Entsoe struct {
 var _ api.Tariff = (*Entsoe)(nil)
 
 func init() {
-	registry.Add("entsoe", NewEntsoeFromConfig)
+	registry.AddCtx("entsoe", NewEntsoeFromConfig)
 }
 
-func NewEntsoeFromConfig(other map[string]any) (api.Tariff, error) {
+func NewEntsoeFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed         `mapstructure:",squash"`
 		Securitytoken string
@@ -60,7 +61,7 @@ func NewEntsoeFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("entsoe").Redact(cc.Securitytoken)
+	log := util.LoggerFromContext(ctx, "entsoe").Redact(cc.Securitytoken)
 
 	t := &Entsoe{
 		log:    log,

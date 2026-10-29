@@ -62,7 +62,7 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (api.
 		return nil, errors.New("missing power sensor entity")
 	}
 
-	log := util.NewLogger("ha-meter")
+	log := util.LoggerFromContext(ctx, "ha-meter")
 
 	conn, err := cc.Config.NewConnection(log)
 	if err != nil {

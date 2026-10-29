@@ -314,8 +314,8 @@ func NewVoltie(ctx context.Context, settings modbus.TcpSettings, cache time.Dura
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("voltie")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "voltie")
+	conn.Logger(log)
 
 	wb := &Voltie{
 		Caps:   implement.New(),

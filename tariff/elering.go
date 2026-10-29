@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -26,10 +27,10 @@ type Elering struct {
 var _ api.Tariff = (*Elering)(nil)
 
 func init() {
-	registry.Add("elering", NewEleringFromConfig)
+	registry.AddCtx("elering", NewEleringFromConfig)
 }
 
-func NewEleringFromConfig(other map[string]any) (api.Tariff, error) {
+func NewEleringFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed  `mapstructure:",squash"`
 		Region string
@@ -49,7 +50,7 @@ func NewEleringFromConfig(other map[string]any) (api.Tariff, error) {
 
 	t := &Elering{
 		embed:  &cc.embed,
-		log:    util.NewLogger("elering"),
+		log:    util.LoggerFromContext(ctx, "elering"),
 		region: strings.ToLower(cc.Region),
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}

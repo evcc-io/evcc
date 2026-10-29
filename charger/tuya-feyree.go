@@ -171,7 +171,7 @@ func NewTuyaFeyree(ctx context.Context, cc tuya.Config) (*TuyaFeyree, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	conn, dps, err := tuya.Dial(ctx, util.NewLogger("tuya-feyree").Redact(cc.LocalKey), cc)
+	conn, dps, err := tuya.Dial(ctx, util.LoggerFromContext(ctx, "tuya-feyree").Redact(cc.LocalKey), cc)
 	if err != nil {
 		return nil, err
 	}

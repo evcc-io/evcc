@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/evcc-io/evcc/util"
 	gridx "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 )
@@ -17,15 +18,16 @@ type Connection struct {
 	meters.Connection
 	physical *meterConnection
 	slaveID  uint8 // duplicated from meters.Connection
-	logical  meters.Logger
+	logical  *util.Logger
 }
 
 func (c *Connection) Addr() string {
 	return fmt.Sprintf("%s::%d", c.Connection.String(), c.slaveID)
 }
 
-func (c *Connection) Logger(logger meters.Logger) {
-	c.logical = logger
+// Logger sets the tracing logger; traces carry the modbus transport attribute
+func (c *Connection) Logger(log *util.Logger) {
+	c.logical = log.With(util.PluginKey, "modbus")
 }
 
 // Delay applies the delay to the shared physical connection
@@ -62,7 +64,12 @@ func reconnectable(err error) bool {
 }
 
 func (c *Connection) exec(fun func() ([]byte, error)) ([]byte, error) {
-	return c.WithLogger(c.logical, func() ([]byte, error) {
+	var trace meters.Logger
+	if c.logical != nil {
+		trace = c.logical.TRACE
+	}
+
+	return c.WithLogger(trace, func() ([]byte, error) {
 		time.Sleep(c.physical.getDelay())
 
 		b, err := fun()

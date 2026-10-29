@@ -79,7 +79,7 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, err
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("sgready"))
+	log := util.LoggerFromContext(ctx, "sgready")
 
 	modeS := func(mode int64) error {
 		switch mode {

@@ -87,8 +87,8 @@ func NewWeidmüller(ctx context.Context, settings modbus.TcpSettings) (api.Charg
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("weidmüller")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "weidmüller")
+	conn.Logger(log)
 
 	wb := &Weidmüller{
 		Caps: implement.New(),

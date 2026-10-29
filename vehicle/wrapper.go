@@ -100,7 +100,7 @@ func (v *Wrapper) instance() api.Vehicle {
 
 func (v *Wrapper) create() {
 	vehicle, err := NewFromConfig(v.ctx, v.typ, v.other)
-	log := util.ContextLoggerWithDefault(v.ctx, util.NewLogger("vehicle"))
+	log := util.LoggerFromContext(v.ctx, "vehicle")
 
 	v.mu.Lock()
 	if err != nil {

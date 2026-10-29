@@ -82,8 +82,8 @@ func NewEnovates(ctx context.Context, settings modbus.TcpSettings) (api.Charger,
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("enovates")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "enovates")
+	conn.Logger(log)
 
 	wb := &Enovates{
 		log:     log,

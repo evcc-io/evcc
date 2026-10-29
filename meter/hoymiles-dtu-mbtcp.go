@@ -57,8 +57,8 @@ func newHoymilesDTUModbusTCP(ctx context.Context, settings modbus.TcpSettings, m
 		return nil, err
 	}
 
-	log := util.NewLogger("hoymiles-dtu-mb")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "hoymiles-dtu-mb")
+	conn.Logger(log)
 
 	m := &hoymilesDTUModbusTCP{
 		log:  log,

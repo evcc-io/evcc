@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"slices"
@@ -30,12 +31,12 @@ type Octopus struct {
 var _ api.Tariff = (*Octopus)(nil)
 
 func init() {
-	registry.Add("octopusenergy", NewOctopusFromConfig)
+	registry.AddCtx("octopusenergy", NewOctopusFromConfig)
 }
 
 // NewOctopusFromConfig creates the tariff provider from the given config map, and runs it.
-func NewOctopusFromConfig(other map[string]any) (api.Tariff, error) {
-	t, err := buildOctopusFromConfig(other)
+func NewOctopusFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
+	t, err := buildOctopusFromConfig(ctx, other)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +46,7 @@ func NewOctopusFromConfig(other map[string]any) (api.Tariff, error) {
 
 // buildOctopusFromConfig creates the Tariff provider from the given config map.
 // Split out to allow for testing.
-func buildOctopusFromConfig(other map[string]any) (*Octopus, error) {
+func buildOctopusFromConfig(ctx context.Context, other map[string]any) (*Octopus, error) {
 	var cc struct {
 		Region          string
 		Tariff          string // DEPRECATED: use ProductCode
@@ -56,7 +57,7 @@ func buildOctopusFromConfig(other map[string]any) (*Octopus, error) {
 		TariffDirection octoGql.TariffDirection
 	}
 
-	logger := util.NewLogger("octopus")
+	logger := util.LoggerFromContext(ctx, "octopus")
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

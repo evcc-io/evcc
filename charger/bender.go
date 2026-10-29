@@ -128,8 +128,8 @@ func NewBenderCC(ctx context.Context, settings modbus.TcpSettings, cache time.Du
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("bender")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "bender")
+	conn.Logger(log)
 
 	wb := &BenderCC{
 		Caps:    implement.New(),

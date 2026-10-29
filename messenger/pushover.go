@@ -1,6 +1,7 @@
 package messenger
 
 import (
+	"context"
 	"errors"
 	"strings"
 
@@ -10,7 +11,7 @@ import (
 )
 
 func init() {
-	registry.Add("pushover", NewPushOverFromConfig)
+	registry.AddCtx("pushover", NewPushOverFromConfig)
 }
 
 // PushOver implements the pushover messenger
@@ -22,7 +23,7 @@ type PushOver struct {
 }
 
 // NewPushOverFromConfig creates new pushover messenger
-func NewPushOverFromConfig(other map[string]any) (api.Messenger, error) {
+func NewPushOverFromConfig(ctx context.Context, other map[string]any) (api.Messenger, error) {
 	var cc struct {
 		App        string
 		Recipients []string
@@ -38,7 +39,7 @@ func NewPushOverFromConfig(other map[string]any) (api.Messenger, error) {
 	}
 
 	m := &PushOver{
-		log:        util.NewLogger("pushover").Redact(cc.App),
+		log:        util.LoggerFromContext(ctx, "pushover").Redact(cc.App),
 		app:        pushover.New(cc.App),
 		device:     strings.Join(cc.Devices, ","),
 		recipients: cc.Recipients,

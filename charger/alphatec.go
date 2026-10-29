@@ -71,8 +71,8 @@ func NewAlphatec(ctx context.Context, settings modbus.Settings) (api.Charger, er
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("alphatec")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "alphatec")
+	conn.Logger(log)
 
 	wb := &Alphatec{
 		conn: conn,

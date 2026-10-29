@@ -86,8 +86,8 @@ func NewHeidelbergEC(ctx context.Context, settings modbus.Settings) (api.Charger
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("heidel")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "heidel")
+	conn.Logger(log)
 
 	wb := &HeidelbergEC{
 		log:     log,

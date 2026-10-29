@@ -71,7 +71,7 @@ func NewLgThinqFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, fmt.Errorf("invalid temperatures: boost setpoint %.1f must exceed normal %.1f", cc.Setpoint, cc.Normal)
 	}
 
-	log := util.NewLogger("lg-thinq").Redact(cc.Token)
+	log := util.LoggerFromContext(ctx, "lg-thinq").Redact(cc.Token)
 	conn := lgthinq.NewAPI(log, cc.Token, cc.Country)
 
 	device, err := ensureEx("device", cc.Device, func() ([]lgthinq.Device, error) {

@@ -105,8 +105,8 @@ func NewABLeMH(ctx context.Context, settings modbus.Settings) (api.Charger, erro
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("abl")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "abl")
+	conn.Logger(log)
 
 	wb := &ABLeMH{
 		Caps: implement.New(),

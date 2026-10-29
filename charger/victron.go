@@ -108,8 +108,8 @@ func NewVictron(ctx context.Context, settings modbus.TcpSettings, regs victronRe
 		return nil, err
 	}
 
-	log := util.NewLogger("victron")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "victron")
+	conn.Logger(log)
 
 	wb := &Victron{
 		Caps: implement.New(),

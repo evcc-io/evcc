@@ -71,8 +71,8 @@ func NewSigenergy(ctx context.Context, settings modbus.TcpSettings) (*Sigenergy,
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("sigenergy")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "sigenergy")
+	conn.Logger(log)
 
 	wb := &Sigenergy{
 		log:  log,

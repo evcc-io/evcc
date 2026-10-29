@@ -1,6 +1,7 @@
 package messenger
 
 import (
+	"context"
 	"errors"
 	"strings"
 
@@ -11,7 +12,7 @@ import (
 )
 
 func init() {
-	registry.Add("homeassistant", NewHomeAssistantFromConfig)
+	registry.AddCtx("homeassistant", NewHomeAssistantFromConfig)
 }
 
 // HomeAssistant implements the Home Assistant messenger
@@ -23,7 +24,7 @@ type HomeAssistant struct {
 }
 
 // NewHomeAssistantFromConfig creates a new Home Assistant messenger
-func NewHomeAssistantFromConfig(other map[string]any) (api.Messenger, error) {
+func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (api.Messenger, error) {
 	var cc struct {
 		homeassistant.Config `mapstructure:",squash"`
 		Notify               string
@@ -38,7 +39,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Messenger, error) {
 		return nil, errors.New("missing uri")
 	}
 
-	log := util.NewLogger("homeassistant")
+	log := util.LoggerFromContext(ctx, "homeassistant")
 
 	conn, err := cc.Config.NewConnection(log)
 	if err != nil {

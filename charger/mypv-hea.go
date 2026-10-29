@@ -98,8 +98,8 @@ func NewMyPvHea(ctx context.Context, name string, settings modbus.TcpSettings, t
 		return nil, err
 	}
 
-	log := util.NewLogger(name)
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, name)
+	conn.Logger(log)
 
 	wb := &MyPvHea{
 		myPvBase:  newMyPvBase(conn, heaTemp[tempSource-1]),

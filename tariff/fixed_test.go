@@ -40,7 +40,7 @@ func TestFixed(t *testing.T) {
 }
 
 func TestFixedSplitZones(t *testing.T) {
-	at, err := NewFixedFromConfig(map[string]any{
+	at, err := NewFixedFromConfig(t.Context(), map[string]any{
 		"price": 0.5,
 		"zones": []struct {
 			Price float64
@@ -106,7 +106,7 @@ func TestFixedSplitZones(t *testing.T) {
 }
 
 func TestFixedChargesZonesMarkers(t *testing.T) {
-	at, err := NewFixedFromConfig(map[string]any{
+	at, err := NewFixedFromConfig(t.Context(), map[string]any{
 		"price": 0.5,
 		"chargesZones": []struct {
 			Charges float64
@@ -135,7 +135,7 @@ func TestFixedChargesZonesMarkers(t *testing.T) {
 }
 
 func TestFixedChargesZonesOrder(t *testing.T) {
-	at, err := NewFixedFromConfig(map[string]any{
+	at, err := NewFixedFromConfig(t.Context(), map[string]any{
 		"price": 0.5,
 		"zones": []struct {
 			Price float64

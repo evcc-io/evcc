@@ -95,8 +95,8 @@ func NewMennekesCompact(ctx context.Context, settings modbus.Settings) (api.Char
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("mennekes")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "mennekes")
+	conn.Logger(log)
 
 	wb := &MennekesCompact{
 		Caps: implement.New(),

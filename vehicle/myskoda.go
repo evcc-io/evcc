@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -17,11 +18,11 @@ type MySkoda struct {
 }
 
 func init() {
-	registry.Add("myskoda", NewMySkodaFromConfig)
+	registry.AddCtx("myskoda", NewMySkodaFromConfig)
 }
 
 // NewMySkodaFromConfig creates a new vehicle
-func NewMySkodaFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewMySkodaFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed   `mapstructure:",squash"`
 		VIN     string
@@ -46,7 +47,7 @@ func NewMySkodaFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, errors.New("missing vin")
 	}
 
-	log := util.NewLogger("myskoda").Redact(cc.ApiKey, cc.VIN)
+	log := util.LoggerFromContext(ctx, "myskoda").Redact(cc.ApiKey, cc.VIN)
 
 	uri := myskoda.BaseURI
 	if cc.Sandbox {

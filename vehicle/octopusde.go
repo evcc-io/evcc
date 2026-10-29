@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -21,11 +22,11 @@ type OctopusDe struct {
 }
 
 func init() {
-	registry.Add("octopus-de", NewOctopusDeFromConfig)
+	registry.AddCtx("octopus-de", NewOctopusDeFromConfig)
 }
 
 // NewOctopusDeFromConfig creates a new vehicle
-func NewOctopusDeFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewOctopusDeFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed         `mapstructure:",squash"`
 		Email         string
@@ -45,7 +46,7 @@ func NewOctopusDeFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.NewLogger("octopus-de").Redact(cc.Email, cc.Password)
+	log := util.LoggerFromContext(ctx, "octopus-de").Redact(cc.Email, cc.Password)
 
 	api, err := octopuskraken.NewAPI(log, octopuskraken.BaseURI, cc.Email, cc.Password)
 	if err != nil {

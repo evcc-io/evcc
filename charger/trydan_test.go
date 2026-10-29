@@ -52,7 +52,7 @@ func TestTrydanStatus(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			srv := trydanTestServerWithBody(t, tc.json)
 
-			wb, err := NewTrydan(srv.URL, 0)
+			wb, err := NewTrydan(t.Context(), srv.URL, 0)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -111,7 +111,7 @@ func TestTrydanPhaseMeasurementsUnavailable(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			srv := trydanTestServerWithBody(t, tc.json)
 
-			wb, err := NewTrydan(srv.URL, 0)
+			wb, err := NewTrydan(t.Context(), srv.URL, 0)
 			if err != nil {
 				t.Fatal(err)
 			}

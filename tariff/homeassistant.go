@@ -25,10 +25,10 @@ type HomeAssistant struct {
 var _ api.Tariff = (*HomeAssistant)(nil)
 
 func init() {
-	registry.Add("homeassistant", NewHomeAssistantFromConfig)
+	registry.AddCtx("homeassistant", NewHomeAssistantFromConfig)
 }
 
-func NewHomeAssistantFromConfig(other map[string]any) (api.Tariff, error) {
+func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	cc := struct {
 		homeassistant.Config `mapstructure:",squash"`
 		Interval             time.Duration
@@ -40,7 +40,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("homeassistant")
+	log := util.LoggerFromContext(ctx, "homeassistant")
 
 	conn, err := cc.NewConnection(log)
 	if err != nil {

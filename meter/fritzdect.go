@@ -1,6 +1,8 @@
 package meter
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/fritz"
 	"github.com/evcc-io/evcc/meter/fritz/aha"
@@ -13,11 +15,11 @@ import (
 // https://fritz.support/resources/SmarthomeRestApiFRITZOS82.html (REST API for FritzOS 8.2+)
 
 func init() {
-	registry.Add("fritzdect", NewFritzDECTFromConfig)
+	registry.AddCtx("fritzdect", NewFritzDECTFromConfig)
 }
 
 // NewFritzDECTFromConfig creates a fritzdect meter from generic config
-func NewFritzDECTFromConfig(other map[string]any) (api.Meter, error) {
+func NewFritzDECTFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := fritz.Settings{
 		Unit: 1,
 	}

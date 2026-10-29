@@ -82,8 +82,8 @@ func NewAblEm4(ctx context.Context, settings modbus.TcpSettings, connector uint1
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("abl-em4")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "abl-em4")
+	conn.Logger(log)
 
 	wb := &AblEm4{
 		log:     log,

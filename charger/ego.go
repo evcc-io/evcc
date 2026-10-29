@@ -92,8 +92,8 @@ func NewEgo(ctx context.Context, embed *embed, settings modbus.TcpSettings) (api
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("ego")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "ego")
+	conn.Logger(log)
 
 	wb := &Ego{
 		embed: embed,

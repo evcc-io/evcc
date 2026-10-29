@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"sort"
@@ -23,10 +24,10 @@ type Fixed struct {
 var _ api.Tariff = (*Fixed)(nil)
 
 func init() {
-	registry.Add("fixed", NewFixedFromConfig)
+	registry.AddCtx("fixed", NewFixedFromConfig)
 }
 
-func NewFixedFromConfig(other map[string]any) (api.Tariff, error) {
+func NewFixedFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed `mapstructure:",squash"`
 		Price float64

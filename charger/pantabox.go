@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -17,11 +18,11 @@ type Pantabox struct {
 }
 
 func init() {
-	registry.Add("pantabox", NewPantaboxFromConfig)
+	registry.AddCtx("pantabox", NewPantaboxFromConfig)
 }
 
 // NewPantaboxFromConfig creates a Pantabox charger from generic config
-func NewPantaboxFromConfig(other map[string]any) (api.Charger, error) {
+func NewPantaboxFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
 		URI string
 	}
@@ -30,12 +31,12 @@ func NewPantaboxFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewPantabox(util.DefaultScheme(cc.URI, "http"))
+	return NewPantabox(ctx, util.DefaultScheme(cc.URI, "http"))
 }
 
 // NewPantabox creates Pantabox charger
-func NewPantabox(uri string) (*Pantabox, error) {
-	log := util.NewLogger("pantabox")
+func NewPantabox(ctx context.Context, uri string) (*Pantabox, error) {
+	log := util.LoggerFromContext(ctx, "pantabox")
 
 	wb := &Pantabox{
 		Helper: request.NewHelper(log),

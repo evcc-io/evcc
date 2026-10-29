@@ -47,11 +47,11 @@ type Tronity struct {
 }
 
 func init() {
-	registry.Add("tronity", NewTronityFromConfig)
+	registry.AddCtx("tronity", NewTronityFromConfig)
 }
 
 // NewTronityFromConfig creates a new vehicle
-func NewTronityFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewTronityFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		Credentials oauth.ClientCredentials
@@ -75,7 +75,7 @@ func NewTronityFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	// authenticated http client with logging injected to the tronity client
-	log := util.NewLogger("tronity").Redact(cc.Credentials.ID, cc.Credentials.Secret)
+	log := util.LoggerFromContext(ctx, "tronity").Redact(cc.Credentials.ID, cc.Credentials.Secret)
 
 	oc, err := tronity.OAuth2Config(cc.Credentials.ID, cc.Credentials.Secret)
 	if err != nil {

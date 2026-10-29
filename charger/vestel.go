@@ -95,8 +95,8 @@ func NewVestel(ctx context.Context, settings modbus.TcpSettings) (api.Charger, e
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("vestel")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "vestel")
+	conn.Logger(log)
 
 	wb := &Vestel{
 		Caps:    implement.New(),

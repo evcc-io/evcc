@@ -120,8 +120,8 @@ func NewAmbibox(ctx context.Context, settings modbus.TcpSettings, connector int)
 		return nil, err
 	}
 
-	log := util.NewLogger("ambibox")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "ambibox")
+	conn.Logger(log)
 
 	wb := &Ambibox{
 		log:         log,

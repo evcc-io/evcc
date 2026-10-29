@@ -76,8 +76,8 @@ func NewMennekesHcc3(ctx context.Context, settings modbus.TcpSettings) (api.Char
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("mennekes-hcc3")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "mennekes-hcc3")
+	conn.Logger(log)
 
 	wb := &MennekesHcc3{
 		conn: conn,

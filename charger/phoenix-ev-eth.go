@@ -93,8 +93,8 @@ func NewPhoenixEVEth(ctx context.Context, settings modbus.TcpSettings, milliCurr
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("ev-eth")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "ev-eth")
+	conn.Logger(log)
 
 	wb := &PhoenixEVEth{
 		Caps: implement.New(),

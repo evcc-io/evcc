@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -39,11 +40,11 @@ type ConnectIq struct {
 }
 
 func init() {
-	registry.Add("connectiq", NewConnectIqFromConfig)
+	registry.AddCtx("connectiq", NewConnectIqFromConfig)
 }
 
 // NewConnectIqFromConfig creates a ConnectIq charger from generic config
-func NewConnectIqFromConfig(other map[string]any) (api.Charger, error) {
+func NewConnectIqFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Cache time.Duration
@@ -55,12 +56,12 @@ func NewConnectIqFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewConnectIq(cc.URI, cc.Cache)
+	return NewConnectIq(ctx, cc.URI, cc.Cache)
 }
 
 // NewConnectIq creates ConnectIq charger
-func NewConnectIq(uri string, cache time.Duration) (api.Charger, error) {
-	log := util.NewLogger("connectiq")
+func NewConnectIq(ctx context.Context, uri string, cache time.Duration) (api.Charger, error) {
+	log := util.LoggerFromContext(ctx, "connectiq")
 
 	wb := &ConnectIq{
 		Helper: request.NewHelper(log),

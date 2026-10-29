@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -36,13 +37,13 @@ type Stekker struct {
 var _ api.Tariff = (*Stekker)(nil)
 
 func init() {
-	registry.Add("stekker", NewStekkerFromConfig)
+	registry.AddCtx("stekker", NewStekkerFromConfig)
 }
 
 const stekkerURI = "https://stekker.app/epex-forecast"
 
 // NewStekkerFromConfig creates provider from config
-func NewStekkerFromConfig(other map[string]any) (api.Tariff, error) {
+func NewStekkerFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed  `mapstructure:",squash"`
 		Region string
@@ -75,7 +76,7 @@ func NewStekkerFromConfig(other map[string]any) (api.Tariff, error) {
 		embed:    &cc.embed,
 		region:   cc.Region,
 		interval: interval,
-		log:      util.NewLogger("stekker"),
+		log:      util.LoggerFromContext(ctx, "stekker"),
 		data:     util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 

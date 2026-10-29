@@ -82,8 +82,8 @@ func NewAlfen(ctx context.Context, settings modbus.TcpSettings) (api.Charger, er
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("alfen")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "alfen")
+	conn.Logger(log)
 
 	wb := &Alfen{
 		Caps: implement.New(),

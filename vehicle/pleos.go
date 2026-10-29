@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -18,11 +19,11 @@ type Pleos struct {
 }
 
 func init() {
-	registry.Add("pleos", NewPleosFromConfig)
+	registry.AddCtx("pleos", NewPleosFromConfig)
 }
 
 // NewPleosFromConfig creates a new vehicle
-func NewPleosFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewPleosFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed                  `mapstructure:",squash"`
 		Brand                  string
@@ -41,7 +42,7 @@ func NewPleosFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.NewLogger("pleos").Redact(cc.ClientID, cc.ClientSecret, cc.VIN)
+	log := util.LoggerFromContext(ctx, "pleos").Redact(cc.ClientID, cc.ClientSecret, cc.VIN)
 
 	// an api key is issued per manufacturer, so the brand can be probed
 	brands := []string{"hyundai", "kia", "genesis"}

@@ -128,8 +128,8 @@ func NewSigenergyEVDC(ctx context.Context, uri string, slaveID uint8) (*Sigenerg
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("sigenergy-evdc")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "sigenergy-evdc")
+	conn.Logger(log)
 
 	wb := newSigenergyEVDC(conn)
 

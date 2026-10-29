@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -18,11 +19,11 @@ type DriveSomethingGreater struct {
 }
 
 func init() {
-	registry.Add("drivesomethinggreater", NewDriveSomethingGreaterFromConfig)
+	registry.AddCtx("drivesomethinggreater", NewDriveSomethingGreaterFromConfig)
 }
 
 // NewDriveSomethingGreaterFromConfig creates a new vehicle
-func NewDriveSomethingGreaterFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewDriveSomethingGreaterFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed                      `mapstructure:",squash"`
 		Brand, User, Password, VIN string
@@ -44,7 +45,7 @@ func NewDriveSomethingGreaterFromConfig(other map[string]any) (api.Vehicle, erro
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("dsg").Redact(cc.User, cc.Password, cc.VIN)
+	log := util.LoggerFromContext(ctx, "dsg").Redact(cc.User, cc.Password, cc.VIN)
 
 	api, err := eudataact.NewAPI(log, cc.Brand, cc.User, cc.Password)
 	if err != nil {

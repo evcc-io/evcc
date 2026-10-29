@@ -92,8 +92,8 @@ func NewPhoenixCharx(ctx context.Context, settings modbus.TcpSettings, connector
 		return nil, err
 	}
 
-	log := util.NewLogger("charx")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "charx")
+	conn.Logger(log)
 
 	wb := &PhoenixCharx{
 		Caps:      implement.New(),

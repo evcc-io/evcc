@@ -31,7 +31,7 @@ var _ api.Tariff = (*Wrapper)(nil)
 // NewWrapper creates a wrapper for a tariff that could not be created
 func NewWrapper(ctx context.Context, typ string, other map[string]any, err error) api.Tariff {
 	return &Wrapper{
-		log:       util.NewLogger("tariff"),
+		log:       util.LoggerFromContext(ctx, "tariff"),
 		ctx:       ctx,
 		typ:       typ,
 		config:    other,

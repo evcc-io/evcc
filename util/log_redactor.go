@@ -2,7 +2,6 @@ package util
 
 import (
 	"bytes"
-	"io"
 	"net/url"
 	"sync"
 )
@@ -94,14 +93,4 @@ func (l *Redactor) redacted(p []byte) []byte {
 	}
 	l.mu.Unlock()
 	return p
-}
-
-// redactWriter implements a redacting io.Writer
-type redactWriter struct {
-	w io.Writer
-	r *Redactor
-}
-
-func (w *redactWriter) Write(p []byte) (n int, err error) {
-	return w.w.Write(w.r.redacted(p))
 }

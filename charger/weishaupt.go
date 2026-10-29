@@ -103,8 +103,8 @@ func NewWeishaupt(ctx context.Context, embed *embed, settings modbus.Settings, t
 		return nil, err
 	}
 
-	log := util.NewLogger("weishaupt")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "weishaupt")
+	conn.Logger(log)
 
 	wb := &Weishaupt{
 		embed:   embed,

@@ -98,8 +98,8 @@ func NewEm2Go(ctx context.Context, settings modbus.TcpSettings) (api.Charger, er
 		return nil, err
 	}
 
-	log := util.NewLogger("em2go")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "em2go")
+	conn.Logger(log)
 
 	wb := &Em2Go{
 		Caps:    implement.New(),

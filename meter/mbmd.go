@@ -64,8 +64,8 @@ func NewMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 		return nil, err
 	}
 
-	log := util.NewLogger("modbus")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "modbus")
+	conn.Logger(log)
 
 	// prepare device
 	device, err := rs485.NewDevice(strings.ToUpper(cc.Model))

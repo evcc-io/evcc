@@ -111,8 +111,8 @@ func NewDelta(ctx context.Context, settings modbus.Settings, connector uint16) (
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("delta")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "delta")
+	conn.Logger(log)
 
 	wb := &Delta{
 		log:  log,

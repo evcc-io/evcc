@@ -1922,7 +1922,7 @@
       "get": {
         "operationId": "getSystemLogs",
         "summary": "Logs",
-        "description": "Returns the latest log lines.",
+        "description": "Returns the latest log entries.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/reference/configuration/log"
         },
@@ -1947,7 +1947,7 @@
           {
             "name": "count",
             "in": "query",
-            "description": "Number of log lines to return",
+            "description": "Number of log entries to return",
             "example": 100,
             "schema": {
               "type": "integer"
@@ -1973,7 +1973,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "$ref": "#/components/schemas/LogEntry"
                   }
                 }
               },
@@ -3393,6 +3393,46 @@
           "url": "https://docs.evcc.io/en/reference/configuration/log#levels"
         },
         "type": "string"
+      },
+      "LogEntry": {
+        "type": "object",
+        "description": "Structured log entry",
+        "properties": {
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "area": {
+            "$ref": "#/components/schemas/LogArea"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "trace",
+              "debug",
+              "info",
+              "warn",
+              "error",
+              "fatal"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "attrs": {
+            "type": "object",
+            "description": "Structured attributes (e.g. component, plugin, title)",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "time",
+          "area",
+          "level",
+          "message"
+        ]
       },
       "LogAreas": {
         "externalDocs": {

@@ -61,7 +61,7 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 		key:      tariffType + "-" + cacheKey(typ, other),
 	}
 
-	log := util.NewLogger("tariff")
+	log := util.LoggerFromContext(ctx, "tariff")
 
 	// check if cached data is up to date
 	if _, err := p.cacheGet(); err != nil {

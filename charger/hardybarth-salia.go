@@ -76,7 +76,7 @@ func NewSaliaFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 // NewSalia creates Hardy Barth charger with Salia controller
 func NewSalia(ctx context.Context, uri, user, password string, cache time.Duration) (api.Charger, error) {
 	basicAuth := transport.BasicAuthHeader(user, password)
-	log := util.NewLogger("salia").Redact(user, password, basicAuth)
+	log := util.LoggerFromContext(ctx, "salia").Redact(user, password, basicAuth)
 
 	uri = strings.TrimSuffix(uri, "/") + "/api"
 

@@ -22,7 +22,7 @@ func init() {
 }
 
 // NewPorscheFromConfig creates a new vehicle
-func NewPorscheFromConfig(_ context.Context, other map[string]any) (api.Vehicle, error) {
+func NewPorscheFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
@@ -40,7 +40,7 @@ func NewPorscheFromConfig(_ context.Context, other map[string]any) (api.Vehicle,
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.NewLogger("porsche").Redact(cc.VIN)
+	log := util.LoggerFromContext(ctx, "porsche").Redact(cc.VIN)
 
 	// no api call here: the vehicle exists before the account is connected,
 	// the vin is resolved from the account on first use if not configured

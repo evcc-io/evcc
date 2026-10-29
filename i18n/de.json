@@ -226,6 +226,11 @@
       "titleAdd": "Einspeisebegrenzung hinzufügen",
       "titleEdit": "Einspeisebegrenzung bearbeiten"
     },
+    "deviceLog": {
+      "empty": "Noch keine Logeinträge.",
+      "showAll": "Alle Einträge anzeigen",
+      "title": "Log"
+    },
     "deviceValue": {
       "activeClients": "Aktive Clients",
       "amount": "Anzahl",

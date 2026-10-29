@@ -87,8 +87,8 @@ func NewSungrow(ctx context.Context, settings modbus.Settings) (api.Charger, err
 		return nil, err
 	}
 
-	log := util.NewLogger("sungrow")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "sungrow")
+	conn.Logger(log)
 
 	wb := &Sungrow{
 		log:  log,

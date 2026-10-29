@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"slices"
@@ -25,10 +26,10 @@ type GrünStromIndex struct {
 var _ api.Tariff = (*GrünStromIndex)(nil)
 
 func init() {
-	registry.Add("grünstromindex", NewGrünStromIndexFromConfig)
+	registry.AddCtx("grünstromindex", NewGrünStromIndexFromConfig)
 }
 
-func NewGrünStromIndexFromConfig(other map[string]any) (api.Tariff, error) {
+func NewGrünStromIndexFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		Zip   string
 		Token string
@@ -38,7 +39,7 @@ func NewGrünStromIndexFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("gsi").Redact(cc.Zip, cc.Token)
+	log := util.LoggerFromContext(ctx, "gsi").Redact(cc.Zip, cc.Token)
 
 	t := &GrünStromIndex{
 		log:    log,

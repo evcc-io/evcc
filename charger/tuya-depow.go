@@ -152,7 +152,7 @@ func NewTuyaDepow(ctx context.Context, cc tuya.Config) (*TuyaDepow, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	conn, dps, err := tuya.Dial(ctx, util.NewLogger("tuya-depow").Redact(cc.LocalKey), cc)
+	conn, dps, err := tuya.Dial(ctx, util.LoggerFromContext(ctx, "tuya-depow").Redact(cc.LocalKey), cc)
 	if err != nil {
 		return nil, err
 	}

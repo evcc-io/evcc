@@ -93,7 +93,7 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 	c := &EEBusOHPCF{
 		Caps:      implement.New(),
 		embed:     embed,
-		log:       util.NewLogger("eebus-ohpcf"),
+		log:       util.LoggerFromContext(ctx, "eebus-ohpcf"),
 		cem:       inst.CustomerEnergyManagement(),
 		ma:        inst.MonitoringAppliance(),
 		eg:        inst.EnergyGuard(),
