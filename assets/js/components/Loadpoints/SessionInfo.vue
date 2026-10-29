@@ -76,7 +76,6 @@ export default defineComponent({
 		last7d: Object as PropType<PeriodStats>,
 		tariffCo2: Number,
 		tariffGrid: Number,
-		experimental: Boolean,
 		chargerFeatureIntegratedDevice: Boolean,
 	},
 	data() {
@@ -128,11 +127,8 @@ export default defineComponent({
 			];
 		},
 		options(): Option[] {
-			const periods = this.experimental ? this.periodOptions : [];
-			// integrated devices drop the session once periods replace it
-			const session =
-				this.chargerFeatureIntegratedDevice && periods.length ? [] : this.sessionOptions;
-			return [...session, ...periods].filter((option) => option.available);
+			const session = this.chargerFeatureIntegratedDevice ? [] : this.sessionOptions;
+			return [...session, ...this.periodOptions].filter((option) => option.available);
 		},
 		optionKeys(): SessionInfoKey[] {
 			return this.options.map((option) => option.key);
@@ -168,7 +164,6 @@ export default defineComponent({
 	},
 	methods: {
 		optionsForPeriod(prefix: SessionInfoPeriod, stats?: PeriodStats): Option[] {
-			if (!stats) return [];
 			const group = this.$t(`main.loadpoint.${prefix}Energy`);
 			const short = this.$t(`main.loadpoint.${prefix}Short`);
 			const option = (
@@ -190,13 +185,11 @@ export default defineComponent({
 			};
 			// device cards say charged for vehicles and consumed for heaters
 			const energyKey = this.chargerFeatureIntegratedDevice ? "consumed" : "charged";
-			const { energy, autarky, pricePerKWh, price } = stats;
-			const priced = pricePerKWh != null;
+			const { energy = 0, autarky, pricePerKWh, price } = stats ?? {};
+			const priced = this.tariffGrid !== undefined;
 			return [
 				option("Energy", energyKey, this.fmtWh(energy, POWER_UNIT.AUTO)),
-				option("Autarky", "autarky", this.fmtPercentage(autarky ?? 0, 1), {
-					available: autarky != null,
-				}),
+				option("Autarky", "autarky", this.fmtPercentage(autarky ?? 0, 1)),
 				option("AvgPrice", "avgPrice", this.fmtAvgPrice(pricePerKWh ?? 0), {
 					valueSm: this.fmtAvgPriceShort(pricePerKWh ?? 0),
 					available: priced,

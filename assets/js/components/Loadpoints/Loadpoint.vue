@@ -122,7 +122,6 @@ import SettingsButton from "./SettingsButton.vue";
 import SettingsModal from "./SettingsModal.vue";
 import VehicleIcon from "../VehicleIcon";
 import SessionInfo from "./SessionInfo.vue";
-import store from "@/store";
 import { defineComponent, type PropType } from "vue";
 import type {
 	CHARGE_MODE,
@@ -300,9 +299,6 @@ export default defineComponent({
 		},
 		integratedDevice() {
 			return this.chargerFeatureIntegratedDevice;
-		},
-		experimental() {
-			return store.state.experimental;
 		},
 		heating() {
 			return this.chargerFeatureHeating;
