@@ -165,8 +165,8 @@ params:
       de: Maximaler Ladestand
       en: Maximum charge
     help:
-      de: Obere Grenze wie am Batteriesystem eingestellt. Wird vom Optimizer und für Netzladen genutzt.
-      en: Upper limit as configured on the battery system. Used by optimizer and for grid charging.
+      de: Obere Grenze wie am Batteriesystem eingestellt. Kann abhängig vom Gerät für Netzladen genutzt werden und dient als Hinweis für den Optimierer.
+      en: Upper limit as configured on the battery system. May, depending on device, be used for grid charging and serves as hint to the optimizer.
     example: 95
     default: 100
     type: int
@@ -402,8 +402,8 @@ params:
       en: Maximum charge power
       de: Maximale Ladeleistung
     help:
-      en: Must match the maximum charge power of the battery system. Used as charge limit by the optimizer and, depending on device, for forced charging.
-      de: Muss der maximalen Ladeleistung des Batteriesystems entsprechen. Wird vom Optimizer als Ladegrenze und je nach Gerät als Vorgabeleistung für Netzladen genutzt.
+      en: Maximum nominal charge power of the battery system. May, depending on device, be used for grid charging and serves as hint for the optimizer.
+      de: Maximale Nenn-Ladeleistung des Batteriesystems. Kann je nach Gerät als Vorgabeleistung für Netzladen verwendet werden und dient als Hinweis für den Optimierer.
     advanced: true
   - name: maxchargerate
     unit: "%"
@@ -425,8 +425,8 @@ params:
       en: Maximum discharge power
       de: Maximale Entladeleistung
     help:
-      en: Must match the maximum discharge power of the battery system. Used as discharge limit by the optimizer and, depending on device, in `hold` mode.
-      de: Muss der maximalen Entladeleistung des Batteriesystems entsprechen. Wird vom Optimizer als Entladegrenze und je nach Gerät im `hold` Modus genutzt.
+      en: Must match the battery's maximum nominal discharge power. May, depending on device, be used as discharging limit in hold mode and serves as hint for the optimizer.
+      de: Muss der maximalen Nenn-Entladeleistung der Batterie entsprechen. Kann je nach Gerät als maximale Entladeleistung im `hold` Modus verwendet werden und dient als Hinweis für den Optimierer.
     advanced: true
 
   - name: accesstoken
