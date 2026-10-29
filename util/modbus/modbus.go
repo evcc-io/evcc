@@ -243,6 +243,10 @@ func physicalConnection(ctx context.Context, proto Protocol, cfg Settings) (*met
 		return nil, errors.New("invalid modbus configuration: must have either uri or device")
 	}
 
+	if cfg.TLS && proto != Tcp {
+		return nil, errors.New("invalid modbus configuration: tls is only supported for Modbus TCP")
+	}
+
 	if cfg.Device != "" {
 		switch strings.ToUpper(cfg.Comset) {
 		case "8N1", "8E1", "8N2":
@@ -303,9 +307,8 @@ func physicalConnection(ctx context.Context, proto Protocol, cfg Settings) (*met
 	}
 }
 
-// newTLSConnection builds a Modbus TCP connection whose socket is wrapped in
-// TLS. Sungrow AC chargers (and other devices speaking Modbus over TLS on port
-// 516) present a self-signed, per-device certificate, so verification is off.
+// newTLSConnection wraps a Modbus TCP socket in TLS. Sungrow AC chargers (and
+// similar devices) present self-signed, per-device certificates, so verification is off.
 func newTLSConnection(uri string) *meters.TCP {
 	host, _, err := net.SplitHostPort(uri)
 	if err != nil {
