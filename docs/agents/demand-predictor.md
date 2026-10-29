@@ -17,13 +17,13 @@ Configured in two distinct places with different value sets:
 
 | Strategy | Feature flag | Lookback | Best for |
 |---|---|---|---|
-| `daily` | *(none, default for any `Heating` loadpoint)* | 28-day all-days average | Any heating device, zero config |
+| `daily` | *(none, fallback for chargers without a predictor feature)* | 28-day all-days average | Any heating device, zero config |
 | `weekday` | `api.DemandWeekday` | 28 days, same weekday | Schedule-driven loads: pool heaters, hot tubs, fixed-time boilers |
 | `temperature` | `api.DemandTemperature` | 7-day baseline + 1-year binned | Room heating: heat pumps, electric radiators, floor heating |
 
-`activeDemandPredictor()` in `loadpoint_load_predictor.go` resolves the effective strategy: loadpoint-level override first, then charger feature flags, then `daily`.
+`activeDemandPredictor()` in `loadpoint_load_predictor.go` resolves the effective strategy: loadpoint-level override first, then charger feature flags (`DemandWeekday` or `DemandTemperature`), then `daily` as the fallback. A charger template with `predictor: [demandtemperature]` defaults to `temperature`, not `daily`.
 
-A prior `DemandDaily` feature flag was removed; the daily average is now the implicit default for any `Heating` loadpoint. Heat pumps without an explicit predictor previously fell outside the home profile entirely, causing the optimizer to plan against a household load that was missing heating consumption.
+A prior `DemandDaily` feature flag was removed; `daily` is now the implicit fallback for `Heating` loadpoints whose charger declares no predictor feature. Heat pumps without an explicit predictor previously fell outside the home profile entirely, causing the optimizer to plan against a household load that was missing heating consumption.
 
 ## Building physics model (temperature strategy)
 
@@ -36,12 +36,14 @@ Forecast[slot] = ─────────────────────
 ```
 
 - `T_room = 21.0 °C` (assumed indoor setpoint, hardcoded)
-- `T_forecast`: weather forecast for the slot, from the `TariffUsageTemperature` tariff source (the same open-meteo source used for tariff optimisation)
+- `T_forecast`: weather forecast for the slot, from the separately configured `TariffUsageTemperature` tariff source. This must be configured independently; it is not automatically shared with or derived from the price optimisation tariff.
 - `T_hist_avg`: average of all recorded outdoor temperatures at the same **UTC** hour (`r.Start.UTC().Hour()`), taken from past tariff slots
 
 Note: `slotInDay` used for the binned lookup is derived from **local** time (`(ts.Local().Hour()*60 + ts.Local().Minute()) / 15`). The two lookups are on different axes. `T_hist_avg` is UTC-hourly, binned slots are local-time-based. They agree at UTC offset 0 and diverge by the UTC offset otherwise.
 
 - Factor is clamped to `[0.1 × ... 3.0 ×]` to prevent extreme corrections when the baseline is near zero
+
+All profile values (baseline, daily, weekday, binned) use the percentile configured in `keys.ProfilePercentile`. When that value is 0 (the default) the average is used. When it is above 0, the configured percentile is used instead. This applies uniformly across all strategies.
 
 The 7-day (not 28-day) baseline window is deliberate: it stays responsive to the current season while being stable enough against noise. The 10% clamp floor preserves standby and DHW load on warm days when space heating has cut off.
 
@@ -67,8 +69,10 @@ None of these can be captured by a single linear coefficient.
 `energyProfileTemperatureBinned()` in `core/metrics/db_profile.go` queries SQLite for a 2D lookup table:
 
 ```
-bins[slot_index][temperature_°C]  →  Wh consumed (average or percentile)
+bins[slot_index][temperature_°C]  →  kWh consumed (average or configured percentile)
 ```
+
+Values are in kWh, matching the unit returned by `energyProfileTemperatureBinned()`. `addHeatingDemand()` multiplies all profile values by 1000 to convert to Wh before adding them to the optimizer's forecast slice.
 
 - **`slot_index`**: 0–95, one per 15-minute interval across 24 hours, derived from local time
 - **`temperature_°C`**: integer, `CAST(round(t.temperature) AS INTEGER)` from the tariff table
@@ -76,7 +80,7 @@ bins[slot_index][temperature_°C]  →  Wh consumed (average or percentile)
 - **Minimum samples**: bins with fewer than 2 observations are excluded (`HAVING count(*) >= 2`)
 - **Percentile**: configurable via `keys.ProfilePercentile` (0 = average); uses linear interpolation between ranks
 
-This is conceptually a **nearest-neighbour (kNN) lookup**: for a future slot at forecast temperature T, `lookupBin()` in `site_load_predictor.go` searches for an exact integer bin, then falls back to interpolating adjacent ±1 °C bins.
+This is conceptually a **nearest-neighbour (kNN) lookup**: for a future slot at forecast temperature T, `lookupBin()` in `site_load_predictor.go` searches for an exact integer bin. If not found, it checks the adjacent bins at T-1 and T+1. If both neighbours exist, it returns their average. If only one neighbour exists, it returns that neighbour unchanged. If neither exists, the bin lookup fails and the slot falls through to the physics model.
 
 Because the lookup indexes by both time-of-day and temperature it automatically captures everything the physics model cannot, without sub-metering, manual configuration, or model parameters:
 
@@ -93,14 +97,16 @@ Because the lookup indexes by both time-of-day and temperature it automatically 
 
 `applyTemperatureCorrection()` in `site_load_predictor.go` resolves each 15-minute forecast slot in order:
 
-1. `lookupBin(binned[slotInDay], tFuture)`: exact bin match, use recorded average
-2. `lookupBin` adjacent ±1 °C interpolation: neighbour exists, interpolate
+1. `lookupBin(binned[slotInDay], tFuture)`: exact bin match, use recorded value
+2. `lookupBin` adjacent ±1 °C: both neighbours exist, return their average; only one neighbour exists, return it unchanged
 3. Degree-day scaling × 7-day baseline: historical temperature data available, apply physics formula
 4. Profile slot left unscaled: no temperature data yet (e.g. fresh install, weather source just added)
 
-If `EnergyProfileTemperatureBinned()` returns `ErrNoBinnedData` (normal on first run), `binned` is `nil`. A nil map lookup in `lookupBin` returns `(0, false)`, so all slots fall through cleanly to steps 3–4. This is expected, not an error condition.
+If `EnergyProfileTemperatureBinned()` returns `ErrNoBinnedData` (normal on first run before sufficient data is collected), `binned` is `nil`. A nil map lookup in `lookupBin` returns `(0, false)`, so all slots fall through cleanly to steps 3–4. This is expected, not an error condition.
 
-On a fresh installation the system operates entirely on the physics model. As it runs through its first season, bins accumulate for the temperatures seen. After a full year the entire operating range is covered and the physics fallback is almost never triggered. Each slot independently promotes from physics to data-driven as its bin reaches the 2-sample threshold, with no retraining and no configuration change.
+Note also that `demandProfile()` calls `EnergyProfile()` to build the baseline profile. If fewer than 96 slots are recorded (e.g. less than one full day of data), `EnergyProfile()` returns `ErrIncomplete` and `demandProfile()` returns nil. In that case `addHeatingDemand()` skips the loadpoint entirely. The physics model is only available once a full 96-slot profile exists.
+
+On a fresh installation with at least one full day of data, the system uses the physics model for all slots. As it runs through its first season, bins accumulate for the temperatures seen. After a year, most common slot/temperature combinations have at least 2 observations and use the binned lookup. Rare temperature extremes or infrequently occupied slots may still fall back to physics indefinitely. Each slot independently promotes from physics to data-driven as its bin reaches the 2-sample threshold, with no retraining and no configuration change.
 
 Seasonal transitions are handled naturally: the 1-year lookback carries observations from the same calendar period a year ago, so a cold snap after a warm week finds matching low-temperature bins from the previous winter rather than extrapolating from the near-zero recent baseline.
 
