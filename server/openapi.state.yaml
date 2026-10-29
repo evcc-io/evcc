@@ -14,6 +14,9 @@ components:
         setupRequired:
           description: Initial setup is required.
           type: boolean
+        onboarding:
+          $ref: "#/components/schemas/OnboardingState"
+          description: Setup wizard and checklist state.
         startupCompleted:
           description: Startup has completed.
           type: boolean
@@ -69,6 +72,12 @@ components:
         gridConfigured:
           description: A grid meter is configured.
           type: boolean
+        gridConnection:
+          $ref: "#/components/schemas/GRID_CONNECTION"
+          description: Grid connection, with or without neutral conductor.
+        voltage:
+          description: Nominal grid voltage in V, line-to-line without neutral.
+          type: number
         pv:
           description: Solar meters. One entry per configured meter.
           type: array
@@ -420,6 +429,12 @@ components:
         capacity:
           description: Battery capacity in kWh. Zero when not specified.
           type: number
+        minSoc:
+          description: Minimum soc (reserve) in % as configured on the device.
+          type: number
+        maxSoc:
+          description: Maximum soc (charge limit) in % as configured on the device.
+          type: number
         suggestion:
           $ref: "#/components/schemas/BatterySuggestion"
           description: Battery optimizer suggestion.
@@ -699,6 +714,12 @@ components:
           enum:
             - file
             - db
+    GRID_CONNECTION:
+      description: Grid connection, with or without neutral conductor.
+      type: string
+      enum:
+        - 3p4w
+        - 3p3w
     Hems:
       description: Home energy management system integration.
       type: object
@@ -1563,6 +1584,35 @@ components:
             $ref: "#/components/schemas/OcppStationStatus"
       required:
         - stations
+    OnboardingItem:
+      description: Setup checklist item.
+      type: string
+      enum:
+        - battery
+        - pv
+        - grid
+        - loadpoint
+        - heater
+        - consumer
+        - gridImport
+        - gridExport
+        - co2
+        - solar
+    OnboardingState:
+      description: Setup wizard and checklist state.
+      type: object
+      properties:
+        done:
+          description: Setup wizard was finished or skipped.
+          type: boolean
+        dismissed:
+          description: Dismissed setup checklist items.
+          type: array
+          items:
+            $ref: "#/components/schemas/OnboardingItem"
+      required:
+        - done
+        - dismissed
     OptimizerAutomatic:
       type: string
       enum:

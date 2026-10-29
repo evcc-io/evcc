@@ -101,6 +101,9 @@ func TestBatteryMaxDischargePowerWithMinSoc(t *testing.T) {
 	}
 
 	site.updateBatteryMeters()
+	if assert.Len(t, site.battery.Devices, 2) {
+		assert.Equal(t, 20.0, *site.battery.Devices[0].MinSoc, "soc limits kept on the measurement")
+	}
 	// Only m2 should contribute
 	if res := site.GetBatteryMaxDischargePower(); assert.NotNil(t, res) {
 		assert.Equal(t, 3000.0, *res)

@@ -21,7 +21,7 @@
 					{{ $t("config.loadpoint.advancedConfig") }}
 				</a>
 				<button type="button" class="btn btn-primary" @click="finish">
-					{{ $t("config.general.close") }}
+					{{ $t("config.general.continue") }}
 				</button>
 			</template>
 		</CreateFlowStatus>
@@ -288,7 +288,7 @@
 											required
 										/>
 										<span class="evcc-gray text-nowrap power-hint">
-											≈ {{ fmtPhasePower(values.minCurrent, minPhases) }}
+											≈ {{ minPowerHint }}
 										</span>
 									</div>
 								</FormRow>
@@ -309,7 +309,7 @@
 											required
 										/>
 										<span class="evcc-gray text-nowrap power-hint">
-											≈ {{ fmtPhasePower(values.maxCurrent, maxPhases) }}
+											≈ {{ maxPowerHint }}
 										</span>
 									</div>
 								</FormRow>
@@ -447,7 +447,51 @@
 						</div>
 
 						<div v-if="chargerIsHeating">
-							<h6>{{ $t("config.loadpoint.temperatureRangeTitle") }}</h6>
+							<h6 class="mb-2">{{ $t("config.loadpoint.demandPredictor.title") }}</h6>
+							<p class="text-muted">
+								{{ $t("config.loadpoint.demandPredictor.description") }}
+							</p>
+							<FormRow
+								id="loadpointDemandPredictor"
+								:label="$t('config.loadpoint.demandPredictor.label')"
+								:help="demandPredictorHelp"
+							>
+								<select
+									id="loadpointDemandPredictor"
+									v-model="demandPredictorSelection"
+									class="form-select"
+								>
+									<optgroup
+										v-for="group in demandPredictorGroups"
+										:key="group.label"
+										:label="group.label"
+									>
+										<option
+											v-for="option in group.options"
+											:key="option.value"
+											:value="option.value"
+										>
+											{{ option.label }}
+										</option>
+									</optgroup>
+								</select>
+								<template #footer>
+									<div v-if="temperatureTariffMissing" class="text-warning mt-1">
+										{{ $t("config.loadpoint.demandPredictor.noTempTariff") }}
+										<a href="#" @click.prevent="addTemperatureTariff">
+											{{
+												$t(
+													"config.loadpoint.demandPredictor.noTempTariffLink"
+												)
+											}}
+										</a>
+									</div>
+								</template>
+							</FormRow>
+						</div>
+
+						<div v-if="chargerIsHeating">
+							<h6 class="mb-2">{{ $t("config.loadpoint.temperatureRangeTitle") }}</h6>
 							<p class="text-muted">
 								{{ $t("config.loadpoint.temperatureRangeHelp") }}
 							</p>
@@ -559,6 +603,7 @@ import { handleError, customChargerName, createDeviceUtils } from "./DeviceModal
 import { getModal, openModal, replaceModal, closeModal } from "@/configModal";
 import {
 	CHARGE_MODE,
+	GRID_CONNECTION,
 	LOADPOINT_TYPE,
 	type DeviceType,
 	type LoadpointType,
@@ -567,9 +612,12 @@ import {
 	type VehicleOption,
 	type ConfigCircuit,
 	type ConfigLoadpoint,
+	type DemandPredictor,
 } from "@/types/evcc";
 
 const nsPerMin = 60 * 1e9;
+
+const DEMAND_PREDICTORS: DemandPredictor[] = ["daily", "weekday", "temperature"];
 
 const { OFF, SMART, NOW } = CHARGE_MODE;
 
@@ -624,6 +672,9 @@ export default {
 			type: Function as PropType<(type: DeviceType, name: string) => boolean>,
 			default: () => false,
 		},
+		voltage: Number,
+		gridConnection: String as PropType<GRID_CONNECTION>,
+		temperatureTariffConfigured: Boolean,
 	},
 	emits: ["changed", "dismissed", "disable"],
 	data() {
@@ -641,6 +692,44 @@ export default {
 	computed: {
 		id(): number | undefined {
 			return getModal("loadpoint")?.id;
+		},
+		defaultDemandPredictor(): DemandPredictor {
+			return this.chargerStatus?.demandPredictor?.value ?? "daily";
+		},
+		demandPredictorGroups() {
+			const t = (key: string) => this.$t(`config.loadpoint.demandPredictor.${key}`);
+			const label = (profile: DemandPredictor) => t(`${profile}.label`);
+			return [
+				{
+					label: t("defaultGroup"),
+					options: [{ value: "", label: label(this.defaultDemandPredictor) }],
+				},
+				{
+					label: t("profilesGroup"),
+					options: DEMAND_PREDICTORS.map((value) => ({ value, label: label(value) })),
+				},
+			];
+		},
+		demandPredictorSelection: {
+			get(): string {
+				return this.values.demandPredictor ?? "";
+			},
+			set(value: string) {
+				this.values.demandPredictor = (value as DemandPredictor) || undefined;
+			},
+		},
+		activeDemandPredictor(): DemandPredictor {
+			return this.values.demandPredictor || this.defaultDemandPredictor;
+		},
+		demandPredictorHelp(): string {
+			return this.$t(
+				`config.loadpoint.demandPredictor.${this.activeDemandPredictor}.description`
+			);
+		},
+		temperatureTariffMissing(): boolean {
+			return (
+				this.activeDemandPredictor === "temperature" && !this.temperatureTariffConfigured
+			);
 		},
 		thresholdsSet(): boolean {
 			const { enable, disable } = this.values.thresholds;
@@ -795,6 +884,22 @@ export default {
 		},
 		maxPhases() {
 			return this.values.phasesConfigured || 3;
+		},
+		minPowerHint() {
+			return this.fmtPhasePower(
+				this.values.minCurrent,
+				this.minPhases,
+				this.voltage,
+				this.gridConnection
+			);
+		},
+		maxPowerHint() {
+			return this.fmtPhasePower(
+				this.values.maxCurrent,
+				this.maxPhases,
+				this.voltage,
+				this.gridConnection
+			);
 		},
 		phasesOptions() {
 			return [
@@ -1000,6 +1105,9 @@ export default {
 			} else if (result.action === "removed") {
 				this.values.charger = "";
 			}
+		},
+		addTemperatureTariff() {
+			openModal("tariff", { type: "temperature" });
 		},
 		async editMeter() {
 			const meter = this.meters.find((m) => m.name === this.values.meter);

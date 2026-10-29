@@ -69,8 +69,6 @@ func automaticLoadpoint(t *testing.T, ac api.AlwaysCharge, automatic bool) (*Loa
 	ctrl := gomock.NewController(t)
 	charger := api.NewMockCharger(ctrl)
 
-	Voltage = 230
-
 	lp := &Loadpoint{
 		log:          util.NewLogger("foo"),
 		bus:          evbus.New(),
@@ -289,7 +287,6 @@ func TestOptimizerPrioritySoc(t *testing.T) {
 // it does not yield to a higher priority loadpoint, so its power is not flexible
 func TestOptimizerFlexibility(t *testing.T) {
 	enableAutomatic(t)
-	Voltage = 230
 
 	for _, tc := range []struct {
 		s    types.Suggestion
@@ -450,8 +447,6 @@ func TestOptimizerPhaseScaleUp(t *testing.T) {
 			clck := clock.NewMock()
 			clck.Add(time.Hour)
 
-			Voltage = 230
-
 			lp := NewLoadpoint(util.NewLogger("foo"), nil)
 			lp.clock = clck
 			lp.minCurrent = minA
@@ -459,6 +454,7 @@ func TestOptimizerPhaseScaleUp(t *testing.T) {
 			lp.Enable.Delay = 3 * time.Minute
 			lp.phases = 1
 			lp.status = api.StatusC
+			lp.enabled = true
 			lp.chargePower = 3680
 			lp.wakeUpTimer = NewTimer()
 
@@ -550,8 +546,6 @@ func TestOptimizerPlanActive(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	clck := clock.NewMock()
 
-	Voltage = 230
-
 	lp := &Loadpoint{
 		log:        util.NewLogger("foo"),
 		clock:      clck,
@@ -627,8 +621,8 @@ func TestBatteryModesPerDevice(t *testing.T) {
 	enableAutomatic(t)
 	ctrl := gomock.NewController(t)
 
-	active, activeCon := batteryControlMock(ctrl, 50, 100)
-	idle, idleCon := batteryControlMock(ctrl, 50, 100)
+	active, activeCon := batteryControlMock(ctrl)
+	idle, idleCon := batteryControlMock(ctrl)
 
 	site := &Site{
 		log: util.NewLogger("foo"),
@@ -658,7 +652,7 @@ func TestBatteryModesReleasedWithoutSuggestion(t *testing.T) {
 	enableAutomatic(t)
 	ctrl := gomock.NewController(t)
 
-	idle, idleCon := batteryControlMock(ctrl, 50, 100)
+	idle, idleCon := batteryControlMock(ctrl)
 
 	site := &Site{
 		log:                util.NewLogger("foo"),
@@ -680,8 +674,8 @@ func TestBatteryModesHemsCurtailed(t *testing.T) {
 	enableAutomatic(t)
 	ctrl := gomock.NewController(t)
 
-	active, activeCon := batteryControlMock(ctrl, 50, 100)
-	idle, idleCon := batteryControlMock(ctrl, 50, 100)
+	active, activeCon := batteryControlMock(ctrl)
+	idle, idleCon := batteryControlMock(ctrl)
 
 	curtailed := 60
 	h := api.NewMockHEMS(ctrl)

@@ -17,6 +17,8 @@ products:
       generic: "FRITZ!Smart Energy 210"
 capabilities: ["meter"]
 group: switchsockets
+discovery:
+  hostname: ["fritz", "fritzbox"]
 params:
   - name: uri
     default: https://fritz.box

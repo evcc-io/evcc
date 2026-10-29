@@ -359,6 +359,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval, pub)},
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(pub)},
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
+			"onboarding":         {"PUT", "/onboarding", updateOnboardingHandler(pub)},
 			"experimental":       {"POST", "/experimental/{value:[01truefalse]+}", boolHandler(setExperimental(pub), getExperimental)},
 			"optimizer":          {"POST", "/optimizer/{value:[01truefalse]+}", boolHandler(setOptimizer(pub), getOptimizer)},
 			"optimizerAutomatic": {"POST", "/optimizerautomatic/{value:[a-z]+}", stringHandler(setOptimizerAutomatic(pub, site), core.OptimizerAutomatic)},
@@ -407,9 +408,10 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		// site
 		for _, r := range map[string]route{
-			"site":          {"GET", "/site", siteHandler(site)},
-			"updatesite":    {"PUT", "/site", updateSiteHandler(site)},
-			"updatecountry": {"PUT", "/country", updateCountryHandler(site)},
+			"site":                 {"GET", "/site", siteHandler(site)},
+			"updatesite":           {"PUT", "/site", updateSiteHandler(site)},
+			"updatecountry":        {"PUT", "/country", updateCountryHandler(site)},
+			"updategridconnection": {"PUT", "/gridconnection", updateGridConnectionHandler(site)},
 		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}

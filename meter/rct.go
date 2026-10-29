@@ -252,6 +252,11 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				})
 
 				eg.Go(func() error {
+					// can't go lower than 5%
+					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(0.05))
+				})
+
+				eg.Go(func() error {
 					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
 				})
 
@@ -271,6 +276,10 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			case api.BatteryDischarge:
 				eg.Go(func() error {
 					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(batteryPowerLimits.MaxDischargePower))
+				})
+
+				eg.Go(func() error {
+					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
 				})
 
 				eg.Go(func() error {
@@ -345,7 +354,7 @@ func (m *RCT) totalEnergy() (float64, error) {
 
 	case "pv":
 		var eg errgroup.Group
-		var a, b float64
+		var a, b, c float64
 
 		eg.Go(func() error {
 			var err error
@@ -359,8 +368,16 @@ func (m *RCT) totalEnergy() (float64, error) {
 			return err
 		})
 
+		if m.externalPower {
+			eg.Go(func() error {
+				var err error
+				c, err = m.queryFloat(rct.TotalExternalEnergyWh)
+				return err
+			})
+		}
+
 		err := eg.Wait()
-		return (a + b) / 1000, err
+		return (a + b + c) / 1000, err
 
 	case "battery":
 		res, err := m.queryFloat(rct.TotalEnergyBattOutWh)

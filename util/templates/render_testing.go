@@ -75,6 +75,9 @@ func testAuth(tmpl Template) error {
 func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values map[string]any)) {
 	t.Parallel()
 
+	// templates sharing one modbus connection serialize on its lock and largest delay
+	port := 20000
+
 	for _, tmpl := range ByClass(class, WithDeprecated()) {
 		// set default values for all params
 		values := tmpl.Defaults(RenderModeUnitTest)
@@ -91,6 +94,9 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 				values[ModbusKeyRS485TCPIP] = true
 			}
 			tmpl.ModbusValues(RenderModeUnitTest, values)
+
+			port++
+			values[ModbusParamPort] = port
 		}
 
 		// set the template value which is needed for rendering

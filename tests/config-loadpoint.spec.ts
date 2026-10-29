@@ -689,6 +689,19 @@ test.describe("heating loadpoint", async () => {
     await expectModalHidden(settingsModal);
     await page.goto("/#/config");
 
+    // min temperature survives loadpoint save
+    await lpEntry.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(lpModal);
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+    await page.goto("/");
+    await page.getByTestId("loadpoint-settings-button").last().click();
+    await expectModalVisible(settingsModal);
+    await expect(settingsModal.getByLabel("Min. temperature")).toHaveValue("50");
+    await settingsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(settingsModal);
+    await page.goto("/#/config");
+
     // delete
     await lpEntry.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
@@ -825,10 +838,12 @@ test.describe("sponsor token", () => {
     // verify disabled save button
     await expect(chargerModal.getByRole("button", { name: "Save" })).toBeDisabled();
 
-    // verify sponsor notice
-    await expect(chargerModal).toContainText(
-      "You must configure a sponsor token before you can create this device."
-    );
+    // verify inline sponsor panel, invalid token is rejected in place
+    const panel = chargerModal.getByTestId("sponsor-token-required");
+    await expect(panel).toContainText("This device is only available to sponsors.");
+    await panel.getByLabel("Sponsor token").fill("invalid");
+    await panel.getByRole("button", { name: "Apply" }).click();
+    await expect(panel).toContainText("The sponsor token is not valid.");
     const testResult = chargerModal.getByTestId("test-result");
     await testResult.getByRole("link", { name: "Validate" }).click();
     const sponsorMessage = testResult.getByText("No sponsor token configured.");

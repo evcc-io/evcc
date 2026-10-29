@@ -553,7 +553,10 @@ export default defineComponent({
 			});
 		},
 		allConsumers() {
-			return [...this.consumers, ...this.aux];
+			const label = (m: Meter) => m.title || m.name || "";
+			return [...this.consumers, ...this.aux].sort((a, b) =>
+				label(a).localeCompare(label(b), this.$i18n.locale)
+			);
 		},
 	},
 	watch: {

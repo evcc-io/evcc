@@ -401,7 +401,7 @@ import Modal from "bootstrap/js/dist/modal";
 import api from "@/api";
 import store from "@/store";
 import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
-import { formatJson } from "@/components/Issue/format";
+import { formatJson, redactEebus } from "@/components/Issue/format";
 import {
 	generateMailtoUrl,
 	generateDebugFile,
@@ -692,6 +692,8 @@ export default defineComponent({
 					}
 				});
 
+				if (configs.eebus) configs.eebus = redactEebus(configs.eebus);
+
 				const { remote } = store.state;
 				if (remote) configs.remote = remote.config;
 
@@ -733,8 +735,9 @@ export default defineComponent({
 
 		async loadState() {
 			try {
-				const response = await api.get("state");
-				this.sections.state.content = formatJson(response.data, EXPAND_KEYS);
+				const { data } = await api.get("state");
+				if (data.eebus) data.eebus = redactEebus(data.eebus);
+				this.sections.state.content = formatJson(data, EXPAND_KEYS);
 			} catch (error) {
 				console.error("Failed to fetch state:", error);
 				this.sections.state.content = "Failed to load system state";

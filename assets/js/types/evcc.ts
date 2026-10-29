@@ -32,6 +32,26 @@ declare global {
 export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
 
 export type DeviceColors = Record<string, string>;
+
+/** Setup checklist item. */
+export type OnboardingItem =
+  | "battery"
+  | "pv"
+  | "grid"
+  | "loadpoint"
+  | "heater"
+  | "consumer"
+  | "gridImport"
+  | "gridExport"
+  | "co2"
+  | "solar";
+/** Setup wizard and checklist state. */
+export interface OnboardingState {
+  /** Setup wizard was finished or skipped. */
+  done: boolean;
+  /** Dismissed setup checklist items. */
+  dismissed: OnboardingItem[];
+}
 /** Color assigned to a device for consistent UI display. */
 export type DeviceColorEntry = {
   /** Device title the color is assigned to. */
@@ -164,6 +184,8 @@ export interface State {
   experimental?: boolean;
   /** Initial setup is required. */
   setupRequired?: boolean;
+  /** Setup wizard and checklist state. */
+  onboarding?: OnboardingState;
   /** Startup has completed. */
   startupCompleted?: boolean;
   /** HTTP API is ready to accept requests. */
@@ -209,6 +231,10 @@ export interface State {
   grid?: Meter;
   /** A grid meter is configured. */
   gridConfigured?: boolean;
+  /** Grid connection, with or without neutral conductor. */
+  gridConnection?: GRID_CONNECTION;
+  /** Nominal grid voltage in V, line-to-line without neutral. */
+  voltage?: number;
   /** Solar meters. One entry per configured meter. */
   pv?: Meter[];
   /** Total solar power in W. Sum of all solar meters. */
@@ -521,6 +547,9 @@ export interface LoadpointThreshold {
   threshold: number;
 }
 
+/** Demand forecast strategy of a heating loadpoint. */
+export type DemandPredictor = "daily" | "weekday" | "temperature";
+
 export interface ConfigLoadpoint {
   id?: number;
   name?: string;
@@ -540,6 +569,8 @@ export interface ConfigLoadpoint {
   planStrategy?: PlanStrategy;
   limitEnergy?: number;
   limitSoc?: number;
+  minSoc?: number;
+  demandPredictor?: DemandPredictor;
   circuit?: string;
   thresholds: {
     enable: LoadpointThreshold;
@@ -832,6 +863,12 @@ export enum THEME {
   AUTO = "auto",
   LIGHT = "light",
   DARK = "dark",
+}
+
+/** Grid connection, with or without neutral conductor. */
+export enum GRID_CONNECTION {
+  THREE_PHASE_FOUR_WIRE = "3p4w",
+  THREE_PHASE_THREE_WIRE = "3p3w",
 }
 
 /** Currency in ISO 4217 format. */
@@ -1249,6 +1286,10 @@ export interface BatteryMeter extends Meter {
   modes?: string[];
   /** Battery capacity in kWh. Zero when not specified. */
   capacity: number;
+  /** Minimum soc (reserve) in % as configured on the device. */
+  minSoc?: number;
+  /** Maximum soc (charge limit) in % as configured on the device. */
+  maxSoc?: number;
   /** Battery optimizer suggestion. */
   suggestion?: BatterySuggestion;
 }
@@ -1503,6 +1544,7 @@ export interface EvOpt {
   req: OptimizationInput;
   res: OptimizationResult;
   details: OptimizationDetails;
+  hosted: boolean;
 }
 
 // last plan explanation, plan is the updated time of the explained plan

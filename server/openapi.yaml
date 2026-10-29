@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: evcc
-  description: Solar charging. Super simple.
+  description: smart charging. open source energy management.
   version: "0.2.0"
   contact:
     url: https://github.com/evcc-io/evcc
@@ -874,6 +874,31 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/StringResult"
+  /config/onboarding:
+    put:
+      operationId: setOnboarding
+      summary: Set onboarding state
+      description: "Setup wizard completion and dismissed setup checklist items."
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      tags:
+        - general
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./openapi.state.yaml#/components/schemas/OnboardingState"
+      responses:
+        "200":
+          description: Updated onboarding state
+          content:
+            application/json:
+              schema:
+                $ref: "./openapi.state.yaml#/components/schemas/OnboardingState"
+        "400":
+          description: Invalid item
   /smartfeedinprioritylimit:
     delete:
       operationId: removeGlobalSmartFeedInPriorityLimit
@@ -1056,6 +1081,28 @@ paths:
           $ref: "#/components/responses/BlankResponse"
         "400":
           description: Invalid country code
+  /config/gridconnection:
+    put:
+      operationId: setGridConnection
+      summary: Set grid connection
+      description: "Set the grid connection. 3p4w for three-phase four-wire grids with neutral (3 x 230/400 V), 3p3w for three-phase three-wire grids without neutral (3 x 230 V)."
+      tags:
+        - general
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+              enum:
+                - 3p4w
+                - 3p3w
+              example: 3p3w
+      responses:
+        "200":
+          $ref: "#/components/responses/BlankResponse"
+        "400":
+          description: Invalid grid connection
   /settings/telemetry/{enable}:
     post:
       operationId: setTelemetryStatus
@@ -1733,7 +1780,8 @@ paths:
                       description: Entity title, omitted when grouped
                     group:
                       type: string
-                      enum: [pv, battery, grid, loadpoint, consumer, meter, home, forecast, temperature]
+                      enum:
+                        [pv, battery, grid, loadpoint, consumer, meter, home, forecast, temperature]
                     isTemp:
                       type: boolean
                       description: socTemp values are temperatures, not state of charge
@@ -1795,23 +1843,25 @@ paths:
                   flows:
                     type: array
                     items:
+                      $ref: "#/components/schemas/Flow"
+                  entities:
+                    type: array
+                    description: Flows into each consumer and loadpoint, priced per slot
+                    items:
                       type: object
                       properties:
-                        from:
+                        group:
                           type: string
-                          enum: [pv, battery, grid]
-                        to:
+                          enum: [consumer, loadpoint]
+                        title:
                           type: string
-                          enum: [home, battery, loadpoint, export]
-                        energy:
-                          type: number
-                          description: kWh
-                        cost:
-                          type: number
-                          description: Cost of the energy, for home and loadpoint
-                        pricedEnergy:
-                          type: number
-                          description: kWh where a price exists
+                        virtual:
+                          type: boolean
+                          description: Home consumption not covered by a consumer
+                        flows:
+                          type: array
+                          items:
+                            $ref: "#/components/schemas/Flow"
                   cost:
                     type: object
                     description: Grid cost sums, omitted without grid price data
@@ -2001,6 +2051,24 @@ components:
       type: number
       example: 25.5
       minimum: 0
+    Flow:
+      type: object
+      properties:
+        from:
+          type: string
+          enum: [pv, battery, grid]
+        to:
+          type: string
+          enum: [home, battery, loadpoint, export]
+        energy:
+          type: number
+          description: kWh
+        cost:
+          type: number
+          description: Cost of the energy, for home and loadpoint
+        pricedEnergy:
+          type: number
+          description: kWh where a price exists
     Delay:
       description: "Duration in seconds."
       type: integer

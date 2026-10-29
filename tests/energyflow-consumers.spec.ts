@@ -12,7 +12,7 @@ test.afterAll(async () => {
   await stop();
 });
 
-test("consumers breakdown lists consumers and aux, excludes ext", async ({ page }) => {
+test("lists consumers and aux alphabetically, excludes ext", async ({ page }) => {
   await page.goto("/");
   await page.getByTestId("energyflow").click();
 
@@ -22,6 +22,7 @@ test("consumers breakdown lists consumers and aux, excludes ext", async ({ page 
   const consumers = page.getByTestId("energyflow-entry-consumer");
   await expect(consumers).toHaveCount(2);
   await expect(consumers.filter({ hasText: "fridge" })).toBeVisible(); // consumer
-  await expect(consumers.filter({ hasText: "heater" })).toBeVisible(); // aux
+  await expect(consumers.filter({ hasText: "boiler" })).toBeVisible(); // aux
   await expect(consumers.filter({ hasText: "submeter" })).toBeHidden(); // ext excluded
+  await expect(consumers).toContainText(["boiler", "fridge"]); // alphabetical, not config order
 });

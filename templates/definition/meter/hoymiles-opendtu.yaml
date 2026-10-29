@@ -3,6 +3,8 @@ products:
   - brand: Hoymiles
     description:
       generic: HM & HMS Series (via OpenDTU)
+discovery:
+  hostname: ["opendtu*"]
 params:
   - name: usage
     choice: ["pv"]
