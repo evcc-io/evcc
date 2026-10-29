@@ -20,7 +20,7 @@ var retryInterval = 15 * time.Minute
 
 func init() {
 	// shorter interval for e2e tests
-	if d, err := time.ParseDuration(os.Getenv("EVCC_VEHICLE_RETRY_INTERVAL")); err == nil {
+	if d, err := time.ParseDuration(os.Getenv("EVCC_VEHICLE_RETRY_INTERVAL")); err == nil && d > 0 {
 		retryInterval = d
 	}
 }
