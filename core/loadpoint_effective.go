@@ -82,7 +82,7 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 	return time.Time{}, 0, 0
 }
 
-// vehiclePlans returns the static plan and the occurrences of active repeating plans within the next days
+// vehiclePlans returns the static plan and each occurrence of active repeating plans within the given days
 func (lp *Loadpoint) vehiclePlans(v api.Vehicle, days int) []plan {
 	var plans []plan
 
@@ -113,9 +113,8 @@ func (lp *Loadpoint) vehiclePlans(v api.Vehicle, days int) []plan {
 	return plans
 }
 
-// GetSocPlanGoals returns the soc goals of all vehicle plans, repeating plans for each
-// occurrence within a week; callers drop goals beyond their horizon. Unlike nextVehiclePlan
-// it includes later and already reached plans, so the optimizer can plan for all of them at once.
+// GetSocPlanGoals returns the soc goals of all vehicle plans, repeating plans for each occurrence
+// within a week. Unlike nextVehiclePlan it includes later and already reached plans.
 func (lp *Loadpoint) GetSocPlanGoals() []loadpoint.PlanGoal {
 	lp.RLock()
 	defer lp.RUnlock()
