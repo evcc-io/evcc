@@ -165,8 +165,8 @@ params:
       de: Maximaler Ladestand
       en: Maximum charge
     help:
-      de: Obere Grenze wie am Batteriesystem eingestellt. Kann abhängig vom Gerät für Netzladen genutzt werden und dient als Hinweis für den Optimierer.
-      en: Upper limit as configured on the battery system. May, depending on device, be used for grid charging and serves as hint to the optimizer.
+      de: Obere Grenze wie am Batteriesystem eingestellt. Kann abhängig vom Gerät für Netzladen genutzt werden und wird vom Optimierer verwendet.
+      en: Upper limit as configured on the battery system. May, depending on device, be used for grid charging and is used by the optimizer.
     example: 95
     default: 100
     type: int
