@@ -107,10 +107,7 @@ func (v *Wrapper) create() {
 
 // Delegate implements the api.Delegator interface
 func (v *Wrapper) Delegate() any {
-	if vv := v.instance(); vv != nil {
-		return vv
-	}
-	return nil
+	return v.instance()
 }
 
 // GetTitle implements the api.TitleDescriber interface
