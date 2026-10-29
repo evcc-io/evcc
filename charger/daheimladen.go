@@ -376,12 +376,18 @@ func isPrintableASCII(s string) bool {
 }
 
 // decodeStationID returns the printable station id from the raw register bytes.
-// Original firmware encodes it UTF-16BE, replacement comm modules as raw ASCII.
+// Original firmware encodes it UTF-16BE, replacement comm modules as byte-swapped ASCII.
 func decodeStationID(raw []byte) string {
 	if s, err := utf16BEBytesAsString(raw); err == nil && isPrintableASCII(s) {
 		return s
 	}
-	return strings.TrimSpace(strings.TrimRight(string(raw), "\x00"))
+
+	swapped := make([]byte, len(raw)&^1)
+	for i := 0; i+1 < len(raw); i += 2 {
+		swapped[i], swapped[i+1] = raw[i+1], raw[i]
+	}
+
+	return strings.TrimSpace(strings.TrimRight(string(swapped), "\x00"))
 }
 
 func (wb *DaheimLaden) checkStation() error {
