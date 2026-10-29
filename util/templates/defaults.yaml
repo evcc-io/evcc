@@ -165,7 +165,7 @@ params:
       de: Maximaler Ladestand
       en: Maximum charge
     help:
-      de: Obere Grenze wie am Batteriesystem eingestellt. Kann abhängig vom Gerät für Netzladen genutzt werden und wird vom Optimierer verwendet.
+      de: Obere Grenze wie am Batteriesystem eingestellt. Kann, je nach Gerät, für Netzladen genutzt werden und wird vom Optimierer verwendet.
       en: Upper limit as configured on the battery system. May, depending on device, be used for grid charging and is used by the optimizer.
     example: 95
     default: 100
@@ -403,7 +403,7 @@ params:
       de: Maximale Ladeleistung
     help:
       en: Maximum nominal charge power of the battery system. May, depending on device, be used for grid charging and serves as hint for the optimizer.
-      de: Maximale Nenn-Ladeleistung des Batteriesystems. Kann je nach Gerät als Vorgabeleistung für Netzladen verwendet werden und dient als Hinweis für den Optimierer.
+      de: Maximale Nenn-Ladeleistung des Batteriesystems. Kann, je nach Gerät, als Vorgabeleistung für Netzladen verwendet werden und dient als Hinweis für den Optimierer.
     advanced: true
   - name: maxchargerate
     unit: "%"
@@ -426,7 +426,7 @@ params:
       de: Maximale Entladeleistung
     help:
       en: Must match the battery's maximum nominal discharge power. May, depending on device, be used as discharging limit in hold mode and serves as hint for the optimizer.
-      de: Muss der maximalen Nenn-Entladeleistung der Batterie entsprechen. Kann je nach Gerät als maximale Entladeleistung im `hold` Modus verwendet werden und dient als Hinweis für den Optimierer.
+      de: Muss der maximalen Nenn-Entladeleistung der Batterie entsprechen. Kann, je nach Gerät, als maximale Entladeleistung im `hold` Modus verwendet werden und dient als Hinweis für den Optimierer.
     advanced: true
 
   - name: accesstoken
@@ -825,7 +825,12 @@ presets:
       pattern:
         regex: "^(tls://)?[^\\/\\s]+(:[0-9]{1,5})?$" # optional tls:// prefix, any char except slash/space, optional :port
         examples:
-          ["192.168.1.100", "example.com", "server.local:8080", "tls://mqtt.example.com:8883"]
+          [
+            "192.168.1.100",
+            "example.com",
+            "server.local:8080",
+            "tls://mqtt.example.com:8883",
+          ]
     - name: port
       default: 1883
       help:
