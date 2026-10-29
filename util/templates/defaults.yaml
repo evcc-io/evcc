@@ -402,8 +402,8 @@ params:
       en: Maximum charge power
       de: Maximale Ladeleistung
     help:
-      en: For forced charging of the battery.
-      de: Für erzwungenes Laden des Speichers.
+      en: Must match the battery's maximum nominal charge power. May, depending on device, be used for forced charging and serves as hint for the optimizer.
+      de: Muss der maximalen Nenn-Ladeleistung der Batterie entsprechen. Kann je nach Gerät als Vorgabeleistung für Netzladen verwendet werden und dient als Hinweis für den Optimierer.
     advanced: true
   - name: maxchargerate
     unit: "%"
@@ -425,8 +425,8 @@ params:
       en: Maximum discharge power
       de: Maximale Entladeleistung
     help:
-      en: Maximum discharge power of the storage.
-      de: Maximale Entladeleistung des Speichers.
+      en: Must match the battery's maximum nominal discharge power. May, depending on device, be used as discharging limit in hold mode and serves as hint for the optimizer.
+      de: Muss der maximalen Nenn-Entladeleistung der Batterie entsprechen. Kann je nach Gerät als maximale Entladeleistung im `hold` Modus verwendet werden und dient als Hinweis für den Optimierer.
     advanced: true
 
   - name: accesstoken
