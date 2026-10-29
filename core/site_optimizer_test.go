@@ -147,6 +147,42 @@ func TestApplyPlanGoalEnergy(t *testing.T) {
 	}
 }
 
+// TestApplyPlanGoalSoc guards that all vehicle plans within the horizon become goals,
+// not only the next one (#35547)
+func TestApplyPlanGoalSoc(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	now := time.Now()
+	first, second := now.Add(2*time.Hour), now.Add(5*time.Hour)
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(50.0).AnyTimes()
+
+	lp := loadpoint.NewMockAPI(ctrl)
+	lp.EXPECT().GetPlanGoal().Return(50.0, true).AnyTimes()
+	lp.EXPECT().GetVehicle().Return(vehicle).AnyTimes()
+	lp.EXPECT().EffectivePlanTime().Return(first).AnyTimes()
+	lp.EXPECT().GetPlanGoals().Return([]loadpoint.PlanGoal{
+		{Time: first, Soc: 50},
+		{Time: second, Soc: 70},
+		{Time: now.Add(6 * time.Hour), Soc: 90},   // above s_max, capped
+		{Time: now.Add(100 * time.Hour), Soc: 90}, // beyond horizon
+		{Time: now.Add(-time.Hour), Soc: 90},      // past
+	}).AnyTimes()
+
+	site := &Site{log: util.NewLogger("foo")}
+
+	bat := optimizer.BatteryConfig{SMax: 40000}
+	site.applyPlanGoal(lp, &bat, 32)
+
+	require.Len(t, bat.SGoal, 32)
+	assert.Equal(t, float32(25000), bat.SGoal[planSlot(now, first)])
+	assert.Equal(t, float32(35000), bat.SGoal[planSlot(now, second)])
+	assert.Equal(t, float32(40000), bat.SGoal[planSlot(now, now.Add(6*time.Hour))])
+	assert.Equal(t, float32(100000), lo.Sum(bat.SGoal))
+	assert.Equal(t, float32(40000), bat.SMax, "later goals must not raise s_max")
+}
+
 func TestLoadpointCurrentAction(t *testing.T) {
 	for _, tc := range []struct {
 		name    string

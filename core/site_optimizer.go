@@ -1588,7 +1588,9 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	}
 
 	// Convert to Wh
-	if vehicle := lp.GetVehicle(); socBased && vehicle != nil {
+	vehicle := lp.GetVehicle()
+	socBased = socBased && vehicle != nil
+	if socBased {
 		goal *= vehicle.Capacity() * 10
 	} else {
 		// energy plans count from the energy charged since the plan was set, on top of the current state
@@ -1600,14 +1602,33 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 		return
 	}
 
-	slot := planSlot(time.Now(), ts)
+	now := time.Now()
+
+	slot := planSlot(now, ts)
 	if slot >= 0 && slot < minLen {
-		bat.SGoal = make([]float32, minLen)
-		bat.SGoal[slot] = float32(goal)
-		bat.SMax = max(bat.SMax, float32(goal))
+		setPlanGoal(bat, minLen, slot, goal)
 	} else {
 		site.log.DEBUG.Printf("plan beyond forecast range or overrun: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
 	}
+
+	// later plans let the optimizer charge ahead for them instead of replanning once the first goal is reached.
+	// Capped at s_max: the loadpoint only charges beyond its limit for the effective plan.
+	if socBased {
+		for _, g := range lp.GetPlanGoals() {
+			if slot := planSlot(now, g.Time); slot >= 0 && slot < minLen {
+				setPlanGoal(bat, minLen, slot, min(float64(g.Soc)*vehicle.Capacity()*10, float64(bat.SMax)))
+			}
+		}
+	}
+}
+
+// setPlanGoal sets the goal (Wh) at slot, keeping a higher goal already set there
+func setPlanGoal(bat *optimizer.BatteryConfig, minLen, slot int, goal float64) {
+	if bat.SGoal == nil {
+		bat.SGoal = make([]float32, minLen)
+	}
+	bat.SGoal[slot] = max(bat.SGoal[slot], float32(goal))
+	bat.SMax = max(bat.SMax, float32(goal))
 }
 
 // planSlot returns the first slot whose end is at or after ts, since s_goal[i] models the SoC at the end of slot i.

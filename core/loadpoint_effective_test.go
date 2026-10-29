@@ -7,9 +7,11 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -246,6 +248,39 @@ func TestPlanLocking(t *testing.T) {
 		assert.Equal(t, 0, soc)
 		assert.Equal(t, 0, id)
 	})
+}
+
+func TestGetPlanGoals(t *testing.T) {
+	config.Reset()
+	t.Cleanup(config.Reset)
+
+	ctrl := gomock.NewController(t)
+	v := api.NewMockVehicle(ctrl)
+	v.EXPECT().Capacity().Return(50.0).AnyTimes()
+	v.EXPECT().Features().Return(nil).AnyTimes()
+
+	const name = "vehicle"
+	require.NoError(t, config.Vehicles().Add(
+		config.NewStaticDevice(config.Named{Name: name}, api.Vehicle(v)),
+	))
+	require.NoError(t, settings.SetJson("vehicle."+name+"."+keys.RepeatingPlans, []api.RepeatingPlan{
+		{Weekdays: []int{0, 1, 2, 3, 4, 5, 6}, Time: "07:00", Tz: "UTC", Soc: 60, Active: true},
+		{Weekdays: []int{3}, Time: "09:00", Tz: "UTC", Soc: 90, Active: true},
+		{Weekdays: []int{3}, Time: "10:00", Tz: "UTC", Soc: 100, Active: false},
+	}))
+	t.Cleanup(func() { _ = settings.Delete("vehicle." + name + "." + keys.RepeatingPlans) })
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.vehicle = v
+	lp.vehicleSoc = 20
+
+	res := lp.GetPlanGoals()
+	require.Len(t, res, 8) // daily plan on each of 7 days, weekly plan once
+
+	for _, g := range res {
+		assert.True(t, g.Time.After(time.Now()) && g.Time.Before(time.Now().Add(7*24*time.Hour)), g.Time)
+	}
+	assert.Equal(t, 7, lo.CountBy(res, func(g loadpoint.PlanGoal) bool { return g.Soc == 60 }))
 }
 
 func TestGetChargePowerFlexibility(t *testing.T) {
