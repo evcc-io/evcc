@@ -950,6 +950,20 @@ func (m *MockCircuit) EXPECT() *MockCircuitMockRecorder {
 	return m.recorder
 }
 
+// EffectiveMaxPower mocks base method.
+func (m *MockCircuit) EffectiveMaxPower() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EffectiveMaxPower")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// EffectiveMaxPower indicates an expected call of EffectiveMaxPower.
+func (mr *MockCircuitMockRecorder) EffectiveMaxPower() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectiveMaxPower", reflect.TypeOf((*MockCircuit)(nil).EffectiveMaxPower))
+}
+
 // GetChargePower mocks base method.
 func (m *MockCircuit) GetChargePower() float64 {
 	m.ctrl.T.Helper()

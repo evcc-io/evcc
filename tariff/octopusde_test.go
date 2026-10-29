@@ -257,3 +257,29 @@ func TestRatesForAgreement_InvalidAgreement_AlreadyCompleted(t *testing.T) {
 	assert.Contains(t, err.Error(), "agreement is not valid for the planning horizon")
 	assert.Nil(t, rates)
 }
+
+// TestRatesForAgreement_TimeOfUseDSTChange verifies that slots stay on wall clock time
+// across the 25 hour day at the end of DST.
+func TestRatesForAgreement_TimeOfUseDSTChange(t *testing.T) {
+	loc, err := time.LoadLocation("Europe/Berlin")
+	require.NoError(t, err)
+
+	rates, err := ratesForAgreement(touAgreement(), time.Date(2026, 10, 25, 0, 0, 0, 0, loc))
+	require.NoError(t, err)
+	require.Len(t, rates, 14)
+
+	at := func(day, hour int) time.Time {
+		return time.Date(2026, 10, 25+day, hour, 0, 0, 0, loc)
+	}
+
+	for i, r := range rates {
+		day := i / 2
+		if i%2 == 0 {
+			assert.Equal(t, at(day, 6), r.ValidFrom, "day slot %d", i)
+			assert.Equal(t, at(day, 22), r.ValidTo, "day slot %d", i)
+		} else {
+			assert.Equal(t, at(day, 22), r.ValidFrom, "night slot %d", i)
+			assert.Equal(t, at(day+1, 6), r.ValidTo, "night slot %d", i)
+		}
+	}
+}

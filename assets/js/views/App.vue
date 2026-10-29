@@ -12,7 +12,6 @@
 		<VehicleSettingsModal :vehicles="vehicleList" :loadpoints="state.uiLoadpoints" />
 		<AboutModal v-bind="aboutModalProps" />
 		<HelpModal :custom-email="custom.email" />
-		<PasswordModal />
 		<LoginModal v-bind="loginModalProps" />
 		<OfflineIndicator v-bind="offlineIndicatorProps" />
 	</div>
@@ -24,12 +23,12 @@ import BottomTabBar from "../components/BottomTabs/Bar.vue";
 import GlobalSettingsModal from "../components/GlobalSettings/GlobalSettingsModal.vue";
 import VehicleSettingsModal from "../components/Vehicles/SettingsModal.vue";
 import OfflineIndicator from "../components/Footer/OfflineIndicator.vue";
-import PasswordModal from "../components/Auth/PasswordModal.vue";
 import LoginModal from "../components/Auth/LoginModal.vue";
 import AboutModal from "../components/AboutModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
 import vehicleList from "@/utils/vehicleList";
+import { wizardPending } from "@/onboarding";
 import { defineComponent } from "vue";
 
 // assume offline if not data received for 5 minutes
@@ -50,7 +49,6 @@ export default defineComponent({
 		GlobalSettingsModal,
 		VehicleSettingsModal,
 		HelpModal,
-		PasswordModal,
 		LoginModal,
 		OfflineIndicator,
 	},
@@ -119,6 +117,7 @@ export default defineComponent({
 			return {
 				installed: window.evcc?.version,
 				customBrand: this.custom.brand,
+				wizardPending: wizardPending(),
 				...this.collectProps(BottomTabBar, this.state),
 			};
 		},
