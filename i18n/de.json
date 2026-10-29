@@ -1589,7 +1589,8 @@
         "continuousCo2Description": "Wählt die sauberste unterbrechungsfreie Folge von Zeitfenstern.",
         "continuousPriceDescription": "Wählt die günstigste unterbrechungsfreie Folge von Zeitfenstern.",
         "disabledDescription": "Benötigt einen dynamischen Tarif oder eine CO₂-Vorhersage.",
-        "label": "Optimierung"
+        "label": "Optimierung",
+        "optimizerDescription": "Der {optimizer} wählt die günstigsten Zeitfenster. Kann zu mehreren Starts und Stopps führen."
       },
       "planNumber": "Plan {number}",
       "precondition": {
