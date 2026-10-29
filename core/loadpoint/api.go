@@ -153,8 +153,8 @@ type API interface {
 	RequestUpdate()
 	// GetPlanGoal returns the plan goal and if the goal is soc based
 	GetPlanGoal() (float64, bool)
-	// GetPlanGoals returns the soc goals of all vehicle plans within the coming week
-	GetPlanGoals() []PlanGoal
+	// GetSocPlanGoals returns the soc goals of all vehicle plans, repeating plans for each occurrence within a week
+	GetSocPlanGoals() []PlanGoal
 	// GetPlanRemainingEnergy returns the energy plan's missing energy in kWh
 	GetPlanRemainingEnergy() float64
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state

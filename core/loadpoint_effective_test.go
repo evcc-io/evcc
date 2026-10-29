@@ -250,7 +250,7 @@ func TestPlanLocking(t *testing.T) {
 	})
 }
 
-func TestGetPlanGoals(t *testing.T) {
+func TestGetSocPlanGoals(t *testing.T) {
 	config.Reset()
 	t.Cleanup(config.Reset)
 
@@ -274,7 +274,7 @@ func TestGetPlanGoals(t *testing.T) {
 	lp.vehicle = v
 	lp.vehicleSoc = 20
 
-	res := lp.GetPlanGoals()
+	res := lp.GetSocPlanGoals()
 	require.Len(t, res, 8) // daily plan on each of 7 days, weekly plan once
 
 	for _, g := range res {

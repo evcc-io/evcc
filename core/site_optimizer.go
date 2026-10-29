@@ -1614,7 +1614,7 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	// later plans let the optimizer charge ahead for them instead of replanning once the first goal is reached.
 	// Capped at s_max: the loadpoint only charges beyond its limit for the effective plan.
 	if socBased {
-		for _, g := range lp.GetPlanGoals() {
+		for _, g := range lp.GetSocPlanGoals() {
 			if slot := planSlot(now, g.Time); slot >= 0 && slot < minLen {
 				setPlanGoal(bat, minLen, slot, min(float64(g.Soc)*vehicle.Capacity()*10, float64(bat.SMax)))
 			}
