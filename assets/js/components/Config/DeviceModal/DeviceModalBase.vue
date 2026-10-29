@@ -202,6 +202,8 @@
 										v-if="modbus"
 										v-model:delay="values['delay']"
 										v-model:timeout="values['timeout']"
+										v-model:tls="values['tls']"
+										:show-tls="values['modbus'] === 'tcpip'"
 										component-id="device"
 									/>
 									<PropertyEntry
