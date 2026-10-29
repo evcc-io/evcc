@@ -103,7 +103,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	        if err != nil {
 	            return nil, err
 	        }
-	        return []string{state}, nil
+	        return []string{state.State}, nil
 	    }))
 	}
 	
