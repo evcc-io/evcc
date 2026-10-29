@@ -66,18 +66,18 @@ func (cr *ChargeRater) StartCharge(continued bool) {
 			}
 
 			cr.startEnergy = &f
+			cr.stopEnergy = nil
 			cr.log.DEBUG.Printf("charge start energy: %.3fkWh", f)
 		} else if !loadpoint.AcceptableError(err) {
 			cr.log.ERROR.Printf("charge total import: %v", err)
 		}
 	}
 
-	cr.stopEnergy = nil
-
 	if continued {
 		cr.charging = true
 	} else {
 		cr.chargedEnergy = 0
+		cr.stopEnergy = nil
 	}
 }
 
@@ -123,7 +123,6 @@ func (cr *ChargeRater) FinalizeCharge() {
 	}
 }
 
-// addTailEnergy adds the energy counted since charging stopped
 func (cr *ChargeRater) addTailEnergy(f float64) {
 	if cr.stopEnergy == nil {
 		return
@@ -201,7 +200,9 @@ func (cr *ChargeRater) ChargedEnergy() (float64, error) {
 		// late-latch baseline if StartCharge could not read TotalEnergy
 		// (e.g. OCPP transaction recovery before first MeterValues frame)
 		if cr.startEnergy == nil {
+			cr.addTailEnergy(f)
 			cr.startEnergy = &f
+			cr.stopEnergy = nil
 			cr.log.DEBUG.Printf("charge start energy: %.3fkWh", f)
 		}
 

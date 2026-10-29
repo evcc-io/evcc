@@ -219,7 +219,6 @@ func (conn *Connector) assumeMeterStopped() {
 	}
 }
 
-// updateEnergyRegister raises the energy register to the given reading in Wh if it was not reported yet
 func (conn *Connector) updateEnergyRegister(wh float64) {
 	m, ok := conn.measurements[types.MeasurandEnergyActiveImportRegister]
 	if !ok {

@@ -226,3 +226,42 @@ func TestTailEnergy(t *testing.T) {
 		t.Errorf("energy: %.3f %v", f, err)
 	}
 }
+
+func TestTailEnergyDeferredBaseline(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mm := api.NewMockMeter(ctrl)
+	me := api.NewMockMeterEnergy(ctrl)
+
+	type EnergyDecorator struct {
+		api.Meter
+		api.MeterEnergy
+	}
+
+	cr := NewChargeRater(util.NewLogger("foo"), &EnergyDecorator{Meter: mm, MeterEnergy: me})
+
+	me.EXPECT().TotalEnergy().Return(100.0, nil).Times(2)
+	cr.StartCharge(false)
+	cr.StartCharge(true)
+
+	me.EXPECT().TotalEnergy().Return(110.0, nil)
+	cr.StopCharge()
+
+	// meter not readable when charging resumes
+	me.EXPECT().TotalEnergy().Return(0.0, errors.New("not available"))
+	cr.StartCharge(true)
+
+	// tail is added when the baseline is latched
+	me.EXPECT().TotalEnergy().Return(110.05, nil)
+	if f, err := cr.ChargedEnergy(); f < 10.049 || f > 10.051 || err != nil {
+		t.Errorf("energy: %.3f %v", f, err)
+	}
+
+	me.EXPECT().TotalEnergy().Return(120.0, nil)
+	cr.StopCharge()
+
+	if f, err := cr.ChargedEnergy(); f < 19.999 || f > 20.001 || err != nil {
+		t.Errorf("energy: %.3f %v", f, err)
+	}
+}
