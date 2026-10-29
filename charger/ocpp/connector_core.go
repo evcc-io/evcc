@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
@@ -218,12 +219,29 @@ func (conn *Connector) assumeMeterStopped() {
 	}
 }
 
+// updateEnergyRegister raises the energy register to the given reading in Wh if it was not reported yet
+func (conn *Connector) updateEnergyRegister(wh float64) {
+	m, ok := conn.measurements[types.MeasurandEnergyActiveImportRegister]
+	if !ok {
+		return
+	}
+
+	if f, err := strconv.ParseFloat(m.Value, 64); err == nil && scale(f, m.Unit) < wh {
+		conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{
+			Value: strconv.FormatFloat(wh, 'f', -1, 64),
+			Unit:  types.UnitOfMeasureWh,
+		}
+	}
+}
+
 func (conn *Connector) OnStopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
 	conn.txnId = 0
 	conn.idTag = ""
+
+	conn.updateEnergyRegister(float64(request.MeterStop))
 
 	res := &core.StopTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{

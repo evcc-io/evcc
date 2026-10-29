@@ -168,3 +168,61 @@ func TestDeferredBaseline(t *testing.T) {
 		t.Errorf("final energy: %.1f %v", f, err)
 	}
 }
+
+func TestTailEnergy(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mm := api.NewMockMeter(ctrl)
+	me := api.NewMockMeterEnergy(ctrl)
+
+	type EnergyDecorator struct {
+		api.Meter
+		api.MeterEnergy
+	}
+
+	cr := NewChargeRater(util.NewLogger("foo"), &EnergyDecorator{Meter: mm, MeterEnergy: me})
+
+	me.EXPECT().TotalEnergy().Return(100.0, nil).Times(2)
+	cr.StartCharge(false)
+	cr.StartCharge(true)
+
+	me.EXPECT().TotalEnergy().Return(110.0, nil)
+	cr.StopCharge()
+
+	// meter keeps counting while the charger ramps down, session gets the full meter delta
+	me.EXPECT().TotalEnergy().Return(110.05, nil)
+	cr.StartCharge(true)
+
+	me.EXPECT().TotalEnergy().Return(120.0, nil)
+	cr.StopCharge()
+
+	if f, err := cr.ChargedEnergy(); f < 19.999 || f > 20.001 || err != nil {
+		t.Errorf("energy: %.3f %v", f, err)
+	}
+
+	// final reading after disconnect
+	me.EXPECT().TotalEnergy().Return(120.07, nil)
+	cr.FinalizeCharge()
+
+	// repeated reading is not counted twice
+	me.EXPECT().TotalEnergy().Return(120.07, nil)
+	cr.FinalizeCharge()
+
+	// implausible jump
+	me.EXPECT().TotalEnergy().Return(150.0, nil)
+	cr.FinalizeCharge()
+
+	if f, err := cr.ChargedEnergy(); f < 20.069 || f > 20.071 || err != nil {
+		t.Errorf("energy: %.3f %v", f, err)
+	}
+
+	// new session discards the stop reading
+	me.EXPECT().TotalEnergy().Return(150.0, nil)
+	cr.StartCharge(false)
+	cr.FinalizeCharge()
+
+	if f, err := cr.ChargedEnergy(); f != 0 || err != nil {
+		t.Errorf("energy: %.3f %v", f, err)
+	}
+}

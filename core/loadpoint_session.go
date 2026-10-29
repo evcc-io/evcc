@@ -146,6 +146,10 @@ func (lp *Loadpoint) finalizeSessionEnergy() {
 		return
 	}
 
+	if cf, ok := lp.chargeRater.(wrapper.ChargeFinalizer); ok {
+		cf.FinalizeCharge()
+	}
+
 	f, err := lp.chargeRater.ChargedEnergy()
 	if err != nil {
 		lp.log.ERROR.Printf("session energy: %v", err)
