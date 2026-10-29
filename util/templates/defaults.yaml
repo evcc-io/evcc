@@ -426,7 +426,7 @@ params:
       de: Maximale Entladeleistung
     help:
       en: Must match the battery's maximum nominal discharge power. May, depending on device, be used as discharging limit in hold mode and serves as hint for the optimizer.
-      de: Muss der maximalen Nenn-Entladeleistung der Batterie entsprechen. Kann, je nach Gerät, als maximale Entladeleistung im `hold` Modus verwendet werden und dient als Hinweis für den Optimierer.
+      de: Muss der maximalen Nenn-Entladeleistung der Batterie entsprechen. Kann, je nach Gerät, als maximale Entladeleistung im `holdcharge` Modus verwendet werden und dient als Hinweis für den Optimierer.
     advanced: true
 
   - name: accesstoken
