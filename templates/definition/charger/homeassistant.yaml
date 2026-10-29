@@ -120,6 +120,16 @@ params:
     help:
       en: Entity ID for cumulative energy measurement in kWh
       de: Entitäts-ID für kumulative Energiemessung in kWh
+  - name: identify
+    description:
+      de: Fahrzeugidentifikations-Sensor
+      en: Vehicle identification sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}
+    example: "sensor.charger_identify"
+    advanced: true
+    help:
+      en: Entity ID for the current RFID or vehicle identifier
+      de: Entitäts-ID für die aktuelle RFID- oder Fahrzeugkennung
   - name: temp
     description:
       de: Temperaturentität
