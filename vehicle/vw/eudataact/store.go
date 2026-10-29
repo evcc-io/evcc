@@ -10,7 +10,7 @@ import (
 )
 
 // maxBackfill bounds how many of the most recent content datasets are downloaded
-// on the first poll of a session to seed the merged map.
+// per poll, both to seed the merged map and to catch up after a longer pause.
 const maxBackfill = 8
 
 // store holds the merged dataset state for all vehicles of a single portal
@@ -161,23 +161,21 @@ func logData(log *util.Logger, data []point) {
 }
 
 // pending returns the content datasets that still need downloading, oldest to
-// newest. content must be sorted oldest to newest. On the first poll (after is
-// zero) only the latest maxBackfill datasets are returned to seed the map;
-// afterwards only datasets delivered after the newest one already merged are
-// returned, so no dataset is downloaded twice.
+// newest. content must be sorted oldest to newest. Only datasets delivered after
+// the newest one already merged are returned (all on the first poll, where after
+// is zero), so no dataset is downloaded twice. Of these only the latest
+// maxBackfill are returned: the portal answers a burst of downloads with 429,
+// which happens when the vehicle has not been polled for several hours.
 func pending(content []dataset, after time.Time) []dataset {
-	if after.IsZero() {
-		if len(content) > maxBackfill {
-			return content[len(content)-maxBackfill:]
-		}
-		return content
-	}
-
 	res := make([]dataset, 0, len(content))
 	for _, d := range content {
 		if d.CreatedOn.After(after) {
 			res = append(res, d)
 		}
+	}
+
+	if len(res) > maxBackfill {
+		res = res[len(res)-maxBackfill:]
 	}
 
 	return res

@@ -135,6 +135,12 @@ func TestPending(t *testing.T) {
 	got = pending(content, after)
 	require.Len(t, got, 1)
 	assert.Equal(t, "20260531100000_WVWZZZ.zip", got[0].Name, "only the newer dataset is pending")
+
+	// catching up after a long pause: only the latest maxBackfill of the newer datasets
+	got = pending(content, content[0].CreatedOn)
+	require.Len(t, got, maxBackfill)
+	assert.Equal(t, content[len(content)-maxBackfill].Name, got[0].Name, "oldest within the catch-up window")
+	assert.Equal(t, content[len(content)-1].Name, got[len(got)-1].Name, "newest")
 }
 
 func TestMerge(t *testing.T) {
