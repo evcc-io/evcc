@@ -1079,8 +1079,8 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 		bat.SInitial = float32(lp.GetChargedEnergy())    // Wh
 		bat.SMax = max(bat.SInitial, float32(limit*1e3)) // prevent infeasible if limit already exceeded
 	} else {
-		maxSoc := capacity * float64(lp.EffectiveLimitSoc()) * 10 // Wh
-		bat.SInitial = float32(capacity * soc * 10)               // Wh
+		maxSoc := socToWh(capacity, float64(lp.EffectiveLimitSoc()))
+		bat.SInitial = float32(socToWh(capacity, soc))
 		if soc == 0 {
 			// vehicle without soc: estimate stored energy from session charged energy
 			bat.SInitial = float32(lp.GetChargedEnergy() * eta) // Wh
@@ -1173,8 +1173,8 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	bat := optimizer.BatteryConfig{
 		CMax:      batteryPower,
 		DMax:      batteryPower,
-		SCapacity: float32(*b.Capacity * 1e3),         // Wh
-		SInitial:  float32(*b.Capacity * *b.Soc * 10), // Wh
+		SCapacity: float32(*b.Capacity * 1e3), // Wh
+		SInitial:  float32(socToWh(*b.Capacity, *b.Soc)),
 		// PA:       pa,
 	}
 	bat.SMax = max(bat.SInitial, float32(*b.Capacity*1e3)) // Wh, narrowed by soc limits below
@@ -1205,8 +1205,8 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 			maxSoc = 100 // empty/unset maxsoc means no upper limit
 		}
 		// clamp against current soc to prevent infeasible if it is outside the configured limits
-		bat.SMin = min(bat.SInitial, float32(*b.Capacity*minSoc*10)) // Wh
-		bat.SMax = max(bat.SInitial, float32(*b.Capacity*maxSoc*10)) // Wh
+		bat.SMin = min(bat.SInitial, float32(socToWh(*b.Capacity, minSoc)))
+		bat.SMax = max(bat.SInitial, float32(socToWh(*b.Capacity, maxSoc)))
 	}
 
 	detail := batteryDetail{
@@ -1591,7 +1591,7 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	vehicle := lp.GetVehicle()
 	socBased = socBased && vehicle != nil
 	if socBased {
-		goal *= vehicle.Capacity() * 10
+		goal = socToWh(vehicle.Capacity(), goal)
 	} else {
 		// energy plans count from the energy charged since the plan was set, on top of the current state
 		goal = float64(bat.SInitial) + lp.GetPlanRemainingEnergy()*1e3 // Wh
@@ -1616,7 +1616,7 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	if socBased {
 		for _, g := range lp.GetSocPlanGoals() {
 			if slot := planSlot(now, g.Time); slot >= 0 && slot < minLen {
-				setPlanGoal(bat, minLen, slot, min(float64(g.Soc)*vehicle.Capacity()*10, float64(bat.SMax)))
+				setPlanGoal(bat, minLen, slot, min(socToWh(vehicle.Capacity(), float64(g.Soc)), float64(bat.SMax)))
 			}
 		}
 	}
@@ -1629,6 +1629,11 @@ func setPlanGoal(bat *optimizer.BatteryConfig, minLen, slot int, goal float64) {
 	}
 	bat.SGoal[slot] = max(bat.SGoal[slot], float32(goal))
 	bat.SMax = max(bat.SMax, float32(goal))
+}
+
+// socToWh converts a soc in % of a capacity in kWh to Wh
+func socToWh(capacity, soc float64) float64 {
+	return capacity * soc * 10
 }
 
 // planSlot returns the first slot whose end is at or after ts, since s_goal[i] models the SoC at the end of slot i.
