@@ -2,7 +2,7 @@ template: ocpp-rheidon
 products:
   - brand: Rheidon
     description:
-      generic: PC200 Pro
+      generic: PC200 Pro (11 kW)
 capabilities: ["mA", "dim"]
 requirements:
   description:
