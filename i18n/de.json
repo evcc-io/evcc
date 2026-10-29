@@ -1632,7 +1632,6 @@
       "forecast": "Vorhersage",
       "forecastTooltip": "Vorhersage: verbleibende PV-Erzeugung heute",
       "gridImport": "Netzbezug",
-      "homeOther": "Sonstige",
       "homePower": "Verbrauch",
       "loadpoints": "Ladepunkt | Ladepunkt | {count} Ladepunkte",
       "loadpointsLimit": "{limit} Limit",

@@ -197,8 +197,7 @@
 										:iconProps="{ names: [c.icon || 'generic'] }"
 									/>
 									<EnergyflowEntry
-										v-if="otherPower !== null"
-										:name="$t('main.energyflow.homeOther')"
+										:name="$t('energy.consumers.others')"
 										:power="otherPower"
 										:powerUnit="powerUnit"
 										icon="vehicle"
@@ -568,7 +567,6 @@ export default defineComponent({
 			);
 		},
 		otherPower() {
-			if (this.allConsumers.length === 0) return null;
 			const metered = this.allConsumers.reduce((sum, m) => sum + (m.power || 0), 0);
 			return Math.max(0, this.homePower - metered);
 		},
