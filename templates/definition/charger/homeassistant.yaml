@@ -230,6 +230,7 @@ render: |
   milliamps: {{ .milliamps }}
   power: {{ .power }}
   energy: {{ .energy }}
+  identify: {{ .identify }}
   temp: {{ .temp }}
   {{- if and .currentL1 .currentL2 .currentL3 }}
   currents:
