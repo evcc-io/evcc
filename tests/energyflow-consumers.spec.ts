@@ -12,7 +12,7 @@ test.afterAll(async () => {
   await stop();
 });
 
-test("lists consumers and aux alphabetically, excludes ext, others = remainder", async ({ page }) => {
+test("lists consumers, aux and others, excludes ext", async ({ page }) => {
   await page.goto("/");
   await page.getByTestId("energyflow").click();
 
