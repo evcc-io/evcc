@@ -42,6 +42,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		Milliamps            bool     // optional - max current entity accepts fractional amps
 		Power                string   // optional - power sensor
 		Energy               string   // optional - energy sensor
+		Identify             string   // optional - RFID/vehicle identifier sensor
 		Currents             []string // optional - current sensors for L1, L2, L3
 		Voltages             []string // optional - voltage sensors for L1, L2, L3
 		Phases               string   // optional - select entity for 1p/3p phase switching
@@ -95,6 +96,17 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		}))
 	}
 
+	// vehicle identification (optional)
+	if cc.Identify != "" {
+	    implement.Has(c, implement.Identifier(func() ([]string, error) {
+	        state, err := conn.GetState(cc.Identify)
+	        if err != nil {
+	            return nil, err
+	        }
+	        return []string{state}, nil
+	    }))
+	}
+	
 	if cc.Power != "" {
 		implement.Has(c, implement.Meter(func() (float64, error) { return conn.GetFloatState(cc.Power) }))
 	}
