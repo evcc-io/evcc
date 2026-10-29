@@ -7,9 +7,11 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/grid"
+	"github.com/samber/lo"
 )
 
 // PublishEffectiveValues publishes all effective values
@@ -72,34 +74,59 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 
 	// calculate fresh plan
 	if v := lp.GetVehicle(); v != nil {
-		var plans []plan
-
-		// static plan
-		if planTime, soc := vehicle.Settings(lp.log, v).GetPlanSoc(); soc != 0 {
-			plans = append(plans, plan{Id: 1, Soc: soc, End: planTime})
-		}
-
-		// repeating plans
-		for index, rp := range vehicle.Settings(lp.log, v).GetRepeatingPlans() {
-			if !rp.Active || len(rp.Weekdays) == 0 {
-				continue
-			}
-
-			planTime, err := util.GetNextOccurrence(rp.Weekdays, rp.Time, rp.Tz)
-			if err != nil {
-				lp.log.DEBUG.Printf("invalid repeating plan: weekdays=%v, time=%s, tz=%s, error=%v", rp.Weekdays, rp.Time, rp.Tz, err)
-				continue
-			}
-
-			plans = append(plans, plan{Id: index + 2, Soc: rp.Soc, End: planTime})
-		}
-
 		// calculate earliest required plan start
-		if plan := lp.nextActivePlan(lp.effectiveMaxPower(), plans); plan != nil {
+		if plan := lp.nextActivePlan(lp.effectiveMaxPower(), lp.vehiclePlans(v, 1)); plan != nil {
 			return plan.End, plan.Soc, plan.Id
 		}
 	}
 	return time.Time{}, 0, 0
+}
+
+// vehiclePlans returns the static plan and each occurrence of active repeating plans within the given days
+func (lp *Loadpoint) vehiclePlans(v api.Vehicle, days int) []plan {
+	var plans []plan
+
+	// static plan
+	if planTime, soc := vehicle.Settings(lp.log, v).GetPlanSoc(); soc != 0 {
+		plans = append(plans, plan{Id: 1, Soc: soc, End: planTime})
+	}
+
+	// repeating plans
+	for index, rp := range vehicle.Settings(lp.log, v).GetRepeatingPlans() {
+		if !rp.Active || len(rp.Weekdays) == 0 {
+			continue
+		}
+
+		planTime, err := util.GetNextOccurrence(rp.Weekdays, rp.Time, rp.Tz)
+		if err != nil {
+			lp.log.DEBUG.Printf("invalid repeating plan: weekdays=%v, time=%s, tz=%s, error=%v", rp.Weekdays, rp.Time, rp.Tz, err)
+			continue
+		}
+
+		for d := range days {
+			if ts := planTime.AddDate(0, 0, d); slices.Contains(rp.Weekdays, int(ts.Weekday())) {
+				plans = append(plans, plan{Id: index + 2, Soc: rp.Soc, End: ts})
+			}
+		}
+	}
+
+	return plans
+}
+
+// GetSocPlanGoals returns the soc goals of all vehicle plans, repeating plans for each occurrence
+// within a week. Unlike nextVehiclePlan it includes later and already reached plans.
+func (lp *Loadpoint) GetSocPlanGoals() []loadpoint.PlanGoal {
+	lp.RLock()
+	defer lp.RUnlock()
+
+	v := lp.GetVehicle()
+	if v == nil || !lp.socBasedPlanning() {
+		return nil
+	}
+
+	return lo.Map(lp.vehiclePlans(v, 7), func(p plan, _ int) loadpoint.PlanGoal {
+		return loadpoint.PlanGoal{Time: p.End, Soc: p.Soc}
+	})
 }
 
 // EffectivePlanSoc returns the soc target for the current plan
