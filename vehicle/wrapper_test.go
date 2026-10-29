@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	corevehicle "github.com/evcc-io/evcc/core/vehicle"
 	"github.com/stretchr/testify/assert"
@@ -113,4 +114,20 @@ func TestWrapperRetry(t *testing.T) {
 	assert.Equal(t, "My Car", res.GetTitle())
 	assert.True(t, api.HasCap[api.ChargeState](res))
 	assert.Equal(t, calls+2, retryCalls())
+}
+
+func TestWrapperPermanent(t *testing.T) {
+	calls := retryCalls()
+
+	res := NewWrapper(context.TODO(), "my car", "test-retry", nil, backoff.Permanent(errors.New("invalid yaml")))
+	w := res.(*Wrapper)
+
+	w.mu.Lock()
+	w.retriedAt = time.Time{}
+	w.mu.Unlock()
+
+	_, err := res.Soc()
+	require.ErrorContains(t, err, "invalid yaml")
+	assert.Equal(t, []api.Feature{api.Offline}, res.Features())
+	assert.Equal(t, calls, retryCalls())
 }

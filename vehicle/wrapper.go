@@ -2,11 +2,13 @@ package vehicle
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	corevehicle "github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/util"
@@ -26,12 +28,14 @@ type Wrapper struct {
 
 	vehicle   api.Vehicle
 	err       error
+	retry     bool
 	retriedAt time.Time // last creation attempt
 }
 
 var _ api.Delegator = (*Wrapper)(nil)
 
-// NewWrapper creates a wrapper for a vehicle that could not be created
+// NewWrapper creates a wrapper for a vehicle that could not be created.
+// Creation is not retried for backoff.Permanent errors.
 func NewWrapper(ctx context.Context, name, typ string, other map[string]any, err error) api.Vehicle {
 	var cc struct {
 		embed `mapstructure:",squash"`
@@ -56,7 +60,12 @@ func NewWrapper(ctx context.Context, name, typ string, other map[string]any, err
 		retriedAt: time.Now(), // creation has just failed
 	}
 
-	v.Features_ = append(v.Features_, api.Offline, api.Retryable)
+	v.Features_ = append(v.Features_, api.Offline)
+
+	if _, ok := errors.AsType[*backoff.PermanentError](err); !ok {
+		v.retry = true
+		v.Features_ = append(v.Features_, api.Retryable)
+	}
 	v.SetTitle(cc.Title_)
 
 	return v
@@ -73,7 +82,7 @@ func (v *Wrapper) instance() api.Vehicle {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
-	if v.vehicle == nil && time.Since(v.retriedAt) >= retryInterval {
+	if v.retry && v.vehicle == nil && time.Since(v.retriedAt) >= retryInterval {
 		v.retriedAt = time.Now()
 		go v.create()
 	}

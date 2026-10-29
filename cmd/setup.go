@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
@@ -504,6 +505,9 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	var instance api.Vehicle
 	if err == nil {
 		instance, err = vehicle.NewFromConfig(ctx, typ, other)
+	} else {
+		// invalid custom yaml won't heal by retrying
+		err = backoff.Permanent(err)
 	}
 
 	if err != nil {
