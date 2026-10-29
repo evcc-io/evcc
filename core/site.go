@@ -1384,7 +1384,6 @@ func (site *Site) update(lp updater) {
 		batteryGridDischargeActive = site.batteryGridDischargeActive(feedinRate)
 	}
 	site.publish(keys.BatteryGridDischargeActive, batteryGridDischargeActive)
-	site.publish(keys.BatteryGridDischargeActive, batteryGridDischargeActive)
 
 	site.updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate)
 
