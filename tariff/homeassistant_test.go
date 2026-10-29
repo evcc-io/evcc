@@ -85,3 +85,27 @@ func TestSolarForecastRatesOffGrid(t *testing.T) {
 	assert.True(t, data[1].End.Equal(start.Add(2*time.Hour)))
 	assert.Equal(t, 376.0, data[1].Value)
 }
+
+func TestSolarForecastRatesZeroFill(t *testing.T) {
+	res := map[string]homeassistant.SolarForecast{
+		"a": {WhHours: map[string]float64{
+			"2026-09-12T10:00:00+00:00": 100,
+			"2026-09-12T13:00:00+00:00": 200,
+		}},
+	}
+
+	data, err := solarForecastRates(res)
+	require.NoError(t, err)
+	require.Len(t, data, 4)
+
+	start := time.Date(2026, 9, 12, 10, 0, 0, 0, time.UTC)
+	for i, v := range []float64{100, 0, 0, 200} {
+		assert.True(t, data[i].Start.Equal(start.Add(time.Duration(i)*time.Hour)))
+		assert.Equal(t, v, data[i].Value)
+	}
+
+	data = zeroFillBefore(data, start.Add(-3*time.Hour))
+	require.Len(t, data, 7)
+	assert.True(t, data[0].Start.Equal(start.Add(-3*time.Hour)))
+	assert.Equal(t, 0.0, data[2].Value)
+}

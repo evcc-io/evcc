@@ -80,6 +80,7 @@ func (t *HomeAssistant) run(interval time.Duration, done chan error) {
 			if len(data) == 0 {
 				return backoff.Permanent(errors.New("no solar forecast configured in the energy dashboard"))
 			}
+			data = zeroFillBefore(data, beginningOfDay())
 			return nil
 		}, bo()); err != nil {
 			if reportError(&once, done, err) {
@@ -133,6 +134,12 @@ func solarForecastRates(res map[string]homeassistant.SolarForecast) (api.Rates, 
 	// sum slots of different granularity on the common time grid
 	edges := slices.SortedFunc(maps.Keys(bounds), time.Time.Compare)
 
+	// forecasts omit zero-energy periods, the optimizer expects gapless slots
+	step := time.Hour
+	for i := 0; i+1 < len(edges); i++ {
+		step = min(step, edges[i+1].Sub(edges[i]))
+	}
+
 	data := make(api.Rates, 0, len(edges))
 	for i := 0; i+1 < len(edges); i++ {
 		start, end := edges[i], edges[i+1]
@@ -150,10 +157,36 @@ func solarForecastRates(res map[string]homeassistant.SolarForecast) (api.Rates, 
 
 		if found {
 			data = append(data, api.Rate{Start: start, End: end, Value: sum})
+			continue
+		}
+
+		for ; start.Before(end); start = start.Add(step) {
+			slotEnd := start.Add(step)
+			if slotEnd.After(end) {
+				slotEnd = end
+			}
+			data = append(data, api.Rate{Start: start, End: slotEnd})
 		}
 	}
 
 	return data, nil
+}
+
+// zeroFillBefore prepends zero-energy slots from the given time up to the first slot
+func zeroFillBefore(data api.Rates, from time.Time) api.Rates {
+	if len(data) == 0 {
+		return data
+	}
+
+	step := data[0].End.Sub(data[0].Start)
+
+	var pre api.Rates
+	for ts := data[0].Start.Add(-step); !ts.Before(from); ts = ts.Add(-step) {
+		pre = append(pre, api.Rate{Start: ts, End: ts.Add(step)})
+	}
+	slices.Reverse(pre)
+
+	return append(pre, data...)
 }
 
 // Rates implements the api.Tariff interface
