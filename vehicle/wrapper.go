@@ -19,7 +19,6 @@ const retryInterval = 15 * time.Minute
 type Wrapper struct {
 	embed
 	mu     sync.Mutex
-	log    *util.Logger
 	ctx    context.Context
 	typ    string
 	other  map[string]any
@@ -49,7 +48,6 @@ func NewWrapper(ctx context.Context, name, typ string, other map[string]any, err
 
 	v := &Wrapper{
 		embed:     cc.embed,
-		log:       util.ContextLoggerWithDefault(ctx, util.NewLogger("vehicle")),
 		ctx:       ctx,
 		typ:       typ,
 		other:     other,
@@ -85,17 +83,18 @@ func (v *Wrapper) instance() api.Vehicle {
 
 func (v *Wrapper) create() {
 	vehicle, err := NewFromConfig(v.ctx, v.typ, v.other)
+	log := util.ContextLoggerWithDefault(v.ctx, util.NewLogger("vehicle"))
 
 	v.mu.Lock()
 	if err != nil {
 		v.err = fmt.Errorf("vehicle not available: %w", err)
-		v.log.WARN.Printf("creating vehicle failed: %v", err)
+		log.WARN.Printf("creating vehicle failed: %v", err)
 	} else {
 		if vehicle.GetTitle() == "" {
 			vehicle.SetTitle(v.Title_)
 		}
 		v.vehicle = vehicle
-		v.log.INFO.Printf("vehicle available: %s", util.TypeWithTemplateName(v.typ, v.other))
+		log.INFO.Printf("vehicle available: %s", util.TypeWithTemplateName(v.typ, v.other))
 	}
 	v.mu.Unlock()
 
