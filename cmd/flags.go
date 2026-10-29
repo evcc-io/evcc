@@ -37,6 +37,9 @@ const (
 	flagCustomLogoDark            = "custom-logo-dark"
 	flagCustomLogoDarkDescription = "Custom dark-mode logo file (svg, png) replacing the evcc logo in the UI. Requires custom-logo-light."
 
+	flagCustomIcon            = "custom-icon"
+	flagCustomIconDescription = "Custom app icon file (png, square, 512x512 recommended) used for browser tab, home screen and app install."
+
 	flagCustomBrand            = "custom-brand"
 	flagCustomBrandDescription = "Custom brand name shown in the UI"
 
