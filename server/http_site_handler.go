@@ -123,7 +123,6 @@ func indexHandler(custom Customization) http.HandlerFunc {
 	}
 }
 
-// manifestHandler serves the web app manifest with white-label name and icon applied
 func manifestHandler(custom Customization) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := fs.ReadFile(assets.Web, "meta/site.webmanifest")
