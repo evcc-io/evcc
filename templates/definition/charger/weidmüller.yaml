@@ -5,9 +5,6 @@ products:
       generic: AC Smart
 capabilities: ["rfid", "1p3p", "meter", "dim"]
 requirements:
-  description:
-    de: Werkseinstellung ist die feste IP 192.168.0.8 ohne DHCP. Die Netzwerkeinstellungen (z. B. DHCP) in der Weboberfläche der Wallbox anpassen. Der für die Steuerung erforderliche Satellitenmodus des Lastmanagements wird von evcc automatisch aktiviert.
-    en: Factory setting is the static IP 192.168.0.8 without DHCP. Adjust the network settings (e.g. enable DHCP) in the charger's web interface. The load management satellite mode required for control is automatically enabled by evcc.
   evcc: ["sponsorship"]
 params:
   - name: host
