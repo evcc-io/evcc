@@ -3,7 +3,7 @@
 		name="modbusproxy"
 		:title="$t('config.modbusproxy.title')"
 		:description="$t('config.modbusproxy.description')"
-		docs="/docs/reference/configuration/modbusproxy"
+		docs="/reference/configuration/modbusproxy"
 		endpoint="/config/modbusproxy"
 		state-key="modbusproxy"
 		store-values-in-array
@@ -13,7 +13,7 @@
 	>
 		<template #default="{ values }: { values: ModbusProxy[] }">
 			<div class="mb-3">
-				<SponsorTokenRequired v-if="!isSponsor" feature />
+				<SponsorTokenRequired :is-sponsor="isSponsor" feature />
 				<pre class="text-monospace my-5">{{ ASCII_DIAGRAM }}</pre>
 				<div v-for="(c, index) in values" :key="index" data-testid="modbusproxy-connection">
 					<div class="d-block">

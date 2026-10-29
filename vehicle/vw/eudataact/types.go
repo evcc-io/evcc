@@ -130,19 +130,25 @@ const (
 	FieldHvBatteryLevelValue = "battery_level_HV.value"
 
 	// target soc
-	FieldTargetSoc = "settings.target_soc"
+	FieldTargetSoc           = "settings.target_soc"
+	FieldChargeBcamThreshold = "battery_care_mode.charge_bcam_threshold" // Audi Q4 e-tron battery care mode target soc
+	FieldBcamActivation      = "setting.bcam_activation"                 // only equals target soc while battery care mode is active
+
+	// battery care mode activation values (see FieldBcamActivation)
+	BcamActivationActivated = "BCAM_ACTIVATION_ACTIVATED"
 
 	// range
 	FieldRangeCombined       = "cruising_range_combined"
 	FieldRangePrimary        = "cruising_range_primary_engine"
 	FieldRangeSecondary      = "cruising_range_secondary_engine"
 	KeyRangeID3              = "0ca40e18-0564-3eda-bcc0-7aee9ef44f04" // VW ID.3 range
-	KeyBatteryStateReportSoc = "506cb83e-f99f-3af3-bbeb-0429b69a78d9" // VW ID.3 soc
+	KeyBatteryStateReportSoc = "506cb83e-f99f-3af3-bbeb-0429b69a78d9" // current soc; other battery_state_report.soc keys hold the soc at charge start
 	KeyEnyaqSoc              = "0a18a053-b4b0-3db1-be44-a6c5dba629b1" // Skoda Enyaq soc
 
 	// odo
 	FieldOdometer      = "mileage"
 	FieldOdometerValue = "mileage.value"
+	KeyMileageValue    = "69d437d3-7baa-38bc-b842-f5baf99ddade" // current mileage; other mileage.value keys may be stale
 
 	// time
 	FieldRemainingTime = "remaining_charging_time"

@@ -1,7 +1,7 @@
 package session
 
 import (
-	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/util"
 	"gorm.io/gorm"
 )
@@ -59,7 +59,7 @@ func (s *DB) Persist(session any) {
 }
 
 // Return sessions
-// TODO make this part of server/db
+// TODO make this part of db
 func (s *DB) Sessions() (Sessions, error) {
 	var res Sessions
 	tx := s.db.Find(&res)

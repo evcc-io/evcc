@@ -3,6 +3,8 @@ package cmd
 import (
 	"cmp"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -13,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
@@ -25,6 +28,9 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
 	coresettings "github.com/evcc-io/evcc/core/settings"
+	"github.com/evcc-io/evcc/curtailer"
+	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/shm"
@@ -34,8 +40,6 @@ import (
 	"github.com/evcc-io/evcc/plugin/javascript"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/server/db"
-	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/providerauth"
@@ -52,7 +56,6 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/libp2p/zeroconf/v2"
-	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	vpr "github.com/spf13/viper"
@@ -170,11 +173,11 @@ func configureCircuits(conf *[]config.Named) error {
 			// just warn, no error to not break previous behavior
 			log.WARN.Println("circuits configured via UI yaml; evcc.yaml config will be ignored")
 		}
+		yamlSource.circuits = globalconfig.YamlSourceDb
 		*conf = []config.Named{}
 		if err := settings.Yaml(keys.Circuits, new([]map[string]any), &conf); err != nil {
 			return err
 		}
-		yamlSource.circuits = globalconfig.YamlSourceDb
 	}
 
 	// load configCircuits devices from database
@@ -205,6 +208,8 @@ func configureCircuits(conf *[]config.Named) error {
 // validateCircuitConfigs validates circuit configurations with support for both static and configurable types
 func validateCircuitConfigs[T any](children []T, getConfigAndLogger func(T) (config.Named, *util.Logger), getDevice func(T, api.Circuit) config.Device[api.Circuit]) error {
 	// TODO check for circular references
+	var errs []error
+
 NEXT:
 	for i, child := range children {
 		cc, log := getConfigAndLogger(child)
@@ -232,11 +237,10 @@ NEXT:
 
 		instance, err := circuit.NewFromConfig(ctx, typ, other)
 		if err != nil {
-			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
-		}
-
-		// ensure config has title
-		if instance.GetTitle() == "" {
+			// register without instance so the broken circuit stays editable
+			errs = append(errs, &DeviceError{cc.Name, fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)})
+		} else if instance.GetTitle() == "" {
+			// ensure config has title
 			//lint:ignore SA1019 as Title is safe on ascii
 			instance.SetTitle(strings.Title(cc.Name))
 		}
@@ -252,6 +256,10 @@ NEXT:
 	if len(children) > 0 {
 		cn, _ := getConfigAndLogger(children[0])
 		return fmt.Errorf("circuit is missing parent: %s", cn.Name)
+	}
+
+	if len(errs) > 0 {
+		return joinErrors(errs...)
 	}
 
 	var rootFound bool
@@ -356,7 +364,7 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 	}()
 
 	var instance T
-	if err == nil {
+	if err == nil && !conf.Disable {
 		instance, err = newFromConf(ctx, typ, other)
 		if err != nil {
 			err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
@@ -408,6 +416,50 @@ func configureMeters(static []config.Named, names ...string) error {
 			}
 
 			return configurableInstance("meter", &conf, meter.NewFromConfig, config.Meters())
+		})
+	}
+
+	return eg.Wait()
+}
+
+func configureCurtailers(static []config.Named, names ...string) error {
+	var eg errgroup.Group
+
+	for i, cc := range static {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create curtailer %d: missing name", i+1)
+		}
+
+		// configure all, if no name refs are given
+		if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			continue
+		}
+
+		if err := nameValid(cc.Name); err != nil {
+			log.WARN.Printf("create curtailer %d: %v", i+1, err)
+		}
+
+		eg.Go(func() error {
+			return staticInstance("curtailer", cc, curtailer.NewFromConfig, config.Curtailers())
+		})
+	}
+
+	// append devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Curtailer)
+	if err != nil {
+		return err
+	}
+
+	for _, conf := range configurable {
+		eg.Go(func() error {
+			cc := conf.Named()
+
+			// always skip unreferenced db devices
+			if !slices.Contains(names, cc.Name) {
+				return nil
+			}
+
+			return configurableInstance("curtailer", &conf, curtailer.NewFromConfig, config.Curtailers())
 		})
 	}
 
@@ -466,6 +518,9 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	var instance api.Vehicle
 	if err == nil {
 		instance, err = vehicle.NewFromConfig(ctx, typ, other)
+	} else {
+		// invalid custom yaml won't heal by retrying
+		err = backoff.Permanent(err)
 	}
 
 	if err != nil {
@@ -475,7 +530,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 
 		// wrap non-config vehicle errors to prevent fatals
 		log.ERROR.Printf("creating vehicle %s failed: %v", cc.Name, err)
-		instance = vehicle.NewWrapper(cc.Name, cc.Type, cc.Other, err)
+		instance = vehicle.NewWrapper(ctx, cc.Name, typ, other, err)
 	}
 
 	// ensure vehicle config has title
@@ -514,7 +569,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 			}
 
 			if _, ok := instance.OnIdentified().GetMode(); ok {
-				log.WARN.Printf("vehicle '%s': default charge 'mode' is deprecated, please configure via UI (charging plan > arrival)", cc.Name)
+				log.WARN.Printf("vehicle '%s': default charge 'mode' is deprecated, please configure via UI (more > vehicles)", cc.Name)
 			}
 
 			mu.Lock()
@@ -552,9 +607,14 @@ func configureVehicles(static []config.Named, names ...string) error {
 				}
 			}
 
-			instance, err := vehicleInstance(cc)
-			if err != nil {
-				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+			// disabled vehicles are not instantiated
+			var instance api.Vehicle
+			if !conf.Disable {
+				var err error
+				instance, err = vehicleInstance(cc)
+				if err != nil {
+					return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+				}
 			}
 
 			mu.Lock()
@@ -896,6 +956,13 @@ func networkSettings(conf *globalconfig.Network) error {
 	return nil
 }
 
+// mdnsInstance returns a stable instance name per installation so multiple evcc instances don't conflict,
+// the machine id is hashed as it must not be published. The port separates instances sharing a host.
+func mdnsInstance(id string, port int) string {
+	sum := sha256.Sum256(fmt.Appendf(nil, "mdns:%s:%d", id, port))
+	return "evcc-" + hex.EncodeToString(sum[:4])
+}
+
 // setup MDNS
 func configureMDNS(conf globalconfig.Network) error {
 	host := strings.TrimSuffix(conf.Host, ".local")
@@ -910,7 +977,7 @@ func configureMDNS(conf globalconfig.Network) error {
 		text = append(text, "external_url="+externalURL)
 	}
 
-	zc, err := zeroconf.RegisterProxy("evcc", "_http._tcp", "local.", conf.Port, host, nil, text, nil)
+	zc, err := zeroconf.RegisterProxy(mdnsInstance(machine.ID(), conf.Port), "_http._tcp", "local.", conf.Port, host, nil, text, nil)
 	if err != nil {
 		return err
 	}
@@ -986,7 +1053,7 @@ func configureEEBus(conf *eebus.Config) error {
 	return nil
 }
 
-func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan messenger.Event, error) {
+func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles) (chan messenger.Event, error) {
 	// yaml config from file
 	if len(confMessaging.Events) != 0 || len(confMessaging.Services) != 0 {
 		yamlSource.messaging = globalconfig.YamlSourceFile
@@ -1015,7 +1082,8 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 		}
 	}
 
-	messageChan := make(chan messenger.Event, 1)
+	// events are queued by the value cache, keep enough slack to not stall it
+	messageChan := make(chan messenger.Event, 16)
 
 	var eg errgroup.Group
 
@@ -1056,7 +1124,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 		events = confMessaging.Events
 	}
 
-	messageHub, err := messenger.NewHub(events, vehicles, cache)
+	messageHub, err := messenger.NewHub(events, vehicles)
 
 	if err != nil {
 		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
@@ -1068,7 +1136,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 		}
 	}
 
-	go messageHub.Run(messageChan, valueChan)
+	go messageHub.Run(messageChan)
 
 	return messageChan, nil
 }
@@ -1089,7 +1157,7 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 
 		// wrap non-config tariff errors to prevent fatals
 		log.ERROR.Printf("creating tariff %s failed: %v", name, err)
-		instance = tariff.NewWrapper(conf.Type, conf.Other, err)
+		instance = tariff.NewWrapper(ctx, typ, other, err)
 	}
 
 	return instance, nil
@@ -1154,15 +1222,20 @@ func configureSolarTariffs(confs []config.Typed, deviceNames []string, target *a
 		if len(deviceNames) == 1 {
 			return configureTariff(config.Typed{}, deviceNames[0], target)
 		}
-		tt := make([]api.Tariff, len(deviceNames))
-		for i, name := range deviceNames {
+		var tt []api.Tariff
+		for _, name := range deviceNames {
 			dev, err := config.Tariffs().ByName(name)
 			if err != nil {
 				return fmt.Errorf("tariff device %s not found: %w", name, err)
 			}
-			tt[i] = dev.Instance()
+			// nil instance marks disabled device
+			if instance := dev.Instance(); instance != nil {
+				tt = append(tt, instance)
+			}
 		}
-		*target = tariff.NewCombined(tt)
+		if len(tt) > 0 {
+			*target = tariff.NewCombined(tt)
+		}
 	}
 	return nil
 }
@@ -1217,9 +1290,13 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 				return nil
 			}
 
-			instance, err := tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
-			if err != nil {
-				return err
+			var instance api.Tariff
+			if !conf.Disable {
+				var err error
+				instance, err = tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
+				if err != nil {
+					return err
+				}
 			}
 
 			if e := config.Tariffs().Add(config.NewConfigurableDevice(&conf, instance)); e != nil {
@@ -1286,6 +1363,10 @@ func configureDevices(conf globalconfig.All) error {
 		errs = append(errs, &ClassError{ClassCircuit, err})
 	}
 
+	if err := configureCurtailers(conf.Curtailers, references.curtailer...); err != nil {
+		errs = append(errs, &ClassError{ClassCurtailer, err})
+	}
+
 	return joinErrors(errs...)
 }
 
@@ -1341,9 +1422,12 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		errs = append(errs, &ClassError{ClassTariff, err})
 	}
 
-	loadpoints := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) *core.Loadpoint {
-		return dev.Instance().(*core.Loadpoint)
-	})
+	// nil entries mark disabled loadpoints- indexes stay aligned with config order
+	var loadpoints []*core.Loadpoint
+	for _, dev := range config.Loadpoints().Devices() {
+		inst, _ := dev.Instance().(*core.Loadpoint)
+		loadpoints = append(loadpoints, inst)
+	}
 
 	site, err := configureSite(conf.Site, loadpoints, tariffs)
 	if err != nil {
@@ -1380,7 +1464,7 @@ CONTINUE:
 		}
 
 		if slices.ContainsFunc(loadpoints, func(lp *core.Loadpoint) bool {
-			return lp.GetCircuit() == instance
+			return lp != nil && lp.GetCircuit() == instance
 		}) {
 			continue CONTINUE
 		}
@@ -1458,19 +1542,41 @@ func configureLoadpoints(conf globalconfig.All) error {
 			return &DeviceError{cc.Name, err}
 		}
 
-		instance, err := newLoadpoint(idx, cc.Name, static, func(log *util.Logger) coresettings.Settings {
-			return coresettings.NewConfigSettingsAdapter(log, &conf)
-		})
-		if err != nil {
-			err = &DeviceError{cc.Name, err}
+		// start in the configured default mode, or restore the last mode from settings if none is set.
+		// static is a copy: dropping the persisted last mode keeps it from being decoded as default
+		delete(static, "mode")
+		if dynamic.DefaultMode != "" {
+			if static == nil {
+				static = make(map[string]any)
+			}
+			static["mode"] = dynamic.DefaultMode
 		}
 
-		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
+		var instance loadpoint.API
+		if !conf.Disable {
+			lp, e := newLoadpoint(idx, cc.Name, static, func(log *util.Logger) coresettings.Settings {
+				return coresettings.NewConfigSettingsAdapter(log, &conf)
+			})
+			if e != nil {
+				err = &DeviceError{cc.Name, e}
+			} else {
+				instance = lp
+			}
+		}
+
+		dev := config.NewConfigurableDevice(&conf, instance)
 		if e := config.Loadpoints().Add(dev); e != nil && err == nil {
 			err = &DeviceError{cc.Name, e}
 		}
 
 		if instance != nil {
+			// stored phase mode may no longer fit the charger, e.g. after it lost phase switching;
+			// fall back to the loadpoint default instead of failing boot
+			if e := instance.SetPhasesConfigured(dynamic.PhasesConfigured); e != nil {
+				log.WARN.Printf("%s: ignoring stored phases %d: %v", cc.Name, dynamic.PhasesConfigured, e)
+				dynamic.PhasesConfigured = instance.GetPhasesConfigured()
+			}
+
 			// ignore dynamic config in case of startup errors that will leave instance empty
 			if e := dynamic.Apply(instance); e != nil && err == nil {
 				err = &DeviceError{cc.Name, e}
@@ -1486,7 +1592,7 @@ func configureLoadpoints(conf globalconfig.All) error {
 }
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes
-func configureAuth(router *mux.Router, paramC chan<- util.Param) {
+func configureAuth(router *mux.Router, authMiddleware mux.MiddlewareFunc, paramC chan<- util.Param) {
 	auth := router.PathPrefix("/providerauth").Subrouter()
 	auth.Use(handlers.CompressHandler)
 	auth.Use(handlers.CORS(
@@ -1496,8 +1602,8 @@ func configureAuth(router *mux.Router, paramC chan<- util.Param) {
 	// backwards-compatible revert of https://github.com/evcc-io/evcc/pull/21266
 	router.PathPrefix("/oauth").Handler(auth)
 
-	// wire the handler
-	providerauth.Setup(auth, paramC)
+	// wire the handler; login/logout require an authenticated session
+	providerauth.Setup(auth, paramC, authMiddleware)
 }
 
 // isExperimental returns if experimental features are enabled

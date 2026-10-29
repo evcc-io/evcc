@@ -73,8 +73,7 @@
 				<pre
 					id="apiKeyExample"
 					class="form-control border font-monospace small mb-2 api-key-example"
-					>{{ curlExample }}</pre
-				>
+					>{{ curlExample }}</pre>
 				<CopyLink :text="curlExample" />
 			</FormRow>
 
@@ -128,9 +127,9 @@ export default defineComponent({
 		},
 		curlExample(): string {
 			const key = this.revealedKey ?? "";
-			const url = `${window.location.origin}/api/system/backup`;
+			const url = `${window.location.origin}/api/db/backup`;
 			return [
-				`curl -X POST ${url} \\`,
+				`curl -X GET ${url} \\`,
 				`  -H "Authorization: Bearer ${key}" \\`,
 				`  -o evcc-backup.db`,
 			].join("\n");

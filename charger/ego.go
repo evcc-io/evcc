@@ -27,6 +27,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -201,14 +202,14 @@ var _ api.ChargerEx = (*Ego)(nil)
 func (wb *Ego) MaxCurrentMillis(current float64) error {
 	phases := 1
 	if wb.lp != nil {
-		if p := wb.lp.GetPhases(); p != 0 {
+		if p := wb.lp.ActivePhases(); p != 0 {
 			phases = p
 		}
 	}
 
 	// Calculate power from current
 	// E.G.O. Smart Heater works in manual mode with specific power values
-	power := int16(voltage * current * float64(phases))
+	power := int16(grid.CurrentToPower(current, phases))
 
 	err := wb.setPower(power)
 	if err == nil {

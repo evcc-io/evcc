@@ -1,5 +1,6 @@
 import axios, { type AxiosResponse } from "axios";
 import { openLoginModal } from "./components/Auth/auth";
+import restart from "./restart";
 
 const { protocol, hostname, port, pathname } = window.location;
 
@@ -29,6 +30,16 @@ const api = axios.create({
 });
 
 const errorInterceptor = (error: any) => {
+  // backend is expected to be unreachable during restart, don't alert
+  if (restart.restarting) {
+    return Promise.reject(error);
+  }
+
+  // proxy/tunnel errors, backend unreachable, no toast
+  if ([502, 503, 504].includes(error.response?.status)) {
+    return Promise.reject(error);
+  }
+
   // handle unauthorized errors
   if (error.response?.status === 401) {
     openLoginModal();

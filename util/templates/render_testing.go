@@ -13,10 +13,10 @@ import (
 )
 
 // test renders and instantiates plus yaml-parses the template per usage
-func test(t *testing.T, tmpl Template, values map[string]any, cb func(values map[string]any)) {
+func test(t *testing.T, class Class, tmpl Template, values map[string]any, cb func(values map[string]any)) {
 	t.Helper()
 
-	b, _, err := tmpl.RenderResult(RenderModeInstance, values)
+	b, _, err := tmpl.RenderResult(class, RenderModeInstance, values)
 	if err != nil {
 		t.Log(string(b))
 		t.Error(err)
@@ -75,6 +75,9 @@ func testAuth(tmpl Template) error {
 func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values map[string]any)) {
 	t.Parallel()
 
+	// templates sharing one modbus connection serialize on its lock and largest delay
+	port := 20000
+
 	for _, tmpl := range ByClass(class, WithDeprecated()) {
 		// set default values for all params
 		values := tmpl.Defaults(RenderModeUnitTest)
@@ -91,6 +94,9 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 				values[ModbusKeyRS485TCPIP] = true
 			}
 			tmpl.ModbusValues(RenderModeUnitTest, values)
+
+			port++
+			values[ModbusParamPort] = port
 		}
 
 		// set the template value which is needed for rendering
@@ -108,7 +114,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 			t.Run(tmpl.Template, func(t *testing.T) {
 				t.Parallel()
 
-				test(t, tmpl, values, func(values map[string]any) {
+				test(t, class, tmpl, values, func(values map[string]any) {
 					instantiate(t, values)
 				})
 			})
@@ -125,7 +131,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 			t.Run(tmpl.Template+"/"+u, func(t *testing.T) {
 				t.Parallel()
 
-				test(t, tmpl, usageValues, func(values map[string]any) {
+				test(t, class, tmpl, usageValues, func(values map[string]any) {
 					instantiate(t, values)
 				})
 			})

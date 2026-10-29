@@ -13,6 +13,22 @@ type Controller interface {
 	LoadpointControl(API)
 }
 
+// AlwaysChargeActive reports if the loadpoint is forced to draw at least min power
+func AlwaysChargeActive(lp API) bool {
+	return lp.GetMode() == api.ModeSmart && lp.GetAlwaysCharge().Active()
+}
+
+// SurplusFlexible reports if the loadpoint charges flexibly from surplus, i.e. smart mode without always charge
+func SurplusFlexible(lp API) bool {
+	return lp.GetMode() == api.ModeSmart && !lp.GetAlwaysCharge().Active()
+}
+
+// PlanGoal is a vehicle plan's soc goal and finish time
+type PlanGoal struct {
+	Time time.Time
+	Soc  int
+}
+
 // API is the external loadpoint API
 type API interface {
 	//
@@ -70,6 +86,10 @@ type API interface {
 	GetMode() api.ChargeMode
 	// SetMode sets the charge mode
 	SetMode(api.ChargeMode)
+	// GetAlwaysCharge returns the always charge state
+	GetAlwaysCharge() api.AlwaysCharge
+	// SetAlwaysCharge sets the always charge state
+	SetAlwaysCharge(api.AlwaysCharge) error
 	// GetDefaultMode returns the default charge mode (for reset)
 	GetDefaultMode() api.ChargeMode
 	// SetDefaultMode sets the default charge mode (for reset)
@@ -129,8 +149,14 @@ type API interface {
 	SetPlanEnergy(time.Time, float64) error
 	// ClearPlanLock clears the locked plan goal
 	ClearPlanLock()
+	// RequestUpdate triggers an immediate loadpoint update
+	RequestUpdate()
 	// GetPlanGoal returns the plan goal and if the goal is soc based
 	GetPlanGoal() (float64, bool)
+	// GetSocPlanGoals returns the soc goals of all vehicle plans, repeating plans for each occurrence within a week
+	GetSocPlanGoals() []PlanGoal
+	// GetPlanRemainingEnergy returns the energy plan's missing energy in kWh
+	GetPlanRemainingEnergy() float64
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state
 	GetPlanRequiredDuration(goal, maxPower float64) time.Duration
 	// GetPlanStrategy returns the plan strategy
@@ -141,6 +167,8 @@ type API interface {
 	SocBasedPlanning() bool
 	// GetPlan creates a charging plan
 	GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continuous bool) api.Rates
+	// EffectivePlan returns the charging plan in effect, its average power and true if the optimizer created it
+	EffectivePlan(planTime time.Time, requiredDuration time.Duration, strategy api.PlanStrategy) (api.Rates, float64, bool)
 
 	// GetSocConfig returns the soc poll settings
 	GetSocConfig() SocConfig
@@ -190,11 +218,22 @@ type API interface {
 	// GetSmartCostLimit return the smart cost limit
 	GetSmartCostLimit() *float64
 	// SetSmartCostLimit sets the smart cost limit
-	SetSmartCostLimit(limit *float64)
+	SetSmartCostLimit(limit *float64) error
+
+	// GetSolarShare gets the solar share
+	GetSolarShare() float64
+	// SetSolarShare sets the solar share
+	SetSolarShare(share float64)
+
+	// GetDemandPredictor returns the heating demand predictor, empty for the charger default
+	GetDemandPredictor() string
+	// SetDemandPredictor sets the heating demand predictor, empty for the charger default
+	SetDemandPredictor(predictor string)
+
 	// GetSmartFeedInPriorityLimit return the smart feed-in limit
 	GetSmartFeedInPriorityLimit() *float64
 	// SetSmartFeedInPriorityLimit sets the smart feed-in limit
-	SetSmartFeedInPriorityLimit(limit *float64)
+	SetSmartFeedInPriorityLimit(limit *float64) error
 
 	//
 	// power and energy
@@ -219,6 +258,8 @@ type API interface {
 	GetRemainingDuration() time.Duration
 	// GetRemainingEnergy is the remaining charge energy in kWh
 	GetRemainingEnergy() float64
+	// GetChargedEnergy returns session charge energy in Wh
+	GetChargedEnergy() float64
 
 	//
 	// vehicles

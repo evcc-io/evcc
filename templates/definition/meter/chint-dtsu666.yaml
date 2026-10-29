@@ -1,0 +1,39 @@
+template: chint-dtsu666
+products:
+  - brand: CHINT
+    description:
+      generic: DTSU666
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: mbmd
+  {{- include "modbus" . }}
+  model: dtsu666
+  {{- if ne .usage "pv" }}
+  power: Power
+  energy: Import
+  returnenergy: Export
+  powers:
+    - PowerL1
+    - PowerL2
+    - PowerL3
+  {{- else }}
+  power: -Power
+  energy: Export
+  returnenergy: Import
+  powers:
+    - -PowerL1
+    - -PowerL2
+    - -PowerL3
+  {{- end }}
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
+  voltages:
+    - VoltageL1
+    - VoltageL2
+    - VoltageL3

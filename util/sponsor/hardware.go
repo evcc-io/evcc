@@ -22,19 +22,20 @@ import (
 
 	"github.com/evcc-io/evcc/api/proto/pb"
 	"github.com/evcc-io/evcc/util/cloud"
-	"github.com/evcc-io/evcc/util/request"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 // checkHardware registers the device with the sponsor server and checks authorization.
-func checkHardware(vendor string, metadata map[string]string) string {
+// Returns the sponsor subject and, for vendors with online service access, a sponsor token.
+func checkHardware(vendor string, metadata map[string]string) (string, string) {
 	conn, err := cloud.Connection()
 	if err != nil {
-		return unavailable
+		return unavailable, ""
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), startupTimeout)
 	defer cancel()
 
 	client := pb.NewAuthClient(conn)
@@ -42,15 +43,15 @@ func checkHardware(vendor string, metadata map[string]string) string {
 		MachineId: machineID(),
 		Vendor:    vendor,
 		Metadata:  metadata,
-	})
+	}, grpc.WaitForReady(true))
 
 	if err == nil && res.Authorized {
-		return res.Subject
+		return res.Subject, res.Token
 	}
 
 	if s, ok := status.FromError(err); ok && s.Code() != codes.Unknown {
-		return unavailable
+		return unavailable, ""
 	}
 
-	return ""
+	return "", ""
 }

@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ClassName = "chargermetervehicletariffloadpointcircuitmessengerhems"
+const _ClassName = "chargermetervehicletariffloadpointcircuitmessengerhemscurtailer"
 
-var _ClassIndex = [...]uint8{0, 7, 12, 19, 25, 34, 41, 50, 54}
+var _ClassIndex = [...]uint8{0, 7, 12, 19, 25, 34, 41, 50, 54, 63}
 
-const _ClassLowerName = "chargermetervehicletariffloadpointcircuitmessengerhems"
+const _ClassLowerName = "chargermetervehicletariffloadpointcircuitmessengerhemscurtailer"
 
 func (i Class) String() string {
 	i -= 1
@@ -33,27 +33,33 @@ func _ClassNoOp() {
 	_ = x[Circuit-(6)]
 	_ = x[Messenger-(7)]
 	_ = x[Hems-(8)]
+	_ = x[Curtailer-(9)]
 }
 
-var _ClassValues = []Class{Charger, Meter, Vehicle, Tariff, Loadpoint, Circuit, Messenger, Hems}
+var _ClassValues = []Class{Charger, Meter, Vehicle, Tariff, Loadpoint, Circuit, Messenger, Hems, Curtailer}
 
 var _ClassNameToValueMap = map[string]Class{
-	_ClassName[0:7]:        Charger,
+	_ClassName[0:7]:   Charger,
+	_ClassName[7:12]:  Meter,
+	_ClassName[12:19]: Vehicle,
+	_ClassName[19:25]: Tariff,
+	_ClassName[25:34]: Loadpoint,
+	_ClassName[34:41]: Circuit,
+	_ClassName[41:50]: Messenger,
+	_ClassName[50:54]: Hems,
+	_ClassName[54:63]: Curtailer,
+}
+
+var _ClassLowerNameToValueMap = map[string]Class{
 	_ClassLowerName[0:7]:   Charger,
-	_ClassName[7:12]:       Meter,
 	_ClassLowerName[7:12]:  Meter,
-	_ClassName[12:19]:      Vehicle,
 	_ClassLowerName[12:19]: Vehicle,
-	_ClassName[19:25]:      Tariff,
 	_ClassLowerName[19:25]: Tariff,
-	_ClassName[25:34]:      Loadpoint,
 	_ClassLowerName[25:34]: Loadpoint,
-	_ClassName[34:41]:      Circuit,
 	_ClassLowerName[34:41]: Circuit,
-	_ClassName[41:50]:      Messenger,
 	_ClassLowerName[41:50]: Messenger,
-	_ClassName[50:54]:      Hems,
 	_ClassLowerName[50:54]: Hems,
+	_ClassLowerName[54:63]: Curtailer,
 }
 
 var _ClassNames = []string{
@@ -65,6 +71,7 @@ var _ClassNames = []string{
 	_ClassName[34:41],
 	_ClassName[41:50],
 	_ClassName[50:54],
+	_ClassName[54:63],
 }
 
 // ClassString retrieves an enum value from the enum constants string name.
@@ -74,7 +81,7 @@ func ClassString(s string) (Class, error) {
 		return val, nil
 	}
 
-	if val, ok := _ClassNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _ClassLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to Class values", s)

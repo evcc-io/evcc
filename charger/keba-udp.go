@@ -14,7 +14,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// https://www.keba.com/file/downloads/e-mobility/KeContact_P20_P30_UDP_ProgrGuide_en.pdf
+// https://www.keba.com/download/x/4aab015706/kecontactp30udp_pgen.pdf
 
 const (
 	udpTimeout = time.Second
@@ -23,6 +23,7 @@ const (
 // KebaUdp is an api.Charger implementation
 type KebaUdp struct {
 	implement.Caps
+	*embed
 	log     *util.Logger
 	conn    string
 	rfid    keba.RFID
@@ -38,6 +39,7 @@ func init() {
 // NewKebaUdpFromConfig creates a new Keba UDP charger
 func NewKebaUdpFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
+		embed   `mapstructure:",squash"`
 		URI     string
 		Serial  string
 		Timeout time.Duration
@@ -50,7 +52,7 @@ func NewKebaUdpFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, err
 	}
 
-	k, err := NewKebaUdp(ctx, cc.URI, cc.Serial, cc.RFID, cc.Timeout)
+	k, err := NewKebaUdp(ctx, &cc.embed, cc.URI, cc.Serial, cc.RFID, cc.Timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +72,7 @@ func NewKebaUdpFromConfig(ctx context.Context, other map[string]any) (api.Charge
 }
 
 // NewKebaUdp creates a new charger
-func NewKebaUdp(ctx context.Context, uri, serial string, rfid keba.RFID, timeout time.Duration) (*KebaUdp, error) {
+func NewKebaUdp(ctx context.Context, embed *embed, uri, serial string, rfid keba.RFID, timeout time.Duration) (*KebaUdp, error) {
 	log := util.LoggerFromContext(ctx, "keba")
 
 	instance, err := keba.Instance(log)
@@ -84,6 +86,7 @@ func NewKebaUdp(ctx context.Context, uri, serial string, rfid keba.RFID, timeout
 
 	c := &KebaUdp{
 		Caps:    implement.New(),
+		embed:   embed,
 		log:     log,
 		conn:    conn,
 		rfid:    rfid,
@@ -306,10 +309,10 @@ func (c *KebaUdp) currents() (float64, float64, float64, error) {
 var _ api.Identifier = (*KebaUdp)(nil)
 
 // Identify implements the api.Identifier interface
-func (c *KebaUdp) Identify() (string, error) {
+func (c *KebaUdp) Identify() ([]string, error) {
 	var kr keba.Report100
 	err := c.roundtrip("report", 100, &kr)
-	return kr.RFIDTag, err
+	return []string{kr.RFIDTag}, err
 }
 
 var _ api.Diagnosis = (*KebaUdp)(nil)

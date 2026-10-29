@@ -41,6 +41,10 @@ Payment.args = { ...base, status: OptimizationStatus.OPTIMAL, netCost: 12.4 };
 export const Credit = Template.bind({});
 Credit.args = { ...base, status: OptimizationStatus.OPTIMAL, netCost: -3.8 };
 
+// usable but not proven optimal plan
+export const Feasible = Template.bind({});
+Feasible.args = { ...base, status: OptimizationStatus.FEASIBLE, netCost: 12.4 };
+
 // solver could not produce a plan
 export const Infeasible = Template.bind({});
 Infeasible.args = { ...base, status: OptimizationStatus.INFEASIBLE, netCost: 0 };

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -36,7 +35,7 @@ func NewHomeAssistantVehicleFromConfig(ctx context.Context, other map[string]any
 			LimitSoc   string // optional
 			Odometer   string // optional
 			Climater   string // optional
-			FinishTime string // optional
+			FinishTime string // deprecated, ignored
 		}
 		StatusA  string // optional - custom states mapped to status A
 		StatusB  string // optional - custom states mapped to status B
@@ -97,10 +96,6 @@ func NewHomeAssistantVehicleFromConfig(ctx context.Context, other map[string]any
 	if cc.Sensors.Climater != "" {
 		implement.Has(res, implement.VehicleClimater(func() (bool, error) { return conn.GetBoolState(cc.Sensors.Climater) }))
 	}
-	if cc.Sensors.FinishTime != "" {
-		implement.Has(res, implement.VehicleFinishTimer(func() (time.Time, error) { return conn.GetTimeState(cc.Sensors.FinishTime) }))
-	}
-
 	var enable func(bool) error
 	if cc.Services.Start != "" && cc.Services.Stop != "" {
 		enable = func(enable bool) error {
@@ -118,7 +113,7 @@ func NewHomeAssistantVehicleFromConfig(ctx context.Context, other map[string]any
 		implement.Has(res, implement.Resurrector(func() error { return conn.CallSwitchService(cc.Services.Wakeup, true) }))
 	}
 	if cc.Services.SetMaxCurrent != "" {
-		implement.Has(res, implement.CurrentController(func(current int64) error { return conn.CallNumberService(cc.Services.SetMaxCurrent, float64(current)) }))
+		implement.Has(res, implement.CurrentController(func(current int64) error { return conn.CallNumberService(cc.Services.SetMaxCurrent, current) }))
 	}
 
 	return res, nil

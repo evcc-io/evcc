@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	pluginmqtt "github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
@@ -15,7 +16,7 @@ func TestCardataStreaming(t *testing.T) {
 
 	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: "at",
-	}), "client", "vin", 0)
+	}), NewMqttConnector(ctx, util.NewLogger("foo"), "client", nil), "vin", time.Hour)
 
 	// prevent container panic
 	p.updated = time.Now()
@@ -30,8 +31,8 @@ func TestCardataStreaming(t *testing.T) {
 	require.Equal(t, 42.0, soc)
 
 	mqtt := mqttConnections["client"]
-	dataC := mqtt.subscriptions["vin"]
-	require.NotNil(t, dataC, "streaming channel")
+	require.Len(t, mqtt.subscriptions["VIN"], 1, "streaming channel")
+	dataC := mqtt.subscriptions["VIN"][0].in
 
 	dataC <- StreamingMessage{
 		Vin: "vin",
@@ -40,13 +41,76 @@ func TestCardataStreaming(t *testing.T) {
 		},
 	}
 
-	// process first message
-	dataC <- StreamingMessage{}
-	dataC <- StreamingMessage{}
+	require.Eventually(t, func() bool {
+		soc, err := p.Soc()
+		return err == nil && soc == 47.0
+	}, time.Second, 10*time.Millisecond, "streaming update not applied")
+}
 
-	soc, err = p.Soc()
+func TestBrokerStreaming(t *testing.T) {
+	ctx := t.Context()
+
+	conn := NewBrokerConnector(ctx, util.NewLogger("foo"), pluginmqtt.Config{Broker: t.Name()}, "bmw/raw/+")
+
+	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
+		AccessToken: "at",
+	}), conn, "vin", time.Hour)
+
+	conn.brokerHandler(`{"vin":"VIN","data":{"vehicle.drivetrain.batteryManagement.header":{"value":"47"}}}`)
+
+	require.Eventually(t, func() bool {
+		p.mu.Lock()
+		defer p.mu.Unlock()
+		return !p.updated.IsZero()
+	}, time.Second, 10*time.Millisecond, "rest timer not reset")
+
+	// nil api panics if rest is requested
+	soc, err := p.Soc()
 	require.NoError(t, err)
 	require.Equal(t, 47.0, soc)
+}
+
+func TestStreamingTimestamps(t *testing.T) {
+	ctx := t.Context()
+
+	conn := NewMqttConnector(ctx, util.NewLogger("foo"), t.Name(), nil)
+
+	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
+		AccessToken: "at",
+	}), conn, "vin", time.Hour)
+
+	dataC := conn.subscriptions["VIN"][0].in
+
+	keySoc := "vehicle.drivetrain.batteryManagement.header"
+	msg := func(ts time.Time, soc string) StreamingMessage {
+		return StreamingMessage{Vin: "vin", TimeStamp: ts, Data: map[string]StreamingData{
+			keySoc: {TimeStamp: ts, Value: soc},
+		}}
+	}
+
+	streamed := func() (time.Time, any) {
+		p.mu.Lock()
+		defer p.mu.Unlock()
+		return p.updated, p.streaming[keySoc].Value
+	}
+
+	// a retained message replayed on subscribe leaves the rest refresh due
+	old := time.Now().Add(-3 * time.Hour).Truncate(time.Second)
+	dataC <- msg(old, "40")
+
+	require.Eventually(t, func() bool {
+		updated, soc := streamed()
+		return updated.Equal(old) && soc == "40"
+	}, time.Second, 10*time.Millisecond, "old message not applied")
+
+	now := time.Now().Truncate(time.Second)
+	dataC <- msg(now, "47")
+	dataC <- msg(now.Add(-time.Minute), "45")
+
+	require.Eventually(t, func() bool {
+		updated, soc := streamed()
+		return updated.Equal(now) && soc == "47"
+	}, time.Second, 10*time.Millisecond, "delayed message overwrote newer data")
 }
 
 func TestSocFallback(t *testing.T) {
@@ -54,7 +118,7 @@ func TestSocFallback(t *testing.T) {
 
 	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: "at",
-	}), "client", "vin", 0)
+	}), NewMqttConnector(ctx, util.NewLogger("foo"), "client", nil), "vin", time.Hour)
 
 	// prevent container panic
 	p.updated = time.Now()
@@ -111,7 +175,7 @@ func TestRangeFallback(t *testing.T) {
 
 	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: "at",
-	}), "client", "vin", 0)
+	}), NewMqttConnector(ctx, util.NewLogger("foo"), "client", nil), "vin", time.Hour)
 
 	// prevent container panic
 	p.updated = time.Now()
@@ -168,7 +232,7 @@ func TestStatusFallback(t *testing.T) {
 
 	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: "at",
-	}), "client", "vin", 0)
+	}), NewMqttConnector(ctx, util.NewLogger("foo"), "client", nil), "vin", time.Hour)
 
 	// prevent container panic
 	p.updated = time.Now()

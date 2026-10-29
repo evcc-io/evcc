@@ -5,8 +5,9 @@ import (
 )
 
 type embed struct {
-	Icon_     string        `mapstructure:"icon"`
-	Features_ []api.Feature `mapstructure:"features"`
+	Icon_      string        `mapstructure:"icon"`
+	Features_  []api.Feature `mapstructure:"features"`
+	Predictor_ []api.Feature `mapstructure:"predictor"`
 }
 
 var _ api.IconDescriber = (*embed)(nil)
@@ -20,5 +21,5 @@ var _ api.FeatureDescriber = (*embed)(nil)
 
 // Features implements the api.FeatureDescriber interface
 func (v *embed) Features() []api.Feature {
-	return v.Features_
+	return append(v.Features_, v.Predictor_...)
 }

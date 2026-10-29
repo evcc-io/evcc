@@ -23,6 +23,7 @@ linters:
   settings:
     modernize:
       disable:
+        - embedlit
         - stringsbuilder
     staticcheck:
       checks:
@@ -42,7 +43,6 @@ formatters:
   enable:
     - gci
     - gofmt
-    - goimports
   exclusions:
     generated: lax
     paths:

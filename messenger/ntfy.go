@@ -67,8 +67,8 @@ func NewNtfyFromConfig(ctx context.Context, other map[string]any) (api.Messenger
 		log = log.Redact(cc.AuthToken, bearer, encoded)
 	}
 
-	if token, ok := strings.CutPrefix(u.String(), "https://ntfy.sh/"); ok {
-		log = log.Redact(token)
+	if u.Host == "ntfy.sh" {
+		log = log.Redact(strings.TrimPrefix(u.Path, "/"))
 	}
 
 	m := &Ntfy{

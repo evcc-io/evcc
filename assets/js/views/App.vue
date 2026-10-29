@@ -11,8 +11,7 @@
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<VehicleSettingsModal :vehicles="vehicleList" :loadpoints="state.uiLoadpoints" />
 		<AboutModal v-bind="aboutModalProps" />
-		<HelpModal />
-		<PasswordModal />
+		<HelpModal :custom-email="custom.email" />
 		<LoginModal v-bind="loginModalProps" />
 		<OfflineIndicator v-bind="offlineIndicatorProps" />
 	</div>
@@ -24,12 +23,12 @@ import BottomTabBar from "../components/BottomTabs/Bar.vue";
 import GlobalSettingsModal from "../components/GlobalSettings/GlobalSettingsModal.vue";
 import VehicleSettingsModal from "../components/Vehicles/SettingsModal.vue";
 import OfflineIndicator from "../components/Footer/OfflineIndicator.vue";
-import PasswordModal from "../components/Auth/PasswordModal.vue";
 import LoginModal from "../components/Auth/LoginModal.vue";
 import AboutModal from "../components/AboutModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
 import vehicleList from "@/utils/vehicleList";
+import { wizardPending } from "@/onboarding";
 import { defineComponent } from "vue";
 
 // assume offline if not data received for 5 minutes
@@ -50,7 +49,6 @@ export default defineComponent({
 		GlobalSettingsModal,
 		VehicleSettingsModal,
 		HelpModal,
-		PasswordModal,
 		LoginModal,
 		OfflineIndicator,
 	},
@@ -62,6 +60,7 @@ export default defineComponent({
 	data: () => {
 		return {
 			reconnectTimeout: null as number | null,
+			reconnectAttempts: 0,
 			ws: null as WebSocket | null,
 			authNotConfigured: false,
 			currentVersion: undefined as string | undefined,
@@ -73,6 +72,15 @@ export default defineComponent({
 	computed: {
 		version() {
 			return store.state.version;
+		},
+		custom() {
+			return {
+				logo: window.evcc?.customLogo ?? false,
+				brand: window.evcc?.customBrand ?? "",
+				website: window.evcc?.customWebsite ?? "",
+				email: window.evcc?.customEmail ?? "",
+				phone: window.evcc?.customPhone ?? "",
+			};
 		},
 		showRoutes() {
 			return this.state.startupCompleted;
@@ -95,15 +103,21 @@ export default defineComponent({
 		},
 		aboutModalProps() {
 			return {
-				installed: window.evcc.version,
-				commit: window.evcc.commit,
+				installed: window.evcc?.version,
+				commit: window.evcc?.commit,
+				customLogo: this.custom.logo,
+				customBrand: this.custom.brand,
+				customWebsite: this.custom.website,
+				customEmail: this.custom.email,
+				customPhone: this.custom.phone,
 				...this.collectProps(AboutModal, this.state),
 			};
 		},
 		bottomTabBarProps() {
 			return {
-				installed: window.evcc.version,
-				commit: window.evcc.commit,
+				installed: window.evcc?.version,
+				customBrand: this.custom.brand,
+				wizardPending: wizardPending(),
 				...this.collectProps(BottomTabBar, this.state),
 			};
 		},
@@ -166,10 +180,13 @@ export default defineComponent({
 		},
 		reconnect() {
 			this.clearReconnectTimeout();
+			// quick first retry, then back off
+			const delay = this.reconnectAttempts === 0 ? 250 : 2500;
 			this.reconnectTimeout = window.setTimeout(() => {
+				this.reconnectAttempts++;
 				this.disconnect();
 				this.connect();
-			}, 2500);
+			}, delay);
 		},
 		disconnect() {
 			if (this.ws) {
@@ -206,6 +223,7 @@ export default defineComponent({
 			};
 			this.ws.onopen = () => {
 				console.log("websocket connected");
+				this.reconnectAttempts = 0;
 				window.app.setOnline();
 			};
 			this.ws.onclose = () => {

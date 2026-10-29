@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+	"uuid"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/jlr"
-	"github.com/google/uuid"
 )
 
 // https://github.com/ardevd/jlrpy
@@ -55,7 +55,7 @@ func NewJLRFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, e
 	log := util.LoggerFromContext(ctx, "jlr").Redact(cc.User, cc.Password, cc.VIN, cc.DeviceID)
 
 	if cc.DeviceID == "" {
-		cc.DeviceID = uuid.NewString()
+		cc.DeviceID = uuid.New().String()
 		log.WARN.Println("new device id generated, add `deviceid` to config:", cc.DeviceID)
 	}
 

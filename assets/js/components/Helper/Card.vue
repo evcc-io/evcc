@@ -1,55 +1,32 @@
 <template>
 	<section class="evcc-card round-box p-3 p-sm-4" :class="{ 'evcc-card--edge': edgeToEdge }">
-		<div
-			v-if="hasHeader"
-			class="evcc-card-header d-flex align-items-center gap-3 flex-wrap mb-3"
-		>
-			<h3
-				v-if="hasTitle || hasSubtitle"
-				class="evcc-card-title fw-normal m-0 d-flex gap-3 flex-wrap align-items-baseline overflow-hidden"
-			>
-				<span class="d-block no-wrap text-truncate">
-					<slot name="title">{{ title }}</slot>
-				</span>
-				<small v-if="hasSubtitle" class="d-block no-wrap text-truncate evcc-card-subtitle">
-					<slot name="subtitle">{{ subtitle }}</slot>
-				</small>
-			</h3>
-			<slot name="nav" />
-			<div v-if="$slots['actions']" class="ms-auto">
-				<slot name="actions" />
-			</div>
-		</div>
+		<CardHeader v-if="hasHeader" class="mb-3" :title="title" :subtitle="subtitle">
+			<template v-if="$slots['icon']" #icon><slot name="icon" /></template>
+			<template v-if="$slots['nav']" #nav><slot name="nav" /></template>
+			<template v-if="$slots['actions']" #actions><slot name="actions" /></template>
+		</CardHeader>
 		<slot />
 	</section>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import CardHeader from "./CardHeader.vue";
 
-// Reusable content card: optional header (title + subtitle + nav/actions slots) over a
-// rounded box. `edgeToEdge` makes it full-bleed on mobile (for charts that need width).
-// Mirrors the History tile style so the look stays consistent across pages.
+// Reusable content card: optional header over a rounded box. `edgeToEdge` makes it
+// full-bleed on mobile (for charts that need width).
 export default defineComponent({
 	name: "Card",
+	components: { CardHeader },
 	props: {
 		title: { type: String, default: "" },
 		subtitle: { type: String, default: "" },
 		edgeToEdge: Boolean,
 	},
 	computed: {
-		hasTitle(): boolean {
-			return !!this.title || !!this.$slots["title"];
-		},
-		hasSubtitle(): boolean {
-			return !!this.subtitle || !!this.$slots["subtitle"];
-		},
 		hasHeader(): boolean {
 			return (
-				this.hasTitle ||
-				this.hasSubtitle ||
-				!!this.$slots["nav"] ||
-				!!this.$slots["actions"]
+				!!this.title || !!this.subtitle || !!this.$slots["nav"] || !!this.$slots["actions"]
 			);
 		},
 	},
@@ -57,17 +34,21 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.evcc-card-subtitle {
-	color: var(--evcc-gray);
-}
-@media (max-width: 575.98px) {
-	.evcc-card--edge {
+@import "../../../css/breakpoints.css";
+@media (--below-sm) {
+	/* app sets .safe-area-side when a side inset exists (e.g. iPhone Duo), keep rounded cards then */
+	:root:not(.safe-area-side) .evcc-card--edge {
 		margin-left: -1.5rem;
 		margin-right: -1.5rem;
 		border-width: 1px 0;
 		border-radius: 0;
 		padding-left: 1.5rem !important;
 		padding-right: 1.5rem !important;
+	}
+	/* small side margin like .box-pull-out, also for cards without it */
+	:root.safe-area-side .evcc-card--edge {
+		margin-left: -1rem;
+		margin-right: -1rem;
 	}
 }
 </style>

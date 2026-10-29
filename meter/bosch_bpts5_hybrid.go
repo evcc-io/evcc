@@ -45,7 +45,7 @@ func NewBoschBpts5HybridFromConfig(ctx context.Context, other map[string]any) (a
 }
 
 // NewBoschBpts5Hybrid creates a Bosch BPT-S 5 Hybrid Meter
-func NewBoschBpts5Hybrid(ctx context.Context, uri, usage string, cache time.Duration, capacity func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*BoschBpts5Hybrid, error) {
+func NewBoschBpts5Hybrid(ctx context.Context, uri, usage string, cache time.Duration, capacity func() (float64, error), batterySocLimits, batteryPowerLimits func() (float64, float64, error)) (*BoschBpts5Hybrid, error) {
 	log := util.LoggerFromContext(ctx, "bosch-bpt")
 
 	instance, exists := bosch.Instances.LoadOrStore(uri, bosch.NewLocal(log, uri, cache))

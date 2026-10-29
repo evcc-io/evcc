@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/cache"
+	"github.com/evcc-io/evcc/util/oauth"
 	"golang.org/x/oauth2"
 )
 
@@ -21,10 +24,24 @@ type passwordTokenSource struct {
 // Token returns a token or an error.
 // Implements oauth2.TokenSource interface
 func (p *passwordTokenSource) Token() (*oauth2.Token, error) {
+	tokenMu.Lock()
+	defer tokenMu.Unlock()
+
+	if d := tokenInterval - time.Since(tokenLast); d > 0 {
+		time.Sleep(d)
+	}
+	defer func() { tokenLast = time.Now() }()
+
 	return p.config.PasswordCredentialsToken(p.ctx, p.user, p.pass)
 }
 
+// tokenInterval is the minimum spacing of token requests, Zaptec allows 1 request/s per IP without burst
+const tokenInterval = time.Second
+
 var (
+	tokenMu   sync.Mutex
+	tokenLast time.Time
+
 	// TokenSourceCache stores per-user token sources
 	tokenSourceCache = cache.New[oauth2.TokenSource]()
 
@@ -42,7 +59,7 @@ func getOIDCProvider(ctx context.Context) (*oidc.Provider, error) {
 }
 
 // TokenSource returns a shared oauth2.TokenSource for the given user.
-func TokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource, error) {
+func TokenSource(ctx context.Context, log *util.Logger, user, pass string) (oauth2.TokenSource, error) {
 	return tokenSourceCache.GetOrCreate(user, func() (oauth2.TokenSource, error) {
 		provider, err := getOIDCProvider(ctx)
 		if err != nil {
@@ -70,6 +87,6 @@ func TokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource, er
 			return nil, err
 		}
 
-		return oauth2.ReuseTokenSource(token, pts), nil
+		return oauth2.ReuseTokenSource(token, oauth.Redacted(log, pts)), nil
 	})
 }

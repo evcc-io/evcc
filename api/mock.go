@@ -396,10 +396,10 @@ func (m *MockIdentifier) EXPECT() *MockIdentifierMockRecorder {
 }
 
 // Identify mocks base method.
-func (m *MockIdentifier) Identify() (string, error) {
+func (m *MockIdentifier) Identify() ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Identify")
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -858,6 +858,20 @@ func (m *MockBatteryController) EXPECT() *MockBatteryControllerMockRecorder {
 	return m.recorder
 }
 
+// BatteryModes mocks base method.
+func (m *MockBatteryController) BatteryModes() []BatteryMode {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BatteryModes")
+	ret0, _ := ret[0].([]BatteryMode)
+	return ret0
+}
+
+// BatteryModes indicates an expected call of BatteryModes.
+func (mr *MockBatteryControllerMockRecorder) BatteryModes() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatteryModes", reflect.TypeOf((*MockBatteryController)(nil).BatteryModes))
+}
+
 // SetBatteryMode mocks base method.
 func (m *MockBatteryController) SetBatteryMode(arg0 BatteryMode) error {
 	m.ctrl.T.Helper()
@@ -897,12 +911,13 @@ func (m *MockBatterySocLimiter) EXPECT() *MockBatterySocLimiterMockRecorder {
 }
 
 // GetSocLimits mocks base method.
-func (m *MockBatterySocLimiter) GetSocLimits() (float64, float64) {
+func (m *MockBatterySocLimiter) GetSocLimits() (float64, float64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSocLimits")
 	ret0, _ := ret[0].(float64)
 	ret1, _ := ret[1].(float64)
-	return ret0, ret1
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetSocLimits indicates an expected call of GetSocLimits.
@@ -933,6 +948,20 @@ func NewMockCircuit(ctrl *gomock.Controller) *MockCircuit {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockCircuit) EXPECT() *MockCircuitMockRecorder {
 	return m.recorder
+}
+
+// EffectiveMaxPower mocks base method.
+func (m *MockCircuit) EffectiveMaxPower() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EffectiveMaxPower")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// EffectiveMaxPower indicates an expected call of EffectiveMaxPower.
+func (mr *MockCircuitMockRecorder) EffectiveMaxPower() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectiveMaxPower", reflect.TypeOf((*MockCircuit)(nil).EffectiveMaxPower))
 }
 
 // GetChargePower mocks base method.

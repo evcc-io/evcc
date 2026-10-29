@@ -3,6 +3,7 @@ package charger
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 
@@ -17,13 +18,11 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/samber/lo"
 )
 
-const (
-	idleFactor         = 0.6
-	voltage    float64 = 230
-)
+const idleFactor = 0.6
 
 type minMax struct {
 	min, max float64
@@ -40,6 +39,8 @@ type EEBus struct {
 	minMaxG func() (minMax, error)
 
 	limitUpdated time.Time // time of last limit change
+
+	lastIdentification []string // last non-empty vehicle identification
 
 	enabled   bool
 	reconnect bool
@@ -59,6 +60,7 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		Ip            string
 		Meter         bool
 		ChargedEnergy *bool
+		CoarseCurrent bool
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -68,12 +70,12 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 	// default true
 	hasChargedEnergy := cc.ChargedEnergy == nil || *cc.ChargedEnergy
 
-	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Meter, hasChargedEnergy)
+	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Meter, hasChargedEnergy, cc.CoarseCurrent)
 }
 
 // newEEBus creates and initializes a raw *EEBus charger.
 // It registers the device with the EEBus instance and waits for the connection.
-func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
+func newEEBus(ctx context.Context, ski, ip string, coarseCurrent bool) (*EEBus, error) {
 	inst, err := eebus.Instance()
 	if err != nil {
 		return nil, err
@@ -88,6 +90,11 @@ func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
 
 	c.connector = eebus.NewConnector()
 	c.minMaxG = util.Cached(c.minMax, time.Second)
+
+	// chargers rounding to full amps internally must not be offered milli amp control
+	if !coarseCurrent {
+		implement.Has(c, implement.ChargerEx(c.maxCurrentMillis))
+	}
 
 	if err := inst.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
@@ -108,8 +115,8 @@ func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
 }
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ctx context.Context, ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, error) {
-	c, err := newEEBus(ctx, ski, ip)
+func NewEEBus(ctx context.Context, ski, ip string, hasMeter, hasChargedEnergy, coarseCurrent bool) (api.Charger, error) {
+	c, err := newEEBus(ctx, ski, ip, coarseCurrent)
 	if err != nil {
 		return nil, err
 	}
@@ -143,6 +150,7 @@ func (c *EEBus) Connect(connected bool) {
 	defer c.mux.Unlock()
 
 	c.ev = nil
+	c.lastIdentification = nil
 }
 
 // UseCaseEvent implements the eebus.Device interface
@@ -158,6 +166,13 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 
 	case evcc.EvDisconnected:
 		c.ev = nil
+		c.lastIdentification = nil
+
+	case evcc.DataUpdateIdentifications:
+		// the identification may be withdrawn again before the loadpoint polls it
+		if ids := c.identifications(entity); len(ids) > 0 {
+			c.lastIdentification = ids
+		}
 
 	case evcem.DataUpdateCurrentPerPhase:
 		// acknowledge limit change
@@ -200,7 +215,7 @@ func (c *EEBus) isCharging(evEntity spineapi.EntityRemoteInterface) bool {
 			// sometimes a min limit is not provided by the EVSE, and we can't take it from the loadpoint
 			return false
 		}
-		minPower = limitsMin[0] * voltage
+		minPower = grid.CurrentToPower(limitsMin[0], 1)
 	}
 
 	return power > minPower*idleFactor
@@ -271,7 +286,10 @@ func (c *EEBus) Enabled() (bool, error) {
 		return c.enabled, nil
 	}
 
-	for _, limit := range limits {
+	minLimits, maxLimits, _, _ := c.cem.OpEV.CurrentLimits(evEntity)
+	numPhases := min(len(limits), activePhases(minLimits, maxLimits))
+
+	for _, limit := range limits[:numPhases] {
 		// for IEC61851 the pause limit is 0A, for ISO15118-2 it is 0.1A
 		// instead of checking for the actual data, hardcode this, so we might run into less
 		// timing issues as the data might not be received yet
@@ -315,6 +333,16 @@ func (c *EEBus) Enable(enable bool) error {
 	return err
 }
 
+func activePhases(limitSlices ...[]float64) int {
+	phases := len(ucapi.PhaseNameMapping)
+	for _, limits := range limitSlices {
+		if len(limits) > 0 && len(limits) < phases {
+			phases = len(limits)
+		}
+	}
+	return phases
+}
+
 // send current charging power limits to the EV
 func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, current float64) error {
 	// check if the EVSE supports overload protection limits
@@ -322,14 +350,19 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 		return api.ErrNotAvailable
 	}
 
-	_, maxLimits, _, err := c.cem.OpEV.CurrentLimits(evEntity)
+	minLimits, maxLimits, _, err := c.cem.OpEV.CurrentLimits(evEntity)
 	if err != nil {
 		c.log.DEBUG.Println("no limits from the EVSE are provided:", err)
 	}
 
+	numPhases := activePhases(minLimits, maxLimits)
+	if numPhases < len(ucapi.PhaseNameMapping) {
+		c.log.DEBUG.Printf("limiting load control to %d phase(s)", numPhases)
+	}
+
 	// setup the obligation limit data structure
 	var limits []ucapi.LoadLimitsPhase
-	for phase := range len(ucapi.PhaseNameMapping) {
+	for phase := range numPhases {
 		limit := ucapi.LoadLimitsPhase{
 			Phase:    ucapi.PhaseNameMapping[phase],
 			IsActive: true,
@@ -337,7 +370,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 		}
 
 		// if the limit equals to the max allowed, then the obligation limit is actually inactive
-		if phase < len(maxLimits) && current >= maxLimits[phase] {
+		if current > 0 && phase < len(maxLimits) && maxLimits[phase] > 0 && current >= maxLimits[phase] {
 			limit.IsActive = false
 		}
 
@@ -375,13 +408,15 @@ func (c *EEBus) writeOscevLimits(evEntity spineapi.EntityRemoteInterface, curren
 		return
 	}
 
-	minLimits, _, _, err := c.cem.OscEV.CurrentLimits(evEntity)
+	minLimits, maxLimits, _, err := c.cem.OscEV.CurrentLimits(evEntity)
 	if err != nil {
 		return
 	}
 
+	numPhases := activePhases(minLimits, maxLimits)
+
 	var limits []ucapi.LoadLimitsPhase
-	for phase := range len(ucapi.PhaseNameMapping) {
+	for phase := range numPhases {
 		limit := ucapi.LoadLimitsPhase{
 			Phase:    ucapi.PhaseNameMapping[phase],
 			IsActive: false,
@@ -406,13 +441,11 @@ func (c *EEBus) writeOscevLimits(evEntity spineapi.EntityRemoteInterface, curren
 
 // MaxCurrent implements the api.Charger interface
 func (c *EEBus) MaxCurrent(current int64) error {
-	return c.MaxCurrentMillis(float64(current))
+	return c.maxCurrentMillis(float64(current))
 }
 
-var _ api.ChargerEx = (*EEBus)(nil)
-
-// MaxCurrentMillis implements the api.ChargerEx interface
-func (c *EEBus) MaxCurrentMillis(current float64) error {
+// maxCurrentMillis implements the api.ChargerEx interface
+func (c *EEBus) maxCurrentMillis(current float64) error {
 	evEntity, ok := c.isEvConnected()
 	if !ok {
 		c.current = current
@@ -448,7 +481,7 @@ func (c *EEBus) currentPower() (float64, error) {
 		// no power provided, calculate from current
 		if currents, err := c.cem.EvCem.CurrentPerPhase(evEntity); err == nil {
 			for _, current := range currents {
-				powers = append(powers, current*voltage)
+				powers = append(powers, grid.CurrentToPower(current, 1))
 			}
 		}
 	}
@@ -519,20 +552,38 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 
 var _ api.Identifier = (*EEBus)(nil)
 
+// identifications returns the entity's non-empty identification values.
+// There may be multiple, e.g. MAC address and PCID.
+func (c *EEBus) identifications(entity spineapi.EntityRemoteInterface) []string {
+	identification, err := c.cem.EvCC.Identifications(entity)
+	if err != nil {
+		return nil
+	}
+
+	return lo.FilterMap(identification, func(i ucapi.IdentificationItem, _ int) (string, bool) {
+		return i.Value, i.Value != ""
+	})
+}
+
 // Identify implements the api.Identifier interface
-func (c *EEBus) Identify() (string, error) {
+func (c *EEBus) Identify() ([]string, error) {
 	evEntity, ok := c.isEvConnected()
 	if !ok {
-		return "", nil
+		return nil, nil
 	}
 
-	if identification, err := c.cem.EvCC.Identifications(evEntity); err == nil && len(identification) > 0 {
-		// return the first identification for now
-		// later this could be multiple, e.g. MAC Address and PCID
-		return identification[0].Value, nil
+	res := c.identifications(evEntity)
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	// some devices (e.g. Porsche PMCC) only report the identification briefly during
+	// the connection handshake, so fall back to the value cached from the update event
+	if len(res) > 0 {
+		c.lastIdentification = res
 	}
 
-	return "", nil
+	return slices.Clone(c.lastIdentification), nil
 }
 
 var _ api.Battery = (*EEBus)(nil)

@@ -1,5 +1,6 @@
 <template>
 	<DeviceModalBase
+		ref="base"
 		:id="id"
 		v-model:external-template="selectedTemplate"
 		name="meter"
@@ -16,10 +17,12 @@
 		:custom-fields="customFields"
 		:preserve-on-template-change="preserveFields"
 		:usage="templateUsage"
+		:tags-usage="selectedType"
 		:on-configuration-loaded="onConfigurationLoaded"
 		@added="(name) => emitChanged('added', name)"
 		@updated="() => emitChanged('updated')"
 		@removed="() => emitChanged('removed')"
+		@disable="$emit('disable', $event)"
 		@close="handleClose"
 	>
 		<template #pre-content>
@@ -32,6 +35,21 @@
 					@click="selectType(t)"
 				/>
 			</div>
+			<p v-else-if="suggestion" class="mb-4">
+				<i18n-t keypath="config.meter.reuseHint" tag="span" scope="global">
+					<template #device>
+						<strong>
+							{{ $t(`onboarding.item.${suggestion.values["usage"]}`) }}
+							({{ suggestion.product }})
+						</strong>
+					</template>
+					<template #target>{{ $t(`onboarding.item.${templateUsage}`) }}</template>
+				</i18n-t>
+				{{ " " }}
+				<a href="#" role="button" class="text-nowrap" @click.prevent="useSuggestion">
+					{{ $t("config.meter.reuseApply") }}
+				</a>
+			</p>
 		</template>
 
 		<template #description>
@@ -45,6 +63,7 @@
 				v-if="hasDeviceTitle"
 				id="meterParamDeviceTitle"
 				:label="$t('config.meter.titleLabel')"
+				:example="titleExample"
 			>
 				<PropertyField
 					id="meterParamDeviceTitle"
@@ -118,6 +137,7 @@ import {
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import defaultMeterYaml from "./defaultYaml/meter.yaml?raw";
 import { getModal, replaceModal, closeModal } from "@/configModal";
+import { prefillFor, suggestions, type CachedDevice } from "@/onboarding";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -148,7 +168,7 @@ export default defineComponent({
 	props: {
 		isSponsor: Boolean,
 	},
-	emits: ["changed", "close"],
+	emits: ["changed", "disable", "close"],
 	data() {
 		return {
 			extMeterUsage: "charge" as MeterTemplateUsage,
@@ -170,6 +190,9 @@ export default defineComponent({
 			return (getModal("meter")?.choices as string[]) || [];
 		},
 		modalTitle(): string {
+			if (this.selectedType === "circuit") {
+				return this.$t(`config.circuit.${this.isNew ? "meterLabelAdd" : "meterLabelEdit"}`);
+			}
 			if (this.isNew) {
 				if (this.selectedType) {
 					return this.$t(`config.${this.selectedType}.titleAdd`);
@@ -190,16 +213,29 @@ export default defineComponent({
 			if (this.selectedType === "consumer") {
 				return "charge";
 			}
+			// circuit meters measure total consumption like a grid meter
+			if (this.selectedType === "circuit") {
+				return "grid";
+			}
 			return this.selectedType;
 		},
 		hasDeviceTitle(): boolean {
 			return ["pv", "battery", "aux", "ext", "consumer"].includes(this.selectedType || "");
+		},
+		titleExample(): string | undefined {
+			const key = `config.meter.titleExample.${this.selectedType}`;
+			return this.$te(key) ? this.$t(key) : undefined;
 		},
 		hasDeviceIcon(): boolean {
 			return ["aux", "ext", "consumer"].includes(this.selectedType || "");
 		},
 		hasDescription(): boolean {
 			return ["ext", "aux", "consumer"].includes(this.selectedType || "");
+		},
+		// a device saved earlier in this session whose template also covers this usage, offered until a template is picked
+		suggestion(): CachedDevice | undefined {
+			if (!this.isNew || this.selectedTemplate) return undefined;
+			return suggestions(this.templateUsage)[0];
 		},
 		isNew(): boolean {
 			return this.id === undefined;
@@ -215,6 +251,10 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		useSuggestion() {
+			const base = this.$refs["base"] as unknown as InstanceType<typeof DeviceModalBase>;
+			base.prefill(prefillFor(this.suggestion!, this.templateUsage!));
+		},
 		onConfigurationLoaded(values: DeviceValues) {
 			// Restore extMeterUsage when editing an existing ext meter
 			if (this.selectedType === "ext" && values.usage) {

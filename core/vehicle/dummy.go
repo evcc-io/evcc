@@ -29,6 +29,15 @@ func (v *dummy) GetMode() api.ChargeMode {
 func (v *dummy) SetMode(mode api.ChargeMode) {
 }
 
+// GetAlwaysCharge returns the always charge state
+func (v *dummy) GetAlwaysCharge() api.AlwaysCharge {
+	return ""
+}
+
+// SetAlwaysCharge sets the always charge state
+func (v *dummy) SetAlwaysCharge(ac api.AlwaysCharge) {
+}
+
 // GetMinSoc returns the min soc
 func (v *dummy) GetMinSoc() int {
 	return 0

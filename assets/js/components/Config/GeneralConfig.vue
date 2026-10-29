@@ -1,12 +1,12 @@
 <template>
 	<div class="group round-box p-4">
 		<GeneralConfigEntry
-			test-id="generalconfig-title"
-			:label="$t('config.general.title')"
-			:text="title || '---'"
-			@edit="openModal('title')"
-		>
-		</GeneralConfigEntry>
+			test-id="generalconfig-site"
+			:label="$t('config.general.site')"
+			:text="siteStatus"
+			@edit="openModal('site')"
+		/>
+		<SiteModal @changed="$emit('site-changed')" />
 
 		<GeneralConfigEntry
 			test-id="generalconfig-security"
@@ -27,14 +27,6 @@
 			:label="$t('config.general.experimental')"
 			:text="$t(`config.general.${experimental ? 'on' : 'off'}`)"
 			@edit="openModal('experimental')"
-		/>
-
-		<GeneralConfigEntry
-			v-if="experimental && batteryControllable"
-			test-id="generalconfig-battery"
-			:label="$t('config.battery.title')"
-			:text="$t(`config.general.${batteryGridDischarge ? 'on' : 'off'}`)"
-			@edit="openModal('battery')"
 		/>
 
 		<GeneralConfigEntry
@@ -66,19 +58,11 @@
 			:text="controlStatus"
 			@edit="openModal('control')"
 		/>
-
-		<GeneralConfigEntry
-			test-id="generalconfig-currency"
-			:label="$t('config.currency.title')"
-			:text="currency"
-			@edit="openModal('currency')"
-		/>
-		<CurrencyModal @changed="$emit('site-changed')" />
 	</div>
 </template>
 
 <script>
-import CurrencyModal from "./CurrencyModal.vue";
+import SiteModal from "./SiteModal.vue";
 import GeneralConfigEntry from "./GeneralConfigEntry.vue";
 import { openModal } from "@/configModal";
 import store from "@/store";
@@ -86,7 +70,7 @@ import formatter from "@/mixins/formatter";
 
 export default {
 	name: "GeneralConfig",
-	components: { CurrencyModal, GeneralConfigEntry },
+	components: { SiteModal, GeneralConfigEntry },
 	mixins: [formatter],
 	props: {
 		sponsorError: Boolean,
@@ -97,17 +81,11 @@ export default {
 		authDisabled() {
 			return store.state?.authDisabled === true;
 		},
-		title() {
-			return store.state?.siteTitle || "";
+		siteStatus() {
+			return store.state?.siteTitle || "---";
 		},
 		telemetryEnabled() {
 			return store.state?.telemetry === true;
-		},
-		batteryControllable() {
-			return (store.state?.battery?.devices ?? []).some((b) => b.controllable);
-		},
-		batteryGridDischarge() {
-			return store.state?.batteryGridDischarge === true;
 		},
 		networkStatus() {
 			return `${store.state?.network?.port ?? ""}`;
@@ -115,9 +93,6 @@ export default {
 		controlStatus() {
 			const sec = store.state?.interval;
 			return sec ? this.fmtDuration(sec) : "";
-		},
-		currency() {
-			return store.state?.currency || "EUR";
 		},
 		sponsorStatus() {
 			const sponsor = store.state?.sponsor || {};

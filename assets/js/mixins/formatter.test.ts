@@ -1,9 +1,10 @@
 import { mount, config } from "@vue/test-utils";
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vite-plus/test";
 import formatter, { POWER_UNIT } from "./formatter";
 import * as units from "../units";
+import settings from "../settings";
 import { defineComponent } from "vue";
-import { CURRENCY } from "@/types/evcc";
+import { CURRENCY, GRID_CONNECTION } from "@/types/evcc";
 
 const is12hSpy = vi.spyOn(units, "is12hFormat").mockReturnValue(false);
 
@@ -19,10 +20,22 @@ const fmt = mount(
   })
 ).vm;
 
+describe("fmtPhasePower", () => {
+  test("should use phase count with neutral", () => {
+    expect(fmt.fmtPhasePower(16, 1)).eq("3,7 kW");
+    expect(fmt.fmtPhasePower(16, 3)).eq("11,0 kW");
+    expect(fmt.fmtPhasePower(16, 3, 230, GRID_CONNECTION.THREE_PHASE_FOUR_WIRE)).eq("11,0 kW");
+  });
+  test("should use line-to-line voltage without neutral", () => {
+    expect(fmt.fmtPhasePower(16, 1, 230, GRID_CONNECTION.THREE_PHASE_THREE_WIRE)).eq("3,7 kW");
+    expect(fmt.fmtPhasePower(16, 3, 230, GRID_CONNECTION.THREE_PHASE_THREE_WIRE)).eq("6,4 kW");
+  });
+});
+
 describe("fmtW", () => {
   test("should format with units", () => {
     expect(fmt.fmtW(0, POWER_UNIT.AUTO)).eq("0,0 kW");
-    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO)).eq("1.200,0 kW");
+    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO)).eq("1.200 kW");
     expect(fmt.fmtW(0, POWER_UNIT.MW)).eq("0,0 MW");
     expect(fmt.fmtW(1200000, POWER_UNIT.MW)).eq("1,2 MW");
     expect(fmt.fmtW(0, POWER_UNIT.KW)).eq("0,0 kW");
@@ -30,9 +43,14 @@ describe("fmtW", () => {
     expect(fmt.fmtW(0, POWER_UNIT.W)).eq("0 W");
     expect(fmt.fmtW(1200000, POWER_UNIT.W)).eq("1.200.000 W");
   });
+  test("should format negative values", () => {
+    expect(fmt.fmtW(-5300, POWER_UNIT.AUTO)).eq("-5,3 kW");
+    expect(fmt.fmtW(-500, POWER_UNIT.AUTO)).eq("-500 W");
+    expect(fmt.fmtW(-12000000, POWER_UNIT.AUTO)).eq("-12,0 MW");
+  });
   test("should format without units", () => {
     expect(fmt.fmtW(0, POWER_UNIT.AUTO, false)).eq("0,0");
-    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO, false)).eq("1.200,0");
+    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO, false)).eq("1.200");
     expect(fmt.fmtW(0, POWER_UNIT.MW, false)).eq("0,0");
     expect(fmt.fmtW(1200000, POWER_UNIT.MW, false)).eq("1,2");
     expect(fmt.fmtW(0, POWER_UNIT.KW, false)).eq("0,0");
@@ -56,10 +74,20 @@ describe("fmtW", () => {
   });
 });
 
+describe("getPowerUnit", () => {
+  test("should pick unit based on largest value", () => {
+    expect(fmt.getPowerUnit(0)).eq(POWER_UNIT.W);
+    expect(fmt.getPowerUnit(999)).eq(POWER_UNIT.W);
+    expect(fmt.getPowerUnit(1000)).eq(POWER_UNIT.KW);
+    expect(fmt.getPowerUnit(9_999_999)).eq(POWER_UNIT.KW);
+    expect(fmt.getPowerUnit(10_000_000)).eq(POWER_UNIT.MW);
+  });
+});
+
 describe("fmtWh", () => {
   test("should format with units", () => {
     expect(fmt.fmtWh(0, POWER_UNIT.AUTO)).eq("0,0 kWh");
-    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO)).eq("1.200,0 kWh");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO)).eq("1.200 kWh");
     expect(fmt.fmtWh(0, POWER_UNIT.MW)).eq("0,0 MWh");
     expect(fmt.fmtWh(1200000, POWER_UNIT.MW)).eq("1,2 MWh");
     expect(fmt.fmtWh(0, POWER_UNIT.KW)).eq("0,0 kWh");
@@ -69,7 +97,7 @@ describe("fmtWh", () => {
   });
   test("should format without units", () => {
     expect(fmt.fmtWh(0, POWER_UNIT.AUTO, false)).eq("0,0");
-    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO, false)).eq("1.200,0");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO, false)).eq("1.200");
     expect(fmt.fmtWh(0, POWER_UNIT.MW, false)).eq("0,0");
     expect(fmt.fmtWh(1200000, POWER_UNIT.MW, false)).eq("1,2");
     expect(fmt.fmtWh(0, POWER_UNIT.KW, false)).eq("0,0");
@@ -260,7 +288,7 @@ describe("12h/24h time format", () => {
   test("12h format", () => {
     is12hSpy.mockReturnValue(true);
     expect(fmt.fmtHourMinute(testDate)).toBe("3:30 PM");
-    expect(fmt.fmtFullDateTime(testDate, false)).toBe("So., 15. Jan., 3:30 PM");
+    expect(fmt.fmtFullDateTime(testDate)).toBe("So., 15. Jan. 2023, 3:30 PM");
     expect(fmt.fmtWeekdayTime(testDate)).toBe("So. 3:30 PM");
     expect(fmt.fmtAbsoluteDate(testDate)).toBe("So 3:30 PM");
   });
@@ -268,9 +296,26 @@ describe("12h/24h time format", () => {
   test("24h format", () => {
     is12hSpy.mockReturnValue(false);
     expect(fmt.fmtHourMinute(testDate)).toBe("15:30");
-    expect(fmt.fmtFullDateTime(testDate, false)).toBe("So., 15. Jan., 15:30");
+    expect(fmt.fmtFullDateTime(testDate)).toBe("So., 15. Jan. 2023, 15:30");
     expect(fmt.fmtWeekdayTime(testDate)).toBe("So., 15:30");
     expect(fmt.fmtAbsoluteDate(testDate)).toBe("So 15:30");
+  });
+});
+
+describe("date format", () => {
+  test("should order day and month by preference", () => {
+    is12hSpy.mockReturnValue(false);
+    settings.dateFormat = "dmy";
+    expect(fmt.fmtFullDateTime(testDate)).toBe("So. 15 Jan. 2023 15:30");
+    settings.dateFormat = "mdy";
+    expect(fmt.fmtFullDateTime(testDate)).toBe("So. Jan. 15, 2023 15:30");
+    settings.dateFormat = "ymd";
+    expect(fmt.fmtFullDateTime(testDate)).toBe("So. 2023-01-15 15:30");
+    settings.dateFormat = "";
+  });
+  test("should format day and time", () => {
+    is12hSpy.mockReturnValue(false);
+    expect(fmt.fmtWeekdayDayTime(testDate)).toBe("So. 15, 15:30");
   });
 });
 

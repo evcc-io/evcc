@@ -5,6 +5,8 @@
 				:label="windowLabel"
 				:prev-disabled="prevDisabled"
 				:next-disabled="nextDisabled"
+				:highlight-prev="highlightPrev"
+				:highlight-next="highlightNext"
 				@prev="changeOffset(-1)"
 				@next="changeOffset(1)"
 			/>
@@ -44,6 +46,8 @@ import { batteryColor } from "@/colors";
 import type { Legend } from "../Sessions/types";
 import type { BatterySeries } from "./types";
 import Card from "../Helper/Card.vue";
+import { attachSwipeHandler } from "@/utils/swipe";
+import { hapticFeedback } from "@/utils/haptic";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import LegendList from "../Sessions/LegendList.vue";
 import WindowNav from "./WindowNav.vue";
@@ -71,6 +75,10 @@ export default defineComponent({
 			dayOffset: 0,
 			focusedBattery: null as number | null,
 			selectedUnit: (settings.batteryUnit || "soc") as "soc" | "energy",
+			highlightPrev: false,
+			highlightNext: false,
+			highlightTimer: null as ReturnType<typeof setTimeout> | null,
+			detachSwipe: null as (() => void) | null,
 		};
 	},
 	computed: {
@@ -145,7 +153,32 @@ export default defineComponent({
 			}
 		},
 	},
+	mounted() {
+		this.detachSwipe = attachSwipeHandler(this.$el as HTMLElement, {
+			onSwipeLeft: () => this.swipe(1),
+			onSwipeRight: () => this.swipe(-1),
+		});
+	},
+	unmounted() {
+		this.detachSwipe?.();
+		if (this.highlightTimer) clearTimeout(this.highlightTimer);
+	},
 	methods: {
+		swipe(dir: number) {
+			if (dir < 0 ? this.prevDisabled : this.nextDisabled) return;
+			this.changeOffset(dir);
+			this.flashHighlight(dir < 0 ? "prev" : "next");
+			hapticFeedback("medium");
+		},
+		flashHighlight(dir: "prev" | "next") {
+			if (this.highlightTimer) clearTimeout(this.highlightTimer);
+			this.highlightPrev = dir === "prev";
+			this.highlightNext = dir === "next";
+			this.highlightTimer = setTimeout(() => {
+				this.highlightPrev = false;
+				this.highlightNext = false;
+			}, 300);
+		},
 		updateUnit(value: string | number | boolean | null) {
 			this.selectedUnit = value === "energy" ? "energy" : "soc";
 			settings.batteryUnit = this.selectedUnit;

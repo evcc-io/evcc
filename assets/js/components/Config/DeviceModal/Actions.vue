@@ -3,27 +3,28 @@
 		<slot name="before-test"></slot>
 
 		<TestResult
-			v-if="testState"
+			v-if="Object.keys(testState).length > 0"
 			v-bind="testState"
 			:sponsor-token-required="sponsorTokenRequired"
 			:currency="currency"
+			:usage="usage"
 			@test="$emit('test')"
 		/>
 
 		<slot name="after-test"></slot>
 
-		<div class="mt-4 d-flex justify-content-between">
+		<div class="mt-4 d-flex justify-content-between align-items-center gap-2">
 			<button
-				v-if="isDeletable"
+				v-if="isDeletable && canDisable"
 				type="button"
-				class="btn btn-link text-danger"
+				class="btn btn-link text-muted"
 				tabindex="0"
-				@click.prevent="$emit('remove')"
+				@click.prevent="$emit('disable', !isDisabled)"
 			>
-				{{ $t("config.general.delete") }}
+				{{ isDisabled ? $t("config.general.enable") : $t("config.general.disable") }}
 			</button>
 			<button
-				v-else
+				v-else-if="!isDeletable"
 				type="button"
 				class="btn btn-link text-muted"
 				data-bs-dismiss="modal"
@@ -33,6 +34,7 @@
 			</button>
 			<button
 				type="submit"
+				class="ms-auto flex-shrink-0 text-nowrap"
 				:class="buttonClass"
 				:disabled="testState.isRunning || isSaving || isSucceeded || sponsorTokenRequired"
 				tabindex="0"
@@ -48,6 +50,15 @@
 				<template v-else>{{ saveButtonLabel }}</template>
 			</button>
 		</div>
+		<button
+			v-if="isDeletable"
+			type="button"
+			class="btn btn-link text-danger mt-2"
+			tabindex="0"
+			@click.prevent="$emit('remove')"
+		>
+			{{ $t("config.general.delete") }}
+		</button>
 	</div>
 </template>
 
@@ -65,17 +76,19 @@ export default defineComponent({
 	},
 	props: {
 		isDeletable: Boolean as PropType<boolean>,
+		isDisabled: Boolean as PropType<boolean>,
+		canDisable: { type: Boolean as PropType<boolean>, default: true },
 		testState: {
 			type: Object as PropType<TestState>,
-			default: () => {},
+			default: {},
 		},
 		isSaving: Boolean as PropType<boolean>,
 		isSucceeded: Boolean as PropType<boolean>,
-		isNew: Boolean as PropType<boolean>,
 		sponsorTokenRequired: Boolean as PropType<boolean>,
 		currency: String as PropType<CURRENCY>,
+		usage: String as PropType<string>,
 	},
-	emits: ["save", "remove", "test"],
+	emits: ["save", "remove", "test", "disable"],
 	computed: {
 		saveButtonLabel(): string {
 			const { isError, isUnknown, isRunning } = this.testState;

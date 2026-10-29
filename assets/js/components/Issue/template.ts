@@ -3,6 +3,10 @@ import type { IssueData, Sections, GitHubContent, Template, HelpType } from "./t
 // Constants
 const PLACEHOLDER = "⚠️  RETURN TO EVCC TAB → COPY STEP 2 → PASTE HERE";
 const MAX_BODY_LENGTH = 8000;
+// windows shell silently truncates mailto urls at ~2000 chars; input limits keep
+// the percent-encoded url below that even for umlaut-heavy text
+export const MAX_MAIL_TITLE_LENGTH = 100;
+export const MAX_MAIL_DESCRIPTION_LENGTH = 600;
 
 function toString(sections: Template): string {
   return sections
@@ -42,30 +46,44 @@ function generateBody(issue: IssueData, additional: string): string {
   return toString(sections);
 }
 
+const SECTION_FORMAT: Record<keyof Sections, [string, string]> = {
+  yamlConfig: ["## Configuration (YAML)", "yaml"],
+  uiConfig: ["## Configuration (UI)", "json5"],
+  state: ["## System State", "json5"],
+  logs: ["## Logs", ""],
+};
+
+export function generateSection(key: keyof Sections, content: string): string {
+  const [heading, lang] = SECTION_FORMAT[key];
+  return toString([heading, ["```" + lang, content, "```"]]);
+}
+
 function generateAdditional(sections: Sections): string {
-  const result: Template = [];
+  return toString(
+    (Object.keys(SECTION_FORMAT) as (keyof Sections)[])
+      .filter((key) => sections[key].included)
+      .map((key) => generateSection(key, sections[key].content))
+  );
+}
 
-  if (sections.yamlConfig.included) {
-    result.push("## Configuration (YAML)");
-    result.push(["```yaml", sections.yamlConfig.content, "```"]);
-  }
+// Generates mailto url with plaintext body; diagnostics travel as file attachment instead
+export function generateMailtoUrl(email: string, issue: IssueData): string {
+  const body = toString([
+    issue.description,
+    `Version: ${issue.version}`,
+    `System: ${issue.system}, ${issue.timezone}`,
+  ]);
 
-  if (sections.uiConfig.included) {
-    result.push("## Configuration (UI)");
-    result.push(["```json5", sections.uiConfig.content, "```"]);
-  }
+  return `mailto:${email}?subject=${encodeURIComponent(issue.title)}&body=${encodeURIComponent(body)}`;
+}
 
-  if (sections.state.included) {
-    result.push("## System State");
-    result.push(["```json5", sections.state.content, "```"]);
-  }
-
-  if (sections.logs.included) {
-    result.push("## Logs");
-    result.push(["```", sections.logs.content, "```"]);
-  }
-
-  return toString(result);
+// Generates text file content with selected diagnostics for manual mail attachment
+export function generateDebugFile(issue: IssueData, sections: Sections): string {
+  return toString([
+    "# evcc debug information",
+    [`Version: ${issue.version}`, `System: ${issue.system}, ${issue.timezone}`],
+    generateAdditional(sections),
+  ]);
 }
 
 // Generates GitHub URL for issues or discussions

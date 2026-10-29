@@ -30,6 +30,6 @@ params:
   - preset: ocpp
 render: |
   {{ include "ocpp" . }}
-  {{- if ne .remotestart "true" }}
+  {{- if not .remotestart }}
   remotestart: true # force remotestart
   {{- end }}

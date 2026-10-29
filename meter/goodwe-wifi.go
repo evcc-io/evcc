@@ -39,7 +39,7 @@ func NewGoodWeWifiFromConfig(ctx context.Context, other map[string]any) (api.Met
 	return NewGoodWeWiFi(ctx, cc.URI, cc.Usage, cc.batteryCapacity.Decorator(), cc.Timeout)
 }
 
-func NewGoodWeWiFi(ctx context.Context, uri, usage string, capacity func() float64, timeout time.Duration) (api.Meter, error) {
+func NewGoodWeWiFi(ctx context.Context, uri, usage string, capacity func() (float64, error), timeout time.Duration) (api.Meter, error) {
 	instance, err := goodwe.Instance(util.LoggerFromContext(ctx, "goodwe-wifi"))
 	if err != nil {
 		return nil, err

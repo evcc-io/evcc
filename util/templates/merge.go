@@ -13,8 +13,6 @@ var matchKey = strings.EqualFold
 
 // mergeMaps recursively merges other into target using matchKey for key comparison
 func mergeMaps(other map[string]any, target map[string]any) error {
-	// return mergo.Map(&target, other, mergo.WithOverride)
-	// return util.DecodeOther(other, target)
 	merge(target, other, 0)
 	return nil
 }
@@ -23,9 +21,15 @@ func merge(dst, src map[string]any, depth int) map[string]any {
 	if depth > mergeMaxDepth {
 		panic("too deep!")
 	}
+outer:
 	for key, srcVal := range src {
 		for k := range dst {
 			if matchKey(k, key) {
+				// empty value keeps the default
+				if srcVal == "" {
+					continue outer
+				}
+
 				// overwrite key
 				key = k
 

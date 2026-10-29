@@ -4,6 +4,7 @@
 			<template #label>
 				<CustomSelect
 					inline
+					class="align-top"
 					:selected="selectedKey"
 					:options="selectOptions"
 					data-testid="sessionInfoSelect"

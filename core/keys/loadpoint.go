@@ -4,8 +4,10 @@ const (
 	// loadpoint settings
 	Name              = "name"             // loadpoint name (config identifier)
 	Title             = "title"            // loadpoint title
+	Disabled          = "disabled"         // loadpoint disabled via config
 	Mode              = "mode"             // charge mode
 	DefaultMode       = "defaultMode"      // default charge mode
+	AlwaysCharge      = "alwaysCharge"     // smart mode: charge continuously at least at min power (off/on/once)
 	Charger           = "charger"          // charger ref
 	Meter             = "meter"            // meter ref
 	Circuit           = "circuit"          // circuit ref
@@ -32,6 +34,7 @@ const (
 
 	ChargerIcon         = "chargerIcon"         // charger icon for ui
 	ChargerFeature      = "chargerFeature"      // charger feature
+	DemandPredictor     = "demandPredictor"     // heating demand predictor, settings only
 	ChargerSinglePhase  = "chargerSinglePhase"  // api.PhaseDescriber: charger physical phases, sockets only
 	ChargerPhases1p3p   = "chargerPhases1p3p"   // api.PhaseSwitcher: 1p3p chargers
 	ChargerStatusReason = "chargerStatusReason" // either awaiting authorization or disconnect required
@@ -49,9 +52,12 @@ const (
 	Suggestion = "suggestion" // optimizer's advisory suggestion for the current slot
 
 	// smart charging
+	OptimizerControlled = "optimizerControlled" // optimizer decides start/stop
+
 	SmartCostActive    = "smartCostActive"    // smart cost active
 	SmartCostLimit     = "smartCostLimit"     // smart cost limit, fast charge when costs are below
 	SmartCostNextStart = "smartCostNextStart" // smart cost next start, time of next fast charging
+	SolarShare         = "solarShare"         // solar share required to start/continue pv charging
 
 	SmartFeedInPriorityActive    = "smartFeedInPriorityActive"    // smart feed-in priority active
 	SmartFeedInPriorityLimit     = "smartFeedInPriorityLimit"     // smart feed-in priority limit, pause self-consumption when feed-in rates are above

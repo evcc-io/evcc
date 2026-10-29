@@ -78,6 +78,7 @@ func newGoEFromConfig(ctx context.Context, v2 bool, other map[string]any) (api.C
 
 	if c.api.IsV2() {
 		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
+		implement.Has(c, implement.StatusReasoner(c.statusReason))
 	}
 
 	return c, nil
@@ -111,6 +112,7 @@ func (c *GoE) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
+	// Unknown/Error=0, Idle=1, Charging=2, WaitCar=3, Complete=4, Error=5, Initializing=6
 	switch car := resp.Status(); car {
 	case 1:
 		return api.StatusA, nil
@@ -121,6 +123,20 @@ func (c *GoE) Status() (api.ChargeStatus, error) {
 	default:
 		return api.StatusNone, fmt.Errorf("car unknown result: %d", car)
 	}
+}
+
+// statusReason implements the api.StatusReasoner interface - v2 only
+func (c *GoE) statusReason() (api.Reason, error) {
+	resp, err := c.api.Status()
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
+
+	if resp.AccessControl() {
+		return api.ReasonWaitingForAuthorization, nil
+	}
+
+	return api.ReasonUnknown, nil
 }
 
 // Enabled implements the api.Charger interface
@@ -200,12 +216,12 @@ func (c *GoE) Voltages() (float64, float64, float64, error) {
 var _ api.Identifier = (*GoE)(nil)
 
 // Identify implements the api.Identifier interface
-func (c *GoE) Identify() (string, error) {
+func (c *GoE) Identify() ([]string, error) {
 	resp, err := c.api.Status()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return resp.Identify(), nil
+	return []string{resp.Identify()}, nil
 }
 
 var _ api.MeterEnergy = (*GoE)(nil)

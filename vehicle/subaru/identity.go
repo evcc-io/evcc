@@ -142,7 +142,7 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 	}
 
 	v.uuid = uuid
-	v.TokenSource = oauth.RefreshTokenSource(util.TokenWithExpiry(&res.Token), v.refreshToken)
+	v.TokenSource = oauth.RefreshTokenSource(v.log, util.TokenWithExpiry(&res.Token), v.refreshToken)
 	return nil
 }
 

@@ -27,7 +27,7 @@ func TestLog(t *testing.T) {
 	log.Add(e2)
 	log.Add(e3)
 
-	idx := log.data
+	trace, other := log.trace.data, log.other.data
 
 	assert.Equal(t, []Entry{e1, e2, e3}, log.All(nil, LevelTrace, 0))
 	assert.Equal(t, []Entry{e1, e2, e3}, log.All([]string{}, LevelTrace, 0))
@@ -37,8 +37,45 @@ func TestLog(t *testing.T) {
 
 	assert.Equal(t, []Entry{}, log.All(nil, LevelFatal, 0))
 
-	assert.Equal(t, idx, log.data, "data should not be changed after All() call")
+	assert.Same(t, trace, log.trace.data, "data should not be changed after All() call")
+	assert.Same(t, other, log.other.data, "data should not be changed after All() call")
 	assert.Equal(t, []string{"test1", "test2"}, log.Areas())
+}
+
+// TestTraceBudget verifies that a flood of trace entries cannot evict non-trace
+// entries, which is what made the log view show mqtt/httpd only (#32673).
+func TestTraceBudget(t *testing.T) {
+	log := New(3)
+
+	log.Add(e2)
+	for i := range 100 {
+		log.Add(entry("mqtt", LevelTrace, fmt.Sprintf("send %d", i)))
+	}
+
+	assert.Equal(t, []Entry{e2}, log.All(nil, slog.LevelDebug, 0))
+	assert.Equal(t, []string{"mqtt", "test2"}, log.Areas())
+}
+
+// TestTraceMerge verifies that trace and non-trace entries are returned in write order.
+func TestTraceMerge(t *testing.T) {
+	log := New(10)
+
+	e4 := entry("test2", slog.LevelInfo, "test4")
+	for _, e := range []Entry{e1, e2, e3, e4} {
+		log.Add(e)
+	}
+
+	assert.Equal(t, []Entry{e1, e2, e3, e4}, log.All(nil, LevelTrace, 0))
+	assert.Equal(t, []Entry{e2, e4}, log.All(nil, slog.LevelDebug, 0))
+}
+
+func BenchmarkAdd(b *testing.B) {
+	log := New(1000)
+	e := entry("mqtt", LevelTrace, "send evcc/site/pv/power 1234")
+	b.ReportAllocs()
+	for b.Loop() {
+		log.Add(e)
+	}
 }
 
 // TestRingGrowsThenCaps adds more entries than the configured size and verifies

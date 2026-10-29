@@ -30,7 +30,7 @@ func NewShoutrrrFromConfig(ctx context.Context, other map[string]any) (api.Messe
 		return nil, err
 	}
 
-	app, err := shoutrrr.CreateSender(cc.URI)
+	app, err := shoutrrr.CreateSenderWithOptions(types.SenderOptions{}, cc.URI)
 	if err != nil {
 		return nil, err
 	}

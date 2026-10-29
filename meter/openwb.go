@@ -58,7 +58,7 @@ func NewOpenWBFromConfig(ctx context.Context, other map[string]any) (api.Meter, 
 	var power func() (float64, error)
 	var currents func() (float64, float64, float64, error)
 	var soc func() (float64, error)
-	var capacity func() float64
+	var capacity func() (float64, error)
 
 	switch strings.ToLower(cc.Usage) {
 	case "grid":

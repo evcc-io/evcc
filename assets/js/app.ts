@@ -6,6 +6,7 @@ import { VueHeadMixin, createHead } from "@unhead/vue/client";
 import App from "./views/App.vue";
 import setupRouter from "./router.ts";
 import setupI18n from "./i18n.ts";
+import tooltip from "./directives/tooltip.ts";
 import { watchThemeChanges } from "./theme.ts";
 import { applyUrlSettings } from "./urlSettings.ts";
 import { appDetection, sendToApp } from "./utils/native";
@@ -24,6 +25,27 @@ Dropdown.Default.popperConfig = (defaultConfig) => {
     ],
   };
 };
+
+// Chrome Android with inline time segments only opens the picker via its icon
+document.addEventListener("click", (e) => {
+  const input = e.target;
+  if (!(input instanceof HTMLInputElement) || input.type !== "time") return;
+  if ((e as PointerEvent).pointerType !== "touch") return;
+  try {
+    input.showPicker();
+  } catch {
+    // disabled, readonly or cross-origin iframe (e.g. Home Assistant panel)
+  }
+});
+
+// after an update the old hashed chunks are gone, a reload picks up the new index
+// https://vite.dev/guide/build#load-error-handling
+window.addEventListener("vite:preloadError", () => {
+  const last = Number(sessionStorage.getItem("chunkReload"));
+  if (Date.now() - last < 10_000) return;
+  sessionStorage.setItem("chunkReload", String(Date.now()));
+  window.location.reload();
+});
 
 // lazy load smoothscroll polyfill. mainly for safari < 15.4
 if (!window.CSS.supports("scroll-behavior", "smooth")) {
@@ -99,12 +121,13 @@ app.use(i18n);
 app.use(router);
 app.use(head);
 app.mixin(VueHeadMixin);
+app.directive("tooltip", tooltip);
 window.app = app.mount("#app");
 
 watchThemeChanges();
 appDetection(router);
 
-if (window.evcc.customCss === "true") {
+if (window.evcc?.customCss) {
   const link = document.createElement("link");
   link.href = `./custom.css`;
   link.rel = "stylesheet";

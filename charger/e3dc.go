@@ -656,10 +656,27 @@ func (wb *E3dc) GetMaxCurrent() (float64, error) {
 // getSessionData retrieves the session data container from WB_REQ_SESSION.
 // Returns all session-related messages (energy, time, RFID, etc.).
 // If no vehicle is connected, returns only WB_INDEX with no session data.
+//
+// The request carries the wallbox index as payload- an unscoped request is always
+// answered for wallbox 0. WB_REQ_SESSION has no entry in go-rscp's datatype table,
+// hence the explicit message.
 func (wb *E3dc) getSessionData() ([]rscp.Message, error) {
-	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_SESSION, nil))
+	res, err := wb.retrySend(rscp.Message{
+		Tag:      rscp.WB_REQ_SESSION,
+		DataType: rscp.UChar8,
+		Value:    wb.id,
+	})
+	if err == nil {
+		err = rscpError(*res)
+	}
+
+	// fall back to the unscoped request if the device rejects the index
 	if err != nil {
-		return nil, err
+		wb.log.DEBUG.Printf("indexed session request failed: %v", err)
+
+		if res, err = wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_SESSION, nil)); err != nil {
+			return nil, err
+		}
 	}
 
 	return rscpContainer(*res, 1)
@@ -731,16 +748,17 @@ var _ api.Identifier = (*E3dc)(nil)
 
 // Identify implements the api.Identifier interface
 // Returns the RFID tag ID from WB_SESSION_AUTH_DATA if a session is active
-func (wb *E3dc) Identify() (string, error) {
+func (wb *E3dc) Identify() ([]string, error) {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 
 	msg, found, err := wb.sessionMessage(rscp.WB_SESSION_AUTH_DATA)
 	if err != nil || !found {
-		return "", err
+		return nil, err
 	}
 
-	return rscpString(msg)
+	id, err := rscpString(msg)
+	return []string{id}, err
 }
 
 var _ api.PhaseSwitcher = (*E3dc)(nil)

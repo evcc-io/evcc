@@ -201,3 +201,47 @@ func mockConn(t *testing.T, response []byte) *net.UDPConn {
 	t.Cleanup(func() { conn.Close() })
 	return conn
 }
+
+// TestFloatGetter_RejectsForeignResponse_BlockMode verifies that a well-formed
+// frame answering a *different* request is rejected instead of decoded.
+// The GoodWe WiFi dongle serves all clients through one reply slot and may
+// hand one client's reply to another. Here the running-data block read
+// (READ 125 @ 0x891C) is answered with the 24-register battery-info block:
+// decoding pv power at offset 10 of that frame would yield garbage.
+func TestFloatGetter_RejectsForeignResponse_BlockMode(t *testing.T) {
+	dec, n := decodeFor(t, "int32")
+	p := &AA55UDP{
+		log:    util.NewLogger("test"),
+		conn:   mockConn(t, mustHex(t, capGW10kETBattery)),
+		pdu:    buildPDU(0xF7, 0x891C, 125),
+		offset: 10, // pv1 power (0x8921) within the block
+		decode: dec,
+		length: n,
+		scale:  1.0,
+	}
+	getter, err := p.FloatGetter()
+	require.NoError(t, err)
+	_, err = getter()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "48")
+	assert.Contains(t, err.Error(), "250")
+}
+
+// TestFloatGetter_RejectsForeignResponse_RegisterMode verifies the same for a
+// single-register read: a 2-register request answered with a full
+// 125-register block must not be decoded at offset 0.
+func TestFloatGetter_RejectsForeignResponse_RegisterMode(t *testing.T) {
+	dec, n := decodeFor(t, "int32")
+	p := &AA55UDP{
+		log:    util.NewLogger("test"),
+		conn:   mockConn(t, mustHex(t, capGW10kET)),
+		pdu:    buildPDU(0xF7, 0x8941, 2),
+		decode: dec,
+		length: n,
+		scale:  1.0,
+	}
+	getter, err := p.FloatGetter()
+	require.NoError(t, err)
+	_, err = getter()
+	require.Error(t, err)
+}

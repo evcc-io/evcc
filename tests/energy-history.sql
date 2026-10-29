@@ -15,6 +15,15 @@ CREATE TABLE `meters` (
 );
 CREATE UNIQUE INDEX `meters_meter_ts` ON `meters`(`meter`, `ts`);
 
+CREATE TABLE `tariffs` (
+  `ts` integer,
+  `grid` real,
+  `feedin` real,
+  `co2` real,
+  `temperature` real
+);
+CREATE UNIQUE INDEX `idx_tariffs_timestamp` ON `tariffs`(`ts`);
+
 -- entities (name = stable id, title = display label)
 -- home is a virtual entity; evcc resets its title to "home" on boot
 INSERT INTO `entities` (id, `group`, name, title) VALUES (1, 'home', 'home', 'home');
@@ -30,6 +39,7 @@ INSERT INTO `entities` (id, `group`, name, title) VALUES (10, 'battery', 'batter
 INSERT INTO `entities` (id, `group`, name, title) VALUES (11, 'meter', 'submeter', 'Submeter');
 -- leftover from a swapped grid meter device ref
 INSERT INTO `entities` (id, `group`, name, title) VALUES (12, 'grid', 'db:2', 'db:2');
+INSERT INTO `entities` (id, `group`, name, title) VALUES (13, 'meter', 'feedin', 'Feed-in meter');
 
 -- =====================================================================
 -- API test data: 2026-03-24/25 (existing). Used by the JSON-shape tests.
@@ -112,6 +122,11 @@ INSERT INTO `meters` VALUES (6, 1775556000, 0.075, 0);
 INSERT INTO `meters` VALUES (6, 1775556900, 0.075, 0);
 INSERT INTO `meters` VALUES (6, 1775557800, 0.075, 0);
 INSERT INTO `meters` VALUES (6, 1775558700, 0.075, 0);
+-- solar covers the house that hour, so the consumers have a source
+INSERT INTO `meters` VALUES (4, 1775556000, 0.25, 0);
+INSERT INTO `meters` VALUES (4, 1775556900, 0.25, 0);
+INSERT INTO `meters` VALUES (4, 1775557800, 0.25, 0);
+INSERT INTO `meters` VALUES (4, 1775558700, 0.25, 0);
 
 -- 2026-05-02 → multi-entity PV with stacked peak 7.2 kW. Two PV entities
 -- (east + west) plus a forecast overlay. axisPeak comes from the stacked
@@ -160,6 +175,17 @@ INSERT INTO `meters` VALUES (3, 1781517600, 1.4, 1.0);
 INSERT INTO `meters` VALUES (3, 1781604000, 1.4, 1.0);
 INSERT INTO `meters` VALUES (3, 1781690400, 1.4, 1.0);
 
+-- =====================================================================
+-- Two batteries over a month: 2026-07-01..03. Battery charges more than it
+-- discharges, Battery 2 is exactly balanced so its net sum is zero.
+-- =====================================================================
+INSERT INTO `meters` VALUES (3, 1782900000, 2.0, 1.0);
+INSERT INTO `meters` VALUES (3, 1782986400, 2.0, 1.0);
+INSERT INTO `meters` VALUES (3, 1783072800, 2.0, 1.0);
+INSERT INTO `meters` VALUES (10, 1782900000, 1.5, 1.5);
+INSERT INTO `meters` VALUES (10, 1782986400, 1.5, 1.5);
+INSERT INTO `meters` VALUES (10, 1783072800, 1.5, 1.5);
+
 -- 2026-04-09 → additional meter (ext) standalone chart. Single entity 1.2 kWh,
 -- not home-combined, so no virtual "Others" series.
 INSERT INTO `meters` VALUES (11, 1775728800, 0.3, 0);
@@ -184,3 +210,48 @@ INSERT INTO `meters` VALUES (11, 1775815200, 0.5, 0.1);
 INSERT INTO `meters` VALUES (11, 1775816100, 0.5, 0.1);
 INSERT INTO `meters` VALUES (11, 1775817000, 0.5, 0.1);
 INSERT INTO `meters` VALUES (11, 1775817900, 0.5, 0.1);
+-- Second, export-only meter on the same day. Both meters render in the same
+-- two direction columns.
+INSERT INTO `meters` VALUES (13, 1775815200, 0, 0.3);
+INSERT INTO `meters` VALUES (13, 1775816100, 0, 0.3);
+INSERT INTO `meters` VALUES (13, 1775817000, 0, 0.3);
+INSERT INTO `meters` VALUES (13, 1775817900, 0, 0.3);
+
+-- 2026-04-12 → consumer with export data. Consumers are not a bidirectional
+-- group, so return energy is ignored: home 1.0, Kitchen 0.4.
+INSERT INTO `meters` VALUES (1, 1775988000, 0.25, 0.05);
+INSERT INTO `meters` VALUES (1, 1775988900, 0.25, 0.05);
+INSERT INTO `meters` VALUES (1, 1775989800, 0.25, 0.05);
+INSERT INTO `meters` VALUES (1, 1775990700, 0.25, 0.05);
+INSERT INTO `meters` VALUES (5, 1775988000, 0.1, 0.025);
+INSERT INTO `meters` VALUES (5, 1775988900, 0.1, 0.025);
+INSERT INTO `meters` VALUES (5, 1775989800, 0.1, 0.025);
+INSERT INTO `meters` VALUES (5, 1775990700, 0.1, 0.025);
+
+-- 2026-04-13 → export-only meter without an importing sibling. Return energy
+-- alone must trigger the split, otherwise 1.2 kWh reads as consumption.
+INSERT INTO `meters` VALUES (13, 1776074400, 0, 0.3);
+INSERT INTO `meters` VALUES (13, 1776075300, 0, 0.3);
+INSERT INTO `meters` VALUES (13, 1776076200, 0, 0.3);
+INSERT INTO `meters` VALUES (13, 1776077100, 0, 0.3);
+
+-- 2026-04-14 → consumers priced by their own slots. Solar covers home at noon
+-- (12:00, 12:15 CEST) when Kitchen runs, grid at night (20:00, 20:15) when
+-- Office runs. Grid 0.30, feed-in 0.10 all day: Kitchen 10 ct, Office 30 ct,
+-- Others (half and half) 20 ct, the house average 20 ct.
+INSERT INTO `meters` VALUES (4, 1776160800, 0.4, 0);
+INSERT INTO `meters` VALUES (4, 1776161700, 0.4, 0);
+INSERT INTO `meters` VALUES (1, 1776160800, 0.4, 0);
+INSERT INTO `meters` VALUES (1, 1776161700, 0.4, 0);
+INSERT INTO `meters` VALUES (5, 1776160800, 0.2, 0);
+INSERT INTO `meters` VALUES (5, 1776161700, 0.2, 0);
+INSERT INTO `meters` VALUES (2, 1776189600, 0.4, 0);
+INSERT INTO `meters` VALUES (2, 1776190500, 0.4, 0);
+INSERT INTO `meters` VALUES (1, 1776189600, 0.4, 0);
+INSERT INTO `meters` VALUES (1, 1776190500, 0.4, 0);
+INSERT INTO `meters` VALUES (6, 1776189600, 0.2, 0);
+INSERT INTO `meters` VALUES (6, 1776190500, 0.2, 0);
+INSERT INTO `tariffs` VALUES (1776160800, 0.3, 0.1, NULL, NULL);
+INSERT INTO `tariffs` VALUES (1776161700, 0.3, 0.1, NULL, NULL);
+INSERT INTO `tariffs` VALUES (1776189600, 0.3, 0.1, NULL, NULL);
+INSERT INTO `tariffs` VALUES (1776190500, 0.3, 0.1, NULL, NULL);

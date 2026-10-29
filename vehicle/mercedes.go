@@ -2,11 +2,11 @@ package vehicle
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/vehicle/mercedes"
 )
 
@@ -17,19 +17,14 @@ type Mercedes struct {
 }
 
 func init() {
-	registry.AddCtx("mercedes", func(ctx context.Context, other map[string]any) (api.Vehicle, error) {
-		return newMercedesFromConfig(ctx, "mercedes", other)
-	})
-	registry.AddCtx("smart-eq", func(ctx context.Context, other map[string]any) (api.Vehicle, error) {
-		return newMercedesFromConfig(ctx, "smart-eq", other)
-	})
+	registry.AddCtx("mercedes", NewMercedesFromConfig)
 }
 
-// newMercedesFromConfig creates a new vehicle
-func newMercedesFromConfig(ctx context.Context, brand string, other map[string]any) (api.Vehicle, error) {
+// NewMercedesFromConfig creates a new vehicle
+func NewMercedesFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
-		Tokens   Tokens
+		Tokens   oauth.Tokens
 		User     string
 		Account_ string `mapstructure:"account"` // TODO deprecated
 		VIN      string
@@ -52,7 +47,7 @@ func newMercedesFromConfig(ctx context.Context, brand string, other map[string]a
 		cc.User = cc.Account_
 	}
 
-	log := util.LoggerFromContext(ctx, brand).Redact(cc.Tokens.Access, cc.Tokens.Refresh)
+	log := util.LoggerFromContext(ctx, "mercedes").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
 	identity, err := mercedes.NewIdentity(log, token, cc.User, cc.Region)
 	if err != nil {
 		return nil, err
@@ -60,15 +55,9 @@ func newMercedesFromConfig(ctx context.Context, brand string, other map[string]a
 
 	api := mercedes.NewAPI(log, identity)
 
-	if brand == "smart-eq" {
-		if cc.VIN == "" {
-			return nil, errors.New("missing VIN")
-		}
-	} else {
-		cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
-		if err != nil {
-			return nil, err
-		}
+	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	if err != nil {
+		return nil, err
 	}
 
 	v := &Mercedes{

@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/bmw/cardata"
 )
@@ -23,10 +25,13 @@ func init() {
 
 // NewCardataFromConfig creates a new BMW/Mini CarData vehicle
 func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
-	var cc struct {
-		embed         `mapstructure:",squash"`
-		ClientID, VIN string
-		Cache         time.Duration // 50 requests per day
+	cc := struct {
+		embed                         `mapstructure:",squash"`
+		ClientID, VIN                 string
+		Cache                         time.Duration // 50 requests per day
+		Broker, User, Password, Topic string
+	}{
+		Topic: "bmw/raw/+",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -36,6 +41,7 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 	if cc.VIN == "" {
 		return nil, errors.New("missing vin")
 	}
+	cc.VIN = strings.ToUpper(cc.VIN)
 
 	if cc.ClientID == "" {
 		return nil, api.ErrMissingCredentials
@@ -51,7 +57,7 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 		embed: &cc.embed,
 	}
 
-	log := util.LoggerFromContext(ctx, "cardata").Redact(cc.ClientID, cc.VIN)
+	log := util.LoggerFromContext(ctx, "cardata").Redact(cc.ClientID, cc.VIN, cc.Password)
 
 	authCtx := util.WithLogger(context.Background(), log)
 	ts, err := cardata.NewOAuth(authCtx, cc.ClientID, cc.embed.GetTitle())
@@ -61,7 +67,18 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 
 	api := cardata.NewAPI(log, ts)
 
-	v.Provider = cardata.NewProvider(ctx, log, api, ts, cc.ClientID, cc.VIN, cc.Cache)
+	var conn *cardata.MqttConnector
+	if cc.Broker != "" {
+		conn = cardata.NewBrokerConnector(context.Background(), log, mqtt.Config{
+			Broker:   cc.Broker,
+			User:     cc.User,
+			Password: cc.Password,
+		}, cc.Topic)
+	} else {
+		conn = cardata.NewMqttConnector(context.Background(), log, cc.ClientID, ts)
+	}
+
+	v.Provider = cardata.NewProvider(ctx, log, api, ts, conn, cc.VIN, cc.Cache)
 
 	return v, nil
 }

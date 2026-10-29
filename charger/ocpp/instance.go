@@ -140,6 +140,10 @@ func NewServer(cfg Config, networkExternalUrl string) {
 	server := &interceptingServer{Server: ws.NewServer()}
 	server.SetCheckOriginHandler(func(r *http.Request) bool { return true })
 
+	timeouts := ws.NewServerTimeoutConfig()
+	timeouts.PingWait = pingWait
+	server.SetTimeoutConfig(timeouts)
+
 	dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
 
 	endpoint := ocppj.NewServer(server, dispatcher, nil, core.Profile, remotetrigger.Profile, smartcharging.Profile, security.Profile, firmware.Profile)

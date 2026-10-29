@@ -319,12 +319,14 @@ func (wb *Vestel) getPhases() (int, error) {
 }
 
 // Identify implements the api.Identifier interface
-func (wb *Vestel) identify() (string, error) {
+func (wb *Vestel) identify() ([]string, error) {
 	b, err := wb.conn.ReadInputRegisters(vestelRegRFID, 15)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return utf16BEBytesAsString(b)
+
+	id, err := utf16BEBytesAsString(b)
+	return []string{id}, err
 }
 
 var _ api.Diagnosis = (*Vestel)(nil)

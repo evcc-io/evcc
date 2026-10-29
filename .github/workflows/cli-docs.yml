@@ -18,19 +18,24 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version-file: go.mod
+
+      - uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
+        with:
+          node-version-file: ".node-version"
+          cache: true
 
       - name: Generate CLI docs
         run: mkdir dist && touch dist/empty && go run main.go gendoc ./cli-docs
 
       - name: Format
-        run: npx prettier@3.9.4 --no-config --write "./cli-docs/**/*.md"
+        run: vp fmt "./cli-docs/**/*.md"
 
       - name: Deploy CLI docs to docs repo
         uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4

@@ -16,6 +16,16 @@ func CustomDevice(typ string, other map[string]any) (string, map[string]any, err
 	if err := yaml.Unmarshal([]byte(customYaml), &res); err != nil {
 		return typ, nil, err
 	}
+	if res == nil {
+		res = make(map[string]any)
+	}
+
+	// structured fields stored next to the yaml take precedence
+	for k, v := range other {
+		if k != "yaml" {
+			res[k] = v
+		}
+	}
 
 	// type override
 	if override := cast.ToString(res["type"]); override != "" {

@@ -1,9 +1,9 @@
 <template>
-	<GenericModal id="aboutModal" :size="modalSize" @opened="acknowledge">
+	<GenericModal id="aboutModal" @opened="acknowledge">
 		<template #title>
-			<a :href="websiteUrl" target="_blank" rel="noopener noreferrer"
-				><Logo class="about-logo"
-			/></a>
+			<a :href="websiteUrl" target="_blank" rel="noopener noreferrer">
+				<BrandLogo :custom-logo="customLogo" :custom-brand="customBrand" />
+			</a>
 		</template>
 		<div v-if="updateStarted">
 			<p>{{ $t("footer.version.modalUpdateStarted") }}</p>
@@ -24,33 +24,20 @@
 						<td v-if="development">---</td>
 						<td v-else>
 							<div class="d-flex flex-wrap column-gap-2 align-items-baseline">
-								<span class="text-nowrap">
-									<a
-										:href="releaseNotesUrl(installed)"
-										target="_blank"
-										rel="noopener noreferrer"
-									>
-										v{{ installed }}
-									</a>
-									<template v-if="nightly">
-										(<a
-											:href="githubCommitUrl"
-											target="_blank"
-											rel="noopener noreferrer"
-											><span class="font-monospace">{{
-												shortCommit
-											}}</span></a
-										>)
-									</template>
-								</span>
-								<span
-									v-if="!nightly && !newVersionAvailable"
-									class="text-muted text-nowrap"
-									>{{ $t("footer.version.latestVersion") }}</span
+								<a
+									class="text-nowrap"
+									:href="nightly ? githubCommitUrl : releaseNotesUrl(installed)"
+									target="_blank"
+									rel="noopener noreferrer"
 								>
-								<span v-if="newVersionAvailable" class="text-nowrap">{{
-									$t("footer.version.availableLong")
-								}}</span>
+									v{{ installed }}
+								</a>
+								<Badge v-if="newVersionAvailable">
+									{{ $t("footer.version.availableLong") }}
+								</Badge>
+								<Badge v-else-if="!nightly" variant="muted">
+									{{ $t("footer.version.latestVersion") }}
+								</Badge>
 							</div>
 						</td>
 					</tr>
@@ -66,6 +53,18 @@
 							</a>
 						</td>
 					</tr>
+					<tr v-if="customPhone">
+						<th>{{ $t("footer.version.labelPhone") }}</th>
+						<td>
+							<a :href="phoneUrl">{{ customPhone }}</a>
+						</td>
+					</tr>
+					<tr v-if="customEmail">
+						<th>{{ $t("footer.version.labelEmail") }}</th>
+						<td>
+							<a :href="`mailto:${customEmail}`">{{ customEmail }}</a>
+						</td>
+					</tr>
 				</tbody>
 			</table>
 
@@ -73,9 +72,9 @@
 			<template v-if="newVersionAvailable">
 				<hr />
 				<h6>{{ $t("footer.version.modalNextRelease") }}</h6>
-				<!-- eslint-disable vue/no-v-html -->
+				<!-- oxlint-disable vue/no-v-html -->
 				<div v-if="releaseNotes" class="release-notes" v-html="cleanedReleaseNotes"></div>
-				<!-- eslint-enable vue/no-v-html -->
+				<!-- oxlint-enable vue/no-v-html -->
 				<p v-else>
 					{{ $t("footer.version.modalNoReleaseNotes") }}
 					<a :href="releaseNotesUrl(availableVersion)">GitHub</a>.
@@ -102,8 +101,22 @@
 
 			<!-- open source -->
 			<hr />
-			<p class="mb-0 small d-flex flex-wrap column-gap-1">
-				<i18n-t keypath="footer.version.madeByCommunity" tag="span">
+			<p
+				class="mb-0 d-flex justify-content-between align-items-center flex-wrap column-gap-2 row-gap-1"
+			>
+				<span v-if="customLogo" class="d-flex align-items-center gap-2">
+					<span>{{ $t("footer.version.poweredBy") }}</span>
+					<a
+						:href="evccWebsiteUrl"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="d-flex"
+						aria-label="evcc"
+					>
+						<Logo class="footer-logo" />
+					</a>
+				</span>
+				<i18n-t v-else keypath="footer.version.madeByCommunity" tag="span">
 					<a
 						:href="githubRepoUrl"
 						target="_blank"
@@ -112,15 +125,13 @@
 						>{{ $t("footer.version.community") }}</a
 					>
 				</i18n-t>
-				<i18n-t keypath="footer.version.poweredByOpenSource" tag="span" class="d-inline">
-					<a
-						class="text-muted"
-						:href="githubDependenciesUrl"
-						target="_blank"
-						rel="noopener noreferrer"
-						>{{ $t("footer.version.openSource") }}</a
-					>
-				</i18n-t>
+				<a
+					class="evcc-gray"
+					:href="githubDependenciesUrl"
+					target="_blank"
+					rel="noopener noreferrer"
+					>{{ $t("footer.version.openSource") }}</a
+				>
 			</p>
 		</div>
 	</GenericModal>
@@ -131,16 +142,12 @@ import GenericModal from "./Helper/GenericModal.vue";
 import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/filled/heart";
 import Logo from "./Footer/Logo.vue";
+import BrandLogo from "./BrandLogo.vue";
+import Badge from "./Helper/Badge.vue";
 import api from "@/api";
 import settings from "@/settings";
-import { extractDomain } from "@/utils/extractDomain";
-import {
-	isDevelopment,
-	isNightly,
-	getReleaseName,
-	shortCommit,
-	isNewVersionAvailable,
-} from "@/utils/version";
+import { extractHostname } from "@/utils/extractDomain";
+import { isDevelopment, isNightly, getReleaseName, isNewVersionAvailable } from "@/utils/version";
 import { defineComponent } from "vue";
 
 const GITHUB_REPO = "https://github.com/evcc-io/evcc";
@@ -148,15 +155,20 @@ const EVCC_WEBSITE = "https://evcc.io/";
 
 export default defineComponent({
 	name: "AboutModal",
-	components: { GenericModal, Logo },
+	components: { GenericModal, Logo, BrandLogo, Badge },
 	props: {
 		installed: { type: String, default: "" },
-		commit: String,
+		commit: { type: String, default: "" },
 		availableVersion: String,
 		releaseNotes: String,
 		hasUpdater: Boolean,
 		uploadMessage: String,
 		uploadProgress: Number,
+		customLogo: Boolean,
+		customBrand: String,
+		customWebsite: String,
+		customEmail: String,
+		customPhone: String,
 	},
 	data() {
 		return {
@@ -169,31 +181,32 @@ export default defineComponent({
 			return isDevelopment(this.installed);
 		},
 		nightly() {
-			return isNightly(this.installed, this.commit);
+			return isNightly(this.installed);
 		},
 		releaseName() {
-			return getReleaseName(this.installed, this.commit);
+			return getReleaseName(this.installed);
 		},
 		websiteUrl() {
-			return EVCC_WEBSITE;
+			return this.customWebsite || EVCC_WEBSITE;
 		},
 		websiteDomain() {
-			return extractDomain(EVCC_WEBSITE);
+			return extractHostname(this.websiteUrl);
+		},
+		phoneUrl() {
+			// strip separators for RFC 3966 tel: uri
+			return `tel:${(this.customPhone || "").replace(/[^+\d]/g, "")}`;
 		},
 		githubRepoUrl() {
 			return GITHUB_REPO;
 		},
+		evccWebsiteUrl() {
+			return EVCC_WEBSITE;
+		},
 		githubDependenciesUrl() {
 			return `${GITHUB_REPO}/network/dependencies`;
 		},
-		shortCommit() {
-			return shortCommit(this.commit);
-		},
 		githubCommitUrl() {
 			return `${GITHUB_REPO}/commit/${this.commit}`;
-		},
-		modalSize() {
-			return this.newVersionAvailable ? undefined : "sm";
 		},
 		cleanedReleaseNotes() {
 			if (!this.releaseNotes) return "";
@@ -225,8 +238,8 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.about-logo {
-	height: 2.5rem;
+.footer-logo {
+	height: 1rem;
 }
 .about-table th {
 	padding-right: 1rem;

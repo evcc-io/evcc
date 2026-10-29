@@ -90,7 +90,7 @@ func NewOstromFromConfig(ctx context.Context, other map[string]any) (api.Tariff,
 
 	t.Client.Transport = &oauth2.Transport{
 		Base:   t.Client.Transport,
-		Source: oauth2.ReuseTokenSource(nil, oauth.BootstrapTokenSource(t.refreshToken)),
+		Source: oauth2.ReuseTokenSource(nil, oauth.BootstrapTokenSource(log, t.refreshToken)),
 	}
 
 	contracts, err := t.getContracts()

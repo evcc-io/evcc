@@ -227,10 +227,10 @@ func (wb *OpenWB20) WakeUp() error {
 }
 
 // Identify implements the api.Identifier interface
-func (wb *OpenWB20) identify() (string, error) {
+func (wb *OpenWB20) identify() ([]string, error) {
 	b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegRfid, 10)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }

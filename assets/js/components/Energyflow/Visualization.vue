@@ -13,7 +13,7 @@
 				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">
 					<shopicon-regular-sun></shopicon-regular-sun>
 				</LabelBar>
-				<LabelBar v-bind="labelBarProps('top', 'batteryDischarge')">
+				<LabelBar class="battery-label" v-bind="labelBarProps('top', 'batteryDischarge')">
 					<BatteryIcon :soc="batterySoc" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'gridImport')">
@@ -85,8 +85,8 @@
 				>
 					<VehicleIcon :names="[lp.icon]" />
 				</LabelBar>
-				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
-					<BatteryIcon :soc="batterySoc" :gridCharge="batteryGridCharge" />
+				<LabelBar class="battery-label" v-bind="labelBarProps('bottom', 'batteryCharge')">
+					<BatteryIcon :soc="batterySoc" :mode="batteryMode" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'pvExport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
@@ -97,7 +97,16 @@
 			</div>
 			<div class="label-scale-name">Out</div>
 		</div>
-		<BatteryIcon hold class="battery-hold" :class="{ 'battery-hold--active': batteryHold }" />
+		<router-link
+			v-if="batteryConfigured"
+			to="/battery"
+			class="battery-status"
+			:class="{ 'battery-status--normal': batteryModeNormal }"
+			:aria-label="$t('main.energyflow.batteryStatus')"
+			@click.stop
+		>
+			<BatteryIcon :soc="batterySoc" :mode="batteryMode" />
+		</router-link>
 	</div>
 </template>
 
@@ -111,7 +120,7 @@ import QuestionIcon from "../MaterialIcon/Question.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
 import { defineComponent, type PropType } from "vue";
-import type { UiLoadpoint } from "@/types/evcc";
+import { BATTERY_MODE, type UiLoadpoint } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Visualization",
@@ -126,8 +135,8 @@ export default defineComponent({
 		batterySoc: { type: Number },
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
-		batteryHold: { type: Boolean, default: false },
-		batteryGridCharge: { type: Boolean, default: false },
+		batteryConfigured: { type: Boolean, default: false },
+		batteryMode: { type: String as PropType<BATTERY_MODE> },
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		powerUnit: { type: String as PropType<POWER_UNIT>, default: POWER_UNIT.KW },
@@ -158,6 +167,11 @@ export default defineComponent({
 		},
 		visualizationReady() {
 			return this.total > 0 && this.width > 0;
+		},
+		batteryModeNormal() {
+			return [undefined, BATTERY_MODE.NORMAL, BATTERY_MODE.UNKNOWN].includes(
+				this.batteryMode
+			);
 		},
 	},
 
@@ -236,6 +250,8 @@ export default defineComponent({
 	display: flex;
 	overflow: hidden;
 	margin-right: 1.2rem;
+	/* Safari composites the width-animated bars without subpixel antialiasing, blurring labels on 1x displays */
+	-webkit-font-smoothing: antialiased;
 }
 .label-scale-name {
 	color: var(--evcc-gray);
@@ -297,19 +313,19 @@ html.dark .grid-import {
 .visualization--ready :deep(.label-bar-icon) {
 	transition-duration: var(--evcc-transition-very-fast), 500ms;
 }
-.battery-hold {
+.battery-status {
 	position: absolute;
 	top: 2.5rem;
 	right: -0.25rem;
 	color: var(--evcc-gray);
-	opacity: 0;
 }
-.visualization--ready .battery-hold {
-	transition-property: opacity;
+.visualization--ready .battery-status {
+	transition-property: opacity, visibility;
 	transition-duration: var(--evcc-transition-medium);
-	transition-timing-function: linear;
 }
-.battery-hold--active {
-	opacity: 1;
+/* redundant while a battery label already shows its icon */
+.visualization:has(.battery-label:not(.label-bar--hide-icon)) .battery-status--normal {
+	opacity: 0;
+	visibility: hidden;
 }
 </style>

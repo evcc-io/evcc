@@ -75,10 +75,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		if err != nil {
 			return nil, err
 		}
+		// disabled meter has no instance, circuit falls back to loadpoint sum
 		meter = dev.Instance()
-		if meter == nil {
-			return nil, errors.New("missing meter instance")
-		}
 	}
 
 	log := util.LoggerFromContext(ctx, "circuit")
@@ -204,10 +202,10 @@ func (c *Circuit) GetMaxPower() float64 {
 	return c.maxPower
 }
 
-// effectiveMaxPower returns the configured max power clamped by the HEMS
+// EffectiveMaxPower returns the configured max power clamped by the HEMS
 // consumption limit. Only the root circuit applies the HEMS clamp; non-root
 // callers walk up the parent chain via ValidatePower.
-func (c *Circuit) effectiveMaxPower() float64 {
+func (c *Circuit) EffectiveMaxPower() float64 {
 	maxPower := c.GetMaxPower()
 	if c.hems == nil {
 		return maxPower
@@ -367,7 +365,7 @@ func (c *Circuit) GetMaxPhaseCurrent() float64 {
 
 // ValidatePower validates power request
 func (c *Circuit) ValidatePower(old, new float64) float64 {
-	if maxPower := c.effectiveMaxPower(); maxPower != 0 {
+	if maxPower := c.EffectiveMaxPower(); maxPower != 0 {
 		delta := max(0, new-old)
 		potential := maxPower - c.power
 

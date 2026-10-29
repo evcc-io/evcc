@@ -15,7 +15,7 @@ params:
     advanced: true
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   soc:
     source: mqtt
     topic: phev/battery/level
@@ -38,4 +38,4 @@ render: |
     topic: phev/climate/status
     timeout: {{ .timeout }}
     jq: (. != "off")
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

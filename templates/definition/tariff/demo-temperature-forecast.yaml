@@ -30,7 +30,7 @@ render: |
   forecast:
     source: js
     script: |
-      // Generate temperature forecast for next 72 hours in 15-minute slots
+      // Generate temperature forecast for next 120 hours in 15-minute slots
       // Sinusoidal daily cycle between min and max: coldest around 05:00, warmest around 17:00
       var now = new Date();
       var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
@@ -44,7 +44,7 @@ render: |
       var slotDuration = slotMinutes * 60 * 1000;
       var slotsPerDay = (24 * 60) / slotMinutes;
 
-      for (var day = 0; day < 3; day++) {
+      for (var day = 0; day < 5; day++) {
         for (var slot = 0; slot < slotsPerDay; slot++) {
           var time = new Date(start.getTime() + (day * slotsPerDay + slot) * slotDuration);
           var hour = (slot * slotMinutes) / 60;
