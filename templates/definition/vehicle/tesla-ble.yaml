@@ -36,15 +36,18 @@ render: |
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/command/{{`{{ if .chargeenable }}charge_start{{ else }}charge_stop{{ end }}`}}
     method: POST
+    timeout: {{ .timeout }}
   maxcurrent:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/command/set_charging_amps
     method: POST
     body: '{"charging_amps": ${maxcurrent}}'
+    timeout: {{ .timeout }}
   wakeup:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/command/wake_up
     method: POST
+    timeout: {{ .timeout }}
   soc:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
@@ -93,6 +96,7 @@ render: |
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
     jq: (if (.response.response.charge_state.charging_state == "Charging") then "C"
+      elif (.response.response.charge_state.charging_state == "Starting") then "B"
       elif (.response.response.charge_state.charging_state == "Stopped") then "B"
       elif (.response.response.charge_state.charging_state == "NoPower") then "B"
       elif (.response.response.charge_state.charging_state == "Complete") then "B" 
