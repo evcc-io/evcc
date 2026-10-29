@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -15,7 +16,14 @@ import (
 )
 
 // retryInterval is the minimum time between attempts to create an unavailable vehicle
-const retryInterval = 15 * time.Minute
+var retryInterval = 15 * time.Minute
+
+func init() {
+	// shorter interval for e2e tests
+	if d, err := time.ParseDuration(os.Getenv("EVCC_VEHICLE_RETRY_INTERVAL")); err == nil {
+		retryInterval = d
+	}
+}
 
 // Wrapper wraps an api.Vehicle that could not be created and retries creating it
 type Wrapper struct {
