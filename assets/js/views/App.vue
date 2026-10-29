@@ -67,7 +67,7 @@ export default defineComponent({
 		};
 	},
 	head() {
-		return { title: "...", titleTemplate: "%s | evcc" };
+		return { title: "...", titleTemplate: `%s | ${window.evcc?.customBrand || "evcc"}` };
 	},
 	computed: {
 		version() {
