@@ -1,7 +1,9 @@
 <template>
 	<div>
-		<div ref="chartEl" class="soc-chart my-3"></div>
-		<LegendList :legends="legends" />
+		<LegendList
+			:legends="[{ label: entry.title, color: entry.color, value: '', type: 'area' }]"
+		/>
+		<div ref="chartEl" class="soc-chart" :class="{ 'soc-chart--labels': showXAxis }"></div>
 	</div>
 </template>
 
@@ -13,7 +15,6 @@ import {
 	forecastYAxis,
 	tooltipStyle,
 	tooltipTable,
-	type TooltipRow,
 	lineDefaults,
 } from "../Forecast/echarts";
 import colors, { dimColor } from "@/colors";
@@ -22,7 +23,6 @@ import echartsChart from "@/mixins/echartsChart";
 import { is12hFormat } from "@/units";
 import type { EvoptData } from "./TimeSeriesDataTable.vue";
 import LegendList from "../Sessions/LegendList.vue";
-import type { Legend } from "../Sessions/types";
 import { slotTimes, transientHoverDot } from "./chart";
 
 export interface SocChartEntry {
@@ -41,14 +41,15 @@ export default defineComponent({
 			type: Object as PropType<EvoptData>,
 			required: true,
 		},
-		entries: {
-			type: Array as PropType<SocChartEntry[]>,
+		entry: {
+			type: Object as PropType<SocChartEntry>,
 			required: true,
 		},
 		timestamp: {
 			type: String,
 			default: "",
 		},
+		showXAxis: { type: Boolean, default: false },
 	},
 	computed: {
 		times(): number[] {
@@ -59,30 +60,43 @@ export default defineComponent({
 			const last = this.times[this.times.length - 1];
 			return last === undefined ? 0 : last + (dt[dt.length - 1] || 0) * 1000;
 		},
-		chartSeries(): Record<string, unknown>[] {
-			return this.entries.map((entry) => ({
-				name: entry.title,
-				type: "line",
-				z: 3,
-				data: this.socSeries(entry),
-				...transientHoverDot(entry.color),
-				lineStyle: { color: entry.color, ...lineDefaults },
-				areaStyle: { color: dimColor(entry.color) },
-			}));
+		// soc is the value at slot end, prefixed with the initial soc at schedule start
+		socSeries(): [number, number][] {
+			const soc = [
+				this.evopt.req.batteries?.[this.entry.index]?.s_initial ?? 0,
+				...(this.evopt.res.batteries[this.entry.index]?.state_of_charge || []),
+			];
+			const capacityWh = this.entry.capacity * 1000;
+			return [...this.times, this.endTime].map((t, i) => [
+				t,
+				capacityWh > 0 ? ((soc[i] ?? 0) / capacityWh) * 100 : 0,
+			]);
 		},
-		legends(): Legend[] {
-			return this.entries.map((entry) => ({
-				label: entry.title,
-				color: entry.color,
-				value: "",
-				type: "line",
-			}));
+		xAxes(): Record<string, unknown>[] {
+			const stepHours = is12hFormat() ? 6 : 4;
+			const [hourAxis, dayAxis] = forecastXAxes(
+				this.times[0] ?? 0,
+				this.endTime,
+				this.hourShort,
+				this.weekdayShort,
+				stepHours
+			);
+			if (!this.showXAxis) {
+				(hourAxis as Record<string, unknown>)["axisLabel"] = { show: false };
+			}
+			return [hourAxis, dayAxis];
 		},
 		chartOption(): Record<string, unknown> {
 			return {
 				animation: false,
 				textStyle: { fontFamily: FONT_FAMILY },
-				grid: { top: 10, right: 36, bottom: 34, left: 0, borderWidth: 0 },
+				grid: {
+					top: 10,
+					right: 36,
+					bottom: this.showXAxis ? 34 : 8,
+					left: 0,
+					borderWidth: 0,
+				},
 				tooltip: {
 					trigger: "axis",
 					axisPointer: {
@@ -92,13 +106,7 @@ export default defineComponent({
 					...tooltipStyle(colors.text || ""),
 					formatter: this.tooltipFormatter,
 				},
-				xAxis: forecastXAxes(
-					this.times[0] ?? 0,
-					this.endTime,
-					this.hourShort,
-					this.weekdayShort,
-					is12hFormat() ? 6 : 4
-				),
+				xAxis: this.xAxes,
 				yAxis: forecastYAxis({
 					min: 0,
 					max: 100,
@@ -109,34 +117,27 @@ export default defineComponent({
 						formatter: (v: number) => this.fmtNumber(v, 0),
 					},
 				}),
-				series: this.chartSeries,
+				series: [
+					{
+						type: "line",
+						z: 3,
+						data: this.socSeries,
+						...transientHoverDot(this.entry.color),
+						lineStyle: { color: this.entry.color, ...lineDefaults },
+						areaStyle: { color: dimColor(this.entry.color) },
+					},
+				],
 			};
 		},
 	},
 	methods: {
-		// soc is the value at slot end, prefixed with the initial soc at schedule start
-		socSeries(entry: SocChartEntry): [number, number][] {
-			const soc = [
-				this.evopt.req.batteries?.[entry.index]?.s_initial ?? 0,
-				...(this.evopt.res.batteries[entry.index]?.state_of_charge || []),
-			];
-			const capacityWh = entry.capacity * 1000;
-			return [...this.times, this.endTime].map((t, i) => [
-				t,
-				capacityWh > 0 ? ((soc[i] ?? 0) / capacityWh) * 100 : 0,
-			]);
-		},
-		tooltipFormatter(
-			params: { axisValue: number; seriesName?: string; value?: [number, number] }[]
-		): string {
+		tooltipFormatter(params: { axisValue: number; value?: [number, number] }[]): string {
 			const arr = Array.isArray(params) ? params : [params];
-			if (!arr.length) return "";
+			const v = arr[0]?.value?.[1];
+			if (v == null || Number.isNaN(v)) return "";
 			const t = new Date(arr[0]!.axisValue);
 			const head = `${this.weekdayShort(t)} ${this.fmtHourMinute(t)}`;
-			const rows: TooltipRow[] = arr
-				.filter((p) => p.value?.[1] != null && !Number.isNaN(p.value[1]))
-				.map((p) => ({ name: p.seriesName, values: [this.fmtPercentage(p.value![1])] }));
-			return tooltipTable(head, rows);
+			return tooltipTable(head, [{ values: [this.fmtPercentage(v)] }]);
 		},
 	},
 });
@@ -144,7 +145,10 @@ export default defineComponent({
 
 <style scoped>
 .soc-chart {
-	height: 200px;
+	height: 100px;
 	width: 100%;
+}
+.soc-chart--labels {
+	height: 126px;
 }
 </style>

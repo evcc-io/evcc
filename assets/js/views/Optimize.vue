@@ -87,11 +87,18 @@
 						edge-to-edge
 						class="box-pull-out mb-4"
 					>
-						<SocChart
-							:evopt="evopt"
-							:entries="socEntries"
-							:timestamp="evopt.details.timestamp[0]"
-						/>
+						<div
+							v-for="(entry, idx) in socEntries"
+							:key="entry.index"
+							:class="{ 'mb-3': idx < socEntries.length - 1 }"
+						>
+							<SocChart
+								:evopt="evopt"
+								:entry="entry"
+								:timestamp="evopt.details.timestamp[0]"
+								:show-x-axis="idx === socEntries.length - 1"
+							/>
+						</div>
 					</Card>
 
 					<Card
