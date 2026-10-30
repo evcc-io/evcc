@@ -2,7 +2,7 @@ package tesla
 
 import (
 	"errors"
-	"slices"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 )
@@ -39,7 +39,8 @@ func (v *Controller) ChargeEnable(enable bool) error {
 
 	if enable {
 		err = apiError(v.api.Command(v.vin, "charge_start", nil))
-		if err != nil && slices.Contains([]string{"complete", "is_charging"}, err.Error()) {
+		// proxy wraps these, e.g. "car could not execute command: complete"
+		if err != nil && (strings.HasSuffix(err.Error(), "complete") || strings.HasSuffix(err.Error(), "is_charging")) {
 			return nil
 		}
 	} else {
