@@ -3,14 +3,13 @@ package eudataact
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"maps"
 	"net/http"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -25,35 +24,28 @@ const testVin = "WVWZZZ"
 
 // testPortal serves datasets whose name is the delivered soc
 type testPortal struct {
-	mu        sync.Mutex
 	files     []dataset
-	lists     int
 	downloads map[string]int
 	fail      map[string]int // remaining failures per dataset
-	gate      chan struct{}  // blocks downloads until closed
+	delay     time.Duration  // per download
 }
 
 func (p *testPortal) RoundTrip(req *http.Request) (*http.Response, error) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-
 	var body []byte
 	status := http.StatusOK
 
 	switch {
 	case strings.HasSuffix(req.URL.Path, "/list"):
-		p.lists++
 		body, _ = json.Marshal(map[string]any{"files": p.files})
 
 	case strings.HasSuffix(req.URL.Path, "/download"):
 		name := req.Header.Get("filename")
 		p.downloads[name]++
 
-		if p.gate != nil {
-			gate := p.gate
-			p.mu.Unlock()
-			<-gate
-			p.mu.Lock()
+		select {
+		case <-time.After(p.delay):
+		case <-req.Context().Done():
+			return nil, req.Context().Err()
 		}
 
 		if p.fail[name] > 0 {
@@ -85,24 +77,14 @@ func datasetZip(soc string) []byte {
 	return buf.Bytes()
 }
 
-// addDatasets appends n datasets delivered after the newest one, named by soc
+// addDatasets appends n datasets delivered after start, named by soc
 func (p *testPortal) addDatasets(start time.Time, n int) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-
 	for i := range n {
 		p.files = append(p.files, dataset{
 			Name:      fmt.Sprintf("%d.zip", len(p.files)+1),
 			CreatedOn: start.Add(time.Duration(i+1) * time.Minute),
 		})
 	}
-}
-
-func (p *testPortal) counts() (int, map[string]int) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-
-	return p.lists, maps.Clone(p.downloads)
 }
 
 // testStore returns a store for a vehicle that has already been polled once at start
@@ -127,23 +109,6 @@ func testStore(start time.Time) (*testPortal, *API, *store) {
 	return portal, a, s
 }
 
-// returns fails the test if f is still blocked after a while
-func returns(t *testing.T, f func()) {
-	t.Helper()
-
-	done := make(chan struct{})
-	go func() {
-		defer close(done)
-		f()
-	}()
-
-	select {
-	case <-done:
-	case <-time.After(5 * time.Second):
-		require.FailNow(t, "call blocked")
-	}
-}
-
 func socOf(data []point) string {
 	if p := find(data, FieldSoc); p != nil {
 		return p.Value
@@ -151,123 +116,117 @@ func socOf(data []point) string {
 	return ""
 }
 
-// TestUpdateFewPending keeps the normal case synchronous, the read returns fresh data.
+var testStart = time.Date(2026, 10, 30, 8, 0, 0, 0, time.UTC)
+
+// slowPortal makes downloads take a third of a shortened update timeout
+func slowPortal(t *testing.T, portal *testPortal) {
+	timeout := updateTimeout
+	t.Cleanup(func() { updateTimeout = timeout })
+
+	updateTimeout = 300 * time.Millisecond
+	portal.delay = updateTimeout / 3
+}
+
+// timedUpdate fails the test if update exceeds its timeout
+func timedUpdate(t *testing.T, s *store) (time.Time, error) {
+	t.Helper()
+
+	start := time.Now()
+	ts, err := s.update(testVin)
+	require.Less(t, time.Since(start), updateTimeout+100*time.Millisecond)
+
+	return ts, err
+}
+
+// TestUpdateFewPending keeps the normal case in a single poll
 func TestUpdateFewPending(t *testing.T) {
-	start := time.Date(2026, 10, 30, 8, 0, 0, 0, time.UTC)
-	portal, _, s := testStore(start)
-	portal.addDatasets(start, maxBackfill)
+	portal, _, s := testStore(testStart)
+	portal.addDatasets(testStart, maxBackfill)
 
 	ts, err := s.update(testVin)
 	require.NoError(t, err)
-	assert.Equal(t, start.Add(maxBackfill*time.Minute), ts)
+	assert.Equal(t, testStart.Add(maxBackfill*time.Minute), ts)
 	assert.Equal(t, fmt.Sprint(maxBackfill), socOf(s.snapshot(testVin)))
 }
 
-// TestUpdateCatchUp guards the site loop: a long catch-up must not block the
-// caller while downloads wait for the rate limit, and reads must not block either.
+// TestUpdateCatchUp continues a catch-up over several polls, each within the timeout
 func TestUpdateCatchUp(t *testing.T) {
-	start := time.Date(2026, 10, 30, 8, 0, 0, 0, time.UTC)
-	total := maxBackfill + 2
+	total := 10
 
-	portal, _, s := testStore(start)
-	portal.addDatasets(start, total)
-	portal.gate = make(chan struct{})
+	portal, _, s := testStore(testStart)
+	portal.addDatasets(testStart, total)
+	slowPortal(t, portal)
 
-	returns(t, func() {
-		_, err := s.update(testVin)
-		assert.ErrorIs(t, err, api.ErrMustRetry)
-	})
-
-	returns(t, func() {
-		_, err := s.update(testVin)
-		assert.ErrorIs(t, err, api.ErrMustRetry)
-		assert.Equal(t, "0", socOf(s.snapshot(testVin)))
-	})
-
-	lists, _ := portal.counts()
-	assert.Equal(t, 1, lists, "no further portal requests while the catch-up runs")
-
-	close(portal.gate)
-
-	var ts time.Time
-	require.Eventually(t, func() bool {
-		var err error
-		ts, err = s.update(testVin)
-		return err == nil
-	}, 5*time.Second, time.Millisecond)
-
-	assert.Equal(t, start.Add(time.Duration(total)*time.Minute), ts)
-	assert.Equal(t, fmt.Sprint(total), socOf(s.snapshot(testVin)), "newest dataset wins")
-
-	_, downloads := portal.counts()
-	require.Len(t, downloads, total)
-	for name, n := range downloads {
-		assert.Equal(t, 1, n, name)
+	var retries int
+	ts, err := timedUpdate(t, s)
+	for errors.Is(err, api.ErrMustRetry) && retries < total {
+		retries++
+		ts, err = timedUpdate(t, s)
 	}
+
+	require.NoError(t, err)
+	assert.Positive(t, retries)
+	assert.Equal(t, testStart.Add(time.Duration(total)*time.Minute), ts)
+	assert.Equal(t, fmt.Sprint(total), socOf(s.snapshot(testVin)))
+	require.Len(t, portal.downloads, total)
 }
 
-// TestUpdateCatchUpError surfaces a failed catch-up once and resumes where it stopped.
-func TestUpdateCatchUpError(t *testing.T) {
-	start := time.Date(2026, 10, 30, 8, 0, 0, 0, time.UTC)
-	total := maxBackfill + 5
+// TestUpdateTimeoutNoProgress surfaces the timeout when not a single dataset arrives
+func TestUpdateTimeoutNoProgress(t *testing.T) {
+	portal, _, s := testStore(testStart)
+	portal.addDatasets(testStart, 1)
+	slowPortal(t, portal)
+	portal.delay = 2 * updateTimeout
 
-	portal, _, s := testStore(start)
-	portal.addDatasets(start, total)
-	portal.fail["2.zip"] = 1
+	_, err := timedUpdate(t, s)
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+	assert.NotErrorIs(t, err, api.ErrMustRetry)
+}
+
+// TestUpdateCatchUpError keeps the datasets before a failure and resumes from there
+func TestUpdateCatchUpError(t *testing.T) {
+	total := 3
+
+	portal, _, s := testStore(testStart)
+	portal.addDatasets(testStart, total)
+	portal.fail[fmt.Sprintf("%d.zip", total)] = 1
 
 	_, err := s.update(testVin)
-	require.ErrorIs(t, err, api.ErrMustRetry)
+	require.Error(t, err)
+	assert.Equal(t, fmt.Sprint(total-1), socOf(s.snapshot(testVin)))
 
-	var failed error
-	require.Eventually(t, func() bool {
-		_, failed = s.update(testVin)
-		return !errors.Is(failed, api.ErrMustRetry)
-	}, 5*time.Second, time.Millisecond)
-
-	require.Error(t, failed)
-	assert.NotErrorIs(t, failed, api.ErrMustRetry)
-	assert.Equal(t, "1", socOf(s.snapshot(testVin)), "datasets before the failure are kept")
-
-	require.Eventually(t, func() bool {
-		_, err := s.update(testVin)
-		return err == nil
-	}, 5*time.Second, time.Millisecond)
-
+	_, err = s.update(testVin)
+	require.NoError(t, err)
 	assert.Equal(t, fmt.Sprint(total), socOf(s.snapshot(testVin)))
-
-	_, downloads := portal.counts()
-	assert.Equal(t, 1, downloads["1.zip"], "not downloaded again")
-	assert.Equal(t, 2, downloads["2.zip"], "retried")
+	assert.Equal(t, 1, portal.downloads[fmt.Sprintf("%d.zip", total-1)], "not downloaded again")
+	assert.Equal(t, 2, portal.downloads[fmt.Sprintf("%d.zip", total)], "retried")
 }
 
 // TestProviderCatchUp ensures old data is not served during a catch-up, since the
 // loadpoint reads once on plug-in unless it gets ErrMustRetry.
 func TestProviderCatchUp(t *testing.T) {
-	start := time.Date(2026, 10, 30, 8, 0, 0, 0, time.UTC)
-	total := maxBackfill + 2
+	total := 10
 
-	portal, a, _ := testStore(start)
+	portal, a, _ := testStore(testStart)
 	p := NewProvider(util.NewLogger("test"), a, testVin, time.Hour)
 
 	soc, err := p.Soc()
 	require.NoError(t, err, "nothing pending, recent success")
 	assert.Equal(t, 0.0, soc)
 
-	portal.addDatasets(start, total)
-	portal.gate = make(chan struct{})
+	portal.addDatasets(testStart, total)
+	slowPortal(t, portal)
 	util.ResetCached()
 
-	returns(t, func() {
-		_, err := p.Soc()
-		assert.ErrorIs(t, err, api.ErrMustRetry)
-	})
+	_, err = p.Soc()
+	require.ErrorIs(t, err, api.ErrMustRetry)
 
-	close(portal.gate)
+	for range total {
+		if soc, err = p.Soc(); !errors.Is(err, api.ErrMustRetry) {
+			break
+		}
+	}
 
-	require.Eventually(t, func() bool {
-		soc, err = p.Soc()
-		return err == nil
-	}, 5*time.Second, time.Millisecond)
-
+	require.NoError(t, err)
 	assert.Equal(t, float64(total), soc)
 }

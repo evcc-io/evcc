@@ -1,6 +1,8 @@
 package eudataact
 
 import (
+	"context"
+	"errors"
 	"slices"
 	"sync"
 	"time"
@@ -10,9 +12,12 @@ import (
 )
 
 // maxBackfill bounds how many of the most recent content datasets are downloaded
-// on the first poll of a session to seed the merged map. It also bounds the
-// downloads done while the caller waits, more are caught up in the background.
+// on the first poll of a session to seed the merged map.
 const maxBackfill = 8
+
+// updateTimeout bounds a single update, so that waiting for the portal's rate
+// limit doesn't stall the site loop. Remaining datasets follow on the next poll.
+var updateTimeout = 10 * time.Second
 
 // store holds the merged dataset state for all vehicles of a single portal
 // account consisting of username and brand
@@ -29,8 +34,6 @@ type vehicleState struct {
 	data       []point
 	after      time.Time
 	seq        uint64 // delivery counter, incremented per merged dataset
-	catchingUp bool   // background download running
-	catchUpErr error  // error of the last background download, returned by the next update
 }
 
 var (
@@ -76,32 +79,26 @@ func (s *store) state(vin string) *vehicleState {
 // merged and merges them into the vehicle's map oldest to newest. It returns the
 // newest dataset's delivery time (used to schedule the next poll).
 // On first poll latest maxBackfill content datasets are downloaded.
-// With more datasets pending it returns api.ErrMustRetry and downloads them in the
-// background, since waiting for the portal's rate limit would stall the site loop.
+// If updateTimeout expires after some datasets were merged, api.ErrMustRetry is
+// returned and the next update continues from there.
 func (s *store) update(vin string) (time.Time, error) {
 	v := s.state(vin)
 
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
-	if v.catchingUp {
-		return time.Time{}, api.ErrMustRetry
-	}
-
-	if err := v.catchUpErr; err != nil {
-		v.catchUpErr = nil
-		return time.Time{}, err
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), updateTimeout)
+	defer cancel()
 
 	if v.identifier == "" {
-		id, err := s.api.identifier(vin)
+		id, err := s.api.identifier(ctx, vin)
 		if err != nil {
 			return time.Time{}, err
 		}
 		v.identifier = id
 	}
 
-	list, err := s.api.datasets(vin, v.identifier)
+	list, err := s.api.datasets(ctx, vin, v.identifier)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -120,20 +117,31 @@ func (s *store) update(vin string) (time.Time, error) {
 	// arrives
 	initial := v.after.IsZero()
 
-	todo := pending(content, v.after)
-	if len(todo) > maxBackfill {
-		v.catchingUp = true
-		go s.catchUp(vin, v, todo)
-		return time.Time{}, api.ErrMustRetry
-	}
-
-	for _, d := range todo {
-		data, err := s.fetch(vin, v.identifier, d)
+	for i, d := range pending(content, v.after) {
+		b, err := s.api.download(ctx, vin, v.identifier, d.Name)
+		if i > 0 && errors.Is(err, context.DeadlineExceeded) {
+			if initial {
+				logData(s.api.log, v.data)
+			}
+			return time.Time{}, api.ErrMustRetry
+		}
 		if err != nil {
 			return newest, err
 		}
 
-		v.add(d, data)
+		data, err := parseDataset(b)
+		if err != nil {
+			return newest, err
+		}
+
+		// advance the high-water mark so this dataset is never downloaded again,
+		// even when it is dropped below
+		if d.CreatedOn.After(v.after) {
+			v.after = d.CreatedOn
+		}
+
+		v.seq++
+		v.data = merge(v.data, data, v.seq)
 
 		if !initial {
 			logData(s.api.log, data)
@@ -149,50 +157,6 @@ func (s *store) update(vin string) (time.Time, error) {
 	}
 
 	return newest, nil
-}
-
-// catchUp downloads datasets without holding the vehicle lock, so that reads don't
-// block. A failed download keeps the datasets before it, update resumes from there.
-func (s *store) catchUp(vin string, v *vehicleState, todo []dataset) {
-	var err error
-	for _, d := range todo {
-		var data []point
-		if data, err = s.fetch(vin, v.identifier, d); err != nil {
-			break
-		}
-
-		v.mu.Lock()
-		v.add(d, data)
-		v.mu.Unlock()
-
-		logData(s.api.log, data)
-	}
-
-	v.mu.Lock()
-	v.catchingUp, v.catchUpErr = false, err
-	v.mu.Unlock()
-}
-
-// fetch downloads and decodes a dataset
-func (s *store) fetch(vin, identifier string, d dataset) ([]point, error) {
-	b, err := s.api.download(vin, identifier, d.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	return parseDataset(b)
-}
-
-// add merges a downloaded dataset. Callers must hold v.mu.
-func (v *vehicleState) add(d dataset, data []point) {
-	// advance the high-water mark so this dataset is never downloaded again,
-	// even when it is dropped below
-	if d.CreatedOn.After(v.after) {
-		v.after = d.CreatedOn
-	}
-
-	v.seq++
-	v.data = merge(v.data, data, v.seq)
 }
 
 // snapshot returns a copy of the merged data for vin

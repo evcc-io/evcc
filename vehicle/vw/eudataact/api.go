@@ -1,6 +1,7 @@
 package eudataact
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -270,11 +271,12 @@ func loginLocation(resp *http.Response) (*url.URL, error) {
 }
 
 // get executes a GET request, re-authenticating once on 401/403, and returns the body
-func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
+func (v *API) get(ctx context.Context, uri string, headers map[string]string) ([]byte, error) {
 	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	gen := v.loginGen.Load()
 	resp, err := v.Do(req)
@@ -292,7 +294,7 @@ func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
 		if req, err = request.New(http.MethodGet, uri, nil, headers); err != nil {
 			return nil, err
 		}
-		if resp, err = v.Do(req); err != nil {
+		if resp, err = v.Do(req.WithContext(ctx)); err != nil {
 			return nil, err
 		}
 	}
@@ -301,8 +303,8 @@ func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
 }
 
 // getJSON executes a GET request and decodes the JSON response
-func (v *API) getJSON(uri string, res any) error {
-	b, err := v.get(uri, map[string]string{"Accept": request.JSONContent})
+func (v *API) getJSON(ctx context.Context, uri string, res any) error {
+	b, err := v.get(ctx, uri, map[string]string{"Accept": request.JSONContent})
 	if err != nil {
 		return err
 	}
@@ -313,7 +315,7 @@ func (v *API) getJSON(uri string, res any) error {
 func (v *API) Vehicles() ([]Vehicle, error) {
 	uri := BaseURL + "/proxy_api/consent/me/vehicles?viewPosition=FRONT_LEFT"
 
-	b, err := v.get(uri, map[string]string{"Accept": request.JSONContent})
+	b, err := v.get(context.Background(), uri, map[string]string{"Accept": request.JSONContent})
 	if err != nil {
 		return nil, err
 	}
@@ -335,13 +337,13 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 }
 
 // identifier returns the data-request identifier required for the data delivery calls
-func (v *API) identifier(vin string) (string, error) {
+func (v *API) identifier(ctx context.Context, vin string) (string, error) {
 	uri := fmt.Sprintf("%s/proxy_api/euda-apim/datarequest/vehicles/%s/metadata/partial", BaseURL, vin)
 
 	var res struct {
 		Identifier string `json:"Identifier"`
 	}
-	if err := v.getJSON(uri, &res); err != nil {
+	if err := v.getJSON(ctx, uri, &res); err != nil {
 		if se, ok := errors.AsType[*request.StatusError](err); ok && se.HasStatus(404) {
 			err = ErrNotConfigured
 		}
@@ -356,10 +358,10 @@ func (v *API) identifier(vin string) (string, error) {
 }
 
 // datasets lists the available datasets for the given data request
-func (v *API) datasets(vin, identifier string) ([]dataset, error) {
+func (v *API) datasets(ctx context.Context, vin, identifier string) ([]dataset, error) {
 	uri := fmt.Sprintf("%s/proxy_api/euda-apim/datadelivery/vehicles/%s/%s/list", BaseURL, vin, identifier)
 
-	b, err := v.get(uri, map[string]string{"Accept": request.JSONContent, "type": "partial"})
+	b, err := v.get(ctx, uri, map[string]string{"Accept": request.JSONContent, "type": "partial"})
 	if err != nil {
 		// the portal answers 404 "No files available for this request" until the
 		// vehicle has delivered its first dataset
@@ -385,7 +387,7 @@ func (v *API) datasets(vin, identifier string) ([]dataset, error) {
 }
 
 // download fetches the dataset zip archive
-func (v *API) download(vin, identifier, name string) ([]byte, error) {
+func (v *API) download(ctx context.Context, vin, identifier, name string) ([]byte, error) {
 	uri := fmt.Sprintf("%s/proxy_api/euda-apim/datadelivery/vehicles/%s/%s/download", BaseURL, vin, identifier)
-	return v.get(uri, map[string]string{"filename": name, "type": "partial"})
+	return v.get(ctx, uri, map[string]string{"filename": name, "type": "partial"})
 }
