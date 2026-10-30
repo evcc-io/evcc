@@ -69,6 +69,7 @@ func newTestAmbibox() (*Ambibox, *fakePublisher) {
 		client:   pub,
 		base:     "device/evCharger/0",
 		minPower: 600,
+		phases:   3,
 
 		liveG:         func() (float64, error) { return 50, nil },
 		connectedG:    func() (bool, error) { return true, nil },
@@ -162,8 +163,8 @@ func TestAmbiboxStatus(t *testing.T) {
 	t.Run("box unreachable - StatusNone/ErrTimeout", func(t *testing.T) {
 		wb, _ := newTestAmbibox()
 		wb.liveG = func() (float64, error) { return 0, errors.New("timeout") }
-		if _, err := wb.Status(); !errors.Is(err, api.ErrTimeout) {
-			t.Errorf("Status() err = %v, want ErrTimeout", err)
+		if s, err := wb.Status(); !errors.Is(err, api.ErrTimeout) || s != api.StatusNone {
+			t.Errorf("Status() = %v, %v, want StatusNone, ErrTimeout", s, err)
 		}
 	})
 

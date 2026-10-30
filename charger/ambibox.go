@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -56,13 +57,16 @@ import (
 //	currentAc1..3     read   A
 //	voltageAc1..3     read   V
 //
-// wakeUpBlocked is not part of the spec but published by firmware 0.4.8.
+// wakeUpBlocked is not part of the spec but published by firmware 0.4.8. The
+// box never reports its own AC phase count, so chargeWatts converts against
+// the configured wiring (phases) rather than always assuming three.
 type Ambibox struct {
 	log      *util.Logger
 	client   ambiboxPublisher
 	base     string
 	current  float64
 	minPower float64
+	phases   int // configured AC phase wiring; the box never reports it
 
 	mu      sync.Mutex
 	enabled *bool // nil until adopted from sessionState
@@ -112,10 +116,12 @@ func NewAmbiboxFromConfig(other map[string]any) (api.Charger, error) {
 		Topic       string
 		ID          string
 		MinPower    float64
+		Phases      int
 		Timeout     time.Duration
 	}{
 		Topic:    "device/evCharger",
 		MinPower: 600,
+		Phases:   3,
 		Timeout:  30 * time.Second,
 	}
 
@@ -127,15 +133,19 @@ func NewAmbiboxFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, fmt.Errorf("missing id")
 	}
 
+	if cc.Phases < 1 || cc.Phases > 3 {
+		return nil, fmt.Errorf("invalid phases: %d", cc.Phases)
+	}
+
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
 
-	return NewAmbibox(cc.Config, cc.Topic, cc.ID, cc.MinPower, cc.Timeout)
+	return NewAmbibox(cc.Config, cc.Topic, cc.ID, cc.MinPower, cc.Phases, cc.Timeout)
 }
 
 // NewAmbibox creates an Ambibox charger
-func NewAmbibox(mqttconf mqtt.Config, topic, id string, minPower float64, timeout time.Duration) (*Ambibox, error) {
+func NewAmbibox(mqttconf mqtt.Config, topic, id string, minPower float64, phases int, timeout time.Duration) (*Ambibox, error) {
 	log := util.NewLogger("ambibox")
 
 	client, err := mqtt.RegisteredClientOrDefault(log, mqttconf)
@@ -148,6 +158,7 @@ func NewAmbibox(mqttconf mqtt.Config, topic, id string, minPower float64, timeou
 		client:   client,
 		base:     fmt.Sprintf("%s/%s", topic, id),
 		minPower: minPower,
+		phases:   phases,
 	}
 
 	boolG := func(sub string) (func() (bool, error), error) {
@@ -238,15 +249,16 @@ func (wb *Ambibox) publish(sub string, retained bool, payload string) {
 }
 
 // chargeWatts converts a charging current into the charge power limit, based
-// on measured voltage of the three-phase AC connection, held between the
-// minimum and maximum charge power.
+// on measured voltage of the configured AC phase wiring (wb.phases - the box
+// never reports its own phase count), held between the minimum and maximum
+// charge power.
 func (wb *Ambibox) chargeWatts(current float64) float64 {
 	if current <= 0 {
 		return 0
 	}
 
 	var sum float64
-	for i := range wb.voltG {
+	for i := range wb.phases {
 		v := 230.0
 		if m, err := wb.voltG[i](); err == nil && m > 0 {
 			v = m
@@ -263,7 +275,13 @@ func (wb *Ambibox) chargeWatts(current float64) float64 {
 	power = math.Max(power, minPower)
 
 	if max, err := wb.chargeMaxG(); err == nil && max > 0 {
-		power = math.Min(power, max)
+		if max < minPower {
+			// an inconsistent reading, not a real ceiling - clamping to it would
+			// publish a limit below the minimum the box is expected to hold
+			wb.log.WARN.Printf("box reports chargePowerMax %.0fW below the %.0fW minimum - ignoring it", max, minPower)
+		} else {
+			power = math.Min(power, max)
+		}
 	}
 
 	return math.Max(0, math.Round(power))
@@ -273,12 +291,14 @@ func (wb *Ambibox) publishLimit(power float64) {
 	wb.publish("limitChargePower", true, strconv.FormatInt(int64(power), 10))
 }
 
-// tryWake sends wakeUp unless the box itself says not to.
+// tryWake sends wakeUp unless the box itself says not to. A guard getter
+// error means the guard cannot be confirmed clear either, so it holds back
+// the wakeUp the same as a confirmed true would.
 func (wb *Ambibox) tryWake() {
-	if replug, err := wb.replugG(); err == nil && replug {
+	if replug, err := wb.replugG(); err != nil || replug {
 		return
 	}
-	if blocked, err := wb.wakeBlockedG(); err == nil && blocked {
+	if blocked, err := wb.wakeBlockedG(); err != nil || blocked {
 		return
 	}
 	wb.publish("wakeUp", false, strconv.FormatBool(true))
@@ -293,10 +313,13 @@ func (wb *Ambibox) tryWake() {
 func (wb *Ambibox) sessionActive() (bool, error) {
 	s, err := wb.sessionStateG()
 	if err != nil {
-		if ev, evErr := wb.evConnectedG(); evErr == nil && ev {
-			return false, err
+		// No vehicle connected is the one case where a missing sessionState is
+		// the expected steady state, not an unknown. A vehicle connected, or
+		// evConnectedG itself failing, must not be guessed at as "no session".
+		if ev, evErr := wb.evConnectedG(); evErr == nil && !ev {
+			return false, nil
 		}
-		return false, nil
+		return false, err
 	}
 	if s == "" {
 		return false, nil
@@ -521,8 +544,11 @@ func (wb *Ambibox) Soc() (float64, error) {
 
 	f, err := wb.socG()
 	if err != nil {
-		// only published while a vehicle is present
-		return 0, api.ErrNotAvailable
+		if errors.Is(err, api.ErrOutdated) {
+			// never published yet - the normal case without a vehicle present
+			return 0, api.ErrNotAvailable
+		}
+		return 0, err
 	}
 	return f, nil
 }
@@ -537,6 +563,10 @@ func (wb *Ambibox) Capacity() (float64, error) {
 
 	f, err := wb.capacityG()
 	if err != nil {
+		if errors.Is(err, api.ErrOutdated) {
+			// never published yet - the normal case without a vehicle present
+			return 0, api.ErrNotAvailable
+		}
 		return 0, err
 	}
 	return f / 1e3, nil

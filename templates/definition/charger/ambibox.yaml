@@ -74,9 +74,21 @@ params:
     help:
       de: Meldet die Box `chargePowerMin`, gilt der größere der beiden Werte.
       en: If the box reports `chargePowerMin`, the larger of both values applies.
+  - name: phases
+    default: 3
+    advanced: true
+    description:
+      de: Angeschlossene AC-Phasen der Wallbox
+      en: AC phases the wallbox is wired to
+    help:
+      de: Die Box meldet ihre eigene Phasenzahl nicht - hier die tatsächliche
+        Verdrahtung angeben, nicht die des Fahrzeugs.
+      en: The box never reports its own phase count - set the wallbox's actual
+        wiring here, not the vehicle's.
 render: |
   type: ambibox
   {{- include "mqtt" . }}
   topic: {{ .topic }}
   id: {{ .id }}
   minpower: {{ .minpower }}
+  phases: {{ .phases }}
