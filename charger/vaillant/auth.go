@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
@@ -74,7 +75,7 @@ func Login(ctx context.Context, log *util.Logger, oc *sensonet.Oauth2Config, use
 		log.WARN.Printf("altcha challenge failed, continuing without: %v", err)
 	}
 
-	req, err := http.NewRequest("POST", match[1], strings.NewReader(params.Encode()))
+	req, err := http.NewRequest("POST", html.UnescapeString(match[1]), strings.NewReader(params.Encode()))
 	if err != nil {
 		return nil, err
 	}
