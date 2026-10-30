@@ -1,0 +1,113 @@
+template: fnn-modbus
+products:
+  - description:
+      de: FNN-Steuerbox via Modbus-I/O-Modul (§ 14a EnWG, § 9 EEG)
+      en: FNN control box via Modbus I/O module (§ 14a EnWG, § 9 EEG)
+  - brand: Ebyte
+    description:
+      generic: ME31-AXXX8000 (FNN-Steuerbox)
+  - brand: Ebyte
+    description:
+      generic: ME31-AXXX4040 (FNN-Steuerbox)
+requirements:
+  description:
+    de: Die Schaltkontakte der Steuerbox werden an die Digitaleingänge des Moduls angeschlossen. Das Modul muss die Eingänge als Discrete Inputs (Funktionscode 02) bereitstellen, ein geschlossener Kontakt wird als aktiv gelesen.
+    en: Connect the relay contacts of the control box to the digital inputs of the module. The module must provide the inputs as discrete inputs (function code 02), a closed contact reads as active.
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: maxconsumptionpower
+    type: float
+    unit: W
+    required: true
+    description:
+      en: Guaranteed minimum power (Pmin)
+      de: Garantierte Mindestleistung (Pmin)
+    help:
+      en: Power limit applied to the root circuit while the limit is active.
+      de: Leistungsbegrenzung des Hauptstromkreises während die Limitierung aktiv ist.
+  - name: w4input
+    type: int
+    required: true
+    default: 1
+    description:
+      en: W4 input
+      de: W4-Eingang
+    help:
+      en: Digital input number for the W4 signal (Dimmer for controllable loads), e.g. 1 for DI1
+      de: Nummer des Digitaleingangs für das W4-Signal (Dimmen der steuerbaren Verbrauchseinrichtungen), z. B. 1 für DI1
+  - name: productionnominalmax
+    type: float
+    unit: Wp
+    description:
+      en: Installed generator power
+      de: Installierte Generatorleistung
+    help:
+      en: Rated generator/module power of the installation (reference value according to § 9 EEG).
+      de: Gesamtnennleistung bzw. Modul- oder Generatorleistung der Anlage (Bezugsgröße nach § 9 EEG).
+  - name: maxproductionpower
+    deprecated: true
+  - name: w3input
+    type: int
+    required: true
+    default: 2
+    description:
+      en: W3 input
+      de: W3-Eingang
+    help:
+      en: Digital input number for the W3 signal (Zero export, 0%), e.g. 2 for DI2
+      de: Nummer des Digitaleingangs für das W3-Signal (Keine Netzeinspeisung, 0%), z. B. 2 für DI2
+  - name: s1input
+    type: int
+    example: 3
+    description:
+      en: S1 input
+      de: S1-Eingang
+    help:
+      en: Digital input number for the S1 signal (60% export power limit), e.g. 3 for DI3
+      de: Nummer des Digitaleingangs für das S1-Signal (Reduzierung der Einspeiseleistung auf 60%), z. B. 3 für DI3
+  - name: s2input
+    type: int
+    example: 4
+    description:
+      en: S2 input
+      de: S2-Eingang
+    help:
+      en: Digital input number for the S2 signal (30% export power limit), e.g. 4 for DI4
+      de: Nummer des Digitaleingangs für das S2-Signal (Reduzierung der Einspeiseleistung auf 30%), z. B. 4 für DI4
+render: |
+  type: fnn
+  maxdimpower: {{ .maxconsumptionpower }}
+  w4:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ sub (int .w4input) 1 }}
+      type: discreteinput
+      encoding: bool8
+  productionnominalmax: {{ or .productionnominalmax .maxproductionpower }}
+  w3:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ sub (int .w3input) 1 }}
+      type: discreteinput
+      encoding: bool8
+  {{- if .s1input }}
+  s1:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ sub (int .s1input) 1 }}
+      type: discreteinput
+      encoding: bool8
+  {{- end }}
+  {{- if .s2input }}
+  s2:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ sub (int .s2input) 1 }}
+      type: discreteinput
+      encoding: bool8
+  {{- end }}
