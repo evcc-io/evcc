@@ -1621,6 +1621,17 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 
 	site.update(<-loadpointChan) // start immediately
 
+	// the loop below updates one loadpoint per interval, don't let the others wait for their turn after startup
+	for _, lp := range startupOrder(site.activeLoadpoints()) {
+		select {
+		case <-stopC:
+			return
+		default:
+		}
+
+		site.update(lp)
+	}
+
 	for tick := time.Tick(interval); ; {
 		select {
 		case <-tick:
