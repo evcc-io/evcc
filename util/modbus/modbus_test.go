@@ -1,6 +1,7 @@
 package modbus
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -38,6 +39,34 @@ func TestSharedSettings(t *testing.T) {
 
 	// timeout has been applied to the physical connection
 	require.Equal(t, 3*time.Second, c1.physical.Connection.Timeout(3*time.Second))
+}
+
+// TestSharedConnectionRelease ensures the shared physical connection is
+// released once every registration's context has ended
+func TestSharedConnectionRelease(t *testing.T) {
+	uri := "localhost:15021"
+
+	registered := func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+		_, ok := connections[uri]
+		return ok
+	}
+
+	ctx1, cancel1 := context.WithCancel(t.Context())
+	ctx2, cancel2 := context.WithCancel(t.Context())
+
+	_, err := Settings{URI: uri, ID: 1}.Connection(ctx1)
+	require.NoError(t, err)
+
+	_, err = Settings{URI: uri, ID: 2}.Connection(ctx2)
+	require.NoError(t, err)
+
+	cancel1()
+	require.Never(t, func() bool { return !registered() }, 50*time.Millisecond, time.Millisecond)
+
+	cancel2()
+	require.Eventually(t, func() bool { return !registered() }, time.Second, time.Millisecond)
 }
 
 func TestParsePoint(t *testing.T) {
