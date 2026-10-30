@@ -132,6 +132,13 @@ export interface HemsStatus {
   maxProductionPower?: number;
 }
 
+/** Persisted log levels. */
+export interface LogLevels {
+  /** Default log level. */
+  default: string;
+  /** Log level overrides by log area. */
+  levels: Record<string, string>;
+}
 /** SMA Home Manager configuration. */
 export interface ShmConfig {
   /** SMA vendor id. */
@@ -305,6 +312,8 @@ export interface State {
   messagingEvents?: MessagingEvents | null;
   /** Update interval of the control loop in seconds. */
   interval?: number;
+  /** Persisted default and per-area log levels. */
+  logLevels?: LogLevels;
   /** Load management circuits, keyed by circuit name. */
   circuits?: Record<string, Circuit>;
   /** Load management configuration. */
@@ -1497,6 +1506,8 @@ export interface SelectOption<T> {
   value: T;
   count?: number;
   disabled?: boolean;
+  hint?: string;
+  badge?: string;
 }
 
 export type DeviceType =

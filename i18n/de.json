@@ -1565,9 +1565,12 @@
     "levelLabel": "Nach Log-Level filtern",
     "nAreas": "{count} Bereiche",
     "noResults": "Keine passenden Einträge gefunden.",
+    "saveAreas": "Dieses Level für die gewählten Bereiche im System-Log speichern",
+    "saveDefault": "Dieses Level als Standard für das System-Log speichern",
     "search": "Suchen",
     "selectAll": "alle wählen",
     "showAll": "Alle Einträge anzeigen",
+    "storedLevel": "Gespeichertes Level: {level}",
     "title": "Logs",
     "update": "Aktualisieren"
   },
