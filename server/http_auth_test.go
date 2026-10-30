@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util/auth"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -66,7 +67,7 @@ func TestRequireCriticalConfig(t *testing.T) {
 			}
 			w := httptest.NewRecorder()
 
-			ok := requireCriticalConfigAuth(w, r, a, tc.req)
+			ok := requireCriticalConfigAuth(w, r, a, templates.Meter, tc.req)
 
 			assert.Equal(t, tc.ok, ok)
 			if !tc.ok {

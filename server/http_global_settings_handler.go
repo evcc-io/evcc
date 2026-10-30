@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/redact"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/gorilla/mux"
 	"go.yaml.in/yaml/v4"
 )
@@ -56,7 +57,7 @@ func settingsSetDurationHandler(key string, pub publisher) http.HandlerFunc {
 	}
 }
 
-func settingsSetYamlHandler(key string, other, struc any, authObject auth.Auth) http.HandlerFunc {
+func settingsSetYamlHandler(key string, class templates.Class, other, struc any, authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -75,7 +76,7 @@ func settingsSetYamlHandler(key string, other, struc any, authObject auth.Auth) 
 		}
 
 		// script plugins need the admin password
-		if !requireCriticalConfigAuth(w, r, authObject, configReq{Yaml: string(b)}) {
+		if !requireCriticalConfigAuth(w, r, authObject, class, configReq{Yaml: string(b)}) {
 			return
 		}
 
