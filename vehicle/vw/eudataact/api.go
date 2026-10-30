@@ -106,8 +106,11 @@ func NewAPI(log *util.Logger, brandName, user, password string) (*API, error) {
 		password: password,
 	}
 	v.Client.Jar = &v.jar
-	// the portal limits downloads per minute and answers bursts with a short Retry-After
-	v.Client.Transport = transport.RetryAfter(5*time.Second, v.Client.Transport)
+	// the portal limits downloads per minute and answers bursts with a short Retry-After,
+	// waiting counts towards the client timeout
+	const maxRetryAfter = 30 * time.Second
+	v.Client.Transport = transport.RetryAfter(maxRetryAfter, v.Client.Transport)
+	v.Client.Timeout += maxRetryAfter
 
 	if err := v.login(0); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
