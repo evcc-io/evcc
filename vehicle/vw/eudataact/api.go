@@ -11,10 +11,12 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
 	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
@@ -104,6 +106,8 @@ func NewAPI(log *util.Logger, brandName, user, password string) (*API, error) {
 		password: password,
 	}
 	v.Client.Jar = &v.jar
+	// the portal limits downloads per minute and answers bursts with a short Retry-After
+	v.Client.Transport = transport.RetryAfter(5*time.Second, v.Client.Transport)
 
 	if err := v.login(0); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
