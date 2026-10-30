@@ -109,3 +109,58 @@ func TestDeviceConfigMapCustomYamlRedacted(t *testing.T) {
 		assert.Equal(t, want, conf["password"])
 	}
 }
+
+// a device referencing other devices through template params owns them:
+// they are deleted together with it, and deleting one of them clears the reference
+func TestDeleteDeviceRefs(t *testing.T) {
+	setup := func(t *testing.T) (relay, parent config.Config) {
+		require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+		config.Reset()
+
+		relay, err := config.AddConfig(templates.Charger, map[string]any{"template": "demo-switch"}, config.WithProperties(config.Properties{Type: "template"}))
+		require.NoError(t, err)
+		require.NoError(t, config.Chargers().Add(config.NewConfigurableDevice[api.Charger](&relay, nil)))
+
+		parent, err = config.AddConfig(templates.Charger, map[string]any{
+			"template": "sgready-relays",
+			"boost":    config.NameForID(relay.ID),
+		}, config.WithProperties(config.Properties{Type: "template"}))
+		require.NoError(t, err)
+		require.NoError(t, config.Chargers().Add(config.NewConfigurableDevice[api.Charger](&parent, nil)))
+
+		return relay, parent
+	}
+
+	deleteCharger := func(t *testing.T, id int) {
+		req := httptest.NewRequest(http.MethodDelete, "/", nil)
+		req = mux.SetURLVars(req, map[string]string{"class": "charger", "id": strconv.Itoa(id)})
+		rec := httptest.NewRecorder()
+		deleteDeviceHandler(deleteCircuitTestSite{})(rec, req)
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	}
+
+	t.Run("parent delete cascades", func(t *testing.T) {
+		relay, parent := setup(t)
+		deleteCharger(t, parent.ID)
+
+		_, err := config.Chargers().ByName(config.NameForID(parent.ID))
+		assert.ErrorIs(t, err, config.ErrNotFound)
+		_, err = config.Chargers().ByName(config.NameForID(relay.ID))
+		assert.ErrorIs(t, err, config.ErrNotFound)
+		_, err = config.ConfigByID(relay.ID)
+		assert.Error(t, err, "relay row removed")
+	})
+
+	t.Run("sub-device delete clears reference", func(t *testing.T) {
+		relay, parent := setup(t)
+		deleteCharger(t, relay.ID)
+
+		dev, err := config.Chargers().ByName(config.NameForID(parent.ID))
+		require.NoError(t, err)
+		assert.Nil(t, dev.Config().Property("boost"))
+
+		stored, err := config.ConfigByID(parent.ID)
+		require.NoError(t, err)
+		assert.NotContains(t, stored.Data, "boost")
+	})
+}

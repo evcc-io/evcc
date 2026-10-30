@@ -111,20 +111,10 @@
 				<ConfigSection v-bind="sectionProps('consumers')">
 					<div class="p-0 config-list box-pull-out">
 						<MeterCard
-							v-for="meter in consumerMeters"
+							v-for="{ meter, meterType } in consumerAndAuxMeters"
 							:key="meter.name"
 							:meter="meter"
-							meter-type="consumer"
-							:has-error="hasDeviceError('meter', meter.name)"
-							:tags="deviceTags('meter', meter.name)"
-							@edit="(type, id) => openModal('meter', { type, id })"
-							@enable="handleDisable('meter', meter.id, false)"
-						/>
-						<MeterCard
-							v-for="meter in auxMeters"
-							:key="meter.name"
-							:meter="meter"
-							meter-type="aux"
+							:meter-type="meterType"
 							:has-error="hasDeviceError('meter', meter.name)"
 							:tags="deviceTags('meter', meter.name)"
 							@edit="(type, id) => openModal('meter', { type, id })"
@@ -541,6 +531,7 @@
 					:hasDeviceError="hasDeviceError"
 					:voltage="voltage"
 					:gridConnection="gridConnection"
+					:temperatureTariffConfigured="temperatureTariffConfigured"
 					@changed="loadpointChanged"
 					@dismissed="loadpointDismissed"
 					@disable="({ id, disable }) => handleDisable('loadpoint', id, disable)"
@@ -555,7 +546,20 @@
 					@changed="meterChanged"
 					@disable="({ id, disable }) => handleDisable('meter', id, disable)"
 				/>
-				<ChargerModal :is-sponsor="isSponsor" :ocpp="ocpp" @changed="chargerChanged" />
+				<ChargerModal
+					:is-sponsor="isSponsor"
+					:ocpp="ocpp"
+					:has-device-error="hasDeviceError"
+					@changed="chargerChanged"
+				/>
+				<ChargerModal
+					name="subcharger"
+					hide-disable
+					:is-sponsor="isSponsor"
+					:ocpp="ocpp"
+					:has-device-error="hasDeviceError"
+					@changed="chargerChanged"
+				/>
 				<InfluxModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
@@ -580,8 +584,16 @@
 				<TariffsLegacyModal @changed="loadDirty" />
 				<TariffModal
 					:currency="currency"
+					:has-device-error="hasDeviceError"
 					@changed="tariffChanged"
 					@disable="({ id, disable }) => handleDisable('tariff', id, disable)"
+				/>
+				<TariffModal
+					name="subtariff"
+					hide-disable
+					:currency="currency"
+					:has-device-error="hasDeviceError"
+					@changed="subTariffChanged"
 				/>
 				<TelemetryModal :is-sponsor="isSponsor" :telemetry="telemetry" />
 				<OptimizerModal :is-sponsor="isSponsor" />
@@ -1076,8 +1088,7 @@ export default defineComponent({
 			return this.getMetersByNames(names);
 		},
 		auxMeters() {
-			const names = this.site?.aux;
-			return this.getMetersByNames(names);
+			return this.getMetersByNames(this.site?.aux);
 		},
 		extMeters() {
 			const names = this.site?.ext;
@@ -1091,6 +1102,18 @@ export default defineComponent({
 		},
 		consumerMeters() {
 			return this.getMetersByNames(this.site?.consumer);
+		},
+		consumerAndAuxMeters(): { meter: ConfigMeter; meterType: MeterType; label: string }[] {
+			const entries = (meters: ConfigMeter[], meterType: MeterType, fallback: string) =>
+				meters.map((meter) => ({
+					meter,
+					meterType,
+					label: meter.deviceTitle || meter.config?.template || fallback,
+				}));
+			return [
+				...entries(this.consumerMeters, "consumer", this.$t("config.devices.consumer")),
+				...entries(this.auxMeters, "aux", this.$t("config.devices.auxMeter")),
+			].sort((a, b) => a.label.localeCompare(b.label, this.$i18n.locale));
 		},
 		gridTariff() {
 			const name = this.tariffRefs?.grid;
@@ -1111,6 +1134,11 @@ export default defineComponent({
 		temperatureTariff() {
 			const name = this.tariffRefs?.temperature;
 			return name ? this.tariffs.find((t) => t.name === name) : null;
+		},
+		temperatureTariffConfigured(): boolean {
+			return this.tariffsYamlVisible
+				? store.state?.tariffTemperature !== undefined
+				: !!this.temperatureTariff;
 		},
 		solarTariffs() {
 			const names = this.tariffRefs?.solar || [];
@@ -1634,6 +1662,12 @@ export default defineComponent({
 			}
 			await this.loadTariffs();
 			await this.loadTariffRefs();
+			await this.loadDirty();
+			this.updateValues();
+		},
+		// nested tariffs belong to their parent and get no usage of their own
+		async subTariffChanged() {
+			await this.loadTariffs();
 			await this.loadDirty();
 			this.updateValues();
 		},

@@ -155,14 +155,14 @@ Device key (`batteryDetail.key()`): `battery:<name>` or `loadpoint:<id>`; empty 
 
 Runs after each solve, and again every cycle via `reapplySuggestions` when the active slot changes (re-derived from the cached solve, no new request). Expiry is only evaluated on that slot change: if the horizon is passed or no solve completed for `2 * tariff.SlotDuration`, `clearSuggestions()` drops suggestions, battery forecast and notification state. Within an unchanged slot the cached advice stays active regardless of age. A failed solve keeps the previous advice so controlled devices are not released for one cycle.
 
-1. `slot = schedule.activeSlot(now)`, `slotHours` = its duration. Grid import/export and all home-battery discharge for that slot are summed.
-2. `currentSlotSuggestion(detail, req, res, slot, gridImport, gridExport, slotHours)` per battery. Because the LP is linear, the slot result sits at an operating-range extreme and maps cleanly onto discrete modes. All thresholds use `suggestionThreshold = 50 W` to ignore solver noise.
+1. `slot = schedule.activeSlot(now)`, `slotHours` = its duration. Grid import/export and all home-battery charge and discharge for that slot are summed. The PV surplus over home demand (`ft - gt`) is shared by the home batteries in proportion to their charge (`pvShare`).
+2. `currentSlotSuggestion(detail, req, res, ts, slot, gridImport, gridExport, slotHours, pvShare)` per battery. Because the LP is linear, the slot result sits at an operating-range extreme and maps cleanly onto discrete modes. All thresholds use `suggestionThreshold = 50 W` to ignore solver noise.
 
 **Home battery** (`Action` is an `api.BatteryMode` string):
 
 | Condition (slot values, W)                         | Action       | Meaning                             |
 | -------------------------------------------------- | ------------ | ----------------------------------- |
-| charge > thr and grid importing                    | `charge`     | grid charging                       |
+| charge > pvShare + thr and grid importing          | `charge`     | grid charging                       |
 | idle and grid importing and soc > `SMin`           | `hold`       | discharge deliberately withheld     |
 | idle and grid exporting and soc < `SMax`           | `holdcharge` | surplus exported instead of charged |
 | discharge > thr and grid exporting                 | `discharge`  | battery-to-grid                     |

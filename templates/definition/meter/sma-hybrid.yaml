@@ -195,7 +195,15 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 31401 # SMA Modbus Profile: CmpBMS.GetBatDschWh
+      address: 31401 # SMA Modbus Profile: BatDsch.BatDsch
+      type: holding
+      decode: uint64nan
+    scale: 0.001
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 31397 # SMA Modbus Profile: BatChrg.BatChrg
       type: holding
       decode: uint64nan
     scale: 0.001
