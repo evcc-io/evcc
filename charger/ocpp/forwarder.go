@@ -558,9 +558,8 @@ func onChargerMessage(ch ws.Channel, data []byte) bool {
 			// throttle MeterValues to upstream; evcc still processes every frame
 			if action == "MeterValues" {
 				sc.lastMeterFwdMu.Lock()
-				interval := sc.meterInterval
-				skip := interval > 0 && time.Since(sc.lastMeterFwd) < interval
-				if interval > 0 && !skip {
+				skip := sc.meterInterval > 0 && time.Since(sc.lastMeterFwd) < sc.meterInterval
+				if !skip {
 					sc.lastMeterFwd = time.Now()
 				}
 				sc.lastMeterFwdMu.Unlock()
