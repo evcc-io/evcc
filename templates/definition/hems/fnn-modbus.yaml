@@ -9,6 +9,24 @@ products:
   - brand: Ebyte
     description:
       generic: ME31-AXXX4040 (FNN-Steuerbox)
+  - brand: Waveshare
+    description:
+      generic: Modbus POE ETH IO 8CH (FNN-Steuerbox)
+  - brand: Moxa
+    description:
+      generic: ioLogik E1210 (FNN-Steuerbox)
+  - brand: Moxa
+    description:
+      generic: ioLogik E1212 (FNN-Steuerbox)
+  - brand: Moxa
+    description:
+      generic: ioLogik E1213 (FNN-Steuerbox)
+  - brand: Moxa
+    description:
+      generic: ioLogik E1214 (FNN-Steuerbox)
+  - brand: Moxa
+    description:
+      generic: ioLogik E1242 (FNN-Steuerbox)
 requirements:
   description:
     de: Die Schaltkontakte der Steuerbox werden an die Digitaleingänge des Moduls angeschlossen. Das Modul muss die Eingänge als Discrete Inputs (Funktionscode 02) bereitstellen, ein geschlossener Kontakt wird als aktiv gelesen.
@@ -34,8 +52,8 @@ params:
       en: W4 input
       de: W4-Eingang
     help:
-      en: Digital input number for the W4 signal (Dimmer for controllable loads), e.g. 1 for DI1
-      de: Nummer des Digitaleingangs für das W4-Signal (Dimmen der steuerbaren Verbrauchseinrichtungen), z. B. 1 für DI1
+      en: Digital input number for the W4 signal (Dimmer for controllable loads), counting from 1 (first input = 1)
+      de: Nummer des Digitaleingangs für das W4-Signal (Dimmen der steuerbaren Verbrauchseinrichtungen), gezählt ab 1 (erster Eingang = 1)
   - name: productionnominalmax
     type: float
     unit: Wp
@@ -55,8 +73,8 @@ params:
       en: W3 input
       de: W3-Eingang
     help:
-      en: Digital input number for the W3 signal (Zero export, 0%), e.g. 2 for DI2
-      de: Nummer des Digitaleingangs für das W3-Signal (Keine Netzeinspeisung, 0%), z. B. 2 für DI2
+      en: Digital input number for the W3 signal (Zero export, 0%), counting from 1 (first input = 1)
+      de: Nummer des Digitaleingangs für das W3-Signal (Keine Netzeinspeisung, 0%), gezählt ab 1 (erster Eingang = 1)
   - name: s1input
     type: int
     example: 3
@@ -64,8 +82,8 @@ params:
       en: S1 input
       de: S1-Eingang
     help:
-      en: Digital input number for the S1 signal (60% export power limit), e.g. 3 for DI3
-      de: Nummer des Digitaleingangs für das S1-Signal (Reduzierung der Einspeiseleistung auf 60%), z. B. 3 für DI3
+      en: Digital input number for the S1 signal (60% export power limit), counting from 1 (first input = 1)
+      de: Nummer des Digitaleingangs für das S1-Signal (Reduzierung der Einspeiseleistung auf 60%), gezählt ab 1 (erster Eingang = 1)
   - name: s2input
     type: int
     example: 4
@@ -73,8 +91,8 @@ params:
       en: S2 input
       de: S2-Eingang
     help:
-      en: Digital input number for the S2 signal (30% export power limit), e.g. 4 for DI4
-      de: Nummer des Digitaleingangs für das S2-Signal (Reduzierung der Einspeiseleistung auf 30%), z. B. 4 für DI4
+      en: Digital input number for the S2 signal (30% export power limit), counting from 1 (first input = 1)
+      de: Nummer des Digitaleingangs für das S2-Signal (Reduzierung der Einspeiseleistung auf 30%), gezählt ab 1 (erster Eingang = 1)
 render: |
   type: fnn
   maxdimpower: {{ .maxconsumptionpower }}
