@@ -1589,7 +1589,8 @@
         "continuousCo2Description": "Selects the cleanest uninterrupted series of slots.",
         "continuousPriceDescription": "Selects the cheapest uninterrupted series of slots.",
         "disabledDescription": "Requires a dynamic tariff or CO₂ forecast.",
-        "label": "Optimization"
+        "label": "Optimization",
+        "optimizerDescription": "The {optimizer} selects the cheapest slots. May result in multiple starts and stops."
       },
       "planNumber": "Plan {number}",
       "precondition": {
