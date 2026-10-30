@@ -188,7 +188,6 @@
     "circuits": {
       "addMainCircuit": "Haaptstroumkrees derbäi fügen",
       "addSubCircuit": "Ënnergeuerdnete Stroumkrees derbäi fügen",
-      "chargingPointsNote": "Luedpunkte & Heizgeräter weist du an de jeeweilege Astellungen engem Stroumkrees zou.",
       "description": "Sécherstellen, datt d'Zomm vun all den Luedstatiounen déi mam Circuit verbonne sinn net déi konfiguréiert Leeschtung an aktuell Grenzen iwwerschreit. Circuiten kënnen agenist ginn fir eng Hierarchie opzebauen.",
       "legacyWarning": "Nei Konfiguratioun vun de Stroumkreesser verfügbar! Läsch a späicher hei deng Konfiguratioun, fir de neie geleetene Prozess ze benotzen.",
       "meterDedicated": "Zieler",

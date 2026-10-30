@@ -188,7 +188,6 @@
     "circuits": {
       "addMainCircuit": "添加主电路",
       "addSubCircuit": "添加子电路",
-      "chargingPointsNote": "在各充电点和加热器的设置中将其分配到电路。",
       "description": "确保连接到同一电路的所有充电点的总和不超过配置的功率和电流限制。电路可以嵌套以构建层级结构。",
       "legacyWarning": "新的电路配置可用！在此移除并保存您的配置，以使用新的引导流程。",
       "meterDedicated": "计量表",

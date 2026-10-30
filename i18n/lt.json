@@ -188,7 +188,6 @@
     "circuits": {
       "addMainCircuit": "Pridėti pagrindinę grandinę",
       "addSubCircuit": "Pridėti papildomą grandinę",
-      "chargingPointsNote": "Grandinei priskirkite įkroviklius ir šildytuvus jų pačių nustatymuose.",
       "description": "Užtikrina, kad naudojant visus į grandinę sujungtus įkroviklius ir šildytuvus, neviršytumėte sukonfigūruotų galios ir srovės ribų. Grandines galima sudėlioti, kad būtų sukurta hierarchija.",
       "legacyWarning": "Galima naudoti naują grandinių konfigūracijos metodą. Pašalinkite ir išsaugokite savo konfigūraciją čia, kad galėtumėte pasinaudoti naujuoju vedliu. Po to reikės restartuoti.",
       "meterDedicated": "Skaitiklis",

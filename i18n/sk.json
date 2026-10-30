@@ -188,7 +188,6 @@
     "circuits": {
       "addMainCircuit": "Pridať hlavný obvod",
       "addSubCircuit": "Pridať podobvod",
-      "chargingPointsNote": "Priraďte nabíjacie body a ohrievače k okruhu v ich vlastných nastaveniach.",
       "description": "Zaisťuje, že súčet všetkých zaťažení pripojených k obvodu neprekročí nakonfigurované limity výkonu a prúdu. Obvody je možné vnorovať a vytvárať hierarchiu.",
       "legacyWarning": "K dispozícii je nová konfigurácia okruhov! Odstráňte a uložte svoju konfiguráciu tu, aby ste mohli využiť nového sprievodcu nastavením.",
       "meterDedicated": "Merač",

@@ -188,7 +188,6 @@
     "circuits": {
       "addMainCircuit": "Añadir circuito principal",
       "addSubCircuit": "Añadir circuito subordinado",
-      "chargingPointsNote": "Asigna los puntos de carga y las calefacciones a un circuito en los ajustes de cada uno.",
       "description": "Asegura que la suma de todos los puntos de carga conectados a un circuito no exceda la potencia configurada y los límites de corriente. Los circuitos pueden ser anidados para construir una jerarquía.",
       "legacyWarning": "¡Hay una nueva configuración de circuitos disponible! Elimina aquí tu configuración actual y guarda para usar el nuevo proceso guiado.",
       "meterDedicated": "Contador",
