@@ -33,23 +33,37 @@ func testRateLimited(t *testing.T, limited int32, retryAfter string) (*atomic.In
 }
 
 func TestRetryAfter(t *testing.T) {
-	requests, uri := testRateLimited(t, 2, "0")
+	requests, uri := testRateLimited(t, 1, "0")
 	client := &http.Client{Transport: RetryAfter(time.Second, nil)}
 
+	start := time.Now()
 	resp, err := client.Post(uri, "text/plain", strings.NewReader("body"))
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.Equal(t, int32(3), requests.Load())
+	assert.Equal(t, int32(2), requests.Load())
+	assert.GreaterOrEqual(t, time.Since(start), time.Second, "zero cooldown waits the minimum")
 
 	b, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Equal(t, "body", string(b), "body is resent")
 }
 
+func TestRetryAfterDate(t *testing.T) {
+	requests, uri := testRateLimited(t, 1, time.Now().Add(2*time.Second).UTC().Format(http.TimeFormat))
+	client := &http.Client{Transport: RetryAfter(5*time.Second, nil)}
+
+	resp, err := client.Get(uri)
+	require.NoError(t, err)
+	resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, int32(2), requests.Load())
+}
+
 func TestRetryAfterExceedsMax(t *testing.T) {
-	for _, retryAfter := range []string{"5", "", "Wed, 21 Oct 2015 07:28:00 GMT"} {
+	for _, retryAfter := range []string{"5", "", "-1", "9223372037", time.Now().Add(time.Hour).UTC().Format(http.TimeFormat)} {
 		requests, uri := testRateLimited(t, 1, retryAfter)
 		client := &http.Client{Transport: RetryAfter(time.Second, nil)}
 

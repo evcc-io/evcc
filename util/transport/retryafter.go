@@ -22,6 +22,24 @@ func RetryAfter(max time.Duration, base http.RoundTripper) http.RoundTripper {
 	return &retryAfter{max: max, base: base}
 }
 
+// cooldown parses Retry-After as delay seconds or HTTP date and reports if it is at most max
+func (t *retryAfter) cooldown(v string) (time.Duration, bool) {
+	var d time.Duration
+	if sec, err := strconv.Atoi(v); err == nil {
+		if sec < 0 || sec > int(t.max/time.Second) {
+			return 0, false
+		}
+		d = time.Duration(sec) * time.Second
+	} else if ts, err := http.ParseTime(v); err == nil {
+		d = time.Until(ts)
+	} else {
+		return 0, false
+	}
+
+	// zero or past cooldowns would retry in a burst
+	return max(d, time.Second), d <= t.max
+}
+
 func (t *retryAfter) RoundTrip(req *http.Request) (*http.Response, error) {
 	for {
 		resp, err := t.base.RoundTrip(req)
@@ -29,9 +47,8 @@ func (t *retryAfter) RoundTrip(req *http.Request) (*http.Response, error) {
 			return resp, err
 		}
 
-		sec, err := strconv.Atoi(resp.Header.Get("Retry-After"))
-		d := time.Duration(sec) * time.Second
-		if err != nil || d < 0 || d > t.max || (req.Body != nil && req.Body != http.NoBody && req.GetBody == nil) {
+		d, ok := t.cooldown(resp.Header.Get("Retry-After"))
+		if !ok || (req.Body != nil && req.Body != http.NoBody && req.GetBody == nil) {
 			return resp, nil
 		}
 		resp.Body.Close()
