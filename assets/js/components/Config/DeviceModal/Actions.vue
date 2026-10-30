@@ -24,7 +24,16 @@
 				{{ isDisabled ? $t("config.general.enable") : $t("config.general.disable") }}
 			</button>
 			<button
-				v-else-if="!isDeletable"
+				v-else-if="isDeletable"
+				type="button"
+				class="btn btn-link text-danger"
+				tabindex="0"
+				@click.prevent="$emit('remove')"
+			>
+				{{ $t("config.general.delete") }}
+			</button>
+			<button
+				v-else
 				type="button"
 				class="btn btn-link text-muted"
 				data-bs-dismiss="modal"
@@ -51,7 +60,7 @@
 			</button>
 		</div>
 		<button
-			v-if="isDeletable"
+			v-if="isDeletable && canDisable"
 			type="button"
 			class="btn btn-link text-danger mt-2"
 			tabindex="0"

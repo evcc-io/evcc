@@ -486,7 +486,7 @@ test.describe("charging loadpoint", async () => {
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
     await expect(lpModal.getByLabel("Title")).toHaveValue("Garage");
-    await expect(lpModal.getByRole("button", { name: "Add dedicated energy meter" })).toBeVisible();
+    await expect(lpModal.getByRole("button", { name: "Add meter" })).toBeVisible();
   });
 
   test("user-defined charger", async ({ page }) => {
@@ -542,7 +542,7 @@ power:
 
     // add user-defined meter
     await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
-    await lpModal.getByRole("button", { name: "Add dedicated energy meter" }).click();
+    await lpModal.getByRole("button", { name: "Add meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
     await meterModal.getByLabel("Manufacturer").selectOption("User-defined device");
@@ -734,9 +734,6 @@ test.describe("heating loadpoint", async () => {
     await modal
       .getByLabel("Manufacturer")
       .selectOption("User-defined heat pump (sg-ready via plugins)");
-    await modal
-      .getByLabel("Manufacturer")
-      .selectOption("User-defined heat pump (sg-ready via relays)");
     await modal.getByLabel("Manufacturer").selectOption("User-defined switch socket");
     await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump");
 

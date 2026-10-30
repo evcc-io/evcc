@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"dario.cat/mergo"
@@ -651,6 +652,73 @@ func deleteMeter(site site.API, id int) error {
 	return err
 }
 
+// cleanupDeviceRefsIn removes references to a deleted device from devices of the given handler
+func cleanupDeviceRefsIn[T any](parentClass templates.Class, h config.Handler[T], class templates.Class, name string) {
+	for _, dev := range h.Devices() {
+		configurable, ok := dev.(config.ConfigurableDevice[T])
+		if !ok {
+			continue
+		}
+
+		conf := dev.Config()
+		tmpl, err := templateForConfig(parentClass, conf.Other)
+		if err != nil {
+			continue
+		}
+
+		var changed bool
+		for _, p := range tmpl.Params {
+			if p.Type == templates.TypeDevice && strings.EqualFold(p.Class, class.String()) && conf.Other[p.Name] == name {
+				delete(conf.Other, p.Name)
+				changed = true
+			}
+		}
+
+		if !changed {
+			continue
+		}
+
+		if err := configurable.Update(conf.Other, dev.Instance()); err != nil {
+			log.ERROR.Printf("cleanup %s reference %s: %v", class, conf.Name, err)
+		}
+	}
+}
+
+// cleanupDeviceRefs removes references to a deleted device from all devices referencing it through template params
+func cleanupDeviceRefs(class templates.Class, name string) {
+	cleanupDeviceRefsIn(templates.Charger, config.Chargers(), class, name)
+	cleanupDeviceRefsIn(templates.Tariff, config.Tariffs(), class, name)
+}
+
+// deleteOwnedDevices deletes the devices a device references through template params
+func deleteOwnedDevices(site site.API, class templates.Class, conf config.Named) {
+	for refClass, names := range config.DeviceRefs(class, conf) {
+		for _, name := range names {
+			if err := deleteOwnedDevice(site, refClass, name); err != nil {
+				log.ERROR.Printf("delete %s %s owned by %s: %v", refClass, name, conf.Name, err)
+			}
+		}
+	}
+}
+
+func deleteOwnedDevice(site site.API, class templates.Class, name string) error {
+	id, err := config.IDForName(name)
+	if err != nil {
+		return err
+	}
+
+	switch class {
+	case templates.Charger:
+		return deleteDevice(id, config.Chargers())
+	case templates.Meter:
+		return deleteMeter(site, id)
+	case templates.Tariff:
+		return deleteDevice(id, config.Tariffs())
+	}
+
+	return nil
+}
+
 // deleteDeviceHandler deletes a device from database by class
 func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -668,6 +736,11 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
+		}
+
+		var owned config.Named
+		if conf, err := config.ConfigByID(id); err == nil {
+			owned = conf.Named()
 		}
 
 		switch class {
@@ -741,6 +814,11 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 
 		case templates.Messenger:
 			err = deleteDevice(id, config.Messengers())
+		}
+
+		if err == nil {
+			cleanupDeviceRefs(class, config.NameForID(id))
+			deleteOwnedDevices(site, class, owned)
 		}
 
 		setConfigDirty()
