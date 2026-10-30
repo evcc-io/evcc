@@ -775,7 +775,9 @@
       "protocolValueRtu": "RTU",
       "protocolValueTcp": "TCP",
       "timeout": "Timeout",
-      "timeoutHint": "Optional maximum time to wait for a device response."
+      "timeoutHint": "Optional maximum time to wait for a device response.",
+      "tls": "TLS encryption",
+      "tlsHint": "Wrap the Modbus TCP connection in TLS. Required for devices that only expose encrypted Modbus, e.g. Sungrow AC chargers on port 516."
     },
     "modbusproxy": {
       "add": "Add proxy connection",

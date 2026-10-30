@@ -29,6 +29,22 @@
 			@update:model-value="(v) => $emit('update:delay', v)"
 		/>
 	</FormRow>
+	<FormRow
+		v-if="showTls"
+		:id="formId('modbusTls')"
+		:label="$t('config.modbus.tls')"
+		:help="$t('config.modbus.tlsHint')"
+	>
+		<PropertyField
+			:id="formId('modbusTls')"
+			property="tls"
+			type="Bool"
+			:label="$t('config.modbus.tls')"
+			class="me-2"
+			:model-value="tls"
+			@update:model-value="(v) => $emit('update:tls', v)"
+		/>
+	</FormRow>
 </template>
 
 <script lang="ts">
@@ -43,8 +59,10 @@ export default defineComponent({
 		componentId: { type: String, required: true },
 		delay: [Number, String],
 		timeout: [Number, String],
+		tls: Boolean,
+		showTls: Boolean,
 	},
-	emits: ["update:delay", "update:timeout"],
+	emits: ["update:delay", "update:timeout", "update:tls"],
 	methods: {
 		formId(name: string): string {
 			return `${name}-${this.componentId}`;
