@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/homeassistant"
+	"github.com/jinzhu/now"
 )
 
 // HomeAssistant provides the solar forecast of the Home Assistant Energy dashboard
@@ -80,7 +81,8 @@ func (t *HomeAssistant) run(interval time.Duration, done chan error) {
 			if len(data) == 0 {
 				return backoff.Permanent(errors.New("no solar forecast configured in the energy dashboard"))
 			}
-			data = zeroFillBefore(data, beginningOfDay())
+			// cover full days, the optimizer horizon ends with the shortest series
+			data = zeroFill(data, beginningOfDay(), now.With(data[len(data)-1].Start).BeginningOfDay().AddDate(0, 0, 1))
 			return nil
 		}, bo()); err != nil {
 			if reportError(&once, done, err) {
@@ -172,21 +174,36 @@ func solarForecastRates(res map[string]homeassistant.SolarForecast) (api.Rates, 
 	return data, nil
 }
 
-// zeroFillBefore prepends zero-energy slots from the given time up to the first slot
-func zeroFillBefore(data api.Rates, from time.Time) api.Rates {
+// zeroFill pads data with zero-energy slots from the given time to the first slot and from the last slot to the given time
+func zeroFill(data api.Rates, from, to time.Time) api.Rates {
 	if len(data) == 0 {
 		return data
 	}
 
-	step := data[0].End.Sub(data[0].Start)
+	first, last := data[0], data[len(data)-1]
 
 	var pre api.Rates
-	for ts := data[0].Start.Add(-step); !ts.Before(from); ts = ts.Add(-step) {
-		pre = append(pre, api.Rate{Start: ts, End: ts.Add(step)})
+	for end := first.Start; end.After(from); {
+		start := end.Add(-first.End.Sub(first.Start))
+		if start.Before(from) {
+			start = from
+		}
+		pre = append(pre, api.Rate{Start: start, End: end})
+		end = start
 	}
 	slices.Reverse(pre)
+	data = append(pre, data...)
 
-	return append(pre, data...)
+	step := last.End.Sub(last.Start)
+	for start := last.End; start.Before(to); start = start.Add(step) {
+		end := start.Add(step)
+		if end.After(to) {
+			end = to
+		}
+		data = append(data, api.Rate{Start: start, End: end})
+	}
+
+	return data
 }
 
 // Rates implements the api.Tariff interface

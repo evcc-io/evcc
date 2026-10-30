@@ -101,11 +101,22 @@ func TestSolarForecastRatesZeroFill(t *testing.T) {
 	start := time.Date(2026, 9, 12, 10, 0, 0, 0, time.UTC)
 	for i, v := range []float64{100, 0, 0, 200} {
 		assert.True(t, data[i].Start.Equal(start.Add(time.Duration(i)*time.Hour)))
+		assert.True(t, data[i].End.Equal(start.Add(time.Duration(i+1)*time.Hour)))
 		assert.Equal(t, v, data[i].Value)
 	}
 
-	data = zeroFillBefore(data, start.Add(-3*time.Hour))
-	require.Len(t, data, 7)
-	assert.True(t, data[0].Start.Equal(start.Add(-3*time.Hour)))
-	assert.Equal(t, 0.0, data[2].Value)
+	// partial slots at both ends
+	data = zeroFill(data, start.Add(-150*time.Minute), start.Add(5*time.Hour+30*time.Minute))
+	require.Len(t, data, 9)
+
+	from := start.Add(-150 * time.Minute)
+	for i, d := range []time.Duration{30 * time.Minute, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, 30 * time.Minute} {
+		assert.True(t, data[i].Start.Equal(from), "slot %d start", i)
+		from = from.Add(d)
+		assert.True(t, data[i].End.Equal(from), "slot %d end", i)
+	}
+
+	for i, v := range []float64{0, 0, 0, 100, 0, 0, 200, 0, 0} {
+		assert.Equal(t, v, data[i].Value, "slot %d value", i)
+	}
 }
