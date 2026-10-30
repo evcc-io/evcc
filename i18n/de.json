@@ -231,6 +231,7 @@
     "deviceRef": {
       "add": {
         "charger": "Wallbox hinzufügen",
+        "meter": "Zähler hinzufügen",
         "switch": "Schaltbare Steckdose hinzufügen",
         "tariff": "Tarif hinzufügen"
       },

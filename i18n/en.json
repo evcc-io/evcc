@@ -231,6 +231,7 @@
     "deviceRef": {
       "add": {
         "charger": "Add charger",
+        "meter": "Add meter",
         "switch": "Add switchable socket",
         "tariff": "Add tariff"
       },
