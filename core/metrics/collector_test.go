@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"math"
 	"testing"
 	"time"
 
@@ -708,4 +709,47 @@ func TestCollectorKeepsRestoreForSurvivingDirection(t *testing.T) {
 	require.NoError(t, db.Instance.Where("meter = ? AND ts = ?", col2.entity.Id, 90*60).First(&m).Error)
 	require.InDelta(t, 10.0, m.Energy, 1e-10)
 	require.True(t, m.Recovered, "catchup slot must be flagged recovered")
+}
+
+func TestCollectorPowerMinMax(t *testing.T) {
+	clock := clock.NewMock()
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Grid, "grid", "", WithClock(clock))
+	require.NoError(t, err)
+
+	// first slot is partial and not persisted
+	require.NoError(t, col.AddEnergy(new(100.0), new(50.0), 500))
+
+	// slot 00:15: import and export peaks, NaN ignored, sample at the boundary belongs to the old slot
+	clock.Add(15 * time.Minute)
+	require.NoError(t, col.AddEnergy(new(100.0), new(50.0), 800))
+	require.Nil(t, col.accu.PowerMin, "reset on slot start")
+
+	for _, p := range []float64{1200, -3000, math.NaN(), 400} {
+		clock.Add(3 * time.Minute)
+		require.NoError(t, col.AddEnergy(new(100.0), new(50.0), p))
+	}
+	require.Equal(t, -3000.0, *col.accu.PowerMin)
+	require.Equal(t, 1200.0, *col.accu.PowerMax)
+
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(new(100.0), new(50.0), 2000))
+
+	var m meter
+	require.NoError(t, db.Instance.Where("ts = ?", (15*time.Minute).Seconds()).First(&m).Error)
+	require.Equal(t, -3000.0, *m.PowerMin)
+	require.Equal(t, 2000.0, *m.PowerMax)
+
+	// slots without power samples persist NULL
+	require.NoError(t, col.SetEnergy(1))
+	clock.Add(15 * time.Minute)
+	require.NoError(t, col.SetEnergy(1))
+
+	m = meter{}
+	require.NoError(t, db.Instance.Where("ts = ?", (30*time.Minute).Seconds()).First(&m).Error)
+	require.Nil(t, m.PowerMin)
+	require.Nil(t, m.PowerMax)
 }

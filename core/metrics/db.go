@@ -19,6 +19,8 @@ type meter struct {
 	ReturnEnergy float64  `json:"returnEnergy" gorm:"column:return_energy"`
 	SocTemp      *float64 `json:"socTemp,omitempty" gorm:"column:soc_temp"`    // at start of slot
 	Recovered    bool     `json:"recovered,omitempty" gorm:"column:recovered"` // downtime catchup slot, excluded from profile
+	PowerMin     *float64 `json:"powerMin,omitempty" gorm:"column:power_min"`  // W, lowest sampled power
+	PowerMax     *float64 `json:"powerMax,omitempty" gorm:"column:power_max"`  // W, highest sampled power
 }
 
 type entity struct {
@@ -136,17 +138,11 @@ func SetupSchema() error {
 // OnPersist, if set, is called with the slot start after a slot is written.
 var OnPersist func(slot time.Time)
 
-// persist stores a completed 15min slot
-func persist(entity entity, ts time.Time, energy, returnEnergy float64, socTemp *float64, recovered bool) error {
-	slot := ts.Truncate(tariff.SlotDuration)
-	if err := db.Instance.Create(&meter{
-		Meter:        entity.Id,
-		Timestamp:    slot.Unix(),
-		Energy:       energy,
-		ReturnEnergy: returnEnergy,
-		SocTemp:      socTemp,
-		Recovered:    recovered,
-	}).Error; err != nil {
+// persistSlot stores a completed 15min slot of the given entity
+func persistSlot(id int, m meter) error {
+	slot := time.Unix(m.Timestamp, 0).Truncate(tariff.SlotDuration)
+	m.Meter, m.Timestamp = id, slot.Unix()
+	if err := db.Instance.Create(&m).Error; err != nil {
 		return err
 	}
 	if OnPersist != nil {

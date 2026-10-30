@@ -10,6 +10,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// persist stores a slot with the given values
+func persist(entity entity, ts time.Time, energy, returnEnergy float64, socTemp *float64, recovered bool) error {
+	return persistSlot(entity.Id, meter{
+		Timestamp:    ts.Unix(),
+		Energy:       energy,
+		ReturnEnergy: returnEnergy,
+		SocTemp:      socTemp,
+		Recovered:    recovered,
+	})
+}
+
 func TestSqliteTimestamp(t *testing.T) {
 	clock := clock.NewMock()
 	clock.Add(time.Hour)

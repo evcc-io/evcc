@@ -3,6 +3,7 @@ package metrics
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/benbjohnson/clock"
@@ -16,6 +17,8 @@ type Accumulator struct {
 	Energy            float64  `json:"energy"`       // kWh
 	ReturnEnergy      float64  `json:"returnEnergy"` // kWh
 	SocTemp           *float64 `json:"socTemp,omitempty"`
+	PowerMin          *float64 `json:"powerMin,omitempty"` // W, lowest sampled power in slot
+	PowerMax          *float64 `json:"powerMax,omitempty"` // W, highest sampled power in slot
 }
 
 // meterTotal tracks a cumulative meter reading in kWh. A lower reading is ignored
@@ -74,6 +77,19 @@ func (m *Accumulator) setSocTemp(value float64) {
 	}
 }
 
+// setPower tracks the slot's power extremes from the sampled values.
+func (m *Accumulator) setPower(v float64) {
+	if math.IsNaN(v) || math.IsInf(v, 0) {
+		return
+	}
+	if m.PowerMin == nil || v < *m.PowerMin {
+		m.PowerMin = &v
+	}
+	if m.PowerMax == nil || v > *m.PowerMax {
+		m.PowerMax = &v
+	}
+}
+
 func WithClock(clock clock.Clock) func(*Accumulator) {
 	return func(m *Accumulator) {
 		m.clock = clock
@@ -91,6 +107,9 @@ func NewAccumulator(opt ...func(*Accumulator)) *Accumulator {
 func (m *Accumulator) String() string {
 	b := new(bytes.Buffer)
 	fmt.Fprintf(b, "Accumulated: %.3fkWh energy, %.3fkWh return energy, updated: %v", m.Energy, m.ReturnEnergy, m.updated.Truncate(time.Second))
+	if m.PowerMin != nil && m.PowerMax != nil {
+		fmt.Fprintf(b, " power: %.0fW..%.0fW", *m.PowerMin, *m.PowerMax)
+	}
 	if m.energyMeter.last != nil || m.returnEnergyMeter.last != nil {
 		fmt.Fprintf(b, " energy total:")
 		if m.energyMeter.last != nil {
