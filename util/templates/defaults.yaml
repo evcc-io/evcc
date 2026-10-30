@@ -425,8 +425,8 @@ params:
       en: Maximum discharge power
       de: Maximale Entladeleistung
     help:
-      en: Highest power the battery system can discharge with. Optimizer and surplus charging assume discharging up to this power.
-      de: Höchste Leistung, mit der das Batteriesystem entladen kann. Optimizer und Überschussladen rechnen mit Entladen bis zu dieser Leistung.
+      en: Highest power the battery system can discharge with. The optimizer plans with discharging up to this power. Smart mode assumes the battery supplies at most this power to vehicle charging.
+      de: Höchste Leistung, mit der das Batteriesystem entladen kann. Der Optimizer plant mit Entladen bis zu dieser Leistung. Der Smart-Modus geht davon aus, dass die Batterie höchstens diese Leistung zum Fahrzeugladen beisteuert.
     advanced: true
 
   - name: accesstoken
