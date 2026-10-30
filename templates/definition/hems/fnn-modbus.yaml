@@ -1,56 +1,50 @@
 template: fnn-modbus
 products:
   - description:
-      de: FNN-Steuerbox via Modbus-I/O-Modul (§ 14a EnWG, § 9 EEG)
-      en: FNN control box via Modbus I/O module (§ 14a EnWG, § 9 EEG)
+      de: Modbus-Digitaleingang (Discrete Input)
+      en: Modbus digital input (Discrete Input)
   - brand: Ebyte
     description:
-      generic: ME31-AXXX8000 (FNN-Steuerbox)
+      generic: ME31-AXXX8000
   - brand: Ebyte
     description:
-      generic: ME31-AXXX4040 (FNN-Steuerbox)
+      generic: ME31-AXXX4040
   - brand: Waveshare
     description:
-      generic: Modbus POE ETH IO 8CH (FNN-Steuerbox)
+      generic: Modbus POE ETH IO 8CH
   - brand: Moxa
     description:
-      generic: ioLogik E1210 (FNN-Steuerbox)
+      generic: ioLogik E1210
   - brand: Moxa
     description:
-      generic: ioLogik E1212 (FNN-Steuerbox)
+      generic: ioLogik E1212
   - brand: Moxa
     description:
-      generic: ioLogik E1213 (FNN-Steuerbox)
+      generic: ioLogik E1213
   - brand: Moxa
     description:
-      generic: ioLogik E1214 (FNN-Steuerbox)
+      generic: ioLogik E1214
   - brand: Moxa
     description:
-      generic: ioLogik E1242 (FNN-Steuerbox)
+      generic: ioLogik E1242
   - brand: Advantech
     description:
-      generic: ADAM-6050 (FNN-Steuerbox)
-    caveats:
+      generic: ADAM-6050
+    caveats: &advantech
       - description:
           de: Die Eingänge sind ab 0 beschriftet (DI0 = Eingang 1). Die Adresszuordnung ist noch nicht am Gerät bestätigt. Wird der falsche Eingang gelesen, die Nummer um 1 erhöhen.
           en: Inputs are labeled from 0 (DI0 = input 1). The address mapping has not been confirmed on a device yet. If the wrong input is read, increase the number by 1.
   - brand: Advantech
     description:
-      generic: ADAM-6051 (FNN-Steuerbox)
-    caveats:
-      - description:
-          de: Die Eingänge sind ab 0 beschriftet (DI0 = Eingang 1). Die Adresszuordnung ist noch nicht am Gerät bestätigt. Wird der falsche Eingang gelesen, die Nummer um 1 erhöhen.
-          en: Inputs are labeled from 0 (DI0 = input 1). The address mapping has not been confirmed on a device yet. If the wrong input is read, increase the number by 1.
+      generic: ADAM-6051
+    caveats: *advantech
   - brand: Advantech
     description:
-      generic: ADAM-6052 (FNN-Steuerbox)
-    caveats:
-      - description:
-          de: Die Eingänge sind ab 0 beschriftet (DI0 = Eingang 1). Die Adresszuordnung ist noch nicht am Gerät bestätigt. Wird der falsche Eingang gelesen, die Nummer um 1 erhöhen.
-          en: Inputs are labeled from 0 (DI0 = input 1). The address mapping has not been confirmed on a device yet. If the wrong input is read, increase the number by 1.
+      generic: ADAM-6052
+    caveats: *advantech
   - brand: WAGO
     description:
-      generic: 750-352 (FNN-Steuerbox)
+      generic: 750-352
     caveats:
       - description:
           de: Die Eingänge werden über alle gesteckten Digitaleingangsklemmen in Steckreihenfolge durchgezählt. Beispiel, 4-Kanal-Klemme vor 8-Kanal-Klemme, dann ist der erste Eingang der zweiten Klemme Nummer 5.
