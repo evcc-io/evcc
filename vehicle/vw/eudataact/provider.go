@@ -22,7 +22,8 @@ const (
 // The portal is not a live api: it stores a new dataset roughly every
 // portalInterval and only ever appends. Rather than re-reading the full history
 // on every poll, a store downloads each dataset once and merges its data points
-// into a single map, keeping the newest value per field across all datasets. The
+// into a single map, keeping the newest value per field across the datasets
+// downloaded (at most maxDownloads per poll, older ones are skipped). The
 // status getter is cached; instead of relying on the cache ttl alone, each read
 // schedules a reset for the moment the next dataset is expected (the dataset's
 // timestamp plus portalInterval and a latency margin), so the map is updated as
@@ -52,7 +53,12 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 
 		// serve the last data over transient portal errors, surface persistent ones
 		if data := s.snapshot(vin); keepData(data, lastOK) {
-			log.ERROR.Println(err)
+			if d, ok := retryAfter(err); ok {
+				log.DEBUG.Printf("rate limited, retry in %v", d)
+				time.AfterFunc(d, cached.Reset)
+			} else {
+				log.ERROR.Println(err)
+			}
 			return data, nil
 		}
 

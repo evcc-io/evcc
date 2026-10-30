@@ -1,11 +1,19 @@
 package eudataact
 
 import (
+	"archive/zip"
+	"bytes"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -114,10 +122,10 @@ func TestPending(t *testing.T) {
 		}) // hour i, oldest first
 	}
 
-	// first poll (zero high-water): only the latest maxBackfill
+	// first poll (zero high-water): only the latest maxDownloads
 	got := pending(content, time.Time{})
-	require.Len(t, got, maxBackfill)
-	assert.Equal(t, content[len(content)-maxBackfill].Name, got[0].Name, "oldest within the backfill window")
+	require.Len(t, got, maxDownloads)
+	assert.Equal(t, content[len(content)-maxDownloads].Name, got[0].Name, "oldest within the backfill window")
 	assert.Equal(t, content[len(content)-1].Name, got[len(got)-1].Name, "newest")
 
 	// fewer datasets than the backfill cap: all returned
@@ -136,11 +144,14 @@ func TestPending(t *testing.T) {
 	require.Len(t, got, 1)
 	assert.Equal(t, "20260531100000_WVWZZZ.zip", got[0].Name, "only the newer dataset is pending")
 
-	// catching up after a long pause: only the latest maxBackfill of the newer datasets
+	// catching up after a long pause: only the latest maxDownloads of the newer datasets
 	got = pending(content, content[0].CreatedOn)
-	require.Len(t, got, maxBackfill)
-	assert.Equal(t, content[len(content)-maxBackfill].Name, got[0].Name, "oldest within the catch-up window")
+	require.Len(t, got, maxDownloads)
+	assert.Equal(t, content[len(content)-maxDownloads].Name, got[0].Name, "oldest within the catch-up window")
 	assert.Equal(t, content[len(content)-1].Name, got[len(got)-1].Name, "newest")
+
+	// first poll without delivery times: datasets are not lost
+	assert.Len(t, pending([]dataset{{Name: "a.zip"}, {Name: "b.zip"}}, time.Time{}), 2)
 }
 
 func TestMerge(t *testing.T) {
@@ -308,4 +319,120 @@ func TestKeepData(t *testing.T) {
 	assert.False(t, keepData(data, time.Now().Add(-2*errorGrace)), "persistent failure")
 	assert.False(t, keepData(data, time.Time{}), "never succeeded")
 	assert.False(t, keepData(nil, time.Now()), "no data")
+}
+
+func TestRetryAfter(t *testing.T) {
+	statusError := func(status int, header http.Header) error {
+		_, err := request.ReadBody(&http.Response{StatusCode: status, Header: header, Body: http.NoBody})
+		return err
+	}
+
+	d, ok := retryAfter(statusError(http.StatusTooManyRequests, http.Header{"Retry-After": {"5"}}))
+	assert.True(t, ok)
+	assert.Equal(t, 5*time.Second, d)
+
+	_, ok = retryAfter(statusError(http.StatusTooManyRequests, nil))
+	assert.False(t, ok, "no header")
+
+	_, ok = retryAfter(statusError(http.StatusServiceUnavailable, http.Header{"Retry-After": {"5"}}))
+	assert.False(t, ok, "not rate limited")
+
+	_, ok = retryAfter(io.EOF)
+	assert.False(t, ok, "no status error")
+}
+
+// testArchive returns a dataset zip archive holding a single data point
+func testArchive(t *testing.T) []byte {
+	t.Helper()
+
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	w, err := zw.Create("data.json")
+	require.NoError(t, err)
+	_, err = w.Write([]byte(`{"Data":[{"dataFieldName":"soc","value":"50"}]}`))
+	require.NoError(t, err)
+	require.NoError(t, zw.Close())
+
+	return buf.Bytes()
+}
+
+func TestProviderRateLimit(t *testing.T) {
+	archive := testArchive(t)
+	created := time.Now().Add(-3 * time.Hour)
+
+	var (
+		mu        sync.Mutex
+		names     = []string{"a.zip"}
+		limited   bool
+		downloads []string
+	)
+
+	respond := func(req *http.Request, status int, header http.Header, body []byte) *http.Response {
+		return &http.Response{
+			StatusCode: status,
+			Header:     header,
+			Body:       io.NopCloser(bytes.NewReader(body)),
+			Request:    req,
+		}
+	}
+
+	log := util.NewLogger("test-ratelimit")
+	var errorLog bytes.Buffer
+	log.ERROR.SetOutput(&errorLog)
+
+	v := &API{Helper: request.NewHelper(log), log: log}
+	v.Client.Transport = loginRoundTripFunc(func(req *http.Request) (*http.Response, error) {
+		mu.Lock()
+		defer mu.Unlock()
+
+		switch {
+		case strings.HasSuffix(req.URL.Path, "/metadata/partial"):
+			return respond(req, http.StatusOK, nil, []byte(`{"Identifier":"id"}`)), nil
+
+		case strings.HasSuffix(req.URL.Path, "/list"):
+			files := make([]string, 0, len(names))
+			for i, name := range names {
+				files = append(files, fmt.Sprintf(`{"name":%q,"createdOn":%q}`, name, created.Add(time.Duration(i)*time.Minute).Format(time.RFC3339)))
+			}
+			return respond(req, http.StatusOK, nil, []byte("["+strings.Join(files, ",")+"]")), nil
+
+		case strings.HasSuffix(req.URL.Path, "/download"):
+			if limited {
+				limited = false
+				return respond(req, http.StatusTooManyRequests, http.Header{"Retry-After": {"0"}}, nil), nil
+			}
+			downloads = append(downloads, req.Header.Get("filename"))
+			return respond(req, http.StatusOK, nil, archive), nil
+		}
+
+		return respond(req, http.StatusNotFound, nil, nil), nil
+	})
+
+	p := NewProvider(log, v, "VIN", time.Hour)
+
+	_, err := p.statusG()
+	require.NoError(t, err)
+
+	mu.Lock()
+	names = append(names, "b.zip")
+	limited = true
+	mu.Unlock()
+
+	util.ResetCached()
+
+	_, err = p.statusG()
+	require.NoError(t, err, "last data is served while rate limited")
+	assert.Empty(t, errorLog.String(), "rate limit is not an error")
+
+	require.Eventually(t, func() bool {
+		if _, err := p.statusG(); err != nil {
+			return false
+		}
+
+		mu.Lock()
+		defer mu.Unlock()
+		return len(downloads) == 2
+	}, 3*time.Second, 10*time.Millisecond, "retried without waiting for the cache interval")
+
+	assert.Equal(t, []string{"a.zip", "b.zip"}, downloads)
 }

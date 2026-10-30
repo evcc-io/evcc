@@ -8,9 +8,11 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -291,6 +293,22 @@ func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
 	}
 
 	return request.ReadBody(resp)
+}
+
+// retryAfter returns the delay the portal requests with a 429 response. The
+// RateLimit-Remaining header is unreliable, it jumps and goes negative.
+func retryAfter(err error) (time.Duration, bool) {
+	se, ok := errors.AsType[*request.StatusError](err)
+	if !ok || !se.HasStatus(http.StatusTooManyRequests) {
+		return 0, false
+	}
+
+	sec, err := strconv.Atoi(se.Response().Header.Get("Retry-After"))
+	if err != nil {
+		return 0, false
+	}
+
+	return time.Duration(sec) * time.Second, true
 }
 
 // getJSON executes a GET request and decodes the JSON response

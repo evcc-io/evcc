@@ -9,9 +9,9 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// maxBackfill bounds how many of the most recent content datasets are downloaded
-// per poll, both to seed the merged map and to catch up after a longer pause.
-const maxBackfill = 8
+// maxDownloads bounds how many of the most recent content datasets are downloaded
+// per poll, well below the portal's download limit (RateLimit-Limit: 30).
+const maxDownloads = 8
 
 // store holds the merged dataset state for all vehicles of a single portal
 // account consisting of username and brand
@@ -72,7 +72,7 @@ func (s *store) state(vin string) *vehicleState {
 // update downloads any datasets for vin delivered after the newest one already
 // merged and merges them into the vehicle's map oldest to newest. It returns the
 // newest dataset's delivery time (used to schedule the next poll).
-// On first poll latest maxBackfill content datasets are downloaded.
+// At most the latest maxDownloads content datasets are downloaded.
 func (s *store) update(vin string) (time.Time, error) {
 	v := s.state(vin)
 
@@ -160,22 +160,21 @@ func logData(log *util.Logger, data []point) {
 	}
 }
 
-// pending returns the content datasets that still need downloading, oldest to
-// newest. content must be sorted oldest to newest. Only datasets delivered after
-// the newest one already merged are returned (all on the first poll, where after
-// is zero), so no dataset is downloaded twice. Of these only the latest
-// maxBackfill are returned: the portal answers a burst of downloads with 429,
-// which happens when the vehicle has not been polled for several hours.
+// pending returns the latest maxDownloads content datasets delivered after the
+// given time (all if zero), oldest to newest. content must be sorted the same way.
 func pending(content []dataset, after time.Time) []dataset {
-	res := make([]dataset, 0, len(content))
-	for _, d := range content {
-		if d.CreatedOn.After(after) {
-			res = append(res, d)
+	res := content
+	if !after.IsZero() {
+		res = make([]dataset, 0, len(content))
+		for _, d := range content {
+			if d.CreatedOn.After(after) {
+				res = append(res, d)
+			}
 		}
 	}
 
-	if len(res) > maxBackfill {
-		res = res[len(res)-maxBackfill:]
+	if len(res) > maxDownloads {
+		res = res[len(res)-maxDownloads:]
 	}
 
 	return res
