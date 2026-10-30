@@ -98,15 +98,19 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 
 	// vehicle identification (optional)
 	if cc.Identify != "" {
-	    implement.Has(c, implement.Identifier(func() ([]string, error) {
-	        state, err := conn.GetState(cc.Identify)
-	        if err != nil {
-	            return nil, err
-	        }
-	        return []string{state.State}, nil
-	    }))
+		implement.Has(c, implement.Identifier(func() ([]string, error) {
+			state, err := conn.GetState(cc.Identify)
+			if errors.Is(err, api.ErrNotAvailable) {
+				// unknown/unavailable: no vehicle identified
+				return nil, nil
+			}
+			if err != nil {
+				return nil, err
+			}
+			return []string{state.State}, nil
+		}))
 	}
-	
+
 	if cc.Power != "" {
 		implement.Has(c, implement.Meter(func() (float64, error) { return conn.GetFloatState(cc.Power) }))
 	}
