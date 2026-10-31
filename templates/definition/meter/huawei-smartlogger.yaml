@@ -10,19 +10,7 @@ params:
     choice: ["tcpip"]
     id: 0
   - name: maxacpower
-  - name: storageunit
-    deprecated: true
   - name: timeout
-    deprecated: true
-  - name: capacity
-    deprecated: true
-  - name: maxchargepower
-    deprecated: true
-  - name: maxdischargepower
-    deprecated: true
-  - name: minsoc
-    deprecated: true
-  - name: maxsoc
     deprecated: true
 render: |
   type: custom
