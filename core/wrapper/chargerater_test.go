@@ -89,6 +89,7 @@ func TestWrappedMeter(t *testing.T) {
 
 	cr.StopCharge()
 
+	me.EXPECT().TotalEnergy().Return(3.0, nil)
 	if f, err := cr.ChargedEnergy(); f != 1 || err != nil {
 		t.Errorf("energy: %.1f %v", f, err)
 	}
@@ -107,6 +108,7 @@ func TestWrappedMeter(t *testing.T) {
 
 	cr.StopCharge()
 
+	me.EXPECT().TotalEnergy().Return(12.0, nil)
 	if f, err := cr.ChargedEnergy(); f != 3 || err != nil {
 		t.Errorf("energy: %.1f %v", f, err)
 	}
@@ -164,6 +166,7 @@ func TestDeferredBaseline(t *testing.T) {
 
 	cr.StopCharge()
 
+	me.EXPECT().TotalEnergy().Return(944.080, nil)
 	if f, err := cr.ChargedEnergy(); f != 5 || err != nil {
 		t.Errorf("final energy: %.1f %v", f, err)
 	}
@@ -197,22 +200,21 @@ func TestTailEnergy(t *testing.T) {
 	me.EXPECT().TotalEnergy().Return(120.0, nil)
 	cr.StopCharge()
 
+	me.EXPECT().TotalEnergy().Return(120.0, nil)
 	if f, err := cr.ChargedEnergy(); f < 19.999 || f > 20.001 || err != nil {
 		t.Errorf("energy: %.3f %v", f, err)
 	}
 
 	// final reading after disconnect
 	me.EXPECT().TotalEnergy().Return(120.07, nil)
-	cr.FinalizeCharge()
+	_, _ = cr.ChargedEnergy()
 
 	// repeated reading is not counted twice
 	me.EXPECT().TotalEnergy().Return(120.07, nil)
-	cr.FinalizeCharge()
+	_, _ = cr.ChargedEnergy()
 
 	// implausible jump
 	me.EXPECT().TotalEnergy().Return(150.0, nil)
-	cr.FinalizeCharge()
-
 	if f, err := cr.ChargedEnergy(); f < 20.069 || f > 20.071 || err != nil {
 		t.Errorf("energy: %.3f %v", f, err)
 	}
@@ -220,7 +222,6 @@ func TestTailEnergy(t *testing.T) {
 	// new session discards the stop reading
 	me.EXPECT().TotalEnergy().Return(150.0, nil)
 	cr.StartCharge(false)
-	cr.FinalizeCharge()
 
 	if f, err := cr.ChargedEnergy(); f != 0 || err != nil {
 		t.Errorf("energy: %.3f %v", f, err)
@@ -261,6 +262,7 @@ func TestTailEnergyDeferredBaseline(t *testing.T) {
 	me.EXPECT().TotalEnergy().Return(120.0, nil)
 	cr.StopCharge()
 
+	me.EXPECT().TotalEnergy().Return(120.0, nil)
 	if f, err := cr.ChargedEnergy(); f < 19.999 || f > 20.001 || err != nil {
 		t.Errorf("energy: %.3f %v", f, err)
 	}

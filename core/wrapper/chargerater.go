@@ -34,11 +34,6 @@ type ChargeResetter interface {
 	ResetCharge()
 }
 
-// ChargeFinalizer completes the charged energy at the end of the charging session
-type ChargeFinalizer interface {
-	FinalizeCharge()
-}
-
 // NewChargeRater creates charge rater and initializes realtime clock
 func NewChargeRater(log *util.Logger, meter api.Meter) *ChargeRater {
 	return &ChargeRater{
@@ -97,26 +92,6 @@ func (cr *ChargeRater) StopCharge() {
 				cr.stopEnergy = &f
 			}
 			cr.log.DEBUG.Printf("charge final energy: %.3fkWh", cr.chargedEnergy)
-		} else if !loadpoint.AcceptableError(err) {
-			cr.log.ERROR.Printf("charge total import: %v", err)
-		}
-	}
-}
-
-var _ ChargeFinalizer = (*ChargeRater)(nil)
-
-// FinalizeCharge adds energy the meter counted after charging stopped, e.g. while the charger ramped down
-func (cr *ChargeRater) FinalizeCharge() {
-	cr.Lock()
-	defer cr.Unlock()
-
-	if cr.charging || cr.stopEnergy == nil {
-		return
-	}
-
-	if m, ok := api.Cap[api.MeterEnergy](cr.meter); ok {
-		if f, err := m.TotalEnergy(); err == nil {
-			cr.addTailEnergy(f)
 		} else if !loadpoint.AcceptableError(err) {
 			cr.log.ERROR.Printf("charge total import: %v", err)
 		}
@@ -187,6 +162,15 @@ func (cr *ChargeRater) ChargedEnergy() (float64, error) {
 
 	// return previously charged energy
 	if !cr.charging {
+		// add energy the meter counted after charging stopped, e.g. while the charger ramped down
+		if m, ok := api.Cap[api.MeterEnergy](cr.meter); ok && cr.stopEnergy != nil {
+			if f, err := m.TotalEnergy(); err == nil {
+				cr.addTailEnergy(f)
+			} else if !loadpoint.AcceptableError(err) {
+				cr.log.ERROR.Printf("charge total import: %v", err)
+			}
+		}
+
 		return cr.chargedEnergy, nil
 	}
 
