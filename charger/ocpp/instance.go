@@ -35,11 +35,23 @@ type ForwarderRule struct {
 	Insecure          bool   `json:"insecure,omitempty" yaml:"insecure,omitempty"`
 	CaCert            string `json:"caCert,omitempty" yaml:"caCert,omitempty"`
 	ReadOnly          bool   `json:"readOnly,omitempty" yaml:"readOnly,omitempty"`
+
+	// Mirrors are read-only upstreams that receive a copy of the charger's messages
+	Mirrors []MirrorRule `json:"mirrors,omitempty" yaml:"mirrors,omitempty"`
 }
 
 func (r ForwarderRule) Redacted() ForwarderRule {
 	r.Password = util.Masked(r.Password)
 	r.CaCert = util.Masked(r.CaCert)
+
+	if len(r.Mirrors) > 0 {
+		mirrors := make([]MirrorRule, len(r.Mirrors))
+		for i, m := range r.Mirrors {
+			mirrors[i] = m.Redacted()
+		}
+		r.Mirrors = mirrors
+	}
+
 	return r
 }
 
