@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 )
 
 // testCCSPApplicationID/testCfb are copied from the real production Kia EU
@@ -239,4 +240,21 @@ func TestLoginPropagatesCCIError(t *testing.T) {
 	require.Error(t, err)
 	assert.True(t, strings.HasPrefix(err.Error(), "login failed:"), "got: %s", err.Error())
 	assert.Contains(t, err.Error(), "WAF")
+}
+
+func TestRequestKeepsOAuthSetsControlCCSP(t *testing.T) {
+	identity := NewIdentity(util.NewLogger("test"), Config{
+		CCSPApplicationID: testCCSPApplicationID,
+		Cfb:               testCfb,
+	})
+	identity.TokenSource = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "oauth-access"})
+	identity.deviceID = "dev-1"
+
+	req, err := http.NewRequest(http.MethodPost, "https://example.invalid/", nil)
+	require.NoError(t, err)
+	req = req.WithContext(WithControlToken(req.Context(), "Bearer ctrl"))
+
+	require.NoError(t, identity.Request(req))
+	assert.Equal(t, "Bearer oauth-access", req.Header.Get("Authorization"))
+	assert.Equal(t, "Bearer ctrl", req.Header.Get("AuthorizationCCSP"))
 }
