@@ -8,6 +8,7 @@ params:
     choice: ["grid", "pv"]
   - name: modbus
     choice: ["tcpip"]
+    id: 0
   - name: maxacpower
   - name: storageunit
   - name: timeout
