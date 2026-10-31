@@ -9,6 +9,9 @@ requirements:
       Die Abregelung begrenzt die Einspeiseleistung auf den gewünschten Prozentsatz der Nennleistung der angeschlossenen Wechselrichter.
     en: |
       Curtailment limits feed-in power to the desired percentage of the rated power of the connected inverters.
+discovery:
+  hostname: ["sungrow*"]
+  mac: ["AC199F"]
 params:
   - name: modbus
     choice: ["tcpip", "rs485"]
