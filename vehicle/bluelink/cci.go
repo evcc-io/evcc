@@ -48,7 +48,7 @@ type CCIConfig struct {
 
 const (
 	cciClientVersion   = "1.3.3"
-	cciMobileUserAgent = "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS"
+	cciMobileUserAgent = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36_CCS_APP_AOS"
 	cciSettingsKeyFmt  = "bluelink-cci.%s.%s"
 )
 
