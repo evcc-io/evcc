@@ -15,7 +15,7 @@ requirements:
       Older devices without that port need the `solplanet-ai-dongle` template instead.
       The grid meter import/export energy counters (46443/46445) are not exposed over Modbus TCP by this firmware.
       With two battery packs (BMS1 + BMS2) add one battery meter each, using battery number 1 and 2.
-capabilities: ["battery-control", "curtail"]
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -61,68 +61,6 @@ render: |
       type: input
       decode: uint32
     scale: 0.1
-  curtail: # allowed feed-in power as percent of nominal
-    source: sequence
-    set:
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 5402 # 45403 active power set (%Pn * 100)
-          type: writesingle
-          encoding: uint16
-        scale: 100
-      # active power control: disabled at 100% (unlimited), enabled while curtailed
-      - source: switch
-        switch:
-          - case: 100 # uncurtailed
-            set:
-              source: const
-              value: 0
-              set:
-                source: modbus
-                {{- include "modbus" . | indent 14 }}
-                register:
-                  address: 4000 # 44001 active power control function
-                  type: writesingle
-                  encoding: uint16
-        default:
-          source: const
-          value: 1
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 4000
-              type: writesingle
-              encoding: uint16
-  curtailed: # the power limit only applies while active power control is enabled
-    source: go
-    in:
-      - name: ena
-        type: int
-        config:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 4000
-            type: holding
-            decode: uint16
-      - name: percent
-        type: int
-        config:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 5402
-            type: holding
-            decode: uint16
-          scale: 0.01
-    script: |
-      res := 100
-      if ena != 0 && percent > 0 && percent < 100 {
-        res = percent
-      }
-      res
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
