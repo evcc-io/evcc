@@ -176,31 +176,28 @@ func registeredConnection(ctx context.Context, key string, proto Protocol, newCo
 	mu.Lock()
 	defer mu.Unlock()
 
-	if conn, ok := connections[key]; ok {
+	conn, ok := connections[key]
+	if ok {
 		if conn.proto != proto {
 			return nil, fmt.Errorf("connection already registered with different protocol: %s", key)
 		}
 
 		conn.refs++
+	} else {
+		conn = &meterConnection{
+			Connection: newConn,
+			proto:      proto,
+			logger:     new(logger),
+		}
 
-		return conn, nil
+		newConn.Logger(conn.logger)
+		connections[key] = conn
 	}
 
-	go func() {
-		<-ctx.Done()
-		unregisterConnection(key)
-	}()
+	// every registration releases its own reference
+	context.AfterFunc(ctx, func() { unregisterConnection(key) })
 
-	connection := &meterConnection{
-		Connection: newConn,
-		proto:      proto,
-		logger:     new(logger),
-	}
-
-	newConn.Logger(connection.logger)
-	connections[key] = connection
-
-	return connection, nil
+	return conn, nil
 }
 
 // NewConnection creates physical modbus device from config
