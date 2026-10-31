@@ -82,7 +82,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 	if devices == nil {
 		// the device tree captures the client gosunspec uses for all further
 		// block reads and writes, hence wrap it in the deduplicating cache
-		devices, err = sunspecDeviceTree(newSunspecCachedClient(conn), modbus.Backoff())
+		devices, err = sunspecDeviceTree(newSunspecCachedClient(conn), backoff.WithContext(modbus.Backoff(), ctx))
 		if err != nil && !errors.Is(err, meters.ErrPartiallyOpened) {
 			return nil, err
 		}
