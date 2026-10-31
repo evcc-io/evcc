@@ -23,11 +23,12 @@ type ChargeRater struct {
 	start         time.Time
 	startEnergy   *float64 // nil until baseline successfully read from meter
 	stopEnergy    *float64 // meter reading when charging stopped
+	stopped       time.Time
 	chargedEnergy float64
 }
 
-// maxTailEnergy limits the energy counted after charging stopped to reject meter jumps
-const maxTailEnergy = 1.0
+// maxTailDuration limits the time after a stop in which the meter is still read, excluding standby consumption
+const maxTailDuration = time.Minute
 
 // ChargeResetter resets the charging session
 type ChargeResetter interface {
@@ -83,6 +84,7 @@ func (cr *ChargeRater) StopCharge() {
 	defer cr.Unlock()
 
 	cr.charging = false
+	cr.stopped = cr.clck.Now()
 
 	// get end energy amount
 	if m, ok := api.Cap[api.MeterEnergy](cr.meter); ok {
@@ -103,7 +105,12 @@ func (cr *ChargeRater) addTailEnergy(f float64) {
 		return
 	}
 
-	if tail := f - *cr.stopEnergy; tail > 0 && tail <= maxTailEnergy {
+	if cr.clck.Since(cr.stopped) > maxTailDuration {
+		cr.stopEnergy = nil
+		return
+	}
+
+	if tail := f - *cr.stopEnergy; tail > 0 {
 		cr.chargedEnergy += tail
 		cr.stopEnergy = &f
 		cr.log.DEBUG.Printf("charge tail energy: %.3fkWh", tail)

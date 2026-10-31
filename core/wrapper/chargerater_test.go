@@ -185,6 +185,8 @@ func TestTailEnergy(t *testing.T) {
 	}
 
 	cr := NewChargeRater(util.NewLogger("foo"), &EnergyDecorator{Meter: mm, MeterEnergy: me})
+	clck := clock.NewMock()
+	cr.clck = clck
 
 	me.EXPECT().TotalEnergy().Return(100.0, nil).Times(2)
 	cr.StartCharge(false)
@@ -205,7 +207,8 @@ func TestTailEnergy(t *testing.T) {
 		t.Errorf("energy: %.3f %v", f, err)
 	}
 
-	// final reading after disconnect
+	// final reading within the tail window
+	clck.Add(30 * time.Second)
 	me.EXPECT().TotalEnergy().Return(120.07, nil)
 	_, _ = cr.ChargedEnergy()
 
@@ -213,8 +216,13 @@ func TestTailEnergy(t *testing.T) {
 	me.EXPECT().TotalEnergy().Return(120.07, nil)
 	_, _ = cr.ChargedEnergy()
 
-	// implausible jump
-	me.EXPECT().TotalEnergy().Return(150.0, nil)
+	// standby consumption after the tail window is ignored and the meter no longer read
+	clck.Add(maxTailDuration + time.Second)
+	me.EXPECT().TotalEnergy().Return(120.5, nil)
+	if f, err := cr.ChargedEnergy(); f < 20.069 || f > 20.071 || err != nil {
+		t.Errorf("energy: %.3f %v", f, err)
+	}
+
 	if f, err := cr.ChargedEnergy(); f < 20.069 || f > 20.071 || err != nil {
 		t.Errorf("energy: %.3f %v", f, err)
 	}
@@ -241,6 +249,8 @@ func TestTailEnergyDeferredBaseline(t *testing.T) {
 	}
 
 	cr := NewChargeRater(util.NewLogger("foo"), &EnergyDecorator{Meter: mm, MeterEnergy: me})
+	clck := clock.NewMock()
+	cr.clck = clck
 
 	me.EXPECT().TotalEnergy().Return(100.0, nil).Times(2)
 	cr.StartCharge(false)
