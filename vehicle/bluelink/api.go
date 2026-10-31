@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -30,67 +30,17 @@ const (
 // ErrAuthFail indicates authorization failure
 var ErrAuthFail = errors.New("authorization failed")
 
-// serialCharge sends at most one charge command at a time and replaces queued
-// commands with the latest requested start/stop so an older request cannot apply last.
-type serialCharge struct {
-	mu      sync.Mutex
-	cond    *sync.Cond
-	busy    bool
-	pending *bool
-	err     error
-}
-
-func newSerialCharge() *serialCharge {
-	s := &serialCharge{}
-	s.cond = sync.NewCond(&s.mu)
-	return s
-}
-
-func (s *serialCharge) Do(enable bool, fn func(bool) error) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	e := enable
-	s.pending = &e
-
-	if s.busy {
-		for s.busy {
-			s.cond.Wait()
-		}
-		return s.err
-	}
-
-	for s.pending != nil {
-		want := *s.pending
-		s.pending = nil
-		s.busy = true
-		err := func() error {
-			s.mu.Unlock()
-			defer s.mu.Lock()
-			return fn(want)
-		}()
-		s.err = err
-	}
-
-	s.busy = false
-	s.cond.Broadcast()
-	return s.err
-}
-
 // API implements the Kia/Hyundai bluelink api.
 type API struct {
 	*request.Helper
-	baseURI  string
-	mu       sync.Mutex
-	chargeMu map[string]*serialCharge
+	baseURI string
 }
 
 // New creates a new BlueLink API
 func NewAPI(log *util.Logger, baseURI string, decorator func(*http.Request) error) *API {
 	v := &API{
-		Helper:   request.NewHelper(log),
-		baseURI:  strings.TrimSuffix(baseURI, "/api/v1/spa") + "/api/v1/spa",
-		chargeMu: make(map[string]*serialCharge),
+		Helper:  request.NewHelper(log),
+		baseURI: strings.TrimSuffix(baseURI, "/api/v1/spa") + "/api/v1/spa",
 	}
 
 	// api is unbelievably slow when retrieving status
@@ -175,18 +125,11 @@ func chargeControlURI(baseURI, vehicleID string, ccs2 bool) string {
 	return fmt.Sprintf("%s/vehicles/%s/control/charge", baseURI, vehicleID)
 }
 
-func (v *API) serial(id string) *serialCharge {
-	v.mu.Lock()
-	defer v.mu.Unlock()
-	if v.chargeMu == nil {
-		v.chargeMu = make(map[string]*serialCharge)
+func chargeStartStop(enable bool) string {
+	if enable {
+		return "start"
 	}
-	s, ok := v.chargeMu[id]
-	if !ok {
-		s = newSerialCharge()
-		v.chargeMu[id] = s
-	}
-	return s
+	return "stop"
 }
 
 func decodeChargeControl(body []byte) error {
@@ -207,25 +150,25 @@ func decodeChargeControl(body []byte) error {
 	return nil
 }
 
-// ChargeEnable starts or stops charging via CCS2 or the older Bluelink charge control API.
-func (v *API) ChargeEnable(identity *Identity, vehicle Vehicle, pin string, enable bool) error {
-	return v.serial(vehicle.VehicleID).Do(enable, func(enable bool) error {
-		return v.sendChargeEnable(identity, vehicle, pin, enable)
-	})
+func isControlTokenRejected(err error) bool {
+	se, ok := errors.AsType[*request.StatusError](err)
+	return ok && se.HasStatus(http.StatusUnauthorized, http.StatusForbidden)
 }
 
-func (v *API) sendChargeEnable(identity *Identity, vehicle Vehicle, pin string, enable bool) error {
+// ChargeEnable starts or stops charging via CCS2 or the older Bluelink charge control API.
+func (v *API) ChargeEnable(identity *Identity, vehicle Vehicle, pin string, enable bool) error {
 	if vehicle.CcuCCS2ProtocolSupport != 0 {
+		if pin == "" {
+			return api.ErrMissingCredentials
+		}
+
 		err := v.postChargeControl(identity, vehicle, pin, enable, true)
 		if err == nil {
 			return nil
 		}
-		if pin == "" {
-			return err
-		}
 
 		if err2 := v.postChargeControl(identity, vehicle, pin, enable, false); err2 != nil {
-			return joinErrors(err, err2)
+			return errors.Join(err, err2)
 		}
 		return nil
 	}
@@ -235,7 +178,7 @@ func (v *API) sendChargeEnable(identity *Identity, vehicle Vehicle, pin string, 
 
 func (v *API) postChargeControl(identity *Identity, vehicle Vehicle, pin string, enable, ccs2 bool) error {
 	ctx := context.Background()
-	if ccs2 && pin != "" {
+	if ccs2 {
 		token, err := identity.ControlAuthorization(pin)
 		if err != nil {
 			return err
@@ -245,11 +188,9 @@ func (v *API) postChargeControl(identity *Identity, vehicle Vehicle, pin string,
 
 	var payload map[string]string
 	if ccs2 {
-		cmd := map[bool]string{true: "start", false: "stop"}
-		payload = map[string]string{"command": cmd[enable]}
+		payload = map[string]string{"command": chargeStartStop(enable)}
 	} else {
-		action := map[bool]string{true: "start", false: "stop"}
-		payload = map[string]string{"action": action[enable]}
+		payload = map[string]string{"action": chargeStartStop(enable)}
 		if id := identity.DeviceID(); id != "" {
 			payload["deviceId"] = id
 		}
@@ -263,19 +204,11 @@ func (v *API) postChargeControl(identity *Identity, vehicle Vehicle, pin string,
 
 	body, err := v.DoBody(req)
 	if err != nil {
+		if isControlTokenRejected(err) {
+			identity.InvalidateControlToken()
+		}
 		return err
 	}
 
 	return decodeChargeControl(body)
-}
-
-func joinErrors(errs ...error) error {
-	switch len(errs) {
-	case 0:
-		return nil
-	case 1:
-		return errs[0]
-	default:
-		return errors.Join(errs...)
-	}
 }

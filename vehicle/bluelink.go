@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/bluelink"
 )
@@ -17,6 +18,7 @@ import (
 type Bluelink struct {
 	*embed
 	*bluelink.Provider
+	implement.Caps
 }
 
 func init() {
@@ -191,6 +193,11 @@ func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink
 	v := &Bluelink{
 		embed:    &cc.embed,
 		Provider: bluelink.NewProvider(api, identity, vehicle, cc.PIN, cc.Cache),
+		Caps:     implement.New(),
+	}
+
+	if cc.PIN != "" {
+		implement.Has(v, implement.ChargeController(v.EnableCharge))
 	}
 
 	// Try to fetch battery capacity from vehicle if the user didn't provide one in the configuration

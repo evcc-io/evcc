@@ -2,188 +2,196 @@ package bluelink
 
 import (
 	"encoding/json"
-	"errors"
-	"sync"
-	"sync/atomic"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 )
 
-func TestJoinErrors(t *testing.T) {
-	ccs2Err := errors.New("ccs2 failed")
-	legacyErr := errors.New("legacy failed")
-
-	err := joinErrors(ccs2Err, legacyErr)
-	if err == nil {
-		t.Fatal("expected combined error")
-	}
-	if !errors.Is(err, legacyErr) {
-		t.Fatalf("legacy error hidden: %v", err)
-	}
-	if !errors.Is(err, ccs2Err) {
-		t.Fatalf("ccs2 error hidden: %v", err)
-	}
-
-	if err := joinErrors(ccs2Err); err != ccs2Err {
-		t.Fatalf("single error wrapped: %v", err)
-	}
-}
-
 func TestChargeControlURI(t *testing.T) {
-	base := "https://au-apigw.ccs.hyundai.com.au:8080/api/v1/spa"
-
-	got := chargeControlURI(base, "VID", true)
-	want := "https://au-apigw.ccs.hyundai.com.au:8080/api/v2/spa/vehicles/VID/ccs2/control/charge"
-	if got != want {
-		t.Fatalf("ccs2 uri: got %s want %s", got, want)
-	}
-
-	got = chargeControlURI(base, "VID", false)
-	want = "https://au-apigw.ccs.hyundai.com.au:8080/api/v1/spa/vehicles/VID/control/charge"
-	if got != want {
-		t.Fatalf("legacy uri: got %s want %s", got, want)
+	for _, tc := range []struct {
+		name, base, ccs2, legacy string
+	}{
+		{
+			name:   "au",
+			base:   "https://au-apigw.ccs.hyundai.com.au:8080/api/v1/spa",
+			ccs2:   "https://au-apigw.ccs.hyundai.com.au:8080/api/v2/spa/vehicles/VID/ccs2/control/charge",
+			legacy: "https://au-apigw.ccs.hyundai.com.au:8080/api/v1/spa/vehicles/VID/control/charge",
+		},
+		{
+			name:   "eu",
+			base:   "https://prd.eu-ccapi.hyundai.com:8080/api/v1/spa",
+			ccs2:   "https://prd.eu-ccapi.hyundai.com:8080/api/v2/spa/vehicles/VID/ccs2/control/charge",
+			legacy: "https://prd.eu-ccapi.hyundai.com:8080/api/v1/spa/vehicles/VID/control/charge",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.ccs2, chargeControlURI(tc.base, "VID", true))
+			assert.Equal(t, tc.legacy, chargeControlURI(tc.base, "VID", false))
+		})
 	}
 }
 
 func TestDecodeChargeControl(t *testing.T) {
-	if err := decodeChargeControl(nil); err != nil {
-		t.Fatalf("empty body: %v", err)
-	}
-	if err := decodeChargeControl([]byte("  \n")); err != nil {
-		t.Fatalf("whitespace body: %v", err)
-	}
-	if err := decodeChargeControl([]byte(`{"retCode":"S"}`)); err != nil {
-		t.Fatalf("success: %v", err)
-	}
-	if err := decodeChargeControl([]byte(`{}`)); err == nil {
-		t.Fatal("expected error for missing retCode")
-	}
-	if err := decodeChargeControl([]byte(`{"msgId":"abc"}`)); err == nil {
-		t.Fatal("expected error for body without retCode")
-	}
-	if err := decodeChargeControl([]byte(`null`)); err == nil {
-		t.Fatal("expected error for null body")
-	}
-	if err := decodeChargeControl([]byte(`{"retCode":"F"}`)); err == nil {
-		t.Fatal("expected error for failed retCode")
-	}
+	require.NoError(t, decodeChargeControl(nil))
+	require.NoError(t, decodeChargeControl([]byte("  \n")))
+	require.NoError(t, decodeChargeControl([]byte(`{"retCode":"S"}`)))
+	require.Error(t, decodeChargeControl([]byte(`{}`)))
+	require.Error(t, decodeChargeControl([]byte(`{"msgId":"abc"}`)))
+	require.Error(t, decodeChargeControl([]byte(`null`)))
+	require.Error(t, decodeChargeControl([]byte(`{"retCode":"F"}`)))
 }
 
 func TestPinResponseResMsg(t *testing.T) {
 	var res pinResponse
-	if err := json.Unmarshal([]byte(`{"retCode":"S","resMsg":{"controlToken":"tok","expiresTime":1700000000}}`), &res); err != nil {
-		t.Fatal(err)
-	}
-	if res.ResMsg.ControlToken != "tok" {
-		t.Fatalf("token: %s", res.ResMsg.ControlToken)
-	}
-	if res.ResMsg.ExpiresTime != 1700000000 {
-		t.Fatalf("expires: %d", res.ResMsg.ExpiresTime)
-	}
+	require.NoError(t, json.Unmarshal([]byte(`{"retCode":"S","resMsg":{"controlToken":"tok","expiresTime":1700000000}}`), &res))
+	assert.Equal(t, "tok", res.ResMsg.ControlToken)
+	assert.EqualValues(t, 1700000000, res.ResMsg.ExpiresTime)
 
 	var top pinResponse
-	if err := json.Unmarshal([]byte(`{"controlToken":"legacy","expiresTime":1700000100}`), &top); err != nil {
-		t.Fatal(err)
-	}
-	if top.ResMsg.ControlToken != "" || top.ControlToken != "legacy" {
-		t.Fatalf("top-level fallback: %+v", top)
-	}
+	require.NoError(t, json.Unmarshal([]byte(`{"controlToken":"legacy","expiresTime":1700000100}`), &top))
+	assert.Empty(t, top.ResMsg.ControlToken)
+	assert.Equal(t, "legacy", top.ControlToken)
 }
 
 func TestControlTokenExpiry(t *testing.T) {
 	now := time.Unix(1_700_000_000, 0)
-	got := controlTokenExpiry(1_700_000_600, now)
-	want := time.Unix(1_700_000_600, 0).Add(-30 * time.Second)
-	if !got.Equal(want) {
-		t.Fatalf("got %s want %s", got, want)
-	}
+	assert.Equal(t, time.Unix(1_700_000_600, 0).Add(-30*time.Second), controlTokenExpiry(1_700_000_600, now))
 
 	past := controlTokenExpiry(1_699_999_000, now)
-	if !past.Before(now) {
-		t.Fatal("absolute expiresTime in the past must not keep the token cached")
-	}
+	assert.True(t, past.Before(now), "absolute expiresTime in the past must not keep the token cached")
 }
 
-func TestSerialChargeLatestWins(t *testing.T) {
-	s := newSerialCharge()
-	started := make(chan struct{})
-	release := make(chan struct{})
+func TestChargeStartStop(t *testing.T) {
+	assert.Equal(t, "start", chargeStartStop(true))
+	assert.Equal(t, "stop", chargeStartStop(false))
+}
 
-	var mu sync.Mutex
-	var sent []bool
-	var inflight atomic.Int32
-	record := func(enable bool) error {
-		n := inflight.Add(1)
-		if n != 1 {
-			t.Errorf("overlapping charge commands: %d", n)
-		}
-		mu.Lock()
-		sent = append(sent, enable)
-		mu.Unlock()
-		inflight.Add(-1)
-		return nil
-	}
+func TestProviderIsNotChargeController(t *testing.T) {
+	p := NewProvider(NewAPI(util.NewLogger("test"), "https://example.invalid/api/v1/spa", func(*http.Request) error { return nil }), NewIdentity(util.NewLogger("test"), Config{}), Vehicle{}, "", time.Second)
+	_, ok := api.Cap[api.ChargeController](p)
+	assert.False(t, ok)
+}
 
-	var wg sync.WaitGroup
-	wg.Add(3)
+func TestChargeEnableCCS2RequiresPIN(t *testing.T) {
+	client := NewAPI(util.NewLogger("test"), "https://example.invalid/api/v1/spa", func(*http.Request) error { return nil })
+	err := client.ChargeEnable(NewIdentity(util.NewLogger("test"), Config{}), Vehicle{VehicleID: "VID", CcuCCS2ProtocolSupport: 1}, "", true)
+	require.ErrorIs(t, err, api.ErrMissingCredentials)
+}
 
-	go func() {
-		defer wg.Done()
-		first := true
-		_ = s.Do(true, func(enable bool) error {
-			if first {
-				first = false
-				close(started)
-				<-release
-			}
-			return record(enable)
+func TestChargeEnableCCS2UnauthorizedInvalidatesControlToken(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1/user/pin", func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"retCode": "S",
+			"resMsg": map[string]any{
+				"controlToken": "ctrl",
+				"expiresTime":  time.Now().Add(time.Hour).Unix(),
+			},
 		})
-	}()
-	<-started
+	})
+	mux.HandleFunc("/api/v2/spa/vehicles/VID/ccs2/control/charge", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+	})
+	mux.HandleFunc("/api/v1/spa/vehicles/VID/control/charge", func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{"retCode": "S"})
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
 
-	go func() {
-		defer wg.Done()
-		_ = s.Do(true, record)
-	}()
+	identity := NewIdentity(util.NewLogger("test"), Config{
+		URI:               srv.URL,
+		CCSPApplicationID: testCCSPApplicationID,
+		Cfb:               testCfb,
+	})
+	identity.TokenSource = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "oauth-access"})
+	identity.deviceID = "dev-1"
+	identity.controlToken = "Bearer stale"
+	identity.controlTokenExpiry = time.Now().Add(time.Hour)
 
-	deadline := time.Now().Add(time.Second)
-	for {
-		s.mu.Lock()
-		pending := s.pending != nil && *s.pending
-		s.mu.Unlock()
-		if pending {
-			break
-		}
-		if time.Now().After(deadline) {
-			t.Fatal("timeout waiting for queued start")
-		}
-		time.Sleep(time.Millisecond)
-	}
+	client := NewAPI(util.NewLogger("test"), srv.URL+"/api/v1/spa", identity.Request)
+	require.NoError(t, client.ChargeEnable(identity, Vehicle{VehicleID: "VID", CcuCCS2ProtocolSupport: 1}, "1234", true))
 
-	go func() {
-		defer wg.Done()
-		_ = s.Do(false, record)
-	}()
+	identity.mu.Lock()
+	defer identity.mu.Unlock()
+	assert.Empty(t, identity.controlToken)
+	assert.True(t, identity.controlTokenExpiry.IsZero())
+}
 
-	for {
-		s.mu.Lock()
-		pending := s.pending != nil && !*s.pending
-		s.mu.Unlock()
-		if pending {
-			break
-		}
-		if time.Now().After(deadline) {
-			t.Fatal("timeout waiting for queued stop")
-		}
-		time.Sleep(time.Millisecond)
-	}
+func TestChargeEnableCCS2FallsBackToLegacy(t *testing.T) {
+	var ccs2, legacy int
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1/user/pin", func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"retCode": "S",
+			"resMsg": map[string]any{
+				"controlToken": "ctrl",
+				"expiresTime":  time.Now().Add(time.Hour).Unix(),
+			},
+		})
+	})
+	mux.HandleFunc("/api/v2/spa/vehicles/VID/ccs2/control/charge", func(w http.ResponseWriter, _ *http.Request) {
+		ccs2++
+		w.WriteHeader(http.StatusInternalServerError)
+	})
+	mux.HandleFunc("/api/v1/spa/vehicles/VID/control/charge", func(w http.ResponseWriter, _ *http.Request) {
+		legacy++
+		_ = json.NewEncoder(w).Encode(map[string]any{"retCode": "S"})
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
 
-	close(release)
-	wg.Wait()
+	identity := NewIdentity(util.NewLogger("test"), Config{
+		URI:               srv.URL,
+		CCSPApplicationID: testCCSPApplicationID,
+		Cfb:               testCfb,
+	})
+	identity.TokenSource = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "oauth-access"})
+	identity.deviceID = "dev-1"
 
-	mu.Lock()
-	defer mu.Unlock()
-	if len(sent) != 2 || sent[0] != true || sent[1] != false {
-		t.Fatalf("sent %v, want [true false]", sent)
-	}
+	client := NewAPI(util.NewLogger("test"), srv.URL+"/api/v1/spa", identity.Request)
+	require.NoError(t, client.ChargeEnable(identity, Vehicle{VehicleID: "VID", CcuCCS2ProtocolSupport: 1}, "1234", false))
+	assert.Equal(t, 1, ccs2)
+	assert.Equal(t, 1, legacy)
+}
+
+func TestChargeEnableJoinsCCS2AndLegacyErrors(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1/user/pin", func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"retCode": "S",
+			"resMsg": map[string]any{
+				"controlToken": "ctrl",
+				"expiresTime":  time.Now().Add(time.Hour).Unix(),
+			},
+		})
+	})
+	mux.HandleFunc("/api/v2/spa/vehicles/VID/ccs2/control/charge", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusBadGateway)
+	})
+	mux.HandleFunc("/api/v1/spa/vehicles/VID/control/charge", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+
+	identity := NewIdentity(util.NewLogger("test"), Config{
+		URI:               srv.URL,
+		CCSPApplicationID: testCCSPApplicationID,
+		Cfb:               testCfb,
+	})
+	identity.TokenSource = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "oauth-access"})
+	identity.deviceID = "dev-1"
+
+	client := NewAPI(util.NewLogger("test"), srv.URL+"/api/v1/spa", identity.Request)
+	err := client.ChargeEnable(identity, Vehicle{VehicleID: "VID", CcuCCS2ProtocolSupport: 1}, "1234", true)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "502")
+	assert.Contains(t, err.Error(), "503")
 }

@@ -286,6 +286,7 @@ func (v *Identity) ControlAuthorization(pin string) (string, error) {
 		return "", api.ErrMissingCredentials
 	}
 
+	// empty token query is required by the SPA PIN endpoint
 	uri := strings.TrimSuffix(v.config.URI, "/") + "/api/v1/user/pin?token="
 	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(map[string]string{
 		"deviceId": v.deviceID,
@@ -314,12 +315,16 @@ func (v *Identity) ControlAuthorization(pin string) (string, error) {
 	}
 
 	v.controlToken = "Bearer " + token
-	if expires <= 0 {
-		v.controlTokenExpiry = time.Now().Add(10 * time.Minute).Add(-30 * time.Second)
-	} else {
-		v.controlTokenExpiry = time.Unix(expires, 0).Add(-30 * time.Second)
-	}
+	v.controlTokenExpiry = controlTokenExpiry(expires, time.Now())
 	return v.controlToken, nil
+}
+
+// InvalidateControlToken drops a cached PIN control token so the next command re-verifies.
+func (v *Identity) InvalidateControlToken() {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	v.controlToken = ""
+	v.controlTokenExpiry = time.Time{}
 }
 
 // stamp creates a stamp locally according to https://github.com/Hyundai-Kia-Connect/hyundai_kia_connect_api/pull/371

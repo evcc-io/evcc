@@ -28,6 +28,7 @@ params:
       en: Region your Bluelink account is registered in
       de: Region, in der dein Bluelink-Konto registriert ist
   - name: pin
+    mask: true
     help:
       en: Bluelink PIN. Required to start and stop charging from evcc.
       de: Bluelink-PIN. Wird zum Starten und Stoppen des Ladevorgangs durch evcc benötigt.

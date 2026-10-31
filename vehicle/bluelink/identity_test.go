@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -257,4 +258,53 @@ func TestRequestKeepsOAuthSetsControlCCSP(t *testing.T) {
 	require.NoError(t, identity.Request(req))
 	assert.Equal(t, "Bearer oauth-access", req.Header.Get("Authorization"))
 	assert.Equal(t, "Bearer ctrl", req.Header.Get("AuthorizationCCSP"))
+}
+
+func TestControlAuthorizationCachesAndInvalidates(t *testing.T) {
+	var pinCalls int
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1/user/pin", func(w http.ResponseWriter, r *http.Request) {
+		pinCalls++
+		assert.Equal(t, http.MethodPut, r.Method)
+		assert.Equal(t, "", r.URL.Query().Get("token"))
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"retCode": "S",
+			"resMsg": map[string]any{
+				"controlToken": "ctrl",
+				"expiresTime":  time.Now().Add(time.Hour).Unix(),
+			},
+		})
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+
+	identity := NewIdentity(util.NewLogger("test"), Config{
+		URI:               srv.URL,
+		CCSPApplicationID: testCCSPApplicationID,
+		Cfb:               testCfb,
+	})
+	identity.TokenSource = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "oauth-access"})
+	identity.deviceID = "dev-1"
+
+	tok, err := identity.ControlAuthorization("1234")
+	require.NoError(t, err)
+	assert.Equal(t, "Bearer ctrl", tok)
+	assert.Equal(t, 1, pinCalls)
+
+	tok, err = identity.ControlAuthorization("1234")
+	require.NoError(t, err)
+	assert.Equal(t, "Bearer ctrl", tok)
+	assert.Equal(t, 1, pinCalls, "cached control token should skip PIN verification")
+
+	identity.InvalidateControlToken()
+	tok, err = identity.ControlAuthorization("1234")
+	require.NoError(t, err)
+	assert.Equal(t, "Bearer ctrl", tok)
+	assert.Equal(t, 2, pinCalls)
+}
+
+func TestControlAuthorizationMissingPIN(t *testing.T) {
+	identity := NewIdentity(util.NewLogger("test"), Config{})
+	_, err := identity.ControlAuthorization("")
+	require.ErrorIs(t, err, api.ErrMissingCredentials)
 }

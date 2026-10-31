@@ -18,6 +18,7 @@ params:
   - preset: vehicle-online
   - preset: vehicle-language
   - name: pin
+    mask: true
     help:
       en: Bluelink PIN. Required to start and stop charging from evcc.
       de: Bluelink-PIN. Wird zum Starten und Stoppen des Ladevorgangs durch evcc benötigt.
