@@ -8,6 +8,7 @@ import (
 	"math"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -127,8 +128,9 @@ type Site struct {
 	explainMu                sync.Mutex                  // serializes explain requests
 	explained                explainCache                // last explanation, guarded by explainMu
 
-	optimizerMu      sync.Mutex // guards optimizer runs
-	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
+	optimizerMu      sync.Mutex  // guards optimizer runs
+	optimizerUpdated time.Time   // last optimizer run, guarded by optimizerMu
+	optimizerRerun   atomic.Bool // forced trigger arrived during a run, re-run when done
 
 	solarScaleCached func() (float64, error) // util.Cached wrapper around querySolarScale
 }

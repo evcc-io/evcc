@@ -482,17 +482,38 @@ const optimizerInterval = 5 * time.Minute
 // optimizerUpdateAsync runs the optimizer unless the last run is younger than
 // the mode's interval. Pass force to run regardless, e.g. when a changed setting
 // should take effect immediately. It is a no-op when the optimizer is not
-// active or a run is already in progress; the running update reflects the
-// change on its next run.
+// active. A forced trigger during a running update, e.g. vehicle identification
+// right after connect, re-runs once that update has finished.
 func (site *Site) optimizerUpdateAsync(force bool) {
 	if !sponsor.IsAuthorized() || !optimizerEnabled() {
 		return
 	}
 
 	if !site.optimizerMu.TryLock() {
-		return
+		if !force {
+			return
+		}
+
+		site.optimizerRerun.Store(true)
+
+		// the running update may have finished in between
+		if !site.optimizerMu.TryLock() {
+			return
+		}
 	}
-	defer site.optimizerMu.Unlock()
+
+	// a pending forced trigger bypasses the interval gate
+	if site.optimizerRerun.Swap(false) {
+		force = true
+	}
+
+	defer func() {
+		site.optimizerMu.Unlock()
+
+		if site.optimizerRerun.Load() {
+			go site.optimizerUpdateAsync(true)
+		}
+	}()
 
 	interval := tariff.SlotDuration
 	if site.Automatic() {
