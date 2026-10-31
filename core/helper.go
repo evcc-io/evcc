@@ -49,13 +49,15 @@ func deviceTitleOrName[T any](dev config.Device[T]) string {
 	return cmp.Or(deviceProperties(dev).Title, dev.Config().Name)
 }
 
-// circuitMaxPower returns a circuits power limit
+// circuitMaxPower returns the lowest power limit along the circuit chain, 0 if none is set
 func circuitMaxPower(circuit api.Circuit) float64 {
-	if circuit == nil {
-		return 0
+	var res float64
+	for c := circuit; c != nil; c = c.GetParent() {
+		if p := c.GetMaxPower(); p > 0 && (res == 0 || p < res) {
+			res = p
+		}
 	}
-
-	return circuit.GetMaxPower()
+	return res
 }
 
 // nonZeroEnergy reports a zero lifetime energy reading as api.ErrNotAvailable.
