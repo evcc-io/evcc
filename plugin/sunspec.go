@@ -286,6 +286,14 @@ func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
 		switch typ {
 		case typelabel.Float32:
 			point.SetFloat32(float32(val))
+		case typelabel.Int16:
+			point.SetValue(int16(math.Round(val)))
+		case typelabel.Int32:
+			point.SetValue(int32(math.Round(val)))
+		case typelabel.Uint16:
+			point.SetValue(uint16(math.Round(val)))
+		case typelabel.Uint32:
+			point.SetValue(uint32(math.Round(val)))
 		default:
 			return fmt.Errorf("invalid point type: %s", typ)
 		}
