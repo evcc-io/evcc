@@ -642,3 +642,27 @@ func TestOptimizerPlanAboveLimit(t *testing.T) {
 
 	ctrl.Finish()
 }
+
+// TestOptimizerPlanSlotNotCritical covers a plan goal beyond the optimizer horizon (#35447):
+// the planner's fallback slot must not make the deadline critical and override the optimizer
+func TestOptimizerPlanSlotNotCritical(t *testing.T) {
+	lp := &Loadpoint{
+		log:        util.NewLogger("foo"),
+		clock:      clock.NewMock(),
+		vehicle:    modelledVehicle(gomock.NewController(t)),
+		site:       &mockSite{automatic: true},
+		status:     api.StatusC,
+		phases:     1,
+		minCurrent: minA,
+		maxCurrent: maxA,
+		vehicleSoc: 50,
+	}
+
+	now := lp.clock.Now()
+	lp.planLocked = PlanLock{Time: now.Add(72 * time.Hour), Soc: 100, Id: 1}
+
+	// the planner's active slot, set by plannerActive before the critical check
+	lp.planSlotEnd = now.Add(time.Hour)
+
+	assert.False(t, lp.planDeadlineCritical())
+}
