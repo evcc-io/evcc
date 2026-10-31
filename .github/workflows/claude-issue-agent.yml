@@ -169,7 +169,9 @@ jobs:
           additional_permissions: |
             actions: read
           # labeling is a classification over the file list, Haiku is enough
-          claude_args: '--model claude-haiku-4-5 --allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr edit:*),Bash(gh api:*)" --disallowed-tools "Task"'
+          # gh api is limited to the read-only issue type lookup: a write through it
+          # (e.g. POST .../labels) silently creates labels that don't exist yet
+          claude_args: '--model claude-haiku-4-5 --allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr edit:*),Bash(gh api repos/${{ github.repository }}/issues/* --jq *)" --disallowed-tools "Task,Bash(gh label create:*),Bash(gh label edit:*),Bash(gh label clone:*),Bash(gh api *-X*),Bash(gh api *--method*),Bash(gh api *-f*),Bash(gh api *-F*),Bash(gh api *--field*),Bash(gh api *--input*)"'
           prompt: |
             You label pull requests for the evcc repository.
             Work on PR #${{ github.event.pull_request.number }}. Fetch its title,
@@ -190,7 +192,8 @@ jobs:
 
             3. Apply every existing label that clearly matches, area and kind, with
                `gh pr edit ${{ github.event.pull_request.number }} --add-label <label>`.
-               Only ever apply labels from the existing set — never create a new label.
+               Only ever apply labels from the existing set, spelled exactly as listed —
+               never create, rename or invent a label. If no listed label fits, apply none.
                Skip any label already present. Prefer a couple of precise labels over
                many loose ones; if nothing clearly matches, apply none.
 
