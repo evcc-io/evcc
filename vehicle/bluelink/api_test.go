@@ -9,11 +9,11 @@ import (
 	"time"
 )
 
-func TestChargeEnableFallbackError(t *testing.T) {
+func TestJoinErrors(t *testing.T) {
 	ccs2Err := errors.New("ccs2 failed")
 	legacyErr := errors.New("legacy failed")
 
-	err := chargeEnableFallbackError(ccs2Err, legacyErr)
+	err := joinErrors(ccs2Err, legacyErr)
 	if err == nil {
 		t.Fatal("expected combined error")
 	}
@@ -24,8 +24,8 @@ func TestChargeEnableFallbackError(t *testing.T) {
 		t.Fatalf("ccs2 error hidden: %v", err)
 	}
 
-	if err := chargeEnableFallbackError(ccs2Err, nil); err != nil {
-		t.Fatalf("successful legacy fallback: %v", err)
+	if err := joinErrors(ccs2Err); err != ccs2Err {
+		t.Fatalf("single error wrapped: %v", err)
 	}
 }
 
