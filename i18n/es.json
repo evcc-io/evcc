@@ -383,6 +383,7 @@
       "optional": "opcional"
     },
     "general": {
+      "add": "Añadir",
       "applyAndClose": "Aplicar y cerrar",
       "authPerform": "Conecta con {provider}",
       "authPerformHint": "Se abrirá en una nueva pestaña. Vuelve aquí para continuar.",
@@ -394,6 +395,7 @@
       "confirmDisable": "¿Deshabilitar este dispositivo? Se ignorará después del próximo reinicio.",
       "confirmEnable": "¿Volver a habilitar este dispositivo?",
       "confirmSave": "Hay cambios sin guardar. ¿Guardar ahora?",
+      "continue": "Continuar",
       "copied": "¡Copiado!",
       "copy": "Copiar",
       "customHelp": "Crea un dispositivo definido por el usuario con el sistema de plugins de evcc.",
@@ -568,16 +570,24 @@
       "priorityLabel": "Prioridad",
       "save": "Guardar",
       "solarShareReset": "Remover umbrales",
+      "solarTitle": "Comportamiento con excedente solar",
       "temperatureRangeHelp": "Rango de visualización para la barra de temperatura. No afecta al control.",
       "temperatureRangeTitle": "Rango de temperatura",
+      "thresholdDisableDelayHelp": "Se detiene cuando no hay suficiente excedente durante {delay}.",
       "thresholdDisableDelayLabel": "Desactivar retraso",
       "thresholdDisableHelpInvalid": "Usa un valor positivo.",
       "thresholdDisableHelpPositive": "Se detiene cuando se utiliza más de {power} de la red durante {delay}.",
       "thresholdDisableLabel": "Umbral de desactivación de la potencia de red",
+      "thresholdEnableDelayHelp": "Se inicia cuando hay suficiente excedente durante {delay}.",
       "thresholdEnableDelayLabel": "Habilitar retraso",
       "thresholdEnableHelpInvalid": "Usa un valor negativo.",
       "thresholdEnableHelpNegative": "Comienza cuando hay {surplus} de excedente disponible durante {delay}.",
       "thresholdEnableLabel": "Umbral de activación de la potencia de red",
+      "thresholdsNote": {
+        "charging": "Para controlar el uso de la red durante la carga solar, usa el control deslizante {slider} en los ajustes del punto de carga de la página {page}. Define valores aquí solo en casos especiales.",
+        "heating": "Para controlar el uso de la red durante la calefacción solar, usa el control deslizante {slider} en los ajustes de la calefacción de la página {page}. Define valores aquí solo en casos especiales."
+      },
+      "thresholdsSliderDisabled": "El control deslizante {slider} está desactivado actualmente porque aquí hay valores definidos.",
       "titleAdd": {
         "charging": "Añadir punto de recarga",
         "heating": "Añadir calefacción",
@@ -707,10 +717,18 @@
         "grid": "Añadir contador de red",
         "pv": "Añadir contador solar"
       },
+      "reuseApply": "Usar su configuración.",
+      "reuseHint": "{device} también se puede usar como \"{target}\".",
       "save": "Guardar",
       "specific": "Integraciones específicas",
       "template": "Fabricante",
       "titleChoice": "¿Qué quieres añadir?",
+      "titleExample": {
+        "aux": "Calentador de agua inteligente, etc.",
+        "battery": "Sótano, garaje, central eléctrica, etc.",
+        "consumer": "Lavavajillas, lavadora, bomba de piscina, etc.",
+        "pv": "Tejado sur, cochera, etc."
+      },
       "titleLabel": "Título",
       "usage": {
         "aux": "Consumidor autorregulado",
@@ -968,6 +986,15 @@
         "example": "La carga te ha costado {price}. Has ahorrado {amount}.",
         "label": "Moneda"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V sin neutro (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V con neutro (3P4W)",
+        "description": {
+          "3p3w": "Red sin conductor neutro. Habitual en Noruega y partes de Bélgica.",
+          "3p4w": "La red más habitual, con conductor neutro."
+        },
+        "label": "Conexión a la red"
+      },
       "siteTitle": {
         "description": "Se muestra en la pantalla principal y en la pestaña del navegador.",
         "label": "Título"
@@ -981,6 +1008,18 @@
       "descriptionToken": "Como patrocinador de GitHub, encontrarás tu token en {url}. Para empezar, ofrecemos un {trialToken}.",
       "enterYourToken": "Tu token de patrocinador",
       "error": "El token del patrocinador no es válido.",
+      "inline": {
+        "applied": "Token aplicado. ¡Gracias por apoyar el proyecto!",
+        "apply": "Aplicar",
+        "becomeSponsor": "hazte patrocinador",
+        "device": "Este dispositivo solo está disponible para patrocinadores.",
+        "feature": "Esta función solo está disponible para patrocinadores.",
+        "learn": "Más información y {becomeSponsor}.",
+        "placeholder": "Pegar token",
+        "title": "Se requiere un token de patrocinador",
+        "trial": "Empieza rápidamente.",
+        "trialLink": "Obtener un token de prueba"
+      },
       "invalid": "no válido",
       "labelToken": "Token del patrocinador",
       "title": "Patrocinio",
@@ -1075,7 +1114,8 @@
       "solar": {
         "description": "Previsión de producción solar para tu sistema solar. Se muestra en la interfaz y se utilizará más adelante para algoritmos de optimización.",
         "titleAdd": "Añadir previsión solar",
-        "titleEdit": "Editar previsión solar"
+        "titleEdit": "Editar previsión solar",
+        "titleExample": "Tejado sur, cochera, etc."
       },
       "temperature": {
         "description": "Previsión de la temperatura exterior en tu ubicación. Se muestra en la interfaz y se utiliza para predecir la demanda de calefacción.",
@@ -1731,6 +1771,11 @@
       "login": "iniciar sesión",
       "logout": "cerrar sesión"
     },
+    "setup": {
+      "description": "Añade tus dispositivos para ver el flujo de energía y empezar a cargar con energía solar.",
+      "start": "Iniciar",
+      "title": "¡Te damos la bienvenida!"
+    },
     "startConfiguration": "Comencemos la configuración",
     "targetCharge": {
       "activate": "Activar",
@@ -1856,6 +1901,76 @@
     "restartNeeded": "Necesario para aplicar los cambios.",
     "restarting": "El servidor volverá en un momento.",
     "starting": "Iniciando servidor..."
+  },
+  "onboarding": {
+    "another": "Añadir otro",
+    "back": "Atrás",
+    "battery": {
+      "add": "Añadir batería doméstica",
+      "description": "Añade tu batería para que la carga la tenga en cuenta y puedas ver lo que hace.",
+      "none": "Sin batería doméstica",
+      "title": "¿Tienes una batería doméstica?"
+    },
+    "checklist": {
+      "dismiss": "Descartar",
+      "legacyTariffs": "Se usa la configuración de tarifas antigua.",
+      "progress": "{done} de {total} completados",
+      "title": "Completa tu configuración"
+    },
+    "control": {
+      "description": "Empieza con el primero. Puedes añadir más después en la página de configuración.",
+      "none": "Nada todavía",
+      "title": "¿Qué quieres controlar?"
+    },
+    "done": {
+      "close": "Ir a configuración",
+      "description": "Un reinicio aplica la configuración. Después, explora las funciones. Puedes añadir vehículos, tarifas y más en cualquier momento.",
+      "restart": "Reiniciar",
+      "title": "Todo listo"
+    },
+    "grid": {
+      "add": "Añadir contador de red",
+      "confirm": "El contador de red es la base de la carga con excedente y de las estadísticas de energía. Se recomienda añadir uno.",
+      "confirmNone": "Continuar sin él",
+      "description": "Mide la importación y exportación de red en el punto de conexión. Hace precisa la carga con excedente.",
+      "none": "Sin contador de red",
+      "title": "¿Tienes un contador de red?"
+    },
+    "item": {
+      "battery": "Batería doméstica",
+      "co2": "Previsión de CO₂",
+      "consumer": "Consumidor",
+      "grid": "Contador de red",
+      "gridExport": "Tarifa de exportación a la red",
+      "gridImport": "Tarifa de importación de la red",
+      "heater": "Calefacción",
+      "loadpoint": "Punto de carga",
+      "pv": "Sistema solar",
+      "solar": "Previsión solar"
+    },
+    "password": {
+      "description": "Protege los ajustes de configuración frente a cambios no autorizados. Recuérdala, no hay una forma sencilla de restablecerla.",
+      "disabled": "La autenticación está desactivada ({flag}). Cualquiera con acceso a la red puede cambiar la configuración, leer las credenciales almacenadas y ejecutar scripts. Protege el acceso por otros medios.",
+      "title": "Establecer contraseña de administrador"
+    },
+    "pv": {
+      "add": "Añadir sistema solar",
+      "description": "Mide la producción solar. Necesario para la cuota solar y la carga con excedente.",
+      "none": "Sin sistema solar",
+      "title": "¿Tienes un sistema solar?"
+    },
+    "site": {
+      "currencyHint": "p. ej. {price}, {amount}",
+      "defaultTitle": "Casa",
+      "description": "Algunos datos básicos de tu hogar. Puedes cambiarlos en cualquier momento.",
+      "title": "Tu instalación"
+    },
+    "skip": "Omitir",
+    "step": "Paso {step} de {total}",
+    "welcome": {
+      "description": "Configura las partes más importantes de tu instalación doméstica para empezar a cargar de forma inteligente.",
+      "start": "Empezar"
+    }
   },
   "passwordModal": {
     "description": "Establezca una contraseña para proteger los ajustes de configuración. Se puede seguir utilizando la pantalla principal sin necesidad de iniciar sesión.",

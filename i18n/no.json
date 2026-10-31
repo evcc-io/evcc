@@ -381,6 +381,7 @@
       "optional": "valgfritt"
     },
     "general": {
+      "add": "Legg til",
       "applyAndClose": "Søk og lukk",
       "authPerform": "Ta kontakt med {provider}",
       "authPerformHint": "Åpnes i en ny fane. Gå tilbake hit for å fortsette.",
@@ -392,6 +393,7 @@
       "confirmDisable": "Deaktivere denne enheten? Den blir ignorert etter neste omstart.",
       "confirmEnable": "Aktivere denne enheten igjen?",
       "confirmSave": "Du har ulagrede endringer. Lagre nå?",
+      "continue": "Fortsett",
       "copied": "Kopiert!",
       "copy": "Kopier",
       "customHelp": "Opprett en brukerdefinert enhet ved hjelp av evccs plugin-system.",
@@ -566,16 +568,24 @@
       "priorityLabel": "Prioritet",
       "save": "Lagre",
       "solarShareReset": "Fjern terskler",
+      "solarTitle": "Oppførsel ved solkraftoverskudd",
       "temperatureRangeHelp": "Visningsområde for temperaturlinjen. Påvirker ikke styringen.",
       "temperatureRangeTitle": "Temperaturområde",
+      "thresholdDisableDelayHelp": "Stopper når det ikke er nok overskudd i {delay}.",
       "thresholdDisableDelayLabel": "Deaktiver forsinkelse",
       "thresholdDisableHelpInvalid": "Bruk en positiv verdi.",
       "thresholdDisableHelpPositive": "Stopp når mer enn {power} brukes fra strømnettet i {delay}.",
       "thresholdDisableLabel": "Deaktiver nettstrøm",
+      "thresholdEnableDelayHelp": "Starter når det er nok overskudd i {delay}.",
       "thresholdEnableDelayLabel": "Aktiver forsinkelse",
       "thresholdEnableHelpInvalid": "Bruk en negativ verdi.",
       "thresholdEnableHelpNegative": "Start når {surplus} overskudd er tilgjengelig for {delay}.",
       "thresholdEnableLabel": "Aktiver nettstrøm",
+      "thresholdsNote": {
+        "charging": "For å styre nettbruken ved lading med solkraft, bruk glidebryteren {slider} i innstillingene for ladepunktet på siden {page}. Angi verdier her kun i spesielle tilfeller.",
+        "heating": "For å styre nettbruken ved oppvarming med solkraft, bruk glidebryteren {slider} i innstillingene for varmeren på siden {page}. Angi verdier her kun i spesielle tilfeller."
+      },
+      "thresholdsSliderDisabled": "Glidebryteren {slider} er for øyeblikket deaktivert fordi verdier er angitt her.",
       "titleAdd": {
         "charging": "Legg til ladepunkt",
         "heating": "Legg til varmeenhet",
@@ -705,10 +715,18 @@
         "grid": "Legg til nettmåler",
         "pv": "Legg til solenergimåler"
       },
+      "reuseApply": "Bruk innstillingene.",
+      "reuseHint": "{device} kan også brukes som «{target}».",
       "save": "Lagre",
       "specific": "Spesifikke integrasjoner",
       "template": "Produsent",
       "titleChoice": "Hva vil du legge til?",
+      "titleExample": {
+        "aux": "Smart varmtvannsbereder osv.",
+        "battery": "Kjeller, garasje, kraftstasjon osv.",
+        "consumer": "Oppvaskmaskin, vaskemaskin, bassengpumpe osv.",
+        "pv": "Sørvendt tak, carport osv."
+      },
       "titleLabel": "Tittel",
       "usage": {
         "aux": "Selvregulerende forbruker",
@@ -965,6 +983,15 @@
         "example": "Ladeprisen din var {price}. Du sparte {amount}.",
         "label": "Valuta"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V uten nøytralleder (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V med nøytralleder (3P4W)",
+        "description": {
+          "3p3w": "Nett uten nøytralleder. Vanlig i Norge og deler av Belgia.",
+          "3p4w": "Vanligste nett med nøytralleder."
+        },
+        "label": "Nettilkobling"
+      },
       "siteTitle": {
         "description": "Vises på hovedskjermen og i nettleserfanen.",
         "label": "Tittel"
@@ -978,6 +1005,18 @@
       "descriptionToken": "Sponsorer finner sin token på {url}. For å komme i gang tilbyr vi en {trialToken}.",
       "enterYourToken": "Skriv inn tokenet ditt",
       "error": "Sponsortokenet er ikke gyldig.",
+      "inline": {
+        "applied": "Token tatt i bruk. Takk for at du støtter prosjektet!",
+        "apply": "Bruk",
+        "becomeSponsor": "bli sponsor",
+        "device": "Denne enheten er kun tilgjengelig for sponsorer.",
+        "feature": "Denne funksjonen er kun tilgjengelig for sponsorer.",
+        "learn": "Les mer og {becomeSponsor}.",
+        "placeholder": "Lim inn token",
+        "title": "Sponsortoken kreves",
+        "trial": "Kom raskt i gang.",
+        "trialLink": "Få et prøvetoken"
+      },
       "invalid": "ugyldig",
       "labelToken": "Sponsortoken",
       "title": "Sponsing",
@@ -1072,7 +1111,8 @@
       "solar": {
         "description": "Prognose for solproduksjon fra solcelleanlegget ditt. Vises i grensesnittet og vil i fremtiden brukes i optimeringsalgoritmer.",
         "titleAdd": "Legg til solprognose",
-        "titleEdit": "Rediger solprognose"
+        "titleEdit": "Rediger solprognose",
+        "titleExample": "Sørvendt tak, carport osv."
       },
       "temperature": {
         "description": "Prognose for utetemperatur på din lokasjon. Vises i grensesnittet og brukes til å forutsi varmebehov.",
@@ -1245,7 +1285,8 @@
       "noCo2": "Ingen CO₂-data.",
       "noPrice": "Ingen prisdata.",
       "savings": "Besparelser",
-      "savingsTooltip": "Sammenlignet med å kjøpe de forbrukte {energy} fra nettet."
+      "savingsTooltip": "Sammenlignet med å kjøpe de forbrukte {energy} fra nettet.",
+      "versus": "{value} mot {reference}"
     },
     "title": "Energi"
   },
@@ -1695,6 +1736,11 @@
       "login": "logg inn",
       "logout": "logg ut"
     },
+    "setup": {
+      "description": "Legg til enhetene dine for å se energiflyten og begynne å lade med solkraft.",
+      "start": "Start oppsett",
+      "title": "Velkommen!"
+    },
     "startConfiguration": "La oss starte konfigurasjonen",
     "targetCharge": {
       "activate": "Aktiver",
@@ -1820,6 +1866,76 @@
     "restartNeeded": "Nødvendig for å bruke endringer.",
     "restarting": "Serveren er tilbake om et øyeblikk.",
     "starting": "Starter server..."
+  },
+  "onboarding": {
+    "another": "Legg til en til",
+    "back": "Tilbake",
+    "battery": {
+      "add": "Legg til hjemmebatteri",
+      "description": "Legg til batteriet slik at ladingen tar hensyn til det, og du kan se hva det gjør.",
+      "none": "Ingen hjemmebatteri",
+      "title": "Har du et hjemmebatteri?"
+    },
+    "checklist": {
+      "dismiss": "Lukk",
+      "legacyTariffs": "Eldre tariffkonfigurasjon er i bruk.",
+      "progress": "{done} av {total} fullført",
+      "title": "Fullfør oppsettet"
+    },
+    "control": {
+      "description": "Start med den første. Flere kan legges til senere på konfigurasjonssiden.",
+      "none": "Ingenting ennå",
+      "title": "Hva vil du styre?"
+    },
+    "done": {
+      "close": "Gå til konfigurasjon",
+      "description": "En omstart tar konfigurasjonen i bruk. Utforsk deretter funksjonene. Kjøretøy, tariffer og mer kan legges til når som helst.",
+      "restart": "Omstart",
+      "title": "Du er klar"
+    },
+    "grid": {
+      "add": "Legg til nettmåler",
+      "confirm": "Nettmåleren er grunnlaget for overskuddslading og energistatistikk. Det anbefales å legge til en.",
+      "confirmNone": "Fortsett uten",
+      "description": "Måler nettimport og nett-eksport i tilkoblingspunktet. Gjør overskuddslading presis.",
+      "none": "Ingen nettmåler",
+      "title": "Har du en nettmåler?"
+    },
+    "item": {
+      "battery": "Hjemmebatteri",
+      "co2": "CO₂-prognose",
+      "consumer": "Forbruker",
+      "grid": "Nettmåler",
+      "gridExport": "Nett-eksporttariff",
+      "gridImport": "Nett-importtariff",
+      "heater": "Varmer",
+      "loadpoint": "Ladepunkt",
+      "pv": "Solsystem",
+      "solar": "Solprognose"
+    },
+    "password": {
+      "description": "Beskytter konfigurasjonsinnstillingene mot uautoriserte endringer. Husk det, det finnes ingen enkel måte å tilbakestille det på.",
+      "disabled": "Autentisering er deaktivert ({flag}). Alle med nettverkstilgang kan endre konfigurasjonen, lese lagrede legitimasjoner og kjøre skript. Sikre tilgangen på andre måter.",
+      "title": "Angi administratorpassord"
+    },
+    "pv": {
+      "add": "Legg til solsystem",
+      "description": "Måler solproduksjon. Nødvendig for solandel og overskuddslading.",
+      "none": "Ingen solsystem",
+      "title": "Har du et solsystem?"
+    },
+    "site": {
+      "currencyHint": "f.eks. {price}, {amount}",
+      "defaultTitle": "Hjem",
+      "description": "Noen grunnleggende opplysninger om hjemmet ditt. Du kan endre dem når som helst.",
+      "title": "Din installasjon"
+    },
+    "skip": "Hopp over",
+    "step": "Trinn {step} av {total}",
+    "welcome": {
+      "description": "Sett opp de viktigste delene av hjeminstallasjonen din for å komme i gang med smart lading.",
+      "start": "Kom i gang"
+    }
   },
   "passwordModal": {
     "description": "Angi et passord for å beskytte konfigurasjonsinnstillingene. Det er fortsatt mulig å bruke hovedskjermen uten å logge inn.",
