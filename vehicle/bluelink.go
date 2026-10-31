@@ -154,7 +154,7 @@ func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
-		VIN            string
+		VIN, PIN       string
 		Language       string
 		Region         string
 		Expiry         time.Duration
@@ -169,7 +169,7 @@ func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink
 		return nil, err
 	}
 
-	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
+	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN, cc.PIN)
 	identity := bluelink.NewIdentity(log, settings)
 
 	if err := identity.Login(cc.User, cc.Password, cc.Language, brand); err != nil {
@@ -190,7 +190,7 @@ func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink
 
 	v := &Bluelink{
 		embed:    &cc.embed,
-		Provider: bluelink.NewProvider(api, vehicle, cc.Cache),
+		Provider: bluelink.NewProvider(api, identity, vehicle, cc.PIN, cc.Cache),
 	}
 
 	// Try to fetch battery capacity from vehicle if the user didn't provide one in the configuration

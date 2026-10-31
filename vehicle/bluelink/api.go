@@ -1,6 +1,7 @@
 package bluelink
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -103,4 +104,75 @@ func (v *API) Refresh(vehicle Vehicle) error {
 		err = fmt.Errorf("unexpected response: %s", res.RetCode)
 	}
 	return err
+}
+
+type chargeControlResponse struct {
+	RetCode string
+	MsgID   string `json:"msgId"`
+}
+
+func spaV2URI(baseURI string) string {
+	return strings.Replace(baseURI, "/api/v1/spa", "/api/v2/spa", 1)
+}
+
+func chargeControlURI(baseURI, vehicleID string, ccs2 bool) string {
+	if ccs2 {
+		return fmt.Sprintf("%s/vehicles/%s/ccs2/control/charge", spaV2URI(baseURI), vehicleID)
+	}
+	return fmt.Sprintf("%s/vehicles/%s/control/charge", baseURI, vehicleID)
+}
+
+// ChargeEnable starts or stops charging via CCS2 or the older Bluelink charge control API.
+func (v *API) ChargeEnable(identity *Identity, vehicle Vehicle, pin string, enable bool) error {
+	if vehicle.CcuCCS2ProtocolSupport != 0 {
+		if err := v.postChargeControl(identity, vehicle, pin, enable, true); err == nil {
+			return nil
+		} else if pin != "" {
+			if err2 := v.postChargeControl(identity, vehicle, pin, enable, false); err2 == nil {
+				return nil
+			}
+			return err
+		}
+	}
+
+	return v.postChargeControl(identity, vehicle, pin, enable, false)
+}
+
+func (v *API) postChargeControl(identity *Identity, vehicle Vehicle, pin string, enable, ccs2 bool) error {
+	ctx := context.Background()
+	if ccs2 && pin != "" {
+		token, err := identity.ControlAuthorization(pin)
+		if err != nil {
+			return err
+		}
+		ctx = WithControlToken(ctx, token)
+	}
+
+	var payload map[string]string
+	if ccs2 {
+		cmd := map[bool]string{true: "start", false: "stop"}
+		payload = map[string]string{"command": cmd[enable]}
+	} else {
+		action := map[bool]string{true: "start", false: "stop"}
+		payload = map[string]string{"action": action[enable]}
+		if id := identity.DeviceID(); id != "" {
+			payload["deviceId"] = id
+		}
+	}
+
+	req, err := request.New(http.MethodPost, chargeControlURI(v.baseURI, vehicle.VehicleID, ccs2), request.MarshalJSON(payload), request.JSONEncoding)
+	if err != nil {
+		return err
+	}
+	req = req.WithContext(ctx)
+
+	var res chargeControlResponse
+	if err := v.DoJSON(req, &res); err != nil {
+		return err
+	}
+	if res.RetCode != "" && res.RetCode != resOK {
+		return fmt.Errorf("unexpected response: %s", res.RetCode)
+	}
+
+	return nil
 }

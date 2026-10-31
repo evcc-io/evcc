@@ -1,6 +1,7 @@
 package bluelink
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"uuid"
 
@@ -18,6 +20,15 @@ import (
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
+
+type ctxKey int
+
+const controlTokenContextKey ctxKey = iota
+
+// WithControlToken uses a PIN-verified control token for CCS2 remote commands.
+func WithControlToken(ctx context.Context, token string) context.Context {
+	return context.WithValue(ctx, controlTokenContextKey, token)
+}
 
 const (
 	LanguageURL = "/api/v1/user/language"
@@ -60,6 +71,15 @@ type Identity struct {
 	language string
 	bundle   cciBundle
 	oauth2.TokenSource
+
+	mu                 sync.Mutex
+	controlToken       string
+	controlTokenExpiry time.Time
+}
+
+// DeviceID returns the registered Bluelink device id.
+func (v *Identity) DeviceID() string {
+	return v.deviceID
 }
 
 // NewIdentity creates BlueLink Identity
@@ -218,18 +238,72 @@ func (v *Identity) Request(req *http.Request) error {
 		return err
 	}
 
-	for k, v := range map[string]string{
-		"Authorization":       "Bearer " + token.AccessToken,
+	auth := "Bearer " + token.AccessToken
+	if ctrl, ok := req.Context().Value(controlTokenContextKey).(string); ok && ctrl != "" {
+		auth = ctrl
+		req.Header.Set("AuthorizationCCSP", ctrl)
+	}
+
+	for k, val := range map[string]string{
+		"Authorization":       auth,
 		"ccsp-device-id":      v.deviceID,
 		"ccsp-application-id": v.config.CCSPApplicationID,
 		"offset":              "1",
 		"User-Agent":          "okhttp/3.10.0",
 		"Stamp":               stamp,
 	} {
-		req.Header.Set(k, v)
+		req.Header.Set(k, val)
 	}
 
 	return nil
+}
+
+type pinResponse struct {
+	ControlToken string `json:"controlToken"`
+	ExpiresTime  int    `json:"expiresTime"`
+}
+
+// ControlAuthorization verifies the account PIN and returns a Bearer control token.
+func (v *Identity) ControlAuthorization(pin string) (string, error) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	if v.controlToken != "" && time.Now().Before(v.controlTokenExpiry) {
+		return v.controlToken, nil
+	}
+
+	if pin == "" {
+		return "", api.ErrMissingCredentials
+	}
+
+	uri := strings.TrimSuffix(v.config.URI, "/") + "/api/v1/user/pin?token="
+	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(map[string]string{
+		"deviceId": v.deviceID,
+		"pin":      pin,
+	}), request.JSONEncoding)
+	if err != nil {
+		return "", err
+	}
+	if err := v.Request(req); err != nil {
+		return "", err
+	}
+
+	var res pinResponse
+	if err := v.DoJSON(req, &res); err != nil {
+		return "", err
+	}
+	if res.ControlToken == "" {
+		return "", errors.New("PIN verification failed")
+	}
+
+	expiry := res.ExpiresTime
+	if expiry <= 0 {
+		expiry = 600
+	}
+
+	v.controlToken = "Bearer " + res.ControlToken
+	v.controlTokenExpiry = time.Now().Add(time.Duration(expiry)*time.Second - 30*time.Second)
+	return v.controlToken, nil
 }
 
 // stamp creates a stamp locally according to https://github.com/Hyundai-Kia-Connect/hyundai_kia_connect_api/pull/371
