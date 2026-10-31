@@ -745,6 +745,10 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 		// without load management scaling up cannot overload anything- no delay
 		{desc: "no circuit, charging at 1p", activePhases: 1, phasesConfigured: 0, status: api.StatusC, chargePower: 3680, expectedPhases: 3, noCircuit: true, phaseTimerRunning: true},
 
+		// unknown phases after restart must not prevent switching
+		{desc: "unknown phases, high limit", phasesConfigured: 0, activePhases: 0, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 3},
+		{desc: "unknown phases, low limit", phasesConfigured: 0, activePhases: 0, status: api.StatusB, chargePower: 0, availableCircuitPower: 3680, expectedPhases: 1},
+
 		{desc: "fixed 1p, 1p active", activePhases: 1, phasesConfigured: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 1},
 		{desc: "fixed 1p, 3p active", activePhases: 3, phasesConfigured: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 1},
 
