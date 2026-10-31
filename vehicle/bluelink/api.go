@@ -30,12 +30,59 @@ const (
 // ErrAuthFail indicates authorization failure
 var ErrAuthFail = errors.New("authorization failed")
 
+// serialCharge sends at most one charge command at a time and replaces queued
+// commands with the latest requested start/stop so an older request cannot apply last.
+type serialCharge struct {
+	mu      sync.Mutex
+	cond    *sync.Cond
+	busy    bool
+	pending *bool
+	err     error
+}
+
+func newSerialCharge() *serialCharge {
+	s := &serialCharge{}
+	s.cond = sync.NewCond(&s.mu)
+	return s
+}
+
+func (s *serialCharge) Do(enable bool, fn func(bool) error) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	e := enable
+	s.pending = &e
+
+	if s.busy {
+		for s.busy {
+			s.cond.Wait()
+		}
+		return s.err
+	}
+
+	for s.pending != nil {
+		want := *s.pending
+		s.pending = nil
+		s.busy = true
+		err := func() error {
+			s.mu.Unlock()
+			defer s.mu.Lock()
+			return fn(want)
+		}()
+		s.err = err
+	}
+
+	s.busy = false
+	s.cond.Broadcast()
+	return s.err
+}
+
 // API implements the Kia/Hyundai bluelink api.
 type API struct {
 	*request.Helper
 	baseURI  string
 	mu       sync.Mutex
-	chargeMu map[string]*sync.Mutex
+	chargeMu map[string]*serialCharge
 }
 
 // New creates a new BlueLink API
@@ -43,7 +90,7 @@ func NewAPI(log *util.Logger, baseURI string, decorator func(*http.Request) erro
 	v := &API{
 		Helper:   request.NewHelper(log),
 		baseURI:  strings.TrimSuffix(baseURI, "/api/v1/spa") + "/api/v1/spa",
-		chargeMu: make(map[string]*sync.Mutex),
+		chargeMu: make(map[string]*serialCharge),
 	}
 
 	// api is unbelievably slow when retrieving status
@@ -128,18 +175,18 @@ func chargeControlURI(baseURI, vehicleID string, ccs2 bool) string {
 	return fmt.Sprintf("%s/vehicles/%s/control/charge", baseURI, vehicleID)
 }
 
-func (v *API) lockVehicle(id string) *sync.Mutex {
+func (v *API) serial(id string) *serialCharge {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 	if v.chargeMu == nil {
-		v.chargeMu = make(map[string]*sync.Mutex)
+		v.chargeMu = make(map[string]*serialCharge)
 	}
-	m, ok := v.chargeMu[id]
+	s, ok := v.chargeMu[id]
 	if !ok {
-		m = new(sync.Mutex)
-		v.chargeMu[id] = m
+		s = newSerialCharge()
+		v.chargeMu[id] = s
 	}
-	return m
+	return s
 }
 
 func decodeChargeControl(body []byte) error {
@@ -159,10 +206,12 @@ func decodeChargeControl(body []byte) error {
 
 // ChargeEnable starts or stops charging via CCS2 or the older Bluelink charge control API.
 func (v *API) ChargeEnable(identity *Identity, vehicle Vehicle, pin string, enable bool) error {
-	mu := v.lockVehicle(vehicle.VehicleID)
-	mu.Lock()
-	defer mu.Unlock()
+	return v.serial(vehicle.VehicleID).Do(enable, func(enable bool) error {
+		return v.sendChargeEnable(identity, vehicle, pin, enable)
+	})
+}
 
+func (v *API) sendChargeEnable(identity *Identity, vehicle Vehicle, pin string, enable bool) error {
 	if vehicle.CcuCCS2ProtocolSupport != 0 {
 		err := v.postChargeControl(identity, vehicle, pin, enable, true)
 		if err == nil {
