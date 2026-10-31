@@ -24,11 +24,29 @@ func (conn *Connector) timestampValid(t time.Time) bool {
 	return !t.Before(conn.status.Timestamp.Time)
 }
 
+// statusClass maps a status to the coarse state evcc reacts to: not plugged, plugged, charging or error.
+// Changes within a class, e.g. SuspendedEV to SuspendedEVSE, are not relevant for a loadpoint update.
+func statusClass(s *core.StatusNotificationRequest) string {
+	switch {
+	case s == nil:
+		return ""
+	case s.ErrorCode != "" && s.ErrorCode != core.NoError:
+		return "error"
+	case s.Status == core.ChargePointStatusCharging:
+		return "charging"
+	case s.Status == core.ChargePointStatusAvailable, s.Status == core.ChargePointStatusUnavailable:
+		return "idle"
+	default:
+		return "plugged"
+	}
+}
+
 func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
 	var applied bool
+	prev := conn.status
 	if conn.status == nil {
 		conn.status = request
 		close(conn.statusC) // signal initial status received
@@ -58,6 +76,16 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		}
 	}
 
+	// the last periodic sample still shows the charging power until the next meter values arrive
+	if applied && prev != nil && prev.Status == core.ChargePointStatusCharging && request.Status != core.ChargePointStatusCharging {
+		conn.zeroPowerMeasurements()
+	}
+
+	var notify func()
+	if applied && statusClass(prev) != statusClass(request) {
+		notify = conn.onStatus
+	}
+
 	if conn.isWaitingForAuth() {
 		if conn.remoteIdTag != "" {
 			// dispatch asynchronously: RemoteStartTransactionRequest issues a
@@ -72,6 +100,12 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		} else {
 			conn.log.DEBUG.Printf("waiting for local authentication")
 		}
+	}
+
+	if notify != nil {
+		conn.mu.Unlock()
+		notify()
+		conn.mu.Lock()
 	}
 
 	return new(core.StatusNotificationConfirmation), nil
@@ -188,6 +222,12 @@ func (conn *Connector) assumeMeterStopped() {
 	conn.meterUpdated = conn.clock.Now()
 	conn.meterTimestamp = conn.meterUpdated
 
+	conn.zeroPowerMeasurements()
+}
+
+// zeroPowerMeasurements replaces the last reported power and currents with zero.
+// Must be called with conn.mu held.
+func (conn *Connector) zeroPowerMeasurements() {
 	if _, ok := conn.measurements[types.MeasurandPowerActiveImport]; ok {
 		conn.measurements[types.MeasurandPowerActiveImport] = types.SampledValue{
 			Value: "0",
