@@ -7,7 +7,9 @@ import (
 	"github.com/evcc-io/evcc/util/test"
 )
 
-var acceptable = []string{}
+var acceptable = []string{
+	"connect: connection refused", // sockets
+}
 
 func TestTemplates(t *testing.T) {
 	templates.TestClass(t, templates.Curtailer, func(t *testing.T, values map[string]any) {
