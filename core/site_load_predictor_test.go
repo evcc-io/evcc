@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/metrics"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/now"
@@ -143,4 +145,117 @@ func TestTileAndTrim(t *testing.T) {
 	firstSlot := int(time.Now().Truncate(tariff.SlotDuration).Sub(now.BeginningOfDay()) / tariff.SlotDuration)
 	assert.Equal(t, float64(firstSlot), res[0], "starts at the current slot")
 	assert.Equal(t, res[0], res[96], "wraps after a full day")
+}
+
+func TestExcludeDays(t *testing.T) {
+	bod := now.BeginningOfDay()
+	key := func(i int) string { return bod.AddDate(0, 0, -i).Format(time.DateOnly) }
+
+	normal := func() map[string]metrics.DayClass {
+		classes := make(map[string]metrics.DayClass)
+		for i := 1; i <= homeClassifyDays; i++ {
+			classes[key(i)] = metrics.DayNormal
+		}
+		return classes
+	}
+
+	t.Run("no absent days", func(t *testing.T) {
+		assert.Empty(t, excludeDays(normal(), bod).exclude)
+	})
+
+	t.Run("absent and outlier days within the profile window", func(t *testing.T) {
+		classes := normal()
+
+		// 14 days vacation ending 3 days ago, one outlier, one incomplete day
+		for i := 4; i < 18; i++ {
+			classes[key(i)] = metrics.DayAbsent
+		}
+		classes[key(20)] = metrics.DayOutlier
+		classes[key(21)] = metrics.DayIncomplete
+
+		// outside the profile window
+		classes[key(homeProfileDays+5)] = metrics.DayAbsent
+
+		ex := excludeDays(classes, bod)
+		assert.Len(t, ex.exclude, 15)
+		assert.NotContains(t, ex.exclude, key(21), "incomplete days are kept")
+		assert.NotContains(t, ex.exclude, key(homeProfileDays+5), "no days outside the profile window")
+	})
+
+	t.Run("days without data do not count towards the minimum", func(t *testing.T) {
+		classes := map[string]metrics.DayClass{key(1): metrics.DayAbsent}
+		for i := 2; i < 2+homeProfileMinDays-1; i++ {
+			classes[key(i)] = metrics.DayNormal
+		}
+
+		assert.Empty(t, excludeDays(classes, bod).exclude)
+	})
+
+	t.Run("too few remaining days", func(t *testing.T) {
+		classes := normal()
+		for i := homeProfileMinDays; i <= homeProfileDays; i++ {
+			classes[key(i)] = metrics.DayAbsent
+		}
+
+		assert.Empty(t, excludeDays(classes, bod).exclude)
+	})
+}
+
+func TestHomeProfileExcludesVacation(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, metrics.SetupSchema())
+
+	col, err := metrics.NewCollector(metrics.Home, metrics.Home, metrics.Home)
+	require.NoError(t, err)
+
+	var meter int
+	require.NoError(t, db.Instance.Raw(`SELECT id FROM entities WHERE "group" = ? AND name = ?`, metrics.Home, metrics.Home).Scan(&meter).Error)
+
+	bod := now.BeginningOfDay()
+
+	// 8 weeks: 3 weeks vacation ending yesterday, normal days before with an evening peak
+	for day := -homeClassifyDays; day < 0; day++ {
+		for slot := range 96 {
+			energy := 0.1 // kWh per slot
+			switch {
+			case day >= -21:
+				energy = 0.09
+			case slot/4 == 18:
+				energy = 0.5
+			}
+
+			ts := bod.AddDate(0, 0, day).Add(time.Duration(slot) * tariff.SlotDuration)
+			require.NoError(t, db.Instance.Exec(`INSERT INTO meters (meter, ts, energy, return_energy) VALUES (?, ?, ?, 0)`, meter, ts.Unix(), energy).Error)
+		}
+	}
+
+	site := &Site{
+		log:        util.NewLogger("foo"),
+		collectors: map[string]*metrics.Collector{metrics.Home: col},
+	}
+
+	res, err := site.homeProfile(96)
+	require.NoError(t, err)
+
+	// profile only contains the 7 normal days of the 4 week window
+	firstSlot := int(time.Now().Truncate(tariff.SlotDuration).Sub(bod) / tariff.SlotDuration)
+	for i, v := range res {
+		expected := 100.0 // Wh
+		if (firstSlot+i)%96/4 == 18 {
+			expected = 500
+		}
+		require.InDelta(t, expected, v, 1e-6, "slot %d", i)
+	}
+
+	// right after midnight the previous day may still be incomplete, so nothing is cached
+	site.homeExclusion = nil
+	ex, err := site.homeDayExclusion(col, bod.Add(tariff.SlotDuration))
+	require.NoError(t, err)
+	assert.Len(t, ex.exclude, 21)
+	assert.Nil(t, site.homeExclusion)
+
+	_, err = site.homeDayExclusion(col, bod.Add(time.Hour))
+	require.NoError(t, err)
+	require.NotNil(t, site.homeExclusion)
+	assert.Len(t, site.homeExclusion.exclude, 21)
 }
