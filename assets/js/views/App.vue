@@ -217,14 +217,14 @@ export default defineComponent({
 			loc.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 
 			this.ws = new WebSocket(loc.href);
+			let receivedData = false;
 			this.ws.onerror = () => {
 				console.log({ message: "Websocket error. Trying to reconnect." });
 				this.ws?.close();
 			};
+			// proxies like Home Assistant ingress accept the socket before reaching evcc, wait for data
 			this.ws.onopen = () => {
 				console.log("websocket connected");
-				this.reconnectAttempts = 0;
-				window.app.setOnline();
 			};
 			this.ws.onclose = () => {
 				window.app.setOffline();
@@ -238,6 +238,11 @@ export default defineComponent({
 					}
 					store.update(msg);
 					lastDataReceived = new Date();
+					if (!receivedData) {
+						receivedData = true;
+						this.reconnectAttempts = 0;
+						window.app.setOnline();
+					}
 				} catch (error) {
 					const e = error as Error;
 					window.app.raise({
