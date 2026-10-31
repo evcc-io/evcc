@@ -160,7 +160,7 @@ func (v *API) Refresh(vehicle Vehicle) error {
 }
 
 type chargeControlResponse struct {
-	RetCode string
+	RetCode string `json:"retCode"`
 	MsgID   string `json:"msgId"`
 }
 
@@ -197,6 +197,9 @@ func decodeChargeControl(body []byte) error {
 	var res chargeControlResponse
 	if err := json.Unmarshal(body, &res); err != nil {
 		return err
+	}
+	if res.RetCode == "" {
+		return fmt.Errorf("missing retCode")
 	}
 	if res.RetCode != resOK {
 		return fmt.Errorf("unexpected response: %s", res.RetCode)

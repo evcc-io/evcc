@@ -28,11 +28,20 @@ func TestDecodeChargeControl(t *testing.T) {
 	if err := decodeChargeControl(nil); err != nil {
 		t.Fatalf("empty body: %v", err)
 	}
+	if err := decodeChargeControl([]byte("  \n")); err != nil {
+		t.Fatalf("whitespace body: %v", err)
+	}
 	if err := decodeChargeControl([]byte(`{"retCode":"S"}`)); err != nil {
 		t.Fatalf("success: %v", err)
 	}
 	if err := decodeChargeControl([]byte(`{}`)); err == nil {
 		t.Fatal("expected error for missing retCode")
+	}
+	if err := decodeChargeControl([]byte(`{"msgId":"abc"}`)); err == nil {
+		t.Fatal("expected error for body without retCode")
+	}
+	if err := decodeChargeControl([]byte(`null`)); err == nil {
+		t.Fatal("expected error for null body")
 	}
 	if err := decodeChargeControl([]byte(`{"retCode":"F"}`)); err == nil {
 		t.Fatal("expected error for failed retCode")
