@@ -310,6 +310,51 @@ func loadpointPlan(res optimizer.BatteryResult, prices []float32, schedule optim
 	return plan
 }
 
+// limitReached returns the end of the slot in which the result reaches the battery's maximum
+// soc- a partial slot is charged at reduced power over the whole slot. Zero if already there
+// or not within the horizon.
+func limitReached(req optimizer.BatteryConfig, res optimizer.BatteryResult, schedule optimizerSchedule, now time.Time) time.Time {
+	limit := req.SMax - 1 // Wh, solver precision
+
+	for i := range schedule.endsAfter(now) {
+		if i >= len(res.StateOfCharge) {
+			break
+		}
+
+		if res.StateOfCharge[i] < limit {
+			continue
+		}
+
+		prev := req.SInitial
+		if i > 0 {
+			prev = res.StateOfCharge[i-1]
+		}
+		if prev >= limit {
+			return time.Time{}
+		}
+
+		return schedule.end(i)
+	}
+
+	return time.Time{}
+}
+
+// publishRemainingDurations publishes the time until each optimizer controlled loadpoint
+// reaches its limit, nil where the optimizer doesn't get there within the horizon
+func (site *Site) publishRemainingDurations(remaining map[int]time.Duration) {
+	for id, lp := range site.loadpoints {
+		if lp == nil {
+			continue
+		}
+
+		var val any
+		if d, ok := remaining[id]; ok && lp.optimizerControlled() {
+			val = d
+		}
+		site.publishLoadpoint(id, keys.OptimizerRemainingDuration, val)
+	}
+}
+
 // setSuggestions replaces the suggestions applied on each publish
 func (site *Site) setSuggestions(suggestions map[string]types.Suggestion) {
 	site.Lock()
@@ -371,6 +416,7 @@ func (site *Site) clearSuggestions() {
 
 	site.publishBattery()
 	site.publishSuggestions()
+	site.publishRemainingDurations(nil)
 
 	site.Lock()
 	site.suggestionActions = nil
@@ -807,9 +853,13 @@ type optimizerSolve struct {
 // setLastOptimizerSolve remembers a solve's inputs for reapplySuggestions
 func (site *Site) setLastOptimizerSolve(solve *optimizerSolve) {
 	site.Lock()
-	defer site.Unlock()
-
 	site.lastOptimizerSolve = solve
+	site.Unlock()
+
+	// a dropped solve no longer reaches the vehicle limit
+	if solve == nil {
+		site.publishRemainingDurations(nil)
+	}
 }
 
 // reapplySuggestions re-derives the last solve's suggestions for the slot covering now
@@ -888,10 +938,17 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 
 	var batteries []batteryResult
 	suggestions := make(map[string]types.Suggestion, len(req.Batteries))
+	remaining := make(map[int]time.Duration)
 
 	for i, batReq := range req.Batteries {
 		batRes := res.Batteries[i]
 		detail := details.BatteryDetails[i]
+
+		if detail.loadpoint != nil {
+			if finish := limitReached(batReq, batRes, schedule, now); !finish.IsZero() {
+				remaining[*detail.loadpoint] = finish.Sub(now).Round(time.Second)
+			}
+		}
 
 		batteries = append(batteries, batteryResult{
 			batteryDetail: detail,
@@ -943,6 +1000,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 
 	// publish for all loadpoints so suggestions of dropped-out loadpoints clear
 	site.publishSuggestions()
+	site.publishRemainingDurations(remaining)
 
 	// notify on actionable suggestion changes (advisory only, see #31903)
 	for _, ev := range site.diffSuggestions(site.pendingSuggestions(details.BatteryDetails)) {
