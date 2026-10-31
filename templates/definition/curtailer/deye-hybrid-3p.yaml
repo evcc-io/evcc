@@ -20,7 +20,6 @@ params:
     id: 1
   - name: maxacpower
     required: true
-    usages: ["curtailer"] # default usages ["pv"] would hide the param in the curtailer UI
   - name: batterytype
     choice: ["lv", "hv"]
     required: true
