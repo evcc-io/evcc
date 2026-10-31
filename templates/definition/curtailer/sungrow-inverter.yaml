@@ -9,6 +9,10 @@ requirements:
       Die Abregelung begrenzt die Wechselrichterleistung auf den gewünschten Prozentsatz der Nennleistung.
     en: |
       Curtailment limits inverter power to the desired percentage of its nominal power.
+discovery:
+  mdns: ["_http._tcp:WiNet-WebServer"]
+  hostname: ["sungrow*"]
+  mac: ["AC199F"]
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]
