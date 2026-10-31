@@ -16,6 +16,7 @@ params:
     id: 247
   - name: maxacpower
     required: true
+    usages: ["curtailer"] # default usages ["pv"] would hide the param in the curtailer UI
 render: |
   type: custom
   # GoodWe only has a single, global feed-in limit for the whole system (registers 47509/47510),
