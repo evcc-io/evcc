@@ -3685,6 +3685,37 @@
           "disable"
         ]
       },
+      "PeriodStats": {
+        "description": "Energy stats of a loadpoint over a period, attributed per 15-minute slot like the energy page.",
+        "type": "object",
+        "properties": {
+          "energy": {
+            "description": "Energy used in Wh.",
+            "type": "number"
+          },
+          "autarky": {
+            "description": "Autarky in %, the share not drawn from the grid.",
+            "type": "number",
+            "nullable": true
+          },
+          "pricePerKWh": {
+            "description": "Average energy price per kWh in the configured currency.",
+            "type": "number",
+            "nullable": true
+          },
+          "price": {
+            "description": "Total cost in the configured currency.",
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "energy",
+          "autarky",
+          "pricePerKWh",
+          "price"
+        ]
+      },
       "LoadpointSuggestion": {
         "description": "Battery optimizer suggestion for a loadpoint.",
         "type": "object",
@@ -3776,7 +3807,7 @@
             "type": "number"
           },
           "chargeRemainingEnergy": {
-            "description": "Estimated remaining energy in kWh.",
+            "description": "Estimated remaining energy in Wh.",
             "type": "number"
           },
           "chargeTotalImport": {
@@ -3791,7 +3822,7 @@
             }
           },
           "chargedEnergy": {
-            "description": "Energy charged in the current charging session in kWh.",
+            "description": "Energy charged in the current charging session in Wh.",
             "type": "number"
           },
           "chargerFeatureAutodetectDisabled": {
@@ -4060,13 +4091,13 @@
             "description": "Remaining time until the pending charge start or stop action executes, in seconds.",
             "type": "number"
           },
-          "last24hEnergy": {
-            "description": "Energy used in the last 24 hours in kWh.",
-            "type": "number"
+          "last24h": {
+            "$ref": "#/components/schemas/PeriodStats",
+            "description": "Energy stats of the last 24 hours."
           },
-          "last7dEnergy": {
-            "description": "Energy used in the last 7 days in kWh.",
-            "type": "number"
+          "last7d": {
+            "$ref": "#/components/schemas/PeriodStats",
+            "description": "Energy stats of the last 7 days."
           },
           "sessionCo2PerKWh": {
             "description": "Average CO₂ emissions of the current charging session in g/kWh.",
@@ -4074,7 +4105,7 @@
             "nullable": true
           },
           "sessionEnergy": {
-            "description": "Energy charged in the current charging session in kWh.",
+            "description": "Energy charged in the current charging session in Wh.",
             "type": "number"
           },
           "sessionPrice": {
@@ -4139,7 +4170,7 @@
             "type": "string"
           },
           "todayEnergy": {
-            "description": "Energy used since midnight in kWh.",
+            "description": "Energy used since midnight in Wh.",
             "type": "number"
           },
           "vehicleClimaterActive": {

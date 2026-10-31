@@ -34,7 +34,26 @@ import LabelAndValue from "../Helper/LabelAndValue.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { getLoadpointSessionInfo, setLoadpointSessionInfo } from "@/uiLoadpoints";
-import type { CURRENCY, SelectOption, SessionInfoKey } from "@/types/evcc";
+import type {
+	CURRENCY,
+	PeriodStats,
+	SelectOption,
+	SessionInfoKey,
+	SessionInfoPeriod,
+	SessionInfoPeriodValue,
+} from "@/types/evcc";
+
+interface Option {
+	key: SessionInfoKey;
+	name: string; // dropdown entry
+	label: string; // card label, names the period outside the dropdown
+	value: string;
+	valueSm?: string;
+	group?: string;
+	available: boolean;
+}
+
+type OptionExtras = Partial<Pick<Option, "valueSm" | "available">>;
 
 export default defineComponent({
 	name: "LoadpointSessionInfo",
@@ -53,10 +72,11 @@ export default defineComponent({
 		chargeRemainingDurationInterpolated: { type: Number, default: 0 },
 		chargeDurationInterpolated: Number,
 		sessionEnergy: { type: Number, default: 0 },
-		last24hEnergy: Number,
-		last7dEnergy: Number,
+		last24h: Object as PropType<PeriodStats>,
+		last7d: Object as PropType<PeriodStats>,
 		tariffCo2: Number,
 		tariffGrid: Number,
+		chargerFeatureIntegratedDevice: Boolean,
 	},
 	data() {
 		return {
@@ -64,83 +84,65 @@ export default defineComponent({
 		};
 	},
 	computed: {
-		options(): Array<{
-			key: SessionInfoKey;
-			value: string;
-			valueSm?: string;
-			available?: boolean;
-		}> {
-			const result = [
-				{
-					key: "remaining" as const,
-					value: this.fmtDuration(this.chargeRemainingDurationInterpolated),
-					available: this.chargeRemainingDurationInterpolated > 0,
-				},
-				{
-					key: "finished" as const,
-					value: this.fmtHourMinute(this.finishTime),
-					available: this.chargeRemainingDurationInterpolated > 0,
-				},
-				{
-					key: "duration" as const,
-					value: this.fmtDuration(this.chargeDurationInterpolated),
-				},
-				{
-					key: "solar" as const,
-					value: this.solarFormatted,
-				},
-				{
-					key: "avgPrice" as const,
-					value: this.fmtAvgPrice(this.sessionPricePerKWh),
+		sessionOptions(): Option[] {
+			const group = this.$t("main.loadpoint.session");
+			const option = (
+				key: SessionInfoKey,
+				value: string,
+				{ valueSm, available = true }: OptionExtras = {}
+			): Option => {
+				const name = this.$t(`main.loadpoint.${key}`);
+				return { key, name, label: name, value, valueSm, group, available };
+			};
+			const remaining = this.chargeRemainingDurationInterpolated > 0;
+			const priced = this.tariffGrid !== undefined;
+			const co2 = this.tariffCo2 !== undefined;
+			return [
+				option("remaining", this.fmtDuration(this.chargeRemainingDurationInterpolated), {
+					available: remaining,
+				}),
+				option("finished", this.fmtHourMinute(this.finishTime), { available: remaining }),
+				option("duration", this.fmtDuration(this.chargeDurationInterpolated)),
+				option("solar", this.fmtPercentage(this.sessionSolarPercentage, 1)),
+				option("avgPrice", this.fmtAvgPrice(this.sessionPricePerKWh), {
 					valueSm: this.fmtAvgPriceShort(this.sessionPricePerKWh),
-					available: this.tariffGrid !== undefined,
-				},
-				{
-					key: "price" as const,
-					value: this.priceFormatted,
-					available: this.tariffGrid !== undefined,
-				},
-				{
-					key: "co2" as const,
-					value: this.fmtCo2Medium(this.sessionCo2PerKWh),
+					available: priced,
+				}),
+				option("price", this.fmtMoneyWithSymbol(this.sessionPrice, this.currency), {
+					available: priced,
+				}),
+				option("co2", this.fmtCo2Medium(this.sessionCo2PerKWh), {
 					valueSm: this.fmtCo2Short(this.sessionCo2PerKWh),
-					available: this.tariffCo2 !== undefined,
-				},
-				{
-					key: "emission" as const,
-					value: this.emissionFormatted,
-					available: this.tariffCo2 !== undefined,
-				},
-				{
-					key: "last24hEnergy" as const,
-					value: this.fmtWh(this.last24hEnergy ?? 0, POWER_UNIT.AUTO),
-					available: this.last24hEnergy !== undefined,
-				},
-				{
-					key: "last7dEnergy" as const,
-					value: this.fmtWh(this.last7dEnergy ?? 0, POWER_UNIT.AUTO),
-					available: this.last7dEnergy !== undefined,
-				},
+					available: co2,
+				}),
+				option("emission", this.fmtEmission(this.sessionCo2PerKWh, this.sessionEnergy), {
+					available: co2,
+				}),
 			];
-			// only show options that are available
-			return result.filter(({ available }) => available === undefined || available);
+		},
+		periodOptions(): Option[] {
+			return [
+				...this.optionsForPeriod("last24h", this.last24h),
+				...this.optionsForPeriod("last7d", this.last7d),
+			];
+		},
+		options(): Option[] {
+			const session = this.chargerFeatureIntegratedDevice ? [] : this.sessionOptions;
+			return [...session, ...this.periodOptions].filter((option) => option.available);
 		},
 		optionKeys(): SessionInfoKey[] {
 			return this.options.map((option) => option.key);
 		},
 		selectOptions(): SelectOption<SessionInfoKey>[] {
-			return this.optionKeys.map((key) => ({
-				name: this.$t(`main.loadpoint.${key}`),
-				value: key,
-			}));
+			return this.options.map(({ key, name, group }) => ({ name, value: key, group }));
 		},
-		selectedOption() {
+		selectedOption(): Option | undefined {
 			return (
 				this.options.find((option) => option.key === this.selectedKey) || this.options[0]
 			);
 		},
 		label() {
-			return this.$t(`main.loadpoint.${this.selectedOption?.key || ""}`);
+			return this.selectedOption?.label;
 		},
 		value() {
 			return this.selectedOption?.value;
@@ -159,25 +161,52 @@ export default defineComponent({
 			}
 			return now;
 		},
-		solarFormatted() {
-			return this.fmtPercentage(this.sessionSolarPercentage, 1);
-		},
-		emissionFormatted() {
-			const kWh = this.sessionEnergy / 1000;
-			return this.fmtGrams(this.sessionCo2PerKWh * kWh);
-		},
-		priceFormatted() {
-			return `${this.fmtMoney(this.sessionPrice, this.currency)} ${this.fmtCurrencySymbol(
-				this.currency
-			)}`;
-		},
 	},
 	methods: {
+		optionsForPeriod(prefix: SessionInfoPeriod, stats?: PeriodStats): Option[] {
+			const group = this.$t(`main.loadpoint.${prefix}Energy`);
+			const short = this.$t(`main.loadpoint.${prefix}Short`);
+			const option = (
+				suffix: SessionInfoPeriodValue,
+				labelKey: string,
+				value: string,
+				{ valueSm, available = true }: OptionExtras = {}
+			): Option => {
+				const name = this.$t(`main.loadpoint.${labelKey}`);
+				return {
+					key: `${prefix}${suffix}` as SessionInfoKey,
+					name,
+					label: `${name} (${short})`,
+					value,
+					valueSm,
+					group,
+					available,
+				};
+			};
+			// device cards say charged for vehicles and consumed for heaters
+			const energyKey = this.chargerFeatureIntegratedDevice ? "consumed" : "charged";
+			const { energy = 0, autarky, pricePerKWh, price } = stats ?? {};
+			const priced = this.tariffGrid !== undefined;
+			return [
+				option("Energy", energyKey, this.fmtWh(energy, POWER_UNIT.AUTO)),
+				option("Autarky", "autarky", this.fmtPercentage(autarky ?? 0, 1)),
+				option("AvgPrice", "avgPrice", this.fmtAvgPrice(pricePerKWh ?? 0), {
+					valueSm: this.fmtAvgPriceShort(pricePerKWh ?? 0),
+					available: priced,
+				}),
+				option("Price", "price", this.fmtMoneyWithSymbol(price ?? 0, this.currency), {
+					available: priced,
+				}),
+			];
+		},
 		fmtAvgPrice(value: number) {
 			return this.fmtPricePerKWh(value, this.currency, false);
 		},
 		fmtAvgPriceShort(value: number) {
 			return this.fmtPricePerKWh(value, this.currency, true);
+		},
+		fmtEmission(co2PerKWh: number, energyWh: number) {
+			return this.fmtGrams((co2PerKWh * energyWh) / 1000);
 		},
 		nextSessionInfo() {
 			const index = this.selectedKey ? this.optionKeys.indexOf(this.selectedKey) : -1;

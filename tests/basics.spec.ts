@@ -52,7 +52,7 @@ test.describe("session info", async () => {
     await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Solar");
     // by click on value
     await page.getByTestId("sessionInfoValue").first().click();
-    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Last 24h");
+    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Charged (24h)");
   });
   test("keep selection on reload", async ({ page }) => {
     await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Duration");
@@ -64,6 +64,18 @@ test.describe("session info", async () => {
     await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Solar");
     await page.reload();
     await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Solar");
+  });
+  test("period groups", async ({ page }) => {
+    // session, 24h and 7d groups; the collapsed select hides its groups
+    const select = page.getByTestId("sessionInfoSelect").first().getByRole("combobox");
+    await expect(select.getByRole("group", { includeHidden: true })).toHaveCount(3);
+    await expect(select.getByRole("option", { name: "Solar" })).toHaveCount(1);
+    await expect(select.getByRole("option", { name: "Charged" })).toHaveCount(2);
+
+    await select.selectOption("last7dEnergy");
+    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Charged (7d)");
+    await page.reload();
+    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Charged (7d)");
   });
 });
 

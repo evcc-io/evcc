@@ -21,7 +21,7 @@ func TestCollectorEnergyStats(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("stats", "stats", "", WithClock(clock))
+	col, err := NewCollector(Loadpoint, "stats", "", WithClock(clock))
 	require.NoError(t, err)
 
 	e := col.entity
@@ -33,24 +33,50 @@ func TestCollectorEnergyStats(t *testing.T) {
 	require.NoError(t, persist(e, slotStart.Add(-15*time.Minute), 2, 0, nil, false))              // last completed slot
 	require.NoError(t, persist(e, slotStart, 4, 0, nil, false))                                   // current slot, excluded
 
+	// sources and tariffs for three slots, the rest stays unattributed
+	pv, err := createEntity(PV, PV, "")
+	require.NoError(t, err)
+	grid, err := createEntity(Grid, Grid, "")
+	require.NoError(t, err)
+	feedin := 0.1
+	tariff := func(ts time.Time, price float64) {
+		require.NoError(t, PersistTariffs(ts, &price, &feedin, nil, nil))
+	}
+	require.NoError(t, persist(grid, slotStart.Add(-12*time.Hour), 3, 0, nil, false)) // grid, no tariff
+	require.NoError(t, persist(pv, midnight, 1, 0, nil, false))                       // solar at feed-in price
+	tariff(midnight, 0.3)
+	require.NoError(t, persist(grid, slotStart.Add(-15*time.Minute), 2, 0, nil, false)) // grid at grid price
+	tariff(slotStart.Add(-15*time.Minute), 0.4)
+
 	stats, err := col.EnergyStats()
 	require.NoError(t, err)
-	require.InDelta(t, 3, stats.Today, 1e-9)
-	require.InDelta(t, 13, stats.Last24h, 1e-9)
-	require.InDelta(t, 18, stats.Last7d, 1e-9)
+	require.InDelta(t, 3000, stats.Today, 1e-9)
+	require.InDelta(t, 13000, stats.Last24h.Energy, 1e-9)
+	require.InDelta(t, 18000, stats.Last7d.Energy, 1e-9)
+
+	// 1 kWh pv at 0.1, 2 kWh grid at 0.4, 3 kWh unpriced grid,
+	// the 7 kWh slot without sources stays unattributed
+	require.InDelta(t, 100.0/6, *stats.Last24h.Autarky, 1e-9)
+	require.InDelta(t, 0.9, *stats.Last24h.Price, 1e-9)
+	require.InDelta(t, 0.3, *stats.Last24h.PricePerKWh, 1e-9)
+	require.InDelta(t, 100.0/6, *stats.Last7d.Autarky, 1e-9)
 
 	// in-flight accumulator counts towards today only
 	col.accu.Energy = 0.5
 	stats, err = col.EnergyStats()
 	require.NoError(t, err)
-	require.InDelta(t, 3.5, stats.Today, 1e-9)
-	require.InDelta(t, 13, stats.Last24h, 1e-9)
+	require.InDelta(t, 3500, stats.Today, 1e-9)
+	require.InDelta(t, 13000, stats.Last24h.Energy, 1e-9)
 
 	// next slot: cache refreshes, windows shift by one slot
 	clock.Add(15 * time.Minute)
 	stats, err = col.EnergyStats()
 	require.NoError(t, err)
-	require.InDelta(t, 7.5, stats.Today, 1e-9)  // 1+2+4 + in-flight
-	require.InDelta(t, 10, stats.Last24h, 1e-9) // drops 7, gains 4
-	require.InDelta(t, 22, stats.Last7d, 1e-9)  // gains 4, 8d slot stays out
+	require.InDelta(t, 7500, stats.Today, 1e-9)           // 1+2+4 + in-flight
+	require.InDelta(t, 10000, stats.Last24h.Energy, 1e-9) // drops 7, gains 4
+	require.InDelta(t, 22000, stats.Last7d.Energy, 1e-9)  // gains 4, 8d slot stays out
+}
+
+func TestPeriodStatsEmpty(t *testing.T) {
+	require.Equal(t, PeriodStats{Energy: 1000}, (&flowEntity{metered: 1}).stats())
 }
