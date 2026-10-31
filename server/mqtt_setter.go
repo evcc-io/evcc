@@ -66,9 +66,10 @@ func durationSetter(set func(time.Duration) error) func(string) error {
 	return setterFunc(util.ParseDuration, set)
 }
 
-func planStrategySetter(set func(api.PlanStrategy) error) func(string) error {
+func planStrategySetter(get func() api.PlanStrategy, set func(api.PlanStrategy) error) func(string) error {
 	return func(payload string) error {
-		var res api.PlanStrategy
+		// fields missing in the payload keep their current value
+		res := get()
 		if err := json.Unmarshal([]byte(payload), &res); err != nil {
 			return err
 		}
