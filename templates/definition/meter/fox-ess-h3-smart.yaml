@@ -177,15 +177,7 @@ render: |
                 address: 49203 # Work Mode
                 type: writesingle
                 encoding: uint16
-          - source: const
-            value: {{ .minsoc }}
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 46609 # Minimum SoC
-                type: writesingle
-                encoding: uint16
+          # 46609 is the Off-Grid (EPS) reserve and is left to the user
           - source: const
             value: {{ .minsoc }} # written before Maximum SoC: the inverter rejects a
             # Maximum SoC at or below the On-Grid reserve, which earlier versions raised in hold mode
