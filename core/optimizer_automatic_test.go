@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"testing"
 	"time"
 
@@ -641,4 +643,38 @@ func TestOptimizerPlanAboveLimit(t *testing.T) {
 	assert.True(t, lp.planSlotEnd.IsZero())
 
 	ctrl.Finish()
+}
+
+// TestPendingSuggestionsAutomatic covers notifications: devices the optimizer
+// controls are not advised about what it applies itself
+func TestPendingSuggestionsAutomatic(t *testing.T) {
+	enableAutomatic(t)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.vehicle = modelledVehicle(gomock.NewController(t))
+
+	site := &Site{loadpoints: []*Loadpoint{lp}}
+	lp.site = site
+
+	site.setSuggestions(map[string]types.Suggestion{
+		batteryKey("bat"): {Action: api.BatteryCharge.String()},
+		loadpointKey(0):   {Action: actionCharge},
+	})
+
+	details := []batteryDetail{
+		{Type: batteryTypeBattery, Name: "bat"},
+		{Type: batteryTypeVehicle, loadpoint: new(int)},
+	}
+
+	for _, tc := range []struct {
+		level string
+		keys  []string
+	}{
+		{OptimizerAutomaticOff, []string{batteryKey("bat"), loadpointKey(0)}},
+		{OptimizerAutomaticBattery, []string{loadpointKey(0)}},
+		{OptimizerAutomaticFull, nil},
+	} {
+		settings.SetString(keys.OptimizerAutomatic, tc.level)
+		assert.ElementsMatch(t, tc.keys, slices.Collect(maps.Keys(site.pendingSuggestions(details))), tc.level)
+	}
 }

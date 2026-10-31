@@ -120,6 +120,15 @@ func (d batteryDetail) currentAction(site *Site) string {
 	return loadpointCurrentAction(site.loadpoints[*d.loadpoint])
 }
 
+// controlled returns true if the optimizer applies its suggestion to the device
+// itself. Must only be called for devices with a non-empty key.
+func (d batteryDetail) controlled(site *Site) bool {
+	if d.Type == batteryTypeBattery {
+		return site.Automatic()
+	}
+	return site.loadpoints[*d.loadpoint].optimizerControlled()
+}
+
 // batteryAction returns the battery's current mode for suggestion comparison.
 // A battery that was never switched (BatteryUnknown) is in normal operation.
 func (site *Site) batteryAction() string {
@@ -378,14 +387,14 @@ func (site *Site) clearSuggestions() {
 	site.Unlock()
 }
 
-// pendingSuggestions collects the stored suggestions with their actionable flag
-// evaluated against the devices' current operating mode
+// pendingSuggestions collects the stored suggestions of advised devices with their
+// actionable flag evaluated against the devices' current operating mode
 func (site *Site) pendingSuggestions(details []batteryDetail) map[string]pendingSuggestion {
 	pending := make(map[string]pendingSuggestion, len(details))
 
 	for _, detail := range details {
 		key := detail.key()
-		if key == "" {
+		if key == "" || detail.controlled(site) {
 			continue
 		}
 
