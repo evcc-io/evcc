@@ -51,6 +51,7 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 	if !active {
 		lp.planOverrunSent = false
 		lp.planSlotEnd = time.Time{}
+		lp.criticalSlotEnd = time.Time{}
 		lp.clearPlanLock()
 	}
 	if lp.planActive != active {
