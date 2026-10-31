@@ -1,11 +1,14 @@
 package bluelink
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -30,14 +33,17 @@ var ErrAuthFail = errors.New("authorization failed")
 // API implements the Kia/Hyundai bluelink api.
 type API struct {
 	*request.Helper
-	baseURI string
+	baseURI  string
+	mu       sync.Mutex
+	chargeMu map[string]*sync.Mutex
 }
 
 // New creates a new BlueLink API
 func NewAPI(log *util.Logger, baseURI string, decorator func(*http.Request) error) *API {
 	v := &API{
-		Helper:  request.NewHelper(log),
-		baseURI: strings.TrimSuffix(baseURI, "/api/v1/spa") + "/api/v1/spa",
+		Helper:   request.NewHelper(log),
+		baseURI:  strings.TrimSuffix(baseURI, "/api/v1/spa") + "/api/v1/spa",
+		chargeMu: make(map[string]*sync.Mutex),
 	}
 
 	// api is unbelievably slow when retrieving status
@@ -122,17 +128,54 @@ func chargeControlURI(baseURI, vehicleID string, ccs2 bool) string {
 	return fmt.Sprintf("%s/vehicles/%s/control/charge", baseURI, vehicleID)
 }
 
+func (v *API) lockVehicle(id string) *sync.Mutex {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	if v.chargeMu == nil {
+		v.chargeMu = make(map[string]*sync.Mutex)
+	}
+	m, ok := v.chargeMu[id]
+	if !ok {
+		m = new(sync.Mutex)
+		v.chargeMu[id] = m
+	}
+	return m
+}
+
+func decodeChargeControl(body []byte) error {
+	if len(bytes.TrimSpace(body)) == 0 {
+		return nil
+	}
+
+	var res chargeControlResponse
+	if err := json.Unmarshal(body, &res); err != nil {
+		return err
+	}
+	if res.RetCode != resOK {
+		return fmt.Errorf("unexpected response: %s", res.RetCode)
+	}
+	return nil
+}
+
 // ChargeEnable starts or stops charging via CCS2 or the older Bluelink charge control API.
 func (v *API) ChargeEnable(identity *Identity, vehicle Vehicle, pin string, enable bool) error {
+	mu := v.lockVehicle(vehicle.VehicleID)
+	mu.Lock()
+	defer mu.Unlock()
+
 	if vehicle.CcuCCS2ProtocolSupport != 0 {
-		if err := v.postChargeControl(identity, vehicle, pin, enable, true); err == nil {
+		err := v.postChargeControl(identity, vehicle, pin, enable, true)
+		if err == nil {
 			return nil
-		} else if pin != "" {
-			if err2 := v.postChargeControl(identity, vehicle, pin, enable, false); err2 == nil {
-				return nil
-			}
+		}
+		if pin == "" {
 			return err
 		}
+
+		if err2 := v.postChargeControl(identity, vehicle, pin, enable, false); err2 != nil {
+			return err2
+		}
+		return nil
 	}
 
 	return v.postChargeControl(identity, vehicle, pin, enable, false)
@@ -166,13 +209,10 @@ func (v *API) postChargeControl(identity *Identity, vehicle Vehicle, pin string,
 	}
 	req = req.WithContext(ctx)
 
-	var res chargeControlResponse
-	if err := v.DoJSON(req, &res); err != nil {
+	body, err := v.DoBody(req)
+	if err != nil {
 		return err
 	}
-	if res.RetCode != "" && res.RetCode != resOK {
-		return fmt.Errorf("unexpected response: %s", res.RetCode)
-	}
 
-	return nil
+	return decodeChargeControl(body)
 }

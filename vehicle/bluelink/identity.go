@@ -238,14 +238,12 @@ func (v *Identity) Request(req *http.Request) error {
 		return err
 	}
 
-	auth := "Bearer " + token.AccessToken
 	if ctrl, ok := req.Context().Value(controlTokenContextKey).(string); ok && ctrl != "" {
-		auth = ctrl
 		req.Header.Set("AuthorizationCCSP", ctrl)
 	}
 
 	for k, val := range map[string]string{
-		"Authorization":       auth,
+		"Authorization":       "Bearer " + token.AccessToken,
 		"ccsp-device-id":      v.deviceID,
 		"ccsp-application-id": v.config.CCSPApplicationID,
 		"offset":              "1",
@@ -260,7 +258,32 @@ func (v *Identity) Request(req *http.Request) error {
 
 type pinResponse struct {
 	ControlToken string `json:"controlToken"`
-	ExpiresTime  int    `json:"expiresTime"`
+	ExpiresTime  int64  `json:"expiresTime"`
+	ResMsg       struct {
+		ControlToken string `json:"controlToken"`
+		ExpiresTime  int64  `json:"expiresTime"`
+	} `json:"resMsg"`
+}
+
+func (r pinResponse) token() string {
+	if r.ResMsg.ControlToken != "" {
+		return r.ResMsg.ControlToken
+	}
+	return r.ControlToken
+}
+
+func (r pinResponse) expiresTime() int64 {
+	if r.ResMsg.ExpiresTime != 0 {
+		return r.ResMsg.ExpiresTime
+	}
+	return r.ExpiresTime
+}
+
+func controlTokenExpiry(expiresTime int64, now time.Time) time.Time {
+	if expiresTime <= 0 {
+		return now.Add(10 * time.Minute).Add(-30 * time.Second)
+	}
+	return time.Unix(expiresTime, 0).Add(-30 * time.Second)
 }
 
 // ControlAuthorization verifies the account PIN and returns a Bearer control token.
@@ -292,17 +315,13 @@ func (v *Identity) ControlAuthorization(pin string) (string, error) {
 	if err := v.DoJSON(req, &res); err != nil {
 		return "", err
 	}
-	if res.ControlToken == "" {
+	token := res.token()
+	if token == "" {
 		return "", errors.New("PIN verification failed")
 	}
 
-	expiry := res.ExpiresTime
-	if expiry <= 0 {
-		expiry = 600
-	}
-
-	v.controlToken = "Bearer " + res.ControlToken
-	v.controlTokenExpiry = time.Now().Add(time.Duration(expiry)*time.Second - 30*time.Second)
+	v.controlToken = "Bearer " + token
+	v.controlTokenExpiry = controlTokenExpiry(res.expiresTime(), time.Now())
 	return v.controlToken, nil
 }
 

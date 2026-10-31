@@ -1,6 +1,7 @@
 package bluelink
 
 import (
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -10,6 +11,7 @@ import (
 // Provider implements the vehicle api.
 // Based on https://github.com/Hacksore/bluelinky.
 type Provider struct {
+	mu      sync.Mutex
 	statusG func() (BluelinkVehicleStatusLatest, error)
 	refresh func() error
 	chargeS func(bool) error
@@ -119,6 +121,8 @@ var _ api.ChargeController = (*Provider)(nil)
 
 // ChargeEnable implements the api.ChargeController interface
 func (v *Provider) ChargeEnable(enable bool) error {
+	v.mu.Lock()
+	defer v.mu.Unlock()
 	return v.chargeS(enable)
 }
 
