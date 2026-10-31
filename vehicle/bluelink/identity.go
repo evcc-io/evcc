@@ -257,26 +257,13 @@ func (v *Identity) Request(req *http.Request) error {
 }
 
 type pinResponse struct {
-	ControlToken string `json:"controlToken"`
-	ExpiresTime  int64  `json:"expiresTime"`
-	ResMsg       struct {
+	RetCode string `json:"retCode"`
+	ResMsg  struct {
 		ControlToken string `json:"controlToken"`
 		ExpiresTime  int64  `json:"expiresTime"`
 	} `json:"resMsg"`
-}
-
-func (r pinResponse) token() string {
-	if r.ResMsg.ControlToken != "" {
-		return r.ResMsg.ControlToken
-	}
-	return r.ControlToken
-}
-
-func (r pinResponse) expiresTime() int64 {
-	if r.ResMsg.ExpiresTime != 0 {
-		return r.ResMsg.ExpiresTime
-	}
-	return r.ExpiresTime
+	ControlToken string `json:"controlToken"`
+	ExpiresTime  int64  `json:"expiresTime"`
 }
 
 func controlTokenExpiry(expiresTime int64, now time.Time) time.Time {
@@ -315,13 +302,19 @@ func (v *Identity) ControlAuthorization(pin string) (string, error) {
 	if err := v.DoJSON(req, &res); err != nil {
 		return "", err
 	}
-	token := res.token()
+
+	token := res.ResMsg.ControlToken
+	expires := res.ResMsg.ExpiresTime
+	if token == "" {
+		token = res.ControlToken
+		expires = res.ExpiresTime
+	}
 	if token == "" {
 		return "", errors.New("PIN verification failed")
 	}
 
 	v.controlToken = "Bearer " + token
-	v.controlTokenExpiry = controlTokenExpiry(res.expiresTime(), time.Now())
+	v.controlTokenExpiry = controlTokenExpiry(expires, time.Now())
 	return v.controlToken, nil
 }
 

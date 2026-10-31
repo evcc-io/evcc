@@ -53,11 +53,19 @@ func TestPinResponseResMsg(t *testing.T) {
 	if err := json.Unmarshal([]byte(`{"retCode":"S","resMsg":{"controlToken":"tok","expiresTime":1700000000}}`), &res); err != nil {
 		t.Fatal(err)
 	}
-	if res.token() != "tok" {
-		t.Fatalf("token: %s", res.token())
+	if res.ResMsg.ControlToken != "tok" {
+		t.Fatalf("token: %s", res.ResMsg.ControlToken)
 	}
-	if res.expiresTime() != 1700000000 {
-		t.Fatalf("expires: %d", res.expiresTime())
+	if res.ResMsg.ExpiresTime != 1700000000 {
+		t.Fatalf("expires: %d", res.ResMsg.ExpiresTime)
+	}
+
+	var top pinResponse
+	if err := json.Unmarshal([]byte(`{"controlToken":"legacy","expiresTime":1700000100}`), &top); err != nil {
+		t.Fatal(err)
+	}
+	if top.ResMsg.ControlToken != "" || top.ControlToken != "legacy" {
+		t.Fatalf("top-level fallback: %+v", top)
 	}
 }
 
