@@ -167,6 +167,62 @@ func TestSeriesExport_SocTempColumns(t *testing.T) {
 	require.NotContains(t, out, "pv.soc")
 }
 
+func TestSeriesExport_PowerColumns(t *testing.T) {
+	t0 := time.Date(2026, 5, 14, 12, 0, 0, 0, time.UTC)
+
+	s := mkSlot(t0, 1, 0)
+	s.PowerMin, s.PowerMax = new(-1500.4), new(3200.6)
+
+	series := SeriesExport{
+		{Group: Grid, Title: "grid", Data: []Slot{s}},
+		{Group: PV, Title: "pv", Data: []Slot{mkSlot(t0, 2, 0)}},
+	}
+
+	var buf bytes.Buffer
+	require.NoError(t, writeSeriesCsv(t, context.Background(), series, &buf))
+	out := buf.String()
+
+	require.Contains(t, out, "grid.powerMin.W")
+	require.Contains(t, out, "grid.powerMax.W")
+	require.Contains(t, out, "-1500")
+	require.Contains(t, out, "3201")
+	require.NotContains(t, out, "pv.powerMin")
+}
+
+func TestQueryEnergyPower(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	e := entity{Name: "grid", Group: Grid}
+	require.NoError(t, db.Instance.Create(&e).Error)
+
+	base := time.Date(2026, 4, 15, 16, 0, 0, 0, time.Now().Location())
+	require.NoError(t, persistSlot(e.Id, meter{Timestamp: base.Unix(), Energy: 1, PowerMin: new(-500.0), PowerMax: new(4000.0)}))
+	require.NoError(t, persistSlot(e.Id, meter{Timestamp: base.Add(15 * time.Minute).Unix(), Energy: 1, PowerMin: new(-2000.0), PowerMax: new(3000.0)}))
+	require.NoError(t, persist(e, base.Add(30*time.Minute), 1, 0, nil, false))
+
+	from := base.Add(-time.Hour).UTC()
+	to := base.Add(time.Hour).UTC()
+
+	// buckets keep the extremes of their slots, slots without samples stay out
+	res, err := QueryEnergy(from, to, "hour", false)
+	require.NoError(t, err)
+	require.Len(t, res[0].Data, 1)
+	require.Equal(t, -2000.0, *res[0].Data[0].PowerMin)
+	require.Equal(t, 4000.0, *res[0].Data[0].PowerMax)
+
+	res, err = QueryEnergy(from, to, "15m", false)
+	require.NoError(t, err)
+	require.Len(t, res[0].Data, 3)
+	require.Equal(t, 4000.0, *res[0].Data[0].PowerMax)
+	require.Nil(t, res[0].Data[2].PowerMax)
+
+	// grouped sums omit per-entity extremes
+	res, err = QueryEnergy(from, to, "hour", true)
+	require.NoError(t, err)
+	require.Nil(t, res[0].Data[0].PowerMax)
+}
+
 func TestQueryEnergySoc(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())

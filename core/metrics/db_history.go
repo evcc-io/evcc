@@ -19,7 +19,9 @@ type Slot struct {
 	End          time.Time `json:"end"`
 	Energy       float64   `json:"energy"`
 	ReturnEnergy float64   `json:"returnEnergy"`
-	SocTemp      *float64  `json:"socTemp,omitempty"` // a single slot's value
+	SocTemp      *float64  `json:"socTemp,omitempty"`  // a single slot's value
+	PowerMin     *float64  `json:"powerMin,omitempty"` // W, lowest sampled power in the bucket
+	PowerMax     *float64  `json:"powerMax,omitempty"` // W, highest sampled power in the bucket
 	// a price may not exist for every slot, priced energy is tracked separately to keep averages correct
 	Cost               *float64 `json:"cost,omitempty"`               // grid import, where a price exists
 	PricedEnergy       *float64 `json:"pricedEnergy,omitempty"`       // kWh with a price
@@ -155,14 +157,18 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool, filter ...E
 		ReturnEnergy float64
 		SocTemp      *float64
 		IsTemp       bool
+		PowerMin     *float64
+		PowerMax     *float64
 
 		Cost, PricedEnergy, ReturnCost, PricedReturnEnergy *float64
 	}
 
 	// soc_temp only for a single slot bucket; omitted for grouped sums
-	socCols := `, CASE WHEN COUNT(*) = 1 THEN m.soc_temp END AS soc_temp, e.is_temp AS is_temp`
+	// power extremes per entity, omitted for grouped sums since per-entity peaks don't add up
+	entityCols := `, CASE WHEN COUNT(*) = 1 THEN m.soc_temp END AS soc_temp, e.is_temp AS is_temp,
+			MIN(m.power_min) AS power_min, MAX(m.power_max) AS power_max`
 	if grouped {
-		socCols = ``
+		entityCols = ``
 	}
 
 	tx := db.Instance.Table("meters m").
@@ -173,7 +179,7 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool, filter ...E
 			SUM(CASE WHEN e."group" = 'grid' THEN m.energy * t.grid END) AS cost,
 			SUM(CASE WHEN e."group" = 'grid' AND t.grid IS NOT NULL THEN m.energy END) AS priced_energy,
 			SUM(CASE WHEN e."group" = 'grid' THEN m.return_energy * t.feedin END) AS return_cost,
-			SUM(CASE WHEN e."group" = 'grid' AND t.feedin IS NOT NULL THEN m.return_energy END) AS priced_return_energy` + socCols).
+			SUM(CASE WHEN e."group" = 'grid' AND t.feedin IS NOT NULL THEN m.return_energy END) AS priced_return_energy` + entityCols).
 		Joins("JOIN entities e ON m.meter = e.id").
 		Joins("LEFT JOIN tariffs t ON t.ts = m.ts").
 		Group(groupCols).
@@ -211,6 +217,8 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool, filter ...E
 			Energy:       roundEnergy(r.Energy),
 			ReturnEnergy: roundEnergy(r.ReturnEnergy),
 			SocTemp:      r.SocTemp,
+			PowerMin:     r.PowerMin,
+			PowerMax:     r.PowerMax,
 
 			Cost:               r.Cost,
 			PricedEnergy:       r.PricedEnergy,
@@ -233,6 +241,18 @@ func seriesHasSocTemp(s *Series) bool {
 	return slices.ContainsFunc(s.Data, func(slot Slot) bool { return slot.SocTemp != nil })
 }
 
+func seriesHasPower(s *Series) bool {
+	return slices.ContainsFunc(s.Data, func(slot Slot) bool { return slot.PowerMin != nil || slot.PowerMax != nil })
+}
+
+// powerValue rounds a power value to W, nil when unset
+func powerValue(v *float64) any {
+	if v == nil {
+		return nil
+	}
+	return int64(math.Round(*v))
+}
+
 // socTempValue rounds a soc/temp value to 0.1, nil when unset
 func socTempValue(v *float64) any {
 	if v == nil {
@@ -242,7 +262,8 @@ func socTempValue(v *float64) any {
 }
 
 // Write emits the wide table to ww: time.start, time.end, then one energy.Wh
-// column per entity (grid/battery add returnEnergy.Wh) as plain locale-safe Wh ints.
+// column per entity (grid/battery add returnEnergy.Wh) as plain locale-safe Wh ints,
+// followed by powerMin.W/powerMax.W where power was sampled.
 func (s SeriesExport) Write(ww export.RowWriter) error {
 	byGroup := make(map[string][]*Series)
 	for i := range s {
@@ -278,6 +299,8 @@ func (s SeriesExport) Write(ww export.RowWriter) error {
 		series       *Series
 		returnEnergy bool
 		socTemp      bool
+		powerMin     bool
+		powerMax     bool
 	}
 	cols := []col{{}, {}}
 	tsSet := make(map[int64]time.Time)
@@ -316,6 +339,10 @@ func (s SeriesExport) Write(ww export.RowWriter) error {
 				}
 				header = append(header, p+unit)
 				cols = append(cols, col{series: e, socTemp: true})
+			}
+			if seriesHasPower(e) {
+				header = append(header, p+".powerMin.W", p+".powerMax.W")
+				cols = append(cols, col{series: e, powerMin: true}, col{series: e, powerMax: true})
 			}
 			for _, slot := range e.Data {
 				tsSet[slot.Start.UnixNano()] = slot.Start
@@ -368,6 +395,10 @@ func (s SeriesExport) Write(ww export.RowWriter) error {
 			switch {
 			case c.socTemp:
 				row[i] = socTempValue(slot.SocTemp)
+			case c.powerMin:
+				row[i] = powerValue(slot.PowerMin)
+			case c.powerMax:
+				row[i] = powerValue(slot.PowerMax)
 			case c.returnEnergy:
 				row[i] = int64(math.Round(slot.ReturnEnergy * 1000))
 			default:

@@ -1805,6 +1805,12 @@ paths:
                           socTemp:
                             type: number
                             description: State of charge in percent or temperature of a single slot
+                          powerMin:
+                            type: number
+                            description: Lowest sampled power in W, signed like energy and returnEnergy. Omitted for grouped series
+                          powerMax:
+                            type: number
+                            description: Highest sampled power in W, signed like energy and returnEnergy. Omitted for grouped series
                           cost:
                             type: number
                             description: Grid import cost, where a price exists
