@@ -86,6 +86,7 @@ render: |
     script: |
       percent := 100
       if ena == 170 {
-        percent = watts * 100 / {{ .maxacpower }}
+        // round, the watt conversion does not reproduce the written percent exactly
+        percent = (watts*100 + {{ .maxacpower }}/2) / {{ .maxacpower }}
       }
       percent
