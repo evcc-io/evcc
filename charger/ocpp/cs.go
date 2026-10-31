@@ -100,8 +100,12 @@ func (cs *CS) errorHandler(errC <-chan error) {
 
 // publish triggers the publish callback if set
 func (cs *CS) publish() {
-	if cs.publishFunc != nil {
-		cs.publishFunc()
+	cs.mu.Lock()
+	f := cs.publishFunc
+	cs.mu.Unlock()
+
+	if f != nil {
+		f()
 	}
 }
 
