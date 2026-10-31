@@ -122,7 +122,7 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 
 	// hold a critical verdict for one slot, like the planner holds its slot: while charging
 	// the soc estimate may shrink the required duration faster than the clock (taper model)
-	// own field: the planner's slot end must not count as critical (#35447)
+	// own field: the planner's slot end must not count as critical
 	if critical {
 		lp.criticalSlotEnd = lp.clock.Now().Add(tariff.SlotDuration)
 	}

@@ -643,7 +643,7 @@ func TestOptimizerPlanAboveLimit(t *testing.T) {
 	ctrl.Finish()
 }
 
-// TestOptimizerPlanSlotNotCritical covers a plan goal beyond the optimizer horizon (#35447):
+// TestOptimizerPlanSlotNotCritical covers a plan goal beyond the optimizer horizon:
 // the planner's fallback slot must not make the deadline critical and override the optimizer
 func TestOptimizerPlanSlotNotCritical(t *testing.T) {
 	lp := &Loadpoint{
