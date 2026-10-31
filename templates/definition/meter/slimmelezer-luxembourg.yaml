@@ -40,6 +40,12 @@ render: |
       scale: -1000
   energy:
     source: http
+    uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Energy Consumed Luxembourg{{ else }}energy_consumed_luxembourg{{ end }}
+    headers:
+    - content-type: application/json
+    jq: .value
+  returnenergy:
+    source: http
     uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Energy Produced Luxembourg{{ else }}energy_produced_luxembourg{{ end }}
     headers:
     - content-type: application/json

@@ -292,6 +292,7 @@ type Circuit interface {
 	SetHEMS(HEMS)
 	HasMeter() bool
 	GetMaxPower() float64
+	EffectiveMaxPower() float64
 	GetMaxCurrent() float64
 	SetMaxPower(float64)
 	SetMaxCurrent(float64)

@@ -107,9 +107,10 @@ type Loadpoint struct {
 	Ui              loadpoint.UIConfig // display-only, not used in control logic
 
 	// from yaml
-	DefaultMode api.ChargeMode `mapstructure:"mode"`     // Default charge mode, used for disconnect
-	Title       string         `mapstructure:"title"`    // UI title
-	Priority    int            `mapstructure:"priority"` // Priority
+	DefaultMode     api.ChargeMode `mapstructure:"mode"`            // Default charge mode, used for disconnect
+	Title           string         `mapstructure:"title"`           // UI title
+	Priority        int            `mapstructure:"priority"`        // Priority
+	DemandPredictor string         `mapstructure:"demandPredictor"` // Heating demand predictor, empty: charger default
 
 	// from yaml, deprecated
 	GuardDuration_ time.Duration `mapstructure:"guardduration"` // ignored, present for compatibility
@@ -127,6 +128,7 @@ type Loadpoint struct {
 	minSoc                   int      // Forced charging below this soc (heating: temperature), 0=disabled
 	smartCostLimit           *float64 // always charge if consumption cost is below this value
 	solarShare               float64  // share of min charging power that must be solar in pv mode (0..1)
+	predictor                string   // heating demand predictor ("daily"/"weekday"/"temperature"), empty: charger default
 	smartFeedInPriorityLimit *float64 // prevent charging if feed-in cost is above this value
 	batteryBoost             int      // battery boost state
 	batteryBoostLimit        int      // battery boost soc limit (0-100, 100=disabled)
@@ -312,6 +314,13 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		lp.setTitle(lp.Title)
 	}
 
+	if p := lp.DemandPredictor; p != "" {
+		if !slices.Contains(demandPredictors, p) {
+			return lp, fmt.Errorf("invalid demand predictor: %s", p)
+		}
+		lp.predictor = p
+	}
+
 	// phase switching defaults based on charger capabilities
 	if !lp.hasPhaseSwitching() {
 		phases := lp.getChargerPhysicalPhases()
@@ -418,6 +427,9 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 	if v, err := lp.settings.Float(keys.SolarShare); err == nil {
 		lp.SetSolarShare(v)
+	}
+	if v, err := lp.settings.String(keys.DemandPredictor); err == nil {
+		lp.predictor = v
 	}
 	if v, err := lp.settings.Float(keys.SmartFeedInPriorityLimit); err == nil {
 		lp.setSmartFeedInPriorityLimit(&v)
@@ -602,7 +614,7 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	lp.socUpdated = time.Time{}
 
 	// charger may have reconfigured phases internally while disconnected
-	if err := lp.syncChargerPhases(); err != nil {
+	if err := lp.syncChargerPhases(!lp.enabled); err != nil {
 		lp.log.ERROR.Println(err)
 	}
 
@@ -947,13 +959,19 @@ func (lp *Loadpoint) syncCharger() error {
 
 		// sync phases
 		if shouldBeConsistent {
-			if err := lp.syncChargerPhases(); err != nil {
+			if err := lp.syncChargerPhases(false); err != nil {
 				return err
 			}
 		}
 
 	case enabled == lp.enabled:
-		// sync disabled state
+		// sync disabled state, adopt phases so the next enable switches them
+		// fixed phases would be switched back right away, see scalePhasesRequired
+		if lp.phasesConfigured == 0 && lp.phaseSwitchCompleted() {
+			if err := lp.syncChargerPhases(true); err != nil {
+				lp.log.ERROR.Println(err)
+			}
+		}
 
 	case !enabled && !lp.phaseSwitchCompleted():
 		// some chargers (i.E. Easee in some configurations) disable themselves to be able to switch phases
@@ -1766,8 +1784,8 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 		if activePhases, maxPhases := lp.ActivePhases(), lp.MaxActivePhases(); activePhases < maxPhases &&
 			lp.circuitAllowsPhases(maxPhases, lp.effectiveMinCurrent()) {
 			// max power actually achievable on the active phases
-			activeMaxPower := min(lp.EffectiveMaxPower(), grid.Voltage*lp.effectiveMaxCurrent()*grid.Factor(activePhases))
-			delta += max(0, grid.Voltage*lp.effectiveMinCurrent()*grid.Factor(maxPhases)-activeMaxPower)
+			activeMaxPower := min(lp.EffectiveMaxPower(), grid.CurrentToPower(lp.effectiveMaxCurrent(), activePhases))
+			delta += max(0, grid.CurrentToPower(lp.effectiveMinCurrent(), maxPhases)-activeMaxPower)
 		}
 	}
 
