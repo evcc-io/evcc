@@ -59,7 +59,7 @@ const Template: StoryFn<Args> = (args) => ({
           label: this.$t("energy.production.accuracy"),
           number: args.accuracy,
           format: (v: number) => this.fmtPercentage(v),
-          sub: this.$t(delta >= 0 ? "energy.production.above" : "energy.production.below", {
+          sub: this.$t(delta >= 0 ? "energy.production.lessThanForecast" : "energy.production.moreThanForecast", {
             value: this.fmtKWh(Math.abs(delta)),
           }),
         },

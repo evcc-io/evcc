@@ -1451,12 +1451,12 @@
       "pv": "Production"
     },
     "production": {
-      "above": "{value} above",
       "accuracy": "Forecast accuracy",
-      "below": "{value} below",
       "deviation": "Deviation",
       "expectedTomorrow": "expected tomorrow",
       "exported": "{value} exported",
+      "lessThanForecast": "{value} less than forecast",
+      "moreThanForecast": "{value} more than forecast",
       "produced": "Produced",
       "remainingToday": "remaining today",
       "selfConsumed": "Self-consumed",

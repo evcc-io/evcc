@@ -1276,12 +1276,12 @@
       "pv": "Erzeugung"
     },
     "production": {
-      "above": "{value} darüber",
       "accuracy": "Vorhersagegenauigkeit",
-      "below": "{value} darunter",
       "deviation": "Abweichung",
       "expectedTomorrow": "morgen erwartet",
       "exported": "{value} eingespeist",
+      "lessThanForecast": "{value} weniger als prognostiziert",
+      "moreThanForecast": "{value} mehr als prognostiziert",
       "produced": "Erzeugt",
       "remainingToday": "heute verbleibend",
       "selfConsumed": "Selbst verbraucht",

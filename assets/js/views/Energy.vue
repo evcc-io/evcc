@@ -1117,9 +1117,11 @@ export default defineComponent({
 					label: this.$t("energy.production.accuracy"),
 					number: this.ratio(accuracy),
 					format: (v: number) => this.fmtPercentage(v),
-					// how far the forecast total sits above or below what was produced
+					// how far production fell short of or exceeded the forecast
 					sub: this.$t(
-						delta >= 0 ? "energy.production.above" : "energy.production.below",
+						delta >= 0
+							? "energy.production.lessThanForecast"
+							: "energy.production.moreThanForecast",
 						{
 							value: this.fmtKWh(Math.abs(delta)),
 						}
