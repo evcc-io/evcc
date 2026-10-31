@@ -74,7 +74,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		return nil, errors.New("value is required")
 	}
 
-	devices := sunspecDevices.Get(conn)
+	devices, partial := sunspecDevices.Get(conn)
 	if devices == nil {
 		// the device tree captures the client gosunspec uses for all further
 		// block reads and writes, hence wrap it in the deduplicating cache
@@ -83,7 +83,8 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 			return nil, err
 		}
 
-		sunspecDevices.Put(conn, devices)
+		partial = err != nil
+		sunspecDevices.Put(conn, devices, partial)
 	}
 
 	device := sunspecSubDevices.Get(conn, cc.SubDevice)
@@ -125,7 +126,23 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		}
 	}
 
+	// none of the models present, callers may treat this as an unsupported feature.
+	// A partial tree may lack models the device has, hence keep failing.
+	if !partial && !hasSunspecModel(devices[cc.SubDevice], ops) {
+		return nil, fmt.Errorf("sunspec model not found: %v: %w", cc.Value, api.ErrNotAvailable)
+	}
+
 	return nil, fmt.Errorf("sunspec model not found: %v", ops)
+}
+
+// hasSunspecModel checks if the device provides any of the operations' models
+func hasSunspecModel(device sunspec.Device, ops []modbus.SunSpecOperation) bool {
+	ids := make([]sunspec.ModelId, 0, len(ops))
+	for _, op := range ops {
+		ids = append(ids, sunspec.ModelId(op.Model))
+	}
+
+	return len(device.Collect(sunspec.OneOfSeveralModelIds(ids))) > 0
 }
 
 // recoverToError converts a panic into *err, for sunspec point access that panics on type mismatch.
