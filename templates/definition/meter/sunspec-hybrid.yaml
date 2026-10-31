@@ -1,5 +1,5 @@
 template: sunspec-hybrid
-covers: ["sunspec-hybrid-inverter"]
+covers: ["sunspec-hybrid-inverter", "sunspec-hybrid-curtailable"]
 products:
   - description:
       de: SunSpec Hybridwechselrichter

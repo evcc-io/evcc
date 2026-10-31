@@ -1,38 +1,20 @@
-template: sunspec-inverter-curtailable
+template: sunspec
 products:
   - description:
-      de: SunSpec Wechselrichter (abregelbar)
-      en: SunSpec Inverter (curtailable)
+      de: SunSpec Wechselrichter
+      en: SunSpec Inverter
 group: generic
-capabilities: ["curtail"]
+requirements:
+  description:
+    de: |
+      Die Abregelung begrenzt die Wirkleistung des Wechselrichters auf den gewünschten Prozentsatz seiner maximalen Leistung (SunSpec Modell 123 bzw. 704).
+    en: |
+      Curtailment limits the inverter's active power to the desired percentage of its maximum power (SunSpec model 123 or 704).
 params:
-  - name: usage
-    choice: ["pv"]
   - name: modbus
     choice: ["tcpip", "rs485"]
 render: |
   type: custom
-  power:
-    source: sunspec
-    {{- include "modbus" . | indent 2 }}
-    value:
-      - 101:W
-      - 111:W
-      - 102:W
-      - 112:W
-      - 103:W
-      - 113:W
-  energy:
-    source: sunspec
-    {{- include "modbus" . | indent 2 }}
-    value:
-      - 101:WH
-      - 111:WH
-      - 102:WH
-      - 112:WH
-      - 103:WH
-      - 113:WH
-    scale: 0.001
   curtail:
     source: sequence
     set:
@@ -87,4 +69,3 @@ render: |
         percent = int(limit)
       }
       percent
-  {{- include "sunspec-maxacpower" . }}
