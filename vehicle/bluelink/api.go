@@ -225,7 +225,7 @@ func (v *API) sendChargeEnable(identity *Identity, vehicle Vehicle, pin string, 
 		}
 
 		if err2 := v.postChargeControl(identity, vehicle, pin, enable, false); err2 != nil {
-			return err2
+			return chargeEnableFallbackError(err, err2)
 		}
 		return nil
 	}
@@ -267,4 +267,11 @@ func (v *API) postChargeControl(identity *Identity, vehicle Vehicle, pin string,
 	}
 
 	return decodeChargeControl(body)
+}
+
+func chargeEnableFallbackError(ccs2Err, legacyErr error) error {
+	if legacyErr == nil {
+		return nil
+	}
+	return fmt.Errorf("ccs2: %w; legacy: %w", ccs2Err, legacyErr)
 }

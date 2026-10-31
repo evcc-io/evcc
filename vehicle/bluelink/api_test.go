@@ -2,11 +2,32 @@ package bluelink
 
 import (
 	"encoding/json"
+	"errors"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 )
+
+func TestChargeEnableFallbackError(t *testing.T) {
+	ccs2Err := errors.New("ccs2 failed")
+	legacyErr := errors.New("legacy failed")
+
+	err := chargeEnableFallbackError(ccs2Err, legacyErr)
+	if err == nil {
+		t.Fatal("expected combined error")
+	}
+	if !errors.Is(err, legacyErr) {
+		t.Fatalf("legacy error hidden: %v", err)
+	}
+	if !errors.Is(err, ccs2Err) {
+		t.Fatalf("ccs2 error hidden: %v", err)
+	}
+
+	if err := chargeEnableFallbackError(ccs2Err, nil); err != nil {
+		t.Fatalf("successful legacy fallback: %v", err)
+	}
+}
 
 func TestChargeControlURI(t *testing.T) {
 	base := "https://au-apigw.ccs.hyundai.com.au:8080/api/v1/spa"
