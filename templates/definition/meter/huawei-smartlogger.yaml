@@ -78,16 +78,14 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: modbus
-    id: 0
-    {{- include "modbus-connection" . | indent 2 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 40521 # Input power
       type: holding
       decode: int32
   energy:
     source: modbus
-    id: 0
-    {{- include "modbus-connection" . | indent 2 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 40446 # Accumulated PV energy yield
       type: holding
