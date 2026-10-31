@@ -482,8 +482,8 @@ const optimizerInterval = 5 * time.Minute
 // optimizerUpdateAsync runs the optimizer unless the last run is younger than
 // the mode's interval. Pass force to run regardless, e.g. when a changed setting
 // should take effect immediately. It is a no-op when the optimizer is not
-// active. A forced trigger during a running update, e.g. vehicle identification
-// right after connect, re-runs once that update has finished.
+// active. A forced trigger during a running update re-runs once that update
+// has finished.
 func (site *Site) optimizerUpdateAsync(force bool) {
 	if !sponsor.IsAuthorized() || !optimizerEnabled() {
 		return
@@ -511,7 +511,8 @@ func (site *Site) optimizerUpdateAsync(force bool) {
 		site.optimizerMu.Unlock()
 
 		if site.optimizerRerun.Load() {
-			go site.optimizerUpdateAsync(true)
+			// not forced: a caller that consumed the trigger in between already ran
+			go site.optimizerUpdateAsync(false)
 		}
 	}()
 

@@ -1160,8 +1160,7 @@ func TestCircuitMaxImport(t *testing.T) {
 	}
 }
 
-// TestOptimizerRerunAfterBusy verifies that a forced trigger arriving during a run,
-// e.g. vehicle identification right after connect, is not dropped (#35604)
+// TestOptimizerRerunAfterBusy verifies that a forced trigger arriving during a run is not dropped
 func TestOptimizerRerunAfterBusy(t *testing.T) {
 	enableAutomatic(t)
 	site := &Site{log: util.NewLogger("foo")}
