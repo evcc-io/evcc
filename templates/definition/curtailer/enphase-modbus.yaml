@@ -11,6 +11,9 @@ requirements:
     de: |
       Erfordert Enphase-Unterstützung, um die Modbus-Funktionalität auf dem IQ Gateway zu aktivieren.
       Die Abregelung begrenzt die Wechselrichterleistung auf den gewünschten Prozentsatz der maximalen AC-Leistung.
+discovery:
+  mdns: ["_enphase-envoy._tcp"]
+  mac: ["001DC0"]
 params:
   - name: modbus
     choice: ["tcpip"]
