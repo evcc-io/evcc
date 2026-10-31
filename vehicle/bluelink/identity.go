@@ -238,10 +238,6 @@ func (v *Identity) Request(req *http.Request) error {
 		return err
 	}
 
-	if ctrl, ok := req.Context().Value(controlTokenContextKey).(string); ok && ctrl != "" {
-		req.Header.Set("AuthorizationCCSP", ctrl)
-	}
-
 	for k, val := range map[string]string{
 		"Authorization":       "Bearer " + token.AccessToken,
 		"ccsp-device-id":      v.deviceID,
@@ -251,6 +247,10 @@ func (v *Identity) Request(req *http.Request) error {
 		"Stamp":               stamp,
 	} {
 		req.Header.Set(k, val)
+	}
+
+	if ctrl, ok := req.Context().Value(controlTokenContextKey).(string); ok && ctrl != "" {
+		req.Header.Set("AuthorizationCCSP", ctrl)
 	}
 
 	return nil
