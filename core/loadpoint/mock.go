@@ -729,6 +729,20 @@ func (mr *MockAPIMockRecorder) GetSocConfig() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSocConfig", reflect.TypeOf((*MockAPI)(nil).GetSocConfig))
 }
 
+// GetSocPlanGoals mocks base method.
+func (m *MockAPI) GetSocPlanGoals() []PlanGoal {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSocPlanGoals")
+	ret0, _ := ret[0].([]PlanGoal)
+	return ret0
+}
+
+// GetSocPlanGoals indicates an expected call of GetSocPlanGoals.
+func (mr *MockAPIMockRecorder) GetSocPlanGoals() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSocPlanGoals", reflect.TypeOf((*MockAPI)(nil).GetSocPlanGoals))
+}
+
 // GetSolarShare mocks base method.
 func (m *MockAPI) GetSolarShare() float64 {
 	m.ctrl.T.Helper()

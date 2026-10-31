@@ -1,0 +1,37 @@
+template: demo-switch
+group: switchsockets
+products:
+  - description:
+      de: Demo Schaltgerät
+      en: Demo switch
+requirements:
+  description:
+    en: For demonstration purposes. Switchable device with a fixed set of values.
+    de: Zu Demonstrationszwecken. Schaltbares Gerät mit festen Werten.
+params:
+  - name: enabled
+    description:
+      de: Eingeschaltet
+      en: Switched on
+    type: bool
+    default: false
+  - name: power
+    description:
+      de: Leistung
+      en: Power
+    unit: W
+    type: int
+    default: 0
+  - preset: switchsocket
+render: |
+  type: switchsocket
+  enabled:
+    source: const
+    value: {{ .enabled }}
+  enable:
+    source: js
+    script:
+  power:
+    source: const
+    value: {{ .power }}
+  {{ include "switchsocket" . }}

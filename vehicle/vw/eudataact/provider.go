@@ -1,6 +1,7 @@
 package eudataact
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -32,9 +33,9 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *Provider {
+func NewProvider(log *util.Logger, client *API, vin string, cache time.Duration) *Provider {
 	v := &Provider{}
-	s := sharedStore(api)
+	s := sharedStore(client)
 
 	var (
 		cached util.Cacheable[[]point]
@@ -48,6 +49,11 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 				time.AfterFunc(resetDelay(ts, cache), cached.Reset)
 			}
 			return s.snapshot(vin), nil
+		}
+
+		// the data is outdated while catching up, the loadpoint must read again
+		if errors.Is(err, api.ErrMustRetry) {
+			return nil, err
 		}
 
 		// serve the last data over transient portal errors, surface persistent ones
