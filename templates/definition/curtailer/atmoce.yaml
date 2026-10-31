@@ -15,12 +15,23 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 1
+  - name: firmware
+    type: choice
+    choice: ["<01.01.00.28.15", ">=01.01.00.28.15"]
+    default: ">=01.01.00.28.15"
+    required: true
+    description:
+      de: Firmware-Version
+      en: Firmware version
+    help:
+      de: Abregelung erfordert Firmware 01.01.00.28.15 oder neuer.
+      en: Curtailment requires firmware 01.01.00.28.15 or later.
   - name: maxacpower
     required: true
-    usages: ["curtailer"] # default usages ["pv"] would hide the param in the curtailer UI
     service: modbus/read?address=60027&type=holding&encoding=uint32&scale=1&resulttype=int&{modbus}
 render: |
   type: custom
+  {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
   curtail:
     source: switch
     switch:
@@ -80,3 +91,4 @@ render: |
         percent = (limit*100 + maxacpower/2) / maxacpower
       }
       percent
+  {{- end }}
