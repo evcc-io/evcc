@@ -31,11 +31,14 @@ import vehicleList from "@/utils/vehicleList";
 import { wizardPending } from "@/onboarding";
 import { defineComponent } from "vue";
 
-// assume offline if not data received for 5 minutes
+// assume offline if no data received for 5 minutes, or 15 seconds on first connect
 let lastDataReceived = new Date();
+let dataReceived = false;
 const maxDataAge = 60 * 1000 * 5;
+const maxFirstDataAge = 15 * 1000;
 setInterval(() => {
-	if (new Date().getTime() - lastDataReceived.getTime() > maxDataAge) {
+	const maxAge = dataReceived ? maxDataAge : maxFirstDataAge;
+	if (new Date().getTime() - lastDataReceived.getTime() > maxAge) {
 		console.log("no data received, assume we are offline");
 		window.app.setOffline();
 	}
@@ -238,6 +241,7 @@ export default defineComponent({
 					}
 					store.update(msg);
 					lastDataReceived = new Date();
+					dataReceived = true;
 					if (!receivedData) {
 						receivedData = true;
 						this.reconnectAttempts = 0;
