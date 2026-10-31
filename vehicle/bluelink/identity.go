@@ -314,7 +314,11 @@ func (v *Identity) ControlAuthorization(pin string) (string, error) {
 	}
 
 	v.controlToken = "Bearer " + token
-	v.controlTokenExpiry = controlTokenExpiry(expires, time.Now())
+	if expires <= 0 {
+		v.controlTokenExpiry = time.Now().Add(10 * time.Minute).Add(-30 * time.Second)
+	} else {
+		v.controlTokenExpiry = time.Unix(expires, 0).Add(-30 * time.Second)
+	}
 	return v.controlToken, nil
 }
 

@@ -76,6 +76,11 @@ func TestControlTokenExpiry(t *testing.T) {
 	if !got.Equal(want) {
 		t.Fatalf("got %s want %s", got, want)
 	}
+
+	past := controlTokenExpiry(1_699_999_000, now)
+	if !past.Before(now) {
+		t.Fatal("absolute expiresTime in the past must not keep the token cached")
+	}
 }
 
 func TestSerialChargeLatestWins(t *testing.T) {
