@@ -838,6 +838,18 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+  /gridpeakbaseline/{power}:
+    post:
+      operationId: setGridPeakBaseline
+      summary: Set grid peak baseline
+      description: "Set the floor in W of the grid import peak target in countries billing the monthly 15-min peak (AT, BE). The grid circuit limits import to the higher of this baseline and the month's peak so far. Fast charging accepts a higher peak. 0 disables the limit."
+      tags:
+        - general
+      parameters:
+        - $ref: "#/components/parameters/power"
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
   /solaradjusted/{enable}:
     post:
       operationId: setSolarAdjusted
