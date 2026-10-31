@@ -165,7 +165,8 @@ func (cp *CP) onTransportConnect() {
 	defer cp.mu.Unlock()
 
 	cp.stopBootTimer()
-	cp.bootTimer = time.AfterFunc(Timeout, cp.onBootTimeout)
+	timer := time.AfterFunc(Timeout, cp.onBootTimeout)
+	cp.bootTimer = timer
 
 	// Proactively trigger BootNotification after a short delay.
 	// This helps chargers that don't send it spontaneously (e.g. Wallbox FW 6.x).
@@ -192,7 +193,7 @@ func (cp *CP) onTransportConnect() {
 				}
 				if conf.Status != remotetrigger.TriggerMessageStatusAccepted {
 					cp.log.DEBUG.Printf("trigger BootNotification: %s, proceeding", conf.Status)
-					cp.onBootTimeout()
+					cp.onBootTriggerRejected(timer)
 				}
 			},
 			core.BootNotificationFeatureName,
@@ -201,6 +202,20 @@ func (cp *CP) onTransportConnect() {
 			cp.log.ERROR.Printf("failed to trigger BootNotification: %v", err)
 		}
 	})
+}
+
+// onBootTriggerRejected ends the boot wait if timer still belongs to the current connection.
+func (cp *CP) onBootTriggerRejected(timer *time.Timer) {
+	cp.mu.Lock()
+	current := cp.bootTimer == timer
+	if current {
+		cp.stopBootTimer()
+	}
+	cp.mu.Unlock()
+
+	if current {
+		cp.connect(true)
+	}
 }
 
 // onBootTimeout is called when the BootNotification wait timer expires.
