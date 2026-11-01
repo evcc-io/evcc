@@ -182,14 +182,12 @@ func registeredConnection(ctx context.Context, key string, proto Protocol, newCo
 		}
 
 		conn.refs++
+		context.AfterFunc(ctx, func() { unregisterConnection(key) })
 
 		return conn, nil
 	}
 
-	go func() {
-		<-ctx.Done()
-		unregisterConnection(key)
-	}()
+	context.AfterFunc(ctx, func() { unregisterConnection(key) })
 
 	connection := &meterConnection{
 		Connection: newConn,
