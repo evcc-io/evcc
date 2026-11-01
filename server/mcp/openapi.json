@@ -5281,6 +5281,27 @@
         ],
         "additionalProperties": false
       },
+      "LogLevels": {
+        "description": "Persisted log levels.",
+        "type": "object",
+        "properties": {
+          "default": {
+            "description": "Default log level.",
+            "type": "string"
+          },
+          "levels": {
+            "description": "Log level overrides by log area.",
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "default",
+          "levels"
+        ]
+      },
       "Circuit": {
         "description": "A load management circuit limiting power and current of its assigned loadpoints.",
         "type": "object",
@@ -5999,6 +6020,10 @@
           "interval": {
             "description": "Update interval of the control loop in seconds.",
             "type": "number"
+          },
+          "logLevels": {
+            "$ref": "#/components/schemas/LogLevels",
+            "description": "Persisted default and per-area log levels."
           },
           "circuits": {
             "description": "Load management circuits, keyed by circuit name.",

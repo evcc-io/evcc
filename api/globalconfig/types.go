@@ -77,6 +77,12 @@ type Go struct {
 	Script string
 }
 
+// LogLevels holds the default and per-area log levels
+type LogLevels struct {
+	Default string            `json:"default"`
+	Levels  map[string]string `json:"levels"`
+}
+
 type ModbusProxy struct {
 	Port            int    `json:"port"`
 	ReadOnly        string `yaml:",omitempty" json:"readonly,omitempty"`
