@@ -84,12 +84,13 @@ type Task = func()
 // Loadpoint is responsible for controlling charge depending on
 // Soc needs and power availability.
 type Loadpoint struct {
-	clock    clock.Clock // mockable time
-	bus      evbus.Bus   // event bus
-	site     site.API
-	pushChan chan<- messenger.Event // notifications
-	uiChan   chan<- util.Param      // client push messages
-	log      *util.Logger
+	clock     clock.Clock // mockable time
+	bus       evbus.Bus   // event bus
+	site      site.API
+	pushChan  chan<- messenger.Event // notifications
+	uiChan    chan<- util.Param      // client push messages
+	senseChan chan<- *Loadpoint      // immediate sense requests
+	log       *util.Logger
 
 	rwMutex      atomic.Int64 // writer goroutine id for reentrancy detection (test only)
 	sync.RWMutex              // guard status
@@ -477,6 +478,14 @@ func (lp *Loadpoint) restoreSettings() {
 // RequestUpdate requests site to control this loadpoint with priority
 func (lp *Loadpoint) RequestUpdate() {
 	lp.requestControl()
+}
+
+// Notify requests an immediate sensing pass without blocking
+func (lp *Loadpoint) Notify() {
+	select {
+	case lp.senseChan <- lp:
+	default:
+	}
 }
 
 // GetInflightPower returns the charge power actuated but not yet reflected by the meter

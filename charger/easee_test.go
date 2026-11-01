@@ -673,7 +673,7 @@ func TestChargerOpMode_RequestsLoadpointUpdate(t *testing.T) {
 	for _, tc := range tc {
 		t.Run(tc.name, func(t *testing.T) {
 			lp := loadpoint.NewMockAPI(gomock.NewController(t))
-			lp.EXPECT().RequestUpdate().Times(tc.updates)
+			lp.EXPECT().Notify().Times(tc.updates)
 
 			e := newEasee()
 			e.lp = lp

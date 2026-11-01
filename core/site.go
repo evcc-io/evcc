@@ -60,6 +60,8 @@ type Site struct {
 	valueChan chan<- util.Param      // client push messages
 	pushChan  chan<- messenger.Event // notification events
 
+	senseTrigger chan *Loadpoint // immediate sense requests, see Loadpoint.Notify
+
 	sync.RWMutex
 	log *util.Logger
 
@@ -1553,6 +1555,9 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 		}
 	}()
 
+	// room for every loadpoint, a notified loadpoint is sensed at once
+	site.senseTrigger = make(chan *Loadpoint, max(1, len(site.loadpoints)))
+
 	site.prepare()
 
 	lpDevices := config.Loadpoints().Devices()
@@ -1590,6 +1595,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 			}
 		}(id)
 
+		lp.senseChan = site.senseTrigger
 		lp.Prepare(site, lpUIChan, lpPushChan)
 	}
 }
@@ -1639,12 +1645,14 @@ func senseLoadpoints(lps []*Loadpoint) {
 	wg.Wait()
 }
 
-// measureLoadpoints continuously senses all loadpoints
-func measureLoadpoints(stopC chan struct{}, lps []*Loadpoint, interval time.Duration) {
+// measureLoadpoints continuously senses all loadpoints and a notified loadpoint immediately
+func measureLoadpoints(stopC chan struct{}, lps []*Loadpoint, trigger <-chan *Loadpoint, interval time.Duration) {
 	for tick := time.Tick(interval); ; {
 		select {
 		case <-tick:
 			senseLoadpoints(lps)
+		case lp := <-trigger:
+			lp.Sense()
 		case <-stopC:
 			return
 		}
@@ -1670,7 +1678,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		senseLoadpoints(active)
 
 		// never sense slower than the control loop
-		go measureLoadpoints(stopC, active, min(measureInterval, interval))
+		go measureLoadpoints(stopC, active, site.senseTrigger, min(measureInterval, interval))
 		go site.loopLoadpoints(loadpointChan)
 	}
 
