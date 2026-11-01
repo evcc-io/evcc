@@ -711,8 +711,8 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 }
 
 // triggerOptimizer re-runs the optimizer when the loadpoint's profile changed.
-// A burst of setters, e.g. on disconnect, is coalesced by optimizerUpdateAsync's
-// TryLock- only the first call gets through while a run is in flight.
+// A burst of setters, e.g. on disconnect, is coalesced by optimizerUpdateAsync:
+// triggers during a run collapse into a single re-run afterwards.
 func (lp *Loadpoint) triggerOptimizer() {
 	if lp.site != nil {
 		lp.site.Optimize()
