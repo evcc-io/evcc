@@ -95,7 +95,7 @@ func (r *Remote) Enabled() bool {
 }
 
 func (r *Remote) connect() {
-	if sponsor.Token == "" {
+	if sponsor.Token() == "" {
 		msg := "remote access requires a sponsor token"
 		r.log.WARN.Println(msg)
 		r.setError(errors.New(msg))
@@ -161,7 +161,7 @@ type registerResponse struct {
 // register calls the cloud registration endpoint and persists the result.
 func (r *Remote) register() error {
 	uri := fmt.Sprintf("https://%s/api/register", r.cloudHost)
-	data := registerRequest{SponsorToken: sponsor.Token}
+	data := registerRequest{SponsorToken: sponsor.Token()}
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 
 	var res registerResponse

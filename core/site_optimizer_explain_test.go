@@ -45,8 +45,12 @@ func TestExplainOptimizerResult(t *testing.T) {
 	defer srv.Close()
 
 	t.Setenv("OPTIMIZER_URI", srv.URL)
-	sponsor.Subject, sponsor.Token = "sponsor", "token"
-	t.Cleanup(func() { sponsor.Subject, sponsor.Token = "", "" })
+	sponsor.Subject = "sponsor"
+	sponsor.SetToken("token")
+	t.Cleanup(func() {
+		sponsor.Subject = ""
+		sponsor.SetToken("")
+	})
 
 	site := &Site{log: util.NewLogger("foo")}
 
