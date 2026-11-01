@@ -1407,11 +1407,10 @@ func TestRequestUpdate(t *testing.T) {
 	lp2.requestUpdate()
 
 	require.Len(t, ch, 2)
-	assert.Same(t, lp1, <-ch)
-	assert.Same(t, lp2, <-ch)
+	assert.Same(t, lp1, (<-ch).dequeued())
+	assert.Same(t, lp2, (<-ch).dequeued())
 
 	// queued again once the site has taken the request
-	lp1.lpQueued.Store(false)
 	lp1.requestUpdate()
 	assert.Same(t, lp1, <-ch)
 

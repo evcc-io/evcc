@@ -1641,8 +1641,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		case <-tick:
 			site.update(<-loadpointChan)
 		case lp := <-site.lpUpdateChan:
-			lp.lpQueued.Store(false)
-			site.update(lp)
+			site.update(lp.dequeued())
 		case <-stopC:
 			return
 		}

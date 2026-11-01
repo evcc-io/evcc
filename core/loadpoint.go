@@ -487,6 +487,12 @@ func (lp *Loadpoint) requestUpdate() {
 	}
 }
 
+// dequeued marks the update request as taken from the site queue so the loadpoint may request again
+func (lp *Loadpoint) dequeued() *Loadpoint {
+	lp.lpQueued.Store(false)
+	return lp
+}
+
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
 func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	var integrated bool
