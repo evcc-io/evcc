@@ -9,12 +9,12 @@ requirements:
   description:
     de: |
       Bei angeschlossenem Batteriespeicher bitte unbedingt "Huawei SUN2000 Hybrid-Wechselrichter" nutzen.
-      Erfordert "Modbus/TCP". Freischaltung via "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters. 
-      Siehe https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+
+      Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
     en: |
       If you have a battery storage system, please be sure to use "Huawei SUN2000 Hybrid-Inverter".
-      Needs "Modbus/TCP". Activation using "maintenance access" within the communication settings of the inverter.
-      See https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+
+      Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
 discovery:
   hostname: ["sdongle*"]
 params:
