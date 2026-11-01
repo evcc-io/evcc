@@ -64,6 +64,14 @@ type optimizerBattery struct {
 
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 
+func batteryCapacityWh(capacityKWh float64) float64 {
+	return capacityKWh * 1e3
+}
+
+func batteryStoredEnergyWh(capacityKWh, soc float64) float64 {
+	return capacityKWh * soc * 10
+}
+
 // optimizerRequest assembles the optimizer request and the matching device
 // details from tariffs, home profile, loadpoints and battery meters
 func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.OptimizationInput, requestDetails, error) {
@@ -394,11 +402,11 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	bat := optimizer.BatteryConfig{
 		CMax:      batteryPower,
 		DMax:      batteryPower,
-		SCapacity: float32(*b.Capacity * 1e3), // Wh
-		SInitial:  float32(socToWh(*b.Capacity, *b.Soc)),
+		SCapacity: float32(batteryCapacityWh(*b.Capacity)), // Wh
+		SInitial:  float32(batteryStoredEnergyWh(*b.Capacity, *b.Soc)),
 		// PA:       pa,
 	}
-	bat.SMax = max(bat.SInitial, float32(*b.Capacity*1e3)) // Wh, narrowed by soc limits below
+	bat.SMax = max(bat.SInitial, float32(batteryCapacityWh(*b.Capacity))) // Wh, narrowed by soc limits below
 
 	instance := dev.Instance()
 
