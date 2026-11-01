@@ -69,6 +69,87 @@ func TestFeedInRatesWithoutTariff(t *testing.T) {
 	}, feedInRates(nil, grid))
 }
 
+func TestBatteryMeterGroups(t *testing.T) {
+	meters := []config.Device[api.Meter]{
+		config.NewStaticDevice[api.Meter](config.Named{Name: "slave-a", Other: map[string]any{"master": "master-a"}}, nil),
+		config.NewStaticDevice[api.Meter](config.Named{Name: "other"}, nil),
+		config.NewStaticDevice[api.Meter](config.Named{Name: "master-a"}, nil),
+		config.NewStaticDevice[api.Meter](config.Named{Name: "slave-b", Other: map[string]any{"master": "master-a"}}, nil),
+		config.NewStaticDevice[api.Meter](config.Named{Name: "master-b"}, nil),
+	}
+
+	assert.Equal(t, [][]int{{1}, {2, 0, 3}, {4}}, batteryMeterGroups(meters))
+}
+
+type optimizerGroupMeter struct {
+	api.Meter
+	modes          []api.BatteryMode
+	chargeLimit    float64
+	dischargeLimit float64
+}
+
+func (m *optimizerGroupMeter) BatteryModes() []api.BatteryMode    { return m.modes }
+func (*optimizerGroupMeter) SetBatteryMode(api.BatteryMode) error { return nil }
+func (m *optimizerGroupMeter) GetPowerLimits() (float64, float64, error) {
+	return m.chargeLimit, m.dischargeLimit, nil
+}
+
+func TestBatteryGroupRequest(t *testing.T) {
+	master := &optimizerGroupMeter{
+		modes:          []api.BatteryMode{api.BatteryNormal, api.BatteryCharge},
+		chargeLimit:    4000,
+		dischargeLimit: 3000,
+	}
+	slave := &optimizerGroupMeter{
+		modes:          []api.BatteryMode{api.BatteryNormal, api.BatteryCharge, api.BatteryDischarge},
+		chargeLimit:    2000,
+		dischargeLimit: 1000,
+	}
+	var masterMeter api.Meter = master
+	var slaveMeter api.Meter = slave
+	limit := 0.15
+	site := &Site{
+		log:                    util.NewLogger("foo"),
+		batteryGridChargeLimit: &limit,
+		batteryGridDischarge:   true,
+		batteryMeters: []config.Device[api.Meter]{
+			config.NewStaticDevice(config.Named{Name: "master"}, masterMeter),
+			config.NewStaticDevice(config.Named{Name: "slave", Other: map[string]any{"master": "master"}}, slaveMeter),
+		},
+	}
+
+	masterCapacity, masterSoc, masterMin, masterMax := 10.0, 50.0, 20.0, 80.0
+	slaveCapacity, slaveSoc, slaveMin, slaveMax := 5.0, 80.0, 10.0, 100.0
+	measurements := []types.Measurement{
+		{Capacity: &masterCapacity, Soc: &masterSoc, MinSoc: &masterMin, MaxSoc: &masterMax},
+		{Capacity: &slaveCapacity, Soc: &slaveSoc, MinSoc: &slaveMin, MaxSoc: &slaveMax},
+	}
+	rates := api.Rates{{Value: 0.1}}
+
+	group, ok := site.batteryGroupRequest([]int{0, 1}, measurements, rates, 1, tariff.SlotDuration)
+	require.True(t, ok)
+	assert.Equal(t, "master", group.detail.Name)
+	assert.Equal(t, 15.0, group.detail.Capacity)
+	assert.False(t, group.detail.controllable, "group recommendation routing is deferred")
+	assert.Equal(t, float32(6000), group.cfg.CMax)
+	assert.Equal(t, float32(4000), group.cfg.DMax)
+	assert.Equal(t, float32(15000), group.cfg.SCapacity)
+	assert.Equal(t, float32(9000), group.cfg.SInitial)
+	assert.Equal(t, float32(2500), group.cfg.SMin)
+	assert.Equal(t, float32(13000), group.cfg.SMax)
+	assert.True(t, group.cfg.ChargeFromGrid)
+	assert.False(t, group.cfg.DischargeToGrid, "grid export permission comes from master")
+	assert.Equal(t, []float32{1500}, group.cfg.PDemand)
+	single, ok := site.batteryGroupRequest([]int{0}, measurements, rates, 1, tariff.SlotDuration)
+	require.True(t, ok)
+	assert.True(t, single.detail.controllable, "standalone battery recommendations remain unchanged")
+
+	measurements[1].Soc = nil
+	if _, ok := site.batteryGroupRequest([]int{0, 1}, measurements, rates, 1, tariff.SlotDuration); ok {
+		t.Fatal("group with incomplete member measurements was optimized")
+	}
+}
+
 func TestApplyPrecondition(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
