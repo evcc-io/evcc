@@ -146,11 +146,20 @@ func (c *Collector) advanceSlot(now time.Time) error {
 	c.accu.Energy = 0
 	c.accu.ReturnEnergy = 0
 	c.accu.SocTemp = nil
+	c.accu.PowerMin, c.accu.PowerMax = nil, nil
 	return nil
 }
 
 func (c *Collector) persist(recovered bool) error {
-	if err := persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.SocTemp, recovered); err != nil {
+	if err := persistSlot(c.entity.Id, meter{
+		Timestamp:    c.started.Unix(),
+		Energy:       c.accu.Energy,
+		ReturnEnergy: c.accu.ReturnEnergy,
+		SocTemp:      c.accu.SocTemp,
+		PowerMin:     c.accu.PowerMin,
+		PowerMax:     c.accu.PowerMax,
+		Recovered:    recovered,
+	}); err != nil {
 		return err
 	}
 
@@ -260,6 +269,8 @@ func (c *Collector) SetReturnEnergyMeterTotal(v float64) error {
 // so a transient failure is recovered via the next delta and not double-counted.
 func (c *Collector) AddEnergy(energyTotal, returnEnergyTotal *float64, power float64) error {
 	return c.process(func() {
+		c.accu.setPower(power)
+
 		// a direction that ever reported a total is metered, so a nil read is a
 		// transient failure rather than a power-only meter
 		hasEnergyMeter := energyTotal != nil || c.accu.energyMeter.last != nil

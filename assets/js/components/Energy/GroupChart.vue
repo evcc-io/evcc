@@ -56,6 +56,8 @@ export interface HistorySlot {
 	energy: number;
 	returnEnergy: number;
 	socTemp?: number; // a single slot's soc in percent or temperature
+	powerMin?: number; // W, lowest sampled power, per entity only
+	powerMax?: number; // W, highest sampled power, per entity only
 	cost?: number; // grid import, where a price exists
 	pricedEnergy?: number; // kWh with a price
 	returnCost?: number; // grid export, where a price exists
