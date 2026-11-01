@@ -138,3 +138,31 @@ func TestLoadpointPlan(t *testing.T) {
 	assert.InDelta(t, 0.4, plan.rates[1].Value, 1e-6)
 	assert.Equal(t, []float64{500, 250}, plan.energy)
 }
+
+func TestLimitReached(t *testing.T) {
+	now := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
+	schedule := optimizerSchedule{
+		timestamps: []time.Time{now.Add(-15 * time.Minute), now, now.Add(15 * time.Minute), now.Add(30 * time.Minute)},
+		dt:         []int{900, 900, 900, 900},
+	}
+
+	for _, tc := range []struct {
+		name     string
+		initial  float32
+		soc      []float32
+		expected time.Time
+	}{
+		{"pause, then charge", 1000, []float32{2000, 2000, 2000, 3000}, now.Add(45 * time.Minute)},
+		{"active slot", 1000, []float32{1000, 3000, 3000, 3000}, now.Add(15 * time.Minute)},
+		{"solver precision", 1000, []float32{1000, 2000, 2999.5, 2999.5}, now.Add(30 * time.Minute)},
+		{"not within horizon", 1000, []float32{1000, 2000, 2500, 2800}, time.Time{}},
+		{"already full", 3000, []float32{3000, 3000, 3000, 3000}, time.Time{}},
+		{"reached in expired slot", 1000, []float32{3000, 3000, 3000, 3000}, time.Time{}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			req := optimizer.BatteryConfig{SInitial: tc.initial, SMax: 3000}
+			res := optimizer.BatteryResult{StateOfCharge: tc.soc}
+			assert.Equal(t, tc.expected, limitReached(req, res, schedule, now))
+		})
+	}
+}

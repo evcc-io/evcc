@@ -225,6 +225,7 @@ export default defineComponent({
 		last24hEnergy: Number,
 		last7dEnergy: Number,
 		chargeRemainingDuration: { type: Number, default: 0 },
+		optimizerRemainingDuration: Number as PropType<number | null>,
 
 		// other information
 		phasesConfigured: Number,
@@ -280,10 +281,15 @@ export default defineComponent({
 			phaseRemainingInterpolated: this.phaseRemaining,
 			pvRemainingInterpolated: this.pvRemaining,
 			chargeDurationInterpolated: this.chargeDuration,
-			chargeRemainingDurationInterpolated: this.chargeRemainingDuration,
+			chargeRemainingDurationInterpolated:
+				this.optimizerRemainingDuration ?? this.chargeRemainingDuration,
 		};
 	},
 	computed: {
+		remainingDuration() {
+			// optimizer plan includes pauses, current power estimate does not
+			return this.optimizerRemainingDuration ?? this.chargeRemainingDuration;
+		},
 		expandLoadpointHeader() {
 			return this.multipleLoadpoints && !this.fullWidth;
 		},
@@ -359,8 +365,8 @@ export default defineComponent({
 		chargeDuration() {
 			this.chargeDurationInterpolated = this.chargeDuration;
 		},
-		chargeRemainingDuration() {
-			this.chargeRemainingDurationInterpolated = this.chargeRemainingDuration;
+		remainingDuration() {
+			this.chargeRemainingDurationInterpolated = this.remainingDuration;
 		},
 	},
 	mounted() {
@@ -382,7 +388,8 @@ export default defineComponent({
 			if (this.chargeDurationInterpolated > 0 && this.charging) {
 				this.chargeDurationInterpolated++;
 			}
-			if (this.chargeRemainingDurationInterpolated > 0 && this.charging) {
+			const optimizer = this.optimizerRemainingDuration != null;
+			if (this.chargeRemainingDurationInterpolated > 0 && (this.charging || optimizer)) {
 				this.chargeRemainingDurationInterpolated--;
 			}
 		},
