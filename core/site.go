@@ -118,19 +118,19 @@ type Site struct {
 	// cached measurement state, guarded by RWMutex
 	siteState
 
-	batteryMaxDischargePower *float64                    // Max discharge power of all battery meters
-	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
-	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
-	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
-	batteryModeApplied       map[string]api.BatteryMode  // Battery mode last applied by global control per battery meter
-	batterySlaveModeApplied  map[string]api.BatteryMode  // Battery mode last applied by slave control per battery meter
-	batterySlaveOutageSince  map[string]time.Time        // Start of the ongoing reading outage per master battery
-	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
-	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
-	lastOptimizerSolve       *optimizerSolve             // last successful solve, reapplied to newer slots by the control cycle
-	optimizerResult          *optimizerResult            // last published plan, explained on request
-	explainMu                sync.Mutex                  // serializes explain requests
-	explained                explainCache                // last explanation, guarded by explainMu
+	batteryMaxDischargePower *float64                      // Max discharge power of all battery meters
+	batteryMode              api.BatteryMode               // Battery mode (runtime only, not persisted)
+	batteryModeExternal      api.BatteryMode               // Battery mode (external, runtime only, not persisted)
+	batteryModeExternalTimer time.Time                     // Battery mode timer for external control
+	batteryModeApplied       map[string]api.BatteryMode    // Battery mode last applied by global control per battery meter
+	batterySlaveStates       map[string]*batterySlaveState // applied control state per slave battery meter
+	batterySlaveOutageSince  map[string]time.Time          // Start of the ongoing reading outage per master battery
+	suggestions              map[string]types.Suggestion   // Optimizer suggestions by device key
+	suggestionActions        map[string]string             // last notified actionable optimizer action by device key
+	lastOptimizerSolve       *optimizerSolve               // last successful solve, reapplied to newer slots by the control cycle
+	optimizerResult          *optimizerResult              // last published plan, explained on request
+	explainMu                sync.Mutex                    // serializes explain requests
+	explained                explainCache                  // last explanation, guarded by explainMu
 
 	optimizerMu      sync.Mutex  // guards optimizer runs
 	optimizerUpdated time.Time   // last optimizer run, guarded by optimizerMu

@@ -205,7 +205,7 @@ func TestUpdateBatterySlavePower(t *testing.T) {
 				site.batteryModeApplied = map[string]api.BatteryMode{"slave-1": tc.appliedMode}
 			}
 			if tc.slaveAppliedMode != api.BatteryUnknown {
-				site.batterySlaveModeApplied = map[string]api.BatteryMode{"slave-1": tc.slaveAppliedMode}
+				site.batterySlaveStates = map[string]*batterySlaveState{"slave-1": {appliedMode: tc.slaveAppliedMode}}
 			}
 			site.updateBatteryMeters()
 
@@ -213,7 +213,12 @@ func TestUpdateBatterySlavePower(t *testing.T) {
 				assert.Equal(t, tc.wantCalls, slave.setpointCalls, "slave %d calls", i+1)
 				assert.Equal(t, tc.wantModeCalls, slave.modeCalls, "slave %d mode calls", i+1)
 				assert.Equal(t, tc.appliedMode, site.batteryModeApplied[fmt.Sprintf("slave-%d", i+1)], "slave %d global applied mode", i+1)
-				assert.Equal(t, tc.wantSlaveMode, site.batterySlaveModeApplied[fmt.Sprintf("slave-%d", i+1)], "slave %d resulting mode cache", i+1)
+				state := site.batterySlaveStates[fmt.Sprintf("slave-%d", i+1)]
+				appliedMode := api.BatteryUnknown
+				if state != nil {
+					appliedMode = state.appliedMode
+				}
+				assert.Equal(t, tc.wantSlaveMode, appliedMode, "slave %d resulting mode cache", i+1)
 				assert.Equal(t, "master", site.battery.Devices[i+1].Master, "slave %d master", i+1)
 				assert.Equal(t, tc.wantStatus, site.battery.Devices[i+1].PowerControlStatus, "slave %d power control status", i+1)
 				if tc.wantModeCalls > 0 {
@@ -287,7 +292,115 @@ func TestUpdateBatterySlavePowerSkipsUnchangedMode(t *testing.T) {
 
 	assert.Equal(t, []api.BatteryMode{api.BatteryCharge}, slave.modeSetHistory)
 	assert.Equal(t, 2, slave.setpointCalls)
-	assert.Equal(t, api.BatteryCharge, site.batterySlaveModeApplied["slave"])
+	assert.Equal(t, api.BatteryCharge, site.batterySlaveStates["slave"].appliedMode)
+}
+
+func TestBatterySlaveSetpointMismatch(t *testing.T) {
+	tests := []struct {
+		name     string
+		applied  batterySlaveSetpoint
+		measured float64
+		want     batterySlavePowerMismatch
+	}{
+		{
+			name:     "charge while discharging",
+			applied:  batterySlaveSetpoint{mode: api.BatteryCharge, power: 500},
+			measured: 300,
+			want:     batterySlavePowerOppositeDirection,
+		},
+		{
+			name:     "discharge while charging",
+			applied:  batterySlaveSetpoint{mode: api.BatteryDischarge, power: 500},
+			measured: -300,
+			want:     batterySlavePowerOppositeDirection,
+		},
+		{
+			name:     "within charge deadband",
+			applied:  batterySlaveSetpoint{mode: api.BatteryCharge, power: 500},
+			measured: 50,
+			want:     batterySlavePowerMatches,
+		},
+		{
+			name:     "zero setpoint",
+			applied:  batterySlaveSetpoint{mode: api.BatteryCharge, power: 0},
+			measured: 300,
+			want:     batterySlavePowerMatches,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, batterySlaveSetpointMismatch(tc.applied, tc.measured))
+		})
+	}
+}
+
+func TestUpdateBatterySlavePowerNewModeSkipsPreviousDirectionCheck(t *testing.T) {
+	master := &batteryPowerControlMeter{power: -700}
+	slave := &batteryPowerControlMeter{power: -300}
+	var masterMeter api.Meter = master
+	var slaveMeter api.Meter = slave
+	site := &Site{
+		log: util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{
+			config.NewStaticDevice(config.Named{Name: "master"}, masterMeter),
+			config.NewStaticDevice(config.Named{Name: "slave", Other: map[string]any{"master": "master"}}, slaveMeter),
+		},
+	}
+	update := func() {
+		measurements := []types.Measurement{{Power: master.power}, {Power: slave.power}}
+		site.updateBatterySlavePower(measurements, []bool{true, true})
+	}
+
+	update()
+	assert.Equal(t, api.BatteryCharge, slave.modeSet)
+
+	master.power = 900
+	slave.power = 300
+	update()
+	assert.Equal(t, []api.BatteryMode{api.BatteryCharge, api.BatteryDischarge}, slave.modeSetHistory)
+	assert.True(t, site.batterySlaveStates["slave"].directionMismatchSince.IsZero())
+}
+
+func TestUpdateBatterySlavePowerReappliesModeOnDirectionMismatch(t *testing.T) {
+	master := &batteryPowerControlMeter{power: -700}
+	slave := &batteryPowerControlMeter{power: -300}
+	var masterMeter api.Meter = master
+	var slaveMeter api.Meter = slave
+	clck := clock.NewMock()
+	site := &Site{
+		log:   util.NewLogger("foo"),
+		clock: clck,
+		batteryMeters: []config.Device[api.Meter]{
+			config.NewStaticDevice(config.Named{Name: "master"}, masterMeter),
+			config.NewStaticDevice(config.Named{Name: "slave", Other: map[string]any{"master": "master"}}, slaveMeter),
+		},
+	}
+
+	update := func() {
+		measurements := []types.Measurement{{Power: master.power}, {Power: slave.power}}
+		site.updateBatterySlavePower(measurements, []bool{true, true})
+	}
+
+	update()
+	assert.Equal(t, api.BatteryCharge, slave.modeSet)
+	assert.Equal(t, float64(500), slave.setpoint)
+	slave.power = 300
+
+	update()
+	clck.Add(batterySlaveModeMismatchTimeout - time.Second)
+	update()
+	assert.Equal(t, 1, slave.modeCalls)
+
+	clck.Add(time.Second)
+	update()
+	assert.Equal(t, []api.BatteryMode{api.BatteryCharge, api.BatteryCharge}, slave.modeSetHistory)
+	assert.Equal(t, float64(200), slave.setpoint)
+
+	slave.power = -200
+	update()
+	assert.Len(t, slave.modeSetHistory, 2)
+	assert.True(t, site.batterySlaveStates["slave"].directionMismatchSince.IsZero())
 }
 
 func TestUpdateBatterySlavePowerOutage(t *testing.T) {
@@ -313,9 +426,12 @@ func TestUpdateBatterySlavePowerOutage(t *testing.T) {
 
 	update(true)
 	assert.Equal(t, []api.BatteryMode{api.BatteryCharge}, slave.modeSetHistory)
+	state := site.batterySlaveStates["slave"]
+	state.directionMismatchSince = clck.Now()
 
 	// outage within the timeout keeps the last setpoint
 	assert.Equal(t, "failed", update(false).PowerControlStatus)
+	assert.True(t, state.directionMismatchSince.IsZero())
 	clck.Add(batterySlaveOutageTimeout - time.Second)
 	update(false)
 	assert.Equal(t, []api.BatteryMode{api.BatteryCharge}, slave.modeSetHistory)
@@ -332,14 +448,14 @@ func TestUpdateBatterySlavePowerOutage(t *testing.T) {
 	clck.Add(time.Second)
 	update(false)
 	assert.Equal(t, []api.BatteryMode{api.BatteryCharge, api.BatteryNormal}, slave.modeSetHistory)
-	assert.NotContains(t, site.batterySlaveModeApplied, "slave")
+	assert.NotContains(t, site.batterySlaveStates, "slave")
 	update(false)
 	assert.Equal(t, []api.BatteryMode{api.BatteryCharge, api.BatteryNormal}, slave.modeSetHistory)
 
 	// readings return: control resumes
 	update(true)
 	assert.Equal(t, []api.BatteryMode{api.BatteryCharge, api.BatteryNormal, api.BatteryCharge}, slave.modeSetHistory)
-	assert.Equal(t, api.BatteryCharge, site.batterySlaveModeApplied["slave"])
+	assert.Equal(t, api.BatteryCharge, site.batterySlaveStates["slave"].appliedMode)
 }
 
 func TestReleaseBatterySlaves(t *testing.T) {
@@ -364,10 +480,10 @@ func TestReleaseBatterySlaves(t *testing.T) {
 				batteryMeters: []config.Device[api.Meter]{
 					config.NewStaticDevice(config.Named{Name: "slave"}, slaveMeter),
 				},
-				batterySlaveModeApplied: map[string]api.BatteryMode{},
+				batterySlaveStates: map[string]*batterySlaveState{},
 			}
 			if tc.cached != api.BatteryUnknown {
-				site.batterySlaveModeApplied["slave"] = tc.cached
+				site.batterySlaveStates["slave"] = &batterySlaveState{appliedMode: tc.cached}
 			}
 
 			site.releaseBatterySlaves()
@@ -376,7 +492,7 @@ func TestReleaseBatterySlaves(t *testing.T) {
 			if tc.wantModeCalls > 0 {
 				assert.Equal(t, api.BatteryNormal, slave.modeSet)
 			}
-			_, cached := site.batterySlaveModeApplied["slave"]
+			_, cached := site.batterySlaveStates["slave"]
 			assert.Equal(t, tc.wantCached || tc.cached == api.BatteryNormal, cached)
 		})
 	}
@@ -415,13 +531,15 @@ func TestApplyBatteryModeDoesNotClearSlaveModeCache(t *testing.T) {
 				batteryMeters: []config.Device[api.Meter]{
 					config.NewStaticDevice(config.Named{Name: "slave"}, slaveMeter),
 				},
-				batteryModeApplied:      map[string]api.BatteryMode{"slave": tc.previousGlobalMode},
-				batterySlaveModeApplied: map[string]api.BatteryMode{"slave": tc.slaveMode},
+				batteryModeApplied: map[string]api.BatteryMode{"slave": tc.previousGlobalMode},
+				batterySlaveStates: map[string]*batterySlaveState{
+					"slave": {appliedMode: tc.slaveMode},
+				},
 			}
 
 			assert.NoError(t, site.applyBatteryMode(tc.requestedGlobalMode))
 			assert.Equal(t, tc.wantModeCalls, slave.modeCalls)
-			_, slaveModeCached := site.batterySlaveModeApplied["slave"]
+			_, slaveModeCached := site.batterySlaveStates["slave"]
 			assert.Equal(t, tc.wantSlaveCache, slaveModeCached)
 			if tc.wantModeCalls > 0 {
 				assert.Equal(t, tc.requestedGlobalMode, slave.modeSet)

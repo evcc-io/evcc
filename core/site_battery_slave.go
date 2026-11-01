@@ -12,8 +12,14 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 )
 
-// batterySlaveOutageTimeout is how long slaves keep their last setpoint without readings.
-const batterySlaveOutageTimeout = 3 * time.Minute
+const (
+	// batterySlaveOutageTimeout is how long slaves keep their last setpoint without readings.
+	batterySlaveOutageTimeout = 3 * time.Minute
+	// Ignore direction differences within this 50 W deadband.
+	batterySlavePowerDirectionTolerance = 50.0
+	// Reapply mode only after opposite-direction measurements persist this long.
+	batterySlaveModeMismatchTimeout = 30 * time.Second
+)
 
 // SupportsBatterySlaveControl reports whether a meter supports the modes and setpoint control required for battery slave control.
 func SupportsBatterySlaveControl(meter api.Meter) bool {
@@ -40,6 +46,101 @@ func (site *Site) batterySlaveModeAllowed(name string) bool {
 type batterySlaveSetpoint struct {
 	mode  api.BatteryMode
 	power float64
+}
+
+type batterySlaveState struct {
+	appliedMode            api.BatteryMode
+	appliedSetpoint        *batterySlaveSetpoint
+	directionMismatchSince time.Time
+}
+
+type batterySlavePowerMismatch uint8
+
+const (
+	batterySlavePowerMatches batterySlavePowerMismatch = iota
+	batterySlavePowerOppositeDirection
+)
+
+func batterySlaveSetpointMismatch(applied batterySlaveSetpoint, measuredPower float64) batterySlavePowerMismatch {
+	if applied.power <= batterySlavePowerDirectionTolerance {
+		return batterySlavePowerMatches
+	}
+
+	switch applied.mode {
+	case api.BatteryCharge:
+		if measuredPower > batterySlavePowerDirectionTolerance {
+			return batterySlavePowerOppositeDirection
+		}
+	case api.BatteryDischarge:
+		if measuredPower < -batterySlavePowerDirectionTolerance {
+			return batterySlavePowerOppositeDirection
+		}
+	}
+
+	return batterySlavePowerMatches
+}
+
+func (site *Site) batterySlaveState(name string) *batterySlaveState {
+	if site.batterySlaveStates == nil {
+		site.batterySlaveStates = make(map[string]*batterySlaveState)
+	}
+
+	state := site.batterySlaveStates[name]
+	if state == nil {
+		state = new(batterySlaveState)
+		site.batterySlaveStates[name] = state
+	}
+	return state
+}
+
+func (site *Site) batterySlaveModeMismatchExpired(state *batterySlaveState, desired batterySlaveSetpoint, measuredPower float64) bool {
+	if state.appliedSetpoint == nil ||
+		state.appliedMode != desired.mode ||
+		state.appliedSetpoint.mode != desired.mode ||
+		desired.power <= batterySlavePowerDirectionTolerance {
+		state.directionMismatchSince = time.Time{}
+		return false
+	}
+
+	mismatch := batterySlaveSetpointMismatch(*state.appliedSetpoint, measuredPower)
+	if mismatch == batterySlavePowerMatches {
+		state.directionMismatchSince = time.Time{}
+		return false
+	}
+
+	now := site.clock.Now()
+	if state.directionMismatchSince.IsZero() {
+		state.directionMismatchSince = now
+		return false
+	}
+	if now.Sub(state.directionMismatchSince) < batterySlaveModeMismatchTimeout {
+		return false
+	}
+
+	state.directionMismatchSince = now
+	return true
+}
+
+func (site *Site) resetBatterySlaveDirectionMismatch(slaves []int) {
+	for _, slaveIndex := range slaves {
+		name := site.batteryMeters[slaveIndex].Config().Name
+		if state := site.batterySlaveStates[name]; state != nil {
+			state.directionMismatchSince = time.Time{}
+		}
+	}
+}
+
+func (site *Site) setBatterySlaveMode(state *batterySlaveState, meter api.Meter, mode api.BatteryMode) error {
+	controller, _ := api.Cap[api.BatteryController](meter)
+	if err := controller.SetBatteryMode(mode); err != nil {
+		return err
+	}
+
+	if state.appliedMode != mode {
+		state.directionMismatchSince = time.Time{}
+	}
+	state.appliedMode = mode
+	return nil
 }
 
 type batterySlavePowerPlan struct {
@@ -81,7 +182,8 @@ func calculateBatterySlaveSetpoints(masterPower float64, slavePowers []float64) 
 // releaseBatterySlave returns a slave under power control to normal operation.
 func (site *Site) releaseBatterySlave(dev config.Device[api.Meter]) bool {
 	name := dev.Config().Name
-	if !batteryModeModified(site.batterySlaveModeApplied[name]) {
+	state := site.batterySlaveStates[name]
+	if state == nil || !batteryModeModified(state.appliedMode) {
 		return false
 	}
 
@@ -95,7 +197,7 @@ func (site *Site) releaseBatterySlave(dev config.Device[api.Meter]) bool {
 		return false
 	}
 
-	delete(site.batterySlaveModeApplied, name)
+	delete(site.batterySlaveStates, name)
 	return true
 }
 
@@ -110,9 +212,6 @@ func (site *Site) updateBatterySlavePower(mm []types.Measurement, powerValid []b
 	if len(mm) != len(site.batteryMeters) || len(powerValid) != len(mm) {
 		site.log.ERROR.Printf("battery slave power: inconsistent input lengths: %d measurements, %d power-valid flags, %d batteries", len(mm), len(powerValid), len(site.batteryMeters))
 		return
-	}
-	if site.batterySlaveModeApplied == nil {
-		site.batterySlaveModeApplied = make(map[string]api.BatteryMode)
 	}
 	if site.batterySlaveOutageSince == nil {
 		site.batterySlaveOutageSince = make(map[string]time.Time)
@@ -129,6 +228,7 @@ func (site *Site) updateBatterySlavePower(mm []types.Measurement, powerValid []b
 	// slaves keep their last setpoint during an outage until the timeout releases them
 	handleOutage := func(master string, slaves []int) {
 		markSlavesFailed(slaves)
+		site.resetBatterySlaveDirectionMismatch(slaves)
 
 		now := site.clock.Now()
 		since, ok := site.batterySlaveOutageSince[master]
@@ -165,7 +265,7 @@ func (site *Site) updateBatterySlavePower(mm []types.Measurement, powerValid []b
 			slave := site.batteryMeters[slaveIndex]
 			name := slave.Config().Name
 			if !site.batterySlaveModeAllowed(name) {
-				delete(site.batterySlaveModeApplied, name)
+				delete(site.batterySlaveStates, name)
 				mm[slaveIndex].PowerControlStatus = "overridden"
 			}
 		}
@@ -221,15 +321,18 @@ func (site *Site) updateBatterySlavePower(mm []types.Measurement, powerValid []b
 			}
 
 			name := slave.Config().Name
-			if site.batterySlaveModeApplied[name] != setpoint.mode {
-				modeController, _ := api.Cap[api.BatteryController](meter)
-				if err := modeController.SetBatteryMode(setpoint.mode); err != nil {
+			state := site.batterySlaveState(name)
+			reapplyMode := site.batterySlaveModeMismatchExpired(state, setpoint, mm[slaveIndex].Power)
+			if state.appliedMode != setpoint.mode || reapplyMode {
+				if err := site.setBatterySlaveMode(state, meter, setpoint.mode); err != nil {
 					site.log.ERROR.Printf("battery %s mode: %v", slaveTitle, err)
 					mm[slaveIndex].PowerControlStatus = "failed"
 					continue
 				}
 
-				site.batterySlaveModeApplied[name] = setpoint.mode
+				if reapplyMode {
+					site.log.WARN.Printf("battery slave %s: measured power %.0fW contradicts last setpoint, reapplying mode %s", slaveTitle, mm[slaveIndex].Power, setpoint.mode)
+				}
 			}
 
 			controller, _ := api.Cap[api.BatteryModePowerController](meter)
@@ -237,6 +340,7 @@ func (site *Site) updateBatterySlavePower(mm []types.Measurement, powerValid []b
 				site.log.ERROR.Printf("battery %s power setpoint: %v", slaveTitle, err)
 				mm[slaveIndex].PowerControlStatus = "failed"
 			} else {
+				state.appliedSetpoint = &setpoint
 				site.log.TRACE.Printf("battery slave %s: applied target %s %.0fW", slaveTitle, setpoint.mode, setpoint.power)
 				mm[slaveIndex].PowerControlStatus = "applied"
 			}
