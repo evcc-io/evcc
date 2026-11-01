@@ -326,9 +326,11 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 	case "evse/user_enabled":
 		err = json.Unmarshal(payload, &w.evse.UserEnabled)
 	case "evse/state":
-		prev := w.evse.State.Iec61851State
-		if err = json.Unmarshal(payload, &w.evse.State); err == nil && w.evse.State.Iec61851State != prev {
-			lp = w.lp
+		prev, _ := w.statusFromEvseStatus(w.evse.State.Iec61851State)
+		if err = json.Unmarshal(payload, &w.evse.State); err == nil {
+			if status, _ := w.statusFromEvseStatus(w.evse.State.Iec61851State); status != prev {
+				lp = w.lp
+			}
 		}
 	case "meter/all_values":
 		if !w.hasFeature(warp.FeatureMeterAllValues) || w.hasFeature(warp.FeatureMeters) {

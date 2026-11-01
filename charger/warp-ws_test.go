@@ -12,7 +12,7 @@ import (
 
 func TestWarpWSStateRequestsLoadpointUpdate(t *testing.T) {
 	lp := loadpoint.NewMockAPI(gomock.NewController(t))
-	lp.EXPECT().RequestUpdate().Times(2)
+	lp.EXPECT().RequestUpdate().Times(3)
 
 	w := &WarpWS{log: util.NewLogger("warp")}
 	w.LoadpointControl(lp)
@@ -21,6 +21,8 @@ func TestWarpWSStateRequestsLoadpointUpdate(t *testing.T) {
 		`{"iec61851_state":1}`, // plugged
 		`{"iec61851_state":1}`, // unchanged
 		`{"iec61851_state":2}`, // charging
+		`{"iec61851_state":3}`, // unknown
+		`{"iec61851_state":4}`, // unknown, unchanged status
 	} {
 		require.NoError(t, w.handleEvent("evse/state", json.RawMessage(state)))
 	}
