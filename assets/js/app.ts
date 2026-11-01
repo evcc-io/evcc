@@ -62,7 +62,8 @@ const app = createApp(
     },
     computed: {
       offline(): boolean {
-        return this.wsOffline || store.state.apiReady !== true;
+        // no data yet on first connect is not offline, avoids a flashing banner
+        return this.wsOffline || store.state.apiReady === false;
       },
     },
     watch: {
