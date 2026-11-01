@@ -102,7 +102,7 @@ require (
 	gitlab.com/bboehmke/sunny v0.17.1
 	go.bug.st/serial v1.8.0
 	go.uber.org/mock v0.6.0
-	go.yaml.in/yaml/v4 v4.0.0-rc.6
+	go.yaml.in/yaml/v4 v4.0.0-rc.7
 	golang.org/x/crypto v0.58.0
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20261020153306-9f2b28d4331a
 	golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e
