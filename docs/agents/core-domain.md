@@ -124,7 +124,7 @@ effectivePrice = gridPrice * (1 - greenShare) + feedInPrice * greenShare
 | Channel | Scope | Buffer | Purpose |
 |---------|-------|--------|---------|
 | `valueChan` | Site | Unbounded (`chanx.NewUnboundedChan`) | State changes -> DB + UI (ordering) |
-| `lpUpdateChan` | Site | 1 | Early loadpoint update requests |
+| `lpUpdateChan` | Site | one per loadpoint | Early loadpoint update requests, each loadpoint queued at most once |
 | `pushChan` | Loadpoint | 16 | User notifications, queued via `valueChan` so the message renders the state at event time |
 
 ## Tariff Integration
