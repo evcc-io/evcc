@@ -286,3 +286,19 @@ func TestBootTriggerRejectedIgnoresStaleConnection(t *testing.T) {
 
 	cp.connect(false)
 }
+
+func TestBootTriggerRejectedAfterDisconnect(t *testing.T) {
+	log := util.NewLogger("test")
+	cp := NewChargePoint(log, instance, "test-cp")
+
+	cp.onTransportConnect()
+
+	cp.mu.RLock()
+	timer := cp.bootTimer
+	cp.mu.RUnlock()
+
+	cp.connect(false)
+	cp.onBootTriggerRejected(timer)
+
+	assert.False(t, cp.Connected(), "rejected trigger after disconnect must not mark the station connected")
+}

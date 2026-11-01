@@ -141,6 +141,12 @@ func (cp *CP) connect(connect bool) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
+	cp.setConnected(connect)
+}
+
+// setConnected updates the connection state.
+// Must be called with cp.mu held.
+func (cp *CP) setConnected(connect bool) {
 	cp.connected = connect
 
 	if connect {
@@ -207,15 +213,14 @@ func (cp *CP) onTransportConnect() {
 // onBootTriggerRejected ends the boot wait if timer still belongs to the current connection.
 func (cp *CP) onBootTriggerRejected(timer *time.Timer) {
 	cp.mu.Lock()
-	current := cp.bootTimer == timer
-	if current {
-		cp.stopBootTimer()
-	}
-	cp.mu.Unlock()
+	defer cp.mu.Unlock()
 
-	if current {
-		cp.connect(true)
+	if cp.bootTimer != timer {
+		return
 	}
+
+	cp.stopBootTimer()
+	cp.setConnected(true)
 }
 
 // onBootTimeout is called when the BootNotification wait timer expires.
