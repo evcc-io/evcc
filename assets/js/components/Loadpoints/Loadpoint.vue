@@ -160,6 +160,7 @@ export default defineComponent({
 		mode: String as PropType<CHARGE_MODE>,
 		alwaysCharge: String as PropType<ALWAYS_CHARGE>,
 		effectiveMinCurrent: Number,
+		effectiveMaxCurrent: Number,
 		effectiveLimitSoc: Number,
 		effectiveMinSoc: Number,
 		limitEnergy: Number,
@@ -309,7 +310,18 @@ export default defineComponent({
 			return this.chargerFeatureSwitchDevice;
 		},
 		phasesProps() {
-			return this.collectProps(Phases);
+			return {
+				...this.collectProps(Phases),
+				maxCurrent:
+					(this.effectiveMaxCurrent ?? 0) > 0
+						? this.effectiveMaxCurrent
+						: this.maxCurrent,
+				phasesConfigured: Math.min(
+					this.phasesConfigured || 3,
+					this.vehicle?.phases || 3,
+					this.chargerSinglePhase ? 1 : 3
+				),
+			};
 		},
 		modeProps() {
 			return this.collectProps(Mode);

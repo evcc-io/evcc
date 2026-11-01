@@ -1626,6 +1626,13 @@ components:
         - inactive
         - scale1p
         - scale3p
+    PhaseCount:
+      type: number
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
     PlanStrategy:
       description: Charging plan strategy.
       type: object
@@ -1949,6 +1956,9 @@ components:
         capacity:
           description: Usable battery capacity in kWh.
           type: number
+        phases:
+          $ref: "#/components/schemas/PhaseCount"
+          description: Maximum number of phases supported by the vehicle. Zero means unknown.
         icon:
           description: Vehicle icon name for UI display.
           type: string
