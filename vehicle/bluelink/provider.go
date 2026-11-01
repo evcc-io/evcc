@@ -1,11 +1,18 @@
 package bluelink
 
 import (
+	"errors"
+	"fmt"
+	"net/http"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
+
+const defaultChargeControlBackoff = 5 * time.Minute
 
 // Provider implements the vehicle api.
 // Based on https://github.com/Hacksore/bluelinky.
@@ -13,6 +20,11 @@ type Provider struct {
 	statusG func() (BluelinkVehicleStatusLatest, error)
 	refresh func() error
 	chargeS func(bool) error
+
+	chargeMu      sync.Mutex
+	chargeBackoff time.Duration
+	chargeUntil   time.Time
+	chargeErr     error
 }
 
 // NewProvider creates a new BlueLink API
@@ -25,6 +37,7 @@ func NewProvider(api *API, identity *Identity, vehicle Vehicle, pin string, cach
 		chargeS: func(enable bool) error {
 			return api.ChargeEnable(identity, vehicle, pin, enable)
 		},
+		chargeBackoff: defaultChargeControlBackoff,
 	}
 }
 
@@ -116,5 +129,53 @@ func (v *Provider) WakeUp() error {
 
 // EnableCharge starts or stops charging. Decorated as ChargeController only when a PIN is configured.
 func (v *Provider) EnableCharge(enable bool) error {
-	return v.chargeS(enable)
+	v.chargeMu.Lock()
+	defer v.chargeMu.Unlock()
+
+	if remaining := time.Until(v.chargeUntil); remaining > 0 {
+		err := v.chargeErr
+		if err == nil {
+			err = api.ErrMustRetry
+		}
+		return fmt.Errorf("charge control paused for %v: %w", remaining.Round(time.Second), err)
+	}
+
+	err := v.chargeS(enable)
+	if chargeControlShouldBackoff(err) {
+		backoff := v.chargeBackoff
+		if backoff <= 0 {
+			backoff = defaultChargeControlBackoff
+		}
+		v.chargeUntil = time.Now().Add(backoff)
+		v.chargeErr = err
+	} else if err == nil {
+		v.chargeUntil = time.Time{}
+		v.chargeErr = nil
+	}
+
+	return err
+}
+
+// chargeControlShouldBackoff reports whether Hyundai rejected a remote command
+// in a way that occupies the vehicle command slot. Retrying on every loadpoint
+// interval keeps that slot busy and blocks the official app.
+func chargeControlShouldBackoff(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	var se *request.StatusError
+	if errors.As(err, &se) && se.HasStatus(http.StatusBadRequest, http.StatusForbidden) {
+		return true
+	}
+
+	if u, ok := err.(interface{ Unwrap() []error }); ok {
+		for _, e := range u.Unwrap() {
+			if chargeControlShouldBackoff(e) {
+				return true
+			}
+		}
+	}
+
+	return false
 }

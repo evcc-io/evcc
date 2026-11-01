@@ -23,11 +23,19 @@ import (
 
 type ctxKey int
 
-const controlTokenContextKey ctxKey = iota
+const (
+	controlTokenContextKey ctxKey = iota
+	ccs2SupportContextKey
+)
 
 // WithControlToken uses a PIN-verified control token for CCS2 remote commands.
 func WithControlToken(ctx context.Context, token string) context.Context {
 	return context.WithValue(ctx, controlTokenContextKey, token)
+}
+
+// WithCCS2ProtocolSupport sets the Ccuccs2protocolsupport header on decorated requests.
+func WithCCS2ProtocolSupport(ctx context.Context, support int) context.Context {
+	return context.WithValue(ctx, ccs2SupportContextKey, support)
 }
 
 const (
@@ -249,8 +257,14 @@ func (v *Identity) Request(req *http.Request) error {
 		req.Header.Set(k, val)
 	}
 
+	// CCS2 control uses the PIN token for both Authorization and AuthorizationCCSP
 	if ctrl, ok := req.Context().Value(controlTokenContextKey).(string); ok && ctrl != "" {
+		req.Header.Set("Authorization", ctrl)
 		req.Header.Set("AuthorizationCCSP", ctrl)
+	}
+
+	if support, ok := req.Context().Value(ccs2SupportContextKey).(int); ok {
+		req.Header.Set("Ccuccs2protocolsupport", strconv.Itoa(support))
 	}
 
 	return nil

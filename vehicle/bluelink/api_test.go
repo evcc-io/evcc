@@ -79,6 +79,38 @@ func TestProviderIsNotChargeController(t *testing.T) {
 	assert.False(t, ok)
 }
 
+func TestChargeEnableCCS2UsesControlTokenHeaders(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1/user/pin", func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"retCode": "S",
+			"resMsg": map[string]any{
+				"controlToken": "ctrl",
+				"expiresTime":  time.Now().Add(time.Hour).Unix(),
+			},
+		})
+	})
+	mux.HandleFunc("/api/v2/spa/vehicles/VID/ccs2/control/charge", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "Bearer ctrl", r.Header.Get("Authorization"))
+		assert.Equal(t, "Bearer ctrl", r.Header.Get("AuthorizationCCSP"))
+		assert.Equal(t, "1", r.Header.Get("Ccuccs2protocolsupport"))
+		_ = json.NewEncoder(w).Encode(map[string]any{"retCode": "S"})
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+
+	identity := NewIdentity(util.NewLogger("test"), Config{
+		URI:               srv.URL,
+		CCSPApplicationID: testCCSPApplicationID,
+		Cfb:               testCfb,
+	})
+	identity.TokenSource = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "oauth-access"})
+	identity.deviceID = "dev-1"
+
+	client := NewAPI(util.NewLogger("test"), srv.URL+"/api/v1/spa", identity.Request)
+	require.NoError(t, client.ChargeEnable(identity, Vehicle{VehicleID: "VID", CcuCCS2ProtocolSupport: 1}, "1234", false))
+}
+
 func TestChargeEnableCCS2RequiresPIN(t *testing.T) {
 	client := NewAPI(util.NewLogger("test"), "https://example.invalid/api/v1/spa", func(*http.Request) error { return nil })
 	err := client.ChargeEnable(NewIdentity(util.NewLogger("test"), Config{}), Vehicle{VehicleID: "VID", CcuCCS2ProtocolSupport: 1}, "", true)

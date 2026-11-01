@@ -184,6 +184,7 @@ func (v *API) postChargeControl(identity *Identity, vehicle Vehicle, pin string,
 			return err
 		}
 		ctx = WithControlToken(ctx, token)
+		ctx = WithCCS2ProtocolSupport(ctx, vehicle.CcuCCS2ProtocolSupport)
 	}
 
 	var payload map[string]string

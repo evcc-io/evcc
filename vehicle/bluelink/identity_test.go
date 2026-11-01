@@ -243,7 +243,7 @@ func TestLoginPropagatesCCIError(t *testing.T) {
 	assert.Contains(t, err.Error(), "WAF")
 }
 
-func TestRequestKeepsOAuthSetsControlCCSP(t *testing.T) {
+func TestRequestSetsControlTokenOnAuthorizationAndCCSP(t *testing.T) {
 	identity := NewIdentity(util.NewLogger("test"), Config{
 		CCSPApplicationID: testCCSPApplicationID,
 		Cfb:               testCfb,
@@ -253,11 +253,29 @@ func TestRequestKeepsOAuthSetsControlCCSP(t *testing.T) {
 
 	req, err := http.NewRequest(http.MethodPost, "https://example.invalid/", nil)
 	require.NoError(t, err)
-	req = req.WithContext(WithControlToken(req.Context(), "Bearer ctrl"))
+	req = req.WithContext(WithCCS2ProtocolSupport(WithControlToken(req.Context(), "Bearer ctrl"), 1))
+
+	require.NoError(t, identity.Request(req))
+	assert.Equal(t, "Bearer ctrl", req.Header.Get("Authorization"))
+	assert.Equal(t, "Bearer ctrl", req.Header.Get("AuthorizationCCSP"))
+	assert.Equal(t, "1", req.Header.Get("Ccuccs2protocolsupport"))
+}
+
+func TestRequestKeepsOAuthWithoutControlToken(t *testing.T) {
+	identity := NewIdentity(util.NewLogger("test"), Config{
+		CCSPApplicationID: testCCSPApplicationID,
+		Cfb:               testCfb,
+	})
+	identity.TokenSource = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "oauth-access"})
+	identity.deviceID = "dev-1"
+
+	req, err := http.NewRequest(http.MethodPost, "https://example.invalid/", nil)
+	require.NoError(t, err)
 
 	require.NoError(t, identity.Request(req))
 	assert.Equal(t, "Bearer oauth-access", req.Header.Get("Authorization"))
-	assert.Equal(t, "Bearer ctrl", req.Header.Get("AuthorizationCCSP"))
+	assert.Empty(t, req.Header.Get("AuthorizationCCSP"))
+	assert.Empty(t, req.Header.Get("Ccuccs2protocolsupport"))
 }
 
 func TestControlAuthorizationCachesAndInvalidates(t *testing.T) {
