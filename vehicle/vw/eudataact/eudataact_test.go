@@ -303,3 +303,22 @@ func TestKeepData(t *testing.T) {
 	assert.False(t, keepData(data, time.Time{}), "never succeeded")
 	assert.False(t, keepData(nil, time.Now()), "no data")
 }
+
+// TestSocKeysPrepended reproduces #35564: on the Cupra Born battery_level_HV.value
+// matches the app while battery_state_report.soc lags, both delivered together.
+func TestSocKeysPrepended(t *testing.T) {
+	data := []point{
+		{Key: KeyBatteryStateReportSoc, Name: "battery_state_report.soc", Value: "72"},
+		{Key: "ac1108b1-b8cc-3db9-a663-03d387e42223", Name: FieldHvBatteryLevelValue, Value: "73.0"},
+	}
+
+	p := testProvider(data)
+	soc, err := p.Soc()
+	require.NoError(t, err)
+	assert.Equal(t, 72.0, soc, "default prefers battery_state_report.soc")
+
+	p.socKeys = []string{"ac1108b1-b8cc-3db9-a663-03d387e42223"} // battery_level_HV.value
+	soc, err = p.Soc()
+	require.NoError(t, err)
+	assert.Equal(t, 73.0, soc, "prepended key wins")
+}
