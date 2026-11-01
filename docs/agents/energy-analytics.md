@@ -7,7 +7,7 @@ How the Energy page turns 15-minute meter slots into attribution, cost, CO2, aut
 Everything derives from two tables written every 15 minutes:
 
 - **Meter slots**: per entity `energy` and `returnEnergy` in kWh, optionally SoC or temperature. Entities belong to a group: `pv`, `grid`, `battery`, `home`, `loadpoint`, `consumer`, `meter`, `forecast`, `temperature`.
-- **Tariff slots**: grid price, feed-in price, CO2 intensity and outside temperature at the same slot boundaries. Each value is optional, a slot exists as soon as one is known.
+- **Tariff slots**: grid price, feed-in price, solar price, CO2 intensity and outside temperature at the same slot boundaries. Each value is optional, a slot exists as soon as one is known.
 
 Directions per group:
 
@@ -60,7 +60,7 @@ Prices are applied at slot level and summed, never as period average times energ
 Per slot with a grid price:
 
 - Import cost = import × grid price. Export revenue = export × feed-in price.
-- **Consumption cost**: grid energy that reached home or loadpoints at the grid price, plus self-produced energy that reached them at the feed-in price. The feed-in price is the opportunity cost: that kWh could have been sold.
+- **Consumption cost**: grid energy that reached home or loadpoints at the grid price, plus self-produced energy at the configured solar price. Without a solar price, self-produced energy uses the feed-in price as its opportunity cost.
 - Each flow into home or loadpoints carries its own cost and priced energy under the same rule. Consumption cost is the sum of these flows, and it can be split by source.
 - **Baseline**: the same consumed energy at the period's average grid price, as if there were no PV and no battery. The page derives it from the average grid price and the priced consumption.
 - **Savings** = baseline - consumption cost.

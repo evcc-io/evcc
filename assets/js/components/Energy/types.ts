@@ -50,6 +50,9 @@ export interface TariffSlot {
   feedin?: number;
   feedinMin?: number;
   feedinMax?: number;
+  solarPrice?: number;
+  solarPriceMin?: number;
+  solarPriceMax?: number;
   co2?: number;
   temperature?: number;
 }

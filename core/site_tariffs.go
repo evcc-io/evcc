@@ -85,11 +85,14 @@ func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
 // effectivePrice calculates the real energy price based on self-produced and grid-imported energy.
 func (site *Site) effectivePrice(greenShare float64) *float64 {
 	if grid, err := tariff.Now(site.GetTariff(api.TariffUsageGrid)); err == nil {
-		feedin, err := tariff.Now(site.GetTariff(api.TariffUsageFeedIn))
+		solarPrice, err := tariff.Now(site.GetTariff(api.TariffUsageSolarPrice))
 		if err != nil {
-			feedin = 0
+			solarPrice, err = tariff.Now(site.GetTariff(api.TariffUsageFeedIn))
+			if err != nil {
+				solarPrice = 0
+			}
 		}
-		effPrice := grid*(1-greenShare) + feedin*greenShare
+		effPrice := grid*(1-greenShare) + solarPrice*greenShare
 		return &effPrice
 	}
 	return nil
@@ -113,6 +116,9 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 	if v, err := tariff.Now(site.GetTariff(api.TariffUsageFeedIn)); err == nil {
 		site.publish(keys.TariffFeedIn, v)
+	}
+	if v, err := tariff.Now(site.GetTariff(api.TariffUsageSolarPrice)); err == nil {
+		site.publish(keys.TariffSolarPrice, v)
 	}
 	if v, err := tariff.Now(site.GetTariff(api.TariffUsageCo2)); err == nil {
 		site.publish(keys.TariffCo2, v)
@@ -184,6 +190,7 @@ func (site *Site) persistTariffs() {
 	if err := metrics.PersistTariffs(slot,
 		value(api.TariffUsageGrid),
 		value(api.TariffUsageFeedIn),
+		value(api.TariffUsageSolarPrice),
 		value(api.TariffUsageCo2),
 		value(api.TariffUsageTemperature),
 	); err != nil {

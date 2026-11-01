@@ -135,11 +135,14 @@ components:
         tariffFeedIn:
           description: Current grid export price per kWh in the configured currency.
           type: number
+        tariffSolarPrice:
+          description: Current solar energy price per kWh in the configured currency.
+          type: number
         tariffCo2:
           description: Current grid CO₂ emissions in g/kWh.
           type: number
         tariffSolar:
-          description: Current cost of solar production per kWh in the configured currency.
+          description: Current solar production forecast in W.
           type: number
         tariffPriceHome:
           description: Current energy price of home consumption per kWh, taking the green energy share into account.

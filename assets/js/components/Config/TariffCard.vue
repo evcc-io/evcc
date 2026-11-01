@@ -70,6 +70,7 @@ export default {
 			const iconMap: Record<TariffType, string> = {
 				grid: "shopicon-regular-invoice",
 				feedIn: "shopicon-regular-receivepayment",
+				solarPrice: "shopicon-regular-sun",
 				co2: "shopicon-regular-eco1",
 				planner: "shopicon-regular-clock",
 				solar: "shopicon-regular-sun",

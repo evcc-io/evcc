@@ -16,6 +16,7 @@ type tariffValue struct {
 	Timestamp   int64    `gorm:"column:ts;uniqueIndex"` // 15min boundary
 	Grid        *float64 `gorm:"column:grid"`
 	FeedIn      *float64 `gorm:"column:feedin"`
+	SolarPrice  *float64 `gorm:"column:solarprice"`
 	Co2         *float64 `gorm:"column:co2"`
 	Temperature *float64 `gorm:"column:temperature"`
 }
@@ -34,7 +35,7 @@ func init() {
 var ErrInvalidUsage = errors.New("invalid usage")
 
 // tariffUsages are the deletable usages, named after their table column
-var tariffUsages = []string{"grid", "feedin", "co2", "temperature"}
+var tariffUsages = []string{"grid", "feedin", "solarprice", "co2", "temperature"}
 
 // DeleteTariffs removes the persisted values in [from,to). An empty usage drops
 // the entire row, otherwise only that usage is cleared. Both bounds are
@@ -68,15 +69,15 @@ func DeleteTariffs(from, to time.Time, usage string) (int64, error) {
 
 	// drop the rows that no longer hold any value
 	err := inRange().
-		Where("grid IS NULL AND feedin IS NULL AND co2 IS NULL AND temperature IS NULL").
+		Where("grid IS NULL AND feedin IS NULL AND solarprice IS NULL AND co2 IS NULL AND temperature IS NULL").
 		Delete(new(tariffValue)).Error
 
 	return res.RowsAffected, err
 }
 
 // PersistTariffs stores the tariff values at the given 15min boundary, nil values omitted
-func PersistTariffs(ts time.Time, grid, feedin, co2, temperature *float64) error {
-	if grid == nil && feedin == nil && co2 == nil && temperature == nil {
+func PersistTariffs(ts time.Time, grid, feedin, solarPrice, co2, temperature *float64) error {
+	if grid == nil && feedin == nil && solarPrice == nil && co2 == nil && temperature == nil {
 		return nil
 	}
 
@@ -84,6 +85,7 @@ func PersistTariffs(ts time.Time, grid, feedin, co2, temperature *float64) error
 		Timestamp:   ts.Unix(),
 		Grid:        grid,
 		FeedIn:      feedin,
+		SolarPrice:  solarPrice,
 		Co2:         co2,
 		Temperature: temperature,
 	}).Error
@@ -92,16 +94,19 @@ func PersistTariffs(ts time.Time, grid, feedin, co2, temperature *float64) error
 // TariffSlot is one persisted 15 minute slot of tariff values, or the average
 // of a bucket with the slot range when aggregated
 type TariffSlot struct {
-	Timestamp   int64     `json:"-" gorm:"column:ts"`
-	Start       time.Time `json:"start" gorm:"-"`
-	Grid        *float64  `json:"grid,omitempty"`
-	GridMin     *float64  `json:"gridMin,omitempty"`
-	GridMax     *float64  `json:"gridMax,omitempty"`
-	FeedIn      *float64  `json:"feedin,omitempty"`
-	FeedInMin   *float64  `json:"feedinMin,omitempty"`
-	FeedInMax   *float64  `json:"feedinMax,omitempty"`
-	Co2         *float64  `json:"co2,omitempty"`
-	Temperature *float64  `json:"temperature,omitempty"`
+	Timestamp     int64     `json:"-" gorm:"column:ts"`
+	Start         time.Time `json:"start" gorm:"-"`
+	Grid          *float64  `json:"grid,omitempty"`
+	GridMin       *float64  `json:"gridMin,omitempty"`
+	GridMax       *float64  `json:"gridMax,omitempty"`
+	FeedIn        *float64  `json:"feedin,omitempty"`
+	FeedInMin     *float64  `json:"feedinMin,omitempty"`
+	FeedInMax     *float64  `json:"feedinMax,omitempty"`
+	SolarPrice    *float64  `json:"solarPrice,omitempty"`
+	SolarPriceMin *float64  `json:"solarPriceMin,omitempty"`
+	SolarPriceMax *float64  `json:"solarPriceMax,omitempty"`
+	Co2           *float64  `json:"co2,omitempty"`
+	Temperature   *float64  `json:"temperature,omitempty"`
 }
 
 // QueryTariffs returns the persisted slots in [from,to), zero bounds are open.
@@ -116,7 +121,7 @@ func QueryTariffs(from, to time.Time, aggregate string) ([]TariffSlot, error) {
 	}
 
 	if aggregate == "" || aggregate == "15m" {
-		tx = tx.Select("ts, grid, feedin AS feed_in, co2, temperature")
+		tx = tx.Select("ts, grid, feedin AS feed_in, solarprice AS solar_price, co2, temperature")
 	} else {
 		format, ok := aggregateFormats[aggregate]
 		if !ok {
@@ -124,7 +129,8 @@ func QueryTariffs(from, to time.Time, aggregate string) ([]TariffSlot, error) {
 		}
 		tx = tx.Select(`MIN(ts) AS ts,
 			AVG(grid) AS grid, MIN(grid) AS grid_min, MAX(grid) AS grid_max,
-			AVG(feedin) AS feed_in, MIN(feedin) AS feed_in_min, MAX(feedin) AS feed_in_max`).
+			AVG(feedin) AS feed_in, MIN(feedin) AS feed_in_min, MAX(feedin) AS feed_in_max,
+			AVG(solarprice) AS solar_price, MIN(solarprice) AS solar_price_min, MAX(solarprice) AS solar_price_max`).
 			Group(fmt.Sprintf(`strftime('%s', ts, 'unixepoch', 'localtime')`, format))
 	}
 

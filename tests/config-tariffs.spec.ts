@@ -178,6 +178,7 @@ grid:
     const modal = page.getByTestId("tariff-modal");
     const tariffGrid = page.getByTestId("tariff-grid");
     const tariffFeedin = page.getByTestId("tariff-feedIn");
+    const tariffSolarPrice = page.getByTestId("tariff-solarPrice");
     const tariffCo2 = page.getByTestId("tariff-co2");
     const tariffSolar = page.getByTestId("tariff-solar");
     const tariffTemperature = page.getByTestId("tariff-temperature");
@@ -188,6 +189,7 @@ grid:
     // modal buttons
     const addGridImport = modal.getByRole("button", { name: "Add grid import tariff" });
     const addGridExport = modal.getByRole("button", { name: "Add grid export tariff" });
+    const addSolarPrice = modal.getByRole("button", { name: "Add solar energy price" });
     const addCo2Forecast = modal.getByRole("button", { name: "Add CO₂ forecast" });
     const addSolarForecast = modal.getByRole("button", { name: "Add solar forecast" });
     const addTemperatureForecast = modal.getByRole("button", {
@@ -220,6 +222,17 @@ grid:
     await save.click();
     await expectModalHidden(modal);
     await expect(tariffFeedin).toContainText(["Price", "8.7 ct"].join(""));
+    await expect(addTariff).toBeVisible();
+
+    // create solar energy price
+    await addTariff.click();
+    await expectModalVisible(modal);
+    await addSolarPrice.click();
+    await modal.getByLabel("Provider").selectOption("Fixed Price");
+    await modal.getByLabel("Price").fill("10.1");
+    await save.click();
+    await expectModalHidden(modal);
+    await expect(tariffSolarPrice).toContainText(["Price", "10.1 ct"].join(""));
     await expect(addTariff).not.toBeVisible();
 
     // create CO₂ forecast
@@ -288,6 +301,8 @@ grid:
     await expect(tariffGrid).toContainText(["Price", "32.1 ct"].join(""));
     await expect(tariffFeedin).toBeVisible();
     await expect(tariffFeedin).toContainText(["Price", "8.7 ct"].join(""));
+    await expect(tariffSolarPrice).toBeVisible();
+    await expect(tariffSolarPrice).toContainText(["Price", "10.1 ct"].join(""));
     await expect(tariffCo2).toBeVisible();
     await expect(tariffSolar).toHaveCount(2);
     await expect(tariffSolar.nth(0)).toContainText("Roof South");
@@ -310,6 +325,8 @@ grid:
     await expect(tariffCo2).toHaveCount(0);
     await deleteTariff(modal, tariffFeedin);
     await expect(tariffFeedin).toHaveCount(0);
+    await deleteTariff(modal, tariffSolarPrice);
+    await expect(tariffSolarPrice).toHaveCount(0);
     await expect(addTariff).toBeVisible();
     await deleteTariff(modal, tariffGrid);
     await expect(tariffGrid).toHaveCount(0);

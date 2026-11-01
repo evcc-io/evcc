@@ -1327,6 +1327,7 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 	var eg errgroup.Group
 	eg.Go(func() error { return configureTariff(conf.Grid, refs.Grid, &tariffs.Grid) })
 	eg.Go(func() error { return configureTariff(conf.FeedIn, refs.FeedIn, &tariffs.FeedIn) })
+	eg.Go(func() error { return configureTariff(conf.SolarPrice, refs.SolarPrice, &tariffs.SolarPrice) })
 	eg.Go(func() error { return configureTariff(conf.Co2, refs.Co2, &tariffs.Co2) })
 	eg.Go(func() error { return configureTariff(conf.Planner, refs.Planner, &tariffs.Planner) })
 	eg.Go(func() error { return configureSolarTariffs(conf.Solar, refs.Solar, &tariffs.Solar) })

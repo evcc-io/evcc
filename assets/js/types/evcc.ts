@@ -267,9 +267,11 @@ export interface State {
   tariffGrid?: number;
   /** Current grid export price per kWh in the configured currency. */
   tariffFeedIn?: number;
+  /** Current solar energy price per kWh in the configured currency. */
+  tariffSolarPrice?: number;
   /** Current grid CO₂ emissions in g/kWh. */
   tariffCo2?: number;
-  /** Current cost of solar production per kWh in the configured currency. */
+  /** Current solar production forecast in W. */
   tariffSolar?: number;
   /** Current energy price of home consumption per kWh, taking the green energy share into account. */
   tariffPriceHome?: number;
@@ -1519,7 +1521,24 @@ export type MeterType =
   | "consumer"
   | "circuit";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
-export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar" | "temperature";
+export type TariffType =
+  | "grid"
+  | "feedIn"
+  | "solarPrice"
+  | "co2"
+  | "planner"
+  | "solar"
+  | "temperature";
+
+export interface TariffRefs {
+  grid: string;
+  feedIn: string;
+  solarPrice: string;
+  co2: string;
+  planner: string;
+  solar: string[];
+  temperature: string;
+}
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;

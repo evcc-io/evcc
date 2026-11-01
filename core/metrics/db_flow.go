@@ -61,11 +61,11 @@ type FlowResult struct {
 type flowSlot struct {
 	Ts                                                  int64
 	PV, GridIn, GridOut, BatIn, BatOut, Home, Loadpoint float64
-	Grid, FeedIn, Co2                                   *float64
+	Grid, FeedIn, SolarPrice, Co2                       *float64
 }
 
 // price of energy from a source in this slot: grid at the grid price, own
-// energy at the feed-in price it could have earned. Nothing is priced without a grid price.
+// energy at its configured price, or at the feed-in price as a fallback.
 func (s flowSlot) price(from string, energy float64) (cost, priced float64) {
 	if s.Grid == nil {
 		return 0, 0
@@ -73,8 +73,12 @@ func (s flowSlot) price(from string, energy float64) (cost, priced float64) {
 	if from == Grid {
 		return energy * *s.Grid, energy
 	}
-	if s.FeedIn != nil {
-		return energy * *s.FeedIn, energy
+	solarPrice := s.SolarPrice
+	if solarPrice == nil {
+		solarPrice = s.FeedIn
+	}
+	if solarPrice != nil {
+		return energy * *solarPrice, energy
 	}
 	return 0, energy
 }
@@ -188,7 +192,7 @@ func sinkSlots(from, to time.Time) ([]flowSlot, error) {
 			COALESCE(SUM(CASE WHEN e."group" = 'battery' THEN m.energy END), 0) AS bat_in,
 			COALESCE(SUM(CASE WHEN e."group" = 'battery' THEN m.return_energy END), 0) AS bat_out,
 			COALESCE(SUM(CASE WHEN e."group" = 'home' THEN m.energy END), 0) AS home,
-			t.grid, t.feedin, t.co2`).
+			t.grid, t.feedin, t.solarprice, t.co2`).
 		Joins("JOIN entities e ON m.meter = e.id").
 		Joins("LEFT JOIN tariffs t ON t.ts = m.ts").
 		Where(`e."group" IN ?`, []string{PV, Grid, Battery, Home}).
@@ -211,7 +215,7 @@ func sinkSlots(from, to time.Time) ([]flowSlot, error) {
 	for rows.Next() {
 		var s flowSlot
 		// scanned by hand: gorm's reflective ScanRows dominates long periods
-		if err := rows.Scan(&s.Ts, &s.PV, &s.GridIn, &s.GridOut, &s.BatIn, &s.BatOut, &s.Home, &s.Grid, &s.FeedIn, &s.Co2); err != nil {
+		if err := rows.Scan(&s.Ts, &s.PV, &s.GridIn, &s.GridOut, &s.BatIn, &s.BatOut, &s.Home, &s.Grid, &s.FeedIn, &s.SolarPrice, &s.Co2); err != nil {
 			return nil, err
 		}
 		res = append(res, s)

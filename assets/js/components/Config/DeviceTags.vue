@@ -264,6 +264,7 @@ export default {
 				case "price":
 				case "gridPrice":
 				case "feedinPrice":
+				case "solarPrice":
 					return this.fmtPricePerKWh(value, this.currency, true);
 				case "co2":
 					return this.fmtCo2Short(value);

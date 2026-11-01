@@ -11,6 +11,37 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type testPriceTariff struct {
+	rates api.Rates
+}
+
+func (t testPriceTariff) Rates() (api.Rates, error) { return t.rates, nil }
+func (testPriceTariff) Type() api.TariffType        { return api.TariffTypePriceStatic }
+
+func TestEffectivePriceSolarPrice(t *testing.T) {
+	now := time.Now()
+	price := func(value float64) api.Tariff {
+		return testPriceTariff{rates: api.Rates{{Start: now.Add(-time.Hour), End: now.Add(time.Hour), Value: value}}}
+	}
+
+	grid, feedIn, solarPrice := price(0.3), price(0.08), price(0.12)
+	for _, tc := range []struct {
+		name       string
+		solarPrice api.Tariff
+		want       float64
+	}{
+		{name: "configured solar price", solarPrice: solarPrice, want: 0.21},
+		{name: "feed-in fallback", solarPrice: nil, want: 0.19},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			site := &Site{tariffs: &tariff.Tariffs{Grid: grid, FeedIn: feedIn, SolarPrice: tc.solarPrice}}
+			effectivePrice := site.effectivePrice(0.5)
+			require.NotNil(t, effectivePrice)
+			assert.InDelta(t, tc.want, *effectivePrice, 0.001)
+		})
+	}
+}
+
 func TestForecastSlotEnergy(t *testing.T) {
 	slot := time.Unix(1735689600, 0).Truncate(tariff.SlotDuration)
 	rate := func(i int, power float64) api.Rate {

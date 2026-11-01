@@ -69,6 +69,15 @@ func TestFeedInRatesWithoutTariff(t *testing.T) {
 	}, feedInRates(nil, grid))
 }
 
+func TestOptimizerTerminalValue(t *testing.T) {
+	grid := []float32{0.0003}
+	feedIn := []float32{0.0001}
+	solarPrice := api.Rates{{Value: 0.4}}
+
+	assert.InDelta(t, 0.0004/eta*1.01, optimizerTerminalValue(grid, feedIn, solarPrice), 1e-8)
+	assert.InDelta(t, 0.0003*eta*0.99, optimizerTerminalValue(grid, feedIn, nil), 1e-8)
+}
+
 func TestApplyPrecondition(t *testing.T) {
 	ctrl := gomock.NewController(t)
 

@@ -170,6 +170,7 @@ type Tariffs struct {
 	Currency    string
 	Grid        config.Typed
 	FeedIn      config.Typed
+	SolarPrice  config.Typed
 	Co2         config.Typed
 	Planner     config.Typed
 	Solar       []config.Typed
@@ -177,12 +178,13 @@ type Tariffs struct {
 }
 
 func (c Tariffs) IsConfigured() bool {
-	return c.Currency != "" || c.Grid.Type != "" || c.FeedIn.Type != "" || c.Co2.Type != "" || c.Planner.Type != "" || len(c.Solar) > 0 || c.Temperature.Type != ""
+	return c.Currency != "" || c.Grid.Type != "" || c.FeedIn.Type != "" || c.SolarPrice.Type != "" || c.Co2.Type != "" || c.Planner.Type != "" || len(c.Solar) > 0 || c.Temperature.Type != ""
 }
 
 type TariffRefs struct {
 	Grid        string   `json:"grid"`
 	FeedIn      string   `json:"feedIn"`
+	SolarPrice  string   `json:"solarPrice"`
 	Co2         string   `json:"co2"`
 	Planner     string   `json:"planner"`
 	Solar       []string `json:"solar"`
@@ -190,12 +192,12 @@ type TariffRefs struct {
 }
 
 func (refs TariffRefs) IsConfigured() bool {
-	return refs.Grid != "" || refs.FeedIn != "" || refs.Co2 != "" || refs.Planner != "" || len(refs.Solar) > 0 || refs.Temperature != ""
+	return refs.Grid != "" || refs.FeedIn != "" || refs.SolarPrice != "" || refs.Co2 != "" || refs.Planner != "" || len(refs.Solar) > 0 || refs.Temperature != ""
 }
 
 func (refs TariffRefs) Used() iter.Seq[string] {
 	return func(yield func(string) bool) {
-		for _, ref := range append([]string{refs.Grid, refs.FeedIn, refs.Co2, refs.Planner, refs.Temperature}, refs.Solar...) {
+		for _, ref := range append([]string{refs.Grid, refs.FeedIn, refs.SolarPrice, refs.Co2, refs.Planner, refs.Temperature}, refs.Solar...) {
 			if ref != "" {
 				if !yield(ref) {
 					return

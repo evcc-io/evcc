@@ -62,7 +62,7 @@ func TestDeleteTariffs(t *testing.T) {
 	base := time.Date(2026, 4, 15, 16, 0, 0, 0, time.UTC)
 	grid, co2 := 0.3, 250.0
 	for i := range 4 {
-		require.NoError(t, PersistTariffs(base.Add(time.Duration(i)*15*time.Minute), &grid, nil, &co2, nil))
+		require.NoError(t, PersistTariffs(base.Add(time.Duration(i)*15*time.Minute), &grid, nil, nil, &co2, nil))
 	}
 
 	count := func() int64 {
@@ -79,8 +79,16 @@ func TestDeleteTariffs(t *testing.T) {
 	require.ErrorIs(t, err, ErrInvalidUsage)
 	require.Equal(t, int64(4), count())
 
+	solarSlot := base.Add(time.Hour)
+	solarPrice := 0.12
+	require.NoError(t, PersistTariffs(solarSlot, nil, nil, &solarPrice, nil, nil))
+	rows, err := DeleteTariffs(solarSlot, solarSlot.Add(15*time.Minute), "solarprice")
+	require.NoError(t, err)
+	require.Equal(t, int64(1), rows)
+	require.Equal(t, int64(4), count())
+
 	// clearing one usage keeps the row as long as another value remains
-	rows, err := DeleteTariffs(base, base.Add(30*time.Minute), "grid")
+	rows, err = DeleteTariffs(base, base.Add(30*time.Minute), "grid")
 	require.NoError(t, err)
 	require.Equal(t, int64(2), rows)
 	require.Equal(t, int64(4), count())

@@ -1282,6 +1282,7 @@ paths:
             enum:
               - grid
               - feedin
+              - solarprice
               - co2
               - planner
               - solar
@@ -1940,6 +1941,15 @@ paths:
                       type: number
                     feedinMax:
                       type: number
+                    solarPrice:
+                      type: number
+                      description: Solar energy price per kWh, the bucket average when aggregated
+                    solarPriceMin:
+                      type: number
+                      description: Lowest slot solar price in the bucket, aggregated only
+                    solarPriceMax:
+                      type: number
+                      description: Highest slot solar price in the bucket, aggregated only
                     co2:
                       type: number
                       description: g/kWh

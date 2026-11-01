@@ -546,6 +546,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 
 	solarTariff := site.GetTariff(api.TariffUsageSolar)
 	solar := currentRates(solarTariff)
+	solarPrice := currentRates(site.GetTariff(api.TariffUsageSolarPrice))
 
 	grid := currentRates(site.GetTariff(api.TariffUsageGrid))
 	planner := currentRates(site.GetTariff(api.TariffUsagePlanner))
@@ -627,7 +628,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 
 	// end of horizon Wh value, floored at the export price: charging surplus only
 	// stores eta Wh per Wh, so below pE/eta exporting beats storing
-	pa := max(lo.Min(req.TimeSeries.PN)*eta*0.99, lo.Min(req.TimeSeries.PE)/eta*1.01)
+	pa := optimizerTerminalValue(req.TimeSeries.PN, req.TimeSeries.PE, solarPrice)
 
 	// individual profiles summarized into Gt, for the debug view
 	details = requestDetails{
@@ -729,6 +730,18 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	}
 
 	return req, details, nil
+}
+
+func optimizerTerminalValue(grid, feedIn []float32, solarPrice api.Rates) float32 {
+	value := max(lo.Min(grid)*eta*0.99, lo.Min(feedIn)/eta*1.01)
+	if len(solarPrice) > 0 {
+		minSolarPrice := solarPrice[0].Value
+		for _, rate := range solarPrice[1:] {
+			minSolarPrice = min(minSolarPrice, rate.Value)
+		}
+		value = max(value, float32(minSolarPrice*0.001/eta*1.01))
+	}
+	return value
 }
 
 func (site *Site) optimizerUpdate(battery []types.Measurement) error {

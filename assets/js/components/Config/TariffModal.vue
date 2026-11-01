@@ -119,7 +119,9 @@ export default defineComponent({
 		},
 		// a fixed price is the common case for grid import and export
 		defaultTemplate(): string | undefined {
-			return this.tariffType === "grid" || this.tariffType === "feedIn" ? "fixed" : undefined;
+			return ["grid", "feedIn", "solarPrice"].includes(this.tariffType || "")
+				? "fixed"
+				: undefined;
 		},
 		modalTitle(): string {
 			if (this.name !== "tariff") {
@@ -213,6 +215,7 @@ export default defineComponent({
 			const groupMap: Record<string, { service: Product[]; generic: Product[] }> = {
 				grid: { service: priceProducts, generic: priceGeneric },
 				feedIn: { service: priceProducts, generic: priceGeneric },
+				solarPrice: { service: priceProducts, generic: priceGeneric },
 				co2: { service: co2Products, generic: co2Generic },
 				solar: { service: solarProducts, generic: solarGeneric },
 				temperature: { service: temperatureProducts, generic: temperatureGeneric },
@@ -240,6 +243,7 @@ export default defineComponent({
 				if (
 					this.tariffType === "grid" ||
 					this.tariffType === "feedIn" ||
+					this.tariffType === "solarPrice" ||
 					this.tariffType === "planner"
 				) {
 					values.yaml = tariffPriceYaml;

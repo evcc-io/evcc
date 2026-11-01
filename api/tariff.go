@@ -25,4 +25,5 @@ const (
 	TariffUsagePlanner
 	TariffUsageSolar
 	TariffUsageTemperature // outdoor temperature forecast
+	TariffUsageSolarPrice
 )

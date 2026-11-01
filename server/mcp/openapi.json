@@ -2099,6 +2099,7 @@
               "enum": [
                 "grid",
                 "feedin",
+                "solarprice",
                 "co2",
                 "planner",
                 "solar"
@@ -3159,6 +3160,18 @@
                       },
                       "feedinMax": {
                         "type": "number"
+                      },
+                      "solarPrice": {
+                        "type": "number",
+                        "description": "Solar energy price per kWh, the bucket average when aggregated"
+                      },
+                      "solarPriceMin": {
+                        "type": "number",
+                        "description": "Lowest slot solar price in the bucket, aggregated only"
+                      },
+                      "solarPriceMax": {
+                        "type": "number",
+                        "description": "Highest slot solar price in the bucket, aggregated only"
                       },
                       "co2": {
                         "type": "number",
@@ -5915,12 +5928,16 @@
             "description": "Current grid export price per kWh in the configured currency.",
             "type": "number"
           },
+          "tariffSolarPrice": {
+            "description": "Current solar energy price per kWh in the configured currency.",
+            "type": "number"
+          },
           "tariffCo2": {
             "description": "Current grid CO₂ emissions in g/kWh.",
             "type": "number"
           },
           "tariffSolar": {
-            "description": "Current cost of solar production per kWh in the configured currency.",
+            "description": "Current solar production forecast in W.",
             "type": "number"
           },
           "tariffPriceHome": {

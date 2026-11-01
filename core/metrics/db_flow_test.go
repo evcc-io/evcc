@@ -81,7 +81,7 @@ func TestQueryFlow(t *testing.T) {
 
 	// tariffs only for slot 1
 	grid, feedin := 0.3, 0.1
-	require.NoError(t, PersistTariffs(slot(1), &grid, &feedin, nil, nil))
+	require.NoError(t, PersistTariffs(slot(1), &grid, &feedin, nil, nil, nil))
 
 	res, err := QueryFlow(slot(0), slot(2))
 	require.NoError(t, err)
@@ -105,6 +105,20 @@ func TestQueryFlow(t *testing.T) {
 	assert.Nil(t, res.Co2)
 }
 
+func TestFlowSlotConfiguredSolarPrice(t *testing.T) {
+	grid, feedin, solarPrice := 0.3, 0.1, 0.2
+	slot := flowSlot{Grid: &grid, FeedIn: &feedin, SolarPrice: &solarPrice}
+
+	cost, priced := slot.price(PV, 2)
+	assert.Equal(t, 0.4, cost)
+	assert.Equal(t, 2.0, priced)
+
+	slot.SolarPrice = nil
+	cost, priced = slot.price(PV, 2)
+	assert.Equal(t, 0.2, cost)
+	assert.Equal(t, 2.0, priced)
+}
+
 func TestQueryFlowEntities(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
@@ -124,7 +138,7 @@ func TestQueryFlowEntities(t *testing.T) {
 	slot := func(i int) time.Time { return base.Add(time.Duration(i) * 15 * time.Minute) }
 	tariff := func(i int, price float64) {
 		feedin := 0.1
-		require.NoError(t, PersistTariffs(slot(i), &price, &feedin, nil, nil))
+		require.NoError(t, PersistTariffs(slot(i), &price, &feedin, nil, nil, nil))
 	}
 
 	// slot 0: solar covers home and carport, the noon consumer runs
