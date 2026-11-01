@@ -46,8 +46,8 @@
     },
     "combined": "Combinado",
     "config": {
-      "buffer": "A energia da bateria doméstica acima de {soc} pode ser utilizada para alimentar os pontos de carregamento e retardar o desligamento no modo inteligente. Iniciar o carregamento solar automaticamente {start}.",
-      "bufferNone": "A energia da bateria doméstica não é utilizada para os pontos de carregamento. Defina um valor inferior a {soc} para ativar esta funcionalidade.",
+      "buffer": "A energia da bateria doméstica acima de {soc} pode ser utilizada para alimentar os pontos de carregamento e retardar o desligamento no modo inteligente. Iniciar o carregamento solar automaticamente {start}. Observação: “Carregar sempre” ignora esta configuração.",
+      "bufferNone": "A energia da bateria doméstica não é usada para os pontos de carregamento. Defina um valor abaixo de {soc} para ativar o suporte no modo inteligente. Observação: a opção \"Carregar sempre\" ignora essa configuração.",
       "bufferStart": {
         "above": "assim que a bateria estiver acima de {soc}",
         "full": "assim que a bateria estiver cheia",
@@ -172,8 +172,8 @@
       "meterGrid": "Contador de rede",
       "meterHelp": "Contador que mede o consumo total deste circuito.",
       "meterLabel": "Contador de energia",
-      "meterLabelAdd": "Adicionar medidor de circuito",
-      "meterLabelEdit": "Editar medidor de circuito",
+      "meterLabelAdd": "Adicionar contador de circuito",
+      "meterLabelEdit": "Editar contador de circuito",
       "meterNone": "Sem contador",
       "meterSelectionHelpDedicatedMeter": "Adicione um contador já existente a este circuito abaixo.",
       "meterSelectionHelpGridMeter": "Utiliza o contador de rede já existente na sua instalação.",
@@ -211,7 +211,7 @@
     },
     "control": {
       "description": "Normalmente funciona com os valores padrão. Mude-os apenas se sabe o que está a fazer.",
-      "descriptionInterval": "Ciclo de atualização em segundos. Define a frequência com que o evcc lê os dados do medidor e ajusta a cobrança. O padrão de 30 segundos é uma escolha segura. Dispositivos como veículos, carregadores e inversores normalmente precisam de vários segundos para ajustar o seu comportamento. Se os seus componentes reagem rapidamente, pode usar valores mais baixos. Recomendamos fortemente não ir abaixo de 10 segundos. Se observar um comportamento de controlo irregular ou valores de potência instáveis, escolha um intervalo maior.",
+      "descriptionInterval": "Ciclo de atualização em segundos. Define a frequência com que o evcc lê os dados do contador e ajusta a cobrança. O padrão de 30 segundos é uma escolha segura. Dispositivos como veículos, carregadores e inversores normalmente precisam de vários segundos para ajustar o seu comportamento. Se os seus componentes reagem rapidamente, pode usar valores mais baixos. Recomendamos fortemente não ir abaixo de 10 segundos. Se observar um comportamento de controlo irregular ou valores de potência instáveis, escolha um intervalo maior.",
       "descriptionResidualPower": "Altera o ponto de operação do circuito de controlo. Se tiver uma bateria doméstica, recomenda-se definir um valor de 100 W. Desta forma, a bateria terá uma ligeira prioridade sobre a utilização da rede.",
       "labelInterval": "Intervalo das actualizações",
       "labelResidualPower": "Potência residual",
@@ -383,6 +383,7 @@
       "optional": "opcional"
     },
     "general": {
+      "add": "Adicionar",
       "applyAndClose": "Aplicar e fechar",
       "authPerform": "Ligar-se a {provider}",
       "authPerformHint": "Será aberto numa nova janela. Volte aqui para continuar.",
@@ -394,6 +395,7 @@
       "confirmDisable": "Desativar este dispositivo? Será ignorado após o próximo reinício.",
       "confirmEnable": "Ativar novamente este dispositivo?",
       "confirmSave": "Existem modificações não guardadas. Guardar agora?",
+      "continue": "Continuar",
       "copied": "Copiado!",
       "copy": "Copiar",
       "customHelp": "Criar um dispositivo definido pelo utilizador utilizando o sistema de plugins do evcc.",
@@ -715,10 +717,18 @@
         "grid": "Adicionar contador de rede",
         "pv": "Adicionar Contador solar"
       },
+      "reuseApply": "Utilize essa configuração.",
+      "reuseHint": "{device} também pode ser usado como \"{target}\".",
       "save": "Guardar",
       "specific": "Integrações específicas",
       "template": "Fabricante",
       "titleChoice": "O que quer adicionar?",
+      "titleExample": {
+        "aux": "Aquecedor de água inteligente, etc.",
+        "battery": "Cave, garagem, central elétrica, etc.",
+        "consumer": "Máquina de lavar louça, máquina de lavar roupa, bomba de piscina, etc.",
+        "pv": "Telhado voltado para o sul, garagem, etc."
+      },
       "titleLabel": "Título",
       "usage": {
         "aux": "Consumidor autorregulador",
@@ -976,6 +986,15 @@
         "example": "O preço que lhe foi cobrado foi de {price}. Poupou {amount}.",
         "label": "Moeda"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V sem neutro (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V com neutro (3P4W)",
+        "description": {
+          "3p3w": "Rede sem condutor neutro. Corrente elétrica na Noruega e em algumas regiões da Bélgica.",
+          "3p4w": "Rede elétrica mais comum com condutor neutro."
+        },
+        "label": "Conexão à rede"
+      },
       "siteTitle": {
         "description": "Exibido no ecrã principal e no separador do navegador.",
         "label": "Título"
@@ -989,6 +1008,18 @@
       "descriptionToken": "Como patrocinado do GitHub, pode encontrar o seu token em {url}. Para começar, disponibilizamos um {trialToken}.",
       "enterYourToken": "O teu token de patrocinador",
       "error": "O token de Apoiante (Sponsor) não é válido.",
+      "inline": {
+        "applied": "Token aplicado. Obrigado por apoiar o projeto!",
+        "apply": "Aplicar",
+        "becomeSponsor": "Torne-se um patrocinador",
+        "device": "Este dispositivo está disponível apenas para patrocinadores.",
+        "feature": "Esta funcionalidade está disponível apenas para patrocinadores.",
+        "learn": "Saiba mais e {becomeSponsor}.",
+        "placeholder": "Inserir token",
+        "title": "Token de patrocinador necessário",
+        "trial": "Comece já.",
+        "trialLink": "Obtenha um token de avaliação"
+      },
       "invalid": "inválido",
       "labelToken": "Token de Apoiante (Sponsor)",
       "title": "Patrocínio",
@@ -1081,9 +1112,10 @@
       },
       "services": "Serviços",
       "solar": {
-        "description": "Previsão de produção solar para o seu sistema solar. Apresentada na interface e que será utilizada para algoritmos de otimização no futuro.",
+        "description": "Previsão de produção solar para a sua instalação fotovoltaica. Apresentada na interface e que será utilizada para algoritmos de otimização no futuro.",
         "titleAdd": "Adicionar previsão solar",
-        "titleEdit": "Editar previsão solar"
+        "titleEdit": "Editar previsão solar",
+        "titleExample": "Telhado voltado para o sul, garagem, etc."
       },
       "temperature": {
         "description": "Previsão da temperatura exterior para a sua localização. Apresentada na interface e utilizada para prever a procura de aquecimento.",
@@ -1716,6 +1748,11 @@
       "login": "iniciar sessão",
       "logout": "encerrar sessão"
     },
+    "setup": {
+      "description": "Adicione seus dispositivos para visualizar o fluxo de energia e comece a carregá-los com energia solar.",
+      "start": "Iniciar configuração",
+      "title": "Bem-vindo!"
+    },
     "startConfiguration": "Iniciar a configuração",
     "targetCharge": {
       "activate": "Ativar",
@@ -1843,6 +1880,76 @@
     "restarting": "Servidor a reiniciar.",
     "starting": "Iniciando servidor..."
   },
+  "onboarding": {
+    "another": "Adicione outro",
+    "back": "Voltar",
+    "battery": {
+      "add": "Adicionar bateria doméstica",
+      "description": "Adicione a sua bateria para que o carregamento a leve em consideração e você possa ver o que acontece.",
+      "none": "Sem bateria doméstica",
+      "title": "Você tem uma bateria doméstica?"
+    },
+    "checklist": {
+      "dismiss": "Ignorar",
+      "legacyTariffs": "Configuração tarifária velha em uso.",
+      "progress": "{done} de {total} concluído",
+      "title": "Conclua a configuração"
+    },
+    "control": {
+      "description": "Comece com o primeiro. Mais poderão ser adicionados posteriormente na página de configuração.",
+      "none": "Nada ainda",
+      "title": "O que você deseja controlar?"
+    },
+    "done": {
+      "close": "Acesse a configuração",
+      "description": "Reiniciar o sistema aplica a configuração. Depois, explore as funcionalidades. Veículos, tarifas e muito mais podem ser adicionados a qualquer momento.",
+      "restart": "Reiniciar",
+      "title": "Você está pronto"
+    },
+    "grid": {
+      "add": "Adicionar contador de rede",
+      "confirm": "O contador de rede é a base para a cobrança de excedentes e para as estatísticas de energia. Recomenda-se a instalação de um.",
+      "confirmNone": "Continuar sem",
+      "description": "Mede a entrada e a saída de energia da rede no ponto de conexão. Permite uma cobrança precisa do excedente de energia.",
+      "none": "Sem contador de rede",
+      "title": "Você tem um contador da rede elétrica?"
+    },
+    "item": {
+      "battery": "Bateria doméstica",
+      "co2": "Previsão de CO₂",
+      "consumer": "Consumidor",
+      "grid": "Contador de rede",
+      "gridExport": "Tarifa de exportação da rede",
+      "gridImport": "Tarifa de importação da rede",
+      "heater": "Aquecedor",
+      "loadpoint": "Ponto de carregamento",
+      "pv": "Instalação fotovoltaica",
+      "solar": "Previsão solar"
+    },
+    "password": {
+      "description": "Protege as configurações contra alterações não autorizadas. Lembre-se: não há maneira fácil de redefini-las.",
+      "disabled": "A autenticação está desativada ({flag}). Qualquer pessoa com acesso à rede pode alterar a configuração, ler as credenciais armazenadas e executar scripts. Proteja o acesso por outros meios.",
+      "title": "Definir senha de administrador"
+    },
+    "pv": {
+      "add": "Adicione uma instalação fotovoltaica",
+      "description": "Mede a produção de energia solar. Necessária para o cálculo da participação da energia solar e para o carregamento do excedente.",
+      "none": "Não há instalações fotovoltaicas",
+      "title": "Você possui uma instalação fotovoltaica?"
+    },
+    "site": {
+      "currencyHint": "Por exemplo {price}, {amount}",
+      "defaultTitle": "Casa",
+      "description": "Algumas informações básicas sobre sua casa. Você pode alterá-las a qualquer momento.",
+      "title": "Seu site"
+    },
+    "skip": "Ignorar configuração",
+    "step": "Etapa {step} de {total}",
+    "welcome": {
+      "description": "Configure as partes mais importantes da sua instalação doméstica para começar a carregar dispositivos inteligentes.",
+      "start": "Comece agora"
+    }
+  },
   "passwordModal": {
     "description": "Defina uma Palavra-passe para proteger as definições de configuração. Continua a ser possível utilizar o menu principal sem iniciar sessão.",
     "empty": "A Palavra-passe não deve ficar por preencher",
@@ -1863,7 +1970,7 @@
     "date": "Período",
     "delete": "Apagar",
     "finished": "Finalizado",
-    "meter": "Leitura do medidor",
+    "meter": "Leitura do contador",
     "meterstart": "Início do Contador",
     "meterstop": "Contagem final",
     "odometer": "Quilómetros",

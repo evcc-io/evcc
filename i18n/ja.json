@@ -383,6 +383,7 @@
       "optional": "オプション"
     },
     "general": {
+      "add": "追加",
       "applyAndClose": "適用して閉じる",
       "authPerform": "{provider} に接続",
       "authPerformHint": "新しいタブが開きます。認証完了後、この画面に戻って手続きを続けてください。",
@@ -394,6 +395,7 @@
       "confirmDisable": "このデバイスを無効にしますか？次回の再起動後は無視されます。",
       "confirmEnable": "このデバイスを再度有効にしますか？",
       "confirmSave": "保存されていない変更があります。保存しますか？",
+      "continue": "続行",
       "copied": "コピーしました！",
       "copy": "コピー",
       "customHelp": "evccのプラグインシステムを使用して、ユーザー定義デバイスを作成します。",
@@ -568,16 +570,24 @@
       "priorityLabel": "優先度",
       "save": "保存",
       "solarShareReset": "しきい値を削除",
+      "solarTitle": "太陽光余剰時の動作",
       "temperatureRangeHelp": "温度バーの表示範囲です。制御には影響しません。",
       "temperatureRangeTitle": "温度範囲",
+      "thresholdDisableDelayHelp": "{delay}の間、余剰電力が不足すると停止します。",
       "thresholdDisableDelayLabel": "無効化の遅延",
       "thresholdDisableHelpInvalid": "正の値を入力してください。",
       "thresholdDisableHelpPositive": "系統からの買電が {power} を超えて {delay} 継続した場合、充電を停止します。",
       "thresholdDisableLabel": "系統電力の停止しきい値",
+      "thresholdEnableDelayHelp": "{delay}の間、余剰電力が十分にあると開始します。",
       "thresholdEnableDelayLabel": "有効化の遅延",
       "thresholdEnableHelpInvalid": "負の値を入力してください。",
       "thresholdEnableHelpNegative": "{surplus} の余剰電力が {delay} 継続したときに開始します。",
       "thresholdEnableLabel": "系統電力の開始しきい値",
+      "thresholdsNote": {
+        "charging": "太陽光充電中の系統電力の使用を制御するには、{page}ページの充電ポイント設定にある{slider}スライダーを使用してください。ここでの値設定は特別な場合のみにしてください。",
+        "heating": "太陽光による加熱中の系統電力の使用を制御するには、{page}ページのヒーター設定にある{slider}スライダーを使用してください。ここでの値設定は特別な場合のみにしてください。"
+      },
+      "thresholdsSliderDisabled": "ここで値が設定されているため、{slider}スライダーは現在無効です。",
       "titleAdd": {
         "charging": "充電ポイントを追加",
         "heating": "ヒーターを追加",
@@ -707,10 +717,18 @@
         "grid": "系統メーターを追加",
         "pv": "太陽光メーターを追加"
       },
+      "reuseApply": "その設定を使用します。",
+      "reuseHint": "{device}は「{target}」としても使用できます。",
       "save": "保存",
       "specific": "専用統合",
       "template": "メーカー",
       "titleChoice": "何を追加しますか？",
+      "titleExample": {
+        "aux": "スマート給湯器など",
+        "battery": "地下室、ガレージ、ポータブル電源など",
+        "consumer": "食洗機、洗濯機、プールポンプなど",
+        "pv": "南側屋根、カーポートなど"
+      },
       "titleLabel": "タイトル",
       "usage": {
         "aux": "自動調整機器",
@@ -968,6 +986,15 @@
         "example": "充電単価は{price}でした。{amount}節約しました。",
         "label": "通貨"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V 中性線なし (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V 中性線あり (3P4W)",
+        "description": {
+          "3p3w": "中性線のない系統です。ノルウェーやベルギーの一部で一般的です。",
+          "3p4w": "中性線のある最も一般的な系統です。"
+        },
+        "label": "系統接続"
+      },
       "siteTitle": {
         "description": "メイン画面とブラウザのタブに表示されます。",
         "label": "タイトル"
@@ -981,6 +1008,18 @@
       "descriptionToken": "GitHubスポンサーの方は、{url} でトークンを確認できます。まず試してみたい方のために、{trialToken} もご用意しています。",
       "enterYourToken": "スポンサートークンを入力",
       "error": "スポンサートークンが無効です。",
+      "inline": {
+        "applied": "トークンを適用しました。プロジェクトをご支援いただきありがとうございます！",
+        "apply": "適用",
+        "becomeSponsor": "スポンサーになる",
+        "device": "このデバイスはスポンサー限定です。",
+        "feature": "この機能はスポンサー限定です。",
+        "learn": "詳細を確認して{becomeSponsor}。",
+        "placeholder": "トークンを貼り付け",
+        "title": "スポンサートークンが必要です",
+        "trial": "すぐに始められます。",
+        "trialLink": "トライアルトークンを取得"
+      },
       "invalid": "無効",
       "labelToken": "スポンサートークン",
       "title": "スポンサーシップ",
@@ -1075,7 +1114,8 @@
       "solar": {
         "description": "太陽光発電システムの発電予測です。画面に表示され、将来的に最適化アルゴリズムでも使用されます。",
         "titleAdd": "太陽光発電予測を追加",
-        "titleEdit": "太陽光発電予測を編集"
+        "titleEdit": "太陽光発電予測を編集",
+        "titleExample": "南側屋根、カーポートなど"
       },
       "temperature": {
         "description": "お住まいの地域の外気温予測です。画面に表示され、暖房需要の予測に使用されます。",
@@ -1250,7 +1290,8 @@
       "noCo2": "CO₂データなし。",
       "noPrice": "価格データなし。",
       "savings": "節約額",
-      "savingsTooltip": "消費した{energy}を系統から購入した場合との比較。"
+      "savingsTooltip": "消費した{energy}を系統から購入した場合との比較。",
+      "versus": "{value} 対 {reference}"
     },
     "title": "エネルギー"
   },
@@ -1702,6 +1743,11 @@
       "login": "ログイン",
       "logout": "ログアウト"
     },
+    "setup": {
+      "description": "デバイスを追加して、エネルギーフローを確認し、太陽光での充電を始めましょう。",
+      "start": "セットアップ開始",
+      "title": "ようこそ！"
+    },
     "startConfiguration": "セットアップを始めましょう",
     "targetCharge": {
       "activate": "アクティベート",
@@ -1827,6 +1873,76 @@
     "restartNeeded": "変更の反映には再起動が必要です。",
     "restarting": "サーバーはまもなく復帰します。",
     "starting": "サーバーを開始中..."
+  },
+  "onboarding": {
+    "another": "さらに追加",
+    "back": "戻る",
+    "battery": {
+      "add": "家庭用蓄電池を追加",
+      "description": "蓄電池を追加すると、充電時に考慮され、その動作も確認できます。",
+      "none": "家庭用蓄電池なし",
+      "title": "家庭用蓄電池はありますか？"
+    },
+    "checklist": {
+      "dismiss": "閉じる",
+      "legacyTariffs": "旧形式の料金プラン設定を使用中です。",
+      "progress": "{total}件中{done}件完了",
+      "title": "セットアップを完了する"
+    },
+    "control": {
+      "description": "まず最初の1つから始めましょう。他は後で設定ページから追加できます。",
+      "none": "まだなし",
+      "title": "何を制御しますか？"
+    },
+    "done": {
+      "close": "設定へ移動",
+      "description": "再起動すると設定が適用されます。その後、各機能をお試しください。車両や料金プランなどはいつでも追加できます。",
+      "restart": "再起動",
+      "title": "準備完了です"
+    },
+    "grid": {
+      "add": "系統メーターを追加",
+      "confirm": "系統メーターは、余剰充電とエネルギー統計の基盤となります。追加することを推奨します。",
+      "confirmNone": "なしで続行",
+      "description": "連系点での系統からの受電量と系統への売電量を計測します。余剰充電の精度が向上します。",
+      "none": "系統メーターなし",
+      "title": "系統メーターはありますか？"
+    },
+    "item": {
+      "battery": "家庭用蓄電池",
+      "co2": "CO₂予測",
+      "consumer": "消費機器",
+      "grid": "系統メーター",
+      "gridExport": "売電料金プラン",
+      "gridImport": "買電料金プラン",
+      "heater": "ヒーター",
+      "loadpoint": "充電ポイント",
+      "pv": "太陽光発電システム",
+      "solar": "太陽光予測"
+    },
+    "password": {
+      "description": "設定が不正に変更されないよう保護します。パスワードは忘れないようにしてください。簡単にリセットする方法はありません。",
+      "disabled": "認証が無効になっています ({flag})。ネットワークにアクセスできる人なら誰でも、設定の変更、保存された認証情報の読み取り、スクリプトの実行ができます。他の方法でアクセスを保護してください。",
+      "title": "管理者パスワードを設定"
+    },
+    "pv": {
+      "add": "太陽光発電システムを追加",
+      "description": "太陽光の発電量を計測します。太陽光の割合と余剰充電に必要です。",
+      "none": "太陽光発電システムなし",
+      "title": "太陽光発電システムはありますか？"
+    },
+    "site": {
+      "currencyHint": "例: {price}、{amount}",
+      "defaultTitle": "自宅",
+      "description": "ご自宅の基本情報です。いつでも変更できます。",
+      "title": "設置場所"
+    },
+    "skip": "セットアップをスキップ",
+    "step": "ステップ {step} / {total}",
+    "welcome": {
+      "description": "ご自宅の設備の主要部分を設定して、スマート充電を始めましょう。",
+      "start": "始める"
+    }
   },
   "passwordModal": {
     "description": "システムの設定を保護するためのパスワードを設定します。ログインしなくてもメイン画面は引き続き利用可能です。",
