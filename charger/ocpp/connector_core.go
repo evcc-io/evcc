@@ -47,10 +47,10 @@ func statusClass(s *core.StatusNotificationRequest) api.ChargeStatus {
 
 func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
 	// deferred before the unlock so the callback runs without holding the lock
-	var onStatusChange func()
+	var onUpdate func()
 	defer func() {
-		if onStatusChange != nil {
-			onStatusChange()
+		if onUpdate != nil {
+			onUpdate()
 		}
 	}()
 
@@ -72,7 +72,7 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 	}
 
 	if applied && statusClass(prev) != statusClass(request) {
-		onStatusChange = conn.onStatusChange
+		onUpdate = conn.onUpdate
 	}
 
 	// Available means cable unplugged and any prior transaction is stale
@@ -128,6 +128,14 @@ func isBoundaryContext(c types.ReadingContext) bool {
 }
 
 func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
+	// meter values arrive as one sample per MeterValueSampleInterval, not as a stream
+	var onUpdate func()
+	defer func() {
+		if onUpdate != nil {
+			onUpdate()
+		}
+	}()
+
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
@@ -163,6 +171,7 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 					conn.meterTimestamp = meterValue.Timestamp.Time
 					// freshness is measured locally: charger sample timestamps may lag (Mennekes: 6-7s)
 					conn.meterUpdated = conn.clock.Now()
+					onUpdate = conn.onUpdate
 				}
 			}
 		}

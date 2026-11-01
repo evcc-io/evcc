@@ -12,7 +12,7 @@ import (
 
 func TestWarpWSStateRequestsLoadpointUpdate(t *testing.T) {
 	lp := loadpoint.NewMockAPI(gomock.NewController(t))
-	lp.EXPECT().RequestUpdate().Times(3)
+	lp.EXPECT().Notify().Times(3)
 
 	w := &WarpWS{log: util.NewLogger("warp")}
 	w.LoadpointControl(lp)

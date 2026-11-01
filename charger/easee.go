@@ -335,7 +335,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	var lp loadpoint.API
 	defer func() {
 		if lp != nil {
-			lp.RequestUpdate()
+			lp.Notify()
 		}
 	}()
 

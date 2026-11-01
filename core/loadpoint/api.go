@@ -149,8 +149,10 @@ type API interface {
 	SetPlanEnergy(time.Time, float64) error
 	// ClearPlanLock clears the locked plan goal
 	ClearPlanLock()
-	// RequestUpdate triggers an immediate loadpoint update
+	// RequestUpdate requests a prioritized loadpoint update
 	RequestUpdate()
+	// Notify requests an immediate sensing pass, e.g. on a charger push notification
+	Notify()
 	// GetPlanGoal returns the plan goal and if the goal is soc based
 	GetPlanGoal() (float64, bool)
 	// GetSocPlanGoals returns the soc goals of all vehicle plans, repeating plans for each occurrence within a week

@@ -37,7 +37,7 @@ type Connector struct {
 
 	meterInterval time.Duration
 
-	onStatusChange func()
+	onUpdate func()
 }
 
 func NewConnector(ctx context.Context, log *util.Logger, id int, cp *CP, idTag string, meterInterval time.Duration) (*Connector, error) {
@@ -89,11 +89,11 @@ func (conn *Connector) TestClock(clock clock.Clock) {
 	conn.clock = clock
 }
 
-// OnStatusChange registers a callback for status changes relevant to the loadpoint
-func (conn *Connector) OnStatusChange(f func()) {
+// OnUpdate registers a callback for status changes relevant to the loadpoint and new meter values
+func (conn *Connector) OnUpdate(f func()) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
-	conn.onStatusChange = f
+	conn.onUpdate = f
 }
 
 func (conn *Connector) ID() int {
