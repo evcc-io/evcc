@@ -128,6 +128,7 @@ type batteryPowerLimits struct {
 // Decorator returns an api.BatteryPowerLimiter decorator
 func (m *batteryPowerLimits) Decorator() func() (float64, float64, error) {
 	if m.MaxChargePower == 0 || m.MaxDischargePower == 0 {
+		warnPartialPowerLimits(m.MaxChargePower != 0, m.MaxDischargePower != 0)
 		return nil
 	}
 	return func() (float64, float64, error) {
@@ -154,9 +155,17 @@ func (m *batteryPowerLimitsCtx) Decorator(ctx context.Context) (func() (float64,
 		return nil, err
 	}
 	if charge == nil || discharge == nil {
+		warnPartialPowerLimits(charge != nil, discharge != nil)
 		return nil, nil
 	}
 	return floatPair(charge, discharge), nil
+}
+
+// warnPartialPowerLimits warns if only one power limit is configured, since it is ignored without the other
+func warnPartialPowerLimits(charge, discharge bool) {
+	if charge != discharge {
+		util.NewLogger("battery").WARN.Println("maxchargepower and maxdischargepower must both be configured, ignoring power limit")
+	}
 }
 
 type batterySocLimits struct {
