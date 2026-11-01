@@ -73,6 +73,12 @@ type StatusReasoner interface {
 	StatusReason() (Reason, error)
 }
 
+// IntervalGetter is implemented by chargers preferring a specific sensing interval, e.g.
+// slower for rate-limited cloud APIs or push-capable chargers. Values below 1s are ignored.
+type IntervalGetter interface {
+	GetInterval() time.Duration
+}
+
 // CurrentController provides settings charging maximum charging current
 type CurrentController interface {
 	MaxCurrent(current int64) error

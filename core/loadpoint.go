@@ -89,7 +89,7 @@ type Loadpoint struct {
 	site      site.API
 	pushChan  chan<- messenger.Event // notifications
 	uiChan    chan<- util.Param      // client push messages
-	senseChan chan<- *Loadpoint      // immediate sense requests
+	senseChan chan struct{}          // immediate sense requests
 	log       *util.Logger
 
 	rwMutex      atomic.Int64 // writer goroutine id for reentrancy detection (test only)
@@ -483,7 +483,7 @@ func (lp *Loadpoint) RequestUpdate() {
 // Notify requests an immediate sensing pass without blocking
 func (lp *Loadpoint) Notify() {
 	select {
-	case lp.senseChan <- lp:
+	case lp.senseChan <- struct{}{}:
 	default:
 	}
 }
@@ -2230,6 +2230,31 @@ func (lp *Loadpoint) GetChargeCurrents() []float64 {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.chargeCurrents
+}
+
+// senseLoop senses this loadpoint at its own interval and immediately on Notify,
+// so a slow rate-limited charger does not throttle a fast local one
+func (lp *Loadpoint) senseLoop(stopC chan struct{}, base time.Duration) {
+	for tick := time.Tick(lp.senseInterval(base)); ; {
+		select {
+		case <-tick:
+			lp.Sense()
+		case <-lp.senseChan:
+			lp.Sense()
+		case <-stopC:
+			return
+		}
+	}
+}
+
+// senseInterval returns the charger's preferred sensing interval, else base
+func (lp *Loadpoint) senseInterval(base time.Duration) time.Duration {
+	if g, ok := api.Cap[api.IntervalGetter](lp.charger); ok {
+		if d := g.GetInterval(); d >= time.Second {
+			return d
+		}
+	}
+	return base
 }
 
 // Sense updates loadpoint measurements and observations

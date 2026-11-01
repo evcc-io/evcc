@@ -203,17 +203,39 @@ func TestObserveKeepsWelcomeCharge(t *testing.T) {
 
 // TestNotifyTriggersSense verifies that Notify requests an immediate sense and never blocks
 func TestNotifyTriggersSense(t *testing.T) {
-	senseChan := make(chan *Loadpoint, 1)
-	lp := &Loadpoint{senseChan: senseChan}
+	lp := &Loadpoint{senseChan: make(chan struct{}, 1)}
 
 	lp.Notify()
-	require.Len(t, senseChan, 1)
-	require.Same(t, lp, <-senseChan)
+	require.Len(t, lp.senseChan, 1)
 
-	// must not block when nobody is draining the channel
-	lp.senseChan = make(chan *Loadpoint)
+	// must not block when the request is already pending
 	lp.Notify()
 
 	// not prepared yet
 	new(Loadpoint).Notify()
+}
+
+type intervalCharger struct {
+	*api.MockCharger
+	d time.Duration
+}
+
+func (c intervalCharger) GetInterval() time.Duration { return c.d }
+
+func TestSenseInterval(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	base := 2 * time.Second
+
+	for _, tc := range []struct {
+		name    string
+		charger api.Charger
+		want    time.Duration
+	}{
+		{"no preference", api.NewMockCharger(ctrl), base},
+		{"slower", intervalCharger{api.NewMockCharger(ctrl), 30 * time.Second}, 30 * time.Second},
+		{"below 1s ignored", intervalCharger{api.NewMockCharger(ctrl), 500 * time.Millisecond}, base},
+	} {
+		lp := &Loadpoint{charger: tc.charger}
+		require.Equal(t, tc.want, lp.senseInterval(base), tc.name)
+	}
 }
