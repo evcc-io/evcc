@@ -54,7 +54,7 @@ render: |
     register:
       address: 1059 # 0x423 yield_total
       type: input
-      decode: uint32
+      decode: uint32s
     scale: 0.1
   currents:
     - source: modbus
