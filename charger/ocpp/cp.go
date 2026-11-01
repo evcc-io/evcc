@@ -191,7 +191,7 @@ func (cp *CP) onTransportConnect() {
 					cp.log.ERROR.Printf("trigger BootNotification response error: %v", err)
 					return
 				}
-				if conf.Status != remotetrigger.TriggerMessageStatusAccepted {
+				if conf != nil && conf.Status != remotetrigger.TriggerMessageStatusAccepted {
 					cp.log.DEBUG.Printf("trigger BootNotification: %s, proceeding", conf.Status)
 					cp.onBootTriggerRejected(timer)
 				}
