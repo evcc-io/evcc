@@ -69,6 +69,12 @@ RUN --mount=type=cache,target=${GOCACHE} --mount=type=cache,target=${GOMODCACHE}
 # STEP 3 build a small image including module support
 FROM alpine:3.23@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11
 
+# add labels
+LABEL org.opencontainers.image.documentation="https://docs.evcc.io"
+LABEL org.opencontainers.image.source="https://github.com/evcc-io/evcc"
+LABEL org.opencontainers.image.url="https://github.com/evcc-io/evcc"
+LABEL org.opencontainers.image.licenses="MIT"
+
 WORKDIR /app
 
 ENV TZ=Europe/Berlin
