@@ -1,12 +1,16 @@
 package bluelink
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -103,4 +107,109 @@ func (v *API) Refresh(vehicle Vehicle) error {
 		err = fmt.Errorf("unexpected response: %s", res.RetCode)
 	}
 	return err
+}
+
+type chargeControlResponse struct {
+	RetCode string `json:"retCode"`
+	MsgID   string `json:"msgId"`
+}
+
+func spaV2URI(baseURI string) string {
+	return strings.Replace(baseURI, "/api/v1/spa", "/api/v2/spa", 1)
+}
+
+func chargeControlURI(baseURI, vehicleID string, ccs2 bool) string {
+	if ccs2 {
+		return fmt.Sprintf("%s/vehicles/%s/ccs2/control/charge", spaV2URI(baseURI), vehicleID)
+	}
+	return fmt.Sprintf("%s/vehicles/%s/control/charge", baseURI, vehicleID)
+}
+
+func chargeStartStop(enable bool) string {
+	if enable {
+		return "start"
+	}
+	return "stop"
+}
+
+func decodeChargeControl(body []byte) error {
+	if len(bytes.TrimSpace(body)) == 0 {
+		return nil
+	}
+
+	var res chargeControlResponse
+	if err := json.Unmarshal(body, &res); err != nil {
+		return err
+	}
+	if res.RetCode == "" {
+		return fmt.Errorf("missing retCode")
+	}
+	if res.RetCode != resOK {
+		return fmt.Errorf("unexpected response: %s", res.RetCode)
+	}
+	return nil
+}
+
+func isControlTokenRejected(err error) bool {
+	se, ok := errors.AsType[*request.StatusError](err)
+	return ok && se.HasStatus(http.StatusUnauthorized, http.StatusForbidden)
+}
+
+// ChargeEnable starts or stops charging via CCS2 or the older Bluelink charge control API.
+func (v *API) ChargeEnable(identity *Identity, vehicle Vehicle, pin string, enable bool) error {
+	if vehicle.CcuCCS2ProtocolSupport != 0 {
+		if pin == "" {
+			return api.ErrMissingCredentials
+		}
+
+		err := v.postChargeControl(identity, vehicle, pin, enable, true)
+		if err == nil {
+			return nil
+		}
+
+		if err2 := v.postChargeControl(identity, vehicle, pin, enable, false); err2 != nil {
+			return errors.Join(err, err2)
+		}
+		return nil
+	}
+
+	return v.postChargeControl(identity, vehicle, pin, enable, false)
+}
+
+func (v *API) postChargeControl(identity *Identity, vehicle Vehicle, pin string, enable, ccs2 bool) error {
+	ctx := context.Background()
+	if ccs2 {
+		token, err := identity.ControlAuthorization(pin)
+		if err != nil {
+			return err
+		}
+		ctx = WithControlToken(ctx, token)
+		ctx = WithCCS2ProtocolSupport(ctx, vehicle.CcuCCS2ProtocolSupport)
+	}
+
+	var payload map[string]string
+	if ccs2 {
+		payload = map[string]string{"command": chargeStartStop(enable)}
+	} else {
+		payload = map[string]string{"action": chargeStartStop(enable)}
+		if id := identity.DeviceID(); id != "" {
+			payload["deviceId"] = id
+		}
+	}
+
+	req, err := request.New(http.MethodPost, chargeControlURI(v.baseURI, vehicle.VehicleID, ccs2), request.MarshalJSON(payload), request.JSONEncoding)
+	if err != nil {
+		return err
+	}
+	req = req.WithContext(ctx)
+
+	body, err := v.DoBody(req)
+	if err != nil {
+		if isControlTokenRejected(err) {
+			identity.InvalidateControlToken()
+		}
+		return err
+	}
+
+	return decodeChargeControl(body)
 }
