@@ -127,8 +127,11 @@ type batteryPowerLimits struct {
 
 // Decorator returns an api.BatteryPowerLimiter decorator
 func (m *batteryPowerLimits) Decorator() func() (float64, float64, error) {
+	if m.MaxChargePower == 0 && m.MaxDischargePower == 0 {
+		return nil
+	}
 	if m.MaxChargePower == 0 || m.MaxDischargePower == 0 {
-		warnPartialPowerLimits(context.Background(), m.MaxChargePower != 0, m.MaxDischargePower != 0)
+		warnPartialPowerLimits(context.Background())
 		return nil
 	}
 	return func() (float64, float64, error) {
@@ -154,18 +157,19 @@ func (m *batteryPowerLimitsCtx) Decorator(ctx context.Context) (func() (float64,
 	if err != nil {
 		return nil, err
 	}
+	if charge == nil && discharge == nil {
+		return nil, nil
+	}
 	if charge == nil || discharge == nil {
-		warnPartialPowerLimits(ctx, charge != nil, discharge != nil)
+		warnPartialPowerLimits(ctx)
 		return nil, nil
 	}
 	return floatPair(charge, discharge), nil
 }
 
-// warnPartialPowerLimits warns if only one power limit is configured, since it is ignored without the other
-func warnPartialPowerLimits(ctx context.Context, charge, discharge bool) {
-	if charge != discharge {
-		util.ContextLoggerWithDefault(ctx, util.NewLogger("battery")).WARN.Println("maxchargepower and maxdischargepower must both be configured, ignoring power limit")
-	}
+// warnPartialPowerLimits warns that a single power limit is ignored without the other
+func warnPartialPowerLimits(ctx context.Context) {
+	util.ContextLoggerWithDefault(ctx, util.NewLogger("battery")).WARN.Println("maxchargepower and maxdischargepower must both be configured, ignoring power limit")
 }
 
 type batterySocLimits struct {
