@@ -1171,12 +1171,15 @@ func TestOptimizerRerunAfterBusy(t *testing.T) {
 	assert.False(t, site.optimizerRerun.Load())
 	site.optimizerUpdateAsync(true)
 	assert.True(t, site.optimizerRerun.Load())
-	site.optimizerMu.Unlock()
 
-	// next call runs despite the closed interval gate and consumes the trigger
+	// unlock re-runs on its own, despite the closed interval gate
 	last := time.Now().Add(-time.Second)
 	site.optimizerUpdated = last
-	site.optimizerUpdateAsync(false)
-	assert.False(t, site.optimizerRerun.Load())
+	site.optimizerUnlock()
+	assert.Eventually(t, func() bool { return !site.optimizerRerun.Load() }, time.Second, time.Millisecond)
+
+	// the re-run holds the lock from before consuming the trigger until done
+	site.optimizerMu.Lock()
+	defer site.optimizerMu.Unlock()
 	assert.True(t, site.optimizerUpdated.After(last), "pending trigger must bypass interval gate")
 }

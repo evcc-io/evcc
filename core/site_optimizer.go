@@ -489,32 +489,18 @@ func (site *Site) optimizerUpdateAsync(force bool) {
 		return
 	}
 
-	if !site.optimizerMu.TryLock() {
-		if !force {
-			return
-		}
-
+	// store before locking: either we get the lock, or the holder sees the trigger on unlock
+	if force {
 		site.optimizerRerun.Store(true)
-
-		// the running update may have finished in between
-		if !site.optimizerMu.TryLock() {
-			return
-		}
 	}
 
-	// a pending forced trigger bypasses the interval gate
-	if site.optimizerRerun.Swap(false) {
-		force = true
+	if !site.optimizerMu.TryLock() {
+		return
 	}
+	defer site.optimizerUnlock()
 
-	defer func() {
-		site.optimizerMu.Unlock()
-
-		if site.optimizerRerun.Load() {
-			// not forced: a caller that consumed the trigger in between already ran
-			go site.optimizerUpdateAsync(false)
-		}
-	}()
+	// false if a run that started after the trigger already served it
+	force = site.optimizerRerun.Swap(false)
 
 	interval := tariff.SlotDuration
 	if site.Automatic() {
@@ -834,13 +820,22 @@ func (site *Site) setLastOptimizerSolve(solve *optimizerSolve) {
 	site.lastOptimizerSolve = solve
 }
 
+// optimizerUnlock releases optimizerMu and re-runs for a forced trigger that arrived while it was held
+func (site *Site) optimizerUnlock() {
+	site.optimizerMu.Unlock()
+
+	if site.optimizerRerun.Load() {
+		go site.optimizerUpdateAsync(false)
+	}
+}
+
 // reapplySuggestions re-derives the last solve's suggestions for the slot covering now
 // without a new solve. TryLock so it never overwrites a fresher concurrent solve.
 func (site *Site) reapplySuggestions(now time.Time) {
 	if !site.optimizerMu.TryLock() {
 		return
 	}
-	defer site.optimizerMu.Unlock()
+	defer site.optimizerUnlock()
 
 	site.RLock()
 	last := site.lastOptimizerSolve
