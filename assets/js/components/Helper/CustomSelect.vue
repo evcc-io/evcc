@@ -21,13 +21,23 @@
 			@blur="handleBlur"
 		>
 			<option
-				v-for="{ name, value, count, disabled } in options"
+				v-for="{ name, value, count, disabled } in ungrouped"
 				:key="value"
 				:value="value"
 				:disabled="count === 0 || disabled"
 			>
 				{{ text(name, count) }}
 			</option>
+			<optgroup v-for="(group, label) in groups" :key="label" :label="label">
+				<option
+					v-for="{ name, value, count, disabled } in group"
+					:key="value"
+					:value="value"
+					:disabled="count === 0 || disabled"
+				>
+					{{ text(name, count) }}
+				</option>
+			</optgroup>
 		</select>
 		<slot></slot>
 	</label>
@@ -37,10 +47,12 @@
 import type { SelectOption } from "@/types/evcc";
 import { defineComponent, type PropType } from "vue";
 
+type Option = SelectOption<number | string>;
+
 export default defineComponent({
 	name: "CustomSelect",
 	props: {
-		options: { type: Array as PropType<SelectOption<number | string>[]> },
+		options: { type: Array as PropType<Option[]>, default: () => [] },
 		selected: { type: [String, Number] },
 		id: { type: String },
 		inline: Boolean,
@@ -53,6 +65,18 @@ export default defineComponent({
 			mouseDown: false,
 			showFocusRing: false,
 		};
+	},
+	computed: {
+		ungrouped(): Option[] {
+			return this.options.filter((option) => !option.group);
+		},
+		groups(): Record<string, Option[]> {
+			const groups: Record<string, Option[]> = {};
+			for (const option of this.options) {
+				if (option.group) (groups[option.group] ??= []).push(option);
+			}
+			return groups;
+		},
 	},
 	methods: {
 		text(name: string, count?: number) {
