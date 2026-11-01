@@ -31,11 +31,14 @@ import vehicleList from "@/utils/vehicleList";
 import { wizardPending } from "@/onboarding";
 import { defineComponent } from "vue";
 
-// assume offline if not data received for 5 minutes
+// assume offline if no data received for 5 minutes, or 15 seconds on first connect
 let lastDataReceived = new Date();
+let dataReceived = false;
 const maxDataAge = 60 * 1000 * 5;
+const maxFirstDataAge = 15 * 1000;
 setInterval(() => {
-	if (new Date().getTime() - lastDataReceived.getTime() > maxDataAge) {
+	const maxAge = dataReceived ? maxDataAge : maxFirstDataAge;
+	if (new Date().getTime() - lastDataReceived.getTime() > maxAge) {
 		console.log("no data received, assume we are offline");
 		window.app.setOffline();
 	}
@@ -217,14 +220,14 @@ export default defineComponent({
 			loc.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 
 			this.ws = new WebSocket(loc.href);
+			let receivedData = false;
 			this.ws.onerror = () => {
 				console.log({ message: "Websocket error. Trying to reconnect." });
 				this.ws?.close();
 			};
+			// proxies like Home Assistant ingress accept the socket before reaching evcc, wait for data
 			this.ws.onopen = () => {
 				console.log("websocket connected");
-				this.reconnectAttempts = 0;
-				window.app.setOnline();
 			};
 			this.ws.onclose = () => {
 				window.app.setOffline();
@@ -238,6 +241,12 @@ export default defineComponent({
 					}
 					store.update(msg);
 					lastDataReceived = new Date();
+					dataReceived = true;
+					if (!receivedData) {
+						receivedData = true;
+						this.reconnectAttempts = 0;
+						window.app.setOnline();
+					}
 				} catch (error) {
 					const e = error as Error;
 					window.app.raise({

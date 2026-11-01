@@ -1367,6 +1367,7 @@ export default defineComponent({
 		backupRestoreProps() {
 			return {
 				authDisabled: this.authDisabled,
+				wizardPending: this.wizardPending,
 			};
 		},
 		circuitsRoot(): CircuitNode | undefined {
