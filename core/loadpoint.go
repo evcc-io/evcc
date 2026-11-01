@@ -90,6 +90,7 @@ type Loadpoint struct {
 	pushChan chan<- messenger.Event // notifications
 	uiChan   chan<- util.Param      // client push messages
 	lpChan   chan<- *Loadpoint      // update requests
+	lpQueued atomic.Bool            // update request waiting in lpChan
 	log      *util.Logger
 
 	rwMutex      atomic.Int64 // count reentrant RWMutex
@@ -474,9 +475,15 @@ func (lp *Loadpoint) RequestUpdate() {
 
 // requestUpdate requests site to update this loadpoint
 func (lp *Loadpoint) requestUpdate() {
+	// queue each loadpoint at most once so the site queue sized to all loadpoints never overflows
+	if lp.lpChan == nil || !lp.lpQueued.CompareAndSwap(false, true) {
+		return
+	}
+
 	select {
 	case lp.lpChan <- lp: // request loadpoint update
 	default:
+		lp.lpQueued.Store(false)
 	}
 }
 
