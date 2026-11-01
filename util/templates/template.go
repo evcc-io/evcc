@@ -380,6 +380,11 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 		}
 	}
 
+	// classes without usage param (e.g. curtailer) match param usages by class name
+	if usage == "" {
+		usage = class.String()
+	}
+
 	// TODO this is an utterly horrible hack
 	//
 	// When decoding the actual values ("other" parameter) into the

@@ -32,7 +32,15 @@ export type Template = {
   };
 };
 
-export type TemplateParamUsage = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
+export type TemplateParamUsage =
+  | "vehicle"
+  | "battery"
+  | "grid"
+  | "pv"
+  | "charger"
+  | "aux"
+  | "ext"
+  | "curtailer";
 
 // mirrors util/templates/paramtype.go
 export type TemplateParamType =
