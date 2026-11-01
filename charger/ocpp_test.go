@@ -357,6 +357,26 @@ func (suite *ocppTestSuite) TestTimeout() {
 	suite.Require().NoError(err)
 }
 
+func (suite *ocppTestSuite) TestReconnect() {
+	id := suite.stationID("test-reconnect")
+
+	cp1, _, stopCp1 := suite.startChargePoint(id, 1)
+	suite.Require().NoError(cp1.Start(ocppTestUrl))
+
+	c, err := NewOCPP(suite.T().Context(), id, 1, "", "", 0, false, false, false, true, false, ocppTestConnectTimeout)
+	suite.Require().NoError(err)
+
+	stopCp1()
+	suite.Require().Eventually(func() bool { return !c.cp.Connected() }, time.Second, 10*time.Millisecond)
+
+	// reconnect without reboot, BootNotification is only sent when triggered
+	cp2, _, _ := suite.startChargePoint(id, 1)
+	suite.Require().NoError(cp2.Start(ocppTestUrl))
+
+	// well before the boot timeout
+	suite.Require().Eventually(c.cp.Connected, ocpp.Timeout/2, 10*time.Millisecond)
+}
+
 func (suite *ocppTestSuite) TestEnabledAvailable() {
 	id := suite.stationID("test-available")
 
