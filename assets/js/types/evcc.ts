@@ -1278,6 +1278,8 @@ export interface Vehicle {
   features?: string[];
   /** Usable battery capacity in kWh. */
   capacity?: number;
+  /** Maximum number of phases supported by the vehicle. Zero means unknown. */
+  phases?: PHASES;
   /** Vehicle icon name for UI display. */
   icon?: string;
 }

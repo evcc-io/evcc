@@ -14,6 +14,7 @@ const RENAME: Record<string, string> = {
   BATTERY_MODE: "BatteryMode",
   CURRENCY: "Currency",
   CHARGER_STATUS_REASON: "ChargerStatusReason",
+  PHASES: "PhaseCount",
   PHASE_ACTION: "PhaseAction",
   PV_ACTION: "PvAction",
   SMART_COST_TYPE: "SmartCostType",
