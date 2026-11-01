@@ -281,6 +281,21 @@ render: |
       register: 13000
       count: 47
     scale: 0.1
+  batterymodepower:
+    charge:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 13051 # Battery max forced (dis)charge power, W
+        type: writesingle
+        decode: uint16
+    discharge:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 13051 # Battery max forced (dis)charge power, W
+        type: writesingle
+        decode: uint16
   batterymode:
     source: switch
     switch:
