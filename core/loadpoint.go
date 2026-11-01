@@ -1569,6 +1569,14 @@ func (lp *Loadpoint) fastChargingPhases() (bool, error) {
 	// use enabled phases- scalePhases compares against the same value
 	phases := lp.GetPhases()
 
+	// unknown phases (charger without api.PhaseGetter after restart): establish target immediately
+	if phases == 0 {
+		if err := lp.scalePhases(targetPhases); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			return false, err
+		}
+		return false, nil
+	}
+
 	// scale down: immediate
 	if targetPhases == 1 && phases == 3 {
 		if err := lp.scalePhases(1); err != nil && !errors.Is(err, api.ErrNotAvailable) {
