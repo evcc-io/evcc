@@ -111,7 +111,23 @@ func ApplyForwarderRules(rules []ForwarderRule) {
 		}
 	}
 
+	reconcileMirrors()
+
 	notifyUpdated()
+}
+
+// reconcileMirrors aligns the mirrors of every connected charger with the current rules.
+func reconcileMirrors() {
+	sidecarsMu.Lock()
+	ids := make([]string, 0, len(connectedChargers))
+	for id := range connectedChargers {
+		ids = append(ids, id)
+	}
+	sidecarsMu.Unlock()
+
+	for _, id := range ids {
+		startMirrors(id)
+	}
 }
 
 // dialUpstream opens a websocket connection to the rule's upstream server for the given charger.
@@ -336,6 +352,9 @@ func onChargerConnect(ch ws.Channel) {
 	if !ok {
 		return
 	}
+
+	startMirrors(id)
+
 	// open the buffer before dialling so early messages are captured, not dropped
 	pendingMu.Lock()
 	pendingMsgs[id] = nil
@@ -517,6 +536,10 @@ func onChargerDisconnect(ch ws.Channel) {
 	_, hadErr := forwarderErrors[id]
 	delete(forwarderErrors, id)
 	sidecarsMu.Unlock()
+
+	// after the connection state changed, so a reconciliation racing with the disconnect cannot start mirrors again
+	stopMirrors(id)
+
 	if ok {
 		sc.conn.CloseNow()
 		forwarderLog.DEBUG.Printf("forwarder: %s upstream connection closed", id)
@@ -544,6 +567,10 @@ func onChargerMessage(ch ws.Channel, data []byte) bool {
 		bootMu.Lock()
 		lastBoot[id] = slices.Clone(data)
 		bootMu.Unlock()
+	}
+
+	if msgType == ocppj.CALL {
+		mirrorCall(id, action, data)
 	}
 
 	sidecarsMu.Lock()
@@ -759,10 +786,11 @@ func trackTransaction(cs *CS, chargerID string, call, result []byte) {
 
 // ForwarderSessionStatus is the observable state of one forwarder session.
 type ForwarderSessionStatus struct {
-	ChargerID         string `json:"chargerId"`
-	UpstreamURL       string `json:"upstreamUrl"`
-	UpstreamConnected bool   `json:"upstreamConnected"`
-	Error             string `json:"error,omitempty"`
+	ChargerID         string         `json:"chargerId"`
+	UpstreamURL       string         `json:"upstreamUrl"`
+	UpstreamConnected bool           `json:"upstreamConnected"`
+	Error             string         `json:"error,omitempty"`
+	Mirrors           []MirrorStatus `json:"mirrors,omitempty"`
 }
 
 // recordForwarderError stores a charger's last upstream failure; caller must notifyUpdated.
@@ -812,22 +840,51 @@ func GetForwarderStatus() []ForwarderSessionStatus {
 
 	sidecarsMu.Lock()
 	defer sidecarsMu.Unlock()
-	out := make([]ForwarderSessionStatus, 0, len(rules))
-	for _, r := range rules {
-		if r.StationID == "*" {
-			continue
-		}
+
+	status := func(chargerID string, r ForwarderRule) ForwarderSessionStatus {
 		st := ForwarderSessionStatus{
-			ChargerID:   r.StationID,
+			ChargerID:   chargerID,
 			UpstreamURL: strings.TrimRight(r.UpstreamURL, "/"),
 		}
-		if _, ok := sidecars[r.StationID]; ok {
+		if _, ok := sidecars[chargerID]; ok {
 			st.UpstreamConnected = true
-		} else if msg, ok := forwarderErrors[r.StationID]; ok {
+		} else if msg, ok := forwarderErrors[chargerID]; ok {
 			st.Error = msg
 		}
-		out = append(out, st)
+		if len(r.Mirrors) > 0 {
+			st.Mirrors = mirrorStatus(chargerID, r.Mirrors)
+		}
+		return st
 	}
+
+	out := make([]ForwarderSessionStatus, 0, len(rules))
+	explicit := make(map[string]bool, len(rules))
+	var wildcard *ForwarderRule
+	for i, r := range rules {
+		if r.StationID == "*" {
+			wildcard = &rules[i]
+			continue
+		}
+
+		explicit[r.StationID] = true
+		out = append(out, status(r.StationID, r))
+	}
+
+	// chargers served by the wildcard rule have no rule of their own
+	if wildcard != nil {
+		ids := make([]string, 0, len(connectedChargers))
+		for id := range connectedChargers {
+			if !explicit[id] {
+				ids = append(ids, id)
+			}
+		}
+		slices.Sort(ids)
+
+		for _, id := range ids {
+			out = append(out, status(id, *wildcard))
+		}
+	}
+
 	return out
 }
 

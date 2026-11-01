@@ -1534,6 +1534,11 @@ components:
         readOnly:
           description: Only forward read operations to the station.
           type: boolean
+        mirrors:
+          description: Read-only upstreams receiving a copy of the station's messages.
+          type: array
+          items:
+            $ref: "#/components/schemas/OcppMirrorRule"
       required:
         - stationId
         - upstreamUrl
@@ -1553,8 +1558,56 @@ components:
         error:
           description: Last connection error.
           type: string
+        mirrors:
+          description: Connection status of the read-only upstreams.
+          type: array
+          items:
+            $ref: "#/components/schemas/OcppMirrorSession"
       required:
         - chargerId
+        - upstreamUrl
+        - upstreamConnected
+    OcppMirrorRule:
+      description: A read-only upstream that receives a copy of a station's OCPP messages.
+      type: object
+      properties:
+        upstreamUrl:
+          description: URL of the upstream OCPP backend.
+          type: string
+        upstreamStationId:
+          description: Station id used towards the upstream backend.
+          type: string
+        username:
+          description: Username for upstream authentication.
+          type: string
+        password:
+          description: Password for upstream authentication. Redacted.
+          type: string
+        insecure:
+          description: Skip TLS certificate verification.
+          type: boolean
+        caCert:
+          description: CA certificate for TLS connections.
+          type: string
+      required:
+        - upstreamUrl
+    OcppMirrorSession:
+      description: Connection status of a read-only upstream.
+      type: object
+      properties:
+        upstreamUrl:
+          description: URL of the upstream OCPP backend.
+          type: string
+        upstreamStationId:
+          description: Station id used towards the upstream backend.
+          type: string
+        upstreamConnected:
+          description: Connection to the upstream backend is established.
+          type: boolean
+        error:
+          description: Last connection error.
+          type: string
+      required:
         - upstreamUrl
         - upstreamConnected
     OcppStationStatus:
