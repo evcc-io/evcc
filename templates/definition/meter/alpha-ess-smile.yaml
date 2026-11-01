@@ -7,9 +7,9 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Um die aktive Ladesteuerung zu nutzen muss einmalig über das Webinterface oder App Zeiten für das Netzladen definiert werden. (Einstellungen->Funktionseinstellungen->Netzladen/Entladen) Hier sollte ein durchgehender Zeitraum (z.B: Ladezeit 1 00:00-23:00,   Ladezeit 2 23:00-00:00) eingetragen werden. Den Schalter "Netzladen" aber deaktivieren. Die eigentliche Steuerung erfolgt über evcc. Der Entladestopp wird über eine geplante Netzladung mit einem Ziel-SoC von 10% realisiert. Alternativ können die Zeiten auch über Modbus konfiguriert werden. Dafür die Register `2134,2142,2135,2136,2144,2137,2175` auf die Werte `0,0,23,0,23,0,0,0` setzen.
+      Um die aktive Ladesteuerung zu nutzen muss einmalig über das Webinterface oder App Zeiten für das Netzladen definiert werden. (Einstellungen->Funktionseinstellungen->Netzladen/Entladen) Hier sollte ein durchgehender Zeitraum (z.B: Ladezeit 1 00:00-23:00,   Ladezeit 2 23:00-00:00) eingetragen werden. Den Schalter "Netzladen" aber deaktivieren. Die eigentliche Steuerung erfolgt über evcc. Der Entladestopp wird über die Entladegrenze (in der App „Batterie-Reserve“) realisiert: evcc setzt sie zum Sperren auf 100 % und im Normalbetrieb wieder auf 10 %. Ein in der App eingestellter anderer Wert wird dabei überschrieben. Alternativ können die Zeiten auch über Modbus konfiguriert werden. Dafür die Register `2134,2142,2135,2136,2144,2137,2175` auf die Werte `0,0,23,23,0,0,0` setzen.
     en: |
-      To use active battery control, times for grid charging must be defined once via the web interface or app. (Settings->Function settings->Grid charging/discharging) A continuous time period should be entered here (e.g.: Charging time 1 00:00-23:00, Charging time 2 23:00-00:00). However, deactivate the "Grid charging" switch. The actual control takes place via evcc. Discharge stop is realized via a scheduled grid charge with a target SoC of 10%. Alternatively, it can also be configured via Modbus. To do this, set the registers `2134,2142,2135,2136,2144,2137,2175` to the values `0,0,23,0,23,0,0,0,0`.
+      To use active battery control, times for grid charging must be defined once via the web interface or app. (Settings->Function settings->Grid charging/discharging) A continuous time period should be entered here (e.g.: Charging time 1 00:00-23:00, Charging time 2 23:00-00:00). However, deactivate the "Grid charging" switch. The actual control takes place via evcc. Discharge stop is realized via the discharge cut SoC ("battery reserve" in the app): evcc sets it to 100% to block discharging and back to 10% in normal mode. A different value set in the app will be overwritten. Alternatively, it can also be configured via Modbus. To do this, set the registers `2134,2142,2135,2136,2144,2137,2175` to the values `0,0,23,23,0,0,0`.
 discovery:
   mac: ["BC97400", "70B3D57A2"]
 params:
@@ -161,23 +161,43 @@ render: |
   batterymode:
     source: switch
     switch:
-    - case: 1 # normal 
-      set:
-        source: const
-        value: 0
-        set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 2127 # 0x84F Time period control flag
-            type: writemultiple
-            decode: uint16
-    - case: 2 # hold -> Enable grid charging with 10% (default) target soc -> will not start charging but will prevent uncharging of battery 
+    - case: 1 # normal -> restore discharge cut SoC, then disable time period control
       set:
         source: sequence
         set:
         - source: const
-          value: 1
+          value: 2 # 2128 (discharge cut SoC) is only accepted while bit 1 of 2127 is set
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2127 # 0x84F Time period control flag
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 10 # 2128 acts as a global battery reserve and must be restored, otherwise the battery stays locked
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2128 # 0x850 Discharge Cut SoC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2127 # 0x84F Time period control flag
+              type: writemultiple
+              decode: uint16
+    - case: 2 # hold -> enable discharge time control with 100% discharge cut SoC -> prevents discharging of battery
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 3 # bit 1 (discharge time control) must be set, otherwise the write to 2128 is acknowledged but dropped
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -186,12 +206,21 @@ render: |
                 type: writemultiple
                 decode: uint16
         - source: const
+          value: 100
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2128 # 0x850 Discharge Cut SoC
+              type: writemultiple
+              decode: uint16
+        - source: const
           value: {{ .minsoc }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 2133 # 0x855 Charge Cut Soc
+              address: 2133 # 0x855 Charge Cut SoC
               type: writemultiple
               decode: uint16
     - case: 3 # charge -> Enable grid charging with 100% target soc (will be stopped by evcc)
@@ -213,7 +242,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 2133 # 0x855 Charge Cut Soc
+              address: 2133 # 0x855 Charge Cut SoC
               type: writemultiple
               decode: uint16
   {{- include "battery-params" . }}
