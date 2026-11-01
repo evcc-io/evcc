@@ -27,6 +27,7 @@ type Template struct {
 	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
 	Requirements Requirements   `json:",omitempty"`
 	Caveats      []Caveat       `json:",omitempty"` // known device limitations
+	Discovery    Discovery      `json:"-"`          // local network discovery hints
 	Params       []Param        `json:",omitempty"`
 	Render       string         `json:"-"` // rendering template
 }
@@ -99,6 +100,10 @@ func (t *Template) Validate() error {
 		}
 	}
 
+	if err := t.Discovery.validate(); err != nil {
+		return err
+	}
+
 	for _, r := range t.Requirements.EVCC {
 		if !slices.Contains(ValidRequirements, r) {
 			return fmt.Errorf("invalid requirement: '%s'", r)
@@ -128,6 +133,12 @@ func (t *Template) Validate() error {
 			}
 			if v := p.Example; v != "" && v != "true" && v != "false" {
 				return fmt.Errorf("param %s: bool example must be true or false, got '%s'", p.Name, v)
+			}
+		}
+
+		if p.Type == TypeDevice {
+			if _, err := ClassString(p.Class); err != nil {
+				return fmt.Errorf("param %s: device param needs a valid class, got '%s'", p.Name, p.Class)
 			}
 		}
 
@@ -356,6 +367,9 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 
 	t.ModbusValues(renderMode, values)
 
+	// modbus params take part in validation like the template's own params
+	t.ModbusParams("", values)
+
 	res := make(map[string]any)
 
 	var usage string
@@ -467,4 +481,26 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 	err = tmpl.Execute(out, res)
 
 	return bytes.TrimSpace(out.Bytes()), res, err
+}
+
+// DeviceRefs returns the names of other devices referenced by device params, keyed by class
+func (t *Template) DeviceRefs(values map[string]any) map[Class][]string {
+	res := make(map[Class][]string)
+
+	for _, p := range t.Params {
+		if p.Type != TypeDevice {
+			continue
+		}
+
+		class, err := ClassString(p.Class)
+		if err != nil {
+			continue
+		}
+
+		if name, ok := values[p.Name].(string); ok && name != "" {
+			res[class] = append(res[class], name)
+		}
+	}
+
+	return res
 }

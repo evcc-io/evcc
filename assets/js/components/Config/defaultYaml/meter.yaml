@@ -4,7 +4,6 @@ power: # current power
   source: const
   value: 1000 # W
 
-
 ## optional attributes (read-only)
 
 #energy: # meter reading in kWh
@@ -22,6 +21,8 @@ power: # current power
 #soc: # state of charge in % (for battery)
 #  source: const
 #  value: 75
+#minsoc: 10 # minimum state of charge in % (for battery)
+#maxsoc: 90 # maximum state of charge in % (for battery)
 #capacity: 10.5 # capacity in kWh (for battery)
 #powers: # phase powers in W
 #  - source: const

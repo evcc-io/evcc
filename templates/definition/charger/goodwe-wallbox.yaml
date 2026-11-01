@@ -17,6 +17,8 @@ requirements:
       Default device ID is 247 (0xF7).
       The wallbox only accepts 2 concurrent Modbus TCP sessions (1× SEMS cloud, 1× client). If the cloud is active, evcc competes for the second slot.
       Note: Implementation is derived from the Home Assistant integration (gen2-modbus branch) and is not vendor-verified.
+discovery:
+  mac: ["F0C1CE"]
 params:
   - name: modbus
     choice: ["tcpip"]

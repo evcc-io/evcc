@@ -3,6 +3,9 @@ products:
   - brand: my-PV
     description:
       generic: AC•THOR
+discovery:
+  mdns: ["_mypv._tcp"]
+  mac: ["986D35C"]
 params:
   - name: usage
     choice: ["aux"]

@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
@@ -41,11 +42,21 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 	}
 
 	// Available means cable unplugged and any prior transaction is stale
-	if applied && request.Status == core.ChargePointStatusAvailable && conn.txnId != 0 {
-		conn.log.DEBUG.Printf("clearing stale transaction %d on Available status", conn.txnId)
-		conn.txnId = 0
-		conn.idTag = ""
-		conn.assumeMeterStopped()
+	if applied && request.Status == core.ChargePointStatusAvailable {
+		conn.clearTransaction("Available status")
+	}
+
+	// a transaction does not survive a reboot, but a charge point may also send
+	// BootNotification on a mere reconnect, so let the first conclusive status decide
+	if applied && conn.rebooted {
+		switch request.Status {
+		case core.ChargePointStatusPreparing:
+			conn.clearTransaction("reboot")
+			conn.rebooted = false
+		case core.ChargePointStatusAvailable, core.ChargePointStatusCharging,
+			core.ChargePointStatusSuspendedEV, core.ChargePointStatusSuspendedEVSE:
+			conn.rebooted = false
+		}
 	}
 
 	if conn.isWaitingForAuth() {
@@ -102,7 +113,7 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 		}
 
 		// ignore old meter value requests
-		if !meterValue.Timestamp.Time.Before(conn.meterUpdated) {
+		if !meterValue.Timestamp.Time.Before(conn.meterTimestamp) {
 			// a charge point may repeat a measurand with a different context, e.g. a live
 			// Sample.Periodic value next to a static Transaction.Begin snapshot that never
 			// changes. Apply boundary snapshots first so live readings win independent of
@@ -115,7 +126,9 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 
 					sample.Value = strings.TrimSpace(sample.Value)
 					conn.measurements[getSampleKey(sample)] = sample
-					conn.meterUpdated = meterValue.Timestamp.Time
+					conn.meterTimestamp = meterValue.Timestamp.Time
+					// freshness is measured locally: charger sample timestamps may lag (Mennekes: 6-7s)
+					conn.meterUpdated = conn.clock.Now()
 				}
 			}
 		}
@@ -125,24 +138,56 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 }
 
 func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
-	conn.mu.Lock()
-	defer conn.mu.Unlock()
-
-	conn.txnId = int(conn.cp.cs.txnId.Add(1))
-	conn.idTag = request.IdTag
+	txnId := int(conn.cp.cs.txnId.Add(1))
+	conn.startTransaction(txnId, request.IdTag)
 
 	res := &core.StartTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
 			Status: types.AuthorizationStatusAccepted,
 		},
-		TransactionId: conn.txnId,
+		TransactionId: txnId,
 	}
 
 	return res, nil
 }
 
+// startTransaction records a transaction issued by evcc or by an upstream central system.
+func (conn *Connector) startTransaction(txnId int, idTag string) {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	conn.txnId = txnId
+	conn.idTag = idTag
+
+	// a transaction started after the boot is fresh and must survive the first status
+	conn.rebooted = false
+}
+
+// clearTransaction resets transaction state and zeroes reported power.
+// Must be called with conn.mu held. No-op if no transaction is tracked.
+func (conn *Connector) clearTransaction(reason string) {
+	if conn.txnId == 0 {
+		return
+	}
+
+	conn.log.DEBUG.Printf("clearing stale transaction %d on %s", conn.txnId, reason)
+	conn.txnId = 0
+	conn.idTag = ""
+	conn.assumeMeterStopped()
+}
+
+// markRebooted defers clearing a transaction left over from before a reboot
+// to the next applied status notification.
+func (conn *Connector) markRebooted() {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	conn.rebooted = true
+}
+
 func (conn *Connector) assumeMeterStopped() {
 	conn.meterUpdated = conn.clock.Now()
+	conn.meterTimestamp = conn.meterUpdated
 
 	if _, ok := conn.measurements[types.MeasurandPowerActiveImport]; ok {
 		conn.measurements[types.MeasurandPowerActiveImport] = types.SampledValue{
@@ -174,12 +219,28 @@ func (conn *Connector) assumeMeterStopped() {
 	}
 }
 
+func (conn *Connector) updateEnergyRegister(wh float64) {
+	m, ok := conn.measurements[types.MeasurandEnergyActiveImportRegister]
+	if !ok {
+		return
+	}
+
+	if f, err := strconv.ParseFloat(m.Value, 64); err == nil && scale(f, m.Unit) < wh {
+		conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{
+			Value: strconv.FormatFloat(wh, 'f', -1, 64),
+			Unit:  types.UnitOfMeasureWh,
+		}
+	}
+}
+
 func (conn *Connector) OnStopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
 	conn.txnId = 0
 	conn.idTag = ""
+
+	conn.updateEnergyRegister(float64(request.MeterStop))
 
 	res := &core.StopTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{

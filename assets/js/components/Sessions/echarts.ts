@@ -47,6 +47,33 @@ export function roundedStackData(datasets: { data: (number | null)[] }[], count:
   );
 }
 
+// rings at top/4, top/2, top land at 50%, 71%, 100% radius on a sqrt scale
+export function sqrtTicks(max: number): number[] {
+  const magnitude = 10 ** Math.floor(Math.log10(max > 0 ? max : 1));
+  const top = [1, 2, 4, 8, 10].find((n) => n * magnitude >= max)! * magnitude;
+  return [top / 4, top / 2, top];
+}
+
+// polar bars plot sqrt(value) so the wedge area, not its radius, is proportional to the value
+export function sqrtRadiusAxis(max: number, formatValue: (value: number) => string) {
+  const ticks = sqrtTicks(max).map(Math.sqrt);
+  return {
+    min: 0,
+    max: ticks[ticks.length - 1],
+    axisLine: { show: false },
+    axisTick: { show: false, customValues: ticks },
+    splitLine: { lineStyle: { color: colors.border || "" } },
+    axisLabel: {
+      customValues: ticks,
+      fontSize: 10,
+      color: colors.muted || "",
+      backgroundColor: colors.box || "",
+      padding: [1, 3],
+      formatter: (value: number) => formatValue(value * value),
+    },
+  };
+}
+
 // shared doughnut chart option, tooltip centered in the cutout
 export function doughnutOption(
   data: { name: string; value: number; color: string }[],

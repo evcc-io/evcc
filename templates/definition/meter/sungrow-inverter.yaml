@@ -4,6 +4,10 @@ products:
     description:
       generic: SG Series Inverter
 capabilities: ["curtail"]
+discovery:
+  mdns: ["_http._tcp:WiNet-WebServer"]
+  hostname: ["sungrow*"]
+  mac: ["AC199F"]
 params:
   - name: usage
     choice: ["grid", "pv"]

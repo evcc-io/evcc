@@ -44,7 +44,7 @@ func legacyTokenHandler(accessToken, refreshToken string) http.HandlerFunc {
 
 // newLoginTestIdentity builds an Identity suitable for exercising the public
 // Login() method end to end, including the legacy getDeviceID call it always
-// makes. cci == nil mirrors a brand without CCI support (e.g. Genesis EU).
+// makes. cci == nil mirrors a brand without CCI support (e.g. Hyundai AU).
 func newLoginTestIdentity(t *testing.T, loginURL, deviceURL, cciURL string, cci *CCIConfig) *Identity {
 	t.Helper()
 
@@ -74,11 +74,15 @@ func testCCIConfig() *CCIConfig {
 		ClientName:           "kia",
 		OSVersion:            "27",
 		NotificationProvider: "IOS_APPSTORE",
+
+		FingerprintClientName: "KiaEU",
+		FingerprintKey:        "yb4Z1n2nlKe" + "ukNilE7QEdb" + "KB34nStPVa",
+		BrandLabel:            "Kia",
 	}
 }
 
-// TestLoginUsesLegacyWhenCCIIsNil covers brands without CCI support (Genesis
-// EU, Hyundai AU): Login must always use the unmodified legacy refreshToken path
+// TestLoginUsesLegacyWhenCCIIsNil covers brands without CCI support (Hyundai
+// AU): Login must always use the unmodified legacy refreshToken path
 func TestLoginUsesLegacyWhenCCIIsNil(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
@@ -153,7 +157,7 @@ func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 	var refreshCalls atomic.Int32
 	var exchangeCalls atomic.Int32
 	cciMux := http.NewServeMux()
-	cciMux.HandleFunc("/domain/api/v1/auth/token", func(w http.ResponseWriter, _ *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token", func(w http.ResponseWriter, _ *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken": "cci-access", "refreshToken": "cci-refresh",
 			"nonCcsToken": "non-ccs", "exchangeableAccessToken": "exch-access",
@@ -161,7 +165,7 @@ func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 			"idToken": "id-1", "expiresIn": 3599,
 		})
 	})
-	cciMux.HandleFunc("/domain/api/v1/auth/token-exchange", func(w http.ResponseWriter, _ *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token-exchange", func(w http.ResponseWriter, _ *http.Request) {
 		// the first (login) exchange returns a token expiring inside oauth2's
 		// 10s buffer, so the next Token() call triggers exactly one refresh
 		resp := map[string]any{"accessToken": "ccs-token-2", "expiresTime": time.Now().Add(time.Hour).Unix()}
@@ -171,7 +175,7 @@ func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 		}
 		_ = json.NewEncoder(w).Encode(resp)
 	})
-	cciMux.HandleFunc("/domain/api/v2/auth/token-refresh", func(w http.ResponseWriter, _ *http.Request) {
+	cciMux.HandleFunc("POST /auth/v2/token-refresh", func(w http.ResponseWriter, _ *http.Request) {
 		refreshCalls.Add(1)
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken": "cci-access-2", "refreshToken": "cci-refresh-2",

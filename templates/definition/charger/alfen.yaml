@@ -13,6 +13,8 @@ caveats:
   - description:
       de: Phasenumschaltung synchronisiert sich nicht immer zuverlässig.
       en: Phase switching does not always synchronise reliably.
+discovery:
+  mac: ["549A119"]
 params:
   - name: modbus
     choice: ["tcpip"]

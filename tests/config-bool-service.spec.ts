@@ -1,11 +1,12 @@
-import { test, expect } from "@playwright/test";
+import { test } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { expectModalVisible, getDatalistOptions } from "./utils";
+import { expectModalVisible, expectDatalistOptions } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
 const templateFlags = [
   "--disable-auth",
+  "--disable-onboarding",
   "--template-type",
   "meter",
   "--template",
@@ -37,6 +38,6 @@ test.describe("config bool service param", async () => {
 
     // entity datalist is populated from the echoed flag
     const entity = meterModal.getByLabel("Entity");
-    expect(await getDatalistOptions(entity)).toEqual(["insecure=false"]);
+    await expectDatalistOptions(entity, ["insecure=false"]);
   });
 });

@@ -46,7 +46,21 @@ params:
       en: Includes all connected external sources, like the power generation of cascaded inverters, into the PV power calculation.
     advanced: true
     usages: ["pv"]
+  - name: slave
+    type: bool
+    description:
+      de: Slave-Wechselrichter
+      en: Slave inverter
+    help:
+      de: Wechselrichter läuft als Slave in einem Master/Slave-Verbund. Die Batterie folgt dem Master und wird nicht direkt gesteuert.
+      en: Inverter runs as slave in a master/slave setup. The battery follows the master and is not controlled directly.
+    advanced: true
+    usages: ["battery"]
   - preset: battery-params
+  - name: maxchargepower
+    required: true
+  - name: maxdischargepower
+    required: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -210,6 +224,9 @@ render: |
       {{- end }}
       type: holding
       decode: uint16
+  {{- if not .slave }}
+  {{- $charge := .maxchargepower | int }}
+  {{- $discharge := mod (sub 4294967296 (.maxdischargepower | int)) 4294967296 }}
   batterymode:
     source: switch
     switch:
@@ -247,7 +264,7 @@ render: |
           convert: int2bytes
           set:
             source: const
-            value: '0x00000000_00000000_7FFFFFFF'
+            value: '{{ printf "0x00000000_00000000_%08X" $charge }}' # battery max power
             set:
               source: ignore
               error: "modbus: response data size '18' does not match count '4'"
@@ -278,7 +295,7 @@ render: |
           convert: int2bytes
           set:
             source: const
-            value: '0x00000000_7FFFFFFF_7FFFFFFF'
+            value: '{{ printf "0x00000000_%08X_%08X" $charge $charge }}' # battery min/max power
             set:
               source: ignore
               error: "modbus: response data size '18' does not match count '4'"
@@ -289,5 +306,68 @@ render: |
                   address: 0x1187
                   type: writemultiple
                   decode: bytes
+    - case: 4 # holdcharge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 3 # passive
+          set:
+            source: ignore
+            error: "modbus: response data size '18' does not match count '4'"
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x1110
+                type: writemultiple
+                decode: int16
+        - source: convert
+          convert: int2bytes
+          set:
+            source: const
+            value: '{{ printf "0x00000000_%08X_00000000" $discharge }}' # battery min power, negative int32, max 0
+            set:
+              source: ignore
+              error: "modbus: response data size '18' does not match count '4'"
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 0x1187
+                  type: writemultiple
+                  decode: bytes
+    - case: 5 # discharge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 3 # passive
+          set:
+            source: ignore
+            error: "modbus: response data size '18' does not match count '4'"
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x1110
+                type: writemultiple
+                decode: int16
+        - source: convert
+          convert: int2bytes
+          set:
+            source: const
+            value: '{{ printf "0x00000000_%08X_%08X" $discharge $discharge }}' # battery min/max power, negative int32
+            set:
+              source: ignore
+              error: "modbus: response data size '18' does not match count '4'"
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 0x1187
+                  type: writemultiple
+                  decode: bytes
+  {{- end }}
   {{- include "battery-params" . }}
   {{- end }}

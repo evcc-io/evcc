@@ -1,6 +1,8 @@
 package loadpoint
 
 import (
+	"cmp"
+	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -27,6 +29,7 @@ type DynamicConfig struct {
 	SmartCostLimit           *float64  `json:"smartCostLimit"`
 	SmartFeedInPriorityLimit *float64  `json:"smartFeedInPriorityLimit"`
 	SolarShare               float64   `json:"solarShare"`
+	DemandPredictor          string    `json:"demandPredictor,omitempty"`
 	PlanEnergy               float64   `json:"planEnergy"`
 	PlanTime                 time.Time `json:"planTime"`
 	PlanPrecondition_        int64     `json:"planPrecondition" mapstructure:"planPrecondition"` // TODO deprecated, keep for compatibility
@@ -71,9 +74,14 @@ func SplitConfig(payload map[string]any) (DynamicConfig, map[string]any, error) 
 func (payload DynamicConfig) Apply(lp API) error {
 	lp.SetTitle(payload.Title)
 	lp.SetPriority(payload.Priority)
-	lp.SetSmartCostLimit(payload.SmartCostLimit)
-	lp.SetSmartFeedInPriorityLimit(payload.SmartFeedInPriorityLimit)
+	// limits the optimizer controls are rejected, the remaining config still applies
+	limitErr := errors.Join(
+		lp.SetSmartCostLimit(payload.SmartCostLimit),
+		lp.SetSmartFeedInPriorityLimit(payload.SmartFeedInPriorityLimit),
+	)
 	lp.SetSolarShare(payload.SolarShare)
+	lp.SetDemandPredictor(payload.DemandPredictor)
+
 	lp.SetThresholds(payload.Thresholds)
 	lp.SetPlanEnergy(payload.PlanTime, payload.PlanEnergy)
 	lp.SetPlanStrategy(payload.PlanStrategy)
@@ -122,5 +130,5 @@ func (payload DynamicConfig) Apply(lp API) error {
 		}
 	}
 
-	return err
+	return cmp.Or(err, limitErr)
 }

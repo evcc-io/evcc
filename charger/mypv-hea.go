@@ -26,6 +26,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -196,12 +197,12 @@ func (wb *MyPvHea) MaxCurrentMillis(current float64) error {
 
 	phases := int(wb.relays)
 	if wb.lp != nil {
-		if p := wb.lp.GetPhases(); p != 0 {
+		if p := wb.lp.ActivePhases(); p != 0 {
 			phases = p
 		}
 	}
 
-	power := voltage * current * float64(phases)
+	power := grid.CurrentToPower(current, phases)
 	// Tolerate floating-point conversion at exact stage boundaries, but never round up a partial stage.
 	steps := uint16(min(math.Floor(power/float64(wb.stepPower)+1e-9), float64(wb.relays)))
 	mask := uint16(1<<steps) - 1

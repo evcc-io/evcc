@@ -1,6 +1,7 @@
 package eudataact
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +14,8 @@ const (
 	// portalLatency is the margin added to a dataset's timestamp before the
 	// following dataset is expected to be available for download
 	portalLatency = time.Minute
+	// errorGrace is how long the last data is served while updates keep failing
+	errorGrace = time.Hour
 )
 
 // Provider implements the vehicle api on top of the EU Data Act dataset.
@@ -30,24 +33,46 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *Provider {
+func NewProvider(log *util.Logger, client *API, vin string, cache time.Duration) *Provider {
 	v := &Provider{}
-	s := sharedStore(api)
+	s := sharedStore(client)
 
-	var cached util.Cacheable[[]point]
+	var (
+		cached util.Cacheable[[]point]
+		lastOK time.Time
+	)
 	cached = util.ResettableCached(func() ([]point, error) {
 		ts, err := s.update(vin)
-		if err != nil {
-			log.ERROR.Println(err)
-		} else if !ts.IsZero() {
-			time.AfterFunc(resetDelay(ts, cache), cached.Reset)
+		if err == nil {
+			lastOK = time.Now()
+			if !ts.IsZero() {
+				time.AfterFunc(resetDelay(ts, cache), cached.Reset)
+			}
+			return s.snapshot(vin), nil
 		}
-		return s.snapshot(vin), nil
+
+		// the data is outdated while catching up, the loadpoint must read again
+		if errors.Is(err, api.ErrMustRetry) {
+			return nil, err
+		}
+
+		// serve the last data over transient portal errors, surface persistent ones
+		if data := s.snapshot(vin); keepData(data, lastOK) {
+			log.ERROR.Println(err)
+			return data, nil
+		}
+
+		return nil, err
 	}, cache)
 
 	v.statusG = cached.Get
 
 	return v
+}
+
+// keepData reports whether data may still be served after a failed update
+func keepData(data []point, lastOK time.Time) bool {
+	return len(data) > 0 && time.Since(lastOK) < errorGrace
 }
 
 // resetDelay returns the delay until the dataset following the one delivered at
@@ -81,7 +106,7 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyBatteryStateReportSoc, KeyEnyaqSoc); p != nil {
+	if p := lookup(data, KeyBatteryStateReportSoc, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyEnyaqSoc); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
@@ -114,7 +139,7 @@ func (v *Provider) Odometer() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldOdometer, FieldOdometerValue); p != nil {
+	if p := lookup(data, KeyMileageValue, FieldOdometer, FieldOdometerValue); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 

@@ -4,7 +4,12 @@
 		<div class="row">
 			<main class="col-12">
 				<div class="mb-5">
-					<p class="text-muted">{{ $t("issue.description") }}</p>
+					<p class="text-muted">
+						{{ $t("issue.description") }}
+						<a v-if="!emailMode" :href="docsLink" target="_blank">
+							{{ $t("config.general.docsLink") }}
+						</a>
+					</p>
 				</div>
 
 				<!-- Help Type Selection -->
@@ -63,6 +68,26 @@
 					<p v-if="!emailMode" class="text-muted mb-4">
 						🇬🇧 Please write your issue in English so everyone can participate.
 					</p>
+
+					<div v-if="showBugHints" class="text-muted mb-4 col-lg-6">
+						<i18n-t tag="div" keypath="issue.searchHint" scope="global">
+							<template #issues>
+								<a href="https://github.com/evcc-io/evcc/issues" target="_blank">
+									{{ $t("issue.searchHintLink") }}
+								</a>
+							</template>
+						</i18n-t>
+						<i18n-t
+							v-if="!nightly"
+							tag="div"
+							keypath="issue.nightlyHint"
+							scope="global"
+						>
+							<template #nightlyVersion>
+								<strong>{{ $t("issue.nightlyHintVersion") }}</strong>
+							</template>
+						</i18n-t>
+					</div>
 
 					<!-- Two Column Layout -->
 					<div class="row mb-5 g-5">
@@ -376,7 +401,7 @@ import Modal from "bootstrap/js/dist/modal";
 import api from "@/api";
 import store from "@/store";
 import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
-import { formatJson } from "@/components/Issue/format";
+import { formatJson, redactEebus } from "@/components/Issue/format";
 import {
 	generateMailtoUrl,
 	generateDebugFile,
@@ -386,12 +411,17 @@ import {
 } from "@/components/Issue/template";
 import type { HelpType, IssueData, Sections } from "@/components/Issue/types";
 import type { State } from "@/types/evcc";
+import { docsPrefix } from "@/i18n";
+import { isNightly } from "@/utils/version";
 
 // Keys that should be expanded (1-level expansion for arrays and objects)
 const EXPAND_KEYS = [
 	"battery",
 	"charger",
+	"circuit",
+	"curtailer",
 	"forecast",
+	"hems",
 	"loadpoints",
 	"messenger",
 	"meter",
@@ -449,6 +479,9 @@ export default defineComponent({
 		return { title: this.$t("issue.title") };
 	},
 	computed: {
+		docsLink() {
+			return `${docsPrefix()}/report-a-problem`;
+		},
 		customEmail(): string {
 			return window.evcc?.customEmail ?? "";
 		},
@@ -463,6 +496,12 @@ export default defineComponent({
 		},
 		versionString(): string {
 			return `v${store.state.version || ""}`;
+		},
+		showBugHints(): boolean {
+			return !this.emailMode && this.helpType === "issue";
+		},
+		nightly(): boolean {
+			return isNightly(store.state.version || "");
 		},
 		systemString(): string {
 			return store.state.system || "";
@@ -583,6 +622,9 @@ export default defineComponent({
 				const deviceEndpoints = [
 					"config/loadpoints",
 					"config/devices/charger",
+					"config/devices/circuit",
+					"config/devices/curtailer",
+					"config/devices/hems",
 					"config/devices/messenger",
 					"config/devices/meter",
 					"config/devices/tariff",
@@ -593,7 +635,6 @@ export default defineComponent({
 					"config/site",
 					...deviceEndpoints,
 					"config/circuits",
-					"config/hems",
 					"config/messaging",
 					"config/tariffs",
 					"config/tariff",
@@ -636,12 +677,25 @@ export default defineComponent({
 					"interval",
 					"residualPower",
 					"experimental",
+					"optimizer",
+					"optimizerChargingStrategy",
+					"gridExportLimit",
+					"ocpp",
+					"ocppforwarder",
+					"eebus",
+					"country",
+					"currency",
 				].forEach((key) => {
 					const value = store.state[key as keyof State];
 					if (value !== undefined && value !== null) {
 						configs[key] = value;
 					}
 				});
+
+				if (configs.eebus) configs.eebus = redactEebus(configs.eebus);
+
+				const { remote } = store.state;
+				if (remote) configs.remote = remote.config;
 
 				this.sections.uiConfig.content = formatJson(configs, EXPAND_KEYS);
 			} catch (error) {
@@ -681,8 +735,9 @@ export default defineComponent({
 
 		async loadState() {
 			try {
-				const response = await api.get("state");
-				this.sections.state.content = formatJson(response.data, EXPAND_KEYS);
+				const { data } = await api.get("state");
+				if (data.eebus) data.eebus = redactEebus(data.eebus);
+				this.sections.state.content = formatJson(data, EXPAND_KEYS);
 			} catch (error) {
 				console.error("Failed to fetch state:", error);
 				this.sections.state.content = "Failed to load system state";

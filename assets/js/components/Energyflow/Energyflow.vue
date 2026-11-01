@@ -26,8 +26,8 @@
 				:pvExport="pvExport"
 				:batteryCharge="batteryCharge"
 				:batteryDischarge="batteryDischarge"
-				:batteryGridCharge="batteryGridChargeActive"
-				:batteryHold="batteryHold"
+				:batteryMode="batteryMode"
+				:batteryConfigured="batteryConfigured"
 				:pvProduction="pvProduction"
 				:homePower="homePower"
 				:batterySoc="batterySoc"
@@ -122,11 +122,7 @@
 								icon="battery"
 								:power="batteryDischarge"
 								:powerUnit="powerUnit"
-								:iconProps="{
-									hold: batteryHold,
-									soc: batterySoc,
-									gridCharge: batteryGridChargeActive,
-								}"
+								:iconProps="{ mode: batteryMode, soc: batterySoc }"
 								:details="batterySoc"
 								:detailsFmt="batteryFmt"
 								:expanded="batteryExpanded"
@@ -200,6 +196,14 @@
 										data-testid="energyflow-entry-consumer"
 										:iconProps="{ names: [c.icon || 'generic'] }"
 									/>
+									<EnergyflowEntry
+										:name="$t('energy.consumers.others')"
+										:power="otherPower"
+										:powerUnit="powerUnit"
+										icon="vehicle"
+										data-testid="energyflow-entry-consumer-other"
+										:iconProps="{ names: ['generic'] }"
+									/>
 								</template>
 							</EnergyflowEntry>
 							<EnergyflowEntry
@@ -247,11 +251,7 @@
 								icon="battery"
 								:power="batteryCharge"
 								:powerUnit="powerUnit"
-								:iconProps="{
-									hold: batteryChargeHold,
-									soc: batterySoc,
-									gridCharge: batteryGridChargeActive,
-								}"
+								:iconProps="{ mode: batteryMode, soc: batterySoc }"
 								:details="batterySoc"
 								:detailsFmt="batteryFmt"
 								:expanded="batteryExpanded"
@@ -325,6 +325,7 @@ import collector from "@/mixins/collector.js";
 import { defineComponent, type PropType } from "vue";
 import {
 	SMART_COST_TYPE,
+	type BATTERY_MODE,
 	type Battery,
 	type Meter,
 	type CURRENCY,
@@ -358,7 +359,7 @@ export default defineComponent({
 		batteryDischargeControl: { type: Boolean },
 		batteryGridChargeLimit: { type: Number },
 		batteryGridChargeActive: { type: Boolean },
-		batteryMode: { type: String },
+		batteryMode: { type: String as PropType<BATTERY_MODE> },
 		tariffGrid: { type: Number },
 		tariffFeedIn: { type: Number, default: 0 },
 		tariffCo2: { type: Number },
@@ -560,7 +561,14 @@ export default defineComponent({
 			});
 		},
 		allConsumers() {
-			return [...this.consumers, ...this.aux];
+			const label = (m: Meter) => m.title || m.name || "";
+			return [...this.consumers, ...this.aux].sort((a, b) =>
+				label(a).localeCompare(label(b), this.$i18n.locale)
+			);
+		},
+		otherPower() {
+			const metered = this.allConsumers.reduce((sum, m) => sum + (m.power || 0), 0);
+			return Math.max(0, this.homePower - metered);
 		},
 	},
 	watch: {

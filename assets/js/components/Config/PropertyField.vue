@@ -74,10 +74,20 @@
 		class="form-control"
 		:class="inputClasses"
 		:type="inputType"
-		:placeholder="placeholder"
+		:placeholder="effectivePlaceholder"
 		:required="required"
 		:rows="textareaRows"
 		:disabled="disabled"
+	/>
+	<PropertyDeviceField
+		v-else-if="device"
+		:id="id"
+		v-model="value"
+		:property="property"
+		:device-class="deviceClass"
+		:usage="usage"
+		:has-device-error="hasDeviceError"
+		:required="required"
 	/>
 	<PropertyZonesField
 		v-else-if="zones"
@@ -85,6 +95,19 @@
 		v-model="value"
 		:currency="currency"
 		:valueLabel="zonesValueLabel"
+	/>
+	<Combobox
+		v-else-if="combobox"
+		:id="id"
+		v-model="value"
+		:options="serviceValues"
+		:placeholder="effectivePlaceholder"
+		:required="required"
+		:pattern="patternRegex"
+		:title="patternTitle"
+		:invalid="invalid"
+		:disabled="disabled"
+		:loading="serviceLoading"
 	/>
 	<div v-else class="d-flex" :class="sizeClass">
 		<div class="position-relative flex-grow-1 shrinkable">
@@ -94,7 +117,7 @@
 				:list="datalistId"
 				:type="inputType"
 				:step="step"
-				:placeholder="placeholder"
+				:placeholder="effectivePlaceholder"
 				:required="required"
 				:pattern="patternRegex"
 				:title="patternTitle"
@@ -152,7 +175,9 @@ import "@h2d2/shopicons/es/regular/minus";
 import VehicleIcon from "../VehicleIcon";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
+import Combobox from "../Helper/Combobox.vue";
 import PropertyZonesField from "./PropertyZonesField.vue";
+import PropertyDeviceField from "./PropertyDeviceField.vue";
 import formatter from "@/mixins/formatter";
 import parseGoDuration, {
 	displayFactors,
@@ -165,13 +190,21 @@ const NS_PER_SECOND = 1000000000;
 
 export default {
 	name: "PropertyField",
-	components: { VehicleIcon, SelectGroup, CustomSelect, PropertyZonesField },
+	components: {
+		VehicleIcon,
+		SelectGroup,
+		CustomSelect,
+		Combobox,
+		PropertyZonesField,
+		PropertyDeviceField,
+	},
 	mixins: [formatter],
 	props: {
 		id: String,
 		property: String,
 		masked: Boolean,
 		placeholder: String,
+		defaultValue: { type: [String, Number, Boolean], default: undefined },
 		type: String,
 		unit: String,
 		// transitional: emit ns numbers, remove once all callers accept duration strings (loadpoint follow-up)
@@ -183,15 +216,26 @@ export default {
 		disabled: Boolean,
 		pattern: { type: Object, default: () => ({}) },
 		choice: { type: Array, default: () => [] },
+		deviceClass: String,
+		usage: String,
+		hasDeviceError: { type: Function, default: () => false },
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
 		serviceValues: { type: Array, default: () => [] },
+		serviceLoading: Boolean,
 		currency: { type: String, default: "EUR" },
 		rows: { type: Number },
 	},
 	emits: ["update:modelValue"],
 	data: () => {
 		return { selectMode: false, unitOverride: null };
+	},
+	watch: {
+		combobox() {
+			// arriving suggestions replace the input element, keep focus
+			if (document.activeElement?.id !== this.id) return;
+			this.$nextTick(() => document.getElementById(this.id)?.focus());
+		},
 	},
 	computed: {
 		patternRegex() {
@@ -201,6 +245,9 @@ export default {
 			const examples = this.pattern.Examples || [];
 			if (!examples.length) return null;
 			return examples.join(", ");
+		},
+		combobox() {
+			return typeof this.serviceValues[0] === "object";
 		},
 		datalistId() {
 			return this.serviceValues.length > 0 ? `${this.id}-datalist` : null;
@@ -306,6 +353,9 @@ export default {
 		zones() {
 			return this.type === "Zones";
 		},
+		device() {
+			return this.type === "Device";
+		},
 		zonesValueLabel() {
 			return this.property === "chargesZones"
 				? this.$t("config.tariff.zones.charge")
@@ -360,42 +410,17 @@ export default {
 				name: this.getOptionName(value),
 			}));
 		},
+		effectivePlaceholder() {
+			if (this.placeholder) return this.placeholder;
+			if (this.defaultValue == null || this.defaultValue === "") return undefined;
+			return String(this.toDisplayValue(this.defaultValue));
+		},
 		value: {
 			get() {
 				if (this.select && this.modelValue == null) {
 					return "";
 				}
-
-				if (this.scale) {
-					return this.modelValue * this.scale;
-				}
-
-				if (this.boolean) {
-					return this.modelValue === "true" || this.modelValue === true;
-				}
-
-				if (this.array) {
-					return Array.isArray(this.modelValue) ? this.modelValue.join("\n") : "";
-				}
-
-				if (this.type === "Duration") {
-					const ns =
-						typeof this.modelValue === "string"
-							? parseGoDuration(this.modelValue)
-							: this.modelValue;
-					if (typeof ns === "number") {
-						return ns / this.durationFactor / NS_PER_SECOND;
-					}
-					return "";
-				}
-
-				if (this.pricePerKWh) {
-					const value = this.modelValue * this.pricePerKWhDisplayFactor(this.currency);
-					// Round to 6 decimals to eliminate floating-point errors
-					return Math.round(value * 1e6) / 1e6;
-				}
-
-				return this.modelValue;
+				return this.toDisplayValue(this.modelValue);
 			},
 			set(value) {
 				let newValue = value;
@@ -423,6 +448,35 @@ export default {
 		},
 	},
 	methods: {
+		toDisplayValue(raw) {
+			if (this.scale) {
+				return raw * this.scale;
+			}
+
+			if (this.boolean) {
+				return raw === "true" || raw === true;
+			}
+
+			if (this.array) {
+				return Array.isArray(raw) ? raw.join("\n") : "";
+			}
+
+			if (this.type === "Duration") {
+				const ns = typeof raw === "string" ? parseGoDuration(raw) : raw;
+				if (typeof ns === "number") {
+					return ns / this.durationFactor / NS_PER_SECOND;
+				}
+				return "";
+			}
+
+			if (this.pricePerKWh) {
+				const value = raw * this.pricePerKWhDisplayFactor(this.currency);
+				// Round to 6 decimals to eliminate floating-point errors
+				return Math.round(value * 1e6) / 1e6;
+			}
+
+			return raw;
+		},
 		coerceValue(val) {
 			if (this.inputType === "number") {
 				return val === "" ? "" : Number(val);

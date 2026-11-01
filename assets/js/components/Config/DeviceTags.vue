@@ -72,14 +72,14 @@ import TariffChart from "../Tariff/TariffChart.vue";
 import { generateRateSlots, calculateCostRange } from "@/utils/tariffSlots";
 import { distanceValue, distanceUnit } from "@/units";
 
-const HIDDEN_TAGS = ["icon", "heating", "integratedDevice", "continuous"];
+const HIDDEN_TAGS = ["icon", "heating", "integratedDevice", "continuous", "demandPredictor"];
 
 const PHASE_TAGS = ["phaseCurrents", "phaseVoltages", "phasePowers"];
 
 const FORECAST_TAGS = ["priceRates", "co2Rates", "solarRates", "temperatureRates"];
 
 // display order, remaining tags follow in backend order
-const FIRST_TAGS = ["power", "soc", "capacity", "energy", "returnEnergy"];
+const FIRST_TAGS = ["power", "soc", "capacity", "energy", "returnEnergy", "chargeStatus"];
 
 export default {
 	name: "DeviceTags",
@@ -182,16 +182,20 @@ export default {
 				return `${this.$t("config.deviceValue.max")} ${fmtMax}`;
 			}
 
-			// For price and CO2 rates, show range
+			if (this.ratesEntry?.type === "price") {
+				return this.fmtPriceRange(min, max, this.currency, true);
+			}
 			const fmtMin = this.formatRateValue(min, true);
 			return `${fmtMin} – ${fmtMax}`;
 		},
 	},
 	methods: {
 		deviceValueLabel(name) {
-			const usageKey = `config.deviceValue.usage.${this.effectiveUsage}.${name}`;
-			if (this.effectiveUsage && this.$te(usageKey)) {
-				return this.$t(usageKey);
+			// same priority as the loadpoint status: continuous > heating > default
+			const usages = [this.tags?.continuous?.value && "continuous", this.effectiveUsage];
+			for (const usage of usages.filter(Boolean)) {
+				const key = `config.deviceValue.usage.${usage}.${name}`;
+				if (this.$te(key)) return this.$t(key);
 			}
 			return this.$t(`config.deviceValue.${name}`);
 		},
@@ -247,8 +251,13 @@ export default {
 				case "odometer":
 				case "range":
 					return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
-				case "chargeStatus":
-					return value ? this.$t(`config.deviceValue.chargeStatus${value}`) : "-";
+				case "chargeStatus": {
+					// like the loadpoint status: continuous devices may run without being enabled
+					const enabled = this.tags.enabled?.value;
+					const status =
+						value === "C" && this.tags.continuous?.value && !enabled ? "B" : value;
+					return status ? this.deviceValueLabel(`chargeStatus${status}`) : "-";
+				}
 				case "switchDevice":
 					// switch device means no current control
 					return this.$t(`config.deviceValue.${value ? "no" : "yes"}`);

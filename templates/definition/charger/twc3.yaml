@@ -8,6 +8,9 @@ requirements:
   description:
     en: The TWC wallbox cannot be controlled directly. Control is via the vehicle. The vehicle must be selected at the TWC3 loadpoint. At this time only Tesla vehicles listed on [docs.evcc.io](https://docs.evcc.io/en/docs/devices/vehicles#tesla) are supported.
     de: Die TWC Wallbox ist nicht direkt regelbar. Die Regelung erfolgt über das Fahrzeug. Das Fahrzeug muss am TWC3 Ladepunkt ausgewählt sein. Aktuell ausschließlich mit [docs.evcc.io](https://docs.evcc.io/docs/devices/vehicles#tesla) unterstützten Tesla Fahrzeugen nutzbar.
+discovery:
+  hostname: ["teslawallconnector_*"]
+  mac: ["DC44271", "98ED5C", "4CFCAA"]
 params:
   - name: host
 render: |

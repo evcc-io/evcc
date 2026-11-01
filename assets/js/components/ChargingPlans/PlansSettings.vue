@@ -37,6 +37,7 @@
 					:precondition="effectivePlanStrategy?.precondition"
 					:continuous="effectivePlanStrategy?.continuous"
 					:smart-cost-type="smartCostType"
+					:optimizer-controlled="optimizerControlled"
 					@update="updatePlanStrategy"
 				/>
 			</div>
@@ -76,6 +77,7 @@ import type {
 	PlanResponse,
 	PlanStrategy,
 	PlanWrapper,
+	Rate,
 	RepeatingPlan,
 	SMART_COST_TYPE,
 	StaticEnergyPlan,
@@ -102,12 +104,14 @@ export default defineComponent({
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,
 		effectivePlanStrategy: Object as PropType<PlanStrategy>,
+		activePlan: Array as PropType<Rate[] | null>,
 		planEnergy: Number,
 		limitEnergy: Number,
 		socBasedPlanning: Boolean,
 		socPerKwh: Number,
 		rangePerSoc: Number,
 		smartCostType: String as PropType<SMART_COST_TYPE>,
+		optimizerControlled: Boolean,
 		currency: String as PropType<CURRENCY>,
 		mode: String,
 		capacity: Number,
@@ -148,11 +152,11 @@ export default defineComponent({
 				end: new Date(end),
 				value,
 			}));
-			const { duration, plan, power, planTime } = this.plan;
+			const { duration, plan, power, planTime, optimizer } = this.plan;
 			const targetTime = planTime ? new Date(planTime) : null;
 			const { currency, smartCostType } = this;
 			return rates
-				? { duration, plan, power, rates, targetTime, currency, smartCostType }
+				? { duration, plan, power, rates, targetTime, currency, smartCostType, optimizer }
 				: null;
 		},
 		alreadyReached(): boolean {
@@ -171,6 +175,15 @@ export default defineComponent({
 		effectivePlanStrategy: {
 			deep: true,
 			handler(vNew: PlanStrategy, vOld: PlanStrategy) {
+				if (!deepEqual(vNew, vOld)) {
+					this.updatePlanDebounced();
+				}
+			},
+		},
+		// the optimizer delivers its schedule after the plan was saved
+		activePlan: {
+			deep: true,
+			handler(vNew: Rate[] | null, vOld: Rate[] | null) {
 				if (!deepEqual(vNew, vOld)) {
 					this.updatePlanDebounced();
 				}

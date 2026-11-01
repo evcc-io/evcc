@@ -1,0 +1,40 @@
+template: localvolts
+link: https://localvolts.com
+products:
+  - brand: Localvolts
+requirements:
+  description:
+    en: Requires the API key and partner ID from the Localvolts web app (My Profile, General, API Key). Prices are the site-specific flex prices for the current and the next 24 hours.
+    de: Benötigt den API-Key und die Partner-ID aus der Localvolts Web-App (My Profile, General, API Key). Die Preise sind die standortspezifischen Flex-Preise für die aktuelle und die nächsten 24 Stunden.
+group: price
+countries: ["AU"]
+params:
+  - name: apikey
+    required: true
+  - name: partner
+    required: true
+    description:
+      en: Partner ID
+      de: Partner-ID
+  - name: nmi
+    required: true
+    description:
+      generic: NMI
+    help:
+      en: National Meter Identifier (10 characters, without checksum)
+      de: National Meter Identifier (10 Zeichen, ohne Prüfziffer)
+  - name: channel
+    type: choice
+    choice: ["Import", "Export"]
+    required: true
+    help:
+      en: Import for the grid tariff, Export for the feed-in tariff
+      de: Import für den Netztarif, Export für den Einspeisetarif
+  - preset: tariff-base
+render: |
+  type: localvolts
+  apikey: {{ .apikey }}
+  partner: {{ .partner }}
+  nmi: {{ .nmi }}
+  channel: {{ .channel }}
+  {{ include "base" . }}

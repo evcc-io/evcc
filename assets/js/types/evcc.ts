@@ -32,6 +32,26 @@ declare global {
 export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
 
 export type DeviceColors = Record<string, string>;
+
+/** Setup checklist item. */
+export type OnboardingItem =
+  | "battery"
+  | "pv"
+  | "grid"
+  | "loadpoint"
+  | "heater"
+  | "consumer"
+  | "gridImport"
+  | "gridExport"
+  | "co2"
+  | "solar";
+/** Setup wizard and checklist state. */
+export interface OnboardingState {
+  /** Setup wizard was finished or skipped. */
+  done: boolean;
+  /** Dismissed setup checklist items. */
+  dismissed: OnboardingItem[];
+}
 /** Color assigned to a device for consistent UI display. */
 export type DeviceColorEntry = {
   /** Device title the color is assigned to. */
@@ -104,7 +124,7 @@ export interface HemsConfig {
 export interface HemsStatus {
   /** Consumption is currently limited. */
   dimmed?: boolean;
-  /** Allowed feed-in in %. Values below 100 mean production is curtailed. */
+  /** Allowed grid export in %. Values below 100 mean production is curtailed. */
   curtailed?: number;
   /** Maximum allowed consumption power in W. */
   maxConsumptionPower?: number;
@@ -164,6 +184,8 @@ export interface State {
   experimental?: boolean;
   /** Initial setup is required. */
   setupRequired?: boolean;
+  /** Setup wizard and checklist state. */
+  onboarding?: OnboardingState;
   /** Startup has completed. */
   startupCompleted?: boolean;
   /** HTTP API is ready to accept requests. */
@@ -174,12 +196,19 @@ export interface State {
   forecast: Forecast;
   /** Configured currency for all monetary values. */
   currency?: CURRENCY;
+  /**
+   * Configured site country as ISO 3166-1 alpha-2 code. Empty when not set.
+   * @example "DE"
+   */
+  country?: string;
   /** Fatal startup errors. */
   fatal?: FatalError[];
   /** Status of configured vehicle authentication providers, keyed by provider name. */
   authProviders?: AuthProviders;
   /** @internal */
   evopt?: EvOpt;
+  /** @internal */
+  "evopt-explanation"?: EvOptExplanation;
   /** Running evcc version. */
   version?: string;
   /** Latest available evcc version. */
@@ -202,11 +231,15 @@ export interface State {
   grid?: Meter;
   /** A grid meter is configured. */
   gridConfigured?: boolean;
-  /** Solar generation meters. One entry per configured pv meter. */
+  /** Grid connection, with or without neutral conductor. */
+  gridConnection?: GRID_CONNECTION;
+  /** Nominal grid voltage in V, line-to-line without neutral. */
+  voltage?: number;
+  /** Solar meters. One entry per configured meter. */
   pv?: Meter[];
-  /** Total solar generation power in W. Sum of all pv meters. */
+  /** Total solar power in W. Sum of all solar meters. */
   pvPower?: number;
-  /** Total solar generation energy in kWh. */
+  /** Total solar production in kWh. */
   pvEnergy?: number;
   /** Auxiliary consumption meters. Their power is treated as available for charging. */
   aux?: Meter[];
@@ -232,11 +265,11 @@ export interface State {
   tariffs?: GenericConfigStatus;
   /** Current grid energy price per kWh in the configured currency. */
   tariffGrid?: number;
-  /** Current feed-in rate per kWh in the configured currency. */
+  /** Current grid export price per kWh in the configured currency. */
   tariffFeedIn?: number;
   /** Current grid CO₂ emissions in g/kWh. */
   tariffCo2?: number;
-  /** Current cost of solar generation per kWh in the configured currency. */
+  /** Current cost of solar production per kWh in the configured currency. */
   tariffSolar?: number;
   /** Current energy price of home consumption per kWh, taking the green energy share into account. */
   tariffPriceHome?: number;
@@ -260,7 +293,7 @@ export interface State {
   shm?: ShmConfig;
   /** Sponsorship status. */
   sponsor?: Sponsor;
-  /** EEBus integration configuration and status. */
+  /** EEBUS integration configuration and status. */
   eebus?: Eebus;
   /** Remote access configuration and connection status. */
   remote?: Remote;
@@ -276,7 +309,7 @@ export interface State {
   circuits?: Record<string, Circuit>;
   /** Load management configuration. */
   circuitsConfig?: GenericConfigStatus;
-  /** Battery buffer SoC in %. Energy above this level may be used for charging in solar mode. */
+  /** Battery buffer SoC in %. Energy above this level may be used for charging in smart mode. */
   bufferSoc?: number;
   /** Battery priority SoC in %. Home battery is charged first while below this level. */
   prioritySoc?: number;
@@ -292,7 +325,7 @@ export interface State {
   batteryGridChargeLimit?: number | null;
   /** Home battery is currently charged from grid. */
   batteryGridChargeActive?: boolean;
-  /** Feed-in price limit for discharging the home battery to the grid (experimental). */
+  /** Grid export price limit for discharging the home battery to the grid (experimental). */
   batteryGridDischargeLimit?: number | null;
   /** Home battery is currently discharged to the grid. */
   batteryGridDischargeActive?: boolean;
@@ -300,7 +333,7 @@ export interface State {
   smartCostAvailable?: boolean;
   /** Type of the smart charging limit, price based or emission based. */
   smartCostType?: SMART_COST_TYPE;
-  /** A feed-in tariff with forecast is configured. */
+  /** A grid export tariff with forecast is configured. */
   smartFeedInPriorityAvailable?: boolean;
   /**
    * Time of the last energy history update.
@@ -327,6 +360,8 @@ export interface State {
   ocppforwarder?: OcppForwarder;
   /** Battery optimizer is enabled. */
   optimizer?: boolean;
+  /** What the optimizer controls instead of only advising: nothing, the home battery, or battery and loadpoints. */
+  optimizerAutomatic?: OPTIMIZER_AUTOMATIC;
   /** Selected battery optimizer charging strategy. */
   optimizerChargingStrategy?: string;
   /** Available battery optimizer charging strategies. */
@@ -512,6 +547,9 @@ export interface LoadpointThreshold {
   threshold: number;
 }
 
+/** Demand forecast strategy of a heating loadpoint. */
+export type DemandPredictor = "daily" | "weekday" | "temperature";
+
 export interface ConfigLoadpoint {
   id?: number;
   name?: string;
@@ -531,6 +569,8 @@ export interface ConfigLoadpoint {
   planStrategy?: PlanStrategy;
   limitEnergy?: number;
   limitSoc?: number;
+  minSoc?: number;
+  demandPredictor?: DemandPredictor;
   circuit?: string;
   thresholds: {
     enable: LoadpointThreshold;
@@ -644,9 +684,9 @@ export interface Loadpoint {
   connectedDuration: number;
   /** Loadpoint is disabled via configuration. */
   disabled?: boolean;
-  /** Delay before charging stops in solar mode, in seconds. */
+  /** Delay before charging stops in smart mode, in seconds. */
   disableDelay: number;
-  /** Grid draw power above which charging stops in solar mode, in W. */
+  /** Grid draw power above which charging stops in smart mode, in W. */
   disableThreshold: number;
   /** Currently applied SoC limit in %. */
   effectiveLimitSoc: number;
@@ -669,9 +709,9 @@ export interface Loadpoint {
   effectivePlanStrategy: PlanStrategy;
   /** Currently applied priority. */
   effectivePriority: number;
-  /** Delay before charging starts in solar mode, in seconds. */
+  /** Delay before charging starts in smart mode, in seconds. */
   enableDelay: number;
-  /** Available surplus power above which charging starts in solar mode, in W. */
+  /** Available surplus power above which charging starts in smart mode, in W. */
   enableThreshold: number;
   /** Charger is currently allowed to charge. */
   enabled: boolean;
@@ -691,7 +731,9 @@ export interface Loadpoint {
   mode: CHARGE_MODE;
   /** Current offered to the vehicle in A. */
   offeredCurrent: number;
-  /** Pending phase switching action in solar mode. */
+  /** Optimizer decides start/stop for this loadpoint, replacing the price limits. */
+  optimizerControlled: boolean;
+  /** Pending phase switching action in smart mode. */
   phaseAction: PHASE_ACTION;
   /** Remaining time until the pending phase switching action executes, in seconds. */
   phaseRemaining: number;
@@ -726,7 +768,7 @@ export interface Loadpoint {
   planTime: string | null;
   /** Priority for surplus distribution. Higher number means higher priority. */
   priority: number;
-  /** Pending charge start or stop action in solar mode. */
+  /** Pending charge start or stop action in smart mode. */
   pvAction: PV_ACTION;
   /** Remaining time until the pending charge start or stop action executes, in seconds. */
   pvRemaining: number;
@@ -823,6 +865,12 @@ export enum THEME {
   DARK = "dark",
 }
 
+/** Grid connection, with or without neutral conductor. */
+export enum GRID_CONNECTION {
+  THREE_PHASE_FOUR_WIRE = "3p4w",
+  THREE_PHASE_THREE_WIRE = "3p3w",
+}
+
 /** Currency in ISO 4217 format. */
 export enum CURRENCY {
   AUD = "AUD",
@@ -854,6 +902,12 @@ export enum CURRENCY {
   KZT = "KZT",
 }
 
+/** ISO 3166-1 alpha-2 country codes, names resolved via Intl.DisplayNames. */
+export const COUNTRIES =
+  "AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW".split(
+    " "
+  );
+
 export enum ICON_SIZE {
   XS = "xs",
   S = "s",
@@ -867,6 +921,12 @@ export enum CHARGE_MODE {
   OFF = "off",
   SMART = "smart",
   NOW = "now",
+}
+
+export enum OPTIMIZER_AUTOMATIC {
+  OFF = "off",
+  BATTERY = "battery",
+  FULL = "full",
 }
 
 /** Always charge state. Smart mode charges continuously at least at minimum power. */
@@ -893,14 +953,14 @@ export enum PHASES {
   THREE_PHASES = 3,
 }
 
-/** Pending phase switching action in solar mode. */
+/** Pending phase switching action in smart mode. */
 export enum PHASE_ACTION {
   INACTIVE = "inactive",
   SCALE_1P = "scale1p",
   SCALE_3P = "scale3p",
 }
 
-/** Pending charge start or stop action in solar mode. */
+/** Pending charge start or stop action in smart mode. */
 export enum PV_ACTION {
   INACTIVE = "inactive",
   ENABLE = "enable",
@@ -1039,24 +1099,24 @@ export type RemoteClientCreated = RemoteClient & {
   password: string;
 };
 
-/** EEBus integration configuration and status. */
+/** EEBUS integration configuration and status. */
 export interface Eebus extends ConfigStatus<EebusConfig, EebusStatus> {}
 
-/** EEBus integration configuration. */
+/** EEBUS integration configuration. */
 export type EebusConfig = {
-  /** URI the EEBus service listens on. */
+  /** URI the EEBUS service listens on. */
   uri?: string;
-  /** Port the EEBus service listens on. */
+  /** Port the EEBUS service listens on. */
   port: number;
   /** SHIP id. */
   shipid: string;
-  /** Network interfaces the EEBus service uses. */
+  /** Network interfaces the EEBUS service uses. */
   interfaces?: string[];
   /** TLS certificate. */
   certificate?: Certificate;
 };
 
-/** EEBus runtime status. */
+/** EEBUS runtime status. */
 export type EebusStatus = {
   /** SKI (subject key identifier) used for pairing. */
   ski: string;
@@ -1194,6 +1254,8 @@ export interface BatterySuggestion {
   charge?: number;
   /** Recommended discharge power in W. */
   discharge?: number;
+  /** Planned site grid flow of the slot in W, positive means import. */
+  grid?: number;
   /** Suggestion differs from the current operating mode. */
   actionable?: boolean;
 }
@@ -1206,6 +1268,10 @@ export interface LoadpointSuggestion {
   charge?: number;
   /** Recommended discharge power in W. */
   discharge?: number;
+  /** Planned site grid flow of the slot in W, positive means import. */
+  grid?: number;
+  /** Planned home battery discharge feeding the site in W. */
+  battery?: number;
   /** Suggestion differs from the current operating mode. */
   actionable?: boolean;
 }
@@ -1216,8 +1282,14 @@ export interface BatteryMeter extends Meter {
   soc: number;
   /** Battery supports external control of its operation mode. */
   controllable: boolean;
+  /** Battery modes supported by the device. */
+  modes?: string[];
   /** Battery capacity in kWh. Zero when not specified. */
   capacity: number;
+  /** Minimum soc (reserve) in % as configured on the device. */
+  minSoc?: number;
+  /** Maximum soc (charge limit) in % as configured on the device. */
+  maxSoc?: number;
   /** Battery optimizer suggestion. */
   suggestion?: BatterySuggestion;
 }
@@ -1242,6 +1314,7 @@ export interface PlanWrapper {
   duration: number;
   plan: Rate[] | null;
   power: number;
+  optimizer?: boolean;
 }
 
 export interface PlanResponse {
@@ -1376,7 +1449,7 @@ export interface Forecast {
   solar?: SolarDetails;
   /** Charging cost forecast used by the plan optimizer per time slot. */
   planner?: ForecastSlot[];
-  /** Feed-in rate forecast. Rate per kWh in the configured currency per time slot. */
+  /** Grid export price forecast. Price per kWh in the configured currency per time slot. */
   feedin?: ForecastSlot[];
   /** Temperature forecast in °C per time slot. */
   temperature?: ForecastSlot[];
@@ -1408,6 +1481,16 @@ export interface UiForecast {
   feedin?: UiForecastSlot[];
   temperature?: UiForecastSlot[];
 }
+
+export interface ServiceOption {
+  value: string;
+  label?: string;
+  hint?: string;
+  match?: boolean;
+  used?: boolean;
+}
+
+export type ServiceValue = string | ServiceOption;
 
 export interface SelectOption<T> {
   name: string;
@@ -1461,6 +1544,14 @@ export interface EvOpt {
   req: OptimizationInput;
   res: OptimizationResult;
   details: OptimizationDetails;
+  hosted: boolean;
+}
+
+// last plan explanation, plan is the updated time of the explained plan
+export interface EvOptExplanation {
+  explanation: string;
+  created: string;
+  plan: string;
 }
 
 // Request payload for /optimize/charge-schedule
@@ -1526,7 +1617,7 @@ export interface OptimizationResult {
 export interface BatteryResult {
   charging_power: number[]; // Charging energy per step (Wh)
   discharging_power: number[]; // Discharging energy per step (Wh)
-  state_of_charge: number[]; // State of charge per step (Wh)
+  state_of_charge: number[]; // State of charge at the end of each step (Wh)
 }
 
 // Battery detail information for optimization

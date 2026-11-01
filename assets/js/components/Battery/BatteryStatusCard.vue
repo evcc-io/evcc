@@ -88,6 +88,7 @@ export default defineComponent({
 			| BATTERY_MODE.HOLD
 			| BATTERY_MODE.HOLDCHARGE
 			| BATTERY_MODE.CHARGE
+			| BATTERY_MODE.DISCHARGE
 			| "charging"
 			| "discharging"
 			| "idle" {
@@ -95,6 +96,7 @@ export default defineComponent({
 				if (this.batteryMode === BATTERY_MODE.HOLD) return BATTERY_MODE.HOLD;
 				if (this.batteryMode === BATTERY_MODE.HOLDCHARGE) return BATTERY_MODE.HOLDCHARGE;
 				if (this.batteryMode === BATTERY_MODE.CHARGE) return BATTERY_MODE.CHARGE;
+				if (this.batteryMode === BATTERY_MODE.DISCHARGE) return BATTERY_MODE.DISCHARGE;
 			}
 			const abs = Math.abs(this.power);
 			if (abs < 50) return "idle";
@@ -108,6 +110,8 @@ export default defineComponent({
 					return this.$t("battery.card.holdCharge");
 				case BATTERY_MODE.CHARGE:
 					return this.$t("battery.card.gridCharge");
+				case BATTERY_MODE.DISCHARGE:
+					return this.$t("battery.card.gridDischarge");
 				case "charging":
 					return this.$t("battery.card.charging");
 				case "discharging":

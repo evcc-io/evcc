@@ -14,6 +14,9 @@ components:
         setupRequired:
           description: Initial setup is required.
           type: boolean
+        onboarding:
+          $ref: "#/components/schemas/OnboardingState"
+          description: Setup wizard and checklist state.
         startupCompleted:
           description: Startup has completed.
           type: boolean
@@ -31,6 +34,10 @@ components:
         currency:
           $ref: "#/components/schemas/Currency"
           description: Configured currency for all monetary values.
+        country:
+          description: Configured site country as ISO 3166-1 alpha-2 code. Empty when not set.
+          type: string
+          example: DE
         fatal:
           description: Fatal startup errors.
           type: array
@@ -65,16 +72,22 @@ components:
         gridConfigured:
           description: A grid meter is configured.
           type: boolean
+        gridConnection:
+          $ref: "#/components/schemas/GRID_CONNECTION"
+          description: Grid connection, with or without neutral conductor.
+        voltage:
+          description: Nominal grid voltage in V, line-to-line without neutral.
+          type: number
         pv:
-          description: Solar generation meters. One entry per configured pv meter.
+          description: Solar meters. One entry per configured meter.
           type: array
           items:
             $ref: "#/components/schemas/Meter"
         pvPower:
-          description: Total solar generation power in W. Sum of all pv meters.
+          description: Total solar power in W. Sum of all solar meters.
           type: number
         pvEnergy:
-          description: Total solar generation energy in kWh.
+          description: Total solar production in kWh.
           type: number
         aux:
           description: Auxiliary consumption meters. Their power is treated as available for charging.
@@ -120,13 +133,13 @@ components:
           description: Current grid energy price per kWh in the configured currency.
           type: number
         tariffFeedIn:
-          description: Current feed-in rate per kWh in the configured currency.
+          description: Current grid export price per kWh in the configured currency.
           type: number
         tariffCo2:
           description: Current grid CO₂ emissions in g/kWh.
           type: number
         tariffSolar:
-          description: Current cost of solar generation per kWh in the configured currency.
+          description: Current cost of solar production per kWh in the configured currency.
           type: number
         tariffPriceHome:
           description: Current energy price of home consumption per kWh, taking the green energy share into account.
@@ -163,7 +176,7 @@ components:
           description: Sponsorship status.
         eebus:
           $ref: "#/components/schemas/Eebus"
-          description: EEBus integration configuration and status.
+          description: EEBUS integration configuration and status.
         remote:
           $ref: "#/components/schemas/Remote"
           description: Remote access configuration and connection status.
@@ -193,7 +206,7 @@ components:
           $ref: "#/components/schemas/GenericConfigStatus"
           description: Load management configuration.
         bufferSoc:
-          description: Battery buffer SoC in %. Energy above this level may be used for charging in solar mode.
+          description: Battery buffer SoC in %. Energy above this level may be used for charging in smart mode.
           type: number
         prioritySoc:
           description: Battery priority SoC in %. Home battery is charged first while below this level.
@@ -218,7 +231,7 @@ components:
           description: Home battery is currently charged from grid.
           type: boolean
         batteryGridDischargeLimit:
-          description: Feed-in price limit for discharging the home battery to the grid (experimental).
+          description: Grid export price limit for discharging the home battery to the grid (experimental).
           type: number
           nullable: true
         batteryGridDischargeActive:
@@ -231,7 +244,7 @@ components:
           $ref: "#/components/schemas/SmartCostType"
           description: Type of the smart charging limit, price based or emission based.
         smartFeedInPriorityAvailable:
-          description: A feed-in tariff with forecast is configured.
+          description: A grid export tariff with forecast is configured.
           type: boolean
         historyUpdated:
           description: Time of the last energy history update.
@@ -271,6 +284,9 @@ components:
         optimizer:
           description: Battery optimizer is enabled.
           type: boolean
+        optimizerAutomatic:
+          $ref: "#/components/schemas/OptimizerAutomatic"
+          description: "What the optimizer controls instead of only advising: nothing, the home battery, or battery and loadpoints."
         optimizerChargingStrategy:
           description: Selected battery optimizer charging strategy.
           type: string
@@ -405,8 +421,19 @@ components:
         controllable:
           description: Battery supports external control of its operation mode.
           type: boolean
+        modes:
+          description: Battery modes supported by the device.
+          type: array
+          items:
+            type: string
         capacity:
           description: Battery capacity in kWh. Zero when not specified.
+          type: number
+        minSoc:
+          description: Minimum soc (reserve) in % as configured on the device.
+          type: number
+        maxSoc:
+          description: Maximum soc (charge limit) in % as configured on the device.
           type: number
         suggestion:
           $ref: "#/components/schemas/BatterySuggestion"
@@ -444,6 +471,9 @@ components:
           type: number
         discharge:
           description: Recommended discharge power in W.
+          type: number
+        grid:
+          description: Planned site grid flow of the slot in W, positive means import.
           type: number
         actionable:
           description: Suggestion differs from the current operating mode.
@@ -552,7 +582,7 @@ components:
         - title
         - color
     Eebus:
-      description: EEBus integration configuration and status.
+      description: EEBUS integration configuration and status.
       type: object
       properties:
         config:
@@ -568,20 +598,20 @@ components:
             - file
             - db
     EebusConfig:
-      description: EEBus integration configuration.
+      description: EEBUS integration configuration.
       type: object
       properties:
         uri:
-          description: URI the EEBus service listens on.
+          description: URI the EEBUS service listens on.
           type: string
         port:
-          description: Port the EEBus service listens on.
+          description: Port the EEBUS service listens on.
           type: number
         shipid:
           description: SHIP id.
           type: string
         interfaces:
-          description: Network interfaces the EEBus service uses.
+          description: Network interfaces the EEBUS service uses.
           type: array
           items:
             type: string
@@ -592,7 +622,7 @@ components:
         - port
         - shipid
     EebusStatus:
-      description: EEBus runtime status.
+      description: EEBUS runtime status.
       type: object
       properties:
         ski:
@@ -654,7 +684,7 @@ components:
           items:
             $ref: "#/components/schemas/ForecastSlot"
         feedin:
-          description: Feed-in rate forecast. Rate per kWh in the configured currency per time slot.
+          description: Grid export price forecast. Price per kWh in the configured currency per time slot.
           type: array
           items:
             $ref: "#/components/schemas/ForecastSlot"
@@ -684,6 +714,12 @@ components:
           enum:
             - file
             - db
+    GRID_CONNECTION:
+      description: Grid connection, with or without neutral conductor.
+      type: string
+      enum:
+        - 3p4w
+        - 3p3w
     Hems:
       description: Home energy management system integration.
       type: object
@@ -717,7 +753,7 @@ components:
           description: Consumption is currently limited.
           type: boolean
         curtailed:
-          description: Allowed feed-in in %. Values below 100 mean production is curtailed.
+          description: Allowed grid export in %. Values below 100 mean production is curtailed.
           type: number
         maxConsumptionPower:
           description: Maximum allowed consumption power in W.
@@ -871,10 +907,10 @@ components:
           description: Loadpoint is disabled via configuration.
           type: boolean
         disableDelay:
-          description: Delay before charging stops in solar mode, in seconds.
+          description: Delay before charging stops in smart mode, in seconds.
           type: number
         disableThreshold:
-          description: Grid draw power above which charging stops in solar mode, in W.
+          description: Grid draw power above which charging stops in smart mode, in W.
           type: number
         effectiveLimitSoc:
           description: Currently applied SoC limit in %.
@@ -906,10 +942,10 @@ components:
           description: Currently applied priority.
           type: number
         enableDelay:
-          description: Delay before charging starts in solar mode, in seconds.
+          description: Delay before charging starts in smart mode, in seconds.
           type: number
         enableThreshold:
-          description: Available surplus power above which charging starts in solar mode, in W.
+          description: Available surplus power above which charging starts in smart mode, in W.
           type: number
         enabled:
           description: Charger is currently allowed to charge.
@@ -938,9 +974,12 @@ components:
         offeredCurrent:
           description: Current offered to the vehicle in A.
           type: number
+        optimizerControlled:
+          description: Optimizer decides start/stop for this loadpoint, replacing the price limits.
+          type: boolean
         phaseAction:
           $ref: "#/components/schemas/PhaseAction"
-          description: Pending phase switching action in solar mode.
+          description: Pending phase switching action in smart mode.
         phaseRemaining:
           description: Remaining time until the pending phase switching action executes, in seconds.
           type: number
@@ -988,7 +1027,7 @@ components:
           type: number
         pvAction:
           $ref: "#/components/schemas/PvAction"
-          description: Pending charge start or stop action in solar mode.
+          description: Pending charge start or stop action in smart mode.
         pvRemaining:
           description: Remaining time until the pending charge start or stop action executes, in seconds.
           type: number
@@ -1139,6 +1178,7 @@ components:
         - minSocNotReached
         - mode
         - offeredCurrent
+        - optimizerControlled
         - phaseAction
         - phaseRemaining
         - phasesActive
@@ -1192,6 +1232,12 @@ components:
           type: number
         discharge:
           description: Recommended discharge power in W.
+          type: number
+        grid:
+          description: Planned site grid flow of the slot in W, positive means import.
+          type: number
+        battery:
+          description: Planned home battery discharge feeding the site in W.
           type: number
         actionable:
           description: Suggestion differs from the current operating mode.
@@ -1538,8 +1584,43 @@ components:
             $ref: "#/components/schemas/OcppStationStatus"
       required:
         - stations
+    OnboardingItem:
+      description: Setup checklist item.
+      type: string
+      enum:
+        - battery
+        - pv
+        - grid
+        - loadpoint
+        - heater
+        - consumer
+        - gridImport
+        - gridExport
+        - co2
+        - solar
+    OnboardingState:
+      description: Setup wizard and checklist state.
+      type: object
+      properties:
+        done:
+          description: Setup wizard was finished or skipped.
+          type: boolean
+        dismissed:
+          description: Dismissed setup checklist items.
+          type: array
+          items:
+            $ref: "#/components/schemas/OnboardingItem"
+      required:
+        - done
+        - dismissed
+    OptimizerAutomatic:
+      type: string
+      enum:
+        - off
+        - battery
+        - full
     PhaseAction:
-      description: Pending phase switching action in solar mode.
+      description: Pending phase switching action in smart mode.
       type: string
       enum:
         - inactive
@@ -1559,7 +1640,7 @@ components:
         - continuous
         - precondition
     PvAction:
-      description: Pending charge start or stop action in solar mode.
+      description: Pending charge start or stop action in smart mode.
       type: string
       enum:
         - inactive

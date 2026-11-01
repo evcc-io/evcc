@@ -53,6 +53,19 @@ render: |
     source: calc
     add:
     - source: http
+      uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Energy Consumed Tariff 1{{ else }}energy_consumed_tariff_1{{ end }}
+      headers:
+      - content-type: application/json
+      jq: .value
+    - source: http
+      uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Energy Consumed Tariff 2{{ else }}energy_consumed_tariff_2{{ end }}
+      headers:
+      - content-type: application/json
+      jq: .value
+  returnenergy:
+    source: calc
+    add:
+    - source: http
       uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Energy Produced Tariff 1{{ else }}energy_produced_tariff_1{{ end }}
       headers:
       - content-type: application/json

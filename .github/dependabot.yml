@@ -6,6 +6,11 @@ updates:
       interval: "monthly"
     labels:
       - "infrastructure"
+    # init and analyze must run the same version, SHA pins make them separate dependencies
+    groups:
+      codeql-action:
+        patterns:
+          - "github/codeql-action*"
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
@@ -25,5 +30,11 @@ updates:
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 0
+    labels:
+      - "infrastructure"
+  - package-ecosystem: "pip"
+    directory: "/.github"
+    schedule:
+      interval: "monthly"
     labels:
       - "infrastructure"

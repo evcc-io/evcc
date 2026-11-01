@@ -20,10 +20,18 @@ type API interface {
 	ActiveLoadpoints() iter.Seq2[int, loadpoint.API]
 	Vehicles() Vehicles
 	Optimize()
+	// Automatic returns true if the optimizer controls the home battery instead of only advising
+	Automatic() bool
+	// AutomaticLoadpoints returns true if the optimizer controls the loadpoints as well
+	AutomaticLoadpoints() bool
 
 	// Meta
 	GetTitle() string
 	SetTitle(string)
+	GetCountry() string
+	SetCountry(string)
+	GetGridConnection() string
+	SetGridConnection(string)
 
 	// Config
 	GetGridMeterRef() string

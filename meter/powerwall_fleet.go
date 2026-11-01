@@ -10,7 +10,6 @@ import (
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/tesla"
-	teslaclient "github.com/evcc-io/tesla-proxy-client"
 )
 
 type fleetConfig struct {
@@ -50,23 +49,35 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	energySite, err := teslaEnergySite(log, cc.FleetConfig, cc.SiteId)
+	fleet, siteId, err := teslaEnergySite(log, cc.FleetConfig, cc.SiteId)
 	if err != nil {
 		return nil, err
+	}
+
+	// regulation (e.g. California) may forbid charging a solar-coupled battery from the grid
+	info, err := fleet.EnergySiteInfo(siteId)
+	if err != nil {
+		return nil, fmt.Errorf("get energy site info: %w", err)
+	}
+
+	modes := batteryModesSocLimit
+	if info.Components.DisallowChargeFromGridWithSolarInstalled {
+		log.INFO.Println("grid charging not allowed by site configuration")
+		modes = implement.BatteryModes(api.BatteryNormal, api.BatteryHold)
 	}
 
 	// charge mode raises the reserve to full, normal mode restores the configured minimum
 	limits := batterySocLimits{MinSoc: cc.MinSoc, MaxSoc: 100}
 
-	implement.Has(m, implement.BatteryController(batteryModesSocLimit, limits.LimitController(func() (float64, error) {
-		ess, err := energySite.EnergySiteStatus()
+	implement.Has(m, implement.BatteryController(modes, limits.LimitController(func() (float64, error) {
+		ess, err := fleet.EnergySiteStatus(siteId)
 		if err != nil {
 			return 0, fmt.Errorf("get energy site status: %w", err)
 		}
 
 		return math.Round(ess.PercentageCharged), nil
 	}, func(limit float64) error {
-		return energySite.SetBatteryReserve(teslaReserveLimit(limit))
+		return fleet.SetBatteryReserve(siteId, teslaReserveLimit(limit))
 	})))
 
 	return m, nil
@@ -86,17 +97,16 @@ func teslaReserveLimit(limit float64) uint64 {
 	}
 }
 
-func teslaEnergySite(log *util.Logger, config tesla.FleetConfig, siteId int64) (*teslaclient.EnergySite, error) {
+func teslaEnergySite(log *util.Logger, config tesla.FleetConfig, siteId int64) (*tesla.API, int64, error) {
 	fleet, err := config.Client(log)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	tc := fleet.Client
 
 	if siteId == 0 {
-		products, err := tc.Products()
+		products, err := fleet.Products()
 		if err != nil {
-			return nil, fmt.Errorf("discover energy sites: %w", err)
+			return nil, 0, fmt.Errorf("discover energy sites: %w", err)
 		}
 
 		for _, p := range products {
@@ -107,11 +117,11 @@ func teslaEnergySite(log *util.Logger, config tesla.FleetConfig, siteId int64) (
 		}
 
 		if siteId == 0 {
-			return nil, errors.New("no energy site found")
+			return nil, 0, errors.New("no energy site found")
 		}
 	}
 
 	log.Redact(strconv.FormatInt(siteId, 10))
 
-	return tc.EnergySite(siteId)
+	return fleet, siteId, nil
 }

@@ -15,6 +15,7 @@ const CONFIG_FAST = "fast.evcc.yaml";
 const CONFIG_CIRCUIT_TREE = "config-circuit-tree.sql";
 
 test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
 
 test.afterEach(async () => {
   await stop();
@@ -28,23 +29,26 @@ async function validateCircuitsTags(page: Page) {
   await expect(loadpoints.nth(1)).toContainText("Power1.0 kW");
 
   await expect(page.getByTestId("circuits")).toHaveCount(1);
+  // the current of the main circuit is the offered current of the loadpoints, it changes with their first update
   await expect(page.getByTestId("circuits")).toContainText(
-    [
-      "Main",
-      "12.0 / 16.0",
-      "A",
-      "2.0 / 10.0",
-      "kW",
-      "Carport 1",
-      "1.0 kW",
-      "Carport 2",
-      "1.0 kW",
-      "Child",
-      "0.0 / 10.0",
-      "A",
-      "0.0",
-      "kW",
-    ].join("")
+    new RegExp(
+      [
+        "Main",
+        "\\d+\\.\\d / 16\\.0",
+        "A",
+        "2\\.0 / 10\\.0",
+        "kW",
+        "Carport 1",
+        "1\\.0 kW",
+        "Carport 2",
+        "1\\.0 kW",
+        "Child",
+        "0\\.0 / 10\\.0",
+        "A",
+        "0\\.0",
+        "kW",
+      ].join("")
+    )
   );
 }
 
@@ -169,7 +173,7 @@ test.describe("circuit", async () => {
 
     const circuitsModal = page.getByTestId("circuits-modal");
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
 
     const circuitModal = page.getByTestId("circuit-modal");
     await expectModalVisible(circuitModal);
@@ -288,7 +292,7 @@ test.describe("circuit", async () => {
 
     await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
     await expectModalVisible(circuitModal);
     await circuitModal.getByLabel("Title").fill("House");
     await circuitModal
@@ -361,7 +365,7 @@ test.describe("circuit meter", async () => {
 
     await circuitsCard.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
     await expectModalVisible(circuitModal);
     await circuitModal.getByLabel("Title").fill("Main");
     await circuitModal
@@ -423,7 +427,7 @@ test.describe("circuit meter", async () => {
     // unreachable host
     await circuitsCard.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
     await expectModalVisible(circuitModal);
     await circuitModal.getByLabel("Title").fill("Main");
     await circuitModal
@@ -497,7 +501,7 @@ test.describe("circuit test result", async () => {
     await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
     const circuitsModal = page.getByTestId("circuits-modal");
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
 
     const circuitModal = page.getByTestId("circuit-modal");
     await expectModalVisible(circuitModal);
@@ -520,7 +524,7 @@ test.describe("circuit test result", async () => {
     await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
     const circuitsModal = page.getByTestId("circuits-modal");
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
 
     const circuitModal = page.getByTestId("circuit-modal");
     await expectModalVisible(circuitModal);
@@ -585,7 +589,7 @@ test.describe("circuit grid meter", async () => {
     // no grid meter: option not offered
     await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
     await expectModalVisible(circuitModal);
     await expect(meterSelection.getByRole("option")).toHaveText(["No meter", "Dedicated meter"]);
     await circuitModal.getByRole("button", { name: "Close" }).first().click();
@@ -604,7 +608,7 @@ test.describe("circuit grid meter", async () => {
     // root circuit using grid meter
     await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
     await expectModalVisible(circuitModal);
     await circuitModal.getByLabel("Title").fill("House");
     await circuitModal

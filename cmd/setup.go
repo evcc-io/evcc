@@ -3,6 +3,8 @@ package cmd
 import (
 	"cmp"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -13,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
@@ -450,8 +453,21 @@ func configureCurtailers(static []config.Named, names ...string) error {
 	return eg.Wait()
 }
 
+// staticRefs returns the names of devices a static device references via `type: device`
+func staticRefs(cc config.Named) []string {
+	var res []string
+	for _, v := range cc.Other {
+		if m, ok := v.(map[string]any); ok && m["type"] == "device" {
+			if name, ok := m["name"].(string); ok {
+				res = append(res, name)
+			}
+		}
+	}
+	return res
+}
+
 func configureChargers(static []config.Named, names ...string) error {
-	var eg errgroup.Group
+	var items []orderedItem
 
 	for i, cc := range static {
 		if cc.Name == "" {
@@ -467,8 +483,12 @@ func configureChargers(static []config.Named, names ...string) error {
 			log.WARN.Printf("create charger %d: %v", i+1, err)
 		}
 
-		eg.Go(func() error {
-			return staticInstance("charger", cc, charger.NewFromConfig, config.Chargers())
+		items = append(items, orderedItem{
+			name: cc.Name,
+			refs: staticRefs(cc),
+			run: func() error {
+				return staticInstance("charger", cc, charger.NewFromConfig, config.Chargers())
+			},
 		})
 	}
 
@@ -479,19 +499,23 @@ func configureChargers(static []config.Named, names ...string) error {
 	}
 
 	for _, conf := range configurable {
-		eg.Go(func() error {
-			cc := conf.Named()
+		cc := conf.Named()
 
-			// always skip unreferenced db devices
-			if !slices.Contains(names, cc.Name) {
-				return nil
-			}
+		// always skip unreferenced db devices
+		if !slices.Contains(names, cc.Name) {
+			continue
+		}
 
-			return configurableInstance("charger", &conf, charger.NewFromConfig, config.Chargers())
+		items = append(items, orderedItem{
+			name: cc.Name,
+			refs: config.DeviceRefs(templates.Charger, cc)[templates.Charger],
+			run: func() error {
+				return configurableInstance("charger", &conf, charger.NewFromConfig, config.Chargers())
+			},
 		})
 	}
 
-	return eg.Wait()
+	return runOrdered(items)
 }
 
 func vehicleInstance(cc config.Named) (api.Vehicle, error) {
@@ -502,6 +526,9 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	var instance api.Vehicle
 	if err == nil {
 		instance, err = vehicle.NewFromConfig(ctx, typ, other)
+	} else {
+		// invalid custom yaml won't heal by retrying
+		err = backoff.Permanent(err)
 	}
 
 	if err != nil {
@@ -511,7 +538,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 
 		// wrap non-config vehicle errors to prevent fatals
 		log.ERROR.Printf("creating vehicle %s failed: %v", cc.Name, err)
-		instance = vehicle.NewWrapper(cc.Name, cc.Type, cc.Other, err)
+		instance = vehicle.NewWrapper(ctx, cc.Name, typ, other, err)
 	}
 
 	// ensure vehicle config has title
@@ -937,6 +964,13 @@ func networkSettings(conf *globalconfig.Network) error {
 	return nil
 }
 
+// mdnsInstance returns a stable instance name per installation so multiple evcc instances don't conflict,
+// the machine id is hashed as it must not be published. The port separates instances sharing a host.
+func mdnsInstance(id string, port int) string {
+	sum := sha256.Sum256(fmt.Appendf(nil, "mdns:%s:%d", id, port))
+	return "evcc-" + hex.EncodeToString(sum[:4])
+}
+
 // setup MDNS
 func configureMDNS(conf globalconfig.Network) error {
 	host := strings.TrimSuffix(conf.Host, ".local")
@@ -951,7 +985,7 @@ func configureMDNS(conf globalconfig.Network) error {
 		text = append(text, "external_url="+externalURL)
 	}
 
-	zc, err := zeroconf.RegisterProxy("evcc", "_http._tcp", "local.", conf.Port, host, nil, text, nil)
+	zc, err := zeroconf.RegisterProxy(mdnsInstance(machine.ID(), conf.Port), "_http._tcp", "local.", conf.Port, host, nil, text, nil)
 	if err != nil {
 		return err
 	}
@@ -1254,39 +1288,43 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 		return &tariffs, err
 	}
 
-	var eg errgroup.Group
+	var items []orderedItem
 
 	for _, conf := range configurable {
-		eg.Go(func() error {
-			cc := conf.Named()
+		cc := conf.Named()
 
-			if len(names) > 0 && !slices.Contains(names, cc.Name) {
-				return nil
-			}
+		if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			continue
+		}
 
-			var instance api.Tariff
-			if !conf.Disable {
-				var err error
-				instance, err = tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
-				if err != nil {
-					return err
+		items = append(items, orderedItem{
+			name: cc.Name,
+			refs: config.DeviceRefs(templates.Tariff, cc)[templates.Tariff],
+			run: func() error {
+				var instance api.Tariff
+				if !conf.Disable {
+					var err error
+					instance, err = tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
+					if err != nil {
+						return err
+					}
 				}
-			}
 
-			if e := config.Tariffs().Add(config.NewConfigurableDevice(&conf, instance)); e != nil {
-				return &DeviceError{cc.Name, e}
-			}
+				if e := config.Tariffs().Add(config.NewConfigurableDevice(&conf, instance)); e != nil {
+					return &DeviceError{cc.Name, e}
+				}
 
-			return nil
+				return nil
+			},
 		})
 	}
 
-	if err := eg.Wait(); err != nil {
+	if err := runOrdered(items); err != nil {
 		return &tariffs, err
 	}
 
 	// resolve tariff roles
-	eg = errgroup.Group{}
+	var eg errgroup.Group
 	eg.Go(func() error { return configureTariff(conf.Grid, refs.Grid, &tariffs.Grid) })
 	eg.Go(func() error { return configureTariff(conf.FeedIn, refs.FeedIn, &tariffs.FeedIn) })
 	eg.Go(func() error { return configureTariff(conf.Co2, refs.Co2, &tariffs.Co2) })
@@ -1514,6 +1552,16 @@ func configureLoadpoints(conf globalconfig.All) error {
 		dynamic, static, err := loadpoint.SplitConfig(cc.Other)
 		if err != nil {
 			return &DeviceError{cc.Name, err}
+		}
+
+		// start in the configured default mode, or restore the last mode from settings if none is set.
+		// static is a copy: dropping the persisted last mode keeps it from being decoded as default
+		delete(static, "mode")
+		if dynamic.DefaultMode != "" {
+			if static == nil {
+				static = make(map[string]any)
+			}
+			static["mode"] = dynamic.DefaultMode
 		}
 
 		var instance loadpoint.API
