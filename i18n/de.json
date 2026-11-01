@@ -794,7 +794,9 @@
       "protocolValueRtu": "RTU",
       "protocolValueTcp": "TCP",
       "timeout": "Zeitüberschreitung",
-      "timeoutHint": "Optionale maximale Wartezeit auf eine Antwort des Geräts."
+      "timeoutHint": "Optionale maximale Wartezeit auf eine Antwort des Geräts.",
+      "tls": "TLS-Verschlüsselung",
+      "tlsHint": "Die Modbus-TCP-Verbindung mit TLS verschlüsseln. Erforderlich für Geräte, die Modbus nur verschlüsselt anbieten, z. B. Sungrow-AC-Ladegeräte auf Port 516."
     },
     "modbusproxy": {
       "add": "Proxy-Verbindung hinzufügen",
