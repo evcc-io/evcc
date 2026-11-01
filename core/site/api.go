@@ -88,6 +88,8 @@ type API interface {
 	SetResidualPower(float64) error
 	GetGridExportLimit() float64
 	SetGridExportLimit(float64) error
+	GetGridPeakBaseline() float64
+	SetGridPeakBaseline(float64) error
 	GetProfilePercentile() *float64
 	SetProfilePercentile(*float64) error
 
