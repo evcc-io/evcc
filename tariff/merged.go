@@ -41,7 +41,7 @@ func NewMergedFromConfig(ctx context.Context, other map[string]any) (api.Tariff,
 		return nil, err
 	}
 
-	if pType, sType := primary.Type(), secondary.Type(); pType != sType {
+	if pType, sType := primary.Type(), secondary.Type(); !compatibleTariffTypes(pType, sType) {
 		return nil, fmt.Errorf("primary and secondary tariff types are not compatible: %v vs %v", pType, sType)
 	}
 
@@ -52,6 +52,14 @@ func NewMergedFromConfig(ctx context.Context, other map[string]any) (api.Tariff,
 	}
 
 	return t, nil
+}
+
+// compatibleTariffTypes allows merging any price tariffs, other types only with their own kind
+func compatibleTariffTypes(a, b api.TariffType) bool {
+	isPrice := func(t api.TariffType) bool {
+		return slices.Contains([]api.TariffType{api.TariffTypePriceStatic, api.TariffTypePriceDynamic, api.TariffTypePriceForecast}, t)
+	}
+	return a == b || isPrice(a) && isPrice(b)
 }
 
 // Rates implements the api.Tariff interface

@@ -165,8 +165,8 @@ params:
       de: Maximaler Ladestand
       en: Maximum charge
     help:
-      de: Obere Grenze wie am Batteriesystem eingestellt. Wird vom Optimizer und für Netzladen genutzt.
-      en: Upper limit as configured on the battery system. Used by optimizer and for grid charging.
+      de: Obere Grenze wie am Batteriesystem eingestellt. Genutzt vom Optimizer und, bei manchen Geräten, für Netzladen.
+      en: Upper limit as configured on the battery system. Used by optimizer and, on some devices, for grid charging.
     example: 95
     default: 100
     type: int
@@ -402,8 +402,8 @@ params:
       en: Maximum charge power
       de: Maximale Ladeleistung
     help:
-      en: For forced charging of the battery.
-      de: Für erzwungenes Laden des Speichers.
+      en: Highest power the battery system can charge with. The optimizer plans with charging up to this power. Some devices also use it as grid charging power.
+      de: Höchste Leistung, mit der das Batteriesystem laden kann. Der Optimizer plant mit Laden bis zu dieser Leistung. Manche Geräte nutzen diesen Wert auch als Leistung für Netzladen.
     advanced: true
   - name: maxchargerate
     unit: "%"
@@ -425,8 +425,8 @@ params:
       en: Maximum discharge power
       de: Maximale Entladeleistung
     help:
-      en: Maximum discharge power of the storage.
-      de: Maximale Entladeleistung des Speichers.
+      en: Highest power the battery system can discharge with. The optimizer plans with discharging up to this power. Smart mode assumes the battery supplies at most this power to vehicle charging.
+      de: Höchste Leistung, mit der das Batteriesystem entladen kann. Der Optimizer plant mit Entladen bis zu dieser Leistung. Der Smart-Modus geht davon aus, dass die Batterie höchstens diese Leistung zum Fahrzeugladen beisteuert.
     advanced: true
 
   - name: accesstoken

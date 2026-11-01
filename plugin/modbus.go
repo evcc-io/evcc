@@ -100,6 +100,9 @@ func (m *Modbus) read(op modbus.RegisterOperation) ([]byte, error) {
 	case gridx.FuncCodeReadCoils:
 		return m.conn.ReadCoils(op.Addr, op.Length)
 
+	case gridx.FuncCodeReadDiscreteInputs:
+		return m.conn.ReadDiscreteInputs(op.Addr, op.Length)
+
 	default:
 		return nil, fmt.Errorf("invalid read function code: %d", op.FuncCode)
 	}

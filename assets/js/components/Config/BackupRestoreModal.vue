@@ -206,6 +206,7 @@ export default defineComponent({
 	components: { GenericModal, PropertyFileField, FormRow, PasswordInput },
 	props: {
 		authDisabled: Boolean,
+		wizardPending: Boolean,
 	},
 	data() {
 		return {
@@ -233,7 +234,8 @@ export default defineComponent({
 		restarting(newVal) {
 			// wait for restarte before navigate (ensure lazy chunks are available)
 			if (!newVal && this.navigateHomeAfterRestart) {
-				this.$router.push({ path: "/" });
+				// home would redirect back to the already open wizard
+				if (!this.wizardPending) this.$router.push({ path: "/" });
 				this.navigateHomeAfterRestart = false;
 			}
 		},

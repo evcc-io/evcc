@@ -41,6 +41,15 @@ document.addEventListener("click", (e) => {
   }
 });
 
+// after an update the old hashed chunks are gone, a reload picks up the new index
+// https://vite.dev/guide/build#load-error-handling
+window.addEventListener("vite:preloadError", () => {
+  const last = Number(sessionStorage.getItem("chunkReload"));
+  if (Date.now() - last < 10_000) return;
+  sessionStorage.setItem("chunkReload", String(Date.now()));
+  window.location.reload();
+});
+
 // lazy load smoothscroll polyfill. mainly for safari < 15.4
 if (!window.CSS.supports("scroll-behavior", "smooth")) {
   console.log("no native smoothscroll support. polyfilling...");
@@ -56,7 +65,8 @@ const app = createApp(
     },
     computed: {
       offline(): boolean {
-        return this.wsOffline || store.state.apiReady !== true;
+        // no data yet on first connect is not offline, avoids a flashing banner
+        return this.wsOffline || store.state.apiReady === false;
       },
     },
     watch: {

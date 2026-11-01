@@ -329,10 +329,19 @@ auth:
 - `float`: for floating point numbers
 - `int`: for integer values
 - `list`: for a list of strings (newline-separated in textarea), e.g., used for defining a list of `identifiers` for vehicles
+- `device`: for a reference to another configured device by name (requires `class`, see below). The UI creates the referenced device from within the form, deletes it together with the referencing device, and renders the value as the device name
 
 ### `choice`
 
 `choice` defines the list of possible values when `type: choice` is used. The user can select one value from this list via a dropdown.
+
+### `class`
+
+`class` defines the device class (`charger`, `meter`, `tariff`) of the referenced device when `type: device` is used.
+
+### `usage`
+
+`usage` sets the context the nested device modal opens with for `type: device` params, e.g. `switch` for a charger that only offers switchable sockets, or `grid` for a tariff. If omitted, the context of the referencing device is inherited (e.g. a `merged` grid tariff references grid tariffs).
 
 **Format**: Array of strings
 

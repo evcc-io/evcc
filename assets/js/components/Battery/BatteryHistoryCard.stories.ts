@@ -5,11 +5,11 @@ import type { Meta, StoryFn } from "@storybook/vue3";
 export default {
   title: "Battery/BatteryHistoryCard",
   component: BatteryHistoryCard,
+  globals: { backgrounds: { value: "black" } },
   parameters: {
     layout: "fullscreen",
     backgrounds: {
-      default: "black",
-      values: [{ name: "black", value: "#000" }],
+      options: { black: { name: "black", value: "#000" } },
     },
   },
 } as Meta<typeof BatteryHistoryCard>;

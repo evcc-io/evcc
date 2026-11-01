@@ -86,7 +86,7 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 			Base: fleet.Transport,
 		}
 
-		controller = tesla.NewController(tesla.NewAPI(pc, cc.CommandProxy), vehicle.Vin)
+		controller = tesla.NewController(tesla.NewAPI(log, pc, cc.CommandProxy), vehicle.Vin)
 	}
 
 	v := &Tesla{

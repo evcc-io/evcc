@@ -4,7 +4,7 @@
 </template>
 
 <script>
-import snarkdown from "snarkdown";
+import { marked } from "marked";
 
 export default {
 	name: "MarkdownRenderer",
@@ -13,13 +13,9 @@ export default {
 	},
 	computed: {
 		compiledMarkdown() {
-			// snarkdown takes every underscore as emphasis; keep the ones inside words
-			// like charge_before_export as text (private use char, restored after rendering)
-			const html = snarkdown(this.markdown.replace(/(?<=[^\W_])_(?=[^\W_])/g, "\uE000"));
+			const html = marked.parse(this.markdown ?? "", { async: false });
 			// open all links in new window
-			return html
-				.replace(/\uE000/g, "_")
-				.replace(/<a href=/g, '<a target="_blank" rel="noopener noreferrer" href=');
+			return html.replace(/<a href=/g, '<a target="_blank" rel="noopener noreferrer" href=');
 		},
 	},
 };
@@ -28,7 +24,10 @@ export default {
 .root {
 	max-width: 100%;
 }
-.root :deep(pre.code) {
+.root > :deep(:last-child) {
+	margin-bottom: 0;
+}
+.root :deep(pre) {
 	overflow-x: auto;
 	margin: 1em 0;
 	hyphens: none;

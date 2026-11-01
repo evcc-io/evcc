@@ -46,8 +46,8 @@
     },
     "combined": "Gesamt",
     "config": {
-      "buffer": "Energie der Hausbatterie oberhalb von {soc} darf für die Unterstützung der Ladepunkte genutzt werden und zögert die Abschaltung im Smart-Modus hinaus. PV-Ladung automatisch starten {start}.",
-      "bufferNone": "Energie der Hausbatterie wird nicht für die Ladepunkte genutzt. Setze einen Wert unter {soc}, um die Unterstützung zu aktivieren.",
+      "buffer": "Energie der Hausbatterie oberhalb von {soc} darf für die Unterstützung der Ladepunkte genutzt werden und zögert die Abschaltung im Smart-Modus hinaus. PV-Ladung automatisch starten {start}. Hinweis: „Dauerhaft laden“ ignoriert diese Einstellung.",
+      "bufferNone": "Energie der Hausbatterie wird nicht für die Ladepunkte genutzt. Setze einen Wert unter {soc}, um die Unterstützung im Smart-Modus zu aktivieren. Hinweis: „Dauerhaft laden“ ignoriert diese Einstellung.",
       "bufferStart": {
         "above": "ab einem Ladestand von {soc}",
         "full": "erst, wenn die Hausbatterie voll ist",
@@ -146,11 +146,13 @@
       "template": "Hersteller",
       "titleAdd": {
         "charging": "Wallbox hinzufügen",
-        "heating": "Heizgerät hinzufügen"
+        "heating": "Heizgerät hinzufügen",
+        "switch": "Schaltbare Steckdose hinzufügen"
       },
       "titleEdit": {
         "charging": "Wallbox bearbeiten",
-        "heating": "Heizgerät bearbeiten"
+        "heating": "Heizgerät bearbeiten",
+        "switch": "Schaltbare Steckdose bearbeiten"
       },
       "type": {
         "custom": {
@@ -225,6 +227,15 @@
       "title": "Einspeisebegrenzung",
       "titleAdd": "Einspeisebegrenzung hinzufügen",
       "titleEdit": "Einspeisebegrenzung bearbeiten"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Wallbox hinzufügen",
+        "meter": "Zähler hinzufügen",
+        "switch": "Schaltbare Steckdose hinzufügen",
+        "tariff": "Tarif hinzufügen"
+      },
+      "noNesting": "Verschachtelung ist nur eine Ebene tief möglich. Bitte eine andere Option wählen."
     },
     "deviceValue": {
       "activeClients": "Aktive Clients",
@@ -304,8 +315,16 @@
           "returnEnergy": "Entladen"
         },
         "consumer": {
+          "chargeStatusB": "Standby",
+          "chargeStatusC": "heizt",
           "energy": "Verbraucht",
           "returnEnergy": "Erzeugt"
+        },
+        "continuous": {
+          "chargeStatusB": "Normal",
+          "chargeStatusC": "Boost",
+          "dimmed": "Gedimmt",
+          "enabled": "Boost"
         },
         "grid": {
           "energy": "Bezogen",
@@ -377,11 +396,13 @@
       "optional": "optional"
     },
     "general": {
+      "add": "Hinzufügen",
       "applyAndClose": "Übernehmen & schließen",
       "authPerform": "Mit {provider} verbinden",
       "authPerformHint": "Öffnet ein neues Tab. Anschließend hier weiter machen.",
       "authPrepare": "Verbindung vorbereiten",
       "cancel": "Abbrechen",
+      "continue": "Weiter",
       "change": "Ändern",
       "clear": "Löschen",
       "close": "Schließen",
@@ -489,7 +510,7 @@
         "charging": "Wallbox hinzufügen",
         "heating": "Heizgerät hinzufügen"
       },
-      "addMeter": "Zusätzlichen Energiezähler hinzufügen",
+      "addMeter": "Zähler hinzufügen",
       "advancedConfig": "Erweiterte Konfiguration",
       "cancel": "Abbrechen",
       "chargerError": {
@@ -528,7 +549,28 @@
       "electricalSubtitle": "Im Zweifelsfall Elektriker fragen.",
       "electricalTitle": "Elektrik",
       "energyMeterHelp": "Zusätzlicher Zähler, wenn die Wallbox keinen integrierten hat.",
-      "energyMeterLabel": "Energiezähler",
+      "energyMeterLabel": "Dedizierter Energiezähler",
+      "demandPredictor": {
+        "daily": {
+          "description": "Durchschnitt der letzten Tage. Für Geräte mit täglich gleichem Verbrauch.",
+          "label": "Tagesdurchschnitt"
+        },
+        "defaultGroup": "Gerätestandard",
+        "description": "Wie der Optimizer den Verbrauch aus der Vergangenheit vorhersagt.",
+        "label": "Profil",
+        "noTempTariff": "Erfordert eine Temperaturvorhersage.",
+        "noTempTariffLink": "Vorhersage hinzufügen",
+        "profilesGroup": "Profile",
+        "temperature": {
+          "description": "Verbrauch bei ähnlicher Außentemperatur. Für Raumheizung, z. B. Wärmepumpen.",
+          "label": "Temperatur"
+        },
+        "title": "Verbrauchsprognose",
+        "weekday": {
+          "description": "Durchschnitt des gleichen Wochentags. Für Geräte mit Wochenrhythmus, z. B. Warmwasser oder Pool.",
+          "label": "Wochentag"
+        }
+      },
       "estimateLabel": "Ladestand zwischen API-Updates interpolieren",
       "maxCurrentHelp": "Muss größer als der Mindeststrom sein.",
       "maxCurrentLabel": "Maximaler Strom",
@@ -603,11 +645,11 @@
       "vehiclesTitle": "Fahrzeuge"
     },
     "main": {
+      "addLoadpoint": "Ladepunkt oder Heizung hinzufügen",
       "addAdditional": "Zusätzlichen Zähler hinzufügen",
       "addConsumer": "Verbraucher hinzufügen",
       "addCurtailer": "Einspeisebegrenzung hinzufügen",
       "addGrid": "Netzzähler hinzufügen",
-      "addLoadpoint": "Ladepunkt oder Heizung hinzufügen",
       "addPvBattery": "PV oder Hausbatterie hinzufügen",
       "addTariffs": "Tarife hinzufügen",
       "addVehicle": "Fahrzeug hinzufügen",
@@ -617,9 +659,7 @@
       "name": "Name",
       "title": "Konfiguration",
       "unconfigured": "nicht konfiguriert",
-      "vehicles": "Meine Fahrzeuge",
-      "welcomeBannerText": "Lege zunächst eine **Wallbox**, **Heizung**, **Netzzähler**, **PV**, **Batterie** oder **zusätzlichen Zähler** an. Falls du nur testen möchtest, wähle ein **Demogerät**.",
-      "welcomeBannerTitle": "Los geht's mit der Konfiguration!"
+      "vehicles": "Meine Fahrzeuge"
     },
     "mcp": {
       "description": "Stellt einen Model Context Protocol Server bereit. Damit können KI-Assistenten wie Claude den Zustand deines Systems auslesen und das Laden steuern.",
@@ -713,6 +753,14 @@
       "specific": "Spezifische Integrationen",
       "template": "Hersteller",
       "titleChoice": "Was möchtest du hinzufügen?",
+      "titleExample": {
+        "aux": "Smarter Boiler, etc.",
+        "battery": "Keller, Garage, Powerstation, etc.",
+        "consumer": "Spülmaschine, Waschmaschine, Poolpumpe, etc.",
+        "pv": "Süddach, Carport, etc."
+      },
+      "reuseApply": "Einstellungen übernehmen.",
+      "reuseHint": "{device} kann auch als „{target}“ verwendet werden.",
       "titleLabel": "Titel",
       "usage": {
         "aux": "Selbstregelnder Verbraucher",
@@ -994,12 +1042,21 @@
       "descriptionToken": "Als GitHub-Sponsor findest du dein Token auf {url}. Zum Ausprobieren gibt's ein {trialToken}.",
       "enterYourToken": "Dein Sponsortoken",
       "error": "Das Sponsortoken ist ungültig.",
+      "inline": {
+        "applied": "Token übernommen. Danke für die Unterstützung des Projekts!",
+        "apply": "Übernehmen",
+        "becomeSponsor": "Sponsor werden",
+        "device": "Dieses Gerät ist nur für Sponsoren verfügbar.",
+        "feature": "Diese Funktion ist nur für Sponsoren verfügbar.",
+        "learn": "Mehr erfahren und {becomeSponsor}.",
+        "placeholder": "Token einfügen",
+        "title": "Sponsortoken erforderlich",
+        "trial": "Schnell loslegen.",
+        "trialLink": "Testtoken holen"
+      },
       "invalid": "ungültig",
       "labelToken": "Sponsortoken",
       "title": "Sponsoring",
-      "tokenRequired": "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät anlegen kannst.",
-      "tokenRequiredFeature": "Diese Funktion erfordert ein Sponsortoken.",
-      "tokenRequiredLearnMore": "Mehr erfahren.",
       "tokenRequiredShort": "Kein Sponsortoken konfiguriert.",
       "trialToken": "Testtoken",
       "viaYaml": "über evcc.yaml",
@@ -1088,7 +1145,8 @@
       "solar": {
         "description": "Erzeugungsvorhersage für deine PV-Anlage. Wird in der Oberfläche angezeigt und zukünftig für Optimierungsalgorithmen verwendet.",
         "titleAdd": "PV-Vorhersage hinzufügen",
-        "titleEdit": "PV-Vorhersage bearbeiten"
+        "titleEdit": "PV-Vorhersage bearbeiten",
+        "titleExample": "Süddach, Carport, etc."
       },
       "temperature": {
         "description": "Vorhersage der Außentemperatur am Standort. Wird in der Oberfläche angezeigt und für die Vorhersage des Heizbedarfs verwendet.",
@@ -1098,9 +1156,10 @@
       "template": "Anbieter",
       "title": "Tarife & Vorhersagen",
       "titleChoice": "Was möchtest du hinzufügen?",
+      "titleSub": "Untertarif",
       "type": {
         "co2": "CO₂ Vorhersage",
-        "feedIn": "Einspeisevergütung",
+        "feedIn": "Einspeisetarif",
         "grid": "Netzbezugspreis",
         "planner": "Planer",
         "solar": "PV",
@@ -1552,7 +1611,8 @@
         "continuousCo2Description": "Wählt die sauberste unterbrechungsfreie Folge von Zeitfenstern.",
         "continuousPriceDescription": "Wählt die günstigste unterbrechungsfreie Folge von Zeitfenstern.",
         "disabledDescription": "Benötigt einen dynamischen Tarif oder eine CO₂-Vorhersage.",
-        "label": "Optimierung"
+        "label": "Optimierung",
+        "optimizerDescription": "Der {optimizer} wählt die günstigsten Zeitfenster. Kann zu mehreren Starts und Stopps führen."
       },
       "planNumber": "Plan {number}",
       "precondition": {
@@ -1708,7 +1768,11 @@
       "login": "anmelden",
       "logout": "abmelden"
     },
-    "startConfiguration": "Konfiguration beginnen",
+    "setup": {
+      "description": "Geräte hinzufügen, um den Energiefluss zu sehen und mit Solarstrom zu laden.",
+      "start": "Einrichtung starten",
+      "title": "Willkommen!"
+    },
     "targetCharge": {
       "activate": "Aktivieren",
       "co2Limit": "CO₂-Limit von {co2}",
@@ -1817,13 +1881,82 @@
       "waitForVehicle": "Ladebereit. Warte auf Fahrzeug …",
       "welcome": "Kurze initiale Ladung zur Bestätigung der Verbindung."
     },
-    "vehicles": "Parkplatz",
-    "welcome": "Herzlich willkommen!"
+    "vehicles": "Parkplatz"
   },
   "notifications": {
     "dismissAll": "Meldungen entfernen",
     "logs": "Vollständiges Log ansehen",
     "modalTitle": "Meldungen"
+  },
+  "onboarding": {
+    "another": "Weitere hinzufügen",
+    "back": "Zurück",
+    "battery": {
+      "add": "Hausbatterie hinzufügen",
+      "description": "Die Batterie hinzufügen, damit das Laden sie berücksichtigt und sichtbar ist, was sie tut.",
+      "none": "Keine Hausbatterie",
+      "title": "Gibt es eine Hausbatterie?"
+    },
+    "checklist": {
+      "dismiss": "Ausblenden",
+      "legacyTariffs": "Veraltete Tarifkonfiguration aktiv.",
+      "progress": "{done} von {total} erledigt",
+      "title": "Einrichtung abschließen"
+    },
+    "control": {
+      "description": "Beginne mit dem ersten. Weitere lassen sich später auf der Konfigurationsseite ergänzen.",
+      "none": "Noch nichts",
+      "title": "Was soll gesteuert werden?"
+    },
+    "done": {
+      "close": "Zur Konfiguration",
+      "description": "Ein Neustart übernimmt die Konfiguration. Danach lassen sich die Funktionen erkunden. Fahrzeuge, Tarife und mehr lassen sich jederzeit ergänzen.",
+      "restart": "Neustart",
+      "title": "Fertig"
+    },
+    "grid": {
+      "add": "Netzzähler hinzufügen",
+      "confirm": "Der Netzzähler ist die Grundlage für Überschussladen und Energiestatistiken. Ein Netzzähler wird empfohlen.",
+      "confirmNone": "Trotzdem weiter",
+      "description": "Misst Netzbezug und Einspeisung am Netzanschluss. Macht das Überschussladen präzise.",
+      "none": "Kein Netzzähler",
+      "title": "Gibt es einen Netzzähler?"
+    },
+    "item": {
+      "battery": "Hausbatterie",
+      "co2": "CO₂-Vorhersage",
+      "consumer": "Verbraucher",
+      "grid": "Netzzähler",
+      "gridExport": "Einspeisetarif",
+      "gridImport": "Netzbezugstarif",
+      "heater": "Heizung",
+      "loadpoint": "Ladepunkt",
+      "pv": "PV-Anlage",
+      "solar": "PV-Vorhersage"
+    },
+    "password": {
+      "description": "Schützt die Konfiguration vor unbefugten Änderungen. Gut merken, ein Zurücksetzen ist nicht ohne Weiteres möglich.",
+      "disabled": "Die Authentifizierung ist deaktiviert ({flag}). Jeder mit Netzwerkzugriff kann die Konfiguration ändern, gespeicherte Zugangsdaten lesen und Skripte ausführen. Der Zugriff muss anderweitig abgesichert werden.",
+      "title": "Administrator-Passwort festlegen"
+    },
+    "pv": {
+      "add": "PV-Anlage hinzufügen",
+      "description": "Misst die PV-Erzeugung. Nötig für den Solaranteil und das Überschussladen.",
+      "none": "Keine PV-Anlage",
+      "title": "Gibt es eine PV-Anlage?"
+    },
+    "site": {
+      "currencyHint": "z.B. {price}, {amount}",
+      "defaultTitle": "Zuhause",
+      "description": "Ein paar Grundlagen zum Zuhause. Alles lässt sich jederzeit ändern.",
+      "title": "Standort"
+    },
+    "skip": "Einrichtung überspringen",
+    "step": "Schritt {step} von {total}",
+    "welcome": {
+      "description": "Die wichtigsten Teile der Hausinstallation einrichten, um mit dem smarten Laden zu starten.",
+      "start": "Los geht's"
+    }
   },
   "offline": {
     "configurationError": "Fehler beim Starten. Überprüfe deine Konfiguration und starte neu.",
@@ -1834,14 +1967,12 @@
     "starting": "Server wird gestartet..."
   },
   "passwordModal": {
-    "description": "Setze ein Passwort, um die Konfiguration zu schützen. Die Hauptansicht bleibt ohne Login zugänglich.",
     "empty": "Passwort darf nicht leer sein",
     "labelCurrent": "Aktuelles Passwort",
     "labelNew": "Neues Passwort",
     "labelRepeat": "Neues Passwort wiederholen",
     "newPassword": "Passwort setzen",
     "noMatch": "Passwörter stimmen nicht überein",
-    "titleNew": "Administrator Passwort setzen",
     "titleUpdate": "Administrator Passwort ändern",
     "updatePassword": "Passwort ändern"
   },

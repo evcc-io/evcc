@@ -1,6 +1,6 @@
 <template>
 	<div class="root safe-area-inset">
-		<div class="container px-4">
+		<div v-show="!wizardPending" class="container px-4">
 			<TopHeader
 				ref="header"
 				:title="headerTitle"
@@ -18,7 +18,13 @@
 
 				<Transition name="fade-swap-left">
 					<div v-if="!mobile || !activeSlug">
-						<WelcomeBanner v-if="setupRequired" class="my-4" />
+						<SetupChecklist
+							v-if="loaded"
+							class="box-pull-out"
+							:configured="configuredItems"
+							:dismissed="dismissed"
+							:legacy-tariffs="tariffsYamlVisible"
+						/>
 						<ConfigSectionNav
 							v-if="mobile"
 							class="my-4"
@@ -105,20 +111,10 @@
 				<ConfigSection v-bind="sectionProps('consumers')">
 					<div class="p-0 config-list box-pull-out">
 						<MeterCard
-							v-for="meter in consumerMeters"
+							v-for="{ meter, meterType } in consumerAndAuxMeters"
 							:key="meter.name"
 							:meter="meter"
-							meter-type="consumer"
-							:has-error="hasDeviceError('meter', meter.name)"
-							:tags="deviceTags('meter', meter.name)"
-							@edit="(type, id) => openModal('meter', { type, id })"
-							@enable="handleDisable('meter', meter.id, false)"
-						/>
-						<MeterCard
-							v-for="meter in auxMeters"
-							:key="meter.name"
-							:meter="meter"
-							meter-type="aux"
+							:meter-type="meterType"
 							:has-error="hasDeviceError('meter', meter.name)"
 							:tags="deviceTags('meter', meter.name)"
 							@edit="(type, id) => openModal('meter', { type, id })"
@@ -535,6 +531,7 @@
 					:hasDeviceError="hasDeviceError"
 					:voltage="voltage"
 					:gridConnection="gridConnection"
+					:temperatureTariffConfigured="temperatureTariffConfigured"
 					@changed="loadpointChanged"
 					@dismissed="loadpointDismissed"
 					@disable="({ id, disable }) => handleDisable('loadpoint', id, disable)"
@@ -555,6 +552,16 @@
 					:is-sponsor="isSponsor"
 					:remote-enabled="remoteEnabled"
 					:ocpp="ocpp"
+					:has-device-error="hasDeviceError"
+					@changed="chargerChanged"
+				/>
+				<ChargerModal
+					name="subcharger"
+					hide-disable
+					:is-sponsor="isSponsor"
+					:remote-enabled="remoteEnabled"
+					:ocpp="ocpp"
+					:has-device-error="hasDeviceError"
 					@changed="chargerChanged"
 				/>
 				<InfluxModal @changed="loadDirty" />
@@ -581,8 +588,16 @@
 				<TariffsLegacyModal @changed="loadDirty" />
 				<TariffModal
 					:currency="currency"
+					:has-device-error="hasDeviceError"
 					@changed="tariffChanged"
 					@disable="({ id, disable }) => handleDisable('tariff', id, disable)"
+				/>
+				<TariffModal
+					name="subtariff"
+					hide-disable
+					:currency="currency"
+					:has-device-error="hasDeviceError"
+					@changed="subTariffChanged"
 				/>
 				<TelemetryModal :is-sponsor="isSponsor" :telemetry="telemetry" />
 				<OptimizerModal :is-sponsor="isSponsor" />
@@ -613,7 +628,8 @@
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<SecurityModal :auth-disabled="authDisabled" />
 				<ApiKeyModal :auth-disabled="authDisabled" />
-				<PasswordModal update-mode />
+				<PasswordModal />
+				<OnboardingModal v-bind="onboardingModalProps" />
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 			</div>
 		</div>
@@ -668,7 +684,7 @@ import MessagingLegacyModal from "@/components/Config/Messaging/MessagingLegacyM
 import MeterModal from "../components/Config/MeterModal.vue";
 import MeterCard from "../components/Config/MeterCard.vue";
 import { createDeviceUtils } from "../components/Config/DeviceModal";
-import { openModal, type ModalResult } from "@/configModal";
+import configModal, { openModal, type ModalResult } from "@/configModal";
 import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
 import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
@@ -712,6 +728,7 @@ import type {
 	DeviceType,
 	Notification,
 	Remote,
+	OnboardingItem,
 } from "@/types/evcc";
 import { ConfigType, CURRENCY } from "@/types/evcc";
 import { circuitTree, type CircuitNode } from "@/utils/circuits";
@@ -739,7 +756,10 @@ type DeviceTags = Record<
 >;
 
 import BackupRestoreModal from "@/components/Config/BackupRestoreModal.vue";
-import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
+import SetupChecklist from "../components/Config/SetupChecklist.vue";
+import OnboardingModal from "../components/Config/Onboarding/OnboardingModal.vue";
+import { wizardPending } from "@/onboarding";
+import auth from "../components/Auth/auth";
 import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import SecurityModal from "../components/Config/Security/SecurityModal.vue";
@@ -807,7 +827,8 @@ export default defineComponent({
 		TopHeader: Header,
 		VehicleIcon,
 		VehicleModal,
-		WelcomeBanner,
+		SetupChecklist,
+		OnboardingModal,
 		AuthSuccessBanner,
 		PasswordModal,
 		SecurityModal,
@@ -826,6 +847,8 @@ export default defineComponent({
 			vehicles: [] as ConfigVehicle[],
 			meters: [] as ConfigMeter[],
 			loadpoints: [] as ConfigLoadpoint[],
+			// checklist state is derived from loaded config, keep it hidden until then
+			loaded: false,
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
 			hemsDevices: [] as ConfigHems[],
@@ -1005,8 +1028,44 @@ export default defineComponent({
 		authProviders() {
 			return store.state?.authProviders;
 		},
-		setupRequired() {
-			return store.state?.setupRequired;
+		authConfigured(): boolean {
+			return auth.configured;
+		},
+		wizardPending(): boolean {
+			return wizardPending();
+		},
+		// reopen whenever the stack empties, e.g. browser back past the first step
+		wizardOpen(): boolean {
+			return this.wizardPending && configModal.stack.length === 0;
+		},
+		dismissed(): OnboardingItem[] {
+			return store.state?.onboarding?.dismissed ?? [];
+		},
+		onboardingModalProps() {
+			return this.collectProps(OnboardingModal);
+		},
+		chargingLoadpoints(): ConfigLoadpoint[] {
+			return this.loadpoints.filter((lp) => !this.isHeater(lp.charger));
+		},
+		heaterLoadpoints(): ConfigLoadpoint[] {
+			return this.loadpoints.filter((lp) => this.isHeater(lp.charger));
+		},
+		configuredItems(): Record<string, boolean> {
+			// legacy tariffs have no refs, their live values only exist when configured
+			const { tariffGrid, tariffFeedIn, tariffCo2, tariffSolar } = store.state;
+			const yaml = this.tariffsYamlVisible;
+			return {
+				battery: (this.site.battery?.length ?? 0) > 0,
+				pv: (this.site.pv?.length ?? 0) > 0,
+				grid: !!this.site.grid,
+				loadpoint: this.chargingLoadpoints.length > 0,
+				heater: this.heaterLoadpoints.length > 0,
+				consumer: (this.site.consumer?.length ?? 0) > 0,
+				gridImport: yaml ? tariffGrid !== undefined : !!this.tariffRefs.grid,
+				gridExport: yaml ? tariffFeedIn !== undefined : !!this.tariffRefs.feedIn,
+				co2: yaml ? tariffCo2 !== undefined : !!this.tariffRefs.co2,
+				solar: yaml ? tariffSolar !== undefined : this.tariffRefs.solar.length > 0,
+			};
 		},
 		currency(): CURRENCY {
 			return store.state?.currency ?? CURRENCY.EUR;
@@ -1033,8 +1092,7 @@ export default defineComponent({
 			return this.getMetersByNames(names);
 		},
 		auxMeters() {
-			const names = this.site?.aux;
-			return this.getMetersByNames(names);
+			return this.getMetersByNames(this.site?.aux);
 		},
 		extMeters() {
 			const names = this.site?.ext;
@@ -1048,6 +1106,18 @@ export default defineComponent({
 		},
 		consumerMeters() {
 			return this.getMetersByNames(this.site?.consumer);
+		},
+		consumerAndAuxMeters(): { meter: ConfigMeter; meterType: MeterType; label: string }[] {
+			const entries = (meters: ConfigMeter[], meterType: MeterType, fallback: string) =>
+				meters.map((meter) => ({
+					meter,
+					meterType,
+					label: meter.deviceTitle || meter.config?.template || fallback,
+				}));
+			return [
+				...entries(this.consumerMeters, "consumer", this.$t("config.devices.consumer")),
+				...entries(this.auxMeters, "aux", this.$t("config.devices.auxMeter")),
+			].sort((a, b) => a.label.localeCompare(b.label, this.$i18n.locale));
 		},
 		gridTariff() {
 			const name = this.tariffRefs?.grid;
@@ -1068,6 +1138,11 @@ export default defineComponent({
 		temperatureTariff() {
 			const name = this.tariffRefs?.temperature;
 			return name ? this.tariffs.find((t) => t.name === name) : null;
+		},
+		temperatureTariffConfigured(): boolean {
+			return this.tariffsYamlVisible
+				? store.state?.tariffTemperature !== undefined
+				: !!this.temperatureTariff;
 		},
 		solarTariffs() {
 			const names = this.tariffRefs?.solar || [];
@@ -1299,6 +1374,7 @@ export default defineComponent({
 		backupRestoreProps() {
 			return {
 				authDisabled: this.authDisabled,
+				wizardPending: this.wizardPending,
 			};
 		},
 		circuitsRoot(): CircuitNode | undefined {
@@ -1338,12 +1414,24 @@ export default defineComponent({
 				this.loadAll();
 			}
 		},
+		// config api needs the admin password, set by the wizard on first run
+		authConfigured: {
+			immediate: true,
+			handler(configured: boolean) {
+				if (configured) this.loadAll();
+			},
+		},
+		wizardOpen: {
+			immediate: true,
+			handler(open: boolean) {
+				if (open) openModal("onboarding");
+			},
+		},
 	},
 	mounted() {
 		this.isComponentMounted = true;
 		document.addEventListener("visibilitychange", this.handleVisibilityChange);
 		this.isPageVisible = document.visibilityState === "visible";
-		this.loadAll();
 	},
 	unmounted() {
 		this.isComponentMounted = false;
@@ -1413,6 +1501,7 @@ export default defineComponent({
 			await this.loadTariffRefs();
 			await this.loadHems();
 			await this.loadDirty();
+			this.loaded = true;
 			this.updateValues();
 		},
 		async loadDirty() {
@@ -1467,6 +1556,13 @@ export default defineComponent({
 		},
 		async loadLoadpoints() {
 			this.loadpoints = (await this.loadConfig("loadpoints")) || [];
+		},
+		isHeater(chargerName: string): boolean {
+			const charger = this.chargers.find((c) => c.name === chargerName);
+			return !!(
+				charger?.config?.["heating"] ||
+				this.deviceTags("charger", chargerName)["heating"]?.value
+			);
 		},
 		getMetersByNames(names: string[] | null): ConfigMeter[] {
 			if (!names || !this.meters) {
@@ -1574,6 +1670,12 @@ export default defineComponent({
 			}
 			await this.loadTariffs();
 			await this.loadTariffRefs();
+			await this.loadDirty();
+			this.updateValues();
+		},
+		// nested tariffs belong to their parent and get no usage of their own
+		async subTariffChanged() {
+			await this.loadTariffs();
 			await this.loadDirty();
 			this.updateValues();
 		},

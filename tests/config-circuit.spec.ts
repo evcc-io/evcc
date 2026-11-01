@@ -15,6 +15,7 @@ const CONFIG_FAST = "fast.evcc.yaml";
 const CONFIG_CIRCUIT_TREE = "config-circuit-tree.sql";
 
 test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
 
 test.afterEach(async () => {
   await stop();
@@ -28,23 +29,26 @@ async function validateCircuitsTags(page: Page) {
   await expect(loadpoints.nth(1)).toContainText("Power1.0 kW");
 
   await expect(page.getByTestId("circuits")).toHaveCount(1);
+  // the current of the main circuit is the offered current of the loadpoints, it changes with their first update
   await expect(page.getByTestId("circuits")).toContainText(
-    [
-      "Main",
-      "12.0 / 16.0",
-      "A",
-      "2.0 / 10.0",
-      "kW",
-      "Carport 1",
-      "1.0 kW",
-      "Carport 2",
-      "1.0 kW",
-      "Child",
-      "0.0 / 10.0",
-      "A",
-      "0.0",
-      "kW",
-    ].join("")
+    new RegExp(
+      [
+        "Main",
+        "\\d+\\.\\d / 16\\.0",
+        "A",
+        "2\\.0 / 10\\.0",
+        "kW",
+        "Carport 1",
+        "1\\.0 kW",
+        "Carport 2",
+        "1\\.0 kW",
+        "Child",
+        "0\\.0 / 10\\.0",
+        "A",
+        "0\\.0",
+        "kW",
+      ].join("")
+    )
   );
 }
 
