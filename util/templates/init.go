@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"slices"
+	"strings"
 	"sync"
 	"text/template"
 
@@ -133,7 +134,8 @@ func load(class Class) {
 		if err != nil {
 			return err
 		}
-		if d.IsDir() {
+		// includes are loaded separately
+		if d.IsDir() || !strings.HasSuffix(filepath, ".yaml") {
 			return nil
 		}
 

@@ -285,6 +285,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Don't restate param properties that `util/templates/defaults.yaml` already defines for that param name. Properties (description, help, type, unit, default, example, required, advanced, mask, private, usages, …) are inherited from defaults; only specify a property in a template to give it a _different_ value. Restating the same value is redundant duplication: reference the param by `name` alone.
 - Test templates: `evcc --template-type [type] --template [file]`
 - Update docs after template changes: `make docs`
+- When a template param becomes required (directly, via a preset, or inherited from `defaults.yaml`), run `make docs` and commit the updated `templates/definition/<class>/_required.yaml`. A new required param on an existing template breaks configurations stored without it, so call it out in the PR
 - When implementing or debugging against a third-party device library (eebus-go/ship/spine-go, ocpp-go, modbus/SunSpec), consult the library's current upstream documentation before coding rather than relying on recalled API details
 
 ### Configuration

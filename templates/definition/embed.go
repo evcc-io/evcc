@@ -2,7 +2,9 @@ package definition
 
 import "embed"
 
-//go:embed charger/*.yaml meter/*.yaml vehicle/*.yaml tariff/*.yaml messenger/*.yaml circuit/*.yaml hems/*.yaml curtailer/*.yaml
+// directories don't embed files starting with _ like the generated _required.yaml
+//
+//go:embed charger meter vehicle tariff messenger circuit hems curtailer
 var YamlTemplates embed.FS
 
 //go:embed */*.tpl
