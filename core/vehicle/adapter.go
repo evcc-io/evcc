@@ -53,7 +53,7 @@ func (v *adapter) updatePlan() {
 	}
 }
 
-// requestUpdate triggers an immediate update.
+// requestUpdate requests a prioritized loadpoint update.
 // Used for changes that affect scheduling only and leave the plan goal intact.
 func (v *adapter) requestUpdate() {
 	if lp := v.owner(); lp != nil {

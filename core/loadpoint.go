@@ -89,13 +89,19 @@ type Loadpoint struct {
 	site     site.API
 	pushChan chan<- messenger.Event // notifications
 	uiChan   chan<- util.Param      // client push messages
-	lpChan   chan<- *Loadpoint      // update requests
-	lpQueued atomic.Bool            // update request waiting in lpChan
 	log      *util.Logger
 
-	rwMutex      atomic.Int64 // count reentrant RWMutex
+	rwMutex      atomic.Int64 // writer goroutine id for reentrancy detection (test only)
 	sync.RWMutex              // guard status
 	vmu          sync.RWMutex // guard vehicle
+	measureMu    sync.Mutex   // serialize meter measurement reads across sense and control loops
+
+	actuatedAt      time.Time     // last setpoint change; opens the in-flight reserve window
+	pendingControl  atomic.Bool   // loadpoint requests re-evaluation
+	controlInterval time.Duration // control interval; also the in-flight reserve settle window
+
+	controlMu sync.Mutex // serialize observe (sense loop) vs control (control loop) per loadpoint
+	observed  bool       // set once observe has produced valid state, cleared on status read error; control must not actuate before
 
 	// exposed public configuration
 	CircuitRef string `mapstructure:"circuit"` // Circuit reference
@@ -468,29 +474,30 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 }
 
-// RequestUpdate requests site to update this loadpoint
+// RequestUpdate requests site to control this loadpoint with priority
 func (lp *Loadpoint) RequestUpdate() {
-	lp.requestUpdate()
+	lp.requestControl()
 }
 
-// requestUpdate requests site to update this loadpoint
-func (lp *Loadpoint) requestUpdate() {
-	// queue each loadpoint at most once so the site queue sized to all loadpoints never overflows
-	if lp.lpChan == nil || !lp.lpQueued.CompareAndSwap(false, true) {
-		return
+// GetInflightPower returns the charge power actuated but not yet reflected by the meter
+func (lp *Loadpoint) GetInflightPower() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+
+	if !lp.inflightActive() {
+		return 0
 	}
 
-	select {
-	case lp.lpChan <- lp: // request loadpoint update
-	default:
-		lp.lpQueued.Store(false)
+	var intended float64
+	if lp.enabled {
+		// use the effective active phases (as setLimit does), not the charger
+		// phase setting: a 1p vehicle on a 3p charger must not inflate the reserve
+		if phases := lp.activePhases(); phases > 0 {
+			intended = grid.CurrentToPower(lp.offeredCurrent, phases)
+		}
 	}
-}
 
-// dequeued marks the update request as taken from the site queue so the loadpoint may request again
-func (lp *Loadpoint) dequeued() *Loadpoint {
-	lp.lpQueued.Store(false)
-	return lp
+	return max(0, intended-lp.chargePower)
 }
 
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
@@ -776,11 +783,10 @@ func (lp *Loadpoint) defaultMode() {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- messenger.Event, lpChan chan<- *Loadpoint) {
+func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- messenger.Event) {
 	lp.site = site
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
-	lp.lpChan = lpChan
 
 	// event handlers
 	_ = lp.bus.Subscribe(evChargeStart, lp.evChargeStartHandler)
@@ -1019,8 +1025,8 @@ func (lp *Loadpoint) roundedCurrent(current float64) float64 {
 // actualMaxChargeCurrent returns the maximum of all phase currents.
 // If currents not measured falls back to offered current.
 func (lp *Loadpoint) actualMaxChargeCurrent() float64 {
-	if lp.chargeCurrents != nil {
-		return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+	if cc := lp.GetChargeCurrents(); cc != nil {
+		return max(cc[0], cc[1], cc[2])
 	}
 	if lp.charging() {
 		return lp.offeredCurrent
@@ -1034,11 +1040,13 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 	// apply circuit limits
 	if lp.circuit != nil {
-		currentLimit := lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), current)
+		// validate against this loadpoint's full contribution to the circuit (metered draw plus
+		// its own in-flight reserve) as the circuit aggregates it, else the own reserve caps it
+		currentLimit := lp.circuit.ValidateCurrent(lp.GetMaxPhaseCurrent()+lp.GetInflightCurrent(), current)
 
 		activePhases := lp.ActivePhases()
 		requestedPower := grid.CurrentToPower(current, activePhases)
-		powerLimit := lp.circuit.ValidatePower(lp.chargePower, requestedPower)
+		powerLimit := lp.circuit.ValidatePower(lp.GetChargePower()+lp.GetInflightPower(), requestedPower)
 
 		// avoid float round trip through power if the circuit does not cap
 		limited := currentLimit
@@ -1065,6 +1073,13 @@ func (lp *Loadpoint) setLimit(current float64) error {
 	effMinCurrent := lp.effectiveMinCurrent()
 	if effMaxCurrent := lp.effectiveMaxCurrent(); effMinCurrent > effMaxCurrent {
 		return fmt.Errorf("invalid config: min current %.3gA exceeds max current %.3gA", effMinCurrent, effMaxCurrent)
+	}
+
+	// capture the intended draw before the change for the in-flight reserve
+	reservePhases := lp.ActivePhases()
+	var oldPower float64
+	if lp.enabled {
+		oldPower = grid.CurrentToPower(lp.offeredCurrent, reservePhases)
 	}
 
 	// set current
@@ -1127,6 +1142,16 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		} else {
 			lp.stopWakeUpTimer()
 		}
+	}
+
+	// open the in-flight reserve window so other loadpoints discount this
+	// un-metered actuation from the surplus until the meters catch up
+	var newPower float64
+	if lp.enabled {
+		newPower = grid.CurrentToPower(lp.offeredCurrent, reservePhases)
+	}
+	if newPower != oldPower {
+		lp.actuatedAt = lp.clock.Now()
 	}
 
 	return nil
@@ -1402,8 +1427,8 @@ func (lp *Loadpoint) effectiveCurrent() float64 {
 	}
 
 	// adjust actual current for vehicles like Zoe where it remains below target
-	if lp.chargeCurrents != nil {
-		cur := max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+	if cc := lp.GetChargeCurrents(); cc != nil {
+		cur := max(cc[0], cc[1], cc[2])
 		return min(cur+2.0, lp.offeredCurrent)
 	}
 
@@ -1509,6 +1534,10 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 		// prevent premature measurement of active phases
 		lp.phasesSwitched = lp.clock.Now()
 
+		// the implicit charging pause of a phase switch keeps the meters below the
+		// intended post-switch draw, so hold the in-flight reserve until they catch up
+		lp.actuatedAt = lp.clock.Now()
+
 		// update setting and reset timer
 		lp.SetPhases(phases)
 
@@ -1526,7 +1555,7 @@ func (lp *Loadpoint) circuitAllowsPhases(phases int, minCurrent float64) bool {
 	}
 
 	minPower := grid.CurrentToPower(minCurrent, phases)
-	powerLimit := lp.circuit.ValidatePower(lp.chargePower, minPower)
+	powerLimit := lp.circuit.ValidatePower(lp.GetChargePower(), minPower)
 	if powerLimit < minPower {
 		lp.log.DEBUG.Printf("available circuit power %.0fW < %.0fW min %dp power", powerLimit, minPower, phases)
 		return false
@@ -1646,7 +1675,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 
 	var waiting, disable bool
 	activePhases := lp.ActivePhases()
-	availablePower := lp.chargePower - sitePower
+	availablePower := lp.GetChargePower() - sitePower
 	scalable := activePhases > 1 && lp.phasesConfigured < 3
 
 	if scalable {
@@ -1764,7 +1793,7 @@ func (lp *Loadpoint) projectPhaseSwitch(sitePower, minCurrent float64) (float64,
 	phases := lp.ActivePhases()
 	if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() && phases > 1 {
 		// site power loses the current draw, at least min power on all phases, and gains 1p min power
-		sitePower -= max(lp.chargePower, grid.CurrentToPower(minCurrent, phases)) - grid.CurrentToPower(minCurrent, 1)
+		sitePower -= max(lp.GetChargePower(), grid.CurrentToPower(minCurrent, phases)) - grid.CurrentToPower(minCurrent, 1)
 		phases = 1
 	}
 	return sitePower, phases
@@ -1943,11 +1972,11 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	effectiveCurrent := lp.effectiveCurrent()
 	if scaledTo == 3 {
 		// if we did scale, spread the power measured before the switch over the new phase count
-		effectiveCurrent = grid.PowerToCurrent(lp.chargePower, lp.maxActivePhases())
+		effectiveCurrent = grid.PowerToCurrent(lp.GetChargePower(), lp.maxActivePhases())
 	}
 	if lp.chargerHasFeature(api.IntegratedDevice) {
 		// for slow-acting heating devices, only take actually consumed power into account
-		effectiveCurrent = grid.PowerToCurrent(lp.chargePower, activePhases)
+		effectiveCurrent = grid.PowerToCurrent(lp.GetChargePower(), activePhases)
 	}
 	deltaCurrent := grid.PowerToCurrent(-sitePower, activePhases)
 	availableCurrent := effectiveCurrent + deltaCurrent
@@ -1976,7 +2005,7 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 		// remainder out of site power, hiding insufficient surplus until it ramps
 		// up (#32282). Project the shortfall towards min power into the gate.
 		if lp.chargerHasFeature(api.Continuous) {
-			projectedSitePower += max(0, grid.CurrentToPower(minCurrent, lp.minActivePhases())-lp.chargePower)
+			projectedSitePower += max(0, grid.CurrentToPower(minCurrent, lp.minActivePhases())-lp.GetChargePower())
 		}
 
 		disableThreshold := lp.pvDisableThreshold(minCurrent, batteryPower, projectedPhases)
@@ -2093,7 +2122,7 @@ func (lp *Loadpoint) pvEnablePhases(sitePower, batteryPower, minCurrent, maxCurr
 		maxCurrent = lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), maxCurrent)
 	}
 
-	availablePower := lp.chargePower - sitePower
+	availablePower := lp.GetChargePower() - sitePower
 	_, enable := lp.pvEnableDecision(0, minCurrent, sitePower, batteryPower, maxPhases)
 	startMax := enable && grid.PowerToCurrent(availablePower, maxPhases) >= minCurrent &&
 		maxCurrent >= minCurrent && lp.circuitAllowsPhases(maxPhases, minCurrent)
@@ -2130,6 +2159,10 @@ func (lp *Loadpoint) pvEnableScalePhases(phases int) bool {
 
 // UpdateChargePowerAndCurrents updates charge meter power and currents for load management
 func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
+	// serialize concurrent reads from the sense and control loops
+	lp.measureMu.Lock()
+	defer lp.measureMu.Unlock()
+
 	power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, modbus.Backoff())
 	if err == nil {
 		lp.Lock()
@@ -2150,8 +2183,8 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 		lp.log.ERROR.Printf("charge power: %v", err)
 	}
 
-	// update charge currents
-	lp.chargeCurrents = nil
+	// replace the currents in a single locked assignment so concurrent readers never see a transient nil
+	var currents []float64
 
 	if phaseMeter, ok := api.Cap[api.PhaseCurrents](lp.chargeMeter); ok {
 		if err := backoff.Retry(func() error {
@@ -2163,31 +2196,52 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 				return err
 			}
 
-			lp.Lock()
-			lp.chargeCurrents = []float64{i1, i2, i3}
-			lp.Unlock()
-
-			lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
-			lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
-
+			currents = []float64{i1, i2, i3}
 			return nil
 		}, modbus.Backoff()); err != nil && !errors.Is(err, api.ErrNotAvailable) {
 			lp.log.ERROR.Printf("charge currents: %v", err)
 		}
 	}
 
+	lp.Lock()
+	lp.chargeCurrents = currents
+	lp.Unlock()
+
+	if currents != nil {
+		lp.log.DEBUG.Printf("charge currents: %.3gA", currents)
+		lp.publish(keys.ChargeCurrents, currents)
+	}
+
 	return power
+}
+
+// GetChargeCurrents returns the per-phase charge currents. The slice is replaced, never
+// mutated, so the result is safe to read without further locking.
+func (lp *Loadpoint) GetChargeCurrents() []float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.chargeCurrents
+}
+
+// Sense updates loadpoint measurements and observations
+func (lp *Loadpoint) Sense() {
+	// live measurements (parallel-safe, serialized per loadpoint via measureMu)
+	lp.UpdateChargePowerAndCurrents()
+
+	// status, vehicle soc and remaining sensing (serialized vs control)
+	lp.Observe()
 }
 
 // phasesFromChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
 func (lp *Loadpoint) phasesFromChargeCurrents() {
-	if lp.chargeCurrents == nil {
+	chargeCurrents := lp.GetChargeCurrents()
+	if chargeCurrents == nil {
 		return
 	}
 
 	if lp.charging() && lp.phaseSwitchCompleted() {
 		var phases int
-		for _, i := range lp.chargeCurrents {
+		for _, i := range chargeCurrents {
 			if i > minActiveCurrent {
 				phases++
 			}
@@ -2307,7 +2361,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 	}
 
 	if lp.chargeEnergy != nil {
-		lp.chargeEnergy.AddEnergy(importTotal, nil, lp.chargePower)
+		lp.chargeEnergy.AddEnergy(importTotal, nil, lp.GetChargePower())
 		if v := lp.GetSoc(); v > 0 {
 			lp.chargeEnergy.SetSocTemp(v, lp.chargerHasFeature(api.Heating))
 		}
@@ -2429,6 +2483,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	lp.RLock()
 	planActive := lp.planActive
 	limitEnergy, energyLimited := lp.remainingLimitEnergy()
+	chargePower := lp.chargePower
 	lp.RUnlock()
 
 	limitSoc := lp.EffectiveLimitSoc()
@@ -2445,17 +2500,17 @@ func (lp *Loadpoint) publishSocAndRange() {
 		// energy-limited session without soc: remaining energy and duration follow
 		// the limit, not the full capacity (#33627)
 		e = limitEnergy
-		if lp.charging() && lp.chargePower > 0 {
-			d = time.Duration(e * 1e3 / lp.chargePower * float64(time.Hour)).Round(time.Second)
+		if lp.charging() && chargePower > 0 {
+			d = time.Duration(e * 1e3 / chargePower * float64(time.Hour)).Round(time.Second)
 		}
 	case socEstimator != nil:
-		if lp.charging() && lp.chargePower > 0 {
-			d = socEstimator.RemainingChargeDuration(float64(limitSoc), lp.chargePower)
+		if lp.charging() && chargePower > 0 {
+			d = socEstimator.RemainingChargeDuration(float64(limitSoc), chargePower)
 		}
 		e = socEstimator.RemainingChargeEnergy(limitSoc)
 	case v != nil && v.Capacity() > 0 && lp.vehicleSoc > 0:
-		if lp.charging() && lp.chargePower > 0 {
-			d = soc.RemainingChargeDuration(float64(limitSoc), lp.chargePower, lp.vehicleSoc, v.Capacity())
+		if lp.charging() && chargePower > 0 {
+			d = soc.RemainingChargeDuration(float64(limitSoc), chargePower, lp.vehicleSoc, v.Capacity())
 		}
 		e = soc.RemainingChargeEnergy(limitSoc, lp.vehicleSoc, v.Capacity())
 	}
@@ -2521,82 +2576,42 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 	return lp.clock.Since(lp.phasesSwitched) > phaseSwitchDuration
 }
 
-// Update is the main control function. It reevaluates meters and charger state
+// Update runs a full observe and control pass. Production drives observe (sense loop)
+// and control (control loop) separately, tests use it for a synchronous cycle.
 func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64, dim *bool) {
-	// hold battery boost when SOC drops below the limit: stop draining the battery, but
-	// keep the vehicle prioritised over recharging it (via sitePower priorityAdjustment)
-	// until the vehicle disconnects or the limit is relaxed (see SetBatteryBoostLimit).
-	// This holds the battery at the configured level instead of the naive on/off which
-	// lets the battery recharge and oscillate (#30558).
-	if boost := lp.GetBatteryBoost(); boost != boostDisabled && boost != boostHold {
-		if limit := lp.GetBatteryBoostLimit(); limit < 100 {
-			if batterySoc := lp.site.GetBatterySoc(); batterySoc < float64(limit) {
-				lp.log.DEBUG.Printf("battery boost hold: soc below limit (%.0f%% < %d%%)", batterySoc, limit)
-				lp.setBatteryBoost(boostHold)
-			}
-		}
+	lp.controlMu.Lock()
+	defer lp.controlMu.Unlock()
+
+	lp.observe()
+	lp.control(sitePower, batteryPower, consumption, feedin, batteryBuffered, batteryStart, greenShare, effPrice, effCo2, dim)
+}
+
+// Observe reads and publishes all sensing data without actuating and requests
+// a control pass on a status change. It is serialized against control.
+func (lp *Loadpoint) Observe() {
+	lp.controlMu.Lock()
+	defer lp.controlMu.Unlock()
+
+	if lp.observe() {
+		lp.requestControl()
 	}
+}
 
-	// smart cost
-	smartCostActive, smartCostNextStart := lp.checkSmartLimit(lp.GetSmartCostLimit(), consumption, true)
-	lp.publish(keys.SmartCostActive, smartCostActive)
-	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
+// observe performs the sensing work and reports whether the charger status changed.
+// The caller must hold controlMu.
+func (lp *Loadpoint) observe() bool {
+	prevStatus := lp.GetStatus()
 
-	smartFeedInPriorityActive, smartFeedInPriorityNextStart := lp.checkSmartLimit(lp.GetSmartFeedInPriorityLimit(), feedin, false)
-	lp.publish(keys.SmartFeedInPriorityActive, smartFeedInPriorityActive)
-	lp.publish(keys.SmartFeedInPriorityNextStart, smartFeedInPriorityNextStart)
-
-	// long-running tasks
-	lp.processTasks()
-
-	// read and publish meters first- charge power and currents have already been updated by the site
+	// read and publish meters - charge power and currents are updated separately
 	lp.updateChargeVoltages()
 	lp.phasesFromChargeCurrents()
 
-	lp.energyMetrics.SetEnvironment(greenShare, effPrice, effCo2)
-
-	// update ChargeRater here to make sure initial meter update is caught
-	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
-	lp.bus.Publish(evChargePower, lp.chargePower)
-
-	// update progress and soc before status is updated
-	lp.publishChargeProgress()
-	lp.PublishEffectiveValues()
-
-	// §14a
-	if dimmer, ok := api.Cap[api.Dimmer](lp.charger); ok {
-		dimmed, err := dimmer.Dimmed()
-		if err != nil {
-			if errors.Is(err, api.ErrNotAvailable) {
-				goto NO_DIM
-			}
-			lp.log.ERROR.Printf("dimmed: %v", err)
-			return
-		}
-
-		if dim != nil {
-			if *dim != dimmed {
-				if err := dimmer.Dim(*dim); err != nil {
-					lp.log.ERROR.Printf("dim: %v", err)
-					return
-				}
-
-				lp.publish(keys.Dimmed, *dim)
-				lp.log.INFO.Printf("§14a dim: %t", *dim)
-			}
-
-			if *dim {
-				return
-			}
-		}
-	}
-
-NO_DIM:
 	// read and publish status
-	err := lp.updateChargerStatus()
-	if err != nil {
+	if err := lp.updateChargerStatus(); err != nil {
+		// state is no longer valid, control must not actuate on stale data
+		lp.observed = false
 		lp.log.ERROR.Println(err)
-		return
+		return lp.GetStatus() != prevStatus
 	}
 
 	lp.publish(keys.VehicleWelcomeActive, lp.welcomeActive())
@@ -2631,6 +2646,96 @@ NO_DIM:
 	// initial update of connected state matches charger status
 	lp.publishSocAndRange()
 
+	lp.observed = true
+
+	return lp.GetStatus() != prevStatus
+}
+
+// Control evaluates the charging strategy and actuates the charger using the observed state.
+// It is serialized against observe.
+func (lp *Loadpoint) Control(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64, dim *bool) {
+	lp.controlMu.Lock()
+	defer lp.controlMu.Unlock()
+
+	// clear first, a request arriving during control re-requests it
+	lp.controlDone()
+
+	lp.control(sitePower, batteryPower, consumption, feedin, batteryBuffered, batteryStart, greenShare, effPrice, effCo2, dim)
+}
+
+// control is the decision and actuation half of the loadpoint update.
+// The caller must hold controlMu and have run observe beforehand.
+func (lp *Loadpoint) control(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64, dim *bool) {
+	// hold battery boost when SOC drops below the limit: stop draining the battery, but
+	// keep the vehicle prioritised over recharging it (via sitePower priorityAdjustment)
+	// until the vehicle disconnects or the limit is relaxed (see SetBatteryBoostLimit).
+	// This holds the battery at the configured level instead of the naive on/off which
+	// lets the battery recharge and oscillate (#30558).
+	if boost := lp.GetBatteryBoost(); boost != boostDisabled && boost != boostHold {
+		if limit := lp.GetBatteryBoostLimit(); limit < 100 {
+			if batterySoc := lp.site.GetBatterySoc(); batterySoc < float64(limit) {
+				lp.log.DEBUG.Printf("battery boost hold: soc below limit (%.0f%% < %d%%)", batterySoc, limit)
+				lp.setBatteryBoost(boostHold)
+			}
+		}
+	}
+
+	// smart cost
+	smartCostActive, smartCostNextStart := lp.checkSmartLimit(lp.GetSmartCostLimit(), consumption, true)
+	lp.publish(keys.SmartCostActive, smartCostActive)
+	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
+
+	smartFeedInPriorityActive, smartFeedInPriorityNextStart := lp.checkSmartLimit(lp.GetSmartFeedInPriorityLimit(), feedin, false)
+	lp.publish(keys.SmartFeedInPriorityActive, smartFeedInPriorityActive)
+	lp.publish(keys.SmartFeedInPriorityNextStart, smartFeedInPriorityNextStart)
+
+	// long-running tasks
+	lp.processTasks()
+
+	lp.energyMetrics.SetEnvironment(greenShare, effPrice, effCo2)
+
+	// update ChargeRater here to make sure initial meter update is caught
+	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
+	lp.bus.Publish(evChargePower, lp.GetChargePower())
+
+	// update progress and effective values
+	lp.publishChargeProgress()
+	lp.PublishEffectiveValues()
+
+	// §14a
+	if dimmer, ok := api.Cap[api.Dimmer](lp.charger); ok {
+		dimmed, err := dimmer.Dimmed()
+		if err != nil {
+			if errors.Is(err, api.ErrNotAvailable) {
+				goto NO_DIM
+			}
+			lp.log.ERROR.Printf("dimmed: %v", err)
+			return
+		}
+
+		if dim != nil {
+			if *dim != dimmed {
+				if err := dimmer.Dim(*dim); err != nil {
+					lp.log.ERROR.Printf("dim: %v", err)
+					return
+				}
+
+				lp.publish(keys.Dimmed, *dim)
+				lp.log.INFO.Printf("§14a dim: %t", *dim)
+			}
+
+			if *dim {
+				return
+			}
+		}
+	}
+
+NO_DIM:
+	// do not actuate before observe has produced valid state
+	if !lp.observed {
+		return
+	}
+
 	// sync settings with charger
 	if err := lp.syncCharger(); err != nil {
 		lp.log.ERROR.Println(err)
@@ -2659,6 +2764,7 @@ NO_DIM:
 	lp.publish(keys.MinSocNotReached, minSocNotReached)
 
 	// execute loading strategy
+	var err error
 	switch {
 	case !lp.connected():
 		// always disable charger if not connected
