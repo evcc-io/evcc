@@ -36,6 +36,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 | [Hardware Integrations](docs/agents/hardware-integrations.md) | Charger/meter/vehicle implementations, adding new devices                    |
 | [Easee Architecture](docs/agents/easee-architecture.md)       | Easee charger (REST+SignalR, async correlation, concurrency)                 |
 | [OCPP Forwarder](docs/agents/ocpp-forwarder.md)               | OCPP proxy/forwarder (sidecar relay to upstream OCPP server, read-only mode) |
+| [Tesla Fleet](docs/agents/tesla-fleet.md)                     | Tesla Fleet API onboarding, signing key, public paths, no-remote-access use  |
 | [Plugin System](docs/agents/plugin-system.md)                 | Plugin layer (HTTP, MQTT, Modbus, SunSpec, JS)                               |
 | [Web UI & API](docs/agents/web-ui-api.md)                     | REST API, WebSocket, Vue frontend, authentication                            |
 | [API Security](docs/agents/api-security.md)                   | Auth modes, JWT/API key/session, two-tier checks, credential storage         |
@@ -49,6 +50,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 
 - **Charger implementation** — hardware-integrations + core-domain
 - **Easee charger work** — easee-architecture + core-domain
+- **Tesla vehicle work** — tesla-fleet + provider-auth
 - **Meter implementation** — hardware-integrations + plugin-system
 - **Vehicle implementation** — hardware-integrations
 - **UI/frontend work** — web-ui-api

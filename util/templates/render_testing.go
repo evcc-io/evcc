@@ -55,9 +55,12 @@ func testAuth(tmpl Template) error {
 
 	params := make(map[string]any)
 	for _, p := range cc.Params {
-		if _, param := tmpl.ParamByName(p); param.Type == TypeBool {
+		_, param := tmpl.ParamByName(p)
+		switch {
+		case param.Readonly:
+		case param.Type == TypeBool:
 			params[p] = true
-		} else {
+		default:
 			params[p] = "foo"
 		}
 	}

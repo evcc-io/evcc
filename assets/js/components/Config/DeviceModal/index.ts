@@ -29,6 +29,7 @@ export type Template = {
   };
   Requirements: {
     Description: string;
+    EVCC?: string[];
   };
 };
 
@@ -53,6 +54,7 @@ export type TemplateParam = {
   Required: boolean;
   Advanced: boolean;
   Deprecated: boolean;
+  Readonly?: boolean; // display-only service value, never sent to the backend
   Default?: string | number | boolean;
   Type?: TemplateParamType;
   Choice?: string[];

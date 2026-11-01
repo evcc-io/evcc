@@ -64,10 +64,10 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 
 	var hasAdvancedParams bool
 
-	// remove usage and deprecated from params and check if there are advanced params
+	// remove usage, deprecated and readonly from params and check if there are advanced params
 	var filteredParams []Param
 	for _, param := range t.Params {
-		if param.IsDeprecated() || param.Name == ParamUsage {
+		if param.IsDeprecated() || param.Readonly || param.Name == ParamUsage {
 			continue
 		}
 

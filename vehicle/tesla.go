@@ -14,7 +14,7 @@ import (
 type Tesla struct {
 	*embed
 	*tesla.Provider
-	*tesla.Controller
+	tesla.Commander
 }
 
 func init() {
@@ -65,19 +65,34 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	// proxy client
-	pc := request.NewClient(log)
-	pc.Transport = &transport.Decorator{
-		Decorator: transport.DecorateHeaders(map[string]string{
-			"X-Authorization": "Bearer " + cc.ProxyToken,
-		}),
-		Base: fleet.Transport,
+	var controller tesla.Commander
+
+	if cc.Interactive() {
+		key, err := tesla.SigningKey()
+		if err != nil {
+			return nil, err
+		}
+
+		if controller, err = tesla.NewSignedController(fleet, key, vehicle.Vin); err != nil {
+			return nil, err
+		}
+	} else {
+		// proxy client
+		pc := request.NewClient(log)
+		pc.Transport = &transport.Decorator{
+			Decorator: transport.DecorateHeaders(map[string]string{
+				"X-Authorization": "Bearer " + cc.ProxyToken,
+			}),
+			Base: fleet.Transport,
+		}
+
+		controller = tesla.NewController(tesla.NewAPI(log, pc, cc.CommandProxy), vehicle.Vin)
 	}
 
 	v := &Tesla{
-		embed:      &cc.embed,
-		Provider:   tesla.NewProvider(fleet, vehicle.Vin, cc.Cache),
-		Controller: tesla.NewController(tesla.NewAPI(log, pc, cc.CommandProxy), vehicle.Vin),
+		embed:     &cc.embed,
+		Provider:  tesla.NewProvider(fleet, vehicle.Vin, cc.Cache),
+		Commander: controller,
 	}
 
 	v.fromVehicle(vehicle.DisplayName, 0)
