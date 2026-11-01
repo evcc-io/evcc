@@ -1186,15 +1186,23 @@ func clearDemandWhenFull(demand []float32, headroom float32) []float32 {
 	return res
 }
 
+func batteryCapacityWh(capacityKWh float64) float64 {
+	return capacityKWh * 1e3
+}
+
+func batteryStoredEnergyWh(capacityKWh, soc float64) float64 {
+	return capacityKWh * soc * 10
+}
+
 func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, planner api.Rates, minLen int, firstSlotDuration time.Duration) (optimizer.BatteryConfig, batteryDetail) {
 	bat := optimizer.BatteryConfig{
 		CMax:      batteryPower,
 		DMax:      batteryPower,
-		SCapacity: float32(*b.Capacity * 1e3), // Wh
-		SInitial:  float32(socToWh(*b.Capacity, *b.Soc)),
+		SCapacity: float32(batteryCapacityWh(*b.Capacity)),
+		SInitial:  float32(batteryStoredEnergyWh(*b.Capacity, *b.Soc)),
 		// PA:       pa,
 	}
-	bat.SMax = max(bat.SInitial, float32(*b.Capacity*1e3)) // Wh, narrowed by soc limits below
+	bat.SMax = max(bat.SInitial, float32(batteryCapacityWh(*b.Capacity))) // Wh, narrowed by soc limits below
 
 	instance := dev.Instance()
 

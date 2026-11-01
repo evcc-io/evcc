@@ -889,6 +889,7 @@ func (site *Site) updateBatteryMeters() {
 	// retain the last known soc when all reads failed, so that a transient
 	// meter error does not report the pack as empty (0%)
 	socFailed := lo.EveryBy(mm, func(m types.Measurement) bool { return m.Soc == nil })
+	aggregate := aggregateBatteryMeasurements(mm)
 
 	// written from the meter goroutine, read via state and GetBatteryMaxDischargePower
 	site.Lock()
@@ -900,38 +901,13 @@ func (site *Site) updateBatteryMeters() {
 	}
 
 	if !socFailed {
-		var batterySocAcc float64
-		var totalCapacity float64
-
-		if lo.SomeBy(mm, func(m types.Measurement) bool { return m.Capacity == nil || *m.Capacity <= 0 }) {
-			// any capacity is missing
-			batterySocAcc = sumOfSocs(mm)
-			totalCapacity = float64(len(site.batteryMeters))
-		} else {
-			// all capacities available - weigh soc by capacity
-			batterySocAcc = weightedSumOfSocs(mm)
-			totalCapacity = lo.SumBy(mm, func(m types.Measurement) float64 { return *m.Capacity })
-		}
-
-		site.battery.Soc = math.Min(100, batterySocAcc/totalCapacity)
-		site.battery.Capacity = totalCapacity
+		site.battery.Soc = aggregate.soc
+		site.battery.Capacity = aggregate.capacity
 	}
 
-	site.battery.Power = lo.SumBy(mm, func(m types.Measurement) float64 {
-		return m.Power
-	})
-	site.battery.Energy = lo.SumBy(mm, func(m types.Measurement) float64 {
-		if m.Energy == nil {
-			return 0
-		}
-		return *m.Energy
-	})
-	site.battery.ReturnEnergy = lo.SumBy(mm, func(m types.Measurement) float64 {
-		if m.ReturnEnergy == nil {
-			return 0
-		}
-		return *m.ReturnEnergy
-	})
+	site.battery.Power = aggregate.power
+	site.battery.Energy = aggregate.energy
+	site.battery.ReturnEnergy = aggregate.returnEnergy
 	site.battery.Devices = mm
 
 	battery := site.battery
@@ -993,6 +969,45 @@ func weightedSumOfSocs(mm []types.Measurement) float64 {
 		// weigh soc by capacity
 		return *m.Soc * *m.Capacity
 	})
+}
+
+type batteryMeasurementsAggregate struct {
+	soc          float64
+	capacity     float64
+	power        float64
+	energy       float64
+	returnEnergy float64
+}
+
+func aggregateBatteryMeasurements(mm []types.Measurement) batteryMeasurementsAggregate {
+	aggregate := batteryMeasurementsAggregate{
+		power: lo.SumBy(mm, func(m types.Measurement) float64 { return m.Power }),
+		energy: lo.SumBy(mm, func(m types.Measurement) float64 {
+			if m.Energy == nil {
+				return 0
+			}
+			return *m.Energy
+		}),
+		returnEnergy: lo.SumBy(mm, func(m types.Measurement) float64 {
+			if m.ReturnEnergy == nil {
+				return 0
+			}
+			return *m.ReturnEnergy
+		}),
+	}
+
+	if len(mm) == 0 {
+		return aggregate
+	}
+	if lo.SomeBy(mm, func(m types.Measurement) bool { return m.Capacity == nil || *m.Capacity <= 0 }) {
+		aggregate.capacity = float64(len(mm))
+		aggregate.soc = sumOfSocs(mm) / aggregate.capacity
+	} else {
+		aggregate.capacity = lo.SumBy(mm, func(m types.Measurement) float64 { return *m.Capacity })
+		aggregate.soc = weightedSumOfSocs(mm) / aggregate.capacity
+	}
+	aggregate.soc = math.Min(100, aggregate.soc)
+	return aggregate
 }
 
 // addMeterEnergy persists per-meter energy (positive power = import).
