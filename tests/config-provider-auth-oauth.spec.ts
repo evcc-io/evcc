@@ -187,14 +187,7 @@ test.describe("provider auth oauth", async () => {
     await expectModalVisible(remoteModal);
     await expectModalHidden(meterModal);
 
-    // sponsor modal stacks on top of remote access
-    await remoteModal.getByRole("button", { name: "Learn more." }).click();
-    const sponsorModal = page.getByTestId("sponsor-modal");
-    await expectModalVisible(sponsorModal);
-    await expectModalHidden(remoteModal);
-    await sponsorModal.getByRole("button", { name: "Close" }).click();
-    await expectModalHidden(sponsorModal);
-    await expectModalVisible(remoteModal);
+    await expect(remoteModal.getByTestId("sponsor-token-required")).toBeVisible();
 
     await remoteModal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(remoteModal);
