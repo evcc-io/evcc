@@ -473,6 +473,8 @@ func (site *Site) batteryGroupRequest(group []int, measurements []types.Measurem
 		config, detail := site.batteryRequest(dev, measurement, nil, 0, firstSlotDuration)
 		if i == 0 {
 			masterDetail = detail
+		} else {
+			masterDetail.Slaves = append(masterDetail.Slaves, deviceTitleOrName(dev))
 		}
 		configs = append(configs, config)
 		groupMeasurements = append(groupMeasurements, measurement)
