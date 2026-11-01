@@ -54,6 +54,35 @@ func TestClearDemandWhenFull(t *testing.T) {
 	}
 }
 
+func TestClearDemandWhenFullPerWindow(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		demand   []float32
+		expected []float32
+	}{
+		{
+			// first window cut at 300Wh headroom, the later one at the 1000Wh soc range
+			"each cheap window restarts the cut",
+			[]float32{345, 345, 0, 345, 345, 345, 345, 345},
+			[]float32{345, 0, 0, 345, 345, 345, 345, 0},
+		},
+		{
+			"a window starting later uses the soc range",
+			[]float32{0, 345, 345, 345, 345, 345},
+			[]float32{0, 345, 345, 345, 345, 0},
+		},
+		{
+			"no demand stays untouched",
+			[]float32{0, 0, 0},
+			[]float32{0, 0, 0},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, clearDemandWhenFullPerWindow(tc.demand, 300, 1000))
+		})
+	}
+}
+
 // the request contract requires every series to have the same length
 func TestClearDemandWhenFullKeepsLength(t *testing.T) {
 	demand := make([]float32, 96)

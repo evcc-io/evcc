@@ -1169,6 +1169,35 @@ func clearDemandWhenFull(demand []float32, headroom float32) []float32 {
 	return res
 }
 
+// clearDemandWhenFullPerWindow applies clearDemandWhenFull to each run of non-zero demand. A window
+// starting now is cut at the current headroom, later ones at the full soc range since the battery
+// may have discharged in between.
+func clearDemandWhenFullPerWindow(demand []float32, headroom, socRange float32) []float32 {
+	res := slices.Clone(demand)
+
+	for start := 0; start < len(res); {
+		if res[start] == 0 {
+			start++
+			continue
+		}
+
+		end := start
+		for end < len(res) && res[end] != 0 {
+			end++
+		}
+
+		room := socRange
+		if start == 0 {
+			room = headroom
+		}
+		copy(res[start:end], clearDemandWhenFull(res[start:end], room))
+
+		start = end
+	}
+
+	return res
+}
+
 func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, planner api.Rates, minLen int, firstSlotDuration time.Duration) (optimizer.BatteryConfig, batteryDetail) {
 	bat := optimizer.BatteryConfig{
 		CMax:      batteryPower,
@@ -1224,6 +1253,10 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	if bat.ChargeFromGrid {
 		if demand := site.applyBatteryGridChargeLimit(bat.CMax, planner, minLen); demand != nil {
 			bat.PDemand = prorate(demand, firstSlotDuration)
+			// uncapped demand puts the hosted optimizer on its slow split path
+			if optimizerURI() == OPTIMIZER_URI {
+				bat.PDemand = clearDemandWhenFullPerWindow(bat.PDemand, bat.SMax-bat.SInitial, bat.SMax-bat.SMin)
+			}
 		}
 	}
 
