@@ -32,6 +32,25 @@ func TestModbusTemplateDefaultID(t *testing.T) {
 	}
 }
 
+// TestModbusTemplateZeroID verifies that a template-specific modbus id of 0
+// is not replaced by the global default of 1.
+func TestModbusTemplateZeroID(t *testing.T) {
+	for _, mode := range []int{RenderModeInstance, RenderModeDocs, RenderModeUnitTest} {
+		t.Run(renderModeNames[mode], func(t *testing.T) {
+			tmpl, err := ByName(Meter, "huawei-emma")
+			require.NoError(t, err)
+
+			_, values, err := tmpl.RenderResult(Meter, mode, map[string]any{
+				"usage": "grid",
+				"host":  "192.168.0.8",
+				"port":  502,
+			})
+			require.NoError(t, err)
+			assert.Equal(t, "0", values["id"], "template-specific modbus id 0 must be applied")
+		})
+	}
+}
+
 // TestModbusTemplateUserIDOverridesTemplate ensures a user-supplied id wins
 // over the template default in all render modes.
 func TestModbusTemplateUserIDOverridesTemplate(t *testing.T) {
