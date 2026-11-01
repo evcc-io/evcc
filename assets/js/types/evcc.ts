@@ -1643,6 +1643,7 @@ export interface BatteryDetail {
   title: string; // Display title
   name: string; // Internal name/identifier
   capacity: number; // Battery capacity (kWh)
+  slaves?: string[]; // Battery names aggregated into this entry
 }
 
 // Single profile summarized into the household demand time series

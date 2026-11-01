@@ -1,5 +1,13 @@
 import { describe, expect, test } from "vite-plus/test";
-import { dayBoundarySeries, isMidnight, slotParents, slotXAxis, splitSlots } from "./chart";
+import {
+  compactBatteryTitle,
+  dayBoundarySeries,
+  isMidnight,
+  seriesTooltipName,
+  slotParents,
+  slotXAxis,
+  splitSlots,
+} from "./chart";
 
 // 15min slots starting at the given local hour
 function times(startHour: number, count: number): number[] {
@@ -46,5 +54,30 @@ describe("splitSlots", () => {
   test("shares energy evenly, power per slot unchanged", () => {
     expect(splitSlots([7, 10, 400, 100], parents)).toEqual([7, 10, 100, 100, 100, 100, 50, 50]);
     expect(splitSlots([], parents)).toEqual([]);
+  });
+});
+
+describe("compactBatteryTitle", () => {
+  test("adds the slave count only for aggregated batteries", () => {
+    expect(
+      compactBatteryTitle({ type: "battery", title: "Master", name: "master", capacity: 10 })
+    ).toBe("Master");
+    expect(
+      compactBatteryTitle({
+        type: "battery",
+        title: "Master",
+        name: "master",
+        capacity: 15,
+        slaves: ["Slave A", "Slave B"],
+      })
+    ).toBe("Master (+2)");
+  });
+});
+
+describe("seriesTooltipName", () => {
+  test("distinguishes groups that share a compact label", () => {
+    expect(seriesTooltipName("Master (+1)", "Master (+1). Aggregated with: Slave A")).not.toBe(
+      seriesTooltipName("Master (+1)", "Master (+1). Aggregated with: Slave B")
+    );
   });
 });

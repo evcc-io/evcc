@@ -87,6 +87,7 @@ type batteryDetail struct {
 	Title    string      `json:"title,omitempty"`
 	Name     string      `json:"name,omitempty"`
 	Capacity float64     `json:"capacity,omitempty"`
+	Slaves   []string    `json:"slaves,omitempty"`
 
 	loadpoint    *int              // originating loadpoint id for loadpoint/vehicle entries
 	controllable bool              // device can act on suggestions
@@ -1271,6 +1272,8 @@ func (site *Site) batteryGroupRequest(group []int, measurements []types.Measurem
 		config, detail := site.batteryRequest(dev, measurement, nil, 0, firstSlotDuration)
 		if i == 0 {
 			masterDetail = detail
+		} else {
+			masterDetail.Slaves = append(masterDetail.Slaves, deviceTitleOrName(dev))
 		}
 		configs = append(configs, config)
 		groupMeasurements = append(groupMeasurements, measurement)

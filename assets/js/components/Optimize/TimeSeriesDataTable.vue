@@ -18,7 +18,7 @@
 			<tbody>
 				<template v-for="(group, groupIndex) in groups" :key="groupIndex">
 					<tr v-if="group.title">
-						<th scope="row" class="sticky-col group-header">
+						<th scope="row" :colspan="slotCount + 1" class="group-header">
 							<div class="d-flex align-items-center gap-2">
 								<span
 									v-if="group.color"
@@ -30,10 +30,11 @@
 									class="dash"
 									:style="{ backgroundColor: group.dash }"
 								></span>
-								{{ group.title }}
+								<span class="text-wrap">
+									{{ group.title }}
+								</span>
 							</div>
 						</th>
-						<td :colspan="slotCount"></td>
 					</tr>
 					<tr v-for="row in group.rows" :key="row.label + (row.unit || '')">
 						<th scope="row" class="sticky-col fw-normal">
@@ -291,7 +292,13 @@ export default defineComponent({
 		},
 		getBatteryTitle(index: number): string {
 			const detail = this.batteryDetails[index];
-			return detail ? detail.title || detail.name : `Battery ${index + 1}`;
+			if (!detail) return `Battery ${index + 1}`;
+			const title = detail.title || detail.name;
+			if (!detail.slaves?.length) return title;
+			const aggregatedWith = this.$t("config.optimizer.aggregatedWithSlaves", {
+				names: detail.slaves.join(", "),
+			});
+			return `${title} (${aggregatedWith})`;
 		},
 		heatStyle(row: Row, index: number): Record<string, string> | undefined {
 			if (!row.heatColor) return undefined;

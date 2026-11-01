@@ -23,7 +23,13 @@
 									class="battery-indicator"
 									:style="{ backgroundColor: batteryColors[index] }"
 								></span>
-								{{ getBatteryTitle(index) }}
+								<span
+									:title="batteryTitleTooltip(index)"
+									:aria-label="batteryTitleTooltip(index) || undefined"
+									:tabindex="batteryTitleTooltip(index) ? 0 : undefined"
+								>
+									{{ getBatteryTitle(index) }}
+								</span>
 							</div>
 							<div class="progress soc-progress mt-2">
 								<div
@@ -88,6 +94,7 @@
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import type { CURRENCY, BatteryDetail } from "@/types/evcc";
+import { compactBatteryTitle } from "./chart";
 
 export interface BatteryConfig {
 	c_min: number;
@@ -143,7 +150,15 @@ export default defineComponent({
 		},
 		getBatteryTitle(index: number): string {
 			const detail = this.batteryDetails[index];
-			return detail ? detail.title || detail.name : `Battery ${index + 1}`;
+			return detail ? compactBatteryTitle(detail) : `Battery ${index + 1}`;
+		},
+		batteryTitleTooltip(index: number): string | undefined {
+			const detail = this.batteryDetails[index];
+			if (!detail?.slaves?.length) return undefined;
+			const aggregatedWith = this.$t("config.optimizer.aggregatedWithSlaves", {
+				names: detail.slaves.join(", "),
+			});
+			return `${detail.title || detail.name}. ${aggregatedWith}`;
 		},
 		socPercentage(initialSocWh: number, index: number): number {
 			const detail = this.batteryDetails[index];

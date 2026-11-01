@@ -1,7 +1,16 @@
 import { boundarySeries, hoverDot, xAxisLabelStyle } from "../Forecast/echarts";
-import type { DemandDetail } from "@/types/evcc";
+import type { BatteryDetail, DemandDetail } from "@/types/evcc";
 
 export type Titled = { title?: string; name?: string };
+
+export function compactBatteryTitle(detail: BatteryDetail): string {
+  const title = detail.title || detail.name;
+  return detail.slaves?.length ? `${title} (+${detail.slaves.length})` : title;
+}
+
+export function seriesTooltipName(label: string, tooltipTitle?: string): string {
+  return tooltipTitle || label;
+}
 
 // base load carries no title, loadpoint profiles are named after the loadpoint
 export function demandTitle(detail: DemandDetail, baseLoadLabel: string): string {
