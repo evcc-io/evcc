@@ -893,6 +893,7 @@
     },
     "optimizer": {
       "automatic": "Automatic control",
+      "aggregatedWithSlaves": "Aggregated with: {names}",
       "automaticLevel": {
         "battery": {
           "description": "Only controls the home battery.",

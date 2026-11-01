@@ -129,6 +129,7 @@ func TestBatteryGroupRequest(t *testing.T) {
 	group, ok := site.batteryGroupRequest([]int{0, 1}, measurements, rates, 1, tariff.SlotDuration)
 	require.True(t, ok)
 	assert.Equal(t, "master", group.detail.Name)
+	assert.Equal(t, []string{"slave"}, group.detail.Slaves)
 	assert.Equal(t, 15.0, group.detail.Capacity)
 	assert.False(t, group.detail.controllable, "group recommendation routing is deferred")
 	assert.Equal(t, float32(6000), group.cfg.CMax)

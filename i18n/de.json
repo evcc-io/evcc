@@ -893,6 +893,7 @@
     },
     "optimizer": {
       "automatic": "Automatische Steuerung",
+      "aggregatedWithSlaves": "Aggregiert mit: {names}",
       "automaticLevel": {
         "battery": {
           "description": "Steuert nur die Hausbatterie.",
