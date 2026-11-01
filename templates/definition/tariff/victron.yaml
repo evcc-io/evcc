@@ -55,16 +55,6 @@ render: |
             start: (($s[$i][0] / 1000) | todateiso8601),
             end:   ((($s[$i][0] + 3600000) / 1000) | todateiso8601),
             value: (($s[[$i-1, 0] | max][1] + $s[$i][1]) / 2)
-          }**Is your feature request related to a problem? Please describe.**
-The VRM solar template requests a fixed 48 h window (`end = now + 172800`), although VRM provides an hourly forecast for up to 7 days. evcc limits the optimizer horizon to the shortest of grid, feed-in and solar, so the hosted optimizer loses up to 18 h of its horizon (it plans until the end of the day after tomorrow, up to ~66 h). A self-hosted optimizer is capped at 48 h altogether.
-
-**Describe the solution you'd like**
-In `templates/definition/tariff/victron.yaml` change `172800` to `604800` in the `uri` and update the description ("2-days-forecast" → "solar forecast for up to 7 days"). VRM returns whatever is available.
-
-**Describe alternatives you've considered**
-A `forecast_days` parameter like pvnode. Not needed, since VRM has no per-plan day limit.
-
-**Additional context**
-Tested on a real installation with `end = now + 7d`: VRM returned 166 hourly values (2026-11-01T22:01Z to 2026-11-08T19:01Z). A 96 h variant of the template has been running on the same installation. `go test ./util/templates/...` and `TestTemplates/victron` pass with the change.
+          }
         ] | tostring
   interval: {{ .interval }}
