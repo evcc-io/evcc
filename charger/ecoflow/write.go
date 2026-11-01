@@ -113,7 +113,7 @@ func (wb *Wallbox) startStop(start bool) error {
 	}
 
 	wb.mu.Lock()
-	wb.release = command[bool]{value: start, at: wb.conn.clock.Now(), ok: true}
+	wb.release = command[bool]{value: start, at: wb.conn.clock.Now(), ok: true, open: true}
 	wb.mu.Unlock()
 
 	return nil
@@ -157,6 +157,39 @@ func (wb *Wallbox) Enabled() (bool, error) {
 	}
 
 	return cmd.ok && cmd.value, nil
+}
+
+// verifyRelease logs whether a heartbeat received at confirms or contradicts
+// the last start or stop. A plugged, idle wallbox (state 2) shows neither.
+func (wb *Wallbox) verifyRelease(hb Heartbeat, at time.Time) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	cmd := wb.release
+	settle := stopSettle
+	if cmd.value {
+		settle = startSettle
+	}
+	if !cmd.open || !cmd.overrides(at, settle) {
+		return
+	}
+
+	var shown bool
+	switch {
+	case hb.State.Enabled():
+		shown = true
+	case hb.State == StateStoppedByWallbox:
+		shown = false
+	default:
+		return
+	}
+
+	wb.release.open = false
+	if shown == cmd.value {
+		wb.log.DEBUG.Printf("%s: enable=%t confirmed", wb.serial, cmd.value)
+	} else {
+		wb.log.WARN.Printf("%s: enable=%t not applied by the wallbox, state %d", wb.serial, cmd.value, hb.State)
+	}
 }
 
 // SetCurrent writes the session current setpoint in 0.1 A (ChargerCtrl 2/81 to

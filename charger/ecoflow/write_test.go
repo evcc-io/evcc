@@ -177,3 +177,27 @@ func TestCurrentWithoutSetpoint(t *testing.T) {
 	_, err := wb.Current()
 	assert.ErrorIs(t, err, api.ErrNotAvailable)
 }
+
+// A start or stop is logged once a heartbeat shows it, like current and phase writes.
+func TestStartStopConfirmed(t *testing.T) {
+	clk := clock.NewMock()
+	wb, transport := newTestWallbox(t, clk)
+	require.NoError(t, transport.Feed(testTelemetry, ecoflowtest.Heartbeat("state3-3p")))
+
+	require.NoError(t, wb.StartStop(false))
+	assert.True(t, wb.release.open)
+
+	clk.Add(stopSettle)
+	require.NoError(t, transport.Feed(testTelemetry, ecoflowtest.Heartbeat("state6-3p")))
+	assert.False(t, wb.release.open, "confirmed by state 6")
+
+	require.NoError(t, wb.StartStop(true))
+	assert.True(t, wb.release.open)
+
+	clk.Add(startSettle)
+	require.NoError(t, transport.Feed(testTelemetry, ecoflowtest.Heartbeat("state2-3p")))
+	assert.True(t, wb.release.open, "state 2 is ambiguous")
+
+	require.NoError(t, transport.Feed(testTelemetry, ecoflowtest.Heartbeat("state5-3p")))
+	assert.False(t, wb.release.open, "confirmed by state 5")
+}

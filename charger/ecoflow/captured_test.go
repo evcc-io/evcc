@@ -107,5 +107,5 @@ func TestDecodeCapturedSettings(t *testing.T) {
 	}
 
 	_, err := DecodeSettings(capturedPdata(t, ecoflowtest.Settings("no-params"), 241, 44))
-	assert.Error(t, err)
+	assert.ErrorIs(t, err, ErrNoSettings, "the routine short variant")
 }

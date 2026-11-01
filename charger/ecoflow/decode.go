@@ -3,6 +3,7 @@
 package ecoflow
 
 import (
+	"errors"
 	"fmt"
 	"math"
 
@@ -198,6 +199,11 @@ type Settings struct {
 	UserCurrentRaw uint64 // field 8: the custom current, written by 2/81 (WorkModeCustom)
 }
 
+// ErrNoSettings is the shorter 241/44 variant, which carries no settings.
+var ErrNoSettings = errors.New("no settings")
+
+var errFieldMissing = errors.New("missing")
+
 // DecodeSettings parses the settings at pdata -> 1 -> 4 -> 8. Any other shape, a
 // missing field or an implausible value is rejected, so no variant is half-decoded.
 func DecodeSettings(pdata []byte) (Settings, error) {
@@ -208,6 +214,9 @@ func DecodeSettings(pdata []byte) (Settings, error) {
 			return Settings{}, err
 		}
 		if b, err = singleBytes(fields, num); err != nil {
+			if num == 8 && errors.Is(err, errFieldMissing) {
+				return Settings{}, ErrNoSettings
+			}
 			return Settings{}, err
 		}
 	}
@@ -257,7 +266,7 @@ func singleBytes(fields []field, num int) ([]byte, error) {
 		found = f.B
 	}
 	if found == nil {
-		return nil, fmt.Errorf("field %d missing", num)
+		return nil, fmt.Errorf("field %d %w", num, errFieldMissing)
 	}
 	return found, nil
 }

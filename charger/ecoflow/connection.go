@@ -189,7 +189,7 @@ func (c *Connection) connect() error {
 		if c.transport.generation() != gen {
 			return // a connection that was already replaced
 		}
-		c.log.ERROR.Printf("connection lost: %v", err)
+		c.log.WARN.Printf("connection lost: %v", err)
 		go c.reconnect()
 	}
 
@@ -329,7 +329,7 @@ func (c *Connection) check() {
 		return
 	}
 
-	c.log.ERROR.Printf("no telemetry since %v, reconnecting", c.traffic.Round(time.Second))
+	c.log.WARN.Printf("no telemetry since %v, reconnecting", c.clock.Since(c.traffic).Round(time.Second))
 	c.revived = c.clock.Now()
 	c.strikes++
 	go c.reconnect()
@@ -385,7 +385,7 @@ func (c *Connection) reconnect() {
 			return
 		}
 
-		c.log.ERROR.Printf("reconnect: %v", err)
+		c.log.WARN.Printf("reconnect: %v", err)
 		relogin = needsLogin(err)
 	}
 }
@@ -489,7 +489,7 @@ func (wb *Wallbox) probe() bool {
 		return false
 	}
 
-	c.log.DEBUG.Printf("%s: no heartbeat since %v, requesting snapshot", wb.serial, seen.Round(time.Second))
+	c.log.DEBUG.Printf("%s: no heartbeat since %v, requesting snapshot", wb.serial, c.clock.Since(seen).Round(time.Second))
 	if err := wb.requestAll(); err != nil {
 		c.log.ERROR.Printf("%s: get-all: %v", wb.serial, err)
 	}
@@ -554,6 +554,7 @@ func (wb *Wallbox) handleHeartbeat(pdata []byte) {
 	wb.log.TRACE.Printf("%s: heartbeat %s", wb.serial, hb)
 	wb.verifyPhases(Update{Heartbeat: &hb}, now)
 	wb.verifyCurrent(Update{Heartbeat: &hb}, now)
+	wb.verifyRelease(hb, now)
 	wb.stopped(hb.State)
 }
 
@@ -563,7 +564,9 @@ func (wb *Wallbox) handleSettings(pdata []byte) {
 	s, err := DecodeSettings(pdata)
 	if err != nil {
 		// the shorter 241/44 variant without settings is routine
-		wb.log.TRACE.Printf("%s: settings: %v", wb.serial, err)
+		if !errors.Is(err, ErrNoSettings) {
+			wb.log.TRACE.Printf("%s: settings: %v", wb.serial, err)
+		}
 		return
 	}
 	now := wb.conn.clock.Now()
