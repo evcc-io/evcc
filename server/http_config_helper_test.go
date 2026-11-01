@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -261,21 +263,74 @@ func TestConfigHasCriticalPlugin(t *testing.T) {
 		{"plain template", "power: 100", false},
 		{"script in yaml list", "- name: main\n  getmaxcurrent:\n    source: script\n    cmd: echo 1", true},
 		{"benign yaml list", "- name: main\n  maxcurrent: 16", false},
+		{"script with non-string sibling key", "power:\n  source: script\n  cmd: echo 1\n~: x", true},
 	}
 
 	for _, tc := range tc {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.want, configHasCriticalPlugin(configReq{Yaml: tc.yaml}))
+			assert.Equal(t, tc.want, configHasCriticalPlugin(templates.Charger, configReq{Yaml: tc.yaml}))
 		})
 	}
 
 	// non-yaml custom config carried in Other
-	assert.True(t, configHasCriticalPlugin(configReq{
+	assert.True(t, configHasCriticalPlugin(templates.Charger, configReq{
 		Other: map[string]any{"power": map[string]any{"source": "script", "cmd": "echo 1"}},
 	}))
-	assert.False(t, configHasCriticalPlugin(configReq{
-		Other: map[string]any{"template": "tesla"},
+	// benign template renders without a critical source
+	assert.False(t, configHasCriticalPlugin(templates.Charger, configReq{
+		Properties: config.Properties{Type: typeTemplate},
+		Other:      map[string]any{"template": "demo-charger", "status": "A"},
 	}))
+	// fail closed: a template we cannot render to verify requires the admin password,
+	// since force-save would persist it and instantiate it on the next start
+	assert.True(t, configHasCriticalPlugin(templates.Charger, configReq{
+		Properties: config.Properties{Type: typeTemplate},
+		Other:      map[string]any{"template": "does-not-exist"},
+	}))
+}
+
+const injectedScript = "A\nx:\n  source: script\n"
+
+func TestConfigHasCriticalPluginRendersTemplate(t *testing.T) {
+	// a param value can expand into a critical source that is only visible after
+	// rendering; the raw request has no `source` key, so the guard must scan the output
+	req := configReq{
+		Properties: config.Properties{Type: typeTemplate},
+		Other:      map[string]any{"template": "demo-charger", "status": injectedScript},
+	}
+
+	assert.False(t, valueHasCriticalSource(templates.Charger, req.Other, 0), "raw request has no critical source")
+	assert.True(t, configHasCriticalPlugin(templates.Charger, req), "rendered template exposes the source")
+
+	// the template key is decoded case-insensitively when rendering
+	req.Other = map[string]any{"Template": "demo-charger", "status": injectedScript}
+	assert.True(t, configHasCriticalPlugin(templates.Charger, req), "capitalised template key")
+}
+
+func TestConfigHasCriticalPluginCustomYamlTemplate(t *testing.T) {
+	// custom yaml may override the type to template
+	y := "type: template\ntemplate: demo-charger\nstatus: " + strconv.Quote(injectedScript)
+	req, err := decodeDeviceConfig(strings.NewReader(`{"type":"custom","yaml":`+strconv.Quote(y)+`}`), templates.Charger)
+	require.NoError(t, err)
+
+	assert.True(t, configHasCriticalPlugin(templates.Charger, req))
+}
+
+func TestConfigHasCriticalPluginGlobalYamlTemplate(t *testing.T) {
+	// global yaml settings nest typed configs, rendered with the setting's class
+	tc := []struct {
+		class templates.Class
+		yaml  string
+	}{
+		{templates.Tariff, "grid:\n  type: template\n  template: amber\n  token: x\n  siteid: x\n  tax: " + strconv.Quote("1\nx:\n  source: script\n")},
+		{templates.Circuit, "- name: main\n  Type: Template\n  template: static\n  maxcurrent: " + strconv.Quote("16\nx:\n  source: script\n")},
+	}
+
+	for _, tc := range tc {
+		assert.True(t, configHasCriticalPlugin(tc.class, configReq{Yaml: tc.yaml}), tc.yaml)
+	}
+
+	assert.False(t, configHasCriticalPlugin(templates.Circuit, configReq{Yaml: "- name: main\n  type: template\n  template: static\n  maxcurrent: 16"}))
 }
 
 func TestFilterValidTemplateParams(t *testing.T) {

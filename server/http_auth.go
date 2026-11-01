@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util/auth"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/gorilla/mux"
 )
 
@@ -244,8 +245,8 @@ func regenerateApiKeyHandler(authObject auth.Auth) http.HandlerFunc {
 }
 
 // requireCriticalConfigAuth guards script-plugin configs: API key passes; session users must supply the admin password.
-func requireCriticalConfigAuth(w http.ResponseWriter, r *http.Request, authObject auth.Auth, req configReq) bool {
-	if authObject.GetAuthMode() == auth.Disabled || !configHasCriticalPlugin(req) {
+func requireCriticalConfigAuth(w http.ResponseWriter, r *http.Request, authObject auth.Auth, class templates.Class, req configReq) bool {
+	if authObject.GetAuthMode() == auth.Disabled || !configHasCriticalPlugin(class, req) {
 		return true
 	}
 	if key := apiKeyFromRequest(r); key != "" && authObject.ValidateApiKey(key) {

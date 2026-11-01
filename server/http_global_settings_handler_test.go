@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +19,7 @@ func TestSettingsSetYamlHandlerCriticalPlugin(t *testing.T) {
 	body := "- name: main\n  getmaxcurrent:\n    source: script\n    cmd: echo 1"
 
 	a := fakeAuth{mode: auth.Enabled, password: pw}
-	h := settingsSetYamlHandler(key, []map[string]any{}, []config.Named{}, a)
+	h := settingsSetYamlHandler(key, templates.Circuit, []map[string]any{}, []config.Named{}, a)
 
 	// session without password is rejected and nothing is persisted
 	r := httptest.NewRequest(http.MethodPost, "/circuits", strings.NewReader(body))
