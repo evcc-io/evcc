@@ -8,12 +8,12 @@ requirements:
   description:
     en: >-
       [vrm.victronenergy.com](https://vrm.victronenergy.com) get the
-      2-days-forecast from your installation in VRM portal. You need a free user
-      access token.
+      solar forecast for up to 7 days from your installation in VRM portal. You
+      need a free user access token.
     de: >-
       [vrm.victronenergy.com](https://vrm.victronenergy.com) abrufen der
-      2-Tage-Prognose einer Installation im VRM-Portal. Es wird ein kostenloses
-      User Access Token benoetigt.
+      Solarprognose für bis zu 7 Tage einer Installation im VRM-Portal. Es wird
+      ein kostenloses User Access Token benoetigt.
   evcc: ["skiptest"]
 group: solar
 params:
@@ -42,7 +42,7 @@ render: |
   tariff: solar
   forecast:
     source: http
-    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/stats?start={{ `{{ now | unixEpoch | int }}` }}&end={{ `{{ add (now | unixEpoch | int) 172800 }}` }}&interval=hours&type=forecast
+    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/stats?start={{ `{{ now | unixEpoch | int }}` }}&end={{ `{{ add (now | unixEpoch | int) 604800 }}` }}&interval=hours&type=forecast
     method: "GET"
     headers:
       - X-Authorization: "Token {{ .token }}"
