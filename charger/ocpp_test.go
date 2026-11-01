@@ -370,11 +370,46 @@ func (suite *ocppTestSuite) TestReconnect() {
 	suite.Require().Eventually(func() bool { return !c.cp.Connected() }, time.Second, 10*time.Millisecond)
 
 	// reconnect without reboot, BootNotification is only sent when triggered
-	cp2, _, _ := suite.startChargePoint(id, 1)
+	cp2, ocppjClient, _ := suite.startChargePoint(id, 1)
+
+	var triggered atomic.Bool
+	handler := ocppjClient.GetRequestHandler()
+	ocppjClient.SetRequestHandler(func(request ocppapi.Request, requestId string, action string) {
+		if req, ok := request.(*remotetrigger.TriggerMessageRequest); ok && req.RequestedMessage == core.BootNotificationFeatureName {
+			triggered.Store(true)
+		}
+		handler(request, requestId, action)
+	})
+
 	suite.Require().NoError(cp2.Start(ocppTestUrl))
 
 	// well before the boot timeout
 	suite.Require().Eventually(c.cp.Connected, ocpp.Timeout/2, 10*time.Millisecond)
+	suite.True(triggered.Load(), "BootNotification should be triggered on reconnect")
+}
+
+func (suite *ocppTestSuite) TestBootTriggerRejected() {
+	id := suite.stationID("test-boot-rejected")
+
+	cp1, ocppjClient, _ := suite.startChargePoint(id, 1)
+
+	handler := ocppjClient.GetRequestHandler()
+	ocppjClient.SetRequestHandler(func(request ocppapi.Request, requestId string, action string) {
+		if req, ok := request.(*remotetrigger.TriggerMessageRequest); ok && req.RequestedMessage == core.BootNotificationFeatureName {
+			suite.Require().NoError(ocppjClient.SendResponse(requestId, remotetrigger.NewTriggerMessageConfirmation(remotetrigger.TriggerMessageStatusRejected)))
+			return
+		}
+		handler(request, requestId, action)
+	})
+
+	start := time.Now()
+	suite.Require().NoError(cp1.Start(ocppTestUrl))
+
+	_, err := NewOCPP(suite.T().Context(), id, 1, "", "", 0, false, false, false, true, false, ocppTestConnectTimeout)
+	suite.Require().NoError(err)
+
+	// neither the boot wait after connect nor the one during setup ran into the timeout
+	suite.Less(time.Since(start), ocpp.Timeout)
 }
 
 func (suite *ocppTestSuite) TestEnabledAvailable() {

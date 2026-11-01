@@ -241,9 +241,8 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) {
 	cs.log.DEBUG.Printf("charge point disconnected: %s", chargePoint.ID())
 
+	// station status only depends on the connection state, which connect publishes
 	if cp, err := cs.ChargepointByID(chargePoint.ID()); err == nil {
 		cp.connect(false)
 	}
-
-	cs.publish()
 }
