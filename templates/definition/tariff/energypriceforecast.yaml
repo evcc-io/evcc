@@ -82,8 +82,8 @@ params:
     choice: ["EUR", "DKK", "CZK", "PLN", "SEK", "NOK", "CHF", "RON", "GBP"]
   - name: apikey
     help:
-      en: "Optional for forecasts up to 120 hours. [Get an API key](https://energypriceforecast.eu/en/api-early-access/)."
-      de: "Optional für Prognosen bis zu 120 Stunden. [API-Key erhalten](https://energypriceforecast.eu/de/api-early-access/)."
+      en: "Optional for forecasts up to 120 hours. [Get an API key](https://energypriceforecast.eu/en/private-pro/)."
+      de: "Optional für Prognosen bis zu 120 Stunden. [API-Key erhalten](https://energypriceforecast.eu/de/private-pro/)."
   - name: horizon
     default: 120
     type: int
@@ -95,6 +95,15 @@ params:
       en: Anonymous access is limited to 48 hours from October 1, 2026. An API key allows up to 120 hours.
       de: Anonymer Zugriff ist ab 1. Oktober 2026 auf 48 Stunden begrenzt. Mit API-Key sind bis zu 120 Stunden möglich.
     required: true
+  - name: forecastonly
+    type: bool
+    description:
+      en: Forecast only
+      de: Nur Prognose
+    help:
+      en: "Return the forecast for every hour without published day-ahead prices. For a merged tariff where another tariff (e.g. your supplier) provides the actual prices."
+      de: "Liefert für jede Stunde die Prognose ohne veröffentlichte Day-Ahead-Preise. Für einen kombinierten Tarif, in dem ein anderer Tarif (z. B. dein Anbieter) die echten Preise liefert."
+    advanced: true
   - preset: tariff-base
   - preset: tariff-features
 render: |
@@ -103,7 +112,7 @@ render: |
   {{ include "features" (merge (dict "basefeatures" (list "cacheable")) (omit . "average")) }}
   forecast:
     source: http
-    uri: https://api.energypriceforecast.eu/api/v1/evcc/tariff?country={{.region}}&type=grid&currency={{.currency}}&hours={{.horizon}}{{ if .average }}&resolution=hourly{{ end }}
+    uri: https://api.energypriceforecast.eu/api/v1/evcc/tariff?country={{.region}}&type=grid&currency={{.currency}}&hours={{.horizon}}{{ if .average }}&resolution=hourly{{ end }}{{ if .forecastonly }}&mode=forecast_only{{ end }}
     {{ if .apikey }}
     auth:
       type: bearer
