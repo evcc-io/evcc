@@ -76,7 +76,7 @@ func (t *Tibber) run(done chan error) {
 		"id": graphql.ID(t.homeID),
 	}
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for ; ; <-time.After(t.nextRefresh(time.Hour, t.data)) {
 		var res struct {
 			Viewer struct {
 				Home struct {

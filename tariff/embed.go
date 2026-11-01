@@ -23,6 +23,7 @@ type embed struct {
 	ChargesZones_ []chargesZoneConfig `mapstructure:"chargesZones"`
 	Tax           float64             `mapstructure:"tax"`
 	Formula       string              `mapstructure:"formula"`
+	EarlyRefresh  time.Duration       `mapstructure:"earlyRefresh"`
 
 	chargesZones fixed.Zones
 	calc         func(price, charges float64, ts time.Time) (float64, error)
