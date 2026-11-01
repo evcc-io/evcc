@@ -117,14 +117,14 @@ type Site struct {
 	// cached measurement state, guarded by RWMutex
 	siteState
 
-	batteryMaxDischargePower *float64                   // Max discharge power of all battery meters
-	batteryMode              api.BatteryMode            // Battery mode (runtime only, not persisted)
-	batteryModeExternal      api.BatteryMode            // Battery mode (external, runtime only, not persisted)
-	batteryModeExternalTimer time.Time                  // Battery mode timer for external control
-	batteryControlMu         sync.Mutex                 // guards applied battery modes and slave control state
-	batteryModeApplied       map[string]api.BatteryMode // Battery mode last applied per battery meter
-	batterySlaveModeApplied  map[string]api.BatteryMode // Battery mode last applied by slave control per battery meter
-	batterySlaveOutageSince  map[string]time.Time       // Start of the ongoing reading outage per master battery
+	batteryMaxDischargePower *float64                      // Max discharge power of all battery meters
+	batteryMode              api.BatteryMode               // Battery mode (runtime only, not persisted)
+	batteryModeExternal      api.BatteryMode               // Battery mode (external, runtime only, not persisted)
+	batteryModeExternalTimer time.Time                     // Battery mode timer for external control
+	batteryControlMu         sync.Mutex                    // guards applied battery modes and slave control state
+	batteryModeApplied       map[string]api.BatteryMode    // Battery mode last applied per battery meter
+	batterySlaveStates       map[string]*batterySlaveState // applied control state per slave battery meter
+	batterySlaveOutageSince  map[string]time.Time          // Start of the ongoing reading outage per master battery
 
 	optimizer optimizerState // optimizer runs, cached results and suggestions
 
