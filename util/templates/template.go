@@ -51,8 +51,9 @@ func (t *Template) UpdateModbusParamsWithDefaults() error {
 		return nil
 	}
 
-	if modbusParam.ID == 0 {
-		modbusParam.ID = cast.ToInt(ConfigDefaults.ModbusDefault(ModbusParamId))
+	if modbusParam.ID == nil {
+		id := cast.ToInt(ConfigDefaults.ModbusDefault(ModbusParamId))
+		modbusParam.ID = &id
 	}
 	if modbusParam.Baudrate == 0 {
 		modbusParam.Baudrate = cast.ToInt(ConfigDefaults.ModbusDefault(ModbusParamBaudrate))
