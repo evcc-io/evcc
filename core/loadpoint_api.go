@@ -207,7 +207,7 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 			}
 		}
 
-		lp.requestUpdate()
+		lp.requestControl()
 		lp.triggerOptimizer()
 	}
 }
@@ -238,7 +238,7 @@ func (lp *Loadpoint) setAlwaysCharge(ac api.AlwaysCharge) {
 	if ac.Active() {
 		lp.resetPVTimer()
 	}
-	lp.requestUpdate()
+	lp.requestControl()
 }
 
 // SetAlwaysCharge sets the always charge state
@@ -352,7 +352,7 @@ func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 	lp.setPhasesConfigured(phases)
 	lp.Unlock()
 
-	lp.requestUpdate()
+	lp.requestControl()
 
 	return nil
 }
@@ -381,7 +381,7 @@ func (lp *Loadpoint) SetLimitSoc(soc int) {
 	// apply immediately
 	if lp.limitSoc != soc {
 		lp.setLimitSoc(soc)
-		lp.requestUpdate()
+		lp.requestControl()
 		lp.triggerOptimizer()
 	}
 }
@@ -410,7 +410,7 @@ func (lp *Loadpoint) SetMinSoc(soc int) {
 	// apply immediately
 	if lp.minSoc != soc {
 		lp.setMinSoc(soc)
-		lp.requestUpdate()
+		lp.requestControl()
 	}
 }
 
@@ -443,7 +443,7 @@ func (lp *Loadpoint) SetLimitEnergy(energy float64) {
 	// apply immediately
 	if lp.limitEnergy != energy {
 		lp.setLimitEnergy(energy)
-		lp.requestUpdate()
+		lp.requestControl()
 		lp.triggerOptimizer()
 	}
 }
@@ -498,7 +498,7 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 	// apply immediately
 	if lp.planEnergy != energy || !lp.planTime.Equal(finishAt) {
 		lp.setPlanEnergy(finishAt, energy)
-		lp.requestUpdate()
+		lp.requestControl()
 		lp.triggerOptimizer()
 	}
 
@@ -516,7 +516,7 @@ func (lp *Loadpoint) setPlanStrategy(strategy api.PlanStrategy) error {
 
 	lp.publish(keys.EffectivePlanStrategy, lp.getEffectivePlanStrategy())
 
-	lp.requestUpdate()
+	lp.requestControl()
 
 	return nil
 }
@@ -553,7 +553,7 @@ func (lp *Loadpoint) GetSocConfig() loadpoint.SocConfig {
 func (lp *Loadpoint) setSocConfig(soc loadpoint.SocConfig) {
 	lp.Soc = soc
 	lp.settings.SetJson(keys.Soc, soc)
-	lp.requestUpdate()
+	lp.requestControl()
 }
 
 // SetSoc sets the PV mode threshold settings
@@ -606,7 +606,7 @@ func (lp *Loadpoint) setThresholds(thresholds loadpoint.ThresholdsConfig) {
 	lp.publish(keys.EnableThreshold, lp.Enable.Threshold)
 	lp.publish(keys.DisableThreshold, lp.Disable.Threshold)
 	lp.settings.SetJson(keys.Thresholds, thresholds)
-	lp.requestUpdate()
+	lp.requestControl()
 }
 
 // SetThresholds sets the PV mode threshold settings
@@ -739,7 +739,7 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 		lp.batteryBoost = boostDisabled
 		if enable {
 			lp.batteryBoost = boostStart
-			lp.requestUpdate()
+			lp.requestControl()
 		}
 	}
 
@@ -779,7 +779,7 @@ func (lp *Loadpoint) SetBatteryBoostLimit(limit int) {
 			lp.batteryBoost = boostStart
 		}
 
-		lp.requestUpdate()
+		lp.requestControl()
 	}
 }
 
@@ -834,6 +834,35 @@ func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 		current = max(current, lp.offeredCurrent)
 	}
 	return current
+}
+
+// GetInflightCurrent returns the max phase current actuated but not yet reflected
+// by the meters (max(0, intended - measured)) during the settle window, else 0.
+// Circuits add it to their metered current so parallel actuation cannot overshoot
+// a circuit limit before the meters catch up. (inflightActive/GetInflightPower
+// live in loadpoint.go alongside the surplus reserve.)
+func (lp *Loadpoint) GetInflightCurrent() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+
+	if !lp.inflightActive() || !lp.enabled {
+		return 0
+	}
+
+	// phase meter present: reserve the not-yet-measured part of the setpoint
+	if lp.chargeCurrents != nil {
+		return max(0, lp.offeredCurrent-max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2]))
+	}
+
+	// no phase meter: a meter-less circuit already counts the offered current via
+	// GetMaxPhaseCurrent (a reserve would double-count), but a metered circuit's
+	// own lagging meter cannot see this loadpoint during the settle window, so
+	// reserve the full intended current there.
+	if lp.circuit != nil && lp.circuit.HasMeter() {
+		return lp.offeredCurrent
+	}
+
+	return 0
 }
 
 // GetMinCurrent returns the min loadpoint current

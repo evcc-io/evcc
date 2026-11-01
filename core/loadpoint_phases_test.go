@@ -810,9 +810,11 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 			if !tc.noCircuit {
 				circuit := api.NewMockCircuit(ctrl)
 				lp.circuit = circuit
+				circuit.EXPECT().HasMeter().Return(false).AnyTimes()
 
-				// ValidatePower caps the request at the available circuit power
-				circuit.EXPECT().ValidatePower(tc.chargePower, gomock.Any()).DoAndReturn(func(_, new float64) float64 {
+				// ValidatePower caps the request at the available circuit power, the
+				// current draw includes the in-flight reserve after a phase switch
+				circuit.EXPECT().ValidatePower(gomock.Any(), gomock.Any()).DoAndReturn(func(_, new float64) float64 {
 					return min(new, tc.availableCircuitPower)
 				}).AnyTimes()
 

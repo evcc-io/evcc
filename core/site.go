@@ -49,7 +49,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
+	Control(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
 	activeSuggestion() *types.Suggestion
 }
 
@@ -57,9 +57,8 @@ var _ site.API = (*Site)(nil)
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Site struct {
-	valueChan    chan<- util.Param      // client push messages
-	pushChan     chan<- messenger.Event // notification events
-	lpUpdateChan chan *Loadpoint
+	valueChan chan<- util.Param      // client push messages
+	pushChan  chan<- messenger.Event // notification events
 
 	sync.RWMutex
 	log *util.Logger
@@ -1435,8 +1434,16 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 
 	// TODO
 	if lp != nil {
-		lp.Update(
-			site.loadpointSitePower(lp, res), state.battery.Power, consumption, feedin, res.batteryBuffered, res.batteryStart,
+		// discount surplus by actuations the meters have not yet reflected,
+		// so this loadpoint does not re-claim power an earlier one already took
+		sitePower := site.loadpointSitePower(lp, res)
+		for _, l := range site.activeLoadpoints() {
+			sitePower += l.GetInflightPower()
+		}
+
+		// control only, the sense loop keeps the observed state fresh
+		lp.Control(
+			sitePower, state.battery.Power, consumption, feedin, res.batteryBuffered, res.batteryStart,
 			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 			hems.Dimmed(site.hems),
 		)
@@ -1546,8 +1553,6 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 		}
 	}()
 
-	site.lpUpdateChan = make(chan *Loadpoint, 1) // 1 capacity to avoid deadlock
-
 	site.prepare()
 
 	lpDevices := config.Loadpoints().Devices()
@@ -1585,7 +1590,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 			}
 		}(id)
 
-		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan)
+		lp.Prepare(site, lpUIChan, lpPushChan)
 	}
 }
 
@@ -1604,9 +1609,44 @@ func (site *Site) loopLoadpoints(next chan<- updater) {
 			})
 			next <- nil
 		} else {
-			for _, lp := range active {
-				next <- lp
+			for i := range active {
+				next <- nextLoadpoint(active, i)
 			}
+		}
+	}
+}
+
+// nextLoadpoint returns the first loadpoint with pending control work starting at
+// the round-robin position, else the loadpoint at that position
+func nextLoadpoint(active []*Loadpoint, cursor int) *Loadpoint {
+	for i := range active {
+		if lp := active[(cursor+i)%len(active)]; lp.controlPending() {
+			return lp
+		}
+	}
+	return active[cursor]
+}
+
+// measureInterval is the default loadpoint sensing interval
+const measureInterval = 2 * time.Second
+
+// senseLoadpoints senses all loadpoints in parallel
+func senseLoadpoints(lps []*Loadpoint) {
+	var wg sync.WaitGroup
+	for _, lp := range lps {
+		wg.Go(lp.Sense)
+	}
+	wg.Wait()
+}
+
+// measureLoadpoints continuously senses all loadpoints
+func measureLoadpoints(stopC chan struct{}, lps []*Loadpoint, interval time.Duration) {
+	for tick := time.Tick(interval); ; {
+		select {
+		case <-tick:
+			senseLoadpoints(lps)
+		case <-stopC:
+			return
 		}
 	}
 }
@@ -1618,8 +1658,19 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		site.log.INFO.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
 	}
 
+	// the in-flight reserve treats a just-actuated setpoint as settling for one control interval
+	active := site.activeLoadpoints()
+	for _, lp := range active {
+		lp.controlInterval = interval
+	}
+
 	loadpointChan := make(chan updater)
 	if site.IsConfigured() {
+		// control must not act before the loadpoints have been sensed
+		senseLoadpoints(active)
+
+		// never sense slower than the control loop
+		go measureLoadpoints(stopC, active, min(measureInterval, interval))
 		go site.loopLoadpoints(loadpointChan)
 	}
 
@@ -1640,8 +1691,6 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		select {
 		case <-tick:
 			site.update(<-loadpointChan)
-		case lp := <-site.lpUpdateChan:
-			site.update(lp)
 		case <-stopC:
 			return
 		}

@@ -39,12 +39,11 @@ func (n *Null) ChargeDuration() (time.Duration, error) {
 	return 0, nil
 }
 
-func createChannels(t *testing.T) (chan util.Param, chan messenger.Event, chan *Loadpoint) {
+func createChannels(t *testing.T) (chan util.Param, chan messenger.Event) {
 	t.Helper()
 
 	uiChan := make(chan util.Param)
 	pushChan := make(chan messenger.Event)
-	lpChan := make(chan *Loadpoint)
 
 	log := false
 	go func() {
@@ -58,21 +57,16 @@ func createChannels(t *testing.T) (chan util.Param, chan messenger.Event, chan *
 				if log {
 					t.Log(v)
 				}
-			case v := <-lpChan:
-				if log {
-					t.Log(v)
-				}
 			}
 		}
 	}()
 
-	return uiChan, pushChan, lpChan
+	return uiChan, pushChan
 }
 
-func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan messenger.Event, lpChan chan *Loadpoint) {
+func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan messenger.Event) {
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
-	lp.lpChan = lpChan
 }
 
 func attachListeners(t *testing.T, lp *Loadpoint) {
@@ -83,9 +77,9 @@ func attachListeners(t *testing.T, lp *Loadpoint) {
 		charger.EXPECT().MaxCurrent(int64(lp.minCurrent)).Return(nil)
 	}
 
-	uiChan, pushChan, lpChan := createChannels(t)
+	uiChan, pushChan := createChannels(t)
 	// the optimizer runs async- without a logger its panic recovery panics again
-	lp.Prepare(&Site{log: util.NewLogger("site")}, uiChan, pushChan, lpChan)
+	lp.Prepare(&Site{log: util.NewLogger("site")}, uiChan, pushChan)
 }
 
 func TestNew(t *testing.T) {
@@ -1395,4 +1389,28 @@ func TestPVDisableContinuousDeviceShortfall(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRequestUpdate(t *testing.T) {
+	lp := new(Loadpoint)
+	lp.RequestUpdate()
+	assert.True(t, lp.controlPending())
+}
+
+func TestNextLoadpoint(t *testing.T) {
+	lps := []*Loadpoint{new(Loadpoint), new(Loadpoint), new(Loadpoint)}
+
+	// round-robin without pending control
+	for i, lp := range lps {
+		assert.Same(t, lp, nextLoadpoint(lps, i))
+	}
+
+	// pending control is preferred, scanning from the cursor
+	lps[0].requestControl()
+	lps[2].requestControl()
+	assert.Same(t, lps[2], nextLoadpoint(lps, 1))
+	assert.Same(t, lps[0], nextLoadpoint(lps, 0))
+
+	lps[2].controlDone()
+	assert.Same(t, lps[0], nextLoadpoint(lps, 1))
 }
