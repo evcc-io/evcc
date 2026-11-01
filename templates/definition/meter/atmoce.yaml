@@ -304,6 +304,23 @@ render: |
       register: 60089
       count: 7
     scale: 1
+  {{- if eq .firmware ">=01.01.00.28.15" }}
+  batterymodepower:
+    charge:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 60318 # Energy Storage Maximum Charging Power (W)
+        type: writemultiple
+        decode: uint32
+    discharge:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 60320 # Energy Storage Maximum Discharging Power (W)
+        type: writemultiple
+        decode: uint32
+  {{- end }}
   batterymode:
     source: switch
     switch:
