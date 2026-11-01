@@ -20,13 +20,14 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 		Status:      core.RegistrationStatusAccepted,
 	}
 
+	// mark charge point as ready for communication
 	cp.mu.Lock()
 	cp.BootNotificationResult = request
 	cp.stopBootTimer()
+	changed := cp.setConnected(true)
 	cp.mu.Unlock()
 
-	// mark charge point as ready for communication
-	cp.connect(true)
+	cp.publishStatus(changed)
 
 	cp.markRebooted()
 
