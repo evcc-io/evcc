@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
@@ -62,7 +63,8 @@ type Site struct {
 	lpUpdateChan chan *Loadpoint
 
 	sync.RWMutex
-	log *util.Logger
+	log   *util.Logger
+	clock clock.Clock
 
 	// configuration
 	Title         string       `mapstructure:"title"`         // UI title
@@ -116,17 +118,19 @@ type Site struct {
 	// cached measurement state, guarded by RWMutex
 	siteState
 
-	batteryMaxDischargePower *float64                    // Max discharge power of all battery meters
-	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
-	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
-	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
-	batteryModeApplied       map[string]api.BatteryMode  // Battery mode last applied per battery meter
-	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
-	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
-	lastOptimizerSolve       *optimizerSolve             // last successful solve, reapplied to newer slots by the control cycle
-	optimizerResult          *optimizerResult            // last published plan, explained on request
-	explainMu                sync.Mutex                  // serializes explain requests
-	explained                explainCache                // last explanation, guarded by explainMu
+	batteryMaxDischargePower *float64                      // Max discharge power of all battery meters
+	batteryMode              api.BatteryMode               // Battery mode (runtime only, not persisted)
+	batteryModeExternal      api.BatteryMode               // Battery mode (external, runtime only, not persisted)
+	batteryModeExternalTimer time.Time                     // Battery mode timer for external control
+	batteryModeApplied       map[string]api.BatteryMode    // Battery mode last applied by global control per battery meter
+	batterySlaveStates       map[string]*batterySlaveState // applied control state per slave battery meter
+	batterySlaveOutageSince  map[string]time.Time          // Start of the ongoing reading outage per master battery
+	suggestions              map[string]types.Suggestion   // Optimizer suggestions by device key
+	suggestionActions        map[string]string             // last notified actionable optimizer action by device key
+	lastOptimizerSolve       *optimizerSolve               // last successful solve, reapplied to newer slots by the control cycle
+	optimizerResult          *optimizerResult              // last published plan, explained on request
+	explainMu                sync.Mutex                    // serializes explain requests
+	explained                explainCache                  // last explanation, guarded by explainMu
 
 	optimizerMu      sync.Mutex  // guards optimizer runs
 	optimizerUpdated time.Time   // last optimizer run, guarded by optimizerMu
@@ -403,6 +407,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 				site.log.ERROR.Println("battery mode:", err)
 			}
 		}
+		site.releaseBatterySlaves()
 	})
 
 	return nil
@@ -412,6 +417,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 func NewSite() *Site {
 	site := &Site{
 		log:        util.NewLogger("site"),
+		clock:      clock.New(),
 		collectors: make(map[string]*metrics.Collector),
 	}
 
@@ -671,7 +677,13 @@ func (site *Site) publishLoadpoint(id int, key string, val any) {
 }
 
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []types.Measurement {
+	mm, _ := site.collectMetersWithPowerValidity(key, meters)
+	return mm
+}
+
+func (site *Site) collectMetersWithPowerValidity(key string, meters []config.Device[api.Meter]) ([]types.Measurement, []bool) {
 	mm := make([]types.Measurement, len(meters))
+	powerValid := make([]bool, len(meters))
 
 	fun := func(i int, dev config.Device[api.Meter]) {
 		meter := dev.Instance()
@@ -693,6 +705,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 		power, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff())
 		if err == nil {
 			mm[i].Power = power
+			powerValid[i] = true
 			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			if b.Len() > 0 {
@@ -729,7 +742,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 	}
 	wg.Wait()
 
-	return mm
+	return mm, powerValid
 }
 
 // updatePvMeters updates pv meters. All measurements are optional.
@@ -803,7 +816,10 @@ func (site *Site) updateBatteryMeters() {
 		return
 	}
 
-	mm := site.collectMeters("battery", site.batteryMeters)
+	mm, powerValid := site.collectMetersWithPowerValidity("battery", site.batteryMeters)
+	for i, dev := range site.batteryMeters {
+		mm[i].Master, _ = dev.Config().Property("master").(string)
+	}
 	prev := site.state().battery.Devices
 
 	var maxDischargePower float64
@@ -868,9 +884,12 @@ func (site *Site) updateBatteryMeters() {
 		}
 	}
 
+	site.updateBatterySlavePower(mm, powerValid)
+
 	// retain the last known soc when all reads failed, so that a transient
 	// meter error does not report the pack as empty (0%)
 	socFailed := lo.EveryBy(mm, func(m types.Measurement) bool { return m.Soc == nil })
+	aggregate := aggregateBatteryMeasurements(mm)
 
 	// written from the meter goroutine, read via state and GetBatteryMaxDischargePower
 	site.Lock()
@@ -882,38 +901,13 @@ func (site *Site) updateBatteryMeters() {
 	}
 
 	if !socFailed {
-		var batterySocAcc float64
-		var totalCapacity float64
-
-		if lo.SomeBy(mm, func(m types.Measurement) bool { return m.Capacity == nil || *m.Capacity <= 0 }) {
-			// any capacity is missing
-			batterySocAcc = sumOfSocs(mm)
-			totalCapacity = float64(len(site.batteryMeters))
-		} else {
-			// all capacities available - weigh soc by capacity
-			batterySocAcc = weightedSumOfSocs(mm)
-			totalCapacity = lo.SumBy(mm, func(m types.Measurement) float64 { return *m.Capacity })
-		}
-
-		site.battery.Soc = math.Min(100, batterySocAcc/totalCapacity)
-		site.battery.Capacity = totalCapacity
+		site.battery.Soc = aggregate.soc
+		site.battery.Capacity = aggregate.capacity
 	}
 
-	site.battery.Power = lo.SumBy(mm, func(m types.Measurement) float64 {
-		return m.Power
-	})
-	site.battery.Energy = lo.SumBy(mm, func(m types.Measurement) float64 {
-		if m.Energy == nil {
-			return 0
-		}
-		return *m.Energy
-	})
-	site.battery.ReturnEnergy = lo.SumBy(mm, func(m types.Measurement) float64 {
-		if m.ReturnEnergy == nil {
-			return 0
-		}
-		return *m.ReturnEnergy
-	})
+	site.battery.Power = aggregate.power
+	site.battery.Energy = aggregate.energy
+	site.battery.ReturnEnergy = aggregate.returnEnergy
 	site.battery.Devices = mm
 
 	battery := site.battery
@@ -975,6 +969,45 @@ func weightedSumOfSocs(mm []types.Measurement) float64 {
 		// weigh soc by capacity
 		return *m.Soc * *m.Capacity
 	})
+}
+
+type batteryMeasurementsAggregate struct {
+	soc          float64
+	capacity     float64
+	power        float64
+	energy       float64
+	returnEnergy float64
+}
+
+func aggregateBatteryMeasurements(mm []types.Measurement) batteryMeasurementsAggregate {
+	aggregate := batteryMeasurementsAggregate{
+		power: lo.SumBy(mm, func(m types.Measurement) float64 { return m.Power }),
+		energy: lo.SumBy(mm, func(m types.Measurement) float64 {
+			if m.Energy == nil {
+				return 0
+			}
+			return *m.Energy
+		}),
+		returnEnergy: lo.SumBy(mm, func(m types.Measurement) float64 {
+			if m.ReturnEnergy == nil {
+				return 0
+			}
+			return *m.ReturnEnergy
+		}),
+	}
+
+	if len(mm) == 0 {
+		return aggregate
+	}
+	if lo.SomeBy(mm, func(m types.Measurement) bool { return m.Capacity == nil || *m.Capacity <= 0 }) {
+		aggregate.capacity = float64(len(mm))
+		aggregate.soc = sumOfSocs(mm) / aggregate.capacity
+	} else {
+		aggregate.capacity = lo.SumBy(mm, func(m types.Measurement) float64 { return *m.Capacity })
+		aggregate.soc = weightedSumOfSocs(mm) / aggregate.capacity
+	}
+	aggregate.soc = math.Min(100, aggregate.soc)
+	return aggregate
 }
 
 // addMeterEnergy persists per-meter energy (positive power = import).

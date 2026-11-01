@@ -36,6 +36,8 @@ import {
 	whToKW,
 	loadpointTitle,
 	demandTitle,
+	compactBatteryTitle,
+	seriesTooltipName,
 	transientHoverDot,
 } from "./chart";
 
@@ -45,6 +47,7 @@ const SOLAR_LABEL = "Solar Forecast";
 // one stacked bar series, data in kW
 interface StackEntry {
 	label: string;
+	tooltipTitle?: string;
 	color: string;
 	data: number[];
 	id?: string;
@@ -159,7 +162,7 @@ export default defineComponent({
 				lineCasing(solar, 3),
 				solar,
 				...this.stackEntries.map((e) => ({
-					name: e.label,
+					name: seriesTooltipName(e.label, e.tooltipTitle),
 					type: "bar",
 					stack: "charge",
 					// one path per series instead of an svg element per slot. Stacking works in
@@ -211,6 +214,7 @@ export default defineComponent({
 				{ label: SOLAR_LABEL, color: colors.forecast || "", value: "", type: "line" },
 				...this.stackEntries.map((e) => ({
 					label: e.label,
+					title: e.tooltipTitle,
 					color: e.color,
 					value: "",
 					type: "area" as const,
@@ -243,7 +247,10 @@ export default defineComponent({
 				});
 				return [
 					{
-						label: detail.title || detail.name,
+						label: compactBatteryTitle(detail),
+						tooltipTitle: detail.slaves?.length
+							? `${compactBatteryTitle(detail)}. ${this.$t("config.optimizer.aggregatedWithSlaves", { names: detail.slaves.join(", ") })}`
+							: undefined,
 						color: this.batteryColors[index] || "",
 						data,
 						id: type === "vehicle" ? loadpointTitle(detail) : undefined,

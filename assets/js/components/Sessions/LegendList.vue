@@ -21,7 +21,9 @@
 				'legend-item--dim': legend.dim,
 			}"
 			:role="legend.focusable ? 'button' : undefined"
-			:tabindex="legend.focusable ? 0 : undefined"
+			:title="legend.title"
+			:aria-label="legend.title || undefined"
+			:tabindex="legend.title || legend.focusable ? 0 : undefined"
 			@click="legend.focusable && onFocus(legend)"
 			@keydown.enter.prevent="legend.focusable && onFocus(legend)"
 			@keydown.space.prevent="legend.focusable && onFocus(legend)"

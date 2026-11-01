@@ -4444,6 +4444,31 @@
           "error"
         ]
       },
+      "BatteryConfigWarning": {
+        "description": "Non-fatal battery configuration issue detected during startup.",
+        "type": "object",
+        "properties": {
+          "device": {
+            "type": "string"
+          },
+          "master": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "invalidMaster",
+              "masterIsSlave",
+              "unsupportedSlave"
+            ]
+          }
+        },
+        "required": [
+          "device",
+          "master",
+          "reason"
+        ]
+      },
       "AuthProviders": {
         "description": "Status of configured vehicle authentication providers, keyed by provider name.",
         "type": "object",
@@ -4540,6 +4565,19 @@
             "items": {
               "type": "number"
             }
+          },
+          "master": {
+            "description": "Configured master battery name for this slave battery.",
+            "type": "string"
+          },
+          "powerControlStatus": {
+            "description": "Status of the latest runtime power-control update.",
+            "type": "string",
+            "enum": [
+              "applied",
+              "failed",
+              "overridden"
+            ]
           },
           "soc": {
             "description": "Charge level in %.",
@@ -5790,6 +5828,13 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/FatalError"
+            }
+          },
+          "batteryConfigWarnings": {
+            "description": "Battery master assignments ignored during setup.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BatteryConfigWarning"
             }
           },
           "authProviders": {

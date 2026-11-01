@@ -365,12 +365,22 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 	return err
 }
 
-func configureMeters(static []config.Named, names ...string) error {
+func configureMeters(static []config.Named, names ...string) ([]batteryConfigWarning, error) {
 	var eg errgroup.Group
+	// Load DB meters before starting goroutines so master references can be validated across both config sources.
+	configurable, err := config.ConfigurationsByClass(templates.Meter)
+	if err != nil {
+		return nil, err
+	}
+	meters := combineBatteryMeterConfigs(static, configurable)
+	var warnings []batteryConfigWarning
+	if len(references.battery) > 0 {
+		warnings = append(warnings, normalizeBatteryMasters(meters, references.battery)...)
+	}
 
 	for i, cc := range static {
 		if cc.Name == "" {
-			return fmt.Errorf("cannot create meter %d: missing name", i+1)
+			return warnings, fmt.Errorf("cannot create meter %d: missing name", i+1)
 		}
 
 		// configure all, if no name refs are given
@@ -387,12 +397,6 @@ func configureMeters(static []config.Named, names ...string) error {
 		})
 	}
 
-	// append devices from database
-	configurable, err := config.ConfigurationsByClass(templates.Meter)
-	if err != nil {
-		return err
-	}
-
 	for _, conf := range configurable {
 		eg.Go(func() error {
 			cc := conf.Named()
@@ -406,7 +410,13 @@ func configureMeters(static []config.Named, names ...string) error {
 		})
 	}
 
-	return eg.Wait()
+	if err := eg.Wait(); err != nil {
+		return warnings, err
+	}
+	if len(references.battery) > 0 {
+		warnings = append(warnings, clearMastersOfUncontrollableBatterySlaves(meters, references.battery)...)
+	}
+	return warnings, nil
 }
 
 func configureCurtailers(static []config.Named, names ...string) error {
@@ -1350,16 +1360,19 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 	return &tariffs, nil
 }
 
-func configureDevices(conf globalconfig.All) error {
+func configureDevices(conf globalconfig.All) ([]batteryConfigWarning, error) {
 	// collect references for filtering used devices
 	if err := collectRefs(conf); err != nil {
-		return err
+		return nil, err
 	}
 
 	// make sure all devices are configured
 	var errs []error
+	var warnings []batteryConfigWarning
 
-	if err := configureMeters(conf.Meters, references.meter...); err != nil {
+	meterWarnings, err := configureMeters(conf.Meters, references.meter...)
+	warnings = append(warnings, meterWarnings...)
+	if err != nil {
 		errs = append(errs, &ClassError{ClassMeter, err})
 	}
 
@@ -1379,7 +1392,7 @@ func configureDevices(conf globalconfig.All) error {
 		errs = append(errs, &ClassError{ClassCurtailer, err})
 	}
 
-	return joinErrors(errs...)
+	return warnings, joinErrors(errs...)
 }
 
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
@@ -1409,20 +1422,21 @@ func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 	return nil
 }
 
-func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
+func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, []batteryConfigWarning, error) {
 	// migrate settings
 	if settings.Exists(keys.Interval) {
 		d, err := settings.Int(keys.Interval)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		conf.Interval = time.Duration(d)
 	}
 
 	var errs []error
+	warnings, deviceErr := configureDevices(*conf)
 
-	if err := configureDevices(*conf); err != nil {
-		errs = append(errs, err)
+	if deviceErr != nil {
+		errs = append(errs, deviceErr)
 	}
 
 	if err := configureLoadpoints(*conf); err != nil {
@@ -1447,16 +1461,16 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 	}
 
 	if len(errs) > 0 {
-		return site, joinErrors(errs...)
+		return site, warnings, joinErrors(errs...)
 	}
 
 	if len(config.Circuits().Devices()) > 0 {
 		if err := validateCircuits(loadpoints); err != nil {
-			return site, &ClassError{ClassCircuit, err}
+			return site, warnings, &ClassError{ClassCircuit, err}
 		}
 	}
 
-	return site, nil
+	return site, warnings, nil
 }
 
 func validateCircuits(loadpoints []*core.Loadpoint) error {

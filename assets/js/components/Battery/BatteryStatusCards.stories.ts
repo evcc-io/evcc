@@ -63,6 +63,25 @@ Multiple.args = {
   },
 };
 
+// slave cards show their master below the charge
+export const MasterSlave = Template.bind({});
+MasterSlave.args = {
+  battery: {
+    ...battery([
+      device({ name: "master", title: "Venus E3", soc: 76, power: 800, controllable: true }),
+      device({
+        name: "slave",
+        title: "Venus E3 Garage",
+        master: "master",
+        soc: 40,
+        power: 700,
+        controllable: true,
+      }),
+    ]),
+    soc: 58,
+  },
+};
+
 // single battery: optimizer gets its own card, showing suggestion + high + low
 export const WithForecast = Template.bind({});
 WithForecast.args = {

@@ -1,8 +1,19 @@
 <template>
 	<div>
 		<LegendList
-			:legends="[{ label: entry.title, color: entry.color, value: '', type: 'area' }]"
+			:legends="[
+				{
+					label: entry.title,
+					title: entry.tooltipTitle,
+					color: entry.color,
+					value: '',
+					type: 'area',
+				},
+			]"
 		/>
+		<div v-if="entry.aggregatedWith" class="text-muted small ms-4 mb-2">
+			{{ entry.aggregatedWith }}
+		</div>
 		<div ref="chartEl" class="soc-chart" :class="{ 'soc-chart--labels': showXAxis }"></div>
 	</div>
 </template>
@@ -30,6 +41,8 @@ export interface SocChartEntry {
 	title: string;
 	capacity: number; // kWh
 	color: string;
+	aggregatedWith?: string;
+	tooltipTitle?: string;
 }
 
 export default defineComponent({

@@ -11,6 +11,15 @@
 					/>
 					{{ fmtPercentage(soc) }}
 				</h3>
+				<div
+					v-if="master"
+					class="master d-flex gap-1"
+					:title="`${$t('battery.card.master')}: ${master}`"
+					data-testid="battery-master"
+				>
+					<span class="master-label">{{ $t("battery.card.master") }}:</span>
+					<span class="master-value">{{ master }}</span>
+				</div>
 			</LabelAndValue>
 
 			<LabelAndValue
@@ -61,6 +70,7 @@ export default defineComponent({
 		capacity: { type: Number, default: 0 }, // kWh, 0 = unspecified
 		color: { type: String, default: "" },
 		controllable: { type: Boolean, default: false },
+		master: { type: String, default: "" },
 		batteryMode: String as PropType<BATTERY_MODE>,
 		suggestion: { type: Object as PropType<BatterySuggestion | null>, default: null },
 		forecast: { type: Object as PropType<BatteryForecast | null>, default: null },
@@ -127,6 +137,25 @@ export default defineComponent({
 <style scoped>
 .value {
 	font-size: 18px;
+}
+.master {
+	margin-top: 0.1rem;
+	color: var(--evcc-gray);
+	font-size: 14px;
+}
+.master-label,
+.master-value {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+/* the label shrinks first so the master name stays readable */
+.master-label {
+	flex: 0 100 auto;
+}
+.master-value {
+	flex: 0 1 auto;
 }
 .values {
 	display: grid;

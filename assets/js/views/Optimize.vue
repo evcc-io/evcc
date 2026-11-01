@@ -199,7 +199,7 @@ import TimeSeriesDataTable from "../components/Optimize/TimeSeriesDataTable.vue"
 import CopyButton from "../components/Optimize/CopyButton.vue";
 import PlanExplanation from "../components/Optimize/PlanExplanation.vue";
 import { formatCompactJson } from "../components/Optimize/compactJson";
-import { loadpointTitle, type Titled } from "../components/Optimize/chart";
+import { compactBatteryTitle, loadpointTitle, type Titled } from "../components/Optimize/chart";
 import api from "../api";
 import store from "../store";
 import formatter from "../mixins/formatter";
@@ -318,13 +318,24 @@ export default defineComponent({
 		},
 		// loadpoints first, then batteries, matching the charging plan order
 		socEntries(): SocChartEntry[] {
-			const entries = this.batteryDetails.map((d, i) => ({
-				index: i,
-				type: d.type,
-				title: d.title || d.name,
-				capacity: d.capacity,
-				color: this.batteryColors[i] || "",
-			}));
+			const entries = this.batteryDetails.map((d, i) => {
+				const aggregatedWith = d.slaves?.length
+					? this.$t("config.optimizer.aggregatedWithSlaves", {
+							names: d.slaves.join(", "),
+						})
+					: undefined;
+				return {
+					index: i,
+					type: d.type,
+					title: compactBatteryTitle(d),
+					tooltipTitle: aggregatedWith
+						? `${compactBatteryTitle(d)}. ${aggregatedWith}`
+						: undefined,
+					aggregatedWith,
+					capacity: d.capacity,
+					color: this.batteryColors[i] || "",
+				};
+			});
 			return [
 				...entries.filter((e) => e.type === "vehicle"),
 				...entries.filter((e) => e.type === "battery"),

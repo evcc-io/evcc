@@ -193,6 +193,34 @@ BatteryForecastMulti.args = {
   ]),
 } as any;
 
+export const BatteryMasterSlaves = Template.bind({});
+BatteryMasterSlaves.args = {
+  ...batteryBase,
+  pvPower: 5000,
+  gridPower: -500,
+  battery: bat(-2500, 55, undefined, [
+    {
+      ...dev("Slave A", -800, 52),
+      name: "battery-slave-a",
+      master: "battery-master",
+      powerControlStatus: "applied",
+    },
+    { ...dev("Master", -900, 58), name: "battery-master" },
+    {
+      ...dev("Slave B", -800, 54),
+      name: "battery-slave-b",
+      master: "battery-master",
+      powerControlStatus: "failed",
+    },
+    {
+      ...dev("Slave C", -800, 56),
+      name: "battery-slave-c",
+      master: "battery-master",
+      powerControlStatus: "overridden",
+    },
+  ]),
+} as any;
+
 export const BatteryForecastGridChargeLimit = Template.bind({});
 BatteryForecastGridChargeLimit.args = {
   ...batteryBase,

@@ -79,6 +79,37 @@ func TestBatterySocRetainOnPartialReadError(t *testing.T) {
 	assert.Equal(t, 40.0, *site.battery.Devices[1].Soc)
 }
 
+func TestAggregateBatteryMeasurements(t *testing.T) {
+	energy, returnEnergy := 2.0, 3.0
+
+	t.Run("capacity weighted", func(t *testing.T) {
+		capacity1, capacity2 := 10.0, 5.0
+		soc1, soc2 := 50.0, 80.0
+		aggregate := aggregateBatteryMeasurements([]types.Measurement{
+			{Power: -100, Energy: &energy, Capacity: &capacity1, Soc: &soc1},
+			{Power: 200, ReturnEnergy: &returnEnergy, Capacity: &capacity2, Soc: &soc2},
+		})
+
+		assert.Equal(t, 60.0, aggregate.soc)
+		assert.Equal(t, 15.0, aggregate.capacity)
+		assert.Equal(t, 100.0, aggregate.power)
+		assert.Equal(t, 2.0, aggregate.energy)
+		assert.Equal(t, 3.0, aggregate.returnEnergy)
+	})
+
+	t.Run("missing capacity keeps unweighted fallback", func(t *testing.T) {
+		capacity, soc1, soc2 := 10.0, 20.0, 40.0
+		aggregate := aggregateBatteryMeasurements([]types.Measurement{
+			{Power: 100, Soc: &soc1},
+			{Power: -50, Capacity: &capacity, Soc: &soc2},
+		})
+
+		assert.Equal(t, 30.0, aggregate.soc)
+		assert.Equal(t, 2.0, aggregate.capacity)
+		assert.Equal(t, 50.0, aggregate.power)
+	})
+}
+
 func TestApplyBatteryMode(t *testing.T) {
 	for _, tc := range []struct {
 		internal, expected api.BatteryMode

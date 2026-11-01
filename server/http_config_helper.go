@@ -112,13 +112,18 @@ func templateForConfig(class templates.Class, conf map[string]any) (templates.Te
 }
 
 // filterValidTemplateParams removes all configuration properties that are not part of the template definition
-func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) map[string]any {
+func filterValidTemplateParams(class templates.Class, tmpl *templates.Template, conf map[string]any) map[string]any {
 	res := make(map[string]any)
 
 	// check if template has modbus capability
 	hasModbus := len(tmpl.ModbusChoices()) > 0
 
 	for k, v := range conf {
+		if class == templates.Meter && strings.EqualFold(k, "master") {
+			res[k] = v
+			continue
+		}
+
 		if k == "template" {
 			res[k] = v
 			continue
@@ -145,7 +150,7 @@ func mapTemplateConfig(class templates.Class, conf map[string]any, fun func(p te
 		return nil, err
 	}
 
-	return filterValidTemplateParams(&tmpl, lo.MapValues(conf, func(val any, key string) any {
+	return filterValidTemplateParams(class, &tmpl, lo.MapValues(conf, func(val any, key string) any {
 		if i, p := tmpl.ParamByName(key); i >= 0 {
 			val = fun(p, key, val)
 		}

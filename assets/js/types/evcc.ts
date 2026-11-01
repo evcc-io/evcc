@@ -152,6 +152,13 @@ export interface FatalError {
   device?: string;
 }
 
+/** Non-fatal battery configuration issue detected during startup. */
+export interface BatteryConfigWarning {
+  device: string;
+  master: string;
+  reason: "invalidMaster" | "masterIsSlave" | "unsupportedSlave";
+}
+
 export type StatisticsPeriod = "30d" | "365d" | "thisYear" | "total";
 export type StatisticsIndicator = "none" | "solar" | "price" | "savings" | "co2" | "co2saved";
 
@@ -203,6 +210,8 @@ export interface State {
   country?: string;
   /** Fatal startup errors. */
   fatal?: FatalError[];
+  /** Battery master assignments ignored during setup. */
+  batteryConfigWarnings?: BatteryConfigWarning[];
   /** Status of configured vehicle authentication providers, keyed by provider name. */
   authProviders?: AuthProviders;
   /** @internal */
@@ -524,7 +533,11 @@ export interface ConfigCharger extends Omit<Entity, "type"> {
   type: ConfigType;
 }
 
-export interface ConfigMeter extends Entity {
+export interface ConfigMeter extends Entity<{
+  master?: string;
+  template?: string;
+  usage?: string;
+}> {
   deviceProduct: string;
   deviceTitle?: string;
   deviceIcon?: string;
@@ -1278,6 +1291,10 @@ export interface LoadpointSuggestion {
 
 /** Measurement data of a single home battery meter. */
 export interface BatteryMeter extends Meter {
+  /** Configured master battery name for this slave battery. */
+  master?: string;
+  /** Status of the latest runtime power-control update. */
+  powerControlStatus?: "applied" | "failed" | "overridden";
   /** Charge level in %. */
   soc: number;
   /** Battery supports external control of its operation mode. */
@@ -1626,6 +1643,7 @@ export interface BatteryDetail {
   title: string; // Display title
   name: string; // Internal name/identifier
   capacity: number; // Battery capacity (kWh)
+  slaves?: string[]; // Battery names aggregated into this entry
 }
 
 // Single profile summarized into the household demand time series
