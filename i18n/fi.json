@@ -46,8 +46,8 @@
     },
     "combined": "Yhdistetty",
     "config": {
-      "buffer": "Kotiakun varaus, joka ylittää {soc} voidaan käyttää lataukseen, ja viivästyttää PV-tilan latauksen päättymistä. Aurinkolataus alkaa automaattisesti {start}.",
-      "bufferNone": "Kotiakun energiaa ei käytetä latauspisteisiin. Aseta arvo alle {soc} hyödyntääksesi sitä.",
+      "buffer": "Kotiakun varaus, joka ylittää {soc} voidaan käyttää lataukseen, ja viivästyttää PV-tilan latauksen päättymistä. Aurinkolataus alkaa automaattisesti {start}. Huom: \"Lataa aina\" ei huomioi tätä asetusta.",
+      "bufferNone": "Kotiakun energiaa ei käytetä latauspisteisiin. Aseta arvo alle {soc} hyödyntääksesi sitä älykkäässä lataustilassa. Huom: \"Lataa aina\" ei huomioi tätä asetusta.",
       "bufferStart": {
         "above": "kun akun varaus on yli {soc}",
         "full": "kun akku on täynnä",
@@ -146,11 +146,13 @@
       "template": "Valmistaja",
       "titleAdd": {
         "charging": "Lisää laturi",
-        "heating": "Lisää lämmityslaite"
+        "heating": "Lisää lämmityslaite",
+        "switch": "Lisää relepistorasia"
       },
       "titleEdit": {
         "charging": "Muokkaa laturia",
-        "heating": "Muokkaa lämmityslaitetta"
+        "heating": "Muokkaa lämmityslaitetta",
+        "switch": "Muokkaa relepistorasiaa"
       },
       "type": {
         "custom": {
@@ -232,6 +234,15 @@
       "titleAdd": "Lisää tehonrajoitin",
       "titleEdit": "Muokkaa tehonrajoitinta"
     },
+    "deviceRef": {
+      "add": {
+        "charger": "Lisää laturi",
+        "meter": "Lisää mittari",
+        "switch": "Lisää relepistorasia",
+        "tariff": "Lisää tariffi"
+      },
+      "noNesting": "Sisäiset rakenteet on rajoitettu yhteen tasoon. Valitse toinen vaihtoehto."
+    },
     "deviceValue": {
       "activeClients": "Aktiiviset asiakasyhteydet",
       "amount": "Määrä",
@@ -310,8 +321,16 @@
           "returnEnergy": "Purettu"
         },
         "consumer": {
+          "chargeStatusB": "valmiustila",
+          "chargeStatusC": "lämmittää",
           "energy": "Kulutettu",
           "returnEnergy": "Tuotettu"
+        },
+        "continuous": {
+          "chargeStatusB": "normaalitila",
+          "chargeStatusC": "tehostus",
+          "dimmed": "Rajoitettu",
+          "enabled": "Tehostettu"
         },
         "grid": {
           "energy": "Käytetty sähköverkosta",
@@ -383,6 +402,7 @@
       "optional": "valinnainen"
     },
     "general": {
+      "add": "Lisää",
       "applyAndClose": "Ota käyttöön ja sulje",
       "authPerform": "Yhdistä {provider}:lla",
       "authPerformHint": "Avaa uuden välilehden. Palaa tänne jatkaaksesi.",
@@ -394,6 +414,7 @@
       "confirmDisable": "Poista tämä laite käytöstä? Laitetta ei huomioida seuraavan käynnistyksen jälkeen.",
       "confirmEnable": "Ota laite uudelleen käyttöön?",
       "confirmSave": "Asetuksien muutoksia on tallentamatta. Tallennetaanko nyt heti?",
+      "continue": "Jatka",
       "copied": "Kopioitu!",
       "copy": "Kopioi",
       "customHelp": "Luo itsemääritelty laite käyttäen EVCC:n lisäosaa.",
@@ -495,7 +516,7 @@
         "charging": "Lisää laturi",
         "heating": "Lisää lämmityslaite"
       },
-      "addMeter": "Lisää erillinen kulutusmittari",
+      "addMeter": "Lisää mittari",
       "advancedConfig": "Lisäasetukset",
       "cancel": "Peruuta",
       "chargerError": {
@@ -531,10 +552,31 @@
       "defaultModeKeep": "pidä nykyisellään",
       "defaultModeLabel": "Oletustila",
       "delete": "Poista",
+      "demandPredictor": {
+        "daily": {
+          "description": "Viime päivien keskiarvo. Laitteille, joilla on sama kulutusprofiili joka päivä.",
+          "label": "Päivittäinen keskiarvo"
+        },
+        "defaultGroup": "Laitteen vakioasetus",
+        "description": "Miten optimoija ennustaa tarvetta menneen kulutuksen perusteella.",
+        "label": "Profiili",
+        "noTempTariff": "Vaatii lämpötilaennusteen.",
+        "noTempTariffLink": "Lisää ennuste",
+        "profilesGroup": "Profiilit",
+        "temperature": {
+          "description": "Mennyt kulutus on riippuvainen ulkolämpötilasta. Lämmityslaitteille, kuten lämpöpumpuille.",
+          "label": "Lämpötila"
+        },
+        "title": "Vaadi ennuste",
+        "weekday": {
+          "description": "Viikonpäivän keskiarvo. Laitteille, joilla on viikkoaikataulu, kuten mahdollisesti lämminvesivaraaja tai allaslämmitys.",
+          "label": "Viikonpäivä"
+        }
+      },
       "electricalSubtitle": "Jos olet epävarma, kysy sähköasentajaltasi.",
       "electricalTitle": "Sähköinen",
       "energyMeterHelp": "Lisämittari, jos laturissa ei ole integroitua energiamittaria.",
-      "energyMeterLabel": "Energiamittari",
+      "energyMeterLabel": "Erillinen energiamittari",
       "estimateLabel": "Arvioi lataustaso API-päivitysten välillä",
       "maxCurrentHelp": "On oltava minimivirtaa suurempi.",
       "maxCurrentLabel": "Maksimivirta",
@@ -715,10 +757,18 @@
         "grid": "Lisää verkon syöttömittari",
         "pv": "Lisää aurinkovoimalan mittari"
       },
+      "reuseApply": "Käytä sen asetuksia.",
+      "reuseHint": "{device} voidaan käyttää myös nimellä \"{target}\".",
       "save": "Tallenna",
       "specific": "Erityisintegraatiot",
       "template": "Valmistaja",
       "titleChoice": "Mitä haluat lisätä?",
+      "titleExample": {
+        "aux": "Älykäs lämminvesivaraaja, yms.",
+        "battery": "Kellari, autotalli, voimala, yms.",
+        "consumer": "Astianpesukone, pesukone, uima-altaan pumppu, yms.",
+        "pv": "Eteläpuoleinen katto, autokatos, yms."
+      },
       "titleLabel": "Otsikko",
       "usage": {
         "aux": "Kulutusta säätelevä käyttäjä",
@@ -976,6 +1026,15 @@
         "example": "Sinulta veloitettu hinta oli {price}. Säästit {amount}.",
         "label": "Valuutta"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V ilman PEN/nollajohdinta muuntajalta (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V PEN/nollajohtimella (3P4W)",
+        "description": {
+          "3p3w": "Verkko ilman nollajohdinta. Yleinen Norjassa ja osassa Belgiaa.",
+          "3p4w": "Yleisin verkkotyyppi, jossa on nollajohdin."
+        },
+        "label": "Sähköverkkoliittymä"
+      },
       "siteTitle": {
         "description": "Näytetään päänäkymässä ja selaimen välilehden otsikossa.",
         "label": "Otsikko"
@@ -989,6 +1048,18 @@
       "descriptionToken": "GitHub-sponsorina löydät sponsorointitunnuksesi osoitteesta {url}. Päästäksesi alkuun tarjoamme {trialToken}.",
       "enterYourToken": "Sponsorointitunnuksesi",
       "error": "Sponsoritunnus ei kelpaa.",
+      "inline": {
+        "applied": "Tunnus otettu käyttöön. Kiitos projektin tukemisesta!",
+        "apply": "Käytä",
+        "becomeSponsor": "ryhdy sponsoriksi",
+        "device": "Tämä laite on vain sponsoreiden käytettävissä.",
+        "feature": "Tämä ominaisuus on vain sponsoreiden käytettävissä.",
+        "learn": "Lue lisää ja {becomeSponsor}.",
+        "placeholder": "Liitä tunnus",
+        "title": "Sponsoritunnus vaaditaan",
+        "trial": "Pääset alkuun nopeasti.",
+        "trialLink": "Hanki kokeilutunnus"
+      },
       "invalid": "epäkelpo",
       "labelToken": "Sponsoritunnus",
       "title": "Sponsorointi",
@@ -1083,7 +1154,8 @@
       "solar": {
         "description": "Aurinkotuotantoennuste aurinkovoimalle. Näytetään käyttöliittymässä ja mahdollisesti käytetään tulevaisuudessa latausoptimointialgoritmiin.",
         "titleAdd": "Lisää aurinkotuotantoennuste",
-        "titleEdit": "Muokkaa aurinkotuotantoennustetta"
+        "titleEdit": "Muokkaa aurinkotuotantoennustetta",
+        "titleExample": "Eteläpuoleinen katto, autokatos, yms."
       },
       "temperature": {
         "description": "Ulkolämpötilaennuste sijainnillesi. Näytetään käyttöliittymässä ja sitä käytetään ennakoimaan lämmitystarvetta.",
@@ -1093,6 +1165,7 @@
       "template": "Lähde",
       "title": "Tariffit & ennusteet",
       "titleChoice": "Mitä haluat lisätä?",
+      "titleSub": "Alitariffi",
       "type": {
         "co2": "CO₂-intensiteetti",
         "feedIn": "Sähkön myyntihinta verkkoon",
@@ -1553,7 +1626,8 @@
         "continuousCo2Description": "Valitsee puhtaimman yhteisen aikajakson.",
         "continuousPriceDescription": "Valitsee halvimman yhtenäisen aikajakson.",
         "disabledDescription": "Vaatii muuttuvan sähköhinnan tai CO₂-ennusteen.",
-        "label": "Optimointi"
+        "label": "Optimointi",
+        "optimizerDescription": "{optimizer} valitsee halvimmat hetket. Voi aiheuttaa useita aloituksia ja lopetuksia."
       },
       "planNumber": "Suunnitelma {number}",
       "precondition": {
@@ -1711,6 +1785,11 @@
       "login": "kirjaudu sisään",
       "logout": "kirjaudu ulos"
     },
+    "setup": {
+      "description": "Lisää laitteesi nähdäksesi energiavuon ja aloittaaksesi lataamisen aurinkosähköllä.",
+      "start": "Aloita asennus",
+      "title": "Tervetuloa!"
+    },
     "startConfiguration": "Aloita määritys",
     "targetCharge": {
       "activate": "Aktivoi",
@@ -1838,6 +1917,76 @@
     "restartNeeded": "Tarvitaan muutosten käyttöönottamiseksi.",
     "restarting": "Palvelin tulee takaisin hetken kuluttua.",
     "starting": "Käynnistetään palvelinta..."
+  },
+  "onboarding": {
+    "another": "Lisää toinen",
+    "back": "Takaisin",
+    "battery": {
+      "add": "Lisää kotiakku",
+      "description": "Lisää akkusi, jotta lataus huomioi sen ja näet, mitä se tekee.",
+      "none": "Ei kotiakkua",
+      "title": "Onko sinulla kotiakku?"
+    },
+    "checklist": {
+      "dismiss": "Sulje",
+      "legacyTariffs": "Vanhaa tariffimääritystä käytössä.",
+      "progress": "{done}/{total} valmista",
+      "title": "Viimeistele käyttöönotto"
+    },
+    "control": {
+      "description": "Aloita ensimmäisestä. Lisää voi lisätä myöhemmin asetussivulla.",
+      "none": "Ei vielä mitään",
+      "title": "Mitä haluat ohjata?"
+    },
+    "done": {
+      "close": "Siirry asetuksiin",
+      "description": "Uudelleenkäynnistys ottaa asetukset käyttöön. Tutustu sitten ominaisuuksiin. Ajoneuvoja, sähkötariffeja ja muuta voi lisätä milloin tahansa.",
+      "restart": "Käynnistä uudelleen",
+      "title": "Kaikki valmista"
+    },
+    "grid": {
+      "add": "Lisää verkkomittari",
+      "confirm": "Verkkomittari on ylijäämälatauksen ja energiatilastojen perusta. Sen lisäämistä suositellaan.",
+      "confirmNone": "Jatka ilman",
+      "description": "Mittaa verkosta käytetyn ja verkkoon syötetyn sähkön liittymispisteessä. Tekee ylijäämälatauksesta tarkan.",
+      "none": "Ei verkkomittaria",
+      "title": "Onko sinulla verkkomittari?"
+    },
+    "item": {
+      "battery": "Kotiakku",
+      "co2": "CO₂-ennuste",
+      "consumer": "Kuluttaja",
+      "grid": "Verkkomittari",
+      "gridExport": "Sähköverkkoon myynnin tariffi",
+      "gridImport": "Sähköverkon kulutuksen tariffi",
+      "heater": "Lämmityslaite",
+      "loadpoint": "Latauspiste",
+      "pv": "Aurinkovoimala",
+      "solar": "Aurinkoennuste"
+    },
+    "password": {
+      "description": "Suojaa asetukset luvattomilta muutoksilta. Muista se, sillä sitä ei voi helposti nollata.",
+      "disabled": "Tunnistautuminen on poistettu käytöstä ({flag}). Kuka tahansa, jolla on pääsy tähän verkkoon, voi muuttaa asetuksia, lukea tallennetut tunnistetiedot ja ajaa komentosarjoja. Suojaa pääsy muilla keinoin.",
+      "title": "Aseta ylläpitäjän salasana"
+    },
+    "pv": {
+      "add": "Lisää aurinkovoimala",
+      "description": "Mittaa aurinkosähkön tuotantoa. Tarvitaan aurinko-osuuteen ja ylijäämälataukseen.",
+      "none": "Ei aurinkovoimalaa",
+      "title": "Onko sinulla aurinkovoimala?"
+    },
+    "site": {
+      "currencyHint": "esim. {price}, {amount}",
+      "defaultTitle": "Koti",
+      "description": "Muutama perustieto kodistasi. Voit muuttaa niitä milloin tahansa.",
+      "title": "Kohteesi"
+    },
+    "skip": "Ohita asetus",
+    "step": "Vaihe {step}/{total}",
+    "welcome": {
+      "description": "Määritä kotiasennuksesi tärkeimmät osat aloittaaksesi älykkään latauksen.",
+      "start": "Aloita"
+    }
   },
   "passwordModal": {
     "description": "Aseta salasana suojellaksesi määritys asetuksia. Pääikkunan käyttö on silti mahdollista ilman kirjautumista.",

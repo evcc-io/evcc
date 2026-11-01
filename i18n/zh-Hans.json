@@ -375,6 +375,7 @@
       "optional": "bucket"
     },
     "general": {
+      "add": "添加",
       "applyAndClose": "应用并关闭",
       "authPerform": "连接 {provider}",
       "authPerformHint": "将在新标签页中打开。完成后返回此处继续。",
@@ -386,6 +387,7 @@
       "confirmDisable": "停用此设备？下次重启后将忽略该设备。",
       "confirmEnable": "重新启用此设备？",
       "confirmSave": "有未保存的更改。是否立即保存？",
+      "continue": "继续",
       "copied": "已复制！",
       "copy": "复制",
       "customHelp": "使用 evcc 的插件系统创建用户定义的设备。",
@@ -560,16 +562,24 @@
       "priorityLabel": "优先级",
       "save": "保存",
       "solarShareReset": "移除阈值",
+      "solarTitle": "太阳能余电行为",
       "temperatureRangeHelp": "温度条的显示范围。不影响控制。",
       "temperatureRangeTitle": "温度范围",
+      "thresholdDisableDelayHelp": "余电不足 {delay} 时停止。",
       "thresholdDisableDelayLabel": "停用延迟",
       "thresholdDisableHelpInvalid": "请输入一个正值。",
       "thresholdDisableHelpPositive": "当从电网取电超过 {power} 并持续 {delay} 时，停止充电。",
       "thresholdDisableLabel": "停用电网功率阈值",
+      "thresholdEnableDelayHelp": "余电充足 {delay} 时开始。",
       "thresholdEnableDelayLabel": "启用延迟",
       "thresholdEnableHelpInvalid": "请输入一个负值。",
       "thresholdEnableHelpNegative": "当有 {surplus} 剩余电力并持续 {delay} 时，开始充电。",
       "thresholdEnableLabel": "启用电网功率阈值",
+      "thresholdsNote": {
+        "charging": "如需控制太阳能充电时的电网用电，请使用 {page} 页面充电点设置中的 {slider} 滑块。仅在特殊情况下在此设置数值。",
+        "heating": "如需控制太阳能加热时的电网用电，请使用 {page} 页面加热器设置中的 {slider} 滑块。仅在特殊情况下在此设置数值。"
+      },
+      "thresholdsSliderDisabled": "由于此处已设置数值，{slider} 滑块当前已禁用。",
       "titleAdd": {
         "charging": "添加充电点",
         "heating": "添加加热器",
@@ -699,10 +709,18 @@
         "grid": "添加电网计量表",
         "pv": "添加太阳能计量表"
       },
+      "reuseApply": "使用其设置。",
+      "reuseHint": "{device} 也可用作“{target}”。",
       "save": "保存",
       "specific": "特定集成",
       "template": "制造商",
       "titleChoice": "您想添加什么？",
+      "titleExample": {
+        "aux": "智能热水器等",
+        "battery": "地下室、车库、储能站等",
+        "consumer": "洗碗机、洗衣机、泳池泵等",
+        "pv": "南向屋顶、车棚等"
+      },
       "titleLabel": "标题",
       "usage": {
         "aux": "智能耗电设备",
@@ -957,6 +975,15 @@
         "example": "您的充电价格为 {price}。您节省了 {amount}。",
         "label": "货币"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V，无中性线 (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V，带中性线 (3P4W)",
+        "description": {
+          "3p3w": "无中性线电网。常见于挪威和比利时部分地区。",
+          "3p4w": "最常见的带中性线电网。"
+        },
+        "label": "电网连接"
+      },
       "siteTitle": {
         "description": "显示在主屏幕和浏览器标签页上。",
         "label": "标题"
@@ -970,6 +997,18 @@
       "descriptionToken": "您可以从 {url} 获取令牌。我们也提供用于测试的试用令牌。 {trialToken}.",
       "enterYourToken": "您的赞助令牌",
       "error": "赞助令牌无效。",
+      "inline": {
+        "applied": "令牌已应用。感谢您支持本项目！",
+        "apply": "应用",
+        "becomeSponsor": "成为赞助者",
+        "device": "此设备仅供赞助者使用。",
+        "feature": "此功能仅供赞助者使用。",
+        "learn": "了解更多并{becomeSponsor}。",
+        "placeholder": "粘贴令牌",
+        "title": "需要赞助令牌",
+        "trial": "快速上手。",
+        "trialLink": "获取试用令牌"
+      },
       "invalid": "无效",
       "labelToken": "赞助令牌",
       "title": "赞助",
@@ -1064,7 +1103,8 @@
       "solar": {
         "description": "光伏系统的太阳能发电预测。显示在界面中，未来将用于优化算法。",
         "titleAdd": "添加太阳能预测",
-        "titleEdit": "编辑太阳能预测"
+        "titleEdit": "编辑太阳能预测",
+        "titleExample": "南向屋顶、车棚等"
       },
       "temperature": {
         "description": "您所在位置的室外温度预测。显示在界面中，并用于预测供暖需求。",
@@ -1691,6 +1731,11 @@
       "login": "登录",
       "logout": "登出"
     },
+    "setup": {
+      "description": "添加您的设备，查看能量流并开始使用太阳能充电。",
+      "start": "开始设置",
+      "title": "欢迎！"
+    },
     "startConfiguration": "开始配置",
     "targetCharge": {
       "activate": "启用",
@@ -1816,6 +1861,76 @@
     "restartNeeded": "需要重启以应用更改。",
     "restarting": "服务器稍后将恢复。",
     "starting": "正在启动服务器..."
+  },
+  "onboarding": {
+    "another": "再添加一个",
+    "back": "返回",
+    "battery": {
+      "add": "添加住宅电池",
+      "description": "添加电池，使充电时将其考虑在内，并可查看其运行情况。",
+      "none": "无住宅电池",
+      "title": "您有住宅电池吗？"
+    },
+    "checklist": {
+      "dismiss": "忽略",
+      "legacyTariffs": "正在使用旧版电价配置。",
+      "progress": "已完成 {done}/{total}",
+      "title": "完成设置"
+    },
+    "control": {
+      "description": "先从第一个开始。之后可在配置页面添加更多。",
+      "none": "暂无",
+      "title": "您想控制什么？"
+    },
+    "done": {
+      "close": "前往配置",
+      "description": "重启后配置生效。然后探索各项功能。车辆、电价等可随时添加。",
+      "restart": "重启",
+      "title": "一切就绪"
+    },
+    "grid": {
+      "add": "添加电网计量表",
+      "confirm": "电网计量表是余电充电和能源统计的基础。建议添加。",
+      "confirmNone": "不添加并继续",
+      "description": "测量连接点的电网取电和馈电，使余电充电更精确。",
+      "none": "无电网计量表",
+      "title": "您有电网计量表吗？"
+    },
+    "item": {
+      "battery": "住宅电池",
+      "co2": "CO₂ 预测",
+      "consumer": "耗电设备",
+      "grid": "电网计量表",
+      "gridExport": "电网馈电电价",
+      "gridImport": "电网取电电价",
+      "heater": "加热器",
+      "loadpoint": "充电点",
+      "pv": "太阳能系统",
+      "solar": "太阳能预测"
+    },
+    "password": {
+      "description": "保护配置设置不被未经授权更改。请牢记密码，没有简便的重置方法。",
+      "disabled": "身份验证已禁用 ({flag})。任何能访问网络的人都可以更改配置、读取已存储的凭据并运行脚本。请通过其他方式保护访问。",
+      "title": "设置管理员密码"
+    },
+    "pv": {
+      "add": "添加太阳能系统",
+      "description": "测量太阳能发电量。太阳能占比和余电充电需要它。",
+      "none": "无太阳能系统",
+      "title": "您有太阳能系统吗？"
+    },
+    "site": {
+      "currencyHint": "例如 {price}、{amount}",
+      "defaultTitle": "家",
+      "description": "关于您住所的一些基本信息。可随时更改。",
+      "title": "您的站点"
+    },
+    "skip": "跳过设置",
+    "step": "第 {step} 步，共 {total} 步",
+    "welcome": {
+      "description": "设置家庭装置中最重要的部分，开始智能充电。",
+      "start": "开始"
+    }
   },
   "passwordModal": {
     "description": "设置密码以保护配置设置。主屏幕仍可在未登录情况下使用。",

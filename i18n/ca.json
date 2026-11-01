@@ -381,6 +381,7 @@
       "optional": "opcional"
     },
     "general": {
+      "add": "Afegeix",
       "applyAndClose": "Aplica i tanca",
       "authPerform": "Connecta’t amb {provider}",
       "authPerformHint": "S’obrirà en una pestanya nova. Torneu aquí per a continuar.",
@@ -392,6 +393,7 @@
       "confirmDisable": "Voleu inhabilitar aquest dispositiu? S’ignorarà després del pròxim reinici.",
       "confirmEnable": "Voleu tornar a habilitar aquest dispositiu?",
       "confirmSave": "Hi ha canvis sense desar. Voleu desar-los ara?",
+      "continue": "Continua",
       "copied": "Copiat!",
       "copy": "Copia",
       "customHelp": "Crea un dispositiu definit per l’usuari mitjançant el sistema de complements d’evcc.",
@@ -566,16 +568,24 @@
       "priorityLabel": "Prioritat",
       "save": "Desa",
       "solarShareReset": "Elimineu els llindars",
+      "solarTitle": "Comportament amb excedent solar",
       "temperatureRangeHelp": "Interval de visualització de la barra de temperatura. No afecta el control.",
       "temperatureRangeTitle": "Interval de temperatura",
+      "thresholdDisableDelayHelp": "S’atura quan no hi ha prou excedent durant {delay}.",
       "thresholdDisableDelayLabel": "Retard de desactivació",
       "thresholdDisableHelpInvalid": "Utilitzeu un valor positiu.",
       "thresholdDisableHelpPositive": "Atura quan s’utilitzen més de {power} de la xarxa durant {delay}.",
       "thresholdDisableLabel": "Potència de xarxa de desactivació",
+      "thresholdEnableDelayHelp": "S’inicia quan hi ha prou excedent durant {delay}.",
       "thresholdEnableDelayLabel": "Retard d’activació",
       "thresholdEnableHelpInvalid": "Utilitzeu un valor negatiu.",
       "thresholdEnableHelpNegative": "Inicia quan hi hagi un excedent de {surplus} disponible durant {delay}.",
       "thresholdEnableLabel": "Potència de xarxa d’activació",
+      "thresholdsNote": {
+        "charging": "Per controlar l’ús de la xarxa durant la càrrega solar, feu servir el control lliscant {slider} a la configuració del punt de recàrrega a la pàgina {page}. Establiu valors aquí només en casos especials.",
+        "heating": "Per controlar l’ús de la xarxa durant l’escalfament solar, feu servir el control lliscant {slider} a la configuració de l’escalfador a la pàgina {page}. Establiu valors aquí només en casos especials."
+      },
+      "thresholdsSliderDisabled": "El control lliscant {slider} està desactivat actualment perquè s’han establert valors aquí.",
       "titleAdd": {
         "charging": "Afegeix punt de recàrrega",
         "heating": "Afegeix escalfador",
@@ -705,10 +715,18 @@
         "grid": "Afegeix mesurador de xarxa",
         "pv": "Afegeix comptador solar"
       },
+      "reuseApply": "Utilitza’n la configuració.",
+      "reuseHint": "{device} també es pot utilitzar com a «{target}».",
       "save": "Desa",
       "specific": "Integracions específiques",
       "template": "Fabricant",
       "titleChoice": "Què voleu afegir?",
+      "titleExample": {
+        "aux": "Escalfador d’aigua intel·ligent, etc.",
+        "battery": "Soterrani, garatge, central elèctrica, etc.",
+        "consumer": "Rentaplats, rentadora, bomba de piscina, etc.",
+        "pv": "Teulada sud, cobert per a cotxes, etc."
+      },
       "titleLabel": "Títol",
       "usage": {
         "aux": "Consumidor autoregulat",
@@ -966,6 +984,15 @@
         "example": "El preu de la càrrega ha estat {price}. Heu estalviat {amount}.",
         "label": "Divisa"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V sense neutre (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V amb neutre (3P4W)",
+        "description": {
+          "3p3w": "Xarxa sense conductor neutre. Habitual a Noruega i en algunes zones de Bèlgica.",
+          "3p4w": "La xarxa més habitual, amb conductor neutre."
+        },
+        "label": "Connexió a la xarxa"
+      },
       "siteTitle": {
         "description": "Es mostra a la pantalla principal i a la pestanya del navegador.",
         "label": "Títol"
@@ -979,6 +1006,18 @@
       "descriptionToken": "Com a GitHub Sponsor trobareu el vostre testimoni a {url}. Per a començar, oferim un {trialToken}.",
       "enterYourToken": "El vostre testimoni de patrocinador",
       "error": "El testimoni de patrocinador no és vàlid.",
+      "inline": {
+        "applied": "Testimoni aplicat. Gràcies per donar suport al projecte!",
+        "apply": "Aplica",
+        "becomeSponsor": "fer-vos patrocinador",
+        "device": "Aquest dispositiu només està disponible per a patrocinadors.",
+        "feature": "Aquesta funció només està disponible per a patrocinadors.",
+        "learn": "Més informació i {becomeSponsor}.",
+        "placeholder": "Enganxeu el testimoni",
+        "title": "Cal un testimoni de patrocinador",
+        "trial": "Comenceu ràpidament.",
+        "trialLink": "Obteniu un testimoni de prova"
+      },
       "invalid": "no vàlid",
       "labelToken": "Testimoni de patrocinador",
       "title": "Patrocini",
@@ -1073,7 +1112,8 @@
       "solar": {
         "description": "Previsió de producció solar del vostre sistema fotovoltaic. Es mostra a la interfície i en el futur s’utilitzarà per als algorismes d’optimització.",
         "titleAdd": "Afegeix previsió solar",
-        "titleEdit": "Edita previsió solar"
+        "titleEdit": "Edita previsió solar",
+        "titleExample": "Teulada sud, cobert per a cotxes, etc."
       },
       "temperature": {
         "description": "Previsió de temperatura exterior de la vostra ubicació. Es mostra a la interfície i s’utilitza per a predir la demanda de calefacció.",
@@ -1695,6 +1735,11 @@
       "login": "inicieu la sessió",
       "logout": "tanqueu la sessió"
     },
+    "setup": {
+      "description": "Afegiu els vostres dispositius per veure el flux d’energia i començar a carregar amb energia solar.",
+      "start": "Configura",
+      "title": "Us donem la benvinguda!"
+    },
     "startConfiguration": "Comencem amb la configuració",
     "targetCharge": {
       "activate": "Activa",
@@ -1822,6 +1867,76 @@
     "restartNeeded": "Cal reiniciar per a aplicar els canvis.",
     "restarting": "El servidor tornarà d’aquí a un moment.",
     "starting": "S’està iniciant el servidor…"
+  },
+  "onboarding": {
+    "another": "Afegeix-ne un altre",
+    "back": "Enrere",
+    "battery": {
+      "add": "Afegeix bateria domèstica",
+      "description": "Afegiu la bateria perquè la càrrega la tingui en compte i pugueu veure què fa.",
+      "none": "Sense bateria domèstica",
+      "title": "Teniu una bateria domèstica?"
+    },
+    "checklist": {
+      "dismiss": "Descarta",
+      "legacyTariffs": "S’utilitza la configuració de tarifes antiga.",
+      "progress": "{done} de {total} fets",
+      "title": "Completeu la configuració"
+    },
+    "control": {
+      "description": "Comenceu pel primer. Se’n poden afegir més a la pàgina de configuració.",
+      "none": "Encara res",
+      "title": "Què voleu controlar?"
+    },
+    "done": {
+      "close": "Ves a la configuració",
+      "description": "Un reinici aplica la configuració. Després, exploreu les funcions. Es poden afegir vehicles, tarifes i més en qualsevol moment.",
+      "restart": "Reinicia",
+      "title": "Ja ho teniu a punt"
+    },
+    "grid": {
+      "add": "Afegeix comptador de xarxa",
+      "confirm": "El comptador de xarxa és la base de la càrrega amb excedent i de les estadístiques d’energia. Es recomana afegir-ne un.",
+      "confirmNone": "Continua sense",
+      "description": "Mesura la importació i l’exportació de la xarxa al punt de connexió. Fa precisa la càrrega amb excedent.",
+      "none": "Sense comptador de xarxa",
+      "title": "Teniu un comptador de xarxa?"
+    },
+    "item": {
+      "battery": "Bateria domèstica",
+      "co2": "Previsió de CO₂",
+      "consumer": "Consumidor",
+      "grid": "Comptador de xarxa",
+      "gridExport": "Tarifa d’exportació a la xarxa",
+      "gridImport": "Tarifa d’importació de la xarxa",
+      "heater": "Escalfador",
+      "loadpoint": "Punt de recàrrega",
+      "pv": "Sistema fotovoltaic",
+      "solar": "Previsió solar"
+    },
+    "password": {
+      "description": "Protegeix la configuració de canvis no autoritzats. Recordeu-la, no hi ha cap manera fàcil de restablir-la.",
+      "disabled": "L’autenticació està desactivada ({flag}). Qualsevol persona amb accés a la xarxa pot canviar la configuració, llegir les credencials desades i executar scripts. Protegiu l’accés per altres mitjans.",
+      "title": "Estableix la contrasenya d’administrador"
+    },
+    "pv": {
+      "add": "Afegeix sistema fotovoltaic",
+      "description": "Mesura la producció solar. Necessari per a la quota solar i la càrrega amb excedent.",
+      "none": "Sense sistema fotovoltaic",
+      "title": "Teniu un sistema fotovoltaic?"
+    },
+    "site": {
+      "currencyHint": "p. ex. {price}, {amount}",
+      "defaultTitle": "Casa",
+      "description": "Alguns aspectes bàsics de la vostra llar. Els podeu canviar en qualsevol moment.",
+      "title": "El vostre emplaçament"
+    },
+    "skip": "Omet",
+    "step": "Pas {step} de {total}",
+    "welcome": {
+      "description": "Configureu les parts més importants de la vostra instal·lació domèstica per començar la càrrega intel·ligent.",
+      "start": "Comença"
+    }
   },
   "passwordModal": {
     "description": "Establiu una contrasenya per a protegir els paràmetres de configuració. Podeu continuar utilitzant la pantalla principal sense iniciar la sessió.",
