@@ -43,6 +43,7 @@ const (
 	rebootDelay = 15 * time.Minute // delayed reboot on error
 	serviceDB   = "/var/lib/evcc/evcc.db"
 	userDB      = "~/.evcc/evcc.db"
+	displayPort = 7072
 )
 
 var (
@@ -263,6 +264,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}()
 	log.INFO.Printf("UI local url:      http://127.0.0.1:%d", conf.Network.Port)
+	displayd := server.NewDisplayHTTPd(fmt.Sprintf(":%d", displayPort), cache)
+	go func() {
+		if err := wrapFatalError(displayd.Server.ListenAndServe()); err != nil && err != http.ErrServerClosed {
+			log.FATAL.Println(err)
+			os.Exit(1)
+		}
+	}()
+	log.INFO.Printf("Display local url: http://127.0.0.1:%d", displayPort)
 	if conf.Network.ExternalUrl != "" {
 		log.INFO.Printf("UI external url:   %s", conf.Network.ExternalURL())
 	}

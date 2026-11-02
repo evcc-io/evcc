@@ -46,6 +46,8 @@ Featured in [PV Magazine](https://www.pv-magazine.de/2022/01/14/mit-open-source-
 
 You'll find everything you need in our [documentation](https://docs.evcc.io/en/).
 
+evcc also serves a dedicated read-only display at http://127.0.0.1:7072. It shows live loadpoint and energy data and only supports switching loadpoints by swiping left or right.
+
 ## Contributing
 
 There are many ways to help, most of them without code. [docs.evcc.io/en/contribute](https://docs.evcc.io/en/contribute) gives an overview.

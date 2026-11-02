@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#010322" />
+    <meta name="description" content="Live-Anzeige für evcc-Ladepunkte" />
+    <title>evcc Display</title>
+    <link rel="stylesheet" href="/display.css" />
+    <script src="/display.js" defer></script>
+  </head>
+  <body>
+    <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <symbol id="sun" viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="8" />
+        <path
+          d="M22 3h4v8h-4zm0 34h4v8h-4zM3 22h8v4H3zm34 0h8v4h-8zM8.8 11.6l2.8-2.8 5.7 5.7-2.8 2.8zm22 22 2.8-2.8 5.7 5.7-2.8 2.8zm-19.2 0 5.7-5.7 2.8 2.8-5.7 5.7zm22-22 2.8 2.8-5.7 5.7-2.8-2.8z"
+        />
+      </symbol>
+      <symbol id="bolt" viewBox="0 0 48 48">
+        <path d="M27 2 9 27h13l-2 19 19-27H25z" />
+      </symbol>
+      <symbol id="car" viewBox="0 0 48 48">
+        <path
+          d="m8 25 3-10a5 5 0 0 1 5-4h16a5 5 0 0 1 5 4l3 10v12h-5v-4H13v4H8zm7-9-2 7h22l-2-7a1 1 0 0 0-1-1H16a1 1 0 0 0-1 1zm-2 13a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zm22 0a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"
+        />
+      </symbol>
+      <symbol id="plug" viewBox="0 0 48 48">
+        <path d="M17 5h4v12h6V5h4v12h6v7a13 13 0 0 1-11 12.9V45h-4v-8.1A13 13 0 0 1 11 24v-7h6z" />
+      </symbol>
+      <symbol id="battery" viewBox="0 0 48 48">
+        <path
+          d="M10 12h26a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4V16a4 4 0 0 1 4-4zm0 4v20h26V16zM18 5h10v4H18z"
+        />
+      </symbol>
+      <symbol id="alert" viewBox="0 0 48 48">
+        <path d="M24 4 2 43h44zm0 9 14.5 26h-29z" />
+        <path d="M22 20h4v10h-4zm0 13h4v4h-4z" />
+      </symbol>
+      <symbol id="cloud" viewBox="0 0 48 48">
+        <path
+          d="M14 37a11 11 0 0 1-1-22 13 13 0 0 1 24 4 9 9 0 0 1-1 18zm0-4h22a5 5 0 0 0 0-10h-3v-2a9 9 0 0 0-17-3l-1 2h-1a7 7 0 0 0 0 13z"
+        />
+      </symbol>
+    </svg>
+
+    <main class="screen" id="screen">
+      <header class="topbar">
+        <h1 id="loadpoint-title">evcc</h1>
+        <div class="topbar-info">
+          <span class="home-battery" id="home-battery" hidden>
+            <svg class="icon" aria-hidden="true"><use href="#battery" /></svg>
+            <span id="battery-soc"></span>
+          </span>
+          <time id="clock"></time>
+          <svg class="icon warning" id="warning" aria-label="Keine aktuellen Daten" hidden>
+            <use href="#alert" />
+          </svg>
+        </div>
+      </header>
+
+      <section class="content" id="content" aria-live="polite">
+        <div class="summary">
+          <p class="vehicle" id="vehicle">
+            <svg class="icon" aria-hidden="true"><use id="vehicle-icon" href="#car" /></svg>
+            <span id="vehicle-text"></span>
+          </p>
+          <div class="reading" id="reading">
+            <span class="main-value" id="main-value"></span>
+            <span class="unit">kW</span>
+            <svg class="icon main-icon" id="main-icon" aria-hidden="true"><use href="#bolt" /></svg>
+          </div>
+          <div class="idle-reading" id="idle-reading" hidden>
+            <svg class="icon" id="idle-icon" aria-hidden="true"><use href="#plug" /></svg>
+            <span id="idle-text"></span>
+          </div>
+          <p class="status" id="status"></p>
+        </div>
+
+        <aside class="details">
+          <div class="energy-flow" id="energy-flow" hidden>
+            <div class="flow-track"><span id="flow-fill"></span></div>
+            <div class="flow-labels">
+              <span id="flow-left"></span>
+              <span id="flow-right"></span>
+            </div>
+          </div>
+          <div class="tiles" id="tiles" hidden>
+            <article class="tile" id="tile-0">
+              <span class="tile-label" id="tile-label-0"></span>
+              <strong class="tile-value" id="tile-value-0"></strong>
+            </article>
+            <article class="tile" id="tile-1">
+              <span class="tile-label" id="tile-label-1"></span>
+              <strong class="tile-value" id="tile-value-1"></strong>
+            </article>
+            <article class="tile" id="tile-2">
+              <span class="tile-label" id="tile-label-2"></span>
+              <strong class="tile-value" id="tile-value-2"></strong>
+            </article>
+          </div>
+        </aside>
+      </section>
+
+      <footer class="bottom">
+        <div class="mode-segments" aria-label="Aktueller Lademodus">
+          <div class="mode" data-mode="smart"><span>Smart</span><small>nur Sonne</small></div>
+          <div class="mode" data-mode="slow"><span>Langsam</span><small>lädt immer</small></div>
+          <div class="mode" data-mode="fast"><span>Schnell</span><small>volle Leistung</small></div>
+        </div>
+        <div class="page-dots" id="page-dots" aria-label="Ladepunkt"></div>
+      </footer>
+    </main>
+  </body>
+</html>

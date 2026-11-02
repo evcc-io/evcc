@@ -73,6 +73,7 @@ make
 ```
 
 Open UI at http://127.0.0.1:7070
+The read-only garage display is served at http://127.0.0.1:7072 and switches loadpoints by horizontal swiping.
 
 To run without creating the `evcc` binary use:
 
