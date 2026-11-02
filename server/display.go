@@ -16,7 +16,7 @@ import (
 )
 
 var displayLoadpointFields = []string{
-	"name", "title", "mode", "alwaysCharge", "chargePower", "charging", "connected",
+	"name", "title", "disabled", "mode", "alwaysCharge", "chargePower", "charging", "connected",
 	"sessionEnergy", "chargedEnergy", "chargeDuration", "phasesActive", "sessionSolarPercentage",
 	"vehicleSoc", "vehicleTitle", "pvAction", "pvRemaining", "planActive", "smartCostActive",
 	"effectiveMinCurrent", "minCurrent", "phasesConfigured", "chargerPhases1p3p",

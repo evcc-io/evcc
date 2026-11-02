@@ -93,7 +93,7 @@ function isIgnoredLoadpoint(loadpoint) {
 function visibleLoadpoints(loadpoints) {
   return loadpoints
     .map((loadpoint, index) => ({ loadpoint, index }))
-    .filter(({ loadpoint }) => !isIgnoredLoadpoint(loadpoint));
+    .filter(({ loadpoint }) => loadpoint?.disabled !== true && !isIgnoredLoadpoint(loadpoint));
 }
 
 function selectInitialLoadpoint(loadpoints) {

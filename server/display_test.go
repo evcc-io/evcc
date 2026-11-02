@@ -20,6 +20,10 @@ func TestDisplayHTTPdReadOnly(t *testing.T) {
 	cache.Add("0.title", util.Param{Loadpoint: &lpIndex, Key: "title", Val: "Garage"})
 	cache.Add("0.charging", util.Param{Loadpoint: &lpIndex, Key: "charging", Val: true})
 	cache.Add("0.password", util.Param{Loadpoint: &lpIndex, Key: "password", Val: "private-loadpoint-data"})
+	disabledIndex := 1
+	cache.Add("1.name", util.Param{Loadpoint: &disabledIndex, Key: "name", Val: "lp-2"})
+	cache.Add("1.title", util.Param{Loadpoint: &disabledIndex, Key: "title", Val: "Disabled"})
+	cache.Add("1.disabled", util.Param{Loadpoint: &disabledIndex, Key: "disabled", Val: true})
 	cache.Add("pvPower", util.Param{Key: "pvPower", Val: 1500})
 	cache.Add("siteTitle", util.Param{Key: "siteTitle", Val: "private-site-data"})
 	cache.Add("battery", util.Param{Key: "battery", Val: map[string]any{"soc": 50, "power": 1000, "serial": "private-battery-data"}})
@@ -49,13 +53,17 @@ func TestDisplayHTTPdReadOnly(t *testing.T) {
 
 	loadpoints, ok := state["loadpoints"].([]any)
 	require.True(t, ok)
-	require.Len(t, loadpoints, 1)
+	require.Len(t, loadpoints, 2)
 	loadpoint, ok := loadpoints[0].(map[string]any)
 	require.True(t, ok)
 	require.Equal(t, "lp-1", loadpoint["name"])
 	require.Equal(t, "Garage", loadpoint["title"])
 	require.Equal(t, true, loadpoint["charging"])
 	require.NotContains(t, loadpoint, "password")
+
+	disabledLoadpoint, ok := loadpoints[1].(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, true, disabledLoadpoint["disabled"])
 
 	battery, ok := state["battery"].(map[string]any)
 	require.True(t, ok)
