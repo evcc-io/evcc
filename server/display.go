@@ -35,7 +35,7 @@ func NewDisplayHTTPd(addr string, cache *util.ParamCache) *HTTPd {
 	}
 
 	router := mux.NewRouter()
-	router.Handle("/api/state", http.HandlerFunc(displayStateHandler(cache))).Methods(http.MethodGet)
+	router.Handle("/api/state", displayStateHandler(cache)).Methods(http.MethodGet)
 	router.HandleFunc("/i18n/{locale:[a-zA-Z0-9-]+\\.json}", displayTranslationHandler).Methods(http.MethodGet)
 	router.HandleFunc("/fonts/{name:Montserrat-(?:Medium|Bold)\\.woff2}", displayFontHandler).Methods(http.MethodGet)
 
