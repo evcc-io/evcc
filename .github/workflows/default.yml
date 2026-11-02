@@ -61,6 +61,7 @@ jobs:
         with:
           node-version-file: ".node-version"
           cache: true
+          cache-toolchain: true
 
       - run: mkdir dist && touch dist/empty
 
@@ -131,6 +132,7 @@ jobs:
         with:
           node-version-file: ".node-version"
           cache: true
+          cache-toolchain: true
 
       - name: Install
         run: make install-ui
@@ -214,6 +216,7 @@ jobs:
         with:
           node-version-file: ".node-version"
           cache: true
+          cache-toolchain: true
 
       - name: Install
         run: make install-ui
@@ -336,6 +339,7 @@ jobs:
         with:
           node-version-file: ".node-version"
           cache: true
+          cache-toolchain: true
 
       - name: Get Playwright version
         run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
