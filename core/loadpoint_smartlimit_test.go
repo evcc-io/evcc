@@ -3,12 +3,14 @@ package core
 import (
 	"testing"
 
+	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -54,29 +56,32 @@ done:
 // TestPvScalePhasesSolarLimitDown asserts that an active 3p session converges
 // to a single phase once the solar 1p limit is enabled, even with ample surplus.
 func TestPvScalePhasesSolarLimitDown(t *testing.T) {
-	Voltage = 230
 
 	ctrl := gomock.NewController(t)
 
 	plainCharger := api.NewMockCharger(ctrl)
+	plainCharger.EXPECT().MaxCurrent(gomock.Any()).Return(nil).AnyTimes()
 	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
 
 	vehicle := api.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Phases().Return(3).AnyTimes()
 	vehicle.EXPECT().Features().AnyTimes()
+	vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
 
 	lp := &Loadpoint{
 		log:              util.NewLogger("foo"),
 		clock:            clock.NewMock(),
+		bus:              evbus.New(),
 		wakeUpTimer:      NewTimer(),
 		minCurrent:       6,
 		maxCurrent:       16,
 		vehicle:          vehicle,
 		phasesConfigured: 0, // allow switching
 		phases:           3,
-		chargePower:      3 * 6 * Voltage,
+		chargePower:      3 * 6 * grid.Voltage,
 		limitSolarPhases: true,
 		status:           api.StatusC,
+		enabled:          true,
 		charger: struct {
 			*api.MockCharger
 			*api.MockPhaseSwitcher
@@ -96,30 +101,33 @@ func TestPvScalePhasesSolarLimitDown(t *testing.T) {
 // otherwise scale up to 3 phases. Fast charging paths never reach
 // pvScalePhases, so they are unaffected by construction.
 func TestPvScalePhasesSmartLimit(t *testing.T) {
-	Voltage = 230
 
 	for _, limited := range []bool{false, true} {
 		ctrl := gomock.NewController(t)
 
 		plainCharger := api.NewMockCharger(ctrl)
+		plainCharger.EXPECT().MaxCurrent(gomock.Any()).Return(nil).AnyTimes()
 		phaseCharger := api.NewMockPhaseSwitcher(ctrl)
 
 		vehicle := api.NewMockVehicle(ctrl)
 		vehicle.EXPECT().Phases().Return(3).AnyTimes()
 		vehicle.EXPECT().Features().AnyTimes()
+		vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
 
 		lp := &Loadpoint{
 			log:              util.NewLogger("foo"),
 			clock:            clock.NewMock(),
+			bus:              evbus.New(),
 			wakeUpTimer:      NewTimer(),
 			minCurrent:       6,
 			maxCurrent:       16,
 			vehicle:          vehicle,
 			phasesConfigured: 0, // allow switching
 			phases:           1,
-			chargePower:      1 * 6 * Voltage,
+			chargePower:      1 * 6 * grid.Voltage,
 			limitSolarPhases: limited,
 			status:           api.StatusC,
+			enabled:          true,
 			charger: struct {
 				*api.MockCharger
 				*api.MockPhaseSwitcher
