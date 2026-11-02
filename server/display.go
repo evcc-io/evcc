@@ -11,8 +11,16 @@ import (
 
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/encode"
 	"github.com/gorilla/mux"
 )
+
+var displayLoadpointFields = []string{
+	"name", "title", "mode", "alwaysCharge", "chargePower", "charging", "connected",
+	"sessionEnergy", "chargedEnergy", "chargeDuration", "phasesActive", "sessionSolarPercentage",
+	"vehicleSoc", "vehicleTitle", "pvAction", "pvRemaining", "planActive", "smartCostActive",
+	"effectiveMinCurrent", "minCurrent", "phasesConfigured", "chargerPhases1p3p",
+}
 
 //go:embed display/static/*
 var displayFiles embed.FS
@@ -25,7 +33,7 @@ func NewDisplayHTTPd(addr string, cache *util.ParamCache) *HTTPd {
 	}
 
 	router := mux.NewRouter()
-	router.Handle("/api/state", http.HandlerFunc(stateHandler(cache))).Methods(http.MethodGet)
+	router.Handle("/api/state", http.HandlerFunc(displayStateHandler(cache))).Methods(http.MethodGet)
 	router.HandleFunc("/fonts/{name:Montserrat-(?:Medium|Bold)\\.woff2}", displayFontHandler).Methods(http.MethodGet)
 
 	files := http.FileServer(http.FS(display))
@@ -53,6 +61,62 @@ func NewDisplayHTTPd(addr string, cache *util.ParamCache) *HTTPd {
 	srv.SetKeepAlivesEnabled(true)
 
 	return srv
+}
+
+func displayStateHandler(cache *util.ParamCache) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		state := cache.State(encode.NewEncoder(encode.WithDuration()))
+		loadpoints, ok := state["loadpoints"].([]map[string]any)
+		if !ok {
+			http.Error(w, "display state unavailable", http.StatusInternalServerError)
+			return
+		}
+
+		displayLoadpoints := make([]map[string]any, len(loadpoints))
+		for i, loadpoint := range loadpoints {
+			displayLoadpoints[i] = selectStateFields(loadpoint, displayLoadpointFields)
+		}
+
+		response := selectStateFields(state, []string{
+			"greenShareLoadpoints", "pvPower", "homePower", "batterySoc", "batteryPower", "gridPower",
+		})
+		response["loadpoints"] = displayLoadpoints
+		battery, err := nestedStateFields(state, "battery", []string{"soc", "power"})
+		if err != nil {
+			http.Error(w, "display state unavailable", http.StatusInternalServerError)
+			return
+		}
+		grid, err := nestedStateFields(state, "grid", []string{"power"})
+		if err != nil {
+			http.Error(w, "display state unavailable", http.StatusInternalServerError)
+			return
+		}
+		response["battery"] = battery
+		response["grid"] = grid
+
+		jsonWrite(w, response)
+	}
+}
+
+func nestedStateFields(state map[string]any, key string, fields []string) (map[string]any, error) {
+	value, ok := state[key]
+	if !ok || value == nil {
+		return selectStateFields(nil, fields), nil
+	}
+
+	nested, ok := value.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("invalid %s state", key)
+	}
+	return selectStateFields(nested, fields), nil
+}
+
+func selectStateFields(state map[string]any, fields []string) map[string]any {
+	selected := make(map[string]any, len(fields))
+	for _, field := range fields {
+		selected[field] = state[field]
+	}
+	return selected
 }
 
 func displayFontHandler(w http.ResponseWriter, r *http.Request) {

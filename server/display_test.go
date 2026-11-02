@@ -1,12 +1,11 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/evcc-io/evcc/server/assets"
@@ -15,7 +14,16 @@ import (
 )
 
 func TestDisplayHTTPdReadOnly(t *testing.T) {
-	srv := NewDisplayHTTPd("", util.NewParamCache())
+	cache := util.NewParamCache()
+	lpIndex := 0
+	cache.Add("0.name", util.Param{Loadpoint: &lpIndex, Key: "name", Val: "lp-1"})
+	cache.Add("0.title", util.Param{Loadpoint: &lpIndex, Key: "title", Val: "Garage"})
+	cache.Add("0.charging", util.Param{Loadpoint: &lpIndex, Key: "charging", Val: true})
+	cache.Add("0.password", util.Param{Loadpoint: &lpIndex, Key: "password", Val: "private-loadpoint-data"})
+	cache.Add("pvPower", util.Param{Key: "pvPower", Val: 1500})
+	cache.Add("siteTitle", util.Param{Key: "siteTitle", Val: "private-site-data"})
+	cache.Add("battery", util.Param{Key: "battery", Val: map[string]any{"soc": 50, "power": 1000, "serial": "private-battery-data"}})
+	srv := NewDisplayHTTPd("", cache)
 
 	for _, path := range []string{"/api/state", "/api/loadpoints/1/mode/now"} {
 		rec := httptest.NewRecorder()
@@ -28,23 +36,32 @@ func TestDisplayHTTPdReadOnly(t *testing.T) {
 	require.Equal(t, http.StatusOK, rec.Code)
 	require.Contains(t, rec.Body.String(), `id="screen"`)
 
-	stateQuery := `{
-		loadpoints: [.loadpoints[] | {
-			name, title, mode, alwaysCharge, chargePower, charging, connected, sessionEnergy, chargedEnergy,
-			chargeDuration, phasesActive, sessionSolarPercentage, vehicleSoc, vehicleTitle, pvAction,
-			pvRemaining, planActive, smartCostActive, effectiveMinCurrent, minCurrent,
-			phasesConfigured, chargerPhases1p3p
-		}],
-		greenShareLoadpoints, pvPower, homePower, batterySoc, batteryPower, gridPower,
-		battery: {soc: .battery.soc, power: .battery.power},
-		grid: {power: .grid.power}
-	}`
-	stateURL := url.URL{Path: "/api/state", RawQuery: url.Values{"jq": {stateQuery}}.Encode()}
 	rec = httptest.NewRecorder()
-	srv.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, stateURL.String(), nil))
+	srv.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/state?jq=.", nil))
 	require.Equal(t, http.StatusOK, rec.Code)
-	require.True(t, strings.HasPrefix(rec.Body.String(), "{"))
-	require.Contains(t, rec.Body.String(), `"loadpoints":[]`)
+	var state map[string]any
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &state))
+	require.Equal(t, float64(1500), state["pvPower"])
+	require.NotContains(t, state, "siteTitle")
+	require.NotContains(t, rec.Body.String(), "private-site-data")
+	require.NotContains(t, rec.Body.String(), "private-loadpoint-data")
+	require.NotContains(t, rec.Body.String(), "private-battery-data")
+
+	loadpoints, ok := state["loadpoints"].([]any)
+	require.True(t, ok)
+	require.Len(t, loadpoints, 1)
+	loadpoint, ok := loadpoints[0].(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, "lp-1", loadpoint["name"])
+	require.Equal(t, "Garage", loadpoint["title"])
+	require.Equal(t, true, loadpoint["charging"])
+	require.NotContains(t, loadpoint, "password")
+
+	battery, ok := state["battery"].(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, float64(50), battery["soc"])
+	require.Equal(t, float64(1000), battery["power"])
+	require.NotContains(t, battery, "serial")
 
 	rec = httptest.NewRecorder()
 	srv.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/fonts/Montserrat-Bold.woff2", nil))

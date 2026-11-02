@@ -1,17 +1,4 @@
-const stateQuery = `{
-  loadpoints: [
-    .loadpoints[] | {
-      name, title, mode, alwaysCharge, chargePower, charging, connected, sessionEnergy, chargedEnergy,
-      chargeDuration, phasesActive, sessionSolarPercentage, vehicleSoc, vehicleTitle, pvAction,
-      pvRemaining, planActive, smartCostActive, effectiveMinCurrent, minCurrent,
-      phasesConfigured, chargerPhases1p3p
-    }
-  ],
-  greenShareLoadpoints, pvPower, homePower, batterySoc, batteryPower, gridPower,
-  battery: {soc: .battery.soc, power: .battery.power},
-  grid: {power: .grid.power}
-}`;
-const stateUrl = `/api/state?${new URLSearchParams({ jq: stateQuery })}`;
+const stateUrl = "/api/state";
 const refreshInterval = 3000;
 const staleAfter = 9000;
 const params = new URLSearchParams(window.location.search);
