@@ -56,7 +56,6 @@ done:
 // TestPvScalePhasesSolarLimitDown asserts that an active 3p session converges
 // to a single phase once the solar 1p limit is enabled, even with ample surplus.
 func TestPvScalePhasesSolarLimitDown(t *testing.T) {
-
 	ctrl := gomock.NewController(t)
 
 	plainCharger := api.NewMockCharger(ctrl)
@@ -101,7 +100,6 @@ func TestPvScalePhasesSolarLimitDown(t *testing.T) {
 // otherwise scale up to 3 phases. Fast charging paths never reach
 // pvScalePhases, so they are unaffected by construction.
 func TestPvScalePhasesSmartLimit(t *testing.T) {
-
 	for _, limited := range []bool{false, true} {
 		ctrl := gomock.NewController(t)
 
