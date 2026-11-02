@@ -1,0 +1,228 @@
+template: kaco-nh3
+products:
+  - brand: KACO
+    description:
+      generic: blueplanet hybrid NH3
+requirements:
+  description:
+    de: |
+      Für KACO blueplanet Hybrid NH3 mit AI-Dongle/WLAN-Stick. Modbus TCP und lokale AISWEI-HTTP-API müssen über die IP-Adresse des Sticks erreichbar sein (Modbus TCP Port 502, Geräte-ID 3; HTTP Port 8484).
+      Die Batterie-Leistungsregelung verwendet die lokale Schnittstelle `fdbg.cgi`. Maximale Lade- und Entladeleistung werden aus SunSpec Model 802 gelesen.
+      Die Netzzählerstände für Import und Export werden von dieser Firmware nicht über Modbus TCP bereitgestellt.
+    en: |
+      For KACO blueplanet Hybrid NH3 with AI dongle/Wi-Fi stick. Modbus TCP and the local AISWEI HTTP API must be reachable at the stick's IP address (Modbus TCP port 502, device ID 3; HTTP port 8484).
+      Battery power control uses the local `fdbg.cgi` endpoint. Maximum charge and discharge power are read from SunSpec Model 802.
+      Grid import and export energy counters are not exposed over Modbus TCP by this firmware.
+capabilities: ["battery-control", "curtail"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 3
+  - name: battery
+    type: choice
+    choice: [1, 2]
+    required: true
+    usages: ["battery"]
+    description:
+      de: Batteriespeichernummer
+      en: Battery number
+  - preset: battery-params
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6433 # 46434 total system power (smart meter)
+      type: holding
+      decode: int32
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1600 # 31601 PV total power
+      type: input
+      decode: uint32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1604 # 31605 PV E-Total (0.1 kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
+  maxacpower:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value:
+      - 120:WRtg
+  curtail:
+    source: sequence
+    set:
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 704:WMaxLimPct
+      - source: switch
+        switch:
+          - case: 100 # Uncurtailed
+            set:
+              source: const
+              value: 0 # Disable active power limit
+              set:
+                source: sunspec
+                {{- include "modbus" . | indent 16 }}
+                value: 704:WMaxLimPctEna
+          default:
+            source: const
+            value: 1 # Enable active power limit
+            set:
+              source: sunspec
+              {{- include "modbus" . | indent 14 }}
+              value: 704:WMaxLimPctEna
+  curtailed:
+    source: go
+    in:
+      - name: enabled
+        type: bool
+        config:
+          source: sunspec
+          {{- include "modbus" . | indent 8 }}
+          value: 704:WMaxLimPctEna
+      - name: percent
+        type: float
+        config:
+          source: sunspec
+          {{- include "modbus" . | indent 8 }}
+          value: 704:WMaxLimPct
+    script: |
+      result := 100
+      if enabled {
+        result = int(percent)
+      }
+      result
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  maxchargepower:
+    source: sunspec
+    {{- include "modbus" . | indent 4 }}
+    value: 802:WChaRteMax
+  maxdischargepower:
+    source: sunspec
+    {{- include "modbus" . | indent 4 }}
+    value: 802:WDisChaRteMax
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .battery "2" }}1751{{ else }}1618{{ end }} # 31752/31619 BMS2/1 battery power
+      type: input
+      decode: int32
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .battery "2" }}1754{{ else }}1621{{ end }} # 31755/31622 BMS2/1 battery SoC
+      type: input
+      decode: uint16
+  batterymode:
+    source: switch
+    switch:
+      - case: 1 # normal
+        set:
+          source: http
+          <<: &fdbg
+            uri: http://{{ .host }}:8484/fdbg.cgi
+            method: POST
+            timeout: 20s
+            headers:
+              Content-Type: application/json
+          body: '{"data":"0306044f0002390e"}' # write register 41104 (mode) = 2 (normal)
+      - case: 2 # hold
+        set:
+          source: sequence
+          set:
+            - source: http
+              <<: *fdbg
+              body: '{"data":"0306044f0004b90c"}' # write register 41104 (mode) = 4 (custom)
+            - source: http
+              <<: *fdbg
+              body: '{"data":"03060480000088f0"}' # write register 41153 (power) = 0 W
+      - case: 3 # charge
+        set:
+          source: sequence
+          set:
+            - source: http
+              <<: *fdbg
+              body: '{"data":"0306044f0004b90c"}' # write register 41104 (mode) = 4 (custom)
+            - source: const
+              value: 3
+              set:
+                source: go
+                <<: &setpoint
+                  in:
+                    - name: charge
+                      type: float
+                      config:
+                        source: sunspec
+                        {{- include "modbus" . | indent 24 }}
+                        value: 802:WChaRteMax
+                    - name: discharge
+                      type: float
+                      config:
+                        source: sunspec
+                        {{- include "modbus" . | indent 24 }}
+                        value: 802:WDisChaRteMax
+                  out:
+                    - name: frame
+                      type: string
+                      config:
+                        source: http
+                        <<: *fdbg
+                        body: '{"data":"{{ .frame }}"}'
+                  script: |
+                    power := 0
+                    if value == 3 {
+                      power = -int(charge + 0.5)
+                    } else if value == 5 {
+                      power = int(discharge + 0.5)
+                    }
+                    frame := []byte{3, 6, 4, 128, byte(power >> 8), byte(power)}
+                    crc := 0xffff
+                    for _, b := range frame {
+                      crc ^= int(b)
+                      for i := 0; i < 8; i++ {
+                        if crc&1 != 0 {
+                          crc = (crc >> 1) ^ 0xa001
+                        } else {
+                          crc >>= 1
+                        }
+                      }
+                    }
+                    frame = append(frame, byte(crc), byte(crc >> 8))
+                    digits := "0123456789abcdef"
+                    result := ""
+                    for _, b := range frame {
+                      result += string(digits[b>>4]) + string(digits[b&15])
+                    }
+                    result
+      - case: 5 # discharge
+        set:
+          source: sequence
+          set:
+            - source: http
+              <<: *fdbg
+              body: '{"data":"0306044f0004b90c"}' # write register 41104 (mode) = 4 (custom)
+            - source: const
+              value: 5
+              set:
+                source: go
+                <<: *setpoint
+  {{- include "battery-capacity" . }}
+  {{- include "battery-minmaxsoc" . }}
+  {{- end }}
