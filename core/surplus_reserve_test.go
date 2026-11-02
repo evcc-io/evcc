@@ -65,3 +65,23 @@ func TestForeignInflightPower(t *testing.T) {
 	assert.Equal(t, lp2.GetInflightPower(), site.foreignInflightPower(lp1))
 	assert.Equal(t, lp1.GetInflightPower(), site.foreignInflightPower(lp2))
 }
+
+// TestGetInflightPowerAfterPhaseSwitch verifies the reserve is sized with the
+// post-switch phases: the switch resets the measured phases, so the stale 1p
+// measurement does not shrink the 3p reserve during the phase switch window.
+func TestGetInflightPowerAfterPhaseSwitch(t *testing.T) {
+	clk := clock.NewMock()
+	lp := &Loadpoint{log: util.NewLogger("foo"), clock: clk, phases: 1, controlInterval: time.Minute}
+	lp.enabled = true
+	lp.offeredCurrent = 6
+	lp.measuredPhases = 1
+	lp.chargePower = 0 // charging pauses during the switch
+	lp.actuatedAt = clk.Now()
+
+	assert.Equal(t, grid.CurrentToPower(6, 1), lp.GetInflightPower(), "1p before the switch")
+
+	lp.phasesSwitched = clk.Now()
+	lp.SetPhases(3)
+
+	assert.Equal(t, grid.CurrentToPower(6, 3), lp.GetInflightPower(), "3p right after the switch")
+}
