@@ -2,6 +2,7 @@ package server
 
 import (
 	"embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -130,8 +131,16 @@ func nestedStateFields(state map[string]any, key string, fields []string) (map[s
 	}
 
 	nested, ok := value.(map[string]any)
-	if !ok {
-		return nil, fmt.Errorf("invalid %s state", key)
+	if ok {
+		return selectStateFields(nested, fields), nil
+	}
+
+	data, err := json.Marshal(value)
+	if err != nil {
+		return nil, fmt.Errorf("encode %s state: %w", key, err)
+	}
+	if err := json.Unmarshal(data, &nested); err != nil {
+		return nil, fmt.Errorf("decode %s state: %w", key, err)
 	}
 	return selectStateFields(nested, fields), nil
 }

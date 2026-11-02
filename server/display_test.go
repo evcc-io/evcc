@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
@@ -114,4 +115,21 @@ func TestDisplayHTTPdServesTranslations(t *testing.T) {
 	require.Equal(t, http.StatusOK, rec.Code)
 	require.Equal(t, "application/json; charset=utf-8", rec.Header().Get("Content-Type"))
 	require.JSONEq(t, `{"display":{"pageTitle":"Display"}}`, rec.Body.String())
+}
+
+func TestDisplayHTTPdProjectsStructMeasurements(t *testing.T) {
+	cache := util.NewParamCache()
+	cache.Add("battery", util.Param{Key: "battery", Val: types.BatteryState{Soc: 50, Power: 1000}})
+	cache.Add("grid", util.Param{Key: "grid", Val: types.Measurement{Power: -2000, Name: "private-grid-name"}})
+
+	srv := NewDisplayHTTPd("", cache)
+	rec := httptest.NewRecorder()
+	srv.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/state", nil))
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	var state map[string]any
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &state))
+	require.Empty(t, state["loadpoints"])
+	require.Equal(t, map[string]any{"soc": float64(50), "power": float64(1000)}, state["battery"])
+	require.Equal(t, map[string]any{"power": float64(-2000)}, state["grid"])
 }
