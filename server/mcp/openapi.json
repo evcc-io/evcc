@@ -5911,8 +5911,15 @@
             "type": "number"
           },
           "gridPeak": {
-            "description": "Highest clock-aligned 15-min average grid import in W of the current month. Only tracked in countries billing the monthly peak (AT, BE).",
+            "description": "Highest 15-min average grid import of the current month in W.",
             "type": "number"
+          },
+          "gridPeakDays": {
+            "description": "Highest 15-min average grid import per day of the current month in W, starting with the 1st.",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
           },
           "gridPeakBaseline": {
             "description": "Floor in W of the grid import peak target, 0 = disabled.",

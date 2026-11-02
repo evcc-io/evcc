@@ -60,6 +60,7 @@ const (
 	// grid settings
 	GridExportLimit  = "gridExportLimit"
 	GridPeak         = "gridPeak"
+	GridPeakDays     = "gridPeakDays"
 	GridPeakBaseline = "gridPeakBaseline"
 
 	// forecast settings

@@ -9,15 +9,12 @@ import (
 	"github.com/evcc-io/evcc/db/settings"
 )
 
-// gridPeakCountries bill the month's highest clock-aligned 15-min average grid import
-var gridPeakCountries = []string{"AT", "BE"}
-
 const gridPeakInterval = 15 * time.Minute
 
 // gridPeak tracks the month's highest clock-aligned 15-min average grid import
 type gridPeak struct {
-	Time  time.Time `json:"time"`  // start of the peak interval
-	Power float64   `json:"power"` // peak in W
+	Time time.Time `json:"time"` // start of the month's first recorded interval
+	Days []float64 `json:"days"` // daily peak in W, index 0 is the 1st of the month
 
 	ts       time.Time // last sample
 	power    float64   // last sample grid import in W
@@ -25,7 +22,7 @@ type gridPeak struct {
 	complete bool      // current interval observed from its start
 }
 
-// add integrates the last sample up to ts and returns true if a completed interval raised the month's peak
+// add integrates the last sample up to ts and returns true if a completed interval raised a recorded peak
 func (p *gridPeak) add(ts time.Time, power float64) bool {
 	var raised bool
 
@@ -57,22 +54,36 @@ func (p *gridPeak) add(ts time.Time, power float64) bool {
 	return raised
 }
 
-// raise records the average of the interval starting at start if it exceeds its month's peak
+// raise records the average of the interval starting at start and returns true if it raised the day's peak
 func (p *gridPeak) raise(start time.Time, power float64) bool {
-	if power <= p.peak(start) {
-		return false
+	if !sameMonth(start, p.Time) {
+		p.Time, p.Days = start, nil
 	}
 
-	p.Time, p.Power = start, power
+	day := start.Day()
+	if len(p.Days) < day {
+		p.Days = append(p.Days, make([]float64, day-len(p.Days))...)
+	}
+
+	if power <= p.Days[day-1] {
+		return false
+	}
+	p.Days[day-1] = power
+
 	return true
 }
 
-// peak returns the peak of the month of ts
-func (p *gridPeak) peak(ts time.Time) float64 {
+// state returns the published peaks of the month of ts
+func (p *gridPeak) state(ts time.Time) gridPeak {
 	if !sameMonth(ts, p.Time) {
-		return 0
+		return gridPeak{Days: []float64{}}
 	}
-	return p.Power
+	return gridPeak{Time: p.Time, Days: slices.Clone(p.Days)}
+}
+
+// peak returns the month's peak in W
+func (p gridPeak) peak() float64 {
+	return slices.Max(append([]float64{0}, p.Days...))
 }
 
 // sameMonth reports whether a and b fall in the same calendar month in the location of a
@@ -84,7 +95,6 @@ func sameMonth(a, b time.Time) bool {
 
 // updateGridPeak tracks the month's grid import peak and the resulting import target
 func (site *Site) updateGridPeak(now time.Time) {
-	regime := slices.Contains(gridPeakCountries, site.GetCountry())
 	baseline := site.GetGridPeakBaseline()
 
 	// fast charging accepts a higher peak
@@ -94,33 +104,32 @@ func (site *Site) updateGridPeak(now time.Time) {
 
 	site.Lock()
 	var raised bool
-	if regime {
-		if site.gridPowerUpdated.After(site.gridPeak.ts) {
-			raised = site.gridPeak.add(now, site.gridPower)
-		} else {
-			// no fresh grid meter reading, current interval cannot be trusted
-			site.gridPeak.ts = time.Time{}
-		}
+	if site.gridPowerUpdated.After(site.gridPeak.ts) {
+		raised = site.gridPeak.add(now, site.gridPower)
+	} else {
+		// no fresh grid meter reading, current interval cannot be trusted
+		site.gridPeak.ts = time.Time{}
 	}
-	peak := site.gridPeak
+	peak := site.gridPeak.state(now)
 	site.gridPeakTarget = 0
-	if regime && baseline > 0 && !fast {
-		site.gridPeakTarget = max(baseline, peak.peak(now))
+	if baseline > 0 && !fast {
+		site.gridPeakTarget = max(baseline, peak.peak())
 	}
 	site.Unlock()
 
-	if !regime {
-		return
-	}
-
 	if raised {
-		site.log.DEBUG.Printf("grid peak: %.0fW", peak.Power)
+		site.log.DEBUG.Printf("grid peak: %.0fW", peak.peak())
 		if err := settings.SetJson(keys.GridPeak, peak); err != nil {
 			site.log.ERROR.Printf("grid peak: %v", err)
 		}
 	}
 
-	site.publish(keys.GridPeak, peak.peak(now))
+	site.publishGridPeak(peak)
+}
+
+func (site *Site) publishGridPeak(peak gridPeak) {
+	site.publish(keys.GridPeak, peak.peak())
+	site.publish(keys.GridPeakDays, peak.Days)
 }
 
 // gridPeakLimiter supplies the grid import target to the root circuit

@@ -97,6 +97,7 @@
 					<div class="row gx-0 gx-sm-4 gy-4">
 						<div class="col-12 col-lg-9 col-xxl-10">
 							<Card
+								id="energy-grid"
 								:title="$t('energy.grid.title')"
 								edge-to-edge
 								class="h-100"
