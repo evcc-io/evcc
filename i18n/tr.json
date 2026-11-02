@@ -33,16 +33,16 @@
   },
   "battery": {
     "card": {
-      "charging": "şarj oluyor",
-      "discharging": "pilden çalışıyor",
+      "charging": "doluyor",
+      "discharging": "boşalıyor",
       "energy": "Enerji",
-      "gridCharge": "şebekeden şarj",
+      "gridCharge": "şebekeden doldurma",
       "gridDischarge": "şebekeye boşaltma",
       "hold": "bataryadan kullanım kapalı",
-      "holdCharge": "şarj olma kilitli",
+      "holdCharge": "doldurma kilitli",
       "ofTotal": "{total}'ın",
       "power": "Güç",
-      "soc": "Batarya seviyesi"
+      "soc": "Doluluk seviyesi"
     },
     "combined": "Birleşik",
     "config": {
@@ -55,7 +55,7 @@
       },
       "bufferTitle": "Batarya doldurma tamponu olarak",
       "discharge": "Hızlı doldurma modunda ve planlı doldurma esnasında ev bataryasının boşalmasını önle.",
-      "gridDischarge": "Ev tipi bataryanın şebekeye deşarj olmasına izin verin.",
+      "gridDischarge": "Ev bataryasının şebekeye boşalmasına izin ver.",
       "gridDischargeConfirm": {
         "country": "Yapılandırılan ülke: {country}.",
         "description": "Bataryadan şebekeye elektrik aktarılabilmesi, bulunduğun ülkeye ve besleme sözleşmene bağlıdır. Batarya aynı zamanda şebekeden dolduruluyorsa, aktarılan elektrik artık tamamen güneş enerjisinden elde edilmiş sayılmaz. Birçok besleme tarifesi kapsamında bu durum, ücret hakkını kaybetmene neden olur veya yasaktır. Öncelikle besleme sözleşmeni ve elektrik şirketinin gerekliliklerini gözden geçir.",
@@ -64,13 +64,13 @@
       },
       "optimizerControlledHint": "{loadpoints} için devre dışı. Bunun yerine {optimizer} karar verir.",
       "priority": "Ev bataryası {soc} seviyesinin altında olduğunda öncelikli olarak doldurulur. Ardından, doldurma noktalarına fazlalık aktarılır.",
-      "priorityNone": "Güneş enerjisi fazlası doğrudan şarj noktalarına aktarılır. Ev bataryasına öncelik vermek için {soc} değerinin üzerinde bir ayar yapın.",
+      "priorityNone": "Güneş enerjisi fazlası doğrudan doldurma noktalarına aktarılır. Ev bataryasına öncelik vermek için {soc} değerinden daha yüksek bir değer ayarla.",
       "priorityTitle": "Fazla akım ilk nereye gitsin?"
     },
     "optimizer": {
       "action": {
-        "charge": "Şebekeden şarj",
-        "discharge": "Şebekeye deşarj",
+        "charge": "Şebekeden doldurma",
+        "discharge": "Şebekeye boşaltma",
         "hold": "Pil kullanımını önle",
         "holdcharge": "Doldurmayı engelle",
         "normal": "Normal çalışma"
@@ -135,7 +135,7 @@
       "ocppConfirmContinue": "Doldurma cihazın henüz evcc'ye bağlanmadı. Devam etmek istediğinden emin misin?",
       "ocppConnected": "Bağlandı!",
       "ocppDescription": "evcc'de yerleşik bir OCPP sunucusu var. Aşağıdaki adımları izle:",
-      "ocppHelp": "Bu URL'yi şarj cihazınızın yapılandırmasına kopyalayın. Ayrıntılar için üreticinin kılavuzuna bakın. Şarj cihazı, benzersiz tanımlayıcısını (istasyon kimliği) URL'ye otomatik olarak ekleyecektir. Nadir durumlarda tanımlayıcıyı manuel olarak belirtmeniz gerekebilir. Örnek: `{url}`",
+      "ocppHelp": "Bu URL’yi doldurma cihazının yapılandırmasına kopyala. Ayrıntılar için üreticinin kullanım kılavuzuna bak. Doldurma cihazının, URL’ye kendine özgü tanımlayıcısını (istasyon kimliği) otomatik olarak eklemesi beklenir. Nadir durumlarda, tanımlayıcıyı elle belirtmen gerekebilir. Örnek: `{url}`",
       "ocppLabel": "OCPP sunucusu URL'si",
       "ocppNextStep": "Sonraki adım",
       "ocppStep1": "Doldurma cihazını evcc'yi OCPP sunucusu olarak kullanacak şekilde yapılandır.",
@@ -186,7 +186,7 @@
       "titleLabel": "Başlık"
     },
     "circuits": {
-      "addMainCircuit": "Ana devreyi ekle",
+      "addMainCircuit": "Ana devre ekle",
       "addSubCircuit": "Alt devre ekle",
       "chargingPointsNote": "Doldurma noktalarını ve ısıtıcıları, kendi ayarları dahilinde bir devreye ata.",
       "description": "Bir devreye bağlı tüm yük noktalarının toplamının, yapılandırılan güç ve akım limitlerini aşmamasını sağlar. Devreler, bir hiyerarşi oluşturacak şekilde iç içe yerleştirilebilir.",
@@ -383,6 +383,7 @@
       "optional": "isteğe bağlı"
     },
     "general": {
+      "add": "Ekle",
       "applyAndClose": "Uygula ve kapat",
       "authPerform": "{provider} ile bağlantı kur",
       "authPerformHint": "Yeni bir sekmede açılacak. Devam etmek için buraya geri dön.",
@@ -394,6 +395,7 @@
       "confirmDisable": "Bu cihazı devre dışı mı kalsın? Bir sonraki yeniden başlatmanın ardından bu ayar göz ardı edilecek.",
       "confirmEnable": "Bu cihaz tekrar etkinleştirilsin mi?",
       "confirmSave": "Kaydedilmemiş değişiklikler var. Şimdi kaydedilsin mi?",
+      "continue": "Devam",
       "copied": "Kopyalandı!",
       "copy": "Kopyala",
       "customHelp": "evcc'nin eklenti sistemini kullanarak kullanıcı tanımlı bir cihaz oluştur.",
@@ -531,6 +533,13 @@
       "defaultModeKeep": "olduğu gibi bırak",
       "defaultModeLabel": "“Varsayılan şekil”",
       "delete": "“Sil”",
+      "demandPredictor": {
+        "daily": {
+          "description": "Son günlerin ortalaması. Günlük tüketimi sabit olan cihazlar için.",
+          "label": "Günlük ortalama"
+        },
+        "defaultGroup": "Cihazın varsayılan ayarı"
+      },
       "electricalSubtitle": "Emin değilsen elektrikçine sor.",
       "electricalTitle": "Elektrik",
       "energyMeterHelp": "Doldurma cihazında bütünleşik bir sayaç yoksa ek sayaç.",
@@ -715,10 +724,18 @@
         "grid": "Şebeke sayacı ekle",
         "pv": "Güneş ölçer ekle"
       },
+      "reuseApply": "Ayarlarını kullanın.",
+      "reuseHint": "{device} ayrıca “{target}” olarak da kullanılabilir.",
       "save": "Kaydet",
       "specific": "Özel bütünleşmeler",
       "template": "Üretici",
       "titleChoice": "Ne Eklemek İstersin?",
+      "titleExample": {
+        "aux": "Akıllı su ısıtıcısı vb.",
+        "battery": "Bodrum, garaj, güç istasyonu vb.",
+        "consumer": "Bulaşık makinesi, çamaşır makinesi, havuz pompası vb.",
+        "pv": "Güney çatı, araç sundurması vb."
+      },
       "titleLabel": "Başlık",
       "usage": {
         "aux": "Kendi kendini düzenleyen tüketici",
@@ -976,6 +993,15 @@
         "example": "Doldurma fiyatın {price} idi. {amount} tasarruf ettin.",
         "label": "Para Birimi"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V, nötrsüz (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V, nötr dahil (3P4W)",
+        "description": {
+          "3p3w": "Nötr iletkeni olmayan şebeke. Norveç’te ve Belçika’nın bazı bölgelerinde yaygın.",
+          "3p4w": "Nötr iletkenli en yaygın şebeke."
+        },
+        "label": "Şebeke bağlantısı"
+      },
       "siteTitle": {
         "description": "Ana ekranda ve tarayıcı sekmesinde gösterilir.",
         "label": "Başlık"
@@ -989,6 +1015,18 @@
       "descriptionToken": "GitHub Destekçisi olarak jetonunu {url} adresinde bulabilirsin. Deneyebilmen için sana bir {trialToken} veriyoruz.",
       "enterYourToken": "Destekçi Jetonun",
       "error": "Destekçi jetonu geçerli değil.",
+      "inline": {
+        "applied": "Jeton uygulandı. Projeye desteğin için teşekkürler!",
+        "apply": "Uygula",
+        "becomeSponsor": "desdekçi ol",
+        "device": "Bu cihaz yalnızca destekçiler için açık.",
+        "feature": "Bu özellik yalnızca destekçilere açık.",
+        "learn": "Daha fazla bilgi edin ve {becomeSponsor}.",
+        "placeholder": "Jetonu yapıştır",
+        "title": "Destekçi jetonu gerekli",
+        "trial": "Hızlıca başla.",
+        "trialLink": "Deneme jetonu al"
+      },
       "invalid": "geçersiz",
       "labelToken": "Destekçi jetonu",
       "title": "Destekçilik",
@@ -1083,7 +1121,8 @@
       "solar": {
         "description": "GES için güneş enerjisi üretim tahmini. Arayüzde görüntülenir ve ileride iyileştirme hesaplamaları için kullanılacak.",
         "titleAdd": "Güneş Tahmini Ekle",
-        "titleEdit": "Güneş Tahmini Düzenle"
+        "titleEdit": "Güneş Tahmini Düzenle",
+        "titleExample": "Güney çatı, garaj vb."
       },
       "temperature": {
         "description": "Konumun için dış hava sıcaklığı tahmini. Arayüzde görüntülenir ve ısıtma ihtiyacını tahmin etmek için kullanılır.",
@@ -1641,10 +1680,10 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Ev bataryasından {limit} seviyesine düşene kadar hızlı şarj.",
+        "description": "Ev bataryasından {limit} seviyesine düşene kadar hızlı doldurmasına izin ver.",
         "descriptionDisabled": "Ev bataryasından hızlı doldurabilmek için bir sınır seç.",
         "disabled": "Devre dışı",
-        "label": "'Batarya Takviyesi”",
+        "label": "Batarya Takviyesi",
         "mode": "Sadece akıllı modda mevcut.",
         "once": "Bu doldurma oturumu için takviye etkin.",
         "stateActive": "Batarya desteği etkin",
@@ -1652,7 +1691,7 @@
         "stateHold": "Batarya kilitli",
         "stateReady": "Batarya desteği hazır"
       },
-      "batteryUsage": "“Ev Bataryası”",
+      "batteryUsage": "Ev Bataryası",
       "currents": "Doldurma Akımı",
       "default": "varsayılan",
       "heating": "Isıtma",
@@ -1710,6 +1749,11 @@
     "provider": {
       "login": "giriş yap",
       "logout": "çıkış yap"
+    },
+    "setup": {
+      "description": "Enerji akışını görmek ve güneş enerjisiyle doldurmaya başlamak için cihazlarını ekle.",
+      "start": "Kurulumu başlat",
+      "title": "Hoş geldin!"
     },
     "startConfiguration": "“Yapılandırmaya başlayalım”",
     "targetCharge": {
@@ -1836,6 +1880,76 @@
     "restartNeeded": "Değişiklikleri uygulamak için gerekli.",
     "restarting": "Sunucu birazdan dönecek.",
     "starting": "Sunucu başlatılıyor..."
+  },
+  "onboarding": {
+    "another": "Bir tane daha ekle",
+    "back": "Geri",
+    "battery": {
+      "add": "Ev bataryası ekle",
+      "description": "Bataryanı ekle; doldurma onu hesaba katsın ve ne yaptığını görebil.",
+      "none": "Ev bataryası yok",
+      "title": "Ev bataryan var mı?"
+    },
+    "checklist": {
+      "dismiss": "Kapat",
+      "legacyTariffs": "Eski tarife yapılandırması kullanılıyor.",
+      "progress": "{done} / {total} tamamlandı",
+      "title": "Kurulumunu tamamla"
+    },
+    "control": {
+      "description": "İlkiyle başla. Diğerleri sonra yapılandırma sayfasından eklenebilir.",
+      "none": "Henüz yok",
+      "title": "Neyi kontrol etmek istiyorsun?"
+    },
+    "done": {
+      "close": "Yapılandırmaya git",
+      "description": "Yapılandırma yeniden başlatmayla uygulanır. Sonra özellikleri keşfet. Araçlar, tarifeler ve fazlası istediğin zaman eklenebilir.",
+      "restart": "Yeniden başlat",
+      "title": "Hazırsın"
+    },
+    "grid": {
+      "add": "Şebeke sayacı ekle",
+      "confirm": "Şebeke sayacı, fazla enerjiyle doldurmanın ve enerji istatistiklerinin temelidir. Eklenmesi önerilir.",
+      "confirmNone": "Onsuz devam et",
+      "description": "Bağlantı noktasında şebekeden çekilen ve şebekeye verilen enerjiyi ölçer. Fazla enerjiyle doldurmayı hassaslaştırır.",
+      "none": "Şebeke sayacı yok",
+      "title": "Şebeke sayacın var mı?"
+    },
+    "item": {
+      "battery": "Ev bataryası",
+      "co2": "CO₂ tahmini",
+      "consumer": "Tüketici",
+      "grid": "Şebeke sayacı",
+      "gridExport": "Şebekeye ihracat tarifesi",
+      "gridImport": "Şebekeden ithalat tarifesi",
+      "heater": "Isıtıcı",
+      "loadpoint": "Doldurma noktası",
+      "pv": "Güneş enerji sistemi",
+      "solar": "Güneş tahmini"
+    },
+    "password": {
+      "description": "Yapılandırma ayarlarını yetkisiz değişikliklerden korur. Unutma, kolay bir sıfırlama yolu yok.",
+      "disabled": "Kimlik doğrulama devre dışı ({flag}). Ağa erişimi olan herkes yapılandırmayı değiştirebilir, kayıtlı kimlik bilgilerini okuyabilir ve betik çalıştırabilir. Erişimi başka yollarla güvenceye al.",
+      "title": "Yönetici parolası belirle"
+    },
+    "pv": {
+      "add": "Güneş enerji sistemi ekle",
+      "description": "Güneş üretimini ölçer. Güneş payı ve fazla enerjiyle doldurma için gereklidir.",
+      "none": "Güneş enerji sistemi yok",
+      "title": "Güneş enerji sistemin var mı?"
+    },
+    "site": {
+      "currencyHint": "örn. {price}, {amount}",
+      "defaultTitle": "Ev",
+      "description": "Evin hakkında birkaç temel bilgi. İstediğin zaman değiştirebilirsin.",
+      "title": "Tesisin"
+    },
+    "skip": "Kurulumu atla",
+    "step": "Adım {step} / {total}",
+    "welcome": {
+      "description": "Akıllı doldurmaya başlamak için ev tesisatının en önemli parçalarını kur.",
+      "start": "Başla"
+    }
   },
   "passwordModal": {
     "description": "Yapılandırma ayarlarını korumak için bir şifre belirle. Ana görünüme erişim oturum açmadan da mümkün.",
