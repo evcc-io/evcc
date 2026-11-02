@@ -1207,6 +1207,65 @@
       "titleEdit": "Fahrzeug bearbeiten"
     }
   },
+  "display": {
+    "accessibility": {
+      "chargingMode": "Aktueller Lademodus",
+      "loadpoint": "Ladepunkt",
+      "noCurrentData": "Keine aktuellen Daten"
+    },
+    "description": "Live-Anzeige für evcc-Ladepunkte",
+    "duration": "{hours}:{minutes} h",
+    "flow": {
+      "gridExport": "Einspeisung {power}",
+      "gridImport": "Netzbezug {power}",
+      "gridShare": "{share} % Netz",
+      "homeBatteryCharging": "Hausbatterie lädt {power}",
+      "homeBatteryDischarging": "Hausbatterie entlädt {power}",
+      "homeBatteryFull": "Hausbatterie voll",
+      "homeBatteryPaused": "Hausbatterie pausiert",
+      "pvNow": "Jetzt {share} % PV"
+    },
+    "idle": {
+      "connecting": "Verbinde …",
+      "noCurrentData": "Keine aktuellen Daten",
+      "noLoadpoint": "Kein Ladepunkt",
+      "noVehicle": "Kein Fahrzeug"
+    },
+    "mode": {
+      "fast": "Schnell",
+      "fastDescription": "volle Leistung",
+      "slow": "Langsam",
+      "slowDescription": "lädt immer",
+      "smart": "Smart",
+      "smartDescription": "nur PV"
+    },
+    "pageTitle": "evcc Display",
+    "phase": " · {count}-phasig",
+    "status": {
+      "charging": "Lädt{phases}",
+      "chargingStops": "Lädt{phases} · stoppt in {time}",
+      "chooseMode": "Modus für die nächste Ladung wählen",
+      "connectedIdle": "Verbunden · lädt gerade nicht",
+      "missingLoadpoint": "Ladepunkt nicht gefunden",
+      "off": "Ladepunkt ist aus · Modus wählen",
+      "offline": "evcc nicht erreichbar",
+      "pvStarts": "Genug PV · Start in {time}",
+      "pvSurplus": "PV-Überschuss",
+      "surplusEnough": "Genug Überschuss für Smart",
+      "surplusStarts": "Smart startet ab {power} Überschuss",
+      "waitCheap": "Wartet auf einen günstigen Zeitpunkt",
+      "waitSurplus": "Wartet auf PV-Überschuss"
+    },
+    "tile": {
+      "averagePV": "Ø PV",
+      "charged": "GELADEN",
+      "duration": "DAUER",
+      "home": "HAUS",
+      "homeBattery": "HAUSBATTERIE",
+      "pv": "PV"
+    },
+    "titleNumbered": "Ladepunkt {number}"
+  },
   "energy": {
     "battery": {
       "charged": "Geladen",

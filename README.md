@@ -46,6 +46,20 @@ Featured in [PV Magazine](https://www.pv-magazine.de/2022/01/14/mit-open-source-
 
 You'll find everything you need in our [documentation](https://docs.evcc.io/en/).
 
+evcc also serves a dedicated read-only display at http://127.0.0.1:7072. It shows live loadpoint and energy data and only supports switching loadpoints by swiping left or right or clicking in the left and right quarter of the frame.
+
+URL parameters configure the display:
+
+- `screenOff=120` turns the screen black after 120 seconds without input while no loadpoint is charging. The default is `0` (disabled).
+- `autoSwitch=0` disables automatic switching to a newly connected vehicle. Automatic switching is enabled by default.
+- `loadpoint=lp-1` selects a loadpoint by its identifier or title. Numeric values such as `loadpoint=2` remain supported as one-based positions. Automatic switching may select another loadpoint later.
+- `loadpointTimeout=300` returns to the initially selected loadpoint after 300 seconds on another loadpoint. The timeout starts after swiping or automatic switching and defaults to `0` (disabled).
+- `theme=light` selects the light layout. Use `theme=dark` for the dark layout, which is the default.
+- `lang=en` selects the display language. Any language supported by evcc can be used; the default is `de`.
+- `ignoreLoadpoints=Heatpump,db:7` hides matching loadpoints by configured name, title, or database identifier. Ignored loadpoints are also excluded from automatic switching and the screen-off charging check.
+
+For example: `http://127.0.0.1:7072/?screenOff=120&loadpoint=db:7&loadpointTimeout=300&autoSwitch=0&theme=light&lang=en&ignoreLoadpoints=Heatpump`. When the screen is black, the first swipe wakes it and the next swipe changes loadpoints.
+
 ## Contributing
 
 There are many ways to help, most of them without code. [docs.evcc.io/en/contribute](https://docs.evcc.io/en/contribute) gives an overview.

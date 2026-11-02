@@ -1382,6 +1382,65 @@
     "restartDescription": "Tried turning it off and on again?",
     "secondaryActions": "Still not able to solve your problem? Here are some more heavy-handed options."
   },
+  "display": {
+    "accessibility": {
+      "chargingMode": "Current charging mode",
+      "loadpoint": "Charging point",
+      "noCurrentData": "No current data"
+    },
+    "description": "Live display for evcc charging points",
+    "duration": "{hours}:{minutes} h",
+    "flow": {
+      "gridExport": "Grid export {power}",
+      "gridImport": "Grid import {power}",
+      "gridShare": "{share} % grid",
+      "homeBatteryCharging": "Home battery charging {power}",
+      "homeBatteryDischarging": "Home battery discharging {power}",
+      "homeBatteryFull": "Home battery full",
+      "homeBatteryPaused": "Home battery paused",
+      "pvNow": "Now {share} % PV"
+    },
+    "idle": {
+      "connecting": "Connecting …",
+      "noCurrentData": "No current data",
+      "noLoadpoint": "No charging point",
+      "noVehicle": "No vehicle"
+    },
+    "mode": {
+      "fast": "Fast",
+      "fastDescription": "full power",
+      "slow": "Slow",
+      "slowDescription": "always charge",
+      "smart": "Smart",
+      "smartDescription": "PV only"
+    },
+    "pageTitle": "evcc Display",
+    "phase": " · {count}-phase",
+    "status": {
+      "charging": "Charging{phases}",
+      "chargingStops": "Charging{phases} · stops in {time}",
+      "chooseMode": "Choose a mode for the next charge",
+      "connectedIdle": "Connected · not charging",
+      "missingLoadpoint": "Charging point not found",
+      "off": "Charging point is off · choose mode",
+      "offline": "evcc is unreachable",
+      "pvStarts": "Enough PV · starts in {time}",
+      "pvSurplus": "PV surplus",
+      "surplusEnough": "Enough surplus for Smart",
+      "surplusStarts": "Smart starts at {power} surplus",
+      "waitCheap": "Waiting for a cheaper time",
+      "waitSurplus": "Waiting for PV surplus"
+    },
+    "tile": {
+      "averagePV": "AVG. PV",
+      "charged": "CHARGED",
+      "duration": "DURATION",
+      "home": "HOME",
+      "homeBattery": "HOME BATTERY",
+      "pv": "PV"
+    },
+    "titleNumbered": "Charging point {number}"
+  },
   "energy": {
     "battery": {
       "charged": "Charged",
