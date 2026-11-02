@@ -48,6 +48,14 @@ You'll find everything you need in our [documentation](https://docs.evcc.io/en/)
 
 evcc also serves a dedicated read-only display at http://127.0.0.1:7072. It shows live loadpoint and energy data and only supports switching loadpoints by swiping left or right.
 
+URL parameters configure the display:
+
+- `screenOff=120` turns the screen black after 120 seconds without input while no loadpoint is charging. The default is `0` (disabled).
+- `autoSwitch=0` disables automatic switching to a newly connected vehicle. Automatic switching is enabled by default.
+- `loadpoint=2` selects the second loadpoint initially. Automatic switching may select another loadpoint later.
+
+For example: `http://127.0.0.1:7072/?screenOff=120&loadpoint=2&autoSwitch=0`. When the screen is black, the first swipe wakes it and the next swipe changes loadpoints.
+
 ## Contributing
 
 There are many ways to help, most of them without code. [docs.evcc.io/en/contribute](https://docs.evcc.io/en/contribute) gives an overview.

@@ -79,6 +79,15 @@ body {
 	-webkit-user-select: none;
 }
 
+.screen.is-screen-off {
+	background: #000;
+	cursor: none;
+}
+
+.screen.is-screen-off > :not(.icon-library) {
+	visibility: hidden;
+}
+
 .topbar,
 .topbar-info {
 	display: flex;

@@ -14,6 +14,10 @@ const stateQuery = `{
 const stateUrl = `/api/state?${new URLSearchParams({ jq: stateQuery })}`;
 const refreshInterval = 3000;
 const staleAfter = 9000;
+const params = new URLSearchParams(window.location.search);
+const screenOffSeconds = readIntegerParam("screenOff", 0);
+const requestedLoadpoint = readIntegerParam("loadpoint", 0, 1);
+const autoSwitch = readBooleanParam("autoSwitch", true);
 const numberFormat = new Intl.NumberFormat("de-DE", {
   minimumFractionDigits: 1,
   maximumFractionDigits: 1,
@@ -47,9 +51,33 @@ const elements = {
 };
 
 let state;
-let selected = 0;
+let selected = requestedLoadpoint > 0 ? requestedLoadpoint - 1 : 0;
 let lastSuccess = 0;
 let pointerStart;
+let lastInputAt = Date.now();
+let previousConnections;
+
+function readIntegerParam(name, fallback, minimum = 0) {
+  const value = params.get(name);
+  if (value === null) return fallback;
+
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < minimum) {
+    console.warn(`display: ignoring invalid ${name} parameter`);
+    return fallback;
+  }
+  return parsed;
+}
+
+function readBooleanParam(name, fallback) {
+  const value = params.get(name);
+  if (value === null) return fallback;
+  if (/^(1|true|on)$/i.test(value)) return true;
+  if (/^(0|false|off)$/i.test(value)) return false;
+
+  console.warn(`display: ignoring invalid ${name} parameter`);
+  return fallback;
+}
 
 const isNumber = (value) => typeof value === "number" && Number.isFinite(value);
 const powerValue = (watts) => numberFormat.format(watts / 1000);
@@ -165,6 +193,10 @@ function render() {
   selected = Math.min(selected, Math.max(loadpoints.length - 1, 0));
   const loadpoint = loadpoints[selected];
   const live = Date.now() - lastSuccess < staleAfter;
+  const charging = live && loadpoints.some((item) => item?.charging === true);
+  const screenOff =
+    screenOffSeconds > 0 && !charging && Date.now() - lastInputAt >= screenOffSeconds * 1000;
+  elements.screen.classList.toggle("is-screen-off", screenOff);
   const house = Boolean(
     loadpoint && !loadpoint.connected && isNumber(state.pvPower) && state.pvPower >= 0
   );
@@ -286,6 +318,14 @@ async function poll() {
     const payload = await response.json();
     const nextState = payload.result || payload;
     if (!Array.isArray(nextState.loadpoints)) throw new Error("state response has no loadpoints");
+    const connections = nextState.loadpoints.map((loadpoint) => Boolean(loadpoint?.connected));
+    if (autoSwitch && previousConnections) {
+      const connectedIndex = connections.findIndex(
+        (connected, index) => connected && !previousConnections[index]
+      );
+      if (connectedIndex >= 0) selected = connectedIndex;
+    }
+    previousConnections = connections;
     state = nextState;
     lastSuccess = Date.now();
   } catch (error) {
@@ -297,11 +337,18 @@ async function poll() {
 
 elements.screen.addEventListener("pointerdown", (event) => {
   if (!event.isPrimary) return;
-  pointerStart = { x: event.clientX, y: event.clientY, id: event.pointerId };
+  const wakeOnly = elements.screen.classList.contains("is-screen-off");
+  lastInputAt = Date.now();
+  elements.screen.classList.remove("is-screen-off");
+  pointerStart = { x: event.clientX, y: event.clientY, id: event.pointerId, wakeOnly };
 });
 
 elements.screen.addEventListener("pointerup", (event) => {
   if (!pointerStart || pointerStart.id !== event.pointerId) return;
+  if (pointerStart.wakeOnly) {
+    pointerStart = undefined;
+    return;
+  }
   const dx = event.clientX - pointerStart.x;
   const dy = event.clientY - pointerStart.y;
   pointerStart = undefined;
@@ -322,4 +369,5 @@ elements.screen.addEventListener("pointercancel", () => {
   pointerStart = undefined;
 });
 
+window.setInterval(render, 1000);
 poll();
