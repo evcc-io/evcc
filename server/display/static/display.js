@@ -354,7 +354,7 @@ function render() {
   }
   const loadpoint = visible[selectedIndex]?.loadpoint;
   const live = Date.now() - lastSuccess < staleAfter;
-  const charging = live && visible.some((entry) => entry.loadpoint?.charging === true);
+  const charging = visible.some((entry) => entry.loadpoint?.charging === true);
   const screenOff =
     screenOffSeconds > 0 && !charging && Date.now() - lastInputAt >= screenOffSeconds * 1000;
   elements.screen.classList.toggle("is-screen-off", screenOff);

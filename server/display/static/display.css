@@ -101,6 +101,10 @@ body {
 	visibility: hidden;
 }
 
+.screen.is-screen-off .warning:not([hidden]) {
+	visibility: visible;
+}
+
 .topbar,
 .topbar-info {
 	display: flex;
