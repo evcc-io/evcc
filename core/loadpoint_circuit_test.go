@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/grid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -146,13 +147,39 @@ func TestInflightCurrentMeteredCircuit(t *testing.T) {
 		t.Fatalf("meter-less circuit: reserve = %v, want 0", got)
 	}
 
-	// metered circuit (meter present): reserve the full intended current
+	// metered circuit (meter present): reserve the part the charge meter does not show yet
 	metered, err := circuit.New(util.NewLogger("c"), "metered", 0, 1e5, api.NewMockMeter(ctrl), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
 	lp.circuit = metered
 	if got := lp.GetInflightCurrent(); got != maxA {
-		t.Fatalf("metered circuit: reserve = %v, want %v (full intended)", got, maxA)
+		t.Fatalf("metered circuit: reserve = %v, want %v (nothing measured yet)", got, maxA)
 	}
+
+	// self-correcting: the reserve collapses as the charge meter catches up
+	lp.chargePower = grid.CurrentToPower(minA, 1)
+	assert.InDelta(t, maxA-minA, lp.GetInflightCurrent(), 1e-9, "reserve = intended - measured")
+
+	lp.chargePower = grid.CurrentToPower(maxA, 1)
+	assert.Zero(t, lp.GetInflightCurrent(), "reserve collapses when the meter catches up")
+}
+
+// TestCircuitCurrentCoversReserve verifies the current a loadpoint validates against
+// matches its share of the circuit's current, so the own reserve never caps it.
+func TestCircuitCurrentCoversReserve(t *testing.T) {
+	clk := clock.NewMock()
+	lp := &Loadpoint{log: util.NewLogger("foo"), clock: clk, phases: 1, controlInterval: time.Minute}
+	lp.enabled = true
+	lp.offeredCurrent = maxA
+	lp.actuatedAt = clk.Now()
+
+	// phase meter: metered plus reserve equals the setpoint
+	lp.chargeCurrents = []float64{minA, minA, minA}
+	assert.Equal(t, maxA, lp.circuitCurrent(lp.GetMaxPhaseCurrent()))
+	assert.Equal(t, maxA, lp.circuitCurrent(lp.actualMaxChargeCurrent()))
+
+	// no reserve: the metered value stands
+	clk.Add(lp.controlInterval)
+	assert.Equal(t, minA, lp.circuitCurrent(lp.GetMaxPhaseCurrent()))
 }

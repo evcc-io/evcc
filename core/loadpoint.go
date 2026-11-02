@@ -1034,15 +1034,25 @@ func (lp *Loadpoint) actualMaxChargeCurrent() float64 {
 	return 0
 }
 
+// circuitCurrent returns the loadpoint's share of its circuit's current as the circuit
+// accounts it: the metered current, raised to the setpoint while the in-flight reserve
+// covers the difference. Validating against less would let the own reserve cap the loadpoint.
+func (lp *Loadpoint) circuitCurrent(metered float64) float64 {
+	if lp.GetInflightCurrent() > 0 {
+		lp.RLock()
+		defer lp.RUnlock()
+		return max(metered, lp.offeredCurrent)
+	}
+	return metered
+}
+
 // setLimit applies charger current limits and enables/disables accordingly
 func (lp *Loadpoint) setLimit(current float64) error {
 	current = lp.roundedCurrent(current)
 
 	// apply circuit limits
 	if lp.circuit != nil {
-		// validate against this loadpoint's full contribution to the circuit (metered draw plus
-		// its own in-flight reserve) as the circuit aggregates it, else the own reserve caps it
-		currentLimit := lp.circuit.ValidateCurrent(lp.GetMaxPhaseCurrent()+lp.GetInflightCurrent(), current)
+		currentLimit := lp.circuit.ValidateCurrent(lp.circuitCurrent(lp.GetMaxPhaseCurrent()), current)
 
 		activePhases := lp.ActivePhases()
 		requestedPower := grid.CurrentToPower(current, activePhases)
@@ -1555,7 +1565,7 @@ func (lp *Loadpoint) circuitAllowsPhases(phases int, minCurrent float64) bool {
 	}
 
 	minPower := grid.CurrentToPower(minCurrent, phases)
-	powerLimit := lp.circuit.ValidatePower(lp.GetChargePower(), minPower)
+	powerLimit := lp.circuit.ValidatePower(lp.GetChargePower()+lp.GetInflightPower(), minPower)
 	if powerLimit < minPower {
 		lp.log.DEBUG.Printf("available circuit power %.0fW < %.0fW min %dp power", powerLimit, minPower, phases)
 		return false
@@ -1724,7 +1734,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 
 	// load management may cap the 1p current far below the theoretical maximum
 	if lp.circuit != nil {
-		maxCurrent = lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), maxCurrent)
+		maxCurrent = lp.circuit.ValidateCurrent(lp.circuitCurrent(lp.actualMaxChargeCurrent()), maxCurrent)
 	}
 
 	maxPhases := lp.MaxActivePhases()
@@ -2119,7 +2129,7 @@ func (lp *Loadpoint) pvEnablePhases(sitePower, batteryPower, minCurrent, maxCurr
 
 	// load management may cap the 1p current far below the theoretical maximum
 	if lp.circuit != nil {
-		maxCurrent = lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), maxCurrent)
+		maxCurrent = lp.circuit.ValidateCurrent(lp.circuitCurrent(lp.actualMaxChargeCurrent()), maxCurrent)
 	}
 
 	availablePower := lp.GetChargePower() - sitePower

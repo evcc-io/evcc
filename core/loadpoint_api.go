@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/settings"
+	"github.com/evcc-io/evcc/util/grid"
 )
 
 var _ loadpoint.API = (*Loadpoint)(nil)
@@ -856,10 +857,13 @@ func (lp *Loadpoint) GetInflightCurrent() float64 {
 
 	// no phase meter: a meter-less circuit already counts the offered current via
 	// GetMaxPhaseCurrent (a reserve would double-count), but a metered circuit's
-	// own lagging meter cannot see this loadpoint during the settle window, so
-	// reserve the full intended current there.
+	// own lagging meter cannot see this loadpoint during the settle window. Derive
+	// the measured current from the charge power so the reserve collapses as the
+	// meter catches up instead of blocking the circuit for the whole window.
 	if lp.circuit != nil && lp.circuit.HasMeter() {
-		return lp.offeredCurrent
+		if phases := lp.activePhases(); phases > 0 {
+			return max(0, lp.offeredCurrent-grid.PowerToCurrent(lp.chargePower, phases))
+		}
 	}
 
 	return 0
