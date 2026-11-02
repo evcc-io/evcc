@@ -464,7 +464,7 @@ func optimizerURI() string {
 // optimizerAuth adds the sponsor token for the hosted optimizer only, a custom OPTIMIZER_URI must not receive it
 func optimizerAuth(req *http.Request) {
 	if optimizerURI() == OPTIMIZER_URI && sponsor.IsAuthorizedForApi() {
-		req.Header.Set("Authorization", "Bearer "+sponsor.Token)
+		req.Header.Set("Authorization", "Bearer "+sponsor.Token())
 	}
 }
 
