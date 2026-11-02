@@ -18,6 +18,12 @@ const params = new URLSearchParams(window.location.search);
 const screenOffSeconds = readIntegerParam("screenOff", 0);
 const loadpointTimeoutSeconds = readIntegerParam("loadpointTimeout", 0);
 const requestedLoadpoint = params.get("loadpoint");
+const ignoredLoadpoints = new Set(
+  (params.get("ignoreLoadpoints") || "")
+    .split(",")
+    .map((name) => name.trim().toLowerCase())
+    .filter(Boolean)
+);
 const theme = params.get("theme") || "dark";
 const autoSwitch = readBooleanParam("autoSwitch", true);
 const numberFormat = new Intl.NumberFormat("de-DE", {
@@ -58,7 +64,7 @@ let lastSuccess = 0;
 let pointerStart;
 let lastInputAt = Date.now();
 let previousConnections;
-let initialLoadpointResolved = requestedLoadpoint === null;
+let initialLoadpointResolved = false;
 let initialLoadpoint = 0;
 let loadpointTimeout;
 
@@ -91,27 +97,45 @@ function readBooleanParam(name, fallback) {
   return fallback;
 }
 
+function isIgnoredLoadpoint(loadpoint) {
+  return [loadpoint?.name, loadpoint?.title].some(
+    (name) => typeof name === "string" && ignoredLoadpoints.has(name.trim().toLowerCase())
+  );
+}
+
+function visibleLoadpoints(loadpoints) {
+  return loadpoints
+    .map((loadpoint, index) => ({ loadpoint, index }))
+    .filter(({ loadpoint }) => !isIgnoredLoadpoint(loadpoint));
+}
+
 function selectInitialLoadpoint(loadpoints) {
   if (initialLoadpointResolved) return;
 
+  const visible = visibleLoadpoints(loadpoints);
   let index = -1;
-  if (/^\d+$/.test(requestedLoadpoint)) {
-    index = Number(requestedLoadpoint) - 1;
-  } else {
-    index = loadpoints.findIndex(
-      (loadpoint) =>
-        loadpoint?.name === requestedLoadpoint || loadpoint?.title === requestedLoadpoint
-    );
-    if (index < 0) {
-      const match = /^lp-(\d+)$/.exec(requestedLoadpoint);
-      if (match) index = Number(match[1]) - 1;
+  if (requestedLoadpoint !== null) {
+    if (/^\d+$/.test(requestedLoadpoint)) {
+      index = Number(requestedLoadpoint) - 1;
+    } else {
+      index = loadpoints.findIndex(
+        (loadpoint) =>
+          loadpoint?.name === requestedLoadpoint || loadpoint?.title === requestedLoadpoint
+      );
+      if (index < 0) {
+        const match = /^lp-(\d+)$/.exec(requestedLoadpoint);
+        if (match) index = Number(match[1]) - 1;
+      }
     }
   }
 
-  if (index >= 0 && index < loadpoints.length) {
+  if (visible.some((entry) => entry.index === index)) {
     selected = index;
   } else {
-    console.warn("display: ignoring unknown loadpoint parameter");
+    if (requestedLoadpoint !== null) {
+      console.warn("display: ignoring unknown or excluded loadpoint parameter");
+    }
+    selected = visible[0]?.index ?? 0;
   }
   initialLoadpoint = selected;
   initialLoadpointResolved = true;
@@ -195,12 +219,12 @@ function setFlow(left, right, share, live, type = "solar") {
   elements.flowRight.textContent = right;
 }
 
-function updateDots(count) {
+function updateDots(count, selectedIndex) {
   elements.dots.replaceChildren();
   if (count < 2) return;
   for (let index = 0; index < count; index += 1) {
     const dot = document.createElement("span");
-    dot.className = `page-dot${index === selected ? " is-current" : ""}`;
+    dot.className = `page-dot${index === selectedIndex ? " is-current" : ""}`;
     dot.setAttribute("aria-hidden", "true");
     elements.dots.append(dot);
   }
@@ -244,10 +268,15 @@ function statusText(loadpoint, house, live) {
 
 function render() {
   const loadpoints = Array.isArray(state?.loadpoints) ? state.loadpoints : [];
-  selected = Math.min(selected, Math.max(loadpoints.length - 1, 0));
-  const loadpoint = loadpoints[selected];
+  const visible = visibleLoadpoints(loadpoints);
+  let selectedIndex = visible.findIndex((entry) => entry.index === selected);
+  if (selectedIndex < 0 && visible.length > 0) {
+    selectedIndex = 0;
+    selected = visible[0].index;
+  }
+  const loadpoint = visible[selectedIndex]?.loadpoint;
   const live = Date.now() - lastSuccess < staleAfter;
-  const charging = live && loadpoints.some((item) => item?.charging === true);
+  const charging = live && visible.some((entry) => entry.loadpoint?.charging === true);
   const screenOff =
     screenOffSeconds > 0 && !charging && Date.now() - lastInputAt >= screenOffSeconds * 1000;
   elements.screen.classList.toggle("is-screen-off", screenOff);
@@ -362,7 +391,7 @@ function render() {
   elements.modes.forEach((element) => {
     element.classList.toggle("is-current", element.dataset.mode === mode);
   });
-  updateDots(loadpoints.length);
+  updateDots(visible.length, selectedIndex);
 }
 
 async function poll() {
@@ -373,7 +402,9 @@ async function poll() {
     const nextState = payload.result || payload;
     if (!Array.isArray(nextState.loadpoints)) throw new Error("state response has no loadpoints");
     selectInitialLoadpoint(nextState.loadpoints);
-    const connections = nextState.loadpoints.map((loadpoint) => Boolean(loadpoint?.connected));
+    const connections = nextState.loadpoints.map(
+      (loadpoint) => !isIgnoredLoadpoint(loadpoint) && Boolean(loadpoint?.connected)
+    );
     if (autoSwitch && previousConnections) {
       const connectedIndex = connections.findIndex(
         (connected, index) => connected && !previousConnections[index]
@@ -409,11 +440,12 @@ elements.screen.addEventListener("pointerup", (event) => {
   pointerStart = undefined;
   if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
 
-  const count = state?.loadpoints?.length || 0;
-  if (count < 2) return;
-  const next = Math.max(0, Math.min(count - 1, selected + (dx < 0 ? 1 : -1)));
-  if (next === selected) return;
-  selectLoadpoint(next);
+  const visible = visibleLoadpoints(state?.loadpoints || []);
+  if (visible.length < 2) return;
+  const currentIndex = visible.findIndex((entry) => entry.index === selected);
+  const nextIndex = Math.max(0, Math.min(visible.length - 1, currentIndex + (dx < 0 ? 1 : -1)));
+  if (nextIndex === currentIndex) return;
+  selectLoadpoint(visible[nextIndex].index);
   render();
   elements.content.classList.remove("enter-from-left", "enter-from-right");
   void elements.content.offsetWidth;
