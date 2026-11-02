@@ -52,9 +52,9 @@ URL parameters configure the display:
 
 - `screenOff=120` turns the screen black after 120 seconds without input while no loadpoint is charging. The default is `0` (disabled).
 - `autoSwitch=0` disables automatic switching to a newly connected vehicle. Automatic switching is enabled by default.
-- `loadpoint=2` selects the second loadpoint initially. Automatic switching may select another loadpoint later.
+- `loadpoint=lp-1` selects a loadpoint by its identifier, title, or database ID such as `db:7`. Numeric values such as `loadpoint=2` remain supported as one-based positions. Automatic switching may select another loadpoint later.
 
-For example: `http://127.0.0.1:7072/?screenOff=120&loadpoint=2&autoSwitch=0`. When the screen is black, the first swipe wakes it and the next swipe changes loadpoints.
+For example: `http://127.0.0.1:7072/?screenOff=120&loadpoint=db:7&autoSwitch=0`. When the screen is black, the first swipe wakes it and the next swipe changes loadpoints.
 
 ## Contributing
 

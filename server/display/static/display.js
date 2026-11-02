@@ -1,7 +1,7 @@
 const stateQuery = `{
   loadpoints: [
     .loadpoints[] | {
-      title, mode, alwaysCharge, chargePower, charging, connected, sessionEnergy, chargedEnergy,
+      name, title, mode, alwaysCharge, chargePower, charging, connected, sessionEnergy, chargedEnergy,
       chargeDuration, phasesActive, sessionSolarPercentage, vehicleSoc, vehicleTitle, pvAction,
       pvRemaining, planActive, smartCostActive, effectiveMinCurrent, minCurrent,
       phasesConfigured, chargerPhases1p3p
@@ -16,7 +16,7 @@ const refreshInterval = 3000;
 const staleAfter = 9000;
 const params = new URLSearchParams(window.location.search);
 const screenOffSeconds = readIntegerParam("screenOff", 0);
-const requestedLoadpoint = readIntegerParam("loadpoint", 0, 1);
+const requestedLoadpoint = params.get("loadpoint");
 const autoSwitch = readBooleanParam("autoSwitch", true);
 const numberFormat = new Intl.NumberFormat("de-DE", {
   minimumFractionDigits: 1,
@@ -56,6 +56,7 @@ let lastSuccess = 0;
 let pointerStart;
 let lastInputAt = Date.now();
 let previousConnections;
+let initialLoadpointResolved = requestedLoadpoint === null;
 
 function readIntegerParam(name, fallback, minimum = 0) {
   const value = params.get(name);
@@ -77,6 +78,31 @@ function readBooleanParam(name, fallback) {
 
   console.warn(`display: ignoring invalid ${name} parameter`);
   return fallback;
+}
+
+function selectInitialLoadpoint(loadpoints) {
+  if (initialLoadpointResolved) return;
+
+  let index = -1;
+  if (/^\d+$/.test(requestedLoadpoint)) {
+    index = Number(requestedLoadpoint) - 1;
+  } else {
+    index = loadpoints.findIndex(
+      (loadpoint) =>
+        loadpoint?.name === requestedLoadpoint || loadpoint?.title === requestedLoadpoint
+    );
+    if (index < 0) {
+      const match = /^lp-(\d+)$/.exec(requestedLoadpoint);
+      if (match) index = Number(match[1]) - 1;
+    }
+  }
+
+  if (index >= 0 && index < loadpoints.length) {
+    selected = index;
+  } else {
+    console.warn("display: ignoring unknown loadpoint parameter");
+  }
+  initialLoadpointResolved = true;
 }
 
 const isNumber = (value) => typeof value === "number" && Number.isFinite(value);
@@ -318,6 +344,7 @@ async function poll() {
     const payload = await response.json();
     const nextState = payload.result || payload;
     if (!Array.isArray(nextState.loadpoints)) throw new Error("state response has no loadpoints");
+    selectInitialLoadpoint(nextState.loadpoints);
     const connections = nextState.loadpoints.map((loadpoint) => Boolean(loadpoint?.connected));
     if (autoSwitch && previousConnections) {
       const connectedIndex = connections.findIndex(

@@ -30,7 +30,7 @@ func TestDisplayHTTPdReadOnly(t *testing.T) {
 
 	stateQuery := `{
 		loadpoints: [.loadpoints[] | {
-			title, mode, alwaysCharge, chargePower, charging, connected, sessionEnergy, chargedEnergy,
+			name, title, mode, alwaysCharge, chargePower, charging, connected, sessionEnergy, chargedEnergy,
 			chargeDuration, phasesActive, sessionSolarPercentage, vehicleSoc, vehicleTitle, pvAction,
 			pvRemaining, planActive, smartCostActive, effectiveMinCurrent, minCurrent,
 			phasesConfigured, chargerPhases1p3p
