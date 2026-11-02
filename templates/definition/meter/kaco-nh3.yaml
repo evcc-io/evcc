@@ -8,11 +8,11 @@ requirements:
     de: |
       Für KACO blueplanet Hybrid NH3 mit AI-Dongle/WLAN-Stick. Modbus TCP und lokale AISWEI-HTTP-API müssen über die IP-Adresse des Sticks erreichbar sein (Modbus TCP Port 502, Geräte-ID 3; HTTP Port 8484).
       Die Batterie-Leistungsregelung verwendet die lokale Schnittstelle `fdbg.cgi`. Maximale Lade- und Entladeleistung werden aus SunSpec Model 802 gelesen.
-      Die Netzzählerstände für Import und Export werden von dieser Firmware nicht über Modbus TCP bereitgestellt.
+      Der im SunSpec-Modell 203 bereitgestellte Netzzähler liefert Netzleistung, Import-/Export-Energie und phasenbezogene Messwerte.
     en: |
       For KACO blueplanet Hybrid NH3 with AI dongle/Wi-Fi stick. Modbus TCP and the local AISWEI HTTP API must be reachable at the stick's IP address (Modbus TCP port 502, device ID 3; HTTP port 8484).
       Battery power control uses the local `fdbg.cgi` endpoint. Maximum charge and discharge power are read from SunSpec Model 802.
-      Grid import and export energy counters are not exposed over Modbus TCP by this firmware.
+      The grid meter exposed through SunSpec Model 203 provides grid power, import/export energy, and per-phase measurements.
 capabilities: ["battery-control", "curtail"]
 params:
   - name: usage
@@ -40,6 +40,55 @@ render: |
       address: 6433 # 46434 total system power (smart meter)
       type: holding
       decode: int32
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 203:TotWhImp
+    scale: 0.001
+  returnenergy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 203:TotWhExp
+    scale: 0.001
+  currents:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:AphA
+      nan: true
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:AphB
+      nan: true
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:AphC
+      nan: true
+  voltages:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:PhVphA
+      nan: true
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:PhVphB
+      nan: true
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:PhVphC
+      nan: true
+  powers:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:WphA
+      nan: true
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:WphB
+      nan: true
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:WphC
+      nan: true
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -76,15 +125,15 @@ render: |
               value: 0 # Disable active power limit
               set:
                 source: sunspec
-                {{- include "modbus" . | indent 16 }}
+                  {{- include "modbus" . | indent 14 }}
                 value: 704:WMaxLimPctEna
-          default:
-            source: const
-            value: 1 # Enable active power limit
-            set:
-              source: sunspec
-              {{- include "modbus" . | indent 14 }}
-              value: 704:WMaxLimPctEna
+        default:
+          source: const
+          value: 1 # Enable active power limit
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 704:WMaxLimPctEna
   curtailed:
     source: go
     in:
@@ -110,11 +159,11 @@ render: |
   {{- if eq .usage "battery" }}
   maxchargepower:
     source: sunspec
-    {{- include "modbus" . | indent 4 }}
+    {{- include "modbus" . | indent 2 }}
     value: 802:WChaRteMax
   maxdischargepower:
     source: sunspec
-    {{- include "modbus" . | indent 4 }}
+    {{- include "modbus" . | indent 2 }}
     value: 802:WDisChaRteMax
   power:
     source: modbus
@@ -170,13 +219,13 @@ render: |
                       type: float
                       config:
                         source: sunspec
-                        {{- include "modbus" . | indent 24 }}
+                        {{- include "modbus" . | indent 22 }}
                         value: 802:WChaRteMax
                     - name: discharge
                       type: float
                       config:
                         source: sunspec
-                        {{- include "modbus" . | indent 24 }}
+                        {{- include "modbus" . | indent 22 }}
                         value: 802:WDisChaRteMax
                   out:
                     - name: frame
