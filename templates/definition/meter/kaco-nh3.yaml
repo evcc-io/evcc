@@ -184,7 +184,7 @@ render: |
                       config:
                         source: http
                         <<: *fdbg
-                        body: '{"data":"{{ .frame }}"}'
+                        body: '{"data":"${frame}"}'
                   script: |
                     power := 0
                     if value == 3 {
