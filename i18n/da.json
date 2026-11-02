@@ -46,8 +46,8 @@
     },
     "combined": "Samlet",
     "config": {
-      "buffer": "Energi i hjemmets batteri over {soc} kan bruges til at understøtte ladestederne og forsinke frakobling i smart mode. Start solopladning automatisk {start}.",
-      "bufferNone": "Hjemmets batteri bruges ikke til ladestederne. Sæt en værdi under {soc} for at aktivere støtte.",
+      "buffer": "Energi i hjemmets batteri over {soc} kan bruges til at understøtte ladestederne og forsinke frakobling i smart mode. Start solopladning automatisk {start}. Note: “Oplad altid” påvirkes ikke af denne indstilling.",
+      "bufferNone": "Hjemmets batteri bruges ikke til ladestederne. Sæt en værdi under {soc} for at aktivere støtte i smatmode. Note \"Oplad altid\" påvirkes ikke af denne indstilling.",
       "bufferStart": {
         "above": "når batteriet er over {soc}",
         "full": "når batteriet er fyldt",
@@ -383,6 +383,7 @@
       "optional": "valgfrit"
     },
     "general": {
+      "add": "Tilføj",
       "applyAndClose": "Anvend og luk",
       "authPerform": "Forbind til {provider}",
       "authPerformHint": "Åbnes i en ny fane. Kom tilbage hertil for at fortsætte.",
@@ -394,6 +395,7 @@
       "confirmDisable": "Deaktiver denne enhed? Den ignoreres efter næste genstart.",
       "confirmEnable": "Aktiver denne enhed igen?",
       "confirmSave": "Ændringer er ikke gemt. Skal de gemmes nu?",
+      "continue": "Fortsæt",
       "copied": "Kopieret!",
       "copy": "Kopier",
       "customHelp": "Opret en brugerdefineret enhed ved hjælp af evcc's plugin-system.",
@@ -531,6 +533,27 @@
       "defaultModeKeep": "Gem som det er",
       "defaultModeLabel": "Standardtilstand",
       "delete": "Slet",
+      "demandPredictor": {
+        "daily": {
+          "description": "Gennemsnit af seneste dage. For enheder med samme mønster hver dag.",
+          "label": "Dagligt gennemsnit"
+        },
+        "defaultGroup": "Enheds standard",
+        "description": "Hvordan optimizer forudsiger efterspørgsel ud fra tidligere forbrug.",
+        "label": "Profil",
+        "noTempTariff": "Kræver temperaturprognose.",
+        "noTempTariffLink": "Tilføj prognose",
+        "profilesGroup": "Profiler",
+        "temperature": {
+          "description": "Tidligere forbrug ved ligende udendørstemperaturer. For opvarmning af rum, f.eks. med varmepumper.",
+          "label": "Temperatur"
+        },
+        "title": "Forbrugsprognose",
+        "weekday": {
+          "description": "Gennemsnit af samme ugedag. For enheder med en ugentlig plan, f.eks. til vand- eller poolopvarmning.",
+          "label": "Ugedag"
+        }
+      },
       "electricalSubtitle": "Ved tvivl, spørg din elektriker.",
       "electricalTitle": "Elektrisk",
       "energyMeterHelp": "Ekstra måler, hvis opladeren ikke har en integreret.",
@@ -715,10 +738,18 @@
         "grid": "Tilføj måler til elnettet",
         "pv": "Tilføj en solenergimåler"
       },
+      "reuseApply": "Brug dens indstillinger.",
+      "reuseHint": "{device} kan også bruges som \"{target}\".",
       "save": "Gem",
       "specific": "Specifikke integrationer",
       "template": "Fabrikant",
       "titleChoice": "Hvad ønsker du at tilføje?",
+      "titleExample": {
+        "aux": "Smart vandvarmer osv.",
+        "battery": "Kælder, garage, kraftværk osv.",
+        "consumer": "Opvaskemaskine, vaskemaskine, poolpumpe osv.",
+        "pv": "Sydvendt tag, carport osv."
+      },
       "titleLabel": "Titel",
       "usage": {
         "aux": "Selvregulerende forbrugsenhed",
@@ -976,6 +1007,15 @@
         "example": "Din opladningspris var {price}. Du sparede {amount}.",
         "label": "Valuta"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V uden nulleder (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V med nulleder (3P4W)",
+        "description": {
+          "3p3w": "Elnet uden nulleder. Almindelig i Norge og dele ag Belgien.",
+          "3p4w": "Mest almindelige elnet med nulleder."
+        },
+        "label": "Elnet forbindelse"
+      },
       "siteTitle": {
         "description": "Vises på hovedskærmen og i browserfanen.",
         "label": "Titel"
@@ -989,6 +1029,18 @@
       "descriptionToken": "Som GitHub sponsor finder du din token på {url}. For at komme i gang tilbyder vi en {trialToken}.",
       "enterYourToken": "Din Sponsor token",
       "error": "Dit Sponsortoken er ikke gyldigt.",
+      "inline": {
+        "applied": "Token anvendt. Tak for din støtte til projektet!",
+        "apply": "Anvend",
+        "becomeSponsor": "bliv sponsor",
+        "device": "Denne enhed er kun tilgængelig for sponsorer.",
+        "feature": "Denne funktion er kun tilgængelig for sponsorer.",
+        "learn": "Læs mere og {becomeSponsor}.",
+        "placeholder": "Indsæt token",
+        "title": "Sponsor token påkrævet",
+        "trial": "Kom hurtigt i gang.",
+        "trialLink": "Hent et afprøvningstoken"
+      },
       "invalid": "ugyldig",
       "labelToken": "Sponsor token",
       "title": "Sponsorat",
@@ -1083,7 +1135,8 @@
       "solar": {
         "description": "Prognose for energi produktion fra dit solcelleanlæg. Vises i brugergrænsefladen og vil blive brugt af optimeringsalgoritmer i fremtiden.",
         "titleAdd": "Tilføj sol prognose",
-        "titleEdit": "Juster sol prognose"
+        "titleEdit": "Juster sol prognose",
+        "titleExample": "Sydvendt tag, carport osv."
       },
       "temperature": {
         "description": "Udendørs temperaturprognose for din placering. Vises i brugerfladen og bruges til at forudsige varmebehovet.",
@@ -1711,6 +1764,11 @@
       "login": "Log på",
       "logout": "Log ud"
     },
+    "setup": {
+      "description": "Tilføj dine enheder for at se energiflowet og begynde at oplade med solenergi.",
+      "start": "Start opsætning",
+      "title": "Velkommen!"
+    },
     "startConfiguration": "Lad os starte konfigurationen",
     "targetCharge": {
       "activate": "Tænd",
@@ -1838,6 +1896,76 @@
     "restartNeeded": "Påkrævet for at anvende ændringer.",
     "restarting": "Serveren kommer tilbage om et øjeblik.",
     "starting": "Starter server..."
+  },
+  "onboarding": {
+    "another": "Tilføj endnu en",
+    "back": "Tilbage",
+    "battery": {
+      "add": "Tilføj hjemmebatteri",
+      "description": "Tilføj dit batteri, så opladningen tager højde for det, og du kan se, hvad det gør.",
+      "none": "Intet hjemmebatteri",
+      "title": "Har du et hjemmebatteri?"
+    },
+    "checklist": {
+      "dismiss": "Afvis",
+      "legacyTariffs": "Gammel tarifkonfiguration er i brug.",
+      "progress": "{done} af {total} udført",
+      "title": "Fuldfør din opsætning"
+    },
+    "control": {
+      "description": "Begynd med din første. Flere kan tilføjes senere på konfigurationssiden.",
+      "none": "Intet endnu",
+      "title": "Hvad vil du styre?"
+    },
+    "done": {
+      "close": "Gå til konfiguration",
+      "description": "En genstart anvender konfigurationen. Udforsk derefter funktionerne. Køretøjer, tariffer og mere kan til enhver tid tilføjes.",
+      "restart": "Genstart",
+      "title": "Du er klar"
+    },
+    "grid": {
+      "add": "Tilføj elnet-måler",
+      "confirm": "Elnet-måleren er grundlaget for overskudsladning og energistatistik. Det anbefales at tilføje en.",
+      "confirmNone": "Fortsæt uden",
+      "description": "Måler import fra og eksport til elnettet i tilslutningspunktet. Gør overskudsladning præcis.",
+      "none": "Ingen elnet-måler",
+      "title": "Har du en elnet-måler?"
+    },
+    "item": {
+      "battery": "Hjemmebatteri",
+      "co2": "CO₂ prognose",
+      "consumer": "Forbrugsenhed",
+      "grid": "Elnet-måler",
+      "gridExport": "Eksporttarif til elnettet",
+      "gridImport": "Importtarif fra elnettet",
+      "heater": "Varmeenhed",
+      "loadpoint": "Ladepunkt",
+      "pv": "Solcelleanlæg",
+      "solar": "Solprognose"
+    },
+    "password": {
+      "description": "Beskytter konfigurationsindstillingerne mod uautoriserede ændringer. Husk den, der er ingen nem måde at nulstille den på.",
+      "disabled": "Godkendelse er deaktiveret ({flag}). Alle med netværksadgang kan ændre konfigurationen, læse gemte loginoplysninger og køre scripts. Sikr adgangen på anden vis.",
+      "title": "Angiv administratorkodeord"
+    },
+    "pv": {
+      "add": "Tilføj solcelleanlæg",
+      "description": "Måler solenergiproduktionen. Nødvendig for solandelen og overskudsladning.",
+      "none": "Intet solcelleanlæg",
+      "title": "Har du et solcelleanlæg?"
+    },
+    "site": {
+      "currencyHint": "fx {price}, {amount}",
+      "defaultTitle": "Hjem",
+      "description": "Et par grundoplysninger om dit hjem. Du kan ændre dem til enhver tid.",
+      "title": "Din installation"
+    },
+    "skip": "Spring over",
+    "step": "Trin {step} af {total}",
+    "welcome": {
+      "description": "Opsæt de vigtigste dele af din hjemmeinstallation for at begynde med smart opladning.",
+      "start": "Kom i gang"
+    }
   },
   "passwordModal": {
     "description": "Angiv adgangskode for at beskytte konfigurations indstillinger. Det er stadig mulig at benytte hovedskærmen uden at logge på.",

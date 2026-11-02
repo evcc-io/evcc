@@ -372,6 +372,7 @@
       "optional": "neobavezno"
     },
     "general": {
+      "add": "Dodaj",
       "applyAndClose": "Primjeni i zatvori",
       "authPerform": "Spoji sa {provider}",
       "authPerformHint": "Otvorit će se u novoj kartici. Vratite se ovdje za nastavak.",
@@ -383,6 +384,7 @@
       "confirmDisable": "Onemogućiti ovaj uređaj? Bit će zanemaren nakon sljedećeg ponovnog pokretanja.",
       "confirmEnable": "Ponovno omogućiti ovaj uređaj?",
       "confirmSave": "Postoje promjene koje nisu spremljene. Spremiti sada?",
+      "continue": "Nastavi",
       "copied": "Kopirano!",
       "copy": "Kopiraj",
       "customHelp": "Izradite posebni uređaj koristeći evcc sustav dodataka.",
@@ -557,16 +559,24 @@
       "priorityLabel": "Prioritet",
       "save": "Spremi",
       "solarShareReset": "Uklonite pragove",
+      "solarTitle": "Ponašanje pri solarnom višku",
       "temperatureRangeHelp": "Raspon prikaza za traku temperature. Ne utječe na upravljanje.",
       "temperatureRangeTitle": "Raspon temperature",
+      "thresholdDisableDelayHelp": "Zaustavlja se kada nema dovoljno viška tijekom {delay}.",
       "thresholdDisableDelayLabel": "Onemogući odgodu",
       "thresholdDisableHelpInvalid": "Koristite pozitivnu vrijednost.",
       "thresholdDisableHelpPositive": "Zaustavi kada se više od {power} koristi iz mreže tijekom {delay}.",
       "thresholdDisableLabel": "Onemogući energiju iz mreže",
+      "thresholdEnableDelayHelp": "Pokreće se kada ima dovoljno viška tijekom {delay}.",
       "thresholdEnableDelayLabel": "Omogući odgodu",
       "thresholdEnableHelpInvalid": "Koristi negativnu vrijednost.",
       "thresholdEnableHelpNegative": "Pokreni kada je dostupno {surplus} viška tijekom {delay}.",
       "thresholdEnableLabel": "Omogući energiju iz mreže",
+      "thresholdsNote": {
+        "charging": "Za upravljanje korištenjem mreže pri solarnom punjenju upotrijebite klizač {slider} u postavkama mjesta punjenja na stranici {page}. Ovdje postavljajte vrijednosti samo u posebnim slučajevima.",
+        "heating": "Za upravljanje korištenjem mreže pri solarnom grijanju upotrijebite klizač {slider} u postavkama grijača na stranici {page}. Ovdje postavljajte vrijednosti samo u posebnim slučajevima."
+      },
+      "thresholdsSliderDisabled": "Klizač {slider} trenutačno je onemogućen jer su vrijednosti postavljene ovdje.",
       "titleAdd": {
         "charging": "Dodaj točku punjenja",
         "heating": "Dodaj uređaj za grijanje",
@@ -696,10 +706,18 @@
         "grid": "Dodaj brojilo mreže",
         "pv": "Dodaj brojilo solarne elektrane"
       },
+      "reuseApply": "Koristi njegove postavke.",
+      "reuseHint": "{device} se može koristiti i kao „{target}“.",
       "save": "Spremi",
       "specific": "Specifične integracije",
       "template": "Proizvođač",
       "titleChoice": "Što želite dodati?",
+      "titleExample": {
+        "aux": "Pametni grijač vode itd.",
+        "battery": "Podrum, garaža, elektrana itd.",
+        "consumer": "Perilica posuđa, perilica rublja, pumpa bazena itd.",
+        "pv": "Južni krov, nadstrešnica itd."
+      },
       "titleLabel": "Naslov",
       "usage": {
         "aux": "Samoregulirajući potrošač",
@@ -957,6 +975,15 @@
         "example": "Vaša cijena punjenja bila je {price}. Uštedjeli ste {amount}.",
         "label": "Valuta"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V bez neutralnog vodiča (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V s neutralnim vodičem (3P4W)",
+        "description": {
+          "3p3w": "Mreža bez neutralnog vodiča. Uobičajena u Norveškoj i dijelovima Belgije.",
+          "3p4w": "Najčešća mreža s neutralnim vodičem."
+        },
+        "label": "Mrežni priključak"
+      },
       "siteTitle": {
         "description": "Prikazuje se na glavnom zaslonu i kartici preglednika.",
         "label": "Naslov"
@@ -970,6 +997,18 @@
       "descriptionToken": "Sponzori mogu pronaći svoj token na {url}. Za početak je dostupan {trialToken}.",
       "enterYourToken": "Upišite svoj token",
       "error": "Sponzorski token nije ispravan.",
+      "inline": {
+        "applied": "Token je primijenjen. Hvala na podršci projektu!",
+        "apply": "Primijeni",
+        "becomeSponsor": "postanite sponzor",
+        "device": "Ovaj je uređaj dostupan samo sponzorima.",
+        "feature": "Ova je značajka dostupna samo sponzorima.",
+        "learn": "Saznajte više i {becomeSponsor}.",
+        "placeholder": "Zalijepi token",
+        "title": "Potreban sponzorski token",
+        "trial": "Brzo započnite.",
+        "trialLink": "Nabavi probni token"
+      },
       "invalid": "neispravno",
       "labelToken": "Sponzorski token",
       "title": "Sponzorstvo",
@@ -1064,7 +1103,8 @@
       "solar": {
         "description": "Prognoza solarne proizvodnje za vaš PV sustav. Prikazuje se u sučelju, a u budućnosti će se koristiti za algoritme optimizacije.",
         "titleAdd": "Dodaj solarnu prognozu",
-        "titleEdit": "Uredi solarnu prognozu"
+        "titleEdit": "Uredi solarnu prognozu",
+        "titleExample": "Južni krov, nadstrešnica itd."
       },
       "temperature": {
         "description": "Prognoza vanjske temperature za vašu lokaciju. Prikazuje se u sučelju i koristi za predviđanje potrebe za grijanjem.",
@@ -1691,6 +1731,11 @@
       "login": "prijavi se",
       "logout": "odjavi se"
     },
+    "setup": {
+      "description": "Dodajte svoje uređaje kako biste vidjeli tok energije i počeli puniti solarnom energijom.",
+      "start": "Postavi",
+      "title": "Dobrodošli!"
+    },
     "startConfiguration": "Započnimo postavljanje",
     "targetCharge": {
       "activate": "Aktiviraj",
@@ -1816,6 +1861,75 @@
     "restartNeeded": "Nužno za primjenu promjena.",
     "restarting": "Poslužitelj će biti dostupan za koji trenutak.",
     "starting": "Pokretanje poslužitelja …"
+  },
+  "onboarding": {
+    "another": "Dodaj još jedan",
+    "back": "Natrag",
+    "battery": {
+      "add": "Dodaj kućnu bateriju",
+      "description": "Dodajte bateriju kako bi je punjenje uzimalo u obzir i kako biste vidjeli što radi.",
+      "none": "Nema kućne baterije",
+      "title": "Imate li kućnu bateriju?"
+    },
+    "checklist": {
+      "dismiss": "Odbaci",
+      "legacyTariffs": "Koristi se stara konfiguracija tarifa.",
+      "progress": "{done} od {total} završeno",
+      "title": "Dovršite postavljanje"
+    },
+    "control": {
+      "description": "Počnite s prvim uređajem. Više ih možete dodati kasnije na stranici postavki.",
+      "none": "Još ništa",
+      "title": "Čime želite upravljati?"
+    },
+    "done": {
+      "close": "Idi na postavke",
+      "description": "Ponovno pokretanje primjenjuje postavke. Zatim istražite značajke. Vozila, tarife i ostalo možete dodati u bilo kojem trenutku.",
+      "title": "Spremni ste"
+    },
+    "grid": {
+      "add": "Dodaj brojilo mreže",
+      "confirm": "Brojilo mreže temelj je za punjenje viškom i statistiku energije. Preporučuje se dodati ga.",
+      "confirmNone": "Nastavi bez njega",
+      "description": "Mjeri uvoz i izvoz iz mreže na priključnoj točki. Čini punjenje viškom preciznim.",
+      "none": "Nema brojila mreže",
+      "title": "Imate li brojilo mreže?"
+    },
+    "item": {
+      "battery": "Kućna baterija",
+      "co2": "Prognoza CO₂",
+      "consumer": "Potrošač",
+      "grid": "Brojilo mreže",
+      "gridExport": "Tarifa za izvoz u mrežu",
+      "gridImport": "Tarifa za uvoz iz mreže",
+      "heater": "Grijač",
+      "loadpoint": "Mjesto punjenja",
+      "pv": "Solarni sustav",
+      "solar": "Prognoza solarne proizvodnje"
+    },
+    "password": {
+      "description": "Štiti postavke od neovlaštenih promjena. Zapamtite ga, jer ga nije jednostavno poništiti.",
+      "disabled": "Autentifikacija je onemogućena ({flag}). Svatko s mrežnim pristupom može mijenjati postavke, čitati pohranjene vjerodajnice i pokretati skripte. Osigurajte pristup na drugi način.",
+      "title": "Postavi administratorsku lozinku"
+    },
+    "pv": {
+      "add": "Dodaj solarni sustav",
+      "description": "Mjeri solarnu proizvodnju. Potrebno za udio solarne energije i punjenje viškom.",
+      "none": "Nema solarnog sustava",
+      "title": "Imate li solarni sustav?"
+    },
+    "site": {
+      "currencyHint": "npr. {price}, {amount}",
+      "defaultTitle": "Dom",
+      "description": "Nekoliko osnovnih podataka o vašem domu. Možete ih promijeniti u bilo kojem trenutku.",
+      "title": "Vaša lokacija"
+    },
+    "skip": "Preskoči",
+    "step": "Korak {step} od {total}",
+    "welcome": {
+      "description": "Postavite najvažnije dijelove svoje kućne instalacije za početak pametnog punjenja.",
+      "start": "Započni"
+    }
   },
   "passwordModal": {
     "description": "Postavite lozinku za zaštitu postavki. Početna stranica se može koristiti i bez prijave.",
