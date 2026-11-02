@@ -62,7 +62,7 @@ Always charge (`alwaysCharge`: off/on/once) is a per-loadpoint option for smart 
 Sensing and control run separately (`Site.Run`):
 
 ```
-Sense loop (every 2s, never slower than interval, all loadpoints in parallel)
+Sense loop (one per loadpoint, every 2s, never slower than interval)
   Loadpoint.Sense()
   ├── UpdateChargePowerAndCurrents()   (serialized per loadpoint via measureMu)
   └── Observe() -> observe()           (serialized against control via controlMu)

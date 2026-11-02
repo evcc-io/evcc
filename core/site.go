@@ -1612,18 +1612,6 @@ func senseLoadpoints(lps []*Loadpoint) {
 	wg.Wait()
 }
 
-// measureLoadpoints continuously senses all loadpoints
-func measureLoadpoints(stopC chan struct{}, lps []*Loadpoint, interval time.Duration) {
-	for tick := time.Tick(interval); ; {
-		select {
-		case <-tick:
-			senseLoadpoints(lps)
-		case <-stopC:
-			return
-		}
-	}
-}
-
 // Run is the main control loop. Every interval it controls all loadpoints against one
 // site measurement, loadpoints that requested control (status, mode or limit change)
 // are controlled immediately.
@@ -1650,9 +1638,12 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	// control must not act before the loadpoints have been sensed
 	senseLoadpoints(active)
 
-	// never sense slower than the control loop
+	// each loadpoint senses on its own loop so a slow charger does not throttle the others,
+	// never slower than the control loop
 	senseInterval := min(measureInterval, interval)
-	go measureLoadpoints(stopC, active, senseInterval)
+	for _, lp := range active {
+		go lp.senseLoop(stopC, senseInterval)
+	}
 
 	// start immediately, charging loadpoints first so a running session is not kept waiting
 	go site.optimizerUpdateAsync(false)

@@ -2234,6 +2234,18 @@ func (lp *Loadpoint) GetChargeCurrents() []float64 {
 	return lp.chargeCurrents
 }
 
+// senseLoop senses the loadpoint at the given interval until stopped
+func (lp *Loadpoint) senseLoop(stopC chan struct{}, interval time.Duration) {
+	for tick := time.Tick(interval); ; {
+		select {
+		case <-tick:
+			lp.Sense()
+		case <-stopC:
+			return
+		}
+	}
+}
+
 // Sense updates loadpoint measurements and observations
 func (lp *Loadpoint) Sense() {
 	// live measurements (parallel-safe, serialized per loadpoint via measureMu)
