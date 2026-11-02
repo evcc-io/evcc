@@ -1312,6 +1312,19 @@ func (site *Site) loadpointSitePower(lp updater, res sitePowerResult) float64 {
 	return sitePower
 }
 
+// foreignInflightPower returns the in-flight reserve of all other loadpoints. The own
+// reserve is excluded, else a loadpoint re-controlled inside its settle window would
+// subtract the power it just claimed from its own surplus and ramp down again.
+func (site *Site) foreignInflightPower(lp updater) float64 {
+	var res float64
+	for _, l := range site.activeLoadpoints() {
+		if l != lp {
+			res += l.GetInflightPower()
+		}
+	}
+	return res
+}
+
 // reservedPVPower returns the anticipated surplus claimed by higher-priority PV loadpoints
 // that are starting up, so lower-priority loadpoints defer enabling against it (#31194).
 func (site *Site) reservedPVPower(lp updater) float64 {
@@ -1432,14 +1445,10 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 	greenShareHome := site.greenShare(0, homePower)
 	greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
-	// TODO
 	if lp != nil {
 		// discount surplus by actuations the meters have not yet reflected,
 		// so this loadpoint does not re-claim power an earlier one already took
-		sitePower := site.loadpointSitePower(lp, res)
-		for _, l := range site.activeLoadpoints() {
-			sitePower += l.GetInflightPower()
-		}
+		sitePower := site.loadpointSitePower(lp, res) + site.foreignInflightPower(lp)
 
 		// control only, the sense loop keeps the observed state fresh
 		lp.Control(

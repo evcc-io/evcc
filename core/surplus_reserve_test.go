@@ -46,3 +46,22 @@ func TestGetInflightPowerDecrease(t *testing.T) {
 
 	assert.Zero(t, lp.GetInflightPower(), "decrease reserves nothing")
 }
+
+// TestForeignInflightPower verifies the site discounts the surplus only by the
+// reserve of other loadpoints, never by the controlled loadpoint's own reserve.
+func TestForeignInflightPower(t *testing.T) {
+	clk := clock.NewMock()
+	newLp := func(current float64) *Loadpoint {
+		lp := &Loadpoint{log: util.NewLogger("foo"), clock: clk, phases: 1, controlInterval: time.Minute}
+		lp.enabled = true
+		lp.offeredCurrent = current
+		lp.actuatedAt = clk.Now()
+		return lp
+	}
+
+	lp1, lp2 := newLp(16), newLp(10)
+	site := &Site{loadpoints: []*Loadpoint{lp1, nil, lp2}}
+
+	assert.Equal(t, lp2.GetInflightPower(), site.foreignInflightPower(lp1))
+	assert.Equal(t, lp1.GetInflightPower(), site.foreignInflightPower(lp2))
+}
