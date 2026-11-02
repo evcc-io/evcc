@@ -1550,12 +1550,20 @@ func (lp *Loadpoint) fastChargingPhases() (bool, error) {
 	// use enabled phases- scalePhases compares against the same value
 	phases := lp.GetPhases()
 
-	// unknown phases (charger without api.PhaseGetter after restart): establish target immediately
+	// unknown phases (charger without api.PhaseGetter after restart): derive from measured phases while
+	// charging, more than 1p measured implies 3p enabled. Without measurement establish target immediately.
 	if phases == 0 {
-		if err := lp.scalePhases(targetPhases); err != nil && !errors.Is(err, api.ErrNotAvailable) {
-			return false, err
+		switch measured := lp.GetMeasuredPhases(); {
+		case measured == 1:
+			phases = 1
+		case measured > 1:
+			phases = 3
+		default:
+			if err := lp.scalePhases(targetPhases); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+				return false, err
+			}
+			return false, nil
 		}
-		return false, nil
 	}
 
 	// scale down: immediate
