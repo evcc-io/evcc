@@ -12,8 +12,8 @@ requirements:
       need a free user access token.
     de: >-
       [vrm.victronenergy.com](https://vrm.victronenergy.com) abrufen der
-      Solarprognose für bis zu 7 Tage einer Installation im VRM-Portal. Es wird
-      ein kostenloses User Access Token benoetigt.
+      PV-Vorhersage für bis zu 7 Tage einer Installation im VRM-Portal. Es wird
+      ein kostenloses User Access Token benötigt.
   evcc: ["skiptest"]
 group: solar
 params:
