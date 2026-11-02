@@ -1,0 +1,39 @@
+template: ecoflow-powerpulse
+products:
+  - brand: EcoFlow
+    description:
+      generic: PowerPulse 2
+capabilities: ["1p3p"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: Die Wallbox muss an einem EcoFlow PowerOcean betrieben werden. Die Anmeldung erfolgt mit den Zugangsdaten der EcoFlow-App.
+    en: The wallbox must be connected to an EcoFlow PowerOcean. Login uses the EcoFlow app credentials.
+params:
+  - name: user
+    required: true
+  - name: password
+    required: true
+  - name: serial
+    required: true
+    description:
+      de: Seriennummer der Wallbox
+      en: Wallbox serial number
+  - name: gateway
+    required: true
+    description:
+      de: Seriennummer des PowerOcean
+      en: PowerOcean serial number
+  - name: timeout
+    default: 3m
+    advanced: true
+    help:
+      de: Maximales Alter der Telemetrie der Wallbox. Die Wallbox meldet sich mindestens einmal pro Minute.
+      en: Maximum age of the wallbox telemetry. The wallbox reports at least once a minute.
+render: |
+  type: ecoflow-powerpulse
+  user: {{ .user }}
+  password: {{ .password }}
+  serial: {{ .serial }}
+  gateway: {{ .gateway }}
+  timeout: {{ .timeout }}
