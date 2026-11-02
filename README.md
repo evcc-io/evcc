@@ -54,8 +54,9 @@ URL parameters configure the display:
 - `autoSwitch=0` disables automatic switching to a newly connected vehicle. Automatic switching is enabled by default.
 - `loadpoint=lp-1` selects a loadpoint by its identifier, title, or database ID such as `db:7`. Numeric values such as `loadpoint=2` remain supported as one-based positions. Automatic switching may select another loadpoint later.
 - `loadpointTimeout=300` returns to the initially selected loadpoint after 300 seconds on another loadpoint. The timeout starts after swiping or automatic switching and defaults to `0` (disabled).
+- `theme=light` selects the light layout. Use `theme=dark` for the dark layout, which is the default.
 
-For example: `http://127.0.0.1:7072/?screenOff=120&loadpoint=db:7&loadpointTimeout=300&autoSwitch=0`. When the screen is black, the first swipe wakes it and the next swipe changes loadpoints.
+For example: `http://127.0.0.1:7072/?screenOff=120&loadpoint=db:7&loadpointTimeout=300&autoSwitch=0&theme=light`. When the screen is black, the first swipe wakes it and the next swipe changes loadpoints.
 
 ## Contributing
 

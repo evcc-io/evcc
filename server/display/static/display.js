@@ -18,6 +18,7 @@ const params = new URLSearchParams(window.location.search);
 const screenOffSeconds = readIntegerParam("screenOff", 0);
 const loadpointTimeoutSeconds = readIntegerParam("loadpointTimeout", 0);
 const requestedLoadpoint = params.get("loadpoint");
+const theme = params.get("theme") || "dark";
 const autoSwitch = readBooleanParam("autoSwitch", true);
 const numberFormat = new Intl.NumberFormat("de-DE", {
   minimumFractionDigits: 1,
@@ -60,6 +61,13 @@ let previousConnections;
 let initialLoadpointResolved = requestedLoadpoint === null;
 let initialLoadpoint = 0;
 let loadpointTimeout;
+
+if (theme === "light" || theme === "dark") {
+  document.documentElement.dataset.theme = theme;
+} else {
+  console.warn("display: ignoring invalid theme parameter");
+  document.documentElement.dataset.theme = "dark";
+}
 
 function readIntegerParam(name, fallback, minimum = 0) {
   const value = params.get(name);
