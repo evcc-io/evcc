@@ -922,6 +922,22 @@
         "big": "big-endian",
         "little": "little-endian"
       },
+      "model": {
+        "best_match": "Automatische Auswahl",
+        "chmi_aladin_seamless": "CHMI - Tschechien",
+        "cmc_gem_seamless": "CMC - Kanada",
+        "dmi_seamless": "DMI - Dänemark",
+        "dwd_icon_seamless": "DWD - Deutschland",
+        "geosphere_seamless": "Geosphere - Österreich",
+        "jma_seamless": "JMA - Japan",
+        "kma_seamless": "KMA - Südkorea",
+        "knmi_seamless": "KNMI - Niederlande",
+        "meteofrance_seamless": "MeteoFrance - Frankreich",
+        "meteoswiss_icon_seamless": "MeteoSwiss - Schweiz",
+        "metno_seamless": "METNO - Norwegen",
+        "ncep_gfs_seamless": "NCEP - USA",
+        "ukmo_seamless": "UKMO - Großbritannien"
+      },
       "operationMode": {
         "heating": "Heizen",
         "standby": "Standby"
