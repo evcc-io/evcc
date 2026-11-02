@@ -157,6 +157,21 @@ function selectLoadpoint(index) {
   }
 }
 
+function switchLoadpoint(direction) {
+  const visible = visibleLoadpoints(state?.loadpoints || []);
+  if (visible.length < 2) return;
+
+  const currentIndex = visible.findIndex((entry) => entry.index === selected);
+  const nextIndex = Math.max(0, Math.min(visible.length - 1, currentIndex + direction));
+  if (nextIndex === currentIndex) return;
+
+  selectLoadpoint(visible[nextIndex].index);
+  render();
+  elements.content.classList.remove("enter-from-left", "enter-from-right");
+  void elements.content.offsetWidth;
+  elements.content.classList.add(direction > 0 ? "enter-from-left" : "enter-from-right");
+}
+
 const isNumber = (value) => typeof value === "number" && Number.isFinite(value);
 const powerValue = (watts) => numberFormat.format(watts / 1000);
 const powerText = (watts) => `${powerValue(watts)} kW`;
@@ -438,18 +453,17 @@ elements.screen.addEventListener("pointerup", (event) => {
   const dx = event.clientX - pointerStart.x;
   const dy = event.clientY - pointerStart.y;
   pointerStart = undefined;
-  if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
 
-  const visible = visibleLoadpoints(state?.loadpoints || []);
-  if (visible.length < 2) return;
-  const currentIndex = visible.findIndex((entry) => entry.index === selected);
-  const nextIndex = Math.max(0, Math.min(visible.length - 1, currentIndex + (dx < 0 ? 1 : -1)));
-  if (nextIndex === currentIndex) return;
-  selectLoadpoint(visible[nextIndex].index);
-  render();
-  elements.content.classList.remove("enter-from-left", "enter-from-right");
-  void elements.content.offsetWidth;
-  elements.content.classList.add(dx < 0 ? "enter-from-left" : "enter-from-right");
+  if (Math.abs(dx) >= 48 && Math.abs(dx) >= Math.abs(dy) * 1.25) {
+    switchLoadpoint(dx < 0 ? 1 : -1);
+    return;
+  }
+  if (Math.hypot(dx, dy) > 16) return;
+
+  const bounds = elements.screen.getBoundingClientRect();
+  const x = event.clientX - bounds.left;
+  if (x < bounds.width * 0.25) switchLoadpoint(-1);
+  else if (x >= bounds.width * 0.75) switchLoadpoint(1);
 });
 
 elements.screen.addEventListener("pointercancel", () => {
