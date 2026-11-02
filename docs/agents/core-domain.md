@@ -70,27 +70,33 @@ Sense loop (every 2s, never slower than interval, all loadpoints in parallel)
       ├── Detect/identify vehicle, publish soc and range
       └── Status changed -> requestControl()
 
-Control loop (Site.update, every interval, one loadpoint per tick)
+Control loop (Site.update, every interval for all loadpoints, immediately for requested ones)
 1. Update all meters (grid, PV, battery, aux)
-2. For each loadpoint: UpdateChargePowerAndCurrents()
+2. Sum the sensed charge power of all loadpoints
 3. Calculate site power balance:
    sitePower = gridPower + batteryPower + excessDCPower
-             + residualPower - auxPower - flexiblePower
+             + residualPower - auxPower
 4. Apply battery priority rules (prioritySoc, bufferSoc)
-5. Add in-flight reserve of all loadpoints (actuated, not yet metered)
-6. For the next loadpoint: Control(sitePower, ...) -> control()
-   ├── Check plan requirements (minSOC, target time)
-   ├── Check limits (limitSOC, limitEnergy)
-   ├── MODE switch -> calculate target current
-   ├── Cap at maxCurrent, respect circuit limits (incl. in-flight reserve)
-   ├── Send MaxCurrent() to charger
-   └── Record metrics
-7. Push updates to WebSocket + metrics
+5. For each loadpoint, higher priority first:
+   ├── Subtract prioritized (flexible) power of lower-priority loadpoints
+   ├── Add in-flight reserve of the other loadpoints (actuated, not yet metered)
+   └── Control(sitePower, ...) -> control()
+       ├── Check plan requirements (minSOC, target time)
+       ├── Check limits (limitSOC, limitEnergy)
+       ├── MODE switch -> calculate target current
+       ├── Cap at maxCurrent, respect circuit limits (incl. in-flight reserve)
+       ├── Send MaxCurrent() to charger
+       └── Record metrics
+6. Push updates to WebSocket + metrics
 ```
 
-The next loadpoint is picked round-robin, but a loadpoint with pending control
-(`requestControl()`/`RequestUpdate()`, e.g. status, mode or limit change) is
-served first. `control()` does not actuate before `observe()` produced valid state.
+All loadpoints are controlled against the same site measurement, in priority order.
+Each one discounts the surplus by what the earlier ones just claimed (their in-flight
+reserve), so one interval cannot hand the same surplus to two loadpoints. A loadpoint
+with pending control (`requestControl()`/`RequestUpdate()`, e.g. status, mode or
+limit change) signals the site and is controlled at once; requests are served at most
+once per sense interval. `control()` does not actuate before `observe()` produced
+valid state.
 
 The loop is stateless per cycle: always re-reads actual state, calculates
 optimal current, sends single command. Resilient to restarts and missed updates.

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -46,19 +47,14 @@ import (
 
 const standbyPower = 10 // consider less than 10W as charger in standby
 
-// updater abstracts the Loadpoint implementation for testing
-type updater interface {
-	loadpoint.API
-	Control(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
-	activeSuggestion() *types.Suggestion
-}
-
 var _ site.API = (*Site)(nil)
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Site struct {
 	valueChan chan<- util.Param      // client push messages
 	pushChan  chan<- messenger.Event // notification events
+
+	controlTrigger chan struct{} // control requests, see Loadpoint.requestControl
 
 	sync.RWMutex
 	log *util.Logger
@@ -1195,7 +1191,7 @@ type sitePowerResult struct {
 }
 
 // sitePower calculates the site power balance from the measured state
-func (site *Site) sitePower(state siteState, totalChargePower, flexiblePower float64) sitePowerResult {
+func (site *Site) sitePower(state siteState, totalChargePower float64) sitePowerResult {
 	// ensure safe default for residual power
 	residualPower := site.GetResidualPower()
 
@@ -1247,15 +1243,9 @@ func (site *Site) sitePower(state siteState, totalChargePower, flexiblePower flo
 		}
 	}
 
-	sitePower := state.gridPower + batteryPower + excessDCPower + residualPower - state.auxPower - flexiblePower
+	sitePower := state.gridPower + batteryPower + excessDCPower + residualPower - state.auxPower
 
-	// handle priority
-	var flexStr string
-	if flexiblePower > 0 {
-		flexStr = fmt.Sprintf(" (including %.0fW prioritized power)", flexiblePower)
-	}
-
-	site.log.DEBUG.Printf("site power: %.0fW"+flexStr, sitePower)
+	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
 
 	return sitePowerResult{
 		state:              state,
@@ -1266,36 +1256,35 @@ func (site *Site) sitePower(state siteState, totalChargePower, flexiblePower flo
 	}
 }
 
-// updateLoadpoints updates all loadpoints' charge power
+// updateLoadpoints updates the loadpoints' flexibility and returns the sensed total charge power
 func (site *Site) updateLoadpoints(rates api.Rates) float64 {
-	var (
-		wg  sync.WaitGroup
-		mu  sync.Mutex
-		sum float64
-	)
-
+	var sum float64
 	for _, lp := range site.activeLoadpoints() {
-		wg.Go(func() {
-			power := lp.UpdateChargePowerAndCurrents()
-			site.prioritizer.UpdateChargePowerFlexibility(lp, rates)
-
-			mu.Lock()
-			sum += power
-			mu.Unlock()
-		})
+		site.prioritizer.UpdateChargePowerFlexibility(lp, rates)
+		sum += lp.GetChargePower()
 	}
-	wg.Wait()
-
 	return sum
 }
 
 // loadpointSitePower returns the site power the loadpoint controls against:
 // the surplus reserved for higher-priority loadpoints and its own battery priority
-func (site *Site) loadpointSitePower(lp updater, res sitePowerResult) float64 {
+func (site *Site) loadpointSitePower(lp *Loadpoint, res sitePowerResult) float64 {
 	sitePower := res.power
+
+	// prioritize if possible
+	if loadpoint.SurplusFlexible(lp) {
+		if flexiblePower := site.prioritizer.GetChargePowerFlexibility(lp); flexiblePower > 0 {
+			site.log.DEBUG.Printf("site power: %.0fW (including %.0fW prioritized power)", sitePower-flexiblePower, flexiblePower)
+			sitePower -= flexiblePower
+		}
+	}
 
 	// reserve surplus claimed by higher-priority loadpoints that are starting up (#31194)
 	sitePower += site.reservedPVPower(lp)
+
+	// discount surplus by actuations the meters have not yet reflected,
+	// so this loadpoint does not re-claim power an earlier one already took
+	sitePower += site.foreignInflightPower(lp)
 
 	// prioritySoc does not apply to a boosting loadpoint, which deliberately drains the
 	// battery (#30541), nor to one the optimizer controls, since the optimizer plans the
@@ -1315,7 +1304,7 @@ func (site *Site) loadpointSitePower(lp updater, res sitePowerResult) float64 {
 // foreignInflightPower returns the in-flight reserve of all other loadpoints. The own
 // reserve is excluded, else a loadpoint re-controlled inside its settle window would
 // subtract the power it just claimed from its own surplus and ramp down again.
-func (site *Site) foreignInflightPower(lp updater) float64 {
+func (site *Site) foreignInflightPower(lp *Loadpoint) float64 {
 	var res float64
 	for _, l := range site.activeLoadpoints() {
 		if l != lp {
@@ -1327,7 +1316,7 @@ func (site *Site) foreignInflightPower(lp updater) float64 {
 
 // reservedPVPower returns the anticipated surplus claimed by higher-priority PV loadpoints
 // that are starting up, so lower-priority loadpoints defer enabling against it (#31194).
-func (site *Site) reservedPVPower(lp updater) float64 {
+func (site *Site) reservedPVPower(lp *Loadpoint) float64 {
 	if !loadpoint.SurplusFlexible(lp) {
 		return 0
 	}
@@ -1351,7 +1340,8 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 	return reserved
 }
 
-func (site *Site) update(lp updater) {
+// update reads the site state once and controls the given loadpoints in order
+func (site *Site) update(lps []*Loadpoint) {
 	site.log.DEBUG.Println("----")
 
 	// smart cost and battery mode handling
@@ -1381,7 +1371,7 @@ func (site *Site) update(lp updater) {
 			site.setLastOptimizerSolve(nil)
 		}
 
-		site.updatePower(lp, state, totalChargePower, consumption, feedin)
+		site.updatePower(lps, state, totalChargePower, consumption, feedin)
 	}
 
 	// smart grid charging
@@ -1410,15 +1400,9 @@ func (site *Site) update(lp updater) {
 	site.stats.Update(site)
 }
 
-// updatePower calculates the site power balance and updates the given loadpoint
-func (site *Site) updatePower(lp updater, state siteState, totalChargePower float64, consumption, feedin api.Rates) {
-	// prioritize if possible
-	var flexiblePower float64
-	if lp != nil && loadpoint.SurplusFlexible(lp) {
-		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
-	}
-
-	res := site.sitePower(state, totalChargePower, flexiblePower)
+// updatePower calculates the site power balance and controls the given loadpoints
+func (site *Site) updatePower(lps []*Loadpoint, state siteState, totalChargePower float64, consumption, feedin api.Rates) {
+	res := site.sitePower(state, totalChargePower)
 	state = res.state
 
 	// retain the estimates for the api getters and the green share
@@ -1445,14 +1429,10 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 	greenShareHome := site.greenShare(0, homePower)
 	greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
-	if lp != nil {
-		// discount surplus by actuations the meters have not yet reflected,
-		// so this loadpoint does not re-claim power an earlier one already took
-		sitePower := site.loadpointSitePower(lp, res) + site.foreignInflightPower(lp)
-
-		// control only, the sense loop keeps the observed state fresh
+	// control only, the sense loop keeps the observed state fresh
+	for _, lp := range lps {
 		lp.Control(
-			sitePower, state.battery.Power, consumption, feedin, res.batteryBuffered, res.batteryStart,
+			site.loadpointSitePower(lp, res), state.battery.Power, consumption, feedin, res.batteryBuffered, res.batteryStart,
 			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 			hems.Dimmed(site.hems),
 		)
@@ -1562,6 +1542,9 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 		}
 	}()
 
+	// a single slot suffices, the control loop serves every pending loadpoint per request
+	site.controlTrigger = make(chan struct{}, 1)
+
 	site.prepare()
 
 	lpDevices := config.Loadpoints().Devices()
@@ -1599,41 +1582,22 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 			}
 		}(id)
 
+		lp.controlChan = site.controlTrigger
 		lp.Prepare(site, lpUIChan, lpPushChan)
 	}
 }
 
-// loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
-func (site *Site) loopLoadpoints(next chan<- updater) {
-	var logOnce sync.Once
-	active := site.activeLoadpoints()
-
-	for {
-		// optimizer runs on its own cadence, checked once per loadpoint cycle
-		go site.optimizerUpdateAsync(false)
-
-		if len(active) == 0 {
-			logOnce.Do(func() {
-				site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
-			})
-			next <- nil
-		} else {
-			for i := range active {
-				next <- nextLoadpoint(active, i)
-			}
-		}
-	}
+// controlOrder sorts loadpoints for control: higher priority first, so it claims the
+// surplus before lower priorities see the remainder discounted by its in-flight reserve
+func controlOrder(lps []*Loadpoint) []*Loadpoint {
+	res := slices.Clone(lps)
+	slices.SortStableFunc(res, func(a, b *Loadpoint) int { return b.EffectivePriority() - a.EffectivePriority() })
+	return res
 }
 
-// nextLoadpoint returns the first loadpoint with pending control work starting at
-// the round-robin position, else the loadpoint at that position
-func nextLoadpoint(active []*Loadpoint, cursor int) *Loadpoint {
-	for i := range active {
-		if lp := active[(cursor+i)%len(active)]; lp.controlPending() {
-			return lp
-		}
-	}
-	return active[cursor]
+// pendingLoadpoints returns the loadpoints that requested control
+func pendingLoadpoints(lps []*Loadpoint) []*Loadpoint {
+	return lo.Filter(lps, func(lp *Loadpoint, _ int) bool { return lp.controlPending() })
 }
 
 // measureInterval is the default loadpoint sensing interval
@@ -1660,11 +1624,17 @@ func measureLoadpoints(stopC chan struct{}, lps []*Loadpoint, interval time.Dura
 	}
 }
 
-// Run is the main control loop. It reacts to trigger events by
-// updating measurements and executing control logic.
+// Run is the main control loop. Every interval it controls all loadpoints against one
+// site measurement, loadpoints that requested control (status, mode or limit change)
+// are controlled immediately.
 func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	if max := 30 * time.Second; interval < max {
 		site.log.INFO.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
+	}
+
+	if !site.IsConfigured() {
+		<-stopC
+		return
 	}
 
 	// the in-flight reserve treats a just-actuated setpoint as settling for one control interval
@@ -1673,33 +1643,38 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		lp.controlInterval = interval
 	}
 
-	loadpointChan := make(chan updater)
-	if site.IsConfigured() {
-		// control must not act before the loadpoints have been sensed
-		senseLoadpoints(active)
-
-		// never sense slower than the control loop
-		go measureLoadpoints(stopC, active, min(measureInterval, interval))
-		go site.loopLoadpoints(loadpointChan)
+	if len(active) == 0 {
+		site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
 	}
 
-	site.update(<-loadpointChan) // start immediately
+	// control must not act before the loadpoints have been sensed
+	senseLoadpoints(active)
 
-	// the loop below updates one loadpoint per interval, don't let the others wait for their turn after startup
-	for _, lp := range startupOrder(site.activeLoadpoints()) {
-		select {
-		case <-stopC:
-			return
-		default:
-		}
+	// never sense slower than the control loop
+	senseInterval := min(measureInterval, interval)
+	go measureLoadpoints(stopC, active, senseInterval)
 
-		site.update(lp)
-	}
+	// start immediately, charging loadpoints first so a running session is not kept waiting
+	go site.optimizerUpdateAsync(false)
+	site.update(startupOrder(active))
+
+	// requests are served at most once per sense interval so a flapping charger cannot flood the meters
+	trigger := site.controlTrigger
+	var cooldown <-chan time.Time
 
 	for tick := time.Tick(interval); ; {
 		select {
 		case <-tick:
-			site.update(<-loadpointChan)
+			// optimizer runs on its own cadence, checked once per interval
+			go site.optimizerUpdateAsync(false)
+			site.update(controlOrder(active))
+		case <-trigger:
+			if lps := pendingLoadpoints(active); len(lps) > 0 {
+				site.update(controlOrder(lps))
+			}
+			trigger, cooldown = nil, time.After(senseInterval)
+		case <-cooldown:
+			trigger, cooldown = site.controlTrigger, nil
 		case <-stopC:
 			return
 		}

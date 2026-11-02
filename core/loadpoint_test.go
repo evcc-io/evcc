@@ -1392,25 +1392,41 @@ func TestPVDisableContinuousDeviceShortfall(t *testing.T) {
 }
 
 func TestRequestUpdate(t *testing.T) {
-	lp := new(Loadpoint)
+	trigger := make(chan struct{}, 1)
+	lp := &Loadpoint{controlChan: trigger}
+
 	lp.RequestUpdate()
 	assert.True(t, lp.controlPending())
+	assert.Len(t, trigger, 1, "request signals the site")
+
+	// a second request must not block on the full slot
+	lp.RequestUpdate()
+	assert.Len(t, trigger, 1)
+
+	// loadpoints without site (tests) request silently
+	new(Loadpoint).RequestUpdate()
 }
 
-func TestNextLoadpoint(t *testing.T) {
+func TestControlOrder(t *testing.T) {
+	low, high, mid := &Loadpoint{priority: 1}, &Loadpoint{priority: 3}, &Loadpoint{priority: 2}
+	lps := []*Loadpoint{low, high, mid}
+
+	assert.Equal(t, []*Loadpoint{high, mid, low}, controlOrder(lps))
+	assert.Equal(t, []*Loadpoint{low, high, mid}, lps, "input order unchanged")
+
+	// equal priorities keep configuration order
+	a, b := &Loadpoint{}, &Loadpoint{}
+	assert.Equal(t, []*Loadpoint{a, b}, controlOrder([]*Loadpoint{a, b}))
+}
+
+func TestPendingLoadpoints(t *testing.T) {
 	lps := []*Loadpoint{new(Loadpoint), new(Loadpoint), new(Loadpoint)}
+	assert.Empty(t, pendingLoadpoints(lps))
 
-	// round-robin without pending control
-	for i, lp := range lps {
-		assert.Same(t, lp, nextLoadpoint(lps, i))
-	}
-
-	// pending control is preferred, scanning from the cursor
 	lps[0].requestControl()
 	lps[2].requestControl()
-	assert.Same(t, lps[2], nextLoadpoint(lps, 1))
-	assert.Same(t, lps[0], nextLoadpoint(lps, 0))
+	assert.Equal(t, []*Loadpoint{lps[0], lps[2]}, pendingLoadpoints(lps))
 
 	lps[2].controlDone()
-	assert.Same(t, lps[0], nextLoadpoint(lps, 1))
+	assert.Equal(t, []*Loadpoint{lps[0]}, pendingLoadpoints(lps))
 }

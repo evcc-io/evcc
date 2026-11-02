@@ -12,10 +12,15 @@ func (lp *Loadpoint) controlDone() {
 	lp.pendingControl.Store(false)
 }
 
-// requestControl requests site to invoke loadpoint.Control()
-// TODO check if all call sites are required
+// requestControl requests site to invoke loadpoint.Control() without waiting for the next interval
 func (lp *Loadpoint) requestControl() {
 	lp.pendingControl.Store(true)
+
+	// a full slot already signals a pending request
+	select {
+	case lp.controlChan <- struct{}{}:
+	default:
+	}
 }
 
 // inflightActive reports whether a just-actuated setpoint is still settling, so

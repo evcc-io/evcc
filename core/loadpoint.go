@@ -94,11 +94,12 @@ type Loadpoint struct {
 	rwMutex      atomic.Int64 // writer goroutine id for reentrancy detection (test only)
 	sync.RWMutex              // guard status
 	vmu          sync.RWMutex // guard vehicle
-	measureMu    sync.Mutex   // serialize meter measurement reads across sense and control loops
+	measureMu    sync.Mutex   // serialize concurrent meter measurement reads
 
-	actuatedAt      time.Time     // last setpoint change; opens the in-flight reserve window
-	pendingControl  atomic.Bool   // loadpoint requests re-evaluation
-	controlInterval time.Duration // control interval; also the in-flight reserve settle window
+	actuatedAt      time.Time       // last setpoint change; opens the in-flight reserve window
+	pendingControl  atomic.Bool     // loadpoint requests re-evaluation
+	controlChan     chan<- struct{} // signals the site to control pending loadpoints
+	controlInterval time.Duration   // control interval; also the in-flight reserve settle window
 
 	controlMu sync.Mutex // serialize observe (sense loop) vs control (control loop) per loadpoint
 	observed  bool       // set once observe has produced valid state, cleared on status read error; control must not actuate before
@@ -2667,7 +2668,9 @@ func (lp *Loadpoint) Control(sitePower, batteryPower float64, consumption, feedi
 	lp.controlMu.Lock()
 	defer lp.controlMu.Unlock()
 
-	// clear first, a request arriving during control re-requests it
+	// clear first, a request arriving during control re-requests it. A pass that does not
+	// actuate (not yet observed, dimmed, meter error) is not re-armed: the next interval
+	// covers it, while re-arming would spin the site on a persistent error.
 	lp.controlDone()
 
 	lp.control(sitePower, batteryPower, consumption, feedin, batteryBuffered, batteryStart, greenShare, effPrice, effCo2, dim)
