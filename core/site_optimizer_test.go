@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -67,6 +68,18 @@ func TestFeedInRatesWithoutTariff(t *testing.T) {
 		{Start: grid[0].Start, End: grid[0].End},
 		{Start: grid[1].Start, End: grid[1].End},
 	}, feedInRates(nil, grid))
+}
+
+func TestOptimizerRequestSolarForecastUnavailable(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	solar := api.NewMockTariff(ctrl)
+	solar.EXPECT().Rates().Return(nil, errors.New("503 Service Unavailable")).AnyTimes()
+
+	site := &Site{tariffs: &tariff.Tariffs{Solar: solar}}
+
+	_, _, err := site.optimizerRequest(nil)
+	require.ErrorContains(t, err, "solar forecast unavailable")
 }
 
 func TestApplyPrecondition(t *testing.T) {
