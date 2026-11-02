@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -198,4 +199,20 @@ func TestObserveKeepsWelcomeCharge(t *testing.T) {
 	if !lp.welcomeActive() {
 		t.Fatal("observe ended the welcome charge before control acted on it")
 	}
+}
+
+// TestNotifyTriggersSense verifies that Notify requests an immediate sense and never blocks
+func TestNotifyTriggersSense(t *testing.T) {
+	senseChan := make(chan struct{}, 1)
+	lp := &Loadpoint{senseChan: senseChan}
+
+	lp.Notify()
+	require.Len(t, senseChan, 1)
+
+	// must not block on a full slot
+	lp.Notify()
+	require.Len(t, senseChan, 1)
+
+	// not prepared yet
+	new(Loadpoint).Notify()
 }

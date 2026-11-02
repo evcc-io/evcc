@@ -1583,6 +1583,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 		}(id)
 
 		lp.controlChan = site.controlTrigger
+		lp.senseChan = make(chan struct{}, 1) // a single slot, a notified loadpoint is sensed once
 		lp.Prepare(site, lpUIChan, lpPushChan)
 	}
 }

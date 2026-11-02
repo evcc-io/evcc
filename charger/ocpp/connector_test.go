@@ -486,9 +486,9 @@ func (suite *connTestSuite) TestOnStopTransactionUpdatesEnergy() {
 	suite.InDelta(1899.6, res, 1e-9)
 }
 
-func (suite *connTestSuite) TestOnStatusChange() {
+func (suite *connTestSuite) TestOnUpdateStatus() {
 	var calls int
-	suite.conn.OnStatusChange(func() { calls++ })
+	suite.conn.OnUpdate(func() { calls++ })
 
 	now := suite.clock.Now()
 	status := func(s core.ChargePointStatus, errorCode core.ChargePointErrorCode, d time.Duration) {
@@ -519,4 +519,30 @@ func (suite *connTestSuite) TestOnStatusChange() {
 		status(tc.status, tc.errorCode, tc.d)
 		suite.Equal(tc.calls, calls, "%s %s", tc.status, tc.errorCode)
 	}
+}
+
+func (suite *connTestSuite) TestOnUpdateMeterValues() {
+	var calls int
+	suite.conn.OnUpdate(func() { calls++ })
+
+	meterValues := func(d time.Duration) {
+		_, err := suite.conn.OnMeterValues(&core.MeterValuesRequest{
+			ConnectorId: 1,
+			MeterValue: []types.MeterValue{{
+				Timestamp:    types.NewDateTime(suite.clock.Now().Add(d)),
+				SampledValue: []types.SampledValue{{Measurand: types.MeasurandPowerActiveImport, Value: "1000"}},
+			}},
+		})
+		suite.NoError(err)
+	}
+
+	meterValues(0)
+	suite.Equal(1, calls)
+
+	// outdated values are ignored
+	meterValues(-time.Minute)
+	suite.Equal(1, calls)
+
+	meterValues(time.Second)
+	suite.Equal(2, calls)
 }

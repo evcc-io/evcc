@@ -303,7 +303,7 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 	var lp loadpoint.API
 	defer func() {
 		if lp != nil {
-			lp.RequestUpdate()
+			lp.Notify()
 		}
 	}()
 
