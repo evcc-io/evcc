@@ -266,9 +266,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 	log.INFO.Printf("UI local url:      http://127.0.0.1:%d", conf.Network.Port)
 	displayd := server.NewDisplayHTTPd(fmt.Sprintf(":%d", displayPort), cache)
 	go func() {
-		if err := wrapFatalError(displayd.Server.ListenAndServe()); err != nil && err != http.ErrServerClosed {
-			log.FATAL.Println(err)
-			os.Exit(1)
+		if err := displayd.Server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.ERROR.Println("Display server:", err)
 		}
 	}()
 	log.INFO.Printf("Display local url: http://127.0.0.1:%d", displayPort)
