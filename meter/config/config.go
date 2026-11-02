@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
@@ -14,6 +15,15 @@ var Registry = reg.New[api.Meter]("meter")
 
 // NewFromConfig creates meter from configuration
 func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.Meter, error) {
+	if other != nil {
+		other = maps.Clone(other)
+		for key := range other {
+			if strings.EqualFold(key, "master") {
+				delete(other, key)
+			}
+		}
+	}
+
 	factory, err := Registry.Get(strings.ToLower(typ))
 	if err != nil {
 		return nil, err

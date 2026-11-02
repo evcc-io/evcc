@@ -40,6 +40,7 @@
       "gridDischarge": "Netzentladen",
       "hold": "Entladesperre",
       "holdCharge": "Ladesperre",
+      "master": "Master",
       "ofTotal": "von {total}",
       "power": "Leistung",
       "soc": "Ladestand"
@@ -275,6 +276,7 @@
       "heaterTempLimit": "Heizungslimit",
       "identifier": "RFID-Kennung",
       "loginBlocked": "Login-Limit erreicht",
+      "master": "Master",
       "max": "max",
       "maxCurrent": "Max. Stromstärke",
       "maxPower": "Max. Leistung",
@@ -742,6 +744,8 @@
       },
       "delete": "Löschen",
       "generic": "Generische Integrationen",
+      "master": "Master-Batterie",
+      "masterInUse": "Diese Batterie steuert bereits andere Batterien und kann nicht selbst einem Master zugeordnet werden.",
       "option": {
         "aux": "Selbstregelnden Verbraucher hinzufügen",
         "battery": "Hausbatterie hinzufügen",
@@ -889,6 +893,7 @@
     },
     "optimizer": {
       "automatic": "Automatische Steuerung",
+      "aggregatedWithSlaves": "Aggregiert mit: {names}",
       "automaticLevel": {
         "battery": {
           "description": "Steuert nur die Hausbatterie.",
@@ -1592,6 +1597,13 @@
       "onceTip": "Nur für diese Ladung",
       "permanent": "bleibt dauerhaft an"
     },
+    "batteryConfigWarnings": {
+      "invalidMaster": "Batterie {device}: Die Master-Referenz \"{master}\" ist ungültig und wurde ignoriert.",
+      "masterIsSlave": "Batterie {device}: Die Master-Referenz \"{master}\" ist selbst ein Slave; die Zuordnung wurde ignoriert.",
+      "review": "Konfiguration prüfen",
+      "title": "Warnung zur Batteriekonfiguration",
+      "unsupportedSlave": "Batterie {device}: Die Master-Referenz \"{master}\" wird ignoriert, da keine Lade-/Entladeleistungssteuerung unterstützt wird."
+    },
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Wiederholenden Plan hinzufügen",
@@ -1648,6 +1660,11 @@
       "batteryDischargeHold": "Batterie (Entladesperre)",
       "batteryGridChargeActive": "Netzladen: aktiv",
       "batteryGridChargeLimit": "Netzladen: wenn",
+      "batteryPowerControl": {
+        "applied": "Leistungssteuerung angewendet",
+        "failed": "Leistungssteuerung fehlgeschlagen",
+        "overridden": "Globale Batteriesteuerung aktiv"
+      },
       "batteryStatus": "Batteriestatus",
       "batteryTooltip": "{energy} von {total} ({soc})",
       "forecast": "Vorhersage",

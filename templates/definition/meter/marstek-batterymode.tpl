@@ -1,4 +1,19 @@
 {{- define "marstek-batterymode" }}
+batterymodepower:
+  charge:
+    source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register:
+      address: 42020 # Forcible Charge Power
+      type: writesingle
+      decode: uint16
+  discharge:
+    source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register:
+      address: 42021 # Forcible Discharge Power
+      type: writesingle
+      decode: uint16
 batterymode:
   source: switch
   switch:

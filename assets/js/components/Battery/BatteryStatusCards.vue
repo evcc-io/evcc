@@ -63,6 +63,7 @@ export default defineComponent({
 				capacity: d.capacity || 0,
 				color: batteryColor(i),
 				controllable: d.controllable,
+				master: this.masterTitle(d),
 				// single battery shows the suggestion on the dedicated optimizer card
 				suggestion: multiple ? this.deviceSuggestion(d) : null,
 				forecast: null, // aggregate forecast lives on the combined / dedicated card
@@ -86,6 +87,10 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		masterTitle(d: BatteryMeter): string | undefined {
+			const master = this.devices.find((m) => m.name === d.master);
+			return master ? master.title || master.name : undefined;
+		},
 		deviceSuggestion(d?: BatteryMeter): BatterySuggestion | null {
 			// optimizer only emits suggestions for controllable batteries
 			return d?.suggestion?.actionable ? d.suggestion : null;

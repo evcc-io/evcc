@@ -87,6 +87,7 @@ type batteryDetail struct {
 	Title    string      `json:"title,omitempty"`
 	Name     string      `json:"name,omitempty"`
 	Capacity float64     `json:"capacity,omitempty"`
+	Slaves   []string    `json:"slaves,omitempty"`
 
 	loadpoint    *int              // originating loadpoint id for loadpoint/vehicle entries
 	controllable bool              // device can act on suggestions
@@ -457,6 +458,70 @@ type optimizerBattery struct {
 	detail batteryDetail
 }
 
+func batteryMeterGroups(meters []config.Device[api.Meter]) [][]int {
+	children := make(map[string][]int)
+	isSlave := make(map[string]bool)
+	for i, dev := range meters {
+		if master, ok := dev.Config().Property("master").(string); ok && master != "" {
+			children[master] = append(children[master], i)
+			isSlave[dev.Config().Name] = true
+		}
+	}
+
+	var groups [][]int
+	grouped := make([]bool, len(meters))
+	for i, dev := range meters {
+		name := dev.Config().Name
+		if isSlave[name] {
+			continue
+		}
+
+		group := append([]int{i}, children[name]...)
+		for _, member := range group {
+			grouped[member] = true
+		}
+		groups = append(groups, group)
+	}
+
+	// Keep unresolved devices modelled independently if configuration changed off-cycle.
+	for i, wasGrouped := range grouped {
+		if !wasGrouped {
+			groups = append(groups, []int{i})
+		}
+	}
+
+	return groups
+}
+
+func aggregateBatteryOptimizerConfigs(configs []optimizer.BatteryConfig) optimizer.BatteryConfig {
+	if len(configs) == 0 {
+		return optimizer.BatteryConfig{}
+	}
+
+	group := configs[0]
+	group.CMax = 0
+	group.DMax = 0
+	group.SCapacity = 0
+	group.SInitial = 0
+	group.SMin = 0
+	group.SMax = 0
+	group.PDemand = nil
+	group.SGoal = nil
+	for _, battery := range configs {
+		group.CMax += battery.CMax
+		group.DMax += battery.DMax
+		group.SCapacity += battery.SCapacity
+		group.SInitial += battery.SInitial
+		group.SMin += battery.SMin
+		group.SMax += battery.SMax
+	}
+
+	// Only the root master determines whether its group may use grid charging or export.
+	group.ChargeFromGrid = configs[0].ChargeFromGrid
+	group.DischargeToGrid = configs[0].DischargeToGrid
+	return group
+}
+
 func optimizerURI() string {
 	return cmp.Or(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
 }
@@ -694,19 +759,10 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		})
 	}
 
-	for i, dev := range site.batteryMeters {
-		// measurements may lag the configured meters on an off-cycle trigger
-		if i >= len(battery) {
-			break
+	for _, group := range batteryMeterGroups(site.batteryMeters) {
+		if battery, ok := site.batteryGroupRequest(group, battery, planner, minLen, firstSlotDuration); ok {
+			batteries = append(batteries, battery)
 		}
-		b := battery[i]
-
-		if b.Capacity == nil || *b.Capacity == 0 || b.Soc == nil {
-			continue
-		}
-
-		cfg, detail := site.batteryRequest(dev, b, planner, minLen, firstSlotDuration)
-		batteries = append(batteries, optimizerBattery{cfg, detail})
 	}
 
 	for _, b := range batteries {
@@ -1186,15 +1242,68 @@ func clearDemandWhenFull(demand []float32, headroom float32) []float32 {
 	return res
 }
 
+func batteryCapacityWh(capacityKWh float64) float64 {
+	return capacityKWh * 1e3
+}
+
+func batteryStoredEnergyWh(capacityKWh, soc float64) float64 {
+	return capacityKWh * soc * 10
+}
+
+func (site *Site) batteryGroupRequest(group []int, measurements []types.Measurement, planner api.Rates, minLen int, firstSlotDuration time.Duration) (optimizerBattery, bool) {
+	if len(group) == 0 {
+		return optimizerBattery{}, false
+	}
+
+	configs := make([]optimizer.BatteryConfig, 0, len(group))
+	groupMeasurements := make([]types.Measurement, 0, len(group))
+	var masterDetail batteryDetail
+	for i, index := range group {
+		if index < 0 || index >= len(measurements) || index >= len(site.batteryMeters) {
+			return optimizerBattery{}, false
+		}
+
+		measurement := measurements[index]
+		if measurement.Capacity == nil || *measurement.Capacity <= 0 || measurement.Soc == nil {
+			return optimizerBattery{}, false
+		}
+
+		dev := site.batteryMeters[index]
+		config, detail := site.batteryRequest(dev, measurement, nil, 0, firstSlotDuration)
+		if i == 0 {
+			masterDetail = detail
+		} else {
+			masterDetail.Slaves = append(masterDetail.Slaves, deviceTitleOrName(dev))
+		}
+		configs = append(configs, config)
+		groupMeasurements = append(groupMeasurements, measurement)
+	}
+
+	aggregate := aggregateBatteryMeasurements(groupMeasurements)
+	groupConfig := aggregateBatteryOptimizerConfigs(configs)
+	if groupConfig.ChargeFromGrid {
+		if demand := site.applyBatteryGridChargeLimit(groupConfig.CMax, planner, minLen); demand != nil {
+			groupConfig.PDemand = prorate(demand, firstSlotDuration)
+		}
+	}
+
+	masterDetail.Capacity = aggregate.capacity
+	if len(group) > 1 {
+		// TODO Route group recommendations to their members with per-result control.
+		masterDetail.controllable = false
+	}
+	return optimizerBattery{cfg: groupConfig, detail: masterDetail}, true
+}
+
 func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, planner api.Rates, minLen int, firstSlotDuration time.Duration) (optimizer.BatteryConfig, batteryDetail) {
 	bat := optimizer.BatteryConfig{
 		CMax:      batteryPower,
 		DMax:      batteryPower,
-		SCapacity: float32(*b.Capacity * 1e3), // Wh
-		SInitial:  float32(socToWh(*b.Capacity, *b.Soc)),
+		SCapacity: float32(batteryCapacityWh(*b.Capacity)),
+		SInitial:  float32(batteryStoredEnergyWh(*b.Capacity, *b.Soc)),
 		// PA:       pa,
 	}
-	bat.SMax = max(bat.SInitial, float32(*b.Capacity*1e3)) // Wh, narrowed by soc limits below
+	bat.SMax = max(bat.SInitial, float32(batteryCapacityWh(*b.Capacity))) // Wh, narrowed by soc limits below
 
 	instance := dev.Instance()
 

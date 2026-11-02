@@ -84,4 +84,34 @@ test.describe("battery meter", async () => {
     await page.getByRole("button", { name: "Hide advanced settings" }).click();
     await expect(meterModal.getByLabel("Meter reading")).not.toBeVisible();
   });
+
+  test("a master with slaves cannot be assigned a master", async ({ page }) => {
+    await page.goto("/#/config");
+
+    const meterModal = page.getByTestId("meter-modal");
+    const addBattery = async (title: string, master?: string) => {
+      await page.getByRole("button", { name: "Add solar or battery" }).click();
+      await expectModalVisible(meterModal);
+      await meterModal.getByRole("button", { name: "Add battery meter" }).click();
+      await meterModal.getByLabel("Title").fill(title);
+      await meterModal.getByLabel("Manufacturer").selectOption("Demo battery");
+      if (master) {
+        await meterModal.getByLabel("Master battery").selectOption({ label: master });
+      }
+      await meterModal.getByRole("link", { name: "validate" }).click();
+      await meterModal.getByRole("button", { name: "Save" }).click();
+      await expectModalHidden(meterModal);
+    };
+
+    await addBattery("Master battery");
+    await addBattery("Slave battery", "Master battery");
+
+    const masterCard = page.getByTestId("battery").first();
+    await masterCard.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(meterModal);
+    await expect(meterModal.getByLabel("Master battery")).toBeDisabled();
+    await expect(meterModal).toContainText(
+      "This battery already has slaves and cannot itself be assigned to a master."
+    );
+  });
 });

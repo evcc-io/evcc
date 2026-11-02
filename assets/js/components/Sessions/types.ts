@@ -23,6 +23,7 @@ export interface Legend {
   label: string;
   color: any;
   value: string | string[];
+  title?: string;
   type?: "area" | "line";
   id?: string;
   dim?: boolean;

@@ -40,6 +40,7 @@
       "gridDischarge": "grid discharging",
       "hold": "discharge locked",
       "holdCharge": "charge locked",
+      "master": "Master",
       "ofTotal": "of {total}",
       "power": "Power",
       "soc": "Charge"
@@ -275,6 +276,7 @@
       "heaterTempLimit": "Heater limit",
       "identifier": "RFID-Identifier",
       "loginBlocked": "Login limit reached",
+      "master": "Master",
       "max": "max",
       "maxCurrent": "Max. current",
       "maxPower": "Max. power",
@@ -742,6 +744,8 @@
       },
       "delete": "Delete",
       "generic": "Generic integrations",
+      "master": "Master battery",
+      "masterInUse": "This battery already has slaves and cannot itself be assigned to a master.",
       "option": {
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",
@@ -889,6 +893,7 @@
     },
     "optimizer": {
       "automatic": "Automatic control",
+      "aggregatedWithSlaves": "Aggregated with: {names}",
       "automaticLevel": {
         "battery": {
           "description": "Only controls the home battery.",
@@ -1592,6 +1597,13 @@
       "onceTip": "Only for this session",
       "permanent": "stays on permanently"
     },
+    "batteryConfigWarnings": {
+      "invalidMaster": "Battery {device}: master reference \"{master}\" is invalid and has been ignored.",
+      "masterIsSlave": "Battery {device}: master reference \"{master}\" is itself a slave, so the assignment was ignored.",
+      "review": "Review configuration",
+      "title": "Battery configuration warning",
+      "unsupportedSlave": "Battery {device}: master reference \"{master}\" is ignored because charge/discharge power control is not supported."
+    },
     "chargingPlan": {
       "active": "Active",
       "addRepeatingPlan": "Add repeating plan",
@@ -1649,6 +1661,11 @@
       "batteryDischargeHold": "Battery (discharge locked)",
       "batteryGridChargeActive": "Grid charging: active",
       "batteryGridChargeLimit": "Grid charging: when",
+      "batteryPowerControl": {
+        "applied": "Power control applied",
+        "failed": "Power control failed",
+        "overridden": "Global battery control active"
+      },
       "batteryTooltip": "{energy} of {total} ({soc})",
       "forecast": "Forecast",
       "forecastTooltip": "forecast: remaining solar production today",
