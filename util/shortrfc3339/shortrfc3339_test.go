@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -37,32 +40,39 @@ func TestMarshalJSONIsValidJSON(t *testing.T) {
 	}{&Timestamp{time.Date(2023, 4, 20, 14, 30, 0, 0, time.UTC)}}
 
 	res, err := json.Marshal(v)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if expected := `{"from":"2023-04-20T14:30Z"}`; string(res) != expected {
-		t.Errorf("got %s, expected %s", res, expected)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, `{"from":"2023-04-20T14:30Z"}`, string(res))
 
 	var back struct {
 		From Timestamp `json:"from"`
 	}
-	if err := json.Unmarshal(res, &back); err != nil {
-		t.Fatal(err)
-	}
-	if !back.From.Equal(v.From.Time) {
-		t.Errorf("round trip: got %s, expected %s", back.From.Time, v.From.Time)
-	}
+	require.NoError(t, json.Unmarshal(res, &back))
+	assert.True(t, back.From.Equal(v.From.Time), "round trip: got %s, expected %s", back.From.Time, v.From.Time)
 }
 
 func TestMarshalJSONConvertsToUTC(t *testing.T) {
 	ct := Timestamp{time.Date(2023, 4, 20, 16, 30, 0, 0, time.FixedZone("CEST", 2*3600))}
 
 	res, err := ct.MarshalJSON()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if expected := `"2023-04-20T14:30Z"`; string(res) != expected {
-		t.Errorf("got %s, expected %s", res, expected)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, `"2023-04-20T14:30Z"`, string(res))
+}
+
+func TestMarshalJSONValue(t *testing.T) {
+	ts := Timestamp{time.Date(2023, 4, 20, 16, 30, 0, 0, time.FixedZone("CEST", 2*3600))}
+
+	// a top-level value and a value field are not addressable
+	res, err := json.Marshal(ts)
+	require.NoError(t, err)
+	assert.Equal(t, `"2023-04-20T14:30Z"`, string(res))
+
+	res, err = json.Marshal(struct {
+		From Timestamp `json:"from"`
+	}{ts})
+	require.NoError(t, err)
+	assert.Equal(t, `{"from":"2023-04-20T14:30Z"}`, string(res))
+
+	res, err = json.Marshal(Timestamp{})
+	require.NoError(t, err)
+	assert.Equal(t, `null`, string(res))
 }

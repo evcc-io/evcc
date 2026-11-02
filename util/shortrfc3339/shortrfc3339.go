@@ -25,7 +25,7 @@ func (ct *Timestamp) UnmarshalJSON(data []byte) (err error) {
 	return
 }
 
-func (ct *Timestamp) MarshalJSON() ([]byte, error) {
+func (ct Timestamp) MarshalJSON() ([]byte, error) {
 	if ct.Time.IsZero() {
 		return []byte("null"), nil
 	}
