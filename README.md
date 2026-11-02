@@ -52,7 +52,7 @@ URL parameters configure the display:
 
 - `screenOff=120` turns the screen black after 120 seconds without input while no loadpoint is charging. The default is `0` (disabled).
 - `autoSwitch=0` disables automatic switching to a newly connected vehicle. Automatic switching is enabled by default.
-- `loadpoint=lp-1` selects a loadpoint by its identifier, title, or database ID such as `db:7`. Numeric values such as `loadpoint=2` remain supported as one-based positions. Automatic switching may select another loadpoint later.
+- `loadpoint=lp-1` selects a loadpoint by its identifier or title. Numeric values such as `loadpoint=2` remain supported as one-based positions. Automatic switching may select another loadpoint later.
 - `loadpointTimeout=300` returns to the initially selected loadpoint after 300 seconds on another loadpoint. The timeout starts after swiping or automatic switching and defaults to `0` (disabled).
 - `theme=light` selects the light layout. Use `theme=dark` for the dark layout, which is the default.
 - `ignoreLoadpoints=Heatpump,db:7` hides matching loadpoints by configured name, title, or database identifier. Ignored loadpoints are also excluded from automatic switching and the screen-off charging check.
