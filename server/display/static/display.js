@@ -97,7 +97,7 @@ function visibleLoadpoints(loadpoints) {
 }
 
 function selectInitialLoadpoint(loadpoints) {
-  if (initialLoadpointResolved) return;
+  if (initialLoadpointResolved || loadpoints.length === 0) return;
 
   const visible = visibleLoadpoints(loadpoints);
   let index = -1;
