@@ -16,6 +16,7 @@ const refreshInterval = 3000;
 const staleAfter = 9000;
 const params = new URLSearchParams(window.location.search);
 const screenOffSeconds = readIntegerParam("screenOff", 0);
+const loadpointTimeoutSeconds = readIntegerParam("loadpointTimeout", 0);
 const requestedLoadpoint = params.get("loadpoint");
 const autoSwitch = readBooleanParam("autoSwitch", true);
 const numberFormat = new Intl.NumberFormat("de-DE", {
@@ -57,6 +58,8 @@ let pointerStart;
 let lastInputAt = Date.now();
 let previousConnections;
 let initialLoadpointResolved = requestedLoadpoint === null;
+let initialLoadpoint = 0;
+let loadpointTimeout;
 
 function readIntegerParam(name, fallback, minimum = 0) {
   const value = params.get(name);
@@ -102,7 +105,24 @@ function selectInitialLoadpoint(loadpoints) {
   } else {
     console.warn("display: ignoring unknown loadpoint parameter");
   }
+  initialLoadpoint = selected;
   initialLoadpointResolved = true;
+}
+
+function selectLoadpoint(index) {
+  if (index === selected) return;
+
+  selected = index;
+  window.clearTimeout(loadpointTimeout);
+  loadpointTimeout = undefined;
+
+  if (loadpointTimeoutSeconds > 0 && selected !== initialLoadpoint) {
+    loadpointTimeout = window.setTimeout(() => {
+      selected = Math.min(initialLoadpoint, Math.max((state?.loadpoints?.length || 0) - 1, 0));
+      loadpointTimeout = undefined;
+      render();
+    }, loadpointTimeoutSeconds * 1000);
+  }
 }
 
 const isNumber = (value) => typeof value === "number" && Number.isFinite(value);
@@ -350,7 +370,7 @@ async function poll() {
       const connectedIndex = connections.findIndex(
         (connected, index) => connected && !previousConnections[index]
       );
-      if (connectedIndex >= 0) selected = connectedIndex;
+      if (connectedIndex >= 0) selectLoadpoint(connectedIndex);
     }
     previousConnections = connections;
     state = nextState;
@@ -385,7 +405,7 @@ elements.screen.addEventListener("pointerup", (event) => {
   if (count < 2) return;
   const next = Math.max(0, Math.min(count - 1, selected + (dx < 0 ? 1 : -1)));
   if (next === selected) return;
-  selected = next;
+  selectLoadpoint(next);
   render();
   elements.content.classList.remove("enter-from-left", "enter-from-right");
   void elements.content.offsetWidth;
