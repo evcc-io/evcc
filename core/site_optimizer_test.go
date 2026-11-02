@@ -70,16 +70,41 @@ func TestFeedInRatesWithoutTariff(t *testing.T) {
 	}, feedInRates(nil, grid))
 }
 
-func TestOptimizerRequestSolarForecastUnavailable(t *testing.T) {
+func TestOptimizerRequestForecastUnavailable(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	solar := api.NewMockTariff(ctrl)
-	solar.EXPECT().Rates().Return(nil, errors.New("503 Service Unavailable")).AnyTimes()
+	tariffWith := func(rr api.Rates, err error) api.Tariff {
+		m := api.NewMockTariff(ctrl)
+		m.EXPECT().Rates().Return(rr, err).AnyTimes()
+		m.EXPECT().Type().Return(api.TariffTypePriceForecast).AnyTimes()
+		return m
+	}
 
-	site := &Site{tariffs: &tariff.Tariffs{Solar: solar}}
+	start := time.Now().Truncate(tariff.SlotDuration)
+	day := make(api.Rates, 96)
+	for i := range day {
+		slot := start.Add(time.Duration(i) * tariff.SlotDuration)
+		day[i] = api.Rate{Start: slot, End: slot.Add(tariff.SlotDuration), Value: 0.3}
+	}
 
-	_, _, err := site.optimizerRequest(nil)
-	require.ErrorContains(t, err, "solar forecast unavailable")
+	unavailable := errors.New("503 Service Unavailable")
+
+	for _, tc := range []struct {
+		name    string
+		tariffs tariff.Tariffs
+		err     string
+	}{
+		{"grid", tariff.Tariffs{Grid: tariffWith(nil, unavailable)}, "not enough forecast slots"},
+		{"feedin", tariff.Tariffs{Grid: tariffWith(day, nil), FeedIn: tariffWith(nil, unavailable)}, "not enough forecast slots"},
+		{"solar", tariff.Tariffs{Grid: tariffWith(day, nil), Solar: tariffWith(nil, unavailable)}, "solar forecast unavailable"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			site := &Site{tariffs: &tc.tariffs}
+
+			_, _, err := site.optimizerRequest(nil)
+			require.ErrorContains(t, err, tc.err)
+		})
+	}
 }
 
 func TestApplyPrecondition(t *testing.T) {
