@@ -380,6 +380,7 @@
       "optional": "opțional"
     },
     "general": {
+      "add": "Adaugă",
       "applyAndClose": "Aplicați și închideți",
       "authPerform": "Conectați-vă cu {provider}",
       "authPerformHint": "Se va deschide într-o filă nouă. Reveniți aici pentru a continua.",
@@ -391,6 +392,7 @@
       "confirmDisable": "Dezactivați acest dispozitiv? Va fi ignorat după următoarea repornire.",
       "confirmEnable": "Activați din nou acest dispozitiv?",
       "confirmSave": "Există modificări nesalvate. Salvați acum?",
+      "continue": "Continuați",
       "copied": "Copiată!",
       "copy": "Copiere",
       "customHelp": "Creați un dispozitiv definit de utilizator folosind sistemul de pluginuri evcc.",
@@ -565,16 +567,24 @@
       "priorityLabel": "Prioritate",
       "save": "Salvați",
       "solarShareReset": "Eliminați pragurile",
+      "solarTitle": "Comportament la surplus solar",
       "temperatureRangeHelp": "Interval de afișare pentru bara de temperatură. Nu afectează controlul.",
       "temperatureRangeTitle": "Interval de temperatură",
+      "thresholdDisableDelayHelp": "Se oprește când surplusul nu este suficient timp de {delay}.",
       "thresholdDisableDelayLabel": "Dezactivează întârzierea",
       "thresholdDisableHelpInvalid": "Vă rugăm să utilizați o valoare pozitivă.",
       "thresholdDisableHelpPositive": "Opriți, când se utilizează mai mult de {power} din rețea pentru {delay}.",
       "thresholdDisableLabel": "Dezactivează alimentarea de la rețea",
+      "thresholdEnableDelayHelp": "Pornește când există suficient surplus timp de {delay}.",
       "thresholdEnableDelayLabel": "Activați întârzierea",
       "thresholdEnableHelpInvalid": "Vă rugăm să utilizați o valoare negativă.",
       "thresholdEnableHelpNegative": "Începeți când {surplus} surplusul este disponibil pentru {delay}.",
       "thresholdEnableLabel": "Activați alimentarea de la rețea",
+      "thresholdsNote": {
+        "charging": "Pentru a controla consumul din rețea la încărcarea solară, folosiți cursorul {slider} din setările punctului de încărcare, pe pagina {page}. Setați valori aici doar în cazuri speciale.",
+        "heating": "Pentru a controla consumul din rețea la încălzirea solară, folosiți cursorul {slider} din setările încălzitorului, pe pagina {page}. Setați valori aici doar în cazuri speciale."
+      },
+      "thresholdsSliderDisabled": "Cursorul {slider} este dezactivat momentan, deoarece aici sunt setate valori.",
       "titleAdd": {
         "charging": "Adăugați punct de încărcare",
         "heating": "Adăugați dispozitiv de încălzire",
@@ -704,10 +714,18 @@
         "grid": "Adăugați contor rețea",
         "pv": "Adăugați contorul solar"
       },
+      "reuseApply": "Folosiți setările acestuia.",
+      "reuseHint": "{device} poate fi folosit și ca „{target}”.",
       "save": "Salveaza",
       "specific": "Integrări specifice",
       "template": "Producător",
       "titleChoice": "Ce vrei să adaugi?",
+      "titleExample": {
+        "aux": "Încălzitor inteligent de apă etc.",
+        "battery": "Subsol, garaj, stație de energie etc.",
+        "consumer": "Mașină de spălat vase, mașină de spălat rufe, pompă de piscină etc.",
+        "pv": "Acoperiș sud, carport etc."
+      },
       "titleLabel": "Titlu",
       "usage": {
         "aux": "Consumator autoreglabil",
@@ -964,6 +982,15 @@
         "example": "Prețul de încărcare a fost {price}. Ați economisit {amount}.",
         "label": "Moneda"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V fără neutru (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V cu neutru (3P4W)",
+        "description": {
+          "3p3w": "Rețea fără conductor neutru. Frecventă în Norvegia și în unele părți ale Belgiei.",
+          "3p4w": "Cea mai frecventă rețea, cu conductor neutru."
+        },
+        "label": "Racord la rețea"
+      },
       "siteTitle": {
         "description": "Afișat pe ecranul principal și în fila browserului.",
         "label": "Titlu"
@@ -977,6 +1004,18 @@
       "descriptionToken": "Sponsorii își găsesc tokenul pe {url}. Pentru a începe, oferim un {trialToken}.",
       "enterYourToken": "Introduceți tokenul dvs",
       "error": "Tokenul sponsorului nu este valid.",
+      "inline": {
+        "applied": "Token aplicat. Vă mulțumim că susțineți proiectul!",
+        "apply": "Aplicați",
+        "becomeSponsor": "deveniți sponsor",
+        "device": "Acest dispozitiv este disponibil doar pentru sponsori.",
+        "feature": "Această funcție este disponibilă doar pentru sponsori.",
+        "learn": "Aflați mai multe și {becomeSponsor}.",
+        "placeholder": "Lipiți tokenul",
+        "title": "Este necesar un token de sponsor",
+        "trial": "Începeți rapid.",
+        "trialLink": "Obțineți un token de încercare"
+      },
       "invalid": "invalid",
       "labelToken": "Jeton sponsor",
       "title": "Sponsorizare",
@@ -1071,7 +1110,8 @@
       "solar": {
         "description": "Prognoza producției solare pentru sistemul dumneavoastră fotovoltaic. Se afișează în interfață și va fi utilizată pentru algoritmi de optimizare în viitor.",
         "titleAdd": "Adauga prognoză solară",
-        "titleEdit": "Editează prognoza solară"
+        "titleEdit": "Editează prognoza solară",
+        "titleExample": "Acoperiș sud, carport etc."
       },
       "temperature": {
         "description": "Prognoza temperaturii exterioare pentru locația dvs. Afișată în interfață și folosită pentru a estima necesarul de încălzire.",
@@ -1234,7 +1274,8 @@
       "noCo2": "Nu există date CO₂.",
       "noPrice": "Nu există date de preț.",
       "savings": "Economii",
-      "savingsTooltip": "Comparativ cu cumpărarea din rețea a celor {energy} consumați."
+      "savingsTooltip": "Comparativ cu cumpărarea din rețea a celor {energy} consumați.",
+      "versus": "{value} față de {reference}"
     },
     "title": "Energie"
   },
@@ -1683,6 +1724,11 @@
       "login": "autentificare",
       "logout": "deconectează"
     },
+    "setup": {
+      "description": "Adăugați dispozitivele pentru a vedea fluxul de energie și a începe încărcarea cu energie solară.",
+      "start": "Configurați",
+      "title": "Bine ați venit!"
+    },
     "startConfiguration": "Să începem configurarea",
     "targetCharge": {
       "activate": "Activează",
@@ -1808,6 +1854,76 @@
     "restartNeeded": "Necesar pentru aplicarea modificărilor.",
     "restarting": "Serverul va reveni în scurt timp.",
     "starting": "Pornirea serverului..."
+  },
+  "onboarding": {
+    "another": "Adăugați încă unul",
+    "back": "Înapoi",
+    "battery": {
+      "add": "Adăugați baterie de casă",
+      "description": "Adăugați bateria pentru ca încărcarea să o ia în considerare și să vedeți ce face.",
+      "none": "Fără baterie de casă",
+      "title": "Aveți o baterie de casă?"
+    },
+    "checklist": {
+      "dismiss": "Închideți",
+      "legacyTariffs": "Se folosește configurația veche a tarifelor.",
+      "progress": "{done} din {total} finalizate",
+      "title": "Finalizați configurarea"
+    },
+    "control": {
+      "description": "Începeți cu primul. Mai multe pot fi adăugate ulterior pe pagina de configurare.",
+      "none": "Încă nimic",
+      "title": "Ce doriți să controlați?"
+    },
+    "done": {
+      "close": "La configurare",
+      "description": "Repornirea aplică configurația. Apoi puteți explora funcțiile. Vehicule, tarife și altele pot fi adăugate oricând.",
+      "restart": "Repornire",
+      "title": "Sunteți gata"
+    },
+    "grid": {
+      "add": "Adăugați contor de rețea",
+      "confirm": "Contorul de rețea stă la baza încărcării din surplus și a statisticilor de energie. Se recomandă adăugarea unuia.",
+      "confirmNone": "Continuați fără",
+      "description": "Măsoară importul și exportul de energie la punctul de racordare. Face încărcarea din surplus precisă.",
+      "none": "Fără contor de rețea",
+      "title": "Aveți un contor de rețea?"
+    },
+    "item": {
+      "battery": "Baterie de casă",
+      "co2": "Prognoză CO₂",
+      "consumer": "Consumator",
+      "grid": "Contor de rețea",
+      "gridExport": "Tarif export în rețea",
+      "gridImport": "Tarif import din rețea",
+      "heater": "Încălzitor",
+      "loadpoint": "Punct de încărcare",
+      "pv": "Sistem solar",
+      "solar": "Prognoză solară"
+    },
+    "password": {
+      "description": "Protejează setările de configurare împotriva modificărilor neautorizate. Rețineți-o, nu există o modalitate simplă de a o reseta.",
+      "disabled": "Autentificarea este dezactivată ({flag}). Oricine are acces la rețea poate modifica configurația, citi datele de autentificare salvate și rula scripturi. Securizați accesul prin alte mijloace.",
+      "title": "Setați parola de administrator"
+    },
+    "pv": {
+      "add": "Adăugați sistem solar",
+      "description": "Măsoară producția solară. Necesar pentru partea solară și încărcarea din surplus.",
+      "none": "Fără sistem solar",
+      "title": "Aveți un sistem solar?"
+    },
+    "site": {
+      "currencyHint": "de ex. {price}, {amount}",
+      "defaultTitle": "Acasă",
+      "description": "Câteva informații de bază despre locuința dvs. Le puteți modifica oricând.",
+      "title": "Locația"
+    },
+    "skip": "Săriți peste",
+    "step": "Pasul {step} din {total}",
+    "welcome": {
+      "description": "Configurați cele mai importante părți ale instalației de acasă pentru a începe încărcarea inteligentă.",
+      "start": "Începeți"
+    }
   },
   "passwordModal": {
     "description": "Setați o parolă pentru a proteja setările de configurare. Utilizarea ecranului principal este în continuare posibilă fără autentificare.",

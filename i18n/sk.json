@@ -383,6 +383,7 @@
       "optional": "voliteľné"
     },
     "general": {
+      "add": "Pridať",
       "applyAndClose": "Použiť a zatvoriť",
       "authPerform": "Pripojte sa s {provider}",
       "authPerformHint": "Otvorí sa v novej karte. Pre pokračovanie sa vráťte sem.",
@@ -394,6 +395,7 @@
       "confirmDisable": "Vypnúť toto zariadenie? Bude to ignorované po ďalšom reštarte.",
       "confirmEnable": "Opäť povoliť toto zariadenie?",
       "confirmSave": "Existujú neuložené zmeny. Uložiť teraz?",
+      "continue": "Pokračovať",
       "copied": "Skopírované!",
       "copy": "Kopírovať",
       "customHelp": "Vytvorte používateľom definované zariadenie pomocou systému pluginov evcc.",
@@ -576,10 +578,16 @@
       "thresholdDisableHelpInvalid": "Použite pozitívnu hodnotu.",
       "thresholdDisableHelpPositive": "Zastaviť, keď sa používa viac ako {power} zo siete pre {delay}.",
       "thresholdDisableLabel": "Vypnúť napájanie zo siete",
+      "thresholdEnableDelayHelp": "Spustí sa, keď je dostatok prebytku počas {delay}.",
       "thresholdEnableDelayLabel": "Povoliť oneskorenie",
       "thresholdEnableHelpInvalid": "Použite negatívnu hodnotu.",
       "thresholdEnableHelpNegative": "Začne, keď je {surplus} prebytok k dispozícii na {delay}.",
       "thresholdEnableLabel": "Povoliť sieťový výkon",
+      "thresholdsNote": {
+        "charging": "Na riadenie odberu zo siete pri solárnom nabíjaní použite posuvník {slider} v nastaveniach nabíjacieho bodu na stránke {page}. Hodnoty tu nastavujte iba v osobitných prípadoch.",
+        "heating": "Na riadenie odberu zo siete pri solárnom vyhrievaní použite posuvník {slider} v nastaveniach ohrievača na stránke {page}. Hodnoty tu nastavujte iba v osobitných prípadoch."
+      },
+      "thresholdsSliderDisabled": "Posuvník {slider} je momentálne vypnutý, pretože hodnoty sú nastavené tu.",
       "titleAdd": {
         "charging": "Pridať Nabíjaciu Stanicu",
         "heating": "Pridať ohrievač",
@@ -709,10 +717,18 @@
         "grid": "Pridať merač elektrickej siete",
         "pv": "Pridať solárny merač"
       },
+      "reuseApply": "Použiť jeho nastavenia.",
+      "reuseHint": "{device} sa dá použiť aj ako „{target}“.",
       "save": "Uložiť",
       "specific": "Špecifické integrácie",
       "template": "Výrobca",
       "titleChoice": "Čo chcete pridať?",
+      "titleExample": {
+        "aux": "Smart bojler a pod.",
+        "battery": "Pivnica, garáž, elektráreň a pod.",
+        "consumer": "Umývačka riadu, práčka, čerpadlo bazéna a pod.",
+        "pv": "Južná strecha, prístrešok a pod."
+      },
       "titleLabel": "Názov",
       "usage": {
         "aux": "Samoregulačný spotrebič",
@@ -970,6 +986,15 @@
         "example": "Cena za nabíjanie bola {price}. Ušetrili ste {amount}.",
         "label": "Mena"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V bez neutrálneho vodiča (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V s neutrálnym vodičom (3P4W)",
+        "description": {
+          "3p3w": "Sieť bez neutrálneho vodiča. Bežná v Nórsku a v častiach Belgicka.",
+          "3p4w": "Najbežnejšia sieť s neutrálnym vodičom."
+        },
+        "label": "Sieťová prípojka"
+      },
       "siteTitle": {
         "description": "Zobrazené na hlavnej obrazovke a záložke prehliadača.",
         "label": "Názov"
@@ -983,6 +1008,18 @@
       "descriptionToken": "Ako GitHub sponzor nájdete token na {url}. Pre začiatok ponúkame {trialToken}.",
       "enterYourToken": "Váš sponzorský Token",
       "error": "Sponzorský token nie je platný.",
+      "inline": {
+        "applied": "Token bol použitý. Ďakujeme za podporu projektu!",
+        "apply": "Použiť",
+        "becomeSponsor": "staňte sa sponzorom",
+        "device": "Toto zariadenie je dostupné iba pre sponzorov.",
+        "feature": "Táto funkcia je dostupná iba pre sponzorov.",
+        "learn": "Zistite viac a {becomeSponsor}.",
+        "placeholder": "Vložte token",
+        "title": "Vyžaduje sa sponzorský token",
+        "trial": "Začnite rýchlo.",
+        "trialLink": "Získať skúšobný token"
+      },
       "invalid": "neplatný",
       "labelToken": "Sponzorský token",
       "title": "Sponzorstvo",
@@ -1077,7 +1114,8 @@
       "solar": {
         "description": "Predpoveď produkcie solárnej energie pre váš fotovoltaický systém. Zobrazuje sa v rozhraní a bude sa v budúcnosti používať na optimalizačné algoritmy.",
         "titleAdd": "Pridať Predpoveď produkcie solárnej energie",
-        "titleEdit": "Zmeniť predpoveď produkcie solárnej energie"
+        "titleEdit": "Zmeniť predpoveď produkcie solárnej energie",
+        "titleExample": "Južná strecha, prístrešok a pod."
       },
       "temperature": {
         "description": "Predpoveď vonkajšej teploty pre vašu polohu. Zobrazené v rozhraní a používané na predpoveď dopytu na vyhrievanie.",
@@ -1710,6 +1748,11 @@
       "login": "prihlásenie",
       "logout": "odhlásenie"
     },
+    "setup": {
+      "description": "Pridajte svoje zariadenia, aby ste videli tok energie a začali nabíjať solárnou energiou.",
+      "start": "Nastaviť",
+      "title": "Vitajte!"
+    },
     "startConfiguration": "Začnime s konfiguráciou",
     "targetCharge": {
       "activate": "Aktivuj",
@@ -1837,6 +1880,76 @@
     "restartNeeded": "Vyžaduje sa na aplikovanie zmien.",
     "restarting": "Server bude späť v okamihu.",
     "starting": "Spúšťanie servera..."
+  },
+  "onboarding": {
+    "another": "Pridať ďalšie",
+    "back": "Späť",
+    "battery": {
+      "add": "Pridať domácu batériu",
+      "description": "Pridajte svoju batériu, aby ju nabíjanie zohľadňovalo a videli ste, čo robí.",
+      "none": "Žiadna domáca batéria",
+      "title": "Máte domácu batériu?"
+    },
+    "checklist": {
+      "dismiss": "Zavrieť",
+      "legacyTariffs": "Používa sa stará konfigurácia taríf.",
+      "progress": "{done} z {total} hotovo",
+      "title": "Dokončite nastavenie"
+    },
+    "control": {
+      "description": "Začnite tým prvým. Ďalšie môžete pridať neskôr na stránke konfigurácie.",
+      "none": "Zatiaľ nič",
+      "title": "Čo chcete ovládať?"
+    },
+    "done": {
+      "close": "Prejsť na konfiguráciu",
+      "description": "Konfigurácia sa použije po reštarte. Potom preskúmajte funkcie. Vozidlá, tarify a ďalšie môžete pridať kedykoľvek.",
+      "restart": "Reštartovať",
+      "title": "Máte hotovo"
+    },
+    "grid": {
+      "add": "Pridať merač elektrickej siete",
+      "confirm": "Merač elektrickej siete je základom nabíjania z prebytku a štatistík energie. Odporúča sa ho pridať.",
+      "confirmNone": "Pokračovať bez neho",
+      "description": "Meria odber zo siete a export do siete v bode pripojenia. Spresňuje nabíjanie z prebytku.",
+      "none": "Žiadny merač elektrickej siete",
+      "title": "Máte merač elektrickej siete?"
+    },
+    "item": {
+      "battery": "Domáca batéria",
+      "co2": "Predpoveď CO₂",
+      "consumer": "Spotrebič",
+      "grid": "Merač elektrickej siete",
+      "gridExport": "Tarif za export do siete",
+      "gridImport": "Tarif na odber zo siete",
+      "heater": "Ohrievač",
+      "loadpoint": "Nabíjací bod",
+      "pv": "Solárny systém",
+      "solar": "Solárna predpoveď"
+    },
+    "password": {
+      "description": "Chráni nastavenia konfigurácie pred neoprávnenými zmenami. Zapamätajte si ho, jednoduchý spôsob obnovenia neexistuje.",
+      "disabled": "Overenie je vypnuté ({flag}). Ktokoľvek s prístupom k sieti môže meniť konfiguráciu, čítať uložené poverenia a spúšťať skripty. Zabezpečte prístup iným spôsobom.",
+      "title": "Nastaviť heslo správcu"
+    },
+    "pv": {
+      "add": "Pridať solárny systém",
+      "description": "Meria solárnu výrobu. Potrebné pre solárny podiel a nabíjanie z prebytku.",
+      "none": "Žiadny solárny systém",
+      "title": "Máte solárny systém?"
+    },
+    "site": {
+      "currencyHint": "napr. {price}, {amount}",
+      "defaultTitle": "Domov",
+      "description": "Niekoľko základných údajov o vašom domove. Môžete ich kedykoľvek zmeniť.",
+      "title": "Vaša lokalita"
+    },
+    "skip": "Preskočiť",
+    "step": "Krok {step} z {total}",
+    "welcome": {
+      "description": "Nastavte najdôležitejšie časti domácej inštalácie a začnite s inteligentným nabíjaním.",
+      "start": "Začať"
+    }
   },
   "passwordModal": {
     "description": "Nastavte heslo na ochranu nastavení konfigurácie. Používanie hlavnej obrazovky je stále možné bez prihlásenia.",
