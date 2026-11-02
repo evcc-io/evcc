@@ -2,6 +2,7 @@ package server
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -34,6 +35,7 @@ func NewDisplayHTTPd(addr string, cache *util.ParamCache) *HTTPd {
 
 	router := mux.NewRouter()
 	router.Handle("/api/state", http.HandlerFunc(displayStateHandler(cache))).Methods(http.MethodGet)
+	router.HandleFunc("/i18n/{locale:[a-zA-Z0-9-]+\\.json}", displayTranslationHandler).Methods(http.MethodGet)
 	router.HandleFunc("/fonts/{name:Montserrat-(?:Medium|Bold)\\.woff2}", displayFontHandler).Methods(http.MethodGet)
 
 	files := http.FileServer(http.FS(display))
@@ -61,6 +63,29 @@ func NewDisplayHTTPd(addr string, cache *util.ParamCache) *HTTPd {
 	srv.SetKeepAlivesEnabled(true)
 
 	return srv
+}
+
+func displayTranslationHandler(w http.ResponseWriter, r *http.Request) {
+	if assets.I18n == nil {
+		http.Error(w, "translations unavailable", http.StatusInternalServerError)
+		return
+	}
+
+	locale := mux.Vars(r)["locale"]
+	data, err := fs.ReadFile(assets.I18n, locale)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, "translations unavailable", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Cache-Control", "no-cache")
+	_, _ = w.Write(data)
 }
 
 func displayStateHandler(cache *util.ParamCache) http.HandlerFunc {

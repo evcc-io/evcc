@@ -2,6 +2,7 @@ const stateUrl = "/api/state";
 const refreshInterval = 3000;
 const staleAfter = 9000;
 const params = new URLSearchParams(window.location.search);
+const requestedLocale = params.get("lang") || "de";
 const screenOffSeconds = readIntegerParam("screenOff", 0);
 const loadpointTimeoutSeconds = readIntegerParam("loadpointTimeout", 0);
 const requestedLoadpoint = params.get("loadpoint");
@@ -13,10 +14,10 @@ const ignoredLoadpoints = new Set(
 );
 const theme = params.get("theme") || "dark";
 const autoSwitch = readBooleanParam("autoSwitch", true);
-const numberFormat = new Intl.NumberFormat("de-DE", {
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
-});
+let locale = requestedLocale;
+let translations = {};
+let fallbackTranslations = {};
+let numberFormat;
 const elements = {
   screen: document.querySelector("#screen"),
   content: document.querySelector("#content"),
@@ -82,6 +83,74 @@ function readBooleanParam(name, fallback) {
 
   console.warn(`display: ignoring invalid ${name} parameter`);
   return fallback;
+}
+
+function findTranslation(source, key) {
+  return key.split(".").reduce((value, part) => value?.[part], source);
+}
+
+function t(key, values = {}) {
+  const message = findTranslation(translations, key) ?? findTranslation(fallbackTranslations, key);
+  if (typeof message !== "string") {
+    console.error(`display: missing translation ${key}`);
+    return key;
+  }
+  return message.replace(/\{(\w+)\}/g, (_, name) => String(values[name] ?? `{${name}}`));
+}
+
+async function fetchTranslations(language) {
+  const response = await fetch(`/i18n/${encodeURIComponent(language)}.json`, { cache: "no-cache" });
+  if (!response.ok) throw new Error(`translation request failed: ${response.status}`);
+  return response.json();
+}
+
+async function loadTranslations() {
+  let selectedTranslations;
+  try {
+    selectedTranslations = await fetchTranslations(requestedLocale);
+  } catch (error) {
+    console.warn(
+      `display: unsupported language ${requestedLocale}, falling back to English`,
+      error
+    );
+    locale = "en";
+  }
+
+  if (locale === "en") {
+    fallbackTranslations = selectedTranslations || (await fetchTranslations("en"));
+    translations = fallbackTranslations;
+  } else {
+    translations = selectedTranslations;
+    fallbackTranslations = await fetchTranslations("en");
+  }
+
+  try {
+    numberFormat = new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    });
+  } catch (error) {
+    console.warn(`display: unsupported number format locale ${locale}`, error);
+    locale = "en";
+    numberFormat = new Intl.NumberFormat("en", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    });
+  }
+
+  document.documentElement.lang = locale;
+  document.title = t("display.pageTitle");
+  document.querySelector('meta[name="description"]').content = t("display.description");
+  elements.warning.setAttribute("aria-label", t("display.accessibility.noCurrentData"));
+  elements.modes.forEach((element) => {
+    const mode = element.dataset.mode;
+    element.querySelector("span").textContent = t(`display.mode.${mode}`);
+    element.querySelector("small").textContent = t(`display.mode.${mode}Description`);
+  });
+  document
+    .querySelector(".mode-segments")
+    .setAttribute("aria-label", t("display.accessibility.chargingMode"));
+  elements.dots.setAttribute("aria-label", t("display.accessibility.loadpoint"));
 }
 
 function isIgnoredLoadpoint(loadpoint) {
@@ -163,7 +232,10 @@ const isNumber = (value) => typeof value === "number" && Number.isFinite(value);
 const powerValue = (watts) => numberFormat.format(watts / 1000);
 const powerText = (watts) => `${powerValue(watts)} kW`;
 const secondsText = (seconds) =>
-  `${Math.floor(seconds / 3600)}:${String(Math.floor(seconds / 60) % 60).padStart(2, "0")} h`;
+  t("display.duration", {
+    hours: Math.floor(seconds / 3600),
+    minutes: String(Math.floor(seconds / 60) % 60).padStart(2, "0"),
+  });
 const countdownText = (seconds) =>
   `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
@@ -233,8 +305,8 @@ function updateDots(count, selectedIndex) {
 }
 
 function statusText(loadpoint, house, live) {
-  if (!live) return "evcc nicht erreichbar";
-  if (!loadpoint) return "Diese Nummer gibt es in evcc nicht";
+  if (!live) return t("display.status.offline");
+  if (!loadpoint) return t("display.status.missingLoadpoint");
   if (!loadpoint.connected && house) {
     const minCurrent = loadpoint.effectiveMinCurrent || loadpoint.minCurrent || 0;
     const phases =
@@ -246,26 +318,30 @@ function statusText(loadpoint, house, live) {
     const minPower = minCurrent * 230 * phases;
     if (minPower > 0) {
       return solarSurplus(state) >= minPower
-        ? "Überschuss reicht für Smart"
-        : `Smart startet ab ${powerText(minPower)} Überschuss`;
+        ? t("display.status.surplusEnough")
+        : t("display.status.surplusStarts", { power: powerText(minPower) });
     }
-    return "Sonnenüberschuss";
+    return t("display.status.pvSurplus");
   }
-  if (!loadpoint.connected) return "Modus für die nächste Ladung wählen";
-  if (loadpoint.mode === "off") return "Ladepunkt ist aus · Modus wählen";
+  if (!loadpoint.connected) return t("display.status.chooseMode");
+  if (loadpoint.mode === "off") return t("display.status.off");
   if (loadpoint.charging) {
-    const phases = loadpoint.phasesActive > 0 ? ` · ${loadpoint.phasesActive}-phasig` : "";
+    const phases =
+      loadpoint.phasesActive > 0 ? t("display.phase", { count: loadpoint.phasesActive }) : "";
     if (loadpoint.pvAction === "disable" && loadpoint.pvRemaining > 0) {
-      return `Lädt${phases} · stoppt in ${countdownText(loadpoint.pvRemaining)}`;
+      return t("display.status.chargingStops", {
+        phases,
+        time: countdownText(loadpoint.pvRemaining),
+      });
     }
-    return `Lädt${phases}`;
+    return t("display.status.charging", { phases });
   }
   if (loadpoint.pvAction === "enable" && loadpoint.pvRemaining > 0) {
-    return `Genug Sonne · Start in ${countdownText(loadpoint.pvRemaining)}`;
+    return t("display.status.pvStarts", { time: countdownText(loadpoint.pvRemaining) });
   }
-  if (loadpoint.mode === "smart") return "Wartet auf Sonnenüberschuss";
-  if (loadpoint.planActive || loadpoint.smartCostActive) return "Wartet auf günstigen Zeitpunkt";
-  return "Verbunden · lädt gerade nicht";
+  if (loadpoint.mode === "smart") return t("display.status.waitSurplus");
+  if (loadpoint.planActive || loadpoint.smartCostActive) return t("display.status.waitCheap");
+  return t("display.status.connectedIdle");
 }
 
 function render() {
@@ -291,8 +367,9 @@ function render() {
   const mode = loadpoint ? loadpointMode(loadpoint) : "";
 
   elements.title.textContent =
-    loadpoint?.title || (loadpoints.length ? `Ladepunkt ${selected + 1}` : "evcc");
-  elements.clock.textContent = new Intl.DateTimeFormat("de-DE", {
+    loadpoint?.title ||
+    (loadpoints.length ? t("display.titleNumbered", { number: selected + 1 }) : "evcc");
+  elements.clock.textContent = new Intl.DateTimeFormat(locale, {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date());
@@ -300,7 +377,7 @@ function render() {
   elements.battery.hidden = !loadpoint || house || !isNumber(homeBatterySoc) || homeBatterySoc < 0;
   elements.batterySoc.textContent = `${Math.round(homeBatterySoc)} %`;
   const vehicleText = house
-    ? "Kein Fahrzeug"
+    ? t("display.idle.noVehicle")
     : connected
       ? [
           loadpoint.vehicleTitle,
@@ -328,11 +405,11 @@ function render() {
     elements.idleIcon.setAttribute("href", idleIcon);
     elements.idleText.textContent = !loadpoint
       ? state
-        ? "Kein Ladepunkt"
-        : "Verbinde …"
+        ? t("display.idle.noLoadpoint")
+        : t("display.idle.connecting")
       : !live
-        ? "Keine aktuellen Daten"
-        : "Kein Fahrzeug";
+        ? t("display.idle.noCurrentData")
+        : t("display.idle.noVehicle");
     elements.idle.classList.toggle("is-error", !live || !loadpoint);
   }
 
@@ -355,13 +432,30 @@ function render() {
     const share = battery + grid >= 50 ? (battery / (battery + grid)) * 100 : 0;
     const batteryLabel =
       battery < 50
-        ? `Akku ${homeBatterySoc >= 99.5 ? "voll" : "pausiert"}`
-        : `Akku ${batteryPower(state) < 0 ? "lädt" : "entlädt"} ${powerText(battery)}`;
-    const gridLabel = `${gridPower(state) > 0 ? "Netzbezug" : "Einspeisung"} ${powerText(grid)}`;
+        ? t(
+            homeBatterySoc >= 99.5
+              ? "display.flow.homeBatteryFull"
+              : "display.flow.homeBatteryPaused"
+          )
+        : t(
+            batteryPower(state) < 0
+              ? "display.flow.homeBatteryCharging"
+              : "display.flow.homeBatteryDischarging",
+            { power: powerText(battery) }
+          );
+    const gridLabel = t(
+      gridPower(state) > 0 ? "display.flow.gridImport" : "display.flow.gridExport",
+      { power: powerText(grid) }
+    );
     setFlow(batteryLabel, gridLabel, share, live, "flow");
   } else if (showPower && loadpoint.charging && isNumber(state.greenShareLoadpoints)) {
     const share = Math.max(0, Math.min(1, state.greenShareLoadpoints)) * 100;
-    setFlow(`Jetzt ${Math.round(share)} % Sonne`, `${100 - Math.round(share)} % Netz`, share, live);
+    setFlow(
+      t("display.flow.pvNow", { share: Math.round(share) }),
+      t("display.flow.gridShare", { share: 100 - Math.round(share) }),
+      share,
+      live
+    );
   }
 
   const showSessionTiles =
@@ -371,11 +465,11 @@ function render() {
   if (house) {
     const batteryAvailable = isNumber(homeBatterySoc) && homeBatterySoc >= 0;
     elements.tiles.classList.toggle("two-tiles", !batteryAvailable);
-    setTile(0, "SONNE", powerText(state.pvPower), !live);
-    setTile(1, "HAUS", powerText(state.homePower || 0), !live);
+    setTile(0, t("display.tile.pv"), powerText(state.pvPower), !live);
+    setTile(1, t("display.tile.home"), powerText(state.homePower || 0), !live);
     setTile(
       2,
-      "AKKU",
+      t("display.tile.homeBattery"),
       batteryAvailable ? `${Math.round(homeBatterySoc)} %` : "",
       !live,
       batteryAvailable
@@ -385,9 +479,14 @@ function render() {
     const energy = isNumber(loadpoint.sessionEnergy)
       ? loadpoint.sessionEnergy
       : loadpoint.chargedEnergy || 0;
-    setTile(0, "GELADEN", `${numberFormat.format(energy)} kWh`, !live);
-    setTile(1, "DAUER", secondsText(loadpoint.chargeDuration || 0), !live);
-    setTile(2, "Ø SONNE", `${Math.round(loadpoint.sessionSolarPercentage || 0)} %`, !live);
+    setTile(0, t("display.tile.charged"), `${numberFormat.format(energy)} kWh`, !live);
+    setTile(1, t("display.tile.duration"), secondsText(loadpoint.chargeDuration || 0), !live);
+    setTile(
+      2,
+      t("display.tile.averagePV"),
+      `${Math.round(loadpoint.sessionSolarPercentage || 0)} %`,
+      !live
+    );
   }
 
   elements.modes.forEach((element) => {
@@ -457,5 +556,10 @@ elements.screen.addEventListener("pointercancel", () => {
   pointerStart = undefined;
 });
 
-window.setInterval(render, 1000);
-poll();
+async function startDisplay() {
+  await loadTranslations();
+  window.setInterval(render, 1000);
+  poll();
+}
+
+startDisplay().catch((error) => console.error("display: failed to initialize", error));

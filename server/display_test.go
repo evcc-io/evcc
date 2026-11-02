@@ -96,3 +96,22 @@ func TestDisplayHTTPdServesFonts(t *testing.T) {
 	require.Equal(t, "font/woff2", rec.Header().Get("Content-Type"))
 	require.Equal(t, "font", rec.Body.String())
 }
+
+func TestDisplayHTTPdServesTranslations(t *testing.T) {
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "en.json"), []byte(`{"display":{"pageTitle":"Display"}}`), 0o600))
+
+	i18n := assets.I18n
+	assets.I18n = os.DirFS(dir)
+	t.Cleanup(func() {
+		assets.I18n = i18n
+	})
+
+	srv := NewDisplayHTTPd("", util.NewParamCache())
+	rec := httptest.NewRecorder()
+	srv.Handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/i18n/en.json", nil))
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Equal(t, "application/json; charset=utf-8", rec.Header().Get("Content-Type"))
+	require.JSONEq(t, `{"display":{"pageTitle":"Display"}}`, rec.Body.String())
+}
