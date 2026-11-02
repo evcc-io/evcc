@@ -330,6 +330,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 				keys.TariffPriceHome,
 				keys.TariffPriceLoadpoints,
 				keys.TariffSolar,
+				keys.TariffSolarPrice,
 				keys.ChargedEnergy,
 				keys.ChargeRemainingEnergy)
 			go influx.Run(site, dedupe.Pipe(

@@ -68,6 +68,10 @@
           "description": "Feed-in tariff",
           "$ref": "#/definitions/typedObject"
         },
+        "solarPrice": {
+          "description": "Price assigned to self-produced solar energy",
+          "$ref": "#/definitions/typedObject"
+        },
         "planner": {
           "description": "Planner tariff",
           "$ref": "#/definitions/typedObject"

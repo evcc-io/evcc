@@ -17,7 +17,8 @@ Optimization spans N slots with N being minimum of available forecast data.
 
 ### Energy consumption/ feed-in costs/ Solar forecast
 
-Grid/ feed-in/ solar tariff data.
+Grid, feed-in and solar price tariff data. The solar price sets a minimum
+commercial value for battery energy at the end of the optimization horizon.
 
 TODO
 

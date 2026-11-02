@@ -5,7 +5,7 @@
 ```
 Site (orchestrator — core/site.go)
 ├── Meters: Grid, PV[], Battery[], Auxiliary[], External[]
-├── Tariffs: Grid, FeedIn, CO2, Solar
+├── Tariffs: Grid, FeedIn, SolarPrice, CO2, Solar
 ├── Coordinator (vehicle <-> loadpoint assignment)
 ├── Prioritizer (power allocation fairness)
 └── Loadpoints[] (core/loadpoint.go)
@@ -109,7 +109,8 @@ None of these apply to a loadpoint the optimizer controls: the optimizer plans t
 
 ```
 greenShare = (max(pvPower,0) + max(batteryPower,0)) / totalChargePower
-effectivePrice = gridPrice * (1 - greenShare) + feedInPrice * greenShare
+solarPrice = configured solar price, otherwise feed-in price, otherwise zero
+effectivePrice = gridPrice * (1 - greenShare) + solarPrice * greenShare
 ```
 
 ## Concurrency Model

@@ -32,6 +32,7 @@ const (
 	TariffPriceHome       = "tariffPriceHome"
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	TariffSolar           = "tariffSolar"
+	TariffSolarPrice      = "tariffSolarPrice"
 	TariffTemperature     = "tariffTemperature"
 	Vehicles              = "vehicles"
 	Voltage               = "voltage"

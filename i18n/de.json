@@ -270,6 +270,7 @@
       "events": "Ereignisse",
       "exportLimit": "Einspeiselimit",
       "feedinPrice": "Einspeisevergütung",
+      "solarPrice": "Solarstrompreis",
       "forecast": "Vorhersage",
       "gridPrice": "Netzbezugspreis",
       "heaterTempLimit": "Heizungslimit",
@@ -1119,6 +1120,11 @@
         "titleAdd": "Einspeisevergütung hinzufügen",
         "titleEdit": "Einspeisevergütung bearbeiten"
       },
+      "solarPrice": {
+        "description": "Preis für selbst erzeugten Solarstrom. Wird zur Berechnung der realen Ladekosten und in Optimierer-Entscheidungen verwendet.",
+        "titleAdd": "Solarstrompreis hinzufügen",
+        "titleEdit": "Solarstrompreis bearbeiten"
+      },
       "generic": "Generische Integrationen",
       "grid": {
         "description": "Energiepreis für den Netzbezug. Für die Berechnung von realen Ladekosten und preisoptimiertes Laden von Fahrzeugen, Steuern von Heizgeräten oder Netzladen der Hausbatterie.",
@@ -1130,6 +1136,7 @@
         "co2": "CO₂-Vorhersage hinzufügen",
         "feedIn": "Einspeisevergütung hinzufügen",
         "grid": "Netzbezugstarif hinzufügen",
+        "solarPrice": "Solarstrompreis hinzufügen",
         "planner": "Planer-Vorhersage hinzufügen",
         "solar": "PV-Vorhersage hinzufügen",
         "temperature": "Temperatur-Vorhersage hinzufügen"
@@ -1159,6 +1166,7 @@
         "co2": "CO₂ Vorhersage",
         "feedIn": "Einspeisetarif",
         "grid": "Netzbezugspreis",
+        "solarPrice": "Solarstrompreis",
         "planner": "Planer",
         "solar": "PV",
         "temperature": "Temperaturvorhersage"

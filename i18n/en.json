@@ -270,6 +270,7 @@
       "events": "Events",
       "exportLimit": "Grid export limit",
       "feedinPrice": "Grid export price",
+      "solarPrice": "Solar energy price",
       "forecast": "Forecast",
       "gridPrice": "Grid import price",
       "heaterTempLimit": "Heater limit",
@@ -1119,6 +1120,11 @@
         "titleAdd": "Add Grid Export Tariff",
         "titleEdit": "Edit Grid Export Tariff"
       },
+      "solarPrice": {
+        "description": "Price assigned to self-produced solar energy. Used to calculate actual charging costs and optimizer decisions.",
+        "titleAdd": "Add Solar Energy Price",
+        "titleEdit": "Edit Solar Energy Price"
+      },
       "generic": "Generic integrations",
       "grid": {
         "description": "Energy price for grid import. For calculating actual charging costs and price-optimized charging of vehicles, heating devices, or grid charging your home battery.",
@@ -1130,6 +1136,7 @@
         "co2": "Add CO₂ forecast",
         "feedIn": "Add grid export tariff",
         "grid": "Add grid import tariff",
+        "solarPrice": "Add solar energy price",
         "planner": "Add planner forecast",
         "solar": "Add solar forecast",
         "temperature": "Add temperature forecast"
@@ -1159,6 +1166,7 @@
         "co2": "CO₂ Intensity",
         "feedIn": "Grid Export Price",
         "grid": "Grid Import Price",
+        "solarPrice": "Solar Energy Price",
         "planner": "Planner",
         "solar": "Solar",
         "temperature": "Temperature Forecast"

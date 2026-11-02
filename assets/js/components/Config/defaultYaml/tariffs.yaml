@@ -8,6 +8,10 @@
 #  type: fixed
 #  price: 0.08 # EUR/kWh
 
+#solarPrice: # price for solar energy used at home
+#  type: fixed
+#  price: 0.10 # EUR/kWh
+
 #co2: # carbon intensity forecast
 #  type: template
 #  template: grünstromindex

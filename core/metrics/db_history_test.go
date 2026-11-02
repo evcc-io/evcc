@@ -218,8 +218,8 @@ func TestQueryEnergyGridCost(t *testing.T) {
 	require.NoError(t, persist(grid, slot(1), 3, 0, nil, false))
 	require.NoError(t, persist(grid, slot(2), 1, 0, nil, false))
 	require.NoError(t, persist(pv, slot(0), 5, 0, nil, false))
-	require.NoError(t, PersistTariffs(slot(0), new(0.2), new(0.1), nil, nil))
-	require.NoError(t, PersistTariffs(slot(1), new(0.4), nil, nil, nil))
+	require.NoError(t, PersistTariffs(slot(0), new(0.2), new(0.1), nil, nil, nil))
+	require.NoError(t, PersistTariffs(slot(1), new(0.4), nil, nil, nil, nil))
 
 	res, err := QueryEnergy(base.Add(-time.Hour), base.Add(time.Hour), "hour", false)
 	require.NoError(t, err)
