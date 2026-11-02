@@ -23,6 +23,12 @@ func SurplusFlexible(lp API) bool {
 	return lp.GetMode() == api.ModeSmart && !lp.GetAlwaysCharge().Active()
 }
 
+// PlanGoal is a vehicle plan's soc goal and finish time
+type PlanGoal struct {
+	Time time.Time
+	Soc  int
+}
+
 // API is the external loadpoint API
 type API interface {
 	//
@@ -147,6 +153,8 @@ type API interface {
 	RequestUpdate()
 	// GetPlanGoal returns the plan goal and if the goal is soc based
 	GetPlanGoal() (float64, bool)
+	// GetSocPlanGoals returns the soc goals of all vehicle plans, repeating plans for each occurrence within a week
+	GetSocPlanGoals() []PlanGoal
 	// GetPlanRemainingEnergy returns the energy plan's missing energy in kWh
 	GetPlanRemainingEnergy() float64
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state

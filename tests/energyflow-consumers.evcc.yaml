@@ -14,7 +14,7 @@ meters:
     type: custom
     power:
       source: js
-      script: "1000"
+      script: "900"
   - name: fridge
     type: custom
     power:
@@ -24,7 +24,7 @@ meters:
     type: custom
     power:
       source: js
-      script: "800"
+      script: "450"
   - name: submeter
     type: custom
     power:

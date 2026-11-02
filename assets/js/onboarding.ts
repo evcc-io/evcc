@@ -25,7 +25,9 @@ function current(): OnboardingState {
 // wizard runs until finished or skipped, on fresh installs and when no admin password is set
 export function wizardPending(): boolean {
   if (!auth.configured) return true;
-  return !current().done && !!store.state.setupRequired;
+  const { onboarding, setupRequired } = store.state;
+  // after a restart both arrive in separate messages, don't open on partial state
+  return !!onboarding && !onboarding.done && !!setupRequired;
 }
 
 export function isDismissed(item: OnboardingItem): boolean {

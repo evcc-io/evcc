@@ -482,17 +482,25 @@ const optimizerInterval = 5 * time.Minute
 // optimizerUpdateAsync runs the optimizer unless the last run is younger than
 // the mode's interval. Pass force to run regardless, e.g. when a changed setting
 // should take effect immediately. It is a no-op when the optimizer is not
-// active or a run is already in progress; the running update reflects the
-// change on its next run.
+// active. A forced trigger during a running update re-runs once that update
+// has finished.
 func (site *Site) optimizerUpdateAsync(force bool) {
 	if !sponsor.IsAuthorized() || !optimizerEnabled() {
 		return
 	}
 
+	// store before locking: either we get the lock, or the holder sees the trigger on unlock
+	if force {
+		site.optimizerRerun.Store(true)
+	}
+
 	if !site.optimizerMu.TryLock() {
 		return
 	}
-	defer site.optimizerMu.Unlock()
+	defer site.optimizerUnlock()
+
+	// false if a run that started after the trigger already served it
+	force = site.optimizerRerun.Swap(false)
 
 	interval := tariff.SlotDuration
 	if site.Automatic() {
@@ -812,13 +820,22 @@ func (site *Site) setLastOptimizerSolve(solve *optimizerSolve) {
 	site.lastOptimizerSolve = solve
 }
 
+// optimizerUnlock releases optimizerMu and re-runs for a forced trigger that arrived while it was held
+func (site *Site) optimizerUnlock() {
+	site.optimizerMu.Unlock()
+
+	if site.optimizerRerun.Load() {
+		go site.optimizerUpdateAsync(false)
+	}
+}
+
 // reapplySuggestions re-derives the last solve's suggestions for the slot covering now
 // without a new solve. TryLock so it never overwrites a fresher concurrent solve.
 func (site *Site) reapplySuggestions(now time.Time) {
 	if !site.optimizerMu.TryLock() {
 		return
 	}
-	defer site.optimizerMu.Unlock()
+	defer site.optimizerUnlock()
 
 	site.RLock()
 	last := site.lastOptimizerSolve
@@ -1079,8 +1096,8 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 		bat.SInitial = float32(lp.GetChargedEnergy())    // Wh
 		bat.SMax = max(bat.SInitial, float32(limit*1e3)) // prevent infeasible if limit already exceeded
 	} else {
-		maxSoc := capacity * float64(lp.EffectiveLimitSoc()) * 10 // Wh
-		bat.SInitial = float32(capacity * soc * 10)               // Wh
+		maxSoc := socToWh(capacity, float64(lp.EffectiveLimitSoc()))
+		bat.SInitial = float32(socToWh(capacity, soc))
 		if soc == 0 {
 			// vehicle without soc: estimate stored energy from session charged energy
 			bat.SInitial = float32(lp.GetChargedEnergy() * eta) // Wh
@@ -1173,8 +1190,8 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	bat := optimizer.BatteryConfig{
 		CMax:      batteryPower,
 		DMax:      batteryPower,
-		SCapacity: float32(*b.Capacity * 1e3),         // Wh
-		SInitial:  float32(*b.Capacity * *b.Soc * 10), // Wh
+		SCapacity: float32(*b.Capacity * 1e3), // Wh
+		SInitial:  float32(socToWh(*b.Capacity, *b.Soc)),
 		// PA:       pa,
 	}
 	bat.SMax = max(bat.SInitial, float32(*b.Capacity*1e3)) // Wh, narrowed by soc limits below
@@ -1205,8 +1222,8 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 			maxSoc = 100 // empty/unset maxsoc means no upper limit
 		}
 		// clamp against current soc to prevent infeasible if it is outside the configured limits
-		bat.SMin = min(bat.SInitial, float32(*b.Capacity*minSoc*10)) // Wh
-		bat.SMax = max(bat.SInitial, float32(*b.Capacity*maxSoc*10)) // Wh
+		bat.SMin = min(bat.SInitial, float32(socToWh(*b.Capacity, minSoc)))
+		bat.SMax = max(bat.SInitial, float32(socToWh(*b.Capacity, maxSoc)))
 	}
 
 	detail := batteryDetail{
@@ -1588,8 +1605,10 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	}
 
 	// Convert to Wh
-	if vehicle := lp.GetVehicle(); socBased && vehicle != nil {
-		goal *= vehicle.Capacity() * 10
+	vehicle := lp.GetVehicle()
+	socBased = socBased && vehicle != nil
+	if socBased {
+		goal = socToWh(vehicle.Capacity(), goal)
 	} else {
 		// energy plans count from the energy charged since the plan was set, on top of the current state
 		goal = float64(bat.SInitial) + lp.GetPlanRemainingEnergy()*1e3 // Wh
@@ -1600,14 +1619,38 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 		return
 	}
 
-	slot := planSlot(time.Now(), ts)
+	now := time.Now()
+
+	slot := planSlot(now, ts)
 	if slot >= 0 && slot < minLen {
-		bat.SGoal = make([]float32, minLen)
-		bat.SGoal[slot] = float32(goal)
-		bat.SMax = max(bat.SMax, float32(goal))
+		setPlanGoal(bat, minLen, slot, goal)
 	} else {
 		site.log.DEBUG.Printf("plan beyond forecast range or overrun: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
 	}
+
+	// later plans let the optimizer charge ahead for them instead of replanning once the first goal is reached.
+	// Capped at s_max: the loadpoint only charges beyond its limit for the effective plan.
+	if socBased {
+		for _, g := range lp.GetSocPlanGoals() {
+			if slot := planSlot(now, g.Time); slot >= 0 && slot < minLen {
+				setPlanGoal(bat, minLen, slot, min(socToWh(vehicle.Capacity(), float64(g.Soc)), float64(bat.SMax)))
+			}
+		}
+	}
+}
+
+// setPlanGoal sets the goal (Wh) at slot, keeping a higher goal already set there
+func setPlanGoal(bat *optimizer.BatteryConfig, minLen, slot int, goal float64) {
+	if bat.SGoal == nil {
+		bat.SGoal = make([]float32, minLen)
+	}
+	bat.SGoal[slot] = max(bat.SGoal[slot], float32(goal))
+	bat.SMax = max(bat.SMax, float32(goal))
+}
+
+// socToWh converts a soc in % of a capacity in kWh to Wh
+func socToWh(capacity, soc float64) float64 {
+	return capacity * soc * 10
 }
 
 // planSlot returns the first slot whose end is at or after ts, since s_goal[i] models the SoC at the end of slot i.
