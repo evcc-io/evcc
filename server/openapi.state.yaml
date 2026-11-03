@@ -124,6 +124,7 @@ components:
           type: array
           items:
             type: number
+            nullable: true
         gridPeakBaseline:
           description: Floor in W of the grid import peak target, 0 = disabled.
           type: number

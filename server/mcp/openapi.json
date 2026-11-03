@@ -5922,7 +5922,8 @@
             "description": "Highest 15-min average grid import per day of the current month in W, starting with the 1st.",
             "type": "array",
             "items": {
-              "type": "number"
+              "type": "number",
+              "nullable": true
             }
           },
           "gridPeakBaseline": {

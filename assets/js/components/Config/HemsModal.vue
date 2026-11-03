@@ -246,12 +246,12 @@ export default defineComponent({
 		peakStatusClass(): string {
 			return this.peakFirstExceeded ? "text-warning" : "text-primary";
 		},
-		peakDayPowers(): number[] {
+		peakDayPowers(): (number | null)[] {
 			return store.state?.gridPeakDays || [];
 		},
 		// day of month, 0 = not exceeded
 		peakFirstExceeded(): number {
-			return this.peakDayPowers.findIndex((power) => power > this.serverPeakLimit) + 1;
+			return this.peakDayPowers.findIndex((power) => (power ?? 0) > this.serverPeakLimit) + 1;
 		},
 		peakDays(): Day[] {
 			const now = new Date();
@@ -259,15 +259,16 @@ export default defineComponent({
 			return Array.from({ length: count }, (_, i): Day => {
 				const day = i + 1;
 				const date = this.monthDate(day);
-				if (day > now.getDate()) return { date, state: "future" };
-				const power = this.peakDayPowers[i] || 0;
-				const value = power
-					? this.$t("config.hems.peakLimitDayMax", {
-							power: this.fmtW(power, this.POWER_UNIT.KW),
-						})
-					: undefined;
+				if (day > now.getDate()) return { date, state: "none" };
+				const to = this.energyDay(day);
+				const power = this.peakDayPowers[i];
+				// no complete slot recorded, unknown rather than below the limit
+				if (power == null) return { date, state: "none", to };
+				const value = this.$t("config.hems.peakLimitDayMax", {
+					power: this.fmtW(power, this.POWER_UNIT.KW),
+				});
 				const state = power > this.serverPeakLimit ? "warning" : "ok";
-				return { date, state, value, to: this.energyDay(day) };
+				return { date, state, value, to };
 			});
 		},
 		peakFirstExceededDate(): string {

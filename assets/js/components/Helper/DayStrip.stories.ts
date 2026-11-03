@@ -10,11 +10,11 @@ const month = (today: number, warning: number[] = []): Day[] =>
   Array.from({ length: 30 }, (_, i) => {
     const day = i + 1;
     const date = new Date(2026, 10, day);
-    const state: DayState = day > today ? "future" : warning.includes(day) ? "warning" : "ok";
+    const state: DayState = day > today ? "none" : warning.includes(day) ? "warning" : "ok";
     return {
       date,
       state,
-      value: state === "future" ? undefined : state === "warning" ? "max 23.4 kW" : "max 8.2 kW",
+      value: state === "none" ? undefined : state === "warning" ? "max 23.4 kW" : "max 8.2 kW",
       to: "/",
     };
   });

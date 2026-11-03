@@ -11,7 +11,7 @@
 				class="day"
 				:class="{
 					hovered: hovered === index,
-					faded: hovered === null ? day.state === 'future' : hovered !== index,
+					faded: hovered === null ? day.state === 'none' : hovered !== index,
 				}"
 				@mouseenter="hovered = index"
 				@focus="hovered = index"
@@ -38,7 +38,7 @@ import { defineComponent, type PropType } from "vue";
 import type { RouteLocationRaw } from "vue-router";
 import formatter from "@/mixins/formatter";
 
-export type DayState = "ok" | "warning" | "future";
+export type DayState = "ok" | "warning" | "none";
 
 export interface Day {
 	date: Date;
@@ -62,8 +62,8 @@ export default defineComponent({
 			return this.hovered === null ? undefined : this.days[this.hovered];
 		},
 		captionClass(): string {
-			return { ok: "text-primary", warning: "text-warning", future: "" }[
-				this.hoveredDay?.state ?? "future"
+			return { ok: "text-primary", warning: "text-warning", none: "" }[
+				this.hoveredDay?.state ?? "none"
 			];
 		},
 	},
@@ -108,7 +108,7 @@ export default defineComponent({
 .box--warning {
 	background: var(--bs-warning);
 }
-.box--future {
+.box--none {
 	background: var(--bs-gray-light);
 }
 </style>
