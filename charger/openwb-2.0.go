@@ -15,13 +15,15 @@ import (
 // OpenWB20 charger implementation
 type OpenWB20 struct {
 	implement.Caps
-	conn         *modbus.Connection
-	enabled      bool
-	curr         uint16
-	base         uint16
-	laststatus   api.ChargeStatus
-	lastidentify string
-	lastidtime   time.Time
+	log              *util.Logger
+	conn             *modbus.Connection
+	enabled          bool
+	curr             uint16
+	base             uint16
+	laststatus       api.ChargeStatus
+	rfidResetPending bool
+	lastidentify     string
+	lastidtime       time.Time
 }
 
 const (
@@ -96,6 +98,7 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 
 	wb := &OpenWB20{
 		Caps:         implement.New(),
+		log:          log,
 		conn:         conn,
 		curr:         6 * 100,
 		base:         (connector - 1) * 100,
@@ -107,31 +110,41 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 	return wb, nil
 }
 
-func (wb *OpenWB20) HandleRfidReset() {
+func (wb *OpenWB20) resetRfid() error {
+	if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err != nil {
+		wb.rfidResetPending = true
+		return err
+	}
+
+	wb.rfidResetPending = false
+	wb.lastidentify = ""
+	wb.lastidtime = time.Unix(0, 0)
+	return nil
+}
+
+func (wb *OpenWB20) HandleRfidReset() error {
 	if wb.laststatus != api.StatusA {
 		// Reset RFID on disconnect
-		if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err == nil {
-			wb.lastidentify = ""
-			wb.lastidtime = time.Unix(0, 0)
-		}
-		return
+		return wb.resetRfid()
 	}
-	new_id, _ := wb.identify()
+	new_id, err := wb.identify()
+	if err != nil {
+		return err
+	}
 	if new_id == "" {
 		wb.lastidentify = ""
 		wb.lastidtime = time.Unix(0, 0)
-		return
+		return nil
 	}
 	if wb.lastidentify != new_id {
 		wb.lastidentify = new_id
 		wb.lastidtime = time.Now()
-		return
+		return nil
 	}
 	if wb.lastidtime != time.Unix(0, 0) && time.Since(wb.lastidtime) > 2*time.Minute {
-		wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1) // Reset RFID after timeout
-		wb.lastidentify = ""
-		wb.lastidtime = time.Unix(0, 0)
+		return wb.resetRfid()
 	}
+	return nil
 }
 
 // Status implements the api.Charger interface
@@ -152,9 +165,9 @@ func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
 		wb.laststatus = api.StatusB
 		return api.StatusB, err
 	}
-	wb.HandleRfidReset()
+	err = wb.HandleRfidReset()
 	wb.laststatus = api.StatusA
-	return api.StatusA, nil
+	return api.StatusA, err
 }
 
 // Enabled implements the api.Charger interface
@@ -273,6 +286,13 @@ func (wb *OpenWB20) WakeUp() error {
 
 // Identify implements the api.Identifier interface
 func (wb *OpenWB20) identify() (string, error) {
+	if wb.rfidResetPending {
+		if err := wb.resetRfid(); err != nil {
+			wb.log.WARN.Printf("RFID reset is still pending, cannot identify vehicle: %v", err)
+			return "", err
+		}
+	}
+
 	b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegRfid, 10)
 	if err != nil {
 		return wb.lastidentify, err
