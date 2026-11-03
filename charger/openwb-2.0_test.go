@@ -16,6 +16,7 @@ import (
 
 type openWB20Handler struct {
 	mbserver.RequestHandler
+	mu           sync.Mutex
 	failReset    bool
 	blankRFID    bool
 	failRFIDRead bool
@@ -25,6 +26,9 @@ type openWB20Handler struct {
 }
 
 func (h *openWB20Handler) HandleInputRegisters(req *mbserver.InputRegistersRequest) ([]uint16, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
 	res := make([]uint16, req.Quantity)
 	if h.failRFIDRead && req.Addr <= openwbRegRfid && openwbRegRfid < req.Addr+req.Quantity {
 		return nil, mbserver.ErrIllegalDataAddress
@@ -44,6 +48,9 @@ func (h *openWB20Handler) HandleInputRegisters(req *mbserver.InputRegistersReque
 }
 
 func (h *openWB20Handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) ([]uint16, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
 	if req.IsWrite && req.Addr == openwbRegResetRfid && h.failReset {
 		return nil, mbserver.ErrIllegalDataValue
 	}
@@ -52,6 +59,22 @@ func (h *openWB20Handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersR
 		h.resetWrites = append(h.resetWrites, [2]uint16{req.Addr, req.Args[0]})
 	}
 	return req.Args, nil
+}
+
+func (h *openWB20Handler) setState(failReset, blankRFID, failRFIDRead bool) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	h.failReset = failReset
+	h.blankRFID = blankRFID
+	h.failRFIDRead = failRFIDRead
+}
+
+func (h *openWB20Handler) counts() (int, int, [][2]uint16) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	return h.rfidReads, h.rfidResets, append([][2]uint16(nil), h.resetWrites...)
 }
 
 func TestOpenWB20PendingRfidReset(t *testing.T) {
@@ -72,23 +95,26 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 	require.Equal(t, api.StatusA, status)
 	require.Equal(t, api.StatusA, wb.laststatus)
 	require.True(t, wb.rfidResetPending)
-	require.Zero(t, handler.rfidReads)
+	reads, _, _ := handler.counts()
+	require.Zero(t, reads)
 
 	identity, err := wb.identify()
 	require.Error(t, err)
 	require.ErrorContains(t, err, "reset RFID")
 	require.Empty(t, identity)
-	require.Zero(t, handler.rfidReads)
+	reads, _, _ = handler.counts()
+	require.Zero(t, reads)
 
-	handler.failReset = false
+	handler.setState(false, false, false)
 	identity, err = wb.identify()
 	require.NoError(t, err)
 	require.Equal(t, []string{"tag"}, identity)
 	require.False(t, wb.rfidResetPending)
-	require.Equal(t, 1, handler.rfidReads)
-	require.Equal(t, [][2]uint16{{openwbRegResetRfid, 1}}, handler.resetWrites)
+	reads, _, writes := handler.counts()
+	require.Equal(t, 1, reads)
+	require.Equal(t, [][2]uint16{{openwbRegResetRfid, 1}}, writes)
 
-	handler.blankRFID = true
+	handler.setState(false, true, false)
 	wb.laststatus = api.StatusA
 	wb.lastidentify = []string{"tag"}
 	wb.lastidtime = time.Now().Add(-3 * time.Minute)
@@ -100,9 +126,10 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 	require.NoError(t, wb.handleRfidReset())
 	require.Nil(t, wb.lastidentify)
 	require.Equal(t, time.Unix(0, 0), wb.lastidtime)
-	require.Equal(t, 1, handler.rfidResets)
+	_, resets, _ := handler.counts()
+	require.Equal(t, 1, resets)
 
-	handler.failReset = true
+	handler.setState(true, false, false)
 	wb.rfidResetPending = true
 	var wg sync.WaitGroup
 	for range 3 {
@@ -118,8 +145,7 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 	}
 	wg.Wait()
 
-	handler.failReset = false
-	handler.failRFIDRead = true
+	handler.setState(false, false, true)
 	_, err = wb.identify()
 	require.ErrorContains(t, err, "read RFID")
 }
