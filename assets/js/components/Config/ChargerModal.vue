@@ -112,7 +112,6 @@ import {
 	getOcpp20UrlWithStationId,
 } from "@/utils/ocpp";
 
-
 const initialValues = {
 	type: ConfigType.Template,
 	icon: undefined,
