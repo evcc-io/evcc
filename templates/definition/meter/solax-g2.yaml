@@ -28,7 +28,7 @@ render: |
     register:
       address: 1083 # 0x43B Grid_Power
       type: input
-      decode: int32
+      decode: int32s
     scale: -1
   energy:
     source: modbus
@@ -36,7 +36,7 @@ render: |
     register:
       address: 1087 # 0x43F Consume Energy
       type: input
-      decode: uint32
+      decode: uint32s
     scale: 0.01
   {{- end }}
   {{- if eq .usage "pv" }}
@@ -54,7 +54,7 @@ render: |
     register:
       address: 1059 # 0x423 yield_total
       type: input
-      decode: uint32
+      decode: uint32s
     scale: 0.1
   currents:
     - source: modbus

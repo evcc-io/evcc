@@ -711,8 +711,8 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 }
 
 // triggerOptimizer re-runs the optimizer when the loadpoint's profile changed.
-// A burst of setters, e.g. on disconnect, is coalesced by optimizerUpdateAsync's
-// TryLock- only the first call gets through while a run is in flight.
+// A burst of setters, e.g. on disconnect, is coalesced by optimizerUpdateAsync:
+// triggers during a run collapse into a single re-run afterwards.
 func (lp *Loadpoint) triggerOptimizer() {
 	if lp.site != nil {
 		lp.site.Optimize()
@@ -1568,6 +1568,22 @@ func (lp *Loadpoint) fastChargingPhases() (bool, error) {
 
 	// use enabled phases- scalePhases compares against the same value
 	phases := lp.GetPhases()
+
+	// unknown phases (charger without api.PhaseGetter after restart): derive from measured phases while
+	// charging, more than 1p measured implies 3p enabled. Without measurement establish target immediately.
+	if phases == 0 {
+		switch measured := lp.GetMeasuredPhases(); {
+		case measured == 1:
+			phases = 1
+		case measured > 1:
+			phases = 3
+		default:
+			if err := lp.scalePhases(targetPhases); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+				return false, err
+			}
+			return false, nil
+		}
+	}
 
 	// scale down: immediate
 	if targetPhases == 1 && phases == 3 {

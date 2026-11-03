@@ -382,6 +382,7 @@
       "optional": "opcjonalnie"
     },
     "general": {
+      "add": "Dodaj",
       "applyAndClose": "Zastosuj i zamknij",
       "authPerform": "Połącz się z {provider}",
       "authPerformHint": "Otworzy się w nowej karcie. Wróć tutaj, aby kontynuować.",
@@ -393,6 +394,7 @@
       "confirmDisable": "Wyłączyć to urządzenie? Będzie ignorowane po następnym ponownym uruchomieniu.",
       "confirmEnable": "Ponownie włączyć to urządzenie?",
       "confirmSave": "Są niezachowane zmiany. Zapisać teraz?",
+      "continue": "Dalej",
       "copied": "Skopiowano!",
       "copy": "Kopia",
       "customHelp": "Utwórz urządzenie zdefiniowane przez użytkownika korzystając z systemu wtyczek evcc.",
@@ -567,16 +569,24 @@
       "priorityLabel": "Priorytet",
       "save": "Zapisz",
       "solarShareReset": "Usuń progi",
+      "solarTitle": "Zachowanie przy nadwyżce energii słonecznej",
       "temperatureRangeHelp": "Zakres wyświetlania paska temperatury. Nie wpływa na sterowanie.",
       "temperatureRangeTitle": "Zakres temperatur",
+      "thresholdDisableDelayHelp": "Zatrzymuje, gdy przez {delay} brakuje wystarczającej nadwyżki.",
       "thresholdDisableDelayLabel": "Wyłącz opóźnienie",
       "thresholdDisableHelpInvalid": "Proszę użyć wartości dodatniej.",
       "thresholdDisableHelpPositive": "Zatrzymaj, gdy z sieci zostanie zużyte więcej niż {power} przez {delay}.",
       "thresholdDisableLabel": "Wyłącz zasilanie z sieci",
+      "thresholdEnableDelayHelp": "Uruchamia, gdy przez {delay} jest wystarczająca nadwyżka.",
       "thresholdEnableDelayLabel": "Włącz opóźnienie",
       "thresholdEnableHelpInvalid": "Proszę użyć wartości ujemnej.",
       "thresholdEnableHelpNegative": "Rozpocznij, gdy nadwyżka {surplus} będzie dostępna przez {delay}.",
       "thresholdEnableLabel": "Pozwól na zasilanie z sieci",
+      "thresholdsNote": {
+        "charging": "Aby kontrolować pobór z sieci podczas ładowania słonecznego, użyj suwaka {slider} w ustawieniach punktu ładowania na stronie {page}. Wartości tutaj ustawiaj tylko w szczególnych przypadkach.",
+        "heating": "Aby kontrolować pobór z sieci podczas ogrzewania słonecznego, użyj suwaka {slider} w ustawieniach podgrzewacza na stronie {page}. Wartości tutaj ustawiaj tylko w szczególnych przypadkach."
+      },
+      "thresholdsSliderDisabled": "Suwak {slider} jest obecnie wyłączony, ponieważ wartości są ustawione tutaj.",
       "titleAdd": {
         "charging": "Dodaj punkt ładowania",
         "heating": "Dodaj urządzenie grzewcze",
@@ -706,10 +716,18 @@
         "grid": "Dodaj licznik sieciowy",
         "pv": "Dodaj licznik energii słonecznej"
       },
+      "reuseApply": "Użyj jego ustawień.",
+      "reuseHint": "{device} może być również używane jako „{target}”.",
       "save": "Zapisz",
       "specific": "Szczególne integracje",
       "template": "Producent",
       "titleChoice": "Co chcesz dodać?",
+      "titleExample": {
+        "aux": "Inteligentny podgrzewacz wody itp.",
+        "battery": "Piwnica, garaż, stacja zasilania itp.",
+        "consumer": "Zmywarka, pralka, pompa basenowa itp.",
+        "pv": "Dach południowy, wiata garażowa itp."
+      },
       "titleLabel": "Tytuł",
       "usage": {
         "aux": "Samoregulujący się konsument",
@@ -967,6 +985,15 @@
         "example": "Twoja cena ładowania wyniosła {price}. Zaoszczędzono {amount}.",
         "label": "Waluta"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V bez przewodu neutralnego (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V z przewodem neutralnym (3P4W)",
+        "description": {
+          "3p3w": "Sieć bez przewodu neutralnego. Spotykana w Norwegii i części Belgii.",
+          "3p4w": "Najczęstsza sieć z przewodem neutralnym."
+        },
+        "label": "Przyłącze sieciowe"
+      },
       "siteTitle": {
         "description": "Wyświetlany na ekranie głównym i w karcie przeglądarki.",
         "label": "Tytuł"
@@ -980,6 +1007,18 @@
       "descriptionToken": "Sponsorzy mogą znaleźć swój token na stronie {url}. Na początek oferujemy {trialToken}.",
       "enterYourToken": "Wprowadź swój token",
       "error": "Token sponsora jest nieprawidłowy.",
+      "inline": {
+        "applied": "Token zastosowany. Dziękujemy za wsparcie projektu!",
+        "apply": "Zastosuj",
+        "becomeSponsor": "zostań sponsorem",
+        "device": "To urządzenie jest dostępne tylko dla sponsorów.",
+        "feature": "Ta funkcja jest dostępna tylko dla sponsorów.",
+        "learn": "Dowiedz się więcej i {becomeSponsor}.",
+        "placeholder": "Wklej token",
+        "title": "Wymagany token sponsora",
+        "trial": "Zacznij szybko.",
+        "trialLink": "Pobierz token próbny"
+      },
       "invalid": "nieważny",
       "labelToken": "Token sponsora",
       "title": "Sponsorowanie",
@@ -1074,7 +1113,8 @@
       "solar": {
         "description": "Prognoza produkcji energii słonecznej dla Twojego systemu fotowoltaicznego. Wyświetlana w interfejsie i wykorzystywana w przyszłych algorytmach optymalizacji.",
         "titleAdd": "Dodawanie prognozy nasłonecznienia",
-        "titleEdit": "Edytowanie prognozy nasłonecznienia"
+        "titleEdit": "Edytowanie prognozy nasłonecznienia",
+        "titleExample": "Dach południowy, wiata garażowa itp."
       },
       "temperature": {
         "description": "Prognoza temperatury zewnętrznej dla Twojej lokalizacji. Wyświetlana w interfejsie i używana do przewidywania zapotrzebowania na ciepło.",
@@ -1702,6 +1742,11 @@
       "login": "zaloguj się",
       "logout": "wyloguj"
     },
+    "setup": {
+      "description": "Dodaj swoje urządzenia, aby zobaczyć przepływ energii i zacząć ładować energią słoneczną.",
+      "start": "Rozpocznij",
+      "title": "Witamy!"
+    },
     "startConfiguration": "Zacznijmy konfigurację",
     "targetCharge": {
       "activate": "Aktywować",
@@ -1827,6 +1872,75 @@
     "restartNeeded": "Wymagane do zastosowania zmian.",
     "restarting": "Serwer będzie ponownie dostępny za chwilę.",
     "starting": "Uruchamianie serwera..."
+  },
+  "onboarding": {
+    "another": "Dodaj kolejny",
+    "back": "Wstecz",
+    "battery": {
+      "add": "Dodaj domowy magazyn energii",
+      "description": "Dodaj magazyn energii, aby ładowanie go uwzględniało i aby można było zobaczyć, co robi.",
+      "none": "Brak domowego magazynu energii",
+      "title": "Czy masz domowy magazyn energii?"
+    },
+    "checklist": {
+      "dismiss": "Zamknij",
+      "legacyTariffs": "Używana jest starsza konfiguracja taryf.",
+      "progress": "{done} z {total} gotowe",
+      "title": "Dokończ konfigurację"
+    },
+    "control": {
+      "description": "Zacznij od pierwszego. Kolejne możesz dodać później na stronie konfiguracji.",
+      "none": "Jeszcze nic",
+      "title": "Czym chcesz sterować?"
+    },
+    "done": {
+      "close": "Do konfiguracji",
+      "description": "Konfiguracja zostanie zastosowana po ponownym uruchomieniu. Potem poznaj funkcje. Pojazdy, taryfy i więcej możesz dodać w dowolnym momencie.",
+      "title": "Wszystko gotowe"
+    },
+    "grid": {
+      "add": "Dodaj licznik sieciowy",
+      "confirm": "Licznik sieciowy jest podstawą ładowania z nadwyżek i statystyk energii. Zalecamy jego dodanie.",
+      "confirmNone": "Kontynuuj bez",
+      "description": "Mierzy pobór z sieci i eksport do sieci w punkcie przyłączenia. Zapewnia precyzyjne ładowanie z nadwyżek.",
+      "none": "Brak licznika sieciowego",
+      "title": "Czy masz licznik sieciowy?"
+    },
+    "item": {
+      "battery": "Domowy magazyn energii",
+      "co2": "Prognoza CO₂",
+      "consumer": "Odbiornik",
+      "grid": "Licznik sieciowy",
+      "gridExport": "Taryfa za eksport do sieci",
+      "gridImport": "Taryfa za pobór z sieci",
+      "heater": "Podgrzewacz",
+      "loadpoint": "Punkt ładowania",
+      "pv": "System PV",
+      "solar": "Prognoza nasłonecznienia"
+    },
+    "password": {
+      "description": "Chroni ustawienia konfiguracji przed nieautoryzowanymi zmianami. Zapamiętaj hasło, nie ma łatwego sposobu na jego zresetowanie.",
+      "disabled": "Uwierzytelnianie jest wyłączone ({flag}). Każdy z dostępem do sieci może zmienić konfigurację, odczytać zapisane dane uwierzytelniające i uruchamiać skrypty. Zabezpiecz dostęp w inny sposób.",
+      "title": "Ustaw hasło administratora"
+    },
+    "pv": {
+      "add": "Dodaj system PV",
+      "description": "Mierzy produkcję energii słonecznej. Potrzebne do udziału energii słonecznej i ładowania z nadwyżek.",
+      "none": "Brak systemu PV",
+      "title": "Czy masz system PV?"
+    },
+    "site": {
+      "currencyHint": "np. {price}, {amount}",
+      "defaultTitle": "Dom",
+      "description": "Kilka podstaw o Twoim domu. Możesz je zmienić w dowolnym momencie.",
+      "title": "Twoja instalacja"
+    },
+    "skip": "Pomiń",
+    "step": "Krok {step} z {total}",
+    "welcome": {
+      "description": "Skonfiguruj najważniejsze elementy swojej domowej instalacji, aby zacząć inteligentne ładowanie.",
+      "start": "Zaczynamy"
+    }
   },
   "passwordModal": {
     "description": "Ustaw hasło, aby chronić ustawienia konfiguracji. Korzystanie z ekranu głównego jest nadal możliwe bez logowania.",

@@ -1159,3 +1159,27 @@ func TestCircuitMaxImport(t *testing.T) {
 		assert.Equal(t, tc.expected, circuitMaxImport(c), "power %.0f current %.0f", tc.power, tc.current)
 	}
 }
+
+// TestOptimizerRerunAfterBusy verifies that a forced trigger arriving during a run is not dropped
+func TestOptimizerRerunAfterBusy(t *testing.T) {
+	enableAutomatic(t)
+	site := &Site{log: util.NewLogger("foo")}
+
+	// run in progress: forced trigger is remembered, regular one is not
+	site.optimizerMu.Lock()
+	site.optimizerUpdateAsync(false)
+	assert.False(t, site.optimizerRerun.Load())
+	site.optimizerUpdateAsync(true)
+	assert.True(t, site.optimizerRerun.Load())
+
+	// unlock re-runs on its own, despite the closed interval gate
+	last := time.Now().Add(-time.Second)
+	site.optimizerUpdated = last
+	site.optimizerUnlock()
+	assert.Eventually(t, func() bool { return !site.optimizerRerun.Load() }, time.Second, time.Millisecond)
+
+	// the re-run holds the lock from before consuming the trigger until done
+	site.optimizerMu.Lock()
+	defer site.optimizerMu.Unlock()
+	assert.True(t, site.optimizerUpdated.After(last), "pending trigger must bypass interval gate")
+}

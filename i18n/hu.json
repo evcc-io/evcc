@@ -373,6 +373,7 @@
       "optional": "opcionális"
     },
     "general": {
+      "add": "Új",
       "applyAndClose": "Alkalmaz & bezárás",
       "authPerform": "Csatlakozzon a {provider}hez",
       "authPerformHint": "Új lapon nyílik meg. Térjen vissza ide a folytatáshoz.",
@@ -384,6 +385,7 @@
       "confirmDisable": "Letiltod ezt az eszközt? A következő újraindítás után figyelmen kívül lesz hagyva.",
       "confirmEnable": "Újra engedélyezed ezt az eszközt?",
       "confirmSave": "Vannak nem mentett módosítások. Mented most?",
+      "continue": "Tovább",
       "copied": "Másolva!",
       "copy": "Másolás",
       "customHelp": "Hozz létre egy felhasználó által definiált eszközt az evcc bővítményrendszerével.",
@@ -558,16 +560,24 @@
       "priorityLabel": "Prioritás",
       "save": "Mentés",
       "solarShareReset": "Küszöbértékek eltávolítása",
+      "solarTitle": "Napelemes többlet viselkedése",
       "temperatureRangeHelp": "A hőmérsékletsáv megjelenítési tartománya. A vezérlést nem befolyásolja.",
       "temperatureRangeTitle": "Hőmérséklet-tartomány",
+      "thresholdDisableDelayHelp": "Leáll, ha {delay} ideig nincs elég többlet.",
       "thresholdDisableDelayLabel": "Késleletetés letiltása",
       "thresholdDisableHelpInvalid": "Kérlek használj pozitív értéket.",
       "thresholdDisableHelpPositive": "Megállítás, amikor több mint {power} lett a hálózatból vételezve {delay} ideig.",
       "thresholdDisableLabel": "Hálózati áramellátás letiltása",
+      "thresholdEnableDelayHelp": "Elindul, ha {delay} ideig elég a többlet.",
       "thresholdEnableDelayLabel": "Késleltetés engedélyezése",
       "thresholdEnableHelpInvalid": "Kérlek használj negatív értéket.",
       "thresholdEnableHelpNegative": "Indulás, amikor {surplus} többlet áll rendelkezésre {delay} esetén.",
       "thresholdEnableLabel": "Hálózati áramellátás engedélyezése",
+      "thresholdsNote": {
+        "charging": "A hálózat használatának szabályozásához napelemes töltés közben használd a(z) {slider} csúszkát a töltőpont beállításaiban a(z) {page} oldalon. Itt csak különleges esetekben állíts be értékeket.",
+        "heating": "A hálózat használatának szabályozásához napelemes fűtés közben használd a(z) {slider} csúszkát a fűtőberendezés beállításaiban a(z) {page} oldalon. Itt csak különleges esetekben állíts be értékeket."
+      },
+      "thresholdsSliderDisabled": "A(z) {slider} csúszka jelenleg le van tiltva, mert itt értékek vannak megadva.",
       "titleAdd": {
         "charging": "Töltőpont hozzáadása",
         "heating": "Fűtőberendezés hozzáadása",
@@ -697,10 +707,18 @@
         "grid": "Új hálózati mérő",
         "pv": "Napelem mérő hozzáadása"
       },
+      "reuseApply": "Beállításainak használata.",
+      "reuseHint": "A(z) {device} \"{target}\" célra is használható.",
       "save": "Mentés",
       "specific": "Specifikus integrációk",
       "template": "Gyártó",
       "titleChoice": "Mit szeretnél hozzáadni?",
+      "titleExample": {
+        "aux": "Okos vízmelegítő stb.",
+        "battery": "Pince, garázs, erőmű stb.",
+        "consumer": "Mosogatógép, mosógép, medencepumpa stb.",
+        "pv": "Déli tető, autóbeálló stb."
+      },
       "titleLabel": "Cím",
       "usage": {
         "aux": "Önszabályozó fogyasztó",
@@ -958,6 +976,15 @@
         "example": "A töltési árad {price} volt. {amount} összeget takarítottál meg.",
         "label": "Valuta"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V nullavezető nélkül (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V nullavezetővel (3P4W)",
+        "description": {
+          "3p3w": "Nullavezető nélküli hálózat. Norvégiában és Belgium egyes részein gyakori.",
+          "3p4w": "A legelterjedtebb hálózat nullavezetővel."
+        },
+        "label": "Hálózati csatlakozás"
+      },
       "siteTitle": {
         "description": "A főképernyőn és a böngészőfülön jelenik meg.",
         "label": "Megnevezés"
@@ -971,6 +998,18 @@
       "descriptionToken": "A tokent innen kapja: {url}. A teszteléshez {trialToken} tokent is kínálunk.",
       "enterYourToken": "Add meg a tokenedet",
       "error": "A szponzor token nem érvényes.",
+      "inline": {
+        "applied": "Token alkalmazva. Köszönjük, hogy támogatod a projektet!",
+        "apply": "Alkalmaz",
+        "becomeSponsor": "légy szponzor",
+        "device": "Ez az eszköz csak szponzoroknak érhető el.",
+        "feature": "Ez a funkció csak szponzoroknak érhető el.",
+        "learn": "Tudj meg többet, és {becomeSponsor}.",
+        "placeholder": "Token beillesztése",
+        "title": "Szponzor token szükséges",
+        "trial": "Kezdj el gyorsan.",
+        "trialLink": "Próba token igénylése"
+      },
       "invalid": "érvénytelen",
       "labelToken": "Szponzor token",
       "title": "Szponzoráció",
@@ -1065,7 +1104,8 @@
       "solar": {
         "description": "Napelemes termelési előrejelzés a PV rendszeredhez. Megjelenik a felületen, és a jövőben optimalizálási algoritmusokhoz is felhasználásra kerül.",
         "titleAdd": "Napelem előrejelzés hozzáadása",
-        "titleEdit": "Napelem előrejelzés szerkesztése"
+        "titleEdit": "Napelem előrejelzés szerkesztése",
+        "titleExample": "Déli tető, autóbeálló stb."
       },
       "temperature": {
         "description": "Kültéri hőmérséklet-előrejelzés a helyszínedre. Megjelenik a felületen, és a fűtési igény előrejelzésére szolgál.",
@@ -1691,6 +1731,11 @@
       "login": "bejelentkezés",
       "logout": "kijelentkezés"
     },
+    "setup": {
+      "description": "Add hozzá az eszközeidet az energiaáramlás megtekintéséhez, és kezdj el napenergiával tölteni.",
+      "start": "Indítás",
+      "title": "Üdv!"
+    },
     "startConfiguration": "Konfiguráció elkezdése",
     "targetCharge": {
       "activate": "Aktiválás",
@@ -1816,6 +1861,76 @@
     "restartNeeded": "A módosítások végrehajtásához szükséges.",
     "restarting": "A szerver egy pillanat múlva elérhető lesz.",
     "starting": "Szerver indítása..."
+  },
+  "onboarding": {
+    "another": "Újabb hozzáadása",
+    "back": "Vissza",
+    "battery": {
+      "add": "Otthoni akkumulátor hozzáadása",
+      "description": "Add hozzá az akkumulátort, hogy a töltés figyelembe vegye, és lásd, mit csinál.",
+      "none": "Nincs otthoni akkumulátor",
+      "title": "Van otthoni akkumulátorod?"
+    },
+    "checklist": {
+      "dismiss": "Bezárás",
+      "legacyTariffs": "Régi tarifakonfiguráció van használatban.",
+      "progress": "{done} / {total} kész",
+      "title": "Fejezd be a beállítást"
+    },
+    "control": {
+      "description": "Kezdd az elsővel. Továbbiak később hozzáadhatók a konfigurációs oldalon.",
+      "none": "Még semmi",
+      "title": "Mit szeretnél vezérelni?"
+    },
+    "done": {
+      "close": "Konfigurációhoz",
+      "description": "Az újraindítás érvényesíti a konfigurációt. Utána fedezd fel a funkciókat. Járművek, tarifák és továbbiak bármikor hozzáadhatók.",
+      "restart": "Újraindítás",
+      "title": "Készen állsz"
+    },
+    "grid": {
+      "add": "Hálózati fogyasztásmérő hozzáadása",
+      "confirm": "A hálózati fogyasztásmérő a többletes töltés és az energiastatisztikák alapja. Ajánlott hozzáadni.",
+      "confirmNone": "Folytatás nélküle",
+      "description": "Méri a hálózati betáplálást és vételezést a csatlakozási ponton. Pontossá teszi a többletes töltést.",
+      "none": "Nincs hálózati fogyasztásmérő",
+      "title": "Van hálózati fogyasztásmérőd?"
+    },
+    "item": {
+      "battery": "Otthoni akkumulátor",
+      "co2": "CO₂ előrejelzés",
+      "consumer": "Fogyasztó",
+      "grid": "Hálózati fogyasztásmérő",
+      "gridExport": "Hálózati betáplálási tarifa",
+      "gridImport": "Hálózati vételezési tarifa",
+      "heater": "Fűtőberendezés",
+      "loadpoint": "Töltőpont",
+      "pv": "Napelemes rendszer",
+      "solar": "Napsütés előrejelzés"
+    },
+    "password": {
+      "description": "Megvédi a konfigurációs beállításokat az illetéktelen módosításoktól. Jegyezd meg, mert nincs egyszerű módja a visszaállításnak.",
+      "disabled": "A hitelesítés le van tiltva ({flag}). Bárki, aki hozzáfér a hálózathoz, módosíthatja a konfigurációt, kiolvashatja a tárolt hitelesítő adatokat és szkripteket futtathat. Védd a hozzáférést más módon.",
+      "title": "Adminisztrátori jelszó beállítása"
+    },
+    "pv": {
+      "add": "Napelemes rendszer hozzáadása",
+      "description": "Méri a napenergia-termelést. Szükséges a napenergia-arányhoz és a többletes töltéshez.",
+      "none": "Nincs napelemes rendszer",
+      "title": "Van napelemes rendszered?"
+    },
+    "site": {
+      "currencyHint": "pl. {price}, {amount}",
+      "defaultTitle": "Otthon",
+      "description": "Néhány alapadat az otthonodról. Bármikor módosíthatod őket.",
+      "title": "A telephelyed"
+    },
+    "skip": "Kihagyás",
+    "step": "{step}. lépés / {total}",
+    "welcome": {
+      "description": "Állítsd be az otthoni rendszer legfontosabb részeit az okos töltés megkezdéséhez.",
+      "start": "Kezdjük"
+    }
   },
   "passwordModal": {
     "description": "Állítson be egy jelszót a konfigurációs beállítások védelmére. A főképernyő használata továbbra is lehetséges bejelentkezés nélkül.",
