@@ -1398,6 +1398,32 @@ func (site *Site) update(lp updater) {
 	site.stats.Update(site)
 }
 
+// boundEstimatedChargePower attributes the charge power the site did not measurably supply
+// to the single charging loadpoint without charge meter and returns it
+func (site *Site) boundEstimatedChargePower(homePower float64) float64 {
+	lps := site.activeLoadpoints()
+	for _, lp := range lps {
+		lp.chargeExcess = 0
+	}
+
+	// supply must be measured
+	if homePower >= 0 || site.gridMeter == nil || site.pvMeters == nil {
+		return 0
+	}
+
+	// a single estimated loadpoint can be attributed
+	estimated := lo.Filter(lps, func(lp *Loadpoint, _ int) bool {
+		return !lp.HasChargeMeter() && lp.GetChargePower() > 0
+	})
+	if len(estimated) != 1 {
+		return 0
+	}
+
+	// negative home power is unsupplied estimate
+	estimated[0].chargeExcess = -homePower
+	return -homePower
+}
+
 // updatePower calculates the site power balance and updates the given loadpoint
 func (site *Site) updatePower(lp updater, state siteState, totalChargePower float64, consumption, feedin api.Rates) {
 	// prioritize if possible
@@ -1418,6 +1444,7 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 
 	// ignore negative pvPower values as that means it is not an energy source but consumption
 	homePower := state.gridPower + max(0, state.pvPower) + state.battery.Power - totalChargePower
+	chargeExcess := site.boundEstimatedChargePower(homePower)
 	homePower = max(homePower, 0)
 	site.publish(keys.HomePower, homePower)
 
@@ -1431,7 +1458,7 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 	// fix for: https://github.com/evcc-io/evcc/issues/11032
 	nonChargePower := homePower + max(0, -state.battery.Power)
 	greenShareHome := site.greenShare(0, homePower)
-	greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
+	greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower-chargeExcess)
 
 	// TODO
 	if lp != nil {
