@@ -118,7 +118,10 @@
 								</CustomSelect>
 							</div>
 							<div class="col-6 col-lg-3 mb-3">
-								<div class="small text-uppercase evcc-gray text-truncate">
+								<div
+									class="small text-uppercase evcc-gray text-truncate"
+									:title="$t('main.vehicleSettings.fullChargeHint')"
+								>
 									{{ $t("main.vehicleSettings.fullChargeDays") }}
 								</div>
 								<CustomSelect
@@ -162,11 +165,20 @@
 								</CustomSelect>
 							</div>
 							<div
-								v-if="fullChargeStatus(vehicle)"
+								v-if="fullChargeEnabled(vehicle)"
 								class="col-12 mb-3 small evcc-gray"
 								data-testid="full-charge-status"
 							>
-								{{ fullChargeStatus(vehicle) }}
+								<span v-if="fullChargeStatus(vehicle)" class="me-2">
+									{{ fullChargeStatus(vehicle) }}
+								</span>
+								<button
+									type="button"
+									class="btn btn-link btn-sm p-0 align-baseline"
+									@click="fullChargeDone(vehicle)"
+								>
+									{{ $t("main.vehicleSettings.fullChargeDone") }}
+								</button>
 							</div>
 						</template>
 					</div>
@@ -345,9 +357,15 @@ export default defineComponent({
 			const energy = Number(this.selectValue(event));
 			api.post(`vehicles/${vehicle.name}/fullcharge`, { days, energy });
 		},
-		fullChargeStatus(vehicle: Vehicle): string | null {
+		fullChargeEnabled(vehicle: Vehicle): boolean {
 			const { days = 0, energy = 0 } = vehicle.fullCharge ?? {};
-			if (!days && !energy) {
+			return days > 0 || energy > 0;
+		},
+		fullChargeDone(vehicle: Vehicle): void {
+			api.post(`vehicles/${vehicle.name}/fullcharge/done`);
+		},
+		fullChargeStatus(vehicle: Vehicle): string | null {
+			if (!this.fullChargeEnabled(vehicle)) {
 				return null;
 			}
 			if (this.connectedLoadpoint(vehicle)?.fullChargeActive) {

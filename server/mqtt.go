@@ -306,6 +306,7 @@ func (m *MQTT) listenVehicleSetters(topic string, v vehicle.API) error {
 		{"planStrategy", planStrategySetter(v.SetPlanStrategy)},
 		{"planSoc", planGoalSetter(v.SetPlanSoc)},
 		{"fullCharge", fullChargeSetter(v.SetFullCharge)},
+		{"fullChargeDone", fullChargeDoneSetter(v)},
 	} {
 		if err := m.Handler.ListenSetter(topic+"/"+s.topic, s.fun); err != nil {
 			return err

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cast"
 )
@@ -85,6 +86,21 @@ func fullChargeSetter(set func(api.FullCharge) error) func(string) error {
 		}
 
 		return set(res)
+	}
+}
+
+// fullChargeDoneSetter records a full charge at the RFC3339 time of the payload, now if empty
+func fullChargeDoneSetter(v vehicle.API) func(string) error {
+	return func(payload string) error {
+		ts := time.Now()
+		if payload != "" && payload != "now" {
+			var err error
+			if ts, err = time.Parse(time.RFC3339, payload); err != nil {
+				return err
+			}
+		}
+
+		return fullChargeDone(v, ts)
 	}
 }
 

@@ -2514,6 +2514,57 @@
         }
       }
     },
+    "/vehicles/{name}/fullcharge/done": {
+      "post": {
+        "operationId": "setVehicleFullChargeDone",
+        "summary": "Record full charge",
+        "description": "Records a full charge now, e.g. one that happened at a public charger. The thresholds count from this time.",
+        "tags": [
+          "vehicles"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/FullChargeDone"
+          }
+        }
+      }
+    },
+    "/vehicles/{name}/fullcharge/done/{time}": {
+      "post": {
+        "operationId": "setVehicleFullChargeDoneAt",
+        "summary": "Record full charge at time",
+        "description": "Records a full charge at the given time, which must not be in the future.",
+        "tags": [
+          "vehicles"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          },
+          {
+            "name": "time",
+            "in": "path",
+            "description": "Time of the full charge in RFC3339 format.",
+            "required": true,
+            "example": "2026-11-03T08:00:00Z",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/FullChargeDone"
+          }
+        }
+      }
+    },
     "/db/backup": {
       "get": {
         "operationId": "downloadBackup",
@@ -6451,6 +6502,22 @@
       }
     },
     "responses": {
+      "FullChargeDone": {
+        "description": "Success - recorded full charge",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "time": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        }
+      },
       "Deleted": {
         "description": "Success - number of deleted records",
         "content": {

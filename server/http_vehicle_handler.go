@@ -2,12 +2,14 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/gorilla/mux"
 )
 
@@ -218,6 +220,50 @@ func fullChargeHandler(site site.API) http.HandlerFunc {
 		}
 
 		jsonWrite(w, v.GetFullCharge())
+	}
+}
+
+// fullChargeDone records a full charge that happened outside of evcc, e.g. at a public charger
+func fullChargeDone(v vehicle.API, ts time.Time) error {
+	if ts.After(time.Now()) {
+		return errors.New("timestamp is in the future")
+	}
+
+	v.SetFullChargeTime(ts)
+
+	return nil
+}
+
+// fullChargeDoneHandler records a full charge, now or at the given time
+func fullChargeDoneHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		v, err := site.Vehicles().ByName(vars["name"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		ts := time.Now()
+		if s, ok := vars["time"]; ok {
+			if ts, err = time.Parse(time.RFC3339, s); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+		}
+
+		if err := fullChargeDone(v, ts); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		res := struct {
+			Time time.Time `json:"time"`
+		}{
+			Time: v.GetFullChargeTime(),
+		}
+
+		jsonWrite(w, res)
 	}
 }
 
