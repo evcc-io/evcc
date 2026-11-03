@@ -318,8 +318,14 @@ func (lp *Loadpoint) vehicleDefaultOrDetect() {
 		// which resets the estimator's initial values for the new charging session.
 		// setActiveVehicle is safe to call repeatedly - it only logs when vehicle actually changes.
 		lp.setActiveVehicle(lp.defaultVehicle)
-	} else if len(lp.coordinatedVehicles()) > 0 && lp.connected() {
-		lp.startVehicleDetection()
+	} else {
+		// vehicle selected while disconnected: drop the previous session's estimator baseline
+		if v := lp.GetVehicle(); v != nil && v.Capacity() > 0 && (lp.Soc.Estimate == nil || *lp.Soc.Estimate) {
+			lp.socEstimator = soc.NewEstimator(lp.log, v)
+		}
+		if len(lp.coordinatedVehicles()) > 0 && lp.connected() {
+			lp.startVehicleDetection()
+		}
 	}
 }
 
