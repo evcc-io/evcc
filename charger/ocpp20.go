@@ -369,6 +369,9 @@ func (c *OCPP20) createTxDefaultChargingProfile(current float64) *types.Charging
 	}
 
 	if c.cp.ChargingRateUnit == types.ChargingRateUnitWatts {
+		if phases == 0 {
+			phases = 3 // default to 3 phases if not set
+		}
 		period.Limit = math.Trunc(230.0 * current * float64(phases))
 	} else {
 		// OCPP assumes phases == 3 if not set
