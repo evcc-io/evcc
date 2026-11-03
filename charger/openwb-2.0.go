@@ -114,6 +114,7 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 func (wb *OpenWB20) resetRfid() error {
 	if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err != nil {
 		wb.rfidResetPending = true
+		wb.log.WARN.Printf("RFID reset was not successful: %v", err)
 		return err
 	}
 
@@ -166,9 +167,9 @@ func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
 		wb.laststatus = api.StatusB
 		return api.StatusB, err
 	}
-	err = wb.HandleRfidReset()
+	wb.HandleRfidReset()
 	wb.laststatus = api.StatusA
-	return api.StatusA, err
+	return api.StatusA, nil
 }
 
 // Enabled implements the api.Charger interface

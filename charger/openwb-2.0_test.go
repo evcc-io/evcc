@@ -52,7 +52,7 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 
 	wb := &OpenWB20{log: util.NewLogger("openwb-2.0"), conn: conn, laststatus: api.StatusB}
 	status, err := wb.Status()
-	require.Error(t, err)
+	require.NoError(t, err)
 	require.Equal(t, api.StatusA, status)
 	require.Equal(t, api.StatusA, wb.laststatus)
 	require.True(t, wb.rfidResetPending)
