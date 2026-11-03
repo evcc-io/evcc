@@ -1,0 +1,88 @@
+template: victron-vrm
+products:
+  - description:
+      generic: Victron VRM
+group: generic
+requirements:
+  description:
+    de: |
+      Fahrzeugdaten aus dem [VRM-Portal](https://vrm.victronenergy.com). Das Fahrzeug muss in VRM als Gerät "Electric Vehicle" angebunden sein. Es wird ein kostenloses User Access Token benötigt.
+
+      Die Werte kommen aus der Fahrzeuganbindung von VRM und können einige Minuten alt sein. Befehle an das Fahrzeug wie Laden starten oder Aufwecken sind nicht möglich.
+    en: |
+      Vehicle data from the [VRM portal](https://vrm.victronenergy.com). The vehicle must be connected in VRM as "Electric Vehicle" device. You need a free user access token.
+
+      Values come from VRM's vehicle integration and may be a few minutes old. Vehicle commands like starting a charge or waking up are not supported.
+params:
+  - preset: vehicle-common
+  - name: idsite
+    required: true
+    description:
+      en: VRM Site ID of the installation
+      de: VRM-Installations-ID der Installation
+    help:
+      en: The VRM Site ID is displayed in the installation settings under "General"
+      de: Die VRM-Installations-ID wird in den Einstellungen der Installation unter "Allgemeines" angezeigt
+    example: 123456
+  - name: token
+    required: true
+    help:
+      en: Tokens can be created in VRM in Preferences->Integrations
+      de: Token können im VRM erstellt werden unter Präferenzen->Integrationen
+  - name: vin
+    help:
+      en: Only required if several vehicles are connected in VRM
+      de: Nur nötig, wenn in VRM mehrere Fahrzeuge angebunden sind
+  - name: cache
+    default: 1m
+  - preset: vehicle-online
+render: |
+  {{- $vehicle := `($all | first | .instance)` }}
+  {{- if .vin }}
+  {{- $vehicle = printf `($all | map(select(.dbusPath == "/VIN" and (.rawValue | tostring | ascii_upcase) == %q)) | first | .instance)` (upper .vin) }}
+  {{- end }}
+  {{- $ev := printf `[.records[] | select(.Device == "Electric Vehicle")] as $all | %s as $i | if $i == null then error("vehicle not found in VRM") else . end | ($all | map(select(.instance == $i))) as $ev | def v($p): $ev | map(select(.dbusPath == $p)) | first | .rawValue; def n($p): v($p) | if type == "string" then tonumber else . end;` $vehicle }}
+  type: custom
+  {{- include "common" . }}
+  soc:
+    source: http
+    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/diagnostics?count=1000
+    headers:
+      - X-Authorization: Token {{ .token }}
+    jq: '{{ $ev }} n("/Soc") // error("soc not available")'
+    timeout: 30s
+    cache: {{ .cache }}
+  limitsoc:
+    source: http
+    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/diagnostics?count=1000
+    headers:
+      - X-Authorization: Token {{ .token }}
+    jq: '{{ $ev }} n("/TargetSoc") // error("limitsoc not available") | floor'
+    timeout: 30s
+    cache: {{ .cache }}
+  range:
+    source: http
+    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/diagnostics?count=1000
+    headers:
+      - X-Authorization: Token {{ .token }}
+    jq: '{{ $ev }} n("/RangeToGo") // error("range not available")'
+    timeout: 30s
+    cache: {{ .cache }}
+  odometer:
+    source: http
+    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/diagnostics?count=1000
+    headers:
+      - X-Authorization: Token {{ .token }}
+    jq: '{{ $ev }} n("/Odometer") // error("odometer not available")'
+    timeout: 30s
+    cache: {{ .cache }}
+  status:
+    source: http
+    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/diagnostics?count=1000
+    headers:
+      - X-Authorization: Token {{ .token }}
+    # charging states 0 and 1 cover both plugged and unplugged, the station connection tells them apart
+    jq: '{{ $ev }} n("/ChargingState") as $cs | if n("/AtSite") == 0 or $cs == null or $cs == 255 then "A" elif $cs == 3 then "C" elif ($cs == 0 or $cs == 1) and ((v("/Mgmt/Connection") // "") | tostring) == "" then "A" else "B" end'
+    timeout: 30s
+    cache: {{ .cache }}
+  {{- include "features" . }}
