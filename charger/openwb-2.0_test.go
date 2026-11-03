@@ -21,6 +21,7 @@ type openWB20Handler struct {
 	failRFIDRead bool
 	rfidReads    int
 	rfidResets   int
+	resetWrites  [][2]uint16
 }
 
 func (h *openWB20Handler) HandleInputRegisters(req *mbserver.InputRegistersRequest) ([]uint16, error) {
@@ -48,6 +49,7 @@ func (h *openWB20Handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersR
 	}
 	if req.IsWrite && req.Addr == openwbRegResetRfid {
 		h.rfidResets++
+		h.resetWrites = append(h.resetWrites, [2]uint16{req.Addr, req.Args[0]})
 	}
 	return req.Args, nil
 }
@@ -84,6 +86,7 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 	require.Equal(t, []string{"tag"}, identity)
 	require.False(t, wb.rfidResetPending)
 	require.Equal(t, 1, handler.rfidReads)
+	require.Equal(t, [][2]uint16{{openwbRegResetRfid, 1}}, handler.resetWrites)
 
 	handler.blankRFID = true
 	wb.laststatus = api.StatusA
