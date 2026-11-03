@@ -4,6 +4,7 @@ products:
     description:
       generic: blueplanet hybrid NH3
 requirements:
+  evcc: ["skiptest"]
   description:
     de: |
       Für KACO blueplanet Hybrid NH3 mit AI-Dongle/WLAN-Stick. Modbus TCP muss über die IP-Adresse des Sticks erreichbar sein (Port 502, Geräte-ID 3).

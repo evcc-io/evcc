@@ -176,7 +176,7 @@ render: |
               value: {{ mul .minsoc 100 }}
               set:
                 source: modbus
-                {{- include "modbus" . | indent 16 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1154 # 41155 discharge SoC lower limit, 0.01%
                   type: writesingle
@@ -185,7 +185,7 @@ render: |
               value: {{ mul .maxsoc 100 }}
               set:
                 source: modbus
-                {{- include "modbus" . | indent 16 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1153 # 41154 charging SoC upper limit, 0.01%
                   type: writesingle
@@ -214,7 +214,7 @@ render: |
                       type: float
                       config:
                         source: sunspec
-                        {{- include "modbus" . | indent 24 }}
+                        {{- include "modbus" . | indent 22 }}
                         value: 802:WChaRteMax
                   out:
                     - name: frame
@@ -247,7 +247,7 @@ render: |
               value: {{ mul .minsoc 100 }}
               set:
                 source: modbus
-                {{- include "modbus" . | indent 16 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1154 # 41155 discharge SoC lower limit, 0.01%
                   type: writesingle
@@ -256,7 +256,7 @@ render: |
               value: {{ mul .maxsoc 100 }}
               set:
                 source: modbus
-                {{- include "modbus" . | indent 16 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1153 # 41154 charging SoC upper limit, 0.01%
                   type: writesingle
@@ -275,7 +275,7 @@ render: |
               value: {{ mul .minsoc 100 }}
               set:
                 source: modbus
-                {{- include "modbus" . | indent 16 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1154 # 41155 discharge SoC lower limit, 0.01%
                   type: writesingle
@@ -284,7 +284,7 @@ render: |
               value: {{ mul .maxsoc 100 }}
               set:
                 source: modbus
-                {{- include "modbus" . | indent 16 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1153 # 41154 charging SoC upper limit, 0.01%
                   type: writesingle
@@ -303,7 +303,7 @@ render: |
               value: {{ mul .minsoc 100 }}
               set:
                 source: modbus
-                {{- include "modbus" . | indent 16 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1154 # 41155 discharge SoC lower limit, 0.01%
                   type: writesingle
@@ -312,7 +312,7 @@ render: |
               value: {{ mul .maxsoc 100 }}
               set:
                 source: modbus
-                {{- include "modbus" . | indent 16 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1153 # 41154 charging SoC upper limit, 0.01%
                   type: writesingle
@@ -382,7 +382,7 @@ render: |
               value: {{ mul .minsoc 100 }}
               set:
                 source: modbus
-                {{- include "modbus" . | indent 16 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1154 # 41155 discharge SoC lower limit, 0.01%
                   type: writesingle
@@ -391,7 +391,7 @@ render: |
               value: {{ mul .maxsoc 100 }}
               set:
                 source: modbus
-                {{- include "modbus" . | indent 16 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1153 # 41154 charging SoC upper limit, 0.01%
                   type: writesingle
