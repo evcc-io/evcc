@@ -94,6 +94,7 @@ func TestFullChargeCompletion(t *testing.T) {
 	lp.status = api.StatusC
 	lp.updateFullCharge()
 	assert.True(t, lp.fullChargeActive)
+	assert.False(t, lp.LimitSocReached(), "a 100% limit leaves stopping to the vehicle")
 
 	// stopped on its own, hold time running
 	lp.status = api.StatusB
