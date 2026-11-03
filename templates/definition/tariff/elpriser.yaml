@@ -1,0 +1,189 @@
+template: elpriser
+link: https://elpriser.org
+products:
+  - brand: elpriser.org
+    description:
+      generic: Spot prices
+requirements:
+  description:
+    de: |
+      Börsenstrompreise (Day-Ahead) für 40 europäische Preiszonen, danach rund eine Woche Prognose (statistisches Modell von elpriser.org, keine offizielle Prognose).
+      Außerhalb Dänemarks ist es der reine Börsenpreis ohne Steuern, Abgaben und Netzentgelte; diese lassen sich mit `charges`, `tax` oder `formula` ergänzen.
+      Für Dänemark (`dk1`, `dk2`) liefert die Preisart `net_inkl_alt` den vollen Preis inklusive Netztarif; dafür wird die GLN des Netzbetreibers benötigt.
+      Die Preise sind in der Währung der Zone (DKK, SEK, NOK, PLN, GBP, ...) oder in EUR. Die Währung in evcc muss dazu passen.
+    en: |
+      Day-ahead electricity prices for 40 European bidding zones, followed by about a week of forecast (elpriser.org's own statistical model, not an official forecast).
+      Outside Denmark this is the wholesale price without taxes, levies and grid fees; add them with `charges`, `tax` or `formula`.
+      For Denmark (`dk1`, `dk2`) the price type `net_inkl_alt` returns the full price including the grid tariff; it needs the GLN of your grid company.
+      Prices are in the zone's currency (DKK, SEK, NOK, PLN, GBP, ...) or in EUR. The currency set in evcc must match.
+  evcc: ["skiptest"]
+group: price
+countries: ["EU", "DK"]
+params:
+  - name: zone
+    type: choice
+    required: true
+    example: de
+    description:
+      de: Preiszone
+      en: Price zone
+    help:
+      de: "Zonencode, z.B. `de`, `fr`, `dk1`, `se3`, `no2`."
+      en: "Zone code, e.g. `de`, `fr`, `dk1`, `se3`, `no2`."
+    choice:
+      - "dk1"
+      - "dk2"
+      - "no1"
+      - "no2"
+      - "no3"
+      - "no4"
+      - "no5"
+      - "se1"
+      - "se2"
+      - "se3"
+      - "se4"
+      - "fi"
+      - "nl"
+      - "de"
+      - "fr"
+      - "pl"
+      - "it-n"
+      - "at"
+      - "be"
+      - "ch"
+      - "cz"
+      - "hu"
+      - "si"
+      - "es"
+      - "pt"
+      - "sk"
+      - "gr"
+      - "ro"
+      - "bg"
+      - "hr"
+      - "rs"
+      - "ee"
+      - "lv"
+      - "lt"
+      - "me"
+      - "mk"
+      - "al"
+      - "xk"
+      - "gb"
+      - "ie"
+  - name: pricemode
+    type: choice
+    default: inkl_alt
+    description:
+      de: Preisart (nur Dänemark)
+      en: Price type (Denmark only)
+    help:
+      de: "Nur für dk1 und dk2. `inkl_alt` = Spot + Energinet-Tarife + Elafgift + MwSt. (alles außer dem Netztarif des Netzbetreibers); `net_inkl_alt` = der volle Preis inkl. Netztarif, braucht `gln`; `spot_ex` / `spot_inkl` = Börsenpreis ohne / mit MwSt."
+      en: "Only for dk1 and dk2. `inkl_alt` = spot + Energinet tariffs + electricity duty + VAT (everything except your grid company's tariff); `net_inkl_alt` = the full price including your grid company's tariff, needs `gln`; `spot_ex` / `spot_inkl` = spot price without / with VAT."
+    choice:
+      - "inkl_alt"
+      - "spot_inkl"
+      - "spot_ex"
+      - "inkl_alt_minus"
+      - "inkl_alt_elvarme"
+      - "net_inkl_alt"
+      - "net_inkl_alt_elvarme"
+      - "net_inkl_tarif"
+  - name: gln
+    description:
+      de: GLN des Netzbetreibers (nur Dänemark)
+      en: Grid company GLN (Denmark only)
+    help:
+      de: "13-stellige GLN-Nummer des dänischen Netzbetreibers, nur für die Preisarten net_*. Liste: [elpriser.org/tariffer](https://elpriser.org/tariffer)"
+      en: "13-digit GLN number of your Danish grid company, only for the net_* price types. List: [elpriser.org/tariffer](https://elpriser.org/tariffer)"
+    example: "5790000705689"
+  - name: currency
+    type: choice
+    default: local
+    description:
+      de: Währung
+      en: Currency
+    help:
+      de: "`local` = Währung der Zone (DKK, SEK, NOK, PLN, ... mit dem EZB-Referenzkurs umgerechnet), `eur` = Euro. Muss zur Währung in evcc passen. Dänemark ist immer DKK, Großbritannien immer GBP."
+      en: "`local` = the zone's currency (DKK, SEK, NOK, PLN, ... converted with the ECB reference rate), `eur` = euro. Must match the currency set in evcc. Denmark is always DKK, Great Britain always GBP."
+    choice: ["local", "eur"]
+  - name: actualonly
+    type: bool
+    advanced: true
+    description:
+      de: Nur veröffentlichte Preise
+      en: Published prices only
+    help:
+      de: Lässt die Tage aus, die nur eine Modell-Prognose sind (ab Veröffentlichung der Day-Ahead-Preise gegen 13 Uhr MEZ ist das der nächste Tag).
+      en: Leaves out the days that are only a model forecast (the next day is a forecast until the day-ahead prices are published, around 13:00 CET).
+  - preset: tariff-base
+  - preset: tariff-features
+render: |
+  type: custom
+  {{ include "base" . }}
+  {{ include "features" . }}
+  forecast:
+    source: http
+    {{- if or (eq .zone "dk1") (eq .zone "dk2") }}
+    {{- if and (hasPrefix "net_" .pricemode) (not .gln) }}
+    {{- fail "mode net_* needs the grid company's GLN" }}
+    {{- end }}
+    uri: https://elpriser.org/api/forecast?area={{ upper .zone }}&mode={{ .pricemode }}{{ if .gln }}&gln={{ .gln }}{{ end }}
+    {{- else }}
+    uri: https://elpriser.org/api/nordic?zone={{ .zone }}
+    {{- end }}
+    cache: 1h
+    jq: |
+      # elpriser.org -> evcc rates  ([{start, end, value}], value = currency per kWh)
+      #
+      # Input : /api/nordic?zone=<zone>            (every zone except dk1/dk2 in DKK)
+      #         /api/forecast?area=DK1|DK2&mode=.. (Denmark, price in DKK/kWh)
+      # The API gives local wall-clock hours (0-23) per calendar day. evcc needs
+      # absolute times, so the zone's UTC offset is worked out here with the EU
+      # daylight-saving rule (last Sunday of March -> last Sunday of October, both at
+      # 01:00 UTC). jq has no time zone database; every zone of the API follows this
+      # rule, only the winter offset differs.
+      #
+      # Settings (set by the template parameters):
+      def local_currency: {{ if eq .currency "local" }}true{{ else }}false{{ end }};   # true: zone currency, false: EUR
+      def actual_only:    {{ if .actualonly }}true{{ else }}false{{ end }};      # true: skip the days that are model forecasts
+
+      # Winter (standard time) offset from UTC in hours; every other zone is CET.
+      def winter_offset: {"pt":0,"gb":0,"ie":0,"gr":2,"ro":2,"bg":2,"ee":2,"lv":2,"lt":2}[.] // 1;
+
+      # 01:00 UTC on the last Sunday of the 31-day month $m ("03" or "10") of year $y.
+      def last_sunday($y; $m):
+        ("\($y)-\($m)-31T01:00:00Z" | fromdate) as $t
+        | $t - ($t | gmtime | .[6]) * 86400;
+
+      # 1 while summer time is in force at this unix time, else 0.
+      def dst: . as $u | ($u | gmtime | .[0]) as $y
+        | if $u >= last_sunday($y; "03") and $u < last_sunday($y; "10") then 1 else 0 end;
+
+      # Unix time of 00:00 local time on the date "YYYY-MM-DD" (never inside the clock change).
+      def midnight($b): (. + "T00:00:00Z" | fromdate) as $n
+        | $n - ($b + (($n - $b * 3600) | dst)) * 3600;
+
+      def next_date: (. + "T00:00:00Z" | fromdate) + 90000 | todate | .[0:10];
+
+      . as $r
+      | ($r.zone // ($r.area | ascii_downcase)) as $zone
+      | ($zone | winter_offset) as $b
+      | (if local_currency then ($r.zoneInfo.rate // 1) else 1 end) as $fx
+      | [ $r.days[]
+          | select(.type == "actual" or (actual_only | not))
+          | .date as $d
+          | ( .prices
+              | map({ key: (.hour | tostring),
+                      value: (if .price != null then .price
+                              elif .eur_mwh != null then .eur_mwh * $fx / 1000
+                              else null end) })
+              | from_entries ) as $by_hour
+          | range($d | midnight($b); ($d | next_date | midnight($b)); 3600) as $u
+          | ((($u + ($b + ($u | dst)) * 3600) / 3600 | floor) % 24 | tostring) as $h
+          | select($by_hour[$h] != null)
+          | { start: ($u | todate),
+              end:   ($u + 3600 | todate),
+              value: (($by_hour[$h] * 100000 | round) / 100000) }
+        ]
+      | tostring
