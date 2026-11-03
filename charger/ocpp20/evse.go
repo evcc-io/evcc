@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp2.0.1/availability"
 	"github.com/lorenzodonini/ocpp-go/ocpp2.0.1/transactions"
+	"github.com/lorenzodonini/ocpp-go/ocpp2.0.1/remotecontrol"
 	"github.com/lorenzodonini/ocpp-go/ocpp2.0.1/types"
 )
 
@@ -92,6 +93,22 @@ func NewEVSE(ctx context.Context, log *util.Logger, id, connectorID int, cp *Sta
 
 // Initialized waits for initial status notification
 func (e *EVSE) Initialized() error {
+	// try to trigger a status notification if station supports it
+	if e.cp.HasRemoteTriggerFeature {
+		go func() {
+			if err := Instance().TriggerMessage(
+				e.cp.ID(),
+				func(conf *remotecontrol.TriggerMessageResponse, err error) {},
+				remotecontrol.MessageTriggerStatusNotification,
+				func(request *remotecontrol.TriggerMessageRequest) {
+					request.Evse = &types.EVSE{ID: e.id}
+				},
+			); err != nil {
+				e.log.DEBUG.Printf("evse %d: trigger status notification failed: %v", e.id, err)
+			}
+		}()
+	}
+
 	// wait for initial status or timeout
 	timeout := time.NewTimer(ocpp.Timeout)
 	defer timeout.Stop()
@@ -186,6 +203,11 @@ func (e *EVSE) updateMeterValuesLocked(meterValues []types.MeterValue) {
 func (e *EVSE) Status() (availability.ConnectorStatus, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+
+	// check station connection first
+	if !e.cp.Connected() {
+		return availability.ConnectorStatusUnavailable, errors.New("station not connected")
+	}
 
 	if e.status == nil {
 		return availability.ConnectorStatusUnavailable, errors.New("no status")
