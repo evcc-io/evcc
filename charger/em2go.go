@@ -36,11 +36,13 @@ import (
 // Em2Go charger implementation
 type Em2Go struct {
 	implement.Caps
-	log        *util.Logger
-	conn       *modbus.Connection
-	current    uint16
-	workaround bool
-	phases     int
+	log                 *util.Logger
+	conn                *modbus.Connection
+	current             uint16
+	workaround          bool
+	phases              int
+	sessionStartEnergy  float64
+	lastStatus          api.ChargeStatus
 }
 
 const (
@@ -180,20 +182,35 @@ func (wb *Em2Go) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
+	var status api.ChargeStatus
 	switch binary.BigEndian.Uint16(b) {
 	case 1: //Standby
-		return api.StatusA, nil
+		status = api.StatusA
 	case
 		2, //Connected
 		3, //Starting
 		6: //Charging end
-		return api.StatusB, nil
+		status = api.StatusB
 	case
 		4: //Charging
-		return api.StatusC, nil
+		status = api.StatusC
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
 	}
+
+	// detect cable connect (StatusA -> StatusB/C) and reset session energy
+	if wb.lastStatus == api.StatusA && status != api.StatusA {
+		if energy, err := wb.TotalEnergy(); err == nil {
+			wb.sessionStartEnergy = energy
+		}
+	}
+	// detect cable disconnect (StatusB/C -> StatusA)
+	if wb.lastStatus != api.StatusA && status == api.StatusA {
+		wb.sessionStartEnergy = 0
+	}
+	wb.lastStatus = status
+
+	return status, nil
 }
 
 // Enabled implements the api.Charger interface
@@ -326,6 +343,17 @@ var _ api.PhaseVoltages = (*Em2Go)(nil)
 // Currents implements the api.PhaseVoltages interface
 func (wb *Em2Go) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(em2GoRegVoltages)
+}
+
+var _ api.ChargeRater = (*Em2Go)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
+func (wb *Em2Go) ChargedEnergy() (float64, error) {
+	total, err := wb.TotalEnergy()
+	if err != nil {
+		return 0, err
+	}
+	return total - wb.sessionStartEnergy, nil
 }
 
 var _ api.ChargeTimer = (*Em2Go)(nil)
