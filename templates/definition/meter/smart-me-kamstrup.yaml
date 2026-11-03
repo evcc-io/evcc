@@ -18,7 +18,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 8196 # Total power (mW)
+      address: 8195
       type: holding
       encoding: int32
     scale: {{ if eq .usage "pv" }}-0.001{{ else }}0.001{{ end }}
@@ -26,7 +26,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: {{ if eq .usage "pv" }}8232{{ else }}8228{{ end }}
+      address: {{ if eq .usage "pv" }}8231{{ else }}8227{{ end }}
       type: holding
       encoding: uint64
     scale: 0.000001
@@ -34,7 +34,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: {{ if eq .usage "pv" }}8228{{ else }}8232{{ end }}
+      address: {{ if eq .usage "pv" }}8227{{ else }}8231{{ end }}
       type: holding
       encoding: uint64
     scale: 0.000001
@@ -42,21 +42,21 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 8218 # Current phase L1 (mA)
+      address: 8217
       type: holding
       encoding: int32
     scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 8220 # Current phase L2 (mA)
+      address: 8219
       type: holding
       encoding: int32
     scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 8222 # Current phase L3 (mA)
+      address: 8221
       type: holding
       encoding: int32
     scale: 0.001
@@ -64,21 +64,21 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 8212 # Voltage phase L1 (mV)
+      address: 8211
       type: holding
       encoding: uint32
     scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 8214 # Voltage phase L2 (mV)
+      address: 8213
       type: holding
       encoding: uint32
     scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 8216 # Voltage phase L3 (mV)
+      address: 8215
       type: holding
       encoding: uint32
     scale: 0.001
