@@ -12,8 +12,8 @@ import (
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp2.0.1/availability"
-	"github.com/lorenzodonini/ocpp-go/ocpp2.0.1/transactions"
 	"github.com/lorenzodonini/ocpp-go/ocpp2.0.1/remotecontrol"
+	"github.com/lorenzodonini/ocpp-go/ocpp2.0.1/transactions"
 	"github.com/lorenzodonini/ocpp-go/ocpp2.0.1/types"
 )
 
@@ -170,8 +170,10 @@ func (e *EVSE) OnTransactionEvent(request *transactions.TransactionEventRequest)
 	case transactions.TransactionEventEnded:
 		if e.transaction != nil && e.transaction.id == request.TransactionInfo.TransactionID {
 			e.log.DEBUG.Printf("evse %d: transaction ended: %s", e.id, request.TransactionInfo.TransactionID)
-		e.transaction = nil
-		e.idTag = ""
+			e.transaction = nil
+			e.idTag = ""
+			// clear cached measurements to avoid stale readings
+			e.measurements = make(map[measurementKey]types.SampledValue)
 		}
 	}
 
