@@ -24,6 +24,7 @@ package charger
 // * Set 'Allow UID Disclose' to On
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
@@ -35,8 +36,10 @@ import (
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/semp"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/hashicorp/go-version"
 )
 
 type sempHandler struct {
@@ -72,6 +75,7 @@ const (
 	bendRegHemsCurrentLimit   = 1000 // HEMS Current Limit (A). Only available on Mennekes Amtron 4You / 4Business chargers.
 	bendRegHemsCurrentLimit10 = 1001 // HEMS Current Limit 1/10 (0.1 A). Only available on Mennekes Amtron 4You / 4Business chargers.
 	bendRegHemsPowerLimit     = 1002 // HEMS Power Limit (W). Only available on Mennekes Amtron 4You / 4Business chargers.
+	bendRegMennekesSoc        = 2200 // Present State of Charge (% 0-100, -101 not available). Mennekes Amtron 4You / 4Business protocol 1.6+.
 
 	bendRegFirmware             = 100 // Application version number
 	bendRegOcppCpStatus         = 104 // Charge Point status according to the OCPP spec. enumaration
@@ -165,6 +169,15 @@ func NewBenderCC(ctx context.Context, settings modbus.TcpSettings, cache time.Du
 		if !wb.legacy && !wb.mennekes4 {
 			if _, err := wb.conn.ReadHoldingRegisters(bendRegEVBatteryState, 1); err == nil {
 				implement.Has(wb, implement.Battery(wb.soc))
+			}
+		}
+	}
+
+	// check vehicle soc by protocol version since unsupported registers close the connection
+	if wb.mennekes4 {
+		if b, err := wb.conn.ReadHoldingRegisters(bendRegProtocolVersion, 2); err == nil {
+			if v, err := version.NewVersion(bytesAsString(bytes.TrimRight(b, "\x00"))); err == nil && v.GreaterThanOrEqual(version.Must(version.NewVersion("1.6"))) {
+				implement.Has(wb, implement.Battery(wb.socMennekes))
 			}
 		}
 	}
@@ -356,11 +369,18 @@ func (wb *BenderCC) maxCurrentMillis(current float64) error {
 // removed: https://github.com/evcc-io/evcc/issues/13555
 // var _ api.ChargeTimer = (*BenderCC)(nil)
 
+// meterValue decodes a 32-bit meter register. The highest bit marks unavailable data:
+// 0xffffffff per Bender Modbus API, lower values were seen while the charger restarts.
+func meterValue(b []byte) (uint32, bool) {
+	u := binary.BigEndian.Uint32(b)
+	return u, u < 1<<31
+}
+
 // CurrentPower implements the api.Meter interface
 func (wb *BenderCC) currentPower() (float64, error) {
 	if wb.legacy {
 		l1, l2, l3, err := wb.currents()
-		return 230 * (l1 + l2 + l3), err
+		return grid.CurrentsToPower(l1, l2, l3), err
 	}
 
 	b, err := wb.conn.ReadHoldingRegisters(bendRegActivePower, 2)
@@ -368,12 +388,11 @@ func (wb *BenderCC) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	u := binary.BigEndian.Uint32(b)
-
 	// some Bender chargers temporarily return 0xffffffff
 	// return error in this case to trigger retry and avoid wrong power readings
 	// https://github.com/evcc-io/evcc/discussions/27736
-	if u == math.MaxUint32 {
+	u, ok := meterValue(b)
+	if !ok {
 		return 0, api.ErrMustRetry
 	}
 
@@ -393,7 +412,9 @@ func (wb *BenderCC) totalEnergy() (float64, error) {
 
 		var total float64
 		for l := range 3 {
-			total += float64(binary.BigEndian.Uint32(b[4*l:4*(l+1)])) / 1e3
+			if u, ok := meterValue(b[4*l:]); ok {
+				total += float64(u) / 1e3
+			}
 		}
 
 		return total, nil
@@ -404,7 +425,12 @@ func (wb *BenderCC) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
+	u, ok := meterValue(b)
+	if !ok {
+		return 0, api.ErrNotAvailable
+	}
+
+	return float64(u) / 1e3, nil
 }
 
 // getPhaseValues returns 3 sequential register values
@@ -416,11 +442,9 @@ func (wb *BenderCC) getPhaseValues(reg uint16, divider float64) (float64, float6
 
 	var res [3]float64
 	for i := range res {
-		u32 := binary.BigEndian.Uint32(b[4*i:])
-		if u32 == math.MaxUint32 {
-			u32 = 0
+		if u, ok := meterValue(b[4*i:]); ok {
+			res[i] = float64(u) / divider
 		}
-		res[i] = float64(u32) / divider
 	}
 
 	return res[0], res[1], res[2], nil
@@ -550,6 +574,20 @@ func (wb *BenderCC) soc() (float64, error) {
 		if soc := binary.BigEndian.Uint16(b); soc <= 100 {
 			return float64(soc), nil
 		}
+	}
+
+	return 0, api.ErrNotAvailable
+}
+
+// socMennekes implements the api.Battery interface
+func (wb *BenderCC) socMennekes() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(bendRegMennekesSoc, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	if soc := int16(binary.BigEndian.Uint16(b)); soc >= 0 && soc <= 100 {
+		return float64(soc), nil
 	}
 
 	return 0, api.ErrNotAvailable

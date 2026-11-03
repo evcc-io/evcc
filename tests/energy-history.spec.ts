@@ -242,6 +242,40 @@ test.describe("consumption breakdown", () => {
     await expect(detail).toHaveCount(0);
   });
 
+  test("consumers priced by their own slots", async ({ page }) => {
+    await gotoDay(page, 2026, 4, 14);
+    const consumption = card(page, "consumer");
+    await expect(consumption).toContainText("1.6 kWh");
+    await expect(consumption).toContainText("0.32 €");
+    await expect(consumption).toContainText("ø 20.0 ct");
+
+    // legend rows: each at its own price, not the house average
+    const kitchen = consumption.getByRole("button", { name: "Kitchen 400 Wh 0.04 €" });
+    const office = consumption.getByRole("button", { name: "Office 400 Wh 0.12 €" });
+    const others = consumption.getByRole("button", { name: "Others 800 Wh 0.16 €" });
+    await expect(kitchen).toBeVisible();
+    await expect(office).toBeVisible();
+    await expect(others).toBeVisible();
+
+    const detail = page.getByTestId("consumer-detail");
+    await kitchen.click();
+    await expect(detail.getByRole("heading", { name: "Kitchen" })).toBeVisible();
+    await expect(detail).toContainText("0.04 €");
+    await expect(detail).toContainText("ø 10.0 ct");
+    await expect(detail.getByRole("button", { name: "Sources" })).toContainText("100% Solar");
+
+    await office.click();
+    await expect(detail.getByRole("heading", { name: "Office" })).toBeVisible();
+    await expect(detail).toContainText("0.12 €");
+    await expect(detail).toContainText("ø 30.0 ct");
+    await expect(detail.getByRole("button", { name: "Sources" })).toContainText("100% Grid");
+
+    await others.click();
+    await expect(detail.getByRole("heading", { name: "Others" })).toBeVisible();
+    await expect(detail).toContainText("ø 20.0 ct");
+    await expect(detail.getByRole("button", { name: "Sources" })).toContainText("50% Solar");
+  });
+
   test("river layer opens its consumer", async ({ page }) => {
     await gotoDay(page, 2026, 4, 7);
     const consumption = card(page, "consumer");

@@ -233,3 +233,27 @@ func TestRequiredBatteryMode(t *testing.T) {
 		assert.Equal(t, tc.res, res, "expected %s, got %s", tc.res, res)
 	}
 }
+
+// nil instance marks a device disabled at runtime by a forced config update
+func TestSiteSkipsDisabledDevices(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	pv := api.NewMockMeter(ctrl)
+	pv.EXPECT().CurrentPower().Return(2e3, nil)
+
+	site := NewSite()
+	site.log = util.NewLogger("foo")
+	site.gridMeter = config.NewStaticDevice(config.Named{Name: "grid"}, api.Meter(nil))
+	site.curtailers = []config.Device[api.Curtailer]{config.NewStaticDevice(config.Named{Name: "curtailer"}, api.Curtailer(nil))}
+
+	mm := site.collectMeters("pv", []config.Device[api.Meter]{
+		config.NewStaticDevice(config.Named{Name: "pv1"}, api.Meter(pv)),
+		config.NewStaticDevice(config.Named{Name: "pv2"}, api.Meter(nil)),
+	})
+	require.Len(t, mm, 2)
+	assert.Equal(t, 2e3, mm[0].Power)
+	assert.Equal(t, types.Measurement{Name: "pv2"}, mm[1])
+
+	assert.Error(t, site.updateGridMeter())
+	assert.Empty(t, site.curtailables())
+}

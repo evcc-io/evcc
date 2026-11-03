@@ -147,7 +147,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 43024 # Battery Reserve SOC
-      type: writeholding
+      type: writesingle
       decode: uint16
   batterymode:
     source: switch
@@ -161,7 +161,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 43110
-            type: writeholding
+            type: writesingle
             decode: uint16
     - case: 2  # hold
       set:
@@ -172,7 +172,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 43110
-            type: writeholding
+            type: writesingle
             decode: uint16
     - case: 3  # charge
       set:
@@ -183,7 +183,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 43110
-            type: writeholding
+            type: writesingle
             decode: uint16
   {{- include "battery-params" . }}
   {{- end }}

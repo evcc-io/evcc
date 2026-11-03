@@ -27,6 +27,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -247,7 +248,7 @@ func (wb *MyPv) MaxCurrentMillis(current float64) error {
 		}
 	}
 
-	power := uint16(voltage * current * float64(phases))
+	power := uint16(grid.CurrentToPower(current, phases))
 
 	err := wb.setPower(power)
 	if err == nil {

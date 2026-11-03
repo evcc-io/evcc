@@ -24,6 +24,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/volkszaehler/mbmd/encoding"
@@ -68,9 +69,6 @@ const (
 	evdcMinPower = 500 // 1A@500V per DC CCS Power Classes
 
 	evdcMinCurrent = 1.0 // A
-
-	// evcc current setpoints are converted using the 3-phase AC convention
-	evdcPowerPerAmp = 230 * 3 // W/A
 )
 
 // running states of evdcRegRunningState
@@ -231,7 +229,8 @@ func (wb *SigenergyEVDC) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.3g", current)
 	}
 
-	power := min(max(uint32(current*evdcPowerPerAmp), evdcMinPower), wb.ratedPower)
+	// evcc current setpoints are converted using the 3-phase AC convention
+	power := min(max(uint32(grid.CurrentToPower(current, 3)), evdcMinPower), wb.ratedPower)
 
 	b := make([]byte, 4)
 	encoding.PutUint32(b, power)
@@ -244,7 +243,7 @@ var _ api.CurrentLimiter = (*SigenergyEVDC)(nil)
 
 // GetMinMaxCurrent implements the api.CurrentLimiter interface
 func (wb *SigenergyEVDC) GetMinMaxCurrent() (float64, float64, error) {
-	return evdcMinCurrent, float64(wb.ratedPower) / evdcPowerPerAmp, nil
+	return evdcMinCurrent, grid.PowerToCurrent(float64(wb.ratedPower), 3), nil
 }
 
 var _ api.Meter = (*SigenergyEVDC)(nil)

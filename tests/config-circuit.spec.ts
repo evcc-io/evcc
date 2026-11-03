@@ -15,6 +15,7 @@ const CONFIG_FAST = "fast.evcc.yaml";
 const CONFIG_CIRCUIT_TREE = "config-circuit-tree.sql";
 
 test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
 
 test.afterEach(async () => {
   await stop();
@@ -28,23 +29,26 @@ async function validateCircuitsTags(page: Page) {
   await expect(loadpoints.nth(1)).toContainText("Power1.0 kW");
 
   await expect(page.getByTestId("circuits")).toHaveCount(1);
+  // the current of the main circuit is the offered current of the loadpoints, it changes with their first update
   await expect(page.getByTestId("circuits")).toContainText(
-    [
-      "Main",
-      "12.0 / 16.0",
-      "A",
-      "2.0 / 10.0",
-      "kW",
-      "Carport 1",
-      "1.0 kW",
-      "Carport 2",
-      "1.0 kW",
-      "Child",
-      "0.0 / 10.0",
-      "A",
-      "0.0",
-      "kW",
-    ].join("")
+    new RegExp(
+      [
+        "Main",
+        "\\d+\\.\\d / 16\\.0",
+        "A",
+        "2\\.0 / 10\\.0",
+        "kW",
+        "Carport 1",
+        "1\\.0 kW",
+        "Carport 2",
+        "1\\.0 kW",
+        "Child",
+        "0\\.0 / 10\\.0",
+        "A",
+        "0\\.0",
+        "kW",
+      ].join("")
+    )
   );
 }
 
@@ -158,6 +162,49 @@ test.describe("circuit", async () => {
         "1.4 kW",
       ].join("")
     );
+  });
+
+  test("assign loadpoints", async ({ page }) => {
+    await start(CONFIG_FAST, CONFIG_CIRCUIT_TREE);
+    await page.goto("/#/config");
+    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
+    const modal = page.getByTestId("circuits-modal");
+    await expectModalVisible(modal);
+
+    const pool = modal.getByRole("list", { name: "Not assigned", exact: true });
+    const row = modal.getByRole("listitem", { name: "Wallbox left" });
+    const rowIn = (list: string) =>
+      modal
+        .getByRole("list", { name: list, exact: true })
+        .getByRole("listitem", { name: "Wallbox left" });
+    const circuit = (title: string) =>
+      modal.getByRole("button", { name: `Circuit ${title}`, exact: true });
+
+    // keyboard: select, remove via pool
+    await expect(rowIn("Garage")).toBeVisible();
+    await row.press("Enter");
+    await expect(row).toHaveAttribute("aria-selected", "true");
+    await pool.press("Space");
+    await expect(rowIn("Not assigned")).toBeVisible();
+
+    // click: select, assign
+    await row.click();
+    await circuit("Home").click();
+    await expect(rowIn("Home")).toBeVisible();
+
+    // drag
+    const handle = row.getByTestId("drag-handle");
+    await handle.dragTo(circuit("Corner"));
+    await expect(rowIn("Corner")).toBeVisible();
+    await handle.dragTo(pool);
+    await expect(rowIn("Not assigned")).toBeVisible();
+    await handle.dragTo(circuit("Home"));
+    await expect(rowIn("Home")).toBeVisible();
+
+    await restart(CONFIG_FAST);
+    await page.reload();
+    await expectModalVisible(modal);
+    await expect(rowIn("Home")).toBeVisible();
   });
 
   test("via config ui", async ({ page }) => {

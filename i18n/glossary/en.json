@@ -1,314 +1,314 @@
 {
-  "autarky": {
-    "description": "Share of consumption covered without the grid.",
-    "other": "autarky"
-  },
-  "authorization": {
-    "description": "Releasing a charging point for charging, e.g. by RFID or app.",
-    "other": "authorization"
-  },
-  "batteryBoost": {
-    "description": "Smart mode setting: charge the vehicle from the home battery down to a limit.",
-    "other": "battery boost"
-  },
-  "batteryCharge": {
-    "description": "Energy flowing into the home battery.",
-    "other": "battery charge"
-  },
-  "batteryDischarge": {
-    "description": "Energy flowing out of the home battery.",
-    "other": "battery discharge"
-  },
-  "card": {
-    "description": "A boxed UI panel on a page. Not tile or panel.",
-    "other": "card"
-  },
-  "charged": {
-    "description": "Energy that went into the vehicle or battery during a session or period.",
-    "other": "charged"
-  },
-  "chargeLevel": {
-    "description": "State of charge of a vehicle or home battery in percent. SoC only in code and data exports, never in UI text.",
-    "other": "charge level"
-  },
-  "chargeLevelShort": {
-    "description": "Short form of charge level for labels and table headers.",
-    "other": "charge"
-  },
-  "charger": {
-    "description": "Device level: the wallbox hardware. The charging point is the loadpoint using it.",
-    "other": "charger"
-  },
-  "chargingPlan": {
-    "description": "Target charge level by a point in time. Plural also names the feature and its dialog.",
-    "other": "charging plan"
-  },
-  "chargingSession": {
-    "description": "One plug-in to unplug cycle, as shown in the sessions log.",
-    "other": "charging session"
-  },
-  "chargingSessionShort": {
-    "description": "Short form of charging session for tight spaces such as the tab bar.",
-    "other": "session"
-  },
-  "cheapEnergy": {
-    "description": "Grid energy below the price limit.",
-    "other": "cheap energy"
-  },
-  "circuit": {
-    "description": "Nestable load management group with a current or power limit that caps everything below it.",
-    "other": "circuit"
-  },
-  "circuitRoot": {
-    "description": "Top-level circuit of the nesting, usually the grid connection. All other circuits sit below it.",
-    "other": "root circuit"
-  },
-  "circuitSub": {
-    "description": "Circuit nested inside another circuit.",
-    "other": "sub-circuit"
-  },
-  "cleanEnergy": {
-    "description": "Grid energy below the CO₂ limit.",
-    "other": "clean energy"
-  },
-  "co2": {
-    "description": "Carbon dioxide. Written with the Unicode subscript character ₂ in every language, not CO2.",
-    "other": "CO₂"
-  },
-  "co2Limit": {
-    "description": "Maximum grid CO₂ intensity at which smart mode charges from the grid.",
-    "other": "CO₂ limit"
-  },
-  "consumer": {
-    "description": "A metered load that evcc does not control, part of house consumption.",
-    "other": "consumer"
-  },
-  "consumption": {
-    "description": "Energy used in the house excluding charging and heating controlled by evcc.",
-    "other": "consumption"
-  },
-  "cost": {
-    "description": "Total amount of money for a session or period. Price is per kWh, cost is the sum.",
-    "other": "cost"
-  },
-  "curtailment": {
-    "description": "Limiting PV production, e.g. the 60% or 70% rule.",
-    "other": "curtailment"
-  },
-  "dialog": {
-    "description": "Overlay opened from a page for settings or confirmations. Called modal only in code.",
-    "other": "dialog"
-  },
-  "dynamicTariff": {
-    "description": "Tariff whose prices change over time, e.g. every hour or 15 minutes.",
-    "other": "dynamic tariff"
-  },
-  "emissions": {
-    "description": "CO₂ caused by charged energy, in kg or g/kWh.",
-    "other": "emissions"
-  },
-  "energy": {
-    "description": "Amount over time, in Wh or kWh. Not power.",
-    "other": "energy"
-  },
-  "energyFlow": {
-    "description": "Live diagram of production, grid, battery and consumption.",
-    "other": "energy flow"
-  },
-  "energyPrice": {
-    "description": "Price per kWh at a point in time.",
-    "other": "energy price"
-  },
-  "evcc": {
-    "description": "Product name. Always lowercase in every language, also at sentence start.",
-    "other": "evcc"
-  },
-  "externalLimit": {
-    "description": "Limit imposed by the grid operator or an external system. Code says HEMS for historical reasons; never use that acronym for this feature in UI text.",
-    "other": "external limit"
-  },
-  "forecast": {
-    "description": "Solar, price or CO₂ forecast.",
-    "other": "forecast"
-  },
-  "grid": {
-    "description": "Public electricity grid.",
-    "other": "grid"
-  },
-  "gridExport": {
-    "description": "Energy fed into the grid. Short label export inside a grid card. One term throughout, no synonyms such as feed-in.",
-    "other": "grid export"
-  },
-  "gridExportTariff": {
-    "description": "Tariff for energy fed into the grid, i.e. the remuneration. Builds on the grid export term; one word for both is fine if the language has no distinction.",
-    "other": "grid export tariff"
-  },
-  "gridImport": {
-    "description": "Energy taken from the grid. Short label import inside a grid card.",
-    "other": "grid import"
-  },
-  "gridImportTariff": {
-    "description": "Tariff for energy taken from the grid.",
-    "other": "grid import tariff"
-  },
-  "gridMeter": {
-    "description": "Meter at the grid connection point.",
-    "other": "grid meter"
-  },
-  "guestVehicle": {
-    "description": "Unknown vehicle at a charging point, not configured in evcc.",
-    "other": "guest vehicle"
-  },
-  "heatingDevice": {
-    "description": "Device level: heat pump, heating rod etc. The heating counterpart of a charger.",
-    "other": "heating device"
-  },
-  "homeBattery": {
-    "description": "Stationary battery in the house, as opposed to the vehicle battery.",
-    "other": "home battery"
-  },
-  "loadpoint": {
-    "description": "Developer term for the controllable unit on top of a device, i.e. a charging point or a heater. Never used in UI text.",
-    "other": "charging point or heater"
-  },
-  "loadpointCharging": {
-    "description": "Loadpoint built on a charger, controls a vehicle.",
-    "other": "charging point"
-  },
-  "loadpointHeating": {
-    "description": "Loadpoint built on a heating device, the heating counterpart of a charging point.",
-    "other": "heater"
-  },
-  "meter": {
-    "description": "Device that reports power and energy at one point of the installation, e.g. grid, solar, battery or consumer. Inverters and batteries act as meters too.",
-    "other": "meter"
-  },
-  "meterReading": {
-    "description": "Cumulative energy counter of a meter in kWh, e.g. at session start and stop.",
-    "other": "meter reading"
-  },
-  "meterUsage": {
-    "description": "Role of a meter in the installation: grid, solar, battery, charger or consumer.",
-    "other": "usage"
-  },
-  "mileage": {
-    "description": "Odometer reading of a vehicle.",
-    "other": "mileage"
-  },
-  "minimumCharge": {
-    "description": "Desired charge level that should be charged regardless of surplus or price.",
-    "other": "minimum charge"
-  },
-  "modeBoost": {
-    "description": "Label of the Fast mode for continuous heating devices: request more power now. SG Ready mode 3.",
-    "other": "boost"
-  },
-  "modeFast": {
-    "description": "Charge mode: full power now. Labelled Boost for continuous heating devices and On for switchable devices.",
-    "other": "fast"
-  },
-  "modeNormal": {
-    "description": "Label of the Off mode for continuous heating devices, which keep running on their own. SG Ready mode 2.",
-    "other": "normal"
-  },
-  "modeOff": {
-    "description": "Charge mode: no charging. Shown as Normal for continuous heating devices.",
-    "other": "off"
-  },
-  "modeOn": {
-    "description": "Label of the Fast mode for switchable devices: switch on now.",
-    "other": "on"
-  },
-  "modeSmart": {
-    "description": "Charge mode: surplus plus cheap or clean grid energy, following plans and limits. Keep the English word in your language. Translate only if the English word would irritate users.",
-    "other": "smart"
-  },
-  "optimizer": {
-    "description": "Battery and charging optimization feature. Keep the English word in your language. Translate only if the English word would irritate users.",
-    "other": "optimizer"
-  },
-  "page": {
-    "description": "Top-level view reachable from the tab bar or menu.",
-    "other": "page"
-  },
-  "pageCharge": {
-    "description": "The start page with charging points and energy flow, named after its tab bar label.",
-    "other": "Charge page"
-  },
-  "power": {
-    "description": "Instantaneous rate, in W or kW. Not energy.",
-    "other": "power"
-  },
-  "priceLimit": {
-    "description": "Maximum price per kWh at which smart mode charges from the grid.",
-    "other": "price limit"
-  },
-  "production": {
-    "description": "Energy generated on site. Usually PV, deliberately open to other sources like wind.",
-    "other": "production"
-  },
-  "savings": {
-    "description": "Money saved compared to charging everything from the grid at the reference price.",
-    "other": "savings"
-  },
-  "selfConsumption": {
-    "description": "Share of solar production used on site instead of exported.",
-    "other": "self-consumption"
-  },
-  "solar": {
-    "description": "Energy from the PV system. Always solar in English, not PV or photovoltaic.",
-    "other": "solar"
-  },
-  "solarSystem": {
-    "description": "The PV installation as a device.",
-    "other": "solar system"
-  },
-  "sponsorToken": {
-    "description": "Token that unlocks sponsor-only features and devices. Two words, lowercase in body text.",
-    "other": "sponsor token"
-  },
-  "summativeEnergyMeasurement": {
-    "description": "Meter nets signed power across phases each instant. Not phase balancing, not net metering.",
-    "other": "summative energy measurement"
-  },
-  "surplus": {
-    "description": "Production minus house consumption, available for charging or heating.",
-    "other": "surplus"
-  },
-  "switchableSocket": {
-    "description": "Socket, plug or relay that is switched on and off, integrated as a charger.",
-    "other": "switchable socket"
-  },
-  "tariff": {
-    "description": "Price structure over time for grid import or grid export, static or dynamic.",
-    "other": "tariff"
-  },
-  "tariffSurcharge": {
-    "description": "Fixed amount per kWh added to the energy price, e.g. grid fees or provider margin. Not the charge level.",
-    "other": "surcharge"
-  },
-  "usage": {
-    "description": "Energy overview view showing where energy went.",
-    "other": "usage"
-  },
-  "valueRange": {
-    "description": "Span between lowest and highest value in a forecast or chart, e.g. price or temperature range.",
-    "other": "range"
-  },
-  "vehicle": {
-    "description": "An EV known to evcc, with its battery capacity and charge level.",
-    "other": "vehicle"
-  },
-  "vehicleLimit": {
-    "description": "Charge limit set in the vehicle itself, not in evcc.",
-    "other": "vehicle limit"
-  },
-  "vehicleRange": {
-    "description": "Distance a vehicle can drive, in km or mi.",
-    "other": "range"
-  },
-  "withdrawal": {
-    "description": "Energy taken from a costly source: grid import and battery discharge. Counterpart of production in the energy chart, which groups energy used directly from own sources. Not a financial term.",
-    "other": "withdrawal"
-  }
+    "autarky": {
+        "description": "Share of consumption covered without the grid.",
+        "other": "autarky"
+    },
+    "authorization": {
+        "description": "Releasing a charging point for charging, e.g. by RFID or app.",
+        "other": "authorization"
+    },
+    "batteryBoost": {
+        "description": "Smart mode setting: charge the vehicle from the home battery down to a limit.",
+        "other": "battery boost"
+    },
+    "batteryCharge": {
+        "description": "Energy flowing into the home battery.",
+        "other": "battery charge"
+    },
+    "batteryDischarge": {
+        "description": "Energy flowing out of the home battery.",
+        "other": "battery discharge"
+    },
+    "card": {
+        "description": "A boxed UI panel on a page. Not tile or panel.",
+        "other": "card"
+    },
+    "charged": {
+        "description": "Energy that went into the vehicle or battery during a session or period.",
+        "other": "charged"
+    },
+    "chargeLevel": {
+        "description": "State of charge of a vehicle or home battery in percent. SoC only in code and data exports, never in UI text.",
+        "other": "charge level"
+    },
+    "chargeLevelShort": {
+        "description": "Short form of charge level for labels and table headers.",
+        "other": "charge"
+    },
+    "charger": {
+        "description": "Device level: the wallbox hardware. The charging point is the loadpoint using it.",
+        "other": "charger"
+    },
+    "chargingPlan": {
+        "description": "Target charge level by a point in time. Plural also names the feature and its dialog.",
+        "other": "charging plan"
+    },
+    "chargingSession": {
+        "description": "One plug-in to unplug cycle, as shown in the sessions log.",
+        "other": "charging session"
+    },
+    "chargingSessionShort": {
+        "description": "Short form of charging session for tight spaces such as the tab bar.",
+        "other": "session"
+    },
+    "cheapEnergy": {
+        "description": "Grid energy below the price limit.",
+        "other": "cheap energy"
+    },
+    "circuit": {
+        "description": "Nestable load management group with a current or power limit that caps everything below it.",
+        "other": "circuit"
+    },
+    "circuitRoot": {
+        "description": "Top-level circuit of the nesting, usually the grid connection. All other circuits sit below it.",
+        "other": "root circuit"
+    },
+    "circuitSub": {
+        "description": "Circuit nested inside another circuit.",
+        "other": "sub-circuit"
+    },
+    "cleanEnergy": {
+        "description": "Grid energy below the CO₂ limit.",
+        "other": "clean energy"
+    },
+    "co2": {
+        "description": "Carbon dioxide. Written with the Unicode subscript character ₂ in every language, not CO2.",
+        "other": "CO₂"
+    },
+    "co2Limit": {
+        "description": "Maximum grid CO₂ intensity at which smart mode charges from the grid.",
+        "other": "CO₂ limit"
+    },
+    "consumer": {
+        "description": "A metered load that evcc does not control, part of house consumption.",
+        "other": "consumer"
+    },
+    "consumption": {
+        "description": "Energy used in the house excluding charging and heating controlled by evcc.",
+        "other": "consumption"
+    },
+    "cost": {
+        "description": "Total amount of money for a session or period. Price is per kWh, cost is the sum.",
+        "other": "cost"
+    },
+    "curtailment": {
+        "description": "Limiting PV production, e.g. the 60% or 70% rule.",
+        "other": "curtailment"
+    },
+    "dialog": {
+        "description": "Overlay opened from a page for settings or confirmations. Called modal only in code.",
+        "other": "dialog"
+    },
+    "dynamicTariff": {
+        "description": "Tariff whose prices change over time, e.g. every hour or 15 minutes.",
+        "other": "dynamic tariff"
+    },
+    "emissions": {
+        "description": "CO₂ caused by charged energy, in kg or g/kWh.",
+        "other": "emissions"
+    },
+    "energy": {
+        "description": "Amount over time, in Wh or kWh. Not power.",
+        "other": "energy"
+    },
+    "energyFlow": {
+        "description": "Live diagram of production, grid, battery and consumption.",
+        "other": "energy flow"
+    },
+    "energyPrice": {
+        "description": "Price per kWh at a point in time.",
+        "other": "energy price"
+    },
+    "evcc": {
+        "description": "Product name. Always lowercase in every language, also at sentence start.",
+        "other": "evcc"
+    },
+    "externalLimit": {
+        "description": "Limit imposed by the grid operator or an external system. Code says HEMS for historical reasons; never use that acronym for this feature in UI text.",
+        "other": "external limit"
+    },
+    "forecast": {
+        "description": "Solar, price or CO₂ forecast.",
+        "other": "forecast"
+    },
+    "grid": {
+        "description": "Public electricity grid.",
+        "other": "grid"
+    },
+    "gridExport": {
+        "description": "Energy fed into the grid. Short label export inside a grid card. One term throughout, no synonyms such as feed-in.",
+        "other": "grid export"
+    },
+    "gridExportTariff": {
+        "description": "Tariff for energy fed into the grid, i.e. the remuneration. Builds on the grid export term; one word for both is fine if the language has no distinction.",
+        "other": "grid export tariff"
+    },
+    "gridImport": {
+        "description": "Energy taken from the grid. Short label import inside a grid card.",
+        "other": "grid import"
+    },
+    "gridImportTariff": {
+        "description": "Tariff for energy taken from the grid.",
+        "other": "grid import tariff"
+    },
+    "gridMeter": {
+        "description": "Meter at the grid connection point.",
+        "other": "grid meter"
+    },
+    "guestVehicle": {
+        "description": "Unknown vehicle at a charging point, not configured in evcc.",
+        "other": "guest vehicle"
+    },
+    "heatingDevice": {
+        "description": "Device level: heat pump, heating rod etc. The heating counterpart of a charger.",
+        "other": "heating device"
+    },
+    "homeBattery": {
+        "description": "Stationary battery in the house, as opposed to the vehicle battery.",
+        "other": "home battery"
+    },
+    "loadpoint": {
+        "description": "Developer term for the controllable unit on top of a device, i.e. a charging point or a heater. Never used in UI text.",
+        "other": "charging point or heater"
+    },
+    "loadpointCharging": {
+        "description": "Loadpoint built on a charger, controls a vehicle.",
+        "other": "charging point"
+    },
+    "loadpointHeating": {
+        "description": "Loadpoint built on a heating device, the heating counterpart of a charging point.",
+        "other": "heater"
+    },
+    "meter": {
+        "description": "Device that reports power and energy at one point of the installation, e.g. grid, solar, battery or consumer. Inverters and batteries act as meters too.",
+        "other": "meter"
+    },
+    "meterReading": {
+        "description": "Cumulative energy counter of a meter in kWh, e.g. at session start and stop.",
+        "other": "meter reading"
+    },
+    "meterUsage": {
+        "description": "Role of a meter in the installation: grid, solar, battery, charger or consumer.",
+        "other": "usage"
+    },
+    "mileage": {
+        "description": "Odometer reading of a vehicle.",
+        "other": "mileage"
+    },
+    "minimumCharge": {
+        "description": "Desired charge level that should be charged regardless of surplus or price.",
+        "other": "minimum charge"
+    },
+    "modeBoost": {
+        "description": "Label of the Fast mode for continuous heating devices: request more power now. SG Ready mode 3.",
+        "other": "boost"
+    },
+    "modeFast": {
+        "description": "Charge mode: full power now. Labelled Boost for continuous heating devices and On for switchable devices.",
+        "other": "fast"
+    },
+    "modeNormal": {
+        "description": "Label of the Off mode for continuous heating devices, which keep running on their own. SG Ready mode 2.",
+        "other": "normal"
+    },
+    "modeOff": {
+        "description": "Charge mode: no charging. Shown as Normal for continuous heating devices.",
+        "other": "off"
+    },
+    "modeOn": {
+        "description": "Label of the Fast mode for switchable devices: switch on now.",
+        "other": "on"
+    },
+    "modeSmart": {
+        "description": "Charge mode: surplus plus cheap or clean grid energy, following plans and limits. Keep the English word in your language. Translate only if the English word would irritate users.",
+        "other": "smart"
+    },
+    "optimizer": {
+        "description": "Battery and charging optimization feature. Keep the English word in your language. Translate only if the English word would irritate users.",
+        "other": "optimizer"
+    },
+    "page": {
+        "description": "Top-level view reachable from the tab bar or menu.",
+        "other": "page"
+    },
+    "pageCharge": {
+        "description": "The start page with charging points and energy flow, named after its tab bar label.",
+        "other": "Charge page"
+    },
+    "power": {
+        "description": "Instantaneous rate, in W or kW. Not energy.",
+        "other": "power"
+    },
+    "priceLimit": {
+        "description": "Maximum price per kWh at which smart mode charges from the grid.",
+        "other": "price limit"
+    },
+    "production": {
+        "description": "Energy generated on site. Usually PV, deliberately open to other sources like wind.",
+        "other": "production"
+    },
+    "savings": {
+        "description": "Money saved compared to charging everything from the grid at the reference price.",
+        "other": "savings"
+    },
+    "selfConsumption": {
+        "description": "Share of solar production used on site instead of exported.",
+        "other": "self-consumption"
+    },
+    "solar": {
+        "description": "Energy from the PV system. Always solar in English, not PV or photovoltaic.",
+        "other": "solar"
+    },
+    "solarSystem": {
+        "description": "The PV installation as a device.",
+        "other": "solar system"
+    },
+    "sponsorToken": {
+        "description": "Token that unlocks sponsor-only features and devices. Two words, lowercase in body text.",
+        "other": "sponsor token"
+    },
+    "summativeEnergyMeasurement": {
+        "description": "Meter nets signed power across phases each instant. Not phase balancing, not net metering.",
+        "other": "summative energy measurement"
+    },
+    "surplus": {
+        "description": "Production minus house consumption, available for charging or heating.",
+        "other": "surplus"
+    },
+    "switchableSocket": {
+        "description": "Socket, plug or relay that is switched on and off, integrated as a charger.",
+        "other": "switchable socket"
+    },
+    "tariff": {
+        "description": "Price structure over time for grid import or grid export, static or dynamic.",
+        "other": "tariff"
+    },
+    "tariffSurcharge": {
+        "description": "Fixed amount per kWh added to the energy price, e.g. grid fees or provider margin. Not the charge level.",
+        "other": "surcharge"
+    },
+    "usage": {
+        "description": "Energy overview view showing where energy went.",
+        "other": "usage"
+    },
+    "valueRange": {
+        "description": "Span between lowest and highest value in a forecast or chart, e.g. price or temperature range.",
+        "other": "range"
+    },
+    "vehicle": {
+        "description": "An EV known to evcc, with its battery capacity and charge level.",
+        "other": "vehicle"
+    },
+    "vehicleLimit": {
+        "description": "Charge limit set in the vehicle itself, not in evcc.",
+        "other": "vehicle limit"
+    },
+    "vehicleRange": {
+        "description": "Distance a vehicle can drive, in km or mi.",
+        "other": "range"
+    },
+    "withdrawal": {
+        "description": "Energy taken from a costly source: grid import and battery discharge. Counterpart of production in the energy chart, which groups energy used directly from own sources. Not a financial term.",
+        "other": "withdrawal"
+    }
 }

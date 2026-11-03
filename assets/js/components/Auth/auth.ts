@@ -86,22 +86,6 @@ export function openLoginModal(nextUrl: string | null = null, nextModal: Modal |
   modal.show();
 }
 
-// show/hide password modal based on auth status
-watch(
-  () => auth.configured,
-  (configured) => {
-    console.log("configured", configured);
-    const modal = Modal.getOrCreateInstance(
-      document.getElementById("passwordSetupModal") as HTMLElement
-    );
-    if (configured) {
-      modal.hide();
-    } else {
-      modal.show();
-    }
-  }
-);
-
 let timeoutId: number | undefined = undefined;
 function debounedUpdateAuthStatus() {
   clearTimeout(timeoutId);

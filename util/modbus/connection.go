@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"time"
 
+	gridx "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 )
 
@@ -146,4 +147,63 @@ func (c *Connection) ReadFIFOQueue(address uint16) (results []byte, err error) {
 	return c.read(func() ([]byte, error) {
 		return c.ModbusClient().ReadFIFOQueue(address)
 	})
+}
+
+// maximum PDU size (253 bytes) minus the function code
+const maxRawDataLength = 252
+
+// ErrRawUnsupported is returned by SendRaw for connections other than Modbus TCP
+var ErrRawUnsupported = errors.New("raw requests require a modbus tcp connection")
+
+// SendRaw sends a Modbus TCP PDU without retries and returns the response data.
+// Exception responses are returned as *modbus.Error and keep the connection open.
+func (c *Connection) SendRaw(functionCode byte, data []byte) ([]byte, error) {
+	tcp, ok := c.Connection.(*meters.TCP)
+	if !ok {
+		return nil, ErrRawUnsupported
+	}
+
+	if len(data) > maxRawDataLength {
+		return nil, fmt.Errorf("raw request data exceeds %d bytes", maxRawDataLength)
+	}
+
+	// exec closes the connection on error, so exceptions are returned afterwards
+	var exception error
+
+	b, err := c.exec(func() ([]byte, error) {
+		req, err := tcp.Handler.Encode(&gridx.ProtocolDataUnit{FunctionCode: functionCode, Data: data})
+		if err != nil {
+			return nil, err
+		}
+
+		res, err := tcp.Handler.Send(req)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := tcp.Handler.Verify(req, res); err != nil {
+			return nil, err
+		}
+
+		pdu, err := tcp.Handler.Decode(res)
+		if err != nil {
+			return nil, err
+		}
+
+		switch {
+		case pdu.FunctionCode == functionCode:
+			return pdu.Data, nil
+		case pdu.FunctionCode == 0x80|functionCode && len(pdu.Data) == 1:
+			exception = &gridx.Error{FunctionCode: pdu.FunctionCode, ExceptionCode: pdu.Data[0]}
+			return nil, nil
+		default:
+			return nil, fmt.Errorf("invalid raw response: function code %02x, data % x", pdu.FunctionCode, pdu.Data)
+		}
+	})
+
+	if err == nil {
+		err = exception
+	}
+
+	return b, err
 }

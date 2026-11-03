@@ -2,6 +2,7 @@ package meter
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -20,7 +21,9 @@ func TestBatteryCapacity(t *testing.T) {
 		g, err := cc.Decorator(ctx)
 		require.NoError(t, err)
 		require.NotNil(t, g)
-		require.Equal(t, 10.0, g())
+		v, err := g()
+		require.NoError(t, err)
+		require.Equal(t, 10.0, v)
 	}
 
 	// zero value is treated as not configured
@@ -52,8 +55,69 @@ func TestBatteryCapacity(t *testing.T) {
 		g, err := cc.Decorator(ctx)
 		require.NoError(t, err)
 		require.NotNil(t, g)
-		require.Equal(t, 12.5, g())
+		v, err := g()
+		require.NoError(t, err)
+		require.Equal(t, 12.5, v)
 	}
+}
+
+func TestBatteryPowerLimitsPluginError(t *testing.T) {
+	var cc batteryPowerLimitsCtx
+	require.NoError(t, util.DecodeOther(map[string]any{
+		"maxchargepower": 1000,
+		"maxdischargepower": map[string]any{
+			"source": "http",
+			"uri":    "http://127.0.0.1:1",
+		},
+	}, &cc))
+	g, err := cc.Decorator(context.TODO())
+	require.NoError(t, err)
+	require.NotNil(t, g)
+
+	// a failed read must surface as error, not as a 0 limit
+	_, _, err = g()
+	require.Error(t, err)
+}
+
+func TestKeepOnce(t *testing.T) {
+	var reads int
+	g := keep(func() (float64, error) {
+		reads++
+		if reads == 1 {
+			return 0, errors.New("read failed")
+		}
+		return 42, nil
+	}, true)
+
+	_, err := g()
+	require.Error(t, err)
+
+	for range 2 {
+		v, err := g()
+		require.NoError(t, err)
+		require.Equal(t, 42.0, v)
+	}
+	require.Equal(t, 2, reads, "cached after first success")
+}
+
+func TestKeepLastGood(t *testing.T) {
+	var fail bool
+	g := keep(func() (float64, error) {
+		if fail {
+			return 0, errors.New("read failed")
+		}
+		return 42, nil
+	}, false)
+
+	v, err := g()
+	require.NoError(t, err)
+	require.Equal(t, 42.0, v)
+
+	// a failed read keeps the last value
+	fail = true
+	v, err = g()
+	require.NoError(t, err)
+	require.Equal(t, 42.0, v)
 }
 
 func TestBatteryModes(t *testing.T) {

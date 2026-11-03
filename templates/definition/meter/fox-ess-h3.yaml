@@ -14,6 +14,14 @@ params:
   - preset: battery-params
   - name: maxchargepower
     required: true
+  - name: maxdischargecurrent
+    default: 26
+    description:
+      en: Max Discharge Current
+      de: Max Entladestrom
+    help:
+      en: Battery max discharge current in A, written back when leaving hold mode. Inverter default is 26 A for H3.
+      de: Maximaler Batterieentladestrom in A, wird beim Verlassen des Haltemodus zurückgeschrieben. Werkseinstellung 26 A bei H3.
   - name: capacity
     advanced: true
   - name: minsoc
@@ -146,30 +154,23 @@ render: |
                 address: 41010 # Maximum SoC
                 type: writesingle
                 encoding: uint16
+          - source: const
+            value: {{ mul .maxdischargecurrent 10 }} # 0.1 A, restores the limit after hold
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 41008 # Battery max discharge current
+                type: writesingle
+                encoding: uint16
       - case: 2 # hold - stop battery discharge
         set:
           source: sequence
           set:
           - source: const
-            value: 1 # Feed-in First, fallback if the remote control watchdog expires
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 41000 # Work Mode
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 60 # Remote timeout 60 seconds
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 44001 # Remote Timeout Set
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 1 # Enabled
+            value: 0 # Disabled: some H3 firmware rejects Remote Active Power (44002),
+            # and a 0 W remote target curtails PV on H3-Pro/Smart. Block discharge via
+            # the discharge current limit instead
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -178,14 +179,23 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 0 # W
+            value: 0 # Self Use
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 44002 # Remote Active Power
-                type: writemultiple
-                encoding: int32
+                address: 41000 # Work Mode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # blocks discharge at any SoC
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 41008 # Battery max discharge current
+                type: writesingle
+                encoding: uint16
       - case: 3 # charge - force battery charge
         set:
           source: sequence
@@ -197,6 +207,15 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 41000 # Work Mode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: {{ mul .maxdischargecurrent 10 }} # restores the limit when switching from hold
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 41008 # Battery max discharge current
                 type: writesingle
                 encoding: uint16
           - source: const

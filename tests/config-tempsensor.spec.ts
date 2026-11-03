@@ -19,7 +19,7 @@ test.afterEach(async () => {
 
 const addTempSensor = async (lpModal: Locator, sensorModal: Locator) => {
   await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
-  await lpModal.getByRole("button", { name: "Add external temperature sensor" }).click();
+  await lpModal.getByRole("button", { name: "Add temperature sensor" }).click();
   await expectModalVisible(sensorModal);
   await sensorModal.getByLabel("Manufacturer").selectOption("User-defined device");
   await sensorModal.getByRole("button", { name: "Validate & save" }).click();
@@ -42,7 +42,7 @@ test.describe("temp sensor", async () => {
     await newLoadpoint(page, "Boiler", LoadpointType.Heating);
     await addDemoCharger(page, LoadpointType.Heating);
     await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
-    await lpModal.getByRole("button", { name: "Add external temperature sensor" }).click();
+    await lpModal.getByRole("button", { name: "Add temperature sensor" }).click();
     await expectModalVisible(sensorModal);
     await expect(
       sensorModal.getByRole("heading", { name: "Add Temperature Sensor" })
@@ -106,9 +106,7 @@ test.describe("temp sensor", async () => {
     await sensorModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(sensorModal);
     await expectModalVisible(lpModal);
-    await expect(
-      lpModal.getByRole("button", { name: "Add external temperature sensor" })
-    ).toBeVisible();
+    await expect(lpModal.getByRole("button", { name: "Add temperature sensor" })).toBeVisible();
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
 
@@ -154,8 +152,6 @@ test.describe("temp sensor", async () => {
     await addDemoCharger(page);
     await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     await expect(lpModal.getByLabel("Default mode")).toBeVisible();
-    await expect(
-      lpModal.getByRole("button", { name: "Add external temperature sensor" })
-    ).toHaveCount(0);
+    await expect(lpModal.getByRole("button", { name: "Add temperature sensor" })).toHaveCount(0);
   });
 });

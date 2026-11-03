@@ -9,11 +9,11 @@ requirements:
   description:
     de: |
       Der Modbus-TCP-Server muss am Display unter „Einstellungen / Netzwerk“ aktiviert und der Modbus Login-Code deaktiviert (Wert 1) werden, da evcc die Login-Sequenz nicht durchführt.
-      Die PV-Statusquelle muss am Display auf „EMS“ und die PV-Datenquelle auf die Leistungsvorgabe gestellt werden.
+      Die PV-Statusquelle muss (im passwortgeschützten Fachmannbereich; kein Endkundenzugriff) am Display auf „EMS“ und die PV-Datenquelle (ebenfalls im Fachmannbereich) auf die Leistungsvorgabe gestellt werden.
       Benötigt MIRA-Regler ab Softwareversion V1.1.3.
     en: |
       The Modbus TCP server must be enabled at the display under "Settings / Network" and the Modbus login code must be disabled (value 1) since evcc does not perform the login sequence.
-      The PV status source must be set to "EMS" and the PV data source to the power setpoint at the display.
+      The PV status source (available only in the password protected expert menu) must be set to "EMS" and the PV data source (also only available in the expert menu) to the power setpoint at the display.
       Requires MIRA controller software V1.1.3 or later.
 params:
   - name: modbus

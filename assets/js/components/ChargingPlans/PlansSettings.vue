@@ -37,6 +37,7 @@
 					:precondition="effectivePlanStrategy?.precondition"
 					:continuous="effectivePlanStrategy?.continuous"
 					:smart-cost-type="smartCostType"
+					:optimizer-controlled="optimizerControlled"
 					@update="updatePlanStrategy"
 				/>
 			</div>
@@ -110,6 +111,7 @@ export default defineComponent({
 		socPerKwh: Number,
 		rangePerSoc: Number,
 		smartCostType: String as PropType<SMART_COST_TYPE>,
+		optimizerControlled: Boolean,
 		currency: String as PropType<CURRENCY>,
 		mode: String,
 		capacity: Number,

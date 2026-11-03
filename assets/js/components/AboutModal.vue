@@ -2,19 +2,7 @@
 	<GenericModal id="aboutModal" @opened="acknowledge">
 		<template #title>
 			<a :href="websiteUrl" target="_blank" rel="noopener noreferrer">
-				<template v-if="customLogo">
-					<img
-						:src="'./custom-logo-light'"
-						class="about-logo custom-logo custom-logo--light"
-						:alt="customBrand || 'evcc'"
-					/>
-					<img
-						:src="'./custom-logo-dark'"
-						class="about-logo custom-logo custom-logo--dark"
-						:alt="customBrand || 'evcc'"
-					/>
-				</template>
-				<Logo v-else class="about-logo" />
+				<BrandLogo :custom-logo="customLogo" :custom-brand="customBrand" />
 			</a>
 		</template>
 		<div v-if="updateStarted">
@@ -154,6 +142,7 @@ import GenericModal from "./Helper/GenericModal.vue";
 import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/filled/heart";
 import Logo from "./Footer/Logo.vue";
+import BrandLogo from "./BrandLogo.vue";
 import Badge from "./Helper/Badge.vue";
 import api from "@/api";
 import settings from "@/settings";
@@ -166,7 +155,7 @@ const EVCC_WEBSITE = "https://evcc.io/";
 
 export default defineComponent({
 	name: "AboutModal",
-	components: { GenericModal, Logo, Badge },
+	components: { GenericModal, Logo, BrandLogo, Badge },
 	props: {
 		installed: { type: String, default: "" },
 		commit: { type: String, default: "" },
@@ -249,27 +238,8 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.about-logo {
-	height: 2.5rem;
-}
 .footer-logo {
 	height: 1rem;
-}
-.custom-logo {
-	height: 4rem;
-	width: auto;
-	max-width: 100%;
-	object-fit: contain;
-	object-position: left;
-}
-.custom-logo--dark {
-	display: none;
-}
-:root.dark .custom-logo--light {
-	display: none;
-}
-:root.dark .custom-logo--dark {
-	display: inline;
 }
 .about-table th {
 	padding-right: 1rem;

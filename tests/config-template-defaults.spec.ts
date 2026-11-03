@@ -4,6 +4,7 @@ import { expectModalHidden, expectModalVisible } from "./utils";
 
 const templateFlags = [
   "--disable-auth",
+  "--disable-onboarding",
   "--template-type",
   "meter",
   "--template",

@@ -1,0 +1,118 @@
+template: huawei-meter
+products:
+  - brand: Huawei
+    description:
+      generic: DTSU666-H
+  - brand: CHINT
+    description:
+      generic: DTSU666 (Huawei firmware)
+requirements:
+  description:
+    de: Der Zähler darf nicht gleichzeitig am Meter-Port eines Huawei-Wechselrichters angeschlossen sein. In diesem Fall die Netzwerte über das Wechselrichter-Template auslesen.
+    en: The meter must not be connected to the meter port of a Huawei inverter at the same time. In that case, read the grid values via the inverter template.
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+    id: 11
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2126 # Total active power
+      type: holding
+      decode: float32
+    {{- if eq .usage "pv" }}
+    scale: -1
+    {{- end }}
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      {{- if eq .usage "pv" }}
+      address: 2174 # Reverse active energy
+      {{- else }}
+      address: 2166 # Forward active energy
+      {{- end }}
+      type: holding
+      decode: float32
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      {{- if eq .usage "pv" }}
+      address: 2166 # Forward active energy
+      {{- else }}
+      address: 2174 # Reverse active energy
+      {{- end }}
+      type: holding
+      decode: float32
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2102 # Current of A phase
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2104 # Current of B phase
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2106 # Current of C phase
+      type: holding
+      decode: float32
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2110 # Voltage of A phase
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2112 # Voltage of B phase
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2114 # Voltage of C phase
+      type: holding
+      decode: float32
+  powers:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2128 # Active power of A phase
+      type: holding
+      decode: float32
+    {{- if eq .usage "pv" }}
+    scale: -1
+    {{- end }}
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2130 # Active power of B phase
+      type: holding
+      decode: float32
+    {{- if eq .usage "pv" }}
+    scale: -1
+    {{- end }}
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2132 # Active power of C phase
+      type: holding
+      decode: float32
+    {{- if eq .usage "pv" }}
+    scale: -1
+    {{- end }}

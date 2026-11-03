@@ -1,7 +1,6 @@
 package fiat
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -12,36 +11,36 @@ import (
 	"strings"
 	"time"
 
-	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
 )
 
 const (
-	LoginURI = "https://loginmyuconnect.fiat.com"
-	TokenURI = "https://authz.sdpr-01.fcagcv.com/v2/cognito/identity/token"
+	LoginURI   = "https://loginmyuconnect.fiat.com"
+	TokenURI   = "https://authz.sdpr-01.fcagcv.com/v2/cognito/identity/token"
+	CognitoURI = "https://cognito-identity." + Region + ".amazonaws.com/"
 
 	Region = "eu-west-1"
 )
 
+// credentials are the temporary aws credentials issued by cognito
+type credentials struct {
+	AccessKeyId, SecretKey, SessionToken string
+	Expiration                           float64 // unix seconds
+}
+
 type Identity struct {
 	*request.Helper
-	ctx            context.Context
 	user, password string
 	uid            string
-	creds          *types.Credentials
+	creds          *credentials
 }
 
 // NewIdentity creates Fiat identity
-func NewIdentity(log *util.Logger, ctx context.Context, user, password string) *Identity {
+func NewIdentity(log *util.Logger, user, password string) *Identity {
 	return &Identity{
 		Helper:   request.NewHelper(log),
-		ctx:      ctx,
 		user:     user,
 		password: password,
 	}
@@ -162,23 +161,26 @@ func (v *Identity) Login() error {
 		return err
 	}
 
-	cfg, err := config.LoadDefaultConfig(v.ctx, config.WithRegion(Region))
-	if err != nil {
-		return err
+	// GetCredentialsForIdentity is an unsigned json call, no sdk needed
+	var creds struct {
+		Credentials credentials
 	}
-	svc := cognitoidentity.NewFromConfig(cfg)
 
-	credRes, err := svc.GetCredentialsForIdentity(v.ctx, &cognitoidentity.GetCredentialsForIdentityInput{
-		IdentityId: &identity.IdentityID,
-		Logins: map[string]string{
-			"cognito-identity.amazonaws.com": identity.Token,
-		},
+	req, _ = request.New(http.MethodPost, CognitoURI, request.MarshalJSON(struct {
+		IdentityId string
+		Logins     map[string]string
+	}{
+		IdentityId: identity.IdentityID,
+		Logins:     map[string]string{"cognito-identity.amazonaws.com": identity.Token},
+	}), map[string]string{
+		"Content-Type": "application/x-amz-json-1.1",
+		"X-Amz-Target": "AWSCognitoIdentityService.GetCredentialsForIdentity",
 	})
-	if err != nil {
+	if err := v.DoJSON(req, &creds); err != nil {
 		return err
 	}
 
-	v.creds = credRes.Credentials
+	v.creds = &creds.Credentials
 	return nil
 }
 
@@ -190,19 +192,10 @@ func (v *Identity) UID() string {
 // Sign signs an AWS request using identity's credentials
 func (v *Identity) Sign(req *http.Request, body io.ReadSeeker) error {
 	// refresh credentials
-	if v.creds.Expiration.Before(time.Now().Add(-time.Minute)) {
+	if v.creds == nil || time.Unix(int64(v.creds.Expiration), 0).Before(time.Now().Add(-time.Minute)) {
 		if err := v.Login(); err != nil {
 			return fmt.Errorf("login failed: %w", err)
 		}
-	}
-
-	// sign request
-	credProvider := credentials.NewStaticCredentialsProvider(
-		*v.creds.AccessKeyId, *v.creds.SecretKey, *v.creds.SessionToken,
-	)
-	credentials, err := credProvider.Retrieve(v.ctx)
-	if err != nil {
-		return err
 	}
 
 	payloadHash, err := hashBody(body)
@@ -210,8 +203,8 @@ func (v *Identity) Sign(req *http.Request, body io.ReadSeeker) error {
 		return err
 	}
 
-	signer := v4.NewSigner()
-	return signer.SignHTTP(v.ctx, credentials, req, payloadHash, "execute-api", Region, time.Now())
+	signV4(req, v.creds.AccessKeyId, v.creds.SecretKey, v.creds.SessionToken, Region, "execute-api", payloadHash, time.Now())
+	return nil
 }
 
 func hashBody(body io.ReadSeeker) (string, error) {

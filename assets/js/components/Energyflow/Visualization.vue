@@ -13,7 +13,7 @@
 				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">
 					<shopicon-regular-sun></shopicon-regular-sun>
 				</LabelBar>
-				<LabelBar v-bind="labelBarProps('top', 'batteryDischarge')">
+				<LabelBar class="battery-label" v-bind="labelBarProps('top', 'batteryDischarge')">
 					<BatteryIcon :soc="batterySoc" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'gridImport')">
@@ -85,7 +85,7 @@
 				>
 					<VehicleIcon :names="[lp.icon]" />
 				</LabelBar>
-				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
+				<LabelBar class="battery-label" v-bind="labelBarProps('bottom', 'batteryCharge')">
 					<BatteryIcon :soc="batterySoc" :mode="batteryMode" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'pvExport')">
@@ -101,6 +101,7 @@
 			v-if="batteryConfigured"
 			to="/battery"
 			class="battery-status"
+			:class="{ 'battery-status--normal': batteryModeNormal }"
 			:aria-label="$t('main.energyflow.batteryStatus')"
 			@click.stop
 		>
@@ -119,7 +120,7 @@ import QuestionIcon from "../MaterialIcon/Question.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
 import { defineComponent, type PropType } from "vue";
-import type { BATTERY_MODE, UiLoadpoint } from "@/types/evcc";
+import { BATTERY_MODE, type UiLoadpoint } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Visualization",
@@ -166,6 +167,11 @@ export default defineComponent({
 		},
 		visualizationReady() {
 			return this.total > 0 && this.width > 0;
+		},
+		batteryModeNormal() {
+			return [undefined, BATTERY_MODE.NORMAL, BATTERY_MODE.UNKNOWN].includes(
+				this.batteryMode
+			);
 		},
 	},
 
@@ -312,5 +318,14 @@ html.dark .grid-import {
 	top: 2.5rem;
 	right: -0.25rem;
 	color: var(--evcc-gray);
+}
+.visualization--ready .battery-status {
+	transition-property: opacity, visibility;
+	transition-duration: var(--evcc-transition-medium);
+}
+/* redundant while a battery label already shows its icon */
+.visualization:has(.battery-label:not(.label-bar--hide-icon)) .battery-status--normal {
+	opacity: 0;
+	visibility: hidden;
 }
 </style>

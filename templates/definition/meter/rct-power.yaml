@@ -6,6 +6,8 @@ products:
 capabilities: ["battery-control", "curtail"]
 requirements:
   evcc: ["skiptest"]
+discovery:
+  hostname: ["rct-ps*"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

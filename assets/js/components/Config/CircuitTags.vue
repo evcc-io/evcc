@@ -178,7 +178,7 @@ export default {
 	margin-left: 1px;
 }
 .bar-export {
-	background-color: var(--evcc-export-contrast);
+	background-color: var(--evcc-export);
 }
 /* stripe period matches the bar height so the pattern stays legible on the thin track */
 .bar-striped {

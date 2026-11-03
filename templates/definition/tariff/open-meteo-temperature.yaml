@@ -16,12 +16,41 @@ params:
   - name: interval
     default: 1h
     advanced: true
+  - name: model
+    description:
+      de: Wettermodell
+      en: Weather model
+    help:
+      en: See Weather Models on [Open-Meteo API docs](https://open-meteo.com/en/docs)
+      de: Siehe Weather Models unter [Open-Meteo API docs](https://open-meteo.com/en/docs)
+    type: choice
+    # https://github.com/open-meteo/open-meteo/blob/main/openapi/forecast.yml#L603
+    choice:
+      [
+        "best_match",
+        "chmi_aladin_seamless",
+        "cmc_gem_seamless",
+        "dmi_seamless",
+        "geosphere_seamless",
+        "icon_seamless",
+        "jma_seamless",
+        "kma_seamless",
+        "knmi_seamless",
+        "meteofrance_seamless",
+        "meteoswiss_icon_seamless",
+        "metno_seamless",
+        "ncep_gfs_seamless",
+        "ukmo_seamless",
+      ]
+    default: best_match
+    required: true
+    advanced: true
 render: |
   type: custom
   tariff: temperature
   forecast:
     source: http
-    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&minutely_15=temperature_2m&past_days=7&forecast_days=5&timezone=UTC
+    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&minutely_15=temperature_2m&past_days=7&forecast_days=5&timezone=UTC{{ if ne .model "best_match" }}&models={{ .model }}{{ end }}
     jq: |
       [ .minutely_15.time as $times
         | .minutely_15.temperature_2m as $temps

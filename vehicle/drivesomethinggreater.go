@@ -27,6 +27,7 @@ func NewDriveSomethingGreaterFromConfig(other map[string]any) (api.Vehicle, erro
 		embed                      `mapstructure:",squash"`
 		Brand, User, Password, VIN string
 		Cache                      time.Duration
+		SocKeys                    []string
 	}{
 		Brand: "Volkswagen",
 		Cache: interval,
@@ -60,7 +61,7 @@ func NewDriveSomethingGreaterFromConfig(other map[string]any) (api.Vehicle, erro
 
 	if err == nil {
 		v.fromVehicle(vehicle.Name(), 0)
-		v.Provider = eudataact.NewProvider(log, api, vehicle.Vin(), cc.Cache)
+		v.Provider = eudataact.NewProvider(log, api, vehicle.Vin(), cc.Cache, cc.SocKeys)
 	}
 
 	return v, err

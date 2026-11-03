@@ -33,13 +33,16 @@ func _ExternalControlNoOp() {
 var _ExternalControlValues = []ExternalControl{ExternalControlAvailable, ExternalControlDeactivated, ExternalControlRuntimeConditionsNotMet, ExternalControlCurrentlySwitching}
 
 var _ExternalControlNameToValueMap = map[string]ExternalControl{
-	_ExternalControlName[0:9]:        ExternalControlAvailable,
+	_ExternalControlName[0:9]:   ExternalControlAvailable,
+	_ExternalControlName[9:20]:  ExternalControlDeactivated,
+	_ExternalControlName[20:46]: ExternalControlRuntimeConditionsNotMet,
+	_ExternalControlName[46:65]: ExternalControlCurrentlySwitching,
+}
+
+var _ExternalControlLowerNameToValueMap = map[string]ExternalControl{
 	_ExternalControlLowerName[0:9]:   ExternalControlAvailable,
-	_ExternalControlName[9:20]:       ExternalControlDeactivated,
 	_ExternalControlLowerName[9:20]:  ExternalControlDeactivated,
-	_ExternalControlName[20:46]:      ExternalControlRuntimeConditionsNotMet,
 	_ExternalControlLowerName[20:46]: ExternalControlRuntimeConditionsNotMet,
-	_ExternalControlName[46:65]:      ExternalControlCurrentlySwitching,
 	_ExternalControlLowerName[46:65]: ExternalControlCurrentlySwitching,
 }
 
@@ -57,7 +60,7 @@ func ExternalControlString(s string) (ExternalControl, error) {
 		return val, nil
 	}
 
-	if val, ok := _ExternalControlNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _ExternalControlLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to ExternalControl values", s)

@@ -461,9 +461,27 @@ func (suite *connTestSuite) TestOnStopTransactionResetsReportedPower() {
 	suite.Equal(res, 3.0, "CurrentPower")
 
 	// set powers to zero
-	suite.conn.OnStopTransaction(nil)
+	suite.conn.OnStopTransaction(&core.StopTransactionRequest{})
 
 	res, err = suite.conn.CurrentPower()
 	suite.NoError(err, "CurrentPower")
 	suite.Equal(res, 0.0, "CurrentPower")
+}
+
+func (suite *connTestSuite) TestOnStopTransactionUpdatesEnergy() {
+	suite.conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{Value: "1899.53", Unit: types.UnitOfMeasureKWh}
+
+	suite.conn.startTransaction(1, "evcc")
+	suite.conn.OnStopTransaction(&core.StopTransactionRequest{TransactionId: 1, MeterStop: 1899600})
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.InDelta(1899.6, res, 1e-9)
+
+	// lower readings are ignored
+	suite.conn.OnStopTransaction(&core.StopTransactionRequest{TransactionId: 1, MeterStop: 1000})
+
+	res, err = suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.InDelta(1899.6, res, 1e-9)
 }

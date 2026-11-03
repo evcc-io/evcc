@@ -229,6 +229,8 @@ type Param struct {
 	Usages      []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
 	Type        ParamType    // string representation of the value type, "string" is default
 	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
+	Class       string       `json:",omitempty"` // device class for Type "device", e.g. "charger"
+	Usage       string       `json:",omitempty"` // usage context the referenced device is configured for, e.g. "switch"
 	Service     string       `json:",omitempty"` // defines a service to provide choices
 	Pattern     *Pattern     `json:",omitempty"` // regex pattern and examples for input validation
 

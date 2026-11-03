@@ -21,7 +21,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -36,10 +35,11 @@ import (
 )
 
 var (
-	mu             sync.RWMutex
-	Subject, Token string
-	ExpiresAt      time.Time
-	Hardware       bool // sponsored via hardware check
+	mu           sync.RWMutex
+	Subject      string
+	sponsorToken string
+	ExpiresAt    time.Time
+	Hardware     bool // sponsored via hardware check
 )
 
 func machineID() string {
@@ -57,10 +57,24 @@ func IsAuthorized() bool {
 	return len(Subject) > 0
 }
 
+// Token returns the current sponsor token
+func Token() string {
+	mu.RLock()
+	defer mu.RUnlock()
+	return sponsorToken
+}
+
+// SetToken sets the sponsor token without cloud verification
+func SetToken(token string) {
+	mu.Lock()
+	defer mu.Unlock()
+	sponsorToken = token
+}
+
 func IsAuthorizedForApi() bool {
 	mu.RLock()
 	defer mu.RUnlock()
-	return len(Subject) > 0 && Subject != unavailable && Token != ""
+	return len(Subject) > 0 && Subject != unavailable && sponsorToken != ""
 }
 
 // check and set sponsorship token
@@ -72,11 +86,12 @@ func ConfigureSponsorship(token string) error {
 
 	if token == "" {
 		var sub string
-		if sub, token = checkVictron(); sub == "" && os.Getenv("HEMSPRO") != "" {
-			sub, token = checkHemsPro()
-		}
+		sub, token = checkHardwareVendors()
 
 		Hardware = sub != "" && sub != unavailable
+		if Hardware && token != "" {
+			startRenewal()
+		}
 
 		if token == "" {
 			if sub != "" {
@@ -91,12 +106,10 @@ func ConfigureSponsorship(token string) error {
 		}
 	}
 
-	Token = token
+	sponsorToken = token
 
 	// check expiry locally to avoid cloud roundtrip
-	var claims jwt.RegisteredClaims
-	if _, _, err := jwt.NewParser().ParseUnverified(token, &claims); err == nil &&
-		claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
+	if exp := tokenExpiry(token); !exp.IsZero() && exp.Before(time.Now()) {
 		return errors.New("token is expired - get a fresh one from https://sponsor.evcc.io")
 	}
 
@@ -132,6 +145,15 @@ func ConfigureSponsorship(token string) error {
 	return err
 }
 
+// tokenExpiry reads the unverified exp claim, zero if absent
+func tokenExpiry(token string) time.Time {
+	var claims jwt.RegisteredClaims
+	if _, _, err := jwt.NewParser().ParseUnverified(token, &claims); err != nil || claims.ExpiresAt == nil {
+		return time.Time{}
+	}
+	return claims.ExpiresAt.Time
+}
+
 // redactToken returns a redacted version of the token showing only start and end characters
 func redactToken(token string) string {
 	if len(token) <= 12 {
@@ -153,7 +175,7 @@ func RedactedStatus() Status {
 	mu.RLock()
 	defer mu.RUnlock()
 
-	// hardware tokens are renewed on every start, no expiry warning
+	// hardware tokens are renewed in-process, no expiry warning
 	var expiresSoon bool
 	if d := time.Until(ExpiresAt); d < 30*24*time.Hour && d > 0 && !Hardware {
 		expiresSoon = true
@@ -163,7 +185,7 @@ func RedactedStatus() Status {
 		Name:        Subject,
 		ExpiresAt:   ExpiresAt,
 		ExpiresSoon: expiresSoon,
-		Token:       redactToken(Token),
+		Token:       redactToken(sponsorToken),
 		Hardware:    Hardware,
 	}
 }

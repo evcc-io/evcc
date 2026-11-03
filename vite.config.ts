@@ -83,7 +83,10 @@ export default defineConfig({
     trailingComma: "es5",
     sortPackageJson: false,
     ignorePatterns: ["tests/custom-css.css"],
-    overrides: [{ files: ["**/*.vue"], options: { tabWidth: 4 } }],
+    overrides: [
+      { files: ["**/*.vue"], options: { tabWidth: 4 } },
+      { files: ["i18n/glossary/*.json"], options: { tabWidth: 4 } },
+    ],
   },
   root: "./assets",
   publicDir: "public",

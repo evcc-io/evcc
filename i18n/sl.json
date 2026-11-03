@@ -187,7 +187,6 @@
     "circuits": {
       "addMainCircuit": "Dodaj glavni krog",
       "addSubCircuit": "Dodaj podkrog",
-      "chargingPointsNote": "Polnilna mesta in grelnike dodelite krogu v njihovih lastnih nastavitvah.",
       "description": "Zagotavlja, da vsota vseh obremenitvenih točk, povezanih z vezjem, ne preseže konfiguriranih omejitev moči in toka. Vezja je mogoče ugnezditi za izgradnjo hierarhije.",
       "legacyWarning": "Na voljo je nova konfiguracija krogov! Odstranite in shranite svojo konfiguracijo tukaj, da uporabite nov vodeni postopek.",
       "meterDedicated": "Števec",
@@ -376,6 +375,7 @@
       "optional": "neobvezno"
     },
     "general": {
+      "add": "Dodaj",
       "applyAndClose": "Uporabi in zapri",
       "authPerform": "Povežite se z {provider}",
       "authPerformHint": "Odprlo se bo v novem zavihku. Za nadaljevanje se vrnite sem.",
@@ -387,6 +387,7 @@
       "confirmDisable": "Onemogočim to napravo? Po naslednjem ponovnem zagonu bo prezrta.",
       "confirmEnable": "Ponovno omogočim to napravo?",
       "confirmSave": "Obstajajo neshranjene spremembe. Želite shraniti zdaj?",
+      "continue": "Naprej",
       "copied": "Kopirano!",
       "copy": "Kopirano!",
       "customHelp": "Ustvarite uporabniško definirano napravo z uporabo sistema vtičnikov evcc.",
@@ -499,7 +500,6 @@
         "charging": "Polnilnica",
         "heating": "Grelec"
       },
-      "chargingTitle": "Vedenje",
       "circuitHelp": "Dodelitev upravljanja obremenitve, da se zagotovi, da omejitve moči in toka niso presežene.",
       "circuitInvalid": "Vezje ne obstaja",
       "circuitLabel": "Krog",
@@ -561,25 +561,25 @@
       "priorityHelp": "Višja prioriteta ima prednostni dostop do presežka sončne energije.",
       "priorityLabel": "Prioriteta",
       "save": "Shrani",
-      "solarBehaviorCustomHelp": "Določite lastne pragove za omogočanje in onemogočanje ter zakasnitve.",
-      "solarBehaviorDefaultHelp": "Začni po {enableDelay} zadostnega presežka. Ustavi, ko presežek ni dovolj za {disableDelay}.",
-      "solarBehaviorLabel": "Sončna energija",
-      "solarModeCustom": "po meri",
-      "solarModeMaximum": "maksimalno sončno polnjenje",
-      "solarShareNote": "Drsnik za sončni delež v uporabniških nastavitvah je onemogočen, dokler so nastavljeni pragovi v vatih. {0} in shranite, da ga omogočite.",
       "solarShareReset": "Odstranite pragove",
+      "solarTitle": "Obnašanje pri sončnem presežku",
       "temperatureRangeHelp": "Območje prikaza za temperaturno vrstico. Ne vpliva na krmiljenje.",
       "temperatureRangeTitle": "Temperaturno območje",
+      "thresholdDisableDelayHelp": "Ustavi se, ko ni dovolj presežka za {delay}.",
       "thresholdDisableDelayLabel": "Onemogoči zakasnitev",
       "thresholdDisableHelpInvalid": "Prosimo, uporabite pozitivno vrednost.",
       "thresholdDisableHelpPositive": "Ustavi se, ko se iz omrežja porabi več kot {power} za {delay}.",
-      "thresholdDisableHelpZero": "Ustavi se, ko minimalne zahtevane moči ni mogoče doseči za {delay}.",
       "thresholdDisableLabel": "Onemogoči napajanje iz omrežja",
+      "thresholdEnableDelayHelp": "Začne se, ko je dovolj presežka za {delay}.",
       "thresholdEnableDelayLabel": "Omogoči zakasnitev",
       "thresholdEnableHelpInvalid": "Prosimo, uporabite negativno vrednost.",
       "thresholdEnableHelpNegative": "Začni, ko je {surplus} presežek na voljo za {delay}.",
-      "thresholdEnableHelpZero": "Začnite, ko je minimalna zahtevana moč dosežena za {delay}.",
       "thresholdEnableLabel": "Omogoči polnjenje iz omrežja",
+      "thresholdsNote": {
+        "charging": "Za nadzor porabe iz omrežja pri sončnem polnjenju uporabite drsnik {slider} v nastavitvah polnilnega mesta na strani {page}. Vrednosti tukaj nastavite le v posebnih primerih.",
+        "heating": "Za nadzor porabe iz omrežja pri sončnem ogrevanju uporabite drsnik {slider} v nastavitvah grelnika na strani {page}. Vrednosti tukaj nastavite le v posebnih primerih."
+      },
+      "thresholdsSliderDisabled": "Drsnik {slider} je trenutno onemogočen, ker so vrednosti nastavljene tukaj.",
       "titleAdd": {
         "charging": "Dodaj polnilno mesto",
         "heating": "Dodaj grelno napravo",
@@ -709,10 +709,18 @@
         "grid": "Dodaj omrežni števec",
         "pv": "Dodaj merilnik sončne energije"
       },
+      "reuseApply": "Uporabi njene nastavitve.",
+      "reuseHint": "{device} je mogoče uporabiti tudi kot »{target}«.",
       "save": "Shrani",
       "specific": "Specifične integracije",
       "template": "Proizvajalec",
       "titleChoice": "Kaj želite dodati?",
+      "titleExample": {
+        "aux": "Pametni grelnik vode itd.",
+        "battery": "Klet, garaža, elektrarna itd.",
+        "consumer": "Pomivalni stroj, pralni stroj, črpalka za bazen itd.",
+        "pv": "Južna streha, nadstrešek itd."
+      },
       "titleLabel": "Ime",
       "usage": {
         "aux": "Samoregulirajoči odjemalec",
@@ -831,6 +839,7 @@
         },
         "label": "Ukazi nadrejenega strežnika"
       },
+      "status": "Stanje",
       "upstreamStationId": "ID postaje",
       "upstreamStationIdHelp": "Identifikator polnilnice, poslan nadrejenemu strežniku.",
       "upstreamUrl": "URL nadrejenega strežnika",
@@ -969,6 +978,15 @@
         "example": "Vaša cena polnjenja je bila {price}. Prihranili ste {amount}.",
         "label": "Valuta"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V brez ničelnega vodnika (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V z ničelnim vodnikom (3P4W)",
+        "description": {
+          "3p3w": "Omrežje brez ničelnega vodnika. Pogosto na Norveškem in v delih Belgije.",
+          "3p4w": "Najpogostejše omrežje z ničelnim vodnikom."
+        },
+        "label": "Omrežni priključek"
+      },
       "siteTitle": {
         "description": "Prikazano na glavnem zaslonu in v zavihku brskalnika.",
         "label": "Ime"
@@ -982,6 +1000,18 @@
       "descriptionToken": "Žeton dobite na naslovu {url}. Ponujamo tudi poskusni žeton za testiranje {trialToken}.",
       "enterYourToken": "Vnesite svoj žeton",
       "error": "Sponzorski žeton ni veljaven.",
+      "inline": {
+        "applied": "Žeton uporabljen. Hvala za podporo projektu!",
+        "apply": "Uporabi",
+        "becomeSponsor": "postanite sponzor",
+        "device": "Ta naprava je na voljo samo sponzorjem.",
+        "feature": "Ta funkcija je na voljo samo sponzorjem.",
+        "learn": "Preberite več in {becomeSponsor}.",
+        "placeholder": "Prilepite žeton",
+        "title": "Potreben je sponzorski žeton",
+        "trial": "Hitro začnite.",
+        "trialLink": "Pridobite poskusni žeton"
+      },
       "invalid": "neveljaven",
       "labelToken": "Sponzorski žeton",
       "title": "Sponzorstvo",
@@ -1076,7 +1106,8 @@
       "solar": {
         "description": "Napoved sončne proizvodnje za vaš PV sistem. Prikazana je v vmesniku, v prihodnosti pa bo uporabljena za optimizacijske algoritme.",
         "titleAdd": "Dodaj napoved sončne energije",
-        "titleEdit": "Uredi napoved sončne energije"
+        "titleEdit": "Uredi napoved sončne energije",
+        "titleExample": "Južna streha, nadstrešek itd."
       },
       "temperature": {
         "description": "Napoved zunanje temperature za vašo lokacijo. Prikazana je v vmesniku in se uporablja za napoved potreb po ogrevanju.",
@@ -1155,7 +1186,11 @@
       },
       "cost": "Stroški",
       "others": "Drugi",
-      "title": "Porabniki"
+      "title": "Porabniki",
+      "view": {
+        "river": "Reka",
+        "treemap": "Drevesni zemljevid"
+      }
     },
     "direction": {
       "battery": {
@@ -1519,6 +1554,7 @@
       "description": "brez prekinitev",
       "label": "Vedno polni",
       "labelHeating": "Vedno ogrevaj",
+      "minCurrent": "min. {current}",
       "once": "do konca seje",
       "onceTip": "Samo za to sejo",
       "permanent": "ostane trajno vklopljeno"
@@ -1698,6 +1734,11 @@
       "login": "prijava",
       "logout": "odjava"
     },
+    "setup": {
+      "description": "Dodajte svoje naprave, da vidite pretok energije in začnete polniti s sončno energijo.",
+      "start": "Začni namestitev",
+      "title": "Dobrodošli!"
+    },
     "startConfiguration": "Začnimo s konfiguracijo",
     "targetCharge": {
       "activate": "Aktiviraj",
@@ -1823,6 +1864,76 @@
     "restartNeeded": "Potrebno za uveljavitev sprememb.",
     "restarting": "Strežnik bo kmalu nazaj.",
     "starting": "Zagon strežnika ..."
+  },
+  "onboarding": {
+    "another": "Dodaj še eno",
+    "back": "Nazaj",
+    "battery": {
+      "add": "Dodaj domačo baterijo",
+      "description": "Dodajte baterijo, da jo polnjenje upošteva in lahko vidite, kaj počne.",
+      "none": "Brez domače baterije",
+      "title": "Imate domačo baterijo?"
+    },
+    "checklist": {
+      "dismiss": "Zavrni",
+      "legacyTariffs": "Uporablja se stara konfiguracija tarif.",
+      "progress": "{done} od {total} opravljeno",
+      "title": "Dokončajte nastavitev"
+    },
+    "control": {
+      "description": "Začnite s prvo napravo. Več jih lahko dodate pozneje na strani s konfiguracijo.",
+      "none": "Še nič",
+      "title": "Kaj želite upravljati?"
+    },
+    "done": {
+      "close": "Na konfiguracijo",
+      "description": "Konfiguracija se uporabi po ponovnem zagonu. Nato raziščite funkcije. Vozila, tarife in drugo lahko dodate kadar koli.",
+      "restart": "Ponovni zagon",
+      "title": "Pripravljeno je"
+    },
+    "grid": {
+      "add": "Dodaj omrežni meter",
+      "confirm": "Omrežni meter je osnova za polnjenje s presežkom in statistiko energije. Priporočamo, da ga dodate.",
+      "confirmNone": "Nadaljuj brez",
+      "description": "Meri uvoz in izvoz iz omrežja na priključni točki. Omogoča natančno polnjenje s presežkom.",
+      "none": "Brez omrežnega metra",
+      "title": "Imate omrežni meter?"
+    },
+    "item": {
+      "battery": "Domača baterija",
+      "co2": "Napoved CO₂",
+      "consumer": "Potrošnik",
+      "grid": "Omrežni meter",
+      "gridExport": "Tarifa za izvoz v omrežje",
+      "gridImport": "Tarifa za uvoz iz omrežja",
+      "heater": "Grelnik",
+      "loadpoint": "Polnilno mesto",
+      "pv": "Solarni sistem",
+      "solar": "Napoved sončne energije"
+    },
+    "password": {
+      "description": "Ščiti nastavitve konfiguracije pred nepooblaščenimi spremembami. Zapomnite si ga, saj ga ni enostavno ponastaviti.",
+      "disabled": "Avtentikacija je onemogočena ({flag}). Vsakdo z dostopom do omrežja lahko spreminja konfiguracijo, bere shranjene poverilnice in izvaja skripte. Dostop zavarujte na drug način.",
+      "title": "Nastavite skrbniško geslo"
+    },
+    "pv": {
+      "add": "Dodaj solarni sistem",
+      "description": "Meri sončno proizvodnjo. Potreben za delež sončne energije in polnjenje s presežkom.",
+      "none": "Brez solarnega sistema",
+      "title": "Imate solarni sistem?"
+    },
+    "site": {
+      "currencyHint": "npr. {price}, {amount}",
+      "defaultTitle": "Dom",
+      "description": "Nekaj osnovnih podatkov o vašem domu. Spremenite jih lahko kadar koli.",
+      "title": "Vaša lokacija"
+    },
+    "skip": "Preskoči",
+    "step": "Korak {step} od {total}",
+    "welcome": {
+      "description": "Nastavite najpomembnejše dele domače napeljave in začnite s pametnim polnjenjem.",
+      "start": "Začnimo"
+    }
   },
   "passwordModal": {
     "description": "Nastavite geslo za zaščito konfiguracijskih nastavitev. Uporaba glavnega vmesnika je še vedno možna brez prijave.",

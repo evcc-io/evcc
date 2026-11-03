@@ -76,6 +76,11 @@ func (p *SMA) FloatGetter() (func() (float64, error), error) {
 			return 0, err
 		}
 
+		if sunny.GetValueInfo(p.value).Type == "energy" {
+			f, err := sma.AsEnergy(values, p.value)
+			return f * p.scale, err
+		}
+
 		return sma.AsFloat(values[p.value]) * p.scale, nil
 	}, nil
 }

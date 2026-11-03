@@ -1,7 +1,7 @@
 package eudataact
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,10 +12,12 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
 	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
@@ -105,6 +107,11 @@ func NewAPI(log *util.Logger, brandName, user, password string) (*API, error) {
 		password: password,
 	}
 	v.Client.Jar = &v.jar
+	// the portal limits downloads per minute and answers bursts with a short Retry-After,
+	// waiting counts towards the client timeout
+	const maxRetryAfter = 30 * time.Second
+	v.Client.Transport = transport.RetryAfter(maxRetryAfter, v.Client.Transport)
+	v.Client.Timeout += maxRetryAfter
 
 	if err := v.login(0); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
@@ -174,44 +181,10 @@ func (v *API) login(gen uint64) error {
 		return err
 	}
 
-	// email/identifier step
-	vars, err := vwidentity.FormValues(bytes.NewReader(body), "form#emailPasswordForm")
+	// the client follows the redirect chain back to the portal which sets the session cookie
+	resp, err = vwidentity.SubmitCredentials(&client, body, v.user, v.password)
 	if err != nil {
-		return fmt.Errorf("identifier form: %w (portal layout may have changed)", err)
-	}
-
-	uri := vwidentity.BaseURL + vars.Action
-	resp, err = client.PostForm(uri, url.Values{
-		"_csrf":      {vars.Inputs["_csrf"]},
-		"relayState": {vars.Inputs["relayState"]},
-		"hmac":       {vars.Inputs["hmac"]},
-		"email":      {v.user},
-	})
-	if err != nil {
-		return err
-	}
-
-	params, err := vwidentity.ParseCredentialsPage(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		return fmt.Errorf("credentials page: %w", err)
-	}
-	if params.TemplateModel.Error != "" {
-		return errors.New(params.TemplateModel.Error)
-	}
-
-	// password/authenticate step - the client follows the redirect chain back to
-	// the portal which sets the session cookie
-	uri = strings.ReplaceAll(uri, params.TemplateModel.IdentifierUrl, params.TemplateModel.PostAction)
-	resp, err = client.PostForm(uri, url.Values{
-		"_csrf":      {params.CsrfToken},
-		"relayState": {params.TemplateModel.RelayState},
-		"hmac":       {params.TemplateModel.Hmac},
-		"email":      {v.user},
-		"password":   {v.password},
-	})
-	if err != nil {
-		return err
+		return fmt.Errorf("credentials: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -298,11 +271,12 @@ func loginLocation(resp *http.Response) (*url.URL, error) {
 }
 
 // get executes a GET request, re-authenticating once on 401/403, and returns the body
-func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
+func (v *API) get(ctx context.Context, uri string, headers map[string]string) ([]byte, error) {
 	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	gen := v.loginGen.Load()
 	resp, err := v.Do(req)
@@ -320,7 +294,7 @@ func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
 		if req, err = request.New(http.MethodGet, uri, nil, headers); err != nil {
 			return nil, err
 		}
-		if resp, err = v.Do(req); err != nil {
+		if resp, err = v.Do(req.WithContext(ctx)); err != nil {
 			return nil, err
 		}
 	}
@@ -329,8 +303,8 @@ func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
 }
 
 // getJSON executes a GET request and decodes the JSON response
-func (v *API) getJSON(uri string, res any) error {
-	b, err := v.get(uri, map[string]string{"Accept": request.JSONContent})
+func (v *API) getJSON(ctx context.Context, uri string, res any) error {
+	b, err := v.get(ctx, uri, map[string]string{"Accept": request.JSONContent})
 	if err != nil {
 		return err
 	}
@@ -341,7 +315,7 @@ func (v *API) getJSON(uri string, res any) error {
 func (v *API) Vehicles() ([]Vehicle, error) {
 	uri := BaseURL + "/proxy_api/consent/me/vehicles?viewPosition=FRONT_LEFT"
 
-	b, err := v.get(uri, map[string]string{"Accept": request.JSONContent})
+	b, err := v.get(context.Background(), uri, map[string]string{"Accept": request.JSONContent})
 	if err != nil {
 		return nil, err
 	}
@@ -363,13 +337,13 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 }
 
 // identifier returns the data-request identifier required for the data delivery calls
-func (v *API) identifier(vin string) (string, error) {
+func (v *API) identifier(ctx context.Context, vin string) (string, error) {
 	uri := fmt.Sprintf("%s/proxy_api/euda-apim/datarequest/vehicles/%s/metadata/partial", BaseURL, vin)
 
 	var res struct {
 		Identifier string `json:"Identifier"`
 	}
-	if err := v.getJSON(uri, &res); err != nil {
+	if err := v.getJSON(ctx, uri, &res); err != nil {
 		if se, ok := errors.AsType[*request.StatusError](err); ok && se.HasStatus(404) {
 			err = ErrNotConfigured
 		}
@@ -384,10 +358,10 @@ func (v *API) identifier(vin string) (string, error) {
 }
 
 // datasets lists the available datasets for the given data request
-func (v *API) datasets(vin, identifier string) ([]dataset, error) {
+func (v *API) datasets(ctx context.Context, vin, identifier string) ([]dataset, error) {
 	uri := fmt.Sprintf("%s/proxy_api/euda-apim/datadelivery/vehicles/%s/%s/list", BaseURL, vin, identifier)
 
-	b, err := v.get(uri, map[string]string{"Accept": request.JSONContent, "type": "partial"})
+	b, err := v.get(ctx, uri, map[string]string{"Accept": request.JSONContent, "type": "partial"})
 	if err != nil {
 		// the portal answers 404 "No files available for this request" until the
 		// vehicle has delivered its first dataset
@@ -413,7 +387,7 @@ func (v *API) datasets(vin, identifier string) ([]dataset, error) {
 }
 
 // download fetches the dataset zip archive
-func (v *API) download(vin, identifier, name string) ([]byte, error) {
+func (v *API) download(ctx context.Context, vin, identifier, name string) ([]byte, error) {
 	uri := fmt.Sprintf("%s/proxy_api/euda-apim/datadelivery/vehicles/%s/%s/download", BaseURL, vin, identifier)
-	return v.get(uri, map[string]string{"filename": name, "type": "partial"})
+	return v.get(ctx, uri, map[string]string{"filename": name, "type": "partial"})
 }

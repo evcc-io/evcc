@@ -18,7 +18,7 @@ runs:
         go-version-file: go.mod
         cache: false # managed explicitly below to keep the scoped namespaces
 
-    - uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
+    - uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
       with:
         node-version-file: ".node-version"
         cache: true

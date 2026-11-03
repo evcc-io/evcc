@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	eapi "github.com/evcc-io/evcc/api"
@@ -51,6 +53,7 @@ type Customization struct {
 	Css       string
 	LogoLight string
 	LogoDark  string
+	Icon      string
 	Brand     string
 	Website   string
 	Email     string
@@ -133,8 +136,29 @@ func NewHTTPd(addr string, hub *SocketHub, custom Customization) *HTTPd {
 		serveCustomFile(path, file)
 	}
 
+	if custom.Icon != "" {
+		log.WARN.Printf("❗ using custom icon: %s", custom.Icon)
+		if _, err := os.Stat(custom.Icon); os.IsNotExist(err) {
+			log.FATAL.Fatalf("custom icon file does not exist: %s", custom.Icon)
+		}
+		// iOS ignores non-png touch icons
+		if !strings.EqualFold(filepath.Ext(custom.Icon), ".png") {
+			log.FATAL.Fatalf("custom icon must be a png file: %s", custom.Icon)
+		}
+		for _, path := range []string{
+			"/meta/apple-touch-icon.png",
+			"/meta/favicon-32x32.png",
+			"/meta/favicon-16x16.png",
+			"/meta/favicon.ico",
+			"/meta/android-chrome-512x512.png",
+		} {
+			serveCustomFile(path, custom.Icon)
+		}
+	}
+
 	static.HandleFunc("/globals.js", globalsJsHandler(custom))
-	static.HandleFunc("/", indexHandler())
+	static.HandleFunc("/", indexHandler(custom))
+	static.HandleFunc("/meta/site.webmanifest", manifestHandler(custom))
 	for _, dir := range []string{"assets", "meta"} {
 		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(assets.Web)))
 	}
@@ -306,7 +330,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 	{ // /api
 		routes := map[string]route{
-			"state": {"GET", "/state", stateHandler(cache)},
+			"state":                    {"GET", "/state", stateHandler(cache)},
+			"optimizerexplain":         {"POST", "/optimizer/explain", optimizerExplainHandler(site)},
+			"optimizerexplainfeedback": {"POST", "/optimizer/explain/feedback", optimizerExplainFeedbackHandler(site)},
 		}
 
 		for _, r := range routes {
@@ -357,6 +383,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval, pub)},
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(pub)},
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
+			"onboarding":         {"PUT", "/onboarding", updateOnboardingHandler(pub)},
 			"experimental":       {"POST", "/experimental/{value:[01truefalse]+}", boolHandler(setExperimental(pub), getExperimental)},
 			"optimizer":          {"POST", "/optimizer/{value:[01truefalse]+}", boolHandler(setOptimizer(pub), getOptimizer)},
 			"optimizerAutomatic": {"POST", "/optimizerautomatic/{value:[a-z]+}", stringHandler(setOptimizerAutomatic(pub, site), core.OptimizerAutomatic)},
@@ -405,9 +432,10 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		// site
 		for _, r := range map[string]route{
-			"site":          {"GET", "/site", siteHandler(site)},
-			"updatesite":    {"PUT", "/site", updateSiteHandler(site)},
-			"updatecountry": {"PUT", "/country", updateCountryHandler(site)},
+			"site":                 {"GET", "/site", siteHandler(site)},
+			"updatesite":           {"PUT", "/site", updateSiteHandler(site)},
+			"updatecountry":        {"PUT", "/country", updateCountryHandler(site)},
+			"updategridconnection": {"PUT", "/gridconnection", updateGridConnectionHandler(site)},
 		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
@@ -426,7 +454,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"loadpoints":      {"GET", "/loadpoints", loadpointsConfigHandler()},
 			"loadpoint":       {"GET", "/loadpoints/{id:[0-9.]+}", loadpointConfigHandler()},
 			"updateloadpoint": {"PUT", "/loadpoints/{id:[0-9.]+}", updateLoadpointHandler()},
-			"deleteloadpoint": {"DELETE", "/loadpoints/{id:[0-9.]+}", deleteLoadpointHandler()},
+			"deleteloadpoint": {"DELETE", "/loadpoints/{id:[0-9.]+}", deleteLoadpointHandler(site)},
 			"newloadpoint":    {"POST", "/loadpoints", newLoadpointHandler()},
 		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)

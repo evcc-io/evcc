@@ -55,7 +55,7 @@
 				class="aside row gy-2 gy-lg-4 gx-sm-5 mt-3 mt-lg-0 pt-lg-2 flex-lg-column justify-content-lg-center flex-shrink-0"
 			>
 				<slot name="aside">
-					<div v-if="cost !== undefined && price !== undefined" class="col-6 col-lg-12">
+					<div v-if="cost !== undefined" class="col-6 col-lg-12">
 						<Stat
 							:label="$t('energy.consumers.cost')"
 							:number="cost"
@@ -102,9 +102,9 @@ import FullStackedBarChartIcon from "../MaterialIcon/FullStackedBarChart.vue";
 import formatter from "@/mixins/formatter";
 import { CURRENCY } from "@/types/evcc";
 import { PERIODS } from "../Sessions/types";
-import { ENTITY_CHART, type FlowResult, type FlowSink, type FlowSource } from "./types";
+import { ENTITY_CHART, type Flow, type FlowSink, type FlowSource } from "./types";
 import DeviceColorDot from "../Helper/DeviceColorDot.vue";
-import { sourceBreakdown, sumEnergy, type SourceRow } from "./mix";
+import { sinkPrice, sourceBreakdown, sumEnergy, type SourceRow } from "./mix";
 
 // one entity of a sink group (consumer of home, loadpoint): bars or pattern chart with
 // energy, source mix and cost beside it. The header closes when `closable`
@@ -124,7 +124,6 @@ export default defineComponent({
 		title: { type: String, required: true },
 		color: { type: String, default: "" },
 		sink: { type: String as PropType<FlowSink>, default: "home" },
-		price: Number, // per kWh at the sink's rate over the period, undefined without tariffs
 		closable: Boolean,
 		// bars only, no pattern chart
 		chartToggle: { type: Boolean, default: true },
@@ -135,7 +134,8 @@ export default defineComponent({
 		// the dot opens the color picker for the device
 		pickable: Boolean,
 		deviceColor: { type: String, default: "" }, // configured color, empty when automatic
-		flow: { type: Object as PropType<FlowResult> },
+		// what reached this entity over the period, priced per slot
+		flows: { type: Array as PropType<Flow[]>, default: () => [] },
 		// sources the site has, others never show up in the breakdown
 		flowSources: { type: Array as PropType<FlowSource[]>, default: () => [] },
 		series: { type: Object as PropType<HistorySeries> },
@@ -182,14 +182,9 @@ export default defineComponent({
 		subtitle(): string {
 			return this.$slots["aside"] ? "" : this.fmtKWh(this.energy);
 		},
-		// the sink's source split applied to this entity
+		// the entity's source split, scaled to its metered energy
 		sources(): SourceRow[] {
-			return sourceBreakdown(
-				this.flow?.flows ?? [],
-				this.sink,
-				this.energy,
-				this.flowSources
-			);
+			return sourceBreakdown(this.flows, this.sink, this.energy, this.flowSources);
 		},
 		// a site with neither solar nor battery has nothing to tell apart
 		hasOwnSources(): boolean {
@@ -221,6 +216,10 @@ export default defineComponent({
 		},
 		energy(): number {
 			return this.series ? sumEnergy(this.series) : 0;
+		},
+		// per kWh over the slots with a price, undefined without tariffs
+		price(): number | undefined {
+			return sinkPrice(this.flows, this.sink);
 		},
 		cost(): number | undefined {
 			return this.price === undefined ? undefined : this.energy * this.price;

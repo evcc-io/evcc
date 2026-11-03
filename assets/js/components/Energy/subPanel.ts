@@ -1,5 +1,5 @@
 import colors, { setAlpha } from "@/colors";
-import { forecastYAxis, hoverDot, lineDefaults } from "./echarts";
+import { boundaryAxis, forecastYAxis, hoverDot, lineDefaults } from "./echarts";
 
 // skinny panel below a chart's main plot, sharing its x axis
 const PANEL_HEIGHT = 40;
@@ -8,11 +8,36 @@ export const PANEL_EXTRA = 48; // added chart height, the main plot gives up the
 
 export interface SubPanel {
   series: Record<string, unknown>[];
+  xAxis: Record<string, unknown>; // hidden, x axis 2, the series sit on it
   yAxis: Record<string, unknown>;
   track: string; // background of the panel, the full range
 }
 
-// soc or temperature per category as line and area on grid, x and y axis 1
+// a slot's value is taken at its start: points on the slot boundaries of a hidden x
+// axis 2, with slot i centered as on the category axis. The last value is repeated to
+// close the day
+export function slotStarts(values: (number | null)[]): [number, number | null][] {
+  return [
+    ...values.map((v, i) => [i - 0.5, v] as [number, number | null]),
+    [values.length - 0.5, values.at(-1) ?? null],
+  ];
+}
+
+// labels at both ends of the range only, tight to fit into the grid's left inset
+export function panelYAxis(min: number, max: number, format: (v: number) => string) {
+  return forecastYAxis({
+    gridIndex: 1,
+    position: "left",
+    min,
+    max,
+    interval: max - min,
+    // the grid's background is the track, a second set of lines would fight the main grid
+    splitLine: { show: false },
+    axisLabel: { color: colors.muted || "", hideOverlap: true, margin: 4, formatter: format },
+  });
+}
+
+// soc or temperature per category as line and area on grid 1
 export function socTempPanel(
   values: (number | null)[],
   color: string,
@@ -36,9 +61,9 @@ export function socTempPanel(
         id: "soctemp",
         name: "soctemp",
         type: "line",
-        xAxisIndex: 1,
+        xAxisIndex: 2,
         yAxisIndex: 1,
-        data: values,
+        data: slotStarts(values),
         smooth: true,
         ...hoverDot(color),
         connectNulls: true,
@@ -47,17 +72,8 @@ export function socTempPanel(
         z: 4,
       },
     ],
-    yAxis: forecastYAxis({
-      gridIndex: 1,
-      position: "left",
-      min,
-      max,
-      // labels at both ends only
-      interval: max - min,
-      // the grid's background is the track, a second set of lines would fight the main grid
-      splitLine: { show: false },
-      axisLabel: { color: colors.muted || "", hideOverlap: true, formatter: format },
-    }),
+    xAxis: { ...boundaryAxis(values.length), gridIndex: 1 },
+    yAxis: panelYAxis(min, max, format),
   };
 }
 

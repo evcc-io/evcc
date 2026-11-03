@@ -7,6 +7,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	pluginmqtt "github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
 )
@@ -63,6 +64,47 @@ func TestMqttMultiSubscribe(t *testing.T) {
 
 	conn.Unsubscribe("wba12345", ch2)
 	require.Empty(t, conn.subscriptions)
+}
+
+func TestBrokerConnector(t *testing.T) {
+	cc := pluginmqtt.Config{Broker: t.Name(), Password: "secret"}
+
+	conn := NewBrokerConnector(context.TODO(), util.NewLogger("foo"), cc, "bmw/raw/+")
+	require.Same(t, conn, NewBrokerConnector(context.TODO(), util.NewLogger("foo"), cc, "bmw/raw/+"), "connector not shared")
+
+	other := cc
+	other.Password = "other"
+	require.NotSame(t, conn, NewBrokerConnector(context.TODO(), util.NewLogger("foo"), other, "bmw/raw/+"), "credentials share connector")
+
+	// a bmw connector using the broker url as client id must not share the entry
+	require.NotSame(t, conn, NewMqttConnector(context.TODO(), util.NewLogger("foo"), t.Name(), nil))
+
+	ch := conn.Subscribe("wba12345")
+	empty := conn.Subscribe("")
+
+	for _, payload := range []string{
+		"online",
+		`{"status":"connected"}`,
+		`{"vin":`,
+		`{"vin":"WBA12345"}`,
+	} {
+		conn.brokerHandler(payload)
+	}
+
+	b, err := json.Marshal(StreamingMessage{Vin: "WBA12345", Data: map[string]StreamingData{"key": {Value: "1"}}})
+	require.NoError(t, err)
+	conn.brokerHandler(string(b))
+
+	// invalid payloads are skipped, so the first message received is the valid one
+	require.Equal(t, "WBA12345", recv(t, ch).Vin)
+
+	conn.Unsubscribe("WBA12345", ch)
+	conn.Unsubscribe("", empty)
+
+	for _, c := range []<-chan StreamingMessage{ch, empty} {
+		_, ok := <-c
+		require.False(t, ok, "unexpected message")
+	}
 }
 
 func TestMqttUnboundedQueue(t *testing.T) {

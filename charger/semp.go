@@ -26,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/semp"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
@@ -237,7 +238,7 @@ func (wb *SEMP) calcPower(enabled bool, current float64, phases int) int {
 		return 0
 	}
 
-	return min(max(int(230*float64(phases)*current), wb.minPower), wb.maxPower)
+	return min(max(int(grid.CurrentToPower(current, phases)), wb.minPower), wb.maxPower)
 }
 
 // Status implements the api.Charger interface

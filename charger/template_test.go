@@ -1,7 +1,9 @@
 package charger
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
@@ -41,7 +43,12 @@ var acceptable = []string{
 func TestTemplates(t *testing.T) {
 	templates.TestClass(t, templates.Charger, func(t *testing.T, values map[string]any) {
 		t.Helper()
-		if _, err := NewFromConfig(t.Context(), "template", values); err != nil && !test.Acceptable(err, acceptable) {
+
+		// cut short connection retries, e.g. em2go retries for 30s
+		ctx, cancel := context.WithTimeout(t.Context(), time.Second)
+		defer cancel()
+
+		if _, err := NewFromConfig(ctx, "template", values); err != nil && !test.Acceptable(err, acceptable) {
 			t.Log(values)
 			t.Error(err)
 		}

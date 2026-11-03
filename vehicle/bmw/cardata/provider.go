@@ -3,7 +3,6 @@ package cardata
 import (
 	"context"
 	"fmt"
-	"maps"
 	"slices"
 	"strings"
 	"sync"
@@ -34,7 +33,7 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.TokenSource, clientID, vin string, cache time.Duration) *Provider {
+func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.TokenSource, mqtt *MqttConnector, vin string, cache time.Duration) *Provider {
 	v := &Provider{
 		log:       log,
 		api:       api,
@@ -45,7 +44,6 @@ func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.Toke
 		streaming: make(map[string]StreamingData),
 	}
 
-	mqtt := NewMqttConnector(context.Background(), log, clientID, ts)
 	recvC := mqtt.Subscribe(vin)
 
 	go func() {
@@ -56,13 +54,29 @@ func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.Toke
 	go func() {
 		for msg := range recvC {
 			v.mu.Lock()
-			maps.Copy(v.streaming, msg.Data)
-			v.updated = time.Now()
+			// a delayed or redelivered message must not overwrite newer data, data without a time counts as new
+			for key, data := range msg.Data {
+				if cur, ok := v.streaming[key]; !ok || data.TimeStamp.IsZero() || !data.TimeStamp.Before(cur.TimeStamp) {
+					v.streaming[key] = data
+				}
+			}
+			// an old message does not postpone the rest refresh past its own age
+			if ts := streamTime(msg.TimeStamp); ts.After(v.updated) {
+				v.updated = ts
+			}
 			v.mu.Unlock()
 		}
 	}()
 
 	return v
+}
+
+// streamTime is the message time, capped at now against clock skew. Messages without one count as new
+func streamTime(ts time.Time) time.Time {
+	if now := time.Now(); ts.IsZero() || ts.After(now) {
+		return now
+	}
+	return ts
 }
 
 func (v *Provider) findOrCreateContainer() (string, error) {

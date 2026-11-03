@@ -34,16 +34,32 @@ export type Template = {
 
 export type TemplateParamUsage = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
 
+// mirrors util/templates/paramtype.go
+export type TemplateParamType =
+  | "String"
+  | "Bool"
+  | "Choice"
+  | "ChargeModes"
+  | "Duration"
+  | "Float"
+  | "Int"
+  | "List"
+  | "Zones"
+  | "PricePerKWh"
+  | "Device";
+
 export type TemplateParam = {
   Name: string;
   Required: boolean;
   Advanced: boolean;
   Deprecated: boolean;
   Default?: string | number | boolean;
-  Type?: string;
+  Type?: TemplateParamType;
   Choice?: string[];
   Service?: string;
   Usages?: TemplateParamUsage[];
+  Class?: DeviceType;
+  Usage?: string; // context the nested device modal opens with, e.g. "heating"
 };
 
 export type ParamService = {

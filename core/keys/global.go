@@ -12,6 +12,7 @@ const (
 	EEBus              = "eebus"
 	Hems               = "hems"
 	Shm                = "shm"
+	ShmUuid            = "shmUuid" // persisted SEMP UDN, its node is the device serial
 	Messaging          = "messaging"
 	MessagingEvents    = "messagingEvents"
 	ModbusProxy        = "modbusproxy"
@@ -41,4 +42,5 @@ const (
 	AuthDisabled       = "authDisabled"
 	AuthProviders      = "authProviders"
 	DeviceColors       = "deviceColors"
+	Onboarding         = "onboarding" // setup wizard and checklist state
 )
