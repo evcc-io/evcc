@@ -105,11 +105,9 @@ import switchsocketHeaterYaml from "./defaultYaml/switchsocketHeater.yaml?raw";
 import switchsocketChargerYaml from "./defaultYaml/switchsocketCharger.yaml?raw";
 import sgreadyYaml from "./defaultYaml/sgready.yaml?raw";
 import sgreadyRelayYaml from "./defaultYaml/sgreadyRelay.yaml?raw";
-import { LOADPOINT_TYPE, type LoadpointType, type Ocpp } from "@/types/evcc";
+import { LOADPOINT_TYPE, type DeviceType, type LoadpointType, type Ocpp } from "@/types/evcc";
 import { getOcppUrl, getOcppUrlWithStationId, getOcpp20Url, getOcpp20UrlWithStationId } from "@/utils/ocpp";
 
-import { LOADPOINT_TYPE, type DeviceType, type LoadpointType, type Ocpp } from "@/types/evcc";
-import { getOcppUrl, getOcppUrlWithStationId } from "@/utils/ocpp";
 
 const initialValues = {
 	type: ConfigType.Template,
