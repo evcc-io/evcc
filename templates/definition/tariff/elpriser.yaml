@@ -18,7 +18,7 @@ requirements:
       Prices are in the zone's currency (DKK, SEK, NOK, PLN, GBP, ...) or in EUR. The currency set in evcc must match.
   evcc: ["skiptest"]
 group: price
-countries: ["EU", "DK"]
+countries: ["EU", "DK", "NO", "CH", "GB", "IE", "RS", "ME", "MK", "AL"]
 params:
   - name: zone
     type: choice
@@ -142,13 +142,17 @@ render: |
       # absolute times, so the zone's UTC offset is worked out here with the EU
       # daylight-saving rule (last Sunday of March -> last Sunday of October, both at
       # 01:00 UTC). jq has no time zone database; every zone of the API follows this
-      # rule, only the winter offset differs.
+      # rule, only the winter offset differs. The 13 Nordic zones and nl (Finland
+      # included) are delivered on Copenhagen time, every other zone on its own clock.
+      # On a 25-hour day the API has one price for the repeated hour (the mean of both
+      # occurrences), it applies to both; on a 23-hour day the missing hour has none.
       #
       # Settings (set by the template parameters):
       def local_currency: {{ if eq .currency "local" }}true{{ else }}false{{ end }};   # true: zone currency, false: EUR
       def actual_only:    {{ if .actualonly }}true{{ else }}false{{ end }};      # true: skip the days that are model forecasts
 
-      # Winter (standard time) offset from UTC in hours; every other zone is CET.
+      # Winter (standard time) offset from UTC in hours of the clock the API uses for the zone;
+      # every other zone (also fi, which is on Copenhagen time) is CET.
       def winter_offset: {"pt":0,"gb":0,"ie":0,"gr":2,"ro":2,"bg":2,"ee":2,"lv":2,"lt":2}[.] // 1;
 
       # 01:00 UTC on the last Sunday of the 31-day month $m ("03" or "10") of year $y.
