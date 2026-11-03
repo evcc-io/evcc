@@ -103,30 +103,20 @@ func NewOCPP20FromConfig(ctx context.Context, other map[string]any) (api.Charger
 		currentsG, voltagesG       func() (float64, float64, float64, error)
 	)
 
-	// Power measurement
-	if _, err := c.evse.CurrentPower(); err == nil {
-		powerG = c.evse.CurrentPower
-	}
+	// Power measurement - always register, values arrive later via TransactionEvent
+	powerG = c.evse.CurrentPower
 
-	// Energy measurement
-	if _, err := c.evse.TotalEnergy(); err == nil {
-		totalEnergyG = c.evse.TotalEnergy
-	}
+	// Energy measurement - always register, values arrive later via TransactionEvent
+	totalEnergyG = c.evse.TotalEnergy
 
-	// Current measurement
-	if i1, i2, i3, err := c.evse.Currents(); err == nil && (i1 != 0 || i2 != 0 || i3 != 0) {
-		currentsG = c.evse.Currents
-	}
+	// Current measurement - always register, values arrive later via TransactionEvent
+	currentsG = c.evse.Currents
 
-	// Voltage measurement
-	if v1, v2, v3, err := c.evse.Voltages(); err == nil && (v1 != 0 || v2 != 0 || v3 != 0) {
-		voltagesG = c.evse.Voltages
-	}
+	// Voltage measurement - always register, values arrive later via TransactionEvent
+	voltagesG = c.evse.Voltages
 
-	// SOC measurement
-	if _, err := c.evse.Soc(); err == nil {
-		socG = c.evse.Soc
-	}
+	// SOC measurement - always register, values arrive later via TransactionEvent
+	socG = c.evse.Soc
 
 	// Current getter
 	var currentG func() (float64, error)
