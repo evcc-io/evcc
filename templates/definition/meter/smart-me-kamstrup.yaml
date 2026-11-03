@@ -1,0 +1,84 @@
+template: smart-me-kamstrup
+products:
+  - brand: smart-me
+    description:
+      generic: Kamstrup Module
+requirements:
+  description:
+    de: Modbus TCP wird ab Firmwareversion 8.0 unterstützt. Für eine stabile Modbus-Kommunikation ist eine permanente Internetverbindung erforderlich.
+    en: Modbus TCP is supported from firmware version 8.0. A constant internet connection is required for stable Modbus communication.
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8196 # Total power (mW)
+      type: holding
+      encoding: int32
+    scale: {{ if eq .usage "pv" }}-0.001{{ else }}0.001{{ end }}
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .usage "pv" }}8232{{ else }}8228{{ end }}
+      type: holding
+      encoding: uint64
+    scale: 0.000001
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .usage "pv" }}8228{{ else }}8232{{ end }}
+      type: holding
+      encoding: uint64
+    scale: 0.000001
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8218 # Current phase L1 (mA)
+      type: holding
+      encoding: int32
+    scale: 0.001
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8220 # Current phase L2 (mA)
+      type: holding
+      encoding: int32
+    scale: 0.001
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8222 # Current phase L3 (mA)
+      type: holding
+      encoding: int32
+    scale: 0.001
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8212 # Voltage phase L1 (mV)
+      type: holding
+      encoding: uint32
+    scale: 0.001
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8214 # Voltage phase L2 (mV)
+      type: holding
+      encoding: uint32
+    scale: 0.001
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8216 # Voltage phase L3 (mV)
+      type: holding
+      encoding: uint32
+    scale: 0.001
