@@ -185,7 +185,6 @@
     "circuits": {
       "addMainCircuit": "Circuit principal nou",
       "addSubCircuit": "Adăugați subcircuit",
-      "chargingPointsNote": "Atribuiți punctele de încărcare și încălzitoarele unui circuit din setările lor proprii.",
       "description": "Asigură că suma tuturor punctelor de încărcare conectate la un circuit nu depășește limitele de putere și curent configurate. Circuitele pot fi imbricate pentru a forma o ierarhie.",
       "legacyWarning": "Este disponibilă o nouă configurare a circuitelor! Eliminați și salvați configurația aici pentru a folosi noul proces ghidat.",
       "meterDedicated": "Contor",

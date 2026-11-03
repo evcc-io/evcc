@@ -186,7 +186,6 @@
     "circuits": {
       "addMainCircuit": "Legg til hovedkrets",
       "addSubCircuit": "Legg til underkrets",
-      "chargingPointsNote": "Tilordne ladepunkter og varmeapparater til en krets i deres egne innstillinger.",
       "description": "Sikrer at summen av alle lastpunkter som er koblet til en krets, ikke overskrider de konfigurerte effekt- og strømgrensene. Kretser kan nestes for å danne en hierarki.",
       "legacyWarning": "Ny kretskonfigurasjon tilgjengelig! Fjern og lagre konfigurasjonen din her for å bruke den nye veiledede prosessen.",
       "meterDedicated": "Måler",

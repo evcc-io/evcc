@@ -187,7 +187,6 @@
     "circuits": {
       "addMainCircuit": "Dodaj glavni krog",
       "addSubCircuit": "Dodaj podkrog",
-      "chargingPointsNote": "Polnilna mesta in grelnike dodelite krogu v njihovih lastnih nastavitvah.",
       "description": "Zagotavlja, da vsota vseh obremenitvenih točk, povezanih z vezjem, ne preseže konfiguriranih omejitev moči in toka. Vezja je mogoče ugnezditi za izgradnjo hierarhije.",
       "legacyWarning": "Na voljo je nova konfiguracija krogov! Odstranite in shranite svojo konfiguracijo tukaj, da uporabite nov vodeni postopek.",
       "meterDedicated": "Števec",

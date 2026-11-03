@@ -186,7 +186,6 @@
     "circuits": {
       "addMainCircuit": "Dodaj glavni krug",
       "addSubCircuit": "Dodaj podređeni strujni krug",
-      "chargingPointsNote": "Mjesta punjenja i grijače dodijelite strujnom krugu u njihovim vlastitim postavkama.",
       "description": "Osigurava da zbroj svih točaka opterećenja povezanih na strujni krug ne premašuje konfigurirana ograničenja snage i struje. Strujni krugovi se mogu ugnijezditi kako bi se izgradila hijerarhija.",
       "legacyWarning": "Dostupna je nova konfiguracija strujnih krugova! Uklonite i spremite ovdje svoju konfiguraciju kako biste koristili novi vođeni postupak.",
       "meterDedicated": "Brojilo",
