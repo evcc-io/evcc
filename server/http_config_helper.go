@@ -15,6 +15,7 @@ import (
 
 	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
@@ -394,6 +395,7 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 	wg.Go(func() {
 		if hasFeature(instance, api.Heating) {
 			makeResult("heating", true, nil)
+			makeResult("demandPredictor", core.DefaultDemandPredictor(instance), nil)
 		}
 	})
 

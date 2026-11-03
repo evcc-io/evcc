@@ -186,7 +186,6 @@
     "circuits": {
       "addMainCircuit": "Dodaj glavni kružni tok",
       "addSubCircuit": "Dodaj podređeni kružni tok",
-      "chargingPointsNote": "Dodijelite tačke punjenja i grijače kružnom toku u njihovim vlastitim postavkama.",
       "description": "Osigurava da zbir svih tačaka opterećenja priključenih na krug ne prelazi konfigurisane granice snage i struje. Krugovi se mogu ugniježđivati kako bi se stvorila hijerarhija.",
       "legacyWarning": "Dostupna je nova konfiguracija kružnih tokova! Uklonite i sačuvajte svoju konfiguraciju ovdje da biste koristili novi vođeni proces. Nakon toga je potrebno ponovno pokretanje.",
       "meterDedicated": "Mjerač",

@@ -1,12 +1,14 @@
 package tariff
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -166,4 +168,47 @@ func TestMergedGapBetweenPrimaryAndSecondary(t *testing.T) {
 
 	// Secondary should be ignored since it would create a gap
 	assert.Equal(t, primaryRates, rates)
+}
+
+func TestMergedFromConfigReferences(t *testing.T) {
+	// current 15m slots pass NewFromConfig unwrapped
+	now := time.Now().Truncate(SlotDuration)
+
+	primary := &mockTariff{typ: api.TariffTypePriceForecast, rates: api.Rates{
+		{Start: now, End: now.Add(SlotDuration), Value: 0.10},
+	}}
+	secondary := &mockTariff{typ: api.TariffTypePriceForecast, rates: api.Rates{
+		{Start: now.Add(SlotDuration), End: now.Add(2 * SlotDuration), Value: 0.20},
+	}}
+
+	config.Reset()
+	t.Cleanup(config.Reset)
+	require.NoError(t, config.Tariffs().Add(config.NewStaticDevice[api.Tariff](config.Named{Name: "db:1"}, primary)))
+	require.NoError(t, config.Tariffs().Add(config.NewStaticDevice[api.Tariff](config.Named{Name: "db:2"}, secondary)))
+
+	tariff, err := NewMergedFromConfig(context.Background(), map[string]any{
+		"primary":   map[string]any{"type": "device", "name": "db:1"},
+		"secondary": map[string]any{"type": "device", "name": "db:2"},
+	})
+	require.NoError(t, err)
+
+	rates, err := tariff.Rates()
+	require.NoError(t, err)
+	assert.Equal(t, api.Rates{
+		{Start: now, End: now.Add(SlotDuration), Value: 0.10},
+		{Start: now.Add(SlotDuration), End: now.Add(2 * SlotDuration), Value: 0.20},
+	}, rates)
+
+	_, err = NewMergedFromConfig(context.Background(), map[string]any{
+		"primary":   map[string]any{"type": "device", "name": "db:1"},
+		"secondary": map[string]any{"type": "device", "name": "db:3"},
+	})
+	assert.ErrorIs(t, err, config.ErrNotFound)
+}
+
+func TestMergedCompatibleTariffTypes(t *testing.T) {
+	assert.True(t, compatibleTariffTypes(api.TariffTypePriceForecast, api.TariffTypePriceStatic))
+	assert.True(t, compatibleTariffTypes(api.TariffTypeCo2, api.TariffTypeCo2))
+	assert.False(t, compatibleTariffTypes(api.TariffTypeCo2, api.TariffTypePriceForecast))
+	assert.False(t, compatibleTariffTypes(api.TariffTypeSolar, api.TariffTypeTemperature))
 }

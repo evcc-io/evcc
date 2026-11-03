@@ -34,6 +34,12 @@ password: secretpass123`,
 			redacted: []string{"W1234567890123456", "john@example.com"},
 		},
 		{
+			name:     "redact private params of deprecated templates",
+			input:    "#  hcaptcha: P1_abc",
+			expected: []string{"hcaptcha: *****"},
+			redacted: []string{"P1_abc"},
+		},
+		{
 			name: "redact multiple sensitive fields",
 			input: `config:
   lat: 52.520008

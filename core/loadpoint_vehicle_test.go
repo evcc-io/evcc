@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -231,6 +232,48 @@ func TestPublishSocAndRangeEnergyLimit(t *testing.T) {
 
 	assert.InDelta(t, 0.9, lp.GetRemainingEnergy(), 1e-9, "remaining energy")
 	assert.Equal(t, time.Hour, lp.GetRemainingDuration(), "remaining duration")
+}
+
+func TestPublishSocAndRangePlanAboveLimit(t *testing.T) {
+	for _, tc := range []struct {
+		optimizer bool
+		mode      api.ChargeMode
+		goal      int
+	}{
+		{false, api.ModeNow, 100},
+		{true, api.ModeSmart, 100},
+		{true, api.ModeNow, 80}, // the optimizer only charges past the limit in smart mode
+	} {
+		ctrl := gomock.NewController(t)
+
+		vehicle := api.NewMockVehicle(ctrl)
+		vehicle.EXPECT().Soc().Return(50.0, nil).AnyTimes()
+		vehicle.EXPECT().Capacity().Return(10.0).AnyTimes()
+		vehicle.EXPECT().Features().AnyTimes()
+
+		clck := clock.NewMock()
+		lp := &Loadpoint{
+			log:               util.NewLogger("foo"),
+			bus:               evbus.New(),
+			clock:             clck,
+			site:              &mockSite{automatic: tc.optimizer},
+			charger:           api.NewMockCharger(ctrl),
+			vehicle:           vehicle,
+			status:            api.StatusC,
+			mode:              tc.mode,
+			limitSoc:          80,
+			planActive:        true,
+			planLocked:        PlanLock{Id: 1, Soc: 100},
+			suggestion:        &types.Suggestion{},
+			suggestionUpdated: clck.Now(),
+		}
+
+		x, y, z := createChannels(t)
+		attachChannels(lp, x, y, z)
+
+		lp.publishSocAndRange()
+		assert.InDelta(t, soc.RemainingChargeEnergy(tc.goal, 50, 10), lp.GetRemainingEnergy(), 1e-9, tc)
+	}
 }
 
 func TestVehicleDetectByID(t *testing.T) {
