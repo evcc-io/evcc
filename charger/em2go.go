@@ -206,8 +206,7 @@ func (wb *Em2Go) Status() (api.ChargeStatus, error) {
 	// detect cable disconnect (StatusB/C -> StatusA)
 	if wb.lastStatus != api.StatusA && status == api.StatusA {
 		wb.log.DEBUG.Printf("Cable disconnected: sessionChargedEnergy=%.2f kWh, lastChargedEnergy=%.2f kWh", wb.sessionChargedEnergy, wb.lastChargedEnergy)
-		wb.sessionChargedEnergy = 0
-		wb.lastChargedEnergy = 0
+		// do not reset wb.sessionChargedEnergy and wb.lastChargedEnergy - they will be read by finalizeSessionEnergy before clearing on next connect
 	}
 	wb.lastStatus = status
 
