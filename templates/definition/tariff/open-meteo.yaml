@@ -66,14 +66,15 @@ params:
       en: See Weather Models on [Open-Meteo API docs](https://open-meteo.com/en/docs)
       de: Siehe Weather Models unter [Open-Meteo API docs](https://open-meteo.com/en/docs)
     type: choice
+    # https://github.com/open-meteo/open-meteo/blob/main/openapi/forecast.yml#L603
     choice:
       [
         "best_match",
         "chmi_aladin_seamless",
         "cmc_gem_seamless",
         "dmi_seamless",
-        "dwd_icon_seamless",
         "geosphere_seamless",
+        "icon_seamless",
         "jma_seamless",
         "kma_seamless",
         "knmi_seamless",
