@@ -50,7 +50,7 @@ render: |
   {{- include "common" . }}
   soc:
     source: http
-    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/diagnostics?count=1000
+    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/diagnostics?count=10000
     headers:
       - X-Authorization: Token {{ .token }}
     jq: '{{ $ev }} n("/Soc") // error("soc not available")'
@@ -58,7 +58,7 @@ render: |
     cache: {{ .cache }}
   limitsoc:
     source: http
-    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/diagnostics?count=1000
+    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/diagnostics?count=10000
     headers:
       - X-Authorization: Token {{ .token }}
     jq: '{{ $ev }} n("/TargetSoc") // error("limitsoc not available") | floor'
@@ -66,7 +66,7 @@ render: |
     cache: {{ .cache }}
   range:
     source: http
-    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/diagnostics?count=1000
+    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/diagnostics?count=10000
     headers:
       - X-Authorization: Token {{ .token }}
     jq: '{{ $ev }} n("/RangeToGo") // error("range not available")'
@@ -74,7 +74,7 @@ render: |
     cache: {{ .cache }}
   odometer:
     source: http
-    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/diagnostics?count=1000
+    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/diagnostics?count=10000
     headers:
       - X-Authorization: Token {{ .token }}
     jq: '{{ $ev }} n("/Odometer") // error("odometer not available")'
@@ -82,7 +82,7 @@ render: |
     cache: {{ .cache }}
   status:
     source: http
-    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/diagnostics?count=1000
+    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .idsite }}/diagnostics?count=10000
     headers:
       - X-Authorization: Token {{ .token }}
     # charging states 0 and 1 cover both plugged and unplugged, the station connection tells them apart
