@@ -117,6 +117,7 @@ func (wb *OpenWB20) resetRfidLocked() error {
 	if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err != nil {
 		wb.rfidResetPending = true
 		wb.log.WARN.Printf("RFID reset was not successful: %v", err)
+		err = fmt.Errorf("reset RFID: %w", err)
 		return err
 	}
 
@@ -316,7 +317,7 @@ func (wb *OpenWB20) identifyLocked() ([]string, error) {
 
 	b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegRfid, 10)
 	if err != nil {
-		return wb.lastidentify, err
+		return wb.lastidentify, fmt.Errorf("read RFID: %w", err)
 	}
 	identity := bytesAsString(b)
 	if identity == "" {

@@ -16,14 +16,18 @@ import (
 
 type openWB20Handler struct {
 	mbserver.RequestHandler
-	failReset  bool
-	blankRFID  bool
-	rfidReads  int
-	rfidResets int
+	failReset    bool
+	blankRFID    bool
+	failRFIDRead bool
+	rfidReads    int
+	rfidResets   int
 }
 
 func (h *openWB20Handler) HandleInputRegisters(req *mbserver.InputRegistersRequest) ([]uint16, error) {
 	res := make([]uint16, req.Quantity)
+	if h.failRFIDRead && req.Addr <= openwbRegRfid && openwbRegRfid < req.Addr+req.Quantity {
+		return nil, mbserver.ErrIllegalDataAddress
+	}
 	if h.blankRFID {
 		return res, nil
 	}
@@ -70,6 +74,7 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 
 	identity, err := wb.identify()
 	require.Error(t, err)
+	require.ErrorContains(t, err, "reset RFID")
 	require.Empty(t, identity)
 	require.Zero(t, handler.rfidReads)
 
@@ -109,4 +114,9 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 		}()
 	}
 	wg.Wait()
+
+	handler.failReset = false
+	handler.failRFIDRead = true
+	_, err = wb.identify()
+	require.ErrorContains(t, err, "read RFID")
 }
