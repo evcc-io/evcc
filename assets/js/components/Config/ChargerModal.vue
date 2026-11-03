@@ -175,24 +175,24 @@ export default defineComponent({
 				this.currentTemplate !== null &&
 				this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "connector") &&
 				this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "stationid") &&
-			        !this.isOcpp20
-                        );
+				!this.isOcpp20
+			);
 		},
-                isOcpp20(): boolean {
-                         return (
-                                this.currentTemplate !== null &&
-                                this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "evse") &&
-                                this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "stationid")
-                        );
-                },
-                ocppUrl(): string | null {
-                    if (this.isOcpp20) return getOcpp20Url(this.ocpp);
-                    return this.isOcpp ? getOcppUrl(this.ocpp) : null;
-                },
-                ocppUrlWithStationId(): string | null {
-                if (this.isOcpp20) return getOcpp20UrlWithStationId(this.ocpp);
-                return this.isOcpp ? getOcppUrlWithStationId(this.ocpp) : null;
-                },
+		isOcpp20(): boolean {
+			return (
+				this.currentTemplate !== null &&
+				this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "evse") &&
+				this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "stationid")
+			);
+		},
+		ocppUrl(): string | null {
+			if (this.isOcpp20) return getOcpp20Url(this.ocpp);
+			return this.isOcpp ? getOcppUrl(this.ocpp) : null;
+		},
+		ocppUrlWithStationId(): string | null {
+			if (this.isOcpp20) return getOcpp20UrlWithStationId(this.ocpp);
+			return this.isOcpp ? getOcppUrlWithStationId(this.ocpp) : null;
+		},
 		ocppStationIdDetected(): string | undefined {
 			if (!this.isOcpp) {
 				return undefined;
