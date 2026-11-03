@@ -305,7 +305,7 @@ export function boundaryAxis(count: number) {
     min: -0.5,
     max: count - 0.5,
     show: false,
-    axisPointer: { show: false },
+    axisPointer: { show: false, triggerTooltip: false },
   };
 }
 
@@ -333,7 +333,8 @@ export function forecastYAxis(overrides: Record<string, unknown> = {}) {
   return {
     type: "value",
     min: 0,
-    axisLine: { show: false },
+    // stay at the grid's side, not at zero of a hidden value x axis like the boundary axis
+    axisLine: { show: false, onZero: false },
     axisTick: { show: false },
     splitLine: {
       showMinLine: true,

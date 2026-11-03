@@ -8,6 +8,7 @@ import (
 	"math"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -127,8 +128,9 @@ type Site struct {
 	explainMu                sync.Mutex                  // serializes explain requests
 	explained                explainCache                // last explanation, guarded by explainMu
 
-	optimizerMu      sync.Mutex // guards optimizer runs
-	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
+	optimizerMu      sync.Mutex  // guards optimizer runs
+	optimizerUpdated time.Time   // last optimizer run, guarded by optimizerMu
+	optimizerRerun   atomic.Bool // forced trigger arrived during a run, re-run when done
 
 	solarScaleCached func() (float64, error) // util.Cached wrapper around querySolarScale
 }
@@ -260,7 +262,10 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			}
 
 			// NOTE: this requires stopSession to respect async access
-			shutdown.Register(lp.stopSession)
+			shutdown.Register(func() {
+				lp.finalizeSessionEnergy()
+				lp.stopSession()
+			})
 		}
 	}
 
@@ -799,6 +804,7 @@ func (site *Site) updateBatteryMeters() {
 	}
 
 	mm := site.collectMeters("battery", site.batteryMeters)
+	prev := site.state().battery.Devices
 
 	var maxDischargePower float64
 	for i, dev := range site.batteryMeters {
@@ -821,6 +827,11 @@ func (site *Site) updateBatteryMeters() {
 				site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
 			} else {
 				site.log.ERROR.Printf("battery %d soc: %v", i+1, err)
+
+				// keep the last known soc and capacity, a failed read would otherwise count as 0%
+				if i < len(prev) && prev[i].Soc != nil {
+					mm[i].Soc, mm[i].Capacity = prev[i].Soc, prev[i].Capacity
+				}
 			}
 		}
 
@@ -1378,7 +1389,6 @@ func (site *Site) update(lp updater) {
 		batteryGridDischargeActive = site.batteryGridDischargeActive(feedinRate)
 	}
 	site.publish(keys.BatteryGridDischargeActive, batteryGridDischargeActive)
-	site.publish(keys.BatteryGridDischargeActive, batteryGridDischargeActive)
 
 	site.updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate)
 
@@ -1435,7 +1445,7 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 	site.publishTariffs(greenShareHome, greenShareLoadpoints)
 
 	if telemetry.Enabled() && totalChargePower > standbyPower {
-		go telemetry.UpdateChargeProgress(site.log, totalChargePower, greenShareLoadpoints)
+		go telemetry.UpdateChargeProgress(site.log, totalChargePower, greenShareLoadpoints, len(site.activeLoadpoints()))
 	}
 }
 
@@ -1614,6 +1624,17 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	}
 
 	site.update(<-loadpointChan) // start immediately
+
+	// the loop below updates one loadpoint per interval, don't let the others wait for their turn after startup
+	for _, lp := range startupOrder(site.activeLoadpoints()) {
+		select {
+		case <-stopC:
+			return
+		default:
+		}
+
+		site.update(lp)
+	}
 
 	for tick := time.Tick(interval); ; {
 		select {

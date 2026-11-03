@@ -5,6 +5,7 @@ import (
 	"math"
 	"testing"
 
+	"github.com/grid-x/modbus"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,6 +25,28 @@ func TestLength(t *testing.T) {
 		require.NoError(t, err, tc)
 		require.Equal(t, tc.want, res, tc)
 	}
+}
+
+func TestFuncCode(t *testing.T) {
+	tc := []struct {
+		typ  string
+		want uint8
+	}{
+		{"holding", modbus.FuncCodeReadHoldingRegisters},
+		{"input", modbus.FuncCodeReadInputRegisters},
+		{"coil", modbus.FuncCodeReadCoils},
+		{"discreteinput", modbus.FuncCodeReadDiscreteInputs},
+		{"discrete", modbus.FuncCodeReadDiscreteInputs},
+	}
+
+	for _, tc := range tc {
+		res, err := Register{Type: tc.typ}.FuncCode()
+		require.NoError(t, err, tc)
+		require.Equal(t, tc.want, res, tc)
+	}
+
+	_, err := Register{Type: "foo"}.FuncCode()
+	require.Error(t, err)
 }
 
 func TestEncoding(t *testing.T) {

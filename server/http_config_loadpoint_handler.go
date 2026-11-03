@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	coresettings "github.com/evcc-io/evcc/core/settings"
+	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
@@ -39,6 +40,7 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 		SmartCostLimit:           lp.GetSmartCostLimit(),
 		SmartFeedInPriorityLimit: lp.GetSmartFeedInPriorityLimit(),
 		SolarShare:               lp.GetSolarShare(),
+		DemandPredictor:          lp.GetDemandPredictor(),
 		Thresholds:               lp.GetThresholds(),
 		Soc:                      lp.GetSocConfig(),
 		UI:                       lp.GetUI(),
@@ -335,7 +337,7 @@ func updateLoadpointHandler() http.HandlerFunc {
 }
 
 // deleteLoadpointHandler deletes a loadpoint
-func deleteLoadpointHandler() http.HandlerFunc {
+func deleteLoadpointHandler(site site.API) http.HandlerFunc {
 	h := config.Loadpoints()
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -376,6 +378,7 @@ func deleteLoadpointHandler() http.HandlerFunc {
 				return
 			}
 
+			deleteOwnedDevices(site, templates.Charger, dev.Config())
 			setConfigDirty()
 		}
 

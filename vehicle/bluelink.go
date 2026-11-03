@@ -142,7 +142,10 @@ func NewGenesisFromConfig(other map[string]any) (api.Vehicle, error) {
 			ClientName:           "genesis",
 			OSVersion:            "18.7",
 			NotificationProvider: "APNS",
-			// X-Fingerprint signing constants unknown, so only the unsigned legacy routes
+			// signing constants of the Android OneApp 1.4.0 build, they rotate with app releases
+			FingerprintClientName: "GenesisEU",
+			FingerprintKey:        "SGcyufLERcZ" + "g8d7THY41KO" + "8l1fHRfZZb",
+			BrandLabel:            "Genesis",
 		},
 	}
 

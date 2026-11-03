@@ -20,6 +20,16 @@ type mockSite struct {
 	residualPower     float64
 	optimized         int
 	automatic         bool
+	batterySoc        float64
+	prioritySoc       float64
+}
+
+func (m *mockSite) GetBatterySoc() float64 {
+	return m.batterySoc
+}
+
+func (m *mockSite) GetPrioritySoc() float64 {
+	return m.prioritySoc
 }
 
 func (m *mockSite) Optimize() {
