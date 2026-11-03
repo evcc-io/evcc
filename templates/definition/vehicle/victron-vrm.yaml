@@ -9,10 +9,14 @@ requirements:
       Fahrzeugdaten aus dem [VRM-Portal](https://vrm.victronenergy.com). Das Fahrzeug muss in VRM als Gerät "Electric Vehicle" angebunden sein. Es wird ein kostenloses User Access Token benötigt.
 
       Die Werte kommen aus der Fahrzeuganbindung von VRM und können einige Minuten alt sein. Befehle an das Fahrzeug wie Laden starten oder Aufwecken sind nicht möglich.
+
+      Die Fahrzeuganbindung von VRM ist derzeit eine kostenlose Beta-Funktion. Victron hat angekündigt, sie später pro Installation kostenpflichtig anzubieten.
     en: |
       Vehicle data from the [VRM portal](https://vrm.victronenergy.com). The vehicle must be connected in VRM as "Electric Vehicle" device. You need a free user access token.
 
       Values come from VRM's vehicle integration and may be a few minutes old. Vehicle commands like starting a charge or waking up are not supported.
+
+      VRM's vehicle integration is currently a free beta feature. Victron announced it will become a paid feature per installation.
 params:
   - preset: vehicle-common
   - name: idsite
