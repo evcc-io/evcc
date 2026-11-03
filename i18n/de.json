@@ -355,6 +355,7 @@
       "auxMeter": "Selbstregelnder Verbraucher",
       "batteryStorage": "Hausbatterie",
       "consumer": "Verbraucher",
+      "extMeter": "Weiterer Zähler",
       "solarSystem": "Solar-Anlage"
     },
     "editor": {

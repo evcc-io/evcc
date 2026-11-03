@@ -355,6 +355,7 @@
       "auxMeter": "Self-regulating consumer",
       "batteryStorage": "Home battery",
       "consumer": "Consumer",
+      "extMeter": "Additional meter",
       "solarSystem": "Solar system"
     },
     "editor": {
