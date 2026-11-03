@@ -36,13 +36,14 @@ import (
 // Em2Go charger implementation
 type Em2Go struct {
 	implement.Caps
-	log                 *util.Logger
-	conn                *modbus.Connection
-	current             uint16
-	workaround          bool
-	phases              int
-	sessionStartEnergy  float64
-	lastStatus          api.ChargeStatus
+	log                  *util.Logger
+	conn                 *modbus.Connection
+	current              uint16
+	workaround           bool
+	phases               int
+	sessionChargedEnergy float64 // accumulated energy in current session
+	lastChargedEnergy    float64 // last seen em2GoRegChargedEnergy value to detect resets
+	lastStatus           api.ChargeStatus
 }
 
 const (
@@ -198,17 +199,17 @@ func (wb *Em2Go) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
 	}
 
-	// detect cable connect (StatusA -> StatusB/C) and reset session energy
+	// detect cable connect (StatusA -> StatusB/C) and reset session energy counters
 	if wb.lastStatus == api.StatusA && status != api.StatusA {
-		if energy, err := wb.TotalEnergy(); err == nil {
-			wb.sessionStartEnergy = energy
-			wb.log.DEBUG.Printf("Cable connected: sessionStartEnergy set to %.2f kWh", wb.sessionStartEnergy)
-		}
+		wb.sessionChargedEnergy = 0
+		wb.lastChargedEnergy = 0
+		wb.log.DEBUG.Printf("Cable connected: session energy counters reset")
 	}
 	// detect cable disconnect (StatusB/C -> StatusA)
 	if wb.lastStatus != api.StatusA && status == api.StatusA {
-		wb.log.DEBUG.Printf("Cable disconnected: sessionStartEnergy reset from %.2f kWh to 0", wb.sessionStartEnergy)
-		wb.sessionStartEnergy = 0
+		wb.log.DEBUG.Printf("Cable disconnected: sessionChargedEnergy=%.2f kWh, lastChargedEnergy=%.2f kWh", wb.sessionChargedEnergy, wb.lastChargedEnergy)
+		wb.sessionChargedEnergy = 0
+		wb.lastChargedEnergy = 0
 	}
 	wb.lastStatus = status
 
@@ -351,23 +352,26 @@ var _ api.ChargeRater = (*Em2Go)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *Em2Go) ChargedEnergy() (float64, error) {
+	// Read modbus chargedEnergy register
 	b, err := wb.conn.ReadHoldingRegisters(em2GoRegChargedEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
-	chargedModbus := float64(binary.BigEndian.Uint16(b)) / 10
+	currentChargedEnergy := float64(binary.BigEndian.Uint16(b)) / 10
 
-	
-	tot, err := wb.conn.ReadHoldingRegisters(em2GoRegEnergy, 2)
-	if err != nil {
-		return 0, err
+	// Detect if em2GoRegChargedEnergy was reset without cable disconnect
+	// This happens during phase switches or pause/resume cycles
+	if wb.lastStatus != api.StatusA && currentChargedEnergy == 0 && wb.lastChargedEnergy > 0 {
+		// Register was reset while cable still connected, accumulate the previous value
+		wb.sessionChargedEnergy += wb.lastChargedEnergy
+		wb.log.DEBUG.Printf("Charged energy reset detected: accumulated %.2f kWh, total session now %.2f kWh", wb.lastChargedEnergy, wb.sessionChargedEnergy)
 	}
 
-	total := rs485.RTUUint32ToFloat64(tot) / 10
+	wb.lastChargedEnergy = currentChargedEnergy
+	totalCharged := wb.sessionChargedEnergy + currentChargedEnergy
 
-	charged := total - wb.sessionStartEnergy
-	wb.log.DEBUG.Printf("ChargedEnergy: TotalEnergy=%.2f kWh, sessionStartEnergy=%.2f kWh, chargedEnergy=%.2f kWh, chargedEnergyModbus=%.2f kWh", total, wb.sessionStartEnergy, charged, chargedModbus)
-	return charged, nil
+	wb.log.DEBUG.Printf("ChargedEnergy: currentModbus=%.2f kWh, accumulatedInternal=%.2f kWh, totalInternal=%.2f kWh", currentChargedEnergy, wb.sessionChargedEnergy, totalCharged)
+	return totalCharged, nil
 }
 
 var _ api.ChargeTimer = (*Em2Go)(nil)
