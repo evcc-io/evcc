@@ -109,7 +109,11 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 
 func (wb *OpenWB20) HandleRfidReset() {
 	if wb.laststatus != api.StatusA {
-		wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1) // Reset RFID on disconnect
+		// Reset RFID on disconnect
+		if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err == nil {
+			wb.lastidentify = ""
+			wb.lastidtime = time.Unix(0, 0)
+		}
 		return
 	}
 	new_id, _ := wb.identify()
