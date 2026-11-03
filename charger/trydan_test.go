@@ -20,10 +20,13 @@ func withSponsor(t *testing.T) {
 	t.Cleanup(func() { sponsor.Subject = orig })
 }
 
-func trydanTestServerWithBody(body string) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func trydanTestServerWithBody(t *testing.T, body string) *httptest.Server {
+	t.Helper()
+	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, body)
 	}))
+	srv.Start()
+	return srv
 }
 
 // ChargeState maps directly to api.ChargeStatus, except firmware 2.5.0 keeps it at
@@ -47,8 +50,7 @@ func TestTrydanStatus(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			srv := trydanTestServerWithBody(tc.json)
-			defer srv.Close()
+			srv := trydanTestServerWithBody(t, tc.json)
 
 			wb, err := NewTrydan(srv.URL, 0)
 			if err != nil {
@@ -107,8 +109,7 @@ func TestTrydanPhaseMeasurementsUnavailable(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			srv := trydanTestServerWithBody(tc.json)
-			defer srv.Close()
+			srv := trydanTestServerWithBody(t, tc.json)
 
 			wb, err := NewTrydan(srv.URL, 0)
 			if err != nil {

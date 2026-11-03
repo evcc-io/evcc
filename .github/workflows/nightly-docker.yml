@@ -13,32 +13,29 @@ jobs:
 
     permissions:
       contents: read
+      id-token: write # depot OIDC
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: refs/heads/master # force master
           fetch-depth: 0
           persist-credentials: false
 
       - name: Login
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
 
-      - name: Setup Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
-
-      - name: Restore build cache
-        uses: ./.github/actions/docker-cache
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
+      # depot builders keep the Dockerfile's cache mounts on their own volumes,
+      # so they need neither buildx nor the cache dance
+      - name: Setup Depot
+        uses: depot/setup-action@91bc8495a33ebfc504ffc89e5674379ccf23c29c # v1.7.2
 
       - name: Define tags
         id: meta
-        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
           images: evcc/evcc
           tags: |
@@ -46,8 +43,9 @@ jobs:
             type=raw,value=nightly.{{date 'YYYYMMDD'}}-{{sha}}
 
       - name: Publish
-        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        uses: depot/build-push-action@0f27be7c41d76663a98518dfe68f1c46582242c4 # v1.19.0
         with:
+          project: ${{ secrets.DEPOT_PROJECT_ID }}
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true

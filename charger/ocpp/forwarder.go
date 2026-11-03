@@ -28,6 +28,7 @@ import (
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 	"github.com/lorenzodonini/ocpp-go/ocppj"
 	"github.com/lorenzodonini/ocpp-go/ws"
 )
@@ -202,9 +203,9 @@ type sidecar struct {
 	pendingUpstreamCallsMu sync.Mutex
 	pendingUpstreamCalls   map[string]struct{}
 
-	// message IDs of charger Calls whose evcc handler was bypassed; upstream's reply is relayed to the charger
+	// charger Calls by message ID whose evcc handler was bypassed; upstream's reply is relayed to the charger
 	pendingChargerCallsMu sync.Mutex
-	pendingChargerCalls   map[string]struct{}
+	pendingChargerCalls   map[string][]byte
 
 	// when > 0, forward at most one MeterValues per interval to upstream; evcc still sees every frame
 	meterInterval  time.Duration
@@ -222,6 +223,10 @@ var (
 	// last upstream failure per charger, surfaced to the UI; guarded by sidecarsMu
 	forwarderErrors = make(map[string]string)
 
+	// current re-dial loop per charger; guarded by sidecarsMu
+	sidecarLoops   = make(map[string]uint64)
+	sidecarLoopSeq uint64
+
 	// raw frames buffered per charger while the sidecar dials; flushed in order
 	// on connect so BootNotification reaches upstream
 	pendingMu   sync.Mutex
@@ -237,12 +242,24 @@ var (
 var (
 	reconnectInitialDelay = 5 * time.Second
 	reconnectMaxDelay     = 5 * time.Minute
+	stableSessionDuration = time.Minute
 )
 
 // runUpstreamSidecar dials a charger's upstream sidecar and re-dials with
 // exponential backoff for as long as the charger stays connected and the rule
 // remains in effect.
 func runUpstreamSidecar(id string, rule ForwarderRule) {
+	// a loop started with an outdated rule must not take over from the current one
+	sidecarsMu.Lock()
+	if !connectedChargers[id] || !ruleCurrent(id, rule) {
+		sidecarsMu.Unlock()
+		return
+	}
+	sidecarLoopSeq++
+	loop := sidecarLoopSeq
+	sidecarLoops[id] = loop
+	sidecarsMu.Unlock()
+
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithInitialInterval(reconnectInitialDelay),
 		backoff.WithMaxInterval(reconnectMaxDelay),
@@ -250,32 +267,42 @@ func runUpstreamSidecar(id string, rule ForwarderRule) {
 	)
 
 	for {
-		if !dialUpstreamSidecar(id, rule) {
-			delay := bo.NextBackOff()
-			forwarderLog.DEBUG.Printf("forwarder: reconnecting upstream for %s in %v", id, delay)
-			time.Sleep(delay)
-			continue
+		session, connected := dialUpstreamSidecar(id, rule, loop)
+
+		// an upstream that accepts and drops at once must not cause a tight re-dial loop
+		if session >= stableSessionDuration {
+			bo.Reset()
 		}
 
-		bo.Reset()
+		delay := bo.NextBackOff()
+		forwarderLog.DEBUG.Printf("forwarder: reconnecting upstream for %s in %v", id, delay)
+		time.Sleep(delay)
 
-		if current, ok := resolveRule(id); !ok || current.UpstreamURL == "" || !current.sameConnection(rule) {
+		if !sidecarWanted(id, rule, loop) {
 			return
 		}
 
-		sidecarsMu.Lock()
-		connected := connectedChargers[id]
-		_, active := sidecars[id]
-		sidecarsMu.Unlock()
-
-		if !connected || active {
-			return
+		if connected {
+			pendingMu.Lock()
+			pendingMsgs[id] = nil
+			pendingMu.Unlock()
 		}
-
-		pendingMu.Lock()
-		pendingMsgs[id] = nil
-		pendingMu.Unlock()
 	}
+}
+
+// sidecarWanted reports whether the loop should keep re-dialling: it is still the
+// charger's current loop, its rule applies and no sidecar is active.
+func sidecarWanted(id string, rule ForwarderRule, loop uint64) bool {
+	sidecarsMu.Lock()
+	defer sidecarsMu.Unlock()
+	_, active := sidecars[id]
+	return sidecarLoops[id] == loop && connectedChargers[id] && !active && ruleCurrent(id, rule)
+}
+
+// ruleCurrent reports whether rule still is the rule in effect for id.
+func ruleCurrent(id string, rule ForwarderRule) bool {
+	current, ok := resolveRule(id)
+	return ok && current.UpstreamURL != "" && current.sameConnection(rule)
 }
 
 // resolveRule returns the forwarding rule for chargerID, or the "*" fallback.
@@ -317,15 +344,18 @@ func onChargerConnect(ch ws.Channel) {
 	go runUpstreamSidecar(id, rule)
 }
 
-func dialUpstreamSidecar(id string, rule ForwarderRule) bool {
+// dialUpstreamSidecar dials and runs the loop's sidecar until upstream drops.
+// It returns how long the connection stayed up and whether it was established.
+func dialUpstreamSidecar(id string, rule ForwarderRule, loop uint64) (time.Duration, bool) {
 	conn, err := dialUpstream(id, rule)
 	if err != nil {
 		forwarderLog.WARN.Printf("forwarder: dial upstream for %s: %v", id, err)
 		recordForwarderError(id, err.Error())
 		notifyUpdated()
 		drainPendingWithErrors(id, nil)
-		return false
+		return 0, false
 	}
+	established := time.Now()
 	conn.SetReadLimit(-1) // no limit; OCPP frames can be large
 
 	sc := &sidecar{
@@ -333,11 +363,16 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) bool {
 		rule:                 rule,
 		conn:                 conn,
 		pendingUpstreamCalls: make(map[string]struct{}),
-		pendingChargerCalls:  make(map[string]struct{}),
+		pendingChargerCalls:  make(map[string][]byte),
 	}
 
-	// install sidecar and drain the pending buffer
+	// install sidecar and drain the pending buffer, unless the loop was superseded while dialling
 	sidecarsMu.Lock()
+	if sidecarLoops[id] != loop || !ruleCurrent(id, rule) {
+		sidecarsMu.Unlock()
+		conn.CloseNow()
+		return 0, false
+	}
 	pendingMu.Lock()
 	old := sidecars[id]
 	sidecars[id] = sc
@@ -378,7 +413,7 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) bool {
 		}
 		if actionsRelayedToUpstream[action] {
 			sc.pendingChargerCallsMu.Lock()
-			sc.pendingChargerCalls[msgID] = struct{}{}
+			sc.pendingChargerCalls[msgID] = frame
 			sc.pendingChargerCallsMu.Unlock()
 		}
 		writeCtx, writeCancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -394,7 +429,7 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) bool {
 			sidecarsMu.Unlock()
 			recordForwarderError(id, writeErr.Error())
 			notifyUpdated()
-			return false
+			return 0, false
 		}
 		flushed++
 	}
@@ -409,7 +444,7 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) bool {
 
 	sc.readFromUpstream()
 
-	return true
+	return time.Since(established), true
 }
 
 // drainPendingWithErrors discards charger id's pending buffer, sending a CallError
@@ -455,7 +490,7 @@ func drainPendingWithErrors(id string, sc *sidecar) {
 				forwarderLog.WARN.Printf("forwarder: send disconnect error for %s to %s: %v", msgID, sc.chargerID, writeErr)
 			}
 		}
-		sc.pendingChargerCalls = make(map[string]struct{})
+		sc.pendingChargerCalls = make(map[string][]byte)
 		sc.pendingChargerCallsMu.Unlock()
 	}
 }
@@ -474,6 +509,7 @@ func onChargerDisconnect(ch ws.Channel) {
 
 	sidecarsMu.Lock()
 	delete(connectedChargers, id)
+	delete(sidecarLoops, id)
 	sc, ok := sidecars[id]
 	if ok {
 		delete(sidecars, id)
@@ -532,7 +568,7 @@ func onChargerMessage(ch ws.Channel, data []byte) bool {
 			}
 			if relay {
 				sc.pendingChargerCallsMu.Lock()
-				sc.pendingChargerCalls[msgID] = struct{}{}
+				sc.pendingChargerCalls[msgID] = slices.Clone(data)
 				sc.pendingChargerCallsMu.Unlock()
 			}
 			if err := sc.conn.Write(context.Background(), websocket.MessageText, data); err != nil {
@@ -661,13 +697,17 @@ func (sc *sidecar) readFromUpstream() {
 		case ocppj.CALL_RESULT, ocppj.CALL_ERROR:
 			// upstream's authoritative response to a bypassed charger Call?
 			sc.pendingChargerCallsMu.Lock()
-			_, isChargerCall := sc.pendingChargerCalls[msgID]
+			call, isChargerCall := sc.pendingChargerCalls[msgID]
 			if isChargerCall {
 				delete(sc.pendingChargerCalls, msgID)
 			}
 			sc.pendingChargerCallsMu.Unlock()
 
 			if isChargerCall {
+				// track before relaying so the charger's follow-up Call sees updated state
+				if msgType == ocppj.CALL_RESULT {
+					trackTransaction(cs, sc.chargerID, call, msg)
+				}
 				// relay to charger; its handler was bypassed and it awaits this reply
 				if err := cs.Write(sc.chargerID, msg); err != nil {
 					forwarderLog.ERROR.Printf("forwarder: relay upstream response to charger %s: %v", sc.chargerID, err)
@@ -675,6 +715,44 @@ func (sc *sidecar) readFromUpstream() {
 				continue
 			}
 			// discard: evcc already replied for non-relay Calls
+		}
+	}
+}
+
+// trackTransaction mirrors a relayed Start/StopTransaction into evcc's connector
+// state so idTag and transaction id stay known while upstream decides and replies.
+func trackTransaction(cs *CS, chargerID string, call, result []byte) {
+	var req, res []json.RawMessage
+	if json.Unmarshal(call, &req) != nil || len(req) < 4 || json.Unmarshal(result, &res) != nil || len(res) < 3 {
+		return
+	}
+
+	var action string
+	if json.Unmarshal(req[2], &action) != nil || action != "StartTransaction" && action != "StopTransaction" {
+		return
+	}
+
+	cp, err := cs.ChargepointByID(chargerID)
+	if err != nil {
+		return
+	}
+
+	switch action {
+	case "StartTransaction":
+		var request core.StartTransactionRequest
+		var conf core.StartTransactionConfirmation
+		if json.Unmarshal(req[3], &request) != nil || json.Unmarshal(res[2], &conf) != nil ||
+			conf.IdTagInfo == nil || conf.IdTagInfo.Status != types.AuthorizationStatusAccepted {
+			return
+		}
+		if conn := cp.connectorByID(request.ConnectorId); conn != nil {
+			conn.startTransaction(conf.TransactionId, request.IdTag)
+		}
+
+	case "StopTransaction":
+		var request core.StopTransactionRequest
+		if json.Unmarshal(req[3], &request) == nil {
+			_, _ = cp.OnStopTransaction(&request)
 		}
 	}
 }

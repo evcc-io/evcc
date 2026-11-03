@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 )
 
 // DeviceColor is the MQTT-safe publish format (map keys would leak into topic segments).

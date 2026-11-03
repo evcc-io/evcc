@@ -59,7 +59,7 @@ func TestOHPCF_LPC_EGMessages_ConsumptionLimit(t *testing.T) {
 				}).
 				Return(new(model.MsgCounterType), nil)
 
-			assert.NoError(t, c.Dim(tc.dim))
+			assert.NoError(t, c.dim(tc.dim))
 		})
 	}
 }
@@ -102,7 +102,7 @@ func TestOHPCF_LPC_Dim_WriteRejected(t *testing.T) {
 		}).
 		Return(new(model.MsgCounterType), nil)
 
-	assert.Error(t, c.Dim(true))
+	assert.Error(t, c.dim(true))
 }
 
 // Dim is gated: no announced LPC scenario, or no connected entity → ErrNotAvailable.
@@ -111,14 +111,14 @@ func TestOHPCF_LPC_Dim_Gating(t *testing.T) {
 		c, lpc, entity := newOHPCFEGCharger(t)
 		lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(false)
 
-		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
+		assert.ErrorIs(t, c.dim(true), api.ErrNotAvailable)
 	})
 
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _ := newOHPCFEGCharger(t)
 		c.egLpcEntity = nil
 
-		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
+		assert.ErrorIs(t, c.dim(true), api.ErrNotAvailable)
 	})
 }
 
@@ -143,7 +143,7 @@ func TestOHPCF_LPC_Dimmed(t *testing.T) {
 			lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 			lpc.EXPECT().ConsumptionLimit(entity).Return(tc.limit, nil)
 
-			got, err := c.Dimmed()
+			got, err := c.dimmed()
 			require.NoError(t, err)
 			assert.Equal(t, tc.want, got)
 		})
@@ -156,7 +156,7 @@ func TestOHPCF_LPC_Dimmed_Gating(t *testing.T) {
 		c, lpc, entity := newOHPCFEGCharger(t)
 		lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(false)
 
-		_, err := c.Dimmed()
+		_, err := c.dimmed()
 		assert.ErrorIs(t, err, api.ErrNotAvailable)
 	})
 
@@ -164,7 +164,7 @@ func TestOHPCF_LPC_Dimmed_Gating(t *testing.T) {
 		c, _, _ := newOHPCFEGCharger(t)
 		c.egLpcEntity = nil
 
-		_, err := c.Dimmed()
+		_, err := c.dimmed()
 		assert.ErrorIs(t, err, api.ErrNotAvailable)
 	})
 }
@@ -177,7 +177,7 @@ func TestOHPCF_LPC_Dimmed_Discard(t *testing.T) {
 			lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 			lpc.EXPECT().ConsumptionLimit(entity).Return(ucapi.LoadLimit{}, badErr)
 
-			_, err := c.Dimmed()
+			_, err := c.dimmed()
 			assert.ErrorIs(t, err, api.ErrNotAvailable)
 		})
 	}

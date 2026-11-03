@@ -5,12 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"os"
 	"time"
 
 	sunspec "github.com/andig/gosunspec"
+	"github.com/andig/gosunspec/layout"
 	"github.com/andig/gosunspec/typelabel"
+	"github.com/cenkalti/backoff/v4"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	gridx "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 	sunsdev "github.com/volkszaehler/mbmd/meters/sunspec"
 )
@@ -19,10 +24,11 @@ import (
 type ModbusSunspec struct {
 	log    *util.Logger
 	conn   *modbus.Connection
-	device *sunsdev.SunSpec
+	device *sunspecDevice
 	op     modbus.SunSpecOperation
 	scale  float64
 	mask   uint64
+	nan    bool
 }
 
 func init() {
@@ -36,6 +42,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		Value           []string
 		Scale           float64
 		BitMask         string
+		Nan             bool // report the not-implemented sentinel as 0, like the modbus *nan encodings
 		ConnectDelay    time.Duration
 	}{
 		Scale: 1,
@@ -73,7 +80,9 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 
 	devices := sunspecDevices.Get(conn)
 	if devices == nil {
-		devices, err = sunsdev.DeviceTree(conn)
+		// the device tree captures the client gosunspec uses for all further
+		// block reads and writes, hence wrap it in the deduplicating cache
+		devices, err = sunspecDeviceTree(newSunspecCachedClient(conn), modbus.Backoff())
 		if err != nil && !errors.Is(err, meters.ErrPartiallyOpened) {
 			return nil, err
 		}
@@ -84,7 +93,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 	device := sunspecSubDevices.Get(conn, cc.SubDevice)
 	if device == nil {
 		// silence KOSTAL implementation errors
-		device = sunsdev.NewDevice("sunspec", cc.SubDevice)
+		device = &sunspecDevice{SunSpec: sunsdev.NewDevice("sunspec", cc.SubDevice)}
 		if err := device.InitializeWithTree(devices); err != nil {
 			return nil, err
 		}
@@ -107,7 +116,11 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		device: device,
 		scale:  cc.Scale,
 		mask:   mask,
+		nan:    cc.Nan,
 	}
+
+	device.mu.Lock()
+	defer device.mu.Unlock()
 
 	for _, op := range ops {
 		if _, _, err := device.QueryPointAny(conn, op.Model, op.Block, op.Point); err == nil {
@@ -129,13 +142,24 @@ func recoverToError(err *error) {
 func (m *ModbusSunspec) floatGetter() (f float64, err error) {
 	defer recoverToError(&err)
 
+	m.device.mu.Lock()
+	defer m.device.mu.Unlock()
+
 	res, err := m.device.QueryPoint(
 		m.conn,
 		m.op.Model,
 		m.op.Block,
 		m.op.Point,
 	)
-	if err != nil && !errors.Is(err, meters.ErrNaN) {
+	if err != nil {
+		// not implemented sentinel: report missing so energy totals are not rebased,
+		// unless the template opted into zero (e.g. an unused mppt string)
+		if errors.Is(err, meters.ErrNaN) {
+			if m.nan {
+				return 0, nil
+			}
+			return 0, api.ErrNotAvailable
+		}
 		return 0, fmt.Errorf("model %d block %d point %s: %w", m.op.Model, m.op.Block, m.op.Point, err)
 	}
 
@@ -170,6 +194,9 @@ var _ BoolGetter = (*ModbusSunspec)(nil)
 func (m *ModbusSunspec) BoolGetter() (func() (bool, error), error) {
 	return func() (res bool, err error) {
 		defer recoverToError(&err)
+
+		m.device.mu.Lock()
+		defer m.device.mu.Unlock()
 
 		_, point, err := m.blockPoint()
 		if err != nil {
@@ -220,6 +247,8 @@ func sunspecBool(val int64, mask uint64) bool {
 	return val != 0
 }
 
+// blockPoint reads the block and returns its point. The device lock must be held
+// by the caller until the point value has been consumed or written.
 func (m *ModbusSunspec) blockPoint() (block sunspec.Block, point sunspec.Point, err error) {
 	defer recoverToError(&err)
 
@@ -240,7 +269,10 @@ var _ FloatSetter = (*Modbus)(nil)
 
 // FloatSetter executes configured modbus write operation and implements FloatSetter
 func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
+	m.device.mu.Lock()
 	block, point, err := m.blockPoint()
+	m.device.mu.Unlock()
+
 	if err != nil {
 		return nil, err
 	}
@@ -250,10 +282,22 @@ func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
 	return func(val float64) (err error) {
 		defer recoverToError(&err)
 
+		// setting the point and writing it must not interleave with a concurrent read
+		m.device.mu.Lock()
+		defer m.device.mu.Unlock()
+
 		val = val * m.scale
 		switch typ {
 		case typelabel.Float32:
 			point.SetFloat32(float32(val))
+		case typelabel.Int16:
+			point.SetValue(int16(math.Round(val)))
+		case typelabel.Int32:
+			point.SetValue(int32(math.Round(val)))
+		case typelabel.Uint16:
+			point.SetValue(uint16(math.Round(val)))
+		case typelabel.Uint32:
+			point.SetValue(uint32(math.Round(val)))
 		default:
 			return fmt.Errorf("invalid point type: %s", typ)
 		}
@@ -266,7 +310,10 @@ var _ IntSetter = (*Modbus)(nil)
 
 // IntSetter executes configured modbus write operation and implements IntSetter
 func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
+	m.device.mu.Lock()
 	block, point, err := m.blockPoint()
+	m.device.mu.Unlock()
+
 	if err != nil {
 		return nil, err
 	}
@@ -275,6 +322,10 @@ func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
 
 	return func(val int64) (err error) {
 		defer recoverToError(&err)
+
+		// setting the point and writing it must not interleave with a concurrent read
+		m.device.mu.Lock()
+		defer m.device.mu.Unlock()
 
 		val = int64(float64(val) * m.scale)
 
@@ -306,4 +357,17 @@ func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
 
 		return block.Write(m.op.Point)
 	}, nil
+}
+
+// sunspecDeviceTree scans the device tree, retrying when detection fails without a
+// connection error: some devices answer the first requests late or out of order,
+// e.g. with stale responses after idle
+func sunspecDeviceTree(client gridx.Client, bo backoff.BackOff) ([]sunspec.Device, error) {
+	return backoff.RetryWithData(func() ([]sunspec.Device, error) {
+		devices, err := sunsdev.DeviceTree(client)
+		if err != nil && !errors.Is(err, layout.ErrNotSunspecDevice) && !errors.Is(err, os.ErrDeadlineExceeded) {
+			return devices, backoff.Permanent(err)
+		}
+		return devices, err
+	}, bo)
 }

@@ -17,7 +17,17 @@ params:
     help:
       de: Wartezeit, nach der eine neu angekündigte optionale Leistungsaufnahme erneut eingeplant wird.
       en: Wait time after which a newly announced optional power consumption is scheduled again.
+  - name: disablepowerlimiter
+    type: bool
+    advanced: true
+    description:
+      de: Leistungsgrenzen ignorieren
+      en: Ignore power limits
+    help:
+      de: Die vom Gerät gemeldete optionale Leistungsaufnahme nicht als Min-/Max-Leistung verwenden.
+      en: Do not use the device's announced optional power consumption as min/max power.
 render: |
   type: eebus-ohpcf
   {{ include "eebus" . }}
   reboost: {{ .reboost }}
+  disablepowerlimiter: {{ .disablepowerlimiter }}

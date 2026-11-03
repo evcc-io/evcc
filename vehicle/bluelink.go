@@ -50,6 +50,21 @@ func NewHyundaiFromConfig(other map[string]any) (api.Vehicle, error) {
 			PushType:          "GCM",
 			LoginFormHost:     "https://idpconnect-eu.hyundai.com",
 			Brand:             "hyundai",
+			// OneApp/CCI login (bypasses the IDPConnect WAF block on the legacy
+			// authorize endpoint, see vehicle/bluelink/cci.go)
+			CCI: &bluelink.CCIConfig{
+				OneAppClientID:       "4f4953b5-02e1-4dbc-8599-87e983ee1be5",
+				OneAppRedirectURI:    "https://oneapp.hyundai.com/redirect",
+				APIURL:               "https://cci-api-eu.hyundai.com",
+				PackageID:            "com.hyundai.oneapp.eu",
+				ClientName:           "hyundai",
+				OSVersion:            "18.7",
+				NotificationProvider: "APNS",
+				// signing constants of the Android OneApp 1.4.0 build, they rotate with app releases
+				FingerprintClientName: "HyundaiEU",
+				FingerprintKey:        "OsZDfDuCyVX" + "yfqjCoA2JbX" + "2MrLpGwNBC",
+				BrandLabel:            "Hyundai",
+			},
 		}
 	case "australia", "new zealand":
 		settings = bluelink.Config{
@@ -84,6 +99,21 @@ func NewKiaFromConfig(other map[string]any) (api.Vehicle, error) {
 		LoginFormHost:     "https://idpconnect-eu.kia.com",
 		PushType:          "APNS",
 		Brand:             "kia",
+		// OneApp/CCI login (bypasses the IDPConnect WAF block on the legacy
+		// authorize endpoint, see vehicle/bluelink/cci.go)
+		CCI: &bluelink.CCIConfig{
+			OneAppClientID:       "01b36c86-79e8-486c-8009-15f2ad88d670",
+			OneAppRedirectURI:    "https://oneapp.kia.com/redirect",
+			APIURL:               "https://cci-api-eu.kia.com",
+			PackageID:            "com.kia.oneapp.eu",
+			ClientName:           "kia",
+			OSVersion:            "27",
+			NotificationProvider: "IOS_APPSTORE",
+			// signing constants of the Android OneApp 1.4.0 build, they rotate with app releases
+			FingerprintClientName: "KiaEU",
+			FingerprintKey:        "yb4Z1n2nlKe" + "ukNilE7QEdb" + "KB34nStPVa",
+			BrandLabel:            "Kia",
+		},
 	}
 
 	return newBluelinkFromConfig("kia", other, settings)
@@ -102,6 +132,21 @@ func NewGenesisFromConfig(other map[string]any) (api.Vehicle, error) {
 		PushType:          "GCM",
 		LoginFormHost:     "https://idpconnect-eu.genesis.com",
 		Brand:             "genesis",
+		// OneApp/CCI login (Genesis EU is WAF-blocked the same way as Kia/Hyundai,
+		// see hyundai_kia_connect_api#1278 — blocked by client_id, not by port)
+		CCI: &bluelink.CCIConfig{
+			OneAppClientID:       "50e3b8b0-ced5-43b7-8a42-f86ac92fe50e",
+			OneAppRedirectURI:    "https://oneapp.genesis.com/redirect",
+			APIURL:               "https://cci-api-eu.genesis.com",
+			PackageID:            "com.genesis.oneapp.eu",
+			ClientName:           "genesis",
+			OSVersion:            "18.7",
+			NotificationProvider: "APNS",
+			// signing constants of the Android OneApp 1.4.0 build, they rotate with app releases
+			FingerprintClientName: "GenesisEU",
+			FingerprintKey:        "SGcyufLERcZ" + "g8d7THY41KO" + "8l1fHRfZZb",
+			BrandLabel:            "Genesis",
+		},
 	}
 
 	return newBluelinkFromConfig("genesis", other, settings)

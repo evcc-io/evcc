@@ -7,9 +7,11 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -109,7 +111,6 @@ func TestEffectiveMinMaxCurrent(t *testing.T) {
 }
 
 func TestEffectivePowerLimiter(t *testing.T) {
-	Voltage = 230
 	ctrl := gomock.NewController(t)
 
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
@@ -133,7 +134,6 @@ func TestEffectivePowerLimiter(t *testing.T) {
 
 // coarse power-limited charger with fixed request must not yield min > max (#31549)
 func TestEffectivePowerLimiterCoarse(t *testing.T) {
-	Voltage = 230
 	ctrl := gomock.NewController(t)
 
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
@@ -250,34 +250,71 @@ func TestPlanLocking(t *testing.T) {
 	})
 }
 
-func TestGetChargePowerFlexibility(t *testing.T) {
-	Voltage = 230
+func TestGetSocPlanGoals(t *testing.T) {
+	config.Reset()
+	t.Cleanup(config.Reset)
 
+	ctrl := gomock.NewController(t)
+	v := api.NewMockVehicle(ctrl)
+	v.EXPECT().Capacity().Return(50.0).AnyTimes()
+	v.EXPECT().Features().Return(nil).AnyTimes()
+
+	const name = "vehicle"
+	require.NoError(t, config.Vehicles().Add(
+		config.NewStaticDevice(config.Named{Name: name}, api.Vehicle(v)),
+	))
+	require.NoError(t, settings.SetJson("vehicle."+name+"."+keys.RepeatingPlans, []api.RepeatingPlan{
+		{Weekdays: []int{0, 1, 2, 3, 4, 5, 6}, Time: "07:00", Tz: "UTC", Soc: 60, Active: true},
+		{Weekdays: []int{3}, Time: "09:00", Tz: "UTC", Soc: 90, Active: true},
+		{Weekdays: []int{3}, Time: "10:00", Tz: "UTC", Soc: 100, Active: false},
+	}))
+	t.Cleanup(func() { _ = settings.Delete("vehicle." + name + "." + keys.RepeatingPlans) })
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.vehicle = v
+	lp.vehicleSoc = 20
+
+	res := lp.GetSocPlanGoals()
+	require.Len(t, res, 8) // daily plan on each of 7 days, weekly plan once
+
+	for _, g := range res {
+		assert.True(t, g.Time.After(time.Now()) && g.Time.Before(time.Now().Add(7*24*time.Hour)), g.Time)
+	}
+	assert.Equal(t, 7, lo.CountBy(res, func(g loadpoint.PlanGoal) bool { return g.Soc == 60 }))
+}
+
+func TestGetChargePowerFlexibility(t *testing.T) {
 	for _, tc := range []struct {
-		mode       api.ChargeMode
-		status     api.ChargeStatus
-		planActive bool
-		want       float64
+		mode         api.ChargeMode
+		alwaysCharge api.AlwaysCharge
+		status       api.ChargeStatus
+		planActive   bool
+		boost        int
+		want         float64
 	}{
 		// not charging → always 0
-		{api.ModePV, api.StatusB, false, 0},
-		// PV mode, charging, no plan → full power is flexible
-		{api.ModePV, api.StatusC, false, 2700},
-		// PV mode, charging, plan active → not flexible
-		{api.ModePV, api.StatusC, true, 0},
-		// MinPV mode, charging, no plan → surplus above min is flexible (230V * 6A * 1phase = 1380W)
-		{api.ModeMinPV, api.StatusC, false, 2700 - 1380},
-		// MinPV mode, charging, plan active → not flexible
-		{api.ModeMinPV, api.StatusC, true, 0},
+		{api.ModeSmart, api.AlwaysChargeOff, api.StatusB, false, boostDisabled, 0},
+		// smart mode, charging, no plan → full power is flexible
+		{api.ModeSmart, api.AlwaysChargeOff, api.StatusC, false, boostDisabled, 2700},
+		// smart mode, charging, plan active → not flexible
+		{api.ModeSmart, api.AlwaysChargeOff, api.StatusC, true, boostDisabled, 0},
+		// smart mode, charging, battery boost → not flexible
+		{api.ModeSmart, api.AlwaysChargeOff, api.StatusC, false, boostContinue, 0},
+		// always charge, charging, no plan → surplus above min is flexible (230V * 6A * 1phase = 1380W)
+		{api.ModeSmart, api.AlwaysChargeOn, api.StatusC, false, boostDisabled, 2700 - 1380},
+		// always charge, charging, plan active → not flexible
+		{api.ModeSmart, api.AlwaysChargeOn, api.StatusC, true, boostDisabled, 0},
 		// Now mode → never flexible, regardless of plan
-		{api.ModeNow, api.StatusC, false, 0},
+		{api.ModeNow, api.AlwaysChargeOff, api.StatusC, false, boostDisabled, 0},
 	} {
 		t.Run("", func(t *testing.T) {
 			lp := NewLoadpoint(util.NewLogger("foo"), nil)
 			lp.mode = tc.mode
+			lp.alwaysCharge = tc.alwaysCharge
 			lp.status = tc.status
 			lp.chargePower = 2700
 			lp.planActive = tc.planActive
+			lp.batteryBoost = tc.boost
 			// EffectiveMinPower() = 230V * 6A * 1phase = 1380W
 			lp.minCurrent = 6
 			lp.phases = 1

@@ -26,11 +26,11 @@ import (
 	"time"
 )
 
-// checkVictron checks if the hardware is a supported victron device and returns sponsor subject
-func checkVictron() string {
+// checkVictron checks if the hardware is a supported victron device and returns sponsor subject and token
+func checkVictron() (string, string) {
 	vd, err := victronDeviceInfo()
 	if err != nil {
-		return ""
+		return "", ""
 	}
 
 	return checkHardware("victron", map[string]string{

@@ -72,6 +72,33 @@ test.describe("vehicles", async () => {
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
   });
 
+  test("prevent accidental dismiss with unsaved changes", async ({ page }) => {
+    await start();
+
+    await page.goto("/#/config");
+    const vehicleModal = page.getByTestId("vehicle-modal");
+
+    // clean: backdrop click closes
+    await page.getByTestId("add-vehicle").click();
+    await expectModalVisible(vehicleModal);
+    await vehicleModal.click({ position: { x: 10, y: 10 } });
+    await expectModalHidden(vehicleModal);
+
+    // dirty: backdrop click and ESC keep modal open
+    await page.getByTestId("add-vehicle").click();
+    await expectModalVisible(vehicleModal);
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
+    await vehicleModal.getByLabel("Title").fill("Green Car");
+    await vehicleModal.click({ position: { x: 10, y: 10 } });
+    await expectModalVisible(vehicleModal);
+    await page.keyboard.press("Escape");
+    await expectModalVisible(vehicleModal);
+
+    // close button works while dirty
+    await vehicleModal.getByLabel("Close").click();
+    await expectModalHidden(vehicleModal);
+  });
+
   test("config should survive restart", async ({ page }) => {
     await start();
 
@@ -156,10 +183,11 @@ test.describe("vehicles", async () => {
     await page.getByRole("button", { name: "Hide advanced settings" }).click();
     await expect(vehicleModal.getByLabel("Maximum number of phases")).not.toBeVisible();
 
-    // polestar template
+    // polestar data portal template
     await vehicleModal.getByLabel("Manufacturer").selectOption("Polestar");
-    await expect(vehicleModal.getByLabel("Username")).toBeVisible();
-    await expect(vehicleModal.getByLabel("Password")).toBeVisible();
+    await expect(vehicleModal.getByLabel("Client ID")).toBeVisible();
+    await expect(vehicleModal.getByLabel("Client Secret")).toBeVisible();
+    await expect(vehicleModal.getByLabel("Account ID")).toBeVisible();
     await expect(vehicleModal.getByLabel("Cache optional")).not.toBeVisible();
     await expect(vehicleModal.getByLabel("Default charging mode")).not.toBeVisible();
 

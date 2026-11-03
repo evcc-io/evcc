@@ -1,6 +1,7 @@
 package aa55
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"net"
@@ -246,7 +247,17 @@ func (p *AA55UDP) exchange() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return stripHeader(raw)
+	payload, err := stripHeader(raw)
+	if err != nil {
+		return nil, err
+	}
+
+	// validate answer length
+	if want := int(binary.BigEndian.Uint16(p.pdu[4:6])) * 2; len(payload) != want {
+		return nil, fmt.Errorf("response length %d does not match request (%d bytes expected)", len(payload), want)
+	}
+
+	return payload, nil
 }
 
 // sendRecv sends packet over p.conn and returns the raw response bytes. When a

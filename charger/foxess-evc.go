@@ -29,6 +29,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -202,7 +203,7 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 
 	// derive the hardware phase count from the device limits
 	wb.phases = 1
-	if math.Round(float64(wb.maxPower)*100/(230*wb.maxCurrent)) >= 3 {
+	if math.Round(grid.PowerToCurrent(float64(wb.maxPower)*100, 1)/wb.maxCurrent) >= 3 {
 		wb.phases = 3
 	}
 
@@ -361,7 +362,7 @@ func (wb *FoxESSEVC) calcSetpoint(enabled bool, current float64, phases int) uin
 	}
 
 	lo, hi := wb.powerLimits(phases)
-	power := 230 * float64(phases) * min(max(current, wb.minCurrent), wb.maxCurrent)
+	power := grid.CurrentToPower(min(max(current, wb.minCurrent), wb.maxCurrent), phases)
 
 	return min(max(uint16(math.Round(power/100)), lo), hi)
 }
@@ -380,7 +381,7 @@ func (wb *FoxESSEVC) decodeSetpoint(setpoint uint16) (float64, int) {
 		}
 	}
 
-	return min(float64(setpoint)*100/(230*float64(phases)), wb.maxCurrent), phases
+	return min(grid.PowerToCurrent(float64(setpoint)*100, phases), wb.maxCurrent), phases
 }
 
 // applySetpoint writes the combined enable state and charging limit. Callers must hold mu.
@@ -599,17 +600,17 @@ func (wb *FoxESSEVC) Voltages() (float64, float64, float64, error) {
 var _ api.Identifier = (*FoxESSEVC)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *FoxESSEVC) Identify() (string, error) {
+func (wb *FoxESSEVC) Identify() ([]string, error) {
 	id, err := wb.readUint32(foxRegRFID)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if id == 0 {
-		return "", nil
+		return nil, nil
 	}
 
-	return fmt.Sprintf("%08X", id), nil
+	return []string{fmt.Sprintf("%08X", id)}, nil
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface

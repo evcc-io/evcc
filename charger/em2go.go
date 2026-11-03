@@ -31,7 +31,7 @@ import (
 	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
-// https://www.em2go.de/download2/ModBus TCP Registers EM2GO  Series.pdf
+// https://media.elv.com/file/252210_modbus_tcp_register.pdf
 
 // Em2Go charger implementation
 type Em2Go struct {

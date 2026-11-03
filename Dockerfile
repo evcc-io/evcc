@@ -1,15 +1,12 @@
 # STEP 1 build ui
-FROM --platform=$BUILDPLATFORM node:26-alpine AS node
+FROM --platform=$BUILDPLATFORM ghcr.io/voidzero-dev/vite-plus:1.4.0@sha256:5dfa2031f7d014b6376407fd99e0747bed329d792c79c184a65ec9a0765bee0e AS node
 
-RUN apk update && apk add --no-cache make curl bash && curl -fsSL https://vite.plus | bash
-
-# the installer only wires vp into interactive shell rc files, which RUN steps don't source
-ENV PATH="/root/.vite-plus/bin:${PATH}"
+USER root
 
 WORKDIR /build
 
 # install node tools
-COPY package*.json ./
+COPY .node-version package*.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
 
 # build ui
@@ -24,7 +21,7 @@ RUN make ui
 
 
 # STEP 2 build executable binary
-FROM --platform=$BUILDPLATFORM golang:1.26.3-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27.3-alpine AS builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -71,6 +68,12 @@ RUN --mount=type=cache,target=${GOCACHE} --mount=type=cache,target=${GOMODCACHE}
 
 # STEP 3 build a small image including module support
 FROM alpine:3.23@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11
+
+# add labels
+LABEL org.opencontainers.image.documentation="https://docs.evcc.io"
+LABEL org.opencontainers.image.source="https://github.com/evcc-io/evcc"
+LABEL org.opencontainers.image.url="https://github.com/evcc-io/evcc"
+LABEL org.opencontainers.image.licenses="MIT"
 
 WORKDIR /app
 

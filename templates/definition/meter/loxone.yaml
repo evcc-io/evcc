@@ -3,6 +3,8 @@ products:
   - brand: Loxone
     description:
       generic: Miniserver
+discovery:
+  mac: ["504F94", "785249"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "charge"]

@@ -2,7 +2,7 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/go
 {
 	"name": "evcc",
-	"image": "mcr.microsoft.com/devcontainers/go",
+	"image": "ghcr.io/voidzero-dev/vite-plus@sha256:8d788678fb9783ba8994c4fe5652af3316bfc414f7ef6ead0136932ee6075b8b",
 	"features": {
 		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
 			"moby": false,
@@ -11,12 +11,9 @@
 			"version": "latest",
 			"dockerDashComposeVersion": "v2"
 		},
-		"ghcr.io/devcontainers/features/node:1": {
-			"nodeGypDependencies": true,
-			"installYarnUsingApt": true,
-			"version": "26",
-			"pnpmVersion": "latest",
-			"nvmVersion": "latest"
+		"ghcr.io/devcontainers/features/go:1": {
+			"version": "1.27.0",
+			"installGoTools": false
 		}
 	},
 	"postCreateCommand": "make install-ui && make install",

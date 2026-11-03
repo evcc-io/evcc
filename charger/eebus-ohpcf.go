@@ -3,6 +3,8 @@ package charger
 import (
 	"context"
 	"errors"
+	"fmt"
+	"reflect"
 	"sync"
 	"time"
 
@@ -15,6 +17,7 @@ import (
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 )
@@ -27,6 +30,7 @@ import (
 // enabling the charger schedules or resumes the optional consumption, disabling
 // it pauses or aborts the running process.
 type EEBusOHPCF struct {
+	implement.Caps
 	*embed
 	cem *eebus.CustomerEnergyManagement
 	ma  *eebus.MonitoringAppliance
@@ -43,7 +47,7 @@ type EEBusOHPCF struct {
 	egLpcEntity spineapi.EntityRemoteInterface
 	enabled     bool
 	reboosting  bool
-	dimmed      bool // last limit written, re-stated on reconnect
+	dimmedState bool // last limit written, re-stated on reconnect
 
 	connector *eebus.Connector
 }
@@ -58,10 +62,11 @@ func init() {
 // NewEEBusOHPCFFromConfig creates an EEBus OHPCF charger from generic config
 func NewEEBusOHPCFFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
-		embed   `mapstructure:",squash"`
-		Ski     string
-		Ip      string
-		Reboost time.Duration
+		embed               `mapstructure:",squash"`
+		Ski                 string
+		Ip                  string
+		Reboost             time.Duration
+		DisablePowerLimiter bool
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
@@ -74,18 +79,19 @@ func NewEEBusOHPCFFromConfig(ctx context.Context, other map[string]any) (api.Cha
 		return nil, err
 	}
 
-	return NewEEBusOHPCF(ctx, &cc.embed, cc.Ski, cc.Ip, cc.Reboost)
+	return NewEEBusOHPCF(ctx, &cc.embed, cc.Ski, cc.Ip, cc.Reboost, cc.DisablePowerLimiter)
 }
 
 // NewEEBusOHPCF creates an EEBus OHPCF charger, registers it with the EEBus
 // instance and waits for the connection.
-func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost time.Duration) (api.Charger, error) {
+func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost time.Duration, disablePowerLimiter bool) (api.Charger, error) {
 	inst, err := eebus.Instance()
 	if err != nil {
 		return nil, err
 	}
 
 	c := &EEBusOHPCF{
+		Caps:      implement.New(),
 		embed:     embed,
 		log:       util.NewLogger("eebus-ohpcf"),
 		cem:       inst.CustomerEnergyManagement(),
@@ -94,6 +100,10 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 		connector: eebus.NewConnector(),
 		ctx:       ctx,
 		reboost:   reboost,
+	}
+
+	if !disablePowerLimiter {
+		implement.Has(c, implement.PowerLimiter(c.getMinMaxPower))
 	}
 
 	if err := inst.RegisterDevice(ski, ip, c); err != nil {
@@ -105,6 +115,19 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 		return nil, err
 	}
 
+	// the compressor entity arrives with the use case data, not with the connection
+	if err := c.connector.WaitUseCase(ctx); err != nil {
+		inst.UnregisterDevice(ski, c)
+		return nil, err
+	}
+
+	// a device without OHPCF never announces a compressor and would error on
+	// every cycle instead of failing here (#33461)
+	if _, ok := c.connectedCompressor(); !ok {
+		inst.UnregisterDevice(ski, c)
+		return nil, fmt.Errorf("missing use case: %s", model.UseCaseNameTypeOptimizationOfSelfConsumptionByHeatPumpCompressorFlexibility)
+	}
+
 	// unregister device when context is cancelled (e.g. UI config validation)
 	go func() {
 		<-ctx.Done()
@@ -112,6 +135,21 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 	}()
 
 	return c, nil
+}
+
+// Capability implements api.Capable. LPC may be announced after OHPCF setup.
+func (c *EEBusOHPCF) Capability(typ reflect.Type) (any, bool) {
+	if typ == reflect.TypeFor[api.Dimmer]() {
+		c.mu.RLock()
+		defer c.mu.RUnlock()
+
+		if c.egLpcEntity != nil && c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(c.egLpcEntity, eebus.LPCLimit) {
+			return implement.Dimmer(c.dim, c.dimmed), true
+		}
+		return nil, false
+	}
+
+	return c.Caps.Capability(typ)
 }
 
 var _ eebus.Device = (*EEBusOHPCF)(nil)
@@ -142,9 +180,7 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 
 	switch event {
 	case ohpcf.DataUpdateConsumptionState:
-		c.mu.Lock()
-		c.compressor = entity
-		c.mu.Unlock()
+		c.setCompressor(entity)
 
 		// react immediately to a freshly announced schedule/resume opportunity
 		// instead of waiting for the next reboost tick, which may miss it (#31549)
@@ -162,9 +198,7 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 		ohpcf.DataUpdateConsumptionStartTime,
 		ohpcf.DataUpdateMinimalRunDuration,
 		ohpcf.DataUpdateMinimalPauseDuration:
-		c.mu.Lock()
-		c.compressor = entity
-		c.mu.Unlock()
+		c.setCompressor(entity)
 
 	// Monitoring Appliance MPC provides the measured power consumption
 	case mpc.UseCaseSupportUpdate:
@@ -189,10 +223,20 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 			c.egLpcEntity = entity
 
 			// [LPC-913]: state the limit to the newly available CS
-			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.Dim(c.lastDimmed()) })
+			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.dim(c.lastDimmed()) })
 		}
 		c.mu.Unlock()
 	}
+}
+
+// setCompressor caches the compressor entity and releases a pending WaitUseCase,
+// which fires on the first OHPCF event, the point Status and Enabled become usable.
+func (c *EEBusOHPCF) setCompressor(entity spineapi.EntityRemoteInterface) {
+	c.mu.Lock()
+	c.compressor = entity
+	c.mu.Unlock()
+
+	c.connector.UseCase()
 }
 
 func (c *EEBusOHPCF) connectedCompressor() (spineapi.EntityRemoteInterface, bool) {
@@ -220,7 +264,7 @@ func (c *EEBusOHPCF) lastDimmed() bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	return c.dimmed
+	return c.dimmedState
 }
 
 // ohpcfStatus maps the compressor process state to a charge status: running is
@@ -375,11 +419,9 @@ func (c *EEBusOHPCF) MaxCurrent(int64) error {
 	return c.apply(c.lastEnabled())
 }
 
-var _ api.Dimmer = (*EEBusOHPCF)(nil)
-
-// Dimmed implements the api.Dimmer interface, reporting whether a §14a/LPC
+// dimmed implements the api.Dimmer interface, reporting whether a §14a/LPC
 // consumption limit is currently active on the heat pump.
-func (c *EEBusOHPCF) Dimmed() (bool, error) {
+func (c *EEBusOHPCF) dimmed() (bool, error) {
 	c.mu.RLock()
 	entity := c.egLpcEntity
 	c.mu.RUnlock()
@@ -404,9 +446,9 @@ func (c *EEBusOHPCF) Dimmed() (bool, error) {
 	return limit.IsActive, nil
 }
 
-// Dim implements the api.Dimmer interface. It writes a §14a/LPC consumption
+// dim implements the api.Dimmer interface. It writes a §14a/LPC consumption
 // limit (fixed 0W safe limit) to the heat pump while dimmed, releasing it otherwise.
-func (c *EEBusOHPCF) Dim(dim bool) error {
+func (c *EEBusOHPCF) dim(dim bool) error {
 	c.mu.RLock()
 	entity := c.egLpcEntity
 	c.mu.RUnlock()
@@ -423,7 +465,7 @@ func (c *EEBusOHPCF) Dim(dim bool) error {
 	}
 
 	c.mu.Lock()
-	c.dimmed = dim
+	c.dimmedState = dim
 	c.mu.Unlock()
 
 	return nil
@@ -460,11 +502,8 @@ func (c *EEBusOHPCF) apply(enable bool) error {
 	return nil
 }
 
-var _ api.PowerLimiter = (*EEBusOHPCF)(nil)
-
-// GetMinMaxPower implements the api.PowerLimiter interface, reporting the
-// optional consumption as expected min/max or ErrNotAvailable if none.
-func (c *EEBusOHPCF) GetMinMaxPower() (float64, float64, error) {
+// getMinMaxPower is the callback used to provide the optional power limits.
+func (c *EEBusOHPCF) getMinMaxPower() (float64, float64, error) {
 	entity, ok := c.connectedCompressor()
 	if !ok {
 		return 0, 0, errNotConnected

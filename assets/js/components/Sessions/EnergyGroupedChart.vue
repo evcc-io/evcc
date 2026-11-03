@@ -64,12 +64,16 @@ export default defineComponent({
 		legends() {
 			const { labels, data, colors: entryColors } = this.chartData;
 			const total = data.reduce((acc, curr) => acc + curr, 0);
+			const fmtShare = (value: number) => this.fmtPercentage((100 / total) * value, 1);
+
 			const maxEnergy = Math.max(...data);
 			// sync energy units for label grid view
 			const unit =
 				maxEnergy < 1 ? POWER_UNIT.W : maxEnergy > 1e4 ? POWER_UNIT.MW : POWER_UNIT.KW;
-			const fmtShare = (value: number) => this.fmtPercentage((100 / total) * value, 1);
-			const fmtValue = (value: number) => this.fmtWh(value * 1e3, unit);
+			// drop decimals for the whole column once a value reaches four digits
+			const digits = unit === POWER_UNIT.KW && maxEnergy > 1e3 ? 0 : undefined;
+			const fmtValue = (value: number) => this.fmtWh(value * 1e3, unit, true, digits);
+
 			const pickable = this.groupBy !== GROUPS.NONE;
 			return labels.map((label, index) => {
 				const dataValue = data[index] as number;

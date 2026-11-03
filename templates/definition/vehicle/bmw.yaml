@@ -23,15 +23,16 @@ params:
     advanced: true
   - name: hcaptcha
     required: true
+    private: true
     description:
       de: Captcha Token
       en: Captcha Token
   - preset: vehicle-features
 render: |
   type: bmw
-  {{ include "vehicle-base" . }}
+  {{ include "base" . }}
   {{- if ne .region "EU" }}
   region: {{ .region }}
   {{- end }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}
   hcaptcha: {{ .hcaptcha }}

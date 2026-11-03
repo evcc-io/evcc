@@ -37,4 +37,4 @@ render: |
     months: {{ .months }}
     {{- end }}
   {{- end }}
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}

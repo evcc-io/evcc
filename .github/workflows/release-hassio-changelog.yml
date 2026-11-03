@@ -4,6 +4,9 @@ on:
   release:
     types: [edited, released]
 
+permissions:
+  contents: read
+
 jobs:
   update-changelog:
     name: Update Hassio Changelog

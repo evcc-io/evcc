@@ -22,6 +22,6 @@ params:
 render: |
   type: nissan
   version: v2
-  {{ include "vehicle-base" . }}
+  {{ include "base" . }}
   expiry: {{ .expiry }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

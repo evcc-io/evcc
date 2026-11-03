@@ -10,9 +10,11 @@ import (
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	coresettings "github.com/evcc-io/evcc/core/settings"
+	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/gorilla/mux"
 )
 
@@ -30,12 +32,15 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 	return loadpoint.DynamicConfig{
 		Title:                    lp.GetTitle(),
 		DefaultMode:              string(lp.GetDefaultMode()),
+		AlwaysCharge:             string(lp.GetAlwaysCharge()),
 		Priority:                 lp.GetPriority(),
 		PhasesConfigured:         lp.GetPhasesConfigured(),
 		MinCurrent:               lp.GetMinCurrent(),
 		MaxCurrent:               lp.GetMaxCurrent(),
 		SmartCostLimit:           lp.GetSmartCostLimit(),
 		SmartFeedInPriorityLimit: lp.GetSmartFeedInPriorityLimit(),
+		SolarShare:               lp.GetSolarShare(),
+		DemandPredictor:          lp.GetDemandPredictor(),
 		Thresholds:               lp.GetThresholds(),
 		Soc:                      lp.GetSocConfig(),
 		UI:                       lp.GetUI(),
@@ -45,6 +50,7 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 		BatteryBoostLimit:        lp.GetBatteryBoostLimit(),
 		LimitEnergy:              lp.GetLimitEnergy(),
 		LimitSoc:                 lp.GetLimitSoc(),
+		MinSoc:                   lp.GetMinSoc(),
 	}
 }
 
@@ -119,8 +125,9 @@ func loadpointConfig(dev config.Device[loadpoint.API]) (loadpointFullConfig, err
 			return loadpointFullConfig{}, err
 		}
 
+		// non-strict: runtime settings (mode, ...) are persisted alongside the config
 		var static loadpoint.StaticConfig
-		if err := util.DecodeOther(staticMap, &static); err != nil {
+		if err := mapstructure.Decode(staticMap, &static); err != nil {
 			return loadpointFullConfig{}, err
 		}
 
@@ -228,7 +235,7 @@ func newLoadpointHandler() http.HandlerFunc {
 		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
 		if err := dynamic.Apply(instance); err != nil {
 			conf.Delete()
-			jsonError(w, http.StatusBadRequest, err)
+			jsonError(w, errorStatus(err), err)
 			return
 		}
 
@@ -318,7 +325,7 @@ func updateLoadpointHandler() http.HandlerFunc {
 		// dynamic; instance is nil for a disabled loadpoint, takes effect on next restart
 		if instance != nil {
 			if err := dynamic.Apply(instance); err != nil {
-				jsonError(w, http.StatusBadRequest, err)
+				jsonError(w, errorStatus(err), err)
 				return
 			}
 		}
@@ -330,7 +337,7 @@ func updateLoadpointHandler() http.HandlerFunc {
 }
 
 // deleteLoadpointHandler deletes a loadpoint
-func deleteLoadpointHandler() http.HandlerFunc {
+func deleteLoadpointHandler(site site.API) http.HandlerFunc {
 	h := config.Loadpoints()
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -371,6 +378,7 @@ func deleteLoadpointHandler() http.HandlerFunc {
 				return
 			}
 
+			deleteOwnedDevices(site, templates.Charger, dev.Config())
 			setConfigDirty()
 		}
 

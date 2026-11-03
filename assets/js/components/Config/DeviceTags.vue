@@ -8,7 +8,7 @@
 				class="d-flex gap-2 overflow-hidden text-truncate"
 			>
 				<div class="label overflow-hidden text-truncate flex-shrink-1 flex-grow-1">
-					{{ $t(`config.deviceValue.${entry.name}`) }}
+					{{ deviceValueLabel(entry.name) }}
 				</div>
 				<div class="value" :class="[valueClasses(entry), truncateClasses(entry)]">
 					{{ fmtDeviceValue(entry) }}
@@ -31,7 +31,7 @@
 						:data-testid="`device-tag-${entry.name}`"
 					>
 						<td class="text-truncate">
-							{{ $t(`config.deviceValue.${entry.name}`) }}
+							{{ deviceValueLabel(entry.name) }}
 						</td>
 						<td
 							v-for="(val, idx) in entry.value"
@@ -72,11 +72,14 @@ import TariffChart from "../Tariff/TariffChart.vue";
 import { generateRateSlots, calculateCostRange } from "@/utils/tariffSlots";
 import { distanceValue, distanceUnit } from "@/units";
 
-const HIDDEN_TAGS = ["icon", "heating", "integratedDevice"];
+const HIDDEN_TAGS = ["icon", "heating", "integratedDevice", "continuous", "demandPredictor"];
 
 const PHASE_TAGS = ["phaseCurrents", "phaseVoltages", "phasePowers"];
 
 const FORECAST_TAGS = ["priceRates", "co2Rates", "solarRates", "temperatureRates"];
+
+// display order, remaining tags follow in backend order
+const FIRST_TAGS = ["power", "soc", "capacity", "energy", "returnEnergy", "chargeStatus"];
 
 export default {
 	name: "DeviceTags",
@@ -85,6 +88,7 @@ export default {
 	props: {
 		tags: Object,
 		currency: String,
+		usage: String,
 	},
 	data() {
 		return {
@@ -92,8 +96,11 @@ export default {
 		};
 	},
 	computed: {
+		effectiveUsage() {
+			return this.tags?.heating?.value ? "consumer" : this.usage;
+		},
 		regularEntries() {
-			return Object.entries(this.tags)
+			const entries = Object.entries(this.tags)
 				.filter(
 					([name]) =>
 						!HIDDEN_TAGS.includes(name) &&
@@ -103,6 +110,11 @@ export default {
 				.map(([name, { value, error, warning, muted, asleep }]) => {
 					return { name, value, error, warning, muted, asleep };
 				});
+			const first = FIRST_TAGS.flatMap((name) =>
+				entries.filter((entry) => entry.name === name)
+			);
+			const rest = entries.filter(({ name }) => !FIRST_TAGS.includes(name));
+			return [...first, ...rest];
 		},
 		phaseEntries() {
 			return Object.entries(this.tags)
@@ -170,12 +182,23 @@ export default {
 				return `${this.$t("config.deviceValue.max")} ${fmtMax}`;
 			}
 
-			// For price and CO2 rates, show range
+			if (this.ratesEntry?.type === "price") {
+				return this.fmtPriceRange(min, max, this.currency, true);
+			}
 			const fmtMin = this.formatRateValue(min, true);
 			return `${fmtMin} – ${fmtMax}`;
 		},
 	},
 	methods: {
+		deviceValueLabel(name) {
+			// same priority as the loadpoint status: continuous > heating > default
+			const usages = [this.tags?.continuous?.value && "continuous", this.effectiveUsage];
+			for (const usage of usages.filter(Boolean)) {
+				const key = `config.deviceValue.usage.${usage}.${name}`;
+				if (this.$te(key)) return this.$t(key);
+			}
+			return this.$t(`config.deviceValue.${name}`);
+		},
 		truncateClasses(entry) {
 			// don't truncate numeric values
 			return typeof entry.value === "string"
@@ -207,6 +230,7 @@ export default {
 			}
 			switch (name) {
 				case "power":
+				case "maxPower":
 				case "solarForecast":
 				case "dimLimit":
 				case "curtailLimit":
@@ -227,8 +251,13 @@ export default {
 				case "odometer":
 				case "range":
 					return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
-				case "chargeStatus":
-					return value ? this.$t(`config.deviceValue.chargeStatus${value}`) : "-";
+				case "chargeStatus": {
+					// like the loadpoint status: continuous devices may run without being enabled
+					const enabled = this.tags.enabled?.value;
+					const status =
+						value === "C" && this.tags.continuous?.value && !enabled ? "B" : value;
+					return status ? this.deviceValueLabel(`chargeStatus${status}`) : "-";
+				}
 				case "switchDevice":
 					// switch device means no current control
 					return this.$t(`config.deviceValue.${value ? "no" : "yes"}`);
@@ -242,6 +271,9 @@ export default {
 					return `${this.fmtW(value[0])} / ${this.fmtW(value[1])}`;
 				case "currentRange":
 					return `${this.fmtNumber(value[0], 1)} A / ${this.fmtNumber(value[1], 1)} A`;
+				case "current":
+				case "maxCurrent":
+					return `${this.fmtNumber(value, 1)} A`;
 				case "curtailed":
 					// devices report the allowed feed-in percent, the hems a plain flag
 					return typeof value === "number"

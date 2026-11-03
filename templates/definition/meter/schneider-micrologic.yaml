@@ -1,0 +1,154 @@
+template: schneider-micrologic
+products:
+  - brand: Schneider Electric
+    description:
+      generic: ComPacT NSX (MicroLogic E)
+  - brand: Schneider Electric
+    description:
+      generic: ComPacT NS (MicroLogic P/H)
+  - brand: Schneider Electric
+    description:
+      generic: MasterPacT NT/NW (MicroLogic P/H)
+  - brand: Schneider Electric
+    description:
+      generic: MasterPacT MTZ (MicroLogic X)
+requirements:
+  description:
+    de: |
+      Die Auslöseeinheit muss über ein Kommunikationsmodul per Modbus erreichbar sein: IFM (Modbus RTU) oder IFE (Modbus TCP), bei MasterPacT MTZ alternativ EIFE. IFE und EIFE nutzen fest die Modbus-ID 255, beim IFM gilt die an den Drehschaltern eingestellte Adresse.
+
+      4-polige Ausführungen messen den Neutralleiter direkt. 3-polige Ausführungen benötigen dafür einen externen Neutralleiter-Spannungsabgriff (ENVT), der angeschlossen und in der Auslöseeinheit deklariert ist (Systemtyp 40 oder 41). Ohne ENVT sind die Leistungswerte falsch, sobald Strom im Neutralleiter fließt.
+
+      Das Leistungsvorzeichen muss mit "EcoStruxure Power Commission" so eingestellt sein, dass die normale Flussrichtung positiv zählt. Werkseinstellung: von den oberen zu den unteren Anschlussklemmen.
+    en: |
+      The trip unit has to be reachable over Modbus through a communication module: IFM (Modbus RTU) or IFE (Modbus TCP), or EIFE on MasterPacT MTZ. IFE and EIFE always use Modbus ID 255, the IFM uses the address set on its rotary switches.
+
+      4-pole versions measure the neutral directly. 3-pole versions need an external neutral voltage tap (ENVT) for this, connected and declared in the trip unit (system type 40 or 41). Without ENVT, power values are wrong whenever current flows in the neutral.
+
+      The power flow sign has to be set with "EcoStruxure Power Commission" so that the normal direction of flow counts as positive. Factory setting: from the top terminals to the bottom ones.
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: modbus
+    choice: ["tcpip", "rs485"]
+    baudrate: 19200
+    comset: 8E1
+    id: 255
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block: # 32028-32111, one read per cycle shared by all sources below
+      register: 32027
+      count: 84
+    register:
+      address: 32077 # 32078 total active power
+      type: holding
+      decode: float32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32103 # 32104 total active energy delivered, Wh
+      type: holding
+      decode: uint64nan
+    scale: 0.001
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32107 # 32108 total active energy received, Wh
+      type: holding
+      decode: uint64nan
+    scale: 0.001
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32027 # 32028 rms current phase 1
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32029 # 32030 rms current phase 2
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32031 # 32032 rms current phase 3
+      type: holding
+      decode: float32
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32061 # 32062 rms voltage V1N
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32063 # 32064 rms voltage V2N
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32065 # 32066 rms voltage V3N
+      type: holding
+      decode: float32
+  powers:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32071 # 32072 active power phase 1
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32073 # 32074 active power phase 2
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32075 # 32076 active power phase 3
+      type: holding
+      decode: float32

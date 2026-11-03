@@ -1,0 +1,391 @@
+template: enecess-ecomain
+products:
+  - brand: enecess
+    description:
+      generic: ecoMain
+requirements:
+  description:
+    de: |
+      Für die Netzmessung wird der Hauptstromkreis des ecoMain verwendet; für PV-, Lade- und Zusatzverbrauchsmessungen können Messkanäle des ecoMain oder eines ecoSub verwendet werden.
+
+      Erfordert ecoMain Firmware 139 oder neuer.
+    en: |
+      Grid metering uses the ecoMain main circuit; PV, charging, and auxiliary metering can use branch channels on the ecoMain or an ecoSub.
+
+      Requires ecoMain firmware 139 or later.
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge", "aux"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 255
+  - name: phasecount
+    type: choice
+    choice: ["1", "3"]
+    default: "1"
+    required: true
+    usages: ["pv", "charge", "aux"]
+    description:
+      de: Phasenanzahl
+      en: Number of phases
+    help:
+      de: Einphasig nur Phase 1 konfigurieren. Dreiphasig zusätzlich Phase 2 und Phase 3 konfigurieren.
+      en: For single-phase metering, configure phase 1 only. For three-phase metering, also configure phases 2 and 3.
+  - name: device1
+    type: choice
+    choice: ["0", "1", "2", "3"]
+    default: "0"
+    required: true
+    usages: ["pv", "charge", "aux"]
+    description:
+      de: Gerät (Phase 1)
+      en: Device (phase 1)
+    help:
+      de: Wählt das Gerät, an dem der Stromwandler für Phase 1 angeschlossen ist. 0 = ecoMain, 1–3 = ecoSub.
+      en: Selects the device to which the CT for phase 1 is connected. 0 = ecoMain, 1–3 = ecoSub.
+  - name: channel1
+    type: choice
+    choice: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+    default: "1"
+    required: true
+    usages: ["pv", "charge", "aux"]
+    description:
+      de: Messkanal (Phase 1)
+      en: Meter channel (phase 1)
+    help:
+      de: Wählt den Messkanal, an dem der Stromwandler für Phase 1 angeschlossen ist.
+      en: Selects the meter channel to which the CT for phase 1 is connected.
+  - name: invert1
+    type: bool
+    default: false
+    usages: ["pv", "charge", "aux"]
+    description:
+      de: Richtung umkehren (Phase 1)
+      en: Invert direction (phase 1)
+    help:
+      de: Aktivieren, wenn die Leistung für Phase 1 mit umgekehrtem Vorzeichen gemessen wird.
+      en: Enable if the power for phase 1 is measured with the opposite sign.
+  - name: device2
+    type: choice
+    choice: ["0", "1", "2", "3"]
+    example: "0"
+    usages: ["pv", "charge", "aux"]
+    description:
+      de: Gerät (Phase 2)
+      en: Device (phase 2)
+    help:
+      de: |
+        Nur bei dreiphasiger Messung erforderlich.
+
+        Wählt das Gerät, an dem der Stromwandler für Phase 2 angeschlossen ist. 0 = ecoMain, 1–3 = ecoSub.
+      en: |
+        Only required for three-phase measurement.
+
+        Selects the device to which the CT for phase 2 is connected. 0 = ecoMain, 1–3 = ecoSub.
+  - name: channel2
+    type: choice
+    choice: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+    example: "2"
+    usages: ["pv", "charge", "aux"]
+    description:
+      de: Messkanal (Phase 2)
+      en: Meter channel (phase 2)
+    help:
+      de: |
+        Nur bei dreiphasiger Messung erforderlich.
+
+        Wählt den Messkanal, an dem der Stromwandler für Phase 2 angeschlossen ist.
+      en: |
+        Only required for three-phase measurement.
+
+        Selects the meter channel to which the CT for phase 2 is connected.
+  - name: invert2
+    type: bool
+    default: false
+    usages: ["pv", "charge", "aux"]
+    description:
+      de: Richtung umkehren (Phase 2)
+      en: Invert direction (phase 2)
+    help:
+      de: Aktivieren, wenn die Leistung für Phase 2 mit umgekehrtem Vorzeichen gemessen wird.
+      en: Enable if the power for phase 2 is measured with the opposite sign.
+  - name: device3
+    type: choice
+    choice: ["0", "1", "2", "3"]
+    example: "0"
+    usages: ["pv", "charge", "aux"]
+    description:
+      de: Gerät (Phase 3)
+      en: Device (phase 3)
+    help:
+      de: |
+        Nur bei dreiphasiger Messung erforderlich.
+
+        Wählt das Gerät, an dem der Stromwandler für Phase 3 angeschlossen ist. 0 = ecoMain, 1–3 = ecoSub.
+      en: |
+        Only required for three-phase measurement.
+
+        Selects the device to which the CT for phase 3 is connected. 0 = ecoMain, 1–3 = ecoSub.
+  - name: channel3
+    type: choice
+    choice: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+    example: "3"
+    usages: ["pv", "charge", "aux"]
+    description:
+      de: Messkanal (Phase 3)
+      en: Meter channel (phase 3)
+    help:
+      de: |
+        Nur bei dreiphasiger Messung erforderlich.
+
+        Wählt den Messkanal, an dem der Stromwandler für Phase 3 angeschlossen ist.
+      en: |
+        Only required for three-phase measurement.
+
+        Selects the meter channel to which the CT for phase 3 is connected.
+  - name: invert3
+    type: bool
+    default: false
+    usages: ["pv", "charge", "aux"]
+    description:
+      de: Richtung umkehren (Phase 3)
+      en: Invert direction (phase 3)
+    help:
+      de: Aktivieren, wenn die Leistung für Phase 3 mit umgekehrtem Vorzeichen gemessen wird.
+      en: Enable if the power for phase 3 is measured with the opposite sign.
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1006
+      type: holding
+      encoding: int32s
+    scale: 0.01
+    block:
+      register: 1000
+      count: 8
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 12
+      type: holding
+      encoding: uint64s
+    scale: 0.000001
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 28
+      type: holding
+      encoding: uint64s
+    scale: 0.000001
+  powers:
+  {{- range $address := list 1000 1002 1004 }}
+  - source: modbus
+    {{- include "modbus" $ | indent 2 }}
+    register:
+      address: {{ $address }}
+      type: holding
+      encoding: int32s
+    scale: 0.01
+    block:
+      register: 1000
+      count: 8
+  {{- end }}
+  voltages:
+  {{- range $address := list 1200 1203 1206 }}
+  - source: modbus
+    {{- include "modbus" $ | indent 2 }}
+    register:
+      address: {{ $address }}
+      type: holding
+      encoding: uint16
+    scale: 0.01
+    block:
+      register: 1200
+      count: 9
+  {{- end }}
+  # current registers are unsigned, direction follows power
+  currents:
+  {{- range $i := until 3 }}
+  - source: calc
+    mul:
+    - source: calc
+      sign:
+        source: modbus
+        {{- include "modbus" $ | indent 6 }}
+        register:
+          address: {{ add 1000 (mul 2 $i) }}
+          type: holding
+          encoding: int32s
+        scale: 0.01
+        block:
+          register: 1000
+          count: 8
+    - source: modbus
+      {{- include "modbus" $ | indent 4 }}
+      register:
+        address: {{ add 1201 (mul 3 $i) }}
+        type: holding
+        encoding: uint16
+      scale: 0.01
+      block:
+        register: 1200
+        count: 9
+  {{- end }}
+  {{- else }}
+  {{- $count := 1 }}
+  {{- if eq (toString .phasecount) "3" }}{{ $count = 3 }}{{ end }}
+  {{- $phases := list }}
+  {{- $used := dict }}
+  {{- range $i := until $count }}
+  {{- $n := add1 $i }}
+  {{- $device := toString (index $ (printf "device%d" $n)) }}
+  {{- $channel := toString (index $ (printf "channel%d" $n)) }}
+  {{- if not (regexMatch "^[0-3]$" $device) }}{{ fail (printf "device%d must be between 0 and 3" $n) }}{{ end }}
+  {{- if not (regexMatch "^([1-9]|10)$" $channel) }}{{ fail (printf "channel%d must be between 1 and 10" $n) }}{{ end }}
+  {{- $key := printf "%s/%s" $device $channel }}
+  {{- if hasKey $used $key }}{{ fail (printf "device%d/channel%d (%s) is already used by phase %s" $n $n $key (get $used $key)) }}{{ end }}
+  {{- $_ := set $used $key (toString $n) }}
+  {{- $d := atoi $device }}
+  {{- $c := sub (atoi $channel) 1 }}
+  {{- $scale := 0.01 }}
+  {{- $energy := add 32 (mul 40 $d) (mul 4 $c) }}
+  {{- $return := add $energy 160 }}
+  {{- if index $ (printf "invert%d" $n) }}
+  {{- $scale = -0.01 }}
+  {{- $forward := $energy }}{{ $energy = $return }}{{ $return = $forward }}
+  {{- end }}
+  {{- $voltage := add 1209 (mul 30 $d) (mul 3 $c) }}
+  {{- $phases = append $phases (dict "power" (add 1008 (mul 20 $d) (mul 2 $c)) "powerblock" (add 1008 (mul 20 $d)) "scale" $scale "voltage" $voltage "current" (add1 $voltage) "elecblock" (add 1209 (mul 30 $d)) "energy" $energy "return" $return) }}
+  {{- end }}
+  {{- if eq $count 1 }}
+  {{- $p := first $phases }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ $p.power }}
+      type: holding
+      encoding: int32s
+    scale: {{ $p.scale }}
+    block:
+      register: {{ $p.powerblock }}
+      count: 20
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ $p.energy }}
+      type: holding
+      encoding: uint64s
+    scale: 0.000001
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ $p.return }}
+      type: holding
+      encoding: uint64s
+    scale: 0.000001
+  {{- else }}
+  power:
+    source: calc
+    add:
+    {{- range $p := $phases }}
+    - source: modbus
+      {{- include "modbus" $ | indent 4 }}
+      register:
+        address: {{ $p.power }}
+        type: holding
+        encoding: int32s
+      scale: {{ $p.scale }}
+      block:
+        register: {{ $p.powerblock }}
+        count: 20
+    {{- end }}
+  energy:
+    source: calc
+    add:
+    {{- range $p := $phases }}
+    - source: modbus
+      {{- include "modbus" $ | indent 4 }}
+      register:
+        address: {{ $p.energy }}
+        type: holding
+        encoding: uint64s
+      scale: 0.000001
+    {{- end }}
+  returnenergy:
+    source: calc
+    add:
+    {{- range $p := $phases }}
+    - source: modbus
+      {{- include "modbus" $ | indent 4 }}
+      register:
+        address: {{ $p.return }}
+        type: holding
+        encoding: uint64s
+      scale: 0.000001
+    {{- end }}
+  powers:
+  {{- range $p := $phases }}
+  - source: modbus
+    {{- include "modbus" $ | indent 2 }}
+    register:
+      address: {{ $p.power }}
+      type: holding
+      encoding: int32s
+    scale: {{ $p.scale }}
+    block:
+      register: {{ $p.powerblock }}
+      count: 20
+  {{- end }}
+  voltages:
+  {{- range $p := $phases }}
+  - source: modbus
+    {{- include "modbus" $ | indent 2 }}
+    register:
+      address: {{ $p.voltage }}
+      type: holding
+      encoding: uint16
+    scale: 0.01
+    block:
+      register: {{ $p.elecblock }}
+      count: 30
+  {{- end }}
+  # current registers are unsigned, direction follows power
+  currents:
+  {{- range $p := $phases }}
+  - source: calc
+    mul:
+    - source: calc
+      sign:
+        source: modbus
+        {{- include "modbus" $ | indent 6 }}
+        register:
+          address: {{ $p.power }}
+          type: holding
+          encoding: int32s
+        scale: {{ $p.scale }}
+        block:
+          register: {{ $p.powerblock }}
+          count: 20
+    - source: modbus
+      {{- include "modbus" $ | indent 4 }}
+      register:
+        address: {{ $p.current }}
+        type: holding
+        encoding: uint16
+      scale: 0.01
+      block:
+        register: {{ $p.elecblock }}
+        count: 30
+  {{- end }}
+  {{- end }}
+  {{- end }}

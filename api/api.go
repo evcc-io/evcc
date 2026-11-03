@@ -46,17 +46,17 @@ type Battery interface {
 
 // BatteryCapacity provides a capacity in kWh
 type BatteryCapacity interface {
-	Capacity() float64
+	Capacity() (float64, error)
 }
 
 // BatteryPowerLimiter provides max AC charge- and discharge power in W
 type BatteryPowerLimiter interface {
-	GetPowerLimits() (charge, discharge float64)
+	GetPowerLimits() (charge, discharge float64, err error)
 }
 
 // BatterySocLimiter provides min/max battery soc in %
 type BatterySocLimiter interface {
-	GetSocLimits() (min, max float64)
+	GetSocLimits() (min, max float64, err error)
 }
 
 // MaxACPowerGetter provides max AC power in W
@@ -85,6 +85,7 @@ type CurrentGetter interface {
 
 // BatteryController optionally allows to control home battery (dis)charging behavior
 type BatteryController interface {
+	BatteryModes() []BatteryMode
 	SetBatteryMode(BatteryMode) error
 }
 
@@ -130,9 +131,10 @@ type ChargeRater interface {
 	ChargedEnergy() (float64, error)
 }
 
-// Identifier identifies a vehicle and is implemented by the charger
+// Identifier identifies a vehicle and is implemented by the charger.
+// A charger may know more than one identity, e.g. an RFID tag and a vehicle id.
 type Identifier interface {
-	Identify() (string, error)
+	Identify() ([]string, error)
 }
 
 // Authorizer authorizes a charging session by supplying RFID credentials
@@ -149,20 +151,14 @@ type PhaseDescriber interface {
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
 	Battery
-	BatteryCapacity
 	IconDescriber
 	FeatureDescriber
 	PhaseDescriber
 	TitleDescriber
 	SetTitle(string)
+	Capacity() float64 // kWh, static configuration
 	Identifiers() []string
 	OnIdentified() ActionConfig
-}
-
-// VehicleFinishTimer provides estimated charge cycle finish time.
-// Finish time is normalized for charging to 100% and may deviate from vehicle display if soc limit is effective.
-type VehicleFinishTimer interface {
-	FinishTime() (time.Time, error)
 }
 
 // VehicleRange provides the vehicles remaining km range
@@ -237,6 +233,28 @@ type AuthProvider interface {
 	DisplayName() string
 }
 
+// AuthChallenge is user input a login needs that no browser redirect can
+// deliver, e.g. a captcha or a code copied from the vendor's login page.
+type AuthChallenge struct {
+	Kind  string `json:"kind"`            // AuthChallengeCaptcha or AuthChallengeCode
+	Image string `json:"image,omitempty"` // data URI shown to the user
+	Link  string `json:"link,omitempty"`  // url the user opens to obtain the answer
+}
+
+const (
+	AuthChallengeCaptcha = "captcha"
+	AuthChallengeCode    = "code"
+)
+
+// AuthChallenger is implemented by AuthProviders whose login runs server-side
+// with stored credentials instead of a redirect or device flow.
+type AuthChallenger interface {
+	// StartChallenge begins the login. Returns the first challenge, or nil when no user input is needed.
+	StartChallenge() (*AuthChallenge, error)
+	// SubmitChallenge answers the current challenge. Returns the next challenge, or nil when authenticated.
+	SubmitChallenge(answer string) (*AuthChallenge, error)
+}
+
 // IconDescriber optionally provides an icon
 type IconDescriber interface {
 	Icon() string
@@ -274,6 +292,7 @@ type Circuit interface {
 	SetHEMS(HEMS)
 	HasMeter() bool
 	GetMaxPower() float64
+	EffectiveMaxPower() float64
 	GetMaxCurrent() float64
 	SetMaxPower(float64)
 	SetMaxCurrent(float64)

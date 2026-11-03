@@ -1,0 +1,27 @@
+template: gossen-energymid-1p
+products:
+  - brand: Gossen Metrawatt
+    description:
+      generic: ENERGYMID EM2281
+  - brand: Gossen Metrawatt
+    description:
+      generic: ENERGYMID EM2381
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    comset: 8E1
+render: |
+  type: mbmd
+  {{- include "modbus" . }}
+  model: energymid
+  {{- if ne .usage "pv" }}
+  power: Power
+  energy: Import
+  returnenergy: Export
+  {{- else }}
+  power: -Power
+  energy: Export
+  returnenergy: Import
+  {{- end }}

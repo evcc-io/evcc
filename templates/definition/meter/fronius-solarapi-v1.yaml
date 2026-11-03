@@ -18,6 +18,10 @@ requirements:
       Username and password are only required for active battery control.
 
       **Attention**: Active battery control should only be used if no other settings for time-dependent battery control were made in the inverter configuration under "Energy Management" - "Battery Management", as existing settings will be overwritten. Choose corresponding configuration URI!
+discovery:
+  mdns: ["_Fronius-SE-Inverter._tcp"]
+  hostname: ["fronius*"]
+  mac: ["0003AC"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -99,26 +103,6 @@ render: |
           user: {{ .user }}
           password: {{ .password }}
         body: '{"timeofuse":[{"Active":true,"Power":0,"ScheduleType":"DISCHARGE_MAX","TimeTable":{"Start":"00:00","End":"23:59"},"Weekdays":{"Mon":true,"Tue":true,"Wed":true,"Thu":true,"Fri":true,"Sat":true,"Sun":true}}]}'
-    - case: 3 # charge (not implemented -> normal)
-      set:
-        source: sequence
-        set:
-        - source: http
-          uri: http://{{ .host }}{{ .batteryconfiguri }}/timeofuse
-          method: POST
-          headers:
-          - content-type: application/json
-          auth:
-            type: digest
-            user: {{ .user }}
-            password: {{ .password }}
-          body: '{"timeofuse":[]}'
-        - source: error
-          error: ErrNotAvailable
-    - case: 4 # holdcharge (not implemented)
-      set:
-        source: error
-        error: ErrNotAvailable
   {{- end }}
   {{- include "battery-params" . }}
   {{- end }}

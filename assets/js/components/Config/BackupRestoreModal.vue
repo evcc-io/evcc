@@ -97,11 +97,31 @@
 								</small>
 							</label>
 						</div>
+
+						<div class="d-flex mb-1">
+							<input
+								id="resetRemote"
+								v-model="selectedReset.remote"
+								class="form-check-input"
+								type="checkbox"
+							/>
+							<label class="form-check-label ms-2" for="resetRemote">
+								<span>{{ $t("config.system.backupRestore.reset.remote") }}</span>
+								<br />
+								<small>
+									{{ $t("config.system.backupRestore.reset.remoteDescription") }}
+								</small>
+							</label>
+						</div>
 					</div>
 
 					<button
 						class="btn btn-outline-danger mt-3"
-						:disabled="!selectedReset.sessions && !selectedReset.settings"
+						:disabled="
+							!selectedReset.sessions &&
+							!selectedReset.settings &&
+							!selectedReset.remote
+						"
 					>
 						{{ $t("config.system.backupRestore.reset.action") }}
 					</button>
@@ -186,12 +206,14 @@ export default defineComponent({
 	components: { GenericModal, PropertyFileField, FormRow, PasswordInput },
 	props: {
 		authDisabled: Boolean,
+		wizardPending: Boolean,
 	},
 	data() {
 		return {
 			selectedReset: {
 				sessions: false,
 				settings: false,
+				remote: false,
 			},
 			file: null as File | null,
 			confirmType: "" as "backup" | "restore" | "reset" | "",
@@ -212,7 +234,8 @@ export default defineComponent({
 		restarting(newVal) {
 			// wait for restarte before navigate (ensure lazy chunks are available)
 			if (!newVal && this.navigateHomeAfterRestart) {
-				this.$router.push({ path: "/" });
+				// home would redirect back to the already open wizard
+				if (!this.wizardPending) this.$router.push({ path: "/" });
 				this.navigateHomeAfterRestart = false;
 			}
 		},
@@ -228,6 +251,7 @@ export default defineComponent({
 			this.selectedReset = {
 				sessions: false,
 				settings: false,
+				remote: false,
 			};
 			this.file = null;
 			this.navigateHomeAfterRestart = false;

@@ -15,4 +15,4 @@ params:
 render: |
   type: fixed
   price: {{ .price }}
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}

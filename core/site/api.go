@@ -20,14 +20,24 @@ type API interface {
 	ActiveLoadpoints() iter.Seq2[int, loadpoint.API]
 	Vehicles() Vehicles
 	Optimize()
+	// Automatic returns true if the optimizer controls the home battery instead of only advising
+	Automatic() bool
+	// AutomaticLoadpoints returns true if the optimizer controls the loadpoints as well
+	AutomaticLoadpoints() bool
 
 	// Meta
 	GetTitle() string
 	SetTitle(string)
+	GetCountry() string
+	SetCountry(string)
+	GetGridConnection() string
+	SetGridConnection(string)
 
 	// Config
 	GetGridMeterRef() string
 	SetGridMeterRef(string)
+	GetCurtailerRefs() []string
+	SetCurtailerRefs([]string)
 	GetPVMeterRefs() []string
 	SetPVMeterRefs([]string)
 	GetBatteryMeterRefs() []string
@@ -59,6 +69,10 @@ type API interface {
 	GetBatteryGridChargeLimit() *float64
 	// SetBatteryGridChargeLimit sets the grid charge limit
 	SetBatteryGridChargeLimit(limit *float64) error
+	// GetBatteryGridDischargeLimit get the grid discharge (feed-in) limit
+	GetBatteryGridDischargeLimit() *float64
+	// SetBatteryGridDischargeLimit sets the grid discharge (feed-in) limit
+	SetBatteryGridDischargeLimit(limit *float64) error
 
 	// GetOptimizerChargingStrategy gets the optimizer grid charging strategy
 	GetOptimizerChargingStrategy() string
@@ -74,6 +88,8 @@ type API interface {
 	SetResidualPower(float64) error
 	GetGridExportLimit() float64
 	SetGridExportLimit(float64) error
+	GetProfilePercentile() *float64
+	SetProfilePercentile(*float64) error
 
 	//
 	// tariffs and costs

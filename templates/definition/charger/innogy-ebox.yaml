@@ -12,6 +12,9 @@ products:
 capabilities: ["mA", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
+discovery:
+  hostname: ["ebox*"]
+  mac: ["9C3066"]
 params:
   - name: modbus
     choice: ["tcpip"]

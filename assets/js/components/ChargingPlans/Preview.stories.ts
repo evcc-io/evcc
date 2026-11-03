@@ -114,3 +114,12 @@ Unknown.args = unknownData;
 
 export const Dynamic = Template.bind({});
 Dynamic.args = dynamicData;
+
+export const Optimizer = Template.bind({});
+Optimizer.args = {
+  ...dynamicData,
+  duration: 5400,
+  power: 3200,
+  plan: [createRate(0.23, 2, 2), createRate(0.23, 6, 1), createRate(0.23, 9, 3)],
+  optimizer: true,
+};

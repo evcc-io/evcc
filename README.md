@@ -48,7 +48,8 @@ You'll find everything you need in our [documentation](https://docs.evcc.io/en/)
 
 ## Contributing
 
-Technical details on how to contribute, how to add translations and how to build evcc from source can be found [here](CONTRIBUTING.md).
+There are many ways to help, most of them without code. [docs.evcc.io/en/contribute](https://docs.evcc.io/en/contribute) gives an overview.
+Ground rules and how to build evcc from source are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 [![Weblate Hosted](https://hosted.weblate.org/widgets/evcc/-/evcc/287x66-grey.png)](https://hosted.weblate.org/engage/evcc/)
 

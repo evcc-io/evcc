@@ -36,7 +36,7 @@ render: |
   forecast:
     source: js
     script: |
-      // Generate CO₂ forecast for next 72 hours in 15-minute slots
+      // Generate CO₂ forecast for next 120 hours in 15-minute slots
       // Based on summer grid patterns with high solar penetration
       var now = new Date();
       var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
@@ -44,13 +44,13 @@ render: |
       var baseIntensity = parseFloat({{ .base }});
       var variation = parseFloat({{ .variation }});
 
-      // Generate 15-minute slots for 3 days
+      // Generate 15-minute slots for 5 days
       var slotMinutes = 15;
       var slotDuration = slotMinutes * 60 * 1000;
       var slotsPerHour = 60 / slotMinutes;
       var slotsPerDay = 24 * slotsPerHour;
 
-      for (var day = 0; day < 3; day++) {
+      for (var day = 0; day < 5; day++) {
         for (var slot = 0; slot < slotsPerDay; slot++) {
           var time = new Date(start.getTime() + (day * slotsPerDay + slot) * slotDuration);
           var hour = slot / slotsPerHour;

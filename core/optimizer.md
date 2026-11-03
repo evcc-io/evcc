@@ -26,7 +26,7 @@ TODO
 
 ### Base load energy demand
 
-Collected 15min energy profile averaged over the last 30 days.
+Collected 15min energy profile over the last 4 weeks, averaged per slot. A per-slot percentile (e.g. 50 = median, robust against a few heavy days) can be configured via `/api/profilepercentile` instead.
 
 ### Measured value blending
 
@@ -47,3 +47,7 @@ Use minimum of energy consumption cost.
 - home battery or loadpoint/vehicle...
   - capacity, soc and charge goals
   - charge/discharge power limits and efficiency
+
+Without vehicle capacity or soc a configured session energy limit is modelled instead:
+state is the session's charged energy, goal is the limit. Loadpoints with neither are
+not modelled at all- their power is added to the base load.

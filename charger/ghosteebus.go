@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
@@ -13,7 +14,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"golang.org/x/oauth2"
 )
 
 // GhostEEBus charger implementation combining EEBus protocol for EV communication
@@ -52,7 +52,7 @@ func NewGhostEEBusFromConfig(ctx context.Context, other map[string]any) (api.Cha
 
 // NewGhostEEBus creates a GhostEEBus charger combining EEBus with Ghost REST API
 func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter, hasChargedEnergy bool) (api.Charger, error) {
-	eb, err := newEEBus(ctx, ski, ip)
+	eb, err := newEEBus(ctx, ski, ip, false)
 	if err != nil {
 		return nil, err
 	}
@@ -69,15 +69,12 @@ func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter
 
 	// REST API features require IP and credentials
 	if ip != "" && user != "" && password != "" {
-		ts, err := ghostone.TokenSource(ctx, log, wb.uri, user, password)
+		tr, err := ghostone.Transport(ctx, log, wb.uri, user, password, transport.Insecure())
 		if err != nil {
 			return nil, err
 		}
 
-		wb.Client.Transport = &oauth2.Transport{
-			Source: ts,
-			Base:   transport.Insecure(),
-		}
+		wb.Client.Transport = tr
 
 		// warn if PV optimization is active
 		var pvMode ghostone.PvOptimizationMode
@@ -112,14 +109,22 @@ func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter
 
 var _ api.Identifier = (*GhostEEBus)(nil)
 
-// Identify implements api.Identifier, preferring RFID over EEBUS identification
-func (wb *GhostEEBus) Identify() (string, error) {
+// Identify implements api.Identifier, reporting RFID before EEBUS identification
+func (wb *GhostEEBus) Identify() ([]string, error) {
+	var res []string
+
 	if wb.hasRFID {
-		if id, err := wb.identify(); err == nil && id != "" {
-			return id, nil
+		if ids, err := wb.identify(); err == nil {
+			res = append(res, ids...)
 		}
 	}
-	return wb.EEBus.Identify()
+
+	ids, err := wb.EEBus.Identify()
+	if err != nil {
+		return nil, err
+	}
+
+	return slices.DeleteFunc(append(res, ids...), func(id string) bool { return id == "" }), nil
 }
 
 // getJSONCtx executes a context-aware GET request and decodes the JSON response.
@@ -215,8 +220,8 @@ func (wb *GhostEEBus) getPhases() (int, error) {
 }
 
 // identify implements RFID identification via REST API.
-func (wb *GhostEEBus) identify() (string, error) {
+func (wb *GhostEEBus) identify() ([]string, error) {
 	var res ghostone.RfidCardLastRead
 	err := wb.GetJSON(wb.uri+"/rfid-cards/last-read", &res)
-	return res.UUID, err
+	return []string{res.UUID}, err
 }

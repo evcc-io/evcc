@@ -143,6 +143,8 @@ func TestGhostEEBus_PhaseSwitchISO15118(t *testing.T) {
 }
 
 func TestGhostEEBus_PhaseSwitch(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		phases    int
@@ -186,14 +188,16 @@ func TestGhostEEBus_PhaseSwitch(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			wb := newTestGhostEEBusREST(t)
 
-			httpmock.ActivateNonDefault(wb.Client)
-			defer httpmock.DeactivateAndReset()
+			transport := httpmock.NewMockTransport()
+			wb.Client.Transport = transport
 
 			// mock PUT (phase switch command)
 			var capturedBody ghostone.RelaisSwitchStateWrite
-			httpmock.RegisterResponder(http.MethodPut, ghostEEBusRelaisStateURL,
+			transport.RegisterResponder(http.MethodPut, ghostEEBusRelaisStateURL,
 				func(req *http.Request) (*http.Response, error) {
 					if err := json.NewDecoder(req.Body).Decode(&capturedBody); err != nil {
 						return httpmock.NewStringResponse(400, ""), nil
@@ -204,14 +208,14 @@ func TestGhostEEBus_PhaseSwitch(t *testing.T) {
 
 			// mock GET (read-after-write verification)
 			body, _ := json.Marshal(tc.readBack)
-			httpmock.RegisterResponder(http.MethodGet, ghostEEBusRelaisStateURL,
+			transport.RegisterResponder(http.MethodGet, ghostEEBusRelaisStateURL,
 				httpmock.NewBytesResponder(200, body),
 			)
 
 			err := wb.phases1p3p(tc.phases)
 
 			assert.Equal(t, tc.wantValue, capturedBody.Value)
-			assert.Equal(t, 2, httpmock.GetTotalCallCount(), "expected PUT + GET")
+			assert.Equal(t, 2, transport.GetTotalCallCount(), "expected PUT + GET")
 
 			if tc.wantErr {
 				require.Error(t, err)
@@ -332,17 +336,17 @@ func TestGhostEEBus_Identify(t *testing.T) {
 	tests := []struct {
 		name   string
 		uuid   string
-		wantID string
+		wantID []string
 	}{
 		{
 			name:   "with_uuid",
 			uuid:   "ABC123",
-			wantID: "ABC123",
+			wantID: []string{"ABC123"},
 		},
 		{
 			name:   "empty",
 			uuid:   "",
-			wantID: "",
+			wantID: []string{""},
 		},
 	}
 
@@ -378,12 +382,16 @@ func TestGhostEEBus_IdentifyFallback(t *testing.T) {
 
 		id, err := wb.Identify()
 		require.NoError(t, err)
-		assert.Equal(t, "MAC-001", id)
+		assert.Equal(t, []string{"MAC-001"}, id)
 	})
 
-	t.Run("rfid_returns_id", func(t *testing.T) {
-		wb, _, _ := newTestGhostEEBusWithEEBus(t)
+	t.Run("rfid_and_eebus", func(t *testing.T) {
+		wb, evccMock, evEntity := newTestGhostEEBusWithEEBus(t)
 		wb.hasRFID = true
+
+		// both identities are reported
+		evccMock.EXPECT().EVConnected(evEntity).Return(true)
+		evccMock.EXPECT().Identifications(evEntity).Return([]ucapi.IdentificationItem{{Value: "MAC-001"}}, nil)
 
 		httpmock.ActivateNonDefault(wb.Client)
 		defer httpmock.DeactivateAndReset()
@@ -397,7 +405,7 @@ func TestGhostEEBus_IdentifyFallback(t *testing.T) {
 
 		id, err := wb.Identify()
 		require.NoError(t, err)
-		assert.Equal(t, "RFID-42", id)
+		assert.Equal(t, []string{"RFID-42", "MAC-001"}, id)
 	})
 
 	t.Run("rfid_empty_falls_back_to_eebus", func(t *testing.T) {
@@ -421,6 +429,6 @@ func TestGhostEEBus_IdentifyFallback(t *testing.T) {
 
 		id, err := wb.Identify()
 		require.NoError(t, err)
-		assert.Equal(t, "MAC-001", id)
+		assert.Equal(t, []string{"MAC-001"}, id)
 	})
 }

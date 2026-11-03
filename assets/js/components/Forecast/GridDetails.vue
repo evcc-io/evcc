@@ -88,11 +88,12 @@ export default defineComponent({
 			const avg = values.reduce((a, b) => a + b, 0) / values.length;
 			const fmtAvg = this.fmtPricePerKWh(avg, this.currency, false, true);
 			if (isStaticTariff(upcoming)) return { avg: fmtAvg, range: "" };
-			const min = Math.min(...values);
-			const max = Math.max(...values);
-			const fmtMin = this.fmtPricePerKWh(min, this.currency, false, false);
-			const fmtMax = this.fmtPricePerKWh(max, this.currency, false, true);
-			return { avg: `⌀ ${fmtAvg}`, range: `${fmtMin} – ${fmtMax}` };
+			const range = this.fmtPriceRange(
+				Math.min(...values),
+				Math.max(...values),
+				this.currency
+			);
+			return { avg: `⌀ ${fmtAvg}`, range };
 		},
 		upcomingSlots(slots?: UiForecastSlot[]): UiForecastSlot[] {
 			if (!Array.isArray(slots)) return [];

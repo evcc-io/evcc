@@ -21,7 +21,7 @@ params:
   - preset: vehicle-online
 render: |
   type: custom
-  {{ include "vehicle-common" . }}
+  {{ include "common" . }}
   {{- if eq .apiversion "3" }}
   soc:
     source: http
@@ -45,4 +45,4 @@ render: |
       uri: https://app.evnotify.de/extended?akey={{ urlEncode .akey }}&token={{ urlEncode .token }}
       jq: .charging
   {{- end }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

@@ -10,7 +10,7 @@ import (
 )
 
 // HomeWizard project homepage
-// https://homewizard-energy-api.readthedocs.io/index.html
+// https://api-documentation.homewizard.com/
 
 // HomeWizard charger implementation
 type HomeWizard struct {

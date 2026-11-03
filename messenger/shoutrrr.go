@@ -28,7 +28,7 @@ func NewShoutrrrFromConfig(other map[string]any) (api.Messenger, error) {
 		return nil, err
 	}
 
-	app, err := shoutrrr.CreateSender(cc.URI)
+	app, err := shoutrrr.CreateSenderWithOptions(types.SenderOptions{}, cc.URI)
 	if err != nil {
 		return nil, err
 	}

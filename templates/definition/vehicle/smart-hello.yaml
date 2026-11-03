@@ -8,5 +8,5 @@ params:
   - preset: vehicle-features
 render: |
   type: smart-hello
-  {{ include "vehicle-base" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}

@@ -3,7 +3,7 @@
 		name="shm"
 		:title="$t('config.shm.title')"
 		:description="$t('config.shm.description')"
-		docs="/docs/reference/configuration/hems"
+		docs="/reference/configuration/hems"
 		endpoint="/config/shm"
 		state-key="shm"
 		disable-remove

@@ -62,7 +62,7 @@ func TokenSource(log *util.Logger, uri, user, password string) (oauth2.TokenSour
 	if err == nil {
 		var token Token
 		if err = c.DoJSON(req, &token); err == nil {
-			c.TokenSource = oauth.RefreshTokenSource(token.AsOAuth2Token(), c.refreshToken)
+			c.TokenSource = oauth.RefreshTokenSource(log, token.AsOAuth2Token(), c.refreshToken)
 		}
 	}
 

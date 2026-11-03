@@ -5,7 +5,6 @@ limit: # input signal, plugin
   source: const
   value: false # 0/false = normal, 1/true = limit active
 
-
 ## optional attributes
 #interval: 10s # polling interval
 #passthrough: # output, mirrors limit to a downstream system

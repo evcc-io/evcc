@@ -21,7 +21,8 @@ params:
       de: IP-Adresse oder Hostname
       en: IP address or hostname
     example: 192.0.2.2
-    pattern:
+    service: network/hosts?template={template}
+    pattern: &host-pattern
       regex: "^[^\\/\\s]+(:[0-9]{1,5})?$" # any char except slash/space, optional :port
       examples: ["192.168.1.100", "example.com", "server.local:8080"]
   - name: ip
@@ -103,6 +104,14 @@ params:
       en: Used to determine the minimum solar surplus and plan duration.
     type: choice
     choice: ["1", "2", "3"]
+  - name: phases1p3p
+    type: bool
+    description:
+      en: Phase switching
+      de: Phasenumschaltung
+    help:
+      en: Charger is equipped with phase switching feature
+      de: Wallbox verfügt über Phasenumschaltung
   - name: connector
     type: int
     description:
@@ -144,20 +153,22 @@ params:
       de: Minimaler Ladestand
       en: Minimum charge
     help:
-      de: Untere Grenze beim Entladen der Batterie im normalen Betrieb
-      en: Lower limit when discharging the battery in normal operation
+      de: Untere Grenze wie am Batteriesystem eingestellt. Wird vom Optimizer genutzt.
+      en: Lower limit as configured on the battery system. Used by optimizer.
     example: 25
+    default: 0
     type: int
-    usages: ["battery", "vehicle"]
+    usages: ["battery"]
   - name: maxsoc
     unit: "%"
     description:
       de: Maximaler Ladestand
       en: Maximum charge
     help:
-      de: Oberes Limit beim Laden der Batterie aus dem Netz
-      en: Upper limit when charging the battery from the grid
+      de: Obere Grenze wie am Batteriesystem eingestellt. Genutzt vom Optimizer und, bei manchen Geräten, für Netzladen.
+      en: Upper limit as configured on the battery system. Used by optimizer and, on some devices, for grid charging.
     example: 95
+    default: 100
     type: int
     usages: ["battery"]
   - name: mincurrent
@@ -391,8 +402,8 @@ params:
       en: Maximum charge power
       de: Maximale Ladeleistung
     help:
-      en: For forced charging of the battery.
-      de: Für erzwungenes Laden des Speichers.
+      en: Highest power the battery system can charge with. The optimizer plans with charging up to this power. Some devices also use it as grid charging power.
+      de: Höchste Leistung, mit der das Batteriesystem laden kann. Der Optimizer plant mit Laden bis zu dieser Leistung. Manche Geräte nutzen diesen Wert auch als Leistung für Netzladen.
     advanced: true
   - name: maxchargerate
     unit: "%"
@@ -414,8 +425,8 @@ params:
       en: Maximum discharge power
       de: Maximale Entladeleistung
     help:
-      en: Maximum discharge power of the storage.
-      de: Maximale Entladeleistung des Speichers.
+      en: Highest power the battery system can discharge with. The optimizer plans with discharging up to this power. Smart mode assumes the battery supplies at most this power to vehicle charging.
+      de: Höchste Leistung, mit der das Batteriesystem entladen kann. Der Optimizer plant mit Entladen bis zu dieser Leistung. Der Smart-Modus geht davon aus, dass die Batterie höchstens diese Leistung zum Fahrzeugladen beisteuert.
     advanced: true
 
   - name: accesstoken
@@ -516,6 +527,9 @@ params:
     description:
       generic: API Key
     mask: true
+  - name: siteid
+    description:
+      generic: Site ID
   - name: tempsource
     description:
       de: Temperaturquelle
@@ -733,6 +747,21 @@ presets:
   ocpp:
     - name: stationid
     - name: connector
+    - name: chargingprofile
+      advanced: true
+      type: choice
+      choice: ["TxDefaultProfile", "TxProfile"]
+      default: TxDefaultProfile
+      description:
+        de: Ladeprofiltyp
+        en: Charging profile type
+      help:
+        de: |
+          TxProfile nur verwenden, wenn die Wallbox Änderungen an TxDefaultProfile während einer laufenden Transaktion ignoriert. Ohne Transaktion wird weiterhin TxDefaultProfile verwendet; eine laufende Transaktion muss ihre ID melden.
+          TxProfile endet mit der Transaktion. Das Standardprofil wird beim nächsten Regelzyklus wiederhergestellt. Ist evcc dabei offline, kann die Wallbox bis zur Wiederverbindung ohne dieses Limit laden.
+        en: |
+          Use TxProfile only if the charger ignores TxDefaultProfile changes during an active transaction. Without a transaction, TxDefaultProfile is still used; an active transaction must report its ID.
+          TxProfile expires with its transaction. The default profile is restored on the next control cycle. If evcc is offline then, the charger may charge without this limit until it reconnects.
     - name: remotestart
       advanced: true
       type: bool
@@ -904,6 +933,7 @@ modbus:
       params:
         - name: id
         - name: host
+          pattern: *host-pattern
         - name: port
           default: 502
         - name: delay
@@ -914,6 +944,7 @@ modbus:
       params:
         - name: id
         - name: host
+          pattern: *host-pattern
         - name: port
           default: 502
         - name: delay
@@ -924,6 +955,7 @@ modbus:
       params:
         - name: id
         - name: host
+          pattern: *host-pattern
         - name: port
           default: 502
         - name: delay

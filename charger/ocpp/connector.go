@@ -22,11 +22,13 @@ type Connector struct {
 	cp    *CP
 	id    int
 
-	status  *core.StatusNotificationRequest
-	statusC chan struct{}
+	status   *core.StatusNotificationRequest
+	statusC  chan struct{}
+	rebooted bool
 
-	meterUpdated time.Time
-	measurements map[types.Measurand]types.SampledValue
+	meterUpdated   time.Time // local receive time, drives watchdog and timeout
+	meterTimestamp time.Time // charger sample time, orders incoming meter values
+	measurements   map[types.Measurand]types.SampledValue
 
 	txnId int
 	idTag string

@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/core/session"
-	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/util/export"
 	"github.com/evcc-io/evcc/util/export/csv"
 	"github.com/evcc-io/evcc/util/export/xlsx"

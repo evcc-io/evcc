@@ -6,6 +6,8 @@ products:
   - brand: Janitza
     description:
       generic: UMG series
+discovery:
+  mac: ["000E6B"]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

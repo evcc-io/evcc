@@ -3,7 +3,9 @@ package shelly
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -45,4 +47,22 @@ func TestUnmarshalGen1Status(t *testing.T) {
 		assert.Equal(t, 401472.9, g.energy(res.EMeters[0].Total))
 		assert.Equal(t, -620.34, res.EMeters[0].Power)
 	}
+}
+
+// TestGen1HasReturnEnergy asserts that only the EM variants report a return
+// register - a 1PM's production must not be booked in return direction (#33062).
+func TestGen1HasReturnEnergy(t *testing.T) {
+	status := func(s string) util.Cacheable[Gen1Status] {
+		var res Gen1Status
+		require.NoError(t, json.Unmarshal([]byte(s), &res))
+		return util.ResettableCached(func() (Gen1Status, error) { return res, nil }, time.Minute)
+	}
+
+	// Shelly 1PM: meters without total_returned
+	g := &gen1{status: status(`{"meters":[{"power":198.0,"total":31510486}]}`)}
+	assert.False(t, g.HasReturnEnergy(), "1PM has no return register")
+
+	// Shelly EM: emeters with total_returned
+	g = &gen1{status: status(`{"emeters":[{"power":-620.34,"total":401472.9,"total_returned":653673.7}]}`)}
+	assert.True(t, g.HasReturnEnergy())
 }

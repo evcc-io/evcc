@@ -19,13 +19,13 @@ products:
 capabilities: ["rfid", "1p3p", "meter", "dim"]
 requirements:
   description:
-    de: 1P3P erfordert Firmware 3.187.0 oder neuer, RFID erfordert 3.156.0 oder neuer.
-    en: 1P3P requires at least firmware version 3.187.0, RFID at least 3.156.0.
+    de: 1P3P erfordert Firmware 3.187.0 oder neuer, RFID erfordert 3.156.0 oder neuer. Beim Vestel Support gibt es aktuell (Stand September 2026) auf Anfrage die Version 3.187.42. Damit ist das Problem des Zurückschaltens behoben.
+    en: 1P3P requires at least firmware version 3.187.0, RFID at least 3.156.0. Vestel Support provides on request the latest version 3.187.42 (as of Sept. 2026). It resolves the issue with phase switching.
   evcc: ["sponsorship"]
 caveats:
   - description:
-      de: Phasenumschaltung deaktiviert sich gelegentlich von selbst.
-      en: Phase switching occasionally disables itself.
+      de: Phasenumschaltung deaktiviert sich gelegentlich von selbst. (Fixed in v3.187.42, siehe Requirements)
+      en: Phase switching occasionally disables itself. (Fixed in v3.187.42, see requirements)
     link: https://github.com/evcc-io/evcc/issues/21708
 params:
   - name: modbus

@@ -242,13 +242,13 @@ func (wb *WebastoNext) Currents() (float64, float64, float64, error) {
 var _ api.Identifier = (*WebastoNext)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *WebastoNext) Identify() (string, error) {
+func (wb *WebastoNext) Identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(tqRegUserID, 10)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }
 
 var _ api.Diagnosis = (*WebastoNext)(nil)

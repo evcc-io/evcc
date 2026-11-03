@@ -17,7 +17,7 @@ params:
     default: 720h
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   soc:
     source: mqtt
     topic: mazda2mqtt/{{ .vin }}/chargeInfo/batteryLevelPercentage
@@ -36,4 +36,4 @@ render: |
     source: mqtt
     topic: mazda2mqtt/{{ .vin }}/chargeInfo/drivingRangeKm
     timeout: {{ .timeout }}
-  {{ include "vehicle-features" (merge (dict "basefeatures" (list "streaming")) .) }}
+  {{ include "features" (merge (dict "basefeatures" (list "streaming")) .) }}

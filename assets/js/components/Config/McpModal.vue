@@ -54,7 +54,7 @@ export default defineComponent({
 			return `claude mcp add --transport http evcc ${this.mcpUrl}`;
 		},
 		docsLink(): string {
-			return `${docsPrefix()}/docs/integrations/mcp`;
+			return `${docsPrefix()}/integrations/mcp`;
 		},
 	},
 });

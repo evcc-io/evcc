@@ -35,6 +35,7 @@
 			<DeviceTags
 				:tags="result as Record<string, any>"
 				:currency="currency"
+				:usage="usage"
 				class="success-values"
 			/>
 		</div>
@@ -59,6 +60,7 @@ export default defineComponent({
 		error: String as PropType<string | null>,
 		sponsorTokenRequired: Boolean,
 		currency: String as PropType<CURRENCY>,
+		usage: String as PropType<string>,
 	},
 	emits: ["test"],
 	data() {

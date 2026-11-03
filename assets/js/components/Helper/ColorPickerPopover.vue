@@ -106,13 +106,12 @@ export default defineComponent({
 	},
 	computed: {
 		palette(): string[] {
-			// de-interleave warm/cool palette into 3×7 grid (rows: light/mid/dark, cols: hue)
+			// palette is ordered for autoassign, the grid sorts by hue (rows: light/mid/dark)
+			// blue, cyan, pink, green, violet, amber, gray → blue, cyan, green, amber, pink, violet, gray
+			const columns = [0, 1, 4, 2, 5, 3, 6];
 			const grid: string[][] = Array.from({ length: 3 }, () => Array(7).fill(""));
 			colors.palette.forEach((hex, i) => {
-				const row = Math.floor(i / 7);
-				const step = i % 7;
-				const col = step < 6 ? Math.floor(step / 2) + (step % 2) * 3 : 6;
-				grid[row][col] = hex;
+				grid[Math.floor(i / 7)][columns[i % 7]] = hex;
 			});
 			return grid.flat();
 		},

@@ -26,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 )
 
 // SgReady charger implementation
@@ -199,7 +200,7 @@ func (wb *SgReady) Dim(dim bool) error {
 		return err
 	}
 
-	wb.mode = Dim
+	wb.mode = mode
 
 	return nil
 }
@@ -215,9 +216,9 @@ var _ api.ChargerEx = (*SgReady)(nil)
 func (wb *SgReady) MaxCurrentMillis(current float64) error {
 	phases := 1
 	if wb.lp != nil {
-		phases = wb.lp.GetPhases()
+		phases = wb.lp.ActivePhases()
 	}
-	return wb.setMaxPower(int64(230 * current * float64(phases)))
+	return wb.setMaxPower(int64(grid.CurrentToPower(current, phases)))
 }
 
 func (wb *SgReady) setMaxPower(power int64) error {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/gorilla/mux"
 )
@@ -19,6 +20,8 @@ type PlanResponse struct {
 	Duration int64     `json:"duration"`
 	Plan     api.Rates `json:"plan"`
 	Power    float64   `json:"power"`
+	// Optimizer indicates that the optimizer created the plan
+	Optimizer bool `json:"optimizer"`
 }
 
 type PlanPreviewResponse struct {
@@ -37,15 +40,19 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 
 		goal, _ := lp.GetPlanGoal()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-		strategy := lp.EffectivePlanStrategy()
-		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
+
+		plan, power, optimizer := lp.EffectivePlan(planTime, requiredDuration, lp.EffectivePlanStrategy())
+		if optimizer {
+			maxPower, requiredDuration = power, planner.Duration(plan)
+		}
 
 		res := PlanResponse{
-			PlanId:   id,
-			PlanTime: planTime,
-			Duration: int64(requiredDuration.Seconds()),
-			Plan:     plan,
-			Power:    maxPower,
+			PlanId:    id,
+			PlanTime:  planTime,
+			Duration:  int64(requiredDuration.Seconds()),
+			Plan:      plan,
+			Power:     maxPower,
+			Optimizer: optimizer,
 		}
 
 		jsonWrite(w, res)

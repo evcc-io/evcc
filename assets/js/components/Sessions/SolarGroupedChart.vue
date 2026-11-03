@@ -11,7 +11,14 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import { FONT_FAMILY, topBottomCenterPosition, tooltipStyle, tooltipTable } from "./echarts";
+import {
+	FONT_FAMILY,
+	lineDefaults,
+	sqrtRadiusAxis,
+	topBottomCenterPosition,
+	tooltipStyle,
+	tooltipTable,
+} from "./echarts";
 import echartsChart from "@/mixins/echartsChart";
 import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
@@ -79,38 +86,25 @@ export default defineComponent({
 					trigger: "item",
 					...tooltipStyle(colors.text || ""),
 					position: topBottomCenterPosition(() => this.chart),
-					formatter: (params: { name: string; value: number }) =>
+					formatter: (params: { name: string; dataIndex: number }) =>
 						tooltipTable(params.name, [
-							{ values: [this.fmtPercentage(params.value, 1)] },
+							{ values: [this.fmtPercentage(data[params.dataIndex]!, 1)] },
 						]),
 				},
 				polar: { radius: "95%" },
 				angleAxis: { type: "category", data: labels, show: false, startAngle: 90 },
-				radiusAxis: {
-					min: 0,
-					max: 100,
-					interval: 25,
-					axisLine: { show: false },
-					axisTick: { show: false },
-					splitLine: { lineStyle: { color: colors.border || "" } },
-					axisLabel: {
-						fontSize: 10,
-						color: colors.muted || "",
-						backgroundColor: colors.box || "",
-						padding: [1, 3],
-					},
-				},
+				radiusAxis: sqrtRadiusAxis(100, (value) => String(Math.round(value))),
 				series: [
 					{
 						type: "bar",
 						coordinateSystem: "polar",
 						barCategoryGap: "0%",
 						data: data.map((value, i) => ({
-							value,
+							value: Math.sqrt(value),
 							itemStyle: {
 								color: dimColor(entryColors[i]),
 								borderColor: entryColors[i],
-								borderWidth: 3,
+								borderWidth: lineDefaults.width,
 								// round outer corners only, sharp apex at the center
 								borderRadius: [0, 0, 8, 8],
 							},

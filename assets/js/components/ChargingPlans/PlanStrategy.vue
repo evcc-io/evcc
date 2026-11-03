@@ -1,13 +1,7 @@
 <template>
 	<div data-testid="plan-strategy" class="mb-5 mb-lg-4">
 		<div :class="{ 'mb-2': open }">
-			<div v-if="disabled">
-				<span class="fw-bold evcc-gray">{{ $t("main.chargingPlan.strategy.label") }}:</span>
-				{{ " " }}
-				<span class="small">{{ summary }}</span>
-			</div>
 			<button
-				v-else
 				type="button"
 				class="btn btn-link btn-sm text-gray p-0 border-0 d-flex align-items-center text-start"
 				:class="{ 'text-primary': open }"
@@ -22,13 +16,7 @@
 		</div>
 		<div class="collapsible-wrapper" :class="{ open }">
 			<div class="collapsible-content ring-space">
-				<div v-if="disabled" class="row mb-4">
-					<div class="small text-muted">
-						<strong class="text-primary">{{ $t("general.note") }}</strong>
-						{{ $t("main.chargingPlan.strategyDisabledDescription") }}
-					</div>
-				</div>
-				<div v-else class="row">
+				<div class="row">
 					<div class="col-12 col-lg-6 mb-3">
 						<div class="row">
 							<label
@@ -39,6 +27,25 @@
 							</label>
 							<div class="col-7 col-lg-12">
 								<select
+									v-if="optimizationDisabled"
+									:id="formId('continuous')"
+									class="form-select"
+									disabled
+								>
+									<option>{{ $t("general.none") }}</option>
+								</select>
+								<select
+									v-else-if="optimizerLocked"
+									:id="formId('continuous')"
+									class="form-select"
+									disabled
+								>
+									<option>
+										{{ $t("main.chargingPlan.optimization.cheapest") }}
+									</option>
+								</select>
+								<select
+									v-else
 									:id="formId('continuous')"
 									v-model="localContinuous"
 									class="form-select"
@@ -54,7 +61,19 @@
 							</div>
 						</div>
 						<div class="small text-muted mt-1">
-							{{ optimizationDescription }}
+							<i18n-t
+								v-if="optimizerLocked"
+								keypath="main.chargingPlan.optimization.optimizerDescription"
+								tag="span"
+								scope="global"
+							>
+								<template #optimizer>
+									<router-link to="/optimize" class="text-muted">
+										{{ $t("config.optimizer.linkWord") }}
+									</router-link>
+								</template>
+							</i18n-t>
+							<template v-else>{{ optimizationDescription }}</template>
 						</div>
 					</div>
 					<div class="col-12 col-lg-6 mb-3">
@@ -67,6 +86,17 @@
 							</label>
 							<div class="col-7 col-lg-12">
 								<select
+									v-if="disabled"
+									:id="formId('precondition')"
+									class="form-select"
+									disabled
+								>
+									<option>
+										{{ $t("main.chargingPlan.precondition.optionAll") }}
+									</option>
+								</select>
+								<select
+									v-else
 									:id="formId('precondition')"
 									v-model="localPrecondition"
 									class="form-select"
@@ -86,7 +116,11 @@
 							</div>
 						</div>
 						<div class="small text-muted mt-1">
-							{{ $t("main.chargingPlan.precondition.description") }}
+							{{
+								$t(
+									`main.chargingPlan.precondition.${disabled ? "disabledDescription" : "description"}`
+								)
+							}}
 						</div>
 					</div>
 				</div>
@@ -101,6 +135,13 @@ import formatter from "@/mixins/formatter";
 import { SMART_COST_TYPE, type PlanStrategy } from "@/types/evcc";
 import DropdownIcon from "../MaterialIcon/Dropdown.vue";
 
+const HOUR = 60 * 60;
+const QUARTER_HOUR = 0.25 * HOUR;
+const HALF_HOUR = 0.5 * HOUR;
+const ONE_HOUR = 1 * HOUR;
+const TWO_HOURS = 2 * HOUR;
+const EVERYTHING = 7 * 24 * HOUR;
+
 export default defineComponent({
 	name: "ChargingPlanStrategy",
 	components: { DropdownIcon },
@@ -109,8 +150,8 @@ export default defineComponent({
 		id: [String, Number],
 		precondition: { type: Number, default: 0 },
 		continuous: { type: Boolean, default: false },
-		disabled: Boolean,
 		smartCostType: String as PropType<SMART_COST_TYPE>,
+		optimizerControlled: Boolean,
 	},
 	emits: ["update"],
 	data() {
@@ -121,21 +162,37 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		disabled(): boolean {
+			// options only make sense with a dynamic planner tariff
+			return !this.smartCostType || this.smartCostType === SMART_COST_TYPE.PRICE_STATIC;
+		},
 		isCo2(): boolean {
 			return this.smartCostType === SMART_COST_TYPE.CO2;
 		},
 		cheapestKey(): string {
 			return this.isCo2 ? "cleanest" : "cheapest";
 		},
+		preconditionAll(): boolean {
+			return this.localPrecondition >= EVERYTHING;
+		},
+		optimizationDisabled(): boolean {
+			// everything is charged late, nothing left to optimize
+			return this.disabled || this.preconditionAll;
+		},
+		optimizerLocked(): boolean {
+			// the optimizer schedules by grid price and does not know "continuous"
+			return this.optimizerControlled && !this.optimizationDisabled;
+		},
 		summary(): string {
-			if (this.disabled) {
-				return this.$t("main.chargingPlan.strategyDisabledDescription");
+			if (this.disabled || this.precondition >= EVERYTHING) {
+				return this.$t("main.chargingPlan.precondition.summaryAll");
 			}
-			const parts = [
-				this.$t(
-					`main.chargingPlan.optimization.${this.continuous ? "continuous" : this.cheapestKey}`
-				),
-			];
+			const optimization = this.optimizerLocked
+				? "cheapest"
+				: this.continuous
+					? "continuous"
+					: this.cheapestKey;
+			const parts = [this.$t(`main.chargingPlan.optimization.${optimization}`)];
 			if (this.precondition) {
 				parts.push(
 					this.$t("main.chargingPlan.precondition.summary", {
@@ -146,6 +203,12 @@ export default defineComponent({
 			return parts.join(", ");
 		},
 		optimizationDescription(): string {
+			if (this.disabled) {
+				return this.$t("main.chargingPlan.optimization.disabledDescription");
+			}
+			if (this.preconditionAll) {
+				return this.$t("main.chargingPlan.precondition.disabledDescription");
+			}
 			const variant = this.localContinuous
 				? this.isCo2
 					? "continuousCo2"
@@ -154,13 +217,6 @@ export default defineComponent({
 			return this.$t(`main.chargingPlan.optimization.${variant}Description`);
 		},
 		preconditionOptions() {
-			const HOUR = 60 * 60;
-			const QUARTER_HOUR = 0.25 * HOUR;
-			const HALF_HOUR = 0.5 * HOUR;
-			const ONE_HOUR = 1 * HOUR;
-			const TWO_HOURS = 2 * HOUR;
-			const EVERYTHING = 7 * 24 * HOUR;
-
 			const options = [QUARTER_HOUR, HALF_HOUR, ONE_HOUR, TWO_HOURS, EVERYTHING];
 
 			// support custom values (via API)

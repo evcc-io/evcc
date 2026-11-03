@@ -43,7 +43,7 @@ func NewCloudFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if !sponsor.IsAuthorized() {
+	if !sponsor.IsAuthorizedForApi() {
 		return nil, api.ErrSponsorRequired
 	}
 

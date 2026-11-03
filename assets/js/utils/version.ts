@@ -2,13 +2,9 @@ export function isDevelopment(version: string): boolean {
   return version === "0.0.0";
 }
 
-// untagged builds carry the commit as build metadata: 0.304.0-dev+abc1234
+// untagged builds are pre-releases carrying the build timestamp: 0.304.0-dev.1712345678
 export function isNightly(version: string): boolean {
-  return version.includes("+");
-}
-
-export function commitFromVersion(version: string): string {
-  return version.split("+")[1] ?? "";
+  return version.includes("-dev.");
 }
 
 export function getReleaseName(version: string): string {
@@ -23,7 +19,8 @@ export function getShortVersion(version: string): string {
 }
 
 export function isNewVersionAvailable(installed?: string, available?: string): boolean {
-  return !!available && !isDevelopment(installed || "") && available !== installed;
+  const v = installed || "";
+  return !!available && !isDevelopment(v) && !isNightly(v) && available !== installed;
 }
 
 export function isNewVersionUnacknowledged(

@@ -60,11 +60,11 @@
 						</th>
 						<td>
 							<template v-if="session.created">
-								{{ fmtFullDateTime(new Date(session.created), false) }}
+								{{ fmtFullDateTime(new Date(session.created)) }}
 							</template>
 							<br />
 							<template v-if="session.finished">
-								{{ fmtFullDateTime(new Date(session.finished), false) }}
+								{{ fmtFullDateTime(new Date(session.finished)) }}
 							</template>
 						</td>
 					</tr>
@@ -218,7 +218,6 @@
 </template>
 
 <script lang="ts">
-import "@h2d2/shopicons/es/regular/checkmark";
 import formatter from "@/mixins/formatter";
 import Options from "../Vehicles/Options.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";

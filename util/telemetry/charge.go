@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -9,7 +10,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/request"
@@ -27,6 +28,7 @@ var (
 	mu                              sync.Mutex
 	updated                         time.Time
 	accChargeEnergy, accGreenEnergy float64
+	loadpoints                      int
 )
 
 func Enabled() bool {
@@ -69,9 +71,12 @@ func Create(machineID string, valueChan chan<- util.Param) {
 }
 
 // UpdateChargeProgress uploads power and energy data every 30 seconds
-func UpdateChargeProgress(log *util.Logger, power, greenShare float64) {
+func UpdateChargeProgress(log *util.Logger, power, greenShare float64, count int) {
 	mu.Lock()
 	defer mu.Unlock()
+
+	// retained for Persist
+	loadpoints = count
 
 	if time.Since(updated) < 30*time.Second {
 		return
@@ -113,6 +118,7 @@ func upload(log *util.Logger, chargePower, greenPower float64) error {
 
 	data := InstanceChargeProgress{
 		InstanceID: instanceID,
+		Loadpoints: loadpoints,
 		ChargeProgress: ChargeProgress{
 			ChargePower:  chargePower,
 			GreenPower:   greenPower,
@@ -143,12 +149,18 @@ func upload(log *util.Logger, chargePower, greenPower float64) error {
 		}
 	}
 
-	if err == nil {
-		updated = time.Now()
-
-		accChargeEnergy = 0
-		accGreenEnergy = 0
+	// retrying a rejected payload cannot succeed and accumulates forever, drop it
+	var se *request.StatusError
+	if errors.As(err, &se) && se.StatusCode() == http.StatusBadRequest {
+		err = fmt.Errorf("%w: %s (dropping %.0fWh)", err, bytes.TrimSpace(se.Body()), accChargeEnergy*1e3)
+	} else if err != nil {
+		return err
 	}
+
+	updated = time.Now()
+
+	accChargeEnergy = 0
+	accGreenEnergy = 0
 
 	return err
 }

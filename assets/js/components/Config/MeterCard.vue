@@ -16,7 +16,7 @@
 			<component :is="iconComponent" v-else />
 		</template>
 		<template #tags>
-			<DeviceTags :tags="tags" />
+			<DeviceTags :tags="tags" :usage="meterType" />
 		</template>
 	</DeviceCard>
 </template>

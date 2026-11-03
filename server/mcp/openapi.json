@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "evcc",
-    "description": "Solar charging. Super simple.",
+    "description": "smart charging. open source energy management.",
     "version": "0.2.0",
     "contact": {
       "url": "https://github.com/evcc-io/evcc"
@@ -287,21 +287,33 @@
       "post": {
         "operationId": "setBatteryGridDischarge",
         "summary": "Control battery grid discharge",
-        "description": "Allow the home battery to discharge to the grid (experimental).",
+        "description": "Allow the home battery to discharge to the grid. Enabling may require `force=true` to confirm country-specific grid export restrictions.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/features/battery"
         },
         "tags": [
-          "battery"
+          "battery",
+          "experimental"
         ],
         "parameters": [
           {
             "$ref": "#/components/parameters/enable"
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "description": "Confirm country-specific grid export restrictions",
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/BooleanResult"
+          },
+          "428": {
+            "description": "Confirmation required"
           }
         }
       }
@@ -329,6 +341,47 @@
         "operationId": "setBatteryGridChargeLimit",
         "summary": "Set battery grid charge limit",
         "description": "Charge home battery from grid when price or emissions are below the threshold. Uses price if a dynamic tariff exists. Uses emissions if a CO₂-tariff is configured. Ignored otherwise.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/battery"
+        },
+        "tags": [
+          "battery"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/costLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        }
+      }
+    },
+    "/batterygriddischargelimit": {
+      "delete": {
+        "operationId": "removeBatteryGridDischargeLimit",
+        "summary": "Remove battery grid discharge limit",
+        "description": "Remove battery grid discharge limit (experimental).",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/battery"
+        },
+        "tags": [
+          "battery"
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        }
+      }
+    },
+    "/batterygriddischargelimit/{cost}": {
+      "post": {
+        "operationId": "setBatteryGridDischargeLimit",
+        "summary": "Set battery grid discharge limit",
+        "description": "Discharge home battery to grid when the grid export price is at or above the threshold (experimental). Requires a grid export tariff and the battery grid discharge setting. Ignored otherwise.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/features/battery"
         },
@@ -428,6 +481,42 @@
         }
       }
     },
+    "/loadpoints/{id}/alwayscharge/{alwaysCharge}": {
+      "post": {
+        "operationId": "setLoadpointAlwaysCharge",
+        "summary": "Set always charge",
+        "description": "Updates the always charge state. When active, smart mode charges continuously at least at minimum power. The once state resets when the vehicle is disconnected.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/solar-charging"
+        },
+        "tags": [
+          "loadpoints"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/alwaysCharge"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlwaysCharge"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not supported for chargers without current control."
+          }
+        }
+      }
+    },
     "/loadpoints/{id}/batteryboost/{enable}": {
       "post": {
         "operationId": "setLoadpointBatteryBoost",
@@ -484,7 +573,7 @@
       "post": {
         "operationId": "setLoadpointDisableDelay",
         "summary": "Disable threshold-delay",
-        "description": "Delay before charging stops in solar mode.",
+        "description": "Delay before charging stops in smart mode.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/reference/configuration/loadpoints"
         },
@@ -510,7 +599,7 @@
       "post": {
         "operationId": "setLoadpointDisableThreshold",
         "summary": "Disable threshold",
-        "description": "Specifies the grid draw power to stop charging in solar mode.",
+        "description": "Specifies the grid draw power to stop charging in smart mode.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/reference/configuration/loadpoints#threshold-1"
         },
@@ -536,7 +625,7 @@
       "post": {
         "operationId": "setLoadpointEnableDelay",
         "summary": "Enable threshold-delay",
-        "description": "Delay before charging starts in solar mode.",
+        "description": "Delay before charging starts in smart mode.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/reference/configuration/loadpoints#delay"
         },
@@ -562,7 +651,7 @@
       "post": {
         "operationId": "setLoadpointEnableThreshold",
         "summary": "Enable threshold",
-        "description": "Specifies the available surplus power to start charging in solar mode.",
+        "description": "Specifies the available surplus power to start charging in smart mode.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/reference/configuration/loadpoints#threshold"
         },
@@ -765,7 +854,7 @@
             "$ref": "#/components/responses/NumberResult"
           },
           "400": {
-            "description": "Invalid phases-value. You have most likely entered the value 0 for a wallbox that cannot switch phases automatically."
+            "description": "Invalid phases-value. You have most likely entered the value 0 for a charger that cannot switch phases automatically."
           }
         }
       }
@@ -909,7 +998,7 @@
     "/loadpoints/{id}/plan/static/preview/soc/{soc}/{timestamp}": {
       "get": {
         "operationId": "previewLoadpointSocPlan",
-        "summary": "Simulate soc-based charging plan",
+        "summary": "Simulate SoC-based charging plan",
         "description": "Simulate charging plan based on SoC goal. Does not alter the actual charging plan.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/features/plans"
@@ -1130,6 +1219,36 @@
         }
       }
     },
+    "/loadpoints/{id}/solarshare/{share}": {
+      "post": {
+        "operationId": "setLoadpointSolarShare",
+        "summary": "Set solar share",
+        "description": "Set the share of the minimum charging power that must come from solar surplus in smart mode. 1 (default) requires full surplus, 0 starts charging as soon as there is no grid import. Ignored while enable/disable thresholds are configured. Usually 0 to 1; values outside that range are possible for special cases.",
+        "tags": [
+          "loadpoints"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "name": "share",
+            "in": "path",
+            "description": "Solar share of the minimum charging power.",
+            "required": true,
+            "example": 0.5,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        }
+      }
+    },
     "/loadpoints/{id}/vehicle": {
       "delete": {
         "operationId": "removeLoadpointVehicle",
@@ -1294,6 +1413,88 @@
         "responses": {
           "200": {
             "$ref": "#/components/responses/BooleanResult"
+          }
+        }
+      }
+    },
+    "/config/optimizerautomatic/{value}": {
+      "post": {
+        "operationId": "setOptimizerAutomatic",
+        "summary": "Set optimizer automatic level",
+        "description": "Let the optimizer directly control the home battery (`battery`) or home battery and loadpoints (`full`) instead of only advising (`off`). Requires a sponsor token.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "experimental"
+        ],
+        "parameters": [
+          {
+            "name": "value",
+            "description": "What the optimizer controls.",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "off",
+                "battery",
+                "full"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/StringResult"
+          }
+        }
+      }
+    },
+    "/config/onboarding": {
+      "put": {
+        "operationId": "setOnboarding",
+        "summary": "Set onboarding state",
+        "description": "Setup wizard completion and dismissed setup checklist items.",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "general"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardingState"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated onboarding state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingState"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid item"
           }
         }
       }
@@ -1514,6 +1715,99 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/config/currency": {
+      "put": {
+        "operationId": "setCurrency",
+        "summary": "Set currency",
+        "description": "Set the currency used for prices, costs and savings.",
+        "tags": [
+          "general"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "description": "ISO 4217 currency code",
+                "example": "EUR"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BlankResponse"
+          },
+          "400": {
+            "description": "Invalid currency code"
+          }
+        }
+      }
+    },
+    "/config/country": {
+      "put": {
+        "operationId": "setCountry",
+        "summary": "Set country",
+        "description": "Set the site country. Used for region-specific hints and defaults. Empty string clears the setting.",
+        "tags": [
+          "general"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "description": "ISO 3166-1 alpha-2 country code",
+                "example": "DE"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BlankResponse"
+          },
+          "400": {
+            "description": "Invalid country code"
+          }
+        }
+      }
+    },
+    "/config/gridconnection": {
+      "put": {
+        "operationId": "setGridConnection",
+        "summary": "Set grid connection",
+        "description": "Set the grid connection. 3p4w for three-phase four-wire grids with neutral (3 x 230/400 V), 3p3w for three-phase three-wire grids without neutral (3 x 230 V).",
+        "tags": [
+          "general"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "3p4w",
+                  "3p3w"
+                ],
+                "example": "3p3w"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BlankResponse"
+          },
+          "400": {
+            "description": "Invalid grid connection"
           }
         }
       }
@@ -1947,6 +2241,89 @@
         }
       }
     },
+    "/vehicles/{name}/alwayscharge": {
+      "delete": {
+        "operationId": "deleteVehicleAlwaysCharge",
+        "summary": "Reset always charge",
+        "description": "Resets the vehicle always charge default to keep the loadpoint state.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/solar-charging"
+        },
+        "tags": [
+          "vehicles"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "alwaysCharge": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/VehicleAlwaysCharge"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            ""
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vehicles/{name}/alwayscharge/{alwaysCharge}": {
+      "post": {
+        "operationId": "setVehicleAlwaysCharge",
+        "summary": "Set always charge",
+        "description": "Sets the always charge state applied when this vehicle becomes active on a loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/solar-charging"
+        },
+        "tags": [
+          "vehicles"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          },
+          {
+            "$ref": "#/components/parameters/vehicleAlwaysCharge"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "alwaysCharge": {
+                      "$ref": "#/components/schemas/VehicleAlwaysCharge"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/vehicles/{name}/plan/repeating": {
       "post": {
         "operationId": "updateVehicleRepeatingPlans",
@@ -2197,7 +2574,7 @@
       "post": {
         "operationId": "resetDatabase",
         "summary": "Reset database",
-        "description": "Selectively deletes sessions and/or settings from the database. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful reset.",
+        "description": "Selectively deletes sessions, settings and/or remote access data from the database. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful reset.",
         "tags": [
           "db"
         ],
@@ -2228,6 +2605,10 @@
                   "settings": {
                     "type": "boolean",
                     "description": "Delete all settings, configs, and meters"
+                  },
+                  "remote": {
+                    "type": "boolean",
+                    "description": "Delete remote access configuration and registered clients"
                   }
                 }
               }
@@ -2419,24 +2800,10 @@
         ],
         "parameters": [
           {
-            "name": "from",
-            "in": "query",
-            "description": "Start time (RFC3339)",
-            "schema": {
-              "type": "string",
-              "format": "date-time",
-              "example": "2026-07-01T00:00:00Z"
-            }
+            "$ref": "#/components/parameters/historyFrom"
           },
           {
-            "name": "to",
-            "in": "query",
-            "description": "End time (RFC3339)",
-            "schema": {
-              "type": "string",
-              "format": "date-time",
-              "example": "2026-07-02T00:00:00Z"
-            }
+            "$ref": "#/components/parameters/historyTo"
           },
           {
             "name": "aggregate",
@@ -2525,12 +2892,284 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "array",
+                  "description": "One series per entity, or per group when grouped",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string",
+                        "description": "Entity title, omitted when grouped"
+                      },
+                      "group": {
+                        "type": "string",
+                        "enum": [
+                          "pv",
+                          "battery",
+                          "grid",
+                          "loadpoint",
+                          "consumer",
+                          "meter",
+                          "home",
+                          "forecast",
+                          "temperature"
+                        ]
+                      },
+                      "isTemp": {
+                        "type": "boolean",
+                        "description": "socTemp values are temperatures, not state of charge"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "start": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "end": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "energy": {
+                              "type": "number",
+                              "description": "kWh"
+                            },
+                            "returnEnergy": {
+                              "type": "number",
+                              "description": "kWh exported or discharged"
+                            },
+                            "socTemp": {
+                              "type": "number",
+                              "description": "State of charge in percent or temperature of a single slot"
+                            },
+                            "cost": {
+                              "type": "number",
+                              "description": "Grid import cost, where a price exists"
+                            },
+                            "pricedEnergy": {
+                              "type": "number",
+                              "description": "kWh imported where a price exists"
+                            },
+                            "returnCost": {
+                              "type": "number",
+                              "description": "Grid export revenue, where a price exists"
+                            },
+                            "pricedReturnEnergy": {
+                              "type": "number",
+                              "description": "kWh exported where a price exists"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               },
               "text/csv": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or database offline"
+          }
+        }
+      }
+    },
+    "/history/flow": {
+      "get": {
+        "operationId": "getEnergyFlow",
+        "summary": "Energy flow",
+        "description": "Returns the energy attributed from sources (pv, battery, grid) to sinks (home, battery, loadpoint, export) over the period, plus grid cost and CO₂ sums where tariff data exists.",
+        "tags": [
+          "experimental"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/historyFrom"
+          },
+          {
+            "$ref": "#/components/parameters/historyTo"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Energy flow data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "flows": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Flow"
+                      }
+                    },
+                    "entities": {
+                      "type": "array",
+                      "description": "Flows into each consumer and loadpoint, priced per slot",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "group": {
+                            "type": "string",
+                            "enum": [
+                              "consumer",
+                              "loadpoint"
+                            ]
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "virtual": {
+                            "type": "boolean",
+                            "description": "Home consumption not covered by a consumer"
+                          },
+                          "flows": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/Flow"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "cost": {
+                      "type": "object",
+                      "description": "Grid cost sums, omitted without grid price data",
+                      "properties": {
+                        "import": {
+                          "type": "number"
+                        },
+                        "export": {
+                          "type": "number"
+                        },
+                        "importEnergy": {
+                          "type": "number",
+                          "description": "kWh where a price exists"
+                        },
+                        "exportEnergy": {
+                          "type": "number",
+                          "description": "kWh where a price exists"
+                        },
+                        "avgGrid": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "co2": {
+                      "type": "object",
+                      "description": "Grid CO₂ sums in kg, omitted without CO₂ data",
+                      "properties": {
+                        "consumption": {
+                          "type": "number",
+                          "description": "Emissions of the grid share that went to home and loadpoints"
+                        },
+                        "consumptionEnergy": {
+                          "type": "number",
+                          "description": "kWh"
+                        },
+                        "baseline": {
+                          "type": "number"
+                        },
+                        "avgCo2": {
+                          "type": "number",
+                          "description": "g/kWh"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or database offline"
+          }
+        }
+      }
+    },
+    "/history/tariffs": {
+      "get": {
+        "operationId": "getTariffHistory",
+        "summary": "Tariff history",
+        "description": "Returns the persisted 15 minute tariff slots in the period, or their averages per hour, day or month.",
+        "tags": [
+          "experimental"
+        ],
+        "parameters": [
+          {
+            "name": "aggregate",
+            "in": "query",
+            "description": "Bucket size, 15 minute slots by default",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "15m",
+                "hour",
+                "day",
+                "month"
+              ]
+            }
+          },
+          {
+            "$ref": "#/components/parameters/historyFrom"
+          },
+          {
+            "$ref": "#/components/parameters/historyTo"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tariff slots",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "grid": {
+                        "type": "number",
+                        "description": "Grid price per kWh, the bucket average when aggregated"
+                      },
+                      "gridMin": {
+                        "type": "number",
+                        "description": "Lowest slot price in the bucket, aggregated only"
+                      },
+                      "gridMax": {
+                        "type": "number",
+                        "description": "Highest slot price in the bucket, aggregated only"
+                      },
+                      "feedin": {
+                        "type": "number",
+                        "description": "Grid export price per kWh, the bucket average when aggregated"
+                      },
+                      "feedinMin": {
+                        "type": "number"
+                      },
+                      "feedinMax": {
+                        "type": "number"
+                      },
+                      "co2": {
+                        "type": "number",
+                        "description": "g/kWh"
+                      },
+                      "temperature": {
+                        "type": "number",
+                        "description": "°C"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -2650,6 +3289,26 @@
           }
         }
       },
+      "VehicleAlwaysCharge": {
+        "description": "Always charge default applied on identification. Once is not supported for vehicles.",
+        "type": "string",
+        "enum": [
+          "off",
+          "on"
+        ]
+      },
+      "ChargeModeInput": {
+        "description": "Charging behavior. The values `pv` and `minpv` are deprecated aliases: `pv` maps to `smart`, `minpv` maps to `smart` with always charge enabled.",
+        "type": "string",
+        "enum": [
+          "off",
+          "smart",
+          "now",
+          "pv",
+          "minpv"
+        ],
+        "example": "smart"
+      },
       "Current": {
         "description": "Electric current in A",
         "type": "number",
@@ -2661,6 +3320,40 @@
         "type": "number",
         "example": 25.5,
         "minimum": 0
+      },
+      "Flow": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "enum": [
+              "pv",
+              "battery",
+              "grid"
+            ]
+          },
+          "to": {
+            "type": "string",
+            "enum": [
+              "home",
+              "battery",
+              "loadpoint",
+              "export"
+            ]
+          },
+          "energy": {
+            "type": "number",
+            "description": "kWh"
+          },
+          "cost": {
+            "type": "number",
+            "description": "Cost of the energy, for home and loadpoint"
+          },
+          "pricedEnergy": {
+            "type": "number",
+            "description": "kWh where a price exists"
+          }
+        }
       },
       "Delay": {
         "description": "Duration in seconds.",
@@ -2787,7 +3480,7 @@
         }
       },
       "Soc": {
-        "description": "SOC in %",
+        "description": "SoC in %",
         "type": "number",
         "example": 60,
         "minimum": 0,
@@ -2844,7 +3537,17 @@
           "normal",
           "hold",
           "charge",
-          "holdcharge"
+          "holdcharge",
+          "discharge"
+        ]
+      },
+      "AlwaysCharge": {
+        "description": "Always charge state. Smart mode charges continuously at least at minimum power.",
+        "type": "string",
+        "enum": [
+          "off",
+          "on",
+          "once"
         ]
       },
       "ChargeMode": {
@@ -2852,9 +3555,8 @@
         "type": "string",
         "enum": [
           "off",
-          "now",
-          "minpv",
-          "pv"
+          "smart",
+          "now"
         ]
       },
       "Rate": {
@@ -2919,6 +3621,43 @@
           "precondition"
         ]
       },
+      "OnboardingItem": {
+        "description": "Setup checklist item.",
+        "type": "string",
+        "enum": [
+          "battery",
+          "pv",
+          "grid",
+          "loadpoint",
+          "heater",
+          "consumer",
+          "gridImport",
+          "gridExport",
+          "co2",
+          "solar"
+        ]
+      },
+      "OnboardingState": {
+        "description": "Setup wizard and checklist state.",
+        "type": "object",
+        "properties": {
+          "done": {
+            "description": "Setup wizard was finished or skipped.",
+            "type": "boolean"
+          },
+          "dismissed": {
+            "description": "Dismissed setup checklist items.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OnboardingItem"
+            }
+          }
+        },
+        "required": [
+          "done",
+          "dismissed"
+        ]
+      },
       "ChargerStatusReason": {
         "description": "Reason why the charger is waiting.",
         "type": "string",
@@ -2929,7 +3668,7 @@
         ]
       },
       "PhaseAction": {
-        "description": "Pending phase switching action in solar mode.",
+        "description": "Pending phase switching action in smart mode.",
         "type": "string",
         "enum": [
           "inactive",
@@ -2938,7 +3677,7 @@
         ]
       },
       "PvAction": {
-        "description": "Pending charge start or stop action in solar mode.",
+        "description": "Pending charge start or stop action in smart mode.",
         "type": "string",
         "enum": [
           "inactive",
@@ -2964,6 +3703,14 @@
           },
           "discharge": {
             "description": "Recommended discharge power in W.",
+            "type": "number"
+          },
+          "grid": {
+            "description": "Planned site grid flow of the slot in W, positive means import.",
+            "type": "number"
+          },
+          "battery": {
+            "description": "Planned home battery discharge feeding the site in W.",
             "type": "number"
           },
           "actionable": {
@@ -3000,6 +3747,10 @@
           "name": {
             "description": "Unique loadpoint identifier used in API routes and configuration.",
             "type": "string"
+          },
+          "alwaysCharge": {
+            "$ref": "#/components/schemas/AlwaysCharge",
+            "description": "Always charge state. Smart mode charges continuously at least at minimum power."
           },
           "batteryBoost": {
             "description": "Battery boost is active. When enabled, home battery power is used for fast charging.",
@@ -3065,6 +3816,14 @@
           },
           "chargerFeatureContinuous": {
             "description": "Charger is a heating device where disabled means normal operation.",
+            "type": "boolean"
+          },
+          "chargerFeatureDemandTemperature": {
+            "description": "Heating device demand forecast uses daily average profile scaled by outdoor temperature.",
+            "type": "boolean"
+          },
+          "chargerFeatureDemandWeekday": {
+            "description": "Heating device demand forecast uses same-weekday average over past 4 weeks.",
             "type": "boolean"
           },
           "chargerFeatureHeating": {
@@ -3138,11 +3897,11 @@
             "type": "boolean"
           },
           "disableDelay": {
-            "description": "Delay before charging stops in solar mode, in seconds.",
+            "description": "Delay before charging stops in smart mode, in seconds.",
             "type": "number"
           },
           "disableThreshold": {
-            "description": "Grid draw power above which charging stops in solar mode, in W.",
+            "description": "Grid draw power above which charging stops in smart mode, in W.",
             "type": "number"
           },
           "effectiveLimitSoc": {
@@ -3184,11 +3943,11 @@
             "type": "number"
           },
           "enableDelay": {
-            "description": "Delay before charging starts in solar mode, in seconds.",
+            "description": "Delay before charging starts in smart mode, in seconds.",
             "type": "number"
           },
           "enableThreshold": {
-            "description": "Available surplus power above which charging starts in solar mode, in W.",
+            "description": "Available surplus power above which charging starts in smart mode, in W.",
             "type": "number"
           },
           "enabled": {
@@ -3227,9 +3986,13 @@
             "description": "Current offered to the vehicle in A.",
             "type": "number"
           },
+          "optimizerControlled": {
+            "description": "Optimizer decides start/stop for this loadpoint, replacing the price limits.",
+            "type": "boolean"
+          },
           "phaseAction": {
             "$ref": "#/components/schemas/PhaseAction",
-            "description": "Pending phase switching action in solar mode."
+            "description": "Pending phase switching action in smart mode."
           },
           "phaseRemaining": {
             "description": "Remaining time until the pending phase switching action executes, in seconds.",
@@ -3291,7 +4054,7 @@
           },
           "pvAction": {
             "$ref": "#/components/schemas/PvAction",
-            "description": "Pending charge start or stop action in solar mode."
+            "description": "Pending charge start or stop action in smart mode."
           },
           "pvRemaining": {
             "description": "Remaining time until the pending charge start or stop action executes, in seconds.",
@@ -3358,6 +4121,10 @@
             "nullable": true,
             "format": "date-time"
           },
+          "solarShare": {
+            "description": "Required solar share. Usually 0 to 1; values outside that range are possible via API for special cases.",
+            "type": "number"
+          },
           "suggestion": {
             "description": "Charging suggestion from the battery optimizer.",
             "nullable": true,
@@ -3423,6 +4190,7 @@
         },
         "required": [
           "name",
+          "alwaysCharge",
           "batteryBoost",
           "chargeDuration",
           "chargePower",
@@ -3433,6 +4201,8 @@
           "chargerFeatureClimaterDisabled",
           "chargerFeatureCoarseCurrent",
           "chargerFeatureContinuous",
+          "chargerFeatureDemandTemperature",
+          "chargerFeatureDemandWeekday",
           "chargerFeatureHeating",
           "chargerFeatureIntegratedDevice",
           "chargerFeatureOffline",
@@ -3469,6 +4239,7 @@
           "minSocNotReached",
           "mode",
           "offeredCurrent",
+          "optimizerControlled",
           "phaseAction",
           "phaseRemaining",
           "phasesActive",
@@ -3495,6 +4266,7 @@
           "smartFeedInPriorityActive",
           "smartFeedInPriorityLimit",
           "smartFeedInPriorityNextStart",
+          "solarShare",
           "title",
           "vehicleClimaterActive",
           "vehicleDetectionActive",
@@ -3603,7 +4375,7 @@
             }
           },
           "feedin": {
-            "description": "Feed-in rate forecast. Rate per kWh in the configured currency per time slot.",
+            "description": "Grid export price forecast. Price per kWh in the configured currency per time slot.",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ForecastSlot"
@@ -3644,7 +4416,11 @@
           "ZAR",
           "TRY",
           "MYR",
-          "THB"
+          "THB",
+          "BYN",
+          "UAH",
+          "RUB",
+          "KZT"
         ]
       },
       "FatalError": {
@@ -3710,6 +4486,10 @@
             "description": "Recommended discharge power in W.",
             "type": "number"
           },
+          "grid": {
+            "description": "Planned site grid flow of the slot in W, positive means import.",
+            "type": "number"
+          },
           "actionable": {
             "description": "Suggestion differs from the current operating mode.",
             "type": "boolean"
@@ -3769,8 +4549,23 @@
             "description": "Battery supports external control of its operation mode.",
             "type": "boolean"
           },
+          "modes": {
+            "description": "Battery modes supported by the device.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "capacity": {
             "description": "Battery capacity in kWh. Zero when not specified.",
+            "type": "number"
+          },
+          "minSoc": {
+            "description": "Minimum soc (reserve) in % as configured on the device.",
+            "type": "number"
+          },
+          "maxSoc": {
+            "description": "Maximum soc (charge limit) in % as configured on the device.",
             "type": "number"
           },
           "suggestion": {
@@ -3839,7 +4634,11 @@
             "type": "number"
           },
           "energy": {
-            "description": "Total battery energy in kWh.",
+            "description": "Total discharged energy in kWh.",
+            "type": "number"
+          },
+          "returnEnergy": {
+            "description": "Total charged energy in kWh.",
             "type": "number"
           },
           "devices": {
@@ -3905,6 +4704,14 @@
         },
         "required": [
           "power"
+        ]
+      },
+      "GRID_CONNECTION": {
+        "description": "Grid connection, with or without neutral conductor.",
+        "type": "string",
+        "enum": [
+          "3p4w",
+          "3p3w"
         ]
       },
       "GenericConfigStatus": {
@@ -4064,7 +4871,7 @@
             "type": "boolean"
           },
           "curtailed": {
-            "description": "Allowed feed-in in %. Values below 100 mean production is curtailed.",
+            "description": "Allowed grid export in %. Values below 100 mean production is curtailed.",
             "type": "number"
           },
           "maxConsumptionPower": {
@@ -4141,6 +4948,10 @@
           "token": {
             "description": "Sponsor token. Redacted.",
             "type": "string"
+          },
+          "hardware": {
+            "description": "Hardware sponsorship.",
+            "type": "boolean"
           }
         }
       },
@@ -4184,15 +4995,15 @@
         ]
       },
       "EebusConfig": {
-        "description": "EEBus integration configuration.",
+        "description": "EEBUS integration configuration.",
         "type": "object",
         "properties": {
           "uri": {
-            "description": "URI the EEBus service listens on.",
+            "description": "URI the EEBUS service listens on.",
             "type": "string"
           },
           "port": {
-            "description": "Port the EEBus service listens on.",
+            "description": "Port the EEBUS service listens on.",
             "type": "number"
           },
           "shipid": {
@@ -4200,7 +5011,7 @@
             "type": "string"
           },
           "interfaces": {
-            "description": "Network interfaces the EEBus service uses.",
+            "description": "Network interfaces the EEBUS service uses.",
             "type": "array",
             "items": {
               "type": "string"
@@ -4217,7 +5028,7 @@
         ]
       },
       "EebusStatus": {
-        "description": "EEBus runtime status.",
+        "description": "EEBUS runtime status.",
         "type": "object",
         "properties": {
           "ski": {
@@ -4234,7 +5045,7 @@
         ]
       },
       "Eebus": {
-        "description": "EEBus integration configuration and status.",
+        "description": "EEBUS integration configuration and status.",
         "type": "object",
         "properties": {
           "config": {
@@ -4474,6 +5285,10 @@
         "description": "A load management circuit limiting power and current of its assigned loadpoints.",
         "type": "object",
         "properties": {
+          "name": {
+            "description": "Circuit name used as configuration reference.",
+            "type": "string"
+          },
           "title": {
             "description": "Circuit title for UI display.",
             "type": "string"
@@ -4513,7 +5328,8 @@
         "enum": [
           "co2",
           "pricedynamic",
-          "priceforecast"
+          "priceforecast",
+          "pricestatic"
         ]
       },
       "DeviceColorEntry": {
@@ -4613,6 +5429,20 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/ChargeMode"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  ""
+                ]
+              }
+            ]
+          },
+          "alwaysCharge": {
+            "description": "Always charge state applied when the vehicle connects.",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AlwaysCharge"
               },
               {
                 "type": "string",
@@ -4899,6 +5729,14 @@
           }
         }
       },
+      "OptimizerAutomatic": {
+        "type": "string",
+        "enum": [
+          "off",
+          "battery",
+          "full"
+        ]
+      },
       "State": {
         "description": "Complete system state as returned by /api/state and pushed via websocket and MQTT. This structure mirrors the internal UI state and carries no compatibility promise. Fields may change or disappear between releases.",
         "type": "object",
@@ -4914,6 +5752,10 @@
           "setupRequired": {
             "description": "Initial setup is required.",
             "type": "boolean"
+          },
+          "onboarding": {
+            "$ref": "#/components/schemas/OnboardingState",
+            "description": "Setup wizard and checklist state."
           },
           "startupCompleted": {
             "description": "Startup has completed.",
@@ -4937,6 +5779,11 @@
           "currency": {
             "$ref": "#/components/schemas/Currency",
             "description": "Configured currency for all monetary values."
+          },
+          "country": {
+            "description": "Configured site country as ISO 3166-1 alpha-2 code. Empty when not set.",
+            "type": "string",
+            "example": "DE"
           },
           "fatal": {
             "description": "Fatal startup errors.",
@@ -4983,19 +5830,27 @@
             "description": "A grid meter is configured.",
             "type": "boolean"
           },
+          "gridConnection": {
+            "$ref": "#/components/schemas/GRID_CONNECTION",
+            "description": "Grid connection, with or without neutral conductor."
+          },
+          "voltage": {
+            "description": "Nominal grid voltage in V, line-to-line without neutral.",
+            "type": "number"
+          },
           "pv": {
-            "description": "Solar generation meters. One entry per configured pv meter.",
+            "description": "Solar meters. One entry per configured meter.",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Meter"
             }
           },
           "pvPower": {
-            "description": "Total solar generation power in W. Sum of all pv meters.",
+            "description": "Total solar power in W. Sum of all solar meters.",
             "type": "number"
           },
           "pvEnergy": {
-            "description": "Total solar generation energy in kWh.",
+            "description": "Total solar production in kWh.",
             "type": "number"
           },
           "aux": {
@@ -5035,6 +5890,11 @@
             "description": "Static grid export power limit in W used as optimizer constraint, 0 = disabled. An active HEMS curtailment takes precedence.",
             "type": "number"
           },
+          "profilePercentile": {
+            "description": "Percentile of the historic energy profiles used for demand prediction in %, e.g. 50 = median. Null uses the average.",
+            "type": "number",
+            "nullable": true
+          },
           "greenShareHome": {
             "description": "Share of green energy in home consumption, between 0 and 1.",
             "type": "number"
@@ -5052,7 +5912,7 @@
             "type": "number"
           },
           "tariffFeedIn": {
-            "description": "Current feed-in rate per kWh in the configured currency.",
+            "description": "Current grid export price per kWh in the configured currency.",
             "type": "number"
           },
           "tariffCo2": {
@@ -5060,7 +5920,7 @@
             "type": "number"
           },
           "tariffSolar": {
-            "description": "Current cost of solar generation per kWh in the configured currency.",
+            "description": "Current cost of solar production per kWh in the configured currency.",
             "type": "number"
           },
           "tariffPriceHome": {
@@ -5109,7 +5969,7 @@
           },
           "eebus": {
             "$ref": "#/components/schemas/Eebus",
-            "description": "EEBus integration configuration and status."
+            "description": "EEBUS integration configuration and status."
           },
           "remote": {
             "$ref": "#/components/schemas/Remote",
@@ -5147,8 +6007,12 @@
               "$ref": "#/components/schemas/Circuit"
             }
           },
+          "circuitsConfig": {
+            "$ref": "#/components/schemas/GenericConfigStatus",
+            "description": "Load management configuration."
+          },
           "bufferSoc": {
-            "description": "Battery buffer SoC in %. Energy above this level may be used for charging in solar mode.",
+            "description": "Battery buffer SoC in %. Energy above this level may be used for charging in smart mode.",
             "type": "number"
           },
           "prioritySoc": {
@@ -5180,6 +6044,15 @@
             "description": "Home battery is currently charged from grid.",
             "type": "boolean"
           },
+          "batteryGridDischargeLimit": {
+            "description": "Grid export price limit for discharging the home battery to the grid (experimental).",
+            "type": "number",
+            "nullable": true
+          },
+          "batteryGridDischargeActive": {
+            "description": "Home battery is currently discharged to the grid.",
+            "type": "boolean"
+          },
           "smartCostAvailable": {
             "description": "A dynamic grid price or CO₂ forecast is configured.",
             "type": "boolean"
@@ -5189,7 +6062,7 @@
             "description": "Type of the smart charging limit, price based or emission based."
           },
           "smartFeedInPriorityAvailable": {
-            "description": "A feed-in tariff with forecast is configured.",
+            "description": "A grid export tariff with forecast is configured.",
             "type": "boolean"
           },
           "historyUpdated": {
@@ -5243,6 +6116,10 @@
             "description": "Battery optimizer is enabled.",
             "type": "boolean"
           },
+          "optimizerAutomatic": {
+            "$ref": "#/components/schemas/OptimizerAutomatic",
+            "description": "What the optimizer controls instead of only advising: nothing, the home battery, or battery and loadpoints."
+          },
           "optimizerChargingStrategy": {
             "description": "Selected battery optimizer charging strategy.",
             "type": "string"
@@ -5271,6 +6148,26 @@
       }
     },
     "parameters": {
+      "historyFrom": {
+        "name": "from",
+        "in": "query",
+        "description": "Start time (RFC3339)",
+        "schema": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2026-07-01T00:00:00Z"
+        }
+      },
+      "historyTo": {
+        "name": "to",
+        "in": "query",
+        "description": "End time (RFC3339)",
+        "schema": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2026-07-02T00:00:00Z"
+        }
+      },
       "adminPassword": {
         "name": "X-Admin-Password",
         "in": "header",
@@ -5355,12 +6252,20 @@
         "in": "path",
         "required": true,
         "schema": {
-          "$ref": "#/components/schemas/ChargeMode"
+          "$ref": "#/components/schemas/ChargeModeInput"
+        }
+      },
+      "alwaysCharge": {
+        "name": "alwaysCharge",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/AlwaysCharge"
         }
       },
       "soc": {
         "name": "soc",
-        "description": "SOC in %",
+        "description": "SoC in %",
         "in": "path",
         "required": true,
         "schema": {
@@ -5392,6 +6297,14 @@
         "required": true,
         "schema": {
           "$ref": "#/components/schemas/VehicleName"
+        }
+      },
+      "vehicleAlwaysCharge": {
+        "name": "alwaysCharge",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/VehicleAlwaysCharge"
         }
       },
       "current": {
@@ -5440,7 +6353,7 @@
       },
       "costLimit": {
         "name": "cost",
-        "description": "Cost limit in configured currency (default EUR) or CO2 limit in g/kWh",
+        "description": "Cost limit in configured currency (default EUR) or CO₂ limit in g/kWh",
         "example": 0.25,
         "in": "path",
         "required": true,
@@ -5512,7 +6425,7 @@
         }
       },
       "SocResult": {
-        "description": "Success - Soc result",
+        "description": "Success - SoC result",
         "content": {
           "application/json": {
             "schema": {
@@ -5542,6 +6455,16 @@
           "application/json": {
             "schema": {
               "type": "boolean"
+            }
+          }
+        }
+      },
+      "StringResult": {
+        "description": "Success - String result",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -5601,9 +6524,9 @@
           "application/json": {
             "schema": {
               "type": "integer",
-              "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge",
+              "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge, 5: discharge",
               "minimum": 0,
-              "maximum": 4
+              "maximum": 5
             }
           }
         }

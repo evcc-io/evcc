@@ -54,6 +54,22 @@ params:
     help:
       de: Android-Benachrichtigungskanal (bestimmt Ton und Priorität). Z. B. `alarm_stream` für Alarmton.
       en: Android notification channel (controls sound and importance). E.g. `alarm_stream` for alarm sound.
+  - name: notification_icon
+    example: mdi:ev-station
+    description:
+      de: Benachrichtigungssymbol
+      en: Notification icon
+    help:
+      de: Material Design Icon für die Benachrichtigung, z. B. `mdi:ev-station`.
+      en: Material Design Icon for the notification, e.g. `mdi:ev-station`.
+  - name: color
+    example: "#0fde49"
+    description:
+      de: Benachrichtigungsfarbe
+      en: Notification color
+    help:
+      de: Farbe der Benachrichtigung als Hex-Code oder Name. Unter iOS die Hintergrundfarbe des Symbols.
+      en: Notification color as hex code or name. On iOS the background color of the icon.
 render: |
   type: homeassistant
   uri: {{ .uri }}
@@ -61,7 +77,7 @@ render: |
   {{- if .notify }}
   notify: {{ .notify }}
   {{- end }}
-  {{- if or .critical .group .notification_channel }}
+  {{- if or .critical .group .notification_channel .notification_icon .color }}
   data:
     {{- if .critical }}
     ttl: 0
@@ -72,5 +88,11 @@ render: |
     {{- end }}
     {{- if .notification_channel }}
     channel: {{ .notification_channel }}
+    {{- end }}
+    {{- if .notification_icon }}
+    notification_icon: {{ quote .notification_icon }}
+    {{- end }}
+    {{- if .color }}
+    color: {{ quote .color }}
     {{- end }}
   {{- end }}

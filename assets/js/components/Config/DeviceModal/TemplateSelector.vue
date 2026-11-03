@@ -1,26 +1,31 @@
 <template>
-	<FormRow :id="`${deviceType}Template`" :label="$t(`config.${deviceType}.template`)">
+	<FormRow :id="templateId" :label="$t(`config.${deviceType}.template`)">
 		<select
 			v-if="isNew"
-			:id="`${deviceType}Template`"
+			:id="templateId"
 			v-model="modelProxy"
 			class="form-select w-100"
 			:disabled="disabled"
 		>
-			<template v-for="group in groups" :key="group.label">
+			<template v-for="(group, index) in groups" :key="index">
 				<optgroup
-					v-if="group.options?.length"
+					v-if="group.label && group.options?.length"
 					:label="$t(`config.${deviceType}.${group.label}`)"
 				>
 					<option v-for="option in group.options" :key="option.name" :value="option">
 						{{ option.name }}
 					</option>
 				</optgroup>
+				<template v-else>
+					<option v-for="option in group.options" :key="option.name" :value="option">
+						{{ option.name }}
+					</option>
+				</template>
 			</template>
 		</select>
 		<div v-else class="d-flex gap-2 align-items-stretch">
 			<input
-				:id="`${deviceType}Template`"
+				:id="templateId"
 				type="text"
 				:value="productName || $t('config.general.customOption')"
 				disabled
@@ -28,6 +33,7 @@
 			/>
 			<slot name="action" />
 		</div>
+		<slot name="footer" />
 	</FormRow>
 </template>
 
@@ -47,7 +53,7 @@ export interface PrimaryOption {
 }
 
 export interface TemplateGroup {
-	label: string;
+	label?: string;
 	options: TemplateOption[];
 }
 
@@ -56,6 +62,7 @@ export default defineComponent({
 	components: { FormRow },
 	props: {
 		deviceType: String as PropType<DeviceType>,
+		idPrefix: String,
 		isNew: Boolean,
 		modelValue: String as PropType<string | null>,
 		productName: String,
@@ -70,6 +77,9 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		templateId(): string {
+			return `${this.idPrefix || this.deviceType}Template`;
+		},
 		flatOptions(): TemplateOption[] {
 			return (this.groups ?? []).flatMap((g) => g.options ?? []);
 		},

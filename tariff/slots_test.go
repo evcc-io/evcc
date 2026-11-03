@@ -53,7 +53,7 @@ func TestBasicSlotConversionCounts(t *testing.T) {
 	for _, tc := range cases {
 		// Create a single rate of length tc.dur starting at "now"
 		rates := makeRates(now, tc.dur, 1, 5.0)
-		w := &SlotWrapper{&testTariff{
+		w := &SlotWrapper{Tariff: &testTariff{
 			rates: rates,
 			typ:   api.TariffTypePriceStatic,
 		}}
@@ -95,7 +95,7 @@ func TestMixedSlots(t *testing.T) {
 		Value: 3.0,
 	}
 
-	w := &SlotWrapper{&testTariff{
+	w := &SlotWrapper{Tariff: &testTariff{
 		rates: api.Rates{r0, r1},
 		typ:   api.TariffTypePriceStatic,
 	}}
@@ -131,7 +131,7 @@ func TestDropOldRates(t *testing.T) {
 		Value: 0.5,
 	}
 
-	w := &SlotWrapper{&testTariff{
+	w := &SlotWrapper{Tariff: &testTariff{
 		rates: api.Rates{old},
 		typ:   api.TariffTypeSolar,
 	}}
@@ -141,22 +141,18 @@ func TestDropOldRates(t *testing.T) {
 	require.Len(t, res, 0)
 }
 
-// assertSourceAverages verifies that the sub-slots preserve the average of their source slot
-func assertSourceAverages(t *testing.T, rr, res api.Rates) {
+// assertSourceValues verifies that each source slot start keeps its original value
+func assertSourceValues(t *testing.T, rr, res api.Rates) {
 	t.Helper()
 
 	n := len(res) / len(rr)
 	for i, r := range rr {
-		var sum float64
-		for _, sub := range res[i*n : (i+1)*n] {
-			sum += sub.Value
-		}
-		assert.InDelta(t, r.Value, sum/float64(n), 1e-9, "rate %d", i)
+		assert.InDelta(t, r.Value, res[i*n].Value, 1e-9, "rate %d", i)
 	}
 }
 
-// TestSolarInterpolation verifies that solar sub-slots follow the neighbouring
-// slots while preserving the average of the slot they originate from
+// TestSolarInterpolation verifies that solar sub-slots ramp towards the
+// following slot while keeping the source value at the source slot start
 func TestSolarInterpolation(t *testing.T) {
 	now := time.Now().Truncate(SlotDuration)
 
@@ -172,7 +168,7 @@ func TestSolarInterpolation(t *testing.T) {
 		Value: 4.0,
 	}
 
-	w := &SlotWrapper{&testTariff{
+	w := &SlotWrapper{Tariff: &testTariff{
 		rates: api.Rates{r0, r1},
 		typ:   api.TariffTypeSolar,
 	}}
@@ -185,12 +181,12 @@ func TestSolarInterpolation(t *testing.T) {
 		assert.Equal(t, now.Add(time.Duration(i)*SlotDuration), r.Start, "slot %d", i)
 	}
 
-	// ramping up from the empty hour, flat towards the missing successor
-	for i, expected := range []float64{0, 0, 0, 0, 20.0 / 7, 4, 32.0 / 7, 32.0 / 7} {
+	// ramping up towards the next hour, flat towards the missing successor
+	for i, expected := range []float64{0, 1, 2, 3, 4, 4, 4, 4} {
 		assert.InDelta(t, expected, res[i].Value, 1e-9, "slot %d", i)
 	}
 
-	assertSourceAverages(t, api.Rates{r0, r1}, res)
+	assertSourceValues(t, api.Rates{r0, r1}, res)
 }
 
 // TestSolarInterpolationInterior verifies an interior slot with both neighbours differing
@@ -203,21 +199,44 @@ func TestSolarInterpolationInterior(t *testing.T) {
 		rr[i] = api.Rate{Start: start, End: start.Add(time.Hour), Value: v}
 	}
 
-	w := &SlotWrapper{&testTariff{rates: rr, typ: api.TariffTypeSolar}}
+	w := &SlotWrapper{Tariff: &testTariff{rates: rr, typ: api.TariffTypeSolar}}
 
 	res, err := w.Rates()
 	require.NoError(t, err)
 	require.Len(t, res, 12)
 
-	// interior slot ramps linearly between the neighbouring slot centers
-	for i, expected := range []float64{2.5, 3.5, 4.5, 5.5} {
+	// interior slot ramps linearly from its own value to the next one
+	for i, expected := range []float64{4, 5, 6, 7} {
 		assert.InDelta(t, expected, res[4+i].Value, 1e-9, "slot %d", i)
 	}
 
-	assertSourceAverages(t, rr, res)
+	assertSourceValues(t, rr, res)
 }
 
-// TestSolarNegativeSlot verifies that a non-positive slot is not shaped
+// TestSolarInterpolationGap verifies that the ramp spans the distance between the
+// two slot starts, not the slot length, when the series has a gap
+func TestSolarInterpolationGap(t *testing.T) {
+	now := time.Now().Truncate(SlotDuration)
+
+	// one hour, then a one hour gap before the successor
+	rr := api.Rates{
+		{Start: now, End: now.Add(time.Hour), Value: 0},
+		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour), Value: 8},
+	}
+
+	w := &SlotWrapper{Tariff: &testTariff{rates: rr, typ: api.TariffTypeSolar}}
+
+	res, err := w.Rates()
+	require.NoError(t, err)
+	require.Len(t, res, 8)
+
+	// ramp reaches the successor after two hours, not after one
+	for i, expected := range []float64{0, 1, 2, 3} {
+		assert.InDelta(t, expected, res[i].Value, 1e-9, "slot %d", i)
+	}
+}
+
+// TestSolarNegativeSlot verifies that a non-positive slot ramps like any other
 func TestSolarNegativeSlot(t *testing.T) {
 	now := time.Now().Truncate(SlotDuration)
 
@@ -226,13 +245,13 @@ func TestSolarNegativeSlot(t *testing.T) {
 		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 4},
 	}
 
-	w := &SlotWrapper{&testTariff{rates: rr, typ: api.TariffTypeSolar}}
+	w := &SlotWrapper{Tariff: &testTariff{rates: rr, typ: api.TariffTypeSolar}}
 
 	res, err := w.Rates()
 	require.NoError(t, err)
 	require.Len(t, res, 8)
 
-	for i, r := range res[:4] {
-		assert.Equal(t, -1.0, r.Value, "slot %d", i)
+	for i, expected := range []float64{-1, 0.25, 1.5, 2.75} {
+		assert.InDelta(t, expected, res[i].Value, 1e-9, "slot %d", i)
 	}
 }

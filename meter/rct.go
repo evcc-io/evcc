@@ -176,7 +176,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits.Decorator()))
 
 		if capacity != 0 {
-			implement.Has(m, implement.BatteryCapacity(func() float64 { return capacity + capacity2 }))
+			implement.Has(m, implement.BatteryCapacity(func() (float64, error) { return capacity + capacity2, nil }))
 		}
 
 		batteryMode := func(mode api.BatteryMode) error {
@@ -252,6 +252,11 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				})
 
 				eg.Go(func() error {
+					// can't go lower than 5%
+					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(0.05))
+				})
+
+				eg.Go(func() error {
 					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
 				})
 
@@ -268,17 +273,35 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MinSoc/100))
 				})
 
+			case api.BatteryDischarge:
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(batteryPowerLimits.MaxDischargePower))
+				})
+
+				eg.Go(func() error {
+					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
+				})
+
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
+				})
+
 			default:
-				return api.ErrNotAvailable
+				return errInvalidBatteryMode(mode)
 			}
 
 			return eg.Wait()
 		}
 
-		implement.Has(m, implement.BatteryController(batteryMode))
+		implement.Has(m, implement.BatteryController(m.getBatteryModes, batteryMode))
 	}
 
 	return m, nil
+}
+
+// getBatteryModes are the modes the batteryMode setter implements
+func (m *RCT) getBatteryModes() []api.BatteryMode {
+	return []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge, api.BatteryDischarge}
 }
 
 // CurrentPower implements the api.Meter interface
@@ -331,7 +354,7 @@ func (m *RCT) totalEnergy() (float64, error) {
 
 	case "pv":
 		var eg errgroup.Group
-		var a, b float64
+		var a, b, c float64
 
 		eg.Go(func() error {
 			var err error
@@ -345,8 +368,16 @@ func (m *RCT) totalEnergy() (float64, error) {
 			return err
 		})
 
+		if m.externalPower {
+			eg.Go(func() error {
+				var err error
+				c, err = m.queryFloat(rct.TotalExternalEnergyWh)
+				return err
+			})
+		}
+
 		err := eg.Wait()
-		return (a + b) / 1000, err
+		return (a + b + c) / 1000, err
 
 	case "battery":
 		res, err := m.queryFloat(rct.TotalEnergyBattOutWh)

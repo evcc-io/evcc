@@ -13,7 +13,10 @@
 		>
 			<div class="modal-dialog modal-dialog-centered" :class="sizeClass" role="document">
 				<div class="modal-content">
-					<div class="modal-header d-flex justify-content-between align-items-start">
+					<div
+						v-if="!hideHeader"
+						class="modal-header d-flex justify-content-between align-items-start"
+					>
 						<h5 class="modal-title">
 							<slot name="title">{{ title }}</slot>
 						</h5>
@@ -28,7 +31,7 @@
 							></button>
 						</div>
 					</div>
-					<div ref="modalBody" class="modal-body">
+					<div ref="modalBody" class="modal-body" :class="{ 'pt-0': hideHeader }">
 						<slot />
 					</div>
 				</div>
@@ -40,7 +43,13 @@
 <script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
 import { defineComponent } from "vue";
-import { registerModal, unregisterModal, onModalHidden, getModalFade } from "@/configModal";
+import {
+	registerModal,
+	unregisterModal,
+	onModalHide,
+	onModalHidden,
+	getModalFade,
+} from "@/configModal";
 
 export default defineComponent({
 	name: "GenericModal",
@@ -49,6 +58,8 @@ export default defineComponent({
 		title: String,
 		dataTestid: String,
 		uncloseable: Boolean,
+		hideHeader: Boolean,
+		preventDismiss: Boolean,
 		size: String,
 		autofocus: { type: Boolean, default: true },
 		configModalName: String,
@@ -58,6 +69,11 @@ export default defineComponent({
 		return {
 			isModalVisible: false,
 		};
+	},
+	watch: {
+		preventDismiss() {
+			this.applyDismissProtection();
+		},
 	},
 	computed: {
 		sizeClass() {
@@ -92,6 +108,20 @@ export default defineComponent({
 		handleShow() {
 			this.$emit("open");
 			this.isModalVisible = true;
+			this.applyDismissProtection();
+		},
+		applyDismissProtection() {
+			const el = this.$refs["modal"] as HTMLElement;
+			const instance = el && Modal.getInstance(el);
+			// no instance yet: applied on next show
+			if (!instance) return;
+			const lock = this.uncloseable || this.preventDismiss;
+			// mutate instance config instead of data attributes: read at event time,
+			// keeps router/theme attribute checks and nav-close behavior intact
+			// @ts-expect-error bs internal
+			instance._config.backdrop = lock ? "static" : true;
+			// @ts-expect-error bs internal
+			instance._config.keyboard = !lock;
 		},
 		handleShown() {
 			this.$emit("opened");
@@ -114,17 +144,25 @@ export default defineComponent({
 		handleHide() {
 			this.$emit("close");
 			this.isModalVisible = false;
+			// a focused element inside a hidden modal breaks aria-hidden
+			const active = document.activeElement;
+			if (active instanceof HTMLElement && this.$refs["modal"]?.contains(active)) {
+				active.blur();
+			}
+			if (this.configModalName) {
+				onModalHide(this.configModalName);
+			}
 		},
 		handleHidden() {
+			// consume hide markers even for a stale event, so they don't leak into the next cycle
+			const dismissed = !!this.configModalName && onModalHidden(this.configModalName);
 			// stale event from a previous close, modal was reopened while still fading out
 			if (this.isModalVisible) {
 				return;
 			}
 			this.$emit("closed");
-			if (this.configModalName) {
-				if (onModalHidden(this.configModalName)) {
-					this.$emit("dismiss");
-				}
+			if (dismissed) {
+				this.$emit("dismiss");
 			}
 		},
 		open() {
