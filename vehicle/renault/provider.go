@@ -152,25 +152,6 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.batteryStatusG()
-
-	if err == nil {
-		timestamp, err := time.Parse(time.RFC3339, res.Timestamp)
-
-		if res.RemainingTime == nil {
-			return time.Time{}, api.ErrNotAvailable
-		}
-
-		return timestamp.Add(time.Duration(*res.RemainingTime) * time.Minute), err
-	}
-
-	return time.Time{}, err
-}
-
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface

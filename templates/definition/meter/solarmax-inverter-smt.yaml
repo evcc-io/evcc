@@ -19,10 +19,4 @@ render: |
       type: holding
       decode: uint32
     scale: 0.1
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 4129 # Total
-      type: holding
-      decode: uint32
+  # energy removed: register 4129 (Total) only resolves whole kWh (#32497)

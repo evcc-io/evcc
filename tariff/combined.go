@@ -29,6 +29,8 @@ func (t *combined) Rates() (api.Rates, error) {
 		rates = append(rates, rr...)
 	}
 
+	rates.Sort()
+
 	var res api.Rates
 
 	partitions := lo.PartitionBy(rates, func(r api.Rate) time.Time {

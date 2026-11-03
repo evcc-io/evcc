@@ -10,33 +10,38 @@
 			</Item>
 
 			<Item v-if="batteryConfigured" to="/battery" :label="$t('tabBar.battery')">
-				<BatteryIcon
-					class="tab-icon"
-					:soc="batterySoc || 0"
-					:grid-charge="batteryGridChargeActive"
-					:hold="batteryHold"
-				/>
+				<BatteryIcon class="tab-icon" :soc="batterySoc || 0" :mode="batteryMode" />
 			</Item>
 
 			<Item to="/forecast" :label="$t('tabBar.forecast')">
 				<ForecastGraphIcon class="tab-icon" />
 			</Item>
 
-			<Item to="/sessions" :label="$t('tabBar.sessions')">
+			<Item v-if="experimental" to="/energy" :label="$t('tabBar.energy')">
+				<SankeyIcon class="tab-icon" />
+			</Item>
+
+			<!-- six tabs do not fit a phone, sessions moves into the more menu there -->
+			<Item
+				to="/sessions"
+				:label="$t('tabBar.sessions')"
+				:class="{ 'd-none d-sm-flex': experimental }"
+			>
 				<SessionsIcon class="tab-icon" />
 			</Item>
 
 			<MoreItem
 				:active="moreActive"
+				:vehicles="vehicles"
 				:auth-providers="authProviders"
 				:sponsor="sponsor"
 				:fatal="fatal"
 				:experimental="experimental"
 				:auth-disabled="authDisabled"
-				:evopt="evopt"
+				:optimizer="optimizer"
 				:installed="installed"
-				:commit="commit"
 				:available-version="availableVersion"
+				:custom-brand="customBrand"
 			/>
 		</div>
 	</nav>
@@ -46,11 +51,19 @@
 import "@h2d2/shopicons/es/regular/lightning";
 import ForecastGraphIcon from "../MaterialIcon/ForecastGraph.vue";
 import SessionsIcon from "../MaterialIcon/Sessions.vue";
+import SankeyIcon from "../MaterialIcon/Sankey.vue";
 import BatteryIcon from "../Energyflow/BatteryIcon.vue";
 import Item from "./Item.vue";
 import MoreItem from "./MoreItem.vue";
 import { defineComponent, type PropType } from "vue";
-import type { FatalError, Forecast, Sponsor, EvOpt, AuthProviders, Battery } from "@/types/evcc";
+import {
+	BATTERY_MODE,
+	type FatalError,
+	type Sponsor,
+	type AuthProviders,
+	type Battery,
+	type Vehicle,
+} from "@/types/evcc";
 
 export default defineComponent({
 	name: "BottomTabBar",
@@ -58,14 +71,14 @@ export default defineComponent({
 		BatteryIcon,
 		ForecastGraphIcon,
 		SessionsIcon,
+		SankeyIcon,
 		Item,
 		MoreItem,
 	},
 	props: {
 		battery: { type: Object as PropType<Battery> },
-		batteryGridChargeActive: Boolean,
-		batteryMode: { type: String as PropType<string> },
-		forecast: { type: Object as PropType<Forecast> },
+		batteryMode: { type: String as PropType<BATTERY_MODE> },
+		vehicles: { type: Object as PropType<Record<string, Vehicle>>, default: () => ({}) },
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
@@ -73,26 +86,24 @@ export default defineComponent({
 		authDisabled: Boolean,
 		offline: Boolean,
 		startupCompleted: Boolean,
-		evopt: { type: Object as PropType<EvOpt>, required: false },
+		wizardPending: Boolean,
+		optimizer: Boolean,
 		installed: String,
-		commit: String,
 		availableVersion: String,
+		customBrand: String,
 	},
 	computed: {
 		hidden() {
-			return this.offline || this.startupCompleted === false;
+			return this.offline || this.startupCompleted === false || this.wizardPending;
 		},
 		batterySoc() {
 			return this.battery?.soc;
-		},
-		batteryHold() {
-			return this.batteryMode === "hold";
 		},
 		batteryConfigured() {
 			return (this.battery?.devices?.length ?? 0) > 0;
 		},
 		moreActive() {
-			const mainTabs = ["/", "/battery", "/forecast", "/sessions"];
+			const mainTabs = ["/", "/energy", "/battery", "/forecast", "/sessions"];
 			return !mainTabs.includes(this.$route.path);
 		},
 	},
@@ -102,6 +113,8 @@ export default defineComponent({
 <style scoped>
 .bottom-tab-bar {
 	z-index: 1030;
+	padding-left: var(--safe-area-inset-left);
+	padding-right: var(--safe-area-inset-right);
 	background: var(--tab-bar-background);
 	border-top: 1px solid var(--evcc-gray-25);
 	box-shadow: 0 -1px 6px var(--evcc-gray-25);

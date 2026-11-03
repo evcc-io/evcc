@@ -7,7 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core"
-	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"

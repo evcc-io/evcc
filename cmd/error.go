@@ -29,6 +29,7 @@ const (
 	ClassMessenger
 	ClassSponsorship
 	ClassLoadpoint
+	ClassCurtailer
 )
 
 // FatalError is an error that can be marshaled

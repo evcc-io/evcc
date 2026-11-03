@@ -51,23 +51,6 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	return status, nil
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.status.Get()
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	t, err := time.Parse("20060102150405", res.DatetimeActual)
-	if err != nil {
-		t = time.Now()
-	}
-
-	return t.Add(time.Duration(res.Chargingtimeleft) * time.Minute), nil
-}
-
 var _ api.VehicleOdometer = (*Provider)(nil)
 
 // Odometer implements the api.VehicleOdometer interface

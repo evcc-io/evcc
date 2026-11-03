@@ -24,9 +24,8 @@ requirements:
       - E-Meter communication type: "ModBus Client"
       - E-Meter measuring point: "Energy-Input"
 params:
-  - name: host
-  - name: port
-    default: 502
+  - name: modbus
+    choice: ["tcpip"]
   - name: tempsource
     type: choice
     choice: ["warmwater_top", "warmwater_bottom", "buffer_top", "buffer_bottom"]
@@ -57,8 +56,7 @@ render: |
     initial: 0
     set:
       source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: 1
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 102 # PV Überschussleistung
         type: writemultiple # λ erwartet single value als FC16
@@ -66,16 +64,14 @@ render: |
       scale: {{ if eq .excess "plus" }}1{{ else }}-1{{ end }}
   power:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register:
       address: {{ if eq .firmware "<1.1.3" }}103{{ else }}1012{{ end }} # aktuelle Aufnahmeleistung [E] der WP
       type: holding
       decode: int16
   energy:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 1020 # kumulierter Stromverbrauch (Energieaufnahme) [E / Wh] seit dem letzten Reset
       type: holding
@@ -84,8 +80,7 @@ render: |
   {{- if .tempsource }}
   temp:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register:
       address: {{ if eq .tempsource "warmwater_top" -}} 2002 {{ else if eq .tempsource "warmwater_bottom" -}} 2003 {{ else if eq .tempsource "buffer_top" -}} 3002 {{ else }} 3003 {{- end }} # 2002 Trinkwasser Oben, 2003 Trinkwasser Unten, 3002 Wärmespeicher Oben, 3003 Wärmespeicher Unten
       type: holding
@@ -93,8 +88,7 @@ render: |
     scale: 0.1
   limittemp:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register:
       address: {{ if eq .tempsource "warmwater_top" -}} 2050 {{ else if eq .tempsource "warmwater_bottom" -}} 2050 {{ else if eq .tempsource "buffer_top" -}} 3050 {{ else }} 3050 {{- end }} # 2050 Trinkwasser Speicher, 3050 Wärmespeicher
       type: holding

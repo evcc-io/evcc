@@ -1,0 +1,18 @@
+<template>
+	<svg :style="svgStyle" viewBox="0 -960 960 960">
+		<path
+			fill="currentColor"
+			d="M200-200h520v-184l45-22q16-8 25.5-22t9.5-32q0-17-9.5-31.5T765-514l-45-21v-185H528l-10-68q-3-22-19.5-37T460-840q-23 0-39.5 15T401-788l-10 68H200v86q56 21 88 68t32 106q0 60-32 107t-88 68v85Zm0 80q-34 0-57-23t-23-57v-152q48 0 84-30.5t36-77.5q0-46-36-76t-84-32v-152q0-33 23.5-56.5T200-800h122q7-51 46-85.5t92-34.5q52 0 91 34.5t47 85.5h122q33 0 56.5 23.5T800-720v134q36 18 58 52t22 74q0 41-22 75t-58 51v134q0 34-23.5 57T720-120H200Zm300-340Z"
+		/>
+	</svg>
+</template>
+
+<script lang="ts">
+import { defineComponent } from "vue";
+import icon from "@/mixins/icon";
+
+export default defineComponent({
+	name: "Integrations",
+	mixins: [icon],
+});
+</script>

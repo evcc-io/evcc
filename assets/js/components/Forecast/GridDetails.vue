@@ -50,8 +50,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
-import type { CURRENCY } from "@/types/evcc";
-import type { ForecastSlot } from "./types";
+import type { CURRENCY, UiForecastSlot } from "@/types/evcc";
 import { isStaticTariff } from "@/utils/forecast";
 
 const MAX_HOURS = 96;
@@ -61,8 +60,8 @@ export default defineComponent({
 	name: "GridDetails",
 	mixins: [formatter],
 	props: {
-		grid: { type: Array as PropType<ForecastSlot[]> },
-		feedin: { type: Array as PropType<ForecastSlot[]> },
+		grid: { type: Array as PropType<UiForecastSlot[]> },
+		feedin: { type: Array as PropType<UiForecastSlot[]> },
 		currency: { type: String as PropType<CURRENCY> },
 		showFeedin: { type: Boolean, default: true },
 	},
@@ -82,20 +81,21 @@ export default defineComponent({
 		toggleFeedin() {
 			this.$emit("toggle-feedin");
 		},
-		summarize(slots?: ForecastSlot[]): { avg: string; range: string } | null {
+		summarize(slots?: UiForecastSlot[]): { avg: string; range: string } | null {
 			const upcoming = this.upcomingSlots(slots);
 			if (upcoming.length === 0) return null;
 			const values = upcoming.map((s) => s.value);
 			const avg = values.reduce((a, b) => a + b, 0) / values.length;
 			const fmtAvg = this.fmtPricePerKWh(avg, this.currency, false, true);
 			if (isStaticTariff(upcoming)) return { avg: fmtAvg, range: "" };
-			const min = Math.min(...values);
-			const max = Math.max(...values);
-			const fmtMin = this.fmtPricePerKWh(min, this.currency, false, false);
-			const fmtMax = this.fmtPricePerKWh(max, this.currency, false, true);
-			return { avg: `⌀ ${fmtAvg}`, range: `${fmtMin} – ${fmtMax}` };
+			const range = this.fmtPriceRange(
+				Math.min(...values),
+				Math.max(...values),
+				this.currency
+			);
+			return { avg: `⌀ ${fmtAvg}`, range };
 		},
-		upcomingSlots(slots?: ForecastSlot[]): ForecastSlot[] {
+		upcomingSlots(slots?: UiForecastSlot[]): UiForecastSlot[] {
 			if (!Array.isArray(slots)) return [];
 			const now = new Date();
 			return slots

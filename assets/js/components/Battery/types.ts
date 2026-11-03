@@ -1,6 +1,6 @@
 // Shared view-model types for the experimental battery page.
 
-import type { BatteryForecast } from "@/types/evcc";
+import type { BatteryForecast, BatterySuggestion } from "@/types/evcc";
 
 export interface SocPoint {
   t: number; // epoch ms
@@ -16,10 +16,6 @@ export interface BatterySeries {
   forecast: SocPoint[]; // ascending t, >= now (may be empty)
 }
 
-export interface BatterySuggestion {
-  action: "normal" | "hold" | "charge" | "holdcharge";
-}
-
 export interface BatteryStatusCardModel {
   id: string;
   title: string;
@@ -27,6 +23,7 @@ export interface BatteryStatusCardModel {
   power: number;
   capacity: number;
   color: string;
+  controllable: boolean;
   suggestion: BatterySuggestion | null;
   forecast: BatteryForecast | null;
 }

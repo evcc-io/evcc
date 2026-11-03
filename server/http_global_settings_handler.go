@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/redact"
 	"github.com/gorilla/mux"

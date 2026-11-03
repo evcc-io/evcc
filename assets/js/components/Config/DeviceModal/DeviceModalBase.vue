@@ -6,6 +6,7 @@
 		:data-testid="`${name}-modal`"
 		:size="modalSize"
 		:config-modal-name="name"
+		:prevent-dismiss="dirty"
 		@open="handleOpen"
 		@close="handleClose"
 		@visibilitychange="handleVisibilityChange"
@@ -26,6 +27,7 @@
 					ref="templateSelect"
 					v-model="templateName"
 					:device-type="deviceType"
+					:id-prefix="idPrefix"
 					:is-new="isNew"
 					:product-name="productName"
 					:groups="computedTemplateOptions"
@@ -33,6 +35,20 @@
 				>
 					<template v-if="$slots['template-action']" #action>
 						<slot name="template-action" />
+					</template>
+					<template v-if="productLink" #footer>
+						<div class="form-text evcc-gray">
+							{{ $t("config.general.moreInfo") }}
+							<a
+								:href="productLink"
+								class="text-gray"
+								target="_blank"
+								rel="noopener noreferrer"
+								data-testid="device-link"
+							>
+								{{ productLinkHost }}
+							</a>
+						</div>
 					</template>
 				</TemplateSelector>
 
@@ -49,7 +65,10 @@
 
 				<div v-else>
 					<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
-					<SponsorTokenRequired v-if="sponsorTokenRequired" />
+					<SponsorTokenRequired v-if="sponsorshipTemplate" :is-sponsor="isSponsor" />
+					<div v-if="nestingUnsupported" class="alert alert-warning my-4" role="alert">
+						{{ $t("config.deviceRef.noNesting") }}
+					</div>
 					<slot name="template-description">
 						<Markdown v-if="description" :markdown="description" class="my-4" />
 					</slot>
@@ -57,22 +76,24 @@
 					<div v-if="authRequired">
 						<PropertyEntry
 							v-for="param in authNormalParams"
-							:id="`${deviceType}Param${param.Name}`"
+							:id="`${idPrefix}Param${param.Name}`"
 							:key="param.Name"
 							v-bind="param"
 							v-model="values[param.Name]"
 							:service-values="serviceValues[param.Name]"
+							:service-loading="serviceLoading[param.Name]"
 							:currency="currency"
 						/>
 						<PropertyCollapsible v-if="authAdvancedParams.length">
 							<template #advanced>
 								<PropertyEntry
 									v-for="param in authAdvancedParams"
-									:id="`${deviceType}Param${param.Name}`"
+									:id="`${idPrefix}Param${param.Name}`"
 									:key="param.Name"
 									v-bind="param"
 									v-model="values[param.Name]"
 									:service-values="serviceValues[param.Name]"
+									:service-loading="serviceLoading[param.Name]"
 									:currency="currency"
 								/>
 							</template>
@@ -81,9 +102,19 @@
 						<div v-if="auth.code">
 							<hr class="my-5" />
 							<AuthCodeDisplay
-								:id="`${deviceType}AuthCode`"
+								:id="`${idPrefix}AuthCode`"
 								:code="auth.code"
 								:expiry="auth.expiry"
+							/>
+						</div>
+
+						<div v-if="auth.challenge">
+							<hr class="my-5" />
+							<AuthChallenge
+								:id="`${idPrefix}AuthChallenge`"
+								v-model="challengeAnswer"
+								:challenge="auth.challenge"
+								@submit="submitChallenge"
 							/>
 						</div>
 
@@ -112,7 +143,23 @@
 								{{ $t("config.general.cancel") }}
 							</button>
 							<!-- perform auth -->
+							<button
+								v-if="auth.challenge"
+								type="button"
+								class="btn btn-primary"
+								:disabled="auth.loading || !challengeAnswer"
+								@click="submitChallenge"
+							>
+								<span
+									v-if="auth.loading"
+									class="spinner-border spinner-border-sm me-2"
+									role="status"
+									aria-hidden="true"
+								></span>
+								{{ $t("authProviders.challenge.submit") }}
+							</button>
 							<AuthConnectButton
+								v-else
 								:provider-url="auth.providerUrl ?? undefined"
 								:loading="auth.loading"
 								@prepare="checkAuthStatus"
@@ -122,7 +169,7 @@
 					<div v-else>
 						<slot name="after-template-info" :values="values"></slot>
 
-						<div v-if="!hideTemplateFields">
+						<div v-if="!hideTemplateFields && !nestingUnsupported">
 							<Modbus
 								v-if="modbus"
 								v-model:modbus="values['modbus']"
@@ -138,27 +185,39 @@
 								:defaultBaudrate="modbus.Baudrate"
 								:defaultPort="modbus.Port"
 								:capabilities="modbusCapabilities"
+								:hostServiceValues="serviceValues['host']"
+								:hostServiceLoading="serviceLoading['host']"
 							/>
 
 							<PropertyEntry
 								v-for="param in normalParams"
-								:id="`${deviceType}Param${param.Name}`"
+								:id="`${idPrefix}Param${param.Name}`"
 								:key="param.Name"
 								v-bind="param"
+								:has-device-error="hasDeviceError"
 								v-model="values[param.Name]"
 								:service-values="serviceValues[param.Name]"
+								:service-loading="serviceLoading[param.Name]"
 								:currency="currency"
 							/>
 
 							<PropertyCollapsible>
-								<template v-if="advancedParams.length" #advanced>
+								<template v-if="advancedParams.length || modbus" #advanced>
+									<ModbusAdvanced
+										v-if="modbus"
+										v-model:delay="values['delay']"
+										v-model:timeout="values['timeout']"
+										component-id="device"
+									/>
 									<PropertyEntry
 										v-for="param in advancedParams"
-										:id="`${deviceType}Param${param.Name}`"
+										:id="`${idPrefix}Param${param.Name}`"
 										:key="param.Name"
 										v-bind="param"
+										:has-device-error="hasDeviceError"
 										v-model="values[param.Name]"
 										:service-values="serviceValues[param.Name]"
+										:service-loading="serviceLoading[param.Name]"
 										:currency="currency"
 									/>
 								</template>
@@ -170,18 +229,24 @@
 					</div>
 				</div>
 
+				<slot name="before-actions" :values="values"></slot>
+
 				<DeviceModalActions
 					v-if="showActions"
 					:is-deletable="isDeletable"
+					:is-disabled="isDisabled"
+					:can-disable="canDisable"
 					:test-state="test"
 					:is-saving="saving"
 					:is-succeeded="succeeded"
 					:is-new="isNew"
 					:sponsor-token-required="sponsorTokenRequired"
 					:currency="currency"
+					:usage="tagsUsage"
 					@save="handleSave"
 					@remove="handleRemove"
 					@test="testManually"
+					@disable="handleDisable"
 				>
 					<template #before-test>
 						<AdminPasswordPrompt
@@ -196,6 +261,7 @@
 				</DeviceModalActions>
 			</template>
 		</form>
+		<slot name="post-content" :values="values"></slot>
 	</GenericModal>
 </template>
 
@@ -203,25 +269,28 @@
 import { defineComponent, type PropType } from "vue";
 import GenericModal from "../../Helper/GenericModal.vue";
 import DeviceInfoButton from "./DeviceInfoButton.vue";
-import { closeModal } from "@/configModal";
+import { closeModal, isNestedIn, getModal } from "@/configModal";
+import { remember } from "@/onboarding";
 import ErrorMessage from "../../Helper/ErrorMessage.vue";
 import PropertyEntry from "../PropertyEntry.vue";
 import PropertyCollapsible from "../PropertyCollapsible.vue";
 import Modbus from "./Modbus.vue";
+import ModbusAdvanced from "./ModbusAdvanced.vue";
 import DeviceModalActions from "./Actions.vue";
 import Markdown from "../Markdown.vue";
 import SponsorTokenRequired from "./SponsorTokenRequired.vue";
 import TemplateSelector, { type TemplateGroup } from "./TemplateSelector.vue";
 import YamlEntry from "./YamlEntry.vue";
 import AuthCodeDisplay from "../AuthCodeDisplay.vue";
+import AuthChallenge from "../AuthChallenge.vue";
 import AuthConnectButton from "../AuthConnectButton.vue";
 import { initialTestState, performTest } from "../utils/test";
 import { reportValidityInModal } from "../utils/reportValidityInModal";
-import { initialAuthState, prepareAuthLogin } from "../utils/authProvider";
+import { initialAuthState, prepareAuthLogin, submitAuthChallenge } from "../utils/authProvider";
 import AdminPasswordPrompt from "@/components/Auth/AdminPasswordPrompt.vue";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
-import type { DeviceType, Timeout } from "@/types/evcc";
+import type { DeviceType, ServiceValue, Timeout } from "@/types/evcc";
 import { CURRENCY } from "@/types/evcc";
 import {
 	handleError,
@@ -235,6 +304,7 @@ import {
 	applyDefaultsFromTemplate,
 	createDeviceUtils,
 	fetchServiceValues,
+	serviceDefaults,
 	ADMIN_PASSWORD_REQUIRED,
 } from "./index";
 import deepEqual from "@/utils/deepEqual";
@@ -250,12 +320,14 @@ export default defineComponent({
 		PropertyEntry,
 		PropertyCollapsible,
 		Modbus,
+		ModbusAdvanced,
 		DeviceModalActions,
 		Markdown,
 		SponsorTokenRequired,
 		TemplateSelector,
 		YamlEntry,
 		AuthCodeDisplay,
+		AuthChallenge,
 		AuthConnectButton,
 		AdminPasswordPrompt,
 	},
@@ -272,6 +344,8 @@ export default defineComponent({
 		showMainContent: { type: Boolean, default: true },
 		// Optional: usage parameter for loadProducts (e.g., meter type: "pv", "battery", "aux", "ext")
 		usage: String,
+		// Optional: usage for test result labels
+		tagsUsage: String,
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		// Optional: custom product name computation
 		getProductName: Function as PropType<
@@ -293,8 +367,8 @@ export default defineComponent({
 		isTypeDeprecated: Function as PropType<(type: ConfigType) => boolean>,
 		// Optional: provide template options from parent (to avoid circular dependency)
 		provideTemplateOptions: Function as PropType<(products: Product[]) => TemplateGroup[]>,
-		// Optional: handle template change (receives event and values, allows setting values.yaml)
-		onTemplateChange: Function as PropType<(e: Event, values: DeviceValues) => void>,
+		// Optional: handle template change (receives selected value and values, allows setting values.yaml)
+		onTemplateChange: Function as PropType<(value: string, values: DeviceValues) => void>,
 		// Optional: default template to select when opening modal for new devices
 		defaultTemplate: String,
 		// Optional: callback after configuration is loaded (receives values)
@@ -309,11 +383,18 @@ export default defineComponent({
 		hideDelete: { type: Boolean, default: false },
 		// Optional: hide the info button in the header (e.g. for singleton devices like hems)
 		hideInfo: { type: Boolean, default: false },
+		// Optional: hide the bottom-middle disable button
+		hideDisable: { type: Boolean, default: false },
+		hasDeviceError: {
+			type: Function as PropType<(type: DeviceType, name: string) => boolean>,
+			default: () => false,
+		},
 	},
 	emits: [
 		"added",
 		"updated",
 		"removed",
+		"disable",
 		"open",
 		"close",
 		"template-changed",
@@ -328,20 +409,32 @@ export default defineComponent({
 			template: null as Template | null,
 			saving: false,
 			auth: initialAuthState(),
+			challengeAnswer: "",
 			succeeded: false,
 			loadingTemplate: false,
 			values: { ...this.initialValues } as DeviceValues,
+			baseline: JSON.stringify({ ...this.initialValues }),
 			test: initialTestState(),
-			serviceValues: {} as Record<string, string[]>,
+			serviceValues: {} as Record<string, ServiceValue[]>,
 			serviceValuesTimer: null as Timeout | null,
+			// params whose service announced more values
+			serviceLoading: {} as Record<string, boolean>,
 			adminPasswordValue: "",
 			adminPasswordRequired: false,
 			adminPasswordInvalid: false,
+			coveredByNested: false,
+			savedConfig: {} as Record<string, any>,
 		};
 	},
 	computed: {
+		idPrefix(): string {
+			return this.name || this.deviceType;
+		},
 		device() {
 			return createDeviceUtils(this.deviceType);
+		},
+		dirty(): boolean {
+			return JSON.stringify(this.values) !== this.baseline;
 		},
 		modalSize(): string | undefined {
 			return this.showYamlInput ? "xl" : undefined;
@@ -386,6 +479,12 @@ export default defineComponent({
 		visibleParams() {
 			return this.authRequired ? this.authParams : this.templateParams;
 		},
+		serviceParams(): TemplateParam[] {
+			if (!this.modbus) return this.visibleParams;
+			// modbus host is not a regular param
+			const host = { Name: "host", Service: "network/hosts?template={template}" };
+			return [...this.visibleParams, host as TemplateParam];
+		},
 		modbus(): ModbusParam | undefined {
 			const params = this.template?.Params || [];
 			return (params as ModbusParam[]).find((p) => p.Name === "modbus");
@@ -410,9 +509,24 @@ export default defineComponent({
 			}
 			return this.values.deviceProduct || this.templateName || "";
 		},
-		sponsorTokenRequired() {
+		productLink(): string | undefined {
+			const matching = this.products.filter((p) => p.template === this.templateName);
+			const product = matching.find((p) => p.name === this.productName) ?? matching[0];
+			return product?.link || this.template?.Link;
+		},
+		productLinkHost(): string {
+			try {
+				return new URL(this.productLink!).hostname.replace(/^www\./, "");
+			} catch {
+				return "";
+			}
+		},
+		sponsorshipTemplate(): boolean {
 			const requirements = this.template?.Requirements as any;
-			return requirements?.EVCC?.includes("sponsorship") && !this.isSponsor;
+			return !!requirements?.EVCC?.includes("sponsorship");
+		},
+		sponsorTokenRequired(): boolean {
+			return this.sponsorshipTemplate && !this.isSponsor;
 		},
 		apiData(): ApiData {
 			let data: ApiData = {
@@ -448,9 +562,25 @@ export default defineComponent({
 		isDeletable() {
 			return !this.isNew && !this.hideDelete;
 		},
+		isDisabled() {
+			return Boolean(this.values.deviceDisable);
+		},
+		canDisable(): boolean {
+			return !isNestedIn("loadpoint") && !this.hideDisable;
+		},
+		// the modal stack holds one nested instance per device type
+		nestingUnsupported(): boolean {
+			const nested = this.name !== this.deviceType && !!getModal(this.deviceType);
+			return (
+				nested &&
+				this.templateParams.some(
+					(p: TemplateParam) => p.Type === "Device" && p.Class === this.deviceType
+				)
+			);
+		},
 		showActions() {
 			// explicitly hide template fields (ocpp step 1)
-			if (this.hideTemplateFields) {
+			if (this.hideTemplateFields || this.nestingUnsupported) {
 				return false;
 			}
 			// yaml input type
@@ -498,6 +628,11 @@ export default defineComponent({
 	watch: {
 		isModalVisible(visible) {
 			if (visible) {
+				if (this.coveredByNested) {
+					// was just hidden by a nested modal, it wasn't actually reopened
+					this.coveredByNested = false;
+					return;
+				}
 				this.templateName =
 					this.isNew && this.defaultTemplate ? this.defaultTemplate : null;
 				this.reset();
@@ -510,6 +645,15 @@ export default defineComponent({
 					// For new devices, apply defaults immediately (e.g., default icons based on meter type)
 					this.applyDefaults();
 				}
+			} else {
+				// check whether we were just hidden (child modal open) or actually closed
+				this.coveredByNested = !!this.name && isNestedIn(this.name);
+			}
+		},
+		// type picked after opening (e.g. tariff chooser) brings its own default
+		defaultTemplate(value) {
+			if (this.isModalVisible && this.isNew && value && !this.templateName) {
+				this.templateName = value;
 			}
 		},
 		id(newVal, oldVal) {
@@ -605,6 +749,14 @@ export default defineComponent({
 			// update on auth state change
 			this.updateServiceValues();
 		},
+		"auth.challenge"() {
+			// a wrong answer comes back as a fresh challenge
+			this.challengeAnswer = "";
+		},
+		challengeAnswer() {
+			// outdated errors must not persist while typing
+			this.auth.error = null;
+		},
 		serviceValues: {
 			handler(newValue, oldValue) {
 				// Apply defaults only for specific params whose service values changed
@@ -620,14 +772,20 @@ export default defineComponent({
 	methods: {
 		reset() {
 			this.values = { ...this.initialValues } as DeviceValues;
+			this.savedConfig = {};
 			this.test = initialTestState();
 			this.resetAuthStatus();
+			this.rebaseline();
 			this.$emit("reset");
+		},
+		rebaseline() {
+			this.baseline = JSON.stringify(this.values);
 		},
 		async loadConfiguration() {
 			try {
 				const device = await this.device.load(this.id!);
 				this.values = device.config;
+				this.savedConfig = { ...device.config };
 				// convert structure to flat list
 				// TODO: adjust GET response to match POST/PUT formats
 				this.values.type = device.type;
@@ -638,6 +796,9 @@ export default defineComponent({
 				if (device.deviceIcon !== undefined) {
 					this.values.deviceIcon = device.deviceIcon;
 				}
+				if (device.deviceDisable !== undefined) {
+					this.values.deviceDisable = device.deviceDisable;
+				}
 				this.applyDefaults();
 				this.templateName = this.values.template;
 
@@ -645,17 +806,23 @@ export default defineComponent({
 				if (this.onConfigurationLoaded) {
 					this.onConfigurationLoaded(this.values);
 				}
+				this.rebaseline();
 				this.checkAuthStatus();
 			} catch (e) {
 				console.error(e);
 			}
 		},
 		applyDefaults() {
+			// late-arriving defaults must not mark a clean form dirty
+			const wasClean = !this.dirty;
 			applyDefaultsFromTemplate(this.template, this.values);
 
 			// Allow parent to apply custom defaults
 			if (this.applyCustomDefaults) {
 				this.applyCustomDefaults(this.template, this.values);
+			}
+			if (wasClean) {
+				this.rebaseline();
 			}
 		},
 		async loadProducts() {
@@ -683,6 +850,14 @@ export default defineComponent({
 				console.error(e);
 			}
 			this.loadingTemplate = false;
+		},
+		// values of a device saved earlier in this session (e.g. hybrid inverter as battery, now as pv);
+		// template defaults only fill gaps, so this survives the template loading afterwards
+		async prefill(values: Record<string, any>) {
+			this.templateName = values["template"];
+			await this.$nextTick(); // the template watcher resets the form first
+			Object.assign(this.values, values);
+			this.rebaseline();
 		},
 		resetAuthStatus() {
 			this.auth = initialAuthState();
@@ -723,6 +898,10 @@ export default defineComponent({
 		async prepareAuthLogin(authId: string) {
 			await prepareAuthLogin(this.auth, authId);
 		},
+		async submitChallenge() {
+			if (!this.challengeAnswer) return;
+			await submitAuthChallenge(this.auth, this.challengeAnswer);
+		},
 		async create(force = false) {
 			if (this.test.isUnknown && !force) {
 				const success = await performTest(
@@ -750,6 +929,7 @@ export default defineComponent({
 				}
 				this.saving = false;
 				this.succeeded = true;
+				remember(this.deviceType, this.productName, this.template, this.apiData);
 				await sleep(500);
 				this.$emit("added", res.data.name);
 				await closeModal({ action: "added", name: res.data.name });
@@ -819,6 +999,11 @@ export default defineComponent({
 				handleError(e, "remove failed");
 			}
 		},
+		async handleDisable(disable: boolean) {
+			if (this.id === undefined) return;
+			this.$emit("disable", { id: this.id, disable });
+			await closeModal();
+		},
 		handleOpen() {
 			this.isModalVisible = true;
 			this.$emit("open");
@@ -828,12 +1013,27 @@ export default defineComponent({
 		handleClose() {
 			this.$emit("close");
 			this.isModalVisible = false;
+			if (!this.succeeded && !(this.name && isNestedIn(this.name))) {
+				this.removeUnsavedDevices();
+			}
 		},
-		handleTemplateChange(e: Event) {
+		async removeUnsavedDevices() {
+			for (const param of this.templateParams) {
+				const name = this.values[param.Name];
+				if (param.Type !== "Device" || !param.Class || typeof name !== "string") continue;
+				if (!name.startsWith("db:") || this.savedConfig[param.Name] === name) continue;
+				try {
+					await createDeviceUtils(param.Class).remove(parseInt(name.slice(3)));
+				} catch (e) {
+					console.error(e);
+				}
+			}
+		},
+		handleTemplateChange(value: string | null) {
 			// ensure this triggers after tempateName watcher
 			this.$nextTick(() => {
-				if (this.onTemplateChange) {
-					this.onTemplateChange(e, this.values);
+				if (this.onTemplateChange && value !== null) {
+					this.onTemplateChange(value, this.values);
 				}
 			});
 		},
@@ -848,6 +1048,8 @@ export default defineComponent({
 			this.remove();
 		},
 		handleVisibilityChange() {
+			// a pending challenge must survive the user looking something up in another tab
+			if (this.auth.challenge) return;
 			this.checkAuthStatus();
 		},
 		isYamlInputTypeByValue(value: ConfigType): boolean {
@@ -861,20 +1063,38 @@ export default defineComponent({
 				clearTimeout(this.serviceValuesTimer);
 			}
 			this.serviceValuesTimer = setTimeout(async () => {
+				const loading: Record<string, boolean> = {};
 				// Fetch only visible params to prevent premature auth instance creation
-				this.serviceValues = await fetchServiceValues(this.visibleParams, {
-					...this.modbusDefaults,
-					...this.values,
-				});
+				this.serviceValues = await fetchServiceValues(
+					this.serviceParams,
+					{ ...this.modbusDefaults, ...this.values, template: this.templateName },
+					(name, seconds) => {
+						loading[name] = true;
+						this.retryServiceValues(seconds);
+					}
+				);
+				this.serviceLoading = loading;
 			}, 500);
+		},
+		retryServiceValues(seconds: number) {
+			if (!this.isModalVisible) return;
+			if (this.serviceValuesTimer) {
+				clearTimeout(this.serviceValuesTimer);
+			}
+			this.serviceValuesTimer = setTimeout(this.updateServiceValues, seconds * 1000);
 		},
 		applyServiceDefault(paramName: string) {
 			// Auto-apply single service value when field is empty and required
-			const values = this.serviceValues[paramName];
+			const values = serviceDefaults(this.serviceValues[paramName]);
 			const param = this.templateParams.find((p) => p.Name === paramName);
 			// Only auto-apply if exactly one value is returned, field is empty, and field is required
-			if (values?.length === 1 && !this.values[paramName] && param?.Required) {
+			if (values.length === 1 && !this.values[paramName] && param?.Required) {
+				// debounced auto-fill must not mark a clean form dirty
+				const wasClean = !this.dirty;
 				this.values[paramName] = values[0];
+				if (wasClean) {
+					this.rebaseline();
+				}
 			}
 		},
 	},

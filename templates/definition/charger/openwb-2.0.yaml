@@ -24,6 +24,8 @@ requirements:
 
       RFID-Authorisation currently is not usable with openWB Software 2.x, check
       [`openWB Issue 2832`](https://github.com/openWB/core/issues/2832)
+discovery:
+  hostname: ["openWB*"]
 params:
   - name: modbus
     choice: ["tcpip"]
@@ -31,10 +33,6 @@ params:
     id: 1
   - name: connector
   - name: phases1p3p
-    type: bool
-    description:
-      en: Charger is equipped with phase switching feature
-      de: Phasenumschaltung vorhanden
     advanced: true
     default: true
   - name: identify

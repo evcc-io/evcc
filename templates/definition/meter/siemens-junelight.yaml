@@ -14,6 +14,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip"]
+    timeout: 5s
   - preset: battery-params
 render: |
   type: custom
@@ -25,7 +26,6 @@ render: |
       address: 14
       type: holding
       decode: int32 
-    timeout: 5s
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -35,7 +35,6 @@ render: |
       address: 16
       type: holding
       decode: int32 
-    timeout: 5s
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

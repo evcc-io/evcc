@@ -1,31 +1,37 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
+	"golang.org/x/text/language"
 )
 
 // siteHandler returns a device configurations by class
 func siteHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := struct {
-			Title     string   `json:"title"`
-			Grid      string   `json:"grid"`
-			PV        []string `json:"pv"`
-			Battery   []string `json:"battery"`
-			Aux       []string `json:"aux"`
-			Ext       []string `json:"ext"`
-			Consumers []string `json:"consumers"`
+			Title    string   `json:"title"`
+			Grid     string   `json:"grid"`
+			PV       []string `json:"pv"`
+			Battery  []string `json:"battery"`
+			Aux      []string `json:"aux"`
+			Ext      []string `json:"ext"`
+			Consumer []string `json:"consumer"`
+			Curtail  []string `json:"curtail"`
 		}{
-			Title:     site.GetTitle(),
-			Grid:      site.GetGridMeterRef(),
-			PV:        site.GetPVMeterRefs(),
-			Battery:   site.GetBatteryMeterRefs(),
-			Aux:       site.GetAuxMeterRefs(),
-			Ext:       site.GetExtMeterRefs(),
-			Consumers: site.GetConsumerMeterRefs(),
+			Title:    site.GetTitle(),
+			Grid:     site.GetGridMeterRef(),
+			Curtail:  site.GetCurtailerRefs(),
+			PV:       site.GetPVMeterRefs(),
+			Battery:  site.GetBatteryMeterRefs(),
+			Aux:      site.GetAuxMeterRefs(),
+			Ext:      site.GetExtMeterRefs(),
+			Consumer: site.GetConsumerMeterRefs(),
 		}
 
 		jsonWrite(w, res)
@@ -46,13 +52,14 @@ func validateRefs(w http.ResponseWriter, refs []string) bool {
 func updateSiteHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var payload struct {
-			Title     *string
-			Grid      *string
-			PV        *[]string
-			Battery   *[]string
-			Aux       *[]string
-			Ext       *[]string
-			Consumers *[]string
+			Title    *string
+			Grid     *string
+			PV       *[]string
+			Battery  *[]string
+			Aux      *[]string
+			Ext      *[]string
+			Consumer *[]string
+			Curtail  *[]string
 		}
 
 		if err := jsonDecoder(r.Body).Decode(&payload); err != nil {
@@ -109,16 +116,77 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			setConfigDirty()
 		}
 
-		if payload.Consumers != nil {
-			if !validateRefs(w, *payload.Consumers) {
+		if payload.Consumer != nil {
+			if !validateRefs(w, *payload.Consumer) {
 				return
 			}
 
-			site.SetConsumerMeterRefs(*payload.Consumers)
+			site.SetConsumerMeterRefs(*payload.Consumer)
 			setConfigDirty()
+		}
+
+		if payload.Curtail != nil {
+			for _, m := range *payload.Curtail {
+				if _, err := config.Curtailers().ByName(m); err != nil {
+					jsonError(w, http.StatusBadRequest, err)
+					return
+				}
+			}
+
+			site.SetCurtailerRefs(*payload.Curtail)
+			setConfigDirty()
+		}
+
+		// persist immediately to keep meter refs consistent with device config on unclean shutdown
+		if err := settings.Persist(); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
 		}
 
 		status := map[bool]int{false: http.StatusOK, true: http.StatusAccepted}
 		w.WriteHeader(status[ConfigDirty()])
+	}
+}
+
+// updateCountryHandler sets the site country as ISO 3166-1 alpha-2 code, empty string clears it
+func updateCountryHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var val string
+		if err := jsonDecoder(r.Body).Decode(&val); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if val != "" {
+			region, err := language.ParseRegion(val)
+			if err != nil || !region.IsCountry() || region.String() != val {
+				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid country code: %s", val))
+				return
+			}
+		}
+
+		site.SetCountry(val)
+
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+// updateGridConnectionHandler sets the grid connection, 3p4w (with neutral) or 3p3w (without neutral)
+func updateGridConnectionHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var val string
+		if err := jsonDecoder(r.Body).Decode(&val); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if val != grid.Connection3P4W && val != grid.Connection3P3W {
+			jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid grid connection: %s", val))
+			return
+		}
+
+		site.SetGridConnection(val)
+
+		w.WriteHeader(http.StatusOK)
 	}
 }

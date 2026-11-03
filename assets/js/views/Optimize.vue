@@ -1,116 +1,177 @@
 <template>
-	<div class="container px-4 safe-area-inset">
+	<div
+		class="container px-4 safe-area-inset d-flex flex-column"
+		:class="{ 'empty-container': !hasResult }"
+	>
 		<TopHeader title="Optimize Debug 🧪" />
-		<OptimizeHeader
-			class="mt-4 mb-5"
-			:updated="evopt?.updated"
-			:status="evopt?.res?.status"
-			:net-cost="netCost"
-			:horizon-hours="horizonHours"
-			:currency="currency"
-			:charging-strategies="chargingStrategies"
-			:selected-strategy="optimizerChargingStrategy"
-			:pending="pending"
-			@optimize="optimizeNow"
-			@change-strategy="changeChargingStrategy"
-		/>
-		<div class="row">
+		<OptimizerModal :is-sponsor="isSponsor" />
+		<div v-if="!optimizer" class="flex-grow-1 d-flex">
+			<div class="empty-box d-flex flex-column p-5">
+				<p class="text-muted mb-4">The optimizer is disabled.</p>
+				<button type="button" class="btn btn-outline-secondary" @click="openOptimizerModal">
+					Open settings
+				</button>
+			</div>
+		</div>
+		<div v-else-if="!evopt" class="flex-grow-1 d-flex" data-testid="optimize-empty">
+			<div class="empty-box d-flex flex-column p-5">
+				<p class="text-muted">
+					The optimizer is enabled and collecting data. For new installations this can
+					take up to 24 hours.
+				</p>
+				<p class="text-muted mb-4">
+					If nothing shows up after that, the logs may tell why.
+				</p>
+				<router-link
+					:to="{ path: '/log', query: { q: 'optimizer' } }"
+					class="btn btn-outline-primary"
+				>
+					Check logs
+				</router-link>
+			</div>
+		</div>
+		<Card v-else edge-to-edge class="box-pull-out mt-4 mb-4">
+			<OptimizeHeader
+				:updated="evopt?.updated"
+				:status="evopt?.res?.status"
+				:net-cost="netCost"
+				:horizon-hours="horizonHours"
+				:currency="currency"
+				:charging-strategies="chargingStrategies"
+				:selected-strategy="optimizerChargingStrategy"
+				:pending="pending"
+				@optimize="optimizeNow"
+				@change-strategy="changeChargingStrategy"
+			/>
+			<AutomaticModeStrip :automatic="optimizerAutomatic" @change="openOptimizerModal" />
+		</Card>
+		<div v-if="hasResult && evopt" class="row">
 			<main class="col-12">
-				<div v-if="evopt">
-					<!-- Optimizer Plan -->
-					<section class="mb-5">
-						<h3 class="fw-normal mb-4">Result: Charging Plan</h3>
+				<div>
+					<h2 class="mt-2 mb-4">Optimizer Plan</h2>
+
+					<Card
+						title="Charging Plan"
+						subtitle="kW"
+						edge-to-edge
+						class="box-pull-out mb-4"
+					>
 						<ChargeChart
 							:evopt="evopt"
 							:battery-details="evopt.details.batteryDetails"
+							:demand-details="demandDetails"
+							:demand-colors="demandColors"
 							:timestamp="evopt.details.timestamp[0]"
-							:currency="currency"
 							:battery-colors="batteryColors"
 							:device-colors="deviceColors"
 						/>
+					</Card>
 
-						<h3 class="fw-normal mb-4">Result: SoC Projection</h3>
-						<SocChart
-							:evopt="evopt"
-							:battery-details="evopt.details.batteryDetails"
-							:timestamp="evopt.details.timestamp[0]"
-							:currency="currency"
-							:battery-colors="batteryColors"
-						/>
-					</section>
+					<!-- a new explanation remounts the card, which starts a new vote -->
+					<PlanExplanation
+						v-if="evopt.hosted"
+						:key="explained?.created"
+						class="mb-4"
+						:sponsor="isSponsor"
+						:explained="explained"
+						:plan="evopt?.updated"
+						:explaining="explaining"
+						:error="explainError"
+						@explain="explainPlan"
+					/>
 
-					<!-- Input Parameters -->
-					<section class="mb-5">
-						<h3 class="fw-normal mb-4">Input: Grid Prices</h3>
-						<PriceChart
-							:evopt="evopt"
-							:timestamp="evopt.details.timestamp[0]"
-							:currency="currency"
-						/>
-
-						<h3
-							class="fw-normal d-flex gap-3 flex-wrap d-flex align-items-baseline overflow-hidden mb-4"
+					<Card
+						v-if="socEntries.length"
+						title="SoC Projections"
+						subtitle="%"
+						edge-to-edge
+						class="box-pull-out mb-4"
+					>
+						<div
+							v-for="(entry, idx) in socEntries"
+							:key="entry.index"
+							:class="{ 'mb-3': idx < socEntries.length - 1 }"
 						>
-							<span class="d-block no-wrap text-truncate"> Input: Battery </span>
-							<small class="d-block no-wrap text-truncate">
-								{{ fmtPercentage((evopt.req.eta_c || 1) * 100, 1) }} charge
-								efficiency ・
-								{{ fmtPercentage((evopt.req.eta_d || 1) * 100, 1) }} discharge
-								efficiency
-							</small>
-						</h3>
+							<SocChart
+								:evopt="evopt"
+								:entry="entry"
+								:timestamp="evopt.details.timestamp[0]"
+								:show-x-axis="idx === socEntries.length - 1"
+							/>
+						</div>
+					</Card>
 
-						<BatteryConfigurationTable
-							:batteries="evopt.req.batteries"
-							:battery-details="evopt.details.batteryDetails"
-							:currency="currency"
-						/>
-					</section>
-
-					<hr class="my-5" />
-
-					<!-- Debugging -->
-					<section class="mb-5">
-						<h3 class="fw-normal mb-4">Time Series</h3>
-
+					<Card
+						title="Timeline"
+						:subtitle="timeSeriesSubtitle"
+						edge-to-edge
+						class="box-pull-out mb-4"
+					>
 						<TimeSeriesDataTable
 							:evopt="evopt"
+							mode="response"
 							:battery-details="evopt.details.batteryDetails"
 							:timestamps="evopt.details.timestamp"
 							:currency="currency"
 							:battery-colors="batteryColors"
-							:dimmed-battery-colors="dimmedBatteryColors"
 						/>
+					</Card>
 
-						<h3 class="fw-normal mb-4">Raw Data</h3>
+					<h2 class="section-title mb-4">Optimizer Inputs</h2>
 
-						<div class="mb-4">
-							<p class="mb-2">Request:</p>
-							<div class="position-relative">
-								<pre
-									class="p-3 rounded border overflow-auto"
-									style="background-color: var(--evcc-box)"
-									>{{ formattedRequest }}</pre
-								>
-								<CopyButton :content="formattedRequest" />
-							</div>
+					<Card
+						title="Batteries"
+						:subtitle="batteryEfficiencySubtitle"
+						edge-to-edge
+						class="box-pull-out mb-4"
+					>
+						<BatteryConfigurationTable
+							:batteries="evopt.req.batteries"
+							:battery-details="evopt.details.batteryDetails"
+							:battery-colors="batteryColors"
+							:currency="currency"
+						/>
+					</Card>
+
+					<Card
+						title="Environment"
+						:subtitle="timeSeriesSubtitle"
+						edge-to-edge
+						class="box-pull-out mb-4"
+					>
+						<TimeSeriesDataTable
+							:evopt="evopt"
+							mode="request"
+							:battery-details="evopt.details.batteryDetails"
+							:demand-details="demandDetails"
+							:demand-colors="demandColors"
+							:timestamps="evopt.details.timestamp"
+							:currency="currency"
+							:battery-colors="batteryColors"
+						/>
+					</Card>
+
+					<h2 class="section-title mb-4">Raw Data</h2>
+
+					<Card title="Request" edge-to-edge class="box-pull-out mb-4">
+						<div class="position-relative">
+							<pre
+								class="p-3 overflow-auto"
+								style="background-color: var(--evcc-gray-10)"
+								>{{ formattedRequest }}</pre>
+							<CopyButton :content="formattedRequest" />
 						</div>
+					</Card>
 
-						<div class="mb-4">
-							<p class="mb-2">Response:</p>
-							<div class="position-relative">
-								<pre
-									class="p-3 rounded border overflow-auto"
-									style="background-color: var(--evcc-box)"
-									>{{ formattedResponse }}</pre
-								>
-								<CopyButton :content="formattedResponse" />
-							</div>
+					<Card title="Response" edge-to-edge class="box-pull-out mb-4">
+						<div class="position-relative">
+							<pre
+								class="p-3 overflow-auto"
+								style="background-color: var(--evcc-gray-10)"
+								>{{ formattedResponse }}</pre>
+							<CopyButton :content="formattedResponse" />
 						</div>
-					</section>
-				</div>
-				<div v-else>
-					<p>nothing to see here</p>
+					</Card>
 				</div>
 			</main>
 		</div>
@@ -120,44 +181,77 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import Header from "../components/Top/Header.vue";
+import Card from "../components/Helper/Card.vue";
 import OptimizeHeader from "../components/Optimize/OptimizeHeader.vue";
+import AutomaticModeStrip from "../components/Optimize/AutomaticModeStrip.vue";
+import OptimizerModal from "../components/Config/OptimizerModal.vue";
+import Modal from "bootstrap/js/dist/modal";
+import {
+	isLoggedIn,
+	openLoginModal,
+	statusUnknown,
+	updateAuthStatus,
+} from "../components/Auth/auth";
 import BatteryConfigurationTable from "../components/Optimize/BatteryConfigurationTable.vue";
-import SocChart from "../components/Optimize/SocChart.vue";
+import SocChart, { type SocChartEntry } from "../components/Optimize/SocChart.vue";
 import ChargeChart from "../components/Optimize/ChargeChart.vue";
-import PriceChart from "../components/Optimize/PriceChart.vue";
 import TimeSeriesDataTable from "../components/Optimize/TimeSeriesDataTable.vue";
 import CopyButton from "../components/Optimize/CopyButton.vue";
+import PlanExplanation from "../components/Optimize/PlanExplanation.vue";
 import { formatCompactJson } from "../components/Optimize/compactJson";
+import { loadpointTitle, type Titled } from "../components/Optimize/chart";
 import api from "../api";
 import store from "../store";
 import formatter from "../mixins/formatter";
-import { resolveColors, deviceColorMap } from "../colors";
-import { CURRENCY } from "../types/evcc";
+import { resolveColors, deviceColorMap, batteryColor } from "../colors";
+import {
+	CURRENCY,
+	OPTIMIZER_AUTOMATIC,
+	type BatteryDetail,
+	type DemandDetail,
+	type EvOptExplanation,
+} from "../types/evcc";
 
 export default defineComponent({
 	name: "Optimize",
 	components: {
 		TopHeader: Header,
+		Card,
 		OptimizeHeader,
 		BatteryConfigurationTable,
 		SocChart,
 		ChargeChart,
-		PriceChart,
 		TimeSeriesDataTable,
 		CopyButton,
+		PlanExplanation,
+		AutomaticModeStrip,
+		OptimizerModal,
 	},
 	mixins: [formatter],
 	data() {
 		return {
 			pending: false,
+			explaining: false,
+			explainError: "",
 		};
 	},
 	head() {
 		return { title: "Optimize Debug" };
 	},
 	computed: {
+		// the last explanation evcc published, in the language it was requested in
+		explained(): EvOptExplanation | undefined {
+			return store.state["evopt-explanation"];
+		},
 		evopt() {
 			return store.state.evopt;
+		},
+		optimizer(): boolean {
+			return !!store.state.optimizer;
+		},
+		// a result from before the optimizer got disabled stays in the store
+		hasResult(): boolean {
+			return this.optimizer && !!this.evopt;
 		},
 		currency() {
 			return store.state.currency || CURRENCY.EUR;
@@ -168,6 +262,12 @@ export default defineComponent({
 		optimizerChargingStrategy(): string {
 			return store.state.optimizerChargingStrategy || "";
 		},
+		optimizerAutomatic(): OPTIMIZER_AUTOMATIC {
+			return store.state.optimizerAutomatic || OPTIMIZER_AUTOMATIC.OFF;
+		},
+		isSponsor(): boolean {
+			return !!store.state.sponsor?.status?.name;
+		},
 		netCost(): number {
 			return (this.evopt?.res?.objective_value || 0) * -1;
 		},
@@ -176,22 +276,62 @@ export default defineComponent({
 			if (!dt?.length) return 0;
 			return Math.round(dt.reduce((sum, s) => sum + s, 0) / 3600);
 		},
+		batteryEfficiencySubtitle(): string {
+			const etaC = this.fmtPercentage((this.evopt?.req.eta_c || 1) * 100, 1);
+			const etaD = this.fmtPercentage((this.evopt?.req.eta_d || 1) * 100, 1);
+			return `${etaC} charge efficiency ・ ${etaD} discharge efficiency`;
+		},
 		deviceColors() {
 			return deviceColorMap(store.state.deviceColors);
 		},
-		batteryTitles(): string[] {
-			const details = this.evopt?.details?.batteryDetails || [];
-			return (this.evopt?.res.batteries || []).map(
-				(_, i) => details[i]?.title || details[i]?.name || `battery-${i}`
-			);
+		batteryDetails(): BatteryDetail[] {
+			return this.evopt?.details?.batteryDetails || [];
 		},
-		batteryColors() {
-			if (!this.evopt?.res.batteries) return [];
-			const palette = resolveColors(this.batteryTitles, this.deviceColors);
-			return this.batteryTitles.map((t) => palette[t] || "");
+		demandDetails(): DemandDetail[] {
+			return this.evopt?.details?.demandDetails || [];
 		},
-		dimmedBatteryColors() {
-			return (this.batteryColors || []).map((color) => this.dimColorBy25Percent(color));
+		// vehicle batteries and titled demand profiles are loadpoints
+		loadpointColorKeys(): string[] {
+			const details: Titled[] = [
+				...this.batteryDetails.filter((d) => d.type === "vehicle"),
+				...this.demandDetails.filter((d) => d.title),
+			];
+			return [...new Set(details.map(loadpointTitle))];
+		},
+		// loadpoints share the picker palette with History
+		loadpointPalette() {
+			return resolveColors(this.loadpointColorKeys, this.deviceColors);
+		},
+		// per-entry colors aligned with res.batteries: dedicated battery palette
+		// for home batteries (same as battery page and history), picker palette
+		// for loadpoints
+		batteryColors(): string[] {
+			let batteryIndex = 0;
+			return this.batteryDetails.map((d) => {
+				if (d.type === "battery") return batteryColor(batteryIndex++);
+				return this.loadpointColor(d);
+			});
+		},
+		// per-entry colors aligned with demandDetails, untitled rows stay muted
+		demandColors(): string[] {
+			return this.demandDetails.map(this.loadpointColor);
+		},
+		// loadpoints first, then batteries, matching the charging plan order
+		socEntries(): SocChartEntry[] {
+			const entries = this.batteryDetails.map((d, i) => ({
+				index: i,
+				type: d.type,
+				title: d.title || d.name,
+				capacity: d.capacity,
+				color: this.batteryColors[i] || "",
+			}));
+			return [
+				...entries.filter((e) => e.type === "vehicle"),
+				...entries.filter((e) => e.type === "battery"),
+			];
+		},
+		timeSeriesSubtitle(): string {
+			return `${this.evopt?.req.time_series.dt.length || 0} steps ・ ${this.horizonHours} h horizon`;
 		},
 		formattedRequest() {
 			return this.evopt?.req ? formatCompactJson(this.evopt.req) : "";
@@ -207,6 +347,9 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		loadpointColor(detail: Titled): string {
+			return this.loadpointPalette[loadpointTitle(detail)] || "";
+		},
 		optimizeNow() {
 			this.pending = true;
 			api.post("optimize");
@@ -214,10 +357,38 @@ export default defineComponent({
 		changeChargingStrategy(value: string) {
 			api.post(`optimizerchargingstrategy/${value}`);
 		},
-		dimColorBy25Percent(color: string): string {
-			// Convert color to 25% opacity (40 in hex = 25% of 255)
-			return color?.toLowerCase().replace(/ff$/, "40") || color;
+		async explainPlan() {
+			this.explaining = true;
+			this.explainError = "";
+			try {
+				// the explanation arrives as evopt-explanation in the state
+				await api.post("optimizer/explain", null, {
+					params: { lang: this.$i18n.locale },
+				});
+			} catch (e: any) {
+				// relay errors come back as 502, which the api client leaves to the caller
+				this.explainError = e.response?.data?.error || e.message;
+			}
+			this.explaining = false;
+		},
+		async openOptimizerModal() {
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("optimizerModal") as HTMLElement
+			);
+			// the page has no auth guard, the modal's settings need a login
+			await updateAuthStatus();
+			if (!isLoggedIn() && !statusUnknown()) {
+				openLoginModal(null, modal);
+			} else {
+				modal.show();
+			}
 		},
 	},
 });
 </script>
+
+<style scoped>
+.section-title {
+	margin-top: 4rem;
+}
+</style>

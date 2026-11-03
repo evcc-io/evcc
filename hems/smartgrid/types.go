@@ -1,11 +1,9 @@
 package smartgrid
 
 import (
-	"context"
-	"io"
 	"time"
 
-	csvutil "github.com/evcc-io/evcc/util/csv"
+	"github.com/evcc-io/evcc/util/export"
 )
 
 type GridSession struct {
@@ -26,9 +24,11 @@ const (
 
 type GridSessions []GridSession
 
-// WriteCsv implements the api.CsvWriter interface
-func (t *GridSessions) WriteCsv(ctx context.Context, w io.Writer) error {
-	return csvutil.WriteStructSlice(ctx, w, t, csvutil.Config{
+var _ export.Writer = (*GridSessions)(nil)
+
+// Write implements the export.Writer interface
+func (t *GridSessions) Write(ww export.RowWriter) error {
+	return export.WriteStructSlice(ww, t, export.Config{
 		I18nPrefix: "config.hems.csv",
 	})
 }

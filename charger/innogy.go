@@ -67,7 +67,7 @@ func NewInnogyFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	wb, err := NewInnogy(ctx, cc.URI, cc.ID)
+	wb, err := NewInnogy(ctx, cc)
 	if err != nil {
 		return nil, err
 	}
@@ -83,8 +83,8 @@ func NewInnogyFromConfig(ctx context.Context, other map[string]any) (api.Charger
 }
 
 // NewInnogy creates a Innogy charger
-func NewInnogy(ctx context.Context, uri string, id uint8) (*Innogy, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewInnogy(ctx context.Context, settings modbus.TcpSettings) (*Innogy, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

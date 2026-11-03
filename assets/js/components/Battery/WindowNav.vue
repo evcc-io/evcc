@@ -3,15 +3,17 @@
 		<DateNavigatorButton
 			prev
 			:disabled="prevDisabled"
+			:highlight="highlightPrev"
 			:on-click="() => $emit('prev')"
 			data-testid="battery-chart-prev"
 		/>
-		<span class="text-center text-truncate evcc-default-text" style="width: 11em">{{
+		<span class="text-center text-truncate evcc-default-text" style="width: 6em">{{
 			label
 		}}</span>
 		<DateNavigatorButton
 			next
 			:disabled="nextDisabled"
+			:highlight="highlightNext"
 			:on-click="() => $emit('next')"
 			data-testid="battery-chart-next"
 		/>
@@ -29,6 +31,8 @@ export default defineComponent({
 		label: { type: String, default: "" },
 		prevDisabled: Boolean,
 		nextDisabled: Boolean,
+		highlightPrev: Boolean,
+		highlightNext: Boolean,
 	},
 	emits: ["prev", "next"],
 });

@@ -24,8 +24,11 @@ const colors: {
   pricePerKWh: string | null;
   price: string | null;
   co2: string | null;
+  temperature: string | null;
   export: string | null;
+  forecast: string | null;
   background: string | null;
+  box: string | null;
   light: string | null;
   selfPalette: string[];
   palette: string[];
@@ -40,34 +43,37 @@ const colors: {
   pricePerKWh: null,
   price: null,
   co2: null,
+  temperature: null,
   export: null,
+  forecast: null,
   background: null,
+  box: null,
   light: null,
   selfPalette: ["#0FDE41", "#FFBD2F", "#FD6158", "#03C1EF", "#0F662D", "#FF922E"],
   palette: [
     // light
     "#60A5FA", // blue
-    "#FBBF24", // amber
     "#22D3EE", // cyan
     "#F472B6", // pink
     "#34D399", // green
     "#A78BFA", // violet
+    "#FBBF24", // amber
     "#94A3B8", // gray
     // mid
     "#2563EB", // blue
-    "#F59E0B", // amber
     "#06B6D4", // cyan
     "#EC4899", // pink
     "#10B981", // green
     "#8B5CF6", // violet
+    "#F59E0B", // amber
     "#64748B", // gray
     // dark
     "#1E40AF", // blue
-    "#B45309", // amber
     "#0E7490", // cyan
     "#BE185D", // pink
     "#047857", // green
     "#6D28D9", // violet
+    "#B45309", // amber
     "#334155", // gray
   ],
   batteryPalette: ["#0BA631", "#7FC41B", "#0A6E63", "#34D399", "#0E9E8F"],
@@ -115,7 +121,7 @@ export function resolveColors(ids: string[], overrides: DeviceColors = {}): Devi
   return result;
 }
 
-// dedicated battery palette, assigned by index (battery page + history battery group)
+// dedicated battery palette, assigned by index (battery and energy pages)
 export function batteryColor(index: number): string {
   const p = colors.batteryPalette;
   return p[index % p.length] || "";
@@ -127,31 +133,49 @@ export const lighterColor = (color: string | null) => setAlpha(color, "aa");
 
 export const fullColor = (color: string | null) => setAlpha(color, "ff");
 
-// Darken an opaque hex color: scale rgb toward black by `factor` (0-1), stays opaque.
-export function darken(color: string, factor: number): string {
+// `fn` on each rgb channel of an opaque hex color, anything else passes through
+function mapChannels(color: string, fn: (v: number) => number): string {
   if (!/^#[0-9a-f]{6}$/i.test(color)) return color;
-  const f = Math.max(0, Math.min(1, factor));
   const channel = (o: number) =>
-    Math.round(parseInt(color.slice(o, o + 2), 16) * f)
+    Math.round(fn(parseInt(color.slice(o, o + 2), 16)))
       .toString(16)
       .padStart(2, "0");
   return `#${channel(1)}${channel(3)}${channel(5)}`;
 }
 
+const unit = (factor: number) => Math.max(0, Math.min(1, factor));
+
+// Darken: scale rgb toward black by `factor` (0-1), stays opaque.
+export const darken = (color: string, factor: number) =>
+  mapChannels(color, (v) => v * unit(factor));
+
+// Lighten: move rgb toward white by `factor` (0-1), stays opaque.
+export const lighten = (color: string, factor: number) =>
+  mapChannels(color, (v) => v + (255 - v) * unit(factor));
+
 export function updateCssColors() {
   const style = window.getComputedStyle(document.documentElement);
-  colors.text = style.getPropertyValue("--evcc-default-text");
-  colors.muted = style.getPropertyValue("--bs-gray-medium");
-  colors.border = style.getPropertyValue("--bs-border-color-translucent");
-  colors.self = style.getPropertyValue("--evcc-self");
-  colors.grid = style.getPropertyValue("--evcc-grid");
-  colors.price = style.getPropertyValue("--evcc-price");
-  colors.co2 = style.getPropertyValue("--evcc-co2");
-  colors.export = style.getPropertyValue("--evcc-export-contrast");
-  colors.background = style.getPropertyValue("--evcc-background");
-  colors.pricePerKWh = style.getPropertyValue("--bs-gray-medium");
-  colors.co2PerKWh = style.getPropertyValue("--bs-gray-medium");
-  colors.light = style.getPropertyValue("--bs-gray-light");
+  // css minifier shortens #rrggbb to #rgb, alpha helpers expect the long form
+  const get = (name: string) =>
+    style
+      .getPropertyValue(name)
+      .trim()
+      .replace(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/i, "#$1$1$2$2$3$3");
+  colors.text = get("--evcc-default-text");
+  colors.muted = get("--bs-gray-medium");
+  colors.border = get("--bs-border-color-translucent");
+  colors.self = get("--evcc-self");
+  colors.grid = get("--evcc-grid");
+  colors.price = get("--evcc-price");
+  colors.co2 = get("--evcc-co2");
+  colors.temperature = get("--evcc-temperature");
+  colors.export = get("--evcc-export");
+  colors.forecast = get("--evcc-dark-yellow");
+  colors.background = get("--evcc-background");
+  colors.box = get("--evcc-box");
+  colors.pricePerKWh = get("--bs-gray-medium");
+  colors.co2PerKWh = get("--bs-gray-medium");
+  colors.light = get("--bs-gray-light");
 }
 
 // initialize colors

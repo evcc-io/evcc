@@ -74,14 +74,6 @@ func (v *Provider) Range() (rng int64, err error) {
 	return int64(res.ElectricRange.Value), err
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.statusG()
-	return res.EstimatedChargingTimeTimeToTargetBatteryChargeLevel.Timestamp.Add(time.Duration(res.EstimatedChargingTimeTimeToTargetBatteryChargeLevel.Value) * time.Minute), err
-}
-
 // GetLimitSoc implements the api.SocLimiter interface
 func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.statusG()

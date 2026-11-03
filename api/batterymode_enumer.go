@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _BatteryModeName = "unknownnormalholdchargeholdcharge"
+const _BatteryModeName = "unknownnormalholdchargeholdchargedischarge"
 
-var _BatteryModeIndex = [...]uint8{0, 7, 13, 17, 23, 33}
+var _BatteryModeIndex = [...]uint8{0, 7, 13, 17, 23, 33, 42}
 
-const _BatteryModeLowerName = "unknownnormalholdchargeholdcharge"
+const _BatteryModeLowerName = "unknownnormalholdchargeholdchargedischarge"
 
 func (i BatteryMode) String() string {
 	if i < 0 || i >= BatteryMode(len(_BatteryModeIndex)-1) {
@@ -29,21 +29,27 @@ func _BatteryModeNoOp() {
 	_ = x[BatteryHold-(2)]
 	_ = x[BatteryCharge-(3)]
 	_ = x[BatteryHoldCharge-(4)]
+	_ = x[BatteryDischarge-(5)]
 }
 
-var _BatteryModeValues = []BatteryMode{BatteryUnknown, BatteryNormal, BatteryHold, BatteryCharge, BatteryHoldCharge}
+var _BatteryModeValues = []BatteryMode{BatteryUnknown, BatteryNormal, BatteryHold, BatteryCharge, BatteryHoldCharge, BatteryDischarge}
 
 var _BatteryModeNameToValueMap = map[string]BatteryMode{
-	_BatteryModeName[0:7]:        BatteryUnknown,
+	_BatteryModeName[0:7]:   BatteryUnknown,
+	_BatteryModeName[7:13]:  BatteryNormal,
+	_BatteryModeName[13:17]: BatteryHold,
+	_BatteryModeName[17:23]: BatteryCharge,
+	_BatteryModeName[23:33]: BatteryHoldCharge,
+	_BatteryModeName[33:42]: BatteryDischarge,
+}
+
+var _BatteryModeLowerNameToValueMap = map[string]BatteryMode{
 	_BatteryModeLowerName[0:7]:   BatteryUnknown,
-	_BatteryModeName[7:13]:       BatteryNormal,
 	_BatteryModeLowerName[7:13]:  BatteryNormal,
-	_BatteryModeName[13:17]:      BatteryHold,
 	_BatteryModeLowerName[13:17]: BatteryHold,
-	_BatteryModeName[17:23]:      BatteryCharge,
 	_BatteryModeLowerName[17:23]: BatteryCharge,
-	_BatteryModeName[23:33]:      BatteryHoldCharge,
 	_BatteryModeLowerName[23:33]: BatteryHoldCharge,
+	_BatteryModeLowerName[33:42]: BatteryDischarge,
 }
 
 var _BatteryModeNames = []string{
@@ -52,6 +58,7 @@ var _BatteryModeNames = []string{
 	_BatteryModeName[13:17],
 	_BatteryModeName[17:23],
 	_BatteryModeName[23:33],
+	_BatteryModeName[33:42],
 }
 
 // BatteryModeString retrieves an enum value from the enum constants string name.
@@ -61,7 +68,7 @@ func BatteryModeString(s string) (BatteryMode, error) {
 		return val, nil
 	}
 
-	if val, ok := _BatteryModeNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _BatteryModeLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to BatteryMode values", s)

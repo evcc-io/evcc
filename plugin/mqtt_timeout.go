@@ -39,20 +39,6 @@ func (h *TimeoutHandler) FloatGetter(p FloatGetter) (func() (float64, error), er
 	}, nil
 }
 
-func (h *TimeoutHandler) StringGetter(p StringGetter) (func() (string, error), error) {
-	g, err := p.StringGetter()
-	if err != nil {
-		return nil, err
-	}
-
-	return func() (val string, err error) {
-		if val, err = g(); err == nil {
-			_, err = h.ticker()
-		}
-		return val, err
-	}, nil
-}
-
 func (h *TimeoutHandler) JsonGetter(p StringGetter) (func(any) error, error) {
 	g, err := p.StringGetter()
 	if err != nil {

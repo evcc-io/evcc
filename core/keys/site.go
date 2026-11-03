@@ -5,11 +5,13 @@ const (
 	AuxPower              = "auxPower"
 	Circuits              = "circuits"
 	Consumers             = "consumers"
+	Country               = "country"
 	Currency              = "currency"
 	Ext                   = "ext"
 	GreenShareHome        = "greenShareHome"
 	GreenShareLoadpoints  = "greenShareLoadpoints"
 	GridConfigured        = "gridConfigured"
+	GridConnection        = "gridConnection"
 	Grid                  = "grid"
 	HistoryUpdated        = "historyUpdated"
 	HomePower             = "homePower"
@@ -30,7 +32,9 @@ const (
 	TariffPriceHome       = "tariffPriceHome"
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	TariffSolar           = "tariffSolar"
+	TariffTemperature     = "tariffTemperature"
 	Vehicles              = "vehicles"
+	Voltage               = "voltage"
 
 	// meters
 	GridMeter      = "gridMeter"
@@ -40,12 +44,25 @@ const (
 	AuxMeters      = "auxMeters"
 	ConsumerMeters = "consumerMeters"
 
+	// curtailment devices
+	Curtailers = "curtailers"
+
 	// battery settings
-	BatteryDischargeControl = "batteryDischargeControl"
-	BatteryGridChargeLimit  = "batteryGridChargeLimit"
-	BatteryGridChargeActive = "batteryGridChargeActive"
-	BufferSoc               = "bufferSoc"
-	BufferStartSoc          = "bufferStartSoc"
+	BatteryDischargeControl    = "batteryDischargeControl"
+	BatteryGridChargeLimit     = "batteryGridChargeLimit"
+	BatteryGridChargeActive    = "batteryGridChargeActive"
+	BatteryGridDischargeLimit  = "batteryGridDischargeLimit"
+	BatteryGridDischargeActive = "batteryGridDischargeActive"
+	BatteryGridDischarge       = "batteryGridDischarge"
+	BufferSoc                  = "bufferSoc"
+	BufferStartSoc             = "bufferStartSoc"
+
+	// grid settings
+	GridExportLimit = "gridExportLimit"
+
+	// forecast settings
+	SolarAdjusted     = "solarAdjusted"
+	ProfilePercentile = "profilePercentile"
 
 	// optimizer
 	OptimizerChargingStrategy   = "optimizerChargingStrategy"

@@ -1,6 +1,16 @@
 package meter
 
-import "github.com/evcc-io/evcc/api"
+import (
+	"context"
+	"fmt"
+	"strings"
+	"sync"
+
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
+	"github.com/evcc-io/evcc/plugin"
+	"github.com/evcc-io/evcc/util"
+)
 
 type batteryCapacity struct {
 	Capacity float64
@@ -9,12 +19,102 @@ type batteryCapacity struct {
 // var _ api.BatteryCapacity = (*batteryCapacity)(nil)
 
 // Decorator returns an api.BatteryCapacity decorator
-func (m *batteryCapacity) Decorator() func() float64 {
-	if m.Capacity == 0 {
+func (m *batteryCapacity) Decorator() func() (float64, error) {
+	return staticFloat(m.Capacity)
+}
+
+type batteryCapacityCtx struct {
+	Capacity any // static kWh value or float plugin
+}
+
+// var _ api.BatteryCapacity = (*batteryCapacityCtx)(nil)
+
+// Decorator returns an api.BatteryCapacity decorator. Capacity may be a static
+// number or a float plugin config; nil/zero means not configured. A plugin
+// capacity is read once, then cached.
+func (m *batteryCapacityCtx) Decorator(ctx context.Context) (func() (float64, error), error) {
+	get, err := resolveFloat(ctx, m.Capacity)
+	if err != nil || get == nil {
+		return nil, err
+	}
+	return keep(get, true), nil
+}
+
+// keep serves the last successful read when get fails: the settings are semi-static,
+// so a transient failure must not change them. Only a value never read errors.
+// With once the first successful read is final and get is not called again.
+func keep(get func() (float64, error), once bool) func() (float64, error) {
+	var (
+		mu   sync.Mutex
+		val  float64
+		read bool
+	)
+	return func() (float64, error) {
+		mu.Lock()
+		defer mu.Unlock()
+
+		if read && once {
+			return val, nil
+		}
+		v, err := get()
+		if err == nil {
+			val, read = v, true
+		} else if read {
+			return val, nil
+		}
+		return val, err
+	}
+}
+
+// resolveFloat resolves a static number or float plugin config to a getter.
+// nil/zero static returns a nil getter (not configured).
+func resolveFloat(ctx context.Context, v any) (func() (float64, error), error) {
+	switch v := v.(type) {
+	case nil:
+		return nil, nil
+	case int:
+		return staticFloat(float64(v)), nil
+	case int64:
+		return staticFloat(float64(v)), nil
+	case float64:
+		return staticFloat(v), nil
+	default:
+		var cfg plugin.Config
+		if err := util.DecodeOther(v, &cfg); err != nil {
+			return nil, err
+		}
+		get, err := cfg.FloatGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return keep(get, false), nil
+	}
+}
+
+func staticFloat(f float64) func() (float64, error) {
+	if f == 0 {
 		return nil
 	}
-	return func() float64 {
-		return m.Capacity
+	return func() (float64, error) { return f, nil }
+}
+
+// floatOr0 evaluates g, returning 0 for a nil (unconfigured) getter.
+func floatOr0(g func() (float64, error)) (float64, error) {
+	if g == nil {
+		return 0, nil
+	}
+	return g()
+}
+
+// floatPair joins two getters into one, a nil getter reads as 0 (not configured)
+func floatPair(a, b func() (float64, error)) func() (float64, float64, error) {
+	return func() (float64, float64, error) {
+		x, err := floatOr0(a)
+		if err != nil {
+			return 0, 0, err
+		}
+		y, err := floatOr0(b)
+		return x, y, err
 	}
 }
 
@@ -26,13 +126,50 @@ type batteryPowerLimits struct {
 // var _ api.BatteryPowerLimiter = (*batteryPowerLimits)(nil)
 
 // Decorator returns an api.BatteryPowerLimiter decorator
-func (m *batteryPowerLimits) Decorator() func() (float64, float64) {
-	if m.MaxChargePower == 0 || m.MaxDischargePower == 0 {
+func (m *batteryPowerLimits) Decorator() func() (float64, float64, error) {
+	if m.MaxChargePower == 0 && m.MaxDischargePower == 0 {
 		return nil
 	}
-	return func() (float64, float64) {
-		return m.MaxChargePower, m.MaxDischargePower
+	if m.MaxChargePower == 0 || m.MaxDischargePower == 0 {
+		warnPartialPowerLimits(context.Background())
+		return nil
 	}
+	return func() (float64, float64, error) {
+		return m.MaxChargePower, m.MaxDischargePower, nil
+	}
+}
+
+type batteryPowerLimitsCtx struct {
+	MaxChargePower    any // static W value or float plugin
+	MaxDischargePower any // static W value or float plugin
+}
+
+// var _ api.BatteryPowerLimiter = (*batteryPowerLimitsCtx)(nil)
+
+// Decorator returns an api.BatteryPowerLimiter decorator. Each limit may be a
+// static number or a float plugin config; either unset means not configured.
+func (m *batteryPowerLimitsCtx) Decorator(ctx context.Context) (func() (float64, float64, error), error) {
+	charge, err := resolveFloat(ctx, m.MaxChargePower)
+	if err != nil {
+		return nil, err
+	}
+	discharge, err := resolveFloat(ctx, m.MaxDischargePower)
+	if err != nil {
+		return nil, err
+	}
+	if charge == nil && discharge == nil {
+		return nil, nil
+	}
+	if charge == nil || discharge == nil {
+		warnPartialPowerLimits(ctx)
+		return nil, nil
+	}
+	return floatPair(charge, discharge), nil
+}
+
+// warnPartialPowerLimits warns that a single power limit is ignored without the other
+func warnPartialPowerLimits(ctx context.Context) {
+	util.ContextLoggerWithDefault(ctx, util.NewLogger("battery")).WARN.Println("maxchargepower and maxdischargepower must both be configured, ignoring power limit")
 }
 
 type batterySocLimits struct {
@@ -41,14 +178,54 @@ type batterySocLimits struct {
 
 // var _ api.BatterySocLimiter = (*batterySocLimits)(nil)
 
-// Decorator returns an api.BatterySocLimiter decorator
-func (m *batterySocLimits) Decorator() func() (float64, float64) {
-	if m.MinSoc == 0 && m.MaxSoc == 0 {
+// Decorator returns an api.BatterySocLimiter decorator. The neutral defaults
+// (0/0 or 0/100) mean no limits configured.
+func (m *batterySocLimits) Decorator() func() (float64, float64, error) {
+	if m.MinSoc == 0 && (m.MaxSoc == 0 || m.MaxSoc == 100) {
 		return nil
 	}
-	return func() (float64, float64) {
-		return m.MinSoc, m.MaxSoc
+	return func() (float64, float64, error) {
+		return m.MinSoc, m.MaxSoc, nil
 	}
+}
+
+// batteryModesSocLimit are the modes implementable via soc limit
+var batteryModesSocLimit = implement.BatteryModes(api.BatteryNormal, api.BatteryHold, api.BatteryCharge)
+
+// batteryModes converts the keys the battery mode setter switches on into modes.
+// Keys that are not a battery mode are ignored.
+func batteryModes(keys []int64) []api.BatteryMode {
+	res := make([]api.BatteryMode, 0, len(keys))
+	for _, v := range keys {
+		if mode := api.BatteryMode(v); mode != api.BatteryUnknown && mode.IsABatteryMode() {
+			res = append(res, mode)
+		}
+	}
+
+	return res
+}
+
+// errInvalidBatteryMode reports a mode the setter does not implement. The
+// controller announces its modes, so reaching a setter with any other is a bug.
+func errInvalidBatteryMode(mode api.BatteryMode) error {
+	return fmt.Errorf("invalid battery mode: %s", mode)
+}
+
+// declaredBatteryModes converts the mode names declared in the config into modes
+func declaredBatteryModes(names []string) ([]api.BatteryMode, error) {
+	res := make([]api.BatteryMode, 0, len(names))
+	for _, name := range names {
+		mode, err := api.BatteryModeString(strings.TrimSpace(name))
+		if err != nil {
+			return nil, err
+		}
+		if mode == api.BatteryUnknown {
+			return nil, fmt.Errorf("invalid battery mode: %s", name)
+		}
+		res = append(res, mode)
+	}
+
+	return res, nil
 }
 
 // LimitController returns an api.BatteryController decorator
@@ -70,7 +247,78 @@ func (m *batterySocLimits) LimitController(socG func() (float64, error), limitSo
 
 		// BatteryHoldCharge implementable via limit soc
 		default:
-			return api.ErrNotAvailable
+			return errInvalidBatteryMode(mode)
 		}
 	}
+}
+
+type batterySocLimitsCtx struct {
+	MinSoc, MaxSoc any // static % value or float plugin
+}
+
+// var _ api.BatterySocLimiter = (*batterySocLimitsCtx)(nil)
+
+func (m *batterySocLimitsCtx) getters(ctx context.Context) (func() (float64, error), func() (float64, error), error) {
+	minG, err := resolveFloat(ctx, m.MinSoc)
+	if err != nil {
+		return nil, nil, err
+	}
+	maxG, err := resolveFloat(ctx, m.MaxSoc)
+	if err != nil {
+		return nil, nil, err
+	}
+	return minG, maxG, nil
+}
+
+// Decorator returns an api.BatterySocLimiter decorator. Each limit may be a
+// static number or a float plugin config; both unset means not configured.
+func (m *batterySocLimitsCtx) Decorator(ctx context.Context) (func() (float64, float64, error), error) {
+	minG, maxG, err := m.getters(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if minG == nil && maxG == nil {
+		return nil, nil
+	}
+	return floatPair(minG, maxG), nil
+}
+
+// LimitController returns an api.BatteryController decorator
+func (m *batterySocLimitsCtx) LimitController(ctx context.Context, socG func() (float64, error), limitSocS func(float64) error) (func(api.BatteryMode) error, error) {
+	minG, maxG, err := m.getters(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return func(mode api.BatteryMode) error {
+		switch mode {
+		case api.BatteryNormal:
+			minSoc, err := floatOr0(minG)
+			if err != nil {
+				return err
+			}
+			return limitSocS(minSoc)
+
+		case api.BatteryHold:
+			soc, err := socG()
+			if err != nil {
+				return err
+			}
+			minSoc, err := floatOr0(minG)
+			if err != nil {
+				return err
+			}
+			return limitSocS(min(100, max(soc, minSoc)))
+
+		case api.BatteryCharge:
+			maxSoc, err := floatOr0(maxG)
+			if err != nil {
+				return err
+			}
+			return limitSocS(maxSoc)
+
+		// BatteryHoldCharge not implementable via limit soc
+		default:
+			return errInvalidBatteryMode(mode)
+		}
+	}, nil
 }

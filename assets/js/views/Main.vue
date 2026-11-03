@@ -1,7 +1,9 @@
 <template>
 	<Site
+		v-if="!wizardPending"
 		:notifications="notifications"
 		v-bind="state"
+		:forecast="uiForecast"
 		:selected-loadpoint-index="selectedLoadpointIndex"
 	/>
 </template>
@@ -11,6 +13,7 @@ import { defineComponent, type PropType } from "vue";
 import Site from "../components/Site/Site.vue";
 import store from "../store";
 import type { Notification } from "@/types/evcc";
+import { wizardPending } from "@/onboarding";
 
 export default defineComponent({
 	name: "Main",
@@ -19,8 +22,24 @@ export default defineComponent({
 		notifications: Array as PropType<Notification[]>,
 		selectedLoadpointIndex: Number,
 	},
-	data() {
-		return store;
+	computed: {
+		state() {
+			return store.state;
+		},
+		uiForecast() {
+			return store.uiForecast.value;
+		},
+		wizardPending() {
+			return wizardPending();
+		},
+	},
+	watch: {
+		wizardPending: {
+			immediate: true,
+			handler(pending: boolean) {
+				if (pending) this.$router.replace("/config");
+			},
+		},
 	},
 	head() {
 		const title = store.state.siteTitle;

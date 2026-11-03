@@ -33,5 +33,5 @@ render: |
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
-  {{ include "vehicle-common" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "common" . }}
+  {{ include "features" . }}

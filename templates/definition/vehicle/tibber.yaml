@@ -39,10 +39,10 @@ auth:
   params: [clientid, clientsecret, redirecturi]
 render: |
   type: tibber
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   clientid: {{ .clientid }}
   clientsecret: {{ .clientsecret }}
   redirecturi: {{ .redirecturi }}
   vin: {{ .vin }}
   cache: {{ .cache }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

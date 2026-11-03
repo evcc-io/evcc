@@ -23,6 +23,7 @@ test.describe("battery meter", async () => {
     await page.getByRole("button", { name: "Add solar or battery" }).click();
 
     const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Add battery meter" }).click();
     await meterModal.getByLabel("Title").fill("Demo Battery");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo battery");
@@ -72,6 +73,7 @@ test.describe("battery meter", async () => {
     await page.getByRole("button", { name: "Add solar or battery" }).click();
 
     const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Add battery meter" }).click();
     await meterModal.getByLabel("Title").fill("Demo Battery");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo battery");

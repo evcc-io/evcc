@@ -324,7 +324,7 @@ export default defineComponent({
 		movedLimitSoc(e: Event) {
 			const value = parseInt((e.target as HTMLInputElement).value, 10);
 			e.stopPropagation();
-			const minLimit = this.heating ? this.lowerBound : 20;
+			const minLimit = this.heating ? this.lowerBound : 5;
 			if (value < minLimit) {
 				(e.target as HTMLInputElement).value = minLimit.toString();
 				this.selectedLimitSoc = value;

@@ -35,12 +35,12 @@ func NewPhoenixEVSerFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
-	return NewPhoenixEVSer(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewPhoenixEVSer(ctx, cc)
 }
 
 // NewPhoenixEVSer creates a Phoenix charger
-func NewPhoenixEVSer(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8) (*PhoenixEVSer, error) {
-	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, id)
+func NewPhoenixEVSer(ctx context.Context, settings modbus.Settings) (*PhoenixEVSer, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

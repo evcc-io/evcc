@@ -248,6 +248,6 @@ func (wb *HardyBarth) Voltages() (float64, float64, float64, error) {
 // var _ api.Identifier = (*HardyBarth)(nil)
 
 // // Identify implements the api.Identifier interface
-// func (wb *HardyBarth) Identify() (string, error) {
-// 	return "", api.ErrNotAvailable
+// func (wb *HardyBarth) Identify() ([]string, error) {
+// 	return nil, api.ErrNotAvailable
 // }

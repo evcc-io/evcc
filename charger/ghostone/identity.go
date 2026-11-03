@@ -3,9 +3,11 @@ package ghostone
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -18,16 +20,21 @@ import (
 
 type tokenSource struct {
 	*request.Helper
-	oauth2.TokenSource
+	mu       sync.Mutex
+	ts       oauth2.TokenSource
+	log      *util.Logger
 	uri      string
 	user     string
 	password string
 }
 
-// TokenSource creates a JWT token source for the ghost REST API
-func TokenSource(ctx context.Context, log *util.Logger, uri, user, password string) (oauth2.TokenSource, error) {
+// Transport creates an http transport authenticating with a JWT token against
+// the ghost REST API. A request rejected with 401 is retried once with a new
+// token since the wallbox invalidates tokens on restart (#33753).
+func Transport(ctx context.Context, log *util.Logger, uri, user, password string, base http.RoundTripper) (http.RoundTripper, error) {
 	c := &tokenSource{
 		Helper:   request.NewHelper(log),
+		log:      log,
 		uri:      uri + "/jwt/login",
 		user:     user,
 		password: password,
@@ -40,9 +47,61 @@ func TokenSource(ctx context.Context, log *util.Logger, uri, user, password stri
 		return nil, err
 	}
 
-	c.TokenSource = oauth.RefreshTokenSource(token, c.refresh)
+	c.ts = oauth.RefreshTokenSource(log, token, c.refresh)
 
-	return c, nil
+	return &authTransport{
+		ts:   c,
+		base: &oauth2.Transport{Source: c, Base: base},
+	}, nil
+}
+
+type authTransport struct {
+	ts   *tokenSource
+	base http.RoundTripper
+}
+
+func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	resp, err := t.base.RoundTrip(req)
+	if err != nil || resp.StatusCode != http.StatusUnauthorized {
+		return resp, err
+	}
+
+	retry := req.Clone(req.Context())
+
+	if req.Body != nil {
+		if req.GetBody == nil {
+			return resp, nil
+		}
+
+		body, err := req.GetBody()
+		if err != nil {
+			return resp, nil
+		}
+
+		retry.Body = body
+	}
+
+	io.Copy(io.Discard, resp.Body)
+	resp.Body.Close()
+
+	t.ts.invalidate()
+
+	return t.base.RoundTrip(retry)
+}
+
+func (c *tokenSource) Token() (*oauth2.Token, error) {
+	c.mu.Lock()
+	ts := c.ts
+	c.mu.Unlock()
+
+	return ts.Token()
+}
+
+// invalidate drops the current token, forcing a new login on the next request
+func (c *tokenSource) invalidate() {
+	c.mu.Lock()
+	c.ts = oauth.RefreshTokenSource(c.log, nil, c.refresh)
+	c.mu.Unlock()
 }
 
 func (c *tokenSource) login(ctx context.Context) (*oauth2.Token, error) {

@@ -124,6 +124,14 @@ func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
 	return io.NopCloser(&buf), io.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }
 
+// Truncate limits a string to LogMaxLen for trace logs, appending an ellipsis when cut
+func Truncate(s string) string {
+	if len(s) > LogMaxLen {
+		return s[:LogMaxLen] + "..."
+	}
+	return s
+}
+
 // dump http request/response body
 func dump(r io.ReadCloser, w *strings.Builder) error {
 	body, err := io.ReadAll(r)
@@ -133,7 +141,7 @@ func dump(r io.ReadCloser, w *strings.Builder) error {
 	if w.Len() > 0 && len(body) > 0 {
 		w.WriteString("\n--\n")
 	}
-	_, err = w.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
+	_, err = w.WriteString(Truncate(strings.TrimSpace(string(body))))
 	return err
 }
 
@@ -155,7 +163,7 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 		if LogHeaders {
 			if body, err := httputil.DumpRequestOut(req, true); err == nil {
 				bld.WriteString("\n")
-				bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
+				bld.WriteString(Truncate(strings.TrimSpace(string(body))))
 			}
 		} else {
 			if save, req.Body, err = drainBody(req.Body); err == nil {
@@ -187,7 +195,7 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 			if LogHeaders {
 				if body, err := httputil.DumpResponse(resp, logBody); err == nil {
 					bld.WriteString("\n\n")
-					bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
+					bld.WriteString(Truncate(strings.TrimSpace(string(body))))
 				}
 			} else if logBody {
 				if save, resp.Body, err = drainBody(resp.Body); err == nil {

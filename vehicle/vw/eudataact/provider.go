@@ -1,6 +1,8 @@
 package eudataact
 
 import (
+	"errors"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +15,8 @@ const (
 	// portalLatency is the margin added to a dataset's timestamp before the
 	// following dataset is expected to be available for download
 	portalLatency = time.Minute
+	// errorGrace is how long the last data is served while updates keep failing
+	errorGrace = time.Hour
 )
 
 // Provider implements the vehicle api on top of the EU Data Act dataset.
@@ -27,27 +31,51 @@ const (
 // soon as the portal delivers a new dataset.
 type Provider struct {
 	statusG func() ([]point, error)
+	socKeys []string
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *Provider {
-	v := &Provider{}
-	s := sharedStore(api)
+// socKeys are soc field keys or names tried before the default ones
+func NewProvider(log *util.Logger, client *API, vin string, cache time.Duration, socKeys []string) *Provider {
+	v := &Provider{socKeys: socKeys}
+	s := sharedStore(client)
 
-	var cached util.Cacheable[[]point]
+	var (
+		cached util.Cacheable[[]point]
+		lastOK time.Time
+	)
 	cached = util.ResettableCached(func() ([]point, error) {
 		ts, err := s.update(vin)
-		if err != nil {
-			log.ERROR.Println(err)
-		} else if !ts.IsZero() {
-			time.AfterFunc(resetDelay(ts, cache), cached.Reset)
+		if err == nil {
+			lastOK = time.Now()
+			if !ts.IsZero() {
+				time.AfterFunc(resetDelay(ts, cache), cached.Reset)
+			}
+			return s.snapshot(vin), nil
 		}
-		return s.snapshot(vin), nil
+
+		// the data is outdated while catching up, the loadpoint must read again
+		if errors.Is(err, api.ErrMustRetry) {
+			return nil, err
+		}
+
+		// serve the last data over transient portal errors, surface persistent ones
+		if data := s.snapshot(vin); keepData(data, lastOK) {
+			log.ERROR.Println(err)
+			return data, nil
+		}
+
+		return nil, err
 	}, cache)
 
 	v.statusG = cached.Get
 
 	return v
+}
+
+// keepData reports whether data may still be served after a failed update
+func keepData(data []point, lastOK time.Time) bool {
+	return len(data) > 0 && time.Since(lastOK) < errorGrace
 }
 
 // resetDelay returns the delay until the dataset following the one delivered at
@@ -81,7 +109,8 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyBatteryStateReportSoc); p != nil {
+	keys := append(slices.Clone(v.socKeys), KeyBatteryStateReportSoc, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyEnyaqSoc)
+	if p := lookup(data, keys...); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
@@ -105,24 +134,6 @@ func (v *Provider) Range() (int64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	data, err := v.statusG()
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	if p := lookup(data, FieldRemainingTime); p != nil && p.Value != "65535" {
-		if v, err := strconv.ParseInt(p.Value, 0, 64); err == nil {
-			return p.Timestamp.Add(time.Duration(v) * time.Minute), nil
-		}
-	}
-
-	return time.Time{}, api.ErrNotAvailable
-}
-
 var _ api.VehicleOdometer = (*Provider)(nil)
 
 // Odometer implements the api.VehicleOdometer interface
@@ -132,7 +143,7 @@ func (v *Provider) Odometer() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldOdometer, FieldOdometerValue); p != nil {
+	if p := lookup(data, KeyMileageValue, FieldOdometer, FieldOdometerValue); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
@@ -157,8 +168,10 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	// block 2: flat charging_state field and the current_charge_state field
 	if p := lookup(data, FieldChargingState, FieldCurrentChargeState); p != nil &&
-		(strings.EqualFold(p.Value, "charging") || strings.Contains(strings.ToUpper(p.Value), "CHARGING_HV") ||
-			strings.EqualFold(p.Value, "conservationCharging") || strings.EqualFold(p.Value, "CHARGE_STATE_CONSERVATION_CHARGING")) {
+		(strings.Contains(strings.ToUpper(p.Value), "CHARGING_HV") ||
+			strings.EqualFold(p.Value, "charging") ||
+			strings.EqualFold(p.Value, "conservationCharging") ||
+			strings.EqualFold(p.Value, "CHARGE_STATE_CONSERVATION_CHARGING")) {
 		status = api.StatusC
 	}
 
@@ -186,7 +199,14 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldTargetSoc); p != nil {
+	// the battery care mode threshold only reflects the target soc while care
+	// mode is active; otherwise it is unrelated and must not be used (see #32520)
+	fields := []string{FieldTargetSoc}
+	if p := find(data, FieldBcamActivation); p != nil && p.Value == BcamActivationActivated {
+		fields = append(fields, FieldChargeBcamThreshold)
+	}
+
+	if p := lookup(data, fields...); p != nil {
 		f, err := strconv.ParseFloat(p.Value, 64)
 		return int64(f), err
 	}

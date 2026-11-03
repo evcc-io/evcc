@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"math"
 	"slices"
 	"strconv"
@@ -8,7 +9,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/types"
-	"github.com/samber/lo"
+	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -97,6 +98,26 @@ func (suite *mqttSuite) TestSlice() {
 	suite.Equal([]string{"2", "10", "20"}, suite.payloads, "payloads")
 }
 
+type jsonSeries [][]float64
+
+func (s jsonSeries) MarshalBytes() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+// a sharded struct publishes one message per key, BytesMarshaler fields as json
+func (suite *mqttSuite) TestSharderBytesMarshaler() {
+	p := struct {
+		Foo jsonSeries `json:"foo,omitempty"`
+		Bar jsonSeries `json:"bar,omitempty"`
+	}{
+		Foo: jsonSeries{{1, 2, 3}, {4, 5, 6}},
+	}
+
+	suite.publish("test", false, util.NewSharder("test", p))
+	suite.Equal([]string{"test/foo", "test/bar"}, suite.topics, "topics")
+	suite.Equal([]string{"[[1,2,3],[4,5,6]]", ""}, suite.payloads, "payloads")
+}
+
 func (suite *mqttSuite) TestNilInterface() {
 	var ptr *time.Time
 	suite.publish("test", false, ptr)
@@ -104,39 +125,44 @@ func (suite *mqttSuite) TestNilInterface() {
 	suite.Equal([]string{""}, suite.payloads, "payloads")
 }
 
-func (suite *mqttSuite) TestMeasurement() {
-	topics := lo.Map([]string{
-		"name", "title", "icon", "power", "energy", "returnEnergy", "powers", "currents", "excessDCPower", "capacity", "soc", "controllable",
-	}, func(s string, _ int) string {
-		return "test/" + s
-	})
+// published returns the last payload per topic
+func (suite *mqttSuite) published() map[string]string {
+	res := make(map[string]string, len(suite.topics))
+	for i, topic := range suite.topics {
+		res[topic] = suite.payloads[i]
+	}
+	return res
+}
 
+// TestMeasurement checks the fields under test only, so adding a field does not break it
+func (suite *mqttSuite) TestMeasurement() {
 	suite.publish("test", false, types.Measurement{})
-	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"", "", "", "0", "", "", "", "", "", "", "", ""}, suite.payloads, "empty payloads")
+	for topic, payload := range suite.published() {
+		if topic != "test/power" {
+			suite.Empty(payload, "unset field must clear retained topic %s", topic)
+		}
+	}
+	suite.Equal("0", suite.published()["test/power"])
 
 	suite.publish("test", false, types.Measurement{Energy: new(1.0)})
-	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"", "", "", "0", "1", "", "", "", "", "", "", ""}, suite.payloads, "energy payloads")
+	suite.Equal("1", suite.published()["test/energy"])
 
 	suite.publish("test", false, types.Measurement{Controllable: new(false)})
-	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"", "", "", "0", "", "", "", "", "", "", "", "false"}, suite.payloads, "controllable payloads")
+	suite.Equal("false", suite.published()["test/controllable"])
+	suite.Empty(suite.published()["test/energy"], "energy cleared")
 
 	suite.publish("test", false, types.Measurement{Currents: []float64{1, 2, 3}})
-	suite.Equal(append(topics, "test/currents/1", "test/currents/2", "test/currents/3"), suite.topics, "currents topics")
-	suite.Equal([]string{"", "", "", "0", "", "", "", "3", "", "", "", "", "1", "2", "3"}, suite.payloads, "currents payloads")
+	suite.Subset(suite.published(), map[string]string{
+		"test/currents": "3", "test/currents/1": "1", "test/currents/2": "2", "test/currents/3": "3",
+	})
+
+	suite.publish("test", false, types.Measurement{Modes: []string{"normal", "discharge"}})
+	suite.Subset(suite.published(), map[string]string{
+		"test/modes": "2", "test/modes/1": "normal", "test/modes/2": "discharge",
+	})
 }
 
 func (suite *mqttSuite) TestBatteryState() {
-	topics := lo.Map([]string{
-		"power", "energy", "capacity", "soc",
-		"devices", "devices/1/name", "devices/1/title", "devices/1/icon", "devices/1/power", "devices/1/energy", "devices/1/returnEnergy", "devices/1/powers", "devices/1/currents", "devices/1/excessDCPower", "devices/1/capacity", "devices/1/soc", "devices/1/controllable",
-		"forecast",
-	}, func(s string, _ int) string {
-		return "test/" + s
-	})
-
 	suite.publish("test", false, types.BatteryState{
 		Power: 2,
 		Soc:   20.0,
@@ -146,6 +172,22 @@ func (suite *mqttSuite) TestBatteryState() {
 		}},
 	})
 
-	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"2", "", "", "20", "1", "", "", "", "1", "", "", "", "", "", "", "10", "", ""}, suite.payloads, "payloads")
+	suite.Subset(suite.published(), map[string]string{
+		"test/power": "2", "test/soc": "20", "test/forecast": "",
+		"test/devices": "1", "test/devices/1/power": "1", "test/devices/1/soc": "10",
+	})
+}
+
+func (suite *mqttSuite) TestMapKeys() {
+	suite.publish("test", false, map[string]int{
+		"HomeAssistant (homeassistant.internal)": 1,
+	})
+	suite.Equal([]string{"test/HomeAssistant_(homeassistant.internal)"}, suite.topics, "topics")
+	suite.Equal([]string{"1"}, suite.payloads, "payloads")
+}
+
+func TestMqttTopicLevel(t *testing.T) {
+	assert.Equal(t, "foo", mqttTopicLevel("foo"))
+	assert.Equal(t, "Tibber_(VW_ID.3,_Cupra)", mqttTopicLevel("Tibber (VW ID.3, Cupra)"))
+	assert.Equal(t, "a_b_c_d", mqttTopicLevel("a+b#c/d"))
 }

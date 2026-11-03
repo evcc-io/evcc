@@ -26,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -76,12 +77,12 @@ func NewCompleoFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, err
 	}
 
-	return NewCompleo(ctx, cc.URI, cc.ID, cc.Connector)
+	return NewCompleo(ctx, cc.TcpSettings, cc.Connector)
 }
 
 // NewCompleo creates Compleo charger
-func NewCompleo(ctx context.Context, uri string, slaveID uint8, connector uint16) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewCompleo(ctx context.Context, settings modbus.TcpSettings, connector uint16) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +106,7 @@ func NewCompleo(ctx context.Context, uri string, slaveID uint8, connector uint16
 	wb := &Compleo{
 		conn:   conn,
 		offset: (connector - 1) * 0x10,
-		power:  3 * 230 * 6, // assume min power
+		power:  uint16(grid.CurrentToPower(6, 3)), // assume min power
 	}
 
 	// heartbeat
@@ -211,7 +212,7 @@ func (wb *Compleo) MaxCurrentMillis(current float64) error {
 		}
 	}
 
-	power := uint16(voltage * current * float64(phases))
+	power := uint16(grid.CurrentToPower(current, phases))
 
 	err := wb.setPower(power)
 	if err == nil {
@@ -289,13 +290,13 @@ func (wb *Compleo) ChargeDuration() (time.Duration, error) {
 var _ api.Identifier = (*Compleo)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *Compleo) Identify() (string, error) {
+func (wb *Compleo) Identify() ([]string, error) {
 	b, err := wb.conn.ReadInputRegisters(compleoRegIdTag+wb.offset, 10)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }
 
 var _ loadpoint.Controller = (*Compleo)(nil)

@@ -1,6 +1,8 @@
 package eudataact
 
 import (
+	"context"
+	"errors"
 	"slices"
 	"sync"
 	"time"
@@ -12,6 +14,10 @@ import (
 // maxBackfill bounds how many of the most recent content datasets are downloaded
 // on the first poll of a session to seed the merged map.
 const maxBackfill = 8
+
+// updateTimeout bounds a single update, so that waiting for the portal's rate
+// limit doesn't stall the site loop. Remaining datasets follow on the next poll.
+var updateTimeout = 10 * time.Second
 
 // store holds the merged dataset state for all vehicles of a single portal
 // account consisting of username and brand
@@ -73,21 +79,26 @@ func (s *store) state(vin string) *vehicleState {
 // merged and merges them into the vehicle's map oldest to newest. It returns the
 // newest dataset's delivery time (used to schedule the next poll).
 // On first poll latest maxBackfill content datasets are downloaded.
+// If updateTimeout expires after some datasets were merged, api.ErrMustRetry is
+// returned and the next update continues from there.
 func (s *store) update(vin string) (time.Time, error) {
 	v := s.state(vin)
 
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
+	ctx, cancel := context.WithTimeout(context.Background(), updateTimeout)
+	defer cancel()
+
 	if v.identifier == "" {
-		id, err := s.api.identifier(vin)
+		id, err := s.api.identifier(ctx, vin)
 		if err != nil {
 			return time.Time{}, err
 		}
 		v.identifier = id
 	}
 
-	list, err := s.api.datasets(vin, v.identifier)
+	list, err := s.api.datasets(ctx, vin, v.identifier)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -106,8 +117,14 @@ func (s *store) update(vin string) (time.Time, error) {
 	// arrives
 	initial := v.after.IsZero()
 
-	for _, d := range pending(content, v.after) {
-		b, err := s.api.download(vin, v.identifier, d.Name)
+	for i, d := range pending(content, v.after) {
+		b, err := s.api.download(ctx, vin, v.identifier, d.Name)
+		if i > 0 && errors.Is(err, context.DeadlineExceeded) {
+			if initial {
+				logData(s.api.log, v.data)
+			}
+			return time.Time{}, api.ErrMustRetry
+		}
 		if err != nil {
 			return newest, err
 		}

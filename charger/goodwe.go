@@ -27,6 +27,7 @@ import (
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -71,24 +72,18 @@ func init() {
 
 // NewGoodWeFromConfig creates a GoodWe wallbox charger from generic config.
 func NewGoodWeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	cc := struct {
-		modbus.TcpSettings `mapstructure:",squash"`
-	}{
-		TcpSettings: modbus.TcpSettings{ID: 247},
-	}
+	cc := modbus.TcpSettings{ID: 247}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewGoodWe(ctx, cc.URI, cc.ID)
+	return NewGoodWe(ctx, cc)
 }
 
 // NewGoodWe creates a GoodWe wallbox charger.
-func NewGoodWe(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
-	uri = util.DefaultPort(uri, 502)
-
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewGoodWe(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -157,11 +152,11 @@ func NewGoodWe(ctx context.Context, uri string, slaveID uint8) (api.Charger, err
 
 // calcPower converts a per-phase current target into the wallbox's 0.1 kW power setpoint.
 // The protocol exposes only a total power register; how the wallbox converts that back into
-// a per-phase current limit is unspecified — it may assume a fixed nominal voltage (e.g. 230 V)
-// or use its own live voltage measurement. 230 V is used here as a best-effort approximation;
+// a per-phase current limit is unspecified: it may assume a fixed nominal voltage (e.g. 230 V)
+// or use its own live voltage measurement. The nominal grid voltage is used here as a best-effort approximation;
 // actual delivered current may deviate accordingly until verified on hardware.
 func (wb *GoodWe) calcPower(current float64, phases int) uint16 {
-	return uint16(min(max(230*float64(phases)*current, 1400), float64(wb.maxPower)) / 100) // 0.1 kW
+	return uint16(min(max(grid.CurrentToPower(current, phases), 1400), float64(wb.maxPower)) / 100) // 0.1 kW
 }
 
 // Status implements api.ChargeState
@@ -276,12 +271,12 @@ func (wb *GoodWe) phases1p3p(phases int) error {
 var _ api.Identifier = (*GoodWe)(nil)
 
 // Identify implements api.Identifier (RFID UID, 14-byte NUL-padded ASCII).
-func (wb *GoodWe) Identify() (string, error) {
+func (wb *GoodWe) Identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(goodweRegRfid, 7)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return bytesAsString(bytes.Trim(b, "\x00")), nil
+	return []string{bytesAsString(bytes.Trim(b, "\x00"))}, nil
 }
 
 var _ loadpoint.Controller = (*GoodWe)(nil)

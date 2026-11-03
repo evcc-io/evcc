@@ -6,7 +6,7 @@ Optimizer uses mixed integer linear programming (MILP) to minize a cost function
 - solar forecast
 - base load (aka home) energy demand
 - end of forecast commercial value
-- strategy- either "charge before export" (charge loads as soon as possible) or "attenuate grid peaks"
+- strategy- either "charge before export" (charge loads as soon as possible) or attenuating grid peaks on the demand side, the feed-in side or both
 - home battery or loadpoint/vehicle...
   - capacity, soc and charge goals
   - charge/discharge power limits and efficiency
@@ -26,7 +26,15 @@ TODO
 
 ### Base load energy demand
 
-Collected 15min energy profile averaged over the last 30 days.
+Collected 15min energy profile over the last 4 weeks, averaged per slot. A per-slot percentile (e.g. 50 = median, robust against a few heavy days) can be configured via `/api/profilepercentile` instead.
+
+### Measured value blending
+
+The solar forecast and the base load profile are anchored to the current situation
+using the last completed 15min metrics slot, decaying linearly over 4 slots:
+
+- base load: the measured home consumption replaces the first slot and decays into the profile
+- solar: the scale factor measured production/forecasted production is applied to the first slot and decays towards 1
 
 ### End of forecast commercial value
 
@@ -39,3 +47,7 @@ Use minimum of energy consumption cost.
 - home battery or loadpoint/vehicle...
   - capacity, soc and charge goals
   - charge/discharge power limits and efficiency
+
+Without vehicle capacity or soc a configured session energy limit is modelled instead:
+state is the session's charged energy, goal is the limit. Loadpoints with neither are
+not modelled at all- their power is added to the base load.

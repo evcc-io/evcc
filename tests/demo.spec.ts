@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { expectModalHidden, expectModalVisible, openMoreMenu } from "./utils";
+import { expectModalVisible, openMoreMenu } from "./utils";
 import { ChildProcess } from "child_process";
 
 test.use({ baseURL: baseUrl() });
@@ -8,7 +8,7 @@ test.use({ baseURL: baseUrl() });
 let instance: ChildProcess | undefined;
 
 test.beforeAll(async () => {
-  instance = await start(undefined, undefined, "--demo");
+  instance = await start(undefined, undefined, ["--demo"]);
 });
 test.afterAll(async () => {
   // force quit by instance, shutdown endpoint disabled
@@ -21,17 +21,18 @@ test.beforeEach(async ({ page }) => {
 
 test.describe("demo mode", async () => {
   test("no admin password prompt", async ({ page }) => {
-    await expectModalHidden(page.getByTestId("password-setup-modal"));
+    await expect(page.getByTestId("onboarding-modal")).toHaveCount(0);
   });
 
   test("site title", async ({ page }) => {
     await expect(page.getByRole("heading", { name: "Demo Mode" })).toBeVisible();
   });
 
-  test("two loadpoints", async ({ page }) => {
-    await expect(page.getByTestId("loadpoint")).toHaveCount(2);
+  test("three loadpoints", async ({ page }) => {
+    await expect(page.getByTestId("loadpoint")).toHaveCount(3);
     await expect(page.getByTestId("loadpoint").nth(0)).toContainText("Carport");
     await expect(page.getByTestId("loadpoint").nth(1)).toContainText("Garage");
+    await expect(page.getByTestId("loadpoint").nth(2)).toContainText("Heat pump");
   });
 
   test("auth is locked", async ({ page }) => {

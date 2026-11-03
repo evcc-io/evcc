@@ -3,7 +3,6 @@ package cardata
 import (
 	"context"
 	"fmt"
-	"maps"
 	"slices"
 	"strings"
 	"sync"
@@ -34,7 +33,7 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.TokenSource, clientID, vin string, cache time.Duration) *Provider {
+func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.TokenSource, mqtt *MqttConnector, vin string, cache time.Duration) *Provider {
 	v := &Provider{
 		log:       log,
 		api:       api,
@@ -45,24 +44,39 @@ func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.Toke
 		streaming: make(map[string]StreamingData),
 	}
 
-	mqtt := NewMqttConnector(context.Background(), log, clientID, ts)
 	recvC := mqtt.Subscribe(vin)
 
 	go func() {
 		<-ctx.Done()
-		mqtt.Unsubscribe(vin)
+		mqtt.Unsubscribe(vin, recvC)
 	}()
 
 	go func() {
 		for msg := range recvC {
 			v.mu.Lock()
-			maps.Copy(v.streaming, msg.Data)
-			v.updated = time.Now()
+			// a delayed or redelivered message must not overwrite newer data, data without a time counts as new
+			for key, data := range msg.Data {
+				if cur, ok := v.streaming[key]; !ok || data.TimeStamp.IsZero() || !data.TimeStamp.Before(cur.TimeStamp) {
+					v.streaming[key] = data
+				}
+			}
+			// an old message does not postpone the rest refresh past its own age
+			if ts := streamTime(msg.TimeStamp); ts.After(v.updated) {
+				v.updated = ts
+			}
 			v.mu.Unlock()
 		}
 	}()
 
 	return v
+}
+
+// streamTime is the message time, capped at now against clock skew. Messages without one count as new
+func streamTime(ts time.Time) time.Time {
+	if now := time.Now(); ts.IsZero() || ts.After(now) {
+		return now
+	}
+	return ts
 }
 
 func (v *Provider) findOrCreateContainer() (string, error) {
@@ -71,19 +85,36 @@ func (v *Provider) findOrCreateContainer() (string, error) {
 		return "", err
 	}
 
+	// obsolete containers keep streaming, resulting in duplicate messages
+	defer v.deleteObsoleteContainers(containers)
+
 	if i := slices.IndexFunc(containers, func(c Container) bool {
-		return c.Name == "evcc.io" && c.Purpose == requiredVersion
+		return c.Name == containerName && c.Purpose == requiredVersion
 	}); i >= 0 {
 		return containers[i].ContainerId, nil
 	}
 
 	res, err := v.api.CreateContainer(CreateContainer{
-		Name:                 "evcc.io",
+		Name:                 containerName,
 		Purpose:              requiredVersion,
 		TechnicalDescriptors: requiredKeys,
 	})
 
 	return res.ContainerId, err
+}
+
+func (v *Provider) deleteObsoleteContainers(containers []Container) {
+	for _, c := range containers {
+		if c.Name != containerName || c.Purpose == requiredVersion {
+			continue
+		}
+
+		v.log.DEBUG.Printf("deleting obsolete container %s (%s)", c.ContainerId, c.Purpose)
+
+		if err := v.api.DeleteContainer(c.ContainerId); err != nil {
+			v.log.WARN.Printf("delete container %s: %v", c.ContainerId, err)
+		}
+	}
 }
 
 func (v *Provider) setupContainer() error {
@@ -115,17 +146,17 @@ func (v *Provider) any(key string) (any, error) {
 
 	_, tokenErr := v.ts.Token()
 
-	switch {
-	case tokenErr == nil && v.updated.IsZero():
-		// this will only happen once
-		if err := v.setupContainer(); err != nil {
-			v.log.WARN.Println(err)
+	if tokenErr == nil && (v.updated.IsZero() || time.Since(v.updated) > v.cache) {
+		if v.container == "" {
+			if err := v.setupContainer(); err != nil {
+				v.log.WARN.Println(err)
+			}
 		}
-		fallthrough
 
-	case tokenErr == nil && time.Since(v.updated) > v.cache && v.container != "":
-		if err := v.updateContainerData(); err != nil {
-			v.log.WARN.Println(err)
+		if v.container != "" {
+			if err := v.updateContainerData(); err != nil {
+				v.log.WARN.Println(err)
+			}
 		}
 		v.updated = time.Now()
 	}
@@ -141,13 +172,13 @@ func (v *Provider) any(key string) (any, error) {
 	return nil, api.ErrNotAvailable
 }
 
-func isNilOrEmtpy(val any) bool {
+func isNilOrEmpty(val any) bool {
 	return val == nil || val == ""
 }
 
 func (v *Provider) String(key string) (string, error) {
 	res, err := v.any(key)
-	if err != nil || isNilOrEmtpy(res) {
+	if err != nil || isNilOrEmpty(res) {
 		return "", api.ErrNotAvailable
 	}
 
@@ -156,7 +187,7 @@ func (v *Provider) String(key string) (string, error) {
 
 func (v *Provider) Int(key string) (int64, error) {
 	res, err := v.any(key)
-	if err != nil || isNilOrEmtpy(res) {
+	if err != nil || isNilOrEmpty(res) {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -165,7 +196,7 @@ func (v *Provider) Int(key string) (int64, error) {
 
 func (v *Provider) Float(key string) (float64, error) {
 	res, err := v.any(key)
-	if err != nil || isNilOrEmtpy(res) {
+	if err != nil || isNilOrEmpty(res) {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -186,22 +217,23 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	port, err := v.String("vehicle.body.chargingPort.status")
-	if err != nil {
-		return api.StatusNone, err
-	}
-
-	status := api.StatusA // disconnected
-	if port == "CONNECTED" {
-		status = api.StatusB
-	}
-
 	// evaluate status first, since it's usually available through
 	// mqtt, while hvStatus might only be available through rest
 	// (https://github.com/evcc-io/evcc/pull/26235)
 	cs, err := v.String("vehicle.drivetrain.electricEngine.charging.status")
 	if err != nil {
-		cs, err = v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
+		cs, _ = v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
+	}
+
+	if slices.Contains([]string{
+		"INITIALIZATION",         // vehicle.drivetrain.electricEngine.charging.status
+		"CHARGINGPAUSED",         // vehicle.drivetrain.electricEngine.charging.status
+		"CHARGINGENDED",          // vehicle.drivetrain.electricEngine.charging.status
+		"WAITING_FOR_CHARGING",   // vehicle.drivetrain.electricEngine.charging.hvStatus
+		"FINISHED_FULLY_CHARGED", // vehicle.drivetrain.electricEngine.charging.hvStatus
+		"FINISHED_NOT_FULL",      // vehicle.drivetrain.electricEngine.charging.hvStatus
+	}, cs) {
+		return api.StatusB, nil
 	}
 
 	if slices.Contains([]string{
@@ -211,18 +243,20 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return api.StatusC, nil
 	}
 
-	return status, err
-}
-
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.Int("vehicle.drivetrain.electricEngine.charging.timeRemaining")
+	port, err := v.String("vehicle.body.chargingPort.status")
 	if err != nil {
-		return time.Time{}, err
+		port, err = v.String("vehicle.body.chargingPort.combinedStatus")
+		if err != nil {
+			return api.StatusNone, err
+		}
 	}
-	return time.Now().Add(time.Duration(res) * time.Minute), nil
+
+	status := api.StatusA // disconnected
+	if port == "CONNECTED" {
+		status = api.StatusB
+	}
+
+	return status, err
 }
 
 var _ api.VehicleRange = (*Provider)(nil)

@@ -1,0 +1,26 @@
+template: ocpp-rheidon
+products:
+  - brand: Rheidon
+    description:
+      generic: PC200 Pro
+capabilities: ["mA", "dim"]
+requirements:
+  description:
+    de: |
+      Firmware ab 2.1.7.2.1.9 erforderlich.
+      In der App unter „Externe Verwaltung“ den Schalter „Externe Steuerung“ aktivieren und als Adresse `ws://<evcc-host>:8887/<stationid>` eintragen.
+    en: |
+      Requires firmware 2.1.7.2.1.9 or later.
+      In the app under "External management", enable "External control" and enter `ws://<evcc-host>:8887/<stationid>` as address.
+  evcc: ["sponsorship", "skiptest"]
+caveats:
+  - description:
+      de: Die Box meldet für L1–L3 immer identische Ströme. Bei einphasigem Betrieb (Schuko-Adapter) die Phasen im Ladepunkt fest auf 1 einstellen.
+      en: The charger reports identical currents for L1–L3. For single-phase operation (Schuko adapter), set the loadpoint phases to 1.
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}
+  {{- if not .remotestart }}
+  remotestart: true # force remotestart
+  {{- end }}

@@ -2,7 +2,7 @@ package porsche
 
 import (
 	"fmt"
-	"net/http"
+	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -10,23 +10,12 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const (
-	ApiURI = "https://api.porsche.com"
-
-	PairingComplete  = "PAIRINGCOMPLETE"
-	PairingInProcess = "INPROCESS"
-)
-
-func IsPaired(status string) bool {
-	return status == PairingComplete || status == PairingInProcess
-}
-
-// API is an api.Vehicle implementation for Porsche PHEV cars
+// API is the Porsche Connect (PPA) backend client.
 type API struct {
 	*request.Helper
 }
 
-// NewAPI creates a new vehicle
+// NewAPI creates a new Porsche Connect API client authenticated by identity.
 func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
@@ -38,47 +27,26 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 			Base:   v.Client.Transport,
 		},
 		Decorator: transport.DecorateHeaders(map[string]string{
-			"apikey": OAuth2Config.ClientID,
+			"X-Client-ID": XClientID,
 		}),
 	}
 
 	return v
 }
 
-// Vehicles implements the vehicle list response
+// Vehicles returns the list of vehicles on the account.
 func (v *API) Vehicles() ([]Vehicle, error) {
 	var res []Vehicle
-	uri := fmt.Sprintf("%s/core/api/v3/de/de_DE/vehicles", ApiURI)
+	uri := ApiURI + "/connect/v1/vehicles"
 	err := v.GetJSON(uri, &res)
 	return res, err
 }
 
-// PairingStatus implements the vehicle pairing status response
-func (v *API) PairingStatus(vin string) (VehiclePairingResponse, error) {
-	var res VehiclePairingResponse
-	uri := fmt.Sprintf("%s/core/api/v3/de/de_DE/vehicles/%s/pairing", ApiURI, vin)
-	err := v.GetJSON(uri, &res)
-	return res, err
-}
-
-// Status implements the vehicle status response
+// Status returns the stored measurement overview for the given vehicle.
 func (v *API) Status(vin string) (StatusResponse, error) {
 	var res StatusResponse
-	uri := fmt.Sprintf("%s/vehicle-data/de/de_DE/status/%s", ApiURI, vin)
+	mf := "mf=" + strings.Join(Measurements, "&mf=")
+	uri := fmt.Sprintf("%s/connect/v1/vehicles/%s?%s", ApiURI, vin, mf)
 	err := v.GetJSON(uri, &res)
 	return res, err
-}
-
-// WakeUp tries to wakeup the vehicle by requesting the current vehicle overview
-func (v *API) WakeUp(vin string) error {
-	uri := fmt.Sprintf("%s/service-vehicle/de/de_DE/vehicle-data/%s/current/request", ApiURI, vin)
-	req, err := request.New(http.MethodPost, uri, nil, request.AcceptJSON)
-	if err != nil {
-		return err
-	}
-	resp, err := v.Do(req)
-	if err == nil {
-		resp.Body.Close()
-	}
-	return err
 }

@@ -1,10 +1,81 @@
 package modbus
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"sync/atomic"
 	"testing"
+	"time"
 
+	gridx "github.com/grid-x/modbus"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/volkszaehler/mbmd/meters"
 )
+
+// TestSharedSettings ensures the largest delay and timeout wins for all
+// connections sharing the same physical connection
+func TestSharedSettings(t *testing.T) {
+	ctx := t.Context()
+	uri := "localhost:15020"
+
+	c1, err := Settings{URI: uri, ID: 1, Delay: 2 * time.Second, Timeout: time.Second}.Connection(ctx)
+	require.NoError(t, err)
+
+	c2, err := Settings{URI: uri, ID: 2, Delay: time.Second, Timeout: 3 * time.Second}.Connection(ctx)
+	require.NoError(t, err)
+
+	// unset settings don't reset the shared values
+	c3, err := Settings{URI: uri, ID: 3}.Connection(ctx)
+	require.NoError(t, err)
+
+	require.Same(t, c1.physical, c2.physical)
+	require.Same(t, c1.physical, c3.physical)
+	require.Same(t, c1.physical, c1.Clone(4).physical)
+
+	for _, c := range []*Connection{c1, c2, c3} {
+		require.Equal(t, 2*time.Second, c.physical.getDelay())
+		require.Equal(t, 3*time.Second, c.physical.timeout)
+	}
+
+	// timeout has been applied to the physical connection
+	require.Equal(t, 3*time.Second, c1.physical.Connection.Timeout(3*time.Second))
+}
+
+type closeCounter struct {
+	meters.Connection
+	closed atomic.Int32
+}
+
+func (c *closeCounter) Close() {
+	c.closed.Add(1)
+	c.Connection.Close()
+}
+
+func TestSharedConnectionRelease(t *testing.T) {
+	uri := "localhost:15021"
+	conn := &closeCounter{Connection: meters.NewTCP(uri)}
+
+	ctx1, cancel1 := context.WithCancel(t.Context())
+	ctx2, cancel2 := context.WithCancel(t.Context())
+
+	_, err := registeredConnection(ctx1, uri, Tcp, conn)
+	require.NoError(t, err)
+
+	_, err = registeredConnection(ctx2, uri, Tcp, conn)
+	require.NoError(t, err)
+
+	cancel1()
+	require.Never(t, func() bool { return conn.closed.Load() > 0 }, 50*time.Millisecond, time.Millisecond)
+
+	cancel2()
+	require.Eventually(t, func() bool { return conn.closed.Load() == 1 }, time.Second, time.Millisecond)
+
+	mu.Lock()
+	defer mu.Unlock()
+	require.NotContains(t, connections, uri)
+}
 
 func TestParsePoint(t *testing.T) {
 	tc := []struct {
@@ -39,4 +110,10 @@ func TestSettingsProtocol(t *testing.T) {
 	for _, tc := range tc {
 		require.Equal(t, tc.res, tc.Protocol(), tc)
 	}
+}
+
+func TestIsException(t *testing.T) {
+	assert.True(t, IsException(fmt.Errorf("wrapped: %w", &gridx.Error{FunctionCode: 3, ExceptionCode: 2})))
+	assert.False(t, IsException(errors.New("timeout")))
+	assert.False(t, IsException(nil))
 }

@@ -7,11 +7,15 @@ const restart = reactive({
 });
 
 export async function performRestart() {
+  restart.restarting = true;
   try {
     await api.post("/system/shutdown");
-    restart.restarting = true;
-  } catch (e) {
-    alert(`Unable to restart server. ${e}`);
+  } catch (e: any) {
+    // connection may drop before response
+    if (e.response?.status < 500) {
+      restart.restarting = false;
+      alert(`Unable to restart server. ${e}`);
+    }
   }
 }
 

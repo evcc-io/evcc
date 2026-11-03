@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/evcc-io/evcc/server/db/cache"
+	"github.com/evcc-io/evcc/db/cache"
 	"github.com/spf13/cobra"
 )
 

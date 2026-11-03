@@ -1,0 +1,93 @@
+template: chint-ech-hybrid
+
+products:
+  - brand: CHINT
+    description:
+      generic: ECH10K-TH-EU Hybrid Inverter
+
+requirements:
+  description:
+    de: Getestet mit CHINT ECH10K-TH-EU und CPS ECD500 Batteriesystem über die EMS-RS485-Schnittstelle.
+    en: Tested with CHINT ECH10K-TH-EU and CPS ECD500 battery system via the EMS RS485 interface.
+
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 9600
+    id: 1
+
+render: |
+  type: custom
+
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      type: input
+      address: 1792 # 0x0700 Total grid power, 1 W
+      decode: int32
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 2095 # 0x082F L1 current, 0.01 A
+        decode: int16
+      scale: 0.01
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 2096 # 0x0830 L2 current, 0.01 A
+        decode: int16
+      scale: 0.01
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 2097 # 0x0831 L3 current, 0.01 A
+        decode: int16
+      scale: 0.01
+  {{- end }}
+
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      type: input
+      address: 1801 # 0x0709 PV power, 1 W
+      decode: uint16
+  {{- end }}
+
+  {{- if eq .usage "battery" }}
+  power:
+    source: calc
+    mul:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 1536 # 0x0600 Battery voltage, 0.1 V
+        decode: uint16
+      scale: 0.1
+
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 1537 # 0x0601 Battery current, 0.1 A
+        decode: int16
+      scale: 0.1
+
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      type: input
+      address: 1539 # 0x0603 Battery SOC, %
+      decode: uint16
+  {{- end }}

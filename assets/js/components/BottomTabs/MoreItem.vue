@@ -11,15 +11,16 @@
 		<template #menu>
 			<MoreMenu
 				:open="open"
+				:vehicles="vehicles"
 				:auth-providers="authProviders"
 				:sponsor="sponsor"
 				:fatal="fatal"
 				:experimental="experimental"
 				:auth-disabled="authDisabled"
-				:evopt="evopt"
+				:optimizer="optimizer"
 				:installed="installed"
-				:commit="commit"
 				:available-version="availableVersion"
+				:custom-brand="customBrand"
 				@close="open = false"
 			/>
 		</template>
@@ -34,22 +35,23 @@ import MoreMenu from "./MoreMenu.vue";
 import { isUserConfigError } from "@/utils/fatal";
 import { isNewVersionAvailable, isNewVersionUnacknowledged } from "@/utils/version";
 import settings from "@/settings";
-import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
+import type { FatalError, Sponsor, AuthProviders, Vehicle } from "@/types/evcc";
 
 export default defineComponent({
 	name: "MoreItem",
 	components: { Item, MoreIcon, MoreMenu },
 	props: {
 		active: Boolean,
+		vehicles: { type: Object as PropType<Record<string, Vehicle>>, default: () => ({}) },
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		experimental: Boolean,
 		authDisabled: Boolean,
-		evopt: { type: Object as PropType<EvOpt>, required: false },
+		optimizer: Boolean,
 		installed: String,
-		commit: String,
 		availableVersion: String,
+		customBrand: String,
 	},
 	data() {
 		return { open: false };
@@ -96,9 +98,21 @@ export default defineComponent({
 			return "bg-darker-green";
 		},
 	},
+	mounted() {
+		document.addEventListener("click", this.closeOnClickOutside, true);
+	},
+	unmounted() {
+		document.removeEventListener("click", this.closeOnClickOutside, true);
+	},
 	methods: {
 		toggleMenu() {
 			this.open = !this.open;
+		},
+		// the tab item wraps both toggle and menu, clicks inside are handled by them
+		closeOnClickOutside(e: MouseEvent) {
+			if (this.open && !this.$el.contains(e.target as Node)) {
+				this.open = false;
+			}
 		},
 	},
 });

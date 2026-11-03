@@ -34,8 +34,8 @@ import (
 )
 
 // https://www.keba.com/en/emobility/service-support/downloads/Downloads
-// https://www.keba.com/download/x/dea7ae6b84/kecontactp30modbustcp_pgen.pdf
-// https://www.keba.com/download/x/4a24e19f80/kecontactp40modbustcp_pgen.pdf
+// https://www.keba.com/download/x/44932c2bc8/kecontactp30modbustcp_pgen.pdf
+// https://www.keba.com/download/x/e9c9ced3ac/kecontactp40modbustcp_pgen.pdf
 
 // Keba is an api.Charger implementation
 type Keba struct {
@@ -47,6 +47,7 @@ type Keba struct {
 	regEnable    uint16
 	energyFactor float64
 	state1p      uint32
+	enabled      bool
 }
 
 const (
@@ -79,6 +80,7 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	cc := struct {
 		embed              `mapstructure:",squash"`
 		modbus.TcpSettings `mapstructure:",squash"`
+		Model              string
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 255,
@@ -89,7 +91,7 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		return nil, err
 	}
 
-	wb, err := NewKeba(ctx, cc.embed, cc.URI, cc.ID)
+	wb, err := NewKeba(ctx, cc.embed, cc.TcpSettings)
 	if err != nil {
 		return nil, err
 	}
@@ -99,17 +101,38 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		return nil, err
 	}
 
-	productCodeStr := fmt.Sprintf("%d", binary.BigEndian.Uint32(b))
+	productCode := binary.BigEndian.Uint32(b)
+	productCodeStr := fmt.Sprintf("%d", productCode)
 
 	var hasEnergyMeter bool
 	var hasRFID bool
 
-	if len(productCodeStr) == 6 && productCodeStr[0] == '3' {
+	isP30 := len(productCodeStr) == 6 && productCodeStr[0] == '3'
+	isP40 := len(productCodeStr) == 7 && productCodeStr[0] == '4'
+
+	if !isP30 && !isP40 {
+		wb.log.WARN.Printf("unknown product code: %d", productCode)
+
+		// some P40 variants (e.g. DKV) report product code 0, use model from template
+		if strings.EqualFold(cc.Model, "p40") {
+			isP40 = true
+			productCodeStr = "4000110" // assume energy meter and RFID
+		}
+	}
+
+	if isP30 {
 		// P30
 		hasEnergyMeter = productCodeStr[4] != '0'
 		hasRFID = productCodeStr[5] == '1'
 		wb.state1p = 0
-	} else if len(productCodeStr) == 7 && productCodeStr[0] == '4' {
+
+		// enable register is write-only, seed from charging state (5: suspended)
+		s, err := wb.getChargingState()
+		if err != nil {
+			return nil, err
+		}
+		wb.enabled = s != 5
+	} else if isP40 {
 		// P40
 		wb.regEnable = kebaRegMaxCurrent
 		hasEnergyMeter = productCodeStr[4] != '0'
@@ -162,8 +185,8 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 }
 
 // NewKeba creates a new charger
-func NewKeba(ctx context.Context, embed embed, uri string, slaveID uint8) (*Keba, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewKeba(ctx context.Context, embed embed, settings modbus.TcpSettings) (*Keba, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -274,13 +297,8 @@ func (wb *Keba) Enabled() (bool, error) {
 		return binary.BigEndian.Uint16(b) != 0, err
 	}
 
-	// P30
-	s, err := wb.getChargingState()
-	if err != nil {
-		return false, err
-	}
-
-	return !(s == 5 || s == 1), nil
+	// P30: charging state 1 also covers "no vehicle", so track enable state locally
+	return verifyEnabled(wb, wb.enabled)
 }
 
 // Enable implements the api.Charger interface
@@ -296,8 +314,17 @@ func (wb *Keba) Enable(enable bool) error {
 		}
 	}
 
-	_, err := wb.conn.WriteSingleRegister(wb.regEnable, u)
-	return err
+	if _, err := wb.conn.WriteSingleRegister(wb.regEnable, u); err != nil {
+		return err
+	}
+	wb.enabled = enable
+
+	// switch back to 1p to avoid the phase switch relay's standby consumption.
+	if !enable && api.HasCap[api.PhaseSwitcher](wb) && api.HasCap[api.PhaseGetter](wb) {
+		return wb.phases1p3p(1)
+	}
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -358,10 +385,10 @@ func (wb *Keba) currents() (float64, float64, float64, error) {
 }
 
 // identify implements the api.Identifier interface
-func (wb *Keba) identify() (string, error) {
+func (wb *Keba) identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(kebaRegRfid, 2)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	id := hex.EncodeToString(b)
@@ -369,7 +396,7 @@ func (wb *Keba) identify() (string, error) {
 		id = ""
 	}
 
-	return id, nil
+	return []string{id}, nil
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface
@@ -379,8 +406,18 @@ func (wb *Keba) phases1p3p(phases int) error {
 		u = 1
 	}
 
-	_, err := wb.conn.WriteSingleRegister(kebaRegTriggerPhase, u)
-	return err
+	if _, err := wb.conn.WriteSingleRegister(kebaRegTriggerPhase, u); err != nil {
+		return err
+	}
+
+	// P30 x-series clears the external enable shortly after a phase toggle, re-apply disable
+	if !wb.enabled {
+		time.Sleep(2 * time.Second)
+		_, err := wb.conn.WriteSingleRegister(wb.regEnable, 0)
+		return err
+	}
+
+	return nil
 }
 
 // getPhases implements the api.PhaseGetter interface
@@ -404,7 +441,13 @@ func (wb *Keba) Diagnose() {
 		fmt.Printf("\tSerial:\t%s\n", strings.TrimLeft(strconv.Itoa(int(binary.BigEndian.Uint32(b))), "0"))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(kebaRegFirmware, 2); err == nil {
-		fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0], b[1], b[2])
+		if wb.regEnable == kebaRegMaxCurrent {
+			// P40: decimal encoded, e.g. 10201 = 1.2.1
+			u := binary.BigEndian.Uint32(b)
+			fmt.Printf("\tFirmware:\t%d.%d.%d\n", u/10000, u/100%100, u%100)
+		} else {
+			fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0], b[1], b[2])
+		}
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(kebaRegProduct, 2); err == nil {
 		fmt.Printf("\tProduct:\t%6d\n", binary.BigEndian.Uint32(b))

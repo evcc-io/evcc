@@ -36,6 +36,8 @@ const (
 	ModbusParamHost     = "host"
 	ModbusParamPort     = "port"
 	ModbusParamRTU      = "rtu"
+	ModbusParamDelay    = "delay"
+	ModbusParamTimeout  = "timeout"
 )
 
 const (
@@ -51,6 +53,7 @@ var (
 	ModbusParams = []string{
 		ModbusParamId, ModbusParamDevice, ModbusParamBaudrate, ModbusParamComset,
 		ModbusParamURI, ModbusParamHost, ModbusParamPort, ModbusParamRTU,
+		ModbusParamDelay, ModbusParamTimeout,
 	}
 
 	ModbusConnectionTypes = []string{
@@ -226,6 +229,8 @@ type Param struct {
 	Usages      []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
 	Type        ParamType    // string representation of the value type, "string" is default
 	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
+	Class       string       `json:",omitempty"` // device class for Type "device", e.g. "charger"
+	Usage       string       `json:",omitempty"` // usage context the referenced device is configured for, e.g. "switch"
 	Service     string       `json:",omitempty"` // defines a service to provide choices
 	Pattern     *Pattern     `json:",omitempty"` // regex pattern and examples for input validation
 
@@ -234,6 +239,8 @@ type Param struct {
 	Comset   string `json:",omitempty"` // device specific default for modbus RS485 comset
 	Port     int    `json:",omitempty"` // device specific default for modbus TCPIP port
 	ID       int    `json:",omitempty"` // device specific default for modbus ID
+	Delay    string `json:",omitempty"` // device specific default for modbus delay
+	Timeout  string `json:",omitempty"` // device specific default for modbus timeout
 }
 
 // DefaultValue returns a default or example value depending on the renderMode
@@ -321,8 +328,11 @@ func (p Param) MarshalJSON() ([]byte, error) {
 
 // Product contains naming information about a product a template supports
 type Product struct {
-	Brand       string       // product brand
-	Description TextLanguage `json:",omitempty"` // product name
+	Brand        string       // product brand
+	Description  TextLanguage // product name
+	Capabilities []Capability `json:",omitempty"` // appended to template-level capabilities
+	Caveats      []Caveat     `json:",omitempty"` // appended to template-level caveats
+	Link         string       `json:",omitempty"` // integration provider link, overrides template-level link
 }
 
 // Title returns the product title in the given language

@@ -5,6 +5,7 @@ package plugin
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/evcc-io/evcc/util"
@@ -15,10 +16,63 @@ func init() {
 	registry.AddCtx("gpio", NewGpioPluginFromConfig)
 }
 
+// sharedLine wraps a gpiocdev.Line shared by all gpio plugin instances requesting the
+// same chip+pin, since the kernel only grants one exclusive line request per GPIO offset.
+type sharedLine struct {
+	mu       sync.Mutex
+	line     *gpiocdev.Line
+	isOutput bool
+}
+
+var (
+	linesMu sync.Mutex
+	lines   = make(map[string]*sharedLine)
+)
+
+// acquireLine returns the shared line for chip+pin, requesting it if not yet open.
+// An input line is reconfigured to output on demand, since output values can still be read back.
+func acquireLine(chip string, pin int, output bool) (*sharedLine, error) {
+	linesMu.Lock()
+	defer linesMu.Unlock()
+
+	key := chip + ":" + strconv.Itoa(pin)
+
+	if sl, ok := lines[key]; ok {
+		if output && !sl.isOutput {
+			sl.mu.Lock()
+			err := sl.line.Reconfigure(gpiocdev.AsOutput(0))
+			if err == nil {
+				sl.isOutput = true
+			}
+			sl.mu.Unlock()
+			if err != nil {
+				return nil, fmt.Errorf("failed to reconfigure GPIO: %w", err)
+			}
+		}
+		return sl, nil
+	}
+
+	var opts []gpiocdev.LineReqOption
+	if output {
+		opts = append(opts, gpiocdev.AsOutput(0))
+	} else {
+		opts = append(opts, gpiocdev.AsInput, gpiocdev.WithPullUp)
+	}
+
+	line, err := gpiocdev.RequestLine(chip, pin, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open GPIO: %w", err)
+	}
+
+	sl := &sharedLine{line: line, isOutput: output}
+	lines[key] = sl
+
+	return sl, nil
+}
+
 type gpio struct {
-	mu   sync.Mutex
-	typ  GpioType
-	line *gpiocdev.Line
+	typ    GpioType
+	shared *sharedLine
 }
 
 // NewGpioPluginFromConfig creates a GPIO provider
@@ -35,24 +89,20 @@ func NewGpioPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 		return nil, err
 	}
 
-	var opts []gpiocdev.LineReqOption
 	switch cc.Function {
-	case GpioTypeRead:
-		opts = append(opts, gpiocdev.AsInput, gpiocdev.WithPullUp)
-	case GpioTypeWrite:
-		opts = append(opts, gpiocdev.AsOutput(0))
+	case GpioTypeRead, GpioTypeWrite:
 	default:
 		return nil, fmt.Errorf("invalid type: %s", cc.Function)
 	}
 
-	line, err := gpiocdev.RequestLine(cc.Chip, cc.Pin, opts...)
+	shared, err := acquireLine(cc.Chip, cc.Pin, cc.Function == GpioTypeWrite)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open GPIO: %w", err)
+		return nil, err
 	}
 
 	return &gpio{
-		typ:  cc.Function,
-		line: line,
+		typ:    cc.Function,
+		shared: shared,
 	}, nil
 }
 
@@ -65,10 +115,10 @@ func (p *gpio) BoolGetter() (func() (bool, error), error) {
 	}
 
 	return func() (bool, error) {
-		p.mu.Lock()
-		defer p.mu.Unlock()
+		p.shared.mu.Lock()
+		defer p.shared.mu.Unlock()
 
-		val, err := p.line.Value()
+		val, err := p.shared.line.Value()
 		if err != nil {
 			return false, fmt.Errorf("failed to read GPIO: %w", err)
 		}
@@ -86,15 +136,15 @@ func (p *gpio) BoolSetter(_ string) (func(bool) error, error) {
 	}
 
 	return func(b bool) error {
-		p.mu.Lock()
-		defer p.mu.Unlock()
+		p.shared.mu.Lock()
+		defer p.shared.mu.Unlock()
 
 		val := 0
 		if b {
 			val = 1
 		}
 
-		if err := p.line.SetValue(val); err != nil {
+		if err := p.shared.line.SetValue(val); err != nil {
 			return fmt.Errorf("failed to write GPIO: %w", err)
 		}
 

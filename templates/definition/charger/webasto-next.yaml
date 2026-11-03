@@ -12,6 +12,8 @@ requirements:
     de: Modus "HEMS activated" muss aktiviert sein. RFID-Tags können durch evcc nur gelesen werden.
     en: Mode "HEMS activated" must be enabled. RFID tags can only be read by evcc.
   evcc: ["sponsorship"]
+discovery:
+  mac: ["6CAF15"]
 params:
   - name: host
   - name: port

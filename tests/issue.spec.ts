@@ -117,7 +117,11 @@ test.describe("issue creation", () => {
     await logsItem.getByRole("button", { name: "show details" }).click();
     const logsModal = page.getByTestId("issueLogs-modal");
     await expectModalVisible(logsModal);
-    await expect(logsModal.getByRole("textbox")).toHaveValue(/DEBUG/);
+    const logsTextbox = logsModal.getByRole("textbox");
+    await expect(logsTextbox).toHaveValue(/DEBUG/);
+    // log line length varies, keep body below github url limit for single-step check
+    await logsModal.getByRole("spinbutton").fill("5");
+    await expect.poll(async () => (await logsTextbox.inputValue()).split("\n").length).toBe(5);
     await logsModal.getByRole("button", { name: "Close" }).first().click();
     await expectModalHidden(logsModal);
 
@@ -186,5 +190,21 @@ test.describe("issue creation", () => {
     expect(href).toContain("carport_pv"); // from evcc.yaml
     expect(href).toContain("DEBUG"); // from logs
     expect(href).toContain("MyFancyState"); // from state
+  });
+
+  test("copy section", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read"]);
+    await start(REDACT_CONFIG);
+    await page.goto("/#/issue");
+
+    const yamlItem = page.getByTestId("issueYamlConfig-additional-item");
+    await yamlItem.getByRole("button", { name: "copy", exact: true }).click();
+    await expect(yamlItem.getByRole("button", { name: "copied!" })).toBeVisible();
+
+    const clipboard = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clipboard).toContain("## Configuration (YAML)");
+    expect(clipboard).toContain("```yaml");
+    expect(clipboard).toContain("site:");
+    expect(clipboard).toContain("sponsortoken: *****");
   });
 });

@@ -1,6 +1,7 @@
 package eebus
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -18,9 +19,13 @@ import (
 
 const remotePort = 9001
 
-func TestEEBus(t *testing.T) {
+func TestMain(m *testing.M) {
+	// Configure logging before service goroutines can access the shared loggers.
 	util.LogLevel("error", map[string]string{"eebus": "trace"})
+	os.Exit(m.Run())
+}
 
+func TestEEBus(t *testing.T) {
 	certificate, err := cert.CreateCertificate("Demo", "Demo", "DE", "Demo-Server-01")
 	require.NoError(t, err, "certificate")
 
@@ -47,10 +52,9 @@ func TestEEBus(t *testing.T) {
 	eventC := make(chan api.EventType, 16)
 	box.remoteEventC = eventC
 
-	hems, err := hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, nil, time.Second)
+	// no hems.Run(): the run loop applies limits via the nil site and is not needed here
+	_, err = hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, nil, time.Second)
 	require.NoError(t, err, "hems")
-
-	go hems.Run()
 
 	// wait for DataUpdateLimit which signals that limit descriptions and data are available
 	require.Eventually(t, func() bool {
@@ -63,7 +67,7 @@ func TestEEBus(t *testing.T) {
 	_, err = box.uclpc.WriteConsumptionLimit(srvEntity, ucapi.LoadLimit{
 		IsActive: true,
 		Value:    1,
-	}, func(result model.ResultDataType) {
+	}, func(result model.ResultDataType, _ model.MsgCounterType) {
 		t.Logf("lpc result: %v", result)
 	})
 

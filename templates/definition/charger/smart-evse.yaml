@@ -1,17 +1,17 @@
 template: smart-evse
 products:
-  - brand: Stegen
+  - brand: Stegen Electronics
     description:
-      generic: Smart Evse v3 / v3.5
+      generic: SmartEVSE
 capabilities: ["mA", "rfid", "1p3p", "dim"]
 requirements:
   description:
     de: |
-      Anbindung über die REST API der Smart Evse Firmware (FW >= 3.6.0).
-      evcc setzt das Gerät in den konfigurierten Modus und steuert den Ladestrom über `override_current`.
+      Anbindung über die REST API mit Firmware >= 3.11.2.
+      Das Gerät wird in den konfigurierten Modus versetzt und steuert den Ladestrom über `override_current`.
     en: |
-      Uses the REST API of the Smart Evse firmware (FW >= 3.6.0).
-      evcc puts the device into the configured mode and controls the charge current via `override_current`.
+      Uses the REST API, requires firmware >= 3.11.2.
+      The device is put into the configured mode and controls the charge current via `override_current`.
 params:
   - name: host
   - name: cache

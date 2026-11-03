@@ -48,11 +48,11 @@ func NewHoymilesDTUModbusTcpFromConfig(ctx context.Context, other map[string]any
 		return nil, err
 	}
 
-	return newHoymilesDTUModbusTCP(ctx, cc.URI, cc.ID, cc.pvMaxACPower.Decorator(), cc.Cache)
+	return newHoymilesDTUModbusTCP(ctx, cc.TcpSettings, cc.pvMaxACPower.Decorator(), cc.Cache)
 }
 
-func newHoymilesDTUModbusTCP(ctx context.Context, uri string, id uint8, maxACPower func() float64, cache time.Duration) (api.Meter, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func newHoymilesDTUModbusTCP(ctx context.Context, settings modbus.TcpSettings, maxACPower func() float64, cache time.Duration) (api.Meter, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

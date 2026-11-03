@@ -12,6 +12,9 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/metrics"
+	"github.com/evcc-io/evcc/util/export"
+	"github.com/evcc-io/evcc/util/export/csv"
+	"github.com/evcc-io/evcc/util/export/xlsx"
 	"github.com/spf13/cobra"
 )
 
@@ -34,6 +37,8 @@ func init() {
 	metricsDataCmd.Flags().String("aggregate", "hour", "Aggregation interval: 15m, hour, day or month")
 	metricsDataCmd.Flags().String("group", "", "Limit output to an entity group")
 	metricsDataCmd.Flags().Bool("csv", false, "Output CSV instead of a table")
+	metricsDataCmd.Flags().Bool("xlsx", false, "Output XLSX instead of a table")
+	metricsDataCmd.MarkFlagsMutuallyExclusive("csv", "xlsx")
 	metricsDataCmd.MarkFlagsMutuallyExclusive("range", "from")
 	metricsDataCmd.MarkFlagsMutuallyExclusive("range", "to")
 }
@@ -73,8 +78,10 @@ func runMetricsData(cmd *cobra.Command, args []string) {
 		byEntity[s.Group+"/"+s.Title] = s
 	}
 
-	if asCSV, _ := cmd.Flags().GetBool("csv"); asCSV {
-		var out metrics.SeriesCSV
+	asCSV, _ := cmd.Flags().GetBool("csv")
+	asXLSX, _ := cmd.Flags().GetBool("xlsx")
+	if asCSV || asXLSX {
+		var out metrics.SeriesExport
 		seen := make(map[string]bool, len(selected))
 		for _, e := range selected {
 			key := e.Group + "/" + metricsEntityLabel(e)
@@ -86,7 +93,18 @@ func runMetricsData(cmd *cobra.Command, args []string) {
 				out = append(out, s)
 			}
 		}
-		if err := out.WriteCsv(context.Background(), os.Stdout); err != nil {
+
+		var ww export.RowWriter
+		var err error
+		if asXLSX {
+			ww, err = xlsx.New(context.Background(), os.Stdout)
+		} else {
+			ww, err = csv.New(context.Background(), os.Stdout)
+		}
+		if err != nil {
+			log.FATAL.Fatal(err)
+		}
+		if err := out.Write(ww); err != nil {
 			log.FATAL.Fatal(err)
 		}
 		return

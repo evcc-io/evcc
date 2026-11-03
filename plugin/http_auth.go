@@ -2,7 +2,6 @@ package plugin
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 	"net/http"
 	"strings"
@@ -10,14 +9,8 @@ import (
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/jpfielding/go-http-digest/pkg/digest"
 	"golang.org/x/oauth2"
 )
-
-func init() {
-	// some servers send SHA256 instead of the RFC 7616 compliant SHA-256
-	digest.Algs["SHA256"] = sha256.New
-}
 
 // Auth is the authorization config
 type Auth struct {
@@ -30,7 +23,7 @@ type Auth struct {
 func (p *Auth) Transport(ctx context.Context, log *util.Logger, base http.RoundTripper) (http.RoundTripper, error) {
 	switch strings.ToLower(p.Type) {
 	case "digest":
-		return digest.NewTransport(p.User, p.Password, base), nil
+		return transport.Digest(p.User, p.Password, base), nil
 
 	case "basic":
 		return transport.BasicAuth(p.User, p.Password, base), nil

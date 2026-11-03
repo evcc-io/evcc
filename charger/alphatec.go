@@ -49,24 +49,23 @@ func init() {
 // NewAlphatecFromConfig creates a Alphatec charger from generic config
 func NewAlphatecFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
-		ID: 1,
+		ID:    1,
+		Delay: 20 * time.Millisecond,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewAlphatec(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewAlphatec(ctx, cc)
 }
 
 // NewAlphatec creates Alphatec charger
-func NewAlphatec(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
+func NewAlphatec(ctx context.Context, settings modbus.Settings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	conn.Delay(20 * time.Millisecond)
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired

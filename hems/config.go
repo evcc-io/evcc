@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/config"
+	_ "github.com/evcc-io/evcc/hems/custom"
 	_ "github.com/evcc-io/evcc/hems/eebus"
 	_ "github.com/evcc-io/evcc/hems/fnn"
 	"github.com/evcc-io/evcc/hems/hems"

@@ -30,3 +30,22 @@ func TestMergeMaps(t *testing.T) {
 		"baz": 3,
 	}, target)
 }
+
+func TestMergeMapsEmptyKeepsDefault(t *testing.T) {
+	target := map[string]any{
+		"maxsoc": "100",
+		"minsoc": "",
+	}
+	other := map[string]any{
+		"MaxSoc": "",
+		"minsoc": "",
+		"extra":  "",
+	}
+
+	require.NoError(t, mergeMaps(other, target))
+	require.Equal(t, map[string]any{
+		"maxsoc": "100",
+		"minsoc": "",
+		"extra":  "",
+	}, target)
+}

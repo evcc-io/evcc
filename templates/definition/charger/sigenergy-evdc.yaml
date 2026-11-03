@@ -1,0 +1,18 @@
+template: sigenergy-evdc
+products:
+  - brand: Sigenergy
+    description:
+      generic: EVDC
+capabilities: ["mA", "meter", "dim"]
+requirements:
+  description:
+    de: Modbus TCP muss in der Konfigurations-App mit Installateursrechten aktiviert werden. Die Modbus-ID ist die des Hybrid-Wechselrichters, an dem der EVDC angeschlossen ist. Benötigt aktuelle Firmware (Modbus-Protokoll V2.9).
+    en: Modbus TCP must be enabled in the configuration app with installer rights. The Modbus ID is that of the hybrid inverter the EVDC is attached to. Requires current firmware (Modbus protocol V2.9).
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+render: |
+  type: sigenergy-evdc
+  {{- include "modbus" . }}

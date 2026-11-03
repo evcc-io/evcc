@@ -22,7 +22,12 @@
 				/>
 			</div>
 			<div class="mb-3 d-flex align-items-center">
-				<Mode class="flex-grow-1" v-bind="modeProps" @updated="setTargetMode" />
+				<Mode
+					class="flex-grow-1"
+					v-bind="modeProps"
+					@updated="setTargetMode"
+					@always-charge-updated="setAlwaysCharge"
+				/>
 				<LoadpointSettingsButton
 					:id="id"
 					:class="expandLoadpointHeader ? 'd-lg-none d-xl-block' : ''"
@@ -71,6 +76,14 @@
 				/>
 			</div>
 			<LabelAndValue
+				v-if="integratedDevice"
+				:label="$t('main.loadpoint.todayEnergy')"
+				:value="todayEnergy"
+				:valueFmt="fmtEnergy"
+				align="center"
+			/>
+			<LabelAndValue
+				v-else
 				v-show="socBasedCharging"
 				:label="$t('main.loadpoint.charged')"
 				:value="chargedEnergy"
@@ -90,7 +103,7 @@
 			@remove-vehicle="removeVehicle"
 			@open-loadpoint-settings="openSettingsModal"
 			@batteryboost-updated="setBatteryBoost"
-			@open-modal="(openArrivalTab) => $emit('open-charging-plan-modal', openArrivalTab)"
+			@open-modal="$emit('open-charging-plan-modal')"
 		/>
 	</div>
 </template>
@@ -112,17 +125,19 @@ import SessionInfo from "./SessionInfo.vue";
 import { defineComponent, type PropType } from "vue";
 import type {
 	CHARGE_MODE,
+	ALWAYS_CHARGE,
 	PHASE_ACTION,
 	PV_ACTION,
 	CHARGER_STATUS_REASON,
 	Timeout,
 	Vehicle,
-	Forecast,
+	UiForecast,
 	SMART_COST_TYPE,
 	BATTERY_MODE,
 	LoadpointUi,
+	PlanStrategy,
+	LoadpointSuggestion,
 } from "@/types/evcc";
-import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
 export default defineComponent({
 	name: "Loadpoint",
@@ -143,7 +158,11 @@ export default defineComponent({
 		// main
 		title: String,
 		mode: String as PropType<CHARGE_MODE>,
+		alwaysCharge: String as PropType<ALWAYS_CHARGE>,
+		effectiveMinCurrent: Number,
+		effectiveMaxCurrent: Number,
 		effectiveLimitSoc: Number,
+		effectiveMinSoc: Number,
 		limitEnergy: Number,
 		remoteDisabled: String,
 		remoteDisabledSource: String,
@@ -203,6 +222,9 @@ export default defineComponent({
 		vehicleWelcomeActive: Boolean,
 		chargePower: { type: Number, default: 0 },
 		chargedEnergy: { type: Number, default: 0 },
+		todayEnergy: { type: Number, default: 0 },
+		last24hEnergy: Number,
+		last7dEnergy: Number,
 		chargeRemainingDuration: { type: Number, default: 0 },
 
 		// other information
@@ -229,6 +251,8 @@ export default defineComponent({
 		smartFeedInPriorityAvailable: Boolean,
 		smartFeedInPriorityActive: Boolean,
 		smartFeedInPriorityNextStart: String as PropType<string | null>,
+		optimizerControlled: Boolean,
+		suggestion: Object as PropType<LoadpointSuggestion | null>,
 		tariffGrid: Number,
 		tariffFeedIn: Number,
 		tariffCo2: Number,
@@ -237,7 +261,7 @@ export default defineComponent({
 		fullWidth: Boolean,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
-		forecast: Object as PropType<Forecast>,
+		forecast: Object as PropType<UiForecast>,
 		lastSmartCostLimit: Number,
 		lastSmartFeedInPriorityLimit: Number,
 		vehicleKnown: Boolean,
@@ -286,7 +310,11 @@ export default defineComponent({
 			return this.chargerFeatureSwitchDevice;
 		},
 		phasesProps() {
-			return this.collectProps(Phases);
+			return {
+				...this.collectProps(Phases),
+				maxCurrent: this.effectiveMaxCurrent,
+				phasesConfigured: Math.min(this.phasesConfigured || 3, this.vehicle?.phases || 3),
+			};
 		},
 		modeProps() {
 			return this.collectProps(Mode);
@@ -369,6 +397,9 @@ export default defineComponent({
 		setTargetMode(mode: CHARGE_MODE) {
 			api.post(this.apiPath("mode") + "/" + mode);
 		},
+		setAlwaysCharge(value: ALWAYS_CHARGE) {
+			api.post(this.apiPath("alwayscharge") + "/" + value);
+		},
 		setLimitSoc(soc: number) {
 			api.post(this.apiPath("limitsoc") + "/" + soc);
 		},
@@ -404,6 +435,7 @@ export default defineComponent({
 	border-radius: 2rem;
 	color: var(--evcc-default-text);
 	background: var(--evcc-box);
+	border: 1px solid var(--bs-border-color-translucent);
 }
 
 .details > div {

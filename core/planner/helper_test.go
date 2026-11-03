@@ -1,7 +1,7 @@
 package planner
 
 import (
-	"math/rand"
+	"math/rand/v2"
 	"testing"
 	"time"
 
@@ -21,21 +21,21 @@ func TestSplitPrecondition(t *testing.T) {
 	assert.Equal(t, rr[3:], precond, "precond")
 }
 
-func TestSlotHasSuccessor(t *testing.T) {
-	plan := rates([]float64{20, 60, 10, 80, 40, 90}, time.Now(), time.Hour)
+func TestSlotHasLaterSuccessor(t *testing.T) {
+	clock := clock.NewMock()
+	rr := rates([]float64{1, 2, 3, 4}, clock.Now(), tariff.SlotDuration)
 
-	last := plan[len(plan)-1]
-	rand.Shuffle(len(plan)-1, func(i, j int) {
-		plan[i], plan[j] = plan[j], plan[i]
-	})
+	// single slot
+	require.False(t, SlotHasLaterSuccessor(rr[0], api.Rates{rr[0]}))
 
-	for i := range plan {
-		if plan[i] != last {
-			require.True(t, SlotHasSuccessor(plan[i], plan))
-		}
-	}
+	// adjacent successor
+	require.False(t, SlotHasLaterSuccessor(rr[0], api.Rates{rr[1], rr[0]}))
 
-	require.False(t, SlotHasSuccessor(last, plan))
+	// last slot
+	require.False(t, SlotHasLaterSuccessor(rr[3], api.Rates{rr[3], rr[0]}))
+
+	// later successor
+	require.True(t, SlotHasLaterSuccessor(rr[0], api.Rates{rr[3], rr[0]}))
 }
 
 func TestIsFirst(t *testing.T) {
@@ -103,6 +103,32 @@ func TestSlotAt(t *testing.T) {
 	require.Equal(t, 1.0, SlotAt(now.Add(30*time.Minute), plan).Value)
 	require.Equal(t, 2.0, SlotAt(now.Add(90*time.Minute), plan).Value)
 	require.True(t, SlotAt(now.Add(3*time.Hour), plan).IsZero())
+}
+
+// TestFindContinuousWindowFlatRates ensures that equal-cost windows always select the
+// latest slot. The current slot is clamped to now, hence its cost is summed from
+// different addends than the aligned slots and must not decide the comparison.
+func TestFindContinuousWindowFlatRates(t *testing.T) {
+	day := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	rr := rates(lo.RepeatBy(3*96, func(int) float64 { return 0.291 }), day, tariff.SlotDuration)
+	target := day.Add(2 * 24 * time.Hour).Add(6*time.Hour + 45*time.Minute)
+
+	for _, tc := range []struct {
+		now      time.Duration
+		duration time.Duration
+	}{
+		{16*time.Hour + 45*time.Minute + 35*time.Second, 15*time.Minute + 30*time.Second + 464868247},
+		{16*time.Hour + 45*time.Minute + 37*time.Second, 15*time.Minute + 30*time.Second + 239819456},
+		{16*time.Hour + 46*time.Minute + 2*time.Second, 26*time.Minute + 39*time.Second + 438201128},
+	} {
+		now := day.Add(tc.now)
+
+		plan := findContinuousWindow(clampRates(rr, now, target), tc.duration, target)
+		require.NotEmpty(t, plan)
+
+		latest := target.Add(-tc.duration).Truncate(tariff.SlotDuration)
+		assert.Equal(t, latest, Start(plan), "now %v, duration %v", now, tc.duration)
+	}
 }
 
 func BenchmarkFindContinuousWindow(b *testing.B) {

@@ -1,0 +1,20 @@
+template: askoheat
+products:
+  - brand: Askoma
+    description:
+      generic: ASKOHEAT+
+group: heating
+params:
+  - name: usage
+    choice: ["aux"]
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 317
+      type: input
+      encoding: uint16

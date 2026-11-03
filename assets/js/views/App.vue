@@ -9,9 +9,9 @@
 		<BottomTabBar v-bind="bottomTabBarProps" />
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
+		<VehicleSettingsModal :vehicles="vehicleList" :loadpoints="state.uiLoadpoints" />
 		<AboutModal v-bind="aboutModalProps" />
-		<HelpModal />
-		<PasswordModal />
+		<HelpModal :custom-email="custom.email" />
 		<LoginModal v-bind="loginModalProps" />
 		<OfflineIndicator v-bind="offlineIndicatorProps" />
 	</div>
@@ -21,19 +21,24 @@
 import store from "../store";
 import BottomTabBar from "../components/BottomTabs/Bar.vue";
 import GlobalSettingsModal from "../components/GlobalSettings/GlobalSettingsModal.vue";
+import VehicleSettingsModal from "../components/Vehicles/SettingsModal.vue";
 import OfflineIndicator from "../components/Footer/OfflineIndicator.vue";
-import PasswordModal from "../components/Auth/PasswordModal.vue";
 import LoginModal from "../components/Auth/LoginModal.vue";
 import AboutModal from "../components/AboutModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
+import vehicleList from "@/utils/vehicleList";
+import { wizardPending } from "@/onboarding";
 import { defineComponent } from "vue";
 
-// assume offline if not data received for 5 minutes
+// assume offline if no data received for 5 minutes, or 15 seconds on first connect
 let lastDataReceived = new Date();
+let dataReceived = false;
 const maxDataAge = 60 * 1000 * 5;
+const maxFirstDataAge = 15 * 1000;
 setInterval(() => {
-	if (new Date().getTime() - lastDataReceived.getTime() > maxDataAge) {
+	const maxAge = dataReceived ? maxDataAge : maxFirstDataAge;
+	if (new Date().getTime() - lastDataReceived.getTime() > maxAge) {
 		console.log("no data received, assume we are offline");
 		window.app.setOffline();
 	}
@@ -45,8 +50,8 @@ export default defineComponent({
 		AboutModal,
 		BottomTabBar,
 		GlobalSettingsModal,
+		VehicleSettingsModal,
 		HelpModal,
-		PasswordModal,
 		LoginModal,
 		OfflineIndicator,
 	},
@@ -58,17 +63,27 @@ export default defineComponent({
 	data: () => {
 		return {
 			reconnectTimeout: null as number | null,
+			reconnectAttempts: 0,
 			ws: null as WebSocket | null,
 			authNotConfigured: false,
 			currentVersion: undefined as string | undefined,
 		};
 	},
 	head() {
-		return { title: "...", titleTemplate: "%s | evcc" };
+		return { title: "...", titleTemplate: `%s | ${window.evcc?.customBrand || "evcc"}` };
 	},
 	computed: {
 		version() {
 			return store.state.version;
+		},
+		custom() {
+			return {
+				logo: window.evcc?.customLogo ?? false,
+				brand: window.evcc?.customBrand ?? "",
+				website: window.evcc?.customWebsite ?? "",
+				email: window.evcc?.customEmail ?? "",
+				phone: window.evcc?.customPhone ?? "",
+			};
 		},
 		showRoutes() {
 			return this.state.startupCompleted;
@@ -76,6 +91,9 @@ export default defineComponent({
 		state() {
 			const { state, uiLoadpoints } = store;
 			return { ...state, uiLoadpoints: uiLoadpoints.value };
+		},
+		vehicleList() {
+			return vehicleList(this.state.vehicles);
 		},
 		globalSettingsProps() {
 			return this.collectProps(GlobalSettingsModal, this.state);
@@ -88,15 +106,21 @@ export default defineComponent({
 		},
 		aboutModalProps() {
 			return {
-				installed: window.evcc.version,
-				commit: window.evcc.commit,
+				installed: window.evcc?.version,
+				commit: window.evcc?.commit,
+				customLogo: this.custom.logo,
+				customBrand: this.custom.brand,
+				customWebsite: this.custom.website,
+				customEmail: this.custom.email,
+				customPhone: this.custom.phone,
 				...this.collectProps(AboutModal, this.state),
 			};
 		},
 		bottomTabBarProps() {
 			return {
-				installed: window.evcc.version,
-				commit: window.evcc.commit,
+				installed: window.evcc?.version,
+				customBrand: this.custom.brand,
+				wizardPending: wizardPending(),
 				...this.collectProps(BottomTabBar, this.state),
 			};
 		},
@@ -159,10 +183,13 @@ export default defineComponent({
 		},
 		reconnect() {
 			this.clearReconnectTimeout();
+			// quick first retry, then back off
+			const delay = this.reconnectAttempts === 0 ? 250 : 2500;
 			this.reconnectTimeout = window.setTimeout(() => {
+				this.reconnectAttempts++;
 				this.disconnect();
 				this.connect();
-			}, 2500);
+			}, delay);
 		},
 		disconnect() {
 			if (this.ws) {
@@ -193,13 +220,14 @@ export default defineComponent({
 			loc.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 
 			this.ws = new WebSocket(loc.href);
+			let receivedData = false;
 			this.ws.onerror = () => {
 				console.log({ message: "Websocket error. Trying to reconnect." });
 				this.ws?.close();
 			};
+			// proxies like Home Assistant ingress accept the socket before reaching evcc, wait for data
 			this.ws.onopen = () => {
 				console.log("websocket connected");
-				window.app.setOnline();
 			};
 			this.ws.onclose = () => {
 				window.app.setOffline();
@@ -213,6 +241,12 @@ export default defineComponent({
 					}
 					store.update(msg);
 					lastDataReceived = new Date();
+					dataReceived = true;
+					if (!receivedData) {
+						receivedData = true;
+						this.reconnectAttempts = 0;
+						window.app.setOnline();
+					}
 				} catch (error) {
 					const e = error as Error;
 					window.app.raise({

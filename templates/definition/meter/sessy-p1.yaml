@@ -8,7 +8,7 @@ params:
     choice: ["grid"]
   - name: host
   - name: cache
-    default: 10
+    default: 10s
 render: |
   type: custom
   power:

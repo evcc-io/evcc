@@ -8,14 +8,14 @@ import (
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 )
 
 var references struct {
-	meter, charger, vehicle, circuit, tariff []string
+	meter, charger, vehicle, circuit, tariff, curtailer []string
 }
 
 func collectRefs(conf globalconfig.All) error {
@@ -26,6 +26,21 @@ func collectRefs(conf globalconfig.All) error {
 
 	// tariffs
 	if err := collectTariffRefs(); err != nil {
+		return err
+	}
+
+	// circuits
+	if err := collectCircuitRefs(slices.Values(conf.Circuits)); err != nil {
+		return err
+	}
+
+	// append circuits from database
+	circuits, err := config.ConfigurationsByClass(templates.Circuit)
+	if err != nil {
+		return err
+	}
+
+	if err := collectCircuitRefs(namedSeq(circuits)); err != nil {
 		return err
 	}
 
@@ -40,19 +55,62 @@ func collectRefs(conf globalconfig.All) error {
 		return err
 	}
 
-	return collectLoadpointRefs(func(yield func(config.Named) bool) {
+	if err := collectLoadpointRefs(namedSeq(configurable)); err != nil {
+		return err
+	}
+
+	collectDeviceRefs(templates.Charger, slices.Values(conf.Chargers), nil)
+
+	chargers, err := config.ConfigurationsByClass(templates.Charger)
+	if err != nil {
+		return err
+	}
+	collectDeviceRefs(templates.Charger, namedSeq(chargers), references.charger)
+
+	tariffs, err := config.ConfigurationsByClass(templates.Tariff)
+	if err != nil {
+		return err
+	}
+	collectDeviceRefs(templates.Tariff, namedSeq(tariffs), references.tariff)
+
+	return nil
+}
+
+// collectDeviceRefs adds the devices referenced by template params of the given parents.
+// Static parents are always instantiated, db parents only when referenced themselves.
+func collectDeviceRefs(class templates.Class, named iter.Seq[config.Named], referenced []string) {
+	for cc := range named {
+		if referenced != nil && !slices.Contains(referenced, cc.Name) {
+			continue
+		}
+		for refClass, refs := range config.DeviceRefs(class, cc) {
+			switch refClass {
+			case templates.Meter:
+				references.meter = append(references.meter, refs...)
+			case templates.Charger:
+				references.charger = append(references.charger, refs...)
+			case templates.Tariff:
+				references.tariff = append(references.tariff, refs...)
+			}
+		}
+	}
+}
+
+func namedSeq(configurable []config.Config) iter.Seq[config.Named] {
+	return func(yield func(config.Named) bool) {
 		for _, cc := range configurable {
 			if !yield(cc.Named()) {
 				return
 			}
 		}
-	})
+	}
 }
 
 func collectSiteRefs(conf globalconfig.All) error {
 	var refs struct {
-		Meters core.MetersConfig `mapstructure:"meters"` // Meter references
-		Other  map[string]any    `mapstructure:",remain"`
+		Meters     core.MetersConfig `mapstructure:"meters"`     // Meter references
+		Curtailers []string          `mapstructure:"curtailers"` // Curtailment device references
+		Other      map[string]any    `mapstructure:",remain"`
 	}
 
 	if err := util.DecodeOther(conf.Site, &refs); err != nil {
@@ -65,6 +123,7 @@ func collectSiteRefs(conf globalconfig.All) error {
 	references.meter = append(references.meter, refs.Meters.ExtMetersRef...)
 	references.meter = append(references.meter, refs.Meters.AuxMetersRef...)
 	references.meter = append(references.meter, refs.Meters.ConsumerMetersRef...)
+	references.curtailer = append(references.curtailer, refs.Curtailers...)
 
 	// append devices from settings
 	if v, err := settings.String(keys.GridMeter); err == nil && v != "" {
@@ -75,6 +134,10 @@ func collectSiteRefs(conf globalconfig.All) error {
 		if v, err := settings.String(key); err == nil && v != "" {
 			references.meter = append(references.meter, strings.Split(v, ",")...)
 		}
+	}
+
+	if v, err := settings.String(keys.Curtailers); err == nil && v != "" {
+		references.curtailer = append(references.curtailer, strings.Split(v, ",")...)
 	}
 
 	return nil
@@ -92,19 +155,7 @@ func collectTariffRefs() error {
 	}
 
 	// Collect all non-empty refs
-	if refs.Grid != "" {
-		references.tariff = append(references.tariff, refs.Grid)
-	}
-	if refs.FeedIn != "" {
-		references.tariff = append(references.tariff, refs.FeedIn)
-	}
-	if refs.Co2 != "" {
-		references.tariff = append(references.tariff, refs.Co2)
-	}
-	if refs.Planner != "" {
-		references.tariff = append(references.tariff, refs.Planner)
-	}
-	references.tariff = append(references.tariff, refs.Solar...)
+	references.tariff = slices.AppendSeq(references.tariff, refs.Used())
 
 	return nil
 }
@@ -127,6 +178,23 @@ func collectLoadpointRefs(named iter.Seq[config.Named]) error {
 		references.charger = append(references.charger, refs.ChargerRef)
 		references.vehicle = append(references.vehicle, refs.VehicleRef)
 		references.circuit = append(references.circuit, refs.CircuitRef)
+	}
+
+	return nil
+}
+
+func collectCircuitRefs(circuits iter.Seq[config.Named]) error {
+	for cc := range circuits {
+		var refs struct {
+			MeterRef string         `mapstructure:"meter"` // Circuit meter reference
+			Other    map[string]any `mapstructure:",remain"`
+		}
+
+		if err := util.DecodeOther(cc.Other, &refs); err != nil {
+			return err
+		}
+
+		references.meter = append(references.meter, refs.MeterRef)
 	}
 
 	return nil

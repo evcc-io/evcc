@@ -34,6 +34,12 @@ password: secretpass123`,
 			redacted: []string{"W1234567890123456", "john@example.com"},
 		},
 		{
+			name:     "redact private params of deprecated templates",
+			input:    "#  hcaptcha: P1_abc",
+			expected: []string{"hcaptcha: *****"},
+			redacted: []string{"P1_abc"},
+		},
+		{
 			name: "redact multiple sensitive fields",
 			input: `config:
   lat: 52.520008
@@ -43,6 +49,18 @@ password: secretpass123`,
   apikey: xyz789`,
 			expected: []string{"lat: *****", "lon: *****", "zip: *****", "sponsortoken: *****", "apikey: *****"},
 			redacted: []string{"52.520008", "13.404954", "10115", "abc123", "xyz789"},
+		},
+		{
+			name: "redact block scalar and nested values",
+			input: `password: |
+  line1
+  line2
+token:
+  accesstoken: acc
+  refreshtoken: ref
+maxPower: 2760`,
+			expected: []string{"password: *****", "token: *****", "maxPower: 2760"},
+			redacted: []string{"line1", "line2", "acc", "ref"},
 		},
 	}
 

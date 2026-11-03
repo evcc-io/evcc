@@ -13,6 +13,8 @@ import {
   isConfigured,
 } from "./components/Auth/auth";
 import { initConfigModal } from "./configModal";
+import { wizardPending } from "./onboarding";
+import { isMobileWidth } from "./mixins/breakpoint";
 import { hapticFeedback } from "./utils/haptic";
 import type { VueI18nInstance } from "vue-i18n";
 
@@ -31,7 +33,8 @@ function hideAllModals() {
 async function ensureAuth(to: RouteLocationNormalizedGeneric) {
   await updateAuthStatus();
   if (!isConfigured()) {
-    return false;
+    // the setup wizard on the config page sets the password
+    return to.path === "/config" && wizardPending();
   }
   if (!isLoggedIn() && !statusUnknown()) {
     openLoginModal(to.path);
@@ -65,6 +68,10 @@ export default function setupRouter(i18n: VueI18nInstance) {
     stringifyQuery,
     scrollBehavior(to, from) {
       if (to.hash) {
+        // config section hashes open a detail panel on small screens, no scrolling
+        if (to.path === "/config" && isMobileWidth()) {
+          return false;
+        }
         return new Promise((resolve) => {
           const check = () => {
             if (document.querySelector(to.hash)) {
@@ -103,9 +110,9 @@ export default function setupRouter(i18n: VueI18nInstance) {
           return {
             month: month ? parseInt(month as string, 10) : undefined,
             year: year ? parseInt(year as string, 10) : undefined,
-            period,
-            loadpointFilter: loadpoint,
-            vehicleFilter: vehicle,
+            period: period ?? undefined,
+            loadpointFilter: loadpoint ?? undefined,
+            vehicleFilter: vehicle ?? undefined,
           };
         },
       },
@@ -120,15 +127,16 @@ export default function setupRouter(i18n: VueI18nInstance) {
         props: true,
       },
       {
-        path: "/history",
-        component: () => import("./views/History.vue"),
+        path: "/energy",
+        component: () => import("./views/Energy.vue"),
         props: (route) => {
-          const { day, month, year, period } = route.query;
+          const { day, month, year, period, consumer } = route.query;
           return {
             day: day ? parseInt(day as string, 10) : undefined,
             month: month ? parseInt(month as string, 10) : undefined,
             year: year ? parseInt(year as string, 10) : undefined,
-            period,
+            period: period ?? undefined,
+            consumer: consumer ?? null,
           };
         },
       },
@@ -142,10 +150,11 @@ export default function setupRouter(i18n: VueI18nInstance) {
         component: () => import("./views/Log.vue"),
         beforeEnter: ensureAuth,
         props: (route) => {
-          const { areas, level } = route.query;
+          const { areas, level, q } = route.query;
           return {
             areas: typeof areas === "string" ? areas.split(",") : undefined,
             level: typeof level === "string" ? level : undefined,
+            q: typeof q === "string" ? q : undefined,
           };
         },
       },

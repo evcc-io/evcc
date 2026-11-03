@@ -1,11 +1,210 @@
 package meter
 
 import (
+	"context"
+	"errors"
 	"testing"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v4"
 )
+
+func TestBatteryCapacity(t *testing.T) {
+	ctx := context.TODO()
+
+	// static value
+	{
+		var cc batteryCapacityCtx
+		require.NoError(t, util.DecodeOther(map[string]any{"capacity": 10}, &cc))
+		g, err := cc.Decorator(ctx)
+		require.NoError(t, err)
+		require.NotNil(t, g)
+		v, err := g()
+		require.NoError(t, err)
+		require.Equal(t, 10.0, v)
+	}
+
+	// zero value is treated as not configured
+	{
+		var cc batteryCapacityCtx
+		require.NoError(t, util.DecodeOther(map[string]any{"capacity": 0}, &cc))
+		g, err := cc.Decorator(ctx)
+		require.NoError(t, err)
+		require.Nil(t, g)
+	}
+
+	// unset is not configured
+	{
+		var cc batteryCapacityCtx
+		g, err := cc.Decorator(ctx)
+		require.NoError(t, err)
+		require.Nil(t, g)
+	}
+
+	// float plugin
+	{
+		var cc batteryCapacityCtx
+		require.NoError(t, util.DecodeOther(map[string]any{
+			"capacity": map[string]any{
+				"source": "const",
+				"value":  "12.5",
+			},
+		}, &cc))
+		g, err := cc.Decorator(ctx)
+		require.NoError(t, err)
+		require.NotNil(t, g)
+		v, err := g()
+		require.NoError(t, err)
+		require.Equal(t, 12.5, v)
+	}
+}
+
+func TestBatteryPowerLimitsPluginError(t *testing.T) {
+	var cc batteryPowerLimitsCtx
+	require.NoError(t, util.DecodeOther(map[string]any{
+		"maxchargepower": 1000,
+		"maxdischargepower": map[string]any{
+			"source": "http",
+			"uri":    "http://127.0.0.1:1",
+		},
+	}, &cc))
+	g, err := cc.Decorator(context.TODO())
+	require.NoError(t, err)
+	require.NotNil(t, g)
+
+	// a failed read must surface as error, not as a 0 limit
+	_, _, err = g()
+	require.Error(t, err)
+}
+
+func TestKeepOnce(t *testing.T) {
+	var reads int
+	g := keep(func() (float64, error) {
+		reads++
+		if reads == 1 {
+			return 0, errors.New("read failed")
+		}
+		return 42, nil
+	}, true)
+
+	_, err := g()
+	require.Error(t, err)
+
+	for range 2 {
+		v, err := g()
+		require.NoError(t, err)
+		require.Equal(t, 42.0, v)
+	}
+	require.Equal(t, 2, reads, "cached after first success")
+}
+
+func TestKeepLastGood(t *testing.T) {
+	var fail bool
+	g := keep(func() (float64, error) {
+		if fail {
+			return 0, errors.New("read failed")
+		}
+		return 42, nil
+	}, false)
+
+	v, err := g()
+	require.NoError(t, err)
+	require.Equal(t, 42.0, v)
+
+	// a failed read keeps the last value
+	fail = true
+	v, err = g()
+	require.NoError(t, err)
+	require.Equal(t, 42.0, v)
+}
+
+func TestBatteryModes(t *testing.T) {
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold}, batteryModes([]int64{1, 2}))
+
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHoldCharge, api.BatteryDischarge}, batteryModes([]int64{1, 4, 5}))
+
+	// values that are not a mode are ignored
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal}, batteryModes([]int64{1, 99}))
+
+	require.Empty(t, batteryModes([]int64{0}))
+}
+
+func TestDeclaredBatteryModes(t *testing.T) {
+	modes, err := declaredBatteryModes([]string{"normal", "charge"})
+	require.NoError(t, err)
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryCharge}, modes)
+
+	// nothing declared is nothing supported, the caller rejects it
+	modes, err = declaredBatteryModes(nil)
+	require.NoError(t, err)
+	require.Empty(t, modes)
+
+	_, err = declaredBatteryModes([]string{"invalid"})
+	require.Error(t, err)
+
+	// unknown parses as an enum value but is not a mode
+	_, err = declaredBatteryModes([]string{"unknown"})
+	require.Error(t, err)
+}
+
+// TestConfigurableBatteryModes covers where a configurable meter takes its modes from
+func TestConfigurableBatteryModes(t *testing.T) {
+	// a switch reports its cases, a default or a wrapping sequence hides them
+	const readable = `
+  source: switch
+  switch:
+  - case: 1
+    set: {source: sleep, duration: 0s}
+  - case: 2
+    set: {source: sleep, duration: 0s}`
+
+	const unreadable = `
+  source: sequence
+  set:
+  - source: switch
+    switch:
+    - case: 1
+      set: {source: sleep, duration: 0s}`
+
+	const withDefault = readable + `
+  default: {source: sleep, duration: 0s}`
+
+	for _, tc := range []struct {
+		name     string
+		setter   string
+		declared string
+		modes    []api.BatteryMode
+	}{
+		{"keys", readable, "", []api.BatteryMode{api.BatteryNormal, api.BatteryHold}},
+		{"keys win over declaration", readable, `["charge"]`, []api.BatteryMode{api.BatteryNormal, api.BatteryHold}},
+		{"declaration for a hidden switch", unreadable, `["normal", "charge"]`, []api.BatteryMode{api.BatteryNormal, api.BatteryCharge}},
+		{"declaration for a default", withDefault, `["normal"]`, []api.BatteryMode{api.BatteryNormal}},
+		{"neither keys nor declaration", unreadable, "", nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			conf := "power: {source: const, value: 0}\nsoc: {source: const, value: 50}\nbatterymode:" + tc.setter + "\n"
+			if tc.declared != "" {
+				conf += "batterymodes: " + tc.declared + "\n"
+			}
+
+			var other map[string]any
+			require.NoError(t, yaml.Unmarshal([]byte(conf), &other))
+
+			m, err := NewConfigurableFromConfig(context.TODO(), other)
+			if tc.modes == nil {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			ctrl, ok := api.Cap[api.BatteryController](m)
+			require.True(t, ok)
+			require.Equal(t, tc.modes, ctrl.BatteryModes())
+		})
+	}
+}
 
 func TestBatterySocLimits(t *testing.T) {
 	other := map[string]any{

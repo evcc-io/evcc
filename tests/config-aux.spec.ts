@@ -23,6 +23,7 @@ test.describe("aux meter", async () => {
     await page.getByRole("button", { name: "Add consumer" }).click();
 
     const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Self-regulating consumer" }).click();
     await meterModal.getByLabel("Title").fill("Water heater");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
@@ -88,7 +89,7 @@ energy:
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: successful");
     await expect(restResult).toContainText(["Power", "3.0 kW"].join(""));
-    await expect(restResult).toContainText(["Energy", "42.0 kWh"].join(""));
+    await expect(restResult).toContainText(["Consumed", "42.0 kWh"].join(""));
 
     // create
     await modal.getByRole("button", { name: "Save" }).click();
@@ -125,8 +126,8 @@ energy:
     await expect(restResult).toContainText("Status: unknown");
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: successful");
-    await expect(restResult).toContainText(["Power", "0.3 kW"].join(""));
-    await expect(restResult).toContainText(["Energy", "4.2 kWh"].join(""));
+    await expect(restResult).toContainText(["Power", "300 W"].join(""));
+    await expect(restResult).toContainText(["Consumed", "4.2 kWh"].join(""));
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
     await expect(page.getByTestId("aux")).toHaveCount(1);

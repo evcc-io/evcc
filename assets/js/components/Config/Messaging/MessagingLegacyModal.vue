@@ -4,7 +4,7 @@
 		name="messaginglegacy"
 		:title="`${$t('config.messaging.title')} (${$t('config.general.legacy')})`"
 		:description="$t('config.messaging.description')"
-		docs="/docs/reference/configuration/messaging"
+		docs="/reference/configuration/messaging"
 		:defaultYaml="defaultYaml"
 		endpoint="/config/messaging"
 		removeKey="messaging"

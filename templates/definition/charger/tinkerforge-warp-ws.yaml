@@ -1,16 +1,33 @@
 template: tinkerforge-warp-ws
 products:
-  - { brand: TinkerForge, description: { generic: WARP3 Smart } }
-  - { brand: TinkerForge, description: { generic: WARP3 Pro } }
-  - { brand: TinkerForge, description: { generic: WARP2 Smart } }
-  - { brand: TinkerForge, description: { generic: WARP2 Pro } }
-  - { brand: TinkerForge, description: { generic: WARP1 Smart } }
-  - { brand: TinkerForge, description: { generic: WARP1 Pro } }
-capabilities: ["mA", "rfid", "1p3p", "dim"]
+  - brand: TinkerForge
+    description: { generic: WARP4 Smart }
+    capabilities: ["iso151182", "rfid", "1p3p"]
+  - brand: TinkerForge
+    description: { generic: WARP4 Pro }
+    capabilities: ["iso151182", "rfid", "1p3p", "meter"]
+  - brand: TinkerForge
+    description: { generic: WARP3 Smart }
+    capabilities: ["rfid", "1p3p"]
+  - brand: TinkerForge
+    description: { generic: WARP3 Pro }
+    capabilities: ["rfid", "1p3p", "meter"]
+  - brand: TinkerForge
+    description: { generic: WARP2 Smart }
+    capabilities: ["rfid"]
+  - brand: TinkerForge
+    description: { generic: WARP2 Pro }
+    capabilities: ["rfid", "meter"]
+  - brand: TinkerForge
+    description: { generic: WARP1 Smart }
+  - brand: TinkerForge
+    description: { generic: WARP1 Pro }
+    capabilities: ["meter"]
+capabilities: ["mA", "dim"]
 requirements:
   description:
-    de: Falls notwendig wird die WARP-eigene automatische Phasenumschaltung von EVCC beim Verbinden mit der Wallbox deaktiviert. Siehe [docs.warp-charger.com](https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3).
-    en: If necessary, WARP's own automatic phase switching will be deactivated by EVCC when connecting to the wallbox. See [docs.warp-charger.com](https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3).
+    de: Falls notwendig wird die WARP3/WARP4-eigene automatische Phasenumschaltung von EVCC beim Verbinden mit der Wallbox deaktiviert (siehe [docs.warp-charger.com](https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3)). Phasenumschaltung (1p/3p) ist beim WARP2 nur mit einem zusätzlichen WARP Energy Manager möglich und beim WARP1 gar nicht, da keine CP-Trennung unterstützt wird. RFID steht beim WARP1 nur zur Verfügung, wenn zusätzlich ein NFC Bricklet nachgerüstet wurde. Beim WARP4 kann EVCC das Fahrzeug anhand seiner MAC-Adresse identifizieren, wenn "Autocharge" oder "Ladestand auslesen" in den ISO 15118-Einstellungen der Wallbox aktiviert ist. Das Auslesen des Fahrzeug-Ladestands per ISO 15118 erfordert "Ladestand auslesen" und ist nur beim WARP4 Pro verfügbar, da der eingebaute Stromzähler benötigt wird. Die ISO 15118-Funktionen erfordern WARP4-Firmware 2.12.2 oder neuer.
+    en: If necessary, WARP3's/WARP4's own automatic phase switching will be deactivated by EVCC when connecting to the wallbox (see [docs.warp-charger.com](https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3)). Phase switching (1p/3p) is only possible on the WARP2 with an additional WARP Energy Manager, and not possible at all on the WARP1, since it does not support CP separation. RFID on the WARP1 is only available if an NFC Bricklet has been retrofitted. On the WARP4, EVCC can identify the vehicle by its MAC address if "Autocharge" or "Read state of charge" is enabled in the wallbox's ISO 15118 settings. Reading the vehicle SoC via ISO 15118 requires "Read state of charge" and is only available on the WARP4 Pro, since it needs the built-in energy meter. The ISO 15118 features require WARP4 firmware 2.12.2 or later.
   evcc: ["skiptest"]
 params:
   - name: uri

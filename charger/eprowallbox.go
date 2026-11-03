@@ -60,12 +60,12 @@ func NewEProWallboxFromConfig(ctx context.Context, other map[string]any) (api.Ch
 		return nil, err
 	}
 
-	return NewEProWallbox(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewEProWallbox(ctx, cc)
 }
 
 // NewEProWallbox creates eProWallbox charger
-func NewEProWallbox(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
+func NewEProWallbox(ctx context.Context, settings modbus.Settings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

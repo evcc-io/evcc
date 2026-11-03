@@ -37,12 +37,12 @@ func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]any) (api
 		return nil, err
 	}
 
-	return NewCfosPowerBrain(ctx, cc.URI, cc.ID)
+	return NewCfosPowerBrain(ctx, cc)
 }
 
 // NewCfosPowerBrain creates a cFos meter
-func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (*CfosPowerBrain, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewCfosPowerBrain(ctx context.Context, settings modbus.TcpSettings) (*CfosPowerBrain, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

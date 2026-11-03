@@ -17,6 +17,20 @@ func (ts timeseries) MarshalBytes() ([]byte, error) {
 	return json.Marshal(ts)
 }
 
+// MarshalJSON publishes entries as [ts, val] with the timestamp in unix seconds
+func (ts timeseries) MarshalJSON() ([]byte, error) {
+	if ts == nil {
+		return []byte("null"), nil
+	}
+
+	res := make([][]float64, 0, len(ts))
+	for _, e := range ts {
+		res = append(res, []float64{float64(e.Timestamp.Unix()), e.Value})
+	}
+
+	return json.Marshal(res)
+}
+
 type tsEntry struct {
 	Timestamp time.Time `json:"ts"`
 	Value     float64   `json:"val"`

@@ -18,7 +18,7 @@ params:
     default: 1h
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   soc: # battery soc (%)
     source: mqtt
     topic: saic/{{ .user }}/vehicles/{{ .vin }}/drivetrain/soc
@@ -63,4 +63,4 @@ render: |
           source: mqtt
           topic: saic/{{ .user }}/vehicles/{{ .vin }}/refresh/mode/set
           timeout: {{ .timeout }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

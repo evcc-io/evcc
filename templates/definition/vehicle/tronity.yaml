@@ -29,6 +29,6 @@ render: |
   credentials:
     id: {{ .clientid }}
     secret: {{ .clientsecret }}
-  {{ include "vehicle-common" . }}
+  {{ include "common" . }}
   cache: {{ .cache }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

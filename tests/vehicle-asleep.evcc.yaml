@@ -1,0 +1,8 @@
+vehicles:
+  - name: sleepy
+    type: custom
+    title: Sleepy Car
+    capacity: 68
+    soc:
+      source: error
+      error: ErrAsleep

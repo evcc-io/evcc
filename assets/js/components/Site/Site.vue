@@ -1,17 +1,7 @@
 <template>
 	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
-			<div
-				class="d-flex justify-content-between align-items-center my-3 my-md-4"
-				data-testid="header"
-			>
-				<h1 class="d-block my-0">
-					<span v-if="!setupRequired">
-						{{ siteTitle || "evcc" }}
-					</span>
-				</h1>
-				<TopNavigationArea :notifications="notifications" />
-			</div>
+			<TopHeader :title="headerTitle" :notifications="notifications" />
 			<HemsWarning :status="hems?.status" />
 			<Energyflow v-if="!setupRequired && !hasFatalError" v-bind="energyflow" />
 		</div>
@@ -30,22 +20,26 @@
 					</router-link>
 				</div>
 			</div>
-			<div
-				v-else-if="setupRequired"
-				class="flex-grow-1 d-flex align-items-center justify-content-center p-3"
-			>
-				<div
-					class="welcome d-flex align-items-center flex-column justify-content-center text-center"
-				>
-					<h1 class="mb-0 fs-4 d-flex align-items-center gap-2">
-						{{ $t("main.welcome") }}
-					</h1>
-					<WelcomeIcons class="welcome-icons" />
-					<router-link
-						class="btn btn-lg btn-outline-primary configure-button"
-						to="/config"
-					>
-						{{ $t("main.startConfiguration") }}
+			<div v-else-if="setupRequired" class="flex-grow-1 d-flex p-3" data-testid="setup-empty">
+				<div class="empty-box d-flex flex-column p-5">
+					<h2 class="fs-4 mb-2">{{ $t("main.setup.title") }}</h2>
+					<p class="text-muted mb-4">{{ $t("main.setup.description") }}</p>
+					<ul class="list-unstyled mb-4">
+						<li
+							v-for="{ item, icon } in setupItems"
+							:key="item"
+							class="d-flex align-items-center gap-2 mb-2"
+						>
+							<component
+								:is="icon"
+								size="s"
+								class="icon-row text-muted flex-shrink-0"
+							/>
+							<span>{{ $t(`onboarding.item.${item}`) }}</span>
+						</li>
+					</ul>
+					<router-link to="/config" class="btn btn-outline-primary">
+						{{ $t("main.setup.start") }}
 					</router-link>
 				</div>
 			</div>
@@ -63,6 +57,8 @@
 				:tariffFeedIn="tariffFeedIn"
 				:currency="currency"
 				:gridConfigured="gridConfigured"
+				:gridConnection="gridConnection"
+				:voltage="voltage"
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
 				:batterySoc="batterySoc"
@@ -77,20 +73,21 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowup";
-import TopNavigationArea from "../Top/TopNavigationArea.vue";
+import TopHeader from "../Top/Header.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector.ts";
-import WelcomeIcons from "./WelcomeIcons.vue";
+import { ONBOARDING_ICONS } from "../Config/Onboarding/icons";
 import { defineComponent, type PropType } from "vue";
 import type {
 	AuthProviders,
 	Battery,
 	Meter,
 	CURRENCY,
-	Forecast,
+	GRID_CONNECTION,
+	UiForecast,
 	Notification,
 	ConfigStatus,
 	HemsConfig,
@@ -99,7 +96,9 @@ import type {
 	FatalError,
 	EvOpt,
 	BATTERY_MODE,
+	Vehicle,
 } from "@/types/evcc";
+import vehicleList from "@/utils/vehicleList";
 import store from "@/store";
 import type { Grid } from "./types";
 
@@ -109,8 +108,7 @@ export default defineComponent({
 		Loadpoints,
 		Energyflow,
 		HemsWarning,
-		TopNavigationArea,
-		WelcomeIcons,
+		TopHeader,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -122,6 +120,8 @@ export default defineComponent({
 
 		// details
 		gridConfigured: Boolean,
+		gridConnection: String as PropType<GRID_CONNECTION>,
+		voltage: Number,
 		grid: Object as PropType<Grid>,
 		homePower: Number,
 		pvPower: Number,
@@ -130,6 +130,7 @@ export default defineComponent({
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
 		consumers: { type: Array as PropType<Meter[]>, default: () => [] },
 		batteryDischargeControl: Boolean,
+		solarAdjusted: Boolean,
 		batteryGridChargeLimit: { type: [Number, null] as PropType<number | null>, default: null },
 		batteryGridChargeActive: Boolean,
 		batteryMode: String as PropType<BATTERY_MODE>,
@@ -139,7 +140,7 @@ export default defineComponent({
 		bufferSoc: Number,
 		bufferStartSoc: Number,
 		siteTitle: String,
-		vehicles: Object,
+		vehicles: Object as PropType<Record<string, Vehicle>>,
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
 		tariffFeedIn: Number,
@@ -154,16 +155,28 @@ export default defineComponent({
 		smartCostAvailable: Boolean,
 		smartFeedInPriorityAvailable: Boolean,
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
-		forecast: Object as PropType<Forecast>,
+		forecast: Object as PropType<UiForecast>,
 		hems: Object as PropType<ConfigStatus<HemsConfig, HemsStatus>>,
 		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
+		setupItems() {
+			return (["pv", "battery", "grid", "loadpoint", "heater"] as const).map((item) => ({
+				item,
+				icon: ONBOARDING_ICONS[item],
+			}));
+		},
+		headerTitle() {
+			return this.setupRequired ? "" : this.siteTitle || "evcc";
+		},
 		loadpoints() {
 			return store.uiLoadpoints.value || [];
 		},
+		enabledLoadpoints() {
+			return this.loadpoints.filter((lp) => !lp.disabled);
+		},
 		orderedVisibleLoadpoints() {
-			return this.loadpoints.filter((lp) => lp.visible);
+			return this.enabledLoadpoints.filter((lp) => lp.visible);
 		},
 		batterySoc() {
 			return this.battery?.soc;
@@ -181,11 +194,10 @@ export default defineComponent({
 			return store.state?.experimental;
 		},
 		energyflow() {
-			return this.collectProps(Energyflow);
+			return { ...this.collectProps(Energyflow), loadpoints: this.enabledLoadpoints };
 		},
 		vehicleList() {
-			const vehicles = this.vehicles || {};
-			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
+			return vehicleList(this.vehicles);
 		},
 		showParkingLot() {
 			// work in progess
@@ -215,30 +227,5 @@ export default defineComponent({
 .content-area {
 	flex-grow: 1;
 	z-index: 1;
-}
-.configure-button:not(:active):not(:hover),
-.welcome-icons {
-	animation: colorTransition 10s infinite alternate;
-	animation-timing-function: ease-in-out;
-}
-
-@keyframes colorTransition {
-	0% {
-		color: var(--evcc-accent1);
-		border-color: var(--evcc-accent1);
-	}
-	50% {
-		color: var(--evcc-accent2);
-		border-color: var(--evcc-accent2);
-	}
-	100% {
-		color: var(--evcc-accent3);
-		border-color: var(--evcc-accent3);
-	}
-}
-.welcome {
-	background-color: var(--evcc-box);
-	padding: 4rem;
-	border-radius: 2rem;
 }
 </style>

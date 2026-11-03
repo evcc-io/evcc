@@ -1,5 +1,5 @@
 import { mount, config } from "@vue/test-utils";
-import { beforeAll, describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vite-plus/test";
 import Preview from "./Preview.vue";
 import type { Slot } from "@/types/evcc";
 

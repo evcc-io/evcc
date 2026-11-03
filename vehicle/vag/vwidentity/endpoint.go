@@ -9,15 +9,14 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+	"uuid"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/urlvalues"
 	"github.com/evcc-io/evcc/vehicle/vag"
-	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
 )
@@ -42,7 +41,7 @@ func LoginWithAuthURL(log *util.Logger, uri string, q url.Values, user, password
 	var verify func(url.Values)
 
 	// add code challenge
-	q = urlvalues.Copy(q)
+	q = q.Clone()
 	if rt := q.Get("response_type"); strings.Contains(rt, "code") {
 		verify = vag.ChallengeAndVerifier(q)
 	}
@@ -92,7 +91,7 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 	// add nonce and state
 	query := url.Values{
 		"nonce": {lo.RandomString(43, lo.LettersCharset)},
-		"state": {uuid.NewString()},
+		"state": {uuid.New().String()},
 	}
 
 	uri = uri + "&" + query.Encode()
@@ -109,16 +108,27 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 		return nil, err
 	}
 
-	// Try to extract legacy form, but don't fail if it's not found
-	if vars, err := FormValues(bytes.NewReader(body), "form#emailPasswordForm"); err == nil {
-		return v.loginLegacy(vars, user, password)
+	resp, err = SubmitCredentials(v.Client, body, user, password)
+	if err != nil {
+		return nil, err
 	}
+	defer resp.Body.Close()
 
-	return v.loginNew(body, user, password)
+	return v.authLocation(resp)
 }
 
-// loginLegacy performs the legacy VW identity login flow
-func (v *Service) loginLegacy(vars FormVars, user, password string) (url.Values, error) {
+// SubmitCredentials posts user and password to the signin page in body, using either the
+// legacy two-step form or the Auth0 universal login. The client's redirect policy decides where it ends.
+func SubmitCredentials(client *http.Client, body []byte, user, password string) (*http.Response, error) {
+	if vars, err := FormValues(bytes.NewReader(body), "form#emailPasswordForm"); err == nil {
+		return submitLegacy(client, vars, user, password)
+	}
+
+	return submitUniversal(client, body, user, password)
+}
+
+// submitLegacy performs the legacy VW identity identifier and password steps
+func submitLegacy(client *http.Client, vars FormVars, user, password string) (*http.Response, error) {
 	var params CredentialParams
 
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/identifier
@@ -130,7 +140,7 @@ func (v *Service) loginLegacy(vars FormVars, user, password string) (url.Values,
 	}
 
 	uri := BaseURL + vars.Action
-	resp, err := v.PostForm(uri, data)
+	resp, err := client.PostForm(uri, data)
 	if err != nil {
 		return nil, err
 	}
@@ -156,12 +166,27 @@ func (v *Service) loginLegacy(vars FormVars, user, password string) (url.Values,
 	// reuse url from identifier step before
 	uri = strings.ReplaceAll(uri, params.TemplateModel.IdentifierUrl, params.TemplateModel.PostAction)
 
-	resp, err = v.PostForm(uri, data)
+	return client.PostForm(uri, data)
+}
+
+// submitUniversal performs the Auth0 universal login step
+func submitUniversal(client *http.Client, body []byte, user, password string) (*http.Response, error) {
+	state, err := extractState(body)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
+	data := url.Values{
+		"username": {user},
+		"password": {password},
+		"state":    {state},
+	}
+
+	return client.PostForm(fmt.Sprintf("%s/u/login?state=%s", BaseURL, state), data)
+}
+
+// authLocation returns the auth code parameters from the redirect after password submission
+func (v *Service) authLocation(resp *http.Response) (url.Values, error) {
 	if resp.StatusCode >= http.StatusBadRequest {
 		return nil, errors.New(resp.Status)
 	}
@@ -187,11 +212,16 @@ func (v *Service) loginLegacy(vars FormVars, user, password string) (url.Values,
 		return nil, errors.New("login redirect missing after password submission - open the myAudi app or website, accept any pending terms or consent prompts, then retry")
 	}
 
-	parsed, err := url.Parse(location)
+	redirectURL, err := resolveLocation(resp.Request.URL, location)
 	if err != nil {
 		return nil, err
 	}
-	return parseAuthLocation(parsed)
+
+	if redirectURL.Scheme == "https" || redirectURL.Scheme == "http" {
+		return nil, fmt.Errorf("unexpected redirect URL scheme: %s, expected app specific url (e.g. 'weconnect://...')", redirectURL.Scheme)
+	}
+
+	return parseAuthLocation(redirectURL)
 }
 
 // MarketingConsentCallback returns the OIDC callback url embedded in an
@@ -243,55 +273,6 @@ func (v *Service) skipMarketingConsent(resp *http.Response) (*url.URL, bool, err
 
 	location, err := url.Parse(cbResp.Header.Get("Location"))
 	return location, true, err
-}
-
-// loginNew performs the new VW identity login flow
-func (v *Service) loginNew(body []byte, user, password string) (url.Values, error) {
-	state, err := extractState(body)
-	if err != nil {
-		return nil, err
-	}
-
-	// POST to new login endpoint
-	loginData := url.Values{
-		"username": {user},
-		"password": {password},
-		"state":    {state},
-	}
-
-	uri := fmt.Sprintf("%s/u/login?state=%s", BaseURL, state)
-	resp, err := v.PostForm(uri, loginData)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	location := resp.Header.Get("Location")
-	if resp.StatusCode >= http.StatusBadRequest {
-		return nil, errors.New(resp.Status)
-	}
-
-	// skip the optional marketing consent page without consenting (#29760)
-	if loc, ok, err := v.skipMarketingConsent(resp); err != nil {
-		return nil, err
-	} else if ok {
-		return parseAuthLocation(loc)
-	}
-
-	if location == "" {
-		return nil, errors.New("no redirect location in new login flow")
-	}
-
-	redirectURL, err := resolveLocation(resp.Request.URL, location)
-	if err != nil {
-		return nil, err
-	}
-
-	if redirectURL.Scheme == "https" || redirectURL.Scheme == "http" {
-		return nil, fmt.Errorf("unexpected redirect URL scheme: %s, expected app specific url (e.g. 'weconnect://...')", redirectURL.Scheme)
-	}
-
-	return parseAuthLocation(redirectURL)
 }
 
 func resolveLocation(base *url.URL, location string) (*url.URL, error) {

@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"gitlab.com/bboehmke/sunny"
 )
@@ -74,4 +75,14 @@ func AsFloat(value any) float64 {
 		util.NewLogger("sma").WARN.Printf("unknown value type: %T", value)
 		return 0
 	}
+}
+
+// AsEnergy converts an energy counter, reporting a counter without valid reading as unavailable instead of zero
+func AsEnergy(values map[sunny.ValueID]any, id sunny.ValueID) (float64, error) {
+	v, ok := values[id]
+	if !ok {
+		return 0, api.ErrNotAvailable
+	}
+
+	return AsFloat(v), nil
 }

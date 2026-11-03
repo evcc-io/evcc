@@ -18,8 +18,8 @@ func (h *msgHandler) receive(payload string) {
 	h.val.Set(payload)
 }
 
-// hasValue returned the received and processed payload as string
-func (h *msgHandler) hasValue() (string, error) {
+// value returns the received and processed payload as string
+func (h *msgHandler) value() (string, error) {
 	payload, err := h.val.GetContext(h.ctx)
 	if err != nil {
 		return "", err
@@ -35,13 +35,4 @@ func (h *msgHandler) hasValue() (string, error) {
 	}
 
 	return payload, nil
-}
-
-func (h *msgHandler) value() (string, error) {
-	v, err := h.hasValue()
-	if err != nil {
-		return "", err
-	}
-
-	return v, nil
 }

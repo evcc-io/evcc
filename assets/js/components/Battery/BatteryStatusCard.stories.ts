@@ -1,4 +1,5 @@
 import BatteryStatusCard from "./BatteryStatusCard.vue";
+import { BATTERY_MODE } from "@/types/evcc";
 import type { Meta, StoryFn } from "@storybook/vue3";
 
 export default {
@@ -86,3 +87,84 @@ SuggestionAndForecast.args = {
   suggestion: { action: "charge" },
   forecast: { highest: { soc: 100, time: "2026-07-01T18:00:00+02:00", limit: true } },
 };
+
+const cards = [
+  {
+    title: "Sungrow",
+    soc: 76,
+    power: 0,
+    capacity: 13.5,
+    color: "#0BA631",
+    controllable: true,
+    batteryMode: BATTERY_MODE.CHARGE,
+    suggestion: { action: "normal", actionable: true },
+  },
+  {
+    title: "Anker",
+    soc: 40,
+    power: 1200, // discharging
+    capacity: 7.5,
+    color: "#7FC41B",
+    controllable: true,
+    suggestion: { action: "hold", actionable: true },
+  },
+  {
+    title: "Fox ESS",
+    soc: 88,
+    power: 0,
+    capacity: 10.4,
+    color: "#0FD0BF",
+    controllable: true,
+    batteryMode: BATTERY_MODE.HOLDCHARGE,
+    suggestion: { action: "discharge", actionable: true },
+  },
+  {
+    title: "Huawei",
+    soc: 30,
+    power: 0,
+    capacity: 5,
+    color: "#4EABE6",
+    controllable: true,
+    batteryMode: BATTERY_MODE.HOLD,
+    suggestion: { action: "charge", actionable: true },
+  },
+  {
+    title: "Sonnen",
+    soc: 95,
+    power: 0,
+    capacity: 10,
+    color: "#F0A30A",
+    controllable: true,
+    batteryMode: BATTERY_MODE.DISCHARGE,
+    suggestion: { action: "holdcharge", actionable: true },
+  },
+  {
+    title: "BYD",
+    soc: 55,
+    power: -2400, // charging
+    capacity: 12.8,
+    color: "#E0457B",
+    controllable: true,
+    suggestion: { action: "hold", actionable: true },
+  },
+  {
+    title: "Pylontech",
+    soc: 62,
+    power: 0, // idle
+    capacity: 9.6,
+    color: "#8E6CEF",
+    controllable: true,
+    suggestion: { action: "normal", actionable: true },
+  },
+];
+
+export const CurrentVsSuggested = () => ({
+  components: { BatteryStatusCard },
+  setup() {
+    return { cards };
+  },
+  template: `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1rem">
+    <BatteryStatusCard v-for="c in cards" :key="c.title" v-bind="c" />
+  </div>`,
+});
+CurrentVsSuggested.parameters = { layout: "padded" };

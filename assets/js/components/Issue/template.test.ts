@@ -1,5 +1,11 @@
-import { describe, it, expect } from "vitest";
-import { generateGitHubContent } from "./template";
+import { describe, it, expect } from "vite-plus/test";
+import {
+  generateGitHubContent,
+  generateMailtoUrl,
+  generateDebugFile,
+  MAX_MAIL_TITLE_LENGTH,
+  MAX_MAIL_DESCRIPTION_LENGTH,
+} from "./template";
 import type { IssueData, Sections } from "./types";
 
 describe("Issue Utils", () => {
@@ -121,6 +127,48 @@ Linux/amd64, MST -07:00`);
       expect(result.body).not.toContain("## Configuration");
       expect(result.body).not.toContain("## System State");
       expect(result.body).not.toContain("## Logs");
+    });
+  });
+
+  describe("generateMailtoUrl", () => {
+    it("generates plaintext mailto url without steps or diagnostics", () => {
+      const url = generateMailtoUrl("support@example.com", mockIssueData);
+
+      expect(url).toContain("mailto:support@example.com?subject=Test%20Issue&body=");
+      const body = decodeURIComponent(url.split("&body=")[1]);
+      expect(body).toBe(`This is a test description
+
+Version: v1.0.0
+
+System: Linux/amd64, MST -07:00`);
+    });
+
+    it("stays below the windows mailto limit at maximum input length", () => {
+      // umlaut-dense german text, each umlaut costs 6 chars percent-encoded
+      const text = "Fehlermeldung: Ladepunkt überprüfen, Zählerstände größer als üblich. ";
+      const fill = (length: number) =>
+        text.repeat(Math.ceil(length / text.length)).slice(0, length);
+
+      const url = generateMailtoUrl("support@installer-example.com", {
+        ...mockIssueData,
+        title: fill(MAX_MAIL_TITLE_LENGTH),
+        description: fill(MAX_MAIL_DESCRIPTION_LENGTH),
+      });
+
+      expect(url.length).toBeLessThan(2000);
+    });
+  });
+
+  describe("generateDebugFile", () => {
+    it("contains version, system and enabled sections", () => {
+      const content = generateDebugFile(mockIssueData, mockSections);
+
+      expect(content).toContain("# evcc debug information");
+      expect(content).toContain("Version: v1.0.0");
+      expect(content).toContain("System: Linux/amd64, MST -07:00");
+      expect(content).toContain("## Configuration (YAML)");
+      expect(content).toContain("## Logs");
+      expect(content).not.toContain("## System State");
     });
   });
 });

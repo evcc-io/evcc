@@ -16,4 +16,4 @@ params:
 render: |
   type: energinet
   region: {{ .region }}
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}

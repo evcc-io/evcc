@@ -26,6 +26,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -77,12 +78,12 @@ func NewChargeXFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, err
 	}
 
-	return NewChargeX(ctx, cc.URI, cc.ID, cc.Connector)
+	return NewChargeX(ctx, cc.TcpSettings, cc.Connector)
 }
 
 // NewChargeX creates ChargeX charger
-func NewChargeX(ctx context.Context, uri string, id uint8, connector uint16) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewChargeX(ctx context.Context, settings modbus.TcpSettings, connector uint16) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +164,7 @@ func (wb *ChargeX) setCurrent(current float64) error {
 	}
 
 	b = make([]byte, 4)
-	targetPower := uint32(230 * current * float64(phases))
+	targetPower := uint32(grid.CurrentToPower(current, phases))
 	binary.BigEndian.PutUint32(b, targetPower)
 
 	wb.log.DEBUG.Printf("set charge power: %dW (%.1fA, %dp)", targetPower, current, phases)

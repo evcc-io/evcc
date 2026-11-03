@@ -70,7 +70,7 @@ func (p *Prometheus) Query() (model.Value, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
 
-	res, warn, err := p.api.Query(ctx, p.query, time.Now())
+	res, warn, _, err := p.api.Query(ctx, p.query, time.Now())
 	if err != nil {
 		return nil, err
 	}

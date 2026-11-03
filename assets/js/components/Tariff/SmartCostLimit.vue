@@ -7,6 +7,7 @@
 		:currency="currency"
 		:apply-all="multipleLoadpoints && isLoadpoint"
 		:possible="possible"
+		:disabled-hint="disabledHint"
 		:tariff="tariff"
 		:form-id="formId"
 		:is-slot-active="isSlotActive"
@@ -24,8 +25,7 @@ import { defineComponent, type PropType } from "vue";
 import api from "@/api";
 import { setLoadpointLastSmartCostLimit } from "@/uiLoadpoints";
 import settings from "@/settings";
-import { type CURRENCY, SMART_COST_TYPE } from "@/types/evcc";
-import { type ForecastSlot } from "../Forecast/types";
+import { type CURRENCY, type UiForecastSlot, SMART_COST_TYPE } from "@/types/evcc";
 
 export default defineComponent({
 	name: "SmartCostLimit",
@@ -41,8 +41,9 @@ export default defineComponent({
 		isLoadpoint: Boolean,
 		loadpointId: String,
 		possible: Boolean,
+		disabledHint: String,
 		lastLimit: Number,
-		tariff: Array as PropType<ForecastSlot[]>,
+		tariff: Array as PropType<UiForecastSlot[]>,
 	},
 	computed: {
 		isCo2(): boolean {

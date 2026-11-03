@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -42,22 +43,41 @@ func TestTemplates(t *testing.T) {
 	})
 }
 
-// universalVehicleFeatures render via the shared vehicle-features include, so a
+// onlineVehicleFeatures render via the shared vehicle features include, so a
 // stored config may carry them; dropping the param breaks reload (discussion #31291).
-var universalVehicleFeatures = []string{"climaterdisabled", "autodetectdisabled"}
+var onlineVehicleFeatures = []string{"streaming", "coarsecurrent", "welcomecharge", "climaterdisabled", "autodetectdisabled", "wakeupdisabled"}
+
+// requiredFeatureParams lists features these templates once offered as user
+// params. Stored configs carry the key, so undeclaring it makes evcc fail to
+// boot on the next restart (#31962). Deprecate such params, never remove them.
+var requiredFeatureParams = map[string][]string{
+	"vw":                    {"streaming", "coarsecurrent", "welcomecharge"},
+	"audi":                  {"streaming", "coarsecurrent", "welcomecharge"},
+	"seat":                  {"streaming", "coarsecurrent", "welcomecharge"},
+	"cupra":                 {"streaming", "coarsecurrent", "welcomecharge"},
+	"drivesomethinggreater": {"streaming", "coarsecurrent", "welcomecharge"},
+}
 
 func TestVehicleFeatureParamsConsistent(t *testing.T) {
 	for _, tmpl := range templates.ByClass(templates.Vehicle, templates.WithDeprecated()) {
-		if !strings.Contains(tmpl.Render, "vehicle-features") {
+		if !strings.Contains(tmpl.Render, `include "features"`) {
 			continue
 		}
 
-		for _, feat := range universalVehicleFeatures {
+		for _, feat := range onlineVehicleFeatures {
+			// not every template ever offered every feature (e.g. wakeupdisabled is new)
+			if i, _ := tmpl.ParamByName(feat); i < 0 {
+				if slices.Contains(requiredFeatureParams[tmpl.Template], feat) {
+					t.Errorf("%s: feature %q must stay a declared param", tmpl.Template, feat)
+				}
+				continue
+			}
+
 			values := tmpl.Defaults(templates.RenderModeUnitTest)
 			values["template"] = tmpl.Template
 			values[feat] = true
 
-			if _, _, err := tmpl.RenderResult(templates.RenderModeInstance, values); err != nil {
+			if _, _, err := tmpl.RenderResult(templates.Vehicle, templates.RenderModeInstance, values); err != nil {
 				t.Errorf("%s: feature %q must stay a declared param: %v", tmpl.Template, feat, err)
 			}
 		}

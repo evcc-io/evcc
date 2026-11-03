@@ -4,6 +4,9 @@ products:
   - brand: my-PV
     description:
       generic: AC ELWA-E
+discovery:
+  mdns: ["_mypv._tcp"]
+  mac: ["986D35C"]
 params:
   - name: usage
     choice: ["aux"]
@@ -13,9 +16,11 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/data.jsn
+    insecure: true
     jq: .power
   soc:
     source: http
     uri: http://{{ .host }}/data.jsn
+    insecure: true
     jq: .temp1
     scale: 0.1

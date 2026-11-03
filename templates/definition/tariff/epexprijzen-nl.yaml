@@ -1,4 +1,5 @@
 template: epexprijzen-nl
+link: https://epexprijzen.nl
 products:
   - brand: epexprijzen.nl
 requirements:
@@ -17,22 +18,29 @@ params:
     choice:
       [
         "anwb-energie",
-        "atoom-alliantie",
         "budget-energie",
         "coolblue-energie",
+        "delta-energie",
         "easyenergy",
         "eneco",
         "energie-vanons",
+        "energiedirect",
+        "energiek",
         "energyzero",
         "engie",
+        "essent",
         "frank-energie",
         "frank-energie-slim",
+        "groenpand",
         "hegg",
         "innova",
         "nextenergy",
+        "oxxio",
         "powerpeers",
         "quatt-energy",
+        "samenom",
         "samsam",
+        "sunergy",
         "tibber",
         "vandebron",
         "vattenfall",
@@ -53,7 +61,7 @@ params:
     advanced: true
 render: |
   type: custom
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}
   forecast:
     source: http
     uri: https://epexprijzen.nl/api/v1/prices/{{ .provider }}/{{ index . "price-interval" }}

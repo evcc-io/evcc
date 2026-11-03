@@ -75,3 +75,15 @@ func TestRequireCriticalConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestEnsureAuthHandler(t *testing.T) {
+	get := func(a auth.Auth) int {
+		next := http.HandlerFunc(func(http.ResponseWriter, *http.Request) {})
+		rec := httptest.NewRecorder()
+		EnsureAuthHandler(a)(next).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/login", nil))
+		return rec.Code
+	}
+
+	assert.Equal(t, http.StatusUnauthorized, get(fakeAuth{mode: auth.Enabled}), "enabled must reject without credentials")
+	assert.Equal(t, http.StatusOK, get(fakeAuth{mode: auth.Disabled}), "disabled must pass through")
+}
