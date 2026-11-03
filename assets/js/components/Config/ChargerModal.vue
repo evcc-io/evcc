@@ -104,7 +104,6 @@ import heatpumpYaml from "./defaultYaml/heatpump.yaml?raw";
 import switchsocketHeaterYaml from "./defaultYaml/switchsocketHeater.yaml?raw";
 import switchsocketChargerYaml from "./defaultYaml/switchsocketCharger.yaml?raw";
 import sgreadyYaml from "./defaultYaml/sgready.yaml?raw";
-import sgreadyRelayYaml from "./defaultYaml/sgreadyRelay.yaml?raw";
 import { LOADPOINT_TYPE, type DeviceType, type LoadpointType, type Ocpp } from "@/types/evcc";
 import { getOcppUrl, getOcppUrlWithStationId, getOcpp20Url, getOcpp20UrlWithStationId } from "@/utils/ocpp";
 
