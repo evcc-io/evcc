@@ -349,7 +349,6 @@ var _ api.ChargeRater = (*Em2Go)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *Em2Go) ChargedEnergy() (float64, error) {
-	// Read modbus chargedEnergy register
 	b, err := wb.conn.ReadHoldingRegisters(em2GoRegChargedEnergy, 1)
 	if err != nil {
 		return 0, err
