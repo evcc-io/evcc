@@ -14,6 +14,7 @@ import {
 	handleParentDrop,
 	handleNodeDrop,
 	handleNodePointerdown,
+	handleDragstart,
 	type ParentConfig,
 	type DragState,
 } from "@formkit/drag-and-drop";
@@ -57,8 +58,21 @@ export default defineComponent({
 	mounted() {
 		const container = this.$refs["container"] as HTMLElement;
 		if (container) {
+			// Safari ignores draggable set during pointerdown (FormKit dragHandle), so filter by handle instead
+			let grabbed = false;
+			const handleConfig: Partial<ParentConfig<unknown>> = {
+				handleNodePointerdown: (data, state) => {
+					grabbed = !!(data.e.target as Element).closest(".drag-handle");
+					// touch in transfer lists uses tap-to-select instead of synthetic drag
+					if (grabbed && !(this.transfer && data.e.pointerType === "touch"))
+						handleNodePointerdown(data, state);
+				},
+				handleDragstart: (data, state) =>
+					grabbed ? handleDragstart(data, state) : data.e.preventDefault(),
+			};
 			const config: Partial<ParentConfig<unknown>> = this.transfer
 				? {
+						...handleConfig,
 						group: this.group,
 						name: this.name,
 						disabled: this.disabled,
@@ -66,9 +80,6 @@ export default defineComponent({
 						draggable: (child) => child.classList.contains("drag-drop-item"),
 						draggableValue: this.draggableValue,
 						handleNodeKeydown: () => {},
-						handleNodePointerdown: (data, state) => {
-							if (data.e.pointerType !== "touch") handleNodePointerdown(data, state);
-						},
 						// FormKit transfers during hover; keep parent-owned values until a real drop
 						performTransfer: ({ targetParent }) =>
 							this.$emit("hover", targetParent.data.config.name),
@@ -84,7 +95,7 @@ export default defineComponent({
 							this.$emit("dragstart", draggedNode.data.value),
 						onDragend: () => this.$emit("dragend"),
 					}
-				: { dragHandle: ".drag-handle" };
+				: handleConfig;
 			dragAndDrop({
 				parent: container,
 				getValues: () => [...this.values],

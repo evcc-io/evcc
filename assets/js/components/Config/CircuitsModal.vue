@@ -24,7 +24,7 @@
 				/>
 				<div v-else>
 					<CircuitsTree
-						class="mb-3"
+						class="mb-4"
 						:circuitsTree="configCircuitTree(circuits)"
 						:grid-meter="gridMeter"
 						:loadpoints="loadpoints"
@@ -96,7 +96,7 @@
 						<button
 							v-if="selectedId !== undefined"
 							type="button"
-							class="btn btn-sm btn-link"
+							class="btn btn-sm btn-link text-muted"
 							@click.stop="cancelSelection"
 						>
 							{{ $t("config.general.cancel") }}

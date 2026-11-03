@@ -193,11 +193,12 @@ test.describe("circuit", async () => {
     await expect(rowIn("Home")).toBeVisible();
 
     // drag
-    await row.dragTo(circuit("Corner"));
+    const handle = row.getByTestId("drag-handle");
+    await handle.dragTo(circuit("Corner"));
     await expect(rowIn("Corner")).toBeVisible();
-    await row.dragTo(pool);
+    await handle.dragTo(pool);
     await expect(rowIn("Not assigned")).toBeVisible();
-    await row.dragTo(circuit("Home"));
+    await handle.dragTo(circuit("Home"));
     await expect(rowIn("Home")).toBeVisible();
 
     await restart(CONFIG_FAST);
