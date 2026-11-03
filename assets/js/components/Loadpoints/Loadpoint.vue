@@ -311,7 +311,7 @@ export default defineComponent({
 		phasesProps() {
 			return {
 				...this.collectProps(Phases),
-				maxCurrent: this.effectiveMaxCurrent || this.maxCurrent,
+				maxCurrent: this.effectiveMaxCurrent,
 				phasesConfigured: Math.min(this.phasesConfigured || 3, this.vehicle?.phases || 3),
 			};
 		},
