@@ -145,15 +145,17 @@ func (e *EVSE) OnTransactionEvent(request *transactions.TransactionEventRequest)
 		e.log.DEBUG.Printf("evse %d: transaction started: %s", e.id, e.transaction.id)
 
 	case transactions.TransactionEventUpdated:
-		if e.transaction != nil {
+		if e.transaction != nil && e.transaction.id == request.TransactionInfo.TransactionID {
 			e.transaction.seqNo = request.SequenceNo
 			e.transaction.chargingState = request.TransactionInfo.ChargingState
 		}
 
 	case transactions.TransactionEventEnded:
-		e.log.DEBUG.Printf("evse %d: transaction ended: %s", e.id, request.TransactionInfo.TransactionID)
+		if e.transaction != nil && e.transaction.id == request.TransactionInfo.TransactionID {
+			e.log.DEBUG.Printf("evse %d: transaction ended: %s", e.id, request.TransactionInfo.TransactionID)
 		e.transaction = nil
 		e.idTag = ""
+		}
 	}
 
 	// update meter values from transaction event
@@ -249,10 +251,17 @@ func (e *EVSE) getMeasurement(measurand types.Measurand) (float64, error) {
 	if sv, ok := e.measurements[measurementKey{measurand: measurand}]; ok {
 		return e.scale(sv), nil
 	}
+	// no aggregate measurement found - try to sum phase-specific values
+	var sum float64
+	var found bool
 	for k, sv := range e.measurements {
 		if k.measurand == measurand {
-			return e.scale(sv), nil
+			sum += e.scale(sv)
+			found = true
 		}
+	}
+	if found {
+		return sum, nil
 	}
 
 	// no measurement yet - return 0 instead of error (values arrive later via TransactionEvent)
@@ -263,8 +272,17 @@ func (e *EVSE) getMeasurement(measurand types.Measurand) (float64, error) {
 func (e *EVSE) scale(sv types.SampledValue) float64 {
 	val := sv.Value
 
-	if sv.UnitOfMeasure != nil && sv.UnitOfMeasure.Multiplier != nil {
-		val *= math.Pow(10, float64(*sv.UnitOfMeasure.Multiplier))
+	if sv.UnitOfMeasure != nil {
+		// apply multiplier if present
+		if sv.UnitOfMeasure.Multiplier != nil {
+			val *= math.Pow(10, float64(*sv.UnitOfMeasure.Multiplier))
+		}
+
+		// normalize kilo-units to base units (kW→W, kWh→Wh, kA→A, kV→V)
+		switch sv.UnitOfMeasure.Unit {
+		case "kW", "kWh", "kA", "kV":
+			val *= 1000
+		}
 	}
 
 	return val

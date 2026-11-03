@@ -100,12 +100,23 @@ func Instance() *CSMS {
 		go instance.errorHandler(csms.Errors())
 		go csms.Start(ocpp.Port20(), "/{ws}")
 
-		// wait for server to start
-		for range time.Tick(10 * time.Millisecond) {
-			if dispatcher.IsRunning() {
-				break
+		// wait for server to start with timeout
+		timeout := time.NewTimer(5 * time.Second)
+		ticker := time.NewTicker(10 * time.Millisecond)
+		defer ticker.Stop()
+		defer timeout.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				if dispatcher.IsRunning() {
+					goto started
+				}
+			case <-timeout.C:
+				log.FATAL.Fatal("OCPP 2.0.1 server failed to start within 5 seconds")
 			}
 		}
+	started:
 	})
 
 	return instance
