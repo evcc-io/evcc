@@ -271,9 +271,10 @@ func (c *OCPP20) Enabled() (bool, error) {
 		case availability.ConnectorStatusUnavailable:
 			return false, nil
 		case availability.ConnectorStatusOccupied:
-			// Check if actually charging
+			// Check if actually charging or temporarily suspended by EV
 			if state, ok := c.evse.ChargingState(); ok {
-				return state == transactions.ChargingStateCharging, nil
+				return state == transactions.ChargingStateCharging ||
+					state == transactions.ChargingStateSuspendedEV, nil
 			}
 			return true, nil
 		}
