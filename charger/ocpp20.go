@@ -280,6 +280,11 @@ func (c *OCPP20) Enabled() (bool, error) {
 		}
 	}
 
+	// for Available status, use cached value (offered measurands report hardware limits, not evcc state)
+	if s, err := c.evse.Status(); err == nil && s == availability.ConnectorStatusAvailable {
+		return c.enabled, nil
+	}
+
 	// fallback to the "offered" measurands
 	if v, err := c.evse.GetMaxCurrent(); err == nil {
 		return v > 0, nil

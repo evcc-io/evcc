@@ -144,15 +144,20 @@ func (cs *CSMS) RegisterChargingStation(id string, newfun func() *Station, init 
 	// first time- create the charging station
 	cp = newfun()
 
-	cs.mu.Lock()
-	reg.cs = cp
-	cs.mu.Unlock()
-
 	if registered {
 		cp.onTransportConnect()
 	}
 
-	return cp, init(cp)
+	if err := init(cp); err != nil {
+		return nil, err
+	}
+
+	// cache only after successful initialization
+	cs.mu.Lock()
+	reg.cs = cp
+	cs.mu.Unlock()
+
+	return cp, nil
 }
 
 // NewChargingStation implements ocpp2.ChargingStationConnectionHandler
