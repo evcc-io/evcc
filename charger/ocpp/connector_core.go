@@ -159,7 +159,7 @@ func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest)
 		IdTagInfo: &types.IdTagInfo{
 			Status: types.AuthorizationStatusAccepted,
 		},
-		TransactionId: txnId,
+		TransactionId: conn.txnId,
 	}
 
 	return res, nil
@@ -274,4 +274,12 @@ func (conn *Connector) OnStopTransaction(request *core.StopTransactionRequest) (
 	conn.assumeMeterStopped()
 
 	return res, nil
+}
+
+// startTransaction sets the transaction state from a forwarded StartTransaction response
+func (conn *Connector) startTransaction(txnId int, idTag string) {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+	conn.txnId = txnId
+	conn.idTag = idTag
 }
