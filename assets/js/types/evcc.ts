@@ -32,6 +32,26 @@ declare global {
 export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
 
 export type DeviceColors = Record<string, string>;
+
+/** Setup checklist item. */
+export type OnboardingItem =
+  | "battery"
+  | "pv"
+  | "grid"
+  | "loadpoint"
+  | "heater"
+  | "consumer"
+  | "gridImport"
+  | "gridExport"
+  | "co2"
+  | "solar";
+/** Setup wizard and checklist state. */
+export interface OnboardingState {
+  /** Setup wizard was finished or skipped. */
+  done: boolean;
+  /** Dismissed setup checklist items. */
+  dismissed: OnboardingItem[];
+}
 /** Color assigned to a device for consistent UI display. */
 export type DeviceColorEntry = {
   /** Device title the color is assigned to. */
@@ -164,6 +184,8 @@ export interface State {
   experimental?: boolean;
   /** Initial setup is required. */
   setupRequired?: boolean;
+  /** Setup wizard and checklist state. */
+  onboarding?: OnboardingState;
   /** Startup has completed. */
   startupCompleted?: boolean;
   /** HTTP API is ready to accept requests. */
@@ -527,6 +549,9 @@ export interface LoadpointThreshold {
   threshold: number;
 }
 
+/** Demand forecast strategy of a heating loadpoint. */
+export type DemandPredictor = "daily" | "weekday" | "temperature";
+
 export interface ConfigLoadpoint {
   id?: number;
   name?: string;
@@ -546,6 +571,8 @@ export interface ConfigLoadpoint {
   planStrategy?: PlanStrategy;
   limitEnergy?: number;
   limitSoc?: number;
+  minSoc?: number;
+  demandPredictor?: DemandPredictor;
   circuit?: string;
   thresholds: {
     enable: LoadpointThreshold;
@@ -1348,6 +1375,8 @@ export interface Vehicle {
   features?: string[];
   /** Usable battery capacity in kWh. */
   capacity?: number;
+  /** Maximum number of phases supported by the vehicle. Zero means unknown. */
+  phases?: number;
   /** Vehicle icon name for UI display. */
   icon?: string;
 }
@@ -1519,6 +1548,7 @@ export interface EvOpt {
   req: OptimizationInput;
   res: OptimizationResult;
   details: OptimizationDetails;
+  hosted: boolean;
 }
 
 // last plan explanation, plan is the updated time of the explained plan

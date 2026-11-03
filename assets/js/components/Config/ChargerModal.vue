@@ -1,8 +1,10 @@
 <template>
 	<DeviceModalBase
 		:id="id"
-		name="charger"
+		:name="name"
 		device-type="charger"
+		:hide-disable="hideDisable"
+		:has-device-error="hasDeviceError"
 		:is-sponsor="isSponsor"
 		:modal-title="modalTitle"
 		tags-usage="charge"
@@ -106,6 +108,8 @@ import sgreadyRelayYaml from "./defaultYaml/sgreadyRelay.yaml?raw";
 import { LOADPOINT_TYPE, type LoadpointType, type Ocpp } from "@/types/evcc";
 import { getOcppUrl, getOcppUrlWithStationId, getOcpp20Url, getOcpp20UrlWithStationId } from "@/utils/ocpp";
 
+import { LOADPOINT_TYPE, type DeviceType, type LoadpointType, type Ocpp } from "@/types/evcc";
+import { getOcppUrl, getOcppUrlWithStationId } from "@/utils/ocpp";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -129,6 +133,9 @@ export default defineComponent({
 			default: () => ({ config: { port: 0 }, status: { stations: [] } }),
 		},
 		isSponsor: Boolean,
+		name: { type: String, default: "charger" },
+		hideDisable: Boolean,
+		hasDeviceError: Function as PropType<(type: DeviceType, name: string) => boolean>,
 	},
 	emits: ["changed", "close"],
 	data() {
@@ -142,10 +149,10 @@ export default defineComponent({
 	},
 	computed: {
 		id(): number | undefined {
-			return getModal("charger")?.id;
+			return getModal(this.name)?.id;
 		},
-		loadpointType(): LoadpointType | null {
-			return (getModal("charger")?.type as LoadpointType) || null;
+		loadpointType(): LoadpointType | "switch" | null {
+			return (getModal(this.name)?.type as LoadpointType | "switch") || null;
 		},
 		modalTitle(): string {
 			if (this.isNew) {
@@ -158,6 +165,9 @@ export default defineComponent({
 		},
 		isHeating(): boolean {
 			return this.loadpointType === LOADPOINT_TYPE.HEATING;
+		},
+		isSwitch(): boolean {
+			return this.loadpointType === "switch";
 		},
 		isOcpp(): boolean {
 			return (
@@ -200,6 +210,24 @@ export default defineComponent({
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
 			const result: TemplateGroup[] = [];
 
+			if (this.isSwitch) {
+				return [
+					{
+						label: "generic",
+						options: [
+							customTemplateOption(
+								this.$t(customChargerName(ConfigType.SwitchSocket, false)),
+								ConfigType.SwitchSocket
+							),
+						],
+					},
+					{
+						label: "switchsockets",
+						options: products.filter((p) => p.group === "switchsockets"),
+					},
+				];
+			}
+
 			if (this.isHeating) {
 				result.push({
 					label: "generic",
@@ -207,7 +235,6 @@ export default defineComponent({
 						...products.filter((p) => p.group === "heatinggeneric"),
 						...[
 							ConfigType.Custom,
-							ConfigType.SgReadyRelay,
 							ConfigType.SgReady,
 							ConfigType.Heatpump,
 							ConfigType.SwitchSocket,
@@ -313,8 +340,6 @@ export default defineComponent({
 					return this.isHeating ? switchsocketHeaterYaml : switchsocketChargerYaml;
 				case ConfigType.SgReady:
 					return sgreadyYaml;
-				case ConfigType.SgReadyRelay:
-					return sgreadyRelayYaml;
 				default: // template
 					return "";
 			}

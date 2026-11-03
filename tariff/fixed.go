@@ -63,6 +63,18 @@ func NewFixedFromConfig(other map[string]any) (api.Tariff, error) {
 	return t, nil
 }
 
+// wallClock returns the local time the given minutes after midnight, independent of DST offset changes
+func wallClock(dayStart time.Time, minutes int) time.Time {
+	ts := time.Date(dayStart.Year(), dayStart.Month(), dayStart.Day(), 0, minutes, 0, 0, dayStart.Location())
+
+	// dst spring forward: map wall times inside the skipped hour to its end, keeping markers ordered
+	if 60*ts.Hour()+ts.Minute() != minutes {
+		ts, _ = ts.ZoneBounds()
+	}
+
+	return ts
+}
+
 // Rates implements the api.Tariff interface
 func (t *Fixed) Rates() (api.Rates, error) {
 	var res api.Rates
@@ -82,7 +94,7 @@ func (t *Fixed) Rates() (api.Rates, error) {
 		markers := append(slices.Clone(zones), t.chargesZones.ForDayAndMonth(dow, month)...).TimeTableMarkers()
 
 		for i, m := range markers {
-			ts := dayStart.Add(time.Minute * time.Duration(m.Minutes()))
+			ts := wallClock(dayStart, m.Minutes())
 
 			var zone *fixed.Zone
 			for j := len(zones) - 1; j >= 0; j-- {
@@ -99,7 +111,7 @@ func (t *Fixed) Rates() (api.Rates, error) {
 			// end rate at end of day or next marker
 			end := dayStart.AddDate(0, 0, 1)
 			if i+1 < len(markers) {
-				end = dayStart.Add(time.Minute * time.Duration(markers[i+1].Minutes()))
+				end = wallClock(dayStart, markers[i+1].Minutes())
 			}
 
 			// dst spring forward: last marker coincides with end of day
