@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/andig/mbserver"
 	"github.com/evcc-io/evcc/api"
@@ -14,12 +15,17 @@ import (
 
 type openWB20Handler struct {
 	mbserver.RequestHandler
-	failReset bool
-	rfidReads int
+	failReset  bool
+	blankRFID  bool
+	rfidReads  int
+	rfidResets int
 }
 
 func (h *openWB20Handler) HandleInputRegisters(req *mbserver.InputRegistersRequest) ([]uint16, error) {
 	res := make([]uint16, req.Quantity)
+	if h.blankRFID {
+		return res, nil
+	}
 	for i := range res {
 		res[i] = ' '<<8 | ' '
 	}
@@ -34,6 +40,9 @@ func (h *openWB20Handler) HandleInputRegisters(req *mbserver.InputRegistersReque
 func (h *openWB20Handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) ([]uint16, error) {
 	if req.IsWrite && req.Addr == openwbRegResetRfid && h.failReset {
 		return nil, mbserver.ErrIllegalDataValue
+	}
+	if req.IsWrite && req.Addr == openwbRegResetRfid {
+		h.rfidResets++
 	}
 	return req.Args, nil
 }
@@ -69,4 +78,18 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 	require.Equal(t, []string{"tag"}, identity)
 	require.False(t, wb.rfidResetPending)
 	require.Equal(t, 1, handler.rfidReads)
+
+	handler.blankRFID = true
+	wb.laststatus = api.StatusA
+	wb.lastidentify = []string{"tag"}
+	wb.lastidtime = time.Now().Add(-3 * time.Minute)
+
+	identity, err = wb.identify()
+	require.NoError(t, err)
+	require.Nil(t, identity)
+
+	require.NoError(t, wb.HandleRfidReset())
+	require.Nil(t, wb.lastidentify)
+	require.Equal(t, time.Unix(0, 0), wb.lastidtime)
+	require.Equal(t, 1, handler.rfidResets)
 }

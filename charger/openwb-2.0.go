@@ -299,5 +299,9 @@ func (wb *OpenWB20) identify() ([]string, error) {
 	if err != nil {
 		return wb.lastidentify, err
 	}
-	return []string{bytesAsString(b)}, nil
+	identity := bytesAsString(b)
+	if identity == "" {
+		return nil, nil
+	}
+	return []string{identity}, nil
 }
