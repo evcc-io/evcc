@@ -165,14 +165,13 @@
 								</CustomSelect>
 							</div>
 							<div
-								v-if="fullChargeEnabled(vehicle)"
+								v-if="fullChargeStatus(vehicle)"
 								class="col-12 mb-3 small evcc-gray"
 								data-testid="full-charge-status"
 							>
-								<span v-if="fullChargeStatus(vehicle)" class="me-2">
-									{{ fullChargeStatus(vehicle) }}
-								</span>
+								<span class="me-2">{{ fullChargeStatus(vehicle) }}</span>
 								<button
+									v-if="fullChargeDue(vehicle)"
 									type="button"
 									class="btn btn-link btn-sm p-0 align-baseline"
 									@click="fullChargeDone(vehicle)"
@@ -361,6 +360,9 @@ export default defineComponent({
 			const { days = 0, energy = 0 } = vehicle.fullCharge ?? {};
 			return days > 0 || energy > 0;
 		},
+		fullChargeDue(vehicle: Vehicle): boolean {
+			return !!this.connectedLoadpoint(vehicle)?.fullChargeActive;
+		},
 		fullChargeDone(vehicle: Vehicle): void {
 			api.post(`vehicles/${vehicle.name}/fullcharge/done`);
 		},
@@ -368,7 +370,7 @@ export default defineComponent({
 			if (!this.fullChargeEnabled(vehicle)) {
 				return null;
 			}
-			if (this.connectedLoadpoint(vehicle)?.fullChargeActive) {
+			if (this.fullChargeDue(vehicle)) {
 				return this.$t("main.vehicleSettings.fullChargeActive");
 			}
 			if (vehicle.fullChargeTime) {

@@ -1844,7 +1844,7 @@
       "editHint": "Fahrzeuge können in der {0} bearbeitet werden.",
       "fullChargeActive": "Vollladung fällig, das Limit steht auf 100 %, bis das Fahrzeug voll ist.",
       "fullChargeDays": "Vollladung (LFP)",
-      "fullChargeDone": "Vollladung als erledigt melden",
+      "fullChargeDone": "Schon erledigt",
       "fullChargeEnergy": "Vollladung nach",
       "fullChargeEveryDays": "alle {0} Tage",
       "fullChargeHint": "Lädt regelmäßig auf 100 %, damit das BMS von LFP-Akkus die Zellen ausgleicht. Für NMC-Akkus nicht empfohlen.",

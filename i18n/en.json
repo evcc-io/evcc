@@ -1844,7 +1844,7 @@
       "editHint": "Vehicles can be edited in {0}.",
       "fullChargeActive": "Full charge due, the limit is raised to 100 % until the vehicle is full.",
       "fullChargeDays": "Full charge (LFP)",
-      "fullChargeDone": "Mark full charge as done",
+      "fullChargeDone": "Already done",
       "fullChargeEnergy": "Full charge after",
       "fullChargeEveryDays": "every {0} days",
       "fullChargeHint": "Charges to 100 % regularly so the BMS of LFP batteries can balance the cells. Not recommended for NMC batteries.",
