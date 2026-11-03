@@ -187,7 +187,6 @@
     "circuits": {
       "addMainCircuit": "Dodaj obwód główny",
       "addSubCircuit": "Dodaj obwód podrzędny",
-      "chargingPointsNote": "Przypisz punkty ładowania i grzejniki do obwodu w ich własnych ustawieniach.",
       "description": "Zapewnia, że suma wszystkich punktów odbioru energii podłączonych do obwodu nie przekracza skonfigurowanych limitów mocy i prądu. Obwody można zagnieżdżać, aby zbudować hierarchię.",
       "legacyWarning": "Dostępna jest nowa konfiguracja obwodów! Usuń i zapisz swoją konfigurację tutaj, aby skorzystać z nowego procesu.",
       "meterDedicated": "Licznik",
