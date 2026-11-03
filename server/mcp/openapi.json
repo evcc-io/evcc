@@ -5491,6 +5491,10 @@
             "description": "Usable battery capacity in kWh.",
             "type": "number"
           },
+          "phases": {
+            "description": "Maximum number of phases supported by the vehicle. Zero means unknown.",
+            "type": "number"
+          },
           "icon": {
             "description": "Vehicle icon name for UI display.",
             "type": "string"

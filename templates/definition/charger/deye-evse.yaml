@@ -1,0 +1,39 @@
+template: deye-evse
+products:
+  - brand: Deye
+    description:
+      generic: SUN-EVSE11K01-EU-AC
+  - brand: Deye
+    description:
+      generic: SUN-EVSE22K01-EU-AC
+capabilities: ["mA", "meter"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: |
+      Die Verbindung erfolgt über den Solarman-WLAN-Logger der Wallbox (Port 8899). Die Register sind nicht offiziell dokumentiert, sondern per Reverse Engineering ermittelt.
+      Der Kommunikationsmodus der Wallbox muss auf "WiFi" stehen, im Modus "LoRa" überschreibt der Wechselrichter die Leistungsvorgabe von evcc.
+    en: |
+      The connection uses the charger's Solarman WiFi logger (port 8899). The registers are not officially documented but reverse engineered.
+      The charger's communication mode must be set to "WiFi", in "LoRa" mode the inverter overrides the power setpoint written by evcc.
+params:
+  - name: host
+  - name: port
+    default: 8899
+    advanced: true
+  - name: serial
+    required: true
+    type: int
+    example: 1234567890
+    help:
+      de: Seriennummer des WLAN-Loggers. Sie wird auf dessen Statusseite unter Geräteinformationen angezeigt.
+      en: WiFi logger serial number. It is shown under device information on the logger status page.
+  - name: id
+    default: 162
+    advanced: true
+render: |
+  type: deye-evse
+  host: {{ .host }}
+  port: {{ .port }}
+  serial: {{ .serial }}
+  id: {{ .id }}

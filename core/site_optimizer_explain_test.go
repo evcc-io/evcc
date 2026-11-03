@@ -45,8 +45,12 @@ func TestExplainOptimizerResult(t *testing.T) {
 	defer srv.Close()
 
 	t.Setenv("OPTIMIZER_URI", srv.URL)
-	sponsor.Subject, sponsor.Token = "sponsor", "token"
-	t.Cleanup(func() { sponsor.Subject, sponsor.Token = "", "" })
+	sponsor.Subject = "sponsor"
+	sponsor.SetToken("token")
+	t.Cleanup(func() {
+		sponsor.Subject = ""
+		sponsor.SetToken("")
+	})
 
 	site := &Site{log: util.NewLogger("foo")}
 
@@ -63,7 +67,7 @@ func TestExplainOptimizerResult(t *testing.T) {
 	first := site.explained.Explanation
 	assert.Equal(t, "because", first.Text)
 	assert.False(t, first.Created.IsZero())
-	assert.Equal(t, "Bearer token", auth)
+	assert.Empty(t, auth, "sponsor token must not be sent to a custom optimizer")
 	assert.Equal(t, "de", got.Language)
 	assert.Equal(t, []int{3600}, got.Req.TimeSeries.Dt)
 	assert.Equal(t, optimizer.Optimal, got.Res.Status)

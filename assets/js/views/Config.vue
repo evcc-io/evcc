@@ -23,6 +23,7 @@
 							class="box-pull-out"
 							:configured="configuredItems"
 							:dismissed="dismissed"
+							:legacy-tariffs="tariffsYamlVisible"
 						/>
 						<ConfigSectionNav
 							v-if="mobile"
@@ -110,20 +111,10 @@
 				<ConfigSection v-bind="sectionProps('consumers')">
 					<div class="p-0 config-list box-pull-out">
 						<MeterCard
-							v-for="meter in consumerMeters"
+							v-for="{ meter, meterType } in consumerAndAuxMeters"
 							:key="meter.name"
 							:meter="meter"
-							meter-type="consumer"
-							:has-error="hasDeviceError('meter', meter.name)"
-							:tags="deviceTags('meter', meter.name)"
-							@edit="(type, id) => openModal('meter', { type, id })"
-							@enable="handleDisable('meter', meter.id, false)"
-						/>
-						<MeterCard
-							v-for="meter in auxMeters"
-							:key="meter.name"
-							:meter="meter"
-							meter-type="aux"
+							:meter-type="meterType"
 							:has-error="hasDeviceError('meter', meter.name)"
 							:tags="deviceTags('meter', meter.name)"
 							@edit="(type, id) => openModal('meter', { type, id })"
@@ -540,6 +531,7 @@
 					:hasDeviceError="hasDeviceError"
 					:voltage="voltage"
 					:gridConnection="gridConnection"
+					:temperatureTariffConfigured="temperatureTariffConfigured"
 					@changed="loadpointChanged"
 					@dismissed="loadpointDismissed"
 					@disable="({ id, disable }) => handleDisable('loadpoint', id, disable)"
@@ -554,7 +546,20 @@
 					@changed="meterChanged"
 					@disable="({ id, disable }) => handleDisable('meter', id, disable)"
 				/>
-				<ChargerModal :is-sponsor="isSponsor" :ocpp="ocpp" @changed="chargerChanged" />
+				<ChargerModal
+					:is-sponsor="isSponsor"
+					:ocpp="ocpp"
+					:has-device-error="hasDeviceError"
+					@changed="chargerChanged"
+				/>
+				<ChargerModal
+					name="subcharger"
+					hide-disable
+					:is-sponsor="isSponsor"
+					:ocpp="ocpp"
+					:has-device-error="hasDeviceError"
+					@changed="chargerChanged"
+				/>
 				<InfluxModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
@@ -579,8 +584,16 @@
 				<TariffsLegacyModal @changed="loadDirty" />
 				<TariffModal
 					:currency="currency"
+					:has-device-error="hasDeviceError"
 					@changed="tariffChanged"
 					@disable="({ id, disable }) => handleDisable('tariff', id, disable)"
+				/>
+				<TariffModal
+					name="subtariff"
+					hide-disable
+					:currency="currency"
+					:has-device-error="hasDeviceError"
+					@changed="subTariffChanged"
 				/>
 				<TelemetryModal :is-sponsor="isSponsor" :telemetry="telemetry" />
 				<OptimizerModal :is-sponsor="isSponsor" />
@@ -594,7 +607,16 @@
 					:ext-meters="extMeters"
 					@changed="loadDirty"
 				/>
-				<CircuitsModal :circuits="circuits" :grid-meter="gridMeter" @changed="loadDirty" />
+				<CircuitsModal
+					:circuits="circuits"
+					:grid-meter="gridMeter"
+					:loadpoints="assignmentLoadpoints"
+					:pending="circuitAssignmentPending"
+					:error="circuitAssignmentError"
+					:revision="circuitAssignmentRevision"
+					:flash-id="circuitAssignmentFlash"
+					@assign="circuitAssignmentChanged"
+				/>
 				<CircuitModal
 					:circuits="circuits"
 					:meters="meters"
@@ -714,7 +736,7 @@ import type {
 	OnboardingItem,
 } from "@/types/evcc";
 import { ConfigType, CURRENCY } from "@/types/evcc";
-import { circuitTree, type CircuitNode } from "@/utils/circuits";
+import { circuitTree, type CircuitNode, type CircuitAssignmentLoadpoint } from "@/utils/circuits";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
 
@@ -830,6 +852,11 @@ export default defineComponent({
 			vehicles: [] as ConfigVehicle[],
 			meters: [] as ConfigMeter[],
 			loadpoints: [] as ConfigLoadpoint[],
+			circuitAssignments: {} as Record<number, string | null>,
+			circuitAssignmentPending: false,
+			circuitAssignmentError: "",
+			circuitAssignmentRevision: 0,
+			circuitAssignmentFlash: undefined as number | undefined,
 			// checklist state is derived from loaded config, keep it hidden until then
 			loaded: false,
 			chargers: [] as ConfigCharger[],
@@ -872,6 +899,19 @@ export default defineComponent({
 		return { title: this.$t("config.main.title") };
 	},
 	computed: {
+		assignmentLoadpoints(): CircuitAssignmentLoadpoint[] {
+			return this.loadpoints.map((lp) => ({
+				id: lp.id,
+				name: lp.name,
+				title: lp.title,
+				circuit:
+					lp.id !== undefined && lp.id in this.circuitAssignments
+						? this.circuitAssignments[lp.id]
+						: lp.circuit || null,
+				editable: lp.id !== undefined && !lp.disable,
+				heating: this.deviceValues.charger[lp.charger]?.heating?.value === true,
+			}));
+		},
 		activeSlug(): string | undefined {
 			const slug = this.$route.hash.slice(1);
 			return SECTION_TITLES[slug] ? slug : undefined;
@@ -1034,6 +1074,9 @@ export default defineComponent({
 			return this.loadpoints.filter((lp) => this.isHeater(lp.charger));
 		},
 		configuredItems(): Record<string, boolean> {
+			// legacy tariffs have no refs, their live values only exist when configured
+			const { tariffGrid, tariffFeedIn, tariffCo2, tariffSolar } = store.state;
+			const yaml = this.tariffsYamlVisible;
 			return {
 				battery: (this.site.battery?.length ?? 0) > 0,
 				pv: (this.site.pv?.length ?? 0) > 0,
@@ -1041,10 +1084,10 @@ export default defineComponent({
 				loadpoint: this.chargingLoadpoints.length > 0,
 				heater: this.heaterLoadpoints.length > 0,
 				consumer: (this.site.consumer?.length ?? 0) > 0,
-				gridImport: !!this.tariffRefs.grid,
-				gridExport: !!this.tariffRefs.feedIn,
-				co2: !!this.tariffRefs.co2,
-				solar: this.tariffRefs.solar.length > 0,
+				gridImport: yaml ? tariffGrid !== undefined : !!this.tariffRefs.grid,
+				gridExport: yaml ? tariffFeedIn !== undefined : !!this.tariffRefs.feedIn,
+				co2: yaml ? tariffCo2 !== undefined : !!this.tariffRefs.co2,
+				solar: yaml ? tariffSolar !== undefined : this.tariffRefs.solar.length > 0,
 			};
 		},
 		currency(): CURRENCY {
@@ -1072,8 +1115,7 @@ export default defineComponent({
 			return this.getMetersByNames(names);
 		},
 		auxMeters() {
-			const names = this.site?.aux;
-			return this.getMetersByNames(names);
+			return this.getMetersByNames(this.site?.aux);
 		},
 		extMeters() {
 			const names = this.site?.ext;
@@ -1087,6 +1129,18 @@ export default defineComponent({
 		},
 		consumerMeters() {
 			return this.getMetersByNames(this.site?.consumer);
+		},
+		consumerAndAuxMeters(): { meter: ConfigMeter; meterType: MeterType; label: string }[] {
+			const entries = (meters: ConfigMeter[], meterType: MeterType, fallback: string) =>
+				meters.map((meter) => ({
+					meter,
+					meterType,
+					label: meter.deviceTitle || meter.config?.template || fallback,
+				}));
+			return [
+				...entries(this.consumerMeters, "consumer", this.$t("config.devices.consumer")),
+				...entries(this.auxMeters, "aux", this.$t("config.devices.auxMeter")),
+			].sort((a, b) => a.label.localeCompare(b.label, this.$i18n.locale));
 		},
 		gridTariff() {
 			const name = this.tariffRefs?.grid;
@@ -1107,6 +1161,11 @@ export default defineComponent({
 		temperatureTariff() {
 			const name = this.tariffRefs?.temperature;
 			return name ? this.tariffs.find((t) => t.name === name) : null;
+		},
+		temperatureTariffConfigured(): boolean {
+			return this.tariffsYamlVisible
+				? store.state?.tariffTemperature !== undefined
+				: !!this.temperatureTariff;
 		},
 		solarTariffs() {
 			const names = this.tariffRefs?.solar || [];
@@ -1335,6 +1394,7 @@ export default defineComponent({
 		backupRestoreProps() {
 			return {
 				authDisabled: this.authDisabled,
+				wizardPending: this.wizardPending,
 			};
 		},
 		circuitsRoot(): CircuitNode | undefined {
@@ -1401,6 +1461,25 @@ export default defineComponent({
 		}
 	},
 	methods: {
+		async circuitAssignmentChanged({ id, circuit }: { id: number; circuit: string | null }) {
+			const lp = this.assignmentLoadpoints.find((lp) => lp.id === id);
+			if (this.circuitAssignmentPending || !lp?.editable || lp.circuit === circuit) return;
+			this.circuitAssignmentPending = true;
+			this.circuitAssignmentError = "";
+			try {
+				const { data } = await api.get(`config/loadpoints/${id}`);
+				await api.put(`config/loadpoints/${id}`, { ...data, circuit: circuit ?? "" });
+				// Live static references remain unchanged until restart
+				this.circuitAssignments[id] = circuit;
+				this.circuitAssignmentFlash = circuit === null ? undefined : id;
+				this.circuitAssignmentRevision++;
+				await this.loadDirty();
+			} catch {
+				this.circuitAssignmentError = this.$t("config.circuits.assignmentFailed");
+			} finally {
+				this.circuitAssignmentPending = false;
+			}
+		},
 		isUnconfigured(tags: DeviceTags): boolean {
 			return tags["configured"]?.value === false;
 		},
@@ -1630,6 +1709,12 @@ export default defineComponent({
 			}
 			await this.loadTariffs();
 			await this.loadTariffRefs();
+			await this.loadDirty();
+			this.updateValues();
+		},
+		// nested tariffs belong to their parent and get no usage of their own
+		async subTariffChanged() {
+			await this.loadTariffs();
 			await this.loadDirty();
 			this.updateValues();
 		},

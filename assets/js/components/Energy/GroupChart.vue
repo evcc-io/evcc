@@ -9,8 +9,8 @@ import { defineComponent, type PropType } from "vue";
 import {
 	echarts,
 	axisNameStyle,
+	energyGrid,
 	FONT_FAMILY,
-	forecastGrid,
 	forecastYAxis,
 	lineCasing,
 	tooltipStyle,
@@ -41,7 +41,14 @@ import type { PriceBand, PriceOverlay } from "./types";
 import { CURRENCY } from "@/types/evcc";
 import { energyAxisScale, type EnergyAxisScale } from "@/utils/energyAxis";
 import { labelStep, DAY_STEPS, MONTH_STEPS } from "@/utils/labelStep";
-import { PANEL_EXTRA, panelGrids, socTempPanel, type SubPanel } from "./subPanel";
+import {
+	PANEL_EXTRA,
+	panelGrids,
+	panelYAxis,
+	slotStarts,
+	socTempPanel,
+	type SubPanel,
+} from "./subPanel";
 
 export interface HistorySlot {
 	start: string;
@@ -256,8 +263,8 @@ export default defineComponent({
 			const has = (key: "energy" | "returnEnergy") =>
 				this.series.some((s) => s.data.some((slot) => slot[key] > 0));
 			// each area runs from the baseline to its axis end (an infinite value is
-			// clipped to it) and carries its label on the outer corner: as far left of the
-			// plot as the tick labels are right of it, and shifted along the rotated text
+			// clipped to it) and carries its label on the outer corner: at the left edge of
+			// the grid's inset, and shifted along the rotated text
 			// (positive is up) to the chart's own top and bottom
 			return [
 				...(this.upperLabel && has("energy")
@@ -267,7 +274,7 @@ export default defineComponent({
 									name: this.upperLabel,
 									yAxis: 0,
 									label: {
-										position: [-14, "0%"],
+										position: [-30, "0%"],
 										align: "right",
 										offset: [28, 0],
 									},
@@ -283,7 +290,7 @@ export default defineComponent({
 									name: this.lowerLabel,
 									yAxis: 0,
 									label: {
-										position: [-14, "100%"],
+										position: [-30, "100%"],
 										align: "left",
 										offset: [-17, 0],
 									},
@@ -335,12 +342,11 @@ export default defineComponent({
 				id: `price-${key}`,
 				name: `price-${key}`,
 				type: "line",
-				xAxisIndex: 1,
+				xAxisIndex: 2,
 				yAxisIndex: 1,
-				data: band.avg,
-				// a price holds for its whole slot: points sit at slot centers, so the
-				// jump between two points lands on the slot boundary
-				step: "middle",
+				data: slotStarts(band.avg),
+				// a price holds for its whole slot, until the next slot's start
+				step: "end",
 				...hoverDot(color),
 				lineStyle: { ...lineDefaults, color },
 				// glow fading out below the line, like the price forecast
@@ -356,21 +362,9 @@ export default defineComponent({
 			return {
 				track: "transparent",
 				series: bands.map(series),
+				xAxis: { ...boundaryAxis(this.categoryTimestamps.length), gridIndex: 1 },
 				// the exact price range, currencies differ too much for rounding rules
-				yAxis: forecastYAxis({
-					gridIndex: 1,
-					position: "right",
-					min,
-					max,
-					// labels at both ends only
-					interval: max - min,
-					splitLine: { show: false },
-					axisLabel: {
-						color: colors.muted || "",
-						hideOverlap: true,
-						formatter: (v: number) => this.fmtPricePerKWh(v, this.currency, true),
-					},
-				}),
+				yAxis: panelYAxis(min, max, (v) => this.fmtPricePerKWh(v, this.currency, true)),
 			};
 		},
 		socTempIsTemp(): boolean {
@@ -474,14 +468,37 @@ export default defineComponent({
 				type: "line",
 				data: overlayValues,
 				smooth: true,
-				symbol: "none",
+				...hoverDot(overlayCol),
 				connectNulls: true,
 				lineStyle: { color: overlayCol, ...lineDefaults },
-				itemStyle: { color: overlayCol },
 				z: 4,
 			};
+			const casing = lineCasing(overlay, 3);
+			// a line through slot centers stops half a slot short of the plot edges: its
+			// first and last value repeated out to them on the boundary axis
+			const edges = (line: Record<string, unknown>) => {
+				const edge = (i: number, x: number) =>
+					overlayValues[i] == null
+						? []
+						: [
+								{
+									...line,
+									id: `${line["id"]}-edge${i}`,
+									xAxisIndex: 1,
+									data: [
+										[x, overlayValues[i]],
+										[i, overlayValues[i]],
+									],
+									symbol: "none",
+									silent: true,
+									emphasis: { disabled: true },
+								},
+							];
+				const last = overlayValues.length - 1;
+				return [...edge(0, -0.5), ...edge(last, last + 0.5)];
+			};
 			// the side labels ride on the overlay, not on its casing
-			result.push(lineCasing(overlay, 3), {
+			result.push(casing, {
 				...overlay,
 				...(this.sideLabels.length
 					? {
@@ -501,8 +518,10 @@ export default defineComponent({
 						}
 					: {}),
 			});
-
-			if (this.subPanel) result.push(...this.subPanel.series);
+			// grid 0 only has the boundary axis without a panel
+			result.push(
+				...(this.subPanel ? this.subPanel.series : [...edges(casing), ...edges(overlay)])
+			);
 
 			// Always render import + export series per entity, even if one direction
 			// is empty (null-filled). Stable series ids/structure across renders so
@@ -688,9 +707,7 @@ export default defineComponent({
 			// the sub panel owns axis index 1 and only exists in the day view
 			const weekMarkers = this.period === PERIODS.MONTH && !this.subPanel;
 			const barGrid = {
-				...forecastGrid(),
-				left: this.socTempValues ? 36 : this.upperLabel || this.lowerLabel ? 22 : 0,
-				right: 36,
+				...energyGrid(),
 				...(this.showXAxis ? {} : { bottom: 4 }),
 			};
 			const xAxisLabel = {
@@ -911,10 +928,9 @@ export default defineComponent({
 								axisLine: { show: false },
 								axisLabel: xAxisLabel,
 							},
+							this.subPanel.xAxis,
 						]
-					: weekMarkers
-						? [barXAxis, boundaryAxis(cats.length)]
-						: barXAxis,
+					: [barXAxis, boundaryAxis(cats.length)],
 				yAxis: [
 					forecastYAxis({
 						// automatic range must be allowed below zero for the export band
@@ -1056,9 +1072,12 @@ export default defineComponent({
 			const grid = this.chart.convertFromPixel({ gridIndex: 0 }, point) as number[];
 			const slot = Math.round(grid[0]!);
 			if (slot === this.activeSlot) return;
-			// nothing to highlight in a slot without a bar, the panel's line still gets
-			// its dot there
-			if (!this.slotsWithData[slot] && !this.subPanel) {
+			// in a slot without a bar only the lines get their dot
+			const lines = [
+				...(this.subPanel?.series.map((s) => s["id"]) ?? []),
+				...(this.showOverlay ? ["overlay"] : []),
+			];
+			if (!this.slotsWithData[slot] && !lines.length) {
 				this.clearHighlight();
 				return;
 			}
@@ -1067,9 +1086,7 @@ export default defineComponent({
 			this.chart.dispatchAction({
 				type: "highlight",
 				dataIndex: slot,
-				...(this.slotsWithData[slot]
-					? {}
-					: { seriesId: this.subPanel?.series.map((s) => s["id"]) }),
+				...(this.slotsWithData[slot] ? {} : { seriesId: lines }),
 			});
 		},
 		clearHighlight() {

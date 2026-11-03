@@ -19,7 +19,7 @@ render: |
   {{ include "base" . }}
   forecast:
     source: http
-    uri: https://api.energidataservice.dk/dataset/DayAheadPrices?start=now&filter={"PriceArea":["{{ .region }}"]}
+    uri: https://api.energidataservice.dk/dataset/DayAheadPrices?start=now-PT15M&filter={"PriceArea":["{{ .region }}"]}
     jq: |
       [.records[]
         | {

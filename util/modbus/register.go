@@ -65,6 +65,8 @@ func (r Register) FuncCode() (uint8, error) {
 		return modbus.FuncCodeReadInputRegisters, nil
 	case "coil":
 		return modbus.FuncCodeReadCoils, nil
+	case "discreteinput", "discrete":
+		return modbus.FuncCodeReadDiscreteInputs, nil
 	case "writesingle", "writeholding":
 		return modbus.FuncCodeWriteSingleRegister, nil
 	case "writemultiple", "writeholdings":

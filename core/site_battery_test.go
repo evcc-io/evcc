@@ -43,6 +43,42 @@ func TestBatterySocRetainOnReadError(t *testing.T) {
 	assert.Equal(t, 84.0, site.battery.Soc, "soc retained when the read fails")
 }
 
+// TestBatterySocRetainOnPartialReadError guards that a failed soc read of one of
+// several batteries keeps its last soc instead of halving the site soc (#35286).
+func TestBatterySocRetainOnPartialReadError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	newBattery := func(soc float64, err error) config.Device[api.Meter] {
+		meter := api.NewMockMeter(ctrl)
+		meter.EXPECT().CurrentPower().Return(0.0, nil).AnyTimes()
+
+		battery := api.NewMockBattery(ctrl)
+		battery.EXPECT().Soc().Return(soc, err).AnyTimes()
+
+		return config.NewStaticDevice(config.Named{}, api.Meter(&struct {
+			api.Meter
+			api.Battery
+		}{
+			Meter:   meter,
+			Battery: battery,
+		}))
+	}
+
+	site := &Site{
+		log: util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{
+			newBattery(38, nil),
+			newBattery(0, errors.New("connection reset by peer")),
+		},
+	}
+	site.battery.Devices = []types.Measurement{{Soc: new(38.0)}, {Soc: new(40.0)}}
+
+	site.updateBatteryMeters()
+
+	assert.Equal(t, 39.0, site.battery.Soc, "failed battery keeps its last soc")
+	assert.Equal(t, 40.0, *site.battery.Devices[1].Soc)
+}
+
 func TestApplyBatteryMode(t *testing.T) {
 	for _, tc := range []struct {
 		internal, expected api.BatteryMode

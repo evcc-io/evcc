@@ -12,8 +12,8 @@ import { defineComponent, type PropType } from "vue";
 import {
 	boundaryAxis,
 	boundarySeries,
+	energyGrid,
 	FONT_FAMILY,
-	forecastGrid,
 	tooltipStyle,
 	tooltipTable,
 	weekBoundaries,
@@ -111,7 +111,7 @@ export default defineComponent({
 			const panel = this.subPanel;
 			const isTemp = !!this.series.isTemp;
 			// same frame as the bar chart so toggling does not jump
-			const grid = { ...forecastGrid(), left: panel ? 36 : 0, right: 36 };
+			const grid = energyGrid();
 			const xAxis = {
 				type: "category",
 				data: Array.from({ length: DAY_SLOTS }, (_, i) => i),
@@ -172,6 +172,7 @@ export default defineComponent({
 					? [
 							{ ...xAxis, axisLabel: { show: false } },
 							{ ...xAxis, gridIndex: 1 },
+							panel.xAxis,
 						]
 					: xAxis,
 				yAxis: [
@@ -220,7 +221,7 @@ export default defineComponent({
 				},
 				visualMap: this.legend(this.fmtKWh(this.max), 36),
 				// same frame and label styles as the bar chart
-				grid: { ...forecastGrid(), left: 0, right: 36 },
+				grid: energyGrid(),
 				xAxis: [
 					{
 						type: "category",
@@ -348,6 +349,20 @@ export default defineComponent({
 		},
 		onChartInit() {
 			this.chartWidth = this.chart?.getWidth() ?? 0;
+			this.chart?.on("updateAxisPointer", this.onAxisPointer as (e: unknown) => void);
+		},
+		// the panel's line sits on its own axis, out of the tooltip's reach: its dot follows the hovered slot by hand
+		onAxisPointer(e: { axesInfo: { axisDim: string; axisIndex: number; value: number }[] }) {
+			if (!this.subPanel) return;
+			const slot = e.axesInfo.find((a) => a.axisDim === "x" && a.axisIndex === 0)?.value;
+			this.chart?.dispatchAction({ type: "downplay", seriesId: "soctemp" });
+			if (slot != null) {
+				this.chart?.dispatchAction({
+					type: "highlight",
+					seriesId: "soctemp",
+					dataIndex: slot,
+				});
+			}
 		},
 		onChartResize() {
 			this.chartWidth = this.chart?.getWidth() ?? 0;

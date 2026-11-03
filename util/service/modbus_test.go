@@ -11,7 +11,7 @@ import (
 
 func TestGetParams_DirectURI(t *testing.T) {
 	// Verify that direct URI parameter works
-	req := httptest.NewRequest("GET", "/read?uri=192.168.1.1:502&address=100&type=holding&encoding=uint16", nil)
+	req := httptest.NewRequest("GET", "/read?uri=127.0.0.1:1&address=100&type=holding&encoding=uint16", nil)
 	w := httptest.NewRecorder()
 
 	modbusRead(w, req)
@@ -22,7 +22,7 @@ func TestGetParams_DirectURI(t *testing.T) {
 
 func TestGetParams_WithScale(t *testing.T) {
 	// Test with scale parameter
-	req := httptest.NewRequest("GET", "/read?uri=192.168.1.1:502&id=1&address=1068&type=holding&encoding=float32s&scale=0.001", nil)
+	req := httptest.NewRequest("GET", "/read?uri=127.0.0.1:1&id=1&address=1068&type=holding&encoding=float32s&scale=0.001", nil)
 	w := httptest.NewRecorder()
 
 	modbusRead(w, req)
@@ -33,7 +33,7 @@ func TestGetParams_WithScale(t *testing.T) {
 
 func TestGetParams_WithResultType(t *testing.T) {
 	// Test with resulttype parameter
-	req := httptest.NewRequest("GET", "/read?uri=192.168.1.1:502&id=1&address=1068&type=holding&encoding=float32s&resulttype=int", nil)
+	req := httptest.NewRequest("GET", "/read?uri=127.0.0.1:1&id=1&address=1068&type=holding&encoding=float32s&resulttype=int", nil)
 	w := httptest.NewRecorder()
 
 	modbusRead(w, req)
@@ -44,7 +44,7 @@ func TestGetParams_WithResultType(t *testing.T) {
 
 func TestGetParams_CompleteRequest(t *testing.T) {
 	// Test complete request with all parameters
-	req := httptest.NewRequest("GET", "/read?uri=192.168.1.1:502&id=1&address=1068&type=holding&encoding=float32s&scale=0.001&resulttype=int", nil)
+	req := httptest.NewRequest("GET", "/read?uri=127.0.0.1:1&id=1&address=1068&type=holding&encoding=float32s&scale=0.001&resulttype=int", nil)
 	w := httptest.NewRecorder()
 
 	modbusRead(w, req)
@@ -89,7 +89,7 @@ func TestGetParams_MissingConnection(t *testing.T) {
 
 func TestGetParams_MissingAddress(t *testing.T) {
 	// Test that address parameter is required
-	req := httptest.NewRequest("GET", "/read?uri=192.168.1.1:502&type=holding&encoding=uint16", nil)
+	req := httptest.NewRequest("GET", "/read?uri=127.0.0.1:1&type=holding&encoding=uint16", nil)
 	w := httptest.NewRecorder()
 
 	modbusRead(w, req)
@@ -100,7 +100,7 @@ func TestGetParams_MissingAddress(t *testing.T) {
 
 func TestGetParams_AddressZero(t *testing.T) {
 	// Test that address=0 is valid (not treated as missing)
-	req := httptest.NewRequest("GET", "/read?uri=192.168.1.1:502&address=0&type=holding&encoding=uint16", nil)
+	req := httptest.NewRequest("GET", "/read?uri=127.0.0.1:1&address=0&type=holding&encoding=uint16", nil)
 	w := httptest.NewRecorder()
 
 	modbusRead(w, req)

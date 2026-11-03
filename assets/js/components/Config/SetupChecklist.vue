@@ -2,7 +2,7 @@
 	<div class="collapsible-wrapper" :class="{ open: visible }">
 		<div class="collapsible-content ring-space">
 			<div
-				class="round-box p-4 my-4 border-primary border-opacity-50"
+				class="round-box p-4 pb-3 my-4 border-primary border-opacity-50"
 				data-testid="setup-checklist"
 			>
 				<div class="d-flex justify-content-between align-items-baseline gap-3 mb-2">
@@ -40,13 +40,23 @@
 						</span>
 						<CheckIcon v-if="row.done" class="text-primary flex-shrink-0" />
 						<template v-else>
-							<button
-								type="button"
-								class="btn btn-sm btn-outline-primary btn-pill px-3"
-								@click="add(row.item)"
+							<!-- disabled buttons get no hover events, the wrapper carries the hint -->
+							<span
+								v-tooltip="
+									row.blocked
+										? $t('onboarding.checklist.legacyTariffs')
+										: undefined
+								"
 							>
-								{{ $t("config.general.add") }}
-							</button>
+								<button
+									type="button"
+									class="btn btn-sm btn-outline-primary btn-pill px-3"
+									:disabled="row.blocked"
+									@click="add(row.item)"
+								>
+									{{ $t("config.general.add") }}
+								</button>
+							</span>
 							<button
 								type="button"
 								class="btn btn-sm btn-link evcc-gray p-0"
@@ -78,6 +88,7 @@ const TARIFF_TYPES: Partial<Record<OnboardingItem, string>> = {
 	gridImport: "grid",
 	gridExport: "feedIn",
 };
+const TARIFF_ITEMS: OnboardingItem[] = ["gridImport", "gridExport", "co2", "solar"];
 
 // rows stay once done (configured or dismissed), the card collapses when nothing is left
 export default defineComponent({
@@ -86,6 +97,7 @@ export default defineComponent({
 	props: {
 		configured: { type: Object as PropType<Record<string, boolean>>, required: true },
 		dismissed: { type: Array as PropType<OnboardingItem[]>, default: () => [] },
+		legacyTariffs: Boolean,
 	},
 	data() {
 		return { ICONS: ONBOARDING_ICONS };
@@ -100,6 +112,7 @@ export default defineComponent({
 					!!this.configured[item] ||
 					this.dismissed.includes(item) ||
 					((item === "loadpoint" || item === "heater") && control),
+				blocked: this.legacyTariffs && TARIFF_ITEMS.includes(item),
 			}));
 		},
 		visible() {
@@ -137,10 +150,7 @@ export default defineComponent({
 	--bs-progress-height: 4px;
 	--bs-progress-bg: var(--evcc-gray-25);
 }
-/* done rows (checkmark) as tall as rows with the add button, last row padding balances the card padding */
-.items {
-	margin-bottom: -0.5rem;
-}
+/* done rows (checkmark) as tall as rows with the add button */
 .items li {
 	min-height: 3rem;
 }

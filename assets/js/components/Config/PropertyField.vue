@@ -79,6 +79,16 @@
 		:rows="textareaRows"
 		:disabled="disabled"
 	/>
+	<PropertyDeviceField
+		v-else-if="device"
+		:id="id"
+		v-model="value"
+		:property="property"
+		:device-class="deviceClass"
+		:usage="usage"
+		:has-device-error="hasDeviceError"
+		:required="required"
+	/>
 	<PropertyZonesField
 		v-else-if="zones"
 		:id="id"
@@ -167,6 +177,7 @@ import SelectGroup from "../Helper/SelectGroup.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import Combobox from "../Helper/Combobox.vue";
 import PropertyZonesField from "./PropertyZonesField.vue";
+import PropertyDeviceField from "./PropertyDeviceField.vue";
 import formatter from "@/mixins/formatter";
 import parseGoDuration, {
 	displayFactors,
@@ -179,7 +190,14 @@ const NS_PER_SECOND = 1000000000;
 
 export default {
 	name: "PropertyField",
-	components: { VehicleIcon, SelectGroup, CustomSelect, Combobox, PropertyZonesField },
+	components: {
+		VehicleIcon,
+		SelectGroup,
+		CustomSelect,
+		Combobox,
+		PropertyZonesField,
+		PropertyDeviceField,
+	},
 	mixins: [formatter],
 	props: {
 		id: String,
@@ -198,6 +216,9 @@ export default {
 		disabled: Boolean,
 		pattern: { type: Object, default: () => ({}) },
 		choice: { type: Array, default: () => [] },
+		deviceClass: String,
+		usage: String,
+		hasDeviceError: { type: Function, default: () => false },
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
 		serviceValues: { type: Array, default: () => [] },
@@ -331,6 +352,9 @@ export default {
 		},
 		zones() {
 			return this.type === "Zones";
+		},
+		device() {
+			return this.type === "Device";
 		},
 		zonesValueLabel() {
 			return this.property === "chargesZones"

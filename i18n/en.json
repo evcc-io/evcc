@@ -146,11 +146,13 @@
       "template": "Manufacturer",
       "titleAdd": {
         "charging": "Add Charger",
-        "heating": "Add Heating Device"
+        "heating": "Add Heating Device",
+        "switch": "Add Switchable Socket"
       },
       "titleEdit": {
         "charging": "Edit Charger",
-        "heating": "Edit Heating Device"
+        "heating": "Edit Heating Device",
+        "switch": "Edit Switchable Socket"
       },
       "type": {
         "custom": {
@@ -187,7 +189,16 @@
     },
     "circuits": {
       "addSubCircuit": "Add sub-circuit",
-      "chargingPointsNote": "Assign charging points & heaters to a circuit in their own settings.",
+      "notAssigned": "Not assigned",
+      "destination": "Circuit {title}",
+      "assignHere": "Assign here",
+      "moveHere": "Move here",
+      "dropAssign": "Drop to assign",
+      "dropRemove": "Drop here to remove from its circuit.",
+      "dragHint": "Drag onto a circuit, or tap to select.",
+      "selectAssign": "Tap a circuit to assign {title}.",
+      "selectMove": "Tap a circuit to move {title}, or the pool to remove it.",
+      "assignmentFailed": "Could not save assignment. Please try again.",
       "addMainCircuit": "Add root circuit",
       "description": "Ensures that the sum of all charging points and heaters connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy.",
       "legacyWarning": "New circuits configuration available! Remove and save your configuration here to use the new guided process. A restart is required afterwards.",
@@ -225,6 +236,15 @@
       "title": "Curtailment",
       "titleAdd": "Add Curtailment Device",
       "titleEdit": "Edit Curtailment Device"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Add charger",
+        "meter": "Add meter",
+        "switch": "Add switchable socket",
+        "tariff": "Add tariff"
+      },
+      "noNesting": "Nesting is limited to one level. Please pick another option."
     },
     "deviceValue": {
       "activeClients": "Active clients",
@@ -304,8 +324,16 @@
           "returnEnergy": "Discharged"
         },
         "consumer": {
+          "chargeStatusB": "standby",
+          "chargeStatusC": "heating",
           "energy": "Consumed",
           "returnEnergy": "Produced"
+        },
+        "continuous": {
+          "chargeStatusB": "normal",
+          "chargeStatusC": "boost",
+          "dimmed": "Dimmed",
+          "enabled": "Boosted"
         },
         "grid": {
           "energy": "Imported",
@@ -327,6 +355,7 @@
       "auxMeter": "Self-regulating consumer",
       "batteryStorage": "Home battery",
       "consumer": "Consumer",
+      "extMeter": "Additional meter",
       "solarSystem": "Solar system"
     },
     "editor": {
@@ -491,7 +520,7 @@
         "charging": "Add charger",
         "heating": "Add heating device"
       },
-      "addMeter": "Add dedicated energy meter",
+      "addMeter": "Add meter",
       "advancedConfig": "Advanced configuration",
       "cancel": "Cancel",
       "chargerError": {
@@ -530,7 +559,28 @@
       "electricalSubtitle": "When in doubt, ask your electrician.",
       "electricalTitle": "Electrics",
       "energyMeterHelp": "Additional meter if the charger doesn't have an integrated one.",
-      "energyMeterLabel": "Energy meter",
+      "energyMeterLabel": "Dedicated energy meter",
+      "demandPredictor": {
+        "daily": {
+          "description": "Average of recent days. For devices with the same pattern every day.",
+          "label": "Daily average"
+        },
+        "defaultGroup": "Device default",
+        "description": "How the optimizer predicts demand from past consumption.",
+        "label": "Profile",
+        "noTempTariff": "Requires a temperature forecast.",
+        "noTempTariffLink": "Add forecast",
+        "profilesGroup": "Profiles",
+        "temperature": {
+          "description": "Past consumption at similar outdoor temperatures. For room heating, like heat pumps.",
+          "label": "Temperature"
+        },
+        "title": "Demand forecast",
+        "weekday": {
+          "description": "Average of the same weekday. For devices on a weekly schedule, like water or pool heaters.",
+          "label": "Weekday"
+        }
+      },
       "estimateLabel": "Interpolate charge level between API updates",
       "maxCurrentHelp": "Must be greater than minimum current.",
       "maxCurrentLabel": "Maximum current",
@@ -1114,6 +1164,7 @@
       "template": "Provider",
       "title": "Tariffs & forecasts",
       "titleChoice": "What Do You Want To Add?",
+      "titleSub": "Sub tariff",
       "type": {
         "co2": "CO₂ Intensity",
         "feedIn": "Grid Export Price",
@@ -1568,7 +1619,8 @@
         "continuousCo2Description": "Selects the cleanest uninterrupted series of slots.",
         "continuousPriceDescription": "Selects the cheapest uninterrupted series of slots.",
         "disabledDescription": "Requires a dynamic tariff or CO₂ forecast.",
-        "label": "Optimization"
+        "label": "Optimization",
+        "optimizerDescription": "The {optimizer} selects the cheapest slots. May result in multiple starts and stops."
       },
       "planNumber": "Plan {number}",
       "precondition": {
@@ -1855,6 +1907,7 @@
     },
     "checklist": {
       "dismiss": "Dismiss",
+      "legacyTariffs": "Legacy tariff configuration in use.",
       "progress": "{done} of {total} done",
       "title": "Complete your setup"
     },

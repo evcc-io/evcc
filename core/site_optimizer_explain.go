@@ -10,7 +10,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // explainRequest is the optimizer's explain payload: the published plan plus currency and language
@@ -51,9 +50,7 @@ func (site *Site) optimizerPost(ctx context.Context, path string, body, res any)
 		return err
 	}
 
-	if sponsor.IsAuthorizedForApi() {
-		req.Header.Set("Authorization", "Bearer "+sponsor.Token)
-	}
+	optimizerAuth(req)
 
 	client := request.NewHelper(site.log)
 	client.Timeout = 60 * time.Second
