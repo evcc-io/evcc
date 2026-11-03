@@ -17,6 +17,9 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
     register:
       address: 8195
       type: holding
@@ -25,6 +28,9 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
     register:
       address: {{ if eq .usage "pv" }}8231{{ else }}8227{{ end }}
       type: holding
@@ -33,6 +39,9 @@ render: |
   returnenergy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
     register:
       address: {{ if eq .usage "pv" }}8227{{ else }}8231{{ end }}
       type: holding
@@ -41,6 +50,9 @@ render: |
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
     register:
       address: 8217
       type: holding
@@ -48,6 +60,9 @@ render: |
     scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
     register:
       address: 8219
       type: holding
@@ -55,6 +70,9 @@ render: |
     scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
     register:
       address: 8221
       type: holding
@@ -63,6 +81,9 @@ render: |
   voltages:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
     register:
       address: 8211
       type: holding
@@ -70,6 +91,9 @@ render: |
     scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
     register:
       address: 8213
       type: holding
@@ -77,6 +101,9 @@ render: |
     scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
     register:
       address: 8215
       type: holding
