@@ -186,7 +186,16 @@ func NewOCPP20(ctx context.Context,
 		profileKindRelative: profileKindRelative,
 	}
 
-	return c, evse.Initialized()
+	// monitor reboots and re-apply setup
+	cp.MonitorReboot(ctx, func() error {
+		return cp.Setup()
+	})
+
+	if err := evse.Initialized(); err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface.
