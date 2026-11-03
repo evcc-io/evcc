@@ -255,7 +255,8 @@ func (e *EVSE) getMeasurement(measurand types.Measurand) (float64, error) {
 		}
 	}
 
-	return 0, fmt.Errorf("measurement not available: %s", measurand)
+	// no measurement yet - return 0 instead of error (values arrive later via TransactionEvent)
+	return 0, nil
 }
 
 // scale applies unit scaling for OCPP 2.0.1 SampledValue
