@@ -33,6 +33,8 @@ type vehicleStruct struct {
 	Plan           *planStruct         `json:"plan,omitempty"`
 	RepeatingPlans []api.RepeatingPlan `json:"repeatingPlans"`
 	PlanStrategy   api.PlanStrategy    `json:"planStrategy"`
+	FullCharge     api.FullCharge      `json:"fullCharge"`
+	FullChargeTime *time.Time          `json:"fullChargeTime,omitempty"`
 }
 
 // publishVehicles returns a list of vehicle titles
@@ -56,6 +58,11 @@ func (site *Site) publishVehicles() {
 			}
 		}
 
+		var fullChargeTime *time.Time
+		if ts := v.GetFullChargeTime(); !ts.IsZero() {
+			fullChargeTime = &ts
+		}
+
 		res[v.Name()] = vehicleStruct{
 			Title:          instance.GetTitle(),
 			Icon:           instance.Icon(),
@@ -72,6 +79,8 @@ func (site *Site) publishVehicles() {
 			Plan:           plan,
 			RepeatingPlans: v.GetRepeatingPlans(),
 			PlanStrategy:   v.GetPlanStrategy(),
+			FullCharge:     v.GetFullCharge(),
+			FullChargeTime: fullChargeTime,
 		}
 
 		// publish effective plan strategy immediately for soc-based planning

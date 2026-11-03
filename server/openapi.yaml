@@ -1501,6 +1501,28 @@ paths:
             application/json:
               schema:
                 $ref: "./openapi.state.yaml#/components/schemas/PlanStrategy"
+  /vehicles/{name}/fullcharge:
+    post:
+      operationId: setVehicleFullCharge
+      summary: Set periodic full charge
+      description: "Raises the SoC limit to 100 % once the given days have passed or the given energy was charged since the last full charge, e.g. for LFP cell balancing. Zero disables a threshold."
+      tags:
+        - vehicles
+      parameters:
+        - $ref: "#/components/parameters/vehicleName"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./openapi.state.yaml#/components/schemas/FullCharge"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "./openapi.state.yaml#/components/schemas/FullCharge"
   /db/backup:
     get:
       operationId: downloadBackup

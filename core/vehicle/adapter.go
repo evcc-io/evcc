@@ -237,3 +237,50 @@ func (v *adapter) SetPlanStrategy(planStrategy api.PlanStrategy) error {
 
 	return nil
 }
+
+// GetFullCharge returns the periodic full charge thresholds
+func (v *adapter) GetFullCharge() api.FullCharge {
+	var res api.FullCharge
+	if err := settings.Json(v.key()+keys.FullCharge, &res); err != nil {
+		return api.FullCharge{}
+	}
+	return res
+}
+
+// SetFullCharge sets the periodic full charge thresholds
+func (v *adapter) SetFullCharge(fc api.FullCharge) error {
+	if err := fc.Validate(); err != nil {
+		return err
+	}
+
+	if err := settings.SetJson(v.key()+keys.FullCharge, fc); err != nil {
+		return err
+	}
+
+	v.log.DEBUG.Printf("set %s full charge: %d days, %.0fkWh", v.name, fc.Days, fc.Energy)
+
+	// without a recorded full charge, thresholds count from now
+	if fc.Enabled() && v.GetFullChargeTime().IsZero() {
+		settings.SetTime(v.key()+keys.FullChargeTime, time.Now())
+	}
+
+	v.publish()
+	v.requestUpdate()
+
+	return nil
+}
+
+// GetFullChargeTime returns the time of the last full charge
+func (v *adapter) GetFullChargeTime() time.Time {
+	if ts, err := settings.Time(v.key() + keys.FullChargeTime); err == nil {
+		return ts
+	}
+	return time.Time{}
+}
+
+// SetFullChargeTime sets the time of the last full charge
+func (v *adapter) SetFullChargeTime(ts time.Time) {
+	v.log.DEBUG.Printf("set %s full charge time: %v", v.name, ts.Round(time.Second).Local())
+	settings.SetTime(v.key()+keys.FullChargeTime, ts)
+	v.publish()
+}

@@ -196,6 +196,31 @@ func updatePlanStrategyHandler(site site.API) http.HandlerFunc {
 	}
 }
 
+// fullChargeHandler updates the periodic full charge thresholds
+func fullChargeHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		v, err := site.Vehicles().ByName(vars["name"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		var res api.FullCharge
+		if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := v.SetFullCharge(res); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		jsonWrite(w, v.GetFullCharge())
+	}
+}
+
 // addRepeatingPlansHandler handles any information regarding weekday, hour, minute, soc and isActive
 func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

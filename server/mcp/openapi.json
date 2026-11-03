@@ -2477,6 +2477,43 @@
         }
       }
     },
+    "/vehicles/{name}/fullcharge": {
+      "post": {
+        "operationId": "setVehicleFullCharge",
+        "summary": "Set periodic full charge",
+        "description": "Raises the SoC limit to 100 % once the given days have passed or the given energy was charged since the last full charge, e.g. for LFP cell balancing. Zero disables a threshold.",
+        "tags": [
+          "vehicles"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FullCharge"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FullCharge"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/db/backup": {
       "get": {
         "operationId": "downloadBackup",
@@ -3954,6 +3991,10 @@
             "description": "Charger is currently allowed to charge.",
             "type": "boolean"
           },
+          "fullChargeActive": {
+            "description": "A periodic full charge is due, the SoC limit is raised to 100 %.",
+            "type": "boolean"
+          },
           "limitEnergy": {
             "description": "Session energy limit in kWh. Zero means no limit.",
             "type": "number"
@@ -4231,6 +4272,7 @@
           "enableDelay",
           "enableThreshold",
           "enabled",
+          "fullChargeActive",
           "limitEnergy",
           "limitSoc",
           "maxCurrent",
@@ -5416,6 +5458,24 @@
           "active"
         ]
       },
+      "FullCharge": {
+        "description": "Periodic full charge, e.g. for LFP cell balancing. Due once either threshold is reached.",
+        "type": "object",
+        "properties": {
+          "days": {
+            "description": "Days since the last full charge. Zero disables.",
+            "type": "number"
+          },
+          "energy": {
+            "description": "Energy charged since the last full charge in kWh. Zero disables.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "days",
+          "energy"
+        ]
+      },
       "Vehicle": {
         "description": "A configured vehicle.",
         "type": "object",
@@ -5475,6 +5535,15 @@
           "planStrategy": {
             "$ref": "#/components/schemas/PlanStrategy",
             "description": "Charging plan strategy."
+          },
+          "fullCharge": {
+            "$ref": "#/components/schemas/FullCharge",
+            "description": "Periodic full charge thresholds."
+          },
+          "fullChargeTime": {
+            "description": "Time of the last full charge.",
+            "type": "string",
+            "format": "date-time"
           },
           "title": {
             "description": "Vehicle title for UI display.",

@@ -171,6 +171,11 @@ type Loadpoint struct {
 	planOverrunSent  bool             // notification has been sent already
 	planLocked       PlanLock         // locked plan
 
+	// periodic full charge
+	fullChargeActive bool                 // full charge due, limit raised to 100%
+	fullChargeFull   time.Time            // vehicle stopped charging at 100% since
+	fullChargeEnergy fullChargeEnergyMemo // energy charged since the last full charge
+
 	// optimizer
 	suggestion        *types.Suggestion // optimizer suggestion for the current slot
 	suggestionUpdated time.Time         // time the suggestion was received
@@ -2633,6 +2638,8 @@ NO_DIM:
 	// publish soc after updating charger status to make sure
 	// initial update of connected state matches charger status
 	lp.publishSocAndRange()
+
+	lp.updateFullCharge()
 
 	// sync settings with charger
 	if err := lp.syncCharger(); err != nil {

@@ -163,6 +163,7 @@ export default defineComponent({
 		effectiveMaxCurrent: Number,
 		effectiveLimitSoc: Number,
 		effectiveMinSoc: Number,
+		fullChargeActive: Boolean,
 		limitEnergy: Number,
 		remoteDisabled: String,
 		remoteDisabledSource: String,

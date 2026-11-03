@@ -55,6 +55,34 @@ func (mr *MockAPIMockRecorder) GetAlwaysCharge() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAlwaysCharge", reflect.TypeOf((*MockAPI)(nil).GetAlwaysCharge))
 }
 
+// GetFullCharge mocks base method.
+func (m *MockAPI) GetFullCharge() api.FullCharge {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFullCharge")
+	ret0, _ := ret[0].(api.FullCharge)
+	return ret0
+}
+
+// GetFullCharge indicates an expected call of GetFullCharge.
+func (mr *MockAPIMockRecorder) GetFullCharge() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFullCharge", reflect.TypeOf((*MockAPI)(nil).GetFullCharge))
+}
+
+// GetFullChargeTime mocks base method.
+func (m *MockAPI) GetFullChargeTime() time.Time {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFullChargeTime")
+	ret0, _ := ret[0].(time.Time)
+	return ret0
+}
+
+// GetFullChargeTime indicates an expected call of GetFullChargeTime.
+func (mr *MockAPIMockRecorder) GetFullChargeTime() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFullChargeTime", reflect.TypeOf((*MockAPI)(nil).GetFullChargeTime))
+}
+
 // GetLimitSoc mocks base method.
 func (m *MockAPI) GetLimitSoc() int {
 	m.ctrl.T.Helper()
@@ -178,6 +206,32 @@ func (m *MockAPI) SetAlwaysCharge(arg0 api.AlwaysCharge) {
 func (mr *MockAPIMockRecorder) SetAlwaysCharge(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAlwaysCharge", reflect.TypeOf((*MockAPI)(nil).SetAlwaysCharge), arg0)
+}
+
+// SetFullCharge mocks base method.
+func (m *MockAPI) SetFullCharge(arg0 api.FullCharge) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetFullCharge", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetFullCharge indicates an expected call of SetFullCharge.
+func (mr *MockAPIMockRecorder) SetFullCharge(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFullCharge", reflect.TypeOf((*MockAPI)(nil).SetFullCharge), arg0)
+}
+
+// SetFullChargeTime mocks base method.
+func (m *MockAPI) SetFullChargeTime(arg0 time.Time) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetFullChargeTime", arg0)
+}
+
+// SetFullChargeTime indicates an expected call of SetFullChargeTime.
+func (mr *MockAPIMockRecorder) SetFullChargeTime(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFullChargeTime", reflect.TypeOf((*MockAPI)(nil).SetFullChargeTime), arg0)
 }
 
 // SetLimitSoc mocks base method.

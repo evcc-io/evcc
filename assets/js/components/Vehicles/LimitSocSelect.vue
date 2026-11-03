@@ -30,6 +30,7 @@ export default defineComponent({
 		limitSoc: { type: Number, default: 0 },
 		rangePerSoc: Number,
 		heating: Boolean,
+		fullCharge: Boolean,
 		minTemp: { type: Number, default: 0 },
 		maxTemp: { type: Number, default: 0 },
 	},
@@ -56,8 +57,11 @@ export default defineComponent({
 			return this.heating ? 1 : 5;
 		},
 		title() {
-			return this.heating
-				? this.$t("main.vehicle.tempLimit")
+			if (this.heating) {
+				return this.$t("main.vehicle.tempLimit");
+			}
+			return this.fullCharge
+				? this.$t("main.vehicle.fullChargeLimit")
 				: this.$t("main.vehicle.targetSoc");
 		},
 		estimatedTargetRange() {

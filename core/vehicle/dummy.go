@@ -82,3 +82,17 @@ func (v *dummy) GetPlanStrategy() api.PlanStrategy {
 func (v *dummy) SetPlanStrategy(strategy api.PlanStrategy) error {
 	return nil
 }
+
+func (v *dummy) GetFullCharge() api.FullCharge {
+	return api.FullCharge{}
+}
+
+func (v *dummy) SetFullCharge(fc api.FullCharge) error {
+	return nil
+}
+
+func (v *dummy) GetFullChargeTime() time.Time {
+	return time.Time{}
+}
+
+func (v *dummy) SetFullChargeTime(ts time.Time) {}

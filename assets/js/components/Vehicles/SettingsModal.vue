@@ -117,6 +117,57 @@
 									</span>
 								</CustomSelect>
 							</div>
+							<div class="col-6 col-lg-3 mb-3">
+								<div class="small text-uppercase evcc-gray text-truncate">
+									{{ $t("main.vehicleSettings.fullChargeDays") }}
+								</div>
+								<CustomSelect
+									:id="fieldId(vehicle, 'fullChargeDays')"
+									inline
+									:options="fullChargeDaysOptions(vehicle)"
+									:selected="vehicle.fullCharge?.days ?? 0"
+									:ariaLabel="$t('main.vehicleSettings.fullChargeDays')"
+									@change="changeFullChargeDays(vehicle, $event)"
+								>
+									<span class="text-decoration-underline text-primary">
+										{{
+											optionName(
+												fullChargeDaysOptions(vehicle),
+												vehicle.fullCharge?.days ?? 0
+											)
+										}}
+									</span>
+								</CustomSelect>
+							</div>
+							<div class="col-6 col-lg-3 mb-3">
+								<div class="small text-uppercase evcc-gray text-truncate">
+									{{ $t("main.vehicleSettings.fullChargeEnergy") }}
+								</div>
+								<CustomSelect
+									:id="fieldId(vehicle, 'fullChargeEnergy')"
+									inline
+									:options="fullChargeEnergyOptions(vehicle)"
+									:selected="vehicle.fullCharge?.energy ?? 0"
+									:ariaLabel="$t('main.vehicleSettings.fullChargeEnergy')"
+									@change="changeFullChargeEnergy(vehicle, $event)"
+								>
+									<span class="text-decoration-underline text-primary">
+										{{
+											optionName(
+												fullChargeEnergyOptions(vehicle),
+												vehicle.fullCharge?.energy ?? 0
+											)
+										}}
+									</span>
+								</CustomSelect>
+							</div>
+							<div
+								v-if="fullChargeStatus(vehicle)"
+								class="col-12 mb-3 small evcc-gray"
+								data-testid="full-charge-status"
+							>
+								{{ fullChargeStatus(vehicle) }}
+							</div>
 						</template>
 					</div>
 				</div>
@@ -138,7 +189,7 @@ import GenericModal from "../Helper/GenericModal.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import VehicleIcon from "../VehicleIcon";
 import api from "@/api";
-import formatter from "@/mixins/formatter";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { docsPrefix } from "@/i18n";
 import { distanceUnit } from "@/units";
 import { vehicleHasSoc, vehicleNotReachable } from "@/uiLoadpoints";
@@ -253,6 +304,60 @@ export default defineComponent({
 		},
 		changeLimitSoc(vehicle: Vehicle, event: Event): void {
 			api.post(`vehicles/${vehicle.name}/limitsoc/${this.selectValue(event)}`);
+		},
+		fullChargeDaysOptions(vehicle: Vehicle): SelectOption<number>[] {
+			return this.withValue([0, 7, 14, 21, 28, 42, 56], vehicle.fullCharge?.days).map(
+				(days) => ({
+					value: days,
+					name:
+						days === 0
+							? this.$t("general.none")
+							: this.$t("main.vehicleSettings.fullChargeEveryDays", [days]),
+				})
+			);
+		},
+		fullChargeEnergyOptions(vehicle: Vehicle): SelectOption<number>[] {
+			return this.withValue(
+				[0, 50, 100, 150, 200, 250, 300, 400, 500],
+				vehicle.fullCharge?.energy
+			).map((energy) => ({
+				value: energy,
+				name:
+					energy === 0
+						? this.$t("general.none")
+						: this.fmtWh(energy * 1e3, POWER_UNIT.KW, true, 0),
+			}));
+		},
+		// values set via api may not be part of the presets
+		withValue(values: number[], value?: number): number[] {
+			if (!value || values.includes(value)) {
+				return values;
+			}
+			return [...values, value].sort((a, b) => a - b);
+		},
+		changeFullChargeDays(vehicle: Vehicle, event: Event): void {
+			const energy = vehicle.fullCharge?.energy ?? 0;
+			const days = Number(this.selectValue(event));
+			api.post(`vehicles/${vehicle.name}/fullcharge`, { days, energy });
+		},
+		changeFullChargeEnergy(vehicle: Vehicle, event: Event): void {
+			const days = vehicle.fullCharge?.days ?? 0;
+			const energy = Number(this.selectValue(event));
+			api.post(`vehicles/${vehicle.name}/fullcharge`, { days, energy });
+		},
+		fullChargeStatus(vehicle: Vehicle): string | null {
+			const { days = 0, energy = 0 } = vehicle.fullCharge ?? {};
+			if (!days && !energy) {
+				return null;
+			}
+			if (this.connectedLoadpoint(vehicle)?.fullChargeActive) {
+				return this.$t("main.vehicleSettings.fullChargeActive");
+			}
+			if (vehicle.fullChargeTime) {
+				const time = this.fmtFullDateTime(new Date(vehicle.fullChargeTime));
+				return this.$t("main.vehicleSettings.fullChargeLast", [time]);
+			}
+			return null;
 		},
 	},
 });

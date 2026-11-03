@@ -62,6 +62,7 @@
 				:limit-soc="displayLimitSoc"
 				:range-per-soc="rangePerSoc"
 				:heating="heating"
+				:full-charge="fullChargeActive"
 				:min-temp="ui?.minTemp ?? 0"
 				:max-temp="ui?.maxTemp ?? 100"
 				@limit-soc-updated="limitSocUpdated"
@@ -127,6 +128,7 @@ export default defineComponent({
 		currency: String,
 		effectiveLimitSoc: Number,
 		effectiveMinSoc: { type: Number, default: 0 },
+		fullChargeActive: Boolean,
 		effectivePlanSoc: Number,
 		effectivePlanTime: String,
 		effectivePlanStrategy: Object as PropType<PlanStrategy>,

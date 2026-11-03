@@ -715,6 +715,8 @@ export interface Loadpoint {
   enableThreshold: number;
   /** Charger is currently allowed to charge. */
   enabled: boolean;
+  /** A periodic full charge is due, the SoC limit is raised to 100 %. */
+  fullChargeActive: boolean;
   /** Session energy limit in kWh. Zero means no limit. */
   limitEnergy: number;
   /** Session SoC limit in %. Zero means no limit. */
@@ -1349,6 +1351,14 @@ export interface PlanStrategy {
   precondition: number;
 }
 
+/** Periodic full charge, e.g. for LFP cell balancing. Due once either threshold is reached. */
+export interface FullCharge {
+  /** Days since the last full charge. Zero disables. */
+  days: number;
+  /** Energy charged since the last full charge in kWh. Zero disables. */
+  energy: number;
+}
+
 /** A configured vehicle. */
 export interface Vehicle {
   /** Unique vehicle name used in API routes and configuration. */
@@ -1367,6 +1377,13 @@ export interface Vehicle {
   repeatingPlans: RepeatingPlan[] | null;
   /** Charging plan strategy. */
   planStrategy: PlanStrategy;
+  /** Periodic full charge thresholds. */
+  fullCharge?: FullCharge;
+  /**
+   * Time of the last full charge.
+   * @format date-time
+   */
+  fullChargeTime?: string;
   /** Vehicle title for UI display. */
   title: string;
   /** Feature flags of the vehicle implementation. */

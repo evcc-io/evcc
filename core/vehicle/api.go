@@ -47,4 +47,13 @@ type API interface {
 	GetPlanStrategy() api.PlanStrategy
 	// SetPlanStrategy sets the plan strategy
 	SetPlanStrategy(api.PlanStrategy) error
+
+	// GetFullCharge returns the periodic full charge thresholds
+	GetFullCharge() api.FullCharge
+	// SetFullCharge sets the periodic full charge thresholds
+	SetFullCharge(api.FullCharge) error
+	// GetFullChargeTime returns the time of the last full charge
+	GetFullChargeTime() time.Time
+	// SetFullChargeTime sets the time of the last full charge
+	SetFullChargeTime(time.Time)
 }

@@ -700,6 +700,19 @@ components:
         type: number
       minItems: 3
       maxItems: 3
+    FullCharge:
+      description: Periodic full charge, e.g. for LFP cell balancing. Due once either threshold is reached.
+      type: object
+      properties:
+        days:
+          description: Days since the last full charge. Zero disables.
+          type: number
+        energy:
+          description: Energy charged since the last full charge in kWh. Zero disables.
+          type: number
+      required:
+        - days
+        - energy
     GenericConfigStatus:
       description: Configuration and runtime status of an integration. Structure depends on configuration.
       type: object
@@ -950,6 +963,9 @@ components:
         enabled:
           description: Charger is currently allowed to charge.
           type: boolean
+        fullChargeActive:
+          description: A periodic full charge is due, the SoC limit is raised to 100 %.
+          type: boolean
         limitEnergy:
           description: Session energy limit in kWh. Zero means no limit.
           type: number
@@ -1170,6 +1186,7 @@ components:
         - enableDelay
         - enableThreshold
         - enabled
+        - fullChargeActive
         - limitEnergy
         - limitSoc
         - maxCurrent
@@ -1938,6 +1955,13 @@ components:
         planStrategy:
           $ref: "#/components/schemas/PlanStrategy"
           description: Charging plan strategy.
+        fullCharge:
+          $ref: "#/components/schemas/FullCharge"
+          description: Periodic full charge thresholds.
+        fullChargeTime:
+          description: Time of the last full charge.
+          type: string
+          format: date-time
         title:
           description: Vehicle title for UI display.
           type: string

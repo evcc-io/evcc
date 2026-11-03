@@ -274,6 +274,10 @@ func (lp *Loadpoint) EffectiveLimitSoc() int {
 // effectiveLimitSoc returns the effective session limit soc
 // TODO take vehicle api limits into account
 func (lp *Loadpoint) effectiveLimitSoc() int {
+	if lp.fullChargeActive {
+		return 100
+	}
+
 	if lp.limitSoc > 0 {
 		return lp.limitSoc
 	}
