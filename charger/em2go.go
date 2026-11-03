@@ -66,7 +66,7 @@ const (
 	em2GoRegPhases          = 200 // Set charging phase 1 unsigned
 
 	//removed due to unreliable session energy when pausing or switching phases
-	//em2GoRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
+	em2GoRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
 )
 
 func init() {
@@ -202,10 +202,12 @@ func (wb *Em2Go) Status() (api.ChargeStatus, error) {
 	if wb.lastStatus == api.StatusA && status != api.StatusA {
 		if energy, err := wb.TotalEnergy(); err == nil {
 			wb.sessionStartEnergy = energy
+			wb.log.DEBUG.Printf("Cable connected: sessionStartEnergy set to %.2f kWh", wb.sessionStartEnergy)
 		}
 	}
 	// detect cable disconnect (StatusB/C -> StatusA)
 	if wb.lastStatus != api.StatusA && status == api.StatusA {
+		wb.log.DEBUG.Printf("Cable disconnected: sessionStartEnergy reset from %.2f kWh to 0", wb.sessionStartEnergy)
 		wb.sessionStartEnergy = 0
 	}
 	wb.lastStatus = status
@@ -349,11 +351,23 @@ var _ api.ChargeRater = (*Em2Go)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *Em2Go) ChargedEnergy() (float64, error) {
-	total, err := wb.TotalEnergy()
+	b, err := wb.conn.ReadHoldingRegisters(em2GoRegChargedEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
-	return total - wb.sessionStartEnergy, nil
+	chargedModbus := float64(binary.BigEndian.Uint16(b)) / 10
+
+	
+	tot, err := wb.conn.ReadHoldingRegisters(em2GoRegEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	total := rs485.RTUUint32ToFloat64(tot) / 10
+
+	charged := total - wb.sessionStartEnergy
+	wb.log.DEBUG.Printf("ChargedEnergy: TotalEnergy=%.2f kWh, sessionStartEnergy=%.2f kWh, chargedEnergy=%.2f kWh, chargedEnergyModbus=%.2f kWh", total, wb.sessionStartEnergy, charged, chargedModbus)
+	return charged, nil
 }
 
 var _ api.ChargeTimer = (*Em2Go)(nil)
