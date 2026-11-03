@@ -57,6 +57,7 @@ const (
 	em2GoRegMinCurrent      = 34  // Uint16 RO 0.1A
 	em2GoRegCableMaxCurrent = 36  // Uint16 RO 0.1A
 	em2GoRegSerial          = 38  // Chr[16] RO UTF16
+	em2GoRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
 	em2GoRegChargeDuration  = 78  // Uint32 RO 1s
 	em2GoRegSafeCurrent     = 87  // Uint16 WR 0.1A
 	em2GoRegCommTimeout     = 89  // Uint16 WR 1s
@@ -65,9 +66,6 @@ const (
 	em2GoRegChargeCommand   = 95  // Uint16 WR ENUM
 	em2GoRegVoltages        = 109 // Uint16 RO 0.1V
 	em2GoRegPhases          = 200 // Set charging phase 1 unsigned
-
-	//removed due to unreliable session energy when pausing or switching phases
-	em2GoRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
 )
 
 func init() {
@@ -353,7 +351,7 @@ var _ api.ChargeRater = (*Em2Go)(nil)
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *Em2Go) ChargedEnergy() (float64, error) {
 	// Read modbus chargedEnergy register
-	b, err := wb.conn.ReadHoldingRegisters(em2GoRegChargedEnergy, 2)
+	b, err := wb.conn.ReadHoldingRegisters(em2GoRegChargedEnergy, 1)
 	if err != nil {
 		return 0, err
 	}
