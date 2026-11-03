@@ -41,11 +41,11 @@ params:
     default: 1m
   - preset: vehicle-online
 render: |
-  {{- $vehicle := `($all | first | .instance)` }}
+  {{- $vehicle := `($all | map(.instance) | unique | if length > 1 then error("several vehicles in VRM, vin required") else first end)` }}
   {{- if .vin }}
   {{- $vehicle = printf `($all | map(select(.dbusPath == "/VIN" and (.rawValue | tostring | ascii_upcase) == %q)) | first | .instance)` (upper .vin) }}
   {{- end }}
-  {{- $ev := printf `[.records[] | select(.Device == "Electric Vehicle")] as $all | %s as $i | if $i == null then error("vehicle not found in VRM") else . end | ($all | map(select(.instance == $i))) as $ev | def v($p): $ev | map(select(.dbusPath == $p)) | first | .rawValue; def n($p): v($p) | if type == "string" then tonumber else . end;` $vehicle }}
+  {{- $ev := printf `[.records[]? | select(.Device == "Electric Vehicle")] as $all | %s as $i | if $i == null then error("vehicle not found in VRM") else . end | ($all | map(select(.instance == $i))) as $ev | def v($p): $ev | map(select(.dbusPath == $p)) | first | .rawValue; def n($p): v($p) | if type == "string" then tonumber else . end;` $vehicle }}
   type: custom
   {{- include "common" . }}
   soc:
