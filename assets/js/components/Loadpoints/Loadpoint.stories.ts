@@ -134,15 +134,7 @@ Standard.args = baseState;
 export const VehicleLimitedPhases = Template.bind({});
 VehicleLimitedPhases.args = {
   ...baseState,
-  vehicleName: "e-up",
-  vehicles: [
-    {
-      ...baseState.vehicles[0]!,
-      name: "e-up",
-      title: "e-up",
-      phases: 2,
-    },
-  ],
+  vehicles: [{ ...baseState.vehicles[0]!, phases: 2 }],
   maxCurrent: 32,
   effectiveMaxCurrent: 16,
   offeredCurrent: 16,

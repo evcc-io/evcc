@@ -311,15 +311,8 @@ export default defineComponent({
 		phasesProps() {
 			return {
 				...this.collectProps(Phases),
-				maxCurrent:
-					(this.effectiveMaxCurrent ?? 0) > 0
-						? this.effectiveMaxCurrent
-						: this.maxCurrent,
-				phasesConfigured: Math.min(
-					this.phasesConfigured || 3,
-					this.vehicle?.phases || 3,
-					this.chargerSinglePhase ? 1 : 3
-				),
+				maxCurrent: this.effectiveMaxCurrent || this.maxCurrent,
+				phasesConfigured: Math.min(this.phasesConfigured || 3, this.vehicle?.phases || 3),
 			};
 		},
 		modeProps() {
