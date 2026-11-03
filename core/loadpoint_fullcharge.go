@@ -8,26 +8,34 @@ import (
 	"github.com/evcc-io/evcc/core/vehicle"
 )
 
-const (
-	// the battery management may still balance cells after the vehicle stopped charging at 100%
-	fullChargeHold = 30 * time.Minute
-
-	fullChargeEnergyInterval = 5 * time.Minute
-)
-
-// fullChargeEnergyMemo caches the energy of the vehicle's sessions since the last full charge
-type fullChargeEnergyMemo struct {
-	since   time.Time
-	updated time.Time
-	energy  float64 // kWh
-}
+// the battery management may still balance cells after the vehicle stopped charging at 100%
+const fullChargeHold = 30 * time.Minute
 
 // updateFullCharge raises the limit to 100% while a periodic full charge is due. A full charge
-// is recorded once the vehicle stopped charging at 100% on its own for the hold time.
+// is recorded once the vehicle charged and then stopped at 100% on its own for the hold time.
 func (lp *Loadpoint) updateFullCharge() {
 	v := lp.GetVehicle()
-	if v == nil || lp.chargerHasFeature(api.Heating) {
+	energy := lp.GetChargedEnergy() / 1e3
+
+	switch {
+	case v != lp.fullChargeVehicle:
+		// energy charged before the vehicle was identified is not attributed to it
+		lp.fullChargeVehicle = v
+		lp.fullChargeEnergy = energy
+		lp.fullChargeCharged = false
 		lp.fullChargeFull = time.Time{}
+	case lp.GetStatus() == api.StatusA:
+		lp.fullChargeCharged = false
+		lp.fullChargeFull = time.Time{}
+	case energy < lp.fullChargeEnergy:
+		// a new session starts from zero
+		lp.fullChargeEnergy = 0
+	}
+
+	delta := energy - lp.fullChargeEnergy
+	lp.fullChargeEnergy = energy
+
+	if v == nil || lp.chargerHasFeature(api.Heating) {
 		lp.setFullChargeActive(false)
 		return
 	}
@@ -36,9 +44,12 @@ func (lp *Loadpoint) updateFullCharge() {
 
 	fc := vs.GetFullCharge()
 	if !fc.Enabled() {
-		lp.fullChargeFull = time.Time{}
 		lp.setFullChargeActive(false)
 		return
+	}
+
+	if delta > 0 {
+		vs.AddFullChargeEnergy(delta)
 	}
 
 	now := lp.clock.Now()
@@ -49,57 +60,31 @@ func (lp *Loadpoint) updateFullCharge() {
 		vs.SetFullChargeTime(now)
 	}
 
-	// charging stopped while still enabled, the vehicle decided it is full
-	if lp.vehicleSoc >= 100 && lp.enabled && lp.GetStatus() == api.StatusB {
+	if lp.GetStatus() == api.StatusC {
+		lp.fullChargeCharged = true
+	}
+
+	// charged, then stopped while still enabled: the vehicle decided it is full
+	if lp.fullChargeCharged && lp.vehicleSoc >= 100 && lp.enabled && lp.GetStatus() == api.StatusB {
 		if lp.fullChargeFull.IsZero() {
 			lp.fullChargeFull = now
 		}
 
-		// record once per stop, a vehicle remaining at 100% does not move the date
-		if now.Sub(lp.fullChargeFull) >= fullChargeHold && last.Before(lp.fullChargeFull) {
+		if now.Sub(lp.fullChargeFull) >= fullChargeHold {
 			lp.log.INFO.Println("full charge: completed")
 			vs.SetFullChargeTime(now)
 			last = now
+			lp.fullChargeCharged = false
+			lp.fullChargeFull = time.Time{}
 		}
 	} else {
 		lp.fullChargeFull = time.Time{}
 	}
 
 	due := fc.Days > 0 && !now.Before(last.AddDate(0, 0, fc.Days)) ||
-		fc.Energy > 0 && lp.fullChargeEnergySince(v.GetTitle(), last) >= fc.Energy
+		fc.Energy > 0 && vs.GetFullChargeEnergy() >= fc.Energy
 
 	lp.setFullChargeActive(due)
-}
-
-// fullChargeEnergySince returns the energy in kWh the vehicle charged since the given time
-func (lp *Loadpoint) fullChargeEnergySince(title string, since time.Time) float64 {
-	m := &lp.fullChargeEnergy
-	now := lp.clock.Now()
-
-	if lp.db != nil && (!m.since.Equal(since) || now.Sub(m.updated) >= fullChargeEnergyInterval) {
-		sessions, err := lp.db.Sessions()
-		if err != nil {
-			lp.log.ERROR.Printf("full charge: %v", err)
-		} else {
-			var energy float64
-			for _, s := range sessions {
-				if s.Vehicle == title && !s.Created.Before(since) && (lp.session == nil || s.ID != lp.session.ID) {
-					energy += s.ChargedEnergy
-				}
-			}
-
-			*m = fullChargeEnergyMemo{since: since, updated: now, energy: energy}
-		}
-	}
-
-	res := m.energy
-
-	// the running session stores its energy when it stops
-	if s := lp.session; s != nil && !s.Created.IsZero() && !s.Created.Before(since) {
-		res += lp.GetChargedEnergy() / 1e3
-	}
-
-	return res
 }
 
 func (lp *Loadpoint) setFullChargeActive(active bool) {

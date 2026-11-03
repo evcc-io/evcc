@@ -131,6 +131,10 @@
         "description": "Solar, price or CO₂ forecast.",
         "other": "forecast"
     },
+    "fullCharge": {
+        "description": "Vehicle setting: charge to 100 % regularly so the battery management of LFP batteries can balance the cells. Not needed for NMC batteries.",
+        "other": "full charge"
+    },
     "grid": {
         "description": "Public electricity grid.",
         "other": "grid"

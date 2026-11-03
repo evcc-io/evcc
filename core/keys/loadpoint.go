@@ -108,6 +108,7 @@ const (
 	// periodic full charge
 	FullCharge       = "fullCharge"       // full charge thresholds (days, energy), vehicle settings only
 	FullChargeTime   = "fullChargeTime"   // last completed full charge, vehicle settings only
+	FullChargeEnergy = "fullChargeEnergy" // energy charged since the last full charge, vehicle settings only
 	FullChargeActive = "fullChargeActive" // full charge due, limit raised to 100%
 
 	// remote control

@@ -54,6 +54,10 @@ type API interface {
 	SetFullCharge(api.FullCharge) error
 	// GetFullChargeTime returns the time of the last full charge
 	GetFullChargeTime() time.Time
-	// SetFullChargeTime sets the time of the last full charge
+	// SetFullChargeTime sets the time of the last full charge and resets the energy since
 	SetFullChargeTime(time.Time)
+	// GetFullChargeEnergy returns the energy charged since the last full charge
+	GetFullChargeEnergy() float64
+	// AddFullChargeEnergy adds charged energy since the last full charge
+	AddFullChargeEnergy(float64)
 }

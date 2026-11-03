@@ -1353,9 +1353,18 @@ export interface PlanStrategy {
 
 /** Periodic full charge, e.g. for LFP cell balancing. Due once either threshold is reached. */
 export interface FullCharge {
-  /** Days since the last full charge. Zero disables. */
+  /**
+   * Days since the last full charge. Zero disables.
+   * @asType integer
+   * @minimum 0
+   * @maximum 365
+   */
   days: number;
-  /** Energy charged since the last full charge in kWh. Zero disables. */
+  /**
+   * Energy charged since the last full charge in kWh. Zero disables.
+   * @minimum 0
+   * @maximum 10000
+   */
   energy: number;
 }
 

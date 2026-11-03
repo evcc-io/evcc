@@ -262,6 +262,7 @@ func (v *adapter) SetFullCharge(fc api.FullCharge) error {
 	// without a recorded full charge, thresholds count from now
 	if fc.Enabled() && v.GetFullChargeTime().IsZero() {
 		settings.SetTime(v.key()+keys.FullChargeTime, time.Now())
+		settings.SetFloat(v.key()+keys.FullChargeEnergy, 0)
 	}
 
 	v.publish()
@@ -278,10 +279,24 @@ func (v *adapter) GetFullChargeTime() time.Time {
 	return time.Time{}
 }
 
-// SetFullChargeTime sets the time of the last full charge
+// SetFullChargeTime sets the time of the last full charge and resets the energy since
 func (v *adapter) SetFullChargeTime(ts time.Time) {
 	v.log.DEBUG.Printf("set %s full charge time: %v", v.name, ts.Round(time.Second).Local())
 	settings.SetTime(v.key()+keys.FullChargeTime, ts)
+	settings.SetFloat(v.key()+keys.FullChargeEnergy, 0)
 	v.publish()
 	v.requestUpdate()
+}
+
+// GetFullChargeEnergy returns the energy charged since the last full charge
+func (v *adapter) GetFullChargeEnergy() float64 {
+	if res, err := settings.Float(v.key() + keys.FullChargeEnergy); err == nil {
+		return res
+	}
+	return 0
+}
+
+// AddFullChargeEnergy adds charged energy since the last full charge
+func (v *adapter) AddFullChargeEnergy(kWh float64) {
+	settings.SetFloat(v.key()+keys.FullChargeEnergy, v.GetFullChargeEnergy()+kWh)
 }

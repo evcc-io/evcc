@@ -96,3 +96,9 @@ func (v *dummy) GetFullChargeTime() time.Time {
 }
 
 func (v *dummy) SetFullChargeTime(ts time.Time) {}
+
+func (v *dummy) GetFullChargeEnergy() float64 {
+	return 0
+}
+
+func (v *dummy) AddFullChargeEnergy(kWh float64) {}

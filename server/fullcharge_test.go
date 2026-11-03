@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -35,4 +36,19 @@ func TestFullChargeDoneSetter(t *testing.T) {
 	require.NoError(t, set(""))
 
 	assert.Error(t, set("yesterday"))
+}
+
+func TestUpdateFullCharge(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	v := vehicle.NewMockAPI(ctrl)
+
+	v.EXPECT().GetFullCharge().Return(api.FullCharge{Days: 14, Energy: 190}).AnyTimes()
+
+	v.EXPECT().SetFullCharge(api.FullCharge{Days: 14, Energy: 0})
+	require.NoError(t, updateFullCharge(v, []byte(`{"energy":0}`)))
+
+	v.EXPECT().SetFullCharge(api.FullCharge{Days: 28, Energy: 190})
+	require.NoError(t, updateFullCharge(v, []byte(`{"days":28}`)))
+
+	assert.Error(t, updateFullCharge(v, []byte(`{`)))
 }

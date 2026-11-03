@@ -41,6 +41,18 @@ func (m *MockAPI) EXPECT() *MockAPIMockRecorder {
 	return m.recorder
 }
 
+// AddFullChargeEnergy mocks base method.
+func (m *MockAPI) AddFullChargeEnergy(arg0 float64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "AddFullChargeEnergy", arg0)
+}
+
+// AddFullChargeEnergy indicates an expected call of AddFullChargeEnergy.
+func (mr *MockAPIMockRecorder) AddFullChargeEnergy(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFullChargeEnergy", reflect.TypeOf((*MockAPI)(nil).AddFullChargeEnergy), arg0)
+}
+
 // GetAlwaysCharge mocks base method.
 func (m *MockAPI) GetAlwaysCharge() api.AlwaysCharge {
 	m.ctrl.T.Helper()
@@ -67,6 +79,20 @@ func (m *MockAPI) GetFullCharge() api.FullCharge {
 func (mr *MockAPIMockRecorder) GetFullCharge() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFullCharge", reflect.TypeOf((*MockAPI)(nil).GetFullCharge))
+}
+
+// GetFullChargeEnergy mocks base method.
+func (m *MockAPI) GetFullChargeEnergy() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFullChargeEnergy")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetFullChargeEnergy indicates an expected call of GetFullChargeEnergy.
+func (mr *MockAPIMockRecorder) GetFullChargeEnergy() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFullChargeEnergy", reflect.TypeOf((*MockAPI)(nil).GetFullChargeEnergy))
 }
 
 // GetFullChargeTime mocks base method.

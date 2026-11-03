@@ -706,10 +706,14 @@ components:
       properties:
         days:
           description: Days since the last full charge. Zero disables.
-          type: number
+          type: integer
+          minimum: 0
+          maximum: 365
         energy:
           description: Energy charged since the last full charge in kWh. Zero disables.
           type: number
+          minimum: 0
+          maximum: 10000
       required:
         - days
         - energy

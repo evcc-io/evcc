@@ -339,14 +339,12 @@ export default defineComponent({
 			return [...values, value].sort((a, b) => a - b);
 		},
 		changeFullChargeDays(vehicle: Vehicle, event: Event): void {
-			const energy = vehicle.fullCharge?.energy ?? 0;
 			const days = Number(this.selectValue(event));
-			api.post(`vehicles/${vehicle.name}/fullcharge`, { days, energy });
+			api.post(`vehicles/${vehicle.name}/fullcharge`, { days });
 		},
 		changeFullChargeEnergy(vehicle: Vehicle, event: Event): void {
-			const days = vehicle.fullCharge?.days ?? 0;
 			const energy = Number(this.selectValue(event));
-			api.post(`vehicles/${vehicle.name}/fullcharge`, { days, energy });
+			api.post(`vehicles/${vehicle.name}/fullcharge`, { energy });
 		},
 		fullChargeEnabled(vehicle: Vehicle): boolean {
 			const { days = 0, energy = 0 } = vehicle.fullCharge ?? {};

@@ -2481,7 +2481,7 @@
       "post": {
         "operationId": "setVehicleFullCharge",
         "summary": "Set periodic full charge",
-        "description": "Raises the SoC limit to 100 % once the given days have passed or the given energy was charged since the last full charge, e.g. for LFP cell balancing. Zero disables a threshold.",
+        "description": "Raises the SoC limit to 100 % once the given days have passed or the given energy was charged since the last full charge, e.g. for LFP cell balancing. Zero disables a threshold, an omitted threshold keeps its value.",
         "tags": [
           "vehicles"
         ],
@@ -2495,7 +2495,21 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/FullCharge"
+                "type": "object",
+                "properties": {
+                  "days": {
+                    "description": "Days since the last full charge.",
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 365
+                  },
+                  "energy": {
+                    "description": "Energy charged since the last full charge in kWh.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 10000
+                  }
+                }
               }
             }
           }
@@ -5515,11 +5529,15 @@
         "properties": {
           "days": {
             "description": "Days since the last full charge. Zero disables.",
-            "type": "number"
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 365
           },
           "energy": {
             "description": "Energy charged since the last full charge in kWh. Zero disables.",
-            "type": "number"
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10000
           }
         },
         "required": [

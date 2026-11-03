@@ -78,14 +78,9 @@ func planStrategySetter(set func(api.PlanStrategy) error) func(string) error {
 	}
 }
 
-func fullChargeSetter(set func(api.FullCharge) error) func(string) error {
+func fullChargeSetter(v vehicle.API) func(string) error {
 	return func(payload string) error {
-		var res api.FullCharge
-		if err := json.Unmarshal([]byte(payload), &res); err != nil {
-			return err
-		}
-
-		return set(res)
+		return updateFullCharge(v, []byte(payload))
 	}
 }
 

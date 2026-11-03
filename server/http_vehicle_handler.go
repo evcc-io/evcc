@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -208,19 +209,40 @@ func fullChargeHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		var res api.FullCharge
-		if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
+		b, err := io.ReadAll(r.Body)
+		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if err := v.SetFullCharge(res); err != nil {
+		if err := updateFullCharge(v, b); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		jsonWrite(w, v.GetFullCharge())
 	}
+}
+
+// updateFullCharge changes the thresholds present in the payload and keeps the others
+func updateFullCharge(v vehicle.API, payload []byte) error {
+	var req struct {
+		Days   *int     `json:"days"`
+		Energy *float64 `json:"energy"`
+	}
+	if err := json.Unmarshal(payload, &req); err != nil {
+		return err
+	}
+
+	res := v.GetFullCharge()
+	if req.Days != nil {
+		res.Days = *req.Days
+	}
+	if req.Energy != nil {
+		res.Energy = *req.Energy
+	}
+
+	return v.SetFullCharge(res)
 }
 
 // fullChargeDone records a full charge that happened outside of evcc, e.g. at a public charger

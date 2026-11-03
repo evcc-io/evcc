@@ -172,9 +172,11 @@ type Loadpoint struct {
 	planLocked       PlanLock         // locked plan
 
 	// periodic full charge
-	fullChargeActive bool                 // full charge due, limit raised to 100%
-	fullChargeFull   time.Time            // vehicle stopped charging at 100% since
-	fullChargeEnergy fullChargeEnergyMemo // energy charged since the last full charge
+	fullChargeActive  bool        // full charge due, limit raised to 100%
+	fullChargeVehicle api.Vehicle // vehicle the full charge state belongs to
+	fullChargeCharged bool        // vehicle charged since it was connected
+	fullChargeFull    time.Time   // vehicle stopped charging at 100% since
+	fullChargeEnergy  float64     // session energy already counted in kWh
 
 	// optimizer
 	suggestion        *types.Suggestion // optimizer suggestion for the current slot
