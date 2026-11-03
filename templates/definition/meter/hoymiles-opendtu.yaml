@@ -9,9 +9,10 @@ params:
   - name: usage
     choice: ["pv"]
   - name: host
-  - name: user
-    default: admin
   - name: password
+    help:
+      de: Nur nötig, wenn Lesezugriff ohne Passwort deaktiviert ist.
+      en: Only needed if read-only access without password is disabled.
   - name: cache
     default: 1s
 render: |
@@ -22,7 +23,7 @@ render: |
     {{- if .password }}
     auth:
       type: basic
-      user: {{ .user }}
+      user: admin
       password: {{ .password }}
     {{- end }}
     jq: .total.Power.v
@@ -33,7 +34,7 @@ render: |
     {{- if .password }}
     auth:
       type: basic
-      user: {{ .user }}
+      user: admin
       password: {{ .password }}
     {{- end }}
     # skip partial sums until all inverters are contacted; radio_stats needs firmware 2024.10.22+
