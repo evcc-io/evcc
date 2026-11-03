@@ -359,7 +359,8 @@ func (wb *Em2Go) ChargedEnergy() (float64, error) {
 
 	// Detect if em2GoRegChargedEnergy was reset without cable disconnect
 	// This happens during phase switches or pause/resume cycles
-	if wb.lastStatus != api.StatusA && currentChargedEnergy == 0 && wb.lastChargedEnergy > 0 {
+	// A reset is indicated by currentChargedEnergy being less than lastChargedEnergy (reading went backwards)
+	if wb.lastStatus != api.StatusA && currentChargedEnergy < wb.lastChargedEnergy && wb.lastChargedEnergy > 0 {
 		// Register was reset while cable still connected, accumulate the previous value
 		wb.sessionChargedEnergy += wb.lastChargedEnergy
 		wb.log.DEBUG.Printf("Charged energy reset detected: accumulated %.2f kWh, total session now %.2f kWh", wb.lastChargedEnergy, wb.sessionChargedEnergy)
