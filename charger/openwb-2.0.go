@@ -126,7 +126,7 @@ func (wb *OpenWB20) resetRfidLocked() error {
 	return nil
 }
 
-func (wb *OpenWB20) HandleRfidReset() error {
+func (wb *OpenWB20) handleRfidReset() error {
 	wb.rfidMu.Lock()
 	defer wb.rfidMu.Unlock()
 

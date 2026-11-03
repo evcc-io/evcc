@@ -89,7 +89,7 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, identity)
 
-	require.NoError(t, wb.HandleRfidReset())
+	require.NoError(t, wb.handleRfidReset())
 	require.Nil(t, wb.lastidentify)
 	require.Equal(t, time.Unix(0, 0), wb.lastidtime)
 	require.Equal(t, 1, handler.rfidResets)
@@ -103,7 +103,7 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 			defer wg.Done()
 			for range 20 {
 				_, _ = wb.Status()
-				_ = wb.HandleRfidReset()
+				_ = wb.handleRfidReset()
 				_, _ = wb.identify()
 			}
 		}()
