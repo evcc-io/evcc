@@ -35,5 +35,7 @@ params:
 render: |
   type: drivesomethinggreater
   brand: Cupra
+  sockeys:
+    - ac1108b1-b8cc-3db9-a663-03d387e42223 # battery_level_HV.value, battery_state_report.soc lags
   {{ include "base" . }}
   {{ include "features" (merge (dict "basefeatures" (list "streaming")) .) }}
