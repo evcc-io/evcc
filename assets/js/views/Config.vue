@@ -607,7 +607,16 @@
 					:ext-meters="extMeters"
 					@changed="loadDirty"
 				/>
-				<CircuitsModal :circuits="circuits" :grid-meter="gridMeter" @changed="loadDirty" />
+				<CircuitsModal
+					:circuits="circuits"
+					:grid-meter="gridMeter"
+					:loadpoints="assignmentLoadpoints"
+					:pending="circuitAssignmentPending"
+					:error="circuitAssignmentError"
+					:revision="circuitAssignmentRevision"
+					:flash-id="circuitAssignmentFlash"
+					@assign="circuitAssignmentChanged"
+				/>
 				<CircuitModal
 					:circuits="circuits"
 					:meters="meters"
@@ -727,7 +736,7 @@ import type {
 	OnboardingItem,
 } from "@/types/evcc";
 import { ConfigType, CURRENCY } from "@/types/evcc";
-import { circuitTree, type CircuitNode } from "@/utils/circuits";
+import { circuitTree, type CircuitNode, type CircuitAssignmentLoadpoint } from "@/utils/circuits";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
 
@@ -843,6 +852,11 @@ export default defineComponent({
 			vehicles: [] as ConfigVehicle[],
 			meters: [] as ConfigMeter[],
 			loadpoints: [] as ConfigLoadpoint[],
+			circuitAssignments: {} as Record<number, string | null>,
+			circuitAssignmentPending: false,
+			circuitAssignmentError: "",
+			circuitAssignmentRevision: 0,
+			circuitAssignmentFlash: undefined as number | undefined,
 			// checklist state is derived from loaded config, keep it hidden until then
 			loaded: false,
 			chargers: [] as ConfigCharger[],
@@ -885,6 +899,19 @@ export default defineComponent({
 		return { title: this.$t("config.main.title") };
 	},
 	computed: {
+		assignmentLoadpoints(): CircuitAssignmentLoadpoint[] {
+			return this.loadpoints.map((lp) => ({
+				id: lp.id,
+				name: lp.name,
+				title: lp.title,
+				circuit:
+					lp.id !== undefined && lp.id in this.circuitAssignments
+						? this.circuitAssignments[lp.id]
+						: lp.circuit || null,
+				editable: lp.id !== undefined && !lp.disable,
+				heating: this.deviceValues.charger[lp.charger]?.heating?.value === true,
+			}));
+		},
 		activeSlug(): string | undefined {
 			const slug = this.$route.hash.slice(1);
 			return SECTION_TITLES[slug] ? slug : undefined;
@@ -1434,6 +1461,25 @@ export default defineComponent({
 		}
 	},
 	methods: {
+		async circuitAssignmentChanged({ id, circuit }: { id: number; circuit: string | null }) {
+			const lp = this.assignmentLoadpoints.find((lp) => lp.id === id);
+			if (this.circuitAssignmentPending || !lp?.editable || lp.circuit === circuit) return;
+			this.circuitAssignmentPending = true;
+			this.circuitAssignmentError = "";
+			try {
+				const { data } = await api.get(`config/loadpoints/${id}`);
+				await api.put(`config/loadpoints/${id}`, { ...data, circuit: circuit ?? "" });
+				// Live static references remain unchanged until restart
+				this.circuitAssignments[id] = circuit;
+				this.circuitAssignmentFlash = circuit === null ? undefined : id;
+				this.circuitAssignmentRevision++;
+				await this.loadDirty();
+			} catch {
+				this.circuitAssignmentError = this.$t("config.circuits.assignmentFailed");
+			} finally {
+				this.circuitAssignmentPending = false;
+			}
+		},
 		isUnconfigured(tags: DeviceTags): boolean {
 			return tags["configured"]?.value === false;
 		},

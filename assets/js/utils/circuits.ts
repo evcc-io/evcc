@@ -1,5 +1,14 @@
 import type { ConfigCircuit, ConfigMeter, Circuit } from "../types/evcc";
 
+export interface CircuitAssignmentLoadpoint {
+  id?: number;
+  name?: string;
+  title: string;
+  circuit: string | null;
+  editable: boolean;
+  heating: boolean;
+}
+
 export type ConfigCircuitNode = ConfigCircuit & {
   children?: ConfigCircuitNode[];
 };
