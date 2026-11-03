@@ -98,6 +98,7 @@
 			v-bind="vehicleProps"
 			:soc-per-kwh="socPerKwh"
 			@limit-soc-updated="setLimitSoc"
+			@full-charge-skipped="skipFullCharge"
 			@limit-energy-updated="setLimitEnergy"
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
@@ -403,6 +404,9 @@ export default defineComponent({
 		},
 		setLimitSoc(soc: number) {
 			api.post(this.apiPath("limitsoc") + "/" + soc);
+		},
+		skipFullCharge() {
+			api.post(`vehicles/${this.vehicleName}/fullcharge/done`);
 		},
 		setLimitEnergy(kWh: number) {
 			api.post(this.apiPath("limitenergy") + "/" + kWh);

@@ -63,6 +63,7 @@
 				:range-per-soc="rangePerSoc"
 				:heating="heating"
 				:full-charge="fullChargeActive"
+				@full-charge-skipped="$emit('full-charge-skipped')"
 				:min-temp="ui?.minTemp ?? 0"
 				:max-temp="ui?.maxTemp ?? 100"
 				@limit-soc-updated="limitSocUpdated"
@@ -190,6 +191,7 @@ export default defineComponent({
 	},
 	emits: [
 		"limit-soc-updated",
+		"full-charge-skipped",
 		"limit-energy-updated",
 		"change-vehicle",
 		"remove-vehicle",

@@ -283,4 +283,5 @@ func (v *adapter) SetFullChargeTime(ts time.Time) {
 	v.log.DEBUG.Printf("set %s full charge time: %v", v.name, ts.Round(time.Second).Local())
 	settings.SetTime(v.key()+keys.FullChargeTime, ts)
 	v.publish()
+	v.requestUpdate()
 }

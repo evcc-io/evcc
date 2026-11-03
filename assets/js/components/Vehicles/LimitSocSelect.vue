@@ -22,6 +22,8 @@ import CustomSelect from "../Helper/CustomSelect.vue";
 import { distanceUnit } from "@/units";
 import formatter from "@/mixins/formatter";
 
+const FULL_CHARGE_SKIP = -1;
+
 export default defineComponent({
 	name: "LimitSocSelect",
 	components: { LabelAndValue, AnimatedNumber, CustomSelect },
@@ -34,7 +36,7 @@ export default defineComponent({
 		minTemp: { type: Number, default: 0 },
 		maxTemp: { type: Number, default: 0 },
 	},
-	emits: ["limit-soc-updated"],
+	emits: ["limit-soc-updated", "full-charge-skipped"],
 	computed: {
 		rangeActive() {
 			return this.heating && this.maxTemp > this.minTemp;
@@ -50,6 +52,12 @@ export default defineComponent({
 			if (this.limitSoc && !result.some((o) => o.value === this.limitSoc)) {
 				result.push(this.socOption(this.limitSoc));
 				result.sort((a, b) => a.value - b.value);
+			}
+			if (this.fullCharge) {
+				result.push({
+					value: FULL_CHARGE_SKIP,
+					name: this.$t("main.vehicle.fullChargeSkip"),
+				});
 			}
 			return result;
 		},
@@ -74,10 +82,11 @@ export default defineComponent({
 			return { value: soc, name };
 		},
 		change(e: Event) {
-			return this.$emit(
-				"limit-soc-updated",
-				parseInt((e.target as HTMLSelectElement).value, 10)
-			);
+			const value = parseInt((e.target as HTMLSelectElement).value, 10);
+			if (value === FULL_CHARGE_SKIP) {
+				return this.$emit("full-charge-skipped");
+			}
+			return this.$emit("limit-soc-updated", value);
 		},
 		estimatedRange(soc: number) {
 			if (this.rangePerSoc) {
