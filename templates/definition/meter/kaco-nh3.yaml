@@ -29,7 +29,8 @@ params:
     description:
       de: Batteriespeichernummer
       en: Battery number
-  - preset: battery-params
+  - preset: battery-capacity
+  - preset: battery-minmaxsoc
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -236,9 +237,9 @@ render: |
                         body: '{"data":"${frame}"}'
                   script: |
                     power := 0
-                    if value == 3 {
+                    if batteryMode == 3 {
                       power = -int(charge + 0.5)
-                    } else if value == 5 {
+                    } else if batteryMode == 5 {
                       power = int(discharge + 0.5)
                     }
                     frame := []byte{3, 6, 4, 128, byte(power >> 8), byte(power)}
