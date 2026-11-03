@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -22,7 +23,7 @@ type OpenWB20 struct {
 	base             uint16
 	laststatus       api.ChargeStatus
 	rfidResetPending bool
-	lastidentify     string
+	lastidentify     []string
 	lastidtime       time.Time
 }
 
@@ -103,7 +104,7 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 		curr:         6 * 100,
 		base:         (connector - 1) * 100,
 		laststatus:   api.StatusNone,
-		lastidentify: "",
+		lastidentify: nil,
 		lastidtime:   time.Unix(0, 0),
 	}
 
@@ -117,7 +118,7 @@ func (wb *OpenWB20) resetRfid() error {
 	}
 
 	wb.rfidResetPending = false
-	wb.lastidentify = ""
+	wb.lastidentify = nil
 	wb.lastidtime = time.Unix(0, 0)
 	return nil
 }
@@ -131,12 +132,12 @@ func (wb *OpenWB20) HandleRfidReset() error {
 	if err != nil {
 		return err
 	}
-	if new_id == "" {
-		wb.lastidentify = ""
+	if new_id == nil {
+		wb.lastidentify = nil
 		wb.lastidtime = time.Unix(0, 0)
 		return nil
 	}
-	if wb.lastidentify != new_id {
+	if !slices.Equal(wb.lastidentify, new_id) {
 		wb.lastidentify = new_id
 		wb.lastidtime = time.Now()
 		return nil
@@ -285,11 +286,11 @@ func (wb *OpenWB20) WakeUp() error {
 }
 
 // Identify implements the api.Identifier interface
-func (wb *OpenWB20) identify() (string, error) {
+func (wb *OpenWB20) identify() ([]string, error) {
 	if wb.rfidResetPending {
 		if err := wb.resetRfid(); err != nil {
 			wb.log.WARN.Printf("RFID reset is still pending, cannot identify vehicle: %v", err)
-			return "", err
+			return nil, err
 		}
 	}
 
@@ -297,5 +298,5 @@ func (wb *OpenWB20) identify() (string, error) {
 	if err != nil {
 		return wb.lastidentify, err
 	}
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }
