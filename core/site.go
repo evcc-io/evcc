@@ -1398,29 +1398,28 @@ func (site *Site) update(lp updater) {
 	site.stats.Update(site)
 }
 
-// boundEstimatedCharging limits the energy recorded for a charge power estimated from the offered
-// current to the measured supply, as no more can have been charged, and returns the excess left
-// out. It needs grid and pv meters, without them the supply is itself derived from the charge
-// power, and a single estimated loadpoint, with more the measured supply does not tell which
-// one drew less.
-func (site *Site) boundEstimatedCharging(balance float64) (excess float64) {
-	lps := lo.Compact(site.loadpoints)
-	estimated := lo.Filter(lps, func(lp *Loadpoint, _ int) bool { return lp.chargePowerEstimated() })
-	measured := site.gridMeter != nil && site.pvMeters != nil
-
-	if measured && len(estimated) == 1 {
-		excess = max(0, -balance)
-	}
-
+// boundEstimatedChargePower attributes the charge power the site did not measurably supply
+// to the single charging loadpoint without charge meter and returns it
+func (site *Site) boundEstimatedChargePower(homePower float64) float64 {
+	lps := site.activeLoadpoints()
 	for _, lp := range lps {
-		var share float64
-		if excess > 0 && lp == estimated[0] {
-			share = excess
-		}
-		lp.setChargeExcess(share)
+		lp.chargeExcess = 0
 	}
 
-	return excess
+	// supply must be measured
+	if homePower >= 0 || site.gridMeter == nil || site.pvMeters == nil {
+		return 0
+	}
+
+	// a single estimated loadpoint can be attributed
+	estimated := lo.Filter(lps, func(lp *Loadpoint, _ int) bool { return lp.chargePowerEstimated() })
+	if len(estimated) != 1 {
+		return 0
+	}
+
+	// negative home power is unsupplied estimate
+	estimated[0].chargeExcess = -homePower
+	return -homePower
 }
 
 // updatePower calculates the site power balance and updates the given loadpoint
@@ -1443,7 +1442,7 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 
 	// ignore negative pvPower values as that means it is not an energy source but consumption
 	homePower := state.gridPower + max(0, state.pvPower) + state.battery.Power - totalChargePower
-	chargeExcess := site.boundEstimatedCharging(homePower)
+	chargeExcess := site.boundEstimatedChargePower(homePower)
 	homePower = max(homePower, 0)
 	site.publish(keys.HomePower, homePower)
 
