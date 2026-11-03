@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"slices"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -18,6 +19,7 @@ type OpenWB20 struct {
 	implement.Caps
 	log              *util.Logger
 	conn             *modbus.Connection
+	rfidMu           sync.Mutex
 	enabled          bool
 	curr             uint16
 	base             uint16
@@ -111,7 +113,7 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 	return wb, nil
 }
 
-func (wb *OpenWB20) resetRfid() error {
+func (wb *OpenWB20) resetRfidLocked() error {
 	if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err != nil {
 		wb.rfidResetPending = true
 		wb.log.WARN.Printf("RFID reset was not successful: %v", err)
@@ -125,11 +127,18 @@ func (wb *OpenWB20) resetRfid() error {
 }
 
 func (wb *OpenWB20) HandleRfidReset() error {
+	wb.rfidMu.Lock()
+	defer wb.rfidMu.Unlock()
+
+	return wb.handleRfidResetLocked()
+}
+
+func (wb *OpenWB20) handleRfidResetLocked() error {
 	if wb.laststatus != api.StatusA {
 		// Reset RFID on disconnect
-		return wb.resetRfid()
+		return wb.resetRfidLocked()
 	}
-	new_id, err := wb.identify()
+	new_id, err := wb.identifyLocked()
 	if err != nil {
 		return err
 	}
@@ -144,13 +153,16 @@ func (wb *OpenWB20) HandleRfidReset() error {
 		return nil
 	}
 	if wb.lastidtime != time.Unix(0, 0) && time.Since(wb.lastidtime) > 2*time.Minute {
-		return wb.resetRfid()
+		return wb.resetRfidLocked()
 	}
 	return nil
 }
 
 // Status implements the api.Charger interface
 func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
+	wb.rfidMu.Lock()
+	defer wb.rfidMu.Unlock()
+
 	b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegCharging, 1)
 	if err != nil {
 		return wb.laststatus, err
@@ -167,7 +179,7 @@ func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
 		wb.laststatus = api.StatusB
 		return api.StatusB, err
 	}
-	wb.HandleRfidReset()
+	wb.handleRfidResetLocked()
 	wb.laststatus = api.StatusA
 	return api.StatusA, nil
 }
@@ -288,8 +300,15 @@ func (wb *OpenWB20) WakeUp() error {
 
 // Identify implements the api.Identifier interface
 func (wb *OpenWB20) identify() ([]string, error) {
+	wb.rfidMu.Lock()
+	defer wb.rfidMu.Unlock()
+
+	return wb.identifyLocked()
+}
+
+func (wb *OpenWB20) identifyLocked() ([]string, error) {
 	if wb.rfidResetPending {
-		if err := wb.resetRfid(); err != nil {
+		if err := wb.resetRfidLocked(); err != nil {
 			wb.log.WARN.Printf("RFID reset is still pending, cannot identify vehicle: %v", err)
 			return nil, err
 		}

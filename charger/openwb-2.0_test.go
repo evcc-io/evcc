@@ -3,6 +3,7 @@ package charger
 import (
 	"context"
 	"net"
+	"sync"
 	"testing"
 	"time"
 
@@ -92,4 +93,20 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 	require.Nil(t, wb.lastidentify)
 	require.Equal(t, time.Unix(0, 0), wb.lastidtime)
 	require.Equal(t, 1, handler.rfidResets)
+
+	handler.failReset = true
+	wb.rfidResetPending = true
+	var wg sync.WaitGroup
+	for range 3 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for range 20 {
+				_, _ = wb.Status()
+				_ = wb.HandleRfidReset()
+				_, _ = wb.identify()
+			}
+		}()
+	}
+	wg.Wait()
 }
