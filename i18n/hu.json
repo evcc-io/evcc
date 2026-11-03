@@ -186,7 +186,6 @@
     "circuits": {
       "addMainCircuit": "Fő áramkör hozzáadása",
       "addSubCircuit": "Alárendelt áramkör hozzáadása",
-      "chargingPointsNote": "A töltőpontokat és fűtőberendezéseket a saját beállításaikban rendelheted áramkörhöz.",
       "description": "Gondoskodik arról, hogy az áramkörhöz csatlakoztatott összes terhelési pont összege ne haladja meg a beállított teljesítmény- és áramkorlátokat. Az áramkörök egymásba ágyazhatók a hierarchia felépítéséhez.",
       "legacyWarning": "Új áramkör konfiguráció érhető el! Távolítsd el és mentsd el itt a konfigurációdat az új, vezetett folyamat használatához.",
       "meterDedicated": "Mérő",
