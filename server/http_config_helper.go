@@ -610,9 +610,12 @@ func configHasCriticalPlugin(class templates.Class, req configReq) bool {
 	return err != nil || typedHasCriticalSource(class, typ, other)
 }
 
+// typedHasCriticalSource renders whenever a template is referenced, not only when typ says so:
+// updating or testing an existing device instantiates with the stored type, not the request's
 func typedHasCriticalSource(class templates.Class, typ string, other map[string]any) bool {
+	_, template := lo.FindKeyBy(other, func(k string, _ any) bool { return strings.EqualFold(k, typeTemplate) })
 	return valueHasCriticalSource(class, other) ||
-		strings.EqualFold(typ, typeTemplate) && renderedHasCriticalSource(class, other)
+		(template || strings.EqualFold(typ, typeTemplate)) && renderedHasCriticalSource(class, other)
 }
 
 // renderedHasCriticalSource fails closed: a template we cannot render to verify

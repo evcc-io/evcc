@@ -305,12 +305,26 @@ func TestConfigHasCriticalPluginRendersTemplate(t *testing.T) {
 	// the template key is decoded case-insensitively when rendering
 	req.Other = map[string]any{"Template": "demo-charger", "status": injectedScript}
 	assert.True(t, configHasCriticalPlugin(templates.Charger, req), "capitalised template key")
+
+	// update and test of an existing device instantiate with the stored type, so the
+	// request's type must not decide whether the template is rendered
+	for _, typ := range []string{"", "custom"} {
+		req.Properties.Type = typ
+		assert.True(t, configHasCriticalPlugin(templates.Charger, req), "request type "+strconv.Quote(typ))
+	}
 }
 
 func TestConfigHasCriticalPluginCustomYamlTemplate(t *testing.T) {
 	// custom yaml may override the type to template
 	y := "type: template\ntemplate: demo-charger\nstatus: " + strconv.Quote(injectedScript)
 	req, err := decodeDeviceConfig(strings.NewReader(`{"type":"custom","yaml":`+strconv.Quote(y)+`}`), templates.Charger)
+	require.NoError(t, err)
+
+	assert.True(t, configHasCriticalPlugin(templates.Charger, req))
+
+	// without a type override the stored type decides, so the template is rendered regardless
+	y = "template: demo-charger\nstatus: " + strconv.Quote(injectedScript)
+	req, err = decodeDeviceConfig(strings.NewReader(`{"type":"custom","yaml":`+strconv.Quote(y)+`}`), templates.Charger)
 	require.NoError(t, err)
 
 	assert.True(t, configHasCriticalPlugin(templates.Charger, req))
