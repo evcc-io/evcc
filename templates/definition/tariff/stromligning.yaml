@@ -47,9 +47,6 @@ render: |
   {{- if and (eq .pricetype "consumption") (not .productid) }}
   {{ fail "productid is required for consumption prices" }}
   {{- end }}
-  {{- if not (has .pricetype (list "consumption" "production")) }}
-  {{ fail "invalid pricetype: expected consumption or production" }}
-  {{- end }}
   type: custom
   {{ include "base" . }}
   forecast:
