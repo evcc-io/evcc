@@ -107,9 +107,10 @@ type Loadpoint struct {
 	Ui              loadpoint.UIConfig // display-only, not used in control logic
 
 	// from yaml
-	DefaultMode api.ChargeMode `mapstructure:"mode"`     // Default charge mode, used for disconnect
-	Title       string         `mapstructure:"title"`    // UI title
-	Priority    int            `mapstructure:"priority"` // Priority
+	DefaultMode     api.ChargeMode `mapstructure:"mode"`            // Default charge mode, used for disconnect
+	Title           string         `mapstructure:"title"`           // UI title
+	Priority        int            `mapstructure:"priority"`        // Priority
+	DemandPredictor string         `mapstructure:"demandPredictor"` // Heating demand predictor, empty: charger default
 
 	// from yaml, deprecated
 	GuardDuration_ time.Duration `mapstructure:"guardduration"` // ignored, present for compatibility
@@ -127,6 +128,7 @@ type Loadpoint struct {
 	minSoc                   int      // Forced charging below this soc (heating: temperature), 0=disabled
 	smartCostLimit           *float64 // always charge if consumption cost is below this value
 	solarShare               float64  // share of min charging power that must be solar in pv mode (0..1)
+	predictor                string   // heating demand predictor ("daily"/"weekday"/"temperature"), empty: charger default
 	smartFeedInPriorityLimit *float64 // prevent charging if feed-in cost is above this value
 	batteryBoost             int      // battery boost state
 	batteryBoostLimit        int      // battery boost soc limit (0-100, 100=disabled)
@@ -164,6 +166,7 @@ type Loadpoint struct {
 	planEnergy       float64          // Plan charge energy in kWh (dumb vehicles)
 	planEnergyOffset float64          // already charged energy in kWh when plan was set
 	planSlotEnd      time.Time        // current plan slot end time
+	criticalSlotEnd  time.Time        // optimizer: deadline critical verdict held until
 	planActive       bool             // charge plan exists and has a currently active slot
 	planOverrunSent  bool             // notification has been sent already
 	planLocked       PlanLock         // locked plan
@@ -312,6 +315,13 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		lp.setTitle(lp.Title)
 	}
 
+	if p := lp.DemandPredictor; p != "" {
+		if !slices.Contains(demandPredictors, p) {
+			return lp, fmt.Errorf("invalid demand predictor: %s", p)
+		}
+		lp.predictor = p
+	}
+
 	// phase switching defaults based on charger capabilities
 	if !lp.hasPhaseSwitching() {
 		phases := lp.getChargerPhysicalPhases()
@@ -418,6 +428,9 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 	if v, err := lp.settings.Float(keys.SolarShare); err == nil {
 		lp.SetSolarShare(v)
+	}
+	if v, err := lp.settings.String(keys.DemandPredictor); err == nil {
+		lp.predictor = v
 	}
 	if v, err := lp.settings.Float(keys.SmartFeedInPriorityLimit); err == nil {
 		lp.setSmartFeedInPriorityLimit(&v)
@@ -698,8 +711,8 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 }
 
 // triggerOptimizer re-runs the optimizer when the loadpoint's profile changed.
-// A burst of setters, e.g. on disconnect, is coalesced by optimizerUpdateAsync's
-// TryLock- only the first call gets through while a run is in flight.
+// A burst of setters, e.g. on disconnect, is coalesced by optimizerUpdateAsync:
+// triggers during a run collapse into a single re-run afterwards.
 func (lp *Loadpoint) triggerOptimizer() {
 	if lp.site != nil {
 		lp.site.Optimize()
@@ -1555,6 +1568,22 @@ func (lp *Loadpoint) fastChargingPhases() (bool, error) {
 
 	// use enabled phases- scalePhases compares against the same value
 	phases := lp.GetPhases()
+
+	// unknown phases (charger without api.PhaseGetter after restart): derive from measured phases while
+	// charging, more than 1p measured implies 3p enabled. Without measurement establish target immediately.
+	if phases == 0 {
+		switch measured := lp.GetMeasuredPhases(); {
+		case measured == 1:
+			phases = 1
+		case measured > 1:
+			phases = 3
+		default:
+			if err := lp.scalePhases(targetPhases); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+				return false, err
+			}
+			return false, nil
+		}
+	}
 
 	// scale down: immediate
 	if targetPhases == 1 && phases == 3 {

@@ -140,10 +140,13 @@ func TestFingerprint(t *testing.T) {
 	kiaKey := "yb4Z1n2nlKe" + "ukNilE7QEdb" + "KB34nStPVa"
 	hyundai := identity("com.hyundai.oneapp.eu", "HyundaiEU", "1792000084084")
 	hyundaiKey := "OsZDfDuCyVX" + "yfqjCoA2JbX" + "2MrLpGwNBC"
+	genesis := identity("com.genesis.oneapp.eu", "GenesisEU", "1700000000123")
+	genesisKey := "SGcyufLERcZ" + "g8d7THY41KO" + "8l1fHRfZZb"
 
 	// golden vectors from hyundai_kia_connect_api, verified against the live gate
 	assert.Equal(t, "0a3ceccc83823ec0d2c5d39a15dbf722c813e6da48800a0156a7a8459db63337", fingerprint(kia, kiaKey, nil))
 	assert.Equal(t, "df04e3dadd52288ce5b280b368af261272556b5360adbc90a817a167526e2946", fingerprint(hyundai, hyundaiKey, nil))
+	assert.Equal(t, "4fdf3bc26ed4a9d7f8d4c8c01b14b70631b3e681c9284ff064fcbc30df087f5a", fingerprint(genesis, genesisKey, nil))
 
 	// body vector from an independent HMAC computation of the upstream recipe, body in Python json.dumps style
 	assert.Equal(t, "0aae2e0acd5d57bcabba202cc7a839fc90f1d52814091b92e0908be66ed12eef", fingerprint(kia, kiaKey, []byte(`{"refreshToken": "r1", "idToken": "i1"}`)))

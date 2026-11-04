@@ -855,6 +855,13 @@ input[list]::-webkit-list-button {
 	}
 }
 
+html.embedded {
+	--safe-area-inset-top: 0px;
+	--safe-area-inset-bottom: 0px;
+	--safe-area-inset-left: 0px;
+	--safe-area-inset-right: 0px;
+}
+
 html.app .hide-in-app {
 	display: none !important;
 }

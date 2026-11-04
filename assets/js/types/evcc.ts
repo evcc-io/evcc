@@ -547,6 +547,9 @@ export interface LoadpointThreshold {
   threshold: number;
 }
 
+/** Demand forecast strategy of a heating loadpoint. */
+export type DemandPredictor = "daily" | "weekday" | "temperature";
+
 export interface ConfigLoadpoint {
   id?: number;
   name?: string;
@@ -567,6 +570,7 @@ export interface ConfigLoadpoint {
   limitEnergy?: number;
   limitSoc?: number;
   minSoc?: number;
+  demandPredictor?: DemandPredictor;
   circuit?: string;
   thresholds: {
     enable: LoadpointThreshold;
@@ -1369,6 +1373,8 @@ export interface Vehicle {
   features?: string[];
   /** Usable battery capacity in kWh. */
   capacity?: number;
+  /** Maximum number of phases supported by the vehicle. Zero means unknown. */
+  phases?: number;
   /** Vehicle icon name for UI display. */
   icon?: string;
 }

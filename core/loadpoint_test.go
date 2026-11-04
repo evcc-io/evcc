@@ -1310,6 +1310,27 @@ func TestNewLoadpointFromConfigDisabledVehicle(t *testing.T) {
 	require.Empty(t, config.Instances(config.Vehicles().Devices()))
 }
 
+func TestNewLoadpointFromConfigDemandPredictor(t *testing.T) {
+	config.Reset()
+	t.Cleanup(config.Reset)
+
+	ctrl := gomock.NewController(t)
+	require.NoError(t, config.Chargers().Add(config.NewStaticDevice(config.Named{Name: "charger"}, api.Charger(api.NewMockCharger(ctrl)))))
+
+	lp, err := NewLoadpointFromConfig(util.NewLogger("foo"), nil, nil, map[string]any{
+		"charger":         "charger",
+		"demandPredictor": "weekday",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "weekday", lp.GetDemandPredictor())
+
+	_, err = NewLoadpointFromConfig(util.NewLogger("foo"), nil, nil, map[string]any{
+		"charger":         "charger",
+		"demandPredictor": "monthly",
+	})
+	require.ErrorContains(t, err, "invalid demand predictor")
+}
+
 // TestPVDisableContinuousDeviceShortfall is a regression test for #32282: a continuous
 // device consuming less than its min power demand keeps the remainder out of site
 // power, so the disable gate never trips on the missing surplus. The shortfall

@@ -1,6 +1,8 @@
 package eudataact
 
 import (
+	"errors"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -29,12 +31,14 @@ const (
 // soon as the portal delivers a new dataset.
 type Provider struct {
 	statusG func() ([]point, error)
+	socKeys []string
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *Provider {
-	v := &Provider{}
-	s := sharedStore(api)
+// socKeys are soc field keys or names tried before the default ones
+func NewProvider(log *util.Logger, client *API, vin string, cache time.Duration, socKeys []string) *Provider {
+	v := &Provider{socKeys: socKeys}
+	s := sharedStore(client)
 
 	var (
 		cached util.Cacheable[[]point]
@@ -48,6 +52,11 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 				time.AfterFunc(resetDelay(ts, cache), cached.Reset)
 			}
 			return s.snapshot(vin), nil
+		}
+
+		// the data is outdated while catching up, the loadpoint must read again
+		if errors.Is(err, api.ErrMustRetry) {
+			return nil, err
 		}
 
 		// serve the last data over transient portal errors, surface persistent ones
@@ -100,7 +109,8 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, KeyBatteryStateReportSoc, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyEnyaqSoc); p != nil {
+	keys := append(slices.Clone(v.socKeys), KeyBatteryStateReportSoc, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyEnyaqSoc)
+	if p := lookup(data, keys...); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
