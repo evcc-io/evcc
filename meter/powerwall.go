@@ -38,8 +38,6 @@ type PowerWall struct {
 
 type powerWallConfig struct {
 	URI, Usage, User, Password string
-	Scheme                     string
-	SkipLogin                  bool `mapstructure:"skipLogin"`
 	ControlSecret              string
 	ChargeMaxSoc               float64 `mapstructure:"chargemaxsoc"`
 	Insecure                   bool    `mapstructure:"insecure"`
@@ -56,9 +54,12 @@ func defaultPowerWallConfig() powerWallConfig {
 	return powerWallConfig{
 		Cache:        time.Second,
 		MinSoc:       20,
-		Scheme:       "https",
 		ChargeMaxSoc: 100,
 	}
+}
+
+func (cc powerWallConfig) usesPypowerwallServer() bool {
+	return cc.Password == "" && strings.Contains(cc.URI, "://")
 }
 
 // validate checks required parameters and maps legacy usage names
@@ -67,20 +68,11 @@ func (cc *powerWallConfig) validate() error {
 		return errors.New("missing usage")
 	}
 
-	if cc.Password == "" && !cc.SkipLogin {
+	if cc.Password == "" && !cc.usesPypowerwallServer() {
 		return errors.New("missing password")
 	}
 
-	if cc.SkipLogin {
-		if cc.Scheme == "" {
-			cc.Scheme = "https"
-		}
-		switch cc.Scheme {
-		case "http", "https":
-		default:
-			return fmt.Errorf("invalid scheme: %s", cc.Scheme)
-		}
-
+	if cc.usesPypowerwallServer() {
 		for name, v := range map[string]float64{"minsoc": cc.MinSoc, "chargemaxsoc": cc.ChargeMaxSoc} {
 			if v < 0 || v > 100 {
 				return fmt.Errorf("invalid %s: %v, must be 0-100", name, v)
@@ -124,9 +116,9 @@ func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 	return newPowerWall(log, cc)
 }
 
-// skipLoginTransport returns a transport for local proxies. Unlike the
+// pypowerwallServerTransport returns a transport for the pypowerwall-server backend. Unlike the
 // gateway transport it must not force the gateway's SNI name.
-func skipLoginTransport(insecure bool) http.RoundTripper {
+func pypowerwallServerTransport(insecure bool) http.RoundTripper {
 	if base, ok := http.DefaultTransport.(*http.Transport); ok {
 		transport := base.Clone()
 		if insecure {
@@ -143,8 +135,8 @@ func skipLoginTransport(insecure bool) http.RoundTripper {
 
 func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 	readTransport := http.RoundTripper(powerwall.DefaultTransport())
-	if cc.SkipLogin {
-		readTransport = skipLoginTransport(cc.Insecure)
+	if cc.usesPypowerwallServer() {
+		readTransport = pypowerwallServerTransport(cc.Insecure)
 	}
 
 	httpClient := &http.Client{
@@ -152,15 +144,7 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 		Timeout:   time.Second * 2, // Timeout after 2 seconds
 	}
 
-	opts := []func(*powerwall.Client){powerwall.WithHttpClient(httpClient)}
-	if cc.SkipLogin {
-		if cc.Scheme != "" {
-			opts = append(opts, powerwall.WithScheme(cc.Scheme))
-		}
-		opts = append(opts, powerwall.WithLoginManager(powerwall.NoopLoginManager{}))
-	}
-
-	client := powerwall.NewClient(cc.URI, cc.User, cc.Password, opts...)
+	client := powerwall.NewClient(cc.URI, cc.User, cc.Password, powerwall.WithHttpClient(httpClient))
 	if _, err := client.GetStatus(); err != nil {
 		return nil, err
 	}
@@ -171,18 +155,18 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 		usage:         strings.ToLower(cc.Usage),
 		meterG:        util.Cached(client.GetMetersAggregates, cc.Cache),
 		controlSecret: cc.ControlSecret,
-		controlBase:   strings.TrimRight(cc.Scheme+"://"+cc.URI, "/"),
+		controlBase:   strings.TrimRight(cc.URI, "/"),
 		minSoc:        cc.MinSoc,
 		chargeMaxSoc:  cc.ChargeMaxSoc,
 	}
-	if cc.SkipLogin {
+	if cc.usesPypowerwallServer() {
 		m.controlClient = &http.Client{
-			Transport: request.NewTripper(log, skipLoginTransport(cc.Insecure)),
+			Transport: request.NewTripper(log, pypowerwallServerTransport(cc.Insecure)),
 			Timeout:   15 * time.Second,
 		}
 		m.freqG = util.Cached(m.getFreq, cc.Cache)
 
-		if cc.ControlSecret != "" && cc.Scheme == "http" {
+		if cc.ControlSecret != "" && strings.HasPrefix(strings.ToLower(cc.URI), "http://") {
 			log.INFO.Println("controlSecret is sent unencrypted over http; use https or a trusted network")
 		}
 	}
@@ -190,7 +174,7 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 	if m.usage == "load" || m.usage == "solar" {
 		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
 	}
-	if cc.SkipLogin {
+	if cc.usesPypowerwallServer() {
 		if m.usage == "site" || m.usage == "battery" {
 			implement.Has(m, implement.MeterEnergy(m.totalEnergy))
 			implement.Has(m, implement.MeterReturnEnergy(m.returnEnergy))
@@ -199,13 +183,13 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 
 	var freq pwsFreq
 	freqErr := error(nil)
-	if cc.SkipLogin && m.usage == "site" {
+	if cc.usesPypowerwallServer() && m.usage == "site" {
 		freq, freqErr = m.freqG()
 		if freqErr != nil {
 			log.WARN.Println("phase readings:", freqErr)
 		}
 	}
-	if cc.SkipLogin && freqErr == nil && m.usage == "site" &&
+	if cc.usesPypowerwallServer() && freqErr == nil && m.usage == "site" &&
 		freq.VoltageL1 != nil && freq.VoltageL2 != nil && freq.VoltageL3 != nil {
 		implement.Has(m, implement.PhaseCurrents(m.currents))
 		implement.Has(m, implement.PhaseVoltages(func() (float64, float64, float64, error) {
@@ -222,7 +206,7 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 
 	if m.usage == "battery" {
 		var opGet func() (*powerwall.OperationData, error)
-		if cc.SkipLogin {
+		if cc.usesPypowerwallServer() {
 			opGet = m.getOperation
 		} else {
 			opGet = client.GetOperation
@@ -251,7 +235,7 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 			return op.BackupReservePercent, 100, nil
 		}))
 
-		if cc.SkipLogin {
+		if cc.usesPypowerwallServer() {
 			// The local/TEDAPI path caps max_* at the inverter usable power.
 			// Take the minimum explicitly so a backend that reports the
 			// nameplate in max_* cannot overstate a derated site.
@@ -279,12 +263,12 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 			}))
 		}
 
-		if cc.SkipLogin && cc.ControlSecret == "" {
+		if cc.usesPypowerwallServer() && cc.ControlSecret == "" {
 			log.WARN.Println("no controlSecret configured, battery control disabled (read-only)")
-		} else if cc.SkipLogin {
+		} else if cc.usesPypowerwallServer() {
 			implement.Has(m, implement.BatteryController(batteryModesSocLimit, m.setBatteryMode))
 		} else if cc.ControlSecret != "" {
-			log.WARN.Println("controlSecret is only supported with skipLogin, ignoring")
+			log.WARN.Println("controlSecret is only supported with the pypowerwall-server backend, ignoring")
 		}
 	}
 

@@ -78,10 +78,8 @@ params:
       de: Max. Entladeleistung in W, überschreibt den Wechselrichter-Wert, falls gesetzt.
 render: |
   type: powerwall
-  uri: {{ .host }}:{{ .port }}
-  scheme: {{ .schema }}
+  uri: {{ .schema }}://{{ .host }}:{{ .port }}
   insecure: {{ .insecure }}
-  skipLogin: true
   usage: {{ .usage }}
   {{- if eq .usage "battery" }}
   minsoc: {{ .minsoc }}

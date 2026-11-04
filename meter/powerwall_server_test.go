@@ -187,10 +187,8 @@ func newTestPowerWallServer(t *testing.T, fake *fakePowerwallServer, usage strin
 	t.Cleanup(srv.Close)
 
 	cfg := map[string]any{
-		"uri":           srv.Listener.Addr().String(),
+		"uri":           "http://" + srv.Listener.Addr().String(),
 		"usage":         usage,
-		"scheme":        "http",
-		"skipLogin":     true,
 		"controlSecret": "secret",
 		"minsoc":        0.0,
 		"cache":         time.Millisecond,
@@ -398,10 +396,8 @@ func TestPowerWallServerTLSInsecure(t *testing.T) {
 	t.Cleanup(srv.Close)
 
 	cfg := map[string]any{
-		"uri":           srv.Listener.Addr().String(),
+		"uri":           "https://" + srv.Listener.Addr().String(),
 		"usage":         "battery",
-		"scheme":        "https",
-		"skipLogin":     true,
 		"controlSecret": "secret",
 		"minsoc":        0.0,
 		"cache":         time.Millisecond,

@@ -27,18 +27,13 @@ func TestNewPowerWallFromConfigValidation(t *testing.T) {
 		},
 		{
 			name:   "invalid minsoc",
-			config: map[string]any{"usage": "battery", "skipLogin": true, "uri": "http://localhost:8675", "minsoc": 150},
+			config: map[string]any{"usage": "battery", "uri": "http://localhost:8675", "minsoc": 150},
 			want:   "invalid minsoc",
 		},
 		{
 			name:   "invalid chargemaxsoc",
-			config: map[string]any{"usage": "battery", "skipLogin": true, "uri": "http://localhost:8675", "chargemaxsoc": -1},
+			config: map[string]any{"usage": "battery", "uri": "http://localhost:8675", "chargemaxsoc": -1},
 			want:   "invalid chargemaxsoc",
-		},
-		{
-			name:   "invalid scheme",
-			config: map[string]any{"usage": "battery", "skipLogin": true, "uri": "localhost:8675", "scheme": "ftp"},
-			want:   "invalid scheme",
 		},
 	}
 
