@@ -752,7 +752,7 @@
       "post": {
         "operationId": "setLoadpointMinCurrent",
         "summary": "Update minimum current",
-        "description": "Updates the minimum current of the loadpoint.",
+        "description": "Updates the minimum current of the loadpoint, or the expected current of a switchable device.",
         "tags": [
           "loadpoints"
         ],
