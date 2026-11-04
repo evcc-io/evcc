@@ -201,6 +201,14 @@ func (wb *Em2Go) Status() (api.ChargeStatus, error) {
 	if wb.lastStatus == api.StatusA && status != api.StatusA {
 		wb.sessionChargedEnergy = 0
 		wb.lastChargedEnergy = 0
+
+		// Latch the current charger register as baseline so a new session starts at 0,
+		// even if the charger still reports the previous session value while in status B.
+		if b, err := wb.conn.ReadHoldingRegisters(em2GoRegChargedEnergy, 1); err == nil {
+			wb.lastChargedEnergy = float64(binary.BigEndian.Uint16(b)) / 10
+			wb.sessionChargedEnergy = -wb.lastChargedEnergy
+		}
+
 		wb.log.DEBUG.Printf("Cable connected: session energy counters reset")
 	}
 	// detect cable disconnect (StatusB/C -> StatusA)
