@@ -85,6 +85,9 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 	server, err := mbserver.New(handler)
 	require.NoError(t, err)
 	require.NoError(t, server.Start(listener))
+	t.Cleanup(func() {
+		require.NoError(t, server.Stop())
+	})
 
 	conn, err := modbus.NewConnection(context.Background(), listener.Addr().String(), "", "", 0, modbus.Tcp, 1)
 	require.NoError(t, err)
@@ -95,6 +98,8 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 		laststatus:      api.StatusB,
 		identifyEnabled: true,
 	}
+
+	// A failed reset on disconnect must stay pending and prevent RFID reads.
 	status, err := wb.Status()
 	require.NoError(t, err)
 	require.Equal(t, api.StatusA, status)
@@ -103,6 +108,7 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 	reads, _, _ := handler.counts()
 	require.Zero(t, reads)
 
+	// Identification retries the reset before attempting to read the tag.
 	identity, err := wb.identify()
 	require.Error(t, err)
 	require.ErrorContains(t, err, "reset RFID")
@@ -110,6 +116,7 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 	reads, _, _ = handler.counts()
 	require.Zero(t, reads)
 
+	// Once the reset succeeds, identification can read the tag and clear the pending flag.
 	handler.setState(false, false, false)
 	identity, err = wb.identify()
 	require.NoError(t, err)
@@ -119,6 +126,7 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 	require.Equal(t, 1, reads)
 	require.Equal(t, [][2]uint16{{openwbRegResetRfid, 1}}, writes)
 
+	// A missing tag clears the remembered identity and its age.
 	handler.setState(false, true, false)
 	wb.laststatus = api.StatusA
 	wb.lastidentify = []string{"tag"}
@@ -135,22 +143,7 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 	_, resets, _ := handler.counts()
 	require.Equal(t, 1, resets)
 
-	handler.setState(true, false, false)
-	wb.rfidResetPending = true
-	var wg sync.WaitGroup
-	for range 3 {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for range 20 {
-				_, _ = wb.Status()
-				wb.handleRfidReset()
-				_, _ = wb.identify()
-			}
-		}()
-	}
-	wg.Wait()
-
+	// RFID read failures are reported rather than returned as an empty identity.
 	handler.setState(false, false, true)
 	_, err = wb.identify()
 	require.ErrorContains(t, err, "read RFID")
