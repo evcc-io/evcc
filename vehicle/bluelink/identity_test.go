@@ -253,7 +253,7 @@ func TestRequestSetsControlTokenOnAuthorizationAndCCSP(t *testing.T) {
 
 	req, err := http.NewRequest(http.MethodPost, "https://example.invalid/", nil)
 	require.NoError(t, err)
-	req = req.WithContext(WithCCS2ProtocolSupport(WithControlToken(req.Context(), "Bearer ctrl"), 1))
+	req = req.WithContext(withCCS2ProtocolSupport(withControlToken(req.Context(), "Bearer ctrl"), 1))
 
 	require.NoError(t, identity.Request(req))
 	assert.Equal(t, "Bearer ctrl", req.Header.Get("Authorization"))

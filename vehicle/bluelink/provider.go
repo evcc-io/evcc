@@ -142,11 +142,7 @@ func (v *Provider) EnableCharge(enable bool) error {
 
 	err := v.chargeS(enable)
 	if chargeControlShouldBackoff(err) {
-		backoff := v.chargeBackoff
-		if backoff <= 0 {
-			backoff = defaultChargeControlBackoff
-		}
-		v.chargeUntil = time.Now().Add(backoff)
+		v.chargeUntil = time.Now().Add(v.chargeBackoff)
 		v.chargeErr = err
 	} else if err == nil {
 		v.chargeUntil = time.Time{}

@@ -111,16 +111,11 @@ func (v *API) Refresh(vehicle Vehicle) error {
 
 type chargeControlResponse struct {
 	RetCode string `json:"retCode"`
-	MsgID   string `json:"msgId"`
-}
-
-func spaV2URI(baseURI string) string {
-	return strings.Replace(baseURI, "/api/v1/spa", "/api/v2/spa", 1)
 }
 
 func chargeControlURI(baseURI, vehicleID string, ccs2 bool) string {
 	if ccs2 {
-		return fmt.Sprintf("%s/vehicles/%s/ccs2/control/charge", spaV2URI(baseURI), vehicleID)
+		return fmt.Sprintf("%s/vehicles/%s/ccs2/control/charge", strings.Replace(baseURI, "/api/v1/spa", "/api/v2/spa", 1), vehicleID)
 	}
 	return fmt.Sprintf("%s/vehicles/%s/control/charge", baseURI, vehicleID)
 }
@@ -183,8 +178,8 @@ func (v *API) postChargeControl(identity *Identity, vehicle Vehicle, pin string,
 		if err != nil {
 			return err
 		}
-		ctx = WithControlToken(ctx, token)
-		ctx = WithCCS2ProtocolSupport(ctx, vehicle.CcuCCS2ProtocolSupport)
+		ctx = withControlToken(ctx, token)
+		ctx = withCCS2ProtocolSupport(ctx, vehicle.CcuCCS2ProtocolSupport)
 	}
 
 	var payload map[string]string
@@ -192,7 +187,7 @@ func (v *API) postChargeControl(identity *Identity, vehicle Vehicle, pin string,
 		payload = map[string]string{"command": chargeStartStop(enable)}
 	} else {
 		payload = map[string]string{"action": chargeStartStop(enable)}
-		if id := identity.DeviceID(); id != "" {
+		if id := identity.deviceID; id != "" {
 			payload["deviceId"] = id
 		}
 	}

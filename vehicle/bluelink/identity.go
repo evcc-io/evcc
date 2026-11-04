@@ -28,13 +28,13 @@ const (
 	ccs2SupportContextKey
 )
 
-// WithControlToken uses a PIN-verified control token for CCS2 remote commands.
-func WithControlToken(ctx context.Context, token string) context.Context {
+// withControlToken uses a PIN-verified control token for CCS2 remote commands.
+func withControlToken(ctx context.Context, token string) context.Context {
 	return context.WithValue(ctx, controlTokenContextKey, token)
 }
 
-// WithCCS2ProtocolSupport sets the Ccuccs2protocolsupport header on decorated requests.
-func WithCCS2ProtocolSupport(ctx context.Context, support int) context.Context {
+// withCCS2ProtocolSupport sets the Ccuccs2protocolsupport header on decorated requests.
+func withCCS2ProtocolSupport(ctx context.Context, support int) context.Context {
 	return context.WithValue(ctx, ccs2SupportContextKey, support)
 }
 
@@ -83,11 +83,6 @@ type Identity struct {
 	mu                 sync.Mutex
 	controlToken       string
 	controlTokenExpiry time.Time
-}
-
-// DeviceID returns the registered Bluelink device id.
-func (v *Identity) DeviceID() string {
-	return v.deviceID
 }
 
 // NewIdentity creates BlueLink Identity
