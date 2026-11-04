@@ -600,84 +600,56 @@ func configUnchanged(id int, req configReq) bool {
 func configHasCriticalPlugin(class templates.Class, req configReq) bool {
 	// any, not map: global yaml configs (circuits) are a list
 	var m any
-	if err := yaml.Unmarshal([]byte(req.Yaml), &m); err != nil || valueHasCriticalSource(class, m, 0) {
+	if err := yaml.Unmarshal([]byte(req.Yaml), &m); err != nil || valueHasCriticalSource(class, m) {
 		return true
 	}
 
 	typ, other, err := config.CustomDevice(req.Type, req.Other)
-	return err != nil || valueHasCriticalSource(class, other, 0) || renderedHasCriticalSource(class, typ, other, 0)
+	return err != nil || typedHasCriticalSource(class, typ, other)
 }
 
-// renderedHasCriticalSource renders template configs and checks the result. fail closed:
-// a config we cannot render to verify may still be force-saved and instantiated later
-func renderedHasCriticalSource(class templates.Class, typ string, other map[string]any, depth int) bool {
-	if !strings.EqualFold(strings.TrimSpace(typ), typeTemplate) {
-		return false
-	}
-	if depth > 2 {
-		return true
-	}
+func typedHasCriticalSource(class templates.Class, typ string, other map[string]any) bool {
+	return valueHasCriticalSource(class, other) ||
+		strings.EqualFold(typ, typeTemplate) && renderedHasCriticalSource(class, other)
+}
 
+// renderedHasCriticalSource fails closed: a template we cannot render to verify
+// may still be force-saved and instantiated later
+func renderedHasCriticalSource(class templates.Class, other map[string]any) bool {
 	instance, err := templates.RenderInstance(class, other)
-	return err != nil ||
-		valueHasCriticalSource(class, instance.Other, depth+1) ||
-		renderedHasCriticalSource(class, instance.Type, instance.Other, depth+1)
+	return err != nil || typedHasCriticalSource(class, instance.Type, instance.Other)
 }
 
-func valueHasCriticalSource(class templates.Class, v any, depth int) bool {
+func valueHasCriticalSource(class templates.Class, v any) bool {
 	switch t := v.(type) {
 	case map[string]any:
+		var template bool
 		for k, val := range t {
-			if mapEntryIsCriticalSource(k, val) || valueHasCriticalSource(class, val, depth) {
+			if mapEntryIsCriticalSource(k, val) || valueHasCriticalSource(class, val) {
 				return true
 			}
-		}
-		return typedHasCriticalSource(class, t, depth)
-	case map[any]any:
-		// yaml decodes any mapping with a non-string key into map[any]any, which
-		// would otherwise slip past the string-keyed scan
-		m := make(map[string]any, len(t))
-		for k, val := range t {
-			key := fmt.Sprint(k)
-			if _, dup := m[key]; dup {
-				return true // ambiguous keys, fail closed
+			if s, ok := val.(string); ok && strings.EqualFold(k, "type") && strings.EqualFold(s, typeTemplate) {
+				template = true
 			}
-			m[key] = val
 		}
-		return valueHasCriticalSource(class, m, depth)
+		// nested typed configs like tariffs or messengers; the renderer accepts the type key
+		return template && renderedHasCriticalSource(class, t)
+	case map[any]any:
+		return true // yaml with non-string keys, fail closed
 	case []any:
 		return slices.ContainsFunc(t, func(v any) bool {
-			return valueHasCriticalSource(class, v, depth)
+			return valueHasCriticalSource(class, v)
 		})
 	}
 	return false
 }
 
-// typedHasCriticalSource renders nested typed configs like tariffs, circuits or messengers
-func typedHasCriticalSource(class templates.Class, m map[string]any, depth int) bool {
-	other := make(map[string]any, len(m))
-	var types []string
-	for k, v := range m {
-		if strings.EqualFold(strings.TrimSpace(k), "type") {
-			if s, ok := v.(string); ok {
-				types = append(types, s)
-			}
-			continue
-		}
-		other[k] = v
-	}
-
-	return slices.ContainsFunc(types, func(typ string) bool {
-		return renderedHasCriticalSource(class, typ, other, depth)
-	})
-}
-
 func mapEntryIsCriticalSource(key string, val any) bool {
-	if !strings.EqualFold(strings.TrimSpace(key), "source") {
+	if !strings.EqualFold(key, "source") {
 		return false
 	}
 	s, ok := val.(string)
-	return ok && slices.Contains(criticalPluginSources, strings.ToLower(strings.TrimSpace(s)))
+	return ok && slices.Contains(criticalPluginSources, strings.ToLower(s))
 }
 
 // decodeDeviceConfig extracts device configuration and yaml details

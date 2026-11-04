@@ -299,7 +299,7 @@ func TestConfigHasCriticalPluginRendersTemplate(t *testing.T) {
 		Other:      map[string]any{"template": "demo-charger", "status": injectedScript},
 	}
 
-	assert.False(t, valueHasCriticalSource(templates.Charger, req.Other, 0), "raw request has no critical source")
+	assert.False(t, valueHasCriticalSource(templates.Charger, req.Other), "raw request has no critical source")
 	assert.True(t, configHasCriticalPlugin(templates.Charger, req), "rendered template exposes the source")
 
 	// the template key is decoded case-insensitively when rendering
