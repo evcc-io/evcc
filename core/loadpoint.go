@@ -97,10 +97,11 @@ type Loadpoint struct {
 	vmu          sync.RWMutex // guard vehicle
 
 	// exposed public configuration
-	CircuitRef string `mapstructure:"circuit"` // Circuit reference
-	ChargerRef string `mapstructure:"charger"` // Charger reference
-	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
-	MeterRef   string `mapstructure:"meter"`   // Charge meter reference
+	CircuitRef    string `mapstructure:"circuit"`       // Circuit reference
+	PhaseRotation string `mapstructure:"phaseRotation"` // Grid phase connected to charger L1
+	ChargerRef    string `mapstructure:"charger"`       // Charger reference
+	VehicleRef    string `mapstructure:"vehicle"`       // Vehicle reference
+	MeterRef      string `mapstructure:"meter"`         // Charge meter reference
 
 	Soc             loadpoint.SocConfig
 	Enable, Disable loadpoint.ThresholdConfig
@@ -123,6 +124,7 @@ type Loadpoint struct {
 	minCurrent               float64  // PV mode: start current	Min+PV mode: min current
 	maxCurrent               float64  // Max allowed current. Physically ensured by the charger
 	phasesConfigured         int      // Charger configured phase mode 0/1/3
+	phaseRotation            int      // Grid phase 1..3 connected to charger L1, 0 if unknown
 	limitSoc                 int      // Session limit for soc
 	limitEnergy              float64  // Session limit for energy
 	minSoc                   int      // Forced charging below this soc (heating: temperature), 0=disabled
@@ -237,6 +239,12 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 	if lp.Priority > 0 {
 		lp.setPriority(lp.Priority)
 	}
+
+	rotation, err := parsePhaseRotation(lp.PhaseRotation)
+	if err != nil {
+		return lp, err
+	}
+	lp.phaseRotation = rotation
 
 	if lp.CircuitRef != "" {
 		dev, err := config.Circuits().ByName(lp.CircuitRef)
@@ -1021,7 +1029,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 	// apply circuit limits
 	if lp.circuit != nil {
-		currentLimit := lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), current)
+		currentLimit := lp.circuit.ValidateCurrent(lp.circuitPhases(), lp.actualMaxChargeCurrent(), current)
 
 		activePhases := lp.ActivePhases()
 		requestedPower := grid.CurrentToPower(current, activePhases)
@@ -1038,7 +1046,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 			// alone would cap it below min current; keep min current unless the circuit is actually over limit
 			minPower := grid.CurrentToPower(minCurrent, activePhases)
 			if lp.charging() && lp.offeredCurrent >= minCurrent &&
-				lp.circuit.ValidateCurrent(minCurrent, minCurrent) >= minCurrent &&
+				lp.circuit.ValidateCurrent(lp.circuitPhases(), minCurrent, minCurrent) >= minCurrent &&
 				lp.circuit.ValidatePower(minPower, minPower) >= minPower {
 				limited = lp.roundedCurrent(minCurrent)
 			} else {
@@ -1698,7 +1706,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 
 	// load management may cap the 1p current far below the theoretical maximum
 	if lp.circuit != nil {
-		maxCurrent = lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), maxCurrent)
+		maxCurrent = lp.circuit.ValidateCurrent(lp.gridPhases(1), lp.actualMaxChargeCurrent(), maxCurrent)
 	}
 
 	maxPhases := lp.MaxActivePhases()
@@ -2093,7 +2101,7 @@ func (lp *Loadpoint) pvEnablePhases(sitePower, batteryPower, minCurrent, maxCurr
 
 	// load management may cap the 1p current far below the theoretical maximum
 	if lp.circuit != nil {
-		maxCurrent = lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), maxCurrent)
+		maxCurrent = lp.circuit.ValidateCurrent(lp.gridPhases(1), lp.actualMaxChargeCurrent(), maxCurrent)
 	}
 
 	availablePower := lp.chargePower - sitePower

@@ -134,7 +134,7 @@ func TestCircuitCurrents(t *testing.T) {
 		cm2.MockPhaseCurrents.EXPECT().Currents().Return(tc.c2, tc.c2, tc.c2, nil)
 		require.NoError(t, pc.Update(nil))
 
-		assert.Equal(t, tc.res, c1.ValidateCurrent(tc.old, tc.new), tc)
+		assert.Equal(t, tc.res, c1.ValidateCurrent(api.AllGridPhases, tc.old, tc.new), tc)
 
 		ctrl.Finish()
 	}

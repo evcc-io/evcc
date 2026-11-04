@@ -535,6 +535,8 @@
       "circuitInvalid": "Circuit does not exist",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "unassigned",
+      "phaseRotationLabel": "Phase connection",
+      "phaseRotationHelp": "Grid phase that L1 of the charger is connected to. Lets load management use separate phases, e.g. two single-phase vehicles on different phases. Only set this if you know the wiring of your installation. A wrong value can overload a phase.",
       "created": "“{name}” was created and uses sensible defaults.",
       "createdTitle": {
         "charging": "Charging point created",

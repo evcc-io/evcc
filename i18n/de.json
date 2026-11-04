@@ -535,6 +535,8 @@
       "circuitInvalid": "Stromkreis existiert nicht",
       "circuitLabel": "Stromkreis",
       "circuitUnassigned": "nicht zugewiesen",
+      "phaseRotationLabel": "Phasenanschluss",
+      "phaseRotationHelp": "Netzphase, an der L1 der Wallbox angeschlossen ist. Damit kann das Lastmanagement getrennte Phasen nutzen, z. B. zwei einphasig ladende Fahrzeuge auf verschiedenen Phasen. Nur setzen, wenn die Verdrahtung der Installation bekannt ist. Ein falscher Wert kann eine Phase überlasten.",
       "created": "„{name}“ wurde angelegt und verwendet sinnvolle Standardwerte.",
       "createdTitle": {
         "charging": "Ladepunkt erstellt",

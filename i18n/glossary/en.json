@@ -155,6 +155,10 @@
         "description": "Meter at the grid connection point.",
         "other": "grid meter"
     },
+    "gridPhase": {
+        "description": "Phase L1, L2 or L3 of the building's grid connection, as opposed to the phase terminals of a charger.",
+        "other": "grid phase"
+    },
     "guestVehicle": {
         "description": "Unknown vehicle at a charging point, not configured in evcc.",
         "other": "guest vehicle"

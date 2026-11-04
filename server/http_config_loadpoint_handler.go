@@ -20,10 +20,11 @@ import (
 
 func getLoadpointStaticConfig(lp loadpoint.API) loadpoint.StaticConfig {
 	return loadpoint.StaticConfig{
-		Charger: lp.GetChargerRef(),
-		Meter:   lp.GetMeterRef(),
-		Circuit: lp.GetCircuitRef(),
-		Vehicle: lp.GetDefaultVehicleRef(),
+		Charger:       lp.GetChargerRef(),
+		Meter:         lp.GetMeterRef(),
+		Circuit:       lp.GetCircuitRef(),
+		PhaseRotation: lp.GetPhaseRotation(),
+		Vehicle:       lp.GetDefaultVehicleRef(),
 	}
 }
 

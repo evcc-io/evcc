@@ -207,6 +207,35 @@ test.describe("circuit", async () => {
     await expect(rowIn("Home")).toBeVisible();
   });
 
+  test("loadpoint phase connection", async ({ page }) => {
+    await start(CONFIG_FAST, CONFIG_CIRCUIT_TREE);
+    await page.goto("/#/config");
+
+    const lpModal = page.getByTestId("loadpoint-modal");
+    const lp = page.getByTestId("loadpoint").filter({ hasText: "Wallbox left" });
+    const phaseConnection = lpModal.getByLabel("Phase connection");
+
+    // shown for loadpoints in a circuit, unset by default
+    await lp.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(lpModal);
+    await expect(phaseConnection).toBeVisible();
+    await expect(phaseConnection).toHaveValue("");
+    await phaseConnection.selectOption("L3");
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+
+    // persisted
+    await restart(CONFIG_FAST);
+    await page.reload();
+    await lp.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(lpModal);
+    await expect(phaseConnection).toHaveValue("L3");
+
+    // hidden without circuit
+    await lpModal.getByLabel("Circuit").selectOption("");
+    await expect(phaseConnection).toHaveCount(0);
+  });
+
   test("via config ui", async ({ page }) => {
     await start(CONFIG_FAST);
     await page.goto("/#/config");

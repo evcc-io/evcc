@@ -270,16 +270,24 @@ type TitleDescriber interface {
 	GetTitle() string
 }
 
+// GridPhases marks the grid phases L1..L3 a load draws current from
+type GridPhases [3]bool
+
+// AllGridPhases is used when a load's grid phases are unknown
+var AllGridPhases = GridPhases{true, true, true}
+
 // CircuitMeasurements is the measurements a circuit or load must deliver
 type CircuitMeasurements interface {
 	GetChargePower() float64
 	GetMaxPhaseCurrent() float64
+	GetGridPhaseCurrents() [3]float64
 }
 
 // CircuitLoad represents a loadpoint attached to a circuit
 type CircuitLoad interface {
 	CircuitMeasurements
 	GetCircuit() Circuit
+	HasGridPhaseMapping() bool
 }
 
 // Circuit defines the load control domain
@@ -297,7 +305,7 @@ type Circuit interface {
 	SetMaxPower(float64)
 	SetMaxCurrent(float64)
 	Update([]CircuitLoad) error
-	ValidateCurrent(old, new float64) float64
+	ValidateCurrent(phases GridPhases, old, new float64) float64
 	ValidatePower(old, new float64) float64
 }
 

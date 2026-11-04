@@ -28,7 +28,7 @@ func TestSetLimitCircuitKeepsMinCurrent(t *testing.T) {
 			charger := api.NewMockCharger(ctrl)
 			circuit := api.NewMockCircuit(ctrl)
 
-			circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any()).DoAndReturn(func(old, new float64) float64 {
+			circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ api.GridPhases, old, new float64) float64 {
 				return min(new, max(0, old+tc.headroom))
 			}).AnyTimes()
 			circuit.EXPECT().ValidatePower(gomock.Any(), gomock.Any()).DoAndReturn(func(_, new float64) float64 {
