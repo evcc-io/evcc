@@ -50,6 +50,9 @@ render: |
   tariff: temperature
   forecast:
     source: http
+    concurrency:
+      group: open-meteo
+      limit: 5
     uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&minutely_15=temperature_2m&past_days=7&forecast_days=5&timezone=UTC{{ if ne .model "best_match" }}&models={{ .model }}{{ end }}
     jq: |
       [ .minutely_15.time as $times

@@ -28,6 +28,8 @@ type HTTP struct {
 	pipeline    *pipeline.Pipeline
 	mu          *sync.Mutex
 	log         *util.Logger
+	ctx         context.Context
+	limiter     *httpConcurrencyLimiter
 }
 
 func init() {
@@ -48,6 +50,7 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 		Auth              Auth
 		Timeout           time.Duration
 		Cache             time.Duration
+		Concurrency       *httpConcurrencyConfig
 	}{
 		Headers: make(map[string]string),
 		Method:  http.MethodGet,
@@ -91,6 +94,13 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 		return nil, err
 	}
 	p.pipeline = pipe
+	p.ctx = ctx
+
+	limiter, err := cc.Concurrency.limiter()
+	if err != nil {
+		return nil, err
+	}
+	p.limiter = limiter
 
 	return p, nil
 }
@@ -102,6 +112,7 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 		url:    uri,
 		method: method,
 		log:    log,
+		ctx:    context.Background(),
 	}
 
 	// build the cache stack without logging so the logging tripper
@@ -219,6 +230,21 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 	req, err := request.New(p.method, url, b, p.headers)
 	if err != nil {
 		return []byte{}, err
+	}
+
+	if p.limiter != nil {
+		ctx := p.ctx
+		if p.Client.Timeout > 0 {
+			// Include waiting for the group in the HTTP request's time budget.
+			var cancel context.CancelFunc
+			ctx, cancel = context.WithTimeout(ctx, p.Client.Timeout)
+			defer cancel()
+		}
+		if err := p.limiter.Acquire(ctx, 1); err != nil {
+			return nil, fmt.Errorf("http concurrency group %q: %w", p.limiter.group, err)
+		}
+		defer p.limiter.Release(1)
+		req = req.WithContext(ctx)
 	}
 
 	resp, err := p.Do(req)

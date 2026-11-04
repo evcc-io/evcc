@@ -8,13 +8,33 @@ into charger, meter, or vehicle implementations via configuration.
 
 | Plugin | Protocol | Key Config |
 |--------|----------|------------|
-| `http` | HTTP/REST | `uri`, `method`, `headers`, `auth`, `cache`, `timeout` |
+| `http` | HTTP/REST | `uri`, `method`, `headers`, `auth`, `cache`, `timeout`, `concurrency` |
 | `mqtt` | MQTT | `topic`, `retained`, `payload` template, `timeout` |
 | `modbus` | Modbus TCP/RTU | `uri`, `register`, `scale`, `baudrate`, `rtu` |
 | `sunspec` | SunSpec/Modbus | Model-based point queries via device tree |
 | `js` | JavaScript/WASM | Inline script evaluation |
 | `go` | Go runtime | Dynamic Go code |
 | `gpio` | Linux GPIO | Digital I/O for relays |
+
+## HTTP concurrency
+
+HTTP plugins can opt into a process-wide concurrency group:
+
+```yaml
+source: http
+uri: https://example.org/forecast
+concurrency:
+  group: weather-provider
+  limit: 3
+```
+
+The group is shared across plugin instances and URLs. Omit `concurrency` for no
+additional limit. `group` is required and `limit` defaults to 1; explicit limits
+must be positive. All instances using a group must specify the same effective
+limit. Group limits remain registered until process restart, including after a
+plugin is reconfigured or removed. Waiting for the group and the HTTP request
+share the plugin's `timeout`. The slot is held until the response body is read
+and closed. Existing URL-specific cache locks remain independent.
 
 ## Getter/Setter Interfaces
 
