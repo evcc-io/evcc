@@ -306,6 +306,11 @@ func TestConfigHasCriticalPluginRendersTemplate(t *testing.T) {
 	req.Other = map[string]any{"Template": "demo-charger", "status": injectedScript}
 	assert.True(t, configHasCriticalPlugin(templates.Charger, req), "capitalised template key")
 
+	// params differing only in case would render in map order, so the guard and the
+	// instantiation could pick different values; the renderer rejects them
+	req.Other = map[string]any{"template": "demo-charger", "status": "A", "Status": injectedScript}
+	assert.True(t, configHasCriticalPlugin(templates.Charger, req), "ambiguous param key")
+
 	// update and test of an existing device instantiate with the stored type, so the
 	// request's type must not decide whether the template is rendered
 	for _, typ := range []string{"", "custom"} {
