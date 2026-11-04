@@ -78,6 +78,92 @@ func TestPublishSocAndRange(t *testing.T) {
 	}
 }
 
+// resurrectableVehicle is a vehicle that counts its wake-up calls
+type resurrectableVehicle struct {
+	*api.MockVehicle
+	wakeUps int
+}
+
+func (v *resurrectableVehicle) WakeUp() error {
+	v.wakeUps++
+	return nil
+}
+
+func TestPublishSocAndRangeAsleep(t *testing.T) {
+	tc := []struct {
+		name       string
+		vehicleSoc float64
+		features   []api.Feature
+		retry      bool
+		wakeUps    int
+	}{
+		{"soc unknown, e.g. after restart", 0, nil, true, 1},
+		{"soc unknown, wake-up disabled", 0, []api.Feature{api.WakeUpDisabled}, true, 0},
+		{"soc known", 40, nil, false, 0},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			clck := clock.NewMock()
+
+			vehicle := &resurrectableVehicle{MockVehicle: api.NewMockVehicle(ctrl)}
+			vehicle.EXPECT().Features().Return(tc.features).AnyTimes()
+			expectVehiclePublish(vehicle.MockVehicle)
+
+			log := util.NewLogger("foo")
+			lp := &Loadpoint{
+				log:         log,
+				bus:         evbus.New(),
+				clock:       clck,
+				charger:     api.NewMockCharger(ctrl),
+				vehicle:     vehicle,
+				chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+				chargeRater: &Null{},                 // silence nil panics
+				chargeTimer: &Null{},                 // silence nil panics
+				minCurrent:  minA,
+				maxCurrent:  maxA,
+				phases:      1,
+				mode:        api.ModeNow,
+				status:      api.StatusB,
+				vehicleSoc:  tc.vehicleSoc,
+			}
+
+			// populate channels
+			x, y, z := createChannels(t)
+			attachChannels(lp, x, y, z)
+
+			assert.True(t, lp.vehicleSocPollAllowed())
+			vehicle.EXPECT().Soc().Return(0.0, api.ErrAsleep)
+			lp.publishSocAndRange()
+
+			clck.Add(time.Second)
+			assert.Equal(t, tc.retry, lp.vehicleSocPollAllowed())
+			assert.Equal(t, tc.wakeUps, vehicle.wakeUps)
+
+			if !tc.retry {
+				return
+			}
+
+			// further failed reads do not wake up the vehicle again
+			vehicle.EXPECT().Soc().Return(0.0, api.ErrAsleep)
+			lp.publishSocAndRange()
+			assert.Equal(t, tc.wakeUps, vehicle.wakeUps)
+
+			clck.Add(time.Second)
+			assert.True(t, lp.vehicleSocPollAllowed())
+
+			// polling stops as soon as the vehicle has woken up
+			vehicle.EXPECT().Soc().Return(14.0, nil)
+			lp.publishSocAndRange()
+			assert.Equal(t, 14.0, lp.vehicleSoc)
+
+			clck.Add(time.Second)
+			assert.False(t, lp.vehicleSocPollAllowed())
+		})
+	}
+}
+
 func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	clck := clock.NewMock()

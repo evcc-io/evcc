@@ -186,6 +186,7 @@ type Loadpoint struct {
 	pvTimer        time.Time        // PV enabled/disable timer
 	phaseTimer     time.Time        // 1p3p switch timer
 	wakeUpTimer    *Timer           // Vehicle wake-up timeout
+	socWakeUpDone  bool             // Vehicle was woken up once to read an unknown SoC
 
 	// charge progress
 	vehicleSoc              float64       // Vehicle or charger soc
@@ -613,6 +614,7 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
+	lp.socWakeUpDone = false
 
 	// charger may have reconfigured phases internally while disconnected
 	if err := lp.syncChargerPhases(!lp.enabled); err != nil {
@@ -2390,9 +2392,13 @@ func (lp *Loadpoint) publishSocAndRange() {
 		var socErr error
 		socR, limitR, socErr = socAndLimit("vehicle", lp.GetVehicle())
 
-		// keep polling async vehicle APIs that return ErrMustRetry until a SoC
-		// arrives, instead of waiting for the next interval
-		if !errors.Is(socErr, api.ErrMustRetry) {
+		// keep polling until a SoC arrives: async vehicle APIs return ErrMustRetry,
+		// sleeping vehicles ErrAsleep while the SoC is unknown, e.g. after a restart
+		asleepSocUnknown := errors.Is(socErr, api.ErrAsleep) && lp.vehicleSoc == 0
+		if asleepSocUnknown {
+			lp.wakeUpVehicleForSoc()
+		}
+		if !errors.Is(socErr, api.ErrMustRetry) && !asleepSocUnknown {
 			lp.socUpdated = lp.clock.Now()
 		}
 
