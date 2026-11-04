@@ -123,10 +123,6 @@
         "description": "Product name. Always lowercase in every language, also at sentence start.",
         "other": "evcc"
     },
-    "expectedPower": {
-        "description": "Power a switchable device draws when on. Replaces min and max current, sets the surplus threshold and plan duration.",
-        "other": "expected power"
-    },
     "externalLimit": {
         "description": "Limit imposed by the grid operator or an external system. Code says HEMS for historical reasons; never use that acronym for this feature in UI text.",
         "other": "external limit"
