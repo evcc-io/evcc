@@ -89,7 +89,12 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 	conn, err := modbus.NewConnection(context.Background(), listener.Addr().String(), "", "", 0, modbus.Tcp, 1)
 	require.NoError(t, err)
 
-	wb := &OpenWB20{log: util.NewLogger("openwb-2.0"), conn: conn, laststatus: api.StatusB}
+	wb := &OpenWB20{
+		log:             util.NewLogger("openwb-2.0"),
+		conn:            conn,
+		laststatus:      api.StatusB,
+		identifyEnabled: true,
+	}
 	status, err := wb.Status()
 	require.NoError(t, err)
 	require.Equal(t, api.StatusA, status)
@@ -123,9 +128,10 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, identity)
 
-	require.NoError(t, wb.handleRfidReset())
+	wb.handleRfidReset()
+	require.False(t, wb.rfidResetPending)
 	require.Nil(t, wb.lastidentify)
-	require.Equal(t, time.Unix(0, 0), wb.lastidtime)
+	require.True(t, wb.lastidtime.IsZero())
 	_, resets, _ := handler.counts()
 	require.Equal(t, 1, resets)
 
@@ -138,7 +144,7 @@ func TestOpenWB20PendingRfidReset(t *testing.T) {
 			defer wg.Done()
 			for range 20 {
 				_, _ = wb.Status()
-				_ = wb.handleRfidReset()
+				wb.handleRfidReset()
 				_, _ = wb.identify()
 			}
 		}()
