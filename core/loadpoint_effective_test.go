@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -108,6 +109,31 @@ func TestEffectiveMinMaxCurrent(t *testing.T) {
 		assert.Equal(t, tc.effectiveMin, lp.effectiveMinCurrent(), "min")
 		assert.Equal(t, tc.effectiveMax, lp.effectiveMaxCurrent(), "max")
 	}
+}
+
+func TestEffectiveMinMaxCurrentSwitchDevice(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	fd := api.NewMockFeatureDescriber(ctrl)
+	fd.EXPECT().Features().AnyTimes().Return([]api.Feature{api.SwitchDevice})
+
+	lp := NewLoadpoint(util.NewLogger("foo"), coresettings.NewMemorySettings())
+	lp.charger = struct {
+		api.Charger
+		api.FeatureDescriber
+	}{api.NewMockCharger(ctrl), fd}
+
+	assert.Equal(t, 6.0, lp.effectiveMaxCurrent(), "max follows default min")
+
+	// min above max raises max
+	require.NoError(t, lp.SetMinCurrent(20))
+	assert.Equal(t, 20.0, lp.effectiveMinCurrent(), "min")
+	assert.Equal(t, 20.0, lp.GetMaxCurrent(), "max raised to min")
+
+	// lower max is clamped
+	require.NoError(t, lp.SetMaxCurrent(16))
+	assert.Equal(t, 20.0, lp.GetMaxCurrent(), "max clamped to min")
+	assert.Equal(t, 20.0, lp.effectiveMaxCurrent(), "max follows min")
 }
 
 func TestEffectivePowerLimiter(t *testing.T) {
