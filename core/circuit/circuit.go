@@ -306,20 +306,28 @@ const mismatchCycles = 3
 // circuit only add current, so a lower reading means a wrong mapping.
 // Root circuits are skipped since a grid meter also sees local generation.
 func (c *Circuit) checkPhaseMapping(loadpoints []api.CircuitLoad) {
-	if c.parent == nil {
+	// a meter for a power limit only may not measure phase currents
+	if c.parent == nil || !api.HasCap[api.PhaseCurrents](c.meter) {
 		return
 	}
 
 	var expected [3]float64
 	var mapped bool
 
+	// loadpoints without a reliable measurement are left out, the sum of the
+	// others still is a lower bound of what the meter must see
 	for _, lp := range loadpoints {
-		if lp.GetCircuit() != c || !lp.HasGridPhaseMapping() {
+		if lp.GetCircuit() != c {
+			continue
+		}
+
+		currents, ok := lp.MeasuredGridPhaseCurrents()
+		if !ok {
 			continue
 		}
 
 		mapped = true
-		for i, v := range lp.GetGridPhaseCurrents() {
+		for i, v := range currents {
 			expected[i] += v
 		}
 	}
@@ -429,22 +437,6 @@ func (c *Circuit) maxPhaseCurrent() float64 {
 	return max(c.currents[0], c.currents[1], c.currents[2])
 }
 
-// phaseCurrent returns the highest current of the given grid phases
-func (c *Circuit) phaseCurrent(phases api.GridPhases) float64 {
-	current := math.Inf(-1)
-	for i, used := range phases {
-		if used {
-			current = max(current, c.currents[i])
-		}
-	}
-
-	if math.IsInf(current, -1) {
-		return c.maxPhaseCurrent()
-	}
-
-	return current
-}
-
 // GetMaxPhaseCurrent returns the actual current of the highest loaded phase
 func (c *Circuit) GetMaxPhaseCurrent() float64 {
 	return c.maxPhaseCurrent()
@@ -477,20 +469,20 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 	return c.parent.ValidatePower(old, new)
 }
 
-// ValidateCurrent validates current request on the given grid phases
-func (c *Circuit) ValidateCurrent(phases api.GridPhases, old, new float64) float64 {
+// ValidateCurrent validates a current request on the given grid phases. old is the
+// current the load draws per grid phase now: every phase is checked on its own and
+// only the headroom left by the other loads on that phase counts.
+func (c *Circuit) ValidateCurrent(phases api.GridPhases, old [3]float64, new float64) float64 {
 	if maxCurrent := c.GetMaxCurrent(); maxCurrent != 0 {
-		current := c.phaseCurrent(phases)
+		for i, active := range phases {
+			if !active {
+				continue
+			}
 
-		delta := max(0, new-old)
-		potential := maxCurrent - current
-
-		if delta > potential {
-			capped := min(new, max(0, old+potential))
-			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", current, old, new, maxCurrent, capped)
-			new = capped
-		} else {
-			c.log.TRACE.Printf("validate current: %.3gA + (%.3gA -> %.3gA) <= %.3gA ok", current, old, new, maxCurrent)
+			if limit := max(0, old[i]+maxCurrent-c.currents[i]); new > limit {
+				c.log.DEBUG.Printf("validate current: L%d %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", i+1, c.currents[i], old[i], new, maxCurrent, limit)
+				new = limit
+			}
 		}
 	}
 

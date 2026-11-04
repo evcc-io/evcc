@@ -1151,7 +1151,7 @@ func (mr *MockCircuitMockRecorder) Update(arg0 any) *gomock.Call {
 }
 
 // ValidateCurrent mocks base method.
-func (m *MockCircuit) ValidateCurrent(phases GridPhases, old, new float64) float64 {
+func (m *MockCircuit) ValidateCurrent(phases GridPhases, old [3]float64, new float64) float64 {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateCurrent", phases, old, new)
 	ret0, _ := ret[0].(float64)

@@ -96,6 +96,8 @@ type Loadpoint struct {
 	sync.RWMutex              // guard status
 	vmu          sync.RWMutex // guard vehicle
 
+	phaseRotationIgnored sync.Once // warns once if the phase rotation cannot be used
+
 	// exposed public configuration
 	CircuitRef    string `mapstructure:"circuit"`       // Circuit reference
 	PhaseRotation string `mapstructure:"phaseRotation"` // Grid phase connected to charger L1
@@ -1029,7 +1031,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 	// apply circuit limits
 	if lp.circuit != nil {
-		currentLimit := lp.circuit.ValidateCurrent(lp.circuitPhases(), lp.actualMaxChargeCurrent(), current)
+		currentLimit := lp.circuit.ValidateCurrent(lp.circuitPhases(), lp.circuitCurrents(), current)
 
 		activePhases := lp.ActivePhases()
 		requestedPower := grid.CurrentToPower(current, activePhases)
@@ -1046,7 +1048,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 			// alone would cap it below min current; keep min current unless the circuit is actually over limit
 			minPower := grid.CurrentToPower(minCurrent, activePhases)
 			if lp.charging() && lp.offeredCurrent >= minCurrent &&
-				lp.circuit.ValidateCurrent(lp.circuitPhases(), minCurrent, minCurrent) >= minCurrent &&
+				lp.circuit.ValidateCurrent(lp.circuitPhases(), [3]float64{minCurrent, minCurrent, minCurrent}, minCurrent) >= minCurrent &&
 				lp.circuit.ValidatePower(minPower, minPower) >= minPower {
 				limited = lp.roundedCurrent(minCurrent)
 			} else {
@@ -1514,10 +1516,16 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 	return nil
 }
 
-// circuitAllowsPhases checks if the circuit power limit allows charging at minCurrent on phases
+// circuitAllowsPhases checks if the circuit limits allow charging at minCurrent on phases
 func (lp *Loadpoint) circuitAllowsPhases(phases int, minCurrent float64) bool {
 	if lp.circuit == nil {
 		return true
+	}
+
+	// check the grid phases charging would use after switching
+	if limit := lp.circuit.ValidateCurrent(lp.gridPhases(phases), lp.circuitCurrents(), minCurrent); limit < minCurrent {
+		lp.log.DEBUG.Printf("available circuit current %.3gA < %.3gA min %dp current", limit, minCurrent, phases)
+		return false
 	}
 
 	minPower := grid.CurrentToPower(minCurrent, phases)
@@ -1706,7 +1714,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 
 	// load management may cap the 1p current far below the theoretical maximum
 	if lp.circuit != nil {
-		maxCurrent = lp.circuit.ValidateCurrent(lp.gridPhases(1), lp.actualMaxChargeCurrent(), maxCurrent)
+		maxCurrent = lp.circuit.ValidateCurrent(lp.gridPhases(1), lp.circuitCurrents(), maxCurrent)
 	}
 
 	maxPhases := lp.MaxActivePhases()
@@ -2101,7 +2109,7 @@ func (lp *Loadpoint) pvEnablePhases(sitePower, batteryPower, minCurrent, maxCurr
 
 	// load management may cap the 1p current far below the theoretical maximum
 	if lp.circuit != nil {
-		maxCurrent = lp.circuit.ValidateCurrent(lp.gridPhases(1), lp.actualMaxChargeCurrent(), maxCurrent)
+		maxCurrent = lp.circuit.ValidateCurrent(lp.gridPhases(1), lp.circuitCurrents(), maxCurrent)
 	}
 
 	availablePower := lp.chargePower - sitePower

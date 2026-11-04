@@ -287,7 +287,9 @@ type CircuitMeasurements interface {
 type CircuitLoad interface {
 	CircuitMeasurements
 	GetCircuit() Circuit
-	HasGridPhaseMapping() bool
+	// MeasuredGridPhaseCurrents returns the measured charge currents per grid phase.
+	// ok is false without an active grid phase mapping or a reliable measurement.
+	MeasuredGridPhaseCurrents() (currents [3]float64, ok bool)
 }
 
 // Circuit defines the load control domain
@@ -305,7 +307,7 @@ type Circuit interface {
 	SetMaxPower(float64)
 	SetMaxCurrent(float64)
 	Update([]CircuitLoad) error
-	ValidateCurrent(phases GridPhases, old, new float64) float64
+	ValidateCurrent(phases GridPhases, old [3]float64, new float64) float64
 	ValidatePower(old, new float64) float64
 }
 
