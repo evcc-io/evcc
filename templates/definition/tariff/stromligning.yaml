@@ -24,7 +24,7 @@ params:
     description:
       generic: Product ID
     help:
-      en: "Required for consumption prices. Not used for production prices. Find IDs in the API documentation."
+      en: "Used for consumption prices only. Find IDs in the API documentation."
   - name: supplierid
     required: true
     example: radius_c
@@ -35,13 +35,13 @@ params:
     description:
       generic: Customer group ID
     help:
-      en: "Optional. For production prices, leave empty to select the production customer group automatically."
+      en: "For production prices, leave empty to select the production customer group automatically."
   - name: agreementstart
     example: "2025-03-01"
     description:
       generic: Agreement start
     help:
-      en: "Optional contract start date (YYYY-MM-DD). Only used for consumption prices."
+      en: "Contract start date (YYYY-MM-DD). Only used for consumption prices, when product ID has discount based on start date."
   - preset: tariff-base
 render: |
   {{- if and (eq .pricetype "consumption") (not .productid) }}
