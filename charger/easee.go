@@ -417,13 +417,17 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 		// New charging session pending, reset internal value of SESSION_ENERGY to 0, and its observation timestamp to "now".
 		// This should be done in a proper way by the api, but it's not.
-		// The first mode after startup is replayed state, not a transition. Session start and energy
-		// arrive before the mode change, so a session started after the disconnect is kept.
-		if !prevModeTime.IsZero() && c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart &&
-			c.sessionStart.Start.Before(prevModeTime) {
-			c.sessionEnergy = 0
-			c.sessionStart = easee.ChargingSessionStartData{}
-			c.obsTime[easee.SESSION_ENERGY] = time.Now()
+		// The first mode after startup is replayed state, not a transition.
+		if !prevModeTime.IsZero() && c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
+			// session start arrives before the mode change, a session started after the disconnect is kept
+			if c.sessionStart.Start.Before(prevModeTime) {
+				c.sessionStart = easee.ChargingSessionStartData{}
+			}
+			// energy observed before the kept session started still belongs to the previous session
+			if c.sessionStart.ID == 0 || c.sessionEnergyTime.Before(c.sessionStart.Start) {
+				c.sessionEnergy = 0
+				c.obsTime[easee.SESSION_ENERGY] = time.Now()
+			}
 		}
 
 		c.opMode = opMode
