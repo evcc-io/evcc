@@ -58,6 +58,22 @@ func (m *RCT) hasRSocStrategy() bool {
 	return m.rSocStrategy != nil
 }
 
+// socStrategyToRestore returns the soc strategy to write on BatteryNormal, or nil.
+// Without a saved value only External is reset to Internal, keeping user choices (#35719).
+func (m *RCT) socStrategyToRestore(current func() (uint8, error)) (*uint8, error) {
+	if s := m.takeRSocStrategy(); s != nil {
+		return s, nil
+	}
+
+	s, err := current()
+	if err != nil || s != rct.SOCTargetExternal {
+		return nil, err
+	}
+
+	internal := rct.SOCTargetInternal
+	return &internal, nil
+}
+
 var (
 	rctMu    sync.Mutex
 	rctCache = make(map[string]*rct.Connection)
@@ -206,15 +222,18 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 			switch mode {
 			case api.BatteryNormal:
-				// fall back to internal if nothing saved, e.g. after restart (#35719)
-				strategy := rct.SOCTargetInternal
-				if s := m.takeRSocStrategy(); s != nil {
-					strategy = *s
+				strategy, err := m.socStrategyToRestore(func() (uint8, error) {
+					return m.queryUint8(rct.PowerMngSocStrategy)
+				})
+				if err != nil {
+					return err
 				}
 
-				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngSocStrategy, []byte{strategy})
-				})
+				if strategy != nil {
+					eg.Go(func() error {
+						return m.conn.Write(rct.PowerMngSocStrategy, []byte{*strategy})
+					})
+				}
 
 				eg.Go(func() error {
 					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))

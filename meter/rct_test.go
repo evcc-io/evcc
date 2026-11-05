@@ -46,3 +46,31 @@ func TestRCTSetRSocStrategyExternal(t *testing.T) {
 	m.setRSocStrategyIfAbsent(rct.SOCTargetExternal)
 	assert.Nil(t, m.takeRSocStrategy())
 }
+
+// TestRCTSocStrategyToRestore verifies BatteryNormal resets a stuck External
+// strategy but leaves other user-chosen strategies untouched (#35719).
+func TestRCTSocStrategyToRestore(t *testing.T) {
+	current := func(s uint8) func() (uint8, error) {
+		return func() (uint8, error) { return s, nil }
+	}
+
+	m := &RCT{}
+
+	// saved value wins
+	m.setRSocStrategyIfAbsent(rct.SOCTargetSchedule)
+	s, err := m.socStrategyToRestore(current(rct.SOCTargetExternal))
+	require.NoError(t, err)
+	require.NotNil(t, s)
+	assert.Equal(t, rct.SOCTargetSchedule, *s)
+
+	// nothing saved, current External: reset to Internal
+	s, err = m.socStrategyToRestore(current(rct.SOCTargetExternal))
+	require.NoError(t, err)
+	require.NotNil(t, s)
+	assert.Equal(t, rct.SOCTargetInternal, *s)
+
+	// nothing saved, current other: no write
+	s, err = m.socStrategyToRestore(current(rct.SOCTargetConstant))
+	require.NoError(t, err)
+	assert.Nil(t, s)
+}
