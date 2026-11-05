@@ -209,8 +209,20 @@ jobs:
                  on it. Read their logins with
                  `gh pr view <number> --json author,comments,reviews` and put a
                  single `cc @author @commenter ...` line right above the footer.
-                 Skip bots, duplicates and the issue author. Never cc anyone when
-                 the cause is uncertain.
+                 Skip bots, duplicates and the issue author. Never cc a pull
+                 request's authors when the cause is uncertain.
+               - If the issue concerns a specific device of type `charger`,
+                 `meter`, `vehicle`, `tariff`, `hems` or `curtailer` (its template
+                 under `templates/definition/<type>/` or its implementation under
+                 `<type>/`), also notify the contributors who own that hardware,
+                 even without a causing pull request: they can test and confirm.
+                 List the commits on the affected file with
+                 `gh api graphql -f query='{repository(owner:"${{ github.repository_owner }}",name:"${{ github.event.repository.name }}"){object(expression:"master"){... on Commit{history(path:"<path>",first:100){nodes{messageHeadline author{user{login}}}}}}}}'`
+                 and pick the authors of the commits that added or changed the
+                 code path in question, e.g. the register or setting the issue is
+                 about. Skip mass refactors, renames and chores, bots, the issue
+                 author and anyone already mentioned in the thread. Add them to
+                 the same single `cc` line, at most three of them.
                Format the comment as valid GitHub-flavored Markdown. Use GitHub's
                autolink forms: `#<number>` for issues/PRs in this repo,
                `owner/repo#<number>` across repos, a bare 7–40 char SHA for commits in
