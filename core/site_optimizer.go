@@ -945,6 +945,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 
 		if detail.loadpoint != nil {
 			suggestion.Battery = batteryDischarge
+			suggestion.BatteryCharge = batteryCharge
 		}
 
 		// uncontrollable devices can't act on a suggestion

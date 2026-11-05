@@ -1272,6 +1272,8 @@ export interface LoadpointSuggestion {
   grid?: number;
   /** Planned home battery discharge feeding the site in W. */
   battery?: number;
+  /** Planned home battery charge in W. */
+  batteryCharge?: number;
   /** Suggestion differs from the current operating mode. */
   actionable?: boolean;
 }

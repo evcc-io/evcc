@@ -260,22 +260,28 @@ func TestOptimizerPrioritySoc(t *testing.T) {
 		action    string
 		res       sitePowerResult
 		expect    float64
+		batCharge float64 // planned home battery charge
 	}{
 		// the report: above prioritySoc the vehicle took the battery's charge power against the stop
-		{"stop above prioritySoc", true, actionStop, above, 0},
-		{"stop below prioritySoc", true, actionStop, below, 0},
-		{"charge above prioritySoc", true, actionCharge, above, -1000},
-		{"charge below prioritySoc", true, actionCharge, below, -1000},
+		{"stop above prioritySoc", true, actionStop, above, 0, 0},
+		{"stop below prioritySoc", true, actionStop, below, 0, 0},
+		{"charge above prioritySoc", true, actionCharge, above, -1000, 0},
+		{"charge below prioritySoc", true, actionCharge, below, -1000, 0},
 		// a discharging battery is not hidden by a stop
-		{"stop while discharging", true, actionStop, sitePowerResult{state: siteState{battery: types.BatteryState{Power: 500}}, power: 500}, 500},
+		{"stop while discharging", true, actionStop, sitePowerResult{state: siteState{battery: types.BatteryState{Power: 500}}, power: 500}, 500, 0},
 		// prioritySoc applies to loadpoints the optimizer does not control
-		{"uncontrolled below prioritySoc", false, actionStop, below, 100},
+		{"uncontrolled below prioritySoc", false, actionStop, below, 100, 0},
+		// a charge leaves the battery its planned charge, the vehicle gets the remainder
+		{"charge with planned battery charge", true, actionCharge, above, 0, 1000},
+		{"charge with partial planned battery charge", true, actionCharge, above, -600, 400},
+		{"charge below prioritySoc with planned battery charge", true, actionCharge, below, 0, 1000},
+		{"charge with planned battery charge below threshold", true, actionCharge, above, -1000, suggestionThreshold},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			lp := NewLoadpoint(util.NewLogger("foo"), nil)
 			lp.site = &mockSite{automatic: tc.automatic}
 			lp.vehicle = modelledVehicle(gomock.NewController(t))
-			lp.setSuggestion(&types.Suggestion{Action: tc.action})
+			lp.setSuggestion(&types.Suggestion{Action: tc.action, BatteryCharge: tc.batCharge})
 
 			site := &Site{log: util.NewLogger("foo")}
 			assert.Equal(t, tc.expect, site.loadpointSitePower(lp, tc.res))

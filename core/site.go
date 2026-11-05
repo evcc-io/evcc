@@ -1310,6 +1310,14 @@ func (site *Site) loadpointSitePower(lp updater, res sitePowerResult) float64 {
 		sitePower -= res.state.battery.Power + res.state.excessDCPower
 	}
 
+	// a charge following pv surplus leaves the battery its planned charge, otherwise the
+	// pv loop takes the battery's charge power and inverts the optimizer's pv split
+	if suggestion != nil && suggestion.Action == actionCharge && suggestion.BatteryCharge > suggestionThreshold {
+		if charging := -(res.state.battery.Power + res.state.excessDCPower); charging > 0 {
+			sitePower += min(charging, suggestion.BatteryCharge)
+		}
+	}
+
 	return sitePower
 }
 
