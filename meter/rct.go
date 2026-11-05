@@ -41,11 +41,12 @@ func (m *RCT) takeRSocStrategy() *uint8 {
 }
 
 // setRSocStrategyIfAbsent saves strategy unless a value is already saved.
+// External is never saved since it is evcc's own override (#35719).
 func (m *RCT) setRSocStrategyIfAbsent(strategy uint8) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if m.rSocStrategy == nil {
+	if m.rSocStrategy == nil && strategy != rct.SOCTargetExternal {
 		m.rSocStrategy = &strategy
 	}
 }
@@ -205,11 +206,15 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 			switch mode {
 			case api.BatteryNormal:
-				if strategy := m.takeRSocStrategy(); strategy != nil {
-					eg.Go(func() error {
-						return m.conn.Write(rct.PowerMngSocStrategy, []byte{*strategy})
-					})
+				// fall back to internal if nothing saved, e.g. after restart (#35719)
+				strategy := rct.SOCTargetInternal
+				if s := m.takeRSocStrategy(); s != nil {
+					strategy = *s
 				}
+
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngSocStrategy, []byte{strategy})
+				})
 
 				eg.Go(func() error {
 					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))

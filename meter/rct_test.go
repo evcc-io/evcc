@@ -3,6 +3,7 @@ package meter
 import (
 	"testing"
 
+	"github.com/evcc-io/rct"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -35,4 +36,13 @@ func TestRCTSetRSocStrategyIfAbsent(t *testing.T) {
 	strategy := m.takeRSocStrategy()
 	require.NotNil(t, strategy)
 	assert.Equal(t, uint8(4), *strategy)
+}
+
+// TestRCTSetRSocStrategyExternal verifies External is never saved as the
+// strategy to restore (#35719).
+func TestRCTSetRSocStrategyExternal(t *testing.T) {
+	m := &RCT{}
+
+	m.setRSocStrategyIfAbsent(rct.SOCTargetExternal)
+	assert.Nil(t, m.takeRSocStrategy())
 }
