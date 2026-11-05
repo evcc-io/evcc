@@ -207,7 +207,7 @@ func TestOptimizerBatteryFed(t *testing.T) {
 	lp, charger, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
 	lp.offeredCurrent = maxA
 
-	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 1380, Battery: 1000})
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 1380, BatteryDischarge: 1000})
 
 	// grid balanced, battery discharging into the site
 	charger.EXPECT().MaxCurrent(int64(minA))
@@ -298,11 +298,11 @@ func TestOptimizerFlexibility(t *testing.T) {
 		s    types.Suggestion
 		want float64
 	}{
-		{types.Suggestion{Action: actionCharge, Charge: 3680, Grid: 1000}, 0},    // full power
-		{types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, 0},    // grid-fed setpoint
-		{types.Suggestion{Action: actionCharge, Charge: 2300}, 2700},             // surplus regime, pv loop yields
-		{types.Suggestion{Action: actionCharge, Charge: 2300, Battery: 1000}, 0}, // battery-fed setpoint
-		{types.Suggestion{Action: actionStop}, 2700},                             // stop, pv loop yields
+		{types.Suggestion{Action: actionCharge, Charge: 3680, Grid: 1000}, 0},             // full power
+		{types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, 0},             // grid-fed setpoint
+		{types.Suggestion{Action: actionCharge, Charge: 2300}, 2700},                      // surplus regime, pv loop yields
+		{types.Suggestion{Action: actionCharge, Charge: 2300, BatteryDischarge: 1000}, 0}, // battery-fed setpoint
+		{types.Suggestion{Action: actionStop}, 2700},                                      // stop, pv loop yields
 	} {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
 		lp.mode = api.ModeSmart

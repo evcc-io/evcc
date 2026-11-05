@@ -944,7 +944,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 		}
 
 		if detail.loadpoint != nil {
-			suggestion.Battery = batteryDischarge
+			suggestion.BatteryDischarge = batteryDischarge
 			suggestion.BatteryCharge = batteryCharge
 		}
 

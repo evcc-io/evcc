@@ -153,7 +153,7 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 // charge the home battery covers: the pv loop sees its discharge as deficit.
 func (lp *Loadpoint) surplusRegime(s *types.Suggestion) bool {
 	full := s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold
-	return s.Action == actionCharge && !full && math.Abs(s.Grid) <= suggestionThreshold && s.Battery <= suggestionThreshold
+	return s.Action == actionCharge && !full && math.Abs(s.Grid) <= suggestionThreshold && s.BatteryDischarge <= suggestionThreshold
 }
 
 // optimizerCharging applies the optimizer's charging decision. It returns false
