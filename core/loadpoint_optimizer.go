@@ -125,12 +125,15 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 		return false
 	}
 
-	goal, _ := lp.GetPlanGoal()
+	goal, isSocBased := lp.GetPlanGoal()
 	if goal <= 0 {
 		return false
 	}
 
 	required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower())
+	if required <= 0 && lp.fullSocPlanContinues(goal, isSocBased) {
+		return true
+	}
 
 	// past the plan time the goal was missed- keep charging like plannerActive does
 	critical := required > 0
