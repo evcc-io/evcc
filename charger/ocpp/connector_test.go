@@ -408,6 +408,22 @@ func (suite *connTestSuite) TestOnMeterValuesBoundaryContextFirst() {
 	suite.Equal(241.010, res, "live reading must not be shadowed by the boundary snapshot")
 }
 
+// Huawei SCharger reports a zero energy register outside transactions (#35732)
+func (suite *connTestSuite) TestOnMeterValuesIgnoreZeroEnergy() {
+	suite.meterValues(energySample("0.00", types.ReadingContextTrigger))
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err, "TotalEnergy")
+	suite.Equal(0.0, res, "initial zero must be accepted")
+
+	suite.meterValues(energySample("537960", types.ReadingContextTransactionBegin))
+	suite.meterValues(energySample("0.00", types.ReadingContextTrigger))
+
+	res, err = suite.conn.TotalEnergy()
+	suite.NoError(err, "TotalEnergy")
+	suite.Equal(537.960, res, "zero must not overwrite known energy")
+}
+
 // meterValuesAt feeds the given samples with an explicit charger-side timestamp
 func (suite *connTestSuite) meterValuesAt(ts time.Time, samples ...types.SampledValue) {
 	_, err := suite.conn.OnMeterValues(&core.MeterValuesRequest{
