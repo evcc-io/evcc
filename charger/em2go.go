@@ -36,14 +36,11 @@ import (
 // Em2Go charger implementation
 type Em2Go struct {
 	implement.Caps
-	log                  *util.Logger
-	conn                 *modbus.Connection
-	current              uint16
-	workaround           bool
-	phases               int
-	sessionChargedEnergy float64 // accumulated energy in current session
-	lastChargedEnergy    float64 // last seen em2GoRegChargedEnergy value to detect resets
-	lastStatus           api.ChargeStatus
+	log        *util.Logger
+	conn       *modbus.Connection
+	current    uint16
+	workaround bool
+	phases     int
 }
 
 const (
@@ -52,12 +49,10 @@ const (
 	em2GoRegErrorCode       = 4   // Uint16 RO ENUM
 	em2GoRegCurrents        = 6   // Uint16 RO 0.1A
 	em2GoRegPower           = 12  // Uint32 RO 1W
-	em2GoRegEnergy          = 28  // Uint32 RO 0.1KWh
 	em2GoRegMaxCurrent      = 32  // Uint16 RO 0.1A
 	em2GoRegMinCurrent      = 34  // Uint16 RO 0.1A
 	em2GoRegCableMaxCurrent = 36  // Uint16 RO 0.1A
 	em2GoRegSerial          = 38  // Chr[16] RO UTF16
-	em2GoRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
 	em2GoRegChargeDuration  = 78  // Uint32 RO 1s
 	em2GoRegSafeCurrent     = 87  // Uint16 WR 0.1A
 	em2GoRegCommTimeout     = 89  // Uint16 WR 1s
@@ -66,6 +61,12 @@ const (
 	em2GoRegChargeCommand   = 95  // Uint16 WR ENUM
 	em2GoRegVoltages        = 109 // Uint16 RO 0.1V
 	em2GoRegPhases          = 200 // Set charging phase 1 unsigned
+
+	//removed due to unreliable session energy when pausing or switching phases
+	//em2GoRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
+
+	//removed since total energy only updates every 10min by adding session energy, evcc integrates power instead
+	//em2GoRegEnergy          = 28  // Uint32 RO 0.1KWh
 )
 
 func init() {
@@ -181,44 +182,20 @@ func (wb *Em2Go) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	var status api.ChargeStatus
 	switch binary.BigEndian.Uint16(b) {
 	case 1: //Standby
-		status = api.StatusA
+		return api.StatusA, nil
 	case
 		2, //Connected
 		3, //Starting
 		6: //Charging end
-		status = api.StatusB
+		return api.StatusB, nil
 	case
 		4: //Charging
-		status = api.StatusC
+		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
 	}
-
-	// detect cable connect (StatusA -> StatusB/C) and reset session energy counters
-	if wb.lastStatus == api.StatusA && status != api.StatusA {
-		wb.sessionChargedEnergy = 0
-		wb.lastChargedEnergy = 0
-
-		// Latch the current charger register as baseline so a new session starts at 0,
-		// even if the charger still reports the previous session value while in status B.
-		if b, err := wb.conn.ReadHoldingRegisters(em2GoRegChargedEnergy, 1); err == nil {
-			wb.lastChargedEnergy = float64(binary.BigEndian.Uint16(b)) / 10
-			wb.sessionChargedEnergy = -wb.lastChargedEnergy
-		}
-
-		wb.log.DEBUG.Printf("Cable connected: session energy counters reset")
-	}
-	// detect cable disconnect (StatusB/C -> StatusA)
-	if wb.lastStatus != api.StatusA && status == api.StatusA {
-		wb.log.DEBUG.Printf("Cable disconnected: sessionChargedEnergy=%.2f kWh, lastChargedEnergy=%.2f kWh", wb.sessionChargedEnergy, wb.lastChargedEnergy)
-		// do not reset wb.sessionChargedEnergy and wb.lastChargedEnergy - they will be read by finalizeSessionEnergy before clearing on next connect
-	}
-	wb.lastStatus = status
-
-	return status, nil
 }
 
 // Enabled implements the api.Charger interface
@@ -311,18 +288,6 @@ func (wb *Em2Go) CurrentPower() (float64, error) {
 	return rs485.RTUUint32ToFloat64(b), nil
 }
 
-var _ api.MeterEnergy = (*Em2Go)(nil)
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Em2Go) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(em2GoRegEnergy, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return rs485.RTUUint32ToFloat64(b) / 10, nil
-}
-
 // getPhaseValues returns 3 register values offset by 2
 func (wb *Em2Go) getPhaseValues(reg uint16) (float64, float64, float64, error) {
 	var res [3]float64
@@ -351,32 +316,6 @@ var _ api.PhaseVoltages = (*Em2Go)(nil)
 // Currents implements the api.PhaseVoltages interface
 func (wb *Em2Go) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(em2GoRegVoltages)
-}
-
-var _ api.ChargeRater = (*Em2Go)(nil)
-
-// ChargedEnergy implements the api.ChargeRater interface
-func (wb *Em2Go) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(em2GoRegChargedEnergy, 1)
-	if err != nil {
-		return 0, err
-	}
-	currentChargedEnergy := float64(binary.BigEndian.Uint16(b)) / 10
-
-	// Detect if em2GoRegChargedEnergy was reset without cable disconnect
-	// This happens during phase switches or pause/resume cycles
-	// A reset is indicated by currentChargedEnergy being less than lastChargedEnergy (reading went backwards)
-	if wb.lastStatus != api.StatusA && currentChargedEnergy < wb.lastChargedEnergy && wb.lastChargedEnergy > 0 {
-		// Register was reset while cable still connected, accumulate the previous value
-		wb.sessionChargedEnergy += wb.lastChargedEnergy
-		wb.log.DEBUG.Printf("Charged energy reset detected: accumulated %.2f kWh, total session now %.2f kWh", wb.lastChargedEnergy, wb.sessionChargedEnergy)
-	}
-
-	wb.lastChargedEnergy = currentChargedEnergy
-	totalCharged := wb.sessionChargedEnergy + currentChargedEnergy
-
-	wb.log.DEBUG.Printf("ChargedEnergy: currentModbus=%.2f kWh, accumulatedInternal=%.2f kWh, totalInternal=%.2f kWh", currentChargedEnergy, wb.sessionChargedEnergy, totalCharged)
-	return totalCharged, nil
 }
 
 var _ api.ChargeTimer = (*Em2Go)(nil)
