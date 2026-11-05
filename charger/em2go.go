@@ -289,7 +289,7 @@ func (wb *Em2Go) CurrentPower() (float64, error) {
 }
 
 // api.MeterEnergy is not implemented: the total energy register only updates every 10min and
-// loses energy when the session counter resets on phase switches, so evcc integrates CurrentPower instead.
+// loses energy when the session counter resets on phase switches, so evcc integrates CurrentPower instead
 
 // getPhaseValues returns 3 register values offset by 2
 func (wb *Em2Go) getPhaseValues(reg uint16) (float64, float64, float64, error) {
