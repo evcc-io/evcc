@@ -59,7 +59,8 @@ func (site *Site) applyHemsLimits() {
 	})
 
 	wg.Go(func() {
-		if hems.Curtailed(site.hems) != nil {
+		// an uncurtailed HEMS statement leaves the pv to the optimizer curtailment
+		if c := hems.Curtailed(site.hems); c != nil && (*c || !site.optimizerCurtailed) {
 			if err := site.curtailPV(site.hems.CurtailedPercent()); err != nil {
 				site.log.ERROR.Println(err)
 			}
@@ -242,7 +243,7 @@ func optimizerCurtailPercent(percent int, gridPower, pvPower, limit float64) int
 // applyOptimizerCurtailment curtails pv to the static grid export limit while the optimizer plans
 // curtailment in the active slot, and releases it afterwards. HEMS curtailment takes precedence.
 func (site *Site) applyOptimizerCurtailment(gridPower, pvPower float64, now time.Time) {
-	if hems.Curtailed(site.hems) != nil {
+	if c := hems.Curtailed(site.hems); c != nil && *c {
 		site.optimizerCurtailed = false
 		return
 	}
@@ -261,10 +262,11 @@ func (site *Site) applyOptimizerCurtailment(gridPower, pvPower float64, now time
 		percent = optimizerCurtailPercent(percent, gridPower, pvPower, limit)
 	}
 
-	if err := site.curtailPV(&percent); err != nil {
+	err := site.curtailPV(&percent)
+	if err != nil {
 		site.log.ERROR.Println(err)
-		return
 	}
 
-	site.optimizerCurtailed = percent < 100
+	// a failed write may have curtailed some devices, keep releasing until it succeeds
+	site.optimizerCurtailed = percent < 100 || err != nil
 }

@@ -11,6 +11,7 @@ import (
 	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 // curtailableMeter counts device interactions to verify caching.
@@ -219,19 +220,26 @@ func TestOptimizerCurtailPercent(t *testing.T) {
 }
 
 // The optimizer curtails while the active slot plans overshoot and releases its curtailment afterwards.
-func TestApplyOptimizerCurtailment(t *testing.T) {
-	enableAutomatic(t)
+func optimizerCurtailSite(t *testing.T, m *curtailableMeter, now time.Time) *Site {
+	t.Helper()
 
-	m := &curtailableMeter{percent: 100}
 	site := curtailSite(m)
 	site.gridMeter = config.NewStaticDevice(config.Named{}, api.Meter(m))
 	site.gridExportLimit = 5000
-
-	now := time.Now()
 	site.lastOptimizerSolve = &optimizerSolve{
 		schedule: optimizerSchedule{timestamps: []time.Time{now}, dt: []int{900}},
 		res:      optimizer.OptimizationResult{GridExportOvershoot: []float32{250}},
 	}
+
+	return site
+}
+
+func TestApplyOptimizerCurtailment(t *testing.T) {
+	enableAutomatic(t)
+
+	now := time.Now()
+	m := &curtailableMeter{percent: 100}
+	site := optimizerCurtailSite(t, m, now)
 
 	site.applyOptimizerCurtailment(-7000, 10000, now)
 	assert.Equal(t, []int{80}, m.setCalls)
@@ -246,4 +254,54 @@ func TestApplyOptimizerCurtailment(t *testing.T) {
 	// not curtailed by the optimizer: left alone
 	site.applyOptimizerCurtailment(-4000, 8000, now)
 	assert.Equal(t, []int{80, 100}, m.setCalls)
+}
+
+// An uncurtailed HEMS statement leaves the pv to the optimizer, an active one takes precedence.
+func TestApplyOptimizerCurtailmentHems(t *testing.T) {
+	enableAutomatic(t)
+
+	now := time.Now()
+	m := &curtailableMeter{percent: 100}
+	site := optimizerCurtailSite(t, m, now)
+
+	h := api.NewMockHEMS(gomock.NewController(t))
+	site.hems = h
+
+	h.EXPECT().CurtailedPercent().Return(new(100)).AnyTimes()
+	h.EXPECT().MaxConsumptionPower().Return(nil).AnyTimes()
+	for range 2 {
+		site.applyHemsLimits()
+		site.applyOptimizerCurtailment(-7000, 10000, now)
+	}
+	assert.Equal(t, []int{80}, m.setCalls[:1])
+	assert.NotContains(t, m.setCalls[1:], 100, "hems must not reset optimizer curtailment")
+
+	h = api.NewMockHEMS(gomock.NewController(t))
+	site.hems = h
+	h.EXPECT().CurtailedPercent().Return(new(60)).AnyTimes()
+	h.EXPECT().MaxConsumptionPower().Return(nil).AnyTimes()
+	site.applyHemsLimits()
+	site.applyOptimizerCurtailment(-7000, 10000, now)
+	assert.Equal(t, 60, m.percent)
+	assert.False(t, site.optimizerCurtailed)
+}
+
+// A partially failed curtailment is released when the plan ends.
+func TestApplyOptimizerCurtailmentPartial(t *testing.T) {
+	enableAutomatic(t)
+
+	now := time.Now()
+	ok := &curtailableMeter{percent: 100}
+	failing := &curtailableMeter{percent: 100, setErr: errors.New("nope")}
+	site := optimizerCurtailSite(t, ok, now)
+	site.pvMeters = append(site.pvMeters, config.NewStaticDevice(config.Named{}, api.Meter(failing)))
+
+	site.applyOptimizerCurtailment(-7000, 10000, now)
+	assert.Equal(t, 80, ok.percent)
+
+	failing.setErr = nil
+	site.lastOptimizerSolve = nil
+	site.applyOptimizerCurtailment(-4000, 8000, now)
+	assert.Equal(t, 100, ok.percent)
+	assert.False(t, site.optimizerCurtailed)
 }
