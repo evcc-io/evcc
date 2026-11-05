@@ -666,3 +666,57 @@ func TestOptimizerPlanSlotNotCritical(t *testing.T) {
 
 	assert.False(t, lp.planDeadlineCritical())
 }
+
+// TestOptimizerPhaseGap verifies that a suggestion between 1p maximum and 3p minimum power
+// charges on 1p below the suggestion instead of toggling phases or exceeding it on 3p
+func TestOptimizerPhaseGap(t *testing.T) {
+	for _, tc := range []struct {
+		phases int
+	}{
+		{1},
+		{3},
+	} {
+		t.Run(fmt.Sprintf("%dp", tc.phases), func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			clck := clock.NewMock()
+
+			lp := NewLoadpoint(util.NewLogger("foo"), nil)
+			lp.clock = clck
+			lp.minCurrent = minA
+			lp.maxCurrent = maxA
+			lp.phases = tc.phases
+			lp.status = api.StatusC
+			lp.enabled = true
+			lp.wakeUpTimer = NewTimer()
+
+			plainCharger := api.NewMockCharger(ctrl)
+			phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+			lp.charger = struct {
+				*api.MockCharger
+				*api.MockPhaseSwitcher
+			}{plainCharger, phaseCharger}
+
+			plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()
+			plainCharger.EXPECT().Enable(gomock.Any()).Return(nil).AnyTimes()
+			plainCharger.EXPECT().MaxCurrent(gomock.Any()).Return(nil).AnyTimes()
+
+			// scales down once, never back up
+			if tc.phases == 3 {
+				phaseCharger.EXPECT().Phases1p3p(1).Return(nil)
+			}
+
+			// above 1p maximum (3680W), below 3p minimum (4140W)
+			s := &types.Suggestion{Action: actionCharge, Charge: 4000, Grid: 4000}
+
+			for range 5 {
+				clck.Add(time.Hour) // phase switch and delays elapsed
+				handled, err := lp.optimizerCharging(s)
+				assert.True(t, handled)
+				assert.NoError(t, err)
+			}
+
+			assert.Equal(t, 1, lp.GetPhases())
+			assert.Equal(t, float64(maxA), lp.offeredCurrent)
+		})
+	}
+}
