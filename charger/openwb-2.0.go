@@ -113,8 +113,6 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 	}
 
 	if wb.identifyEnabled {
-		wb.rfidMu.Lock()
-		defer wb.rfidMu.Unlock()
 		wb.resetRfidLocked()
 	}
 	return wb, nil
