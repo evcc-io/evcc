@@ -212,7 +212,8 @@ jobs:
                  Skip bots, duplicates and the issue author. Never cc a pull
                  request's authors when the cause is uncertain.
                - If the issue concerns a specific device (a template under
-                 `templates/definition/` or a device driver), also notify the
+                 `templates/definition/` or an implementation under `charger/`,
+                 `meter/`, `vehicle/`, `tariff/` or `hems/`), also notify the
                  contributors who own that hardware, even without a causing pull
                  request: they can test and confirm. List the commits on the
                  affected file with
