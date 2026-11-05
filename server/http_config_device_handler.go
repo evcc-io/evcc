@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"maps"
 	"net/http"
-	"net/url"
 	"reflect"
 	"slices"
 	"strconv"
@@ -320,8 +319,11 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) (*config.Config, error) {
 	typ, other, err := config.CustomDevice(req.Type, req.Other)
-	if err != nil && !force {
-		return nil, err
+	if err != nil {
+		if !force {
+			return nil, err
+		}
+		logDeviceError("force create", class, 0, req, err)
 	}
 
 	instance, err := newFromConf(ctx, typ, other)
@@ -870,15 +872,17 @@ func testConfig[T any](ctx context.Context, id int, class templates.Class, req c
 	return instance, err
 }
 
-// logDeviceError logs a failed device action without masked values like passwords or tokens
+// logDeviceError logs a failed device action with masked and private config values redacted
 func logDeviceError(action string, class templates.Class, id int, req configReq, err error) {
 	device := class.String()
-	confs := []map[string]any{req.Other}
+	conf := req.Other
 	if id != 0 {
 		device += " " + config.NameForID(id)
 		// request contains masked placeholders, the stored config has the actual values
 		if other, err := deviceOther(class, id); err == nil {
-			confs = append(confs, other)
+			if merged, err := mergeMasked(class, conf, other); err == nil {
+				conf = merged
+			}
 		}
 	}
 
@@ -887,23 +891,20 @@ func logDeviceError(action string, class templates.Class, id int, req configReq,
 		typ += ":" + tmpl
 	}
 
-	msg := err.Error()
-	for _, conf := range confs {
-		tmpl, err := templateForConfig(class, conf)
-		if err != nil {
-			continue
-		}
-		for k, v := range conf {
-			if _, p := tmpl.ParamByName(k); p.IsMasked() {
-				if s, ok := v.(string); ok && s != "" && s != masked {
-					msg = strings.ReplaceAll(msg, s, masked)
-					msg = strings.ReplaceAll(msg, url.QueryEscape(s), masked)
-				}
-			}
+	sanitized, serr := sanitizeMasked(class, conf, true)
+	if serr != nil {
+		// without template it is unknown which values are secret
+		log.WARN.Printf("%s %s (%s) failed", action, device, typ)
+		return
+	}
+
+	for k, v := range sanitized {
+		if v == masked && conf[k] != nil && conf[k] != masked {
+			log.Redact(fmt.Sprint(conf[k]))
 		}
 	}
 
-	log.WARN.Printf("%s %s (%s): %s", action, device, typ, msg)
+	log.WARN.Printf("%s %s (%s): %v", action, device, typ, err)
 }
 
 // testConfigHandler tests a configuration by class
