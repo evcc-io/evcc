@@ -81,6 +81,24 @@ func (lp *Loadpoint) optimizerControlled() bool {
 	return v != nil && v.Capacity() > 0
 }
 
+// fixedDemandModelled indicates that optimizerRequest contains the charging as fixed vehicle
+// demand (mode now, smart cost limit) even if the optimizer does not control the loadpoint.
+// Plan and min soc charging follow evcc's own timing, which the request does not model.
+func (lp *Loadpoint) fixedDemandModelled() bool {
+	if lp.chargerHasFeature(api.Heating) || lp.chargerHasFeature(api.IntegratedDevice) || lp.EffectiveMaxPower() <= 0 {
+		return false
+	}
+
+	if v := lp.GetVehicle(); v == nil || (v.Capacity() == 0 && lp.GetLimitEnergy() == 0) {
+		return false
+	}
+
+	lp.RLock()
+	defer lp.RUnlock()
+
+	return !lp.planActive && !lp.minSocNotReached()
+}
+
 // activeSuggestion returns the optimizer's start/stop decision for the current slot,
 // nil if the optimizer does not control this loadpoint
 func (lp *Loadpoint) activeSuggestion() *types.Suggestion {
