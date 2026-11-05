@@ -208,7 +208,7 @@ func TestProviderCatchUp(t *testing.T) {
 	total := 10
 
 	portal, a, _ := testStore(testStart)
-	p := NewProvider(util.NewLogger("test"), a, testVin, time.Hour, nil)
+	p := NewProvider(util.NewLogger("test"), a, testVin, time.Hour, nil, nil)
 
 	soc, err := p.Soc()
 	require.NoError(t, err, "nothing pending, recent success")
