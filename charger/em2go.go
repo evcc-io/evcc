@@ -288,6 +288,9 @@ func (wb *Em2Go) CurrentPower() (float64, error) {
 	return rs485.RTUUint32ToFloat64(b), nil
 }
 
+// api.MeterEnergy is not implemented: the total energy register only updates every 10min and
+// loses energy when the session counter resets on phase switches, so evcc integrates CurrentPower instead.
+
 // getPhaseValues returns 3 register values offset by 2
 func (wb *Em2Go) getPhaseValues(reg uint16) (float64, float64, float64, error) {
 	var res [3]float64
