@@ -1,7 +1,7 @@
 template: wican
 products:
   - brand: MeatPi Electronics
-  - description:
+    description:
       generic: WiCAN Pro
 group: generic
 requirements:
@@ -20,7 +20,6 @@ discovery:
 params:
   - preset: vehicle-common
   - name: host
-    required: true
     description:
       en: IP address/hostname of the WiCAN Pro device
       de: IP-Adresse/Hostname des WiCAN Pro Geräts

@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -61,7 +62,8 @@ func NewWiCANFromConfig(other map[string]any) (api.Vehicle, error) {
 func (v *WiCAN) fetchData() (WiCANResponse, error) {
 	var res WiCANResponse
 
-	uri := fmt.Sprintf("http://%s/api/autopid/data", v.host)
+	host := net.JoinHostPort(v.host, "80")
+	uri := fmt.Sprintf("http://%s/api/autopid/data", host)
 
 	err := v.helper.GetJSON(uri, &res)
 	if err != nil {
@@ -74,6 +76,10 @@ func (v *WiCAN) fetchData() (WiCANResponse, error) {
 // Soc implements the api.Vehicle interface
 func (v *WiCAN) Soc() (float64, error) {
 	res, err := v.dataG()
+
+	if err != nil {
+		return 0, err
+	}
 	
 	// use "display SoC", if value exists
 	if res.SocD != nil {
@@ -85,49 +91,69 @@ func (v *WiCAN) Soc() (float64, error) {
 		return *res.Soc, err
 	}
 
-	// no cache data
-	if err != nil {
-		return 0, fmt.Errorf("WiCAN API not reachable: %w", err)
-	}
-	
 	return 0, fmt.Errorf("Missing SOC_D or SOC value in WiCAN API response")
 }
 
 // Range implements the api.VehicleRange interface
 func (v *WiCAN) Range() (int64, error) {
-	res, _ := v.dataG()
+	res, err := v.dataG()
+	
+	if err != nil {
+		return 0, err
+	}
+
 	if res.Range == nil {
 		return 0, api.ErrNotAvailable
 	}
+
 	return *res.Range, nil
 }
 
 // Odometer implements the api.VehicleOdometer interface
 func (v *WiCAN) Odometer() (float64, error) {
-	res, _ := v.dataG()
+	res, err := v.dataG()
+
+	if err != nil {
+		return 0, err
+	}
+
 	if res.Odometer == nil {
 		return 0, api.ErrNotAvailable
 	}
+
 	return *res.Odometer, nil
 }
 
 // Status implements the api.ChargeState interface
 func (v *WiCAN) Status() (api.ChargeStatus, error) {
-	res, _ := v.dataG()
-	if res.Charging == nil {
-		return api.StatusA, api.ErrNotAvailable
+	res, err := v.dataG()
+
+	if err != nil {
+		return api.StatusNone, err
 	}
+
+	if res.Charging == nil {
+		return api.StatusNone, api.ErrNotAvailable
+	}
+
 	if *res.Charging == 1 {
 		return api.StatusC, nil // charging
 	}
-	return api.StatusA, nil // disconnected/not charging
+
+	return api.StatusB, nil // connected, not charging
 }
 
 // Climater implements the  api.VehicleClimater interface
 func (v *WiCAN) Climater() (bool, error) {
-	res, _ := v.dataG()
+	res, err := v.dataG()
+	
+	if err != nil {
+		return false, err
+	}
+
 	if res.Climater == nil {
 		return false, api.ErrNotAvailable
 	}
+
 	return *res.Climater == 1, nil
 }
