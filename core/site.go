@@ -1306,16 +1306,10 @@ func (site *Site) loadpointSitePower(lp updater, res sitePowerResult) float64 {
 		sitePower += res.priorityAdjustment
 	}
 
-	if suggestion != nil && suggestion.Action != actionCharge && res.state.battery.Power < 0 {
+	// a charge next to planned battery charging gives the battery priority, too: the pv loop
+	// would otherwise take the battery's charge power and invert the optimizer's pv split
+	if suggestion != nil && (suggestion.Action != actionCharge || suggestion.BatteryCharge > suggestionThreshold) && res.state.battery.Power < 0 {
 		sitePower -= res.state.battery.Power + res.state.excessDCPower
-	}
-
-	// a charge following pv surplus leaves the battery its planned charge, otherwise the
-	// pv loop takes the battery's charge power and inverts the optimizer's pv split
-	if suggestion != nil && suggestion.Action == actionCharge && suggestion.BatteryCharge > suggestionThreshold {
-		if charging := -(res.state.battery.Power + res.state.excessDCPower); charging > 0 {
-			sitePower += min(charging, suggestion.BatteryCharge)
-		}
 	}
 
 	return sitePower

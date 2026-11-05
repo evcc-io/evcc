@@ -271,9 +271,9 @@ func TestOptimizerPrioritySoc(t *testing.T) {
 		{"stop while discharging", true, actionStop, sitePowerResult{state: siteState{battery: types.BatteryState{Power: 500}}, power: 500}, 500, 0},
 		// prioritySoc applies to loadpoints the optimizer does not control
 		{"uncontrolled below prioritySoc", false, actionStop, below, 100, 0},
-		// a charge leaves the battery its planned charge, the vehicle gets the remainder
+		// a charge next to planned battery charging gives the battery priority, the vehicle gets the remainder
 		{"charge with planned battery charge", true, actionCharge, above, 0, 1000},
-		{"charge with partial planned battery charge", true, actionCharge, above, -600, 400},
+		{"charge with partial planned battery charge", true, actionCharge, above, 0, 400},
 		{"charge below prioritySoc with planned battery charge", true, actionCharge, below, 0, 1000},
 		{"charge with planned battery charge below threshold", true, actionCharge, above, -1000, suggestionThreshold},
 	} {
