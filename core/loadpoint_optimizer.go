@@ -176,7 +176,7 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion) (bool, error) {
 	scaleUp := s.Charge > grid.CurrentToPower(lp.effectiveMaxCurrent(), lp.ActivePhases()) &&
 		s.Charge >= grid.CurrentToPower(lp.effectiveMinCurrent(), 3)
 	if s.Action == actionCharge && (full || scaleUp) {
-		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), full power", s.Charge)
+		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), max current", s.Charge)
 		return true, lp.fastCharging()
 	}
 
