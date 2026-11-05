@@ -14,8 +14,8 @@ import (
 type WiCAN struct {
 	*embed
 	helper *request.Helper
-	host    string
-	dataG func() (WiCANResponse, error)
+	host   string
+	dataG  func() (WiCANResponse, error)
 }
 
 type WiCANResponse struct {
@@ -34,9 +34,9 @@ func init() {
 // NewWiCANFromConfig creates a new vehicle
 func NewWiCANFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
-		embed         `mapstructure:",squash"`
-		Host		  string
-		Cache		  time.Duration
+		embed `mapstructure:",squash"`
+		Host  string
+		Cache time.Duration
 	}{
 		Cache: interval,
 	}
@@ -80,12 +80,12 @@ func (v *WiCAN) Soc() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	
+
 	// use "display SoC", if value exists
 	if res.SocD != nil {
 		return *res.SocD, err
 	}
-	
+
 	// otherwise use real SoC
 	if res.Soc != nil {
 		return *res.Soc, err
@@ -97,7 +97,7 @@ func (v *WiCAN) Soc() (float64, error) {
 // Range implements the api.VehicleRange interface
 func (v *WiCAN) Range() (int64, error) {
 	res, err := v.dataG()
-	
+
 	if err != nil {
 		return 0, err
 	}
@@ -146,7 +146,7 @@ func (v *WiCAN) Status() (api.ChargeStatus, error) {
 // Climater implements the  api.VehicleClimater interface
 func (v *WiCAN) Climater() (bool, error) {
 	res, err := v.dataG()
-	
+
 	if err != nil {
 		return false, err
 	}
