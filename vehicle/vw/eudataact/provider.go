@@ -30,7 +30,7 @@ const (
 // timestamp plus portalInterval and a latency margin), so the map is updated as
 // soon as the portal delivers a new dataset.
 type Provider struct {
-	statusG func() ([]point, error)
+	statusG   func() ([]point, error)
 	socKeys   []string
 	limitKeys []string
 }
