@@ -207,7 +207,7 @@ func TestOptimizerBatteryFed(t *testing.T) {
 	lp, charger, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
 	lp.offeredCurrent = maxA
 
-	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 1380, Battery: 1000})
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 1380, BatteryDischarge: 1000})
 
 	// grid balanced, battery discharging into the site
 	charger.EXPECT().MaxCurrent(int64(minA))
@@ -260,22 +260,28 @@ func TestOptimizerPrioritySoc(t *testing.T) {
 		action    string
 		res       sitePowerResult
 		expect    float64
+		batCharge float64 // planned home battery charge
 	}{
 		// the report: above prioritySoc the vehicle took the battery's charge power against the stop
-		{"stop above prioritySoc", true, actionStop, above, 0},
-		{"stop below prioritySoc", true, actionStop, below, 0},
-		{"charge above prioritySoc", true, actionCharge, above, -1000},
-		{"charge below prioritySoc", true, actionCharge, below, -1000},
+		{"stop above prioritySoc", true, actionStop, above, 0, 0},
+		{"stop below prioritySoc", true, actionStop, below, 0, 0},
+		{"charge above prioritySoc", true, actionCharge, above, -1000, 0},
+		{"charge below prioritySoc", true, actionCharge, below, -1000, 0},
 		// a discharging battery is not hidden by a stop
-		{"stop while discharging", true, actionStop, sitePowerResult{state: siteState{battery: types.BatteryState{Power: 500}}, power: 500}, 500},
+		{"stop while discharging", true, actionStop, sitePowerResult{state: siteState{battery: types.BatteryState{Power: 500}}, power: 500}, 500, 0},
 		// prioritySoc applies to loadpoints the optimizer does not control
-		{"uncontrolled below prioritySoc", false, actionStop, below, 100},
+		{"uncontrolled below prioritySoc", false, actionStop, below, 100, 0},
+		// a charge next to planned battery charging gives the battery priority, the vehicle gets the remainder
+		{"charge with planned battery charge", true, actionCharge, above, 0, 1000},
+		{"charge with partial planned battery charge", true, actionCharge, above, 0, 400},
+		{"charge below prioritySoc with planned battery charge", true, actionCharge, below, 0, 1000},
+		{"charge with planned battery charge below threshold", true, actionCharge, above, -1000, suggestionThreshold},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			lp := NewLoadpoint(util.NewLogger("foo"), nil)
 			lp.site = &mockSite{automatic: tc.automatic}
 			lp.vehicle = modelledVehicle(gomock.NewController(t))
-			lp.setSuggestion(&types.Suggestion{Action: tc.action})
+			lp.setSuggestion(&types.Suggestion{Action: tc.action, BatteryCharge: tc.batCharge})
 
 			site := &Site{log: util.NewLogger("foo")}
 			assert.Equal(t, tc.expect, site.loadpointSitePower(lp, tc.res))
@@ -292,11 +298,11 @@ func TestOptimizerFlexibility(t *testing.T) {
 		s    types.Suggestion
 		want float64
 	}{
-		{types.Suggestion{Action: actionCharge, Charge: 3680, Grid: 1000}, 0},    // full power
-		{types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, 0},    // grid-fed setpoint
-		{types.Suggestion{Action: actionCharge, Charge: 2300}, 2700},             // surplus regime, pv loop yields
-		{types.Suggestion{Action: actionCharge, Charge: 2300, Battery: 1000}, 0}, // battery-fed setpoint
-		{types.Suggestion{Action: actionStop}, 2700},                             // stop, pv loop yields
+		{types.Suggestion{Action: actionCharge, Charge: 3680, Grid: 1000}, 0},             // full power
+		{types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, 0},             // grid-fed setpoint
+		{types.Suggestion{Action: actionCharge, Charge: 2300}, 2700},                      // surplus regime, pv loop yields
+		{types.Suggestion{Action: actionCharge, Charge: 2300, BatteryDischarge: 1000}, 0}, // battery-fed setpoint
+		{types.Suggestion{Action: actionStop}, 2700},                                      // stop, pv loop yields
 	} {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
 		lp.mode = api.ModeSmart
