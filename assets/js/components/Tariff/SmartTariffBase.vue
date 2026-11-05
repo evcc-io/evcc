@@ -360,10 +360,9 @@ export default defineComponent({
 		slotSelected(index: number) {
 			const value = this.chartSlots[index]?.value;
 			if (value !== undefined) {
-				// 3 decimal precision
-				const valueRounded = Math.ceil(value * 1000) / 1000;
-				this.selectedLimit = valueRounded;
-				this.saveLimit(valueRounded);
+				// keep exact slot price, rounding up would activate more expensive slots
+				this.selectedLimit = value;
+				this.saveLimit(value);
 			}
 		},
 		changeLimit($event: Event) {
