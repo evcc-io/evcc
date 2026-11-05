@@ -121,8 +121,7 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 func (wb *OpenWB20) resetRfidLocked() error {
 	if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err != nil {
 		wb.rfidResetPending = true
-		err = fmt.Errorf("reset RFID: %w", err)
-		return err
+		return fmt.Errorf("reset RFID: %w", err)
 	}
 
 	wb.rfidResetPending = false
@@ -142,15 +141,14 @@ func (wb *OpenWB20) handleRfidReset() {
 func (wb *OpenWB20) handleRfidResetLocked() {
 	if wb.laststatus != api.StatusA {
 		// Reset RFID on disconnect
-		err := wb.resetRfidLocked()
-		if err != nil {
-			wb.log.WARN.Printf("Failed to reset RFID: %v", err)
+		if err := wb.resetRfidLocked(); err != nil {
+			wb.log.WARN.Printf("failed to reset RFID: %v", err)
 		}
 		return
 	}
 	newID, err := wb.identifyLocked()
 	if err != nil {
-		wb.log.WARN.Printf("RFID read was not successful: %v", err)
+		wb.log.WARN.Printf("reading RFID was not successful: %v", err)
 		return
 	}
 	if newID == nil {
@@ -164,9 +162,8 @@ func (wb *OpenWB20) handleRfidResetLocked() {
 		return
 	}
 	if !wb.lastidtime.IsZero() && time.Since(wb.lastidtime) > 2*time.Minute {
-		err := wb.resetRfidLocked()
-		if err != nil {
-			wb.log.WARN.Printf("Failed to reset RFID: %v", err)
+		if err := wb.resetRfidLocked(); err != nil {
+			wb.log.WARN.Printf("failed to reset RFID: %v", err)
 		}
 		return
 	}
