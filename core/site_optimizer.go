@@ -451,7 +451,6 @@ type demandDetail struct {
 	Values []float32  `json:"values"`
 }
 
-// optimizerBattery pairs a battery request entry with its device detail
 // endOfHorizonValue is the Wh value of energy left in storage at the end of the horizon.
 // Storage that can export is floored at the export price: charging surplus only
 // stores eta Wh per Wh, so below pE/eta exporting beats storing.
@@ -463,6 +462,7 @@ func endOfHorizonValue(pN, pE []float32, eta float32, canExport bool) float32 {
 	return pa
 }
 
+// optimizerBattery pairs a battery request entry with its device detail
 type optimizerBattery struct {
 	cfg    optimizer.BatteryConfig
 	detail batteryDetail
