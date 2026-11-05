@@ -194,9 +194,7 @@ func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
 		return api.StatusB, err
 	}
 	if wb.identifyEnabled {
-		wb.rfidMu.Lock()
-		defer wb.rfidMu.Unlock()
-		wb.handleRfidResetLocked()
+		wb.handleRfidReset()
 	}
 	wb.laststatus = api.StatusA
 	return api.StatusA, nil
