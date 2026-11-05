@@ -35,7 +35,7 @@ params:
       de: Nummer des Eingangs für das W3-Signal (Keine Netzeinspeisung, 0%), 1 bis 3 (SW1 = 1)
   - name: s1input
     type: int
-    example: 2
+    default: 2
     description:
       en: S1 input
       de: S1-Eingang
@@ -44,7 +44,7 @@ params:
       de: Nummer des Eingangs für das S1-Signal (Reduzierung der Einspeiseleistung auf 60%), 1 bis 3 (SW1 = 1)
   - name: s2input
     type: int
-    example: 3
+    default: 3
     description:
       en: S2 input
       de: S2-Eingang
@@ -81,7 +81,7 @@ render: |
     password: {{ .password }}
   {{- end }}
   cache: 1s # inputs share one /status response per cycle
-  jq: .inputs[{{ sub (int .input) 1 }}].input == 1
+  jq: .inputs[{{ sub (int .input) 1 }}].input | if . == 1 then true elif . == 0 then false else error("invalid input state") end
   {{- end }}
   type: fnn
   productionnominalmax: {{ .productionnominalmax }}
