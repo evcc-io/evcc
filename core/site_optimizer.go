@@ -451,6 +451,16 @@ type demandDetail struct {
 	Values []float32  `json:"values"`
 }
 
+// endOfHorizonValue is the Wh value of energy left in storage at the end of the horizon, floored
+// at pE/eta for storage that can export: charging surplus only stores eta Wh per Wh
+func endOfHorizonValue(pN, pE []float32, eta float32, canExport bool) float32 {
+	pa := lo.Min(pN) * eta * 0.99
+	if canExport {
+		pa = max(pa, lo.Min(pE)/eta*1.01)
+	}
+	return pa
+}
+
 // optimizerBattery pairs a battery request entry with its device detail
 type optimizerBattery struct {
 	cfg    optimizer.BatteryConfig
@@ -464,7 +474,7 @@ func optimizerURI() string {
 // optimizerAuth adds the sponsor token for the hosted optimizer only, a custom OPTIMIZER_URI must not receive it
 func optimizerAuth(req *http.Request) {
 	if optimizerURI() == OPTIMIZER_URI && sponsor.IsAuthorizedForApi() {
-		req.Header.Set("Authorization", "Bearer "+sponsor.Token)
+		req.Header.Set("Authorization", "Bearer "+sponsor.Token())
 	}
 }
 
@@ -547,13 +557,18 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	solarTariff := site.GetTariff(api.TariffUsageSolar)
 	solar := currentRates(solarTariff)
 
+	// a configured but failing forecast is not a site without pv: a plan without sun
+	// holds the battery for days. failing keeps the last plan until it expires.
+	if solarTariff != nil && len(solar) == 0 {
+		return req, details, errors.New("solar forecast unavailable")
+	}
+
 	grid := currentRates(site.GetTariff(api.TariffUsageGrid))
 	planner := currentRates(site.GetTariff(api.TariffUsagePlanner))
 	feedIn := feedInRates(site.GetTariff(api.TariffUsageFeedIn), grid)
 
 	minLen := lo.Min([]int{len(grid), len(feedIn)})
-	// exclude empty solar forecast from minLen
-	if solarTariff != nil && len(solar) > 0 {
+	if solarTariff != nil {
 		minLen = min(minLen, len(solar))
 	}
 
@@ -598,9 +613,9 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	// heating loadpoints add their forecast demand on top of the measured base load
 	heaters := site.addHeatingDemand(gt, minLen)
 
-	// allow empty solar forecast
+	// sites without solar forecast plan without pv
 	ft := lo.RepeatBy(minLen, func(i int) float32 { return float32(0) })
-	if solarTariff != nil && len(solar) > 0 {
+	if solarTariff != nil {
 		solarEnergy, err := solarRatesToEnergy(solar)
 		if err != nil {
 			return req, details, err
@@ -624,10 +639,6 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 			PE: scaleAndPrune(feedIn, 0.001, minLen),
 		},
 	}
-
-	// end of horizon Wh value, floored at the export price: charging surplus only
-	// stores eta Wh per Wh, so below pE/eta exporting beats storing
-	pa := max(lo.Min(req.TimeSeries.PN)*eta*0.99, lo.Min(req.TimeSeries.PE)/eta*1.01)
 
 	// individual profiles summarized into Gt, for the debug view
 	details = requestDetails{
@@ -710,7 +721,8 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	}
 
 	for _, b := range batteries {
-		b.cfg.PA = pa
+		// vehicles cannot export
+		b.cfg.PA = endOfHorizonValue(req.TimeSeries.PN, req.TimeSeries.PE, eta, b.detail.loadpoint == nil)
 		req.Batteries = append(req.Batteries, b.cfg)
 		details.BatteryDetails = append(details.BatteryDetails, b.detail)
 	}
@@ -932,7 +944,8 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 		}
 
 		if detail.loadpoint != nil {
-			suggestion.Battery = batteryDischarge
+			suggestion.BatteryDischarge = batteryDischarge
+			suggestion.BatteryCharge = batteryCharge
 		}
 
 		// uncontrollable devices can't act on a suggestion

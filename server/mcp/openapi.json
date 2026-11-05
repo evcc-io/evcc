@@ -3709,8 +3709,12 @@
             "description": "Planned site grid flow of the slot in W, positive means import.",
             "type": "number"
           },
-          "battery": {
+          "batteryDischarge": {
             "description": "Planned home battery discharge feeding the site in W.",
+            "type": "number"
+          },
+          "batteryCharge": {
+            "description": "Planned home battery charge in W.",
             "type": "number"
           },
           "actionable": {
@@ -5489,6 +5493,10 @@
           },
           "capacity": {
             "description": "Usable battery capacity in kWh.",
+            "type": "number"
+          },
+          "phases": {
+            "description": "Maximum number of phases supported by the vehicle. Zero means unknown.",
             "type": "number"
           },
           "icon": {
