@@ -670,8 +670,13 @@ func TestOptimizerPlanSlotNotCritical(t *testing.T) {
 // TestOptimizerPhaseGap verifies that a suggestion between 1p maximum and 3p minimum power
 // charges on 1p below the suggestion instead of toggling phases or exceeding it on 3p
 func TestOptimizerPhaseGap(t *testing.T) {
-	for _, phases := range []int{1, 3} {
-		t.Run(fmt.Sprintf("%dp", phases), func(t *testing.T) {
+	for _, tc := range []struct {
+		phases int
+	}{
+		{1},
+		{3},
+	} {
+		t.Run(fmt.Sprintf("%dp", tc.phases), func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			clck := clock.NewMock()
 
@@ -679,7 +684,7 @@ func TestOptimizerPhaseGap(t *testing.T) {
 			lp.clock = clck
 			lp.minCurrent = minA
 			lp.maxCurrent = maxA
-			lp.phases = phases
+			lp.phases = tc.phases
 			lp.status = api.StatusC
 			lp.enabled = true
 			lp.wakeUpTimer = NewTimer()
@@ -696,7 +701,7 @@ func TestOptimizerPhaseGap(t *testing.T) {
 			plainCharger.EXPECT().MaxCurrent(gomock.Any()).Return(nil).AnyTimes()
 
 			// scales down once, never back up
-			if phases == 3 {
+			if tc.phases == 3 {
 				phaseCharger.EXPECT().Phases1p3p(1).Return(nil)
 			}
 
