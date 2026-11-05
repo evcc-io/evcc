@@ -778,6 +778,27 @@ func TestOptimizerChargingStrategy(t *testing.T) {
 	assert.Equal(t, "attenuate_grid_peaks", site.GetOptimizerChargingStrategy())
 }
 
+func TestEndOfHorizonValue(t *testing.T) {
+	const eta = 0.9
+
+	for _, tc := range []struct {
+		name      string
+		pN, pE    float32
+		canExport bool
+		want      float32
+	}{
+		{"battery, export below import", 0.3, 0.08, true, 0.3 * eta * 0.99},
+		{"battery, export above import", 0.3, 0.33, true, 0.33 / eta * 1.01},
+		{"vehicle, export below import", 0.3, 0.08, false, 0.3 * eta * 0.99},
+		{"vehicle, export above import", 0.3, 0.33, false, 0.3 * eta * 0.99},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := endOfHorizonValue([]float32{tc.pN, 2 * tc.pN}, []float32{tc.pE, 2 * tc.pE}, eta, tc.canExport)
+			assert.InDelta(t, tc.want, got, 1e-6)
+		})
+	}
+}
+
 func TestGridExportLimit(t *testing.T) {
 	site := &Site{log: util.NewLogger("foo")}
 
