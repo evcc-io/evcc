@@ -169,9 +169,13 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion) (bool, error) {
 	lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	// full power, or more than the active phases can deliver: fastCharging scales
-	// up and owns the phase timer, resetting it here would restart the delay every cycle
+	// up and owns the phase timer, resetting it here would restart the delay every cycle.
+	// Inside the 1p/3p gap neither phase count matches the suggestion: stay below it on 1p
+	// instead of scaling up to a 3p minimum that draws unplanned power, e.g. from grid.
 	full := s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold
-	if s.Action == actionCharge && (full || s.Charge > grid.CurrentToPower(lp.effectiveMaxCurrent(), lp.ActivePhases())) {
+	scaleUp := s.Charge > grid.CurrentToPower(lp.effectiveMaxCurrent(), lp.ActivePhases()) &&
+		s.Charge >= grid.CurrentToPower(lp.effectiveMinCurrent(), 3)
+	if s.Action == actionCharge && (full || scaleUp) {
 		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), full power", s.Charge)
 		return true, lp.fastCharging()
 	}
@@ -182,7 +186,7 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion) (bool, error) {
 		// a limited setpoint, e.g. a minimum demand or a grid import limit
 		if current := grid.PowerToCurrent(s.Charge, lp.ActivePhases()); current >= lp.effectiveMinCurrent() {
 			lp.log.DEBUG.Printf("optimizer: charge (%.0fW)", s.Charge)
-			return true, lp.setLimit(current)
+			return true, lp.setLimit(min(current, lp.effectiveMaxCurrent()))
 		}
 
 		// below what the active phases can deliver, minCharging scales down instead
