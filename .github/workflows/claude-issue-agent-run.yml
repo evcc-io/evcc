@@ -221,7 +221,7 @@ jobs:
                  code path in question, e.g. the register or setting the issue is
                  about. Skip mass refactors, renames and chores, bots, the issue
                  author and anyone already mentioned in the thread. Add them to
-                 the same single `cc` line, at most three logins.
+                 the same single `cc` line, at most three of them.
                Format the comment as valid GitHub-flavored Markdown. Use GitHub's
                autolink forms: `#<number>` for issues/PRs in this repo,
                `owner/repo#<number>` across repos, a bare 7–40 char SHA for commits in
