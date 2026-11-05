@@ -80,6 +80,7 @@ render: |
     user: {{ .user }}
     password: {{ .password }}
   {{- end }}
+  cache: 1s # inputs share one /status response per cycle
   jq: .inputs[{{ sub (int .input) 1 }}].input == 1
   {{- end }}
   type: fnn
