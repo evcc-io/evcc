@@ -21,7 +21,7 @@ type WiCAN struct {
 type WiCANResponse struct {
 	Soc      *float64 `json:"SOC"`
 	SocD     *float64 `json:"SOC_D"`
-	Range    *int64   `json:"RANGE"`
+	Range    *float64 `json:"RANGE"`
 	Odometer *float64 `json:"ODOMETER"`
 	Charging *int64   `json:"CHARGING"`
 	Climater *int64   `json:"CLIMATER"`
@@ -106,7 +106,7 @@ func (v *WiCAN) Range() (int64, error) {
 		return 0, api.ErrNotAvailable
 	}
 
-	return *res.Range, nil
+	return int64(*res.Range), nil
 }
 
 // Odometer implements the api.VehicleOdometer interface
@@ -140,7 +140,7 @@ func (v *WiCAN) Status() (api.ChargeStatus, error) {
 		return api.StatusC, nil // charging
 	}
 
-	return api.StatusB, nil // connected, not charging
+	return api.StatusNone, nil // unknown (A or B)
 }
 
 // Climater implements the  api.VehicleClimater interface
