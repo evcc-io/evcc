@@ -106,9 +106,6 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 		conn:            conn,
 		curr:            6 * 100,
 		base:            (connector - 1) * 100,
-		laststatus:      api.StatusNone,
-		lastidentify:    nil,
-		lastidtime:      time.Time{},
 		identifyEnabled: identify,
 	}
 
