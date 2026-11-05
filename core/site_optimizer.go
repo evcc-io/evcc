@@ -451,9 +451,8 @@ type demandDetail struct {
 	Values []float32  `json:"values"`
 }
 
-// endOfHorizonValue is the Wh value of energy left in storage at the end of the horizon.
-// Storage that can export is floored at the export price: charging surplus only
-// stores eta Wh per Wh, so below pE/eta exporting beats storing.
+// endOfHorizonValue is the Wh value of energy left in storage at the end of the horizon, floored
+// at pE/eta for storage that can export: charging surplus only stores eta Wh per Wh
 func endOfHorizonValue(pN, pE []float32, eta float32, canExport bool) float32 {
 	pa := lo.Min(pN) * eta * 0.99
 	if canExport {
