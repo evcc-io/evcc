@@ -149,8 +149,7 @@ func (lp *Loadpoint) EffectivePlan(planTime time.Time, requiredDuration time.Dur
 	return lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous), 0, false
 }
 
-// fullSocPlanContinues continues an active 100% plan as long as the vehicle is connected,
-// the vehicle tapers and stops by itself
+// fullSocPlanContinues continues an active 100% plan as long as the vehicle is connected
 func (lp *Loadpoint) fullSocPlanContinues(goal float64, isSocBased bool) bool {
 	return lp.planActive && isSocBased && goal == 100
 }
