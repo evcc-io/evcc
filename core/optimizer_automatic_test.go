@@ -753,6 +753,31 @@ func TestOptimizerPlanSlotNotCritical(t *testing.T) {
 	assert.False(t, lp.planDeadlineCritical())
 }
 
+// TestOptimizerPlanFullSocContinues covers a 100% plan with the goal reached (#35689):
+// like the planner, the active plan keeps charging while the vehicle tapers by itself
+func TestOptimizerPlanFullSocContinues(t *testing.T) {
+	lp := &Loadpoint{
+		log:        util.NewLogger("foo"),
+		clock:      clock.NewMock(),
+		vehicle:    modelledVehicle(gomock.NewController(t)),
+		site:       &mockSite{automatic: true},
+		status:     api.StatusC,
+		phases:     1,
+		minCurrent: minA,
+		maxCurrent: maxA,
+		vehicleSoc: 100,
+	}
+
+	now := lp.clock.Now()
+	lp.planLocked = PlanLock{Time: now.Add(time.Hour), Soc: 100, Id: 1}
+
+	assert.False(t, lp.planDeadlineCritical(), "inactive plan")
+
+	lp.planActive = true
+	lp.clock.(*clock.Mock).Add(time.Hour)
+	assert.True(t, lp.planDeadlineCritical(), "active plan")
+}
+
 // TestOptimizerPhaseGap verifies that a suggestion between 1p maximum and 3p minimum power
 // charges on 1p below the suggestion instead of toggling phases or exceeding it on 3p
 func TestOptimizerPhaseGap(t *testing.T) {
