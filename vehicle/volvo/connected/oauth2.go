@@ -34,8 +34,8 @@ func OAuthConfig(id, secret, redirectUri string) *oauth2.Config {
 		ClientSecret: secret,
 		RedirectURL:  redirectUri,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:   "https://volvoid.eu.volvocars.com/as/authorization.oauth2",
-			TokenURL:  "https://volvoid.eu.volvocars.com/as/token.oauth2",
+			AuthURL:   "https://auth.volvocars.com/realms/volvocars/protocol/openid-connect/auth",
+			TokenURL:  "https://auth.volvocars.com/realms/volvocars/protocol/openid-connect/token",
 			AuthStyle: oauth2.AuthStyleInHeader,
 		},
 		Scopes: []string{

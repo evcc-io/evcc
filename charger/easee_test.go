@@ -935,6 +935,11 @@ func TestTotalEnergy_PlugInSequence(t *testing.T) {
 	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start.Add(48*time.Second), easee.Integer, "2"))
 	assert.Equal(t, 42, e.sessionStart.ID)
 
+	// previous session's energy must not leak into the new session
+	charged, err := e.ChargedEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 0.0, charged)
+
 	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, time.Now().Add(time.Second), easee.Double, "1"))
 	total, err = e.TotalEnergy()
 	require.NoError(t, err)
