@@ -5,8 +5,8 @@ products:
       generic: i3
 requirements:
   description:
-    de: Die Schaltkontakte der Steuerbox werden an die Eingänge SW1 bis SW3 angeschlossen. Mit drei Eingängen ist standardmäßig nur die Einspeisebegrenzung (W3, S1, S2) belegt. Für das Dimmen der steuerbaren Verbrauchseinrichtungen (W4) muss ein Eingang umgewidmet werden. Bei Betrieb mit Netzspannung muss der Anschluss durch eine Elektrofachkraft erfolgen.
-    en: Connect the relay contacts of the control box to the inputs SW1 to SW3. With three inputs only the feed-in limitation (W3, S1, S2) is mapped by default. Dimming of controllable loads (W4) requires reassigning one of the inputs. When operated with mains voltage, installation must be done by a qualified electrician.
+    de: Die Schaltkontakte der Steuerbox werden an die Eingänge SW1 bis SW3 angeschlossen. Mit drei Eingängen ist standardmäßig nur die Einspeisebegrenzung (W3, S1, S2) belegt. Für das Dimmen der steuerbaren Verbrauchseinrichtungen (W4) muss ein Eingang umgewidmet werden.
+    en: Connect the relay contacts of the control box to the inputs SW1 to SW3. With three inputs only the feed-in limitation (W3, S1, S2) is mapped by default. Dimming of controllable loads (W4) requires reassigning one of the inputs.
 params:
   - name: host
   - name: user
