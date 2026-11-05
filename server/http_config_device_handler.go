@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"maps"
 	"net/http"
+	"net/url"
 	"reflect"
 	"slices"
 	"strconv"
@@ -324,8 +325,11 @@ func newDevice[T any](ctx context.Context, class templates.Class, req configReq,
 	}
 
 	instance, err := newFromConf(ctx, typ, other)
-	if err != nil && !force {
-		return nil, err
+	if err != nil {
+		if !force {
+			return nil, err
+		}
+		logDeviceError("force create", class, 0, req, err)
 	}
 
 	conf, err := config.AddConfig(class, req.Serialise(), config.WithProperties(req.Properties))
@@ -410,6 +414,7 @@ func newDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 
 		if err != nil {
 			cancel()
+			logDeviceError("create", class, 0, req, err)
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -442,6 +447,7 @@ func updateDevice[T any](ctx context.Context, id int, class templates.Class, req
 		if !force || merged == nil {
 			return err
 		}
+		logDeviceError("force update", class, id, req, err)
 	}
 
 	configurable, ok := dev.(config.ConfigurableDevice[T])
@@ -513,6 +519,7 @@ func updateDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 
 		if err != nil {
 			cancel()
+			logDeviceError("update", class, id, req, err)
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -863,6 +870,42 @@ func testConfig[T any](ctx context.Context, id int, class templates.Class, req c
 	return instance, err
 }
 
+// logDeviceError logs a failed device action without masked values like passwords or tokens
+func logDeviceError(action string, class templates.Class, id int, req configReq, err error) {
+	device := class.String()
+	confs := []map[string]any{req.Other}
+	if id != 0 {
+		device += " " + config.NameForID(id)
+		// request contains masked placeholders, the stored config has the actual values
+		if other, err := deviceOther(class, id); err == nil {
+			confs = append(confs, other)
+		}
+	}
+
+	typ := req.Type
+	if tmpl, ok := req.Other[typeTemplate].(string); ok {
+		typ += ":" + tmpl
+	}
+
+	msg := err.Error()
+	for _, conf := range confs {
+		tmpl, err := templateForConfig(class, conf)
+		if err != nil {
+			continue
+		}
+		for k, v := range conf {
+			if _, p := tmpl.ParamByName(k); p.IsMasked() {
+				if s, ok := v.(string); ok && s != "" && s != masked {
+					msg = strings.ReplaceAll(msg, s, masked)
+					msg = strings.ReplaceAll(msg, url.QueryEscape(s), masked)
+				}
+			}
+		}
+	}
+
+	log.WARN.Printf("%s %s (%s): %s", action, device, typ, msg)
+}
+
 // testConfigHandler tests a configuration by class
 func testConfigHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -925,6 +968,7 @@ func testConfigHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 
 		if err != nil {
 			cancel()
+			logDeviceError("test", class, id, req, err)
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
