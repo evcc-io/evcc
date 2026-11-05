@@ -4,8 +4,10 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
+	"math"
 	"slices"
 	"sync"
+	"time"
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
@@ -202,4 +204,67 @@ func (site *Site) curtailPV(percent *int) error {
 	}
 
 	return errs
+}
+
+// optimizerOvershoot reports whether the last solve curtails pv at the grid export limit in the active slot
+func (site *Site) optimizerOvershoot(now time.Time) bool {
+	site.RLock()
+	last := site.lastOptimizerSolve
+	site.RUnlock()
+
+	if last == nil {
+		return false
+	}
+
+	slot := last.schedule.activeSlot(now)
+	hours := last.schedule.duration(slot).Hours()
+	if slot < 0 || slot >= len(last.res.GridExportOvershoot) || hours <= 0 {
+		return false
+	}
+
+	return float64(last.res.GridExportOvershoot[slot])/hours > suggestionThreshold
+}
+
+// optimizerCurtailPercent scales the curtail percent so that the export meets the limit. The percent
+// refers to the unknown nominal power: below the cap the scaled percent curtails too little, at the
+// cap pv power follows it, so the loop converges within a few cycles.
+func optimizerCurtailPercent(percent int, gridPower, pvPower, limit float64) int {
+	// gridPower is positive on import, export beyond the limit is excess
+	excess := -gridPower - limit
+	if pvPower <= 0 || math.Abs(excess) <= suggestionThreshold {
+		return percent
+	}
+
+	scaled := math.Round(float64(percent) * (pvPower - excess) / pvPower)
+	return int(max(0, min(100, scaled)))
+}
+
+// applyOptimizerCurtailment curtails pv to the static grid export limit while the optimizer plans
+// curtailment in the active slot, and releases it afterwards. HEMS curtailment takes precedence.
+func (site *Site) applyOptimizerCurtailment(gridPower, pvPower float64, now time.Time) {
+	if hems.Curtailed(site.hems) != nil {
+		site.optimizerCurtailed = false
+		return
+	}
+
+	limit := site.GetGridExportLimit()
+	active := site.Automatic() && site.gridMeter != nil && limit > 0 && site.optimizerOvershoot(now)
+	if !active && !site.optimizerCurtailed || len(site.curtailables()) == 0 {
+		return
+	}
+
+	percent := 100
+	if active {
+		if site.curtailPercent != nil {
+			percent = *site.curtailPercent
+		}
+		percent = optimizerCurtailPercent(percent, gridPower, pvPower, limit)
+	}
+
+	if err := site.curtailPV(&percent); err != nil {
+		site.log.ERROR.Println(err)
+		return
+	}
+
+	site.optimizerCurtailed = percent < 100
 }
