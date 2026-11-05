@@ -753,7 +753,7 @@ func TestOptimizerPlanSlotNotCritical(t *testing.T) {
 	assert.False(t, lp.planDeadlineCritical())
 }
 
-// TestOptimizerPlanFullSocContinues covers a 100% plan with the goal reached (#35689):
+// TestOptimizerPlanFullSocContinues covers a 100% plan with the goal reached:
 // like the planner, the active plan keeps charging while the vehicle tapers by itself
 func TestOptimizerPlanFullSocContinues(t *testing.T) {
 	lp := &Loadpoint{
