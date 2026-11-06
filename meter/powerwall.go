@@ -173,7 +173,7 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 		m.freqG = util.Cached(m.getFreq, cc.Cache)
 
 		if controlEnabled && strings.HasPrefix(strings.ToLower(cc.URI), "http://") {
-			log.INFO.Println("controlSecret is sent unencrypted over http; use https or a trusted network")
+			log.WARN.Println("controlSecret is sent unencrypted over http; use https or a trusted network")
 		}
 	}
 
