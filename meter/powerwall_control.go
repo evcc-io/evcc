@@ -71,6 +71,9 @@ func (m *PowerWall) setReserve(limit float64) error {
 	return nil
 }
 
+// reserve_hold has no idempotency key: if the response is lost, a retry may
+// resolve a newer SoC and raise the reserve. Accepted; eliminating this
+// requires server-side deduplication.
 func (m *PowerWall) holdReserve() error {
 	if err := m.postControl("/control/reserve_hold", map[string]any{}); err != nil {
 		return err
