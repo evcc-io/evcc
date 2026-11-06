@@ -8,6 +8,7 @@ import (
 	"math"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -127,8 +128,9 @@ type Site struct {
 	explainMu                sync.Mutex                  // serializes explain requests
 	explained                explainCache                // last explanation, guarded by explainMu
 
-	optimizerMu      sync.Mutex // guards optimizer runs
-	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
+	optimizerMu      sync.Mutex  // guards optimizer runs
+	optimizerUpdated time.Time   // last optimizer run, guarded by optimizerMu
+	optimizerRerun   atomic.Bool // forced trigger arrived during a run, re-run when done
 
 	solarScaleCached func() (float64, error) // util.Cached wrapper around querySolarScale
 }
@@ -1304,7 +1306,9 @@ func (site *Site) loadpointSitePower(lp updater, res sitePowerResult) float64 {
 		sitePower += res.priorityAdjustment
 	}
 
-	if suggestion != nil && suggestion.Action != actionCharge && res.state.battery.Power < 0 {
+	// a charge next to planned battery charging gives the battery priority, too: the PV loop
+	// would otherwise take the battery's charge power and invert the optimizer's PV split
+	if suggestion != nil && (suggestion.Action != actionCharge || suggestion.BatteryCharge > suggestionThreshold) && res.state.battery.Power < 0 {
 		sitePower -= res.state.battery.Power + res.state.excessDCPower
 	}
 

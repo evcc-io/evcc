@@ -183,7 +183,7 @@ Gated by `OptimizerAutomatic()`: `off` (advisory only), battery-only, or `full` 
 **Home battery** (`requiredBatteryMode`, `core/site_battery.go`), in priority order:
 
 - external mode (API) wins.
-- `Automatic()` and `unmodelledCharging(rate)`: a loadpoint the optimizer does not control is fast charging or on the smart cost limit. The suggestion did not account for that load, so force `hold`.
+- `Automatic()` and `unmodelledCharging(rate)`: a loadpoint the optimizer does not control is fast charging or on the smart cost limit, and the request does not contain that load: heaters, vehicles without capacity or session energy limit, plan or min soc charging. A vehicle the request models as storage on mode now or the smart cost limit is fixed demand (`fixedDemandModelled`) and does not count. The suggestion did not account for that load, so force `hold`, unless the suggestion is `charge`: grid charging cannot drain the battery into that load.
 - `Automatic()`: `batterySuggestionMode()` takes the first controllable battery's suggestion (`api.BatteryModeString(s.Action)`); an unknown action releases to `normal`; no suggestion releases to `normal` only if evcc had modified the mode (`batteryModeModified`), otherwise the mode is left untouched. This replaces the grid charge limit and discharge control. TODO: per-battery modes.
 - not automatic: legacy grid charge / discharge control / feed-in discharge rules.
 
@@ -192,8 +192,9 @@ Gated by `OptimizerAutomatic()`: `off` (advisory only), battery-only, or `full` 
 - `ModeSmart` strategy switch calls `optimizerCharging(s)` and skips the smart cost / feed-in price limits.
   - `surplusRegime` (charge below max power, no grid flow, no battery discharge): not handled, the PV loop tracks measured surplus instead of the forecast.
   - `stop` without always-charge: not handled, PV loop may still enable on measured surplus.
-  - `charge` at full power or above what the active phases deliver: `fastCharging()`.
-  - `charge` at a limited setpoint: `setLimit(PowerToCurrent(s.Charge))`, or `minCharging()` below min current.
+  - `charge` at full power, or above what the active phases deliver and at least 3p min power: `fastCharging()`.
+  - `charge` at a limited setpoint: `setLimit(PowerToCurrent(s.Charge))` capped at max current, or `minCharging()` below min current.
+    Inside the 1p/3p gap (above 1p max, below 3p min power) this charges on 1p below the suggestion, never above it.
   - `stop` with always-charge: `minCharging()`.
 - Planner is reduced to a backstop: `plannerActive = planDeadlineCritical()`.
 - Session `LimitEnergy` / `LimitSoc` do not stop charging while the optimizer is driving a plan goal above them.

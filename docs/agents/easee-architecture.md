@@ -128,7 +128,7 @@ Before a POST to a known 200-returning endpoint, increment the counter. When `Co
 
 ### Session Energy Zero-value Protection
 
-`sessionEnergy` is never set to `0` from a `ProductUpdate` — the API sends spurious zeros erratically. Session reset is driven by op-mode transition: when `CHARGER_OP_MODE` transitions from disconnected to awaiting-start, `sessionEnergy` resets to `0` with a fresh timestamp. The first op mode after startup is replayed state and does not reset, so replayed session energy survives a restart. `CHARGE_SESSION_START` and a zero `SESSION_ENERGY` arrive before the mode change, so the reset is skipped when the cached session started after the previous mode observation.
+`sessionEnergy` is never set to `0` from a `ProductUpdate` — the API sends spurious zeros erratically. Session reset is driven by op-mode transition: when `CHARGER_OP_MODE` transitions from disconnected to awaiting-start, `sessionEnergy` resets to `0` with a fresh timestamp. The first op mode after startup is replayed state and does not reset, so replayed session energy survives a restart. `CHARGE_SESSION_START` and a zero `SESSION_ENERGY` arrive before the mode change, so a cached session that started after the previous mode observation is kept. Session energy observed before that start is still reset, otherwise a value replayed on restart would leak into the new session.
 
 ### Logical Energy Meter
 
