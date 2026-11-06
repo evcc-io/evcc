@@ -319,11 +319,8 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) (*config.Config, error) {
 	typ, other, err := config.CustomDevice(req.Type, req.Other)
-	if err != nil {
-		if !force {
-			return nil, err
-		}
-		logDeviceError("force create", class, 0, req, err)
+	if err != nil && !force {
+		return nil, err
 	}
 
 	instance, err := newFromConf(ctx, typ, other)
