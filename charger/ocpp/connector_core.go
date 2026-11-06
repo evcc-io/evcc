@@ -125,14 +125,12 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 					}
 
 					sample.Value = strings.TrimSpace(sample.Value)
-					key := getSampleKey(sample)
 
-					// a lifetime register never drops to zero, some chargers (Huawei) report 0 outside transactions
-					if key == types.MeasurandEnergyActiveImportRegister && conn.isZeroEnergyReset(sample) {
-						continue
+					// a lifetime register is never zero, some chargers (Huawei) report 0 outside transactions
+					if !isZeroEnergy(sample) {
+						conn.measurements[getSampleKey(sample)] = sample
 					}
 
-					conn.measurements[key] = sample
 					conn.meterTimestamp = meterValue.Timestamp.Time
 					// freshness is measured locally: charger sample timestamps may lag (Mennekes: 6-7s)
 					conn.meterUpdated = conn.clock.Now()
@@ -226,20 +224,14 @@ func (conn *Connector) assumeMeterStopped() {
 	}
 }
 
-// isZeroEnergyReset returns true if sample is zero while a non-zero energy register is known.
-func (conn *Connector) isZeroEnergyReset(sample types.SampledValue) bool {
+// isZeroEnergy returns true if sample is a total or phase energy register reading of zero.
+func isZeroEnergy(sample types.SampledValue) bool {
+	if sample.Measurand != types.MeasurandEnergyActiveImportRegister {
+		return false
+	}
+
 	f, err := strconv.ParseFloat(sample.Value, 64)
-	if err != nil || f != 0 {
-		return false
-	}
-
-	m, ok := conn.measurements[types.MeasurandEnergyActiveImportRegister]
-	if !ok {
-		return false
-	}
-
-	prev, err := strconv.ParseFloat(m.Value, 64)
-	return err == nil && prev > 0
+	return err == nil && f == 0
 }
 
 func (conn *Connector) updateEnergyRegister(wh float64) {
