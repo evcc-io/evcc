@@ -38,7 +38,7 @@ func init() {
 		}
 
 		log := util.NewLogger("volvo").Redact(cc.ClientID)
-		oc := OAuthConfig(log, cc.ClientID, cc.ClientSecret, cc.RedirectUri)
+		oc := OAuthConfig(cc.ClientID, cc.ClientSecret, cc.RedirectUri)
 
 		return NewOAuth(util.WithLogger(context.Background(), log), oc, "")
 	})
@@ -50,11 +50,11 @@ func isLegacyClient(id string) bool {
 }
 
 // OAuthConfig returns the OAuth2 config, selecting the legacy or current endpoint by client id
-func OAuthConfig(log *util.Logger, id, secret, redirectUri string) *oauth2.Config {
+func OAuthConfig(id, secret, redirectUri string) *oauth2.Config {
 	ep := endpoint
 	if isLegacyClient(id) {
 		ep = legacyEndpoint
-		log.WARN.Println("legacy Volvo developer application detected, it will stop working on 31 January 2027. Create and publish a new application at https://developer.volvocars.com/account/ and update client id, client secret and VCC API key")
+		util.NewLogger("volvo").WARN.Println("legacy Volvo developer application detected, it will stop working on 31 January 2027. Create and publish a new application at https://developer.volvocars.com/account/ and update client id, client secret and VCC API key")
 	}
 
 	return &oauth2.Config{
