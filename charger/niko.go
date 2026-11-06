@@ -1,6 +1,8 @@
 package charger
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/niko"
 	"github.com/evcc-io/evcc/util"
@@ -9,7 +11,7 @@ import (
 // Niko Home Control smart plug via Hobby API
 
 func init() {
-	registry.Add("niko", NewNikoFromConfig)
+	registry.AddCtx("niko", NewNikoFromConfig)
 }
 
 // Niko charger implementation
@@ -19,7 +21,7 @@ type Niko struct {
 }
 
 // NewNikoFromConfig creates a Niko Home Control smart plug charger from generic config
-func NewNikoFromConfig(other map[string]any) (api.Charger, error) {
+func NewNikoFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
 		Host         string
@@ -35,7 +37,7 @@ func NewNikoFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	conn, err := niko.NewConnection(cc.Host, cc.User, cc.Token, cc.Device)
+	conn, err := niko.NewConnection(ctx, cc.Host, cc.User, cc.Token, cc.Device)
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package niko
 
 import (
 	"cmp"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,7 +16,7 @@ import (
 )
 
 // the controller disables instant usage reporting 30s after it has been requested
-const instantUsageRefresh = 20 * time.Second
+const refreshInterval = 20 * time.Second
 
 // Connection is a Niko Home Control smart plug connected via the Hobby API
 type Connection struct {
@@ -23,10 +24,12 @@ type Connection struct {
 	client *mqtt.Client
 	uuid   string
 
+	enableMu sync.Mutex
+
 	mu      sync.Mutex
 	status  bool
 	power   float64
-	instant time.Time
+	instant time.Time // last refresh
 
 	once   sync.Once
 	listed chan struct{}
@@ -39,7 +42,7 @@ func Broker(host string) string {
 }
 
 // NewConnection creates a Niko Home Control smart plug connection
-func NewConnection(host, user, token, uuid string) (*Connection, error) {
+func NewConnection(ctx context.Context, host, user, token, uuid string) (*Connection, error) {
 	switch {
 	case token == "":
 		return nil, api.ErrMissingToken
@@ -73,6 +76,8 @@ func NewConnection(host, user, token, uuid string) (*Connection, error) {
 
 	select {
 	case <-c.listed:
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	case <-time.After(request.Timeout):
 		return nil, fmt.Errorf("device list: %w", api.ErrTimeout)
 	}
@@ -81,7 +86,7 @@ func NewConnection(host, user, token, uuid string) (*Connection, error) {
 		return nil, c.err
 	}
 
-	c.requestInstantUsage()
+	c.refresh()
 
 	return c, nil
 }
@@ -129,16 +134,19 @@ func (c *Connection) update(msg Message) bool {
 	return found
 }
 
-func (c *Connection) requestInstantUsage() {
+// refresh re-enables instant usage reporting and re-lists the devices, the latter
+// restores the cached state after missed events, e.g. on reconnect
+func (c *Connection) refresh() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if time.Since(c.instant) < instantUsageRefresh {
+	if time.Since(c.instant) < refreshInterval {
 		return
 	}
 	c.instant = time.Now()
 
 	c.client.Publish(TopicCmd, false, ControlRequest(c.uuid, "ReportInstantUsage", "True"))
+	c.client.Publish(TopicCmd, false, ListRequest())
 }
 
 // Enabled returns the relay state
@@ -150,6 +158,9 @@ func (c *Connection) Enabled() (bool, error) {
 
 // Enable switches the relay and waits for the state change to be reported
 func (c *Connection) Enable(enable bool) error {
+	c.enableMu.Lock()
+	defer c.enableMu.Unlock()
+
 	onoff := map[bool]string{true: "On", false: "Off"}
 	c.client.Publish(TopicCmd, false, ControlRequest(c.uuid, "Status", onoff[enable]))
 
@@ -171,7 +182,7 @@ var _ api.Meter = (*Connection)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Connection) CurrentPower() (float64, error) {
-	c.requestInstantUsage()
+	c.refresh()
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
