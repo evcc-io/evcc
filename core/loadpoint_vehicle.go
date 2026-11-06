@@ -251,6 +251,22 @@ func (lp *Loadpoint) wakeUpVehicle() {
 	}
 }
 
+// wakeUpVehicleForSoc wakes up a sleeping vehicle once per connection to read its unknown SoC
+func (lp *Loadpoint) wakeUpVehicleForSoc() {
+	if lp.socWakeUpDone || lp.vehicleHasFeature(api.WakeUpDisabled) {
+		return
+	}
+
+	if vehicle, ok := api.Cap[api.Resurrector](lp.GetVehicle()); ok {
+		lp.socWakeUpDone = true
+
+		lp.log.DEBUG.Println("soc unknown: waking up vehicle")
+		if err := vehicle.WakeUp(); err != nil {
+			lp.log.ERROR.Printf("wake-up vehicle: %v", err)
+		}
+	}
+}
+
 func (lp *Loadpoint) wakeUpResurrector(resurrector api.Resurrector, name string) {
 	lp.log.DEBUG.Printf("wake-up %s, attempts left: %d", name, lp.wakeUpTimer.wakeupAttemptsLeft)
 	if err := resurrector.WakeUp(); err != nil {
