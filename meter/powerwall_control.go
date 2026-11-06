@@ -15,21 +15,23 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func anyFloat(v any) float64 {
+func anyFloat(v any) (float64, error) {
 	switch x := v.(type) {
 	case float64:
-		return x
+		return x, nil
 	case float32:
-		return float64(x)
+		return float64(x), nil
 	case int:
-		return float64(x)
+		return float64(x), nil
 	case int64:
-		return float64(x)
+		return float64(x), nil
 	case string:
-		f, _ := strconv.ParseFloat(x, 64)
-		return f
+		f, err := strconv.ParseFloat(x, 64)
+		return f, err
+	case nil:
+		return 0, nil
 	default:
-		return 0
+		return 0, fmt.Errorf("unsupported value type %T", v)
 	}
 }
 
@@ -61,26 +63,19 @@ func (m *PowerWall) setReserve(limit float64) error {
 		return fmt.Errorf("invalid reserve: %v, must be 0-100", limit)
 	}
 
-	if err := m.postControl("/control/reserve", map[string]any{
-		"value": int(math.Round(limit)),
-	}); err != nil {
-		return err
-	}
+	defer m.resetOperation()
 
-	m.resetOperation()
-	return nil
+	return m.postControl("/control/reserve", map[string]any{
+		"value": int(math.Round(limit)),
+	})
 }
 
 // reserve_hold has no idempotency key: if the response is lost, a retry may
-// resolve a newer SoC and raise the reserve. Accepted; eliminating this
-// requires server-side deduplication.
+// resolve a newer SoC and raise the reserve.
 func (m *PowerWall) holdReserve() error {
-	if err := m.postControl("/control/reserve_hold", map[string]any{}); err != nil {
-		return err
-	}
+	defer m.resetOperation()
 
-	m.resetOperation()
-	return nil
+	return m.postControl("/control/reserve_hold", map[string]any{})
 }
 
 func (m *PowerWall) resetOperation() {

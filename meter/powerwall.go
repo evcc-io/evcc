@@ -79,6 +79,19 @@ func (cc *powerWallConfig) validate() error {
 				return fmt.Errorf("invalid %s: %v, must be 0-100", name, v)
 			}
 		}
+
+		for name, v := range map[string]any{"maxchargepower": cc.MaxChargePower_, "maxdischargepower": cc.MaxDischargePower_} {
+			if v == nil {
+				continue
+			}
+			f, err := anyFloat(v)
+			if err != nil {
+				return fmt.Errorf("invalid %s: %w", name, err)
+			}
+			if f < 0 {
+				return fmt.Errorf("invalid %s: %v, must be >= 0", name, f)
+			}
+		}
 	}
 
 	// support default meter names
@@ -187,16 +200,7 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 		}
 	}
 
-	var freq pwsFreq
-	freqErr := error(nil)
 	if serverMode && m.usage == "site" {
-		freq, freqErr = m.freqG()
-		if freqErr != nil {
-			log.WARN.Println("phase readings:", freqErr)
-		}
-	}
-	if serverMode && freqErr == nil && m.usage == "site" &&
-		freq.VoltageL1 != nil && freq.VoltageL2 != nil && freq.VoltageL3 != nil {
 		implement.Has(m, implement.PhaseCurrents(m.currents))
 		implement.Has(m, implement.PhaseVoltages(func() (float64, float64, float64, error) {
 			res, err := m.freqG()
@@ -249,10 +253,14 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 			charge := minPositive(status.MaxChargePower, usable)
 			discharge := minPositive(status.MaxDischargePower, usable)
 
-			if v := anyFloat(cc.MaxChargePower_); v > 0 {
+			if v, err := anyFloat(cc.MaxChargePower_); err != nil {
+				return nil, fmt.Errorf("maxchargepower: %w", err)
+			} else if v > 0 {
 				charge = v
 			}
-			if v := anyFloat(cc.MaxDischargePower_); v > 0 {
+			if v, err := anyFloat(cc.MaxDischargePower_); err != nil {
+				return nil, fmt.Errorf("maxdischargepower: %w", err)
+			} else if v > 0 {
 				discharge = v
 			}
 

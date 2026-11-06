@@ -402,15 +402,47 @@ func TestPowerWallServerPowerLimitOverrides(t *testing.T) {
 	assert.Equal(t, 8500.0, discharge)
 }
 
+func TestPowerWallServerPowerLimitValidation(t *testing.T) {
+	fake := &fakePowerwallServer{secret: "secret", reserve: 20}
+	srv := httptest.NewServer(fake.handler())
+	t.Cleanup(srv.Close)
+
+	for _, tc := range []struct {
+		field string
+		value any
+	}{
+		{"maxchargepower", "invalid"},
+		{"maxdischargepower", -1.0},
+	} {
+		cfg := map[string]any{
+			"uri":           "http://" + srv.Listener.Addr().String(),
+			"usage":         "battery",
+			"controlSecret": "secret",
+			"minsoc":        0.0,
+			"cache":         time.Millisecond,
+			tc.field:        tc.value,
+		}
+		_, err := NewPowerWallFromConfig(cfg)
+		require.ErrorContains(t, err, tc.field)
+	}
+}
+
 func TestPowerWallServerPartialPhaseReadings(t *testing.T) {
 	fake := &fakePowerwallServer{secret: "secret", reserve: 20, partialFreq: true}
 	pw, _ := newTestPowerWallServer(t, fake, "grid", nil)
 
-	_, ok := api.Cap[api.PhaseCurrents](pw)
-	assert.False(t, ok)
+	currents, ok := api.Cap[api.PhaseCurrents](pw)
+	require.True(t, ok)
+	a, b, c, err := currents.Currents()
+	require.NoError(t, err)
+	assert.Equal(t, 1.0, a)
+	assert.Equal(t, 2.0, b)
+	assert.Equal(t, 3.0, c)
 
-	_, ok = api.Cap[api.PhaseVoltages](pw)
-	assert.False(t, ok)
+	voltages, ok := api.Cap[api.PhaseVoltages](pw)
+	require.True(t, ok)
+	_, _, _, err = voltages.Voltages()
+	assert.Error(t, err)
 }
 
 func TestPowerWallServerTLSInsecure(t *testing.T) {
@@ -472,6 +504,29 @@ func TestPowerWallServerReserveCacheInvalidation(t *testing.T) {
 	assert.Equal(t, 0.0, lower)
 }
 
+func TestPowerWallServerReserveCacheInvalidationOnError(t *testing.T) {
+	fake := &fakePowerwallServer{secret: "secret", reserve: 20}
+	pw, _ := newTestPowerWallServer(t, fake, "battery", map[string]any{"cache": time.Hour})
+
+	lim, ok := api.Cap[api.BatterySocLimiter](pw)
+	require.True(t, ok)
+
+	lower, _, err := lim.GetSocLimits()
+	require.NoError(t, err)
+	assert.Equal(t, 20.0, lower)
+
+	fake.mu.Lock()
+	fake.reserve = 30
+	fake.mu.Unlock()
+
+	pw.controlSecret = "wrong"
+	require.Error(t, pw.setReserve(20))
+
+	lower, _, err = lim.GetSocLimits()
+	require.NoError(t, err)
+	assert.Equal(t, 30.0, lower)
+}
+
 func TestPowerWallServerControl(t *testing.T) {
 	fake := &fakePowerwallServer{secret: "secret", reserve: 20}
 	pw, _ := newTestPowerWallServer(t, fake, "battery", nil)
@@ -505,8 +560,9 @@ func TestPowerWallServerControlErrors(t *testing.T) {
 
 func TestPowerWallAnyFloat(t *testing.T) {
 	tests := []struct {
-		in   any
-		want float64
+		in      any
+		want    float64
+		wantErr bool
 	}{
 		{in: 1.5, want: 1.5},
 		{in: float32(2), want: 2},
@@ -514,9 +570,17 @@ func TestPowerWallAnyFloat(t *testing.T) {
 		{in: int64(4), want: 4},
 		{in: "5.5", want: 5.5},
 		{in: nil, want: 0},
+		{in: "invalid", wantErr: true},
+		{in: struct{}{}, wantErr: true},
 	}
 
 	for _, tc := range tests {
-		assert.Equal(t, tc.want, anyFloat(tc.in))
+		got, err := anyFloat(tc.in)
+		if tc.wantErr {
+			assert.Error(t, err)
+			continue
+		}
+		require.NoError(t, err)
+		assert.Equal(t, tc.want, got)
 	}
 }
