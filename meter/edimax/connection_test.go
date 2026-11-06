@@ -58,7 +58,7 @@ func TestStatusAndSwitch(t *testing.T) {
 		return ok && u == "admin" && p == "1234"
 	})
 
-	conn := NewConnection(host(srv), "admin", "1234", 0)
+	conn := NewConnection(t.Context(), host(srv), "admin", "1234", 0)
 
 	res, err := conn.Status()
 	require.NoError(t, err)
@@ -81,7 +81,7 @@ func TestDigestAuth(t *testing.T) {
 		return strings.HasPrefix(r.Header.Get("Authorization"), "Digest ")
 	})
 
-	power, err := NewConnection(host(srv), "admin", "1234", 0).CurrentPower()
+	power, err := NewConnection(t.Context(), host(srv), "admin", "1234", 0).CurrentPower()
 	require.NoError(t, err)
 	assert.Equal(t, 118.25, power)
 	assert.False(t, basic, "basic credentials sent to digest device")
@@ -93,7 +93,7 @@ func TestSetupFailed(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	assert.Error(t, NewConnection(host(srv), "", "", 0).Enable(true))
+	assert.Error(t, NewConnection(t.Context(), host(srv), "", "", 0).Enable(true))
 }
 
 func TestNoRedirect(t *testing.T) {
@@ -108,7 +108,39 @@ func TestNoRedirect(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	_, err := NewConnection(host(srv), "admin", "1234", 0).Status()
+	_, err := NewConnection(t.Context(), host(srv), "admin", "1234", 0).Status()
 	assert.Error(t, err)
 	assert.False(t, leaked)
+}
+
+func TestNoBasicAfterDigest(t *testing.T) {
+	var digest, basic bool
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if _, _, ok := r.BasicAuth(); ok {
+			basic = true
+		}
+		if !digest {
+			if !strings.HasPrefix(r.Header.Get("Authorization"), "Digest ") {
+				w.Header().Set("WWW-Authenticate", `Digest realm="SP2101W", nonce="abc", qop="auth"`)
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			digest = true
+			_, _ = io.WriteString(w, statusOn)
+			return
+		}
+		// later downgrade attempt
+		w.Header().Set("WWW-Authenticate", `Basic realm="SP2101W"`)
+		w.WriteHeader(http.StatusUnauthorized)
+	}))
+	defer srv.Close()
+
+	conn := NewConnection(t.Context(), host(srv), "admin", "1234", 0)
+
+	_, err := conn.Status()
+	require.NoError(t, err)
+
+	_, err = conn.Status()
+	assert.Error(t, err)
+	assert.False(t, basic, "basic credentials sent after digest")
 }

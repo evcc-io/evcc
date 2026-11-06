@@ -9,11 +9,17 @@ import (
 	"github.com/evcc-io/evcc/util/transport"
 )
 
-// authTransport picks basic (V1) or digest (V2/V3) auth from the plug's challenge,
-// so basic credentials are never sent to digest devices
+const (
+	schemeUnknown int32 = iota
+	schemeBasic
+	schemeDigest
+)
+
+// authTransport picks basic (V1) or digest (V2/V3) auth from the plug's first challenge
+// and pins it, so basic credentials are never sent once a plug answered via digest
 type authTransport struct {
 	basic, digest http.RoundTripper
-	isBasic       atomic.Bool
+	scheme        atomic.Int32
 }
 
 func newAuthTransport(user, password string, base http.RoundTripper) http.RoundTripper {
@@ -24,20 +30,30 @@ func newAuthTransport(user, password string, base http.RoundTripper) http.RoundT
 }
 
 func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if t.isBasic.Load() {
+	switch t.scheme.Load() {
+	case schemeBasic:
 		return t.basic.RoundTrip(req)
+	case schemeDigest:
+		return t.digest.RoundTrip(req)
 	}
 
 	// the digest transport probes without credentials and answers digest challenges itself
 	resp, err := t.digest.RoundTrip(req)
-	if err != nil || resp.StatusCode != http.StatusUnauthorized || !basicChallenge(resp.Header) {
+	if err != nil {
 		return resp, err
+	}
+
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.scheme.CompareAndSwap(schemeUnknown, schemeDigest)
+		return resp, nil
+	}
+
+	if !basicChallenge(resp.Header) || !t.scheme.CompareAndSwap(schemeUnknown, schemeBasic) {
+		return resp, nil
 	}
 
 	_, _ = io.Copy(io.Discard, resp.Body)
 	_ = resp.Body.Close()
-
-	t.isBasic.Store(true)
 
 	retry := req.Clone(req.Context())
 	if req.GetBody != nil {

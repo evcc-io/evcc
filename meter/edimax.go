@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -9,11 +10,11 @@ import (
 )
 
 func init() {
-	registry.Add("edimax", NewEdimaxFromConfig)
+	registry.AddCtx("edimax", NewEdimaxFromConfig)
 }
 
 // NewEdimaxFromConfig creates an Edimax meter from generic config
-func NewEdimaxFromConfig(other map[string]any) (api.Meter, error) {
+func NewEdimaxFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Host     string
 		User     string
@@ -29,5 +30,5 @@ func NewEdimaxFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	return edimax.NewConnection(cc.Host, cc.User, cc.Password, cc.Cache), nil
+	return edimax.NewConnection(ctx, cc.Host, cc.User, cc.Password, cc.Cache), nil
 }

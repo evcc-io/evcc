@@ -1,7 +1,9 @@
 package charger
 
 import (
+	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -11,16 +13,17 @@ import (
 
 // Edimax charger implementation
 type Edimax struct {
+	mu   sync.Mutex
 	conn *edimax.Connection
 	*switchSocket
 }
 
 func init() {
-	registry.Add("edimax", NewEdimaxFromConfig)
+	registry.AddCtx("edimax", NewEdimaxFromConfig)
 }
 
 // NewEdimaxFromConfig creates an Edimax charger from generic config
-func NewEdimaxFromConfig(other map[string]any) (api.Charger, error) {
+func NewEdimaxFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
 		Host         string
@@ -39,7 +42,7 @@ func NewEdimaxFromConfig(other map[string]any) (api.Charger, error) {
 	}
 
 	c := &Edimax{
-		conn: edimax.NewConnection(cc.Host, cc.User, cc.Password, cc.Cache),
+		conn: edimax.NewConnection(ctx, cc.Host, cc.User, cc.Password, cc.Cache),
 	}
 
 	c.switchSocket = NewSwitchSocket(&cc.embed, c.Enabled, c.conn.CurrentPower, cc.StandbyPower)
@@ -54,6 +57,9 @@ func (c *Edimax) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *Edimax) Enable(enable bool) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if err := c.conn.Enable(enable); err != nil {
 		return err
 	}

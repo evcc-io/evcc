@@ -1,6 +1,7 @@
 package edimax
 
 import (
+	"context"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -43,16 +45,19 @@ type setupResponse struct {
 // Connection is the Edimax smart plug connection
 type Connection struct {
 	*request.Helper
+	ctx     context.Context
+	mu      sync.Mutex
 	uri     string
 	statusG util.Cacheable[Status]
 }
 
 // NewConnection creates an Edimax smart plug connection
-func NewConnection(host, user, password string, cache time.Duration) *Connection {
+func NewConnection(ctx context.Context, host, user, password string, cache time.Duration) *Connection {
 	log := util.NewLogger("edimax").Redact(transport.BasicAuthHeader(user, password))
 
 	c := &Connection{
 		Helper: request.NewHelper(log),
+		ctx:    ctx,
 		uri:    fmt.Sprintf("http://%s/smartplug.cgi", util.DefaultPort(host, 10000)),
 	}
 
@@ -75,6 +80,7 @@ func (c *Connection) post(body string, res any) error {
 	if err != nil {
 		return err
 	}
+	req = req.WithContext(c.ctx)
 
 	resp, err := c.Do(req)
 	if err != nil {
@@ -149,6 +155,8 @@ func (c *Connection) Enabled() (bool, error) {
 
 // Enable switches the relay
 func (c *Connection) Enable(enable bool) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	defer c.statusG.Reset()
 
 	onoff := map[bool]string{true: "ON", false: "OFF"}
