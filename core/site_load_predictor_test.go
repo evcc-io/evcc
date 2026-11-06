@@ -215,16 +215,16 @@ func TestHomeProfileExcludesVacation(t *testing.T) {
 
 	// 8 weeks: 3 weeks vacation ending yesterday, normal days before with an evening peak
 	for day := -homeClassifyDays; day < 0; day++ {
-		for slot := range 96 {
+		// iterate wall clock slots, DST days have 92 or 100 slots
+		for ts := bod.AddDate(0, 0, day); ts.Before(bod.AddDate(0, 0, day+1)); ts = ts.Add(tariff.SlotDuration) {
 			energy := 0.1 // kWh per slot
 			switch {
 			case day >= -21:
 				energy = 0.09
-			case slot/4 == 18:
+			case ts.Hour() == 18:
 				energy = 0.5
 			}
 
-			ts := bod.AddDate(0, 0, day).Add(time.Duration(slot) * tariff.SlotDuration)
 			require.NoError(t, db.Instance.Exec(`INSERT INTO meters (meter, ts, energy, return_energy) VALUES (?, ?, ?, 0)`, meter, ts.Unix(), energy).Error)
 		}
 	}
@@ -251,7 +251,7 @@ func TestHomeProfileExcludesVacation(t *testing.T) {
 	site.homeExclusion = nil
 	ex, err := site.homeDayExclusion(col, bod.Add(tariff.SlotDuration))
 	require.NoError(t, err)
-	assert.Len(t, ex.exclude, 21)
+	assert.Len(t, ex, 21)
 	assert.Nil(t, site.homeExclusion)
 
 	_, err = site.homeDayExclusion(col, bod.Add(time.Hour))

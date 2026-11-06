@@ -21,10 +21,9 @@ const (
 	homeClassifyDays = 56
 	// homeProfileMinDays is the minimum number of remaining days to use an excluding profile
 	homeProfileMinDays = 7
+	// homeExclusionSettle delays caching after midnight until the last slot of the previous day is persisted
+	homeExclusionSettle = 2 * tariff.SlotDuration
 )
-
-// homeExclusionSettle delays caching after midnight until the last slot of the previous day is persisted
-const homeExclusionSettle = 2 * tariff.SlotDuration
 
 // homeExclusion holds the days excluded from the home profile, computed once per day
 type homeExclusion struct {
@@ -38,11 +37,9 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	col := site.collectors[metrics.Home]
 
 	// vacation days would otherwise bias the forecast low for weeks
-	var exclude []string
-	if ex, err := site.homeDayExclusion(col, time.Now()); err != nil {
+	exclude, err := site.homeDayExclusion(col, time.Now())
+	if err != nil {
 		site.log.WARN.Printf("home profile: %v, using all days", err)
-	} else {
-		exclude = ex.exclude
 	}
 
 	base, err := col.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -homeProfileDays), exclude...)
@@ -54,11 +51,11 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	return lo.Map(tileAndTrim(base[:], minLen), func(v float64, _ int) float64 { return v * 1e3 }), nil
 }
 
-// homeDayExclusion returns the day exclusion of ts' day, cached once the previous day has settled
-func (site *Site) homeDayExclusion(col *metrics.Collector, ts time.Time) (*homeExclusion, error) {
+// homeDayExclusion returns the excluded days for ts' day, cached once the previous day has settled
+func (site *Site) homeDayExclusion(col *metrics.Collector, ts time.Time) ([]string, error) {
 	bod := now.With(ts).BeginningOfDay()
 	if ex := site.homeExclusion; ex != nil && ex.day.Equal(bod) {
-		return ex, nil
+		return ex.exclude, nil
 	}
 
 	classes, err := col.ClassifyDays(bod.AddDate(0, 0, -homeClassifyDays), bod)
@@ -75,7 +72,7 @@ func (site *Site) homeDayExclusion(col *metrics.Collector, ts time.Time) (*homeE
 		site.log.DEBUG.Printf("home profile: excluding %d absent/outlier days: %v", len(ex.exclude), ex.exclude)
 	}
 
-	return ex, nil
+	return ex.exclude, nil
 }
 
 // excludeDays returns the absent and outlier days of the profile window. Nothing is excluded
@@ -93,6 +90,7 @@ func excludeDays(classes map[string]metrics.DayClass, bod time.Time) *homeExclus
 		case class == metrics.DayAbsent || class == metrics.DayOutlier:
 			res.exclude = append(res.exclude, key)
 		default:
+			// normal and incomplete days are kept
 			kept++
 		}
 	}

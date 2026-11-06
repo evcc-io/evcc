@@ -75,18 +75,21 @@ func median(values []float64) float64 {
 // classifyDays classifies complete days relative to the household's own base load,
 // derived from the night hours of all complete days
 func classifyDays(days []dayEnergy) map[string]DayClass {
-	complete := lo.Filter(days, func(d dayEnergy, _ int) bool { return d.complete() })
+	res := make(map[string]DayClass, len(days))
+
+	var complete []dayEnergy
+	for _, d := range days {
+		if d.complete() {
+			complete = append(complete, d)
+		} else {
+			res[d.day] = DayIncomplete
+		}
+	}
+
 	base := median(lo.FlatMap(complete, func(d dayEnergy, _ int) []float64 { return d.hours[:nightHours] }))
 	typical := median(lo.Map(complete, func(d dayEnergy, _ int) float64 { return d.total() }))
 
-	res := make(map[string]DayClass, len(days))
-
-	for _, d := range days {
-		if !d.complete() {
-			res[d.day] = DayIncomplete
-			continue
-		}
-
+	for _, d := range complete {
 		if base <= 0 || typical <= 0 {
 			res[d.day] = DayNormal
 			continue

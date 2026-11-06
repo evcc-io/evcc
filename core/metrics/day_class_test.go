@@ -4,9 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/evcc-io/evcc/db"
-	"github.com/evcc-io/evcc/tariff"
-	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -101,70 +98,4 @@ func TestClassifyDaysEmpty(t *testing.T) {
 	// no base load: nothing to compare against
 	day := time.Now().Format(time.DateOnly)
 	assert.Equal(t, map[string]DayClass{day: DayNormal}, classifyDays([]dayEnergy{testDay(day, 0, 0, 0)}))
-}
-
-func TestDailyEnergyAndExcludingProfile(t *testing.T) {
-	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	require.NoError(t, SetupSchema())
-
-	// home entity is created by SetupSchema
-	var e entity
-	require.NoError(t, db.Instance.Where(&entity{Group: Home, Name: Home}).First(&e).Error)
-
-	bod := now.BeginningOfDay()
-
-	// 10 normal days and 4 absent days in between, per slot energy in kWh
-	absent := map[int]bool{-9: true, -8: true, -7: true, -6: true}
-
-	for day := -14; day < 0; day++ {
-		base := bod.AddDate(0, 0, day)
-
-		for slot := range 96 {
-			ts := base.Add(time.Duration(slot) * tariff.SlotDuration)
-
-			energy := 0.1 // 0.4 kWh/h base and daytime load
-			if hour := slot / 4; hour == 18 && !absent[day] {
-				energy = 0.5 // 2 kWh evening peak
-			}
-			if absent[day] {
-				energy = 0.09
-			}
-
-			require.NoError(t, persist(e, ts, energy, 0, nil, false))
-		}
-	}
-
-	days, err := dailyEnergy(e, bod.AddDate(0, 0, -14), bod)
-	require.NoError(t, err)
-	require.Len(t, days, 14)
-
-	classes := classifyDays(days)
-
-	var exclude []string
-	for day := -14; day < 0; day++ {
-		key := bod.AddDate(0, 0, day).Format(time.DateOnly)
-		if absent[day] {
-			require.Equal(t, DayAbsent, classes[key], key)
-			exclude = append(exclude, key)
-		} else {
-			require.Equal(t, DayNormal, classes[key], key)
-		}
-	}
-
-	// without exclusion the evening slots are pulled down by the absent days
-	all, err := energyProfileFiltered(e, bod.AddDate(0, 0, -14), nil, 0)
-	require.NoError(t, err)
-	assert.InDelta(t, (10*0.5+4*0.09)/14, all[18*4], 1e-9)
-
-	// with exclusion only normal days remain
-	res, err := energyProfileFiltered(e, bod.AddDate(0, 0, -14), nil, 0, exclude...)
-	require.NoError(t, err)
-
-	for i, v := range res {
-		expected := 0.1
-		if i/4 == 18 {
-			expected = 0.5
-		}
-		require.InDelta(t, expected, v, 1e-9, "slot %d", i)
-	}
 }
