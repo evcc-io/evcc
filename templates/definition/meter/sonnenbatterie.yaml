@@ -11,12 +11,12 @@ requirements:
       Für die aktive Batteriesteuerung muss über das Webinterface der sonnenBatterie (unter Software-Integration) das "JSON Write API" aktiviert und das dort generierte API-Token in der Batteriekonfiguration unter `token` eingetragen werden.
       Als Betriebsart der sonnenBatterie werden die beiden Modi "Eigenverbrauch" (Standard) und "Time-of-use" unterstützt. Der Modus kann über den Parameter `defaultmode` an die Konfiguration der sonnenBatterie angepasst werden.
       Die Leistung für das Netzladen kann an die Wechselrichterleistung der sonnenBatterie über den Parameter `maxchargepower` angepasst werden.
-      Zum Halten der Batterie setzt evcc die Notstromreserve auf den aktuellen SoC und anschließend wieder auf `minsoc`. Eine im Webinterface der sonnenBatterie eingestellte Notstromreserve wird dabei überschrieben.
+      evcc steuert die Notstromreserve: beim Halten auf den aktuellen SoC, im Normalbetrieb auf `minsoc` und beim Laden auf `maxsoc`. Eine im Webinterface der sonnenBatterie eingestellte Notstromreserve wird dabei überschrieben.
     en: |
       For active battery control, the "JSON Write API" must be activated via the sonnenBatterie web interface (under Software-Integration) and the API token generated there must be entered in the battery configuration under `token`.
       The two operating modes supported for the sonnenBatterie are "self-consumption" (default) and "time-of-use". The mode can be adapted to the configuration of the sonnenBatterie via the 'defaultmode' parameter.
       The power for grid charging can be adapted to the inverter power of the sonnenBatterie via the `maxchargepower` parameter.
-      evcc holds the battery by raising the backup buffer to the current SoC and resets it to `minsoc` afterwards. A backup buffer set in the sonnenBatterie web interface is overwritten.
+      evcc controls the backup buffer: the current SoC while holding, `minsoc` in normal operation and `maxsoc` while charging. A backup buffer set in the sonnenBatterie web interface is overwritten.
 discovery:
   hostname: ["sb-*"]
 params:
