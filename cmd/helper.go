@@ -13,8 +13,8 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 )
 
-// parseLogLevels parses --log area:level[,...] switch into levels per log area
-func parseLogLevels() {
+// parseLogLevels parses --log area:level[,...] switch into levels per log area and applies them
+func parseLogLevels() (string, map[string]string) {
 	levels := viper.GetStringMapString("levels")
 	if levels == nil {
 		levels = make(map[string]string)
@@ -31,6 +31,7 @@ func parseLogLevels() {
 	}
 
 	util.LogLevel(level, levels)
+	return level, levels
 }
 
 // unwrap converts a wrapped error into slice of strings

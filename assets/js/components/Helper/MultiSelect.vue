@@ -46,6 +46,16 @@
 						/>
 						<div class="form-check-label">
 							{{ option.name }}
+							<span
+								v-if="option.badge"
+								class="badge-level ms-2"
+								:title="option.hint"
+								aria-hidden="true"
+								>{{ option.badge }}</span
+							>
+							<span v-if="option.hint" class="visually-hidden">{{
+								option.hint
+							}}</span>
 						</div>
 					</label>
 				</li>
@@ -133,5 +143,9 @@ export default defineComponent({
 }
 .multi-select-menu--top-level {
 	padding-bottom: calc(var(--bottom-space) + 1rem);
+}
+.badge-level {
+	color: var(--evcc-darker-green);
+	font-weight: bold;
 }
 </style>
