@@ -11,7 +11,7 @@ require (
 	github.com/PanterSoft/comlynx-go v0.1.0
 	github.com/PuerkitoBio/goquery v1.13.0
 	github.com/WulfgarW/sensonet v0.0.8
-	github.com/andig/go-powerwall v0.3.0
+	github.com/andig/go-powerwall v0.3.1-0.20261106174138-d560667a43c0
 	github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512
 	github.com/andig/mbserver v0.0.0-20261012132218-a196e033ec39
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
