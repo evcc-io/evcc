@@ -15,8 +15,11 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-// the controller disables instant usage reporting 30s after it has been requested
-const refreshInterval = 20 * time.Second
+const (
+	// the controller disables instant usage reporting 30s after it has been requested
+	refreshInterval = 20 * time.Second
+	maxAge          = 3 * refreshInterval
+)
 
 // Connection is a Niko Home Control smart plug connected via the Hobby API
 type Connection struct {
@@ -29,7 +32,7 @@ type Connection struct {
 	mu      sync.Mutex
 	status  bool
 	power   float64
-	instant time.Time // last refresh
+	updated time.Time // last report of the device
 
 	once   sync.Once
 	listed chan struct{}
@@ -87,6 +90,7 @@ func NewConnection(ctx context.Context, host, user, token, uuid string) (*Connec
 	}
 
 	c.refresh()
+	go c.run(ctx)
 
 	return c, nil
 }
@@ -122,6 +126,7 @@ func (c *Connection) update(msg Message) bool {
 			continue
 		}
 		found = true
+		c.updated = time.Now()
 
 		if status, ok := d.Status(); ok {
 			c.status = status
@@ -137,23 +142,37 @@ func (c *Connection) update(msg Message) bool {
 // refresh re-enables instant usage reporting and re-lists the devices, the latter
 // restores the cached state after missed events, e.g. on reconnect
 func (c *Connection) refresh() {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if time.Since(c.instant) < refreshInterval {
-		return
-	}
-	c.instant = time.Now()
-
 	c.client.Publish(TopicCmd, false, ControlRequest(c.uuid, "ReportInstantUsage", "True"))
 	c.client.Publish(TopicCmd, false, ListRequest())
+}
+
+func (c *Connection) run(ctx context.Context) {
+	ticker := time.NewTicker(refreshInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			c.refresh()
+		}
+	}
+}
+
+// outdated must be called with the lock held
+func (c *Connection) outdated() error {
+	if time.Since(c.updated) > maxAge {
+		return api.ErrOutdated
+	}
+	return nil
 }
 
 // Enabled returns the relay state
 func (c *Connection) Enabled() (bool, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.status, nil
+	return c.status, c.outdated()
 }
 
 // Enable switches the relay and waits for the state change to be reported
@@ -182,9 +201,7 @@ var _ api.Meter = (*Connection)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Connection) CurrentPower() (float64, error) {
-	c.refresh()
-
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.power, nil
+	return c.power, c.outdated()
 }

@@ -3,7 +3,9 @@ package niko
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -55,6 +57,13 @@ func TestUpdate(t *testing.T) {
 	assert.True(t, c.update(msg))
 	assert.False(t, c.status)
 	assert.Equal(t, 1234.5, c.power, "power retained when not reported")
+
+	_, err := c.Enabled()
+	assert.NoError(t, err)
+
+	c.updated = time.Now().Add(-2 * maxAge)
+	_, err = c.CurrentPower()
+	assert.ErrorIs(t, err, api.ErrOutdated)
 
 	c.uuid = "x"
 	assert.False(t, c.update(msg))
