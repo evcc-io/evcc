@@ -3,7 +3,7 @@ products:
   - brand: SMA
     description:
       generic: eCharger (Modbus)
-capabilities: ["mA", "1p3p", "meter"]
+capabilities: ["mA", "meter"]
 requirements:
   evcc: ["sponsorship"]
   description:
