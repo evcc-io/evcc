@@ -2,11 +2,11 @@ package bluelink
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -152,36 +152,26 @@ func isControlTokenRejected(err error) bool {
 
 // ChargeEnable starts or stops charging via CCS2 or the older Bluelink charge control API.
 func (v *API) ChargeEnable(identity *Identity, vehicle Vehicle, pin string, enable bool) error {
-	if vehicle.CcuCCS2ProtocolSupport != 0 {
-		if pin == "" {
-			return api.ErrMissingCredentials
-		}
+	if vehicle.CcuCCS2ProtocolSupport == 0 {
+		return v.postChargeControl(identity, vehicle, pin, enable, false)
+	}
 
-		err := v.postChargeControl(identity, vehicle, pin, enable, true)
-		if err == nil {
-			return nil
-		}
+	if pin == "" {
+		return api.ErrMissingCredentials
+	}
 
-		if err2 := v.postChargeControl(identity, vehicle, pin, enable, false); err2 != nil {
-			return errors.Join(err, err2)
-		}
+	err := v.postChargeControl(identity, vehicle, pin, enable, true)
+	if err == nil {
 		return nil
 	}
 
-	return v.postChargeControl(identity, vehicle, pin, enable, false)
+	if err2 := v.postChargeControl(identity, vehicle, pin, enable, false); err2 != nil {
+		return errors.Join(err, err2)
+	}
+	return nil
 }
 
 func (v *API) postChargeControl(identity *Identity, vehicle Vehicle, pin string, enable, ccs2 bool) error {
-	ctx := context.Background()
-	if ccs2 {
-		token, err := identity.ControlAuthorization(pin)
-		if err != nil {
-			return err
-		}
-		ctx = withControlToken(ctx, token)
-		ctx = withCCS2ProtocolSupport(ctx, vehicle.CcuCCS2ProtocolSupport)
-	}
-
 	var payload map[string]string
 	if ccs2 {
 		payload = map[string]string{"command": chargeStartStop(enable)}
@@ -196,7 +186,16 @@ func (v *API) postChargeControl(identity *Identity, vehicle Vehicle, pin string,
 	if err != nil {
 		return err
 	}
-	req = req.WithContext(ctx)
+
+	if ccs2 {
+		token, err := identity.ControlAuthorization(pin)
+		if err != nil {
+			return err
+		}
+		req.Header.Set("Authorization", token)
+		req.Header.Set("AuthorizationCCSP", token)
+		req.Header.Set("Ccuccs2protocolsupport", strconv.Itoa(vehicle.CcuCCS2ProtocolSupport))
+	}
 
 	body, err := v.DoBody(req)
 	if err != nil {

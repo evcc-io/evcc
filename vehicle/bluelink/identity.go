@@ -1,7 +1,6 @@
 package bluelink
 
 import (
-	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -20,23 +19,6 @@ import (
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
-
-type ctxKey int
-
-const (
-	controlTokenContextKey ctxKey = iota
-	ccs2SupportContextKey
-)
-
-// withControlToken uses a PIN-verified control token for CCS2 remote commands.
-func withControlToken(ctx context.Context, token string) context.Context {
-	return context.WithValue(ctx, controlTokenContextKey, token)
-}
-
-// withCCS2ProtocolSupport sets the Ccuccs2protocolsupport header on decorated requests.
-func withCCS2ProtocolSupport(ctx context.Context, support int) context.Context {
-	return context.WithValue(ctx, ccs2SupportContextKey, support)
-}
 
 const (
 	LanguageURL = "/api/v1/user/language"
@@ -242,7 +224,6 @@ func (v *Identity) Request(req *http.Request) error {
 	}
 
 	for k, val := range map[string]string{
-		"Authorization":       "Bearer " + token.AccessToken,
 		"ccsp-device-id":      v.deviceID,
 		"ccsp-application-id": v.config.CCSPApplicationID,
 		"offset":              "1",
@@ -252,14 +233,8 @@ func (v *Identity) Request(req *http.Request) error {
 		req.Header.Set(k, val)
 	}
 
-	// CCS2 control uses the PIN token for both Authorization and AuthorizationCCSP
-	if ctrl, ok := req.Context().Value(controlTokenContextKey).(string); ok && ctrl != "" {
-		req.Header.Set("Authorization", ctrl)
-		req.Header.Set("AuthorizationCCSP", ctrl)
-	}
-
-	if support, ok := req.Context().Value(ccs2SupportContextKey).(int); ok {
-		req.Header.Set("Ccuccs2protocolsupport", strconv.Itoa(support))
+	if req.Header.Get("Authorization") == "" {
+		req.Header.Set("Authorization", "Bearer "+token.AccessToken)
 	}
 
 	return nil

@@ -30,7 +30,7 @@ params:
   - name: pin
     mask: true
     help:
-      en: Bluelink PIN. Required to start and stop charging from evcc.
+      en: Bluelink PIN. Required to start and stop charging.
       de: Bluelink-PIN. Wird zum Starten und Stoppen des Ladevorgangs durch evcc benötigt.
 render: |
   type: hyundai
@@ -38,6 +38,4 @@ render: |
   {{ include "base" . }}
   {{ include "language" . }}
   {{ include "features" . }}
-  {{- if .pin }}
   pin: {{ quote .pin }}
-  {{- end }}
