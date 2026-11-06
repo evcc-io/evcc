@@ -57,16 +57,13 @@ import (
 //	currentAc1..3     read   A
 //	voltageAc1..3     read   V
 //
-// wakeUpBlocked is not part of the spec but published by firmware 0.4.8. The
-// box never reports its own AC phase count, so chargeWatts converts against
-// the configured wiring (phases) rather than always assuming three.
+// wakeUpBlocked is not part of the spec but published by firmware 0.4.8.
 type Ambibox struct {
 	log      *util.Logger
 	client   ambiboxPublisher
 	base     string
 	current  float64
 	minPower float64
-	phases   int // configured AC phase wiring; the box never reports it
 
 	mu      sync.Mutex
 	enabled *bool // nil until adopted from sessionState
@@ -116,12 +113,10 @@ func NewAmbiboxFromConfig(other map[string]any) (api.Charger, error) {
 		Topic       string
 		ID          string
 		MinPower    float64
-		Phases      int
 		Timeout     time.Duration
 	}{
 		Topic:    "device/evCharger",
 		MinPower: 600,
-		Phases:   3,
 		Timeout:  30 * time.Second,
 	}
 
@@ -133,19 +128,15 @@ func NewAmbiboxFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, fmt.Errorf("missing id")
 	}
 
-	if cc.Phases < 1 || cc.Phases > 3 {
-		return nil, fmt.Errorf("invalid phases: %d", cc.Phases)
-	}
-
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
 
-	return NewAmbibox(cc.Config, cc.Topic, cc.ID, cc.MinPower, cc.Phases, cc.Timeout)
+	return NewAmbibox(cc.Config, cc.Topic, cc.ID, cc.MinPower, cc.Timeout)
 }
 
 // NewAmbibox creates an Ambibox charger
-func NewAmbibox(mqttconf mqtt.Config, topic, id string, minPower float64, phases int, timeout time.Duration) (*Ambibox, error) {
+func NewAmbibox(mqttconf mqtt.Config, topic, id string, minPower float64, timeout time.Duration) (*Ambibox, error) {
 	log := util.NewLogger("ambibox")
 
 	client, err := mqtt.RegisteredClientOrDefault(log, mqttconf)
@@ -158,7 +149,6 @@ func NewAmbibox(mqttconf mqtt.Config, topic, id string, minPower float64, phases
 		client:   client,
 		base:     fmt.Sprintf("%s/%s", topic, id),
 		minPower: minPower,
-		phases:   phases,
 	}
 
 	boolG := func(sub string) (func() (bool, error), error) {
@@ -249,16 +239,16 @@ func (wb *Ambibox) publish(sub string, retained bool, payload string) {
 }
 
 // chargeWatts converts a charging current into the charge power limit, based
-// on measured voltage of the configured AC phase wiring (wb.phases - the box
-// never reports its own phase count), held between the minimum and maximum
-// charge power.
+// on measured voltage of the three-phase AC connection, held between the
+// minimum and maximum charge power. The DC box always loads all three phases
+// symmetrically, independent of the vehicle.
 func (wb *Ambibox) chargeWatts(current float64) float64 {
 	if current <= 0 {
 		return 0
 	}
 
 	var sum float64
-	for i := range wb.phases {
+	for i := range wb.voltG {
 		v := 230.0
 		if m, err := wb.voltG[i](); err == nil && m > 0 {
 			v = m

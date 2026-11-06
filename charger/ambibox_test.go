@@ -69,7 +69,6 @@ func newTestAmbibox() (*Ambibox, *fakePublisher) {
 		client:   pub,
 		base:     "device/evCharger/0",
 		minPower: 600,
-		phases:   3,
 
 		liveG:         func() (float64, error) { return 50, nil },
 		connectedG:    func() (bool, error) { return true, nil },
