@@ -22,7 +22,8 @@ import (
 )
 
 type Config struct {
-	Port int `json:"port"`
+	Port   int `json:"port"`   // OCPP 1.6 port (default 8887)
+	Port20 int `json:"port20"` // OCPP 2.0.1 port (default 8886)
 }
 
 // ForwarderRule maps a station ID (or "*" for all chargers) to an upstream OCPP server URL.
@@ -47,8 +48,12 @@ var (
 	instance    *CS
 	started     func() error // memoized listen; set in NewServer, runs once
 	port        = 8887
+	port20      = 8886
 	boundPort   int
 	externalUrl string
+
+	// statusHook20 is set by the ocpp20 package to contribute its stations to GetStatus.
+	statusHook20 func() []StationInfo
 )
 
 // Forwarder hooks, nil unless the forwarder is built in (set once in init()
@@ -100,12 +105,28 @@ func Port() int {
 	return boundPort
 }
 
-// GetStatus returns the OCPP runtime status
+// Port20 returns the configured OCPP 2.0.1 listen port.
+func Port20() int { return port20 }
+
+// RegisterStatusHook20 lets the ocpp20 package register a callback that returns
+// its station list. Called once at package init; safe to leave nil otherwise.
+func RegisterStatusHook20(fn func() []StationInfo) {
+	statusHook20 = fn
+}
+
+// GetStatus returns the OCPP runtime status for both 1.6 and 2.0.1
 func GetStatus() Status {
-	if instance == nil {
-		return Status{}
+	status := Status{}
+
+	if instance != nil {
+		status = instance.status()
 	}
-	return instance.status()
+
+	if statusHook20 != nil {
+		status.Stations = append(status.Stations, statusHook20()...)
+	}
+
+	return status
 }
 
 // ExternalUrl returns the auto-generated OCPP external URL based on network external URL
@@ -127,22 +148,21 @@ func ExternalUrl() string {
 
 // CurrentConfig returns the current runtime OCPP configuration.
 func CurrentConfig() Config {
-	return Config{Port: port}
+	return Config{Port: port, Port20: port20}
 }
 
 // NewServer builds the OCPP central system without starting it.
 func NewServer(cfg Config, networkExternalUrl string) {
 	port = cfg.Port
+	if cfg.Port20 != 0 {
+		port20 = cfg.Port20
+	}
 	externalUrl = networkExternalUrl
 
 	log := util.NewLogger("ocpp")
 
 	server := &interceptingServer{Server: ws.NewServer()}
 	server.SetCheckOriginHandler(func(r *http.Request) bool { return true })
-
-	timeouts := ws.NewServerTimeoutConfig()
-	timeouts.PingWait = pingWait
-	server.SetTimeoutConfig(timeouts)
 
 	dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
 

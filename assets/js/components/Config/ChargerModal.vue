@@ -105,7 +105,12 @@ import switchsocketHeaterYaml from "./defaultYaml/switchsocketHeater.yaml?raw";
 import switchsocketChargerYaml from "./defaultYaml/switchsocketCharger.yaml?raw";
 import sgreadyYaml from "./defaultYaml/sgready.yaml?raw";
 import { LOADPOINT_TYPE, type DeviceType, type LoadpointType, type Ocpp } from "@/types/evcc";
-import { getOcppUrl, getOcppUrlWithStationId } from "@/utils/ocpp";
+import {
+	getOcppUrl,
+	getOcppUrlWithStationId,
+	getOcpp20Url,
+	getOcpp20UrlWithStationId,
+} from "@/utils/ocpp";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -169,13 +174,23 @@ export default defineComponent({
 			return (
 				this.currentTemplate !== null &&
 				this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "connector") &&
+				this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "stationid") &&
+				!this.isOcpp20
+			);
+		},
+		isOcpp20(): boolean {
+			return (
+				this.currentTemplate !== null &&
+				this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "evse") &&
 				this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "stationid")
 			);
 		},
 		ocppUrl(): string | null {
+			if (this.isOcpp20) return getOcpp20Url(this.ocpp);
 			return this.isOcpp ? getOcppUrl(this.ocpp) : null;
 		},
 		ocppUrlWithStationId(): string | null {
+			if (this.isOcpp20) return getOcpp20UrlWithStationId(this.ocpp);
 			return this.isOcpp ? getOcppUrlWithStationId(this.ocpp) : null;
 		},
 		ocppStationIdDetected(): string | undefined {
