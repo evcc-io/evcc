@@ -57,27 +57,46 @@ Always charge (`alwaysCharge`: off/on/once) is a per-loadpoint option for smart 
 - `B` — connected, not charging
 - `C` — connected, charging
 
-## The Control Loop (Site.update — runs every N seconds)
+## Sense and Control Loops (core/site.go)
+
+Sensing and control run separately (`Site.Run`):
 
 ```
+Sense loop (one per loadpoint, every 2s, never slower than interval)
+  Loadpoint.Sense()
+  ├── UpdateChargePowerAndCurrents()   (serialized per loadpoint via measureMu)
+  └── Observe() -> observe()           (serialized against control via controlMu)
+      ├── Read charger status, voltages, active phases
+      ├── Detect/identify vehicle, publish soc and range
+      └── Status changed -> requestControl()
+
+Control loop (Site.update, every interval for all loadpoints, immediately for requested ones)
 1. Update all meters (grid, PV, battery, aux)
-2. For each loadpoint: UpdateChargePowerAndCurrents()
+2. Sum the sensed charge power of all loadpoints
 3. Calculate site power balance:
    sitePower = gridPower + batteryPower + excessDCPower
-             + residualPower - auxPower - flexiblePower
+             + residualPower - auxPower
 4. Apply battery priority rules (prioritySoc, bufferSoc)
-5. Get tariff rates
-6. For EACH loadpoint: Update(sitePower, ...)
-   ├── Read charger status
-   ├── Detect/identify vehicle
-   ├── Check plan requirements (minSOC, target time)
-   ├── Check limits (limitSOC, limitEnergy)
-   ├── MODE switch -> calculate target current
-   ├── Cap at maxCurrent, respect circuit limits
-   ├── Send MaxCurrent() to charger
-   └── Record metrics
-7. Push updates to WebSocket + metrics
+5. For each loadpoint, higher priority first:
+   ├── Subtract prioritized (flexible) power of lower-priority loadpoints
+   ├── Add in-flight reserve of the other loadpoints (actuated, not yet metered)
+   └── Control(sitePower, ...) -> control()
+       ├── Check plan requirements (minSOC, target time)
+       ├── Check limits (limitSOC, limitEnergy)
+       ├── MODE switch -> calculate target current
+       ├── Cap at maxCurrent, respect circuit limits (incl. in-flight reserve)
+       ├── Send MaxCurrent() to charger
+       └── Record metrics
+6. Push updates to WebSocket + metrics
 ```
+
+All loadpoints are controlled against the same site measurement, in priority order.
+Each one discounts the surplus by what the earlier ones just claimed (their in-flight
+reserve), so one interval cannot hand the same surplus to two loadpoints. A loadpoint
+with pending control (`requestControl()`/`RequestUpdate()`, e.g. status, mode or
+limit change) signals the site and is controlled at once; requests are served at most
+once per sense interval. `control()` does not actuate before `observe()` produced
+valid state.
 
 The loop is stateless per cycle: always re-reads actual state, calculates
 optimal current, sends single command. Resilient to restarts and missed updates.
@@ -115,7 +134,7 @@ effectivePrice = gridPrice * (1 - greenShare) + feedInPrice * greenShare
 ## Concurrency Model
 
 - **Site** owns `RWMutex` for its state (meters, battery, tariffs)
-- **Loadpoint** owns `RWMutex` for its state (charger, vehicle, current)
+- **Loadpoint** owns `RWMutex` for its state (charger, vehicle, current), `controlMu` to serialize observe vs control, `measureMu` to serialize meter reads
 - **Coordinator** owns `RWMutex` for vehicle <-> loadpoint tracking
 - No global locks — ordering prevents deadlocks
 
@@ -124,7 +143,6 @@ effectivePrice = gridPrice * (1 - greenShare) + feedInPrice * greenShare
 | Channel | Scope | Buffer | Purpose |
 |---------|-------|--------|---------|
 | `valueChan` | Site | Unbounded (`chanx.NewUnboundedChan`) | State changes -> DB + UI (ordering) |
-| `lpUpdateChan` | Site | 1 | Early loadpoint update requests |
 | `pushChan` | Loadpoint | 16 | User notifications, queued via `valueChan` so the message renders the state at event time |
 
 ## Tariff Integration

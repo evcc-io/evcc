@@ -23,8 +23,8 @@ func (c *featureCharger) Features() []api.Feature { return c.features }
 func TestSetModeLegacyAliases(t *testing.T) {
 	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
 
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
+	x, y := createChannels(t)
+	attachChannels(lp, x, y)
 
 	// minpv maps to smart and enables always charge
 	lp.SetMode(api.ModeMinPV)
@@ -51,8 +51,8 @@ func TestSetModeLegacyAliasesSwitchDevice(t *testing.T) {
 	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
 	lp.charger = &featureCharger{features: []api.Feature{api.SwitchDevice}}
 
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
+	x, y := createChannels(t)
+	attachChannels(lp, x, y)
 
 	// no current control: minpv maps to smart without always charge
 	lp.SetMode(api.ModeMinPV)
@@ -65,8 +65,8 @@ func TestSetModeLegacyAliasesSwitchDevice(t *testing.T) {
 func TestAlwaysChargeOnceResetsOnDisconnect(t *testing.T) {
 	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
 
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
+	x, y := createChannels(t)
+	attachChannels(lp, x, y)
 
 	require.NoError(t, lp.SetAlwaysCharge(api.AlwaysChargeOnce))
 	lp.evVehicleDisconnectHandler()
@@ -106,8 +106,8 @@ func TestNormalizeMode(t *testing.T) {
 func TestSetDefaultModeLegacyAliases(t *testing.T) {
 	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
 
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
+	x, y := createChannels(t)
+	attachChannels(lp, x, y)
 
 	// deprecated defaults map to smart without touching always charge
 	for _, mode := range []api.ChargeMode{api.ModeMinPV, api.ModePV} {

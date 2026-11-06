@@ -270,7 +270,6 @@ func TestSetBatteryBoostLimitResume(t *testing.T) {
 			lp := &Loadpoint{
 				log:               util.NewLogger("lp"),
 				settings:          settings.NewDatabaseSettingsAdapter("foo"),
-				lpChan:            make(chan *Loadpoint, 1),
 				batteryBoost:      tc.boost,
 				batteryBoostLimit: tc.from,
 			}
@@ -279,8 +278,8 @@ func TestSetBatteryBoostLimitResume(t *testing.T) {
 
 			assert.Equal(t, tc.to, lp.batteryBoostLimit)
 			assert.Equal(t, tc.want, lp.batteryBoost)
-			// a changed limit must act now instead of on the next update tick
-			assert.Equal(t, tc.wantUpdate, len(lp.lpChan) == 1)
+			// a changed limit must be controlled with priority
+			assert.Equal(t, tc.wantUpdate, lp.controlPending())
 		})
 	}
 }

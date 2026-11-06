@@ -17,7 +17,7 @@ import (
 // restored into a fresh loadpoint sharing the same store.
 func TestSettingsRoundtrip(t *testing.T) {
 	store := settings.NewMemorySettings()
-	uiChan, pushChan, lpChan := createChannels(t)
+	uiChan, pushChan := createChannels(t)
 
 	planTime := time.Now().Add(4 * time.Hour).Round(time.Second)
 	smartCost := 0.25
@@ -41,7 +41,7 @@ func TestSettingsRoundtrip(t *testing.T) {
 	// write
 	lp := NewLoadpoint(util.NewLogger("foo"), store)
 	lp.charger = charger
-	lp.Prepare(new(Site), uiChan, pushChan, lpChan)
+	lp.Prepare(new(Site), uiChan, pushChan)
 
 	lp.SetMode(api.ModeSmart)
 	lp.SetPriority(3)
@@ -61,7 +61,7 @@ func TestSettingsRoundtrip(t *testing.T) {
 	// read back into a fresh loadpoint
 	restored := NewLoadpoint(util.NewLogger("bar"), store)
 	restored.charger = charger
-	restored.Prepare(new(Site), uiChan, pushChan, lpChan)
+	restored.Prepare(new(Site), uiChan, pushChan)
 
 	assert.Equal(t, api.ModeSmart, restored.GetMode())
 	assert.Equal(t, 3, restored.GetPriority())

@@ -39,12 +39,11 @@ func (n *Null) ChargeDuration() (time.Duration, error) {
 	return 0, nil
 }
 
-func createChannels(t *testing.T) (chan util.Param, chan messenger.Event, chan *Loadpoint) {
+func createChannels(t *testing.T) (chan util.Param, chan messenger.Event) {
 	t.Helper()
 
 	uiChan := make(chan util.Param)
 	pushChan := make(chan messenger.Event)
-	lpChan := make(chan *Loadpoint)
 
 	log := false
 	go func() {
@@ -58,21 +57,16 @@ func createChannels(t *testing.T) (chan util.Param, chan messenger.Event, chan *
 				if log {
 					t.Log(v)
 				}
-			case v := <-lpChan:
-				if log {
-					t.Log(v)
-				}
 			}
 		}
 	}()
 
-	return uiChan, pushChan, lpChan
+	return uiChan, pushChan
 }
 
-func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan messenger.Event, lpChan chan *Loadpoint) {
+func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan messenger.Event) {
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
-	lp.lpChan = lpChan
 }
 
 func attachListeners(t *testing.T, lp *Loadpoint) {
@@ -83,9 +77,9 @@ func attachListeners(t *testing.T, lp *Loadpoint) {
 		charger.EXPECT().MaxCurrent(int64(lp.minCurrent)).Return(nil)
 	}
 
-	uiChan, pushChan, lpChan := createChannels(t)
+	uiChan, pushChan := createChannels(t)
 	// the optimizer runs async- without a logger its panic recovery panics again
-	lp.Prepare(&Site{log: util.NewLogger("site")}, uiChan, pushChan, lpChan)
+	lp.Prepare(&Site{log: util.NewLogger("site")}, uiChan, pushChan)
 }
 
 func TestNew(t *testing.T) {
@@ -1395,4 +1389,44 @@ func TestPVDisableContinuousDeviceShortfall(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRequestUpdate(t *testing.T) {
+	trigger := make(chan struct{}, 1)
+	lp := &Loadpoint{controlChan: trigger}
+
+	lp.RequestUpdate()
+	assert.True(t, lp.controlPending())
+	assert.Len(t, trigger, 1, "request signals the site")
+
+	// a second request must not block on the full slot
+	lp.RequestUpdate()
+	assert.Len(t, trigger, 1)
+
+	// loadpoints without site (tests) request silently
+	new(Loadpoint).RequestUpdate()
+}
+
+func TestControlOrder(t *testing.T) {
+	low, high, mid := &Loadpoint{priority: 1}, &Loadpoint{priority: 3}, &Loadpoint{priority: 2}
+	lps := []*Loadpoint{low, high, mid}
+
+	assert.Equal(t, []*Loadpoint{high, mid, low}, controlOrder(lps))
+	assert.Equal(t, []*Loadpoint{low, high, mid}, lps, "input order unchanged")
+
+	// equal priorities keep configuration order
+	a, b := &Loadpoint{}, &Loadpoint{}
+	assert.Equal(t, []*Loadpoint{a, b}, controlOrder([]*Loadpoint{a, b}))
+}
+
+func TestPendingLoadpoints(t *testing.T) {
+	lps := []*Loadpoint{new(Loadpoint), new(Loadpoint), new(Loadpoint)}
+	assert.Empty(t, pendingLoadpoints(lps))
+
+	lps[0].requestControl()
+	lps[2].requestControl()
+	assert.Equal(t, []*Loadpoint{lps[0], lps[2]}, pendingLoadpoints(lps))
+
+	lps[2].controlDone()
+	assert.Equal(t, []*Loadpoint{lps[0]}, pendingLoadpoints(lps))
 }

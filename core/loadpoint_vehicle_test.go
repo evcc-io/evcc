@@ -53,8 +53,8 @@ func TestPublishSocAndRange(t *testing.T) {
 	}
 
 	// populate channels
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
+	x, y := createChannels(t)
+	attachChannels(lp, x, y)
 
 	assert.Empty(t, lp.socUpdated)
 
@@ -169,8 +169,8 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 		}
 
 		// populate channels
-		x, y, z := createChannels(t)
-		attachChannels(lp, x, y, z)
+		x, y := createChannels(t)
+		attachChannels(lp, x, y)
 
 		test := func(t *testing.T) {
 			assert.Equal(t, tc.socPoll, lp.vehicleSocPollAllowed())
@@ -225,8 +225,8 @@ func TestPublishSocAndRangeEnergyLimit(t *testing.T) {
 	}
 	lp.energyMetrics.totalKWh = 1.1
 
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
+	x, y := createChannels(t)
+	attachChannels(lp, x, y)
 
 	lp.publishSocAndRange()
 
@@ -268,8 +268,8 @@ func TestPublishSocAndRangePlanAboveLimit(t *testing.T) {
 			suggestionUpdated: clck.Now(),
 		}
 
-		x, y, z := createChannels(t)
-		attachChannels(lp, x, y, z)
+		x, y := createChannels(t)
+		attachChannels(lp, x, y)
 
 		lp.publishSocAndRange()
 		assert.InDelta(t, soc.RemainingChargeEnergy(tc.goal, 50, 10), lp.GetRemainingEnergy(), 1e-9, tc)
@@ -393,8 +393,8 @@ func TestDefaultVehicle(t *testing.T) {
 	lp.defaultVehicle = dflt
 
 	// populate channels
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
+	x, y := createChannels(t)
+	attachChannels(lp, x, y)
 
 	title := func(v api.Vehicle) string {
 		if v == nil {
@@ -442,8 +442,8 @@ func TestVehicleChangeResetsAlwaysChargeOnce(t *testing.T) {
 
 	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
 
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
+	x, y := createChannels(t)
+	attachChannels(lp, x, y)
 
 	lp.setActiveVehicle(v1)
 	assert.NoError(t, lp.SetAlwaysCharge(api.AlwaysChargeOnce))
@@ -487,8 +487,8 @@ func TestReidentifyActiveVehicleKeepsMode(t *testing.T) {
 	lp.charger = &idCharger{id: "rfid-1"}
 	lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
 
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
+	x, y := createChannels(t)
+	attachChannels(lp, x, y)
 
 	// vehicle already active via a different detection path (e.g. SoC poll)
 	lp.setActiveVehicle(vehicle)
@@ -517,8 +517,8 @@ func TestReassignActiveVehicleKeepsSoc(t *testing.T) {
 
 	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
 
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
+	x, y := createChannels(t)
+	attachChannels(lp, x, y)
 
 	// vehicle active, soc read from a prior cycle
 	lp.setActiveVehicle(vehicle)
@@ -549,8 +549,8 @@ func TestActiveVehicleChangeTriggersOptimizer(t *testing.T) {
 	s := new(mockSite)
 	lp.site = s
 
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
+	x, y := createChannels(t)
+	attachChannels(lp, x, y)
 
 	lp.setActiveVehicle(vehicle)
 	assert.Equal(t, 1, s.optimized, "vehicle detected")
@@ -594,8 +594,8 @@ func TestDisconnectIntegratedDeviceKeepsMode(t *testing.T) {
 	lp.DefaultMode = api.ModeSmart
 	lp.setMode(api.ModeOff)
 
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
+	x, y := createChannels(t)
+	attachChannels(lp, x, y)
 
 	lp.evVehicleDisconnectHandler()
 

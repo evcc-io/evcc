@@ -62,7 +62,7 @@ func TestSitePowerPriorityAdjustment(t *testing.T) {
 			require.NoError(t, err)
 			state.excessDCPower = tc.excessDC
 
-			res := site.sitePower(state, 0, 0)
+			res := site.sitePower(state, 0)
 			assert.Equal(t, tc.expSitePower, res.power, "sitePower")
 			assert.Equal(t, tc.expAdjustment, res.priorityAdjustment, "priority adjustment")
 			assert.Equal(t, tc.expReconstructed, res.power+res.priorityAdjustment, "reconstructed (unadjusted) site power")
