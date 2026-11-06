@@ -19,9 +19,8 @@ func init() {
 // sharedLine wraps a gpiocdev.Line shared by all gpio plugin instances requesting the
 // same chip+pin, since the kernel only grants one exclusive line request per GPIO offset.
 type sharedLine struct {
-	mu       sync.Mutex
-	line     *gpiocdev.Line
-	isOutput bool
+	mu   sync.Mutex
+	line *gpiocdev.Line
 }
 
 var (
@@ -31,40 +30,38 @@ var (
 
 // acquireLine returns the shared line for chip+pin, requesting it if not yet open.
 // An input line is reconfigured to output on demand, since output values can still be read back.
-func acquireLine(chip string, pin int, output bool) (*sharedLine, error) {
+func acquireLine(chip string, pin int, output bool, opts []gpiocdev.LineReqOption) (*sharedLine, error) {
 	linesMu.Lock()
 	defer linesMu.Unlock()
 
 	key := chip + ":" + strconv.Itoa(pin)
 
 	if sl, ok := lines[key]; ok {
-		if output && !sl.isOutput {
-			sl.mu.Lock()
+		sl.mu.Lock()
+		defer sl.mu.Unlock()
+
+		var info, _ = sl.line.Info()
+		if output && info.Config.Direction != gpiocdev.LineDirectionOutput {
 			err := sl.line.Reconfigure(gpiocdev.AsOutput(0))
-			if err == nil {
-				sl.isOutput = true
-			}
-			sl.mu.Unlock()
 			if err != nil {
 				return nil, fmt.Errorf("failed to reconfigure GPIO: %w", err)
 			}
 		}
+
 		return sl, nil
 	}
 
-	var opts []gpiocdev.LineReqOption
 	if output {
 		opts = append(opts, gpiocdev.AsOutput(0))
 	} else {
-		opts = append(opts, gpiocdev.AsInput, gpiocdev.WithPullUp)
+		opts = append(opts, gpiocdev.AsInput)
 	}
-
 	line, err := gpiocdev.RequestLine(chip, pin, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open GPIO: %w", err)
 	}
 
-	sl := &sharedLine{line: line, isOutput: output}
+	sl := &sharedLine{line: line}
 	lines[key] = sl
 
 	return sl, nil
@@ -78,24 +75,51 @@ type gpio struct {
 // NewGpioPluginFromConfig creates a GPIO provider
 func NewGpioPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
-		Function GpioType
-		Pin      int
-		Chip     string
+		Function  GpioType
+		Pin       int
+		ActiveLow bool
+		Bias      GpioBias
+		Chip      string
 	}{
-		Chip: "gpiochip0",
+		ActiveLow: false,
+		Bias:      -1,
+		Chip:      "gpiochip0",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
+	var opts []gpiocdev.LineReqOption
 	switch cc.Function {
 	case GpioTypeRead, GpioTypeWrite:
 	default:
 		return nil, fmt.Errorf("invalid type: %s", cc.Function)
 	}
 
-	shared, err := acquireLine(cc.Chip, cc.Pin, cc.Function == GpioTypeWrite)
+	switch cc.Bias {
+	case -1:
+		if cc.Function == GpioTypeRead {
+			opts = append(opts, gpiocdev.WithPullUp)
+		}
+	case GpioBiasAsIs:
+		opts = append(opts, gpiocdev.WithBiasAsIs)
+	case GpioBiasDisabled:
+		opts = append(opts, gpiocdev.WithBiasDisabled)
+	case GpioBiasPullUp:
+		opts = append(opts, gpiocdev.WithPullUp)
+	case GpioBiasPullDown:
+		opts = append(opts, gpiocdev.WithPullDown)
+	default:
+		return nil, fmt.Errorf("invalid bias: %s", cc.Bias)
+	}
+
+	if cc.ActiveLow {
+		opts = append(opts, gpiocdev.AsActiveLow)
+	}
+
+	shared, err := acquireLine(cc.Chip, cc.Pin, cc.Function == GpioTypeWrite, opts)
+
 	if err != nil {
 		return nil, err
 	}
