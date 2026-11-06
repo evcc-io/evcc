@@ -19,6 +19,7 @@ import (
 var ErrAuthFailed = krakengql.ErrAuthFailed
 
 type OctopusDe struct {
+	*embed
 	log       *util.Logger
 	gqlClient *krakengql.Client
 	data      *util.Monitor[api.Rates]
@@ -49,6 +50,7 @@ func NewOctopusDeFromConfig(other map[string]any) (api.Tariff, error) {
 // Split out to allow for testing.
 func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 	var cc struct {
+		embed         `mapstructure:",squash"`
 		Email         string
 		Password      string
 		AccountNumber string
@@ -70,6 +72,10 @@ func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 		return nil, errors.New("missing account number")
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	log := util.NewLogger("octopus-de").Redact(cc.Email, cc.Password)
 
 	// Create GraphQL client
@@ -79,6 +85,7 @@ func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 	}
 
 	t := &OctopusDe{
+		embed:     &cc.embed,
 		log:       log,
 		gqlClient: gqlClient,
 		data:      util.NewMonitor[api.Rates](2 * time.Hour),
@@ -112,21 +119,45 @@ func (t *OctopusDe) run(done chan error) {
 			continue
 		}
 
-		data := make(api.Rates, 0, len(rates))
-		for _, r := range rates {
-			ar := api.Rate{
-				Start: r.ValidFrom,
-				End:   r.ValidTo,
-				// Convert from cents per kWh to € per kWh (divide by 100)
-				// Use gross price (including tax) as that's what the customer pays
-				Value: r.GrossUnitRateCentsPerKwh / 100,
-			}
-			data = append(data, ar)
-		}
-
-		mergeRates(t.data, data)
+		mergeRates(t.data, t.toRates(rates))
 		once.Do(func() { close(done) })
 	}
+}
+
+// toRates converts rate periods into api.Rates, applying configured charges, charges zones, tax and formula.
+// Periods are split into slots when charges zones or a formula are configured, since the resulting price
+// may change within long periods (simple and time-of-use tariffs).
+func (t *OctopusDe) toRates(periods []RatePeriod) api.Rates {
+	adjust := t.Charges != 0 || len(t.chargesZones) > 0 || t.Tax != 0 || t.Formula != ""
+	split := len(t.chargesZones) > 0 || t.Formula != ""
+
+	data := make(api.Rates, 0, len(periods))
+	for _, r := range periods {
+		// Convert from cents per kWh to € per kWh (divide by 100)
+		// Use gross price (including tax) as that's what the customer pays
+		price := r.GrossUnitRateCentsPerKwh / 100
+
+		if !split {
+			if adjust {
+				price = t.totalPrice(price, r.ValidFrom)
+			}
+
+			data = append(data, api.Rate{Start: r.ValidFrom, End: r.ValidTo, Value: price})
+			continue
+		}
+
+		for start := r.ValidFrom; start.Before(r.ValidTo); {
+			end := start.Truncate(SlotDuration).Add(SlotDuration)
+			if end.After(r.ValidTo) {
+				end = r.ValidTo
+			}
+
+			data = append(data, api.Rate{Start: start, End: end, Value: t.totalPrice(price, start)})
+			start = end
+		}
+	}
+
+	return data
 }
 
 // Rates implements the api.Tariff interface
