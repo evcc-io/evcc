@@ -18,7 +18,7 @@ const LINK_ALPHA: Record<string, string> = { pv: "b0", battery: "50", grid: "40"
 
 // links below this share of all energy are noise, e.g. a trace of battery energy
 // in the export from meter timing
-const MIN_LINK_SHARE = 0.01;
+const MIN_LINK_SHARE = 0.005;
 
 const COMPACT = window.matchMedia("(max-width: 575.98px)");
 
@@ -26,6 +26,7 @@ interface Node {
 	name: string;
 	label: string;
 	value: number;
+	drawn: boolean;
 	color: string | object;
 	source: boolean;
 }
@@ -55,15 +56,17 @@ export default defineComponent({
 			};
 		},
 		nodes(): Node[] {
-			// only what is drawn counts, so a node's label is the sum of the links you can hover
-			const sum = (key: "from" | "to", id: string) =>
-				this.visibleFlows
-					.filter((f) => f[key] === id)
-					.reduce((acc, f) => acc + f.energy, 0);
+			const sum = (flows: Flow[], key: "from" | "to", id: string) =>
+				flows.filter((f) => f[key] === id).reduce((acc, f) => acc + f.energy, 0);
+			// label shows the full total, the node is drawn only if a visible link remains
+			const node = (key: "from" | "to", id: string) => ({
+				value: sum(this.flows, key, id),
+				drawn: sum(this.visibleFlows, key, id) > 0,
+			});
 			const src = SOURCES.map((id) => ({
 				name: `from-${id}`,
 				label: this.$t(`energy.flow.${id}`),
-				value: sum("from", id),
+				...node("from", id),
 				color: this.nodeColors[id] || "",
 				source: true,
 			}));
@@ -71,12 +74,12 @@ export default defineComponent({
 			const dst = SINKS.map((id) => ({
 				name: `to-${id}`,
 				label: id === "loadpoint" ? loadpointLabel : this.$t(`energy.flow.${id}`),
-				value: sum("to", id),
+				...node("to", id),
 				// colored by where the energy came from, only feed-in keeps its own color
 				color: id === "export" ? this.nodeColors[id] || "" : this.sourceBands(id),
 				source: false,
 			}));
-			return [...src, ...dst].filter((n) => n.value > 0);
+			return [...src, ...dst].filter((n) => n.drawn);
 		},
 		chartOption(): Record<string, unknown> {
 			const compact = this.compact;
@@ -146,8 +149,8 @@ export default defineComponent({
 						lineStyle: { curveness: 0.5, opacity: 1 },
 						emphasis: { focus: "adjacency" },
 						data: this.nodes.map((n) => ({
+							// no value: height follows the drawn links, not the labelled total
 							name: n.name,
-							value: n.value,
 							depth: n.source ? 0 : 1,
 							// rounded towards the label, sharp where the links attach
 							itemStyle: {

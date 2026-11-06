@@ -384,3 +384,17 @@ func TestDeviceRefs(t *testing.T) {
 		Meter:   {"db:3"},
 	}, refs)
 }
+
+func TestRenderResultStaleKeys(t *testing.T) {
+	tmpl := &Template{
+		Params: []Param{{Name: "minCurrent", Type: TypeInt}},
+		Render: "min: {{ .minCurrent }}",
+	}
+
+	b, _, err := tmpl.RenderResult(Vehicle, RenderModeInstance, map[string]any{"minCurrent": 12, "mincurrent": 6})
+	require.NoError(t, err)
+	assert.Equal(t, "min: 12", string(b))
+
+	_, _, err = tmpl.RenderResult(Vehicle, RenderModeInstance, map[string]any{"MinCurrent": 12, "mincurrent": 6})
+	require.Error(t, err)
+}

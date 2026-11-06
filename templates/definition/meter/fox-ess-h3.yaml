@@ -97,16 +97,6 @@ render: |
       address: 31038 # Soc
       type: holding
       decode: int16
-  limitsoc:
-    source: convert
-    convert: float2int
-    set:
-      source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 41009 # limit soc
-        type: writesingle
-        decode: uint16
   batterymode:
     source: watchdog
     timeout: 30s
@@ -136,13 +126,14 @@ render: |
                 address: 41000 # Work Mode
                 type: writesingle
                 encoding: uint16
+          # 41009 is the Off-Grid (EPS) reserve and is left to the user
           - source: const
             value: {{ .minsoc }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 41009 # Minimum SoC
+                address: 41011 # Minimum SoC On-Grid
                 type: writesingle
                 encoding: uint16
           - source: const

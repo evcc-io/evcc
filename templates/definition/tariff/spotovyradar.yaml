@@ -6,11 +6,11 @@ products:
       generic: Predicted spot prices
 requirements:
   description:
-    en: "Czech OTE day-ahead prices in 15-minute intervals plus a 72-hour forecast. Optionally the final price including distribution and VAT from your tariff settings at spotovyradar.cz. Requires an API key from [spotovyradar.cz](https://spotovyradar.cz/ucet/api) (Smart Home plan)."
-    de: "Tschechische OTE Day-Ahead-Preise in 15-Minuten-Intervallen plus 72-Stunden-Prognose. Optional der Endpreis inklusive Netzentgelte und Mehrwertsteuer aus den Tarifeinstellungen auf spotovyradar.cz. Benötigt einen API-Key von [spotovyradar.cz](https://spotovyradar.cz/ucet/api) (Tarif Smart Home)."
+    en: "Day-ahead prices for Czechia (OTE, CZK) or Slovakia (OKTE, EUR) in 15-minute intervals plus a 72-hour forecast. The market follows your account settings at spotovyradar.cz; set the matching currency in evcc. Optionally the final price including supplier fee, distribution (CZ) and VAT from your tariff settings. Requires an API key from [spotovyradar.cz](https://spotovyradar.cz/ucet/api) (Smart Home plan)."
+    de: "Day-Ahead-Preise für Tschechien (OTE, CZK) oder die Slowakei (OKTE, EUR) in 15-Minuten-Intervallen plus 72-Stunden-Prognose. Der Markt folgt den Kontoeinstellungen auf spotovyradar.cz; die passende Währung in evcc einstellen. Optional der Endpreis inklusive Händleraufschlag, Netzentgelte (CZ) und Mehrwertsteuer aus den Tarifeinstellungen. Benötigt einen API-Key von [spotovyradar.cz](https://spotovyradar.cz/ucet/api) (Tarif Smart Home)."
   evcc: ["skiptest"]
 group: price
-countries: ["CZ"]
+countries: ["CZ", "SK"]
 params:
   - name: apikey
     required: true
@@ -26,8 +26,8 @@ params:
       en: Price
       de: Preis
     help:
-      en: "spot = spot price in CZK/kWh excluding VAT and charges (add them with charges and tax). final = final price according to the tariff saved at spotovyradar.cz (supplier fee, distribution peak/off-peak, other charges, VAT). Do not combine final with charges or tax."
-      de: "spot = Börsenpreis in CZK/kWh ohne Mehrwertsteuer und Gebühren (über charges und tax ergänzen). final = Endpreis gemäß dem auf spotovyradar.cz gespeicherten Tarif (Händleraufschlag, Netzentgelt HT/NT, weitere Umlagen, Mehrwertsteuer). final nicht mit charges oder tax kombinieren."
+      en: "spot = spot price per kWh excluding VAT and charges (add them with charges and tax). final = final price according to your tariff settings at spotovyradar.cz (supplier fee, distribution peak/off-peak, other charges, VAT). Do not combine final with charges or tax."
+      de: "spot = Börsenpreis pro kWh ohne Mehrwertsteuer und Gebühren (über charges und tax ergänzen). final = Endpreis gemäß den Tarifeinstellungen auf spotovyradar.cz (Händleraufschlag, Netzentgelt HT/NT, weitere Umlagen, Mehrwertsteuer). final nicht mit charges oder tax kombinieren."
   - preset: tariff-base
   - preset: tariff-features
 render: |
