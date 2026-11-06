@@ -121,6 +121,11 @@ type Loadpoint struct {
 	Priority        int            `mapstructure:"priority"`        // Priority
 	DemandPredictor string         `mapstructure:"demandPredictor"` // Heating demand predictor, empty: charger default
 
+	// from yaml, phase hysteresis
+	PhasesUpPower     float64 `mapstructure:"phasesuppower"`     // 1p→3p up-switch threshold in W; 0 = default (maxCurrent × 230 V)
+	PhasesDownPower   float64 `mapstructure:"phasesdownpower"`   // 3p→1p down-switch threshold in W; 0 = default (minCurrent × activePhases × 230 V)
+	PhasesMaxCurrent3 float64 `mapstructure:"phasesmaxcurrent3"` // 3p max charge current in A; 0 = maxCurrent (e.g. TWC3: 1p 18 A, 3p 16 A)
+
 	// from yaml, deprecated
 	GuardDuration_ time.Duration `mapstructure:"guardduration"` // ignored, present for compatibility
 	Phases_        int           `mapstructure:"phases"`        // ignored, present for compatibility
@@ -241,6 +246,17 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		lp.log.WARN.Printf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
 	} else if lp.Enable.Threshold > 0 {
 		lp.log.WARN.Printf("PV mode enable threshold %.0fW > 0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
+	}
+
+	// validate phase hysteresis
+	if lp.PhasesUpPower > 0 && lp.PhasesDownPower > 0 && lp.PhasesDownPower >= lp.PhasesUpPower {
+		lp.log.WARN.Printf("phase hysteresis: phasesdownpower (%.0fW) must be below phasesuppower (%.0fW)", lp.PhasesDownPower, lp.PhasesUpPower)
+	}
+	if lp.PhasesUpPower > 0 || lp.PhasesDownPower > 0 {
+		lp.log.DEBUG.Printf("phase hysteresis: up above %.0fW, down below %.0fW", lp.phasesUpThreshold(lp.maxCurrent), lp.phasesDownThreshold(lp.minCurrent, 3))
+	}
+	if lp.PhasesMaxCurrent3 > 0 && lp.PhasesMaxCurrent3 > lp.maxCurrent {
+		lp.log.WARN.Printf("phasesmaxcurrent3 (%.1fA) above maxCurrent (%.1fA)", lp.PhasesMaxCurrent3, lp.maxCurrent)
 	}
 
 	// choose sane default if mode is not set
@@ -811,6 +827,9 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.DisableThreshold, lp.Disable.Threshold)
 	lp.publish(keys.EnableDelay, lp.Enable.Delay)
 	lp.publish(keys.DisableDelay, lp.Disable.Delay)
+	lp.publish(keys.PhasesUpPower, lp.PhasesUpPower)
+	lp.publish(keys.PhasesDownPower, lp.PhasesDownPower)
+	lp.publish(keys.PhasesMaxCurrent3, lp.PhasesMaxCurrent3)
 
 	lp.publish(keys.UI, lp.Ui)
 
@@ -1766,6 +1785,26 @@ func (lp *Loadpoint) minCharging() error {
 	return lp.setLimit(lp.effectiveMinCurrent())
 }
 
+// phasesUpThreshold returns the 1p→3p up-switch threshold in W.
+// When unset, maxCurrent × 230 V (default: switch up only once 1p cannot
+// cover the 3p max current).
+func (lp *Loadpoint) phasesUpThreshold(maxCurrent float64) float64 {
+	if lp.PhasesUpPower > 0 {
+		return lp.PhasesUpPower
+	}
+	return grid.CurrentToPower(maxCurrent, 1)
+}
+
+// phasesDownThreshold returns the 3p→1p down-switch threshold in W.
+// When unset, minCurrent × phases × 230 V (default: switch down only once
+// 3p cannot cover the min current).
+func (lp *Loadpoint) phasesDownThreshold(minCurrent float64, phases int) float64 {
+	if lp.PhasesDownPower > 0 {
+		return lp.PhasesDownPower
+	}
+	return grid.CurrentToPower(minCurrent, phases)
+}
+
 // pvScalePhases switches phases if necessary and returns number of phases switched to.
 // mayDisable indicates that insufficient surplus can stop charging via the pv disable timer.
 func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, mayDisable bool) int {
@@ -1797,9 +1836,10 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 	scalable := activePhases > 1 && lp.phasesConfigured < 3
 
 	if scalable {
-		insufficient := sitePower > 0 && grid.PowerToCurrent(availablePower, activePhases) < minCurrent
+		downThreshold := lp.phasesDownThreshold(minCurrent, activePhases)
+		insufficient := (sitePower > 0 || !lp.enabled) && availablePower < downThreshold
 		if insufficient {
-			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, grid.CurrentToPower(minCurrent, activePhases), activePhases)
+			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, downThreshold, activePhases)
 		}
 
 		// scaling down only helps if 1p is sustainable, otherwise the loadpoint
@@ -1851,10 +1891,10 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 	}
 
 	maxPhases := lp.MaxActivePhases()
-	target1pCurrent := grid.PowerToCurrent(availablePower, 1)
+	upThreshold := lp.phasesUpThreshold(maxCurrent)
 
 	// scaling up is pointless unless load management allows min current and power on maxPhases
-	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent &&
+	scalable = maxPhases > 1 && phases < maxPhases && availablePower > upThreshold &&
 		maxCurrent >= minCurrent && lp.circuitAllowsPhases(maxPhases, minCurrent)
 
 	// scale up phases

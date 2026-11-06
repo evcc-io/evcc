@@ -1,6 +1,6 @@
 package core
 
-// Fork extension (twc3shelly): 0A safety sequence for phase switching.
+// 0A safety sequence for phase switching.
 //
 // Switching phases under load can damage the installation contactor (Shelly
 // Pro 1PM Gen3) and the vehicle's charging electronics, so the load is
