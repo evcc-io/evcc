@@ -185,7 +185,7 @@ func (c *Connection) Enable(enable bool) error {
 
 	timeout := time.After(request.Timeout)
 	for {
-		if enabled, _ := c.Enabled(); enabled == enable {
+		if enabled, err := c.Enabled(); err == nil && enabled == enable {
 			return nil
 		}
 
