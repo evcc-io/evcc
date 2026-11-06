@@ -8,7 +8,7 @@ products:
       generic: Sigen PV Max
   - brand: Sigenergy
     description:
-      generic: SigenStore EC
+      generic: SigenStor EC
 capabilities: ["battery-control"]
 requirements:
   description:
