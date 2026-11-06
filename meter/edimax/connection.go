@@ -61,9 +61,8 @@ func NewConnection(host, user, password string, cache time.Duration) *Connection
 		return http.ErrUseLastResponse
 	}
 
-	// firmware V1 uses basic auth, V2/V3 answer with a digest challenge
 	if user != "" {
-		c.Client.Transport = transport.BasicAuth(user, password, transport.Digest(user, password, c.Client.Transport))
+		c.Client.Transport = newAuthTransport(user, password, c.Client.Transport)
 	}
 
 	c.statusG = util.ResettableCached(c.status, cache)

@@ -16,7 +16,7 @@ const (
 	setupOK  = `<?xml version="1.0" encoding="UTF8"?><SMARTPLUG id="edimax"><CMD id="setup">OK</CMD></SMARTPLUG>`
 )
 
-func plug(t *testing.T, auth func(r *http.Request) bool) (*httptest.Server, *[]string) {
+func plug(t *testing.T, challenge string, auth func(r *http.Request) bool) (*httptest.Server, *[]string) {
 	t.Helper()
 
 	var bodies []string
@@ -24,7 +24,7 @@ func plug(t *testing.T, auth func(r *http.Request) bool) (*httptest.Server, *[]s
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !auth(r) {
-			w.Header().Set("WWW-Authenticate", `Digest realm="SP2101W", nonce="abc", qop="auth"`)
+			w.Header().Set("WWW-Authenticate", challenge)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -53,7 +53,7 @@ func host(srv *httptest.Server) string {
 }
 
 func TestStatusAndSwitch(t *testing.T) {
-	srv, bodies := plug(t, func(r *http.Request) bool {
+	srv, bodies := plug(t, `Basic realm="SP2101W"`, func(r *http.Request) bool {
 		u, p, ok := r.BasicAuth()
 		return ok && u == "admin" && p == "1234"
 	})
@@ -73,13 +73,18 @@ func TestStatusAndSwitch(t *testing.T) {
 }
 
 func TestDigestAuth(t *testing.T) {
-	srv, _ := plug(t, func(r *http.Request) bool {
+	var basic bool
+	srv, _ := plug(t, `Digest realm="SP2101W", nonce="abc", qop="auth"`, func(r *http.Request) bool {
+		if _, _, ok := r.BasicAuth(); ok {
+			basic = true
+		}
 		return strings.HasPrefix(r.Header.Get("Authorization"), "Digest ")
 	})
 
 	power, err := NewConnection(host(srv), "admin", "1234", 0).CurrentPower()
 	require.NoError(t, err)
 	assert.Equal(t, 118.25, power)
+	assert.False(t, basic, "basic credentials sent to digest device")
 }
 
 func TestSetupFailed(t *testing.T) {
