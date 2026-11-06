@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"errors"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -29,10 +30,10 @@ func bo() backoff.BackOff {
 	)
 }
 
-// backoffPermanentError returns a permanent error in case of HTTP 400
+// backoffPermanentError returns a permanent error in case of HTTP errors except 429
 func backoffPermanentError(err error) error {
 	if se, ok := errors.AsType[*request.StatusError](err); ok {
-		if code := se.StatusCode(); code >= 400 && code <= 599 {
+		if code := se.StatusCode(); code >= 400 && code <= 599 && code != http.StatusTooManyRequests {
 			return backoff.Permanent(se)
 		}
 	}
