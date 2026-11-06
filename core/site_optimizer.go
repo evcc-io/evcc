@@ -451,6 +451,16 @@ type demandDetail struct {
 	Values []float32  `json:"values"`
 }
 
+// endOfHorizonValue is the Wh value of energy left in storage at the end of the horizon, floored
+// at pE/eta for storage that can export: charging surplus only stores eta Wh per Wh
+func endOfHorizonValue(pN, pE []float32, eta float32, canExport bool) float32 {
+	pa := lo.Min(pN) * eta * 0.99
+	if canExport {
+		pa = max(pa, lo.Min(pE)/eta*1.01)
+	}
+	return pa
+}
+
 // optimizerBattery pairs a battery request entry with its device detail
 type optimizerBattery struct {
 	cfg    optimizer.BatteryConfig
@@ -630,10 +640,6 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		},
 	}
 
-	// end of horizon Wh value, floored at the export price: charging surplus only
-	// stores eta Wh per Wh, so below pE/eta exporting beats storing
-	pa := max(lo.Min(req.TimeSeries.PN)*eta*0.99, lo.Min(req.TimeSeries.PE)/eta*1.01)
-
 	// individual profiles summarized into Gt, for the debug view
 	details = requestDetails{
 		Timestamps: asTimestamps(dt, now),
@@ -715,7 +721,8 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	}
 
 	for _, b := range batteries {
-		b.cfg.PA = pa
+		// vehicles cannot export
+		b.cfg.PA = endOfHorizonValue(req.TimeSeries.PN, req.TimeSeries.PE, eta, b.detail.loadpoint == nil)
 		req.Batteries = append(req.Batteries, b.cfg)
 		details.BatteryDetails = append(details.BatteryDetails, b.detail)
 	}
@@ -937,7 +944,8 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 		}
 
 		if detail.loadpoint != nil {
-			suggestion.Battery = batteryDischarge
+			suggestion.BatteryDischarge = batteryDischarge
+			suggestion.BatteryCharge = batteryCharge
 		}
 
 		// uncontrollable devices can't act on a suggestion
