@@ -40,6 +40,12 @@ func TestMergeMapsAmbiguousKey(t *testing.T) {
 	}
 }
 
+func TestMergeMapsEqualDuplicateKey(t *testing.T) {
+	target := map[string]any{"mincurrent": 6}
+	require.NoError(t, mergeMaps(map[string]any{"minCurrent": 12, "mincurrent": 12}, target))
+	require.Equal(t, map[string]any{"mincurrent": 12}, target)
+}
+
 func TestMergeMapsEmptyKeepsDefault(t *testing.T) {
 	target := map[string]any{
 		"maxsoc": "100",

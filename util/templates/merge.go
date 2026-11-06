@@ -21,12 +21,13 @@ func mergeMaps(other map[string]any, target map[string]any) error {
 	return nil
 }
 
-// ambiguousKey finds two keys that matchKey treats as equal. merge visits src in map
-// order, so such keys would make the rendered result depend on iteration order
+// ambiguousKey finds two keys that matchKey treats as equal and carry different values.
+// merge visits src in map order, so such keys would make the rendered result depend on
+// iteration order. Duplicates with equal values are harmless and tolerated.
 func ambiguousKey(m map[string]any) (string, bool) {
 	for key, val := range m {
 		for other := range m {
-			if other != key && matchKey(other, key) {
+			if other != key && matchKey(other, key) && !reflect.DeepEqual(m[other], val) {
 				return key, true
 			}
 		}
