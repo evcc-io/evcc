@@ -8,6 +8,7 @@ import (
 
 	"github.com/andig/mbserver"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/stretchr/testify/require"
 )
@@ -69,7 +70,7 @@ func TestOpenWB20RfidReset(t *testing.T) {
 	conn, err := modbus.NewConnection(context.Background(), l.Addr().String(), "", "", 0, modbus.Tcp, 1)
 	require.NoError(t, err)
 
-	wb := &OpenWB20{conn: conn, rfid: true}
+	wb := &OpenWB20{log: util.NewLogger("test"), conn: conn, rfid: true}
 
 	status, err := wb.Status()
 	require.NoError(t, err)
@@ -78,8 +79,10 @@ func TestOpenWB20RfidReset(t *testing.T) {
 
 	// failed reset on disconnect is retried
 	h.set(0, true)
-	_, err = wb.Status()
-	require.ErrorContains(t, err, "reset rfid")
+	status, err = wb.Status()
+	require.NoError(t, err)
+	require.Equal(t, api.StatusA, status)
+	require.Zero(t, h.count())
 
 	h.set(0, false)
 	status, err = wb.Status()

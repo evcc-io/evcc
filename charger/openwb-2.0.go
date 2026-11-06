@@ -14,6 +14,7 @@ import (
 // OpenWB20 charger implementation
 type OpenWB20 struct {
 	implement.Caps
+	log       *util.Logger
 	conn      *modbus.Connection
 	enabled   bool
 	curr      uint16
@@ -96,6 +97,7 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 
 	wb := &OpenWB20{
 		Caps: implement.New(),
+		log:  log,
 		conn: conn,
 		curr: 6 * 100,
 		base: (connector - 1) * 100,
@@ -118,10 +120,12 @@ func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
 
 	// reset RFID tag on disconnect, retried until successful (requires openWB 2.3.0)
 	if wb.rfid && wb.connected {
+		// keep the disconnect visible to the loadpoint
 		if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err != nil {
-			return api.StatusA, fmt.Errorf("reset rfid: %w", err)
+			wb.log.WARN.Printf("reset rfid: %v", err)
+		} else {
+			wb.connected = false
 		}
-		wb.connected = false
 	}
 
 	return api.StatusA, nil
