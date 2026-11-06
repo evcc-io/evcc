@@ -22,7 +22,7 @@ render: |
   {{ include "base" . }}
   forecast:
     source: http
-    uri: https://tarife.primeo-energie.ch/api/v1/tariffs?tariff_type=integrated&tariff_name={{ .tariff }}&start_timestamp={{ `{{ now.Format "2006-01-02T00:00:00Z07:00" | urlquery }}` }}&end_timestamp={{ `{{ (now.AddDate 0 0 2).Format "2006-01-02T00:00:00Z07:00" | urlquery }}` }}
+    uri: https://tarife.primeo-energie.ch/api/v1/tariffs?tariff_type=integrated&tariff_name={{ .tariff }}&start_timestamp={{ `{{ now.UTC.Format "2006-01-02T15:00:00Z" }}` }}
     jq: |
       [.prices[] |
         {
