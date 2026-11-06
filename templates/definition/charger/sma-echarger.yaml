@@ -1,0 +1,22 @@
+template: sma-echarger
+products:
+  - brand: SMA
+    description:
+      generic: eCharger (Modbus)
+capabilities: ["mA", "meter"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: Firmware 2.7 oder neuer. Der Modbus TCP Server muss aktiviert sein. Der Charger darf nicht gleichzeitig vom Sunny Home Manager gesteuert werden.
+    en: Firmware 2.7 or newer. The Modbus TCP server must be enabled. The charger must not be controlled by the Sunny Home Manager at the same time.
+discovery:
+  hostname: ["sma*"]
+  mac: ["0015BB", "0040AD"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 3
+render: |
+  type: sma-echarger
+  {{- include "modbus" . }}
