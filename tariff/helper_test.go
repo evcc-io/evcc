@@ -158,11 +158,18 @@ func TestRunOrErrorStopsGoroutineOnStartupFailure(t *testing.T) {
 }
 
 func TestBackoffPermanentError(t *testing.T) {
-	statusErr := func(code int) error {
-		return request.NewStatusError(&http.Response{StatusCode: code, Request: &http.Request{Method: http.MethodGet, URL: &url.URL{}}})
-	}
+	for _, tc := range []struct {
+		code      int
+		permanent bool
+	}{
+		{http.StatusBadRequest, true},
+		{http.StatusInternalServerError, true},
+		{http.StatusTooManyRequests, false},
+	} {
+		// status errors arrive wrapped as permanent from the request package
+		err := backoff.Permanent(request.NewStatusError(&http.Response{StatusCode: tc.code, Request: &http.Request{Method: http.MethodGet, URL: &url.URL{}}}))
 
-	var perm *backoff.PermanentError
-	assert.ErrorAs(t, backoffPermanentError(statusErr(http.StatusBadRequest)), &perm)
-	assert.NotErrorAs(t, backoffPermanentError(statusErr(http.StatusTooManyRequests)), &perm)
+		var perm *backoff.PermanentError
+		assert.Equal(t, tc.permanent, errors.As(backoffPermanentError(err), &perm), "status %d", tc.code)
+	}
 }
