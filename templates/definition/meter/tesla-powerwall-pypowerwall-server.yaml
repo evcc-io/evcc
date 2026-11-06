@@ -35,8 +35,10 @@ params:
   - name: insecure
     advanced: true
     help:
-      en: Allow self-signed TLS certificates of the TLS reverse proxy (https only).
-      de: Selbstsignierte TLS-Zertifikate des TLS-Reverse-Proxy erlauben (nur bei https).
+      en: |
+        Only relevant with `schema: https`; set to true for a self-signed TLS reverse proxy. Ignored for http.
+      de: |
+        Nur bei `schema: https` relevant; für einen selbstsignierten TLS-Reverse-Proxy auf true setzen. Bei http ohne Wirkung.
   - name: controlSecret
     usages: ["battery"]
     mask: true
