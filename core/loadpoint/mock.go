@@ -545,6 +545,34 @@ func (mr *MockAPIMockRecorder) GetPhasesConfigured() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPhasesConfigured", reflect.TypeOf((*MockAPI)(nil).GetPhasesConfigured))
 }
 
+// GetPhasesDownPower mocks base method.
+func (m *MockAPI) GetPhasesDownPower() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPhasesDownPower")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetPhasesDownPower indicates an expected call of GetPhasesDownPower.
+func (mr *MockAPIMockRecorder) GetPhasesDownPower() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPhasesDownPower", reflect.TypeOf((*MockAPI)(nil).GetPhasesDownPower))
+}
+
+// GetPhasesUpPower mocks base method.
+func (m *MockAPI) GetPhasesUpPower() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPhasesUpPower")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetPhasesUpPower indicates an expected call of GetPhasesUpPower.
+func (mr *MockAPIMockRecorder) GetPhasesUpPower() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPhasesUpPower", reflect.TypeOf((*MockAPI)(nil).GetPhasesUpPower))
+}
+
 // GetPlan mocks base method.
 func (m *MockAPI) GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continuous bool) api.Rates {
 	m.ctrl.T.Helper()
@@ -1141,6 +1169,20 @@ func (m *MockAPI) SetPhasesConfigured(arg0 int) error {
 func (mr *MockAPIMockRecorder) SetPhasesConfigured(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPhasesConfigured", reflect.TypeOf((*MockAPI)(nil).SetPhasesConfigured), arg0)
+}
+
+// SetPhasesHysteresis mocks base method.
+func (m *MockAPI) SetPhasesHysteresis(up, down float64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetPhasesHysteresis", up, down)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetPhasesHysteresis indicates an expected call of SetPhasesHysteresis.
+func (mr *MockAPIMockRecorder) SetPhasesHysteresis(up, down any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPhasesHysteresis", reflect.TypeOf((*MockAPI)(nil).SetPhasesHysteresis), up, down)
 }
 
 // SetPlanEnergy mocks base method.

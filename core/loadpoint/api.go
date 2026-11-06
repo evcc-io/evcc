@@ -100,6 +100,12 @@ type API interface {
 	GetPhasesConfigured() int
 	// SetPhasesConfigured sets the configured phases
 	SetPhasesConfigured(int) error
+	// GetPhasesUpPower returns the 1p→3p up-switch threshold in W (0 = default)
+	GetPhasesUpPower() float64
+	// GetPhasesDownPower returns the 3p→1p down-switch threshold in W (0 = default)
+	GetPhasesDownPower() float64
+	// SetPhasesHysteresis sets the 1p/3p switching thresholds in W (0 = default)
+	SetPhasesHysteresis(up, down float64) error
 	// ActivePhases returns the active phases for the current vehicle
 	ActivePhases() int
 

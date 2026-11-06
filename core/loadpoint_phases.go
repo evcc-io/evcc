@@ -216,3 +216,42 @@ func (lp *Loadpoint) syncChargerPhases(disabled bool) error {
 
 	return nil
 }
+
+// GetPhasesUpPower returns the 1p→3p up-switch threshold in W (0 = default).
+func (lp *Loadpoint) GetPhasesUpPower() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.PhasesUpPower
+}
+
+// GetPhasesDownPower returns the 3p→1p down-switch threshold in W (0 = default).
+func (lp *Loadpoint) GetPhasesDownPower() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.PhasesDownPower
+}
+
+// SetPhasesHysteresis sets the 1p/3p switching thresholds in W (0 = default).
+// The down threshold must be below the up threshold to form a hysteresis band.
+func (lp *Loadpoint) SetPhasesHysteresis(up, down float64) error {
+	if up < 0 || down < 0 {
+		return fmt.Errorf("phase hysteresis: thresholds must not be negative (up: %.0f W, down: %.0f W)", up, down)
+	}
+	if up > 0 && down > 0 && down >= up {
+		return fmt.Errorf("phase hysteresis: down threshold (%.0f W) must be below up threshold (%.0f W)", down, up)
+	}
+
+	lp.log.DEBUG.Printf("set phase hysteresis: up above %.0f W, down below %.0f W (0 = default)", up, down)
+
+	lp.Lock()
+	lp.PhasesUpPower = up
+	lp.PhasesDownPower = down
+	lp.Unlock()
+
+	lp.publish(keys.PhasesUpPower, up)
+	lp.publish(keys.PhasesDownPower, down)
+	lp.settings.SetFloat(keys.PhasesUpPower, up)
+	lp.settings.SetFloat(keys.PhasesDownPower, down)
+
+	return nil
+}

@@ -561,6 +561,10 @@ export interface ConfigLoadpoint {
   defaultMode: string;
   priority: number;
   phasesConfigured: number;
+  /** 3-phase switching threshold in W (0 = default) */
+  phasesUpPower?: number;
+  /** 1-phase switching threshold in W (0 = default) */
+  phasesDownPower?: number;
   minCurrent: number;
   maxCurrent: number;
   smartCostLimit: number | null;
