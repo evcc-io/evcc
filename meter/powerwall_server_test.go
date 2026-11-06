@@ -264,6 +264,29 @@ func TestPowerWallServerReadOnly(t *testing.T) {
 	assert.True(t, ok)
 }
 
+func TestPowerWallServerTrailingSlash(t *testing.T) {
+	fake := &fakePowerwallServer{secret: "secret", reserve: 20}
+	srv := httptest.NewServer(fake.handler())
+	t.Cleanup(srv.Close)
+
+	addr := srv.Listener.Addr().String()
+	cfg := map[string]any{
+		"uri":           "http://" + addr + "/",
+		"usage":         "battery",
+		"controlSecret": "secret",
+		"minsoc":        0.0,
+		"cache":         time.Millisecond,
+	}
+
+	m, err := NewPowerWallFromConfig(cfg)
+	require.NoError(t, err)
+	pw := m.(*PowerWall)
+	assert.Equal(t, "http://"+addr, pw.controlBase)
+
+	require.NoError(t, pw.setReserve(0))
+	assert.Equal(t, 0.0, fake.reserveValue())
+}
+
 func TestPowerWallServerGridReads(t *testing.T) {
 	fake := &fakePowerwallServer{secret: "secret", reserve: 20}
 	pw, _ := newTestPowerWallServer(t, fake, "grid", nil)

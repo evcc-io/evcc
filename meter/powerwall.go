@@ -68,11 +68,12 @@ func (cc *powerWallConfig) validate() error {
 		return errors.New("missing usage")
 	}
 
-	if cc.Password == "" && !cc.usesPypowerwallServer() {
+	serverMode := cc.usesPypowerwallServer()
+	if cc.Password == "" && !serverMode {
 		return errors.New("missing password")
 	}
 
-	if cc.usesPypowerwallServer() {
+	if serverMode {
 		for name, v := range map[string]float64{"minsoc": cc.MinSoc, "chargemaxsoc": cc.ChargeMaxSoc} {
 			if v < 0 || v > 100 {
 				return fmt.Errorf("invalid %s: %v, must be 0-100", name, v)
@@ -134,9 +135,14 @@ func pypowerwallServerTransport(insecure bool) http.RoundTripper {
 }
 
 func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
+	serverMode := cc.usesPypowerwallServer()
+	controlEnabled := serverMode && cc.ControlSecret != ""
+
 	readTransport := http.RoundTripper(powerwall.DefaultTransport())
-	if cc.usesPypowerwallServer() {
-		readTransport = pypowerwallServerTransport(cc.Insecure)
+	var serverTransport http.RoundTripper
+	if serverMode {
+		serverTransport = pypowerwallServerTransport(cc.Insecure)
+		readTransport = serverTransport
 	}
 
 	httpClient := &http.Client{
@@ -159,14 +165,14 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 		minSoc:        cc.MinSoc,
 		chargeMaxSoc:  cc.ChargeMaxSoc,
 	}
-	if cc.usesPypowerwallServer() {
+	if serverMode {
 		m.controlClient = &http.Client{
-			Transport: request.NewTripper(log, pypowerwallServerTransport(cc.Insecure)),
+			Transport: request.NewTripper(log, serverTransport),
 			Timeout:   15 * time.Second,
 		}
 		m.freqG = util.Cached(m.getFreq, cc.Cache)
 
-		if cc.ControlSecret != "" && strings.HasPrefix(strings.ToLower(cc.URI), "http://") {
+		if controlEnabled && strings.HasPrefix(strings.ToLower(cc.URI), "http://") {
 			log.INFO.Println("controlSecret is sent unencrypted over http; use https or a trusted network")
 		}
 	}
@@ -174,7 +180,7 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 	if m.usage == "load" || m.usage == "solar" {
 		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
 	}
-	if cc.usesPypowerwallServer() {
+	if serverMode {
 		if m.usage == "site" || m.usage == "battery" {
 			implement.Has(m, implement.MeterEnergy(m.totalEnergy))
 			implement.Has(m, implement.MeterReturnEnergy(m.returnEnergy))
@@ -183,13 +189,13 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 
 	var freq pwsFreq
 	freqErr := error(nil)
-	if cc.usesPypowerwallServer() && m.usage == "site" {
+	if serverMode && m.usage == "site" {
 		freq, freqErr = m.freqG()
 		if freqErr != nil {
 			log.WARN.Println("phase readings:", freqErr)
 		}
 	}
-	if cc.usesPypowerwallServer() && freqErr == nil && m.usage == "site" &&
+	if serverMode && freqErr == nil && m.usage == "site" &&
 		freq.VoltageL1 != nil && freq.VoltageL2 != nil && freq.VoltageL3 != nil {
 		implement.Has(m, implement.PhaseCurrents(m.currents))
 		implement.Has(m, implement.PhaseVoltages(func() (float64, float64, float64, error) {
@@ -206,7 +212,7 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 
 	if m.usage == "battery" {
 		var opGet func() (*powerwall.OperationData, error)
-		if cc.usesPypowerwallServer() {
+		if serverMode {
 			opGet = m.getOperation
 		} else {
 			opGet = client.GetOperation
@@ -235,7 +241,7 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 			return op.BackupReservePercent, 100, nil
 		}))
 
-		if cc.usesPypowerwallServer() {
+		if serverMode {
 			// The local/TEDAPI path caps max_* at the inverter usable power.
 			// Take the minimum explicitly so a backend that reports the
 			// nameplate in max_* cannot overstate a derated site.
@@ -263,11 +269,13 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 			}))
 		}
 
-		if cc.usesPypowerwallServer() && cc.ControlSecret == "" {
+		if serverMode && !controlEnabled {
 			log.WARN.Println("no controlSecret configured, battery control disabled (read-only)")
-		} else if cc.usesPypowerwallServer() {
+		}
+		if controlEnabled {
 			implement.Has(m, implement.BatteryController(batteryModesSocLimit, m.setBatteryMode))
-		} else if cc.ControlSecret != "" {
+		}
+		if !serverMode && cc.ControlSecret != "" {
 			log.WARN.Println("controlSecret is only supported with the pypowerwall-server backend, ignoring")
 		}
 	}

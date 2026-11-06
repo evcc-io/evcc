@@ -9,7 +9,6 @@ import (
 	"math"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/andig/go-powerwall"
@@ -100,7 +99,7 @@ func (m *PowerWall) postControl(path string, body any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, strings.TrimRight(m.controlBase, "/")+path, bytes.NewReader(data))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, m.controlBase+path, bytes.NewReader(data))
 	if err != nil {
 		return err
 	}
@@ -121,28 +120,31 @@ func (m *PowerWall) postControl(path string, body any) error {
 	return nil
 }
 
-func (m *PowerWall) getFreq() (pwsFreq, error) {
-	var res pwsFreq
-
+func (m *PowerWall) getControl(path string, result any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(m.controlBase, "/")+"/freq", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, m.controlBase+path, nil)
 	if err != nil {
-		return res, err
+		return err
 	}
 
 	resp, err := m.controlClient.Do(req)
 	if err != nil {
-		return res, err
+		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return res, fmt.Errorf("get /freq: %s", resp.Status)
+		return fmt.Errorf("get %s: %s", path, resp.Status)
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(&res)
+	return json.NewDecoder(resp.Body).Decode(result)
+}
+
+func (m *PowerWall) getFreq() (pwsFreq, error) {
+	var res pwsFreq
+	err := m.getControl("/freq", &res)
 	return res, err
 }
 
@@ -151,25 +153,7 @@ func (m *PowerWall) getOperation() (*powerwall.OperationData, error) {
 		BackupReservePercent *float64 `json:"backup_reserve_percent"`
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(m.controlBase, "/")+"/api/operation", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := m.controlClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("get /api/operation: %s", resp.Status)
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+	if err := m.getControl("/api/operation", &res); err != nil {
 		return nil, err
 	}
 	if res.BackupReservePercent == nil {
