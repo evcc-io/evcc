@@ -22,37 +22,56 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // SmaECharger charger implementation for the SMA eCharger (Modbus profile SW 2.7)
 type SmaECharger struct {
-	conn     *modbus.Connection
-	oldstate uint32
+	conn    *modbus.Connection
+	phases  int
+	current float64
 }
 
 const (
 	// input registers
-	smaEChargerRegPowers   = 30777 // INT32 W L1-L3
-	smaEChargerRegVoltages = 30783 // UINT32 0.01 V L1-L3
-	smaEChargerRegCurrents = 30977 // INT32 0.001 A L1-L3
-	smaEChargerRegSession  = 35453 // UINT64 Wh
-	smaEChargerRegPower    = 35457 // INT32 W
-	smaEChargerRegEnergy   = 35459 // UINT64 Wh
-	smaEChargerRegStatus   = 35463 // ENUM32
+	smaEChargerRegMainModel   = 30051 // UINT32
+	smaEChargerRegModel       = 30053 // UINT32
+	smaEChargerRegVendor      = 30055 // UINT32
+	smaEChargerRegPkgRev      = 30059 // UINT32
+	smaEChargerRegSerial      = 35549 // STRING
+	smaEChargerRegSwRev       = 35565 // STRING
+	smaEChargerRegHealth      = 35465 // ENUM32
+	smaEChargerRegEvent       = 30213 // UINT32
+	smaEChargerRegLimitSrc    = 35547 // UINT32
+	smaEChargerRegMaxPowerRtg = 33019 // INT32 W
+	smaEChargerRegPowers      = 30777 // INT32 W L1-L3
+	smaEChargerRegVoltages    = 30783 // UINT32 0.01 V L1-L3
+	smaEChargerRegCurrents    = 30977 // INT32 0.001 A L1-L3
+	smaEChargerRegSession     = 35453 // UINT64 Wh
+	smaEChargerRegPower       = 35457 // INT32 W
+	smaEChargerRegEnergy      = 35459 // UINT64 Wh
+	smaEChargerRegStatus      = 35463 // ENUM32
 
 	// holding registers
-	smaEChargerRegMode    = 41471 // ENUM32
-	smaEChargerRegCurrent = 41473 // UINT32 0.1 A
-	smaEChargerRegAppLock = 41477 // ENUM32
+	smaEChargerRegMaxCurrent = 40480 // UINT32 0.001 A
+	smaEChargerRegMinCurrent = 41473 // UINT32 0.1 A
+	smaEChargerRegMode       = 41471 // ENUM32
+	smaEChargerRegEnable     = 41475 // ENUM32
+	smaEChargerRegChargeLock = 41477 // ENUM32, charging release required via app, RFID or UI
+	smaEChargerRegSetpoint   = 44383 // INT32 W
+	smaEChargerRegMinPower   = 44387 // INT32 W
 
-	smaEChargerModeFast = 4718
-	smaEChargerModeStop = 4721
-	smaEChargerLockNo   = 1130
+	smaEChargerDisabled      = 5171
+	smaEChargerEnabled       = 5172
+	smaEChargerChargeLockOn  = 1129
+	smaEChargerChargeLockOff = 1130
+	smaEChargerModeFast      = 4718
 
 	smaEChargerNaN32 = 0x80000000
 )
@@ -85,15 +104,19 @@ func NewSmaECharger(ctx context.Context, settings modbus.Settings) (api.Charger,
 		return nil, api.ErrSponsorRequired
 	}
 
-	conn.Logger(util.NewLogger("sma-echarger").TRACE)
+	log := util.NewLogger("sma-echarger")
+	conn.Logger(log.TRACE)
 
 	wb := &SmaECharger{
-		conn: conn,
+		conn:   conn,
+		phases: 3,
 	}
 
-	// app lock overrides the charge status and prevents vehicle detection
-	if err := wb.write(smaEChargerRegAppLock, smaEChargerLockNo); err != nil {
-		return nil, fmt.Errorf("app lock: %w", err)
+	// pv surplus and target modes would regulate charging on their own
+	if v, err := wb.readHolding32(smaEChargerRegMode); err != nil {
+		return nil, fmt.Errorf("mode: %w", err)
+	} else if v != smaEChargerModeFast {
+		log.WARN.Printf("charging mode is %d, fast charging (%d) required", v, smaEChargerModeFast)
 	}
 
 	return wb, nil
@@ -135,16 +158,7 @@ func (wb *SmaECharger) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	// stop charging when the vehicle connects to prevent unauthorised charging
-	s := v[0]
-	if wb.oldstate == 200111 && s != 200111 {
-		if err := wb.Enable(false); err != nil {
-			return api.StatusNone, err
-		}
-	}
-	wb.oldstate = s
-
-	switch s {
+	switch s := v[0]; s {
 	case 200111: // not connected
 		return api.StatusA, nil
 	case 200112, 200114, 5169: // sleeping, charge target reached, locked
@@ -156,24 +170,42 @@ func (wb *SmaECharger) Status() (api.ChargeStatus, error) {
 	}
 }
 
+var _ api.StatusReasoner = (*SmaECharger)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (wb *SmaECharger) StatusReason() (api.Reason, error) {
+	v, err := wb.read32(smaEChargerRegStatus, 1)
+	if err != nil || v[0] != 5169 {
+		return api.ReasonUnknown, err
+	}
+
+	// locked status may also be caused by disabling charging, only the charge lock requires authorization
+	lock, err := wb.readHolding32(smaEChargerRegChargeLock)
+	if err != nil || lock != smaEChargerChargeLockOn {
+		return api.ReasonUnknown, err
+	}
+
+	return api.ReasonWaitingForAuthorization, nil
+}
+
 // Enabled implements the api.Charger interface
 func (wb *SmaECharger) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(smaEChargerRegMode, 2)
+	b, err := wb.conn.ReadHoldingRegisters(smaEChargerRegEnable, 2)
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint32(b) != smaEChargerModeStop, nil
+	return binary.BigEndian.Uint32(b) == smaEChargerEnabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *SmaECharger) Enable(enable bool) error {
-	mode := uint32(smaEChargerModeStop)
+	val := uint32(smaEChargerDisabled)
 	if enable {
-		mode = smaEChargerModeFast
+		val = smaEChargerEnabled
 	}
 
-	return wb.write(smaEChargerRegMode, mode)
+	return wb.write(smaEChargerRegEnable, val)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -189,7 +221,42 @@ func (wb *SmaECharger) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	return wb.write(smaEChargerRegCurrent, uint32(math.Round(current*10)))
+	if err := wb.setPower(current, wb.phases); err != nil {
+		return err
+	}
+
+	wb.current = current
+
+	return nil
+}
+
+// setPower writes the power limit, the charger selects 1p or 3p internally based on it
+func (wb *SmaECharger) setPower(current float64, phases int) error {
+	power := int32(math.Round(grid.CurrentToPower(current, phases)))
+	return wb.write(smaEChargerRegSetpoint, uint32(power))
+}
+
+var _ api.PhaseSwitcher = (*SmaECharger)(nil)
+
+// Phases1p3p implements the api.PhaseSwitcher interface
+func (wb *SmaECharger) Phases1p3p(phases int) error {
+	// loadpoint may not rewrite an unchanged current, hence apply the new phases immediately
+	if wb.current > 0 {
+		if err := wb.setPower(wb.current, phases); err != nil {
+			return err
+		}
+	}
+
+	wb.phases = phases
+
+	return nil
+}
+
+var _ api.PhaseGetter = (*SmaECharger)(nil)
+
+// GetPhases implements the api.PhaseGetter interface
+func (wb *SmaECharger) GetPhases() (int, error) {
+	return wb.phases, nil
 }
 
 var _ api.Meter = (*SmaECharger)(nil)
@@ -233,8 +300,8 @@ func (wb *SmaECharger) ChargedEnergy() (float64, error) {
 	return wb.energy(smaEChargerRegSession)
 }
 
-// phases reads three 32 bit phase values; abs since grid measurements may be signed from the grid perspective
-func (wb *SmaECharger) phases(reg uint16, scale float64, signed bool) (float64, float64, float64, error) {
+// phaseValues reads three 32 bit phase values; abs since grid measurements may be signed from the grid perspective
+func (wb *SmaECharger) phaseValues(reg uint16, scale float64, signed bool) (float64, float64, float64, error) {
 	v, err := wb.read32(reg, 3)
 	if err != nil {
 		return 0, 0, 0, err
@@ -256,19 +323,134 @@ var _ api.PhasePowers = (*SmaECharger)(nil)
 
 // Powers implements the api.PhasePowers interface
 func (wb *SmaECharger) Powers() (float64, float64, float64, error) {
-	return wb.phases(smaEChargerRegPowers, 1, true)
+	return wb.phaseValues(smaEChargerRegPowers, 1, true)
 }
 
 var _ api.PhaseCurrents = (*SmaECharger)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *SmaECharger) Currents() (float64, float64, float64, error) {
-	return wb.phases(smaEChargerRegCurrents, 0.001, true)
+	return wb.phaseValues(smaEChargerRegCurrents, 0.001, true)
 }
 
 var _ api.PhaseVoltages = (*SmaECharger)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *SmaECharger) Voltages() (float64, float64, float64, error) {
-	return wb.phases(smaEChargerRegVoltages, 0.01, false)
+	return wb.phaseValues(smaEChargerRegVoltages, 0.01, false)
+}
+
+// readString reads a UTF-8 string input register of count 16 bit words
+func (wb *SmaECharger) readString(reg uint16, count uint16) (string, error) {
+	b, err := wb.conn.ReadInputRegisters(reg, count)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(strings.TrimRight(string(b), "\x00")), nil
+}
+
+// readHolding32 reads a 32 bit holding register
+func (wb *SmaECharger) readHolding32(reg uint16) (uint32, error) {
+	b, err := wb.conn.ReadHoldingRegisters(reg, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return binary.BigEndian.Uint32(b), nil
+}
+
+// smaEChargerUint32 converts an unsigned 32 bit value, treating NaN as zero
+func smaEChargerUint32(u uint32) float64 {
+	if u == math.MaxUint32 {
+		return 0
+	}
+	return float64(u)
+}
+
+var _ api.CurrentLimiter = (*SmaECharger)(nil)
+
+// GetMinMaxCurrent implements the api.CurrentLimiter interface
+func (wb *SmaECharger) GetMinMaxCurrent() (float64, float64, error) {
+	minCurrent, err := wb.readHolding32(smaEChargerRegMinCurrent)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	maxCurrent, err := wb.readHolding32(smaEChargerRegMaxCurrent)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return smaEChargerUint32(minCurrent) / 10, smaEChargerUint32(maxCurrent) / 1e3, nil
+}
+
+var _ api.PowerLimiter = (*SmaECharger)(nil)
+
+// GetMinMaxPower implements the api.PowerLimiter interface
+func (wb *SmaECharger) GetMinMaxPower() (float64, float64, error) {
+	minPower, err := wb.readHolding32(smaEChargerRegMinPower)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	maxPower, err := wb.read32(smaEChargerRegMaxPowerRtg, 1)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return smaEChargerInt32(minPower), smaEChargerInt32(maxPower[0]), nil
+}
+
+var _ api.Diagnosis = (*SmaECharger)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *SmaECharger) Diagnose() {
+	for _, r := range []struct {
+		name string
+		reg  uint16
+	}{
+		{"Main model", smaEChargerRegMainModel},
+		{"Model", smaEChargerRegModel},
+		{"Vendor", smaEChargerRegVendor},
+		{"Package revision", smaEChargerRegPkgRev},
+		{"Status", smaEChargerRegStatus},
+		{"Health", smaEChargerRegHealth},
+		{"Event", smaEChargerRegEvent},
+		{"Power limit source", smaEChargerRegLimitSrc},
+		{"Rated max power", smaEChargerRegMaxPowerRtg},
+	} {
+		if v, err := wb.read32(r.reg, 1); err == nil {
+			fmt.Printf("\t%s:\t%d\n", r.name, v[0])
+		}
+	}
+
+	for _, r := range []struct {
+		name string
+		reg  uint16
+	}{
+		{"Serial", smaEChargerRegSerial},
+		{"Software", smaEChargerRegSwRev},
+	} {
+		if s, err := wb.readString(r.reg, 16); err == nil {
+			fmt.Printf("\t%s:\t%s\n", r.name, s)
+		}
+	}
+
+	for _, r := range []struct {
+		name string
+		reg  uint16
+	}{
+		{"Mode", smaEChargerRegMode},
+		{"Enable", smaEChargerRegEnable},
+		{"Charge lock", smaEChargerRegChargeLock},
+		{"Max power", smaEChargerRegSetpoint},
+		{"Min power", smaEChargerRegMinPower},
+		{"Rated max current", smaEChargerRegMaxCurrent},
+		{"Min current", smaEChargerRegMinCurrent},
+	} {
+		if b, err := wb.conn.ReadHoldingRegisters(r.reg, 2); err == nil {
+			fmt.Printf("\t%s:\t%d\n", r.name, int32(binary.BigEndian.Uint32(b)))
+		}
+	}
 }
