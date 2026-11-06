@@ -157,7 +157,7 @@ type Loadpoint struct {
 	vehicle        api.Vehicle        // Currently active vehicle
 	defaultVehicle api.Vehicle        // Default vehicle (disables detection)
 	coordinator    coordinator.API
-	socEstimator   *soc.Estimator
+	socEstimator   *soc.Estimator // guarded by vmu
 
 	// charge planning
 	planner          *planner.Planner
@@ -2346,9 +2346,8 @@ func (lp *Loadpoint) publishEnergyStats() {
 //   - charger may still provide soc
 //   - no estimator
 func (lp *Loadpoint) publishSocAndRange() {
-	// guard for socEstimator removed by api and keep a local copy in order to avoid race conditions
-	// https://github.com/evcc-io/evcc/issues/16180
-	socEstimator := lp.socEstimator
+	// local copy, the api may replace the estimator concurrently
+	socEstimator := lp.getSocEstimator()
 
 	socAndLimit := func(typ string, dev any) (*float64, *int64, error) {
 		var socR *float64
