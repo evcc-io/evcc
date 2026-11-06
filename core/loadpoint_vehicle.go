@@ -135,14 +135,14 @@ func (lp *Loadpoint) selectVehicleByID(ids ...string) (api.Vehicle, string) {
 	return nil, ""
 }
 
-// getSocEstimator returns the active vehicle's soc estimator or nil
-func (lp *Loadpoint) getSocEstimator() *soc.Estimator {
+// getVehicleAndSocEstimator returns the active vehicle and its SoC estimator as a consistent pair
+func (lp *Loadpoint) getVehicleAndSocEstimator() (api.Vehicle, *soc.Estimator) {
 	lp.vmu.RLock()
 	defer lp.vmu.RUnlock()
-	return lp.socEstimator
+	return lp.vehicle, lp.socEstimator
 }
 
-// setActiveVehicle assigns currently active vehicle, configures soc estimator
+// setActiveVehicle assigns currently active vehicle, configures SoC estimator
 // and adds an odometer task
 func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	// always start a fresh estimator, also when re-assigning the same vehicle
