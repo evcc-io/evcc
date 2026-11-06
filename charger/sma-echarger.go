@@ -45,6 +45,7 @@ const (
 	smaEChargerRegStatus   = 35463 // ENUM32
 
 	// holding registers
+	smaEChargerRegPhases  = 40183 // UINT32 1/3 (assumed)
 	smaEChargerRegMode    = 41471 // ENUM32
 	smaEChargerRegCurrent = 41473 // UINT32 0.1 A
 	smaEChargerRegAppLock = 41477 // ENUM32
@@ -261,4 +262,23 @@ var _ api.PhaseVoltages = (*SmaECharger)(nil)
 // Voltages implements the api.PhaseVoltages interface
 func (wb *SmaECharger) Voltages() (float64, float64, float64, error) {
 	return wb.phases(smaEChargerRegVoltages, 0.01, false)
+}
+
+var _ api.PhaseSwitcher = (*SmaECharger)(nil)
+
+// Phases1p3p implements the api.PhaseSwitcher interface
+func (wb *SmaECharger) Phases1p3p(phases int) error {
+	return wb.write(smaEChargerRegPhases, uint32(phases))
+}
+
+var _ api.PhaseGetter = (*SmaECharger)(nil)
+
+// GetPhases implements the api.PhaseGetter interface
+func (wb *SmaECharger) GetPhases() (int, error) {
+	b, err := wb.conn.ReadHoldingRegisters(smaEChargerRegPhases, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(binary.BigEndian.Uint32(b)), nil
 }
