@@ -90,3 +90,20 @@ func TestSetupFailed(t *testing.T) {
 
 	assert.Error(t, NewConnection(host(srv), "", "", 0).Enable(true))
 }
+
+func TestNoRedirect(t *testing.T) {
+	var leaked bool
+	other := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _, leaked = r.BasicAuth()
+	}))
+	defer other.Close()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, other.URL, http.StatusTemporaryRedirect)
+	}))
+	defer srv.Close()
+
+	_, err := NewConnection(host(srv), "admin", "1234", 0).Status()
+	assert.Error(t, err)
+	assert.False(t, leaked)
+}

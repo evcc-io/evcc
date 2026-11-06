@@ -29,8 +29,9 @@ func NewEdimaxFromConfig(other map[string]any) (api.Charger, error) {
 		StandbyPower float64
 		Cache        time.Duration
 	}{
-		User:  "admin",
-		Cache: time.Second,
+		User:     "admin",
+		Password: "1234",
+		Cache:    time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
