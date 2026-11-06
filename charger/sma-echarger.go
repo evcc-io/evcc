@@ -31,7 +31,8 @@ import (
 
 // SmaECharger charger implementation for the SMA eCharger (Modbus profile SW 2.7)
 type SmaECharger struct {
-	conn *modbus.Connection
+	conn     *modbus.Connection
+	oldstate uint32
 }
 
 const (
@@ -135,7 +136,16 @@ func (wb *SmaECharger) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch s := v[0]; s {
+	// stop charging when the vehicle connects to prevent unauthorised charging
+	s := v[0]
+	if wb.oldstate == 200111 && s != 200111 {
+		if err := wb.Enable(false); err != nil {
+			return api.StatusNone, err
+		}
+	}
+	wb.oldstate = s
+
+	switch s {
 	case 200111: // not connected
 		return api.StatusA, nil
 	case 200112, 200114, 5169: // sleeping, charge target reached, locked
