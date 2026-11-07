@@ -28,6 +28,13 @@ TODO
 
 Collected 15min energy profile over the last 4 weeks, averaged per slot. A per-slot percentile (e.g. 50 = median, robust against a few heavy days) can be configured via `/api/profilepercentile` instead.
 
+Days are classified against the household's own base load, the median of the night hours 0-6 over the last 8 weeks so that a long vacation does not lower it:
+
+- absent: daily energy below 1.35 × 24h base load and no hour above 2.5 × base load (vacation)
+- outlier: daily energy above 2 × the median day
+
+Absent and outlier days are excluded from the 4 week profile without replacement, so seasons are not mixed. Incomplete days are kept. Nothing is excluded when fewer than 7 days would remain.
+
 ### Measured value blending
 
 The solar forecast and the base load profile are anchored to the current situation
