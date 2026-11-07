@@ -144,3 +144,32 @@ func TestTileAndTrim(t *testing.T) {
 	assert.Equal(t, float64(firstSlot), res[0], "starts at the current slot")
 	assert.Equal(t, res[0], res[96], "wraps after a full day")
 }
+
+// https://github.com/evcc-io/evcc/issues/35498
+func TestSurplusOnly(t *testing.T) {
+	limit := 0.2
+
+	for _, tc := range []struct {
+		name     string
+		mode     api.ChargeMode
+		always   api.AlwaysCharge
+		limit    *float64
+		planTime time.Time
+		expected bool
+	}{
+		{"smart", api.ModeSmart, api.AlwaysChargeOff, nil, time.Time{}, true},
+		{"smart always charge", api.ModeSmart, api.AlwaysChargeOn, nil, time.Time{}, false},
+		{"smart cost limit", api.ModeSmart, api.AlwaysChargeOff, &limit, time.Time{}, false},
+		{"smart plan", api.ModeSmart, api.AlwaysChargeOff, nil, time.Now().Add(time.Hour), false},
+		{"now", api.ModeNow, api.AlwaysChargeOff, nil, time.Time{}, false},
+		{"off", api.ModeOff, api.AlwaysChargeOff, nil, time.Time{}, false},
+	} {
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.mode = tc.mode
+		lp.alwaysCharge = tc.always
+		lp.smartCostLimit = tc.limit
+		lp.planTime = tc.planTime
+
+		assert.Equal(t, tc.expected, surplusOnly(lp), tc.name)
+	}
+}

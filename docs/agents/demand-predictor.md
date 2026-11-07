@@ -116,6 +116,7 @@ Seasonal transitions are handled naturally: the 1-year lookback carries observat
 
 - Skips loadpoints where status is not `StatusB` (connected, not charging) or `StatusC` (charging), i.e. disconnected or unknown
 - Skips non-`Continuous` loadpoints in `ModeOff`; `Continuous` devices in `ModeOff` mean "normal operation" and are included
+- Skips non-`Continuous` loadpoints charging from surplus only (`surplusOnly`: smart mode without always charge, smart cost limit or plan); that consumption is never must-serve demand
 - Calls `lp.demandProfile()` for daily/temperature strategies, `lp.demandProfileWeekday()` for weekday
 - Temperature correction (`applyTemperatureCorrection`) is called when `demandProfile()` returns `correct = true`, even if binned data is not yet available (nil map falls through to physics)
 - The resulting Wh values are added directly to the `gt` (grid total) forecast slice
