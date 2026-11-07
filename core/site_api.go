@@ -480,29 +480,29 @@ func (site *Site) SetProfilePercentile(percentile *float64) error {
 	return nil
 }
 
-// GetSolarAddon returns the solar forecast addon in %, positive = more solar than forecasted
-func (site *Site) GetSolarAddon() float64 {
-	v, _ := settings.Float(keys.SolarAddon)
+// GetSolarCorrection returns the solar forecast correction in %, positive = more solar than forecasted
+func (site *Site) GetSolarCorrection() float64 {
+	v, _ := settings.Float(keys.SolarCorrection)
 	return v
 }
 
-// SetSolarAddon sets the solar forecast addon in %, positive = more solar than forecasted
-func (site *Site) SetSolarAddon(val float64) error {
-	return site.setForecastAddon(keys.SolarAddon, val)
+// SetSolarCorrection sets the solar forecast correction in %, positive = more solar than forecasted
+func (site *Site) SetSolarCorrection(val float64) error {
+	return site.setForecastCorrection(keys.SolarCorrection, val)
 }
 
-// GetHouseholdAddon returns the household consumption addon in %, positive = more consumption than forecasted
-func (site *Site) GetHouseholdAddon() float64 {
-	v, _ := settings.Float(keys.HouseholdAddon)
+// GetHouseholdCorrection returns the household consumption correction in %, positive = more consumption than forecasted
+func (site *Site) GetHouseholdCorrection() float64 {
+	v, _ := settings.Float(keys.HouseholdCorrection)
 	return v
 }
 
-// SetHouseholdAddon sets the household consumption addon in %, positive = more consumption than forecasted
-func (site *Site) SetHouseholdAddon(val float64) error {
-	return site.setForecastAddon(keys.HouseholdAddon, val)
+// SetHouseholdCorrection sets the household consumption correction in %, positive = more consumption than forecasted
+func (site *Site) SetHouseholdCorrection(val float64) error {
+	return site.setForecastCorrection(keys.HouseholdCorrection, val)
 }
 
-func (site *Site) setForecastAddon(key string, val float64) error {
+func (site *Site) setForecastCorrection(key string, val float64) error {
 	if val < -100 || val > 100 {
 		return fmt.Errorf("invalid %s: %g", key, val)
 	}

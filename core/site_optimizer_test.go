@@ -833,26 +833,26 @@ func TestProfilePercentile(t *testing.T) {
 	assert.Nil(t, site.GetProfilePercentile())
 }
 
-func TestForecastAddons(t *testing.T) {
+func TestForecastCorrections(t *testing.T) {
 	site := &Site{log: util.NewLogger("foo")}
 	t.Cleanup(func() {
-		require.NoError(t, site.SetSolarAddon(0))
-		require.NoError(t, site.SetHouseholdAddon(0))
+		require.NoError(t, site.SetSolarCorrection(0))
+		require.NoError(t, site.SetHouseholdCorrection(0))
 	})
 
-	assert.Equal(t, 0.0, site.GetSolarAddon())
+	assert.Equal(t, 0.0, site.GetSolarCorrection())
 	assert.Equal(t, 1.0, site.effectiveSolarScale())
 
 	// out of range rejected, unchanged
-	require.Error(t, site.SetSolarAddon(-101))
-	require.Error(t, site.SetHouseholdAddon(101))
-	assert.Equal(t, 0.0, site.GetHouseholdAddon())
+	require.Error(t, site.SetSolarCorrection(-101))
+	require.Error(t, site.SetHouseholdCorrection(101))
+	assert.Equal(t, 0.0, site.GetHouseholdCorrection())
 
-	require.NoError(t, site.SetSolarAddon(-20))
+	require.NoError(t, site.SetSolarCorrection(-20))
 	assert.InDelta(t, 0.8, site.effectiveSolarScale(), 1e-9)
 
-	require.NoError(t, site.SetHouseholdAddon(10))
-	assert.Equal(t, 10.0, site.GetHouseholdAddon())
+	require.NoError(t, site.SetHouseholdCorrection(10))
+	assert.Equal(t, 10.0, site.GetHouseholdCorrection())
 }
 
 func TestBlendMeasured(t *testing.T) {
