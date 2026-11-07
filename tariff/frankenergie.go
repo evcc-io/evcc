@@ -98,7 +98,7 @@ func (t *FrankEnergie) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for ; ; <-time.After(t.nextRefresh(time.Hour, t.data)) {
 		today := time.Now().In(t.loc)
 
 		var prices []frankEnergiePrice

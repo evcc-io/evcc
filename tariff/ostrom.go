@@ -234,7 +234,7 @@ func (t *Ostrom) runStatic(done chan error) {
 func (t *Ostrom) run(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for ; ; <-time.After(t.nextRefresh(time.Hour, t.data)) {
 		var res ostrom.Prices
 
 		start := now.BeginningOfDay()

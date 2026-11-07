@@ -96,7 +96,7 @@ func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
 func (t *Pun) run(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for ; ; <-time.After(t.nextRefresh(time.Hour, t.data)) {
 		// get today data
 		today, err := backoff.RetryWithData(func() (api.Rates, error) {
 			res, err := t.getData(time.Now())
