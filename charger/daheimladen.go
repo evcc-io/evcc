@@ -362,6 +362,34 @@ func (wb *DaheimLaden) getPhases() (int, error) {
 	return int(wb.phases), nil
 }
 
+// isPrintableASCII reports whether s is non-empty and all printable ASCII
+func isPrintableASCII(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if r < 0x20 || r > 0x7e {
+			return false
+		}
+	}
+	return true
+}
+
+// decodeStationID returns the printable station id from the raw register bytes.
+// Original firmware encodes it UTF-16BE, replacement comm modules as byte-swapped ASCII.
+func decodeStationID(raw []byte) string {
+	if s, err := utf16BEBytesAsString(raw); err == nil && isPrintableASCII(s) {
+		return s
+	}
+
+	swapped := make([]byte, len(raw)&^1)
+	for i := 0; i+1 < len(raw); i += 2 {
+		swapped[i], swapped[i+1] = raw[i+1], raw[i]
+	}
+
+	return strings.TrimSpace(strings.TrimRight(string(swapped), "\x00"))
+}
+
 func (wb *DaheimLaden) checkStation() error {
 	// map may still be zero right after the wake-up call- poll briefly until populated
 	for range 5 {
@@ -370,10 +398,7 @@ func (wb *DaheimLaden) checkStation() error {
 			return err
 		}
 
-		s, err := utf16BEBytesAsString(b[2*(dlRegStationId-dlRegEvseMaxCurrent):])
-		if err != nil {
-			return err
-		}
+		s := decodeStationID(b[2*(dlRegStationId-dlRegEvseMaxCurrent):])
 
 		if len(s) == 0 {
 			time.Sleep(200 * time.Millisecond)
@@ -384,10 +409,8 @@ func (wb *DaheimLaden) checkStation() error {
 			return api.ErrSponsorRequired
 		}
 
-		for _, r := range s {
-			if r < 0x20 || r > 0x7e {
-				return api.ErrSponsorRequired
-			}
+		if !isPrintableASCII(s) {
+			return api.ErrSponsorRequired
 		}
 
 		return nil
@@ -413,8 +436,7 @@ func (wb *DaheimLaden) Diagnose() {
 		fmt.Printf("\tCable Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegStationId, 16); err == nil {
-		s, _ := utf16BEBytesAsString(b)
-		fmt.Printf("\tStation ID:\t%s\n", s)
+		fmt.Printf("\tStation ID:\t%s\n", decodeStationID(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16); err == nil {
 		s, _ := utf16BEBytesAsString(b)

@@ -18,13 +18,11 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/samber/lo"
 )
 
-const (
-	idleFactor         = 0.6
-	voltage    float64 = 230
-)
+const idleFactor = 0.6
 
 type minMax struct {
 	min, max float64
@@ -217,7 +215,7 @@ func (c *EEBus) isCharging(evEntity spineapi.EntityRemoteInterface) bool {
 			// sometimes a min limit is not provided by the EVSE, and we can't take it from the loadpoint
 			return false
 		}
-		minPower = limitsMin[0] * voltage
+		minPower = grid.CurrentToPower(limitsMin[0], 1)
 	}
 
 	return power > minPower*idleFactor
@@ -288,7 +286,10 @@ func (c *EEBus) Enabled() (bool, error) {
 		return c.enabled, nil
 	}
 
-	for _, limit := range limits {
+	minLimits, maxLimits, _, _ := c.cem.OpEV.CurrentLimits(evEntity)
+	numPhases := min(len(limits), activePhases(minLimits, maxLimits))
+
+	for _, limit := range limits[:numPhases] {
 		// for IEC61851 the pause limit is 0A, for ISO15118-2 it is 0.1A
 		// instead of checking for the actual data, hardcode this, so we might run into less
 		// timing issues as the data might not be received yet
@@ -332,6 +333,16 @@ func (c *EEBus) Enable(enable bool) error {
 	return err
 }
 
+func activePhases(limitSlices ...[]float64) int {
+	phases := len(ucapi.PhaseNameMapping)
+	for _, limits := range limitSlices {
+		if len(limits) > 0 && len(limits) < phases {
+			phases = len(limits)
+		}
+	}
+	return phases
+}
+
 // send current charging power limits to the EV
 func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, current float64) error {
 	// check if the EVSE supports overload protection limits
@@ -339,14 +350,19 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 		return api.ErrNotAvailable
 	}
 
-	_, maxLimits, _, err := c.cem.OpEV.CurrentLimits(evEntity)
+	minLimits, maxLimits, _, err := c.cem.OpEV.CurrentLimits(evEntity)
 	if err != nil {
 		c.log.DEBUG.Println("no limits from the EVSE are provided:", err)
 	}
 
+	numPhases := activePhases(minLimits, maxLimits)
+	if numPhases < len(ucapi.PhaseNameMapping) {
+		c.log.DEBUG.Printf("limiting load control to %d phase(s)", numPhases)
+	}
+
 	// setup the obligation limit data structure
 	var limits []ucapi.LoadLimitsPhase
-	for phase := range len(ucapi.PhaseNameMapping) {
+	for phase := range numPhases {
 		limit := ucapi.LoadLimitsPhase{
 			Phase:    ucapi.PhaseNameMapping[phase],
 			IsActive: true,
@@ -354,7 +370,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 		}
 
 		// if the limit equals to the max allowed, then the obligation limit is actually inactive
-		if phase < len(maxLimits) && current >= maxLimits[phase] {
+		if current > 0 && phase < len(maxLimits) && maxLimits[phase] > 0 && current >= maxLimits[phase] {
 			limit.IsActive = false
 		}
 
@@ -392,13 +408,15 @@ func (c *EEBus) writeOscevLimits(evEntity spineapi.EntityRemoteInterface, curren
 		return
 	}
 
-	minLimits, _, _, err := c.cem.OscEV.CurrentLimits(evEntity)
+	minLimits, maxLimits, _, err := c.cem.OscEV.CurrentLimits(evEntity)
 	if err != nil {
 		return
 	}
 
+	numPhases := activePhases(minLimits, maxLimits)
+
 	var limits []ucapi.LoadLimitsPhase
-	for phase := range len(ucapi.PhaseNameMapping) {
+	for phase := range numPhases {
 		limit := ucapi.LoadLimitsPhase{
 			Phase:    ucapi.PhaseNameMapping[phase],
 			IsActive: false,
@@ -463,7 +481,7 @@ func (c *EEBus) currentPower() (float64, error) {
 		// no power provided, calculate from current
 		if currents, err := c.cem.EvCem.CurrentPerPhase(evEntity); err == nil {
 			for _, current := range currents {
-				powers = append(powers, current*voltage)
+				powers = append(powers, grid.CurrentToPower(current, 1))
 			}
 		}
 	}

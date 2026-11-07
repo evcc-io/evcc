@@ -122,7 +122,7 @@ describe("applyDefaultsFromTemplate", () => {
   const template = (params: TemplateParam[]) => ({ Params: params }) as any;
 
   it("coerces string defaults of Bool params to booleans", () => {
-    const params = [
+    const params: TemplateParam[] = [
       { ...buildParam("measurements"), Type: "Bool", Default: "false" },
       { ...buildParam("enabled"), Type: "Bool", Default: "true" },
     ];
@@ -133,21 +133,23 @@ describe("applyDefaultsFromTemplate", () => {
   });
 
   it("initializes Bool params without default to false", () => {
-    const params = [{ ...buildParam("flag"), Type: "Bool" }];
+    const params: TemplateParam[] = [{ ...buildParam("flag"), Type: "Bool" }];
     const values: Record<string, any> = {};
     applyDefaultsFromTemplate(template(params), values as any);
     expect(values["flag"]).toBe(false);
   });
 
   it("keeps an explicitly stored false against a true default", () => {
-    const params = [{ ...buildParam("phases1p3p"), Type: "Bool", Default: "true" }];
+    const params: TemplateParam[] = [
+      { ...buildParam("phases1p3p"), Type: "Bool", Default: "true" },
+    ];
     const values: Record<string, any> = { phases1p3p: false };
     applyDefaultsFromTemplate(template(params), values as any);
     expect(values["phases1p3p"]).toBe(false);
   });
 
   it("coerces stored string values of Bool params to booleans", () => {
-    const params = [
+    const params: TemplateParam[] = [
       { ...buildParam("phases1p3p"), Type: "Bool", Default: "true" },
       { ...buildParam("heating"), Type: "Bool" },
     ];

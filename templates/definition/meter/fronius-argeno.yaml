@@ -10,6 +10,8 @@ requirements:
     en: |
       Modbus TCP must be enabled on the inverter (Configuration → Communication → Ethernet → Modbus TCP/UDP). For the grid meter see the "Fronius Smart Meter IP" template — the Argeno uses the Smart Meter IP as a standalone network device.
 discovery:
+  mdns: ["_Fronius-SE-Inverter._tcp"]
+  hostname: ["fronius*"]
   mac: ["0003AC"]
 params:
   - name: usage

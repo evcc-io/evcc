@@ -20,6 +20,7 @@ requirements:
       In combination with a HomeHub (EKRHH) configured in mode 3 (Modbus TCP/IP).
 discovery:
   mdns: ["_dkapi._tcp"]
+  hostname: ["altherma*"]
 params:
   - name: modbus
     choice: ["tcpip"]

@@ -30,14 +30,6 @@ render: |
       type: holding
       decode: int16
     scale: 1
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 706 # aktuelle Wärmemenge der WP
-      type: holding
-      decode: int16
-    scale: 1
   {{- if .tempsource }}
   temp:
     source: modbus

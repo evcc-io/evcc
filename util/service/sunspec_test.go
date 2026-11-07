@@ -10,7 +10,7 @@ import (
 
 func TestSunspecRead_MissingValue(t *testing.T) {
 	// point value is required
-	req := httptest.NewRequest("GET", "/read?uri=192.168.1.1:502&id=1", nil)
+	req := httptest.NewRequest("GET", "/read?uri=127.0.0.1:1&id=1", nil)
 	w := httptest.NewRecorder()
 
 	sunspecRead(w, req)

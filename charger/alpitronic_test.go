@@ -373,10 +373,8 @@ func TestAlpitronicReadFailure(t *testing.T) {
 }
 
 func TestAlpitronicSponsorGate(t *testing.T) {
-	// go-e tests set the global sponsor.Subject and never reset it
-	old := sponsor.Subject
-	sponsor.Subject = ""
-	t.Cleanup(func() { sponsor.Subject = old })
+	// test requires an unsponsored instance
+	sponsor.SetSubjectForTest(t, "")
 
 	// tests run without sponsorship: the public constructor must refuse
 	_, err := NewAlpitronicHYC(t.Context(), modbus.TcpSettings{URI: "localhost:0", ID: 1}, 1)

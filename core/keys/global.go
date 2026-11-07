@@ -42,4 +42,5 @@ const (
 	AuthDisabled       = "authDisabled"
 	AuthProviders      = "authProviders"
 	DeviceColors       = "deviceColors"
+	Onboarding         = "onboarding" // setup wizard and checklist state
 )

@@ -9,6 +9,7 @@ const secret = "topsecret";
 
 const templateFlags = [
   "--disable-auth",
+  "--disable-onboarding",
   "--template-type",
   "meter",
   "--template",

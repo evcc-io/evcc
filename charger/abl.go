@@ -42,6 +42,7 @@ const (
 	ablRegFirmware    = 0x01
 	ablRegStatus      = 0x04
 	ablRegModifyState = 0x05
+	ablRegSystemFlags = 0x06
 	ablRegEnabled     = 0x0F
 	ablRegAmpsConfig  = 0x14
 	ablRegStatusLong  = 0x2E
@@ -49,6 +50,9 @@ const (
 	ablAmpsDisabled uint16 = 0x03E8
 
 	ablSensorPresent = 1 << 5
+
+	ablB1B2Disabled           = 1 << 4
+	ablB1B2DisabledPowerCycle = 1 << 14
 )
 
 var ablStatus = map[byte]string{
@@ -122,7 +126,23 @@ func NewABLeMH(ctx context.Context, settings modbus.Settings) (api.Charger, erro
 		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 	}
 
+	if flags, err := wb.systemFlags(); err != nil {
+		log.DEBUG.Printf("system flags: %v", err)
+	} else if flags&(ablB1B2Disabled|ablB1B2DisabledPowerCycle) != 0 {
+		log.WARN.Printf("charging release by group master required (system flags: %04x), set operating mode to 'Standalone eMH' using the ABL Configuration Software", flags)
+	}
+
 	return wb, nil
+}
+
+// systemFlags returns the lower 16 bits of the system flags register
+func (wb *ABLeMH) systemFlags() (uint16, error) {
+	b, err := wb.get(ablRegSystemFlags, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return binary.BigEndian.Uint16(b[2:]), nil
 }
 
 func (wb *ABLeMH) set(reg, val uint16) error {
@@ -251,6 +271,13 @@ func (wb *ABLeMH) Diagnose() {
 	b, err := wb.get(ablRegFirmware, 2)
 	if err == nil {
 		fmt.Printf("Firmware: %0 x\n", b)
+	}
+
+	if flags, err := wb.systemFlags(); err != nil {
+		fmt.Printf("System flags: %v\n", err)
+	} else {
+		fmt.Printf("System flags: %04x (B1->B2 disabled: %t, after power-cycle: %t)\n", flags,
+			flags&ablB1B2Disabled != 0, flags&ablB1B2DisabledPowerCycle != 0)
 	}
 }
 

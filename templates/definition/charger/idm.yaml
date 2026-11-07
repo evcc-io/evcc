@@ -5,6 +5,9 @@ capabilities: ["meter", "dim"]
 group: heating
 requirements:
   # evcc: ["sponsorship"]
+discovery:
+  mdns: ["_idmnav._tcp"]
+  hostname: ["idm-nav*"]
 params:
   - name: modbus
     choice: ["tcpip"]

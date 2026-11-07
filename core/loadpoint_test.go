@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -1052,6 +1053,61 @@ func TestPVSolarShare(t *testing.T) {
 		"disable threshold should apply despite solar share")
 }
 
+// TestPVSolarSharePrioritySoc verifies that below prioritySoc a discharging battery
+// does not cover the non-solar part of the min power (#34332)
+func TestPVSolarSharePrioritySoc(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	newLp := func(enabled bool, soc float64) *Loadpoint {
+		lp := &Loadpoint{
+			log:            util.NewLogger("foo"),
+			clock:          clock.NewMock(),
+			charger:        api.NewMockCharger(ctrl),
+			site:           &mockSite{batterySoc: soc, prioritySoc: 80},
+			minCurrent:     minA,
+			maxCurrent:     maxA,
+			phases:         3,
+			measuredPhases: 3,
+			solarShare:     0.5,
+		}
+		lp.status = api.StatusC
+		lp.enabled = enabled
+		return lp
+	}
+
+	minPower := grid.CurrentToPower(minA, 3)
+
+	// below prioritySoc a discharging battery drops the grid allowance
+	assert.Equal(t, 0.0, newLp(true, 50).pvMaxCurrent(minPower/2-100, 1000, false, false),
+		"should disable while battery discharges below prioritySoc")
+	assert.Equal(t, 0.0, newLp(false, 50).pvMaxCurrent(-minPower/2, 1000, false, false),
+		"must not enable while battery discharges below prioritySoc")
+
+	// a charging battery or one above prioritySoc keeps the allowance
+	assert.Equal(t, minA, newLp(true, 50).pvMaxCurrent(minPower/2-100, -1000, false, false),
+		"must not disable while battery charges")
+	assert.Equal(t, minA, newLp(true, 90).pvMaxCurrent(minPower/2-100, 1000, false, false),
+		"must not disable above prioritySoc")
+	assert.Equal(t, minA, newLp(false, 90).pvMaxCurrent(-minPower/2, 1000, false, false),
+		"should enable above prioritySoc")
+
+	// the solar share setting is disabled under optimizer control
+	optimizerLp := func(enabled bool) *Loadpoint {
+		lp := newLp(enabled, 90)
+		lp.site = &mockSite{automatic: true}
+		lp.vehicle = modelledVehicle(ctrl)
+		lp.setSuggestion(&types.Suggestion{Action: actionStop})
+		return lp
+	}
+
+	assert.Equal(t, 0.0, optimizerLp(false).pvMaxCurrent(-minPower/2, 0, false, false),
+		"must not enable on half surplus under optimizer")
+	assert.Equal(t, minA, optimizerLp(false).pvMaxCurrent(-minPower, 0, false, false),
+		"should enable on full surplus under optimizer")
+	assert.Equal(t, 0.0, optimizerLp(true).pvMaxCurrent(100, 0, false, false),
+		"should disable on grid import under optimizer")
+}
+
 // TestWelcomeChargeNoBatterySupport verifies that bufferSoc does not sustain a session
 // the welcome charge started until surplus confirms it (#32278)
 func TestWelcomeChargeNoBatterySupport(t *testing.T) {
@@ -1252,6 +1308,27 @@ func TestNewLoadpointFromConfigDisabledVehicle(t *testing.T) {
 
 	// disabled vehicle is filtered from instances
 	require.Empty(t, config.Instances(config.Vehicles().Devices()))
+}
+
+func TestNewLoadpointFromConfigDemandPredictor(t *testing.T) {
+	config.Reset()
+	t.Cleanup(config.Reset)
+
+	ctrl := gomock.NewController(t)
+	require.NoError(t, config.Chargers().Add(config.NewStaticDevice(config.Named{Name: "charger"}, api.Charger(api.NewMockCharger(ctrl)))))
+
+	lp, err := NewLoadpointFromConfig(util.NewLogger("foo"), nil, nil, map[string]any{
+		"charger":         "charger",
+		"demandPredictor": "weekday",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "weekday", lp.GetDemandPredictor())
+
+	_, err = NewLoadpointFromConfig(util.NewLogger("foo"), nil, nil, map[string]any{
+		"charger":         "charger",
+		"demandPredictor": "monthly",
+	})
+	require.ErrorContains(t, err, "invalid demand predictor")
 }
 
 // TestPVDisableContinuousDeviceShortfall is a regression test for #32282: a continuous

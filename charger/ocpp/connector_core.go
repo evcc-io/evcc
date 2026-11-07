@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
@@ -124,7 +125,12 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 					}
 
 					sample.Value = strings.TrimSpace(sample.Value)
-					conn.measurements[getSampleKey(sample)] = sample
+
+					// a lifetime register is never zero, some chargers (Huawei) report 0 outside transactions
+					if !isZeroEnergy(sample) {
+						conn.measurements[getSampleKey(sample)] = sample
+					}
+
 					conn.meterTimestamp = meterValue.Timestamp.Time
 					// freshness is measured locally: charger sample timestamps may lag (Mennekes: 6-7s)
 					conn.meterUpdated = conn.clock.Now()
@@ -137,23 +143,29 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 }
 
 func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
-	conn.mu.Lock()
-	defer conn.mu.Unlock()
-
-	conn.txnId = int(conn.cp.cs.txnId.Add(1))
-	conn.idTag = request.IdTag
-
-	// a transaction started after the boot is fresh and must survive the first status
-	conn.rebooted = false
+	txnId := int(conn.cp.cs.txnId.Add(1))
+	conn.startTransaction(txnId, request.IdTag)
 
 	res := &core.StartTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
 			Status: types.AuthorizationStatusAccepted,
 		},
-		TransactionId: conn.txnId,
+		TransactionId: txnId,
 	}
 
 	return res, nil
+}
+
+// startTransaction records a transaction issued by evcc or by an upstream central system.
+func (conn *Connector) startTransaction(txnId int, idTag string) {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	conn.txnId = txnId
+	conn.idTag = idTag
+
+	// a transaction started after the boot is fresh and must survive the first status
+	conn.rebooted = false
 }
 
 // clearTransaction resets transaction state and zeroes reported power.
@@ -212,12 +224,38 @@ func (conn *Connector) assumeMeterStopped() {
 	}
 }
 
+// isZeroEnergy returns true if sample is a total or phase energy register reading of zero.
+func isZeroEnergy(sample types.SampledValue) bool {
+	if sample.Measurand != types.MeasurandEnergyActiveImportRegister {
+		return false
+	}
+
+	f, err := strconv.ParseFloat(sample.Value, 64)
+	return err == nil && f == 0
+}
+
+func (conn *Connector) updateEnergyRegister(wh float64) {
+	m, ok := conn.measurements[types.MeasurandEnergyActiveImportRegister]
+	if !ok {
+		return
+	}
+
+	if f, err := strconv.ParseFloat(m.Value, 64); err == nil && scale(f, m.Unit) < wh {
+		conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{
+			Value: strconv.FormatFloat(wh, 'f', -1, 64),
+			Unit:  types.UnitOfMeasureWh,
+		}
+	}
+}
+
 func (conn *Connector) OnStopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
 	conn.txnId = 0
 	conn.idTag = ""
+
+	conn.updateEnergyRegister(float64(request.MeterStop))
 
 	res := &core.StopTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{

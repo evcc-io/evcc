@@ -13,6 +13,7 @@ import {
   isConfigured,
 } from "./components/Auth/auth";
 import { initConfigModal } from "./configModal";
+import { wizardPending } from "./onboarding";
 import { isMobileWidth } from "./mixins/breakpoint";
 import { hapticFeedback } from "./utils/haptic";
 import type { VueI18nInstance } from "vue-i18n";
@@ -32,7 +33,8 @@ function hideAllModals() {
 async function ensureAuth(to: RouteLocationNormalizedGeneric) {
   await updateAuthStatus();
   if (!isConfigured()) {
-    return false;
+    // the setup wizard on the config page sets the password
+    return to.path === "/config" && wizardPending();
   }
   if (!isLoggedIn() && !statusUnknown()) {
     openLoginModal(to.path);

@@ -5,13 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"os"
 	"time"
 
 	sunspec "github.com/andig/gosunspec"
+	"github.com/andig/gosunspec/layout"
 	"github.com/andig/gosunspec/typelabel"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	gridx "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 	sunsdev "github.com/volkszaehler/mbmd/meters/sunspec"
 )
@@ -78,7 +82,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 	if devices == nil {
 		// the device tree captures the client gosunspec uses for all further
 		// block reads and writes, hence wrap it in the deduplicating cache
-		devices, err = sunsdev.DeviceTree(newSunspecCachedClient(conn))
+		devices, err = sunspecDeviceTree(newSunspecCachedClient(conn), modbus.Backoff())
 		if err != nil && !errors.Is(err, meters.ErrPartiallyOpened) {
 			return nil, err
 		}
@@ -286,6 +290,14 @@ func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
 		switch typ {
 		case typelabel.Float32:
 			point.SetFloat32(float32(val))
+		case typelabel.Int16:
+			point.SetValue(int16(math.Round(val)))
+		case typelabel.Int32:
+			point.SetValue(int32(math.Round(val)))
+		case typelabel.Uint16:
+			point.SetValue(uint16(math.Round(val)))
+		case typelabel.Uint32:
+			point.SetValue(uint32(math.Round(val)))
 		default:
 			return fmt.Errorf("invalid point type: %s", typ)
 		}
@@ -345,4 +357,17 @@ func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
 
 		return block.Write(m.op.Point)
 	}, nil
+}
+
+// sunspecDeviceTree scans the device tree, retrying when detection fails without a
+// connection error: some devices answer the first requests late or out of order,
+// e.g. with stale responses after idle
+func sunspecDeviceTree(client gridx.Client, bo backoff.BackOff) ([]sunspec.Device, error) {
+	return backoff.RetryWithData(func() ([]sunspec.Device, error) {
+		devices, err := sunsdev.DeviceTree(client)
+		if err != nil && !errors.Is(err, layout.ErrNotSunspecDevice) && !errors.Is(err, os.ErrDeadlineExceeded) {
+			return devices, backoff.Permanent(err)
+		}
+		return devices, err
+	}, bo)
 }

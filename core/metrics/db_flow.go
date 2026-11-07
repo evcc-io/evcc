@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/db"
+	"golang.org/x/sync/errgroup"
 )
 
 // flow sinks; sources reuse the group names PV, Battery, Grid
@@ -148,7 +149,7 @@ func entitySlots(entities map[int]*flowEntity, from, to time.Time) (map[int64][]
 
 	tx := db.Instance.Table("meters").
 		Select("ts, meter, energy").
-		Where("meter IN ?", slices.Collect(maps.Keys(entities)))
+		Where("meter IN ? AND energy <> 0", slices.Collect(maps.Keys(entities)))
 
 	if !from.IsZero() {
 		tx = tx.Where("ts >= ?", from.Unix())
@@ -171,6 +172,49 @@ func entitySlots(entities map[int]*flowEntity, from, to time.Time) (map[int64][]
 			return nil, err
 		}
 		res[ts] = append(res[ts], slotEnergy{entities[id], energy})
+	}
+
+	return res, rows.Err()
+}
+
+// sinkSlots returns the source and home meters pivoted per slot, with the slot's tariff
+func sinkSlots(from, to time.Time) ([]flowSlot, error) {
+	tx := db.Instance.Table("meters m").
+		Select(`
+			m.ts,
+			COALESCE(SUM(CASE WHEN e."group" = 'pv' THEN m.energy END), 0) AS pv,
+			COALESCE(SUM(CASE WHEN e."group" = 'grid' THEN m.energy END), 0) AS grid_in,
+			COALESCE(SUM(CASE WHEN e."group" = 'grid' THEN m.return_energy END), 0) AS grid_out,
+			COALESCE(SUM(CASE WHEN e."group" = 'battery' THEN m.energy END), 0) AS bat_in,
+			COALESCE(SUM(CASE WHEN e."group" = 'battery' THEN m.return_energy END), 0) AS bat_out,
+			COALESCE(SUM(CASE WHEN e."group" = 'home' THEN m.energy END), 0) AS home,
+			t.grid, t.feedin, t.co2`).
+		Joins("JOIN entities e ON m.meter = e.id").
+		Joins("LEFT JOIN tariffs t ON t.ts = m.ts").
+		Where(`e."group" IN ?`, []string{PV, Grid, Battery, Home}).
+		Group("m.ts")
+
+	if !from.IsZero() {
+		tx = tx.Where("m.ts >= ?", from.Unix())
+	}
+	if !to.IsZero() {
+		tx = tx.Where("m.ts < ?", to.Unix())
+	}
+
+	rows, err := tx.Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var res []flowSlot
+	for rows.Next() {
+		var s flowSlot
+		// scanned by hand: gorm's reflective ScanRows dominates long periods
+		if err := rows.Scan(&s.Ts, &s.PV, &s.GridIn, &s.GridOut, &s.BatIn, &s.BatOut, &s.Home, &s.Grid, &s.FeedIn, &s.Co2); err != nil {
+			return nil, err
+		}
+		res = append(res, s)
 	}
 
 	return res, rows.Err()
@@ -199,8 +243,21 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 		entities[e.Id] = byTitle[key]
 	}
 
-	perSlot, err := entitySlots(entities, from, to)
-	if err != nil {
+	// both reads are bound by page lookups and run side by side on WAL readers
+	var perSlot map[int64][]slotEnergy
+	var slots []flowSlot
+	var eg errgroup.Group
+	eg.Go(func() error {
+		var err error
+		perSlot, err = entitySlots(entities, from, to)
+		return err
+	})
+	eg.Go(func() error {
+		var err error
+		slots, err = sinkSlots(from, to)
+		return err
+	})
+	if err := eg.Wait(); err != nil {
 		return FlowResult{}, err
 	}
 
@@ -209,47 +266,12 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 	others.Group = Consumer
 	list = append(list, others)
 
-	tx := db.Instance.Table("meters m").
-		Select(`
-			m.ts,
-			COALESCE(SUM(CASE WHEN e."group" = 'pv' THEN m.energy END), 0) AS pv,
-			COALESCE(SUM(CASE WHEN e."group" = 'grid' THEN m.energy END), 0) AS grid_in,
-			COALESCE(SUM(CASE WHEN e."group" = 'grid' THEN m.return_energy END), 0) AS grid_out,
-			COALESCE(SUM(CASE WHEN e."group" = 'battery' THEN m.energy END), 0) AS bat_in,
-			COALESCE(SUM(CASE WHEN e."group" = 'battery' THEN m.return_energy END), 0) AS bat_out,
-			COALESCE(SUM(CASE WHEN e."group" = 'home' THEN m.energy END), 0) AS home,
-			t.grid, t.feedin, t.co2`).
-		Joins("JOIN entities e ON m.meter = e.id").
-		Joins("LEFT JOIN tariffs t ON t.ts = m.ts").
-		Where(`e."group" IN ?`, []string{PV, Grid, Battery, Home}).
-		Group("m.ts")
-
-	if !from.IsZero() {
-		tx = tx.Where("m.ts >= ?", from.Unix())
-	}
-	if !to.IsZero() {
-		tx = tx.Where("m.ts < ?", to.Unix())
-	}
-
-	// stream slots to keep memory flat for long periods
-	rows, err := tx.Rows()
-	if err != nil {
-		return FlowResult{}, err
-	}
-	defer rows.Close()
-
 	sums := make(map[[2]string]flowSum)
 	var cost FlowCost
 	var co2 FlowCo2
 	var costSlots, co2Slots float64
 
-	for rows.Next() {
-		var s flowSlot
-		// scanned by hand: gorm's reflective ScanRows dominates long periods
-		if err := rows.Scan(&s.Ts, &s.PV, &s.GridIn, &s.GridOut, &s.BatIn, &s.BatOut, &s.Home, &s.Grid, &s.FeedIn, &s.Co2); err != nil {
-			return FlowResult{}, err
-		}
-
+	for _, s := range slots {
 		// the slot's loadpoints add up to their sink
 		slotEntities := perSlot[s.Ts]
 		for _, se := range slotEntities {
@@ -316,10 +338,6 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 			co2.AvgCo2 += *s.Co2
 			co2Slots++
 		}
-	}
-
-	if err := rows.Err(); err != nil {
-		return FlowResult{}, err
 	}
 
 	var res FlowResult
