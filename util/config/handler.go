@@ -67,7 +67,7 @@ func (cp *handler[T]) Delete(name string) error {
 
 			bus.Publish(cp.topic, OpDelete, dev)
 
-			if r, ok := dev.(interface{ Release() }); ok {
+			if r, ok := dev.(ConfigurableDevice[T]); ok {
 				r.Release()
 			}
 
