@@ -163,6 +163,26 @@ func TestApplyPrecondition(t *testing.T) {
 	assert.Nil(t, applyPrecondition(lp, nil, 8))
 }
 
+func TestPlanDemand(t *testing.T) {
+	now := time.Date(2026, 1, 1, 10, 5, 0, 0, time.UTC) // 10 min left in current slot
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+	slot := func(i int) time.Time { return eos.Add(time.Duration(i-1) * tariff.SlotDuration) }
+
+	assert.Nil(t, planDemand(nil, nil, 1000, now, 6))
+
+	// 10 + 15 + 7.5 min: 4 kWh spread evenly, current slot relative to its full length before prorate
+	plan := api.Rates{
+		{Start: now, End: slot(1)},
+		{Start: slot(2), End: slot(3)},
+		{Start: slot(4), End: slot(4).Add(tariff.SlotDuration / 2)},
+	}
+	assert.InDeltaSlice(t, []float32{1846, 0, 1846, 0, 923, 0}, planDemand(plan, nil, 4000, now, 6), 1)
+
+	// existing demand is kept where higher, plan beyond horizon ignored
+	plan = api.Rates{{Start: slot(1), End: slot(5)}}
+	assert.InDeltaSlice(t, []float32{3000, 1000, 1000}, planDemand(plan, []float32{3000, 500, 0}, 4000, now, 3), 1)
+}
+
 // TestApplyPlanGoalEnergy guards that an energy plan only asks for the missing energy on top of
 // the current state instead of the full plan energy (optimizer#190)
 func TestApplyPlanGoalEnergy(t *testing.T) {
@@ -752,6 +772,7 @@ func TestLoadpointRequestChargingState(t *testing.T) {
 			lp.EXPECT().EffectiveMaxPower().Return(11000.0).AnyTimes()
 			lp.EXPECT().GetMode().Return(api.ModeNow).AnyTimes()
 			lp.EXPECT().GetStatus().Return(status).AnyTimes()
+			lp.EXPECT().EffectivePlanTime().Return(time.Time{}).AnyTimes()
 			lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOff).AnyTimes()
 			lp.EXPECT().GetChargePower().Return(11000.0).AnyTimes()
 			lp.EXPECT().GetRemainingEnergy().Return(0.0).AnyTimes()

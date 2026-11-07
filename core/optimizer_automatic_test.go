@@ -476,7 +476,7 @@ func TestBatteryModeFixedDemandModelled(t *testing.T) {
 	}{
 		{"smart cost", api.ModeSmart, false, 0, api.BatteryDischarge},
 		{"fast", api.ModeNow, false, 0, api.BatteryDischarge},
-		{"plan", api.ModeSmart, true, 0, api.BatteryHold},
+		{"plan", api.ModeSmart, true, 0, api.BatteryDischarge},
 		{"min soc", api.ModeSmart, false, 80, api.BatteryHold},
 	} {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)

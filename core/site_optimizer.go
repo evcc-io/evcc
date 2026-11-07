@@ -1137,6 +1137,7 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	}
 
 	var demand []float32
+	automatic := site.AutomaticLoadpoints()
 
 	switch lp.GetMode() {
 	case api.ModeOff:
@@ -1154,8 +1155,15 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 		}
 		// add smartcost limit, precondition and plan goal, if configured
 		demand = applySmartCostLimit(lp, demand, planner, minLen)
-		demand = applyPrecondition(lp, demand, minLen)
-		site.applyPlanGoal(lp, &bat, minLen)
+		if automatic {
+			demand = applyPrecondition(lp, demand, minLen)
+			site.applyPlanGoal(lp, &bat, minLen)
+		}
+	}
+
+	// the loadpoint follows its own planner in any mode, which the optimizer must not reschedule
+	if lp.GetMode() != api.ModeOff && !automatic {
+		demand = applyPlannerPlan(lp, demand, bat.SInitial, minLen)
 	}
 
 	if demand != nil {
@@ -1617,15 +1625,9 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 		return
 	}
 
-	// Convert to Wh
 	vehicle := lp.GetVehicle()
 	socBased = socBased && vehicle != nil
-	if socBased {
-		goal = socToWh(vehicle.Capacity(), goal)
-	} else {
-		// energy plans count from the energy charged since the plan was set, on top of the current state
-		goal = float64(bat.SInitial) + lp.GetPlanRemainingEnergy()*1e3 // Wh
-	}
+	goal = planGoalWh(lp, goal, socBased, bat.SInitial)
 
 	ts := lp.EffectivePlanTime()
 	if ts.IsZero() {
@@ -1652,6 +1654,15 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	}
 }
 
+// planGoalWh converts the plan goal to Wh. Energy plans count from the energy
+// charged since the plan was set, on top of the current state.
+func planGoalWh(lp loadpoint.API, goal float64, socBased bool, sInitial float32) float64 {
+	if v := lp.GetVehicle(); socBased && v != nil {
+		return socToWh(v.Capacity(), goal)
+	}
+	return float64(sInitial) + lp.GetPlanRemainingEnergy()*1e3
+}
+
 // setPlanGoal sets the goal (Wh) at slot, keeping a higher goal already set there
 func setPlanGoal(bat *optimizer.BatteryConfig, minLen, slot int, goal float64) {
 	if bat.SGoal == nil {
@@ -1675,6 +1686,75 @@ func planSlot(now, ts time.Time) int {
 
 	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
 	return int((ts.Sub(eos) + tariff.SlotDuration - 1) / tariff.SlotDuration)
+}
+
+// applyPlannerPlan adds the planner's charging schedule as fixed demand, including precondition and continuous strategy
+func applyPlannerPlan(lp loadpoint.API, demand []float32, sInitial float32, minLen int) []float32 {
+	ts := lp.EffectivePlanTime()
+	if ts.IsZero() {
+		return demand
+	}
+
+	goal, socBased := lp.GetPlanGoal()
+	energy := planGoalWh(lp, goal, socBased, sInitial) - float64(sInitial)
+	if energy <= 0 {
+		return demand
+	}
+
+	maxPower := lp.EffectiveMaxPower()
+	required := lp.GetPlanRequiredDuration(goal, maxPower)
+	if required <= 0 {
+		return demand
+	}
+
+	strategy := lp.EffectivePlanStrategy()
+	plan := lp.GetPlan(ts, required, strategy.Precondition, strategy.Continuous)
+
+	return planDemand(plan, demand, energy/eta, time.Now(), minLen)
+}
+
+// planDemand spreads the plan's grid energy (Wh) evenly over its slots, which also covers the planner's
+// extra time for tapering. Slot 0 is the remainder of the current slot, its energy relative to the full
+// slot like the other demands before prorate.
+func planDemand(plan api.Rates, demand []float32, energy float64, now time.Time, minLen int) []float32 {
+	total := lo.SumBy(plan, func(r api.Rate) time.Duration { return r.End.Sub(r.Start) })
+	if total <= 0 {
+		return demand
+	}
+
+	if demand == nil {
+		demand = make([]float32, minLen)
+	}
+
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+
+	for i := range minLen {
+		start, end := eos.Add(time.Duration(i-1)*tariff.SlotDuration), eos.Add(time.Duration(i)*tariff.SlotDuration)
+		if i == 0 {
+			start = now
+		}
+
+		var overlap time.Duration
+		for _, r := range plan {
+			from, to := r.Start, r.End
+			if from.Before(start) {
+				from = start
+			}
+			if to.After(end) {
+				to = end
+			}
+			if from.Before(to) {
+				overlap += to.Sub(from)
+			}
+		}
+
+		if overlap > 0 {
+			slotEnergy := energy * float64(overlap) / float64(total)
+			demand[i] = max(demand[i], float32(slotEnergy*float64(tariff.SlotDuration)/float64(end.Sub(start))))
+		}
+	}
+
+	return demand
 }
 
 // TODO remove once smart cost limit usage becomes obsolete
