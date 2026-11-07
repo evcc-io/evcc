@@ -13,6 +13,8 @@ type ConfigurableDevice[T any] interface {
 	Properties() Properties
 	Update(map[string]any, T, ...func(*Config)) error
 	Delete() error
+	SetRelease(func())
+	Release()
 }
 
 var _ Device[any] = (*staticDevice[any])(nil)
@@ -43,6 +45,7 @@ type configurableDevice[T any] struct {
 	mu       sync.Mutex
 	config   *Config
 	instance T
+	release  func()
 }
 
 func NewConfigurableDevice[T any](config *Config, instance T) ConfigurableDevice[T] {
@@ -90,4 +93,21 @@ func (d *configurableDevice[T]) Delete() error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	return d.config.Delete()
+}
+
+// SetRelease sets the function that releases the instance's resources, releasing the previous instance
+func (d *configurableDevice[T]) SetRelease(release func()) {
+	d.mu.Lock()
+	prev := d.release
+	d.release = release
+	d.mu.Unlock()
+
+	if prev != nil {
+		prev()
+	}
+}
+
+// Release releases the instance's resources
+func (d *configurableDevice[T]) Release() {
+	d.SetRelease(nil)
 }

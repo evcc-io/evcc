@@ -66,6 +66,11 @@ func (cp *handler[T]) Delete(name string) error {
 			cp.mu.Unlock()
 
 			bus.Publish(cp.topic, OpDelete, dev)
+
+			if r, ok := dev.(interface{ Release() }); ok {
+				r.Release()
+			}
+
 			return nil
 		}
 	}
