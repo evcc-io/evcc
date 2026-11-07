@@ -154,9 +154,9 @@ test.describe("page", () => {
     await expect(legend("Battery discharge")).toContainText("2.0 kWh");
   });
 
-  // plot area spans the chart width minus the 36px axes, 96 slots a day
-  const slotX = (width: number, slot: number, left = 0) =>
-    left + ((width - left - 36) * (slot + 0.5)) / 96;
+  // plot area spans the chart width minus 36px on either side, 96 slots a day
+  const slotX = (width: number, slot: number, slots = 96) =>
+    36 + ((width - 72) * (slot + 0.5)) / slots;
 
   test("production tooltip with forecast", async ({ page }) => {
     await page.goto("/#/energy?year=2026&month=9&day=15");
@@ -173,11 +173,11 @@ test.describe("page", () => {
 
   test("battery soc below the bars", async ({ page }) => {
     await page.goto("/#/energy?year=2026&month=9&day=15");
-    // 12:00: charging 0.5 kWh at 50%, the soc axis takes 36px on the left
+    // 12:00: charging 0.5 kWh at 50%
     const chart = page.getByTestId("energy-battery").getByTestId("group-chart-battery");
     const box = await chart.boundingBox();
     if (!box) throw new Error("chart not visible");
-    const x = slotX(box.width, 48, 36);
+    const x = slotX(box.width, 48);
     const tooltip = page.getByRole("table");
     // the bars and the soc panel share one tooltip
     for (const y of [box.height / 3, box.height - 40]) {
@@ -194,8 +194,7 @@ test.describe("page", () => {
     const chart = page.getByTestId("energy-grid").getByTestId("group-chart-grid");
     const box = await chart.boundingBox();
     if (!box) throw new Error("chart not visible");
-    // plot area spans the chart width minus the 36px axis on the right
-    await chart.hover({ position: { x: ((box.width - 36) * 14.5) / 30, y: box.height / 2 } });
+    await chart.hover({ position: { x: slotX(box.width, 14, 30), y: box.height / 2 } });
     const tooltip = page.getByRole("table");
     const amount = tooltip.getByRole("row", { name: "Amount" });
     await expect(amount).toContainText("0.60 €");

@@ -138,7 +138,6 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/trash";
-import "@h2d2/shopicons/es/regular/checkmark";
 import { distanceUnit } from "@/units";
 import MultiSelect from "../Helper/MultiSelect.vue";
 import formatter from "@/mixins/formatter";

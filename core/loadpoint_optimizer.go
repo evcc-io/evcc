@@ -81,6 +81,24 @@ func (lp *Loadpoint) optimizerControlled() bool {
 	return v != nil && v.Capacity() > 0
 }
 
+// fixedDemandModelled indicates that optimizerRequest contains the charging as fixed vehicle
+// demand (mode now, smart cost limit) even if the optimizer does not control the loadpoint.
+// Plan and min soc charging follow evcc's own timing, which the request does not model.
+func (lp *Loadpoint) fixedDemandModelled() bool {
+	if lp.chargerHasFeature(api.Heating) || lp.chargerHasFeature(api.IntegratedDevice) || lp.EffectiveMaxPower() <= 0 {
+		return false
+	}
+
+	if v := lp.GetVehicle(); v == nil || (v.Capacity() == 0 && lp.GetLimitEnergy() == 0) {
+		return false
+	}
+
+	lp.RLock()
+	defer lp.RUnlock()
+
+	return !lp.planActive && !lp.minSocNotReached()
+}
+
 // activeSuggestion returns the optimizer's start/stop decision for the current slot,
 // nil if the optimizer does not control this loadpoint
 func (lp *Loadpoint) activeSuggestion() *types.Suggestion {
@@ -107,12 +125,15 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 		return false
 	}
 
-	goal, _ := lp.GetPlanGoal()
+	goal, isSocBased := lp.GetPlanGoal()
 	if goal <= 0 {
 		return false
 	}
 
 	required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower())
+	if required <= 0 && lp.fullSocPlanContinues(goal, isSocBased) {
+		return true
+	}
 
 	// past the plan time the goal was missed- keep charging like plannerActive does
 	critical := required > 0
@@ -123,10 +144,10 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 	// hold a critical verdict for one slot, like the planner holds its slot: while charging
 	// the soc estimate may shrink the required duration faster than the clock (taper model)
 	if critical {
-		lp.planSlotEnd = lp.clock.Now().Add(tariff.SlotDuration)
+		lp.criticalSlotEnd = lp.clock.Now().Add(tariff.SlotDuration)
 	}
 
-	return critical || lp.clock.Now().Before(lp.planSlotEnd)
+	return critical || lp.clock.Now().Before(lp.criticalSlotEnd)
 }
 
 // surplusRegime indicates that the suggested charge power matches the forecast
@@ -135,7 +156,7 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 // charge the home battery covers: the pv loop sees its discharge as deficit.
 func (lp *Loadpoint) surplusRegime(s *types.Suggestion) bool {
 	full := s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold
-	return s.Action == actionCharge && !full && math.Abs(s.Grid) <= suggestionThreshold && s.Battery <= suggestionThreshold
+	return s.Action == actionCharge && !full && math.Abs(s.Grid) <= suggestionThreshold && s.BatteryDischarge <= suggestionThreshold
 }
 
 // optimizerCharging applies the optimizer's charging decision. It returns false
@@ -169,10 +190,14 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion) (bool, error) {
 	lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	// full power, or more than the active phases can deliver: fastCharging scales
-	// up and owns the phase timer, resetting it here would restart the delay every cycle
+	// up and owns the phase timer, resetting it here would restart the delay every cycle.
+	// Inside the 1p/3p gap neither phase count matches the suggestion: stay below it on 1p
+	// instead of scaling up to a 3p minimum that draws unplanned power, e.g. from grid.
 	full := s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold
-	if s.Action == actionCharge && (full || s.Charge > grid.CurrentToPower(lp.effectiveMaxCurrent(), lp.ActivePhases())) {
-		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), full power", s.Charge)
+	scaleUp := s.Charge > grid.CurrentToPower(lp.effectiveMaxCurrent(), lp.ActivePhases()) &&
+		s.Charge >= grid.CurrentToPower(lp.effectiveMinCurrent(), 3)
+	if s.Action == actionCharge && (full || scaleUp) {
+		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), max current", s.Charge)
 		return true, lp.fastCharging()
 	}
 
@@ -182,7 +207,7 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion) (bool, error) {
 		// a limited setpoint, e.g. a minimum demand or a grid import limit
 		if current := grid.PowerToCurrent(s.Charge, lp.ActivePhases()); current >= lp.effectiveMinCurrent() {
 			lp.log.DEBUG.Printf("optimizer: charge (%.0fW)", s.Charge)
-			return true, lp.setLimit(current)
+			return true, lp.setLimit(min(current, lp.effectiveMaxCurrent()))
 		}
 
 		// below what the active phases can deliver, minCharging scales down instead

@@ -11,6 +11,18 @@ describe("Markdown", () => {
     expect(html).not.toContain("<em>");
   });
 
+  test("keeps underscores in firmware versions", () => {
+    const html = render("requires M3W_3.11STP or M3W_4.03PTB");
+    expect(html).toContain("requires M3W_3.11STP or M3W_4.03PTB");
+    expect(html).not.toContain("<em>");
+  });
+
+  test("opens links in new window", () => {
+    expect(render("[docs](https://docs.evcc.io)")).toContain(
+      '<a target="_blank" rel="noopener noreferrer" href="https://docs.evcc.io">docs</a>'
+    );
+  });
+
   test("still emphasises whole words", () => {
     expect(render("so _early_ and __bold__")).toContain(
       "so <em>early</em> and <strong>bold</strong>"

@@ -17,6 +17,9 @@
 			:required="Required"
 			:pattern="Pattern"
 			:choice="Choice"
+			:device-class="Class"
+			:usage="Usage"
+			:has-device-error="hasDeviceError"
 			:service-values="serviceValues"
 			:service-loading="serviceLoading"
 			:label="label"
@@ -47,10 +50,13 @@ export default {
 		Example: String,
 		Default: { type: [String, Number, Boolean], default: undefined },
 		Type: String,
+		hasDeviceError: { type: Function, default: () => false },
 		Unit: String,
 		Mask: Boolean,
 		Pattern: { type: Object, default: () => ({}) },
 		Choice: Array,
+		Class: String,
+		Usage: String,
 		serviceValues: Array,
 		serviceLoading: Boolean,
 		modelValue: [String, Number, Boolean, Object],
@@ -73,6 +79,8 @@ export default {
 			return this.Description === this.Help ? undefined : this.Help;
 		},
 		example() {
+			// device names are picked, not typed: the example only serves yaml docs
+			if (this.Type === "Device") return undefined;
 			// show duration example in its own unit, field unit is user-changeable
 			const unit = this.Type === "Duration" ? goDurationUnit(this.Example) : null;
 			if (!unit) return this.Example;

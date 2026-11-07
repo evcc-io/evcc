@@ -207,7 +207,7 @@ func TestOptimizerBatteryFed(t *testing.T) {
 	lp, charger, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
 	lp.offeredCurrent = maxA
 
-	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 1380, Battery: 1000})
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 1380, BatteryDischarge: 1000})
 
 	// grid balanced, battery discharging into the site
 	charger.EXPECT().MaxCurrent(int64(minA))
@@ -260,22 +260,28 @@ func TestOptimizerPrioritySoc(t *testing.T) {
 		action    string
 		res       sitePowerResult
 		expect    float64
+		batCharge float64 // planned home battery charge
 	}{
 		// the report: above prioritySoc the vehicle took the battery's charge power against the stop
-		{"stop above prioritySoc", true, actionStop, above, 0},
-		{"stop below prioritySoc", true, actionStop, below, 0},
-		{"charge above prioritySoc", true, actionCharge, above, -1000},
-		{"charge below prioritySoc", true, actionCharge, below, -1000},
+		{"stop above prioritySoc", true, actionStop, above, 0, 0},
+		{"stop below prioritySoc", true, actionStop, below, 0, 0},
+		{"charge above prioritySoc", true, actionCharge, above, -1000, 0},
+		{"charge below prioritySoc", true, actionCharge, below, -1000, 0},
 		// a discharging battery is not hidden by a stop
-		{"stop while discharging", true, actionStop, sitePowerResult{state: siteState{battery: types.BatteryState{Power: 500}}, power: 500}, 500},
+		{"stop while discharging", true, actionStop, sitePowerResult{state: siteState{battery: types.BatteryState{Power: 500}}, power: 500}, 500, 0},
 		// prioritySoc applies to loadpoints the optimizer does not control
-		{"uncontrolled below prioritySoc", false, actionStop, below, 100},
+		{"uncontrolled below prioritySoc", false, actionStop, below, 100, 0},
+		// a charge next to planned battery charging gives the battery priority, the vehicle gets the remainder
+		{"charge with planned battery charge", true, actionCharge, above, 0, 1000},
+		{"charge with partial planned battery charge", true, actionCharge, above, 0, 400},
+		{"charge below prioritySoc with planned battery charge", true, actionCharge, below, 0, 1000},
+		{"charge with planned battery charge below threshold", true, actionCharge, above, -1000, suggestionThreshold},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			lp := NewLoadpoint(util.NewLogger("foo"), nil)
 			lp.site = &mockSite{automatic: tc.automatic}
 			lp.vehicle = modelledVehicle(gomock.NewController(t))
-			lp.setSuggestion(&types.Suggestion{Action: tc.action})
+			lp.setSuggestion(&types.Suggestion{Action: tc.action, BatteryCharge: tc.batCharge})
 
 			site := &Site{log: util.NewLogger("foo")}
 			assert.Equal(t, tc.expect, site.loadpointSitePower(lp, tc.res))
@@ -292,11 +298,11 @@ func TestOptimizerFlexibility(t *testing.T) {
 		s    types.Suggestion
 		want float64
 	}{
-		{types.Suggestion{Action: actionCharge, Charge: 3680, Grid: 1000}, 0},    // full power
-		{types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, 0},    // grid-fed setpoint
-		{types.Suggestion{Action: actionCharge, Charge: 2300}, 2700},             // surplus regime, pv loop yields
-		{types.Suggestion{Action: actionCharge, Charge: 2300, Battery: 1000}, 0}, // battery-fed setpoint
-		{types.Suggestion{Action: actionStop}, 2700},                             // stop, pv loop yields
+		{types.Suggestion{Action: actionCharge, Charge: 3680, Grid: 1000}, 0},             // full power
+		{types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, 0},             // grid-fed setpoint
+		{types.Suggestion{Action: actionCharge, Charge: 2300}, 2700},                      // surplus regime, pv loop yields
+		{types.Suggestion{Action: actionCharge, Charge: 2300, BatteryDischarge: 1000}, 0}, // battery-fed setpoint
+		{types.Suggestion{Action: actionStop}, 2700},                                      // stop, pv loop yields
 	} {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
 		lp.mode = api.ModeSmart
@@ -415,6 +421,86 @@ func TestBatteryModeAutomatic(t *testing.T) {
 	ctrl.Finish()
 }
 
+// TestBatteryModeUnmodelledCharging guards that an uncontrolled loadpoint on the smart cost
+// limit holds the battery but does not block a grid charge suggestion (#35337)
+func TestBatteryModeUnmodelledCharging(t *testing.T) {
+	enableAutomatic(t)
+	settings.SetString(keys.OptimizerAutomatic, OptimizerAutomaticBattery)
+
+	above := 1.5
+	rate := api.Rate{Start: time.Now(), End: time.Now().Add(time.Hour), Value: 1.15}
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.status = api.StatusC
+	lp.mode = api.ModeSmart
+	lp.smartCostLimit = &above
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, api.Meter(nil))},
+		loadpoints:    []*Loadpoint{lp},
+	}
+
+	for _, tc := range []struct {
+		suggestion, res api.BatteryMode
+	}{
+		{api.BatteryCharge, api.BatteryCharge},
+		{api.BatteryNormal, api.BatteryHold},
+		{api.BatteryDischarge, api.BatteryHold},
+	} {
+		site.setSuggestions(map[string]types.Suggestion{
+			batteryKey("bat"): {Action: tc.suggestion.String()},
+		})
+		assert.Equal(t, tc.res, site.requiredBatteryMode(false, false, rate), tc.suggestion.String())
+	}
+}
+
+// TestBatteryModeFixedDemandModelled guards that a vehicle whose smart cost or fast charging
+// is fixed demand in the optimizer request does not hold the battery in battery-only mode,
+// while plan and min soc charging still do (#35337)
+func TestBatteryModeFixedDemandModelled(t *testing.T) {
+	enableAutomatic(t)
+	settings.SetString(keys.OptimizerAutomatic, OptimizerAutomaticBattery)
+
+	ctrl := gomock.NewController(t)
+
+	above := 1.5
+	rate := api.Rate{Start: time.Now(), End: time.Now().Add(time.Hour), Value: 1.15}
+
+	for _, tc := range []struct {
+		name       string
+		mode       api.ChargeMode
+		planActive bool
+		minSoc     int
+		res        api.BatteryMode
+	}{
+		{"smart cost", api.ModeSmart, false, 0, api.BatteryDischarge},
+		{"fast", api.ModeNow, false, 0, api.BatteryDischarge},
+		{"plan", api.ModeSmart, true, 0, api.BatteryHold},
+		{"min soc", api.ModeSmart, false, 80, api.BatteryHold},
+	} {
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.status = api.StatusC
+		lp.mode = tc.mode
+		lp.smartCostLimit = &above
+		lp.vehicle = modelledVehicle(ctrl)
+		lp.vehicleSoc = 50
+		lp.planActive = tc.planActive
+		lp.minSoc = tc.minSoc
+
+		site := &Site{
+			log:           util.NewLogger("foo"),
+			batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, api.Meter(nil))},
+			loadpoints:    []*Loadpoint{lp},
+		}
+		site.setSuggestions(map[string]types.Suggestion{
+			batteryKey("bat"): {Action: api.BatteryDischarge.String()},
+		})
+
+		assert.Equal(t, tc.res, site.requiredBatteryMode(false, false, rate), tc.name)
+	}
+}
+
 func TestBatteryGridChargeLimitUnavailable(t *testing.T) {
 	enableAutomatic(t)
 
@@ -454,6 +540,7 @@ func TestOptimizerPhaseScaleUp(t *testing.T) {
 			lp.Enable.Delay = 3 * time.Minute
 			lp.phases = 1
 			lp.status = api.StatusC
+			lp.enabled = true
 			lp.chargePower = 3680
 			lp.wakeUpTimer = NewTimer()
 
@@ -640,4 +727,107 @@ func TestOptimizerPlanAboveLimit(t *testing.T) {
 	assert.True(t, lp.planSlotEnd.IsZero())
 
 	ctrl.Finish()
+}
+
+// TestOptimizerPlanSlotNotCritical covers a plan goal beyond the optimizer horizon:
+// the planner's fallback slot must not make the deadline critical and override the optimizer
+func TestOptimizerPlanSlotNotCritical(t *testing.T) {
+	lp := &Loadpoint{
+		log:        util.NewLogger("foo"),
+		clock:      clock.NewMock(),
+		vehicle:    modelledVehicle(gomock.NewController(t)),
+		site:       &mockSite{automatic: true},
+		status:     api.StatusC,
+		phases:     1,
+		minCurrent: minA,
+		maxCurrent: maxA,
+		vehicleSoc: 50,
+	}
+
+	now := lp.clock.Now()
+	lp.planLocked = PlanLock{Time: now.Add(72 * time.Hour), Soc: 100, Id: 1}
+
+	// the planner's active slot, set by plannerActive before the critical check
+	lp.planSlotEnd = now.Add(time.Hour)
+
+	assert.False(t, lp.planDeadlineCritical())
+}
+
+// TestOptimizerPlanFullSocContinues covers a 100% plan with the goal reached:
+// like the planner, the active plan keeps charging while the vehicle tapers by itself
+func TestOptimizerPlanFullSocContinues(t *testing.T) {
+	lp := &Loadpoint{
+		log:        util.NewLogger("foo"),
+		clock:      clock.NewMock(),
+		vehicle:    modelledVehicle(gomock.NewController(t)),
+		site:       &mockSite{automatic: true},
+		status:     api.StatusC,
+		phases:     1,
+		minCurrent: minA,
+		maxCurrent: maxA,
+		vehicleSoc: 100,
+	}
+
+	now := lp.clock.Now()
+	lp.planLocked = PlanLock{Time: now.Add(time.Hour), Soc: 100, Id: 1}
+
+	assert.False(t, lp.planDeadlineCritical(), "inactive plan")
+
+	lp.planActive = true
+	lp.clock.(*clock.Mock).Add(time.Hour)
+	assert.True(t, lp.planDeadlineCritical(), "active plan")
+}
+
+// TestOptimizerPhaseGap verifies that a suggestion between 1p maximum and 3p minimum power
+// charges on 1p below the suggestion instead of toggling phases or exceeding it on 3p
+func TestOptimizerPhaseGap(t *testing.T) {
+	for _, tc := range []struct {
+		phases int
+	}{
+		{1},
+		{3},
+	} {
+		t.Run(fmt.Sprintf("%dp", tc.phases), func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			clck := clock.NewMock()
+
+			lp := NewLoadpoint(util.NewLogger("foo"), nil)
+			lp.clock = clck
+			lp.minCurrent = minA
+			lp.maxCurrent = maxA
+			lp.phases = tc.phases
+			lp.status = api.StatusC
+			lp.enabled = true
+			lp.wakeUpTimer = NewTimer()
+
+			plainCharger := api.NewMockCharger(ctrl)
+			phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+			lp.charger = struct {
+				*api.MockCharger
+				*api.MockPhaseSwitcher
+			}{plainCharger, phaseCharger}
+
+			plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()
+			plainCharger.EXPECT().Enable(gomock.Any()).Return(nil).AnyTimes()
+			plainCharger.EXPECT().MaxCurrent(gomock.Any()).Return(nil).AnyTimes()
+
+			// scales down once, never back up
+			if tc.phases == 3 {
+				phaseCharger.EXPECT().Phases1p3p(1).Return(nil)
+			}
+
+			// above 1p maximum (3680W), below 3p minimum (4140W)
+			s := &types.Suggestion{Action: actionCharge, Charge: 4000, Grid: 4000}
+
+			for range 5 {
+				clck.Add(time.Hour) // phase switch and delays elapsed
+				handled, err := lp.optimizerCharging(s)
+				assert.True(t, handled)
+				assert.NoError(t, err)
+			}
+
+			assert.Equal(t, 1, lp.GetPhases())
+			assert.Equal(t, float64(maxA), lp.offeredCurrent)
+		})
+	}
 }
