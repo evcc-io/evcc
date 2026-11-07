@@ -25,6 +25,15 @@ func TestLength(t *testing.T) {
 		require.NoError(t, err, tc)
 		require.Equal(t, tc.want, res, tc)
 	}
+
+	// bytes encoding uses configured length
+	res, err := Register{Encoding: "bytes"}.Length()
+	require.NoError(t, err)
+	require.Equal(t, uint16(0), res)
+
+	res, err = Register{Encoding: "bytes", Count: 10}.Length()
+	require.NoError(t, err)
+	require.Equal(t, uint16(10), res)
 }
 
 func TestFuncCode(t *testing.T) {
