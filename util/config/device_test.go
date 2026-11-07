@@ -29,6 +29,11 @@ func TestDeviceRelease(t *testing.T) {
 	assert.Equal(t, 1, first)
 	assert.Equal(t, 1, second)
 
+	// release funcs set after release are invoked immediately
+	var late int
+	dev.SetRelease(func() { late++ })
+	assert.Equal(t, 1, late)
+
 	// static devices have nothing to release
 	require.NoError(t, h.Delete("static"))
 }

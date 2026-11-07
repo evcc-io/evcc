@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"slices"
 	"syscall"
 	"time"
 
@@ -95,7 +96,8 @@ func runDevicehost(cmd *cobra.Command, args []string) {
 }
 
 func releaseAll[T any](h config.Handler[T]) {
-	for _, dev := range h.Devices() {
+	// clone since Delete modifies the slice
+	for _, dev := range slices.Clone(h.Devices()) {
 		if err := h.Delete(dev.Config().Name); err != nil {
 			log.ERROR.Println(err)
 		}

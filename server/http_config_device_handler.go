@@ -452,14 +452,7 @@ func updateDevice[T any](ctx context.Context, release func(), id int, class temp
 		return errors.New("not configurable")
 	}
 
-	if err := configurable.Update(merged, instance, config.WithProperties(req.Properties)); err != nil {
-		return err
-	}
-
-	// release previous instance
-	configurable.SetRelease(release)
-
-	return nil
+	return configurable.UpdateWithRelease(merged, instance, release, config.WithProperties(req.Properties))
 }
 
 // updateDeviceHandler updates database device's configuration by class
