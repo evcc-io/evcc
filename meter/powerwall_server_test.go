@@ -3,6 +3,7 @@ package meter
 import (
 	"encoding/json"
 	"maps"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -429,6 +430,7 @@ func TestPowerWallServerPowerLimitValidation(t *testing.T) {
 		value any
 	}{
 		{"maxchargepower", "invalid"},
+		{"maxchargepower", "Inf"},
 		{"maxdischargepower", -1.0},
 	} {
 		cfg := map[string]any{
@@ -436,6 +438,30 @@ func TestPowerWallServerPowerLimitValidation(t *testing.T) {
 			"usage":         "battery",
 			"controlSecret": "secret",
 			"minsoc":        0.0,
+			"cache":         time.Millisecond,
+			tc.field:        tc.value,
+		}
+		_, err := NewPowerWallFromConfig(cfg)
+		require.ErrorContains(t, err, tc.field)
+	}
+}
+
+func TestPowerWallServerReserveValidation(t *testing.T) {
+	fake := &fakePowerwallServer{secret: "secret", reserve: 20}
+	srv := httptest.NewServer(fake.handler())
+	t.Cleanup(srv.Close)
+
+	for _, tc := range []struct {
+		field string
+		value float64
+	}{
+		{"minsoc", math.NaN()},
+		{"chargemaxsoc", math.Inf(1)},
+	} {
+		cfg := map[string]any{
+			"uri":           "http://" + srv.Listener.Addr().String(),
+			"usage":         "battery",
+			"controlSecret": "secret",
 			"cache":         time.Millisecond,
 			tc.field:        tc.value,
 		}
@@ -588,6 +614,11 @@ func TestPowerWallAnyFloat(t *testing.T) {
 		{in: "5.5", want: 5.5},
 		{in: nil, want: 0},
 		{in: "invalid", wantErr: true},
+		{in: "NaN", wantErr: true},
+		{in: "Inf", wantErr: true},
+		{in: "-Inf", wantErr: true},
+		{in: math.NaN(), wantErr: true},
+		{in: math.Inf(1), wantErr: true},
 		{in: struct{}{}, wantErr: true},
 	}
 

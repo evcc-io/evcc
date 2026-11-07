@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -75,7 +76,7 @@ func (cc *powerWallConfig) validate() error {
 
 	if serverMode {
 		for name, v := range map[string]float64{"minsoc": cc.MinSoc, "chargemaxsoc": cc.ChargeMaxSoc} {
-			if v < 0 || v > 100 {
+			if math.IsNaN(v) || math.IsInf(v, 0) || v < 0 || v > 100 {
 				return fmt.Errorf("invalid %s: %v, must be 0-100", name, v)
 			}
 		}

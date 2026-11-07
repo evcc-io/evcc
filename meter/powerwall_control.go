@@ -16,23 +16,33 @@ import (
 )
 
 func anyFloat(v any) (float64, error) {
+	var f float64
 	switch x := v.(type) {
 	case float64:
-		return x, nil
+		f = x
 	case float32:
-		return float64(x), nil
+		f = float64(x)
 	case int:
-		return float64(x), nil
+		f = float64(x)
 	case int64:
-		return float64(x), nil
+		f = float64(x)
 	case string:
-		f, err := strconv.ParseFloat(x, 64)
-		return f, err
+		var err error
+		f, err = strconv.ParseFloat(x, 64)
+		if err != nil {
+			return 0, err
+		}
 	case nil:
 		return 0, nil
 	default:
 		return 0, fmt.Errorf("unsupported value type %T", v)
 	}
+
+	if math.IsNaN(f) || math.IsInf(f, 0) {
+		return 0, fmt.Errorf("value must be finite")
+	}
+
+	return f, nil
 }
 
 func minPositive(values ...float64) float64 {
