@@ -45,10 +45,9 @@ func TestExplainOptimizerResult(t *testing.T) {
 	defer srv.Close()
 
 	t.Setenv("OPTIMIZER_URI", srv.URL)
-	sponsor.Subject = "sponsor"
+	sponsor.SetSubjectForTest(t, "sponsor")
 	sponsor.SetToken("token")
 	t.Cleanup(func() {
-		sponsor.Subject = ""
 		sponsor.SetToken("")
 	})
 

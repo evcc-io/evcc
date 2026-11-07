@@ -291,10 +291,8 @@ func TestSigenergyEVDCMinMaxCurrent(t *testing.T) {
 }
 
 func TestSigenergyEVDCSponsorGate(t *testing.T) {
-	// go-e tests set the global sponsor.Subject and never reset it
-	old := sponsor.Subject
-	sponsor.Subject = ""
-	t.Cleanup(func() { sponsor.Subject = old })
+	// test requires an unsponsored instance
+	sponsor.SetSubjectForTest(t, "")
 
 	// tests run without sponsorship: the public constructor must refuse
 	_, err := NewSigenergyEVDC(t.Context(), "localhost:0", 1)
