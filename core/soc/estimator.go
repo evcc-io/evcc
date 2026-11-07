@@ -22,10 +22,15 @@ const (
 // Estimator provides vehicle soc and charge duration
 // Vehicle Soc can be estimated to provide more granularity
 type Estimator struct {
-	mu  sync.Mutex
-	log *util.Logger
+	mu       sync.Mutex
+	log      *util.Logger
+	capacity float64 // vehicle capacity in Wh
 
-	capacity          float64 // vehicle capacity in Wh
+	session
+}
+
+// session holds the per-session estimator state
+type session struct {
 	energyPerSocStep  float64 // energy per soc percent in Wh
 	vehicleSoc        float64 // estimated vehicle soc in %
 	initialSoc        float64 // first received valid vehicle soc in %
@@ -50,13 +55,9 @@ func (s *Estimator) Reset() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.energyPerSocStep = s.capacity / ChargeEfficiency / 100
-	s.vehicleSoc = 0
-	s.initialSoc = 0
-	s.initialEnergy = 0
-	s.prevSoc = 0
-	s.prevChargedEnergy = 0
-	s.sampled = false
+	s.session = session{
+		energyPerSocStep: s.capacity / ChargeEfficiency / 100,
+	}
 }
 
 // virtualCapacity returns the estimated capacity in Wh, never below the vehicle's physical capacity
