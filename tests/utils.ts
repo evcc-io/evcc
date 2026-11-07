@@ -81,7 +81,7 @@ export async function addDemoCharger(
 export async function addDemoMeter(page: Page, power = "0"): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
   await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
-  await lpModal.getByRole("button", { name: "Add dedicated energy meter" }).click();
+  await lpModal.getByRole("button", { name: "Add meter" }).click();
 
   const modal = page.getByTestId("meter-modal");
   await expectModalVisible(modal);

@@ -9,6 +9,10 @@ params:
   - name: usage
     choice: ["pv"]
   - name: host
+  - name: password
+    help:
+      de: Nur nötig, wenn Lesezugriff ohne Passwort deaktiviert ist.
+      en: Only needed if read-only access without password is disabled.
   - name: cache
     default: 1s
 render: |
@@ -16,11 +20,23 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/api/livedata/status
+    {{- if .password }}
+    auth:
+      type: basic
+      user: admin
+      password: {{ .password }}
+    {{- end }}
     jq: .total.Power.v
     cache: {{ .cache }}
   energy:
     source: http
     uri: http://{{ .host }}/api/livedata/status
+    {{- if .password }}
+    auth:
+      type: basic
+      user: admin
+      password: {{ .password }}
+    {{- end }}
     # skip partial sums until all inverters are contacted; radio_stats needs firmware 2024.10.22+
     jq: 'if all(.inverters[]; .radio_stats.rssi == null or .radio_stats.rssi > -127) then .total.YieldTotal.v else empty end'
     cache: {{ .cache }}

@@ -1396,3 +1396,24 @@ func TestPVDisableContinuousDeviceShortfall(t *testing.T) {
 		})
 	}
 }
+
+func TestRequestUpdate(t *testing.T) {
+	ch := make(chan *Loadpoint, 2)
+	lp1 := &Loadpoint{lpChan: ch}
+	lp2 := &Loadpoint{lpChan: ch}
+
+	lp1.requestUpdate()
+	lp1.requestUpdate() // already queued
+	lp2.requestUpdate()
+
+	require.Len(t, ch, 2)
+	assert.Same(t, lp1, (<-ch).dequeued())
+	assert.Same(t, lp2, (<-ch).dequeued())
+
+	// queued again once the site has taken the request
+	lp1.requestUpdate()
+	assert.Same(t, lp1, <-ch)
+
+	// not prepared yet
+	new(Loadpoint).requestUpdate()
+}

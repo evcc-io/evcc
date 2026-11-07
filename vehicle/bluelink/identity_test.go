@@ -44,7 +44,7 @@ func legacyTokenHandler(accessToken, refreshToken string) http.HandlerFunc {
 
 // newLoginTestIdentity builds an Identity suitable for exercising the public
 // Login() method end to end, including the legacy getDeviceID call it always
-// makes. cci == nil mirrors a brand without CCI support (e.g. Genesis EU).
+// makes. cci == nil mirrors a brand without CCI support (e.g. Hyundai AU).
 func newLoginTestIdentity(t *testing.T, loginURL, deviceURL, cciURL string, cci *CCIConfig) *Identity {
 	t.Helper()
 
@@ -81,8 +81,8 @@ func testCCIConfig() *CCIConfig {
 	}
 }
 
-// TestLoginUsesLegacyWhenCCIIsNil covers brands without CCI support (Genesis
-// EU, Hyundai AU): Login must always use the unmodified legacy refreshToken path
+// TestLoginUsesLegacyWhenCCIIsNil covers brands without CCI support (Hyundai
+// AU): Login must always use the unmodified legacy refreshToken path
 func TestLoginUsesLegacyWhenCCIIsNil(t *testing.T) {
 	for _, tt := range []struct {
 		name     string

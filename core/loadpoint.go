@@ -90,6 +90,7 @@ type Loadpoint struct {
 	pushChan chan<- messenger.Event // notifications
 	uiChan   chan<- util.Param      // client push messages
 	lpChan   chan<- *Loadpoint      // update requests
+	lpQueued atomic.Bool            // update request waiting in lpChan
 	log      *util.Logger
 
 	rwMutex      atomic.Int64 // count reentrant RWMutex
@@ -166,6 +167,7 @@ type Loadpoint struct {
 	planEnergy       float64          // Plan charge energy in kWh (dumb vehicles)
 	planEnergyOffset float64          // already charged energy in kWh when plan was set
 	planSlotEnd      time.Time        // current plan slot end time
+	criticalSlotEnd  time.Time        // optimizer: deadline critical verdict held until
 	planActive       bool             // charge plan exists and has a currently active slot
 	planOverrunSent  bool             // notification has been sent already
 	planLocked       PlanLock         // locked plan
@@ -473,10 +475,22 @@ func (lp *Loadpoint) RequestUpdate() {
 
 // requestUpdate requests site to update this loadpoint
 func (lp *Loadpoint) requestUpdate() {
+	// queue each loadpoint at most once so the site queue sized to all loadpoints never overflows
+	if lp.lpChan == nil || !lp.lpQueued.CompareAndSwap(false, true) {
+		return
+	}
+
 	select {
 	case lp.lpChan <- lp: // request loadpoint update
 	default:
+		lp.lpQueued.Store(false)
 	}
+}
+
+// dequeued marks the update request as taken from the site queue so the loadpoint may request again
+func (lp *Loadpoint) dequeued() *Loadpoint {
+	lp.lpQueued.Store(false)
+	return lp
 }
 
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
@@ -710,8 +724,8 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 }
 
 // triggerOptimizer re-runs the optimizer when the loadpoint's profile changed.
-// A burst of setters, e.g. on disconnect, is coalesced by optimizerUpdateAsync's
-// TryLock- only the first call gets through while a run is in flight.
+// A burst of setters, e.g. on disconnect, is coalesced by optimizerUpdateAsync:
+// triggers during a run collapse into a single re-run afterwards.
 func (lp *Loadpoint) triggerOptimizer() {
 	if lp.site != nil {
 		lp.site.Optimize()
@@ -1567,6 +1581,22 @@ func (lp *Loadpoint) fastChargingPhases() (bool, error) {
 
 	// use enabled phases- scalePhases compares against the same value
 	phases := lp.GetPhases()
+
+	// unknown phases (charger without api.PhaseGetter after restart): derive from measured phases while
+	// charging, more than 1p measured implies 3p enabled. Without measurement establish target immediately.
+	if phases == 0 {
+		switch measured := lp.GetMeasuredPhases(); {
+		case measured == 1:
+			phases = 1
+		case measured > 1:
+			phases = 3
+		default:
+			if err := lp.scalePhases(targetPhases); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+				return false, err
+			}
+			return false, nil
+		}
+	}
 
 	// scale down: immediate
 	if targetPhases == 1 && phases == 3 {

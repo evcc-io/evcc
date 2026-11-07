@@ -35,12 +35,20 @@ type Estimator struct {
 
 // NewEstimator creates new estimator
 func NewEstimator(log *util.Logger, vehicle api.Vehicle) *Estimator {
-	capacity := vehicle.Capacity() * 1e3
+	s := &Estimator{
+		log:      log,
+		capacity: vehicle.Capacity() * 1e3,
+	}
+	s.Reset()
+	return s
+}
 
-	return &Estimator{
-		log:              log,
-		capacity:         capacity,
-		energyPerSocStep: capacity / ChargeEfficiency / 100, // initial gradient taking efficiency into account
+// Reset clears session samples and restores the initial charging efficiency.
+func (s *Estimator) Reset() {
+	*s = Estimator{
+		log:              s.log,
+		capacity:         s.capacity,
+		energyPerSocStep: s.capacity / ChargeEfficiency / 100,
 	}
 }
 
