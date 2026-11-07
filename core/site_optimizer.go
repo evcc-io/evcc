@@ -311,8 +311,7 @@ func loadpointPlan(res optimizer.BatteryResult, prices []float32, schedule optim
 }
 
 // limitReached returns the end of the slot in which the result reaches the battery's maximum
-// soc- a partial slot is charged at reduced power over the whole slot. Zero if already there
-// or not within the horizon.
+// soc (a partial slot is charged over the whole slot), zero if already there or not within the horizon
 func limitReached(req optimizer.BatteryConfig, res optimizer.BatteryResult, schedule optimizerSchedule, now time.Time) time.Time {
 	limit := req.SMax - 1 // Wh, solver precision
 
