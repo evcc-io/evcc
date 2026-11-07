@@ -1,0 +1,66 @@
+template: enphase-modbus
+products:
+  - brand: Enphase
+    description:
+      generic: IQ Gateway (Modbus)
+requirements:
+  description:
+    en: |
+      Requires Enphase support to enable modbus functionality on IQ Gateway.
+      Curtailment limits the inverter output power to the desired percentage of the maximum AC power.
+    de: |
+      Erfordert Enphase-Unterstützung, um die Modbus-Funktionalität auf dem IQ Gateway zu aktivieren.
+      Die Abregelung begrenzt die Wechselrichterleistung auf den gewünschten Prozentsatz der maximalen AC-Leistung.
+discovery:
+  mdns: ["_enphase-envoy._tcp"]
+  mac: ["001DC0"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+render: |
+  type: custom
+  curtail:
+    source: sequence
+    set:
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 704:WMaxLimPct
+      - source: switch
+        switch:
+          - case: 100 # Uncurtailed
+            set:
+              source: const
+              value: 0 # Limit disabled
+              set:
+                source: sunspec
+                {{- include "modbus" . | indent 14 }}
+                value: 704:WMaxLimPctEna
+        default:
+          source: const
+          value: 1 # Limit enabled
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 704:WMaxLimPctEna
+  curtailed: # the limit percentage only applies while the limit is enabled
+    source: go
+    in:
+      - name: ena
+        type: bool
+        config:
+          source: sunspec
+          {{- include "modbus" . | indent 8 }}
+          value: 704:WMaxLimPctEna
+      - name: limit
+        type: float
+        config:
+          source: sunspec
+          {{- include "modbus" . | indent 8 }}
+          value: 704:WMaxLimPct
+    script: |
+      percent := 100
+      if ena {
+        percent = int(limit)
+      }
+      percent

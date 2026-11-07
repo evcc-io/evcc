@@ -9,7 +9,6 @@ requirements:
       Requires Enphase support to enable modbus functionality on IQ Gateway.
     de: |
       Erfordert Enphase-Unterstützung, um die Modbus-Funktionalität auf dem IQ Gateway zu aktivieren.
-capabilities: ["curtail"]
 discovery:
   mdns: ["_enphase-envoy._tcp"]
   mac: ["001DC0"]
@@ -60,49 +59,5 @@ render: |
       {{- include "modbus" . | indent 4 }}
       value: 701:VL3
       nan: true
-  curtail:
-    source: sequence
-    set:
-      - source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value: 704:WMaxLimPct
-      - source: switch
-        switch:
-          - case: 100 # Uncurtailed
-            set:
-              source: const
-              value: 0 # Limit disabled
-              set:
-                source: sunspec
-                {{- include "modbus" . | indent 14 }}
-                value: 704:WMaxLimPctEna
-        default:
-          source: const
-          value: 1 # Limit enabled
-          set:
-            source: sunspec
-            {{- include "modbus" . | indent 10 }}
-            value: 704:WMaxLimPctEna
-  curtailed: # the limit percentage only applies while the limit is enabled
-    source: go
-    in:
-      - name: ena
-        type: bool
-        config:
-          source: sunspec
-          {{- include "modbus" . | indent 8 }}
-          value: 704:WMaxLimPctEna
-      - name: limit
-        type: float
-        config:
-          source: sunspec
-          {{- include "modbus" . | indent 8 }}
-          value: 704:WMaxLimPct
-    script: |
-      percent := 100
-      if ena {
-        percent = int(limit)
-      }
-      percent
   {{- include "sunspec-maxacpower" . }}
   {{- end }}
