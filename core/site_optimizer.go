@@ -1137,6 +1137,7 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	}
 
 	var demand []float32
+	automatic := site.AutomaticLoadpoints()
 
 	switch lp.GetMode() {
 	case api.ModeOff:
@@ -1154,14 +1155,14 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 		}
 		// add smartcost limit, precondition and plan goal, if configured
 		demand = applySmartCostLimit(lp, demand, planner, minLen)
-		if site.AutomaticLoadpoints() {
+		if automatic {
 			demand = applyPrecondition(lp, demand, minLen)
 			site.applyPlanGoal(lp, &bat, minLen)
 		}
 	}
 
 	// the loadpoint follows its own planner in any mode, which the optimizer must not reschedule
-	if lp.GetMode() != api.ModeOff && !site.AutomaticLoadpoints() {
+	if lp.GetMode() != api.ModeOff && !automatic {
 		demand = applyPlannerPlan(lp, demand, bat.SInitial, minLen)
 	}
 
@@ -1624,15 +1625,9 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 		return
 	}
 
-	// Convert to Wh
 	vehicle := lp.GetVehicle()
 	socBased = socBased && vehicle != nil
-	if socBased {
-		goal = socToWh(vehicle.Capacity(), goal)
-	} else {
-		// energy plans count from the energy charged since the plan was set, on top of the current state
-		goal = float64(bat.SInitial) + lp.GetPlanRemainingEnergy()*1e3 // Wh
-	}
+	goal = planGoalWh(lp, goal, socBased, bat.SInitial)
 
 	ts := lp.EffectivePlanTime()
 	if ts.IsZero() {
@@ -1657,6 +1652,15 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 			}
 		}
 	}
+}
+
+// planGoalWh converts the plan goal to Wh. Energy plans count from the energy
+// charged since the plan was set, on top of the current state.
+func planGoalWh(lp loadpoint.API, goal float64, socBased bool, sInitial float32) float64 {
+	if v := lp.GetVehicle(); socBased && v != nil {
+		return socToWh(v.Capacity(), goal)
+	}
+	return float64(sInitial) + lp.GetPlanRemainingEnergy()*1e3
 }
 
 // setPlanGoal sets the goal (Wh) at slot, keeping a higher goal already set there
@@ -1692,17 +1696,7 @@ func applyPlannerPlan(lp loadpoint.API, demand []float32, sInitial float32, minL
 	}
 
 	goal, socBased := lp.GetPlanGoal()
-	if goal <= 0 {
-		return demand
-	}
-
-	// missing energy to the goal, like applyPlanGoal
-	var energy float64
-	if v := lp.GetVehicle(); socBased && v != nil {
-		energy = socToWh(v.Capacity(), goal) - float64(sInitial)
-	} else {
-		energy = lp.GetPlanRemainingEnergy() * 1e3
-	}
+	energy := planGoalWh(lp, goal, socBased, sInitial) - float64(sInitial)
 	if energy <= 0 {
 		return demand
 	}
@@ -1755,7 +1749,8 @@ func planDemand(plan api.Rates, demand []float32, energy float64, now time.Time,
 		}
 
 		if overlap > 0 {
-			demand[i] = max(demand[i], float32(energy*float64(overlap)/float64(total)*float64(tariff.SlotDuration)/float64(end.Sub(start))))
+			slotEnergy := energy * float64(overlap) / float64(total)
+			demand[i] = max(demand[i], float32(slotEnergy*float64(tariff.SlotDuration)/float64(end.Sub(start))))
 		}
 	}
 
