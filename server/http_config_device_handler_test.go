@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -163,4 +164,32 @@ func TestDeleteDeviceRefs(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotContains(t, stored.Data, "boost")
 	})
+}
+
+func TestDeviceContextReleased(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	config.Reset()
+
+	var ctxs []context.Context
+	newFromConf := func(ctx context.Context, typ string, other map[string]any) (api.Meter, error) {
+		ctxs = append(ctxs, ctx)
+		return nil, nil
+	}
+
+	req := configReq{Properties: config.Properties{Type: "template"}, Other: map[string]any{"template": "demo-meter", "usage": "grid"}}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	conf, err := newDevice(ctx, cancel, templates.Meter, req, newFromConf, config.Meters(), false)
+	require.NoError(t, err)
+	require.NoError(t, ctxs[0].Err())
+
+	// update releases the previous instance
+	ctx, cancel = context.WithCancel(context.Background())
+	require.NoError(t, updateDevice(ctx, cancel, conf.ID, templates.Meter, req, newFromConf, config.Meters(), false))
+	assert.Error(t, ctxs[0].Err())
+	require.NoError(t, ctxs[1].Err())
+
+	// delete releases the current instance
+	require.NoError(t, deleteDevice(conf.ID, config.Meters()))
+	assert.Error(t, ctxs[1].Err())
 }
