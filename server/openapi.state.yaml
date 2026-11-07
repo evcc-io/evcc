@@ -116,6 +116,18 @@ components:
         gridExportLimit:
           description: Static grid export power limit in W used as optimizer constraint, 0 = disabled. An active HEMS curtailment takes precedence.
           type: number
+        gridPeak:
+          description: Highest 15-min average grid import of the current month in W.
+          type: number
+        gridPeakDays:
+          description: Highest 15-min average grid import per day of the current month in W, starting with the 1st.
+          type: array
+          items:
+            type: number
+            nullable: true
+        gridPeakBaseline:
+          description: Floor in W of the grid import peak target, 0 = disabled.
+          type: number
         profilePercentile:
           description: Percentile of the historic energy profiles used for demand prediction in %, e.g. 50 = median. Null uses the average.
           type: number

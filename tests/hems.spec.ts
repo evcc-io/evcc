@@ -25,6 +25,10 @@ const CONFIG = "fast.evcc.yaml";
 
 async function addMainCircuit(page: Page, title: string) {
   await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
+  await addRootCircuit(page, title);
+}
+
+async function addRootCircuit(page: Page, title: string) {
   const circuitsModal = page.getByTestId("circuits-modal");
   await expectModalVisible(circuitsModal);
   await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
@@ -164,7 +168,7 @@ maxconsumptionpower:
     // enable, set value, commit via Enter
     await toggle.click();
     await expect(input).toBeVisible();
-    await input.fill("7000");
+    await input.fill("7");
     await input.press("Enter");
     await expect(section.getByText("Saved.")).toBeVisible();
 
@@ -184,11 +188,81 @@ maxconsumptionpower:
     await expectModalVisible(hemsModal);
     await staticTab.click();
     await expect(toggle).toBeChecked();
-    await expect(input).toHaveValue("7000");
+    await expect(input).toHaveValue("7");
 
     // switch off removes limit, collapse is the feedback
     await toggle.click();
     await expect(input).not.toBeVisible();
+
+    // switch on restores the last value
+    await expect(toggle).toBeEnabled();
+    await toggle.click();
+    await expect(input).toHaveValue("7");
+    await expect(section.getByText("Saved.")).toBeVisible();
+    await hemsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(hemsModal);
+    await expect(hemsCard).toContainText("7.0 kW");
+  });
+
+  test("grid import peak", async ({ page }) => {
+    const GRID_CONFIG = "hems-grid.evcc.yaml";
+    await start(GRID_CONFIG);
+    await page.goto("/#/config");
+    await enableExperimental(page);
+
+    const hemsModal = page.getByTestId("hems-modal");
+    const section = hemsModal.getByTestId("grid-peak-limit");
+    const staticTab = hemsModal.getByRole("link", { name: "Static limits" });
+
+    // hidden without country, hint links to the site settings
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(hemsModal);
+    await staticTab.click();
+    await expect(section).not.toBeVisible();
+    await hemsModal.getByRole("link", { name: "Set country" }).click();
+
+    const siteModal = page.getByTestId("site-modal");
+    await expectModalVisible(siteModal);
+    await siteModal.getByLabel("Country").selectOption("Austria");
+    await siteModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(siteModal);
+
+    await expectModalVisible(hemsModal);
+    await expect(hemsModal.getByRole("link", { name: "Set country" })).not.toBeVisible();
+    const toggle = section.getByRole("switch", { name: "Grid import peak" });
+    const input = section.getByRole("spinbutton", { name: "Grid import peak" });
+    await toggle.click();
+    await input.fill("8");
+    await input.press("Enter");
+    await expect(section.getByText("Saved.")).toBeVisible();
+
+    // status and one strip day per day of month
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    await expect(section).toContainText("All days this month are below the limit.");
+    await expect(section.getByRole("listitem")).toHaveCount(daysInMonth);
+
+    // without circuit, hint links to load management
+    const circuitHint = section.getByText("Load management must be configured.");
+    await expect(circuitHint).toBeVisible();
+    await section.getByRole("link", { name: "Configure" }).click();
+    await addRootCircuit(page, "Main");
+    await expectModalVisible(hemsModal);
+    await expect(circuitHint).not.toBeVisible();
+    await hemsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(hemsModal);
+
+    // circuits card links to the setting, circuits need a restart
+    const circuitsCard = page.getByTestId("circuits");
+    await expect(circuitsCard).toContainText("Restart required");
+    await restart(GRID_CONFIG);
+    await page.goto("/#/config");
+    await expect(circuitsCard).not.toContainText("Restart required");
+    const peakLimit = page.getByTestId("circuit-peak-limit");
+    await expect(peakLimit).toContainText("Grid peak limit");
+    await peakLimit.getByRole("button", { name: "8.0 kW" }).click();
+    await expectModalVisible(hemsModal);
+    await expect(input).toHaveValue("8");
   });
 
   test("user-defined relay drives external limit without circuits", async ({ page }) => {
