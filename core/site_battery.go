@@ -160,7 +160,7 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 // smart cost limit, which is what keeps such a loadpoint running at cheap prices.
 func (site *Site) unmodelledCharging(rate api.Rate) bool {
 	for _, lp := range site.activeLoadpoints() {
-		if lp.optimizerControlled() || lp.fixedDemandModelled() {
+		if lp.optimizerControlled() || lp.fixedDemandModelled() || lp.deviceLoadModelled() {
 			continue
 		}
 
