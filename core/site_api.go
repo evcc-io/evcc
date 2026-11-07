@@ -480,6 +480,42 @@ func (site *Site) SetProfilePercentile(percentile *float64) error {
 	return nil
 }
 
+// GetSolarCorrection returns the solar forecast correction in %, positive = more solar than forecasted
+func (site *Site) GetSolarCorrection() float64 {
+	v, _ := settings.Float(keys.SolarCorrection)
+	return v
+}
+
+// SetSolarCorrection sets the solar forecast correction in %, positive = more solar than forecasted
+func (site *Site) SetSolarCorrection(val float64) error {
+	return site.setForecastCorrection(keys.SolarCorrection, val)
+}
+
+// GetHouseholdCorrection returns the household consumption correction in %, positive = more consumption than forecasted
+func (site *Site) GetHouseholdCorrection() float64 {
+	v, _ := settings.Float(keys.HouseholdCorrection)
+	return v
+}
+
+// SetHouseholdCorrection sets the household consumption correction in %, positive = more consumption than forecasted
+func (site *Site) SetHouseholdCorrection(val float64) error {
+	return site.setForecastCorrection(keys.HouseholdCorrection, val)
+}
+
+func (site *Site) setForecastCorrection(key string, val float64) error {
+	if val < -100 || val > 100 {
+		return fmt.Errorf("invalid %s: %g", key, val)
+	}
+
+	settings.SetFloat(key, val)
+	site.publish(key, val)
+
+	// re-run the optimizer so the new forecast takes effect immediately
+	go site.optimizerUpdateAsync(true)
+
+	return nil
+}
+
 // GetTariff returns the respective tariff if configured or nil
 func (site *Site) GetTariff(tariff api.TariffUsage) api.Tariff {
 	site.RLock()

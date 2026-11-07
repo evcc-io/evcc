@@ -106,6 +106,14 @@ type API interface {
 	GetSolarAdjusted() bool
 	// SetSolarAdjusted sets if the solar forecast is adjusted to real production data
 	SetSolarAdjusted(bool)
+	// GetSolarCorrection returns the solar forecast correction in %
+	GetSolarCorrection() float64
+	// SetSolarCorrection sets the solar forecast correction in %
+	SetSolarCorrection(float64) error
+	// GetHouseholdCorrection returns the household consumption correction in %
+	GetHouseholdCorrection() float64
+	// SetHouseholdCorrection sets the household consumption correction in %
+	SetHouseholdCorrection(float64) error
 
 	//
 	// battery control

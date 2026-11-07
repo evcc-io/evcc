@@ -120,6 +120,12 @@ components:
           description: Percentile of the historic energy profiles used for demand prediction in %, e.g. 50 = median. Null uses the average.
           type: number
           nullable: true
+        solarCorrection:
+          description: Solar forecast correction in %, positive = more solar than forecasted.
+          type: number
+        householdCorrection:
+          description: Household consumption forecast correction in %, positive = more consumption than forecasted.
+          type: number
         greenShareHome:
           description: Share of green energy in home consumption, between 0 and 1.
           type: number
