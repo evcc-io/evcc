@@ -154,6 +154,35 @@ func TestUnmodelledCharging(t *testing.T) {
 	}
 }
 
+// TestUnmodelledChargingDevice guards that a switch socket or integrated device switched on
+// does not hold the battery: optimizerRequest contains its measured power, heaters keep the hold
+func TestUnmodelledChargingDevice(t *testing.T) {
+	above := 1.5
+	rate := api.Rate{Start: time.Now(), End: time.Now().Add(time.Hour), Value: 1.15}
+
+	for _, tc := range []struct {
+		name     string
+		features []api.Feature
+		mode     api.ChargeMode
+		expected bool
+	}{
+		{"switch device on", []api.Feature{api.SwitchDevice}, api.ModeNow, false},
+		{"switch device smart cost", []api.Feature{api.SwitchDevice}, api.ModeSmart, false},
+		{"integrated device on", []api.Feature{api.IntegratedDevice}, api.ModeNow, false},
+		{"switch device heating", []api.Feature{api.SwitchDevice, api.Heating}, api.ModeNow, true},
+		{"integrated device heating", []api.Feature{api.IntegratedDevice, api.Heating}, api.ModeNow, true},
+	} {
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.charger = &featureCharger{features: tc.features}
+		lp.status = api.StatusC
+		lp.mode = tc.mode
+		lp.smartCostLimit = &above
+
+		site := &Site{log: util.NewLogger("foo"), loadpoints: []*Loadpoint{lp}}
+		assert.Equal(t, tc.expected, site.unmodelledCharging(rate), tc.name)
+	}
+}
+
 func TestSupportedBatteryMode(t *testing.T) {
 	all := []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge, api.BatteryDischarge}
 	basic := []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}
