@@ -29,8 +29,8 @@ github.com/WulfgarW/sensonet v0.0.8 h1:CkKzQuGTmZiYQPOI7t9tYCynM0mVnl1UNWyiSY5a3
 github.com/WulfgarW/sensonet v0.0.8/go.mod h1:uId+Lbatrz6CsUMXfj+zsRPdT5KHrh3H8YOk0xZU/9E=
 github.com/andig/eebus-go v0.0.0-20260930172701-f8d6395986ba h1:LtCcwFaVDGkkqbrXOaT1TfKg13Js0emrR47cctt5LBk=
 github.com/andig/eebus-go v0.0.0-20260930172701-f8d6395986ba/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
-github.com/andig/go-powerwall v0.3.0 h1:6g50+8xEwxrnzoSaPsxNRpc2fld8gARk0X78NEexFGI=
-github.com/andig/go-powerwall v0.3.0/go.mod h1:Xk09mD+7RTCuuHMX5RxlqgEUeh9oZdIX0rL0qiY6l/4=
+github.com/andig/go-powerwall v0.3.1-0.20261106174138-d560667a43c0 h1:BUxhp6bb81P5xd5nZfTU2emhjDcOf934g1ONnltlaik=
+github.com/andig/go-powerwall v0.3.1-0.20261106174138-d560667a43c0/go.mod h1:Xk09mD+7RTCuuHMX5RxlqgEUeh9oZdIX0rL0qiY6l/4=
 github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512 h1:1y8dS4GaBB9WUu/r8rInTaxdZhHG5GuwOfllzDAZXL8=
 github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
 github.com/andig/mbserver v0.0.0-20261012132218-a196e033ec39 h1:iQDM/EaY5WvFF7e314NvUhwb8D1J0N/fGzBwSGSizpw=

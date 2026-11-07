@@ -25,6 +25,16 @@ func TestNewPowerWallFromConfigValidation(t *testing.T) {
 			config: map[string]any{"usage": "battery"},
 			want:   "missing password",
 		},
+		{
+			name:   "invalid minsoc",
+			config: map[string]any{"usage": "battery", "uri": "http://localhost:8675", "minsoc": 150},
+			want:   "invalid minsoc",
+		},
+		{
+			name:   "invalid chargemaxsoc",
+			config: map[string]any{"usage": "battery", "uri": "http://localhost:8675", "chargemaxsoc": -1},
+			want:   "invalid chargemaxsoc",
+		},
 	}
 
 	for _, tc := range tests {
