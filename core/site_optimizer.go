@@ -1157,10 +1157,12 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 		if site.AutomaticLoadpoints() {
 			demand = applyPrecondition(lp, demand, minLen)
 			site.applyPlanGoal(lp, &bat, minLen)
-		} else {
-			// the loadpoint follows its own planner, which the optimizer must not reschedule (#35210)
-			demand = applyPlannerPlan(lp, demand, minLen)
 		}
+	}
+
+	// the loadpoint follows its own planner in any mode, which the optimizer must not reschedule
+	if lp.GetMode() != api.ModeOff && !site.AutomaticLoadpoints() {
+		demand = applyPlannerPlan(lp, demand, bat.SInitial, minLen)
 	}
 
 	if demand != nil {
@@ -1683,14 +1685,25 @@ func planSlot(now, ts time.Time) int {
 }
 
 // applyPlannerPlan adds the planner's charging schedule as fixed demand, including precondition and continuous strategy
-func applyPlannerPlan(lp loadpoint.API, demand []float32, minLen int) []float32 {
+func applyPlannerPlan(lp loadpoint.API, demand []float32, sInitial float32, minLen int) []float32 {
 	ts := lp.EffectivePlanTime()
 	if ts.IsZero() {
 		return demand
 	}
 
-	goal, _ := lp.GetPlanGoal()
+	goal, socBased := lp.GetPlanGoal()
 	if goal <= 0 {
+		return demand
+	}
+
+	// missing energy to the goal, like applyPlanGoal
+	var energy float64
+	if v := lp.GetVehicle(); socBased && v != nil {
+		energy = socToWh(v.Capacity(), goal) - float64(sInitial)
+	} else {
+		energy = lp.GetPlanRemainingEnergy() * 1e3
+	}
+	if energy <= 0 {
 		return demand
 	}
 
@@ -1703,13 +1716,15 @@ func applyPlannerPlan(lp loadpoint.API, demand []float32, minLen int) []float32 
 	strategy := lp.EffectivePlanStrategy()
 	plan := lp.GetPlan(ts, required, strategy.Precondition, strategy.Continuous)
 
-	return planDemand(plan, demand, maxPower, time.Now(), minLen)
+	return planDemand(plan, demand, energy/eta, time.Now(), minLen)
 }
 
-// planDemand converts plan slots to per-slot energy at max power. Slot 0 is the remainder
-// of the current slot, its energy relative to the full slot like the other demands before prorate.
-func planDemand(plan api.Rates, demand []float32, maxPower float64, now time.Time, minLen int) []float32 {
-	if len(plan) == 0 {
+// planDemand spreads the plan's grid energy (Wh) evenly over its slots, which also covers the planner's
+// extra time for tapering. Slot 0 is the remainder of the current slot, its energy relative to the full
+// slot like the other demands before prorate.
+func planDemand(plan api.Rates, demand []float32, energy float64, now time.Time, minLen int) []float32 {
+	total := lo.SumBy(plan, func(r api.Rate) time.Duration { return r.End.Sub(r.Start) })
+	if total <= 0 {
 		return demand
 	}
 
@@ -1717,7 +1732,6 @@ func planDemand(plan api.Rates, demand []float32, maxPower float64, now time.Tim
 		demand = make([]float32, minLen)
 	}
 
-	energy := float32(maxPower / slotsPerHour)
 	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
 
 	for i := range minLen {
@@ -1741,7 +1755,7 @@ func planDemand(plan api.Rates, demand []float32, maxPower float64, now time.Tim
 		}
 
 		if overlap > 0 {
-			demand[i] = max(demand[i], energy*float32(overlap)/float32(end.Sub(start)))
+			demand[i] = max(demand[i], float32(energy*float64(overlap)/float64(total)*float64(tariff.SlotDuration)/float64(end.Sub(start))))
 		}
 	}
 
