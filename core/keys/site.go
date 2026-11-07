@@ -63,6 +63,8 @@ const (
 	// forecast settings
 	SolarAdjusted     = "solarAdjusted"
 	ProfilePercentile = "profilePercentile"
+	SolarAddon        = "solarAddon"
+	HouseholdAddon    = "householdAddon"
 
 	// optimizer
 	OptimizerChargingStrategy   = "optimizerChargingStrategy"

@@ -222,6 +222,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"gridexportlimit":                 {"POST", "/gridexportlimit/{value:[0-9.]+}", floatHandler(site.SetGridExportLimit, site.GetGridExportLimit)},
 		"profilepercentile":               {"POST", "/profilepercentile/{value:[0-9.]+}", floatPtrHandler(site.SetProfilePercentile, site.GetProfilePercentile)},
 		"profilepercentiledelete":         {"DELETE", "/profilepercentile", floatPtrHandler(site.SetProfilePercentile, site.GetProfilePercentile)},
+		"solaraddon":                      {"POST", "/solaraddon/{value:-?[0-9.]+}", floatHandler(site.SetSolarAddon, site.GetSolarAddon)},
+		"householdaddon":                  {"POST", "/householdaddon/{value:-?[0-9.]+}", floatHandler(site.SetHouseholdAddon, site.GetHouseholdAddon)},
 		"solaradjusted":                   {"POST", "/solaradjusted/{value:[01truefalse]+}", boolHandler(pass(site.SetSolarAdjusted), site.GetSolarAdjusted)},
 		"smartcost":                       {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site, smartCostLimit)},
 		"smartcostdelete":                 {"DELETE", "/smartcostlimit", updateSmartCostLimit(site, smartCostLimit)},

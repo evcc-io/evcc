@@ -480,6 +480,42 @@ func (site *Site) SetProfilePercentile(percentile *float64) error {
 	return nil
 }
 
+// GetSolarAddon returns the solar forecast addon in %, positive = more solar than forecasted
+func (site *Site) GetSolarAddon() float64 {
+	v, _ := settings.Float(keys.SolarAddon)
+	return v
+}
+
+// SetSolarAddon sets the solar forecast addon in %, positive = more solar than forecasted
+func (site *Site) SetSolarAddon(val float64) error {
+	return site.setForecastAddon(keys.SolarAddon, val)
+}
+
+// GetHouseholdAddon returns the household consumption addon in %, positive = more consumption than forecasted
+func (site *Site) GetHouseholdAddon() float64 {
+	v, _ := settings.Float(keys.HouseholdAddon)
+	return v
+}
+
+// SetHouseholdAddon sets the household consumption addon in %, positive = more consumption than forecasted
+func (site *Site) SetHouseholdAddon(val float64) error {
+	return site.setForecastAddon(keys.HouseholdAddon, val)
+}
+
+func (site *Site) setForecastAddon(key string, val float64) error {
+	if val < -100 || val > 100 {
+		return fmt.Errorf("invalid %s: %g", key, val)
+	}
+
+	settings.SetFloat(key, val)
+	site.publish(key, val)
+
+	// re-run the optimizer so the new forecast takes effect immediately
+	go site.optimizerUpdateAsync(true)
+
+	return nil
+}
+
 // GetTariff returns the respective tariff if configured or nil
 func (site *Site) GetTariff(tariff api.TariffUsage) api.Tariff {
 	site.RLock()

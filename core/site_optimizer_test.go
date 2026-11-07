@@ -833,6 +833,28 @@ func TestProfilePercentile(t *testing.T) {
 	assert.Nil(t, site.GetProfilePercentile())
 }
 
+func TestForecastAddons(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+	t.Cleanup(func() {
+		require.NoError(t, site.SetSolarAddon(0))
+		require.NoError(t, site.SetHouseholdAddon(0))
+	})
+
+	assert.Equal(t, 0.0, site.GetSolarAddon())
+	assert.Equal(t, 1.0, site.effectiveSolarScale())
+
+	// out of range rejected, unchanged
+	require.Error(t, site.SetSolarAddon(-101))
+	require.Error(t, site.SetHouseholdAddon(101))
+	assert.Equal(t, 0.0, site.GetHouseholdAddon())
+
+	require.NoError(t, site.SetSolarAddon(-20))
+	assert.InDelta(t, 0.8, site.effectiveSolarScale(), 1e-9)
+
+	require.NoError(t, site.SetHouseholdAddon(10))
+	assert.Equal(t, 10.0, site.GetHouseholdAddon())
+}
+
 func TestBlendMeasured(t *testing.T) {
 	slots := []float64{100, 100, 100, 100, 100, 100}
 	blendMeasured(slots, 200, 4)

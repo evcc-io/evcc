@@ -257,6 +257,10 @@ export interface State {
   gridExportLimit?: number;
   /** Percentile of the historic energy profiles used for demand prediction in %, e.g. 50 = median. Null uses the average. */
   profilePercentile?: number | null;
+  /** Solar forecast addon in %, positive = more solar than forecasted. */
+  solarAddon?: number;
+  /** Household consumption forecast addon in %, positive = more consumption than forecasted. */
+  householdAddon?: number;
   /** Share of green energy in home consumption, between 0 and 1. */
   greenShareHome?: number;
   /** Share of green energy used for charging, between 0 and 1. */

@@ -106,6 +106,14 @@ type API interface {
 	GetSolarAdjusted() bool
 	// SetSolarAdjusted sets if the solar forecast is adjusted to real production data
 	SetSolarAdjusted(bool)
+	// GetSolarAddon returns the solar forecast addon in %
+	GetSolarAddon() float64
+	// SetSolarAddon sets the solar forecast addon in %
+	SetSolarAddon(float64) error
+	// GetHouseholdAddon returns the household consumption addon in %
+	GetHouseholdAddon() float64
+	// SetHouseholdAddon sets the household consumption addon in %
+	SetHouseholdAddon(float64) error
 
 	//
 	// battery control
