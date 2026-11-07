@@ -501,7 +501,6 @@ func TestSEMPChargerAutoDetectDeviceID(t *testing.T) {
 	assert.Equal(t, api.StatusC, status)
 }
 
-// https://github.com/evcc-io/evcc/issues/35933
 func TestSEMPChargerEnabledResetOnDisconnect(t *testing.T) {
 	handler := &sempTestHandler{
 		statusResponse:   mockDeviceStatusReadyResponse,
@@ -532,4 +531,29 @@ func TestSEMPChargerEnabledResetOnDisconnect(t *testing.T) {
 	enabled, err = wb.Enabled()
 	require.NoError(t, err)
 	assert.False(t, enabled, "enabled state of previous session must not leak into the next one")
+}
+
+func TestSEMPChargerEnabledSyncedWhenOn(t *testing.T) {
+	handler := &sempTestHandler{
+		statusResponse:   mockDeviceStatusOffResponse,
+		planningResponse: mockEmptyPlanningRequestResponse,
+		infoResponse:     mockDeviceInfoResponse,
+	}
+	server := httptest.NewTestServer(t, handler)
+	server.Start()
+
+	wb, err := NewSEMP(t.Context(), server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
+	require.NoError(t, err)
+
+	sempWb := wb.(*SEMP)
+	require.False(t, sempWb.enabled)
+
+	// charger switched on after reconnect: cached state must follow so heartbeat doesn't switch it off
+	handler.statusResponse = mockDeviceStatusResponse
+	sempWb.deviceG.Reset()
+
+	enabled, err := wb.Enabled()
+	require.NoError(t, err)
+	assert.True(t, enabled)
+	assert.Positive(t, sempWb.calcPower(sempWb.enabled, sempWb.current, sempWb.phases))
 }

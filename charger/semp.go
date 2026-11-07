@@ -295,12 +295,12 @@ func (wb *SEMP) Enabled() (bool, error) {
 
 	if !status.EMSignalsAccepted {
 		// vehicle disconnected: drop cached state so it doesn't leak into the next session
-		// https://github.com/evcc-io/evcc/issues/35933
 		wb.enabled = false
 		return false, nil
 	}
 
 	if status.Status == semp.StatusOn {
+		wb.enabled = true
 		return true, nil
 	}
 
