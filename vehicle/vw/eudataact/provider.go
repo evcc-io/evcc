@@ -1,6 +1,8 @@
 package eudataact
 
 import (
+	"errors"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -28,13 +30,17 @@ const (
 // timestamp plus portalInterval and a latency margin), so the map is updated as
 // soon as the portal delivers a new dataset.
 type Provider struct {
-	statusG func() ([]point, error)
+	statusG   func() ([]point, error)
+	socKeys   []string
+	limitKeys []string
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *Provider {
-	v := &Provider{}
-	s := sharedStore(api)
+// socKeys are soc field keys or names tried before the default ones.
+// limitKeys are target soc field keys that replace the name based lookup if present.
+func NewProvider(log *util.Logger, client *API, vin string, cache time.Duration, socKeys, limitKeys []string) *Provider {
+	v := &Provider{socKeys: socKeys, limitKeys: limitKeys}
+	s := sharedStore(client)
 
 	var (
 		cached util.Cacheable[[]point]
@@ -48,6 +54,11 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 				time.AfterFunc(resetDelay(ts, cache), cached.Reset)
 			}
 			return s.snapshot(vin), nil
+		}
+
+		// the data is outdated while catching up, the loadpoint must read again
+		if errors.Is(err, api.ErrMustRetry) {
+			return nil, err
 		}
 
 		// serve the last data over transient portal errors, surface persistent ones
@@ -100,7 +111,8 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, KeyBatteryStateReportSoc, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyEnyaqSoc); p != nil {
+	keys := append(slices.Clone(v.socKeys), KeyBatteryStateReportSoc, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyEnyaqSoc)
+	if p := lookup(data, keys...); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
@@ -192,6 +204,11 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 	// the battery care mode threshold only reflects the target soc while care
 	// mode is active; otherwise it is unrelated and must not be used (see #32520)
 	fields := []string{FieldTargetSoc}
+
+	// some cars report settings.target_soc under several keys, only one follows the app
+	if slices.ContainsFunc(data, func(p point) bool { return slices.Contains(v.limitKeys, p.Key) }) {
+		fields = slices.Clone(v.limitKeys)
+	}
 	if p := find(data, FieldBcamActivation); p != nil && p.Value == BcamActivationActivated {
 		fields = append(fields, FieldChargeBcamThreshold)
 	}

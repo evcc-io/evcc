@@ -230,6 +230,13 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 	if err != nil {
 		if err2 := knownErrors(val); err2 != nil {
 			err = err2
+		} else if p.pipeline != nil {
+			// the pipeline may map an error response to a known error
+			if b, perr := p.pipeline.Process(val); perr == nil {
+				if err2 := knownErrors(b); err2 != nil {
+					err = err2
+				}
+			}
 		}
 
 		return val, err

@@ -196,6 +196,14 @@
 										data-testid="energyflow-entry-consumer"
 										:iconProps="{ names: [c.icon || 'generic'] }"
 									/>
+									<EnergyflowEntry
+										:name="$t('energy.consumers.others')"
+										:power="otherPower"
+										:powerUnit="powerUnit"
+										icon="vehicle"
+										data-testid="energyflow-entry-consumer-other"
+										:iconProps="{ names: ['generic'] }"
+									/>
 								</template>
 							</EnergyflowEntry>
 							<EnergyflowEntry
@@ -557,6 +565,10 @@ export default defineComponent({
 			return [...this.consumers, ...this.aux].sort((a, b) =>
 				label(a).localeCompare(label(b), this.$i18n.locale)
 			);
+		},
+		otherPower() {
+			const metered = this.allConsumers.reduce((sum, m) => sum + (m.power || 0), 0);
+			return Math.max(0, this.homePower - metered);
 		},
 	},
 	watch: {

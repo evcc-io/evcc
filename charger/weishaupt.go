@@ -39,6 +39,7 @@ type Weishaupt struct {
 	conn    *modbus.Connection
 	lp      loadpoint.API
 	power   uint16
+	enabled bool
 	tempReg uint16
 }
 
@@ -127,7 +128,7 @@ func (wb *Weishaupt) heartbeat(ctx context.Context, interval time.Duration) {
 		}
 
 		wb.mu.Lock()
-		if power := wb.power; power > 0 {
+		if power := wb.power; wb.enabled && power > 0 {
 			if err := wb.setPowerSetpoint(power); err != nil {
 				wb.log.ERROR.Println("heartbeat:", err)
 			}
@@ -162,8 +163,21 @@ func (wb *Weishaupt) getPowerSetpoint() (uint16, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Weishaupt) Enabled() (bool, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	power, err := wb.getPowerSetpoint()
-	return power > 0, err
+	if err != nil {
+		return false, err
+	}
+
+	// adopt the register so the heartbeat follows the heat pump after a restart or a lost write reply
+	wb.enabled = power > 0
+	if wb.enabled {
+		wb.power = power
+	}
+
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface
@@ -171,13 +185,21 @@ func (wb *Weishaupt) Enable(enable bool) error {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 
-	// writing 0 releases the power setpoint and returns the heat pump to normal operation
-	var power uint16
-	if enable {
-		power = max(1, wb.power)
+	if !enable {
+		wb.enabled = false
+		// writing 0 releases the power setpoint and returns the heat pump to normal operation
+		return wb.setPowerSetpoint(0)
 	}
 
-	return wb.setPowerSetpoint(power)
+	power := max(1, wb.power)
+	if err := wb.setPowerSetpoint(power); err != nil {
+		return err
+	}
+
+	wb.power = power
+	wb.enabled = true
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -201,12 +223,15 @@ func (wb *Weishaupt) MaxCurrentMillis(current float64) error {
 
 	power := uint16(min(grid.CurrentToPower(current, phases), 65535))
 
-	err := wb.setPowerSetpoint(power)
-	if err == nil {
-		wb.power = power
+	if wb.enabled {
+		if err := wb.setPowerSetpoint(power); err != nil {
+			return err
+		}
 	}
 
-	return err
+	wb.power = power
+
+	return nil
 }
 
 // temp reads a temperature sensor register. Values outside of -50..500°C

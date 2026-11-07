@@ -9,11 +9,13 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/easee"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 // Helper function to create a payload
@@ -654,6 +656,43 @@ func TestChargerOpMode_ConnectResetsSessionFields(t *testing.T) {
 	assert.Equal(t, 0.0, charged)
 }
 
+func TestChargerOpMode_RequestsLoadpointUpdate(t *testing.T) {
+	tc := []struct {
+		name     string
+		from, to int
+		updates  int
+	}{
+		{"connect", easee.ModeDisconnected, easee.ModeAwaitingStart, 1},
+		{"charge start", easee.ModeReadyToCharge, easee.ModeCharging, 1},
+		{"charge stop", easee.ModeCharging, easee.ModeCompleted, 1},
+		{"disconnect", easee.ModeCompleted, easee.ModeDisconnected, 1},
+		{"same status", easee.ModeAwaitingStart, easee.ModeReadyToCharge, 0},
+		{"same mode", easee.ModeCharging, easee.ModeCharging, 0},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			lp := loadpoint.NewMockAPI(gomock.NewController(t))
+			lp.EXPECT().RequestUpdate().Times(tc.updates)
+
+			e := newEasee()
+			e.lp = lp
+			e.opMode = tc.from
+
+			e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, time.Now(), easee.Integer, fmt.Sprint(tc.to)))
+			assert.Equal(t, tc.to, e.opMode)
+		})
+	}
+
+	t.Run("no loadpoint", func(t *testing.T) {
+		e := newEasee()
+		e.opMode = easee.ModeDisconnected
+
+		e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, time.Now(), easee.Integer, fmt.Sprint(easee.ModeCharging)))
+		assert.Equal(t, easee.ModeCharging, e.opMode)
+	})
+}
+
 func TestIsTNGrid(t *testing.T) {
 	// TN grid types must return true
 	assert.True(t, isTNGrid(easee.PowerGridTN3Phase))
@@ -934,6 +973,11 @@ func TestTotalEnergy_PlugInSequence(t *testing.T) {
 
 	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start.Add(48*time.Second), easee.Integer, "2"))
 	assert.Equal(t, 42, e.sessionStart.ID)
+
+	// previous session's energy must not leak into the new session
+	charged, err := e.ChargedEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 0.0, charged)
 
 	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, time.Now().Add(time.Second), easee.Double, "1"))
 	total, err = e.TotalEnergy()

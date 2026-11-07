@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -69,6 +70,43 @@ func TestFeedInRatesWithoutTariff(t *testing.T) {
 	}, feedInRates(nil, grid))
 }
 
+func TestOptimizerRequestForecastUnavailable(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	tariffWith := func(rr api.Rates, err error) api.Tariff {
+		m := api.NewMockTariff(ctrl)
+		m.EXPECT().Rates().Return(rr, err).AnyTimes()
+		m.EXPECT().Type().Return(api.TariffTypePriceForecast).AnyTimes()
+		return m
+	}
+
+	start := time.Now().Truncate(tariff.SlotDuration)
+	day := make(api.Rates, 96)
+	for i := range day {
+		slot := start.Add(time.Duration(i) * tariff.SlotDuration)
+		day[i] = api.Rate{Start: slot, End: slot.Add(tariff.SlotDuration), Value: 0.3}
+	}
+
+	unavailable := errors.New("503 Service Unavailable")
+
+	for _, tc := range []struct {
+		name    string
+		tariffs tariff.Tariffs
+		err     string
+	}{
+		{"grid", tariff.Tariffs{Grid: tariffWith(nil, unavailable)}, "not enough forecast slots"},
+		{"feedin", tariff.Tariffs{Grid: tariffWith(day, nil), FeedIn: tariffWith(nil, unavailable)}, "not enough forecast slots"},
+		{"solar", tariff.Tariffs{Grid: tariffWith(day, nil), Solar: tariffWith(nil, unavailable)}, "solar forecast unavailable"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			site := &Site{tariffs: &tc.tariffs}
+
+			_, _, err := site.optimizerRequest(nil)
+			require.ErrorContains(t, err, tc.err)
+		})
+	}
+}
+
 func TestApplyPrecondition(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -125,6 +163,26 @@ func TestApplyPrecondition(t *testing.T) {
 	assert.Nil(t, applyPrecondition(lp, nil, 8))
 }
 
+func TestPlanDemand(t *testing.T) {
+	now := time.Date(2026, 1, 1, 10, 5, 0, 0, time.UTC) // 10 min left in current slot
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+	slot := func(i int) time.Time { return eos.Add(time.Duration(i-1) * tariff.SlotDuration) }
+
+	assert.Nil(t, planDemand(nil, nil, 1000, now, 6))
+
+	// 10 + 15 + 7.5 min: 4 kWh spread evenly, current slot relative to its full length before prorate
+	plan := api.Rates{
+		{Start: now, End: slot(1)},
+		{Start: slot(2), End: slot(3)},
+		{Start: slot(4), End: slot(4).Add(tariff.SlotDuration / 2)},
+	}
+	assert.InDeltaSlice(t, []float32{1846, 0, 1846, 0, 923, 0}, planDemand(plan, nil, 4000, now, 6), 1)
+
+	// existing demand is kept where higher, plan beyond horizon ignored
+	plan = api.Rates{{Start: slot(1), End: slot(5)}}
+	assert.InDeltaSlice(t, []float32{3000, 1000, 1000}, planDemand(plan, []float32{3000, 500, 0}, 4000, now, 3), 1)
+}
+
 // TestApplyPlanGoalEnergy guards that an energy plan only asks for the missing energy on top of
 // the current state instead of the full plan energy (optimizer#190)
 func TestApplyPlanGoalEnergy(t *testing.T) {
@@ -145,6 +203,40 @@ func TestApplyPlanGoalEnergy(t *testing.T) {
 		require.Len(t, bat.SGoal, 16)
 		assert.Equal(t, sInitial+11000, lo.Max(bat.SGoal), "s_initial %.0f", sInitial)
 	}
+}
+
+// TestApplyPlanGoalSoc guards that all vehicle plans within the horizon become goals,
+// not only the next one (#35547)
+func TestApplyPlanGoalSoc(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	now := time.Now()
+	first := now.Add(2 * time.Hour)
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(50.0).AnyTimes()
+
+	lp := loadpoint.NewMockAPI(ctrl)
+	lp.EXPECT().GetPlanGoal().Return(50.0, true).AnyTimes()
+	lp.EXPECT().GetVehicle().Return(vehicle).AnyTimes()
+	lp.EXPECT().EffectivePlanTime().Return(first).AnyTimes()
+	lp.EXPECT().GetSocPlanGoals().Return([]loadpoint.PlanGoal{
+		{Time: first, Soc: 50},
+		{Time: now.Add(5 * time.Hour), Soc: 70},
+		{Time: now.Add(6 * time.Hour), Soc: 90},   // above s_max, capped
+		{Time: now.Add(100 * time.Hour), Soc: 90}, // beyond horizon
+		{Time: now.Add(-time.Hour), Soc: 90},      // past
+	}).AnyTimes()
+
+	site := &Site{log: util.NewLogger("foo")}
+
+	bat := optimizer.BatteryConfig{SMax: 40000}
+	site.applyPlanGoal(lp, &bat, 32)
+
+	require.Len(t, bat.SGoal, 32)
+	// goal values in slot order, independent of where applyPlanGoal's clock falls within the slot
+	assert.Equal(t, []float32{25000, 35000, 40000}, lo.Filter(bat.SGoal, func(g float32, _ int) bool { return g > 0 }))
+	assert.Equal(t, float32(40000), bat.SMax, "later goals must not raise s_max")
 }
 
 func TestLoadpointCurrentAction(t *testing.T) {
@@ -680,6 +772,7 @@ func TestLoadpointRequestChargingState(t *testing.T) {
 			lp.EXPECT().EffectiveMaxPower().Return(11000.0).AnyTimes()
 			lp.EXPECT().GetMode().Return(api.ModeNow).AnyTimes()
 			lp.EXPECT().GetStatus().Return(status).AnyTimes()
+			lp.EXPECT().EffectivePlanTime().Return(time.Time{}).AnyTimes()
 			lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOff).AnyTimes()
 			lp.EXPECT().GetChargePower().Return(11000.0).AnyTimes()
 			lp.EXPECT().GetRemainingEnergy().Return(0.0).AnyTimes()
@@ -704,6 +797,27 @@ func TestOptimizerChargingStrategy(t *testing.T) {
 	// valid change is applied (re-trigger is gated on sponsor/enabled, not unit-tested here)
 	require.NoError(t, site.SetOptimizerChargingStrategy(string(optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks)))
 	assert.Equal(t, "attenuate_grid_peaks", site.GetOptimizerChargingStrategy())
+}
+
+func TestEndOfHorizonValue(t *testing.T) {
+	const eta = 0.9
+
+	for _, tc := range []struct {
+		name      string
+		pN, pE    float32
+		canExport bool
+		want      float32
+	}{
+		{"battery, export below import", 0.3, 0.08, true, 0.3 * eta * 0.99},
+		{"battery, export above import", 0.3, 0.33, true, 0.33 / eta * 1.01},
+		{"vehicle, export below import", 0.3, 0.08, false, 0.3 * eta * 0.99},
+		{"vehicle, export above import", 0.3, 0.33, false, 0.3 * eta * 0.99},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := endOfHorizonValue([]float32{tc.pN, 2 * tc.pN}, []float32{tc.pE, 2 * tc.pE}, eta, tc.canExport)
+			assert.InDelta(t, tc.want, got, 1e-6)
+		})
+	}
 }
 
 func TestGridExportLimit(t *testing.T) {
@@ -860,10 +974,10 @@ func TestApplyOptimizerResultPVShare(t *testing.T) {
 			})
 
 			site := &Site{valueChan: make(chan util.Param, 100)}
-			site.applyOptimizerResult(req, details, res, schedule, now.Add(time.Second), now)
+			site.applyOptimizerResult(optimizerSolve{req: req, details: details, res: res, schedule: schedule, completed: now}, now.Add(time.Second))
 
 			for i := range tc.charge {
-				assert.Equal(t, tc.want, site.suggestions[batteryKey(string(rune('a'+i)))].Action)
+				assert.Equal(t, tc.want, site.optimizer.suggestions[batteryKey(string(rune('a'+i)))].Action)
 			}
 		})
 	}
@@ -1016,11 +1130,13 @@ func reapplyFixture(site *Site, batteries []optimizer.BatteryConfig, res []optim
 	dt := []int{7 * 60, 900, 900}
 	schedule := optimizerSchedule{timestamps: asTimestamps(dt, completed), dt: dt}
 
-	site.applyOptimizerResult(
-		optimizer.OptimizationInput{TimeSeries: optimizer.TimeSeries{Dt: dt}, Batteries: batteries},
-		requestDetails{Timestamps: schedule.timestamps, BatteryDetails: details},
-		optimizer.OptimizationResult{GridImport: []float32{0, 500, 0}, Batteries: res}, // slot 1 imports
-		schedule, completed, completed)
+	site.applyOptimizerResult(optimizerSolve{
+		req:       optimizer.OptimizationInput{TimeSeries: optimizer.TimeSeries{Dt: dt}, Batteries: batteries},
+		details:   requestDetails{Timestamps: schedule.timestamps, BatteryDetails: details},
+		res:       optimizer.OptimizationResult{GridImport: []float32{0, 500, 0}, Batteries: res}, // slot 1 imports
+		schedule:  schedule,
+		completed: completed,
+	}, completed)
 
 	return completed
 }
@@ -1092,7 +1208,7 @@ func TestReapplySuggestionsExcludeDisconnectedLoadpoint(t *testing.T) {
 	site.reapplySuggestions(reapplyMidGap)
 
 	assert.Equal(t, actionStop, site.suggestion(loadpointKey(0), actionCharge).Action)
-	assert.Nil(t, site.lastOptimizerSolve)
+	assert.Nil(t, site.optimizer.lastSolve)
 }
 
 func TestReapplySuggestionsExpireAfterOutage(t *testing.T) {
@@ -1104,7 +1220,7 @@ func TestReapplySuggestionsExpireAfterOutage(t *testing.T) {
 	site.reapplySuggestions(completed.Add(2*tariff.SlotDuration + time.Minute))
 
 	assert.Nil(t, site.suggestion(batteryKey("home"), api.BatteryNormal.String()))
-	assert.Nil(t, site.lastOptimizerSolve)
+	assert.Nil(t, site.optimizer.lastSolve)
 }
 
 func TestCircuitMaxImport(t *testing.T) {
@@ -1124,4 +1240,28 @@ func TestCircuitMaxImport(t *testing.T) {
 
 		assert.Equal(t, tc.expected, circuitMaxImport(c), "power %.0f current %.0f", tc.power, tc.current)
 	}
+}
+
+// TestOptimizerRerunAfterBusy verifies that a forced trigger arriving during a run is not dropped
+func TestOptimizerRerunAfterBusy(t *testing.T) {
+	enableAutomatic(t)
+	site := &Site{log: util.NewLogger("foo")}
+
+	// run in progress: forced trigger is remembered, regular one is not
+	site.optimizer.mu.Lock()
+	site.optimizerUpdateAsync(false)
+	assert.False(t, site.optimizer.rerun.Load())
+	site.optimizerUpdateAsync(true)
+	assert.True(t, site.optimizer.rerun.Load())
+
+	// unlock re-runs on its own, despite the closed interval gate
+	last := time.Now().Add(-time.Second)
+	site.optimizer.updated = last
+	site.optimizerUnlock()
+	assert.Eventually(t, func() bool { return !site.optimizer.rerun.Load() }, time.Second, time.Millisecond)
+
+	// the re-run holds the lock from before consuming the trigger until done
+	site.optimizer.mu.Lock()
+	defer site.optimizer.mu.Unlock()
+	assert.True(t, site.optimizer.updated.After(last), "pending trigger must bypass interval gate")
 }
