@@ -238,7 +238,7 @@ type Param struct {
 	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate
 	Comset   string `json:",omitempty"` // device specific default for modbus RS485 comset
 	Port     int    `json:",omitempty"` // device specific default for modbus TCPIP port
-	ID       int    `json:",omitempty"` // device specific default for modbus ID
+	ID       *int   `json:",omitempty"` // device specific default for modbus ID, pointer since 0 is a valid ID
 	Delay    string `json:",omitempty"` // device specific default for modbus delay
 	Timeout  string `json:",omitempty"` // device specific default for modbus timeout
 }

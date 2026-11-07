@@ -83,8 +83,8 @@ func (t *Template) ModbusValues(renderMode int, values map[string]any) {
 
 			switch p.Name {
 			case ModbusParamId:
-				if modbusParam.ID != 0 {
-					defaultValue = strconv.Itoa(modbusParam.ID)
+				if modbusParam.ID != nil {
+					defaultValue = strconv.Itoa(*modbusParam.ID)
 				}
 			case ModbusParamPort:
 				if modbusParam.Port != 0 {
