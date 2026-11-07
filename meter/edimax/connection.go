@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -24,15 +22,9 @@ const (
 	setState  = `<?xml version="1.0" encoding="UTF8"?><SMARTPLUG id="edimax"><CMD id="setup"><Device.System.Power.State>%s</Device.System.Power.State></CMD></SMARTPLUG>`
 )
 
-// Status is the plug's relay state and live measurement
-type Status struct {
-	On    bool
-	Power float64
-}
-
-type statusResponse struct {
-	State string `xml:"CMD>Device.System.Power.State"`
-	Power string `xml:"CMD>NOW_POWER>Device.System.Power.NowPower"`
+type status struct {
+	State string  `xml:"CMD>Device.System.Power.State"`
+	Power float64 `xml:"CMD>NOW_POWER>Device.System.Power.NowPower"`
 }
 
 type setupResponse struct {
@@ -43,9 +35,8 @@ type setupResponse struct {
 type Connection struct {
 	*request.Helper
 	ctx     context.Context
-	mu      sync.Mutex
 	uri     string
-	statusG util.Cacheable[Status]
+	statusG util.Cacheable[status]
 }
 
 // NewConnection creates an Edimax smart plug connection
@@ -98,47 +89,28 @@ func (c *Connection) post(body string, res any) error {
 	return dec.Decode(res)
 }
 
-func (c *Connection) status() (Status, error) {
-	var res statusResponse
+func (c *Connection) status() (status, error) {
+	var res status
 	if err := c.post(getStatus, &res); err != nil {
-		return Status{}, err
+		return status{}, err
 	}
 
-	var (
-		status Status
-		err    error
-	)
-
-	switch strings.ToUpper(strings.TrimSpace(res.State)) {
-	case "ON":
-		status.On = true
-	case "OFF":
-	default:
-		return Status{}, fmt.Errorf("invalid state: %q", res.State)
+	res.State = strings.ToUpper(strings.TrimSpace(res.State))
+	if res.State != "ON" && res.State != "OFF" {
+		return status{}, fmt.Errorf("invalid state: %q", res.State)
 	}
 
-	if status.Power, err = strconv.ParseFloat(strings.TrimSpace(res.Power), 64); err != nil {
-		return Status{}, fmt.Errorf("power: %w", err)
-	}
-
-	return status, nil
-}
-
-// Status returns the cached plug status
-func (c *Connection) Status() (Status, error) {
-	return c.statusG.Get()
+	return res, nil
 }
 
 // Enabled returns the relay state
 func (c *Connection) Enabled() (bool, error) {
-	res, err := c.Status()
-	return res.On, err
+	res, err := c.statusG.Get()
+	return res.State == "ON", err
 }
 
 // Enable switches the relay
 func (c *Connection) Enable(enable bool) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
 	defer c.statusG.Reset()
 
 	onoff := map[bool]string{true: "ON", false: "OFF"}
@@ -159,6 +131,6 @@ var _ api.Meter = (*Connection)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Connection) CurrentPower() (float64, error) {
-	res, err := c.Status()
+	res, err := c.statusG.Get()
 	return res.Power, err
 }

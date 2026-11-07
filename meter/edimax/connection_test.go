@@ -60,14 +60,18 @@ func TestStatusAndSwitch(t *testing.T) {
 
 	conn := NewConnection(t.Context(), host(srv), "admin", "1234", 0)
 
-	res, err := conn.Status()
+	on, err := conn.Enabled()
 	require.NoError(t, err)
-	assert.Equal(t, Status{On: true, Power: 118.25}, res)
+	assert.True(t, on)
+
+	power, err := conn.CurrentPower()
+	require.NoError(t, err)
+	assert.Equal(t, 118.25, power)
 
 	require.NoError(t, conn.Enable(false))
-	assert.Contains(t, (*bodies)[1], "<Device.System.Power.State>OFF</Device.System.Power.State>")
+	assert.Contains(t, (*bodies)[len(*bodies)-1], "<Device.System.Power.State>OFF</Device.System.Power.State>")
 
-	on, err := conn.Enabled()
+	on, err = conn.Enabled()
 	require.NoError(t, err)
 	assert.False(t, on)
 }
@@ -108,7 +112,7 @@ func TestNoRedirect(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	_, err := NewConnection(t.Context(), host(srv), "admin", "1234", 0).Status()
+	_, err := NewConnection(t.Context(), host(srv), "admin", "1234", 0).CurrentPower()
 	assert.Error(t, err)
 	assert.False(t, leaked)
 }
@@ -137,10 +141,10 @@ func TestNoBasicAfterDigest(t *testing.T) {
 
 	conn := NewConnection(t.Context(), host(srv), "admin", "1234", 0)
 
-	_, err := conn.Status()
+	_, err := conn.CurrentPower()
 	require.NoError(t, err)
 
-	_, err = conn.Status()
+	_, err = conn.CurrentPower()
 	assert.Error(t, err)
 	assert.False(t, basic, "basic credentials sent after digest")
 }
