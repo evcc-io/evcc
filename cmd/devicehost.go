@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/subtle"
+	"encoding/hex"
 	"errors"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,7 +21,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const flagListen = "listen"
+const (
+	flagListen = "listen"
+	flagToken  = "token"
+)
 
 // devicehostCmd represents the devicehost command
 var devicehostCmd = &cobra.Command{
@@ -35,6 +40,7 @@ func init() {
 	withCustomTemplate(devicehostCmd)
 
 	devicehostCmd.Flags().String(flagListen, "127.0.0.1:7090", "Listen address")
+	devicehostCmd.Flags().String(flagToken, "", "Bearer token required for api requests (default random)")
 }
 
 func runDevicehost(cmd *cobra.Command, args []string) {
@@ -57,17 +63,32 @@ func runDevicehost(cmd *cobra.Command, args []string) {
 	}
 
 	addr := cmd.Flag(flagListen).Value.String()
-	if host, _, err := net.SplitHostPort(addr); err != nil || !net.ParseIP(host).IsLoopback() {
-		log.WARN.Println("❗❗❗ devicehost has no authentication, listening on non-loopback address", addr)
+
+	// bearer token protects against browser-based requests (CSRF, DNS rebinding)
+	token := cmd.Flag(flagToken).Value.String()
+	if token == "" {
+		b := make([]byte, 16)
+		_, _ = rand.Read(b)
+		token = hex.EncodeToString(b)
+		log.INFO.Println("devicehost token:", token)
 	}
 
+	// token replaces evcc's session auth
 	authObject := auth.New()
 	authObject.SetAuthMode(auth.Disabled)
 
 	router := mux.NewRouter()
+	router.Use(bearerAuth(token))
 	server.RegisterDeviceHandlers(router, site, authObject)
 
-	srv := &http.Server{Addr: addr, Handler: router, ReadHeaderTimeout: 10 * time.Second}
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           http.MaxBytesHandler(router, 1<<20),
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       5 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
 
 	go func() {
 		log.INFO.Println("devicehost listening at", addr)
@@ -82,7 +103,9 @@ func runDevicehost(cmd *cobra.Command, args []string) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	_ = srv.Shutdown(ctx)
+	if err := srv.Shutdown(ctx); err != nil {
+		_ = srv.Close()
+	}
 
 	// release all devices
 	releaseAll(config.Meters())
@@ -101,5 +124,18 @@ func releaseAll[T any](h config.Handler[T]) {
 		if err := h.Delete(dev.Config().Name); err != nil {
 			log.ERROR.Println(err)
 		}
+	}
+}
+
+func bearerAuth(token string) mux.MiddlewareFunc {
+	want := []byte("Bearer " + token)
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if subtle.ConstantTimeCompare([]byte(r.Header.Get("Authorization")), want) != 1 {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
 	}
 }
