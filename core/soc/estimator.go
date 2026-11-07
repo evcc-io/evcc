@@ -47,11 +47,16 @@ func NewEstimator(log *util.Logger, vehicle api.Vehicle) *Estimator {
 
 // Reset clears session samples and restores the initial charging efficiency.
 func (s *Estimator) Reset() {
-	*s = Estimator{
-		log:              s.log,
-		capacity:         s.capacity,
-		energyPerSocStep: s.capacity / ChargeEfficiency / 100,
-	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.energyPerSocStep = s.capacity / ChargeEfficiency / 100
+	s.vehicleSoc = 0
+	s.initialSoc = 0
+	s.initialEnergy = 0
+	s.prevSoc = 0
+	s.prevChargedEnergy = 0
+	s.sampled = false
 }
 
 // virtualCapacity returns the estimated capacity in Wh, never below the vehicle's physical capacity

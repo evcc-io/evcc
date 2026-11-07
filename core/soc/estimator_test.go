@@ -188,5 +188,10 @@ func TestEstimatorConcurrentAccess(t *testing.T) {
 			ce.RemainingChargeEnergy(80)
 		}
 	})
+	wg.Go(func() {
+		for range 10 {
+			ce.Reset()
+		}
+	})
 	wg.Wait()
 }
