@@ -916,6 +916,15 @@ modbus:
       advanced: true
     - name: timeout
       advanced: true
+    - name: tls
+      description:
+        de: TLS-Verschlüsselung
+        en: TLS encryption
+      help:
+        de: Modbus TCP über TLS (z. B. Sungrow AC-Wallbox auf Port 516)
+        en: Modbus TCP over TLS (e.g. Sungrow AC charger on port 516)
+      type: bool
+      advanced: true
   types:
     rs485serial:
       description:
@@ -947,6 +956,7 @@ modbus:
           pattern: *host-pattern
         - name: port
           default: 502
+        - name: tls
         - name: delay
         - name: timeout
     udp:
