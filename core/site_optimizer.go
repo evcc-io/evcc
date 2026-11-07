@@ -1154,8 +1154,13 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 		}
 		// add smartcost limit, precondition and plan goal, if configured
 		demand = applySmartCostLimit(lp, demand, planner, minLen)
-		demand = applyPrecondition(lp, demand, minLen)
-		site.applyPlanGoal(lp, &bat, minLen)
+		if site.AutomaticLoadpoints() {
+			demand = applyPrecondition(lp, demand, minLen)
+			site.applyPlanGoal(lp, &bat, minLen)
+		} else {
+			// the loadpoint follows its own planner, which the optimizer must not reschedule (#35210)
+			demand = applyPlannerPlan(lp, demand, minLen)
+		}
 	}
 
 	if demand != nil {
@@ -1675,6 +1680,72 @@ func planSlot(now, ts time.Time) int {
 
 	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
 	return int((ts.Sub(eos) + tariff.SlotDuration - 1) / tariff.SlotDuration)
+}
+
+// applyPlannerPlan adds the planner's charging schedule as fixed demand, including precondition and continuous strategy
+func applyPlannerPlan(lp loadpoint.API, demand []float32, minLen int) []float32 {
+	ts := lp.EffectivePlanTime()
+	if ts.IsZero() {
+		return demand
+	}
+
+	goal, _ := lp.GetPlanGoal()
+	if goal <= 0 {
+		return demand
+	}
+
+	maxPower := lp.EffectiveMaxPower()
+	required := lp.GetPlanRequiredDuration(goal, maxPower)
+	if required <= 0 {
+		return demand
+	}
+
+	strategy := lp.EffectivePlanStrategy()
+	plan := lp.GetPlan(ts, required, strategy.Precondition, strategy.Continuous)
+
+	return planDemand(plan, demand, maxPower, time.Now(), minLen)
+}
+
+// planDemand converts plan slots to per-slot energy at max power. Slot 0 is the remainder
+// of the current slot, its energy relative to the full slot like the other demands before prorate.
+func planDemand(plan api.Rates, demand []float32, maxPower float64, now time.Time, minLen int) []float32 {
+	if len(plan) == 0 {
+		return demand
+	}
+
+	if demand == nil {
+		demand = make([]float32, minLen)
+	}
+
+	energy := float32(maxPower / slotsPerHour)
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+
+	for i := range minLen {
+		start, end := eos.Add(time.Duration(i-1)*tariff.SlotDuration), eos.Add(time.Duration(i)*tariff.SlotDuration)
+		if i == 0 {
+			start = now
+		}
+
+		var overlap time.Duration
+		for _, r := range plan {
+			from, to := r.Start, r.End
+			if from.Before(start) {
+				from = start
+			}
+			if to.After(end) {
+				to = end
+			}
+			if from.Before(to) {
+				overlap += to.Sub(from)
+			}
+		}
+
+		if overlap > 0 {
+			demand[i] = max(demand[i], energy*float32(overlap)/float32(end.Sub(start)))
+		}
+	}
+
+	return demand
 }
 
 // TODO remove once smart cost limit usage becomes obsolete

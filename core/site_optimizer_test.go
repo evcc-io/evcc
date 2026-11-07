@@ -163,6 +163,27 @@ func TestApplyPrecondition(t *testing.T) {
 	assert.Nil(t, applyPrecondition(lp, nil, 8))
 }
 
+func TestPlanDemand(t *testing.T) {
+	now := time.Date(2026, 1, 1, 10, 5, 0, 0, time.UTC) // 10 min left in current slot
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+	slot := func(i int) time.Time { return eos.Add(time.Duration(i-1) * tariff.SlotDuration) }
+
+	// 8 kW = 2 kWh per slot
+	assert.Nil(t, planDemand(nil, nil, 8000, now, 6))
+
+	// current slot remainder, full slot 2, half slot 4
+	plan := api.Rates{
+		{Start: now, End: slot(1)},
+		{Start: slot(2), End: slot(3)},
+		{Start: slot(4), End: slot(4).Add(tariff.SlotDuration / 2)},
+	}
+	assert.InDeltaSlice(t, []float32{2000, 0, 2000, 0, 1000, 0}, planDemand(plan, nil, 8000, now, 6), 1)
+
+	// existing demand is kept where higher, plan beyond horizon ignored
+	plan = api.Rates{{Start: slot(1), End: slot(8)}}
+	assert.InDeltaSlice(t, []float32{3000, 2000, 2000}, planDemand(plan, []float32{3000, 1000, 0}, 8000, now, 3), 1)
+}
+
 // TestApplyPlanGoalEnergy guards that an energy plan only asks for the missing energy on top of
 // the current state instead of the full plan energy (optimizer#190)
 func TestApplyPlanGoalEnergy(t *testing.T) {
