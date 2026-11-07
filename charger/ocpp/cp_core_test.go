@@ -243,9 +243,31 @@ func TestMonitorRebootOnlyOnce(t *testing.T) {
 		"setup should be called exactly once")
 }
 
+func TestConnectPublishesStatusChange(t *testing.T) {
+	log := util.NewLogger("test")
+	cp := NewChargePoint(log, instance, "test-cp")
+
+	var published atomic.Int32
+	instance.SetUpdated(func() { published.Add(1) })
+	defer instance.SetUpdated(nil)
+
+	cp.connect(true)
+	assert.Equal(t, int32(1), published.Load(), "connect should publish")
+
+	cp.connect(true)
+	assert.Equal(t, int32(1), published.Load(), "unchanged state should not publish")
+
+	cp.connect(false)
+	assert.Equal(t, int32(2), published.Load(), "disconnect should publish")
+}
+
 func TestBootTriggerRejectedConnects(t *testing.T) {
 	log := util.NewLogger("test")
 	cp := NewChargePoint(log, instance, "test-cp")
+
+	var published atomic.Int32
+	instance.SetUpdated(func() { published.Add(1) })
+	defer instance.SetUpdated(nil)
 
 	cp.onTransportConnect()
 
@@ -253,9 +275,10 @@ func TestBootTriggerRejectedConnects(t *testing.T) {
 	timer := cp.bootTimer
 	cp.mu.RUnlock()
 
-	cp.onBootTriggerRejected(timer)
+	cp.endBootWait(&timer, "rejected")
 
 	assert.True(t, cp.Connected(), "should be connected after rejected trigger")
+	assert.Equal(t, int32(1), published.Load(), "rejected trigger should publish")
 
 	cp.mu.RLock()
 	assert.Nil(t, cp.bootTimer, "boot timer should be nil after rejected trigger")
@@ -276,7 +299,7 @@ func TestBootTriggerRejectedIgnoresStaleConnection(t *testing.T) {
 	cp.connect(false)
 	cp.onTransportConnect()
 
-	cp.onBootTriggerRejected(stale)
+	cp.endBootWait(&stale, "rejected")
 
 	assert.False(t, cp.Connected(), "stale rejected trigger must not end the new boot wait")
 
@@ -298,7 +321,7 @@ func TestBootTriggerRejectedAfterDisconnect(t *testing.T) {
 	cp.mu.RUnlock()
 
 	cp.connect(false)
-	cp.onBootTriggerRejected(timer)
+	cp.endBootWait(&timer, "rejected")
 
 	assert.False(t, cp.Connected(), "rejected trigger after disconnect must not mark the station connected")
 }
