@@ -11,6 +11,8 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -315,7 +317,7 @@ func (site *Site) setSuggestions(suggestions map[string]types.Suggestion) {
 	site.Lock()
 	defer site.Unlock()
 
-	site.suggestions = suggestions
+	site.optimizer.suggestions = suggestions
 }
 
 // setBatteryForecast replaces the battery forecast of the cached state
@@ -331,7 +333,7 @@ func (site *Site) setBatteryForecast(forecast *types.BatteryForecast) {
 // action since that changes between optimizer runs.
 func (site *Site) suggestion(key, currentAction string) *types.Suggestion {
 	site.RLock()
-	s, ok := site.suggestions[key]
+	s, ok := site.optimizer.suggestions[key]
 	site.RUnlock()
 
 	if !ok {
@@ -373,8 +375,8 @@ func (site *Site) clearSuggestions() {
 	site.publishSuggestions()
 
 	site.Lock()
-	site.suggestionActions = nil
-	site.lastOptimizerSolve = nil
+	site.optimizer.suggestionActions = nil
+	site.optimizer.lastSolve = nil
 	site.Unlock()
 }
 
@@ -408,23 +410,23 @@ func (site *Site) diffSuggestions(pending map[string]pendingSuggestion) []messen
 	site.Lock()
 	defer site.Unlock()
 
-	if site.suggestionActions == nil {
-		site.suggestionActions = make(map[string]string)
+	if site.optimizer.suggestionActions == nil {
+		site.optimizer.suggestionActions = make(map[string]string)
 	}
 
 	// prune devices that are gone or no longer actionable
-	for key := range site.suggestionActions {
+	for key := range site.optimizer.suggestionActions {
 		if p, ok := pending[key]; !ok || !p.suggestion.Actionable {
-			delete(site.suggestionActions, key)
+			delete(site.optimizer.suggestionActions, key)
 		}
 	}
 
 	var events []messenger.Event
 	for key, p := range pending {
-		if !p.suggestion.Actionable || site.suggestionActions[key] == p.suggestion.Action {
+		if !p.suggestion.Actionable || site.optimizer.suggestionActions[key] == p.suggestion.Action {
 			continue
 		}
-		site.suggestionActions[key] = p.suggestion.Action
+		site.optimizer.suggestionActions[key] = p.suggestion.Action
 		events = append(events, p.event)
 	}
 	return events
@@ -501,16 +503,16 @@ func (site *Site) optimizerUpdateAsync(force bool) {
 
 	// store before locking: either we get the lock, or the holder sees the trigger on unlock
 	if force {
-		site.optimizerRerun.Store(true)
+		site.optimizer.rerun.Store(true)
 	}
 
-	if !site.optimizerMu.TryLock() {
+	if !site.optimizer.mu.TryLock() {
 		return
 	}
 	defer site.optimizerUnlock()
 
 	// false if a run that started after the trigger already served it
-	force = site.optimizerRerun.Swap(false)
+	force = site.optimizer.rerun.Swap(false)
 
 	interval := tariff.SlotDuration
 	if site.Automatic() {
@@ -519,8 +521,8 @@ func (site *Site) optimizerUpdateAsync(force bool) {
 
 	if force {
 		// keep the gate open so a not-ready run is retried on the next cycle
-		site.optimizerUpdated = time.Time{}
-	} else if time.Since(site.optimizerUpdated) < interval {
+		site.optimizer.updated = time.Time{}
+	} else if time.Since(site.optimizer.updated) < interval {
 		return
 	}
 
@@ -536,7 +538,7 @@ func (site *Site) optimizerUpdateAsync(force bool) {
 			return
 		}
 
-		site.optimizerUpdated = time.Now()
+		site.optimizer.updated = time.Now()
 
 		// a failed run keeps the advice: dropping it would release the controlled
 		// devices for one cycle. reapplySuggestions expires the cached solve.
@@ -789,7 +791,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	site.Lock()
-	site.optimizerResult = &result
+	site.optimizer.result = &result
 	site.Unlock()
 
 	site.publish("evopt", result)
@@ -809,9 +811,25 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return errors.New("optimizer result expired")
 	}
 
-	site.applyOptimizerResult(req, details, *resp.JSON200, schedule, now, now)
+	site.applyOptimizerResult(optimizerSolve{req: req, details: details, res: *resp.JSON200, schedule: schedule, completed: now}, now)
 
 	return nil
+}
+
+// optimizerState holds the optimizer runtime state of a site
+type optimizerState struct {
+	mu      sync.Mutex  // guards optimizer runs
+	updated time.Time   // last optimizer run, guarded by mu
+	rerun   atomic.Bool // forced trigger arrived during a run, re-run when done
+
+	// guarded by the site lock
+	suggestions       map[string]types.Suggestion // suggestions by device key
+	suggestionActions map[string]string           // last notified actionable action by device key
+	lastSolve         *optimizerSolve             // last successful solve, reapplied to newer slots by the control cycle
+	result            *optimizerResult            // last published plan, explained on request
+
+	explainMu sync.Mutex   // serializes explain requests
+	explained explainCache // last explanation, guarded by explainMu
 }
 
 // optimizerSolve caches a solve so the control cycle can reapply it to a newer slot
@@ -829,14 +847,14 @@ func (site *Site) setLastOptimizerSolve(solve *optimizerSolve) {
 	site.Lock()
 	defer site.Unlock()
 
-	site.lastOptimizerSolve = solve
+	site.optimizer.lastSolve = solve
 }
 
-// optimizerUnlock releases optimizerMu and re-runs for a forced trigger that arrived while it was held
+// optimizerUnlock releases optimizer.mu and re-runs for a forced trigger that arrived while it was held
 func (site *Site) optimizerUnlock() {
-	site.optimizerMu.Unlock()
+	site.optimizer.mu.Unlock()
 
-	if site.optimizerRerun.Load() {
+	if site.optimizer.rerun.Load() {
 		go site.optimizerUpdateAsync(false)
 	}
 }
@@ -844,13 +862,13 @@ func (site *Site) optimizerUnlock() {
 // reapplySuggestions re-derives the last solve's suggestions for the slot covering now
 // without a new solve. TryLock so it never overwrites a fresher concurrent solve.
 func (site *Site) reapplySuggestions(now time.Time) {
-	if !site.optimizerMu.TryLock() {
+	if !site.optimizer.mu.TryLock() {
 		return
 	}
 	defer site.optimizerUnlock()
 
 	site.RLock()
-	last := site.lastOptimizerSolve
+	last := site.optimizer.lastSolve
 	site.RUnlock()
 
 	if last == nil {
@@ -880,12 +898,14 @@ func (site *Site) reapplySuggestions(now time.Time) {
 		}
 	}
 
-	site.applyOptimizerResult(last.req, last.details, last.res, last.schedule, now, last.completed)
+	site.applyOptimizerResult(*last, now)
 }
 
 // applyOptimizerResult maps the optimizer response onto suggestions, battery
 // forecast and notifications
-func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details requestDetails, res optimizer.OptimizationResult, schedule optimizerSchedule, now time.Time, completed time.Time) {
+func (site *Site) applyOptimizerResult(solve optimizerSolve, now time.Time) {
+	req, details, res, schedule := solve.req, solve.details, solve.res, solve.schedule
+
 	slot := schedule.activeSlot(now)
 	slotHours := schedule.duration(slot).Hours()
 	var gridImport, gridExport float32
@@ -979,7 +999,8 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 		site.pushEvent(ev)
 	}
 
-	site.setLastOptimizerSolve(&optimizerSolve{req: req, details: details, res: res, schedule: schedule, slot: slot, completed: completed})
+	solve.slot = slot
+	site.setLastOptimizerSolve(&solve)
 }
 
 func (site *Site) addBatteryForecastTotals(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult, schedule optimizerSchedule, now time.Time) *types.BatteryForecast {
