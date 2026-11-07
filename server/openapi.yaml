@@ -506,6 +506,19 @@ paths:
             application/json:
               schema:
                 $ref: "./openapi.state.yaml#/components/schemas/ChargeMode"
+  /loadpoints/{id}/limitsolarphases/{enable}:
+    post:
+      operationId: setLoadpointLimitSolarPhases
+      summary: Limit solar surplus charging to 1 phase
+      description: "When enabled, solar surplus charging stays on a single phase and never scales up to 3 phases. Fast charging (now mode, planner, minSoc, cheap grid price) is not affected."
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/enable"
+      responses:
+        "200":
+          $ref: "#/components/responses/BooleanResult"
   /loadpoints/{id}/phases/{phases}:
     post:
       operationId: setLoadpointPhases
