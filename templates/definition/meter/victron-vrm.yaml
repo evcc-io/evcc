@@ -51,3 +51,4 @@ render: |
     - content-type: application/json
     - x-authorization: Token {{ .token }}
     jq: .records.data["51"].valueFloat
+  {{- include "battery-params" . }}

@@ -218,7 +218,6 @@
 </template>
 
 <script lang="ts">
-import "@h2d2/shopicons/es/regular/checkmark";
 import formatter from "@/mixins/formatter";
 import Options from "../Vehicles/Options.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";

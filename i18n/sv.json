@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Auktorisering lyckades",
     "buttonConnect": "Anslut till {provider}",
     "buttonDisconnect": "Koppla från",
+    "challenge": {
+      "captcha": {
+        "label": "Ange tecknen som visas i bilden.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Klistra in koden eller adressen till sidan du omdirigerades till.",
+        "title": "Auktoriseringskod"
+      },
+      "openLogin": "Öppna inloggningssidan",
+      "submit": "Fortsätt"
+    },
     "confirmLogout": "Är du säker på att du vill koppla från {title}?",
     "connect": "anslut",
     "disconnect": "koppla från",
@@ -25,16 +37,17 @@
       "discharging": "laddar ur",
       "energy": "Energi",
       "gridCharge": "elnätsladdning",
+      "gridDischarge": "utmatning till nätet",
       "hold": "urladdning låst",
       "holdCharge": "laddning låst",
       "ofTotal": "av {total}",
       "power": "Effekt",
-      "soc": "Batterinivå"
+      "soc": "Laddningladdnivå"
     },
     "combined": "Sammanlagt",
     "config": {
-      "buffer": "Hembatteriets energi över {soc} får användas för att stödja laddning och fördröjer avstängning i smartmode. Starta solcellsladdning automatiskt {start}.",
-      "bufferNone": "Hemmabatteriets energi används inte för billaddning. Ställ in ett värde under {soc} för att aktivera stöd.",
+      "buffer": "Hembatteriets energi över {soc} får användas för att stödja laddning och fördröjer avstängning i smartmode. Starta solcellsladdning automatiskt {start}. Notera: \"Ladda alltid\" påverkas inte av denna inställning.",
+      "bufferNone": "Hemmabatteriets energi används inte för billaddning. Ställ in ett värde under {soc} för att aktivera stöd. Notera: \"Ladda alltid\" påverkas inte av denna inställning.",
       "bufferStart": {
         "above": "när batteriet är över {soc}",
         "full": "när batteriet är fullt",
@@ -43,6 +56,13 @@
       "bufferTitle": "Batteriet som laddningsbuffert",
       "discharge": "Förhindra att hemmabatteriet laddas ur i snabbläge och under planerad laddning.",
       "gridDischarge": "Tillåt hemmabatteriet att återmata till nätet.",
+      "gridDischargeConfirm": {
+        "country": "Inställt land: {country}.",
+        "description": "Om batterienergi får matas ut till elnätet beror på ditt land och ditt inmatningsavtal. Om batteriet även laddas från elnätet är den exporterade energin inte längre ren solenergi. Med många inmatningstariffer förlorar du då ersättningen eller så är det förbjudet. Kontrollera först ditt inmatningsavtal och nätägarens krav.",
+        "noCountry": "Inget land inställt. Ställ in det under {link}.",
+        "title": "Export till elnätet från batteri"
+      },
+      "optimizerControlledHint": "Avaktiverad för {loadpoints}. Istället bestämmer {optimizer}.",
       "priority": "Hemmabatteriet har prioritet så länge det är under {soc}. Därefter får billaddarna överskottet.",
       "priorityNone": "Solelens överskott går direkt till billaddarna. Ställ in ett värde över {soc} för att prioritera hemmabatteriet.",
       "priorityTitle": "Vart ska överskottet gå i första hand?"
@@ -144,13 +164,47 @@
         "switchsocket": "Egendefinierad strömbrytare"
       }
     },
+    "circuit": {
+      "addMeter": "Lägg till dedikerad energimätare",
+      "custom": "Egendefinierad krets",
+      "deleteChildrenFirst": "Radera först underkretsarna för att kunna radera denna krets.",
+      "meterDedicated": "Dedikerad mätare",
+      "meterGrid": "Elmätare",
+      "meterHelp": "Mätare som mäter den totala förbrukningen i denna krets.",
+      "meterLabel": "Energimätare",
+      "meterLabelAdd": "Lägg till kretsmätare",
+      "meterLabelEdit": "Ändra kretsmätare",
+      "meterNone": "Ingen mätare",
+      "meterSelectionHelpDedicatedMeter": "Lägg till en befintlig mätare till denna krets nedan.",
+      "meterSelectionHelpGridMeter": "Använder installationens befintliga elmätare.",
+      "meterSelectionHelpNoMeter": "Summan av alla laddpunkter används.",
+      "meterSelectionLabel": "Val av mätare",
+      "parentCircuit": "Överordnad krets",
+      "template": "Krets",
+      "titleAdd": "Lägg till krets",
+      "titleEdit": "Ändra krets",
+      "titleLabel": "Titel"
+    },
     "circuits": {
+      "addMainCircuit": "Lägg till huvudkrets",
+      "addSubCircuit": "Lägg till underkrets",
       "description": "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki.",
+      "legacyWarning": "Ny kretskonfiguration tillgänglig! Ta bort och spara din konfiguration här för att använda den nya guidade processen. Omstart krävs.",
+      "meterDedicated": "Mätare",
+      "meterGrid": "Elnät",
       "title": "Belastningshantering",
       "usableMeters": "Mätarreferenser som kan användas"
     },
+    "combobox": {
+      "count": "{count} förslag",
+      "matching": "Matchar",
+      "other": "Övriga",
+      "searching": "Söker…",
+      "suggestions": "Förslag",
+      "used": "används redan"
+    },
     "consumer": {
-      "description": "Spårar mindre apparater som inte kan styras (kylskåp, tvättmaskin, ...). Det ger dig en bättre helhetsbild av din hemförbrukning.",
+      "description": "Spårar mindre apparater som inte kan styras (kylskåp, tvättmaskin, ...). Det ger dig en bättre helhetsbild av din förbrukning.",
       "titleAdd": "Lägg till förbrukningsmätare",
       "titleEdit": "Ändra förbrukningsmätare"
     },
@@ -169,7 +223,7 @@
       "title": "Valuta"
     },
     "curtailer": {
-      "description": "Enhet som begränsar inmatning på nätoperatörens begäran (§ 9 EEG). Många växelriktare stöder detta direkt via sin solmätarkonfiguration. En separat konfiguration krävs endast för vissa tillverkare eller system med flera omriktare.",
+      "description": "Enhet som begränsar nätexport på nätoperatörens begäran (§ 9 EEG). Många växelriktare stöder detta direkt via sin solmätarkonfiguration. En separat konfiguration krävs endast för vissa tillverkare eller system med flera omriktare.",
       "generic": "Generisk integration",
       "specific": "Specifik integration",
       "template": "Tillverkare",
@@ -199,9 +253,9 @@
       "currency": "Valuta",
       "current": "Ström",
       "currentRange": "Ström",
-      "curtailLimit": "Gräns för inmatning",
+      "curtailLimit": "Gräns för nätexport",
       "curtailable": "Kan begränsas",
-      "curtailed": "Inmatning begränsad",
+      "curtailed": "Nätexport begränsad",
       "detected": "Upptäckt",
       "dimLimit": "Förbrukningsgräns",
       "dimmed": "Förbrukning begränsad",
@@ -209,13 +263,15 @@
       "energy": "Energi",
       "events": "Händelser",
       "exportLimit": "Begränsning nätexport",
-      "feedinPrice": "Inmatningspris",
+      "feedinPrice": "Pris nätexport",
       "forecast": "Prognos",
-      "gridPrice": "Nätpris",
+      "gridPrice": "Pris nätimport",
       "heaterTempLimit": "Värmarbegränsning",
       "identifier": "RFID-identifierare",
       "loginBlocked": "Inloggningsgräns nådd",
       "max": "max",
+      "maxCurrent": "Max. ström",
+      "maxPower": "Max. effekt",
       "messengers": "Tjänster",
       "no": "nej",
       "odometer": "Mätarställning",
@@ -274,7 +330,7 @@
     },
     "devices": {
       "auxMeter": "Smart förbrukare",
-      "batteryStorage": "Batterilager",
+      "batteryStorage": "Hemmabatteri",
       "consumer": "Brukare",
       "solarSystem": "Solanläggning"
     },
@@ -288,26 +344,26 @@
         "title": "Certifikat"
       },
       "configuredDevices": "Konfigurerade enheter",
-      "description": "Inställning som tillåter evcc att kommunicera med EEBus-kompatibla enheter som laddare eller kontrollenheter från din nätoperatör. Initiering och generering av certifikat sker vid första uppstart.",
+      "description": "Inställning som tillåter evcc att kommunicera med EEBUS-kompatibla enheter som laddare eller kontrollenheter från din nätoperatör. Initiering och generering av certifikat sker vid första uppstart.",
       "descriptionAdvanced": "Inga ändringar behövs. Gör enbart ändringar om du är säker på vad du gör. Om du ändrar SHIP-id eller certifikat så måste enheterna paras igen.",
       "interfaces": "Gränssnitt",
-      "interfacesHelp": "Begränsa nätverkets gränssnitt som EEBus kan använda för att undvika kommunikationsproblem. Lämna blankt för att använda alla gränssnitt. Ett inlägg per rad.",
+      "interfacesHelp": "Begränsa nätverkets gränssnitt som EEBUS kan använda för att undvika kommunikationsproblem. Lämna blankt för att använda alla gränssnitt. Ett inlägg per rad.",
       "noConfiguredDevices": "Inga enheter konfigurerade av SKI.",
       "noPairings": "Inga enheter parade.",
       "pairings": "Parade enheter",
       "port": "Port",
       "portHelp": "Port som ska användas.",
       "qr": "Kopplingskod",
-      "qrExplain": "Skanna från en annan EEBus-enhet vid installationen för automatisk parkoppling – du behöver då inte ange SKI manuellt.",
-      "removeConfirm": "All EEBus konfiguration kommer raderas. Nya certifikat och id kommer att genereras vid nästa start. Är du säker?",
+      "qrExplain": "Skanna från en annan EEBUS-enhet vid installationen för automatisk parkoppling – du behöver då inte ange SKI manuellt.",
+      "removeConfirm": "All EEBUS konfiguration kommer raderas. Nya certifikat och id kommer att genereras vid nästa start. Är du säker?",
       "removePairing": "Ta bort parning",
       "removePairingConfirm": "Enheten kommer kopplas bort och måste bli ihopparad igen. Är du säker?",
       "shipid": "SHIP-ID",
-      "shipidExplain": "Permanent enhets-id för identifiering i EEBus-nätverket.",
+      "shipidExplain": "Permanent enhets-id för identifiering i EEBUS-nätverket.",
       "shipidHelp": "Detta SHIP-ID är länkat till certifikatet nedan.",
       "ski": "SKI",
-      "skiExplain": "Unikt säkerhets-id för att para EEBus-enheter.",
-      "title": "EEBus"
+      "skiExplain": "Unikt säkerhets-id för att para EEBUS-enheter.",
+      "title": "EEBUS"
     },
     "experimental": {
       "description": "Ger tillgång till funktioner som fortfarande testas. De kan vara instabila och komma att ändras eller tas bort i framtida versioner.",
@@ -326,6 +382,7 @@
       "optional": "valfritt"
     },
     "general": {
+      "add": "Lägg till",
       "applyAndClose": "Använd & stäng",
       "authPerform": "Anslut med {provider}",
       "authPerformHint": "Kommer att öppnas i en ny flik. Kom tillbaka hit för att fortsätta.",
@@ -337,6 +394,7 @@
       "confirmDisable": "Avaktivera denna enhet? Kommer ignoreras efter nästa omstart.",
       "confirmEnable": "Aktivera denna enhet igen?",
       "confirmSave": "Det finns ej sparade ändringar. Spara nu?",
+      "continue": "Fortsätt",
       "copied": "Kopierad!",
       "copy": "Kopiera",
       "customHelp": "Skapa en egen enhet med hjälp av evcc's plugin-system.",
@@ -352,6 +410,7 @@
       "enable": "Aktivera",
       "error": "Fel",
       "experimental": "Experimentella funktioner",
+      "forceEnable": "Aktivera ändå",
       "forceSave": "Spara ändå",
       "fromYamlHint": "Obs: Konfigurerad via evcc.yaml. Ta bort posten från filen för att aktivera redigering här.",
       "hideAdvancedSettings": "Dölj avancerade inställningar",
@@ -370,6 +429,7 @@
       "saving": "Sparar…",
       "selectFile": "Bläddra",
       "showAdvancedSettings": "Visa avancerade inställningar",
+      "site": "Anläggning",
       "telemetry": "Telemetri",
       "templateLoading": "Laddar...",
       "title": "Titel",
@@ -397,7 +457,7 @@
       "eventsRecorded": "Registrerade {count} händelser med nätbegränsning.",
       "exportLimit": "Nätets exportbegränsning",
       "exportLimitDescription": "Optimeraren respekterar gränsen för att undvika solförluster. Aktiv effektbegränsning från dynamisk styrning har företräde.",
-      "exportLimitHint": "Statisk gräns för utmatning till nätet vid anslutningspunkten.",
+      "exportLimitHint": "Statisk gräns för nätexport vid anslutningspunkten.",
       "generic": "Generiska integrationer",
       "integrations": "Integrationer",
       "lastEvent": "Senaste {timeAgo}.",
@@ -447,7 +507,6 @@
         "charging": "Laddare",
         "heating": "Värmekälla"
       },
-      "chargingTitle": "Tillstånd",
       "circuitHelp": "Belastningsstyrning som säkrar att effekt och strömgränser ej överskrids.",
       "circuitInvalid": "Kretsen saknas",
       "circuitLabel": "Krets",
@@ -473,6 +532,27 @@
       "defaultModeKeep": "behåll",
       "defaultModeLabel": "Standardinställning",
       "delete": "Radera",
+      "demandPredictor": {
+        "daily": {
+          "description": "Medel de senaste dagarna. För enheter som följer samma mönster varje dag.",
+          "label": "Dagligt medel"
+        },
+        "defaultGroup": "Enhetens standardinställning",
+        "description": "Hur optimeraren förutser behovet med hjälp av tidigare förbrukning.",
+        "label": "Profil",
+        "noTempTariff": "Kräver en temperaturprognos.",
+        "noTempTariffLink": "Lägg till prognos",
+        "profilesGroup": "Profiler",
+        "temperature": {
+          "description": "Tidigare förbrukningvid liknande utomhustemperatur. För uppvärming med ex.vis värmepump.",
+          "label": "Temperatur"
+        },
+        "title": "Förbrukningsprognos",
+        "weekday": {
+          "description": "Medel en viss veckodag. För enheter som följer ett veckomönster, tex. vatten eller poolvärmare.",
+          "label": "Veckodag"
+        }
+      },
       "electricalSubtitle": "Om du är osäker, kontakta elektriker.",
       "electricalTitle": "Elektricitet",
       "energyMeterHelp": "Extern mätare (Om laddaren inte har en integrerad mätare).",
@@ -509,25 +589,25 @@
       "priorityHelp": "Högre prioritet får snabbare tillgång till solenergiöverskott.",
       "priorityLabel": "Prioritet",
       "save": "Spara",
-      "solarBehaviorCustomHelp": "Definera dina egna aktiverings- och deaktiverings-tröskelvärden och fördröjningar.",
-      "solarBehaviorDefaultHelp": "Starta efter {enableDelay} av tillräckligt överskott. Stanna när det inte är tillräckligt överskottet i {disableDelay}.",
-      "solarBehaviorLabel": "Solöverskott",
-      "solarModeCustom": "egen",
-      "solarModeMaximum": "maximal solenergi",
-      "solarShareNote": "Solandelsreglaget i användarinställningarna är inaktiverat när watt-trösklar är inställda. {0} och spara för att aktivera det.",
       "solarShareReset": "Ta bort gränser",
+      "solarTitle": "Beteende vid solöverskott",
       "temperatureRangeHelp": "Visningsområde för temperatur-stapel. Påverkar ej styrning.",
       "temperatureRangeTitle": "Temperatur-område",
+      "thresholdDisableDelayHelp": "Stoppar när överskottet inte räcker under {delay}.",
       "thresholdDisableDelayLabel": "Stäng av fördröjning",
       "thresholdDisableHelpInvalid": "Ange ett positivt värde.",
-      "thresholdDisableHelpPositive": "Sluta när mer än {power} används från elnätet i {delay} .",
-      "thresholdDisableHelpZero": "Sluta när minimum effekt inte kan uppfyllas under {delay}.",
+      "thresholdDisableHelpPositive": "Stoppar när mer än {power} används från elnätet i {delay} .",
       "thresholdDisableLabel": "Koppla bort elnätet",
+      "thresholdEnableDelayHelp": "Startar när det finns tillräckligt med överskott i {delay}.",
       "thresholdEnableDelayLabel": "Slå på fördröjning",
       "thresholdEnableHelpInvalid": "Ange ett negativt värde.",
       "thresholdEnableHelpNegative": "Starta när {surplus} överskott finns i {delay}.",
-      "thresholdEnableHelpZero": "Starta när minimum av nödvändig effekt finns i {delay}.",
       "thresholdEnableLabel": "Anslut elnätet",
+      "thresholdsNote": {
+        "charging": "För att styra nätanvändningen vid solladdning, använd reglaget {slider} i laddplatsens inställningar på sidan {page}. Ange värden här endast i specialfall.",
+        "heating": "För att styra nätanvändningen vid solvärmning, använd reglaget {slider} i värmarens inställningar på sidan {page}. Ange värden här endast i specialfall."
+      },
+      "thresholdsSliderDisabled": "Reglaget {slider} är för närvarande inaktiverat eftersom värden är angivna här.",
       "titleAdd": {
         "charging": "Lägg till laddplats",
         "heating": "Lägg till värmare",
@@ -657,10 +737,18 @@
         "grid": "Lägg till nätmätare",
         "pv": "Lägg till solenergimätare"
       },
+      "reuseApply": "Använd dess inställningar.",
+      "reuseHint": "{device} kan också användas som \"{target}\".",
       "save": "Spara",
       "specific": "Specifik integration",
       "template": "Tillverkare",
       "titleChoice": "Vad vill du lägga till?",
+      "titleExample": {
+        "aux": "Smart varmvattenberedare m.m.",
+        "battery": "Källare, garage, powerstation m.m.",
+        "consumer": "Diskmaskin, tvättmaskin, poolpump m.m.",
+        "pv": "Södertak, carport m.m."
+      },
       "titleLabel": "Titel",
       "usage": {
         "aux": "Själv-reglerande förbrukare",
@@ -788,9 +876,29 @@
       "usernameHelp": "Till HTTP Basic Authentication mot den överordnade servern."
     },
     "optimizer": {
+      "automatic": "Automatisk styrning",
+      "automaticLevel": {
+        "battery": {
+          "description": "Styr endast hembatteriet.",
+          "label": "Hembatteri",
+          "status": "{automatic} styr hembatteriet."
+        },
+        "full": {
+          "description": "Styr hembatteriet, startar och stoppar fordonsladdning i smart läge, ersätter pris- och CO₂-gränser och tar över planer. Oförändrat: av- och snabbläge, värmare, smarta uttag, fordon med okänd kapacitet.",
+          "label": "Hembatteri & laddplatser",
+          "status": "{automatic} styr hembatteri och laddplatser."
+        },
+        "off": {
+          "description": "Optimeraren ger bara förslag. Inget styrs.",
+          "status": "{automatic} är av. Optimeraren ger bara förslag."
+        }
+      },
+      "controlled": "Avaktiverad av automatisk styrning. Istället bestämmer {optimizer}.",
+      "controls": "Styr",
       "description": "Analyserar solprognoser, elpriser och din typiska förbrukning för att optimera batteri- och laddningsstrategi. Data överförs till evcc optimeringstjänst för beräkning. Beräknar och visualiserar för närvarande endast. Styr ännu inga enheter.",
       "enable": "Aktivera optimerare",
       "info": "För nya installationer kan det ta upp till 24 timmar innan evcc har samlat in tillräckligt med data.",
+      "linkWord": "optimeraren",
       "title": "Optimerare"
     },
     "options": {
@@ -888,6 +996,31 @@
       "labelVendorId": "Tillverkar-ID",
       "title": "SMA Sunny Home Manager"
     },
+    "site": {
+      "country": {
+        "description": "Används för regionspecifika tips och standardvärden.",
+        "label": "Land"
+      },
+      "currency": {
+        "description": "Används för att formatera energipriser, kostnader och besparingar utifrån din tariff.",
+        "example": "Ditt laddpris var {price}. Du sparade {amount}.",
+        "label": "Valuta"
+      },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V utan nollledare (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V med nollledare (3P4W)",
+        "description": {
+          "3p3w": "Elnät utan nollledare. Vanligt i Norge och delar av Belgien.",
+          "3p4w": "Vanligaste elnätet, med nollledare."
+        },
+        "label": "Nätanslutning"
+      },
+      "siteTitle": {
+        "description": "Visas på startsidan och i webbläsarfliken.",
+        "label": "Titel"
+      },
+      "title": "Anläggning"
+    },
     "sponsor": {
       "addToken": "Ange sponsor-token",
       "changeToken": "Ändra sponsor-token",
@@ -895,6 +1028,18 @@
       "descriptionToken": "Som GitHub-sponsor hittar du din token på {url}. För att komma igång erbjuder vi en {trialToken}.",
       "enterYourToken": "Din sponsor-token",
       "error": "Din sponsor-token är inte giltig.",
+      "inline": {
+        "applied": "Token tillämpad. Tack för att du stöder projektet!",
+        "apply": "Verkställ",
+        "becomeSponsor": "bli sponsor",
+        "device": "Den här enheten är endast tillgänglig för sponsorer.",
+        "feature": "Den här funktionen är endast tillgänglig för sponsorer.",
+        "learn": "Läs mer och {becomeSponsor}.",
+        "placeholder": "Klistra in token",
+        "title": "Sponsor-token krävs",
+        "trial": "Kom igång snabbt.",
+        "trialLink": "Skaffa en testtoken"
+      },
       "invalid": "ogiltig",
       "labelToken": "Sponsor-token",
       "title": "Sponsor",
@@ -989,7 +1134,8 @@
       "solar": {
         "description": "Prognos för solproduktion för din solcellsanläggning. Visas i gränssnittet och kommer framöver att användas för optimeringsalgoritmer.",
         "titleAdd": "Lägg till solprognos",
-        "titleEdit": "Ändra solprognos"
+        "titleEdit": "Ändra solprognos",
+        "titleExample": "Södertak, carport m.m."
       },
       "temperature": {
         "description": "Utomhustemperaturprognos för din plats. Visas i gränssnittet och används för att beräkna värmebehov.",
@@ -1055,6 +1201,119 @@
       "titleAdd": "Lägg till fordon",
       "titleEdit": "Ändra fordon"
     }
+  },
+  "energy": {
+    "battery": {
+      "charged": "Laddat",
+      "discharged": "Urladdat"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Staplar",
+        "pattern": "Mönster"
+      },
+      "cost": "Kostnad",
+      "others": "Övriga",
+      "title": "Förbrukare",
+      "view": {
+        "river": "Flöde",
+        "treemap": "Trädkarta"
+      }
+    },
+    "direction": {
+      "battery": {
+        "energy": "laddad",
+        "returnEnergy": "urladdad"
+      },
+      "grid": {
+        "energy": "importerad",
+        "returnEnergy": "exporterad"
+      },
+      "meter": {
+        "energy": "Energi",
+        "returnEnergy": "Energi (baklänges)"
+      }
+    },
+    "empty": "Inga energidata tillgängliga för denna period.",
+    "flow": {
+      "battery": "Batteri",
+      "batteryCharge": "Batteriladdning",
+      "batteryDischarge": "Batteriurladdning",
+      "charging": "Laddning",
+      "export": "Export till elnät",
+      "grid": "Import från elnät",
+      "heating": "Uppvärmning",
+      "home": "Förbrukning",
+      "overview": "Översikt",
+      "pv": "Produktion",
+      "title": "Energiflöde",
+      "usage": "Användning",
+      "withdrawal": "Uttag"
+    },
+    "grid": {
+      "amount": "Belopp",
+      "cost": "Nätkostnad",
+      "energy": "Energi",
+      "export": "Export",
+      "exportPrice": "Exportpris",
+      "import": "Import",
+      "importPrice": "Importpris",
+      "price": "Pris",
+      "revenue": "Inmatningsintäkt",
+      "title": "Elnät"
+    },
+    "group": {
+      "battery": "Batteri",
+      "consumer": "Förbrukning",
+      "forecast": "Prognos",
+      "grid": "Nät",
+      "loadpoint": "Laddning & uppvärmning",
+      "meter": "Extra mätare",
+      "pv": "Produktion"
+    },
+    "production": {
+      "above": "{value} över",
+      "accuracy": "Prognosprecision",
+      "below": "{value} under",
+      "deviation": "Avvikelse",
+      "expectedTomorrow": "förväntat i morgon",
+      "exported": "{value} exporterat",
+      "produced": "Producerat",
+      "remainingToday": "återstår idag",
+      "selfConsumed": "Egenförbrukat",
+      "title": "Produktion"
+    },
+    "socTemp": {
+      "charged": "laddat",
+      "soc": "laddnivå",
+      "temperature": "temperatur",
+      "used": "förbrukat"
+    },
+    "sources": {
+      "battery": "Batteri",
+      "cost": "Kostnad",
+      "energy": "Energi",
+      "grid": "Elnät",
+      "hint": "Sol- och batterienergi värderas till inmatningspriset.",
+      "price": "Pris/kWh",
+      "pv": "Sol",
+      "share": "Andel",
+      "source": "Källa",
+      "title": "Källor",
+      "total": "Totalt"
+    },
+    "stat": {
+      "autarky": "Självförsörjning",
+      "co2Saved": "CO₂ sparat",
+      "co2SavedTooltip": "Jämfört med att ta den förbrukade {energy} från elnätet.",
+      "configure": "Konfigurera nu",
+      "noCo2": "Inga CO₂-data.",
+      "noPrice": "Inga prisdata.",
+      "savings": "Besparing",
+      "savingsTooltip": "Jämfört med att köpa den förbrukade {energy} från elnätet.",
+      "versus": "{value} mot {reference}"
+    },
+    "title": "Energi"
   },
   "footer": {
     "community": {
@@ -1193,6 +1452,7 @@
   },
   "general": {
     "back": "Tillbaka",
+    "cancel": "Avbryt",
     "download": "Ladda hem",
     "error": "Fel",
     "none": "inget",
@@ -1229,31 +1489,6 @@
     "restartButton": "Starta om",
     "restartDescription": "Har du testat att starta om?",
     "secondaryActions": "Lyckas du inte lösa problemet? Här finns mer hjälp."
-  },
-  "energy": {
-    "direction": {
-      "battery": {
-        "energy": "laddad",
-        "returnEnergy": "urladdad"
-      },
-      "grid": {
-        "energy": "importerad",
-        "returnEnergy": "exporterad"
-      },
-      "meter": {
-        "energy": "Energi",
-        "returnEnergy": "Energi (baklänges)"
-      }
-    },
-    "group": {
-      "battery": "Batteri",
-      "consumer": "Förbrukning",
-      "forecast": "Prognos",
-      "grid": "Nät",
-      "loadpoint": "Laddning & uppvärmning",
-      "meter": "Extra mätare",
-      "pv": "Produktion"
-    }
   },
   "issue": {
     "additional": {
@@ -1292,6 +1527,10 @@
     },
     "issueDescription": "Beskrivning",
     "issueTitle": "Titel",
+    "nightlyHint": "Det kan redan vara åtgärdat. Kontrollera först med den senaste {nightlyVersion}.",
+    "nightlyHintVersion": "nightly-versionen",
+    "searchHint": "Sök i befintliga {issues} innan du rapporterar ett fel.",
+    "searchHintLink": "GitHub-ärenden",
     "stepsToReproduce": "Steg för att återskapa",
     "subTitleDiscussion": "Beskriv ditt problem",
     "subTitleEmail": "Beskriv ditt problem",
@@ -1404,6 +1643,7 @@
       "batteryDischargeHold": "Batteri (låst)",
       "batteryGridChargeActive": "Nätladdning: aktiv",
       "batteryGridChargeLimit": "Nätladdning: när",
+      "batteryStatus": "Batteristatus",
       "batteryTooltip": "{energy} av {total} ({soc})",
       "forecast": "Prognos",
       "forecastTooltip": "Prognos: återstående solproduktion idag",
@@ -1523,6 +1763,11 @@
       "login": "logga in",
       "logout": "logga ut"
     },
+    "setup": {
+      "description": "Lägg till dina enheter för att se energiflödet och börja ladda med solenergi.",
+      "start": "Starta installation",
+      "title": "Välkommen!"
+    },
     "startConfiguration": "Starta konfigurationen",
     "targetCharge": {
       "activate": "Aktivera",
@@ -1559,6 +1804,7 @@
     "targetChargePlan": {
       "chargeDuration": "Laddtid",
       "co2Label": "CO₂-utsläpp ⌀",
+      "optimizerHint": "Obs: Denna plan skapades av {optimizer}.",
       "priceLabel": "Energipris",
       "timeRange": "{day} {range} t",
       "unknownPrice": "fortfarande okänt"
@@ -1618,6 +1864,7 @@
       "feedinPriorityPausing": "Solladdning har pausats för att maximera inmatning.",
       "finished": "Färdig.",
       "minCharge": "Minimiladdning till {soc}.",
+      "optimizerControlledTooltip": "Automatisk styrning. Optimeraren startar och stoppar laddningen.",
       "pvDisable": "Inte tillräckligt med överskott. Pausar strax.",
       "pvEnable": "Överskott tillgängligt. Börjar strax.",
       "scale1p": "Minskar till 1-fas-laddning strax.",
@@ -1648,6 +1895,76 @@
     "restartNeeded": "Krävs för att spara ändringar.",
     "restarting": "Servern är strax tillbaka.",
     "starting": "Startar server..."
+  },
+  "onboarding": {
+    "another": "Lägg till fler",
+    "back": "Tillbaka",
+    "battery": {
+      "add": "Lägg till hembatteri",
+      "description": "Lägg till ditt batteri så att laddningen tar hänsyn till det och du kan se vad det gör.",
+      "none": "Inget hembatteri",
+      "title": "Har du ett hembatteri?"
+    },
+    "checklist": {
+      "dismiss": "Avfärda",
+      "legacyTariffs": "Äldre tariffkonfiguration används.",
+      "progress": "{done} av {total} klara",
+      "title": "Slutför din installation"
+    },
+    "control": {
+      "description": "Börja med din första. Fler kan läggas till senare på konfigurationssidan.",
+      "none": "Ingenting ännu",
+      "title": "Vad vill du styra?"
+    },
+    "done": {
+      "close": "Till konfigurationen",
+      "description": "En omstart tillämpar konfigurationen. Utforska sedan funktionerna. Fordon, tariffer och mer kan läggas till när som helst.",
+      "restart": "Starta om",
+      "title": "Du är redo"
+    },
+    "grid": {
+      "add": "Lägg till elmätare",
+      "confirm": "Elmätaren är grunden för överskottsladdning och energistatistik. Vi rekommenderar att lägga till en.",
+      "confirmNone": "Fortsätt utan",
+      "description": "Mäter import från och export till elnätet vid anslutningspunkten. Gör överskottsladdning exakt.",
+      "none": "Ingen elmätare",
+      "title": "Har du en elmätare?"
+    },
+    "item": {
+      "battery": "Hembatteri",
+      "co2": "CO₂-prognos",
+      "consumer": "Förbrukare",
+      "grid": "Elmätare",
+      "gridExport": "Tariff för nätexport",
+      "gridImport": "Tariff för nätimport",
+      "heater": "Värmare",
+      "loadpoint": "Laddplats",
+      "pv": "Solanläggning",
+      "solar": "Solprognos"
+    },
+    "password": {
+      "description": "Skyddar konfigurationsinställningarna mot obehöriga ändringar. Kom ihåg det, det finns inget enkelt sätt att återställa det.",
+      "disabled": "Autentisering är inaktiverad ({flag}). Alla med nätverksåtkomst kan ändra konfigurationen, läsa lagrade inloggningsuppgifter och köra skript. Säkra åtkomsten på annat sätt.",
+      "title": "Ange administratörslösenord"
+    },
+    "pv": {
+      "add": "Lägg till solanläggning",
+      "description": "Mäter solproduktionen. Behövs för solandelen och överskottsladdning.",
+      "none": "Ingen solanläggning",
+      "title": "Har du en solanläggning?"
+    },
+    "site": {
+      "currencyHint": "t.ex. {price}, {amount}",
+      "defaultTitle": "Hem",
+      "description": "Några grunduppgifter om ditt hem. Du kan ändra dem när som helst.",
+      "title": "Din anläggning"
+    },
+    "skip": "Hoppa över",
+    "step": "Steg {step} av {total}",
+    "welcome": {
+      "description": "Konfigurera de viktigaste delarna av din hemmainstallation för att börja ladda smart.",
+      "start": "Kom igång"
+    }
   },
   "passwordModal": {
     "description": "Använd lösenord för att skydda inställningarna. Huvudskärmen kan användas utan att logga in.",
@@ -1868,6 +2185,7 @@
     "battery": "Batteri",
     "charge": "Ladda",
     "comingSoon": "Sida under uppbyggnad.",
+    "energy": "Energi",
     "forecast": "Prognos",
     "more": "Mer",
     "sessions": "Laddningar"

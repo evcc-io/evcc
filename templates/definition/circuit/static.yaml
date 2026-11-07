@@ -16,7 +16,6 @@ params:
       de: Maximal erlaubte Gesamtleistung in diesem Stromkreis.
       en: Maximum total power allowed in this circuit.
   - name: meter
-    # service: TODO
   - name: parent
     description:
       de: Übergeordneter Stromkreis

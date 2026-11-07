@@ -7,7 +7,7 @@ import (
 )
 
 // ProductURI defines the location of the tariff information page. Substitute %s with tariff name.
-const ProductURI = "https://api.octopus.energy/v1/products/%s/"
+const ProductURI = "https://api.oegb-kraken.energy/v1/products/%s/"
 
 // RatesURI defines the location of the full tariff rates page, including speculation.
 // Substitute first %s with product code, second with tariff code.

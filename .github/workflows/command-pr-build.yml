@@ -102,7 +102,7 @@ jobs:
           gzip -9 "evcc-linux-${{ matrix.arch }}"
 
       - name: Upload binary
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: evcc-pr-${{ github.event.issue.number }}-linux-${{ matrix.arch }}
           path: evcc-linux-${{ matrix.arch }}.gz
@@ -123,7 +123,7 @@ jobs:
           persist-credentials: false
 
       - name: Login
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}

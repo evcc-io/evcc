@@ -37,7 +37,9 @@ This is the same rule the live control loop uses for the green share, so the pag
 
 Everything downstream is built on these flows: the flow chart, the source mix bars (share of PV, battery, grid in what reached a sink), autarky, cost and CO2.
 
-The overview bar chart uses a simpler per-bucket split on the client: production covers export first, then battery charging, the remainder is self-consumption. The usage view keeps that column, from minus import and discharge up to production, and fills it with sinks instead: export on top, then consumers, each loadpoint, each battery at the bottom, each with all it received from production and import alike. The baseline just cuts through the stack. Energy no sink explains stays with consumption, a sink no source covers is not drawn.
+The overview bar chart uses a simpler per-bucket split on the client: production covers export first, then battery charging, the remainder is self-consumption. Stacked from the baseline: self-consumption, battery charge, export above it, battery discharge and grid import below.
+
+The usage view keeps that column, from minus import and discharge up to production, and fills it with sinks instead, each with all it received from production and import alike. The baseline just cuts through the stack, every sink stays one contiguous band. Bottom up: consumption, loadpoints, batteries, consumption again, export. Consumption is two series with one shared entity index (`paletteIndex`), only one carries a slot's value: the lower one when consumption alone covers the slot's withdrawal (it then spans the baseline and the other sinks sit on top), the upper one otherwise. This keeps the house load next to the baseline in pure production and pure withdrawal slots without reordering per slot; in mixed slots where a loadpoint crosses the baseline, consumption sits above it. Tooltip and legend merge the two series into one entry. Energy no sink explains stays with consumption, a sink no source covers is not drawn.
 
 ## Metered versus attributed
 
@@ -69,7 +71,7 @@ Slots without a price (or CO2 value) are excluded from the cost model on both si
 
 The grid history carries the same pair per bucket: import cost and feed-in revenue with their priced energy. The grid chart uses them for the amount and the effective price of a day or month.
 
-Per-entity cost uses average sink rates, not slot detail: every consumer is priced at the average rate of home, every loadpoint at the average rate of the non-home consumption. The source breakdown of an entity works the same way: it inherits the source shares and prices of its sink, scaled to its energy. Sub-meters are not attributed individually because their slot pattern would have to be matched against the home slot pattern with no gain in trust.
+Per-entity cost follows the same slot rule. A consumer inherits home's source split of each slot it ran in, a loadpoint the split of the loadpoint sink in that slot, scaled to the entity's energy of the slot and priced at that slot's tariff. Summed over the period this gives every consumer and loadpoint its own flows (`entities` in the flow response), so a dryer that ran at night on battery and grid shows exactly that, not the house's daily mix. "Others" is the per-slot residual of home minus the tracked consumers, clamped at zero, attributed the same way. The split is taken against the metered sink, so the part of a slot its sources could not cover stays out of the entity's flows as it does for the sink. Meters sharing a title form one entity, as in the history. The displayed energy of an entity stays the metered sum; the breakdown applies the entity's shares to it, and its price is cost over priced energy.
 
 ## Forecast accuracy
 

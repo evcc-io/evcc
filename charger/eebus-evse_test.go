@@ -228,6 +228,24 @@ func TestWriteCurrentLimitData_Disable(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestWriteCurrentLimitData_DisableWhenMaxLimitsZero(t *testing.T) {
+	eebus, opev, oscev, evEntity := newTestEEBus(t)
+	_ = eebus
+
+	// When EVSE reports max limit as 0 (e.g. idle before charging starts)
+	// disabling (0A) must still produce an active obligation limit
+	opev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
+	opev.EXPECT().CurrentLimits(evEntity).Return([]float64{6}, []float64{0}, []float64{0}, nil)
+	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
+		return len(limits) == 1 && limits[0].IsActive && limits[0].Value == 0
+	}), mock.Anything).Run(ackWrite).Return(nil, nil)
+
+	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(false)
+
+	err := eebus.writeCurrentLimitData(evEntity, 0)
+	require.NoError(t, err)
+}
+
 func TestWriteCurrentLimitData_OscevNoLimitData(t *testing.T) {
 	eebus, opev, oscev, evEntity := newTestEEBus(t)
 	_ = eebus
@@ -255,6 +273,38 @@ func TestWriteCurrentLimitData_OpevNotAvailable(t *testing.T) {
 	require.ErrorIs(t, err, api.ErrNotAvailable)
 }
 
+func TestWriteCurrentLimitData_SinglePhaseAutoDetect(t *testing.T) {
+	eebus, opev, oscev, evEntity := newTestEEBus(t)
+
+	// OPEV available with 1 phase limit (e.g. EVBox Livo / North America 1-phase)
+	opev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
+	opev.EXPECT().CurrentLimits(evEntity).Return([]float64{6}, []float64{48}, []float64{0}, nil)
+	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
+		return len(limits) == 1 && limits[0].Phase == ucapi.PhaseNameMapping[0] && limits[0].IsActive && limits[0].Value == 10
+	}), mock.Anything).Run(ackWrite).Return(nil, nil)
+
+	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(false)
+
+	err := eebus.writeCurrentLimitData(evEntity, 10)
+	require.NoError(t, err)
+}
+
+func TestWriteCurrentLimitData_PartialLimitsAutoDetect(t *testing.T) {
+	eebus, opev, oscev, evEntity := newTestEEBus(t)
+
+	// OPEV returns minLimits with 1 phase and empty maxLimits
+	opev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
+	opev.EXPECT().CurrentLimits(evEntity).Return([]float64{6}, nil, nil, nil)
+	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
+		return len(limits) == 1 && limits[0].Phase == ucapi.PhaseNameMapping[0] && limits[0].IsActive && limits[0].Value == 10
+	}), mock.Anything).Run(ackWrite).Return(nil, nil)
+
+	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(false)
+
+	err := eebus.writeCurrentLimitData(evEntity, 10)
+	require.NoError(t, err)
+}
+
 func TestEnabledAlwaysReadsOpev(t *testing.T) {
 	evcc := mocks.NewCemEVCCInterface(t)
 	opev := mocks.NewCemOPEVInterface(t)
@@ -270,6 +320,7 @@ func TestEnabledAlwaysReadsOpev(t *testing.T) {
 	}
 
 	evcc.EXPECT().EVConnected(evEntity).Return(true)
+	opev.EXPECT().CurrentLimits(evEntity).Return([]float64{6, 6, 6}, []float64{16, 16, 16}, []float64{0, 0, 0}, nil)
 	opev.EXPECT().LoadControlLimits(evEntity).Return([]ucapi.LoadLimitsPhase{
 		{Phase: model.ElectricalConnectionPhaseNameTypeA, IsActive: true, Value: 10},
 		{Phase: model.ElectricalConnectionPhaseNameTypeB, IsActive: true, Value: 10},
@@ -279,6 +330,35 @@ func TestEnabledAlwaysReadsOpev(t *testing.T) {
 	enabled, err := eebus.Enabled()
 	require.NoError(t, err)
 	assert.True(t, enabled)
+}
+
+func TestEnabledSinglePhaseLingeringThreePhaseLimits(t *testing.T) {
+	evcc := mocks.NewCemEVCCInterface(t)
+	opev := mocks.NewCemOPEVInterface(t)
+
+	evEntity := spinemocks.NewEntityRemoteInterface(t)
+	eebus := &EEBus{
+		cem: &eebus.CustomerEnergyManagement{
+			EvCC: evcc,
+			OpEV: opev,
+		},
+		ev:  evEntity,
+		log: util.NewLogger("test"),
+	}
+
+	evcc.EXPECT().EVConnected(evEntity).Return(true)
+	// EVSE reports single-phase limits
+	opev.EXPECT().CurrentLimits(evEntity).Return([]float64{6}, []float64{32}, []float64{0}, nil)
+	// EVSE table retains lingering 16A limits on phases B and C from an earlier 3-phase write
+	opev.EXPECT().LoadControlLimits(evEntity).Return([]ucapi.LoadLimitsPhase{
+		{Phase: model.ElectricalConnectionPhaseNameTypeA, IsActive: true, Value: 0},
+		{Phase: model.ElectricalConnectionPhaseNameTypeB, IsActive: true, Value: 16},
+		{Phase: model.ElectricalConnectionPhaseNameTypeC, IsActive: true, Value: 16},
+	}, nil)
+
+	enabled, err := eebus.Enabled()
+	require.NoError(t, err)
+	assert.False(t, enabled)
 }
 
 func TestEEBusIsCharging(t *testing.T) {

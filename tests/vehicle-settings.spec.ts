@@ -10,6 +10,7 @@ import {
 } from "./simulator";
 
 test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
 
 test.beforeAll(async () => {
   await startSimulator();

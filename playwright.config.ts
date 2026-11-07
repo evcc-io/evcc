@@ -17,6 +17,7 @@ export default defineConfig({
     screenshot: "only-on-failure",
     permissions: ["clipboard-write"],
     actionTimeout: 20000, // 20s for individual actions
+    reducedMotion: "reduce", // skips animations and transitions
   },
   projects: [
     {

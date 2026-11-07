@@ -9,11 +9,11 @@ requirements:
   evcc: ["skiptest"]
   description:
     de: |
-      Einmalige Warmwasserbereitung. Das Gerät entscheidet eigenständig, ob die Wärmepumpe oder die elektrische Zusatzheizung (falls vorhanden) genutzt wird.
+      Einmalige Warmwasserbereitung. Das Gerät entscheidet eigenständig, ob die Wärmepumpe oder die elektrische Zusatzheizung (falls vorhanden) genutzt wird. Voraussetzung ist, dass das Gerät die Einmal-Warmwasserbereitung (`heating.dhw.oneTimeCharge`) über die API anbietet. Das ist nicht bei allen Geräten der Fall (z. B. Vitocal 150-A).
 
       Optional können Leistungs- und Temperaturwerte ausgelesen werden. Das setzt Datenpunkte der One-Base-/E3-Gerätegeneration voraus (z. B. Vitocal 25x, getestet mit Vitocal 250-A). Welche Datenpunkte ein Gerät liefert, ist geräteabhängig und lässt sich über die [Viessmann API](https://developer.viessmann-climatesolutions.com/) am Feature-Endpunkt der Anlage ablesen. Die Option „Leistungs- und Temperaturwerte auslesen" wird nach der Anmeldung automatisch vorbelegt, wenn das Gerät die Datenpunkte liefert.
     en: |
-      One-time hot water preparation. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available).
+      One-time hot water preparation. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available). Requires the device to offer one-time hot water charging (`heating.dhw.oneTimeCharge`) via the API. Not all devices do (e.g. Vitocal 150-A).
 
       Optionally, power and temperature readings can be enabled. This requires data points of the One Base/E3 device generation (e.g. Vitocal 25x, tested with a Vitocal 250-A). Which data points a device provides is device-specific and can be inspected via the [Viessmann API](https://developer.viessmann-climatesolutions.com/) feature endpoint of the installation. The "Read power and temperature values" option is pre-set automatically after login if the device provides the data points.
 params:
@@ -186,9 +186,10 @@ render: |
       clientid: {{ .clientid }}
       redirecturi: {{ .redirecturi }}
       gateway_serial: {{ .gateway_serial }}
-    jq: '.data[] | select(.feature == "heating.dhw.oneTimeCharge") | .properties.active.value | if . == false then 2 elif . == true then 3 else . end'
+    jq: '[.data[] | select(.feature == "heating.dhw.oneTimeCharge") | .properties.active.value | booleans] | if length == 0 then error("heating.dhw.oneTimeCharge not supported by device") elif .[0] then 3 else 2 end'
     # false -> oneTimeCharge is disabled -> normal mode -> 2
     # true -> oneTimeCharge is enabled -> boost mode -> 3
+    # some devices (e.g. Vitocal 150-A) report the feature with isEnabled: false and no properties
   setmode:
     source: watchdog
     timeout: 60m # re-write at timeout/2

@@ -9,7 +9,7 @@
 			{{ $t("config.optimizer.description") }}
 			<a :href="docsLink" target="_blank">{{ $t("config.general.docsLink") }}</a>
 		</p>
-		<SponsorTokenRequired v-if="!isSponsor" feature class="mt-0" />
+		<SponsorTokenRequired :is-sponsor="isSponsor" feature />
 		<ErrorMessage :error="error" />
 		<div class="form-check form-switch my-3">
 			<input

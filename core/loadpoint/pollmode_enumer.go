@@ -32,11 +32,14 @@ func _PollModeNoOp() {
 var _PollModeValues = []PollMode{PollCharging, PollConnected, PollAlways}
 
 var _PollModeNameToValueMap = map[string]PollMode{
-	_PollModeName[0:8]:        PollCharging,
+	_PollModeName[0:8]:   PollCharging,
+	_PollModeName[8:17]:  PollConnected,
+	_PollModeName[17:23]: PollAlways,
+}
+
+var _PollModeLowerNameToValueMap = map[string]PollMode{
 	_PollModeLowerName[0:8]:   PollCharging,
-	_PollModeName[8:17]:       PollConnected,
 	_PollModeLowerName[8:17]:  PollConnected,
-	_PollModeName[17:23]:      PollAlways,
 	_PollModeLowerName[17:23]: PollAlways,
 }
 
@@ -53,7 +56,7 @@ func PollModeString(s string) (PollMode, error) {
 		return val, nil
 	}
 
-	if val, ok := _PollModeNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _PollModeLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to PollMode values", s)

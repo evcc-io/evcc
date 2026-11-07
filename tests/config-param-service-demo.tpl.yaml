@@ -32,6 +32,12 @@ params:
       generic: Required address
     required: true
     service: demo/options
+  - name: user
+  - name: credentials
+    description:
+      generic: Credentials
+    required: true
+    service: demo/echo?user={user}
 
 render: |
   type: custom

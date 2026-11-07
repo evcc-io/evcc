@@ -273,6 +273,11 @@ func (w *WarpWS) handleConnection(ctx context.Context, role wsRole, conn *websoc
 				return err
 			}
 
+			// the energy manager has its own meters, evse and ev topics that must not overwrite the charger's
+			if role == wsRolePM && !isPmTopic(event.Topic) {
+				continue
+			}
+
 			// only drop PM topics on the main WS when a dedicated PM connection exists;
 			// on single-WS setups (WARP3) PM events arrive here and must be processed
 			if role == wsRoleMain && w.pm != w.Connection && isPmTopic(event.Topic) {

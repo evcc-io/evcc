@@ -6,6 +6,8 @@ products:
 capabilities: ["rfid", "1p3p", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
+discovery:
+  mac: ["00157E"]
 params:
   - name: host
 render: |

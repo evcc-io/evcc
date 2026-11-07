@@ -26,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/pcelectric"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -262,7 +263,7 @@ func (wb *PCElectric) MaxCurrent(current int64) error {
 // CurrentPower implements the api.Meter interface W
 func (wb *PCElectric) currentPower() (float64, error) {
 	l1, l2, l3, err := wb.currents()
-	return 230 * (l1 + l2 + l3), err
+	return grid.CurrentsToPower(l1, l2, l3), err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface kwh

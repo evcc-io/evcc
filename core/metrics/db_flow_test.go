@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"math"
 	"testing"
 	"time"
 
@@ -102,4 +103,99 @@ func TestQueryFlow(t *testing.T) {
 	assert.InDelta(t, 0.3, res.Cost.AvgGrid, 1e-9)
 
 	assert.Nil(t, res.Co2)
+}
+
+func TestQueryFlowEntities(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	create := func(group, name string) entity {
+		e := entity{Name: name, Group: group, Title: name}
+		require.NoError(t, db.Instance.FirstOrCreate(&e, entity{Name: name}).Error)
+		return e
+	}
+	pv, grid, home := create(PV, PV), create(Grid, Grid), create(Home, Home)
+	carport, garage := create(Loadpoint, "carport"), create(Loadpoint, "garage")
+	noon, evening := create(Consumer, "noon"), create(Consumer, "evening")
+	noon2 := entity{Name: "noon2", Group: Consumer, Title: "noon"}
+	require.NoError(t, db.Instance.Create(&noon2).Error)
+
+	base := time.Date(2026, 9, 1, 12, 0, 0, 0, time.Now().Location())
+	slot := func(i int) time.Time { return base.Add(time.Duration(i) * 15 * time.Minute) }
+	tariff := func(i int, price float64) {
+		feedin := 0.1
+		require.NoError(t, PersistTariffs(slot(i), &price, &feedin, nil, nil))
+	}
+
+	// slot 0: solar covers home and carport, the noon consumer runs
+	require.NoError(t, persist(pv, slot(0), 2, 0, nil, false))
+	require.NoError(t, persist(home, slot(0), 1, 0, nil, false))
+	require.NoError(t, persist(carport, slot(0), 1, 0, nil, false))
+	require.NoError(t, persist(noon, slot(0), 0.4, 0, nil, false))
+	tariff(0, 0.3)
+
+	// slot 1: grid covers home and garage, the evening consumer runs
+	require.NoError(t, persist(grid, slot(1), 2, 0, nil, false))
+	require.NoError(t, persist(home, slot(1), 1, 0, nil, false))
+	require.NoError(t, persist(garage, slot(1), 1, 0, nil, false))
+	require.NoError(t, persist(evening, slot(1), 0.4, 0, nil, false))
+	tariff(1, 0.4)
+
+	// slot 2: both consumers exceed home, others clamps to zero
+	require.NoError(t, persist(grid, slot(2), 0.5, 0, nil, false))
+	require.NoError(t, persist(home, slot(2), 0.5, 0, nil, false))
+	require.NoError(t, persist(noon, slot(2), 0.4, 0, nil, false))
+	require.NoError(t, persist(evening, slot(2), 0.4, 0, nil, false))
+	tariff(2, 0.2)
+
+	// slot 3: grid covers half of home, a second "noon" meter runs
+	require.NoError(t, persist(grid, slot(3), 0.5, 0, nil, false))
+	require.NoError(t, persist(home, slot(3), 1, 0, nil, false))
+	require.NoError(t, persist(noon2, slot(3), 0.4, 0, nil, false))
+	tariff(3, 0.5)
+
+	res, err := QueryFlow(slot(0), slot(4))
+	require.NoError(t, err)
+
+	round := func(flows []Flow) []Flow {
+		for i := range flows {
+			flows[i].Cost = math.Round(flows[i].Cost*1e9) / 1e9
+			flows[i].PricedEnergy = math.Round(flows[i].PricedEnergy*1e9) / 1e9
+		}
+		return flows
+	}
+
+	// the sinks as before, consumers never enter the attribution
+	assert.Equal(t, []Flow{
+		{From: PV, To: Home, Energy: 1, Cost: 0.1, PricedEnergy: 1},
+		{From: PV, To: Loadpoint, Energy: 1, Cost: 0.1, PricedEnergy: 1},
+		{From: Grid, To: Home, Energy: 2, Cost: 0.75, PricedEnergy: 2},
+		{From: Grid, To: Loadpoint, Energy: 1, Cost: 0.4, PricedEnergy: 1},
+	}, round(res.Flows))
+
+	// each entity priced by the slots it ran in, not the sink average, and only
+	// for the part its sink's sources covered
+	require.Len(t, res.Entities, 5)
+	for i := range res.Entities {
+		round(res.Entities[i].Flows)
+	}
+	assert.Equal(t, []EntityFlows{
+		{Group: Consumer, Title: "evening", Flows: []Flow{
+			{From: Grid, To: Home, Energy: 0.8, Cost: 0.24, PricedEnergy: 0.8},
+		}},
+		{Group: Consumer, Title: "noon", Flows: []Flow{
+			{From: PV, To: Home, Energy: 0.4, Cost: 0.04, PricedEnergy: 0.4},
+			{From: Grid, To: Home, Energy: 0.6, Cost: 0.18, PricedEnergy: 0.6},
+		}},
+		{Group: Loadpoint, Title: "carport", Flows: []Flow{
+			{From: PV, To: Loadpoint, Energy: 1, Cost: 0.1, PricedEnergy: 1},
+		}},
+		{Group: Loadpoint, Title: "garage", Flows: []Flow{
+			{From: Grid, To: Loadpoint, Energy: 1, Cost: 0.4, PricedEnergy: 1},
+		}},
+		{Group: Consumer, Virtual: true, Flows: []Flow{
+			{From: PV, To: Home, Energy: 0.6, Cost: 0.06, PricedEnergy: 0.6},
+			{From: Grid, To: Home, Energy: 0.9, Cost: 0.39, PricedEnergy: 0.9},
+		}},
+	}, res.Entities)
 }

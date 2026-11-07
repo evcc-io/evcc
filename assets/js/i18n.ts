@@ -111,7 +111,10 @@ export async function ensureCurrentLocaleMessages(i18n: VueI18nInstance) {
   }
 }
 
+const DOCS_LOCALES = ["en", "de", "nl", "fr", "da", "it", "cs"];
+
 export function docsPrefix() {
-  const lang = getLocale() === "de" ? "de" : "en";
+  const locale = getLocale();
+  const lang = DOCS_LOCALES.includes(locale) ? locale : "en";
   return `https://docs.evcc.io/${lang}`;
 }

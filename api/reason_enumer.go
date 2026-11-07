@@ -32,11 +32,14 @@ func _ReasonNoOp() {
 var _ReasonValues = []Reason{ReasonUnknown, ReasonWaitingForAuthorization, ReasonDisconnectRequired}
 
 var _ReasonNameToValueMap = map[string]Reason{
-	_ReasonName[0:7]:        ReasonUnknown,
+	_ReasonName[0:7]:   ReasonUnknown,
+	_ReasonName[7:30]:  ReasonWaitingForAuthorization,
+	_ReasonName[30:48]: ReasonDisconnectRequired,
+}
+
+var _ReasonLowerNameToValueMap = map[string]Reason{
 	_ReasonLowerName[0:7]:   ReasonUnknown,
-	_ReasonName[7:30]:       ReasonWaitingForAuthorization,
 	_ReasonLowerName[7:30]:  ReasonWaitingForAuthorization,
-	_ReasonName[30:48]:      ReasonDisconnectRequired,
 	_ReasonLowerName[30:48]: ReasonDisconnectRequired,
 }
 
@@ -53,7 +56,7 @@ func ReasonString(s string) (Reason, error) {
 		return val, nil
 	}
 
-	if val, ok := _ReasonNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _ReasonLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to Reason values", s)

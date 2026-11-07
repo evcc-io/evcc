@@ -34,16 +34,32 @@ export type Template = {
 
 export type TemplateParamUsage = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
 
+// mirrors util/templates/paramtype.go
+export type TemplateParamType =
+  | "String"
+  | "Bool"
+  | "Choice"
+  | "ChargeModes"
+  | "Duration"
+  | "Float"
+  | "Int"
+  | "List"
+  | "Zones"
+  | "PricePerKWh"
+  | "Device";
+
 export type TemplateParam = {
   Name: string;
   Required: boolean;
   Advanced: boolean;
   Deprecated: boolean;
   Default?: string | number | boolean;
-  Type?: string;
+  Type?: TemplateParamType;
   Choice?: string[];
   Service?: string;
   Usages?: TemplateParamUsage[];
+  Class?: DeviceType;
+  Usage?: string; // context the nested device modal opens with, e.g. "heating"
 };
 
 export type ParamService = {
@@ -175,7 +191,8 @@ export async function loadServiceValues(path: string, retry?: (seconds: number) 
     });
     const retryAfter = Number(response.headers["retry-after"]);
     if (retryAfter > 0) retry?.(retryAfter);
-    return (response.data as ServiceValue[]) || [];
+    // 4xx bodies (e.g. a 404 for a path with an empty optional param) are not suggestions
+    return Array.isArray(response.data) ? (response.data as ServiceValue[]) : [];
   } catch {
     return [];
   }
@@ -209,6 +226,10 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
       if (!param.Service) {
         return null;
       }
+      // empty optional params (e.g. user/password) must not block the fetch
+      const optional = extractPlaceholders(param.Service).filter((name) =>
+        params.some((p) => p.Name === name && name !== "modbus" && !p.Required)
+      );
       const stringValues = (values: Record<string, any>): Record<string, string> =>
         Object.entries(values).reduce(
           (acc, [key, val]) => {
@@ -216,7 +237,7 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
               acc[key] = String(val);
             return acc;
           },
-          {} as Record<string, string>
+          Object.fromEntries(optional.map((name) => [name, ""])) as Record<string, string>
         );
 
       return {

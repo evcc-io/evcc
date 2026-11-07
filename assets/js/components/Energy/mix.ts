@@ -1,4 +1,4 @@
-import type { Flow, FlowSink, FlowSource } from "./types";
+import { OTHERS, type EntityFlows, type Flow, type FlowSink, type FlowSource } from "./types";
 
 export function sumEnergy(
   series: { data: { energy: number; returnEnergy: number }[] },
@@ -14,6 +14,24 @@ export function sinkCost(flows: Flow[], ...sinks: FlowSink[]): { cost: number; e
     cost: into.reduce((acc, f) => acc + (f.cost ?? 0), 0),
     energy: into.reduce((acc, f) => acc + (f.pricedEnergy ?? 0), 0),
   };
+}
+
+// average price of the priced energy that reached the sink, undefined without any
+export function sinkPrice(flows: Flow[], sink: FlowSink): number | undefined {
+  const { cost, energy } = sinkCost(flows, sink);
+  return energy ? cost / energy : undefined;
+}
+
+// the flows into one consumer or loadpoint, OTHERS being the rest of home
+export function entityFlows(
+  entities: EntityFlows[] | undefined,
+  group: EntityFlows["group"],
+  title: string
+): Flow[] {
+  const entity = entities?.find(
+    (e) => e.group === group && (e.virtual ? title === OTHERS : e.title === title)
+  );
+  return entity?.flows ?? [];
 }
 
 export interface SourceRow {

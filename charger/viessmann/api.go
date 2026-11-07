@@ -12,12 +12,23 @@ import (
 // Gateway is a Viessmann communication module.
 type Gateway struct {
 	Serial string `json:"serial"`
+	// GatewayType is the module model, e.g. VitoconnectOPTO2 or TCU301 (IoT API v2 Gateway schema)
+	GatewayType string `json:"gatewayType"`
+}
+
+// Address is the location of an installation (IoT API v2 Installation schema).
+type Address struct {
+	Street      string `json:"street"`
+	HouseNumber string `json:"houseNumber"`
+	City        string `json:"city"`
 }
 
 // Installation is a Viessmann installation including its gateways.
 type Installation struct {
-	ID       int       `json:"id"`
-	Gateways []Gateway `json:"gateways"`
+	ID          int       `json:"id"`
+	Description string    `json:"description"`
+	Address     Address   `json:"address"`
+	Gateways    []Gateway `json:"gateways"`
 }
 
 // API is the Viessmann IoT API client.

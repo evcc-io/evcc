@@ -79,7 +79,7 @@ func NewE3dcFromConfig(other map[string]any) (api.Meter, error) {
 
 var e3dcOnce sync.Once
 
-func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, externalPower bool, capacity, maxacpower func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (api.Meter, error) {
+func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, externalPower bool, capacity func() (float64, error), maxacpower func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64, error)) (api.Meter, error) {
 	e3dcOnce.Do(func() {
 		log := util.NewLogger("e3dc")
 		rscp.Log.SetLevel(logrus.DebugLevel)

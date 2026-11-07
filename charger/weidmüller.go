@@ -20,6 +20,7 @@ package charger
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"time"
 
@@ -47,7 +48,10 @@ const (
 	wmRegCurrents     = 406   // GD_ID_CM_CURRENT_PHASE UINT32
 	wmRegActivePower  = 418   // GD_ID_CM_ACTIVE_POWER UINT32
 	wmRegTotalEnergy  = 457   // GD_ID_CM_CONSUMED_ENERGY_TOTAL_WH UINT64
+	wmRegInstallLimit = 701   // GD_ID_AUT_INSTALLATION_CURRENT_LIMIT UINT16 (A)
+	wmRegUserLimit    = 702   // GD_ID_AUT_USER_CURRENT_LIMIT UINT16 (A)
 	wmRegCardId       = 1000  // GD_ID_RFID_TAG_UID CHAR[21]
+	wmRegLcmSlave     = 11000 // GD_ID_LCM_SLAVE UINT16, followed by GD_ID_LCM_MASTER UINT16
 	wmRegTimeout      = 11050 // GD_ID_LCM_TIMEOUT UINT32
 	wmRegCurrentLimit = 11052 // GD_ID_LCM_ACTUAL_CURRENT_LIMIT UINT16 (A)
 
@@ -93,6 +97,10 @@ func NewWeidmüller(ctx context.Context, settings modbus.TcpSettings) (api.Charg
 		curr: 6, // assume min current
 	}
 
+	if err := wb.setup(); err != nil {
+		return nil, fmt.Errorf("setup: %w", err)
+	}
+
 	// get initial state from charger
 	curr, err := wb.getCurrent()
 	if err != nil {
@@ -113,9 +121,43 @@ func NewWeidmüller(ctx context.Context, settings modbus.TcpSettings) (api.Charg
 	return wb, nil
 }
 
+// setup prepares the charger for current control via the load management current limit:
+// it requires satellite mode and is capped by the user current limit, which may have been
+// left at 0A by earlier implementations. Both settings are non-volatile and only written if required.
+func (wb *Weidmüller) setup() error {
+	b, err := wb.conn.ReadHoldingRegisters(wmRegLcmSlave, 2)
+	if err != nil {
+		return err
+	}
+
+	if binary.BigEndian.Uint16(b) == 0 {
+		if binary.BigEndian.Uint16(b[2:]) == 1 {
+			return errors.New("charger is configured as load management control box")
+		}
+
+		wb.log.INFO.Println("enabling load management satellite mode")
+		if _, err := wb.conn.WriteSingleRegister(wmRegLcmSlave, 1); err != nil {
+			return err
+		}
+	}
+
+	if b, err = wb.conn.ReadHoldingRegisters(wmRegInstallLimit, 2); err != nil {
+		return err
+	}
+
+	if limit := binary.BigEndian.Uint16(b); binary.BigEndian.Uint16(b[2:]) == 0 {
+		wb.log.INFO.Printf("releasing user current limit: %dA", limit)
+		_, err = wb.conn.WriteSingleRegister(wmRegUserLimit, limit)
+	}
+
+	return err
+}
+
 func (wb *Weidmüller) heartbeat(ctx context.Context, timeout time.Duration) {
+	// uint32 with least significant word first
 	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, wmTimeout)
+	binary.BigEndian.PutUint16(b[0:], wmTimeout&0xffff)
+	binary.BigEndian.PutUint16(b[2:], wmTimeout>>16)
 
 	for tick := time.Tick(timeout); ; {
 		select {

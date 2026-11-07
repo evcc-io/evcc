@@ -470,6 +470,13 @@ func (c *EEBus) clientsFor(ski string) []Device {
 	return c.clients[ski]
 }
 
+// HasDevices reports whether any configured device uses the given ski
+func (c *EEBus) HasDevices(ski string) bool {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	return len(c.clientsFor(ski)) > 0
+}
+
 // RegisterDevice subscribes a device to the remote service with given ski.
 // An empty ski subscribes to the device paired via the SHIP Pairing Service.
 func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {

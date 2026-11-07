@@ -161,3 +161,11 @@ func (v *Provider) ChargeEnable(enable bool) error {
 	}
 	return v.action(action)
 }
+
+var _ api.Resurrector = (*Provider)(nil)
+
+// WakeUp implements the api.Resurrector interface
+// the api has no wake-up call, starting charging wakes the vehicle
+func (v *Provider) WakeUp() error {
+	return v.action(ActionStart)
+}

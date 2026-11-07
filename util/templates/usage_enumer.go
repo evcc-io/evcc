@@ -35,17 +35,20 @@ func _UsageNoOp() {
 var _UsageValues = []Usage{UsageGrid, UsageCurtail, UsagePV, UsageBattery, UsageCharge, UsageAux}
 
 var _UsageNameToValueMap = map[string]Usage{
-	_UsageName[0:4]:        UsageGrid,
+	_UsageName[0:4]:   UsageGrid,
+	_UsageName[4:11]:  UsageCurtail,
+	_UsageName[11:13]: UsagePV,
+	_UsageName[13:20]: UsageBattery,
+	_UsageName[20:26]: UsageCharge,
+	_UsageName[26:29]: UsageAux,
+}
+
+var _UsageLowerNameToValueMap = map[string]Usage{
 	_UsageLowerName[0:4]:   UsageGrid,
-	_UsageName[4:11]:       UsageCurtail,
 	_UsageLowerName[4:11]:  UsageCurtail,
-	_UsageName[11:13]:      UsagePV,
 	_UsageLowerName[11:13]: UsagePV,
-	_UsageName[13:20]:      UsageBattery,
 	_UsageLowerName[13:20]: UsageBattery,
-	_UsageName[20:26]:      UsageCharge,
 	_UsageLowerName[20:26]: UsageCharge,
-	_UsageName[26:29]:      UsageAux,
 	_UsageLowerName[26:29]: UsageAux,
 }
 
@@ -65,7 +68,7 @@ func UsageString(s string) (Usage, error) {
 		return val, nil
 	}
 
-	if val, ok := _UsageNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _UsageLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to Usage values", s)

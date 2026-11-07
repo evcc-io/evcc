@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vite-plus/test";
-import { sinkCost, sourceBreakdown } from "./mix";
+import { entityFlows, sinkCost, sinkPrice, sourceBreakdown } from "./mix";
+import { OTHERS, type EntityFlows } from "./types";
 
 describe("sourceBreakdown", () => {
   test("scales the sink's split and prices to the entity", () => {
@@ -44,5 +45,32 @@ describe("sinkCost", () => {
       energy: 4,
     });
     expect(sinkCost([...flows], "export")).toEqual({ cost: 0, energy: 0 });
+  });
+});
+
+describe("entityFlows", () => {
+  const entities: EntityFlows[] = [
+    { group: "consumer", title: "Dryer", flows: [{ from: "grid", to: "home", energy: 1 }] },
+    { group: "consumer", title: "", virtual: true, flows: [{ from: "pv", to: "home", energy: 2 }] },
+    { group: "loadpoint", title: "Dryer", flows: [{ from: "pv", to: "loadpoint", energy: 3 }] },
+  ];
+
+  test("finds the entity by group and title, others by the virtual flag", () => {
+    expect(entityFlows(entities, "consumer", "Dryer")[0]?.energy).toBe(1);
+    expect(entityFlows(entities, "loadpoint", "Dryer")[0]?.energy).toBe(3);
+    expect(entityFlows(entities, "consumer", OTHERS)[0]?.energy).toBe(2);
+    expect(entityFlows(entities, "consumer", "Oven")).toEqual([]);
+    expect(entityFlows(undefined, "consumer", "Dryer")).toEqual([]);
+  });
+});
+
+describe("sinkPrice", () => {
+  test("cost over priced energy, undefined without any", () => {
+    const flows = [
+      { from: "pv", to: "home", energy: 4, cost: 0.2, pricedEnergy: 2 },
+      { from: "grid", to: "home", energy: 2, cost: 0.6, pricedEnergy: 2 },
+    ] as const;
+    expect(sinkPrice([...flows], "home")).toBeCloseTo(0.2);
+    expect(sinkPrice([...flows], "loadpoint")).toBeUndefined();
   });
 });

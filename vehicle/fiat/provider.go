@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -12,6 +13,8 @@ import (
 )
 
 const refreshTimeout = 2 * time.Minute
+
+var errNotPluggedIn = errors.New("vehicle not plugged in")
 
 type Provider struct {
 	statusG     func() (StatusResponse, error)
@@ -49,12 +52,14 @@ func NewProvider(api *API, vin, pin string, expiry, cache time.Duration) *Provid
 
 func (v *Provider) deepRefresh() error {
 	res, err := v.action("ev", "DEEPREFRESH")
+
+	// pin authentication errors leave the response empty
+	if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() == http.StatusForbidden && strings.Contains(res.DebugMsg, "not plugged-in") {
+		return errNotPluggedIn
+	}
+
 	if err == nil && res.ResponseStatus != "pending" {
 		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
-	} else {
-		if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() == http.StatusForbidden {
-			err = nil
-		}
 	}
 	return err
 }
@@ -66,9 +71,20 @@ func (v *Provider) status(statusG func() (StatusResponse, error)) (StatusRespons
 	if err == nil {
 		// result expired?
 		if res.Timestamp.Add(v.expiry).Before(time.Now()) {
+			// fiat rejects deep refresh when the last upload reported the vehicle as unplugged
+			if res.EvInfo != nil && !res.EvInfo.Battery.PlugInStatus {
+				v.refreshTime = time.Time{}
+				res.unplugged = true
+				return res, nil
+			}
+
 			// start refresh
 			if v.refreshTime.IsZero() {
 				if err = v.deepRefresh(); err != nil {
+					if errors.Is(err, errNotPluggedIn) {
+						res.unplugged = true
+						return res, nil
+					}
 					return res, err
 				}
 
@@ -142,6 +158,10 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	res, err := v.statusG()
 	if err == nil {
+		if res.unplugged {
+			return status, nil
+		}
+
 		if res.EvInfo == nil {
 			return api.StatusNone, api.ErrNotAvailable
 		}
