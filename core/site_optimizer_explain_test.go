@@ -45,10 +45,9 @@ func TestExplainOptimizerResult(t *testing.T) {
 	defer srv.Close()
 
 	t.Setenv("OPTIMIZER_URI", srv.URL)
-	sponsor.Subject = "sponsor"
+	sponsor.SetSubjectForTest(t, "sponsor")
 	sponsor.SetToken("token")
 	t.Cleanup(func() {
-		sponsor.Subject = ""
 		sponsor.SetToken("")
 	})
 
@@ -58,13 +57,13 @@ func TestExplainOptimizerResult(t *testing.T) {
 	assert.EqualError(t, err, "no optimizer result")
 	assert.EqualError(t, site.ExplainFeedback(context.Background(), "up", ""), "nothing explained yet")
 
-	site.optimizerResult = &optimizerResult{
+	site.optimizer.result = &optimizerResult{
 		Req: optimizer.OptimizationInput{TimeSeries: optimizer.TimeSeries{Dt: []int{3600}}},
 		Res: optimizer.OptimizationResult{Status: optimizer.Optimal},
 	}
 
 	require.NoError(t, site.ExplainOptimizerResult(context.Background(), "de"))
-	first := site.explained.Explanation
+	first := site.optimizer.explained.Explanation
 	assert.Equal(t, "because", first.Text)
 	assert.False(t, first.Created.IsZero())
 	assert.Empty(t, auth, "sponsor token must not be sent to a custom optimizer")
@@ -75,7 +74,7 @@ func TestExplainOptimizerResult(t *testing.T) {
 
 	// same plan and language is served from cache, with the time it was written
 	require.NoError(t, site.ExplainOptimizerResult(context.Background(), "de"))
-	assert.Equal(t, first, site.explained.Explanation)
+	assert.Equal(t, first, site.optimizer.explained.Explanation)
 	assert.Equal(t, 1, calls)
 
 	// feedback carries the explained plan and the explanation
@@ -92,7 +91,7 @@ func TestExplainOptimizerResult(t *testing.T) {
 	assert.Equal(t, 2, calls)
 
 	// new plan asks again, errors are not cached
-	site.optimizerResult = &optimizerResult{
+	site.optimizer.result = &optimizerResult{
 		Req: optimizer.OptimizationInput{TimeSeries: optimizer.TimeSeries{Dt: []int{900}}},
 		Res: optimizer.OptimizationResult{Status: optimizer.Optimal},
 	}
