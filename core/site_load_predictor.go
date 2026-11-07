@@ -42,7 +42,14 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		site.log.WARN.Printf("home profile: %v, using all days", err)
 	}
 
-	base, err := col.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -homeProfileDays), exclude...)
+	from := now.BeginningOfDay().AddDate(0, 0, -homeProfileDays)
+
+	base, err := col.EnergyProfile(from, exclude...)
+	if err != nil && len(exclude) > 0 {
+		// excluded days may hold the only readings of a slot
+		site.log.DEBUG.Printf("home profile: %v, using all days", err)
+		base, err = col.EnergyProfile(from)
+	}
 	if err != nil {
 		return nil, err
 	}

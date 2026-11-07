@@ -35,7 +35,7 @@ const (
 type dayEnergy struct {
 	day    string      // local date YYYY-MM-DD
 	hours  [24]float64 // energy per hour of day
-	slots  int         // persisted slots
+	slots  int         // persisted slots with energy
 	broken bool        // contains recovered downtime energy
 }
 
@@ -90,17 +90,13 @@ func classifyDays(days []dayEnergy) map[string]DayClass {
 	typical := median(lo.Map(complete, func(d dayEnergy, _ int) float64 { return d.total() }))
 
 	for _, d := range complete {
-		if base <= 0 || typical <= 0 {
-			res[d.day] = DayNormal
-			continue
-		}
-
 		total := d.total()
 
+		// absence needs a positive base load, outliers a positive typical day
 		switch {
-		case total < absentDayFactor*24*base && d.peak() < absentPeakFactor*base:
+		case base > 0 && total < absentDayFactor*24*base && d.peak() < absentPeakFactor*base:
 			res[d.day] = DayAbsent
-		case total > outlierDayFactor*typical:
+		case typical > 0 && total > outlierDayFactor*typical:
 			res[d.day] = DayOutlier
 		default:
 			res[d.day] = DayNormal
@@ -122,7 +118,7 @@ func dailyEnergy(entity entity, from, to time.Time) ([]dayEnergy, error) {
 			CAST(strftime('%Y%m%d', ts, 'unixepoch', 'localtime') AS INTEGER) AS day,
 			CAST(strftime('%H', ts, 'unixepoch', 'localtime') AS INTEGER) AS hour,
 			SUM(COALESCE(energy, 0)),
-			COUNT(*),
+			COUNT(energy),
 			MAX(COALESCE(recovered, 0))
 		FROM meters
 		WHERE meter = ? AND ts >= ? AND ts < ?

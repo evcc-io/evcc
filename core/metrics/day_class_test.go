@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -98,4 +100,44 @@ func TestClassifyDaysEmpty(t *testing.T) {
 	// no base load: nothing to compare against
 	day := time.Now().Format(time.DateOnly)
 	assert.Equal(t, map[string]DayClass{day: DayNormal}, classifyDays([]dayEnergy{testDay(day, 0, 0, 0)}))
+}
+
+func TestClassifyDaysOutlierWithoutBaseLoad(t *testing.T) {
+	date := func(i int) string {
+		return time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local).AddDate(0, 0, i).Format(time.DateOnly)
+	}
+
+	// no night consumption: absence cannot be detected, outliers still are
+	var days []dayEnergy
+	for i := range 7 {
+		days = append(days, testDay(date(i), 0, 0.5, 1))
+	}
+	days = append(days, testDay(date(10), 0, 2, 5))
+
+	res := classifyDays(days)
+	assert.Equal(t, DayNormal, res[date(0)])
+	assert.Equal(t, DayOutlier, res[date(10)])
+}
+
+func TestDailyEnergyIgnoresNullReadings(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	entity := entity{Id: 2, Name: "foo"}
+	require.NoError(t, db.Instance.FirstOrCreate(&entity).Error)
+
+	bod := time.Date(2026, 1, 14, 0, 0, 0, 0, time.Local)
+	for i, ts := 0, bod; ts.Before(bod.AddDate(0, 0, 1)); i, ts = i+1, ts.Add(tariff.SlotDuration) {
+		var energy any = 0.1
+		if i < 4 {
+			energy = nil // unknown readings
+		}
+		require.NoError(t, db.Instance.Exec(`INSERT INTO meters (meter, ts, energy, return_energy) VALUES (?, ?, ?, 0)`, entity.Id, ts.Unix(), energy).Error)
+	}
+
+	days, err := dailyEnergy(entity, bod, bod.AddDate(0, 0, 1))
+	require.NoError(t, err)
+	require.Len(t, days, 1)
+	assert.Equal(t, 92, days[0].slots)
+	assert.False(t, days[0].complete(), "day with unknown readings is incomplete")
 }

@@ -259,3 +259,47 @@ func TestHomeProfileExcludesVacation(t *testing.T) {
 	require.NotNil(t, site.homeExclusion)
 	assert.Len(t, site.homeExclusion.exclude, 21)
 }
+
+func TestHomeProfileFallsBackToAllDays(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, metrics.SetupSchema())
+
+	col, err := metrics.NewCollector(metrics.Home, metrics.Home, metrics.Home)
+	require.NoError(t, err)
+
+	var meter int
+	require.NoError(t, db.Instance.Raw(`SELECT id FROM entities WHERE "group" = ? AND name = ?`, metrics.Home, metrics.Home).Scan(&meter).Error)
+
+	bod := now.BeginningOfDay()
+
+	// 8 weeks: 3 weeks vacation ending yesterday, normal days before without readings between 3 and 4 am
+	for day := -homeClassifyDays; day < 0; day++ {
+		for ts := bod.AddDate(0, 0, day); ts.Before(bod.AddDate(0, 0, day+1)); ts = ts.Add(tariff.SlotDuration) {
+			energy := 0.1 // kWh per slot
+			switch {
+			case day >= -21:
+				energy = 0.09
+			case ts.Hour() == 3:
+				continue
+			case ts.Hour() == 18:
+				energy = 0.5
+			}
+
+			require.NoError(t, db.Instance.Exec(`INSERT INTO meters (meter, ts, energy, return_energy) VALUES (?, ?, ?, 0)`, meter, ts.Unix(), energy).Error)
+		}
+	}
+
+	site := &Site{
+		log:        util.NewLogger("foo"),
+		collectors: map[string]*metrics.Collector{metrics.Home: col},
+	}
+
+	// the excluded vacation days hold the only readings between 3 and 4 am
+	ex, err := site.homeDayExclusion(col, bod.Add(time.Hour))
+	require.NoError(t, err)
+	require.Len(t, ex, 21)
+
+	res, err := site.homeProfile(96)
+	require.NoError(t, err)
+	assert.Len(t, res, 96)
+}
