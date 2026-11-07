@@ -76,10 +76,6 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ba
 	implement.May(m, implement.BatteryCapacity(batteryCapacity.Decorator()))
 	implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits.Decorator()))
 
-	if m.usage == "grid" && essType != lgpcs.LgEss15 {
-		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
-	}
-
 	if usage == "battery" {
 		implement.Has(m, implement.Battery(m.batterySoc))
 		implement.May(m, implement.BatterySocLimiter(batterySocLimits.Decorator()))
@@ -106,21 +102,6 @@ func (m *LgEss) CurrentPower() (float64, error) {
 		return data.GetPvTotalPower(), nil
 	case "battery":
 		return data.GetBatConvPower(), nil
-	default:
-		return 0, fmt.Errorf("invalid usage: %s", m.usage)
-	}
-}
-
-// totalEnergy implements the api.MeterEnergy interface
-func (m *LgEss) totalEnergy() (float64, error) {
-	data, err := m.conn.Data()
-	if err != nil {
-		return 0, err
-	}
-
-	switch m.usage {
-	case "grid":
-		return data.GetCurrentGridFeedInEnergy() / 1e3, nil
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
 	}

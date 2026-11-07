@@ -69,6 +69,7 @@
 
 					<!-- a new explanation remounts the card, which starts a new vote -->
 					<PlanExplanation
+						v-if="evopt.hosted"
 						:key="explained?.created"
 						class="mb-4"
 						:sponsor="isSponsor"

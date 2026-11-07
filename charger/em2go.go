@@ -49,7 +49,6 @@ const (
 	em2GoRegErrorCode       = 4   // Uint16 RO ENUM
 	em2GoRegCurrents        = 6   // Uint16 RO 0.1A
 	em2GoRegPower           = 12  // Uint32 RO 1W
-	em2GoRegEnergy          = 28  // Uint32 RO 0.1KWh
 	em2GoRegMaxCurrent      = 32  // Uint16 RO 0.1A
 	em2GoRegMinCurrent      = 34  // Uint16 RO 0.1A
 	em2GoRegCableMaxCurrent = 36  // Uint16 RO 0.1A
@@ -65,6 +64,9 @@ const (
 
 	//removed due to unreliable session energy when pausing or switching phases
 	//em2GoRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
+
+	//removed since total energy only updates every 10min by adding session energy, evcc integrates power instead
+	//em2GoRegEnergy          = 28  // Uint32 RO 0.1KWh
 )
 
 func init() {
@@ -286,17 +288,8 @@ func (wb *Em2Go) CurrentPower() (float64, error) {
 	return rs485.RTUUint32ToFloat64(b), nil
 }
 
-var _ api.MeterEnergy = (*Em2Go)(nil)
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Em2Go) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(em2GoRegEnergy, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return rs485.RTUUint32ToFloat64(b) / 10, nil
-}
+// api.MeterEnergy is not implemented: the total energy register only updates every 10min and
+// loses energy when the session counter resets on phase switches, so evcc integrates CurrentPower instead
 
 // getPhaseValues returns 3 register values offset by 2
 func (wb *Em2Go) getPhaseValues(reg uint16) (float64, float64, float64, error) {

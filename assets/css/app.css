@@ -855,6 +855,13 @@ input[list]::-webkit-list-button {
 	}
 }
 
+html.embedded {
+	--safe-area-inset-top: 0px;
+	--safe-area-inset-bottom: 0px;
+	--safe-area-inset-left: 0px;
+	--safe-area-inset-right: 0px;
+}
+
 html.app .hide-in-app {
 	display: none !important;
 }
@@ -863,6 +870,12 @@ html.app .hide-in-app {
 	padding: max(1rem, var(--safe-area-inset-top)) var(--safe-area-inset-right)
 		calc(var(--safe-area-inset-bottom) + var(--bottom-space)) var(--safe-area-inset-left);
 	position: relative;
+}
+
+/* px-4 is !important and would drop the side insets */
+.safe-area-inset.px-4 {
+	padding-left: calc(1.5rem + var(--safe-area-inset-left)) !important;
+	padding-right: calc(1.5rem + var(--safe-area-inset-right)) !important;
 }
 
 .safe-area-inset::before {
@@ -878,9 +891,14 @@ html.app .hide-in-app {
 	background-color: var(--evcc-background);
 }
 
+html.app .modal {
+	padding-left: var(--safe-area-inset-left);
+	padding-right: var(--safe-area-inset-right);
+}
+
 html.app .modal-dialog {
-	margin-top: var(--safe-area-inset-top);
-	margin-bottom: var(--safe-area-inset-bottom);
+	margin-top: max(var(--bs-modal-margin), var(--safe-area-inset-top));
+	margin-bottom: max(var(--bs-modal-margin), var(--safe-area-inset-bottom));
 }
 
 .btn-neutral {
@@ -1053,6 +1071,20 @@ input::-webkit-date-and-time-value {
 	transition:
 		opacity var(--evcc-transition-fast) ease var(--evcc-transition-fast),
 		visibility var(--evcc-transition-fast) ease var(--evcc-transition-fast);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		animation: none !important;
+	}
+}
+
+/* shopicons are inline and size by font, component icons are block: same 24px row height for both */
+.icon-row {
+	font-size: 24px;
+	line-height: 0;
 }
 
 /* clearance so overflow-hidden containers don't clip focus rings */

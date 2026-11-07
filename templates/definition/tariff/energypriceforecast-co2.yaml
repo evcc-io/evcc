@@ -10,7 +10,7 @@ requirements:
     en: "5 days prognosis [energypriceforecast.eu](https://energypriceforecast.eu/en/evcc-electricity-price-co2-forecast/)"
   evcc: ["skiptest"]
 group: co2
-countries: ["DE", "NL", "BE", "DK", "FR", "AT", "CZ", "PL", "FI", "SE", "NO"]
+countries: ["DE", "NL", "BE", "DK", "FR", "AT", "CZ", "PL", "FI", "SE", "NO", "GB"]
 params:
   - name: region
     example: DE
@@ -36,6 +36,7 @@ params:
         "NO3",
         "NO4",
         "NO5",
+        "GB",
       ]
     required: true
   - name: horizon

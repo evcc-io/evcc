@@ -41,11 +41,12 @@ func (m *RCT) takeRSocStrategy() *uint8 {
 }
 
 // setRSocStrategyIfAbsent saves strategy unless a value is already saved.
+// External is never saved since it is evcc's own override (#35719).
 func (m *RCT) setRSocStrategyIfAbsent(strategy uint8) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if m.rSocStrategy == nil {
+	if m.rSocStrategy == nil && strategy != rct.SOCTargetExternal {
 		m.rSocStrategy = &strategy
 	}
 }
@@ -55,6 +56,22 @@ func (m *RCT) hasRSocStrategy() bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.rSocStrategy != nil
+}
+
+// socStrategyToRestore returns the soc strategy to write on BatteryNormal, or nil.
+// Without a saved value only External is reset to Internal, keeping user choices (#35719).
+func (m *RCT) socStrategyToRestore(current func() (uint8, error)) (*uint8, error) {
+	if s := m.takeRSocStrategy(); s != nil {
+		return s, nil
+	}
+
+	s, err := current()
+	if err != nil || s != rct.SOCTargetExternal {
+		return nil, err
+	}
+
+	internal := rct.SOCTargetInternal
+	return &internal, nil
 }
 
 var (
@@ -205,7 +222,14 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 			switch mode {
 			case api.BatteryNormal:
-				if strategy := m.takeRSocStrategy(); strategy != nil {
+				strategy, err := m.socStrategyToRestore(func() (uint8, error) {
+					return m.queryUint8(rct.PowerMngSocStrategy)
+				})
+				if err != nil {
+					return err
+				}
+
+				if strategy != nil {
 					eg.Go(func() error {
 						return m.conn.Write(rct.PowerMngSocStrategy, []byte{*strategy})
 					})
@@ -252,6 +276,11 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				})
 
 				eg.Go(func() error {
+					// can't go lower than 5%
+					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(0.05))
+				})
+
+				eg.Go(func() error {
 					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
 				})
 
@@ -271,6 +300,10 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			case api.BatteryDischarge:
 				eg.Go(func() error {
 					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(batteryPowerLimits.MaxDischargePower))
+				})
+
+				eg.Go(func() error {
+					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
 				})
 
 				eg.Go(func() error {

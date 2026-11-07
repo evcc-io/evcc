@@ -4,6 +4,8 @@ products:
     description:
       generic: AC EV Charger (Modbus)
 capabilities: ["mA", "rfid", "meter", "1p3p"]
+discovery:
+  mdns: ["_modbus._tcp:EVC-*"]
 requirements:
   description:
     de: In der Fox Switch App muss der Arbeitsmodus auf "Modbus TCP" gestellt werden. Wie eine Ladesession beginnt, bestimmt der in der Wallbox eingestellte Betriebsmodus - entweder per App bzw. RFID-Karte oder automatisch beim Anstecken starten.

@@ -48,55 +48,55 @@ render: |
   soc:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
-    jq: .response.response.charge_state.battery_level
+    jq: if .response.reason == "vehicle is sleeping" then "ErrAsleep" else (.response.response.charge_state.battery_level) end
     timeout: {{ .timeout }}
     cache: 1s
   getmaxcurrent:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
-    jq: .response.response.charge_state.charge_amps
+    jq: if .response.reason == "vehicle is sleeping" then "ErrAsleep" else (.response.response.charge_state.charge_amps) end
     timeout: {{ .timeout }}
     cache: 1s
   limitsoc:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
-    jq: .response.response.charge_state.charge_limit_soc
+    jq: if .response.reason == "vehicle is sleeping" then "ErrAsleep" else (.response.response.charge_state.charge_limit_soc) end
     timeout: {{ .timeout }}
     cache: 1s
   range:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
-    jq: .response.response.charge_state.battery_range
+    jq: if .response.reason == "vehicle is sleeping" then "ErrAsleep" else (.response.response.charge_state.battery_range) end
     scale: 1.60934
     timeout: {{ .timeout }}
     cache: 1s
   chargedenergy:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
-    jq: .response.response.charge_state.charge_energy_added
+    jq: if .response.reason == "vehicle is sleeping" then "ErrAsleep" else (.response.response.charge_state.charge_energy_added) end
     timeout: {{ .timeout }}
     cache: 1s
   climater:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=climate_state
-    jq: .response.response.climate_state.is_preconditioning
+    jq: if .response.reason == "vehicle is sleeping" then "ErrAsleep" else (.response.response.climate_state.is_preconditioning) end
     timeout: {{ .timeout }}
     cache: 1s
   odometer:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=drive_state
-    jq: .response.response.drive_state.odometer | if . > 0 then . else error("odometer not available") end
+    jq: if .response.reason == "vehicle is sleeping" then "ErrAsleep" else (.response.response.drive_state.odometer | if . > 0 then . else error("odometer not available") end) end
     scale: 1.60934
     timeout: {{ .timeout }}
     cache: 1s
   status:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
-    jq: (if (.response.response.charge_state.charging_state == "Charging") then "C"
+    jq: if .response.reason == "vehicle is sleeping" then "ErrAsleep" else (if (.response.response.charge_state.charging_state == "Charging") then "C"
       elif (.response.response.charge_state.charging_state == "Stopped") then "B"
       elif (.response.response.charge_state.charging_state == "NoPower") then "B"
       elif (.response.response.charge_state.charging_state == "Complete") then "B" 
-      else "A" end)
+      else "A" end) end
     timeout: {{ .timeout }}
     cache: 1s
   {{ include "features" . }}
