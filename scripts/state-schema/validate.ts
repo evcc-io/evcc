@@ -6,7 +6,7 @@ import addFormats from "ajv-formats";
 const STATE_SCHEMAS_PATH = "server/openapi.state.yaml";
 
 // intentionally undocumented experimental structures
-const IGNORE = new Set(["$.evopt", "$.evopt-batteries"]);
+const IGNORE = new Set(["$.evopt", "$.evopt-batteries", "$.evopt-explanation"]);
 
 type AnySchema = any;
 

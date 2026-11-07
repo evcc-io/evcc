@@ -33,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -64,7 +65,7 @@ type Site struct {
 
 	// configuration
 	Title         string       `mapstructure:"title"`         // UI title
-	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
+	Voltage       float64      `mapstructure:"voltage"`       // Deprecated: ignored, the nominal voltage is fixed
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
 	CurtailersRef []string     `mapstructure:"curtailers"`    // Curtailment device references
@@ -114,17 +115,13 @@ type Site struct {
 	// cached measurement state, guarded by RWMutex
 	siteState
 
-	batteryMaxDischargePower *float64                    // Max discharge power of all battery meters
-	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
-	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
-	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
-	batteryModeApplied       map[string]api.BatteryMode  // Battery mode last applied per battery meter
-	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
-	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
-	lastOptimizerSolve       *optimizerSolve             // last successful solve, reapplied to newer slots by the control cycle
+	batteryMaxDischargePower *float64                   // Max discharge power of all battery meters
+	batteryMode              api.BatteryMode            // Battery mode (runtime only, not persisted)
+	batteryModeExternal      api.BatteryMode            // Battery mode (external, runtime only, not persisted)
+	batteryModeExternalTimer time.Time                  // Battery mode timer for external control
+	batteryModeApplied       map[string]api.BatteryMode // Battery mode last applied per battery meter
 
-	optimizerMu      sync.Mutex // guards optimizer runs
-	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
+	optimizer optimizerState // optimizer runs, cached results and suggestions
 
 	solarScaleCached func() (float64, error) // util.Cached wrapper around querySolarScale
 }
@@ -168,7 +165,10 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	site.restoreMetersAndTitle()
 
 	// TODO title
-	Voltage = site.Voltage
+	if site.Voltage != 0 && site.Voltage != grid.Voltage {
+		site.log.WARN.Printf("voltage %.0fV is no longer supported, using %.0fV", site.Voltage, grid.Voltage)
+	}
+	grid.SetNoNeutral(site.GetGridConnection() == grid.Connection3P3W)
 
 	return site, nil
 }
@@ -253,7 +253,10 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			}
 
 			// NOTE: this requires stopSession to respect async access
-			shutdown.Register(lp.stopSession)
+			shutdown.Register(func() {
+				lp.finalizeSessionEnergy()
+				lp.stopSession()
+			})
 		}
 	}
 
@@ -400,7 +403,6 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 func NewSite() *Site {
 	site := &Site{
 		log:        util.NewLogger("site"),
-		Voltage:    230, // V
 		collectors: make(map[string]*metrics.Collector),
 	}
 
@@ -672,6 +674,11 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 			Icon:  props.Icon,
 		}
 
+		// disabled at runtime, skipped until restart
+		if meter == nil {
+			return
+		}
+
 		// power
 		var b bytes.Buffer
 		power, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff())
@@ -788,6 +795,7 @@ func (site *Site) updateBatteryMeters() {
 	}
 
 	mm := site.collectMeters("battery", site.batteryMeters)
+	prev := site.state().battery.Devices
 
 	var maxDischargePower float64
 	for i, dev := range site.batteryMeters {
@@ -800,27 +808,45 @@ func (site *Site) updateBatteryMeters() {
 				mm[i].Soc = new(batSoc)
 
 				if bc, ok := api.Cap[api.BatteryCapacity](meter); ok {
-					mm[i].Capacity = new(bc.Capacity())
+					if capacity, err := bc.Capacity(); err == nil {
+						mm[i].Capacity = new(capacity)
+					} else {
+						site.log.ERROR.Printf("battery %d capacity: %v", i+1, err)
+					}
 				}
 
 				site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
 			} else {
 				site.log.ERROR.Printf("battery %d soc: %v", i+1, err)
+
+				// keep the last known soc and capacity, a failed read would otherwise count as 0%
+				if i < len(prev) && prev[i].Soc != nil {
+					mm[i].Soc, mm[i].Capacity = prev[i].Soc, prev[i].Capacity
+				}
+			}
+		}
+
+		// battery soc limits, read once per cycle for mode control and optimizer
+		if bsl, ok := api.Cap[api.BatterySocLimiter](meter); ok {
+			if minSoc, maxSoc, err := bsl.GetSocLimits(); err == nil {
+				mm[i].MinSoc = new(minSoc)
+				mm[i].MaxSoc = new(maxSoc)
+			} else {
+				site.log.ERROR.Printf("battery %d soc limits: %v", i+1, err)
 			}
 		}
 
 		if bpl, ok := api.Cap[api.BatteryPowerLimiter](meter); ok && maxDischargePower >= 0 {
-			var empty bool
-			if bsl, ok := api.Cap[api.BatterySocLimiter](meter); ok {
-				minSoc, _ := bsl.GetSocLimits()
-				if mm[i].Soc != nil && *mm[i].Soc <= minSoc {
-					empty = true
-				}
-			}
+			empty := mm[i].Soc != nil && mm[i].MinSoc != nil && *mm[i].Soc <= *mm[i].MinSoc
 
 			if !empty {
-				_, discharge := bpl.GetPowerLimits()
-				maxDischargePower += discharge
+				_, discharge, err := bpl.GetPowerLimits()
+				if err != nil {
+					site.log.ERROR.Printf("battery %d power limits: %v", i+1, err)
+					maxDischargePower = -1 // unknown limit disables the cap
+				} else {
+					maxDischargePower += discharge
+				}
 			}
 		} else {
 			maxDischargePower = -1 // any battery without a limit disables the cap
@@ -1016,6 +1042,9 @@ func (site *Site) updateGridMeter() error {
 	mm := types.Measurement{Name: site.gridMeter.Config().Name}
 
 	meter := site.gridMeter.Instance()
+	if meter == nil {
+		return errors.New("grid meter disabled, restart required")
+	}
 
 	if res, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff()); err == nil {
 		mm.Power = res
@@ -1268,7 +1297,9 @@ func (site *Site) loadpointSitePower(lp updater, res sitePowerResult) float64 {
 		sitePower += res.priorityAdjustment
 	}
 
-	if suggestion != nil && suggestion.Action != actionCharge && res.state.battery.Power < 0 {
+	// a charge next to planned battery charging gives the battery priority, too: the PV loop
+	// would otherwise take the battery's charge power and invert the optimizer's PV split
+	if suggestion != nil && (suggestion.Action != actionCharge || suggestion.BatteryCharge > suggestionThreshold) && res.state.battery.Power < 0 {
 		sitePower -= res.state.battery.Power + res.state.excessDCPower
 	}
 
@@ -1351,7 +1382,6 @@ func (site *Site) update(lp updater) {
 		batteryGridDischargeActive = site.batteryGridDischargeActive(feedinRate)
 	}
 	site.publish(keys.BatteryGridDischargeActive, batteryGridDischargeActive)
-	site.publish(keys.BatteryGridDischargeActive, batteryGridDischargeActive)
 
 	site.updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate)
 
@@ -1408,7 +1438,7 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 	site.publishTariffs(greenShareHome, greenShareLoadpoints)
 
 	if telemetry.Enabled() && totalChargePower > standbyPower {
-		go telemetry.UpdateChargeProgress(site.log, totalChargePower, greenShareLoadpoints)
+		go telemetry.UpdateChargeProgress(site.log, totalChargePower, greenShareLoadpoints, len(site.activeLoadpoints()))
 	}
 }
 
@@ -1442,6 +1472,8 @@ func (site *Site) prepare() {
 	site.publish(keys.Country, site.GetCountry())
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
+	site.publish(keys.Voltage, grid.Voltage)
+	site.publish(keys.GridConnection, site.GetGridConnection())
 	site.publish(keys.Grid, api.Meter(nil))
 	site.publish(keys.Pv, []api.Meter{})
 	site.publish(keys.Aux, []api.Meter{})
@@ -1507,7 +1539,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 		}
 	}()
 
-	site.lpUpdateChan = make(chan *Loadpoint, 1) // 1 capacity to avoid deadlock
+	site.lpUpdateChan = make(chan *Loadpoint, max(1, len(site.loadpoints))) // room for every loadpoint, see requestUpdate
 
 	site.prepare()
 
@@ -1586,12 +1618,23 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 
 	site.update(<-loadpointChan) // start immediately
 
+	// the loop below updates one loadpoint per interval, don't let the others wait for their turn after startup
+	for _, lp := range startupOrder(site.activeLoadpoints()) {
+		select {
+		case <-stopC:
+			return
+		default:
+		}
+
+		site.update(lp)
+	}
+
 	for tick := time.Tick(interval); ; {
 		select {
 		case <-tick:
 			site.update(<-loadpointChan)
 		case lp := <-site.lpUpdateChan:
-			site.update(lp)
+			site.update(lp.dequeued())
 		case <-stopC:
 			return
 		}

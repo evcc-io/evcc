@@ -50,45 +50,48 @@ func _ClassNoOp() {
 var _ClassValues = []Class{ClassConfigFile, ClassMeter, ClassCharger, ClassVehicle, ClassTariff, ClassCircuit, ClassSite, ClassMqtt, ClassDatabase, ClassModbusProxy, ClassEEBus, ClassJavascript, ClassGo, ClassHEMS, ClassSHM, ClassInflux, ClassMessenger, ClassSponsorship, ClassLoadpoint, ClassCurtailer}
 
 var _ClassNameToValueMap = map[string]Class{
-	_ClassName[0:10]:         ClassConfigFile,
+	_ClassName[0:10]:    ClassConfigFile,
+	_ClassName[10:15]:   ClassMeter,
+	_ClassName[15:22]:   ClassCharger,
+	_ClassName[22:29]:   ClassVehicle,
+	_ClassName[29:35]:   ClassTariff,
+	_ClassName[35:42]:   ClassCircuit,
+	_ClassName[42:46]:   ClassSite,
+	_ClassName[46:50]:   ClassMqtt,
+	_ClassName[50:58]:   ClassDatabase,
+	_ClassName[58:69]:   ClassModbusProxy,
+	_ClassName[69:74]:   ClassEEBus,
+	_ClassName[74:84]:   ClassJavascript,
+	_ClassName[84:86]:   ClassGo,
+	_ClassName[86:90]:   ClassHEMS,
+	_ClassName[90:93]:   ClassSHM,
+	_ClassName[93:99]:   ClassInflux,
+	_ClassName[99:108]:  ClassMessenger,
+	_ClassName[108:119]: ClassSponsorship,
+	_ClassName[119:128]: ClassLoadpoint,
+	_ClassName[128:137]: ClassCurtailer,
+}
+
+var _ClassLowerNameToValueMap = map[string]Class{
 	_ClassLowerName[0:10]:    ClassConfigFile,
-	_ClassName[10:15]:        ClassMeter,
 	_ClassLowerName[10:15]:   ClassMeter,
-	_ClassName[15:22]:        ClassCharger,
 	_ClassLowerName[15:22]:   ClassCharger,
-	_ClassName[22:29]:        ClassVehicle,
 	_ClassLowerName[22:29]:   ClassVehicle,
-	_ClassName[29:35]:        ClassTariff,
 	_ClassLowerName[29:35]:   ClassTariff,
-	_ClassName[35:42]:        ClassCircuit,
 	_ClassLowerName[35:42]:   ClassCircuit,
-	_ClassName[42:46]:        ClassSite,
 	_ClassLowerName[42:46]:   ClassSite,
-	_ClassName[46:50]:        ClassMqtt,
 	_ClassLowerName[46:50]:   ClassMqtt,
-	_ClassName[50:58]:        ClassDatabase,
 	_ClassLowerName[50:58]:   ClassDatabase,
-	_ClassName[58:69]:        ClassModbusProxy,
 	_ClassLowerName[58:69]:   ClassModbusProxy,
-	_ClassName[69:74]:        ClassEEBus,
 	_ClassLowerName[69:74]:   ClassEEBus,
-	_ClassName[74:84]:        ClassJavascript,
 	_ClassLowerName[74:84]:   ClassJavascript,
-	_ClassName[84:86]:        ClassGo,
 	_ClassLowerName[84:86]:   ClassGo,
-	_ClassName[86:90]:        ClassHEMS,
 	_ClassLowerName[86:90]:   ClassHEMS,
-	_ClassName[90:93]:        ClassSHM,
 	_ClassLowerName[90:93]:   ClassSHM,
-	_ClassName[93:99]:        ClassInflux,
 	_ClassLowerName[93:99]:   ClassInflux,
-	_ClassName[99:108]:       ClassMessenger,
 	_ClassLowerName[99:108]:  ClassMessenger,
-	_ClassName[108:119]:      ClassSponsorship,
 	_ClassLowerName[108:119]: ClassSponsorship,
-	_ClassName[119:128]:      ClassLoadpoint,
 	_ClassLowerName[119:128]: ClassLoadpoint,
-	_ClassName[128:137]:      ClassCurtailer,
 	_ClassLowerName[128:137]: ClassCurtailer,
 }
 
@@ -122,7 +125,7 @@ func ClassString(s string) (Class, error) {
 		return val, nil
 	}
 
-	if val, ok := _ClassNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _ClassLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to Class values", s)

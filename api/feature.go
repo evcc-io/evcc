@@ -10,7 +10,7 @@ const (
 	SwitchDevice               // charger - no current control - heat pumps or switch sockets
 	Heating                    // charger - heating device - soc ist temperature (°C)
 	DemandWeekday              // charger - demand forecast: same-weekday average over past 4 weeks (warm water)
-	DemandTemperature          // charger - demand forecast: daily avg scaled by outdoor temp (room heating)
+	DemandTemperature          // charger - demand forecast: temperature-binned historical lookup with linear fallback (room heating)
 	Continuous                 // charger - heating device where disabled means "normal operation"
 	Average                    // tariff
 	Cacheable                  // tariff

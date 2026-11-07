@@ -28,7 +28,7 @@ export default defineComponent({
 	--vertical-shift: 0rem;
 	left: 0;
 	right: 0;
-	top: max(0rem, env(safe-area-inset-top)) !important;
+	top: max(0rem, var(--safe-area-inset-top)) !important;
 	margin: 0 calc(calc(1.5rem + var(--vertical-shift)) * -1);
 	background-color: var(--evcc-background);
 	box-shadow: 0 1px 8px 0px var(--evcc-background);

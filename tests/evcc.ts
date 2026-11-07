@@ -11,6 +11,8 @@ import { test } from "@playwright/test";
 const BINARY = "./evcc";
 const IS_CI = !!process.env["GITHUB_ACTIONS"];
 const LOG_ENABLED = !IS_CI;
+// wait-on polls every 250ms by default, which adds up over hundreds of start/stop cycles
+export const WAIT_OPTS = { interval: 50, window: 50, log: LOG_ENABLED };
 
 // sometimes evcc startup fails due to infra issues in runner ususally fixed by retry. allowing some fails to avoid github annotations clutter
 let allowedStartupFails = IS_CI ? 2 : 0;
@@ -61,14 +63,16 @@ function dbPath() {
   return path.join(os.tmpdir(), file);
 }
 
+const DEFAULT_FLAGS = ["--disable-auth", "--disable-onboarding"];
+
 export async function start(
   config?: string,
-  sqlDumps?: string | null,
-  flags: string | string[] = "--disable-auth"
+  sqlDump?: string | null,
+  flags: string[] = DEFAULT_FLAGS
 ) {
   await _clean();
-  if (sqlDumps) {
-    await _restoreDatabase(sqlDumps);
+  if (sqlDump) {
+    await _restoreDatabase(sqlDump);
   }
   return await _start(config, flags);
 }
@@ -80,7 +84,7 @@ export async function stop(instance?: ChildProcess) {
 
 export async function restart(
   config?: string,
-  flags: string | string[] = "--disable-auth",
+  flags: string[] = DEFAULT_FLAGS,
   alreadyStopped = false
 ) {
   if (!alreadyStopped) {
@@ -89,24 +93,12 @@ export async function restart(
   await _start(config, flags);
 }
 
-export async function cleanRestart(config: string, sqlDumps: string) {
-  await _stop();
-  await _clean();
-  if (sqlDumps) {
-    await _restoreDatabase(sqlDumps);
-  }
-  await _start(config);
+async function _restoreDatabase(sqlDump: string) {
+  log("loading database", dbPath(), sqlDump);
+  execSync(`sqlite3 ${dbPath()} < tests/${sqlDump}`);
 }
 
-async function _restoreDatabase(sqlDumps: string) {
-  const dumps = Array.isArray(sqlDumps) ? sqlDumps : [sqlDumps];
-  for (const dump of dumps) {
-    log("loading database", dbPath(), dump);
-    execSync(`sqlite3 ${dbPath()} < tests/${dump}`);
-  }
-}
-
-async function _start(config?: string, flags: string | string[] = []) {
+async function _start(config?: string, flags: string[] = []) {
   const configArgs = config ? ["--config", config.includes("/") ? config : `tests/${config}`] : [];
   const port = workerPort();
   const ocpp = ocppPort();
@@ -114,10 +106,9 @@ async function _start(config?: string, flags: string | string[] = []) {
 
   log(`wait until port ${port} is available`);
   // wait for port to be available
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, ...WAIT_OPTS });
   log(`starting evcc on ports ${port} (HTTP), ${ocpp} (OCPP) and ${eebus} (EEBus)`);
-  const additionalFlags = typeof flags === "string" ? [flags] : flags;
-  additionalFlags.push("--log", "debug,httpd:trace");
+  const additionalFlags = [...flags, "--log", "debug,httpd:trace"];
   log("starting evcc", { config, port, ocpp, eebus, additionalFlags });
   const instance = spawn(BINARY, [...configArgs, ...additionalFlags], {
     env: {
@@ -142,7 +133,7 @@ async function _start(config?: string, flags: string | string[] = []) {
     // wait for apiReady so tests don't race a half-started backend
     const jq = encodeURIComponent(".apiReady|select(.)");
     const ready = `${baseUrl().replace(/^http/, "http-get")}/api/state?jq=${jq}`;
-    await waitOn({ resources: [ready], log: LOG_ENABLED, timeout: 90000 });
+    await waitOn({ resources: [ready], ...WAIT_OPTS, timeout: 90000 });
   } catch (error) {
     instance.kill("SIGKILL");
     console.error(logPrefix(), `evcc startup failed: ${error}`);
@@ -162,7 +153,7 @@ async function _stop(instance?: ChildProcess) {
   if (instance) {
     log("shutting down evcc hard", { port });
     instance.kill("SIGKILL");
-    await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED, timeout: 5000 });
+    await waitOn({ resources: [`tcp:${port}`], reverse: true, ...WAIT_OPTS, timeout: 5000 });
     log("evcc is down", { port });
     return;
   }
@@ -190,7 +181,7 @@ async function _stop(instance?: ChildProcess) {
     }
   }
   log(`wait until port ${port} is closed`);
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED, timeout: 5000 });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, ...WAIT_OPTS, timeout: 5000 });
   log("evcc is down", { port });
 }
 

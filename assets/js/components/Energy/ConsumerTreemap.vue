@@ -43,7 +43,7 @@ import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import colors, { resolveColors } from "@/colors";
 import { CURRENCY, type DeviceColors } from "@/types/evcc";
-import type { ConsumerEnergy } from "./types";
+import { OTHERS, type ConsumerEnergy } from "./types";
 import LegendList from "../Sessions/LegendList.vue";
 import type { Legend } from "../Sessions/types";
 import { squarify, type TreemapRect } from "./treemap";
@@ -55,12 +55,11 @@ const NARROW_WIDTH = 576;
 const GAP = 2;
 const RADIUS = 8;
 
-export const OTHERS = "others";
-
 interface Tile {
 	key: string; // consumer title or OTHERS
 	name: string;
 	value: number;
+	cost?: number;
 	color: string;
 }
 
@@ -71,8 +70,8 @@ export default defineComponent({
 	props: {
 		consumers: { type: Array as PropType<ConsumerEnergy[]>, default: () => [] },
 		others: { type: Number, default: 0 },
+		othersCost: Number, // undefined without price data
 		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
-		price: Number, // per kWh, undefined without tariff data
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		selected: { type: String as PropType<string | null>, default: null },
 	},
@@ -92,6 +91,7 @@ export default defineComponent({
 					key: e.title,
 					name: e.title,
 					value: e.energy,
+					cost: e.cost,
 					color: this.palette[e.title] || "",
 				}));
 			if (this.others > 0) {
@@ -99,6 +99,7 @@ export default defineComponent({
 					key: OTHERS,
 					name: this.$t("energy.consumers.others"),
 					value: this.others,
+					cost: this.othersCost,
 					color: colors.muted || "",
 				});
 			}
@@ -137,9 +138,9 @@ export default defineComponent({
 				label: t.name,
 				color: t.color,
 				value:
-					this.price === undefined
+					t.cost === undefined
 						? this.fmtKWh(t.value)
-						: [this.fmtKWh(t.value), this.fmtCost(t.value * this.price)],
+						: [this.fmtKWh(t.value), this.fmtCost(t.cost)],
 				// pickable only for real devices, "Others" keeps the muted color
 				id: t.key === OTHERS ? undefined : t.key,
 				focusable: true,

@@ -5,7 +5,7 @@ test.use({ baseURL: baseUrl() });
 
 // from assets/js/colors.ts palette
 const BLUE = "rgb(96, 165, 250)"; // #60A5FA — palette[0]
-const AMBER = "rgb(251, 191, 36)"; // #FBBF24 — palette[1]
+const CYAN = "rgb(34, 211, 238)"; // #22D3EE — palette[1]
 const CUSTOM_HEX = "FF0080";
 const CUSTOM_RGB = "rgb(255, 0, 128)";
 const CUSTOM_HEX2 = "00C8FF";
@@ -39,7 +39,7 @@ test("device colors: autoassign, override, persistence", async ({ page }) => {
   await page.getByRole("button", { name: "Charging point", exact: true }).click();
   // initial autoassign — alphabetical: Carport → palette[0], Garage → palette[1]
   await expectLegendColor(page, "Carport", BLUE);
-  await expectLegendColor(page, "Garage", AMBER);
+  await expectLegendColor(page, "Garage", CYAN);
 
   // open picker on Garage badge; first palette swatch = BLUE
   await legendBadge(page, "Garage").click();
@@ -50,21 +50,21 @@ test("device colors: autoassign, override, persistence", async ({ page }) => {
   await page.keyboard.press("Escape");
 
   await expectLegendColor(page, "Garage", BLUE);
-  // non-collision: Carport must shift off BLUE to the first free entry (AMBER)
-  await expectLegendColor(page, "Carport", AMBER);
+  // non-collision: Carport must shift off BLUE to the first free entry (CYAN)
+  await expectLegendColor(page, "Carport", CYAN);
 
   // ---------- Step 3 — Energy page, same colors on the loadpoint cards ----------
   await page.goto("/#/energy?period=day&year=2026&month=5&day=15");
   await expect(page.getByTestId("energy-loadpoint")).toHaveCount(2);
   await expectLegendColor(page, "Garage", BLUE);
-  await expectLegendColor(page, "Carport", AMBER);
+  await expectLegendColor(page, "Carport", CYAN);
 
   // ---------- Step 4 — Custom hex on consumer meter (consumers legend) ----------
   await legendBadge(page, "Dishwasher").click();
   const popover2 = page.getByRole("dialog");
   await expect(popover2).toBeVisible();
   // save-on-type fires when input matches hex regex
-  await popover2.getByLabel("Hex color").fill(CUSTOM_HEX);
+  await popover2.getByLabel("Hex colour").fill(CUSTOM_HEX);
   await page.keyboard.press("Escape");
 
   await expectLegendColor(page, "Dishwasher", CUSTOM_RGB);
@@ -73,7 +73,7 @@ test("device colors: autoassign, override, persistence", async ({ page }) => {
   await legendBadge(page, "Alternative grid").click();
   const popover3 = page.getByRole("dialog");
   await expect(popover3).toBeVisible();
-  await popover3.getByLabel("Hex color").fill(CUSTOM_HEX2);
+  await popover3.getByLabel("Hex colour").fill(CUSTOM_HEX2);
   await page.keyboard.press("Escape");
 
   await expectLegendColor(page, "Alternative grid", CUSTOM_RGB2);

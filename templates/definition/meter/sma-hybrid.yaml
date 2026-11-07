@@ -11,7 +11,7 @@ requirements:
     de: Bei der Nutzung der aktiven Speichersteuerung durch evcc darf die Funktion 'Prognosebasierten Laden' im SMA Portal nicht aktiv sein. Ansonsten kann es zu Konflikten bei der Steuerung des Speichers kommen.
 discovery:
   hostname: ["sma*"]
-  mac: ["0015BB"]
+  mac: ["0015BB", "0040AD"]
 params:
   - name: usage
     choice: ["pv", "battery", "grid"]
@@ -177,25 +177,34 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: calc
-    add:
+    mul:
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 31395 # SMA Modbus Profile: BatDsch.CurBatDsch
-          type: input
-          decode: uint32nan
+          address: 30843 # SMA Modbus Profile: Bat.Amp, positive while discharging
+          type: holding
+          decode: int32nan
+        scale: 0.001
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 31393 # SMA Modbus Profile: BatChrg.CurBatCha
-          type: input
+          address: 30851 # SMA Modbus Profile: Bat.Vol
+          type: holding
           decode: uint32nan
-        scale: -1
+        scale: 0.01
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 31401 # SMA Modbus Profile: CmpBMS.GetBatDschWh
+      address: 34665 # SMA Modbus Profile: BatDsch.ActBatDsch
+      type: holding
+      decode: uint64nan
+    scale: 0.001
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 34661 # SMA Modbus Profile: BatChrg.ActBatChrg
       type: holding
       decode: uint64nan
     scale: 0.001

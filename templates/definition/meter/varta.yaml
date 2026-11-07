@@ -78,7 +78,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 1074  # max discharge power
-                    type: writeholding
+                    type: writesingle
                     decode: int16
         - case: 2  # hold
           set:
@@ -91,7 +91,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 1074  # max discharge power
-                    type: writeholding
+                    type: writesingle
                     decode: int16
   {{- include "battery-params" . }}
   {{- end }}

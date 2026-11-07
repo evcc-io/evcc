@@ -51,6 +51,7 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 	if !active {
 		lp.planOverrunSent = false
 		lp.planSlotEnd = time.Time{}
+		lp.criticalSlotEnd = time.Time{}
 		lp.clearPlanLock()
 	}
 	if lp.planActive != active {
@@ -148,6 +149,11 @@ func (lp *Loadpoint) EffectivePlan(planTime time.Time, requiredDuration time.Dur
 	return lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous), 0, false
 }
 
+// fullSocPlanContinues continues an active 100% plan as long as the vehicle is connected
+func (lp *Loadpoint) fullSocPlanContinues(goal float64, isSocBased bool) bool {
+	return lp.planActive && isSocBased && goal == 100
+}
+
 // plannerActive checks if the charging plan has a currently active slot
 func (lp *Loadpoint) plannerActive() (active bool) {
 	defer func() {
@@ -187,8 +193,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	maxPower := lp.EffectiveMaxPower()
 	requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 	if requiredDuration <= 0 {
-		// continue a 100% plan as long as the vehicle is connected
-		if lp.planActive && isSocBased && goal == 100 {
+		if lp.fullSocPlanContinues(goal, isSocBased) {
 			return true
 		}
 		lp.log.DEBUG.Println("!! plan: required duration 0")

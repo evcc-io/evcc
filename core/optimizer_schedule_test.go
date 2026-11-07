@@ -93,9 +93,9 @@ func TestApplyOptimizerResultSchedule(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			values := make(chan util.Param, 10)
 			site := &Site{valueChan: values}
-			site.applyOptimizerResult(req, details, res, schedule, tc.at, tc.at)
+			site.applyOptimizerResult(optimizerSolve{req: req, details: details, res: res, schedule: schedule, completed: tc.at}, tc.at)
 
-			s, ok := site.suggestions[batteryKey("home")]
+			s, ok := site.optimizer.suggestions[batteryKey("home")]
 			require.True(t, ok)
 			assert.Equal(t, api.BatteryCharge.String(), s.Action)
 			assert.InDelta(t, tc.power, s.Charge, 1e-3)

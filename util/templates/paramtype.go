@@ -14,4 +14,5 @@ const (
 	TypeList
 	TypeZones
 	TypePricePerKWh
+	TypeDevice // reference to another configured device by name
 )

@@ -6,7 +6,7 @@
 		data-testid="remote-modal"
 		@open="onOpen"
 	>
-		<SponsorTokenRequired v-if="!isSponsor" feature class="mt-0" />
+		<SponsorTokenRequired :is-sponsor="isSponsor" feature />
 		<ErrorMessage :error="error" />
 
 		<template v-if="view === 'list'">
