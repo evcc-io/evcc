@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"uuid"
 
@@ -60,6 +61,10 @@ type Identity struct {
 	language string
 	bundle   cciBundle
 	oauth2.TokenSource
+
+	mu                 sync.Mutex
+	controlToken       string
+	controlTokenExpiry time.Time
 }
 
 // NewIdentity creates BlueLink Identity
@@ -218,18 +223,92 @@ func (v *Identity) Request(req *http.Request) error {
 		return err
 	}
 
-	for k, v := range map[string]string{
-		"Authorization":       "Bearer " + token.AccessToken,
+	for k, val := range map[string]string{
 		"ccsp-device-id":      v.deviceID,
 		"ccsp-application-id": v.config.CCSPApplicationID,
 		"offset":              "1",
 		"User-Agent":          "okhttp/3.10.0",
 		"Stamp":               stamp,
 	} {
-		req.Header.Set(k, v)
+		req.Header.Set(k, val)
+	}
+
+	if req.Header.Get("Authorization") == "" {
+		req.Header.Set("Authorization", "Bearer "+token.AccessToken)
 	}
 
 	return nil
+}
+
+type pinResponse struct {
+	RetCode string `json:"retCode"`
+	ResMsg  struct {
+		ControlToken string `json:"controlToken"`
+		ExpiresTime  int64  `json:"expiresTime"`
+	} `json:"resMsg"`
+	ControlToken string `json:"controlToken"`
+	ExpiresTime  int64  `json:"expiresTime"`
+}
+
+func controlTokenExpiry(expiresTime int64, now time.Time) time.Time {
+	if expiresTime <= 0 {
+		return now.Add(10 * time.Minute).Add(-30 * time.Second)
+	}
+	return time.Unix(expiresTime, 0).Add(-30 * time.Second)
+}
+
+// ControlAuthorization verifies the account PIN and returns a Bearer control token.
+func (v *Identity) ControlAuthorization(pin string) (string, error) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	if v.controlToken != "" && time.Now().Before(v.controlTokenExpiry) {
+		return v.controlToken, nil
+	}
+
+	if pin == "" {
+		return "", api.ErrMissingCredentials
+	}
+
+	// empty token query is required by the SPA PIN endpoint
+	uri := strings.TrimSuffix(v.config.URI, "/") + "/api/v1/user/pin?token="
+	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(map[string]string{
+		"deviceId": v.deviceID,
+		"pin":      pin,
+	}), request.JSONEncoding)
+	if err != nil {
+		return "", err
+	}
+	if err := v.Request(req); err != nil {
+		return "", err
+	}
+
+	var res pinResponse
+	if err := v.DoJSON(req, &res); err != nil {
+		return "", err
+	}
+
+	token := res.ResMsg.ControlToken
+	expires := res.ResMsg.ExpiresTime
+	if token == "" {
+		token = res.ControlToken
+		expires = res.ExpiresTime
+	}
+	if token == "" {
+		return "", errors.New("PIN verification failed")
+	}
+
+	v.controlToken = "Bearer " + token
+	v.controlTokenExpiry = controlTokenExpiry(expires, time.Now())
+	return v.controlToken, nil
+}
+
+// InvalidateControlToken drops a cached PIN control token so the next command re-verifies.
+func (v *Identity) InvalidateControlToken() {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	v.controlToken = ""
+	v.controlTokenExpiry = time.Time{}
 }
 
 // stamp creates a stamp locally according to https://github.com/Hyundai-Kia-Connect/hyundai_kia_connect_api/pull/371
