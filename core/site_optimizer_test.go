@@ -163,6 +163,26 @@ func TestApplyPrecondition(t *testing.T) {
 	assert.Nil(t, applyPrecondition(lp, nil, 8))
 }
 
+func TestPlanDemand(t *testing.T) {
+	now := time.Date(2026, 1, 1, 10, 5, 0, 0, time.UTC) // 10 min left in current slot
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+	slot := func(i int) time.Time { return eos.Add(time.Duration(i-1) * tariff.SlotDuration) }
+
+	assert.Nil(t, planDemand(nil, nil, 1000, now, 6))
+
+	// 10 + 15 + 7.5 min: 4 kWh spread evenly, current slot relative to its full length before prorate
+	plan := api.Rates{
+		{Start: now, End: slot(1)},
+		{Start: slot(2), End: slot(3)},
+		{Start: slot(4), End: slot(4).Add(tariff.SlotDuration / 2)},
+	}
+	assert.InDeltaSlice(t, []float32{1846, 0, 1846, 0, 923, 0}, planDemand(plan, nil, 4000, now, 6), 1)
+
+	// existing demand is kept where higher, plan beyond horizon ignored
+	plan = api.Rates{{Start: slot(1), End: slot(5)}}
+	assert.InDeltaSlice(t, []float32{3000, 1000, 1000}, planDemand(plan, []float32{3000, 500, 0}, 4000, now, 3), 1)
+}
+
 // TestApplyPlanGoalEnergy guards that an energy plan only asks for the missing energy on top of
 // the current state instead of the full plan energy (optimizer#190)
 func TestApplyPlanGoalEnergy(t *testing.T) {
@@ -752,6 +772,7 @@ func TestLoadpointRequestChargingState(t *testing.T) {
 			lp.EXPECT().EffectiveMaxPower().Return(11000.0).AnyTimes()
 			lp.EXPECT().GetMode().Return(api.ModeNow).AnyTimes()
 			lp.EXPECT().GetStatus().Return(status).AnyTimes()
+			lp.EXPECT().EffectivePlanTime().Return(time.Time{}).AnyTimes()
 			lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOff).AnyTimes()
 			lp.EXPECT().GetChargePower().Return(11000.0).AnyTimes()
 			lp.EXPECT().GetRemainingEnergy().Return(0.0).AnyTimes()
@@ -953,10 +974,10 @@ func TestApplyOptimizerResultPVShare(t *testing.T) {
 			})
 
 			site := &Site{valueChan: make(chan util.Param, 100)}
-			site.applyOptimizerResult(req, details, res, schedule, now.Add(time.Second), now)
+			site.applyOptimizerResult(optimizerSolve{req: req, details: details, res: res, schedule: schedule, completed: now}, now.Add(time.Second))
 
 			for i := range tc.charge {
-				assert.Equal(t, tc.want, site.suggestions[batteryKey(string(rune('a'+i)))].Action)
+				assert.Equal(t, tc.want, site.optimizer.suggestions[batteryKey(string(rune('a'+i)))].Action)
 			}
 		})
 	}
@@ -1109,11 +1130,13 @@ func reapplyFixture(site *Site, batteries []optimizer.BatteryConfig, res []optim
 	dt := []int{7 * 60, 900, 900}
 	schedule := optimizerSchedule{timestamps: asTimestamps(dt, completed), dt: dt}
 
-	site.applyOptimizerResult(
-		optimizer.OptimizationInput{TimeSeries: optimizer.TimeSeries{Dt: dt}, Batteries: batteries},
-		requestDetails{Timestamps: schedule.timestamps, BatteryDetails: details},
-		optimizer.OptimizationResult{GridImport: []float32{0, 500, 0}, Batteries: res}, // slot 1 imports
-		schedule, completed, completed)
+	site.applyOptimizerResult(optimizerSolve{
+		req:       optimizer.OptimizationInput{TimeSeries: optimizer.TimeSeries{Dt: dt}, Batteries: batteries},
+		details:   requestDetails{Timestamps: schedule.timestamps, BatteryDetails: details},
+		res:       optimizer.OptimizationResult{GridImport: []float32{0, 500, 0}, Batteries: res}, // slot 1 imports
+		schedule:  schedule,
+		completed: completed,
+	}, completed)
 
 	return completed
 }
@@ -1185,7 +1208,7 @@ func TestReapplySuggestionsExcludeDisconnectedLoadpoint(t *testing.T) {
 	site.reapplySuggestions(reapplyMidGap)
 
 	assert.Equal(t, actionStop, site.suggestion(loadpointKey(0), actionCharge).Action)
-	assert.Nil(t, site.lastOptimizerSolve)
+	assert.Nil(t, site.optimizer.lastSolve)
 }
 
 func TestReapplySuggestionsExpireAfterOutage(t *testing.T) {
@@ -1197,7 +1220,7 @@ func TestReapplySuggestionsExpireAfterOutage(t *testing.T) {
 	site.reapplySuggestions(completed.Add(2*tariff.SlotDuration + time.Minute))
 
 	assert.Nil(t, site.suggestion(batteryKey("home"), api.BatteryNormal.String()))
-	assert.Nil(t, site.lastOptimizerSolve)
+	assert.Nil(t, site.optimizer.lastSolve)
 }
 
 func TestCircuitMaxImport(t *testing.T) {
@@ -1225,20 +1248,20 @@ func TestOptimizerRerunAfterBusy(t *testing.T) {
 	site := &Site{log: util.NewLogger("foo")}
 
 	// run in progress: forced trigger is remembered, regular one is not
-	site.optimizerMu.Lock()
+	site.optimizer.mu.Lock()
 	site.optimizerUpdateAsync(false)
-	assert.False(t, site.optimizerRerun.Load())
+	assert.False(t, site.optimizer.rerun.Load())
 	site.optimizerUpdateAsync(true)
-	assert.True(t, site.optimizerRerun.Load())
+	assert.True(t, site.optimizer.rerun.Load())
 
 	// unlock re-runs on its own, despite the closed interval gate
 	last := time.Now().Add(-time.Second)
-	site.optimizerUpdated = last
+	site.optimizer.updated = last
 	site.optimizerUnlock()
-	assert.Eventually(t, func() bool { return !site.optimizerRerun.Load() }, time.Second, time.Millisecond)
+	assert.Eventually(t, func() bool { return !site.optimizer.rerun.Load() }, time.Second, time.Millisecond)
 
 	// the re-run holds the lock from before consuming the trigger until done
-	site.optimizerMu.Lock()
-	defer site.optimizerMu.Unlock()
-	assert.True(t, site.optimizerUpdated.After(last), "pending trigger must bypass interval gate")
+	site.optimizer.mu.Lock()
+	defer site.optimizer.mu.Unlock()
+	assert.True(t, site.optimizer.updated.After(last), "pending trigger must bypass interval gate")
 }

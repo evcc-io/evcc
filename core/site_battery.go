@@ -155,7 +155,7 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 
 // unmodelledCharging reports a loadpoint charging at full power that the battery
 // suggestion does not account for: a heater, a vehicle without capacity or session
-// energy limit (see optimizerRequest), or plan or min soc charging while only the
+// energy limit (see optimizerRequest), or min soc charging while only the
 // battery is automatic. Like dischargeControlActive this includes charging on the
 // smart cost limit, which is what keeps such a loadpoint running at cheap prices.
 func (site *Site) unmodelledCharging(rate api.Rate) bool {

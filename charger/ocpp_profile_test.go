@@ -116,9 +116,7 @@ func (h *ocppProfileHandler) OnSetChargingProfile(req *smartcharging.SetCharging
 
 func (suite *ocppTestSuite) TestTransactionProfiles() {
 	t := suite.T()
-	old := sponsor.Subject
-	sponsor.Subject = "test"
-	t.Cleanup(func() { sponsor.Subject = old })
+	sponsor.SetSubjectForTest(t, "test")
 
 	id := suite.stationID("tx-profile")
 	cp, _, stop := suite.startChargePoint(id, 1)
@@ -217,9 +215,7 @@ func (suite *ocppTestSuite) TestTransactionProfiles() {
 
 func (suite *ocppTestSuite) TestDefaultProfiles() {
 	t := suite.T()
-	old := sponsor.Subject
-	sponsor.Subject = "test"
-	t.Cleanup(func() { sponsor.Subject = old })
+	sponsor.SetSubjectForTest(t, "test")
 	for _, value := range []string{"", "TxDefaultProfile"} {
 		id := suite.stationID("default-profile-" + value)
 		cp, _, _ := suite.startChargePoint(id, 1)
