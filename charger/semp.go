@@ -293,16 +293,18 @@ func (wb *SEMP) Enabled() (bool, error) {
 		return false, err
 	}
 
-	if status.EMSignalsAccepted {
-		if status.Status == semp.StatusOn {
-			return true, nil
-		}
-
-		// work around wrong status reporting during phase switching (SMA Chargers...)
-		return wb.enabled, nil
+	if !status.EMSignalsAccepted {
+		// no vehicle: drop cached state so it doesn't leak into the next session
+		wb.enabled = false
+		return false, nil
 	}
 
-	return false, nil
+	if status.Status == semp.StatusOn {
+		return true, nil
+	}
+
+	// work around wrong status reporting during phase switching (SMA Chargers...)
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface
