@@ -282,14 +282,12 @@ export default defineComponent({
 			phaseRemainingInterpolated: this.phaseRemaining,
 			pvRemainingInterpolated: this.pvRemaining,
 			chargeDurationInterpolated: this.chargeDuration,
-			chargeRemainingDurationInterpolated: this.optimizerControlled
-				? (this.optimizerRemainingDuration ?? 0)
-				: this.chargeRemainingDuration,
+			chargeRemainingDurationInterpolated: 0,
 		};
 	},
 	computed: {
 		remainingDuration() {
-			// optimizer plan includes pauses, current power estimate does not; nil means no finish within the horizon
+			// plan includes pauses; nil means no finish within the horizon
 			if (this.optimizerControlled) {
 				return this.optimizerRemainingDuration ?? 0;
 			}
@@ -374,8 +372,11 @@ export default defineComponent({
 		chargeDuration() {
 			this.chargeDurationInterpolated = this.chargeDuration;
 		},
-		remainingDuration() {
-			this.chargeRemainingDurationInterpolated = this.remainingDuration;
+		remainingDuration: {
+			handler(value: number) {
+				this.chargeRemainingDurationInterpolated = value;
+			},
+			immediate: true,
 		},
 	},
 	mounted() {
