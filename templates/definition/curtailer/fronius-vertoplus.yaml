@@ -1,0 +1,65 @@
+template: fronius-vertoplus
+products:
+  - brand: Fronius
+    description:
+      generic: Verto Plus
+requirements:
+  description:
+    de: |
+      Die Abregelung begrenzt die AC-Ausgangsleistung des Wechselrichters auf den gewünschten Prozentsatz seiner maximalen AC-Leistung.
+    en: |
+      Curtailment limits the inverter AC output power to the desired percentage of its maximum AC power.
+discovery:
+  mdns: ["_Fronius-SE-Inverter._tcp"]
+  hostname: ["fronius*"]
+  mac: ["0003AC"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1 # inverter
+render: |
+  type: custom
+  curtail:
+    source: sequence
+    set:
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 123:WMaxLimPct
+      - source: switch
+        switch:
+          - case: 100 # Uncurtailed
+            set:
+              source: const
+              value: 0 # Limit disabled
+              set:
+                source: sunspec
+                {{- include "modbus" . | indent 14 }}
+                value: 123:WMaxLim_Ena
+        default:
+          source: const
+          value: 1 # Limit enabled
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 123:WMaxLim_Ena
+  curtailed: # the limit percentage only applies while the limit is enabled
+    source: go
+    in:
+    - name: ena
+      type: bool
+      config:
+        source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 123:WMaxLim_Ena
+    - name: limit
+      type: float
+      config:
+        source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 123:WMaxLimPct
+    script: |
+      percent := 100
+      if ena {
+        percent = int(limit)
+      }
+      percent
