@@ -3,7 +3,7 @@ products:
   - brand: Atmoce
     description:
       generic: MG100 M-gateway
-capabilities: ["battery-control", "curtail", "dim"]
+capabilities: ["battery-control", "dim"]
 requirements:
   description:
     de: |
@@ -39,10 +39,10 @@ params:
       en: Firmware version
     help:
       de: |
-        Firmware 01.01.00.28.15 und höher ermöglichen die korrekte Hold/Holdcharge-Funktionalität sowie das Dimmen und Abschalten.
+        Firmware 01.01.00.28.15 und höher ermöglichen die korrekte Hold/Holdcharge-Funktionalität sowie das Dimmen.
         Ältere Versionen unterstützen lediglich die Hold-Funktion ohne (Ent-)Ladefunktion.
       en: |
-        Firmware 01.01.00.28.15 and higher allows for correct hold/holdcharge functionality, dimming and curtailing.
+        Firmware 01.01.00.28.15 and higher allows for correct hold/holdcharge functionality and dimming.
         Older versions only support hold function without (dis)charge.
   - name: capacity
     deprecated: true
@@ -173,67 +173,6 @@ render: |
       count: 30
     scale: 0.01
   maxacpower: {{ .maxacpower }}
-  {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
-  curtail:
-    source: switch
-    switch:
-      - case: 100 # No curtailment
-        set:
-          source: const
-          value: 0xFFFFFFFF # No limit
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 60322 # Photovoltaic Maximum Power (kW * 1000)
-              type: writemultiple
-              encoding: uint32
-    default:
-      source: go
-      in:
-        - name: maxacpower
-          type: int
-          config:
-            source: const
-            value: {{ .maxacpower }}
-      script: |
-        powerlimit := ( maxacpower * curtail ) / 100
-        powerlimit
-      out:
-        - name: powerlimit
-          type: int
-          config:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 60322 # Photovoltaic Maximum Power (kW * 1000)
-              type: writemultiple
-              encoding: uint32
-  curtailed: # the power limit is expressed as percent of nominal AC power
-    source: go
-    in:
-      - name: limit
-        type: int
-        config:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 60322 # Photovoltaic Maximum Power (kW * 1000)
-            type: holding
-            decode: uint32
-      - name: maxacpower
-        type: int
-        config:
-          source: const
-          value: {{ .maxacpower }}
-    script: |
-      percent := 100
-      if limit != 0xFFFFFFFF && maxacpower > 0 {
-        // round, the watt conversion does not reproduce the written percent exactly
-        percent = (limit*100 + maxacpower/2) / maxacpower
-      }
-      percent
-  {{- end }}
   {{- end }}
   {{- if eq .usage "battery" }}
   capacity:

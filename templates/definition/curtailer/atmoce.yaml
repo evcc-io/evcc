@@ -1,0 +1,94 @@
+template: atmoce
+products:
+  - brand: Atmoce
+    description:
+      generic: MG100 M-gateway
+requirements:
+  description:
+    de: |
+      Die Abregelung begrenzt die PV-Leistung auf den gewünschten Prozentsatz der maximalen AC-Leistung.
+      Erfordert Firmware-Version 01.01.00.28.15 oder neuer.
+    en: |
+      Curtailment limits PV power to the desired percentage of the maximum AC power.
+      Requires firmware version 01.01.00.28.15 or later.
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+  - name: firmware
+    type: choice
+    choice: ["<01.01.00.28.15", ">=01.01.00.28.15"]
+    default: ">=01.01.00.28.15"
+    required: true
+    description:
+      de: Firmware-Version
+      en: Firmware version
+    help:
+      de: Abregelung erfordert Firmware 01.01.00.28.15 oder neuer.
+      en: Curtailment requires firmware 01.01.00.28.15 or later.
+  - name: maxacpower
+    required: true
+    service: modbus/read?address=60027&type=holding&encoding=uint32&scale=1&resulttype=int&{modbus}
+render: |
+  type: custom
+  {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
+  curtail:
+    source: switch
+    switch:
+      - case: 100 # No curtailment
+        set:
+          source: const
+          value: 0xFFFFFFFF # No limit
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 60322 # Photovoltaic Maximum Power (kW * 1000)
+              type: writemultiple
+              encoding: uint32
+    default:
+      source: go
+      in:
+        - name: maxacpower
+          type: int
+          config:
+            source: const
+            value: {{ .maxacpower }}
+      script: |
+        powerlimit := ( maxacpower * curtail ) / 100
+        powerlimit
+      out:
+        - name: powerlimit
+          type: int
+          config:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 60322 # Photovoltaic Maximum Power (kW * 1000)
+              type: writemultiple
+              encoding: uint32
+  curtailed: # the power limit is expressed as percent of nominal AC power
+    source: go
+    in:
+      - name: limit
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 60322 # Photovoltaic Maximum Power (kW * 1000)
+            type: holding
+            decode: uint32
+      - name: maxacpower
+        type: int
+        config:
+          source: const
+          value: {{ .maxacpower }}
+    script: |
+      percent := 100
+      if limit != 0xFFFFFFFF && maxacpower > 0 {
+        // round, the watt conversion does not reproduce the written percent exactly
+        percent = (limit*100 + maxacpower/2) / maxacpower
+      }
+      percent
+  {{- end }}
