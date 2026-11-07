@@ -25,8 +25,7 @@ import (
 func enableAutomatic(t *testing.T) {
 	t.Helper()
 
-	subject := sponsor.Subject
-	sponsor.Subject = "test"
+	sponsor.SetSubjectForTest(t, "test")
 
 	for _, k := range []string{keys.Experimental, keys.Optimizer} {
 		settings.SetBool(k, true)
@@ -34,7 +33,6 @@ func enableAutomatic(t *testing.T) {
 	settings.SetString(keys.OptimizerAutomatic, OptimizerAutomaticFull)
 
 	t.Cleanup(func() {
-		sponsor.Subject = subject
 		for _, k := range []string{keys.Experimental, keys.Optimizer} {
 			settings.SetBool(k, false)
 		}
@@ -476,7 +474,7 @@ func TestBatteryModeFixedDemandModelled(t *testing.T) {
 	}{
 		{"smart cost", api.ModeSmart, false, 0, api.BatteryDischarge},
 		{"fast", api.ModeNow, false, 0, api.BatteryDischarge},
-		{"plan", api.ModeSmart, true, 0, api.BatteryHold},
+		{"plan", api.ModeSmart, true, 0, api.BatteryDischarge},
 		{"min soc", api.ModeSmart, false, 80, api.BatteryHold},
 	} {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
@@ -751,6 +749,31 @@ func TestOptimizerPlanSlotNotCritical(t *testing.T) {
 	lp.planSlotEnd = now.Add(time.Hour)
 
 	assert.False(t, lp.planDeadlineCritical())
+}
+
+// TestOptimizerPlanFullSocContinues covers a 100% plan with the goal reached:
+// like the planner, the active plan keeps charging while the vehicle tapers by itself
+func TestOptimizerPlanFullSocContinues(t *testing.T) {
+	lp := &Loadpoint{
+		log:        util.NewLogger("foo"),
+		clock:      clock.NewMock(),
+		vehicle:    modelledVehicle(gomock.NewController(t)),
+		site:       &mockSite{automatic: true},
+		status:     api.StatusC,
+		phases:     1,
+		minCurrent: minA,
+		maxCurrent: maxA,
+		vehicleSoc: 100,
+	}
+
+	now := lp.clock.Now()
+	lp.planLocked = PlanLock{Time: now.Add(time.Hour), Soc: 100, Id: 1}
+
+	assert.False(t, lp.planDeadlineCritical(), "inactive plan")
+
+	lp.planActive = true
+	lp.clock.(*clock.Mock).Add(time.Hour)
+	assert.True(t, lp.planDeadlineCritical(), "active plan")
 }
 
 // TestOptimizerPhaseGap verifies that a suggestion between 1p maximum and 3p minimum power

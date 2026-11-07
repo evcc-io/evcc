@@ -125,7 +125,12 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 					}
 
 					sample.Value = strings.TrimSpace(sample.Value)
-					conn.measurements[getSampleKey(sample)] = sample
+
+					// a lifetime register is never zero, some chargers (Huawei) report 0 outside transactions
+					if !isZeroEnergy(sample) {
+						conn.measurements[getSampleKey(sample)] = sample
+					}
+
 					conn.meterTimestamp = meterValue.Timestamp.Time
 					// freshness is measured locally: charger sample timestamps may lag (Mennekes: 6-7s)
 					conn.meterUpdated = conn.clock.Now()
@@ -217,6 +222,16 @@ func (conn *Connector) assumeMeterStopped() {
 			}
 		}
 	}
+}
+
+// isZeroEnergy returns true if sample is a total or phase energy register reading of zero.
+func isZeroEnergy(sample types.SampledValue) bool {
+	if sample.Measurand != types.MeasurandEnergyActiveImportRegister {
+		return false
+	}
+
+	f, err := strconv.ParseFloat(sample.Value, 64)
+	return err == nil && f == 0
 }
 
 func (conn *Connector) updateEnergyRegister(wh float64) {

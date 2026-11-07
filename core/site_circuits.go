@@ -210,7 +210,7 @@ func (site *Site) curtailPV(percent *int) error {
 // optimizerOvershoot reports whether the last solve curtails pv at the grid export limit in the active slot
 func (site *Site) optimizerOvershoot(now time.Time) bool {
 	site.RLock()
-	last := site.lastOptimizerSolve
+	last := site.optimizer.lastSolve
 	site.RUnlock()
 
 	if last == nil {

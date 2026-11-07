@@ -408,6 +408,39 @@ func (suite *connTestSuite) TestOnMeterValuesBoundaryContextFirst() {
 	suite.Equal(241.010, res, "live reading must not be shadowed by the boundary snapshot")
 }
 
+// Huawei SCharger reports a zero energy register outside transactions
+func (suite *connTestSuite) TestOnMeterValuesIgnoreZeroEnergy() {
+	suite.meterValues(energySample("0.00", types.ReadingContextTrigger))
+
+	_, err := suite.conn.TotalEnergy()
+	suite.ErrorIs(err, api.ErrNotAvailable, "zero must not be stored")
+
+	suite.meterValues(energySample("537960", types.ReadingContextTransactionBegin))
+
+	suite.clock.Add(time.Hour)
+	suite.meterValues(energySample("0.00", types.ReadingContextTrigger))
+	suite.False(suite.conn.isMeterTimeout(), "zero must still update meter freshness")
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err, "TotalEnergy")
+	suite.Equal(537.960, res, "zero must not overwrite known energy")
+}
+
+func (suite *connTestSuite) TestOnMeterValuesIgnoreZeroPhaseEnergy() {
+	phase := func(value string, p types.Phase) types.SampledValue {
+		s := energySample(value, types.ReadingContextSamplePeriodic)
+		s.Phase = p
+		return s
+	}
+
+	suite.meterValues(phase("1000", types.PhaseL1), phase("2000", types.PhaseL2), phase("3000", types.PhaseL3))
+	suite.meterValues(phase("0", types.PhaseL1), phase("0", types.PhaseL2), phase("0", types.PhaseL3))
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err, "TotalEnergy")
+	suite.Equal(6.0, res, "zero must not overwrite known phase energy")
+}
+
 // meterValuesAt feeds the given samples with an explicit charger-side timestamp
 func (suite *connTestSuite) meterValuesAt(ts time.Time, samples ...types.SampledValue) {
 	_, err := suite.conn.OnMeterValues(&core.MeterValuesRequest{

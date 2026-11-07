@@ -226,7 +226,7 @@ func optimizerCurtailSite(t *testing.T, m *curtailableMeter, now time.Time) *Sit
 	site := curtailSite(m)
 	site.gridMeter = config.NewStaticDevice(config.Named{}, api.Meter(m))
 	site.gridExportLimit = 5000
-	site.lastOptimizerSolve = &optimizerSolve{
+	site.optimizer.lastSolve = &optimizerSolve{
 		schedule: optimizerSchedule{timestamps: []time.Time{now}, dt: []int{900}},
 		res:      optimizer.OptimizationResult{GridExportOvershoot: []float32{250}},
 	}
@@ -246,7 +246,7 @@ func TestApplyOptimizerCurtailment(t *testing.T) {
 	assert.True(t, site.optimizerCurtailed)
 
 	// no planned overshoot: release
-	site.lastOptimizerSolve = nil
+	site.optimizer.lastSolve = nil
 	site.applyOptimizerCurtailment(-4000, 8000, now)
 	assert.Equal(t, []int{80, 100}, m.setCalls)
 	assert.False(t, site.optimizerCurtailed)
@@ -300,7 +300,7 @@ func TestApplyOptimizerCurtailmentPartial(t *testing.T) {
 	assert.Equal(t, 80, ok.percent)
 
 	failing.setErr = nil
-	site.lastOptimizerSolve = nil
+	site.optimizer.lastSolve = nil
 	site.applyOptimizerCurtailment(-4000, 8000, now)
 	assert.Equal(t, 100, ok.percent)
 	assert.False(t, site.optimizerCurtailed)
