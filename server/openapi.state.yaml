@@ -817,6 +817,10 @@ components:
         chargeRemainingDuration:
           description: Estimated remaining charging time in seconds.
           type: number
+        optimizerRemainingDuration:
+          description: Time in seconds until the optimizer plan reaches the vehicle limit, including pauses.
+          type: number
+          nullable: true
         chargeRemainingEnergy:
           description: Estimated remaining energy in kWh.
           type: number

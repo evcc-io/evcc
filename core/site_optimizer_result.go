@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/types"
 	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/samber/lo"
@@ -143,6 +144,50 @@ func loadpointPlan(res optimizer.BatteryResult, prices []float32, schedule optim
 	return plan
 }
 
+// limitReached returns the end of the slot in which the result reaches the battery's maximum
+// soc (a partial slot is charged over the whole slot), zero if already there or not within the horizon
+func limitReached(req optimizer.BatteryConfig, res optimizer.BatteryResult, schedule optimizerSchedule, now time.Time) time.Time {
+	limit := req.SMax - 1 // Wh, solver precision
+
+	for i := range schedule.endsAfter(now) {
+		if i >= len(res.StateOfCharge) {
+			break
+		}
+
+		if res.StateOfCharge[i] < limit {
+			continue
+		}
+
+		prev := req.SInitial
+		if i > 0 {
+			prev = res.StateOfCharge[i-1]
+		}
+		if prev >= limit {
+			return time.Time{}
+		}
+
+		return schedule.end(i)
+	}
+
+	return time.Time{}
+}
+
+// publishRemainingDurations publishes the time until each optimizer controlled loadpoint
+// reaches its limit, nil where the optimizer doesn't get there within the horizon
+func (site *Site) publishRemainingDurations(remaining map[int]time.Duration) {
+	for id, lp := range site.loadpoints {
+		if lp == nil {
+			continue
+		}
+
+		var val any
+		if d, ok := remaining[id]; ok && lp.optimizerControlled() {
+			val = d
+		}
+		site.publishLoadpoint(id, keys.OptimizerRemainingDuration, val)
+	}
+}
+
 // setBatteryForecast replaces the battery forecast of the cached state
 func (site *Site) setBatteryForecast(forecast *types.BatteryForecast) {
 	site.Lock()
@@ -187,10 +232,17 @@ func (site *Site) applyOptimizerResult(solve optimizerSolve, now time.Time) {
 
 	var batteries []batteryResult
 	suggestions := make(map[string]types.Suggestion, len(req.Batteries))
+	remaining := make(map[int]time.Duration)
 
 	for i, batReq := range req.Batteries {
 		batRes := res.Batteries[i]
 		detail := details.BatteryDetails[i]
+
+		if detail.loadpoint != nil {
+			if finish := limitReached(batReq, batRes, schedule, now); !finish.IsZero() {
+				remaining[*detail.loadpoint] = finish.Sub(now).Round(time.Second)
+			}
+		}
 
 		batteries = append(batteries, batteryResult{
 			batteryDetail: detail,
@@ -243,6 +295,7 @@ func (site *Site) applyOptimizerResult(solve optimizerSolve, now time.Time) {
 
 	// publish for all loadpoints so suggestions of dropped-out loadpoints clear
 	site.publishSuggestions()
+	site.publishRemainingDurations(remaining)
 
 	// notify on actionable suggestion changes (advisory only, see #31903)
 	for _, ev := range site.diffSuggestions(site.pendingSuggestions(details.BatteryDetails)) {
