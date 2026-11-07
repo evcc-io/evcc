@@ -6,6 +6,7 @@
 		name="meter"
 		device-type="meter"
 		:is-sponsor="isSponsor"
+		:remote-enabled="remoteEnabled"
 		:modal-title="modalTitle"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
@@ -167,6 +168,7 @@ export default defineComponent({
 	},
 	props: {
 		isSponsor: Boolean,
+		remoteEnabled: Boolean,
 	},
 	emits: ["changed", "disable", "close"],
 	data() {
