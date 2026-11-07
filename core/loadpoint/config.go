@@ -19,13 +19,16 @@ type StaticConfig struct {
 
 type DynamicConfig struct {
 	// dynamic config
-	Title                    string    `json:"title"`
-	DefaultMode              string    `json:"defaultMode"`
-	AlwaysCharge             string    `json:"alwaysCharge"`
-	Priority                 int       `json:"priority"`
-	PhasesConfigured         int       `json:"phasesConfigured"`
-	MinCurrent               float64   `json:"minCurrent"`
-	MaxCurrent               float64   `json:"maxCurrent"`
+	Title            string  `json:"title"`
+	DefaultMode      string  `json:"defaultMode"`
+	AlwaysCharge     string  `json:"alwaysCharge"`
+	Priority         int     `json:"priority"`
+	PhasesConfigured int     `json:"phasesConfigured"`
+	MinCurrent       float64 `json:"minCurrent"`
+	MaxCurrent       float64 `json:"maxCurrent"`
+	// phase switching hysteresis thresholds in W (0 = default)
+	PhasesUpPower            float64   `json:"phasesUpPower"`
+	PhasesDownPower          float64   `json:"phasesDownPower"`
 	SmartCostLimit           *float64  `json:"smartCostLimit"`
 	SmartFeedInPriorityLimit *float64  `json:"smartFeedInPriorityLimit"`
 	SolarShare               float64   `json:"solarShare"`
@@ -108,6 +111,11 @@ func (payload DynamicConfig) Apply(lp API) error {
 
 	if err == nil {
 		err = lp.SetPhasesConfigured(payload.PhasesConfigured)
+	}
+
+	// phase switching hysteresis (0 = default)
+	if err == nil {
+		err = lp.SetPhasesHysteresis(payload.PhasesUpPower, payload.PhasesDownPower)
 	}
 
 	if err == nil {

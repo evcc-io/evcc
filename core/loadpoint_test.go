@@ -720,12 +720,14 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			{2 * grid.Voltage * minA, dt - 1, minA},
 			{2 * grid.Voltage * minA, dt + 1, 0},
 		}},
-		// stay enabled when threshold not met after phase switch
+		// the 0A safety hold at the switch moment overrides the
+		// vanilla "stay enabled" expectation - the charger re-enables via the pv
+		// enable decision once the surplus covers the 1p minimum current
 		{[]se{
 			{5 * grid.Voltage, 0, minA},
 			{5 * grid.Voltage, 1, minA},
 			{5 * grid.Voltage, dt - 1, minA},
-			{5 * grid.Voltage, dt + 1, minA},
+			{5 * grid.Voltage, dt + 1, 0},
 		}},
 	}
 
@@ -738,15 +740,20 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 		switcher := api.NewMockPhaseSwitcher(ctrl)
 		switcher.EXPECT().Phases1p3p(1)
 
+		// the 0A safety hold before the switch calls Enable()
+		plainCharger := api.NewMockCharger(ctrl)
+		plainCharger.EXPECT().Enable(gomock.Any()).Return(nil).AnyTimes()
+
 		charger := struct {
 			*api.MockCharger
 			*api.MockPhaseSwitcher
 		}{
-			api.NewMockCharger(ctrl), switcher,
+			plainCharger, switcher,
 		}
 
 		lp := &Loadpoint{
 			log:         util.NewLogger("foo"),
+			bus:         evbus.New(), // 0A hold publishes charge current
 			wakeUpTimer: NewTimer(),
 			clock:       clock,
 			charger:     charger,
@@ -767,6 +774,13 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			clock.Set(start.Add(se.delay))
 			assert.Equal(t, se.current, lp.pvMaxCurrent(se.site, 0, false, false), step)
 		}
+
+		// complete the pending 0A safety sequence like the
+		// update loop would; the charger stays disabled afterwards because the
+		// pv enable threshold is not met with positive site power
+		completePendingPhaseSwitch(t, lp)
+		assert.Equal(t, 1, lp.phases)
+		assert.Equal(t, 0.0, lp.pvMaxCurrent(tc.series[len(tc.series)-1].site, 0, false, false))
 
 		ctrl.Finish()
 	}
@@ -797,11 +811,13 @@ func TestPVDisablePhaseTimerHandover(t *testing.T) {
 			{bad, 40 * time.Second, minA},
 			{bad, dt + time.Second, 0},
 		}, false},
+		// the 0A safety hold at the switch moment overrides the
+		// vanilla "stay enabled" expectation
 		{"scales down within one delay", []se{
 			{bad, 0, minA},
 			{good, 20 * time.Second, minA},
 			{bad, 40 * time.Second, minA},
-			{good, dt + time.Second, minA},
+			{good, dt + time.Second, 0},
 		}, true},
 	}
 
@@ -810,21 +826,27 @@ func TestPVDisablePhaseTimerHandover(t *testing.T) {
 			clock := clock.NewMock()
 			clock.Add(time.Hour) // avoid time.IsZero
 			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
 			switcher := api.NewMockPhaseSwitcher(ctrl)
 			if tc.scaled {
 				switcher.EXPECT().Phases1p3p(1)
 			}
 
+			// the 0A safety hold before the switch calls Enable()
+			plainCharger := api.NewMockCharger(ctrl)
+			plainCharger.EXPECT().Enable(gomock.Any()).Return(nil).AnyTimes()
+
 			charger := struct {
 				*api.MockCharger
 				*api.MockPhaseSwitcher
 			}{
-				api.NewMockCharger(ctrl), switcher,
+				plainCharger, switcher,
 			}
 
 			lp := &Loadpoint{
 				log:            util.NewLogger("foo"),
+				bus:            evbus.New(), // 0A hold publishes charge current
 				wakeUpTimer:    NewTimer(),
 				clock:          clock,
 				charger:        charger,
@@ -845,6 +867,13 @@ func TestPVDisablePhaseTimerHandover(t *testing.T) {
 			for step, se := range tc.series {
 				clock.Set(start.Add(se.delay))
 				assert.Equal(t, se.current, lp.pvMaxCurrent(se.site, 0, false, false), step)
+			}
+
+			// complete the pending 0A safety sequence like the
+			// update loop would
+			completePendingPhaseSwitch(t, lp)
+			if tc.scaled {
+				assert.Equal(t, 1, lp.phases)
 			}
 		})
 	}

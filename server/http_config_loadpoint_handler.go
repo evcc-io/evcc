@@ -37,6 +37,8 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 		PhasesConfigured:         lp.GetPhasesConfigured(),
 		MinCurrent:               lp.GetMinCurrent(),
 		MaxCurrent:               lp.GetMaxCurrent(),
+		PhasesUpPower:            lp.GetPhasesUpPower(),
+		PhasesDownPower:          lp.GetPhasesDownPower(),
 		SmartCostLimit:           lp.GetSmartCostLimit(),
 		SmartFeedInPriorityLimit: lp.GetSmartFeedInPriorityLimit(),
 		SolarShare:               lp.GetSolarShare(),

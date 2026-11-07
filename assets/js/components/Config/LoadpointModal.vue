@@ -268,6 +268,19 @@
 										equal-width
 									/>
 								</FormRow>
+								<FormRow
+									v-if="chargerSupports1p3p"
+									id="loadpointParamPhasesHysteresis"
+									:label="$t('config.loadpoint.phasesHysteresisLabel')"
+									:help="$t('config.loadpoint.phasesHysteresisHelp')"
+									>
+									<PhaseHysteresis
+										v-model:up="values.phasesUpPower"
+										v-model:down="values.phasesDownPower"
+										:default-up="hysteresisDefaultUp"
+										:default-down="hysteresisDefaultDown"
+										/>
+								</FormRow>
 							</template>
 
 							<div class="row mb-4">
@@ -587,6 +600,7 @@ import FormRow from "./FormRow.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import PropertyField from "./PropertyField.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
+import PhaseHysteresis from "./PhaseHysteresis.vue";
 import api from "@/api";
 import { docsPrefix } from "@/i18n";
 import GenericModal from "../Helper/GenericModal.vue";
@@ -624,6 +638,8 @@ const defaultValues = {
 	id: undefined,
 	title: "",
 	phasesConfigured: 3,
+	phasesUpPower: 0,
+	phasesDownPower: 0,
 	minCurrent: 6,
 	maxCurrent: 16,
 	priority: 0,
@@ -658,6 +674,7 @@ export default {
 		NewDeviceButton,
 		InvalidReferenceAlert,
 		CreateFlowStatus,
+		PhaseHysteresis,
 	},
 	mixins: [formatter],
 	props: {
@@ -906,6 +923,12 @@ export default {
 				{ value: 3, name: this.$t("config.loadpoint.phases3p") },
 			];
 		},
+		hysteresisDefaultUp() {
+			return this.phasePower(this.values.maxCurrent, 1);
+		},
+		hysteresisDefaultDown() {
+			return this.phasePower(this.values.minCurrent, 3);
+		},
 		defaultModeOptions(): { key: CHARGE_MODE; name: string }[] {
 			// empty option is provided by PropertyField placeholder
 			return [OFF, SMART, NOW].map((key) => ({
@@ -983,6 +1006,14 @@ export default {
 			this.values.thresholds.enable.threshold = 0;
 			this.values.thresholds.disable.threshold = 0;
 		},
+		phasePower(current: number, phases: number) {
+			const voltage = this.voltage || 230;
+			const factor =
+				this.gridConnection === GRID_CONNECTION.THREE_PHASE_THREE_WIRE && phases === 3
+					? Math.sqrt(3)
+					: phases || 0;
+			return voltage * (current || 0) * factor;
+		},
 		reset() {
 			this.values = deepClone(defaultValues);
 			this.autoCreate = false;
@@ -998,6 +1029,8 @@ export default {
 			try {
 				const res = await api.get(`config/loadpoints/${this.id}`);
 				this.values = deepClone(res.data);
+				this.values.phasesUpPower ??= 0;
+				this.values.phasesDownPower ??= 0;
 				this.thresholdsExpanded = this.thresholdsSet;
 				this.updatePhases();
 				this.rebaseline();

@@ -1,0 +1,57 @@
+template: twc3shelly
+products:
+  - brand: Tesla
+    description:
+      generic: Wall Connector (Gen 3) mit 1p3p-Schaltung
+capabilities: ["meter", "dim", "1p3p"]
+requirements:
+  description:
+    en: TWC3 with 1p3p phase switching via a Shelly controlling the L2/L3 contactor. L1 must be permanently connected. Control is via the vehicle, which must be selected at the TWC3 loadpoint.
+    de: TWC3 mit 1p3p-Phasenwechsel über einen Shelly, der das L2/L3-Schütz steuert. L1 muss dauerhaft verbunden sein. Die Regelung erfolgt über das Fahrzeug, das am TWC3-Ladepunkt ausgewählt sein muss.
+params:
+  - name: host
+    required: true
+    help:
+      de: TWC3-Adresse (ohne http://)
+      en: TWC3 address (without http://)
+  - name: shelly
+    required: true
+    example: 192.168.178.167
+    description:
+      de: Shelly-Adresse (IP oder Hostname)
+      en: Shelly address (IP or hostname)
+    help:
+      de: Steuert das L2/L3-Schütz
+      en: Controls the L2/L3 contactor
+  - name: shellyswitch
+    default: 0
+    advanced: true
+    description:
+      de: Schalter-Kanal am Shelly
+      en: Switch channel on the Shelly
+  - name: shellyuser
+    advanced: true
+    description:
+      de: Shelly-Benutzer (nur bei Auth)
+      en: Shelly user (only with auth)
+  - name: shellypass
+    advanced: true
+    mask: true
+    description:
+      de: Shelly-Passwort (nur bei Auth)
+      en: Shelly password (only with auth)
+  - name: cache
+    default: 1s
+    advanced: true
+render: |
+  type: twc3shelly
+  uri: http://{{ .host }}
+  shelly: {{ .shelly }}
+  shellyswitch: {{ .shellyswitch }}
+  {{- if .shellyuser }}
+  shellyuser: {{ .shellyuser }}
+  {{- end }}
+  {{- if .shellypass }}
+  shellypass: {{ .shellypass }}
+  {{- end }}
+  cache: {{ .cache }}

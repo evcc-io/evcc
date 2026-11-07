@@ -2,23 +2,26 @@ package keys
 
 const (
 	// loadpoint settings
-	Name              = "name"             // loadpoint name (config identifier)
-	Title             = "title"            // loadpoint title
-	Disabled          = "disabled"         // loadpoint disabled via config
-	Mode              = "mode"             // charge mode
-	DefaultMode       = "defaultMode"      // default charge mode
-	AlwaysCharge      = "alwaysCharge"     // smart mode: charge continuously at least at min power (off/on/once)
-	Charger           = "charger"          // charger ref
-	Meter             = "meter"            // meter ref
-	Circuit           = "circuit"          // circuit ref
-	DefaultVehicle    = "vehicle"          // default vehicle ref
-	Priority          = "priority"         // priority
-	MinCurrent        = "minCurrent"       // min current
-	MaxCurrent        = "maxCurrent"       // max current
-	MinSoc            = "minSoc"           // min soc (heating: min temperature)
-	MinSocNotReached  = "minSocNotReached" // min soc not reached
-	LimitSoc          = "limitSoc"         // limit soc
-	LimitEnergy       = "limitEnergy"      // limit energy
+	Name              = "name"              // loadpoint name (config identifier)
+	Title             = "title"             // loadpoint title
+	Disabled          = "disabled"          // loadpoint disabled via config
+	Mode              = "mode"              // charge mode
+	DefaultMode       = "defaultMode"       // default charge mode
+	AlwaysCharge      = "alwaysCharge"      // smart mode: charge continuously at least at min power (off/on/once)
+	Charger           = "charger"           // charger ref
+	Meter             = "meter"             // meter ref
+	Circuit           = "circuit"           // circuit ref
+	DefaultVehicle    = "vehicle"           // default vehicle ref
+	Priority          = "priority"          // priority
+	MinCurrent        = "minCurrent"        // min current
+	MaxCurrent        = "maxCurrent"        // max current
+	PhasesUpPower     = "phasesUpPower"     // phase hysteresis: 1p→3p up-switch threshold in W, 0 = default
+	PhasesDownPower   = "phasesDownPower"   // phase hysteresis: 3p→1p down-switch threshold in W, 0 = default
+	PhasesMaxCurrent3 = "phasesMaxCurrent3" // phase limit: max charge current in A on 3 phases, 0 = maxCurrent
+	MinSoc            = "minSoc"            // min soc (heating: min temperature)
+	MinSocNotReached  = "minSocNotReached"  // min soc not reached
+	LimitSoc          = "limitSoc"          // limit soc
+	LimitEnergy       = "limitEnergy"       // limit energy
 	Soc               = "soc"
 	Thresholds        = "thresholds"
 	UI                = "ui" // display-only ui settings (json)
