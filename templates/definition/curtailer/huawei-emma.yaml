@@ -20,7 +20,8 @@ render: |
     set:
     # allowed feed-in power as percent of nominal (0-100 %)
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      id: 0
+      {{- include "modbus-connection" . | indent 4 }}
       register:
         address: 40109 # Maximum grid feed-in power (0-100 %)
         type: writesingle
@@ -35,7 +36,8 @@ render: |
             value: 0 # Unlimited
             set:
               source: modbus
-              {{- include "modbus" . | indent 12 }}
+              id: 0
+              {{- include "modbus-connection" . | indent 12 }}
               register:
                 address: 40100 # Power control mode at grid connection point
                 type: writesingle
@@ -45,7 +47,8 @@ render: |
         value: 7 # Power-limited grid connection (%)
         set:
           source: modbus
-          {{- include "modbus" . | indent 8 }}
+          id: 0
+          {{- include "modbus-connection" . | indent 8 }}
           register:
             address: 40100 # Power control mode at grid connection point
             type: writesingle
@@ -57,7 +60,8 @@ render: |
       type: int
       config:
         source: modbus
-        {{- include "modbus" . | indent 6 }}
+        id: 0
+        {{- include "modbus-connection" . | indent 6 }}
         register:
           address: 40100 # Power control mode at grid connection point (0=no curtailment)
           type: holding
@@ -66,7 +70,8 @@ render: |
       type: int
       config:
         source: modbus
-        {{- include "modbus" . | indent 6 }}
+        id: 0
+        {{- include "modbus-connection" . | indent 6 }}
         register:
           address: 40109 # Maximum grid feed-in power (0-100 %)
           type: holding
