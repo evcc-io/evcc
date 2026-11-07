@@ -849,7 +849,7 @@
       "descriptionExternalUrl": "Address for other devices that want to connect to evcc and for auto discovery of the evcc app.",
       "descriptionHost": "Used to announce evcc in your local network.",
       "descriptionInternalUrl": "Local network address of evcc.",
-      "descriptionPort": "Port for the web interface and API. You'll need to update your browser URL if you change this.",
+      "descriptionPort": "Port for the web interface and API. You'll need to update your browser URL if you change this. If Docker is used update the Docker configuration.",
       "labelExternalUrl": "External URL",
       "labelHost": "mDNS Hostname",
       "labelInternalUrl": "Internal URL",

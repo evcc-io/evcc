@@ -849,7 +849,7 @@
       "descriptionExternalUrl": "Adresse, mit der sich andere Geräte mit evcc verbinden und für die Auto-Discovery der evcc-App.",
       "descriptionHost": "Wird verwendet, um evcc in deinem lokalen Netzwerk anzukündigen.",
       "descriptionInternalUrl": "Lokale Netzwerkadresse von evcc.",
-      "descriptionPort": "Port für die Web-Oberfläche und API. Du musst deine Browser-URL aktualisieren, wenn du dies änderst.",
+      "descriptionPort": "Port für die Web-Oberfläche und API. Du musst deine Browser-URL aktualisieren, wenn du dies änderst. Wenn Docker verwendet wird, aktualisiere die Docker Konfiguration.",
       "labelExternalUrl": "Externe URL",
       "labelHost": "mDNS-Hostname",
       "labelInternalUrl": "Interne URL",
