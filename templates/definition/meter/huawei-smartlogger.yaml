@@ -17,7 +17,8 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    id: 0
+    {{- include "modbus-connection" . | indent 2 }}
     connectdelay: 1s
     register:
       address: 32278 # Active power
@@ -26,7 +27,8 @@ render: |
     scale: 1
   energy:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    id: 0
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 32357 # Positive active electricity
       type: holding
@@ -34,7 +36,8 @@ render: |
     scale: 0.01
   returnenergy:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    id: 0
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 32349 # Negative active electricity
       type: holding
@@ -42,21 +45,24 @@ render: |
     scale: 0.01
   currents:
   - source: modbus
-    {{- include "modbus" . | indent 2 }}
+    id: 0
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 32272 # Huawei phase A grid current
       type: holding
       decode: int32
     scale: 0.1
   - source: modbus
-    {{- include "modbus" . | indent 2 }}
+    id: 0
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 32274 # Huawei phase B grid current
       type: holding
       decode: int32
     scale: 0.1
   - source: modbus
-    {{- include "modbus" . | indent 2 }}
+    id: 0
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 32276 # Huawei phase C grid current
       type: holding
@@ -66,14 +72,16 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    id: 0
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 40521 # Input power
       type: holding
       decode: int32
   energy:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    id: 0
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 40446 # Accumulated PV energy yield
       type: holding
