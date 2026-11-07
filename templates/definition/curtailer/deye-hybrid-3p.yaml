@@ -1,0 +1,75 @@
+template: deye-hybrid-3p
+covers: ["deye-hybrid", "deye-hybrid-hp3"]
+products:
+  - brand: Deye
+    description:
+      generic: 3p hybrid inverter
+  - brand: Sunsynk
+    description:
+      generic: 3p hybrid inverter
+requirements:
+  description:
+    de: |
+      Die Abregelung begrenzt die Einspeiseleistung über das Register "Max Sell Power" auf den gewünschten Prozentsatz der maximalen AC-Leistung.
+    en: |
+      Curtailment limits feed-in power via the "Max Sell Power" register to the desired percentage of the maximum AC power.
+params:
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 1
+  - name: maxacpower
+    required: true
+  - name: batterytype
+    choice: ["lv", "hv"]
+    required: true
+    default: "lv"
+    description:
+      de: Wechselrichter für LV- oder HV-Batterie
+      en: Inverter for LV or HV batteries
+    help:
+      de: |
+        "hv" für eine Hochvolt-Batterie mit Nennspannung über 60V verwenden
+      en: |
+        Choose "hv" if you are using a high voltage battery with a nominal voltage over 60V
+render: |
+  type: custom
+  # Feed-in curtailment via "Max Sell Power" (register 143, watts). The register is the
+  # device's always-active feed-in ceiling; there is no separate limit-enable register.
+  # "Solar Sell" (register 145) is the owner's export on/off switch and left untouched.
+  # HV models use 10 W units for register 143 (LV: 1 W).
+  curtail: # limit feed-in to the given percent of nominal (100 % = nominal power)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 143 # Max Sell Power (W)
+      type: writemultiple
+      decode: uint16
+    {{- if eq .batterytype "hv" }}
+    scale: {{ divf (maxf .maxacpower 1) 1000 }} # % to 10 W units
+    {{- else }}
+    scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
+    {{- end }}
+  curtailed: # allowed feed-in as percent of nominal, derived from Max Sell Power
+    source: go
+    in:
+      - name: limit
+        type: float
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 143 # Max Sell Power (W)
+            type: holding
+            decode: uint16
+          {{- if eq .batterytype "hv" }}
+          scale: 10
+          {{- end }}
+    script: |
+      // float64 is required: a whole-number input arrives as an int literal
+      // round, the watt conversion does not reproduce the written percent exactly
+      p := int(float64(limit)*100/{{ maxf .maxacpower 1 }} + 0.5)
+      if p > 100 {
+        p = 100
+      }
+      p
