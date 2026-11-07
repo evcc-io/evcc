@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,21 +20,19 @@ import (
 // Edimax SP-2101W smart plug local API (port 10000)
 
 const (
-	getStatus = `<?xml version="1.0" encoding="UTF8"?><SMARTPLUG id="edimax"><CMD id="get"><Device.System.Power.State></Device.System.Power.State><NOW_POWER><Device.System.Power.NowCurrent></Device.System.Power.NowCurrent><Device.System.Power.NowPower></Device.System.Power.NowPower></NOW_POWER></CMD></SMARTPLUG>`
+	getStatus = `<?xml version="1.0" encoding="UTF8"?><SMARTPLUG id="edimax"><CMD id="get"><Device.System.Power.State></Device.System.Power.State><NOW_POWER><Device.System.Power.NowPower></Device.System.Power.NowPower></NOW_POWER></CMD></SMARTPLUG>`
 	setState  = `<?xml version="1.0" encoding="UTF8"?><SMARTPLUG id="edimax"><CMD id="setup"><Device.System.Power.State>%s</Device.System.Power.State></CMD></SMARTPLUG>`
 )
 
 // Status is the plug's relay state and live measurement
 type Status struct {
-	On      bool
-	Power   float64
-	Current float64
+	On    bool
+	Power float64
 }
 
 type statusResponse struct {
-	State   string `xml:"CMD>Device.System.Power.State"`
-	Power   string `xml:"CMD>NOW_POWER>Device.System.Power.NowPower"`
-	Current string `xml:"CMD>NOW_POWER>Device.System.Power.NowCurrent"`
+	State string `xml:"CMD>Device.System.Power.State"`
+	Power string `xml:"CMD>NOW_POWER>Device.System.Power.NowPower"`
 }
 
 type setupResponse struct {
@@ -101,17 +98,6 @@ func (c *Connection) post(body string, res any) error {
 	return dec.Decode(res)
 }
 
-func parseFloat(s string) (float64, error) {
-	f, err := strconv.ParseFloat(strings.TrimSpace(s), 64)
-	if err != nil {
-		return 0, err
-	}
-	if math.IsNaN(f) || math.IsInf(f, 0) {
-		return 0, fmt.Errorf("invalid value: %s", s)
-	}
-	return f, nil
-}
-
 func (c *Connection) status() (Status, error) {
 	var res statusResponse
 	if err := c.post(getStatus, &res); err != nil {
@@ -131,12 +117,8 @@ func (c *Connection) status() (Status, error) {
 		return Status{}, fmt.Errorf("invalid state: %q", res.State)
 	}
 
-	if status.Power, err = parseFloat(res.Power); err != nil {
+	if status.Power, err = strconv.ParseFloat(strings.TrimSpace(res.Power), 64); err != nil {
 		return Status{}, fmt.Errorf("power: %w", err)
-	}
-
-	if status.Current, err = parseFloat(res.Current); err != nil {
-		return Status{}, fmt.Errorf("current: %w", err)
 	}
 
 	return status, nil

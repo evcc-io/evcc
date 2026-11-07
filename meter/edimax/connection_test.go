@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	statusOn = `<?xml version="1.0" encoding="UTF8"?><SMARTPLUG id="edimax"><CMD id="get"><Device.System.Power.State>ON</Device.System.Power.State><NOW_POWER><Device.System.Power.NowCurrent>0.5432</Device.System.Power.NowCurrent><Device.System.Power.NowPower>118.25</Device.System.Power.NowPower></NOW_POWER></CMD></SMARTPLUG>`
+	statusOn = `<?xml version="1.0" encoding="UTF8"?><SMARTPLUG id="edimax"><CMD id="get"><Device.System.Power.State>ON</Device.System.Power.State><NOW_POWER><Device.System.Power.NowPower>118.25</Device.System.Power.NowPower></NOW_POWER></CMD></SMARTPLUG>`
 	setupOK  = `<?xml version="1.0" encoding="UTF8"?><SMARTPLUG id="edimax"><CMD id="setup">OK</CMD></SMARTPLUG>`
 )
 
@@ -62,7 +62,7 @@ func TestStatusAndSwitch(t *testing.T) {
 
 	res, err := conn.Status()
 	require.NoError(t, err)
-	assert.Equal(t, Status{On: true, Power: 118.25, Current: 0.5432}, res)
+	assert.Equal(t, Status{On: true, Power: 118.25}, res)
 
 	require.NoError(t, conn.Enable(false))
 	assert.Contains(t, (*bodies)[1], "<Device.System.Power.State>OFF</Device.System.Power.State>")

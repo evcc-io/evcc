@@ -3,7 +3,6 @@ package charger
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -13,7 +12,6 @@ import (
 
 // Edimax charger implementation
 type Edimax struct {
-	mu   sync.Mutex
 	conn *edimax.Connection
 	*switchSocket
 }
@@ -57,9 +55,6 @@ func (c *Edimax) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *Edimax) Enable(enable bool) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
 	if err := c.conn.Enable(enable); err != nil {
 		return err
 	}
