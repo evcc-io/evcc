@@ -974,10 +974,10 @@ func TestApplyOptimizerResultPVShare(t *testing.T) {
 			})
 
 			site := &Site{valueChan: make(chan util.Param, 100)}
-			site.applyOptimizerResult(req, details, res, schedule, now.Add(time.Second), now)
+			site.applyOptimizerResult(optimizerSolve{req: req, details: details, res: res, schedule: schedule, completed: now}, now.Add(time.Second))
 
 			for i := range tc.charge {
-				assert.Equal(t, tc.want, site.suggestions[batteryKey(string(rune('a'+i)))].Action)
+				assert.Equal(t, tc.want, site.optimizer.suggestions[batteryKey(string(rune('a'+i)))].Action)
 			}
 		})
 	}
@@ -1130,11 +1130,13 @@ func reapplyFixture(site *Site, batteries []optimizer.BatteryConfig, res []optim
 	dt := []int{7 * 60, 900, 900}
 	schedule := optimizerSchedule{timestamps: asTimestamps(dt, completed), dt: dt}
 
-	site.applyOptimizerResult(
-		optimizer.OptimizationInput{TimeSeries: optimizer.TimeSeries{Dt: dt}, Batteries: batteries},
-		requestDetails{Timestamps: schedule.timestamps, BatteryDetails: details},
-		optimizer.OptimizationResult{GridImport: []float32{0, 500, 0}, Batteries: res}, // slot 1 imports
-		schedule, completed, completed)
+	site.applyOptimizerResult(optimizerSolve{
+		req:       optimizer.OptimizationInput{TimeSeries: optimizer.TimeSeries{Dt: dt}, Batteries: batteries},
+		details:   requestDetails{Timestamps: schedule.timestamps, BatteryDetails: details},
+		res:       optimizer.OptimizationResult{GridImport: []float32{0, 500, 0}, Batteries: res}, // slot 1 imports
+		schedule:  schedule,
+		completed: completed,
+	}, completed)
 
 	return completed
 }
@@ -1206,7 +1208,7 @@ func TestReapplySuggestionsExcludeDisconnectedLoadpoint(t *testing.T) {
 	site.reapplySuggestions(reapplyMidGap)
 
 	assert.Equal(t, actionStop, site.suggestion(loadpointKey(0), actionCharge).Action)
-	assert.Nil(t, site.lastOptimizerSolve)
+	assert.Nil(t, site.optimizer.lastSolve)
 }
 
 func TestReapplySuggestionsExpireAfterOutage(t *testing.T) {
@@ -1218,7 +1220,7 @@ func TestReapplySuggestionsExpireAfterOutage(t *testing.T) {
 	site.reapplySuggestions(completed.Add(2*tariff.SlotDuration + time.Minute))
 
 	assert.Nil(t, site.suggestion(batteryKey("home"), api.BatteryNormal.String()))
-	assert.Nil(t, site.lastOptimizerSolve)
+	assert.Nil(t, site.optimizer.lastSolve)
 }
 
 func TestCircuitMaxImport(t *testing.T) {
@@ -1246,20 +1248,20 @@ func TestOptimizerRerunAfterBusy(t *testing.T) {
 	site := &Site{log: util.NewLogger("foo")}
 
 	// run in progress: forced trigger is remembered, regular one is not
-	site.optimizerMu.Lock()
+	site.optimizer.mu.Lock()
 	site.optimizerUpdateAsync(false)
-	assert.False(t, site.optimizerRerun.Load())
+	assert.False(t, site.optimizer.rerun.Load())
 	site.optimizerUpdateAsync(true)
-	assert.True(t, site.optimizerRerun.Load())
+	assert.True(t, site.optimizer.rerun.Load())
 
 	// unlock re-runs on its own, despite the closed interval gate
 	last := time.Now().Add(-time.Second)
-	site.optimizerUpdated = last
+	site.optimizer.updated = last
 	site.optimizerUnlock()
-	assert.Eventually(t, func() bool { return !site.optimizerRerun.Load() }, time.Second, time.Millisecond)
+	assert.Eventually(t, func() bool { return !site.optimizer.rerun.Load() }, time.Second, time.Millisecond)
 
 	// the re-run holds the lock from before consuming the trigger until done
-	site.optimizerMu.Lock()
-	defer site.optimizerMu.Unlock()
-	assert.True(t, site.optimizerUpdated.After(last), "pending trigger must bypass interval gate")
+	site.optimizer.mu.Lock()
+	defer site.optimizer.mu.Unlock()
+	assert.True(t, site.optimizer.updated.After(last), "pending trigger must bypass interval gate")
 }
