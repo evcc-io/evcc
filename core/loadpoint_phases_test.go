@@ -823,7 +823,7 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 					return min(new, tc.availableCircuitPower)
 				}).AnyTimes()
 
-				circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any()).DoAndReturn(func(_, new float64) float64 {
+				circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ api.GridPhases, _ [3]float64, new float64) float64 {
 					return new
 				}).AnyTimes()
 			}
@@ -1005,7 +1005,7 @@ func TestPvScalePhasesCircuitLimits(t *testing.T) {
 			vehicle.EXPECT().Features().Return(nil).AnyTimes()
 
 			circuit := api.NewMockCircuit(ctrl)
-			circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any()).DoAndReturn(func(_, current float64) float64 {
+			circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ api.GridPhases, _ [3]float64, current float64) float64 {
 				if tc.circuitCurrent == 0 {
 					return current
 				}

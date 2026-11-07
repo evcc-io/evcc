@@ -34,8 +34,10 @@ type Circuit struct {
 	getMaxCurrent func() (float64, error) // dynamic max allowed current
 	getMaxPower   func() (float64, error) // dynamic max allowed power
 
-	current float64
-	power   float64
+	currents [3]float64 // per grid phase
+	power    float64
+
+	mappingMismatch int // consecutive updates where the meter contradicts the loadpoint phase mapping
 
 	hems api.HEMS // only set on the root circuit, supplies the HEMS consumption cap
 
@@ -260,7 +262,7 @@ func (c *Circuit) RegisterChild(child api.Circuit) {
 
 func (c *Circuit) updateLoadpoints(loadpoints []api.CircuitLoad) {
 	c.power = 0
-	c.current = 0
+	c.currents = [3]float64{}
 
 	for _, lp := range loadpoints {
 		if lp.GetCircuit() != c {
@@ -268,7 +270,13 @@ func (c *Circuit) updateLoadpoints(loadpoints []api.CircuitLoad) {
 		}
 
 		c.power += lp.GetChargePower()
-		c.current += lp.GetMaxPhaseCurrent()
+		c.addCurrents(lp.GetGridPhaseCurrents())
+	}
+}
+
+func (c *Circuit) addCurrents(currents [3]float64) {
+	for i := range c.currents {
+		c.currents[i] += currents[i]
 	}
 }
 
@@ -276,6 +284,69 @@ func (c *Circuit) overloadOnError(t time.Time, val *float64) {
 	if c.timeout > 0 && time.Since(t) > c.timeout {
 		*val = math.MaxFloat64
 	}
+}
+
+func (c *Circuit) overloadCurrentsOnError(t time.Time) {
+	if c.timeout > 0 && time.Since(t) > c.timeout {
+		c.currents = [3]float64{math.MaxFloat64, math.MaxFloat64, math.MaxFloat64}
+	}
+}
+
+// mismatchTolerance is the measurement and timing deviation accepted before the
+// meter is considered to contradict the configured loadpoint phase mapping
+func mismatchTolerance(expected float64) float64 {
+	return max(2, 0.2*expected)
+}
+
+// mismatchCycles is the number of consecutive updates a contradiction must persist
+const mismatchCycles = 3
+
+// checkPhaseMapping warns if the meter measures less current on a grid phase than
+// the loadpoints with a configured phase mapping draw from it. Other loads on the
+// circuit only add current, so a lower reading means a wrong mapping.
+// Root circuits are skipped since a grid meter also sees local generation.
+func (c *Circuit) checkPhaseMapping(loadpoints []api.CircuitLoad) {
+	// a meter for a power limit only may not measure phase currents
+	if c.parent == nil || !api.HasCap[api.PhaseCurrents](c.meter) {
+		return
+	}
+
+	var expected [3]float64
+	var mapped bool
+
+	// loadpoints without a reliable measurement are left out, the sum of the
+	// others still is a lower bound of what the meter must see
+	for _, lp := range loadpoints {
+		if lp.GetCircuit() != c {
+			continue
+		}
+
+		currents, ok := lp.MeasuredGridPhaseCurrents()
+		if !ok {
+			continue
+		}
+
+		mapped = true
+		for i, v := range currents {
+			expected[i] += v
+		}
+	}
+
+	if !mapped {
+		return
+	}
+
+	for i := range expected {
+		if c.currents[i]+mismatchTolerance(expected[i]) < expected[i] {
+			c.mappingMismatch++
+			if c.mappingMismatch == mismatchCycles {
+				c.log.WARN.Printf("loadpoint phase mapping does not match meter: L%d measured %.3gA, expected at least %.3gA", i+1, c.currents[i], expected[i])
+			}
+			return
+		}
+	}
+
+	c.mappingMismatch = 0
 }
 
 func (c *Circuit) updateMeters() error {
@@ -294,7 +365,7 @@ func (c *Circuit) updateMeters() error {
 			i1, i2, i3, err = phaseMeter.Currents()
 			return err
 		}, modbus.Backoff()); err != nil {
-			c.overloadOnError(c.currentUpdated, &c.current)
+			c.overloadCurrentsOnError(c.currentUpdated)
 			return fmt.Errorf("circuit currents: %w", err)
 		}
 
@@ -306,7 +377,7 @@ func (c *Circuit) updateMeters() error {
 			}
 		}
 
-		c.current = max(util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3))
+		c.currents = [3]float64{util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3)}
 		c.currentUpdated = time.Now()
 	}
 
@@ -324,10 +395,10 @@ func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 			c.log.DEBUG.Printf("power: %.0fW", c.power)
 		}
 
-		if maxCurrent != 0 && c.current > maxCurrent {
-			c.log.WARN.Printf("over current detected: %.3gA > %.3gA", c.current, maxCurrent)
+		if current := c.maxPhaseCurrent(); maxCurrent != 0 && current > maxCurrent {
+			c.log.WARN.Printf("over current detected: %.3gA > %.3gA", current, maxCurrent)
 		} else {
-			c.log.DEBUG.Printf("current: %.3gA", c.current)
+			c.log.DEBUG.Printf("current: %.3gA", current)
 		}
 	}()
 
@@ -340,14 +411,18 @@ func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 
 	// meter available
 	if c.meter != nil {
-		return c.updateMeters()
+		if err := c.updateMeters(); err != nil {
+			return err
+		}
+		c.checkPhaseMapping(loadpoints)
+		return nil
 	}
 
 	// no meter available
 	c.updateLoadpoints(loadpoints)
 	for _, ch := range c.children {
 		c.power += ch.GetChargePower()
-		c.current += ch.GetMaxPhaseCurrent()
+		c.addCurrents(ch.GetGridPhaseCurrents())
 	}
 
 	return nil
@@ -358,9 +433,18 @@ func (c *Circuit) GetChargePower() float64 {
 	return c.power
 }
 
-// GetMaxPhaseCurrent returns the actual current
+func (c *Circuit) maxPhaseCurrent() float64 {
+	return max(c.currents[0], c.currents[1], c.currents[2])
+}
+
+// GetMaxPhaseCurrent returns the actual current of the highest loaded phase
 func (c *Circuit) GetMaxPhaseCurrent() float64 {
-	return c.current
+	return c.maxPhaseCurrent()
+}
+
+// GetGridPhaseCurrents returns the actual currents per grid phase
+func (c *Circuit) GetGridPhaseCurrents() [3]float64 {
+	return c.currents
 }
 
 // ValidatePower validates power request
@@ -385,18 +469,20 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 	return c.parent.ValidatePower(old, new)
 }
 
-// ValidateCurrent validates current request
-func (c *Circuit) ValidateCurrent(old, new float64) float64 {
+// ValidateCurrent validates a current request on the given grid phases. old is the
+// current the load draws per grid phase now: every phase is checked on its own and
+// only the headroom left by the other loads on that phase counts.
+func (c *Circuit) ValidateCurrent(phases api.GridPhases, old [3]float64, new float64) float64 {
 	if maxCurrent := c.GetMaxCurrent(); maxCurrent != 0 {
-		delta := max(0, new-old)
-		potential := maxCurrent - c.current
+		for i, active := range phases {
+			if !active {
+				continue
+			}
 
-		if delta > potential {
-			capped := min(new, max(0, old+potential))
-			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current, old, new, maxCurrent, capped)
-			new = capped
-		} else {
-			c.log.TRACE.Printf("validate current: %.3gA + (%.3gA -> %.3gA) <= %.3gA ok", c.current, old, new, maxCurrent)
+			if limit := max(0, old[i]+maxCurrent-c.currents[i]); new > limit {
+				c.log.DEBUG.Printf("validate current: L%d %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", i+1, c.currents[i], old[i], new, maxCurrent, limit)
+				new = limit
+			}
 		}
 	}
 
@@ -404,5 +490,5 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 		return new
 	}
 
-	return c.parent.ValidateCurrent(old, new)
+	return c.parent.ValidateCurrent(phases, old, new)
 }

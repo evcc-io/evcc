@@ -65,6 +65,13 @@ func (lp *Loadpoint) GetCircuitRef() string {
 	return lp.CircuitRef
 }
 
+// GetPhaseRotation returns the grid phase connected to charger L1
+func (lp *Loadpoint) GetPhaseRotation() string {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.PhaseRotation
+}
+
 // SetCircuitRef sets the loadpoint circuit
 func (lp *Loadpoint) SetCircuitRef(ref string) {
 	if !lp.isConfigurable() {
@@ -825,6 +832,10 @@ func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
+	return lp.maxPhaseCurrent()
+}
+
+func (lp *Loadpoint) maxPhaseCurrent() float64 {
 	if lp.chargeCurrents == nil {
 		return lp.offeredCurrent
 	}

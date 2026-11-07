@@ -557,7 +557,7 @@ func TestOptimizerPhaseScaleUp(t *testing.T) {
 			lp.circuit = circuit
 			circuit.EXPECT().GetMaxPower().Return(0.0).AnyTimes()
 			circuit.EXPECT().ValidatePower(gomock.Any(), gomock.Any()).DoAndReturn(func(_, new float64) float64 { return new }).AnyTimes()
-			circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any()).DoAndReturn(func(_, new float64) float64 { return new }).AnyTimes()
+			circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ api.GridPhases, _ [3]float64, new float64) float64 { return new }).AnyTimes()
 
 			s := &types.Suggestion{Action: actionCharge, Charge: charge, Grid: charge}
 
