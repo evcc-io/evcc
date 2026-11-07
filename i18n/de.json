@@ -582,6 +582,8 @@
         }
       },
       "estimateLabel": "Ladestand zwischen API-Updates interpolieren",
+      "expectedPowerHelp": "Leistung, die das Gerät im eingeschalteten Zustand aufnimmt. Wird für die Überschuss-Schwelle und die Plandauer verwendet.",
+      "expectedPowerLabel": "Erwartete Leistung",
       "maxCurrentHelp": "Muss größer als der Mindeststrom sein.",
       "maxCurrentLabel": "Maximaler Strom",
       "maxTempHelp": "Muss größer als die Mindesttemperatur sein.",

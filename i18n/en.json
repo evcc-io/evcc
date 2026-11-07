@@ -582,6 +582,8 @@
         }
       },
       "estimateLabel": "Interpolate charge level between API updates",
+      "expectedPowerHelp": "Power the device draws when switched on. Used for the surplus threshold and plan duration.",
+      "expectedPowerLabel": "Expected power",
       "maxCurrentHelp": "Must be greater than minimum current.",
       "maxCurrentLabel": "Maximum current",
       "maxTempHelp": "Must be greater than minimum temperature.",

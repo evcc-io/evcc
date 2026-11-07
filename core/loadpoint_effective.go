@@ -216,6 +216,11 @@ func (lp *Loadpoint) effectiveMinCurrent() float64 {
 
 // effectiveMaxCurrent returns the effective max current
 func (lp *Loadpoint) effectiveMaxCurrent() float64 {
+	// no current control, min current is the expected draw
+	if lp.chargerHasFeature(api.SwitchDevice) {
+		return lp.effectiveMinCurrent()
+	}
+
 	maxCurrent := lp.getMaxCurrent()
 
 	if v := lp.GetVehicle(); v != nil {

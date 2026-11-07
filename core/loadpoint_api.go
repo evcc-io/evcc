@@ -861,7 +861,11 @@ func (lp *Loadpoint) SetMinCurrent(current float64) error {
 	defer lp.Unlock()
 
 	if current > lp.maxCurrent {
-		return errors.New("min current must be smaller or equal than max current")
+		if lp.chargerHasFeature(api.SwitchDevice) {
+			lp.setMaxCurrent(current)
+		} else {
+			return errors.New("min current must be smaller or equal than max current")
+		}
 	}
 
 	lp.log.DEBUG.Println("set min current:", current)
@@ -897,7 +901,11 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	defer lp.Unlock()
 
 	if current < lp.minCurrent {
-		return errors.New("max current must be greater or equal than min current")
+		if lp.chargerHasFeature(api.SwitchDevice) {
+			current = lp.minCurrent
+		} else {
+			return errors.New("max current must be greater or equal than min current")
+		}
 	}
 
 	lp.log.DEBUG.Println("set max current:", current)
