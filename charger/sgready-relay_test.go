@@ -11,6 +11,8 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+var testRelay api.Charger
+
 func TestSgReadyRelayFromConfig(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	ctx := context.Background()
@@ -23,9 +25,13 @@ func TestSgReadyRelayFromConfig(t *testing.T) {
 	require.NoError(t, config.Chargers().Add(config.NewStaticDevice[api.Charger](config.Named{Name: "boost-relay"}, boost)))
 	require.NoError(t, config.Chargers().Add(config.NewStaticDevice[api.Charger](config.Named{Name: "dim-relay"}, dim)))
 
-	registry.AddCtx("test-relay", func(context.Context, map[string]any) (api.Charger, error) {
-		return dim, nil
-	})
+	// registry has no removal, register once and swap the instance per run
+	testRelay = dim
+	if _, err := registry.Get("test-relay"); err != nil {
+		registry.AddCtx("test-relay", func(context.Context, map[string]any) (api.Charger, error) {
+			return testRelay, nil
+		})
+	}
 
 	t.Run("referenced relays", func(t *testing.T) {
 		wb, err := NewSgReadyRelayFromConfig(ctx, map[string]any{
