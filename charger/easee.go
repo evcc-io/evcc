@@ -331,14 +331,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	// logging might be slow or block, execute outside lock
 	c.log.TRACE.Printf("ProductUpdate %s: (%v) %s %v", res.Mid, res.Timestamp, res.ID, value)
 
-	// deferred before the unlock so the loadpoint is called without holding the lock
-	var lp loadpoint.API
-	defer func() {
-		if lp != nil {
-			lp.RequestUpdate()
-		}
-	}()
-
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
@@ -434,8 +426,8 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			c.obsTime[easee.SESSION_ENERGY] = time.Now()
 		}
 
-		if opModeStatus(c.opMode) != opModeStatus(opMode) {
-			lp = c.lp
+		if opModeStatus(c.opMode) != opModeStatus(opMode) && c.lp != nil {
+			c.lp.RequestUpdate()
 		}
 
 		c.opMode = opMode

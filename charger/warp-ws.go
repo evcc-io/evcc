@@ -299,14 +299,6 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 	metersValueIDsTopic := fmt.Sprintf("meters/%d/value_ids", w.meterIndex)
 	metersValuesTopic := fmt.Sprintf("meters/%d/values", w.meterIndex)
 
-	// deferred before the unlock so the loadpoint is called without holding the lock
-	var lp loadpoint.API
-	defer func() {
-		if lp != nil {
-			lp.RequestUpdate()
-		}
-	}()
-
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -328,8 +320,8 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 	case "evse/state":
 		prev, _ := w.statusFromEvseStatus(w.evse.State.Iec61851State)
 		if err = json.Unmarshal(payload, &w.evse.State); err == nil {
-			if status, _ := w.statusFromEvseStatus(w.evse.State.Iec61851State); status != prev {
-				lp = w.lp
+			if status, _ := w.statusFromEvseStatus(w.evse.State.Iec61851State); status != prev && w.lp != nil {
+				w.lp.RequestUpdate()
 			}
 		}
 	case "meter/all_values":

@@ -46,14 +46,6 @@ func statusClass(s *core.StatusNotificationRequest) api.ChargeStatus {
 }
 
 func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
-	// deferred before the unlock so the callback runs without holding the lock
-	var onStatusChange func()
-	defer func() {
-		if onStatusChange != nil {
-			onStatusChange()
-		}
-	}()
-
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
@@ -71,8 +63,8 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		conn.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, conn.status.Timestamp)
 	}
 
-	if applied && statusClass(prev) != statusClass(request) {
-		onStatusChange = conn.onStatusChange
+	if applied && statusClass(prev) != statusClass(request) && conn.onStatusChange != nil {
+		conn.onStatusChange()
 	}
 
 	// Available means cable unplugged and any prior transaction is stale
