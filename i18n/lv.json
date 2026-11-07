@@ -190,10 +190,20 @@
     "circuits": {
       "addMainCircuit": "Pievienot saknes ķēdi",
       "addSubCircuit": "Pievienot apakšķēdi",
+      "assignHere": "Piešķirt šeit",
+      "assignmentFailed": "Neizdevās saglabāt piešķīrumu. Lūdzu, mēģiniet vēlreiz.",
       "description": "Nodrošina, ka visu ķēdei pievienoto uzlādes punktu un sildītāju kopsumma nepārsniedz konfigurētos jaudas un strāvas ierobežojumus. Ķēdes var ligzdot, veidojot hierarhiju.",
+      "destination": "Ķēde {title}",
+      "dragHint": "Velciet uz ķēdi vai pieskarieties, lai atlasītu.",
+      "dropAssign": "Nometiet, lai piešķirtu",
+      "dropRemove": "Nometiet šeit, lai noņemtu no tās ķēdes.",
       "legacyWarning": "Pieejama jauna ķēžu konfigurācija! Noņemiet un saglabājiet savu konfigurāciju šeit, lai izmantotu jauno vadīto procesu. Pēc tam nepieciešama restartēšana.",
       "meterDedicated": "Skaitītājs",
       "meterGrid": "Elektrotīkls",
+      "moveHere": "Pārvietot šeit",
+      "notAssigned": "Nav piešķirts",
+      "selectAssign": "Pieskarieties ķēdei, lai piešķirtu {title}.",
+      "selectMove": "Pieskarieties ķēdei, lai pārvietotu {title}, vai kopējam laukumam, lai to noņemtu.",
       "title": "Slodzes pārvaldība",
       "usableMeters": "Izmantojamās skaitītāju atsauces"
     },
@@ -351,6 +361,7 @@
       "auxMeter": "Pašregulējošs patērētājs",
       "batteryStorage": "Mājas akumulatora",
       "consumer": "Patērētājs",
+      "extMeter": "Papildu skaitītājs",
       "solarSystem": "Saules enerģijas sistēma"
     },
     "editor": {

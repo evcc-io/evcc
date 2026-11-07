@@ -146,11 +146,13 @@
       "template": "Fabrikant",
       "titleAdd": {
         "charging": "Voeg lader toe",
-        "heating": "Voeg verwarmer toe"
+        "heating": "Voeg verwarmer toe",
+        "switch": "Schakelbaar Stopcontact Toevoegen"
       },
       "titleEdit": {
         "charging": "Wijzig lader",
-        "heating": "Pas verwarmer aan"
+        "heating": "Pas verwarmer aan",
+        "switch": "Schakelbaar stopcontact wijzigen"
       },
       "type": {
         "custom": {
@@ -188,10 +190,20 @@
     "circuits": {
       "addMainCircuit": "Hoofdcircuit toevoegen",
       "addSubCircuit": "Onderliggend circuit toevoegen",
+      "assignHere": "Hier toewijzen",
+      "assignmentFailed": "Kan toewijzing niet opslaan. Probeer het opnieuw.",
       "description": "Zorgt ervoor dat de som van alle laadpunten en verwarmers die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
+      "destination": "Circuit {title}",
+      "dragHint": "Sleep op een circuit, of tik om te selecteren.",
+      "dropAssign": "Loslaten om toe te wijzen",
+      "dropRemove": "Hier loslaten om van het circuit te ontkoppelen.",
       "legacyWarning": "Nieuwe circuitconfiguratie beschikbaar! Verwijder en sla uw configuratie hier op om het nieuwe, begeleide proces te gebruiken. Een herstart is daarna vereist.",
       "meterDedicated": "Meter",
       "meterGrid": "Net",
+      "moveHere": "Hierheen verplaatsen",
+      "notAssigned": "Niet toegewezen",
+      "selectAssign": "Tik op een circuit om {title} toe te wijzen.",
+      "selectMove": "Tik op een circuit om {title} te verplaatsen, of de groep om te verwijderen.",
       "title": "Load Balancing",
       "usableMeters": "Bruikbare meterreferenties"
     },
@@ -230,6 +242,15 @@
       "title": "Opwekbegrenzing",
       "titleAdd": "Voeg opwekbegrenzingsapparaat toe",
       "titleEdit": "Bewerk opwekbegrenzingsapparaat"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Lader toevoegen",
+        "meter": "Meter toevoegen",
+        "switch": "Schakelbaar stopcontact toevoegen",
+        "tariff": "Tarief toevoegen"
+      },
+      "noNesting": "Nestelen is gelimiteerd tot één niveau. Kies een andere optie."
     },
     "deviceValue": {
       "activeClients": "Actieve clients",
@@ -309,8 +330,16 @@
           "returnEnergy": "Ontladen"
         },
         "consumer": {
+          "chargeStatusB": "standby",
+          "chargeStatusC": "verwarmen",
           "energy": "Verbruikt",
           "returnEnergy": "Geproduceerd"
+        },
+        "continuous": {
+          "chargeStatusB": "normaal",
+          "chargeStatusC": "boost",
+          "dimmed": "Gedimd",
+          "enabled": "Boost"
         },
         "grid": {
           "energy": "Geïmporteerd",
@@ -332,6 +361,7 @@
       "auxMeter": "Zelf-regulerende verbruiker",
       "batteryStorage": "Thuisbatterij",
       "consumer": "Verbruiker",
+      "extMeter": "Extra meter",
       "solarSystem": "Zonnepanelen systeem"
     },
     "editor": {
@@ -496,7 +526,7 @@
         "charging": "Laadpunt toevoegen",
         "heating": "Verwarmingstoestel toevoegen"
       },
-      "addMeter": "Toevoegen van een individuele energiemeter",
+      "addMeter": "Meter toevoegen",
       "advancedConfig": "Geavanceerde configuratie",
       "cancel": "Annuleren",
       "chargerError": {
@@ -556,7 +586,7 @@
       "electricalSubtitle": "Bij twijfel, raadpleeg een elektricien.",
       "electricalTitle": "Elektrisch",
       "energyMeterHelp": "Extra meter voor laadstations zonder geïntegreerde meter.",
-      "energyMeterLabel": "Energiemeter",
+      "energyMeterLabel": "Specifieke energiemeter",
       "estimateLabel": "Interpoleer batterijpercentage tussen API updates",
       "maxCurrentHelp": "Moet groter zijn dan de minimum stroom.",
       "maxCurrentLabel": "Maximale stroom",
@@ -1145,6 +1175,7 @@
       "template": "Aanbieder",
       "title": "Tarieven & verwachtingen",
       "titleChoice": "Wat wilt u toevoegen?",
+      "titleSub": "Subtarief",
       "type": {
         "co2": "CO₂ intensiteit",
         "feedIn": "Terugleververgoeding",
@@ -1609,7 +1640,8 @@
         "continuousCo2Description": "Kiest de meest ecologische, continue reeks laadmomenten.",
         "continuousPriceDescription": "Kiest de goedkoopste, continue reeks laadmomenten.",
         "disabledDescription": "Vereist een verwachting van dynamische tarieven of CO₂.",
-        "label": "Optimalisatie"
+        "label": "Optimalisatie",
+        "optimizerDescription": "De {optimizer} slecteert het goedkoopste tijdsvenster. Kan leiden tot meerdere keren starten en stoppen."
       },
       "planNumber": "Schema {number}",
       "precondition": {
