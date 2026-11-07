@@ -251,7 +251,11 @@ func (lp *Loadpoint) SetAlwaysCharge(ac api.AlwaysCharge) error {
 	}
 
 	lp.log.DEBUG.Println("set always charge:", ac)
-	lp.setAlwaysCharge(ac)
+
+	if ac != lp.alwaysCharge {
+		lp.setAlwaysCharge(ac)
+		lp.triggerOptimizer()
+	}
 
 	return nil
 }
