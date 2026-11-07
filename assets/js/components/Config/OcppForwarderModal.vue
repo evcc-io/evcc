@@ -142,6 +142,26 @@
 				</template>
 			</PropertyCollapsible>
 
+			<h6 class="mt-4">{{ $t("config.ocppforwarder.mirrors.title") }}</h6>
+			<p class="text-muted small">{{ $t("config.ocppforwarder.mirrors.description") }}</p>
+			<OcppForwarderMirror
+				v-for="(mirror, index) in values.mirrors || []"
+				:key="index"
+				:model-value="mirror"
+				:status="mirrorStatus(mirror)"
+				:index="index"
+				@update:model-value="setMirror(values, index, $event)"
+				@remove="removeMirror(values, index)"
+			/>
+			<button
+				type="button"
+				class="btn btn-sm btn-outline-secondary"
+				data-testid="ocppforwarder-add-mirror"
+				@click="addMirror(values)"
+			>
+				{{ $t("config.ocppforwarder.mirrors.add") }}
+			</button>
+
 			<div class="mt-4 d-flex justify-content-between gap-2 flex-column flex-sm-row">
 				<div
 					class="d-flex justify-content-between order-2 order-sm-1 gap-2 flex-grow-1 flex-sm-grow-0"
@@ -167,7 +187,7 @@
 					v-if="changes"
 					type="button"
 					class="btn btn-primary order-1 order-sm-2 flex-grow-1 flex-sm-grow-0 px-4"
-					:disabled="!values.upstreamUrl"
+					:disabled="!values.upstreamUrl || mirrorsIncomplete(values)"
 					@click="save(false)"
 				>
 					{{ $t("config.general.save") }}
@@ -191,14 +211,20 @@ import JsonModal from "./JsonModal.vue";
 import FormRow from "./FormRow.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import PropertyCertField from "./PropertyCertField.vue";
-import type { OcppForwarderRule, OcppForwarderSession } from "@/types/evcc";
+import OcppForwarderMirror from "./OcppForwarderMirror.vue";
+import type {
+	OcppForwarderRule,
+	OcppForwarderSession,
+	OcppMirrorRule,
+	OcppMirrorSession,
+} from "@/types/evcc";
 import { getModal, closeModal } from "@/configModal";
 import api from "@/api";
 import store from "@/store";
 
 export default defineComponent({
 	name: "OcppForwarderModal",
-	components: { JsonModal, FormRow, PropertyCollapsible, PropertyCertField },
+	components: { JsonModal, FormRow, PropertyCollapsible, PropertyCertField, OcppForwarderMirror },
 	emits: ["changed"],
 	data() {
 		return { removing: false };
@@ -234,6 +260,26 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		mirrorStatus(mirror: OcppMirrorRule): OcppMirrorSession | undefined {
+			const url = (mirror.upstreamUrl || "").replace(/\/+$/, "");
+			return this.session?.mirrors?.find(
+				(m) =>
+					m.upstreamUrl === url &&
+					(m.upstreamStationId || "") === (mirror.upstreamStationId || "")
+			);
+		},
+		mirrorsIncomplete(rule: OcppForwarderRule): boolean {
+			return (rule.mirrors || []).some((m) => !m.upstreamUrl);
+		},
+		addMirror(rule: OcppForwarderRule) {
+			rule.mirrors = [...(rule.mirrors || []), { upstreamUrl: "" }];
+		},
+		setMirror(rule: OcppForwarderRule, index: number, mirror: OcppMirrorRule) {
+			rule.mirrors = (rule.mirrors || []).map((m, i) => (i === index ? mirror : m));
+		},
+		removeMirror(rule: OcppForwarderRule, index: number) {
+			rule.mirrors = (rule.mirrors || []).filter((_, i) => i !== index);
+		},
 		getReadOnlyHelp(readOnly?: boolean): string {
 			return this.$t(`config.ocppforwarder.readOnly.help.${readOnly ? "true" : "false"}`);
 		},
