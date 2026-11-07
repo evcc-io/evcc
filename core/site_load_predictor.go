@@ -93,10 +93,18 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
 	return res
 }
 
-// surplusOnly reports a loadpoint in smart mode without always charge, smart cost limit
-// or plan, which only ever charges from surplus
+// surplusOnly reports a loadpoint in smart mode without always charge, smart cost limit,
+// plan, battery boost or min soc charging, which only ever charges from surplus
 func surplusOnly(lp *Loadpoint) bool {
-	return loadpoint.SurplusFlexible(lp) && lp.GetSmartCostLimit() == nil && lp.EffectivePlanTime().IsZero()
+	if !loadpoint.SurplusFlexible(lp) || lp.GetSmartCostLimit() != nil ||
+		!lp.EffectivePlanTime().IsZero() || lp.GetBatteryBoost() != boostDisabled {
+		return false
+	}
+
+	lp.RLock()
+	defer lp.RUnlock()
+
+	return !lp.minSocNotReached()
 }
 
 // lookupBin returns the historical energy at the rounded forecast temperature (°C),
