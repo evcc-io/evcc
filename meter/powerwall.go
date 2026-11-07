@@ -232,9 +232,11 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 
 		implement.Has(m, implement.Battery(m.batterySoc))
 
-		implement.Has(m, implement.BatteryCapacity(func() (float64, error) {
-			return status.NominalFullPackEnergy / 1e3, nil
-		}))
+		if !serverMode || status.NominalFullPackEnergy > 0 {
+			implement.Has(m, implement.BatteryCapacity(func() (float64, error) {
+				return status.NominalFullPackEnergy / 1e3, nil
+			}))
+		}
 
 		// backup reserve is the lower discharge limit, the powerwall has no upper soc limit
 		implement.Has(m, implement.BatterySocLimiter(func() (float64, float64, error) {

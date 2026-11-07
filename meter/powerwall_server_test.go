@@ -16,17 +16,18 @@ import (
 )
 
 type fakePowerwallServer struct {
-	mu                sync.Mutex
-	secret            string
-	reserve           float64
-	holds             int
-	loginCalls        atomic.Int32
-	apparent          float64
-	usable            float64
-	maxChargePower    float64
-	maxDischargePower float64
-	reserveNull       bool
-	partialFreq       bool
+	mu                    sync.Mutex
+	secret                string
+	reserve               float64
+	holds                 int
+	loginCalls            atomic.Int32
+	apparent              float64
+	usable                float64
+	nominalFullPackEnergy *float64
+	maxChargePower        float64
+	maxDischargePower     float64
+	reserveNull           bool
+	partialFreq           bool
 }
 
 func (f *fakePowerwallServer) reserveValue() float64 {
@@ -97,9 +98,13 @@ func (f *fakePowerwallServer) handler() http.Handler {
 		if usable == 0 {
 			usable = 9200
 		}
+		nominal := 27000.0
+		if f.nominalFullPackEnergy != nil {
+			nominal = *f.nominalFullPackEnergy
+		}
 
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"nominal_full_pack_energy":      27000,
+			"nominal_full_pack_energy":      nominal,
 			"max_apparent_power":            apparent,
 			"inverter_nominal_usable_power": usable,
 			"max_charge_power":              f.maxChargePower,
@@ -251,6 +256,18 @@ func TestPowerWallServerBatteryReads(t *testing.T) {
 	assert.Equal(t, 2.0, discharged)
 
 	assert.Equal(t, 0, fake.loginCount())
+}
+
+func TestPowerWallServerMissingCapacity(t *testing.T) {
+	zero := 0.0
+	fake := &fakePowerwallServer{secret: "secret", reserve: 20, nominalFullPackEnergy: &zero}
+	pw, _ := newTestPowerWallServer(t, fake, "battery", nil)
+
+	_, ok := api.Cap[api.BatteryCapacity](pw)
+	assert.False(t, ok)
+
+	_, ok = api.Cap[api.Battery](pw)
+	assert.True(t, ok)
 }
 
 func TestPowerWallServerReadOnly(t *testing.T) {
