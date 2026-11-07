@@ -82,6 +82,8 @@ export function fadeDirections(
   // same top (route re-sync, replaceModal): keep the running transition
   if (oldTop === newTop) return undefined;
   if (!oldTop || !newTop) return {};
+  // branching off the wizard keeps bootstrap's vertical slide, a detour instead of a step
+  if (oldTop === "onboarding" || newTop === "onboarding") return {};
   const forward = newStack.length > oldStack.length;
   return { [oldTop]: forward ? "left" : "right", [newTop]: forward ? "right" : "left" };
 }
@@ -273,18 +275,23 @@ export function initConfigModal(router: Router): void {
   });
 }
 
-export function openModal(name: string, params?: ModalParams): Promise<ModalResult> {
-  if (!_router) {
-    return Promise.resolve({ action: "cancelled" });
-  }
-
+function toEntry(name: string, params?: ModalParams): ModalEntry {
   const entry: ModalEntry = { name };
   if (params?.id !== undefined) entry.id = params.id;
   if (params?.type) entry.type = params.type;
   if (params?.choices) entry.choices = params.choices;
   if (params?.station) entry.station = params.station;
   if (params?.parent) entry.parent = params.parent;
+  return entry;
+}
 
+export function openModal(name: string, params?: ModalParams): Promise<ModalResult> {
+  // modals are keyed by name, a second instance can't be shown
+  if (!_router || configModal.stack.some((m) => m.name === name)) {
+    return Promise.resolve({ action: "cancelled" });
+  }
+
+  const entry = toEntry(name, params);
   const newStack = [...configModal.stack, entry];
   const query = buildQuery(newStack);
 
@@ -323,13 +330,7 @@ export async function closeModal(result?: ModalResult): Promise<void> {
 export function replaceModal(name: string, params?: ModalParams): void {
   if (!_router) return;
 
-  const entry: ModalEntry = { name };
-  if (params?.id !== undefined) entry.id = params.id;
-  if (params?.type) entry.type = params.type;
-  if (params?.choices) entry.choices = params.choices;
-  if (params?.station) entry.station = params.station;
-  if (params?.parent) entry.parent = params.parent;
-
+  const entry = toEntry(name, params);
   const newStack = [...configModal.stack.slice(0, -1), entry];
   const query = buildQuery(newStack);
 

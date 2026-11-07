@@ -8,7 +8,7 @@ products:
       generic: Sigen PV Max
   - brand: Sigenergy
     description:
-      generic: SigenStore EC
+      generic: SigenStor EC
 capabilities: ["battery-control"]
 requirements:
   description:
@@ -49,9 +49,19 @@ render: |
       decode: int32
   energy:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    {{- include "modbus-connection" . | indent 2 }}
+    id: 247
     register:
-      address: 30562 # Accumulated import energy
+      address: 30216 # [Plant] Total imported energy
+      type: holding
+      decode: uint64
+    scale: 0.01
+  returnenergy:
+    source: modbus
+    {{- include "modbus-connection" . | indent 2 }}
+    id: 247
+    register:
+      address: 30220 # [Plant] Total exported energy
       type: holding
       decode: uint64
     scale: 0.01

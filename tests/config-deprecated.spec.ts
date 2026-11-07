@@ -4,7 +4,7 @@ import { expectModalVisible, expectModalHidden } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
-const flags = ["--disable-auth", "--template-type", "meter", "--template"];
+const flags = ["--disable-auth", "--disable-onboarding", "--template-type", "meter", "--template"];
 const templateFlags = [...flags, "tests/config-deprecated-false.tpl.yaml"];
 const deprecatedFlags = [...flags, "tests/config-deprecated-true.tpl.yaml"];
 

@@ -203,7 +203,7 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 
 	// derive the hardware phase count from the device limits
 	wb.phases = 1
-	if math.Round(float64(wb.maxPower)*100/(230*wb.maxCurrent)) >= 3 {
+	if math.Round(grid.PowerToCurrent(float64(wb.maxPower)*100, 1)/wb.maxCurrent) >= 3 {
 		wb.phases = 3
 	}
 

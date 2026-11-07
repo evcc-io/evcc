@@ -14,6 +14,9 @@ components:
         setupRequired:
           description: Initial setup is required.
           type: boolean
+        onboarding:
+          $ref: "#/components/schemas/OnboardingState"
+          description: Setup wizard and checklist state.
         startupCompleted:
           description: Startup has completed.
           type: boolean
@@ -1233,8 +1236,11 @@ components:
         grid:
           description: Planned site grid flow of the slot in W, positive means import.
           type: number
-        battery:
+        batteryDischarge:
           description: Planned home battery discharge feeding the site in W.
+          type: number
+        batteryCharge:
+          description: Planned home battery charge in W.
           type: number
         actionable:
           description: Suggestion differs from the current operating mode.
@@ -1581,6 +1587,35 @@ components:
             $ref: "#/components/schemas/OcppStationStatus"
       required:
         - stations
+    OnboardingItem:
+      description: Setup checklist item.
+      type: string
+      enum:
+        - battery
+        - pv
+        - grid
+        - loadpoint
+        - heater
+        - consumer
+        - gridImport
+        - gridExport
+        - co2
+        - solar
+    OnboardingState:
+      description: Setup wizard and checklist state.
+      type: object
+      properties:
+        done:
+          description: Setup wizard was finished or skipped.
+          type: boolean
+        dismissed:
+          description: Dismissed setup checklist items.
+          type: array
+          items:
+            $ref: "#/components/schemas/OnboardingItem"
+      required:
+        - done
+        - dismissed
     OptimizerAutomatic:
       type: string
       enum:
@@ -1916,6 +1951,9 @@ components:
             type: string
         capacity:
           description: Usable battery capacity in kWh.
+          type: number
+        phases:
+          description: Maximum number of phases supported by the vehicle. Zero means unknown.
           type: number
         icon:
           description: Vehicle icon name for UI display.

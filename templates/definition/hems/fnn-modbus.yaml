@@ -1,0 +1,153 @@
+template: fnn-modbus
+products:
+  - description:
+      de: Modbus-Digitaleingang (Discrete Input)
+      en: Modbus digital input (Discrete Input)
+  - brand: Ebyte
+    description:
+      generic: ME31-AXXX8000
+  - brand: Ebyte
+    description:
+      generic: ME31-AXXX4040
+  - brand: Waveshare
+    description:
+      generic: Modbus POE ETH IO 8CH
+  - brand: Moxa
+    description:
+      generic: ioLogik E1210
+  - brand: Moxa
+    description:
+      generic: ioLogik E1212
+  - brand: Moxa
+    description:
+      generic: ioLogik E1213
+  - brand: Moxa
+    description:
+      generic: ioLogik E1214
+  - brand: Moxa
+    description:
+      generic: ioLogik E1242
+  - brand: Advantech
+    description:
+      generic: ADAM-6050
+    caveats: &advantech
+      - description:
+          de: Die Eingänge sind ab 0 beschriftet (DI0 = Eingang 1). Die Adresszuordnung ist noch nicht am Gerät bestätigt. Wird der falsche Eingang gelesen, die Nummer um 1 erhöhen.
+          en: Inputs are labeled from 0 (DI0 = input 1). The address mapping has not been confirmed on a device yet. If the wrong input is read, increase the number by 1.
+  - brand: Advantech
+    description:
+      generic: ADAM-6051
+    caveats: *advantech
+  - brand: Advantech
+    description:
+      generic: ADAM-6052
+    caveats: *advantech
+  - brand: WAGO
+    description:
+      generic: 750-352
+    caveats:
+      - description:
+          de: Die Eingänge werden über alle gesteckten Digitaleingangsklemmen in Steckreihenfolge durchgezählt. Beispiel, 4-Kanal-Klemme vor 8-Kanal-Klemme, dann ist der erste Eingang der zweiten Klemme Nummer 5.
+          en: Inputs are counted across all digital input modules in slot order. Example, with a 4-channel module before an 8-channel module, the first input of the second module is number 5.
+requirements:
+  description:
+    de: Die Schaltkontakte der Steuerbox werden an die Digitaleingänge des Moduls angeschlossen. Das Modul muss die Eingänge als Discrete Inputs (Funktionscode 02) bereitstellen, ein geschlossener Kontakt wird als aktiv gelesen.
+    en: Connect the relay contacts of the control box to the digital inputs of the module. The module must provide the inputs as discrete inputs (function code 02), a closed contact reads as active.
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: maxconsumptionpower
+    type: float
+    unit: W
+    required: true
+    description:
+      en: Guaranteed minimum power (Pmin)
+      de: Garantierte Mindestleistung (Pmin)
+    help:
+      en: Power limit applied to the root circuit while the limit is active.
+      de: Leistungsbegrenzung des Hauptstromkreises während die Limitierung aktiv ist.
+  - name: w4input
+    type: int
+    required: true
+    default: 1
+    description:
+      en: W4 input
+      de: W4-Eingang
+    help:
+      en: Digital input number for the W4 signal (Dimmer for controllable loads), counting from 1 (first input = 1)
+      de: Nummer des Digitaleingangs für das W4-Signal (Dimmen der steuerbaren Verbrauchseinrichtungen), gezählt ab 1 (erster Eingang = 1)
+  - name: productionnominalmax
+    type: float
+    unit: Wp
+    description:
+      en: Installed generator power
+      de: Installierte Generatorleistung
+    help:
+      en: Rated generator/module power of the installation (reference value according to § 9 EEG).
+      de: Gesamtnennleistung bzw. Modul- oder Generatorleistung der Anlage (Bezugsgröße nach § 9 EEG).
+  - name: maxproductionpower
+    deprecated: true
+  - name: w3input
+    type: int
+    required: true
+    default: 2
+    description:
+      en: W3 input
+      de: W3-Eingang
+    help:
+      en: Digital input number for the W3 signal (Zero export, 0%), counting from 1 (first input = 1)
+      de: Nummer des Digitaleingangs für das W3-Signal (Keine Netzeinspeisung, 0%), gezählt ab 1 (erster Eingang = 1)
+  - name: s1input
+    type: int
+    example: 3
+    description:
+      en: S1 input
+      de: S1-Eingang
+    help:
+      en: Digital input number for the S1 signal (60% export power limit), counting from 1 (first input = 1)
+      de: Nummer des Digitaleingangs für das S1-Signal (Reduzierung der Einspeiseleistung auf 60%), gezählt ab 1 (erster Eingang = 1)
+  - name: s2input
+    type: int
+    example: 4
+    description:
+      en: S2 input
+      de: S2-Eingang
+    help:
+      en: Digital input number for the S2 signal (30% export power limit), counting from 1 (first input = 1)
+      de: Nummer des Digitaleingangs für das S2-Signal (Reduzierung der Einspeiseleistung auf 30%), gezählt ab 1 (erster Eingang = 1)
+render: |
+  type: fnn
+  maxdimpower: {{ .maxconsumptionpower }}
+  w4:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ sub (int .w4input) 1 }}
+      type: discreteinput
+      encoding: bool8
+  productionnominalmax: {{ or .productionnominalmax .maxproductionpower }}
+  w3:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ sub (int .w3input) 1 }}
+      type: discreteinput
+      encoding: bool8
+  {{- if .s1input }}
+  s1:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ sub (int .s1input) 1 }}
+      type: discreteinput
+      encoding: bool8
+  {{- end }}
+  {{- if .s2input }}
+  s2:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ sub (int .s2input) 1 }}
+      type: discreteinput
+      encoding: bool8
+  {{- end }}
