@@ -79,10 +79,28 @@ func ApplyForwarderRules(rules []ForwarderRule) {
 	for _, sc := range stale {
 		sc.conn.CloseNow()
 	}
+	// removed rules flush no pending buffer: release buffered relayed calls so
+	// the charger is not bypassed forever and frames don't accumulate unread
+	pendingMu.Lock()
+	var orphaned []string
+	for id := range pendingMsgs {
+		if !valid[id] && !hasWildcard {
+			orphaned = append(orphaned, id)
+		}
+	}
+	pendingMu.Unlock()
+	for _, id := range orphaned {
+		drainPendingWithErrors(id, nil)
+	}
 
 	// connected charger: (re)dial sidecar; otherwise test-dial to surface config errors
 	for _, r := range rules {
-		if r.StationID == "*" || r.UpstreamURL == "" {
+		if r.StationID == "*" {
+			continue
+		}
+		if r.UpstreamURL == "" {
+			// nothing to dial: release buffered relay calls so evcc keeps answering
+			drainPendingWithErrors(r.StationID, nil)
 			continue
 		}
 		sidecarsMu.Lock()
@@ -428,6 +446,9 @@ func dialUpstreamSidecar(id string, rule ForwarderRule, loop uint64) (time.Durat
 			}
 			sidecarsMu.Unlock()
 			recordForwarderError(id, writeErr.Error())
+			// readFromUpstream never started: already-flushed relay calls await
+			// upstream's reply that will never come; release the charger
+			drainPendingWithErrors(id, sc)
 			notifyUpdated()
 			return 0, false
 		}
