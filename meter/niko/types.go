@@ -33,7 +33,6 @@ type Param struct {
 type Device struct {
 	Uuid       string     `json:"Uuid"`
 	Type       string     `json:"Type,omitempty"`
-	Model      string     `json:"Model,omitempty"`
 	Name       string     `json:"Name,omitempty"`
 	Properties []Property `json:"Properties,omitempty"`
 }

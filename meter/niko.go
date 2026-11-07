@@ -21,9 +21,7 @@ func NewNikoFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 		User   string
 		Token  string
 		Device string
-	}{
-		User: "hobby",
-	}
+	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

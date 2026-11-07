@@ -29,9 +29,7 @@ func NewNikoFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		Token        string
 		Device       string
 		StandbyPower float64
-	}{
-		User: "hobby",
-	}
+	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
