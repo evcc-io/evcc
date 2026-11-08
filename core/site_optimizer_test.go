@@ -1268,10 +1268,21 @@ func TestOptimizerRerunAfterBusy(t *testing.T) {
 }
 
 func TestValidateDemand(t *testing.T) {
-	ts := []time.Time{time.Unix(0, 0), time.Unix(900, 0)}
-	dt := []int{900, 900}
+	ts := []time.Time{time.Unix(0, 0)}
+	dt := []int{900}
 
-	require.NoError(t, validateDemand(dt, []float32{250, 0}, ts))
-	require.Error(t, validateDemand(dt, []float32{250, 5.1e15}, ts))
-	require.Error(t, validateDemand(dt, []float32{float32(math.NaN()), 0}, ts))
+	for _, tc := range []struct {
+		energy float32 // Wh in a 15 minute slot
+		ok     bool
+	}{
+		{250, true},
+		{maxDemandPower / 4, true},
+		{maxDemandPower/4 + 1, false},
+		{5.1e15, false},
+		{float32(math.NaN()), false},
+		{float32(math.Inf(-1)), false},
+	} {
+		err := validateDemand(dt, []float32{tc.energy}, ts)
+		assert.Equal(t, tc.ok, err == nil, "%g Wh", tc.energy)
+	}
 }

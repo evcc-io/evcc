@@ -249,16 +249,17 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		details.DemandDetails = nil
 	}
 
+	// before coarsening, which would average a broken slot with its neighbours
+	if err := validateDemand(req.TimeSeries.Dt, req.TimeSeries.Gt, details.Timestamps); err != nil {
+		return req, details, err
+	}
+
 	after, err := coarseSlotsAfter(hosted)
 	if err != nil {
 		site.log.WARN.Println("optimizer:", err)
 	}
 	if after > 0 {
 		coarsenHorizon(&req, &details, after)
-	}
-
-	if err := validateDemand(req.TimeSeries.Dt, req.TimeSeries.Gt, details.Timestamps); err != nil {
-		return req, details, err
 	}
 
 	return req, details, nil
@@ -270,7 +271,7 @@ const maxDemandPower = 1e6 // W
 
 func validateDemand(dt []int, gt []float32, ts []time.Time) error {
 	for i, e := range gt {
-		if p := float64(e) * 3600 / float64(dt[i]); math.IsNaN(p) || p > maxDemandPower {
+		if p := float64(e) * 3600 / float64(dt[i]); math.IsNaN(p) || math.IsInf(p, 0) || p > maxDemandPower {
 			return fmt.Errorf("invalid household demand forecast: %.4gWh at %v", e, ts[i].Local())
 		}
 	}
