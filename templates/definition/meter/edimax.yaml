@@ -1,0 +1,27 @@
+template: edimax
+products:
+  - brand: Edimax
+    description:
+      generic: SP-2101W
+  - brand: Edimax
+    description:
+      generic: SP-2101W V2
+  - brand: Edimax
+    description:
+      generic: SP-2101W V3
+group: switchsockets
+discovery:
+  mac: ["74DA38"]
+params:
+  - name: usage
+    choice: ["pv", "charge"]
+  - name: host
+  - name: user
+    default: admin
+  - name: password
+    default: 1234
+render: |
+  type: edimax
+  host: {{ .host }}
+  user: {{ .user }}
+  password: {{ .password }}
