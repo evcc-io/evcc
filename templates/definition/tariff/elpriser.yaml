@@ -135,6 +135,6 @@ render: |
     {{- else }}
     uri: https://elpriser.org/api/slots?zone={{ .zone }}&currency={{ .currency }}{{ if .actualonly }}&actualonly=1{{ end }}
     {{- end }}
-    cache: 1h
+    cache: 30m
     jq: |
       .slots | map({ start, end, value: .price }) | tostring
