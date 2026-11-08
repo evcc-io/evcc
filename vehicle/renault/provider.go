@@ -25,7 +25,16 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(api *kamereon.API, accountID, vin string, wakeupMode string, cache time.Duration) *Provider {
+func NewProvider(api *kamereon.API, accountID, vin, model string, wakeupMode string, cache time.Duration) *Provider {
+	chargeAction := func(action string) (kamereon.ChargeAction, error) {
+		// Dacia Spring rejects charging-start, see hacf-fr/renault-api#502
+		if model == "XBG1VE" {
+			pauseResume := map[string]string{kamereon.ActionStart: kamereon.ActionResume, kamereon.ActionStop: kamereon.ActionPause}
+			return api.PauseResume(accountID, pauseResume[action], vin)
+		}
+		return api.ChargeAction(accountID, action, vin)
+	}
+
 	impl := &Provider{
 		batteryStatusG: util.Cached(func() (kamereon.BatteryStatus, error) {
 			return api.BatteryStatus(accountID, vin)
@@ -43,7 +52,7 @@ func NewProvider(api *kamereon.API, accountID, vin string, wakeupMode string, ca
 			var err error
 			switch wakeupMode {
 			case "alternative":
-				_, err = api.ChargeAction(accountID, kamereon.ActionStart, vin)
+				_, err = chargeAction(kamereon.ActionStart)
 			case "MY24":
 				_, err = api.WakeUpMy24(accountID, vin)
 			default:
@@ -59,9 +68,7 @@ func NewProvider(api *kamereon.API, accountID, vin string, wakeupMode string, ca
 		position: func() (kamereon.Position, error) {
 			return api.Position(accountID, vin)
 		},
-		chargeAction: func(action string) (kamereon.ChargeAction, error) {
-			return api.ChargeAction(accountID, action, vin)
-		},
+		chargeAction: chargeAction,
 	}
 	return impl
 }
