@@ -233,8 +233,10 @@ func (lp *Loadpoint) GetPhasesDownPower() float64 {
 }
 
 // SetPhasesHysteresis sets the 1p/3p switching thresholds in W (0 = default).
-// The effective thresholds, including derived defaults, must form a
-// hysteresis band (down below up) or the switching would oscillate.
+// Explicit thresholds must form a hysteresis band (down below up) or the
+// switching would oscillate. For unset values (0, 0) the derived defaults
+// can overlap (e.g. 6-16 A: 16A x 230V < 6A x 3 x 230V); in that case the
+// defaults are kept with a warning, consistent with the YAML config path.
 func (lp *Loadpoint) SetPhasesHysteresis(up, down float64) error {
 	if up < 0 || down < 0 {
 		return fmt.Errorf("phase hysteresis: thresholds must not be negative (up: %.0f W, down: %.0f W)", up, down)
@@ -242,7 +244,11 @@ func (lp *Loadpoint) SetPhasesHysteresis(up, down float64) error {
 	effUp := effectivePhasesUpThreshold(lp, up)
 	effDown := effectivePhasesDownThreshold(lp, down)
 	if effDown >= effUp {
-		return fmt.Errorf("phase hysteresis: down threshold (%.0f W) must be below up threshold (%.0f W)", effDown, effUp)
+		if up == 0 && down == 0 {
+			lp.log.WARN.Printf("phase hysteresis: default down threshold (%.0fW) must be below up threshold (%.0fW), set explicit thresholds", effDown, effUp)
+		} else {
+			return fmt.Errorf("phase hysteresis: down threshold (%.0f W) must be below up threshold (%.0f W)", effDown, effUp)
+		}
 	}
 
 	lp.log.DEBUG.Printf("set phase hysteresis: up above %.0f W, down below %.0f W (0 = default)", up, down)

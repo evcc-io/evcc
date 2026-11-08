@@ -16,14 +16,13 @@ import (
 	"testing"
 	"time"
 
+	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-
-	evbus "github.com/asaskevich/EventBus"
 )
 
 func TestPvScalePhasesHysteresis(t *testing.T) {

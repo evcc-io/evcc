@@ -273,7 +273,7 @@
 									id="loadpointParamPhasesHysteresis"
 									:label="$t('config.loadpoint.phasesHysteresisLabel')"
 									:help="$t('config.loadpoint.phasesHysteresisHelp')"
-									>
+								>
 									<PhaseHysteresis
 										v-model:up="values.phasesUpPower"
 										v-model:down="values.phasesDownPower"
@@ -282,13 +282,13 @@
 										:min="hysteresisMin"
 										:max="hysteresisMax"
 									/>
-									</FormRow>
-									<FormRow
+								</FormRow>
+								<FormRow
 									v-if="chargerSupports1p3p"
 									id="loadpointParamMaxCurrent3"
 									:label="$t('config.loadpoint.maxCurrent3Label')"
 									:help="$t('config.loadpoint.maxCurrent3Help')"
-									>
+								>
 									<PropertyField
 										id="loadpointParamMaxCurrent3"
 										v-model="values.phasesMaxCurrent3"
@@ -296,7 +296,7 @@
 										unit="A"
 										size="w-50 w-sm-100"
 									/>
-									</FormRow>
+								</FormRow>
 							</template>
 
 							<div class="row mb-4">

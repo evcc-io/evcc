@@ -567,6 +567,30 @@ func TestSetPhasesHysteresisValidation(t *testing.T) {
 	require.Equal(t, 3000.0, lp.PhasesDownPower)
 }
 
+// TestSetPhasesHysteresisDefaultOverlap verifies that when the derived
+// defaults overlap (common for standard configurations, e.g. 6-16 A where
+// 16A x 230V < 6A x 3 x 230V) the pure default (0, 0) is accepted with a
+// warning - consistent with the YAML config path - while explicit inverted
+// bands are still rejected.
+func TestSetPhasesHysteresisDefaultOverlap(t *testing.T) {
+	lp := &Loadpoint{
+		log:        util.NewLogger("foo"),
+		bus:        evbus.New(),
+		settings:   settings.NewMemorySettings(),
+		minCurrent: 6,
+		maxCurrent: 16,
+	}
+
+	// defaults: up = 16A*230V = 3680W, down = 6A*3*230V = 4140W (overlapping)
+	require.NoError(t, lp.SetPhasesHysteresis(0, 0))
+	require.Equal(t, 0.0, lp.PhasesUpPower)
+	require.Equal(t, 0.0, lp.PhasesDownPower)
+
+	// explicit inverted bands are still rejected
+	require.Error(t, lp.SetPhasesHysteresis(4000, 5000))
+	require.Error(t, lp.SetPhasesHysteresis(0, 5000))
+}
+
 // TestSetPhasesMaxCurrent3Validation verifies the 3p current cap setter:
 // negative values are rejected, values below minCurrent are clamped.
 func TestSetPhasesMaxCurrent3Validation(t *testing.T) {

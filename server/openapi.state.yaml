@@ -989,6 +989,15 @@ components:
         phasesConfigured:
           description: Configured phase mode. 0 is automatic switching, 1 and 3 select a fixed phase count.
           type: number
+        phasesUpPower:
+          description: "Phase hysteresis: 1p→3p up-switch threshold in W. 0 = default."
+          type: number
+        phasesDownPower:
+          description: "Phase hysteresis: 3p→1p down-switch threshold in W. 0 = default."
+          type: number
+        phasesMaxCurrent3:
+          description: Max charge current in A on 3 phases. 0 = maxCurrent.
+          type: number
         plan:
           description: Time slots of the current charging plan.
           type: array
@@ -1183,6 +1192,9 @@ components:
         - phaseRemaining
         - phasesActive
         - phasesConfigured
+        - phasesUpPower
+        - phasesDownPower
+        - phasesMaxCurrent3
         - plan
         - planActive
         - planEnergy

@@ -237,8 +237,7 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 		if maxAmp := -sitePower / grid.Voltage; maxAmp < maxA {
 			checkScale(maxAmp - 0.0001)
 
-			// we've verified scale-up here so next test should not scale
-			testExpectation = strings.ReplaceAll(testExpectation, testDirection, "")
+			// we've verified scale-up here so the final check below must not scale
 			expectTarget = 0
 		}
 	}

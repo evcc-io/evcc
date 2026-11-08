@@ -747,6 +747,12 @@ export interface Loadpoint {
   phasesActive: number;
   /** Configured phase mode. 0 is automatic switching, 1 and 3 select a fixed phase count. */
   phasesConfigured: number;
+  /** Phase hysteresis: 1p→3p up-switch threshold in W. 0 = default. */
+  phasesUpPower: number;
+  /** Phase hysteresis: 3p→1p down-switch threshold in W. 0 = default. */
+  phasesDownPower: number;
+  /** Max charge current in A on 3 phases. 0 = maxCurrent. */
+  phasesMaxCurrent3: number;
   /** Time slots of the current charging plan. */
   plan: Rate[] | null;
   /** The current time slot is an active charging slot of the plan. */

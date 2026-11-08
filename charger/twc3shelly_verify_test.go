@@ -1,9 +1,9 @@
 package charger
 
-// Template-Verifikation (ohne Gerätezugriff):
+// Template verification (no device access):
 // Template registrieren, validieren und rendern. Läuft überall.
 //
-// LIVE-Verifikation (nur Read-only-Gerätezugriffe, kein Phasenwechsel!):
+// LIVE verification (nur Read-only-Gerätezugriffe, kein Phasenwechsel!):
 // den Charger gegen die echten Geräte (TWC3 + Shelly) bauen.
 // Opt-in, weil die Adressen hardcodiert sind und CI/andere Maschinen die
 // Geräte nicht erreichen:
@@ -15,10 +15,9 @@ import (
 	"os"
 	"testing"
 
-	yaml "go.yaml.in/yaml/v3"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
+	yaml "go.yaml.in/yaml/v3"
 )
 
 func TestTwc3ShellyTemplate(t *testing.T) {
@@ -101,7 +100,7 @@ func TestTwc3ShellyLive(t *testing.T) {
 	}
 	t.Logf("TWC3 power: %.1f W", p)
 
-	t.Log("LIVE-VERIFIKATION OK (kein Phasenwechsel ausgeführt)")
+	t.Log("LIVE-VERIFICATION OK (kein Phasenwechsel ausgeführt)")
 }
 
 // firstNonEmpty returns the first non-empty string or the fallback
