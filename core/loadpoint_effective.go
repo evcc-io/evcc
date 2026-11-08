@@ -46,7 +46,7 @@ type plan struct {
 
 func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 	for i, p := range plans {
-		requiredDuration := lp.getPlanRequiredDuration(float64(p.Soc), maxPower)
+		requiredDuration := lp.getPlanRequiredDuration(float64(p.Soc), maxPower, true)
 		plans[i].Start = p.End.Add(-requiredDuration)
 	}
 

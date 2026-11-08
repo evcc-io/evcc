@@ -183,7 +183,7 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 			if tc.soc > 0 {
 				d := time.Duration((1 - tc.soc/100) * float64(time.Hour))
 				t.Log("d", d)
-				assert.True(t, d < lp.GetPlanRequiredDuration(100, 10e3))
+				assert.True(t, d < lp.GetPlanRequiredDuration(100, 10e3, true))
 			}
 		}
 

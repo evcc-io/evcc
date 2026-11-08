@@ -167,6 +167,10 @@ func TestNextPlan(t *testing.T) {
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
 	lp.charger = api.NewMockCharger(ctrl)
 
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(50.0).AnyTimes()
+	lp.vehicle = vehicle
+
 	for _, tc := range []struct {
 		planId int
 		soc    int

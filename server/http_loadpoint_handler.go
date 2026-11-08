@@ -38,8 +38,8 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		planTime := lp.EffectivePlanTime()
 		id := lp.EffectivePlanId()
 
-		goal, _ := lp.GetPlanGoal()
-		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
+		goal, socBased := lp.GetPlanGoal()
+		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower, socBased)
 
 		plan, power, optimizer := lp.EffectivePlan(planTime, requiredDuration, lp.EffectivePlanStrategy())
 		if optimizer {
@@ -93,7 +93,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		}
 
 		maxPower := lp.EffectiveMaxPower()
-		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
+		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower, vars["type"] == "soc")
 		strategy := lp.EffectivePlanStrategy()
 
 		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
