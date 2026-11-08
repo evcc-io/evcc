@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"math"
 	"testing"
 	"time"
 
@@ -1264,4 +1265,24 @@ func TestOptimizerRerunAfterBusy(t *testing.T) {
 	site.optimizer.mu.Lock()
 	defer site.optimizer.mu.Unlock()
 	assert.True(t, site.optimizer.updated.After(last), "pending trigger must bypass interval gate")
+}
+
+func TestValidateDemand(t *testing.T) {
+	ts := []time.Time{time.Unix(0, 0)}
+	dt := []int{900}
+
+	for _, tc := range []struct {
+		energy float32 // Wh in a 15 minute slot
+		ok     bool
+	}{
+		{250, true},
+		{maxDemandPower / 4, true},
+		{maxDemandPower/4 + 1, false},
+		{5.1e15, false},
+		{float32(math.NaN()), false},
+		{float32(math.Inf(-1)), false},
+	} {
+		err := validateDemand(dt, []float32{tc.energy}, ts)
+		assert.Equal(t, tc.ok, err == nil, "%g Wh", tc.energy)
+	}
 }
