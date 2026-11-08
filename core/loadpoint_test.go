@@ -692,7 +692,7 @@ func TestSocPoll(t *testing.T) {
 		lp.Soc.Poll.Mode = tc.mode
 		lp.status = tc.status
 
-		res := lp.vehicleSocPollAllowed()
+		res := lp.vehicleSocPollAllowed(lp.GetVehicle())
 		if res {
 			// mimic update outside of socPollAllowed
 			lp.socUpdated = clock.Now()

@@ -271,7 +271,7 @@ func (lp *Loadpoint) unpublishVehicleIdentity() {
 
 // unpublishVehicle resets published vehicle data
 func (lp *Loadpoint) unpublishVehicle() {
-	lp.vehicleSoc = 0
+	lp.setVehicleSoc(0)
 	lp.vehicleRange = 0
 
 	lp.publish(keys.VehicleClimaterActive, nil)
@@ -392,13 +392,13 @@ func (lp *Loadpoint) vehicleClimatePollAllowed() bool {
 }
 
 // vehicleSocPollAllowed validates charging state against polling mode
-func (lp *Loadpoint) vehicleSocPollAllowed() bool {
-	if lp.vehicleHasFeature(api.Offline) {
+func (lp *Loadpoint) vehicleSocPollAllowed(v api.Vehicle) bool {
+	if hasFeature(v, api.Offline) {
 		return false
 	}
 
 	// always update soc when charging
-	if lp.charging() || lp.vehicleHasFeature(api.Streaming) {
+	if lp.charging() || hasFeature(v, api.Streaming) {
 		return true
 	}
 

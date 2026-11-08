@@ -55,8 +55,9 @@ func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 		return i.Start.Compare(j.Start)
 	})
 
+	vehicleSoc := lp.GetSoc()
 	for _, p := range plans {
-		if lp.vehicleSoc == 0 || lp.vehicleSoc < float64(p.Soc) {
+		if vehicleSoc == 0 || vehicleSoc < float64(p.Soc) {
 			return &p
 		}
 	}
@@ -274,11 +275,16 @@ func (lp *Loadpoint) EffectiveLimitSoc() int {
 // effectiveLimitSoc returns the effective session limit soc
 // TODO take vehicle api limits into account
 func (lp *Loadpoint) effectiveLimitSoc() int {
+	return lp.effectiveLimitSocFor(lp.GetVehicle())
+}
+
+// effectiveLimitSocFor is effectiveLimitSoc for a given vehicle snapshot
+func (lp *Loadpoint) effectiveLimitSocFor(v api.Vehicle) int {
 	if lp.limitSoc > 0 {
 		return lp.limitSoc
 	}
 
-	if v := lp.GetVehicle(); v != nil {
+	if v != nil {
 		if soc := vehicle.Settings(lp.log, v).GetLimitSoc(); soc > 0 {
 			return soc
 		}

@@ -987,6 +987,14 @@ func (lp *Loadpoint) GetSoc() float64 {
 	return lp.vehicleSoc
 }
 
+// setVehicleSoc sets the vehicle soc in %
+func (lp *Loadpoint) setVehicleSoc(soc float64) {
+	lp.vmu.Lock()
+	defer lp.vmu.Unlock()
+
+	lp.vehicleSoc = soc
+}
+
 // StartVehicleDetection allows triggering vehicle detection for debugging purposes
 func (lp *Loadpoint) StartVehicleDetection() {
 	// reset vehicle

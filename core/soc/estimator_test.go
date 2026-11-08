@@ -179,13 +179,13 @@ func TestEstimatorConcurrentAccess(t *testing.T) {
 	wg.Go(func() {
 		for i := range 100 {
 			soc := float64(20 + i/10)
-			ce.Soc(&soc, float64(i)*100)
+			assert.InDelta(t, 50, ce.Soc(&soc, float64(i)*100), 50)
 		}
 	})
 	wg.Go(func() {
 		for range 100 {
-			ce.RemainingChargeDuration(80, 11000)
-			ce.RemainingChargeEnergy(80)
+			assert.GreaterOrEqual(t, ce.RemainingChargeDuration(80, 11000), time.Duration(0))
+			assert.GreaterOrEqual(t, ce.RemainingChargeEnergy(80), 0.0)
 		}
 	})
 	wg.Go(func() {

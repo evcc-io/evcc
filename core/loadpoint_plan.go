@@ -97,7 +97,7 @@ func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Durati
 		if estimator != nil {
 			return estimator.RemainingChargeDuration(goal, maxPower)
 		}
-		return soc.RemainingChargeDuration(goal, maxPower, lp.vehicleSoc, v.Capacity())
+		return soc.RemainingChargeDuration(goal, maxPower, lp.GetSoc(), v.Capacity())
 	}
 
 	energy := lp.remainingPlanEnergy(goal)
