@@ -542,3 +542,29 @@ func TestSEMPChargerAutoDetectDeviceID(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, api.StatusC, status)
 }
+
+// https://github.com/evcc-io/evcc/issues/35933
+func TestSEMPChargerEnabledResetOnDisconnect(t *testing.T) {
+	handler := &sempTestHandler{
+		statusResponse:   mockDeviceStatusReadyResponse,
+		planningResponse: mockPlanningRequestResponse,
+		infoResponse:     mockDeviceInfoResponse,
+	}
+	server := httptest.NewTestServer(t, handler)
+	server.Start()
+
+	wb, err := NewSEMP(t.Context(), server.URL+"/semp", "F-12345678-ABCDEF123456-00", 0)
+	require.NoError(t, err)
+	require.NoError(t, wb.Enable(true))
+
+	enabled := func(status string) bool {
+		handler.statusResponse = status
+		enabled, err := wb.Enabled()
+		require.NoError(t, err)
+		return enabled
+	}
+
+	assert.True(t, enabled(mockDeviceStatusReadyResponse), "phase switch workaround")
+	assert.False(t, enabled(mockDeviceStatusOffResponse), "vehicle disconnected")
+	assert.False(t, enabled(mockDeviceStatusReadyResponse), "stale enabled state after reconnect")
+}
