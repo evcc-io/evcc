@@ -16,6 +16,7 @@ const (
 	ActionStart  = "start"
 	ActionStop   = "stop"
 	ActionResume = "resume"
+	ActionPause  = "pause"
 )
 
 type API struct {
@@ -127,13 +128,17 @@ func (v *API) Position(accountID string, vin string) (Position, error) {
 }
 
 func (v *API) WakeUp(accountID string, vin string) (ChargeAction, error) {
+	return v.PauseResume(accountID, ActionResume, vin)
+}
+
+func (v *API) PauseResume(accountID, action string, vin string) (ChargeAction, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kcm/v1/vehicles/%s/charge/pause-resume", v.keys.Target, accountID, vin)
 
 	reqBody := map[string]any{
 		"data": ChargeAction{
 			Type: "ChargePauseResume",
 			Attributes: ChargeActionAttributes{
-				Action: ActionResume,
+				Action: action,
 			},
 		},
 	}

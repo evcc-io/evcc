@@ -25,7 +25,7 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(api *kamereon.API, accountID, vin string, wakeupMode string, cache time.Duration) *Provider {
+func NewProvider(api *kamereon.API, accountID, vin, model string, wakeupMode string, cache time.Duration) *Provider {
 	impl := &Provider{
 		batteryStatusG: util.Cached(func() (kamereon.BatteryStatus, error) {
 			return api.BatteryStatus(accountID, vin)
@@ -60,6 +60,11 @@ func NewProvider(api *kamereon.API, accountID, vin string, wakeupMode string, ca
 			return api.Position(accountID, vin)
 		},
 		chargeAction: func(action string) (kamereon.ChargeAction, error) {
+			// Dacia Spring rejects charging-start, see hacf-fr/renault-api#502
+			if model == "XBG1VE" {
+				pauseResume := map[string]string{kamereon.ActionStart: kamereon.ActionResume, kamereon.ActionStop: kamereon.ActionPause}
+				return api.PauseResume(accountID, pauseResume[action], vin)
+			}
 			return api.ChargeAction(accountID, action, vin)
 		},
 	}

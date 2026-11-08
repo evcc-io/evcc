@@ -18,10 +18,17 @@ type Vehicle struct {
 	VIN             string
 	Status          string
 	ConnectedDriver connectedDriver
+	VehicleDetails  vehicleDetails
 }
 
 type connectedDriver struct {
 	Role string
+}
+
+type vehicleDetails struct {
+	Model struct {
+		Code string
+	}
 }
 
 func (v *Vehicle) Available() error {
