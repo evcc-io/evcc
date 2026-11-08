@@ -733,3 +733,17 @@ func TestReconnectVehicle(t *testing.T) {
 		})
 	}
 }
+
+func TestSetVehicleSocForReplacedVehicle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	prev, active := api.NewMockVehicle(ctrl), api.NewMockVehicle(ctrl)
+	lp.vehicle = active
+
+	lp.setVehicleSocFor(prev, 80)
+	assert.Zero(t, lp.GetSoc(), "stale poll of replaced vehicle must be dropped")
+
+	lp.setVehicleSocFor(active, 50)
+	assert.Equal(t, 50.0, lp.GetSoc())
+}
