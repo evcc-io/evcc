@@ -82,7 +82,6 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 		cache:    cache,
 		phases:   3,
 		current:  6,
-		enabled:  true,
 		deviceID: deviceID,
 	}
 
@@ -140,10 +139,13 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 		wb.hasStatusParam = true
 	}
 
-	wb.enabled, err = wb.Enabled()
+	// initialize enabled state from the actual device status, not from the cached
+	// value Enabled() would return while the device is not running
+	status, err := wb.getDeviceStatus()
 	if err != nil {
 		return nil, err
 	}
+	wb.enabled = status.EMSignalsAccepted && status.Status == semp.StatusOn
 
 	go wb.heartbeat(ctx)
 
