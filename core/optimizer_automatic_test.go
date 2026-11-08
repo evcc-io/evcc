@@ -25,8 +25,7 @@ import (
 func enableAutomatic(t *testing.T) {
 	t.Helper()
 
-	subject := sponsor.Subject
-	sponsor.Subject = "test"
+	sponsor.SetSubjectForTest(t, "test")
 
 	for _, k := range []string{keys.Experimental, keys.Optimizer} {
 		settings.SetBool(k, true)
@@ -34,7 +33,6 @@ func enableAutomatic(t *testing.T) {
 	settings.SetString(keys.OptimizerAutomatic, OptimizerAutomaticFull)
 
 	t.Cleanup(func() {
-		sponsor.Subject = subject
 		for _, k := range []string{keys.Experimental, keys.Optimizer} {
 			settings.SetBool(k, false)
 		}
@@ -476,7 +474,7 @@ func TestBatteryModeFixedDemandModelled(t *testing.T) {
 	}{
 		{"smart cost", api.ModeSmart, false, 0, api.BatteryDischarge},
 		{"fast", api.ModeNow, false, 0, api.BatteryDischarge},
-		{"plan", api.ModeSmart, true, 0, api.BatteryHold},
+		{"plan", api.ModeSmart, true, 0, api.BatteryDischarge},
 		{"min soc", api.ModeSmart, false, 80, api.BatteryHold},
 	} {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)

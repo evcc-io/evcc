@@ -8,7 +8,6 @@ import (
 	"math"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -116,21 +115,13 @@ type Site struct {
 	// cached measurement state, guarded by RWMutex
 	siteState
 
-	batteryMaxDischargePower *float64                    // Max discharge power of all battery meters
-	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
-	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
-	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
-	batteryModeApplied       map[string]api.BatteryMode  // Battery mode last applied per battery meter
-	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
-	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
-	lastOptimizerSolve       *optimizerSolve             // last successful solve, reapplied to newer slots by the control cycle
-	optimizerResult          *optimizerResult            // last published plan, explained on request
-	explainMu                sync.Mutex                  // serializes explain requests
-	explained                explainCache                // last explanation, guarded by explainMu
+	batteryMaxDischargePower *float64                   // Max discharge power of all battery meters
+	batteryMode              api.BatteryMode            // Battery mode (runtime only, not persisted)
+	batteryModeExternal      api.BatteryMode            // Battery mode (external, runtime only, not persisted)
+	batteryModeExternalTimer time.Time                  // Battery mode timer for external control
+	batteryModeApplied       map[string]api.BatteryMode // Battery mode last applied per battery meter
 
-	optimizerMu      sync.Mutex  // guards optimizer runs
-	optimizerUpdated time.Time   // last optimizer run, guarded by optimizerMu
-	optimizerRerun   atomic.Bool // forced trigger arrived during a run, re-run when done
+	optimizer optimizerState // optimizer runs, cached results and suggestions
 
 	solarScaleCached func() (float64, error) // util.Cached wrapper around querySolarScale
 }
@@ -1548,7 +1539,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 		}
 	}()
 
-	site.lpUpdateChan = make(chan *Loadpoint, 1) // 1 capacity to avoid deadlock
+	site.lpUpdateChan = make(chan *Loadpoint, max(1, len(site.loadpoints))) // room for every loadpoint, see requestUpdate
 
 	site.prepare()
 
@@ -1643,7 +1634,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		case <-tick:
 			site.update(<-loadpointChan)
 		case lp := <-site.lpUpdateChan:
-			site.update(lp)
+			site.update(lp.dequeued())
 		case <-stopC:
 			return
 		}

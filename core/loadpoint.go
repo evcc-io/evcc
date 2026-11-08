@@ -99,6 +99,7 @@ type Loadpoint struct {
 	pushChan chan<- messenger.Event // notifications
 	uiChan   chan<- util.Param      // client push messages
 	lpChan   chan<- *Loadpoint      // update requests
+	lpQueued atomic.Bool            // update request waiting in lpChan
 	log      *util.Logger
 
 	rwMutex      atomic.Int64 // count reentrant RWMutex
@@ -523,10 +524,22 @@ func (lp *Loadpoint) RequestUpdate() {
 
 // requestUpdate requests site to update this loadpoint
 func (lp *Loadpoint) requestUpdate() {
+	// queue each loadpoint at most once so the site queue sized to all loadpoints never overflows
+	if lp.lpChan == nil || !lp.lpQueued.CompareAndSwap(false, true) {
+		return
+	}
+
 	select {
 	case lp.lpChan <- lp: // request loadpoint update
 	default:
+		lp.lpQueued.Store(false)
 	}
+}
+
+// dequeued marks the update request as taken from the site queue so the loadpoint may request again
+func (lp *Loadpoint) dequeued() *Loadpoint {
+	lp.lpQueued.Store(false)
+	return lp
 }
 
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
@@ -580,6 +593,10 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 
 // pushEvent sends push messages to clients
 func (lp *Loadpoint) pushEvent(event string) {
+	// test helper
+	if lp.pushChan == nil {
+		return
+	}
 	lp.pushChan <- messenger.Event{Event: event}
 }
 
@@ -715,6 +732,13 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 
 	// forget startup energy offset
 	lp.chargedAtStartup = 0
+
+	// the previous session's SoC must not satisfy limits on the next connection
+	// skip for integrated devices: their SoC comes from the charger and the "disconnect" is the socket switching off
+	if !lp.chargerHasFeature(api.IntegratedDevice) {
+		lp.vehicleSoc = 0
+		lp.publish(keys.VehicleSoc, 0.0)
+	}
 
 	// remove charger vehicle id and stop potential detection
 	lp.setVehicleIdentifier("")
