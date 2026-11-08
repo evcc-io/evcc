@@ -146,6 +146,7 @@ func (t *OctopusDe) toRates(periods []RatePeriod) api.Rates {
 			continue
 		}
 
+		first := len(data)
 		for start := r.ValidFrom; start.Before(r.ValidTo); {
 			end := start.Truncate(SlotDuration).Add(SlotDuration)
 			if end.After(r.ValidTo) {
@@ -154,6 +155,14 @@ func (t *OctopusDe) toRates(periods []RatePeriod) api.Rates {
 
 			data = append(data, api.Rate{Start: start, End: end, Value: t.totalPrice(price, start)})
 			start = end
+		}
+
+		// Merge a trailing remainder shorter than SlotDuration (unaligned period end, e.g. the
+		// planning horizon of simple tariffs) into the previous slot, since tariff validation
+		// rejects short slots except the leading one.
+		if n := len(data); n-first > 1 && data[n-1].End.Sub(data[n-1].Start) < SlotDuration {
+			data[n-2].End = data[n-1].End
+			data = data[:n-1]
 		}
 	}
 

@@ -300,7 +300,15 @@ func TestOctopusDeConfigParse_TariffBase(t *testing.T) {
 	tariff, err := buildOctopusDeFromConfig(config)
 	require.NoError(t, err)
 	assert.Equal(t, 0.01, tariff.Charges)
-	assert.Len(t, tariff.chargesZones, 2)
+	require.Len(t, tariff.chargesZones, 2)
+
+	// zones are parsed with their hours and charges, default charges apply outside
+	at := func(hour int) time.Time {
+		return time.Date(2026, 1, 15, hour, 0, 0, 0, time.Local)
+	}
+	assert.Equal(t, -0.0858, tariff.effectiveCharges(at(3)))
+	assert.Equal(t, 0.0612, tariff.effectiveCharges(at(16)))
+	assert.Equal(t, 0.01, tariff.effectiveCharges(at(10)))
 
 	config["chargesZones"] = []any{
 		map[string]any{"hours": "invalid", "charges": 0.1},
@@ -446,4 +454,34 @@ func TestOctopusDeToRates_FormulaSplitsLongPeriods(t *testing.T) {
 
 	assert.InDelta(t, 0.30, priceAt(t, rates, from.Add(11*time.Hour+45*time.Minute)), 1e-9)
 	assert.InDelta(t, 0.40, priceAt(t, rates, from.Add(12*time.Hour)), 1e-9)
+}
+
+func TestOctopusDeToRates_ChargesZonesUnalignedEnd(t *testing.T) {
+	tariff := newOctopusDeWithEmbed(t, embed{
+		ChargesZones_: []chargesZoneConfig{
+			{Hours: "11-12", Charges: 0.1},
+		},
+	})
+
+	at := func(hour, minute int) time.Time {
+		return time.Date(2026, 1, 15, hour, minute, 0, 0, time.Local)
+	}
+
+	// simple tariff: single period from now until the unaligned end of the planning horizon
+	rates := tariff.toRates([]RatePeriod{
+		{ValidFrom: at(10, 7), ValidTo: at(12, 7), GrossUnitRateCentsPerKwh: 20},
+	})
+
+	// tariff validation rejects slots shorter than SlotDuration except the leading one
+	_, short := shortSlot(rates)
+	assert.False(t, short, "trailing slot must not be shorter than %v", SlotDuration)
+
+	requireContiguousSlots(t, rates, at(10, 7), at(12, 7))
+	require.Len(t, rates, 8)
+
+	// leading partial slot is kept, trailing remainder is merged into the last full slot
+	assert.Equal(t, at(10, 15), rates[0].End)
+	assert.Equal(t, at(11, 45), rates[7].Start)
+	assert.InDelta(t, 0.30, rates[7].Value, 1e-9)
+	assert.InDelta(t, 0.20, priceAt(t, rates, at(10, 30)), 1e-9)
 }
