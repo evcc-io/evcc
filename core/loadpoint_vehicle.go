@@ -142,8 +142,7 @@ func (lp *Loadpoint) getVehicleAndSocEstimator() (api.Vehicle, *soc.Estimator) {
 	return lp.vehicle, lp.socEstimator
 }
 
-// setActiveVehicle assigns currently active vehicle, configures SoC estimator
-// and adds an odometer task
+// setActiveVehicle assigns the active vehicle, configures its SoC estimator and adds an odometer task
 func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	// always start a fresh estimator, also when re-assigning the same vehicle
 	var estimator *soc.Estimator
