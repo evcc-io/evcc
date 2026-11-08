@@ -544,6 +544,10 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 
 // pushEvent sends push messages to clients
 func (lp *Loadpoint) pushEvent(event string) {
+	// test helper
+	if lp.pushChan == nil {
+		return
+	}
 	lp.pushChan <- messenger.Event{Event: event}
 }
 

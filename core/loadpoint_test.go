@@ -69,12 +69,6 @@ func createChannels(t *testing.T) (chan util.Param, chan messenger.Event, chan *
 	return uiChan, pushChan, lpChan
 }
 
-func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan messenger.Event, lpChan chan *Loadpoint) {
-	lp.uiChan = uiChan
-	lp.pushChan = pushChan
-	lp.lpChan = lpChan
-}
-
 func attachListeners(t *testing.T, lp *Loadpoint) {
 	t.Helper()
 
