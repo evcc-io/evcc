@@ -415,6 +415,7 @@ func (lp *Loadpoint) SetMinSoc(soc int) {
 	if lp.minSoc != soc {
 		lp.setMinSoc(soc)
 		lp.requestUpdate()
+		lp.triggerOptimizer()
 	}
 }
 
@@ -745,6 +746,8 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 			lp.batteryBoost = boostStart
 			lp.requestUpdate()
 		}
+
+		lp.triggerOptimizer()
 	}
 
 	return nil
@@ -1043,6 +1046,7 @@ func (lp *Loadpoint) setSmartCostLimit(val *float64) {
 
 		lp.settings.SetFloatPtr(keys.SmartCostLimit, val)
 		lp.publish(keys.SmartCostLimit, val)
+		lp.triggerOptimizer()
 	}
 }
 
