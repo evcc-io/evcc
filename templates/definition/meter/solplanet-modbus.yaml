@@ -8,12 +8,14 @@ requirements:
     de: |
       Nur für Wechselrichter mit eigenem Modbus-TCP-Ethernet-Port (z.B. ASW-TH Serie, KACO Blueplanet Hybrid NH3, Port eth 5&6), Protokoll AISWEI "MB001_ASW GEN-Modbus" V2.1.7.
       Ältere Geräte ohne diesen Port benötigen stattdessen das `solplanet-ai-dongle` Template.
-      Die Import-/Export-Zählerstände des Netzzählers (46443/46445) werden von dieser Firmware nicht über Modbus TCP bereitgestellt.
+      Die Netzleistung (46434) wird erst ab der Firmware von Oktober 2026 (ARM V610-50119-08.001) über Modbus TCP bereitgestellt, die Import-/Export-Zählerstände (46443/46445) weiterhin nicht.
+      Die Batteriesteuerung setzt die untere Entlade-SoC-Grenze (41155) im Normalbetrieb auf `minsoc`, beim Halten auf den aktuellen SoC. Laden aus dem Netz wird nicht unterstützt.
       Bei zwei Batteriepaketen (BMS1 + BMS2) je einen Batteriezähler mit Batteriespeichernummer 1 und 2 anlegen.
     en: |
       Only for inverters with a dedicated Modbus TCP ethernet port (e.g. ASW-TH series, KACO Blueplanet Hybrid NH3, port eth 5&6), protocol AISWEI "MB001_ASW GEN-Modbus" V2.1.7.
       Older devices without that port need the `solplanet-ai-dongle` template instead.
-      The grid meter import/export energy counters (46443/46445) are not exposed over Modbus TCP by this firmware.
+      Grid power (46434) is only exposed over Modbus TCP from the October 2026 firmware (ARM V610-50119-08.001), the import/export energy counters (46443/46445) still are not.
+      Battery control sets the discharge lower SoC limit (41155) to `minsoc` in normal operation and to the current SoC while holding. Charging from the grid is not supported.
       With two battery packs (BMS1 + BMS2) add one battery meter each, using battery number 1 and 2.
 capabilities: ["battery-control", "curtail"]
 params:
@@ -32,8 +34,6 @@ params:
       de: Batteriespeichernummer
       en: Battery number
   - preset: battery-params
-  - name: maxchargepower
-    required: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -44,6 +44,16 @@ render: |
       address: 6433 # 46434 total system power (smart meter)
       type: holding
       decode: int32
+  currents:
+  {{- range $i, $addr := list 6403 6404 6405 }}
+    - source: modbus
+      {{- include "modbus" $ | indent 4 }}
+      register:
+        address: {{ $addr }} # 4640{{ add $i 4 }} phase {{ add $i 1 }} current
+        type: holding
+        decode: uint16
+      scale: 0.1
+  {{- end }}
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -139,63 +149,35 @@ render: |
       address: {{ if eq .battery "2" }}1754{{ else }}1621{{ end }} # 31755/31622 BMS2/1 battery SoC
       type: input
       decode: uint16
+  # reserve soc per mode: normal minsoc, hold current soc
+  limitsoc:
+    source: convert
+    convert: float2int
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1154 # 41155 discharge lower soc limit (0.01%)
+        type: writesingle
+        encoding: uint16
+      scale: 100
+  # self-use in both modes, the soc limit does the rest
+  # custom mode (4) forces a full charge ignoring 41153, so grid charging is not supported
   batterymode:
     source: switch
     switch:
-      - case: 1 # normal
+      {{- range $mode := list 1 2 }}
+      - case: {{ $mode }} # {{ if eq $mode 1 }}normal{{ else }}hold{{ end }}
         set:
           source: const
-          value: 2 # normal
+          value: 2 # self generating self use
           set:
             source: modbus
-            {{- include "modbus" . | indent 10 }}
+            {{- include "modbus" $ | indent 10 }}
             register:
               address: 1103 # 41104 battery working mode
               type: writesingle
               encoding: uint16
-      - case: 2 # hold
-        set:
-          source: sequence
-          set:
-            - source: const
-              value: 4 # custom
-              set:
-                source: modbus
-                {{- include "modbus" . | indent 14 }}
-                register:
-                  address: 1103
-                  type: writesingle
-                  encoding: uint16
-            - source: const
-              value: 0
-              set:
-                source: modbus
-                {{- include "modbus" . | indent 14 }}
-                register:
-                  address: 1152 # 41153 charge/discharge power, negative charges
-                  type: writesingle
-                  encoding: int16
-      - case: 3 # charge
-        set:
-          source: sequence
-          set:
-            - source: const
-              value: 4
-              set:
-                source: modbus
-                {{- include "modbus" . | indent 14 }}
-                register:
-                  address: 1103
-                  type: writesingle
-                  encoding: uint16
-            - source: const
-              value: {{ mul .maxchargepower -1 }}
-              set:
-                source: modbus
-                {{- include "modbus" . | indent 14 }}
-                register:
-                  address: 1152
-                  type: writesingle
-                  encoding: int16
+      {{- end }}
   {{- include "battery-params" . }}
   {{- end }}
