@@ -533,6 +533,32 @@ func TestReassignActiveVehicleKeepsSoc(t *testing.T) {
 	assert.Equal(t, 0.0, lp.vehicleSoc, "soc must clear on vehicle change")
 }
 
+// TestDisconnectClearsSoc ensures the previous session's soc does not survive
+// a disconnect for the same default vehicle, see #35916
+func TestDisconnectClearsSoc(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().GetTitle().Return("default").AnyTimes()
+	vehicle.EXPECT().Icon().Return("").AnyTimes()
+	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Phases().AnyTimes()
+	vehicle.EXPECT().OnIdentified().AnyTimes()
+
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+	lp.defaultVehicle = vehicle
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	lp.setActiveVehicle(vehicle)
+	lp.vehicleSoc = 75.1
+
+	lp.evVehicleDisconnectHandler()
+	assert.Equal(t, vehicle, lp.vehicle, "expected default vehicle")
+	assert.Zero(t, lp.vehicleSoc, "soc must clear on disconnect")
+}
+
 // TestActiveVehicleChangeTriggersOptimizer ensures the optimizer is re-run when
 // the detected vehicle changes, as the loadpoint profile depends on it.
 func TestActiveVehicleChangeTriggersOptimizer(t *testing.T) {
