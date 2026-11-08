@@ -534,7 +534,7 @@ func TestReassignActiveVehicleKeepsSoc(t *testing.T) {
 }
 
 // TestDisconnectClearsSoc ensures the previous session's SoC does not survive
-// a disconnect for the same default vehicle, see #35916
+// a disconnect for the same default vehicle
 func TestDisconnectClearsSoc(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
