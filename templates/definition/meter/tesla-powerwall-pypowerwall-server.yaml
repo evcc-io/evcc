@@ -75,9 +75,9 @@ params:
       en: Backup reserve (normal mode)
     help:
       en: |-
-        Target backup reserve written in normal mode (0-100). The generated SOC lower limit is read from the server's actual backup reserve, not from this target.
+        Target backup reserve written in normal mode (0-100). The generated SoC lower limit is read from the server's actual backup reserve, not from this target.
       de: |-
-        Ziel-Backup-Reserve, die im Normalbetrieb geschrieben wird (0-100). Die generierte SOC-Untergrenze wird aus der tatsächlichen Backup-Reserve des Servers gelesen, nicht aus diesem Zielwert.
+        Ziel-Backup-Reserve, die im Normalbetrieb geschrieben wird (0-100). Die generierte SoC-Untergrenze wird aus der tatsächlichen Backup-Reserve des Servers gelesen, nicht aus diesem Zielwert.
   - name: chargemaxsoc
     type: int
     unit: "%"
@@ -136,6 +136,12 @@ render: |
   {{- $energyField := "energy_imported" -}}
   {{- if eq .usage "pv" -}}
     {{- $energyField = "energy_exported" -}}
+  {{- end -}}
+  {{- if or (lt (int .minsoc) 0) (gt (int .minsoc) 100) -}}
+    {{- fail "minsoc must be between 0 and 100" -}}
+  {{- end -}}
+  {{- if or (lt (int .chargemaxsoc) 0) (gt (int .chargemaxsoc) 100) -}}
+    {{- fail "chargemaxsoc must be between 0 and 100" -}}
   {{- end -}}
   type: custom
   power:
@@ -216,12 +222,14 @@ render: |
   {{- end }}
   # The minsoc template parameter is the target for normal mode. The generated
   # minsoc key is deliberately a dynamic getter for the actual backup reserve,
-  # so EVCC's BatterySocLimiter reflects the gateway state.
+  # so evcc's BatterySocLimiter reflects the gateway state.
   minsoc:
     source: http
     uri: {{ $api }}/operation
     insecure: {{ .insecure }}
-    cache: {{ .cache }}
+    # Do not cache the reserve: it changes independently of the server poll.
+    # pypowerwall-server may still return its last polled value until the next poll.
+    cache: 0s
     jq: if .backup_reserve_percent == null then empty else .backup_reserve_percent end
   maxsoc: 100 # %
   {{- if .maxchargepower }}
