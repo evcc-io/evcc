@@ -10,9 +10,13 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"golang.org/x/oauth2"
 )
 
-const FleetBaseUrl = "https://fleet-api.prd.na.vn.cloud.tesla.com"
+const (
+	FleetBaseUrl   = "https://fleet-api.prd.na.vn.cloud.tesla.com"
+	FleetBaseUrlEU = "https://fleet-api.prd.eu.vn.cloud.tesla.com"
+)
 
 const vehicleDataEndpoints = "charge_state;climate_state;drive_state;vehicle_state"
 
@@ -32,6 +36,21 @@ func NewAPI(log *util.Logger, client *http.Client, base string) *API {
 		log:    log,
 		base:   strings.TrimSuffix(base, "/") + "/api/1",
 	}
+}
+
+// Host returns the API host, e.g. of the account's Fleet API region
+func (v *API) Host() string {
+	u, _ := url.Parse(v.base)
+	return u.Host
+}
+
+// TokenSource returns the token source authenticating the Fleet API client
+func (v *API) TokenSource() (oauth2.TokenSource, error) {
+	t, ok := v.Client.Transport.(*oauth2.Transport)
+	if !ok {
+		return nil, errors.New("client not authenticated via oauth")
+	}
+	return t.Source, nil
 }
 
 func (v *API) post(uri string, data any) error {

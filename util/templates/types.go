@@ -62,11 +62,12 @@ var (
 )
 
 const (
-	RequirementSponsorship = "sponsorship" // Sponsorship is required
-	RequirementSkipTest    = "skiptest"    // Template should be rendered but not tested
+	RequirementSponsorship  = "sponsorship"  // Sponsorship is required
+	RequirementSkipTest     = "skiptest"     // Template should be rendered but not tested
+	RequirementRemoteAccess = "remoteaccess" // Remote access must be enabled, e.g. for public callback endpoints
 )
 
-var ValidRequirements = []string{RequirementSponsorship, RequirementSkipTest}
+var ValidRequirements = []string{RequirementSponsorship, RequirementSkipTest, RequirementRemoteAccess}
 
 var predefinedTemplateProperties = slices.Concat(
 	[]string{"type", "template", "name"}, ModbusParams, ModbusConnectionTypes,
@@ -221,6 +222,7 @@ type Param struct {
 	Private     bool         `json:",omitempty"` // value should be redacted in bug reports, e.g. email, locations, ...
 	Advanced    bool         `json:",omitempty"` // cli if the user does not need to be asked. Requires a "Default" to be defined.
 	Deprecated  bool         `json:",omitempty"` // if the parameter is deprecated and thus should not be presented in the cli or docs
+	Readonly    bool         `json:",omitempty"` // display-only service value for copying, never part of the config
 	Default     string       `json:",omitempty"` // default value if no user value is provided in the configuration
 	Example     string       `json:",omitempty"` // cli example value
 	Value       string       `json:"-"`          // user provided value via cli configuration

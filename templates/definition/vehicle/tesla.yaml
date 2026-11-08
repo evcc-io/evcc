@@ -2,6 +2,8 @@ template: tesla
 covers: ["tesla-command", "tesla-proxy"]
 products:
   - brand: Tesla
+    description:
+      generic: Manual Tokens (MyTeslaMate)
 requirements:
   evcc: ["skiptest"]
   description:

@@ -66,11 +66,16 @@
 				<div v-else>
 					<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 					<SponsorTokenRequired v-if="sponsorshipTemplate" :is-sponsor="isSponsor" />
+					<RemoteAccessRequired v-if="remoteAccessRequired" />
 					<div v-if="nestingUnsupported" class="alert alert-warning my-4" role="alert">
 						{{ $t("config.deviceRef.noNesting") }}
 					</div>
 					<slot name="template-description">
-						<Markdown v-if="description" :markdown="description" class="my-4" />
+						<Markdown
+							v-if="description && (authRequired || !template?.Auth)"
+							:markdown="description"
+							class="my-4"
+						/>
 					</slot>
 
 					<div v-if="authRequired">
@@ -163,6 +168,7 @@
 								:provider-url="auth.providerUrl ?? undefined"
 								:loading="auth.loading"
 								@prepare="checkAuthStatus"
+								@external-click="stashValues"
 							/>
 						</div>
 					</div>
@@ -279,6 +285,7 @@ import ModbusAdvanced from "./ModbusAdvanced.vue";
 import DeviceModalActions from "./Actions.vue";
 import Markdown from "../Markdown.vue";
 import SponsorTokenRequired from "./SponsorTokenRequired.vue";
+import RemoteAccessRequired from "./RemoteAccessRequired.vue";
 import TemplateSelector, { type TemplateGroup } from "./TemplateSelector.vue";
 import YamlEntry from "./YamlEntry.vue";
 import AuthCodeDisplay from "../AuthCodeDisplay.vue";
@@ -287,6 +294,7 @@ import AuthConnectButton from "../AuthConnectButton.vue";
 import { initialTestState, performTest } from "../utils/test";
 import { reportValidityInModal } from "../utils/reportValidityInModal";
 import { initialAuthState, prepareAuthLogin, submitAuthChallenge } from "../utils/authProvider";
+import { popAuthValues, stashAuthValues } from "@/utils/authStash";
 import AdminPasswordPrompt from "@/components/Auth/AdminPasswordPrompt.vue";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
@@ -307,7 +315,6 @@ import {
 	serviceDefaults,
 	ADMIN_PASSWORD_REQUIRED,
 } from "./index";
-import deepEqual from "@/utils/deepEqual";
 
 const CUSTOM_FIELDS = ["modbus"];
 
@@ -324,6 +331,7 @@ export default defineComponent({
 		DeviceModalActions,
 		Markdown,
 		SponsorTokenRequired,
+		RemoteAccessRequired,
 		TemplateSelector,
 		YamlEntry,
 		AuthCodeDisplay,
@@ -336,6 +344,7 @@ export default defineComponent({
 		id: Number as PropType<number | undefined>,
 		name: String,
 		isSponsor: Boolean,
+		remoteEnabled: Boolean,
 		// Computed/derived props that must be provided by parent
 		modalTitle: { type: String, required: true },
 		initialValues: { type: Object as PropType<DeviceValues>, required: true },
@@ -522,11 +531,15 @@ export default defineComponent({
 			}
 		},
 		sponsorshipTemplate(): boolean {
-			const requirements = this.template?.Requirements as any;
+			const requirements = this.template?.Requirements;
 			return !!requirements?.EVCC?.includes("sponsorship");
 		},
 		sponsorTokenRequired(): boolean {
 			return this.sponsorshipTemplate && !this.isSponsor;
+		},
+		remoteAccessRequired() {
+			const requirements = this.template?.Requirements;
+			return requirements?.EVCC?.includes("remoteaccess") && !this.remoteEnabled;
 		},
 		apiData(): ApiData {
 			let data: ApiData = {
@@ -549,6 +562,10 @@ export default defineComponent({
 				delete data["modbus"];
 			}
 
+			for (const p of this.templateParams.filter((p) => p.Readonly)) {
+				delete data[p.Name];
+			}
+
 			// Allow parent to transform API data
 			if (this.transformApiData) {
 				data = this.transformApiData(data, this.values);
@@ -558,6 +575,9 @@ export default defineComponent({
 		},
 		isNew() {
 			return this.id === undefined;
+		},
+		stashKey(): string {
+			return `${this.deviceType}:${this.id ?? "new"}`;
 		},
 		isDeletable() {
 			return !this.isNew && !this.hideDelete;
@@ -606,22 +626,15 @@ export default defineComponent({
 			return this.template?.Auth && !this.auth.ok;
 		},
 		authValuesMissing() {
-			const authParamNames: string[] = this.template?.Auth?.params ?? [];
-			return (
-				authParamNames.length > 0 &&
-				this.templateParams
-					.filter((p: TemplateParam) => authParamNames.includes(p.Name) && p.Required)
-					.some((p: TemplateParam) => !this.values[p.Name])
-			);
+			return this.authParams
+				.filter((p: TemplateParam) => p.Required && !p.Readonly)
+				.some((p: TemplateParam) => !this.values[p.Name]);
 		},
 		authValues() {
-			const params = this.template?.Auth?.params ?? [];
-			return params.reduce(
-				(acc, param) => {
-					acc[param] = this.values[param];
-					return acc;
-				},
-				{} as Record<string, any>
+			return Object.fromEntries(
+				this.authParams
+					.filter((p: TemplateParam) => !p.Readonly)
+					.map((p: TemplateParam) => [p.Name, this.values[p.Name]])
 			);
 		},
 	},
@@ -631,6 +644,8 @@ export default defineComponent({
 				if (this.coveredByNested) {
 					// was just hidden by a nested modal, it wasn't actually reopened
 					this.coveredByNested = false;
+					// the nested modal may have changed service results, e.g. enabled remote access
+					this.updateServiceValues();
 					return;
 				}
 				this.templateName =
@@ -640,10 +655,11 @@ export default defineComponent({
 				this.succeeded = false;
 				this.loadProducts();
 				if (this.id !== undefined) {
-					this.loadConfiguration();
+					this.loadConfiguration().then(() => this.restoreStash());
 				} else {
 					// For new devices, apply defaults immediately (e.g., default icons based on meter type)
 					this.applyDefaults();
+					this.restoreStash();
 				}
 			} else {
 				// check whether we were just hidden (child modal open) or actually closed
@@ -757,17 +773,6 @@ export default defineComponent({
 			// outdated errors must not persist while typing
 			this.auth.error = null;
 		},
-		serviceValues: {
-			handler(newValue, oldValue) {
-				// Apply defaults only for specific params whose service values changed
-				Object.keys(newValue).forEach((paramName) => {
-					if (!deepEqual(newValue[paramName], oldValue[paramName])) {
-						this.applyServiceDefault(paramName);
-					}
-				});
-			},
-			deep: true,
-		},
 	},
 	methods: {
 		reset() {
@@ -777,6 +782,16 @@ export default defineComponent({
 			this.resetAuthStatus();
 			this.rebaseline();
 			this.$emit("reset");
+		},
+		// the provider login may return in a new tab, keep the entered values across it
+		stashValues() {
+			stashAuthValues(this.stashKey, this.templateName, this.values);
+		},
+		restoreStash() {
+			const stash = popAuthValues(this.stashKey);
+			if (!stash) return;
+			this.templateName = stash.templateName;
+			this.values = { ...stash.values } as DeviceValues;
 		},
 		rebaseline() {
 			this.baseline = JSON.stringify(this.values);
@@ -929,6 +944,7 @@ export default defineComponent({
 				}
 				this.saving = false;
 				this.succeeded = true;
+				popAuthValues(this.stashKey);
 				remember(this.deviceType, this.productName, this.template, this.apiData);
 				await sleep(500);
 				this.$emit("added", res.data.name);
@@ -978,6 +994,7 @@ export default defineComponent({
 				}
 				this.saving = false;
 				this.succeeded = true;
+				popAuthValues(this.stashKey);
 				await sleep(500);
 				this.$emit("updated");
 				await closeModal({ action: "updated" });
@@ -1074,6 +1091,8 @@ export default defineComponent({
 					}
 				);
 				this.serviceLoading = loading;
+				// values may have been reloaded since the last fetch
+				Object.keys(this.serviceValues).forEach((name) => this.applyServiceDefault(name));
 			}, 500);
 		},
 		retryServiceValues(seconds: number) {
@@ -1087,8 +1106,11 @@ export default defineComponent({
 			// Auto-apply single service value when field is empty and required
 			const values = serviceDefaults(this.serviceValues[paramName]);
 			const param = this.templateParams.find((p) => p.Name === paramName);
-			// Only auto-apply if exactly one value is returned, field is empty, and field is required
-			if (values.length === 1 && !this.values[paramName] && param?.Required) {
+			// single service value only, readonly fields always mirror it
+			if (
+				values.length === 1 &&
+				(param?.Readonly || (!this.values[paramName] && param?.Required))
+			) {
 				// debounced auto-fill must not mark a clean form dirty
 				const wasClean = !this.dirty;
 				this.values[paramName] = values[0];

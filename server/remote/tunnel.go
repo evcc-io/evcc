@@ -11,6 +11,8 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/coder/websocket"
+	"github.com/evcc-io/evcc/server/network"
+	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/hashicorp/yamux"
@@ -216,6 +218,12 @@ func (t *Tunnel) basicAuthMiddleware(next http.Handler) http.Handler {
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// public routes and the OAuth redirect (state-token gated) need no credentials
+		if r.Method == http.MethodGet && (service.IsPublic(r.URL.Path) || r.URL.Path == network.CallbackPath) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		user, pass, ok := r.BasicAuth()
 		if !ok || t.authenticate == nil {
 			rejectAuth(w)

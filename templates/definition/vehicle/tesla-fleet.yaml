@@ -1,0 +1,91 @@
+template: tesla-fleet
+products:
+  - brand: Tesla
+    description:
+      generic: Fleet API
+requirements:
+  evcc: ["skiptest", "remoteaccess"]
+  description:
+    de: |
+      Direkte Anbindung an die offizielle Tesla Fleet API mit eigenem Developer Account.
+
+      1. Kostenlosen Developer Account auf [developer.tesla.com](https://developer.tesla.com/) erstellen und eine Fleet API Anwendung anlegen.
+      2. "Zulassung" und "Anwendungsdetails": Name, Beschreibung und Zweck frei wählen.
+      3. "Kundendetails": Genehmigungstyp "Autorisierungscode und Maschine-zu-Maschine" wählen. Herkunfts- und Weiterleitungs-URL von unten übernehmen, Rücksende-URL leer lassen.
+      4. "API & Arbeitsumfänge": die unten aufgeführten Berechtigungen auswählen.
+      5. "Rechnungsdetails": überspringen und absenden.
+      6. "Einzelheiten ansehen" der Anwendung öffnen und "Kunden-ID" und "Kundengeheimnis" in die Felder unten kopieren.
+
+      Berechtigungen:
+
+      - Profilinformationen
+      - Fahrzeugdaten
+      - Fahrzeugstandort
+      - Fahrzeugbefehle
+      - Fahrzeug-Ladeverwaltung
+    en: |
+      Direct connection to the official Tesla Fleet API with your own developer account.
+
+      1. Create a free developer account at [developer.tesla.com](https://developer.tesla.com/) and create a Fleet API application.
+      2. "Registration" and "Application Details": choose any name, description and purpose.
+      3. "Client Details": select OAuth grant type "Authorization Code and Machine-to-Machine". Copy origin and redirect URL from below, leave returned URL empty.
+      4. "API & Scopes": select the scopes listed below.
+      5. "Billing Details": click "Skip and Submit".
+      6. Open the application, tab "Credentials & APIs", and copy "Client ID" and "Client Secret" into the fields below.
+
+      Scopes:
+
+      - Profile Information
+      - Vehicle Information
+      - Vehicle Location
+      - Vehicle Commands
+      - Vehicle Charging Management
+params:
+  - preset: vehicle-common
+  - preset: vehicle-online
+  - name: allowedorigin
+    readonly: true
+    required: true
+    description:
+      de: Zulässige Herkunfts-URL
+      en: Allowed Origin URL
+    service: auth/origin?public
+  - name: redirecturi
+    readonly: true
+    description:
+      de: Zulässige Weiterleitungs-URI
+      en: Allowed Redirect URI
+    service: auth/redirecturi?public
+  - name: clientid
+    help:
+      de: Kunden-ID der Anwendung auf [developer.tesla.com](https://developer.tesla.com/dashboard).
+      en: Client ID of the application at [developer.tesla.com](https://developer.tesla.com/dashboard).
+  - name: clientsecret
+    help:
+      de: Kundengeheimnis der Anwendung auf [developer.tesla.com](https://developer.tesla.com/dashboard).
+      en: Client Secret of the application at [developer.tesla.com](https://developer.tesla.com/dashboard).
+  - name: vin
+  - name: cache
+    default: 15m
+  - name: virtualkey
+    readonly: true
+    advanced: true
+    description:
+      de: Virtueller Schlüssel
+      en: Virtual key
+    help:
+      de: Nur erforderlich für direkte Ladesteuerung am Fahrzeug, z. B. am Tesla Wall Connector. Link auf dem Smartphone öffnen und den Schlüssel in der Tesla-App auf jedem Fahrzeug installieren.
+      en: Only required for direct charge control via the vehicle, e.g. with a Tesla Wall Connector. Open the link on your phone and add the key to each vehicle in the Tesla app.
+    service: tesla/virtualkey
+auth:
+  type: tesla
+  params: [allowedorigin, redirecturi, clientid, clientsecret]
+render: |
+  type: tesla
+  credentials:
+    id: {{ .clientid }}
+    secret: {{ .clientsecret }}
+  vin: {{ .vin }}
+  {{ include "common" . }}
+  {{ include "features" (merge (dict "basefeatures" (list "coarsecurrent")) .) }}
+  cache: {{ .cache }}
