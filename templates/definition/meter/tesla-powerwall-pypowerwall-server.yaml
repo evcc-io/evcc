@@ -1,0 +1,289 @@
+template: tesla-powerwall-pypowerwall-server
+products:
+  - brand: Tesla
+    description:
+      generic: Powerwall (pypowerwall-server)
+capabilities: ["battery-control"]
+caveats:
+  - description:
+      de: |
+        Ohne vollständige Systemstatus-Daten, z. B. im Basic-LAN-Modus oder während der Startphase, können automatische Kapazität und Leistungsgrenzen fehlen. Setze `capacity`, `maxchargepower` und `maxdischargepower` in diesem Fall manuell.
+        Die tatsächliche Backup-Reserve wird aus dem Server-Cache gelesen und kann nach einer Steuerungsaktion erst beim nächsten Poll aktualisiert sein.
+      en: |
+        Without complete system status data, e.g. in Basic LAN mode or during startup, automatic capacity and power limits may be unavailable. Set `capacity`, `maxchargepower` and `maxdischargepower` manually in that case.
+        The actual backup reserve is read from the server cache and may update only after the next poll following a control action.
+requirements:
+  description:
+    de: |
+      Nutzt [pypowerwall-server](https://github.com/jasonacox/pypowerwall-server) als Backend. Die Lesezugriffe kommen über dessen Proxy-API, die Batteriesteuerung über die authentifizierten `/control/*`-Routen. Für die Batteriesteuerung muss im Server `PW_CONTROL_SECRET` gesetzt sein; `reserve_hold` benötigt pypowerwall-server v0.10.0 oder neuer.
+      Ab pypowerwall-server v0.14.0 kann der Server optional auch HTTPS auf Port 8775 anbieten. Ohne TLS-Reverse-Proxy oder aktivierten HTTPS-Listener bleibt es bei HTTP; mit `controlSecret` sollte HTTPS oder ein vertrauenswürdiges Netz verwendet werden.
+    en: |
+      Uses [pypowerwall-server](https://github.com/jasonacox/pypowerwall-server) as backend. Reads come from its proxy API, battery control uses its authenticated `/control/*` routes. For battery control, `PW_CONTROL_SECRET` must be set on the server; `reserve_hold` requires pypowerwall-server v0.10.0 or later.
+      Since pypowerwall-server v0.14.0 the server can optionally serve HTTPS on port 8775. Without a TLS reverse proxy or the HTTPS listener it stays plain HTTP; with `controlSecret`, prefer HTTPS or a trusted network.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+    help:
+      en: IP address or hostname of pypowerwall-server, e.g. 192.0.2.2
+      de: IP-Adresse oder Hostname von pypowerwall-server, z.B. 192.0.2.2
+  - name: port
+    default: 8675
+    help:
+      en: pypowerwall-server port
+      de: pypowerwall-server Port
+  - name: schema
+    default: http
+    advanced: true
+    help:
+      en: Use https when the server has PW_HTTPS enabled or is behind a TLS reverse proxy. Set the port to the HTTPS port, usually 8775, when using the server's HTTPS listener.
+      de: https verwenden, wenn der Server PW_HTTPS aktiviert hat oder hinter einem TLS-Reverse-Proxy läuft. Bei aktiviertem HTTPS-Listener des Servers den HTTPS-Port setzen, üblicherweise 8775.
+  - name: insecure
+    default: false
+    type: bool
+    advanced: true
+    help:
+      en: Accept a self-signed certificate when using https.
+      de: Selbstsigniertes Zertifikat bei https akzeptieren.
+  - name: cache
+    default: 1s
+    advanced: true
+    description:
+      en: Cache duration
+      de: Cache-Dauer
+    help:
+      en: The server already caches its data; increase only if needed.
+      de: Der Server verwendet bereits einen Cache; nur bei Bedarf erhöhen.
+  - name: controlSecret
+    usages: ["battery"]
+    mask: true
+    advanced: true
+    description:
+      de: Control Secret
+      en: Control secret
+    help:
+      en: Value of PW_CONTROL_SECRET. Required for battery control, omit for read-only use.
+      de: Wert von PW_CONTROL_SECRET. Für Batteriesteuerung nötig, weglassen für reinen Lesezugriff.
+  - name: minsoc
+    type: int
+    unit: "%"
+    default: 0
+    advanced: true
+    usages: ["battery"]
+    description:
+      de: Backup-Reserve (Normalbetrieb)
+      en: Backup reserve (normal mode)
+    help:
+      en: |-
+        Target backup reserve written in normal mode (0-100). The generated SOC lower limit is read from the server's actual backup reserve, not from this target.
+      de: |-
+        Ziel-Backup-Reserve, die im Normalbetrieb geschrieben wird (0-100). Die generierte SOC-Untergrenze wird aus der tatsächlichen Backup-Reserve des Servers gelesen, nicht aus diesem Zielwert.
+  - name: chargemaxsoc
+    type: int
+    unit: "%"
+    default: 100
+    advanced: true
+    usages: ["battery"]
+    description:
+      de: Ladeziel
+      en: Charge target
+    help:
+      en: Reserve written in forced charge mode (0-100).
+      de: Reserve, die im erzwungenen Lademodus gesetzt wird (0-100).
+  - name: capacity
+    type: float
+    unit: kWh
+    advanced: true
+    usages: ["battery"]
+    description:
+      de: Akkukapazität
+      en: Battery capacity
+    help:
+      en: Optional override. If omitted, capacity is read from the server's system status.
+      de: Optionaler Override. Ohne Angabe wird die Kapazität aus dem Systemstatus des Servers gelesen.
+  - name: maxchargepower
+    type: int
+    unit: W
+    advanced: true
+    usages: ["battery"]
+    description:
+      de: Maximale Ladeleistung
+      en: Maximum charge power
+    help:
+      en: Optional override. If omitted, the limit is derived from the server's system status.
+      de: Optionaler Override. Ohne Angabe wird das Limit aus dem Systemstatus des Servers abgeleitet.
+  - name: maxdischargepower
+    type: int
+    unit: W
+    advanced: true
+    usages: ["battery"]
+    description:
+      de: Maximale Entladeleistung
+      en: Maximum discharge power
+    help:
+      en: Optional override. If omitted, the limit is derived from the server's system status.
+      de: Optionaler Override. Ohne Angabe wird das Limit aus dem Systemstatus des Servers abgeleitet.
+render: |
+  {{- $base := printf "%s://%s:%s" .schema .host .port -}}
+  {{- $api := printf "%s/api" $base -}}
+  {{- $meter := .usage -}}
+  {{- if eq .usage "grid" -}}
+    {{- $meter = "site" -}}
+  {{- end -}}
+  {{- if eq .usage "pv" -}}
+    {{- $meter = "solar" -}}
+  {{- end -}}
+  {{- $energyField := "energy_imported" -}}
+  {{- if eq .usage "pv" -}}
+    {{- $energyField = "energy_exported" -}}
+  {{- end -}}
+  type: custom
+  power:
+    source: http
+    uri: {{ $api }}/meters/aggregates
+    insecure: {{ .insecure }}
+    cache: {{ .cache }}
+    jq: .{{ $meter }}.instant_power
+  energy:
+    source: http
+    uri: {{ $api }}/meters/aggregates
+    insecure: {{ .insecure }}
+    cache: {{ .cache }}
+    jq: .{{ $meter }}.{{ $energyField }} / 1000
+  {{- if ne .usage "pv" }}
+  returnenergy:
+    source: http
+    uri: {{ $api }}/meters/aggregates
+    insecure: {{ .insecure }}
+    cache: {{ .cache }}
+    jq: .{{ $meter }}.energy_exported / 1000
+  {{- end }}
+  {{- if eq .usage "grid" }}
+  currents:
+    - source: http
+      uri: {{ $api }}/meters/aggregates
+      insecure: {{ .insecure }}
+      cache: {{ .cache }}
+      jq: .site.i_a_current
+    - source: http
+      uri: {{ $api }}/meters/aggregates
+      insecure: {{ .insecure }}
+      cache: {{ .cache }}
+      jq: .site.i_b_current
+    - source: http
+      uri: {{ $api }}/meters/aggregates
+      insecure: {{ .insecure }}
+      cache: {{ .cache }}
+      jq: .site.i_c_current
+  voltages:
+    - source: http
+      uri: {{ $base }}/freq
+      insecure: {{ .insecure }}
+      cache: {{ .cache }}
+      jq: .ISLAND_VL1N_Main
+    - source: http
+      uri: {{ $base }}/freq
+      insecure: {{ .insecure }}
+      cache: {{ .cache }}
+      jq: .ISLAND_VL2N_Main
+    - source: http
+      uri: {{ $base }}/freq
+      insecure: {{ .insecure }}
+      cache: {{ .cache }}
+      jq: .ISLAND_VL3N_Main
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  soc:
+    source: http
+    uri: {{ $api }}/system_status/soe
+    insecure: {{ .insecure }}
+    cache: {{ .cache }}
+    jq: if .percentage == null then empty else .percentage end
+  {{- if .capacity }}
+  capacity: {{ .capacity }}
+  {{- else }}
+  capacity:
+    source: http
+    uri: {{ $api }}/system_status
+    insecure: {{ .insecure }}
+    cache: {{ .cache }}
+    jq: |
+      if (.nominal_full_pack_energy // 0) > 0 then
+        .nominal_full_pack_energy / 1000
+      else
+        empty
+      end
+  {{- end }}
+  # The minsoc template parameter is the target for normal mode. The generated
+  # minsoc key is deliberately a dynamic getter for the actual backup reserve,
+  # so EVCC's BatterySocLimiter reflects the gateway state.
+  minsoc:
+    source: http
+    uri: {{ $api }}/operation
+    insecure: {{ .insecure }}
+    cache: {{ .cache }}
+    jq: if .backup_reserve_percent == null then empty else .backup_reserve_percent end
+  maxsoc: 100 # %
+  {{- if .maxchargepower }}
+  maxchargepower: {{ .maxchargepower }}
+  {{- else }}
+  maxchargepower:
+    source: http
+    uri: {{ $api }}/system_status
+    insecure: {{ .insecure }}
+    cache: {{ .cache }}
+    jq: |
+      ([.max_charge_power, .max_apparent_power, .inverter_nominal_usable_power]
+        | map(select(. != null and . > 0))) as $v
+      | if ($v | length) > 0 then ($v | min) else empty end
+  {{- end }}
+  {{- if .maxdischargepower }}
+  maxdischargepower: {{ .maxdischargepower }}
+  {{- else }}
+  maxdischargepower:
+    source: http
+    uri: {{ $api }}/system_status
+    insecure: {{ .insecure }}
+    cache: {{ .cache }}
+    jq: |
+      ([.max_discharge_power, .max_apparent_power, .inverter_nominal_usable_power]
+        | map(select(. != null and . > 0))) as $v
+      | if ($v | length) > 0 then ($v | min) else empty end
+  {{- end }}
+  {{- if .controlSecret }}
+  batterymodes: ["normal", "hold", "charge"]
+  batterymode:
+    source: switch
+    switch:
+      - case: 1 # normal
+        set:
+          source: http
+          uri: {{ $base }}/control/reserve
+          method: POST
+          insecure: {{ .insecure }}
+          headers:
+            - Content-Type: application/json
+            - Authorization: {{ printf "Bearer %s" .controlSecret | toJson }}
+          body: '{"value": {{ .minsoc }}}'
+      - case: 2 # hold
+        set:
+          source: http
+          uri: {{ $base }}/control/reserve_hold
+          method: POST
+          insecure: {{ .insecure }}
+          headers:
+            - Content-Type: application/json
+            - Authorization: {{ printf "Bearer %s" .controlSecret | toJson }}
+          body: '{}'
+      - case: 3 # charge
+        set:
+          source: http
+          uri: {{ $base }}/control/reserve
+          method: POST
+          insecure: {{ .insecure }}
+          headers:
+            - Content-Type: application/json
+            - Authorization: {{ printf "Bearer %s" .controlSecret | toJson }}
+          body: '{"value": {{ .chargemaxsoc }}}'
+  {{- end }}
+  {{- end }}
