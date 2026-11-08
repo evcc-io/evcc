@@ -1169,12 +1169,8 @@ func (lp *Loadpoint) setStatus(status api.ChargeStatus) {
 
 // socBasedPlanning returns true if vehicle soc (optionally from charger) and capacity are available
 func (lp *Loadpoint) socBasedPlanning() bool {
-	return lp.socBasedPlanningFor(lp.GetVehicle())
-}
-
-// socBasedPlanningFor is socBasedPlanning for a given vehicle snapshot
-func (lp *Loadpoint) socBasedPlanningFor(v api.Vehicle) bool {
-	return v != nil && v.Capacity() > 0 && (!hasFeature(v, api.Offline) || lp.vehicleSoc > 0)
+	v := lp.GetVehicle()
+	return (v != nil && v.Capacity() > 0) && (lp.vehicleHasSoc() || lp.vehicleSoc > 0)
 }
 
 // repeatingPlanning returns true if the current plan is a repeating plan
@@ -1183,6 +1179,11 @@ func (lp *Loadpoint) repeatingPlanning() bool {
 		return false
 	}
 	return lp.getPlanId() > 1
+}
+
+// vehicleHasSoc returns true if active vehicle supports returning soc, i.e. it is not an offline vehicle
+func (lp *Loadpoint) vehicleHasSoc() bool {
+	return lp.GetVehicle() != nil && !lp.vehicleHasFeature(api.Offline)
 }
 
 // remainingLimitEnergy returns missing energy amount in kWh if vehicle has a valid energy target

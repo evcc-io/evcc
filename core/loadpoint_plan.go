@@ -93,11 +93,16 @@ func (lp *Loadpoint) GetPlanRequiredDuration(goal, maxPower float64) time.Durati
 
 // getPlanRequiredDuration is the estimated total charging duration
 func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Duration {
-	if v, estimator := lp.getVehicleAndSocEstimator(); lp.socBasedPlanningFor(v) {
-		if estimator != nil {
+	if lp.socBasedPlanning() {
+		switch v, estimator := lp.getVehicleAndSocEstimator(); {
+		case estimator != nil:
 			return estimator.RemainingChargeDuration(goal, maxPower)
+		case v != nil:
+			return soc.RemainingChargeDuration(goal, maxPower, lp.vehicleSoc, v.Capacity())
+		default:
+			// vehicle removed concurrently, goal is a SoC and must not be read as energy
+			return 0
 		}
-		return soc.RemainingChargeDuration(goal, maxPower, lp.vehicleSoc, v.Capacity())
 	}
 
 	energy := lp.remainingPlanEnergy(goal)
