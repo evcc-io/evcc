@@ -15,8 +15,8 @@ import (
 //	evcc.yaml:
 //	  charger:
 //	    type: twc3shelly
-//	    host: 192.168.178.27
-//	    shelly: 192.168.178.167
+//	    host: 192.168.1.20
+//	    shelly: 192.168.1.100
 type Twc3Shelly struct {
 	*Twc3
 	shellyConn *shelly.Connection

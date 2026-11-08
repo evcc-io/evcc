@@ -16,7 +16,7 @@ params:
       en: TWC3 address (without http://)
   - name: shelly
     required: true
-    example: 192.168.178.167
+    example: 192.168.1.100
     description:
       de: Shelly-Adresse (IP oder Hostname)
       en: Shelly address (IP or hostname)

@@ -33,8 +33,8 @@ func TestTwc3ShellyTemplate(t *testing.T) {
 
 	// 2. Rendern
 	b, _, err := tmpl.RenderResult(templates.Charger, templates.RenderModeInstance, map[string]any{
-		"host":   "192.168.178.27",
-		"shelly": "192.168.178.167",
+		"host":   "192.168.1.20",
+		"shelly": "192.168.1.100",
 	})
 	if err != nil {
 		t.Fatalf("template render: %v", err)
