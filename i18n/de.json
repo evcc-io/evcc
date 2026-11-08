@@ -582,6 +582,8 @@
         }
       },
       "estimateLabel": "Ladestand zwischen API-Updates interpolieren",
+      "maxCurrent3Help": "Maximaler Strom für den 3-phasigen Betrieb (0 = Standard).",
+      "maxCurrent3Label": "Maximaler Strom 3-phasig",
       "maxCurrentHelp": "Muss größer als der Mindeststrom sein.",
       "maxCurrentLabel": "Maximaler Strom",
       "maxTempHelp": "Muss größer als die Mindesttemperatur sein.",

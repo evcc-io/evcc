@@ -588,9 +588,14 @@ func TestOptimizerPhaseScaleUp(t *testing.T) {
 			assert.False(t, lp.enabled)
 			assert.Equal(t, 0.0, lp.offeredCurrent)
 
-			// safety buffer elapsed and the charger is idle → the switch happens
+			// first idle tick anchors the safety buffer on the confirmed 0A
 			clck.Add(21 * time.Second)
 			lp.status = api.StatusB
+			assert.NoError(t, lp.advancePhaseSwitch())
+			assert.Equal(t, 1, lp.GetPhases(), "switch must wait for the anchored safety buffer")
+
+			// buffer elapsed at zero current and the charger is idle: the switch happens
+			clck.Add(21 * time.Second)
 			phaseCharger.EXPECT().Phases1p3p(3).Return(nil)
 			assert.NoError(t, lp.advancePhaseSwitch())
 			assert.Equal(t, 3, lp.GetPhases())

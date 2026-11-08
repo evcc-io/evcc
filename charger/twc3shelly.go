@@ -22,6 +22,12 @@ type Twc3Shelly struct {
 	shellyConn *shelly.Connection
 }
 
+// compile-time interface assertions
+var (
+	_ api.Charger       = (*Twc3Shelly)(nil)
+	_ api.PhaseSwitcher = (*Twc3Shelly)(nil)
+)
+
 func init() {
 	registry.Add("twc3shelly", NewTwc3ShellyFromConfig)
 }

@@ -106,6 +106,10 @@ type API interface {
 	GetPhasesDownPower() float64
 	// SetPhasesHysteresis sets the 1p/3p switching thresholds in W (0 = default)
 	SetPhasesHysteresis(up, down float64) error
+	// GetPhasesMaxCurrent3 returns the 3-phase max charge current in A (0 = maxCurrent)
+	GetPhasesMaxCurrent3() float64
+	// SetPhasesMaxCurrent3 sets the 3-phase max charge current in A (0 = maxCurrent)
+	SetPhasesMaxCurrent3(current float64) error
 	// ActivePhases returns the active phases for the current vehicle
 	ActivePhases() int
 

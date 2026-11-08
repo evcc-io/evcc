@@ -26,9 +26,12 @@ type DynamicConfig struct {
 	PhasesConfigured int     `json:"phasesConfigured"`
 	MinCurrent       float64 `json:"minCurrent"`
 	MaxCurrent       float64 `json:"maxCurrent"`
-	// phase switching hysteresis thresholds in W (0 = default)
-	PhasesUpPower            float64   `json:"phasesUpPower"`
-	PhasesDownPower          float64   `json:"phasesDownPower"`
+	// phase switching hysteresis thresholds in W (0 = default); nil = not
+	// present in the payload, keeps the persisted value
+	PhasesUpPower   *float64 `json:"phasesUpPower"`
+	PhasesDownPower *float64 `json:"phasesDownPower"`
+	// 3p max charge current in A (0 = maxCurrent); nil = not present
+	PhasesMaxCurrent3        *float64  `json:"phasesMaxCurrent3"`
 	SmartCostLimit           *float64  `json:"smartCostLimit"`
 	SmartFeedInPriorityLimit *float64  `json:"smartFeedInPriorityLimit"`
 	SolarShare               float64   `json:"solarShare"`
@@ -75,6 +78,21 @@ func SplitConfig(payload map[string]any) (DynamicConfig, map[string]any, error) 
 }
 
 func (payload DynamicConfig) Apply(lp API) error {
+	// phase switching hysteresis and the 3p current cap are applied and
+	// validated first, so a rejected update does not apply the remaining
+	// fields. Absent fields (nil) keep the persisted value, so an old client
+	// that does not know the fields cannot reset the settings to defaults.
+	if payload.PhasesUpPower != nil || payload.PhasesDownPower != nil {
+		if err := lp.SetPhasesHysteresis(derefOr(payload.PhasesUpPower, 0), derefOr(payload.PhasesDownPower, 0)); err != nil {
+			return err
+		}
+	}
+	if payload.PhasesMaxCurrent3 != nil {
+		if err := lp.SetPhasesMaxCurrent3(*payload.PhasesMaxCurrent3); err != nil {
+			return err
+		}
+	}
+
 	lp.SetTitle(payload.Title)
 	lp.SetPriority(payload.Priority)
 	// limits the optimizer controls are rejected, the remaining config still applies
@@ -113,11 +131,6 @@ func (payload DynamicConfig) Apply(lp API) error {
 		err = lp.SetPhasesConfigured(payload.PhasesConfigured)
 	}
 
-	// phase switching hysteresis (0 = default)
-	if err == nil {
-		err = lp.SetPhasesHysteresis(payload.PhasesUpPower, payload.PhasesDownPower)
-	}
-
 	if err == nil {
 		// In case both min and max current are set, we need to set them in the correct order to avoid validation errors
 		switch {
@@ -139,4 +152,12 @@ func (payload DynamicConfig) Apply(lp API) error {
 	}
 
 	return cmp.Or(err, limitErr)
+}
+
+// derefOr returns the pointed value or def for a nil pointer
+func derefOr(p *float64, def float64) float64 {
+	if p == nil {
+		return def
+	}
+	return *p
 }

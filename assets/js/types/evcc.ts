@@ -565,6 +565,8 @@ export interface ConfigLoadpoint {
   phasesUpPower?: number;
   /** 1-phase switching threshold in W (0 = default) */
   phasesDownPower?: number;
+  /** max current for 3-phase operation in A (0 = default) */
+  phasesMaxCurrent3?: number;
   minCurrent: number;
   maxCurrent: number;
   smartCostLimit: number | null;

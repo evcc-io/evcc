@@ -53,8 +53,10 @@ func TestSplitConfigPhasesHysteresis(t *testing.T) {
 	dynamic, other, err := SplitConfig(payload)
 	require.NoError(t, err)
 
-	assert.Equal(t, 4140.0, dynamic.PhasesUpPower)
-	assert.Equal(t, 3000.0, dynamic.PhasesDownPower)
+	require.NotNil(t, dynamic.PhasesUpPower)
+	require.NotNil(t, dynamic.PhasesDownPower)
+	assert.Equal(t, 4140.0, *dynamic.PhasesUpPower)
+	assert.Equal(t, 3000.0, *dynamic.PhasesDownPower)
 	assert.NotContains(t, other, "phasesuppower")
 	assert.NotContains(t, other, "phasesdownpower")
 }

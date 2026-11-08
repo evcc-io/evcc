@@ -279,8 +279,24 @@
 										v-model:down="values.phasesDownPower"
 										:default-up="hysteresisDefaultUp"
 										:default-down="hysteresisDefaultDown"
-										/>
-								</FormRow>
+										:min="hysteresisMin"
+										:max="hysteresisMax"
+									/>
+									</FormRow>
+									<FormRow
+									v-if="chargerSupports1p3p"
+									id="loadpointParamMaxCurrent3"
+									:label="$t('config.loadpoint.maxCurrent3Label')"
+									:help="$t('config.loadpoint.maxCurrent3Help')"
+									>
+									<PropertyField
+										id="loadpointParamMaxCurrent3"
+										v-model="values.phasesMaxCurrent3"
+										type="Float"
+										unit="A"
+										size="w-50 w-sm-100"
+									/>
+									</FormRow>
 							</template>
 
 							<div class="row mb-4">
@@ -640,6 +656,7 @@ const defaultValues = {
 	phasesConfigured: 3,
 	phasesUpPower: 0,
 	phasesDownPower: 0,
+	phasesMaxCurrent3: 0,
 	minCurrent: 6,
 	maxCurrent: 16,
 	priority: 0,
@@ -929,6 +946,14 @@ export default {
 		hysteresisDefaultDown() {
 			return this.phasePower(this.values.minCurrent, 3);
 		},
+		// slider span: 1-phase power at min current ... 3-phase power at max
+		// current, so the band covers the derived defaults
+		hysteresisMin() {
+			return this.phasePower(this.values.minCurrent, 1);
+		},
+		hysteresisMax() {
+			return this.phasePower(this.values.maxCurrent, 3);
+		},
 		defaultModeOptions(): { key: CHARGE_MODE; name: string }[] {
 			// empty option is provided by PropertyField placeholder
 			return [OFF, SMART, NOW].map((key) => ({
@@ -1031,6 +1056,7 @@ export default {
 				this.values = deepClone(res.data);
 				this.values.phasesUpPower ??= 0;
 				this.values.phasesDownPower ??= 0;
+				this.values.phasesMaxCurrent3 ??= 0;
 				this.thresholdsExpanded = this.thresholdsSet;
 				this.updatePhases();
 				this.rebaseline();

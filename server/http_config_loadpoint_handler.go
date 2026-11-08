@@ -29,6 +29,9 @@ func getLoadpointStaticConfig(lp loadpoint.API) loadpoint.StaticConfig {
 
 func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 	planTime, planEnergy := lp.GetPlanEnergy()
+	up := lp.GetPhasesUpPower()
+	down := lp.GetPhasesDownPower()
+	maxCurrent3 := lp.GetPhasesMaxCurrent3()
 	return loadpoint.DynamicConfig{
 		Title:                    lp.GetTitle(),
 		DefaultMode:              string(lp.GetDefaultMode()),
@@ -37,8 +40,9 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 		PhasesConfigured:         lp.GetPhasesConfigured(),
 		MinCurrent:               lp.GetMinCurrent(),
 		MaxCurrent:               lp.GetMaxCurrent(),
-		PhasesUpPower:            lp.GetPhasesUpPower(),
-		PhasesDownPower:          lp.GetPhasesDownPower(),
+		PhasesUpPower:            &up,
+		PhasesDownPower:          &down,
+		PhasesMaxCurrent3:        &maxCurrent3,
 		SmartCostLimit:           lp.GetSmartCostLimit(),
 		SmartFeedInPriorityLimit: lp.GetSmartFeedInPriorityLimit(),
 		SolarShare:               lp.GetSolarShare(),

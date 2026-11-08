@@ -243,8 +243,9 @@ func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 	}
 
 	// phase-dependent max current limit, e.g. TWC3
-	// delivers 18 A on 1 phase but only 16 A on 3 phases. 1p is unaffected.
-	if lp.hasPhaseSwitching() && lp.phases == 3 && lp.PhasesMaxCurrent3 > 0 {
+	// delivers 18 A on 1 phase but only 16 A on 3 phases. A 1p vehicle on a
+	// 3p loadpoint is unaffected (active phases, not configured phases).
+	if lp.hasPhaseSwitching() && lp.activePhases() == 3 && lp.PhasesMaxCurrent3 > 0 {
 		maxCurrent = min(maxCurrent, lp.PhasesMaxCurrent3)
 	}
 

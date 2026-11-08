@@ -186,6 +186,10 @@ func TestEffectiveMinPowerFixedPhases(t *testing.T) {
 	}
 }
 
+// testScale runs one pvScalePhases decision check. An expected scale no
+// longer returns the new phase count: under load the change goes through the
+// 0A safety sequence, so we verify the pending target and then complete the
+// sequence to check the physical switch.
 func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string, tc testCase) {
 	t.Helper()
 
@@ -195,29 +199,51 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 	testDirection := direction[0:1] // (d)own or (u)p
 	testExpectation := tc.scale
 
+	expectTarget := 0
+	if strings.Contains(testExpectation, testDirection) {
+		expectTarget = 1
+		if testDirection == "u" {
+			expectTarget = 3
+		}
+	}
+
+	checkScale := func(maxCurrent float64) {
+		scaled := lp.pvScalePhases(sitePower, minA, maxCurrent, true)
+
+		if expectTarget > 0 {
+			// the switch is deferred to the 0A safety sequence, which
+			// completes in a later cycle
+			require.Zero(t, scaled, "%v act=%d max=%d scale %s must defer to the 0A sequence", tc, act, max, direction)
+			require.True(t, lp.phaseSwitchPending(), "%v act=%d max=%d missing scale %s", tc, act, max, direction)
+			require.Equal(t, expectTarget, lp.phaseSwitchTarget, "%v act=%d max=%d missing scale %s", tc, act, max, direction)
+
+			// complete the sequence and verify the physical switch
+			completePendingPhaseSwitch(t, lp)
+			require.Equal(t, expectTarget, lp.phases, "%v act=%d max=%d wrong phases after 0A sequence", tc, act, max, direction)
+
+			// the next pv cycle re-enables the charger; keep the LP ready
+			lp.enabled = true
+			return
+		}
+
+		require.Zero(t, scaled, "%v act=%d max=%d unexpected scale %s", tc, act, max, direction)
+		require.False(t, lp.phaseSwitchPending(), "%v act=%d max=%d unexpected 0A sequence", tc, act, max, direction)
+	}
+
 	// up-scale expected
 	if testDirection == "u" && strings.Contains(testExpectation, testDirection) {
 		// scale-up should only execute when the 1p max current is exceeded
 		// we're testing this here and remove the upscale expectation for the following test below 1p max current
 		if maxAmp := -sitePower / grid.Voltage; maxAmp < maxA {
-			if scaled := lp.pvScalePhases(sitePower, minA, maxAmp-0.0001, true); scaled != 3 {
-				t.Errorf("%v act=%d max=%d missing scale %s at reduced max current %.1fA", tc, act, max, direction, maxAmp)
-			}
+			checkScale(maxAmp - 0.0001)
 
 			// we've verified scale-up here so next test should not scale
 			testExpectation = strings.ReplaceAll(testExpectation, testDirection, "")
+			expectTarget = 0
 		}
 	}
 
-	scaled := lp.pvScalePhases(sitePower, minA, maxA, true)
-
-	if strings.Contains(testExpectation, testDirection) {
-		if scaled == 0 {
-			t.Errorf("%v act=%d max=%d missing scale %s", tc, act, max, direction)
-		}
-	} else if scaled != 0 {
-		t.Errorf("%v act=%d max=%d unexpected scale %s", tc, act, max, direction)
-	}
+	checkScale(maxA)
 }
 
 func TestPvScalePhases(t *testing.T) {
@@ -312,6 +338,8 @@ func TestPvScalePhases(t *testing.T) {
 			// reset to initial state
 			lp.phases = tc.physical
 			lp.measuredPhases = tc.measuredPhases
+			lp.cancelPhaseSwitch() // the down subtest may have left a pending 0A sequence
+			lp.enabled = true      // the 0A sequence disables the charger
 
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(3).Return(nil).MaxTimes(1)
@@ -667,13 +695,17 @@ func TestScalePhasesUpMinCurrent(t *testing.T) {
 	plainCharger := api.NewMockCharger(ctrl)
 	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
 
+	// the charger is enabled: the switch goes through the 0A safety sequence,
+	// the load is dropped to 0A and the physical switch runs after the safety
+	// buffer at zero current, so the 1p current is never applied to all phases
 	gomock.InOrder(
-		plainCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil),
+		plainCharger.EXPECT().Enable(false).Return(nil),
 		phaseCharger.EXPECT().Phases1p3p(3).Return(nil),
 	)
 
+	clck := clock.NewMock()
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
-	lp.clock = clock.NewMock()
+	lp.clock = clck
 	lp.wakeUpTimer = NewTimer()
 	lp.charger = struct {
 		*api.MockCharger
@@ -686,8 +718,20 @@ func TestScalePhasesUpMinCurrent(t *testing.T) {
 	lp.phases = 1
 
 	require.NoError(t, lp.scalePhases(3))
+	require.True(t, lp.phaseSwitchPending())
+	require.Equal(t, 3, lp.phaseSwitchTarget)
+	require.False(t, lp.enabled)
+	require.Equal(t, 0.0, lp.offeredCurrent)
+	require.Equal(t, 1, lp.GetPhases())
+
+	// the first confirmed 0A tick anchors the safety buffer, the switch waits
+	require.NoError(t, lp.advancePhaseSwitch())
+	require.Equal(t, 1, lp.GetPhases())
+
+	// buffer elapsed at zero current: the physical switch happens
+	clck.Add(phaseSwitchSafetyBuffer + time.Second)
+	require.NoError(t, lp.advancePhaseSwitch())
 	require.Equal(t, 3, lp.GetPhases())
-	require.Equal(t, float64(minA), lp.offeredCurrent)
 }
 
 // TestMinChargingPhaseScaling verifies that minCharging scales down to 1 phase
@@ -941,14 +985,20 @@ func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
 	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
 	require.True(t, lp.phaseSwitchPending(), "0A safety sequence must be pending while charging")
 
-	// after the safety buffer the charger has stopped (0A), the switch is
-	// attempted, gets api.ErrNotAvailable and adopts the configured phase count
+	// first idle cycle: the safety buffer anchors on the confirmed 0A and
+	// must run its full duration before the switch is attempted
 	chargerStatus = api.StatusB
+	clock.Add(phaseSwitchSafetyBuffer + time.Second)
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
+	require.Equal(t, 0, lp.GetPhases(), "switch must wait for the anchored safety buffer")
+
+	// buffer elapsed at zero current: the switch is attempted, gets
+	// api.ErrNotAvailable and adopts the configured phase count
 	clock.Add(phaseSwitchSafetyBuffer + time.Second)
 	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
 	require.Equal(t, 3, lp.GetPhases(), "configured phases should be adopted")
 
-	// third cycle must not attempt the switch again (Phases1p3p .Times(1))
+	// final cycle must not attempt the switch again (Phases1p3p Times(1))
 	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
 	require.Equal(t, 3, lp.GetPhases())
 }

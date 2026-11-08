@@ -248,15 +248,23 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		lp.log.WARN.Printf("PV mode enable threshold %.0fW > 0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
 	}
 
-	// validate phase hysteresis
-	if lp.PhasesUpPower > 0 && lp.PhasesDownPower > 0 && lp.PhasesDownPower >= lp.PhasesUpPower {
-		lp.log.WARN.Printf("phase hysteresis: phasesdownpower (%.0fW) must be below phasesuppower (%.0fW)", lp.PhasesDownPower, lp.PhasesUpPower)
+	// validate the effective phase hysteresis band, including derived
+	// defaults (an overlapping band would oscillate the phase switching)
+	if down := lp.phasesDownThreshold(lp.minCurrent, 3); down >= lp.phasesUpThreshold(lp.maxCurrent) {
+		lp.log.WARN.Printf("phase hysteresis: down threshold (%.0fW) must be below up threshold (%.0fW), set explicit thresholds", down, lp.phasesUpThreshold(lp.maxCurrent))
 	}
 	if lp.PhasesUpPower > 0 || lp.PhasesDownPower > 0 {
 		lp.log.DEBUG.Printf("phase hysteresis: up above %.0fW, down below %.0fW", lp.phasesUpThreshold(lp.maxCurrent), lp.phasesDownThreshold(lp.minCurrent, 3))
 	}
-	if lp.PhasesMaxCurrent3 > 0 && lp.PhasesMaxCurrent3 > lp.maxCurrent {
-		lp.log.WARN.Printf("phasesmaxcurrent3 (%.1fA) above maxCurrent (%.1fA)", lp.PhasesMaxCurrent3, lp.maxCurrent)
+	if lp.PhasesMaxCurrent3 > 0 {
+		if lp.PhasesMaxCurrent3 > lp.maxCurrent {
+			lp.log.WARN.Printf("phasesmaxcurrent3 (%.1fA) above maxCurrent (%.1fA)", lp.PhasesMaxCurrent3, lp.maxCurrent)
+		} else if lp.PhasesMaxCurrent3 < lp.minCurrent {
+			// a 3p cap below the min current would make setLimit fail while
+			// charging on 3 phases, so clamp to the min current
+			lp.log.WARN.Printf("phasesmaxcurrent3 (%.1fA) below minCurrent (%.1fA), using minCurrent", lp.PhasesMaxCurrent3, lp.minCurrent)
+			lp.PhasesMaxCurrent3 = lp.minCurrent
+		}
 	}
 
 	// choose sane default if mode is not set
@@ -443,6 +451,17 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 	if v, err := lp.settings.Float(keys.MaxCurrent); err == nil && v > 0 {
 		lp.setMaxCurrent(v)
+	}
+	// phase switching hysteresis and 3p current cap: UI-persisted values
+	// override the config defaults. 0 = default is a valid stored value, so
+	// the pair is restored whenever both keys are present
+	if up, err := lp.settings.Float(keys.PhasesUpPower); err == nil {
+		if down, err := lp.settings.Float(keys.PhasesDownPower); err == nil {
+			_ = lp.SetPhasesHysteresis(up, down)
+		}
+	}
+	if v, err := lp.settings.Float(keys.PhasesMaxCurrent3); err == nil {
+		_ = lp.SetPhasesMaxCurrent3(v)
 	}
 	if v, err := lp.settings.Int(keys.LimitSoc); err == nil && v > 0 {
 		lp.setLimitSoc(int(v))
@@ -937,7 +956,9 @@ func (lp *Loadpoint) syncCharger() error {
 
 	// #1: check charger logic, fix charger state if necessary (for chargers that start charging while being disabled).
 	// A continuous device runs on its own schedule, so status C without evcc's enable is normal there.
-	if !enabled && lp.charging() && lp.phaseSwitchCompleted() && !lp.chargerHasFeature(api.Continuous) {
+	// During a pending phase switch the charger is disabled on purpose, so
+	// status C while the 0A hold runs is expected and must not be "fixed".
+	if !enabled && lp.charging() && lp.phaseSwitchCompleted() && !lp.phaseSwitchPending() && !lp.chargerHasFeature(api.Continuous) {
 		lp.log.WARN.Println("charger logic error: disabled but charging")
 
 		// treat as enabled when charging for further validations
@@ -1007,7 +1028,7 @@ func (lp *Loadpoint) syncCharger() error {
 			}
 		}
 
-	case !enabled && !lp.phaseSwitchCompleted():
+	case !enabled && !lp.phaseSwitchCompleted() && !lp.phaseSwitchPending():
 		// some chargers (i.E. Easee in some configurations) disable themselves to be able to switch phases
 		// -> enable charger
 		if err := lp.charger.Enable(true); err != nil {
@@ -1525,8 +1546,9 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 		return nil
 	}
 
-	// never switch under load: hold at 0A for the safety buffer first
-	if lp.charging() {
+	// never switch while the charger is enabled: hold at 0A for the safety
+	// buffer first (an enabled charger may start drawing at any time)
+	if lp.enabled {
 		return lp.startPhaseSwitchSequence(phases)
 	}
 
@@ -1535,7 +1557,8 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 
 // startPhaseSwitchSequence drops the load to 0A and marks the phase switch as
 // pending. advancePhaseSwitch executes the switch once the safety buffer has
-// elapsed and no current flows anymore.
+// elapsed at zero current. The buffer is anchored on the first confirmed 0A,
+// not on the switch request, so it is only spent at zero current.
 func (lp *Loadpoint) startPhaseSwitchSequence(phases int) error {
 	if lp.phaseSwitchTarget == 0 {
 		lp.log.INFO.Printf("phase switch to %dp: dropping to 0A, safety buffer %v", phases, phaseSwitchSafetyBuffer)
@@ -1544,15 +1567,15 @@ func (lp *Loadpoint) startPhaseSwitchSequence(phases int) error {
 	}
 
 	lp.phaseSwitchTarget = phases
-	lp.phaseSwitchZeroAt = lp.clock.Now()
+	lp.phaseSwitchZeroAt = time.Time{} // anchored on confirmed zero current
 	lp.phaseSwitchLastRetry = time.Time{}
 
 	return lp.setLimit(0)
 }
 
 // advancePhaseSwitch holds the load at 0A until the safety buffer has elapsed
-// and no current flows anymore, then executes the pending phase switch and
-// lets the pv logic re-establish the charge current from the current surplus
+// at zero current, then executes the pending phase switch and lets the pv
+// logic re-establish the charge current from the current surplus
 func (lp *Loadpoint) advancePhaseSwitch() error {
 	// defensive: nothing pending
 	if lp.phaseSwitchTarget == 0 {
@@ -1560,8 +1583,9 @@ func (lp *Loadpoint) advancePhaseSwitch() error {
 	}
 
 	// keep the load at 0A (rate limited: the stop command goes through the
-	// vehicle API, which may be down or rate-limited)
-	if lp.offeredCurrent != 0 &&
+	// vehicle API, which may be down or rate-limited); retry as long as the
+	// charger still reports charging or current is still flowing
+	if (lp.charging() || !lp.zeroCurrentConfirmed()) &&
 		(lp.phaseSwitchLastRetry.IsZero() || lp.clock.Since(lp.phaseSwitchLastRetry) >= phaseSwitchRetryDelay) {
 		lp.phaseSwitchLastRetry = lp.clock.Now()
 		if err := lp.setLimit(0); err != nil {
@@ -1569,8 +1593,16 @@ func (lp *Loadpoint) advancePhaseSwitch() error {
 		}
 	}
 
-	// wait for the safety buffer and that no current flows anymore
-	if lp.clock.Since(lp.phaseSwitchZeroAt) < phaseSwitchSafetyBuffer || lp.charging() {
+	// the safety buffer is spent at zero current: anchor the timer on the
+	// first confirmed 0A and restart it whenever current reappears
+	if lp.charging() || !lp.zeroCurrentConfirmed() {
+		lp.phaseSwitchZeroAt = time.Time{}
+		return nil
+	}
+	if lp.phaseSwitchZeroAt.IsZero() {
+		lp.phaseSwitchZeroAt = lp.clock.Now()
+	}
+	if lp.clock.Since(lp.phaseSwitchZeroAt) < phaseSwitchSafetyBuffer {
 		return nil
 	}
 
@@ -1580,24 +1612,35 @@ func (lp *Loadpoint) advancePhaseSwitch() error {
 	}
 
 	target := lp.phaseSwitchTarget
-	lp.phaseSwitchTarget = 0
 
 	if err := lp.scalePhasesNow(cp, target); err != nil {
 		// the charger cannot switch phases right now (e.g. EEBus charger with
 		// an ISO 15118 vehicle): adopt the target phase count so the switch is
-		// not re-attempted on every cycle (issue #29974)
+		// not re-attempted on every cycle
 		if errors.Is(err, api.ErrNotAvailable) {
+			lp.phaseSwitchTarget = 0
 			lp.SetPhases(target)
 			return nil
 		}
+		// the physical switch failed: the contactor state is unknown, keep the
+		// target pending and re-arm the full 0A hold before the next attempt
+		lp.phaseSwitchZeroAt = time.Time{}
 		return err
 	}
+	lp.phaseSwitchTarget = 0
 
 	// re-establish the charge current from the current surplus on the next
 	// cycle without waiting the enable delay
 	lp.elapsePVTimer()
 
 	return nil
+}
+
+// zeroCurrentConfirmed reports that no significant current flows: measured
+// phase currents at rest, or a zero offered current if the charger does not
+// measure phase currents.
+func (lp *Loadpoint) zeroCurrentConfirmed() bool {
+	return lp.GetMaxPhaseCurrent() < minActiveCurrent
 }
 
 // scalePhasesNow performs the physical phase switch (assumes 0A).
@@ -1641,6 +1684,7 @@ func (lp *Loadpoint) cancelPhaseSwitch() {
 	if lp.phaseSwitchTarget != 0 {
 		lp.log.INFO.Printf("phase switch to %dp aborted", lp.phaseSwitchTarget)
 		lp.phaseSwitchTarget = 0
+		lp.phaseSwitchZeroAt = time.Time{}
 		lp.phaseSwitchLastRetry = time.Time{}
 	}
 }
@@ -1663,8 +1707,8 @@ func (lp *Loadpoint) circuitAllowsPhases(phases int, minCurrent float64) bool {
 
 // fastCharging scales to 3p if available and sets maximum current
 func (lp *Loadpoint) fastCharging() error {
-	// explicit max charging wins over a pending phase switch
-	// in the opposite direction — the physical phase already matches, abort
+	// explicit max charging wins over a pending phase switch in the opposite
+	// direction; if the physical phase already matches, abort the switch
 	if lp.phaseSwitchPending() && lp.phaseSwitchTarget != 3 && lp.GetPhases() == 3 {
 		lp.cancelPhaseSwitch()
 	}
@@ -1679,8 +1723,8 @@ func (lp *Loadpoint) fastCharging() error {
 		return err
 	}
 
-	// fastChargingPhases may have started a phase switch
-	// safety sequence — keep the load at 0A
+	// fastChargingPhases may have started a phase switch safety sequence,
+	// in which case the load stays at 0A until it completes
 	if lp.phaseSwitchPending() {
 		return nil
 	}
@@ -1762,8 +1806,8 @@ func (lp *Loadpoint) fastChargingPhases() (bool, error) {
 
 // minCharging scales to 1p if available and sets minimum current
 func (lp *Loadpoint) minCharging() error {
-	// explicit 1p charging wins over a pending phase switch
-	// in the opposite direction — the physical phase already matches, abort
+	// explicit 1p charging wins over a pending phase switch in the opposite
+	// direction; if the physical phase already matches, abort the switch
 	if lp.phaseSwitchPending() && lp.phaseSwitchTarget != 1 && lp.GetPhases() == 1 {
 		lp.cancelPhaseSwitch()
 	}
@@ -1776,8 +1820,8 @@ func (lp *Loadpoint) minCharging() error {
 		}
 	}
 
-	// a phase switch safety sequence may have been started
-	// above — keep the load at 0A
+	// a phase switch safety sequence may have been started above, in which
+	// case the load stays at 0A until it completes
 	if lp.phaseSwitchPending() {
 		return nil
 	}
@@ -1789,8 +1833,8 @@ func (lp *Loadpoint) minCharging() error {
 // When unset, maxCurrent × 230 V (default: switch up only once 1p cannot
 // cover the 3p max current).
 func (lp *Loadpoint) phasesUpThreshold(maxCurrent float64) float64 {
-	if lp.PhasesUpPower > 0 {
-		return lp.PhasesUpPower
+	if up := lp.GetPhasesUpPower(); up > 0 {
+		return up
 	}
 	return grid.CurrentToPower(maxCurrent, 1)
 }
@@ -1799,8 +1843,8 @@ func (lp *Loadpoint) phasesUpThreshold(maxCurrent float64) float64 {
 // When unset, minCurrent × phases × 230 V (default: switch down only once
 // 3p cannot cover the min current).
 func (lp *Loadpoint) phasesDownThreshold(minCurrent float64, phases int) float64 {
-	if lp.PhasesDownPower > 0 {
-		return lp.PhasesDownPower
+	if down := lp.GetPhasesDownPower(); down > 0 {
+		return down
 	}
 	return grid.CurrentToPower(minCurrent, phases)
 }
@@ -1874,8 +1918,8 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 				// switch did not complete - phase count is unchanged
 				return phases
 			}
-			// switching under load is deferred to the 0A safety
-			// sequence — it completes in a later cycle
+			// switching under load is deferred to the 0A safety sequence,
+			// which completes in a later cycle
 			if lp.phaseSwitchPending() {
 				return 0
 			}
@@ -1911,8 +1955,8 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 				// switch did not complete - phase count is unchanged
 				return phases
 			}
-			// switching under load is deferred to the 0A safety
-			// sequence — it completes in a later cycle
+			// switching under load is deferred to the 0A safety sequence,
+			// which completes in a later cycle
 			if lp.phaseSwitchPending() {
 				return 0
 			}
@@ -2128,8 +2172,8 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
 		scaledTo = lp.pvScalePhases(sitePower, minCurrent, maxCurrent, mayDisable)
 
-		// a phase switch safety sequence was started — hold
-		// at 0A until it completes (the mode dispatch keeps the load off)
+		// a phase switch safety sequence was started: hold at 0A until it
+		// completes (the mode dispatch keeps the load off)
 		if lp.phaseSwitchPending() {
 			return 0
 		}
@@ -2873,7 +2917,7 @@ NO_DIM:
 
 	case lp.phaseSwitchPending():
 		// an explicit request that already matches the
-		// physical phase cancels the pending opposite-direction switch —
+		// physical phase cancels the pending opposite-direction switch,
 		// waiting out the 0A sequence would only delay the user's request
 		if lp.phaseSwitchTarget != 3 && lp.GetPhases() == 3 &&
 			(mode == api.ModeNow || minSocNotReached || plannerActive) {
@@ -2882,6 +2926,21 @@ NO_DIM:
 			mode == api.ModeSmart && lp.GetAlwaysCharge().Active() && smartFeedInPriorityActive {
 			lp.cancelPhaseSwitch()
 		}
+		// a changed fixed phase config supersedes the pending switch:
+		// cancel when the physical phase already matches it (no switch
+		// needed), retarget when it differs from the pending target and let
+		// the running 0A hold continue toward the new count. If the pending
+		// target already matches the new config, nothing changes: the
+		// physical phase may still be short of it, so the switch stays
+		// pending
+		if lp.hasPhaseSwitching() && lp.phasesConfigured != 0 && lp.phaseSwitchPending() {
+			if lp.phasesConfigured == lp.GetPhases() {
+				lp.cancelPhaseSwitch()
+			} else if lp.phasesConfigured != lp.phaseSwitchTarget {
+				lp.log.WARN.Printf("phase switch target changed from %dp to %dp (fixed phase config)", lp.phaseSwitchTarget, lp.phasesConfigured)
+				lp.phaseSwitchTarget = lp.phasesConfigured
+			}
+		}
 		// 0A safety sequence before physical phase switch
 		err = lp.advancePhaseSwitch()
 
@@ -2889,13 +2948,14 @@ NO_DIM:
 		if err = lp.scalePhases(lp.phasesConfigured); errors.Is(err, api.ErrNotAvailable) {
 			// the charger cannot switch phases right now (e.g. EEBus charger
 			// with an ISO 15118 vehicle). Adopt the configured phase count so
-			// the switch is not re-attempted on every cycle (issue #29974).
+			// the switch is not re-attempted on every cycle.
 			lp.SetPhases(lp.phasesConfigured)
 			err = nil
 		}
 
-		// the welcome charge must not miss its connect cycle on the new phases (#34853)
-		if err != nil || !lp.welcomeActive() {
+		// the welcome charge must not miss its connect cycle on the new phases (#34853),
+		// and must not restore current while the 0A safety sequence is pending
+		if err != nil || !lp.welcomeActive() || lp.phaseSwitchPending() {
 			break
 		}
 		fallthrough

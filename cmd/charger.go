@@ -123,8 +123,14 @@ func runCharger(cmd *cobra.Command, args []string) {
 			flagUsed = true
 
 			if vv, ok := api.Cap[api.PhaseSwitcher](v); ok {
-				if err := vv.Phases1p3p(phases); err != nil {
-					log.ERROR.Println("set phases:", err)
+				// never switch under load: the loadpoint's 0A safety sequence
+				// only covers loadpoint-driven switches
+				if status, err := v.Status(); err == nil && status == api.StatusC {
+					log.ERROR.Println("refusing phase switch while charging, stop the charge process first")
+				} else {
+					if err := vv.Phases1p3p(phases); err != nil {
+						log.ERROR.Println("set phases:", err)
+					}
 				}
 			} else {
 				log.ERROR.Println("phases: not implemented")

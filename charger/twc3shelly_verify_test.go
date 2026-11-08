@@ -1,12 +1,18 @@
 package charger
 
-// LIVE-Verifikation (nur Read-only-Gerätezugriffe, kein Phasenwechsel!):
-// Template registrieren, validieren, rendern und den Charger gegen die
-// echten Geräte (TWC3 .27 + Shelly .167) bauen.
+// Template-Verifikation (ohne Gerätezugriff):
+// Template registrieren, validieren und rendern. Läuft überall.
 //
-// Laufzeit: go test ./charger/ -run TestTwc3ShellyLive -v
+// LIVE-Verifikation (nur Read-only-Gerätezugriffe, kein Phasenwechsel!):
+// den Charger gegen die echten Geräte (TWC3 + Shelly) bauen.
+// Opt-in, weil die Adressen hardcodiert sind und CI/andere Maschinen die
+// Geräte nicht erreichen:
+//
+//	LIVE-Test: go test ./charger/ -run TestTwc3ShellyLive -v
+//	mit:       TWC3SHELLY_LIVE=1 (und TWC3_HOST/SHELLY_HOST bei Abweichung)
 
 import (
+	"os"
 	"testing"
 
 	yaml "go.yaml.in/yaml/v3"
@@ -15,8 +21,8 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 )
 
-func TestTwc3ShellyLive(t *testing.T) {
-	// 1. Template ist über init() (embedded FS) bereits registriert + validiert
+func TestTwc3ShellyTemplate(t *testing.T) {
+	// 1. Template ist über init() (embedded FS) bereits registrieren + validiert
 	tmpl, err := templates.ByName(templates.Charger, "twc3shelly")
 	if err != nil {
 		t.Fatalf("template by name: %v", err)
@@ -26,7 +32,7 @@ func TestTwc3ShellyLive(t *testing.T) {
 	}
 	t.Logf("template ok: %d params, capabilities=%v", len(tmpl.Params), tmpl.Capabilities)
 
-	// 2. Rendern mit echten Werten
+	// 2. Rendern
 	b, _, err := tmpl.RenderResult(templates.Charger, templates.RenderModeInstance, map[string]any{
 		"host":   "192.168.178.27",
 		"shelly": "192.168.178.167",
@@ -47,11 +53,22 @@ func TestTwc3ShellyLive(t *testing.T) {
 	if cfg["type"] != "twc3shelly" {
 		t.Fatalf("unexpected type: %v", cfg["type"])
 	}
+}
+
+func TestTwc3ShellyLive(t *testing.T) {
+	if os.Getenv("TWC3SHELLY_LIVE") != "1" {
+		t.Skip("live device verification requires TWC3SHELLY_LIVE=1 (devices TWC3/SHELLY_HOST must be reachable)")
+	}
+	host := firstNonEmpty(os.Getenv("TWC3_HOST"), "192.168.178.27")
+	shelly := firstNonEmpty(os.Getenv("SHELLY_HOST"), "192.168.178.167")
 
 	// 4. Charger gegen LIVE-Geräte bauen (read-only Calls an Shelly)
 	//    Die echte Pipeline (plugin/charger.go) dekodiert in config.Typed:
 	//    "type" landet in .Type und wird NICHT an den Konstruktor übergeben.
-	delete(cfg, "type")
+	cfg := map[string]any{
+		"host":   host,
+		"shelly": shelly,
+	}
 	ch, err := NewTwc3ShellyFromConfig(cfg)
 	if err != nil {
 		t.Fatalf("charger construct: %v", err)
@@ -85,4 +102,14 @@ func TestTwc3ShellyLive(t *testing.T) {
 	t.Logf("TWC3 power: %.1f W", p)
 
 	t.Log("LIVE-VERIFIKATION OK (kein Phasenwechsel ausgeführt)")
+}
+
+// firstNonEmpty returns the first non-empty string or the fallback
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }

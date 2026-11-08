@@ -86,11 +86,14 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
 import formatter from "@/mixins/formatter";
 import { POWER_UNIT } from "@/mixins/formatter";
 
-export default {
+type DragTarget = "up" | "down";
+
+export default defineComponent({
   name: "PhaseHysteresis",
   mixins: [formatter],
   props: {
@@ -123,31 +126,31 @@ export default {
   emits: ["update:up", "update:down"],
   data() {
     return {
-      dragging: null,
+      dragging: null as DragTarget | null,
     };
   },
   computed: {
     POWER_UNIT: () => POWER_UNIT,
-    upValue() {
+    upValue(): number {
       return this.up || this.defaultUp || this.max;
     },
-    downValue() {
+    downValue(): number {
       return this.down || this.defaultDown || this.min;
     },
-    bandWidth() {
+    bandWidth(): number {
       return Math.max(0, this.pct(this.upValue) - this.pct(this.downValue));
     },
   },
   methods: {
-    pct(value) {
+    pct(value: number): number {
       const span = this.max - this.min;
       if (span <= 0) {
         return 0;
       }
       return Math.min(100, Math.max(0, ((value - this.min) / span) * 100));
     },
-    valueFromClientX(clientX) {
-      const el = this.$refs.track;
+    valueFromClientX(clientX: number): number {
+      const el = this.$refs["track"] as HTMLDivElement | undefined;
       if (!el) {
         return this.min;
       }
@@ -158,16 +161,16 @@ export default {
       const rel = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
       return this.min + rel * (this.max - this.min);
     },
-    thumbPosPx(value) {
-      const el = this.$refs.track;
+    thumbPosPx(value: number): number {
+      const el = this.$refs["track"] as HTMLDivElement | undefined;
       if (!el) {
         return 0;
       }
       const rect = el.getBoundingClientRect();
       return rect.left + (this.pct(value) / 100) * rect.width;
     },
-    onPointerDown(e) {
-      const el = this.$refs.track;
+    onPointerDown(e: PointerEvent): void {
+      const el = this.$refs["track"] as HTMLDivElement | undefined;
       if (!el) {
         return;
       }
@@ -180,18 +183,18 @@ export default {
       el.setPointerCapture(e.pointerId);
       this.setValueFromX(this.dragging, e.clientX);
     },
-    onPointerMove(e) {
+    onPointerMove(e: PointerEvent): void {
       if (this.dragging) {
         this.setValueFromX(this.dragging, e.clientX);
       }
     },
-    onPointerUp() {
+    onPointerUp(): void {
       this.dragging = null;
     },
-    setValueFromX(which, clientX) {
+    setValueFromX(which: DragTarget, clientX: number): void {
       this.commit(which, Math.round(this.valueFromClientX(clientX) / 10) * 10);
     },
-    onKeydown(which, e) {
+    onKeydown(which: DragTarget, e: KeyboardEvent): void {
       const step = e.shiftKey ? 100 : 10;
       let value = which === "up" ? this.upValue : this.downValue;
       switch (e.key) {
@@ -215,22 +218,22 @@ export default {
       e.preventDefault();
       this.commit(which, Math.round(value / 10) * 10);
     },
-    commit(which, value) {
-      value = Math.min(this.max, Math.max(this.min, value));
+    commit(which: DragTarget, value: number): void {
+      const clamped = Math.min(this.max, Math.max(this.min, value));
       if (which === "up") {
-        value = Math.max(value, this.downValue + 10);
-        this.$emit("update:up", value);
+        const next = Math.max(clamped, this.downValue + 10);
+        this.$emit("update:up", next);
       } else {
-        value = Math.min(value, this.upValue - 10);
-        this.$emit("update:down", value);
+        const next = Math.min(clamped, this.upValue - 10);
+        this.$emit("update:down", next);
       }
     },
-    reset() {
+    reset(): void {
       this.$emit("update:up", 0);
       this.$emit("update:down", 0);
     },
   },
-};
+});
 </script>
 
 <style scoped>
