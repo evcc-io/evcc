@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"math"
 	"testing"
 	"time"
 
@@ -1264,4 +1265,13 @@ func TestOptimizerRerunAfterBusy(t *testing.T) {
 	site.optimizer.mu.Lock()
 	defer site.optimizer.mu.Unlock()
 	assert.True(t, site.optimizer.updated.After(last), "pending trigger must bypass interval gate")
+}
+
+func TestValidateDemand(t *testing.T) {
+	ts := []time.Time{time.Unix(0, 0), time.Unix(900, 0)}
+	dt := []int{900, 900}
+
+	require.NoError(t, validateDemand(dt, []float32{250, 0}, ts))
+	require.Error(t, validateDemand(dt, []float32{250, 5.1e15}, ts))
+	require.Error(t, validateDemand(dt, []float32{float32(math.NaN()), 0}, ts))
 }
