@@ -533,7 +533,7 @@ func TestReassignActiveVehicleKeepsSoc(t *testing.T) {
 	assert.Equal(t, 0.0, lp.vehicleSoc, "soc must clear on vehicle change")
 }
 
-// TestDisconnectClearsSoc ensures the previous session's soc does not survive
+// TestDisconnectClearsSoc ensures the previous session's SoC does not survive
 // a disconnect for the same default vehicle, see #35916
 func TestDisconnectClearsSoc(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -556,7 +556,7 @@ func TestDisconnectClearsSoc(t *testing.T) {
 
 	lp.evVehicleDisconnectHandler()
 	assert.Equal(t, vehicle, lp.vehicle, "expected default vehicle")
-	assert.Zero(t, lp.vehicleSoc, "soc must clear on disconnect")
+	assert.Zero(t, lp.vehicleSoc, "SoC must clear on disconnect")
 }
 
 // TestActiveVehicleChangeTriggersOptimizer ensures the optimizer is re-run when

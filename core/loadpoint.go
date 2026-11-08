@@ -680,9 +680,12 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// forget startup energy offset
 	lp.chargedAtStartup = 0
 
-	// the previous session's soc must not satisfy limits on the next connection (#35916)
-	lp.vehicleSoc = 0
-	lp.publish(keys.VehicleSoc, 0.0)
+	// the previous session's SoC must not satisfy limits on the next connection (#35916)
+	// skip for integrated devices: their SoC comes from the charger and the "disconnect" is the socket switching off
+	if !lp.chargerHasFeature(api.IntegratedDevice) {
+		lp.vehicleSoc = 0
+		lp.publish(keys.VehicleSoc, 0.0)
+	}
 
 	// remove charger vehicle id and stop potential detection
 	lp.setVehicleIdentifier("")
