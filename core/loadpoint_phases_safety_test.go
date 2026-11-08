@@ -210,6 +210,83 @@ func TestPhaseSwitchAbortOnDisconnect(t *testing.T) {
 	require.Equal(t, 3, lp.phases)
 }
 
+// TestPhaseSwitchAbortOnDisconnectViaUpdate verifies that the abort also
+// works through the real update dispatch: a vehicle that unplugs while the
+// 0A safety sequence is pending must keep 0A, cancel the pending switch and
+// never execute the physical phase change.
+func TestPhaseSwitchAbortOnDisconnectViaUpdate(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	plainCharger := api.NewMockCharger(ctrl)
+	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+
+	chargerStatus := api.StatusC
+	plainCharger.EXPECT().Status().DoAndReturn(func() (api.ChargeStatus, error) {
+		return chargerStatus, nil
+	}).AnyTimes()
+	plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()
+	plainCharger.EXPECT().Enable(gomock.Any()).Return(nil).AnyTimes()
+	plainCharger.EXPECT().MaxCurrent(gomock.Any()).Return(nil).AnyTimes()
+	// the physical switch must never happen
+	phaseCharger.EXPECT().Phases1p3p(gomock.Any()).Return(nil).Times(0)
+
+	clock := clock.NewMock()
+
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock,
+		chargeMeter: newChargeMeter(&Null{}),
+		chargeRater: &Null{},
+		chargeTimer: &Null{},
+		progress:    NewProgress(0, 10),
+		wakeUpTimer: NewTimer(),
+		mode:        api.ModePV,
+		minCurrent:  minA,
+		maxCurrent:  maxA,
+		status:      api.StatusC,
+		charger: struct {
+			*api.MockCharger
+			*api.MockPhaseSwitcher
+		}{
+			plainCharger,
+			phaseCharger,
+		},
+		phases:           3,
+		phasesConfigured: 0,
+		enabled:          true,
+		offeredCurrent:   16,
+	}
+
+	attachListeners(t, lp)
+
+	// a 3p->1p sequence is pending (started by pvScalePhases while charging)
+	require.NoError(t, lp.scalePhases(1))
+	require.Equal(t, 1, lp.phaseSwitchTarget)
+	require.False(t, lp.enabled)
+
+	// vehicle still connected: the update dispatch keeps the hold at 0A
+	clock.Add(10 * time.Second)
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
+	require.True(t, lp.phaseSwitchPending())
+	require.False(t, lp.enabled)
+	require.Equal(t, 0.0, lp.offeredCurrent)
+
+	// vehicle unplugs: the dispatch cancels the pending switch and stays at 0A
+	chargerStatus = api.StatusA
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
+	require.Equal(t, 0, lp.phaseSwitchTarget, "disconnect must cancel the pending switch")
+	require.Equal(t, 3, lp.GetPhases())
+	require.False(t, lp.phaseSwitchPending())
+	require.Equal(t, 0.0, lp.offeredCurrent)
+
+	// and no switch is ever executed, no matter how long the buffer would have taken
+	clock.Add(time.Minute)
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
+	require.Equal(t, 3, lp.GetPhases())
+}
+
 // TestPhaseSwitchUserOverride verifies that an explicit "Schnell" (now mode)
 // cancels a pending 3p→1p switch when the physical phase already is 3p.
 func TestPhaseSwitchUserOverride(t *testing.T) {
