@@ -12,7 +12,9 @@ import (
 )
 
 func TestStatusLatestFallsBackToCCS2On5031(t *testing.T) {
+	var paths []string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		paths = append(paths, r.URL.Path)
 		w.Header().Set("Content-Type", "application/json")
 		if strings.HasSuffix(r.URL.Path, "/ccs2/carstatus/latest") {
 			fmt.Fprint(w, `{"retCode":"S","resCode":"0000","resMsg":{"state":{"Vehicle":{"Green":{"BatteryManagement":{"BatteryRemain":{"Ratio":42}}}}}}}`)
@@ -31,4 +33,5 @@ func TestStatusLatestFallsBackToCCS2On5031(t *testing.T) {
 	soc, err := res.SoC()
 	require.NoError(t, err)
 	require.Equal(t, 42.0, soc)
+	require.Equal(t, []string{"/vehicles/vid/status", "/vehicles/vid/status/latest", "/vehicles/vid/ccs2/carstatus/latest"}, paths)
 }
