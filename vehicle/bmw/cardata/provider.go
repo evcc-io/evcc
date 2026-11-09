@@ -85,12 +85,11 @@ func (v *Provider) findOrCreateContainer() (string, error) {
 		return "", err
 	}
 
-	// obsolete containers keep streaming, resulting in duplicate messages
-	defer v.deleteObsoleteContainers(containers)
-
 	if i := slices.IndexFunc(containers, func(c Container) bool {
 		return c.Name == containerName && c.Purpose == requiredVersion
 	}); i >= 0 {
+		// obsolete containers keep streaming, resulting in duplicate messages
+		v.deleteObsoleteContainers(containers)
 		return containers[i].ContainerId, nil
 	}
 
@@ -99,8 +98,14 @@ func (v *Provider) findOrCreateContainer() (string, error) {
 		Purpose:              requiredVersion,
 		TechnicalDescriptors: requiredKeys,
 	})
+	if err != nil {
+		// keep the old container streaming when the replacement cannot be created
+		return "", err
+	}
 
-	return res.ContainerId, err
+	v.deleteObsoleteContainers(containers)
+
+	return res.ContainerId, nil
 }
 
 func (v *Provider) deleteObsoleteContainers(containers []Container) {
