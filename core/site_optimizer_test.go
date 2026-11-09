@@ -988,14 +988,14 @@ func TestApplyOptimizerResultPVShare(t *testing.T) {
 // discharge when the kept energy is discharged later at a higher price
 func TestCurrentSlotSuggestionHoldWorthwhile(t *testing.T) {
 	battery := batteryDetail{Type: batteryTypeBattery}
-	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000}
+	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000, DMax: 4000}
 	ts := optimizer.TimeSeries{Dt: []int{900, 900, 900}, PN: []float32{0.26, 0.26, 0.29}}
 
 	// pv charging now, discharge at a higher price later that runs the battery short
 	res := optimizer.BatteryResult{
 		ChargingPower:    []float32{500, 500, 0},
 		DischargingPower: []float32{0, 0, 500},
-		StateOfCharge:    []float32{5000, 5500, 1500},
+		StateOfCharge:    []float32{5000, 5500, 1300},
 	}
 	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25, 0).Action, "pv charge before expensive discharge")
 
@@ -1003,9 +1003,9 @@ func TestCurrentSlotSuggestionHoldWorthwhile(t *testing.T) {
 	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25, 0).Action, "idle balanced before expensive discharge")
 
 	// the expensive discharge leaves energy to spare: kept energy only raises the leftover
-	res.StateOfCharge[2] = 5000
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25, 0).Action, "discharge not energy-limited")
 	res.StateOfCharge[2] = 1500
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25, 0).Action, "slack beyond one run of full discharge")
+	res.StateOfCharge[2] = 1300
 
 	// the kept energy would be discharged at the same price
 	ts.PN[2] = 0.26

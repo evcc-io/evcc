@@ -92,10 +92,6 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 	return s
 }
 
-// holdReserve is the share of the usable capacity above SMin a plan must keep in reserve
-// during its later discharge to count as not energy-limited
-const holdReserve = 0.1
-
 // holdWorthwhile reports whether energy kept in the battery now is discharged later at a
 // higher price. A battery that fills up before its next discharge only displaces pv
 // charging with the kept energy, so holding it would trade a battery dip for a grid import.
@@ -107,7 +103,8 @@ func holdWorthwhile(req optimizer.BatteryConfig, res optimizer.BatteryResult, ts
 	}
 
 	discharging := false
-	reserve := req.SMin + holdReserve*max(req.SMax-req.SMin, 0)
+	// normal mode may drain the battery at full power until the next run sees the drained soc
+	reserve := req.SMin + req.DMax*float32(optimizerInterval.Hours())
 
 	for i := slot + 1; i < min(len(res.DischargingPower), len(res.StateOfCharge), len(ts.PN), len(ts.Dt)); i++ {
 		if req.SMax > 0 && res.StateOfCharge[i] >= req.SMax {
