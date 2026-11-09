@@ -238,9 +238,14 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	active = !activeSlot.End.IsZero()
 
 	// the optimizer starts and stops by itself, the planner's rules below don't
-	// apply. Its plan is active during a slot and while the deadline is critical.
+	// apply. Its plan is active during a slot, while the deadline is critical and
+	// through a short gap before its next slot.
 	if optimized {
 		active = active || lp.planDeadlineCritical()
+		if !active && lp.optimizerPlanGap() {
+			lp.log.DEBUG.Printf("plan: avoid re-start within %v, continuing until %s", tariff.SlotDuration, planStart.Round(time.Second).Local())
+			active = true
+		}
 		if active && lp.planLocked.Id == 0 && isSocBased {
 			lp.lockPlanGoal(planTime, int(goal), lp.getPlanId())
 		}
