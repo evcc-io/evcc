@@ -177,7 +177,7 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 			if tc.soc > 0 {
 				d := time.Duration((1 - tc.soc/100) * float64(time.Hour))
 				t.Log("d", d)
-				assert.True(t, d < lp.GetPlanRequiredDuration(100, 10e3))
+				assert.True(t, d < lp.GetPlanRequiredDuration(100, 10e3, true))
 			}
 		}
 
@@ -732,4 +732,18 @@ func TestReconnectVehicle(t *testing.T) {
 			assert.Equal(t, vehicle, lp.vehicle, "vehicle should be detected")
 		})
 	}
+}
+
+func TestSetVehicleSocForReplacedVehicle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	prev, active := api.NewMockVehicle(ctrl), api.NewMockVehicle(ctrl)
+	lp.vehicle = active
+
+	lp.setVehicleSocFor(prev, 80)
+	assert.Zero(t, lp.GetSoc(), "stale poll of replaced vehicle must be dropped")
+
+	lp.setVehicleSocFor(active, 50)
+	assert.Equal(t, 50.0, lp.GetSoc())
 }

@@ -96,7 +96,7 @@ func (lp *Loadpoint) fixedDemandModelled() bool {
 
 	// a 100% plan charging on past its goal has no planner schedule
 	goal, socBased := lp.GetPlanGoal()
-	continues := socBased && goal == 100 && lp.GetPlanRequiredDuration(goal, maxPower) <= 0
+	continues := socBased && goal == 100 && lp.GetPlanRequiredDuration(goal, maxPower, socBased) <= 0
 
 	lp.RLock()
 	defer lp.RUnlock()
@@ -135,7 +135,7 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 		return false
 	}
 
-	required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower())
+	required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower(), isSocBased)
 	if required <= 0 && lp.fullSocPlanContinues(goal, isSocBased) {
 		return true
 	}

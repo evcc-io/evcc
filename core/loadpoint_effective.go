@@ -46,7 +46,7 @@ type plan struct {
 
 func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 	for i, p := range plans {
-		requiredDuration := lp.getPlanRequiredDuration(float64(p.Soc), maxPower)
+		requiredDuration := lp.getPlanRequiredDuration(float64(p.Soc), maxPower, true)
 		plans[i].Start = p.End.Add(-requiredDuration)
 	}
 
@@ -55,8 +55,9 @@ func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 		return i.Start.Compare(j.Start)
 	})
 
+	vehicleSoc := lp.GetSoc()
 	for _, p := range plans {
-		if lp.vehicleSoc == 0 || lp.vehicleSoc < float64(p.Soc) {
+		if vehicleSoc == 0 || vehicleSoc < float64(p.Soc) {
 			return &p
 		}
 	}

@@ -85,22 +85,22 @@ func (lp *Loadpoint) GetPlanRemainingEnergy() float64 {
 }
 
 // GetPlanRequiredDuration is the estimated total charging duration
-func (lp *Loadpoint) GetPlanRequiredDuration(goal, maxPower float64) time.Duration {
+func (lp *Loadpoint) GetPlanRequiredDuration(goal, maxPower float64, socBased bool) time.Duration {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.getPlanRequiredDuration(goal, maxPower)
+	return lp.getPlanRequiredDuration(goal, maxPower, socBased)
 }
 
-// getPlanRequiredDuration is the estimated total charging duration
-func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Duration {
-	if lp.socBasedPlanning() {
+// getPlanRequiredDuration is the estimated total charging duration, goal is a SoC in % if socBased, else energy in kWh
+func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64, socBased bool) time.Duration {
+	if socBased {
 		switch v, estimator := lp.getVehicleAndSocEstimator(); {
 		case estimator != nil:
 			return estimator.RemainingChargeDuration(goal, maxPower)
 		case v != nil:
-			return soc.RemainingChargeDuration(goal, maxPower, lp.vehicleSoc, v.Capacity())
+			return soc.RemainingChargeDuration(goal, maxPower, lp.GetSoc(), v.Capacity())
 		default:
-			// vehicle removed concurrently, goal is a SoC and must not be read as energy
+			// vehicle removed since the goal was read
 			return 0
 		}
 	}
@@ -196,7 +196,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	goal, isSocBased := lp.GetPlanGoal()
 	maxPower := lp.EffectiveMaxPower()
-	requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
+	requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower, isSocBased)
 	if requiredDuration <= 0 {
 		if lp.fullSocPlanContinues(goal, isSocBased) {
 			return true

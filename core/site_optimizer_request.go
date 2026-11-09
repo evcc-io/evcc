@@ -890,7 +890,7 @@ func applyPlannerPlan(lp loadpoint.API, demand []float32, sInitial float32, minL
 	}
 
 	maxPower := lp.EffectiveMaxPower()
-	required := lp.GetPlanRequiredDuration(goal, maxPower)
+	required := lp.GetPlanRequiredDuration(goal, maxPower, socBased)
 	if required <= 0 {
 		return demand
 	}
@@ -991,8 +991,8 @@ func applyPrecondition(lp loadpoint.API, demand []float32, minLen int) []float32
 	}
 
 	// limit to the required charging duration, i.e. "all" must not demand beyond the plan goal
-	goal, _ := lp.GetPlanGoal()
-	if required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower()); required < precondition {
+	goal, socBased := lp.GetPlanGoal()
+	if required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower(), socBased); required < precondition {
 		precondition = required
 	}
 	if precondition <= 0 {

@@ -158,7 +158,7 @@ type API interface {
 	// GetPlanRemainingEnergy returns the energy plan's missing energy in kWh
 	GetPlanRemainingEnergy() float64
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state
-	GetPlanRequiredDuration(goal, maxPower float64) time.Duration
+	GetPlanRequiredDuration(goal, maxPower float64, socBased bool) time.Duration
 	// GetPlanStrategy returns the plan strategy
 	GetPlanStrategy() api.PlanStrategy
 	// SetPlanStrategy sets the plan strategy

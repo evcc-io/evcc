@@ -95,7 +95,7 @@ type Loadpoint struct {
 
 	rwMutex      atomic.Int64 // count reentrant RWMutex
 	sync.RWMutex              // guard status
-	vmu          sync.RWMutex // guard vehicle
+	vmu          sync.RWMutex // guards vehicle, socEstimator, vehicleSoc; leaf lock, may be taken under lp.mu, never the reverse
 
 	// exposed public configuration
 	CircuitRef string `mapstructure:"circuit"` // Circuit reference
@@ -189,7 +189,7 @@ type Loadpoint struct {
 	wakeUpTimer    *Timer           // Vehicle wake-up timeout
 
 	// charge progress
-	vehicleSoc              float64       // Vehicle or charger soc
+	vehicleSoc              float64       // Vehicle or charger soc, guarded by vmu
 	vehicleRange            int64         // Vehicle range in km
 	chargeDuration          time.Duration // Charge duration
 	connectedDuration       time.Duration // Connection duration
@@ -596,7 +596,7 @@ func (lp *Loadpoint) evChargeStartHandler() {
 			session.Created = lp.clock.Now()
 		}
 		// capture start soc once available (may not be present at session start)
-		if soc := lp.vehicleSoc; session.SocStart == nil && soc > 0 && !lp.chargerHasFeature(api.Heating) {
+		if soc := lp.GetSoc(); session.SocStart == nil && soc > 0 && !lp.chargerHasFeature(api.Heating) {
 			session.SocStart = &soc
 		}
 	})
@@ -687,7 +687,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// the previous session's SoC must not satisfy limits on the next connection
 	// skip for integrated devices: their SoC comes from the charger and the "disconnect" is the socket switching off
 	if !lp.chargerHasFeature(api.IntegratedDevice) {
-		lp.vehicleSoc = 0
+		lp.setVehicleSoc(0)
 		lp.publish(keys.VehicleSoc, 0.0)
 	}
 
@@ -1194,7 +1194,7 @@ func (lp *Loadpoint) setStatus(status api.ChargeStatus) {
 // socBasedPlanning returns true if vehicle soc (optionally from charger) and capacity are available
 func (lp *Loadpoint) socBasedPlanning() bool {
 	v := lp.GetVehicle()
-	return (v != nil && v.Capacity() > 0) && (lp.vehicleHasSoc() || lp.vehicleSoc > 0)
+	return (v != nil && v.Capacity() > 0) && (lp.vehicleHasSoc() || lp.GetSoc() > 0)
 }
 
 // repeatingPlanning returns true if the current plan is a repeating plan
@@ -1230,7 +1230,7 @@ func (lp *Loadpoint) LimitSocReached() bool {
 	lp.RLock()
 	defer lp.RUnlock()
 	limit := lp.effectiveLimitSoc()
-	return limit > 0 && limit < 100 && lp.vehicleSoc >= float64(limit)
+	return limit > 0 && limit < 100 && lp.GetSoc() >= float64(limit)
 }
 
 // minSocNotReached checks if minimum is configured and not reached
@@ -1240,10 +1240,10 @@ func (lp *Loadpoint) minSocNotReached() bool {
 		return false
 	}
 
-	if lp.vehicleSoc != 0 {
-		active := lp.vehicleSoc < float64(minSoc)
+	if soc := lp.GetSoc(); soc != 0 {
+		active := soc < float64(minSoc)
 		if active {
-			lp.log.DEBUG.Printf("forced charging at vehicle soc %.0f%% (< %.0f%% min soc)", lp.vehicleSoc, float64(minSoc))
+			lp.log.DEBUG.Printf("forced charging at vehicle soc %.0f%% (< %.0f%% min soc)", soc, float64(minSoc))
 		}
 		return active
 	}
@@ -2435,13 +2435,14 @@ func (lp *Loadpoint) publishSocAndRange() {
 		// nil soc extrapolates from charged energy while vehicle api is unavailable;
 		// don't overwrite a known soc while a freshly created estimator returns 0
 		if soc := socEstimator.Soc(socR, lp.GetChargedEnergy()); socR != nil || soc > 0 {
-			lp.vehicleSoc = soc
-			lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
+			lp.setVehicleSocFor(v, soc)
+			lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", soc)
 		}
 	} else if socR != nil {
-		lp.vehicleSoc = *socR
+		lp.setVehicleSocFor(v, *socR)
 	}
-	lp.publish(keys.VehicleSoc, lp.vehicleSoc)
+	vehicleSoc := lp.GetSoc()
+	lp.publish(keys.VehicleSoc, vehicleSoc)
 
 	apiLimitSoc := 100
 	if limitR != nil {
@@ -2453,9 +2454,9 @@ func (lp *Loadpoint) publishSocAndRange() {
 	lp.RLock()
 	planActive := lp.planActive
 	limitEnergy, energyLimited := lp.remainingLimitEnergy()
+	limitSoc := lp.effectiveLimitSoc()
 	lp.RUnlock()
 
-	limitSoc := lp.EffectiveLimitSoc()
 	// an active plan slot charges past the session limit, unless the optimizer controls a non-smart mode
 	if planActive && (lp.GetMode() == api.ModeSmart || lp.activeSuggestion() == nil) {
 		limitSoc = max(limitSoc, lp.EffectivePlanSoc())
@@ -2477,17 +2478,17 @@ func (lp *Loadpoint) publishSocAndRange() {
 			d = socEstimator.RemainingChargeDuration(float64(limitSoc), lp.chargePower)
 		}
 		e = socEstimator.RemainingChargeEnergy(limitSoc)
-	case v != nil && v.Capacity() > 0 && lp.vehicleSoc > 0:
+	case v != nil && v.Capacity() > 0 && vehicleSoc > 0:
 		if lp.charging() && lp.chargePower > 0 {
-			d = soc.RemainingChargeDuration(float64(limitSoc), lp.chargePower, lp.vehicleSoc, v.Capacity())
+			d = soc.RemainingChargeDuration(float64(limitSoc), lp.chargePower, vehicleSoc, v.Capacity())
 		}
-		e = soc.RemainingChargeEnergy(limitSoc, lp.vehicleSoc, v.Capacity())
+		e = soc.RemainingChargeEnergy(limitSoc, vehicleSoc, v.Capacity())
 	}
 	lp.SetRemainingDuration(d)
 	lp.SetRemainingEnergy(e)
 
 	// trigger message after variables are updated
-	lp.bus.Publish(evVehicleSoc, lp.vehicleSoc)
+	lp.bus.Publish(evVehicleSoc, vehicleSoc)
 }
 
 // addTask adds a single task to the queue
@@ -2721,7 +2722,7 @@ NO_DIM:
 		err = lp.disableUnlessClimater()
 
 	case lp.LimitSocReached() && !optimizerPlan:
-		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% >= %d%%", lp.vehicleSoc, lp.EffectiveLimitSoc())
+		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% >= %d%%", lp.GetSoc(), lp.EffectiveLimitSoc())
 		err = lp.disableUnlessClimater()
 
 	// immediate charging- must be placed after limits are evaluated
@@ -2785,7 +2786,7 @@ NO_DIM:
 	// Wake-up checks
 	if lp.enabled && lp.status == api.StatusB &&
 		// TODO take vehicle api limits into account
-		!lp.chargerHasFeature(api.IntegratedDevice) && int(lp.vehicleSoc) < lp.EffectiveLimitSoc() {
+		!lp.chargerHasFeature(api.IntegratedDevice) && int(lp.GetSoc()) < lp.EffectiveLimitSoc() {
 		switch lp.wakeUpTimer.Elapsed() {
 		case WakeUpTimerElapsed:
 			lp.wakeUpVehicle()
