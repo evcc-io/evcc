@@ -55,6 +55,7 @@ render: |
       [ .minutely_15.time as $times
         | .minutely_15.temperature_2m as $temps
         | range(0; ($times | length))
+        | select($temps[.] != null)
         | {
             start: ($times[.] + ":00Z"),
             end: (($times[.] + ":00Z" | fromdateiso8601) + 900 | todateiso8601),
