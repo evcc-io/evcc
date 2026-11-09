@@ -24,14 +24,8 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: host
-    help:
-      en: IP address or hostname of pypowerwall-server, e.g. 192.0.2.2
-      de: IP-Adresse oder Hostname von pypowerwall-server, z.B. 192.0.2.2
   - name: port
     default: 8675
-    help:
-      en: pypowerwall-server port
-      de: pypowerwall-server Port
   - name: schema
     default: http
     advanced: true
@@ -41,13 +35,6 @@ params:
   - name: insecure
   - name: cache
     default: 1s
-    advanced: true
-    description:
-      en: Cache duration
-      de: Cache-Dauer
-    help:
-      en: The server already caches its data; increase only if needed.
-      de: Der Server verwendet bereits einen Cache; nur bei Bedarf erhöhen.
   - name: controlSecret
     usages: ["battery"]
     mask: true
