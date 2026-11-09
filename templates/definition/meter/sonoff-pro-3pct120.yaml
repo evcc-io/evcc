@@ -1,14 +1,14 @@
-template: sonoff-pro-3pct120                     
+template: sonoff-pro-3pct120
 products:
-  - brand: Sonoff                      
+  - brand: Sonoff
     description:
-      generic: Pro-3PCT120             
+      generic: Pro-3PCT120
 params:
   - name: usage
-    choice: ["grid","charge","pv"]   
+    choice: ["grid","charge","pv"]
   - name: host
     default: 192.168.1.100
-    required: true           
+    required: true
   - name: user
     default: admin
     required: true
