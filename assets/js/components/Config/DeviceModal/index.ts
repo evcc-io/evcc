@@ -117,7 +117,7 @@ export function handleError(e: any, msg: string) {
   alert(message);
 }
 
-// only the params shown for the device: hidden ones must not end up in the stored config (#35963)
+// only displayed params: hidden ones must not end up in the stored config
 export function applyDefaultsFromTemplate(params: TemplateParam[], values: DeviceValues) {
   params.forEach((p) => {
     if (p.Type === "Bool") {
