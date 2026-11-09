@@ -21,7 +21,7 @@ params:
     example: 5m
 render: |
   type: nissan
-  version: v2
+  version: v3
   {{ include "base" . }}
   expiry: {{ .expiry }}
   {{ include "features" . }}

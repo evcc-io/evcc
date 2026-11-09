@@ -60,9 +60,10 @@ type Vehicles struct {
 }
 
 type Vehicle struct {
-	VIN        string
-	ModelName  string
-	PictureURL string
+	VIN           string
+	ModelName     string
+	PictureURL    string
+	CanGeneration any
 }
 
 // Request structure for kamereon api
@@ -83,6 +84,9 @@ type Error struct {
 type StatusResponse struct {
 	ID string
 	Attributes
+	Data *struct {
+		Attributes Attributes
+	}
 	Errors []Error
 }
 
@@ -102,6 +106,9 @@ type Attributes struct {
 	// v2
 	Timestamp       *time.Time `json:"timestamp"`
 	BatteryAutonomy *int       `json:"batteryAutonomy"`
+	// v3
+	ChargingStatus *float32 `json:"chargingStatus"`
+	RangeHvacOn    *int     `json:"rangeHvacOn"`
 	// synthesized fields
 	Updated time.Time
 }
@@ -124,7 +131,7 @@ type Timestamp struct {
 func (ct *Timestamp) UnmarshalJSON(data []byte) error {
 	s := strings.Trim(string(data), "\"")
 
-	t, err := time.Parse(timeFormat, s)
+	t, err := time.Parse(time.RFC3339, s)
 	if err == nil {
 		ct.Time = t
 	}
