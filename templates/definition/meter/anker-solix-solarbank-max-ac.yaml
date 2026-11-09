@@ -25,6 +25,17 @@ params:
     default: 2500
   - name: maxdischargepower
     default: 800
+  - name: backupsoc
+    type: int
+    default: 0
+    advanced: true
+    unit: "%"
+    description:
+      de: Backup-Reserve SoC
+      en: Backup reserve SoC
+    help:
+      de: Reserve-SoC, der im Normalbetrieb gesetzt wird. Im Haltemodus wird er auf den aktuellen SoC angehoben.
+      en: Reserve SoC applied in normal operation. In hold mode it is raised to the current SoC.
   - name: watchdog
     default: 60s
 render: |
@@ -123,12 +134,30 @@ render: |
                     address: 10064
                     type: writesingle
                     encoding: uint16
-        - case: 2 # holddischarge
+              - source: const
+                value: 1 # Backup Reserve Enable (always on)
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 60003
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: {{ .backupsoc }} # restore Reserve SOC
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 60002
+                    type: writesingle
+                    encoding: uint16
+        - case: 2 # hold: block discharge via backup reserve, PV charging stays allowed
           set:
             source: sequence
             set:
               - source: const
-                value: 3 # third_party_control
+                value: 0 # self_consumption (settings are ignored in third_party_control)
                 set:
                   source: modbus
                   {{- include "modbus" . | indent 16 }}
@@ -137,14 +166,50 @@ render: |
                     type: writesingle
                     encoding: uint16
               - source: const
-                value: 0
+                value: 1 # Backup Reserve Enable (always on)
                 set:
                   source: modbus
                   {{- include "modbus" . | indent 16 }}
                   register:
-                    address: 10071
-                    type: writemultiple
-                    encoding: int32
+                    address: 60003
+                    type: writesingle
+                    encoding: uint16
+              - source: go
+                script: |
+                  limit := soc
+                  if cur > soc {
+                    limit = cur // never lower the reserve while holding
+                  }
+                  limit
+                in:
+                  - name: soc
+                    type: int
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: 10014 # SOC (%)
+                        type: input
+                        decode: uint16
+                  - name: cur
+                    type: int
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: 60002 # current Reserve SOC (%)
+                        type: holding
+                        decode: uint16
+                out:
+                  - name: limit
+                    type: int
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: 60002 # Reserve SOC (%)
+                        type: writesingle
+                        encoding: uint16
         - case: 3 # charge
           set:
             source: sequence
