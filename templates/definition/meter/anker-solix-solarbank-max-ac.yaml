@@ -31,11 +31,11 @@ params:
     advanced: true
     unit: "%"
     description:
-      de: Backup-Reserve SoC
+      de: Backup Reserve SoC
       en: Backup reserve SoC
     help:
-      de: Reserve-SoC, der im Normalbetrieb gesetzt wird. Im Haltemodus wird er auf den aktuellen SoC angehoben.
-      en: Reserve SoC applied in normal operation. In hold mode it is raised to the current SoC.
+      de: Minimaler Ladezustand, auf den die Batterie im Backup-Modus geladen wird.
+      en: Minimum state of charge to which the battery will be charged in backup mode.
   - name: watchdog
     default: 60s
 render: |
@@ -135,7 +135,7 @@ render: |
                     type: writesingle
                     encoding: uint16
               - source: const
-                value: 1 # Backup Reserve Enable (always on)
+                value: 1 # Backup SoC Enable (always on)
                 set:
                   source: modbus
                   {{- include "modbus" . | indent 16 }}
@@ -144,7 +144,7 @@ render: |
                     type: writesingle
                     encoding: uint16
               - source: const
-                value: {{ .backupsoc }} # restore Reserve SOC
+                value: {{ .backupsoc }} # restore Backup SoC
                 set:
                   source: modbus
                   {{- include "modbus" . | indent 16 }}
@@ -152,12 +152,12 @@ render: |
                     address: 60002
                     type: writesingle
                     encoding: uint16
-        - case: 2 # hold: block discharge via backup reserve, PV charging stays allowed
+        - case: 2 # hold: block discharge via backup SoC, PV charging stays allowed
           set:
             source: sequence
             set:
               - source: const
-                value: 0 # self_consumption (settings are ignored in third_party_control)
+                value: 0 # self_consumption
                 set:
                   source: modbus
                   {{- include "modbus" . | indent 16 }}
@@ -166,7 +166,7 @@ render: |
                     type: writesingle
                     encoding: uint16
               - source: const
-                value: 1 # Backup Reserve Enable (always on)
+                value: 1 # Backup SoC Enable (always on)
                 set:
                   source: modbus
                   {{- include "modbus" . | indent 16 }}
@@ -197,7 +197,7 @@ render: |
                       source: modbus
                       {{- include "modbus" . | indent 20 }}
                       register:
-                        address: 60002 # current Reserve SOC (%)
+                        address: 60002 # current Backup SoC (%)
                         type: holding
                         decode: uint16
                 out:
@@ -207,7 +207,7 @@ render: |
                       source: modbus
                       {{- include "modbus" . | indent 20 }}
                       register:
-                        address: 60002 # Reserve SOC (%)
+                        address: 60002 # Backup SoC (%)
                         type: writesingle
                         encoding: uint16
         - case: 3 # charge
