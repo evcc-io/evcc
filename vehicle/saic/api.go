@@ -130,7 +130,9 @@ func (v *API) doRequest[T any](req *http.Request, result *requests.Answer[T]) (s
 	// expired session is rejected with 401 or 403, see openWB/core@d967ef3
 	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
 		v.log.TRACE.Printf("doRequest: %s", resp.Status)
-		v.identity.Login()
+		if err := v.identity.Login(); err != nil {
+			return "", err
+		}
 		return "", api.ErrMustRetry
 	}
 
@@ -150,8 +152,9 @@ func (v *API) doRequest[T any](req *http.Request, result *requests.Answer[T]) (s
 				err = api.ErrMustRetry
 			case http.StatusUnauthorized, http.StatusForbidden:
 				v.log.TRACE.Printf("doRequest: code %d", result.Code)
-				v.identity.Login()
-				err = api.ErrMustRetry
+				if err = v.identity.Login(); err == nil {
+					err = api.ErrMustRetry
+				}
 			default:
 				err = fmt.Errorf("%d: %s", result.Code, result.Message)
 			}
