@@ -201,13 +201,16 @@ func (s *LoginSession) submitPassword() (string, error) {
 // resume walks the redirect chain to the callback, declining the optional
 // passkey enrollment screen, see CJNE/pyporscheconnectapi#96
 func (s *LoginSession) resume(uri string) (string, error) {
-	for range maxResumeRedirects {
+	for i := 0; ; i++ {
 		u, err := url.Parse(uri)
 		if err != nil {
 			return "", err
 		}
 		if code := u.Query().Get("code"); code != "" {
 			return code, nil
+		}
+		if i == maxResumeRedirects {
+			break
 		}
 		if u.Scheme != "http" && u.Scheme != "https" {
 			return "", fmt.Errorf("login: no code in callback (%s)", u.Redacted())
