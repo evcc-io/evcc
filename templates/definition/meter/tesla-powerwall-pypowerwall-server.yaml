@@ -39,12 +39,6 @@ params:
       en: Use https when the server has PW_HTTPS enabled or is behind a TLS reverse proxy. Set the port to the HTTPS port, usually 8775, when using the server's HTTPS listener.
       de: https verwenden, wenn der Server PW_HTTPS aktiviert hat oder hinter einem TLS-Reverse-Proxy läuft. Bei aktiviertem HTTPS-Listener des Servers den HTTPS-Port setzen, üblicherweise 8775.
   - name: insecure
-    default: false
-    type: bool
-    advanced: true
-    help:
-      en: Accept a self-signed certificate when using https.
-      de: Selbstsigniertes Zertifikat bei https akzeptieren.
   - name: cache
     default: 1s
     advanced: true
@@ -64,65 +58,7 @@ params:
     help:
       en: Value of PW_CONTROL_SECRET. Required for battery control, omit for read-only use.
       de: Wert von PW_CONTROL_SECRET. Für Batteriesteuerung nötig, weglassen für reinen Lesezugriff.
-  - name: minsoc
-    type: int
-    unit: "%"
-    default: 0
-    advanced: true
-    usages: ["battery"]
-    description:
-      de: Backup-Reserve (Normalbetrieb)
-      en: Backup reserve (normal mode)
-    help:
-      en: |-
-        Target backup reserve written in normal mode (0-100). The generated SoC lower limit is read from the server's actual backup reserve, not from this target.
-      de: |-
-        Ziel-Backup-Reserve, die im Normalbetrieb geschrieben wird (0-100). Die generierte SoC-Untergrenze wird aus der tatsächlichen Backup-Reserve des Servers gelesen, nicht aus diesem Zielwert.
-  - name: chargemaxsoc
-    type: int
-    unit: "%"
-    default: 100
-    advanced: true
-    usages: ["battery"]
-    description:
-      de: Ladeziel
-      en: Charge target
-    help:
-      en: Reserve written in forced charge mode (0-100).
-      de: Reserve, die im erzwungenen Lademodus gesetzt wird (0-100).
-  - name: capacity
-    type: float
-    unit: kWh
-    advanced: true
-    usages: ["battery"]
-    description:
-      de: Akkukapazität
-      en: Battery capacity
-    help:
-      en: Optional override. If omitted, capacity is read from the server's system status.
-      de: Optionaler Override. Ohne Angabe wird die Kapazität aus dem Systemstatus des Servers gelesen.
-  - name: maxchargepower
-    type: int
-    unit: W
-    advanced: true
-    usages: ["battery"]
-    description:
-      de: Maximale Ladeleistung
-      en: Maximum charge power
-    help:
-      en: Optional override. If omitted, the limit is derived from the server's system status.
-      de: Optionaler Override. Ohne Angabe wird das Limit aus dem Systemstatus des Servers abgeleitet.
-  - name: maxdischargepower
-    type: int
-    unit: W
-    advanced: true
-    usages: ["battery"]
-    description:
-      de: Maximale Entladeleistung
-      en: Maximum discharge power
-    help:
-      en: Optional override. If omitted, the limit is derived from the server's system status.
-      de: Optionaler Override. Ohne Angabe wird das Limit aus dem Systemstatus des Servers abgeleitet.
+  - preset: battery-params
 render: |
   {{- $base := printf "%s://%s:%s" .schema .host .port -}}
   {{- $api := printf "%s/api" $base -}}
@@ -140,8 +76,8 @@ render: |
   {{- if or (lt (int .minsoc) 0) (gt (int .minsoc) 100) -}}
     {{- fail "minsoc must be between 0 and 100" -}}
   {{- end -}}
-  {{- if or (lt (int .chargemaxsoc) 0) (gt (int .chargemaxsoc) 100) -}}
-    {{- fail "chargemaxsoc must be between 0 and 100" -}}
+  {{- if or (lt (int .maxsoc) 0) (gt (int .maxsoc) 100) -}}
+    {{- fail "maxsoc must be between 0 and 100" -}}
   {{- end -}}
   type: custom
   power:
@@ -231,7 +167,7 @@ render: |
     # pypowerwall-server may still return its last polled value until the next poll.
     cache: 0s
     jq: if .backup_reserve_percent == null then empty else .backup_reserve_percent end
-  maxsoc: 100 # %
+  maxsoc: {{ .maxsoc }} # %
   {{- if .maxchargepower }}
   maxchargepower: {{ .maxchargepower }}
   {{- else }}
@@ -292,6 +228,6 @@ render: |
           headers:
             - Content-Type: application/json
             - Authorization: {{ printf "Bearer %s" .controlSecret | toJson }}
-          body: '{"value": {{ .chargemaxsoc }}}'
+          body: '{"value": {{ .maxsoc }}}'
   {{- end }}
   {{- end }}
