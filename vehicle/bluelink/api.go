@@ -21,7 +21,8 @@ const (
 )
 
 const (
-	resOK = "S" // auth fail: F
+	resOK          = "S"    // auth fail: F
+	resUnavailable = "5031" // service temporary unavailable
 )
 
 // ErrAuthFail indicates authorization failure
@@ -71,23 +72,31 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 
 // StatusLatest retrieves vehicle status (triggers refresh for older API, then returns cached data)
 func (v *API) StatusLatest(vehicle Vehicle) (BluelinkVehicleStatusLatest, error) {
-	vid := vehicle.VehicleID
-
 	if vehicle.CcuCCS2ProtocolSupport != 0 {
-		var res StatusLatestResponseCCS
-		uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURLCCS2, vid))
-		err := v.GetJSON(uri, &res)
-		if err == nil && res.RetCode != resOK {
-			err = fmt.Errorf("unexpected response: %s", res.RetCode)
-		}
-		return res, err
+		return v.statusLatestCCS2(vehicle.VehicleID)
 	}
 
 	// For older API: first trigger refresh, then get latest cached data
 	_ = v.Refresh(vehicle) // Ignore error, will retry with /status/latest
 
 	var res StatusLatestResponse
-	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURL, vid))
+	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURL, vehicle.VehicleID))
+	err := v.GetJSON(uri, &res)
+
+	// some flag-0 cars are only served by the CCS2 endpoint, see Hyundai-Kia-Connect/hyundai_kia_connect_api#1546
+	if err != nil && res.ResCode == resUnavailable {
+		return v.statusLatestCCS2(vehicle.VehicleID)
+	}
+
+	if err == nil && res.RetCode != resOK {
+		err = fmt.Errorf("unexpected response: %s", res.RetCode)
+	}
+	return res, err
+}
+
+func (v *API) statusLatestCCS2(vid string) (BluelinkVehicleStatusLatest, error) {
+	var res StatusLatestResponseCCS
+	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURLCCS2, vid))
 	err := v.GetJSON(uri, &res)
 	if err == nil && res.RetCode != resOK {
 		err = fmt.Errorf("unexpected response: %s", res.RetCode)
