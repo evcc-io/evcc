@@ -298,9 +298,10 @@ func marketingSkipForm(body []byte) (url.Values, error) {
 		if ch.ChannelID == "" {
 			continue
 		}
-		val := "true"
-		if ch.ChannelType == "NOT_USED" {
-			val = "not_used"
+		// never opt into unknown channel types
+		val := "not_used"
+		if ch.ChannelType == "BOUND_TO_BASIC_AGREEMENT" {
+			val = "true"
 		}
 		data.Set("channel"+ch.ChannelID, val)
 	}
