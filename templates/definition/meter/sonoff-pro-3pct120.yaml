@@ -5,7 +5,7 @@ products:
       generic: Pro-3PCT120
 params:
   - name: usage
-    choice: ["grid","charge","pv"]
+    choice: ["grid", "charge", "pv"]
   - name: host
     default: 192.168.1.100
     required: true
