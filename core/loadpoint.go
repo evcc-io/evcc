@@ -158,7 +158,7 @@ type Loadpoint struct {
 	vehicle        api.Vehicle        // Currently active vehicle
 	defaultVehicle api.Vehicle        // Default vehicle (disables detection)
 	coordinator    coordinator.API
-	socEstimator   *soc.Estimator
+	socEstimator   *soc.Estimator // guarded by vmu
 
 	// charge planning
 	planner          *planner.Planner
@@ -2370,9 +2370,8 @@ func (lp *Loadpoint) publishEnergyStats() {
 //   - charger may still provide soc
 //   - no estimator
 func (lp *Loadpoint) publishSocAndRange() {
-	// guard for socEstimator removed by api and keep a local copy in order to avoid race conditions
-	// https://github.com/evcc-io/evcc/issues/16180
-	socEstimator := lp.socEstimator
+	// consistent snapshot, the API may swap vehicle and estimator concurrently
+	v, socEstimator := lp.getVehicleAndSocEstimator()
 
 	socAndLimit := func(typ string, dev any) (*float64, *int64, error) {
 		var socR *float64
@@ -2412,7 +2411,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	socR, limitR, _ := socAndLimit("charger", lp.charger)
 	if socR == nil && (lp.vehicleSocPollAllowed() || lp.chargerHasFeature(api.IntegratedDevice)) {
 		var socErr error
-		socR, limitR, socErr = socAndLimit("vehicle", lp.GetVehicle())
+		socR, limitR, socErr = socAndLimit("vehicle", v)
 
 		// keep polling async vehicle APIs that return ErrMustRetry until a SoC
 		// arrives, instead of waiting for the next interval
@@ -2421,7 +2420,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 
 		// range
-		if vs, ok := api.Cap[api.VehicleRange](lp.GetVehicle()); ok {
+		if vs, ok := api.Cap[api.VehicleRange](v); ok {
 			if rng, err := vs.Range(); err == nil {
 				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 				lp.vehicleRange = rng
@@ -2450,8 +2449,6 @@ func (lp *Loadpoint) publishSocAndRange() {
 		// https://github.com/evcc-io/evcc/issues/13349
 		lp.publish(keys.VehicleLimitSoc, float64(*limitR))
 	}
-
-	v := lp.GetVehicle()
 
 	lp.RLock()
 	planActive := lp.planActive
