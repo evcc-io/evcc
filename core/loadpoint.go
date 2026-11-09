@@ -1229,7 +1229,7 @@ func (lp *Loadpoint) LimitEnergyReached() bool {
 func (lp *Loadpoint) LimitSocReached() bool {
 	lp.RLock()
 	defer lp.RUnlock()
-	limit := lp.effectiveLimitSoc()
+	limit := lp.effectiveLimitSoc(lp.GetVehicle())
 	return limit > 0 && limit < 100 && lp.GetSoc() >= float64(limit)
 }
 
@@ -2454,7 +2454,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	lp.RLock()
 	planActive := lp.planActive
 	limitEnergy, energyLimited := lp.remainingLimitEnergy()
-	limitSoc := lp.effectiveLimitSocFor(v)
+	limitSoc := lp.effectiveLimitSoc(v)
 	lp.RUnlock()
 
 	// an active plan slot charges past the session limit, unless the optimizer controls a non-smart mode

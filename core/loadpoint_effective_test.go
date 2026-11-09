@@ -19,7 +19,7 @@ import (
 
 func TestEffectiveLimitSoc(t *testing.T) {
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
-	assert.Equal(t, 100, lp.effectiveLimitSoc())
+	assert.Equal(t, 100, lp.effectiveLimitSoc(lp.GetVehicle()))
 }
 
 func TestEffectiveMinSoc(t *testing.T) {
