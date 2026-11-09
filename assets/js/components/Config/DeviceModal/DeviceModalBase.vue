@@ -815,7 +815,7 @@ export default defineComponent({
 		applyDefaults() {
 			// late-arriving defaults must not mark a clean form dirty
 			const wasClean = !this.dirty;
-			applyDefaultsFromTemplate(this.template, this.values);
+			applyDefaultsFromTemplate(this.templateParams, this.values);
 
 			// Allow parent to apply custom defaults
 			if (this.applyCustomDefaults) {
