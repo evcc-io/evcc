@@ -76,6 +76,18 @@ func (v *Provider) resolveVIN() (string, error) {
 	}
 }
 
+var _ api.Resurrector = (*Provider)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	vin, err := v.resolveVIN()
+	if err != nil {
+		return err
+	}
+	_, err = v.api.WakeUp(vin)
+	return err
+}
+
 var _ api.Battery = (*Provider)(nil)
 
 // Soc implements the api.Battery interface (high-voltage battery level).
