@@ -224,6 +224,15 @@ render: |
                     type: writesingle
                     encoding: uint16
               - source: const
+                value: {{ .backupsoc }} # restore Backup SoC raised by hold
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 60002
+                    type: writesingle
+                    encoding: uint16
+              - source: const
                 value: {{ .maxchargepower }}
                 set:
                   source: modbus
@@ -244,6 +253,15 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 10064
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: {{ .backupsoc }} # restore Backup SoC raised by hold
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 60002
                     type: writesingle
                     encoding: uint16
               - source: const
