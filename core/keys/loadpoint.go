@@ -105,6 +105,9 @@ const (
 	// repeating plans
 	RepeatingPlans = "repeatingPlans" // key to access all repeating plans in db
 
+	// one-time plans
+	OneTimePlans = "oneTimePlans" // key to access all one-time plans in db
+
 	// remote control
 	RemoteDisabled       = "remoteDisabled"       // remote disabled
 	RemoteDisabledSource = "remoteDisabledSource" // remote disabled source

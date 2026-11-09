@@ -426,6 +426,29 @@ test.describe("repeating", async () => {
     await expect(modal.getByTestId("plan-entry").first()).not.toContainText("#1");
   });
 
+  test("add and remove one-time plans", async ({ page }) => {
+    await page.goto("/");
+
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Capacity");
+
+    await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+    const modal = await page.getByTestId("charging-plan-modal");
+    const entries = modal.getByTestId("plan-entry");
+
+    await modal.getByRole("button", { name: "Add one-time plan" }).click();
+    await modal.getByRole("button", { name: "Add one-time plan" }).click();
+    await expect(entries).toHaveCount(3);
+    await expect(entries.first()).toContainText("#1");
+    await expect(entries.last()).toContainText("#3");
+
+    await entries.last().getByRole("button", { name: "Remove" }).click();
+    await expect(entries).toHaveCount(2);
+  });
+
   test("preview static and repeating plan", async ({ page }) => {
     await page.goto("/");
 

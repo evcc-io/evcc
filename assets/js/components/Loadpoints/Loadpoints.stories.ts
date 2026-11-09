@@ -48,6 +48,7 @@ const baseArgs = {
       capacity: 8,
       features: ["Offline"],
       repeatingPlans: [],
+      oneTimePlans: [],
       planStrategy: {
         continuous: false,
         precondition: 0,
@@ -60,6 +61,7 @@ const baseArgs = {
       capacity: 80,
       features: ["Offline"],
       repeatingPlans: [],
+      oneTimePlans: [],
       planStrategy: {
         continuous: true,
         precondition: 0,
@@ -72,6 +74,7 @@ const baseArgs = {
       capacity: 0.46,
       features: ["Offline"],
       repeatingPlans: [],
+      oneTimePlans: [],
       planStrategy: {
         continuous: false,
         precondition: 0,

@@ -3,6 +3,7 @@ package vehicle
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -213,6 +214,42 @@ func (v *adapter) GetRepeatingPlans() []api.RepeatingPlan {
 	var plans []api.RepeatingPlan
 
 	if err := settings.Json(v.key()+keys.RepeatingPlans, &plans); err != nil {
+		return nil
+	}
+
+	return plans
+}
+
+func (v *adapter) SetOneTimePlans(plans []api.OneTimePlan) error {
+	for _, plan := range plans {
+		if plan.Soc < 1 || plan.Soc > 100 {
+			return fmt.Errorf("soc out of range: %d", plan.Soc)
+		}
+		if !plan.Time.After(time.Now()) {
+			return errors.New("timestamp is in the past")
+		}
+	}
+
+	slices.SortFunc(plans, func(a, b api.OneTimePlan) int {
+		return a.Time.Compare(b.Time)
+	})
+
+	if err := settings.SetJson(v.key()+keys.OneTimePlans, plans); err != nil {
+		return err
+	}
+
+	v.log.DEBUG.Printf("update one-time plans for %s to: %v", v.name, plans)
+
+	v.publish()
+	v.updatePlan()
+
+	return nil
+}
+
+func (v *adapter) GetOneTimePlans() []api.OneTimePlan {
+	var plans []api.OneTimePlan
+
+	if err := settings.Json(v.key()+keys.OneTimePlans, &plans); err != nil {
 		return nil
 	}
 

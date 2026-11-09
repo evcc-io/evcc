@@ -1438,6 +1438,34 @@ paths:
                 type: array
                 items:
                   $ref: "./openapi.state.yaml#/components/schemas/RepeatingPlan"
+  /vehicles/{name}/plan/onetime:
+    post:
+      operationId: updateVehicleOneTimePlans
+      summary: Update one-time plans
+      description: "Replaces the one-time charging plans that are listed in addition to the static plan."
+      externalDocs:
+        url: https://docs.evcc.io/en/features/plans
+      tags:
+        - vehicles
+      parameters:
+        - $ref: "#/components/parameters/vehicleName"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "./openapi.state.yaml#/components/schemas/OneTimePlan"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "./openapi.state.yaml#/components/schemas/OneTimePlan"
   /vehicles/{name}/plan/soc:
     delete:
       operationId: deleteVehicleSocPlan

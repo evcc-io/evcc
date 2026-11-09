@@ -1616,6 +1616,19 @@ components:
       required:
         - done
         - dismissed
+    OneTimePlan:
+      description: A one-time charging plan.
+      type: object
+      properties:
+        time:
+          description: Target time.
+          type: string
+        soc:
+          description: SoC goal in %.
+          type: number
+      required:
+        - time
+        - soc
     OptimizerAutomatic:
       type: string
       enum:
@@ -1938,6 +1951,12 @@ components:
           nullable: true
           items:
             $ref: "#/components/schemas/RepeatingPlan"
+        oneTimePlans:
+          description: One-time charging plans in addition to the static plan.
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/OneTimePlan"
         planStrategy:
           $ref: "#/components/schemas/PlanStrategy"
           description: Charging plan strategy.
@@ -1960,5 +1979,6 @@ components:
           type: string
       required:
         - repeatingPlans
+        - oneTimePlans
         - planStrategy
         - title

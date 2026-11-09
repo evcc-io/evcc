@@ -257,6 +257,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"plan":           {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc/{value:[0-9]+}/{time:[0-9TZ:.+-]+}", planSocHandler(site)},
 		"plan2":          {"DELETE", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc", planSocRemoveHandler(site)},
 		"repeatingPlans": {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/repeating", addRepeatingPlansHandler(site)},
+		"oneTimePlans":   {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/onetime", updateOneTimePlansHandler(site)},
 		"planStrategy":   {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/strategy", updatePlanStrategyHandler(site)},
 	}
 

@@ -1604,12 +1604,14 @@
     },
     "chargingPlan": {
       "active": "Aktiv",
+      "addOneTimePlan": "Einmaligen Plan hinzufügen",
       "addRepeatingPlan": "Wiederholenden Plan hinzufügen",
       "day": "Tag",
       "goal": "Ladeziel",
       "modalTitle": "Ladepläne",
       "none": "keiner",
       "once": "einmalig",
+      "oneTimePlans": "Einmalige Pläne",
       "optimization": {
         "cheapest": "günstigst",
         "cheapestDescription": "Wählt die günstigsten Zeitfenster. Kann zu mehreren Starts und Stopps führen.",

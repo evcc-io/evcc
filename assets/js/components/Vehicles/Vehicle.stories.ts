@@ -17,6 +17,7 @@ const baseState = {
     features: [],
     name: "",
     repeatingPlans: [],
+    oneTimePlans: [],
     planStrategy: {
       continuous: false,
       precondition: 0,

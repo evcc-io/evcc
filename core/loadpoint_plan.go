@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -67,7 +68,24 @@ func (lp *Loadpoint) finishPlan() {
 	} else if !lp.socBasedPlanning() {
 		lp.setPlanEnergy(time.Time{}, 0)
 	} else if v := lp.GetVehicle(); v != nil {
+		if lp.getPlanId() > 1 {
+			lp.finishOneTimePlan(v)
+			return
+		}
 		vehicle.Settings(lp.log, v).SetPlanSoc(time.Time{}, 0)
+	}
+}
+
+// finishOneTimePlan deletes the current one-time plan from the vehicle
+func (lp *Loadpoint) finishOneTimePlan(v api.Vehicle) {
+	ts, _, _ := lp.nextVehiclePlan()
+	vs := vehicle.Settings(lp.log, v)
+
+	plans := slices.DeleteFunc(vs.GetOneTimePlans(), func(p api.OneTimePlan) bool {
+		return p.Time.Equal(ts)
+	})
+	if err := vs.SetOneTimePlans(plans); err != nil {
+		lp.log.ERROR.Println("finish plan:", err)
 	}
 }
 

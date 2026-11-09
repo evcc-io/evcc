@@ -1296,6 +1296,14 @@ export interface BatteryMeter extends Meter {
   suggestion?: BatterySuggestion;
 }
 
+/** A one-time charging plan. */
+export interface OneTimePlan {
+  /** Target time. */
+  time: string;
+  /** SoC goal in %. */
+  soc: number;
+}
+
 /** A repeating charging plan. */
 export interface RepeatingPlan {
   /** Weekdays the plan is active. 0 is Sunday, 6 is Saturday. */
@@ -1367,6 +1375,8 @@ export interface Vehicle {
   plan?: StaticPlan;
   /** Repeating charging plans. */
   repeatingPlans: RepeatingPlan[] | null;
+  /** One-time charging plans in addition to the static plan. */
+  oneTimePlans: OneTimePlan[] | null;
   /** Charging plan strategy. */
   planStrategy: PlanStrategy;
   /** Vehicle title for UI display. */

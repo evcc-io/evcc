@@ -224,6 +224,34 @@ func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 	}
 }
 
+// updateOneTimePlansHandler updates the one-time plans
+func updateOneTimePlansHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		v, err := site.Vehicles().ByName(vars["name"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		var res []api.OneTimePlan
+		if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := v.SetOneTimePlans(res); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		site.Optimize()
+
+		jsonWrite(w, v.GetOneTimePlans())
+	}
+}
+
 // planSocRemoveHandler removes plan soc and time
 func planSocRemoveHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

@@ -32,6 +32,7 @@ type vehicleStruct struct {
 	Features       []string            `json:"features,omitempty"`
 	Plan           *planStruct         `json:"plan,omitempty"`
 	RepeatingPlans []api.RepeatingPlan `json:"repeatingPlans"`
+	OneTimePlans   []api.OneTimePlan   `json:"oneTimePlans"`
 	PlanStrategy   api.PlanStrategy    `json:"planStrategy"`
 }
 
@@ -71,6 +72,7 @@ func (site *Site) publishVehicles() {
 			Features:       lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
 			Plan:           plan,
 			RepeatingPlans: v.GetRepeatingPlans(),
+			OneTimePlans:   v.GetOneTimePlans(),
 			PlanStrategy:   v.GetPlanStrategy(),
 		}
 

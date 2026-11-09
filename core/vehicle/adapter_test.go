@@ -2,12 +2,14 @@ package vehicle
 
 import (
 	"testing"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAdapterSetModeLegacyAliases(t *testing.T) {
@@ -58,4 +60,28 @@ func TestAdapterGetModeMigratesLegacy(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "smart", s, "migration persisted")
 	}
+}
+
+func TestAdapterSetOneTimePlans(t *testing.T) {
+	v := &adapter{log: util.NewLogger("foo"), name: "onetime"}
+	t.Cleanup(func() { _ = settings.Delete(v.key() + keys.OneTimePlans) })
+
+	later, sooner := time.Now().Add(48*time.Hour).Round(time.Second), time.Now().Add(24*time.Hour).Round(time.Second)
+
+	// stored ordered by time
+	require.NoError(t, v.SetOneTimePlans([]api.OneTimePlan{{Time: later, Soc: 65}, {Time: sooner, Soc: 100}}))
+	plans := v.GetOneTimePlans()
+	require.Len(t, plans, 2)
+	assert.Equal(t, 100, plans[0].Soc)
+	assert.Equal(t, 65, plans[1].Soc)
+
+	// invalid input is rejected and leaves stored plans untouched
+	assert.Error(t, v.SetOneTimePlans([]api.OneTimePlan{{Time: time.Now().Add(-time.Hour), Soc: 80}}), "past")
+	assert.Error(t, v.SetOneTimePlans([]api.OneTimePlan{{Time: later, Soc: 0}}), "soc zero")
+	assert.Error(t, v.SetOneTimePlans([]api.OneTimePlan{{Time: later, Soc: 101}}), "soc above 100")
+	assert.Len(t, v.GetOneTimePlans(), 2)
+
+	// empty list clears
+	require.NoError(t, v.SetOneTimePlans(nil))
+	assert.Empty(t, v.GetOneTimePlans())
 }
