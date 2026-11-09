@@ -1039,11 +1039,11 @@ func TestHoldWorthwhilePriceAtShortfall(t *testing.T) {
 	assert.False(t, holdWorthwhile(req, res, optimizer.TimeSeries{Dt: dt, PN: []float32{0.26, 0.29, 0.29, 0.20}}, 1, 0), "short at lower price")
 
 	// first discharge at the current price, short later at a higher one
-	assert.True(t, holdWorthwhile(req, res, optimizer.TimeSeries{Dt: dt, PN: []float32{0.26, 0.26, 0.26, 0.35}}, 1, 0), "short at higher price")
+	ts := optimizer.TimeSeries{Dt: dt, PN: []float32{0.26, 0.26, 0.26, 0.35}}
+	assert.True(t, holdWorthwhile(req, res, ts, 1, 0), "short at higher price")
 
 	// discharge losses widen the reserve: 1000 + 4000 W * 5 min / 0.75 = 1444 Wh
 	res.StateOfCharge[3] = 1400
-	ts := optimizer.TimeSeries{Dt: dt, PN: []float32{0.26, 0.26, 0.26, 0.35}}
 	assert.False(t, holdWorthwhile(req, res, ts, 1, 0), "1400 Wh above the lossless reserve")
 	assert.True(t, holdWorthwhile(req, res, ts, 0.75, 0), "1400 Wh within the lossy reserve")
 }
