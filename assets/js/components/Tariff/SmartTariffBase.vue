@@ -183,7 +183,7 @@ export default defineComponent({
 			for (let i = 0; i <= 100; i++) {
 				const value = this.optionStartValue + stepSize * i;
 				if (max !== undefined && value > max + stepSize) break;
-				values.push(this.roundLimit(value) as number);
+				values.push(Math.round(value * 1000) / 1000);
 			}
 			// add special entry if currently selected value is not in the scale
 			const selected = this.selectedLimit;
@@ -304,29 +304,27 @@ export default defineComponent({
 		this.initLimit();
 	},
 	methods: {
-		roundLimit(limit: number | null): number | null {
-			return limit === null ? null : Math.round(limit * 1000) / 1000;
-		},
 		initLimit() {
 			if (this.currentLimit === null) {
 				this.active = false;
 				this.selectedLimit = this.lastLimit;
 			} else {
 				this.active = true;
-				this.selectedLimit = this.roundLimit(this.currentLimit);
+				this.selectedLimit = this.currentLimit;
 			}
 		},
 		formatLimit(limit: number | null): string {
 			if (limit === null) {
 				return this.$t("smartCost.none");
 			}
-			return `${this.limitOperator} ${this.formatValue(limit)}`;
+			return `${this.limitOperator} ${this.formatValue(limit, true)}`;
 		},
-		formatValue(value: number): string {
+		// exact shows all price digits, telling a limit taken from a slot apart from the scale
+		formatValue(value: number, exact = false): string {
 			if (this.isCo2) {
 				return this.fmtCo2Medium(value);
 			}
-			return this.fmtPricePerKWh(value, this.currency);
+			return this.fmtPricePerKWh(value, this.currency, false, true, exact);
 		},
 
 		costRange(slots: Slot[]): { min: number | undefined; max: number | undefined } {
@@ -360,7 +358,6 @@ export default defineComponent({
 		slotSelected(index: number) {
 			const value = this.chartSlots[index]?.value;
 			if (value !== undefined) {
-				// keep exact slot price, rounding up would activate more expensive slots
 				this.selectedLimit = value;
 				this.saveLimit(value);
 			}
