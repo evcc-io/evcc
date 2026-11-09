@@ -81,9 +81,10 @@ func (lp *Loadpoint) finishOneTimePlan(v api.Vehicle) {
 	ts, _, _ := lp.nextVehiclePlan()
 	vs := vehicle.Settings(lp.log, v)
 
-	plans := slices.DeleteFunc(vs.GetOneTimePlans(), func(p api.OneTimePlan) bool {
-		return p.Time.Equal(ts)
-	})
+	plans := vs.GetOneTimePlans()
+	if i := slices.IndexFunc(plans, func(p api.OneTimePlan) bool { return p.Time.Equal(ts) }); i >= 0 {
+		plans = slices.Delete(plans, i, i+1)
+	}
 	if err := vs.SetOneTimePlans(plans); err != nil {
 		lp.log.ERROR.Println("finish plan:", err)
 	}

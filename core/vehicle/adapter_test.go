@@ -76,10 +76,13 @@ func TestAdapterSetOneTimePlans(t *testing.T) {
 	assert.Equal(t, 65, plans[1].Soc)
 
 	// invalid input is rejected and leaves stored plans untouched
-	assert.Error(t, v.SetOneTimePlans([]api.OneTimePlan{{Time: time.Now().Add(-time.Hour), Soc: 80}}), "past")
 	assert.Error(t, v.SetOneTimePlans([]api.OneTimePlan{{Time: later, Soc: 0}}), "soc zero")
 	assert.Error(t, v.SetOneTimePlans([]api.OneTimePlan{{Time: later, Soc: 101}}), "soc above 100")
 	assert.Len(t, v.GetOneTimePlans(), 2)
+
+	// expired plans are dropped
+	require.NoError(t, v.SetOneTimePlans([]api.OneTimePlan{{Time: later, Soc: 65}, {Time: time.Now().Add(-time.Hour), Soc: 80}}))
+	assert.Len(t, v.GetOneTimePlans(), 1)
 
 	// empty list clears
 	require.NoError(t, v.SetOneTimePlans(nil))

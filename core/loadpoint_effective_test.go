@@ -340,7 +340,7 @@ func TestOneTimePlans(t *testing.T) {
 	))
 
 	key := func(k string) string { return "vehicle." + name + "." + k }
-	tuesday := time.Now().Add(2 * 24 * time.Hour).Round(time.Second)
+	tuesday := time.Now().Add(2 * 24 * time.Hour).Round(time.Second).UTC()
 	friday := tuesday.Add(3 * 24 * time.Hour)
 
 	require.NoError(t, settings.SetJson(key(keys.RepeatingPlans), []api.RepeatingPlan{

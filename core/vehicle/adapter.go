@@ -225,10 +225,11 @@ func (v *adapter) SetOneTimePlans(plans []api.OneTimePlan) error {
 		if plan.Soc < 1 || plan.Soc > 100 {
 			return fmt.Errorf("soc out of range: %d", plan.Soc)
 		}
-		if !plan.Time.After(time.Now()) {
-			return errors.New("timestamp is in the past")
-		}
 	}
+
+	plans = slices.DeleteFunc(plans, func(p api.OneTimePlan) bool {
+		return !p.Time.After(time.Now())
+	})
 
 	slices.SortFunc(plans, func(a, b api.OneTimePlan) int {
 		return a.Time.Compare(b.Time)

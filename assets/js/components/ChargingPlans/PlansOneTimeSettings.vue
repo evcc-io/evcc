@@ -7,6 +7,7 @@
 				:value="plan.day"
 				:min="today"
 				type="date"
+				:aria-label="$t('main.chargingPlan.day')"
 				class="form-control"
 				required
 				data-testid="one-time-plan-day"
@@ -18,6 +19,7 @@
 				:id="formId(index, 'time')"
 				:value="plan.time"
 				type="time"
+				:aria-label="$t('main.chargingPlan.time')"
 				class="form-control"
 				required
 				data-testid="one-time-plan-time"
@@ -29,6 +31,7 @@
 				:id="formId(index, 'soc')"
 				:value="plan.soc"
 				class="form-select"
+				:aria-label="$t('main.chargingPlan.goal')"
 				data-testid="one-time-plan-soc"
 				@change="update(index, 'soc', $event)"
 			>

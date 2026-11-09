@@ -95,6 +95,9 @@ func (lp *Loadpoint) vehiclePlans(v api.Vehicle, days int) []plan {
 	// one-time plans
 	oneTime := vehicle.Settings(lp.log, v).GetOneTimePlans()
 	for index, op := range oneTime {
+		if op.Time.Before(time.Now()) {
+			continue
+		}
 		plans = append(plans, plan{Id: index + 2, Soc: op.Soc, End: op.Time})
 	}
 
@@ -120,12 +123,14 @@ func (lp *Loadpoint) vehiclePlans(v api.Vehicle, days int) []plan {
 	return plans
 }
 
-// oneTimePlanCount returns the number of additional one-time plans of the current vehicle
-func (lp *Loadpoint) oneTimePlanCount() int {
+// isOneTimePlan returns true if the current vehicle has a one-time plan ending at the given time
+func (lp *Loadpoint) isOneTimePlan(ts time.Time) bool {
 	if v := lp.GetVehicle(); v != nil {
-		return len(vehicle.Settings(lp.log, v).GetOneTimePlans())
+		return slices.ContainsFunc(vehicle.Settings(lp.log, v).GetOneTimePlans(), func(p api.OneTimePlan) bool {
+			return p.Time.Equal(ts)
+		})
 	}
-	return 0
+	return false
 }
 
 // GetSocPlanGoals returns the soc goals of all vehicle plans, repeating plans for each occurrence

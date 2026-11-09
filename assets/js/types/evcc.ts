@@ -1298,7 +1298,10 @@ export interface BatteryMeter extends Meter {
 
 /** A one-time charging plan. */
 export interface OneTimePlan {
-  /** Target time. */
+  /**
+   * Target time.
+   * @format date-time
+   */
   time: string;
   /** SoC goal in %. */
   soc: number;

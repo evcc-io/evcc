@@ -5472,7 +5472,8 @@
         "properties": {
           "time": {
             "description": "Target time.",
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "soc": {
             "description": "SoC goal in %.",

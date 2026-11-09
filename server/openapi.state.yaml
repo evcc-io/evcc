@@ -1623,6 +1623,7 @@ components:
         time:
           description: Target time.
           type: string
+          format: date-time
         soc:
           description: SoC goal in %.
           type: number

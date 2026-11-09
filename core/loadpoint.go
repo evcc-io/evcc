@@ -1202,7 +1202,8 @@ func (lp *Loadpoint) repeatingPlanning() bool {
 	if !lp.socBasedPlanning() {
 		return false
 	}
-	return lp.getPlanId() > 1+lp.oneTimePlanCount()
+	ts, _, id := lp.nextVehiclePlan()
+	return id > 1 && !lp.isOneTimePlan(ts)
 }
 
 // vehicleHasSoc returns true if active vehicle supports returning soc, i.e. it is not an offline vehicle
