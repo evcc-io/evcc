@@ -84,7 +84,9 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		StackLevelZero       *bool
 		ProfileKindRelative  bool
 		RemoteStart          bool
+		RemoteStartRecovery  bool
 		NoChangeAvailability *bool
+		NoPhaseSwitching     bool
 		ChargingProfile      types.ChargingProfilePurposeType
 	}{
 		Connector:       1,
@@ -102,16 +104,20 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	if cc.ChargingProfile == types.ChargingProfilePurposeTxProfile && cc.Connector <= 0 {
 		return nil, fmt.Errorf("TxProfile requires a positive connector: %d", cc.Connector)
 	}
+	recoverRemoteStart := cc.RemoteStart && cc.RemoteStartRecovery
+	if recoverRemoteStart && (!cc.ForcePowerCtrl || cc.Connector <= 0 || cc.ChargingProfile != types.ChargingProfilePurposeTxDefaultProfile) {
+		return nil, errors.New("remote start recovery requires watt control, a positive connector and TxDefaultProfile")
+	}
 
 	stackLevelZero := cc.StackLevelZero != nil && *cc.StackLevelZero
 	profileKindRelative := cc.ProfileKindRelative
 	noChangeAvailability := cc.NoChangeAvailability != nil && *cc.NoChangeAvailability
 
-	c, err := NewOCPP(ctx,
+	c, err := newOCPP(ctx,
 		cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
 		cc.ForcePowerCtrl, stackLevelZero, profileKindRelative, cc.RemoteStart, noChangeAvailability,
-		cc.ConnectTimeout)
+		cc.ConnectTimeout, recoverRemoteStart)
 	if err != nil {
 		return c, err
 	}
@@ -141,7 +147,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		implement.Has(c, implement.Battery(c.conn.Soc))
 	}
 
-	if c.cp.PhaseSwitching {
+	if c.cp.PhaseSwitching && !cc.NoPhaseSwitching {
 		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 	}
 
@@ -154,6 +160,16 @@ func NewOCPP(ctx context.Context,
 	meterValues string, meterInterval time.Duration,
 	forcePowerCtrl, stackLevelZero, profileKindRelative, remoteStart, noChangeAvailability bool,
 	connectTimeout time.Duration,
+) (*OCPP, error) {
+	return newOCPP(ctx, id, connector, idTag, meterValues, meterInterval,
+		forcePowerCtrl, stackLevelZero, profileKindRelative, remoteStart, noChangeAvailability, connectTimeout, false)
+}
+
+func newOCPP(ctx context.Context,
+	id string, connector int, idTag string,
+	meterValues string, meterInterval time.Duration,
+	forcePowerCtrl, stackLevelZero, profileKindRelative, remoteStart, noChangeAvailability bool,
+	connectTimeout time.Duration, remoteStartRecovery bool,
 ) (*OCPP, error) {
 	log := util.NewLogger(fmt.Sprintf("%s-%d", cmp.Or(id, "ocpp"), connector))
 
@@ -192,7 +208,7 @@ func NewOCPP(ctx context.Context,
 		idTag = cmp.Or(idTag, cp.IdTag, defaultIdTag)
 	}
 
-	conn, err := ocpp.NewConnector(ctx, log, connector, cp, idTag, meterInterval)
+	conn, err := ocpp.NewConnectorWithProfileStart(ctx, log, connector, cp, idTag, meterInterval, remoteStartRecovery)
 	if err != nil {
 		return nil, err
 	}
@@ -287,6 +303,10 @@ func (c *OCPP) StatusReason() (api.Reason, error) {
 func (c *OCPP) Enabled() (bool, error) {
 	if s, err := c.conn.Status(); err == nil {
 		switch s {
+		case core.ChargePointStatusPreparing:
+			if enabled, ok := c.conn.PendingStartProfile(); ok {
+				return enabled, nil
+			}
 		case
 			core.ChargePointStatusSuspendedEVSE:
 			return false, nil

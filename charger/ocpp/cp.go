@@ -155,6 +155,13 @@ func (cp *CP) setConnected(connect bool) {
 		})
 	} else {
 		cp.stopBootTimer()
+		for _, conn := range cp.connectors {
+			if conn.profileStart != nil {
+				conn.mu.Lock()
+				conn.profileStart.reset()
+				conn.mu.Unlock()
+			}
+		}
 	}
 }
 

@@ -85,7 +85,17 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		}
 	}
 
-	if conn.isWaitingForAuth() {
+	if conn.profileStart != nil {
+		if applied {
+			switch request.Status {
+			case core.ChargePointStatusAvailable, core.ChargePointStatusUnavailable:
+				if prev == nil || prev.Status != request.Status {
+					conn.profileStart.reset()
+				}
+			}
+			conn.maybeStartAfterProfile()
+		}
+	} else if conn.isWaitingForAuth() {
 		if conn.remoteIdTag != "" {
 			// dispatch asynchronously: RemoteStartTransactionRequest issues a
 			// synchronous CS→CP request whose response is read by this same
@@ -130,6 +140,10 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 			conn.status.Status == core.ChargePointStatusSuspendedEVSE) {
 		conn.log.DEBUG.Printf("recovered transaction: %d", *request.TransactionId)
 		conn.txnId = *request.TransactionId
+		if conn.profileStart != nil && !conn.profileStart.paused {
+			conn.profileStart.armed = false
+			conn.profileStart.clear()
+		}
 	}
 
 	for _, meterValue := range sortByAge(request.MeterValue) {
@@ -189,6 +203,11 @@ func (conn *Connector) startTransaction(txnId int, idTag string) {
 
 	conn.txnId = txnId
 	conn.idTag = idTag
+	if conn.profileStart != nil {
+		conn.profileStart.armed = false
+		conn.profileStart.paused = false
+		conn.profileStart.clear()
+	}
 
 	// a transaction started after the boot is fresh and must survive the first status
 	conn.rebooted = false
@@ -214,6 +233,9 @@ func (conn *Connector) markRebooted() {
 	defer conn.mu.Unlock()
 
 	conn.rebooted = true
+	if conn.profileStart != nil {
+		conn.profileStart.reset()
+	}
 }
 
 func (conn *Connector) assumeMeterStopped() {
@@ -278,18 +300,22 @@ func (conn *Connector) OnStopTransaction(request *core.StopTransactionRequest) (
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
+	res := &core.StopTransactionConfirmation{
+		IdTagInfo: &types.IdTagInfo{
+			Status: types.AuthorizationStatusAccepted,
+		},
+	}
+	if conn.profileStart != nil && request.TransactionId != conn.txnId {
+		return res, nil
+	}
+
 	conn.txnId = 0
 	conn.idTag = ""
 
 	conn.updateEnergyRegister(float64(request.MeterStop))
 
-	res := &core.StopTransactionConfirmation{
-		IdTagInfo: &types.IdTagInfo{
-			Status: types.AuthorizationStatusAccepted, // accept
-		},
-	}
-
 	conn.assumeMeterStopped()
+	conn.maybeStartAfterProfile()
 
 	return res, nil
 }
