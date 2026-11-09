@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,6 +23,6 @@ func TestStatusCCS(t *testing.T) {
 
 		status, err := res.Status()
 		require.NoError(t, err)
-		require.Equal(t, tc.status, status, tc.green)
+		assert.Equal(t, tc.status, status, tc.green)
 	}
 }
