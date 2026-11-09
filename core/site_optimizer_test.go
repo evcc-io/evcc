@@ -991,16 +991,21 @@ func TestCurrentSlotSuggestionHoldWorthwhile(t *testing.T) {
 	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000}
 	ts := optimizer.TimeSeries{Dt: []int{900, 900, 900}, PN: []float32{0.26, 0.26, 0.29}}
 
-	// pv charging now, discharge at a higher price later
+	// pv charging now, discharge at a higher price later that runs the battery short
 	res := optimizer.BatteryResult{
 		ChargingPower:    []float32{500, 500, 0},
 		DischargingPower: []float32{0, 0, 500},
-		StateOfCharge:    []float32{5000, 5500, 5000},
+		StateOfCharge:    []float32{5000, 5500, 1500},
 	}
 	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25, 0).Action, "pv charge before expensive discharge")
 
 	res.ChargingPower[0], res.ChargingPower[1] = 0, 0
 	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25, 0).Action, "idle balanced before expensive discharge")
+
+	// the expensive discharge leaves energy to spare: kept energy only raises the leftover
+	res.StateOfCharge[2] = 5000
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25, 0).Action, "discharge not energy-limited")
+	res.StateOfCharge[2] = 1500
 
 	// the kept energy would be discharged at the same price
 	ts.PN[2] = 0.26
