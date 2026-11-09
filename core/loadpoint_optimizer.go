@@ -91,16 +91,7 @@ func (lp *Loadpoint) optimizerPlanGap() bool {
 		return false
 	}
 
-	tf := lp.site.GetTariff(api.TariffUsagePlanner)
-	if tf == nil {
-		return false
-	}
-
-	rates, err := tf.Rates()
-	if err != nil {
-		return false
-	}
-
+	rates := tariff.Rates(lp.site.GetTariff(api.TariffUsagePlanner))
 	current, err := rates.At(lp.clock.Now())
 	if err != nil {
 		return false
