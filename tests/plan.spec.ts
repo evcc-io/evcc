@@ -25,9 +25,9 @@ function getWeekday(offset = 1, style: "long" | "short" = "long") {
   return date.toLocaleDateString("en-US", { weekday: style });
 }
 
-// wait for the websocket update, the plan modal depends on the vehicle's soc/capacity
+// wait for the websocket update, the plan modal depends on the vehicle's SoC/capacity
 async function selectVehicle(lp: Locator, title: string) {
-  await lp.getByTestId("change-vehicle").locator("select").selectOption(title);
+  await lp.getByTestId("change-vehicle").getByRole("combobox").selectOption(title);
   await expect(lp.getByTestId("vehicle-name")).toHaveText(title);
 }
 
