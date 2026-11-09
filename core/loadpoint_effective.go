@@ -269,17 +269,17 @@ func (lp *Loadpoint) effectiveMinSoc() int {
 func (lp *Loadpoint) EffectiveLimitSoc() int {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.effectiveLimitSoc(lp.GetVehicle())
+	return lp.effectiveLimitSoc()
 }
 
-// effectiveLimitSoc returns the effective session limit soc for the given vehicle snapshot
+// effectiveLimitSoc returns the effective session limit soc
 // TODO take vehicle api limits into account
-func (lp *Loadpoint) effectiveLimitSoc(v api.Vehicle) int {
+func (lp *Loadpoint) effectiveLimitSoc() int {
 	if lp.limitSoc > 0 {
 		return lp.limitSoc
 	}
 
-	if v != nil {
+	if v := lp.GetVehicle(); v != nil {
 		if soc := vehicle.Settings(lp.log, v).GetLimitSoc(); soc > 0 {
 			return soc
 		}

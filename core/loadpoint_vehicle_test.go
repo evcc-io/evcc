@@ -60,14 +60,14 @@ func TestPublishSocAndRange(t *testing.T) {
 	for _, tc := range tc {
 		lp.status = tc
 
-		assert.True(t, lp.vehicleSocPollAllowed(lp.GetVehicle()))
+		assert.True(t, lp.vehicleSocPollAllowed())
 		vehicle.EXPECT().Soc().Return(0.0, errors.New("foo"))
 		lp.publishSocAndRange()
 
 		clck.Add(time.Second)
 
 		allowed := tc == api.StatusC
-		assert.Equal(t, allowed, lp.vehicleSocPollAllowed(lp.GetVehicle()))
+		assert.Equal(t, allowed, lp.vehicleSocPollAllowed())
 		if allowed {
 			vehicle.EXPECT().Soc().Return(0.0, errors.New("foo"))
 		}
@@ -167,7 +167,7 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 
 		// populate channels
 		test := func(t *testing.T) {
-			assert.Equal(t, tc.socPoll, lp.vehicleSocPollAllowed(lp.GetVehicle()))
+			assert.Equal(t, tc.socPoll, lp.vehicleSocPollAllowed())
 			lp.publishSocAndRange()
 			assert.Equal(t, tc.soc, lp.vehicleSoc)
 

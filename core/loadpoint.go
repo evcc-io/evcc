@@ -95,7 +95,7 @@ type Loadpoint struct {
 
 	rwMutex      atomic.Int64 // count reentrant RWMutex
 	sync.RWMutex              // guard status
-	vmu          sync.RWMutex // guard vehicle
+	vmu          sync.RWMutex // guards vehicle, socEstimator, vehicleSoc; leaf lock, may be taken under lp.mu, never the reverse
 
 	// exposed public configuration
 	CircuitRef string `mapstructure:"circuit"` // Circuit reference
@@ -1229,7 +1229,7 @@ func (lp *Loadpoint) LimitEnergyReached() bool {
 func (lp *Loadpoint) LimitSocReached() bool {
 	lp.RLock()
 	defer lp.RUnlock()
-	limit := lp.effectiveLimitSoc(lp.GetVehicle())
+	limit := lp.effectiveLimitSoc()
 	return limit > 0 && limit < 100 && lp.GetSoc() >= float64(limit)
 }
 
@@ -2409,7 +2409,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	}
 
 	socR, limitR, _ := socAndLimit("charger", lp.charger)
-	if socR == nil && (lp.vehicleSocPollAllowed(v) || lp.chargerHasFeature(api.IntegratedDevice)) {
+	if socR == nil && (lp.vehicleSocPollAllowed() || lp.chargerHasFeature(api.IntegratedDevice)) {
 		var socErr error
 		socR, limitR, socErr = socAndLimit("vehicle", v)
 
@@ -2454,7 +2454,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	lp.RLock()
 	planActive := lp.planActive
 	limitEnergy, energyLimited := lp.remainingLimitEnergy()
-	limitSoc := lp.effectiveLimitSoc(v)
+	limitSoc := lp.effectiveLimitSoc()
 	lp.RUnlock()
 
 	// an active plan slot charges past the session limit, unless the optimizer controls a non-smart mode
