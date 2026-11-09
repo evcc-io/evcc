@@ -68,11 +68,21 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 	}
 
 	// Available means cable unplugged and any prior transaction is stale
-	if applied && request.Status == core.ChargePointStatusAvailable && conn.txnId != 0 {
-		conn.log.DEBUG.Printf("clearing stale transaction %d on Available status", conn.txnId)
-		conn.txnId = 0
-		conn.idTag = ""
-		conn.assumeMeterStopped()
+	if applied && request.Status == core.ChargePointStatusAvailable {
+		conn.clearTransaction("Available status")
+	}
+
+	// a transaction does not survive a reboot, but a charge point may also send
+	// BootNotification on a mere reconnect, so let the first conclusive status decide
+	if applied && conn.rebooted {
+		switch request.Status {
+		case core.ChargePointStatusPreparing:
+			conn.clearTransaction("reboot")
+			conn.rebooted = false
+		case core.ChargePointStatusAvailable, core.ChargePointStatusCharging,
+			core.ChargePointStatusSuspendedEV, core.ChargePointStatusSuspendedEVSE:
+			conn.rebooted = false
+		}
 	}
 
 	if conn.isWaitingForAuth() {
@@ -100,6 +110,13 @@ func getSampleKey(s types.SampledValue) types.Measurand {
 	}
 
 	return s.Measurand
+}
+
+// isBoundaryContext returns true for readings that are a snapshot taken at the
+// transaction's start or end rather than a live measurement. Context is optional
+// and defaults to Sample.Periodic.
+func isBoundaryContext(c types.ReadingContext) bool {
+	return c == types.ReadingContextTransactionBegin || c == types.ReadingContextTransactionEnd
 }
 
 func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
@@ -159,7 +176,7 @@ func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest)
 		IdTagInfo: &types.IdTagInfo{
 			Status: types.AuthorizationStatusAccepted,
 		},
-		TransactionId: conn.txnId,
+		TransactionId: txnId,
 	}
 
 	return res, nil
@@ -201,6 +218,7 @@ func (conn *Connector) markRebooted() {
 
 func (conn *Connector) assumeMeterStopped() {
 	conn.meterUpdated = conn.clock.Now()
+	conn.meterTimestamp = conn.meterUpdated
 
 	if _, ok := conn.measurements[types.MeasurandPowerActiveImport]; ok {
 		conn.measurements[types.MeasurandPowerActiveImport] = types.SampledValue{
@@ -274,12 +292,4 @@ func (conn *Connector) OnStopTransaction(request *core.StopTransactionRequest) (
 	conn.assumeMeterStopped()
 
 	return res, nil
-}
-
-// startTransaction sets the transaction state from a forwarded StartTransaction response
-func (conn *Connector) startTransaction(txnId int, idTag string) {
-	conn.mu.Lock()
-	defer conn.mu.Unlock()
-	conn.txnId = txnId
-	conn.idTag = idTag
 }

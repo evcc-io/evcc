@@ -148,16 +148,21 @@ func (cs *CSMS) RegisterChargingStation(id string, newfun func() *Station, init 
 		cp.onTransportConnect()
 	}
 
-	if err := init(cp); err != nil {
-		return nil, err
-	}
-
-	// cache only after successful initialization
+	// set cs BEFORE init so OnBootNotification can find the station
 	cs.mu.Lock()
 	reg.cs = cp
 	cs.mu.Unlock()
 
+	if err := init(cp); err != nil {
+		// rollback on error
+		cs.mu.Lock()
+		reg.cs = nil
+		cs.mu.Unlock()
+		return nil, err
+	}
+
 	return cp, nil
+
 }
 
 // NewChargingStation implements ocpp2.ChargingStationConnectionHandler

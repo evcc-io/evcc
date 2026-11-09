@@ -87,6 +87,16 @@ func (cp *CP) connectorByID(id int) *Connector {
 	return cp.connectors[id]
 }
 
+// markRebooted flags all connectors after a BootNotification.
+func (cp *CP) markRebooted() {
+	cp.mu.RLock()
+	defer cp.mu.RUnlock()
+
+	for _, conn := range cp.connectors {
+		conn.markRebooted()
+	}
+}
+
 func (cp *CP) connectorByTransactionID(id int) *Connector {
 	cp.mu.RLock()
 	defer cp.mu.RUnlock()
