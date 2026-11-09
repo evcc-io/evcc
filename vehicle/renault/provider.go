@@ -93,19 +93,25 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
-
 	res, err := v.batteryStatusG()
-	if err == nil {
-		if res.PlugStatus == 1 {
-			status = api.StatusB
-		}
-		if res.ChargingStatus >= 1.0 {
-			status = api.StatusC
-		}
+	if err != nil {
+		return api.StatusNone, err
 	}
 
-	return status, err
+	// Twingo E-Tech reports neither, see hacf-fr/renault-api#2386
+	if res.PlugStatus == nil && res.ChargingStatus == nil {
+		return api.StatusNone, api.ErrNotAvailable
+	}
+
+	status := api.StatusA // disconnected
+	if res.PlugStatus != nil && *res.PlugStatus == 1 {
+		status = api.StatusB
+	}
+	if res.ChargingStatus != nil && *res.ChargingStatus >= 1.0 {
+		status = api.StatusC
+	}
+
+	return status, nil
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
