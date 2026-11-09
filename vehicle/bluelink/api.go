@@ -16,6 +16,7 @@ const (
 	VehiclesURL         = "vehicles"
 	StatusURL           = "vehicles/%s/status"                // Triggers refresh from vehicle (older API)
 	StatusLatestURL     = "vehicles/%s/status/latest"         // Cached data with location/odometer (older API)
+	StatusURLCCS2       = "vehicles/%s/ccs2/carstatus"        // Triggers refresh from vehicle (newer API)
 	StatusLatestURLCCS2 = "vehicles/%s/ccs2/carstatus/latest" // Newer API (2024+ vehicles with ccOS)
 )
 
@@ -96,8 +97,14 @@ func (v *API) StatusLatest(vehicle Vehicle) (BluelinkVehicleStatusLatest, error)
 
 // Refresh triggers a status update from the vehicle
 func (v *API) Refresh(vehicle Vehicle) error {
+	path := StatusURL
+	if vehicle.CcuCCS2ProtocolSupport != 0 {
+		// CCS2 cars wake via the CCS2 endpoint, see Hyundai-Kia-Connect/hyundai_kia_connect_api@cadd705
+		path = StatusURLCCS2
+	}
+
 	var res StatusResponse
-	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusURL, vehicle.VehicleID))
+	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(path, vehicle.VehicleID))
 	err := v.GetJSON(uri, &res)
 	if err == nil && res.RetCode != resOK {
 		err = fmt.Errorf("unexpected response: %s", res.RetCode)
