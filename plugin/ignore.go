@@ -10,7 +10,6 @@ import (
 type ignorePlugin struct {
 	ctx context.Context
 	err string
-	get Config
 	set Config
 }
 
@@ -22,7 +21,6 @@ func init() {
 func NewIgnoreFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		Error string
-		Get   Config
 		Set   Config
 	}
 
@@ -33,7 +31,6 @@ func NewIgnoreFromConfig(ctx context.Context, other map[string]any) (Plugin, err
 	o := &ignorePlugin{
 		ctx: ctx,
 		err: cc.Error,
-		get: cc.Get,
 		set: cc.Set,
 	}
 
@@ -44,29 +41,11 @@ var _ IntSetter = (*ignorePlugin)(nil)
 
 func ignoreError[T any](fun func(T) error, match string) func(T) error {
 	return func(val T) error {
-		if err := fun(val); err != nil && !strings.Contains(err.Error(), match) {
+		if err := fun(val); err != nil && !strings.HasPrefix(err.Error(), match) {
 			return err
 		}
 		return nil
 	}
-}
-
-var _ FloatGetter = (*ignorePlugin)(nil)
-
-// FloatGetter returns zero instead of a matching error
-func (o *ignorePlugin) FloatGetter() (func() (float64, error), error) {
-	get, err := o.get.FloatGetter(o.ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return func() (float64, error) {
-		v, err := get()
-		if err != nil && strings.Contains(err.Error(), o.err) {
-			return 0, nil
-		}
-		return v, err
-	}, nil
 }
 
 func (o *ignorePlugin) IntSetter(param string) (func(int64) error, error) {

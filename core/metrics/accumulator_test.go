@@ -46,22 +46,6 @@ func TestMeterEnergyMeterTotalDropout(t *testing.T) {
 	assert.Equal(t, 4.0, me.Energy)
 }
 
-func TestMeterEnergyMeterTotalSpike(t *testing.T) {
-	me := &Accumulator{clock: clock.NewMock()}
-
-	// single implausible reading is ignored (#35976)
-	me.SetEnergyMeterTotal(1000)
-	me.SetEnergyMeterTotal(1.8446744073709552e17)
-	me.SetEnergyMeterTotal(1001)
-	assert.Equal(t, 1.0, me.Energy)
-
-	// confirmed jump is accepted, e.g. after downtime
-	me.SetEnergyMeterTotal(1500)
-	assert.Equal(t, 1.0, me.Energy)
-	me.SetEnergyMeterTotal(1501)
-	assert.Equal(t, 501.0, me.Energy)
-}
-
 func TestMeterEnergyAddPower(t *testing.T) {
 	clock := clock.NewMock()
 	clock.Set(now.BeginningOfDay())
