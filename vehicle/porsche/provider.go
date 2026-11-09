@@ -133,6 +133,22 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	}
 }
 
+var _ api.SocLimiter = (*Provider)(nil)
+
+// GetLimitSoc implements the api.SocLimiter interface
+func (v *Provider) GetLimitSoc() (int64, error) {
+	res, err := v.statusG()
+	if err != nil {
+		return 0, err
+	}
+
+	var summary chargingSummary
+	if !res.decode("CHARGING_SUMMARY", &summary) || summary.TargetSoC == 0 {
+		return 0, api.ErrNotAvailable
+	}
+	return int64(summary.TargetSoC), nil
+}
+
 var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface (electric range).
