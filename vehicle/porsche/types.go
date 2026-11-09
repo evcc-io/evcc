@@ -64,6 +64,8 @@ type chargingSummary struct {
 	Status string `json:"status"` // e.g. CHARGING, CHARGING_COMPLETED, NOT_CHARGING, NOT_PLUGGED
 	Mode   string `json:"mode"`   // e.g. DIRECT
 	Type   string `json:"type"`   // e.g. AC, DC
+	// active target soc on newer vehicles, see CJNE/pyporscheconnectapi@f511730
+	TargetSoC float64 `json:"targetSoC"`
 }
 
 type chargingRate struct {
