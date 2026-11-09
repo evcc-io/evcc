@@ -1,0 +1,71 @@
+template: sonoff-pro-3pct120                     
+products:
+  - brand: Sonoff                      
+    description:
+      generic: Pro-3PCT120             
+params:
+  - name: usage
+    choice: ["grid","charge","pv"]   
+  - name: host
+    default: 192.168.1.100
+    required: true           
+  - name: user
+    default: admin
+    required: true
+  - name: password
+    default: 12345678
+    required: true
+render: |
+  type: custom
+  power: &rpc
+    source: http
+    uri: http://{{ .host }}/rpc
+    method: POST
+    headers:
+      Content-Type: application/json
+    auth:
+      type: digest
+      user: {{ .user }}
+      password: {{ .password }}
+    body: '{"id":0,"src":"evcc","method":"EnergyMeter.GetStatus","params":[{}]}'
+    jq: .result.status.total_power
+    scale: 1
+    timeout: 10s
+  energy:
+    <<: *rpc
+    jq: .result.status.total_energy.forward
+    scale: 0.001
+  returnenergy:
+    <<: *rpc
+    jq: .result.status.total_energy.reverse
+    scale: 0.001
+  voltages:
+    - <<: *rpc
+      jq: .result.status.phase_a.voltage
+      scale: 0.01
+    - <<: *rpc
+      jq: .result.status.phase_b.voltage
+      scale: 0.01
+    - <<: *rpc
+      jq: .result.status.phase_c.voltage
+      scale: 0.01
+  currents:
+    - <<: *rpc
+      jq: .result.status.phase_a.current
+      scale: 0.01
+    - <<: *rpc
+      jq: .result.status.phase_b.current
+      scale: 0.01
+    - <<: *rpc
+      jq: .result.status.phase_c.current
+      scale: 0.01
+  powers:
+    - <<: *rpc
+      jq: .result.status.phase_a.active_power
+      scale: 0.01
+    - <<: *rpc
+      jq: .result.status.phase_b.active_power
+      scale: 0.01
+    - <<: *rpc
+      jq: .result.status.phase_c.active_power
+      scale: 0.01
