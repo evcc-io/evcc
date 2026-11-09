@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,10 +22,10 @@ func TestResumeSkipsPasskeyEnrollment(t *testing.T) {
 			_, _ = w.Write([]byte(`<script>atob("` + ctx + `")</script>`))
 			return
 		}
-		require.NoError(t, r.ParseForm())
-		require.Equal(t, "tx", r.PostForm.Get("state"))
-		require.Equal(t, "abort-passkey-enrollment", r.PostForm.Get("action"))
-		require.Equal(t, "bar", r.PostForm.Get("foo"))
+		assert.NoError(t, r.ParseForm())
+		assert.Equal(t, "tx", r.PostForm.Get("state"))
+		assert.Equal(t, "abort-passkey-enrollment", r.PostForm.Get("action"))
+		assert.Equal(t, "bar", r.PostForm.Get("foo"))
 		w.Header().Set("Location", RedirectURI+"?code=abc&state=evcc")
 		w.WriteHeader(http.StatusFound)
 	})
