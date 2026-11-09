@@ -23,17 +23,6 @@ params:
       de: Batteriespeichernummer
     choice: [1, 2]
     usages: ["battery"]
-  - name: extendedmeterenergy
-    type: bool
-    default: false
-    advanced: true
-    usages: ["grid"]
-    description:
-      de: Erweiterte Zählerregister für Energie
-      en: Extended meter energy registers
-    help:
-      de: Liest Bezug und Einspeisung aus den Registern 36120/36104. Für neuere Modelle wie ETA-G20, bei denen Register 36017 immer 0 liefert.
-      en: Read grid import and export energy from registers 36120/36104. For newer models like ETA-G20 where register 36017 always returns 0.
   - preset: battery-params
   - name: maxchargepower
     default: 10000
@@ -53,37 +42,56 @@ render: |
       address: 36025 # MTTotalActivepower Pmeter
       type: holding
       decode: int32
-    block: # 36017-36026
-      register: 36017
-      count: 10
+    block: # 36015-36026
+      register: 36015
+      count: 12
     scale: -1
   energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    {{- if .extendedmeterenergy }}
-    register: # manual non-sunspec register configuration
-      address: 36120 # Meter total import energy
-      type: holding
-      decode: uint64nan
-    scale: 0.01
+    source: calc
+    max:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register: # manual non-sunspec register configuration
+          address: 36017 # E-Total-Buy, 0 on newer models
+          type: holding
+          decode: float32
+        block: # 36015-36026
+          register: 36015
+          count: 12
+        scale: 0.001
+      - source: ignore
+        error: illegal data address # older models
+        get:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register: # manual non-sunspec register configuration
+            address: 36120 # Meter total import energy
+            type: holding
+            decode: uint64nan
+          scale: 0.01
   returnEnergy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
-      address: 36104 # Meter total export energy
-      type: holding
-      decode: uint64nan
-    scale: 0.01
-    {{- else }}
-    register: # manual non-sunspec register configuration
-      address: 36017 # E-Total-Buy
-      type: holding
-      decode: float32
-    block: # 36017-36026
-      register: 36017
-      count: 10
-    scale: 0.001
-    {{- end }}
+    source: calc
+    max:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register: # manual non-sunspec register configuration
+          address: 36015 # E-Total-Sell, 0 on newer models
+          type: holding
+          decode: float32
+        block: # 36015-36026
+          register: 36015
+          count: 12
+        scale: 0.001
+      - source: ignore
+        error: illegal data address # older models
+        get:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register: # manual non-sunspec register configuration
+            address: 36104 # Meter total export energy
+            type: holding
+            decode: uint64nan
+          scale: 0.01
   powers:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -91,9 +99,9 @@ render: |
         address: 36019 # Meter Active Power R, W
         type: holding
         decode: int32
-      block: # 36017-36026
-        register: 36017
-        count: 10
+      block: # 36015-36026
+        register: 36015
+        count: 12
       scale: -1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -101,9 +109,9 @@ render: |
         address: 36021 # Meter Active Power S, W
         type: holding
         decode: int32
-      block: # 36017-36026
-        register: 36017
-        count: 10
+      block: # 36015-36026
+        register: 36015
+        count: 12
       scale: -1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -111,9 +119,9 @@ render: |
         address: 36023 # Meter Active Power T, W
         type: holding
         decode: int32
-      block: # 36017-36026
-        register: 36017
-        count: 10
+      block: # 36015-36026
+        register: 36015
+        count: 12
       scale: -1
   voltages:
     - source: modbus

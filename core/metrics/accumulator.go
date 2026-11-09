@@ -18,10 +18,15 @@ type Accumulator struct {
 	SocTemp           *float64 `json:"socTemp,omitempty"`
 }
 
+// maxMeterStep is the largest increase in kWh accepted without confirmation
+const maxMeterStep = 100
+
 // meterTotal tracks a cumulative meter reading in kWh. A lower reading is ignored
 // as a dropout until a second, increasing lower reading confirms the counter reset.
+// An increase above maxMeterStep is ignored as a spike until a second reading
+// at or above it confirms the jump.
 type meterTotal struct {
-	last, reset *float64
+	last, reset, jump *float64
 }
 
 // add returns the increase over the last reading and advances it
@@ -29,14 +34,16 @@ func (t *meterTotal) add(v float64) float64 {
 	switch {
 	case t.last == nil:
 		t.last = &v
-	case v >= *t.last:
+	case v >= *t.last && (v-*t.last <= maxMeterStep || t.jump != nil && v >= *t.jump):
 		delta := v - *t.last
-		t.last, t.reset = &v, nil
+		t.last, t.reset, t.jump = &v, nil, nil
 		return delta
+	case v >= *t.last:
+		t.jump = &v
 	case t.reset != nil && v > *t.reset:
-		t.last, t.reset = &v, nil
+		t.last, t.reset, t.jump = &v, nil, nil
 	default:
-		t.reset = &v
+		t.reset, t.jump = &v, nil
 	}
 	return 0
 }
