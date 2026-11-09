@@ -95,17 +95,35 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 // holdWorthwhile reports whether energy kept in the battery now is discharged later at a
 // higher price. A battery that fills up before its next discharge only displaces pv
 // charging with the kept energy, so holding it would trade a battery dip for a grid import.
+// The same holds when the plan still has energy to spare during that discharge: the kept
+// energy only raises the leftover at the end of the horizon.
 func holdWorthwhile(req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, slot int) bool {
 	if slot >= len(ts.PN) {
 		return false
 	}
 
-	for i := slot + 1; i < min(len(res.DischargingPower), len(ts.PN), len(ts.Dt)); i++ {
-		if slotHours := float64(ts.Dt[i]) / 3600; slotHours > 0 && float64(res.DischargingPower[i])/slotHours > suggestionThreshold {
-			return ts.PN[i] > ts.PN[slot]
-		}
-		if req.SMax > 0 && i < len(res.StateOfCharge) && res.StateOfCharge[i] >= req.SMax {
+	discharging := false
+	// normal mode may drain the battery at full power until the next run sees the drained soc
+	reserve := req.SMin + req.DMax*float32(optimizerInterval.Hours())
+
+	for i := slot + 1; i < min(len(res.DischargingPower), len(res.StateOfCharge), len(ts.PN), len(ts.Dt)); i++ {
+		if req.SMax > 0 && res.StateOfCharge[i] >= req.SMax {
 			return false
+		}
+
+		if !discharging {
+			slotHours := float64(ts.Dt[i]) / 3600
+			if slotHours <= 0 || float64(res.DischargingPower[i])/slotHours <= suggestionThreshold {
+				continue
+			}
+			if ts.PN[i] <= ts.PN[slot] {
+				return false
+			}
+			discharging = true
+		}
+
+		if res.StateOfCharge[i] <= reserve {
+			return true
 		}
 	}
 
