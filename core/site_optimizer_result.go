@@ -111,7 +111,6 @@ func holdWorthwhile(req optimizer.BatteryConfig, res optimizer.BatteryResult, ts
 
 	for i := slot + 1; i < min(len(res.DischargingPower), len(res.StateOfCharge), len(ts.PN), len(ts.Dt)); i++ {
 		if req.SMax > 0 && res.StateOfCharge[i] >= req.SMax {
-			// kept energy is clamped away once the battery is full
 			return false
 		}
 
@@ -126,7 +125,6 @@ func holdWorthwhile(req optimizer.BatteryConfig, res optimizer.BatteryResult, ts
 			discharging = true
 		}
 
-		// kept energy replaces an import only where the plan runs short
 		if res.StateOfCharge[i] <= reserve {
 			return true
 		}
