@@ -70,14 +70,11 @@ render: |
   {{- $aggregates := printf "%s/meters/aggregates" $api -}}
   {{- $freq := printf "%s/freq" $base -}}
   {{- $meter := .usage -}}
+  {{- $energyField := "energy_imported" -}}
   {{- if eq .usage "grid" -}}
     {{- $meter = "site" -}}
-  {{- end -}}
-  {{- if eq .usage "pv" -}}
+  {{- else if eq .usage "pv" -}}
     {{- $meter = "solar" -}}
-  {{- end -}}
-  {{- $energyField := "energy_imported" -}}
-  {{- if eq .usage "pv" -}}
     {{- $energyField = "energy_exported" -}}
   {{- end -}}
   type: custom
@@ -121,19 +118,14 @@ render: |
   soc:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ $api }}/system_status/soe
-    jq: if .percentage == null then empty else .percentage end
+    jq: .percentage // empty
   {{- if .capacity }}
   capacity: {{ .capacity }}
   {{- else }}
   capacity:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ $api }}/system_status
-    jq: |
-      if (.nominal_full_pack_energy // 0) > 0 then
-        .nominal_full_pack_energy / 1000
-      else
-        empty
-      end
+    jq: select(.nominal_full_pack_energy > 0) | .nominal_full_pack_energy / 1000
   {{- end }}
   # The minsoc template parameter is the target for normal mode. The generated
   # minsoc key is deliberately a dynamic getter for the actual backup reserve,
@@ -141,7 +133,7 @@ render: |
   minsoc:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ $api }}/operation
-    jq: if .backup_reserve_percent == null then empty else .backup_reserve_percent end
+    jq: .backup_reserve_percent // empty
   maxsoc: {{ .maxsoc }} # %
   {{- if .maxchargepower }}
   maxchargepower: {{ .maxchargepower }}
