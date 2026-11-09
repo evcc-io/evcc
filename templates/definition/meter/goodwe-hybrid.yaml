@@ -62,7 +62,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     {{- if .extendedmeterenergy }}
     register: # manual non-sunspec register configuration
-      address: 36120 # M-ReverseEnergy, total import
+      address: 36120 # Meter total import energy
       type: holding
       decode: uint64nan
     scale: 0.01
@@ -70,7 +70,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 36104 # M-ForwardEnergy, total export
+      address: 36104 # Meter total export energy
       type: holding
       decode: uint64nan
     scale: 0.01
