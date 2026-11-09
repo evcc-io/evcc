@@ -117,8 +117,8 @@ export function handleError(e: any, msg: string) {
   alert(message);
 }
 
-export function applyDefaultsFromTemplate(template: Template | null, values: DeviceValues) {
-  const params = template?.Params || [];
+// only the params shown for the device: hidden ones must not end up in the stored config (#35963)
+export function applyDefaultsFromTemplate(params: TemplateParam[], values: DeviceValues) {
   params.forEach((p) => {
     if (p.Type === "Bool") {
       // template defaults are strings, and configs stored before bool params
