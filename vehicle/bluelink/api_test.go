@@ -33,5 +33,5 @@ func TestStatusLatestFallsBackToCCS2On5031(t *testing.T) {
 	soc, err := res.SoC()
 	require.NoError(t, err)
 	require.Equal(t, 42.0, soc)
-	require.Equal(t, []string{"/vehicles/vid/status", "/vehicles/vid/status/latest", "/vehicles/vid/ccs2/carstatus/latest"}, paths)
+	require.Equal(t, []string{"/api/v1/spa/vehicles/vid/status", "/api/v1/spa/vehicles/vid/status/latest", "/api/v1/spa/vehicles/vid/ccs2/carstatus/latest"}, paths)
 }
