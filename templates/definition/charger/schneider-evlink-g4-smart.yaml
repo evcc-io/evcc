@@ -3,6 +3,8 @@ products:
   - brand: Schneider
     description:
       generic: EVlink Wallbox G4 Smart
+requirements:
+  evcc: ["sponsorship"]
 params:
   - name: modbus
     choice: ["tcpip"]
