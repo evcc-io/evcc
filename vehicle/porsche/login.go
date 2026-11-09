@@ -83,7 +83,7 @@ func NewLoginSession(log *util.Logger, email, password string) (*LoginSession, s
 
 func headers() map[string]string {
 	return map[string]string{
-		"User-Agent":  "evcc",
+		"User-Agent":  UserAgent,
 		"X-Client-ID": XClientID,
 	}
 }
