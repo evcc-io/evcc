@@ -174,11 +174,11 @@ func (v *Provider) Climater() (bool, error) {
 		return false, err
 	}
 
-	var c climatizerState
-	if !res.decode("CLIMATIZER_STATE", &c) {
+	var c hvacSummary
+	if !res.decode("HVAC_SUMMARY", &c) || c.Status == "" {
 		return false, api.ErrNotAvailable
 	}
-	return c.IsOn, nil
+	return c.Status != "OFF", nil
 }
 
 var _ api.VehiclePosition = (*Provider)(nil)

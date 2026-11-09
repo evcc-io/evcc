@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/types"
-	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/grid"
@@ -39,42 +38,6 @@ func (n *Null) ChargeDuration() (time.Duration, error) {
 	return 0, nil
 }
 
-func createChannels(t *testing.T) (chan util.Param, chan messenger.Event, chan *Loadpoint) {
-	t.Helper()
-
-	uiChan := make(chan util.Param)
-	pushChan := make(chan messenger.Event)
-	lpChan := make(chan *Loadpoint)
-
-	log := false
-	go func() {
-		for {
-			select {
-			case v := <-uiChan:
-				if log {
-					t.Log(v)
-				}
-			case v := <-pushChan:
-				if log {
-					t.Log(v)
-				}
-			case v := <-lpChan:
-				if log {
-					t.Log(v)
-				}
-			}
-		}
-	}()
-
-	return uiChan, pushChan, lpChan
-}
-
-func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan messenger.Event, lpChan chan *Loadpoint) {
-	lp.uiChan = uiChan
-	lp.pushChan = pushChan
-	lp.lpChan = lpChan
-}
-
 func attachListeners(t *testing.T, lp *Loadpoint) {
 	t.Helper()
 
@@ -83,9 +46,8 @@ func attachListeners(t *testing.T, lp *Loadpoint) {
 		charger.EXPECT().MaxCurrent(int64(lp.minCurrent)).Return(nil)
 	}
 
-	uiChan, pushChan, lpChan := createChannels(t)
 	// the optimizer runs async- without a logger its panic recovery panics again
-	lp.Prepare(&Site{log: util.NewLogger("site")}, uiChan, pushChan, lpChan)
+	lp.Prepare(&Site{log: util.NewLogger("site")}, nil, nil, nil)
 }
 
 func TestNew(t *testing.T) {
