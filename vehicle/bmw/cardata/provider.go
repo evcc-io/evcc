@@ -89,7 +89,7 @@ func (v *Provider) findOrCreateContainer() (string, error) {
 	defer v.deleteObsoleteContainers(containers)
 
 	if i := slices.IndexFunc(containers, func(c Container) bool {
-		return c.Name == containerName && c.Purpose == requiredVersion
+		return c.State == "ACTIVE" && c.Name == containerName && c.Purpose == requiredVersion
 	}); i >= 0 {
 		return containers[i].ContainerId, nil
 	}
@@ -105,7 +105,8 @@ func (v *Provider) findOrCreateContainer() (string, error) {
 
 func (v *Provider) deleteObsoleteContainers(containers []Container) {
 	for _, c := range containers {
-		if c.Name != containerName || c.Purpose == requiredVersion {
+		// deleted containers stay listed for 29 days, see TA2k/ioBroker.bmw@1b67ef4
+		if c.State == "DELETED" || c.Name != containerName || c.Purpose == requiredVersion {
 			continue
 		}
 
