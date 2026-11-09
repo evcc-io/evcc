@@ -104,8 +104,10 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	if cc.ChargingProfile == types.ChargingProfilePurposeTxProfile && cc.Connector <= 0 {
 		return nil, fmt.Errorf("TxProfile requires a positive connector: %d", cc.Connector)
 	}
-	recoverRemoteStart := cc.RemoteStart && cc.RemoteStartRecovery
-	if recoverRemoteStart && (!cc.ForcePowerCtrl || cc.Connector <= 0 || cc.ChargingProfile != types.ChargingProfilePurposeTxDefaultProfile) {
+	if cc.RemoteStartRecovery && !cc.RemoteStart {
+		return nil, errors.New("remotestartrecovery requires remotestart")
+	}
+	if cc.RemoteStartRecovery && (!cc.ForcePowerCtrl || cc.Connector <= 0 || cc.ChargingProfile != types.ChargingProfilePurposeTxDefaultProfile) {
 		return nil, errors.New("remote start recovery requires watt control, a positive connector and TxDefaultProfile")
 	}
 
@@ -117,7 +119,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
 		cc.ForcePowerCtrl, stackLevelZero, profileKindRelative, cc.RemoteStart, noChangeAvailability,
-		cc.ConnectTimeout, recoverRemoteStart)
+		cc.ConnectTimeout, cc.RemoteStartRecovery)
 	if err != nil {
 		return c, err
 	}

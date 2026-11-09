@@ -2,6 +2,7 @@ package ocpp
 
 import (
 	"context"
+	"errors"
 	"math"
 	"sync"
 	"time"
@@ -15,6 +16,7 @@ const (
 	profileStartSettle  = 7 * time.Second
 	profileStartPoll    = 2 * time.Second
 	profileStartTimeout = 20 * time.Second
+	profileStartRetries = 1
 )
 
 // profileRemoteStart tracks the last acknowledged watt profile for an opted-in
@@ -29,6 +31,9 @@ type profileRemoteStart struct {
 	limit    float64
 	accepted time.Time
 	sequence uint64
+
+	stoppedTxn     int
+	disconnectedAt time.Time // require new evidence before trusting a retained transaction
 }
 
 func (p *profileRemoteStart) clear() {
@@ -111,6 +116,7 @@ func (conn *Connector) waitForStartProfile(ctx context.Context, cancel context.C
 	timer := time.NewTimer(time.Until(accepted.Add(profileStartSettle)))
 	defer timer.Stop()
 
+	retries := profileStartRetries
 	for {
 		select {
 		case <-ctx.Done():
@@ -126,8 +132,14 @@ func (conn *Connector) waitForStartProfile(ctx context.Context, cancel context.C
 		if !conn.cp.Connected() {
 			return
 		}
-		if confirmed, ok := conn.confirmStartProfile(ctx, limit); ok && conn.dispatchProfileStart(ctx, sequence, limit, confirmed) {
-			return
+		if confirmed, ok := conn.confirmStartProfile(ctx, limit); ok {
+			attempted, retry := conn.dispatchProfileStart(ctx, sequence, limit, confirmed)
+			if attempted {
+				if !retry || retries == 0 {
+					return
+				}
+				retries--
+			}
 		}
 		timer.Reset(profileStartPoll)
 	}
@@ -155,28 +167,62 @@ func (conn *Connector) confirmStartProfile(ctx context.Context, limit float64) (
 	}
 }
 
-func (conn *Connector) dispatchProfileStart(ctx context.Context, sequence uint64, limit, confirmed float64) bool {
+func (conn *Connector) dispatchProfileStart(ctx context.Context, sequence uint64, limit, confirmed float64) (attempted, retry bool) {
+	response := make(chan error, 1)
+	valid, paused, err := conn.enqueueProfileStart(ctx, sequence, response)
+	if !valid {
+		return false, false
+	}
+	if err != nil {
+		conn.log.WARN.Printf("queue RemoteStartTransaction: %v", err)
+		return true, true // nothing was queued
+	}
+
+	conn.log.DEBUG.Printf("OCPP charging profile confirmed: %.0f W (requested %.0f W)", confirmed, limit)
+	if err = wait(nil, response); err == nil {
+		return true, false
+	}
+	conn.log.WARN.Printf("RemoteStartTransaction after charging profile: %v", err)
+	// A timeout can mean the charger acted on a request whose reply was lost.
+	if !errors.Is(err, errRemoteStartRejected) {
+		return true, false
+	}
+
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+	p := conn.profileStart
+	if p.sequence != sequence {
+		return true, false
+	}
+	p.armed = true
+	p.paused = paused
+	return true, true
+}
+
+func (conn *Connector) enqueueProfileStart(ctx context.Context, sequence uint64, response chan<- error) (valid, paused bool, err error) {
 	p := conn.profileStart
 	p.requests.Lock()
 	defer p.requests.Unlock()
 
+	// Disconnect takes the charge point lock before resetting the connector.
+	// Keep both states stable through enqueue, then release the locks before
+	// waiting for the charger, which can send transaction events before its reply.
+	conn.cp.mu.RLock()
+	defer conn.cp.mu.RUnlock()
 	conn.mu.Lock()
-	proceed := ctx.Err() == nil && p.sequence == sequence && p.armed && conn.isWaitingForAuth() &&
-		conn.status.ErrorCode == core.NoError
-	if proceed {
+	defer conn.mu.Unlock()
+	if !conn.cp.connected || ctx.Err() != nil || p.sequence != sequence || !p.armed ||
+		!conn.isWaitingForAuth() || conn.status.ErrorCode != core.NoError {
+		return false, false, nil
+	}
+
+	paused = p.paused
+	err = conn.cp.enqueueRemoteStart(conn.id, conn.remoteIdTag, response)
+	if err == nil {
 		p.armed = false
 		p.paused = false
 	}
-	conn.mu.Unlock()
-	if !proceed || !conn.cp.Connected() {
-		return false
-	}
-
-	conn.log.DEBUG.Printf("OCPP charging profile confirmed: %.0f W (requested %.0f W)", confirmed, limit)
-	if err := conn.RemoteStartTransactionRequest(conn.remoteIdTag); err != nil {
-		conn.log.WARN.Printf("RemoteStartTransaction after charging profile: %v", err)
-	}
-	return true
+	return true, paused, err
 }
 
 func matchesStartSchedule(reply *smartcharging.GetCompositeScheduleConfirmation, connector int, limit float64, requested, now time.Time) bool {

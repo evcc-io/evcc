@@ -16,11 +16,17 @@ type huaweiScheduleHandler struct {
 	*ocppProfileHandler
 	events chan string
 	limits chan func() float64
+	starts chan types.RemoteStartStopStatus
 }
 
 func (h *huaweiScheduleHandler) OnRemoteStartTransaction(req *core.RemoteStartTransactionRequest) (*core.RemoteStartTransactionConfirmation, error) {
 	h.events <- "start"
-	return h.ChargePointHandler.OnRemoteStartTransaction(req)
+	select {
+	case status := <-h.starts:
+		return core.NewRemoteStartTransactionConfirmation(status), nil
+	default:
+		return h.ChargePointHandler.OnRemoteStartTransaction(req)
+	}
 }
 
 func (h *huaweiScheduleHandler) OnGetCompositeSchedule(req *smartcharging.GetCompositeScheduleRequest) (*smartcharging.GetCompositeScheduleConfirmation, error) {
@@ -50,6 +56,7 @@ func (suite *ocppTestSuite) TestHuaweiStartAfterProfile() {
 		ocppProfileHandler: &ocppProfileHandler{profiles: make(chan *smartcharging.SetChargingProfileRequest, 8)},
 		events:             make(chan string, 8),
 		limits:             make(chan func() float64, 8),
+		starts:             make(chan types.RemoteStartStopStatus, 1),
 	}
 	cp.SetCoreHandler(h)
 	cp.SetSmartChargingHandler(h)
@@ -102,11 +109,15 @@ func (suite *ocppTestSuite) TestHuaweiStartAfterProfile() {
 	status(core.ChargePointStatusPreparing)
 	h.limits <- func() float64 { return 0 }
 	h.limits <- func() float64 { return 11000 }
+	h.limits <- func() float64 { return 11000 }
+	h.starts <- types.RemoteStartStopStatusRejected
 	now := time.Now()
 	require.NoError(t, c.MaxCurrent(16))
 	expectProfile(11040)
 	expectEvent("schedule")
 	require.GreaterOrEqual(t, time.Since(now), 7*time.Second)
+	expectEvent("schedule")
+	expectEvent("start")
 	expectEvent("schedule")
 	expectEvent("start")
 	tx := startTransaction()

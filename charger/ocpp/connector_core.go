@@ -88,6 +88,11 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 	if conn.profileStart != nil {
 		if applied {
 			switch request.Status {
+			case core.ChargePointStatusPreparing:
+				if !conn.profileStart.disconnectedAt.IsZero() {
+					conn.clearTransaction("Preparing after reconnect")
+					conn.profileStart.disconnectedAt = time.Time{}
+				}
 			case core.ChargePointStatusAvailable, core.ChargePointStatusUnavailable:
 				if prev == nil || prev.Status != request.Status {
 					conn.profileStart.reset()
@@ -134,16 +139,11 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 	defer conn.mu.Unlock()
 
 	if request.TransactionId != nil && *request.TransactionId > 0 &&
-		conn.txnId == 0 && conn.status != nil &&
+		conn.status != nil &&
 		(conn.status.Status == core.ChargePointStatusCharging ||
 			conn.status.Status == core.ChargePointStatusSuspendedEV ||
 			conn.status.Status == core.ChargePointStatusSuspendedEVSE) {
-		conn.log.DEBUG.Printf("recovered transaction: %d", *request.TransactionId)
-		conn.txnId = *request.TransactionId
-		if conn.profileStart != nil && !conn.profileStart.paused {
-			conn.profileStart.armed = false
-			conn.profileStart.clear()
-		}
+		conn.recoverTransactionFromMeterValues(*request.TransactionId, request.MeterValue)
 	}
 
 	for _, meterValue := range sortByAge(request.MeterValue) {
@@ -182,6 +182,44 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 	return new(core.MeterValuesConfirmation), nil
 }
 
+// recoverTransactionFromMeterValues must be called with Connector.mu held.
+func (conn *Connector) recoverTransactionFromMeterValues(id int, values []types.MeterValue) {
+	p := conn.profileStart
+	if conn.txnId != 0 && (p == nil || p.disconnectedAt.IsZero() || conn.txnId != id) {
+		return
+	}
+	if p != nil {
+		if conn.rebooted || id == p.stoppedTxn || !conn.hasFreshTransactionSample(values) {
+			return
+		}
+		p.disconnectedAt = time.Time{}
+	}
+	if conn.txnId == 0 {
+		conn.log.DEBUG.Printf("recovered transaction: %d", id)
+		conn.txnId = id
+		if p != nil && !p.paused {
+			p.armed = false
+			p.clear()
+		}
+	}
+}
+
+func (conn *Connector) hasFreshTransactionSample(values []types.MeterValue) bool {
+	for _, value := range values {
+		if value.Timestamp == nil || value.Timestamp.Time.Before(conn.meterTimestamp) ||
+			value.Timestamp.Time.Before(conn.profileStart.disconnectedAt) ||
+			conn.clock.Since(value.Timestamp.Time) > max(conn.meterInterval+10*time.Second, Timeout) {
+			continue
+		}
+		for _, sample := range value.SampledValue {
+			if !isBoundaryContext(sample.Context) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
 	txnId := int(conn.cp.cs.txnId.Add(1))
 	conn.startTransaction(txnId, request.IdTag)
@@ -204,6 +242,7 @@ func (conn *Connector) startTransaction(txnId int, idTag string) {
 	conn.txnId = txnId
 	conn.idTag = idTag
 	if conn.profileStart != nil {
+		conn.profileStart.disconnectedAt = time.Time{}
 		conn.profileStart.armed = false
 		conn.profileStart.paused = false
 		conn.profileStart.clear()
@@ -221,6 +260,9 @@ func (conn *Connector) clearTransaction(reason string) {
 	}
 
 	conn.log.DEBUG.Printf("clearing stale transaction %d on %s", conn.txnId, reason)
+	if conn.profileStart != nil {
+		conn.profileStart.stoppedTxn = conn.txnId
+	}
 	conn.txnId = 0
 	conn.idTag = ""
 	conn.assumeMeterStopped()
@@ -307,6 +349,9 @@ func (conn *Connector) OnStopTransaction(request *core.StopTransactionRequest) (
 	}
 	if conn.profileStart != nil && request.TransactionId != conn.txnId {
 		return res, nil
+	}
+	if conn.profileStart != nil {
+		conn.profileStart.stoppedTxn = request.TransactionId
 	}
 
 	conn.txnId = 0
