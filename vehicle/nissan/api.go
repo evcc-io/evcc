@@ -79,12 +79,6 @@ func (v *API) BatteryStatus(vin, version, canGen string) (StatusResponse, error)
 		if version == "v2" && res.Timestamp != nil {
 			res.Updated = time.Now()
 		}
-
-		// Micra reports chargingStatus, Ariya chargeStatus
-		if version == "v3" && res.ChargingStatus == nil {
-			cs := res.ChargeStatus
-			res.ChargingStatus = &cs
-		}
 	}
 
 	return res, err

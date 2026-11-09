@@ -95,7 +95,7 @@ func TestBatteryStatusV1NoTimestampYieldsZero(t *testing.T) {
 	assert.True(t, res.Attributes.Updated.IsZero(), "v1 without lastUpdateTime should leave Updated zero")
 }
 
-// TestBatteryStatusV3 checks v3 honors lastUpdateTime and falls back from chargingStatus to chargeStatus.
+// TestBatteryStatusV3 checks v3 honors lastUpdateTime and keeps chargeStatus separate from chargingStatus.
 func TestBatteryStatusV3(t *testing.T) {
 	past2h := time.Now().Add(-2 * time.Hour).UTC().Truncate(time.Second)
 
@@ -109,6 +109,6 @@ func TestBatteryStatusV3(t *testing.T) {
 	res, err = newTestAPI(`{"batteryLevel":80,"chargeStatus":1}`).BatteryStatus("VIN", "v3", "2")
 	require.NoError(t, err)
 	assert.True(t, res.Updated.IsZero())
-	require.NotNil(t, res.ChargingStatus)
-	assert.Equal(t, float32(1), *res.ChargingStatus)
+	assert.Nil(t, res.ChargingStatus)
+	assert.Equal(t, float32(1), res.ChargeStatus)
 }
