@@ -210,7 +210,11 @@ func (v *Provider) Soc() (float64, error) {
 	if res, err := v.Float("vehicle.drivetrain.batteryManagement.header"); err == nil {
 		return res, nil
 	}
-	return v.Float("vehicle.powertrain.electric.battery.stateOfCharge.displayed")
+	if res, err := v.Float("vehicle.powertrain.electric.battery.stateOfCharge.displayed"); err == nil {
+		return res, nil
+	}
+	// Neue Klasse, only updated at trip end, see openWB/core@0f92a95
+	return v.Float("vehicle.trip.segment.end.drivetrain.batteryManagement.hvSoc")
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -266,14 +270,20 @@ func (v *Provider) Range() (int64, error) {
 	if res, err := v.Int("vehicle.drivetrain.electricEngine.kombiRemainingElectricRange"); err == nil {
 		return res, nil
 	}
-	return v.Int("vehicle.drivetrain.lastRemainingRange")
+	if res, err := v.Int("vehicle.drivetrain.lastRemainingRange"); err == nil {
+		return res, nil
+	}
+	return v.Int("vehicle.drivetrain.electricEngine.remainingElectricRange")
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
 
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
-	return v.Float("vehicle.vehicle.travelledDistance")
+	if res, err := v.Float("vehicle.vehicle.travelledDistance"); err == nil {
+		return res, nil
+	}
+	return v.Float("vehicle.trip.segment.end.travelledDistance")
 }
 
 var _ api.SocLimiter = (*Provider)(nil)
