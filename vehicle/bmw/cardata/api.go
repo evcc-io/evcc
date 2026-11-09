@@ -26,16 +26,19 @@ var requiredKeys = []string{
 	"vehicle.drivetrain.electricEngine.charging.status",
 	"vehicle.drivetrain.electricEngine.charging.timeRemaining",
 	"vehicle.drivetrain.electricEngine.kombiRemainingElectricRange",
+	"vehicle.drivetrain.electricEngine.remainingElectricRange",
 	"vehicle.drivetrain.lastRemainingRange",
 	"vehicle.powertrain.electric.battery.stateOfCharge.displayed",
 	"vehicle.powertrain.electric.battery.stateOfCharge.target",
+	"vehicle.trip.segment.end.drivetrain.batteryManagement.hvSoc",
+	"vehicle.trip.segment.end.travelledDistance",
 	"vehicle.vehicle.preConditioning.activity",
 	"vehicle.vehicle.travelledDistance",
 }
 
 const (
 	containerName   = "evcc.io"
-	requiredVersion = "v6"
+	requiredVersion = "v7"
 )
 
 type API struct {
