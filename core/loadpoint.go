@@ -2672,7 +2672,7 @@ NO_DIM:
 	// A stalled optimizer has no suggestion and releases the planner again.
 	suggestion := lp.activeSuggestion()
 	if suggestion != nil {
-		plannerActive = lp.planDeadlineCritical()
+		plannerActive = lp.planDeadlineCritical() || lp.optimizerPlanGap()
 	}
 
 	// a plan goal above the session limits is the optimizer's to reach, like the planner's slot is below
