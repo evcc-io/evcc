@@ -60,8 +60,16 @@ params:
       de: Wert von PW_CONTROL_SECRET. Für Batteriesteuerung nötig, weglassen für reinen Lesezugriff.
   - preset: battery-params
 render: |
+  {{- define "pypowerwall-http" }}
+  source: http
+  uri: {{ .uri }}
+  insecure: {{ .insecure }}
+  cache: {{ .cache }}
+  {{- end }}
   {{- $base := printf "%s://%s:%s" .schema .host .port -}}
   {{- $api := printf "%s/api" $base -}}
+  {{- $aggregates := printf "%s/meters/aggregates" $api -}}
+  {{- $freq := printf "%s/freq" $base -}}
   {{- $meter := .usage -}}
   {{- if eq .usage "grid" -}}
     {{- $meter = "site" -}}
@@ -73,82 +81,76 @@ render: |
   {{- if eq .usage "pv" -}}
     {{- $energyField = "energy_exported" -}}
   {{- end -}}
-  {{- if or (lt (int .minsoc) 0) (gt (int .minsoc) 100) -}}
-    {{- fail "minsoc must be between 0 and 100" -}}
-  {{- end -}}
-  {{- if or (lt (int .maxsoc) 0) (gt (int .maxsoc) 100) -}}
-    {{- fail "maxsoc must be between 0 and 100" -}}
-  {{- end -}}
   type: custom
   power:
-    source: http
-    uri: {{ $api }}/meters/aggregates
-    insecure: {{ .insecure }}
-    cache: {{ .cache }}
+    {{- include "pypowerwall-http" (dict
+      "uri" $aggregates
+      "insecure" .insecure
+      "cache" .cache) | nindent 2 }}
     jq: .{{ $meter }}.instant_power
   energy:
-    source: http
-    uri: {{ $api }}/meters/aggregates
-    insecure: {{ .insecure }}
-    cache: {{ .cache }}
+    {{- include "pypowerwall-http" (dict
+      "uri" $aggregates
+      "insecure" .insecure
+      "cache" .cache) | nindent 2 }}
     jq: .{{ $meter }}.{{ $energyField }} / 1000
   {{- if ne .usage "pv" }}
   returnenergy:
-    source: http
-    uri: {{ $api }}/meters/aggregates
-    insecure: {{ .insecure }}
-    cache: {{ .cache }}
+    {{- include "pypowerwall-http" (dict
+      "uri" $aggregates
+      "insecure" .insecure
+      "cache" .cache) | nindent 2 }}
     jq: .{{ $meter }}.energy_exported / 1000
   {{- end }}
   {{- if eq .usage "grid" }}
   currents:
-    - source: http
-      uri: {{ $api }}/meters/aggregates
-      insecure: {{ .insecure }}
-      cache: {{ .cache }}
+    - {{ include "pypowerwall-http" (dict
+        "uri" $aggregates
+        "insecure" .insecure
+        "cache" .cache) | nindent 4 }}
       jq: .site.i_a_current
-    - source: http
-      uri: {{ $api }}/meters/aggregates
-      insecure: {{ .insecure }}
-      cache: {{ .cache }}
+    - {{ include "pypowerwall-http" (dict
+        "uri" $aggregates
+        "insecure" .insecure
+        "cache" .cache) | nindent 4 }}
       jq: .site.i_b_current
-    - source: http
-      uri: {{ $api }}/meters/aggregates
-      insecure: {{ .insecure }}
-      cache: {{ .cache }}
+    - {{ include "pypowerwall-http" (dict
+        "uri" $aggregates
+        "insecure" .insecure
+        "cache" .cache) | nindent 4 }}
       jq: .site.i_c_current
   voltages:
-    - source: http
-      uri: {{ $base }}/freq
-      insecure: {{ .insecure }}
-      cache: {{ .cache }}
+    - {{ include "pypowerwall-http" (dict
+        "uri" $freq
+        "insecure" .insecure
+        "cache" .cache) | nindent 4 }}
       jq: .ISLAND_VL1N_Main
-    - source: http
-      uri: {{ $base }}/freq
-      insecure: {{ .insecure }}
-      cache: {{ .cache }}
+    - {{ include "pypowerwall-http" (dict
+        "uri" $freq
+        "insecure" .insecure
+        "cache" .cache) | nindent 4 }}
       jq: .ISLAND_VL2N_Main
-    - source: http
-      uri: {{ $base }}/freq
-      insecure: {{ .insecure }}
-      cache: {{ .cache }}
+    - {{ include "pypowerwall-http" (dict
+        "uri" $freq
+        "insecure" .insecure
+        "cache" .cache) | nindent 4 }}
       jq: .ISLAND_VL3N_Main
   {{- end }}
   {{- if eq .usage "battery" }}
   soc:
-    source: http
-    uri: {{ $api }}/system_status/soe
-    insecure: {{ .insecure }}
-    cache: {{ .cache }}
+    {{- include "pypowerwall-http" (dict
+      "uri" (printf "%s/system_status/soe" $api)
+      "insecure" .insecure
+      "cache" .cache) | nindent 2 }}
     jq: if .percentage == null then empty else .percentage end
   {{- if .capacity }}
   capacity: {{ .capacity }}
   {{- else }}
   capacity:
-    source: http
-    uri: {{ $api }}/system_status
-    insecure: {{ .insecure }}
-    cache: {{ .cache }}
+    {{- include "pypowerwall-http" (dict
+      "uri" (printf "%s/system_status" $api)
+      "insecure" .insecure
+      "cache" .cache) | nindent 2 }}
     jq: |
       if (.nominal_full_pack_energy // 0) > 0 then
         .nominal_full_pack_energy / 1000
@@ -160,22 +162,22 @@ render: |
   # minsoc key is deliberately a dynamic getter for the actual backup reserve,
   # so evcc's BatterySocLimiter reflects the gateway state.
   minsoc:
-    source: http
-    uri: {{ $api }}/operation
-    insecure: {{ .insecure }}
     # Do not cache the reserve: it changes independently of the server poll.
     # pypowerwall-server may still return its last polled value until the next poll.
-    cache: 0s
+    {{- include "pypowerwall-http" (dict
+      "uri" (printf "%s/operation" $api)
+      "insecure" .insecure
+      "cache" "0s") | nindent 2 }}
     jq: if .backup_reserve_percent == null then empty else .backup_reserve_percent end
   maxsoc: {{ .maxsoc }} # %
   {{- if .maxchargepower }}
   maxchargepower: {{ .maxchargepower }}
   {{- else }}
   maxchargepower:
-    source: http
-    uri: {{ $api }}/system_status
-    insecure: {{ .insecure }}
-    cache: {{ .cache }}
+    {{- include "pypowerwall-http" (dict
+      "uri" (printf "%s/system_status" $api)
+      "insecure" .insecure
+      "cache" .cache) | nindent 2 }}
     jq: |
       ([.max_charge_power, .max_apparent_power, .inverter_nominal_usable_power]
         | map(select(. != null and . > 0))) as $v
@@ -185,17 +187,16 @@ render: |
   maxdischargepower: {{ .maxdischargepower }}
   {{- else }}
   maxdischargepower:
-    source: http
-    uri: {{ $api }}/system_status
-    insecure: {{ .insecure }}
-    cache: {{ .cache }}
+    {{- include "pypowerwall-http" (dict
+      "uri" (printf "%s/system_status" $api)
+      "insecure" .insecure
+      "cache" .cache) | nindent 2 }}
     jq: |
       ([.max_discharge_power, .max_apparent_power, .inverter_nominal_usable_power]
         | map(select(. != null and . > 0))) as $v
       | if ($v | length) > 0 then ($v | min) else empty end
   {{- end }}
   {{- if .controlSecret }}
-  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: switch
     switch:
