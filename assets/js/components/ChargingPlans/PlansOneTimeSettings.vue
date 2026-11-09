@@ -11,7 +11,7 @@
 				class="form-control"
 				required
 				data-testid="one-time-plan-day"
-				@change="update(index, 'day', $event)"
+				@change="update(index)"
 			/>
 		</div>
 		<div class="col-4 col-lg-2 mb-2 mb-lg-0">
@@ -23,7 +23,7 @@
 				class="form-control"
 				required
 				data-testid="one-time-plan-time"
-				@change="update(index, 'time', $event)"
+				@change="update(index)"
 			/>
 		</div>
 		<div class="col-3 mb-2 mb-lg-0">
@@ -33,7 +33,7 @@
 				class="form-select"
 				:aria-label="$t('main.chargingPlan.goal')"
 				data-testid="one-time-plan-soc"
-				@change="update(index, 'soc', $event)"
+				@change="update(index)"
 			>
 				<option v-for="opt in socOptions" :key="opt.value" :value="opt.value">
 					{{ opt.name }}
@@ -120,13 +120,15 @@ export default defineComponent({
 				{ time: date.toISOString(), soc: DEFAULT_TARGET_SOC },
 			]);
 		},
-		update(index: number, field: "day" | "time" | "soc", event: Event): void {
-			const row = { ...this.rows[index]!, [field]: (event.target as HTMLInputElement).value };
-			const date = new Date(`${row.day}T${row.time}`);
+		update(index: number): void {
+			// read all inputs, a rejected value stays in the form until corrected
+			const value = (name: string) =>
+				(document.getElementById(this.formId(index, name)) as HTMLInputElement).value;
+			const date = new Date(`${value("day")}T${value("time")}`);
 			// incomplete or past input keeps the stored plan
 			if (isNaN(date.getTime()) || date < new Date()) return;
 			const plans = [...this.plans];
-			plans[index] = { time: date.toISOString(), soc: Number(row.soc) };
+			plans[index] = { time: date.toISOString(), soc: Number(value("soc")) };
 			this.$emit("updated", plans);
 		},
 		remove(index: number): void {
