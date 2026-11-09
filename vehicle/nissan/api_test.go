@@ -80,7 +80,7 @@ func TestBatteryStatusV2NoTimestampYieldsZero(t *testing.T) {
 // lastUpdateTime directly, so a past timestamp is preserved in Updated.
 func TestBatteryStatusV1HonorsPastTimestamp(t *testing.T) {
 	past2h := time.Now().Add(-2 * time.Hour).UTC().Truncate(time.Second)
-	body := `{"batteryLevel":80,"chargeStatus":1,"lastUpdateTime":"` + past2h.Format(timeFormat) + `"}`
+	body := `{"batteryLevel":80,"chargeStatus":1,"lastUpdateTime":"` + past2h.Format(time.RFC3339) + `"}`
 	res, err := newTestAPI(body).BatteryStatus("VIN", "v1", "")
 	require.NoError(t, err)
 	assert.Equal(t, past2h, res.Attributes.Updated, "v1 should use the reported lastUpdateTime verbatim")

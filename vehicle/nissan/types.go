@@ -120,8 +120,6 @@ type ActionResponse struct {
 	Errors []Error
 }
 
-const timeFormat = "2006-01-02T15:04:05Z"
-
 // Timestamp implements JSON unmarshal
 type Timestamp struct {
 	time.Time
