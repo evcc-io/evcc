@@ -30,11 +30,12 @@ type Measurement struct {
 type Suggestion struct {
 	// Action is the recommended action for the current slot.
 	// home battery: normal|hold|charge|holdcharge; loadpoint/vehicle: charge|stop
-	Action    string  `json:"action"`
-	Charge    float64 `json:"charge"`    // recommended charge power, W
-	Discharge float64 `json:"discharge"` // recommended discharge power, W
-	Grid      float64 `json:"grid"`      // planned site grid flow, positive means import, W
-	Battery   float64 `json:"battery"`   // planned home battery discharge feeding the site, W
+	Action           string  `json:"action"`
+	Charge           float64 `json:"charge"`           // recommended charge power, W
+	Discharge        float64 `json:"discharge"`        // recommended discharge power, W
+	Grid             float64 `json:"grid"`             // planned site grid flow, positive means import, W
+	BatteryDischarge float64 `json:"batteryDischarge"` // planned home battery discharge feeding the site, W
+	BatteryCharge    float64 `json:"batteryCharge"`    // planned home battery charge, W
 	// Actionable indicates the suggestion differs from the current operating mode.
 	Actionable bool `json:"actionable"`
 }

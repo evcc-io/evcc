@@ -1,0 +1,36 @@
+name: Setup Bun
+description: >
+  Installs the Bun version claude-code-action expects, cached and with retries.
+  The action's own setup-bun downloads from GitHub releases on every run with
+  no cache and fails the job on intermittent 504s.
+
+inputs:
+  version:
+    description: Bun version, keep in sync with the pinned claude-code-action
+    default: 1.4.4
+
+outputs:
+  path:
+    description: Path to the bun executable, for path_to_bun_executable
+    value: ${{ runner.temp }}/bun/bun
+
+runs:
+  using: composite
+  steps:
+    - name: Cache Bun
+      id: cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      with:
+        path: ${{ runner.temp }}/bun
+        key: ${{ runner.os }}-bun-${{ inputs.version }}
+
+    - name: Download Bun
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+      run: |
+        curl -fsSL --retry 6 --retry-all-errors --retry-delay 15 -o "$RUNNER_TEMP/bun.zip" \
+          "https://github.com/oven-sh/bun/releases/download/bun-v$VERSION/bun-linux-x64.zip"
+        unzip -q -j -o "$RUNNER_TEMP/bun.zip" -d "$RUNNER_TEMP/bun"
+        "$RUNNER_TEMP/bun/bun" --version

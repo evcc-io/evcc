@@ -71,8 +71,8 @@ type chargingRate struct {
 	RateKph       float64 `json:"chargingRate-kph"`
 }
 
-type climatizerState struct {
-	IsOn bool `json:"isOn"`
+type hvacSummary struct {
+	Status string `json:"status"` // OFF when inactive, see CJNE/pyporscheconnectapi@00de57d
 }
 
 type gpsLocation struct {

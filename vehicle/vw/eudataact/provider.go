@@ -30,14 +30,16 @@ const (
 // timestamp plus portalInterval and a latency margin), so the map is updated as
 // soon as the portal delivers a new dataset.
 type Provider struct {
-	statusG func() ([]point, error)
-	socKeys []string
+	statusG   func() ([]point, error)
+	socKeys   []string
+	limitKeys []string
 }
 
 // NewProvider creates a vehicle api provider
-// socKeys are soc field keys or names tried before the default ones
-func NewProvider(log *util.Logger, client *API, vin string, cache time.Duration, socKeys []string) *Provider {
-	v := &Provider{socKeys: socKeys}
+// socKeys are soc field keys or names tried before the default ones.
+// limitKeys are target soc field keys that replace the name based lookup if present.
+func NewProvider(log *util.Logger, client *API, vin string, cache time.Duration, socKeys, limitKeys []string) *Provider {
+	v := &Provider{socKeys: socKeys, limitKeys: limitKeys}
 	s := sharedStore(client)
 
 	var (
@@ -202,6 +204,11 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 	// the battery care mode threshold only reflects the target soc while care
 	// mode is active; otherwise it is unrelated and must not be used (see #32520)
 	fields := []string{FieldTargetSoc}
+
+	// some cars report settings.target_soc under several keys, only one follows the app
+	if slices.ContainsFunc(data, func(p point) bool { return slices.Contains(v.limitKeys, p.Key) }) {
+		fields = slices.Clone(v.limitKeys)
+	}
 	if p := find(data, FieldBcamActivation); p != nil && p.Value == BcamActivationActivated {
 		fields = append(fields, FieldChargeBcamThreshold)
 	}

@@ -90,6 +90,7 @@ type Loadpoint struct {
 	pushChan chan<- messenger.Event // notifications
 	uiChan   chan<- util.Param      // client push messages
 	lpChan   chan<- *Loadpoint      // update requests
+	lpQueued atomic.Bool            // update request waiting in lpChan
 	log      *util.Logger
 
 	rwMutex      atomic.Int64 // count reentrant RWMutex
@@ -157,7 +158,7 @@ type Loadpoint struct {
 	vehicle        api.Vehicle        // Currently active vehicle
 	defaultVehicle api.Vehicle        // Default vehicle (disables detection)
 	coordinator    coordinator.API
-	socEstimator   *soc.Estimator
+	socEstimator   *soc.Estimator // guarded by vmu
 
 	// charge planning
 	planner          *planner.Planner
@@ -474,10 +475,22 @@ func (lp *Loadpoint) RequestUpdate() {
 
 // requestUpdate requests site to update this loadpoint
 func (lp *Loadpoint) requestUpdate() {
+	// queue each loadpoint at most once so the site queue sized to all loadpoints never overflows
+	if lp.lpChan == nil || !lp.lpQueued.CompareAndSwap(false, true) {
+		return
+	}
+
 	select {
 	case lp.lpChan <- lp: // request loadpoint update
 	default:
+		lp.lpQueued.Store(false)
 	}
+}
+
+// dequeued marks the update request as taken from the site queue so the loadpoint may request again
+func (lp *Loadpoint) dequeued() *Loadpoint {
+	lp.lpQueued.Store(false)
+	return lp
 }
 
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
@@ -531,6 +544,10 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 
 // pushEvent sends push messages to clients
 func (lp *Loadpoint) pushEvent(event string) {
+	// test helper
+	if lp.pushChan == nil {
+		return
+	}
 	lp.pushChan <- messenger.Event{Event: event}
 }
 
@@ -666,6 +683,13 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 
 	// forget startup energy offset
 	lp.chargedAtStartup = 0
+
+	// the previous session's SoC must not satisfy limits on the next connection
+	// skip for integrated devices: their SoC comes from the charger and the "disconnect" is the socket switching off
+	if !lp.chargerHasFeature(api.IntegratedDevice) {
+		lp.vehicleSoc = 0
+		lp.publish(keys.VehicleSoc, 0.0)
+	}
 
 	// remove charger vehicle id and stop potential detection
 	lp.setVehicleIdentifier("")
@@ -2346,9 +2370,8 @@ func (lp *Loadpoint) publishEnergyStats() {
 //   - charger may still provide soc
 //   - no estimator
 func (lp *Loadpoint) publishSocAndRange() {
-	// guard for socEstimator removed by api and keep a local copy in order to avoid race conditions
-	// https://github.com/evcc-io/evcc/issues/16180
-	socEstimator := lp.socEstimator
+	// consistent snapshot, the API may swap vehicle and estimator concurrently
+	v, socEstimator := lp.getVehicleAndSocEstimator()
 
 	socAndLimit := func(typ string, dev any) (*float64, *int64, error) {
 		var socR *float64
@@ -2388,7 +2411,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	socR, limitR, _ := socAndLimit("charger", lp.charger)
 	if socR == nil && (lp.vehicleSocPollAllowed() || lp.chargerHasFeature(api.IntegratedDevice)) {
 		var socErr error
-		socR, limitR, socErr = socAndLimit("vehicle", lp.GetVehicle())
+		socR, limitR, socErr = socAndLimit("vehicle", v)
 
 		// keep polling async vehicle APIs that return ErrMustRetry until a SoC
 		// arrives, instead of waiting for the next interval
@@ -2397,7 +2420,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 
 		// range
-		if vs, ok := api.Cap[api.VehicleRange](lp.GetVehicle()); ok {
+		if vs, ok := api.Cap[api.VehicleRange](v); ok {
 			if rng, err := vs.Range(); err == nil {
 				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 				lp.vehicleRange = rng
@@ -2426,8 +2449,6 @@ func (lp *Loadpoint) publishSocAndRange() {
 		// https://github.com/evcc-io/evcc/issues/13349
 		lp.publish(keys.VehicleLimitSoc, float64(*limitR))
 	}
-
-	v := lp.GetVehicle()
 
 	lp.RLock()
 	planActive := lp.planActive

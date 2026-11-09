@@ -27,6 +27,7 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 			Base:   v.Client.Transport,
 		},
 		Decorator: transport.DecorateHeaders(map[string]string{
+			"User-Agent":  UserAgent,
 			"X-Client-ID": XClientID,
 		}),
 	}

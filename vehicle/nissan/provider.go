@@ -19,7 +19,7 @@ type Provider struct {
 }
 
 // NewProvider returns a kamereon provider
-func NewProvider(api *API, vin, version string, expiry, cache time.Duration) *Provider {
+func NewProvider(api *API, vin, version, canGen string, expiry, cache time.Duration) *Provider {
 	impl := &Provider{
 		action: func(value Action) error {
 			_, err := api.ChargingAction(vin, value)
@@ -30,7 +30,7 @@ func NewProvider(api *API, vin, version string, expiry, cache time.Duration) *Pr
 
 	impl.statusG = util.Cached(func() (StatusResponse, error) {
 		return impl.status(
-			func() (StatusResponse, error) { return api.BatteryStatus(vin, version) },
+			func() (StatusResponse, error) { return api.BatteryStatus(vin, version, canGen) },
 			func() (ActionResponse, error) { return api.RefreshRequest(vin, "RefreshBatteryStatus") },
 		)
 	}, cache)
@@ -107,6 +107,10 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		if res.Attributes.ChargeStatus > 1.0 {
 			status = api.StatusC
 		}
+		// v3: 1 = charging
+		if cs := res.Attributes.ChargingStatus; cs != nil && *cs >= 1 {
+			status = api.StatusC
+		}
 	}
 
 	return status, err
@@ -128,6 +132,11 @@ func (v *Provider) Range() (int64, error) {
 	// v2
 	if res.Attributes.BatteryAutonomy != nil {
 		return int64(*res.Attributes.BatteryAutonomy), nil
+	}
+
+	// v3
+	if res.Attributes.RangeHvacOn != nil {
+		return int64(*res.Attributes.RangeHvacOn), nil
 	}
 
 	return 0, api.ErrNotAvailable

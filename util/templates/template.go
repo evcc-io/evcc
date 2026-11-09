@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -261,6 +262,20 @@ func (t *Template) ParamByName(name string) (int, Param) {
 	return -1, Param{}
 }
 
+// dropStaleKeys removes keys that differ only in case from a param's current spelling
+// if that spelling is present, e.g. keys left over from a renamed param in stored configs
+func (t *Template) dropStaleKeys(other map[string]any) map[string]any {
+	res := maps.Clone(other)
+	for key := range other {
+		if i, p := t.ParamByName(key); i > -1 && key != p.Name {
+			if _, ok := other[p.Name]; ok {
+				delete(res, key)
+			}
+		}
+	}
+	return res
+}
+
 // Usages returns the list of supported usages
 func (t *Template) Usages() []string {
 	if i, p := t.ParamByName(ParamUsage); i > -1 {
@@ -361,7 +376,7 @@ func formatValue(val any) string {
 // RenderResult renders the result template to instantiate the proxy
 func (t *Template) RenderResult(class Class, renderMode int, other map[string]any) ([]byte, map[string]any, error) {
 	values := t.Defaults(renderMode)
-	if err := mergeMaps(other, values); err != nil {
+	if err := mergeMaps(t.dropStaleKeys(other), values); err != nil {
 		return nil, values, err
 	}
 

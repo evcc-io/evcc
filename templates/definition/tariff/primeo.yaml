@@ -1,0 +1,33 @@
+template: primeo
+link: https://www.primeo-energie.ch
+products:
+  - brand: Primeo Energie
+    description:
+      de: NetzDynamisch
+      en: NetzDynamisch
+requirements:
+  evcc: ["skiptest"]
+group: price
+countries: ["CH"]
+params:
+  - preset: tariff-base
+  - name: tariff
+    default: NetzDynamisch
+    choice: ["NetzDynamisch", "NetzDynamischAVAG", "NetzDynamischELAG"]
+    description:
+      de: Tarifname
+      en: Tariff name
+render: |
+  type: custom
+  {{ include "base" . }}
+  forecast:
+    source: http
+    uri: https://tarife.primeo-energie.ch/api/v1/tariffs?tariff_type=integrated&tariff_name={{ .tariff }}&start_timestamp={{ `{{ now.UTC.Format "2006-01-02T15:00:00Z" }}` }}
+    jq: |
+      [.prices[] |
+        {
+          start: .start_timestamp,
+          end: .end_timestamp,
+          value: (.integrated[] | select(.unit == "CHF_kWh") | .value)
+        }
+      ] | tostring
