@@ -1,0 +1,153 @@
+template: solax-hybrid-g3
+products:
+  - brand: Solax
+    description:
+      generic: X3-Hybrid G3
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 19200
+  - name: maxacpower
+  - preset: battery-params
+  - name: maxdischargecurrent
+    default: 25
+    type: int
+    unit: A
+    usages: ["battery"]
+    description:
+      en: Max Discharge Current
+      de: Max Entladestrom
+    help:
+      en: Battery max discharge current in A, written back when leaving hold mode.
+      de: Maximaler Batterieentladestrom in A, wird beim Verlassen des Haltemodus zurückgeschrieben.
+  - name: defaultmode
+    default: 0 # "SelfUse"
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 70 # 0x0046 feedin_power(meter)
+      type: input
+      decode: int32s
+    scale: -1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10 # 0x000A Powerdc1
+        type: input
+        decode: uint16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 11 # 0x000B Powerdc2
+        type: input
+        decode: uint16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 148 # 0x0094 SolarEnergyTotal
+      type: input
+      decode: uint32s
+    scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 22 # 0x0016 Batpower_Charge1
+      type: input
+      decode: int16
+    scale: -1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 28 # 0x001C Battery 1 Capacity
+      type: input
+      decode: uint16
+  # 0x0020 is the battery minimum capacity on G3, manual mode only exists from G4
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .defaultmode }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x001F # SolarChargeUseMode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: {{ mul .maxdischargecurrent 10 }} # 0.1 A, restores the limit after hold
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x0025 # Battery discharge max current
+              type: writesingle
+              decode: uint16
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # self use
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x001F # SolarChargeUseMode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0 # no discharge
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x0025 # Battery discharge max current
+              type: writesingle
+              decode: uint16
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 2 # back up mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x001F # SolarChargeUseMode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: {{ mul .maxdischargecurrent 10 }} # 0.1 A, restores the limit after hold
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x0025 # Battery discharge max current
+              type: writesingle
+              decode: uint16
+  {{- include "battery-params" . }}
+  {{- end }}
