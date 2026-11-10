@@ -107,6 +107,7 @@ func (site *Site) clearSuggestions() {
 
 	site.publishBattery()
 	site.publishSuggestions()
+	site.publishRemainingDurations(nil)
 
 	site.Lock()
 	site.optimizer.suggestionActions = nil

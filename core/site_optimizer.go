@@ -296,9 +296,13 @@ type optimizerSolve struct {
 // setLastOptimizerSolve remembers a solve's inputs for reapplySuggestions
 func (site *Site) setLastOptimizerSolve(solve *optimizerSolve) {
 	site.Lock()
-	defer site.Unlock()
-
 	site.optimizer.lastSolve = solve
+	site.Unlock()
+
+	// a dropped solve no longer reaches the vehicle limit
+	if solve == nil {
+		site.publishRemainingDurations(nil)
+	}
 }
 
 // optimizerUnlock releases optimizer.mu and re-runs for a forced trigger that arrived while it was held
