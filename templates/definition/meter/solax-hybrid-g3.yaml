@@ -2,7 +2,10 @@ template: solax-hybrid-g3
 products:
   - brand: Solax
     description:
-      generic: X3-Hybrid G3
+      generic: Hybrid X1/X3 G3
+  - brand: Qcells
+    description:
+      generic: Q.HOME ESS HYB-G3
 capabilities: ["battery-control"]
 params:
   - name: usage
