@@ -358,4 +358,8 @@ func TestNeueKlasseFallback(t *testing.T) {
 	odo, err := p.Odometer()
 	require.NoError(t, err)
 	require.Equal(t, 45000.0, odo)
+
+	p.rest["vehicle.trip.segment.end.drivetrain.batteryManagement.hvSoc"] = TelematicData{Value: "NaN"}
+	_, err = p.Soc()
+	require.ErrorIs(t, err, api.ErrNotAvailable)
 }
