@@ -21,7 +21,6 @@ params:
     default: 2
   - name: singlephase
     type: bool
-    default: false
     advanced: true
     usages: ["grid"]
     description:
