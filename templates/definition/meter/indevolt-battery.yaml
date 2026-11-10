@@ -106,15 +106,15 @@ render: |
         set:
           source: sequence
           set:
-            # Step 1: Set Mode to Self-consumed Prioritized (47005=1), which is the default for this battery
+            # Step 1: Set Grid Charging Setting to Disable (1143=0). Must precede the mode change: a write while it is pending makes the device drop it
             - source: http
-              uri: "http://{{ .host }}:8080/rpc/Indevolt.SetData?config={\"f\":16,\"t\":47005,\"v\":[1]}"
+              uri: "http://{{ .host }}:8080/rpc/Indevolt.SetData?config={\"f\":16,\"t\":1143,\"v\":[0]}"
               method: POST
               {{- include "auth" . | indent 14 }}
               jq: .result
-            # Step 2: Also Set Grid Charging Setting to Disable (1143=0) to enable normal operation
+            # Step 2: Set Mode to Self-consumed Prioritized (47005=1), which is the default for this battery
             - source: http
-              uri: "http://{{ .host }}:8080/rpc/Indevolt.SetData?config={\"f\":16,\"t\":1143,\"v\":[0]}"
+              uri: "http://{{ .host }}:8080/rpc/Indevolt.SetData?config={\"f\":16,\"t\":47005,\"v\":[1]}"
               method: POST
               {{- include "auth" . | indent 14 }}
               jq: .result
@@ -139,15 +139,15 @@ render: |
         set:
           source: sequence
           set:
-            # Step 1: Set Mode to Real-time control (47005=4), which is necessary to write State Setting (Step 3)
+            # Step 1: Set Grid Charging Setting to Charging (1143=1). Must precede the mode change: a write while it is pending makes the device drop it
             - source: http
-              uri: "http://{{ .host }}:8080/rpc/Indevolt.SetData?config={\"f\":16,\"t\":47005,\"v\":[4]}"
+              uri: "http://{{ .host }}:8080/rpc/Indevolt.SetData?config={\"f\":16,\"t\":1143,\"v\":[1]}"
               method: POST
               {{- include "auth" . | indent 14 }}
               jq: .result
-            # Step 2: Set Grid Charging Setting to Charging (1143=1)
+            # Step 2: Set Mode to Real-time control (47005=4), which is necessary to write State Setting (Step 3)
             - source: http
-              uri: "http://{{ .host }}:8080/rpc/Indevolt.SetData?config={\"f\":16,\"t\":1143,\"v\":[1]}"
+              uri: "http://{{ .host }}:8080/rpc/Indevolt.SetData?config={\"f\":16,\"t\":47005,\"v\":[4]}"
               method: POST
               {{- include "auth" . | indent 14 }}
               jq: .result
