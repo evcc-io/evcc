@@ -137,6 +137,16 @@ func (lp *Loadpoint) fixedDemandModelled() bool {
 	return !(lp.planActive && continues) && !lp.minSocNotReached()
 }
 
+// deviceLoadModelled indicates a switch socket or integrated device without vehicle, which
+// optimizerRequest contains with its measured power like any other household consumer
+func (lp *Loadpoint) deviceLoadModelled() bool {
+	if lp.chargerHasFeature(api.Heating) || lp.GetVehicle() != nil {
+		return false
+	}
+
+	return lp.chargerHasFeature(api.SwitchDevice) || lp.chargerHasFeature(api.IntegratedDevice)
+}
+
 // activeSuggestion returns the optimizer's start/stop decision for the current slot,
 // nil if the optimizer does not control this loadpoint
 func (lp *Loadpoint) activeSuggestion() *types.Suggestion {
