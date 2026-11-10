@@ -19,6 +19,17 @@ params:
   # battery control
   - name: defaultmode
     default: 2
+  - name: singlephaseenergy
+    type: bool
+    default: false
+    advanced: true
+    usages: ["grid"]
+    description:
+      de: Netzenergie nur von Phase 1
+      en: Grid energy from phase 1 only
+    help:
+      de: Für einphasige Geräte, die das Summenregister der Netzenergie nicht unterstützen (Modbus-Fehler 65).
+      en: For single-phase devices that don't support the grid energy sum register (Modbus exception 65).
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -50,30 +61,18 @@ render: |
       scale: 0.01
   {{- end }}
   energy:
-    # per-phase sum, some models don't implement the 0x416D sum register
-    source: calc
-    add:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 0x40FD # Total_FeedInEnergy L1
-        type: holding
-        decode: uint32
-      scale: 0.01
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 0x415D # Total_FeedInEnergy L2
-        type: holding
-        decode: uint32
-      scale: 0.01
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 0x4165 # Total_FeedInEnergy L3
-        type: holding
-        decode: uint32
-      scale: 0.01
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      # the per-phase totals don't net import against export across phases, so they can't replace the sum
+      {{- if .singlephaseenergy }}
+      address: 0x40FD # Total_FeedInEnergy L1
+      {{- else }}
+      address: 0x416D # Sum All Phases Feed-In Total, not implemented by some models
+      {{- end }}
+      type: holding
+      decode: uint32
+    scale: 0.01
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
