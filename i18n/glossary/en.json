@@ -19,6 +19,10 @@
         "description": "Energy flowing out of the home battery.",
         "other": "battery discharge"
     },
+    "capacityTariff": {
+        "description": "Grid fee component billed on the highest power drawn, e.g. the grid import peak of the month (Austria, Belgium).",
+        "other": "capacity tariff"
+    },
     "card": {
         "description": "A boxed UI panel on a page. Not tile or panel.",
         "other": "card"
@@ -146,6 +150,10 @@
     "gridImport": {
         "description": "Energy taken from the grid. Short label import inside a grid card.",
         "other": "grid import"
+    },
+    "gridImportPeak": {
+        "description": "Highest 15-minute average grid import of a calendar month. Capacity tariffs (e.g. Austria, Belgium) bill grid fees on it.",
+        "other": "grid import peak"
     },
     "gridImportTariff": {
         "description": "Tariff for energy taken from the grid.",

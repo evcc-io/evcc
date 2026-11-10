@@ -96,7 +96,7 @@ Principles:
 - **Show what is covered.** Cost and CO2 tiles print the priced energy they explain. Without any tariff data they show a "no price data" state with a link to tariff configuration instead of zeros.
 - **Drop, do not stretch.** Attribution never scales a source up to meet a sink. Unexplained energy disappears from ratios rather than being assigned to grid by default.
 - **Clamp residuals at zero.** "Others" (home minus tracked consumers) is clamped per slot so meter noise or a consumer briefly exceeding home never produces negative consumption.
-- **Slot gaps are tolerated in sums.** A day with 91 to 95 slots after a restart sums fine. Recovered slots (downtime energy written into one slot) are kept in sums but excluded from profile averages, where they would distort the shape.
+- **Slot gaps are tolerated in sums.** A day with 91 to 95 slots after a restart sums fine. Recovered slots (downtime energy written into one slot) are kept in sums but excluded from profile averages, where they would distort the shape, and from the grid import peak, where they would read as a false peak.
 
 Known data quality traits that are accepted, not fixed:
 

@@ -18,7 +18,7 @@
 					class="bar-row"
 					:class="STATE_TEXT[part.bar.state]"
 				>
-					<div class="bar-track d-flex min-w-0 me-2">
+					<div class="bar-track d-flex min-w-0 me-2 position-relative">
 						<div
 							class="bar-fill h-100"
 							:class="[
@@ -27,6 +27,7 @@
 									'bar-striped': part.striped,
 									'bar-export': part.export,
 									'bar-animated': part.striped && part.active,
+									'rounded-end-0': part.peak?.over,
 								},
 							]"
 							:style="{ width: part.bar.fill + '%' }"
@@ -35,14 +36,47 @@
 							v-if="part.bar.state === 'danger'"
 							class="bar-fill bar-excess h-100 flex-grow-1 bg-danger rounded-start-0"
 						/>
+						<div
+							v-if="part.peak?.over"
+							class="bar-fill h-100 bg-warning rounded-start-0"
+							:style="{ width: part.peak.over + '%' }"
+						/>
+						<div
+							v-if="part.peak"
+							class="peak-marker peak-tick"
+							:class="{ 'peak-marker--raised': peakLimitRaised }"
+							:style="{ left: part.peak.tick + '%' }"
+						/>
 					</div>
 					<span class="bar-label text-nowrap text-end tabular">{{ part.label }}</span>
 					<span class="text-nowrap ms-1">{{ part.unit }}</span>
 				</div>
 				<div
+					v-if="depth === 0 && peakLimit"
+					class="full-row d-flex align-items-center gap-1 evcc-gray"
+					data-testid="circuit-peak-limit"
+				>
+					<span class="peak-marker-slot flex-shrink-0">
+						<span
+							class="peak-marker d-block"
+							:class="{ 'peak-marker--raised': peakLimitRaised }"
+						/>
+					</span>
+					<span>
+						{{ $t("config.circuits.peakLimit") }}
+						<button
+							type="button"
+							class="btn btn-link peak-link p-0 border-0 tabular"
+							@click="$emit('peak-limit')"
+						>
+							{{ fmtW(peakLimit, POWER_UNIT.KW) }}
+						</button>
+					</span>
+				</div>
+				<div
 					v-for="lp in loadpointsFor(node)"
 					:key="lp.name"
-					class="loadpoint-row d-flex align-items-center gap-1 min-w-0 evcc-gray"
+					class="full-row d-flex align-items-center gap-1 min-w-0 evcc-gray"
 				>
 					<SubdirectoryArrowRight class="flex-shrink-0" :size="ICON_SIZE.XS" />
 					<span class="text-truncate">{{ lp.title || lp.name }}</span>
@@ -79,6 +113,8 @@ interface LimitPart {
 	striped?: boolean;
 	active?: boolean;
 	export?: boolean;
+	/** Grid peak limit tick and the excess beyond it, in % of the bar. */
+	peak?: { tick: number; over: number };
 }
 
 const STATE_TEXT: Record<LimitState, string> = {
@@ -111,7 +147,12 @@ export default {
 			type: Number,
 			default: 0,
 		},
+		/** Grid peak limit in W, applies to the root circuit. */
+		peakLimit: Number,
+		/** The month's peak raised the limit above the configured value. */
+		peakLimitRaised: Boolean,
 	},
+	emits: ["peak-limit"],
 	data() {
 		return { ICON_SIZE, STATE_TEXT, STATE_FILL };
 	},
@@ -130,6 +171,21 @@ export default {
 			const power = node.power ?? 0;
 			const feedIn = power < 0;
 			const powerLabel = this.fmtW(power, this.POWER_UNIT.KW, false);
+			const peak = this.depth === 0 ? this.peakLimit : undefined;
+			if (peak && !feedIn && (!node.maxPower || power <= node.maxPower)) {
+				// without max power the peak limit scales the bar
+				const scale = node.maxPower || Math.max(peak, power);
+				result.push({
+					unit: "kW",
+					label: `${powerLabel} / ${this.fmtW(node.maxPower || peak, this.POWER_UNIT.KW, false)}`,
+					bar: { state: "normal", fill: (Math.min(power, peak) / scale) * 100 },
+					peak: {
+						tick: (peak / scale) * 100,
+						over: (Math.max(0, power - peak) / scale) * 100,
+					},
+				});
+				return result;
+			}
 			result.push({
 				unit: "kW",
 				label: node.maxPower
@@ -157,8 +213,33 @@ export default {
 .bar-row {
 	display: contents;
 }
-.loadpoint-row {
+.full-row {
 	grid-column: 1 / -1;
+}
+.peak-marker {
+	width: 2px;
+	height: 12px;
+	border-radius: 1px;
+	background-color: var(--evcc-dark-green);
+}
+/* matches the XS arrow icon below, marker sits on its stem */
+.peak-marker-slot {
+	width: 16px;
+	padding-left: 3px;
+}
+.peak-marker--raised {
+	background-color: var(--bs-warning);
+}
+.peak-tick {
+	position: absolute;
+	top: -4px;
+	margin-left: -1px;
+}
+.peak-link {
+	color: inherit;
+	font-size: inherit;
+	line-height: inherit;
+	vertical-align: baseline;
 }
 .bar-track {
 	height: 4px;
