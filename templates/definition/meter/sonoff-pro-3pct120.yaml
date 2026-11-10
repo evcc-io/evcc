@@ -1,71 +1,137 @@
 template: sonoff-pro-3pct120
 products:
-  - brand: Sonoff
+  - brand: SONOFF
     description:
       generic: Pro-3PCT120
+requirements:
+  description:
+    de: Benötigt ein Gerät mit SONOFF RPC API. Das Passwort wird in der Web-Oberfläche des Geräts vergeben.
+    en: Requires a device with SONOFF RPC API. The password is set in the device's web interface.
 params:
   - name: usage
     choice: ["grid", "charge", "pv"]
   - name: host
-    default: 192.168.1.100
-    required: true
   - name: user
     default: admin
-    required: true
   - name: password
-    default: 12345678
-    required: true
+  - name: cache
+    default: 1s
 render: |
+  {{- define "uri" -}}
+  http://{{ .host }}/rpc/EnergyMeter.GetStatus?id=0
+  {{- end }}
   type: custom
-  power: &rpc
+  power:
     source: http
-    uri: http://{{ .host }}/rpc
-    method: POST
-    headers:
-      Content-Type: application/json
+    uri: {{ include "uri" . }}
     auth:
       type: digest
       user: {{ .user }}
       password: {{ .password }}
-    body: '{"id":0,"src":"evcc","method":"EnergyMeter.GetStatus","params":[{}]}'
     jq: .result.status.total_power
-    scale: 1
-    timeout: 10s
+    scale: {{ if eq .usage "pv" }}-1{{ else }}1{{ end }}
+    cache: {{ .cache }}
   energy:
-    <<: *rpc
-    jq: .result.status.total_energy.forward
+    source: http
+    uri: {{ include "uri" . }}
+    auth:
+      type: digest
+      user: {{ .user }}
+      password: {{ .password }}
+    jq: .result.status.total_energy.{{ if eq .usage "pv" }}reverse{{ else }}forward{{ end }}
     scale: 0.001
+    cache: {{ .cache }}
   returnenergy:
-    <<: *rpc
-    jq: .result.status.total_energy.reverse
+    source: http
+    uri: {{ include "uri" . }}
+    auth:
+      type: digest
+      user: {{ .user }}
+      password: {{ .password }}
+    jq: .result.status.total_energy.{{ if eq .usage "pv" }}forward{{ else }}reverse{{ end }}
     scale: 0.001
+    cache: {{ .cache }}
   voltages:
-    - <<: *rpc
+    - source: http
+      uri: {{ include "uri" . }}
+      auth:
+        type: digest
+        user: {{ .user }}
+        password: {{ .password }}
       jq: .result.status.phase_a.voltage
       scale: 0.01
-    - <<: *rpc
+      cache: {{ .cache }}
+    - source: http
+      uri: {{ include "uri" . }}
+      auth:
+        type: digest
+        user: {{ .user }}
+        password: {{ .password }}
       jq: .result.status.phase_b.voltage
       scale: 0.01
-    - <<: *rpc
+      cache: {{ .cache }}
+    - source: http
+      uri: {{ include "uri" . }}
+      auth:
+        type: digest
+        user: {{ .user }}
+        password: {{ .password }}
       jq: .result.status.phase_c.voltage
       scale: 0.01
+      cache: {{ .cache }}
   currents:
-    - <<: *rpc
+    - source: http
+      uri: {{ include "uri" . }}
+      auth:
+        type: digest
+        user: {{ .user }}
+        password: {{ .password }}
       jq: .result.status.phase_a.current
       scale: 0.01
-    - <<: *rpc
+      cache: {{ .cache }}
+    - source: http
+      uri: {{ include "uri" . }}
+      auth:
+        type: digest
+        user: {{ .user }}
+        password: {{ .password }}
       jq: .result.status.phase_b.current
       scale: 0.01
-    - <<: *rpc
+      cache: {{ .cache }}
+    - source: http
+      uri: {{ include "uri" . }}
+      auth:
+        type: digest
+        user: {{ .user }}
+        password: {{ .password }}
       jq: .result.status.phase_c.current
       scale: 0.01
+      cache: {{ .cache }}
   powers:
-    - <<: *rpc
+    - source: http
+      uri: {{ include "uri" . }}
+      auth:
+        type: digest
+        user: {{ .user }}
+        password: {{ .password }}
       jq: .result.status.phase_a.active_power
-      scale: 0.01
-    - <<: *rpc
+      scale: 0.001
+      cache: {{ .cache }}
+    - source: http
+      uri: {{ include "uri" . }}
+      auth:
+        type: digest
+        user: {{ .user }}
+        password: {{ .password }}
       jq: .result.status.phase_b.active_power
-      scale: 0.01
-    - <<: *rpc
+      scale: 0.001
+      cache: {{ .cache }}
+    - source: http
+      uri: {{ include "uri" . }}
+      auth:
+        type: digest
+        user: {{ .user }}
+        password: {{ .password }}
       jq: .result.status.phase_c.active_power
-      scale: 0.01
+      scale: 0.001
+      cache: {{ .cache }}
