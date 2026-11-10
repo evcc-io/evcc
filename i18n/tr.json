@@ -46,7 +46,7 @@
     },
     "combined": "Birleşik",
     "config": {
-      "buffer": "{soc} üzerindeki ev bataryası enerjisi, doldurma noktalarını desteklemek için kullanılabilir ve akıllı modda kapanmayı geciktirebilir. Güneş enerjisiyle doldurmayı otomatik olarak başlat {start}.",
+      "buffer": "{soc} üzerindeki ev bataryası enerjisi, doldurma noktalarını desteklemek için kullanılabilir ve akıllı modda kapanmayı geciktirir. Güneş enerjisiyle doldurmayı otomatik olarak başlatır {start}. Not: “Hep doldur” bu ayarı yok sayar.",
       "bufferNone": "Doldurma noktaları için ev bataryasından enerji kullanılmamaktadır. Desteği etkinleştirmek için {soc} değerinden daha düşük bir değer ayarla.",
       "bufferStart": {
         "above": "batarya doluluk seviyesi {soc} oranının üzerine çıktığında",
@@ -146,11 +146,13 @@
       "template": "Üretici",
       "titleAdd": {
         "charging": "Doldurma Cihazı Ekle",
-        "heating": "Isıtma Cihazı Ekle"
+        "heating": "Isıtma Cihazı Ekle",
+        "switch": "Anahtarlı priz ekle"
       },
       "titleEdit": {
         "charging": "Doldurma Cihazını Düzenle",
-        "heating": "Isıtma Cihazını Düzenle"
+        "heating": "Isıtma Cihazını Düzenle",
+        "switch": "Anahtarlı prizi düzenle"
       },
       "type": {
         "custom": {
@@ -188,10 +190,20 @@
     "circuits": {
       "addMainCircuit": "Ana devre ekle",
       "addSubCircuit": "Alt devre ekle",
+      "assignHere": "Buraya ata",
+      "assignmentFailed": "Atama kaydedilemedi. Lütfen tekrar dene.",
       "description": "Bir devreye bağlı tüm yük noktalarının toplamının, yapılandırılan güç ve akım limitlerini aşmamasını sağlar. Devreler, bir hiyerarşi oluşturacak şekilde iç içe yerleştirilebilir.",
+      "destination": "Devre {title}",
+      "dragHint": "Bir devrenin üzerine sürükle veya seçmek için dokun.",
+      "dropAssign": "Atamak için bırak",
+      "dropRemove": "Devresinden çıkarmak için buraya bırak",
       "legacyWarning": "Yeni devre yapılandırması kullanıma sunuldu! Yeni adım adım kılavuzlu süreci kullanmak için yapılandırmanı buradan sil ve kaydet.",
       "meterDedicated": "Sayaç",
       "meterGrid": "Şebeke",
+      "moveHere": "Buraya taşı",
+      "notAssigned": "Atanmamış",
+      "selectAssign": "{title} atamak için bir devreye dokun.",
+      "selectMove": "{title} taşımak için bir devreye, kaldırmak için havuza dokun.",
       "title": "Yük yönetimi",
       "usableMeters": "Kullanılabilir sayaç referansları"
     },
@@ -230,6 +242,15 @@
       "title": "Şebekeye satış kısıtlaması",
       "titleAdd": "Kısıtlama Cihazı Ekle",
       "titleEdit": "Kısıtlama Cihazını Düzenle"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Doldurma cihazı ekle",
+        "meter": "Sayaç ekle",
+        "switch": "Anahtarlı priz ekle",
+        "tariff": "Tarife ekle"
+      },
+      "noNesting": "İç içe yerleştirme yalnızca bir seviyeye kadar desteklenir. Lütfen başka bir seçenek belirle."
     },
     "deviceValue": {
       "activeClients": "Etkin müşteriler",
@@ -309,8 +330,16 @@
           "returnEnergy": "Boşaltıldı"
         },
         "consumer": {
+          "chargeStatusB": "Bekleme modu",
+          "chargeStatusC": "ısıtıyor",
           "energy": "Tüketildi",
           "returnEnergy": "Üretildi"
+        },
+        "continuous": {
+          "chargeStatusB": "normal",
+          "chargeStatusC": "Güçlendirme",
+          "dimmed": "Kısılmış",
+          "enabled": "Güçlendirilmiş"
         },
         "grid": {
           "energy": "Alınan",
@@ -332,6 +361,7 @@
       "auxMeter": "“Akıllı tüketici”",
       "batteryStorage": "“Batarya”",
       "consumer": "Tüketici",
+      "extMeter": "Ek sayaç",
       "solarSystem": "“Güneş Enerji Sistemi”"
     },
     "editor": {
@@ -537,7 +567,21 @@
           "description": "Son günlerin ortalaması. Günlük tüketimi sabit olan cihazlar için.",
           "label": "Günlük ortalama"
         },
-        "defaultGroup": "Cihazın varsayılan ayarı"
+        "defaultGroup": "Cihazın varsayılan ayarı",
+        "description": "İyileştiricinin geçmiş tüketim verilerine dayanarak talebi nasıl tahmin ettiği.",
+        "label": "Profil",
+        "noTempTariff": "Sıcaklık tahmini gerektirir.",
+        "noTempTariffLink": "Tahmin ekle",
+        "profilesGroup": "Profiller",
+        "temperature": {
+          "description": "Isı pompaları gibi oda ısıtma sistemleri için benzer dış ortam sıcaklıklarındaki geçmiş tüketim verileri.",
+          "label": "Sıcaklık"
+        },
+        "title": "Talep tahmini",
+        "weekday": {
+          "description": "Aynı haftanın gününe ait ortalama. Haftalık düzende çalışan sıcak su veya havuz ısıtıcıları gibi cihazlar için.",
+          "label": "Haftanın günü"
+        }
       },
       "electricalSubtitle": "Emin değilsen elektrikçine sor.",
       "electricalTitle": "Elektrik",
@@ -1131,6 +1175,7 @@
       "template": "Sağlayıcı",
       "title": "Tarifeler ve Tahminler",
       "titleChoice": "Ne eklemek istersin?",
+      "titleSub": "Alt tarife",
       "type": {
         "co2": "CO₂ Yoğunluğu",
         "feedIn": "Şebekeye Satış Fiyatı",
@@ -1591,7 +1636,8 @@
         "continuousCo2Description": "En temiz kesintisiz dilim dizisini seçer.",
         "continuousPriceDescription": "En ucuz kesintisiz dilim dizisini seçer.",
         "disabledDescription": "Dinamik tarife veya CO₂ tahmini gerektirir.",
-        "label": "Optimizasyon"
+        "label": "Optimizasyon",
+        "optimizerDescription": "{optimizer} en ucuz zaman dilimlerini seçer. Birden fazla başlatma ve durdurmaya neden olabilir."
       },
       "planNumber": "Plan {number}",
       "precondition": {
@@ -1662,16 +1708,16 @@
       "avgPrice": "⌀ Fiyat",
       "charged": "Doldu",
       "co2": "⌀ CO₂",
-      "duration": "Süre",
+      "duration": "Doldurma süresi",
       "emission": "Salım",
       "fallbackName": "Doldurma noktası",
-      "finished": "“Doldurma sonu”",
+      "finished": "Doldurma sonu",
       "last24hEnergy": "Son 24 saat",
       "last7dEnergy": "Son 7 gün",
       "phasesMismatch": "Yapılandırılandan daha fazla aşama etkin. Aşama yapılandırmasını kontrol et.",
       "power": "Güç",
       "price": "Maliyet",
-      "remaining": "Kalan zaman",
+      "remaining": "Kalan süre",
       "remoteDisabledHard": "{source}: kapatıldı",
       "remoteDisabledSoft": "{source}: uyumlu güneş enerjili doldurma kapatıldı",
       "solar": "Güneş Enerjisi",

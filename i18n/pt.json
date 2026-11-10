@@ -20,7 +20,7 @@
       "submit": "Continuar"
     },
     "confirmLogout": "Tem a certeza de que deseja desligar {title}?",
-    "connect": "Ligar",
+    "connect": "ligar",
     "disconnect": "Desligar",
     "loggedOut": "Sessão encerrada com sucesso",
     "logoutFailed": "Não foi possível sair da conta",
@@ -146,11 +146,13 @@
       "template": "Fabricante",
       "titleAdd": {
         "charging": "Adicionar Carregador",
-        "heating": "Adicionar dispositivo de aquecimento"
+        "heating": "Adicionar dispositivo de aquecimento",
+        "switch": "Adicionar tomada comutável"
       },
       "titleEdit": {
         "charging": "Editar Carregador",
-        "heating": "Editar dispositivo de aquecimento"
+        "heating": "Editar dispositivo de aquecimento",
+        "switch": "Editar Tomada comutável"
       },
       "type": {
         "custom": {
@@ -188,10 +190,20 @@
     "circuits": {
       "addMainCircuit": "Adicionar circuito raiz",
       "addSubCircuit": "Adicionar circuito secundário",
+      "assignHere": "Atribuir aqui",
+      "assignmentFailed": "Não foi possível salvar a tarefa. Tente novamente.",
       "description": "Garante que a soma de todos os pontos de carregamento e aquecedores conectados a um circuito não exceda os limites de potência e corrente configurados. Os circuitos podem ser aninhados para criar uma hierarquia.",
+      "destination": "Circuito {title}",
+      "dragHint": "Arraste para um circuito ou toque para selecionar.",
+      "dropAssign": "Largar para atribuir",
+      "dropRemove": "Solte aqui para remover do circuito.",
       "legacyWarning": "Nova configuração de circuitos disponível! Remova e salve sua configuração aqui para usar o novo processo guiado. Será depois necessário reiniciar o sistema.",
       "meterDedicated": "Contador",
       "meterGrid": "Rede",
+      "moveHere": "Mover para cá",
+      "notAssigned": "Não atribuído",
+      "selectAssign": "Toque em um circuito para atribuir {title}.",
+      "selectMove": "Toque no circuito para mover {title}, ou na piscina para removê-lo.",
       "title": "Gestão de Cargas",
       "usableMeters": "Referências dos contadores utilizáveis"
     },
@@ -230,6 +242,15 @@
       "title": "Restrição",
       "titleAdd": "Adicionar dispositivo de restrição",
       "titleEdit": "Editar dispositivo de restrição"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Adicionar carregado",
+        "meter": "Adicionar medidor",
+        "switch": "Adicionar tomada comutável",
+        "tariff": "Adicionar tarifa"
+      },
+      "noNesting": "O encaixe é limitado a um nível. Por favor, escolha outra opção."
     },
     "deviceValue": {
       "activeClients": "Clientes ativos",
@@ -309,8 +330,16 @@
           "returnEnergy": "Descarregado"
         },
         "consumer": {
+          "chargeStatusB": "à espera",
+          "chargeStatusC": "aquecimento",
           "energy": "Consumido",
           "returnEnergy": "Produzido"
+        },
+        "continuous": {
+          "chargeStatusB": "normal",
+          "chargeStatusC": "boost",
+          "dimmed": "Escurecido",
+          "enabled": "Boost"
         },
         "grid": {
           "energy": "Importado",
@@ -332,6 +361,7 @@
       "auxMeter": "Consumidor autorregulado",
       "batteryStorage": "Bateria doméstica",
       "consumer": "Consumidor",
+      "extMeter": "Contador adicional",
       "solarSystem": "Sistema fotovoltaico"
     },
     "editor": {
@@ -496,7 +526,7 @@
         "charging": "Adicionar Carregador",
         "heating": "Adicionar dispositivo de aquecimento"
       },
-      "addMeter": "Adicionar contador de energia dedicado",
+      "addMeter": "Adicionar contador",
       "advancedConfig": "Configuração avançada",
       "cancel": "Cancelar",
       "chargerError": {
@@ -532,10 +562,31 @@
       "defaultModeKeep": "manter tal como está",
       "defaultModeLabel": "Modo predefinido",
       "delete": "Apagar",
+      "demandPredictor": {
+        "daily": {
+          "description": "Média dos últimos dias. Para dispositivos com o mesmo padrão diário.",
+          "label": "Média diária"
+        },
+        "defaultGroup": "Padrão do dispositivo",
+        "description": "Como o otimizador prevê a demanda com base no consumo passado.",
+        "label": "Perfil",
+        "noTempTariff": "Requer uma previsão de temperatura.",
+        "noTempTariffLink": "Adicionar previsão",
+        "profilesGroup": "Perfis",
+        "temperature": {
+          "description": "Consumo anterior em temperaturas externas semelhantes. Para aquecimento de ambientes, como bombas de calor.",
+          "label": "Temperatura"
+        },
+        "title": "Previsão de demanda",
+        "weekday": {
+          "description": "Média do mesmo dia da semana. Para aparelhos com programação semanal, como aquecedores de água ou de piscina.",
+          "label": "Dia da semana"
+        }
+      },
       "electricalSubtitle": "Em caso de dúvida, pergunte ao seu eletricista.",
       "electricalTitle": "Sistema elétrico",
       "energyMeterHelp": "Contador adicional se o Carregador não tiver um integrado.",
-      "energyMeterLabel": "Contador de energia",
+      "energyMeterLabel": "Contador de energia dedicado",
       "estimateLabel": "Interpolar o nível de carga entre actualizações da API",
       "maxCurrentHelp": "Deve ser superior à Corrente mínima.",
       "maxCurrentLabel": "Corrente máxima",
@@ -1124,6 +1175,7 @@
       "template": "Fornecedor",
       "title": "Tarifas e previsões",
       "titleChoice": "O que deseja adicionar?",
+      "titleSub": "Subtarifa",
       "type": {
         "co2": "Intensidade de CO₂",
         "feedIn": "Preço de exportação da rede",
@@ -1589,7 +1641,8 @@
         "continuousCo2Description": "Seleciona a série de intervalos mais limpa e não interrompida.",
         "continuousPriceDescription": "Seleciona a série de intervalos de tempo não interrompidos mais económica.",
         "disabledDescription": "Requer uma tarifa dinâmica ou uma previsão de CO₂.",
-        "label": "Otimização"
+        "label": "Otimização",
+        "optimizerDescription": "O {optimizer} seleciona os slots mais baratos. Isso pode resultar em múltiplos inícios e paradas."
       },
       "planNumber": "Plano {number}",
       "precondition": {

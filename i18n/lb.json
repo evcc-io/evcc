@@ -146,11 +146,13 @@
       "template": "Hiersteller",
       "titleAdd": {
         "charging": "Wallbox derbäi fügen",
-        "heating": "Heizungsgerät derbäi fügen"
+        "heating": "Heizungsgerät derbäi fügen",
+        "switch": "Schaltbar Steckdous derbäisetzen"
       },
       "titleEdit": {
         "charging": "Wallbox beaarbechten",
-        "heating": "Heizungsgerät beaarbechten"
+        "heating": "Heizungsgerät beaarbechten",
+        "switch": "Schaltbar Steckdous upassen"
       },
       "type": {
         "custom": {
@@ -188,10 +190,20 @@
     "circuits": {
       "addMainCircuit": "Haaptstroumkrees derbäi fügen",
       "addSubCircuit": "Ënnergeuerdnete Stroumkrees derbäi fügen",
+      "assignHere": "Hei zouweisen",
+      "assignmentFailed": "D'Aufgab konnt net gespäichert ginn. Probéiert et nach eng Kéier.",
       "description": "Sécherstellen, datt d'Zomm vun all den Luedstatiounen an Heizungen déi mam Circuit verbonne sinn net déi konfiguréiert Leeschtung an aktuell Grenzen iwwerschreit. Circuiten kënnen agenist ginn fir eng Hierarchie opzebauen.",
+      "destination": "Elektresch Schaltung {title}",
+      "dragHint": "Zitt op e Circuit oder tippt fir ze wielen.",
+      "dropAssign": "Ofsetzen fir zouzeweisen",
+      "dropRemove": "Hei fale loossen fir en aus sengem Circuit ze läschen.",
       "legacyWarning": "Nei Konfiguratioun vun de Stroumkreesser verfügbar! Läsch a späicher hei deng Konfiguratioun, fir de neie geleetene Prozess ze benotzen. Duerno ass e Neistart néideg.",
       "meterDedicated": "Zieler",
       "meterGrid": "Netz",
+      "moveHere": "Heihinner réckelen",
+      "notAssigned": "Net zougewisen",
+      "selectAssign": "Tippt op e Circuit fir {title} zouzeweisen.",
+      "selectMove": "Tippt op e Circuit fir {title} ze réckelen, oder op de Pool fir en ze läschen.",
       "title": "Management vun der Belaaschtung",
       "usableMeters": "Verwendbar Zielerreferenzen"
     },
@@ -230,6 +242,15 @@
       "title": "Limitatioun",
       "titleAdd": "Aspeisebegrenzung derbäi fügen",
       "titleEdit": "Aspeisebegrenzung beaarbechten"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Opluedgerät derbäisetzen",
+        "meter": "Zieler derbäisetzen",
+        "switch": "Schaltbar Steckdous derbäi setzen",
+        "tariff": "Tarif derbäisetzen"
+      },
+      "noNesting": "D'Anisten ass op een Niveau limitéiert. Wielt wgl. eng aner Optioun."
     },
     "deviceValue": {
       "activeClients": "Aktiv Clienten",
@@ -309,8 +330,16 @@
           "returnEnergy": "Entlueden"
         },
         "consumer": {
+          "chargeStatusB": "Standby",
+          "chargeStatusC": "Heizung",
           "energy": "Verbraucht",
           "returnEnergy": "Productioun"
+        },
+        "continuous": {
+          "chargeStatusB": "normal",
+          "chargeStatusC": "boost",
+          "dimmed": "Gedämmt",
+          "enabled": "Boosted"
         },
         "grid": {
           "energy": "Importéiert",
@@ -332,6 +361,7 @@
       "auxMeter": "Selbstreguléierende Verbraucher",
       "batteryStorage": "Hausbatterie",
       "consumer": "Verbraucher",
+      "extMeter": "Zousätzlech Zieler",
       "solarSystem": "PV Anlag"
     },
     "editor": {
@@ -496,7 +526,7 @@
         "charging": "Wallbox derbäi fügen",
         "heating": "Heizungsgerät derbäi fügen"
       },
-      "addMeter": "Zousätzlechen Energiezieler derbäi fügen",
+      "addMeter": "Zieler derbäi fügen",
       "advancedConfig": "Erweidert Konfiguratioun",
       "cancel": "Ofbriechen",
       "chargerError": {
@@ -532,10 +562,31 @@
       "defaultModeKeep": "bäibehalen",
       "defaultModeLabel": "Standard-Modus",
       "delete": "Läschen",
+      "demandPredictor": {
+        "daily": {
+          "description": "Duerchschnëtt vun de leschten Deeg. Fir Apparater mam selwechte Muster all Dag.",
+          "label": "Dagesduerchschnëtt"
+        },
+        "defaultGroup": "Gerätestandard",
+        "description": "Wéi den Optimisator opgrond vum Verbrauch an der Vergaangenheet Viraussoe maache kann.",
+        "label": "Profil",
+        "noTempTariff": "Braucht eng Temperaturprognose.",
+        "noTempTariffLink": "Prognose derbäisetzen",
+        "profilesGroup": "Profiller",
+        "temperature": {
+          "description": "De Verbrauch an der Vergaangenheet bei ähnlechen Outdoortemperaturen. Fir Raumheizung, wéi z.B. Wärmepompelen.",
+          "label": "Temperatur"
+        },
+        "title": "Nofroprognose",
+        "weekday": {
+          "description": "Duerchschnëtt vum selwechten Dag an der Woch. Fir Apparater mat engem wöchentleche Plang, wéi Waasser- oder Poolheizungen.",
+          "label": "Wochendag"
+        }
+      },
       "electricalSubtitle": "Wann onsécher sidd, da léiwer den Elektriker froen.",
       "electricalTitle": "Elektresch",
       "energyMeterHelp": "Zousätzlechen Zieler, falls d'Wallbox keen integréierten huet.",
-      "energyMeterLabel": "Energiezieler",
+      "energyMeterLabel": "Dédiéierten Energiezieler",
       "estimateLabel": "Luedstand zwëschen API-Updates interpoléieren",
       "maxCurrentHelp": "Muss méi grouss wéi de minimale Stroum sinn.",
       "maxCurrentLabel": "Maximale Stroum",
@@ -1124,6 +1175,7 @@
       "template": "Fournisseur",
       "title": "Tariffer & Previsiounen",
       "titleChoice": "Wat wëlls du derbäisetzen?",
+      "titleSub": "Ënnertarif",
       "type": {
         "co2": "CO₂-Intensitéit",
         "feedIn": "Verkafspräis un d'Netz",
@@ -1589,7 +1641,8 @@
         "continuousCo2Description": "Wielt déi propperest onënnerbrach Serie vu Slots.",
         "continuousPriceDescription": "Wielt déi bëllegst onënnerbrach Serie vu Slots aus.",
         "disabledDescription": "Erfuerdert en dynameschen Tarif oder eng CO₂-Prognos.",
-        "label": "Optimisatioun"
+        "label": "Optimisatioun",
+        "optimizerDescription": "Den {optimizer} wielt déi bëllegst Slots aus. Kann zu méi Starten an Arrête féieren."
       },
       "planNumber": "Planifkatioun {number}",
       "precondition": {
