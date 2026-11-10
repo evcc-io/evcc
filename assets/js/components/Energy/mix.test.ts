@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vite-plus/test";
-import { entityFlows, sinkCost, sinkPrice, sourceBreakdown } from "./mix";
+import { entityFlows, mergeSources, sinkCost, sinkPrice, sourceBreakdown } from "./mix";
 import { OTHERS, type EntityFlows } from "./types";
 
 describe("sourceBreakdown", () => {
@@ -72,5 +72,30 @@ describe("sinkPrice", () => {
     ] as const;
     expect(sinkPrice([...flows], "home")).toBeCloseTo(0.2);
     expect(sinkPrice([...flows], "loadpoint")).toBeUndefined();
+  });
+});
+
+describe("mergeSources", () => {
+  test("adds energy and cost, shares and prices follow", () => {
+    const rows = mergeSources([
+      [
+        { from: "pv", share: 75, energy: 3, cost: 0.3, price: 0.1 },
+        { from: "grid", share: 25, energy: 1, cost: 0.3, price: 0.3 },
+      ],
+      [
+        { from: "pv", share: 0, energy: 0 },
+        { from: "grid", share: 100, energy: 4, cost: 1.3, price: 0.325 },
+      ],
+    ]);
+    expect(rows).toEqual([
+      { from: "pv", share: 37.5, energy: 3, cost: expect.closeTo(0.3), price: expect.closeTo(0.1) },
+      {
+        from: "grid",
+        share: 62.5,
+        energy: 5,
+        cost: expect.closeTo(1.6),
+        price: expect.closeTo(0.32),
+      },
+    ]);
   });
 });

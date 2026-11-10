@@ -53,9 +53,9 @@ test("device colors: autoassign, override, persistence", async ({ page }) => {
   // non-collision: Carport must shift off BLUE to the first free entry (CYAN)
   await expectLegendColor(page, "Carport", CYAN);
 
-  // ---------- Step 3 — Energy page, same colors on the loadpoint cards ----------
+  // ---------- Step 3 — Energy page, same colors in the charging card ----------
   await page.goto("/#/energy?period=day&year=2026&month=5&day=15");
-  await expect(page.getByTestId("energy-loadpoint")).toHaveCount(2);
+  await expect(page.getByTestId("energy-charging")).toBeVisible();
   await expectLegendColor(page, "Garage", BLUE);
   await expectLegendColor(page, "Carport", CYAN);
 
