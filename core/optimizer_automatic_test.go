@@ -654,7 +654,7 @@ func TestOptimizerPlanActive(t *testing.T) {
 		lp.planLocked = PlanLock{Time: planTime, Soc: 60, Id: 1}
 		lp.setSuggestion(&types.Suggestion{Action: actionCharge})
 		lp.setOptimizerPlan(optimizerPlan{
-			rates:  api.Rates{slot(0), slot(4), slot(14)},
+			rates:  api.Rates{slot(0), slot(4), slot(15)},
 			energy: []float64{920, 920, 920},
 		})
 	}
@@ -697,6 +697,87 @@ func TestOptimizerPlanActive(t *testing.T) {
 	clck.Add(time.Hour)
 	_, _, optimized = lp.EffectivePlan(planTime, time.Hour, api.PlanStrategy{})
 	assert.False(t, optimized)
+}
+
+type tariffSite struct {
+	*mockSite
+	tariff api.Tariff
+}
+
+func (s *tariffSite) GetTariff(api.TariffUsage) api.Tariff {
+	return s.tariff
+}
+
+// TestOptimizerPlanGap covers a running plan with a gap before the optimizer's next slot:
+// up to one slot is bridged instead of stopping and restarting the vehicle, unless the
+// optimizer skipped the slot for its price
+func TestOptimizerPlanGap(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		next   int       // index of the second plan slot
+		prices []float64 // per slot, the last one repeats
+		bridge bool
+	}{
+		{"equal price", 2, []float64{0.2}, true},
+		{"cheaper gap", 2, []float64{0.2, 0.1, 0.2}, true},
+		{"pricier gap", 2, []float64{0.2, 0.3, 0.2}, false},
+		{"two slots", 3, []float64{0.2}, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			clck := clock.NewMock()
+			now := clck.Now()
+
+			slot := func(i int) api.Rate {
+				return api.Rate{Start: now.Add(time.Duration(i) * tariff.SlotDuration), End: now.Add(time.Duration(i+1) * tariff.SlotDuration)}
+			}
+
+			var rates api.Rates
+			for i := range 16 {
+				r := slot(i)
+				r.Value = tc.prices[min(i, len(tc.prices)-1)]
+				rates = append(rates, r)
+			}
+
+			tf := api.NewMockTariff(ctrl)
+			tf.EXPECT().Rates().Return(rates, nil).AnyTimes()
+
+			lp := &Loadpoint{
+				log:        util.NewLogger("foo"),
+				clock:      clck,
+				charger:    api.NewMockCharger(ctrl),
+				pushChan:   make(chan messenger.Event, 1),
+				vehicle:    modelledVehicle(ctrl),
+				site:       &tariffSite{&mockSite{automatic: true}, tf},
+				status:     api.StatusC,
+				phases:     1,
+				minCurrent: minA,
+				maxCurrent: maxA,
+				vehicleSoc: 50,
+			}
+
+			// plan far enough away not to be deadline critical
+			planTime := now.Add(4 * time.Hour)
+			optimize := func() {
+				lp.planLocked = PlanLock{Time: planTime, Soc: 60, Id: 1}
+				lp.setSuggestion(&types.Suggestion{Action: actionCharge})
+				lp.setOptimizerPlan(optimizerPlan{
+					rates:  api.Rates{slot(0), slot(tc.next)},
+					energy: []float64{920, 920},
+				})
+			}
+
+			optimize()
+			assert.True(t, lp.plannerActive(), "first slot")
+			assert.False(t, lp.optimizerPlanGap(), "inside a slot")
+
+			// just after the first slot, like the solve at the slot boundary
+			clck.Add(tariff.SlotDuration + 18*time.Second)
+			optimize()
+			assert.Equal(t, tc.bridge, lp.plannerActive())
+			assert.Equal(t, tc.bridge, lp.optimizerPlanGap())
+		})
+	}
 }
 
 // TestOptimizerPlanAboveLimit covers a plan goal above the session soc limit (#34868):

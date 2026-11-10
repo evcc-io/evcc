@@ -24,13 +24,23 @@ type Provider struct {
 	chargeAction   func(action string) (kamereon.ChargeAction, error)
 }
 
+// errNotAvailable is needed where the api package is shadowed
+var errNotAvailable = api.ErrNotAvailable
+
 // NewProvider creates a vehicle api provider
 func NewProvider(api *kamereon.API, accountID, vin, model string, wakeupMode string, cache time.Duration) *Provider {
 	chargeAction := func(action string) (kamereon.ChargeAction, error) {
-		// Dacia Spring rejects charging-start, see hacf-fr/renault-api#502
-		if model == "XBG1VE" {
+		switch model {
+		case "XBG1VE":
+			// Dacia Spring rejects charging-start, see hacf-fr/renault-api#502
 			pauseResume := map[string]string{kamereon.ActionStart: kamereon.ActionResume, kamereon.ActionStop: kamereon.ActionPause}
 			return api.PauseResume(accountID, pauseResume[action], vin)
+		case "X071VE":
+			// Twingo III starts via kcm and cannot stop, see hacf-fr/renault-api@116c9d0
+			if action != kamereon.ActionStart {
+				return kamereon.ChargeAction{}, errNotAvailable
+			}
+			return api.KcmChargeStart(accountID, vin)
 		}
 		return api.ChargeAction(accountID, action, vin)
 	}
@@ -93,19 +103,25 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
-
 	res, err := v.batteryStatusG()
-	if err == nil {
-		if res.PlugStatus == 1 {
-			status = api.StatusB
-		}
-		if res.ChargingStatus >= 1.0 {
-			status = api.StatusC
-		}
+	if err != nil {
+		return api.StatusNone, err
 	}
 
-	return status, err
+	// Twingo E-Tech reports neither, see hacf-fr/renault-api#2386
+	if res.PlugStatus == nil && res.ChargingStatus == nil {
+		return api.StatusNone, api.ErrNotAvailable
+	}
+
+	status := api.StatusA // disconnected
+	if res.PlugStatus != nil && *res.PlugStatus == 1 {
+		status = api.StatusB
+	}
+	if res.ChargingStatus != nil && *res.ChargingStatus >= 1.0 {
+		status = api.StatusC
+	}
+
+	return status, nil
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
