@@ -23,6 +23,15 @@ params:
     help:
       de: Der Wechselrichter hat einen dritten PV-Eingang (MPPT3)
       en: The inverter has a third PV input (MPPT3)
+  - name: gen6
+    type: bool
+    usages: ["pv"]
+    description:
+      de: Gen6 Wechselrichter
+      en: Gen6 inverter
+    help:
+      de: X1-VAST und X3-HYB G4 PRO. Die Skalierung der PV-Energie hängt bei diesen Geräten von der Modbus-Protokollversion ab.
+      en: X1-VAST and X3-HYB G4 PRO. On these devices the pv energy scale depends on the Modbus protocol version.
   - name: maxacpower
   - name: storageunit
   - preset: battery-params
@@ -110,6 +119,32 @@ render: |
         decode: uint16
   {{- end }}
   energy:
+  {{- if .gen6 }}
+    source: go
+    script: |
+      scale := 0.1
+      if VERSION < 100 { scale = 0.001 } // older Gen6 protocol counts Wh
+      float64(RAW) * scale
+    in:
+    - name: VERSION
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 0x0082 # Modbus protocol version
+          type: holding
+          decode: uint16
+    - name: RAW
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 148 # 0x0094 SolarEnergyTotal
+          type: input
+          decode: uint32s
+  {{- else }}
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -117,6 +152,7 @@ render: |
       type: input
       decode: uint32s
     scale: 0.1
+  {{- end }}
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
