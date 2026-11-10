@@ -66,13 +66,13 @@ export default defineComponent({
 			return points;
 		},
 		yAxisConfig(): Record<string, unknown> {
-			const values = [
-				...this.slots.map((s) => s.value),
-				...this.feedinSlots.map((s) => s.value),
-			];
+			const gridValues = this.slots.map((s) => s.value);
+			const values = [...gridValues, ...this.feedinSlots.map((s) => s.value)];
 			const dataMin = Math.min(...values);
 			const dataMax = Math.max(...values);
-			const rangeMin = this.zoom ? dataMin : Math.min(0, dataMin);
+			// feed-in is usually far below import prices and would cancel the zoom
+			const zoomMin = gridValues.length ? Math.min(...gridValues) : dataMin;
+			const rangeMin = this.zoom ? zoomMin : Math.min(0, dataMin);
 			const rangeMax = Math.max(0, dataMax);
 			const range = rangeMax - rangeMin || 1;
 			const rawInterval = range / 5;
