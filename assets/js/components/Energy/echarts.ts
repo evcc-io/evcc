@@ -17,7 +17,8 @@ export * from "../Forecast/echarts";
 // same insets on every energy plot so they line up across cards, wide enough for the
 // value axis on the right and the panel axis or side labels on the left
 export function energyGrid() {
-  return { ...forecastGrid(), left: 36, right: 36 };
+  // room for the descenders of month names below the axis
+  return { ...forecastGrid(), left: 36, right: 36, bottom: 20 };
 }
 
 // boundary axis positions between the last day of a week and the first of the next

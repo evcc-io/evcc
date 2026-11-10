@@ -92,3 +92,11 @@ export function panelGrids(main: { bottom: number; left: number; right: number }
     },
   ];
 }
+
+// a price band earns its panel only when it moves. An effective price carries float
+// noise, a flat tariff must stay flat
+export function priceVaries(band?: { lo: (number | null)[]; hi: (number | null)[] }): boolean {
+  if (!band) return false;
+  const known = (v: (number | null)[]) => v.filter((x): x is number => x !== null);
+  return Math.max(...known(band.hi)) - Math.min(...known(band.lo)) > 1e-4;
+}

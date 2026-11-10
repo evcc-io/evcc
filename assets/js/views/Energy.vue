@@ -3,7 +3,7 @@
 		<TopHeader :title="`${$t('energy.title')} 🧪`" />
 		<div class="row flex-grow-1 d-flex">
 			<main class="col-12 d-flex flex-column">
-				<PeriodHeader>
+				<PeriodHeader ref="header">
 					<template #period>
 						<PeriodSelector
 							:period="effectivePeriod"
@@ -30,246 +30,231 @@
 						<span class="text-muted">{{ $t("energy.empty") }}</span>
 					</div>
 				</div>
-				<div v-else class="card-row mb-4">
-					<div class="row gx-0 gx-sm-4 gy-4">
-						<div class="col-12 col-lg-9 col-xxl-10">
-							<Card
-								:title="overviewTitle"
-								edge-to-edge
-								class="h-100"
-								data-testid="energy-flow"
-								data-anchor
-							>
-								<template #actions>
-									<IconSelectGroup>
-										<IconSelectItem
-											v-for="option in overviewOptions"
-											:key="option.value"
-											:active="overview === option.value"
-											:title="option.name"
-											@click="settings.energyOverview = option.value"
-										>
-											<component :is="option.icon" />
-										</IconSelectItem>
-									</IconSelectGroup>
-								</template>
-								<!-- the sankey fills the height of the bar chart with its legend, so toggling does not jump -->
-								<div v-if="overview === OVERVIEW_VIEW.FLOW" class="fill-stack">
-									<div class="invisible">
-										<div :style="{ height: `${OVERVIEW_HEIGHT}px` }"></div>
-										<LegendList class="mt-4" :legends="stackLegends" />
-									</div>
-									<FlowChart :flows="flows" :loadpoint-labels="loadpointLabels" />
-								</div>
-								<template v-else>
-									<GroupChart
-										group="meter"
-										:color="colors.grid || ''"
-										:series="stackSeries"
-										:stack-through="overview === OVERVIEW_VIEW.USAGE"
-										:period="effectivePeriod"
-										:from="from"
-										:to="to"
-										single-value
-										:height="OVERVIEW_HEIGHT"
-										stacked
-										auto-range
-										:upper-label="$t('energy.flow.pv')"
-										:lower-label="$t('energy.flow.withdrawal')"
-										@slot="drillDown"
-									/>
-									<LegendList class="mt-4" :legends="stackLegends" />
-								</template>
-							</Card>
+				<template v-else>
+					<Summary
+						v-if="hasSummary"
+						:has-battery="batteries.length > 0"
+						:has-price-tariff="hasPriceTariff"
+						:has-co2-tariff="hasCo2Tariff"
+						:autarky="autarky"
+						:production="pvTotal"
+						:consumption="consumptionTotal"
+						:grid-import="gridImport"
+						:flows="flows"
+						:cost="flow?.cost"
+						:co2="flow?.co2"
+						:currency="currency"
+					/>
+					<Card
+						:title="overviewTitle"
+						edge-to-edge
+						class="box-pull-out mb-4"
+						data-testid="energy-flow"
+						data-anchor
+					>
+						<template #actions>
+							<IconSelectGroup>
+								<IconSelectItem
+									v-for="option in overviewOptions"
+									:key="option.value"
+									:active="overview === option.value"
+									:title="option.name"
+									@click="settings.energyOverview = option.value"
+								>
+									<component :is="option.icon" />
+								</IconSelectItem>
+							</IconSelectGroup>
+						</template>
+						<!-- the sankey fills the height of the bar chart with its legend, so toggling does not jump -->
+						<div v-if="overview === OVERVIEW_VIEW.FLOW" class="fill-stack">
+							<div class="invisible">
+								<div :style="{ height: `${OVERVIEW_HEIGHT}px` }"></div>
+								<LegendList class="mt-4" :legends="stackLegends" />
+							</div>
+							<FlowChart :flows="flows" :loadpoint-labels="loadpointLabels" />
 						</div>
-						<div class="col-12 col-lg-3 col-xxl-2">
-							<CostStats
-								:autarky="autarky"
-								:flows="flows"
-								:cost="flow?.cost"
-								:co2="flow?.co2"
-								:currency="currency"
+						<template v-else>
+							<GroupChart
+								group="meter"
+								:color="colors.grid || ''"
+								:series="stackSeries"
+								:stack-through="overview === OVERVIEW_VIEW.USAGE"
+								:period="effectivePeriod"
+								:from="from"
+								:to="to"
+								single-value
+								:height="OVERVIEW_HEIGHT"
+								stacked
+								auto-range
+								:upper-label="$t('energy.flow.pv')"
+								:lower-label="$t('energy.flow.withdrawal')"
+								@slot="drillDown"
 							/>
-						</div>
-					</div>
-				</div>
-				<div v-if="hasGrid" class="card-row mb-4">
-					<div class="row gx-0 gx-sm-4 gy-4">
-						<div class="col-12 col-lg-9 col-xxl-10">
-							<Card
-								:title="$t('energy.grid.title')"
-								edge-to-edge
-								class="h-100"
-								data-testid="energy-grid"
-								data-anchor
-							>
-								<template #icon>
-									<shopicon-regular-powersupply></shopicon-regular-powersupply>
-								</template>
-								<GroupChart
-									group="grid"
-									:color="colors.grid || ''"
-									:series="gridSeries"
-									:prices="chartPrices"
-									:currency="currency"
-									:height="200"
-									:period="effectivePeriod"
-									:from="from"
-									:to="to"
-									@slot="drillDown"
-								/>
-								<LegendList class="mt-4" :legends="gridLegends" />
-							</Card>
-						</div>
-						<div class="col-12 col-lg-3 col-xxl-2">
-							<GridStats :cost="flow?.cost" :currency="currency" />
-						</div>
-					</div>
-				</div>
-				<div v-if="pvSeries.length" class="card-row mb-4">
-					<div class="row gx-0 gx-sm-4 gy-4">
-						<div class="col-12 col-lg-9 col-xxl-10">
-							<Card
-								:title="$t('energy.production.title')"
-								:subtitle="fmtKWh(pvTotal)"
-								edge-to-edge
-								class="h-100"
-								data-testid="energy-production"
-								data-anchor
-							>
-								<template #icon>
-									<shopicon-regular-sun></shopicon-regular-sun>
-								</template>
-								<GroupChart
-									group="pv"
-									:color="groupColor('pv')"
-									:series="pvSeries"
-									:overlay="forecastSeries"
-									:overlay-color="groupColor('forecast')"
-									:overlay-label="$t('energy.group.forecast')"
-									:show-overlay="hasForecast && focusedPv === null"
-									:height="260"
-									:focused-entity="focusedPv"
-									:period="effectivePeriod"
-									:from="from"
-									:to="to"
-									@slot="drillDown"
-								/>
-								<LegendList
-									v-if="productionLegends.length"
-									class="mt-4"
-									:legends="productionLegends"
-									@focus="toggleFocusPv"
-								/>
-							</Card>
-						</div>
-						<div class="col-12 col-lg-3 col-xxl-2">
-							<StatCards :stats="productionStats">
-								<template #selfConsumed>
-									<MixBar :segments="selfSegments" :tooltip="selfRows" />
-									<div class="small text-muted">{{ exportedLabel }}</div>
-								</template>
-								<template v-if="tomorrowForecast !== undefined" #remaining>
-									<Stat
-										class="mt-3"
-										:number="tomorrowForecast"
-										:format="(v: number) => fmtKWh(v)"
-										:sub="$t('energy.production.expectedTomorrow')"
-									/>
-								</template>
-								<template v-if="forecastDeviation" #forecast>
-									<ForecastDeviation
-										class="mt-3"
-										:spans="forecastDeviation"
-										:color="groupColor('forecast')"
-										:labels="bucketLabels"
-										:power="isDay"
-									/>
-								</template>
-							</StatCards>
-						</div>
-					</div>
-				</div>
+							<LegendList class="mt-4" :legends="stackLegends" />
+						</template>
+					</Card>
+				</template>
 				<Card
-					v-for="(bat, i) in batteries"
-					:key="bat.title"
+					v-if="hasGrid"
+					:title="$t('energy.grid.title')"
 					edge-to-edge
 					class="box-pull-out mb-4"
-					data-testid="energy-battery"
+					data-testid="energy-grid"
 					data-anchor
 				>
-					<EntityDetail
-						:title="bat.title"
-						:color="batteryColor(i)"
-						:series="{ ...bat, paletteIndex: i }"
+					<template #icon>
+						<shopicon-regular-powersupply></shopicon-regular-powersupply>
+					</template>
+					<template #stats>
+						<GridStats
+							:import-energy="gridImport"
+							:export-energy="gridExport"
+							:cost="flow?.cost"
+							:currency="currency"
+							:direction="gridDaily ? gridDirection : undefined"
+							@update:direction="setGridDirection"
+						/>
+					</template>
+					<template v-if="!isDay" #actions>
+						<EntityChartToggle :chart="entityChart" @update:chart="setEntityChart" />
+					</template>
+					<PatternChart
+						v-if="gridDaily"
+						:series="gridDaily"
+						:color="gridDailyColor"
 						:period="effectivePeriod"
 						:from="from"
 						:to="to"
-						:chart-toggle="false"
-						@drill="drillDown"
-					>
-						<template #icon>
-							<shopicon-regular-batterythreequarters></shopicon-regular-batterythreequarters>
-						</template>
-						<template #aside>
-							<div class="col-6 col-lg-12">
-								<Stat
-									:label="$t('energy.battery.charged')"
-									:number="sumEnergy(bat)"
-									:format="(v: number) => fmtKWh(v)"
-									compact
-								/>
-							</div>
-							<div class="col-6 col-lg-12">
-								<Stat
-									:label="$t('energy.battery.discharged')"
-									align="end lg-start"
-									:number="sumEnergy(bat, 'returnEnergy')"
-									:format="(v: number) => fmtKWh(v)"
-									compact
-								/>
-							</div>
-						</template>
-					</EntityDetail>
+						:height="gridDailyHeight"
+					/>
+					<GroupChart
+						v-else
+						group="grid"
+						:color="colors.grid || ''"
+						:series="gridSeries"
+						:prices="chartPrices"
+						:currency="currency"
+						:height="200"
+						:period="effectivePeriod"
+						:from="from"
+						:to="to"
+						@slot="drillDown"
+					/>
+					<LegendList class="mt-4" :legends="gridLegends" @focus="focusGridLegend" />
 				</Card>
 				<Card
-					v-for="lp in loadpoints"
-					:key="lp.title"
+					v-if="pvSeries.length"
+					:title="productionTitle"
+					:parent="productionParent"
+					:parent-static="!focusedPvSeries"
 					edge-to-edge
 					class="box-pull-out mb-4"
-					data-testid="energy-loadpoint"
+					data-testid="energy-production"
 					data-anchor
+					@parent="clearFocusPv"
 				>
-					<EntityDetail
-						pickable
-						sink="loadpoint"
-						:title="lp.title"
-						:color="loadpointColors[lp.title] || ''"
-						:device-color="deviceColors[lp.title] || ''"
-						:flows="loadpointFlows(lp.title)"
-						:series="lp"
-						:daily="loadpointDaily(lp.title) ?? undefined"
+					<template #icon>
+						<shopicon-regular-sun></shopicon-regular-sun>
+					</template>
+					<template #stats>
+						<StatRow
+							:stats="productionStats"
+							inline
+							:selected="forecastSelected"
+							@select="toggleForecastGap"
+						/>
+					</template>
+					<template v-if="!isDay" #actions>
+						<EntityChartToggle :chart="entityChart" @update:chart="setEntityChart" />
+					</template>
+					<PatternChart
+						v-if="pvDaily"
+						:series="pvDaily"
+						:color="groupColor('pv')"
 						:period="effectivePeriod"
 						:from="from"
 						:to="to"
-						:currency="currency"
-						:chart="entityChart"
-						@update:chart="settings.energyEntityChart = $event"
-						@drill="drillDown"
-						:flow-sources="flowSources"
-						@sources="showSources"
+						:height="260"
+					/>
+					<GroupChart
+						v-else
+						group="pv"
+						:color="groupColor('pv')"
+						:series="pvSeries"
+						:overlay="forecastSeries"
+						:overlay-color="groupColor('forecast')"
+						:overlay-label="$t('energy.group.forecast')"
+						:show-overlay="hasForecast && focusedPv === null"
+						:overlay-gap="showForecastGap"
+						:height="260"
+						:focused-entity="focusedPv"
+						:period="effectivePeriod"
+						:from="from"
+						:to="to"
+						@slot="drillDown"
+					/>
+					<LegendList
+						v-if="productionLegends.length"
+						class="mt-4"
+						:legends="productionLegends"
+						@focus="toggleFocusPv"
 					/>
 				</Card>
+				<EntityGroup
+					v-if="batteries.length"
+					group="battery"
+					:title="$t('energy.group.battery')"
+					:entities="batteries"
+					:colors="batteryColors"
+					:daily="batteryDaily"
+					:period="effectivePeriod"
+					:from="from"
+					:to="to"
+					:chart="entityChart"
+					:direction="batteryDirection"
+					data-testid="energy-battery"
+					@update:chart="setEntityChart"
+					@update:direction="setBatteryDirection"
+					@drill="drillDown"
+				>
+					<template #icon>
+						<shopicon-regular-batterythreequarters></shopicon-regular-batterythreequarters>
+					</template>
+				</EntityGroup>
+				<EntityGroup
+					v-for="lps in loadpointGroups"
+					:key="lps.key"
+					group="loadpoint"
+					:title="lps.title"
+					:entities="lps.entities"
+					:colors="loadpointColors"
+					:device-colors="deviceColors"
+					:flows="flow?.entities"
+					:flow-sources="flowSources"
+					:daily="loadpointDaily"
+					:period="effectivePeriod"
+					:from="from"
+					:to="to"
+					:currency="currency"
+					:chart="entityChart"
+					:data-testid="`energy-${lps.key}`"
+					@update:chart="setEntityChart"
+					@drill="drillDown"
+					@sources="showSources"
+					@sources-change="refreshSources"
+				>
+					<template #icon><VehicleIcon :name="lps.icon" /></template>
+				</EntityGroup>
 				<Card
 					v-if="consumers.length"
-					:title="$t('energy.consumers.title')"
-					:subtitle="consumersSubtitle"
+					:title="consumer ? '' : $t('energy.group.consumer')"
 					edge-to-edge
 					class="box-pull-out mb-4"
 					data-testid="energy-consumers"
-					data-anchor
+					data-anchor="consumers"
 				>
-					<template #actions>
+					<template #icon><shopicon-regular-home></shopicon-regular-home></template>
+					<template v-if="!consumer" #actions>
 						<IconSelectGroup>
 							<IconSelectItem
 								v-for="option in consumerViewOptions"
@@ -282,6 +267,12 @@
 							</IconSelectItem>
 						</IconSelectGroup>
 					</template>
+					<template v-if="!consumer" #stats>
+						<StatRow :stats="consumersStats" inline />
+					</template>
+					<template v-if="!consumer" #ring>
+						<SourcesButton :rows="homeSources" @click="showHomeSources" />
+					</template>
 					<ConsumerTreemap
 						:consumers="consumers"
 						:others="others"
@@ -291,7 +282,36 @@
 						:selected="consumer"
 						@select="selectConsumer"
 					>
-						<template v-if="consumerView === CONSUMER_VIEW.RIVER" #chart>
+						<template v-if="consumer" #chart>
+							<EntityDetail
+								data-testid="consumer-detail"
+								:parent="$t('energy.group.consumer')"
+								:pickable="consumerPickable"
+								:device-color="deviceColors[consumerTitle] || ''"
+								sink="home"
+								:flows="consumerFlows"
+								:title="consumerTitle"
+								:color="consumerColor"
+								:series="consumerSeries ?? undefined"
+								:period="effectivePeriod"
+								:from="from"
+								:to="to"
+								:currency="currency"
+								:daily="consumerDaily ?? undefined"
+								:chart="entityChart"
+								:flow-sources="flowSources"
+								@update:chart="setEntityChart"
+								@drill="drillDown"
+								@sources="showSources"
+								@sources-change="refreshSources"
+								@close="selectConsumer(null)"
+							>
+								<template #icon>
+									<shopicon-regular-home></shopicon-regular-home>
+								</template>
+							</EntityDetail>
+						</template>
+						<template v-else-if="consumerView === CONSUMER_VIEW.RIVER" #chart>
 							<ConsumerRiver
 								:layers="riverLayers"
 								:selected="consumer"
@@ -302,32 +322,6 @@
 							/>
 						</template>
 					</ConsumerTreemap>
-					<template v-if="consumer">
-						<hr class="my-4" />
-						<EntityDetail
-							data-anchor
-							data-testid="consumer-detail"
-							closable
-							:pickable="consumerPickable"
-							:device-color="deviceColors[consumerTitle] || ''"
-							sink="home"
-							:flows="consumerFlows"
-							:title="consumerTitle"
-							:color="consumerColor"
-							:series="consumerSeries ?? undefined"
-							:period="effectivePeriod"
-							:from="from"
-							:to="to"
-							:currency="currency"
-							:daily="consumerDaily ?? undefined"
-							:chart="entityChart"
-							@update:chart="settings.energyEntityChart = $event"
-							@drill="drillDown"
-							:flow-sources="flowSources"
-							@sources="showSources"
-							@close="selectConsumer(null)"
-						/>
-					</template>
 				</Card>
 				<!-- no individual consumers: the house consumption alone, nothing to break down -->
 				<Card
@@ -335,7 +329,7 @@
 					edge-to-edge
 					class="box-pull-out mb-4"
 					data-testid="energy-consumers"
-					data-anchor
+					data-anchor="consumers"
 				>
 					<EntityDetail
 						sink="home"
@@ -350,9 +344,10 @@
 						:daily="consumerDaily ?? undefined"
 						:chart="entityChart"
 						:flow-sources="flowSources"
-						@update:chart="settings.energyEntityChart = $event"
+						@update:chart="setEntityChart"
 						@drill="drillDown"
 						@sources="showSources"
+						@sources-change="refreshSources"
 					/>
 				</Card>
 				<MetersCard
@@ -386,6 +381,9 @@ import Header from "../components/Top/Header.vue";
 import Card from "../components/Helper/Card.vue";
 import "@h2d2/shopicons/es/regular/powersupply";
 import "@h2d2/shopicons/es/regular/sun";
+import "@h2d2/shopicons/es/regular/home";
+import VehicleIcon from "../components/VehicleIcon";
+import SourcesButton from "../components/Energy/SourcesButton.vue";
 import "@h2d2/shopicons/es/regular/batterythreequarters";
 import DownloadButton from "../components/Helper/DownloadButton.vue";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
@@ -402,18 +400,24 @@ import SankeyIcon from "../components/MaterialIcon/Sankey.vue";
 import PlugIcon from "../components/MaterialIcon/Plug.vue";
 import { groupColor } from "../components/Energy/groups";
 import { adjustedSolar } from "@/utils/forecast";
-import type { TooltipRow } from "../components/Forecast/echarts";
-import StatCards from "../components/Energy/StatCards.vue";
-import Stat from "../components/Energy/Stat.vue";
-import MixBar from "../components/Energy/MixBar.vue";
+import StatRow from "../components/Energy/StatRow.vue";
 import GridStats from "../components/Energy/GridStats.vue";
-import ForecastDeviation from "../components/Energy/ForecastDeviation.vue";
-import CostStats from "../components/Energy/CostStats.vue";
+import Summary from "../components/Energy/Summary.vue";
 import ConsumerTreemap from "../components/Energy/ConsumerTreemap.vue";
 import EntityDetail from "../components/Energy/EntityDetail.vue";
-import { entityFlows, sinkPrice, sumEnergy, type SourceRow } from "../components/Energy/mix";
+import EntityGroup from "../components/Energy/EntityGroup.vue";
+import PatternChart from "../components/Energy/PatternChart.vue";
+import { PANEL_EXTRA, priceVaries } from "../components/Energy/subPanel";
+import EntityChartToggle from "../components/Energy/EntityChartToggle.vue";
+import {
+	entityFlows,
+	sinkPrice,
+	sourceBreakdown,
+	sumEnergy,
+	sumSeries,
+	type SourceRow,
+} from "../components/Energy/mix";
 import { usageSplit } from "../components/Energy/usage";
-import { SLOT_MS } from "../components/Energy/slots";
 import MetersCard from "../components/Energy/MetersCard.vue";
 import SourcesModal from "../components/Energy/SourcesModal.vue";
 import ConsumerRiver, { type RiverLayer } from "../components/Energy/ConsumerRiver.vue";
@@ -432,6 +436,7 @@ import {
 	type FlowSource,
 	type StatItem,
 	type PriceBand,
+	type SourcesDetail,
 	type PriceOverlay,
 	type TariffSlot,
 	OTHERS,
@@ -476,14 +481,16 @@ export default defineComponent({
 		LegendList,
 		IconSelectGroup,
 		IconSelectItem,
-		StatCards,
-		Stat,
-		MixBar,
+		StatRow,
 		GridStats,
-		ForecastDeviation,
-		CostStats,
+		Summary,
 		ConsumerTreemap,
 		EntityDetail,
+		EntityGroup,
+		VehicleIcon,
+		SourcesButton,
+		PatternChart,
+		EntityChartToggle,
 		MetersCard,
 		SourcesModal,
 		ConsumerRiver,
@@ -510,8 +517,13 @@ export default defineComponent({
 			CONSUMER_VIEW,
 			OVERVIEW_HEIGHT,
 			loading: false,
+			// the scroll position is held until this time, see holdScroll
+			holdUntil: 0,
+			holdStop: null as (() => void) | null,
 			focusedPv: null as number | null,
-			sourcesDetail: { title: "", rows: [] as SourceRow[] },
+			// the forecast picked: the chart shows where it missed the production
+			forecastGap: false,
+			sourcesDetail: { owner: "", title: "", rows: [] } as SourcesDetail,
 			startDate: new Date(2020, 0, 1),
 		};
 	},
@@ -556,15 +568,35 @@ export default defineComponent({
 			return (this.entityTotals["home"] || []).reduce((acc, e) => acc + e.energy, 0);
 		},
 		// metered energy at the average price of the tariff-covered slots, same basis as the legend
-		consumersSubtitle(): string {
-			const parts = [this.fmtKWh(this.homeEnergy)];
+		consumersStats(): StatItem[] {
+			const list: StatItem[] = [
+				{
+					key: "energy",
+					label: this.$t("energy.stat.energy"),
+					number: this.homeEnergy,
+					format: (v: number) => this.fmtKWh(v),
+				},
+			];
 			if (this.homePrice !== undefined) {
-				parts.push(
-					this.fmtMoneyWithSymbol(this.homeEnergy * this.homePrice, this.currency)
-				);
-				parts.push(`ø ${this.fmtPricePerKWh(this.homePrice, this.currency)}`);
+				list.push({
+					key: "cost",
+					label: this.$t("energy.consumers.cost"),
+					number: this.homeEnergy * this.homePrice,
+					format: (v: number) => this.fmtMoneyWithSymbol(v, this.currency),
+					sub: `ø ${this.fmtPricePerKWh(this.homePrice, this.currency)}`,
+				});
 			}
-			return parts.join(" · ");
+			return list;
+		},
+		homeSourcesDetail(): SourcesDetail {
+			return {
+				owner: "home",
+				title: this.$t("energy.group.consumer"),
+				rows: this.homeSources,
+			};
+		},
+		homeSources(): SourceRow[] {
+			return sourceBreakdown(this.flows, "home", this.homeEnergy, this.flowSources);
 		},
 		// the selected day, month or year
 		periodLabel(): string {
@@ -832,6 +864,17 @@ export default defineComponent({
 		batteries(): HistorySeries[] {
 			return this.withData("battery");
 		},
+		// set up right now, whatever the period's data says
+		hasPriceTariff(): boolean {
+			return store.state.tariffGrid !== undefined;
+		},
+		hasCo2Tariff(): boolean {
+			return store.state.tariffCo2 !== undefined;
+		},
+		// the overview compares own energy with the grid, without any there is nothing to tell
+		hasSummary(): boolean {
+			return this.batteries.length > 0 || this.pvSeries.length > 0;
+		},
 		meters(): HistorySeries[] {
 			return this.withData("meter");
 		},
@@ -852,6 +895,68 @@ export default defineComponent({
 		},
 		loadpointColors(): Record<string, string> {
 			return this.entityColors(this.loadpoints);
+		},
+		// chargers and heaters in a card each
+		loadpointGroups(): {
+			key: string;
+			icon: string;
+			title: string;
+			entities: HistorySeries[];
+		}[] {
+			return [
+				{
+					key: "charging",
+					icon: "car",
+					title: this.$t("energy.flow.charging"),
+					entities: this.loadpoints.filter((lp) => !lp.isTemp),
+				},
+				{
+					key: "heating",
+					icon: "heater",
+					title: this.$t("energy.flow.heating"),
+					entities: this.loadpoints.filter((lp) => lp.isTemp),
+				},
+			].filter((g) => g.entities.length > 0);
+		},
+		// finer buckets for the pattern chart, the day view has them already
+		loadpointDaily(): HistorySeries[] {
+			return this.patternSeries("loadpoint");
+		},
+		batteryDaily(): HistorySeries[] {
+			return this.patternSeries("battery");
+		},
+		batteryDirection(): "charged" | "discharged" {
+			return settings.energyBatteryDirection === "discharged" ? "discharged" : "charged";
+		},
+		batteryColors(): Record<string, string> {
+			return Object.fromEntries(this.batteries.map((s, i) => [s.title, batteryColor(i)]));
+		},
+		consumptionTotal(): number {
+			return this.homeEnergy + this.total(this.loadpoints);
+		},
+		// as a pattern over month or year: one direction of the grid, and the production
+		gridDirection(): "import" | "export" {
+			return settings.energyGridDirection === "export" ? "export" : "import";
+		},
+		gridDaily(): HistorySeries | null {
+			const sum = this.dailySum("grid");
+			if (!sum || this.gridDirection === "import") return sum;
+			return {
+				...sum,
+				data: sum.data.map((slot) => ({ ...slot, energy: slot.returnEnergy })),
+			};
+		},
+		// as high as the bars with their price panel, toggling must not move the page
+		gridDailyHeight(): number {
+			const prices = this.chartPrices;
+			const panel = priceVaries(prices?.import) || priceVaries(prices?.feedin);
+			return 200 + (panel ? PANEL_EXTRA : 0);
+		},
+		gridDailyColor(): string {
+			return (this.gridDirection === "export" ? colors.export : colors.grid) || "";
+		},
+		pvDaily(): HistorySeries | null {
+			return this.dailySum("pv", this.focusedPvSeries?.title);
 		},
 		pvSeries(): HistorySeries[] {
 			return this.withData("pv");
@@ -877,16 +982,22 @@ export default defineComponent({
 		},
 		// with the price overlay on, both prices as lines with their range over the period
 		gridLegends(): Legend[] {
+			// the calendar shows one direction: its entry stands out, both switch it
+			const shown = this.gridDaily ? this.gridDirection : null;
+			const pick = (direction: "import" | "export") =>
+				shown ? { focusable: true, focusKey: direction, dim: shown !== direction } : {};
 			const list: Legend[] = [
 				{
 					label: this.$t("energy.grid.import"),
 					color: colors.grid || "",
 					value: this.fmtKWh(this.gridImport),
+					...pick("import"),
 				},
 				{
 					label: this.$t("energy.grid.export"),
 					color: colors.export || "",
 					value: this.fmtKWh(this.gridExport),
+					...pick("export"),
 				},
 			];
 			const prices = this.gridPrices;
@@ -910,6 +1021,7 @@ export default defineComponent({
 					color: colors.price || "",
 					value: price(prices.import, cost?.import, cost?.importEnergy),
 					type: "line",
+					dim: !!shown,
 				});
 			}
 			if (prices?.feedin) {
@@ -918,6 +1030,7 @@ export default defineComponent({
 					color: colors.export || "",
 					value: price(prices.feedin, cost?.export, cost?.exportEnergy),
 					type: "line",
+					dim: !!shown,
 				});
 			}
 			return list;
@@ -990,25 +1103,6 @@ export default defineComponent({
 					s.data.some((slot) => slot.energy > 0 || slot.returnEnergy > 0)
 			);
 		},
-		// tooltip headline per bucket: slot, day or month
-		bucketLabels(): string[] {
-			const count = this.buckets("grid", "energy").length;
-			return Array.from({ length: count }, (_, i) => {
-				switch (this.effectivePeriod) {
-					case PERIODS.DAY:
-						return this.fmtTimeSlot(
-							new Date(this.from.getTime() + i * SLOT_MS),
-							SLOT_MS
-						);
-					case PERIODS.MONTH:
-						return this.fmtDayMonth(
-							new Date(this.effectiveYear, this.effectiveMonth - 1, i + 1)
-						);
-					default:
-						return this.fmtMonthYear(new Date(this.effectiveYear, i, 1));
-				}
-			});
-		},
 		// per bucket the forecast and what was produced
 		forecastDeviation(): ([number, number] | null)[] | null {
 			if (!this.hasForecast) return null;
@@ -1054,49 +1148,61 @@ export default defineComponent({
 			const today = this.solar?.today;
 			return today ? today.energy / 1e3 : undefined;
 		},
-		tomorrowForecast(): number | undefined {
-			const tomorrow = this.solar?.tomorrow;
-			return tomorrow ? tomorrow.energy / 1e3 : undefined;
-		},
 		// production split into what was used and what went to the grid
 		selfShare(): number {
 			return this.ratio(this.selfConsumption);
 		},
-		selfSegments(): { value: number; color: string }[] {
-			return [
-				{ value: this.selfShare, color: groupColor("pv") },
-				{ value: 100 - this.selfShare, color: colors.export || "" },
-			];
+		// a system picked in the legend, the card then shows it alone
+		focusedPvSeries(): HistorySeries | undefined {
+			return this.focusedPv === null ? undefined : this.pvSeries[this.focusedPv];
 		},
-		// the rest of the production
-		exportedLabel(): string {
-			return this.$t("energy.production.exported", {
-				value: this.fmtPercentage(100 - this.selfShare),
-			});
+		// the picked or only system is the title, the group a crumb before it
+		productionTitle(): string {
+			const only = this.pvSeries.length === 1 ? this.pvSeries[0] : undefined;
+			return (this.focusedPvSeries ?? only)?.title || this.$t("energy.production.title");
 		},
-		selfRows(): TooltipRow[] {
-			const produced = this.sumFlows((f) => f.from === "pv");
-			const exported = this.sumFlows((f) => f.to === "export");
-			const row = (name: string, share: number, energy: number) => ({
-				name,
-				values: [this.fmtPercentage(share), this.fmtKWh(energy)],
-			});
-			return [
-				row(this.$t("energy.production.selfConsumed"), this.selfShare, produced - exported),
-				row(this.$t("energy.flow.export"), 100 - this.selfShare, exported),
-			];
+		productionParent(): string {
+			const title = this.$t("energy.production.title");
+			return this.productionTitle === title ? "" : title;
+		},
+		// the forecast tile switches the gap view, underlined while it is on. Not a
+		// button without a forecast or in the pattern
+		forecastSelected(): string | undefined {
+			if (!this.forecastPickable) return undefined;
+			return this.forecastGap ? this.forecastStatKey : "";
+		},
+		// the pattern has no forecast to compare with
+		forecastPickable(): boolean {
+			const pattern = !this.isDay && this.entityChart === ENTITY_CHART.PATTERN;
+			return this.hasForecast && !pattern;
+		},
+		showForecastGap(): boolean {
+			return this.forecastGap && this.forecastPickable;
+		},
+		forecastStatKey(): string {
+			return this.productionStats.find((s) => s.selectable !== false)?.key ?? "";
 		},
 		productionStats(): StatItem[] {
+			// a picked system counts alone, shares and forecast are known for the site only
+			const focused = this.focusedPvSeries;
 			const list: StatItem[] = [
+				{
+					key: "energy",
+					label: this.$t("energy.production.produced"),
+					number: focused ? sumEnergy(focused) : this.pvTotal,
+					format: (v: number) => this.fmtKWh(v),
+					selectable: false,
+				},
 				{
 					key: "selfConsumed",
 					label: this.$t("energy.production.selfConsumed"),
 					number: this.selfShare,
 					format: (v: number) => this.fmtPercentage(v),
+					selectable: false,
 				},
 			];
 			if (this.inFlightDay && this.remainingForecast !== undefined) {
-				// own key: a separate card without the accuracy chart and a fresh number animation
+				// own key: a fresh number animation
 				list.push({
 					key: "remaining",
 					label: this.$t("energy.group.forecast"),
@@ -1110,20 +1216,12 @@ export default defineComponent({
 					(acc, s) => acc + (s ? Math.abs(s[0] - s[1]) : 0),
 					0
 				);
-				const accuracy = 1 - error / this.forecastTotal;
-				const delta = this.forecastTotal - this.pvTotal;
 				list.push({
 					key: "forecast",
-					label: this.$t("energy.production.accuracy"),
-					number: this.ratio(accuracy),
+					label: this.$t("energy.group.forecast"),
+					number: this.ratio(1 - error / this.forecastTotal),
 					format: (v: number) => this.fmtPercentage(v),
-					// how far the forecast total sits above or below what was produced
-					sub: this.$t(
-						delta >= 0 ? "energy.production.above" : "energy.production.below",
-						{
-							value: this.fmtKWh(Math.abs(delta)),
-						}
-					),
+					sub: this.$t("energy.production.accuracy"),
 				});
 			}
 			return list;
@@ -1139,7 +1237,9 @@ export default defineComponent({
 							value: this.fmtKWh(this.total([s])),
 							focusable: true,
 							focusKey: i,
-							dim: this.focusedPv !== null && this.focusedPv !== i,
+							dim:
+								this.showForecastGap ||
+								(this.focusedPv !== null && this.focusedPv !== i),
 						}))
 					: [];
 			if (this.hasForecast) {
@@ -1148,6 +1248,8 @@ export default defineComponent({
 					color: groupColor("forecast"),
 					value: this.fmtKWh(this.forecastTotal),
 					type: "line",
+					focusable: this.forecastPickable,
+					focusKey: "forecast",
 					dim: this.focusedPv !== null,
 				});
 			}
@@ -1164,14 +1266,14 @@ export default defineComponent({
 			return this.entitySeries(this.dailySeries);
 		},
 		// the pattern chart needs finer buckets than the period view for the open
-		// consumer and every loadpoint
+		// consumer and every loadpoint, production, grid and batteries
 		dailyKey(): string {
-			const calendar =
+			const pattern =
 				this.entityChart === ENTITY_CHART.PATTERN && this.effectivePeriod !== PERIODS.DAY;
 			const titles = [this.activeConsumer, ...this.loadpoints.map((s) => s.title)].filter(
 				Boolean
 			);
-			return calendar && titles.length ? `${this.fetchKey}|${titles.join(",")}` : "";
+			return pattern ? `${this.fetchKey}|${titles.join(",")}` : "";
 		},
 		// csv of the period's series, same query as the charts
 		downloadHref(): string {
@@ -1248,7 +1350,11 @@ export default defineComponent({
 		},
 	},
 	watch: {
+		homeSourcesDetail: "refreshSources",
+		// runs before the page re-renders for the new period: the place to note what
+		// the user is looking at
 		fetchKey() {
+			this.holdScroll();
 			this.fetchData();
 		},
 		dailyKey() {
@@ -1264,10 +1370,14 @@ export default defineComponent({
 	mounted() {
 		this.fetchData();
 		this.fetchDaily();
+		// holdScroll keeps the position, the browser's own anchoring works against it
+		document.documentElement.style.overflowAnchor = "none";
+	},
+	beforeUnmount() {
+		document.documentElement.style.overflowAnchor = "";
+		this.holdStop?.();
 	},
 	methods: {
-		batteryColor,
-		sumEnergy,
 		groupColor,
 		// one value per slot, day or month spanning the whole period, so a running day
 		// stays empty on the right
@@ -1322,10 +1432,20 @@ export default defineComponent({
 		ratio(v: number): number {
 			return Number.isFinite(v) ? Math.min(100, Math.max(0, v * 100)) : 0;
 		},
+		clearFocusPv() {
+			this.focusedPv = null;
+		},
+		toggleForecastGap() {
+			this.forecastGap = !this.forecastGap;
+			this.focusedPv = null;
+		},
+		// a system or the forecast, one at a time
 		toggleFocusPv(legend: Legend) {
 			if (legend.focusKey === undefined) return;
+			if (legend.focusKey === "forecast") return this.toggleForecastGap();
 			const key = legend.focusKey as number;
 			this.focusedPv = this.focusedPv === key ? null : key;
+			this.forecastGap = false;
 		},
 		async fetchData() {
 			this.loading = true;
@@ -1338,19 +1458,20 @@ export default defineComponent({
 				]);
 				// a newer request superseded this one
 				if (requestKey !== this.fetchKey) return;
-				const anchor = this.scrollAnchor();
 				this.flow = flow.data || null;
 				this.series = energy.data || [];
 				this.tariffs = tariffs.data || [];
 				if (this.focusedPv !== null && this.focusedPv >= this.pvSeries.length)
 					this.focusedPv = null;
-				await this.$nextTick();
-				this.restoreScroll(anchor);
 				this.prefetchAdjacent();
 			} catch (e) {
 				console.error("Failed to load energy flow", e);
 			} finally {
-				if (requestKey === this.fetchKey) this.loading = false;
+				if (requestKey === this.fetchKey) {
+					this.loading = false;
+					// the new content settles: charts take their height, numbers run in
+					this.holdUntil = performance.now() + 700;
+				}
 			}
 		},
 		fetchFlow(from: Date, to: Date) {
@@ -1395,10 +1516,6 @@ export default defineComponent({
 				})),
 			};
 		},
-		loadpointDaily(title: string): HistorySeries | null {
-			const list = this.effectivePeriod === PERIODS.DAY ? this.series : this.dailySeries;
-			return list.find((s) => s.group === "loadpoint" && s.title === title) || null;
-		},
 		entitySeries(series: HistorySeries[]): HistorySeries | null {
 			if (!this.activeConsumer) return null;
 			if (this.activeConsumer === OTHERS) return this.othersOf(series);
@@ -1406,6 +1523,32 @@ export default defineComponent({
 				series.find((s) => s.group === "consumer" && s.title === this.activeConsumer) ||
 				null
 			);
+		},
+		focusGridLegend(legend: Legend) {
+			this.setGridDirection(legend.focusKey as string);
+		},
+		setBatteryDirection(direction: string) {
+			settings.energyBatteryDirection = direction;
+		},
+		// a group's finer buckets for the pattern chart, the day view has them already
+		patternSeries(group: string): HistorySeries[] {
+			const list = this.isDay ? this.series : this.dailySeries;
+			return list.filter((s) => s.group === group);
+		},
+		setGridDirection(direction: string) {
+			settings.energyGridDirection = direction;
+		},
+		setEntityChart(chart: ENTITY_CHART) {
+			settings.energyEntityChart = chart;
+		},
+		// one group's finer buckets as a single series, null unless the pattern shows them
+		dailySum(group: string, title?: string): HistorySeries | null {
+			if (this.isDay || this.entityChart !== ENTITY_CHART.PATTERN) return null;
+			const list = this.dailySeries.filter(
+				(s) => s.group === group && (!title || s.title === title)
+			);
+			if (!list.length) return null;
+			return { ...list[0]!, data: sumSeries(list) };
 		},
 		async fetchDaily() {
 			if (!this.dailyKey) {
@@ -1425,6 +1568,9 @@ export default defineComponent({
 				scopes.push({ group: "home" }, { group: "consumer" });
 			else if (this.activeConsumer) scopes.push({ title: this.activeConsumer });
 			if (this.loadpoints.length) scopes.push({ group: "loadpoint" });
+			scopes.push({ group: "pv" });
+			if (this.batteries.length) scopes.push({ group: "battery" });
+			if (this.hasGrid) scopes.push({ group: "grid" });
 			try {
 				const res = await Promise.all(
 					scopes.map((scope) =>
@@ -1437,19 +1583,60 @@ export default defineComponent({
 				console.error("Failed to load daily energy", e);
 			}
 		},
-		// Keep the first visible card or section where it is while the content above
-		// it changes size. The browser's own anchoring loses track when the legend
-		// rows are re-rendered.
-		scrollAnchor(): { el: Element; top: number } | null {
-			const anchors = [...document.querySelectorAll("[data-anchor]")];
-			const visible = anchors.find((el) => el.getBoundingClientRect().top >= 0);
-			const el = visible ?? anchors.at(-1);
-			return el ? { el, top: el.getBoundingClientRect().top } : null;
+		// Switching the period changes the page in several steps: controls and cards
+		// re-render for the new period at once, the data follows, charts and numbers
+		// settle after that. The card the user is looking at stays where it is through
+		// all of them, until the content has settled or the user scrolls
+		holdScroll() {
+			const anchors = this.scrollAnchors();
+			if (!anchors.length) return;
+			// a switch during a running hold starts over from where the page is now
+			this.holdStop?.();
+			// open until the data is in, fetchData sets the end
+			this.holdUntil = Infinity;
+			const restore = () => {
+				// a card can be gone in the new period, the next one takes over
+				const anchor = anchors.find((a) => a.el().isConnected);
+				if (!anchor) return;
+				const delta = anchor.el().getBoundingClientRect().top - anchor.top;
+				if (Math.abs(delta) > 1) window.scrollBy({ top: delta, behavior: "instant" });
+			};
+			let frame = 0;
+			const stop = () => {
+				cancelAnimationFrame(frame);
+				this.holdStop = null;
+			};
+			// every frame, before it is painted
+			const tick = () => {
+				if (performance.now() > this.holdUntil) return stop();
+				restore();
+				frame = requestAnimationFrame(tick);
+			};
+			frame = requestAnimationFrame(tick);
+			this.holdStop = stop;
+			// the user takes over
+			for (const event of ["wheel", "touchstart", "keydown"]) {
+				window.addEventListener(event, stop, { once: true, passive: true });
+			}
 		},
-		restoreScroll(anchor: { el: Element; top: number } | null) {
-			if (!anchor || !anchor.el.isConnected) return;
-			const delta = anchor.el.getBoundingClientRect().top - anchor.top;
-			if (Math.abs(delta) > 1) window.scrollBy({ top: delta, behavior: "instant" });
+		// the card under the sticky header first, then the ones below it. A card that
+		// reaches above the header counts: its chart is what the user sees
+		scrollAnchors(): { el: () => Element; top: number }[] {
+			const header = (this.$refs["header"] as { $el?: Element } | undefined)?.$el;
+			const line = header?.getBoundingClientRect().bottom ?? 0;
+			const cards = [...document.querySelectorAll("[data-anchor]")].map((el) => ({
+				// a named card can be replaced by its counterpart for the new period
+				el: () => {
+					const name = el.getAttribute("data-anchor");
+					if (el.isConnected || !name) return el;
+					return document.querySelector(`[data-anchor="${name}"]`) ?? el;
+				},
+				top: el.getBoundingClientRect().top,
+				bottom: el.getBoundingClientRect().bottom,
+			}));
+			// a card that only shows its last rows is not what the user looks at
+			const first = cards.findIndex((c) => c.bottom > line + 100);
+			return first < 0 ? cards.slice(-1) : cards.slice(first);
 		},
 		// a second click on the open entity closes it, like the production legend
 		// another view of the consumers starts without a selection
@@ -1457,39 +1644,30 @@ export default defineComponent({
 			settings.energyConsumerView = view;
 			if (this.consumer) this.selectConsumer(null);
 		},
-		async selectConsumer(key: string | null) {
+		selectConsumer(key: string | null) {
 			const next = key === this.consumer ? null : key;
 			const query = this.buildBaseQuery();
 			if (next) query["consumer"] = next;
 			else delete query["consumer"];
-			await this.$router.push({ query });
-			if (next) this.revealDetail();
-		},
-		// bring the detail section into view once when it opens below the fold,
-		// leaving room for the sticky period header
-		revealDetail() {
-			const el = document.querySelector('[data-testid="consumer-detail"]');
-			if (!el) return;
-			const top = el.getBoundingClientRect().top;
-			const header =
-				document.querySelector(".sticky-top")?.getBoundingClientRect().bottom ?? 0;
-			if (top > window.innerHeight - 160) {
-				window.scrollBy({ top: top - header - 24, behavior: "smooth" });
-			}
-		},
-		// a bar in the year view opens that month, a day bar opens that day
-		loadpointFlows(title: string): Flow[] {
-			return entityFlows(this.flow?.entities, "loadpoint", title);
+			this.$router.push({ query });
 		},
 		// the consumer's metered energy at its own average price, undefined without priced slots
 		consumerCost(title: string, energy: number): number | undefined {
 			const price = sinkPrice(entityFlows(this.flow?.entities, "consumer", title), "home");
 			return price === undefined ? undefined : energy * price;
 		},
-		showSources(detail: { title: string; rows: SourceRow[] }) {
+		showHomeSources() {
+			this.showSources(this.homeSourcesDetail);
+		},
+		// an open breakdown follows the period: the card it came from sends its new numbers
+		refreshSources(detail: SourcesDetail) {
+			if (detail.owner === this.sourcesDetail.owner) this.sourcesDetail = detail;
+		},
+		showSources(detail: SourcesDetail) {
 			this.sourcesDetail = detail;
 			(this.$refs["sourcesModal"] as unknown as { open: () => void }).open();
 		},
+		// a bar in the year view opens that month, a day bar opens that day
 		drillDown(start: Date) {
 			if (this.effectivePeriod === PERIODS.DAY) return;
 			const query = this.buildBaseQuery();
@@ -1554,14 +1732,8 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* rows of cards: pulled into the container padding like a single card from sm up,
-   flush on phones where the edge-to-edge cards bleed on their own */
-@media (min-width: 576px) {
-	.card-row {
-		margin-left: -1.5rem;
-		margin-right: -1.5rem;
-	}
-}
+@import "../../css/breakpoints.css";
+
 /* overlay: the sizer sets the height, the chart fills it */
 .fill-stack {
 	display: grid;

@@ -20,6 +20,8 @@ const SAVINGS_INDICATOR = "savings_indicator";
 const SESSIONS_GROUP = "sessions_group";
 const SESSIONS_TYPE = "sessions_type";
 const ENERGY_ENTITY_CHART = "energy_entity_chart";
+const ENERGY_GRID_DIRECTION = "energy_grid_direction";
+const ENERGY_BATTERY_DIRECTION = "energy_battery_direction";
 const ENERGY_OVERVIEW = "energy_overview";
 const ENERGY_CONSUMER_VIEW = "energy_consumer_view";
 const BATTERY_UNIT = "battery_unit";
@@ -133,6 +135,8 @@ export interface Settings {
   sessionsGroup: string;
   sessionsType: string;
   energyEntityChart: string;
+  energyGridDirection: string;
+  energyBatteryDirection: string;
   energyOverview: string;
   energyConsumerView: string;
   batteryUnit: string;
@@ -167,6 +171,8 @@ const settings: Settings = reactive({
   sessionsGroup: read(SESSIONS_GROUP),
   sessionsType: read(SESSIONS_TYPE),
   energyEntityChart: read(ENERGY_ENTITY_CHART),
+  energyGridDirection: read(ENERGY_GRID_DIRECTION),
+  energyBatteryDirection: read(ENERGY_BATTERY_DIRECTION),
   energyOverview: read(ENERGY_OVERVIEW),
   energyConsumerView: read(ENERGY_CONSUMER_VIEW),
   batteryUnit: read(BATTERY_UNIT),
@@ -200,6 +206,8 @@ watch(() => settings.savingsIndicator, save(SAVINGS_INDICATOR));
 watch(() => settings.sessionsGroup, save(SESSIONS_GROUP));
 watch(() => settings.sessionsType, save(SESSIONS_TYPE));
 watch(() => settings.energyEntityChart, save(ENERGY_ENTITY_CHART));
+watch(() => settings.energyGridDirection, save(ENERGY_GRID_DIRECTION));
+watch(() => settings.energyBatteryDirection, save(ENERGY_BATTERY_DIRECTION));
 watch(() => settings.energyOverview, save(ENERGY_OVERVIEW));
 watch(() => settings.energyConsumerView, save(ENERGY_CONSUMER_VIEW));
 watch(() => settings.batteryUnit, save(BATTERY_UNIT));
