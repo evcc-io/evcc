@@ -360,9 +360,9 @@ func (wb *MyPv) CurrentPower() (float64, error) {
 
 	// relay power = combined power - controlled power, finally corrected with 110% factor
 	if elwaControlFWVer >= 230 { //no scaling needed for FW >= a0023006
-		res += float64(int(binary.BigEndian.Uint16(e))-int(binary.BigEndian.Uint16(d))) / 1.1
+		res += float64(int(combined)-int(controlled))  / 1.1
 	} else {
-		res += float64(int(binary.BigEndian.Uint16(e))-int(binary.BigEndian.Uint16(d))) / wb.scale / 1.1
+		res += float64(int(combined)-int(controlled)) / wb.scale / 1.1
 	}
 
 	return res, nil
