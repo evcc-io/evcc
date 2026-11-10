@@ -22,8 +22,8 @@ import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import type { UiForecastSlot } from "@/types/evcc";
 import type { ValueChartType } from "./ValueChart.vue";
+import { DEFAULT_FORECAST_HOURS } from "@/utils/forecast";
 
-const MAX_HOURS = 96;
 const SLOTS_PER_HOUR = 4;
 
 export default defineComponent({
@@ -32,6 +32,7 @@ export default defineComponent({
 	props: {
 		type: { type: String as PropType<ValueChartType>, required: true },
 		rates: { type: Array as PropType<UiForecastSlot[]> },
+		maxHours: { type: Number, default: DEFAULT_FORECAST_HOURS },
 	},
 	computed: {
 		upcomingSlots(): UiForecastSlot[] {
@@ -39,7 +40,7 @@ export default defineComponent({
 			const now = new Date();
 			return this.rates
 				.filter((slot) => new Date(slot.end) > now)
-				.slice(0, MAX_HOURS * SLOTS_PER_HOUR);
+				.slice(0, this.maxHours * SLOTS_PER_HOUR);
 		},
 		average(): string {
 			if (this.upcomingSlots.length === 0) return "";

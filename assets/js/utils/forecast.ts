@@ -9,6 +9,9 @@ import type {
 } from "@/types/evcc";
 import deepCopy from "./deepClone";
 
+// hours shown on the forecast page unless the full range is enabled
+export const DEFAULT_FORECAST_HOURS = 96;
+
 export enum ForecastType {
   Solar = "solar",
   Price = "price",

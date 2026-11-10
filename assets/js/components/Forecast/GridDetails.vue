@@ -51,9 +51,8 @@
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import type { CURRENCY, UiForecastSlot } from "@/types/evcc";
-import { isStaticTariff } from "@/utils/forecast";
+import { DEFAULT_FORECAST_HOURS, isStaticTariff } from "@/utils/forecast";
 
-const MAX_HOURS = 96;
 const SLOTS_PER_HOUR = 4;
 
 export default defineComponent({
@@ -64,6 +63,7 @@ export default defineComponent({
 		feedin: { type: Array as PropType<UiForecastSlot[]> },
 		currency: { type: String as PropType<CURRENCY> },
 		showFeedin: { type: Boolean, default: true },
+		maxHours: { type: Number, default: DEFAULT_FORECAST_HOURS },
 	},
 	emits: ["toggle-feedin"],
 	computed: {
@@ -100,7 +100,7 @@ export default defineComponent({
 			const now = new Date();
 			return slots
 				.filter((slot) => new Date(slot.end) > now)
-				.slice(0, MAX_HOURS * SLOTS_PER_HOUR);
+				.slice(0, this.maxHours * SLOTS_PER_HOUR);
 		},
 	},
 });

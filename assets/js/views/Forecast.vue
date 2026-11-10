@@ -26,6 +26,21 @@
 		</div>
 		<div v-else class="row">
 			<main class="col-12 d-flex flex-column">
+				<div v-if="hasExtendedForecast" class="d-flex justify-content-end mb-3">
+					<div class="form-check form-switch mb-0 text-nowrap">
+						<input
+							id="forecastFullRange"
+							:checked="fullRange"
+							class="form-check-input"
+							type="checkbox"
+							role="switch"
+							@change="toggleFullRange"
+						/>
+						<label class="form-check-label text-muted" for="forecastFullRange">
+							{{ $t("forecast.fullRange", { days: dataDays }) }}
+						</label>
+					</div>
+				</div>
 				<Card
 					v-if="forecast.solar"
 					:title="$t('forecast.type.solar')"
@@ -100,6 +115,7 @@
 						:feedin="forecast.feedin"
 						:currency="currency"
 						:show-feedin="showFeedin"
+						:max-hours="visibleHours"
 						@toggle-feedin="toggleFeedin"
 					/>
 				</Card>
@@ -121,7 +137,7 @@
 							@scroll="onChartScroll"
 						/>
 					</div>
-					<ValueDetails :type="t" :rates="forecast[t]" />
+					<ValueDetails :type="t" :rates="forecast[t]" :max-hours="visibleHours" />
 				</Card>
 			</main>
 		</div>
@@ -146,10 +162,15 @@ import formatter from "@/mixins/formatter";
 import api from "@/api";
 import settings from "@/settings";
 import store from "../store";
-import { adjustedSolar, ForecastType, isStaticTariff } from "@/utils/forecast";
+import {
+	adjustedSolar,
+	DEFAULT_FORECAST_HOURS,
+	ForecastType,
+	isStaticTariff,
+} from "@/utils/forecast";
 
 const MIN_HOURS = 76;
-const MAX_HOURS = 96;
+const HOUR_MS = 60 * 60 * 1000;
 
 export default defineComponent({
 	name: "Forecast",
@@ -201,10 +222,10 @@ export default defineComponent({
 		},
 		maxEndDate(): Date {
 			const end = new Date(this.startDate);
-			end.setHours(end.getHours() + MAX_HOURS);
+			end.setHours(end.getHours() + DEFAULT_FORECAST_HOURS);
 			return end;
 		},
-		dataEndDate(): Date {
+		latestDataEnd(): Date {
 			let latest = this.startDate.getTime();
 			for (const s of [
 				...(this.forecast.grid || []),
@@ -218,8 +239,26 @@ export default defineComponent({
 				const t = new Date(e.ts).getTime();
 				if (t > latest) latest = t;
 			}
-			const end = new Date(Math.min(latest, this.maxEndDate.getTime()));
-			return end;
+			return new Date(latest);
+		},
+		hasExtendedForecast(): boolean {
+			return this.latestDataEnd > this.maxEndDate;
+		},
+		fullRange(): boolean {
+			return settings.forecastFullRange;
+		},
+		dataDays(): number {
+			const ms = this.latestDataEnd.getTime() - this.startDate.getTime();
+			return Math.ceil(ms / (24 * HOUR_MS));
+		},
+		dataEndDate(): Date {
+			if (this.fullRange && this.hasExtendedForecast) return this.latestDataEnd;
+			return this.hasExtendedForecast ? this.maxEndDate : this.latestDataEnd;
+		},
+		visibleHours(): number {
+			if (!this.fullRange || !this.hasExtendedForecast) return DEFAULT_FORECAST_HOURS;
+			const ms = this.latestDataEnd.getTime() - this.startDate.getTime();
+			return Math.ceil(ms / HOUR_MS);
 		},
 		chartEndDate(): Date {
 			const minEnd = new Date(this.startDate);
@@ -289,6 +328,9 @@ export default defineComponent({
 		},
 		toggleFeedin() {
 			settings.hideFeedin = !settings.hideFeedin;
+		},
+		toggleFullRange() {
+			settings.forecastFullRange = !settings.forecastFullRange;
 		},
 		onChartScroll(val: number) {
 			if (this.isScrolling) return;
