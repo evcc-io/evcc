@@ -70,6 +70,11 @@ func runDiscovery(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
+	// stored log levels must not undo the quiet log
+	if jsonOutput {
+		util.LogLevel("error", nil)
+	}
+
 	configs := slices.Concat(conf.Meters, conf.Chargers, conf.Vehicles, conf.Curtailers)
 
 	if !cmd.Flag(flagIgnoreDatabase).Changed {

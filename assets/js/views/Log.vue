@@ -32,12 +32,12 @@
 							>
 								<shopicon-regular-download
 									size="s"
-									class="icon"
+									class="icon d-flex"
 								></shopicon-regular-download>
 							</a>
 						</div>
 					</div>
-					<div class="col-6 offset-lg-1 col-lg-4 mb-4 mb-lg-0">
+					<div class="col-6 col-lg-3 mb-4 mb-lg-0">
 						<input
 							:value="q"
 							@input="changeSearch"
@@ -47,21 +47,40 @@
 							data-testid="log-search"
 						/>
 					</div>
-					<div class="filterLevel col-6 col-lg-2">
+					<div class="filterLevel col-6 col-lg-3 d-flex joined">
 						<select
 							class="form-select"
 							:aria-label="$t('log.levelLabel')"
 							:value="level"
 							@input="changeLevel"
 						>
-							<option v-for="l in levels" :key="l" :value="l">
-								{{ l.toUpperCase() }}
+							<option
+								v-for="l in levels"
+								:key="l"
+								:value="l"
+								:class="{ stored: isStoredDefault(l) }"
+							>
+								{{ levelText(l) }}
 							</option>
 						</select>
+						<button
+							type="button"
+							class="btn btn-outline-secondary flex-grow-0"
+							:title="$t('log.saveDefault')"
+							:aria-label="$t('log.saveDefault')"
+							:disabled="!defaultChanged"
+							@click="saveDefault"
+						>
+							<shopicon-regular-bookmark
+								size="s"
+								class="icon d-flex"
+							></shopicon-regular-bookmark>
+						</button>
 					</div>
-					<div class="filterAreas col-6 col-lg-2">
+					<div class="filterAreas col-6 col-lg-3 d-flex joined">
 						<MultiSelect
 							id="logAreasSelect"
+							class="flex-grow-1 areas-select"
 							isTopLevel
 							:modelValue="areas"
 							:options="areaOptions"
@@ -71,6 +90,19 @@
 						>
 							{{ areasLabel }}
 						</MultiSelect>
+						<button
+							type="button"
+							class="btn btn-outline-secondary flex-grow-0"
+							:title="$t('log.saveAreas')"
+							:aria-label="$t('log.saveAreas')"
+							:disabled="!areasChanged"
+							@click="saveAreas"
+						>
+							<shopicon-regular-bookmark
+								size="s"
+								class="icon d-flex"
+							></shopicon-regular-bookmark>
+						</button>
 					</div>
 				</div>
 				<hr class="my-0" />
@@ -111,6 +143,7 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/download";
+import "@h2d2/shopicons/es/regular/bookmark";
 import Header from "../components/Top/Header.vue";
 import Play from "../components/MaterialIcon/Play.vue";
 import ProgressRing from "../components/MaterialIcon/ProgressRing.vue";
@@ -118,10 +151,13 @@ import MultiSelect from "../components/Helper/MultiSelect.vue";
 import api from "../api";
 import store from "../store";
 import { defineComponent, type PropType } from "vue";
-import type { Timeout } from "@/types/evcc";
+import type { LogLevels, Timeout } from "@/types/evcc";
 import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
 import { handleDownloadClick } from "@/utils/native";
 const DEFAULT_COUNT = 1000;
+
+const sortedEntries = (levels: Record<string, string>) =>
+	JSON.stringify(Object.entries(levels).sort(([a], [b]) => a.localeCompare(b)));
 
 const levelMatcher = new RegExp(`\\[.*?\\] (${LOG_LEVELS.map((l) => l.toUpperCase()).join("|")})`);
 
@@ -181,7 +217,51 @@ export default defineComponent({
 			return this.availableAreas
 				.slice()
 				.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-				.map((area) => ({ name: this.areaName(area), value: area }));
+				.map((area) => ({
+					name: this.areaName(area),
+					value: area,
+					badge: this.storedLevels[area]?.charAt(0),
+					hint: this.storedLevels[area]
+						? this.$t("log.storedLevel", { level: this.storedLevels[area] })
+						: undefined,
+				}));
+		},
+		storedLevels(): Record<string, string> {
+			return store.state?.logLevels?.levels ?? {};
+		},
+		existingLevels(): Record<string, string> {
+			// overrides of areas that no longer exist are dropped on the next write
+			if (!this.availableAreas.length) return this.storedLevels;
+			return Object.fromEntries(
+				Object.entries(this.storedLevels).filter(([area]) =>
+					this.availableAreas.includes(area)
+				)
+			);
+		},
+		storedDefault(): string {
+			return store.state?.logLevels?.default ?? "INFO";
+		},
+		defaultChanged(): boolean {
+			return this.level.toUpperCase() !== this.storedDefault;
+		},
+		nextLevels(): Record<string, string> {
+			const level = this.level.toUpperCase();
+			const levels = { ...this.existingLevels };
+			this.areas.forEach((area) => {
+				// an override equal to the default is redundant
+				if (level === this.storedDefault) {
+					delete levels[area];
+				} else {
+					levels[area] = level;
+				}
+			});
+			return levels;
+		},
+		areasChanged(): boolean {
+			return (
+				this.areas.length > 0 &&
+				sortedEntries(this.nextLevels) !== sortedEntries(this.existingLevels)
+			);
 		},
 		areasLabel() {
 			if (this.areas.length === 0) {
@@ -230,6 +310,12 @@ export default defineComponent({
 	},
 	methods: {
 		handleDownloadClick,
+		isStoredDefault(level: string) {
+			return level.toUpperCase() === this.storedDefault;
+		},
+		levelText(level: string) {
+			return this.isStoredDefault(level) ? `${level.toUpperCase()} ●` : level.toUpperCase();
+		},
 		areaName(area: string) {
 			const title = this.loadpointTitles[area];
 			return title ? `${area} (${title})` : area;
@@ -273,6 +359,19 @@ export default defineComponent({
 				clearTimeout(this.timeout);
 				this.timeout = null;
 			}
+		},
+		async saveLogLevels(logLevels: LogLevels) {
+			try {
+				await api.post("/config/logLevels", logLevels);
+			} catch (e) {
+				console.error(e);
+			}
+		},
+		saveDefault() {
+			return this.saveLogLevels({ default: this.level, levels: this.existingLevels });
+		},
+		saveAreas() {
+			return this.saveLogLevels({ default: this.storedDefault, levels: this.nextLevels });
 		},
 		async updateAreas() {
 			try {
@@ -350,6 +449,27 @@ export default defineComponent({
 }
 .btn {
 	--bs-btn-border-width: 1px;
+}
+.stored {
+	color: var(--evcc-darker-green);
+}
+.joined :deep(.form-select) {
+	height: 100%;
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+.joined > .btn {
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+	margin-left: -1px;
+}
+.joined :deep(.form-select:focus),
+.joined > .btn:hover {
+	position: relative;
+	z-index: 1;
+}
+.areas-select {
+	min-width: 0;
 }
 .play {
 	transform: scale(1.2);

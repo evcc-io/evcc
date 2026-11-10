@@ -3,6 +3,7 @@ package util
 import (
 	"io"
 	"log"
+	"maps"
 	"os"
 	"regexp"
 	"strconv"
@@ -87,7 +88,11 @@ func (l *Logger) Redact(items ...string) *Logger {
 
 // Loggers invokes callback for each configured logger
 func Loggers(cb func(string, *Logger)) {
-	for name, logger := range loggers {
+	loggersMux.Lock()
+	snapshot := maps.Clone(loggers)
+	loggersMux.Unlock()
+
+	for name, logger := range snapshot {
 		cb(name, logger)
 	}
 }
@@ -101,10 +106,15 @@ func logLevelForArea(area string) jww.Threshold {
 	return level
 }
 
-// LogLevel sets log level for all loggers
+// LogLevel sets default and area log levels for all loggers, replacing previously set area levels
 func LogLevel(defaultLevel string, areaLevels map[string]string) {
+	loggersMux.Lock()
+	defer loggersMux.Unlock()
+
 	// default level
 	OutThreshold = logstash.LogLevelToThreshold(defaultLevel)
+
+	clear(levels)
 
 	// area levels
 	for area, level := range areaLevels {
@@ -112,9 +122,9 @@ func LogLevel(defaultLevel string, areaLevels map[string]string) {
 		levels[area] = logstash.LogLevelToThreshold(level)
 	}
 
-	Loggers(func(name string, logger *Logger) {
+	for name, logger := range loggers {
 		logger.SetStdoutThreshold(logLevelForArea(name))
-	})
+	}
 }
 
 var uiChan chan<- Param
