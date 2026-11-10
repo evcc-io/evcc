@@ -136,26 +136,18 @@ func (wb *MyPv) heartbeat(ctx context.Context, timeout time.Duration) {
 			return
 		}
 
-		if err := wb.refreshPower(); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
+		wb.mu.Lock()
+		if wb.enabled && wb.power > 0 {
+			enabled, err := wb.deviceEnabled()
+			if err == nil && enabled {
+				err = wb.setPower(wb.power)
+			}
+			if err != nil {
+				wb.log.ERROR.Println("heartbeat:", err)
+			}
 		}
+		wb.mu.Unlock()
 	}
-}
-
-func (wb *MyPv) refreshPower() error {
-	wb.mu.Lock()
-	defer wb.mu.Unlock()
-
-	if wb.power == 0 || !wb.enabled {
-		return nil
-	}
-
-	enabled, known, err := wb.operationEnabled()
-	if err != nil || known && !enabled {
-		return err
-	}
-
-	return wb.setPower(wb.power)
 }
 
 // Status implements the api.Charger interface
@@ -192,45 +184,14 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 	return res, nil
 }
 
-// operationEnabled reads the operation state; known is false for states that tell neither
-func (wb *MyPv) operationEnabled() (enabled, known bool, err error) {
-	// "ac-thor" and "ac-elwa-2"
-	reg := myPvRegOperationState
-	states := []uint16{1, 2} // heating PV excess, boost backup
-
-	if wb.name == "ac-elwa-e" {
-		reg = elwaERegOperationState
-		states = []uint16{2, 4} // heating PV excess, boost backup
-	}
-
-	state, err := wb.readUint16(uint16(reg))
-	if err != nil {
-		return false, false, err
-	}
-
-	if state == 0 { // standby
-		return false, true, nil
-	}
-
-	if slices.Contains(states, state) {
-		return true, true, nil
-	}
-
-	return false, false, nil
-}
-
 // Enabled implements the api.Charger interface
 func (wb *MyPv) Enabled() (bool, error) {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 
-	enabled, known, err := wb.operationEnabled()
+	enabled, err := wb.deviceEnabled()
 	if err != nil {
 		return false, err
-	}
-
-	if !known {
-		return wb.enabled, nil
 	}
 
 	// adopt the device state once after a restart; later the device's own boost must not enable the heartbeat
@@ -240,6 +201,35 @@ func (wb *MyPv) Enabled() (bool, error) {
 	}
 
 	return enabled, nil
+}
+
+// deviceEnabled reads the operation state, the caller holds the mutex
+func (wb *MyPv) deviceEnabled() (bool, error) {
+	// "ac-thor" and "ac-elwa-2"
+	reg := myPvRegOperationState
+	enabled := []uint16{1, 2} // heating PV excess, boost backup
+
+	if wb.name == "ac-elwa-e" {
+		reg = elwaERegOperationState
+		enabled = []uint16{2, 4} // heating PV excess, boost backup
+	}
+
+	// register read
+	state, err := wb.readUint16(uint16(reg))
+	if err != nil {
+		return false, err
+	}
+
+	// determine enabled state
+	if state == 0 { // standby
+		return false, nil
+	}
+	if slices.Contains(enabled, state) {
+		return true, nil
+	}
+
+	// fallback to cached value as last resort
+	return wb.enabled, nil
 }
 
 func (wb *MyPv) setPower(power uint16) error {
