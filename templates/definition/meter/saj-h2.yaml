@@ -19,7 +19,7 @@ params:
   # battery control
   - name: defaultmode
     default: 2
-  - name: singlephaseenergy
+  - name: singlephase
     type: bool
     default: false
     advanced: true
@@ -65,7 +65,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       # the per-phase totals don't net import against export across phases, so they can't replace the sum
-      {{- if .singlephaseenergy }}
+      {{- if .singlephase }}
       address: 0x40FD # Total_FeedInEnergy L1
       {{- else }}
       address: 0x416D # Sum All Phases Feed-In Total, not implemented by some models
