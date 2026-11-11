@@ -207,12 +207,14 @@ export default defineComponent({
 		},
 		dataEndDate(): Date {
 			let latest = this.startDate.getTime();
-			for (const s of [
-				...(this.forecast.grid || []),
-				...(this.forecast.feedin || []),
-				...(this.forecast.co2 || []),
-				...(this.forecast.temperature || []),
-			]) {
+			// constant series carry no information and must not extend the chart
+			const series = [
+				this.forecast.grid,
+				this.forecast.feedin,
+				this.forecast.co2,
+				this.forecast.temperature,
+			].filter((s) => !isStaticTariff(s));
+			for (const s of series.flatMap((s) => s || [])) {
 				const t = new Date(s.end).getTime();
 				if (t > latest) latest = t;
 			}
