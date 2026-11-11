@@ -36,19 +36,19 @@ type SchneiderG4S struct {
 }
 
 const (
-	schneiderG4SRegCpwState				= 6	// 1 RO
-	schneiderG4SRegEvState				= 8	// 1 RO
-	schneiderG4SRegLastStopCause		= 9	// 1 RO
-	schneiderG4SRegCommandStatus		= 20   // 1 RO
-	schneiderG4SRegChargingTime			= 30   // 2 RO (seconds)
-	schneiderG4SRegSetCommand			= 150  // 1 RW
-	schneiderG4SRegSetPoint				= 301  // 1 RW unsigned (A)
-	schneiderG4SRegCurrents				= 350  // 6 RO float (A)
-	schneiderG4SRegEnergy				= 356  // 2 RO uint32t (Wh)
-	schneiderG4SRegPower				= 358  // 2 RO float (kW)
-	schneiderG4SRegVoltages				= 366  // 6 RO float (V)
-	schneiderG4SRegLifebit				= 932  // 1 RW
-	schneiderG4SRegSessionChargingTime	= 2004 // 2 RO (seconds)
+	schneiderG4SRegCpwState             = 6    // 1 RO
+	schneiderG4SRegEvState              = 8    // 1 RO
+	schneiderG4SRegLastStopCause        = 9    // 1 RO
+	schneiderG4SRegCommandStatus        = 20   // 1 RO
+	schneiderG4SRegChargingTime         = 30   // 2 RO (seconds)
+	schneiderG4SRegSetCommand           = 150  // 1 RW
+	schneiderG4SRegSetPoint             = 301  // 1 RW unsigned (A)
+	schneiderG4SRegCurrents             = 350  // 6 RO float (A)
+	schneiderG4SRegEnergy               = 356  // 2 RO uint32t (Wh)
+	schneiderG4SRegPower                = 358  // 2 RO float (kW)
+	schneiderG4SRegVoltages             = 366  // 6 RO float (V)
+	schneiderG4SRegLifebit              = 932  // 1 RW
+	schneiderG4SRegSessionChargingTime  = 2004 // 2 RO (seconds)
 
 	schneiderG4SDisabled = uint16(0)
 )
