@@ -100,6 +100,7 @@
 						:feedin="forecast.feedin"
 						:currency="currency"
 						:show-feedin="showFeedin"
+						:end-date="chartEndDate"
 						@toggle-feedin="toggleFeedin"
 					/>
 				</Card>
@@ -121,7 +122,7 @@
 							@scroll="onChartScroll"
 						/>
 					</div>
-					<ValueDetails :type="t" :rates="forecast[t]" />
+					<ValueDetails :type="t" :rates="forecast[t]" :end-date="chartEndDate" />
 				</Card>
 			</main>
 		</div>
@@ -149,7 +150,7 @@ import store from "../store";
 import { adjustedSolar, ForecastType, isStaticTariff } from "@/utils/forecast";
 
 const MIN_HOURS = 76;
-const MAX_HOURS = 96;
+const MAX_HOURS = 8 * 24;
 
 export default defineComponent({
 	name: "Forecast",
@@ -208,6 +209,7 @@ export default defineComponent({
 			let latest = this.startDate.getTime();
 			for (const s of [
 				...(this.forecast.grid || []),
+				...(this.forecast.feedin || []),
 				...(this.forecast.co2 || []),
 				...(this.forecast.temperature || []),
 			]) {
