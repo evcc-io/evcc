@@ -192,7 +192,7 @@ render: |
               address: {{ .battery_set_register }} # SetActivePowerLessOrEquals (W)
               type: writemultiple
               encoding: float32
-      - case: 2 # hold
+      - case: 2 # holddischarge
         set:
           source: const
           value: 0

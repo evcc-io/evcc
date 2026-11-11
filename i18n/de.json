@@ -38,8 +38,8 @@
       "energy": "Energie",
       "gridCharge": "Netzladen",
       "gridDischarge": "Netzentladen",
-      "hold": "Entladesperre",
       "holdCharge": "Ladesperre",
+      "holdDischarge": "Entladesperre",
       "ofTotal": "von {total}",
       "power": "Leistung",
       "soc": "Ladestand"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Aus dem Netz laden",
         "discharge": "Einspeisung ins Netz",
-        "hold": "Entladen verhindern",
         "holdcharge": "Laden verhindern",
+        "holddischarge": "Entladen verhindern",
         "normal": "Normaler Betrieb"
       },
       "empty": "leer",

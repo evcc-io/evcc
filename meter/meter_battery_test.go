@@ -26,13 +26,13 @@ func TestBatteryLimitSocWithBatteryMode(t *testing.T) {
 		"maxsoc":       80,
 		"limitsoc":     js(`log = (typeof log === "undefined" ? "" : log) + "L" + limitSoc + ";"`),
 		"batterymode":  js(`log = (typeof log === "undefined" ? "" : log) + "M" + batteryMode + ";"`),
-		"batterymodes": []string{"normal", "hold", "charge", "holdcharge"},
+		"batterymodes": []string{"normal", "holddischarge", "charge", "holdcharge"},
 	})
 	require.NoError(t, err)
 
 	ctrl, ok := api.Cap[api.BatteryController](m)
 	require.True(t, ok)
-	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge}, ctrl.BatteryModes())
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHoldDischarge, api.BatteryCharge, api.BatteryHoldCharge}, ctrl.BatteryModes())
 
 	for _, mode := range ctrl.BatteryModes() {
 		require.NoError(t, ctrl.SetBatteryMode(mode))

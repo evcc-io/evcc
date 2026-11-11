@@ -475,7 +475,7 @@ render: |
               address: 109 # Battery Max Discharging Current
               type: writemultiple
               decode: uint16
-    - case: 2 # hold - prevent discharge
+    - case: 2 # holddischarge - prevent discharge
       set:
         source: sequence
         set:

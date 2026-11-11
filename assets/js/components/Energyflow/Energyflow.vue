@@ -428,11 +428,11 @@ export default defineComponent({
 		},
 		batteryDischargeLabel() {
 			return this.$t(
-				`main.energyflow.battery${this.batteryHold ? "DischargeHold" : "Discharge"}`
+				`main.energyflow.battery${this.batteryDischargeHold ? "DischargeHold" : "Discharge"}`
 			);
 		},
-		batteryHold() {
-			return this.batteryMode === "hold";
+		batteryDischargeHold() {
+			return this.batteryMode === "holddischarge";
 		},
 		batteryChargeHold() {
 			return this.batteryMode === "holdcharge";

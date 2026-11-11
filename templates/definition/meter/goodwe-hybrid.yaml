@@ -345,7 +345,7 @@ render: |
               address: 47512 # EMSPowerSet [0-10000]
               type: writemultiple
               encoding: uint16
-    - case: 2 # discharge hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

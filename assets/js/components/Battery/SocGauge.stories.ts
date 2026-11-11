@@ -33,7 +33,7 @@ const scenarios = [
   { label: "idle", power: 0, mode: undefined },
   { label: "charging", power: -800, mode: undefined },
   { label: "discharging", power: 800, mode: undefined },
-  { label: "hold", power: 0, mode: BATTERY_MODE.HOLD },
+  { label: "holddischarge", power: 0, mode: BATTERY_MODE.HOLDDISCHARGE },
   { label: "holdcharge", power: 0, mode: BATTERY_MODE.HOLDCHARGE },
   { label: "charge", power: -800, mode: BATTERY_MODE.CHARGE },
 ];
