@@ -31,14 +31,14 @@ export default defineComponent({
 	name: "PriceChart",
 	mixins: [formatter, chartMixin],
 	props: {
-		grid: { type: Array as PropType<UiForecastSlot[]>, required: true },
+		grid: { type: Array as PropType<UiForecastSlot[]> },
 		feedin: { type: Array as PropType<UiForecastSlot[]> },
 		currency: { type: String as PropType<CURRENCY> },
 		zoom: { type: Boolean, default: false },
 	},
 	computed: {
 		slots(): UiForecastSlot[] {
-			return filterForecastSlots(this.grid, this.startDate, this.endDate);
+			return this.grid ? filterForecastSlots(this.grid, this.startDate, this.endDate) : [];
 		},
 		feedinSlots(): UiForecastSlot[] {
 			return this.feedin
@@ -46,7 +46,8 @@ export default defineComponent({
 				: [];
 		},
 		markPoints(): { coord: [number, number]; value: string }[] {
-			const slots = this.slots;
+			// label extremes on the first visible line
+			const slots = this.slots.length ? this.slots : this.feedinSlots;
 			if (!slots.length) return [];
 			const minIdx = minSlotIndex(slots);
 			const maxIdx = maxSlotIndex(slots);
@@ -66,13 +67,13 @@ export default defineComponent({
 			return points;
 		},
 		yAxisConfig(): Record<string, unknown> {
-			const gridValues = this.slots.map((s) => s.value);
-			const values = [...gridValues, ...this.feedinSlots.map((s) => s.value)];
+			const values = [
+				...this.slots.map((s) => s.value),
+				...this.feedinSlots.map((s) => s.value),
+			];
 			const dataMin = Math.min(...values);
 			const dataMax = Math.max(...values);
-			// feed-in is usually far below import prices and would cancel the zoom
-			const zoomMin = gridValues.length ? Math.min(...gridValues) : dataMin;
-			const rangeMin = this.zoom ? zoomMin : Math.min(0, dataMin);
+			const rangeMin = this.zoom ? dataMin : Math.min(0, dataMin);
 			const rangeMax = Math.max(0, dataMax);
 			const range = rangeMax - rangeMin || 1;
 			const rawInterval = range / 5;
@@ -144,8 +145,16 @@ export default defineComponent({
 					},
 				}),
 				series: [
-					this.priceSeries(this.slots, priceColor, this.markPoints),
-					this.priceSeries(this.feedinSlots, exportColor),
+					this.priceSeries(
+						this.slots,
+						priceColor,
+						this.slots.length ? this.markPoints : undefined
+					),
+					this.priceSeries(
+						this.feedinSlots,
+						exportColor,
+						this.slots.length ? undefined : this.markPoints
+					),
 				],
 			};
 		},
