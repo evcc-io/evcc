@@ -1,7 +1,24 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
-    "context"
+	"context"
 	"fmt"
 	"time"
 
@@ -19,19 +36,19 @@ type SchneiderG4S struct {
 }
 
 const (
-	schneiderG4SRegCpwState            = 6    // 1 RO
-	schneiderG4SRegEvState             = 8    // 1 RO
-	schneiderG4SRegLastStopCause       = 9    // 1 RO
-	schneiderG4SRegCommandStatus       = 20   // 1 RO
-	schneiderG4SRegChargingTime        = 30   // 2 RO (seconds)
-	schneiderG4SRegSetCommand          = 150  // 1 RW
-	schneiderG4SRegSetPoint            = 301  // 1 RW unsigned (A)
-	schneiderG4SRegCurrents            = 350  // 6 RO float (A)
-	schneiderG4SRegEnergy              = 356  // 2 RO uint32t (Wh)
-	schneiderG4SRegPower               = 358  // 2 RO float (kW)
-	schneiderG4SRegVoltages            = 366  // 6 RO float (V)
-	schneiderG4SRegLifebit             = 932  // 1 RW
-	schneiderG4SRegSessionChargingTime = 2004 // 2 RO (seconds)
+	schneiderG4SRegCpwState				= 6	// 1 RO
+	schneiderG4SRegEvState				= 8	// 1 RO
+	schneiderG4SRegLastStopCause		= 9	// 1 RO
+	schneiderG4SRegCommandStatus		= 20   // 1 RO
+	schneiderG4SRegChargingTime			= 30   // 2 RO (seconds)
+	schneiderG4SRegSetCommand			= 150  // 1 RW
+	schneiderG4SRegSetPoint				= 301  // 1 RW unsigned (A)
+	schneiderG4SRegCurrents				= 350  // 6 RO float (A)
+	schneiderG4SRegEnergy				= 356  // 2 RO uint32t (Wh)
+	schneiderG4SRegPower				= 358  // 2 RO float (kW)
+	schneiderG4SRegVoltages				= 366  // 6 RO float (V)
+	schneiderG4SRegLifebit				= 932  // 1 RW
+	schneiderG4SRegSessionChargingTime	= 2004 // 2 RO (seconds)
 
 	schneiderG4SDisabled = uint16(0)
 )
@@ -153,12 +170,11 @@ func (wb *SchneiderG4S) MaxCurrent(current int64) error {
 
 // CurrentPower implements the api.Meter interface
 func (wb *SchneiderG4S) CurrentPower() (float64, error) {
-    b, err := wb.conn.ReadHoldingRegisters(schneiderG4SRegPower, 2)
-    if err != nil {
-        return 0, err
-    }
-    // Standard Float32 nutzen, Schneider liefert kW, evcc erwartet Watt (*1e3)
-    return float64(encoding.Float32(b)) * 1e3, nil
+	b, err := wb.conn.ReadHoldingRegisters(schneiderG4SRegPower, 2)
+	if err != nil {
+		return 0, err
+	}
+	return float64(encoding.Float32(b)) * 1e3, nil
 }
 
 var _ api.MeterEnergy = (*SchneiderG4S)(nil)
@@ -189,18 +205,17 @@ func (wb *SchneiderG4S) Voltages() (float64, float64, float64, error) {
 
 // getPhaseValues returns 3 sequential phase values
 func (wb *SchneiderG4S) getPhaseValues(reg uint16) (float64, float64, float64, error) {
-    b, err := wb.conn.ReadHoldingRegisters(reg, 6)
-    if err != nil {
-        return 0, 0, 0, err
-    }
+	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
+	if err != nil {
+		return 0, 0, 0, err
+	}
 
-    var res [3]float64
-    for i := range res {
-        // Standard Float32 ohne LswFirst
-        res[i] = float64(encoding.Float32(b[4*i:]))
-    }
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(encoding.Float32(b[4*i:]))
+	}
 
-    return res[0], res[1], res[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.ChargeTimer = (*SchneiderG4S)(nil)
