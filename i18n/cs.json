@@ -37,8 +37,8 @@
       "energy": "Energie",
       "gridCharge": "nabíjení z distribuční sítě",
       "gridDischarge": "vybíjení do sítě",
-      "hold": "vybíjení zamčené",
       "holdCharge": "nabíjení zamčené",
+      "holdDischarge": "vybíjení zamčené",
       "ofTotal": "ze {total}",
       "power": "Výkon",
       "soc": "Nabití baterie"

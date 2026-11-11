@@ -38,8 +38,8 @@
       "energy": "Energía",
       "gridCharge": "cargando desde la red",
       "gridDischarge": "vertiendo a la red",
-      "hold": "descarga bloqueada",
       "holdCharge": "carga bloqueada",
+      "holdDischarge": "descarga bloqueada",
       "ofTotal": "de {total}",
       "power": "Potencia",
       "soc": "Carga"

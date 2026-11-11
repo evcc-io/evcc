@@ -28,7 +28,7 @@ const (
 // Because the optimization is linear, the slot is at an operating-range extreme, so it
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
-// (hold), exporting means charging is withheld (holdcharge). At its soc bound nothing is
+// (holddischarge), exporting means charging is withheld (holdcharge). At its soc bound nothing is
 // withheld, the bound does it, so the battery stays in normal mode. Without planned
 // discharge the battery is held when holdWorthwhile, since normal mode would let the
 // inverter cover intra-slot dips from the battery.

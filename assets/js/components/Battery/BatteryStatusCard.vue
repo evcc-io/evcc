@@ -106,7 +106,7 @@ export default defineComponent({
 		powerState(): string | undefined {
 			switch (this.statusState) {
 				case BATTERY_MODE.HOLDDISCHARGE:
-					return this.$t("battery.card.hold");
+					return this.$t("battery.card.holdDischarge");
 				case BATTERY_MODE.HOLDCHARGE:
 					return this.$t("battery.card.holdCharge");
 				case BATTERY_MODE.CHARGE:

@@ -64,7 +64,7 @@ func (site *Site) fromTo(requested, m api.BatteryMode) bool {
 func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive bool, rate api.Rate) {
 	batteryMode := site.requiredBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate)
 
-	// put battery into hold mode when charging is active and HEMS dimmed
+	// put battery into holddischarge mode when charging is active and HEMS dimmed
 	if dimmed := hems.Dimmed(site.hems); site.fromTo(batteryMode, api.BatteryCharge) && dimmed != nil && *dimmed {
 		site.log.DEBUG.Println("battery mode: HEMS dimmed")
 		batteryMode = api.BatteryHoldDischarge
@@ -141,7 +141,7 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		}
 		res = keepUnlessModified(api.BatteryCharge)
 	case site.dischargeControlActive(rate) || (batteryGridDischargeActive && site.evFastChargingActive()):
-		// hold wins over feed-in discharge; fast charging holds even without
+		// holddischarge wins over feed-in discharge; fast charging holds even without
 		// batteryDischargeControl, selling while an EV fast-charges is worse
 		res = keepUnlessModified(api.BatteryHoldDischarge)
 	case batteryGridDischargeActive:
@@ -253,7 +253,7 @@ func supportedBatteryMode(supported []api.BatteryMode, mode api.BatteryMode) api
 // A battery that reached the soc bound of the requested mode is held instead:
 // the max soc when charging, the min soc reserve when discharging to grid. This
 // is decided per device, so one battery reaching its bound does not force the
-// others into hold.
+// others into holddischarge.
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	fromToCharge := site.fromTo(mode, api.BatteryCharge)
 	fromToDischarge := site.fromTo(mode, api.BatteryDischarge)

@@ -38,8 +38,8 @@
       "energy": "Energie",
       "gridCharge": "charge depuis le réseau",
       "gridDischarge": "décharge du réseau",
-      "hold": "décharge verrouillée",
       "holdCharge": "charge verrouillée",
+      "holdDischarge": "décharge verrouillée",
       "ofTotal": "de {total}",
       "power": "Puissance",
       "soc": "Niveau de batterie"

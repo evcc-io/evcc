@@ -38,8 +38,8 @@
       "energy": "Energia",
       "gridCharge": "lataus verkosta",
       "gridDischarge": "sähköverkkoon purkaminen",
-      "hold": "purku estetty",
       "holdCharge": "lataus estetty",
+      "holdDischarge": "purku estetty",
       "ofTotal": "{total}:sta",
       "power": "Teho",
       "soc": "Varaus"

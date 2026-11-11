@@ -282,7 +282,7 @@ func TestBatterySocLimitsReadOnce(t *testing.T) {
 }
 
 // TestBatteryHoldAppliedOnce guards that reaching max soc during grid charge switches
-// the battery to hold mode once instead of on every update
+// the battery to holddischarge mode once instead of on every update
 func TestBatteryHoldAppliedOnce(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -305,7 +305,7 @@ func TestBatteryHoldAppliedOnce(t *testing.T) {
 }
 
 // TestBatteryHoldNotShared guards that one battery reaching max soc does not put the
-// remaining batteries into hold mode
+// remaining batteries into holddischarge mode
 func TestBatteryHoldNotShared(t *testing.T) {
 	ctrl := gomock.NewController(t)
 

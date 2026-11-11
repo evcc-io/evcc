@@ -70,7 +70,7 @@ render: |
     cache: {{ .cache }}
     jq: .USOC
   {{- if .token }}
-  # backup buffer (EM_USOC): minsoc in normal, the current soc in hold, maxsoc in charge
+  # backup buffer (EM_USOC): minsoc in normal, the current soc in holddischarge, maxsoc in charge
   limitsoc:
     source: http
     uri: http://{{ .host }}/api/v2/configurations
@@ -79,7 +79,7 @@ render: |
     headers:
     - content-type: application/json
     - Auth-Token: {{ .token }}
-    # backup buffer rejects 1-4, a hold below 5 is sent as 0
+    # backup buffer rejects 1-4, a holddischarge below 5 is sent as 0
     body: '{"EM_USOC":"{{ `{{ ternary 0.0 .limitSoc (lt .limitSoc 5.0) | printf "%.0f" }}` }}"}'
   # the sequence hides the switch, so the modes are declared here
   batterymodes: ["normal", "holddischarge", "charge"]
@@ -87,8 +87,8 @@ render: |
     # use a sequence to propagate resets to the watchdog
     source: sequence
     set:
-    # the charge setpoint is ignored when it follows the switch from hold, so it is repeated while charging
-    # the watchdog runs first so that normal and hold stop it before any mode request
+    # the charge setpoint is ignored when it follows the switch from holddischarge, so it is repeated while charging
+    # the watchdog runs first so that normal and holddischarge stop it before any mode request
     - source: watchdog
       timeout: 30s
       reset: [1, 2]
@@ -99,7 +99,7 @@ render: |
           set:
             source: sleep
             duration: 0s
-        - case: 2 # hold
+        - case: 2 # holddischarge
           set:
             source: sleep
             duration: 0s
@@ -130,7 +130,7 @@ render: |
           {{- else }}
           body: '{"EM_OperatingMode":"2"}'  # Self-consumption
           {{- end }}
-      - case: 2 # hold: limitsoc raises the backup buffer to the current soc, pv keeps charging
+      - case: 2 # holddischarge: limitsoc raises the backup buffer to the current soc, pv keeps charging
         set:
           source: http
           uri: http://{{ .host }}/api/v2/configurations

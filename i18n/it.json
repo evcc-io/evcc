@@ -38,8 +38,8 @@
       "energy": "Energia",
       "gridCharge": "Carica da rete",
       "gridDischarge": "scarica in rete",
-      "hold": "Scarica inibita",
       "holdCharge": "Ricarica inibita",
+      "holdDischarge": "Scarica inibita",
       "ofTotal": "di {total}",
       "power": "Potenza batteria",
       "soc": "Carica"

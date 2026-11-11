@@ -113,7 +113,7 @@ export default defineComponent({
 				});
 			const newValue = !this.active;
 
-			// battery hold: only show message, don't toggle
+			// battery holddischarge: only show message, don't toggle
 			if (newValue && this.batteryHold) {
 				status("batteryBoostHold");
 				return;

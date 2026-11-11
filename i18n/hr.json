@@ -37,8 +37,8 @@
       "energy": "Energija",
       "gridCharge": "punjenje iz mreže",
       "gridDischarge": "pražnjenje u mrežu",
-      "hold": "pražnjenje zaključano",
       "holdCharge": "punjenje zaključano",
+      "holdDischarge": "pražnjenje zaključano",
       "ofTotal": "od {total}",
       "power": "Snaga",
       "soc": "Razina baterije"

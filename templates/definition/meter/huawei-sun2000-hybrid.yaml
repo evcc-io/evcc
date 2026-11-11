@@ -386,7 +386,7 @@ render: |
                   out := rated
                   if limit < rated { out = limit }
                   out
-          - case: 2 # hold
+          - case: 2 # holddischarge
             set:
               source: sequence
               set:

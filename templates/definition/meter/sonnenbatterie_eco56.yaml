@@ -81,7 +81,7 @@ render: |
               method: PUT
               uri: http://{{ .host }}:{{ .port }}/rest/devices/battery/C06
               body: '10' # Automatic
-          - case: 2 # hold
+          - case: 2 # holddischarge
             set:
               source: http
               method: PUT
@@ -107,7 +107,7 @@ render: |
               set:
                 source: sleep
                 duration: 0s
-            - case: 2 # hold
+            - case: 2 # holddischarge
               set:
                 source: sleep
                 duration: 0s

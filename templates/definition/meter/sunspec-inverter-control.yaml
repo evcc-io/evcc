@@ -55,7 +55,7 @@ render: |
             source: sunspec
             {{- include "modbus" . | indent 10 }}
             value: 124:0:OutWRte
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

@@ -37,8 +37,8 @@
       "energy": "Energia",
       "gridCharge": "càrrega de xarxa",
       "gridDischarge": "descàrrega a la xarxa",
-      "hold": "descàrrega bloquejada",
       "holdCharge": "càrrega bloquejada",
+      "holdDischarge": "descàrrega bloquejada",
       "ofTotal": "de {total}",
       "power": "Potència",
       "soc": "Nivell de bateria"

@@ -38,8 +38,8 @@
       "energy": "Energie",
       "gridCharge": "Luede vum Netz",
       "gridDischarge": "Entluede vum Netz",
-      "hold": "Entluede gespaart",
       "holdCharge": "Luede gespaart",
+      "holdDischarge": "Entluede gespaart",
       "ofTotal": "vun {total}",
       "power": "Leeschtung",
       "soc": "Lueden"

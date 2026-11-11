@@ -877,7 +877,7 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	}{
 		{"battery grid charge", batteryTypeBattery, 3000, 0, 1000, 0, "charge"},
 		{"battery pv charge (no import)", batteryTypeBattery, 3000, 0, 0, 1000, "normal"},
-		{"battery hold (idle while importing)", batteryTypeBattery, 0, 0, 1000, 0, "holddischarge"},
+		{"battery holddischarge (idle while importing)", batteryTypeBattery, 0, 0, 1000, 0, "holddischarge"},
 		{"battery holdcharge (idle while exporting)", batteryTypeBattery, 0, 0, 0, 1000, "holdcharge"},
 		{"battery discharge (self-consumption while importing)", batteryTypeBattery, 0, 2000, 1000, 0, "normal"},
 		{"battery grid discharge (discharge while exporting)", batteryTypeBattery, 0, 2000, 0, 1000, "discharge"},
@@ -909,7 +909,7 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, res, optimizer.TimeSeries{}, 1, 1, 1000, 0, 1, 0)
 	assert.Equal(t, api.BatteryHoldDischarge.String(), s.Action)
 
-	// an idle battery at its soc bound withholds nothing: normal instead of hold/holdcharge
+	// an idle battery at its soc bound withholds nothing: normal instead of holddischarge/holdcharge
 	battery := batteryDetail{Type: batteryTypeBattery}
 	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000}
 	res = optimizer.BatteryResult{
@@ -931,7 +931,7 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	// an unsupported mode is suggested as the mode control applies instead (#35379)
 	battery.modes = []api.BatteryMode{api.BatteryNormal, api.BatteryHoldDischarge, api.BatteryCharge}
 	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 0, 1000, 1, 0).Action, "holdcharge unsupported")
-	assert.Equal(t, api.BatteryHoldDischarge.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 1000, 0, 1, 0).Action, "hold supported")
+	assert.Equal(t, api.BatteryHoldDischarge.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 1000, 0, 1, 0).Action, "holddischarge supported")
 }
 
 // TestApplyOptimizerResultPVShare covers home batteries charging from the PV surplus
@@ -1184,7 +1184,7 @@ func TestReapplySuggestionAcrossSlotBoundary(t *testing.T) {
 	reapplyFixture(site,
 		[]optimizer.BatteryConfig{{}, {}},
 		[]optimizer.BatteryResult{
-			reapplyIdleBattery, // hold/normal follows grid import
+			reapplyIdleBattery, // holddischarge/normal follows grid import
 			{ChargingPower: []float32{0, 11000, 0}, DischargingPower: []float32{0, 0, 0}}, // loadpoint: stop, then charge
 		},
 		[]batteryDetail{reapplyHomeBattery, {Type: batteryTypeLoadpoint, loadpoint: new(int), controllable: true}},

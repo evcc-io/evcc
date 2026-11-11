@@ -37,8 +37,8 @@
       "energy": "Energie",
       "gridCharge": "încărcare din rețea",
       "gridDischarge": "descărcare în rețea",
-      "hold": "descărcare blocată",
       "holdCharge": "încărcare blocată",
+      "holdDischarge": "descărcare blocată",
       "ofTotal": "din {total}",
       "power": "Putere",
       "soc": "Nivel baterie"

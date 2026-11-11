@@ -37,8 +37,8 @@
       "energy": "Energia",
       "gridCharge": "hálózati töltés",
       "gridDischarge": "hálózati kisütés",
-      "hold": "kisütés zárolva",
       "holdCharge": "töltés zárolva",
+      "holdDischarge": "kisütés zárolva",
       "ofTotal": "/ {total}",
       "power": "Teljesítmény",
       "soc": "Töltöttségi szint"

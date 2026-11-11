@@ -38,8 +38,8 @@
       "energy": "Energy",
       "gridCharge": "grid charging",
       "gridDischarge": "grid discharging",
-      "hold": "discharge locked",
       "holdCharge": "charge locked",
+      "holdDischarge": "discharge locked",
       "ofTotal": "of {total}",
       "power": "Power",
       "soc": "Charge"

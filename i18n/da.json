@@ -38,8 +38,8 @@
       "energy": "Energi",
       "gridCharge": "netladning",
       "gridDischarge": "aflading til elnettet",
-      "hold": "afladning låst",
       "holdCharge": "ladning låst",
+      "holdDischarge": "afladning låst",
       "ofTotal": "af {total}",
       "power": "Effekt",
       "soc": "Batteriniveau"

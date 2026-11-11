@@ -38,8 +38,8 @@
       "energy": "电能",
       "gridCharge": "电网充电中",
       "gridDischarge": "电网放电中",
-      "hold": "放电已锁定",
       "holdCharge": "充电已锁定",
+      "holdDischarge": "放电已锁定",
       "ofTotal": "/ {total}",
       "power": "功率",
       "soc": "电池电量"
