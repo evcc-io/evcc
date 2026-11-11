@@ -1,4 +1,11 @@
-import { OTHERS, type EntityFlows, type Flow, type FlowSink, type FlowSource } from "./types";
+import {
+  OTHERS,
+  type ChartFlow,
+  type EntityFlows,
+  type Flow,
+  type FlowSink,
+  type FlowSource,
+} from "./types";
 
 export function sumEnergy(
   series: { data: { energy: number; returnEnergy: number }[] },
@@ -46,6 +53,30 @@ export function entityFlows(
     (e) => e.group === group && (e.virtual ? title === OTHERS : e.title === title)
   );
   return entity?.flows ?? [];
+}
+
+// the loadpoint sink as a charging and a heating sink. Loadpoints share their
+// sink's split per slot, so their flows add up to it.
+export function splitLoadpointFlows(
+  flows: Flow[],
+  entities: EntityFlows[] | undefined,
+  heatingTitles: string[]
+): ChartFlow[] {
+  const sums = new Map<string, ChartFlow>();
+  for (const e of entities ?? []) {
+    if (e.group !== "loadpoint") continue;
+    const to = heatingTitles.includes(e.title) ? "heating" : "charging";
+    for (const f of e.flows) {
+      const key = `${f.from}-${to}`;
+      const sum = sums.get(key) ?? { from: f.from, to, energy: 0 };
+      sum.energy += f.energy;
+      sums.set(key, sum);
+    }
+  }
+  const rest = flows.flatMap((f): ChartFlow[] =>
+    f.to === "loadpoint" ? [] : [{ from: f.from, to: f.to, energy: f.energy }]
+  );
+  return [...rest, ...sums.values()];
 }
 
 export interface SourceRow {

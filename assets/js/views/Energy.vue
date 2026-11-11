@@ -71,7 +71,7 @@
 								<div :style="{ height: `${OVERVIEW_HEIGHT}px` }"></div>
 								<LegendList class="mt-4" :legends="stackLegends" />
 							</div>
-							<FlowChart :flows="flows" :loadpoint-labels="loadpointLabels" />
+							<FlowChart :flows="flowChartFlows" />
 						</div>
 						<template v-else>
 							<GroupChart
@@ -413,6 +413,7 @@ import {
 	entityFlows,
 	sinkPrice,
 	sourceBreakdown,
+	splitLoadpointFlows,
 	sumEnergy,
 	sumSeries,
 	type SourceRow,
@@ -432,6 +433,7 @@ import {
 	OVERVIEW_VIEW,
 	type ConsumerEnergy,
 	type Flow,
+	type ChartFlow,
 	type FlowResult,
 	type FlowSource,
 	type StatItem,
@@ -884,14 +886,9 @@ export default defineComponent({
 		loadpoints(): HistorySeries[] {
 			return this.withData("loadpoint");
 		},
-		loadpointLabels(): string[] {
-			const charging = this.loadpoints.some((lp) => !lp.isTemp);
-			const heating = this.loadpoints.some((lp) => lp.isTemp);
-			const both = charging === heating;
-			return [
-				...(charging || both ? [this.$t("energy.flow.charging")] : []),
-				...(heating || both ? [this.$t("energy.flow.heating")] : []),
-			];
+		flowChartFlows(): ChartFlow[] {
+			const heatingTitles = this.loadpoints.filter((lp) => lp.isTemp).map((lp) => lp.title);
+			return splitLoadpointFlows(this.flows, this.flow?.entities, heatingTitles);
 		},
 		loadpointColors(): Record<string, string> {
 			return this.entityColors(this.loadpoints);
