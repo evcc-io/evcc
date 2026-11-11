@@ -136,7 +136,7 @@ test.describe("wizard with password", async () => {
     await page.getByRole("link", { name: "Charge" }).click();
     await page.getByTestId("visualization").click();
     await expect(page.getByTestId("energyflow-entry-production")).toContainText("5.0 kW");
-    await expect(page.getByTestId("energyflow-entry-loadpoints")).toContainText("3.0 kW");
+    await expect(page.getByTestId("energyflow-entry-charging")).toContainText("3.0 kW");
     await expect(page.getByTestId("energyflow-entry-gridexport")).toContainText("2.0 kW");
     await expect(
       page.getByTestId("loadpoint").getByRole("heading", { name: "Solar Carport" })
