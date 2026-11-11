@@ -72,14 +72,22 @@ render: |
   {{- if .token }}
   # backup buffer (EM_USOC): minsoc in normal, the current soc in hold, maxsoc in charge
   limitsoc:
-    source: http
-    uri: http://{{ .host }}/api/v2/configurations
-    insecure: true
-    method: PUT
-    headers:
-    - content-type: application/json
-    - Auth-Token: {{ .token }}
-    body: '{"EM_USOC":"${limitSoc:%.0f}"}'
+    # backup buffer rejects 1-4, a hold below 5 is sent as 0
+    source: js
+    script: |
+      limitSoc < 5 ? 0.0 : limitSoc
+    out:
+    - name: limitSoc
+      type: float
+      config:
+        source: http
+        uri: http://{{ .host }}/api/v2/configurations
+        insecure: true
+        method: PUT
+        headers:
+        - content-type: application/json
+        - Auth-Token: {{ .token }}
+        body: '{"EM_USOC":"${limitSoc:%.0f}"}'
   # the sequence hides the switch, so the modes are declared here
   batterymodes: ["normal", "hold", "charge"]
   batterymode:
