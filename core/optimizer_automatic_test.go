@@ -443,8 +443,8 @@ func TestBatteryModeUnmodelledCharging(t *testing.T) {
 		suggestion, res api.BatteryMode
 	}{
 		{api.BatteryCharge, api.BatteryCharge},
-		{api.BatteryNormal, api.BatteryHold},
-		{api.BatteryDischarge, api.BatteryHold},
+		{api.BatteryNormal, api.BatteryHoldDischarge},
+		{api.BatteryDischarge, api.BatteryHoldDischarge},
 	} {
 		site.setSuggestions(map[string]types.Suggestion{
 			batteryKey("bat"): {Action: tc.suggestion.String()},
@@ -475,7 +475,7 @@ func TestBatteryModeFixedDemandModelled(t *testing.T) {
 		{"smart cost", api.ModeSmart, false, 0, api.BatteryDischarge},
 		{"fast", api.ModeNow, false, 0, api.BatteryDischarge},
 		{"plan", api.ModeSmart, true, 0, api.BatteryDischarge},
-		{"min soc", api.ModeSmart, false, 80, api.BatteryHold},
+		{"min soc", api.ModeSmart, false, 80, api.BatteryHoldDischarge},
 	} {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
 		lp.status = api.StatusC

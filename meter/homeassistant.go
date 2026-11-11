@@ -100,11 +100,11 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (api.
 		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
 
 		modes := map[api.BatteryMode]string{
-			api.BatteryNormal:     cc.ModeNormal,
-			api.BatteryHold:       cc.ModeHold,
-			api.BatteryCharge:     cc.ModeCharge,
-			api.BatteryHoldCharge: cc.ModeHoldCharge,
-			api.BatteryDischarge:  cc.ModeDischarge,
+			api.BatteryNormal:        cc.ModeNormal,
+			api.BatteryHoldDischarge: cc.ModeHold,
+			api.BatteryCharge:        cc.ModeCharge,
+			api.BatteryHoldCharge:    cc.ModeHoldCharge,
+			api.BatteryDischarge:     cc.ModeDischarge,
 		}
 
 		// an unconfigured mode is not supported

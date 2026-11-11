@@ -1,8 +1,19 @@
 <template>
 	<section class="evcc-card round-box p-3 p-sm-4" :class="{ 'evcc-card--edge': edgeToEdge }">
-		<CardHeader v-if="hasHeader" class="mb-3" :title="title" :subtitle="subtitle">
+		<CardHeader
+			v-if="hasHeader"
+			class="mb-3"
+			:title="title"
+			:subtitle="subtitle"
+			:parent="parent"
+			:parent-static="parentStatic"
+			@parent="$emit('parent')"
+		>
 			<template v-if="$slots['icon']" #icon><slot name="icon" /></template>
+			<template v-if="$slots['dot']" #dot><slot name="dot" /></template>
 			<template v-if="$slots['nav']" #nav><slot name="nav" /></template>
+			<template v-if="$slots['stats']" #stats><slot name="stats" /></template>
+			<template v-if="$slots['ring']" #ring><slot name="ring" /></template>
 			<template v-if="$slots['actions']" #actions><slot name="actions" /></template>
 		</CardHeader>
 		<slot />
@@ -21,12 +32,19 @@ export default defineComponent({
 	props: {
 		title: { type: String, default: "" },
 		subtitle: { type: String, default: "" },
+		parent: { type: String, default: "" },
+		parentStatic: Boolean,
 		edgeToEdge: Boolean,
 	},
+	emits: ["parent"],
 	computed: {
 		hasHeader(): boolean {
 			return (
-				!!this.title || !!this.subtitle || !!this.$slots["nav"] || !!this.$slots["actions"]
+				!!this.title ||
+				!!this.subtitle ||
+				!!this.$slots["nav"] ||
+				!!this.$slots["stats"] ||
+				!!this.$slots["actions"]
 			);
 		},
 	},

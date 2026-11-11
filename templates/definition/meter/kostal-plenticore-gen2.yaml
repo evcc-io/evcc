@@ -133,7 +133,7 @@ render: |
         set:
           source: sleep
           duration: 0s # no-op
-      - case: 2 # hold
+      - case: 2 # holddischarge
         set:
           source: const
           value: 0 # W

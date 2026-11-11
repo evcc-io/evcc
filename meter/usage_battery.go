@@ -190,7 +190,7 @@ func (m *batterySocLimits) Decorator() func() (float64, float64, error) {
 }
 
 // batteryModesSocLimit are the modes implementable via soc limit
-var batteryModesSocLimit = implement.BatteryModes(api.BatteryNormal, api.BatteryHold, api.BatteryCharge)
+var batteryModesSocLimit = implement.BatteryModes(api.BatteryNormal, api.BatteryHoldDischarge, api.BatteryCharge)
 
 // batteryModes converts the keys the battery mode setter switches on into modes.
 // Keys that are not a battery mode are ignored.
@@ -235,7 +235,7 @@ func (m *batterySocLimits) LimitController(socG func() (float64, error), limitSo
 		case api.BatteryNormal:
 			return limitSocS(m.MinSoc)
 
-		case api.BatteryHold:
+		case api.BatteryHoldDischarge:
 			soc, err := socG()
 			if err != nil {
 				return err
@@ -298,7 +298,7 @@ func (m *batterySocLimitsCtx) LimitController(ctx context.Context, socG func() (
 			}
 			return limitSocS(minSoc)
 
-		case api.BatteryHold:
+		case api.BatteryHoldDischarge:
 			soc, err := socG()
 			if err != nil {
 				return err

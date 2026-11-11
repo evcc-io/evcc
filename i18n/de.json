@@ -38,8 +38,8 @@
       "energy": "Energie",
       "gridCharge": "Netzladen",
       "gridDischarge": "Netzentladen",
-      "hold": "Entladesperre",
       "holdCharge": "Ladesperre",
+      "holdDischarge": "Entladesperre",
       "ofTotal": "von {total}",
       "power": "Leistung",
       "soc": "Ladestand"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Aus dem Netz laden",
         "discharge": "Einspeisung ins Netz",
-        "hold": "Entladen verhindern",
         "holdcharge": "Laden verhindern",
+        "holddischarge": "Entladen verhindern",
         "normal": "Normaler Betrieb"
       },
       "empty": "leer",
@@ -1229,7 +1229,6 @@
       },
       "cost": "Kosten",
       "others": "Sonstige",
-      "title": "Verbraucher",
       "view": {
         "river": "River",
         "treemap": "Treemap"
@@ -1286,12 +1285,7 @@
       "pv": "Erzeugung"
     },
     "production": {
-      "above": "{value} darüber",
-      "accuracy": "Vorhersagegenauigkeit",
-      "below": "{value} darunter",
-      "deviation": "Abweichung",
-      "expectedTomorrow": "morgen erwartet",
-      "exported": "{value} eingespeist",
+      "accuracy": "Genauigkeit",
       "produced": "Erzeugt",
       "remainingToday": "heute verbleibend",
       "selfConsumed": "Selbst verbraucht",
@@ -1311,7 +1305,6 @@
       "hint": "PV- und Batteriestrom zum Einspeisepreis bewertet.",
       "price": "Preis/kWh",
       "pv": "PV",
-      "share": "Anteil",
       "source": "Quelle",
       "title": "Quellen",
       "total": "Gesamt"
@@ -1321,6 +1314,8 @@
       "co2Saved": "CO₂ gespart",
       "co2SavedTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz.",
       "configure": "Jetzt einrichten",
+      "energy": "Energie",
+      "fromGrid": "{value} aus dem Netz",
       "noCo2": "Keine CO₂-Daten.",
       "noPrice": "Keine Preisdaten.",
       "savings": "Ersparnis",
