@@ -68,6 +68,32 @@ GridAndPV.args = {
   },
 } as any;
 
+export const MixedGroupUnits = Template.bind({});
+MixedGroupUnits.args = {
+  gridConfigured: true,
+  pvConfigured: true,
+  pvPower: 6200,
+  gridPower: -1500,
+  homePower: 730,
+  consumers: [
+    { title: "Fridge", icon: "cooler", power: 40 },
+    { title: "Server", icon: "compute", power: 85 },
+    { title: "Dehumidifier", icon: "airpurifier", power: 320 },
+  ],
+  loadpoints: [
+    {
+      icon: "car",
+      charging: true,
+      displayTitle: "Garage",
+      chargePower: 3970,
+      connected: true,
+      vehicleName: "",
+      vehicleSoc: 50,
+      chargerFeatureHeating: false,
+    },
+  ],
+} as any;
+
 export const LoadpointCharging = Template.bind({});
 LoadpointCharging.args = {
   gridConfigured: true,
