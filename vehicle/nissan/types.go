@@ -94,6 +94,7 @@ type Attributes struct {
 	ChargeStatus          float32    `json:"chargeStatus"`
 	RangeHvacOff          *int       `json:"rangeHvacOff"`
 	BatteryLevel          int        `json:"batteryLevel"`
+	BatteryBarLevel       *float64   `json:"batteryBarLevel"`
 	BatteryCapacity       int        `json:"batteryCapacity"`
 	BatteryTemperature    int        `json:"batteryTemperature"`
 	PlugStatus            int        `json:"plugStatus"`

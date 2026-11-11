@@ -22,7 +22,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"slices"
-	"sync/atomic"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -36,11 +36,13 @@ import (
 type MyPv struct {
 	myPvBase
 	log     *util.Logger
-	power   uint32
+	mu      sync.Mutex
+	power   uint16
 	scale   float64
 	name    string
 	statusC uint16
 	enabled bool
+	synced  bool
 }
 
 const (
@@ -134,15 +136,17 @@ func (wb *MyPv) heartbeat(ctx context.Context, timeout time.Duration) {
 			return
 		}
 
-		if power := uint16(atomic.LoadUint32(&wb.power)); power > 0 {
-			enabled, err := wb.Enabled()
+		wb.mu.Lock()
+		if wb.enabled && wb.power > 0 {
+			enabled, err := wb.deviceEnabled()
 			if err == nil && enabled {
-				err = wb.setPower(power)
+				err = wb.setPower(wb.power)
 			}
 			if err != nil {
 				wb.log.ERROR.Println("heartbeat:", err)
 			}
 		}
+		wb.mu.Unlock()
 	}
 }
 
@@ -182,6 +186,25 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *MyPv) Enabled() (bool, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	enabled, err := wb.deviceEnabled()
+	if err != nil {
+		return false, err
+	}
+
+	// adopt the device state once after a restart; later the device's own boost must not enable the heartbeat
+	if !wb.synced {
+		wb.enabled = enabled
+		wb.synced = true
+	}
+
+	return enabled, nil
+}
+
+// deviceEnabled reads the operation state, the caller holds the mutex
+func (wb *MyPv) deviceEnabled() (bool, error) {
 	// "ac-thor" and "ac-elwa-2"
 	reg := myPvRegOperationState
 	enabled := []uint16{1, 2} // heating PV excess, boost backup
@@ -219,17 +242,23 @@ func (wb *MyPv) setPower(power uint16) error {
 
 // Enable implements the api.Charger interface
 func (wb *MyPv) Enable(enable bool) error {
-	var power uint16
-	if enable {
-		power = uint16(atomic.LoadUint32(&wb.power))
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	wb.synced = true
+
+	if !enable {
+		wb.enabled = false
+		return wb.setPower(0)
 	}
 
-	res := wb.setPower(power)
-	if res == nil {
-		wb.enabled = enable
+	if err := wb.setPower(wb.power); err != nil {
+		return err
 	}
 
-	return res
+	wb.enabled = true
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -241,6 +270,9 @@ var _ api.ChargerEx = (*MyPv)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *MyPv) MaxCurrentMillis(current float64) error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	phases := 1
 	if wb.lp != nil {
 		if p := wb.lp.ActivePhases(); p != 0 {
@@ -250,12 +282,15 @@ func (wb *MyPv) MaxCurrentMillis(current float64) error {
 
 	power := uint16(grid.CurrentToPower(current, phases))
 
-	err := wb.setPower(power)
-	if err == nil {
-		atomic.StoreUint32(&wb.power, uint32(power))
+	if wb.enabled {
+		if err := wb.setPower(power); err != nil {
+			return err
+		}
 	}
 
-	return err
+	wb.power = power
+
+	return nil
 }
 
 var _ api.Meter = (*MyPv)(nil)

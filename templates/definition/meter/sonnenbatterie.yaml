@@ -9,14 +9,14 @@ requirements:
   description:
     de: |
       Für die aktive Batteriesteuerung muss über das Webinterface der sonnenBatterie (unter Software-Integration) das "JSON Write API" aktiviert und das dort generierte API-Token in der Batteriekonfiguration unter `token` eingetragen werden.
-      Als Betriebsart der sonnenBatterie werden die beiden Modi "Eigenverbrauch" (Standard) und "Time-of-use" unterstützt. Der Modus kann über den Parameter `defaultmode` an die Konfiguration der sonnenBatterie angepasst werden.
+      Als Betriebsart der sonnenBatterie werden die Modi "Eigenverbrauch" (Standard), "Time-of-use" und "Optimierung" unterstützt. Der Modus kann über den Parameter `defaultmode` an die Konfiguration der sonnenBatterie angepasst werden.
       Die Leistung für das Netzladen kann an die Wechselrichterleistung der sonnenBatterie über den Parameter `maxchargepower` angepasst werden.
-      evcc steuert die Notstromreserve: beim Halten auf den aktuellen SoC, im Normalbetrieb auf `minsoc` und beim Laden auf `maxsoc`. Eine im Webinterface der sonnenBatterie eingestellte Notstromreserve wird dabei überschrieben.
+      evcc steuert die Notstromreserve: beim Halten auf den aktuellen SoC, im Normalbetrieb auf `minsoc` und beim Laden auf `maxsoc`. Eine im Webinterface der sonnenBatterie eingestellte Notstromreserve wird dabei überschrieben. Die sonnenBatterie akzeptiert als Notstromreserve nur 0 oder 5 bis 100, `minsoc` muss daher 0 oder mindestens 5 sein.
     en: |
       For active battery control, the "JSON Write API" must be activated via the sonnenBatterie web interface (under Software-Integration) and the API token generated there must be entered in the battery configuration under `token`.
-      The two operating modes supported for the sonnenBatterie are "self-consumption" (default) and "time-of-use". The mode can be adapted to the configuration of the sonnenBatterie via the 'defaultmode' parameter.
+      The operating modes supported for the sonnenBatterie are "self-consumption" (default), "time-of-use" and "optimization". The mode can be adapted to the configuration of the sonnenBatterie via the 'defaultmode' parameter.
       The power for grid charging can be adapted to the inverter power of the sonnenBatterie via the `maxchargepower` parameter.
-      evcc controls the backup buffer: the current SoC while holding, `minsoc` in normal operation and `maxsoc` while charging. A backup buffer set in the sonnenBatterie web interface is overwritten.
+      evcc controls the backup buffer: the current SoC while holding, `minsoc` in normal operation and `maxsoc` while charging. A backup buffer set in the sonnenBatterie web interface is overwritten. The sonnenBatterie only accepts a backup buffer of 0 or 5 to 100, so `minsoc` must be 0 or at least 5.
 discovery:
   hostname: ["sb-*"]
 params:
@@ -26,6 +26,13 @@ params:
   - name: port
     default: 8080
   - preset: battery-params
+  - name: minsoc
+    help:
+      de: Untere Grenze wie am Batteriesystem eingestellt. Wird vom Optimizer genutzt. Die sonnenBatterie akzeptiert nur 0 oder 5 bis 100.
+      en: Lower limit as configured on the battery system. Used by optimizer. The sonnenBatterie only accepts 0 or 5 to 100.
+    pattern:
+      regex: "^(0|[5-9]|[1-9][0-9]|100)$" # backup buffer rejects 1-4
+      examples: ["0", "5", "25", "100"]
   - name: maxchargepower
     default: 3300
   - name: token
@@ -35,7 +42,7 @@ params:
     usages: ["battery"]
   - name: defaultmode
     type: choice
-    choice: ["self-consumption", "time-of-use"]
+    choice: ["self-consumption", "time-of-use", "optimization"]
     default: self-consumption
     required: true
   - name: cache
@@ -72,7 +79,8 @@ render: |
     headers:
     - content-type: application/json
     - Auth-Token: {{ .token }}
-    body: '{"EM_USOC":"${limitSoc:%.0f}"}'
+    # backup buffer rejects 1-4, a hold below 5 is sent as 0
+    body: '{"EM_USOC":"{{ `{{ ternary 0.0 .limitSoc (lt .limitSoc 5.0) | printf "%.0f" }}` }}"}'
   # the sequence hides the switch, so the modes are declared here
   batterymodes: ["normal", "hold", "charge"]
   batterymode:
@@ -117,6 +125,8 @@ render: |
           - Auth-Token: {{ .token }}
           {{- if eq .defaultmode "time-of-use" }}
           body: '{"EM_OperatingMode":"10"}' # Time-of-use
+          {{- else if eq .defaultmode "optimization" }}
+          body: '{"EM_OperatingMode":"11"}' # Optimization
           {{- else }}
           body: '{"EM_OperatingMode":"2"}'  # Self-consumption
           {{- end }}
@@ -131,6 +141,8 @@ render: |
           - Auth-Token: {{ .token }}
           {{- if eq .defaultmode "time-of-use" }}
           body: '{"EM_OperatingMode":"10"}' # Time-of-use
+          {{- else if eq .defaultmode "optimization" }}
+          body: '{"EM_OperatingMode":"11"}' # Optimization
           {{- else }}
           body: '{"EM_OperatingMode":"2"}'  # Self-consumption
           {{- end }}

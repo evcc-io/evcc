@@ -2,6 +2,7 @@ package nissan
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -87,10 +88,29 @@ func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
 
 	if err == nil {
-		return float64(res.Attributes.BatteryLevel), nil
+		return soc(res.Attributes), nil
 	}
 
 	return 0, err
+}
+
+// soc prefers the finer 0-240 batteryBarLevel if consistent with batteryLevel, see openWB/core@79a2fb3
+func soc(a Attributes) float64 {
+	level := float64(a.BatteryLevel)
+
+	bar := a.BatteryBarLevel
+	if bar == nil || *bar < 0 || *bar > 240 {
+		return level
+	}
+
+	barSoc := *bar / 240 * 100
+
+	// tolerate integer rounding, but reject a zero placeholder for positive soc
+	if (*bar > 0 || level == 0) && math.Abs(barSoc-level) <= 1 {
+		return barSoc
+	}
+
+	return level
 }
 
 var _ api.ChargeState = (*Provider)(nil)

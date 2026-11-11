@@ -88,12 +88,12 @@ test.describe("page", () => {
     await expect(grid).toContainText("2.0 kWh");
     await expect(grid).toContainText("Export");
     await expect(grid).toContainText("1.0 kWh");
-    // priced: cost and revenue with the average price below
-    const gridImport = page.getByTestId("energy-stat-gridImport");
-    await expect(gridImport).toContainText("Grid cost");
-    await expect(gridImport).toContainText("0.60 €");
-    await expect(gridImport).toContainText("ø 30.0 ct/kWh");
-    await expect(page.getByTestId("energy-stat-gridExport")).toContainText("0.10 €");
+    // priced: cost and revenue beside the energy, the average price in the summary
+    await expect(grid.getByTestId("energy-stat-gridImport")).toContainText("0.60 €");
+    await expect(grid.getByTestId("energy-stat-gridExport")).toContainText("0.10 €");
+    const gridCost = page.getByTestId("energy-stat-gridCost");
+    await expect(gridCost).toContainText("0.60 €");
+    await expect(gridCost).toContainText("ø 30.0 ct/kWh");
     // every defined price is in the legend, the import price moves between 25 and 35 ct
     await expect(grid).toContainText("Import price");
     await expect(grid).toContainText("25.0 – 35.0 ct/kWh");
@@ -103,24 +103,32 @@ test.describe("page", () => {
     // pv 4 kWh vs forecast 3.2 kWh, self-consumption 1 - 1/4
     const production = page.getByTestId("energy-production");
     await expect(production).toContainText("4.0 kWh");
-    await expect(production.getByText("Forecast", { exact: true })).toBeVisible();
+    const forecastLegend = production.getByRole("button", { name: "Forecast 3.2 kWh" });
+    await expect(forecastLegend).toBeVisible();
     const selfConsumed = page.getByTestId("energy-stat-selfConsumed");
     await expect(selfConsumed).toContainText("Self-consumed");
     await expect(selfConsumed).toContainText("75%");
-    await expect(selfConsumed).toContainText("25% exported");
     const forecast = page.getByTestId("energy-stat-forecast");
-    await expect(forecast).toContainText("Forecast accuracy");
+    await expect(forecast).toContainText("Forecast");
     await expect(forecast).toContainText("75%");
-    await expect(forecast).toContainText("800 Wh below");
+    await expect(forecast).toContainText("accuracy");
+    // tile and legend entry switch the gap view together
+    await expect(forecast).toHaveAttribute("aria-pressed", "false");
+    await forecastLegend.click();
+    await expect(forecast).toHaveAttribute("aria-pressed", "true");
+    await forecast.click();
+    await expect(forecast).toHaveAttribute("aria-pressed", "false");
 
     // battery 1 kWh charged, 1 kWh discharged
     const battery = page.getByTestId("energy-battery");
     await expect(battery).toContainText("Charged");
     await expect(battery).toContainText("Discharged");
 
-    // loadpoint card with its 3 kWh
-    const loadpoint = page.getByTestId("energy-loadpoint");
-    await expect(loadpoint.getByRole("heading", { name: "Carport 3.0 kWh" })).toBeVisible();
+    // charging card with the loadpoint's 3 kWh
+    const charging = page.getByTestId("energy-charging");
+    await expect(charging.getByRole("heading")).toContainText("Charging");
+    await expect(charging.getByRole("heading")).toContainText("Carport");
+    await expect(charging.getByTestId("energy-stat-energy")).toContainText("3.0 kWh");
 
     // additional meter outside the balance
     const meters = page.getByTestId("energy-meters");
@@ -128,9 +136,9 @@ test.describe("page", () => {
     await expect(meters).toContainText("300 Wh");
 
     // fixture has no consumer meters, the house consumption stands alone
-    await expect(
-      page.getByTestId("energy-consumers").getByRole("heading", { name: "Consumption 2.0 kWh" })
-    ).toBeVisible();
+    const consumers = page.getByTestId("energy-consumers");
+    await expect(consumers.getByRole("heading", { name: "Consumption" })).toBeVisible();
+    await expect(consumers.getByTestId("energy-stat-energy")).toContainText("2.0 kWh");
 
     // savings 1.50 - 0.90
     await expect(page.getByTestId("energy-stat-savings")).toContainText("0.60 €");
@@ -250,10 +258,7 @@ test.describe("page", () => {
     test("shares and cost", async ({ page }) => {
       // carport 3 kWh: 1 solar at feed-in 0.10, 2 grid at ø 0.30
       await page.goto("/#/energy?year=2026&month=9&day=15");
-      const sources = page.getByTestId("energy-loadpoint").getByRole("button", { name: "Sources" });
-      await expect(sources).toContainText("33% Solar");
-      await expect(sources).toContainText("0% Battery, 67% Grid");
-
+      const sources = page.getByTestId("energy-charging").getByRole("button", { name: "Sources" });
       await sources.click();
       const modal = page.getByTestId("energy-sources-modal");
       await expectModalVisible(modal);
@@ -278,16 +283,13 @@ test.describe("page", () => {
     test("no price data", async ({ page }) => {
       // solar only, neither battery nor grid has data that day
       await page.goto("/#/energy?year=2026&month=9&day=17");
-      const loadpoint = page.getByTestId("energy-loadpoint");
-      await expect(loadpoint.getByRole("heading", { name: "Carport 1.0 kWh" })).toBeVisible();
-      const sources = loadpoint.getByRole("button", { name: "Sources" });
-      await expect(sources).toContainText("100% Solar");
-      await expect(sources).not.toContainText("battery");
-      await expect(sources).not.toContainText("grid");
-
+      const charging = page.getByTestId("energy-charging");
+      await expect(charging.getByTestId("energy-stat-energy")).toContainText("1.0 kWh");
+      const sources = charging.getByRole("button", { name: "Sources" });
       await sources.click();
       const modal = page.getByTestId("energy-sources-modal");
       await expectModalVisible(modal);
+      await expect(modal.getByRole("row", { name: "Solar" })).toContainText("100%");
       await expect(modal.getByRole("row", { name: "Solar" })).toContainText("1.0 kWh");
       await expect(modal.getByRole("row", { name: "Battery" })).toHaveCount(0);
       await expect(modal.getByRole("row", { name: "Grid" })).toHaveCount(0);
@@ -297,16 +299,23 @@ test.describe("page", () => {
 
     test("battery leads without solar", async ({ page }) => {
       await page.goto("/#/energy?year=2026&month=9&day=18");
-      const sources = page.getByTestId("energy-loadpoint").getByRole("button", { name: "Sources" });
-      await expect(sources).toContainText("100% Battery");
-      await expect(sources).not.toContainText("solar");
+      await page.getByTestId("energy-charging").getByRole("button", { name: "Sources" }).click();
+      const modal = page.getByTestId("energy-sources-modal");
+      await expectModalVisible(modal);
+      await expect(modal.getByRole("row", { name: "Battery" })).toContainText("100%");
+      await expect(modal.getByRole("row", { name: "Solar" })).toHaveCount(0);
+      await expect(modal.getByRole("row", { name: "Grid" })).toHaveCount(0);
     });
 
     test("grid only", async ({ page }) => {
       await page.goto("/#/energy?year=2026&month=9&day=16");
-      const loadpoint = page.getByTestId("energy-loadpoint");
-      await expect(loadpoint.getByRole("heading", { name: "Heat pump 1.0 kWh" })).toBeVisible();
-      await expect(loadpoint.getByRole("button", { name: "Sources" })).toHaveCount(0);
+      const heating = page.getByTestId("energy-heating");
+      // the only heater is named beside the title
+      await expect(heating.getByRole("heading")).toContainText("Heating");
+      await expect(heating.getByRole("heading")).toContainText("Heat pump");
+      await expect(heating.getByRole("listitem")).toHaveCount(0);
+      await expect(heating.getByTestId("energy-stat-energy")).toContainText("1.0 kWh");
+      await expect(heating.getByRole("button", { name: "Sources" })).toHaveCount(0);
     });
   });
 

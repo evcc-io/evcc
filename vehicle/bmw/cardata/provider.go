@@ -3,6 +3,7 @@ package cardata
 import (
 	"context"
 	"fmt"
+	"math"
 	"slices"
 	"strings"
 	"sync"
@@ -206,7 +207,12 @@ func (v *Provider) Float(key string) (float64, error) {
 		return 0, api.ErrNotAvailable
 	}
 
-	return cast.ToFloat64E(res)
+	f, err := cast.ToFloat64E(res)
+	if err == nil && (math.IsNaN(f) || math.IsInf(f, 0)) {
+		return 0, api.ErrNotAvailable
+	}
+
+	return f, err
 }
 
 var _ api.Battery = (*Provider)(nil)
