@@ -54,7 +54,7 @@ test.describe("loadpoint ordering and hiding", async () => {
 
     // hidden loadpoint stays in energy flow
     await page.getByTestId("energyflow").click();
-    await expect(page.getByTestId("energyflow-entry-loadpoints")).toContainText("Second Loadpoint");
+    await expect(page.getByTestId("energyflow-entry-charging")).toContainText("Second Loadpoint");
   });
 
   test("reorder loadpoints", async ({ page }) => {

@@ -38,8 +38,8 @@
       "energy": "Energija",
       "gridCharge": "polnjenje iz omrežja",
       "gridDischarge": "praznjenje v omrežje",
-      "hold": "praznjenje zaklenjeno",
       "holdCharge": "polnjenje zaklenjeno",
+      "holdDischarge": "praznjenje zaklenjeno",
       "ofTotal": "od {total}",
       "power": "Moč",
       "soc": "Napolnjenost baterije"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Polnjenje iz omrežja",
         "discharge": "Praznjenje v omrežje",
-        "hold": "Prepreči praznjenje",
         "holdcharge": "Prepreči polnjenje",
+        "holddischarge": "Prepreči praznjenje",
         "normal": "Normalno delovanje"
       },
       "empty": "prazna",

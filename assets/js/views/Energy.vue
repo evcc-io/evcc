@@ -243,7 +243,10 @@
 					@sources="showSources"
 					@sources-change="refreshSources"
 				>
-					<template #icon><VehicleIcon :name="lps.icon" /></template>
+					<template #icon>
+						<LoadpointIcon v-if="lps.key === 'charging'" />
+						<VehicleIcon v-else name="heater" />
+					</template>
 				</EntityGroup>
 				<Card
 					v-if="consumers.length"
@@ -396,6 +399,7 @@ import type { Legend } from "../components/Sessions/types";
 import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
 import IconSelectItem from "../components/Helper/IconSelectItem.vue";
 import BarChartIcon from "../components/MaterialIcon/BarChart.vue";
+import LoadpointIcon from "../components/MaterialIcon/Loadpoint.vue";
 import SankeyIcon from "../components/MaterialIcon/Sankey.vue";
 import PlugIcon from "../components/MaterialIcon/Plug.vue";
 import { groupColor } from "../components/Energy/groups";
@@ -470,6 +474,7 @@ function shiftPeriod(period: PERIODS, from: Date, offset: number): Date {
 export default defineComponent({
 	name: "Energy",
 	components: {
+		LoadpointIcon,
 		TopHeader: Header,
 		Card,
 		DownloadButton,
@@ -899,20 +904,17 @@ export default defineComponent({
 		// chargers and heaters in a card each
 		loadpointGroups(): {
 			key: string;
-			icon: string;
 			title: string;
 			entities: HistorySeries[];
 		}[] {
 			return [
 				{
 					key: "charging",
-					icon: "car",
 					title: this.$t("energy.flow.charging"),
 					entities: this.loadpoints.filter((lp) => !lp.isTemp),
 				},
 				{
 					key: "heating",
-					icon: "heater",
 					title: this.$t("energy.flow.heating"),
 					entities: this.loadpoints.filter((lp) => lp.isTemp),
 				},

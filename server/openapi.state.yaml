@@ -449,7 +449,7 @@ components:
       enum:
         - unknown
         - normal
-        - hold
+        - holddischarge
         - charge
         - holdcharge
         - discharge
@@ -462,7 +462,7 @@ components:
           type: string
           enum:
             - normal
-            - hold
+            - holddischarge
             - charge
             - holdcharge
             - discharge

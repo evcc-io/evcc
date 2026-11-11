@@ -38,8 +38,8 @@
       "energy": "Energy",
       "gridCharge": "grid charging",
       "gridDischarge": "grid discharging",
-      "hold": "discharge locked",
       "holdCharge": "charge locked",
+      "holdDischarge": "discharge locked",
       "ofTotal": "of {total}",
       "power": "Power",
       "soc": "Charge"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Charge from grid",
         "discharge": "Discharge to grid",
-        "hold": "Prevent discharging",
         "holdcharge": "Prevent charging",
+        "holddischarge": "Prevent discharging",
         "normal": "Normal operation"
       },
       "empty": "empty",
@@ -1658,8 +1658,9 @@
       "forecast": "Forecast",
       "forecastTooltip": "forecast: remaining solar production today",
       "gridImport": "Grid import",
+      "heaters": "Heater | Heaters",
       "homePower": "Consumption",
-      "loadpoints": "Charger| Charger | {count} chargers",
+      "loadpoints": "Charger | Chargers",
       "loadpointsLimit": "{limit} limit",
       "noEnergy": "No meter data",
       "pv": "Solar system",

@@ -38,8 +38,8 @@
       "energy": "Energie",
       "gridCharge": "laden met netstroom",
       "gridDischarge": "ontladen naar het net",
-      "hold": "ontladen gesperd",
       "holdCharge": "opladen gesperd",
+      "holdDischarge": "ontladen gesperd",
       "ofTotal": "van {total}",
       "power": "Vermogen",
       "soc": "Batterijniveau"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Laden met netstroom",
         "discharge": "Ontladen naar het net",
-        "hold": "Blokkeer ontladen",
         "holdcharge": "Blokkeer laden",
+        "holddischarge": "Blokkeer ontladen",
         "normal": "Normale werking"
       },
       "empty": "leeg",

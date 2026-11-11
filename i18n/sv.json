@@ -38,8 +38,8 @@
       "energy": "Energi",
       "gridCharge": "laddning från elnätet",
       "gridDischarge": "urladdning till elnätet",
-      "hold": "urladdning låst",
       "holdCharge": "laddning låst",
+      "holdDischarge": "urladdning låst",
       "ofTotal": "av {total}",
       "power": "Effekt",
       "soc": "Laddnivå"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Ladda från elnätet",
         "discharge": "Mata ut el till elnätet",
-        "hold": "Blockera urladdning",
         "holdcharge": "Blockera laddning",
+        "holddischarge": "Blockera urladdning",
         "normal": "Normal drift"
       },
       "empty": "tom",

@@ -38,8 +38,8 @@
       "energy": "Energija",
       "gridCharge": "įkraunama iš tinklo",
       "gridDischarge": "iškrova į tinklą",
-      "hold": "iškrovimas blokuojamas",
       "holdCharge": "įkrovimas blokuojamas",
+      "holdDischarge": "iškrovimas blokuojamas",
       "ofTotal": "iš {total}",
       "power": "Galia",
       "soc": "Įkrova"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Įkrauti iš tinklo",
         "discharge": "Iškrauti į tinklą",
-        "hold": "Iškrovimas blokuojamas",
         "holdcharge": "Įkrovimas blokuojamas",
+        "holddischarge": "Iškrovimas blokuojamas",
         "normal": "Normalus veikimas"
       },
       "empty": "tuščia",
