@@ -71,8 +71,8 @@
       "action": {
         "charge": "Laddning från nätet",
         "discharge": "Återmata till nätet",
-        "hold": "Blockera urladdning",
         "holdcharge": "Blockera laddning",
+        "holddischarge": "Blockera urladdning",
         "normal": "Normal drift"
       },
       "empty": "tom",

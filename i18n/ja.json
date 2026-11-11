@@ -71,8 +71,8 @@
       "action": {
         "charge": "系統から充電",
         "discharge": "系統へ放電",
-        "hold": "放電を防止",
         "holdcharge": "充電を防止",
+        "holddischarge": "放電を防止",
         "normal": "通常運転"
       },
       "empty": "空",

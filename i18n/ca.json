@@ -70,8 +70,8 @@
       "action": {
         "charge": "Carrega de la xarxa",
         "discharge": "Descarrega a la xarxa",
-        "hold": "Evita la descàrrega",
         "holdcharge": "Evita la càrrega",
+        "holddischarge": "Evita la descàrrega",
         "normal": "Funcionament normal"
       },
       "empty": "buida",

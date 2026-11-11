@@ -70,8 +70,8 @@
       "action": {
         "charge": "Polnjenje iz omrežja",
         "discharge": "Praznjenje v omrežje",
-        "hold": "Prepreči praznjenje",
         "holdcharge": "Prepreči polnjenje",
+        "holddischarge": "Prepreči praznjenje",
         "normal": "Normalno delovanje"
       },
       "empty": "prazna",

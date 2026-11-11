@@ -71,8 +71,8 @@
       "action": {
         "charge": "Opladning fra nettet",
         "discharge": "Aflader til nettet",
-        "hold": "Bloker afladning",
         "holdcharge": "Bloker opladning",
+        "holddischarge": "Bloker afladning",
         "normal": "Normal drift"
       },
       "empty": "tom",

@@ -70,8 +70,8 @@
       "action": {
         "charge": "Ładowanie z sieci",
         "discharge": "Rozładowywanie do sieci",
-        "hold": "Zapobiegaj rozładowywaniu",
         "holdcharge": "Zapobiegaj ładowaniu",
+        "holddischarge": "Zapobiegaj rozładowywaniu",
         "normal": "Normalna praca"
       },
       "empty": "pusty",

@@ -71,8 +71,8 @@
       "action": {
         "charge": "Aus dem Netz lueden",
         "discharge": "Entlueden an d'Netz",
-        "hold": "Entluede verhënneren",
         "holdcharge": "Luede verhënneren",
+        "holddischarge": "Entluede verhënneren",
         "normal": "Normale Betrib"
       },
       "empty": "eidel",

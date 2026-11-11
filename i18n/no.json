@@ -70,8 +70,8 @@
       "action": {
         "charge": "Lad fra nettet",
         "discharge": "Utlad til nettet",
-        "hold": "Hindre utlading",
         "holdcharge": "Hindre lading",
+        "holddischarge": "Hindre utlading",
         "normal": "Normal drift"
       },
       "empty": "tomt",

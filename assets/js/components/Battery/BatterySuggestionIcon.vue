@@ -7,7 +7,7 @@
 	<BatteryHoldCharge v-else-if="action === 'holdcharge'" :size="size" />
 	<!-- discharge: battery-to-grid export -->
 	<BatteryDischarge v-else-if="action === 'discharge'" :size="size" />
-	<!-- hold: prevent discharging -->
+	<!-- holddischarge: prevent discharging -->
 	<BatteryHold v-else :size="size" />
 </template>
 

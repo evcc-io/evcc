@@ -68,7 +68,7 @@ export default defineComponent({
 			return this.batterySoc < this.batteryBoostLimit;
 		},
 		batteryHold(): boolean {
-			return this.batteryMode === BATTERY_MODE.HOLD;
+			return this.batteryMode === BATTERY_MODE.HOLDDISCHARGE;
 		},
 		available(): boolean {
 			return !this.belowLimit && !this.batteryHold;

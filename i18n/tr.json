@@ -71,8 +71,8 @@
       "action": {
         "charge": "Şebekeden doldurma",
         "discharge": "Şebekeye boşaltma",
-        "hold": "Pil kullanımını önle",
         "holdcharge": "Doldurmayı engelle",
+        "holddischarge": "Pil kullanımını önle",
         "normal": "Normal çalışma"
       },
       "empty": "boş",

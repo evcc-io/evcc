@@ -432,7 +432,7 @@ export default defineComponent({
 			);
 		},
 		batteryHold() {
-			return this.batteryMode === "hold";
+			return this.batteryMode === "holddischarge";
 		},
 		batteryChargeHold() {
 			return this.batteryMode === "holdcharge";

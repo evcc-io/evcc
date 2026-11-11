@@ -71,8 +71,8 @@
       "action": {
         "charge": "Cargar desde la red",
         "discharge": "Descargar a la red",
-        "hold": "Evitando la descarga",
         "holdcharge": "Evitando la carga",
+        "holddischarge": "Evitando la descarga",
         "normal": "Operación normal"
       },
       "empty": "vacío",

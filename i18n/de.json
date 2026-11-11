@@ -71,8 +71,8 @@
       "action": {
         "charge": "Aus dem Netz laden",
         "discharge": "Einspeisung ins Netz",
-        "hold": "Entladen verhindern",
         "holdcharge": "Laden verhindern",
+        "holddischarge": "Entladen verhindern",
         "normal": "Normaler Betrieb"
       },
       "empty": "leer",

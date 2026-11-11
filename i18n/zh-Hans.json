@@ -71,8 +71,8 @@
       "action": {
         "charge": "从电网充电",
         "discharge": "向电网放电",
-        "hold": "禁止放电",
         "holdcharge": "禁止充电",
+        "holddischarge": "禁止放电",
         "normal": "正常运行"
       },
       "empty": "空",

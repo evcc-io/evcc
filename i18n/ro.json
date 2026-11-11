@@ -70,8 +70,8 @@
       "action": {
         "charge": "Încărcare din rețea",
         "discharge": "Descărcare în rețea",
-        "hold": "Împiedică descărcarea",
         "holdcharge": "Împiedică încărcarea",
+        "holddischarge": "Împiedică descărcarea",
         "normal": "Funcționare normală"
       },
       "empty": "goală",

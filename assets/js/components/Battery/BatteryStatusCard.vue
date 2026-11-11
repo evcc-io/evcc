@@ -85,7 +85,7 @@ export default defineComponent({
 		},
 		// mode takes priority over the raw power reading when the battery is controllable
 		statusState():
-			| BATTERY_MODE.HOLD
+			| BATTERY_MODE.HOLDDISCHARGE
 			| BATTERY_MODE.HOLDCHARGE
 			| BATTERY_MODE.CHARGE
 			| BATTERY_MODE.DISCHARGE
@@ -93,7 +93,8 @@ export default defineComponent({
 			| "discharging"
 			| "idle" {
 			if (this.controllable) {
-				if (this.batteryMode === BATTERY_MODE.HOLD) return BATTERY_MODE.HOLD;
+				if (this.batteryMode === BATTERY_MODE.HOLDDISCHARGE)
+					return BATTERY_MODE.HOLDDISCHARGE;
 				if (this.batteryMode === BATTERY_MODE.HOLDCHARGE) return BATTERY_MODE.HOLDCHARGE;
 				if (this.batteryMode === BATTERY_MODE.CHARGE) return BATTERY_MODE.CHARGE;
 				if (this.batteryMode === BATTERY_MODE.DISCHARGE) return BATTERY_MODE.DISCHARGE;
@@ -104,7 +105,7 @@ export default defineComponent({
 		},
 		powerState(): string | undefined {
 			switch (this.statusState) {
-				case BATTERY_MODE.HOLD:
+				case BATTERY_MODE.HOLDDISCHARGE:
 					return this.$t("battery.card.hold");
 				case BATTERY_MODE.HOLDCHARGE:
 					return this.$t("battery.card.holdCharge");

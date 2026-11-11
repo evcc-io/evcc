@@ -71,8 +71,8 @@
       "action": {
         "charge": "Uzlādēt no elektrotīkla",
         "discharge": "Izlādēt tīklā",
-        "hold": "Nepieļaut izlādi",
         "holdcharge": "Apturēt uzlādi",
+        "holddischarge": "Nepieļaut izlādi",
         "normal": "Sekot saules pārpalikumam"
       },
       "empty": "tukšs",

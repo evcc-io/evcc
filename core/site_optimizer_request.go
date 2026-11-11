@@ -475,7 +475,7 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 			bat.PDemand = nil
 
 			switch mode {
-			case api.BatteryHold:
+			case api.BatteryHoldDischarge:
 				bat.DMax = 0
 			case api.BatteryHoldCharge, api.BatteryDischarge:
 				bat.CMax = 0

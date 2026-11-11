@@ -70,8 +70,8 @@
       "action": {
         "charge": "Nabíjení odběrem ze sítě",
         "discharge": "Vybíjení do sítě",
-        "hold": "Předejít vybíjení",
         "holdcharge": "Předejít nabíjení",
+        "holddischarge": "Předejít vybíjení",
         "normal": "Běžný režim"
       },
       "empty": "prázdné",

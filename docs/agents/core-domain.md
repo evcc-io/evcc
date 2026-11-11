@@ -163,7 +163,7 @@ Runs after each solve, and again every cycle via `reapplySuggestions` when the a
 | Condition (slot values, W)                         | Action       | Meaning                             |
 | -------------------------------------------------- | ------------ | ----------------------------------- |
 | charge > pvShare + thr and grid importing          | `charge`     | grid charging                       |
-| idle and grid importing and soc > `SMin`           | `hold`       | discharge deliberately withheld     |
+| idle and grid importing and soc > `SMin`           | `holddischarge` | discharge deliberately withheld     |
 | idle and grid exporting and soc < `SMax`           | `holdcharge` | surplus exported instead of charged |
 | discharge > thr and grid exporting                 | `discharge`  | battery-to-grid                     |
 | otherwise (incl. idle at a soc bound, PV charging) | `normal`     | inverter self-consumption logic     |

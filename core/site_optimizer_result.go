@@ -64,7 +64,7 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 			s.Action = api.BatteryCharge.String()
 		case idle && gridImporting && !empty:
 			// idle while importing: discharge is deliberately withheld
-			s.Action = api.BatteryHold.String()
+			s.Action = api.BatteryHoldDischarge.String()
 		case idle && gridExporting && !full:
 			// idle while exporting: surplus is exported instead of charged
 			s.Action = api.BatteryHoldCharge.String()
@@ -72,7 +72,7 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 			// discharging while exporting means battery-to-grid discharge
 			s.Action = api.BatteryDischarge.String()
 		case discharge <= suggestionThreshold && !(idle && empty) && holdWorthwhile(req, res, ts, etaD, slot):
-			s.Action = api.BatteryHold.String()
+			s.Action = api.BatteryHoldDischarge.String()
 		default:
 			s.Action = api.BatteryNormal.String()
 		}

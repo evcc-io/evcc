@@ -71,8 +71,8 @@
       "action": {
         "charge": "Lataa verkosta",
         "discharge": "Pura verkkoon",
-        "hold": "Estä purkaminen",
         "holdcharge": "Estä lataus",
+        "holddischarge": "Estä purkaminen",
         "normal": "Normaali toiminta"
       },
       "empty": "tyhjä",

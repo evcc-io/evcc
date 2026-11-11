@@ -71,8 +71,8 @@
       "action": {
         "charge": "Charge depuis le réseau",
         "discharge": "Décharge vers le réseau",
-        "hold": "Eviter la décharge",
         "holdcharge": "Eviter la charge",
+        "holddischarge": "Eviter la décharge",
         "normal": "Opération normale"
       },
       "empty": "vide",

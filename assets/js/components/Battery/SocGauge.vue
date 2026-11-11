@@ -43,7 +43,7 @@
 			<BatteryHold
 				:size="ICON_SIZE.M"
 				class="layer"
-				:class="{ 'layer--active': mode === BATTERY_MODE.HOLD }"
+				:class="{ 'layer--active': mode === BATTERY_MODE.HOLDDISCHARGE }"
 			/>
 			<BatteryHoldCharge
 				:size="ICON_SIZE.M"
@@ -73,7 +73,7 @@ const R = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * R;
 
 const LOCKED_MODES: BATTERY_MODE[] = [
-	BATTERY_MODE.HOLD,
+	BATTERY_MODE.HOLDDISCHARGE,
 	BATTERY_MODE.HOLDCHARGE,
 	BATTERY_MODE.CHARGE,
 	BATTERY_MODE.DISCHARGE,

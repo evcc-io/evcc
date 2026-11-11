@@ -71,8 +71,8 @@
       "action": {
         "charge": "Charge from grid",
         "discharge": "Discharge to grid",
-        "hold": "Prevent discharging",
         "holdcharge": "Prevent charging",
+        "holddischarge": "Prevent discharging",
         "normal": "Normal operation"
       },
       "empty": "empty",

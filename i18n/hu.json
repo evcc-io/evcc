@@ -70,8 +70,8 @@
       "action": {
         "charge": "Töltés a hálózatról",
         "discharge": "Kisütés a hálózatba",
-        "hold": "Kisütés megakadályozása",
         "holdcharge": "Töltés megakadályozása",
+        "holddischarge": "Kisütés megakadályozása",
         "normal": "Normál működés"
       },
       "empty": "üres",

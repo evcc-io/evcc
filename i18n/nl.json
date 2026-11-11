@@ -71,8 +71,8 @@
       "action": {
         "charge": "Laden met netstroom",
         "discharge": "Ontladen naar het net",
-        "hold": "Blokkeer ontladen",
         "holdcharge": "Blokkeer laden",
+        "holddischarge": "Blokkeer ontladen",
         "normal": "Normale werking"
       },
       "empty": "leeg",
