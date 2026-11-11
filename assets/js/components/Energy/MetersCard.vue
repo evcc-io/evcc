@@ -22,28 +22,9 @@
 			:chart-height="130"
 			:show-x-axis="i === meters.length - 1"
 			subhead
+			:stats="stats(m)"
 			@drill="$emit('drill', $event)"
-		>
-			<template #aside>
-				<div class="col-4 col-lg-12">
-					<Stat
-						:label="$t('energy.direction.meter.energy')"
-						:number="sumEnergy(m)"
-						:format="(v: number) => fmtKWh(v)"
-						compact
-					/>
-				</div>
-				<div v-if="sumEnergy(m, 'returnEnergy') > 0" class="col-4 col-lg-12">
-					<Stat
-						:label="$t('energy.direction.meter.returnEnergy')"
-						align="center lg-start"
-						:number="sumEnergy(m, 'returnEnergy')"
-						:format="(v: number) => fmtKWh(v)"
-						compact
-					/>
-				</div>
-			</template>
-		</EntityDetail>
+		/>
 	</Card>
 </template>
 
@@ -51,17 +32,17 @@
 import { defineComponent, type PropType } from "vue";
 import Card from "../Helper/Card.vue";
 import EntityDetail from "./EntityDetail.vue";
-import Stat from "./Stat.vue";
 import type { HistorySeries } from "./GroupChart.vue";
 import { sumEnergy } from "./mix";
 import formatter from "@/mixins/formatter";
 import type { DeviceColors } from "@/types/evcc";
+import type { StatItem } from "./types";
 import { PERIODS } from "../Sessions/types";
 
 // additional meters outside the energy balance: bars per bucket and the metered sums
 export default defineComponent({
 	name: "MetersCard",
-	components: { Card, EntityDetail, Stat },
+	components: { Card, EntityDetail },
 	mixins: [formatter],
 	props: {
 		meters: { type: Array as PropType<HistorySeries[]>, default: () => [] },
@@ -72,6 +53,17 @@ export default defineComponent({
 		to: { type: Date, required: true },
 	},
 	emits: ["drill"],
-	methods: { sumEnergy },
+	methods: {
+		stats(m: HistorySeries): StatItem[] {
+			const stat = (key: "energy" | "returnEnergy"): StatItem => ({
+				key,
+				label: this.$t(`energy.direction.meter.${key}`),
+				number: sumEnergy(m, key),
+				format: (v: number) => this.fmtKWh(v),
+			});
+			const reverse = sumEnergy(m, "returnEnergy") > 0;
+			return [stat("energy"), ...(reverse ? [stat("returnEnergy")] : [])];
+		},
+	},
 });
 </script>

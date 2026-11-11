@@ -81,7 +81,7 @@ test.describe("boost", async () => {
     await expect(boostButton).toBeDisabled();
   });
 
-  test("boost button disabled when battery is on hold", async ({ page }) => {
+  test("boost button disabled when battery is in holddischarge mode", async ({ page }) => {
     await start(CONFIG_BATTERY);
     await page.goto("/");
 
@@ -103,11 +103,11 @@ test.describe("boost", async () => {
     await page.waitForLoadState("networkidle");
     await page.goto("/");
 
-    // LP2: switch to fast mode → triggers global battery hold
+    // LP2: switch to fast mode → triggers global battery holddischarge
     const lp2 = page.getByTestId("loadpoint").nth(1);
     await lp2.getByTestId("mode").getByRole("button", { name: "Fast" }).click();
 
-    // LP1: boost button should show hold state
+    // LP1: boost button should show holddischarge state
     const boostButton = lp1.getByTestId("battery-boost-button");
     await expect(boostButton).toHaveAttribute("aria-label", "Battery locked");
 

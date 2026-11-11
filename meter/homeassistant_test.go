@@ -29,7 +29,7 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 
 	ctrl, ok := api.Cap[api.BatteryController](m)
 	require.True(t, ok)
-	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}, ctrl.BatteryModes())
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHoldDischarge, api.BatteryCharge}, ctrl.BatteryModes())
 
 	// a mode without entity is not announced and rejected by the setter
 	m, err = NewHomeAssistantFromConfig(t.Context(), conf("script.hold", ""))
@@ -37,7 +37,7 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 
 	ctrl, ok = api.Cap[api.BatteryController](m)
 	require.True(t, ok)
-	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold}, ctrl.BatteryModes())
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHoldDischarge}, ctrl.BatteryModes())
 	require.Error(t, ctrl.SetBatteryMode(api.BatteryCharge))
 
 	// a mode entity must be a script

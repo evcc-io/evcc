@@ -38,8 +38,8 @@
       "energy": "Energy",
       "gridCharge": "grid charging",
       "gridDischarge": "grid discharging",
-      "hold": "discharge locked",
       "holdCharge": "charge locked",
+      "holdDischarge": "discharge locked",
       "ofTotal": "of {total}",
       "power": "Power",
       "soc": "Charge"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Charge from grid",
         "discharge": "Discharge to grid",
-        "hold": "Prevent discharging",
         "holdcharge": "Prevent charging",
+        "holddischarge": "Prevent discharging",
         "normal": "Normal operation"
       },
       "empty": "empty",
@@ -1403,7 +1403,6 @@
       },
       "cost": "Cost",
       "others": "Others",
-      "title": "Consumers",
       "view": {
         "river": "River",
         "treemap": "Treemap"
@@ -1460,12 +1459,7 @@
       "pv": "Production"
     },
     "production": {
-      "above": "{value} above",
-      "accuracy": "Forecast accuracy",
-      "below": "{value} below",
-      "deviation": "Deviation",
-      "expectedTomorrow": "expected tomorrow",
-      "exported": "{value} exported",
+      "accuracy": "accuracy",
       "produced": "Produced",
       "remainingToday": "remaining today",
       "selfConsumed": "Self-consumed",
@@ -1485,7 +1479,6 @@
       "hint": "Solar and battery energy valued at grid export price.",
       "price": "Price/kWh",
       "pv": "Solar",
-      "share": "Share",
       "source": "Source",
       "title": "Sources",
       "total": "Total"
@@ -1495,6 +1488,8 @@
       "co2Saved": "CO₂ saved",
       "co2SavedTooltip": "Compared to drawing the consumed {energy} from the grid.",
       "configure": "Configure now",
+      "energy": "Energy",
+      "fromGrid": "{value} from grid",
       "noCo2": "No CO₂ data.",
       "noPrice": "No price data.",
       "savings": "Savings",
@@ -1662,8 +1657,9 @@
       "forecast": "Forecast",
       "forecastTooltip": "forecast: remaining solar production today",
       "gridImport": "Grid import",
+      "heaters": "Heater | Heaters",
       "homePower": "Consumption",
-      "loadpoints": "Charger| Charger | {count} chargers",
+      "loadpoints": "Charger | Chargers",
       "loadpointsLimit": "{limit} limit",
       "noEnergy": "No meter data",
       "pv": "Solar system",

@@ -38,8 +38,8 @@
       "energy": "エネルギー",
       "gridCharge": "系統充電中",
       "gridDischarge": "系統へ放電中",
-      "hold": "放電制限中",
       "holdCharge": "充電制限中",
+      "holdDischarge": "放電制限中",
       "ofTotal": "/ {total}",
       "power": "出力",
       "soc": "充電残量"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "系統から充電",
         "discharge": "系統へ放電",
-        "hold": "放電を防止",
         "holdcharge": "充電を防止",
+        "holddischarge": "放電を防止",
         "normal": "通常運転"
       },
       "empty": "空",

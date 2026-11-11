@@ -3535,7 +3535,7 @@
         "enum": [
           "unknown",
           "normal",
-          "hold",
+          "holddischarge",
           "charge",
           "holdcharge",
           "discharge"
@@ -4476,7 +4476,7 @@
             "type": "string",
             "enum": [
               "normal",
-              "hold",
+              "holddischarge",
               "charge",
               "holdcharge",
               "discharge"
@@ -6532,7 +6532,7 @@
           "application/json": {
             "schema": {
               "type": "integer",
-              "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge, 5: discharge",
+              "description": "Battery mode. 0: unknown, 1: normal, 2: holddischarge, 3: charge, 4: holdcharge, 5: discharge",
               "minimum": 0,
               "maximum": 5
             }

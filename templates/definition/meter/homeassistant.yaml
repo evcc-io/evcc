@@ -142,7 +142,7 @@ params:
     usages: ["battery"]
     description:
       de: Halten Skript
-      en: Hold Mode Script
+      en: Hold Discharge Mode Script
     service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=script
     example: "script.battery_hold"
     advanced: true
