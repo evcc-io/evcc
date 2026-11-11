@@ -1,5 +1,5 @@
 import colors, { setAlpha } from "@/colors";
-import { boundaryAxis, type echarts, forecastYAxis, hoverDot, lineDefaults } from "./echarts";
+import { boundaryAxis, forecastYAxis, hoverDot, lineDefaults } from "./echarts";
 
 // skinny panel below a chart's main plot, sharing its x axis
 const PANEL_HEIGHT = 40;
@@ -23,7 +23,7 @@ export function slotStarts(values: (number | null)[]): [number, number | null][]
   ];
 }
 
-// labels at both ends of the range only, tight to fit into the grid's left inset
+// labels at both ends of the range only, right aligned next to the panel
 export function panelYAxis(min: number, max: number, format: (v: number) => string) {
   return forecastYAxis({
     gridIndex: 1,
@@ -77,28 +77,6 @@ export function socTempPanel(
   };
 }
 
-// aligns the x axis labels below the panel with the bars above: echarts moves each grid's
-// edges on its own to fit that grid's labels, so both grids take the larger inset per side
-export function alignPanelGrids(
-  chart: Pick<echarts.ECharts, "setOption" | "convertToPixel" | "getWidth">,
-  grids: ReturnType<typeof panelGrids>,
-  slots: number
-) {
-  chart.setOption({ grid: grids });
-  const insets = [0, 1].map((xAxisIndex) => {
-    // a category axis only maps slot centers, the grid's edges lie half a slot further out
-    const firstCenter = chart.convertToPixel({ xAxisIndex }, 0);
-    const lastCenter = chart.convertToPixel({ xAxisIndex }, slots - 1);
-    const slotWidth = (lastCenter - firstCenter) / (slots - 1);
-    const leftEdge = firstCenter - slotWidth / 2;
-    const rightEdge = lastCenter + slotWidth / 2;
-    return { left: leftEdge, right: chart.getWidth() - rightEdge };
-  });
-  const left = Math.max(...insets.map((i) => i.left));
-  const right = Math.max(...insets.map((i) => i.right));
-  chart.setOption({ grid: grids.map((grid) => ({ ...grid, left, right })) });
-}
-
 // the main plot's grid shortened, and the panel's grid below it
 export function panelGrids(main: { bottom: number; left: number; right: number }, track: string) {
   return [
@@ -108,6 +86,7 @@ export function panelGrids(main: { bottom: number; left: number; right: number }
       height: PANEL_HEIGHT,
       left: main.left,
       right: main.right,
+      outerBoundsMode: "none",
       borderWidth: 0,
       show: true,
       backgroundColor: track,

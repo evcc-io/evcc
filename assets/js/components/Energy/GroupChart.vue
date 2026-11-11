@@ -43,7 +43,6 @@ import { energyAxisScale, type EnergyAxisScale } from "@/utils/energyAxis";
 import { labelStep, DAY_STEPS, MONTH_STEPS } from "@/utils/labelStep";
 import {
 	PANEL_EXTRA,
-	alignPanelGrids,
 	panelGrids,
 	panelYAxis,
 	priceVaries,
@@ -252,12 +251,6 @@ export default defineComponent({
 				isTemp,
 				(v) => (isTemp ? this.fmtNumber(v, 0, "celsius") : this.fmtPercentage(v))
 			);
-		},
-		barGrid() {
-			return { ...energyGrid(), ...(this.showXAxis ? {} : { bottom: 4 }) };
-		},
-		panelGrids(): ReturnType<typeof panelGrids> | null {
-			return this.subPanel ? panelGrids(this.barGrid, this.subPanel.track) : null;
 		},
 		chartHeight(): number {
 			return this.height + (this.subPanel ? PANEL_EXTRA : 0);
@@ -790,6 +783,10 @@ export default defineComponent({
 			const tooltipDate = this.tooltipDateLabel;
 			// the sub panel owns axis index 1 and only exists in the day view
 			const weekMarkers = this.period === PERIODS.MONTH && !this.subPanel;
+			const barGrid = {
+				...energyGrid(),
+				...(this.showXAxis ? {} : { bottom: 4 }),
+			};
 			const xAxisLabel = {
 				...xAxisLabelStyle(),
 				show: this.showXAxis,
@@ -818,7 +815,7 @@ export default defineComponent({
 				animationDurationUpdate: 400,
 				textStyle: { fontFamily: FONT_FAMILY },
 				// the bars stay grid 0, the panel sits below them as grid 1
-				grid: this.panelGrids ?? this.barGrid,
+				grid: this.subPanel ? panelGrids(barGrid, this.subPanel.track) : barGrid,
 				// one pointer and tooltip across both grids
 				axisPointer: { link: [{ xAxisIndex: "all" }] },
 				tooltip: {
@@ -1078,15 +1075,9 @@ export default defineComponent({
 				const elements = this.chart?.getZr().storage.getDisplayList() ?? [];
 				for (const el of elements) (el as { z2EmphasisLift?: number }).z2EmphasisLift = 0;
 			});
-			this.alignPanel();
 		},
 		onChartResize() {
 			this.chartWidth = this.chart?.getWidth() ?? 0;
-			this.alignPanel();
-		},
-		alignPanel() {
-			if (!this.chart || !this.panelGrids) return;
-			alignPanelGrids(this.chart, this.panelGrids, this.categoryTimestamps.length);
 		},
 		onChartTap(x: number, y: number) {
 			this.emitSlotAt(x, y);
@@ -1137,7 +1128,6 @@ export default defineComponent({
 			this.previousPeriod = this.period as PERIODS;
 			this.previousSeriesKey = newSeriesKey;
 			this.previousView = this.viewKey;
-			this.alignPanel();
 		},
 		onTouchTooltipReset() {
 			this.clearHighlight();
@@ -1207,5 +1197,10 @@ export default defineComponent({
 }
 .history-chart {
 	width: 100%;
+}
+/* an axis label wider than the grid's inset grows out of the chart instead of being cut off */
+.history-chart :deep(div),
+.history-chart :deep(svg) {
+	overflow: visible !important;
 }
 </style>
