@@ -73,9 +73,7 @@ export function splitLoadpointFlows(
       sums.set(key, sum);
     }
   }
-  const rest = flows.flatMap((f): ChartFlow[] =>
-    f.to === "loadpoint" ? [] : [{ from: f.from, to: f.to, energy: f.energy }]
-  );
+  const rest = flows.filter((f) => f.to !== "loadpoint") as ChartFlow[];
   return [...rest, ...sums.values()];
 }
 
