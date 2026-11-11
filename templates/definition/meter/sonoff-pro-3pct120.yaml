@@ -14,124 +14,45 @@ params:
   - name: user
     default: admin
   - name: password
-  - name: cache
-    default: 1s
 render: |
-  {{- define "uri" -}}
-  http://{{ .host }}/rpc/EnergyMeter.GetStatus?id=0
+  {{- define "getter" }}
+  source: http
+  uri: http://{{ .host }}/rpc/EnergyMeter.GetStatus?id=0
+  auth:
+    type: digest
+    user: {{ .user }}
+    password: {{ .password }}
+  cache: 1s
   {{- end }}
+  {{- $sign := "" }}{{ if eq .usage "pv" }}{{ $sign = "-" }}{{ end }}
   type: custom
   power:
-    source: http
-    uri: {{ include "uri" . }}
-    auth:
-      type: digest
-      user: {{ .user }}
-      password: {{ .password }}
+    {{- include "getter" . | indent 2 }}
     jq: .result.status.total_power
-    scale: {{ if eq .usage "pv" }}-1{{ else }}1{{ end }}
-    cache: {{ .cache }}
+    scale: {{ $sign }}1
   energy:
-    source: http
-    uri: {{ include "uri" . }}
-    auth:
-      type: digest
-      user: {{ .user }}
-      password: {{ .password }}
+    {{- include "getter" . | indent 2 }}
     jq: .result.status.total_energy.{{ if eq .usage "pv" }}reverse{{ else }}forward{{ end }}
     scale: 0.001
-    cache: {{ .cache }}
   returnenergy:
-    source: http
-    uri: {{ include "uri" . }}
-    auth:
-      type: digest
-      user: {{ .user }}
-      password: {{ .password }}
+    {{- include "getter" . | indent 2 }}
     jq: .result.status.total_energy.{{ if eq .usage "pv" }}forward{{ else }}reverse{{ end }}
     scale: 0.001
-    cache: {{ .cache }}
   voltages:
-    - source: http
-      uri: {{ include "uri" . }}
-      auth:
-        type: digest
-        user: {{ .user }}
-        password: {{ .password }}
-      jq: .result.status.phase_a.voltage
+  {{- range list "a" "b" "c" }}
+    - {{ include "getter" $ | indent 4 | trim }}
+      jq: .result.status.phase_{{ . }}.voltage
       scale: 0.01
-      cache: {{ .cache }}
-    - source: http
-      uri: {{ include "uri" . }}
-      auth:
-        type: digest
-        user: {{ .user }}
-        password: {{ .password }}
-      jq: .result.status.phase_b.voltage
-      scale: 0.01
-      cache: {{ .cache }}
-    - source: http
-      uri: {{ include "uri" . }}
-      auth:
-        type: digest
-        user: {{ .user }}
-        password: {{ .password }}
-      jq: .result.status.phase_c.voltage
-      scale: 0.01
-      cache: {{ .cache }}
+  {{- end }}
   currents:
-    - source: http
-      uri: {{ include "uri" . }}
-      auth:
-        type: digest
-        user: {{ .user }}
-        password: {{ .password }}
-      jq: .result.status.phase_a.current
+  {{- range list "a" "b" "c" }}
+    - {{ include "getter" $ | indent 4 | trim }}
+      jq: .result.status.phase_{{ . }}.current
       scale: 0.01
-      cache: {{ .cache }}
-    - source: http
-      uri: {{ include "uri" . }}
-      auth:
-        type: digest
-        user: {{ .user }}
-        password: {{ .password }}
-      jq: .result.status.phase_b.current
-      scale: 0.01
-      cache: {{ .cache }}
-    - source: http
-      uri: {{ include "uri" . }}
-      auth:
-        type: digest
-        user: {{ .user }}
-        password: {{ .password }}
-      jq: .result.status.phase_c.current
-      scale: 0.01
-      cache: {{ .cache }}
+  {{- end }}
   powers:
-    - source: http
-      uri: {{ include "uri" . }}
-      auth:
-        type: digest
-        user: {{ .user }}
-        password: {{ .password }}
-      jq: .result.status.phase_a.active_power
-      scale: 0.001
-      cache: {{ .cache }}
-    - source: http
-      uri: {{ include "uri" . }}
-      auth:
-        type: digest
-        user: {{ .user }}
-        password: {{ .password }}
-      jq: .result.status.phase_b.active_power
-      scale: 0.001
-      cache: {{ .cache }}
-    - source: http
-      uri: {{ include "uri" . }}
-      auth:
-        type: digest
-        user: {{ .user }}
-        password: {{ .password }}
-      jq: .result.status.phase_c.active_power
-      scale: 0.001
-      cache: {{ .cache }}
+  {{- range list "a" "b" "c" }}
+    - {{ include "getter" $ | indent 4 | trim }}
+      jq: .result.status.phase_{{ . }}.active_power
+      scale: {{ $sign }}0.001
+  {{- end }}
