@@ -55,12 +55,11 @@ const (
 	elwaRegOperationMode      = 1065 // https://github.com/evcc-io/evcc/discussions/23708
 	elwaRegMaxControlledPower = 1014 // max. power for linear controlled output
 	elwaRegMaxCombinedPower   = 1071 // (max. power for linear controlled output + configured relais power) * 1.10
-	elwaRegControlFWVer       = 1016 // control firmware version
+	elwaRegControlFirmware    = 1016 // control firmware version, 230 for a0023006
 )
 
 var elwaTemp = []uint16{1001, 1030, 1031}
 var elwaStandbyPower uint16 = 10
-var elwaControlFWVer uint16 = 0
 
 func init() {
 	// https://github.com/evcc-io/evcc/discussions/12761
@@ -123,6 +122,17 @@ func NewMyPv(ctx context.Context, name string, settings modbus.TcpSettings, temp
 		name:     name,
 		statusC:  statusC,
 		scale:    scale,
+	}
+
+	// AC Thor scales by itself since firmware a0023006
+	if name == "ac-thor" {
+		firmware, err := wb.readUint16(elwaRegControlFirmware)
+		if err != nil {
+			return nil, err
+		}
+		if firmware >= 230 {
+			wb.scale = 1
+		}
 	}
 
 	go wb.heartbeat(ctx, 30*time.Second)
@@ -235,20 +245,8 @@ func (wb *MyPv) deviceEnabled() (bool, error) {
 }
 
 func (wb *MyPv) setPower(power uint16) error {
-	if elwaControlFWVer == 0 {
-		c, err := wb.conn.ReadHoldingRegisters(elwaRegControlFWVer, 1)
-		if err != nil {
-			return err
-		}
-		elwaControlFWVer = binary.BigEndian.Uint16(c)
-	}
-
 	b := make([]byte, 2)
-	if elwaControlFWVer >= 230 { //no scaling needed for FW >= a0023006
-		binary.BigEndian.PutUint16(b, power)
-	} else {
-		binary.BigEndian.PutUint16(b, uint16(wb.scale*float64(power)))
-	}
+	binary.BigEndian.PutUint16(b, uint16(wb.scale*float64(power)))
 
 	_, err := wb.conn.WriteMultipleRegisters(elwaRegSetPower, 1, b)
 	return err
@@ -359,11 +357,7 @@ func (wb *MyPv) CurrentPower() (float64, error) {
 	wb.log.TRACE.Printf("max. power: controlled %.0f W / combined %.0f W", float64(controlled), float64(combined))
 
 	// relay power = combined power - controlled power, finally corrected with 110% factor
-	if elwaControlFWVer >= 230 { //no scaling needed for FW >= a0023006
-		res += float64(int(combined)-int(controlled)) / 1.1
-	} else {
-		res += float64(int(combined)-int(controlled)) / wb.scale / 1.1
-	}
+	res += float64(int(combined)-int(controlled)) / wb.scale / 1.1
 
 	return res, nil
 }
