@@ -192,22 +192,7 @@ render: |
           type: holding
           decode: uint32nan
         scale: 0.01
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 34665 # SMA Modbus Profile: BatDsch.ActBatDsch
-      type: holding
-      decode: uint64nan
-    scale: 0.001
-  returnenergy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 34661 # SMA Modbus Profile: BatChrg.ActBatChrg
-      type: holding
-      decode: uint64nan
-    scale: 0.001
+  # no energy: BMS counters BatDsch.ActBatDsch (34665) and BatChrg.ActBatChrg (34661) only count whole kWh, power is integrated instead
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
