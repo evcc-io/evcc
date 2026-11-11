@@ -7,6 +7,20 @@ export function sumEnergy(
   return series.data.reduce((acc, slot) => acc + slot[key], 0);
 }
 
+// several series as one, slot by slot
+export function sumSeries<T extends { start: string; energy: number; returnEnergy: number }>(
+  list: { data: T[] }[]
+): T[] {
+  const slots = new Map<string, T>();
+  for (const slot of list.flatMap((s) => s.data)) {
+    const sum = slots.get(slot.start) ?? { ...slot, energy: 0, returnEnergy: 0 };
+    sum.energy += slot.energy;
+    sum.returnEnergy += slot.returnEnergy;
+    slots.set(slot.start, sum);
+  }
+  return [...slots.values()].sort((a, b) => a.start.localeCompare(b.start));
+}
+
 // what the energy into the given sinks cost, and how much of it was priced
 export function sinkCost(flows: Flow[], ...sinks: FlowSink[]): { cost: number; energy: number } {
   const into = flows.filter((f) => sinks.includes(f.to));
@@ -40,6 +54,24 @@ export interface SourceRow {
   energy: number; // kWh
   cost?: number; // undefined without price data
   price?: number; // per kWh
+}
+
+// several entities as one: energy and cost add up, shares and prices follow
+export function mergeSources(lists: SourceRow[][]): SourceRow[] {
+  const rows = lists.flat();
+  const total = rows.reduce((acc, row) => acc + row.energy, 0);
+  const out = new Map<FlowSource, SourceRow>();
+  for (const row of rows) {
+    const sum = out.get(row.from) ?? { from: row.from, share: 0, energy: 0 };
+    sum.energy += row.energy;
+    if (row.cost !== undefined) sum.cost = (sum.cost ?? 0) + row.cost;
+    out.set(row.from, sum);
+  }
+  return [...out.values()].map((row) => ({
+    ...row,
+    share: total ? (row.energy / total) * 100 : 0,
+    price: row.cost !== undefined && row.energy ? row.cost / row.energy : undefined,
+  }));
 }
 
 // what reached the sink from each of `sources` over the period, scaled to `energy`:

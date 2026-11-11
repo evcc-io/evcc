@@ -45,6 +45,7 @@ import {
 	PANEL_EXTRA,
 	panelGrids,
 	panelYAxis,
+	priceVaries,
 	slotStarts,
 	socTempPanel,
 	type SubPanel,
@@ -103,6 +104,8 @@ export default defineComponent({
 		overlayColor: { type: String, default: "" },
 		overlayLabel: { type: String, default: "" },
 		showOverlay: { type: Boolean, default: false },
+		// the gap between the overlay and the stacked sum as striped bars
+		overlayGap: Boolean,
 		focusedEntity: { type: Number as PropType<number | null>, default: null },
 		period: { type: String as PropType<PERIODS>, required: true },
 		from: { type: Date, required: true },
@@ -132,8 +135,6 @@ export default defineComponent({
 	},
 	emits: ["slot"],
 	data(): {
-		isMobile: boolean;
-		mediaQuery: MediaQueryList | null;
 		previousFocusedEntity: number | null;
 		previousPeriod: PERIODS;
 		previousSeriesKey: string;
@@ -142,8 +143,6 @@ export default defineComponent({
 		chartWidth: number;
 	} {
 		return {
-			isMobile: false,
-			mediaQuery: null,
 			chartWidth: 0,
 			previousFocusedEntity: this.focusedEntity as number | null,
 			previousPeriod: this.period as PERIODS,
@@ -228,10 +227,10 @@ export default defineComponent({
 		isBidirectional(): boolean {
 			return isBidirectional(this.group, this.series);
 		},
-		// day view: soc or temperature per category from the first series carrying it
+		// day view: soc or temperature per category from the first visible series carrying it
 		socTempValues(): (number | null)[] | null {
 			if (this.period !== PERIODS.DAY || !this.socTemp) return null;
-			const source = this.series.find((s) => s.data.some((slot) => slot.socTemp != null));
+			const source = this.socTempSource;
 			if (!source) return null;
 			const out: (number | null)[] = this.categoryKeys.map(() => null);
 			for (const slot of source.data) {
@@ -320,7 +319,7 @@ export default defineComponent({
 		},
 		// another view of the same data: stack order or the price overlay toggled
 		viewKey(): string {
-			return `${this.stackThrough}-${!!this.prices}`;
+			return `${this.stackThrough}-${!!this.prices}-${this.overlayGap}`;
 		},
 		// the prices that move over the period, zoomed into their range. A constant price
 		// is only in the tooltip
@@ -330,8 +329,7 @@ export default defineComponent({
 			const hi = (band: PriceBand) => Math.max(...known(band.hi));
 			const bands: { key: string; band: PriceBand; color: string }[] = [];
 			const add = (key: string, band: PriceBand | undefined, color: string) => {
-				// an effective price carries float noise, a flat tariff must stay flat
-				if (band && hi(band) - lo(band) > 1e-4) bands.push({ key, band, color });
+				if (band && priceVaries(band)) bands.push({ key, band, color });
 			};
 			add("import", this.prices?.import, colors.price || "");
 			add("feedin", this.prices?.feedin, colors.export || "");
@@ -347,6 +345,8 @@ export default defineComponent({
 				data: slotStarts(band.avg),
 				// a price holds for its whole slot, until the next slot's start
 				step: "end",
+				// the area would sweep in whenever the chart comes back from the pattern
+				animation: false,
 				...hoverDot(color),
 				lineStyle: { ...lineDefaults, color },
 				// glow fading out below the line, like the price forecast
@@ -368,7 +368,10 @@ export default defineComponent({
 			};
 		},
 		socTempIsTemp(): boolean {
-			return !!this.series.find((s) => s.data.some((slot) => slot.socTemp != null))?.isTemp;
+			return !!this.socTempSource?.isTemp;
+		},
+		socTempSource(): HistorySeries | undefined {
+			return this.visibleSeries.find((s) => s.data.some((slot) => slot.socTemp != null));
 		},
 		categoryTimestamps(): number[] {
 			const out: number[] = [];
@@ -462,6 +465,8 @@ export default defineComponent({
 				}
 			}
 			const overlayCol = this.overlayColor || this.color;
+			// the gap bars come on top of the line
+			const gap = this.overlayGap && this.showOverlay;
 			const overlay = {
 				id: "overlay",
 				name: this.overlayLabel || "overlay",
@@ -555,6 +560,34 @@ export default defineComponent({
 				energyByEntity.push(energyValues);
 				returnEnergyByEntity.push(returnEnergyValues);
 			});
+			// gap view: what the stack came to, then the bars end at the overlay. Where it
+			// fell short of them, the stripes take their upper part
+			const sums = cats.map((_, idx) =>
+				energyByEntity.reduce((acc, values) => acc + (values[idx] ?? 0), 0)
+			);
+			// a slot without an overlay value takes what the line shows there: the way
+			// between its neighbours. Bars would stick out of the stripes otherwise
+			const known = overlayValues.flatMap((v, i) => (v == null ? [] : [i]));
+			const gapValues = (gap ? overlayValues : []).map((o, idx) => {
+				if (o != null) return o;
+				const before = known.filter((i) => i < idx).pop();
+				const after = known.find((i) => i > idx);
+				if (before === undefined || after === undefined) return null;
+				const from = overlayValues[before]!;
+				const share = (idx - before) / (after - before);
+				return from + (overlayValues[after]! - from) * share;
+			});
+			if (gap) {
+				gapValues.forEach((o, idx) => {
+					let left = o ?? Infinity;
+					for (const values of energyByEntity) {
+						const v = values[idx];
+						if (v == null) continue;
+						values[idx] = Math.min(v, left) || null;
+						left -= values[idx] ?? 0;
+					}
+				});
+			}
 			// Per slot: index of the topmost (largest i) entity with a non-zero
 			// value. -1 = no entity has data at that slot.
 			const topEnergyPerSlot: number[] = Array.from({ length: cats.length }, () => -1);
@@ -574,6 +607,8 @@ export default defineComponent({
 			// hover lightens the active slot's bars (onChartMouseMove), like the sessions
 			// charts; silent stops single-segment highlight
 			const barEmphasis = { silent: true };
+			// the gap bars sit on the entity bars, not beside them
+			const barGap = gap ? "-100%" : "10%";
 			const returnSeries: Record<string, unknown>[] = [];
 			this.series.forEach((s, i) => {
 				const c = this.entryColors[i] || this.color;
@@ -628,7 +663,7 @@ export default defineComponent({
 					data: energyData,
 					itemStyle: { color: c, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
-					barGap: "10%",
+					barGap,
 					...barEmphasis,
 				});
 				(this.stackThrough ? returnSeries : result).push({
@@ -639,11 +674,53 @@ export default defineComponent({
 					data: returnEnergyData,
 					itemStyle: { color: returnEnergyColor, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
-					barGap: "10%",
+					barGap,
 					...barEmphasis,
 				});
 			});
 			result.push(...returnSeries.reverse());
+
+			if (gap) {
+				// from the lower to the higher of overlay and stacked sum, on a hidden base
+				const span = (pick: (o: number, sum: number) => number) =>
+					gapValues.map((o, idx) => (o == null ? null : pick(o, sums[idx] ?? 0)));
+				const shared = {
+					type: "bar",
+					stack: "overlay-gap",
+					barCategoryGap: "25%",
+					barGap,
+					z: 5,
+					...barEmphasis,
+				};
+				result.push(
+					{
+						...shared,
+						id: "overlay-gap-base",
+						data: span(Math.min),
+						itemStyle: { color: "transparent" },
+					},
+					{
+						...shared,
+						id: "overlay-gap",
+						name: this.overlayLabel,
+						data: span((o, sum) => Math.abs(o - sum)),
+						// in place of the bar's upper part or above it. Striped on dark, solid
+						// on light where stripes get lost
+						itemStyle: colors.dark
+							? {
+									color: "transparent",
+									borderRadius: radius,
+									decal: {
+										color: overlayCol,
+										dashArrayX: [1, 0],
+										dashArrayY: [3, 3],
+										rotation: -Math.PI / 4,
+									},
+								}
+							: { color: overlayCol, borderRadius: radius },
+					}
+				);
+			}
 
 			return result;
 		},
@@ -673,8 +750,8 @@ export default defineComponent({
 					return (day - 1) % step === 0 ? `${day}` : "";
 				};
 			}
-			// YEAR — narrow (single-letter) on mobile, short month name otherwise
-			return this.isMobile
+			// YEAR: single letters when twelve short month names would touch
+			return this.chartWidth < 640
 				? (t: number) => this.fmtMonthNarrow(new Date(t))
 				: (t: number) => this.fmtMonth(new Date(t), true);
 		},
@@ -983,12 +1060,6 @@ export default defineComponent({
 		const zr = this.chart?.getZr();
 		zr?.on("mousemove", this.onChartMouseMove);
 		zr?.on("globalout", this.clearHighlight);
-		this.mediaQuery = window.matchMedia("(max-width: 575.98px)");
-		this.isMobile = this.mediaQuery.matches;
-		this.mediaQuery.addEventListener("change", this.onMediaChange);
-	},
-	beforeUnmount() {
-		this.mediaQuery?.removeEventListener("change", this.onMediaChange);
 	},
 	methods: {
 		onChartInit() {
@@ -1093,9 +1164,6 @@ export default defineComponent({
 			if (this.activeSlot === null) return;
 			this.activeSlot = null;
 			this.chart?.dispatchAction({ type: "downplay" });
-		},
-		onMediaChange(e: MediaQueryListEvent) {
-			this.isMobile = e.matches;
 		},
 		timestampKey(t: number): string {
 			const d = new Date(t);

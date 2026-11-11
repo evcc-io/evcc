@@ -64,10 +64,10 @@ func (site *Site) fromTo(requested, m api.BatteryMode) bool {
 func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive bool, rate api.Rate) {
 	batteryMode := site.requiredBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate)
 
-	// put battery into hold mode when charging is active and HEMS dimmed
+	// put battery into holddischarge mode when charging is active and HEMS dimmed
 	if dimmed := hems.Dimmed(site.hems); site.fromTo(batteryMode, api.BatteryCharge) && dimmed != nil && *dimmed {
 		site.log.DEBUG.Println("battery mode: HEMS dimmed")
-		batteryMode = api.BatteryHold
+		batteryMode = api.BatteryHoldDischarge
 	}
 
 	// stop discharging to grid when HEMS curtailed production, but keep self-consumption
@@ -118,8 +118,13 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 			res = extMode
 		}
 	case site.Automatic() && site.unmodelledCharging(rate):
-		// the suggestion ignores loads the optimizer cannot model as storage
-		res = keepUnlessModified(api.BatteryHold)
+		// the suggestion ignores loads the optimizer cannot model as storage;
+		// grid charging cannot drain the battery into them, so only charge passes
+		if mode, ok := site.batterySuggestionMode(); ok && mode == api.BatteryCharge {
+			res = keepUnlessModified(mode)
+		} else {
+			res = keepUnlessModified(api.BatteryHoldDischarge)
+		}
 	case site.Automatic():
 		// optimizer decides, replacing grid charge limit and discharge control
 		if mode, ok := site.batterySuggestionMode(); ok {
@@ -136,9 +141,9 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		}
 		res = keepUnlessModified(api.BatteryCharge)
 	case site.dischargeControlActive(rate) || (batteryGridDischargeActive && site.evFastChargingActive()):
-		// hold wins over feed-in discharge; fast charging holds even without
+		// holddischarge wins over feed-in discharge; fast charging holds even without
 		// batteryDischargeControl, selling while an EV fast-charges is worse
-		res = keepUnlessModified(api.BatteryHold)
+		res = keepUnlessModified(api.BatteryHoldDischarge)
 	case batteryGridDischargeActive:
 		res = keepUnlessModified(api.BatteryDischarge)
 	case batteryModeModified(batMode):
@@ -148,15 +153,14 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 	return res
 }
 
-// unmodelledCharging reports a loadpoint charging at full power that the optimizer
-// does not control: it cannot model it as storage (unknown vehicle capacity, see
-// optimizerRequest), it is a heater, or only the battery is automatic. Its battery
-// suggestion does not account for that load, so the battery must be held. Like
-// dischargeControlActive this includes charging on the smart cost limit, which is
-// what keeps such a loadpoint running at cheap prices.
+// unmodelledCharging reports a loadpoint charging at full power that the battery
+// suggestion does not account for: a heater, a vehicle without capacity or session
+// energy limit (see optimizerRequest), or min soc charging while only the
+// battery is automatic. Like dischargeControlActive this includes charging on the
+// smart cost limit, which is what keeps such a loadpoint running at cheap prices.
 func (site *Site) unmodelledCharging(rate api.Rate) bool {
 	for _, lp := range site.activeLoadpoints() {
-		if lp.optimizerControlled() {
+		if lp.optimizerControlled() || lp.fixedDemandModelled() {
 			continue
 		}
 
@@ -228,10 +232,10 @@ func (site *Site) batterySocLimitReached(dev config.Device[api.Meter], m types.M
 
 // batteryModeFallbacks lists the modes applied instead of an unsupported mode, most to least aligned with its intent
 var batteryModeFallbacks = map[api.BatteryMode][]api.BatteryMode{
-	api.BatteryCharge:     {api.BatteryHold, api.BatteryNormal},       // keep the energy while grid power is cheap
-	api.BatteryDischarge:  {api.BatteryHoldCharge, api.BatteryNormal}, // don't store pv, feed the house instead
-	api.BatteryHold:       {api.BatteryNormal},
-	api.BatteryHoldCharge: {api.BatteryNormal},
+	api.BatteryCharge:        {api.BatteryHoldDischarge, api.BatteryNormal}, // keep the energy while grid power is cheap
+	api.BatteryDischarge:     {api.BatteryHoldCharge, api.BatteryNormal},    // don't store pv, feed the house instead
+	api.BatteryHoldDischarge: {api.BatteryNormal},
+	api.BatteryHoldCharge:    {api.BatteryNormal},
 }
 
 // supportedBatteryMode returns the requested mode if supported, otherwise the first supported fallback or unknown
@@ -249,7 +253,7 @@ func supportedBatteryMode(supported []api.BatteryMode, mode api.BatteryMode) api
 // A battery that reached the soc bound of the requested mode is held instead:
 // the max soc when charging, the min soc reserve when discharging to grid. This
 // is decided per device, so one battery reaching its bound does not force the
-// others into hold.
+// others into holddischarge.
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	fromToCharge := site.fromTo(mode, api.BatteryCharge)
 	fromToDischarge := site.fromTo(mode, api.BatteryDischarge)
@@ -272,7 +276,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 		deviceMode := mode
 
 		// hold at the soc bound of the requested mode (max soc for charge, min soc reserve for grid discharge)
-		if (fromToCharge || fromToDischarge) && deviceMode != api.BatteryHold {
+		if (fromToCharge || fromToDischarge) && deviceMode != api.BatteryHoldDischarge {
 			var m types.Measurement
 			if i < len(devices) {
 				m = devices[i]
@@ -283,7 +287,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 				return err
 			}
 			if hold {
-				deviceMode = api.BatteryHold
+				deviceMode = api.BatteryHoldDischarge
 			}
 		}
 

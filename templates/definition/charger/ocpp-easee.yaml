@@ -23,6 +23,8 @@ requirements:
         * `evcc easee-ocpp --user <email> --password <passwort> --charger <seriennummer> enable --url ws://<evcc-host>:8887/`
       * Zum Deaktivieren: `evcc easee-ocpp ... disable`
       * Status prüfen: `evcc easee-ocpp ... status`
+      * Die Wallbox gibt den Ladevorgang erst nach Authentifizierung frei, per RFID-Karte oder über die Easee App
+      * Wird keine RFID-Karte verwendet und die Freischaltung soll nicht manuell in der App erfolgen, die erweiterte Option `remotestart` aktivieren
       * Die Seriennummer des Chargers wird automatisch als Station-ID verwendet
       * Protokoll: OCPP-J v1.6, Websocket, ws://
       * Verbindung über das lokale Netzwerk
@@ -35,6 +37,8 @@ requirements:
         * `evcc easee-ocpp --user <email> --password <password> --charger <serial> enable --url ws://<evcc-host>:8887/`
       * To disable: `evcc easee-ocpp ... disable`
       * Check status: `evcc easee-ocpp ... status`
+      * The wallbox releases charging only after authorization, by RFID card or from the Easee app
+      * If no RFID card is used and charging should not be released manually in the app, enable the advanced option `remotestart`
       * The charger serial number is automatically used as station ID
       * Protocol: OCPP-J v1.6, Websocket, ws://
       * Local network connection
@@ -46,5 +50,4 @@ params:
     default: Energy.Active.Import.Register,Power.Active.Import,Current.Import
 render: |
   {{ include "ocpp" . }}
-  remotestart: true
   meterinterval: 30s

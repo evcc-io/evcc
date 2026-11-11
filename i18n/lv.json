@@ -38,8 +38,8 @@
       "energy": "Enerģija",
       "gridCharge": "tīkla uzlāde",
       "gridDischarge": "tīkla izlāde",
-      "hold": "izlāde bloķēta",
       "holdCharge": "uzlāde bloķēta",
+      "holdDischarge": "izlāde bloķēta",
       "ofTotal": "no {total}",
       "power": "Jauda",
       "soc": "Uzlāde"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Uzlādēt no elektrotīkla",
         "discharge": "Izlādēt tīklā",
-        "hold": "Nepieļaut izlādi",
         "holdcharge": "Apturēt uzlādi",
+        "holddischarge": "Nepieļaut izlādi",
         "normal": "Sekot saules pārpalikumam"
       },
       "empty": "tukšs",

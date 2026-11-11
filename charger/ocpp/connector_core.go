@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
@@ -25,9 +26,30 @@ func (conn *Connector) timestampValid(t time.Time) bool {
 	return !t.Before(conn.status.Timestamp.Time)
 }
 
+// statusClass maps a status to the charge status as seen by the loadpoint, api.StatusNone for errors
+func statusClass(s *core.StatusNotificationRequest) api.ChargeStatus {
+	if s == nil || s.ErrorCode != core.NoError {
+		return api.StatusNone
+	}
+
+	switch s.Status {
+	case core.ChargePointStatusAvailable, core.ChargePointStatusUnavailable:
+		return api.StatusA
+	case core.ChargePointStatusPreparing, core.ChargePointStatusSuspendedEVSE,
+		core.ChargePointStatusSuspendedEV, core.ChargePointStatusFinishing:
+		return api.StatusB
+	case core.ChargePointStatusCharging:
+		return api.StatusC
+	default:
+		return api.StatusNone
+	}
+}
+
 func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
+
+	prev := conn.status
 
 	var applied bool
 	if conn.status == nil {
@@ -39,6 +61,10 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		applied = true
 	} else {
 		conn.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, conn.status.Timestamp)
+	}
+
+	if applied && statusClass(prev) != statusClass(request) && conn.onStatusChange != nil {
+		conn.onStatusChange()
 	}
 
 	// Available means cable unplugged and any prior transaction is stale
@@ -125,7 +151,12 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 					}
 
 					sample.Value = strings.TrimSpace(sample.Value)
-					conn.measurements[getSampleKey(sample)] = sample
+
+					// a lifetime register is never zero, some chargers (Huawei) report 0 outside transactions
+					if !isZeroEnergy(sample) {
+						conn.measurements[getSampleKey(sample)] = sample
+					}
+
 					conn.meterTimestamp = meterValue.Timestamp.Time
 					// freshness is measured locally: charger sample timestamps may lag (Mennekes: 6-7s)
 					conn.meterUpdated = conn.clock.Now()
@@ -217,6 +248,16 @@ func (conn *Connector) assumeMeterStopped() {
 			}
 		}
 	}
+}
+
+// isZeroEnergy returns true if sample is a total or phase energy register reading of zero.
+func isZeroEnergy(sample types.SampledValue) bool {
+	if sample.Measurand != types.MeasurandEnergyActiveImportRegister {
+		return false
+	}
+
+	f, err := strconv.ParseFloat(sample.Value, 64)
+	return err == nil && f == 0
 }
 
 func (conn *Connector) updateEnergyRegister(wh float64) {
