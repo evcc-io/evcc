@@ -16,6 +16,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip"]
+    id: 1
   - name: maxacpower
   - name: meterid # grid meter VRM instance
     description:

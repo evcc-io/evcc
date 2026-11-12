@@ -180,7 +180,7 @@
 								v-model:baudrate="values['baudrate']"
 								v-model:comset="values['comset']"
 								component-id="device"
-								:defaultId="modbus.ID != null ? Number(modbus.ID) : undefined"
+								:defaultId="modbusDefaultId"
 								:defaultComset="modbus.Comset"
 								:defaultBaudrate="modbus.Baudrate"
 								:defaultPort="modbus.Port"
@@ -492,9 +492,14 @@ export default defineComponent({
 		modbusCapabilities() {
 			return (this.modbus?.Choice || []) as ModbusCapability[];
 		},
+		modbusDefaultId(): number | undefined {
+			if (!this.modbus) return undefined;
+			// a default of 0 is omitted by the api
+			return Number(this.modbus.ID ?? 0);
+		},
 		modbusDefaults() {
 			return {
-				id: this.modbus?.ID,
+				id: this.modbusDefaultId,
 				comset: this.modbus?.Comset,
 				baudrate: this.modbus?.Baudrate,
 				port: this.modbus?.Port,

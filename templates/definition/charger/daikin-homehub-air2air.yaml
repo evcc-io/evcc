@@ -21,6 +21,7 @@ discovery:
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 1
 render: |
   type: sgready
   getmode:

@@ -21,6 +21,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip"]
+    id: 1
   - preset: battery-params
 render: |
   type: custom

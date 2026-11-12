@@ -23,6 +23,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
     baudrate: 9600
   - name: lan
     type: bool

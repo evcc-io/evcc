@@ -10,6 +10,7 @@ params:
     choice: ["battery"]
   - name: modbus
     choice: ["tcpip", "rs485"]
+    id: 1
   - name: maxchargerate
   - preset: battery-params
 render: |

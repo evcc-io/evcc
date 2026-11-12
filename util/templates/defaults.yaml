@@ -874,7 +874,6 @@ modbus:
     - name: id
       description:
         generic: Modbus ID
-      default: 1
       type: int
     - name: device
       description:
