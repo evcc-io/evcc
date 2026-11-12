@@ -40,13 +40,15 @@ func TestModbusTemplateZeroID(t *testing.T) {
 			tmpl, err := ByName(Meter, "huawei-emma")
 			require.NoError(t, err)
 
-			_, values, err := tmpl.RenderResult(Meter, mode, map[string]any{
+			b, values, err := tmpl.RenderResult(Meter, mode, map[string]any{
 				"usage": "grid",
 				"host":  "192.168.0.8",
 				"port":  502,
 			})
 			require.NoError(t, err)
 			assert.Equal(t, "0", values["id"], "template-specific modbus id 0 must be applied")
+			assert.Contains(t, string(b), "id: 0")
+			assert.NotContains(t, string(b), "id: 1")
 		})
 	}
 }
