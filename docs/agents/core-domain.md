@@ -187,6 +187,13 @@ Gated by `OptimizerAutomatic()`: `off` (advisory only), battery-only, or `full` 
 - `Automatic()`: `batterySuggestionMode()` takes the first controllable battery's suggestion (`api.BatteryModeString(s.Action)`); an unknown action releases to `normal`; no suggestion releases to `normal` only if evcc had modified the mode (`batteryModeModified`), otherwise the mode is left untouched. This replaces the grid charge limit and discharge control. TODO: per-battery modes.
 - not automatic: legacy grid charge / discharge control / feed-in discharge rules.
 
+Battery mode writes invalidate the per-device applied-mode cache before the call.
+A failed or unavailable write leaves that entry unknown, since a sequence may
+have applied earlier steps. The next cycle reconciles the current requested mode,
+or normal when a failed request has ended, even if the site's logical mode has
+not changed. Successful writes restore the cache; this is runtime recovery, not
+rollback or persistence across restarts.
+
 **Loadpoint** (`activeSuggestion`, `core/loadpoint_optimizer.go`): non-nil only if `optimizerControlled()` (full automatic, not a heater or integrated device, vehicle with capacity > 0) and the suggestion is younger than `suggestionMaxAge = 2 * SlotDuration` (a stalled optimizer must not keep the loadpoint gated). With an active suggestion:
 
 - `ModeSmart` strategy switch calls `optimizerCharging(s)` and skips the smart cost / feed-in price limits.

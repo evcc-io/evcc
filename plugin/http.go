@@ -312,8 +312,10 @@ func (p *HTTP) set(param string, val any) error {
 		return err
 	}
 
-	_, err = p.request(url, body)
-
+	b, err := p.request(url, body)
+	if err == nil && p.pipeline != nil {
+		_, err = p.pipeline.Process(b)
+	}
 	return err
 }
 
