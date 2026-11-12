@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math"
 	"sync"
@@ -32,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
+	gridx "github.com/grid-x/modbus"
 )
 
 // FoxESS EV Charger, Modbus TCP Protocol 1.6
@@ -208,11 +210,16 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 	}
 
 	if wb.phases == 3 {
-		// C-series (e.g. C044KS2) has no auto phase switch register
-		if autoSw, err := wb.readUint16(foxRegAutoPhaseSwitch); err != nil {
-			wb.log.DEBUG.Printf("auto phase switch not supported: %v", err)
-		} else {
+		autoSw, err := wb.readUint16(foxRegAutoPhaseSwitch)
+		var mbErr *gridx.Error
+		switch {
+		case err == nil:
 			wb.switchable = autoSw > 0
+		case errors.As(err, &mbErr) && mbErr.ExceptionCode == gridx.ExceptionCodeIllegalDataAddress:
+			// C-series (e.g. C044KS2) has no auto phase switch register
+			wb.log.DEBUG.Printf("auto phase switch not supported: %v", err)
+		default:
+			return nil, err
 		}
 	}
 
