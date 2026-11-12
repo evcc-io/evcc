@@ -52,8 +52,9 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
 			continue
 		}
 		// For Continuous devices ModeOff means "normal operation" (heat pump runs
-		// on its own schedule). Skip only non-continuous loadpoints in ModeOff.
-		if lp.GetMode() == api.ModeOff && !lp.chargerHasFeature(api.Continuous) {
+		// on its own schedule). Skip non-continuous loadpoints in ModeOff, or charging
+		// from surplus only: neither draws must-serve energy.
+		if !lp.chargerHasFeature(api.Continuous) && (lp.GetMode() == api.ModeOff || surplusOnly(lp)) {
 			continue
 		}
 
@@ -90,6 +91,20 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
 	}
 
 	return res
+}
+
+// surplusOnly reports a loadpoint in smart mode without always charge, smart cost limit,
+// plan, battery boost or min soc charging, which only ever charges from surplus
+func surplusOnly(lp *Loadpoint) bool {
+	if !loadpoint.SurplusFlexible(lp) || lp.GetSmartCostLimit() != nil ||
+		!lp.EffectivePlanTime().IsZero() || lp.GetBatteryBoost() != boostDisabled {
+		return false
+	}
+
+	lp.RLock()
+	defer lp.RUnlock()
+
+	return !lp.minSocNotReached()
 }
 
 // lookupBin returns the historical energy at the rounded forecast temperature (°C),
