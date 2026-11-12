@@ -12,6 +12,7 @@ params:
     choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["tcpip"]
+    id: 1
 render: |
   type: custom
   power:
