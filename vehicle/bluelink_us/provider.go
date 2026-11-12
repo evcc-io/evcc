@@ -56,16 +56,6 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	return res.Status()
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.statusG()
-	if err != nil {
-		return time.Time{}, err
-	}
-	return res.FinishTime()
-}
-
 var _ api.VehicleRange = (*Provider)(nil)
 
 func (v *Provider) Range() (int64, error) {

@@ -5,6 +5,7 @@ import { defineConfig, devices } from "@playwright/test";
  */
 export default defineConfig({
   testDir: "./tests",
+  globalSetup: "./tests/global-setup.ts",
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 4 : 0,
   timeout: 60000, // 60s
@@ -16,6 +17,7 @@ export default defineConfig({
     screenshot: "only-on-failure",
     permissions: ["clipboard-write"],
     actionTimeout: 20000, // 20s for individual actions
+    reducedMotion: "reduce", // skips animations and transitions
   },
   projects: [
     {

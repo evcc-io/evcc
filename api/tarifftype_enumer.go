@@ -36,17 +36,20 @@ func _TariffTypeNoOp() {
 var _TariffTypeValues = []TariffType{TariffTypePriceStatic, TariffTypePriceDynamic, TariffTypePriceForecast, TariffTypeCo2, TariffTypeSolar, TariffTypeTemperature}
 
 var _TariffTypeNameToValueMap = map[string]TariffType{
-	_TariffTypeName[0:11]:       TariffTypePriceStatic,
+	_TariffTypeName[0:11]:  TariffTypePriceStatic,
+	_TariffTypeName[11:23]: TariffTypePriceDynamic,
+	_TariffTypeName[23:36]: TariffTypePriceForecast,
+	_TariffTypeName[36:39]: TariffTypeCo2,
+	_TariffTypeName[39:44]: TariffTypeSolar,
+	_TariffTypeName[44:55]: TariffTypeTemperature,
+}
+
+var _TariffTypeLowerNameToValueMap = map[string]TariffType{
 	_TariffTypeLowerName[0:11]:  TariffTypePriceStatic,
-	_TariffTypeName[11:23]:      TariffTypePriceDynamic,
 	_TariffTypeLowerName[11:23]: TariffTypePriceDynamic,
-	_TariffTypeName[23:36]:      TariffTypePriceForecast,
 	_TariffTypeLowerName[23:36]: TariffTypePriceForecast,
-	_TariffTypeName[36:39]:      TariffTypeCo2,
 	_TariffTypeLowerName[36:39]: TariffTypeCo2,
-	_TariffTypeName[39:44]:      TariffTypeSolar,
 	_TariffTypeLowerName[39:44]: TariffTypeSolar,
-	_TariffTypeName[44:55]:      TariffTypeTemperature,
 	_TariffTypeLowerName[44:55]: TariffTypeTemperature,
 }
 
@@ -66,7 +69,7 @@ func TariffTypeString(s string) (TariffType, error) {
 		return val, nil
 	}
 
-	if val, ok := _TariffTypeNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _TariffTypeLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to TariffType values", s)

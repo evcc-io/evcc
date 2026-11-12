@@ -3,7 +3,6 @@ package vehicle
 import (
 	"errors"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -35,7 +34,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 			LimitSoc   string // optional
 			Odometer   string // optional
 			Climater   string // optional
-			FinishTime string // optional
+			FinishTime string // deprecated, ignored
 		}
 		StatusA  string // optional - custom states mapped to status A
 		StatusB  string // optional - custom states mapped to status B
@@ -96,10 +95,6 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	if cc.Sensors.Climater != "" {
 		implement.Has(res, implement.VehicleClimater(func() (bool, error) { return conn.GetBoolState(cc.Sensors.Climater) }))
 	}
-	if cc.Sensors.FinishTime != "" {
-		implement.Has(res, implement.VehicleFinishTimer(func() (time.Time, error) { return conn.GetTimeState(cc.Sensors.FinishTime) }))
-	}
-
 	var enable func(bool) error
 	if cc.Services.Start != "" && cc.Services.Stop != "" {
 		enable = func(enable bool) error {

@@ -1,0 +1,43 @@
+interval: 0.25s
+
+# no default vehicle: connecting starts vehicle detection
+loadpoints:
+  - title: Carport
+    charger: charger
+
+chargers:
+  - name: charger
+    type: custom
+    status:
+      source: http
+      uri: http://localhost:7072/api/state
+      jq: .loadpoints[0].status
+    enabled:
+      source: js
+      script: |
+        false
+    enable:
+      source: js
+      script: |
+        false
+    maxcurrent:
+      source: js
+      script: |
+        16
+
+# the golf's cloud api is slow and still reports it unplugged, the honda has no status api
+vehicles:
+  - name: golf
+    type: custom
+    title: blauer e-Golf
+    soc:
+      source: js
+      script: |
+        50
+    status:
+      source: script
+      cmd: sh -c "sleep 3; echo A"
+  - name: honda
+    type: template
+    template: offline
+    title: grüner Honda e

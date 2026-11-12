@@ -16,6 +16,8 @@ requirements:
       Works with air 2 air heat pumps that support 4th gen WLAN-adapters (BRP069C4). With a maximum of 5 units.
 
       Homehub (EKRHH) needs to be configured in mode 4 (Modbus TCP/IP for air2air heat pumps).
+discovery:
+  mdns: ["_dkapi._tcp"]
 params:
   - name: modbus
     choice: ["tcpip"]
@@ -47,7 +49,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 1000
-            type: writeholding
+            type: writesingle
             encoding: int16
     - case: 3 # boost
       set:
@@ -58,7 +60,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 1000
-            type: writeholding
+            type: writesingle
             encoding: int16
     - case: 1 # dim
       set:
@@ -66,13 +68,13 @@ render: |
         {{- include "modbus" . | indent 6 }}
         register:
           address: 1000
-          type: writeholding
+          type: writesingle
           encoding: int16
   setmaxpower:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 1001 # PV surplus
-      type: writeholding
+      type: writesingle
       decode: int16
     scale: 0.1

@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"errors"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -29,10 +30,14 @@ func bo() backoff.BackOff {
 	)
 }
 
-// backoffPermanentError returns a permanent error in case of HTTP 400
+// backoffPermanentError returns a permanent error in case of HTTP errors except 429
 func backoffPermanentError(err error) error {
 	if se, ok := errors.AsType[*request.StatusError](err); ok {
-		if code := se.StatusCode(); code >= 400 && code <= 599 {
+		code := se.StatusCode()
+		if code == http.StatusTooManyRequests {
+			return se // drop the permanent wrapper added by the request package
+		}
+		if code >= 400 && code <= 599 {
 			return backoff.Permanent(se)
 		}
 	}
@@ -49,24 +54,28 @@ func mergeRates(data *util.Monitor[api.Rates], new api.Rates) {
 
 // mergeRatesAfter blends new and existing rates, keeping existing rates after timestamp
 func mergeRatesAfter(data *util.Monitor[api.Rates], new api.Rates, now time.Time) {
+	data.SetFunc(func(old api.Rates) api.Rates {
+		return mergeAfter(old, new, now)
+	})
+}
+
+// mergeAfter keeps the old slots that end after now and before the new slots begin
+func mergeAfter(old, new api.Rates, now time.Time) api.Rates {
 	new.Sort()
 
 	var newStart time.Time
 	if len(new) > 0 {
-		new.Sort()
 		newStart = new[0].Start
 	}
 
-	data.SetFunc(func(old api.Rates) api.Rates {
-		var between api.Rates
-		for _, r := range old {
-			if (newStart.IsZero() || !r.End.After(newStart)) && r.End.After(now) {
-				between = append(between, r)
-			}
+	var between api.Rates
+	for _, r := range old {
+		if (newStart.IsZero() || !r.End.After(newStart)) && r.End.After(now) {
+			between = append(between, r)
 		}
+	}
 
-		return append(between, new...)
-	})
+	return append(between, new...)
 }
 
 // beginningOfDay returns the beginning of the current day

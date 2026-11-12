@@ -1,0 +1,29 @@
+template: mazda
+products:
+  - brand: Mazda
+    description:
+      generic: 6e / CX-6e
+requirements:
+  evcc: ["skiptest"]
+  description:
+    en: |
+      Sign in with the account of the Mazda app of the vehicle. When the device is not known yet, Mazda sends a verification code by email which evcc asks for when connecting.
+
+      **NOTE:** Use a separate Mazda account for evcc if possible. Signing in may sign out other apps using the same account.
+    de: |
+      Anmeldung mit dem Konto der Mazda-App des Fahrzeugs. Ist das Gerät noch nicht bekannt, schickt Mazda einen Bestätigungscode per E-Mail, den evcc beim Verbinden abfragt.
+
+      **HINWEIS:** Verwende nach Möglichkeit ein separates Mazda-Konto für evcc. Die Anmeldung kann andere Apps mit demselben Konto abmelden.
+params:
+  - preset: vehicle-base
+  - preset: vehicle-online
+  - name: vin
+  - name: cache
+    default: 15m
+auth:
+  type: mazda
+  params: [user, password]
+render: |
+  type: mazda
+  {{ include "base" . }}
+  {{ include "features" . }}

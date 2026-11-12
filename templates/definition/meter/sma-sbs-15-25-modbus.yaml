@@ -4,6 +4,9 @@ products:
     description:
       generic: Sunny Boy Storage 1.5/2.0/2.5 (Modbus)
 capabilities: ["battery-control"]
+discovery:
+  hostname: ["sma*"]
+  mac: ["0015BB", "0040AD"]
 params:
   - name: usage
     choice: ["battery"]
@@ -111,7 +114,7 @@ render: |
                 address: 40801 # CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
                 type: writemultiple
                 decode: uint32
-      - case: 2 # hold
+      - case: 2 # holddischarge
         set:
           source: sequence
           set:

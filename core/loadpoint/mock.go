@@ -109,6 +109,22 @@ func (mr *MockAPIMockRecorder) EffectiveMinPower() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectiveMinPower", reflect.TypeOf((*MockAPI)(nil).EffectiveMinPower))
 }
 
+// EffectivePlan mocks base method.
+func (m *MockAPI) EffectivePlan(planTime time.Time, requiredDuration time.Duration, strategy api.PlanStrategy) (api.Rates, float64, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EffectivePlan", planTime, requiredDuration, strategy)
+	ret0, _ := ret[0].(api.Rates)
+	ret1, _ := ret[1].(float64)
+	ret2, _ := ret[2].(bool)
+	return ret0, ret1, ret2
+}
+
+// EffectivePlan indicates an expected call of EffectivePlan.
+func (mr *MockAPIMockRecorder) EffectivePlan(planTime, requiredDuration, strategy any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePlan", reflect.TypeOf((*MockAPI)(nil).EffectivePlan), planTime, requiredDuration, strategy)
+}
+
 // EffectivePlanId mocks base method.
 func (m *MockAPI) EffectivePlanId() int {
 	m.ctrl.T.Helper()
@@ -317,6 +333,20 @@ func (m *MockAPI) GetDefaultVehicleRef() string {
 func (mr *MockAPIMockRecorder) GetDefaultVehicleRef() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefaultVehicleRef", reflect.TypeOf((*MockAPI)(nil).GetDefaultVehicleRef))
+}
+
+// GetDemandPredictor mocks base method.
+func (m *MockAPI) GetDemandPredictor() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDemandPredictor")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetDemandPredictor indicates an expected call of GetDemandPredictor.
+func (mr *MockAPIMockRecorder) GetDemandPredictor() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDemandPredictor", reflect.TypeOf((*MockAPI)(nil).GetDemandPredictor))
 }
 
 // GetDisableDelay mocks base method.
@@ -559,6 +589,20 @@ func (mr *MockAPIMockRecorder) GetPlanGoal() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanGoal", reflect.TypeOf((*MockAPI)(nil).GetPlanGoal))
 }
 
+// GetPlanRemainingEnergy mocks base method.
+func (m *MockAPI) GetPlanRemainingEnergy() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPlanRemainingEnergy")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetPlanRemainingEnergy indicates an expected call of GetPlanRemainingEnergy.
+func (mr *MockAPIMockRecorder) GetPlanRemainingEnergy() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanRemainingEnergy", reflect.TypeOf((*MockAPI)(nil).GetPlanRemainingEnergy))
+}
+
 // GetPlanRequiredDuration mocks base method.
 func (m *MockAPI) GetPlanRequiredDuration(goal, maxPower float64) time.Duration {
 	m.ctrl.T.Helper()
@@ -683,6 +727,20 @@ func (m *MockAPI) GetSocConfig() SocConfig {
 func (mr *MockAPIMockRecorder) GetSocConfig() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSocConfig", reflect.TypeOf((*MockAPI)(nil).GetSocConfig))
+}
+
+// GetSocPlanGoals mocks base method.
+func (m *MockAPI) GetSocPlanGoals() []PlanGoal {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSocPlanGoals")
+	ret0, _ := ret[0].([]PlanGoal)
+	return ret0
+}
+
+// GetSocPlanGoals indicates an expected call of GetSocPlanGoals.
+func (mr *MockAPIMockRecorder) GetSocPlanGoals() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSocPlanGoals", reflect.TypeOf((*MockAPI)(nil).GetSocPlanGoals))
 }
 
 // GetSolarShare mocks base method.
@@ -923,6 +981,18 @@ func (mr *MockAPIMockRecorder) SetDefaultVehicleRef(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDefaultVehicleRef", reflect.TypeOf((*MockAPI)(nil).SetDefaultVehicleRef), arg0)
 }
 
+// SetDemandPredictor mocks base method.
+func (m *MockAPI) SetDemandPredictor(predictor string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetDemandPredictor", predictor)
+}
+
+// SetDemandPredictor indicates an expected call of SetDemandPredictor.
+func (mr *MockAPIMockRecorder) SetDemandPredictor(predictor any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDemandPredictor", reflect.TypeOf((*MockAPI)(nil).SetDemandPredictor), predictor)
+}
+
 // SetDisableDelay mocks base method.
 func (m *MockAPI) SetDisableDelay(delay time.Duration) {
 	m.ctrl.T.Helper()
@@ -1114,9 +1184,11 @@ func (mr *MockAPIMockRecorder) SetPriority(arg0 any) *gomock.Call {
 }
 
 // SetSmartCostLimit mocks base method.
-func (m *MockAPI) SetSmartCostLimit(limit *float64) {
+func (m *MockAPI) SetSmartCostLimit(limit *float64) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetSmartCostLimit", limit)
+	ret := m.ctrl.Call(m, "SetSmartCostLimit", limit)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SetSmartCostLimit indicates an expected call of SetSmartCostLimit.
@@ -1126,9 +1198,11 @@ func (mr *MockAPIMockRecorder) SetSmartCostLimit(limit any) *gomock.Call {
 }
 
 // SetSmartFeedInPriorityLimit mocks base method.
-func (m *MockAPI) SetSmartFeedInPriorityLimit(limit *float64) {
+func (m *MockAPI) SetSmartFeedInPriorityLimit(limit *float64) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetSmartFeedInPriorityLimit", limit)
+	ret := m.ctrl.Call(m, "SetSmartFeedInPriorityLimit", limit)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SetSmartFeedInPriorityLimit indicates an expected call of SetSmartFeedInPriorityLimit.

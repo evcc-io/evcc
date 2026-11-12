@@ -9,9 +9,9 @@
 import { defineComponent, type PropType } from "vue";
 import {
 	axisNameStyle,
+	boundaryAxis,
 	FONT_FAMILY,
 	forecastYAxis,
-	hoverDot,
 	lineCasing,
 	tooltipStyle,
 	tooltipTable,
@@ -29,12 +29,14 @@ import type { Legend } from "../Sessions/types";
 import {
 	slotTimes,
 	slotXAxis,
-	dayBoundaryAxis,
+	slotParents,
+	splitSlots,
 	dayBoundarySeries,
 	formatSlotRange,
 	whToKW,
 	loadpointTitle,
 	demandTitle,
+	transientHoverDot,
 } from "./chart";
 
 const GRID_LABEL = "Grid Power";
@@ -81,7 +83,7 @@ export default defineComponent({
 	},
 	computed: {
 		consumptionLabel(): string {
-			return this.$t("main.history.group.consumer");
+			return this.$t("energy.group.consumer");
 		},
 		consumptionColor(): string {
 			return colors.muted || "";
@@ -97,19 +99,26 @@ export default defineComponent({
 				...details.map((d, i) => ({
 					label: demandTitle(d, this.consumptionLabel),
 					color: this.demandColors[i] || this.consumptionColor,
-					data: d.values.map(this.toKW),
+					data: this.split(d.values).map(this.toKW),
 					id: d.title ? loadpointTitle(d) : undefined,
 				})),
 				...this.batteryEntries("vehicle"),
 				...this.batteryEntries("battery"),
 			];
 		},
+		// request slots beyond 48h may be clock hours, the chart shows them as quarters
+		parents(): number[] {
+			return slotParents(this.evopt.req.time_series.dt);
+		},
+		dt(): number[] {
+			return this.split(this.evopt.req.time_series.dt);
+		},
 		times(): number[] {
-			return slotTimes(this.timestamp, this.evopt.req.time_series.dt);
+			return slotTimes(this.timestamp, this.dt);
 		},
 		gridPower(): number[] {
-			const gridImport = this.evopt.res.grid_import || [];
-			const gridExport = this.evopt.res.grid_export || [];
+			const gridImport = this.split(this.evopt.res.grid_import || []);
+			const gridExport = this.split(this.evopt.res.grid_export || []);
 			return gridImport.map((imp, i) => {
 				const importKW = this.toKW(imp, i);
 				const exportKW = this.toKW(gridExport[i] || 0, i);
@@ -131,16 +140,16 @@ export default defineComponent({
 				z: 4,
 				data: this.gridPower,
 				smooth: 0.2,
-				...hoverDot(colors.grid || ""),
+				...transientHoverDot(colors.grid || ""),
 				lineStyle: { color: colors.grid || "", ...lineDefaults },
 			};
 			const solar = {
 				name: SOLAR_LABEL,
 				type: "line",
 				z: 4,
-				data: this.evopt.req.time_series.ft.map(this.toKW),
+				data: this.split(this.evopt.req.time_series.ft).map(this.toKW),
 				smooth: 0.2,
-				...hoverDot(colors.forecast || ""),
+				...transientHoverDot(colors.forecast || ""),
 				lineStyle: { color: colors.forecast || "", ...lineDefaults },
 			};
 			const series: Record<string, unknown>[] = [
@@ -153,6 +162,10 @@ export default defineComponent({
 					name: e.label,
 					type: "bar",
 					stack: "charge",
+					// one path per series instead of an svg element per slot. Stacking works in
+					// large mode despite the outdated TODO in echarts' barGrid layout
+					large: true,
+					largeThreshold: 0,
 					data: e.data,
 					itemStyle: { color: e.color },
 					emphasis: { disabled: true },
@@ -174,7 +187,7 @@ export default defineComponent({
 					...tooltipStyle(colors.text || ""),
 					formatter: this.tooltipFormatter,
 				},
-				xAxis: [slotXAxis(this.times, this.weekdayShort), dayBoundaryAxis(this.times)],
+				xAxis: [slotXAxis(this.times, this.weekdayShort), boundaryAxis(this.times.length)],
 				yAxis: forecastYAxis({
 					min: undefined,
 					position: "right",
@@ -208,8 +221,11 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		split(values: number[]): number[] {
+			return splitSlots(values, this.parents);
+		},
 		toKW(wh: number, index: number): number {
-			return whToKW(wh, this.evopt.req.time_series.dt[index] || 0);
+			return whToKW(wh, this.dt[index] || 0);
 		},
 		formatValue(value: number): string {
 			return this.fmtW(value * 1000, POWER_UNIT.AUTO);
@@ -219,9 +235,10 @@ export default defineComponent({
 				const battery = this.evopt.res.batteries[index];
 				if (detail.type !== type || !battery) return [];
 				// charging positive, discharging negative; one of both is always zero
-				const data = battery.charging_power.map((charging, i) => {
+				const discharging = this.split(battery.discharging_power);
+				const data = this.split(battery.charging_power).map((charging, i) => {
 					const chargingKW = this.toKW(charging, i);
-					const dischargingKW = this.toKW(battery.discharging_power[i] || 0, i);
+					const dischargingKW = this.toKW(discharging[i] || 0, i);
 					return chargingKW > 0 ? chargingKW : -dischargingKW;
 				});
 				return [
@@ -239,8 +256,7 @@ export default defineComponent({
 		): string {
 			const arr = Array.isArray(params) ? params : [params];
 			if (!arr.length) return "";
-			const dt = this.evopt.req.time_series.dt;
-			const head = formatSlotRange(this.times, dt, arr[0]!.dataIndex);
+			const head = formatSlotRange(this.times, this.dt, arr[0]!.dataIndex);
 			const rows: TooltipRow[] = arr
 				.filter((p) => p.value != null && !Number.isNaN(p.value))
 				.filter((p) => !p.seriesName?.endsWith("-casing"))

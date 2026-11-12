@@ -79,14 +79,3 @@ func (v *Provider) Odometer() (float64, error) {
 	}
 	return float64(res.Odometer[0].OdometerMeters) / 1e3, err
 }
-
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime via car telemetry
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.telemetryG()
-	if len(res.Battery) == 0 {
-		return time.Time{}, api.ErrNotAvailable
-	}
-	return time.Now().Add(time.Duration(res.Battery[0].EstimatedChargingTimeToFullMinutes) * time.Minute), err
-}

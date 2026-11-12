@@ -6,6 +6,8 @@ products:
   - brand: Ampere
     description:
       generic: Ampere.StoragePro
+discovery:
+  mdns: ["_modbus._tcp:*HST*", "_modbus._tcp:*HSR*"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -17,6 +19,16 @@ params:
   # battery control
   - name: defaultmode
     default: 2
+  - name: singlephase
+    type: bool
+    advanced: true
+    usages: ["grid"]
+    description:
+      de: Netzenergie nur von Phase 1
+      en: Grid energy from phase 1 only
+    help:
+      de: Für einphasige Geräte, die das Summenregister der Netzenergie nicht unterstützen (Modbus-Fehler 65).
+      en: For single-phase devices that don't support the grid energy sum register (Modbus exception 65).
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -28,32 +40,35 @@ render: |
       type: holding
       decode: int16
   currents:
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x4032 # RGridCurr
-      type: holding
-      decode: int16
-    scale: 0.01
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x4039 # SGridCurr
-      type: holding
-      decode: int16
-    scale: 0.01
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x4040 # TGridCurr
-      type: holding
-      decode: int16
-    scale: 0.01
+  {{- range $i := until 3 }}
+  - source: calc
+    mul:
+    - source: calc
+      sign:
+        source: modbus
+        {{- include "modbus" $ | indent 6 }}
+        register:
+          address: {{ add 41023 (mul 6 $i) }} # 0xA03F/0xA045/0xA04B R/S/T GridActivePower (+import/-export)
+          type: holding
+          decode: int16
+    - source: modbus
+      {{- include "modbus" $ | indent 4 }}
+      register:
+        address: {{ add 41022 (mul 6 $i) }} # 0xA03E/0xA044/0xA04A R/S/T meter current
+        type: holding
+        decode: uint16
+      scale: 0.01
+  {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x40FD # Total_FeedInEnergy
+      # the per-phase totals don't net import against export across phases, so they can't replace the sum
+      {{- if .singlephase }}
+      address: 0x40FD # Total_FeedInEnergy L1
+      {{- else }}
+      address: 0x416D # Sum All Phases Feed-In Total, not implemented by some models
+      {{- end }}
       type: holding
       decode: uint32
     scale: 0.01
@@ -113,7 +128,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13895 # AppMode 
-              type: writeholding
+              type: writesingle
               decode: int16
         - source: const
           value: {{ .minsoc }} 
@@ -122,9 +137,9 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13905 # BatSocLimitkeep 
-              type: writeholding
+              type: writesingle
               decode: int16
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:
@@ -135,7 +150,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13895 # AppMode 
-              type: writeholding
+              type: writesingle
               decode: int16
         - source: const
           value: {{ .maxsoc }}
@@ -144,7 +159,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13905 # BatSocLimitkeep 
-              type: writeholding
+              type: writesingle
               decode: int16
     - case: 3 # charge
       set:
@@ -157,7 +172,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13895 # AppMode 
-              type: writeholding
+              type: writesingle
               decode: int16
         - source: const
           value: 1 # enable
@@ -166,7 +181,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13828 # Charge_time_enable_control 
-              type: writeholding
+              type: writesingle
               decode: int16
         - source: const
           value: 0 # start (00:00)
@@ -175,7 +190,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13830 # First_charge_start_time 
-              type: writeholding
+              type: writesingle
               decode: int16
         - source: const
           value: 0x173B # end (23:59)
@@ -184,7 +199,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13831 # First_charge_end_time 
-              type: writeholding
+              type: writesingle
               decode: int16
         - source: const
           value: 0x7F64 # end (0xFF / 100%)
@@ -193,7 +208,7 @@ render: |
             {{- include "modbus" . | indent 10 }}        
             register:
               address: 13832 # First_charge_power_time 
-              type: writeholding
+              type: writesingle
               decode: int16
   {{- include "battery-params" . }}
   {{- end }}

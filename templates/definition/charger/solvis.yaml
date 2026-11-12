@@ -16,9 +16,8 @@ requirements:
       Control is done via the hot water target temperature.
       The controller does not support power reduction (dim).
 params:
-  - name: host
-  - name: port
-    default: 502
+  - name: modbus
+    choice: ["tcpip"]
   - name: tempnormal
     type: int
     default: 48
@@ -62,8 +61,7 @@ render: |
         value: {{ .tempnormal }}
         set:
           source: modbus
-          uri: {{ joinHostPort .host .port }}
-          id: 1
+          {{- include "modbus" . | indent 8 }}
           register:
             address: 2305 # Warmwasser Solltemperatur
             type: writesingle
@@ -74,8 +72,7 @@ render: |
         value: {{ .tempboost }}
         set:
           source: modbus
-          uri: {{ joinHostPort .host .port }}
-          id: 1
+          {{- include "modbus" . | indent 8 }}
           register:
             address: 2305 # Warmwasser Solltemperatur
             type: writesingle
@@ -86,8 +83,7 @@ render: |
         error: ErrNotAvailable
   power:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 33545 # Wärmepumpe Leistungsaufnahme elektrisch
       type: holding
@@ -95,8 +91,7 @@ render: |
     scale: 100 # 0.1 kW -> W
   temp:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register:
       address: {{ if eq .tempsource "warmwater" }}33025{{ else }}33024{{ end }} # 33025 Warmwasser S2, 33024 Warmwasserpuffer S1
       type: input
@@ -104,8 +99,7 @@ render: |
     scale: 0.1
   limittemp:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 2305 # Warmwasser Solltemperatur
       type: holding

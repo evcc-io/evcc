@@ -1,6 +1,7 @@
 package homeassistant
 
 import (
+	"cmp"
 	"encoding/json"
 	"errors"
 	"maps"
@@ -28,7 +29,34 @@ func getInstances(w http.ResponseWriter, req *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	jsonWrite(w, slices.Sorted(maps.Values(instances)))
+	res := make([]service.Option, 0, len(instances))
+	for name, uri := range instances {
+		// match keeps the single-instance auto-fill
+		res = append(res, service.Option{Value: uri, Label: name, Match: true})
+	}
+
+	slices.SortFunc(res, func(a, b service.Option) int { return cmp.Compare(a.Value, b.Value) })
+	jsonWrite(w, res)
+}
+
+func entityOptions(states []StateResponse, domains, units []string) []service.Option {
+	var res []service.Option
+	for _, e := range states {
+		if !matchesDomains(e.EntityId, domains) {
+			continue
+		}
+		o := service.Option{
+			Value: e.EntityId,
+			Label: e.Attributes.FriendlyName,
+			Match: slices.Contains(units, e.Attributes.UnitOfMeasurement),
+		}
+		if e.State != "unavailable" && e.State != "unknown" {
+			o.Hint = strings.TrimSpace(e.State + " " + e.Attributes.UnitOfMeasurement)
+		}
+		res = append(res, o)
+	}
+	slices.SortFunc(res, func(a, b service.Option) int { return cmp.Compare(a.Value, b.Value) })
+	return res
 }
 
 func connectionFromRequest(req *http.Request) (*Connection, error) {
@@ -46,10 +74,10 @@ func connectionFromRequest(req *http.Request) (*Connection, error) {
 	return NewConnection(log, uri, "", insecure)
 }
 
-// domainsFromRequest parses the comma-separated "domain" query parameter.
-func domainsFromRequest(req *http.Request) []string {
-	if domain := req.URL.Query().Get("domain"); domain != "" {
-		return strings.Split(domain, ",")
+// queryList parses a comma-separated query parameter.
+func queryList(req *http.Request, key string) []string {
+	if v := req.URL.Query().Get(key); v != "" {
+		return strings.Split(v, ",")
 	}
 	return nil
 }
@@ -81,17 +109,9 @@ func getEntities(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	domains := domainsFromRequest(req)
-
-	var result []string
-	for _, e := range states {
-		if matchesDomains(e.EntityId, domains) {
-			result = append(result, e.EntityId)
-		}
-	}
-
-	w.Header().Set("Cache-control", "max-age=300")
-	jsonWrite(w, result)
+	// short cache: hints carry live values, the form refetches on every change
+	w.Header().Set("Cache-control", "max-age=30")
+	jsonWrite(w, entityOptions(states, queryList(req, "domain"), queryList(req, "unit")))
 }
 
 func getServices(w http.ResponseWriter, req *http.Request) {
@@ -101,7 +121,7 @@ func getServices(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	domains := domainsFromRequest(req)
+	domains := queryList(req, "domain")
 
 	seen := make(map[string]struct{})
 

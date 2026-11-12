@@ -125,7 +125,7 @@ func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 
 	headers := map[string]string{
 		"Content-type": "application/x-www-form-urlencoded",
-		"User-Agent":   "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS",
+		"User-Agent":   cciMobileUserAgent,
 	}
 
 	data := url.Values{
@@ -198,6 +198,13 @@ func (v *Identity) Login(user, password, language, brand string) error {
 	v.TokenSource = oauth.RefreshTokenSource(v.log, token, refresher)
 
 	v.deviceID, err = v.getDeviceID()
+
+	// EU accounts work with an unregistered device id, see Hyundai-Kia-Connect/hyundai_kia_connect_api#1342
+	if err != nil && v.config.CCI != nil {
+		v.log.WARN.Printf("device registration failed, using random device id: %v", err)
+		v.deviceID, err = uuid.New().String(), nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error getting device id: %w", err)
 	}

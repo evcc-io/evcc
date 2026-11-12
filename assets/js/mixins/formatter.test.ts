@@ -4,7 +4,7 @@ import formatter, { POWER_UNIT } from "./formatter";
 import * as units from "../units";
 import settings from "../settings";
 import { defineComponent } from "vue";
-import { CURRENCY } from "@/types/evcc";
+import { CURRENCY, GRID_CONNECTION } from "@/types/evcc";
 
 const is12hSpy = vi.spyOn(units, "is12hFormat").mockReturnValue(false);
 
@@ -20,10 +20,22 @@ const fmt = mount(
   })
 ).vm;
 
+describe("fmtPhasePower", () => {
+  test("should use phase count with neutral", () => {
+    expect(fmt.fmtPhasePower(16, 1)).eq("3,7 kW");
+    expect(fmt.fmtPhasePower(16, 3)).eq("11,0 kW");
+    expect(fmt.fmtPhasePower(16, 3, 230, GRID_CONNECTION.THREE_PHASE_FOUR_WIRE)).eq("11,0 kW");
+  });
+  test("should use line-to-line voltage without neutral", () => {
+    expect(fmt.fmtPhasePower(16, 1, 230, GRID_CONNECTION.THREE_PHASE_THREE_WIRE)).eq("3,7 kW");
+    expect(fmt.fmtPhasePower(16, 3, 230, GRID_CONNECTION.THREE_PHASE_THREE_WIRE)).eq("6,4 kW");
+  });
+});
+
 describe("fmtW", () => {
   test("should format with units", () => {
     expect(fmt.fmtW(0, POWER_UNIT.AUTO)).eq("0,0 kW");
-    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO)).eq("1.200,0 kW");
+    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO)).eq("1.200 kW");
     expect(fmt.fmtW(0, POWER_UNIT.MW)).eq("0,0 MW");
     expect(fmt.fmtW(1200000, POWER_UNIT.MW)).eq("1,2 MW");
     expect(fmt.fmtW(0, POWER_UNIT.KW)).eq("0,0 kW");
@@ -38,7 +50,7 @@ describe("fmtW", () => {
   });
   test("should format without units", () => {
     expect(fmt.fmtW(0, POWER_UNIT.AUTO, false)).eq("0,0");
-    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO, false)).eq("1.200,0");
+    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO, false)).eq("1.200");
     expect(fmt.fmtW(0, POWER_UNIT.MW, false)).eq("0,0");
     expect(fmt.fmtW(1200000, POWER_UNIT.MW, false)).eq("1,2");
     expect(fmt.fmtW(0, POWER_UNIT.KW, false)).eq("0,0");
@@ -75,7 +87,7 @@ describe("getPowerUnit", () => {
 describe("fmtWh", () => {
   test("should format with units", () => {
     expect(fmt.fmtWh(0, POWER_UNIT.AUTO)).eq("0,0 kWh");
-    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO)).eq("1.200,0 kWh");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO)).eq("1.200 kWh");
     expect(fmt.fmtWh(0, POWER_UNIT.MW)).eq("0,0 MWh");
     expect(fmt.fmtWh(1200000, POWER_UNIT.MW)).eq("1,2 MWh");
     expect(fmt.fmtWh(0, POWER_UNIT.KW)).eq("0,0 kWh");
@@ -85,7 +97,7 @@ describe("fmtWh", () => {
   });
   test("should format without units", () => {
     expect(fmt.fmtWh(0, POWER_UNIT.AUTO, false)).eq("0,0");
-    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO, false)).eq("1.200,0");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO, false)).eq("1.200");
     expect(fmt.fmtWh(0, POWER_UNIT.MW, false)).eq("0,0");
     expect(fmt.fmtWh(1200000, POWER_UNIT.MW, false)).eq("1,2");
     expect(fmt.fmtWh(0, POWER_UNIT.KW, false)).eq("0,0");

@@ -7,6 +7,7 @@
 				class="me-2 flex-shrink-0 spin"
 				:title="$t('main.vehicle.detectionActive')"
 				data-bs-toggle="tooltip"
+				data-testid="vehicle-detection-icon"
 			>
 				<Sync />
 			</div>

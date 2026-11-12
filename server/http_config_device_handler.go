@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"dario.cat/mergo"
@@ -286,13 +287,11 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	case templates.Vehicle:
 		instance, err = deviceStatus(name, config.Vehicles())
 
-	case templates.Circuit:
-		instance, err = deviceStatus(name, config.Circuits())
-
 	case templates.Curtailer:
 		instance, err = deviceStatus(name, config.Curtailers())
 
-	case templates.Hems:
+	case templates.Circuit, templates.Hems:
+		// live values are published with the site state
 		err = api.ErrNotAvailable
 
 	case templates.Tariff:
@@ -364,13 +363,13 @@ func newDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		req, err := decodeDeviceConfig(r.Body)
+		req, err := decodeDeviceConfig(r.Body, class)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if !requireCriticalConfigAuth(w, r, authObject, req) {
+		if !requireCriticalConfigAuth(w, r, authObject, class, req) {
 			return
 		}
 
@@ -470,13 +469,13 @@ func updateDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		req, err := decodeDeviceConfig(r.Body)
+		req, err := decodeDeviceConfig(r.Body, class)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if !requireCriticalConfigAuth(w, r, authObject, req) {
+		if !configUnchanged(id, req) && !requireCriticalConfigAuth(w, r, authObject, class, req) {
 			return
 		}
 
@@ -574,6 +573,28 @@ func cleanupSiteMeterRef(name string, get func() []string, set func([]string)) {
 	}
 }
 
+// cleanupCircuitMeterRef removes a meter reference from circuit configuration
+func cleanupCircuitMeterRef(name string) {
+	for _, dev := range config.Circuits().Devices() {
+		conf := dev.Config()
+
+		if ref, _ := conf.Property("meter").(string); ref != name {
+			continue
+		}
+
+		configurable, ok := dev.(config.ConfigurableDevice[api.Circuit])
+		if !ok {
+			continue
+		}
+
+		delete(conf.Other, "meter")
+
+		if err := configurable.Update(conf.Other, dev.Instance()); err != nil {
+			log.ERROR.Printf("cleanup circuit meter reference %s: %v", conf.Name, err)
+		}
+	}
+}
+
 // cleanupTariffRef removes a tariff reference from settings
 func cleanupTariffRef(name string) {
 	if !settings.Exists(keys.TariffRefs) {
@@ -595,6 +616,109 @@ func cleanupTariffRef(name string) {
 	settings.SetJson(keys.TariffRefs, refs)
 }
 
+// deleteMeter deletes a meter and removes all references to it
+func deleteMeter(site site.API, id int) error {
+	err := deleteDevice(id, config.Meters())
+
+	// cleanup references
+	name := config.NameForID(id)
+
+	if site.GetGridMeterRef() == name {
+		site.SetGridMeterRef("")
+	}
+
+	for _, fun := range []struct {
+		get func() []string
+		set func([]string)
+	}{
+		{site.GetPVMeterRefs, site.SetPVMeterRefs},
+		{site.GetBatteryMeterRefs, site.SetBatteryMeterRefs},
+		{site.GetAuxMeterRefs, site.SetAuxMeterRefs},
+		{site.GetExtMeterRefs, site.SetExtMeterRefs},
+		{site.GetConsumerMeterRefs, site.SetConsumerMeterRefs},
+	} {
+		cleanupSiteMeterRef(name, fun.get, fun.set)
+	}
+
+	for _, dev := range config.Loadpoints().Devices() {
+		lp := dev.Instance()
+		if lp != nil && lp.GetMeterRef() == name {
+			lp.SetMeterRef("")
+		}
+	}
+
+	cleanupCircuitMeterRef(name)
+
+	return err
+}
+
+// cleanupDeviceRefsIn removes references to a deleted device from devices of the given handler
+func cleanupDeviceRefsIn[T any](parentClass templates.Class, h config.Handler[T], class templates.Class, name string) {
+	for _, dev := range h.Devices() {
+		configurable, ok := dev.(config.ConfigurableDevice[T])
+		if !ok {
+			continue
+		}
+
+		conf := dev.Config()
+		tmpl, err := templateForConfig(parentClass, conf.Other)
+		if err != nil {
+			continue
+		}
+
+		var changed bool
+		for _, p := range tmpl.Params {
+			if p.Type == templates.TypeDevice && strings.EqualFold(p.Class, class.String()) && conf.Other[p.Name] == name {
+				delete(conf.Other, p.Name)
+				changed = true
+			}
+		}
+
+		if !changed {
+			continue
+		}
+
+		if err := configurable.Update(conf.Other, dev.Instance()); err != nil {
+			log.ERROR.Printf("cleanup %s reference %s: %v", class, conf.Name, err)
+		}
+	}
+}
+
+// cleanupDeviceRefs removes references to a deleted device from all devices referencing it through template params
+func cleanupDeviceRefs(class templates.Class, name string) {
+	cleanupDeviceRefsIn(templates.Charger, config.Chargers(), class, name)
+	cleanupDeviceRefsIn(templates.Tariff, config.Tariffs(), class, name)
+}
+
+// deleteOwnedDevices deletes the devices a device references through template params
+func deleteOwnedDevices(site site.API, class templates.Class, conf config.Named) {
+	for refClass, names := range config.DeviceRefs(class, conf) {
+		for _, name := range names {
+			if err := deleteOwnedDevice(site, refClass, name); err != nil {
+				log.ERROR.Printf("delete %s %s owned by %s: %v", refClass, name, conf.Name, err)
+			}
+		}
+	}
+}
+
+func deleteOwnedDevice(site site.API, class templates.Class, name string) error {
+	id, err := config.IDForName(name)
+	if err != nil {
+		return err
+	}
+
+	switch class {
+	case templates.Charger:
+		return deleteDevice(id, config.Chargers())
+	case templates.Meter:
+		return deleteMeter(site, id)
+	case templates.Tariff:
+		return deleteDevice(id, config.Tariffs())
+	}
+
+	return nil
+}
+
 // deleteDeviceHandler deletes a device from database by class
 func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -614,6 +738,11 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
+		var owned config.Named
+		if conf, err := config.ConfigByID(id); err == nil {
+			owned = conf.Named()
+		}
+
 		switch class {
 		case templates.Charger:
 			err = deleteDevice(id, config.Chargers())
@@ -627,34 +756,7 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			}
 
 		case templates.Meter:
-			err = deleteDevice(id, config.Meters())
-
-			// cleanup references
-			name := config.NameForID(id)
-
-			if site.GetGridMeterRef() == name {
-				site.SetGridMeterRef("")
-			}
-
-			for _, fun := range []struct {
-				get func() []string
-				set func([]string)
-			}{
-				{site.GetPVMeterRefs, site.SetPVMeterRefs},
-				{site.GetBatteryMeterRefs, site.SetBatteryMeterRefs},
-				{site.GetAuxMeterRefs, site.SetAuxMeterRefs},
-				{site.GetExtMeterRefs, site.SetExtMeterRefs},
-				{site.GetConsumerMeterRefs, site.SetConsumerMeterRefs},
-			} {
-				cleanupSiteMeterRef(name, fun.get, fun.set)
-			}
-
-			for _, dev := range h.Devices() {
-				lp := dev.Instance()
-				if lp != nil && lp.GetMeterRef() == name {
-					lp.SetMeterRef("")
-				}
-			}
+			err = deleteMeter(site, id)
 
 		case templates.Vehicle:
 			err = deleteDevice(id, config.Vehicles())
@@ -668,6 +770,11 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			}
 
 		case templates.Circuit:
+			var meterRef string
+			if circuit, lookupErr := config.Circuits().ByName(config.NameForID(id)); lookupErr == nil {
+				meterRef, _ = circuit.Config().Property("meter").(string)
+			}
+
 			err = deleteDevice(id, config.Circuits())
 
 			// cleanup references
@@ -675,6 +782,16 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 				lp := dev.Instance()
 				if lp != nil && lp.GetCircuitRef() == config.NameForID(id) {
 					lp.SetCircuitRef("")
+				}
+			}
+
+			if err == nil && meterRef != "" && meterRef != site.GetGridMeterRef() {
+				if meter, lookupErr := config.Meters().ByName(meterRef); lookupErr == nil {
+					if configurable, ok := meter.(config.ConfigurableDevice[api.Meter]); ok {
+						if delErr := deleteMeter(site, configurable.ID()); delErr != nil {
+							log.ERROR.Printf("delete circuit meter %s: %v", meterRef, delErr)
+						}
+					}
 				}
 			}
 
@@ -697,6 +814,11 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 
 		case templates.Messenger:
 			err = deleteDevice(id, config.Messengers())
+		}
+
+		if err == nil {
+			cleanupDeviceRefs(class, config.NameForID(id))
+			deleteOwnedDevices(site, class, owned)
 		}
 
 		setConfigDirty()
@@ -762,13 +884,13 @@ func testConfigHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 			}
 		}
 
-		req, err := decodeDeviceConfig(r.Body)
+		req, err := decodeDeviceConfig(r.Body, class)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if !requireCriticalConfigAuth(w, r, authObject, req) {
+		if !requireCriticalConfigAuth(w, r, authObject, class, req) {
 			return
 		}
 

@@ -6,6 +6,8 @@ products:
 capabilities: ["meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
+discovery:
+  mdns: ["_http._tcp:lektrico*"]
 params:
   - name: host
   - name: cache

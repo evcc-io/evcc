@@ -12,26 +12,7 @@ import (
 var (
 	status   = map[bool]string{false: "disable", true: "enable"}
 	presence = map[bool]string{false: "✗", true: "✓"}
-
-	// Voltage global value
-	Voltage float64
 )
-
-// powerToCurrent is a helper function to convert power to per-phase current
-func powerToCurrent(power float64, phases int) float64 {
-	if Voltage == 0 {
-		panic("Voltage is not set")
-	}
-	return power / (float64(phases) * Voltage)
-}
-
-// currentToPower is a helper function to convert current to sum power
-func currentToPower(current float64, phases int) float64 {
-	if Voltage == 0 {
-		panic("Voltage is not set")
-	}
-	return current * float64(phases) * Voltage
-}
 
 // printPtr returns a string representation of a pointer value
 func printPtr[T any](format string, v *T) string {

@@ -38,11 +38,7 @@ render: |
       type: input
       address: 3004 # Active power
       decode: uint32
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 3008 # Total energy
-      type: input
-      decode: uint32
+  # energy (3008 Total energy) intentionally omitted: the register has 1 kWh
+  # resolution, so the 15min energy history quantizes to 4 kW steps. History
+  # is integrated from power instead (see issue #30407).
   {{- end }}

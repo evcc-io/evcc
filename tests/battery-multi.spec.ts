@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
+import { expectModalVisible, expectModalHidden } from "./utils";
 
 const CONFIG = "battery-multi.evcc.yaml";
 const SQL = "battery-multi.sql";
@@ -106,7 +107,18 @@ test.describe("battery page with multiple batteries", async () => {
     await expect(gridDischarge).not.toBeChecked();
     await expect(limit).not.toBeVisible();
 
+    // enabling asks for confirmation while no country is set, cancel keeps it off
+    const confirmModal = page.getByTestId("grid-discharge-confirm-modal");
     await gridDischarge.click();
+    await expectModalVisible(confirmModal);
+    await confirmModal.getByRole("button", { name: "Cancel" }).click();
+    await expectModalHidden(confirmModal);
+    await expect(gridDischarge).not.toBeChecked();
+
+    await gridDischarge.click();
+    await expectModalVisible(confirmModal);
+    await confirmModal.getByRole("button", { name: "Enable anyway" }).click();
+    await expectModalHidden(confirmModal);
     await expect(gridDischarge).toBeChecked();
 
     // the card carries a working limit control, not just its heading
@@ -121,9 +133,9 @@ test.describe("battery page with multiple batteries", async () => {
     // price range follows the limit: full tariff span at 6 ct, only the
     // 28 ct zone once the limit excludes the base rate
     const range = limit.getByTestId("price-range");
-    await expect(range).toContainText("6.0 ct – 28.0 ct");
+    await expect(range).toContainText("6.0 – 28.0 ct");
     await limit.getByRole("combobox").selectOption("0.28");
-    await expect(range).toContainText("28.0 ct – 28.0 ct");
+    await expect(range).toContainText("28.0 ct");
 
     // switch and limit survive a reload
     await page.reload();

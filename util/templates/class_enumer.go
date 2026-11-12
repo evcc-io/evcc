@@ -39,23 +39,26 @@ func _ClassNoOp() {
 var _ClassValues = []Class{Charger, Meter, Vehicle, Tariff, Loadpoint, Circuit, Messenger, Hems, Curtailer}
 
 var _ClassNameToValueMap = map[string]Class{
-	_ClassName[0:7]:        Charger,
+	_ClassName[0:7]:   Charger,
+	_ClassName[7:12]:  Meter,
+	_ClassName[12:19]: Vehicle,
+	_ClassName[19:25]: Tariff,
+	_ClassName[25:34]: Loadpoint,
+	_ClassName[34:41]: Circuit,
+	_ClassName[41:50]: Messenger,
+	_ClassName[50:54]: Hems,
+	_ClassName[54:63]: Curtailer,
+}
+
+var _ClassLowerNameToValueMap = map[string]Class{
 	_ClassLowerName[0:7]:   Charger,
-	_ClassName[7:12]:       Meter,
 	_ClassLowerName[7:12]:  Meter,
-	_ClassName[12:19]:      Vehicle,
 	_ClassLowerName[12:19]: Vehicle,
-	_ClassName[19:25]:      Tariff,
 	_ClassLowerName[19:25]: Tariff,
-	_ClassName[25:34]:      Loadpoint,
 	_ClassLowerName[25:34]: Loadpoint,
-	_ClassName[34:41]:      Circuit,
 	_ClassLowerName[34:41]: Circuit,
-	_ClassName[41:50]:      Messenger,
 	_ClassLowerName[41:50]: Messenger,
-	_ClassName[50:54]:      Hems,
 	_ClassLowerName[50:54]: Hems,
-	_ClassName[54:63]:      Curtailer,
 	_ClassLowerName[54:63]: Curtailer,
 }
 
@@ -78,7 +81,7 @@ func ClassString(s string) (Class, error) {
 		return val, nil
 	}
 
-	if val, ok := _ClassNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _ClassLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to Class values", s)

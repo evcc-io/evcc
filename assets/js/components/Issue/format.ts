@@ -1,3 +1,5 @@
+import type { Eebus } from "@/types/evcc";
+
 function sortedEntries(obj: object): [string, any][] {
   const firstKeys = ["id", "name", "type", "template"];
   return Object.entries(obj).sort(([a], [b]) => {
@@ -70,4 +72,18 @@ export function formatJson(obj: any, expandKeys: string[] = []): string {
   }
 
   return `{\n${lines.join(",\n")}\n}`;
+}
+
+const shorten = (id: string) => `***${id.slice(-4)}`;
+
+export function redactEebus({ config, status, ...rest }: Eebus): Eebus {
+  return {
+    ...rest,
+    config: config && {
+      ...config,
+      shipid: shorten(config.shipid),
+      certificate: config.certificate && { ...config.certificate, public: "***" },
+    },
+    status: status && { ...status, ski: shorten(status.ski), qr: status.qr && "***" },
+  };
 }

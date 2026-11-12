@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -27,6 +28,7 @@ type Template struct {
 	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
 	Requirements Requirements   `json:",omitempty"`
 	Caveats      []Caveat       `json:",omitempty"` // known device limitations
+	Discovery    Discovery      `json:"-"`          // local network discovery hints
 	Params       []Param        `json:",omitempty"`
 	Render       string         `json:"-"` // rendering template
 }
@@ -99,6 +101,10 @@ func (t *Template) Validate() error {
 		}
 	}
 
+	if err := t.Discovery.validate(); err != nil {
+		return err
+	}
+
 	for _, r := range t.Requirements.EVCC {
 		if !slices.Contains(ValidRequirements, r) {
 			return fmt.Errorf("invalid requirement: '%s'", r)
@@ -128,6 +134,12 @@ func (t *Template) Validate() error {
 			}
 			if v := p.Example; v != "" && v != "true" && v != "false" {
 				return fmt.Errorf("param %s: bool example must be true or false, got '%s'", p.Name, v)
+			}
+		}
+
+		if p.Type == TypeDevice {
+			if _, err := ClassString(p.Class); err != nil {
+				return fmt.Errorf("param %s: device param needs a valid class, got '%s'", p.Name, p.Class)
 			}
 		}
 
@@ -250,6 +262,20 @@ func (t *Template) ParamByName(name string) (int, Param) {
 	return -1, Param{}
 }
 
+// dropStaleKeys removes keys that differ only in case from a param's current spelling
+// if that spelling is present, e.g. keys left over from a renamed param in stored configs
+func (t *Template) dropStaleKeys(other map[string]any) map[string]any {
+	res := maps.Clone(other)
+	for key := range other {
+		if i, p := t.ParamByName(key); i > -1 && key != p.Name {
+			if _, ok := other[p.Name]; ok {
+				delete(res, key)
+			}
+		}
+	}
+	return res
+}
+
 // Usages returns the list of supported usages
 func (t *Template) Usages() []string {
 	if i, p := t.ParamByName(ParamUsage); i > -1 {
@@ -350,11 +376,14 @@ func formatValue(val any) string {
 // RenderResult renders the result template to instantiate the proxy
 func (t *Template) RenderResult(class Class, renderMode int, other map[string]any) ([]byte, map[string]any, error) {
 	values := t.Defaults(renderMode)
-	if err := mergeMaps(other, values); err != nil {
+	if err := mergeMaps(t.dropStaleKeys(other), values); err != nil {
 		return nil, values, err
 	}
 
 	t.ModbusValues(renderMode, values)
+
+	// modbus params take part in validation like the template's own params
+	t.ModbusParams("", values)
 
 	res := make(map[string]any)
 
@@ -467,4 +496,26 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 	err = tmpl.Execute(out, res)
 
 	return bytes.TrimSpace(out.Bytes()), res, err
+}
+
+// DeviceRefs returns the names of other devices referenced by device params, keyed by class
+func (t *Template) DeviceRefs(values map[string]any) map[Class][]string {
+	res := make(map[Class][]string)
+
+	for _, p := range t.Params {
+		if p.Type != TypeDevice {
+			continue
+		}
+
+		class, err := ClassString(p.Class)
+		if err != nil {
+			continue
+		}
+
+		if name, ok := values[p.Name].(string); ok && name != "" {
+			res[class] = append(res[class], name)
+		}
+	}
+
+	return res
 }

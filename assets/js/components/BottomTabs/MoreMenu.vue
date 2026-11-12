@@ -80,8 +80,14 @@
 		>
 			Optimize 🧪
 		</router-link>
-		<router-link v-if="experimental" class="dropdown-item" to="/history" active-class="active">
-			{{ $t("main.history.title") }} 🧪
+		<!-- the menu opens upwards, the tab that moved here on phones stays closest to the bar -->
+		<router-link
+			v-if="experimental"
+			class="dropdown-item d-sm-none"
+			to="/sessions"
+			active-class="active"
+		>
+			{{ $t("tabBar.sessions") }}
 		</router-link>
 	</div>
 </template>

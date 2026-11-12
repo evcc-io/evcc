@@ -628,7 +628,7 @@ func TestCollectorFallsBackToPowerAfterCapabilityLoss(t *testing.T) {
 	require.True(t, col2.restored)
 
 	require.NoError(t, col2.SetCapabilities(false, false))
-	require.Nil(t, col2.accu.energyMeter)
+	require.Nil(t, col2.accu.energyMeter.last)
 	require.False(t, col2.restored, "no readings left to seed a restore")
 
 	require.NoError(t, db.Instance.First(&e, col2.entity.Id).Error)
@@ -661,7 +661,7 @@ func TestCollectorClearsUnrestoredCheckpoint(t *testing.T) {
 	col2, err := NewCollector(Grid, "incomplete", "", WithClock(clk))
 	require.NoError(t, err)
 	require.False(t, col2.restored, "incomplete state must not restore")
-	require.Nil(t, col2.accu.energyMeter)
+	require.Nil(t, col2.accu.energyMeter.last)
 
 	require.NoError(t, col2.SetCapabilities(false, false))
 
@@ -695,7 +695,7 @@ func TestCollectorKeepsRestoreForSurvivingDirection(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, col2.SetCapabilities(true, false))
 	require.True(t, col2.restored, "the surviving import reading still seeds a restore")
-	require.Nil(t, col2.accu.returnEnergyMeter)
+	require.Nil(t, col2.accu.returnEnergyMeter.last)
 
 	// the import delta across the downtime is kept
 	require.NoError(t, col2.AddEnergy(new(111.0), nil, 0))

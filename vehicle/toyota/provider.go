@@ -12,7 +12,7 @@ import (
 const refreshInterval = 15 * time.Minute
 
 type Provider struct {
-	status  func() (Status, error)
+	status  util.Cacheable[Status]
 	refresh func() error
 }
 
@@ -33,7 +33,7 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 	}
 
 	impl := &Provider{
-		status: util.Cached(func() (Status, error) {
+		status: util.ResettableCached(func() (Status, error) {
 			res, err := api.Status(vin)
 			if err != nil {
 				return res, err
@@ -61,25 +61,30 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 var _ api.Resurrector = (*Provider)(nil)
 
 func (v *Provider) WakeUp() error {
-	return v.refresh()
+	err := v.refresh()
+	v.status.Reset()
+	return err
 }
 
 func (v *Provider) Soc() (float64, error) {
-	res, err := v.status()
+	res, err := v.status.Get()
 	if err != nil {
 		return 0, err
 	}
 
-	if res.Payload.BatteryLevel == nil {
+	switch {
+	case res.Payload.PhevUsableBatteryLevel != nil:
+		return float64(*res.Payload.PhevUsableBatteryLevel), nil
+	case res.Payload.BatteryLevel != nil:
+		return float64(*res.Payload.BatteryLevel), nil
+	default:
 		return 0, api.ErrNotAvailable
 	}
-
-	return float64(*res.Payload.BatteryLevel), nil
 }
 
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
-	res, err := v.status()
+	res, err := v.status.Get()
 	if err != nil {
 		return 0, err
 	}

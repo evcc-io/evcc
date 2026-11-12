@@ -7,6 +7,8 @@ products:
     description:
       generic: ET/EH/BT/BH Hybrid Inverter (WiFi)
 capabilities: ["battery-control"]
+discovery:
+  mac: ["F0C1CE"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -172,7 +174,7 @@ render: |
               type: writemultiple
               encoding: uint16
             delay: {{ .delay }}
-    - case: 2 # discharge hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

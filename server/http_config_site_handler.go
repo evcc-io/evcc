@@ -1,11 +1,14 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
+	"golang.org/x/text/language"
 )
 
 // siteHandler returns a device configurations by class
@@ -142,5 +145,48 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 
 		status := map[bool]int{false: http.StatusOK, true: http.StatusAccepted}
 		w.WriteHeader(status[ConfigDirty()])
+	}
+}
+
+// updateCountryHandler sets the site country as ISO 3166-1 alpha-2 code, empty string clears it
+func updateCountryHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var val string
+		if err := jsonDecoder(r.Body).Decode(&val); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if val != "" {
+			region, err := language.ParseRegion(val)
+			if err != nil || !region.IsCountry() || region.String() != val {
+				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid country code: %s", val))
+				return
+			}
+		}
+
+		site.SetCountry(val)
+
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+// updateGridConnectionHandler sets the grid connection, 3p4w (with neutral) or 3p3w (without neutral)
+func updateGridConnectionHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var val string
+		if err := jsonDecoder(r.Body).Decode(&val); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if val != grid.Connection3P4W && val != grid.Connection3P3W {
+			jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid grid connection: %s", val))
+			return
+		}
+
+		site.SetGridConnection(val)
+
+		w.WriteHeader(http.StatusOK)
 	}
 }

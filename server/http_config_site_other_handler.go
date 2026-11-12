@@ -2,9 +2,12 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -14,6 +17,11 @@ func setOptimizer(pub publisher) func(bool) error {
 	return func(b bool) error {
 		settings.SetBool(keys.Optimizer, b)
 		pub(keys.Optimizer, b)
+		if !b {
+			// automatic mode cannot outlive the optimizer
+			settings.SetString(keys.OptimizerAutomatic, core.OptimizerAutomaticOff)
+			pub(keys.OptimizerAutomatic, core.OptimizerAutomaticOff)
+		}
 		return nil
 	}
 }
@@ -21,6 +29,22 @@ func setOptimizer(pub publisher) func(bool) error {
 func getOptimizer() bool {
 	b, _ := settings.Bool(keys.Optimizer)
 	return b
+}
+
+func setOptimizerAutomatic(pub publisher, site *core.Site) func(string) error {
+	return func(level string) error {
+		if !slices.Contains(core.OptimizerAutomaticLevels, level) {
+			return fmt.Errorf("invalid optimizer automatic level: %s", level)
+		}
+
+		settings.SetString(keys.OptimizerAutomatic, level)
+		pub(keys.OptimizerAutomatic, level)
+
+		// suggestions become control decisions, don't wait for the next slot
+		site.Optimize()
+
+		return nil
+	}
 }
 
 func setExperimental(pub publisher) func(bool) error {

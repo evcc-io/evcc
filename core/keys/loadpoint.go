@@ -34,6 +34,7 @@ const (
 
 	ChargerIcon         = "chargerIcon"         // charger icon for ui
 	ChargerFeature      = "chargerFeature"      // charger feature
+	DemandPredictor     = "demandPredictor"     // heating demand predictor, settings only
 	ChargerSinglePhase  = "chargerSinglePhase"  // api.PhaseDescriber: charger physical phases, sockets only
 	ChargerPhases1p3p   = "chargerPhases1p3p"   // api.PhaseSwitcher: 1p3p chargers
 	ChargerStatusReason = "chargerStatusReason" // either awaiting authorization or disconnect required
@@ -51,6 +52,8 @@ const (
 	Suggestion = "suggestion" // optimizer's advisory suggestion for the current slot
 
 	// smart charging
+	OptimizerControlled = "optimizerControlled" // optimizer decides start/stop
+
 	SmartCostActive    = "smartCostActive"    // smart cost active
 	SmartCostLimit     = "smartCostLimit"     // smart cost limit, fast charge when costs are below
 	SmartCostNextStart = "smartCostNextStart" // smart cost next start, time of next fast charging
@@ -80,8 +83,8 @@ const (
 	ChargeDuration    = "chargeDuration"    // charge duration
 	ChargeTotalImport = "chargeTotalImport" // charge meter total import
 	TodayEnergy       = "todayEnergy"       // energy since midnight
-	Last24hEnergy     = "last24hEnergy"     // energy, rolling 24h
-	Last7dEnergy      = "last7dEnergy"      // energy, rolling 7 days
+	Last24h           = "last24h"           // energy stats, rolling 24h
+	Last7d            = "last7d"            // energy stats, rolling 7 days
 
 	// session
 	ConnectedDuration       = "connectedDuration"       // connected duration

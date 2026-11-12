@@ -27,7 +27,6 @@
 					data-bs-offset="0,10"
 					aria-expanded="false"
 					:aria-label="$t('main.alwaysCharge.label')"
-					@click="ensureSmart"
 				>
 					<AlwaysChargeIcon
 						v-if="alwaysChargeActive"
@@ -127,6 +126,7 @@ export default defineComponent({
 			this.$emit("updated", mode);
 		},
 		updateAlwaysCharge(value: ALWAYS_CHARGE) {
+			this.ensureSmart();
 			this.$emit("always-charge-updated", value);
 		},
 		syncDropdown() {

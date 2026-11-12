@@ -16,6 +16,9 @@ requirements:
 
       Für die 1P/3P Phasenumschaltung ist eine Hardware-Modifikation erforderlich: Der 4P-Schütz muss durch 2×2P-Schütze ersetzt werden. Der erste Schütz schaltet L1+N, der zweite L2+L3 und wird über das zweite Relais auf der Platine gesteuert. Register 5100 muss auf 1 gesetzt werden, um die Phasenumschaltung zu aktivieren.
       [Mehr Infos](https://community.victronenergy.com/t/charging-an-ev-with-excess-solar-switching-between-1p-and-3p/21181)
+discovery:
+  hostname: ["venus"]
+  mac: ["C0619AB"]
 params:
   - name: modbus
     choice: ["tcpip"]

@@ -148,7 +148,7 @@ render: |
               address: 0x214C # Time-based control Enable
               type: writesingle
               encoding: uint16
-    - case: 2 # hold - stop battery discharge
+    - case: 2 # holddischarge - stop battery discharge
       set:
         source: sequence
         set:

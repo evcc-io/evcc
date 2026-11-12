@@ -44,7 +44,7 @@ func legacyTokenHandler(accessToken, refreshToken string) http.HandlerFunc {
 
 // newLoginTestIdentity builds an Identity suitable for exercising the public
 // Login() method end to end, including the legacy getDeviceID call it always
-// makes. cci == nil mirrors a brand without CCI support (e.g. Genesis EU).
+// makes. cci == nil mirrors a brand without CCI support (e.g. Hyundai AU).
 func newLoginTestIdentity(t *testing.T, loginURL, deviceURL, cciURL string, cci *CCIConfig) *Identity {
 	t.Helper()
 
@@ -74,11 +74,15 @@ func testCCIConfig() *CCIConfig {
 		ClientName:           "kia",
 		OSVersion:            "27",
 		NotificationProvider: "IOS_APPSTORE",
+
+		FingerprintClientName: "KiaEU",
+		FingerprintKey:        "yb4Z1n2nlKe" + "ukNilE7QEdb" + "KB34nStPVa",
+		BrandLabel:            "Kia",
 	}
 }
 
-// TestLoginUsesLegacyWhenCCIIsNil covers brands without CCI support (Genesis
-// EU, Hyundai AU): Login must always use the unmodified legacy refreshToken path
+// TestLoginUsesLegacyWhenCCIIsNil covers brands without CCI support (Hyundai
+// AU): Login must always use the unmodified legacy refreshToken path
 func TestLoginUsesLegacyWhenCCIIsNil(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
@@ -128,6 +132,27 @@ func TestLoginPrefersLegacyToken(t *testing.T) {
 	assert.Equal(t, "legacy-access-2", token.AccessToken)
 }
 
+// TestLoginFallsBackToRandomDeviceID covers a CCI-capable brand whose legacy
+// device registration fails: Login must continue with a random device id
+func TestLoginFallsBackToRandomDeviceID(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/auth/api/v2/user/oauth2/token", legacyTokenHandler("legacy-access", "legacy-refresh"))
+	loginSrv := httptest.NewServer(mux)
+	defer loginSrv.Close()
+
+	deviceSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+	defer deviceSrv.Close()
+
+	identity := newLoginTestIdentity(t, loginSrv.URL, deviceSrv.URL, unreachable, testCCIConfig())
+	require.NoError(t, identity.Login("user@example.com", strings.Repeat("A", 48), "en", "kia"))
+	assert.NotEmpty(t, identity.deviceID)
+
+	identity = newLoginTestIdentity(t, loginSrv.URL, deviceSrv.URL, "", nil)
+	require.Error(t, identity.Login("user@example.com", strings.Repeat("A", 48), "en", "kia"))
+}
+
 // TestLoginUsesCCIAndWiresRefreshCCI covers a CCI-capable brand with an account
 // password: Login must fall back to the CCI login and wire TokenSource to refreshCCI
 func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
@@ -153,7 +178,7 @@ func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 	var refreshCalls atomic.Int32
 	var exchangeCalls atomic.Int32
 	cciMux := http.NewServeMux()
-	cciMux.HandleFunc("/domain/api/v1/auth/token", func(w http.ResponseWriter, _ *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token", func(w http.ResponseWriter, _ *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken": "cci-access", "refreshToken": "cci-refresh",
 			"nonCcsToken": "non-ccs", "exchangeableAccessToken": "exch-access",
@@ -161,7 +186,7 @@ func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 			"idToken": "id-1", "expiresIn": 3599,
 		})
 	})
-	cciMux.HandleFunc("/domain/api/v1/auth/token-exchange", func(w http.ResponseWriter, _ *http.Request) {
+	cciMux.HandleFunc("POST /auth/v1/token-exchange", func(w http.ResponseWriter, _ *http.Request) {
 		// the first (login) exchange returns a token expiring inside oauth2's
 		// 10s buffer, so the next Token() call triggers exactly one refresh
 		resp := map[string]any{"accessToken": "ccs-token-2", "expiresTime": time.Now().Add(time.Hour).Unix()}
@@ -171,7 +196,7 @@ func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 		}
 		_ = json.NewEncoder(w).Encode(resp)
 	})
-	cciMux.HandleFunc("/domain/api/v2/auth/token-refresh", func(w http.ResponseWriter, _ *http.Request) {
+	cciMux.HandleFunc("POST /auth/v2/token-refresh", func(w http.ResponseWriter, _ *http.Request) {
 		refreshCalls.Add(1)
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken": "cci-access-2", "refreshToken": "cci-refresh-2",

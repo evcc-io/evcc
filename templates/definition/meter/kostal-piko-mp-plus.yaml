@@ -6,6 +6,8 @@ products:
   - brand: Steca
     description:
       generic: coolcept fleX
+discovery:
+  mac: ["1897F1", "240BB1"]
 params:
   - name: usage
     choice: ["grid", "pv"]
@@ -16,11 +18,13 @@ render: |
   {{- if eq .usage "pv" }}
     source: http
     uri: http://{{ .host }}/measurements.xml
+    cache: 1s
     jq: .root.Device.Measurements.Measurement[] | select(.attrType == "AC_Power") | if has ("attrValue") then .attrValue else "0" end | tonumber
   {{- end }}
   {{- if eq .usage "grid" }}
     source: http
     uri: http://{{ .host }}/measurements.xml
+    cache: 1s
     jq: .root.Device.Measurements.Measurement[] | select(.attrType == "GridPower") | if has ("attrValue") then .attrValue else "0" end | tonumber
     scale: -1
   {{- end }}

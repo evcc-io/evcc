@@ -46,8 +46,13 @@ func (v *API) Vehicles() ([]string, error) {
 		return nil, err
 	}
 
+	all := res.AssignedVehicles
+	for _, f := range res.Fleets {
+		all = append(all, f.BookedVehicles...)
+	}
+
 	var vehicles []string
-	for _, v := range res.AssignedVehicles {
+	for _, v := range all {
 		if len(v.Vin) > 0 {
 			vehicles = append(vehicles, v.Vin)
 		} else {

@@ -1,21 +1,34 @@
+import { createServer, type Server } from "node:net";
 import { test, expect } from "@playwright/test";
+import { Aedes } from "aedes";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { expectModalHidden, expectModalVisible } from "./utils";
-import { isMqttReachable } from "./mqtt";
 
 test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
 
+let broker: Aedes;
+let server: Server;
+
 test.beforeEach(async ({ page }) => {
+  // local broker, public test brokers drop connections and evcc treats that as a startup error
+  broker = await Aedes.createBroker({
+    authenticate: (_, username, password, done) =>
+      done(null, username === VALID_USERNAME && password?.toString() === VALID_PASSWORD),
+  });
+  server = createServer(broker.handle);
+  await new Promise<void>((resolve) => server.listen(BROKER_PORT, "127.0.0.1", resolve));
   await start();
   await page.goto("/#/config");
 });
 
 test.afterEach(async () => {
   await stop();
+  await new Promise<void>((resolve) => broker.close(() => server.close(() => resolve())));
 });
 
-const VALID_BROKER = "test.mosquitto.org:1884";
+const BROKER_PORT = 14000 + Number(process.env["TEST_WORKER_INDEX"] ?? 0);
+const VALID_BROKER = `127.0.0.1:${BROKER_PORT}`;
 const INVALID_BROKER = "unknown.example.org";
 const VALID_TOPIC = "my-topic";
 const VALID_CLIENT_ID = "my-client-id";
@@ -29,11 +42,6 @@ test.describe("mqtt", async () => {
   });
 
   test("mqtt via ui", async ({ page }) => {
-    test.skip(
-      !(await isMqttReachable(VALID_BROKER, VALID_USERNAME, VALID_PASSWORD)),
-      `MQTT broker ${VALID_BROKER} is not reachable, skipping tests`
-    );
-
     await page.getByTestId("mqtt").getByRole("button", { name: "edit" }).click();
     const modal = await page.getByTestId("mqtt-modal");
     await expectModalVisible(modal);

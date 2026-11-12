@@ -45,6 +45,7 @@ type ChargingStatus struct {
 	FullyChargedAt                       time.Time
 	State                                string
 	ChargeType                           string
+	PlugConnectionState                  string
 	Battery                              BatteryStatus
 }
 

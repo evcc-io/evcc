@@ -132,6 +132,7 @@ import type {
 	Timeout,
 	Vehicle,
 	UiForecast,
+	PeriodStats,
 	SMART_COST_TYPE,
 	BATTERY_MODE,
 	LoadpointUi,
@@ -160,6 +161,7 @@ export default defineComponent({
 		mode: String as PropType<CHARGE_MODE>,
 		alwaysCharge: String as PropType<ALWAYS_CHARGE>,
 		effectiveMinCurrent: Number,
+		effectiveMaxCurrent: Number,
 		effectiveLimitSoc: Number,
 		effectiveMinSoc: Number,
 		limitEnergy: Number,
@@ -222,8 +224,8 @@ export default defineComponent({
 		chargePower: { type: Number, default: 0 },
 		chargedEnergy: { type: Number, default: 0 },
 		todayEnergy: { type: Number, default: 0 },
-		last24hEnergy: Number,
-		last7dEnergy: Number,
+		last24h: Object as PropType<PeriodStats>,
+		last7d: Object as PropType<PeriodStats>,
 		chargeRemainingDuration: { type: Number, default: 0 },
 
 		// other information
@@ -250,6 +252,7 @@ export default defineComponent({
 		smartFeedInPriorityAvailable: Boolean,
 		smartFeedInPriorityActive: Boolean,
 		smartFeedInPriorityNextStart: String as PropType<string | null>,
+		optimizerControlled: Boolean,
 		suggestion: Object as PropType<LoadpointSuggestion | null>,
 		tariffGrid: Number,
 		tariffFeedIn: Number,
@@ -308,7 +311,11 @@ export default defineComponent({
 			return this.chargerFeatureSwitchDevice;
 		},
 		phasesProps() {
-			return this.collectProps(Phases);
+			return {
+				...this.collectProps(Phases),
+				maxCurrent: this.effectiveMaxCurrent,
+				phasesConfigured: Math.min(this.phasesConfigured || 3, this.vehicle?.phases || 3),
+			};
 		},
 		modeProps() {
 			return this.collectProps(Mode);

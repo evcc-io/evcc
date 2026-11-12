@@ -4,6 +4,8 @@ products:
   - brand: Kostal
     description:
       generic: Piko Hybrid
+discovery:
+  mac: ["1897F1", "240BB1"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

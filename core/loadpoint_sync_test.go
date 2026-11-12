@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"testing"
 
 	evbus "github.com/asaskevich/EventBus"
@@ -47,6 +48,23 @@ func TestSyncCharger(t *testing.T) {
 		require.NoError(t, lp.syncCharger())
 		assert.Equal(t, tc.corrected, lp.enabled)
 	}
+}
+
+// a continuous device (heat pump) draws power on its own schedule: status C while disabled is not a logic error
+func TestSyncChargerContinuousDisabledButCharging(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	charger := api.NewMockCharger(ctrl)
+	charger.EXPECT().Enabled().Return(false, nil)
+
+	lp := &Loadpoint{
+		log:     util.NewLogger("foo"),
+		clock:   clock.New(),
+		charger: &featureCharger{Charger: charger, features: []api.Feature{api.Continuous}},
+		status:  api.StatusC,
+	}
+
+	require.NoError(t, lp.syncCharger())
+	assert.False(t, lp.enabled)
 }
 
 func TestSyncChargerDuringPhaseSwitch(t *testing.T) {
@@ -203,6 +221,89 @@ func TestSyncChargerPhasesByGetter(t *testing.T) {
 		require.NoError(t, lp.syncCharger())
 		assert.Equal(t, tc.outPhases, lp.phases)
 	}
+}
+
+// phases a disabled charger switched without the loadpoint (Keba driver back to 1p) are adopted
+// without warning, ignoring stale measured phases
+func TestSyncChargerPhasesDisabled(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	ch := api.NewMockCharger(ctrl)
+	ps := api.NewMockPhaseSwitcher(ctrl)
+	pg := api.NewMockPhaseGetter(ctrl)
+
+	charger := struct {
+		api.Charger
+		api.PhaseSwitcher
+		api.PhaseGetter
+	}{
+		ch, ps, pg,
+	}
+
+	ch.EXPECT().Enabled().Return(false, nil)
+	pg.EXPECT().GetPhases().Return(1, nil)
+
+	lp := &Loadpoint{
+		log:            util.NewLogger("foo"),
+		bus:            evbus.New(),
+		clock:          clock.New(),
+		charger:        charger,
+		status:         api.StatusB,
+		phases:         3,
+		measuredPhases: 3,
+	}
+
+	require.NoError(t, lp.syncCharger())
+	assert.Equal(t, 1, lp.phases)
+
+	// measured currents are stale while disabled
+	lp.measuredPhases = 3
+	ch.EXPECT().Enabled().Return(false, nil)
+	lp.charger = struct {
+		api.Charger
+		api.PhaseSwitcher
+	}{ch, ps}
+
+	require.NoError(t, lp.syncCharger())
+	assert.Equal(t, 1, lp.phases)
+}
+
+// fixed phases are not adopted while disabled, scalePhasesRequired would switch them back,
+// and a failed phase read while disabled does not stop the update
+func TestSyncChargerPhasesDisabledGates(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	ch := api.NewMockCharger(ctrl)
+	ps := api.NewMockPhaseSwitcher(ctrl)
+	pg := api.NewMockPhaseGetter(ctrl)
+
+	charger := struct {
+		api.Charger
+		api.PhaseSwitcher
+		api.PhaseGetter
+	}{
+		ch, ps, pg,
+	}
+
+	lp := &Loadpoint{
+		log:              util.NewLogger("foo"),
+		bus:              evbus.New(),
+		clock:            clock.New(),
+		charger:          charger,
+		status:           api.StatusB,
+		phases:           3,
+		phasesConfigured: 3,
+	}
+
+	ch.EXPECT().Enabled().Return(false, nil)
+	require.NoError(t, lp.syncCharger())
+	assert.Equal(t, 3, lp.phases)
+
+	lp.phasesConfigured = 0
+	ch.EXPECT().Enabled().Return(false, nil)
+	pg.EXPECT().GetPhases().Return(0, errors.New("timeout"))
+	require.NoError(t, lp.syncCharger())
+	assert.Equal(t, 3, lp.phases)
 }
 
 func TestSyncChargerPhasesByMeasurement(t *testing.T) {

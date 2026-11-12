@@ -430,7 +430,7 @@ test.describe("disabled loadpoint behavior", async () => {
 
     // disabled loadpoint gone from energy flow, hidden one stays
     await page.getByTestId("energyflow").click();
-    const loadpointsEntry = page.getByTestId("energyflow-entry-loadpoints");
+    const loadpointsEntry = page.getByTestId("energyflow-entry-charging");
     await expect(loadpointsEntry).toContainText("Carport");
     await expect(loadpointsEntry).toContainText("Süd");
     await expect(loadpointsEntry).not.toContainText("Garage");

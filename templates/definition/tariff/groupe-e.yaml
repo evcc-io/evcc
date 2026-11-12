@@ -16,7 +16,8 @@ render: |
   {{ include "base" . }}
   forecast:
     source: http
-    uri: https://api.tariffs.groupe-e.ch/v2/tariffs?start_timestamp={{ `{{ now.UTC | mustDateModify "-1h" | date "2006-01-02T15" }}` }}:00:00Z&end_timestamp={{ `{{ addDate now.UTC 0 0 2 | date "2006-01-02T15" }}` }}:00:00Z
+    # dateInZone: sprig `date` formats in local time, which shifts the window by the UTC offset and drops the current slot
+    uri: https://api.tariffs.groupe-e.ch/v2/tariffs?start_timestamp={{ `{{ dateInZone "2006-01-02T15" (now.UTC | mustDateModify "-1h") "UTC" }}` }}:00:00Z&end_timestamp={{ `{{ dateInZone "2006-01-02T15" (addDate now.UTC 0 0 2) "UTC" }}` }}:00:00Z
     jq: |
       [.prices[] |
         {

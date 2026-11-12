@@ -1,0 +1,19 @@
+template: template-defaults-demo
+group: generic
+products:
+  - description:
+      generic: Template Defaults Demo Meter
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: power
+    type: int
+    unit: W
+    default: 1000
+    description:
+      generic: Power
+render: |
+  type: custom
+  power:
+    source: const
+    value: {{ .power }}

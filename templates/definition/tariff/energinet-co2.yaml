@@ -20,7 +20,7 @@ render: |
   tariff: co2
   forecast:
     source: http
-    uri: https://api.energidataservice.dk/dataset/CO2EmisProg?filter={"PriceArea":["{{ .region }}"]}&start=now
+    uri: https://api.energidataservice.dk/dataset/CO2EmisProg?filter={"PriceArea":["{{ .region }}"]}&start=now-PT15M
     jq: |
       [.records[]
         | (.Minutes5UTC | strptime("%Y-%m-%dT%H:%M:%S") | mktime) as $epoch

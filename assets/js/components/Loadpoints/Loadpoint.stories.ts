@@ -131,6 +131,19 @@ const Template: StoryFn<typeof Loadpoint> = (args) => ({
 export const Standard = Template.bind({});
 Standard.args = baseState;
 
+export const VehicleLimitedPhases = Template.bind({});
+VehicleLimitedPhases.args = {
+  ...baseState,
+  vehicles: [{ ...baseState.vehicles[0]!, phases: 2 }],
+  maxCurrent: 32,
+  effectiveMaxCurrent: 16,
+  offeredCurrent: 16,
+  phasesConfigured: 0,
+  phasesActive: 2,
+  chargeCurrents: [16, 16, 0],
+  chargePower: 7360,
+};
+
 export const WithoutSoc = Template.bind({});
 WithoutSoc.args = {
   ...baseState,
@@ -193,6 +206,6 @@ Heating.args = {
   effectiveLimitSoc: 60,
   vehicleLimitSoc: 65,
   todayEnergy: 3200,
-  last24hEnergy: 4100,
-  last7dEnergy: 26500,
+  last24h: { energy: 4100, pvEnergy: 2100, batteryEnergy: 450, pricePerKWh: 0.21, price: 0.86 },
+  last7d: { energy: 26500, pvEnergy: 12700, batteryEnergy: 0, pricePerKWh: 0.24, price: 6.36 },
 };

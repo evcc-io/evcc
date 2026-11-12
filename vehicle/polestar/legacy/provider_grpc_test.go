@@ -2,13 +2,30 @@ package legacy
 
 import (
 	"testing"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/vehicle/polestar/pb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
+
+func TestGrpcError(t *testing.T) {
+	for code, expected := range map[codes.Code]error{
+		codes.Unavailable:      api.ErrMustRetry,
+		codes.DeadlineExceeded: api.ErrMustRetry,
+		codes.PermissionDenied: api.ErrNotAvailable,
+		codes.Unimplemented:    api.ErrNotAvailable,
+		codes.NotFound:         api.ErrNotAvailable,
+	} {
+		assert.ErrorIs(t, grpcError(status.Error(code, "")), expected, code.String())
+	}
+
+	err := grpcError(status.Error(codes.Unauthenticated, ""))
+	assert.NotErrorIs(t, err, api.ErrMustRetry)
+	assert.NotErrorIs(t, err, api.ErrNotAvailable)
+}
 
 func TestGrpcStatus(t *testing.T) {
 	tc := []struct {
@@ -41,33 +58,4 @@ func TestGrpcStatus(t *testing.T) {
 			assert.Equal(t, tc.expected, status)
 		})
 	}
-}
-
-func TestGrpcFinishTime(t *testing.T) {
-	captured := time.Date(2026, 5, 22, 12, 0, 0, 0, time.UTC)
-
-	v := &GrpcProvider{
-		batteryG: func() (*pb.Battery, error) {
-			return &pb.Battery{
-				EstimatedChargingTimeToFullMinutes: 30,
-				Timestamp:                          &pb.Timestamp{Seconds: captured.Unix()},
-			}, nil
-		},
-	}
-
-	// finish time is anchored to the API capture timestamp, not time.Now()
-	ft, err := v.FinishTime()
-	require.NoError(t, err)
-	assert.True(t, captured.Add(30*time.Minute).Equal(ft))
-}
-
-func TestGrpcFinishTimeNotCharging(t *testing.T) {
-	v := &GrpcProvider{
-		batteryG: func() (*pb.Battery, error) {
-			return &pb.Battery{EstimatedChargingTimeToFullMinutes: 0}, nil
-		},
-	}
-
-	_, err := v.FinishTime()
-	assert.ErrorIs(t, err, api.ErrNotAvailable)
 }

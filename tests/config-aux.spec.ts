@@ -23,6 +23,7 @@ test.describe("aux meter", async () => {
     await page.getByRole("button", { name: "Add consumer" }).click();
 
     const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Self-regulating consumer" }).click();
     await meterModal.getByLabel("Title").fill("Water heater");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");

@@ -119,24 +119,23 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 
 		implement.Has(m, implement.Battery(m.batterySoc))
 
-		implement.Has(m, implement.BatteryCapacity(func() float64 {
-			return status.NominalFullPackEnergy / 1e3
+		implement.Has(m, implement.BatteryCapacity(func() (float64, error) {
+			return status.NominalFullPackEnergy / 1e3, nil
 		}))
 
 		// backup reserve is the lower discharge limit, the powerwall has no upper soc limit
-		implement.Has(m, implement.BatterySocLimiter(func() (float64, float64) {
+		implement.Has(m, implement.BatterySocLimiter(func() (float64, float64, error) {
 			op, err := opG()
 			if err != nil {
-				log.ERROR.Println("battery soc limits:", err)
-				return 0, 100
+				return 0, 0, err
 			}
-			return op.BackupReservePercent, 100
+			return op.BackupReservePercent, 100, nil
 		}))
 
 		if status.MaxApparentPower > 0 {
 			// inverter apparent power applies to charging and discharging alike
-			implement.Has(m, implement.BatteryPowerLimiter(func() (float64, float64) {
-				return status.MaxApparentPower, status.MaxApparentPower
+			implement.Has(m, implement.BatteryPowerLimiter(func() (float64, float64, error) {
+				return status.MaxApparentPower, status.MaxApparentPower, nil
 			}))
 		}
 	}

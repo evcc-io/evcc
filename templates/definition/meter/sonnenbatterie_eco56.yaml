@@ -12,6 +12,8 @@ products:
   - brand: Sonnen
     description:
       generic: oem 6.5
+discovery:
+  hostname: ["sb-*"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -66,7 +68,7 @@ render: |
     cache: {{ .cache }}
     jq: .M30 # SOC relative to usable capacity (.M05 # display SOC)
   # the sequence hides the switch, so the modes are declared here
-  batterymodes: ["normal", "hold", "charge"]
+  batterymodes: ["normal", "holddischarge", "charge"]
   batterymode:
     # use a sequence to propagate resets to the watchdog
     source: sequence
@@ -79,7 +81,7 @@ render: |
               method: PUT
               uri: http://{{ .host }}:{{ .port }}/rest/devices/battery/C06
               body: '10' # Automatic
-          - case: 2 # hold
+          - case: 2 # holddischarge
             set:
               source: http
               method: PUT
@@ -105,7 +107,7 @@ render: |
               set:
                 source: sleep
                 duration: 0s
-            - case: 2 # hold
+            - case: 2 # holddischarge
               set:
                 source: sleep
                 duration: 0s

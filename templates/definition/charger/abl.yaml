@@ -11,6 +11,9 @@ products:
       generic: Wallbox pro
 capabilities: ["mA", "dim"]
 requirements:
+  description:
+    de: Die Wallbox muss mit der ABL Configuration Software auf den Betriebsmodus "Standalone eMH" eingestellt sein. Im Gruppenmodus (z. B. "Controller / Extender" für das eMS home) wartet sie auf eine Ladefreigabe und bleibt im Status B.
+    en: The wallbox must be set to the "Standalone eMH" operating mode using the ABL Configuration Software. In group mode (e.g. "Controller / Extender" for the eMS home) it waits for a charging release and stays in status B.
   evcc: ["sponsorship"]
 params:
   - name: modbus

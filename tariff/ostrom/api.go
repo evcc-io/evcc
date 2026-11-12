@@ -66,27 +66,27 @@ type CityId []struct {
 type Tariffs struct {
 	Ostrom []struct {
 		ProductCode                              string  `json:"productCode"`
-		Tariff                                   int     `json:"tariff"`
-		BasicFee                                 int     `json:"basicFee"`
+		Tariff                                   float64 `json:"tariff"`
+		BasicFee                                 float64 `json:"basicFee"`
 		NetworkFee                               float64 `json:"networkFee"`
 		UnitPricePerkWH                          float64 `json:"unitPricePerkWH"`
-		TariffWithStormPreisBremse               int     `json:"tariffWithStormPreisBremse"`
-		StromPreisBremseUnitPrice                int     `json:"stromPreisBremseUnitPrice"`
+		TariffWithStormPreisBremse               float64 `json:"tariffWithStormPreisBremse"`
+		StromPreisBremseUnitPrice                float64 `json:"stromPreisBremseUnitPrice"`
 		AccumulatedUnitPriceWithStromPreisBremse float64 `json:"accumulatedUnitPriceWithStromPreisBremse"`
 		UnitPrice                                float64 `json:"unitPrice"`
-		EnergyConsumption                        int     `json:"energyConsumption"`
+		EnergyConsumption                        float64 `json:"energyConsumption"`
 		BasePriceBrutto                          float64 `json:"basePriceBrutto"`
 		WorkingPriceBrutto                       float64 `json:"workingPriceBrutto"`
 		WorkingPriceNetto                        float64 `json:"workingPriceNetto"`
-		MeterChargeBrutto                        int     `json:"meterChargeBrutto"`
+		MeterChargeBrutto                        float64 `json:"meterChargeBrutto"`
 		WorkingPricePowerTax                     float64 `json:"workingPricePowerTax"`
 		AverageHourlyPriceToday                  float64 `json:"averageHourlyPriceToday,omitempty"`
 		MinHourlyPriceToday                      float64 `json:"minHourlyPriceToday,omitempty"`
 		MaxHourlyPriceToday                      float64 `json:"maxHourlyPriceToday,omitempty"`
 	} `json:"ostrom"`
 	Footprint struct {
-		Usage          int `json:"usage"`
-		KgCO2Emissions int `json:"kgCO2Emissions"`
+		Usage          float64 `json:"usage"`
+		KgCO2Emissions float64 `json:"kgCO2Emissions"`
 	} `json:"footprint"`
 	IsPendingApplicationAllowed bool   `json:"isPendingApplicationAllowed"`
 	Status                      string `json:"status"`

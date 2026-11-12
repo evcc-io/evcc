@@ -75,29 +75,6 @@ func (v *GrpcProvider) Range() (int64, error) {
 	return int64(res.GetEstimatedDistanceToEmptyKm()), nil
 }
 
-var _ api.VehicleFinishTimer = (*GrpcProvider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *GrpcProvider) FinishTime() (time.Time, error) {
-	res, err := v.batteryG()
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	minutes := res.GetEstimatedChargingTimeToFullMinutes()
-	if minutes <= 0 {
-		return time.Time{}, api.ErrNotAvailable
-	}
-
-	// anchor the relative remaining time to the API's capture timestamp
-	base := time.Now()
-	if ts := res.GetTimestamp(); ts.GetSeconds() > 0 {
-		base = time.Unix(ts.GetSeconds(), int64(ts.GetNanos()))
-	}
-
-	return base.Add(time.Duration(minutes) * time.Minute), nil
-}
-
 var _ api.VehicleOdometer = (*GrpcProvider)(nil)
 
 // Odometer implements the api.VehicleOdometer interface

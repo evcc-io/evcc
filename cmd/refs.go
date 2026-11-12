@@ -30,7 +30,17 @@ func collectRefs(conf globalconfig.All) error {
 	}
 
 	// circuits
-	if err := collectCircuitRefs(conf.Circuits); err != nil {
+	if err := collectCircuitRefs(slices.Values(conf.Circuits)); err != nil {
+		return err
+	}
+
+	// append circuits from database
+	circuits, err := config.ConfigurationsByClass(templates.Circuit)
+	if err != nil {
+		return err
+	}
+
+	if err := collectCircuitRefs(namedSeq(circuits)); err != nil {
 		return err
 	}
 
@@ -45,13 +55,55 @@ func collectRefs(conf globalconfig.All) error {
 		return err
 	}
 
-	return collectLoadpointRefs(func(yield func(config.Named) bool) {
+	if err := collectLoadpointRefs(namedSeq(configurable)); err != nil {
+		return err
+	}
+
+	collectDeviceRefs(templates.Charger, slices.Values(conf.Chargers), nil)
+
+	chargers, err := config.ConfigurationsByClass(templates.Charger)
+	if err != nil {
+		return err
+	}
+	collectDeviceRefs(templates.Charger, namedSeq(chargers), references.charger)
+
+	tariffs, err := config.ConfigurationsByClass(templates.Tariff)
+	if err != nil {
+		return err
+	}
+	collectDeviceRefs(templates.Tariff, namedSeq(tariffs), references.tariff)
+
+	return nil
+}
+
+// collectDeviceRefs adds the devices referenced by template params of the given parents.
+// Static parents are always instantiated, db parents only when referenced themselves.
+func collectDeviceRefs(class templates.Class, named iter.Seq[config.Named], referenced []string) {
+	for cc := range named {
+		if referenced != nil && !slices.Contains(referenced, cc.Name) {
+			continue
+		}
+		for refClass, refs := range config.DeviceRefs(class, cc) {
+			switch refClass {
+			case templates.Meter:
+				references.meter = append(references.meter, refs...)
+			case templates.Charger:
+				references.charger = append(references.charger, refs...)
+			case templates.Tariff:
+				references.tariff = append(references.tariff, refs...)
+			}
+		}
+	}
+}
+
+func namedSeq(configurable []config.Config) iter.Seq[config.Named] {
+	return func(yield func(config.Named) bool) {
 		for _, cc := range configurable {
 			if !yield(cc.Named()) {
 				return
 			}
 		}
-	})
+	}
 }
 
 func collectSiteRefs(conf globalconfig.All) error {
@@ -131,8 +183,8 @@ func collectLoadpointRefs(named iter.Seq[config.Named]) error {
 	return nil
 }
 
-func collectCircuitRefs(circuits []config.Named) error {
-	for _, cc := range circuits {
+func collectCircuitRefs(circuits iter.Seq[config.Named]) error {
+	for cc := range circuits {
 		var refs struct {
 			MeterRef string         `mapstructure:"meter"` // Circuit meter reference
 			Other    map[string]any `mapstructure:",remain"`

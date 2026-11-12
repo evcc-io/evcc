@@ -24,21 +24,26 @@
 			/>
 		</svg>
 		<span class="status-icon" :style="{ color }">
-			<shopicon-regular-powersupply
-				size="s"
+			<BatteryCharge
+				:size="ICON_SIZE.M"
 				class="layer grid-icon"
 				:class="{ 'layer--active': mode === BATTERY_MODE.CHARGE }"
-			></shopicon-regular-powersupply>
+			/>
+			<BatteryDischarge
+				:size="ICON_SIZE.M"
+				class="layer grid-icon"
+				:class="{ 'layer--active': mode === BATTERY_MODE.DISCHARGE }"
+			/>
 			<ArrowDown
 				:size="ICON_SIZE.M"
 				class="layer"
 				:class="{ 'layer--active': isCharging || isDischarging }"
 				:style="{ '--rotate': arrowRotate }"
 			/>
-			<BatteryHold
+			<BatteryHoldDischarge
 				:size="ICON_SIZE.M"
 				class="layer"
-				:class="{ 'layer--active': mode === BATTERY_MODE.HOLD }"
+				:class="{ 'layer--active': mode === BATTERY_MODE.HOLDDISCHARGE }"
 			/>
 			<BatteryHoldCharge
 				:size="ICON_SIZE.M"
@@ -52,11 +57,12 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import "@h2d2/shopicons/es/regular/powersupply";
 import { BATTERY_MODE, ICON_SIZE } from "@/types/evcc";
 import ArrowDown from "../MaterialIcon/ArrowDown.vue";
-import BatteryHold from "../MaterialIcon/BatteryHold.vue";
+import BatteryHoldDischarge from "../MaterialIcon/BatteryHoldDischarge.vue";
 import BatteryHoldCharge from "../MaterialIcon/BatteryHoldCharge.vue";
+import BatteryCharge from "../MaterialIcon/BatteryCharge.vue";
+import BatteryDischarge from "../MaterialIcon/BatteryDischarge.vue";
 import Dot from "../MaterialIcon/Dot.vue";
 
 // fixed ring geometry, computed once rather than per instance
@@ -67,16 +73,24 @@ const R = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * R;
 
 const LOCKED_MODES: BATTERY_MODE[] = [
-	BATTERY_MODE.HOLD,
+	BATTERY_MODE.HOLDDISCHARGE,
 	BATTERY_MODE.HOLDCHARGE,
 	BATTERY_MODE.CHARGE,
+	BATTERY_MODE.DISCHARGE,
 ];
 
-// all four icon layers stay mounted and cross-fade via opacity/scale, so switching state
+// all icon layers stay mounted and cross-fade via opacity/scale, so switching state
 // tweens instead of hard-swapping
 export default defineComponent({
 	name: "SocGauge",
-	components: { ArrowDown, BatteryHold, BatteryHoldCharge, Dot },
+	components: {
+		ArrowDown,
+		BatteryHoldDischarge,
+		BatteryHoldCharge,
+		BatteryCharge,
+		BatteryDischarge,
+		Dot,
+	},
 	props: {
 		soc: { type: Number, default: 0 },
 		color: { type: String, default: "" },
@@ -137,6 +151,6 @@ export default defineComponent({
 	transform: scale(var(--scale)) rotate(var(--rotate));
 }
 .grid-icon {
-	--scale: 0.9;
+	--scale: 0.75;
 }
 </style>

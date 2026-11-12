@@ -41,12 +41,15 @@ render: |
     headers:
       x-api-key: "{{ .securitytoken }}"
       Accept: "application/json"
+    # REE publishes the Canarias series at peninsular instants, but the prices
+    # apply per Canary local hour, which is one hour behind all year
     jq: |
-      [.indicator.values[] 
-        | select(.geo_name == {{ if eq .indicator "1739" }} "España" {{ else }}"{{.region}}"{{ end }})
+      [.indicator.values[]
+        | select(.geo_name == {{ if eq .indicator "1739" }}"España"{{ else }}"{{ .region }}"{{ end }})
+        | (.datetime_utc | strptime("%FT%TZ") | mktime{{ if and (eq .region "Canarias") (ne .indicator "1739") }} + 3600{{ end }}) as $start
         | {
-          start: .datetime_utc,
-          end: (.datetime_utc | strptime ("%FT%TZ") | mktime + 3600 | strftime("%FT%TZ")),
+          start: ($start | strftime("%FT%TZ")),
+          end: ($start + 3600 | strftime("%FT%TZ")),
           value: (.value | tonumber) / 1000
           }
       ] | tostring

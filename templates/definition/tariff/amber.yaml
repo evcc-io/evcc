@@ -8,8 +8,6 @@ params:
   - name: token
     required: true
   - name: siteid
-    description:
-      generic: Site ID
     required: true
   - name: channel
     type: choice

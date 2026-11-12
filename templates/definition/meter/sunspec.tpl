@@ -10,7 +10,7 @@ maxacpower: # nameplate rating
 {{ define "sunspec-maxacpower-tcp" }}
 maxacpower: # nameplate rating
   source: sunspec
-  uri: {{ joinHostPort .host .port }}
+  {{- include "modbus-connection" . | indent 2 }}
   id: 1
   value:
     - 120:WRtg

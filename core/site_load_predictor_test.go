@@ -39,7 +39,7 @@ func TestApplyTemperatureCorrection(t *testing.T) {
 	}
 
 	// Future forecast: 12 slots (3 hours)
-	// First hour: 5°C, second hour: 15°C, third hour: 20°C (above heating stop threshold)
+	// First hour: 5°C, second hour: 15°C, third hour: 20°C
 	for i := range 12 {
 		temp := 5.0
 		switch {
@@ -64,7 +64,8 @@ func TestApplyTemperatureCorrection(t *testing.T) {
 
 	profile := slices.Repeat([]float64{2.0}, 12)
 
-	result := site.applyTemperatureCorrection(profile)
+	// 1. Linear scaling (binned == nil)
+	result := site.applyTemperatureCorrection("test", profile, nil)
 
 	require.Len(t, result, 12)
 
@@ -72,8 +73,62 @@ func TestApplyTemperatureCorrection(t *testing.T) {
 	assert.Greater(t, result[0], 2.0, "first hour should increase (colder forecast)")
 	assert.Less(t, result[4], 2.0, "second hour should decrease (warmer forecast)")
 	assert.Greater(t, result[0], result[4], "first hour should be higher than second hour")
-	// above the heating threshold the correction is skipped but the historical average is kept
-	assert.Equal(t, 2.0, result[8], "third hour keeps historical average when above heating threshold")
+	// warm forecast scales down naturally and clamps to minCorrection (10%)
+	assert.InDelta(t, 0.2, result[8], 1e-6, "third hour scales to minCorrection floor")
+
+	// 2. Temperature-binned lookup: same bins for every slot of the day, so the
+	// result depends on the forecast temperature only
+	bins := map[int]float64{
+		5:  3.5, // 5°C forecast
+		10: 2.2,
+		12: 1.0,
+		20: 0.8, // 20°C forecast, recorded DHW cycle
+	}
+	binned := make(map[int]map[int]float64)
+	for slot := range 96 {
+		binned[slot] = bins
+	}
+	resultBinned := site.applyTemperatureCorrection("test", profile, binned)
+	assert.InDelta(t, 3.5, resultBinned[0], 1e-6, "binned exact match should be used directly")
+	assert.Less(t, resultBinned[4], 2.0, "15°C without bin falls back to scaling")
+	assert.InDelta(t, 0.8, resultBinned[8], 1e-6, "binned exact match for warm temp (>=18°C) should be used directly")
+}
+
+func TestLookupBin(t *testing.T) {
+	bins := map[int]float64{
+		5:  3.0,
+		7:  5.0,
+		10: 2.0,
+		12: 4.0,
+	}
+
+	// Exact match
+	val, ok := lookupBin(bins, 5.2)
+	assert.True(t, ok)
+	assert.InDelta(t, 3.0, val, 1e-6)
+
+	// Adjacent ±1 interpolation (e.g. 11°C interpolates between 10°C and 12°C)
+	val, ok = lookupBin(bins, 11.0)
+	assert.True(t, ok)
+	assert.InDelta(t, 3.0, val, 1e-6) // (2.0 + 4.0) / 2
+
+	// Adjacent single match (e.g. 6°C matches 5°C and 7°C)
+	val, ok = lookupBin(bins, 6.0)
+	assert.True(t, ok)
+	assert.InDelta(t, 4.0, val, 1e-6) // (3.0 + 5.0) / 2
+
+	// Adjacent single +1 match (e.g. 4°C matches bin 5)
+	val, ok = lookupBin(bins, 4.0)
+	assert.True(t, ok)
+	assert.InDelta(t, 3.0, val, 1e-6)
+
+	// No match (e.g. 25°C)
+	_, ok = lookupBin(bins, 25.0)
+	assert.False(t, ok)
+
+	// Nil bins
+	_, ok = lookupBin(nil, 5.0)
+	assert.False(t, ok)
 }
 
 func TestTileAndTrim(t *testing.T) {

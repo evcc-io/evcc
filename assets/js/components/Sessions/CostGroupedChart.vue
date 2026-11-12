@@ -64,12 +64,17 @@ export default defineComponent({
 			const { labels, data, colors: entryColors } = this.chartData;
 			const total = data.reduce((acc, curr) => acc + curr, 0);
 			const fmtShare = (value: number) => this.fmtPercentage((100 / total) * value, 1);
+
+			// drop decimals for the whole column once a value reaches four digits
+			const decimals = Math.max(...data) <= 1e3;
+			const fmtValue = (value: number) => this.formatValue(value, decimals);
+
 			return labels.map((label, index) => {
 				const dataValue = data[index] as number;
 				return {
 					label,
 					color: entryColors[index],
-					value: [this.formatValue(dataValue), fmtShare(dataValue)],
+					value: [fmtValue(dataValue), fmtShare(dataValue)],
 					id: label || undefined,
 				};
 			});
@@ -84,9 +89,9 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		formatValue(value: number) {
+		formatValue(value: number, decimals = true) {
 			if (this.costType === TYPES.PRICE) {
-				return this.fmtMoney(value, this.currency, true, true);
+				return this.fmtMoney(value, this.currency, decimals, true);
 			}
 			return this.fmtGrams(value);
 		},
