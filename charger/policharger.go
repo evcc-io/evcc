@@ -14,18 +14,11 @@ import (
 
 // Policharger charger implementation for the Ulartec Policharger 8.1 series.
 //
-// Observed charger behaviour (NW-T2, software 9.30):
-//   - a charging session only starts with IntRepartida (reg 80) >= 16 A, and only
-//     about 205 s after it was set; while reg 80 stays at 16 the charger stays "armed"
-//   - the effective current is min(reg 80, reg 44)
-//   - in "normally locked" mode (reg 30 = 1) an armed charger starts (reg 88 = 0) and
-//     stops (reg 88 = 1) within seconds; stopping with reg 80 = 0 takes about 55 s
-//   - booleans are 1/0 (writing 0xFF00 as in the vendor sheet returns exception 03)
-//   - there is no communication watchdog
-//
-// The charger is therefore kept in normally locked mode. While idle it stays armed
-// (reg 80 = 16) with reg 44 capping the current, so a session starts at the requested
-// current without a 16 A peak. While charging the current is regulated with reg 80.
+// On the tested unit (NW-T2, software 9.30) a session only starts with reg 80 >= 16 A,
+// about 205 s after reg 80 was set, and reg 80 = 0 takes about 55 s to stop. The
+// charger is therefore kept in normally locked mode (reg 30 = 1): while idle it stays
+// armed (reg 80 = 16) with reg 44 capping the current, and reg 88 starts and stops
+// charging within seconds. Booleans are 1/0, writing 0xFF00 returns exception 03.
 type Policharger struct {
 	log     *util.Logger
 	conn    *modbus.Connection

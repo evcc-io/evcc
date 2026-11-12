@@ -3,19 +3,17 @@ products:
   - brand: Policharger
     description:
       generic: IN, NW, ÖN, OUT, PRO (8.1 series)
-  - brand: Ksix
-    description:
-      generic: EVHOME+SC by Policharger
+capabilities: ["meter"]
 requirements:
   description:
     de: |
-      Modbus RTU (Standard 9600 8N1, Slave-ID 1). Im Menü der Wallbox einstellen: Modbus aktiv, "Es Maestro" NEIN, Zähler NEIN, "Sensor general" NEIN, keine programmierten Ladungen, Talzeitkonfiguration NEIN.
-      evcc schaltet die Wallbox in den Modus "normalerweise gesperrt" (Register 30) und gibt das Laden über Register 88 frei. Ohne evcc lädt die Wallbox daher nicht.
-      Die Wallbox startet eine Ladung erst ab 16 A und etwa 3,5 Minuten nach dem Vorbereiten; evcc hält sie dafür im Ruhezustand vorbereitet. Getestet mit NW-T2 einphasig, Software 9.30.
+      Modbus RTU (Standard 9600 8N1, Slave-ID 1) über RS485, per Modbus-TCP-Gateway oder USB-Adapter. Im Menü der Wallbox einstellen: Modbus aktiv, "Es Maestro" NEIN, Zähler NEIN, "Sensor general" NEIN, keine programmierten Ladungen, Talzeitkonfiguration NEIN.
+      evcc stellt die Wallbox dauerhaft auf den Modus "normalerweise gesperrt" (Register 30 = 1) und gibt das Laden über Register 88 frei. Ohne evcc lädt die Wallbox danach nicht mehr; zum Laden ohne evcc Register 30 per Modbus wieder auf 0 setzen.
+      Getestet mit einer einphasigen NW-T2, Software 9.30. Bei dieser Wallbox startete eine Ladung erst ab 16 A und etwa 3,5 Minuten nach dem Vorbereiten, daher hält evcc sie im Ruhezustand vorbereitet. Bei Modellen mit zwei Anschlüssen wird nur der erste gesteuert.
     en: |
-      Modbus RTU (default 9600 8N1, slave ID 1). In the charger menu set: Modbus enabled, "Es Maestro" NO, meter NO, "Sensor general" NO, no scheduled charging, off-peak configuration NO.
-      evcc switches the charger to "normally locked" mode (register 30) and releases charging through register 88, so the charger does not charge without evcc.
-      The charger only starts a session at 16 A or more and about 3.5 minutes after being armed; evcc keeps it armed while idle. Tested with a single-phase NW-T2, software 9.30.
+      Modbus RTU (default 9600 8N1, slave ID 1) over RS485, through a Modbus TCP gateway or a USB adapter. In the charger menu set: Modbus enabled, "Es Maestro" NO, meter NO, "Sensor general" NO, no scheduled charging, off-peak configuration NO.
+      evcc permanently switches the charger to "normally locked" mode (register 30 = 1) and releases charging through register 88. After that the charger no longer charges without evcc; to charge without evcc, set register 30 back to 0 over Modbus.
+      Tested with a single-phase NW-T2, software 9.30. On this unit a session only started at 16 A or more and about 3.5 minutes after being armed, so evcc keeps it armed while idle. On dual-connector models only the first connector is controlled.
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]
