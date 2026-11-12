@@ -38,8 +38,8 @@
       "energy": "Energie",
       "gridCharge": "Netzladen",
       "gridDischarge": "Netzentladen",
-      "hold": "Entladesperre",
       "holdCharge": "Ladesperre",
+      "holdDischarge": "Entladesperre",
       "ofTotal": "von {total}",
       "power": "Leistung",
       "soc": "Ladestand"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Aus dem Netz laden",
         "discharge": "Einspeisung ins Netz",
-        "hold": "Entladen verhindern",
         "holdcharge": "Laden verhindern",
+        "holddischarge": "Entladen verhindern",
         "normal": "Normaler Betrieb"
       },
       "empty": "leer",
@@ -190,7 +190,16 @@
     "circuits": {
       "addMainCircuit": "Hauptstromkreis hinzufügen",
       "addSubCircuit": "Unterstromkreis hinzufügen",
-      "chargingPointsNote": "Ladepunkte & Heizgeräte weist du in ihren jeweiligen Einstellungen einem Stromkreis zu.",
+      "notAssigned": "Nicht zugeordnet",
+      "destination": "Stromkreis {title}",
+      "assignHere": "Hier zuordnen",
+      "moveHere": "Hierhin verschieben",
+      "dropAssign": "Zum Zuordnen ablegen",
+      "dropRemove": "Hier ablegen, um die Zuordnung zu entfernen.",
+      "dragHint": "Auf einen Stromkreis ziehen oder zum Auswählen antippen.",
+      "selectAssign": "Stromkreis antippen, um {title} zuzuordnen.",
+      "selectMove": "Stromkreis antippen, um {title} zu verschieben, oder den Bereich unten, um die Zuordnung zu entfernen.",
+      "assignmentFailed": "Zuordnung konnte nicht gespeichert werden. Bitte erneut versuchen.",
       "description": "Stellt sicher, dass die Summe aller Ladepunkte und Heizungen, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen.",
       "legacyWarning": "Neue Stromkreis-Konfiguration verfügbar! Entferne und speichere deine Konfiguration hier, um den neuen geführten Prozess zu verwenden. Anschließend ist ein Neustart erforderlich.",
       "meterDedicated": "Zähler",
@@ -346,6 +355,7 @@
       "auxMeter": "Selbstregelnder Verbraucher",
       "batteryStorage": "Hausbatterie",
       "consumer": "Verbraucher",
+      "extMeter": "Weiterer Zähler",
       "solarSystem": "PV-Anlage"
     },
     "editor": {
@@ -1013,19 +1023,19 @@
         "description": "Wird für länderspezifische Hinweise und Voreinstellungen verwendet.",
         "label": "Land"
       },
-      "gridConnection": {
-        "description": {
-          "3p4w": "Häufigstes Netz mit Neutralleiter.",
-          "3p3w": "Netz ohne Neutralleiter. Üblich in Norwegen und Teilen Belgiens."
-        },
-        "label": "Netzanschluss",
-        "3p4w": "{voltage}/{lineVoltage} V mit Neutralleiter (3P4W)",
-        "3p3w": "3 × {voltage} V ohne Neutralleiter (3P3W)"
-      },
       "currency": {
         "description": "Wird für die Erfassung und Formatierung von Energiepreisen, Kosten und Einsparungen verwendet.",
         "example": "Dein Ladepreis betrug {price}. Du hast {amount} gespart.",
         "label": "Währung"
+      },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V ohne Neutralleiter (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V mit Neutralleiter (3P4W)",
+        "description": {
+          "3p3w": "Netz ohne Neutralleiter. Üblich in Norwegen und Teilen Belgiens.",
+          "3p4w": "Häufigstes Netz mit Neutralleiter."
+        },
+        "label": "Netzanschluss"
       },
       "siteTitle": {
         "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",
@@ -1219,7 +1229,6 @@
       },
       "cost": "Kosten",
       "others": "Sonstige",
-      "title": "Verbraucher",
       "view": {
         "river": "River",
         "treemap": "Treemap"
@@ -1276,12 +1285,7 @@
       "pv": "Erzeugung"
     },
     "production": {
-      "above": "{value} darüber",
-      "accuracy": "Vorhersagegenauigkeit",
-      "below": "{value} darunter",
-      "deviation": "Abweichung",
-      "expectedTomorrow": "morgen erwartet",
-      "exported": "{value} eingespeist",
+      "accuracy": "Genauigkeit",
       "produced": "Erzeugt",
       "remainingToday": "heute verbleibend",
       "selfConsumed": "Selbst verbraucht",
@@ -1301,7 +1305,6 @@
       "hint": "PV- und Batteriestrom zum Einspeisepreis bewertet.",
       "price": "Preis/kWh",
       "pv": "PV",
-      "share": "Anteil",
       "source": "Quelle",
       "title": "Quellen",
       "total": "Gesamt"
@@ -1311,6 +1314,8 @@
       "co2Saved": "CO₂ gespart",
       "co2SavedTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz.",
       "configure": "Jetzt einrichten",
+      "energy": "Energie",
+      "fromGrid": "{value} aus dem Netz",
       "noCo2": "Keine CO₂-Daten.",
       "noPrice": "Keine Preisdaten.",
       "savings": "Ersparnis",
@@ -1653,8 +1658,9 @@
       "forecast": "Vorhersage",
       "forecastTooltip": "Vorhersage: verbleibende PV-Erzeugung heute",
       "gridImport": "Netzbezug",
+      "heaters": "Heizung | Heizungen",
       "homePower": "Verbrauch",
-      "loadpoints": "Ladepunkt | Ladepunkt | {count} Ladepunkte",
+      "loadpoints": "Ladepunkt | Ladepunkte",
       "loadpointsLimit": "{limit} Limit",
       "noEnergy": "Keine Messwerte",
       "pv": "PV-Anlage",
@@ -1681,18 +1687,22 @@
       "avgPrice": "⌀ Preis",
       "charged": "Geladen",
       "co2": "⌀ CO₂",
+      "consumed": "Verbraucht",
       "duration": "Ladedauer",
       "emission": "Emissionen",
       "fallbackName": "Ladepunkt",
       "finished": "Ladeende",
       "last24hEnergy": "Letzte 24h",
+      "last24hShort": "24h",
       "last7dEnergy": "Letzte 7 Tage",
+      "last7dShort": "7T",
       "phasesMismatch": "Mehr Phasen aktiv als konfiguriert. Phasenkonfiguration prüfen.",
       "power": "Leistung",
       "price": "Kosten",
       "remaining": "Restzeit",
       "remoteDisabledHard": "{source}: Deaktiviert",
       "remoteDisabledSoft": "{source}: Adaptives PV-Laden deaktiviert",
+      "session": "Ladevorgang",
       "solar": "PV",
       "todayEnergy": "Heute"
     },

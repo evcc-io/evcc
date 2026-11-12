@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -68,4 +69,45 @@ func TestSubmitCredentialsUniversal(t *testing.T) {
 	require.Len(t, rec.posts, 1)
 	assert.Equal(t, BaseURL+"/u/login?state=s1", rec.posts[0].url)
 	assert.Equal(t, url.Values{"state": {"s1"}, "username": {"user"}, "password": {"pass"}}, rec.posts[0].form)
+}
+
+func TestAuthLocationAuth0MarketingConsent(t *testing.T) {
+	page, err := url.Parse(BaseURL + "/v2/login/ui/marketing-consent?x=1")
+	require.NoError(t, err)
+
+	var posted url.Values
+	v := &Service{Helper: &request.Helper{Client: &http.Client{
+		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+		Transport: loginRoundTripFunc(func(req *http.Request) (*http.Response, error) {
+			assert.Equal(t, BaseURL+"/v2/login/ui/marketing-consent/skip", req.URL.String())
+			require.NoError(t, req.ParseForm())
+			posted = req.PostForm
+			return &http.Response{
+				StatusCode: http.StatusFound,
+				Header:     http.Header{"Location": {"weconnect://authenticated?code=c1"}},
+				Body:       io.NopCloser(strings.NewReader("")),
+				Request:    req,
+			}, nil
+		}),
+	}}}
+
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(strings.NewReader(`<script>window._IDK = {"Data":{"channels":[{"channelId":"MAIL","channelType":"BOUND_TO_BASIC_AGREEMENT"},{"channelId":"APP","channelType":"NOT_USED"}],"state":"s1","relayStateToken":"r1","mdKey":"k1","mdLanguage":"en"}};</script>`)),
+		Request:    &http.Request{URL: page},
+	}
+
+	q, err := v.authLocation(resp)
+	require.NoError(t, err)
+	assert.Equal(t, "c1", q.Get("code"))
+	assert.Equal(t, url.Values{
+		"channelMAIL": {"true"}, "channelAPP": {"not_used"},
+		"state": {"s1"}, "relayState": {"r1"}, "mdKey": {"k1"}, "mdLanguage": {"en"},
+	}, posted)
+}
+
+type loginRoundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f loginRoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
 }

@@ -14,7 +14,7 @@ import (
 )
 
 func TestCommandResponse(t *testing.T) {
-	sponsor.Subject = "any"
+	sponsor.SetSubjectForTest(t, "any")
 
 	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {

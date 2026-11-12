@@ -3,6 +3,7 @@ package nissan
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -38,7 +39,7 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 	return v
 }
 
-func (v *API) Vehicles() ([]string, error) {
+func (v *API) Vehicles() ([]Vehicle, error) {
 	var user struct{ UserID string }
 	uri := fmt.Sprintf("%s/v1/users/current", UserAdapterBaseURL)
 	err := v.GetJSON(uri, &user)
@@ -49,27 +50,29 @@ func (v *API) Vehicles() ([]string, error) {
 		err = v.GetJSON(uri, &res)
 	}
 
-	var vehicles []string
-	if err == nil {
-		for _, v := range res.Data {
-			vehicles = append(vehicles, v.VIN)
-		}
-	}
-
-	return vehicles, err
+	return res.Data, err
 }
 
 // BatteryStatus provides battery api response
-func (v *API) BatteryStatus(vin, version string) (StatusResponse, error) {
+func (v *API) BatteryStatus(vin, version, canGen string) (StatusResponse, error) {
 	uri := fmt.Sprintf("%s/%s/cars/%s/battery-status", CarAdapterBaseURL, version, vin)
+
+	// Micra and Ariya battery status, see dan-r/HomeAssistant-NissanConnect@b92a16f
+	if version == "v3" {
+		uri = fmt.Sprintf("%s/v3/cars/%s/battery-status?canGen=%s", UserBaseURL, vin, url.QueryEscape(canGen))
+	}
 
 	var res StatusResponse
 	err := v.GetJSON(uri, &res)
 
 	if err == nil {
+		if res.Data != nil {
+			res.Attributes = res.Data.Attributes
+		}
+
 		res.Updated = time.Time{}
 
-		if version == "v1" && res.LastUpdateTime != nil {
+		if (version == "v1" || version == "v3") && res.LastUpdateTime != nil {
 			res.Updated = res.LastUpdateTime.Time
 		}
 

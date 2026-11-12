@@ -132,6 +132,27 @@ func TestLoginPrefersLegacyToken(t *testing.T) {
 	assert.Equal(t, "legacy-access-2", token.AccessToken)
 }
 
+// TestLoginFallsBackToRandomDeviceID covers a CCI-capable brand whose legacy
+// device registration fails: Login must continue with a random device id
+func TestLoginFallsBackToRandomDeviceID(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/auth/api/v2/user/oauth2/token", legacyTokenHandler("legacy-access", "legacy-refresh"))
+	loginSrv := httptest.NewServer(mux)
+	defer loginSrv.Close()
+
+	deviceSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+	defer deviceSrv.Close()
+
+	identity := newLoginTestIdentity(t, loginSrv.URL, deviceSrv.URL, unreachable, testCCIConfig())
+	require.NoError(t, identity.Login("user@example.com", strings.Repeat("A", 48), "en", "kia"))
+	assert.NotEmpty(t, identity.deviceID)
+
+	identity = newLoginTestIdentity(t, loginSrv.URL, deviceSrv.URL, "", nil)
+	require.Error(t, identity.Login("user@example.com", strings.Repeat("A", 48), "en", "kia"))
+}
+
 // TestLoginUsesCCIAndWiresRefreshCCI covers a CCI-capable brand with an account
 // password: Login must fall back to the CCI login and wire TokenSource to refreshCCI
 func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {

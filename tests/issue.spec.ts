@@ -117,7 +117,11 @@ test.describe("issue creation", () => {
     await logsItem.getByRole("button", { name: "show details" }).click();
     const logsModal = page.getByTestId("issueLogs-modal");
     await expectModalVisible(logsModal);
-    await expect(logsModal.getByRole("textbox")).toHaveValue(/DEBUG/);
+    const logsTextbox = logsModal.getByRole("textbox");
+    await expect(logsTextbox).toHaveValue(/DEBUG/);
+    // log line length varies, keep body below github url limit for single-step check
+    await logsModal.getByRole("spinbutton").fill("5");
+    await expect.poll(async () => (await logsTextbox.inputValue()).split("\n").length).toBe(5);
     await logsModal.getByRole("button", { name: "Close" }).first().click();
     await expectModalHidden(logsModal);
 

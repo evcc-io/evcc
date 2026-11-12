@@ -3,10 +3,18 @@
 		class="drag-drop-item d-flex mb-2 border rounded"
 		:class="{
 			'drag-drop-item--hidden': !visible,
+			'drag-drop-item--assigned': assigned,
+			'drag-drop-item--selected': selected,
+			'opacity-50': disabled,
 		}"
 		role="listitem"
 		:aria-label="$t('config.general.dragItem', { title })"
 		tabindex="0"
+		:aria-selected="interactive ? selected : undefined"
+		:aria-disabled="disabled || undefined"
+		@click.stop="activate"
+		@keydown.enter.self="activate"
+		@keydown.space.self="activate"
 	>
 		<div
 			class="drag-handle d-flex align-items-center px-2"
@@ -15,7 +23,7 @@
 		>
 			<shopicon-regular-menu></shopicon-regular-menu>
 		</div>
-		<div class="flex-grow-1 d-flex align-items-center py-2">
+		<div class="flex-grow-1 min-w-0 text-truncate d-flex align-items-center py-2">
 			<slot>
 				{{ title }}
 			</slot>
@@ -35,6 +43,18 @@ export default defineComponent({
 	props: {
 		title: { type: String, default: "" },
 		visible: { type: Boolean, default: true },
+		interactive: Boolean,
+		selected: Boolean,
+		disabled: Boolean,
+		assigned: Boolean,
+	},
+	emits: ["activate"],
+	methods: {
+		activate(event: Event) {
+			if (!this.interactive || this.disabled) return;
+			event.preventDefault();
+			this.$emit("activate");
+		},
 	},
 });
 </script>
@@ -46,6 +66,14 @@ export default defineComponent({
 	border-color: var(--bs-border-color-translucent) !important;
 	transition: all var(--evcc-transition-fast) ease-in-out;
 	transform: translate(0, 0);
+}
+
+.drag-drop-item--assigned {
+	background: var(--evcc-background);
+	border-color: transparent !important;
+}
+.drag-drop-item--selected {
+	box-shadow: 0 0 0 2px var(--bs-primary);
 }
 
 .drag-drop-item--hidden {

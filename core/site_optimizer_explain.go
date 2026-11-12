@@ -73,7 +73,7 @@ func (site *Site) optimizerPost(ctx context.Context, path string, body, res any)
 // Repeated calls for the same plan and language return the previous explanation.
 func (site *Site) ExplainOptimizerResult(ctx context.Context, language string) error {
 	site.RLock()
-	result := site.optimizerResult
+	result := site.optimizer.result
 	site.RUnlock()
 
 	if result == nil {
@@ -91,13 +91,13 @@ func (site *Site) ExplainOptimizerResult(ctx context.Context, language string) e
 	}
 	key := sha256.Sum256(keyJSON)
 
-	site.explainMu.Lock()
-	defer site.explainMu.Unlock()
+	site.optimizer.explainMu.Lock()
+	defer site.optimizer.explainMu.Unlock()
 
-	if site.explained.key == key {
+	if site.optimizer.explained.key == key {
 		// a rerun can reproduce the plan, the explanation still fits it
-		site.explained.Plan = result.Updated
-		site.publish("evopt-explanation", site.explained.Explanation)
+		site.optimizer.explained.Plan = result.Updated
+		site.publish("evopt-explanation", site.optimizer.explained.Explanation)
 		return nil
 	}
 
@@ -107,7 +107,7 @@ func (site *Site) ExplainOptimizerResult(ctx context.Context, language string) e
 	}
 
 	res.Created, res.Plan = time.Now(), result.Updated
-	site.explained = explainCache{key: key, body: body, Explanation: res}
+	site.optimizer.explained = explainCache{key: key, body: body, Explanation: res}
 	site.publish("evopt-explanation", res)
 
 	return nil
@@ -120,10 +120,10 @@ func (site *Site) ExplainFeedback(ctx context.Context, vote, comment string) err
 		return errors.New("vote must be up or down")
 	}
 
-	site.explainMu.Lock()
-	defer site.explainMu.Unlock()
+	site.optimizer.explainMu.Lock()
+	defer site.optimizer.explainMu.Unlock()
 
-	if site.explained.Text == "" {
+	if site.optimizer.explained.Text == "" {
 		return errors.New("nothing explained yet")
 	}
 
@@ -132,7 +132,7 @@ func (site *Site) ExplainFeedback(ctx context.Context, vote, comment string) err
 		Explanation string `json:"explanation"`
 		Vote        string `json:"vote"`
 		Comment     string `json:"comment,omitempty"`
-	}{site.explained.body, site.explained.Text, vote, comment}
+	}{site.optimizer.explained.body, site.optimizer.explained.Text, vote, comment}
 
 	var res struct{}
 	return site.optimizerPost(ctx, "/optimize/explain/feedback", body, &res)

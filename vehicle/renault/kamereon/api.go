@@ -16,6 +16,7 @@ const (
 	ActionStart  = "start"
 	ActionStop   = "stop"
 	ActionResume = "resume"
+	ActionPause  = "pause"
 )
 
 type API struct {
@@ -127,13 +128,17 @@ func (v *API) Position(accountID string, vin string) (Position, error) {
 }
 
 func (v *API) WakeUp(accountID string, vin string) (ChargeAction, error) {
+	return v.PauseResume(accountID, ActionResume, vin)
+}
+
+func (v *API) PauseResume(accountID, action string, vin string) (ChargeAction, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kcm/v1/vehicles/%s/charge/pause-resume", v.keys.Target, accountID, vin)
 
 	reqBody := map[string]any{
 		"data": ChargeAction{
 			Type: "ChargePauseResume",
 			Attributes: ChargeActionAttributes{
-				Action: ActionResume,
+				Action: action,
 			},
 		},
 	}
@@ -179,7 +184,15 @@ func (v *API) WakeUpMy24(accountID string, vin string) (EvSettingsResponse, erro
 
 func (v *API) ChargeAction(accountID, action string, vin string) (ChargeAction, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/actions/charging-start", v.keys.Target, accountID, vin)
+	return v.chargingStart(uri, action)
+}
 
+func (v *API) KcmChargeStart(accountID string, vin string) (ChargeAction, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kcm/v1/vehicles/%s/charge/start", v.keys.Target, accountID, vin)
+	return v.chargingStart(uri, ActionStart)
+}
+
+func (v *API) chargingStart(uri, action string) (ChargeAction, error) {
 	reqBody := map[string]any{
 		"data": ChargeAction{
 			Type: "ChargingStart",

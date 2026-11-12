@@ -520,4 +520,5 @@ var _ loadpoint.Controller = (*OCPP)(nil)
 // LoadpointControl implements loadpoint.Controller
 func (c *OCPP) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
+	c.conn.OnStatusChange(lp.RequestUpdate)
 }

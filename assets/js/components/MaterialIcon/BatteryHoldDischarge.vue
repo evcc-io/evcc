@@ -12,7 +12,7 @@ import { defineComponent } from "vue";
 import icon from "@/mixins/icon";
 
 export default defineComponent({
-	name: "BatteryHold",
+	name: "BatteryHoldDischarge",
 	mixins: [icon],
 });
 </script>
