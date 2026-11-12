@@ -654,8 +654,10 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	// create charging session
 	lp.createSession()
 
-	// reset energy-based charging plan offset
-	lp.planEnergyOffset = lp.getChargedEnergy() / 1e3
+	// reset energy-based charging plan offset, integrated devices keep counting
+	if !lp.chargerHasFeature(api.IntegratedDevice) {
+		lp.planEnergyOffset = 0
+	}
 
 	// connect adds the loadpoint's demand
 	lp.triggerOptimizer()
@@ -2594,6 +2596,9 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 	lp.bus.Publish(evChargePower, lp.chargePower)
 
+	// before today's energy is updated, the reset carries over yesterday's total
+	lp.resetDailyEnergy()
+
 	// update progress and soc before status is updated
 	lp.publishChargeProgress()
 	lp.PublishEffectiveValues()
@@ -2637,8 +2642,6 @@ NO_DIM:
 	lp.publish(keys.VehicleWelcomeActive, lp.welcomeActive())
 	lp.publish(keys.Connected, lp.connected())
 	lp.publish(keys.Charging, lp.charging())
-
-	lp.resetDailyEnergy()
 
 	if sr, ok := api.Cap[api.StatusReasoner](lp.charger); ok && lp.GetStatus() == api.StatusB {
 		if r, err := sr.StatusReason(); err == nil {
