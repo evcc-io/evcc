@@ -3576,6 +3576,10 @@
           "value": {
             "description": "Price per kWh in the configured currency or emissions in g/kWh.",
             "type": "number"
+          },
+          "estimate": {
+            "description": "Predicted value that may still be replaced by an actual one.",
+            "type": "boolean"
           }
         },
         "required": [
@@ -4285,13 +4289,25 @@
         ]
       },
       "ForecastSlot": {
-        "description": "A forecast time slot as [start, end, value] array. Start and end are unix seconds. Value unit depends on the forecast type.",
-        "type": "array",
-        "items": {
-          "type": "number"
-        },
-        "minItems": 3,
-        "maxItems": 3
+        "description": "A forecast time slot as [start, end, value] array. Start and end are unix seconds. Value unit depends on the forecast type. A trailing 1 marks an estimate.",
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          }
+        ]
       },
       "EnergyByDay": {
         "description": "Expected solar production energy of a day.",

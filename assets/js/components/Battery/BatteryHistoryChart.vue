@@ -13,6 +13,7 @@ import {
 	type TooltipRow,
 	hoverDot,
 	lineDefaults,
+	hatchPattern,
 } from "../Forecast/echarts";
 import colors, { dimColor, setAlpha, batteryColor } from "@/colors";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
@@ -26,25 +27,6 @@ type Point = [number, number];
 const DASHED = { type: [4, 4], cap: "butt" as const };
 const GRID = { top: 10, right: 36, bottom: 34, left: 0 };
 const BADGE_GAP = 24; // badge height (12px font + 2x4px padding) plus spacing
-
-// diagonal-stripe fill for forecast areas
-function hatchPattern(color: string) {
-	const size = 8;
-	const dpr = window.devicePixelRatio || 1;
-	const canvas = document.createElement("canvas");
-	canvas.width = canvas.height = size * dpr;
-	const ctx = canvas.getContext("2d")!;
-	ctx.scale(dpr, dpr);
-	ctx.strokeStyle = setAlpha(color, "66") || color;
-	ctx.lineWidth = 1;
-	ctx.beginPath();
-	for (const o of [-size, 0, size]) {
-		ctx.moveTo(o, size);
-		ctx.lineTo(o + size, 0);
-	}
-	ctx.stroke();
-	return { image: canvas, repeat: "repeat" };
-}
 
 export default defineComponent({
 	name: "BatteryHistoryChart",

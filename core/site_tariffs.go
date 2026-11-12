@@ -47,7 +47,7 @@ type dailyDetails struct {
 
 // forecastRates publishes rates as [start, end, value] with the timestamps in
 // unix seconds. The forecast is the largest payload evcc sends and RFC3339
-// timestamps are two thirds of it.
+// timestamps are two thirds of it. Estimates carry a trailing 1.
 func forecastRates(rr api.Rates) forecastSeries {
 	// keep nil for empty rates: shards are published without omitempty
 	if len(rr) == 0 {
@@ -55,7 +55,11 @@ func forecastRates(rr api.Rates) forecastSeries {
 	}
 
 	return lo.Map(rr, func(r api.Rate, _ int) []float64 {
-		return []float64{float64(r.Start.Unix()), float64(r.End.Unix()), r.Value}
+		res := []float64{float64(r.Start.Unix()), float64(r.End.Unix()), r.Value}
+		if r.Estimate {
+			res = append(res, 1)
+		}
+		return res
 	})
 }
 

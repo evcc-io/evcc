@@ -11,6 +11,8 @@ type Rate struct {
 	Start time.Time `json:"start"`
 	End   time.Time `json:"end"`
 	Value float64   `json:"value"`
+	// Estimate marks a predicted value that may still be replaced by an actual one
+	Estimate bool `json:"estimate,omitempty"`
 }
 
 // IsZero returns is the rate is the zero value

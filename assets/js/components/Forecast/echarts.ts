@@ -1,5 +1,5 @@
 import * as echarts from "echarts/core";
-import colors from "@/colors";
+import colors, { setAlpha } from "@/colors";
 import { attachTouchTooltipGate, pointerState } from "@/utils/swipe";
 import escapeHtml from "@/utils/escapeHtml";
 import type { UiForecastSlot } from "@/types/evcc";
@@ -97,6 +97,25 @@ export function hoverDot(color: string, lineStyle: Record<string, unknown> = {})
       itemStyle: { color, borderColor: color, borderWidth: 2, opacity: 1 },
     },
   };
+}
+
+// diagonal-stripe fill for forecast areas
+export function hatchPattern(color: string) {
+  const size = 8;
+  const dpr = window.devicePixelRatio || 1;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size * dpr;
+  const ctx = canvas.getContext("2d")!;
+  ctx.scale(dpr, dpr);
+  ctx.strokeStyle = setAlpha(color, "66") || color;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (const o of [-size, 0, size]) {
+    ctx.moveTo(o, size);
+    ctx.lineTo(o + size, 0);
+  }
+  ctx.stroke();
+  return { image: canvas, repeat: "repeat" };
 }
 
 // wider box-colored twin drawn beneath a line so it stays readable over bars

@@ -16,7 +16,12 @@ export enum ForecastType {
 }
 
 function expandSlots(slots?: ForecastSlot[]): UiForecastSlot[] | undefined {
-  return slots?.map(([start, end, value]) => ({ start: start * 1000, end: end * 1000, value }));
+  return slots?.map(([start, end, value, estimate]) => ({
+    start: start * 1000,
+    end: end * 1000,
+    value,
+    ...(estimate ? { estimate: true } : {}),
+  }));
 }
 
 function expandSolar(solar?: SolarDetails): UiSolarDetails | undefined {

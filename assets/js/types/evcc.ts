@@ -1401,6 +1401,8 @@ export interface Rate {
   end: Date;
   /** Price per kWh in the configured currency or emissions in g/kWh. */
   value: number;
+  /** Predicted value that may still be replaced by an actual one. */
+  estimate?: boolean;
 }
 
 export interface Slot {
@@ -1415,8 +1417,8 @@ export interface Slot {
   selectable?: boolean | null;
 }
 
-/** A forecast time slot as [start, end, value] array. Start and end are unix seconds. Value unit depends on the forecast type. */
-export type ForecastSlot = [number, number, number];
+/** A forecast time slot as [start, end, value] array. Start and end are unix seconds. Value unit depends on the forecast type. A trailing 1 marks an estimate. */
+export type ForecastSlot = [number, number, number] | [number, number, number, 1];
 
 /** A forecast value at a point in time as [ts, val] array. ts is unix seconds, val is power in W. */
 export type TimeseriesEntry = [number, number];
@@ -1471,6 +1473,7 @@ export interface UiForecastSlot {
   start: number;
   end: number;
   value: number;
+  estimate?: boolean;
 }
 
 export interface UiSolarDetails extends Omit<SolarDetails, "timeseries"> {
