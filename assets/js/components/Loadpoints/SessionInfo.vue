@@ -185,11 +185,13 @@ export default defineComponent({
 			};
 			// device cards say charged for vehicles and consumed for heaters
 			const energyKey = this.chargerFeatureIntegratedDevice ? "consumed" : "charged";
-			const { energy = 0, autarky, pricePerKWh, price } = stats ?? {};
+			const { energy = 0, pvEnergy = 0, batteryEnergy = 0, pricePerKWh, price } = stats ?? {};
+			// TODO clarify naming: solar includes the battery, like the session
+			const solar = energy > 0 ? (100 * (pvEnergy + batteryEnergy)) / energy : 0;
 			const priced = this.tariffGrid !== undefined;
 			return [
 				option("Energy", energyKey, this.fmtWh(energy, POWER_UNIT.AUTO)),
-				option("Autarky", "autarky", this.fmtPercentage(autarky ?? 0, 1)),
+				option("Solar", "solar", this.fmtPercentage(solar, 1)),
 				option("AvgPrice", "avgPrice", this.fmtAvgPrice(pricePerKWh ?? 0), {
 					valueSm: this.fmtAvgPriceShort(pricePerKWh ?? 0),
 					available: priced,

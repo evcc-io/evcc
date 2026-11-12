@@ -69,7 +69,7 @@ test.describe("session info", async () => {
     // session, 24h and 7d groups; the collapsed select hides its groups
     const select = page.getByTestId("sessionInfoSelect").first().getByRole("combobox");
     await expect(select.getByRole("group", { includeHidden: true })).toHaveCount(3);
-    await expect(select.getByRole("option", { name: "Solar" })).toHaveCount(1);
+    await expect(select.getByRole("option", { name: "Solar" })).toHaveCount(3);
     await expect(select.getByRole("option", { name: "Charged" })).toHaveCount(2);
 
     await select.selectOption("last7dEnergy");

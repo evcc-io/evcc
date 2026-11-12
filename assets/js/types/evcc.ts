@@ -840,8 +840,10 @@ export interface Loadpoint {
 export interface PeriodStats {
   /** Energy used in Wh. */
   energy: number;
-  /** Autarky in %, the share not drawn from the grid. */
-  autarky: number | null;
+  /** Energy from solar in Wh. */
+  pvEnergy: number;
+  /** Energy from the home battery in Wh. */
+  batteryEnergy: number;
   /** Average energy price per kWh in the configured currency. */
   pricePerKWh: number | null;
   /** Total cost in the configured currency. */
@@ -1006,7 +1008,7 @@ export type SessionInfoKey =
 
 export type SessionInfoPeriod = "last24h" | "last7d";
 
-export type SessionInfoPeriodValue = "Energy" | "Autarky" | "AvgPrice" | "Price";
+export type SessionInfoPeriodValue = "Energy" | "Solar" | "AvgPrice" | "Price";
 
 /** Sponsorship status. */
 export interface SponsorStatus {

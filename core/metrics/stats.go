@@ -10,25 +10,26 @@ import (
 
 // PeriodStats is an entity's metered energy over a period and the Energy page's attribution of it
 type PeriodStats struct {
-	Energy      float64  `json:"energy"`      // Wh metered
-	Autarky     *float64 `json:"autarky"`     // percent of the attributed energy not drawn from the grid
-	PricePerKWh *float64 `json:"pricePerKWh"` // average over the priced energy
-	Price       *float64 `json:"price"`       // cost of the priced energy
+	Energy        float64  `json:"energy"`        // Wh metered, the rest after solar and battery is grid
+	PVEnergy      float64  `json:"pvEnergy"`      // Wh attributed to solar
+	BatteryEnergy float64  `json:"batteryEnergy"` // Wh attributed to the battery
+	PricePerKWh   *float64 `json:"pricePerKWh"`   // average over the priced energy
+	Price         *float64 `json:"price"`         // cost of the priced energy
 }
 
 // stats derives the period values from the metered energy and the attributed flows
 func (e *flowEntity) stats() PeriodStats {
 	var sum flowSum
 	for _, f := range e.flows {
-		sum.energy += f.energy
 		sum.cost += f.cost
 		sum.priced += f.priced
 	}
 
-	res := PeriodStats{Energy: math.Round(e.metered * 1e3)}
-	if sum.energy > 0 {
-		autarky := 100 * (1 - e.flows[2].energy/sum.energy) // grid is flowSources[2]
-		res.Autarky = &autarky
+	// pv and battery are flowSources[0] and [1]
+	res := PeriodStats{
+		Energy:        math.Round(e.metered * 1e3),
+		PVEnergy:      math.Round(e.flows[0].energy * 1e3),
+		BatteryEnergy: math.Round(e.flows[1].energy * 1e3),
 	}
 	if sum.priced > 0 {
 		price := sum.cost / sum.priced

@@ -3693,10 +3693,13 @@
             "description": "Energy used in Wh.",
             "type": "number"
           },
-          "autarky": {
-            "description": "Autarky in %, the share not drawn from the grid.",
-            "type": "number",
-            "nullable": true
+          "pvEnergy": {
+            "description": "Energy from solar in Wh.",
+            "type": "number"
+          },
+          "batteryEnergy": {
+            "description": "Energy from the home battery in Wh.",
+            "type": "number"
           },
           "pricePerKWh": {
             "description": "Average energy price per kWh in the configured currency.",
@@ -3711,7 +3714,8 @@
         },
         "required": [
           "energy",
-          "autarky",
+          "pvEnergy",
+          "batteryEnergy",
           "pricePerKWh",
           "price"
         ]

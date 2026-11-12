@@ -1629,10 +1629,12 @@ components:
         energy:
           description: Energy used in Wh.
           type: number
-        autarky:
-          description: Autarky in %, the share not drawn from the grid.
+        pvEnergy:
+          description: Energy from solar in Wh.
           type: number
-          nullable: true
+        batteryEnergy:
+          description: Energy from the home battery in Wh.
+          type: number
         pricePerKWh:
           description: Average energy price per kWh in the configured currency.
           type: number
@@ -1643,7 +1645,8 @@ components:
           nullable: true
       required:
         - energy
-        - autarky
+        - pvEnergy
+        - batteryEnergy
         - pricePerKWh
         - price
     PhaseAction:

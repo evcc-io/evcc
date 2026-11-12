@@ -54,12 +54,12 @@ func TestCollectorEnergyStats(t *testing.T) {
 	require.InDelta(t, 13000, stats.Last24h.Energy, 1e-9)
 	require.InDelta(t, 18000, stats.Last7d.Energy, 1e-9)
 
-	// 1 kWh pv at 0.1, 2 kWh grid at 0.4, 3 kWh unpriced grid,
-	// the 7 kWh slot without sources stays unattributed
-	require.InDelta(t, 100.0/6, *stats.Last24h.Autarky, 1e-9)
+	// 1 kWh pv at 0.1, 2 kWh grid at 0.4, 3 kWh unpriced grid
+	require.InDelta(t, 1000, stats.Last24h.PVEnergy, 1e-9)
+	require.Zero(t, stats.Last24h.BatteryEnergy)
 	require.InDelta(t, 0.9, *stats.Last24h.Price, 1e-9)
 	require.InDelta(t, 0.3, *stats.Last24h.PricePerKWh, 1e-9)
-	require.InDelta(t, 100.0/6, *stats.Last7d.Autarky, 1e-9)
+	require.InDelta(t, 1000, stats.Last7d.PVEnergy, 1e-9)
 
 	// in-flight accumulator counts towards today only
 	col.accu.Energy = 0.5
