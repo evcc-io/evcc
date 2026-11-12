@@ -232,3 +232,120 @@ func TestRepeatedGet(t *testing.T) {
 	require.False(t, repeatedGet("http://q.test/path?ts=1", t0))
 	require.False(t, repeatedGet("http://q.test/path?ts=2", t0.Add(300*time.Millisecond)))
 }
+
+const indevoltWriteAcknowledgement = `if type == "object" and .result == true then . else error("write rejected") end`
+
+func TestHTTPSetAcknowledgement(t *testing.T) {
+	for _, tc := range []struct {
+		name, body string
+		status     int
+		valid      bool
+	}{
+		{"accepted", `{"result":true}`, 200, true},
+		{"rejected", `{"result":false}`, 200, false},
+		{"missing", `{}`, 200, false},
+		{"null", `{"result":null}`, 200, false},
+		{"string", `{"result":"true"}`, 200, false},
+		{"number", `{"result":1}`, 200, false},
+		{"array", `[]`, 200, false},
+		{"scalar", `"private-device-token"`, 200, false},
+		{"private result", `{"result":"private-device-token"}`, 200, false},
+		{"empty", ``, 200, false},
+		{"malformed", `not json: private-device-token`, 200, false},
+		{"http error", `{"result":true}`, 500, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(tc.status)
+				_, _ = w.Write([]byte(tc.body))
+			}))
+			defer srv.Close()
+			cfg := Config{Source: "http", Other: map[string]any{
+				"uri": srv.URL, "method": "POST", "jq": indevoltWriteAcknowledgement,
+			}}
+			set, err := cfg.IntSetter(t.Context(), "mode")
+			require.NoError(t, err)
+			err = set(1)
+			if tc.valid {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				require.NotContains(t, err.Error(), "private-device-token")
+			}
+		})
+	}
+}
+
+func TestHTTPSetPipeline(t *testing.T) {
+	for _, tc := range []struct {
+		name, body, jq string
+		valid          bool
+	}{
+		{"no transform text", "plain text", "", true},
+		{"no transform empty", "", "", true},
+		{"jq text", "plain text", ".result", false},
+		{"jq empty", "", ".result", false},
+		{"jq false result", `{"result":false}`, ".result", true},
+		{"jq error", `{"result":false}`, `.result or error("write rejected")`, false},
+		{"jq empty result", `{}`, "empty", false},
+		{"jq multiple results", `{}`, "true, true", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				_, _ = w.Write([]byte(tc.body))
+			}))
+			defer srv.Close()
+			cfg := Config{Source: "http", Other: map[string]any{
+				"uri": srv.URL, "method": "POST", "jq": tc.jq,
+			}}
+			set, err := cfg.IntSetter(t.Context(), "mode")
+			require.NoError(t, err)
+			if tc.valid {
+				require.NoError(t, set(1))
+			} else {
+				require.Error(t, set(1))
+			}
+		})
+	}
+}
+
+func TestHTTPSetSequenceRetry(t *testing.T) {
+	for _, failedStep := range []string{"mode", "state"} {
+		t.Run(failedStep, func(t *testing.T) {
+			reject := true
+			var calls []string
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				step := r.URL.Path[1:]
+				calls = append(calls, step)
+				_, _ = fmt.Fprintf(w, `{"result":%t}`, !(reject && step == failedStep))
+			}))
+			defer srv.Close()
+			cfg := Config{Source: "sequence", Other: map[string]any{"set": []Config{
+				{Source: "http", Other: map[string]any{"uri": srv.URL + "/mode", "method": "POST", "jq": indevoltWriteAcknowledgement}},
+				{Source: "http", Other: map[string]any{"uri": srv.URL + "/state", "method": "POST", "jq": indevoltWriteAcknowledgement}},
+			}}}
+			set, err := cfg.IntSetter(t.Context(), "mode")
+			require.NoError(t, err)
+			require.Error(t, set(2))
+			want := []string{"mode"}
+			if failedStep == "state" {
+				want = append(want, "state")
+			}
+			require.Equal(t, want, calls)
+			reject, calls = false, nil
+			require.NoError(t, set(2))
+			require.Equal(t, []string{"mode", "state"}, calls)
+		})
+	}
+}
+
+func TestHTTPSetPipelineTransportError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+	srv.Close()
+	cfg := Config{Source: "http", Other: map[string]any{
+		"uri": srv.URL, "method": "POST", "jq": indevoltWriteAcknowledgement,
+	}}
+	set, err := cfg.IntSetter(t.Context(), "mode")
+	require.NoError(t, err)
+	require.Error(t, set(1))
+}

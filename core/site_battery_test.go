@@ -666,3 +666,27 @@ func TestEvFastChargingActiveDisabledLoadpoint(t *testing.T) {
 
 	assert.False(t, site.evFastChargingActive())
 }
+
+func TestBatteryModeRejectedWriteRetries(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	batCon := batteryControllerMock(ctrl)
+	bat := &struct {
+		api.Meter
+		api.BatteryController
+	}{BatteryController: batCon}
+	site := &Site{
+		log:                util.NewLogger("foo"),
+		batteryMeters:      []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, api.Meter(bat))},
+		batteryModeApplied: map[string]api.BatteryMode{"bat": api.BatteryHoldDischarge},
+	}
+	rejected := errors.New("write rejected")
+	gomock.InOrder(
+		batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Return(rejected),
+		batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Return(nil),
+	)
+	assert.ErrorIs(t, site.applyBatteryMode(api.BatteryNormal), rejected)
+	assert.Equal(t, api.BatteryHoldDischarge, site.batteryModeApplied["bat"])
+	assert.NoError(t, site.applyBatteryMode(api.BatteryNormal))
+	assert.Equal(t, api.BatteryNormal, site.batteryModeApplied["bat"])
+	assert.NoError(t, site.applyBatteryMode(api.BatteryNormal))
+}
