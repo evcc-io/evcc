@@ -82,23 +82,52 @@ func TestIndevoltModes(t *testing.T) {
 }
 
 func TestIndevoltHybridMeasurements(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost || r.URL.Path != "/rpc/Indevolt.GetData" {
-			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		_, _ = w.Write([]byte(`{"2101":500,"2108":200,"2107":10,"1501":700,"1505":2500,"6000":123,"6002":50,"6007":20}`))
-	}))
-	defer srv.Close()
+	registers := map[int]float64{2101: 500, 2108: 200, 2107: 10, 1501: 700, 1505: 2500, 6000: 123, 6002: 50, 6007: 20}
 	for _, tc := range []struct {
 		usage         string
 		controllable  bool
 		power, energy float64
+		queries       [][]int
 	}{
-		{"battery", false, 123, 20}, {"grid", true, 300, 10}, {"pv", true, 700, 2.5},
+		{"battery", false, 123, 20, [][]int{{6000}, {6007}, {6002}}},
+		{"grid", true, 300, 10, [][]int{{2101, 2108}, {2107}}},
+		{"pv", true, 700, 2.5, [][]int{{1501}, {1505}}},
 	} {
 		t.Run(tc.usage, func(t *testing.T) {
+			var mu sync.Mutex
+			var queries [][]int
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != http.MethodPost || r.URL.Path != "/rpc/Indevolt.GetData" {
+					t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
+				var config struct {
+					Points []int `json:"t"`
+				}
+				if err := json.Unmarshal([]byte(r.URL.Query().Get("config")), &config); err != nil {
+					t.Error(err)
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
+				mu.Lock()
+				queries = append(queries, config.Points)
+				mu.Unlock()
+				response := make(map[int]float64, len(config.Points))
+				for _, point := range config.Points {
+					if value, ok := registers[point]; ok {
+						response[point] = value
+					} else {
+						t.Errorf("unexpected register: %d", point)
+						w.WriteHeader(http.StatusBadRequest)
+						return
+					}
+				}
+				if err := json.NewEncoder(w).Encode(response); err != nil {
+					t.Error(err)
+				}
+			}))
+			defer srv.Close()
 			m := indevoltMeter(t, map[string]any{"template": "indevolt-hybrid", "usage": tc.usage, "controllable": tc.controllable, "maxchargepower": 1000}, srv.URL)
 			require.False(t, api.HasCap[api.BatteryController](m))
 			power, err := m.CurrentPower()
@@ -116,6 +145,9 @@ func TestIndevoltHybridMeasurements(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, 50.0, soc)
 			}
+			mu.Lock()
+			defer mu.Unlock()
+			require.Equal(t, tc.queries, queries)
 		})
 	}
 }
