@@ -17,6 +17,7 @@ params:
     choice: ["grid", "pv"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
     baudrate: 9600
   - name: maxacpower
 render: |

@@ -32,6 +32,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip"]
+    id: 1
     default: "tcpip"
   - name: grid_power_register
     type: int
