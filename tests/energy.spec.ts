@@ -212,7 +212,7 @@ test.describe("page", () => {
     await expect(price).toContainText("10.0 ct/kWh");
   });
 
-  test("flow chart loadpoint label", async ({ page }) => {
+  test("flow chart charging and heating", async ({ page }) => {
     const card = page.getByTestId("energy-flow");
     const chart = card.getByTestId("flow-chart");
 
@@ -229,7 +229,7 @@ test.describe("page", () => {
 
     // both
     await page.goto("/#/energy?period=month&year=2026&month=9");
-    await expect(chart.getByText("Charging &")).toBeVisible();
+    await expect(chart.getByText("Charging")).toBeVisible();
     await expect(chart.getByText("Heating")).toBeVisible();
   });
 
