@@ -7,8 +7,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
@@ -20,14 +22,15 @@ import (
 // armed (reg 80 = 16) with reg 44 capping the current, and reg 88 starts and stops
 // charging within seconds. Booleans are 1/0, writing 0xFF00 returns exception 03.
 type Policharger struct {
-	log     *util.Logger
-	conn    *modbus.Connection
-	cache   *modbus.Cache
-	mu      sync.Mutex
-	phases  float64
-	current uint16    // last current requested by evcc
-	armed   bool      // reg 44 and reg 80 are known to be set for the next start
-	cfgOK   time.Time // last time the lock mode was verified
+	log      *util.Logger
+	conn     *modbus.Connection
+	cache    *modbus.Cache
+	mu       sync.Mutex
+	phases   int
+	current  uint16    // last current requested by evcc
+	armed    bool      // reg 44 and reg 80 are known to be set for the next start
+	cfgOK    time.Time // last time the lock mode was verified
+	pvWarned bool
 }
 
 const (
@@ -46,15 +49,20 @@ const (
 	polRegPinConnected = 86 // ConectadoPin1 (valid in normally locked mode)
 	polRegLock         = 88 // BloqueoCarga1: 0 charging allowed, 1 locked
 
+	// register blocks read together, gateways become unreliable above about 14 registers
+	polBlockStatus, polBlockStatusLen   = 36, 9
+	polBlockControl, polBlockControlLen = 80, 10
+
 	polArmCurrent = 16 // minimum reg 80 value that lets the charger start a session
 	polMinCurrent = 6
 	polMaxCurrent = 32
 
-	polCfgCheck = 10 * time.Minute // periodic verification of the lock mode
-	polArmCheck = time.Minute      // the lock mode must be this fresh before arming
-	polCacheTTL = 5 * time.Second  // share reads between the calls of one evcc cycle
-	polRetries  = 4
-	polVoltage  = 230
+	polHeartbeat  = time.Minute
+	polCfgCheck   = 10 * time.Minute // periodic verification of the lock mode
+	polArmCheck   = time.Minute      // the lock mode must be this fresh before arming
+	polCacheTTL   = 5 * time.Second  // share reads between the calls of one evcc cycle
+	polRetries    = 4
+	polRetryDelay = 300 * time.Millisecond
 )
 
 // polRegs maps register addresses to values
@@ -121,6 +129,8 @@ func NewPolicharger(ctx context.Context, settings modbus.Settings) (api.Charger,
 		return nil, fmt.Errorf("lock mode: %w", err)
 	}
 
+	go wb.heartbeat(ctx)
+
 	return wb, nil
 }
 
@@ -134,21 +144,62 @@ func newPolicharger(conn *modbus.Connection, log *util.Logger, ttl time.Duration
 	}
 }
 
-// retry repeats op on transport errors; the link to the charger loses single requests
-func (wb *Policharger) retry(op func() error) error {
-	var err error
-	for i := range polRetries {
-		if i > 0 {
-			time.Sleep(300 * time.Millisecond)
+// heartbeat keeps the charger in locked mode and armed while idle, including after
+// a session the car ended by itself
+func (wb *Policharger) heartbeat(ctx context.Context) {
+	tick := time.NewTicker(polHeartbeat)
+	defer tick.Stop()
+
+	for {
+		if err := wb.maintain(); err != nil {
+			wb.log.WARN.Println("heartbeat:", err)
 		}
-		if err = op(); err == nil || modbus.IsException(err) {
-			return err
+
+		select {
+		case <-tick.C:
+		case <-ctx.Done():
+			return
 		}
 	}
-	return err
 }
 
-// read reads a block of holding registers (14 registers at most for reliable gateways)
+// maintain verifies the lock mode and arms the charger if it is not charging
+func (wb *Policharger) maintain() error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	wb.cache.Clear()
+
+	r, err := wb.state()
+	if err != nil {
+		return err
+	}
+
+	if err := wb.ensureConfig(r, polCfgCheck); err != nil {
+		return err
+	}
+
+	if r[polRegCharging] == 0 && (!wb.armed || r[polRegSetpoint] != polArmCurrent) {
+		return wb.arm(r, wb.target())
+	}
+
+	return nil
+}
+
+// retry repeats op on transport errors, the link to the charger loses single requests
+func (wb *Policharger) retry(op func() error) error {
+	bo := backoff.WithMaxRetries(backoff.NewConstantBackOff(polRetryDelay), polRetries-1)
+
+	return backoff.Retry(func() error {
+		err := op()
+		if modbus.IsException(err) {
+			return backoff.Permanent(err)
+		}
+		return err
+	}, bo)
+}
+
+// read reads a block of holding registers
 func (wb *Policharger) read(start, count uint16) (polRegs, error) {
 	b, _, err := wb.cache.Fetch(fmt.Sprintf("%d:%d", start, count), func() ([]byte, error) {
 		var b []byte
@@ -174,14 +225,14 @@ func (wb *Policharger) read(start, count uint16) (polRegs, error) {
 	return res, nil
 }
 
-// state reads status (regs 36-44) and control (regs 80-89) registers
+// state reads the status and control register blocks
 func (wb *Policharger) state() (polRegs, error) {
-	res, err := wb.read(36, 9)
+	res, err := wb.read(polBlockStatus, polBlockStatusLen)
 	if err != nil {
 		return nil, err
 	}
 
-	ctrl, err := wb.read(80, 10)
+	ctrl, err := wb.read(polBlockControl, polBlockControlLen)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +253,7 @@ func (wb *Policharger) write(reg, val uint16) error {
 	return wb.retry(func() error {
 		_, err := wb.conn.WriteSingleRegister(reg, val)
 		if err != nil && !modbus.IsException(err) {
-			if b, rerr := wb.conn.ReadHoldingRegisters(reg, 1); rerr == nil && binary.BigEndian.Uint16(b) == val {
+			if b, rerr := wb.conn.ReadHoldingRegisters(reg, 1); rerr == nil && len(b) == 2 && binary.BigEndian.Uint16(b) == val {
 				return nil
 			}
 		}
@@ -210,8 +261,7 @@ func (wb *Policharger) write(reg, val uint16) error {
 	})
 }
 
-// ensureConfig puts the charger in normally locked mode unless verified within maxAge.
-// With the PV programme licence active, reg 73 = 0 blocks charging from the grid.
+// ensureConfig puts the charger in normally locked mode unless verified within maxAge
 func (wb *Policharger) ensureConfig(r polRegs, maxAge time.Duration) error {
 	if maxAge > 0 && time.Since(wb.cfgOK) < maxAge {
 		return nil
@@ -236,17 +286,17 @@ func (wb *Policharger) ensureConfig(r polRegs, maxAge time.Duration) error {
 		}
 	}
 
-	if r[polRegPvProgram] != 0 {
+	// with the PV programme licence, a low grid limit blocks charging from the grid
+	if r[polRegPvProgram] != 0 && !wb.pvWarned {
 		pv, err := wb.read(polRegPvGridLimit, 1)
 		if err != nil {
 			return err
 		}
 
-		if pv[polRegPvGridLimit] < polArmCurrent {
-			if err := wb.write(polRegPvGridLimit, polArmCurrent); err != nil {
-				return err
-			}
+		if limit := pv[polRegPvGridLimit]; limit < polArmCurrent {
+			wb.log.WARN.Printf("PV programme active with grid current limit %d A: sessions may not start, set it to %d A or more in the charger menu", limit, polArmCurrent)
 		}
+		wb.pvWarned = true
 	}
 
 	wb.cfgOK = time.Now()
@@ -296,20 +346,8 @@ func (wb *Policharger) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if err := wb.ensureConfig(r, polCfgCheck); err != nil {
-		return api.StatusNone, err
-	}
-
-	charging := r[polRegCharging] != 0
-
-	if !charging && (!wb.armed || r[polRegSetpoint] != polArmCurrent) {
-		if err := wb.arm(r, wb.target()); err != nil {
-			wb.log.WARN.Println("arm:", err)
-		}
-	}
-
 	switch {
-	case charging:
+	case r[polRegCharging] != 0:
 		return api.StatusC, nil
 	case r[polRegPinConnected] != 0 || r[polRegConnected] != 0:
 		return api.StatusB, nil
@@ -323,7 +361,7 @@ func (wb *Policharger) Enabled() (bool, error) {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 
-	r, err := wb.read(80, 10)
+	r, err := wb.read(polBlockControl, polBlockControlLen)
 	if err != nil {
 		return false, err
 	}
@@ -344,7 +382,7 @@ func (wb *Policharger) Enable(enable bool) error {
 			return err
 		}
 
-		// arm for the next start; Status completes this if it fails here
+		// arm for the next start, the heartbeat completes this if it fails here
 		r, err := wb.state()
 		if err == nil {
 			err = wb.arm(r, wb.target())
@@ -400,7 +438,7 @@ func (wb *Policharger) MaxCurrent(current int64) error {
 		return wb.arm(r, amps)
 	}
 
-	// regulate with reg 80; reg 44 is only raised, keeping its writes rare
+	// regulate with reg 80, reg 44 is only raised to keep its writes rare
 	if r[polRegSetpoint] != amps {
 		wb.armed = false
 		if err := wb.write(polRegSetpoint, amps); err != nil {
@@ -421,11 +459,12 @@ func (wb *Policharger) chargeCurrent() (float64, error) {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 
-	r, err := wb.read(36, 9)
+	r, err := wb.read(polBlockStatus, polBlockStatusLen)
 	if err != nil {
 		return 0, err
 	}
 
+	// the sensor may show a residual value while not charging
 	if r[polRegCharging] == 0 {
 		return 0, nil
 	}
@@ -437,10 +476,10 @@ var _ api.Meter = (*Policharger)(nil)
 
 // CurrentPower implements the api.Meter interface
 //
-// The charger only reports current (1 A resolution), so power assumes 230 V.
+// The charger only reports current (1 A resolution), so power uses the nominal voltage.
 func (wb *Policharger) CurrentPower() (float64, error) {
 	i, err := wb.chargeCurrent()
-	return i * polVoltage * wb.phases, err
+	return grid.CurrentToPower(i, wb.phases), err
 }
 
 var _ api.PhaseCurrents = (*Policharger)(nil)
@@ -452,4 +491,34 @@ func (wb *Policharger) Currents() (float64, float64, float64, error) {
 		return i, i, i, err
 	}
 	return i, 0, 0, err
+}
+
+var _ api.Diagnosis = (*Policharger)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *Policharger) Diagnose() {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	wb.cache.Clear()
+
+	if id, err := wb.read(polRegModel, 4); err == nil {
+		fmt.Printf("Model: %d, connector: %d, software: %d.%02d\n",
+			id[polRegModel], id[polRegConnector], id[polRegSwVersion], id[polRegSwVersion+1])
+	}
+
+	if cfg, err := wb.read(polRegLockType, 1); err == nil {
+		fmt.Printf("Lock type (reg %d): %d (1 = normally locked)\n", polRegLockType, cfg[polRegLockType])
+	}
+
+	if pv, err := wb.read(polRegPvGridLimit, 1); err == nil {
+		fmt.Printf("PV grid current limit (reg %d): %d A\n", polRegPvGridLimit, pv[polRegPvGridLimit])
+	}
+
+	if r, err := wb.state(); err == nil {
+		fmt.Printf("Charging: %d, connected: %d/%d, current: %d A\n",
+			r[polRegCharging], r[polRegPinConnected], r[polRegConnected], r[polRegCurrent])
+		fmt.Printf("Lock (reg %d): %d, setpoint (reg %d): %d A, cap (reg %d): %d A, PV licence: %d\n",
+			polRegLock, r[polRegLock], polRegSetpoint, r[polRegSetpoint], polRegManualLimit, r[polRegManualLimit], r[polRegPvProgram])
+	}
 }

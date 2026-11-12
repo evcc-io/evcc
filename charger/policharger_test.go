@@ -2,7 +2,10 @@ package charger
 
 import (
 	"context"
+	"encoding/binary"
+	"io"
 	"net"
+	"slices"
 	"sync"
 	"testing"
 	"time"
@@ -25,6 +28,7 @@ type polHandler struct {
 	mu     sync.Mutex
 	regs   map[uint16]uint16
 	writes []polWrite
+	reads  int
 }
 
 func (h *polHandler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) ([]uint16, error) {
@@ -44,6 +48,8 @@ func (h *polHandler) HandleHoldingRegisters(req *mbserver.HoldingRegistersReques
 		return req.Args, nil
 	}
 
+	h.reads++
+
 	res := make([]uint16, 0, req.Quantity)
 	for i := range req.Quantity {
 		v, ok := h.regs[req.Addr+i]
@@ -55,7 +61,32 @@ func (h *polHandler) HandleHoldingRegisters(req *mbserver.HoldingRegistersReques
 	return res, nil
 }
 
-// polRegsIdle returns a locked, armed charger with a car connected
+func (h *polHandler) written() []polWrite {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return append([]polWrite(nil), h.writes...)
+}
+
+func (h *polHandler) reg(addr uint16) uint16 {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.regs[addr]
+}
+
+func (h *polHandler) readCount() int {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.reads
+}
+
+func (h *polHandler) reset() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.writes = nil
+	h.reads = 0
+}
+
+// polRegsIdle returns a locked, armed, single-phase charger with a car connected
 func polRegsIdle() map[uint16]uint16 {
 	regs := make(map[uint16]uint16)
 	for reg := uint16(1); reg <= 95; reg++ {
@@ -75,49 +106,186 @@ func polRegsIdle() map[uint16]uint16 {
 	return regs
 }
 
+// polMux dispatches requests to one mock charger per slave id, so tests share a
+// server: mbserver.Stop() races its accept goroutine and is never called
+type polMux struct {
+	mbserver.RequestHandler
+	mu       sync.Mutex
+	handlers map[uint8]*polHandler
+	next     uint8
+}
+
+func (m *polMux) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) ([]uint16, error) {
+	m.mu.Lock()
+	h, ok := m.handlers[req.UnitId]
+	m.mu.Unlock()
+
+	if !ok {
+		return nil, mbserver.ErrGWTargetFailedToRespond
+	}
+
+	return h.HandleHoldingRegisters(req)
+}
+
 var (
 	polOnce sync.Once
 	polURI  string
-	polSrvH = &polHandler{RequestHandler: new(mbserver.DummyHandler)}
+	polSrv  = &polMux{RequestHandler: new(mbserver.DummyHandler), handlers: make(map[uint8]*polHandler)}
 )
 
-// polTestCharger connects a charger to the shared mock Modbus server
-func polTestCharger(t *testing.T, regs map[uint16]uint16) (*Policharger, *polHandler) {
+// polServer adds a mock charger to the shared server and returns its address and slave id
+func polServer(t *testing.T, regs map[uint16]uint16) (string, uint8, *polHandler) {
 	t.Helper()
 
 	polOnce.Do(func() {
 		l, err := net.Listen("tcp", "localhost:0")
 		require.NoError(t, err)
 
-		srv, err := mbserver.New(polSrvH)
+		srv, err := mbserver.New(polSrv)
 		require.NoError(t, err)
 		require.NoError(t, srv.Start(l))
 
 		polURI = l.Addr().String()
 	})
 
-	polSrvH.mu.Lock()
-	polSrvH.regs = regs
-	polSrvH.writes = nil
-	polSrvH.mu.Unlock()
+	h := &polHandler{RequestHandler: new(mbserver.DummyHandler), regs: regs}
 
-	conn, err := modbus.NewConnection(context.Background(), polURI, "", "", 0, modbus.Tcp, 1)
+	polSrv.mu.Lock()
+	defer polSrv.mu.Unlock()
+
+	polSrv.next++
+	require.Less(t, polSrv.next, uint8(248), "out of slave ids")
+	polSrv.handlers[polSrv.next] = h
+
+	return polURI, polSrv.next, h
+}
+
+// polTestCharger connects a charger to a new mock charger
+func polTestCharger(t *testing.T, regs map[uint16]uint16) (*Policharger, *polHandler) {
+	t.Helper()
+
+	uri, id, h := polServer(t, regs)
+
+	conn, err := modbus.NewConnection(t.Context(), uri, "", "", 0, modbus.Tcp, id)
 	require.NoError(t, err)
 
 	// no read cache: every call sees the current mock registers
-	return newPolicharger(conn, util.NewLogger("test"), 0), polSrvH
+	return newPolicharger(conn, util.NewLogger("test"), 0), h
 }
 
-func (h *polHandler) written() []polWrite {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	return append([]polWrite(nil), h.writes...)
+// polProxy forwards Modbus TCP and swallows a number of replies, like a lossy gateway
+type polProxy struct {
+	mu   sync.Mutex
+	drop int
 }
 
-func (h *polHandler) reset() {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	h.writes = nil
+func (p *polProxy) dropNext(n int) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.drop = n
+}
+
+func (p *polProxy) swallow() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.drop > 0 {
+		p.drop--
+		return true
+	}
+	return false
+}
+
+func (p *polProxy) serve(c net.Conn, upstream string) {
+	defer c.Close()
+
+	u, err := net.Dial("tcp", upstream)
+	if err != nil {
+		return
+	}
+
+	go func() {
+		_, _ = io.Copy(u, c)
+		u.Close()
+	}()
+
+	hdr := make([]byte, 7)
+	for {
+		if _, err := io.ReadFull(u, hdr); err != nil {
+			return
+		}
+
+		body := make([]byte, int(binary.BigEndian.Uint16(hdr[4:6]))-1)
+		if _, err := io.ReadFull(u, body); err != nil {
+			return
+		}
+
+		if !p.swallow() {
+			if _, err := c.Write(slices.Concat(hdr, body)); err != nil {
+				return
+			}
+		}
+	}
+}
+
+// polLossyCharger connects a charger to a mock charger through a lossy proxy
+func polLossyCharger(t *testing.T, regs map[uint16]uint16) (*Policharger, *polHandler, *polProxy) {
+	t.Helper()
+
+	upstream, id, h := polServer(t, regs)
+
+	l, err := net.Listen("tcp", "localhost:0")
+	require.NoError(t, err)
+	t.Cleanup(func() { l.Close() })
+
+	p := new(polProxy)
+	go func() {
+		for {
+			c, err := l.Accept()
+			if err != nil {
+				return
+			}
+			go p.serve(c, upstream)
+		}
+	}()
+
+	conn, err := modbus.NewConnection(t.Context(), l.Addr().String(), "", "", 0, modbus.Tcp, id)
+	require.NoError(t, err)
+	conn.Timeout(200 * time.Millisecond)
+
+	return newPolicharger(conn, util.NewLogger("test"), 0), h, p
+}
+
+func TestPolichargerNew(t *testing.T) {
+	regs := polRegsIdle()
+	regs[polRegLockType] = 0 // factory default: normal mode
+	regs[polRegLock] = 0
+	regs[polRegThreePhase] = 1
+	uri, id, h := polServer(t, regs)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+
+	c, err := NewPolichargerFromConfig(ctx, map[string]any{"uri": uri, "id": id})
+	require.NoError(t, err)
+
+	wb := c.(*Policharger)
+	assert.Equal(t, 3, wb.phases)
+
+	// locked before switching to normally locked mode
+	w := h.written()
+	require.GreaterOrEqual(t, len(w), 2)
+	assert.Equal(t, []polWrite{{polRegLock, 1}, {polRegLockType, 1}}, w[:2])
+	assert.Equal(t, uint16(1), h.reg(polRegLockType))
+}
+
+func TestPolichargerNewUnreachable(t *testing.T) {
+	l, err := net.Listen("tcp", "localhost:0")
+	require.NoError(t, err)
+	uri := l.Addr().String()
+	l.Close()
+
+	_, err = NewPolicharger(t.Context(), modbus.Settings{URI: uri, ID: 1, Timeout: 100 * time.Millisecond})
+	assert.Error(t, err)
 }
 
 func TestPolichargerStatus(t *testing.T) {
@@ -137,76 +305,110 @@ func TestPolichargerStatus(t *testing.T) {
 			r[polRegCharging] = 1
 			r[polRegCurrent] = 12
 		}, api.StatusC},
+		{"not armed, normal mode: status does not write", func(r map[uint16]uint16) {
+			r[polRegLockType] = 0
+			r[polRegSetpoint] = 0
+		}, api.StatusB},
 	}
 
 	for _, tc := range tc {
-		regs := polRegsIdle()
-		tc.mod(regs)
-		wb, _ := polTestCharger(t, regs)
+		t.Run(tc.name, func(t *testing.T) {
+			regs := polRegsIdle()
+			tc.mod(regs)
+			wb, h := polTestCharger(t, regs)
 
-		status, err := wb.Status()
-		require.NoError(t, err, tc.name)
-		assert.Equal(t, tc.status, status, tc.name)
+			status, err := wb.Status()
+			require.NoError(t, err)
+			assert.Equal(t, tc.status, status)
+			assert.Empty(t, h.written(), "status must be read-only")
+		})
 	}
 }
 
-func TestPolichargerStatusArmsWhenIdle(t *testing.T) {
-	regs := polRegsIdle()
-	regs[polRegSetpoint] = 9 // stopped after charging below 16 A
-	regs[polRegManualLimit] = 16
-	wb, h := polTestCharger(t, regs)
-	wb.current = 9
+func TestPolichargerMaintain(t *testing.T) {
+	tc := []struct {
+		name    string
+		mod     func(map[uint16]uint16)
+		current uint16
+		cfgAge  time.Duration // since the last lock mode check, 0 = never checked
+		writes  []polWrite
+	}{
+		{
+			name: "armed: nothing to do",
+			mod:  func(r map[uint16]uint16) {}, current: 6,
+		},
+		{
+			name: "car ended the session below 16 A: cap first, then arm",
+			mod: func(r map[uint16]uint16) {
+				r[polRegSetpoint] = 9
+				r[polRegManualLimit] = 16
+			},
+			current: 9,
+			writes:  []polWrite{{polRegManualLimit, 9}, {polRegSetpoint, polArmCurrent}},
+		},
+		{
+			name: "charging: never arm",
+			mod: func(r map[uint16]uint16) {
+				r[polRegLock] = 0
+				r[polRegCharging] = 1
+				r[polRegSetpoint] = 10
+				r[polRegManualLimit] = 10
+			},
+			current: 10,
+		},
+		{
+			name: "back in normal mode: lock and restore mode before arming",
+			mod: func(r map[uint16]uint16) {
+				r[polRegLockType] = 0
+				r[polRegLock] = 0
+				r[polRegSetpoint] = 0
+			},
+			current: 6,
+			writes:  []polWrite{{polRegLock, 1}, {polRegLockType, 1}, {polRegSetpoint, polArmCurrent}},
+		},
+		{
+			name: "periodic check not due: the check before arming catches normal mode",
+			mod: func(r map[uint16]uint16) {
+				r[polRegLockType] = 0
+				r[polRegLock] = 0
+				r[polRegSetpoint] = 0
+			},
+			current: 6,
+			cfgAge:  2 * time.Minute,
+			writes:  []polWrite{{polRegLock, 1}, {polRegLockType, 1}, {polRegSetpoint, polArmCurrent}},
+		},
+		{
+			name: "low PV grid limit: warn, do not change it",
+			mod: func(r map[uint16]uint16) {
+				r[polRegPvGridLimit] = 0
+			},
+			current: 6,
+		},
+	}
 
-	status, err := wb.Status()
-	require.NoError(t, err)
-	assert.Equal(t, api.StatusB, status)
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			regs := polRegsIdle()
+			tc.mod(regs)
+			wb, h := polTestCharger(t, regs)
+			wb.current = tc.current
+			wb.armed = true
+			if tc.cfgAge > 0 {
+				wb.cfgOK = time.Now().Add(-tc.cfgAge)
+			}
+			if len(tc.writes) > 0 {
+				wb.armed = false
+			}
 
-	// cap first, then arm
-	assert.Equal(t, []polWrite{{polRegManualLimit, 9}, {polRegSetpoint, polArmCurrent}}, h.written())
-	assert.True(t, wb.armed)
+			require.NoError(t, wb.maintain())
+			assert.Equal(t, tc.writes, h.written())
 
-	// nothing left to do on the next cycle
-	h.reset()
-	_, err = wb.Status()
-	require.NoError(t, err)
-	assert.Empty(t, h.written())
-}
-
-func TestPolichargerNeverArmsInNormalMode(t *testing.T) {
-	regs := polRegsIdle()
-	regs[polRegLockType] = 0 // e.g. after a reset of the charger
-	regs[polRegLock] = 0
-	regs[polRegSetpoint] = 0
-	wb, h := polTestCharger(t, regs)
-
-	_, err := wb.Status()
-	require.NoError(t, err)
-
-	// locked and back in normally locked mode before reg 80 = 16
-	assert.Equal(t, []polWrite{
-		{polRegLock, 1},
-		{polRegLockType, 1},
-		{polRegSetpoint, polArmCurrent},
-	}, h.written())
-}
-
-func TestPolichargerArmChecksLockMode(t *testing.T) {
-	regs := polRegsIdle()
-	regs[polRegLockType] = 0
-	regs[polRegLock] = 0
-	regs[polRegSetpoint] = 0
-	wb, h := polTestCharger(t, regs)
-
-	// periodic check not due yet: the check before arming must catch it
-	wb.cfgOK = time.Now().Add(-2 * time.Minute)
-
-	_, err := wb.Status()
-	require.NoError(t, err)
-	assert.Equal(t, []polWrite{
-		{polRegLock, 1},
-		{polRegLockType, 1},
-		{polRegSetpoint, polArmCurrent},
-	}, h.written())
+			// idempotent
+			h.reset()
+			require.NoError(t, wb.maintain())
+			assert.Empty(t, h.written())
+		})
+	}
 }
 
 func TestPolichargerEnable(t *testing.T) {
@@ -219,100 +421,166 @@ func TestPolichargerEnable(t *testing.T) {
 	enabled, err := wb.Enabled()
 	require.NoError(t, err)
 	assert.True(t, enabled)
+
+	// again: nothing to do
+	h.reset()
+	require.NoError(t, wb.Enable(true))
+	assert.Empty(t, h.written())
+}
+
+func TestPolichargerEnableWhileCharging(t *testing.T) {
+	regs := polRegsIdle()
+	regs[polRegCharging] = 1 // locked but still ramping down
+	regs[polRegSetpoint] = 10
+	regs[polRegManualLimit] = 10
+	wb, h := polTestCharger(t, regs)
+	wb.current = 10
+
+	require.NoError(t, wb.Enable(true))
+	assert.Equal(t, []polWrite{{polRegLock, 0}}, h.written(), "no arming while charging")
 }
 
 func TestPolichargerDisable(t *testing.T) {
 	regs := polRegsIdle()
 	regs[polRegLock] = 0
-	regs[polRegCharging] = 1
 	regs[polRegSetpoint] = 12
 	regs[polRegManualLimit] = 12
 	wb, h := polTestCharger(t, regs)
 	wb.current = 12
 
-	// the mock does not stop charging by itself
 	require.NoError(t, wb.Enable(false))
-	assert.Equal(t, polWrite{polRegLock, 1}, h.written()[0], "lock must be the first write")
+	assert.Equal(t, []polWrite{{polRegLock, 1}, {polRegSetpoint, polArmCurrent}}, h.written(), "lock first, then arm")
+	assert.True(t, wb.armed)
 
 	enabled, err := wb.Enabled()
 	require.NoError(t, err)
 	assert.False(t, enabled)
 }
 
-func TestPolichargerDisableRearms(t *testing.T) {
+func TestPolichargerDisableStillCharging(t *testing.T) {
 	regs := polRegsIdle()
 	regs[polRegLock] = 0
+	regs[polRegCharging] = 1 // the mock does not stop by itself
 	regs[polRegSetpoint] = 12
 	regs[polRegManualLimit] = 12
 	wb, h := polTestCharger(t, regs)
 	wb.current = 12
 
 	require.NoError(t, wb.Enable(false))
-	assert.Equal(t, []polWrite{{polRegLock, 1}, {polRegSetpoint, polArmCurrent}}, h.written())
-	assert.True(t, wb.armed)
+	assert.Equal(t, polWrite{polRegLock, 1}, h.written()[0], "lock must be the first write")
 }
 
-func TestPolichargerMaxCurrentCharging(t *testing.T) {
-	regs := polRegsIdle()
-	regs[polRegLock] = 0
-	regs[polRegCharging] = 1
-	regs[polRegSetpoint] = 12
-	regs[polRegManualLimit] = 12
-	wb, h := polTestCharger(t, regs)
+func TestPolichargerMaxCurrent(t *testing.T) {
+	t.Run("charging", func(t *testing.T) {
+		regs := polRegsIdle()
+		regs[polRegLock] = 0
+		regs[polRegCharging] = 1
+		regs[polRegSetpoint] = 12
+		regs[polRegManualLimit] = 12
+		wb, h := polTestCharger(t, regs)
 
-	// lower: setpoint only
-	require.NoError(t, wb.MaxCurrent(9))
-	assert.Equal(t, []polWrite{{polRegSetpoint, 9}}, h.written())
+		// lower: setpoint only
+		require.NoError(t, wb.MaxCurrent(9))
+		assert.Equal(t, []polWrite{{polRegSetpoint, 9}}, h.written())
 
-	// above the cap: setpoint first, then lift the cap
-	h.reset()
-	require.NoError(t, wb.MaxCurrent(14))
-	assert.Equal(t, []polWrite{{polRegSetpoint, 14}, {polRegManualLimit, 14}}, h.written())
-	assert.False(t, wb.armed)
-}
+		// above the cap: setpoint first, then lift the cap
+		h.reset()
+		require.NoError(t, wb.MaxCurrent(14))
+		assert.Equal(t, []polWrite{{polRegSetpoint, 14}, {polRegManualLimit, 14}}, h.written())
+		assert.False(t, wb.armed)
+	})
 
-func TestPolichargerMaxCurrentIdle(t *testing.T) {
-	wb, h := polTestCharger(t, polRegsIdle())
+	t.Run("idle", func(t *testing.T) {
+		wb, h := polTestCharger(t, polRegsIdle())
 
-	// idle: only the cap changes, reg 80 stays armed
-	require.NoError(t, wb.MaxCurrent(11))
-	assert.Equal(t, []polWrite{{polRegManualLimit, 11}}, h.written())
+		// only the cap changes, reg 80 stays armed
+		require.NoError(t, wb.MaxCurrent(11))
+		assert.Equal(t, []polWrite{{polRegManualLimit, 11}}, h.written())
+	})
 
-	assert.Error(t, wb.MaxCurrent(5))
-	assert.Error(t, wb.MaxCurrent(33))
-}
+	t.Run("range", func(t *testing.T) {
+		wb, h := polTestCharger(t, polRegsIdle())
 
-func TestPolichargerPvGridLimit(t *testing.T) {
-	regs := polRegsIdle()
-	regs[polRegPvGridLimit] = 0 // blocks grid charging with the PV licence
-	wb, h := polTestCharger(t, regs)
-
-	_, err := wb.Status()
-	require.NoError(t, err)
-	assert.Equal(t, []polWrite{{polRegPvGridLimit, polArmCurrent}}, h.written())
+		for _, c := range []int64{0, 5, 33} {
+			assert.Error(t, wb.MaxCurrent(c), c)
+		}
+		assert.Empty(t, h.written())
+	})
 }
 
 func TestPolichargerMeasurements(t *testing.T) {
-	regs := polRegsIdle()
-	regs[polRegLock] = 0
-	regs[polRegCharging] = 1
-	regs[polRegCurrent] = 13
-	wb, _ := polTestCharger(t, regs)
+	tc := []struct {
+		name       string
+		phases     int
+		charging   uint16
+		current    uint16
+		power      float64
+		l1, l2, l3 float64
+	}{
+		{"1p charging", 1, 1, 13, 2990, 13, 0, 0},
+		{"3p charging", 3, 1, 10, 6900, 10, 10, 10},
+		{"residual sensor value while not charging", 1, 0, 1, 0, 0, 0, 0},
+	}
 
-	power, err := wb.CurrentPower()
-	require.NoError(t, err)
-	assert.Equal(t, 2990.0, power)
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			regs := polRegsIdle()
+			regs[polRegCharging] = tc.charging
+			regs[polRegCurrent] = tc.current
+			wb, _ := polTestCharger(t, regs)
+			wb.phases = tc.phases
 
-	l1, l2, l3, err := wb.Currents()
-	require.NoError(t, err)
-	assert.Equal(t, []float64{13, 0, 0}, []float64{l1, l2, l3})
+			power, err := wb.CurrentPower()
+			require.NoError(t, err)
+			assert.Equal(t, tc.power, power)
 
-	// not charging: no power even if the sensor reads a residual value
-	regs = polRegsIdle()
-	regs[polRegCurrent] = 1
-	wb, _ = polTestCharger(t, regs)
+			l1, l2, l3, err := wb.Currents()
+			require.NoError(t, err)
+			assert.Equal(t, []float64{tc.l1, tc.l2, tc.l3}, []float64{l1, l2, l3})
+		})
+	}
+}
 
-	power, err = wb.CurrentPower()
-	require.NoError(t, err)
-	assert.Zero(t, power)
+func TestPolichargerLossyLink(t *testing.T) {
+	t.Run("read retried after a lost reply", func(t *testing.T) {
+		wb, _, p := polLossyCharger(t, polRegsIdle())
+
+		p.dropNext(1)
+		status, err := wb.Status()
+		require.NoError(t, err)
+		assert.Equal(t, api.StatusB, status)
+	})
+
+	t.Run("write applied but echo lost: read back, no second write", func(t *testing.T) {
+		wb, h, p := polLossyCharger(t, polRegsIdle())
+
+		p.dropNext(1)
+		require.NoError(t, wb.write(polRegManualLimit, 10))
+		assert.Equal(t, []polWrite{{polRegManualLimit, 10}}, h.written())
+	})
+
+	t.Run("gives up after the retries", func(t *testing.T) {
+		wb, h, p := polLossyCharger(t, polRegsIdle())
+
+		p.dropNext(2 * polRetries)
+		_, err := wb.Status()
+		require.Error(t, err)
+		assert.Equal(t, polRetries, h.readCount())
+	})
+}
+
+func TestPolichargerExceptionNotRetried(t *testing.T) {
+	wb, h := polTestCharger(t, polRegsIdle())
+
+	_, err := wb.read(200, 1) // outside the register map
+	require.Error(t, err)
+	assert.True(t, modbus.IsException(err))
+	assert.Equal(t, 1, h.readCount())
+}
+
+func TestPolichargerDiagnose(t *testing.T) {
+	wb, h := polTestCharger(t, polRegsIdle())
+
+	wb.Diagnose()
+	assert.Empty(t, h.written(), "diagnose must be read-only")
 }
