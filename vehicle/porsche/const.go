@@ -10,6 +10,8 @@ const (
 	Audience  = "https://api.porsche.com"
 	ClientID  = "XhygisuebbrqQ80byOuU5VncxLIm8E6H"
 	XClientID = "41843fb4-691d-4970-85c7-2673e8ecef40"
+	// app user agent, required for current overview data, see CJNE/pyporscheconnectapi@4aad11f
+	UserAgent = "de.porsche.one/20.26.36-row+186611 (android)"
 	// RedirectURI is the custom app scheme registered for the My Porsche app's
 	// Auth0 client. Auth0 only permits this redirect, so the login runs
 	// server-side and reads the code from the redirect location (see login.go).
@@ -45,7 +47,7 @@ var Measurements = []string{
 	"RANGE",
 	"CHARGING_SUMMARY",
 	"CHARGING_RATE",
-	"CLIMATIZER_STATE",
+	"HVAC_SUMMARY",
 	"MILEAGE",
 	"GPS_LOCATION",
 }

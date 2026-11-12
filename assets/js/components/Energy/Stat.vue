@@ -1,23 +1,19 @@
 <template>
 	<!-- the wrapper is the query container, rules cannot address the container itself -->
-	<div class="container-wrapper">
-		<div class="stat" :class="{ 'stat--compact': compact, 'stat--aside': $slots['aside'] }">
-			<div v-if="label" class="label text-uppercase" :class="alignClass">{{ label }}</div>
-			<div
-				v-if="format"
-				class="value fw-bold text-truncate"
-				:class="[valueClass, alignClass]"
-			>
+	<div :class="{ 'container-wrapper': !inline }">
+		<div
+			class="stat"
+			:class="{
+				'stat--compact': inline,
+				'stat--inline': inline,
+			}"
+		>
+			<div v-if="label" class="label text-uppercase">{{ label }}</div>
+			<div v-if="format" class="value fw-bold text-truncate tabular" :class="valueClass">
 				<AnimatedNumber :to="number" :format="format" />
 			</div>
-			<div v-if="sub || $slots['sub']" class="sub" :class="alignClass">
-				<slot name="sub">
-					<span v-tooltip="tooltip" :class="{ hint: tooltip?.length }">{{ sub }}</span>
-				</slot>
-			</div>
-			<div v-if="$slots['aside']" class="aside"><slot name="aside" /></div>
-			<div v-if="$slots['asideSub']" class="aside-sub small text-muted">
-				<slot name="asideSub" />
+			<div v-if="sub" class="sub tabular">
+				<span v-tooltip="tooltip" :class="{ hint: tooltip?.length }">{{ sub }}</span>
 			</div>
 			<div v-if="$slots['default']" class="extra"><slot /></div>
 		</div>
@@ -28,9 +24,7 @@
 import { defineComponent, type PropType } from "vue";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 
-// label, animated number and subline. `aside` sits beside the number when the
-// component is wide enough, below it otherwise, `asideSub` follows it. The default
-// slot renders underneath everything
+// label, animated number and subline. The default slot renders underneath everything
 export default defineComponent({
 	name: "Stat",
 	components: { AnimatedNumber },
@@ -42,19 +36,15 @@ export default defineComponent({
 		// text or table rows, see the tooltip directive
 		tooltip: [String, Array] as PropType<string | string[][]>,
 		valueClass: String,
-		compact: Boolean,
-		// Bootstrap alignment suffixes, several for responsive changes: "center lg-start"
-		align: { type: String, default: "start" },
-	},
-	computed: {
-		alignClass(): string[] {
-			return this.align.split(" ").map((a) => `text-${a}`);
-		},
+		// compact and sized by its content: card headers
+		inline: Boolean,
 	},
 });
 </script>
 
 <style scoped>
+@import "../../../css/breakpoints.css";
+
 .container-wrapper {
 	container-type: inline-size;
 }
@@ -62,7 +52,7 @@ export default defineComponent({
 	display: grid;
 	/* a chart's inline width from the first layout must not hold the column open */
 	grid-template-columns: minmax(0, 1fr);
-	grid-template-areas: "label" "value" "sub" "aside" "aside-sub" "extra";
+	grid-template-areas: "label" "value" "sub" "extra";
 }
 .label {
 	grid-area: label;
@@ -83,14 +73,6 @@ export default defineComponent({
 	grid-area: sub;
 	color: var(--evcc-gray);
 	font-size: 14px;
-}
-.aside {
-	grid-area: aside;
-	min-width: 0;
-	margin-top: 1rem;
-}
-.aside-sub {
-	grid-area: aside-sub;
 }
 .extra {
 	grid-area: extra;
@@ -113,23 +95,21 @@ export default defineComponent({
 .stat--compact .value {
 	font-size: 20px;
 }
-/* enough room: aside shares the number's row, more of it on wide cards */
-@container (min-width: 24rem) {
-	.stat--aside {
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-		column-gap: 1.5rem;
-		grid-template-areas: "label ." "value aside" "sub aside-sub" "extra extra";
-	}
-	.stat--aside .aside {
-		margin-top: 0;
-	}
-	.stat--aside .aside-sub {
-		text-align: end;
-	}
+/* two of them side by side on a phone, sized by the number: never cut */
+.stat--inline .value {
+	overflow: visible;
+	font-size: 18px;
 }
-@container (min-width: 32rem) {
-	.stat--aside {
-		grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+.stat--inline .label,
+.stat--inline .sub {
+	white-space: nowrap;
+}
+.stat--inline .sub {
+	font-size: 12px;
+}
+@media (--sm-and-up) {
+	.stat--inline .value {
+		font-size: 20px;
 	}
 }
 </style>

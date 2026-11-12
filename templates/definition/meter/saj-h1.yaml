@@ -87,7 +87,7 @@ render: |
               address: 0x3247 # AppMode
               type: writesingle
               decode: uint16
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

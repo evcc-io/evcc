@@ -37,8 +37,8 @@
       "energy": "Energija",
       "gridCharge": "mrežno punjenje",
       "gridDischarge": "mrežno pražnjenje",
-      "hold": "pražnjenje zaključano",
       "holdCharge": "punjenje zaključano",
+      "holdDischarge": "pražnjenje zaključano",
       "ofTotal": "od {total}",
       "power": "Snaga",
       "soc": "Napunjenost"
@@ -70,8 +70,8 @@
       "action": {
         "charge": "Punjenje iz mreže",
         "discharge": "Pražnjenje u mrežu",
-        "hold": "Spriječi pražnjenje",
         "holdcharge": "Spriječi punjenje",
+        "holddischarge": "Spriječi pražnjenje",
         "normal": "Normalan rad"
       },
       "empty": "prazno",
@@ -186,7 +186,6 @@
     "circuits": {
       "addMainCircuit": "Dodaj glavni kružni tok",
       "addSubCircuit": "Dodaj podređeni kružni tok",
-      "chargingPointsNote": "Dodijelite tačke punjenja i grijače kružnom toku u njihovim vlastitim postavkama.",
       "description": "Osigurava da zbir svih tačaka opterećenja priključenih na krug ne prelazi konfigurisane granice snage i struje. Krugovi se mogu ugniježđivati kako bi se stvorila hijerarhija.",
       "legacyWarning": "Dostupna je nova konfiguracija kružnih tokova! Uklonite i sačuvajte svoju konfiguraciju ovdje da biste koristili novi vođeni proces. Nakon toga je potrebno ponovno pokretanje.",
       "meterDedicated": "Mjerač",

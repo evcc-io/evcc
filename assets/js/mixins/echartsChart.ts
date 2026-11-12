@@ -43,7 +43,8 @@ export default defineComponent({
       if (!el) return;
       this.chart = markRaw(echarts.init(el));
       this.observer?.disconnect();
-      this.observer = new ResizeObserver(() => this.resize());
+      // next frame: resizing inside the callback can resize other observed elements
+      this.observer = new ResizeObserver(() => requestAnimationFrame(() => this.resize()));
       this.observer.observe(el);
       // hover states jump instead of fading, keeps the dot in sync with the tooltip
       this.chart.setOption({ stateAnimation: { duration: 0 } });

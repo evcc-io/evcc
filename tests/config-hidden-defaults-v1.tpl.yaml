@@ -1,0 +1,20 @@
+template: hidden-defaults-meter
+group: generic
+products:
+  - description:
+      generic: Hidden Defaults Meter
+params:
+  - name: usage
+    choice: ["grid", "battery"]
+  - name: power
+    description:
+      generic: Power
+  - name: storageunit
+    default: 1
+    usages: ["battery"]
+
+render: |
+  type: custom
+  power:
+    source: const
+    value: {{ .power }}

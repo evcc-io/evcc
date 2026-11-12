@@ -85,3 +85,38 @@ func TestSolarForecastRatesOffGrid(t *testing.T) {
 	assert.True(t, data[1].End.Equal(start.Add(2*time.Hour)))
 	assert.Equal(t, 376.0, data[1].Value)
 }
+
+func TestSolarForecastRatesZeroFill(t *testing.T) {
+	res := map[string]homeassistant.SolarForecast{
+		"a": {WhHours: map[string]float64{
+			"2026-09-12T10:00:00+00:00": 100,
+			"2026-09-12T13:00:00+00:00": 200,
+		}},
+	}
+
+	data, err := solarForecastRates(res)
+	require.NoError(t, err)
+	require.Len(t, data, 4)
+
+	start := time.Date(2026, 9, 12, 10, 0, 0, 0, time.UTC)
+	for i, v := range []float64{100, 0, 0, 200} {
+		assert.True(t, data[i].Start.Equal(start.Add(time.Duration(i)*time.Hour)))
+		assert.True(t, data[i].End.Equal(start.Add(time.Duration(i+1)*time.Hour)))
+		assert.Equal(t, v, data[i].Value)
+	}
+
+	// partial slots at both ends
+	data = zeroFill(data, start.Add(-150*time.Minute), start.Add(5*time.Hour+30*time.Minute))
+	require.Len(t, data, 9)
+
+	from := start.Add(-150 * time.Minute)
+	for i, d := range []time.Duration{30 * time.Minute, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, 30 * time.Minute} {
+		assert.True(t, data[i].Start.Equal(from), "slot %d start", i)
+		from = from.Add(d)
+		assert.True(t, data[i].End.Equal(from), "slot %d end", i)
+	}
+
+	for i, v := range []float64{0, 0, 0, 100, 0, 0, 200, 0, 0} {
+		assert.Equal(t, v, data[i].Value, "slot %d value", i)
+	}
+}

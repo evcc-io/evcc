@@ -146,7 +146,7 @@ render: |
               address: 3049
               type: writemultiple
               decode: uint16
-    - case: 2 # hold -> enable "battery first" and disable "ac charge"
+    - case: 2 # holddischarge -> enable "battery first" and disable "ac charge"
       set:
         source: sequence
         set:

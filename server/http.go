@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	eapi "github.com/evcc-io/evcc/api"
@@ -21,6 +23,7 @@ import (
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/go-http-utils/etag"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -51,6 +54,7 @@ type Customization struct {
 	Css       string
 	LogoLight string
 	LogoDark  string
+	Icon      string
 	Brand     string
 	Website   string
 	Email     string
@@ -133,8 +137,29 @@ func NewHTTPd(addr string, hub *SocketHub, custom Customization) *HTTPd {
 		serveCustomFile(path, file)
 	}
 
+	if custom.Icon != "" {
+		log.WARN.Printf("❗ using custom icon: %s", custom.Icon)
+		if _, err := os.Stat(custom.Icon); os.IsNotExist(err) {
+			log.FATAL.Fatalf("custom icon file does not exist: %s", custom.Icon)
+		}
+		// iOS ignores non-png touch icons
+		if !strings.EqualFold(filepath.Ext(custom.Icon), ".png") {
+			log.FATAL.Fatalf("custom icon must be a png file: %s", custom.Icon)
+		}
+		for _, path := range []string{
+			"/meta/apple-touch-icon.png",
+			"/meta/favicon-32x32.png",
+			"/meta/favicon-16x16.png",
+			"/meta/favicon.ico",
+			"/meta/android-chrome-512x512.png",
+		} {
+			serveCustomFile(path, custom.Icon)
+		}
+	}
+
 	static.HandleFunc("/globals.js", globalsJsHandler(custom))
-	static.HandleFunc("/", indexHandler())
+	static.HandleFunc("/", indexHandler(custom))
+	static.HandleFunc("/meta/site.webmanifest", manifestHandler(custom))
 	for _, dir := range []string{"assets", "meta"} {
 		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(assets.Web)))
 	}
@@ -370,15 +395,17 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		}
 
 		// yaml handlers
-		for key, fun := range map[string]func() (any, any){
-			keys.Hems:      func() (any, any) { return map[string]any{}, config.Typed{} },
-			keys.Tariffs:   func() (any, any) { return map[string]any{}, globalconfig.Tariffs{} },
-			keys.Messaging: func() (any, any) { return map[string]any{}, globalconfig.Messaging{} }, // has default
-			keys.Circuits:  func() (any, any) { return []map[string]any{}, []config.Named{} },       // slice
+		for key, fun := range map[string]func() (templates.Class, any, any){
+			keys.Hems:    func() (templates.Class, any, any) { return templates.Hems, map[string]any{}, config.Typed{} },
+			keys.Tariffs: func() (templates.Class, any, any) { return templates.Tariff, map[string]any{}, globalconfig.Tariffs{} },
+			keys.Messaging: func() (templates.Class, any, any) {
+				return templates.Messenger, map[string]any{}, globalconfig.Messaging{}
+			}, // has default
+			keys.Circuits: func() (templates.Class, any, any) { return templates.Circuit, []map[string]any{}, []config.Named{} }, // slice
 		} {
-			other, struc := fun()
+			class, other, struc := fun()
 			routes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetStringHandler(key)}
-			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetYamlHandler(key, other, struc, auth)}
+			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetYamlHandler(key, class, other, struc, auth)}
 			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteHandler(key)}
 		}
 
@@ -430,7 +457,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"loadpoints":      {"GET", "/loadpoints", loadpointsConfigHandler()},
 			"loadpoint":       {"GET", "/loadpoints/{id:[0-9.]+}", loadpointConfigHandler()},
 			"updateloadpoint": {"PUT", "/loadpoints/{id:[0-9.]+}", updateLoadpointHandler()},
-			"deleteloadpoint": {"DELETE", "/loadpoints/{id:[0-9.]+}", deleteLoadpointHandler()},
+			"deleteloadpoint": {"DELETE", "/loadpoints/{id:[0-9.]+}", deleteLoadpointHandler(site)},
 			"newloadpoint":    {"POST", "/loadpoints", newLoadpointHandler()},
 		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)

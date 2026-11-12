@@ -82,3 +82,25 @@ func TestStatusRawPastTimestampTriggersRefresh(t *testing.T) {
 	assert.Equal(t, 1, *batteryCalls)
 	assert.Equal(t, 1, *refreshCalls, "refresh must be called when Updated is beyond expiry")
 }
+
+func TestSocBatteryBarLevel(t *testing.T) {
+	for _, tc := range []struct {
+		level int
+		bar   *float64
+		soc   float64
+	}{
+		{61, nil, 61},
+		{0, new(0.0), 0},
+		{0, new(1.0), 100.0 / 240},
+		{61, new(148.0), 148.0 / 240 * 100},
+		{99, new(240.0), 100},
+		{100, new(240.0), 100},
+		{1, new(0.0), 1},    // zero placeholder
+		{80, new(12.0), 80}, // inconsistent
+		{0, new(240.0), 0},  // inconsistent
+		{61, new(-1.0), 61}, // out of range
+		{61, new(241.0), 61},
+	} {
+		assert.InDelta(t, tc.soc, soc(Attributes{BatteryLevel: tc.level, BatteryBarLevel: tc.bar}), 1e-9, "level %d", tc.level)
+	}
+}

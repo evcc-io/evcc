@@ -131,6 +131,19 @@ const Template: StoryFn<typeof Loadpoint> = (args) => ({
 export const Standard = Template.bind({});
 Standard.args = baseState;
 
+export const VehicleLimitedPhases = Template.bind({});
+VehicleLimitedPhases.args = {
+  ...baseState,
+  vehicles: [{ ...baseState.vehicles[0]!, phases: 2 }],
+  maxCurrent: 32,
+  effectiveMaxCurrent: 16,
+  offeredCurrent: 16,
+  phasesConfigured: 0,
+  phasesActive: 2,
+  chargeCurrents: [16, 16, 0],
+  chargePower: 7360,
+};
+
 export const WithoutSoc = Template.bind({});
 WithoutSoc.args = {
   ...baseState,

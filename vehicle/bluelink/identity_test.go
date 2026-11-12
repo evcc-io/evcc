@@ -44,7 +44,7 @@ func legacyTokenHandler(accessToken, refreshToken string) http.HandlerFunc {
 
 // newLoginTestIdentity builds an Identity suitable for exercising the public
 // Login() method end to end, including the legacy getDeviceID call it always
-// makes. cci == nil mirrors a brand without CCI support (e.g. Genesis EU).
+// makes. cci == nil mirrors a brand without CCI support (e.g. Hyundai AU).
 func newLoginTestIdentity(t *testing.T, loginURL, deviceURL, cciURL string, cci *CCIConfig) *Identity {
 	t.Helper()
 
@@ -81,8 +81,8 @@ func testCCIConfig() *CCIConfig {
 	}
 }
 
-// TestLoginUsesLegacyWhenCCIIsNil covers brands without CCI support (Genesis
-// EU, Hyundai AU): Login must always use the unmodified legacy refreshToken path
+// TestLoginUsesLegacyWhenCCIIsNil covers brands without CCI support (Hyundai
+// AU): Login must always use the unmodified legacy refreshToken path
 func TestLoginUsesLegacyWhenCCIIsNil(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
@@ -130,6 +130,27 @@ func TestLoginPrefersLegacyToken(t *testing.T) {
 	token, err := identity.Token()
 	require.NoError(t, err)
 	assert.Equal(t, "legacy-access-2", token.AccessToken)
+}
+
+// TestLoginFallsBackToRandomDeviceID covers a CCI-capable brand whose legacy
+// device registration fails: Login must continue with a random device id
+func TestLoginFallsBackToRandomDeviceID(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/auth/api/v2/user/oauth2/token", legacyTokenHandler("legacy-access", "legacy-refresh"))
+	loginSrv := httptest.NewServer(mux)
+	defer loginSrv.Close()
+
+	deviceSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+	defer deviceSrv.Close()
+
+	identity := newLoginTestIdentity(t, loginSrv.URL, deviceSrv.URL, unreachable, testCCIConfig())
+	require.NoError(t, identity.Login("user@example.com", strings.Repeat("A", 48), "en", "kia"))
+	assert.NotEmpty(t, identity.deviceID)
+
+	identity = newLoginTestIdentity(t, loginSrv.URL, deviceSrv.URL, "", nil)
+	require.Error(t, identity.Login("user@example.com", strings.Repeat("A", 48), "en", "kia"))
 }
 
 // TestLoginUsesCCIAndWiresRefreshCCI covers a CCI-capable brand with an account

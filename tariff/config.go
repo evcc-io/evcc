@@ -3,6 +3,7 @@ package tariff
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
@@ -35,7 +36,9 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.T
 			return nil, fmt.Errorf("tariff type '%s': slot duration %v shorter than %v", util.TypeWithTemplateName(typ, other), r.End.Sub(r.Start), SlotDuration)
 		}
 
-		if rr[0].End.Sub(rr[0].Start) == SlotDuration {
+		if !slices.ContainsFunc(rr, func(r api.Rate) bool {
+			return r.End.Sub(r.Start) != SlotDuration
+		}) {
 			return v, nil
 		}
 	}

@@ -3535,7 +3535,7 @@
         "enum": [
           "unknown",
           "normal",
-          "hold",
+          "holddischarge",
           "charge",
           "holdcharge",
           "discharge"
@@ -3740,8 +3740,12 @@
             "description": "Planned site grid flow of the slot in W, positive means import.",
             "type": "number"
           },
-          "battery": {
+          "batteryDischarge": {
             "description": "Planned home battery discharge feeding the site in W.",
+            "type": "number"
+          },
+          "batteryCharge": {
+            "description": "Planned home battery charge in W.",
             "type": "number"
           },
           "actionable": {
@@ -4503,7 +4507,7 @@
             "type": "string",
             "enum": [
               "normal",
-              "hold",
+              "holddischarge",
               "charge",
               "holdcharge",
               "discharge"
@@ -5520,6 +5524,10 @@
           },
           "capacity": {
             "description": "Usable battery capacity in kWh.",
+            "type": "number"
+          },
+          "phases": {
+            "description": "Maximum number of phases supported by the vehicle. Zero means unknown.",
             "type": "number"
           },
           "icon": {
@@ -6555,7 +6563,7 @@
           "application/json": {
             "schema": {
               "type": "integer",
-              "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge, 5: discharge",
+              "description": "Battery mode. 0: unknown, 1: normal, 2: holddischarge, 3: charge, 4: holdcharge, 5: discharge",
               "minimum": 0,
               "maximum": 5
             }

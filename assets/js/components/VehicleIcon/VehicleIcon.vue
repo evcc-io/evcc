@@ -1,18 +1,10 @@
 <template>
-	<component
-		:is="singleIcon"
-		v-if="single"
-		:class="`icon icon--${size}`"
-		role="img"
-		:aria-label="name"
-	></component>
-	<MultiIcon v-else :count="count" :size="size"></MultiIcon>
+	<component :is="icon" :class="`icon icon--${size}`" role="img" :aria-label="name"></component>
 </template>
 
 <script lang="ts">
 import { defineComponent, type Component, type PropType } from "vue";
 import "@h2d2/shopicons/es/regular/car3";
-import MultiIcon from "../MultiIcon";
 
 import airpurifier from "./Airpurifier.vue";
 import battery from "./Battery.vue";
@@ -100,25 +92,13 @@ export const ICONS = Object.keys(icons);
 
 export default defineComponent({
 	name: "VehicleIcon",
-	components: { MultiIcon },
 	props: {
 		name: { type: String, default: "car" },
-		names: { type: Array as PropType<string[]>, default: () => [] },
 		size: { type: String as PropType<ICON_SIZE>, default: ICON_SIZE.S },
 	},
 	computed: {
-		uniqueNames(): string[] {
-			return [...new Set(this.names && this.names.length ? this.names : [this.name])];
-		},
-		count() {
-			return this.names.length;
-		},
-		single() {
-			return this.uniqueNames.length == 1;
-		},
-		singleIcon() {
-			const firstName = this.uniqueNames[0];
-			return (firstName && icons[firstName]) || `shopicon-regular-car3`;
+		icon() {
+			return icons[this.name] || `shopicon-regular-car3`;
 		},
 	},
 });
