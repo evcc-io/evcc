@@ -208,11 +208,12 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 	}
 
 	if wb.phases == 3 {
-		autoSw, err := wb.readUint16(foxRegAutoPhaseSwitch)
-		if err != nil {
-			return nil, err
+		// C-series (e.g. C044KS2) has no auto phase switch register
+		if autoSw, err := wb.readUint16(foxRegAutoPhaseSwitch); err != nil {
+			wb.log.DEBUG.Printf("auto phase switch not supported: %v", err)
+		} else {
+			wb.switchable = autoSw > 0
 		}
-		wb.switchable = autoSw > 0
 	}
 
 	if wb.switchable {
