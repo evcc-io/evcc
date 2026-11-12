@@ -2,8 +2,10 @@ package meter
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -192,6 +194,56 @@ func TestIndevoltControlPower(t *testing.T) {
 					require.Equal(t, 3, charge.Case)
 					require.Len(t, charge.Set.Set, 3)
 					require.Contains(t, charge.Set.Set[2].URI, `"v":[1,`+tc.want+`,100]`)
+				})
+			}
+		})
+	}
+}
+
+func TestIndevoltRejectedWrite(t *testing.T) {
+	for _, template := range []string{"indevolt-battery", "indevolt-hybrid"} {
+		t.Run(template, func(t *testing.T) {
+			for _, body := range []string{`{"result":false}`, `{}`, `not json`} {
+				t.Run(body, func(t *testing.T) {
+					for failedStep := 1; failedStep <= 3; failedStep++ {
+						t.Run(fmt.Sprint(failedStep), func(t *testing.T) {
+							var mu sync.Mutex
+							var points []int
+							reject := true
+							srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+								var write indevoltWrite
+								if err := json.Unmarshal([]byte(r.URL.Query().Get("config")), &write); err != nil {
+									t.Error(err)
+									w.WriteHeader(http.StatusBadRequest)
+									return
+								}
+								mu.Lock()
+								points = append(points, write.Point)
+								fail := reject && len(points) == failedStep
+								mu.Unlock()
+								response := `{"result":true}`
+								if fail {
+									response = body
+								}
+								_, _ = w.Write([]byte(response))
+							}))
+							defer srv.Close()
+							values := map[string]any{"template": template, "usage": "battery", "maxchargepower": 1000, "minsoc": 5, "maxsoc": 80}
+							m := indevoltMeter(t, values, srv.URL)
+							ctrl, ok := api.Cap[api.BatteryController](m)
+							require.True(t, ok)
+							require.Error(t, ctrl.SetBatteryMode(api.BatteryCharge))
+							mu.Lock()
+							got := slices.Clone(points)
+							reject, points = false, nil
+							mu.Unlock()
+							require.Equal(t, []int{1143, 47005, 47015}[:failedStep], got)
+							require.NoError(t, ctrl.SetBatteryMode(api.BatteryCharge))
+							mu.Lock()
+							defer mu.Unlock()
+							require.Equal(t, []int{1143, 47005, 47015}, points)
+						})
+					}
 				})
 			}
 		})
