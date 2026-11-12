@@ -18,6 +18,7 @@ products:
   - brand: Indevolt
     description:
       generic: PowerFlex 3000 Hybrid
+capabilities: ["battery-control"]
 requirements:
   description:
     de: |
@@ -47,6 +48,22 @@ params:
   - name: cache
     default: 5s
   - preset: battery-params
+  - name: controllable
+    type: bool
+    default: false
+    usages: ["battery"]
+    description:
+      en: Active battery control
+      de: Aktive Batteriesteuerung
+    help:
+      en: Enables mode changes and grid charging. Holding the battery uses standby and also stops solar charging.
+      de: Aktiviert Moduswechsel und Netzladen. Das Unterbinden der Entladung verwendet Standby und stoppt auch das Solarladen.
+  - name: maxchargepower
+    example: 1000
+    advanced: false
+    help:
+      en: Required for active battery control. Set the supported grid charging power for your model (at least 50 W).
+      de: Für die aktive Batteriesteuerung erforderlich. Unterstützte Netzladeleistung des Modells einstellen (mindestens 50 W).
 render: |
   {{- define "auth" }}
   {{- if .user }}
@@ -112,5 +129,11 @@ render: |
     {{- include "auth" . | indent 2 }}
     jq: ."6007" # Battery Total Discharging Energy (kWh)
     cache: {{ .cache }}
+  {{- if .controllable }}
+  {{- if lt (int .maxchargepower) 50 }}
+  {{- fail "maxchargepower must be at least 50 W for active battery control" }}
+  {{- end }}
+  {{- include "indevolt-batterymode" . }}
+  {{- end }}
   {{- include "battery-params" . }}
   {{- end }}
