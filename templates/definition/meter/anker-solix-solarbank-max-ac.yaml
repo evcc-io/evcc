@@ -123,7 +123,7 @@ render: |
                     address: 10064
                     type: writesingle
                     encoding: uint16
-        - case: 2 # hold
+        - case: 2 # holddischarge
           set:
             source: sequence
             set:

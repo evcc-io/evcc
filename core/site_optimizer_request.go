@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"slices"
 	"strconv"
@@ -249,6 +250,11 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		details.DemandDetails = nil
 	}
 
+	// before coarsening, which would average a broken slot with its neighbours
+	if err := validateDemand(req.TimeSeries.Dt, req.TimeSeries.Gt, details.Timestamps); err != nil {
+		return req, details, err
+	}
+
 	after, err := coarseSlotsAfter(hosted)
 	if err != nil {
 		site.log.WARN.Println("optimizer:", err)
@@ -258,6 +264,19 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	}
 
 	return req, details, nil
+}
+
+// maxDemandPower bounds the average household demand per slot. A forecast above it is
+// broken input: the optimizer cannot build a model from it and returns no plan.
+const maxDemandPower = 1e6 // W
+
+func validateDemand(dt []int, gt []float32, ts []time.Time) error {
+	for i, e := range gt {
+		if p := float64(e) * 3600 / float64(dt[i]); math.IsNaN(p) || math.IsInf(p, 0) || p > maxDemandPower {
+			return fmt.Errorf("invalid household demand forecast: %.4gWh at %v", e, ts[i].Local())
+		}
+	}
+	return nil
 }
 
 func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDuration time.Duration, planner api.Rates) (optimizer.BatteryConfig, batteryDetail) {
@@ -457,7 +476,7 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 			bat.PDemand = nil
 
 			switch mode {
-			case api.BatteryHold:
+			case api.BatteryHoldDischarge:
 				bat.DMax = 0
 			case api.BatteryHoldCharge, api.BatteryDischarge:
 				bat.CMax = 0
