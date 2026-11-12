@@ -9,7 +9,7 @@ products:
   - brand: Compleo
     description:
       generic: eBox
-capabilities: ["mA", "meter", "dim"]
+capabilities: ["mA", "dim"]
 requirements:
   evcc: ["sponsorship"]
 caveats:
