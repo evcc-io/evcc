@@ -19,6 +19,7 @@ params:
     choice: ["battery"]
   - name: modbus
     choice: ["tcpip"]
+    id: 1
   - name: units
     required: true
     example: 0,1,2
