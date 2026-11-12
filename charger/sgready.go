@@ -160,10 +160,7 @@ func (wb *SgReady) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if mode == Boost {
-		return heatingStatus(wb.lp, wb.standbyPower), nil
-	}
-	return api.StatusB, nil
+	return heatingStatus(wb.lp, wb.standbyPower, mode == Boost), nil
 }
 
 // Enabled implements the api.Charger interface

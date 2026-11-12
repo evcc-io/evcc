@@ -19,19 +19,26 @@ func TestHeatingStatus(t *testing.T) {
 		return lp
 	}
 
-	noMeter := loadpoint.NewMockAPI(ctrl)
-	noMeter.EXPECT().HasChargeMeter().Return(false)
+	noMeter := func() loadpoint.API {
+		lp := loadpoint.NewMockAPI(ctrl)
+		lp.EXPECT().HasChargeMeter().Return(false)
+		return lp
+	}
 
 	for _, tc := range []struct {
-		name   string
-		lp     loadpoint.API
-		status api.ChargeStatus
+		name      string
+		lp        loadpoint.API
+		requested bool
+		status    api.ChargeStatus
 	}{
-		{"no loadpoint", nil, api.StatusC},
-		{"no meter", noMeter, api.StatusC},
-		{"standby", withMeter(80), api.StatusB},
-		{"running", withMeter(800), api.StatusC},
+		{"no loadpoint, requested", nil, true, api.StatusC},
+		{"no loadpoint, not requested", nil, false, api.StatusB},
+		{"no meter, requested", noMeter(), true, api.StatusC},
+		{"no meter, not requested", noMeter(), false, api.StatusB},
+		{"standby, requested", withMeter(80), true, api.StatusB},
+		{"running, requested", withMeter(800), true, api.StatusC},
+		{"running, not requested", withMeter(800), false, api.StatusC},
 	} {
-		assert.Equal(t, tc.status, heatingStatus(tc.lp, heatpumpStandbyPower), tc.name)
+		assert.Equal(t, tc.status, heatingStatus(tc.lp, heatpumpStandbyPower, tc.requested), tc.name)
 	}
 }

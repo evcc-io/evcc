@@ -49,12 +49,16 @@ func init() {
 	registry.AddCtx("heatpump", NewHeatpumpFromConfig)
 }
 
-// heatingStatus reports status C only while the device draws more than its standby power
-func heatingStatus(lp loadpoint.API, standbyPower float64) api.ChargeStatus {
-	if lp != nil && lp.HasChargeMeter() && lp.GetChargePower() <= standbyPower {
-		return api.StatusB
+// heatingStatus reports status C while the device draws more than its standby power.
+// Without a charge meter it falls back to the requested mode.
+func heatingStatus(lp loadpoint.API, standbyPower float64, requested bool) api.ChargeStatus {
+	if lp != nil && lp.HasChargeMeter() {
+		requested = lp.GetChargePower() > standbyPower
 	}
-	return api.StatusC
+	if requested {
+		return api.StatusC
+	}
+	return api.StatusB
 }
 
 // NewHeatpumpFromConfig creates heatpump configurable charger from generic config
@@ -156,10 +160,7 @@ func (wb *Heatpump) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if power > 0 {
-		return heatingStatus(wb.lp, wb.standbyPower), nil
-	}
-	return api.StatusB, nil
+	return heatingStatus(wb.lp, wb.standbyPower, power > 0), nil
 }
 
 // Enabled implements the api.Charger interface
