@@ -8,6 +8,7 @@
 				v-for="(slot, index) in slots"
 				:key="`${slot.day}-${fmtHourMinute(slot.start)}`"
 				:data-index="index"
+				data-testid="tariff-slot"
 				class="slot user-select-none"
 				:class="{
 					active: slot.charging,
