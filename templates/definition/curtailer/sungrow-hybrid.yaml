@@ -16,6 +16,7 @@ discovery:
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
     baudrate: 9600
   - name: maxacpower
     service: modbus/read?address=5000&type=input&encoding=uint16&scale=100&{modbus} # Nominal output power, 0.1kW
