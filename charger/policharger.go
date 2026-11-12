@@ -19,7 +19,7 @@ import (
 // On the tested unit (NW-T2, software 9.30) a session only starts with reg 80 >= 16 A,
 // about 205 s after reg 80 was set, and reg 80 = 0 takes about 55 s to stop. The
 // charger is therefore kept in normally locked mode (reg 30 = 1): while idle it stays
-// armed (reg 80 = 16) with reg 44 capping the current, and reg 88 starts and stops
+// armed (reg 80 >= 16) with reg 44 capping the current, and reg 88 starts and stops
 // charging within seconds. Booleans are 1/0, writing 0xFF00 returns exception 03.
 type Policharger struct {
 	log      *util.Logger
@@ -28,7 +28,6 @@ type Policharger struct {
 	mu       sync.Mutex
 	phases   int
 	current  uint16    // last current requested by evcc
-	armed    bool      // reg 44 and reg 80 are known to be set for the next start
 	cfgOK    time.Time // last time the lock mode was verified
 	pvWarned bool
 }
@@ -57,15 +56,14 @@ const (
 	polMinCurrent = 6
 	polMaxCurrent = 32
 
+	// well below the start delay, so a charger back in normal mode is locked again in time
 	polHeartbeat  = time.Minute
-	polCfgCheck   = 10 * time.Minute // periodic verification of the lock mode
-	polArmCheck   = time.Minute      // the lock mode must be this fresh before arming
-	polCacheTTL   = 5 * time.Second  // share reads between the calls of one evcc cycle
+	polCfgCheck   = polHeartbeat
+	polCacheTTL   = 5 * time.Second // share reads between the calls of one evcc cycle
 	polRetries    = 4
 	polRetryDelay = 300 * time.Millisecond
 )
 
-// polRegs maps register addresses to values
 type polRegs map[uint16]uint16
 
 func init() {
@@ -129,6 +127,13 @@ func NewPolicharger(ctx context.Context, settings modbus.Settings) (api.Charger,
 		return nil, fmt.Errorf("lock mode: %w", err)
 	}
 
+	// an armed and unlocked charger would start without evcc enabling it
+	if r[polRegCharging] == 0 && r[polRegLock] != 1 {
+		if err := wb.write(polRegLock, 1); err != nil {
+			return nil, fmt.Errorf("lock: %w", err)
+		}
+	}
+
 	go wb.heartbeat(ctx)
 
 	return wb, nil
@@ -179,7 +184,7 @@ func (wb *Policharger) maintain() error {
 		return err
 	}
 
-	if r[polRegCharging] == 0 && (!wb.armed || r[polRegSetpoint] != polArmCurrent) {
+	if r[polRegCharging] == 0 {
 		return wb.arm(r, wb.target())
 	}
 
@@ -288,15 +293,14 @@ func (wb *Policharger) ensureConfig(r polRegs, maxAge time.Duration) error {
 
 	// with the PV programme licence, a low grid limit blocks charging from the grid
 	if r[polRegPvProgram] != 0 && !wb.pvWarned {
-		pv, err := wb.read(polRegPvGridLimit, 1)
-		if err != nil {
-			return err
+		if pv, err := wb.read(polRegPvGridLimit, 1); err != nil {
+			wb.log.DEBUG.Println("pv grid limit:", err)
+		} else {
+			if limit := pv[polRegPvGridLimit]; limit < polArmCurrent {
+				wb.log.WARN.Printf("PV programme active with grid current limit %d A: sessions may not start, set it to %d A or more in the charger menu", limit, polArmCurrent)
+			}
+			wb.pvWarned = true
 		}
-
-		if limit := pv[polRegPvGridLimit]; limit < polArmCurrent {
-			wb.log.WARN.Printf("PV programme active with grid current limit %d A: sessions may not start, set it to %d A or more in the charger menu", limit, polArmCurrent)
-		}
-		wb.pvWarned = true
 	}
 
 	wb.cfgOK = time.Now()
@@ -309,10 +313,15 @@ func (wb *Policharger) target() uint16 {
 	return max(wb.current, polMinCurrent)
 }
 
-// arm sets the current cap and arms the charger while it is not charging.
-// In normal mode reg 80 = 16 would start charging on its own, so the lock mode
-// is verified first.
+// arm sets the current cap and arms the charger while it is not charging. The
+// setpoint is at least 16 A to arm and at least the cap, so that the cap is the
+// effective current once a session starts. In normal mode an armed charger would
+// start on its own, so the lock mode is verified first.
 func (wb *Policharger) arm(r polRegs, amps uint16) error {
+	if err := wb.ensureConfig(r, polCfgCheck); err != nil {
+		return err
+	}
+
 	if r[polRegManualLimit] != amps {
 		if err := wb.write(polRegManualLimit, amps); err != nil {
 			return err
@@ -320,18 +329,12 @@ func (wb *Policharger) arm(r polRegs, amps uint16) error {
 		r[polRegManualLimit] = amps
 	}
 
-	if r[polRegSetpoint] != polArmCurrent {
-		if err := wb.ensureConfig(r, polArmCheck); err != nil {
+	if setpoint := max(amps, polArmCurrent); r[polRegSetpoint] != setpoint {
+		if err := wb.write(polRegSetpoint, setpoint); err != nil {
 			return err
 		}
-
-		if err := wb.write(polRegSetpoint, polArmCurrent); err != nil {
-			return err
-		}
-		r[polRegSetpoint] = polArmCurrent
+		r[polRegSetpoint] = setpoint
 	}
-
-	wb.armed = true
 
 	return nil
 }
@@ -375,16 +378,14 @@ func (wb *Policharger) Enable(enable bool) error {
 	defer wb.mu.Unlock()
 
 	if !enable {
-		wb.armed = false
-
 		// stop first, without prior reads
 		if err := wb.write(polRegLock, 1); err != nil {
 			return err
 		}
 
-		// arm for the next start, the heartbeat completes this if it fails here
+		// arm for the next start once the session has ended, else the heartbeat does
 		r, err := wb.state()
-		if err == nil {
+		if err == nil && r[polRegCharging] == 0 {
 			err = wb.arm(r, wb.target())
 		}
 		if err != nil {
@@ -440,14 +441,12 @@ func (wb *Policharger) MaxCurrent(current int64) error {
 
 	// regulate with reg 80, reg 44 is only raised to keep its writes rare
 	if r[polRegSetpoint] != amps {
-		wb.armed = false
 		if err := wb.write(polRegSetpoint, amps); err != nil {
 			return err
 		}
 	}
 
 	if r[polRegManualLimit] < amps {
-		wb.armed = false
 		return wb.write(polRegManualLimit, amps)
 	}
 

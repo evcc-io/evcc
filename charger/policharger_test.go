@@ -278,6 +278,50 @@ func TestPolichargerNew(t *testing.T) {
 	assert.Equal(t, uint16(1), h.reg(polRegLockType))
 }
 
+func TestPolichargerNewLocksIdle(t *testing.T) {
+	tc := []struct {
+		name     string
+		charging uint16
+		writes   []polWrite
+	}{
+		{"idle and unlocked: lock", 0, []polWrite{{polRegLock, 1}}},
+		{"charging: leave the session alone", 1, nil},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			regs := polRegsIdle()
+			regs[polRegLock] = 0
+			regs[polRegCharging] = tc.charging
+			uri, id, h := polServer(t, regs)
+
+			ctx, cancel := context.WithCancel(t.Context())
+			defer cancel()
+
+			_, err := NewPolichargerFromConfig(ctx, map[string]any{"uri": uri, "id": id})
+			require.NoError(t, err)
+
+			if tc.writes == nil {
+				assert.NotContains(t, h.written(), polWrite{polRegLock, 1})
+			} else {
+				assert.Equal(t, tc.writes, h.written()[:len(tc.writes)])
+			}
+		})
+	}
+}
+
+func TestPolichargerNewPvLimitUnreadable(t *testing.T) {
+	regs := polRegsIdle()
+	delete(regs, polRegPvGridLimit) // the read returns an exception
+	uri, id, _ := polServer(t, regs)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+
+	_, err := NewPolichargerFromConfig(ctx, map[string]any{"uri": uri, "id": id})
+	assert.NoError(t, err, "the PV grid limit is advisory only")
+}
+
 func TestPolichargerNewUnreachable(t *testing.T) {
 	l, err := net.Listen("tcp", "localhost:0")
 	require.NoError(t, err)
@@ -378,6 +422,32 @@ func TestPolichargerMaintain(t *testing.T) {
 			writes:  []polWrite{{polRegLock, 1}, {polRegLockType, 1}, {polRegSetpoint, polArmCurrent}},
 		},
 		{
+			name: "already armed but back in normal mode: lock and restore mode",
+			mod: func(r map[uint16]uint16) {
+				r[polRegLockType] = 0
+				r[polRegLock] = 0
+			},
+			current: 6,
+			cfgAge:  2 * time.Minute,
+			writes:  []polWrite{{polRegLock, 1}, {polRegLockType, 1}},
+		},
+		{
+			name: "stale cap after a failed write: corrected",
+			mod: func(r map[uint16]uint16) {
+				r[polRegManualLimit] = 12
+			},
+			current: 8,
+			writes:  []polWrite{{polRegManualLimit, 8}},
+		},
+		{
+			name: "cap above 16 A: setpoint follows the cap",
+			mod: func(r map[uint16]uint16) {
+				r[polRegManualLimit] = 6
+			},
+			current: 20,
+			writes:  []polWrite{{polRegManualLimit, 20}, {polRegSetpoint, 20}},
+		},
+		{
 			name: "low PV grid limit: warn, do not change it",
 			mod: func(r map[uint16]uint16) {
 				r[polRegPvGridLimit] = 0
@@ -392,12 +462,8 @@ func TestPolichargerMaintain(t *testing.T) {
 			tc.mod(regs)
 			wb, h := polTestCharger(t, regs)
 			wb.current = tc.current
-			wb.armed = true
 			if tc.cfgAge > 0 {
 				wb.cfgOK = time.Now().Add(-tc.cfgAge)
-			}
-			if len(tc.writes) > 0 {
-				wb.armed = false
 			}
 
 			require.NoError(t, wb.maintain())
@@ -450,7 +516,6 @@ func TestPolichargerDisable(t *testing.T) {
 
 	require.NoError(t, wb.Enable(false))
 	assert.Equal(t, []polWrite{{polRegLock, 1}, {polRegSetpoint, polArmCurrent}}, h.written(), "lock first, then arm")
-	assert.True(t, wb.armed)
 
 	enabled, err := wb.Enabled()
 	require.NoError(t, err)
@@ -467,7 +532,7 @@ func TestPolichargerDisableStillCharging(t *testing.T) {
 	wb.current = 12
 
 	require.NoError(t, wb.Enable(false))
-	assert.Equal(t, polWrite{polRegLock, 1}, h.written()[0], "lock must be the first write")
+	assert.Equal(t, []polWrite{{polRegLock, 1}}, h.written(), "no arming before the session has ended")
 }
 
 func TestPolichargerMaxCurrent(t *testing.T) {
@@ -487,7 +552,6 @@ func TestPolichargerMaxCurrent(t *testing.T) {
 		h.reset()
 		require.NoError(t, wb.MaxCurrent(14))
 		assert.Equal(t, []polWrite{{polRegSetpoint, 14}, {polRegManualLimit, 14}}, h.written())
-		assert.False(t, wb.armed)
 	})
 
 	t.Run("idle", func(t *testing.T) {
@@ -496,6 +560,16 @@ func TestPolichargerMaxCurrent(t *testing.T) {
 		// only the cap changes, reg 80 stays armed
 		require.NoError(t, wb.MaxCurrent(11))
 		assert.Equal(t, []polWrite{{polRegManualLimit, 11}}, h.written())
+
+		// above 16 A the setpoint must not limit the session once it starts
+		h.reset()
+		require.NoError(t, wb.MaxCurrent(20))
+		assert.Equal(t, []polWrite{{polRegManualLimit, 20}, {polRegSetpoint, 20}}, h.written())
+
+		// back below 16 A: armed at 16 A again
+		h.reset()
+		require.NoError(t, wb.MaxCurrent(10))
+		assert.Equal(t, []polWrite{{polRegManualLimit, 10}, {polRegSetpoint, polArmCurrent}}, h.written())
 	})
 
 	t.Run("range", func(t *testing.T) {
@@ -557,6 +631,7 @@ func TestPolichargerLossyLink(t *testing.T) {
 		p.dropNext(1)
 		require.NoError(t, wb.write(polRegManualLimit, 10))
 		assert.Equal(t, []polWrite{{polRegManualLimit, 10}}, h.written())
+		assert.Equal(t, 1, h.readCount(), "value read back")
 	})
 
 	t.Run("gives up after the retries", func(t *testing.T) {
