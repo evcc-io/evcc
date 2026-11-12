@@ -777,15 +777,15 @@ export interface Loadpoint {
   /** Energy stats of the last 7 days. */
   last7d?: PeriodStats;
   /** Average CO₂ emissions of the current charging session in g/kWh. */
-  sessionCo2PerKWh: number | null;
+  sessionCo2PerKWh?: number | null;
   /** Energy charged in the current charging session in Wh. */
-  sessionEnergy: number;
+  sessionEnergy?: number;
   /** Total cost of the current charging session in the configured currency. */
-  sessionPrice: number | null;
+  sessionPrice?: number | null;
   /** Average energy price of the current charging session per kWh in the configured currency. */
-  sessionPricePerKWh: number | null;
+  sessionPricePerKWh?: number | null;
   /** Share of solar energy in the current charging session in %. */
-  sessionSolarPercentage: number;
+  sessionSolarPercentage?: number;
   /** Fast charging with cheap or clean grid energy is currently active. */
   smartCostActive: boolean;
   /** Price or emission limit for fast charging with grid energy. */

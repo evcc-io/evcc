@@ -42,7 +42,7 @@
 			<LabelAndValue
 				v-else
 				class="flex-grow-1"
-				:label="$t('main.loadpoint.charged')"
+				:label="chargedEnergyLabel"
 				:value="fmtEnergy(chargedEnergy)"
 				:extraValue="chargedSoc || ''"
 				data-testid="current-energy"
@@ -246,6 +246,12 @@ export default defineComponent({
 				return this.$t("main.vehicle.temp");
 			}
 			return this.$t("main.vehicle.vehicleSoc");
+		},
+		chargedEnergyLabel() {
+			if (this.integratedDevice) {
+				return this.$t("main.loadpoint.todayEnergy");
+			}
+			return this.$t("main.loadpoint.charged");
 		},
 		rangeUnit() {
 			return distanceUnit();

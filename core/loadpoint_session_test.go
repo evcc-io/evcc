@@ -6,6 +6,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/soc"
 	serverdb "github.com/evcc-io/evcc/db"
@@ -224,7 +225,7 @@ func createMockSessions(db *session.DB, clock *clock.Mock) []*session.Session {
 	return sessions
 }
 
-func TestResetHeatingSession(t *testing.T) {
+func TestIntegratedDeviceEnergyReset(t *testing.T) {
 	var err error
 	serverdb.Instance, err = serverdb.New("sqlite", ":memory:")
 	require.NoError(t, err)
@@ -246,55 +247,80 @@ func TestResetHeatingSession(t *testing.T) {
 	}
 
 	charger := &FeatureDecorator{Charger: cc, FeatureDescriber: fd}
-	fd.EXPECT().Features().AnyTimes().Return([]api.Feature{
-		api.Heating, api.IntegratedDevice,
-	})
-
-	mm := api.NewMockMeter(ctrl)
-	me := api.NewMockMeterEnergy(ctrl)
-
-	type EnergyDecorator struct {
-		api.Meter
-		api.MeterEnergy
-	}
-
-	cm := &EnergyDecorator{Meter: mm, MeterEnergy: me}
+	fd.EXPECT().Features().AnyTimes().Return([]api.Feature{api.IntegratedDevice})
 
 	lp := &Loadpoint{
 		log:         util.NewLogger("foo"),
 		clock:       clock,
 		db:          db,
 		charger:     charger,
-		chargeMeter: newChargeMeter(cm),
+		chargeMeter: newChargeMeter(nil),
 	}
 
-	// create session
-	me.EXPECT().TotalEnergy().Return(1.0, nil)
+	// connect resets session energy, no session
+	lp.energyMetrics.Update(1)
 	lp.createSession()
-	require.NotNil(t, lp.session)
-	assert.True(t, lp.session.Created.IsZero())
+	assert.Nil(t, lp.session)
+	assert.Zero(t, lp.energyMetrics.TotalWh())
 
-	// actually mark session as started
-	lp.session.Created = clock.Now()
-	assert.Equal(t, clock.Now(), lp.session.Created)
-
-	clock.Add(36 * time.Hour)
-	me.EXPECT().TotalEnergy().Return(1.0, nil).MaxTimes(2)
-
-	lp.resetHeatingSession()
-	require.NotNil(t, lp.session)
-	assert.True(t, lp.session.Created.IsZero())
-
+	// charge start and stop persist nothing
 	lp.updateSession(sessionStart(lp))
-	assert.Equal(t, clock.Now(), lp.session.Created)
-
-	me.EXPECT().TotalEnergy().Return(3.0, nil)
 	lp.stopSession()
 
-	assert.NotNil(t, lp.session)
-	assert.Equal(t, clock.Now(), lp.session.Finished)
-	assert.Equal(t, 1.0, *lp.session.MeterStart)
-	assert.Equal(t, 3.0, *lp.session.MeterStop)
+	var count int64
+	require.NoError(t, serverdb.Instance.Model(&session.Session{}).Count(&count).Error)
+	assert.Zero(t, count)
+
+	// same day keeps session energy
+	lp.energyMetrics.Update(2)
+	clock.Add(time.Hour)
+	lp.resetDailyEnergy()
+	assert.Equal(t, 2e3, lp.energyMetrics.TotalWh())
+
+	// next day resets once
+	clock.Add(36 * time.Hour)
+	lp.resetDailyEnergy()
+	assert.Zero(t, lp.energyMetrics.TotalWh())
+
+	lp.energyMetrics.Update(3)
+	lp.resetDailyEnergy()
+	assert.Equal(t, 3e3, lp.energyMetrics.TotalWh())
+}
+
+func TestIntegratedDeviceChargedEnergy(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	type FeatureDecorator struct {
+		api.Charger
+		api.FeatureDescriber
+	}
+
+	fd := api.NewMockFeatureDescriber(ctrl)
+	fd.EXPECT().Features().AnyTimes().Return([]api.Feature{api.IntegratedDevice})
+
+	lp := &Loadpoint{
+		charger:      &FeatureDecorator{Charger: api.NewMockCharger(ctrl), FeatureDescriber: fd},
+		chargeEnergy: new(metrics.Collector),
+	}
+
+	// time-based energy wins over session energy
+	lp.energyMetrics.Update(1)
+	lp.todayEnergy = 2000
+	assert.Equal(t, 2000.0, lp.GetChargedEnergy())
+
+	// plan set at 2kWh, 1.5kWh consumed until midnight
+	lp.planEnergyOffset = 2
+	lp.todayEnergy = 3500
+	assert.Equal(t, 8.5, lp.remainingPlanEnergy(10))
+
+	clock := clock.NewMock()
+	lp.clock = clock
+	lp.energyReset = clock.Now()
+
+	clock.Add(36 * time.Hour)
+	lp.resetDailyEnergy()
+	lp.todayEnergy = 500
+	assert.Equal(t, 8.0, lp.remainingPlanEnergy(10), "progress survives midnight")
 }
 
 func TestFinalizeSessionEnergy(t *testing.T) {
