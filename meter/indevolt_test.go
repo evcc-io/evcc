@@ -123,12 +123,38 @@ func TestIndevoltHybridMeasurements(t *testing.T) {
 func TestIndevoltHybridControlPower(t *testing.T) {
 	tmpl, err := templates.ByName(templates.Meter, "indevolt-hybrid")
 	require.NoError(t, err)
-	for _, power := range []int{0, 49, 50, 1000} {
-		_, _, err := tmpl.RenderResult(templates.Meter, templates.RenderModeInstance, map[string]any{"usage": "battery", "host": "localhost", "controllable": true, "maxchargepower": power})
-		if power < 50 {
-			require.ErrorContains(t, err, "maxchargepower must be at least 50 W")
-		} else {
+	for _, tc := range []struct {
+		name  string
+		power any
+		want  string
+	}{
+		{"default", nil, "2400"},
+		{"override", 1000, "1000"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]any{"usage": "battery", "host": "localhost", "controllable": true}
+			if tc.power != nil {
+				values["maxchargepower"] = tc.power
+			}
+			b, _, err := tmpl.RenderResult(templates.Meter, templates.RenderModeInstance, values)
 			require.NoError(t, err)
-		}
+			require.Contains(t, string(b), "maxchargepower: "+tc.want)
+			var config struct {
+				BatteryMode struct {
+					Switch []struct {
+						Case int
+						Set  struct {
+							Set []struct{ URI string }
+						}
+					}
+				}
+			}
+			require.NoError(t, yaml.Unmarshal(b, &config))
+			require.Len(t, config.BatteryMode.Switch, 3)
+			charge := config.BatteryMode.Switch[2]
+			require.Equal(t, 3, charge.Case)
+			require.Len(t, charge.Set.Set, 3)
+			require.Contains(t, charge.Set.Set[2].URI, `"v":[1,`+tc.want+`,100]`)
+		})
 	}
 }

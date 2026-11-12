@@ -59,11 +59,10 @@ params:
       en: Enables mode changes and grid charging. Holding the battery uses standby and also stops solar charging.
       de: Aktiviert Moduswechsel und Netzladen. Das Unterbinden der Entladung verwendet Standby und stoppt auch das Solarladen.
   - name: maxchargepower
-    example: 1000
-    advanced: false
+    default: 2400
     help:
-      en: Required for active battery control. Set the supported grid charging power for your model (at least 50 W).
-      de: Für die aktive Batteriesteuerung erforderlich. Unterstützte Netzladeleistung des Modells einstellen (mindestens 50 W).
+      en: Power used for grid charging. Adjust to the supported charging power of your device.
+      de: Leistung für das Netzladen. An die unterstützte Ladeleistung des Geräts anpassen.
 render: |
   {{- define "auth" }}
   {{- if .user }}
@@ -130,9 +129,6 @@ render: |
     jq: ."6007" # Battery Total Discharging Energy (kWh)
     cache: {{ .cache }}
   {{- if .controllable }}
-  {{- if lt (int .maxchargepower) 50 }}
-  {{- fail "maxchargepower must be at least 50 W for active battery control" }}
-  {{- end }}
   {{- include "indevolt-batterymode" . }}
   {{- end }}
   {{- include "battery-params" . }}
