@@ -36,7 +36,7 @@ requirements:
     en: The configuration option 'External Energy Management' must be enabled.
   evcc: ["sponsorship"]
 discovery:
-  mac: ["E0AEB2"]
+  mac: ["E0AEB2", "7C70BC8"]
 params:
   - name: modbus
     choice: ["tcpip"]
