@@ -149,9 +149,7 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		print() {
-			window.print();
-		},
+		print: () => window.print(),
 	},
 });
 </script>
