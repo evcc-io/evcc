@@ -1,0 +1,112 @@
+template: smart-me-kamstrup
+products:
+  - brand: smart-me
+    description:
+      generic: Kamstrup Module
+requirements:
+  description:
+    de: Modbus TCP wird ab Firmwareversion 8.0 unterstützt. Für eine stabile Modbus-Kommunikation ist eine permanente Internetverbindung erforderlich.
+    en: Modbus TCP is supported from firmware version 8.0. A constant internet connection is required for stable Modbus communication.
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
+    register:
+      address: 8195
+      type: holding
+      encoding: int32
+    scale: {{ if eq .usage "pv" }}-0.001{{ else }}0.001{{ end }}
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
+    register:
+      address: {{ if eq .usage "pv" }}8231{{ else }}8227{{ end }}
+      type: holding
+      encoding: uint64
+    scale: 0.000001
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
+    register:
+      address: {{ if eq .usage "pv" }}8227{{ else }}8231{{ end }}
+      type: holding
+      encoding: uint64
+    scale: 0.000001
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
+    register:
+      address: 8217
+      type: holding
+      encoding: int32
+    scale: 0.001
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
+    register:
+      address: 8219
+      type: holding
+      encoding: int32
+    scale: 0.001
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
+    register:
+      address: 8221
+      type: holding
+      encoding: int32
+    scale: 0.001
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
+    register:
+      address: 8211
+      type: holding
+      encoding: uint32
+    scale: 0.001
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
+    register:
+      address: 8213
+      type: holding
+      encoding: uint32
+    scale: 0.001
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 8195
+      count: 40
+    register:
+      address: 8215
+      type: holding
+      encoding: uint32
+    scale: 0.001
