@@ -1,0 +1,39 @@
+template: huawei-sun2000-sdongle-nometer
+products:
+  - brand: Huawei
+    description:
+      de: SUN2000 & Smart Dongle (ohne Zähler)
+      en: SUN2000 & Smart Dongle (without meter)
+requirements:
+  description:
+    de: |
+      Für Anlagen ohne Zähler (Smart Power Sensor DDSU/DTSU666 oder SmartPS) am Einspeisepunkt. Die Abregelung reduziert die Wirkleistung des Wechselrichters (Leistungsreduzierung / Derating) auf den gewünschten Prozentsatz seiner maximalen AC-Leistung. Begrenzt wird dadurch die Erzeugung des Wechselrichters, nicht die Einspeiseleistung am Netzanschlusspunkt. Der Eigenverbrauch wird dabei nicht berücksichtigt.
+
+      Ist ein Zähler installiert, sollte stattdessen die Vorlage "huawei-sun2000-sdongle" verwendet werden, die die Einspeiseleistung begrenzt.
+    en: |
+      For setups without a meter (Smart Power Sensor DDSU/DTSU666 or SmartPS) at the feed-in point. Curtailment reduces the inverter's active power (power derating) to the desired percentage of its maximum AC power. This limits the inverter's generation, not the feed-in power at the grid connection point. Household consumption is not taken into account.
+
+      If a meter is installed, use the "huawei-sun2000-sdongle" template instead, which limits feed-in power.
+params:
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    id: 1
+    timeout: 5s
+render: |
+  type: custom
+  curtail:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40125 # Active power derating percentage (100 % = uncurtailed)
+      type: writesingle
+      encoding: uint16
+    scale: 10
+  curtailed:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40125 # Active power derating percentage (100 % = uncurtailed)
+      type: holding
+      decode: uint16
+    scale: 0.1
