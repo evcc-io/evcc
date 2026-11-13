@@ -355,11 +355,12 @@ func TestOctopusDeToRates_NoCharges(t *testing.T) {
 		{ValidFrom: t0, ValidTo: end, GrossUnitRateCentsPerKwh: 29.75},
 	})
 
-	// periods are passed through unchanged
-	require.Len(t, rates, 1)
-	assert.Equal(t, t0, rates[0].Start)
-	assert.Equal(t, end, rates[0].End)
-	assert.InDelta(t, 0.2975, rates[0].Value, 1e-9)
+	// periods are split into slots with unchanged price
+	require.Len(t, rates, 96)
+	requireContiguousSlots(t, rates, t0, end)
+	for _, r := range rates {
+		assert.InDelta(t, 0.2975, r.Value, 1e-9)
+	}
 }
 
 func TestOctopusDeToRates_ChargesWithoutZones(t *testing.T) {
@@ -370,10 +371,11 @@ func TestOctopusDeToRates_ChargesWithoutZones(t *testing.T) {
 		{ValidFrom: t0, ValidTo: end, GrossUnitRateCentsPerKwh: 29.75},
 	})
 
-	// time-independent charges don't require splitting
-	require.Len(t, rates, 1)
-	assert.Equal(t, end, rates[0].End)
-	assert.InDelta(t, (0.2975+0.05)*1.1, rates[0].Value, 1e-9)
+	require.Len(t, rates, 96)
+	requireContiguousSlots(t, rates, t0, end)
+	for _, r := range rates {
+		assert.InDelta(t, (0.2975+0.05)*1.1, r.Value, 1e-9)
+	}
 }
 
 func TestOctopusDeToRates_ChargesZonesSplitsLongPeriods(t *testing.T) {
@@ -410,7 +412,7 @@ func TestOctopusDeToRates_ChargesZonesSplitsLongPeriods(t *testing.T) {
 	assert.InDelta(t, 0.30, priceAt(t, rates, at(20, 0)), 1e-9)
 }
 
-func TestOctopusDeToRates_ChargesZonesUnalignedAndShortPeriods(t *testing.T) {
+func TestOctopusDeToRates_ChargesZonesMixedPeriodLengths(t *testing.T) {
 	tariff := newOctopusDeWithEmbed(t, embed{
 		ChargesZones_: []chargesZoneConfig{
 			{Hours: "10:30-11", Charges: 0.1},
@@ -422,16 +424,15 @@ func TestOctopusDeToRates_ChargesZonesUnalignedAndShortPeriods(t *testing.T) {
 	}
 
 	rates := tariff.toRates([]RatePeriod{
-		// unaligned start, e.g. simple tariff starting now
-		{ValidFrom: at(10, 7), ValidTo: at(10, 45), GrossUnitRateCentsPerKwh: 20},
+		// hourly period, zone starts within
+		{ValidFrom: at(10, 0), ValidTo: at(10, 45), GrossUnitRateCentsPerKwh: 20},
 		// already slot-sized period of a dynamic tariff
 		{ValidFrom: at(10, 45), ValidTo: at(11, 0), GrossUnitRateCentsPerKwh: 25},
 	})
 
 	require.Len(t, rates, 4)
-	requireContiguousSlots(t, rates, at(10, 7), at(11, 0))
+	requireContiguousSlots(t, rates, at(10, 0), at(11, 0))
 
-	assert.Equal(t, at(10, 15), rates[0].End)
 	assert.InDelta(t, 0.20, rates[0].Value, 1e-9)
 	assert.InDelta(t, 0.20, rates[1].Value, 1e-9)
 	assert.InDelta(t, 0.30, rates[2].Value, 1e-9)
@@ -456,63 +457,23 @@ func TestOctopusDeToRates_FormulaSplitsLongPeriods(t *testing.T) {
 	assert.InDelta(t, 0.40, priceAt(t, rates, from.Add(12*time.Hour)), 1e-9)
 }
 
-func TestOctopusDeToRates_ChargesZonesUnalignedEnd(t *testing.T) {
-	tariff := newOctopusDeWithEmbed(t, embed{
-		ChargesZones_: []chargesZoneConfig{
-			{Hours: "11-12", Charges: 0.1},
-		},
-	})
+// TestRatesForAgreement_HorizonAlignedToSlots verifies that an unaligned now is truncated to the
+// slot boundary, so that splitting a simple tariff yields full slots only.
+func TestRatesForAgreement_HorizonAlignedToSlots(t *testing.T) {
+	now := t0.Add(48*time.Hour + 7*time.Minute)
 
-	at := func(hour, minute int) time.Time {
-		return time.Date(2026, 1, 15, hour, minute, 0, 0, time.Local)
-	}
+	periods, err := ratesForAgreement(simpleAgreement(), now)
+	require.NoError(t, err)
+	require.Len(t, periods, 1)
 
-	// simple tariff: single period from now until the unaligned end of the planning horizon
-	rates := tariff.toRates([]RatePeriod{
-		{ValidFrom: at(10, 7), ValidTo: at(12, 7), GrossUnitRateCentsPerKwh: 20},
-	})
+	from := t0.Add(48 * time.Hour)
+	assert.Equal(t, from, periods[0].ValidFrom)
+	assert.Equal(t, from.AddDate(0, 0, planDays), periods[0].ValidTo)
 
-	// tariff validation rejects slots shorter than SlotDuration except the leading one
+	tariff := newOctopusDeWithEmbed(t, embed{})
+	rates := tariff.toRates(periods)
+
 	_, short := shortSlot(rates)
-	assert.False(t, short, "trailing slot must not be shorter than %v", SlotDuration)
-
-	// leading partial slot is kept, trailing remainder after the zone boundary at 12:00 is dropped
-	requireContiguousSlots(t, rates, at(10, 7), at(12, 0))
-	require.Len(t, rates, 8)
-
-	assert.Equal(t, at(10, 15), rates[0].End)
-	assert.Equal(t, at(11, 45), rates[7].Start)
-	assert.InDelta(t, 0.30, rates[7].Value, 1e-9)
-	assert.InDelta(t, 0.20, priceAt(t, rates, at(10, 30)), 1e-9)
-
-	// no slot after the zone boundary carries the zone price
-	for _, r := range rates {
-		if !r.Start.Before(at(12, 0)) {
-			assert.InDelta(t, 0.20, r.Value, 1e-9)
-		}
-		assert.False(t, r.End.After(at(12, 0)), "slot %v-%v crosses zone boundary", r.Start, r.End)
-	}
-}
-
-func TestOctopusDeToRates_ShortTrailingSlotOnlyDroppedAtEnd(t *testing.T) {
-	tariff := newOctopusDeWithEmbed(t, embed{
-		ChargesZones_: []chargesZoneConfig{
-			{Hours: "0-7", Charges: -0.05},
-		},
-	})
-
-	at := func(hour, minute int) time.Time {
-		return time.Date(2026, 1, 15, hour, minute, 0, 0, time.Local)
-	}
-
-	// regular slot-sized periods of a dynamic tariff are passed through completely
-	rates := tariff.toRates([]RatePeriod{
-		{ValidFrom: at(6, 45), ValidTo: at(7, 0), GrossUnitRateCentsPerKwh: 20},
-		{ValidFrom: at(7, 0), ValidTo: at(7, 15), GrossUnitRateCentsPerKwh: 25},
-	})
-
-	require.Len(t, rates, 2)
-	requireContiguousSlots(t, rates, at(6, 45), at(7, 15))
-	assert.InDelta(t, 0.15, rates[0].Value, 1e-9)
-	assert.InDelta(t, 0.25, rates[1].Value, 1e-9)
+	assert.False(t, short)
+	requireContiguousSlots(t, rates, from, from.AddDate(0, 0, planDays))
 }

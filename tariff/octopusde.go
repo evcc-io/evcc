@@ -124,44 +124,23 @@ func (t *OctopusDe) run(done chan error) {
 	}
 }
 
-// toRates converts rate periods into api.Rates, applying configured charges, charges zones, tax and formula.
-// Periods are split into slots when charges zones or a formula are configured, since the resulting price
-// may change within long periods (simple and time-of-use tariffs).
+// toRates converts rate periods into 15 minute api.Rates, applying configured charges, charges zones, tax and formula.
+// Periods are always split into slots since the resulting price may change within long periods (simple and
+// time-of-use tariffs). Period boundaries are expected to be slot-aligned (see computeHorizon).
 func (t *OctopusDe) toRates(periods []RatePeriod) api.Rates {
-	adjust := t.Charges != 0 || len(t.chargesZones) > 0 || t.Tax != 0 || t.Formula != ""
-	split := len(t.chargesZones) > 0 || t.Formula != ""
-
-	data := make(api.Rates, 0, len(periods))
+	var data api.Rates
 	for _, r := range periods {
 		// Convert from cents per kWh to € per kWh (divide by 100)
 		// Use gross price (including tax) as that's what the customer pays
 		price := r.GrossUnitRateCentsPerKwh / 100
 
-		if !split {
-			if adjust {
-				price = t.totalPrice(price, r.ValidFrom)
-			}
-
-			data = append(data, api.Rate{Start: r.ValidFrom, End: r.ValidTo, Value: price})
-			continue
+		for start := r.ValidFrom; start.Before(r.ValidTo); start = start.Add(SlotDuration) {
+			data = append(data, api.Rate{
+				Start: start,
+				End:   start.Add(SlotDuration),
+				Value: t.totalPrice(price, start),
+			})
 		}
-
-		for start := r.ValidFrom; start.Before(r.ValidTo); {
-			end := start.Truncate(SlotDuration).Add(SlotDuration)
-			if end.After(r.ValidTo) {
-				end = r.ValidTo
-			}
-
-			data = append(data, api.Rate{Start: start, End: end, Value: t.totalPrice(price, start)})
-			start = end
-		}
-	}
-
-	// Drop a trailing remainder shorter than SlotDuration (unaligned end of the planning horizon,
-	// e.g. for simple tariffs), since tariff validation rejects short slots except the leading one.
-	// Merging it into the previous slot instead could apply that slot's price across a zone boundary.
-	if n := len(data); split && n > 1 && data[n-1].End.Sub(data[n-1].Start) < SlotDuration {
-		data = data[:n-1]
 	}
 
 	return data
@@ -286,8 +265,9 @@ func simpleRates(info krakengql.SimpleProductUnitRateInformation, horizon planni
 
 // computeHorizon returns the planning window, capped by the validity of the agreement.
 func computeHorizon(now time.Time, agreement krakengql.Agreement, planDays int) (planningHorizon, error) {
-	start := now
-	end := now.AddDate(0, 0, planDays)
+	// align the horizon with slot boundaries so that all rate periods start on a slot
+	start := now.Truncate(SlotDuration)
+	end := start.AddDate(0, 0, planDays)
 
 	// Validate agreement overlaps with planning horizon
 	if agreement.ValidFrom.After(end) || (!agreement.ValidTo.IsZero() && agreement.ValidTo.Before(start)) {
