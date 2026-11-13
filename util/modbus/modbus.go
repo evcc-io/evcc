@@ -2,13 +2,16 @@ package modbus
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"net"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	gridx "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 )
 
@@ -30,6 +33,7 @@ type TcpSettings struct {
 	URI     string
 	ID      uint8
 	RTU     *bool `mapstructure:"rtu"`
+	TLS     bool  `mapstructure:"tls"`
 	Delay   time.Duration
 	Timeout time.Duration
 }
@@ -40,6 +44,7 @@ func (s TcpSettings) Connection(ctx context.Context) (*Connection, error) {
 		ID:      s.ID,
 		URI:     s.URI,
 		RTU:     s.RTU,
+		TLS:     s.TLS,
 		Delay:   s.Delay,
 		Timeout: s.Timeout,
 	}
@@ -57,6 +62,7 @@ type Settings struct {
 	Baudrate  int           `json:"baudrate,omitempty" yaml:",omitempty"`
 	UDP       bool          `json:"udp,omitempty" yaml:",omitempty"`
 	RTU       *bool         `json:"rtu,omitempty" yaml:",omitempty"`
+	TLS       bool          `json:"tls,omitempty" yaml:",omitempty"`
 	Delay     time.Duration `json:"delay,omitempty" yaml:",omitempty"`
 	Timeout   time.Duration `json:"timeout,omitempty" yaml:",omitempty"`
 }
@@ -69,7 +75,7 @@ func (s Settings) Connection(ctx context.Context, proto ...Protocol) (*Connectio
 		p = proto[0]
 	}
 
-	conn, err := NewConnection(ctx, s.URI, s.Device, s.Comset, s.Baudrate, p, s.ID)
+	conn, err := newConnection(ctx, p, s)
 	if err != nil {
 		return nil, err
 	}
@@ -203,19 +209,26 @@ func registeredConnection(ctx context.Context, key string, proto Protocol, newCo
 
 // NewConnection creates physical modbus device from config
 func NewConnection(ctx context.Context, uri, device, comset string, baudrate int, proto Protocol, slaveID uint8) (*Connection, error) {
-	conn, err := physicalConnection(ctx, proto, Settings{
+	return newConnection(ctx, proto, Settings{
+		ID:       slaveID,
 		URI:      uri,
 		Device:   device,
 		Comset:   comset,
 		Baudrate: baudrate,
 	})
+}
+
+// newConnection creates a physical modbus device from the full settings,
+// preserving fields (such as TLS) that the scalar NewConnection signature drops.
+func newConnection(ctx context.Context, proto Protocol, cfg Settings) (*Connection, error) {
+	conn, err := physicalConnection(ctx, proto, cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	res := &Connection{
-		slaveID:    slaveID,
-		Connection: conn.Clone(slaveID),
+		slaveID:    cfg.ID,
+		Connection: conn.Clone(cfg.ID),
 		logger:     conn.logger,
 		physical:   conn,
 	}
@@ -226,6 +239,10 @@ func NewConnection(ctx context.Context, uri, device, comset string, baudrate int
 func physicalConnection(ctx context.Context, proto Protocol, cfg Settings) (*meterConnection, error) {
 	if (cfg.Device != "") == (cfg.URI != "") {
 		return nil, errors.New("invalid modbus configuration: must have either uri or device")
+	}
+
+	if cfg.TLS && proto != Tcp {
+		return nil, errors.New("invalid modbus configuration: tls is only supported for Modbus TCP")
 	}
 
 	if cfg.Device != "" {
@@ -273,10 +290,36 @@ func physicalConnection(ctx context.Context, proto Protocol, cfg Settings) (*met
 
 	default:
 		// use retry outside of grid-x/modbus
-		conn := meters.NewTCP(uri)
+		key := uri
+		var conn *meters.TCP
+		if cfg.TLS {
+			key += "+tls"
+			conn = newTLSConnection(uri)
+		} else {
+			conn = meters.NewTCP(uri)
+		}
 		conn.Handler.LinkRecoveryTimeout = 0
 		conn.Handler.ProtocolRecoveryTimeout = 0
 
-		return registeredConnection(ctx, uri, proto, conn)
+		return registeredConnection(ctx, key, proto, conn)
+	}
+}
+
+// newTLSConnection wraps a Modbus TCP socket in TLS. Sungrow AC chargers (and
+// similar devices) present self-signed, per-device certificates, so verification is off.
+func newTLSConnection(uri string) *meters.TCP {
+	host, _, err := net.SplitHostPort(uri)
+	if err != nil {
+		host = uri
+	}
+
+	// #nosec G402 -- device presents a self-signed, per-device certificate
+	tlsConfig := &tls.Config{InsecureSkipVerify: true, ServerName: host}
+
+	handler := gridx.NewTCPClientHandler(uri, gridx.WithTLSConfig(tlsConfig))
+
+	return &meters.TCP{
+		Client:  gridx.NewClient(handler),
+		Handler: handler,
 	}
 }

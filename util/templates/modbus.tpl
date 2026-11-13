@@ -17,6 +17,9 @@ rtu: true
 # Modbus TCP
 uri: {{ joinHostPort .host .port }}
 rtu: false
+{{- if .tls }}
+tls: true
+{{- end }}
 {{- else if or (eq .modbus "udp") .udp }}
 # Modbus UDP
 uri: {{ joinHostPort .host .port }}

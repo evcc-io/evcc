@@ -36,6 +36,7 @@ const (
 	ModbusParamHost     = "host"
 	ModbusParamPort     = "port"
 	ModbusParamRTU      = "rtu"
+	ModbusParamTLS      = "tls"
 	ModbusParamDelay    = "delay"
 	ModbusParamTimeout  = "timeout"
 )
@@ -53,7 +54,7 @@ var (
 	ModbusParams = []string{
 		ModbusParamId, ModbusParamDevice, ModbusParamBaudrate, ModbusParamComset,
 		ModbusParamURI, ModbusParamHost, ModbusParamPort, ModbusParamRTU,
-		ModbusParamDelay, ModbusParamTimeout,
+		ModbusParamTLS, ModbusParamDelay, ModbusParamTimeout,
 	}
 
 	ModbusConnectionTypes = []string{
