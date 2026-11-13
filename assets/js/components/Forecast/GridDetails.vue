@@ -13,8 +13,8 @@
 					<span class="price-label">{{ line.label }}</span>
 				</span>
 				<span
-					class="d-flex flex-column flex-md-row column-gap-3 fw-bold"
-					:class="[line.shown ? line.text : 'text-gray', line.justify]"
+					class="d-flex flex-column flex-md-row column-gap-3 text-gray fw-bold"
+					:class="line.justify"
 				>
 					<span class="text-nowrap">{{ line.summary.avg }}</span>
 					<span v-if="line.summary.range" class="text-nowrap">{{
@@ -80,7 +80,6 @@ export default defineComponent({
 					key: "grid",
 					label: this.$t("main.energyflow.gridImport"),
 					color: colors.price || "",
-					text: "text-price",
 					summary: this.gridSummary!,
 					shown: this.showGrid,
 					focused: !this.showFeedin,
@@ -91,7 +90,6 @@ export default defineComponent({
 					key: "feedin",
 					label: this.$t("main.energyflow.pvExport"),
 					color: colors.export || "",
-					text: "text-export",
 					summary: this.feedinSummary!,
 					shown: this.showFeedin,
 					focused: !this.showGrid,
