@@ -1,0 +1,136 @@
+template: kostal-plenticore-mdc
+products:
+  - brand: Kostal
+    description:
+      de: Plenticore G3 MDC-Anlage (Host)
+      en: Plenticore G3 MDC plant (host)
+capabilities: ["battery-control"]
+caveats:
+  - description:
+      de: |
+        Nur ein System kann und darf die Anlage steuern! Wechselrichter und Batterien der MDC-Clients nicht zusätzlich einrichten, die Anlagenwerte enthalten sie bereits.
+      en: |
+        Only a single system may control the plant! Do not add inverters or batteries of MDC clients separately, the plant values already include them.
+requirements:
+  description:
+    de: |
+      Für PLENTICORE G3 Wechselrichter im Geräteverbund (Multi Device Control) mit der Rolle MDC-Host. Anlagenwerte ab Software 3.06.10, Steuerung ab 3.07.00. Für die aktive Batteriesteuerung muss am Host die externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. Der Watchdog muss passend zum Fallback-Timeout der Anlage (Standard 30s) eingestellt werden.
+    en: |
+      For PLENTICORE G3 inverters in a device group (Multi Device Control) with the MDC host role. Plant values from software 3.06.10, control from 3.07.00. For active battery control, external battery control via Modbus must be activated on the host using installer access. The watchdog must match the plant's fallback timeout (default 30s).
+params:
+  - name: usage
+    choice: ["pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 71
+    port: 1502
+  - name: endianness
+    description:
+      de: Byte-Reihenfolge (Little/Big)
+      en: Endianness (Little/Big)
+    type: choice
+    choice: ["little", "big"]
+    default: little
+    advanced: true
+  - preset: battery-params
+  - name: capacity
+    service: modbus/read?address=1563&type=holding&encoding=float32s&scale=0.001&{modbus}
+  - name: minsoc
+    service: modbus/read?address=1557&type=holding&encoding=float32s&{modbus}
+  - name: maxsoc
+    service: modbus/read?address=1559&type=holding&encoding=float32s&{modbus}
+  - name: maxchargepower
+    service: modbus/read?address=1565&type=holding&encoding=float32s&resulttype=int&{modbus}
+  - name: maxdischargepower
+    service: modbus/read?address=1567&type=holding&encoding=float32s&resulttype=int&{modbus}
+  - name: watchdog
+    default: 30s
+render: |
+  {{- if eq .usage "pv" }}
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1551 # Plant total PV power (sum) [W]
+      type: holding
+      encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1549 # Plant total battery power (sum), negative = charging [W]
+      type: holding
+      encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1547 # Plant state of charge, capacity-weighted [%]
+      type: holding
+      encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+  batterymode:
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2, below the plant fallback timeout (register 1573, default 30s)
+    defer: true # make sure timeouts are followed on update
+    reset: 1 # reset watchdog on normal
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal: the plant falls back to internal control once the last limit times out
+        set:
+          source: sleep
+          duration: 0s # no-op
+      - case: 2 # holddischarge
+        set:
+          source: const
+          value: 0 # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1571 # Maximum battery DC-discharge power [W]
+              type: writemultiple
+              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+      {{- if .maxchargepower }}
+      - case: 3 # charge
+        set:
+          source: const
+          value: -{{ .maxchargepower }} # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1561 # Battery charge-/discharge DC power setpoint, negative = charging [W]
+              type: writemultiple
+              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+      {{- end }}
+      - case: 4 # holdcharge
+        set:
+          source: const
+          value: 0 # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1569 # Maximum battery DC-charge power [W]
+              type: writemultiple
+              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+      {{- if .maxdischargepower }}
+      - case: 5 # discharge (forced feed-in arbitrage)
+        set:
+          source: const
+          value: {{ .maxdischargepower }} # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1561 # Battery charge-/discharge DC power setpoint, positive = discharging [W]
+              type: writemultiple
+              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+      {{- end }}
+  {{- include "battery-params" . }}
+  {{- end }}
