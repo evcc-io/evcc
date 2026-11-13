@@ -171,6 +171,30 @@ func TestRequiredPerUsage(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// TestRequiredWithoutUsage guards that usage restrictions inherited from the
+// param defaults do not disable validation for templates without usage
+func TestRequiredWithoutUsage(t *testing.T) {
+	tmpl := &Template{
+		Params: []Param{
+			{
+				Name:     "param",
+				Required: true,
+				Usages:   []string{"pv"},
+			},
+		},
+	}
+
+	_, _, err := tmpl.RenderResult(Curtailer, RenderModeUnitTest, map[string]any{
+		"Param": nil,
+	})
+	require.Error(t, err)
+
+	_, _, err = tmpl.RenderResult(Curtailer, RenderModeUnitTest, map[string]any{
+		"Param": "foo",
+	})
+	require.NoError(t, err)
+}
+
 // TestModbusHostPattern guards that the modbus host is validated like the plain host
 // param instead of rendering invalid yaml (#34380)
 func TestModbusHostPattern(t *testing.T) {

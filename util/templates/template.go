@@ -384,6 +384,9 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 
 	res := make(map[string]any)
 
+	usageIdx, _ := t.ParamByName(ParamUsage)
+	hasUsage := usageIdx > -1
+
 	var usage string
 	for k, v := range values {
 		if strings.ToLower(k) == "usage" {
@@ -453,8 +456,8 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 
 				// validate required fields from yaml
 				if p.IsRequired() && p.IsZero(s) && (renderMode == RenderModeUnitTest || renderMode == RenderModeInstance && !testing.Testing()) {
-					// validate required per usage
-					if len(p.Usages) == 0 || slices.Contains(p.Usages, usage) {
+					// validate required per usage, templates without usage always validate
+					if len(p.Usages) == 0 || !hasUsage || slices.Contains(p.Usages, usage) {
 						return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
 					}
 				}
