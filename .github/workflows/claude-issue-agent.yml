@@ -176,7 +176,7 @@ jobs:
           # labeling is a classification over the file list, Haiku is enough
           # gh api is limited to the read-only issue type lookup: a write through it
           # (e.g. POST .../labels) silently creates labels that don't exist yet
-          claude_args: '--model claude-haiku-4-5 --allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr edit:*),Bash(gh api repos/${{ github.repository }}/issues/* --jq *)" --disallowed-tools "Task,Bash(gh label create:*),Bash(gh label edit:*),Bash(gh label clone:*),Bash(gh api *-X*),Bash(gh api *--method*),Bash(gh api *-f*),Bash(gh api *-F*),Bash(gh api *--field*),Bash(gh api *--input*)"'
+          claude_args: '--model claude-haiku-4-5 --allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr edit ${{ github.event.pull_request.number }} --add-label:*),Bash(gh api repos/${{ github.repository }}/issues/* --jq *)" --disallowed-tools "Task,Bash(gh label create:*),Bash(gh label edit:*),Bash(gh label clone:*),Bash(gh api *-X*),Bash(gh api *--method*),Bash(gh api *-f*),Bash(gh api *-F*),Bash(gh api *--field*),Bash(gh api *--input*)"'
           prompt: |
             You label pull requests for the evcc repository.
             Work on PR #${{ github.event.pull_request.number }}. Fetch its title,
