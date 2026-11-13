@@ -27,6 +27,12 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	return impl
 }
 
+// isInt reports whether the attribute holds an integer. Any other variant would read as zero.
+func isInt(attr *protos.VehicleAttributeStatus) bool {
+	_, ok := attr.GetAttributeType().(*protos.VehicleAttributeStatus_IntValue)
+	return ok
+}
+
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.dataG()
@@ -50,8 +56,8 @@ func (v *Provider) Odometer() (float64, error) {
 		return 0, err
 	}
 
-	odo, ok := res.GetAttributes()["odo"]
-	if !ok || odo.GetNilValue() {
+	odo := res.GetAttributes()["odo"]
+	if !isInt(odo) {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -72,8 +78,8 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 		return 0, err
 	}
 
-	limit, ok := res.GetAttributes()["maxSoc"]
-	if !ok || limit.GetNilValue() {
+	limit := res.GetAttributes()["maxSoc"]
+	if !isInt(limit) {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -89,17 +95,20 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	// charging variants map to C, plugged without energy flow to B, unplugged (3) and unknown to A
-	if status, ok := res.GetAttributes()["chargingstatus"]; ok && !status.GetNilValue() {
-		switch status.GetIntValue() {
-		case 0, 5, 6, 9, 10, 11, 13, 14:
-			return api.StatusC, nil
-		case 1, 2, 4, 7, 8, 12, 15:
-			return api.StatusB, nil
-		}
+	status := res.GetAttributes()["chargingstatus"]
+	if !isInt(status) {
+		return api.StatusNone, api.ErrNotAvailable
 	}
 
-	return api.StatusA, nil
+	// charging variants map to C, plugged without energy flow to B, unplugged (3) and unknown to A
+	switch status.GetIntValue() {
+	case 0, 5, 6, 9, 10, 11, 13, 14:
+		return api.StatusC, nil
+	case 1, 2, 4, 7, 8, 12, 15:
+		return api.StatusB, nil
+	default:
+		return api.StatusA, nil
+	}
 }
 
 var _ api.VehicleClimater = (*Provider)(nil)

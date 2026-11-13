@@ -80,6 +80,7 @@ func TestPushAttributes(t *testing.T) {
 	boolValue := func(value bool) *protos.VehicleAttributeStatus {
 		return &protos.VehicleAttributeStatus{AttributeType: &protos.VehicleAttributeStatus_BoolValue{BoolValue: value}}
 	}
+	unsupported := &protos.VehicleAttributeStatus{AttributeType: &protos.VehicleAttributeStatus_UnsupportedValue{}}
 	miles := intValue(1000)
 	miles.DisplayUnit = &protos.VehicleAttributeStatus_DistanceUnit_{DistanceUnit: protos.VehicleAttributeStatus_MILES}
 
@@ -89,15 +90,18 @@ func TestPushAttributes(t *testing.T) {
 		odometer   float64
 		odoErr     error
 		status     api.ChargeStatus
+		statusErr  error
 		limitSoc   int64
 		limitErr   error
 		climater   bool
 	}{
-		{"charging", map[string]*protos.VehicleAttributeStatus{"odo": intValue(2188), "chargingstatus": intValue(0), "maxSoc": intValue(80), "precondNow": boolValue(true), "precondActive": boolValue(false)}, 2188, nil, api.StatusC, 80, nil, true},
-		{"plugged", map[string]*protos.VehicleAttributeStatus{"odo": miles, "chargingstatus": intValue(8), "maxSoc": intValue(100), "precondActive": boolValue(true)}, 1609.344, nil, api.StatusB, 100, nil, true},
-		{"unplugged", map[string]*protos.VehicleAttributeStatus{"odo": nilValue, "chargingstatus": intValue(3), "maxSoc": nilValue, "precondNow": boolValue(false)}, 0, api.ErrNotAvailable, api.StatusA, 0, api.ErrNotAvailable, false},
-		{"nil status", map[string]*protos.VehicleAttributeStatus{"chargingstatus": nilValue}, 0, api.ErrNotAvailable, api.StatusA, 0, api.ErrNotAvailable, false},
-		{"missing", nil, 0, api.ErrNotAvailable, api.StatusA, 0, api.ErrNotAvailable, false},
+		{"charging", map[string]*protos.VehicleAttributeStatus{"odo": intValue(2188), "chargingstatus": intValue(0), "maxSoc": intValue(80), "precondNow": boolValue(true), "precondActive": boolValue(false)}, 2188, nil, api.StatusC, nil, 80, nil, true},
+		{"plugged", map[string]*protos.VehicleAttributeStatus{"odo": miles, "chargingstatus": intValue(8), "maxSoc": intValue(100), "precondActive": boolValue(true)}, 1609.344, nil, api.StatusB, nil, 100, nil, true},
+		{"unplugged", map[string]*protos.VehicleAttributeStatus{"odo": nilValue, "chargingstatus": intValue(3), "maxSoc": nilValue, "precondNow": boolValue(false)}, 0, api.ErrNotAvailable, api.StatusA, nil, 0, api.ErrNotAvailable, false},
+		{"nil status", map[string]*protos.VehicleAttributeStatus{"chargingstatus": nilValue}, 0, api.ErrNotAvailable, api.StatusNone, api.ErrNotAvailable, 0, api.ErrNotAvailable, false},
+		{"unsupported", map[string]*protos.VehicleAttributeStatus{"odo": unsupported, "chargingstatus": unsupported, "maxSoc": unsupported}, 0, api.ErrNotAvailable, api.StatusNone, api.ErrNotAvailable, 0, api.ErrNotAvailable, false},
+		{"untyped", map[string]*protos.VehicleAttributeStatus{"odo": {}, "chargingstatus": {}, "maxSoc": {}}, 0, api.ErrNotAvailable, api.StatusNone, api.ErrNotAvailable, 0, api.ErrNotAvailable, false},
+		{"missing", nil, 0, api.ErrNotAvailable, api.StatusNone, api.ErrNotAvailable, 0, api.ErrNotAvailable, false},
 	}
 
 	for _, tc := range tc {
@@ -111,7 +115,7 @@ func TestPushAttributes(t *testing.T) {
 			assert.InDelta(t, tc.odometer, odometer, 1e-6)
 
 			status, err := v.Status()
-			require.NoError(t, err)
+			require.ErrorIs(t, err, tc.statusErr)
 			assert.Equal(t, tc.status, status)
 
 			limitSoc, err := v.GetLimitSoc()
