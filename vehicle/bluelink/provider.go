@@ -12,17 +12,20 @@ import (
 type Provider struct {
 	statusG func() (BluelinkVehicleStatusLatest, error)
 	refresh func() error
+	chargeS func(bool) error
 }
 
 // NewProvider creates a new BlueLink API
-func NewProvider(api *API, vehicle Vehicle, cache time.Duration) *Provider {
-	impl := &Provider{
+func NewProvider(api *API, identity *Identity, vehicle Vehicle, pin string, cache time.Duration) *Provider {
+	return &Provider{
 		statusG: util.Cached(func() (BluelinkVehicleStatusLatest, error) {
 			return api.StatusLatest(vehicle)
 		}, cache),
 		refresh: func() error { return api.Refresh(vehicle) },
+		chargeS: func(enable bool) error {
+			return api.ChargeEnable(identity, vehicle, pin, enable)
+		},
 	}
-	return impl
 }
 
 var _ api.Battery = (*Provider)(nil)
@@ -109,4 +112,9 @@ var _ api.Resurrector = (*Provider)(nil)
 func (v *Provider) WakeUp() error {
 	// Triggers refresh from vehicle
 	return v.refresh()
+}
+
+// EnableCharge implements the api.ChargeController interface
+func (v *Provider) EnableCharge(enable bool) error {
+	return v.chargeS(enable)
 }
