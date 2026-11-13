@@ -1,0 +1,17 @@
+template: schneider-evlink-g4-smart
+products:
+  - brand: Schneider
+    description:
+      generic: EVlink Wallbox G4 Smart
+requirements:
+  description:
+    de: Ab Werk unterbricht die Wallbox dreiphasiges Laden unter 14 A. Für Regelung ab 6 A in der exportierten Konfigurationsdatei `monophasedLoadSheddingFloorValue`, `triphasedLoadSheddingFloorValue`, `degradedModeSetPointMono` und `degradedModeSetPointTri` auf 6 setzen und wieder einspielen. Alternativ am Ladepunkt `minCurrent` auf 14 A setzen.
+    en: By default the wallbox suspends three-phase charging below 14 A. To regulate down to 6 A, set `monophasedLoadSheddingFloorValue`, `triphasedLoadSheddingFloorValue`, `degradedModeSetPointMono` and `degradedModeSetPointTri` to 6 in the exported configuration file and upload it again. Alternatively set the loadpoint `minCurrent` to 14 A.
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+render: |
+  type: schneider-g4s
+  {{- include "modbus" . }}
