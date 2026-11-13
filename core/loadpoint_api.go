@@ -289,7 +289,7 @@ func (lp *Loadpoint) GetChargedEnergy() float64 {
 // getChargedEnergy returns session charge energy in Wh
 func (lp *Loadpoint) getChargedEnergy() float64 {
 	// integrated devices have no session, their energy counts per day
-	if lp.chargeEnergy != nil && lp.chargerHasFeature(api.IntegratedDevice) {
+	if lp.chargerHasFeature(api.IntegratedDevice) {
 		return lp.todayEnergy
 	}
 	return lp.energyMetrics.TotalWh()

@@ -6,7 +6,6 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/soc"
 	serverdb "github.com/evcc-io/evcc/db"
@@ -299,8 +298,7 @@ func TestIntegratedDeviceChargedEnergy(t *testing.T) {
 	fd.EXPECT().Features().AnyTimes().Return([]api.Feature{api.IntegratedDevice})
 
 	lp := &Loadpoint{
-		charger:      &FeatureDecorator{Charger: api.NewMockCharger(ctrl), FeatureDescriber: fd},
-		chargeEnergy: new(metrics.Collector),
+		charger: &FeatureDecorator{Charger: api.NewMockCharger(ctrl), FeatureDescriber: fd},
 	}
 
 	// time-based energy wins over session energy
