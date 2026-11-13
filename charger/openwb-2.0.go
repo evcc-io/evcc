@@ -14,10 +14,13 @@ import (
 // OpenWB20 charger implementation
 type OpenWB20 struct {
 	implement.Caps
-	conn    *modbus.Connection
-	enabled bool
-	curr    uint16
-	base    uint16
+	log       *util.Logger
+	conn      *modbus.Connection
+	enabled   bool
+	curr      uint16
+	base      uint16
+	rfid      bool
+	connected bool
 }
 
 const (
@@ -34,6 +37,7 @@ const (
 	openwbRegPhaseTarget  = 10180
 	openwbRegPhaseTrigger = 10181
 	openwbRegHeartbeat    = 10190
+	openwbRegResetRfid    = 10197
 	openwbRegCpTrigger    = 10198
 )
 
@@ -71,6 +75,8 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 
 	if cc.Identify {
+		// reset stale tag on first disconnected status
+		wb.rfid, wb.connected = true, true
 		implement.Has(wb, implement.Identifier(wb.identify))
 	}
 
@@ -91,6 +97,7 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 
 	wb := &OpenWB20{
 		Caps: implement.New(),
+		log:  log,
 		conn: conn,
 		curr: 6 * 100,
 		base: (connector - 1) * 100,
@@ -102,11 +109,23 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 // Status implements the api.Charger interface
 func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
 	if b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegCharging, 1); err != nil || binary.BigEndian.Uint16(b) == 1 {
+		wb.connected = wb.connected || err == nil
 		return api.StatusC, err
 	}
 
 	if b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegPlugged, 1); err != nil || binary.BigEndian.Uint16(b) == 1 {
+		wb.connected = wb.connected || err == nil
 		return api.StatusB, err
+	}
+
+	// reset RFID tag on disconnect, retried until successful (requires openWB 2.3.0)
+	if wb.rfid && wb.connected {
+		// keep the disconnect visible to the loadpoint
+		if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err != nil {
+			wb.log.WARN.Printf("reset rfid: %v", err)
+		} else {
+			wb.connected = false
+		}
 	}
 
 	return api.StatusA, nil
@@ -232,5 +251,8 @@ func (wb *OpenWB20) identify() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []string{bytesAsString(b)}, nil
+	if id := bytesAsString(b); id != "" {
+		return []string{id}, nil
+	}
+	return nil, nil
 }
