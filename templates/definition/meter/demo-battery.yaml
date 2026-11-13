@@ -69,6 +69,8 @@ params:
     unit: A
     type: int
     advanced: true
+  - name: maxacpower
+    deprecated: true
 
 render: |
   type: custom
