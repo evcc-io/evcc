@@ -8,6 +8,12 @@ describe("expandForecast", () => {
     ]);
   });
 
+  test("keeps the estimate marker", () => {
+    expect(expandForecast({ grid: [[1735689600, 1735693200, 0.25, 1]] }).grid).toEqual([
+      { start: 1735689600000, end: 1735693200000, value: 0.25, estimate: true },
+    ]);
+  });
+
   test("expands the solar timeseries", () => {
     expect(expandForecast({ solar: { scale: 1, timeseries: [[1735689600, 1000]] } }).solar).toEqual(
       { scale: 1, timeseries: [{ ts: 1735689600000, val: 1000 }] }

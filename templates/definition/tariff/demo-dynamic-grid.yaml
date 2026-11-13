@@ -28,6 +28,16 @@ params:
     help:
       en: Highest price, typically in the evening
       de: Höchster Preis, typisch am Abend
+  - name: days
+    type: int
+    default: 5
+    description:
+      en: Number of days
+      de: Anzahl Tage
+    help:
+      en: Length of the generated forecast, starting now
+      de: Länge der erzeugten Vorhersage, beginnend jetzt
+    advanced: true
   - name: noise
     type: float
     default: 0.01
@@ -48,7 +58,7 @@ render: |
   forecast:
     source: js
     script: |
-      // Generate deterministic dynamic grid prices for 5 days in 15-minute slots
+      // Generate deterministic dynamic grid prices in 15-minute slots
       // Daily pattern (by hour) repeats for predictability
       var now = new Date();
       var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
@@ -57,8 +67,8 @@ render: |
       var maxPrice = parseFloat({{ .max }});
       var priceRange = maxPrice - minPrice;
       var noiseAmount = parseFloat({{ .noise }});
+      var days = {{ .days }};
 
-      // Generate 15-minute slots for 5 days
       var slotMinutes = 15;
       var slotDuration = slotMinutes * 60 * 1000;
       var slotsPerHour = 60 / slotMinutes;
@@ -95,9 +105,13 @@ render: |
         return ((n - Math.floor(n)) * 2 - 1) * noiseAmount;
       }
 
-      for (var day = 0; day < 5; day++) {
+      // rolling horizon from the current slot, pattern stays anchored at midnight
+      var end = Math.floor(now.getTime() / slotDuration) * slotDuration + days * slotsPerDay * slotDuration;
+
+      for (var day = 0; day <= days; day++) {
         for (var slot = 0; slot < slotsPerDay; slot++) {
           var time = new Date(start.getTime() + (day * slotsPerDay + slot) * slotDuration);
+          if (time.getTime() >= end) break;
           var hour = slot / slotsPerHour;
 
           // Calculate base price from smooth pattern

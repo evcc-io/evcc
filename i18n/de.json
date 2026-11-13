@@ -1433,6 +1433,7 @@
     "price": {
       "average": "Durchschnitt",
       "constant": "Preis",
+      "estimate": "Schätzung",
       "lowestHour": "Günstigste Stunde",
       "range": "Bereich"
     },

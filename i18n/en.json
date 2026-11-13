@@ -1326,6 +1326,7 @@
     "price": {
       "average": "Average",
       "constant": "Price",
+      "estimate": "estimate",
       "lowestHour": "Cheapest hour",
       "range": "Range"
     },

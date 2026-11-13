@@ -54,11 +54,12 @@ func TestMergedRates(t *testing.T) {
 	expected := api.Rates{
 		{Start: now, End: now.Add(time.Hour), Value: 0.10},
 		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 0.12},
-		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour), Value: 0.22},
-		{Start: now.Add(3 * time.Hour), End: now.Add(4 * time.Hour), Value: 0.24},
+		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour), Value: 0.22, Estimate: true},
+		{Start: now.Add(3 * time.Hour), End: now.Add(4 * time.Hour), Value: 0.24, Estimate: true},
 	}
 
 	assert.Equal(t, expected, rates)
+	assert.False(t, secondaryRates[1].Estimate, "secondary rates must not be mutated")
 }
 
 func TestMergedPrimaryFailure(t *testing.T) {
@@ -77,7 +78,7 @@ func TestMergedPrimaryFailure(t *testing.T) {
 
 	rates, err := ext.Rates()
 	require.NoError(t, err)
-	assert.Equal(t, secondaryRates, rates)
+	assert.Equal(t, estimated(secondaryRates), rates)
 }
 
 func TestMergedSecondaryFailure(t *testing.T) {
@@ -117,7 +118,7 @@ func TestMergedEmptyPrimary(t *testing.T) {
 	require.NoError(t, err)
 
 	// With empty primary, all secondary rates should be included
-	assert.Equal(t, secondaryRates, rates)
+	assert.Equal(t, estimated(secondaryRates), rates)
 }
 
 func TestMergedType(t *testing.T) {
@@ -196,7 +197,7 @@ func TestMergedFromConfigReferences(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, api.Rates{
 		{Start: now, End: now.Add(SlotDuration), Value: 0.10},
-		{Start: now.Add(SlotDuration), End: now.Add(2 * SlotDuration), Value: 0.20},
+		{Start: now.Add(SlotDuration), End: now.Add(2 * SlotDuration), Value: 0.20, Estimate: true},
 	}, rates)
 
 	_, err = NewMergedFromConfig(context.Background(), map[string]any{

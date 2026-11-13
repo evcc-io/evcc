@@ -8,9 +8,10 @@ import (
 
 // Rate is a grid tariff rate
 type Rate struct {
-	Start time.Time `json:"start"`
-	End   time.Time `json:"end"`
-	Value float64   `json:"value"`
+	Start    time.Time `json:"start"`
+	End      time.Time `json:"end"`
+	Value    float64   `json:"value"`
+	Estimate bool      `json:"estimate,omitempty"` // predicted, may be replaced by actual
 }
 
 // IsZero returns is the rate is the zero value
