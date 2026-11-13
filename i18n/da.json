@@ -146,11 +146,13 @@
       "template": "Fabrikant",
       "titleAdd": {
         "charging": "Tilføj oplader",
-        "heating": "Tilføj varmelegeme"
+        "heating": "Tilføj varmelegeme",
+        "switch": "Tilføj styrbar stikkontakt"
       },
       "titleEdit": {
         "charging": "Ændre oplader",
-        "heating": "Rediger varmelegemet"
+        "heating": "Rediger varmelegemet",
+        "switch": "Rediger styrbar stikkontakt"
       },
       "type": {
         "custom": {
@@ -188,10 +190,20 @@
     "circuits": {
       "addMainCircuit": "Tilføj hovedkredsløb",
       "addSubCircuit": "Tilføj underkredsløb",
+      "assignHere": "Tildel her",
+      "assignmentFailed": "Kunne ikke gemme tilknytningen. Prøv igen.",
       "description": "Sikrer, at summen af alle ladepunkter og varmere forbundet til et kredsløb ikke overstiger de konfigurerede effekt- og strømgrænser. Kredsløb kan indlejres for at opbygge et hierarki.",
+      "destination": "Kredsløb {title}",
+      "dragHint": "Træk til et kredsløb, eller klik for at vælge.",
+      "dropAssign": "Slip for at tildele",
+      "dropRemove": "Slip her for at fjerne fra kredsløbet.",
       "legacyWarning": "Ny konfiguration af kredsløb tilgængelig! Fjern og gem din konfiguration her for at bruge den nye guidede proces. En genstart er nødvendig bagefter.",
       "meterDedicated": "Måler",
       "meterGrid": "Elnet",
+      "moveHere": "Flyt her",
+      "notAssigned": "Ikke tildelt",
+      "selectAssign": "klik på et kredsløb for at tildele {title}.",
+      "selectMove": "Klik på et kredsløb for at flytte {title}, eller på listen for at fjerne det.",
       "title": "Belastningsstyring",
       "usableMeters": "Gyldige målerreferencer"
     },
@@ -230,6 +242,15 @@
       "title": "Effektbegrænsning",
       "titleAdd": "Tilføj enhed til effektbegrænsning",
       "titleEdit": "Rediger enhed til effektbegrænsning"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Tilføj oplader",
+        "meter": "Tilføj måler",
+        "switch": "Tilføj styrbar stikkontakt",
+        "tariff": "Tilføj tarif"
+      },
+      "noNesting": "Indlejring er begrænset til et niveau. Vælg venligst en anden mulighed."
     },
     "deviceValue": {
       "activeClients": "Aktive klienter",
@@ -309,8 +330,16 @@
           "returnEnergy": "Afladet"
         },
         "consumer": {
+          "chargeStatusB": "standby",
+          "chargeStatusC": "varme",
           "energy": "Forbrugt",
           "returnEnergy": "Produceret"
+        },
+        "continuous": {
+          "chargeStatusB": "normal",
+          "chargeStatusC": "boost",
+          "dimmed": "Dæmpet",
+          "enabled": "Boostet"
         },
         "grid": {
           "energy": "Importeret",
@@ -332,6 +361,7 @@
       "auxMeter": "Selvregulerende forbrugsenhed",
       "batteryStorage": "Hjemmebatteri",
       "consumer": "Forbrugsenhed",
+      "extMeter": "Ekstra måler",
       "solarSystem": "Solcelleanlæg"
     },
     "editor": {
@@ -496,7 +526,7 @@
         "charging": "Tilføj oplader",
         "heating": "Tilføj varmelegeme"
       },
-      "addMeter": "Tilføj dedikeret energimåler",
+      "addMeter": "Tilføj måler",
       "advancedConfig": "Avanceret konfiguration",
       "cancel": "Afbryd",
       "chargerError": {
@@ -556,7 +586,7 @@
       "electricalSubtitle": "Ved tvivl, spørg din elektriker.",
       "electricalTitle": "Elektrisk",
       "energyMeterHelp": "Ekstra måler, hvis opladeren ikke har en integreret.",
-      "energyMeterLabel": "Energi måler",
+      "energyMeterLabel": "Dedikeret energimåler",
       "estimateLabel": "Interpoler opladningsniveauet mellem API-opdateringer",
       "maxCurrentHelp": "Skal være større end minimum strømstyrken.",
       "maxCurrentLabel": "Maksimal strømstyrke",
@@ -1145,6 +1175,7 @@
       "template": "Udbyder",
       "title": "Tariffer og prognoser",
       "titleChoice": "Hvad ønsker du at tilføje?",
+      "titleSub": "Undertarif",
       "type": {
         "co2": "CO₂ Intensitet",
         "feedIn": "Indfødningspris",
@@ -1605,7 +1636,8 @@
         "continuousCo2Description": "Vælger det reneste sammenhængende tidsrum.",
         "continuousPriceDescription": "Vælger det billigste sammenhængende tidsrum.",
         "disabledDescription": "Kræver dynamisk tarif eller CO₂ prognose.",
-        "label": "Optimering"
+        "label": "Optimering",
+        "optimizerDescription": "{optimizer} vælger de billigste tidsrum. Det kan resultere i multiple start og stop."
       },
       "planNumber": "Plan {number}",
       "precondition": {
