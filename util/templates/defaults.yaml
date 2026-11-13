@@ -690,6 +690,17 @@ presets:
         de: Individuelle Formel zur Berechnung des Preises
         en: Individual formula for calculating the price
       example: "math.Max((price + charges) * (1 + tax), 0.0)"
+    - name: earlyRefresh
+      type: duration
+      unit: minute
+      advanced: true
+      description:
+        en: Fetch tomorrow's prices early
+        de: Preise für morgen früher abrufen
+      help:
+        de: Abrufintervall, solange die Preise für morgen fehlen. Gilt von 13:00 bis 15:00 Uhr, danach alle 30 Minuten. Leer lassen für stündlichen Abruf. Manche Anbieter begrenzen API-Anfragen, ein kurzes Intervall kann zu einer vorübergehenden Sperre führen.
+        en: Refresh interval while tomorrow's prices are missing. Applies from 13:00 to 15:00, then every 30 minutes. Leave empty to refresh hourly. Some providers limit API requests, a short interval can lead to a temporary block.
+      example: 5m
   tariff-features:
     - name: average
       type: bool
