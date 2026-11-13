@@ -195,12 +195,15 @@ func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink
 
 	v := &Bluelink{
 		embed:    &cc.embed,
-		Provider: bluelink.NewProvider(api, identity, vehicle, cc.PIN, cc.Cache),
+		Provider: bluelink.NewProvider(api, vehicle, cc.Cache),
 		Caps:     implement.New(),
 	}
 
+	// CCS2 vehicles need the PIN for start/stop
 	if cc.PIN != "" || vehicle.CcuCCS2ProtocolSupport == 0 {
-		implement.Has(v, implement.ChargeController(v.EnableCharge))
+		implement.Has(v, implement.ChargeController(func(enable bool) error {
+			return api.ChargeEnable(identity, vehicle, cc.PIN, enable)
+		}))
 	}
 
 	// Try to fetch battery capacity from vehicle if the user didn't provide one in the configuration
