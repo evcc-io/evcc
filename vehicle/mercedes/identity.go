@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	protos "github.com/evcc-io/evcc/vehicle/mercedes/pb"
 	"golang.org/x/oauth2"
 )
 
@@ -21,6 +22,7 @@ type Identity struct {
 	account   string
 	region    string
 	Sessionid string
+	updatesG  func() (map[string]*protos.VEPUpdate, error)
 }
 
 // OAuth2Config is the OAuth2 configuration for authenticating with the MercedesAPI.
@@ -65,6 +67,7 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 	}
 
 	v.TokenSource = ts
+	v.updatesG = util.Cached(v.pushUpdates, pushInterval)
 
 	// add instance
 	addInstance(account, v)

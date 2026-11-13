@@ -51,9 +51,5 @@ type StatusResponse struct {
 		Longitude float64
 		Latitude  float64
 	}
-	Preconditioning struct {
-		Active    bool
-		Timestamp time.Time
-	}
 	Timestamp time.Time
 }

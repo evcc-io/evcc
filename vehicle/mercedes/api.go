@@ -3,6 +3,7 @@ package mercedes
 import (
 	"fmt"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -13,8 +14,9 @@ import (
 
 // API is an api.Vehicle implementation for Mercedes-Benz cars
 type API struct {
-	region string
-	log    *util.Logger
+	region   string
+	log      *util.Logger
+	identity *Identity
 	*request.Helper
 }
 
@@ -30,9 +32,10 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	}
 
 	return &API{
-		Helper: client,
-		region: identity.region,
-		log:    log,
+		Helper:   client,
+		region:   identity.region,
+		log:      log,
+		identity: identity,
 	}
 }
 
@@ -91,15 +94,20 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 		res.EvInfo.Battery.EndOfChargeTime = int(val.GetIntValue())
 	}
 
-	// There are two attributes for the proconditioning status, precondNow and precondActive
-	if val, ok := message.Attributes["precondNow"]; ok {
-		res.Preconditioning.Active = val.GetBoolValue()
-	}
-	if !res.Preconditioning.Active {
-		if val, ok := message.Attributes["precondActive"]; ok {
-			res.Preconditioning.Active = val.GetBoolValue()
-		}
+	return res, err
+}
+
+// Push returns the full update of the vehicle from the push api. It holds attributes the widget api no longer delivers.
+func (v *API) Push(vin string) (*protos.VEPUpdate, error) {
+	updates, err := v.identity.updatesG()
+	if err != nil {
+		return nil, err
 	}
 
-	return res, err
+	update, ok := updates[vin]
+	if !ok {
+		return nil, api.ErrNotAvailable
+	}
+
+	return update, nil
 }
