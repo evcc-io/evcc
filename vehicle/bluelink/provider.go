@@ -10,9 +10,9 @@ import (
 // Provider implements the vehicle api.
 // Based on https://github.com/Hacksore/bluelinky.
 type Provider struct {
-	statusG func() (BluelinkVehicleStatusLatest, error)
-	refresh func() error
-	chargeS func(bool) error
+	statusG      func() (BluelinkVehicleStatusLatest, error)
+	refresh      func() error
+	EnableCharge func(bool) error
 }
 
 // NewProvider creates a new BlueLink API
@@ -22,7 +22,7 @@ func NewProvider(api *API, identity *Identity, vehicle Vehicle, pin string, cach
 			return api.StatusLatest(vehicle)
 		}, cache),
 		refresh: func() error { return api.Refresh(vehicle) },
-		chargeS: func(enable bool) error {
+		EnableCharge: func(enable bool) error {
 			return api.ChargeEnable(identity, vehicle, pin, enable)
 		},
 	}
@@ -112,9 +112,4 @@ var _ api.Resurrector = (*Provider)(nil)
 func (v *Provider) WakeUp() error {
 	// Triggers refresh from vehicle
 	return v.refresh()
-}
-
-// EnableCharge implements the api.ChargeController interface
-func (v *Provider) EnableCharge(enable bool) error {
-	return v.chargeS(enable)
 }
