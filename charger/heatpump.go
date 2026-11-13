@@ -38,10 +38,27 @@ type Heatpump struct {
 	power     int64
 	maxPowerG func() (int64, error)
 	maxPowerS func(int64) error
+
+	standbyPower float64
 }
+
+// heatpumpStandbyPower separates idle draw (controller, circulation pumps) from a running compressor
+const heatpumpStandbyPower = 100
 
 func init() {
 	registry.AddCtx("heatpump", NewHeatpumpFromConfig)
+}
+
+// heatingStatus reports status C while the device draws more than its standby power.
+// Without a charge meter it falls back to the requested mode.
+func heatingStatus(lp loadpoint.API, standbyPower float64, requested bool) api.ChargeStatus {
+	if lp != nil && lp.HasChargeMeter() {
+		requested = lp.GetChargePower() > standbyPower
+	}
+	if requested {
+		return api.StatusC
+	}
+	return api.StatusB
 }
 
 // NewHeatpumpFromConfig creates heatpump configurable charger from generic config
@@ -49,7 +66,8 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	cc := struct {
 		embed                   `mapstructure:",squash"`
 		SetMaxPower             plugin.Config
-		GetMaxPower             *plugin.Config           // optional
+		GetMaxPower             *plugin.Config // optional
+		StandbyPower            float64
 		measurement.Temperature `mapstructure:",squash"` // optional
 		measurement.Energy      `mapstructure:",squash"` // optional
 		meter.Dimmer            `mapstructure:",squash"` // optional
@@ -58,6 +76,7 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 			Icon_:     "heatpump",
 			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice},
 		},
+		StandbyPower: heatpumpStandbyPower,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -90,6 +109,7 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	implement.May(res, implement.Meter(powerG))
 	implement.May(res, implement.MeterEnergy(energyG))
 	implement.May(res, implement.MeterReturnEnergy(returnG))
+	res.standbyPower = cc.StandbyPower
 
 	tempG, limitTempG, err := cc.Temperature.Configure(ctx)
 	if err != nil {
@@ -140,8 +160,7 @@ func (wb *Heatpump) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	status := map[bool]api.ChargeStatus{false: api.StatusB, true: api.StatusC}
-	return status[power > 0], nil
+	return heatingStatus(wb.lp, wb.standbyPower, power > 0), nil
 }
 
 // Enabled implements the api.Charger interface
