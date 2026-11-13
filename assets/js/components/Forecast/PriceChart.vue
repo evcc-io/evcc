@@ -34,7 +34,6 @@ export default defineComponent({
 		grid: { type: Array as PropType<UiForecastSlot[]> },
 		feedin: { type: Array as PropType<UiForecastSlot[]> },
 		currency: { type: String as PropType<CURRENCY> },
-		zoom: { type: Boolean, default: false },
 	},
 	computed: {
 		slots(): UiForecastSlot[] {
@@ -70,23 +69,30 @@ export default defineComponent({
 				...this.slots.map((s) => s.value),
 				...this.feedinSlots.map((s) => s.value),
 			];
+			if (!values.length) return {};
 			const dataMin = Math.min(...values);
 			const dataMax = Math.max(...values);
-			// a flat line has no range to fit, it keeps the zero baseline
-			const fit = this.zoom && dataMin !== dataMax;
+			// a single line is fitted, a flat one has no range and keeps the zero baseline
+			const single = !this.slots.length || !this.feedinSlots.length;
+			const fit = single && dataMin !== dataMax;
 			const rangeMin = fit ? dataMin : Math.min(0, dataMin);
 			const rangeMax = Math.max(0, dataMax);
 			const range = rangeMax - rangeMin || 1;
 			const rawInterval = range / 5;
 			const magnitude = Math.pow(10, Math.floor(Math.log10(rawInterval)));
-			const nice = [1, 2, 2.5, 5, 10].find((n) => n * magnitude >= rawInterval) || 10;
-			const interval = nice * magnitude;
+			const nice = [1, 2, 5, 10].find((n) => n * magnitude >= rawInterval) || 10;
+			// labels are whole display units, finer steps would repeat them
+			const interval = Math.max(
+				nice * magnitude,
+				1 / this.pricePerKWhDisplayFactor(this.currency)
+			);
+			// rounded, float noise would add a tick
+			const snap = (steps: number) => Number((steps * interval).toFixed(10));
 
-			// a peak on a tick gets one more step, the line must not sit on the axis end
-			const steps = rangeMax > 0 ? Math.floor(rangeMax / interval + 1e-9) + 1 : 0;
 			return {
-				min: Math.floor(rangeMin / interval) * interval,
-				max: steps * interval,
+				min: snap(Math.floor(rangeMin / interval + 1e-9)),
+				// a peak on a tick gets one more step, the line must not sit on the axis end
+				max: snap(rangeMax > 0 ? Math.floor(rangeMax / interval + 1e-9) + 1 : 0),
 				interval,
 			};
 		},
@@ -108,7 +114,7 @@ export default defineComponent({
 				tooltip: {
 					trigger: "axis",
 					axisPointer: { type: "line", snap: true, lineStyle: { color: "transparent" } },
-					...tooltipStyle(priceColor),
+					...tooltipStyle(this.slots.length ? priceColor : exportColor),
 					formatter(
 						params: {
 							value: [string, number];
