@@ -1,0 +1,37 @@
+template: wican
+products:
+  - brand: MeatPi Electronics
+    description:
+      generic: WiCAN Pro
+group: generic
+requirements:
+  description:
+    de: |
+      Liest Fahrzeugdaten (Ladestand, Reichweite, Kilometerstand, Ladestatus, Klimastatus) über die WiCAN Pro API.
+
+      Die AutoPID-Funktion in WiCAN Pro muss aktiv sein und die PIDs müssen mit `SOC_D` (oder `SOC`), `RANGE`, `ODOMETER`, `CHARGING`, `CLIMATER` benannt sein.
+
+      Falls ein Proxy definiert ist, muss die IP-Adresse bzw. der Hostname entsprechend in `NO_PROXY` hinterlegt werden.
+    en: |
+      Reads vehicle data (state of charge, range, odometer, charging status, climate control status) via the WiCAN Pro API.
+
+      The AutoPID feature in WiCAN Pro must be enabled, and the PIDs must be named `SOC_D` (or `SOC`), `RANGE`, `ODOMETER`, `CHARGING`, and `CLIMATER`.
+
+      If a proxy is defined, the IP address or hostname must be specified accordingly in `NO_PROXY`.
+discovery:
+  mdns: ["_wican._tcp"]
+  hostname: ["wican_*"]
+params:
+  - preset: vehicle-common
+  - name: host
+    description:
+      en: IP address/hostname of the WiCAN Pro device
+      de: IP-Adresse/Hostname des WiCAN Pro Geräts
+  - name: cache
+    default: 30s
+render: |
+  type: wican
+  {{- include "common" . }}
+  host: {{ .host }}
+  cache: {{ .cache }}
+  {{ include "features" . }}
