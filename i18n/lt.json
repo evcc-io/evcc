@@ -146,11 +146,13 @@
       "template": "Gamintojas",
       "titleAdd": {
         "charging": "Pridėti Įkroviklį",
-        "heating": "Pridėti Šildytuvą"
+        "heating": "Pridėti Šildytuvą",
+        "switch": "Pridėti Išmanią Rozetę"
       },
       "titleEdit": {
         "charging": "Redaguoti įkroviklį",
-        "heating": "Redaguoti Šildytuvą"
+        "heating": "Redaguoti Šildytuvą",
+        "switch": "Redaguoti Išmanią Rozetę"
       },
       "type": {
         "custom": {
@@ -188,10 +190,20 @@
     "circuits": {
       "addMainCircuit": "Pridėti pagrindinę grandinę",
       "addSubCircuit": "Pridėti papildomą grandinę",
+      "assignHere": "Priskirti čia",
+      "assignmentFailed": "Nepavyko išsaugoti priskyrimo. Bandykite dar kartą.",
       "description": "Užtikrina, kad naudojant visus į grandinę sujungtus įkroviklius ir šildytuvus, neviršytumėte sukonfigūruotų galios ir srovės ribų. Grandines galima sudėlioti, kad būtų sukurta hierarchija.",
+      "destination": "Grandinė {title}",
+      "dragHint": "Nutempkite ant grandinės arba bakstelėkite, kad pasirinktumėte.",
+      "dropAssign": "Įdėkite priskyrimui",
+      "dropRemove": "Įdėkite čia, kad pašalintumėte iš grandinės.",
       "legacyWarning": "Galima naudoti naują grandinių konfigūracijos metodą. Pašalinkite ir išsaugokite savo konfigūraciją čia, kad galėtumėte pasinaudoti naujuoju vedliu. Po to reikės restartuoti.",
       "meterDedicated": "Skaitiklis",
       "meterGrid": "Tinklas",
+      "moveHere": "Perkelti čia",
+      "notAssigned": "Nepriskirta",
+      "selectAssign": "Bakstelėkite grandinę, kad priskirti {title}.",
+      "selectMove": "Bakstelėkite grandinę, kad perkeltumėte {title}, arba bakstelėkite žemiau, kad pašalintumėte priskyrimą.",
       "title": "Apkrovos valdymas",
       "usableMeters": "Galimi skaitikliai"
     },
@@ -230,6 +242,15 @@
       "title": "Apribojimas",
       "titleAdd": "Pridėti Apribojimo Įrenginį",
       "titleEdit": "Redaguoti apribojimo įrenginį"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Pridėti įkroviklį",
+        "meter": "Pridėti skaitiklį",
+        "switch": "Pridėti išmanią rozetę",
+        "tariff": "Pridėti tarifą"
+      },
+      "noNesting": "Įdėjimas galimas tik vienu lygiu. Prašome pasirinkti kitą variantą."
     },
     "deviceValue": {
       "activeClients": "Aktyvūs vartotojai",
@@ -309,8 +330,16 @@
           "returnEnergy": "Iškrauta"
         },
         "consumer": {
+          "chargeStatusB": "pasiruošęs",
+          "chargeStatusC": "šildoma",
           "energy": "Suvartota",
           "returnEnergy": "Pagaminta"
+        },
+        "continuous": {
+          "chargeStatusB": "normalus",
+          "chargeStatusC": "pastiprinti",
+          "dimmed": "Pamažintas",
+          "enabled": "Pastiprintas"
         },
         "grid": {
           "energy": "Importuota",
@@ -332,6 +361,7 @@
       "auxMeter": "Savireguliuojantis prietaisas",
       "batteryStorage": "Kaupiklis",
       "consumer": "Vartojantis įrenginys",
+      "extMeter": "Papildomas skaitiklis",
       "solarSystem": "Saulės elektrinė"
     },
     "editor": {
@@ -496,7 +526,7 @@
         "charging": "Pridėti įkroviklį",
         "heating": "Pridėti šildytuvą"
       },
-      "addMeter": "Pridėti energijos skaitiklį",
+      "addMeter": "Pridėti skaitiklį",
       "advancedConfig": "Išplėstinė konfigūracija",
       "cancel": "Atšaukti",
       "chargerError": {
@@ -532,10 +562,31 @@
       "defaultModeKeep": "palikti kaip yra",
       "defaultModeLabel": "Numatytasis režimas",
       "delete": "Ištrinti",
+      "demandPredictor": {
+        "daily": {
+          "description": "Pastarųjų dienų vidurkis. Įrenginiams, kurių veikimo pobūdis kasdien vienodas.",
+          "label": "Dienos vidurkis"
+        },
+        "defaultGroup": "Įrenginio numatytasis",
+        "description": "Kaip optimizatorius prognozuoja poreikį, remiantis ankstesniu vartojimu.",
+        "label": "Profilis",
+        "noTempTariff": "Reikalinga temperatūros prognozė.",
+        "noTempTariffLink": "Pridėti prognozę",
+        "profilesGroup": "Profiliai",
+        "temperature": {
+          "description": "Ankstesnės sąnaudos esant panašiai lauko temperatūrai. Patalpų šildymui, pavyzdžiui, naudojant šilumos siurblius.",
+          "label": "Temperatūra"
+        },
+        "title": "Poreikio prognozė",
+        "weekday": {
+          "description": "Tos pačios savaitės dienos vidurkis. Įrenginiams, veikiantiems pagal savaitinį tvarkaraštį, pavyzdžiui, vandens ar baseinų šildytuvams.",
+          "label": "Savaitės diena"
+        }
+      },
       "electricalSubtitle": "Jei abejojate, pasitarkite su elektriku.",
       "electricalTitle": "Elektros parametrai",
       "energyMeterHelp": "Papildomas skaitiklis, jei įkroviklyje nėra integruoto.",
-      "energyMeterLabel": "Energijos skaitiklis",
+      "energyMeterLabel": "Dedikuotas energijos skaitiklis",
       "estimateLabel": "Interpoliuoti įkrovos lygį tarp API naujinimų",
       "maxCurrentHelp": "Turi būti didesnė nei minimali srovė.",
       "maxCurrentLabel": "Max srovė",
@@ -1124,6 +1175,7 @@
       "template": "Tiekėjas",
       "title": "Tarifai ir prognozės",
       "titleChoice": "Ką norite pridėti?",
+      "titleSub": "Sub tarifas",
       "type": {
         "co2": "CO₂ Intensyvumas",
         "feedIn": "Tinklo Eksporto Kaina",
@@ -1589,7 +1641,8 @@
         "continuousCo2Description": "Parenka švariausią nepertraukiamą laikotarpių seriją.",
         "continuousPriceDescription": "Pasirenkama pigiausia ištisinė laikotarpių serija.",
         "disabledDescription": "Reikalingas dinaminis tarifas arba CO₂ prognozė.",
-        "label": "Optimizacija"
+        "label": "Optimizacija",
+        "optimizerDescription": "{optimizer} parenka pigiausius laiko intervalus. Dėl to gali būti keli įjungimai ir išjungimai."
       },
       "planNumber": "Planas {number}",
       "precondition": {
@@ -1891,7 +1944,7 @@
     },
     "checklist": {
       "dismiss": "Atmesti",
-      "legacyTariffs": "Naudojama sena tarifų konfigūracija.",
+      "legacyTariffs": "Yra naudojama pasenusi tarifų konfigūracija.",
       "progress": "{done} iš {total} atlikta",
       "title": "Užbaikite nustatymus"
     },

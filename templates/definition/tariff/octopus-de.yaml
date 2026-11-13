@@ -37,8 +37,10 @@ params:
     help:
       de: "Ihre Octopus Energy Kundennummer (z.B. A-12345678)."
       en: "Your Octopus Energy account number (e.g., A-12345678)."
+  - preset: tariff-base
 render: |
   type: octopus-de
   accountNumber: {{ .accountNumber }}
   email: {{ .email }}
   password: {{ .password }}
+  {{ include "base" . }}

@@ -273,6 +273,29 @@ func (t *Template) dropStaleKeys(other map[string]any) map[string]any {
 	return res
 }
 
+// ValidateUsages ensures that usage-restricted params can match a usage of the template.
+// Templates without usage param use the class name as usage.
+func (t *Template) ValidateUsages(class Class) error {
+	usages := t.Usages()
+	if len(usages) == 0 {
+		usages = []string{class.String()}
+	}
+
+	for _, p := range t.Params {
+		if p.IsDeprecated() || len(p.Usages) == 0 {
+			continue
+		}
+
+		if !slices.ContainsFunc(p.Usages, func(u string) bool {
+			return slices.Contains(usages, u)
+		}) {
+			return fmt.Errorf("param %s: usages %v do not match template usages %v", p.Name, p.Usages, usages)
+		}
+	}
+
+	return nil
+}
+
 // Usages returns the list of supported usages
 func (t *Template) Usages() []string {
 	if i, p := t.ParamByName(ParamUsage); i > -1 {
@@ -390,6 +413,11 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 			usage = strings.ToLower(cast.ToString(v))
 			break
 		}
+	}
+
+	// classes without usage param (e.g. curtailer) match param usages by class name
+	if usage == "" {
+		usage = class.String()
 	}
 
 	// TODO this is an utterly horrible hack

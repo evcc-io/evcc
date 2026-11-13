@@ -77,29 +77,39 @@ jobs:
       matrix:
         arch: ${{ fromJSON(needs.prep.outputs.archs) }}
     steps:
+      # base checkout: the local actions below must never come from the PR
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.prep.outputs.sha }}
+          path: pr
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: ./.github/actions/build-toolchain
-        with:
-          cache-scope: pr # isolated cache, cannot poison the nightly/main cache
+      - name: Setup Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
+      - name: Restore build cache
+        uses: ./.github/actions/docker-cache
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          cache-scope: pr
+
+      # PR code only runs inside the build containers, never on the runner:
+      # a runner process could write any cache key, including the shared ones
       - name: Build binary
-        env:
-          CGO_ENABLED: 0
-          GOOS: linux
-          GOARCH: ${{ matrix.arch }}
-          GOARM: 6
-          SHA: ${{ needs.prep.outputs.sha }}
-          NUM: ${{ github.event.issue.number }}
-        run: |
-          go build -trimpath -tags release \
-            -ldflags "-X github.com/evcc-io/evcc/util.Version=pr-${NUM}-${SHA:0:7} -X github.com/evcc-io/evcc/util.Commit=${SHA:0:7} -s -w" \
-            -o "evcc-linux-${{ matrix.arch }}" .
-          gzip -9 "evcc-linux-${{ matrix.arch }}"
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: pr
+          platforms: linux/${{ matrix.arch == 'arm' && 'arm/v6' || matrix.arch }}
+          outputs: type=local,dest=out
+
+      - name: Compress binary
+        run: gzip -9 -c out/usr/local/bin/evcc > "evcc-linux-${{ matrix.arch }}.gz"
 
       - name: Upload binary
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -116,17 +126,17 @@ jobs:
     permissions:
       contents: read
     steps:
+      # base checkout: the local actions below must never come from the PR
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.prep.outputs.sha }}
+          path: pr
           fetch-depth: 0
           persist-credentials: false
-
-      - name: Login
-        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4
-        with:
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASS }}
 
       - name: Setup Buildx
         id: buildx
@@ -138,10 +148,17 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           cache-scope: pr
 
+      # as late as possible: PR code only runs inside the build containers
+      - name: Login
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASS }}
+
       - name: Publish
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
-          context: .
+          context: pr
           platforms: ${{ needs.prep.outputs.platforms }}
           push: true
           tags: evcc/evcc:pr-${{ github.event.issue.number }}

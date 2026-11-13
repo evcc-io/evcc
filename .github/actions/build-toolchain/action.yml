@@ -22,6 +22,8 @@ runs:
       with:
         node-version-file: ".node-version"
         cache: true
+        # the dependency cache has no namespace, only trusted callers may write it
+        cache-save: ${{ inputs.cache-scope == 'main' }}
 
     # Writes are namespaced by cache-scope so a PR build cannot poison the
     # shared "main" cache; PRs still read it through the fallback restore-key.
