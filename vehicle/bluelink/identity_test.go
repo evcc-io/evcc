@@ -261,3 +261,14 @@ func TestLoginPropagatesCCIError(t *testing.T) {
 	assert.True(t, strings.HasPrefix(err.Error(), "login failed:"), "got: %s", err.Error())
 	assert.Contains(t, err.Error(), "WAF")
 }
+
+func TestRequestKeepsExistingAuthorization(t *testing.T) {
+	identity := testIdentity(t, "")
+
+	req, err := http.NewRequest(http.MethodPost, "https://example.invalid/", nil)
+	require.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer ctrl")
+
+	require.NoError(t, identity.Request(req))
+	assert.Equal(t, "Bearer ctrl", req.Header.Get("Authorization"))
+}
