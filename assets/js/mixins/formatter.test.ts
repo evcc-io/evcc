@@ -129,6 +129,8 @@ describe("fmtPricePerKWh", () => {
     expect(fmt.fmtPricePerKWh(1234, CURRENCY.SEK)).eq("123.400,0 öre/kWh");
     expect(fmt.fmtPricePerKWh(0.2, CURRENCY.EUR, false, false)).eq("20,0");
     expect(fmt.fmtPricePerKWh(0.123, CURRENCY.CHF)).eq("12,3 Rp./kWh");
+    expect(fmt.fmtPricePerKWh(0.43404, CURRENCY.EUR, false, true, true)).eq("43,404 ct/kWh");
+    expect(fmt.fmtPricePerKWh(0.435, CURRENCY.EUR, false, true, true)).eq("43,5 ct/kWh");
   });
 });
 

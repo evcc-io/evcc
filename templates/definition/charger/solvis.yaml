@@ -18,6 +18,7 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 1
   - name: tempnormal
     type: int
     default: 48

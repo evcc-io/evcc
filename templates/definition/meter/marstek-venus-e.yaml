@@ -19,6 +19,7 @@ params:
     choice: ["battery"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
     baudrate: 115200
     comset: 8N1
   - name: generation

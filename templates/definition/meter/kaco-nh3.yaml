@@ -1,0 +1,412 @@
+template: kaco-nh3
+products:
+  - brand: KACO
+    description:
+      generic: blueplanet hybrid NH3
+requirements:
+  description:
+    de: |
+      Für KACO blueplanet Hybrid NH3 mit AI-Dongle/WLAN-Stick. Modbus TCP und lokale AISWEI-HTTP-API müssen über die IP-Adresse des Sticks erreichbar sein (Modbus TCP Port 502, Geräte-ID 3; HTTP Port 8484).
+      Die Batterie-Leistungsregelung verwendet die lokale Schnittstelle `fdbg.cgi`. Maximale Lade- und Entladeleistung werden aus SunSpec Model 802 gelesen. Batterie-Lade- und Entladeenergie werden über die lokale AISWEI-HTTP-API ausgelesen.
+      Die Abregelung wird über ein separates KACO NH3 Abregelungsgerät konfiguriert.
+      Der im SunSpec-Modell 203 bereitgestellte Netzzähler liefert Netzleistung, Import-/Export-Energie und phasenbezogene Messwerte.
+    en: |
+      For KACO blueplanet Hybrid NH3 with AI dongle/Wi-Fi stick. Modbus TCP and the local AISWEI HTTP API must be reachable at the stick's IP address (Modbus TCP port 502, device ID 3; HTTP port 8484).
+      Battery power control uses the local `fdbg.cgi` endpoint. Maximum charge and discharge power are read from SunSpec Model 802. Battery charge and discharge energy are read from the local AISWEI HTTP API.
+      Configure curtailment through a separate KACO NH3 curtailer device.
+      The grid meter exposed through SunSpec Model 203 provides grid power, import/export energy, and per-phase measurements.
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 3
+  - name: battery
+    type: choice
+    choice: [1, 2]
+    required: true
+    usages: ["battery"]
+    description:
+      de: Batteriespeichernummer
+      en: Battery number
+  - name: serial
+    required: true
+    usages: ["battery"]
+    description:
+      de: Seriennummer des Wechselrichters (isn)
+      en: Inverter serial number (isn)
+  - preset: battery-capacity
+  - name: minsoc
+    default: 10
+    pattern:
+      regex: ^([5-9]|[1-9][0-9]|100)$
+      examples: ["5", "10"]
+    help:
+      de: Wird als Entladegrenze an den Wechselrichter geschrieben und vom Optimizer verwendet. Nur einen Wert einstellen, der vom Batteriespeicher unterstützt wird. Mindestwert 5 %.
+      en: Written to the inverter as the discharge limit and used by the optimizer. Only set a value supported by the battery. Minimum value is 5%.
+  - name: maxsoc
+    help:
+      de: Wird als Ladegrenze an den Wechselrichter geschrieben und vom Optimizer verwendet. Nur einen Wert einstellen, der vom Batteriespeicher unterstützt wird.
+      en: Written to the inverter as the charge limit and used by the optimizer. Only set a value supported by the battery.
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6433 # 46434 total system power (smart meter)
+      type: holding
+      decode: int32
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 203:TotWhImp
+    scale: 0.001
+  returnenergy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 203:TotWhExp
+    scale: 0.001
+  currents:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:AphA
+      nan: true
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:AphB
+      nan: true
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:AphC
+      nan: true
+  voltages:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:PhVphA
+      nan: true
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:PhVphB
+      nan: true
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:PhVphC
+      nan: true
+  powers:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:WphA
+      nan: true
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:WphB
+      nan: true
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:WphC
+      nan: true
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1600 # 31601 PV total power
+      type: input
+      decode: uint32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1604 # 31605 PV E-Total (0.1 kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
+  maxacpower:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value:
+      - 120:WRtg
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  energy:
+    source: http
+    uri: http://{{ .host }}:8484/getdevdata.cgi?device=4&sn={{ .serial }}
+    jq: .ebi
+    scale: 0.1
+  returnenergy:
+    source: http
+    uri: http://{{ .host }}:8484/getdevdata.cgi?device=4&sn={{ .serial }}
+    jq: .ebo
+    scale: 0.1
+  maxchargepower:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:WChaRteMax
+  maxdischargepower:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:WDisChaRteMax
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .battery "2" }}1751{{ else }}1618{{ end }} # 31752/31619 BMS2/1 battery power
+      type: input
+      decode: int32
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .battery "2" }}1754{{ else }}1621{{ end }} # 31755/31622 BMS2/1 battery SoC
+      type: input
+      decode: uint16
+  batterymode:
+    source: switch
+    switch:
+      - case: 1 # normal
+        set:
+          source: sequence
+          set:
+            - source: const
+              value: {{ mul .minsoc 100 }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1154 # 41155 discharge SoC lower limit, 0.01%
+                  type: writesingle
+                  encoding: uint16
+            - source: const
+              value: {{ mul .maxsoc 100 }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1153 # 41154 charging SoC upper limit, 0.01%
+                  type: writesingle
+                  encoding: uint16
+            - source: http
+              <<: &fdbg
+                uri: http://{{ .host }}:8484/fdbg.cgi
+                method: POST
+                timeout: 20s
+                headers:
+                  Content-Type: application/json
+              body: '{"data":"0306044f0002390e"}' # write register 41104 (mode) = 2 (normal)
+            - source: const
+              value: 1
+              set:
+                source: go
+                <<: &setdefine
+                  in:
+                    - name: schedule
+                      type: string
+                      config:
+                        source: http
+                        uri: http://{{ .host }}:8484/getdefine.cgi
+                        jq: 'if type == "object" and has("Pin") then .Pin = "__PIN__" else error("missing Pin field") end | tojson'
+                    - name: charge
+                      type: float
+                      config:
+                        source: sunspec
+                        {{- include "modbus" . | indent 22 }}
+                        value: 802:WChaRteMax
+                  out:
+                    - name: frame
+                      type: string
+                      config:
+                        source: http
+                        uri: http://{{ .host }}:8484/setting.cgi
+                        method: POST
+                        timeout: 20s
+                        headers:
+                          Content-Type: application/json
+                        body: '${frame}'
+                  script: |
+                    import "fmt"
+                    import "strings"
+                    pin := int(charge + 0.5)
+                    if batteryMode == 4 {
+                      pin = 0
+                    }
+                    updated := strings.Replace(schedule, `"Pin":"__PIN__"`, fmt.Sprintf(`"Pin":%d`, pin), 1)
+                    if updated == schedule {
+                      panic("missing Pin field in stick schedule")
+                    }
+                    fmt.Sprintf(`{"value":%s,"device":4,"action":"setdefine"}`, updated)
+      - case: 2 # hold
+        set:
+          source: sequence
+          set:
+            - source: const
+              value: {{ mul .minsoc 100 }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1154 # 41155 discharge SoC lower limit, 0.01%
+                  type: writesingle
+                  encoding: uint16
+            - source: const
+              value: {{ mul .maxsoc 100 }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1153 # 41154 charging SoC upper limit, 0.01%
+                  type: writesingle
+                  encoding: uint16
+            - source: http
+              <<: *fdbg
+              body: '{"data":"0306044f0003f8ce"}' # write register 41104 (mode) = 3 (reserve energy)
+            - source: const
+              value: 2
+              set: *setdefine
+      - case: 4 # holdcharge
+        set:
+          source: sequence
+          set:
+            - source: const
+              value: {{ mul .minsoc 100 }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1154 # 41155 discharge SoC lower limit, 0.01%
+                  type: writesingle
+                  encoding: uint16
+            - source: const
+              value: {{ mul .maxsoc 100 }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1153 # 41154 charging SoC upper limit, 0.01%
+                  type: writesingle
+                  encoding: uint16
+            - source: http
+              <<: *fdbg
+              body: '{"data":"0306044f0002390e"}' # write register 41104 (mode) = 2 (normal)
+            - source: const
+              value: 4
+              set: *setdefine
+      - case: 3 # charge
+        set:
+          source: sequence
+          set:
+            - source: const
+              value: {{ mul .minsoc 100 }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1154 # 41155 discharge SoC lower limit, 0.01%
+                  type: writesingle
+                  encoding: uint16
+            - source: const
+              value: {{ mul .maxsoc 100 }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1153 # 41154 charging SoC upper limit, 0.01%
+                  type: writesingle
+                  encoding: uint16
+            - source: http
+              <<: *fdbg
+              body: '{"data":"0306044f0004b90c"}' # write register 41104 (mode) = 4 (custom)
+            - source: const
+              value: 3
+              set: *setdefine
+            - source: const
+              value: 3
+              set:
+                source: go
+                <<: &setpoint
+                  in:
+                    - name: charge
+                      type: float
+                      config:
+                        source: sunspec
+                        {{- include "modbus" . | indent 22 }}
+                        value: 802:WChaRteMax
+                    - name: discharge
+                      type: float
+                      config:
+                        source: sunspec
+                        {{- include "modbus" . | indent 22 }}
+                        value: 802:WDisChaRteMax
+                  out:
+                    - name: frame
+                      type: string
+                      config:
+                        source: http
+                        <<: *fdbg
+                        body: '{"data":"${frame}"}'
+                  script: |
+                    power := 0
+                    if batteryMode == 3 {
+                      power = -int(charge + 0.5)
+                    } else if batteryMode == 5 {
+                      power = int(discharge + 0.5)
+                    }
+                    frame := []byte{3, 6, 4, 128, byte(power >> 8), byte(power)}
+                    crc := 0xffff
+                    for _, b := range frame {
+                      crc ^= int(b)
+                      for i := 0; i < 8; i++ {
+                        if crc&1 != 0 {
+                          crc = (crc >> 1) ^ 0xa001
+                        } else {
+                          crc >>= 1
+                        }
+                      }
+                    }
+                    frame = append(frame, byte(crc), byte(crc >> 8))
+                    digits := "0123456789abcdef"
+                    result := ""
+                    for _, b := range frame {
+                      result += string(digits[b>>4]) + string(digits[b&15])
+                    }
+                    result
+      - case: 5 # discharge
+        set:
+          source: sequence
+          set:
+            - source: const
+              value: {{ mul .minsoc 100 }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1154 # 41155 discharge SoC lower limit, 0.01%
+                  type: writesingle
+                  encoding: uint16
+            - source: const
+              value: {{ mul .maxsoc 100 }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1153 # 41154 charging SoC upper limit, 0.01%
+                  type: writesingle
+                  encoding: uint16
+            - source: http
+              <<: *fdbg
+              body: '{"data":"0306044f0004b90c"}' # write register 41104 (mode) = 4 (custom)
+            - source: const
+              value: 5
+              set: *setdefine
+            - source: const
+              value: 5
+              set:
+                source: go
+                <<: *setpoint
+  {{- include "battery-capacity" . }}
+  {{- include "battery-minmaxsoc" . }}
+  {{- end }}
