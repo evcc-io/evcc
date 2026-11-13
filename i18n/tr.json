@@ -38,8 +38,8 @@
       "energy": "Enerji",
       "gridCharge": "şebekeden doldurma",
       "gridDischarge": "şebekeye boşaltma",
-      "hold": "bataryadan kullanım kapalı",
       "holdCharge": "doldurma kilitli",
+      "holdDischarge": "bataryadan kullanım kapalı",
       "ofTotal": "{total}'ın",
       "power": "Güç",
       "soc": "Doluluk seviyesi"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Şebekeden doldurma",
         "discharge": "Şebekeye boşaltma",
-        "hold": "Pil kullanımını önle",
         "holdcharge": "Doldurmayı engelle",
+        "holddischarge": "Pil kullanımını önle",
         "normal": "Normal çalışma"
       },
       "empty": "boş",

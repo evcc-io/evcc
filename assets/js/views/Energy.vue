@@ -71,7 +71,7 @@
 								<div :style="{ height: `${OVERVIEW_HEIGHT}px` }"></div>
 								<LegendList class="mt-4" :legends="stackLegends" />
 							</div>
-							<FlowChart :flows="flows" :loadpoint-labels="loadpointLabels" />
+							<FlowChart :flows="flowChartFlows" />
 						</div>
 						<template v-else>
 							<GroupChart
@@ -243,7 +243,10 @@
 					@sources="showSources"
 					@sources-change="refreshSources"
 				>
-					<template #icon><VehicleIcon :name="lps.icon" /></template>
+					<template #icon>
+						<LoadpointIcon v-if="lps.key === 'charging'" />
+						<VehicleIcon v-else name="heater" />
+					</template>
 				</EntityGroup>
 				<Card
 					v-if="consumers.length"
@@ -396,6 +399,7 @@ import type { Legend } from "../components/Sessions/types";
 import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
 import IconSelectItem from "../components/Helper/IconSelectItem.vue";
 import BarChartIcon from "../components/MaterialIcon/BarChart.vue";
+import LoadpointIcon from "../components/MaterialIcon/Loadpoint.vue";
 import SankeyIcon from "../components/MaterialIcon/Sankey.vue";
 import PlugIcon from "../components/MaterialIcon/Plug.vue";
 import { groupColor } from "../components/Energy/groups";
@@ -413,6 +417,7 @@ import {
 	entityFlows,
 	sinkPrice,
 	sourceBreakdown,
+	splitLoadpointFlows,
 	sumEnergy,
 	sumSeries,
 	type SourceRow,
@@ -432,6 +437,7 @@ import {
 	OVERVIEW_VIEW,
 	type ConsumerEnergy,
 	type Flow,
+	type ChartFlow,
 	type FlowResult,
 	type FlowSource,
 	type StatItem,
@@ -470,6 +476,7 @@ function shiftPeriod(period: PERIODS, from: Date, offset: number): Date {
 export default defineComponent({
 	name: "Energy",
 	components: {
+		LoadpointIcon,
 		TopHeader: Header,
 		Card,
 		DownloadButton,
@@ -884,14 +891,9 @@ export default defineComponent({
 		loadpoints(): HistorySeries[] {
 			return this.withData("loadpoint");
 		},
-		loadpointLabels(): string[] {
-			const charging = this.loadpoints.some((lp) => !lp.isTemp);
-			const heating = this.loadpoints.some((lp) => lp.isTemp);
-			const both = charging === heating;
-			return [
-				...(charging || both ? [this.$t("energy.flow.charging")] : []),
-				...(heating || both ? [this.$t("energy.flow.heating")] : []),
-			];
+		flowChartFlows(): ChartFlow[] {
+			const heatingTitles = this.loadpoints.filter((lp) => lp.isTemp).map((lp) => lp.title);
+			return splitLoadpointFlows(this.flows, this.flow?.entities, heatingTitles);
 		},
 		loadpointColors(): Record<string, string> {
 			return this.entityColors(this.loadpoints);
@@ -899,20 +901,17 @@ export default defineComponent({
 		// chargers and heaters in a card each
 		loadpointGroups(): {
 			key: string;
-			icon: string;
 			title: string;
 			entities: HistorySeries[];
 		}[] {
 			return [
 				{
 					key: "charging",
-					icon: "car",
 					title: this.$t("energy.flow.charging"),
 					entities: this.loadpoints.filter((lp) => !lp.isTemp),
 				},
 				{
 					key: "heating",
-					icon: "heater",
 					title: this.$t("energy.flow.heating"),
 					entities: this.loadpoints.filter((lp) => lp.isTemp),
 				},

@@ -55,6 +55,7 @@ const (
 	elwaRegOperationMode      = 1065 // https://github.com/evcc-io/evcc/discussions/23708
 	elwaRegMaxControlledPower = 1014 // max. power for linear controlled output
 	elwaRegMaxCombinedPower   = 1071 // (max. power for linear controlled output + configured relais power) * 1.10
+	elwaRegControlFirmware    = 1016 // control firmware version, 230 for a0023006
 )
 
 var elwaTemp = []uint16{1001, 1030, 1031}
@@ -121,6 +122,17 @@ func NewMyPv(ctx context.Context, name string, settings modbus.TcpSettings, temp
 		name:     name,
 		statusC:  statusC,
 		scale:    scale,
+	}
+
+	// AC Thor scales by itself since firmware a0023006
+	if name == "ac-thor" {
+		firmware, err := wb.readUint16(elwaRegControlFirmware)
+		if err != nil {
+			return nil, err
+		}
+		if firmware >= 230 {
+			wb.scale = 1
+		}
 	}
 
 	go wb.heartbeat(ctx, 30*time.Second)

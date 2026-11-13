@@ -38,8 +38,8 @@
       "energy": "Energia",
       "gridCharge": "carga da rede",
       "gridDischarge": "descarga da rede",
-      "hold": "descarga bloqueada",
       "holdCharge": "carga bloqueada",
+      "holdDischarge": "descarga bloqueada",
       "ofTotal": "de {total}",
       "power": "Potência",
       "soc": "Carregar"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Carregar a partir da rede elétrica",
         "discharge": "Descarga para a rede",
-        "hold": "Evitar a descarga",
         "holdcharge": "Impedir o carregamento",
+        "holddischarge": "Evitar a descarga",
         "normal": "Funcionamento normal"
       },
       "empty": "vazio",

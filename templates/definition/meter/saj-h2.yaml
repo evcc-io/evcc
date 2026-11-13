@@ -13,6 +13,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
     baudrate: 115200
     comset: 8N1
   - preset: battery-params
@@ -139,7 +140,7 @@ render: |
               address: 13905 # BatSocLimitkeep 
               type: writesingle
               decode: int16
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

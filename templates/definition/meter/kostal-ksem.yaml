@@ -4,6 +4,8 @@ products:
     description:
       generic: Smart Energy Meter
 discovery:
+  mdns: ["_ship._tcp:KOSTAL*"]
+  hostname: ["ksem-*"]
   mac: ["1897F1", "240BB1"]
 params:
   - name: usage

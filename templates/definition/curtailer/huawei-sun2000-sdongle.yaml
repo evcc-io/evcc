@@ -16,6 +16,7 @@ requirements:
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
     timeout: 5s
 render: |
   type: custom

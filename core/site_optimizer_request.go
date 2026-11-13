@@ -157,6 +157,14 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		},
 	}
 
+	if rp := site.GetOptimizerRiskProfile(); rp != nil {
+		req.Uncertainty = optimizer.Uncertainty{
+			FtDev:  float32(rp.Solar),
+			GtDev:  float32(rp.Demand),
+			Budget: float32(rp.Budget),
+		}
+	}
+
 	// individual profiles summarized into Gt, for the debug view
 	details = requestDetails{
 		Timestamps: asTimestamps(dt, now),
@@ -199,9 +207,10 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 			continue
 		}
 
-		// no vehicle capacity and no session energy limit to model against:
-		// account for the consumption as uncontrollable load
-		if v := lp.GetVehicle(); v == nil || (v.Capacity() == 0 && lp.GetLimitEnergy() == 0) {
+		// no vehicle capacity and no session energy limit to model against, or a heater
+		// whose soc is a temperature: account for the consumption as uncontrollable load
+		if v := lp.GetVehicle(); v == nil || (v.Capacity() == 0 && lp.GetLimitEnergy() == 0) ||
+			site.loadpoints[id].chargerHasFeature(api.Heating) {
 			site.addUnmodelledLoad(req.TimeSeries.Gt, &details, lp, minLen, firstSlotDuration)
 			continue
 		}
@@ -475,7 +484,7 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 			bat.PDemand = nil
 
 			switch mode {
-			case api.BatteryHold:
+			case api.BatteryHoldDischarge:
 				bat.DMax = 0
 			case api.BatteryHoldCharge, api.BatteryDischarge:
 				bat.CMax = 0

@@ -8,6 +8,7 @@ group: heating
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 1
 render: |
   type: heatpump
   setmaxpower:
