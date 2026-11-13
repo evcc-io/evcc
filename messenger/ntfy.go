@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"net/http"
 	"net/url"
 	"strings"
 
@@ -19,6 +18,7 @@ func init() {
 
 // Ntfy implements the ntfy messaging aggregator
 type Ntfy struct {
+	*request.Helper
 	log      *util.Logger
 	uri      string
 	priority string
@@ -47,7 +47,9 @@ func NewNtfyFromConfig(other map[string]any) (api.Messenger, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("ntfy")
+	// credentials given in the uri itself
+	pass, _ := u.User.Password()
+	log := util.NewLogger("ntfy").Redact(pass, u.Query().Get("auth"))
 
 	if cc.AuthToken != "" {
 		bearer := "Bearer " + cc.AuthToken
@@ -71,6 +73,7 @@ func NewNtfyFromConfig(other map[string]any) (api.Messenger, error) {
 	}
 
 	m := &Ntfy{
+		Helper:   request.NewHelper(log),
 		log:      log,
 		uri:      cc.URI,
 		priority: cc.Priority,
@@ -88,10 +91,11 @@ func (m *Ntfy) Send(title, msg string) {
 		"Tags":     m.tags,
 	})
 	if err != nil {
-		m.log.ERROR.Printf("ntfy: %v", err)
+		m.log.ERROR.Println(err)
+		return
 	}
 
-	if _, err := http.DefaultClient.Do(req); err != nil {
-		m.log.ERROR.Printf("ntfy: %v", err)
+	if _, err := m.DoBody(req); err != nil {
+		m.log.ERROR.Println(err)
 	}
 }
