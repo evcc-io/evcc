@@ -201,7 +201,7 @@ func (lp *Loadpoint) resetDailyEnergy() {
 		ct.ResetCharge()
 	}
 
-	// keep energy plan progress across midnight
+	// keep energy plan progress across midnight, the last interval before the reset is not carried over
 	lp.Lock()
 	lp.planEnergyOffset -= lp.todayEnergy / 1e3
 	lp.todayEnergy = 0
