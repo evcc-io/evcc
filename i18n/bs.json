@@ -1317,7 +1317,6 @@
       "solar": "Pogledajte očekivanu solarnu proizvodnju za danas i naredne dane. U budućnosti će se koristiti i za automatsku optimizaciju punjenja.",
       "temperature": "Pogledajte očekivanu vanjsku temperaturu za vašu lokaciju. Koristi se za predviđanje potrebe za grijanjem."
     },
-    "hideLine": "sakrij liniju",
     "modalTitle": "Prognoza",
     "price": {
       "average": "Prosjek",
@@ -1325,8 +1324,6 @@
       "lowestHour": "Najjeftiniji sat",
       "range": "Raspon"
     },
-    "priceZoom": "uvećaj",
-    "showLine": "prikaži liniju",
     "solar": {
       "dayAfterTomorrow": "Prekosutra",
       "partly": "djelimično",

@@ -1403,7 +1403,6 @@
       "solar": "Kuckt déi erwaart Solarproduktioun fir haut an déi nächst Deeg. Et gëtt och an der Zukunft fir d'automatiséiert Luedoptimiséierung benotzt.",
       "temperature": "Kuckt déierwaart Baussentemperatur fir Äre Standuert. Gëtt benotzt fir den Heizungsbedarf virauszesoen."
     },
-    "hideLine": "Linn ausblennen",
     "modalTitle": "Prognose",
     "price": {
       "average": "Duerchschnitt",
@@ -1411,8 +1410,6 @@
       "lowestHour": "Bëllegst Stonn",
       "range": "Beräich"
     },
-    "priceZoom": "erazoomen",
-    "showLine": "Linn uweisen",
     "solar": {
       "dayAfterTomorrow": "Iwwermuer",
       "partly": "deelweis",

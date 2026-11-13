@@ -1439,7 +1439,6 @@
       "solar": "Katso aurinkotuotannon ennuste täksi ja tuleviksi päiviksi. Käytetään tulevaisuudessa myös latauksien optimoitiin.",
       "temperature": "Näe ulkolämpötilaennuste sijainnissasi. Sitä käytetään ennakkoimaan lämmitystarvetta."
     },
-    "hideLine": "piilota kuvaaja",
     "modalTitle": "Ennuste",
     "price": {
       "average": "Keskimääräinen",
@@ -1447,8 +1446,6 @@
       "lowestHour": "Edullisin tunti",
       "range": "Vaihteluväli"
     },
-    "priceZoom": "lähennä",
-    "showLine": "näytä kuvaaja",
     "solar": {
       "dayAfterTomorrow": "Ylihuomenna",
       "partly": "osittain",

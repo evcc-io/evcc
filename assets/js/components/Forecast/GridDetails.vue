@@ -1,32 +1,27 @@
 <template>
 	<div v-if="hasBothTariffs" class="row gx-2 mt-1">
-		<div class="col-6">
-			<small>
-				<span class="text-gray">{{ $t("main.energyflow.gridImport") }}</span>
-				<br />
-				<div class="d-flex flex-column flex-md-row column-gap-3 text-price fw-bold">
-					<span class="text-nowrap">{{ gridSummary!.avg }}</span>
-					<span v-if="gridSummary!.range" class="text-nowrap">{{
-						gridSummary!.range
-					}}</span>
-				</div>
-			</small>
-		</div>
-		<div class="col-6 text-end">
-			<small>
-				<span class="text-gray">{{ $t("main.energyflow.pvExport") }}</span>
-				<div
-					class="d-flex flex-column flex-md-row column-gap-3 justify-content-end text-export fw-bold"
+		<div v-for="line in lines" :key="line.key" class="col-6" :class="line.align">
+			<button
+				type="button"
+				class="price-line border-0 bg-transparent p-0 small text-reset"
+				:class="[line.align, { 'price-line--dim': !line.shown }]"
+				:aria-pressed="line.focused"
+				@click="$emit('focus-line', line.key)"
+			>
+				<span class="d-block text-gray">
+					<DeviceColorDot line :color="line.color" class="me-2 align-middle" />
+					<span class="price-label">{{ line.label }}</span>
+				</span>
+				<span
+					class="d-flex flex-column flex-md-row column-gap-3 text-gray fw-bold"
+					:class="line.justify"
 				>
-					<span class="text-nowrap">{{ feedinSummary!.avg }}</span>
-					<span v-if="feedinSummary!.range" class="text-nowrap">{{
-						feedinSummary!.range
+					<span class="text-nowrap">{{ line.summary.avg }}</span>
+					<span v-if="line.summary.range" class="text-nowrap">{{
+						line.summary.range
 					}}</span>
-				</div>
-				<a href="#" class="text-gray" @click.prevent="toggleFeedin">{{
-					showFeedin ? $t("forecast.hideLine") : $t("forecast.showLine")
-				}}</a>
-			</small>
+				</span>
+			</button>
 		</div>
 	</div>
 	<div v-else-if="gridSummary" class="row gx-2 mt-1">
@@ -52,19 +47,23 @@ import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import type { CURRENCY, UiForecastSlot } from "@/types/evcc";
 import { isStaticTariff } from "@/utils/forecast";
+import colors from "@/colors";
+import DeviceColorDot from "../Helper/DeviceColorDot.vue";
 import { filterForecastSlots } from "./echarts";
 
 export default defineComponent({
 	name: "GridDetails",
+	components: { DeviceColorDot },
 	mixins: [formatter],
 	props: {
 		grid: { type: Array as PropType<UiForecastSlot[]> },
 		feedin: { type: Array as PropType<UiForecastSlot[]> },
 		currency: { type: String as PropType<CURRENCY> },
+		showGrid: { type: Boolean, default: true },
 		showFeedin: { type: Boolean, default: true },
 		endDate: { type: Date, required: true },
 	},
-	emits: ["toggle-feedin"],
+	emits: ["focus-line"],
 	computed: {
 		gridSummary(): { avg: string; range: string } | null {
 			return this.summarize(this.grid);
@@ -75,11 +74,32 @@ export default defineComponent({
 		hasBothTariffs(): boolean {
 			return !!this.gridSummary && !!this.feedinSummary;
 		},
+		lines() {
+			return [
+				{
+					key: "grid",
+					label: this.$t("main.energyflow.gridImport"),
+					color: colors.price || "",
+					summary: this.gridSummary!,
+					shown: this.showGrid,
+					focused: !this.showFeedin,
+					align: "text-start",
+					justify: "",
+				},
+				{
+					key: "feedin",
+					label: this.$t("main.energyflow.pvExport"),
+					color: colors.export || "",
+					summary: this.feedinSummary!,
+					shown: this.showFeedin,
+					focused: !this.showGrid,
+					align: "text-end",
+					justify: "justify-content-end",
+				},
+			];
+		},
 	},
 	methods: {
-		toggleFeedin() {
-			this.$emit("toggle-feedin");
-		},
 		summarize(slots?: UiForecastSlot[]): { avg: string; range: string } | null {
 			const upcoming = this.upcomingSlots(slots);
 			if (upcoming.length === 0) return null;
@@ -100,3 +120,15 @@ export default defineComponent({
 	},
 });
 </script>
+
+<style scoped>
+.price-line {
+	transition: opacity 150ms;
+}
+.price-line--dim {
+	opacity: 0.35;
+}
+.price-line:hover .price-label {
+	text-decoration: underline;
+}
+</style>

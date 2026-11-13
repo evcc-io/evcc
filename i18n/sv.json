@@ -1419,7 +1419,6 @@
       "solar": "Förväntat solproduktion idag och imorgon. Kommer i framtiden även att användas för automatisk laddningsoptimering.",
       "temperature": "Se förväntad utomhustemperatur för din plats. Används till att förutse värmebehovet."
     },
-    "hideLine": "göm graf",
     "modalTitle": "Prognos",
     "price": {
       "average": "Genomsnitt",
@@ -1427,8 +1426,6 @@
       "lowestHour": "Billigaste timmen",
       "range": "Intervall"
     },
-    "priceZoom": "zooma in",
-    "showLine": "visa linje",
     "solar": {
       "dayAfterTomorrow": "I övermorgon",
       "partly": "delvis",

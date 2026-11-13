@@ -1398,7 +1398,6 @@
       "solar": "今日と数日間の太陽光発電予測を表示します。将来的には自動充電最適化にも使用されます。",
       "temperature": "お住まいの地域の外気温予測を確認できます。暖房需要の予測に使用されます。"
     },
-    "hideLine": "ラインを非表示",
     "modalTitle": "予測",
     "price": {
       "average": "平均",
@@ -1406,8 +1405,6 @@
       "lowestHour": "最安の時間",
       "range": "変動範囲"
     },
-    "priceZoom": "拡大",
-    "showLine": "ラインを表示",
     "solar": {
       "dayAfterTomorrow": "明後日",
       "partly": "一部のみ",

@@ -68,27 +68,11 @@
 					class="box-pull-out mb-4"
 					:style="isGridStatic ? { order: 1 } : undefined"
 				>
-					<template #actions>
-						<div class="form-check form-switch mb-0 text-nowrap">
-							<input
-								id="priceZoom"
-								:checked="priceZoom"
-								class="form-check-input"
-								type="checkbox"
-								role="switch"
-								@change="togglePriceZoom"
-							/>
-							<label class="form-check-label text-muted" for="priceZoom">
-								{{ $t("forecast.priceZoom") }}
-							</label>
-						</div>
-					</template>
 					<div class="chart-edge">
 						<PriceChart
-							:grid="forecast.grid"
+							:grid="showGrid ? forecast.grid : undefined"
 							:feedin="showFeedin ? forecast.feedin : undefined"
 							:currency="currency"
-							:zoom="priceZoom"
 							:chart-width="chartWidth"
 							:end-date="chartEndDate"
 							:scroll-left="scrollLeft"
@@ -99,9 +83,10 @@
 						:grid="forecast.grid"
 						:feedin="forecast.feedin"
 						:currency="currency"
+						:show-grid="showGrid"
 						:show-feedin="showFeedin"
 						:end-date="chartEndDate"
-						@toggle-feedin="toggleFeedin"
+						@focus-line="focusPriceLine"
 					/>
 				</Card>
 
@@ -244,11 +229,19 @@ export default defineComponent({
 		solarAdjusted() {
 			return store.state?.solarAdjusted;
 		},
-		priceZoom() {
-			return settings.priceZoom;
+		priceView(): string {
+			const view = settings.priceView;
+			return this.forecast.grid?.length &&
+				this.forecast.feedin?.length &&
+				(view === "grid" || view === "feedin")
+				? view
+				: "both";
 		},
-		showFeedin() {
-			return !settings.hideFeedin;
+		showGrid(): boolean {
+			return this.priceView !== "feedin";
+		},
+		showFeedin(): boolean {
+			return this.priceView !== "grid";
 		},
 		isGridStatic(): boolean {
 			if (!this.forecast.grid) return false;
@@ -279,6 +272,10 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		// a second click on the focused line shows both again
+		focusPriceLine(line: "grid" | "feedin") {
+			settings.priceView = this.priceView === line ? "both" : line;
+		},
 		async changeAdjusted(e: Event) {
 			try {
 				await api.post(
@@ -287,12 +284,6 @@ export default defineComponent({
 			} catch (err) {
 				console.error(err);
 			}
-		},
-		togglePriceZoom() {
-			settings.priceZoom = !settings.priceZoom;
-		},
-		toggleFeedin() {
-			settings.hideFeedin = !settings.hideFeedin;
 		},
 		onChartScroll(val: number) {
 			if (this.isScrolling) return;

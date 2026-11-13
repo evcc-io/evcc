@@ -26,8 +26,7 @@ const ENERGY_BATTERY_DIRECTION = "energy_battery_direction";
 const ENERGY_OVERVIEW = "energy_overview";
 const ENERGY_CONSUMER_VIEW = "energy_consumer_view";
 const BATTERY_UNIT = "battery_unit";
-const SETTINGS_PRICE_ZOOM = "settings_price_zoom";
-const SETTINGS_HIDE_FEEDIN = "settings_hide_feedin";
+const SETTINGS_PRICE_VIEW = "settings_price_view";
 const LAST_BATTERY_SMART_COST_LIMIT = "last_battery_smart_cost_limit";
 const LAST_BATTERY_GRID_DISCHARGE_LIMIT = "last_battery_grid_discharge_limit";
 const SETTINGS_DATE_FORMAT = "settings_date_format";
@@ -142,8 +141,7 @@ export interface Settings {
   energyOverview: string;
   energyConsumerView: string;
   batteryUnit: string;
-  priceZoom: boolean;
-  hideFeedin: boolean;
+  priceView: string;
   loadpoints: Record<string, LoadpointSettings>;
   lastBatterySmartCostLimit: number | undefined;
   lastBatteryGridDischargeLimit: number | undefined;
@@ -179,8 +177,7 @@ const settings: Settings = reactive({
   energyOverview: read(ENERGY_OVERVIEW),
   energyConsumerView: read(ENERGY_CONSUMER_VIEW),
   batteryUnit: read(BATTERY_UNIT),
-  priceZoom: readBool(SETTINGS_PRICE_ZOOM),
-  hideFeedin: readBool(SETTINGS_HIDE_FEEDIN),
+  priceView: read(SETTINGS_PRICE_VIEW),
   loadpoints: readJSON(LOADPOINTS),
   lastBatterySmartCostLimit: readNumber(LAST_BATTERY_SMART_COST_LIMIT),
   lastBatteryGridDischargeLimit: readNumber(LAST_BATTERY_GRID_DISCHARGE_LIMIT),
@@ -215,8 +212,7 @@ watch(() => settings.energyBatteryDirection, save(ENERGY_BATTERY_DIRECTION));
 watch(() => settings.energyOverview, save(ENERGY_OVERVIEW));
 watch(() => settings.energyConsumerView, save(ENERGY_CONSUMER_VIEW));
 watch(() => settings.batteryUnit, save(BATTERY_UNIT));
-watch(() => settings.priceZoom, saveBool(SETTINGS_PRICE_ZOOM));
-watch(() => settings.hideFeedin, saveBool(SETTINGS_HIDE_FEEDIN));
+watch(() => settings.priceView, save(SETTINGS_PRICE_VIEW));
 watch(() => settings.loadpoints, saveJSON(LOADPOINTS), { deep: true });
 watch(() => settings.lastBatterySmartCostLimit, saveNumber(LAST_BATTERY_SMART_COST_LIMIT));
 watch(() => settings.lastBatteryGridDischargeLimit, saveNumber(LAST_BATTERY_GRID_DISCHARGE_LIMIT));

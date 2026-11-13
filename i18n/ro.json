@@ -1381,7 +1381,6 @@
       "solar": "Vedeți producția solară estimată pentru astăzi și zilele următoare. Va fi folosită în viitor și pentru optimizarea automată a încărcării.",
       "temperature": "Vedeți temperatura exterioară estimată pentru locația dvs. Folosită pentru a estima necesarul de încălzire."
     },
-    "hideLine": "ascunde linia",
     "modalTitle": "Prognoză",
     "price": {
       "average": "Media",
@@ -1389,8 +1388,6 @@
       "lowestHour": "Cea mai ieftină oră",
       "range": "Gama"
     },
-    "priceZoom": "mărire",
-    "showLine": "afișează linia",
     "solar": {
       "dayAfterTomorrow": "Poimâine",
       "partly": "parțial",
