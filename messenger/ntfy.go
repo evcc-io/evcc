@@ -4,8 +4,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"strings"
 
@@ -20,6 +18,7 @@ func init() {
 
 // Ntfy implements the ntfy messaging aggregator
 type Ntfy struct {
+	*request.Helper
 	log      *util.Logger
 	uri      string
 	priority string
@@ -72,6 +71,7 @@ func NewNtfyFromConfig(other map[string]any) (api.Messenger, error) {
 	}
 
 	m := &Ntfy{
+		Helper:   request.NewHelper(log),
 		log:      log,
 		uri:      cc.URI,
 		priority: cc.Priority,
@@ -93,16 +93,7 @@ func (m *Ntfy) Send(title, msg string) {
 		return
 	}
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
+	if _, err := m.DoBody(req); err != nil {
 		m.log.ERROR.Println(err)
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		// the body carries the server's reason, the uri is left out as it holds the token
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
-		m.log.ERROR.Printf("unexpected status: %d (%s) %s", resp.StatusCode, http.StatusText(resp.StatusCode), strings.TrimSpace(string(body)))
 	}
 }
