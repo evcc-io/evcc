@@ -261,6 +261,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"mode", setterFunc(api.ChargeModeString, pass(lp.SetMode))},
 		{"alwaysCharge", setterFunc(api.AlwaysChargeString, lp.SetAlwaysCharge)},
 		{"phasesConfigured", intSetter(lp.SetPhasesConfigured)},
+		{"limitSolarPhases", boolSetter(lp.SetLimitSolarPhases)},
 		{"limitSoc", intSetter(pass(lp.SetLimitSoc))},
 		{"minSoc", intSetter(pass(lp.SetMinSoc))},
 		{"priority", intSetter(pass(lp.SetPriority))},
