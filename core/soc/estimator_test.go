@@ -1,6 +1,7 @@
 package soc
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -165,4 +166,32 @@ func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {
 
 		assert.Equal(t, tc.duration, ce.RemainingChargeDuration(tc.targetsoc, tc.chargePower))
 	}
+}
+
+func TestEstimatorConcurrentAccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(float64(50))
+
+	ce := NewEstimator(util.NewLogger("foo"), vehicle)
+
+	var wg sync.WaitGroup
+	wg.Go(func() {
+		for i := range 100 {
+			soc := float64(20 + i/10)
+			ce.Soc(&soc, float64(i)*100)
+		}
+	})
+	wg.Go(func() {
+		for range 100 {
+			ce.RemainingChargeDuration(80, 11000)
+			ce.RemainingChargeEnergy(80)
+		}
+	})
+	wg.Go(func() {
+		for range 10 {
+			ce.Reset()
+		}
+	})
+	wg.Wait()
 }

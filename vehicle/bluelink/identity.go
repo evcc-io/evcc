@@ -125,7 +125,7 @@ func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 
 	headers := map[string]string{
 		"Content-type": "application/x-www-form-urlencoded",
-		"User-Agent":   "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS",
+		"User-Agent":   cciMobileUserAgent,
 	}
 
 	data := url.Values{
@@ -198,6 +198,13 @@ func (v *Identity) Login(user, password, language, brand string) error {
 	v.TokenSource = oauth.RefreshTokenSource(v.log, token, refresher)
 
 	v.deviceID, err = v.getDeviceID()
+
+	// EU accounts work with an unregistered device id, see Hyundai-Kia-Connect/hyundai_kia_connect_api#1342
+	if err != nil && v.config.CCI != nil {
+		v.log.WARN.Printf("device registration failed, using random device id: %v", err)
+		v.deviceID, err = uuid.New().String(), nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error getting device id: %w", err)
 	}
@@ -219,7 +226,6 @@ func (v *Identity) Request(req *http.Request) error {
 	}
 
 	for k, v := range map[string]string{
-		"Authorization":       "Bearer " + token.AccessToken,
 		"ccsp-device-id":      v.deviceID,
 		"ccsp-application-id": v.config.CCSPApplicationID,
 		"offset":              "1",
@@ -229,7 +235,34 @@ func (v *Identity) Request(req *http.Request) error {
 		req.Header.Set(k, v)
 	}
 
+	if req.Header.Get("Authorization") == "" {
+		req.Header.Set("Authorization", "Bearer "+token.AccessToken)
+	}
+
 	return nil
+}
+
+// controlToken verifies the PIN and returns a control token for CCS2 commands
+func (v *Identity) controlToken(pin string) (string, error) {
+	uri := v.config.URI + "/api/v1/user/pin?token="
+	data := map[string]string{"deviceId": v.deviceID, "pin": pin}
+
+	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
+	if err == nil {
+		err = v.Request(req)
+	}
+
+	var res struct {
+		ControlToken string
+	}
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+	if err == nil && res.ControlToken == "" {
+		err = errors.New("pin verification failed")
+	}
+
+	return "Bearer " + res.ControlToken, err
 }
 
 // stamp creates a stamp locally according to https://github.com/Hyundai-Kia-Connect/hyundai_kia_connect_api/pull/371

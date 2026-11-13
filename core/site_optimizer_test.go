@@ -1,6 +1,8 @@
 package core
 
 import (
+	"errors"
+	"math"
 	"testing"
 	"time"
 
@@ -69,6 +71,43 @@ func TestFeedInRatesWithoutTariff(t *testing.T) {
 	}, feedInRates(nil, grid))
 }
 
+func TestOptimizerRequestForecastUnavailable(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	tariffWith := func(rr api.Rates, err error) api.Tariff {
+		m := api.NewMockTariff(ctrl)
+		m.EXPECT().Rates().Return(rr, err).AnyTimes()
+		m.EXPECT().Type().Return(api.TariffTypePriceForecast).AnyTimes()
+		return m
+	}
+
+	start := time.Now().Truncate(tariff.SlotDuration)
+	day := make(api.Rates, 96)
+	for i := range day {
+		slot := start.Add(time.Duration(i) * tariff.SlotDuration)
+		day[i] = api.Rate{Start: slot, End: slot.Add(tariff.SlotDuration), Value: 0.3}
+	}
+
+	unavailable := errors.New("503 Service Unavailable")
+
+	for _, tc := range []struct {
+		name    string
+		tariffs tariff.Tariffs
+		err     string
+	}{
+		{"grid", tariff.Tariffs{Grid: tariffWith(nil, unavailable)}, "not enough forecast slots"},
+		{"feedin", tariff.Tariffs{Grid: tariffWith(day, nil), FeedIn: tariffWith(nil, unavailable)}, "not enough forecast slots"},
+		{"solar", tariff.Tariffs{Grid: tariffWith(day, nil), Solar: tariffWith(nil, unavailable)}, "solar forecast unavailable"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			site := &Site{tariffs: &tc.tariffs}
+
+			_, _, err := site.optimizerRequest(nil)
+			require.ErrorContains(t, err, tc.err)
+		})
+	}
+}
+
 func TestApplyPrecondition(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -123,6 +162,26 @@ func TestApplyPrecondition(t *testing.T) {
 	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
 	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(time.Duration(0)).Times(1)
 	assert.Nil(t, applyPrecondition(lp, nil, 8))
+}
+
+func TestPlanDemand(t *testing.T) {
+	now := time.Date(2026, 1, 1, 10, 5, 0, 0, time.UTC) // 10 min left in current slot
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+	slot := func(i int) time.Time { return eos.Add(time.Duration(i-1) * tariff.SlotDuration) }
+
+	assert.Nil(t, planDemand(nil, nil, 1000, now, 6))
+
+	// 10 + 15 + 7.5 min: 4 kWh spread evenly, current slot relative to its full length before prorate
+	plan := api.Rates{
+		{Start: now, End: slot(1)},
+		{Start: slot(2), End: slot(3)},
+		{Start: slot(4), End: slot(4).Add(tariff.SlotDuration / 2)},
+	}
+	assert.InDeltaSlice(t, []float32{1846, 0, 1846, 0, 923, 0}, planDemand(plan, nil, 4000, now, 6), 1)
+
+	// existing demand is kept where higher, plan beyond horizon ignored
+	plan = api.Rates{{Start: slot(1), End: slot(5)}}
+	assert.InDeltaSlice(t, []float32{3000, 1000, 1000}, planDemand(plan, []float32{3000, 500, 0}, 4000, now, 3), 1)
 }
 
 // TestApplyPlanGoalEnergy guards that an energy plan only asks for the missing energy on top of
@@ -533,7 +592,7 @@ func TestBatteryRequestGridModes(t *testing.T) {
 	capacity, soc := 10.0, 50.0
 	m := types.Measurement{Capacity: &capacity, Soc: &soc}
 
-	req, _ := site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryHold, api.BatteryCharge), m, nil, 8, 15*time.Minute)
+	req, _ := site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryHoldDischarge, api.BatteryCharge), m, nil, 8, 15*time.Minute)
 	assert.True(t, req.ChargeFromGrid)
 	assert.False(t, req.DischargeToGrid, "grid discharge opt-in must not apply to a battery without discharge mode")
 
@@ -549,7 +608,7 @@ func TestBatteryRequestGridModes(t *testing.T) {
 // TestBatteryRequestExternalMode ensures an external battery mode is relayed as power limits
 func TestBatteryRequestExternalMode(t *testing.T) {
 	batCon := api.NewMockBatteryController(gomock.NewController(t))
-	batCon.EXPECT().BatteryModes().Return([]api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}).AnyTimes()
+	batCon.EXPECT().BatteryModes().Return([]api.BatteryMode{api.BatteryNormal, api.BatteryHoldDischarge, api.BatteryCharge}).AnyTimes()
 	dev := config.NewStaticDevice(config.Named{}, api.Meter(&struct {
 		api.Meter
 		api.BatteryController
@@ -571,7 +630,7 @@ func TestBatteryRequestExternalMode(t *testing.T) {
 	}{
 		{api.BatteryUnknown, batteryPower, batteryPower, true, []float32{batteryPower / 4, 0}},
 		{api.BatteryNormal, batteryPower, batteryPower, false, nil},
-		{api.BatteryHold, batteryPower, 0, false, nil},
+		{api.BatteryHoldDischarge, batteryPower, 0, false, nil},
 		{api.BatteryCharge, batteryPower, 0, true, []float32{batteryPower / 4, batteryPower / 4}},
 		{api.BatteryDischarge, batteryPower, batteryPower, false, nil}, // unsupported, falls back to normal
 	} {
@@ -714,6 +773,7 @@ func TestLoadpointRequestChargingState(t *testing.T) {
 			lp.EXPECT().EffectiveMaxPower().Return(11000.0).AnyTimes()
 			lp.EXPECT().GetMode().Return(api.ModeNow).AnyTimes()
 			lp.EXPECT().GetStatus().Return(status).AnyTimes()
+			lp.EXPECT().EffectivePlanTime().Return(time.Time{}).AnyTimes()
 			lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOff).AnyTimes()
 			lp.EXPECT().GetChargePower().Return(11000.0).AnyTimes()
 			lp.EXPECT().GetRemainingEnergy().Return(0.0).AnyTimes()
@@ -738,6 +798,27 @@ func TestOptimizerChargingStrategy(t *testing.T) {
 	// valid change is applied (re-trigger is gated on sponsor/enabled, not unit-tested here)
 	require.NoError(t, site.SetOptimizerChargingStrategy(string(optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks)))
 	assert.Equal(t, "attenuate_grid_peaks", site.GetOptimizerChargingStrategy())
+}
+
+func TestEndOfHorizonValue(t *testing.T) {
+	const eta = 0.9
+
+	for _, tc := range []struct {
+		name      string
+		pN, pE    float32
+		canExport bool
+		want      float32
+	}{
+		{"battery, export below import", 0.3, 0.08, true, 0.3 * eta * 0.99},
+		{"battery, export above import", 0.3, 0.33, true, 0.33 / eta * 1.01},
+		{"vehicle, export below import", 0.3, 0.08, false, 0.3 * eta * 0.99},
+		{"vehicle, export above import", 0.3, 0.33, false, 0.3 * eta * 0.99},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := endOfHorizonValue([]float32{tc.pN, 2 * tc.pN}, []float32{tc.pE, 2 * tc.pE}, eta, tc.canExport)
+			assert.InDelta(t, tc.want, got, 1e-6)
+		})
+	}
 }
 
 func TestGridExportLimit(t *testing.T) {
@@ -796,7 +877,7 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	}{
 		{"battery grid charge", batteryTypeBattery, 3000, 0, 1000, 0, "charge"},
 		{"battery pv charge (no import)", batteryTypeBattery, 3000, 0, 0, 1000, "normal"},
-		{"battery hold (idle while importing)", batteryTypeBattery, 0, 0, 1000, 0, "hold"},
+		{"battery holddischarge (idle while importing)", batteryTypeBattery, 0, 0, 1000, 0, "holddischarge"},
 		{"battery holdcharge (idle while exporting)", batteryTypeBattery, 0, 0, 0, 1000, "holdcharge"},
 		{"battery discharge (self-consumption while importing)", batteryTypeBattery, 0, 2000, 1000, 0, "normal"},
 		{"battery grid discharge (discharge while exporting)", batteryTypeBattery, 0, 2000, 0, 1000, "discharge"},
@@ -810,7 +891,7 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 				ChargingPower:    []float32{tc.charge},
 				DischargingPower: []float32{tc.disch},
 			}
-			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, optimizer.BatteryConfig{}, res, optimizer.TimeSeries{}, 0, tc.gridImp, tc.gridExp, 1, 0)
+			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, optimizer.BatteryConfig{}, res, optimizer.TimeSeries{}, 1, 0, tc.gridImp, tc.gridExp, 1, 0)
 			assert.Equal(t, tc.want, s.Action)
 			assert.InDelta(t, tc.charge, s.Charge, 1e-3)
 			assert.InDelta(t, tc.disch, s.Discharge, 1e-3)
@@ -819,16 +900,16 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	}
 
 	// no result yields an empty suggestion
-	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, optimizer.BatteryResult{}, optimizer.TimeSeries{}, 0, 1000, 0, 1, 0))
+	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, optimizer.BatteryResult{}, optimizer.TimeSeries{}, 1, 0, 1000, 0, 1, 0))
 
 	res := optimizer.BatteryResult{
 		ChargingPower:    []float32{100, 0},
 		DischargingPower: []float32{0, 0},
 	}
-	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, res, optimizer.TimeSeries{}, 1, 1000, 0, 1, 0)
-	assert.Equal(t, api.BatteryHold.String(), s.Action)
+	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, res, optimizer.TimeSeries{}, 1, 1, 1000, 0, 1, 0)
+	assert.Equal(t, api.BatteryHoldDischarge.String(), s.Action)
 
-	// an idle battery at its soc bound withholds nothing: normal instead of hold/holdcharge
+	// an idle battery at its soc bound withholds nothing: normal instead of holddischarge/holdcharge
 	battery := batteryDetail{Type: batteryTypeBattery}
 	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000}
 	res = optimizer.BatteryResult{
@@ -836,21 +917,21 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 		DischargingPower: []float32{0},
 		StateOfCharge:    []float32{1000},
 	}
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 1000, 0, 1, 0).Action, "empty battery idle while importing")
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 1000, 0, 1, 0).Action, "empty battery idle while importing")
 	res.StateOfCharge[0] = 9000
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 0, 1000, 1, 0).Action, "full battery idle while exporting")
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 0, 1000, 1, 0).Action, "full battery idle while exporting")
 	res.StateOfCharge[0] = 5000
-	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 1000, 0, 1, 0).Action, "idle within bounds is withheld")
-	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 0, 1000, 1, 0).Action, "idle within bounds is withheld")
+	assert.Equal(t, api.BatteryHoldDischarge.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 1000, 0, 1, 0).Action, "idle within bounds is withheld")
+	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 0, 1000, 1, 0).Action, "idle within bounds is withheld")
 
 	// solver noise on the grid is no import/export (#34657)
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 4e-05, 0, 570.0/3600, 0).Action, "idle with import noise")
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 0, 4e-05, 570.0/3600, 0).Action, "idle with export noise")
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 4e-05, 0, 570.0/3600, 0).Action, "idle with import noise")
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 0, 4e-05, 570.0/3600, 0).Action, "idle with export noise")
 
 	// an unsupported mode is suggested as the mode control applies instead (#35379)
-	battery.modes = []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 0, 1000, 1, 0).Action, "holdcharge unsupported")
-	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 0, 1000, 0, 1, 0).Action, "hold supported")
+	battery.modes = []api.BatteryMode{api.BatteryNormal, api.BatteryHoldDischarge, api.BatteryCharge}
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 0, 1000, 1, 0).Action, "holdcharge unsupported")
+	assert.Equal(t, api.BatteryHoldDischarge.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 1000, 0, 1, 0).Action, "holddischarge supported")
 }
 
 // TestApplyOptimizerResultPVShare covers home batteries charging from the PV surplus
@@ -894,10 +975,10 @@ func TestApplyOptimizerResultPVShare(t *testing.T) {
 			})
 
 			site := &Site{valueChan: make(chan util.Param, 100)}
-			site.applyOptimizerResult(req, details, res, schedule, now.Add(time.Second), now)
+			site.applyOptimizerResult(optimizerSolve{req: req, details: details, res: res, schedule: schedule, completed: now}, now.Add(time.Second))
 
 			for i := range tc.charge {
-				assert.Equal(t, tc.want, site.suggestions[batteryKey(string(rune('a'+i)))].Action)
+				assert.Equal(t, tc.want, site.optimizer.suggestions[batteryKey(string(rune('a'+i)))].Action)
 			}
 		})
 	}
@@ -907,36 +988,64 @@ func TestApplyOptimizerResultPVShare(t *testing.T) {
 // discharge when the kept energy is discharged later at a higher price
 func TestCurrentSlotSuggestionHoldWorthwhile(t *testing.T) {
 	battery := batteryDetail{Type: batteryTypeBattery}
-	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000}
+	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000, DMax: 4000}
 	ts := optimizer.TimeSeries{Dt: []int{900, 900, 900}, PN: []float32{0.26, 0.26, 0.29}}
 
-	// pv charging now, discharge at a higher price later
+	// pv charging now, discharge at a higher price later that runs the battery short
 	res := optimizer.BatteryResult{
 		ChargingPower:    []float32{500, 500, 0},
 		DischargingPower: []float32{0, 0, 500},
-		StateOfCharge:    []float32{5000, 5500, 5000},
+		StateOfCharge:    []float32{5000, 5500, 1300},
 	}
-	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25, 0).Action, "pv charge before expensive discharge")
+	assert.Equal(t, api.BatteryHoldDischarge.String(), currentSlotSuggestion(battery, req, res, ts, 1, 0, 0, 0, 0.25, 0).Action, "pv charge before expensive discharge")
 
 	res.ChargingPower[0], res.ChargingPower[1] = 0, 0
-	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25, 0).Action, "idle balanced before expensive discharge")
+	assert.Equal(t, api.BatteryHoldDischarge.String(), currentSlotSuggestion(battery, req, res, ts, 1, 0, 0, 0, 0.25, 0).Action, "idle balanced before expensive discharge")
+
+	// the expensive discharge leaves energy to spare: kept energy only raises the leftover
+	res.StateOfCharge[2] = 1500
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, ts, 1, 0, 0, 0, 0.25, 0).Action, "slack beyond one run of full discharge")
+	res.StateOfCharge[2] = 1300
 
 	// the kept energy would be discharged at the same price
 	ts.PN[2] = 0.26
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25, 0).Action, "discharge at same price")
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, ts, 1, 0, 0, 0, 0.25, 0).Action, "discharge at same price")
 
 	// battery fills up before its next discharge: kept energy only displaces pv
 	ts.PN[2] = 0.29
 	res.StateOfCharge[1] = 9000
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25, 0).Action, "full before discharge")
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, ts, 1, 0, 0, 0, 0.25, 0).Action, "full before discharge")
 
 	// no later discharge at all
 	res.StateOfCharge[1] = 5500
 	res.DischargingPower[2] = 0
-	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, ts, 0, 0, 0, 0.25, 0).Action, "no later discharge")
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, ts, 1, 0, 0, 0, 0.25, 0).Action, "no later discharge")
 
 	// idle while importing is withheld regardless of what comes later
-	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, ts, 0, 1000, 0, 0.25, 0).Action, "idle while importing")
+	assert.Equal(t, api.BatteryHoldDischarge.String(), currentSlotSuggestion(battery, req, res, ts, 1, 0, 1000, 0, 0.25, 0).Action, "idle while importing")
+}
+
+// TestHoldWorthwhilePriceAtShortfall compares the price where the plan runs the battery short,
+// not at its first discharge
+func TestHoldWorthwhilePriceAtShortfall(t *testing.T) {
+	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000, DMax: 4000}
+	res := optimizer.BatteryResult{
+		DischargingPower: []float32{0, 500, 500, 500},
+		StateOfCharge:    []float32{6000, 5500, 5000, 1300},
+	}
+	dt := []int{900, 900, 900, 900}
+
+	// spare energy in the expensive evening, short in the cheap night
+	assert.False(t, holdWorthwhile(req, res, optimizer.TimeSeries{Dt: dt, PN: []float32{0.26, 0.29, 0.29, 0.20}}, 1, 0), "short at lower price")
+
+	// first discharge at the current price, short later at a higher one
+	ts := optimizer.TimeSeries{Dt: dt, PN: []float32{0.26, 0.26, 0.26, 0.35}}
+	assert.True(t, holdWorthwhile(req, res, ts, 1, 0), "short at higher price")
+
+	// discharge losses widen the reserve: 1000 + 4000 W * 5 min / 0.75 = 1444 Wh
+	res.StateOfCharge[3] = 1400
+	assert.False(t, holdWorthwhile(req, res, ts, 1, 0), "1400 Wh above the lossless reserve")
+	assert.True(t, holdWorthwhile(req, res, ts, 0.75, 0), "1400 Wh within the lossy reserve")
 }
 
 // TestSuggestionActionable ensures the actionable flag follows the current state
@@ -1050,11 +1159,13 @@ func reapplyFixture(site *Site, batteries []optimizer.BatteryConfig, res []optim
 	dt := []int{7 * 60, 900, 900}
 	schedule := optimizerSchedule{timestamps: asTimestamps(dt, completed), dt: dt}
 
-	site.applyOptimizerResult(
-		optimizer.OptimizationInput{TimeSeries: optimizer.TimeSeries{Dt: dt}, Batteries: batteries},
-		requestDetails{Timestamps: schedule.timestamps, BatteryDetails: details},
-		optimizer.OptimizationResult{GridImport: []float32{0, 500, 0}, Batteries: res}, // slot 1 imports
-		schedule, completed, completed)
+	site.applyOptimizerResult(optimizerSolve{
+		req:       optimizer.OptimizationInput{TimeSeries: optimizer.TimeSeries{Dt: dt}, Batteries: batteries},
+		details:   requestDetails{Timestamps: schedule.timestamps, BatteryDetails: details},
+		res:       optimizer.OptimizationResult{GridImport: []float32{0, 500, 0}, Batteries: res}, // slot 1 imports
+		schedule:  schedule,
+		completed: completed,
+	}, completed)
 
 	return completed
 }
@@ -1073,7 +1184,7 @@ func TestReapplySuggestionAcrossSlotBoundary(t *testing.T) {
 	reapplyFixture(site,
 		[]optimizer.BatteryConfig{{}, {}},
 		[]optimizer.BatteryResult{
-			reapplyIdleBattery, // hold/normal follows grid import
+			reapplyIdleBattery, // holddischarge/normal follows grid import
 			{ChargingPower: []float32{0, 11000, 0}, DischargingPower: []float32{0, 0, 0}}, // loadpoint: stop, then charge
 		},
 		[]batteryDetail{reapplyHomeBattery, {Type: batteryTypeLoadpoint, loadpoint: new(int), controllable: true}},
@@ -1085,7 +1196,7 @@ func TestReapplySuggestionAcrossSlotBoundary(t *testing.T) {
 
 	site.reapplySuggestions(reapplyMidGap)
 
-	assert.Equal(t, api.BatteryHold.String(), site.suggestion(batteryKey("home"), api.BatteryNormal.String()).Action)
+	assert.Equal(t, api.BatteryHoldDischarge.String(), site.suggestion(batteryKey("home"), api.BatteryNormal.String()).Action)
 	assert.Equal(t, actionCharge, site.suggestion(loadpointKey(0), actionStop).Action)
 }
 
@@ -1126,7 +1237,7 @@ func TestReapplySuggestionsExcludeDisconnectedLoadpoint(t *testing.T) {
 	site.reapplySuggestions(reapplyMidGap)
 
 	assert.Equal(t, actionStop, site.suggestion(loadpointKey(0), actionCharge).Action)
-	assert.Nil(t, site.lastOptimizerSolve)
+	assert.Nil(t, site.optimizer.lastSolve)
 }
 
 func TestReapplySuggestionsExpireAfterOutage(t *testing.T) {
@@ -1138,7 +1249,7 @@ func TestReapplySuggestionsExpireAfterOutage(t *testing.T) {
 	site.reapplySuggestions(completed.Add(2*tariff.SlotDuration + time.Minute))
 
 	assert.Nil(t, site.suggestion(batteryKey("home"), api.BatteryNormal.String()))
-	assert.Nil(t, site.lastOptimizerSolve)
+	assert.Nil(t, site.optimizer.lastSolve)
 }
 
 func TestCircuitMaxImport(t *testing.T) {
@@ -1157,5 +1268,49 @@ func TestCircuitMaxImport(t *testing.T) {
 		c.EXPECT().GetMaxCurrent().Return(tc.current)
 
 		assert.Equal(t, tc.expected, circuitMaxImport(c), "power %.0f current %.0f", tc.power, tc.current)
+	}
+}
+
+// TestOptimizerRerunAfterBusy verifies that a forced trigger arriving during a run is not dropped
+func TestOptimizerRerunAfterBusy(t *testing.T) {
+	enableAutomatic(t)
+	site := &Site{log: util.NewLogger("foo")}
+
+	// run in progress: forced trigger is remembered, regular one is not
+	site.optimizer.mu.Lock()
+	site.optimizerUpdateAsync(false)
+	assert.False(t, site.optimizer.rerun.Load())
+	site.optimizerUpdateAsync(true)
+	assert.True(t, site.optimizer.rerun.Load())
+
+	// unlock re-runs on its own, despite the closed interval gate
+	last := time.Now().Add(-time.Second)
+	site.optimizer.updated = last
+	site.optimizerUnlock()
+	assert.Eventually(t, func() bool { return !site.optimizer.rerun.Load() }, time.Second, time.Millisecond)
+
+	// the re-run holds the lock from before consuming the trigger until done
+	site.optimizer.mu.Lock()
+	defer site.optimizer.mu.Unlock()
+	assert.True(t, site.optimizer.updated.After(last), "pending trigger must bypass interval gate")
+}
+
+func TestValidateDemand(t *testing.T) {
+	ts := []time.Time{time.Unix(0, 0)}
+	dt := []int{900}
+
+	for _, tc := range []struct {
+		energy float32 // Wh in a 15 minute slot
+		ok     bool
+	}{
+		{250, true},
+		{maxDemandPower / 4, true},
+		{maxDemandPower/4 + 1, false},
+		{5.1e15, false},
+		{float32(math.NaN()), false},
+		{float32(math.Inf(-1)), false},
+	} {
+		err := validateDemand(dt, []float32{tc.energy}, ts)
+		assert.Equal(t, tc.ok, err == nil, "%g Wh", tc.energy)
 	}
 }

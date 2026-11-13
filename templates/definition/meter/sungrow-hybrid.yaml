@@ -23,6 +23,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
     baudrate: 9600
   - name: lan
     type: bool
@@ -324,7 +325,7 @@ render: |
               address: 33047 # Battery max discharge power
               type: writesingle
               decode: uint16
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

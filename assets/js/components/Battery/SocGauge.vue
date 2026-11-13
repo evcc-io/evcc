@@ -40,10 +40,10 @@
 				:class="{ 'layer--active': isCharging || isDischarging }"
 				:style="{ '--rotate': arrowRotate }"
 			/>
-			<BatteryHold
+			<BatteryHoldDischarge
 				:size="ICON_SIZE.M"
 				class="layer"
-				:class="{ 'layer--active': mode === BATTERY_MODE.HOLD }"
+				:class="{ 'layer--active': mode === BATTERY_MODE.HOLDDISCHARGE }"
 			/>
 			<BatteryHoldCharge
 				:size="ICON_SIZE.M"
@@ -59,7 +59,7 @@
 import { defineComponent, type PropType } from "vue";
 import { BATTERY_MODE, ICON_SIZE } from "@/types/evcc";
 import ArrowDown from "../MaterialIcon/ArrowDown.vue";
-import BatteryHold from "../MaterialIcon/BatteryHold.vue";
+import BatteryHoldDischarge from "../MaterialIcon/BatteryHoldDischarge.vue";
 import BatteryHoldCharge from "../MaterialIcon/BatteryHoldCharge.vue";
 import BatteryCharge from "../MaterialIcon/BatteryCharge.vue";
 import BatteryDischarge from "../MaterialIcon/BatteryDischarge.vue";
@@ -73,7 +73,7 @@ const R = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * R;
 
 const LOCKED_MODES: BATTERY_MODE[] = [
-	BATTERY_MODE.HOLD,
+	BATTERY_MODE.HOLDDISCHARGE,
 	BATTERY_MODE.HOLDCHARGE,
 	BATTERY_MODE.CHARGE,
 	BATTERY_MODE.DISCHARGE,
@@ -83,7 +83,14 @@ const LOCKED_MODES: BATTERY_MODE[] = [
 // tweens instead of hard-swapping
 export default defineComponent({
 	name: "SocGauge",
-	components: { ArrowDown, BatteryHold, BatteryHoldCharge, BatteryCharge, BatteryDischarge, Dot },
+	components: {
+		ArrowDown,
+		BatteryHoldDischarge,
+		BatteryHoldCharge,
+		BatteryCharge,
+		BatteryDischarge,
+		Dot,
+	},
 	props: {
 		soc: { type: Number, default: 0 },
 		color: { type: String, default: "" },

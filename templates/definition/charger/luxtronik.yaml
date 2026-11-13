@@ -39,6 +39,7 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 1
     timeout: 10s
   - name: timeout
     deprecated: true

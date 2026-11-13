@@ -330,3 +330,36 @@ func TestStatusFallback(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, api.StatusB, status)
 }
+
+func TestNeueKlasseFallback(t *testing.T) {
+	ctx := t.Context()
+
+	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
+		AccessToken: "token",
+	}), NewMqttConnector(ctx, util.NewLogger("foo"), "client", nil), "vin", time.Hour)
+
+	// prevent container panic
+	p.updated = time.Now()
+
+	p.rest = map[string]TelematicData{
+		"vehicle.trip.segment.end.drivetrain.batteryManagement.hvSoc": {Value: "33"},
+		"vehicle.drivetrain.electricEngine.remainingElectricRange":    {Value: "120"},
+		"vehicle.trip.segment.end.travelledDistance":                  {Value: "45000"},
+	}
+
+	soc, err := p.Soc()
+	require.NoError(t, err)
+	require.Equal(t, 33.0, soc)
+
+	rng, err := p.Range()
+	require.NoError(t, err)
+	require.Equal(t, int64(120), rng)
+
+	odo, err := p.Odometer()
+	require.NoError(t, err)
+	require.Equal(t, 45000.0, odo)
+
+	p.rest["vehicle.trip.segment.end.drivetrain.batteryManagement.hvSoc"] = TelematicData{Value: "NaN"}
+	_, err = p.Soc()
+	require.ErrorIs(t, err, api.ErrNotAvailable)
+}

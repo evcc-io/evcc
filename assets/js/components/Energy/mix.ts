@@ -1,10 +1,31 @@
-import { OTHERS, type EntityFlows, type Flow, type FlowSink, type FlowSource } from "./types";
+import {
+  OTHERS,
+  type ChartFlow,
+  type EntityFlows,
+  type Flow,
+  type FlowSink,
+  type FlowSource,
+} from "./types";
 
 export function sumEnergy(
   series: { data: { energy: number; returnEnergy: number }[] },
   key: "energy" | "returnEnergy" = "energy"
 ): number {
   return series.data.reduce((acc, slot) => acc + slot[key], 0);
+}
+
+// several series as one, slot by slot
+export function sumSeries<T extends { start: string; energy: number; returnEnergy: number }>(
+  list: { data: T[] }[]
+): T[] {
+  const slots = new Map<string, T>();
+  for (const slot of list.flatMap((s) => s.data)) {
+    const sum = slots.get(slot.start) ?? { ...slot, energy: 0, returnEnergy: 0 };
+    sum.energy += slot.energy;
+    sum.returnEnergy += slot.returnEnergy;
+    slots.set(slot.start, sum);
+  }
+  return [...slots.values()].sort((a, b) => a.start.localeCompare(b.start));
 }
 
 // what the energy into the given sinks cost, and how much of it was priced
@@ -34,12 +55,52 @@ export function entityFlows(
   return entity?.flows ?? [];
 }
 
+// the loadpoint sink as a charging and a heating sink. Loadpoints share their
+// sink's split per slot, so their flows add up to it.
+export function splitLoadpointFlows(
+  flows: Flow[],
+  entities: EntityFlows[] | undefined,
+  heatingTitles: string[]
+): ChartFlow[] {
+  const sums = new Map<string, ChartFlow>();
+  for (const e of entities ?? []) {
+    if (e.group !== "loadpoint") continue;
+    const to = heatingTitles.includes(e.title) ? "heating" : "charging";
+    for (const f of e.flows) {
+      const key = `${f.from}-${to}`;
+      const sum = sums.get(key) ?? { from: f.from, to, energy: 0 };
+      sum.energy += f.energy;
+      sums.set(key, sum);
+    }
+  }
+  const rest = flows.filter((f) => f.to !== "loadpoint") as ChartFlow[];
+  return [...rest, ...sums.values()];
+}
+
 export interface SourceRow {
   from: FlowSource;
   share: number; // percent of what reached the sink
   energy: number; // kWh
   cost?: number; // undefined without price data
   price?: number; // per kWh
+}
+
+// several entities as one: energy and cost add up, shares and prices follow
+export function mergeSources(lists: SourceRow[][]): SourceRow[] {
+  const rows = lists.flat();
+  const total = rows.reduce((acc, row) => acc + row.energy, 0);
+  const out = new Map<FlowSource, SourceRow>();
+  for (const row of rows) {
+    const sum = out.get(row.from) ?? { from: row.from, share: 0, energy: 0 };
+    sum.energy += row.energy;
+    if (row.cost !== undefined) sum.cost = (sum.cost ?? 0) + row.cost;
+    out.set(row.from, sum);
+  }
+  return [...out.values()].map((row) => ({
+    ...row,
+    share: total ? (row.energy / total) * 100 : 0,
+    price: row.cost !== undefined && row.energy ? row.cost / row.energy : undefined,
+  }));
 }
 
 // what reached the sink from each of `sources` over the period, scaled to `energy`:

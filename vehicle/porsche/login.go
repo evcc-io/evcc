@@ -32,6 +32,12 @@ var (
 	reSvg = regexp.MustCompile(`(data:image/svg\+xml[^"')\s]+)`)
 )
 
+const (
+	// optional Auth0 screen interleaved into the resume redirect chain
+	passkeyEnrollmentPath = "/u/passkey-enrollment"
+	maxResumeRedirects    = 10
+)
+
 // ErrCaptchaRequired is returned by the login steps when a captcha must be
 // solved before the flow can continue. The image is a data URI (SVG).
 type ErrCaptchaRequired struct {
@@ -47,6 +53,7 @@ type LoginSession struct {
 	log       *util.Logger
 	client    *http.Client
 	state     string
+	verifier  string // PKCE, bound to the /authorize transaction and kept across the captcha step
 	email     string
 	password  string
 	created   time.Time
@@ -72,6 +79,7 @@ func NewLoginSession(log *util.Logger, email, password string) (*LoginSession, s
 	s := &LoginSession{
 		log:      log,
 		client:   client,
+		verifier: oauth2.GenerateVerifier(),
 		email:    email,
 		password: password,
 		created:  time.Now(),
@@ -83,7 +91,7 @@ func NewLoginSession(log *util.Logger, email, password string) (*LoginSession, s
 
 func headers() map[string]string {
 	return map[string]string{
-		"User-Agent":  "evcc",
+		"User-Agent":  UserAgent,
 		"X-Client-ID": XClientID,
 	}
 }
@@ -97,6 +105,9 @@ func (s *LoginSession) start() (string, error) {
 		"audience":      {Audience},
 		"scope":         {strings.Join(Scopes, " ")},
 		"state":         {"evcc"},
+		// Auth0 now requires PKCE, see CJNE/pyporscheconnectapi#96
+		"code_challenge":        {oauth2.S256ChallengeFromVerifier(s.verifier)},
+		"code_challenge_method": {"S256"},
 	}
 
 	loc, err := s.getLocation(OAuthURI+"/authorize?"+v.Encode(), headers())
@@ -184,16 +195,110 @@ func (s *LoginSession) submitPassword() (string, error) {
 		resume = OAuthURI + resume
 	}
 
-	loc, err := s.getLocation(resume, headers())
+	return s.resume(resume)
+}
+
+// resume walks the redirect chain to the callback, declining the optional
+// passkey enrollment screen, see CJNE/pyporscheconnectapi#96
+func (s *LoginSession) resume(uri string) (string, error) {
+	for i := 0; ; i++ {
+		u, err := url.Parse(uri)
+		if err != nil {
+			return "", err
+		}
+		if code := u.Query().Get("code"); code != "" {
+			return code, nil
+		}
+		if i == maxResumeRedirects {
+			break
+		}
+		if u.Scheme != "http" && u.Scheme != "https" {
+			return "", fmt.Errorf("login: no code in callback (%s)", u.Redacted())
+		}
+
+		req, err := request.New(http.MethodGet, uri, nil, headers())
+		if err != nil {
+			return "", err
+		}
+		resp, err := s.client.Do(req)
+		if err != nil {
+			return "", err
+		}
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return "", err
+		}
+
+		switch {
+		case resp.StatusCode >= 300 && resp.StatusCode < 400 && resp.Header.Get("Location") != "":
+			uri, err = resolve(u, resp.Header.Get("Location"))
+		case resp.StatusCode == http.StatusOK && strings.HasPrefix(u.Path, passkeyEnrollmentPath):
+			uri, err = s.skipPasskeyEnrollment(u, body)
+		default:
+			return "", fmt.Errorf("login: unexpected status %d resuming authorization (%s)", resp.StatusCode, u.Redacted())
+		}
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return "", errors.New("login: too many redirects resuming authorization")
+}
+
+// skipPasskeyEnrollment declines passkey enrollment and returns where to continue.
+func (s *LoginSession) skipPasskeyEnrollment(u *url.URL, html []byte) (string, error) {
+	m := reAtob.FindSubmatch(html)
+	if m == nil {
+		return "", errors.New("login: passkey enrollment context missing")
+	}
+	decoded, err := base64.StdEncoding.DecodeString(string(m[1]))
 	if err != nil {
 		return "", err
 	}
 
-	code := loc.Query().Get("code")
-	if code == "" {
-		return "", fmt.Errorf("login: no code in callback (%s)", loc.Redacted())
+	var ctx struct {
+		Transaction struct {
+			State string `json:"state"`
+		} `json:"transaction"`
+		UntrustedData struct {
+			SubmittedFormData map[string]any `json:"submittedFormData"`
+		} `json:"untrustedData"`
 	}
-	return code, nil
+	if err := json.Unmarshal(decoded, &ctx); err != nil {
+		return "", err
+	}
+	if ctx.Transaction.State == "" {
+		return "", errors.New("login: passkey enrollment state missing")
+	}
+
+	data := url.Values{}
+	for k, v := range ctx.UntrustedData.SubmittedFormData {
+		data.Set(k, fmt.Sprint(v))
+	}
+	data.Set("state", ctx.Transaction.State)
+	data.Set("action", "abort-passkey-enrollment")
+	data.Set("acul-sdk", "@auth0/auth0-acul-js@1.2.0")
+
+	resp, err := s.post(u.String(), data)
+	if err != nil {
+		return "", err
+	}
+	resp.Body.Close()
+
+	if resp.StatusCode != http.StatusFound && resp.StatusCode != http.StatusSeeOther {
+		return "", fmt.Errorf("login: declining passkey enrollment failed (status %d)", resp.StatusCode)
+	}
+	return resolve(u, resp.Header.Get("Location"))
+}
+
+// resolve resolves a possibly relative Location against the request url.
+func resolve(base *url.URL, loc string) (string, error) {
+	u, err := base.Parse(loc)
+	if err != nil {
+		return "", err
+	}
+	return u.String(), nil
 }
 
 // SolveCaptcha continues a paused login with the user-provided captcha solution.
@@ -255,9 +360,9 @@ func extractCaptcha(html string) string {
 }
 
 // ExchangeCode exchanges an authorization code for a token using the identity's
-// OAuth config (and X-Client-ID via its context).
-func (o *Identity) ExchangeCode(code string) (*oauth2.Token, error) {
-	token, err := o.oc.Exchange(o.ctx, code)
+// OAuth config (and X-Client-ID via its context) and the PKCE verifier.
+func (o *Identity) ExchangeCode(code, verifier string) (*oauth2.Token, error) {
+	token, err := o.oc.Exchange(o.ctx, code, oauth2.VerifierOption(verifier))
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +428,7 @@ func (o *Identity) finish(s *LoginSession, code string, err error) (*api.AuthCha
 		return nil, err
 	}
 
-	if _, err := o.ExchangeCode(code); err != nil {
+	if _, err := o.ExchangeCode(code, s.verifier); err != nil {
 		return nil, err
 	}
 	return nil, nil

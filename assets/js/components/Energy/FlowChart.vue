@@ -9,16 +9,16 @@ import echartsChart from "@/mixins/echartsChart";
 import formatter from "@/mixins/formatter";
 import colors, { setAlpha } from "@/colors";
 import { groupColor } from "./groups";
-import type { Flow, FlowSink, FlowSource } from "./types";
+import type { ChartFlow, ChartSink, FlowSource } from "./types";
 
 const SOURCES: FlowSource[] = ["pv", "battery", "grid"];
-const SINKS: FlowSink[] = ["home", "loadpoint", "battery", "export"];
+const SINKS: ChartSink[] = ["home", "charging", "heating", "battery", "export"];
 // one shade per source, feed-in stands out
 const LINK_ALPHA: Record<string, string> = { pv: "b0", battery: "50", grid: "40", export: "e0" };
 
 // links below this share of all energy are noise, e.g. a trace of battery energy
 // in the export from meter timing
-const MIN_LINK_SHARE = 0.01;
+const MIN_LINK_SHARE = 0.005;
 
 const COMPACT = window.matchMedia("(max-width: 575.98px)");
 
@@ -26,6 +26,7 @@ interface Node {
 	name: string;
 	label: string;
 	value: number;
+	drawn: boolean;
 	color: string | object;
 	source: boolean;
 }
@@ -34,15 +35,14 @@ export default defineComponent({
 	name: "FlowChart",
 	mixins: [formatter, echartsChart],
 	props: {
-		flows: { type: Array as PropType<Flow[]>, default: () => [] },
-		loadpointLabels: { type: Array as PropType<string[]>, default: () => [] },
+		flows: { type: Array as PropType<ChartFlow[]>, default: () => [] },
 	},
 	data() {
 		return { compact: COMPACT.matches };
 	},
 	computed: {
 		// without the hairline links, a node left with none is not drawn either
-		visibleFlows(): Flow[] {
+		visibleFlows(): ChartFlow[] {
 			const total = this.flows.reduce((acc, f) => acc + f.energy, 0);
 			return this.flows.filter((f) => f.energy >= total * MIN_LINK_SHARE);
 		},
@@ -55,28 +55,29 @@ export default defineComponent({
 			};
 		},
 		nodes(): Node[] {
-			// only what is drawn counts, so a node's label is the sum of the links you can hover
-			const sum = (key: "from" | "to", id: string) =>
-				this.visibleFlows
-					.filter((f) => f[key] === id)
-					.reduce((acc, f) => acc + f.energy, 0);
+			const sum = (flows: ChartFlow[], key: "from" | "to", id: string) =>
+				flows.filter((f) => f[key] === id).reduce((acc, f) => acc + f.energy, 0);
+			// label shows the full total, the node is drawn only if a visible link remains
+			const node = (key: "from" | "to", id: string) => ({
+				value: sum(this.flows, key, id),
+				drawn: sum(this.visibleFlows, key, id) > 0,
+			});
 			const src = SOURCES.map((id) => ({
 				name: `from-${id}`,
 				label: this.$t(`energy.flow.${id}`),
-				value: sum("from", id),
+				...node("from", id),
 				color: this.nodeColors[id] || "",
 				source: true,
 			}));
-			const loadpointLabel = this.loadpointLabels.join(" &\n");
 			const dst = SINKS.map((id) => ({
 				name: `to-${id}`,
-				label: id === "loadpoint" ? loadpointLabel : this.$t(`energy.flow.${id}`),
-				value: sum("to", id),
+				label: this.$t(`energy.flow.${id}`),
+				...node("to", id),
 				// colored by where the energy came from, only feed-in keeps its own color
 				color: id === "export" ? this.nodeColors[id] || "" : this.sourceBands(id),
 				source: false,
 			}));
-			return [...src, ...dst].filter((n) => n.value > 0);
+			return [...src, ...dst].filter((n) => n.drawn);
 		},
 		chartOption(): Record<string, unknown> {
 			const compact = this.compact;
@@ -146,8 +147,8 @@ export default defineComponent({
 						lineStyle: { curveness: 0.5, opacity: 1 },
 						emphasis: { focus: "adjacency" },
 						data: this.nodes.map((n) => ({
+							// no value: height follows the drawn links, not the labelled total
 							name: n.name,
-							value: n.value,
 							depth: n.source ? 0 : 1,
 							// rounded towards the label, sharp where the links attach
 							itemStyle: {
@@ -179,7 +180,7 @@ export default defineComponent({
 		},
 		// the sink's sources as hard-edged bands from top to bottom, matching the
 		// incoming links which attach in source order
-		sourceBands(to: FlowSink): object {
+		sourceBands(to: ChartSink): object {
 			const flows = SOURCES.flatMap((from) =>
 				this.visibleFlows.filter((f) => f.from === from && f.to === to)
 			);
@@ -196,7 +197,7 @@ export default defineComponent({
 			});
 			return { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops };
 		},
-		linkColor(f: Flow): string {
+		linkColor(f: ChartFlow): string {
 			const key = f.to === "export" ? "export" : f.from;
 			return setAlpha(this.nodeColors[key] || "", LINK_ALPHA[key] || "80") ?? "";
 		},

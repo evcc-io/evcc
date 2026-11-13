@@ -3535,7 +3535,7 @@
         "enum": [
           "unknown",
           "normal",
-          "hold",
+          "holddischarge",
           "charge",
           "holdcharge",
           "discharge"
@@ -3685,6 +3685,41 @@
           "disable"
         ]
       },
+      "PeriodStats": {
+        "description": "Energy stats of a loadpoint over a period, attributed per 15-minute slot like the energy page.",
+        "type": "object",
+        "properties": {
+          "energy": {
+            "description": "Energy used in Wh.",
+            "type": "number"
+          },
+          "pvEnergy": {
+            "description": "Energy from solar in Wh.",
+            "type": "number"
+          },
+          "batteryEnergy": {
+            "description": "Energy from the home battery in Wh.",
+            "type": "number"
+          },
+          "pricePerKWh": {
+            "description": "Average energy price per kWh in the configured currency.",
+            "type": "number",
+            "nullable": true
+          },
+          "price": {
+            "description": "Total cost in the configured currency.",
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "energy",
+          "pvEnergy",
+          "batteryEnergy",
+          "pricePerKWh",
+          "price"
+        ]
+      },
       "LoadpointSuggestion": {
         "description": "Battery optimizer suggestion for a loadpoint.",
         "type": "object",
@@ -3709,8 +3744,12 @@
             "description": "Planned site grid flow of the slot in W, positive means import.",
             "type": "number"
           },
-          "battery": {
+          "batteryDischarge": {
             "description": "Planned home battery discharge feeding the site in W.",
+            "type": "number"
+          },
+          "batteryCharge": {
+            "description": "Planned home battery charge in W.",
             "type": "number"
           },
           "actionable": {
@@ -3776,7 +3815,7 @@
             "type": "number"
           },
           "chargeRemainingEnergy": {
-            "description": "Estimated remaining energy in kWh.",
+            "description": "Estimated remaining energy in Wh.",
             "type": "number"
           },
           "chargeTotalImport": {
@@ -3791,7 +3830,7 @@
             }
           },
           "chargedEnergy": {
-            "description": "Energy charged in the current charging session in kWh.",
+            "description": "Energy charged in the current charging session in Wh.",
             "type": "number"
           },
           "chargerFeatureAutodetectDisabled": {
@@ -4060,13 +4099,13 @@
             "description": "Remaining time until the pending charge start or stop action executes, in seconds.",
             "type": "number"
           },
-          "last24hEnergy": {
-            "description": "Energy used in the last 24 hours in kWh.",
-            "type": "number"
+          "last24h": {
+            "$ref": "#/components/schemas/PeriodStats",
+            "description": "Energy stats of the last 24 hours."
           },
-          "last7dEnergy": {
-            "description": "Energy used in the last 7 days in kWh.",
-            "type": "number"
+          "last7d": {
+            "$ref": "#/components/schemas/PeriodStats",
+            "description": "Energy stats of the last 7 days."
           },
           "sessionCo2PerKWh": {
             "description": "Average CO₂ emissions of the current charging session in g/kWh.",
@@ -4074,7 +4113,7 @@
             "nullable": true
           },
           "sessionEnergy": {
-            "description": "Energy charged in the current charging session in kWh.",
+            "description": "Energy charged in the current charging session in Wh.",
             "type": "number"
           },
           "sessionPrice": {
@@ -4139,7 +4178,7 @@
             "type": "string"
           },
           "todayEnergy": {
-            "description": "Energy used since midnight in kWh.",
+            "description": "Energy used since midnight in Wh.",
             "type": "number"
           },
           "vehicleClimaterActive": {
@@ -4472,7 +4511,7 @@
             "type": "string",
             "enum": [
               "normal",
-              "hold",
+              "holddischarge",
               "charge",
               "holdcharge",
               "discharge"
@@ -5489,6 +5528,10 @@
           },
           "capacity": {
             "description": "Usable battery capacity in kWh.",
+            "type": "number"
+          },
+          "phases": {
+            "description": "Maximum number of phases supported by the vehicle. Zero means unknown.",
             "type": "number"
           },
           "icon": {
@@ -6524,7 +6567,7 @@
           "application/json": {
             "schema": {
               "type": "integer",
-              "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge, 5: discharge",
+              "description": "Battery mode. 0: unknown, 1: normal, 2: holddischarge, 3: charge, 4: holdcharge, 5: discharge",
               "minimum": 0,
               "maximum": 5
             }

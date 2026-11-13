@@ -13,6 +13,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
     baudrate: 19200
   - name: mppt3
     type: bool
@@ -39,14 +40,7 @@ render: |
       type: input
       decode: int32s
     scale: -1
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 74 # 0x004A consum_energy_total(meter)
-      type: input
-      decode: uint32s
-    scale: 0.01
+  # no energy: 0x004A consum_energy_total(meter) sums per phase (not phase-balanced)
   currents:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -171,7 +165,7 @@ render: |
             address: 0x001F # SolarChargeUseMode
             type: writesingle
             decode: uint16
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:
