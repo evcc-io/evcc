@@ -1,0 +1,69 @@
+template: victron-multi-rs
+products:
+  - brand: Victron
+    description:
+      generic: Multi RS
+requirements:
+  description:
+    de: |
+      Für Anlagen mit Victron Multi RS Wechselrichtern. Diese verwalten das ESS selbst (nicht der GX),
+      deshalb wird der Min-SoC pro Multi RS geschrieben (/Settings/Ess/MinimumSocLimit, Register 4614).
+      Die Unit-IDs der Multi RS stehen in der Geräteliste des GX.
+    en: |
+      For installations with Victron Multi RS inverters. These manage the ESS themselves (not the GX),
+      so the minimum SoC is written per Multi RS (/Settings/Ess/MinimumSocLimit, register 4614).
+      The unit ids of the Multi RS units are listed in the GX device list.
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+  - name: units
+    required: true
+    example: 0,1,2
+    description:
+      de: Modbus-Unit-IDs (kommagetrennt)
+      en: Modbus unit ids (comma separated)
+    help:
+      de: Die Unit-IDs der Multi RS stehen in der Geräteliste des GX (Modbus TCP).
+      en: The unit ids of the Multi RS units are listed in the GX device list (Modbus TCP).
+  - preset: battery-params
+render: |
+  {{- if eq .usage "battery" }}
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus-connection" . | indent 2 }}
+    id: 100 # com.victronenergy.system
+    register:
+      address: 842 # active DC power
+      type: input
+      decode: int16
+    scale: -1
+  soc:
+    source: modbus
+    {{- include "modbus-connection" . | indent 2 }}
+    id: 100 # com.victronenergy.system
+    register:
+      address: 843 # Soc
+      type: input
+      decode: uint16
+  limitsoc:
+    source: convert
+    convert: float2int
+    set:
+      source: sequence
+      set:
+      {{- range splitList "," (.units | unquote) }}
+      - source: modbus
+        {{- include "modbus-connection" $ | indent 6 }}
+        id: {{ . | trim }}
+        register:
+          address: 4614 # /Settings/Ess/MinimumSocLimit
+          type: writesingle
+          decode: uint16
+      {{- end }}
+  {{- include "battery-params" . }}
+  {{- end }}
