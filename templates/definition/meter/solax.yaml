@@ -24,6 +24,15 @@ params:
     help:
       de: Der Wechselrichter hat einen dritten PV-Eingang (MPPT3)
       en: The inverter has a third PV input (MPPT3)
+  - name: gen6
+    type: bool
+    usages: ["pv"]
+    description:
+      de: Gen6 Wechselrichter
+      en: Gen6 inverter
+    help:
+      de: X1-VAST und X3-HYB G4 PRO, diese zählen die PV-Energie in Wh.
+      en: X1-VAST and X3-HYB G4 PRO, these count pv energy in Wh.
   - name: maxacpower
   - name: storageunit
   - preset: battery-params
@@ -117,7 +126,11 @@ render: |
       address: 148 # 0x0094 SolarEnergyTotal
       type: input
       decode: uint32s
+    {{- if .gen6 }}
+    scale: 0.001 # Wh
+    {{- else }}
     scale: 0.1
+    {{- end }}
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
