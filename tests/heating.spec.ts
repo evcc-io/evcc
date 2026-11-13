@@ -100,14 +100,13 @@ test.describe("integrated device", async () => {
     await expect(modal.getByLabel("Min. temperature")).toHaveValue("50");
   });
 
-  test("min current and phases but no max current for switch device", async ({ page }) => {
+  test("no currents or phases for switch device", async ({ page }) => {
     const lp = page.getByTestId("loadpoint").first();
     await lp.getByTestId("loadpoint-settings-button").last().click();
     const modal = page.getByTestId("loadpoint-settings-modal").first();
     await expectModalVisible(modal);
-    // min current and phases feed the solar switch-on threshold and stay
-    await expect(modal.getByText("Min. Current")).toBeVisible();
-    await expect(modal.getByText("Phases")).toBeVisible();
-    await expect(modal.getByText("Max. Current")).toHaveCount(0);
+    await expect(modal.getByText("Min. temperature")).toBeVisible();
+    await expect(modal.getByText("Charging Current")).toHaveCount(0);
+    await expect(modal.getByText("Phases")).toHaveCount(0);
   });
 });
