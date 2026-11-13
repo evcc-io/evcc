@@ -22,7 +22,7 @@
 		</ol>
 		<div class="text-center my-3">
 			<a v-if="qrDataUrl" :href="appUrl" class="d-inline-block">
-				<img :src="qrDataUrl" alt="QR Code" class="qr-code" />
+				<img :src="qrDataUrl" alt="QR Code" width="200" />
 			</a>
 		</div>
 
@@ -61,10 +61,37 @@
 		</div>
 
 		<div class="d-flex justify-content-end mt-3">
-			<button type="button" class="btn btn-primary" @click="$emit('done')">
+			<button v-if="canPrint" type="button" class="btn btn-outline-secondary" @click="print">
+				{{ $t("config.remote.print") }}
+			</button>
+			<button type="button" class="btn btn-primary ms-auto" @click="$emit('done')">
 				{{ $t("config.remote.done") }}
 			</button>
 		</div>
+
+		<Teleport to="body">
+			<div class="print-sheet d-none d-print-block">
+				<p v-if="siteTitle" class="fs-4 mb-1">{{ siteTitle }}</p>
+				<h1 class="fs-2 mb-5">{{ brand }} {{ $t("config.remote.title") }}</h1>
+				<ol>
+					<li>{{ $t("config.remote.qrInstall", { ios: "iOS", android: "Android" }) }}</li>
+					<li>{{ $t("config.remote.qrScan") }}</li>
+				</ol>
+				<img
+					v-if="qrDataUrl"
+					:src="qrDataUrl"
+					alt="QR Code"
+					class="d-block mx-auto my-5 print-sheet-qr"
+				/>
+				<p>{{ $t("config.remote.manualLogin", { url: serverUrl }) }}</p>
+				<dl>
+					<dt>{{ $t("config.remote.username") }}</dt>
+					<dd>{{ client.username }}</dd>
+					<dt>{{ $t("config.remote.password") }}</dt>
+					<dd class="font-monospace">{{ client.password }}</dd>
+				</dl>
+			</div>
+		</Teleport>
 	</div>
 </template>
 
@@ -74,6 +101,7 @@ import QRCode from "qrcode";
 import FormRow from "../FormRow.vue";
 import CopyLink from "../../Helper/CopyLink.vue";
 import type { RemoteClientCreated } from "@/types/evcc";
+import { isApp } from "@/utils/native";
 
 export default defineComponent({
 	name: "RemoteClientReveal",
@@ -82,6 +110,7 @@ export default defineComponent({
 		client: { type: Object as PropType<RemoteClientCreated>, required: true },
 		serverUrl: { type: String, required: true },
 		siteTitle: String,
+		brand: { type: String, default: () => window.evcc?.customBrand || "evcc" },
 	},
 	emits: ["done"],
 	data() {
@@ -100,6 +129,10 @@ export default defineComponent({
 			});
 			return `evcc://server?${params.toString()}`;
 		},
+		canPrint(): boolean {
+			// window.print is not available in the native app webviews
+			return !isApp();
+		},
 	},
 	watch: {
 		appUrl: {
@@ -107,21 +140,32 @@ export default defineComponent({
 			async handler(url: string) {
 				if (!url) return;
 				try {
-					this.qrDataUrl = await QRCode.toDataURL(url, {
-						width: 200,
-						margin: 1,
-					});
+					const svg = await QRCode.toString(url, { type: "svg", margin: 1 });
+					this.qrDataUrl = `data:image/svg+xml,${encodeURIComponent(svg)}`;
 				} catch {
 					this.qrDataUrl = null;
 				}
 			},
 		},
 	},
+	methods: {
+		print() {
+			window.print();
+		},
+	},
 });
 </script>
 
-<style scoped>
-.qr-code {
-	image-rendering: pixelated;
+<style>
+@media print {
+	body:has(> .print-sheet) > :not(.print-sheet) {
+		display: none !important;
+	}
+	.print-sheet {
+		color: #000;
+	}
+	.print-sheet-qr {
+		width: 60mm;
+	}
 }
 </style>
