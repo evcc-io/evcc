@@ -34,6 +34,7 @@ export default defineComponent({
 		grid: { type: Array as PropType<UiForecastSlot[]> },
 		feedin: { type: Array as PropType<UiForecastSlot[]> },
 		currency: { type: String as PropType<CURRENCY> },
+		zoom: { type: Boolean, default: false },
 	},
 	computed: {
 		slots(): UiForecastSlot[] {
@@ -72,9 +73,8 @@ export default defineComponent({
 			if (!values.length) return {};
 			const dataMin = Math.min(...values);
 			const dataMax = Math.max(...values);
-			// a single line is fitted, a flat one has no range and keeps the zero baseline
-			const single = !this.slots.length || !this.feedinSlots.length;
-			const fit = single && dataMin !== dataMax;
+			// a flat line has no range and keeps the zero baseline
+			const fit = this.zoom && dataMin !== dataMax;
 			const rangeMin = fit ? dataMin : Math.min(0, dataMin);
 			const rangeMax = Math.max(0, dataMax);
 			const range = rangeMax - rangeMin || 1;

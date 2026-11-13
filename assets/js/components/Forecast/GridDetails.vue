@@ -1,6 +1,10 @@
 <template>
-	<div v-if="hasBothTariffs" class="row gx-2 mt-1">
-		<div v-for="line in lines" :key="line.key" class="col-6" :class="line.align">
+	<div v-if="lines.length" class="row gx-2 mt-1">
+		<div
+			v-for="line in lines"
+			:key="line.key"
+			:class="[lines.length > 1 ? 'col-6' : 'col-12', line.align]"
+		>
 			<button
 				type="button"
 				class="price-line border-0 bg-transparent p-0 small text-reset"
@@ -71,16 +75,13 @@ export default defineComponent({
 		feedinSummary(): { avg: string; range: string } | null {
 			return this.summarize(this.feedin);
 		},
-		hasBothTariffs(): boolean {
-			return !!this.gridSummary && !!this.feedinSummary;
-		},
 		lines() {
-			return [
+			const all = [
 				{
 					key: "grid",
 					label: this.$t("main.energyflow.gridImport"),
 					color: colors.price || "",
-					summary: this.gridSummary!,
+					summary: this.gridSummary,
 					shown: this.showGrid,
 					focused: !this.showFeedin,
 					align: "text-start",
@@ -90,13 +91,17 @@ export default defineComponent({
 					key: "feedin",
 					label: this.$t("main.energyflow.pvExport"),
 					color: colors.export || "",
-					summary: this.feedinSummary!,
+					summary: this.feedinSummary,
 					shown: this.showFeedin,
 					focused: !this.showGrid,
 					align: "text-end",
 					justify: "justify-content-end",
 				},
 			];
+			const available = all.flatMap((l) => (l.summary ? [{ ...l, summary: l.summary }] : []));
+			// a flat single tariff has nothing to zoom into
+			const flat = available.length === 1 && !available[0]!.summary.range;
+			return flat ? [] : available;
 		},
 	},
 	methods: {

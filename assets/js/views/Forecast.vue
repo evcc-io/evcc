@@ -73,6 +73,7 @@
 							:grid="showGrid ? forecast.grid : undefined"
 							:feedin="showFeedin ? forecast.feedin : undefined"
 							:currency="currency"
+							:zoom="priceView !== 'both'"
 							:chart-width="chartWidth"
 							:end-date="chartEndDate"
 							:scroll-left="scrollLeft"
@@ -231,9 +232,7 @@ export default defineComponent({
 		},
 		priceView(): string {
 			const view = settings.priceView;
-			return this.forecast.grid?.length &&
-				this.forecast.feedin?.length &&
-				(view === "grid" || view === "feedin")
+			return (view === "grid" || view === "feedin") && this.forecast[view]?.length
 				? view
 				: "both";
 		},
