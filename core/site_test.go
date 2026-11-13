@@ -70,6 +70,54 @@ func TestSitePowerPriorityAdjustment(t *testing.T) {
 	}
 }
 
+// TestSitePowerBatteryStart verifies that charging may only start off the battery
+// while the battery buffer is usable at all (#34225)
+func TestSitePowerBatteryStart(t *testing.T) {
+	for _, tc := range []struct {
+		name                   string
+		bufferSoc, bufferStart float64
+		soc                    float64
+		expBuffered, expStart  bool
+	}{
+		{"buffer off, start at full", 100, 100, 100, false, false},
+		{"buffer unset, start at full", 0, 100, 100, false, false},
+		{"buffered, start at full", 95, 100, 100, true, true},
+		{"buffered, below start", 95, 100, 98, true, false},
+		{"below buffer", 95, 100, 90, false, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			meter := api.NewMockMeter(ctrl)
+			meter.EXPECT().CurrentPower().Return(0.0, nil).AnyTimes()
+
+			battery := api.NewMockBattery(ctrl)
+			battery.EXPECT().Soc().Return(tc.soc, nil).AnyTimes()
+
+			var bat api.Meter = &struct {
+				api.Meter
+				api.Battery
+			}{
+				Meter:   meter,
+				Battery: battery,
+			}
+
+			site := &Site{
+				log:            util.NewLogger("foo"),
+				batteryMeters:  []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+				bufferSoc:      tc.bufferSoc,
+				bufferStartSoc: tc.bufferStart,
+			}
+			state, err := site.updateMeters()
+			require.NoError(t, err)
+
+			res := site.sitePower(state, 0, 0)
+			assert.Equal(t, tc.expBuffered, res.batteryBuffered, "buffered")
+			assert.Equal(t, tc.expStart, res.batteryStart, "start")
+		})
+	}
+}
+
 func TestGreenShare(t *testing.T) {
 	tc := []struct {
 		title                                                 string
