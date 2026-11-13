@@ -240,6 +240,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"devicecolors":                    {"PUT", "/devicecolors", updateDeviceColor(site)},
 
 		"optimizerchargingstrategy":  {"POST", "/optimizerchargingstrategy/{value:[a-z_]+}", stringHandler(site.SetOptimizerChargingStrategy, site.GetOptimizerChargingStrategy)},
+		"optimizerriskprofileget":    {"GET", "/optimizerriskprofile", optimizerRiskProfileHandler(site)},
 		"optimizerriskprofile":       {"POST", "/optimizerriskprofile", optimizerRiskProfileHandler(site)},
 		"optimizerriskprofiledelete": {"DELETE", "/optimizerriskprofile", optimizerRiskProfileHandler(site)},
 	}

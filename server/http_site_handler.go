@@ -264,9 +264,14 @@ func batteryGridDischargeHandler(site site.API) http.HandlerFunc {
 	}
 }
 
-// optimizerRiskProfileHandler updates the optimizer risk profile, DELETE removes it
+// optimizerRiskProfileHandler returns or updates the optimizer risk profile, DELETE removes it
 func optimizerRiskProfileHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			jsonWrite(w, site.GetOptimizerRiskProfile())
+			return
+		}
+
 		var profile *api.RiskProfile
 
 		if r.Method != http.MethodDelete {

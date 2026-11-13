@@ -1418,6 +1418,31 @@
       }
     },
     "/optimizerriskprofile": {
+      "get": {
+        "operationId": "getOptimizerRiskProfile",
+        "summary": "Get optimizer risk profile",
+        "description": "Forecast uncertainty the optimizer hedges against. Null plans on the forecasts as they are.",
+        "tags": [
+          "experimental"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true,
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/RiskProfile"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "operationId": "setOptimizerRiskProfile",
         "summary": "Set optimizer risk profile",

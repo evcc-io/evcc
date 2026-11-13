@@ -4,11 +4,36 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/core/site"
 	"github.com/stretchr/testify/assert"
 )
+
+type riskProfileSite struct {
+	site.API
+	profile *api.RiskProfile
+}
+
+func (s riskProfileSite) GetOptimizerRiskProfile() *api.RiskProfile {
+	return s.profile
+}
+
+func TestOptimizerRiskProfileGet(t *testing.T) {
+	for want, profile := range map[string]*api.RiskProfile{
+		"null\n": nil,
+		`{"solar":0.3,"demand":0.2,"budget":8}` + "\n": {Solar: 0.3, Demand: 0.2, Budget: 8},
+	} {
+		w := httptest.NewRecorder()
+		optimizerRiskProfileHandler(riskProfileSite{profile: profile})(w, httptest.NewRequest(http.MethodGet, "/optimizerriskprofile", nil))
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, want, w.Body.String())
+	}
+}
 
 func TestErrorStatus(t *testing.T) {
 	// settings the optimizer decides on are rejected as conflict, not bad request
