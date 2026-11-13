@@ -144,7 +144,7 @@
 				</div>
 
 				<Card v-if="showTable" :title="$t('sessions.overview')" edge-to-edge class="mb-4">
-					<div v-if="loading" class="skeleton-chart" :style="{ height: '200px' }"></div>
+					<div v-if="loading" class="skeleton-chart py-5"></div>
 					<SessionTable
 						v-else
 						:sessions="currentSessions"

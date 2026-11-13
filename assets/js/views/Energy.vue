@@ -642,7 +642,8 @@ export default defineComponent({
 			);
 		},
 		isCurrentSpan(): boolean {
-			return this.requested.to > new Date();
+			const now = new Date();
+			return this.requested.from <= now && now < this.requested.to;
 		},
 		emptyDescription(): string {
 			const key = this.isCurrentSpan ? "descriptionCurrent" : "description";
@@ -1455,7 +1456,7 @@ export default defineComponent({
 			const titles = [this.activeConsumer, ...this.loadpoints.map((s) => s.title)].filter(
 				Boolean
 			);
-			return pattern ? `${this.from.getTime()}|${this.to.getTime()}|${titles.join(",")}` : "";
+			return pattern ? `${this.shownKey}|${titles.join(",")}` : "";
 		},
 		// csv of the period's series, same query as the charts
 		downloadHref(): string {
@@ -1506,6 +1507,9 @@ export default defineComponent({
 		},
 		fetchKey(): string {
 			return `${this.requested.from.getTime()}|${this.requested.to.getTime()}`;
+		},
+		shownKey(): string {
+			return `${this.from.getTime()}|${this.to.getTime()}`;
 		},
 	},
 	watch: {
@@ -1628,7 +1632,7 @@ export default defineComponent({
 			} catch (e) {
 				console.error("Failed to load energy flow", e);
 				// another period failed: its header must not sit above the previous data
-				if (requestKey === this.fetchKey && span.from.getTime() !== this.from.getTime()) {
+				if (requestKey === this.fetchKey && requestKey !== this.shownKey) {
 					this.shown = span;
 					this.flow = null;
 					this.series = [];
