@@ -1423,7 +1423,11 @@
         "returnEnergy": "Energy (reverse)"
       }
     },
-    "empty": "No energy data available for this time range.",
+    "empty": {
+      "description": "No energy data for this period.",
+      "descriptionCurrent": "No energy data yet. Values appear once the first measurements are recorded.",
+      "showCurrent": "Show current period"
+    },
     "flow": {
       "battery": "Battery",
       "batteryCharge": "Battery charge",

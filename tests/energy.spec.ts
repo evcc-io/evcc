@@ -321,6 +321,6 @@ test.describe("page", () => {
 
   test("empty state", async ({ page }) => {
     await page.goto("/#/energy?year=2026&month=1&day=1");
-    await expect(page.getByText("No energy data available")).toBeVisible();
+    await expect(page.getByText("No energy data for this period.")).toBeVisible();
   });
 });

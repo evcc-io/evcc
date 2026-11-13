@@ -81,6 +81,8 @@ export default defineComponent({
 
 .root {
 	justify-content: flex-start;
+	/* an empty list keeps its line, entries that arrive later do not move the page */
+	min-height: 1lh;
 }
 .legend-item--focusable {
 	cursor: pointer;

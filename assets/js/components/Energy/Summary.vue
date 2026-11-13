@@ -10,8 +10,13 @@
 				<div class="label text-uppercase mb-3">{{ ring.label }}</div>
 				<div class="d-flex align-items-center gap-3">
 					<ShareRing :segments="ring.segments" :size="120" :stroke="3">
-						<div class="fs-5 fw-bold lh-1 text-nowrap tabular">{{ ring.value }}</div>
-						<div class="label mt-1">{{ ring.unit }}</div>
+						<span v-if="pending" class="skeleton-value fs-5"></span>
+						<template v-else>
+							<div class="fs-5 fw-bold lh-1 text-nowrap tabular">
+								{{ ring.value }}
+							</div>
+							<div class="label mt-1">{{ ring.unit }}</div>
+						</template>
 					</ShareRing>
 					<ul class="list-unstyled m-0 d-flex flex-column gap-2 overflow-hidden">
 						<li
@@ -23,7 +28,10 @@
 								class="dot rounded-circle flex-shrink-0 align-self-center"
 								:style="{ backgroundColor: part.color }"
 							></span>
-							<span class="share fw-bold text-end tabular">{{ part.share }}</span>
+							<span v-if="pending" class="share skeleton-value"></span>
+							<span v-else class="share fw-bold text-end tabular">{{
+								part.share
+							}}</span>
 							<span class="text-truncate">{{ part.label }}</span>
 						</li>
 					</ul>
@@ -44,7 +52,7 @@ import ShareRing from "./ShareRing.vue";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import { CURRENCY } from "@/types/evcc";
-import type { Flow, FlowCo2, FlowCost, StatItem } from "./types";
+import { pendingStat, type Flow, type FlowCo2, type FlowCost, type StatItem } from "./types";
 import { sinkCost } from "./mix";
 import { groupColor } from "./groups";
 
@@ -71,6 +79,9 @@ export default defineComponent({
 		gridImport: { type: Number, default: 0 }, // kWh, metered
 		// a battery was active in the period, its shares show even at zero
 		hasBattery: Boolean,
+		// the values are on their way: the frame shows what the site is set up for
+		pending: Boolean,
+		hasPv: { type: Boolean, default: true },
 		// tariffs that are set up now. A period without their data then only says so,
 		// there is nothing left to configure
 		hasPriceTariff: Boolean,
@@ -112,9 +123,39 @@ export default defineComponent({
 					hidden: from === "battery" && !this.hasBattery,
 				}))
 			);
+			if (this.pending) {
+				const track = [{ value: 1, color: colors.border || "" }];
+				return [...(this.hasPv ? [production] : []), consumption].map((r) => ({
+					...r,
+					segments: track,
+				}));
+			}
 			return [production, consumption].filter((r) => r.segments.some((s) => s.value > 0));
 		},
 		stats(): StatItem[] {
+			const noPrice: StatItem = {
+				key: "savings",
+				label: this.$t("energy.stat.savings"),
+				empty: this.$t("energy.stat.noPrice"),
+				configure: !this.hasPriceTariff,
+			};
+			const noCo2: StatItem = {
+				key: "co2",
+				label: this.$t("energy.stat.co2Saved"),
+				empty: this.$t("energy.stat.noCo2"),
+				configure: !this.hasCo2Tariff,
+			};
+			if (this.pending) {
+				// every one of them comes with a subline
+				const wait = (key: string, label: string) => pendingStat(key, label, "…");
+				const price = this.hasPriceTariff;
+				return [
+					wait("autarky", this.$t("energy.stat.autarky")),
+					price ? wait("savings", noPrice.label || "") : noPrice,
+					...(price ? [wait("gridCost", this.$t("energy.grid.cost"))] : []),
+					this.hasCo2Tariff ? wait("co2", noCo2.label || "") : noCo2,
+				];
+			}
 			const list: StatItem[] = [
 				{
 					key: "autarky",
@@ -147,12 +188,7 @@ export default defineComponent({
 					}),
 				});
 			} else {
-				list.push({
-					key: "savings",
-					label: this.$t("energy.stat.savings"),
-					empty: this.$t("energy.stat.noPrice"),
-					configure: !this.hasPriceTariff,
-				});
+				list.push(noPrice);
 			}
 			if (this.cost) {
 				const { import: money, importEnergy } = this.cost;
@@ -185,12 +221,7 @@ export default defineComponent({
 					}),
 				});
 			} else {
-				list.push({
-					key: "co2",
-					label: this.$t("energy.stat.co2Saved"),
-					empty: this.$t("energy.stat.noCo2"),
-					configure: !this.hasCo2Tariff,
-				});
+				list.push(noCo2);
 			}
 			return list;
 		},

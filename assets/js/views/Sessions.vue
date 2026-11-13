@@ -3,7 +3,7 @@
 		<TopHeader :title="$t('sessions.title')" :notifications="notifications" />
 		<div class="row">
 			<main class="col-12">
-				<PeriodHeader>
+				<PeriodHeader :loading="loading">
 					<template #period>
 						<PeriodSelector
 							:period="period"
@@ -23,7 +23,7 @@
 					</template>
 				</PeriodHeader>
 
-				<div class="d-flex gap-3 mb-5 justify-content-between flex-wrap pt-1">
+				<div class="d-flex gap-3 mb-4 justify-content-between flex-wrap pt-1">
 					<IconSelectGroup>
 						<template v-for="largeScreen in [true, false]">
 							<IconSelectItem
@@ -144,7 +144,9 @@
 				</div>
 
 				<Card v-if="showTable" :title="$t('sessions.overview')" edge-to-edge class="mb-4">
+					<div v-if="loading" class="skeleton-chart" :style="{ height: '200px' }"></div>
 					<SessionTable
+						v-else
 						:sessions="currentSessions"
 						:vehicleFilter="vehicleFilter"
 						:loadpointFilter="loadpointFilter"
@@ -249,6 +251,8 @@ export default defineComponent({
 	data() {
 		return {
 			sessions: [] as Session[],
+			// until the first response: no totals, no "no data"
+			loading: true,
 			selectedType: (settings.sessionsType || TYPES.SOLAR) as TYPES,
 			selectedGroup: (settings.sessionsGroup || GROUPS.NONE) as GROUPS,
 			selectedSessionId: undefined as number | undefined,
@@ -274,6 +278,7 @@ export default defineComponent({
 			return this.activeType === TYPES.SOLAR ? this.energyTitle : this.costTitle;
 		},
 		historySubTitle() {
+			if (this.loading) return "";
 			if (this.activeType === TYPES.SOLAR) {
 				return this.energySubTitle;
 			}
@@ -586,12 +591,16 @@ export default defineComponent({
 			this.$router.push({ query: { ...this.$route.query, period, month, year } });
 		},
 		async loadSessions() {
-			const response = await api.get("sessions");
-			// ensure sessions are sorted by created date
-			const sortedSessions = response.data?.sort((a: Session, b: Session) => {
-				return new Date(a.created).getTime() - new Date(b.created).getTime();
-			});
-			this.sessions = sortedSessions;
+			try {
+				const response = await api.get("sessions");
+				// ensure sessions are sorted by created date
+				const sortedSessions = response.data?.sort((a: Session, b: Session) => {
+					return new Date(a.created).getTime() - new Date(b.created).getTime();
+				});
+				this.sessions = sortedSessions;
+			} finally {
+				this.loading = false;
+			}
 		},
 		showDetails(sessionId: number) {
 			this.selectedSessionId = sessionId;

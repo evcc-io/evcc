@@ -1,6 +1,6 @@
 <template>
 	<div class="header-outer sticky-top">
-		<div class="container px-4">
+		<div class="container px-4 position-relative">
 			<div class="row py-3 py-sm-3 d-flex flex-column flex-sm-row gap-3 gap-lg-0 mb-lg-2">
 				<div class="col-lg-5 d-flex mb-lg-0">
 					<slot name="period" />
@@ -9,6 +9,11 @@
 					<slot name="navigator" />
 				</div>
 			</div>
+			<div
+				class="loading-line header-line position-absolute start-0 end-0 mx-4"
+				:class="{ 'loading-line--active': loading }"
+				aria-hidden="true"
+			></div>
 		</div>
 	</div>
 </template>
@@ -18,6 +23,9 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
 	name: "PeriodHeader",
+	props: {
+		loading: Boolean,
+	},
 });
 </script>
 
@@ -32,6 +40,18 @@ export default defineComponent({
 	margin: 0 calc(calc(1.5rem + var(--vertical-shift)) * -1);
 	background-color: var(--evcc-background);
 	box-shadow: 0 1px 8px 0px var(--evcc-background);
+}
+
+/* halfway between the controls and the content: half the row's bottom padding. From lg
+   on the row's margin adds to that space below the container, the line moves down by half of it */
+.header-line {
+	bottom: 0.5rem;
+}
+
+@media (--lg-and-up) {
+	.header-line {
+		bottom: 0.25rem;
+	}
 }
 
 @supports (backdrop-filter: blur(1px)) {
