@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"maps"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -371,18 +372,8 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		routes := map[string]route{
 			"auth":               {"POST", "/auth", authHandler},
 			"authmerged":         {"POST", "/auth/{class:[a-z]+}/merge/{id:[0-9.]+}", authHandler},
-			"templates":          {"GET", "/templates/{class:[a-z]+}", templatesHandler},
-			"products":           {"GET", "/products/{class:[a-z]+}", productsHandler},
-			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesConfigHandler},
-			"device":             {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
-			"devicestatus":       {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
 			"dirty":              {"GET", "/dirty", getHandler(ConfigDirty)},
 			"evccyaml":           {"GET", "/evcc.yaml", configYamlHandler(configFile)},
-			"newdevice":          {"POST", "/devices/{class:[a-z]+}", newDeviceHandler(site, auth)},
-			"updatedevice":       {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler(site, auth)},
-			"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler(site)},
-			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler(site, auth)},
-			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler(site, auth)},
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval, pub)},
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(pub)},
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
@@ -395,6 +386,8 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"createremoteclient": {"POST", "/remote/clients", createRemoteClientHandler(remoteAccess)},
 			"deleteremoteclient": {"DELETE", "/remote/clients", deleteRemoteClientHandler(remoteAccess)},
 		}
+
+		maps.Copy(routes, deviceRoutes(site, auth))
 
 		// yaml handlers
 		for key, fun := range map[string]func() (templates.Class, any, any){
@@ -501,5 +494,32 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		for _, r := range routes {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
+	}
+}
+
+// deviceRoutes are the device configuration routes below /api/config
+func deviceRoutes(site site.API, auth auth.Auth) map[string]route {
+	return map[string]route{
+		"templates":    {"GET", "/templates/{class:[a-z]+}", templatesHandler},
+		"products":     {"GET", "/products/{class:[a-z]+}", productsHandler},
+		"devices":      {"GET", "/devices/{class:[a-z]+}", devicesConfigHandler},
+		"device":       {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
+		"devicestatus": {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
+		"newdevice":    {"POST", "/devices/{class:[a-z]+}", newDeviceHandler(site, auth)},
+		"updatedevice": {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler(site, auth)},
+		"deletedevice": {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler(site)},
+		"testconfig":   {"POST", "/test/{class:[a-z]+}", testConfigHandler(site, auth)},
+		"testmerged":   {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler(site, auth)},
+	}
+}
+
+// RegisterDeviceHandlers registers only the device configuration api below /api/config
+func RegisterDeviceHandlers(router *mux.Router, site site.API, auth auth.Auth) {
+	api := router.PathPrefix("/api/config").Subrouter()
+	api.Use(jsonHandler)
+	api.Use(EnsureAuthHandler(auth))
+
+	for _, r := range deviceRoutes(site, auth) {
+		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 	}
 }
