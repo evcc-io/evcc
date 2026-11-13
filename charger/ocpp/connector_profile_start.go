@@ -17,6 +17,9 @@ const (
 	profileStartPoll    = 2 * time.Second
 	profileStartTimeout = 20 * time.Second
 	profileStartRetries = 1
+
+	// Huawei reports the start of its composite schedule a few seconds ahead of the request.
+	profileStartScheduleSkew = 30 * time.Second
 )
 
 // profileRemoteStart tracks the last acknowledged watt profile for an opted-in
@@ -228,7 +231,7 @@ func (conn *Connector) enqueueProfileStart(ctx context.Context, sequence uint64,
 func matchesStartSchedule(reply *smartcharging.GetCompositeScheduleConfirmation, connector int, limit float64, requested, now time.Time) bool {
 	if reply == nil || reply.Status != smartcharging.GetCompositeScheduleStatusAccepted ||
 		reply.ConnectorId == nil || *reply.ConnectorId != connector || reply.ScheduleStart == nil ||
-		reply.ScheduleStart.Before(requested.Add(-profileStartPoll)) || reply.ScheduleStart.After(now.Add(profileStartPoll)) {
+		reply.ScheduleStart.Before(requested.Add(-profileStartScheduleSkew)) || reply.ScheduleStart.After(now.Add(profileStartScheduleSkew)) {
 		return false
 	}
 

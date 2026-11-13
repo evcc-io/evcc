@@ -2,13 +2,49 @@ package ocpp
 
 import (
 	"context"
+	"testing"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestMatchesStartScheduleClockSkew(t *testing.T) {
+	requested := time.Date(2026, time.November, 12, 20, 45, 43, 0, time.UTC)
+
+	for _, tc := range []struct {
+		name   string
+		offset time.Duration
+		limit  float64
+		match  bool
+	}{
+		{"on time", 0, 11000, true},
+		{"Huawei schedule five seconds ahead", 5 * time.Second, 11000, true},
+		{"thirty seconds ahead", 30 * time.Second, 11000, true},
+		{"thirty seconds behind", -30 * time.Second, 11000, true},
+		{"too far ahead", 31 * time.Second, 11000, false},
+		{"too old", -31 * time.Second, 11000, false},
+		{"zero watt profile", 5 * time.Second, 0, false},
+		{"mismatched positive profile", 5 * time.Second, 4830, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			reply := &smartcharging.GetCompositeScheduleConfirmation{
+				Status:        smartcharging.GetCompositeScheduleStatusAccepted,
+				ConnectorId:   new(1),
+				ScheduleStart: types.NewDateTime(requested.Add(tc.offset)),
+				ChargingSchedule: &types.ChargingSchedule{
+					ChargingRateUnit:       types.ChargingRateUnitWatts,
+					ChargingSchedulePeriod: []types.ChargingSchedulePeriod{types.NewChargingSchedulePeriod(0, tc.limit)},
+				},
+			}
+			assert.Equal(t, tc.match, matchesStartSchedule(reply, 1, 11040, requested, requested))
+		})
+	}
+}
 
 type profileStartCentralSystem struct {
 	ocpp16.CentralSystem

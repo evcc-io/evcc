@@ -34,9 +34,10 @@ func (h *huaweiScheduleHandler) OnGetCompositeSchedule(req *smartcharging.GetCom
 	select {
 	case limit := <-h.limits:
 		return &smartcharging.GetCompositeScheduleConfirmation{
-			Status:        smartcharging.GetCompositeScheduleStatusAccepted,
-			ConnectorId:   &req.ConnectorId,
-			ScheduleStart: types.NewDateTime(time.Now().Truncate(time.Second)),
+			Status:      smartcharging.GetCompositeScheduleStatusAccepted,
+			ConnectorId: &req.ConnectorId,
+			// Reproduce the timestamp returned by the SCharger in the field.
+			ScheduleStart: types.NewDateTime(time.Now().Truncate(time.Second).Add(5 * time.Second)),
 			ChargingSchedule: &types.ChargingSchedule{
 				ChargingRateUnit:       types.ChargingRateUnitWatts,
 				ChargingSchedulePeriod: []types.ChargingSchedulePeriod{types.NewChargingSchedulePeriod(0, limit())},
