@@ -18,6 +18,7 @@ products:
   - brand: Indevolt
     description:
       generic: PowerFlex 3000 Hybrid
+capabilities: ["battery-control"]
 requirements:
   description:
     de: |
@@ -27,6 +28,8 @@ requirements:
 
       Vorzeichenkonvention der Batterieleistung sowie Verfügbarkeit eines Netzbezugs-/-einspeisepunktes (Register 2101/2108) hängen von der Installation (CT-Klemme) ab und sind ggf. zu prüfen.
 
+      Wird das Entladen der Batterie verhindert, wechselt sie in den Standby-Modus. Dadurch wird auch das Laden über direkt angeschlossene Solarmodule gestoppt.
+
       Siehe [docs.indevolt.com](https://docs.indevolt.com/docs/hardware/open-data/http-api/).
     en: |
       Local direct access to Indevolt devices (e.g. Solidflex series) via HTTP API on port 8080.
@@ -34,6 +37,8 @@ requirements:
       The device's IP address can be obtained from the Indevolt app, the router, or via UDP broadcast (port 10000). Assigning a static IP in the router is recommended.
 
       Battery power sign convention and availability of grid import/export readings (registers 2101/2108) depend on installation (CT clamp) and should be verified.
+
+      Preventing battery discharge puts the battery in standby, which also stops charging from directly connected solar panels.
 
       See [docs.indevolt.com](https://docs.indevolt.com/docs/hardware/open-data/http-api/).
 params:
@@ -47,6 +52,11 @@ params:
   - name: cache
     default: 5s
   - preset: battery-params
+  - name: maxchargepower
+    default: 1200
+    help:
+      en: Power used for grid charging. Adjust to the supported charging power of your device.
+      de: Leistung für das Netzladen. An die unterstützte Ladeleistung des Geräts anpassen.
 render: |
   {{- define "auth" }}
   {{- if .user }}
@@ -112,5 +122,6 @@ render: |
     {{- include "auth" . | indent 2 }}
     jq: ."6007" # Battery Total Discharging Energy (kWh)
     cache: {{ .cache }}
+  {{- include "indevolt-batterymode" . }}
   {{- include "battery-params" . }}
   {{- end }}
