@@ -1417,42 +1417,50 @@
         }
       }
     },
-    "/solarcorrection/{percent}": {
+    "/optimizerriskprofile": {
       "post": {
-        "operationId": "setSolarCorrection",
-        "summary": "Set solar forecast correction",
-        "description": "Adjust the solar forecast used by the optimizer by a percentage. Positive values expect more solar than forecasted, negative values less. 0 disables.",
+        "operationId": "setOptimizerRiskProfile",
+        "summary": "Set optimizer risk profile",
+        "description": "Make the optimizer hedge against forecast errors. A slot may deliver less solar and need more energy than forecasted by the given shares, in at most `budget` slots per day.",
         "tags": [
           "experimental"
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/percent"
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskProfile"
+              }
+            }
           }
-        ],
+        },
         "responses": {
           "200": {
-            "$ref": "#/components/responses/NumberResult"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid risk profile."
           }
         }
-      }
-    },
-    "/householdcorrection/{percent}": {
-      "post": {
-        "operationId": "setHouseholdCorrection",
-        "summary": "Set household consumption correction",
-        "description": "Adjust the household base load forecast used by the optimizer by a percentage. Positive values expect more consumption than forecasted, negative values less. 0 disables. Heating demand is not affected.",
+      },
+      "delete": {
+        "operationId": "removeOptimizerRiskProfile",
+        "summary": "Remove optimizer risk profile",
+        "description": "The optimizer plans on the forecasts as they are.",
         "tags": [
           "experimental"
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/percent"
-          }
-        ],
         "responses": {
           "200": {
-            "$ref": "#/components/responses/NumberResult"
+            "$ref": "#/components/responses/NullResult"
           }
         }
       }
@@ -3659,6 +3667,29 @@
         "required": [
           "continuous",
           "precondition"
+        ]
+      },
+      "RiskProfile": {
+        "description": "Forecast uncertainty the optimizer hedges against.",
+        "type": "object",
+        "properties": {
+          "solar": {
+            "description": "Share of the solar forecast a slot may fall short of, between 0 and 1.",
+            "type": "number"
+          },
+          "demand": {
+            "description": "Share of the demand forecast a slot may exceed, between 0 and 1.",
+            "type": "number"
+          },
+          "budget": {
+            "description": "15min slots per day that deviate adversely, above 0 up to 96.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "solar",
+          "demand",
+          "budget"
         ]
       },
       "OnboardingItem": {
@@ -5978,14 +6009,6 @@
             "type": "number",
             "nullable": true
           },
-          "solarCorrection": {
-            "description": "Solar forecast correction in %, positive = more solar than forecasted.",
-            "type": "number"
-          },
-          "householdCorrection": {
-            "description": "Household consumption forecast correction in %, positive = more consumption than forecasted.",
-            "type": "number"
-          },
           "greenShareHome": {
             "description": "Share of green energy in home consumption, between 0 and 1.",
             "type": "number"
@@ -6222,6 +6245,15 @@
               "type": "string"
             }
           },
+          "optimizerRiskProfile": {
+            "description": "Forecast uncertainty the optimizer hedges against. Null plans on the forecasts as they are.",
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RiskProfile"
+              }
+            ]
+          },
           "mcp": {
             "description": "Built-in MCP server is enabled.",
             "type": "boolean"
@@ -6432,17 +6464,6 @@
         "required": true,
         "schema": {
           "$ref": "#/components/schemas/Power"
-        }
-      },
-      "percent": {
-        "name": "percent",
-        "description": "Percentage, may be negative",
-        "in": "path",
-        "required": true,
-        "schema": {
-          "type": "number",
-          "minimum": -100,
-          "maximum": 100
         }
       },
       "batteryMode": {

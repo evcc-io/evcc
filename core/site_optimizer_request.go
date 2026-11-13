@@ -157,6 +157,14 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		},
 	}
 
+	if rp := site.GetOptimizerRiskProfile(); rp != nil {
+		req.Uncertainty = optimizer.Uncertainty{
+			FtDev:  float32(rp.Solar),
+			GtDev:  float32(rp.Demand),
+			Budget: float32(rp.Budget),
+		}
+	}
+
 	// individual profiles summarized into Gt, for the debug view
 	details = requestDetails{
 		Timestamps: asTimestamps(dt, now),

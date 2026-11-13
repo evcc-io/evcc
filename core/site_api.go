@@ -480,42 +480,6 @@ func (site *Site) SetProfilePercentile(percentile *float64) error {
 	return nil
 }
 
-// GetSolarCorrection returns the solar forecast correction in %, positive = more solar than forecasted
-func (site *Site) GetSolarCorrection() float64 {
-	v, _ := settings.Float(keys.SolarCorrection)
-	return v
-}
-
-// SetSolarCorrection sets the solar forecast correction in %, positive = more solar than forecasted
-func (site *Site) SetSolarCorrection(val float64) error {
-	return site.setForecastCorrection(keys.SolarCorrection, val)
-}
-
-// GetHouseholdCorrection returns the household consumption correction in %, positive = more consumption than forecasted
-func (site *Site) GetHouseholdCorrection() float64 {
-	v, _ := settings.Float(keys.HouseholdCorrection)
-	return v
-}
-
-// SetHouseholdCorrection sets the household consumption correction in %, positive = more consumption than forecasted
-func (site *Site) SetHouseholdCorrection(val float64) error {
-	return site.setForecastCorrection(keys.HouseholdCorrection, val)
-}
-
-func (site *Site) setForecastCorrection(key string, val float64) error {
-	if val < -100 || val > 100 {
-		return fmt.Errorf("invalid %s: %g", key, val)
-	}
-
-	settings.SetFloat(key, val)
-	site.publish(key, val)
-
-	// re-run the optimizer so the new forecast takes effect immediately
-	go site.optimizerUpdateAsync(true)
-
-	return nil
-}
-
 // GetTariff returns the respective tariff if configured or nil
 func (site *Site) GetTariff(tariff api.TariffUsage) api.Tariff {
 	site.RLock()
@@ -738,6 +702,38 @@ func (site *Site) SetOptimizerChargingStrategy(strategy string) error {
 		// re-run the optimizer so the new strategy takes effect immediately
 		go site.optimizerUpdateAsync(true)
 	}
+
+	return nil
+}
+
+// GetOptimizerRiskProfile returns the forecast uncertainty the optimizer hedges against, nil = none
+func (site *Site) GetOptimizerRiskProfile() *api.RiskProfile {
+	var res api.RiskProfile
+	if err := settings.Json(keys.OptimizerRiskProfile, &res); err != nil {
+		return nil
+	}
+	return &res
+}
+
+// SetOptimizerRiskProfile sets the forecast uncertainty the optimizer hedges against, nil = none
+func (site *Site) SetOptimizerRiskProfile(profile *api.RiskProfile) error {
+	if profile == nil {
+		if err := settings.Delete(keys.OptimizerRiskProfile); err != nil {
+			return err
+		}
+	} else {
+		if err := profile.Validate(); err != nil {
+			return err
+		}
+		if err := settings.SetJson(keys.OptimizerRiskProfile, profile); err != nil {
+			return err
+		}
+	}
+
+	site.publish(keys.OptimizerRiskProfile, profile)
+
+	// re-run the optimizer so the new profile takes effect immediately
+	go site.optimizerUpdateAsync(true)
 
 	return nil
 }

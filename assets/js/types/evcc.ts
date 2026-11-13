@@ -257,10 +257,6 @@ export interface State {
   gridExportLimit?: number;
   /** Percentile of the historic energy profiles used for demand prediction in %, e.g. 50 = median. Null uses the average. */
   profilePercentile?: number | null;
-  /** Solar forecast correction in %, positive = more solar than forecasted. */
-  solarCorrection?: number;
-  /** Household consumption forecast correction in %, positive = more consumption than forecasted. */
-  householdCorrection?: number;
   /** Share of green energy in home consumption, between 0 and 1. */
   greenShareHome?: number;
   /** Share of green energy used for charging, between 0 and 1. */
@@ -370,6 +366,8 @@ export interface State {
   optimizerChargingStrategy?: string;
   /** Available battery optimizer charging strategies. */
   optimizerChargingStrategies?: string[];
+  /** Forecast uncertainty the optimizer hedges against. Null plans on the forecasts as they are. */
+  optimizerRiskProfile?: RiskProfile | null;
   /** Built-in MCP server is enabled. */
   mcp?: boolean;
   /** Instance runs in demo mode. */
@@ -1362,6 +1360,16 @@ export interface StaticEnergyPlan {
   energy: number;
   /** Target time. */
   time: Date;
+}
+
+/** Forecast uncertainty the optimizer hedges against. */
+export interface RiskProfile {
+  /** Share of the solar forecast a slot may fall short of, between 0 and 1. */
+  solar: number;
+  /** Share of the demand forecast a slot may exceed, between 0 and 1. */
+  demand: number;
+  /** 15min slots per day that deviate adversely, above 0 up to 96. */
+  budget: number;
 }
 
 /** Charging plan strategy. */

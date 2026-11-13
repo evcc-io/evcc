@@ -24,9 +24,8 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		return nil, err
 	}
 
-	// convert to Wh, apply household correction
-	scale := 1e3 * (1 + site.GetHouseholdCorrection()/100)
-	return lo.Map(tileAndTrim(base[:], minLen), func(v float64, _ int) float64 { return v * scale }), nil
+	// convert to Wh
+	return lo.Map(tileAndTrim(base[:], minLen), func(v float64, _ int) float64 { return v * 1e3 }), nil
 }
 
 // heatingDemand is the forecast demand in Wh a single heating loadpoint contributes

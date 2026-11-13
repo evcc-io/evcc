@@ -132,8 +132,8 @@ github.com/evcc-io/ocpp-go v0.0.0-20260812074841-a8aa5fef8a9e h1:NHimNp7oIn4YERn
 github.com/evcc-io/ocpp-go v0.0.0-20260812074841-a8aa5fef8a9e/go.mod h1:2kcukDdhui4u730VfnYVWuwzDLgw+mBRGDir/QAyBhg=
 github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4 h1:aGM3NwDsKbnmiaO10ptbvEolRAUThWJEsObiAWFDU/c=
 github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4/go.mod h1:YyOx4zwr6xVUcchAETHERZ+75cZMIrdcjVIZFwBlE1Q=
-github.com/evcc-io/optimizer v0.0.0-20261109163106-a7a45da92b13 h1:PrMFlK/DIM2tcWHq+npMHJGTbyYiCvJE3v/0gZWO5/0=
-github.com/evcc-io/optimizer v0.0.0-20261109163106-a7a45da92b13/go.mod h1:xpgtmxTi0OUd3PBFwSz6KaA8/CZln9bpiEmN5RBzg1I=
+github.com/evcc-io/optimizer v0.0.0-20261111163058-dc3654111301 h1:EI9zQw0/PIyrLKgzpPEDVy3G1rwafGoePtlxbLYxQJg=
+github.com/evcc-io/optimizer v0.0.0-20261111163058-dc3654111301/go.mod h1:xpgtmxTi0OUd3PBFwSz6KaA8/CZln9bpiEmN5RBzg1I=
 github.com/evcc-io/rct v0.3.0 h1:BZ0QCG72G1AcOk+RXE/vbJ4O7n0zA5ka3zntClzcYBI=
 github.com/evcc-io/rct v0.3.0/go.mod h1:n6MTBU36QOadGlxxiADu86VaT5l0eYdbmFBHF14AD/s=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=

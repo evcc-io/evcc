@@ -61,14 +61,13 @@ const (
 	GridExportLimit = "gridExportLimit"
 
 	// forecast settings
-	SolarAdjusted       = "solarAdjusted"
-	ProfilePercentile   = "profilePercentile"
-	SolarCorrection     = "solarCorrection"
-	HouseholdCorrection = "householdCorrection"
+	SolarAdjusted     = "solarAdjusted"
+	ProfilePercentile = "profilePercentile"
 
 	// optimizer
 	OptimizerChargingStrategy   = "optimizerChargingStrategy"
 	OptimizerChargingStrategies = "optimizerChargingStrategies"
+	OptimizerRiskProfile        = "optimizerRiskProfile"
 
 	// battery status
 	Battery     = "battery"

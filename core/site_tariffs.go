@@ -243,13 +243,12 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 }
 
 // effectiveSolarScale returns the solar forecast scale used to adjust the
-// optimizer's solar input: the adjustment scale if enabled, times the solar correction.
+// optimizer's solar input if forecast adjustment is enabled, 1 otherwise.
 func (site *Site) effectiveSolarScale() float64 {
-	scale := 1 + site.GetSolarCorrection()/100
-	if site.GetSolarAdjusted() {
-		scale *= site.solarScale()
+	if !site.GetSolarAdjusted() {
+		return 1
 	}
-	return scale
+	return site.solarScale()
 }
 
 const (

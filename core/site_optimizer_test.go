@@ -855,26 +855,26 @@ func TestProfilePercentile(t *testing.T) {
 	assert.Nil(t, site.GetProfilePercentile())
 }
 
-func TestForecastCorrections(t *testing.T) {
+func TestOptimizerRiskProfile(t *testing.T) {
 	site := &Site{log: util.NewLogger("foo")}
-	t.Cleanup(func() {
-		require.NoError(t, site.SetSolarCorrection(0))
-		require.NoError(t, site.SetHouseholdCorrection(0))
-	})
+	t.Cleanup(func() { require.NoError(t, site.SetOptimizerRiskProfile(nil)) })
 
-	assert.Equal(t, 0.0, site.GetSolarCorrection())
-	assert.Equal(t, 1.0, site.effectiveSolarScale())
+	// none by default
+	assert.Nil(t, site.GetOptimizerRiskProfile())
 
 	// out of range rejected, unchanged
-	require.Error(t, site.SetSolarCorrection(-101))
-	require.Error(t, site.SetHouseholdCorrection(101))
-	assert.Equal(t, 0.0, site.GetHouseholdCorrection())
+	require.Error(t, site.SetOptimizerRiskProfile(&api.RiskProfile{Solar: 1.1, Budget: 8}))
+	require.Error(t, site.SetOptimizerRiskProfile(&api.RiskProfile{Demand: -0.1, Budget: 8}))
+	require.Error(t, site.SetOptimizerRiskProfile(&api.RiskProfile{Solar: 0.3}))
+	require.Error(t, site.SetOptimizerRiskProfile(&api.RiskProfile{Solar: 0.3, Budget: 97}))
+	assert.Nil(t, site.GetOptimizerRiskProfile())
 
-	require.NoError(t, site.SetSolarCorrection(-20))
-	assert.InDelta(t, 0.8, site.effectiveSolarScale(), 1e-9)
+	profile := api.RiskProfile{Solar: 0.3, Demand: 0.2, Budget: 8}
+	require.NoError(t, site.SetOptimizerRiskProfile(&profile))
+	assert.Equal(t, &profile, site.GetOptimizerRiskProfile())
 
-	require.NoError(t, site.SetHouseholdCorrection(10))
-	assert.Equal(t, 10.0, site.GetHouseholdCorrection())
+	require.NoError(t, site.SetOptimizerRiskProfile(nil))
+	assert.Nil(t, site.GetOptimizerRiskProfile())
 }
 
 func TestBlendMeasured(t *testing.T) {

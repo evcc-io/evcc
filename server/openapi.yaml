@@ -850,30 +850,37 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/BooleanResult"
-  /solarcorrection/{percent}:
+  /optimizerriskprofile:
     post:
-      operationId: setSolarCorrection
-      summary: Set solar forecast correction
-      description: "Adjust the solar forecast used by the optimizer by a percentage. Positive values expect more solar than forecasted, negative values less. 0 disables."
+      operationId: setOptimizerRiskProfile
+      summary: Set optimizer risk profile
+      description: "Make the optimizer hedge against forecast errors. A slot may deliver less solar and need more energy than forecasted by the given shares, in at most `budget` slots per day."
       tags:
         - experimental
-      parameters:
-        - $ref: "#/components/parameters/percent"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./openapi.state.yaml#/components/schemas/RiskProfile"
       responses:
         "200":
-          $ref: "#/components/responses/NumberResult"
-  /householdcorrection/{percent}:
-    post:
-      operationId: setHouseholdCorrection
-      summary: Set household consumption correction
-      description: "Adjust the household base load forecast used by the optimizer by a percentage. Positive values expect more consumption than forecasted, negative values less. 0 disables. Heating demand is not affected."
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "./openapi.state.yaml#/components/schemas/RiskProfile"
+        "400":
+          description: "Invalid risk profile."
+    delete:
+      operationId: removeOptimizerRiskProfile
+      summary: Remove optimizer risk profile
+      description: "The optimizer plans on the forecasts as they are."
       tags:
         - experimental
-      parameters:
-        - $ref: "#/components/parameters/percent"
       responses:
         "200":
-          $ref: "#/components/responses/NumberResult"
+          $ref: "#/components/responses/NullResult"
   /config/optimizerautomatic/{value}:
     post:
       operationId: setOptimizerAutomatic
@@ -2379,15 +2386,6 @@ components:
       required: true
       schema:
         $ref: "#/components/schemas/Power"
-    percent:
-      name: percent
-      description: Percentage, may be negative
-      in: path
-      required: true
-      schema:
-        type: number
-        minimum: -100
-        maximum: 100
     batteryMode:
       name: batteryMode
       in: path
