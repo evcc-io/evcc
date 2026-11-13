@@ -1,0 +1,33 @@
+template: tuya
+products:
+  - brand: Tuya
+    description:
+      generic: Smart Plug
+capabilities: ["meter"]
+group: switchsockets
+requirements:
+  description:
+    de: |
+      Lokale Verbindung über das Tuya-Protokoll für Steckdosen mit Energiemessung (Apps: „Smart Life“, „Tuya“).
+      Device ID und Local Key müssen einmalig ermittelt werden, z. B. mit `tinytuya wizard`, das dafür ein Konto auf der Tuya-IoT-Plattform benötigt. Im Betrieb ist kein Cloud-Zugang nötig. Das Gerät erlaubt nur eine lokale Verbindung gleichzeitig, andere lokale Integrationen (z. B. LocalTuya, Tuya Local) müssen deaktiviert werden.
+    en: |
+      Local connection via the Tuya protocol for plugs with energy monitoring (apps: "Smart Life", "Tuya").
+      Device ID and local key must be retrieved once, e.g. using `tinytuya wizard`, which requires an account on the Tuya IoT platform. No cloud access is needed during operation. The device accepts only one local connection at a time, other local integrations (e.g. LocalTuya, Tuya Local) must be disabled.
+params:
+  - name: host
+  - name: id
+    required: true
+    description:
+      generic: Device ID
+  - name: localkey
+    required: true
+    mask: true
+    description:
+      generic: Local Key
+  - preset: switchsocket
+render: |
+  type: tuya
+  host: {{ .host }}
+  id: {{ .id }}
+  localkey: {{ .localkey }}
+  {{ include "switchsocket" . }}
