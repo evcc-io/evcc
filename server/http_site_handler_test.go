@@ -23,15 +23,18 @@ func (s riskProfileSite) GetOptimizerRiskProfile() *api.RiskProfile {
 }
 
 func TestOptimizerRiskProfileGet(t *testing.T) {
-	for want, profile := range map[string]*api.RiskProfile{
-		"null\n": nil,
-		`{"solar":0.3,"demand":0.2,"budget":8}` + "\n": {Solar: 0.3, Demand: 0.2, Budget: 8},
+	for _, tc := range []struct {
+		profile *api.RiskProfile
+		want    string
+	}{
+		{nil, "null"},
+		{&api.RiskProfile{Solar: 0.3, Demand: 0.2, Budget: 8}, `{"solar":0.3,"demand":0.2,"budget":8}`},
 	} {
 		w := httptest.NewRecorder()
-		optimizerRiskProfileHandler(riskProfileSite{profile: profile})(w, httptest.NewRequest(http.MethodGet, "/optimizerriskprofile", nil))
+		optimizerRiskProfileHandler(riskProfileSite{profile: tc.profile})(w, httptest.NewRequest(http.MethodGet, "/optimizerriskprofile", nil))
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Equal(t, want, w.Body.String())
+		assert.JSONEq(t, tc.want, w.Body.String())
 	}
 }
 
