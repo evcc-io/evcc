@@ -1248,7 +1248,11 @@
         "returnEnergy": "Energie (rückwärts)"
       }
     },
-    "empty": "Keine Energiedaten für diesen Zeitraum verfügbar.",
+    "empty": {
+      "description": "Keine Energiedaten für diesen Zeitraum.",
+      "descriptionCurrent": "Noch keine Energiedaten. Werte erscheinen, sobald die ersten Messungen aufgezeichnet wurden.",
+      "showCurrent": "Aktuellen Zeitraum anzeigen"
+    },
     "flow": {
       "battery": "Batterie",
       "batteryCharge": "Batterieladung",
@@ -1322,6 +1326,7 @@
       "savingsTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz.",
       "versus": "{value} statt {reference}"
     },
+    "summary": "Zusammenfassung",
     "title": "Energie"
   },
   "footer": {
@@ -1464,6 +1469,7 @@
     "cancel": "Abbrechen",
     "download": "Download",
     "error": "Fehler",
+    "loading": "Lädt",
     "none": "keine",
     "note": "Hinweis:",
     "warning": "Warnung"

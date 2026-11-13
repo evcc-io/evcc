@@ -1,11 +1,5 @@
 <template>
-	<Card
-		:title="$t('energy.group.meter')"
-		edge-to-edge
-		class="box-pull-out mb-4"
-		data-testid="energy-meters"
-		data-anchor
-	>
+	<Card :title="$t('energy.group.meter')" edge-to-edge class="box-pull-out mb-4" data-anchor>
 		<EntityDetail
 			v-for="(m, i) in meters"
 			:key="m.title"

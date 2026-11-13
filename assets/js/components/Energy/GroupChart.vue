@@ -162,6 +162,9 @@ export default defineComponent({
 		},
 		// Peak of stacked per-slot sums, incl. overlay when shown so its line isn't
 		// clipped. Bidirectional: pos/neg separately.
+		hasSlots(): boolean {
+			return this.series.some((s) => s.data.length > 0);
+		},
 		axisPeak(): number {
 			const factor = this.valueFactor;
 			// Stacked groups: sum entities per slot. Unstacked (grid, meter): max per entity.
@@ -1028,9 +1031,11 @@ export default defineComponent({
 							showMaxLine: true,
 							lineStyle: { color: colors.border || "" },
 						},
-						name: this.unit,
+						// without series the scale is made up, only its lines show
+						name: this.hasSlots ? this.unit : "",
 						...axisNameStyle(),
 						axisLabel: {
+							show: this.hasSlots,
 							color: colors.muted || "",
 							hideOverlap: true,
 							formatter: (v: number): string => {
