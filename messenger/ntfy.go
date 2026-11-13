@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -89,9 +90,19 @@ func (m *Ntfy) Send(title, msg string) {
 	})
 	if err != nil {
 		m.log.ERROR.Printf("ntfy: %v", err)
+		return
 	}
 
-	if _, err := http.DefaultClient.Do(req); err != nil {
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
 		m.log.ERROR.Printf("ntfy: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		// the body carries the server's reason, the uri is left out as it holds the token
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
+		m.log.ERROR.Printf("ntfy: unexpected status: %d (%s) %s", resp.StatusCode, http.StatusText(resp.StatusCode), strings.TrimSpace(string(body)))
 	}
 }
