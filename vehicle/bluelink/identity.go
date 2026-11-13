@@ -253,15 +253,16 @@ func (v *Identity) controlToken(pin string) (string, error) {
 	}
 
 	var res struct {
-		ResMsg struct {
-			ControlToken string
-		}
+		ControlToken string
 	}
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
+	if err == nil && res.ControlToken == "" {
+		err = errors.New("pin verification failed")
+	}
 
-	return "Bearer " + res.ResMsg.ControlToken, err
+	return "Bearer " + res.ControlToken, err
 }
 
 // stamp creates a stamp locally according to https://github.com/Hyundai-Kia-Connect/hyundai_kia_connect_api/pull/371

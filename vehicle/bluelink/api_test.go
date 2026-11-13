@@ -57,9 +57,7 @@ func TestChargeEnableCCS2(t *testing.T) {
 	mux.HandleFunc("/api/v1/user/pin", func(w http.ResponseWriter, r *http.Request) {
 		pin++
 		assert.Equal(t, http.MethodPut, r.Method)
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"resMsg": map[string]any{"controlToken": "ctrl"},
-		})
+		_ = json.NewEncoder(w).Encode(map[string]any{"controlToken": "ctrl"})
 	})
 	mux.HandleFunc("/api/v2/spa/vehicles/VID/ccs2/control/charge", func(w http.ResponseWriter, r *http.Request) {
 		charge++
@@ -82,7 +80,7 @@ func TestChargeEnableCCS2(t *testing.T) {
 func TestChargeEnableLegacy(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/v1/user/pin", func(http.ResponseWriter, *http.Request) {
-		t.Fatal("legacy charge control must not verify PIN")
+		t.Error("legacy charge control must not verify PIN")
 	})
 	mux.HandleFunc("/api/v1/spa/vehicles/VID/control/charge", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodPost, r.Method)
