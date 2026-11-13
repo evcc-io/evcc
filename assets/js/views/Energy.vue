@@ -63,7 +63,7 @@
 						:title="overviewTitle"
 						edge-to-edge
 						class="box-pull-out mb-4"
-						data-testid="energy-flow"
+						:label="$t('energy.flow.overview')"
 						data-anchor
 					>
 						<template #actions>
@@ -140,7 +140,6 @@
 						:title="$t('energy.grid.title')"
 						edge-to-edge
 						class="box-pull-out mb-4"
-						data-testid="energy-grid"
 						data-anchor
 					>
 						<template #icon>
@@ -193,7 +192,7 @@
 						:parent-static="!focusedPvSeries"
 						edge-to-edge
 						class="box-pull-out mb-4"
-						data-testid="energy-production"
+						:label="$t('energy.production.title')"
 						data-anchor
 						@parent="clearFocusPv"
 					>
@@ -259,7 +258,6 @@
 						:to="to"
 						:chart="entityChart"
 						:direction="batteryDirection"
-						data-testid="energy-battery"
 						@update:chart="setEntityChart"
 						@update:direction="setBatteryDirection"
 						@drill="drillDown"
@@ -284,7 +282,6 @@
 						:to="to"
 						:currency="currency"
 						:chart="entityChart"
-						:data-testid="`energy-${lps.key}`"
 						@update:chart="setEntityChart"
 						@drill="drillDown"
 						@sources="showSources"
@@ -300,7 +297,7 @@
 						:title="consumer ? '' : $t('energy.group.consumer')"
 						edge-to-edge
 						class="box-pull-out mb-4"
-						data-testid="energy-consumers"
+						:label="$t('energy.group.consumer')"
 						data-anchor="consumers"
 					>
 						<template #icon><shopicon-regular-home></shopicon-regular-home></template>
@@ -378,7 +375,7 @@
 						v-else-if="homeEnergy > 0"
 						edge-to-edge
 						class="box-pull-out mb-4"
-						data-testid="energy-consumers"
+						:label="$t('energy.group.consumer')"
 						data-anchor="consumers"
 					>
 						<EntityDetail

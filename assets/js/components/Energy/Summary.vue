@@ -1,5 +1,5 @@
 <template>
-	<Card edge-to-edge class="box-pull-out mb-4" data-testid="energy-summary" data-anchor>
+	<Card :label="$t('energy.summary')" edge-to-edge class="box-pull-out mb-4" data-anchor>
 		<div class="row gx-4 gx-xl-5 gy-4">
 			<div
 				v-for="ring in rings"

@@ -12,7 +12,9 @@
 			<div
 				class="loading-line header-line position-absolute start-0 end-0 mx-4"
 				:class="{ 'loading-line--active': loading }"
-				aria-hidden="true"
+				role="progressbar"
+				:aria-label="$t('general.loading')"
+				:aria-hidden="!loading"
 			></div>
 		</div>
 	</div>

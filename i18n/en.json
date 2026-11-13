@@ -1357,6 +1357,7 @@
     "cancel": "Cancel",
     "download": "Download",
     "error": "Error",
+    "loading": "Loading",
     "none": "none",
     "note": "Note:",
     "warning": "Warning"
@@ -1501,6 +1502,7 @@
       "savingsTooltip": "Compared to buying the consumed {energy} from the grid.",
       "versus": "{value} vs. {reference}"
     },
+    "summary": "Summary",
     "title": "Energy"
   },
   "issue": {
