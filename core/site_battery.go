@@ -89,6 +89,18 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischarg
 	}
 }
 
+func (site *Site) batteryModeUncertain() bool {
+	for _, dev := range site.batteryMeters {
+		if dev == nil || !api.HasCap[api.BatteryController](dev.Instance()) {
+			continue
+		}
+		if mode, ok := site.batteryModeApplied[dev.Config().Name]; ok && mode == api.BatteryUnknown {
+			return true
+		}
+	}
+	return false
+}
+
 // requiredBatteryMode determines required battery mode based on grid charge/discharge and rate
 func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischargeActive bool, rate api.Rate) api.BatteryMode {
 	var res api.BatteryMode
@@ -150,6 +162,12 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		res = api.BatteryNormal
 	}
 
+	if res == api.BatteryUnknown && site.batteryModeUncertain() {
+		res = batMode
+		if res == api.BatteryUnknown {
+			res = api.BatteryNormal
+		}
+	}
 	return res
 }
 
@@ -312,6 +330,8 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 		}
 		deviceMode = applyMode
 
+		// A failed sequence may have changed the device before returning an error.
+		site.batteryModeApplied[name] = api.BatteryUnknown
 		if err := batCtrl.SetBatteryMode(deviceMode); err != nil {
 			if !errors.Is(err, api.ErrNotAvailable) {
 				return err

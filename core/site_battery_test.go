@@ -666,3 +666,127 @@ func TestEvFastChargingActiveDisabledLoadpoint(t *testing.T) {
 
 	assert.False(t, site.evFastChargingActive())
 }
+
+func TestBatteryModeRejectedWriteRetries(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	batCon := batteryControllerMock(ctrl)
+	bat := &struct {
+		api.Meter
+		api.BatteryController
+	}{BatteryController: batCon}
+	site := &Site{
+		log:                util.NewLogger("foo"),
+		batteryMeters:      []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, api.Meter(bat))},
+		batteryModeApplied: map[string]api.BatteryMode{"bat": api.BatteryHoldDischarge},
+	}
+	rejected := errors.New("write rejected")
+	gomock.InOrder(
+		batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Return(rejected),
+		batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Return(nil),
+	)
+	assert.ErrorIs(t, site.applyBatteryMode(api.BatteryNormal), rejected)
+	assert.Equal(t, api.BatteryUnknown, site.batteryModeApplied["bat"])
+	assert.NoError(t, site.applyBatteryMode(api.BatteryNormal))
+	assert.Equal(t, api.BatteryNormal, site.batteryModeApplied["bat"])
+	assert.NoError(t, site.applyBatteryMode(api.BatteryNormal))
+}
+
+func TestBatteryModeFailedChargeRecovery(t *testing.T) {
+	for _, failure := range []error{errors.New("write rejected"), errors.New("timeout"), api.ErrNotAvailable} {
+		t.Run(failure.Error(), func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			batCon := batteryControllerMock(ctrl)
+			bat := &struct {
+				api.Meter
+				api.BatteryController
+			}{BatteryController: batCon}
+			site := &Site{
+				log:                util.NewLogger("foo"),
+				batteryMeters:      []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, api.Meter(bat))},
+				batteryMode:        api.BatteryNormal,
+				batteryModeApplied: map[string]api.BatteryMode{"bat": api.BatteryNormal},
+			}
+			gomock.InOrder(
+				batCon.EXPECT().SetBatteryMode(api.BatteryCharge).Return(failure),
+				batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Return(errors.New("recovery failed")),
+				batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Return(nil),
+			)
+			site.updateBatteryMode(true, false, api.Rate{})
+			assert.True(t, site.batteryModeUncertain())
+			site.updateBatteryMode(false, false, api.Rate{})
+			assert.True(t, site.batteryModeUncertain())
+			site.updateBatteryMode(false, false, api.Rate{})
+			assert.False(t, site.batteryModeUncertain())
+			assert.Equal(t, api.BatteryNormal, site.batteryModeApplied["bat"])
+			site.updateBatteryMode(false, false, api.Rate{})
+		})
+	}
+}
+
+func TestBatteryModeFailedChangeRetriesCurrentExternalMode(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	batCon := batteryControllerMock(ctrl)
+	bat := &struct {
+		api.Meter
+		api.BatteryController
+	}{BatteryController: batCon}
+	site := &Site{
+		log:                 util.NewLogger("foo"),
+		batteryMeters:       []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, api.Meter(bat))},
+		batteryMode:         api.BatteryHoldDischarge,
+		batteryModeExternal: api.BatteryCharge,
+		batteryModeApplied:  map[string]api.BatteryMode{"bat": api.BatteryHoldDischarge},
+	}
+	gomock.InOrder(
+		batCon.EXPECT().SetBatteryMode(api.BatteryCharge).Return(errors.New("write rejected")),
+		batCon.EXPECT().SetBatteryMode(api.BatteryHoldDischarge).Return(nil),
+	)
+	site.updateBatteryMode(false, false, api.Rate{})
+	site.batteryModeExternal = api.BatteryHoldDischarge
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.False(t, site.batteryModeUncertain())
+	assert.Equal(t, api.BatteryHoldDischarge, site.batteryModeApplied["bat"])
+	site.updateBatteryMode(false, false, api.Rate{})
+}
+
+func TestBatteryModePartialFailureAcrossDevices(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	site := &Site{
+		log:                util.NewLogger("foo"),
+		batteryMode:        api.BatteryNormal,
+		batteryModeApplied: map[string]api.BatteryMode{},
+	}
+	controllers := make([]*api.MockBatteryController, 3)
+	for i, name := range []string{"charged", "failed", "untouched"} {
+		controllers[i] = batteryControllerMock(ctrl)
+		bat := &struct {
+			api.Meter
+			api.BatteryController
+		}{BatteryController: controllers[i]}
+		site.batteryMeters = append(site.batteryMeters, config.NewStaticDevice(config.Named{Name: name}, api.Meter(bat)))
+		site.batteryModeApplied[name] = api.BatteryNormal
+	}
+	gomock.InOrder(
+		controllers[0].EXPECT().SetBatteryMode(api.BatteryCharge).Return(nil),
+		controllers[1].EXPECT().SetBatteryMode(api.BatteryCharge).Return(errors.New("write rejected")),
+		controllers[0].EXPECT().SetBatteryMode(api.BatteryNormal).Return(nil),
+		controllers[1].EXPECT().SetBatteryMode(api.BatteryNormal).Return(nil),
+	)
+	site.updateBatteryMode(true, false, api.Rate{})
+	assert.Equal(t, api.BatteryCharge, site.batteryModeApplied["charged"])
+	assert.Equal(t, api.BatteryUnknown, site.batteryModeApplied["failed"])
+	assert.Equal(t, api.BatteryNormal, site.batteryModeApplied["untouched"])
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.False(t, site.batteryModeUncertain())
+	site.updateBatteryMode(false, false, api.Rate{})
+}
+
+func TestBatteryModeUncertainIgnoresInactiveControllers(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	meter := api.NewMockMeter(ctrl)
+	site := &Site{
+		batteryMeters:      []config.Device[api.Meter]{nil, config.NewStaticDevice(config.Named{Name: "readOnly"}, api.Meter(meter))},
+		batteryModeApplied: map[string]api.BatteryMode{"readOnly": api.BatteryUnknown, "removed": api.BatteryUnknown},
+	}
+	assert.False(t, site.batteryModeUncertain())
+}
