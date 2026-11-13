@@ -219,6 +219,36 @@ func TestForwarderDialRetry(t *testing.T) {
 	assert.GreaterOrEqual(t, reqs.Load(), int32(3))
 }
 
+func TestForwarderRuleRemovalReleasesBufferedCalls(t *testing.T) {
+	const id = "fwd-rule-removal-buffer-test"
+
+	cleanup := forwarderTestSetup(t, id)
+	defer cleanup()
+
+	// leftover buffer slot from a rule that existed at connect time
+	pendingMu.Lock()
+	pendingMsgs[id] = nil
+	pendingMu.Unlock()
+
+	// while a buffer slot exists, relay Calls are bypassed and buffered for upstream
+	startTx := []byte(`[2,"tx-1","StartTransaction",{"connectorId":1,"idTag":"TAG","meterStart":0,"timestamp":"2026-10-29T10:00:00Z"}]`)
+	assert.True(t, onChargerMessage(fakeChannel(id), startTx))
+
+	pendingMu.Lock()
+	buffered := pendingMsgs[id]
+	pendingMu.Unlock()
+	require.Len(t, buffered, 1)
+
+	// removing the rule must release the buffer: evcc stays authoritative
+	ApplyForwarderRules(nil)
+
+	pendingMu.Lock()
+	_, hasPending := pendingMsgs[id]
+	pendingMu.Unlock()
+	assert.False(t, hasPending)
+	assert.False(t, onChargerMessage(fakeChannel(id), startTx))
+}
+
 func TestForwarderReconnectStopsOnRuleRemoval(t *testing.T) {
 	const id = "fwd-rule-removal-test"
 
