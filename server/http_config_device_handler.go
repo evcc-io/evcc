@@ -324,8 +324,11 @@ func newDevice[T any](ctx context.Context, class templates.Class, req configReq,
 	}
 
 	instance, err := newFromConf(ctx, typ, other)
-	if err != nil && !force {
-		return nil, err
+	if err != nil {
+		if !force {
+			return nil, err
+		}
+		logDeviceError("force create", class, 0, req, err)
 	}
 
 	conf, err := config.AddConfig(class, req.Serialise(), config.WithProperties(req.Properties))
@@ -410,6 +413,7 @@ func newDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 
 		if err != nil {
 			cancel()
+			logDeviceError("create", class, 0, req, err)
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -442,6 +446,7 @@ func updateDevice[T any](ctx context.Context, id int, class templates.Class, req
 		if !force || merged == nil {
 			return err
 		}
+		logDeviceError("force update", class, id, req, err)
 	}
 
 	configurable, ok := dev.(config.ConfigurableDevice[T])
@@ -513,6 +518,7 @@ func updateDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 
 		if err != nil {
 			cancel()
+			logDeviceError("update", class, id, req, err)
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -863,6 +869,41 @@ func testConfig[T any](ctx context.Context, id int, class templates.Class, req c
 	return instance, err
 }
 
+// logDeviceError logs a failed device action with masked and private config values redacted
+func logDeviceError(action string, class templates.Class, id int, req configReq, err error) {
+	device := class.String()
+	conf := req.Other
+	if id != 0 {
+		device += " " + config.NameForID(id)
+		// request contains masked placeholders, the stored config has the actual values
+		if other, err := deviceOther(class, id); err == nil {
+			if merged, err := mergeMasked(class, conf, other); err == nil {
+				conf = merged
+			}
+		}
+	}
+
+	typ := req.Type
+	if tmpl, ok := req.Other[typeTemplate].(string); ok {
+		typ += ":" + tmpl
+	}
+
+	sanitized, serr := sanitizeMasked(class, conf, true)
+	if serr != nil {
+		// without template it is unknown which values are secret
+		log.WARN.Printf("%s %s (%s) failed", action, device, typ)
+		return
+	}
+
+	for k, v := range sanitized {
+		if v == masked && conf[k] != nil && conf[k] != masked {
+			log.Redact(fmt.Sprint(conf[k]))
+		}
+	}
+
+	log.WARN.Printf("%s %s (%s): %v", action, device, typ, err)
+}
+
 // testConfigHandler tests a configuration by class
 func testConfigHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -925,6 +966,7 @@ func testConfigHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 
 		if err != nil {
 			cancel()
+			logDeviceError("test", class, id, req, err)
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
