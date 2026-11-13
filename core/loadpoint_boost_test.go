@@ -222,6 +222,8 @@ func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
 
 			circuit := api.NewMockCircuit(ctrl)
 			circuit.EXPECT().ValidatePower(gomock.Any(), gomock.Any()).Return(tc.circuitPower).AnyTimes()
+			circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+				func(_ api.GridPhases, _ [3]float64, new float64) float64 { return new }).AnyTimes()
 
 			lp := &Loadpoint{
 				log:              util.NewLogger("lp"),

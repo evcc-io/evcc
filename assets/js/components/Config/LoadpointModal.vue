@@ -339,6 +339,20 @@
 									:choice="circuitOptions"
 								/>
 							</FormRow>
+							<FormRow
+								v-if="values.circuit"
+								id="loadpointParamPhaseRotation"
+								:label="$t('config.loadpoint.phaseRotationLabel')"
+								:help="$t('config.loadpoint.phaseRotationHelp')"
+							>
+								<PropertyField
+									id="loadpointParamPhaseRotation"
+									v-model="values.phaseRotation"
+									type="Choice"
+									class="me-2"
+									:choice="phaseRotationOptions"
+								/>
+							</FormRow>
 						</div>
 
 						<div v-if="!chargerIsIntegratedDevice">
@@ -643,6 +657,7 @@ const defaultValues = {
 	vehicle: "",
 	charger: "",
 	circuit: "",
+	phaseRotation: "",
 	meter: "",
 } as ConfigLoadpoint;
 
@@ -921,6 +936,10 @@ export default {
 		invalidCircuit() {
 			const { circuit } = this.values;
 			return circuit && !this.circuitOptions.some((c) => c.key === circuit);
+		},
+		phaseRotationOptions() {
+			// empty option is provided by PropertyField placeholder
+			return ["L1", "L2", "L3"].map((key) => ({ key, name: key }));
 		},
 		circuitOptions() {
 			// empty option is provided by PropertyField placeholder

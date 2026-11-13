@@ -978,6 +978,20 @@ func (mr *MockCircuitMockRecorder) GetChargePower() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargePower", reflect.TypeOf((*MockCircuit)(nil).GetChargePower))
 }
 
+// GetGridPhaseCurrents mocks base method.
+func (m *MockCircuit) GetGridPhaseCurrents() [3]float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGridPhaseCurrents")
+	ret0, _ := ret[0].([3]float64)
+	return ret0
+}
+
+// GetGridPhaseCurrents indicates an expected call of GetGridPhaseCurrents.
+func (mr *MockCircuitMockRecorder) GetGridPhaseCurrents() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGridPhaseCurrents", reflect.TypeOf((*MockCircuit)(nil).GetGridPhaseCurrents))
+}
+
 // GetMaxCurrent mocks base method.
 func (m *MockCircuit) GetMaxCurrent() float64 {
 	m.ctrl.T.Helper()
@@ -1137,17 +1151,17 @@ func (mr *MockCircuitMockRecorder) Update(arg0 any) *gomock.Call {
 }
 
 // ValidateCurrent mocks base method.
-func (m *MockCircuit) ValidateCurrent(old, new float64) float64 {
+func (m *MockCircuit) ValidateCurrent(phases GridPhases, old [3]float64, new float64) float64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateCurrent", old, new)
+	ret := m.ctrl.Call(m, "ValidateCurrent", phases, old, new)
 	ret0, _ := ret[0].(float64)
 	return ret0
 }
 
 // ValidateCurrent indicates an expected call of ValidateCurrent.
-func (mr *MockCircuitMockRecorder) ValidateCurrent(old, new any) *gomock.Call {
+func (mr *MockCircuitMockRecorder) ValidateCurrent(phases, old, new any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateCurrent", reflect.TypeOf((*MockCircuit)(nil).ValidateCurrent), old, new)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateCurrent", reflect.TypeOf((*MockCircuit)(nil).ValidateCurrent), phases, old, new)
 }
 
 // ValidatePower mocks base method.

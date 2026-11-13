@@ -517,6 +517,20 @@ func (mr *MockAPIMockRecorder) GetMode() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMode", reflect.TypeOf((*MockAPI)(nil).GetMode))
 }
 
+// GetPhaseRotation mocks base method.
+func (m *MockAPI) GetPhaseRotation() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPhaseRotation")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetPhaseRotation indicates an expected call of GetPhaseRotation.
+func (mr *MockAPIMockRecorder) GetPhaseRotation() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPhaseRotation", reflect.TypeOf((*MockAPI)(nil).GetPhaseRotation))
+}
+
 // GetPhases mocks base method.
 func (m *MockAPI) GetPhases() int {
 	m.ctrl.T.Helper()

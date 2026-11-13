@@ -574,6 +574,7 @@ export interface ConfigLoadpoint {
   minSoc?: number;
   demandPredictor?: DemandPredictor;
   circuit?: string;
+  phaseRotation?: string;
   thresholds: {
     enable: LoadpointThreshold;
     disable: LoadpointThreshold;

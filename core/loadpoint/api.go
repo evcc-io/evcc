@@ -52,6 +52,8 @@ type API interface {
 	SetMeterRef(string)
 	// GetCircuitRef returns the loadpoint circuit
 	GetCircuitRef() string
+	// GetPhaseRotation returns the grid phase connected to charger L1
+	GetPhaseRotation() string
 	// SetCircuitRef sets the loadpoint circuit
 	SetCircuitRef(string)
 	// GetCircuit returns the loadpoint circuit
