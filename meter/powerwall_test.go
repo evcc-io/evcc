@@ -90,7 +90,7 @@ func TestPowerWallFleetReserve(t *testing.T) {
 		want float64
 	}{
 		{mode: api.BatteryNormal, want: 20},
-		{mode: api.BatteryHold, want: 50},
+		{mode: api.BatteryHoldDischarge, want: 50},
 		{mode: api.BatteryCharge, want: 100},
 	}
 

@@ -76,6 +76,18 @@ func (v *Provider) resolveVIN() (string, error) {
 	}
 }
 
+var _ api.Resurrector = (*Provider)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	vin, err := v.resolveVIN()
+	if err != nil {
+		return err
+	}
+	_, err = v.api.WakeUp(vin)
+	return err
+}
+
 var _ api.Battery = (*Provider)(nil)
 
 // Soc implements the api.Battery interface (high-voltage battery level).
@@ -133,6 +145,22 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	}
 }
 
+var _ api.SocLimiter = (*Provider)(nil)
+
+// GetLimitSoc implements the api.SocLimiter interface
+func (v *Provider) GetLimitSoc() (int64, error) {
+	res, err := v.statusG()
+	if err != nil {
+		return 0, err
+	}
+
+	var summary chargingSummary
+	if !res.decode("CHARGING_SUMMARY", &summary) || summary.TargetSoC == 0 {
+		return 0, api.ErrNotAvailable
+	}
+	return int64(summary.TargetSoC), nil
+}
+
 var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface (electric range).
@@ -174,11 +202,11 @@ func (v *Provider) Climater() (bool, error) {
 		return false, err
 	}
 
-	var c climatizerState
-	if !res.decode("CLIMATIZER_STATE", &c) {
+	var c hvacSummary
+	if !res.decode("HVAC_SUMMARY", &c) || c.Status == "" {
 		return false, api.ErrNotAvailable
 	}
-	return c.IsOn, nil
+	return c.Status != "OFF", nil
 }
 
 var _ api.VehiclePosition = (*Provider)(nil)

@@ -1,0 +1,61 @@
+template: eebus-ohpcf-bosch
+products:
+  - brand: Buderus
+    description:
+      generic: Logatherm WLW166i MBB AR (EEBus)
+  - brand: Buderus
+    description:
+      generic: Logatherm WLW176i MB AR (EEBus)
+  - brand: Buderus
+    description:
+      generic: Logatherm WLW186i MB AR (EEBus)
+  - brand: Buderus
+    description:
+      generic: Logatherm WLW186i MBE+ AR (EEBus)
+  - brand: Buderus
+    description:
+      generic: Kaskade WLW MBE+ mit Logamatic WPM400 K (EEBus)
+  - brand: Bosch
+    description:
+      generic: Compress 3800i AW (EEBus)
+  - brand: Bosch
+    description:
+      generic: Compress 5800i AW (EEBus)
+  - brand: Bosch
+    description:
+      generic: Compress 6800i AW (EEBus)
+  - brand: Bosch
+    description:
+      generic: Compress 8800i AW (EEBus)
+group: heating
+requirements:
+  description:
+    de: Erfordert das Gateway Buderus MX400 bzw. Bosch K40 RF, empfohlen mit Firmware 15.00.01 oder neuer.
+    en: Requires the Buderus MX400 or Bosch K40 RF gateway, firmware 15.00.01 or newer recommended.
+capabilities: ["meter", "dim"]
+params:
+  - preset: eebus
+  - name: reboost
+    type: duration
+    default: 10m
+    advanced: true
+    description:
+      de: Reboost-Intervall
+      en: Reboost interval
+    help:
+      de: Wartezeit, nach der eine neu angekündigte optionale Leistungsaufnahme erneut eingeplant wird.
+      en: Wait time after which a newly announced optional power consumption is scheduled again.
+  - name: disablepowerlimiter
+    type: bool
+    advanced: true
+    description:
+      de: Leistungsgrenzen ignorieren
+      en: Ignore power limits
+    help:
+      de: Die vom Gerät gemeldete optionale Leistungsaufnahme nicht als Min-/Max-Leistung verwenden.
+      en: Do not use the device's announced optional power consumption as min/max power.
+render: |
+  type: eebus-ohpcf
+  {{ include "eebus" . }}
+  reboost: {{ .reboost }}
+  disablepowerlimiter: {{ .disablepowerlimiter }}

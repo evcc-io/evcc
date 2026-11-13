@@ -26,6 +26,7 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 1
   - name: tempsource
     type: choice
     choice: ["warmwater_top", "warmwater_bottom", "buffer_top", "buffer_bottom"]

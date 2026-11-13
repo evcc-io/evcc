@@ -94,7 +94,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		implement.May(m, implement.BatterySocLimiter(socLimiter))
 		implement.May(m, implement.BatteryPowerLimiter(powerLimiter))
 
-		// limitSoc expresses normal/hold/charge through the reserve soc (hold uses the live soc),
+		// limitSoc expresses normal/holddischarge/charge through the reserve soc (holddischarge uses the live soc),
 		// batteryMode switches the device's operating mode. Configured together the limit is written first.
 		var limitController func(api.BatteryMode) error
 		if cc.LimitSoc != nil {

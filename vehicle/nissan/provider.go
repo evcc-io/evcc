@@ -2,6 +2,7 @@ package nissan
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -19,7 +20,7 @@ type Provider struct {
 }
 
 // NewProvider returns a kamereon provider
-func NewProvider(api *API, vin, version string, expiry, cache time.Duration) *Provider {
+func NewProvider(api *API, vin, version, canGen string, expiry, cache time.Duration) *Provider {
 	impl := &Provider{
 		action: func(value Action) error {
 			_, err := api.ChargingAction(vin, value)
@@ -30,7 +31,7 @@ func NewProvider(api *API, vin, version string, expiry, cache time.Duration) *Pr
 
 	impl.statusG = util.Cached(func() (StatusResponse, error) {
 		return impl.status(
-			func() (StatusResponse, error) { return api.BatteryStatus(vin, version) },
+			func() (StatusResponse, error) { return api.BatteryStatus(vin, version, canGen) },
 			func() (ActionResponse, error) { return api.RefreshRequest(vin, "RefreshBatteryStatus") },
 		)
 	}, cache)
@@ -87,10 +88,29 @@ func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
 
 	if err == nil {
-		return float64(res.Attributes.BatteryLevel), nil
+		return soc(res.Attributes), nil
 	}
 
 	return 0, err
+}
+
+// soc prefers the finer 0-240 batteryBarLevel if consistent with batteryLevel, see openWB/core@79a2fb3
+func soc(a Attributes) float64 {
+	level := float64(a.BatteryLevel)
+
+	bar := a.BatteryBarLevel
+	if bar == nil || *bar < 0 || *bar > 240 {
+		return level
+	}
+
+	barSoc := *bar / 240 * 100
+
+	// tolerate integer rounding, but reject a zero placeholder for positive soc
+	if (*bar > 0 || level == 0) && math.Abs(barSoc-level) <= 1 {
+		return barSoc
+	}
+
+	return level
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -105,6 +125,10 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 			status = api.StatusB
 		}
 		if res.Attributes.ChargeStatus > 1.0 {
+			status = api.StatusC
+		}
+		// v3: 1 = charging
+		if cs := res.Attributes.ChargingStatus; cs != nil && *cs >= 1 {
 			status = api.StatusC
 		}
 	}
@@ -128,6 +152,11 @@ func (v *Provider) Range() (int64, error) {
 	// v2
 	if res.Attributes.BatteryAutonomy != nil {
 		return int64(*res.Attributes.BatteryAutonomy), nil
+	}
+
+	// v3
+	if res.Attributes.RangeHvacOn != nil {
+		return int64(*res.Attributes.RangeHvacOn), nil
 	}
 
 	return 0, api.ErrNotAvailable

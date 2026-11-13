@@ -1541,7 +1541,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 		}
 	}()
 
-	site.lpUpdateChan = make(chan *Loadpoint, 1) // 1 capacity to avoid deadlock
+	site.lpUpdateChan = make(chan *Loadpoint, max(1, len(site.loadpoints))) // room for every loadpoint, see requestUpdate
 
 	site.prepare()
 
@@ -1636,7 +1636,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		case <-tick:
 			site.update(<-loadpointChan)
 		case lp := <-site.lpUpdateChan:
-			site.update(lp)
+			site.update(lp.dequeued())
 		case <-stopC:
 			return
 		}

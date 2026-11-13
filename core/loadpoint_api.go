@@ -251,7 +251,11 @@ func (lp *Loadpoint) SetAlwaysCharge(ac api.AlwaysCharge) error {
 	}
 
 	lp.log.DEBUG.Println("set always charge:", ac)
-	lp.setAlwaysCharge(ac)
+
+	if ac != lp.alwaysCharge {
+		lp.setAlwaysCharge(ac)
+		lp.triggerOptimizer()
+	}
 
 	return nil
 }
@@ -411,6 +415,7 @@ func (lp *Loadpoint) SetMinSoc(soc int) {
 	if lp.minSoc != soc {
 		lp.setMinSoc(soc)
 		lp.requestUpdate()
+		lp.triggerOptimizer()
 	}
 }
 
@@ -741,6 +746,8 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 			lp.batteryBoost = boostStart
 			lp.requestUpdate()
 		}
+
+		lp.triggerOptimizer()
 	}
 
 	return nil
@@ -1039,6 +1046,7 @@ func (lp *Loadpoint) setSmartCostLimit(val *float64) {
 
 		lp.settings.SetFloatPtr(keys.SmartCostLimit, val)
 		lp.publish(keys.SmartCostLimit, val)
+		lp.triggerOptimizer()
 	}
 }
 

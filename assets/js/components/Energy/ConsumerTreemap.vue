@@ -175,13 +175,9 @@ export default defineComponent({
 <style scoped>
 @import "../../../css/breakpoints.css";
 
+/* as high as a consumer's own chart, selecting one does not move the page */
 .treemap {
-	height: 360px;
-}
-@media (--sm-and-up) {
-	.treemap {
-		height: 260px;
-	}
+	height: 200px;
 }
 .tile {
 	color: var(--bs-white);

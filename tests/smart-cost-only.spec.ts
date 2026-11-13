@@ -25,7 +25,7 @@ test.describe("main screen", async () => {
     await page.getByTestId("energyflow").click();
     await expect(page.getByTestId("energyflow-entry-gridimport")).toBeVisible();
     await expect(page.getByTestId("energyflow-entry-home")).not.toBeVisible();
-    await expect(page.getByTestId("energyflow-entry-loadpoints")).toBeVisible();
+    await expect(page.getByTestId("energyflow-entry-charging")).toBeVisible();
     await expect(page.getByTestId("energyflow-entry-gridexport")).not.toBeVisible();
   });
 });

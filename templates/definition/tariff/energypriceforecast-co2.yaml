@@ -10,7 +10,29 @@ requirements:
     en: "5 days prognosis [energypriceforecast.eu](https://energypriceforecast.eu/en/evcc-electricity-price-co2-forecast/)"
   evcc: ["skiptest"]
 group: co2
-countries: ["DE", "NL", "BE", "DK", "FR", "AT", "CZ", "PL", "FI", "SE", "NO", "GB"]
+countries:
+  [
+    "DE",
+    "NL",
+    "BE",
+    "DK",
+    "FR",
+    "AT",
+    "CZ",
+    "PL",
+    "FI",
+    "SE",
+    "NO",
+    "CH",
+    "IT",
+    "SK",
+    "RO",
+    "ES",
+    "PT",
+    "GR",
+    "BG",
+    "GB",
+  ]
 params:
   - name: region
     example: DE
@@ -36,6 +58,20 @@ params:
         "NO3",
         "NO4",
         "NO5",
+        "CH",
+        "ITN",
+        "IT_CNOR",
+        "IT_CSUD",
+        "IT_SUD",
+        "IT_CALA",
+        "IT_SICI",
+        "IT_SARD",
+        "SK",
+        "RO",
+        "ES",
+        "PT",
+        "GR",
+        "BG",
         "GB",
       ]
     required: true

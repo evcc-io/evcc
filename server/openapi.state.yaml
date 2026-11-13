@@ -455,7 +455,7 @@ components:
       enum:
         - unknown
         - normal
-        - hold
+        - holddischarge
         - charge
         - holdcharge
         - discharge
@@ -468,7 +468,7 @@ components:
           type: string
           enum:
             - normal
-            - hold
+            - holddischarge
             - charge
             - holdcharge
             - discharge
@@ -824,7 +824,7 @@ components:
           description: Estimated remaining charging time in seconds.
           type: number
         chargeRemainingEnergy:
-          description: Estimated remaining energy in kWh.
+          description: Estimated remaining energy in Wh.
           type: number
         chargeTotalImport:
           description: Total energy imported by the charge meter in kWh.
@@ -835,7 +835,7 @@ components:
           items:
             type: number
         chargedEnergy:
-          description: Energy charged in the current charging session in kWh.
+          description: Energy charged in the current charging session in Wh.
           type: number
         chargerFeatureAutodetectDisabled:
           description: The connected vehicle is not identified automatically by its status.
@@ -1037,18 +1037,18 @@ components:
         pvRemaining:
           description: Remaining time until the pending charge start or stop action executes, in seconds.
           type: number
-        last24hEnergy:
-          description: Energy used in the last 24 hours in kWh.
-          type: number
-        last7dEnergy:
-          description: Energy used in the last 7 days in kWh.
-          type: number
+        last24h:
+          $ref: "#/components/schemas/PeriodStats"
+          description: Energy stats of the last 24 hours.
+        last7d:
+          $ref: "#/components/schemas/PeriodStats"
+          description: Energy stats of the last 7 days.
         sessionCo2PerKWh:
           description: Average CO₂ emissions of the current charging session in g/kWh.
           type: number
           nullable: true
         sessionEnergy:
-          description: Energy charged in the current charging session in kWh.
+          description: Energy charged in the current charging session in Wh.
           type: number
         sessionPrice:
           description: Total cost of the current charging session in the configured currency.
@@ -1097,7 +1097,7 @@ components:
           description: Loadpoint title for UI display.
           type: string
         todayEnergy:
-          description: Energy used since midnight in kWh.
+          description: Energy used since midnight in Wh.
           type: number
         vehicleClimaterActive:
           description: Climater of the connected vehicle is active.
@@ -1628,6 +1628,33 @@ components:
         - off
         - battery
         - full
+    PeriodStats:
+      description: Energy stats of a loadpoint over a period, attributed per 15-minute slot like the energy page.
+      type: object
+      properties:
+        energy:
+          description: Energy used in Wh.
+          type: number
+        pvEnergy:
+          description: Energy from solar in Wh.
+          type: number
+        batteryEnergy:
+          description: Energy from the home battery in Wh.
+          type: number
+        pricePerKWh:
+          description: Average energy price per kWh in the configured currency.
+          type: number
+          nullable: true
+        price:
+          description: Total cost in the configured currency.
+          type: number
+          nullable: true
+      required:
+        - energy
+        - pvEnergy
+        - batteryEnergy
+        - pricePerKWh
+        - price
     PhaseAction:
       description: Pending phase switching action in smart mode.
       type: string

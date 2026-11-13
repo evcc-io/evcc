@@ -86,7 +86,7 @@ render: |
     value: {{ .soc }}
   {{- include "battery-params" . }}
   {{- if .controllable }}
-  batterymodes: ["normal", "hold", "charge", "holdcharge"]
+  batterymodes: ["normal", "holddischarge", "charge", "holdcharge"]
   batterymode:
     source: js
     vm: shared

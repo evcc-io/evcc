@@ -12,6 +12,11 @@ params:
   - name: maxacpower
   - name: timeout
     deprecated: true
+  # stored by the config ui for grid/pv meters before the battery usage was removed in #35658
+  - name: storageunit
+    deprecated: true
+  - name: maxsoc
+    deprecated: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
