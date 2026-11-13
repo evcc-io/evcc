@@ -302,6 +302,7 @@ func (c *Circuit) updateMeters() error {
 		if phaseMeter, ok := api.Cap[api.PhasePowers](c.meter); ok {
 			var err error // phases needed for signed currents
 			if p1, p2, p3, err = phaseMeter.Powers(); err != nil {
+				c.overloadOnError(c.currentUpdated, &c.current)
 				return fmt.Errorf("circuit powers: %w", err)
 			}
 		}
