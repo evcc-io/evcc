@@ -1,0 +1,88 @@
+template: openquatt
+products:
+  - brand: Quatt
+    description:
+      generic: OpenQuatt
+capabilities: ["meter"]
+group: heating
+requirements:
+  description:
+    de: |
+      Benötigt die alternative Firmware [OpenQuatt](https://github.com/OpenQuatt/OpenQuatt), die originale Quatt CIC kann nicht gesteuert werden.
+
+      Im Boost-Betrieb wird die Heizkurve um den eingestellten Offset angehoben. Dazu muss in OpenQuatt die Heizkurven-Regelung aktiv sein.
+    en: |
+      Requires the alternative [OpenQuatt](https://github.com/OpenQuatt/OpenQuatt) firmware, the original Quatt CIC cannot be controlled.
+
+      Boost mode raises the heating curve by the configured offset. This requires the heating curve strategy to be active in OpenQuatt.
+params:
+  - name: host
+  - name: user
+  - name: password
+  - name: tempsource
+    type: choice
+    choice: ["room"]
+  - name: boostoffset
+    advanced: true
+    type: int
+    default: 3
+    unit: °C
+    description:
+      de: Boost-Offset
+      en: Boost offset
+    help:
+      de: Anhebung der Vorlauftemperatur im Boost-Betrieb (1-5 °C)
+      en: Supply temperature increase in boost mode (1-5 °C)
+  - name: watchdog
+    default: 5m
+render: |
+  {{- define "auth" }}
+  {{- if .user }}
+  auth:
+    type: digest
+    user: {{ .user }}
+    password: {{ .password }}
+  {{- end }}
+  {{- end }}
+  type: sgready
+  setmode:
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2, the offset expires after 15m
+    reset: 2 # normal
+    set:
+      source: switch
+      switch:
+      - case: 3 # boost
+        set:
+          source: http
+          uri: http://{{ .host }}/number/api_input_heating_curve_modifier/set?value={{ .boostoffset }}
+          method: POST
+          {{- include "auth" . | indent 8 }}
+      default: # normal, dim is not supported
+        source: http
+        uri: http://{{ .host }}/number/api_input_heating_curve_modifier/set?value=0
+        method: POST
+        {{- include "auth" . | indent 6 }}
+  power:
+    source: http
+    uri: http://{{ .host }}/sensor/total_power_input
+    {{- include "auth" . | indent 2 }}
+    jq: .value
+  energy:
+    source: http
+    uri: http://{{ .host }}/sensor/electrical_energy_cumulative
+    {{- include "auth" . | indent 2 }}
+    jq: .value
+  {{- if eq .tempsource "room" }}
+  temp:
+    source: http
+    uri: http://{{ .host }}/sensor/room_temperature__selected_
+    {{- include "auth" . | indent 2 }}
+    jq: .value
+  limittemp:
+    source: http
+    uri: http://{{ .host }}/sensor/room_setpoint__selected_
+    {{- include "auth" . | indent 2 }}
+    jq: .value
+  {{- end }}
+  {{ include "heatpumpswitch" . }}
