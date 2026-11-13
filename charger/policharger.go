@@ -35,7 +35,7 @@ const (
 	polRegPinPlugged = 86 // valid in normally locked mode
 	polRegLock       = 88 // 0 charging allowed, 1 locked
 
-	polArmCurrent = 16 // lowest reg 80 value that lets the charger start a session
+	polArmCurrent = 16 // the tested unit starts a session from reg 80 >= 14 A
 )
 
 func init() {
