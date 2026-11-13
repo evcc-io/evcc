@@ -10,6 +10,15 @@ export interface Flow {
   pricedEnergy?: number; // kWh with a price
 }
 
+// the flow chart shows loadpoints as two sinks
+export type ChartSink = Exclude<FlowSink, "loadpoint"> | "charging" | "heating";
+
+export interface ChartFlow {
+  from: FlowSource;
+  to: ChartSink;
+  energy: number; // kWh
+}
+
 export interface FlowCost {
   import: number;
   export: number;

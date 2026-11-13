@@ -15,6 +15,7 @@ params:
     choice: ["pv"]
   - name: modbus
     choice: ["tcpip"]
+    id: 1
   - name: maxacpower
     default: "0"
     description:

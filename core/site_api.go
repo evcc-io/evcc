@@ -622,11 +622,10 @@ func (site *Site) setBatteryGridChargeLimit(val *float64) error {
 
 		if val == nil {
 			settings.SetString(keys.BatteryGridChargeLimit, "")
-			site.publish(keys.BatteryGridChargeLimit, nil)
 		} else {
 			settings.SetFloat(keys.BatteryGridChargeLimit, *val)
-			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
+		site.publish(keys.BatteryGridChargeLimit, val)
 
 		// re-run the optimizer so the new limit takes effect immediately
 		go site.optimizerUpdateAsync(true)
@@ -661,11 +660,10 @@ func (site *Site) SetBatteryGridDischargeLimit(val *float64) error {
 
 		if val == nil {
 			settings.SetString(keys.BatteryGridDischargeLimit, "")
-			site.publish(keys.BatteryGridDischargeLimit, nil)
 		} else {
 			settings.SetFloat(keys.BatteryGridDischargeLimit, *val)
-			site.publish(keys.BatteryGridDischargeLimit, *val)
 		}
+		site.publish(keys.BatteryGridDischargeLimit, val)
 	}
 
 	return nil

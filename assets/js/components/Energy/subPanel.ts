@@ -23,7 +23,7 @@ export function slotStarts(values: (number | null)[]): [number, number | null][]
   ];
 }
 
-// labels at both ends of the range only, tight to fit into the grid's left inset
+// labels at both ends of the range only, right aligned next to the panel
 export function panelYAxis(min: number, max: number, format: (v: number) => string) {
   return forecastYAxis({
     gridIndex: 1,
@@ -86,6 +86,7 @@ export function panelGrids(main: { bottom: number; left: number; right: number }
       height: PANEL_HEIGHT,
       left: main.left,
       right: main.right,
+      outerBoundsMode: "none",
       borderWidth: 0,
       show: true,
       backgroundColor: track,

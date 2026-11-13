@@ -1198,4 +1198,9 @@ export default defineComponent({
 .history-chart {
 	width: 100%;
 }
+/* an axis label wider than the grid's inset grows out of the chart instead of being cut off */
+.history-chart :deep(div),
+.history-chart :deep(svg) {
+	overflow: visible !important;
+}
 </style>

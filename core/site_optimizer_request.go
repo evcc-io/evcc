@@ -199,9 +199,10 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 			continue
 		}
 
-		// no vehicle capacity and no session energy limit to model against:
-		// account for the consumption as uncontrollable load
-		if v := lp.GetVehicle(); v == nil || (v.Capacity() == 0 && lp.GetLimitEnergy() == 0) {
+		// no vehicle capacity and no session energy limit to model against, or a heater
+		// whose soc is a temperature: account for the consumption as uncontrollable load
+		if v := lp.GetVehicle(); v == nil || (v.Capacity() == 0 && lp.GetLimitEnergy() == 0) ||
+			site.loadpoints[id].chargerHasFeature(api.Heating) {
 			site.addUnmodelledLoad(req.TimeSeries.Gt, &details, lp, minLen, firstSlotDuration)
 			continue
 		}

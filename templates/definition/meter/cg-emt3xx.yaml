@@ -23,6 +23,7 @@ params:
     choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
 render: |
   type: mbmd
   {{- include "modbus" . }}

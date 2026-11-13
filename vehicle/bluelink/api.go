@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -119,4 +120,46 @@ func (v *API) Refresh(vehicle Vehicle) error {
 		err = fmt.Errorf("unexpected response: %s", res.RetCode)
 	}
 	return err
+}
+
+// ChargeEnable starts or stops charging
+func (v *API) ChargeEnable(identity *Identity, vehicle Vehicle, pin string, enable bool) error {
+	action := "stop"
+	if enable {
+		action = "start"
+	}
+
+	uri := fmt.Sprintf("%s/vehicles/%s/control/charge", v.baseURI, vehicle.VehicleID)
+	data := map[string]string{"action": action, "deviceId": identity.deviceID}
+
+	ccs2 := vehicle.CcuCCS2ProtocolSupport != 0
+	if ccs2 {
+		uri = fmt.Sprintf("%s/vehicles/%s/ccs2/control/charge", strings.Replace(v.baseURI, "/api/v1/", "/api/v2/", 1), vehicle.VehicleID)
+		data = map[string]string{"command": action}
+	}
+
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	if err != nil {
+		return err
+	}
+
+	if ccs2 {
+		token, err := identity.controlToken(pin)
+		if err != nil {
+			return err
+		}
+		req.Header.Set("Authorization", token)
+		req.Header.Set("AuthorizationCCSP", token)
+		req.Header.Set("Ccuccs2protocolsupport", strconv.Itoa(vehicle.CcuCCS2ProtocolSupport))
+	}
+
+	var res struct{ RetCode string }
+	if err := v.DoJSON(req, &res); err != nil {
+		return err
+	}
+	if res.RetCode != resOK {
+		return fmt.Errorf("unexpected response: %s", res.RetCode)
+	}
+
+	return nil
 }
