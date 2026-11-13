@@ -187,6 +187,7 @@ type Loadpoint struct {
 	pvTimer        time.Time        // PV enabled/disable timer
 	phaseTimer     time.Time        // 1p3p switch timer
 	wakeUpTimer    *Timer           // Vehicle wake-up timeout
+	chargeExcess   float64          // estimated charge power the measured supply does not cover
 
 	// charge progress
 	vehicleSoc              float64       // Vehicle or charger soc
@@ -2155,6 +2156,21 @@ func (lp *Loadpoint) pvEnableScalePhases(phases int) bool {
 	return err == nil
 }
 
+// chargePowerEstimated reports whether the loadpoint charges with its power estimated
+// from the offered current for lack of a charge meter
+func (lp *Loadpoint) chargePowerEstimated() bool {
+	return !lp.HasChargeMeter() && lp.GetChargePower() > 0
+}
+
+// boundedChargePower is the charge power published and booked as energy, without the estimated
+// part the measured supply does not cover. Control keeps using chargePower.
+func (lp *Loadpoint) boundedChargePower() float64 {
+	if lp.chargeExcess == 0 {
+		return lp.chargePower
+	}
+	return max(0, lp.chargePower-lp.chargeExcess)
+}
+
 // UpdateChargePowerAndCurrents updates charge meter power and currents for load management
 func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 	power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, modbus.Backoff())
@@ -2164,7 +2180,7 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 		lp.Unlock()
 
 		lp.log.DEBUG.Printf("charge power: %.0fW", power)
-		lp.publish(keys.ChargePower, power)
+		lp.publish(keys.ChargePower, lp.boundedChargePower())
 
 		// https://github.com/evcc-io/evcc/issues/2153
 		// https://github.com/evcc-io/evcc/issues/6986
@@ -2334,7 +2350,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 	}
 
 	if lp.chargeEnergy != nil {
-		lp.chargeEnergy.AddEnergy(importTotal, nil, lp.chargePower)
+		lp.chargeEnergy.AddEnergy(importTotal, nil, lp.boundedChargePower())
 		if v := lp.GetSoc(); v > 0 {
 			lp.chargeEnergy.SetSocTemp(v, lp.chargerHasFeature(api.Heating))
 		}
@@ -2581,7 +2597,7 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 
 	// update ChargeRater here to make sure initial meter update is caught
 	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
-	lp.bus.Publish(evChargePower, lp.chargePower)
+	lp.bus.Publish(evChargePower, lp.boundedChargePower())
 
 	// update progress and soc before status is updated
 	lp.publishChargeProgress()
