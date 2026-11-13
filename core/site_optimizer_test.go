@@ -855,6 +855,28 @@ func TestProfilePercentile(t *testing.T) {
 	assert.Nil(t, site.GetProfilePercentile())
 }
 
+func TestOptimizerRiskProfile(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+	t.Cleanup(func() { require.NoError(t, site.SetOptimizerRiskProfile(nil)) })
+
+	// none by default
+	assert.Nil(t, site.GetOptimizerRiskProfile())
+
+	// out of range rejected, unchanged
+	require.Error(t, site.SetOptimizerRiskProfile(&api.RiskProfile{Solar: 1.1, Budget: 8}))
+	require.Error(t, site.SetOptimizerRiskProfile(&api.RiskProfile{Demand: -0.1, Budget: 8}))
+	require.Error(t, site.SetOptimizerRiskProfile(&api.RiskProfile{Solar: 0.3}))
+	require.Error(t, site.SetOptimizerRiskProfile(&api.RiskProfile{Solar: 0.3, Budget: 97}))
+	assert.Nil(t, site.GetOptimizerRiskProfile())
+
+	profile := api.RiskProfile{Solar: 0.3, Demand: 0.2, Budget: 8}
+	require.NoError(t, site.SetOptimizerRiskProfile(&profile))
+	assert.Equal(t, &profile, site.GetOptimizerRiskProfile())
+
+	require.NoError(t, site.SetOptimizerRiskProfile(nil))
+	assert.Nil(t, site.GetOptimizerRiskProfile())
+}
+
 func TestBlendMeasured(t *testing.T) {
 	slots := []float64{100, 100, 100, 100, 100, 100}
 	blendMeasured(slots, 200, 4)

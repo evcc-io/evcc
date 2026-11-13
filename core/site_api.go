@@ -706,6 +706,38 @@ func (site *Site) SetOptimizerChargingStrategy(strategy string) error {
 	return nil
 }
 
+// GetOptimizerRiskProfile returns the forecast uncertainty the optimizer hedges against, nil = none
+func (site *Site) GetOptimizerRiskProfile() *api.RiskProfile {
+	var res api.RiskProfile
+	if err := settings.Json(keys.OptimizerRiskProfile, &res); err != nil {
+		return nil
+	}
+	return &res
+}
+
+// SetOptimizerRiskProfile sets the forecast uncertainty the optimizer hedges against, nil = none
+func (site *Site) SetOptimizerRiskProfile(profile *api.RiskProfile) error {
+	if profile == nil {
+		if err := settings.Delete(keys.OptimizerRiskProfile); err != nil {
+			return err
+		}
+	} else {
+		if err := profile.Validate(); err != nil {
+			return err
+		}
+		if err := settings.SetJson(keys.OptimizerRiskProfile, profile); err != nil {
+			return err
+		}
+	}
+
+	site.publish(keys.OptimizerRiskProfile, profile)
+
+	// re-run the optimizer so the new profile takes effect immediately
+	go site.optimizerUpdateAsync(true)
+
+	return nil
+}
+
 // GetBatteryMode returns the battery mode
 func (site *Site) GetBatteryMode() api.BatteryMode {
 	site.RLock()

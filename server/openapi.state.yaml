@@ -295,6 +295,11 @@ components:
           type: array
           items:
             type: string
+        optimizerRiskProfile:
+          description: Forecast uncertainty the optimizer hedges against. Null plans on the forecasts as they are.
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/RiskProfile"
         mcp:
           description: Built-in MCP server is enabled.
           type: boolean
@@ -1771,6 +1776,23 @@ components:
         - tz
         - soc
         - active
+    RiskProfile:
+      description: Forecast uncertainty the optimizer hedges against.
+      type: object
+      properties:
+        solar:
+          description: Share of the solar forecast a slot may fall short of, between 0 and 1.
+          type: number
+        demand:
+          description: Share of the demand forecast a slot may exceed, between 0 and 1.
+          type: number
+        budget:
+          description: 15min slots per day that deviate adversely, above 0 up to 96.
+          type: number
+      required:
+        - solar
+        - demand
+        - budget
     ShmConfig:
       description: SMA Home Manager configuration.
       type: object
