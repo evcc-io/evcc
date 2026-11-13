@@ -1,0 +1,21 @@
+template: policharger
+products:
+  - brand: Policharger
+    description:
+      generic: IN, NW, ÖN, OUT, PRO (8.1 series)
+capabilities: ["meter"]
+requirements:
+  description:
+    de: |
+      Modbus RTU (Standard 9600 8N1, Slave-ID 1) über RS485, per Modbus-TCP-Gateway oder USB-Adapter. Im Menü der Wallbox einstellen: Modbus aktiv, "Es Maestro" NEIN, Zähler NEIN, "Sensor general" NEIN, keine programmierten Ladungen, Talzeitkonfiguration NEIN, und unter Erweiterte Konfiguration den Sperrtyp 1 (normalerweise gesperrt). evcc gibt das Laden dann über Register 88 frei; ohne evcc lädt die Wallbox nicht.
+      Getestet mit einer einphasigen NW-T2, Software 9.30. Bei Modellen mit zwei Anschlüssen wird nur der erste gesteuert.
+    en: |
+      Modbus RTU (default 9600 8N1, slave ID 1) over RS485, through a Modbus TCP gateway or a USB adapter. In the charger menu set: Modbus enabled, "Es Maestro" NO, meter NO, "Sensor general" NO, no scheduled charging, off-peak configuration NO, and under advanced configuration lock type 1 (normally locked). evcc then releases charging through register 88; without evcc the charger does not charge.
+      Tested with a single-phase NW-T2, software 9.30. On dual-connector models only the first connector is controlled.
+params:
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    id: 1
+render: |
+  type: policharger
+  {{- include "modbus" . }}
