@@ -1444,7 +1444,6 @@
       "solar": "Redziet sagaidāmo saules enerģijas ražošanu šodienai un nākamajām dienām. Nākotnē tiks izmantota arī automātiskai uzlādes optimizācijai.",
       "temperature": "Skatiet paredzamo āra temperatūru jūsu atrašanās vietai. Izmanto, lai prognozētu sildīšanas pieprasījumu."
     },
-    "hideLine": "slēpt līniju",
     "modalTitle": "Prognoze",
     "price": {
       "average": "Vidējā",
@@ -1452,8 +1451,6 @@
       "lowestHour": "Zemākās cenas stunda",
       "range": "Diapazons"
     },
-    "priceZoom": "pievilkt",
-    "showLine": "rādīt līniju",
     "solar": {
       "dayAfterTomorrow": "Parīt",
       "partly": "daļēji",

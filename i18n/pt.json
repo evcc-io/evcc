@@ -1403,7 +1403,6 @@
       "solar": "Veja a produção solar prevista para hoje e para os próximos dias. Esta informação será também utilizada para a otimização automática do carregamento no futuro.",
       "temperature": "Consulte a temperatura exterior prevista para a sua localização. Utilizada para prever a procura de aquecimento."
     },
-    "hideLine": "ocultar linha",
     "modalTitle": "Previsões",
     "price": {
       "average": "Média",
@@ -1411,8 +1410,6 @@
       "lowestHour": "Horário mais barato",
       "range": "Intervalo"
     },
-    "priceZoom": "ampliar",
-    "showLine": "mostrar linha",
     "solar": {
       "dayAfterTomorrow": "Depois de amanhã",
       "partly": "parcialmente",

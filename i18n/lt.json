@@ -1403,7 +1403,6 @@
       "solar": "Prognozuojama saulės energijos gamyba šiandienai ir ateinančiomis dienomis. Ateityje taip pat bus naudojama automatiniam įkrovimo optimizavimui.",
       "temperature": "Peržiūrėkite numatomą lauko temperatūrą jūsų vietovėje. Naudojama šildymo poreikiui prognozuoti."
     },
-    "hideLine": "paslėpti liniją",
     "modalTitle": "Prognozė",
     "price": {
       "average": "Vidurkis",
@@ -1411,8 +1410,6 @@
       "lowestHour": "Pigiausia valanda",
       "range": "Diapazonas"
     },
-    "priceZoom": "priartinti",
-    "showLine": "rodyti liniją",
     "solar": {
       "dayAfterTomorrow": "Poryt",
       "partly": "dalinai",

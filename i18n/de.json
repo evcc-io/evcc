@@ -1428,7 +1428,6 @@
       "solar": "Erwartete PV-Erzeugung für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet.",
       "temperature": "Zeigt die erwartete Außentemperatur am Standort. Wird für die Vorhersage des Heizbedarfs verwendet."
     },
-    "hideLine": "Linie ausblenden",
     "modalTitle": "Vorhersage",
     "price": {
       "average": "Durchschnitt",
@@ -1436,7 +1435,6 @@
       "lowestHour": "Günstigste Stunde",
       "range": "Bereich"
     },
-    "showLine": "Linie anzeigen",
     "solar": {
       "dayAfterTomorrow": "Übermorgen",
       "partly": "teilweise",

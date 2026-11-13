@@ -1,57 +1,27 @@
 <template>
 	<div v-if="hasBothTariffs" class="row gx-2 mt-1">
-		<div class="col-6">
-			<small>
-				<button
-					type="button"
-					class="legend-toggle text-gray"
-					:aria-pressed="showGrid"
-					:disabled="!showFeedin"
-					:title="showGrid ? $t('forecast.hideLine') : $t('forecast.showLine')"
-					@click="$emit('toggle-line', 'grid')"
+		<div v-for="line in lines" :key="line.key" class="col-6" :class="line.align">
+			<button
+				type="button"
+				class="price-line border-0 bg-transparent p-0 small text-reset"
+				:class="[line.align, { 'price-line--dim': !line.shown }]"
+				:aria-pressed="line.focused"
+				@click="$emit('focus-line', line.key)"
+			>
+				<span class="d-block text-gray">
+					<DeviceColorDot line :color="line.color" class="me-2 align-middle" />
+					<span class="price-label">{{ line.label }}</span>
+				</span>
+				<span
+					class="d-flex flex-column flex-md-row column-gap-3 fw-bold"
+					:class="[line.shown ? line.text : 'text-gray', line.justify]"
 				>
-					<span class="legend-dot bg-price" :class="{ inactive: !showGrid }"></span>
-					<span :class="{ 'text-decoration-line-through': !showGrid }">{{
-						$t("main.energyflow.gridImport")
+					<span class="text-nowrap">{{ line.summary.avg }}</span>
+					<span v-if="line.summary.range" class="text-nowrap">{{
+						line.summary.range
 					}}</span>
-				</button>
-				<br />
-				<div
-					class="d-flex flex-column flex-md-row column-gap-3 text-price fw-bold"
-					:class="{ 'opacity-50': !showGrid }"
-				>
-					<span class="text-nowrap">{{ gridSummary!.avg }}</span>
-					<span v-if="gridSummary!.range" class="text-nowrap">{{
-						gridSummary!.range
-					}}</span>
-				</div>
-			</small>
-		</div>
-		<div class="col-6 text-end">
-			<small>
-				<button
-					type="button"
-					class="legend-toggle text-gray"
-					:aria-pressed="showFeedin"
-					:disabled="!showGrid"
-					:title="showFeedin ? $t('forecast.hideLine') : $t('forecast.showLine')"
-					@click="$emit('toggle-line', 'feedin')"
-				>
-					<span class="legend-dot bg-export" :class="{ inactive: !showFeedin }"></span>
-					<span :class="{ 'text-decoration-line-through': !showFeedin }">{{
-						$t("main.energyflow.pvExport")
-					}}</span>
-				</button>
-				<div
-					class="d-flex flex-column flex-md-row column-gap-3 justify-content-end text-export fw-bold"
-					:class="{ 'opacity-50': !showFeedin }"
-				>
-					<span class="text-nowrap">{{ feedinSummary!.avg }}</span>
-					<span v-if="feedinSummary!.range" class="text-nowrap">{{
-						feedinSummary!.range
-					}}</span>
-				</div>
-			</small>
+				</span>
+			</button>
 		</div>
 	</div>
 	<div v-else-if="gridSummary" class="row gx-2 mt-1">
@@ -77,10 +47,13 @@ import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import type { CURRENCY, UiForecastSlot } from "@/types/evcc";
 import { isStaticTariff } from "@/utils/forecast";
+import colors from "@/colors";
+import DeviceColorDot from "../Helper/DeviceColorDot.vue";
 import { filterForecastSlots } from "./echarts";
 
 export default defineComponent({
 	name: "GridDetails",
+	components: { DeviceColorDot },
 	mixins: [formatter],
 	props: {
 		grid: { type: Array as PropType<UiForecastSlot[]> },
@@ -90,7 +63,7 @@ export default defineComponent({
 		showFeedin: { type: Boolean, default: true },
 		endDate: { type: Date, required: true },
 	},
-	emits: ["toggle-line"],
+	emits: ["focus-line"],
 	computed: {
 		gridSummary(): { avg: string; range: string } | null {
 			return this.summarize(this.grid);
@@ -100,6 +73,32 @@ export default defineComponent({
 		},
 		hasBothTariffs(): boolean {
 			return !!this.gridSummary && !!this.feedinSummary;
+		},
+		lines() {
+			return [
+				{
+					key: "grid",
+					label: this.$t("main.energyflow.gridImport"),
+					color: colors.price || "",
+					text: "text-price",
+					summary: this.gridSummary!,
+					shown: this.showGrid,
+					focused: !this.showFeedin,
+					align: "text-start",
+					justify: "",
+				},
+				{
+					key: "feedin",
+					label: this.$t("main.energyflow.pvExport"),
+					color: colors.export || "",
+					text: "text-export",
+					summary: this.feedinSummary!,
+					shown: this.showFeedin,
+					focused: !this.showGrid,
+					align: "text-end",
+					justify: "justify-content-end",
+				},
+			];
 		},
 	},
 	methods: {
@@ -125,33 +124,13 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.legend-dot {
-	display: inline-block;
-	width: 0.6em;
-	height: 0.6em;
-	margin-right: 0.35em;
-	border-radius: 50%;
+.price-line {
+	transition: opacity 150ms;
 }
-.legend-dot.inactive {
-	opacity: 0.25;
+.price-line--dim {
+	opacity: 0.35;
 }
-.bg-price {
-	background-color: var(--evcc-price);
-}
-.bg-export {
-	background-color: var(--evcc-export);
-}
-.legend-toggle {
-	background: none;
-	border: 0;
-	padding: 0;
-	font: inherit;
-	cursor: pointer;
-}
-.legend-toggle:hover:not(:disabled) {
+.price-line:hover .price-label {
 	text-decoration: underline;
-}
-.legend-toggle:disabled {
-	cursor: default;
 }
 </style>

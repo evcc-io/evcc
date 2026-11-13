@@ -87,7 +87,7 @@
 						:show-grid="showGrid"
 						:show-feedin="showFeedin"
 						:end-date="chartEndDate"
-						@toggle-line="togglePriceLine"
+						@focus-line="focusPriceLine"
 					/>
 				</Card>
 
@@ -230,12 +230,11 @@ export default defineComponent({
 		solarAdjusted() {
 			return store.state?.solarAdjusted;
 		},
-		hasFeedin(): boolean {
-			return !!this.forecast.feedin?.length;
-		},
 		priceView(): string {
 			const view = settings.priceView;
-			return this.hasFeedin && (view === "grid" || view === "feedin") ? view : "both";
+			return this.forecast.feedin?.length && (view === "grid" || view === "feedin")
+				? view
+				: "both";
 		},
 		showGrid(): boolean {
 			return this.priceView !== "feedin";
@@ -272,11 +271,9 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		togglePriceLine(line: "grid" | "feedin") {
-			// one line always stays visible
-			if (this.priceView === line) return;
-			settings.priceView =
-				this.priceView === "both" ? (line === "grid" ? "feedin" : "grid") : "both";
+		// a second click on the focused line shows both again
+		focusPriceLine(line: "grid" | "feedin") {
+			settings.priceView = this.priceView === line ? "both" : line;
 		},
 		async changeAdjusted(e: Event) {
 			try {

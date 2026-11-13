@@ -1444,7 +1444,6 @@
       "solar": "Consultez les prévisions de production solaire pour aujourd'hui et les prochains jours. Ces données serviront également, à l'avenir, à optimiser automatiquement la recharge.",
       "temperature": "Consultez la température extérieure prévue pour votre localité. Cette donnée sert à prévoir les besoins en chauffage."
     },
-    "hideLine": "cacher la ligne",
     "modalTitle": "Prévisions",
     "price": {
       "average": "Moyenne",
@@ -1452,8 +1451,6 @@
       "lowestHour": "Heure la moins chère",
       "range": "Amplitude"
     },
-    "priceZoom": "zoomer",
-    "showLine": "afficher la ligne",
     "solar": {
       "dayAfterTomorrow": "Après-demain",
       "partly": "partiellement",

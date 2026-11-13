@@ -1423,7 +1423,6 @@
       "solar": "Bekijk de verwachtte zonne opbrengt voor vandaag en de komende dagen. Wordt ook gebruikt voor automatische laadplan optimalisatie in de toekomst.",
       "temperature": "Bekijk de buitentemperatuurverwachting voor jouw locatie. Wordt gebruikt om de verwarmingsbehoefte te bepalen."
     },
-    "hideLine": "regel verbergen",
     "modalTitle": "Verwachting",
     "price": {
       "average": "Gemiddeld",
@@ -1431,8 +1430,6 @@
       "lowestHour": "Goedkoopste uur",
       "range": "Bereik"
     },
-    "priceZoom": "zoom in",
-    "showLine": "regel tonen",
     "solar": {
       "dayAfterTomorrow": "Overmorgen",
       "partly": "gedeeltelijk",

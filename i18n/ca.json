@@ -1391,7 +1391,6 @@
       "solar": "Vegeu la producció solar prevista per a avui i els pròxims dies. En el futur també s’utilitzarà per a l’optimització automàtica de la càrrega.",
       "temperature": "Vegeu la temperatura exterior prevista per a la vostra ubicació. S’utilitza per a predir la demanda de calefacció."
     },
-    "hideLine": "Amaga la línia",
     "modalTitle": "Previsió",
     "price": {
       "average": "Mitjana",
@@ -1399,8 +1398,6 @@
       "lowestHour": "Hora més barata",
       "range": "Interval"
     },
-    "priceZoom": "Amplia",
-    "showLine": "Mostra la línia",
     "solar": {
       "dayAfterTomorrow": "Demà passat",
       "partly": "parcial",

@@ -46,7 +46,6 @@ export default defineComponent({
 				: [];
 		},
 		markPoints(): { coord: [number, number]; value: string }[] {
-			// label extremes on the first visible line
 			const slots = this.slots.length ? this.slots : this.feedinSlots;
 			if (!slots.length) return [];
 			const minIdx = minSlotIndex(slots);
@@ -73,7 +72,9 @@ export default defineComponent({
 			];
 			const dataMin = Math.min(...values);
 			const dataMax = Math.max(...values);
-			const rangeMin = this.zoom ? dataMin : Math.min(0, dataMin);
+			// a flat line has no range to fit, it keeps the zero baseline
+			const fit = this.zoom && dataMin !== dataMax;
+			const rangeMin = fit ? dataMin : Math.min(0, dataMin);
 			const rangeMax = Math.max(0, dataMax);
 			const range = rangeMax - rangeMin || 1;
 			const rawInterval = range / 5;
@@ -81,15 +82,21 @@ export default defineComponent({
 			const nice = [1, 2, 2.5, 5, 10].find((n) => n * magnitude >= rawInterval) || 10;
 			const interval = nice * magnitude;
 
+			// a peak on a tick gets one more step, the line must not sit on the axis end
+			const steps = rangeMax > 0 ? Math.floor(rangeMax / interval + 1e-9) + 1 : 0;
 			return {
 				min: Math.floor(rangeMin / interval) * interval,
-				max: Math.ceil(rangeMax / interval) * interval,
+				max: steps * interval,
 				interval,
 			};
 		},
 		chartOption(): Record<string, unknown> {
 			const priceColor = colors.price || "";
 			const exportColor = colors.export || "";
+			// extremes are labelled on the first visible line
+			const [gridPoints, feedinPoints] = this.slots.length
+				? [this.markPoints, []]
+				: [[], this.markPoints];
 
 			// oxlint-disable-next-line typescript/no-this-alias
 			const vThis = this;
@@ -145,16 +152,8 @@ export default defineComponent({
 					},
 				}),
 				series: [
-					this.priceSeries(
-						this.slots,
-						priceColor,
-						this.slots.length ? this.markPoints : undefined
-					),
-					this.priceSeries(
-						this.feedinSlots,
-						exportColor,
-						this.slots.length ? undefined : this.markPoints
-					),
+					this.priceSeries(this.slots, priceColor, gridPoints),
+					this.priceSeries(this.feedinSlots, exportColor, feedinPoints),
 				],
 			};
 		},
@@ -163,7 +162,7 @@ export default defineComponent({
 		priceSeries(
 			slots: UiForecastSlot[],
 			color: string,
-			points?: { coord: [number, number]; value: string }[]
+			points: { coord: [number, number]; value: string }[]
 		): Record<string, unknown> {
 			const avg = slots.length ? slots.reduce((a, s) => a + s.value, 0) / slots.length : 0;
 			const gradientDown = avg >= 0;
@@ -193,16 +192,13 @@ export default defineComponent({
 						]
 					),
 				},
-				...(points
-					? {
-							markPoint: markPointLabel(
-								color,
-								this.tooltipVisible ? [] : points,
-								this.startDate,
-								this.endDate
-							),
-						}
-					: {}),
+				// always set, a dropped key would keep the previous labels on merge
+				markPoint: markPointLabel(
+					color,
+					this.tooltipVisible ? [] : points,
+					this.startDate,
+					this.endDate
+				),
 			};
 		},
 	},

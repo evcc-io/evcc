@@ -1419,7 +1419,6 @@
       "solar": "Vis forventet solenergi produceret i dag og de nærmeste dage. Bliver også brugt til automatisk optimering af opladninger i fremtiden.",
       "temperature": "Se den forventede udendørstemperatur for din placering. Bruges til at forudsige varmebehovet."
     },
-    "hideLine": "skjul linjen",
     "modalTitle": "Prognose",
     "price": {
       "average": "Gennemsnit",
@@ -1427,8 +1426,6 @@
       "lowestHour": "Billigste time",
       "range": "Spændvidde"
     },
-    "priceZoom": "zoom ind",
-    "showLine": "vis linjen",
     "solar": {
       "dayAfterTomorrow": "I overmorgen",
       "partly": "delvis",

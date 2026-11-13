@@ -1321,7 +1321,6 @@
       "solar": "See expected solar production for today and the coming days. Will also be used for automatic charging optimization in the future.",
       "temperature": "See the expected outdoor temperature for your location. Used to predict heating demand."
     },
-    "hideLine": "hide line",
     "modalTitle": "Forecast",
     "price": {
       "average": "Average",
@@ -1329,7 +1328,6 @@
       "lowestHour": "Cheapest hour",
       "range": "Range"
     },
-    "showLine": "show line",
     "solar": {
       "dayAfterTomorrow": "Day after tomorrow",
       "partly": "partly",

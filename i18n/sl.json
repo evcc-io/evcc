@@ -1390,7 +1390,6 @@
       "solar": "Oglejte si pričakovano sončno proizvodnjo za danes in prihodnje dni. V prihodnosti bo uporabljena tudi za samodejno optimizacijo polnjenja.",
       "temperature": "Oglejte si pričakovano zunanjo temperaturo za vašo lokacijo. Uporablja se za napoved potreb po ogrevanju."
     },
-    "hideLine": "skrij črto",
     "modalTitle": "Napoved",
     "price": {
       "average": "Povprečje",
@@ -1398,8 +1397,6 @@
       "lowestHour": "Najcenejša ura",
       "range": "Doseg"
     },
-    "priceZoom": "povečaj",
-    "showLine": "prikaži črto",
     "solar": {
       "dayAfterTomorrow": "Pojutrišnjem",
       "partly": "delno",
