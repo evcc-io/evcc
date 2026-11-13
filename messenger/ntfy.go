@@ -47,7 +47,9 @@ func NewNtfyFromConfig(other map[string]any) (api.Messenger, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("ntfy")
+	// credentials given in the uri itself
+	pass, _ := u.User.Password()
+	log := util.NewLogger("ntfy").Redact(pass, u.Query().Get("auth"))
 
 	if cc.AuthToken != "" {
 		bearer := "Bearer " + cc.AuthToken
