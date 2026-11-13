@@ -89,13 +89,13 @@ func (m *Ntfy) Send(title, msg string) {
 		"Tags":     m.tags,
 	})
 	if err != nil {
-		m.log.ERROR.Printf("%v", err)
+		m.log.ERROR.Println(err)
 		return
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		m.log.ERROR.Printf("%v", err)
+		m.log.ERROR.Println(err)
 		return
 	}
 	defer resp.Body.Close()
