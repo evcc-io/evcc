@@ -171,15 +171,14 @@ func TestRequiredPerUsage(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// TestRequiredWithoutUsage guards that usage restrictions inherited from the
-// param defaults do not disable validation for templates without usage
-func TestRequiredWithoutUsage(t *testing.T) {
+// TestRequiredPerClass guards that templates without usage param match param usages by class name
+func TestRequiredPerClass(t *testing.T) {
 	tmpl := &Template{
 		Params: []Param{
 			{
 				Name:     "param",
 				Required: true,
-				Usages:   []string{"pv"},
+				Usages:   []string{"pv", "curtailer"},
 			},
 		},
 	}
@@ -193,6 +192,31 @@ func TestRequiredWithoutUsage(t *testing.T) {
 		"Param": "foo",
 	})
 	require.NoError(t, err)
+
+	_, _, err = tmpl.RenderResult(Hems, RenderModeUnitTest, map[string]any{
+		"Param": nil,
+	})
+	require.NoError(t, err)
+}
+
+func TestValidateUsages(t *testing.T) {
+	tmpl := func(usages ...string) *Template {
+		return &Template{
+			Params: []Param{{Name: "param", Usages: usages}},
+		}
+	}
+
+	require.NoError(t, tmpl().ValidateUsages(Curtailer))
+	require.NoError(t, tmpl("pv", "curtailer").ValidateUsages(Curtailer))
+	require.Error(t, tmpl("pv").ValidateUsages(Curtailer), "usage never matches class")
+
+	withUsage := &Template{
+		Params: []Param{
+			{Name: ParamUsage, Choice: []string{"grid", "pv"}},
+			{Name: "param", Usages: []string{"battery"}},
+		},
+	}
+	require.Error(t, withUsage.ValidateUsages(Meter), "usage never matches template usages")
 }
 
 // TestModbusHostPattern guards that the modbus host is validated like the plain host

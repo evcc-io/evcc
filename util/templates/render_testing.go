@@ -5,6 +5,7 @@ import (
 	"errors"
 	"maps"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/evcc-io/evcc/plugin/auth"
@@ -79,6 +80,13 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 	port := 20000
 
 	for _, tmpl := range ByClass(class, WithDeprecated()) {
+		// demo templates carry unreachable params on purpose for e2e tests
+		if !strings.HasPrefix(tmpl.Template, "demo-") {
+			if err := tmpl.ValidateUsages(class); err != nil {
+				t.Error(tmpl.Template+":", err)
+			}
+		}
+
 		// set default values for all params
 		values := tmpl.Defaults(RenderModeUnitTest)
 

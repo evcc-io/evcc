@@ -447,8 +447,11 @@ export default defineComponent({
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
-			// usages are handled by the device specific filters, devices without usage show all params
-			const filtered = params.filter((p) => !this.customFields.includes(p.Name));
+			const filtered = params.filter(
+				(p) =>
+					!this.customFields.includes(p.Name) &&
+					(p.Usages ? p.Usages.includes(this.deviceType as any) : true)
+			);
 
 			// Allow parent to customize parameter filtering (passes all params for full control)
 			if (this.filterTemplateParams) {
