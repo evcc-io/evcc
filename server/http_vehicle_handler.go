@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -221,6 +222,48 @@ func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 		site.Optimize()
 
 		jsonWrite(w, res)
+	}
+}
+
+const maxOneTimePlans = 20
+
+// updateOneTimePlansHandler updates the one-time plans
+func updateOneTimePlansHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		v, err := site.Vehicles().ByName(vars["name"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		var res []api.OneTimePlan
+		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<16)).Decode(&res); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if len(res) > maxOneTimePlans {
+			jsonError(w, http.StatusBadRequest, errors.New("too many plans"))
+			return
+		}
+
+		for _, p := range res {
+			if !p.Time.After(time.Now()) {
+				jsonError(w, http.StatusBadRequest, errors.New("timestamp is in the past"))
+				return
+			}
+		}
+
+		if err := v.SetOneTimePlans(res); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		site.Optimize()
+
+		jsonWrite(w, v.GetOneTimePlans())
 	}
 }
 

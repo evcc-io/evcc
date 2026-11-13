@@ -1599,12 +1599,14 @@
     },
     "chargingPlan": {
       "active": "Active",
+      "addOneTimePlan": "Add one-time plan",
       "addRepeatingPlan": "Add repeating plan",
       "day": "Day",
       "goal": "Charging goal",
       "modalTitle": "Charging Plan",
       "none": "none",
       "once": "once",
+      "oneTimePlans": "One-time plans",
       "optimization": {
         "cheapest": "cheapest",
         "cheapestDescription": "Selects the cheapest slots. May result in multiple starts and stops.",

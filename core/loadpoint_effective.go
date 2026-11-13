@@ -87,13 +87,23 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 	return time.Time{}, 0, 0
 }
 
-// vehiclePlans returns the static plan and each occurrence of active repeating plans within the given days
+// vehiclePlans returns the static plan, the one-time plans and each occurrence of active repeating plans within the given days.
+// Plan ids are ordered like in the ui: static, one-time, repeating.
 func (lp *Loadpoint) vehiclePlans(v api.Vehicle, days int) []plan {
 	var plans []plan
 
 	// static plan
 	if planTime, soc := vehicle.Settings(lp.log, v).GetPlanSoc(); soc != 0 {
 		plans = append(plans, plan{Id: 1, Soc: soc, End: planTime})
+	}
+
+	// one-time plans
+	oneTime := vehicle.Settings(lp.log, v).GetOneTimePlans()
+	for index, op := range oneTime {
+		if op.Time.Before(time.Now()) {
+			continue
+		}
+		plans = append(plans, plan{Id: index + 2, Soc: op.Soc, End: op.Time})
 	}
 
 	// repeating plans
@@ -110,12 +120,22 @@ func (lp *Loadpoint) vehiclePlans(v api.Vehicle, days int) []plan {
 
 		for d := range days {
 			if ts := planTime.AddDate(0, 0, d); slices.Contains(rp.Weekdays, int(ts.Weekday())) {
-				plans = append(plans, plan{Id: index + 2, Soc: rp.Soc, End: ts})
+				plans = append(plans, plan{Id: len(oneTime) + index + 2, Soc: rp.Soc, End: ts})
 			}
 		}
 	}
 
 	return plans
+}
+
+// isOneTimePlan returns true if the current vehicle has a one-time plan ending at the given time
+func (lp *Loadpoint) isOneTimePlan(ts time.Time) bool {
+	if v := lp.GetVehicle(); v != nil {
+		return slices.ContainsFunc(vehicle.Settings(lp.log, v).GetOneTimePlans(), func(p api.OneTimePlan) bool {
+			return p.Time.Equal(ts)
+		})
+	}
+	return false
 }
 
 // GetSocPlanGoals returns the soc goals of all vehicle plans, repeating plans for each occurrence
