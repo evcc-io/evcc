@@ -1300,7 +1300,14 @@ func (site *Site) loadpointSitePower(lp updater, res sitePowerResult) float64 {
 	// a charge next to planned battery charging gives the battery priority, too: the PV loop
 	// would otherwise take the battery's charge power and invert the optimizer's PV split
 	if suggestion != nil && (suggestion.Action != actionCharge || suggestion.BatteryCharge > suggestionThreshold) && res.state.battery.Power < 0 {
-		sitePower -= res.state.battery.Power + res.state.excessDCPower
+		hide := -(res.state.battery.Power + res.state.excessDCPower)
+
+		// only the planned share: a battery charging beyond it would keep the vehicle below its minimum power
+		if suggestion.Action == actionCharge {
+			hide = min(hide, suggestion.BatteryCharge)
+		}
+
+		sitePower += hide
 	}
 
 	return sitePower
