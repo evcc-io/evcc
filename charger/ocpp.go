@@ -86,6 +86,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		RemoteStart          bool
 		NoChangeAvailability *bool
 		ChargingProfile      types.ChargingProfilePurposeType
+		NonFatalErrors       []string
 	}{
 		Connector:       1,
 		MeterInterval:   10 * time.Second,
@@ -120,6 +121,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		return nil, api.ErrSponsorRequired
 	}
 	c.txProfile = cc.ChargingProfile == types.ChargingProfilePurposeTxProfile
+	c.conn.SetNonFatalErrors(cc.NonFatalErrors)
 
 	if c.cp.HasMeasurement(types.MeasurandPowerActiveImport) {
 		implement.Has(c, implement.Meter(c.conn.CurrentPower))
@@ -285,7 +287,8 @@ func (c *OCPP) StatusReason() (api.Reason, error) {
 
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
-	if s, err := c.conn.Status(); err == nil {
+	// a derived status cannot tell if the vehicle or the charger suspended charging
+	if s, err := c.conn.Status(); err == nil && !(s == core.ChargePointStatusSuspendedEV && c.conn.StatusDerived()) {
 		switch s {
 		case
 			core.ChargePointStatusSuspendedEVSE:

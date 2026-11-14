@@ -19,3 +19,4 @@ params:
   - preset: ocpp
 render: |
   {{ include "ocpp" . }}
+  nonfatalerrors: ["METER UNKNOWN"] # internal phase current meter failed, charging continues at 10A
