@@ -58,30 +58,10 @@ render: |
       switch:
       - case: 1 # normal
         set:
-          source: const
-          value: 803 # inaktiv (Ina)
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
-              type: writemultiple
-              decode: uint32
-      - case: 2 # holddischarge
-        set:
           source: sequence
           set:
           - source: const
-            value: 0 # Wirkleistungsvorgabe
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40149 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSpt
-                type: writemultiple
-                decode: int32
-          - source: const
-            value: 802 # aktiv (Act)
+            value: 803 # inaktiv (Ina)
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -89,12 +69,65 @@ render: |
                 address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
                 type: writemultiple
                 decode: uint32
+          - source: const
+            value: {{ .maxchargepower }} # charging unrestricted
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40795 # Maximale Batterieladeleistung
+                type: writemultiple
+                decode: int32
+          - source: const
+            value: {{ .maxchargepower }} # discharging unrestricted
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40799 # Maximale Batterieentladeleistung
+                type: writemultiple
+                decode: int32
+      - case: 2 # hold
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 803 # inaktiv (Ina), self-consumption keeps charging from pv
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
+                type: writemultiple
+                decode: uint32
+          - source: const
+            value: {{ .maxchargepower }} # charging unrestricted
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40795 # Maximale Batterieladeleistung
+                type: writemultiple
+                decode: int32
+          - source: const
+            value: 0 # 0%, no discharge
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40799 # Maximale Batterieentladeleistung
+                type: writemultiple
+                decode: int32
       - case: 3 # charge
         set:
           source: sequence
           set:
           - source: const
-            value: -{{ .maxchargepower }} # Wirkleistungsvorgabe
+            value: -{{ .maxchargepower * 1.1}} # Wirkleistungsvorgabe ---> SunnyIsland berechnet die max Wirkleistung via Ampere. 
+                                               # im Falle den SI6.0H-1x sind das exemplarisch 20A, also 4600/230 = 20A. Der Max Wert ergibt sich aus dem maximal zulässigen 
+                                               # Spannung im Europäischen Stromnetz (+/-10%), somit kann auf den Max Wert des Batteriestellers 10% aufgeschlagen werden 
+                                               # um auch bei hohen Spannungen die max 20A auszunutzen. Dies trifft für alle SI zu. Somit erreicht man etwas mehr Leistung
+                                               # bei hohen Spannungslagen, anstatt Stumpf bei 4600W bzw 20A bei 230V abzuregeln. Intern begrenzt der SI das maximum automatisch
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -111,4 +144,22 @@ render: |
                 address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
                 type: writemultiple
                 decode: uint32
+          - source: const
+            value: {{ .maxchargepower }} # charging unrestricted
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40795 # Maximale Batterieladeleistung
+                type: writemultiple
+                decode: int32
+          - source: const
+            value: 0 # no discharging 
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40799 # Maximale Batterieentladeleistung
+                type: writemultiple
+                decode: int32
   {{- include "battery-params" . }}
