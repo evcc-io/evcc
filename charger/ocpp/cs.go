@@ -100,8 +100,12 @@ func (cs *CS) errorHandler(errC <-chan error) {
 
 // publish triggers the publish callback if set
 func (cs *CS) publish() {
-	if cs.publishFunc != nil {
-		cs.publishFunc()
+	cs.mu.Lock()
+	f := cs.publishFunc
+	cs.mu.Unlock()
+
+	if f != nil {
+		f()
 	}
 }
 
@@ -237,9 +241,8 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) {
 	cs.log.DEBUG.Printf("charge point disconnected: %s", chargePoint.ID())
 
+	// station status only depends on the connection state, which connect publishes
 	if cp, err := cs.ChargepointByID(chargePoint.ID()); err == nil {
 		cp.connect(false)
 	}
-
-	cs.publish()
 }
