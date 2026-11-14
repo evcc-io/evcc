@@ -203,7 +203,7 @@ func (lp *Loadpoint) surplusRegime(s *types.Suggestion) bool {
 func (lp *Loadpoint) partialSurplusRegime(s *types.Suggestion) bool {
 	min := suggestionThreshold < s.Charge && s.Charge <= lp.EffectiveMinPower()+suggestionThreshold
 
-	return s.Action == actionCharge && min && s.Grid < s.Charge && s.BatteryDischarge <= suggestionThreshold
+	return s.Action == actionCharge && min && s.Grid >= -suggestionThreshold && s.Grid < s.Charge && s.BatteryDischarge <= suggestionThreshold
 }
 
 // optimizerCharging applies the optimizer's charging decision. It returns false
