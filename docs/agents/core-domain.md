@@ -191,6 +191,7 @@ Gated by `OptimizerAutomatic()`: `off` (advisory only), battery-only, or `full` 
 
 - `ModeSmart` strategy switch calls `optimizerCharging(s)` and skips the smart cost / feed-in price limits.
   - `surplusRegime` (charge below max power, no grid flow, no battery discharge): not handled, the PV loop tracks measured surplus instead of the forecast.
+  - `partialSurplusRegime` (charge at min power, grid import of a part of charge power, no battery discharge): not handled, the PV loop tracks measured surplus.
   - `stop` without always-charge: not handled, PV loop may still enable on measured surplus.
   - `charge` at full power, or above what the active phases deliver and at least 3p min power: `fastCharging()`.
   - `charge` at a limited setpoint: `setLimit(PowerToCurrent(s.Charge))` capped at max current, or `minCharging()` below min current.
