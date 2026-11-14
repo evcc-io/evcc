@@ -3,12 +3,15 @@ package core
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 // curtailableMeter counts device interactions to verify caching.
@@ -192,4 +195,113 @@ func TestDimMetersNotAvailable(t *testing.T) {
 
 	require.NoError(t, site.dimMeters(false))
 	assert.Equal(t, []bool{true, false}, m.dimCalls)
+}
+
+// The curtail percent scales with the export beyond the limit and converges at the cap.
+func TestOptimizerCurtailPercent(t *testing.T) {
+	for _, tc := range []struct {
+		name            string
+		percent         int
+		grid, pv, limit float64
+		expect          int
+	}{
+		{"export above limit", 100, -7000, 10000, 5000, 80},
+		{"at the cap, still above limit", 80, -6000, 8000, 5000, 70},
+		{"below limit raises", 70, -4000, 7000, 5000, 80},
+		{"within threshold", 70, -5030, 7000, 5000, 70},
+		{"no pv", 70, -7000, 0, 5000, 70},
+		{"clamped to 0", 100, -20000, 10000, 5000, 0},
+		{"clamped to 100", 90, 1000, 3000, 5000, 100},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expect, optimizerCurtailPercent(tc.percent, tc.grid, tc.pv, tc.limit))
+		})
+	}
+}
+
+// The optimizer curtails while the active slot plans overshoot and releases its curtailment afterwards.
+func optimizerCurtailSite(t *testing.T, m *curtailableMeter, now time.Time) *Site {
+	t.Helper()
+
+	site := curtailSite(m)
+	site.gridMeter = config.NewStaticDevice(config.Named{}, api.Meter(m))
+	site.gridExportLimit = 5000
+	site.optimizer.lastSolve = &optimizerSolve{
+		schedule: optimizerSchedule{timestamps: []time.Time{now}, dt: []int{900}},
+		res:      optimizer.OptimizationResult{GridExportOvershoot: []float32{250}},
+	}
+
+	return site
+}
+
+func TestApplyOptimizerCurtailment(t *testing.T) {
+	enableAutomatic(t)
+
+	now := time.Now()
+	m := &curtailableMeter{percent: 100}
+	site := optimizerCurtailSite(t, m, now)
+
+	site.applyOptimizerCurtailment(-7000, 10000, now)
+	assert.Equal(t, []int{80}, m.setCalls)
+	assert.True(t, site.optimizerCurtailed)
+
+	// no planned overshoot: release
+	site.optimizer.lastSolve = nil
+	site.applyOptimizerCurtailment(-4000, 8000, now)
+	assert.Equal(t, []int{80, 100}, m.setCalls)
+	assert.False(t, site.optimizerCurtailed)
+
+	// not curtailed by the optimizer: left alone
+	site.applyOptimizerCurtailment(-4000, 8000, now)
+	assert.Equal(t, []int{80, 100}, m.setCalls)
+}
+
+// An uncurtailed HEMS statement leaves the pv to the optimizer, an active one takes precedence.
+func TestApplyOptimizerCurtailmentHems(t *testing.T) {
+	enableAutomatic(t)
+
+	now := time.Now()
+	m := &curtailableMeter{percent: 100}
+	site := optimizerCurtailSite(t, m, now)
+
+	h := api.NewMockHEMS(gomock.NewController(t))
+	site.hems = h
+
+	h.EXPECT().CurtailedPercent().Return(new(100)).AnyTimes()
+	h.EXPECT().MaxConsumptionPower().Return(nil).AnyTimes()
+	for range 2 {
+		site.applyHemsLimits()
+		site.applyOptimizerCurtailment(-7000, 10000, now)
+	}
+	assert.Equal(t, []int{80}, m.setCalls[:1])
+	assert.NotContains(t, m.setCalls[1:], 100, "hems must not reset optimizer curtailment")
+
+	h = api.NewMockHEMS(gomock.NewController(t))
+	site.hems = h
+	h.EXPECT().CurtailedPercent().Return(new(60)).AnyTimes()
+	h.EXPECT().MaxConsumptionPower().Return(nil).AnyTimes()
+	site.applyHemsLimits()
+	site.applyOptimizerCurtailment(-7000, 10000, now)
+	assert.Equal(t, 60, m.percent)
+	assert.False(t, site.optimizerCurtailed)
+}
+
+// A partially failed curtailment is released when the plan ends.
+func TestApplyOptimizerCurtailmentPartial(t *testing.T) {
+	enableAutomatic(t)
+
+	now := time.Now()
+	ok := &curtailableMeter{percent: 100}
+	failing := &curtailableMeter{percent: 100, setErr: errors.New("nope")}
+	site := optimizerCurtailSite(t, ok, now)
+	site.pvMeters = append(site.pvMeters, config.NewStaticDevice(config.Named{}, api.Meter(failing)))
+
+	site.applyOptimizerCurtailment(-7000, 10000, now)
+	assert.Equal(t, 80, ok.percent)
+
+	failing.setErr = nil
+	site.optimizer.lastSolve = nil
+	site.applyOptimizerCurtailment(-4000, 8000, now)
+	assert.Equal(t, 100, ok.percent)
+	assert.False(t, site.optimizerCurtailed)
 }

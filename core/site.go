@@ -85,6 +85,8 @@ type Site struct {
 	dimmed         *bool
 	curtailPercent *int
 
+	optimizerCurtailed bool // pv curtailed by the optimizer, released when it no longer plans curtailment
+
 	// battery settings
 	prioritySoc               float64  // prefer battery up to this Soc
 	bufferSoc                 float64  // continue charging on battery above this Soc
@@ -1370,6 +1372,7 @@ func (site *Site) update(lp updater) {
 		}
 
 		site.updatePower(lp, state, totalChargePower, consumption, feedin)
+		site.applyOptimizerCurtailment(state.gridPower, state.pvPower, time.Now())
 	}
 
 	// smart grid charging
