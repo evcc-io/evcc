@@ -135,8 +135,8 @@ func (m *LgEss) batteryMode(batterySocLimits batterySocLimits) func(api.BatteryM
 			}
 			// soc needs to be the next higher int value to stop discharging immediately
 			// example: batterySoc=50.7 -> set 51
-			if int(soc)+1 < 100 {
-				soc++
+			if next := int(soc) + 1; next <= 100 {
+				soc = float64(next)
 			}
 			return m.conn.BatteryMode("on", int(soc), true)
 		case api.BatteryCharge:
