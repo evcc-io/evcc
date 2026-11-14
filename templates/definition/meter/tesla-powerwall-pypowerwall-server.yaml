@@ -12,14 +12,21 @@ caveats:
       en: |
         Without complete system status data, e.g. in Basic LAN mode or during startup, automatic capacity and power limits may be unavailable. Set `capacity`, `maxchargepower` and `maxdischargepower` manually in that case.
         The actual backup reserve is read from the server cache and may update only after the next poll following a control action.
+  - description:
+      de: |
+        Netz- und Batterie-Energiezähler werden nur gelesen, wenn pypowerwall-server `cloud_energy.active` meldet. Ohne diesen Marker integriert evcc die lokale Leistung, statt möglicherweise unbalancierte Lifetime-Zähler zu verwenden.
+      en: |
+        Grid and battery energy counters are only read when pypowerwall-server reports `cloud_energy.active`. Without that marker, evcc integrates the local power instead of using possibly unbalanced lifetime counters.
 requirements:
   description:
     de: |
       Nutzt [pypowerwall-server](https://github.com/jasonacox/pypowerwall-server) als Backend. Die Lesezugriffe kommen über dessen Proxy-API, die Batteriesteuerung über die authentifizierten `/control/*`-Routen. Für die Batteriesteuerung muss im Server `PW_CONTROL_SECRET` gesetzt sein; `reserve_hold` benötigt pypowerwall-server v0.10.0 oder neuer.
       Ab pypowerwall-server v0.14.0 kann der Server optional auch HTTPS auf Port 8775 anbieten. Ohne TLS-Reverse-Proxy oder aktivierten HTTPS-Listener bleibt es bei HTTP; mit `controlSecret` sollte HTTPS oder ein vertrauenswürdiges Netz verwendet werden.
+      Optional `PW_CLOUD_ENERGY=yes` im pypowerwall-server aktivieren, um Tesla-Cloud-Lifetime-Zähler für Netz und Batterie zu verwenden; andernfalls integriert evcc die lokale Leistung.
     en: |
       Uses [pypowerwall-server](https://github.com/jasonacox/pypowerwall-server) as backend. Reads come from its proxy API, battery control uses its authenticated `/control/*` routes. For battery control, `PW_CONTROL_SECRET` must be set on the server; `reserve_hold` requires pypowerwall-server v0.10.0 or later.
       Since pypowerwall-server v0.14.0 the server can optionally serve HTTPS on port 8775. Without a TLS reverse proxy or the HTTPS listener it stays plain HTTP; with `controlSecret`, prefer HTTPS or a trusted network.
+      Optionally set `PW_CLOUD_ENERGY=yes` on pypowerwall-server to use Tesla Cloud lifetime grid and battery counters; otherwise evcc integrates the local power.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -61,14 +68,16 @@ render: |
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
     jq: .site.instant_power
+  # Cloud-backed lifetime counters are used only when the server marks the
+  # overlay active; zero makes evcc integrate the local power instead.
   energy:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
-    jq: .site.energy_imported / 1000
+    jq: if .cloud_energy.active == true then .site.energy_imported / 1000 else 0 end
   returnenergy:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
-    jq: .site.energy_exported / 1000
+    jq: if .cloud_energy.active == true then .site.energy_exported / 1000 else 0 end
   currents:
     - uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
       jq: .site.i_a_current
@@ -106,11 +115,11 @@ render: |
   energy:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
-    jq: .battery.energy_imported / 1000
+    jq: if .cloud_energy.active == true then .battery.energy_imported / 1000 else 0 end
   returnenergy:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
-    jq: .battery.energy_exported / 1000
+    jq: if .cloud_energy.active == true then .battery.energy_exported / 1000 else 0 end
   soc:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/system_status/soe
