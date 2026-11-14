@@ -12,12 +12,14 @@ requirements:
       Diese Konfiguration wurde mit der Firmware-Version 1.0.16.1 getestet.
       Ältere oder neuere Firmware-Versionen können andere Registeradressen verwenden und daher falsche Daten liefern.
       evcc kann die Batterie aus dem Netz laden (Arbeitsmodus Drittanbietersteuerung mit `maxchargepower`, Standard 5000 W) und sie zurück in den Eigenverbrauch schalten. Ein in der Anker-App eingestellter Arbeitsmodus wird dabei überschrieben.
+      Der X1 kehrt nicht von selbst in den Eigenverbrauch zurück: Endet evcc unerwartet während des Netzladens, lädt der X1 weiter, bis evcc wieder einen Modus setzt.
       Halten wird nicht unterstützt und fällt auf den Normalbetrieb zurück: Der X1 bietet keine Möglichkeit, das Entladen zu sperren und gleichzeitig PV-Überschuss zu speichern.
     en: |
       The Modbus TCP interface must be enabled in the Anker app.
       This configuration was tested with the Firmware Version 1.0.16.1.
       Older or newer Firmware Versions may use different register addresses and therefore deliver incorrect data.
       evcc can charge the battery from the grid (work mode third-party control with `maxchargepower`, default 5000 W) and return it to self-consumption. A work mode set in the Anker app is overwritten.
+      The X1 does not return to self-consumption on its own: if evcc stops unexpectedly while grid charging, the X1 keeps charging until evcc sets a mode again.
       Holding is not supported and falls back to normal operation: the X1 offers no way to block discharging while still storing PV surplus.
 params:
   - name: usage
@@ -190,19 +192,12 @@ render: |
     set:
       source: switch
       switch:
+        # writes are ordered so that a failed second write leaves the X1 in self_consumption,
+        # where the setpoint has no effect
         - case: 1 # normal
           set:
             source: sequence
             set:
-              - source: const
-                value: 0
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 10071 # Battery Charge/Discharge Power (W, positive = discharge, negative = charge)
-                    type: writemultiple
-                    encoding: int32s
               - source: const
                 value: 0 # self_consumption
                 set:
@@ -212,21 +207,21 @@ render: |
                     address: 10064 # Work Mode
                     type: writesingle
                     encoding: uint16
+              - source: const
+                value: 0
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10071 # Battery Charge/Discharge Power (W, positive = discharge, negative = charge)
+                    type: writemultiple
+                    encoding: int32s
         # holddischarge is not supported: third_party_control with 0 W also blocks pv charging
         # and the backup soc registers (60002/60003) are not implemented on the X1
         - case: 3 # charge
           set:
             source: sequence
             set:
-              - source: const
-                value: 3 # third_party_control
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 10064
-                    type: writesingle
-                    encoding: uint16
               - source: const
                 value: {{ .maxchargepower | default 5000 }} # W, the X1 limits it to what the battery accepts
                 set:
@@ -237,5 +232,14 @@ render: |
                     type: writemultiple
                     encoding: int32s
                   scale: -1 # negative = charge
+              - source: const
+                value: 3 # third_party_control
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10064
+                    type: writesingle
+                    encoding: uint16
   {{- include "battery-params" . }}
   {{- end }}
