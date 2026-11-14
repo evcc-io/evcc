@@ -190,6 +190,7 @@
     "circuits": {
       "addMainCircuit": "Aggiungi il circuito di rete principale",
       "addSubCircuit": "Aggiungi sotto-circuito",
+      "chargingPointsNote": "Assegna i punti di ricarica e i dispositivi di riscaldamento a un circuito nelle rispettive impostazioni.",
       "description": "Garantisce che la somma dei carichi connessi ad un circuito non superi i limiti di corrente configurati. I circuiti possono essere annidati in una struttura gerarchica.",
       "legacyWarning": "Nuova configurazione dei circuiti disponibile! Rimuovere e salvare la configurazione qui per utilizzare il nuovo processo guidato. E' necessario un riavvio al termine.",
       "meterDedicated": "Contatore",
@@ -1155,6 +1156,11 @@
         "titleAdd": "Aggiungere la previsione solare",
         "titleEdit": "Modificare la previsione solare",
         "titleExample": "Tetto a sud, tettoia, ecc."
+      },
+      "temperature": {
+        "description": "Previsione della temperatura esterna per la tua località. Visualizzata nell'interfaccia e usata per stimare il fabbisogno di riscaldamento.",
+        "titleAdd": "Aggiungi previsione temperatura",
+        "titleEdit": "Modifica previsione temperatura"
       },
       "temperature": {
         "description": "Previsione della temperatura esterna per la tua località. Visualizzata nell'interfaccia e usata per stimare il fabbisogno di riscaldamento.",

@@ -1117,6 +1117,11 @@
         "titleAdd": "Adăugați prognoză de temperatură",
         "titleEdit": "Editați prognoza de temperatură"
       },
+      "temperature": {
+        "description": "Prognoza temperaturii exterioare pentru locația dvs. Afișată în interfață și folosită pentru a estima necesarul de încălzire.",
+        "titleAdd": "Adăugați prognoză de temperatură",
+        "titleEdit": "Editați prognoza de temperatură"
+      },
       "template": "Furnizor",
       "title": "Tarife si prognoze",
       "titleChoice": "Ce vrei să adaugi?",

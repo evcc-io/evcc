@@ -396,6 +396,8 @@ export type YamlSource = "file" | "db" | undefined;
 export interface OcppConfig {
   /** Port the OCPP server listens on. */
   port: number;
+  /** Port the OCPP 2.0.1 server listens on. */
+  port20: number;
 }
 
 /** A rule forwarding an OCPP station to an upstream backend. */
@@ -1579,6 +1581,13 @@ export interface EvOpt {
   res: OptimizationResult;
   details: OptimizationDetails;
   hosted: boolean;
+}
+
+// last plan explanation, plan is the updated time of the explained plan
+export interface EvOptExplanation {
+  explanation: string;
+  created: string;
+  plan: string;
 }
 
 // last plan explanation, plan is the updated time of the explained plan
