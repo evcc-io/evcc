@@ -2,9 +2,11 @@ package meter
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
+	"net/http"
 	"slices"
 	"strings"
 	"sync/atomic"
@@ -29,6 +31,9 @@ type EcoFlow struct {
 	client  *ecoflow.Client
 	dataG   func() (*ecoflow.GetCmdResponse, error)
 	limitG  func() (float64, error)
+	mainG   func() (string, error)
+	mainSn  string
+	known   map[string]bool
 
 	power, batterySoc string
 }
@@ -46,6 +51,7 @@ func NewEcoFlowFromConfig(other map[string]any) (api.Meter, error) {
 		Usage                                string
 		AccessKey, SecretKey, Serial, Region string
 		Power, Soc                           string
+		MainDevice                           bool
 		Cache                                time.Duration
 	}{
 		Cache: 30 * time.Second,
@@ -86,17 +92,18 @@ func NewEcoFlowFromConfig(other map[string]any) (api.Meter, error) {
 		}
 	}
 
-	return NewEcoFlow(cc.AccessKey, cc.SecretKey, serials, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits, cc.batteryPowerLimits.Decorator())
+	return NewEcoFlow(cc.AccessKey, cc.SecretKey, serials, cc.Usage, uri, cc.Power, cc.Soc, cc.MainDevice, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits, cc.batteryPowerLimits.Decorator())
 }
 
 // NewEcoFlow constructs the EcoFlow struct
 func NewEcoFlow(accessKey, secretKey string, serials []string, usage, uri string,
-	power, soc string, cache time.Duration, capacity func() (float64, error), batterySocLimits batterySocLimits, batteryPowerLimits func() (float64, float64, error)) (*EcoFlow, error) {
+	power, soc string, mainDevice bool, cache time.Duration, capacity func() (float64, error), batterySocLimits batterySocLimits, batteryPowerLimits func() (float64, float64, error)) (*EcoFlow, error) {
 	if len(serials) == 0 {
 		return nil, errors.New("missing serial")
 	}
 
 	log := util.NewLogger("ecoflow").Redact(append([]string{accessKey, secretKey}, serials...)...)
+	client := request.NewClient(log)
 
 	m := &EcoFlow{
 		Caps:    implement.New(),
@@ -106,13 +113,29 @@ func NewEcoFlow(accessKey, secretKey string, serials []string, usage, uri string
 		cache:   cache,
 		client: ecoflow.NewEcoflowClient(accessKey, secretKey,
 			ecoflow.WithBaseUrl(uri),
-			ecoflow.WithHttpClient(request.NewClient(log)),
+			ecoflow.WithHttpClient(client),
 		),
 		power:      power,
 		batterySoc: soc,
 	}
 
 	m.dataG = util.Cached(m.getData, cache)
+
+	// only commands follow the main device, reads stay on the configured serial since summed per-device
+	// meters rely on followers reading zero. A serial list keeps detecting the leader by cmsBattSoc.
+	if mainDevice && len(serials) == 1 {
+		m.known = map[string]bool{serials[0]: true}
+		m.mainG = util.Cached(func() (string, error) {
+			sn, err := m.mainSerial(ecoflow.NewHttpRequest(client, http.MethodGet, uri+"/iot-open/sign/device/system/main/sn",
+				map[string]any{"sn": serials[0]}, accessKey, secretKey))
+			if err != nil {
+				// keep the last main device, the error lets the cache retry with backoff
+				m.log.DEBUG.Printf("main device: %v", err)
+				return m.mainSn, err
+			}
+			return sn, nil
+		}, cache)
+	}
 
 	if usage == "battery" {
 		implement.Has(m, implement.Battery(m.soc))
@@ -123,7 +146,7 @@ func NewEcoFlow(accessKey, secretKey string, serials []string, usage, uri string
 		// the backup reserve command is Stream-specific, the PowerOcean template shares this meter type
 		if soc == "cmsBattSoc" {
 			m.limitG = util.Cached(m.dischargeLimit, cache)
-			implement.Has(m, implement.BatteryController(batteryModesSocLimit, batterySocLimits.LimitController(m.soc, m.setBackupReserve)))
+			implement.Has(m, implement.BatteryController(batteryModesSocLimit, batterySocLimits.LimitController(m.holdSoc, m.setBackupReserve)))
 		}
 	}
 
@@ -133,9 +156,48 @@ func NewEcoFlow(accessKey, secretKey string, serials []string, usage, uri string
 // ecoflowLeaderKey is only reported non-zero by the elected leader of a Stream system
 const ecoflowLeaderKey = "cmsBattSoc"
 
-// serial returns the serial of the current leader
+// serial returns the serial commands are sent to: the main device if looked up, the current leader otherwise
 func (m *EcoFlow) serial() string {
+	if m.mainG != nil {
+		if sn, _ := m.mainG(); sn != "" {
+			return sn
+		}
+	}
+
 	return m.serials[m.leader.Load()]
+}
+
+// mainSerial resolves the configured serial to the main device of its system
+func (m *EcoFlow) mainSerial(req *ecoflow.HttpRequest) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	b, err := req.Execute(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	var res struct {
+		Code, Message string
+		Data          struct{ Sn string }
+	}
+	if err := json.Unmarshal(b, &res); err != nil {
+		return "", err
+	}
+	if res.Code != "0" {
+		return "", fmt.Errorf("%s (%s)", res.Message, res.Code)
+	}
+	if res.Data.Sn == "" {
+		return "", errors.New("invalid response")
+	}
+
+	if !m.known[res.Data.Sn] {
+		m.log.Redact(res.Data.Sn)
+		m.known[res.Data.Sn] = true
+	}
+	m.mainSn = res.Data.Sn
+
+	return res.Data.Sn, nil
 }
 
 func (m *EcoFlow) query(serial string, params []string) (*ecoflow.GetCmdResponse, error) {
@@ -225,6 +287,21 @@ func (m *EcoFlow) soc() (float64, error) {
 	}
 
 	return ecoflowValue(response.Data, m.batterySoc)
+}
+
+// holdSoc returns the soc of the device the backup reserve is sent to
+func (m *EcoFlow) holdSoc() (float64, error) {
+	sn := m.serial()
+	if sn == m.serials[m.leader.Load()] {
+		return m.soc()
+	}
+
+	res, err := m.query(sn, []string{m.batterySoc})
+	if err != nil {
+		return 0, err
+	}
+
+	return ecoflowValue(res.Data, m.batterySoc)
 }
 
 // ecoflowReserveLimit clamps the reserve above the discharge limit, which the device requires it
