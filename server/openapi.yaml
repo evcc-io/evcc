@@ -850,6 +850,37 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/BooleanResult"
+  /optimizerriskprofile:
+    post:
+      operationId: setOptimizerRiskProfile
+      summary: Set optimizer risk profile
+      description: "Make the optimizer hedge against forecast errors. A slot may deliver less solar and need more energy than forecasted by the given shares, in at most `budget` slots per day."
+      tags:
+        - experimental
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./openapi.state.yaml#/components/schemas/RiskProfile"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "./openapi.state.yaml#/components/schemas/RiskProfile"
+        "400":
+          description: "Invalid risk profile."
+    delete:
+      operationId: removeOptimizerRiskProfile
+      summary: Remove optimizer risk profile
+      description: "The optimizer plans on the forecasts as they are."
+      tags:
+        - experimental
+      responses:
+        "200":
+          $ref: "#/components/responses/NullResult"
   /config/optimizerautomatic/{value}:
     post:
       operationId: setOptimizerAutomatic
@@ -2474,7 +2505,7 @@ components:
         application/json:
           schema:
             type: integer
-            description: "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge, 5: discharge"
+            description: "Battery mode. 0: unknown, 1: normal, 2: holddischarge, 3: charge, 4: holdcharge, 5: discharge"
             minimum: 0
             maximum: 5
   securitySchemes:

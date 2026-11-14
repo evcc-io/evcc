@@ -4,14 +4,16 @@ on:
   issue_comment:
     types: [created]
 
-# Triggered by a `/analyze` comment on any issue or PR conversation. Delegates to
+# Triggered by a `/analyze` comment on any issue or PR conversation, maintainers only. Delegates to
 # the shared issue agent in analyze mode, which investigates, posts one answer
 # comment, then minimizes the calling `/analyze` comment as RESOLVED, whatever
 # the answer says.
 jobs:
   analyze:
     name: Analyze on demand
-    if: startsWith(github.event.comment.body, '/analyze')
+    if: |
+      startsWith(github.event.comment.body, '/analyze') &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     permissions:
       contents: read # explore the codebase for the answer; no fix/PR in analyze mode
       issues: write # comment + minimize the calling comment

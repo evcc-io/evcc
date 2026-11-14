@@ -466,11 +466,17 @@ export default defineComponent({
     fmtCountryName(country: string) {
       return new Intl.DisplayNames(this.$i18n?.locale, { type: "region" }).of(country) || country;
     },
-    fmtPricePerKWh(amout = 0, currency = CURRENCY.EUR, short = false, withUnit = true) {
+    fmtPricePerKWh(
+      amout = 0,
+      currency = CURRENCY.EUR,
+      short = false,
+      withUnit = true,
+      exact = false
+    ) {
       const factor = this.pricePerKWhDisplayFactor(currency);
       const value = amout * factor;
       const minimumFractionDigits = 1;
-      const maximumFractionDigits = this.energyPriceSubunit(currency) ? 1 : 3;
+      const maximumFractionDigits = exact ? 6 : this.energyPriceSubunit(currency) ? 1 : 3;
       const price = new Intl.NumberFormat(this.$i18n?.locale, {
         style: "decimal",
         minimumFractionDigits,

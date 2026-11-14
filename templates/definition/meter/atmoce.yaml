@@ -21,6 +21,7 @@ params:
     choice: ["tcpip"]
     id: 1
   - name: maxacpower
+    required: true
     service: modbus/read?address=60027&type=holding&encoding=uint32&scale=1&resulttype=int&{modbus}
   - preset: battery-minmaxsoc
   - name: minsoc
@@ -39,11 +40,11 @@ params:
       en: Firmware version
     help:
       de: |
-        Firmware 01.01.00.28.15 und höher ermöglichen die korrekte Hold/Holdcharge-Funktionalität sowie das Dimmen und Abschalten.
-        Ältere Versionen unterstützen lediglich die Hold-Funktion ohne (Ent-)Ladefunktion.
+        Firmware 01.01.00.28.15 und höher ermöglichen die korrekte Holddischarge/Holdcharge-Funktionalität sowie das Dimmen und Abschalten.
+        Ältere Versionen unterstützen lediglich die Holddischarge-Funktion ohne (Ent-)Ladefunktion.
       en: |
-        Firmware 01.01.00.28.15 and higher allows for correct hold/holdcharge functionality, dimming and curtailing.
-        Older versions only support hold function without (dis)charge.
+        Firmware 01.01.00.28.15 and higher allows for correct holddischarge/holdcharge functionality, dimming and curtailing.
+        Older versions only support holddischarge function without (dis)charge.
   - name: capacity
     deprecated: true
   - name: maxchargepower
@@ -340,7 +341,7 @@ render: |
                   type: writemultiple
                   decode: uint32
             {{- end }}
-      - case: 2 # hold -> No discharging
+      - case: 2 # holddischarge -> No discharging
         set:
           source: sequence
           set:

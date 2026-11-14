@@ -3,6 +3,7 @@ package cardata
 import (
 	"context"
 	"fmt"
+	"math"
 	"slices"
 	"strings"
 	"sync"
@@ -85,12 +86,11 @@ func (v *Provider) findOrCreateContainer() (string, error) {
 		return "", err
 	}
 
-	// obsolete containers keep streaming, resulting in duplicate messages
-	defer v.deleteObsoleteContainers(containers)
-
 	if i := slices.IndexFunc(containers, func(c Container) bool {
-		return c.Name == containerName && c.Purpose == requiredVersion
+		return c.State == "ACTIVE" && c.Name == containerName && c.Purpose == requiredVersion
 	}); i >= 0 {
+		// obsolete containers keep streaming, resulting in duplicate messages
+		v.deleteObsoleteContainers(containers)
 		return containers[i].ContainerId, nil
 	}
 
@@ -99,13 +99,20 @@ func (v *Provider) findOrCreateContainer() (string, error) {
 		Purpose:              requiredVersion,
 		TechnicalDescriptors: requiredKeys,
 	})
+	if err != nil {
+		// keep the old container streaming when the replacement cannot be created
+		return "", err
+	}
 
-	return res.ContainerId, err
+	v.deleteObsoleteContainers(containers)
+
+	return res.ContainerId, nil
 }
 
 func (v *Provider) deleteObsoleteContainers(containers []Container) {
 	for _, c := range containers {
-		if c.Name != containerName || c.Purpose == requiredVersion {
+		// deleted containers stay listed for 29 days, see TA2k/ioBroker.bmw@1b67ef4
+		if c.State == "DELETED" || c.Name != containerName || c.Purpose == requiredVersion {
 			continue
 		}
 
@@ -200,7 +207,12 @@ func (v *Provider) Float(key string) (float64, error) {
 		return 0, api.ErrNotAvailable
 	}
 
-	return cast.ToFloat64E(res)
+	f, err := cast.ToFloat64E(res)
+	if err == nil && (math.IsNaN(f) || math.IsInf(f, 0)) {
+		return 0, api.ErrNotAvailable
+	}
+
+	return f, err
 }
 
 var _ api.Battery = (*Provider)(nil)
@@ -210,7 +222,11 @@ func (v *Provider) Soc() (float64, error) {
 	if res, err := v.Float("vehicle.drivetrain.batteryManagement.header"); err == nil {
 		return res, nil
 	}
-	return v.Float("vehicle.powertrain.electric.battery.stateOfCharge.displayed")
+	if res, err := v.Float("vehicle.powertrain.electric.battery.stateOfCharge.displayed"); err == nil {
+		return res, nil
+	}
+	// Neue Klasse, only updated at trip end, see openWB/core@0f92a95
+	return v.Float("vehicle.trip.segment.end.drivetrain.batteryManagement.hvSoc")
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -266,14 +282,20 @@ func (v *Provider) Range() (int64, error) {
 	if res, err := v.Int("vehicle.drivetrain.electricEngine.kombiRemainingElectricRange"); err == nil {
 		return res, nil
 	}
-	return v.Int("vehicle.drivetrain.lastRemainingRange")
+	if res, err := v.Int("vehicle.drivetrain.lastRemainingRange"); err == nil {
+		return res, nil
+	}
+	return v.Int("vehicle.drivetrain.electricEngine.remainingElectricRange")
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
 
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
-	return v.Float("vehicle.vehicle.travelledDistance")
+	if res, err := v.Float("vehicle.vehicle.travelledDistance"); err == nil {
+		return res, nil
+	}
+	return v.Float("vehicle.trip.segment.end.travelledDistance")
 }
 
 var _ api.SocLimiter = (*Provider)(nil)

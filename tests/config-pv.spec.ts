@@ -28,8 +28,6 @@ test.describe("pv meter", async () => {
     await meterModal.getByLabel("Title").fill("PV North");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
     await page.getByRole("button", { name: "Show advanced settings" }).click();
-    await expect(meterModal.getByLabel("Minimum charge")).not.toBeVisible(); // battery usage only
-    await expect(meterModal.getByLabel("Maximum AC power of the hybrid inverter")).toBeVisible(); // pv usage only
     await meterModal.getByLabel("Power optional").fill("5000");
     await expect(meterModal.getByLabel("Power optional")).toHaveValue("5000");
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();

@@ -1,3 +1,4 @@
+import type { SourceRow } from "./mix";
 export type FlowSource = "pv" | "battery" | "grid";
 export type FlowSink = "home" | "battery" | "loadpoint" | "export";
 
@@ -7,6 +8,15 @@ export interface Flow {
   energy: number; // kWh
   cost?: number; // home and loadpoint only
   pricedEnergy?: number; // kWh with a price
+}
+
+// the flow chart shows loadpoints as two sinks
+export type ChartSink = Exclude<FlowSink, "loadpoint"> | "charging" | "heating";
+
+export interface ChartFlow {
+  from: FlowSource;
+  to: ChartSink;
+  energy: number; // kWh
 }
 
 export interface FlowCost {
@@ -101,5 +111,14 @@ export interface StatItem {
   sub?: string;
   tooltip?: string;
   accent?: string; // text color class for the value
-  empty?: string; // shown instead of a value, with a link to the tariff settings
+  empty?: string; // shown instead of a value
+  configure?: boolean; // with a link to the tariff settings: nothing is configured yet
+  selectable?: boolean; // false: not a button in a row with a chosen stat
+}
+
+// a breakdown by source and the card it belongs to
+export interface SourcesDetail {
+  owner: string;
+  title: string;
+  rows: SourceRow[];
 }

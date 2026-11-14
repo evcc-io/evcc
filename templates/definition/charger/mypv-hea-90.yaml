@@ -22,6 +22,7 @@ discovery:
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 1
   - name: tempsource
     choice: ["1", "2"]
     default: "1"

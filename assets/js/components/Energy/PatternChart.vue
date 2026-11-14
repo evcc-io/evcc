@@ -42,6 +42,8 @@ export default defineComponent({
 		from: { type: Date, required: true },
 		to: { type: Date, required: true },
 		period: { type: String as PropType<PERIODS>, required: true },
+		// names the energy in the day tooltip beside soc or temperature
+		valueLabel: String,
 		// same as the bar chart so toggling does not jump
 		height: { type: Number, default: 260 },
 	},
@@ -72,6 +74,12 @@ export default defineComponent({
 		},
 		max(): number {
 			return Math.max(0, ...this.series.data.map((slot) => slot.energy));
+		},
+		// calendar: the scale ends at a strong day (95th percentile), one extreme day
+		// would wash out all others
+		calendarMax(): number {
+			const values = this.series.data.map((slot) => slot.energy).sort((a, b) => a - b);
+			return values[Math.floor(0.95 * (values.length - 1))] || this.max;
 		},
 		chartOption(): Record<string, unknown> {
 			return {
@@ -149,7 +157,9 @@ export default defineComponent({
 								? [{ values: [power] }]
 								: [
 										{
-											name: label(isTemp ? "used" : "charged"),
+											name:
+												this.valueLabel ||
+												label(isTemp ? "used" : "charged"),
 											values: [power],
 										},
 										{
@@ -165,7 +175,7 @@ export default defineComponent({
 					},
 				},
 				// the scale colors the row only, not the panel's line
-				visualMap: { ...this.legend(maxLabel, 36), seriesIndex: 0 },
+				visualMap: { ...this.legend(maxLabel), seriesIndex: 0 },
 				grid: panel ? panelGrids(grid, panel.track) : grid,
 				// with a panel the labels sit below it
 				xAxis: panel
@@ -219,7 +229,7 @@ export default defineComponent({
 						);
 					},
 				},
-				visualMap: this.legend(this.fmtKWh(this.max), 36),
+				visualMap: this.legend(this.fmtKWh(this.max)),
 				// same frame and label styles as the bar chart
 				grid: energyGrid(),
 				xAxis: [
@@ -269,26 +279,36 @@ export default defineComponent({
 		// year: github style calendar of days
 		calendarOption(): Record<string, unknown> {
 			const last = new Date(this.to.getTime() - 1);
-			const data = this.series.data.map((slot) => [
-				this.dayKey(new Date(slot.start)),
-				slot.energy,
-			]);
+			const days = new Map(
+				this.series.data.map((slot) => [this.dayKey(new Date(slot.start)), slot.energy])
+			);
+			const cap = this.calendarMax;
+			// days above the scale keep its full color
+			const data = [...days].map(([day, energy]) => [day, Math.min(energy, cap)]);
+			const capLabel = this.fmtKWh(cap);
 			return {
 				tooltip: {
 					...tooltipStyle(colors.text || ""),
 					formatter: (params: { value: [string, number] }) =>
 						tooltipTable(this.fmtDayMonthYear(new Date(params.value[0])), [
-							{ values: [this.fmtKWh(params.value[1])] },
+							{ values: [this.fmtKWh(days.get(params.value[0]) ?? 0)] },
 						]),
 				},
 				// calendar data is [day, energy], the energy sits in dimension 1
-				visualMap: { ...this.legend(this.fmtKWh(this.max), 4), dimension: 1 },
+				// the scale below the days, clear of the card's header
+				visualMap: {
+					...this.legend(cap < this.max ? `≥ ${capLabel}` : capLabel),
+					max: cap || 1,
+					dimension: 1,
+					top: undefined,
+					bottom: 0,
+					left: 28,
+				},
 				calendar: {
 					left: 28,
 					right: 4,
-					// below the legend
-					top: 44,
-					bottom: 4,
+					top: 20,
+					bottom: 28,
 					range: [this.dayKey(this.from), this.dayKey(last)],
 					cellSize: ["auto", "auto"],
 					splitLine: { show: false },
@@ -304,7 +324,12 @@ export default defineComponent({
 						color: colors.muted || "",
 						margin: 6,
 					},
-					monthLabel: { fontSize: 10, color: colors.muted || "", margin: 6 },
+					monthLabel: {
+						nameMap: this.monthNames,
+						fontSize: 10,
+						color: colors.muted || "",
+						margin: 6,
+					},
 					yearLabel: { show: false },
 				},
 				series: [
@@ -318,28 +343,44 @@ export default defineComponent({
 				],
 			};
 		},
+		// single letters when twelve short names would touch
+		monthNames(): string[] {
+			const narrow = this.chartWidth < 480;
+			return Array.from({ length: 12 }, (_, i) => {
+				const d = new Date(2000, i, 1);
+				return narrow ? this.fmtMonthNarrow(d) : this.fmtMonth(d, true);
+			});
+		},
 		dayNames(): string[] {
 			// echarts expects sunday first
 			return [0, 1, 2, 3, 4, 5, 6].map((i) => this.fmtWeekdayByIndex(i, "narrow"));
 		},
 	},
 	methods: {
-		// the color scale top right in the frame's header space, its max label ending
-		// at the plot edge
-		legend(maxLabel: string, margin: number): Record<string, unknown> {
+		// the color scale top left in the frame's header space, starting at the plot edge.
+		// In steps: a cell is read against it at a glance
+		legend(maxLabel: string): Record<string, unknown> {
 			return {
 				...this.visualMap,
 				dimension: 2,
 				show: true,
 				hoverLink: false,
 				orient: "horizontal",
-				right: margin,
+				left: 36,
 				// text on the same line as the axis name
 				top: 8,
 				padding: 0,
-				itemWidth: 8,
-				itemHeight: 80,
-				text: [maxLabel, "0"],
+				type: "piecewise",
+				splitNumber: 6,
+				// a scale, not a filter
+				selectedMode: false,
+				itemWidth: 9,
+				itemHeight: 9,
+				itemGap: 2,
+				itemSymbol: "roundRect",
+				showLabel: false,
+				// an en space keeps the labels further off than the blocks are from each other
+				text: [`\u2002${maxLabel}`, "0\u2002"],
 				textStyle: { fontSize: 10, color: setAlpha(colors.muted, "bf") || "" },
 			};
 		},

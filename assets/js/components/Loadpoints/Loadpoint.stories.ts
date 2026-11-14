@@ -206,6 +206,6 @@ Heating.args = {
   effectiveLimitSoc: 60,
   vehicleLimitSoc: 65,
   todayEnergy: 3200,
-  last24hEnergy: 4100,
-  last7dEnergy: 26500,
+  last24h: { energy: 4100, pvEnergy: 2100, batteryEnergy: 450, pricePerKWh: 0.21, price: 0.86 },
+  last7d: { energy: 26500, pvEnergy: 12700, batteryEnergy: 0, pricePerKWh: 0.24, price: 6.36 },
 };
