@@ -9,7 +9,8 @@
     "buttonDisconnect": "Desconnecta",
     "challenge": {
       "captcha": {
-        "label": "Introduïu els caràcters que es mostren a la imatge."
+        "label": "Introduïu els caràcters que es mostren a la imatge.",
+        "title": "Captxa"
       },
       "code": {
         "label": "Enganxeu el codi o l’adreça de la pàgina a la qual heu estat redirigit.",
@@ -41,7 +42,7 @@
       "holdDischarge": "descàrrega bloquejada",
       "ofTotal": "de {total}",
       "power": "Potència",
-      "soc": "Nivell de bateria"
+      "soc": "Càrrega"
     },
     "combined": "Combinada",
     "config": {
@@ -145,11 +146,13 @@
       "template": "Fabricant",
       "titleAdd": {
         "charging": "Afegeix carregador",
-        "heating": "Afegeix dispositiu de calefacció"
+        "heating": "Afegeix dispositiu de calefacció",
+        "switch": "Afegir endoll activable"
       },
       "titleEdit": {
         "charging": "Edita carregador",
-        "heating": "Edita dispositiu de calefacció"
+        "heating": "Edita dispositiu de calefacció",
+        "switch": "Edita Endoll Activable"
       },
       "type": {
         "custom": {
@@ -179,6 +182,7 @@
       "meterSelectionHelpNoMeter": "S’utilitza la suma de tots els punts de recàrrega.",
       "meterSelectionLabel": "Selecció del comptador",
       "parentCircuit": "Circuit pare",
+      "template": "Circuit",
       "titleAdd": "Afegeix circuit",
       "titleEdit": "Edita circuit",
       "titleLabel": "Títol"
@@ -186,10 +190,20 @@
     "circuits": {
       "addMainCircuit": "Nou circuit principal",
       "addSubCircuit": "Afegeix subcircuit",
+      "assignHere": "Assigna aquí",
+      "assignmentFailed": "No s'ha pogut salvar l'assignació. Si us plau prova-ho una altre vegada.",
       "description": "Assegura que la suma de tots els punts de recàrrega connectats a un circuit no superi els límits de potència i corrent configurats. Els circuits es poden imbricar per a crear jerarquies.",
+      "destination": "Circuit {title}",
+      "dragHint": "Mou a un circuit, o prem per a seleccionar.",
+      "dropAssign": "Mou per a assignar",
+      "dropRemove": "Mou aquí per a treure del seu circuit.",
       "legacyWarning": "Hi ha disponible una nova configuració de circuits! Elimineu i deseu aquí la vostra configuració per a utilitzar el nou procés guiat.",
       "meterDedicated": "Comptador",
       "meterGrid": "Xarxa",
+      "moveHere": "Mou a aquí",
+      "notAssigned": "Sense assignar",
+      "selectAssign": "Prem un circuit per a assignar {title}.",
+      "selectMove": "Prem un circuit per a moure {title}, o la reserva per a borrar-lo.",
       "title": "Gestió de càrregues",
       "usableMeters": "Referències dels comptadors utilitzables"
     },
@@ -228,6 +242,15 @@
       "title": "Restricció",
       "titleAdd": "Afegeix un dispositiu de restricció",
       "titleEdit": "Edita el dispositiu de restricció"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Afegir carregador",
+        "meter": "Afegir contador",
+        "switch": "Afegir endoll controlable",
+        "tariff": "Afegir tarifa"
+      },
+      "noNesting": "L'imbricació es limita a un sol nivell. Si us plau, trieu una altra opció."
     },
     "deviceValue": {
       "activeClients": "Clients actius",
@@ -268,8 +291,8 @@
       "identifier": "Identificador RFID",
       "loginBlocked": "Límit d’intents d’inici de sessió assolit",
       "max": "màxim",
-      "maxCurrent": "Corrent màx.",
-      "maxPower": "Potència màx.",
+      "maxCurrent": "Corrent màxima",
+      "maxPower": "Potència màxima",
       "messengers": "Serveis",
       "no": "no",
       "odometer": "Comptaquilòmetres",
@@ -307,8 +330,16 @@
           "returnEnergy": "Descarregat"
         },
         "consumer": {
+          "chargeStatusB": "standby",
+          "chargeStatusC": "calefacció",
           "energy": "Consumit",
           "returnEnergy": "Produït"
+        },
+        "continuous": {
+          "chargeStatusB": "normal",
+          "chargeStatusC": "impuls",
+          "dimmed": "Atenuat",
+          "enabled": "Impulsat"
         },
         "grid": {
           "energy": "Importat",
@@ -330,6 +361,7 @@
       "auxMeter": "Consumidor intel·ligent",
       "batteryStorage": "Emmagatzematge en bateria",
       "consumer": "Consumidor",
+      "extMeter": "Comptador addicional",
       "solarSystem": "Sistema fotovoltaic"
     },
     "editor": {
@@ -530,13 +562,34 @@
       "defaultModeKeep": "manté l’actual",
       "defaultModeLabel": "Mode per defecte",
       "delete": "Suprimeix",
+      "demandPredictor": {
+        "daily": {
+          "description": "Mitjana dels últims dies. Per a dispositius amb el mateix patró diari.",
+          "label": "Mitjana diaria"
+        },
+        "defaultGroup": "Dispositiu per defecte",
+        "description": "Com l'optimitzador prediu la demanda dels consums anteriors.",
+        "label": "Perfil",
+        "noTempTariff": "Requereix previsió de temperatura.",
+        "noTempTariffLink": "Afegir previsió",
+        "profilesGroup": "Perfils",
+        "temperature": {
+          "description": "Consums anterior a una temperatura exterior similar. Per calefaccions interiors, com bombes de calor.",
+          "label": "Temperatura"
+        },
+        "title": "Consultar previsió",
+        "weekday": {
+          "description": "Mitjana del mateix dia de la setmana. Per a dispositius amb programació setmanal, com calderes d'aigua.",
+          "label": "Dia laboral"
+        }
+      },
       "electricalSubtitle": "En cas de dubte, consulteu el vostre electricista.",
       "electricalTitle": "Electricitat",
       "energyMeterHelp": "Comptador addicional si el carregador no en té un d’integrat.",
       "energyMeterLabel": "Comptador d’energia",
       "estimateLabel": "Interpola el nivell de càrrega entre actualitzacions de l’API",
       "maxCurrentHelp": "Ha de ser superior al corrent mínim.",
-      "maxCurrentLabel": "Corrent màxim",
+      "maxCurrentLabel": "Corrent màxima",
       "maxTempHelp": "Ha de ser superior a la temperatura mínima.",
       "maxTempLabel": "Temperatura màxima",
       "minCurrentHelp": "Baixeu de 6 A només si sabeu què esteu fent.",
@@ -643,7 +696,7 @@
           "titleDefault": "Vehicle en repòs"
         },
         "connect": {
-          "messageDefault": "Vehicle connectat amb {pvPower} kW de PV",
+          "messageDefault": "Vehicle connectat amb {pvPower} kW de Solar",
           "title": "Quan es connecta un vehicle",
           "titleDefault": "Vehicle connectat"
         },
@@ -1122,6 +1175,7 @@
       "template": "Proveïdor",
       "title": "Tarifes i previsions",
       "titleChoice": "Què voleu afegir?",
+      "titleSub": "Subtarifa",
       "type": {
         "co2": "Intensitat de CO₂",
         "feedIn": "Preu d’exportació a la xarxa",
@@ -1189,6 +1243,7 @@
         "bars": "Barres",
         "pattern": "Patró"
       },
+      "cost": "Cost",
       "others": "Altres",
       "title": "Consumidors",
       "view": {
@@ -1215,7 +1270,7 @@
       "battery": "Bateria",
       "batteryCharge": "Càrrega de bateria",
       "batteryDischarge": "Descàrrega de bateria",
-      "charging": "Càrrega",
+      "charging": "Carregant",
       "export": "Exportació a la xarxa",
       "grid": "Importació de la xarxa",
       "heating": "Calefacció",
@@ -1267,23 +1322,29 @@
     },
     "sources": {
       "battery": "Bateria",
+      "cost": "Cost",
       "energy": "Energia",
       "grid": "Xarxa",
       "hint": "Energia solar i de bateria valorada al preu d’injecció.",
       "price": "Preu/kWh",
+      "pv": "Solar",
       "share": "Quota",
       "source": "Origen",
-      "title": "Orígens"
+      "title": "Orígens",
+      "total": "Total"
     },
     "stat": {
       "autarky": "Autarquia",
       "co2Saved": "CO₂ estalviat",
       "co2SavedTooltip": "En comparació amb obtenir de la xarxa els {energy} consumits.",
       "configure": "Configura ara",
+      "energy": "Energia",
+      "fromGrid": "{value} de la xarxa",
       "noCo2": "Sense dades de CO₂.",
       "noPrice": "Sense dades de preu.",
       "savings": "Estalvi",
-      "savingsTooltip": "En comparació amb comprar a la xarxa els {energy} consumits."
+      "savingsTooltip": "En comparació amb comprar a la xarxa els {energy} consumits.",
+      "versus": "{value} vs. {reference}"
     },
     "title": "Energia"
   },
@@ -1577,7 +1638,8 @@
         "continuousCo2Description": "Selecciona la sèrie més neta i ininterrompuda de franges.",
         "continuousPriceDescription": "Selecciona la sèrie més barata i ininterrompuda de franges.",
         "disabledDescription": "Requereix d'una tarifa dinàmica o previsió de CO₂.",
-        "label": "Optimització"
+        "label": "Optimització",
+        "optimizerDescription": "{optimizer} selecciona el tram més econòmic. Pot produir diverses arrencades i parades."
       },
       "planNumber": "Pla {number}",
       "precondition": {
@@ -1620,6 +1682,7 @@
       "forecast": "Previsió",
       "forecastTooltip": "previsió: producció solar restant avui",
       "gridImport": "Importació de la xarxa",
+      "heaters": "Escalfador| Escalfadors",
       "homePower": "Consum",
       "loadpoints": "Punt de recàrrega | Punt de recàrrega | {count} punts de recàrrega",
       "loadpointsLimit": "límit de {limit}",
@@ -1648,18 +1711,22 @@
       "avgPrice": "Preu ⌀",
       "charged": "Carregat",
       "co2": "CO₂ ⌀",
+      "consumed": "Consumit",
       "duration": "Durada",
       "emission": "Emissió",
       "fallbackName": "Punt de recàrrega",
       "finished": "Hora de finalització",
       "last24hEnergy": "Últimes 24 h",
+      "last24hShort": "24h",
       "last7dEnergy": "Últims 7 dies",
+      "last7dShort": "7d",
       "phasesMismatch": "Més fases actives de les configurades. Comprova la configuració de fases.",
       "power": "Potència",
       "price": "Cost",
       "remaining": "Restant",
       "remoteDisabledHard": "{source}: desactivat",
       "remoteDisabledSoft": "{source}: càrrega solar adaptativa desactivada",
+      "session": "Sessió",
       "solar": "Solar",
       "todayEnergy": "Avui"
     },
@@ -1681,7 +1748,7 @@
       "default": "per defecte",
       "heating": "Calefacció",
       "maxCurrent": {
-        "label": "Corrent màxim"
+        "label": "Corrent màxima"
       },
       "minCurrent": {
         "label": "Corrent mínim"
@@ -1724,6 +1791,7 @@
     "mode": {
       "boost": "Impuls",
       "minpv": "Mín+Solar",
+      "normal": "Normal",
       "now": "Ràpid",
       "off": "Apagat",
       "on": "Encès",
