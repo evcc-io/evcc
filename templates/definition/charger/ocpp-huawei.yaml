@@ -11,6 +11,19 @@ requirements:
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
+  - name: remotestartrecovery
+    type: bool
+    advanced: true
+    description:
+      de: OCPP-Wiederanlauf nach Ladepause
+      en: OCPP resume after charging pause
+    help:
+      de: Bei aktiviertem Fernstart prüft evcc das Ladeprofil an der Wallbox vor dem Start und startet nach einer Ladepause bei Bedarf eine neue Transaktion.
+      en: When remote start is enabled, evcc verifies the charging profile on the charger before starting and starts a new transaction after a charging pause if necessary.
 render: |
   {{ include "ocpp" . }}
   forcepowerctrl: true
+  nophaseswitching: true
+  {{- if .remotestartrecovery }}
+  remotestartrecovery: true
+  {{- end }}
