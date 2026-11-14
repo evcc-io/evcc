@@ -933,16 +933,26 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 
 	// an idle battery at its soc bound withholds nothing: normal instead of holddischarge/holdcharge
 	battery := batteryDetail{Type: batteryTypeBattery}
-	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000}
+	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000, SInitial: 1000}
 	res = optimizer.BatteryResult{
 		ChargingPower:    []float32{0},
 		DischargingPower: []float32{0},
 		StateOfCharge:    []float32{1000},
 	}
 	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 1000, 0, 1, 0).Action, "empty battery idle while importing")
-	res.StateOfCharge[0] = 9000
+	res.StateOfCharge[0] = 1000.7
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 1000, 0, 1, 0).Action, "empty battery with solver drift")
+	req.SInitial, res.StateOfCharge[0] = 9000, 9000
 	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 0, 1000, 1, 0).Action, "full battery idle while exporting")
-	res.StateOfCharge[0] = 5000
+	res.StateOfCharge[0] = 8999.3
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 0, 1000, 1, 0).Action, "full battery with solver drift")
+	res = optimizer.BatteryResult{
+		ChargingPower:    []float32{0, 0},
+		DischargingPower: []float32{0, 0},
+		StateOfCharge:    []float32{9000, 8999.5},
+	}
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 1, 0, 1000, 1, 0).Action, "full at the start of a later slot")
+	req.SInitial, res.StateOfCharge = 5000, []float32{5000}
 	assert.Equal(t, api.BatteryHoldDischarge.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 1000, 0, 1, 0).Action, "idle within bounds is withheld")
 	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, optimizer.TimeSeries{}, 1, 0, 0, 1000, 1, 0).Action, "idle within bounds is withheld")
 
@@ -1010,7 +1020,7 @@ func TestApplyOptimizerResultPVShare(t *testing.T) {
 // discharge when the kept energy is discharged later at a higher price
 func TestCurrentSlotSuggestionHoldWorthwhile(t *testing.T) {
 	battery := batteryDetail{Type: batteryTypeBattery}
-	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000, DMax: 4000}
+	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000, SInitial: 5000, DMax: 4000}
 	ts := optimizer.TimeSeries{Dt: []int{900, 900, 900}, PN: []float32{0.26, 0.26, 0.29}}
 
 	// pv charging now, discharge at a higher price later that runs the battery short
