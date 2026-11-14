@@ -34,8 +34,9 @@ type Connector struct {
 	meterTimestamp time.Time // charger sample time, orders incoming meter values
 	measurements   map[types.Measurand]types.SampledValue
 
-	txnId int
-	idTag string
+	txnId        int
+	stoppedTxnId int // keeps late meter values from recovering a stopped transaction
+	idTag        string
 
 	remoteIdTag string
 
@@ -203,10 +204,10 @@ func (conn *Connector) Status() (core.ChargePointStatus, error) {
 func (conn *Connector) SetNonFatalErrors(codes []string) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
-	conn.nonFatalErrors = codes
+	// an empty code would match any error without vendor error code
+	conn.nonFatalErrors = slices.DeleteFunc(slices.Clone(codes), func(s string) bool { return s == "" })
 }
 
-// isNonFatal checks if the status reports a non-fatal error.
 // Must only be called while holding lock.
 func (conn *Connector) isNonFatal(s *core.StatusNotificationRequest) bool {
 	return s != nil && s.ErrorCode != core.NoError &&
@@ -235,7 +236,7 @@ func (conn *Connector) nonFatalStatus() (core.ChargePointStatus, bool) {
 	switch conn.lastStatus {
 	case "":
 		return "", false
-	case core.ChargePointStatusAvailable, core.ChargePointStatusPreparing:
+	case core.ChargePointStatusAvailable, core.ChargePointStatusPreparing, core.ChargePointStatusUnavailable:
 		return conn.lastStatus, true
 	default:
 		// transaction ended while faulted

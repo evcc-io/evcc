@@ -136,7 +136,7 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 		(conn.status.Status == core.ChargePointStatusCharging ||
 			conn.status.Status == core.ChargePointStatusSuspendedEV ||
 			conn.status.Status == core.ChargePointStatusSuspendedEVSE ||
-			conn.isNonFatal(conn.status)) {
+			conn.isNonFatal(conn.status) && *request.TransactionId != conn.stoppedTxnId) {
 		conn.log.DEBUG.Printf("recovered transaction: %d", *request.TransactionId)
 		conn.txnId = *request.TransactionId
 	}
@@ -287,6 +287,7 @@ func (conn *Connector) OnStopTransaction(request *core.StopTransactionRequest) (
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
+	conn.stoppedTxnId = request.TransactionId
 	conn.txnId = 0
 	conn.idTag = ""
 

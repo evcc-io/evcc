@@ -574,6 +574,7 @@ func (suite *connTestSuite) TestNonFatalErrorStatus() {
 		{"waiting for authorization", core.ChargePointStatusPreparing, 0, "", core.OtherError, vendorError, core.ChargePointStatusPreparing},
 		{"not connected", core.ChargePointStatusAvailable, 0, "", core.OtherError, vendorError, core.ChargePointStatusAvailable},
 		{"transaction ended", core.ChargePointStatusCharging, 0, "", core.OtherError, vendorError, core.ChargePointStatusFinishing},
+		{"unavailable", core.ChargePointStatusUnavailable, 0, "", core.OtherError, vendorError, core.ChargePointStatusUnavailable},
 		{"unknown regular status", "", 0, "", core.OtherError, vendorError, ""},
 		{"standard error code", core.ChargePointStatusCharging, 1, "6900", core.PowerMeterFailure, "", core.ChargePointStatusCharging},
 		{"other vendor error", core.ChargePointStatusCharging, 1, "6900", core.OtherError, "RCD", ""},
@@ -581,7 +582,7 @@ func (suite *connTestSuite) TestNonFatalErrorStatus() {
 	} {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-			suite.conn.SetNonFatalErrors([]string{vendorError, string(core.PowerMeterFailure)})
+			suite.conn.SetNonFatalErrors([]string{vendorError, string(core.PowerMeterFailure), ""})
 
 			if tc.last != "" {
 				_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
@@ -653,4 +654,18 @@ func (suite *connTestSuite) TestNonFatalErrorRecoversTransaction() {
 	status, err := suite.conn.Status()
 	suite.NoError(err)
 	suite.Equal(core.ChargePointStatusCharging, status)
+
+	_, err = suite.conn.OnStopTransaction(&core.StopTransactionRequest{TransactionId: txn, Timestamp: types.NewDateTime(suite.clock.Now())})
+	suite.Require().NoError(err)
+
+	_, err = suite.conn.OnMeterValues(&core.MeterValuesRequest{
+		ConnectorId:   1,
+		TransactionId: &txn,
+		MeterValue: []types.MeterValue{{
+			Timestamp:    types.NewDateTime(suite.clock.Now()),
+			SampledValue: []types.SampledValue{{Measurand: types.MeasurandPowerActiveImport, Value: "0"}},
+		}},
+	})
+	suite.Require().NoError(err)
+	suite.Zero(suite.conn.txnId, "late meter values must not recover the stopped transaction")
 }
