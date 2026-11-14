@@ -18,10 +18,10 @@ params:
       en: ModbusTCP server needs to be enabled.
       de: Der ModbusTCP Server muss aktiviert sein.
   - preset: battery-params
-  - name: maxchargepower  # could be read at 40189 on on SI Gen 11 and 12, not sure about Gen 13. Don't know how to implemet it here yet
+  - name: maxchargepower  # could be read at 40189 on on SI Gen 11, 12 and 13. Don't know how to implemet it here yet
     default: 4200
     required: true
-  - name: maxdischargepower  # async value, depending on battery, could also be read at 40191 on SI Gen 11 and 12, not sure about Gen 13. Don't know how to implemet it here yet
+  - name: maxdischargepower  # async value, depending on battery, could also be read at 40191 on SI Gen 11, 12 and 13. Don't know how to implemet it here yet
     default: 4200
     required: true
   - name: watchdog
