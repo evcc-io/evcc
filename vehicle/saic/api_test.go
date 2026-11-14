@@ -2,12 +2,77 @@ package saic
 
 import (
 	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/saic/requests"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 )
+
+func TestWakeupTransportError(t *testing.T) {
+	log := util.NewLogger("saic")
+	identity := NewIdentity(log, "", "", "http://saic.invalid/")
+	identity.TokenSource = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "test"})
+	v := NewAPI(log, identity)
+
+	want := errors.New("connection failed")
+	v.Client.Transport = &transport.Decorator{
+		Decorator: func(*http.Request) error { return want },
+	}
+
+	require.ErrorIs(t, v.Wakeup("test-vin"), want)
+}
+
+func TestWakeupHTTPResponse(t *testing.T) {
+	for _, status := range []int{
+		http.StatusOK,
+		http.StatusAccepted,
+		http.StatusNoContent,
+		http.StatusServiceUnavailable,
+		http.StatusUnauthorized,
+		http.StatusForbidden,
+	} {
+		t.Run(http.StatusText(status), func(t *testing.T) {
+			var logins int
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/oauth/token" {
+					logins++
+					fmt.Fprint(w, `{"code":0,"data":{"access_token":"refreshed","expires_in":3600}}`)
+					return
+				}
+				assert.Equal(t, "/vehicle/status", r.URL.Path)
+				w.WriteHeader(status)
+			}))
+			t.Cleanup(srv.Close)
+
+			log := util.NewLogger("saic")
+			identity := NewIdentity(log, "", "", srv.URL+"/")
+			identity.TokenSource = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "test"})
+			v := NewAPI(log, identity)
+
+			err := v.Wakeup("test-vin")
+			switch status {
+			case http.StatusUnauthorized, http.StatusForbidden:
+				require.ErrorIs(t, err, api.ErrMustRetry)
+				assert.Equal(t, 1, logins)
+			case http.StatusServiceUnavailable:
+				var statusErr *request.StatusError
+				require.ErrorAs(t, err, &statusErr)
+				assert.Equal(t, status, statusErr.StatusCode())
+			default:
+				require.NoError(t, err)
+			}
+		})
+	}
+}
 
 // TestTakeReturnsValueOnce verifies a stored value is returned exactly once,
 // and every other state yields ErrMustRetry or starts a fresh request.
