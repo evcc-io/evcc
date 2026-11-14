@@ -197,6 +197,15 @@ func (lp *Loadpoint) surplusRegime(s *types.Suggestion) bool {
 	return s.Action == actionCharge && !full && math.Abs(s.Grid) <= suggestionThreshold && s.BatteryDischarge <= suggestionThreshold
 }
 
+// partialSurplusRegime indicates charging at minimum power with surplus less than that.
+// The optimizer creates this when the partial grid-fed/partial solar charging
+// is cheaper than exporting the surplus and charging at full power at some other time.
+func (lp *Loadpoint) partialSurplusRegime(s *types.Suggestion) bool {
+	min := suggestionThreshold < s.Charge && s.Charge <= lp.EffectiveMinPower()+suggestionThreshold
+
+	return s.Action == actionCharge && min && s.Grid < s.Charge && s.BatteryDischarge <= suggestionThreshold
+}
+
 // optimizerCharging applies the optimizer's charging decision. It returns false
 // if the loadpoint is to follow pv surplus instead, leaving current and phases
 // to the regular pv control loop. Otherwise current and phases follow the
@@ -211,6 +220,22 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion) (bool, error) {
 		}
 
 		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), following pv surplus", s.Charge)
+		return false, nil
+	}
+
+	if lp.partialSurplusRegime(s) {
+		// the charge power is at minimum and the optimizer expects it to be
+		// partially covered by surplus. This only holds on average.
+		// The PV loop implements the optimizer's intent better thanks to
+		// realtime reaction to unexpected pv yield or demand spikes based on
+		// enable and disable thresholds and timers.
+
+		if lp.pvTimer.Equal(elapsed) {
+			// elapsed by a previous grid-fed slot, would disable on the first dip
+			lp.resetPVTimer()
+		}
+
+		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), following partial pv surplus", s.Charge)
 		return false, nil
 	}
 
