@@ -84,7 +84,7 @@ params:
     default: 0
     example: 5000
     type: float
-    usages: ["pv"]
+    usages: ["pv", "curtailer"]
     advanced: true
   - name: vin
     private: true
@@ -874,7 +874,6 @@ modbus:
     - name: id
       description:
         generic: Modbus ID
-      default: 1
       type: int
     - name: device
       description:

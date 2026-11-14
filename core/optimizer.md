@@ -35,6 +35,10 @@ Days are classified against the household's own base load, the median of the nig
 
 Absent and outlier days are excluded from the 4 week profile without replacement, so seasons are not mixed. Incomplete days are kept. Nothing is excluded when fewer than 7 days would remain.
 
+### Forecast uncertainty
+
+By default the optimizer plans on the forecasts as they are. A risk profile makes it hedge against forecast errors: `POST /api/optimizerriskprofile` with `{"solar": 0.3, "demand": 0.2, "budget": 8}` assumes that a slot may deliver 30% less solar and need 20% more energy than forecasted, in at most 8 slots per day. `DELETE /api/optimizerriskprofile` removes it.
+
 ### Measured value blending
 
 The solar forecast and the base load profile are anchored to the current situation

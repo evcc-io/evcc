@@ -83,6 +83,10 @@
         "description": "A metered load that evcc does not control, part of house consumption.",
         "other": "consumer"
     },
+    "consumed": {
+        "description": "Energy an integrated device such as a heater used over a session or period.",
+        "other": "consumed"
+    },
     "consumption": {
         "description": "Energy used in the house excluding charging and heating controlled by evcc.",
         "other": "consumption"

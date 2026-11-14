@@ -1,0 +1,191 @@
+template: tesla-powerwall-pypowerwall-server
+products:
+  - brand: Tesla
+    description:
+      generic: Powerwall (pypowerwall-server)
+capabilities: ["battery-control"]
+caveats:
+  - description:
+      de: |
+        Ohne vollständige Systemstatus-Daten, z. B. im Basic-LAN-Modus oder während der Startphase, können automatische Kapazität und Leistungsgrenzen fehlen. Setze `capacity`, `maxchargepower` und `maxdischargepower` in diesem Fall manuell.
+        Die tatsächliche Backup-Reserve wird aus dem Server-Cache gelesen und kann nach einer Steuerungsaktion erst beim nächsten Poll aktualisiert sein.
+      en: |
+        Without complete system status data, e.g. in Basic LAN mode or during startup, automatic capacity and power limits may be unavailable. Set `capacity`, `maxchargepower` and `maxdischargepower` manually in that case.
+        The actual backup reserve is read from the server cache and may update only after the next poll following a control action.
+requirements:
+  description:
+    de: |
+      Nutzt [pypowerwall-server](https://github.com/jasonacox/pypowerwall-server) als Backend. Die Lesezugriffe kommen über dessen Proxy-API, die Batteriesteuerung über die authentifizierten `/control/*`-Routen. Für die Batteriesteuerung muss im Server `PW_CONTROL_SECRET` gesetzt sein; `reserve_hold` benötigt pypowerwall-server v0.10.0 oder neuer.
+      Ab pypowerwall-server v0.14.0 kann der Server optional auch HTTPS auf Port 8775 anbieten. Ohne TLS-Reverse-Proxy oder aktivierten HTTPS-Listener bleibt es bei HTTP; mit `controlSecret` sollte HTTPS oder ein vertrauenswürdiges Netz verwendet werden.
+    en: |
+      Uses [pypowerwall-server](https://github.com/jasonacox/pypowerwall-server) as backend. Reads come from its proxy API, battery control uses its authenticated `/control/*` routes. For battery control, `PW_CONTROL_SECRET` must be set on the server; `reserve_hold` requires pypowerwall-server v0.10.0 or later.
+      Since pypowerwall-server v0.14.0 the server can optionally serve HTTPS on port 8775. Without a TLS reverse proxy or the HTTPS listener it stays plain HTTP; with `controlSecret`, prefer HTTPS or a trusted network.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+  - name: port
+    default: 8675
+  - name: schema
+    default: http
+    advanced: true
+    help:
+      en: Use https when the server has PW_HTTPS enabled or is behind a TLS reverse proxy. Set the port to the HTTPS port, usually 8775, when using the server's HTTPS listener.
+      de: https verwenden, wenn der Server PW_HTTPS aktiviert hat oder hinter einem TLS-Reverse-Proxy läuft. Bei aktiviertem HTTPS-Listener des Servers den HTTPS-Port setzen, üblicherweise 8775.
+  - name: insecure
+  - name: cache
+    default: 1s
+  - name: controlSecret
+    usages: ["battery"]
+    mask: true
+    advanced: true
+    description:
+      de: Control Secret
+      en: Control secret
+    help:
+      en: Value of PW_CONTROL_SECRET. Required for battery control, omit for read-only use.
+      de: Wert von PW_CONTROL_SECRET. Für Batteriesteuerung nötig, weglassen für reinen Lesezugriff.
+  - preset: battery-params
+render: |
+  {{- define "pypowerwall-base" -}}
+  {{ .schema }}://{{ .host }}:{{ .port }}
+  {{- end }}
+  {{- define "pypowerwall-http" -}}
+  source: http
+  insecure: {{ .insecure }}
+  cache: {{ .cache }}
+  {{- end }}
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    {{- include "pypowerwall-http" . | nindent 2 }}
+    uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
+    jq: .site.instant_power
+  energy:
+    {{- include "pypowerwall-http" . | nindent 2 }}
+    uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
+    jq: .site.energy_imported / 1000
+  returnenergy:
+    {{- include "pypowerwall-http" . | nindent 2 }}
+    uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
+    jq: .site.energy_exported / 1000
+  currents:
+    - uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
+      jq: .site.i_a_current
+      {{- include "pypowerwall-http" . | nindent 4 }}
+    - uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
+      jq: .site.i_b_current
+      {{- include "pypowerwall-http" . | nindent 4 }}
+    - uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
+      jq: .site.i_c_current
+      {{- include "pypowerwall-http" . | nindent 4 }}
+  voltages:
+    - uri: {{ include "pypowerwall-base" . }}/freq
+      jq: .ISLAND_VL1N_Main
+      {{- include "pypowerwall-http" . | nindent 4 }}
+    - uri: {{ include "pypowerwall-base" . }}/freq
+      jq: .ISLAND_VL2N_Main
+      {{- include "pypowerwall-http" . | nindent 4 }}
+    - uri: {{ include "pypowerwall-base" . }}/freq
+      jq: .ISLAND_VL3N_Main
+      {{- include "pypowerwall-http" . | nindent 4 }}
+  {{- else if eq .usage "pv" }}
+  power:
+    {{- include "pypowerwall-http" . | nindent 2 }}
+    uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
+    jq: .solar.instant_power
+  energy:
+    {{- include "pypowerwall-http" . | nindent 2 }}
+    uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
+    jq: .solar.energy_exported / 1000
+  {{- else if eq .usage "battery" }}
+  power:
+    {{- include "pypowerwall-http" . | nindent 2 }}
+    uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
+    jq: .battery.instant_power
+  energy:
+    {{- include "pypowerwall-http" . | nindent 2 }}
+    uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
+    jq: .battery.energy_imported / 1000
+  returnenergy:
+    {{- include "pypowerwall-http" . | nindent 2 }}
+    uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
+    jq: .battery.energy_exported / 1000
+  soc:
+    {{- include "pypowerwall-http" . | nindent 2 }}
+    uri: {{ include "pypowerwall-base" . }}/api/system_status/soe
+    jq: .percentage // empty
+  {{- if .capacity }}
+  capacity: {{ .capacity }}
+  {{- else }}
+  capacity:
+    {{- include "pypowerwall-http" . | nindent 2 }}
+    uri: {{ include "pypowerwall-base" . }}/api/system_status
+    jq: select(.nominal_full_pack_energy > 0) | .nominal_full_pack_energy / 1000
+  {{- end }}
+  # The minsoc template parameter is the target for normal mode. The generated
+  # minsoc key is deliberately a dynamic getter for the actual backup reserve,
+  # so evcc's BatterySocLimiter reflects the gateway state.
+  minsoc:
+    {{- include "pypowerwall-http" . | nindent 2 }}
+    uri: {{ include "pypowerwall-base" . }}/api/operation
+    jq: .backup_reserve_percent // empty
+  maxsoc: {{ .maxsoc }} # %
+  {{- if .maxchargepower }}
+  maxchargepower: {{ .maxchargepower }}
+  {{- else }}
+  maxchargepower:
+    {{- include "pypowerwall-http" . | nindent 2 }}
+    uri: {{ include "pypowerwall-base" . }}/api/system_status
+    jq: |
+      ([.max_charge_power, .max_apparent_power, .inverter_nominal_usable_power]
+        | map(select(. != null and . > 0))) as $v
+      | if ($v | length) > 0 then ($v | min) else empty end
+  {{- end }}
+  {{- if .maxdischargepower }}
+  maxdischargepower: {{ .maxdischargepower }}
+  {{- else }}
+  maxdischargepower:
+    {{- include "pypowerwall-http" . | nindent 2 }}
+    uri: {{ include "pypowerwall-base" . }}/api/system_status
+    jq: |
+      ([.max_discharge_power, .max_apparent_power, .inverter_nominal_usable_power]
+        | map(select(. != null and . > 0))) as $v
+      | if ($v | length) > 0 then ($v | min) else empty end
+  {{- end }}
+  {{- if .controlSecret }}
+  batterymode:
+    source: switch
+    switch:
+      - case: 1 # normal
+        set:
+          source: http
+          uri: {{ include "pypowerwall-base" . }}/control/reserve
+          method: POST
+          insecure: {{ .insecure }}
+          headers:
+            - Content-Type: application/json
+            - Authorization: {{ printf "Bearer %s" .controlSecret | toJson }}
+          body: '{"value": {{ .minsoc }}}'
+      - case: 2 # hold
+        set:
+          source: http
+          uri: {{ include "pypowerwall-base" . }}/control/reserve_hold
+          method: POST
+          insecure: {{ .insecure }}
+          headers:
+            - Content-Type: application/json
+            - Authorization: {{ printf "Bearer %s" .controlSecret | toJson }}
+          body: '{}'
+      - case: 3 # charge
+        set:
+          source: http
+          uri: {{ include "pypowerwall-base" . }}/control/reserve
+          method: POST
+          insecure: {{ .insecure }}
+          headers:
+            - Content-Type: application/json
+            - Authorization: {{ printf "Bearer %s" .controlSecret | toJson }}
+          body: '{"value": {{ .maxsoc }}}'
+  {{- end }}
+  {{- end }}

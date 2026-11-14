@@ -8,8 +8,8 @@ products:
 capabilities: ["mA", "rfid", "1p3p", "dim"]
 requirements:
   description:
-    de: Firmware v2 erforderlich. Die WARP-eigene automatische Phasenumschaltung wird von EVCC beim Verbinden mit der Wallbox deaktiviert. Siehe [docs.warp-charger.com](https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3).
-    en: Firmware v2 required. WARP's own automatic phase switching will be deactivated by EVCC when connecting to the wallbox. See [docs.warp-charger.com](https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3).
+    de: Firmware v2 erforderlich. Die WARP-eigene automatische Phasenumschaltung wird von evcc beim Verbinden mit der Wallbox deaktiviert. Siehe [docs.warp-charger.com](https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3).
+    en: Firmware v2 required. WARP's own automatic phase switching will be deactivated by evcc when connecting to the wallbox. See [docs.warp-charger.com](https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3).
   evcc: ["skiptest"]
 params:
   - name: uri

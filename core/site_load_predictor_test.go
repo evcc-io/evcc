@@ -303,3 +303,39 @@ func TestHomeProfileFallsBackToAllDays(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, res, 96)
 }
+
+func TestSurplusOnly(t *testing.T) {
+	limit := 0.2
+
+	for _, tc := range []struct {
+		name     string
+		mode     api.ChargeMode
+		always   api.AlwaysCharge
+		limit    *float64
+		planTime time.Time
+		boost    int
+		minSoc   int
+		expected bool
+	}{
+		{"smart", api.ModeSmart, api.AlwaysChargeOff, nil, time.Time{}, boostDisabled, 0, true},
+		{"smart above min soc", api.ModeSmart, api.AlwaysChargeOff, nil, time.Time{}, boostDisabled, 40, true},
+		{"smart always charge", api.ModeSmart, api.AlwaysChargeOn, nil, time.Time{}, boostDisabled, 0, false},
+		{"smart cost limit", api.ModeSmart, api.AlwaysChargeOff, &limit, time.Time{}, boostDisabled, 0, false},
+		{"smart plan", api.ModeSmart, api.AlwaysChargeOff, nil, time.Now().Add(time.Hour), boostDisabled, 0, false},
+		{"smart battery boost", api.ModeSmart, api.AlwaysChargeOff, nil, time.Time{}, boostStart, 0, false},
+		{"smart below min soc", api.ModeSmart, api.AlwaysChargeOff, nil, time.Time{}, boostDisabled, 60, false},
+		{"now", api.ModeNow, api.AlwaysChargeOff, nil, time.Time{}, boostDisabled, 0, false},
+		{"off", api.ModeOff, api.AlwaysChargeOff, nil, time.Time{}, boostDisabled, 0, false},
+	} {
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.mode = tc.mode
+		lp.alwaysCharge = tc.always
+		lp.smartCostLimit = tc.limit
+		lp.planTime = tc.planTime
+		lp.batteryBoost = tc.boost
+		lp.minSoc = tc.minSoc
+		lp.vehicleSoc = 50
+
+		assert.Equal(t, tc.expected, surplusOnly(lp), tc.name)
+	}
+}

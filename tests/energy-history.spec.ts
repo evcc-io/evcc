@@ -89,6 +89,16 @@ const CARDS: Record<string, string> = {
   meter: "energy-meters",
 };
 
+// the share of one source in the breakdown behind a sources button
+async function expectSource(page: Page, sources: Locator, source: string, share: string) {
+  await sources.click();
+  const modal = page.getByTestId("energy-sources-modal");
+  await expectModalVisible(modal);
+  await expect(modal.getByRole("row", { name: source })).toContainText(share);
+  await modal.getByRole("button", { name: "Close" }).click();
+  await expectModalHidden(modal);
+}
+
 function card(page: Page, group: string): Locator {
   return page.getByTestId(CARDS[group] ?? "");
 }
@@ -157,14 +167,14 @@ test.describe("consumption breakdown", () => {
     await expect(consumption).toBeVisible();
 
     // Card total = home, not sum of meters.
-    await expect(consumption.getByRole("heading")).toContainText("1.0 kWh");
+    await expect(consumption.getByTestId("energy-stat-energy")).toContainText("1.0 kWh");
 
     // Others (virtual) + explicit meters, as tiles and legend rows.
     for (const name of ["Others 300 Wh", "Kitchen 400 Wh", "Office 300 Wh"]) {
       await expect(consumption.getByRole("button", { name })).toHaveCount(2);
     }
     // the breakdown comes first, a timeline only opens for a selected consumer
-    await expect(consumption.getByRole("heading", { name: "Consumers" })).toBeVisible();
+    await expect(consumption.getByRole("heading", { name: "Consumption" })).toBeVisible();
     await expect(chart(page, "consumer")).toHaveCount(0);
   });
 
@@ -182,23 +192,24 @@ test.describe("consumption breakdown", () => {
     await page.reload();
     await expect(consumption.getByTestId("consumer-river")).toBeVisible();
 
-    // switching the view drops the selection
+    // a selected consumer takes the card over, the crumb leads back to the view
     await consumption.getByRole("button", { name: "Kitchen 400 Wh" }).click();
     await expect(page.getByTestId("consumer-detail")).toBeVisible();
-    await consumption.getByTitle("Treemap").click();
-    await expect(page.getByTestId("consumer-detail")).toHaveCount(0);
+    await expect(consumption.getByTitle("Treemap")).toHaveCount(0);
     await expect(consumption.getByTestId("consumer-river")).toHaveCount(0);
-    await expect(consumption.getByRole("button", { name: "Kitchen 400 Wh" })).toHaveCount(2);
+    await consumption.getByRole("button", { name: "Consumption" }).click();
+    await expect(page.getByTestId("consumer-detail")).toHaveCount(0);
+    await expect(consumption.getByTestId("consumer-river")).toBeVisible();
   });
 
   // 2026-03-24: home = 0.4 kWh, no meter entities with data.
   test("home without meters shows the consumption alone", async ({ page }) => {
     await gotoDay(page, 2026, 3, 24);
     const consumption = card(page, "consumer");
-    await expect(consumption.getByRole("heading", { name: "Consumption 400 Wh" })).toBeVisible();
+    await expect(consumption.getByRole("heading", { name: "Consumption" })).toBeVisible();
+    await expect(consumption.getByTestId("energy-stat-energy")).toContainText("400 Wh");
     await expect(chart(page, "consumer")).toBeVisible();
     // nothing to break down: no tiles, no legend, not closable
-    await expect(consumption.getByRole("heading", { name: "Consumers" })).toHaveCount(0);
     await expect(consumption.getByRole("button", { name: "Others" })).toHaveCount(0);
     await expect(consumption.getByRole("button", { name: "Close" })).toHaveCount(0);
     await expect(consumption.getByTitle("River")).toHaveCount(0);
@@ -209,7 +220,7 @@ test.describe("consumption breakdown", () => {
   test("return energy is ignored", async ({ page }) => {
     await gotoDay(page, 2026, 4, 12);
     const consumption = card(page, "consumer");
-    await expect(consumption.getByRole("heading")).toContainText("1.0 kWh");
+    await expect(consumption.getByTestId("energy-stat-energy")).toContainText("1.0 kWh");
     await expect(consumption.getByRole("button", { name: "Kitchen 400 Wh" }).first()).toBeVisible();
     await expect(consumption.getByRole("button", { name: "Others 600 Wh" }).first()).toBeVisible();
   });
@@ -229,7 +240,7 @@ test.describe("consumption breakdown", () => {
 
     // the house ran on solar that hour, the consumer inherits its sources
     const sources = detail.getByRole("button", { name: "Sources" });
-    await expect(sources).toContainText("100% Solar");
+    await expectSource(page, sources, "Solar", "100%");
     await sources.click();
     const modal = page.getByTestId("energy-sources-modal");
     await expectModalVisible(modal);
@@ -262,18 +273,18 @@ test.describe("consumption breakdown", () => {
     await expect(detail.getByRole("heading", { name: "Kitchen" })).toBeVisible();
     await expect(detail).toContainText("0.04 €");
     await expect(detail).toContainText("ø 10.0 ct");
-    await expect(detail.getByRole("button", { name: "Sources" })).toContainText("100% Solar");
+    await expectSource(page, detail.getByRole("button", { name: "Sources" }), "Solar", "100%");
 
     await office.click();
     await expect(detail.getByRole("heading", { name: "Office" })).toBeVisible();
     await expect(detail).toContainText("0.12 €");
     await expect(detail).toContainText("ø 30.0 ct");
-    await expect(detail.getByRole("button", { name: "Sources" })).toContainText("100% Grid");
+    await expectSource(page, detail.getByRole("button", { name: "Sources" }), "Grid", "100%");
 
     await others.click();
     await expect(detail.getByRole("heading", { name: "Others" })).toBeVisible();
     await expect(detail).toContainText("ø 20.0 ct");
-    await expect(detail.getByRole("button", { name: "Sources" })).toContainText("50% Solar");
+    await expectSource(page, detail.getByRole("button", { name: "Sources" }), "Solar", "50%");
   });
 
   test("river layer opens its consumer", async ({ page }) => {
@@ -299,14 +310,20 @@ test.describe("battery card", () => {
   // would collapse the balanced battery to zero, so both directions are shown.
   test("month keeps charge and discharge apart per battery", async ({ page }) => {
     await gotoMonth(page, 2026, 7);
-    // one card per battery
-    const cards = page.getByTestId("energy-battery");
-    await expect(cards).toHaveCount(2);
-    await expect(cards.first().getByRole("heading", { name: "Battery" })).toBeVisible();
-    await expect(cards.first()).toContainText("6.0 kWh");
-    await expect(cards.first()).toContainText("3.0 kWh");
-    await expect(cards.last().getByRole("heading", { name: "Battery 2" })).toBeVisible();
-    await expect(cards.last()).toContainText("4.5 kWh");
+    // one card, a legend row per battery and the sums in the header
+    const battery = page.getByTestId("energy-battery");
+    await expect(battery).toHaveCount(1);
+    await expect(battery.getByRole("button", { name: "Battery 6.0 kWh 3.0 kWh" })).toBeVisible();
+    const second = battery.getByRole("button", { name: "Battery 2 4.5 kWh 4.5 kWh" });
+    await expect(second).toBeVisible();
+    await expect(battery.getByTestId("energy-stat-charged")).toContainText("10.5 kWh");
+    await expect(battery.getByTestId("energy-stat-discharged")).toContainText("7.5 kWh");
+
+    // a row focuses its battery, the header follows
+    await second.click();
+    await expect(battery.getByTestId("energy-stat-charged")).toContainText("4.5 kWh");
+    await second.click();
+    await expect(battery.getByTestId("energy-stat-charged")).toContainText("10.5 kWh");
   });
 });
 

@@ -244,7 +244,7 @@ render: |
               address: 0x1110
               type: writemultiple
               decode: int16
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

@@ -195,18 +195,18 @@ func TestRequiredBatteryMode(t *testing.T) {
 	}{
 		{false, false, api.BatteryUnknown, api.BatteryUnknown}, // ignore
 		{false, false, api.BatteryNormal, api.BatteryUnknown},  // ignore
-		{false, false, api.BatteryHold, api.BatteryNormal},
+		{false, false, api.BatteryHoldDischarge, api.BatteryNormal},
 		{false, false, api.BatteryCharge, api.BatteryNormal},
 
 		{true, false, api.BatteryUnknown, api.BatteryCharge},
 		{true, false, api.BatteryNormal, api.BatteryCharge},
-		{true, false, api.BatteryHold, api.BatteryCharge},
+		{true, false, api.BatteryHoldDischarge, api.BatteryCharge},
 		{true, false, api.BatteryCharge, api.BatteryUnknown}, // ignore
 
 		// grid discharge (feed-in arbitrage)
 		{false, true, api.BatteryUnknown, api.BatteryDischarge},
 		{false, true, api.BatteryNormal, api.BatteryDischarge},
-		{false, true, api.BatteryHold, api.BatteryDischarge},
+		{false, true, api.BatteryHoldDischarge, api.BatteryDischarge},
 		{false, true, api.BatteryDischarge, api.BatteryUnknown}, // ignore
 		{false, true, api.BatteryCharge, api.BatteryDischarge},
 

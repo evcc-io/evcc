@@ -63,7 +63,7 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 	modes := batteryModesSocLimit
 	if info.Components.DisallowChargeFromGridWithSolarInstalled {
 		log.INFO.Println("grid charging not allowed by site configuration")
-		modes = implement.BatteryModes(api.BatteryNormal, api.BatteryHold)
+		modes = implement.BatteryModes(api.BatteryNormal, api.BatteryHoldDischarge)
 	}
 
 	// charge mode raises the reserve to full, normal mode restores the configured minimum

@@ -1302,7 +1302,14 @@ func (site *Site) loadpointSitePower(lp updater, res sitePowerResult) float64 {
 	// a charge next to planned battery charging gives the battery priority, too: the PV loop
 	// would otherwise take the battery's charge power and invert the optimizer's PV split
 	if suggestion != nil && (suggestion.Action != actionCharge || suggestion.BatteryCharge > suggestionThreshold) && res.state.battery.Power < 0 {
-		sitePower -= res.state.battery.Power + res.state.excessDCPower
+		hide := -(res.state.battery.Power + res.state.excessDCPower)
+
+		// only the planned share: a battery charging beyond it would keep the vehicle below its minimum power
+		if suggestion.Action == actionCharge {
+			hide = min(hide, suggestion.BatteryCharge)
+		}
+
+		sitePower += hide
 	}
 
 	return sitePower
@@ -1491,6 +1498,7 @@ func (site *Site) prepare() {
 	site.publish(keys.ResidualPower, site.GetResidualPower())
 	site.publish(keys.GridExportLimit, site.GetGridExportLimit())
 	site.publish(keys.ProfilePercentile, site.GetProfilePercentile())
+	site.publish(keys.OptimizerRiskProfile, site.GetOptimizerRiskProfile())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
 
@@ -1541,7 +1549,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 		}
 	}()
 
-	site.lpUpdateChan = make(chan *Loadpoint, 1) // 1 capacity to avoid deadlock
+	site.lpUpdateChan = make(chan *Loadpoint, max(1, len(site.loadpoints))) // room for every loadpoint, see requestUpdate
 
 	site.prepare()
 
@@ -1636,7 +1644,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		case <-tick:
 			site.update(<-loadpointChan)
 		case lp := <-site.lpUpdateChan:
-			site.update(lp)
+			site.update(lp.dequeued())
 		case <-stopC:
 			return
 		}

@@ -622,11 +622,10 @@ func (site *Site) setBatteryGridChargeLimit(val *float64) error {
 
 		if val == nil {
 			settings.SetString(keys.BatteryGridChargeLimit, "")
-			site.publish(keys.BatteryGridChargeLimit, nil)
 		} else {
 			settings.SetFloat(keys.BatteryGridChargeLimit, *val)
-			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
+		site.publish(keys.BatteryGridChargeLimit, val)
 
 		// re-run the optimizer so the new limit takes effect immediately
 		go site.optimizerUpdateAsync(true)
@@ -661,11 +660,10 @@ func (site *Site) SetBatteryGridDischargeLimit(val *float64) error {
 
 		if val == nil {
 			settings.SetString(keys.BatteryGridDischargeLimit, "")
-			site.publish(keys.BatteryGridDischargeLimit, nil)
 		} else {
 			settings.SetFloat(keys.BatteryGridDischargeLimit, *val)
-			site.publish(keys.BatteryGridDischargeLimit, *val)
 		}
+		site.publish(keys.BatteryGridDischargeLimit, val)
 	}
 
 	return nil
@@ -704,6 +702,38 @@ func (site *Site) SetOptimizerChargingStrategy(strategy string) error {
 		// re-run the optimizer so the new strategy takes effect immediately
 		go site.optimizerUpdateAsync(true)
 	}
+
+	return nil
+}
+
+// GetOptimizerRiskProfile returns the forecast uncertainty the optimizer hedges against, nil = none
+func (site *Site) GetOptimizerRiskProfile() *api.RiskProfile {
+	var res api.RiskProfile
+	if err := settings.Json(keys.OptimizerRiskProfile, &res); err != nil {
+		return nil
+	}
+	return &res
+}
+
+// SetOptimizerRiskProfile sets the forecast uncertainty the optimizer hedges against, nil = none
+func (site *Site) SetOptimizerRiskProfile(profile *api.RiskProfile) error {
+	if profile == nil {
+		if err := settings.Delete(keys.OptimizerRiskProfile); err != nil {
+			return err
+		}
+	} else {
+		if err := profile.Validate(); err != nil {
+			return err
+		}
+		if err := settings.SetJson(keys.OptimizerRiskProfile, profile); err != nil {
+			return err
+		}
+	}
+
+	site.publish(keys.OptimizerRiskProfile, profile)
+
+	// re-run the optimizer so the new profile takes effect immediately
+	go site.optimizerUpdateAsync(true)
 
 	return nil
 }

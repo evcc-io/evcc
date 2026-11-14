@@ -13,6 +13,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
     baudrate: 19200
   - name: mppt3
     type: bool
@@ -164,7 +165,7 @@ render: |
             address: 0x001F # SolarChargeUseMode
             type: writesingle
             decode: uint16
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

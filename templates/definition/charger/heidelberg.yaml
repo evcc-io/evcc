@@ -21,6 +21,7 @@ requirements:
 params:
   - name: modbus
     choice: ["rs485"]
+    id: 1
     baudrate: 19200
     comset: 8E1
 render: |

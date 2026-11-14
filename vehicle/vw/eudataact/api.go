@@ -208,11 +208,21 @@ func (v *API) login(gen uint64) error {
 		if final, err = loginLocation(resp); err != nil {
 			return err
 		}
+	} else if resp.StatusCode == http.StatusOK && vwidentity.IsAuth0MarketingConsent(final) {
+		resp, err = vwidentity.SkipAuth0MarketingConsent(&client, resp)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		if final, err = loginLocation(resp); err != nil {
+			return err
+		}
 	}
 
 	// a successful login lands on the portal; a remaining signin/consent url means
 	// the user has not completed the one-time browser consent and vehicle linking
-	if strings.Contains(final.Path, "signin-service") || strings.Contains(final.Path, "/consent") || strings.Contains(final.Path, "/error") {
+	if strings.Contains(final.Path, "signin-service") || strings.Contains(final.Path, "/consent") || strings.Contains(final.Path, "/error") ||
+		strings.HasPrefix(final.Path, "/v2/login/ui/") {
 		return api.UrlError(
 			fmt.Sprintf("login did not complete- open the portal and confirm consent: %s", final),
 			final,

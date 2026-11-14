@@ -174,7 +174,7 @@ render: |
               type: writemultiple
               encoding: uint16
             delay: {{ .delay }}
-    - case: 2 # discharge hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

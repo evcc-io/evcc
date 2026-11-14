@@ -19,6 +19,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip"]
+    id: 1
   - name: maxacpower
   - name: gateway
     type: bool

@@ -8,6 +8,7 @@ params:
     choice: ["grid", "charge", "pv"]
   - name: modbus
     choice: ["rs485"]
+    id: 1
 render: |
   type: custom
   power:
