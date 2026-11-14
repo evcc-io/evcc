@@ -271,7 +271,7 @@ func TestOptimizerPrioritySoc(t *testing.T) {
 		{"uncontrolled below prioritySoc", false, actionStop, below, 100, 0},
 		// a charge next to planned battery charging gives the battery priority, the vehicle gets the remainder
 		{"charge with planned battery charge", true, actionCharge, above, 0, 1000},
-		{"charge with partial planned battery charge", true, actionCharge, above, 0, 400},
+		{"charge with partial planned battery charge", true, actionCharge, above, -600, 400},
 		{"charge below prioritySoc with planned battery charge", true, actionCharge, below, 0, 1000},
 		{"charge with planned battery charge below threshold", true, actionCharge, above, -1000, suggestionThreshold},
 	} {
