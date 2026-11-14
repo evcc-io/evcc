@@ -553,3 +553,104 @@ func (suite *connTestSuite) TestOnStatusChange() {
 		suite.Equal(tc.calls, calls, "%s %s", tc.status, tc.errorCode)
 	}
 }
+
+// TestNonFatalErrorStatus ensures that a charge point reporting a non-fatal error as Faulted
+// keeps a usable status derived from transaction, power and the last regular status.
+func (suite *connTestSuite) TestNonFatalErrorStatus() {
+	const vendorError = "METER UNKNOWN"
+
+	for _, tc := range []struct {
+		name       string
+		last       core.ChargePointStatus // regular status before the fault
+		txn        int
+		power      string
+		errorCode  core.ChargePointErrorCode
+		vendorCode string
+		expected   core.ChargePointStatus // empty for error
+	}{
+		{"charging", core.ChargePointStatusCharging, 1, "6900", core.OtherError, vendorError, core.ChargePointStatusCharging},
+		{"suspended", core.ChargePointStatusCharging, 1, "0", core.OtherError, vendorError, core.ChargePointStatusSuspendedEV},
+		{"no meter value", core.ChargePointStatusCharging, 1, "", core.OtherError, vendorError, core.ChargePointStatusSuspendedEV},
+		{"waiting for authorization", core.ChargePointStatusPreparing, 0, "", core.OtherError, vendorError, core.ChargePointStatusPreparing},
+		{"not connected", core.ChargePointStatusAvailable, 0, "", core.OtherError, vendorError, core.ChargePointStatusAvailable},
+		{"transaction ended", core.ChargePointStatusCharging, 0, "", core.OtherError, vendorError, core.ChargePointStatusFinishing},
+		{"unknown regular status", "", 0, "", core.OtherError, vendorError, ""},
+		{"standard error code", core.ChargePointStatusCharging, 1, "6900", core.PowerMeterFailure, "", core.ChargePointStatusCharging},
+		{"other vendor error", core.ChargePointStatusCharging, 1, "6900", core.OtherError, "RCD", ""},
+		{"other error code", core.ChargePointStatusCharging, 1, "6900", core.GroundFailure, "", ""},
+	} {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			suite.conn.SetNonFatalErrors([]string{vendorError, string(core.PowerMeterFailure)})
+
+			if tc.last != "" {
+				_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+					ConnectorId: 1,
+					Status:      tc.last,
+					ErrorCode:   core.NoError,
+					Timestamp:   types.NewDateTime(suite.clock.Now()),
+				})
+				suite.Require().NoError(err)
+			}
+
+			suite.conn.txnId = tc.txn
+			if tc.power != "" {
+				suite.meterValues(types.SampledValue{Measurand: types.MeasurandPowerActiveImport, Value: tc.power})
+			}
+
+			_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+				ConnectorId:     1,
+				Status:          core.ChargePointStatusFaulted,
+				ErrorCode:       tc.errorCode,
+				VendorErrorCode: tc.vendorCode,
+				Timestamp:       types.NewDateTime(suite.clock.Now().Add(time.Second)),
+			})
+			suite.Require().NoError(err)
+
+			status, err := suite.conn.Status()
+			if tc.expected == "" {
+				suite.Error(err)
+				suite.False(suite.conn.StatusDerived())
+				return
+			}
+
+			suite.NoError(err)
+			suite.Equal(tc.expected, status)
+			suite.True(suite.conn.StatusDerived())
+			suite.Equal(tc.expected == core.ChargePointStatusPreparing, suite.conn.NeedsAuthentication())
+		})
+	}
+}
+
+// TestNonFatalErrorRecoversTransaction ensures a running transaction is recovered from
+// meter values when the connector only reports the fault, e.g. after a restart.
+func (suite *connTestSuite) TestNonFatalErrorRecoversTransaction() {
+	suite.conn.SetNonFatalErrors([]string{"METER UNKNOWN"})
+
+	_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId:     1,
+		Status:          core.ChargePointStatusFaulted,
+		ErrorCode:       core.OtherError,
+		VendorErrorCode: "METER UNKNOWN",
+		Timestamp:       types.NewDateTime(suite.clock.Now()),
+	})
+	suite.Require().NoError(err)
+
+	_, err = suite.conn.Status()
+	suite.Error(err, "status is unknown without transaction and regular status")
+
+	txn := 42
+	_, err = suite.conn.OnMeterValues(&core.MeterValuesRequest{
+		ConnectorId:   1,
+		TransactionId: &txn,
+		MeterValue: []types.MeterValue{{
+			Timestamp:    types.NewDateTime(suite.clock.Now()),
+			SampledValue: []types.SampledValue{{Measurand: types.MeasurandPowerActiveImport, Value: "6900"}},
+		}},
+	})
+	suite.Require().NoError(err)
+
+	status, err := suite.conn.Status()
+	suite.NoError(err)
+	suite.Equal(core.ChargePointStatusCharging, status)
+}

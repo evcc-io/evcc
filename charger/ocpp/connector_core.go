@@ -63,6 +63,14 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		conn.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, conn.status.Timestamp)
 	}
 
+	if applied {
+		if request.ErrorCode == core.NoError {
+			conn.lastStatus = request.Status
+		} else if conn.isNonFatal(request) {
+			conn.log.WARN.Printf("non-fatal error %s %s: %s", request.ErrorCode, request.VendorErrorCode, request.Info)
+		}
+	}
+
 	if applied && statusClass(prev) != statusClass(request) && conn.onStatusChange != nil {
 		conn.onStatusChange()
 	}
@@ -127,7 +135,8 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 		conn.txnId == 0 && conn.status != nil &&
 		(conn.status.Status == core.ChargePointStatusCharging ||
 			conn.status.Status == core.ChargePointStatusSuspendedEV ||
-			conn.status.Status == core.ChargePointStatusSuspendedEVSE) {
+			conn.status.Status == core.ChargePointStatusSuspendedEVSE ||
+			conn.isNonFatal(conn.status)) {
 		conn.log.DEBUG.Printf("recovered transaction: %d", *request.TransactionId)
 		conn.txnId = *request.TransactionId
 	}

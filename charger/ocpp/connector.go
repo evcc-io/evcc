@@ -3,6 +3,7 @@ package ocpp
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -22,9 +23,12 @@ type Connector struct {
 	cp    *CP
 	id    int
 
-	status   *core.StatusNotificationRequest
-	statusC  chan struct{}
-	rebooted bool
+	status     *core.StatusNotificationRequest
+	lastStatus core.ChargePointStatus // last status reported without error
+	statusC    chan struct{}
+	rebooted   bool
+
+	nonFatalErrors []string
 
 	meterUpdated   time.Time // local receive time, drives watchdog and timeout
 	meterTimestamp time.Time // charger sample time, orders incoming meter values
@@ -185,10 +189,67 @@ func (conn *Connector) Status() (core.ChargePointStatus, error) {
 	}
 
 	if conn.status.ErrorCode != core.NoError {
+		if status, ok := conn.nonFatalStatus(); ok {
+			return status, nil
+		}
 		return "", fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
 	}
 
 	return conn.status.Status, nil
+}
+
+// SetNonFatalErrors sets the error codes or vendor error codes that the charge point
+// reports as Faulted although charging remains possible
+func (conn *Connector) SetNonFatalErrors(codes []string) {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+	conn.nonFatalErrors = codes
+}
+
+// isNonFatal checks if the status reports a non-fatal error.
+// Must only be called while holding lock.
+func (conn *Connector) isNonFatal(s *core.StatusNotificationRequest) bool {
+	return s != nil && s.ErrorCode != core.NoError &&
+		(slices.Contains(conn.nonFatalErrors, s.VendorErrorCode) || slices.Contains(conn.nonFatalErrors, string(s.ErrorCode)))
+}
+
+// nonFatalStatus returns the status of a connector reporting a non-fatal error.
+// Faulted replaces the regular status, which is then derived from transaction, power and the last regular status.
+// Must only be called while holding lock.
+func (conn *Connector) nonFatalStatus() (core.ChargePointStatus, bool) {
+	if !conn.isNonFatal(conn.status) {
+		return "", false
+	}
+
+	if conn.status.Status != core.ChargePointStatusFaulted {
+		return conn.status.Status, true
+	}
+
+	if conn.txnId != 0 {
+		if power, err := conn.currentPower(); err == nil && power > 0 {
+			return core.ChargePointStatusCharging, true
+		}
+		return core.ChargePointStatusSuspendedEV, true
+	}
+
+	switch conn.lastStatus {
+	case "":
+		return "", false
+	case core.ChargePointStatusAvailable, core.ChargePointStatusPreparing:
+		return conn.lastStatus, true
+	default:
+		// transaction ended while faulted
+		return core.ChargePointStatusFinishing, true
+	}
+}
+
+// StatusDerived returns true if the status is derived from a non-fatal error instead of reported
+func (conn *Connector) StatusDerived() bool {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	_, ok := conn.nonFatalStatus()
+	return ok && conn.status.Status == core.ChargePointStatusFaulted
 }
 
 // NeedsAuthentication checks if local authentication or an initial RemoteStartTransaction is required
@@ -206,7 +267,16 @@ func (conn *Connector) NeedsAuthentication() bool {
 // isWaitingForAuth checks if meter values are outdated.
 // Must only be called while holding lock.
 func (conn *Connector) isWaitingForAuth() bool {
-	return conn.status != nil && conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing
+	if conn.status == nil || conn.txnId != 0 {
+		return false
+	}
+
+	status := conn.status.Status
+	if s, ok := conn.nonFatalStatus(); ok {
+		status = s
+	}
+
+	return status == core.ChargePointStatusPreparing
 }
 
 // isMeterTimeout checks if meter values are outdated.
@@ -297,6 +367,12 @@ func (conn *Connector) CurrentPower() (float64, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
+	return conn.currentPower()
+}
+
+// currentPower returns the measured power.
+// Must only be called while holding lock.
+func (conn *Connector) currentPower() (float64, error) {
 	// zero value on timeout when no transaction is running
 	if conn.isMeterTimeout() {
 		if conn.txnId != 0 {
