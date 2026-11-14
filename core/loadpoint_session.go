@@ -40,12 +40,16 @@ func (lp *Loadpoint) createSession() {
 		return
 	}
 
+	// integrated devices are recorded time-based only
+	if lp.chargerHasFeature(api.IntegratedDevice) {
+		lp.resetEnergyMetrics()
+		return
+	}
+
 	lp.session = lp.db.New(lp.chargeMeterTotal())
 
 	if v := lp.GetVehicle(); v != nil {
 		lp.session.Vehicle = v.GetTitle()
-	} else if lp.chargerHasFeature(api.IntegratedDevice) {
-		lp.session.Vehicle = lp.GetTitle()
 	}
 
 	if c, ok := api.Cap[api.Identifier](lp.charger); ok {
@@ -61,12 +65,25 @@ func (lp *Loadpoint) createSession() {
 		lp.session.ReferenceCo2PerKWh = tariff.AverageRate(lp.site.GetTariff(api.TariffUsageCo2), 24*time.Hour)
 	}
 
-	// energy
+	lp.resetEnergyMetrics()
+}
+
+// publishSessionEnergy publishes the session energy metrics
+func (lp *Loadpoint) publishSessionEnergy() {
+	if lp.chargerHasFeature(api.IntegratedDevice) {
+		return
+	}
+	lp.energyMetrics.Publish("session", lp)
+}
+
+// resetEnergyMetrics resets and publishes the live energy counters
+func (lp *Loadpoint) resetEnergyMetrics() {
+	lp.energyReset = lp.clock.Now()
 	lp.energyMetrics.Reset()
 	if _, estimator := lp.getVehicleAndSocEstimator(); estimator != nil {
 		estimator.Reset()
 	}
-	lp.energyMetrics.Publish("session", lp)
+	lp.publishSessionEnergy()
 	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
 }
 
@@ -167,17 +184,15 @@ func (lp *Loadpoint) finalizeSessionEnergy() {
 	lp.applyEnergyMetrics(s)
 }
 
-func (lp *Loadpoint) resetHeatingSession() {
-	if lp.session == nil || !lp.chargerHasFeature(api.Heating) || !lp.chargerHasFeature(api.IntegratedDevice) {
+// resetDailyEnergy restarts charge duration and energy tracking of integrated devices at midnight
+func (lp *Loadpoint) resetDailyEnergy() {
+	if !lp.chargerHasFeature(api.IntegratedDevice) {
 		return
 	}
 
-	if !now.With(lp.clock.Now()).BeginningOfDay().After(lp.session.Created) {
+	if !now.With(lp.clock.Now()).BeginningOfDay().After(lp.energyReset) {
 		return
 	}
-
-	lp.stopSession()
-	lp.clearSession()
 
 	if cr, ok := lp.chargeRater.(wrapper.ChargeResetter); ok {
 		cr.ResetCharge()
@@ -186,5 +201,11 @@ func (lp *Loadpoint) resetHeatingSession() {
 		ct.ResetCharge()
 	}
 
-	lp.createSession()
+	// keep energy plan progress across midnight, the last interval before the reset is not carried over
+	lp.Lock()
+	lp.planEnergyOffset -= lp.todayEnergy / 1e3
+	lp.todayEnergy = 0
+	lp.Unlock()
+
+	lp.resetEnergyMetrics()
 }

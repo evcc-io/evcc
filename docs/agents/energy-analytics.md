@@ -23,7 +23,7 @@ Directions per group:
 
 `home` is not a meter. It is the residual of the live power balance: grid + pv + battery discharge minus loadpoint charging, clamped at zero, integrated per slot. It is the whole house load excluding loadpoints. Consumers are sub-meters of home; `meter` entities are monitoring only and never enter any balance.
 
-Everything works on slots, never on session records. Sessions use an instantaneous solar share, the slot model nets import and export inside 15 minutes. The two will disagree on "solar %", by design. The Energy page follows the slot model, Sessions stay as they are.
+Everything works on slots, never on session records. Sessions use an instantaneous solar share, the slot model nets import and export inside 15 minutes. The two will disagree on "solar %", by design. The Energy page follows the slot model, Sessions stay as they are. Integrated devices (heaters, switch sockets) have no session records at all, slots are their only history.
 
 ## Source attribution
 

@@ -194,6 +194,8 @@ type Loadpoint struct {
 	chargeDuration          time.Duration // Charge duration
 	connectedDuration       time.Duration // Connection duration
 	energyMetrics           EnergyMetrics // Stats for charged energy by session
+	energyReset             time.Time     // Last reset of energy metrics
+	todayEnergy             float64       // Time-based energy since midnight in Wh
 	chargeRemainingDuration time.Duration // Remaining charge duration
 	chargeRemainingEnergy   float64       // Remaining charge energy in kWh
 	progress                *Progress     // Step-wise progress indicator
@@ -304,6 +306,10 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 	if lp.chargeMeter != nil && collector != nil {
 		lp.chargeEnergy = collector
 
+		if stats, err := collector.EnergyStats(); err == nil {
+			lp.todayEnergy = stats.Today
+		}
+
 		// drop stale readings when the meter no longer reports totals
 		energy, returnEnergy := api.HasCap[api.MeterEnergy](lp.chargeMeter), api.HasCap[api.MeterReturnEnergy](lp.chargeMeter)
 		if err := collector.SetCapabilities(energy, returnEnergy); err != nil {
@@ -346,7 +352,8 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 		log:               log,      // logger
 		settings:          settings, // settings
 		clock:             clock,    // mockable time
-		bus:               bus,      // event bus
+		energyReset:       clock.Now(),
+		bus:               bus, // event bus
 		mode:              api.ModeOff,
 		alwaysCharge:      api.AlwaysChargeOff,
 		status:            api.StatusNone,
@@ -647,8 +654,10 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	// create charging session
 	lp.createSession()
 
-	// reset energy-based charging plan offset
-	lp.planEnergyOffset = 0
+	// reset energy-based charging plan offset, integrated devices keep counting
+	if !lp.chargerHasFeature(api.IntegratedDevice) {
+		lp.planEnergyOffset = 0
+	}
 
 	// connect adds the loadpoint's demand
 	lp.triggerOptimizer()
@@ -674,7 +683,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.ResetMeasuredPhases()
 
 	// energy and duration
-	lp.energyMetrics.Publish("session", lp)
+	lp.publishSessionEnergy()
 	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
 	lp.publish(keys.ConnectedDuration, lp.clock.Since(lp.connectedTime).Round(time.Second))
 
@@ -2318,7 +2327,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 	}
 
 	// TODO check if "session" prefix required?
-	lp.energyMetrics.Publish("session", lp)
+	lp.publishSessionEnergy()
 
 	// TODO deprecated: use sessionEnergy instead
 	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
@@ -2354,6 +2363,10 @@ func (lp *Loadpoint) publishEnergyStats() {
 		lp.log.ERROR.Printf("energy stats: %v", err)
 		return
 	}
+
+	lp.Lock()
+	lp.todayEnergy = stats.Today
+	lp.Unlock()
 
 	lp.publish(keys.TodayEnergy, stats.Today)
 	lp.publish(keys.Last24h, stats.Last24h)
@@ -2583,6 +2596,9 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 	lp.bus.Publish(evChargePower, lp.chargePower)
 
+	// before today's energy is updated, the reset carries over yesterday's total
+	lp.resetDailyEnergy()
+
 	// update progress and soc before status is updated
 	lp.publishChargeProgress()
 	lp.PublishEffectiveValues()
@@ -2626,8 +2642,6 @@ NO_DIM:
 	lp.publish(keys.VehicleWelcomeActive, lp.welcomeActive())
 	lp.publish(keys.Connected, lp.connected())
 	lp.publish(keys.Charging, lp.charging())
-
-	lp.resetHeatingSession()
 
 	if sr, ok := api.Cap[api.StatusReasoner](lp.charger); ok && lp.GetStatus() == api.StatusB {
 		if r, err := sr.StatusReason(); err == nil {
