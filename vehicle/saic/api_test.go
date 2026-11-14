@@ -32,15 +32,19 @@ func TestWakeupTransportError(t *testing.T) {
 }
 
 func TestWakeupHTTPResponse(t *testing.T) {
-	for _, status := range []int{
-		http.StatusOK,
-		http.StatusAccepted,
-		http.StatusNoContent,
-		http.StatusServiceUnavailable,
-		http.StatusUnauthorized,
-		http.StatusForbidden,
+	for _, tc := range []struct {
+		status    int
+		mustRetry bool
+		statusErr bool
+	}{
+		{status: http.StatusOK},
+		{status: http.StatusAccepted},
+		{status: http.StatusNoContent},
+		{status: http.StatusServiceUnavailable, statusErr: true},
+		{status: http.StatusUnauthorized, mustRetry: true},
+		{status: http.StatusForbidden, mustRetry: true},
 	} {
-		t.Run(http.StatusText(status), func(t *testing.T) {
+		t.Run(http.StatusText(tc.status), func(t *testing.T) {
 			var logins int
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/oauth/token" {
@@ -49,7 +53,7 @@ func TestWakeupHTTPResponse(t *testing.T) {
 					return
 				}
 				assert.Equal(t, "/vehicle/status", r.URL.Path)
-				w.WriteHeader(status)
+				w.WriteHeader(tc.status)
 			}))
 			t.Cleanup(srv.Close)
 
@@ -59,14 +63,14 @@ func TestWakeupHTTPResponse(t *testing.T) {
 			v := NewAPI(log, identity)
 
 			err := v.Wakeup("test-vin")
-			switch status {
-			case http.StatusUnauthorized, http.StatusForbidden:
+			switch {
+			case tc.mustRetry:
 				require.ErrorIs(t, err, api.ErrMustRetry)
 				assert.Equal(t, 1, logins)
-			case http.StatusServiceUnavailable:
+			case tc.statusErr:
 				var statusErr *request.StatusError
 				require.ErrorAs(t, err, &statusErr)
-				assert.Equal(t, status, statusErr.StatusCode())
+				assert.Equal(t, tc.status, statusErr.StatusCode())
 			default:
 				require.NoError(t, err)
 			}
