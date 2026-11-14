@@ -14,8 +14,10 @@ requirements:
   description:
     de: |
       Die aktive Batteriesteuerung überschreibt die Wechselrichter Einstellungen "Allow grid charging" und "Battery Reserve SOC".
+      In der SolisCloud App muss die Funktion "Solis AI" / "Smart Strategy" vollständig deaktiviert sein (nicht nur auf "Self-Use" oder Standard gestellt), da die Cloud sonst die lokale Steuerung regelmäßig zurücksetzt.
     en: |
       Active battery control overrides the inverter settings "Allow grid charging" and "Battery Reserve SOC".
+      In the SolisCloud app, the "Solis AI" / "Smart Strategy" feature must be turned off completely (setting it to "Self-Use" or standard is not sufficient), otherwise the cloud periodically resets local control.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
