@@ -18,7 +18,10 @@ params:
       en: ModbusTCP server needs to be enabled.
       de: Der ModbusTCP Server muss aktiviert sein.
   - preset: battery-params
-  - name: maxchargepower
+  - name: maxchargepower  # could be read at 40189 on on SI Gen 11 and 12, not sure about Gen 13. Don't know how to implemet it here yet
+    default: 4200
+    required: true
+  - name: maxdischargepower  # async value, depending on battery, could also be read at 40191 on SI Gen 11 and 12, not sure about Gen 13. Don't know how to implemet it here yet
     default: 4200
     required: true
   - name: watchdog
@@ -77,16 +80,16 @@ render: |
               register:
                 address: 40795 # Maximale Batterieladeleistung
                 type: writemultiple
-                decode: int32
+                decode: uint32
           - source: const
-            value: {{ .maxchargepower }} # discharging unrestricted
+            value: {{ .maxdischargepower }} # discharging unrestricted
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 40799 # Maximale Batterieentladeleistung
                 type: writemultiple
-                decode: int32
+                decode: uint32
       - case: 2 # hold
         set:
           source: sequence
@@ -108,7 +111,7 @@ render: |
               register:
                 address: 40795 # Maximale Batterieladeleistung
                 type: writemultiple
-                decode: int32
+                decode: uint32
           - source: const
             value: 0 # 0%, no discharge
             set:
@@ -117,17 +120,17 @@ render: |
               register:
                 address: 40799 # Maximale Batterieentladeleistung
                 type: writemultiple
-                decode: int32
+                decode: uint32
       - case: 3 # charge
         set:
           source: sequence
           set:
           - source: const
-            value: -{{ .maxchargepower * 1.1}} # Wirkleistungsvorgabe ---> SunnyIsland berechnet die max Wirkleistung via Ampere. 
-                                               # im Falle den SI6.0H-1x sind das exemplarisch 20A, also 4600/230 = 20A. Der Max Wert ergibt sich aus dem maximal zulässigen 
+            value: -{{ mulf .maxchargepower 1.1 }} # Wirkleistungsvorgabe ---> SunnyIsland berechnet intern die max Wirkleistung via Ampere. 
+                                               # im Falle des SI6.0H-1x sind das exemplarisch 20A, also 4600/230 = 20A. Der Max Wert ergibt sich aus dem maximal zulässigen 
                                                # Spannung im Europäischen Stromnetz (+/-10%), somit kann auf den Max Wert des Batteriestellers 10% aufgeschlagen werden 
                                                # um auch bei hohen Spannungen die max 20A auszunutzen. Dies trifft für alle SI zu. Somit erreicht man etwas mehr Leistung
-                                               # bei hohen Spannungslagen, anstatt Stumpf bei 4600W bzw 20A bei 230V abzuregeln. Intern begrenzt der SI das maximum automatisch
+                                               # bei hohen Spannungslagen, anstatt Stumpf bei $maxwert auf der AC Seite abzuregeln. Intern begrenzt der SI das maximum in A automatisch.                            
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -152,7 +155,7 @@ render: |
               register:
                 address: 40795 # Maximale Batterieladeleistung
                 type: writemultiple
-                decode: int32
+                decode: uint32
           - source: const
             value: 0 # no discharging 
             set:
@@ -161,5 +164,5 @@ render: |
               register:
                 address: 40799 # Maximale Batterieentladeleistung
                 type: writemultiple
-                decode: int32
+                decode: uint32
   {{- include "battery-params" . }}
