@@ -185,11 +185,11 @@ func (conn *Connector) Status() (core.ChargePointStatus, error) {
 	}
 
 	// per OCPP 1.6 an error code is a warning unless the status is Faulted
-	if conn.status.ErrorCode == core.NoError || conn.status.Status != core.ChargePointStatusFaulted {
+	if conn.status.Status != core.ChargePointStatusFaulted {
 		return conn.status.Status, nil
 	}
 
-	// some chargers report Faulted for errors they keep charging through, e.g. ABL eMH2 (#36233)
+	// some chargers report Faulted for errors they keep charging through, e.g. ABL eMH2
 	if conn.txnId != 0 {
 		if power, err := conn.currentPower(); err == nil && power > 0 {
 			return core.ChargePointStatusCharging, nil

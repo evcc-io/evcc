@@ -127,7 +127,8 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 		conn.txnId == 0 && conn.status != nil &&
 		(conn.status.Status == core.ChargePointStatusCharging ||
 			conn.status.Status == core.ChargePointStatusSuspendedEV ||
-			conn.status.Status == core.ChargePointStatusSuspendedEVSE) {
+			conn.status.Status == core.ChargePointStatusSuspendedEVSE ||
+			conn.status.Status == core.ChargePointStatusFaulted) {
 		conn.log.DEBUG.Printf("recovered transaction: %d", *request.TransactionId)
 		conn.txnId = *request.TransactionId
 	}

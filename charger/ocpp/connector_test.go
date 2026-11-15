@@ -556,7 +556,7 @@ func (suite *connTestSuite) TestOnStatusChange() {
 }
 
 // TestErrorStatus covers error codes: a warning unless Faulted, and a Faulted connector
-// that keeps charging through its error (#36233)
+// that keeps charging through its error
 func (suite *connTestSuite) TestErrorStatus() {
 	for _, tc := range []struct {
 		name      string
@@ -568,6 +568,7 @@ func (suite *connTestSuite) TestErrorStatus() {
 	}{
 		{"warning", core.ChargePointStatusCharging, core.PowerMeterFailure, 1, "6900", core.ChargePointStatusCharging},
 		{"faulted charging", core.ChargePointStatusFaulted, core.OtherError, 1, "6900", core.ChargePointStatusCharging},
+		{"faulted without error code", core.ChargePointStatusFaulted, core.NoError, 1, "6900", core.ChargePointStatusCharging},
 		{"faulted suspended", core.ChargePointStatusFaulted, core.OtherError, 1, "0", core.ChargePointStatusSuspendedEV},
 		{"faulted without transaction", core.ChargePointStatusFaulted, core.GroundFailure, 0, "", ""},
 	} {
