@@ -28,3 +28,10 @@ func TestCurtailmentNotConfigured(t *testing.T) {
 	assert.Nil(t, c.CurtailedPercent())
 	assert.Nil(t, hems.Curtailed(c))
 }
+
+func TestInvalidPowerLimit(t *testing.T) {
+	for _, maxPower := range []float64{0, -4200} {
+		_, err := NewRelay(nil, nil, nil, maxPower, 0)
+		assert.Error(t, err)
+	}
+}

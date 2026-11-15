@@ -150,6 +150,11 @@ func (c *EEBus) updateConsumptionLimit() {
 		return
 	}
 
+	if limit.Value < 0 {
+		c.log.ERROR.Printf("CS LPC ConsumptionLimit: invalid negative limit: %.0fW", limit.Value)
+		return
+	}
+
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
@@ -160,6 +165,12 @@ func (c *EEBus) updateProductionLimit() {
 	limit, err := c.cs.CsLPPInterface.ProductionLimit()
 	if err != nil {
 		c.log.ERROR.Println("CS LPP ProductionLimit:", err)
+		return
+	}
+
+	// LPP states its limits as negative watts
+	if limit.Value > 0 {
+		c.log.ERROR.Printf("CS LPP ProductionLimit: invalid positive limit: %.0fW", limit.Value)
 		return
 	}
 
@@ -219,6 +230,11 @@ func (c *EEBus) updateFailsafeConsumptionActivePowerLimit() {
 		return
 	}
 
+	if limit < 0 {
+		c.log.ERROR.Printf("CS LPC FailsafeConsumptionActivePowerLimit: invalid negative limit: %.0fW", limit)
+		return
+	}
+
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
@@ -229,6 +245,11 @@ func (c *EEBus) updateFailsafeProductionActivePowerLimit() {
 	limit, _, err := c.cs.CsLPPInterface.FailsafeProductionActivePowerLimit()
 	if err != nil {
 		c.log.ERROR.Println("CS LPP FailsafeProductionActivePowerLimit:", err)
+		return
+	}
+
+	if limit < 0 {
+		c.log.ERROR.Printf("CS LPP FailsafeProductionActivePowerLimit: invalid negative limit: %.0fW", limit)
 		return
 	}
 

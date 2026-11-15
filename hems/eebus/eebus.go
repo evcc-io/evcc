@@ -3,6 +3,7 @@ package eebus
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -68,6 +69,25 @@ type Limits struct {
 	FailsafeDurationMinimum time.Duration
 }
 
+// validate rejects negative limits, all limits are configured as positive watts
+func (l Limits) validate() error {
+	limits := map[string]float64{
+		"contractualconsumptionnominalmax":    l.ContractualConsumptionNominalMax,
+		"failsafeconsumptionactivepowerlimit": l.FailsafeConsumptionActivePowerLimit,
+		"productionnominalmax":                l.ProductionNominalMax,
+	}
+	if l.FailsafeProductionActivePowerLimit != nil {
+		limits["failsafeproductionactivepowerlimit"] = *l.FailsafeProductionActivePowerLimit
+	}
+
+	for name, limit := range limits {
+		if limit < 0 {
+			return fmt.Errorf("invalid %s: %.0fW", name, limit)
+		}
+	}
+	return nil
+}
+
 // NewFromConfig creates an EEBus HEMS from generic config
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*EEBus, error) {
 	cc := struct {
@@ -96,6 +116,10 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 
 // NewEEBus creates EEBus HEMS
 func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(bool) error, site site.API, interval time.Duration) (*EEBus, error) {
+	if err := limits.validate(); err != nil {
+		return nil, err
+	}
+
 	inst, err := eebus.Instance()
 	if err != nil {
 		return nil, err
