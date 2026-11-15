@@ -149,7 +149,7 @@ render: |
     register:
       address: {{ if eq .battery "2" }}1749{{ else }}1616{{ end }} # 31750/31617 BMS2/1 battery voltage (0.01 V)
       type: input
-      decode: uint16
+      decode: uint16nan
     scale: 0.3 # 30 A * 0.01 V
   maxdischargepower:
     source: modbus
@@ -157,7 +157,7 @@ render: |
     register:
       address: {{ if eq .battery "2" }}1749{{ else }}1616{{ end }} # 31750/31617 BMS2/1 battery voltage (0.01 V)
       type: input
-      decode: uint16
+      decode: uint16nan
     scale: 0.3 # 30 A * 0.01 V
   power:
     source: modbus
@@ -221,9 +221,13 @@ render: |
                     - name: charge
                       type: float
                       config:
-                        source: sunspec
+                        source: modbus
                         {{- include "modbus" . | indent 22 }}
-                        value: 802:WChaRteMax
+                        register:
+                          address: {{ if eq .battery "2" }}1749{{ else }}1616{{ end }} # 31750/31617 BMS2/1 battery voltage (0.01 V)
+                          type: input
+                          decode: uint16nan
+                        scale: 0.3 # 30 A * 0.01 V
                   out:
                     - name: frame
                       type: string
@@ -340,15 +344,23 @@ render: |
                     - name: charge
                       type: float
                       config:
-                        source: sunspec
+                        source: modbus
                         {{- include "modbus" . | indent 22 }}
-                        value: 802:WChaRteMax
+                        register:
+                          address: {{ if eq .battery "2" }}1749{{ else }}1616{{ end }} # 31750/31617 BMS2/1 battery voltage (0.01 V)
+                          type: input
+                          decode: uint16nan
+                        scale: 0.3 # 30 A * 0.01 V
                     - name: discharge
                       type: float
                       config:
-                        source: sunspec
+                        source: modbus
                         {{- include "modbus" . | indent 22 }}
-                        value: 802:WDisChaRteMax
+                        register:
+                          address: {{ if eq .battery "2" }}1749{{ else }}1616{{ end }} # 31750/31617 BMS2/1 battery voltage (0.01 V)
+                          type: input
+                          decode: uint16nan
+                        scale: 0.3 # 30 A * 0.01 V
                   out:
                     - name: frame
                       type: string
