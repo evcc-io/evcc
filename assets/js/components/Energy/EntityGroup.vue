@@ -1,6 +1,7 @@
 <template>
 	<Card
 		:title="active ?? only?.title ?? title"
+		:label="title"
 		:parent="active || only ? title : ''"
 		:parent-static="!!only"
 		edge-to-edge

@@ -173,9 +173,11 @@ export default defineComponent({
 						showMaxLine: true,
 						lineStyle: { color: colors.border || "" },
 					},
-					name: `${this.axisScale.unit}h`,
+					// without sessions the scale is made up, only its lines show
+					name: this.hasSessions ? `${this.axisScale.unit}h` : "",
 					...axisNameStyle(),
 					axisLabel: {
+						show: this.hasSessions,
 						color: colors.muted || "",
 						hideOverlap: true,
 						formatter: (v: number) =>
