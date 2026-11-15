@@ -80,7 +80,7 @@
 				</div>
 				<div class="col-12 col-md-6 pe-md-5 pb-4 d-flex flex-column">
 					<div class="d-flex justify-content-between align-items-baseline mb-4">
-						<h3 class="m-0">In</h3>
+						<h3 class="m-0">{{ $t("main.energyflow.in") }}</h3>
 						<span v-if="pvPossible" class="fw-bold">
 							<AnimatedNumber :to="inPower" :format="kw" />
 						</span>
@@ -162,7 +162,7 @@
 				</div>
 				<div class="col-12 col-md-6 ps-md-5 pb-4 d-flex flex-column">
 					<div class="d-flex justify-content-between align-items-baseline mb-4">
-						<h3 class="m-0">Out</h3>
+						<h3 class="m-0">{{ $t("main.energyflow.out") }}</h3>
 						<span v-if="pvPossible" class="fw-bold">
 							<AnimatedNumber :to="outPower" :format="kw" />
 						</span>
