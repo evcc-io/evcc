@@ -38,7 +38,9 @@ func TestGoEV1(t *testing.T) {
 	srv := httptest.NewTestServer(t, new(handler))
 	srv.Start()
 
+	old := sponsor.Subject
 	sponsor.Subject = "foo"
+	t.Cleanup(func() { sponsor.Subject = old })
 
 	wb, err := newGoEFromConfig(false, map[string]any{"uri": srv.URL})
 	if err != nil {
@@ -68,7 +70,9 @@ func TestGoEV2(t *testing.T) {
 	srv.Start()
 	h.expect("/api/status?filter=alw")
 
+	old := sponsor.Subject
 	sponsor.Subject = "foo"
+	t.Cleanup(func() { sponsor.Subject = old })
 
 	wb, err := newGoEFromConfig(false, map[string]any{"uri": srv.URL, "cache": "0s"})
 	if err != nil {
