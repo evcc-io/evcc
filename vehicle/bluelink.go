@@ -175,9 +175,8 @@ func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink
 	}
 
 	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN, cc.PIN)
-	identity := bluelink.NewIdentity(log, settings)
-
-	if err := identity.Login(cc.User, cc.Password, cc.Language, brand); err != nil {
+	identity, err := bluelink.LoginIdentity(log, settings, cc.User, cc.Password, cc.Language, brand)
+	if err != nil {
 		return nil, err
 	}
 
