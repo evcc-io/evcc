@@ -11,11 +11,11 @@ const (
 	ClientID  = "XhygisuebbrqQ80byOuU5VncxLIm8E6H"
 	XClientID = "41843fb4-691d-4970-85c7-2673e8ecef40"
 	// app user agent, required for current overview data, see CJNE/pyporscheconnectapi@4aad11f
-	UserAgent = "de.porsche.one/20.26.36-row+186611 (android)"
-	// RedirectURI is the custom app scheme registered for the My Porsche app's
-	// Auth0 client. Auth0 only permits this redirect, so the login runs
-	// server-side and reads the code from the redirect location (see login.go).
-	RedirectURI = "my-porsche-app://auth0/callback"
+	UserAgent = "de.porsche.one/21.26.46-row+195601 (android)"
+	// RedirectURI is the app link registered for the My Porsche app's Auth0 client,
+	// see CJNE/pyporscheconnectapi#100. The login runs server-side and reads the
+	// code from the redirect location without following it (see login.go).
+	RedirectURI = "https://security.porsche.com/auth/en-GB/app/callback"
 )
 
 // Scopes requested during authorization (matches the official app).
