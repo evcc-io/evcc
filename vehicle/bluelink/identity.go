@@ -86,7 +86,8 @@ func LoginIdentity(log *util.Logger, config Config, user, password, language, br
 	mu.Lock()
 	defer mu.Unlock()
 
-	key := config.URI + "." + brand + "." + strings.ToLower(user)
+	// same spelling as the persisted token, a changed password logs in again
+	key := strings.Join([]string{config.URI, brand, user, password}, ".")
 
 	// reuse identity instance
 	if v := identities[key]; v != nil {
