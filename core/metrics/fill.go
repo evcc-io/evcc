@@ -23,8 +23,8 @@ var slotSeconds = int64(tariff.SlotDuration / time.Second)
 // fill persists interpolated slots for a short gap before the given slot, as
 // left by a restart. A recovered slot is shared evenly with the gap instead.
 func fill(e entity, slot time.Time) error {
-	// forecast and temperature are not energy measurements
-	if e.Group == Forecast || e.Group == Temperature {
+	// temperature slots carry no energy
+	if e.Group == Temperature {
 		return nil
 	}
 
