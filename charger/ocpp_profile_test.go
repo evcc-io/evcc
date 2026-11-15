@@ -8,7 +8,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/ocpp"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
@@ -116,7 +115,6 @@ func (h *ocppProfileHandler) OnSetChargingProfile(req *smartcharging.SetCharging
 
 func (suite *ocppTestSuite) TestTransactionProfiles() {
 	t := suite.T()
-	sponsor.SetSubjectForTest(t, "test")
 
 	id := suite.stationID("tx-profile")
 	cp, _, stop := suite.startChargePoint(id, 1)
@@ -215,7 +213,6 @@ func (suite *ocppTestSuite) TestTransactionProfiles() {
 
 func (suite *ocppTestSuite) TestDefaultProfiles() {
 	t := suite.T()
-	sponsor.SetSubjectForTest(t, "test")
 	for _, value := range []string{"", "TxDefaultProfile"} {
 		id := suite.stationID("default-profile-" + value)
 		cp, _, _ := suite.startChargePoint(id, 1)

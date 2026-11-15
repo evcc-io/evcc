@@ -8,15 +8,7 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
-
-// withSponsor authorizes the sponsor-gated Trydan charger for the duration of the test,
-// restoring the previous value afterwards so tests don't leak global state between them.
-func withSponsor(t *testing.T) {
-	t.Helper()
-	sponsor.SetSubjectForTest(t, "foo")
-}
 
 func trydanTestServerWithBody(t *testing.T, body string) *httptest.Server {
 	t.Helper()
@@ -30,8 +22,6 @@ func trydanTestServerWithBody(t *testing.T, body string) *httptest.Server {
 // ChargeState maps directly to api.ChargeStatus, except firmware 2.5.0 keeps it at
 // "charging" even after Paused=1, so that specific combination must fall back to StatusB.
 func TestTrydanStatus(t *testing.T) {
-	withSponsor(t)
-
 	tests := []struct {
 		name    string
 		json    string
@@ -72,8 +62,6 @@ func TestTrydanStatus(t *testing.T) {
 // Voltages() is always unavailable when all phases read zero, since a
 // grid-connected charger always sees mains voltage.
 func TestTrydanPhaseMeasurementsUnavailable(t *testing.T) {
-	withSponsor(t)
-
 	tests := []struct {
 		name            string
 		json            string
