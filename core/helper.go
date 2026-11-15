@@ -49,11 +49,12 @@ func deviceTitleOrName[T any](dev config.Device[T]) string {
 	return cmp.Or(deviceProperties(dev).Title, dev.Config().Name)
 }
 
-// circuitMaxPower returns the lowest power limit along the circuit chain, 0 if none is set
+// circuitMaxPower returns the lowest power limit incl. HEMS limit along the circuit chain, 0 if none is set
+// TODO consider max current limits
 func circuitMaxPower(circuit api.Circuit) float64 {
 	var res float64
 	for c := circuit; c != nil; c = c.GetParent() {
-		if p := c.GetMaxPower(); p > 0 && (res == 0 || p < res) {
+		if p := c.EffectiveMaxPower(); p > 0 && (res == 0 || p < res) {
 			res = p
 		}
 	}
