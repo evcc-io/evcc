@@ -82,14 +82,12 @@ var (
 // LoginIdentity returns the logged-in identity of the account. Vehicles of the same
 // account share it, since the CCI refresh token is single-use (#36245).
 func LoginIdentity(log *util.Logger, config Config, user, password, language, brand string) (*Identity, error) {
-	// serialise instance handling
 	mu.Lock()
 	defer mu.Unlock()
 
 	// same spelling as the persisted token, a changed password logs in again
 	key := strings.Join([]string{config.URI, brand, user, password}, ".")
 
-	// reuse identity instance
 	if v := identities[key]; v != nil {
 		return v, nil
 	}
@@ -99,7 +97,6 @@ func LoginIdentity(log *util.Logger, config Config, user, password, language, br
 		return nil, err
 	}
 
-	// add instance
 	identities[key] = v
 
 	return v, nil
