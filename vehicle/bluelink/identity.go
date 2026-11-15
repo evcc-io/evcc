@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"uuid"
 
@@ -71,6 +72,36 @@ func NewIdentity(log *util.Logger, config Config) *Identity {
 	}
 
 	return v
+}
+
+var (
+	mu         sync.Mutex
+	identities = make(map[string]*Identity)
+)
+
+// LoginIdentity returns the logged-in identity of the account. Vehicles of the same
+// account share it, since the CCI refresh token is single-use (#36245).
+func LoginIdentity(log *util.Logger, config Config, user, password, language, brand string) (*Identity, error) {
+	// serialise instance handling
+	mu.Lock()
+	defer mu.Unlock()
+
+	key := config.URI + "." + brand + "." + strings.ToLower(user)
+
+	// reuse identity instance
+	if v := identities[key]; v != nil {
+		return v, nil
+	}
+
+	v := NewIdentity(log, config)
+	if err := v.Login(user, password, language, brand); err != nil {
+		return nil, err
+	}
+
+	// add instance
+	identities[key] = v
+
+	return v, nil
 }
 
 func (v *Identity) getDeviceID() (string, error) {

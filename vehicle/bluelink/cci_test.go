@@ -364,6 +364,37 @@ func TestRefreshCCI(t *testing.T) {
 	assert.Equal(t, "device-abc", persisted.DeviceID) // device id carried over unchanged
 }
 
+// TestLoginIdentityShared covers two vehicles on the same account: they must
+// share one identity, as the CCI refresh token is single-use (#36245)
+func TestLoginIdentityShared(t *testing.T) {
+	config := Config{
+		URI:           unreachable,
+		Brand:         "kia-test:" + t.Name(),
+		LoginFormHost: unreachable,
+		CCI:           testCCIConfig(),
+	}
+
+	// a valid persisted bundle lets the login succeed without contacting a server
+	key := fmt.Sprintf(cciSettingsKeyFmt, config.Brand, "test@example.com")
+	require.NoError(t, settings.SetJson(key, cciBundle{AccessToken: "ccs-token", RefreshToken: "refresh", Expiry: time.Now().Add(time.Hour)}))
+	t.Cleanup(func() {
+		settings.SetString(key, "")
+		mu.Lock()
+		clear(identities)
+		mu.Unlock()
+	})
+
+	log := util.NewLogger("test")
+	a, err := LoginIdentity(log, config, "test@example.com", "password", "en", "kia")
+	require.NoError(t, err)
+	b, err := LoginIdentity(log, config, "Test@Example.com", "password", "en", "kia")
+	require.NoError(t, err)
+	assert.Same(t, a, b)
+
+	_, err = LoginIdentity(log, config, "other@example.com", "password", "en", "kia")
+	assert.Error(t, err, "other account logs in on its own")
+}
+
 func TestLoginCCIUsesPersistedBundleWithoutContactingServer(t *testing.T) {
 	identity := newTestIdentity(t, unreachable, unreachable)
 
