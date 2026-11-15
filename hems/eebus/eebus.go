@@ -77,19 +77,15 @@ func invalidLimit(limit float64) bool {
 
 // validate checks the configured limits, which are all positive watts
 func (l Limits) validate() error {
-	limits := map[string]float64{
-		"contractualconsumptionnominalmax":    l.ContractualConsumptionNominalMax,
-		"failsafeconsumptionactivepowerlimit": l.FailsafeConsumptionActivePowerLimit,
-		"productionnominalmax":                l.ProductionNominalMax,
-	}
-	if l.FailsafeProductionActivePowerLimit != nil {
-		limits["failsafeproductionactivepowerlimit"] = *l.FailsafeProductionActivePowerLimit
-	}
-
-	for name, limit := range limits {
-		if invalidLimit(limit) {
-			return fmt.Errorf("invalid %s: %.0fW", name, limit)
-		}
+	switch {
+	case invalidLimit(l.ContractualConsumptionNominalMax):
+		return fmt.Errorf("invalid contractualconsumptionnominalmax: %.0fW", l.ContractualConsumptionNominalMax)
+	case invalidLimit(l.FailsafeConsumptionActivePowerLimit):
+		return fmt.Errorf("invalid failsafeconsumptionactivepowerlimit: %.0fW", l.FailsafeConsumptionActivePowerLimit)
+	case invalidLimit(l.ProductionNominalMax):
+		return fmt.Errorf("invalid productionnominalmax: %.0fW", l.ProductionNominalMax)
+	case l.FailsafeProductionActivePowerLimit != nil && invalidLimit(*l.FailsafeProductionActivePowerLimit):
+		return fmt.Errorf("invalid failsafeproductionactivepowerlimit: %.0fW", *l.FailsafeProductionActivePowerLimit)
 	}
 	return nil
 }
