@@ -977,24 +977,30 @@ func TestChargingSession_CompletedOnDisconnect(t *testing.T) {
 	session, err := json.Marshal(easee.ChargingSessionData{ID: 42, Start: start, Stop: stop, EnergyKwh: 8, MeterValueStart: 10000, MeterValueStop: 10008})
 	require.NoError(t, err)
 
-	for _, modeFirst := range []bool{false, true} {
+	for _, tc := range []struct {
+		name      string
+		modeFirst bool
+	}{
+		{"session before disconnect", false},
+		{"disconnect before session", true},
+	} {
 		e := newEasee()
 		e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, fmt.Sprintf("%d", easee.ModeCharging)))
 		e.ProductUpdate(sessionStartPayload(t, start, easee.ChargingSessionStartData{ID: 42, Start: start, MeterValue: 10000}))
 		e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start.Add(time.Minute), easee.Double, "7.9"))
 
 		disconnect := createPayload(easee.CHARGER_OP_MODE, stop.Add(time.Second), easee.Integer, fmt.Sprintf("%d", easee.ModeDisconnected))
-		if modeFirst {
+		if tc.modeFirst {
 			e.ProductUpdate(disconnect)
 		}
 		e.ProductUpdate(createPayload(easee.CHARGING_SESSION, stop, easee.String, string(session)))
-		if !modeFirst {
+		if !tc.modeFirst {
 			e.ProductUpdate(disconnect)
 		}
 
 		charged, err := e.ChargedEnergy()
 		require.NoError(t, err)
-		assert.Equal(t, 8.0, charged, modeFirst)
+		assert.Equal(t, 8.0, charged, tc.name)
 	}
 }
 
