@@ -409,6 +409,10 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		if data.ID != c.sessionStart.ID {
 			break
 		}
+		// a reconnect replays the last completed session, it is not the one of the connected vehicle
+		if c.opMode >= easee.ModeAwaitingStart && !data.Stop.IsZero() && data.Stop.Before(prevModeTime) {
+			break
+		}
 		c.sessionEnergy = data.EnergyKwh
 		c.sessionEnergyTime = res.Timestamp
 

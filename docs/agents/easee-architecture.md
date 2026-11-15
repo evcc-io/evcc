@@ -130,6 +130,8 @@ Before a POST to a known 200-returning endpoint, increment the counter. When `Co
 
 `sessionEnergy` is never set to `0` from a `ProductUpdate` — the API sends spurious zeros erratically. Session reset is driven by op-mode transition: when `CHARGER_OP_MODE` transitions from disconnected to awaiting-start, `sessionEnergy` resets to `0` with a fresh timestamp. The first op mode after startup is replayed state and does not reset, so replayed session energy survives a restart. `CHARGE_SESSION_START` and a zero `SESSION_ENERGY` arrive before the mode change, so a cached session that started after the previous mode observation is kept. Session energy observed before that start is still reset, otherwise a value replayed on restart would leak into the new session.
 
+Until a new session is authorized, the cloud keeps the previous `CHARGE_SESSION_START` and its completed `CHARGING_SESSION`, and replays both on every stream reconnect. While a vehicle is connected, a `CHARGING_SESSION` whose `Stop` is older than the current op mode is therefore not applied to `sessionEnergy`. The final record of a session that ends now carries a newer `Stop`, or arrives after the disconnect.
+
 ### Logical Energy Meter
 
 `LIFETIME_ENERGY` is pushed only ~hourly. `TotalEnergy()` therefore keeps a monotonic max of the lifetime reading, the session meter values from `CHARGE_SESSION_START` and `CHARGING_SESSION`, and `CHARGE_SESSION_START.MeterValue + sessionEnergy`. The session term is only applied while the last nonzero `SESSION_ENERGY` (or session completion) is not older than the session start, so a stale previous-session value cannot inflate the total. Ignored zero observations do not count as fresh readings.
