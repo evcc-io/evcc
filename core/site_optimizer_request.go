@@ -836,6 +836,13 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	slot := planSlot(now, ts)
 	if slot >= 0 && slot < minLen {
 		setPlanGoal(bat, minLen, slot, goal)
+	} else if slot >= minLen {
+		// what full power cannot store between the horizon end and the plan time must be in by the horizon end
+		end := now.Truncate(tariff.SlotDuration).Add(time.Duration(minLen) * tariff.SlotDuration)
+		if rest := goal - float64(bat.CMax)*eta*ts.Sub(end).Hours(); rest > float64(bat.SInitial) {
+			setPlanGoal(bat, minLen, minLen-1, rest)
+		}
+		site.log.DEBUG.Printf("plan beyond forecast range: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
 	} else {
 		site.log.DEBUG.Printf("plan beyond forecast range or overrun: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
 	}
