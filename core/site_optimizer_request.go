@@ -844,7 +844,7 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 		}
 		site.log.DEBUG.Printf("plan beyond forecast range: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
 	} else {
-		site.log.DEBUG.Printf("plan beyond forecast range or overrun: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
+		site.log.DEBUG.Printf("plan overrun: %.1f at %v", goal, ts.Round(time.Minute))
 	}
 
 	// later plans let the optimizer charge ahead for them instead of replanning once the first goal is reached.
