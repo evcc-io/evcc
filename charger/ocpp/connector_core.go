@@ -26,9 +26,9 @@ func (conn *Connector) timestampValid(t time.Time) bool {
 	return !t.Before(conn.status.Timestamp.Time)
 }
 
-// statusClass maps a status to the charge status as seen by the loadpoint, api.StatusNone for errors
+// statusClass maps a status to the charge status as seen by the loadpoint, api.StatusNone for Faulted
 func statusClass(s *core.StatusNotificationRequest) api.ChargeStatus {
-	if s == nil || s.ErrorCode != core.NoError {
+	if s == nil {
 		return api.StatusNone
 	}
 

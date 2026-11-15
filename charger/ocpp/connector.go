@@ -184,11 +184,28 @@ func (conn *Connector) Status() (core.ChargePointStatus, error) {
 		return core.ChargePointStatusUnavailable, nil
 	}
 
-	if conn.status.ErrorCode != core.NoError {
-		return "", fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
+	// per OCPP 1.6 an error code is a warning unless the status is Faulted
+	if conn.status.ErrorCode == core.NoError || conn.status.Status != core.ChargePointStatusFaulted {
+		return conn.status.Status, nil
 	}
 
-	return conn.status.Status, nil
+	// some chargers report Faulted for errors they keep charging through, e.g. ABL eMH2 (#36233)
+	if conn.txnId != 0 {
+		if power, err := conn.currentPower(); err == nil && power > 0 {
+			return core.ChargePointStatusCharging, nil
+		}
+		return core.ChargePointStatusSuspendedEV, nil
+	}
+
+	return "", fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
+}
+
+// Faulted returns true if the connector reports Faulted, its status then follows the transaction
+func (conn *Connector) Faulted() bool {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	return conn.status != nil && conn.status.Status == core.ChargePointStatusFaulted
 }
 
 // NeedsAuthentication checks if local authentication or an initial RemoteStartTransaction is required
@@ -297,6 +314,12 @@ func (conn *Connector) CurrentPower() (float64, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
+	return conn.currentPower()
+}
+
+// currentPower returns the measured power.
+// Must only be called while holding lock.
+func (conn *Connector) currentPower() (float64, error) {
 	// zero value on timeout when no transaction is running
 	if conn.isMeterTimeout() {
 		if conn.txnId != 0 {

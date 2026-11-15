@@ -285,7 +285,8 @@ func (c *OCPP) StatusReason() (api.Reason, error) {
 
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
-	if s, err := c.conn.Status(); err == nil {
+	// a Faulted connector cannot tell if the vehicle or the charger suspended charging
+	if s, err := c.conn.Status(); err == nil && !(s == core.ChargePointStatusSuspendedEV && c.conn.Faulted()) {
 		switch s {
 		case
 			core.ChargePointStatusSuspendedEVSE:
