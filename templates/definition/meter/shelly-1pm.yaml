@@ -9,6 +9,7 @@ products:
   - { brand: Shelly, description: { generic: Pro 3EM (monophase device profile) } }
   - { brand: Shelly, description: { generic: Pro 4PM } }
   - { brand: Shelly, description: { generic: Plug S } }
+  - { brand: Shelly, description: { generic: Plug M } }
 group: switchsockets
 discovery:
   mdns: ["_shelly._tcp", "_http._tcp:shelly*"]
