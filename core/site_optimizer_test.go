@@ -231,7 +231,7 @@ func TestApplyPlanGoalSoc(t *testing.T) {
 
 	site := &Site{log: util.NewLogger("foo")}
 
-	bat := optimizer.BatteryConfig{SMax: 40000}
+	bat := optimizer.BatteryConfig{SMax: 40000, CMax: 11000} // the plan beyond the horizon is reachable after it
 	site.applyPlanGoal(lp, &bat, 32)
 
 	require.Len(t, bat.SGoal, 32)
@@ -248,9 +248,6 @@ func TestApplyPlanGoalBeyondHorizon(t *testing.T) {
 	vehicle := api.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Capacity().Return(50.0).AnyTimes()
 
-	now := time.Now()
-	end := now.Truncate(tariff.SlotDuration).Add(16 * tariff.SlotDuration) // horizon end
-
 	for _, tc := range []struct {
 		name  string
 		after time.Duration // plan time after horizon end
@@ -259,16 +256,25 @@ func TestApplyPlanGoalBeyondHorizon(t *testing.T) {
 		{"remainder by horizon end", 2 * time.Hour, 25000 - 3000*eta*2},
 		{"reachable after horizon end", 8 * time.Hour, 0},
 	} {
-		lp := loadpoint.NewMockAPI(ctrl)
-		lp.EXPECT().GetPlanGoal().Return(50.0, true).AnyTimes()
-		lp.EXPECT().GetVehicle().Return(vehicle).AnyTimes()
-		lp.EXPECT().EffectivePlanTime().Return(end.Add(tc.after)).AnyTimes()
-		lp.EXPECT().GetSocPlanGoals().Return(nil).AnyTimes()
+		var bat optimizer.BatteryConfig
+		var slot time.Time
 
-		site := &Site{log: util.NewLogger("foo")}
+		// repeat if applyPlanGoal's clock crossed into the next slot, which moves the horizon end
+		for slot != time.Now().Truncate(tariff.SlotDuration) {
+			slot = time.Now().Truncate(tariff.SlotDuration)
+			end := slot.Add(16 * tariff.SlotDuration)
 
-		bat := optimizer.BatteryConfig{SInitial: 5000, SMax: 40000, CMax: 3000}
-		site.applyPlanGoal(lp, &bat, 16)
+			lp := loadpoint.NewMockAPI(ctrl)
+			lp.EXPECT().GetPlanGoal().Return(50.0, true).AnyTimes()
+			lp.EXPECT().GetVehicle().Return(vehicle).AnyTimes()
+			lp.EXPECT().EffectivePlanTime().Return(end.Add(tc.after)).AnyTimes()
+			lp.EXPECT().GetSocPlanGoals().Return(nil).AnyTimes()
+
+			site := &Site{log: util.NewLogger("foo")}
+
+			bat = optimizer.BatteryConfig{SInitial: 5000, SMax: 40000, CMax: 3000}
+			site.applyPlanGoal(lp, &bat, 16)
+		}
 
 		if tc.goal == 0 {
 			assert.Nil(t, bat.SGoal, tc.name)
