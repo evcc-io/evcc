@@ -1,6 +1,7 @@
 package eebus
 
 import (
+	"slices"
 	"time"
 
 	eebusapi "github.com/enbility/eebus-go/api"
@@ -150,8 +151,8 @@ func (c *EEBus) updateConsumptionLimit() {
 		return
 	}
 
-	if limit.Value < 0 {
-		c.log.ERROR.Printf("CS LPC ConsumptionLimit: invalid negative limit: %.0fW", limit.Value)
+	if invalidLimit(limit.Value) {
+		c.log.ERROR.Printf("CS LPC ConsumptionLimit: invalid limit: %.0fW", limit.Value)
 		return
 	}
 
@@ -169,8 +170,8 @@ func (c *EEBus) updateProductionLimit() {
 	}
 
 	// LPP states its limits as negative watts
-	if limit.Value > 0 {
-		c.log.ERROR.Printf("CS LPP ProductionLimit: invalid positive limit: %.0fW", limit.Value)
+	if invalidLimit(-limit.Value) {
+		c.log.ERROR.Printf("CS LPP ProductionLimit: invalid limit: %.0fW", limit.Value)
 		return
 	}
 
@@ -183,8 +184,8 @@ func (c *EEBus) updateProductionLimit() {
 func (c *EEBus) consumptionWriteApprovalRequired() {
 	for msg, limit := range c.cs.CsLPCInterface.PendingConsumptionLimits() {
 		c.log.DEBUG.Println("CS LPC PendingConsumptionLimit:", msg, limit)
-		if limit.Value < 0 {
-			c.cs.CsLPCInterface.ApproveOrDenyConsumptionLimit(msg, false, "negative limit")
+		if invalidLimit(limit.Value) {
+			c.cs.CsLPCInterface.ApproveOrDenyConsumptionLimit(msg, false, "invalid limit")
 			continue
 		}
 
@@ -199,8 +200,8 @@ func (c *EEBus) consumptionWriteApprovalRequired() {
 func (c *EEBus) productionWriteApprovalRequired() {
 	for msg, limit := range c.cs.CsLPPInterface.PendingProductionLimits() {
 		c.log.DEBUG.Println("CS LPP PendingProductionLimit:", msg, limit)
-		if limit.Value > 0 {
-			c.cs.CsLPPInterface.ApproveOrDenyProductionLimit(msg, false, "positive limit")
+		if invalidLimit(-limit.Value) {
+			c.cs.CsLPPInterface.ApproveOrDenyProductionLimit(msg, false, "invalid limit")
 			continue
 		}
 
@@ -211,16 +212,32 @@ func (c *EEBus) productionWriteApprovalRequired() {
 	}
 }
 
-// approveDeviceConfigurations approves all pending device configuration writes,
-// preserving the automatic behaviour of eebus-go <= v0.7.0
+// approveDeviceConfigurations approves pending device configuration writes,
+// denying those that state an invalid failsafe limit
 func (c *EEBus) approveDeviceConfigurations(
 	pending map[model.MsgCounterType][]ucapi.PendingDeviceConfiguration,
 	approve func(msgCounter model.MsgCounterType, approve bool, reason string),
 ) {
 	for msg, configs := range pending {
+		if slices.ContainsFunc(configs, invalidFailsafeLimit) {
+			c.log.ERROR.Println("denying device configuration write:", msg, configs)
+			approve(msg, false, "invalid limit")
+			continue
+		}
+
 		c.log.DEBUG.Println("approving device configuration write:", msg, configs)
 		approve(msg, true, "")
 	}
+}
+
+// invalidFailsafeLimit reports whether a configuration write states an invalid failsafe limit
+func invalidFailsafeLimit(config ucapi.PendingDeviceConfiguration) bool {
+	switch config.KeyName {
+	case model.DeviceConfigurationKeyNameTypeFailsafeConsumptionActivePowerLimit,
+		model.DeviceConfigurationKeyNameTypeFailsafeProductionActivePowerLimit:
+		return config.Value != nil && config.Value.ScaledNumber != nil && invalidLimit(config.Value.ScaledNumber.GetValue())
+	}
+	return false
 }
 
 func (c *EEBus) updateFailsafeConsumptionActivePowerLimit() {
@@ -230,8 +247,8 @@ func (c *EEBus) updateFailsafeConsumptionActivePowerLimit() {
 		return
 	}
 
-	if limit < 0 {
-		c.log.ERROR.Printf("CS LPC FailsafeConsumptionActivePowerLimit: invalid negative limit: %.0fW", limit)
+	if invalidLimit(limit) {
+		c.log.ERROR.Printf("CS LPC FailsafeConsumptionActivePowerLimit: invalid limit: %.0fW", limit)
 		return
 	}
 
@@ -248,8 +265,8 @@ func (c *EEBus) updateFailsafeProductionActivePowerLimit() {
 		return
 	}
 
-	if limit < 0 {
-		c.log.ERROR.Printf("CS LPP FailsafeProductionActivePowerLimit: invalid negative limit: %.0fW", limit)
+	if invalidLimit(limit) {
+		c.log.ERROR.Printf("CS LPP FailsafeProductionActivePowerLimit: invalid limit: %.0fW", limit)
 		return
 	}
 

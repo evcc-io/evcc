@@ -1,10 +1,12 @@
 package eebus
 
 import (
+	"math"
 	"testing"
 
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/mocks"
+	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,6 +26,8 @@ func TestLimitsValidate(t *testing.T) {
 		"failsafe consumption":    {FailsafeConsumptionActivePowerLimit: -1},
 		"production nominal":      {ProductionNominalMax: -1},
 		"failsafe production":     {FailsafeProductionActivePowerLimit: new(-1.0)},
+		"not a number":            {ProductionNominalMax: math.NaN()},
+		"infinite":                {FailsafeConsumptionActivePowerLimit: math.Inf(1)},
 	} {
 		assert.Error(t, l.validate(), name)
 	}
@@ -60,4 +64,19 @@ func TestRemoteLimitsWithInvalidSign(t *testing.T) {
 	lpp.EXPECT().ProductionLimit().Return(ucapi.LoadLimit{Value: -1000, IsActive: true}, nil).Once()
 	c.updateProductionLimit()
 	assert.Equal(t, -1000.0, c.productionLimit.Value)
+}
+
+func TestInvalidFailsafeLimit(t *testing.T) {
+	config := func(key model.DeviceConfigurationKeyNameType, value float64) ucapi.PendingDeviceConfiguration {
+		return ucapi.PendingDeviceConfiguration{
+			KeyName: key,
+			Value:   &model.DeviceConfigurationKeyValueValueType{ScaledNumber: model.NewScaledNumberType(value)},
+		}
+	}
+
+	assert.True(t, invalidFailsafeLimit(config(model.DeviceConfigurationKeyNameTypeFailsafeConsumptionActivePowerLimit, -1000)))
+	assert.True(t, invalidFailsafeLimit(config(model.DeviceConfigurationKeyNameTypeFailsafeProductionActivePowerLimit, -1000)))
+	assert.False(t, invalidFailsafeLimit(config(model.DeviceConfigurationKeyNameTypeFailsafeProductionActivePowerLimit, 1000)))
+	assert.False(t, invalidFailsafeLimit(config(model.DeviceConfigurationKeyNameTypeFailsafeDurationMinimum, -1)))
+	assert.False(t, invalidFailsafeLimit(ucapi.PendingDeviceConfiguration{}))
 }

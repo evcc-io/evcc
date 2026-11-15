@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -69,7 +70,12 @@ type Limits struct {
 	FailsafeDurationMinimum time.Duration
 }
 
-// validate rejects negative limits, all limits are configured as positive watts
+// invalidLimit reports whether a limit stated as positive watts is negative or not finite
+func invalidLimit(limit float64) bool {
+	return limit < 0 || math.IsNaN(limit) || math.IsInf(limit, 0)
+}
+
+// validate checks the configured limits, which are all positive watts
 func (l Limits) validate() error {
 	limits := map[string]float64{
 		"contractualconsumptionnominalmax":    l.ContractualConsumptionNominalMax,
@@ -81,7 +87,7 @@ func (l Limits) validate() error {
 	}
 
 	for name, limit := range limits {
-		if limit < 0 {
+		if invalidLimit(limit) {
 			return fmt.Errorf("invalid %s: %.0fW", name, limit)
 		}
 	}
@@ -137,8 +143,11 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 
 		failsafeDuration:         limits.FailsafeDurationMinimum,
 		failsafeConsumptionLimit: limits.FailsafeConsumptionActivePowerLimit,
-		failsafeProductionLimit:  limits.FailsafeProductionActivePowerLimit,
 		productionNominalMax:     limits.ProductionNominalMax,
+	}
+
+	if limit := limits.FailsafeProductionActivePowerLimit; limit != nil {
+		c.failsafeProductionLimit = new(*limit)
 	}
 
 	if err := inst.RegisterDevice(ski, "", c); err != nil {

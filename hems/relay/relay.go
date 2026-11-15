@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -77,7 +78,7 @@ func NewRelay(site site.API, w1 func() (bool, error), passthrough func(bool) err
 	if maxPower == 0 {
 		return nil, errors.New("missing power limit")
 	}
-	if maxPower < 0 {
+	if maxPower < 0 || math.IsNaN(maxPower) || math.IsInf(maxPower, 0) {
 		return nil, fmt.Errorf("invalid power limit: %.0fW", maxPower)
 	}
 
