@@ -208,49 +208,48 @@ render: |
               body: '{"data":"0306044f0002390e"}' # write register 41104 (mode) = 2 (normal)
             - source: const
               value: 1
-              set:
+              set: &setdefine
                 source: go
-                <<: &setdefine
-                  in:
-                    - name: schedule
-                      type: string
-                      config:
-                        source: http
-                        uri: http://{{ .host }}:8484/getdefine.cgi
-                        jq: 'if type == "object" and has("Pin") then .Pin = "__PIN__" else error("missing Pin field") end | tojson'
-                    - name: charge
-                      type: float
-                      config:
-                        source: modbus
-                        {{- include "modbus" . | indent 22 }}
-                        register:
-                          address: {{ if eq .battery "2" }}1749{{ else }}1616{{ end }} # 31750/31617 BMS2/1 battery voltage (0.01 V)
-                          type: input
-                          decode: uint16nan
-                        scale: 0.3 # 30 A * 0.01 V
-                  out:
-                    - name: frame
-                      type: string
-                      config:
-                        source: http
-                        uri: http://{{ .host }}:8484/setting.cgi
-                        method: POST
-                        timeout: 20s
-                        headers:
-                          Content-Type: application/json
-                        body: '${frame}'
-                  script: |
-                    import "fmt"
-                    import "strings"
-                    pin := int(charge + 0.5)
-                    if batteryMode == 4 {
-                      pin = 0
-                    }
-                    updated := strings.Replace(schedule, `"Pin":"__PIN__"`, fmt.Sprintf(`"Pin":%d`, pin), 1)
-                    if updated == schedule {
-                      panic("missing Pin field in stick schedule")
-                    }
-                    fmt.Sprintf(`{"value":%s,"device":4,"action":"setdefine"}`, updated)
+                in:
+                  - name: schedule
+                    type: string
+                    config:
+                      source: http
+                      uri: http://{{ .host }}:8484/getdefine.cgi
+                      jq: 'if type == "object" and has("Pin") then .Pin = "__PIN__" else error("missing Pin field") end | tojson'
+                  - name: charge
+                    type: float
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: {{ if eq .battery "2" }}1749{{ else }}1616{{ end }} # 31750/31617 BMS2/1 battery voltage (0.01 V)
+                        type: input
+                        decode: uint16nan
+                      scale: 0.3 # 30 A * 0.01 V
+                out:
+                  - name: frame
+                    type: string
+                    config:
+                      source: http
+                      uri: http://{{ .host }}:8484/setting.cgi
+                      method: POST
+                      timeout: 20s
+                      headers:
+                        Content-Type: application/json
+                      body: '${frame}'
+                script: |
+                  import "fmt"
+                  import "strings"
+                  pin := int(charge + 0.5)
+                  if batteryMode == 4 {
+                    pin = 0
+                  }
+                  updated := strings.Replace(schedule, `"Pin":"__PIN__"`, fmt.Sprintf(`"Pin":%d`, pin), 1)
+                  if updated == schedule {
+                    panic("missing Pin field in stick schedule")
+                  }
+                  fmt.Sprintf(`{"value":%s,"device":4,"action":"setdefine"}`, updated)
       - case: 2 # hold
         set:
           source: sequence
