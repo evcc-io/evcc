@@ -9,6 +9,7 @@ const restart = reactive({
 
 export async function performRestart() {
   restart.restarting = true;
+  restart.navigateHomeAfterRestart = false;
   try {
     await api.post("/system/shutdown");
   } catch (e: any) {

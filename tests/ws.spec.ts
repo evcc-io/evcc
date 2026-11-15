@@ -56,6 +56,8 @@ test("stay offline until api is ready", async ({ page }) => {
   const offline = page.getByTestId("offline-indicator");
 
   await page.goto("/#/config");
+  // initial state received
+  await expect(page.getByTestId("generalconfig-network")).toContainText(new URL(baseUrl()).port);
   await expect(offline).toHaveAttribute("aria-hidden", "true");
 
   // server restarted, devices initializing
