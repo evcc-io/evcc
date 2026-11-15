@@ -139,11 +139,8 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 
 		failsafeDuration:         limits.FailsafeDurationMinimum,
 		failsafeConsumptionLimit: limits.FailsafeConsumptionActivePowerLimit,
+		failsafeProductionLimit:  limits.FailsafeProductionActivePowerLimit,
 		productionNominalMax:     limits.ProductionNominalMax,
-	}
-
-	if limit := limits.FailsafeProductionActivePowerLimit; limit != nil {
-		c.failsafeProductionLimit = new(*limit)
 	}
 
 	if err := inst.RegisterDevice(ski, "", c); err != nil {
