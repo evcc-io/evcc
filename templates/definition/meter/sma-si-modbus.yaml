@@ -147,22 +147,4 @@ render: |
                 address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
                 type: writemultiple
                 decode: uint32
-          - source: const
-            value: {{ .maxchargepower }} # charging unrestricted
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40795 # Maximale Batterieladeleistung
-                type: writemultiple
-                decode: uint32
-          - source: const
-            value: 0 # no discharging 
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40799 # Maximale Batterieentladeleistung
-                type: writemultiple
-                decode: uint32
   {{- include "battery-params" . }}
