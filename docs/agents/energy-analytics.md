@@ -106,6 +106,18 @@ Known data quality traits that are accepted, not fixed:
 - Battery counters with coarse resolution can show cumulative discharge above charge. No efficiency figure is derived from them. Throughput and SoC are fine.
 - Entities have different "valid since" dates. Autarky without a grid meter, or savings before tariffs were persisted, is simply absent or covers less energy.
 
+## Daily rollup
+
+Reading every slot of a month or year is too slow on small devices, so completed local days are summed up once and stored (`core/metrics/daily.go`).
+
+- `meters_daily` holds the energy and grid cost sums per entity and day. `flows_daily` holds the attribution of the day as JSON, one row per rolled up day even without data. The newest row marks how far the rollup got.
+- Day and month aggregates and the flows read whole rolled up days from these tables. Everything else comes from the slots: the current day, partial days at the edges of a period, 15 minute and hourly aggregates.
+- A day is rolled up once its slots cannot change anymore (`dailyDelay`). The rollup runs in the background at startup. A read rolls up at most the next chunk of days and never waits for a running rollup, it uses the slots for the days that are missing. A failed rollup does not fail the read.
+- Attribution stays per slot. A day stores the attributed sums, which add up over days. Never attribute daily sums.
+- A write to a completed day marks the rollup stale from that day on (`markDaily`): slots, tariffs, deletes, a meter regrouped as consumer. Readers stop using the stale days at once, the next rollup drops and rebuilds them. A rollup chunk that such a write arrived for while it ran is discarded. Slots edited outside of evcc need both tables cleared.
+- The rollup is dropped completely when the newest day is no local midnight anymore (time zone change). Clear both tables in `SetupSchema` when attribution, pricing or the stored columns change.
+- All buckets are computed in Go from the local wall clock and passed to SQL as bounds. SQL never converts to local time. A day starts at the first instant of the local date, which is not midnight where daylight saving skips it. The hour repeated when daylight saving ends is one bucket.
+
 ## Tariff aggregation for charts
 
 The tariff read path can aggregate slots per hour, day or month, returning the mean plus min and max per bucket. These aggregates are display context only. Cost figures always come from the slot-level model above.

@@ -51,7 +51,10 @@ func DeleteTariffs(from, to time.Time, usage string) (int64, error) {
 
 	if usage == "" {
 		res := inRange().Delete(new(tariffValue))
-		return res.RowsAffected, res.Error
+		if res.Error != nil {
+			return 0, res.Error
+		}
+		return res.RowsAffected, invalidateDaily(from.Unix())
 	}
 
 	// guards the column interpolated below
@@ -70,8 +73,11 @@ func DeleteTariffs(from, to time.Time, usage string) (int64, error) {
 	err := inRange().
 		Where("grid IS NULL AND feedin IS NULL AND co2 IS NULL AND temperature IS NULL").
 		Delete(new(tariffValue)).Error
+	if err != nil {
+		return 0, err
+	}
 
-	return res.RowsAffected, err
+	return res.RowsAffected, invalidateDaily(from.Unix())
 }
 
 // PersistTariffs stores the tariff values at the given 15min boundary, nil values omitted
@@ -80,13 +86,18 @@ func PersistTariffs(ts time.Time, grid, feedin, co2, temperature *float64) error
 		return nil
 	}
 
-	return db.Instance.Clauses(clause.OnConflict{DoNothing: true}).Create(&tariffValue{
+	if err := db.Instance.Clauses(clause.OnConflict{DoNothing: true}).Create(&tariffValue{
 		Timestamp:   ts.Unix(),
 		Grid:        grid,
 		FeedIn:      feedin,
 		Co2:         co2,
 		Temperature: temperature,
-	}).Error
+	}).Error; err != nil {
+		return err
+	}
+
+	markDaily(ts.Unix())
+	return nil
 }
 
 // TariffSlot is one persisted 15 minute slot of tariff values, or the average
@@ -118,14 +129,26 @@ func QueryTariffs(from, to time.Time, aggregate string) ([]TariffSlot, error) {
 	if aggregate == "" || aggregate == "15m" {
 		tx = tx.Select("ts, grid, feedin AS feed_in, co2, temperature")
 	} else {
-		format, ok := aggregateFormats[aggregate]
-		if !ok {
+		if _, ok := aggregateStarts[aggregate]; !ok {
 			return nil, fmt.Errorf("invalid aggregate: %s", aggregate)
 		}
-		tx = tx.Select(`MIN(ts) AS ts,
-			AVG(grid) AS grid, MIN(grid) AS grid_min, MAX(grid) AS grid_max,
-			AVG(feedin) AS feed_in, MIN(feedin) AS feed_in_min, MAX(feedin) AS feed_in_max`).
-			Group(fmt.Sprintf(`strftime('%s', ts, 'unixepoch', 'localtime')`, format))
+
+		var err error
+		from, to, err = closeBounds(from, to, func() (int64, int64, error) {
+			var r struct{ First, Last int64 }
+			err := db.Instance.Table("tariffs").Select("COALESCE(MIN(ts), 0) AS first, COALESCE(MAX(ts), 0) AS last").Scan(&r).Error
+			return r.First, r.Last, err
+		})
+		if err != nil || !from.Before(to) {
+			return nil, err
+		}
+
+		tx = db.Instance.Raw(`WITH b(s, e) AS (VALUES ` + bucketValues(buckets(from, to, aggregate)) + `)
+			SELECT MIN(t.ts) AS ts,
+				AVG(t.grid) AS grid, MIN(t.grid) AS grid_min, MAX(t.grid) AS grid_max,
+				AVG(t.feedin) AS feed_in, MIN(t.feedin) AS feed_in_min, MAX(t.feedin) AS feed_in_max
+			FROM b CROSS JOIN tariffs t ON t.ts >= b.s AND t.ts < b.e
+			GROUP BY b.s ORDER BY b.s`)
 	}
 
 	var res []TariffSlot

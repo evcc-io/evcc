@@ -62,6 +62,11 @@ func createEntity(group, name, title string) (entity, error) {
 		var prev entity
 		if db.Instance.Where(`"group" = ? AND name = ?`, Meter, name).Limit(1).Find(&prev).RowsAffected > 0 {
 			db.Instance.Model(&prev).UpdateColumn("group", Consumer)
+
+			// the rolled up flows do not know the consumer yet
+			if err := invalidateDaily(0); err != nil {
+				return entity{}, err
+			}
 		}
 	}
 

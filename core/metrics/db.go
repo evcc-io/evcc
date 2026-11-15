@@ -130,7 +130,11 @@ func SetupSchema() error {
 		}
 	}
 
-	return db.Instance.AutoMigrate(new(meter))
+	if err := db.Instance.AutoMigrate(new(meter), new(energySum), new(flowDay)); err != nil {
+		return err
+	}
+
+	return loadDaily()
 }
 
 // OnPersist, if set, is called with the slot start after a slot is written.
@@ -149,6 +153,7 @@ func persist(entity entity, ts time.Time, energy, returnEnergy float64, socTemp 
 	}).Error; err != nil {
 		return err
 	}
+	markDaily(slot.Unix())
 	if OnPersist != nil {
 		OnPersist(slot)
 	}

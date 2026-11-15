@@ -20,21 +20,21 @@ type PeriodStats struct {
 // stats derives the period values from the metered energy and the attributed flows
 func (e *flowEntity) stats() PeriodStats {
 	var sum flowSum
-	for _, f := range e.flows {
-		sum.cost += f.cost
-		sum.priced += f.priced
+	for _, f := range e.Flows {
+		sum.Cost += f.Cost
+		sum.Priced += f.Priced
 	}
 
 	// pv and battery are flowSources[0] and [1]
 	res := PeriodStats{
-		Energy:        math.Round(e.metered * 1e3),
-		PVEnergy:      math.Round(e.flows[0].energy * 1e3),
-		BatteryEnergy: math.Round(e.flows[1].energy * 1e3),
+		Energy:        math.Round(e.Metered * 1e3),
+		PVEnergy:      math.Round(e.Flows[0].Energy * 1e3),
+		BatteryEnergy: math.Round(e.Flows[1].Energy * 1e3),
 	}
-	if sum.priced > 0 {
-		price := sum.cost / sum.priced
+	if sum.Priced > 0 {
+		price := sum.Cost / sum.Priced
 		res.PricePerKWh = &price
-		res.Price = &sum.cost
+		res.Price = &sum.Cost
 	}
 	return res
 }
