@@ -152,8 +152,8 @@ func (e *flowEntity) merge(o *flowEntity) {
 }
 
 // flowAcc is the unrounded attribution of a period. Periods add up, which
-// lets the daily rollup store one per day: bump dailyVersion when a field
-// here or in FlowCost and FlowCo2 changes.
+// lets the daily rollup store one per day. A change to a field here or in
+// FlowCost and FlowCo2 needs the rollup rebuilt, see loadDaily.
 type flowAcc struct {
 	Flows     [3][4]flowSum       `json:"flows"`    // per flowSources and flowSinks entry
 	Entities  map[int]*flowEntity `json:"entities"` // consumers and loadpoints by entity id

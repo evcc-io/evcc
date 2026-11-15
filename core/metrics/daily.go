@@ -40,9 +40,8 @@ func (energySum) TableName() string {
 // flowDay is the flow attribution of a local day. A row exists for every
 // rolled up day, the newest marks how far the rollup got.
 type flowDay struct {
-	Day     int64  `gorm:"column:day;primaryKey;autoIncrement:false"`
-	Version int    `gorm:"column:version"`
-	Data    string `gorm:"column:data"` // json flowAcc
+	Day  int64  `gorm:"column:day;primaryKey;autoIncrement:false"`
+	Data string `gorm:"column:data"` // json flowAcc
 }
 
 func (flowDay) TableName() string {
@@ -50,10 +49,6 @@ func (flowDay) TableName() string {
 }
 
 const (
-	// bump to rebuild the rollup after a change to what a day sums up to:
-	// attribution, pricing, the fields of flowAcc or the stored columns
-	dailyVersion = 1
-
 	// a day is complete once its slots cannot change anymore: the last slot is
 	// written when the next one starts, the rest is margin for late writes
 	dailyDelay = 2 * time.Hour
@@ -93,20 +88,21 @@ func dailyFinal() time.Time {
 	return dayStart(dailyNow().Add(-dailyDelay))
 }
 
-// loadDaily restores how far the rollup got. A rollup of another version or
-// time zone is dropped.
+// loadDaily restores how far the rollup got. A rollup of another time zone
+// is dropped. The first change to what a day sums up to needs the same: add
+// a version to flowDay and drop the rollup here when it differs.
 func loadDaily() error {
 	dailyEnd.Store(0)
 	dailyDirty.Store(dailyClean)
 
 	var last flowDay
-	tx := db.Instance.Select("day, version").Order("day DESC").Limit(1).Find(&last)
+	tx := db.Instance.Select("day").Order("day DESC").Limit(1).Find(&last)
 	if tx.Error != nil {
 		return tx.Error
 	}
 
 	day := time.Unix(last.Day, 0)
-	if tx.RowsAffected == 0 || last.Version != dailyVersion || !day.Equal(dayStart(day)) {
+	if tx.RowsAffected == 0 || !day.Equal(dayStart(day)) {
 		return deleteDaily(db.Instance, 0, dailyClean)
 	}
 
@@ -261,7 +257,7 @@ func rollup(end int64, final time.Time) (int64, error) {
 		if err != nil {
 			return end, err
 		}
-		flows = append(flows, flowDay{Day: d[0], Version: dailyVersion, Data: string(data)})
+		flows = append(flows, flowDay{Day: d[0], Data: string(data)})
 	}
 
 	dailyMu.Lock()

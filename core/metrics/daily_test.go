@@ -95,18 +95,6 @@ func TestDailyRollup(t *testing.T) {
 	slots -= 4
 	assert.Equal(t, slots, pv())
 	require.Equal(t, to.Unix(), dailyEnd.Load())
-
-	// a rollup of another version is dropped and rebuilt
-	require.NoError(t, db.Instance.Model(new(flowDay)).Where("1 = 1").Update("version", dailyVersion+1).Error)
-	require.NoError(t, loadDaily())
-	require.Zero(t, dailyEnd.Load())
-
-	var sums int64
-	require.NoError(t, db.Instance.Model(new(energySum)).Count(&sums).Error)
-	require.Zero(t, sums)
-
-	assert.Equal(t, slots, pv())
-	require.Equal(t, to.Unix(), dailyEnd.Load())
 }
 
 func TestBuckets(t *testing.T) {
