@@ -4,6 +4,7 @@ import api from "./api";
 const restart = reactive({
   restartNeeded: false,
   restarting: false,
+  navigateHomeAfterRestart: false,
 });
 
 export async function performRestart() {
