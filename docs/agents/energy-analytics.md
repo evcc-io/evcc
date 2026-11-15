@@ -98,7 +98,8 @@ Principles:
 - **Show what is covered.** Cost and CO2 tiles print the priced energy they explain. Without any tariff data they show a "no price data" state with a link to tariff configuration instead of zeros.
 - **Drop, do not stretch.** Attribution never scales a source up to meet a sink. Unexplained energy disappears from ratios rather than being assigned to grid by default.
 - **Clamp residuals at zero.** "Others" (home minus tracked consumers) is clamped per slot so meter noise or a consumer briefly exceeding home never produces negative consumption.
-- **Slot gaps are tolerated in sums.** A day with 91 to 95 slots after a restart sums fine. Recovered slots (downtime energy written into one slot) are kept in sums but excluded from profile averages, where they would distort the shape.
+- **Short slot gaps are interpolated once, at write time.** After a gap of up to 4 slots (a restart) the collector runs `fill` (`core/metrics/fill.go`) and persists linearly interpolated slots. Readers never interpolate energy. `meters.recovered` holds the slot origin: 0 measured, 1 recovered (catch-up slot holding the meter diff across downtime), 2 interpolated. A recovered slot after a short gap is shared evenly with the gap instead, so no energy is counted twice.
+- **Longer downtime stays empty.** Sums tolerate missing slots. Recovered slots are kept in sums but excluded from profile averages, where they would distort the shape. Interpolated slots count in both.
 
 Known data quality traits that are accepted, not fixed:
 

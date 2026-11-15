@@ -314,15 +314,20 @@ func TestCollectorRecoversDowntimeViaMeterReadings(t *testing.T) {
 
 	var m meter
 	require.NoError(t, db.Instance.Where("meter = ? AND ts = ?", col2.entity.Id, 90*60).First(&m).Error)
-	require.InDelta(t, 2.5, m.Energy, 1e-10)
-	require.InDelta(t, 1.0, m.ReturnEnergy, 1e-10)
-	require.True(t, m.Recovered, "catchup slot must be flagged recovered")
-
-	// the recovered slot is excluded from the household profile
+	require.Equal(t, slotRecovered, m.Recovered, "catchup slot must be flagged recovered")
 	require.False(t, col2.restored, "recovery flag cleared after first slot")
-	var recovered int64
-	require.NoError(t, db.Instance.Model(new(meter)).Where("meter = ? AND recovered", col2.entity.Id).Count(&recovered).Error)
-	require.EqualValues(t, 1, recovered, "only the catchup slot is recovered")
+
+	// the catchup slot is shared evenly with the 4 missing slots before it
+	var filled []meter
+	require.NoError(t, db.Instance.Where("meter = ? AND ts > ?", col2.entity.Id, 15*60).Order("ts").Find(&filled).Error)
+	require.Len(t, filled, 5)
+	for _, s := range filled[:4] {
+		require.Equal(t, slotInterpolated, s.Recovered)
+		require.InDelta(t, 0.5, s.Energy, 1e-10)
+		require.InDelta(t, 0.2, s.ReturnEnergy, 1e-10)
+	}
+	require.InDelta(t, 0.5, m.Energy, 1e-10)
+	require.InDelta(t, 0.2, m.ReturnEnergy, 1e-10)
 
 	// readings advanced with the persisted slot
 	require.NoError(t, db.Instance.First(&e, col2.entity.Id).Error)
@@ -372,7 +377,7 @@ func TestCollectorRecoveryWithinCurrentSlot(t *testing.T) {
 	var m meter
 	require.NoError(t, db.Instance.Where("meter = ? AND ts = ?", col2.entity.Id, 30*60).First(&m).Error)
 	require.InDelta(t, 2.5, m.Energy, 1e-10)
-	require.False(t, m.Recovered, "contiguous restart with meter totals is not recovered")
+	require.Equal(t, slotMeasured, m.Recovered, "contiguous restart with meter totals is not recovered")
 
 	// no slot is excluded from the household profile
 	var recovered int64
@@ -706,6 +711,9 @@ func TestCollectorKeepsRestoreForSurvivingDirection(t *testing.T) {
 
 	var m meter
 	require.NoError(t, db.Instance.Where("meter = ? AND ts = ?", col2.entity.Id, 90*60).First(&m).Error)
-	require.InDelta(t, 10.0, m.Energy, 1e-10)
-	require.True(t, m.Recovered, "catchup slot must be flagged recovered")
+	require.Equal(t, slotRecovered, m.Recovered, "catchup slot must be flagged recovered")
+
+	var total float64
+	require.NoError(t, db.Instance.Model(new(meter)).Where("meter = ? AND ts > ?", col2.entity.Id, 15*60).Select("sum(energy)").Scan(&total).Error)
+	require.InDelta(t, 10.0, total, 1e-10)
 }

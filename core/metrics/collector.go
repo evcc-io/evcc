@@ -27,6 +27,7 @@ type Collector struct {
 	started    time.Time
 	restored   bool      // meter readings seeded from db
 	lastSlot   time.Time // last persisted slot at restore, for contiguity check
+	gap        bool      // slots may be missing before the next persisted one
 	statsCache EnergyStats
 }
 
@@ -39,6 +40,7 @@ func NewCollector(group, name, title string, opt ...func(*Accumulator)) (*Collec
 	c := &Collector{
 		entity: entity,
 		accu:   NewAccumulator(opt...),
+		gap:    true,
 	}
 
 	// seed saved readings so the first delta covers the downtime
@@ -111,6 +113,7 @@ func (c *Collector) process(fun func()) error {
 // slot, leaving it untouched within the current one.
 func (c *Collector) advanceSlot(now time.Time) error {
 	slotStart := now.Truncate(tariff.SlotDuration)
+	var persisted bool
 
 	switch {
 	case c.started.IsZero():
@@ -134,6 +137,9 @@ func (c *Collector) advanceSlot(now time.Time) error {
 			if err := c.persist(recovered); err != nil {
 				return err
 			}
+			persisted = true
+		} else {
+			c.gap = true
 		}
 
 		c.restored = false // only the first slot inherits recovery energy
@@ -146,6 +152,13 @@ func (c *Collector) advanceSlot(now time.Time) error {
 	c.accu.Energy = 0
 	c.accu.ReturnEnergy = 0
 	c.accu.SocTemp = nil
+
+	if persisted && c.gap {
+		if err := fill(c.entity); err != nil {
+			return err
+		}
+		c.gap = false
+	}
 	return nil
 }
 

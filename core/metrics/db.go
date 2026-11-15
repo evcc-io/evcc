@@ -17,8 +17,8 @@ type meter struct {
 	Entity       entity   `json:"-" gorm:"foreignkey:Meter;references:Id"`
 	Energy       float64  `json:"energy" gorm:"column:energy"`
 	ReturnEnergy float64  `json:"returnEnergy" gorm:"column:return_energy"`
-	SocTemp      *float64 `json:"socTemp,omitempty" gorm:"column:soc_temp"`    // at start of slot
-	Recovered    bool     `json:"recovered,omitempty" gorm:"column:recovered"` // downtime catchup slot, excluded from profile
+	SocTemp      *float64 `json:"socTemp,omitempty" gorm:"column:soc_temp"`                 // at start of slot
+	Recovered    int      `json:"recovered,omitempty" gorm:"column:recovered;type:numeric"` // slot origin, slotMeasured etc
 }
 
 type entity struct {
@@ -139,13 +139,17 @@ var OnPersist func(slot time.Time)
 // persist stores a completed 15min slot
 func persist(entity entity, ts time.Time, energy, returnEnergy float64, socTemp *float64, recovered bool) error {
 	slot := ts.Truncate(tariff.SlotDuration)
+	origin := slotMeasured
+	if recovered {
+		origin = slotRecovered
+	}
 	if err := db.Instance.Create(&meter{
 		Meter:        entity.Id,
 		Timestamp:    slot.Unix(),
 		Energy:       energy,
 		ReturnEnergy: returnEnergy,
 		SocTemp:      socTemp,
-		Recovered:    recovered,
+		Recovered:    origin,
 	}).Error; err != nil {
 		return err
 	}
