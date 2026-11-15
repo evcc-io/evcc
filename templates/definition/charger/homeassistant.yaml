@@ -25,10 +25,6 @@ params:
     required: true
   - name: insecure
   - name: timeout
-    advanced: true
-    help:
-      en: Increase if the integration only responds after the device confirmed a command
-      de: Erhöhen, wenn die Integration erst antwortet, nachdem das Gerät einen Befehl bestätigt hat
   - name: status
     description:
       de: Ladestatus-Sensor
