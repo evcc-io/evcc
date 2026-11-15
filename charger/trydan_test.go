@@ -15,7 +15,9 @@ import (
 // restoring the previous value afterwards so tests don't leak global state between them.
 func withSponsor(t *testing.T) {
 	t.Helper()
-	sponsor.SetSubjectForTest(t, "foo")
+	orig := sponsor.Subject
+	sponsor.Subject = "foo"
+	t.Cleanup(func() { sponsor.Subject = orig })
 }
 
 func trydanTestServerWithBody(t *testing.T, body string) *httptest.Server {

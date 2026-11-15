@@ -16,7 +16,6 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -24,8 +23,6 @@ import (
 // enableAutomatic puts the optimizer in control for the duration of the test
 func enableAutomatic(t *testing.T) {
 	t.Helper()
-
-	sponsor.SetSubjectForTest(t, "test")
 
 	for _, k := range []string{keys.Experimental, keys.Optimizer} {
 		settings.SetBool(k, true)
