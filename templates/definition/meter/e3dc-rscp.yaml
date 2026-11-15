@@ -61,7 +61,7 @@ params:
       en: Discharge limit in W
     help:
       de: Limitiert die Entladeleistung im 'Halten' Batteriemodus
-      en: Limits discharge power in 'Hold' battery mode
+      en: Limits discharge power in 'holddischarge' battery mode
     type: int
     advanced: true
     usages: ["battery"]

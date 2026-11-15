@@ -15,6 +15,15 @@ CREATE TABLE `meters` (
 );
 CREATE UNIQUE INDEX `meters_meter_ts` ON `meters`(`meter`, `ts`);
 
+CREATE TABLE `tariffs` (
+  `ts` integer,
+  `grid` real,
+  `feedin` real,
+  `co2` real,
+  `temperature` real
+);
+CREATE UNIQUE INDEX `idx_tariffs_timestamp` ON `tariffs`(`ts`);
+
 -- entities (name = stable id, title = display label)
 -- home is a virtual entity; evcc resets its title to "home" on boot
 INSERT INTO `entities` (id, `group`, name, title) VALUES (1, 'home', 'home', 'home');
@@ -225,3 +234,24 @@ INSERT INTO `meters` VALUES (13, 1776074400, 0, 0.3);
 INSERT INTO `meters` VALUES (13, 1776075300, 0, 0.3);
 INSERT INTO `meters` VALUES (13, 1776076200, 0, 0.3);
 INSERT INTO `meters` VALUES (13, 1776077100, 0, 0.3);
+
+-- 2026-04-14 → consumers priced by their own slots. Solar covers home at noon
+-- (12:00, 12:15 CEST) when Kitchen runs, grid at night (20:00, 20:15) when
+-- Office runs. Grid 0.30, feed-in 0.10 all day: Kitchen 10 ct, Office 30 ct,
+-- Others (half and half) 20 ct, the house average 20 ct.
+INSERT INTO `meters` VALUES (4, 1776160800, 0.4, 0);
+INSERT INTO `meters` VALUES (4, 1776161700, 0.4, 0);
+INSERT INTO `meters` VALUES (1, 1776160800, 0.4, 0);
+INSERT INTO `meters` VALUES (1, 1776161700, 0.4, 0);
+INSERT INTO `meters` VALUES (5, 1776160800, 0.2, 0);
+INSERT INTO `meters` VALUES (5, 1776161700, 0.2, 0);
+INSERT INTO `meters` VALUES (2, 1776189600, 0.4, 0);
+INSERT INTO `meters` VALUES (2, 1776190500, 0.4, 0);
+INSERT INTO `meters` VALUES (1, 1776189600, 0.4, 0);
+INSERT INTO `meters` VALUES (1, 1776190500, 0.4, 0);
+INSERT INTO `meters` VALUES (6, 1776189600, 0.2, 0);
+INSERT INTO `meters` VALUES (6, 1776190500, 0.2, 0);
+INSERT INTO `tariffs` VALUES (1776160800, 0.3, 0.1, NULL, NULL);
+INSERT INTO `tariffs` VALUES (1776161700, 0.3, 0.1, NULL, NULL);
+INSERT INTO `tariffs` VALUES (1776189600, 0.3, 0.1, NULL, NULL);
+INSERT INTO `tariffs` VALUES (1776190500, 0.3, 0.1, NULL, NULL);

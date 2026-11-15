@@ -315,11 +315,12 @@ func (d StatusLatestResponseCCS) SoC() (float64, error) {
 
 func (d StatusLatestResponseCCS) Status() (api.ChargeStatus, error) {
 	if d.ResMsg.State.Vehicle.Green != nil {
-		if d.ResMsg.State.Vehicle.Green.ChargingInformation.ConnectorFastening.State == 1 {
-			return api.StatusB, nil
-		}
+		// fastening state 1 also holds while charging, see Hyundai-Kia-Connect/hyundai_kia_connect_api#1545
 		if d.ResMsg.State.Vehicle.Green.ChargingInformation.Charging.RemainTime > 0 {
 			return api.StatusC, nil
+		}
+		if d.ResMsg.State.Vehicle.Green.ChargingInformation.ConnectorFastening.State == 1 {
+			return api.StatusB, nil
 		}
 		return api.StatusA, nil
 	}

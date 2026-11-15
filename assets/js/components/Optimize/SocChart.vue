@@ -111,7 +111,7 @@ export default defineComponent({
 					min: 0,
 					max: 100,
 					position: "right",
-					interval: 50,
+					interval: 25,
 					axisLabel: {
 						color: colors.muted || "",
 						formatter: (v: number) => this.fmtNumber(v, 0),
@@ -145,10 +145,10 @@ export default defineComponent({
 
 <style scoped>
 .soc-chart {
-	height: 54px;
+	height: 100px;
 	width: 100%;
 }
 .soc-chart--labels {
-	height: 80px;
+	height: 126px;
 }
 </style>

@@ -8,6 +8,7 @@ params:
     choice: ["pv", "battery"]
   - name: modbus
     choice: ["rs485"]
+    id: 1
     baudrate: 115200
     comset: 8N1
   - name: maxacpower

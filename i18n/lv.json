@@ -38,16 +38,16 @@
       "energy": "Enerģija",
       "gridCharge": "tīkla uzlāde",
       "gridDischarge": "tīkla izlāde",
-      "hold": "izlāde bloķēta",
       "holdCharge": "uzlāde bloķēta",
+      "holdDischarge": "izlāde bloķēta",
       "ofTotal": "no {total}",
       "power": "Jauda",
       "soc": "Uzlāde"
     },
     "combined": "Kombinēti",
     "config": {
-      "buffer": "Mājas akumulatora enerģiju virs {soc} var izmantot uzlādes punktu atbalstam, un tā aizkavē izslēgšanu viedajā režīmā. Sākt saules uzlādi automātiski {start}.",
-      "bufferNone": "Mājas akumulatora enerģija netiek izmantota uzlādes punktiem. Iestatiet vērtību zem {soc}, lai iespējotu atbalstu.",
+      "buffer": "Mājas akumulatora enerģiju virs {soc} var izmantot uzlādes punktu atbalstam, un tā aizkavē izslēgšanu viedajā režīmā. Sākt saules uzlādi automātiski {start}. Piezīme: “Vienmēr uzlādēt” ignorē šo iestatījumu.",
+      "bufferNone": "Mājas akumulatora enerģija netiek izmantota uzlādes punktiem. Iestatiet vērtību zem {soc}, lai iespējotu atbalstu viedajā režīmā. Piezīme: “Vienmēr uzlādēt” ignorē šo iestatījumu.",
       "bufferStart": {
         "above": "kad akumulators ir virs {soc}",
         "full": "kad akumulators ir pilns",
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Uzlādēt no elektrotīkla",
         "discharge": "Izlādēt tīklā",
-        "hold": "Nepieļaut izlādi",
         "holdcharge": "Apturēt uzlādi",
+        "holddischarge": "Nepieļaut izlādi",
         "normal": "Sekot saules pārpalikumam"
       },
       "empty": "tukšs",
@@ -146,11 +146,13 @@
       "template": "Ražotājs",
       "titleAdd": {
         "charging": "Pievienot lādētāju",
-        "heating": "Sildīšanas ierīces pievienošana"
+        "heating": "Sildīšanas ierīces pievienošana",
+        "switch": "Pievienot pārslēdzamu rozeti"
       },
       "titleEdit": {
         "charging": "Rediģēt lādētāju",
-        "heating": "Rediģēt sildīšanas ierīci"
+        "heating": "Rediģēt sildīšanas ierīci",
+        "switch": "Rediģēt pārslēdzamu rozeti"
       },
       "type": {
         "custom": {
@@ -188,11 +190,20 @@
     "circuits": {
       "addMainCircuit": "Pievienot saknes ķēdi",
       "addSubCircuit": "Pievienot apakšķēdi",
-      "chargingPointsNote": "Piešķiriet uzlādes punktus un sildītājus ķēdei to attiecīgajos iestatījumos.",
+      "assignHere": "Piešķirt šeit",
+      "assignmentFailed": "Neizdevās saglabāt piešķīrumu. Lūdzu, mēģiniet vēlreiz.",
       "description": "Nodrošina, ka visu ķēdei pievienoto uzlādes punktu un sildītāju kopsumma nepārsniedz konfigurētos jaudas un strāvas ierobežojumus. Ķēdes var ligzdot, veidojot hierarhiju.",
+      "destination": "Ķēde {title}",
+      "dragHint": "Velciet uz ķēdi vai pieskarieties, lai atlasītu.",
+      "dropAssign": "Nometiet, lai piešķirtu",
+      "dropRemove": "Nometiet šeit, lai noņemtu no tās ķēdes.",
       "legacyWarning": "Pieejama jauna ķēžu konfigurācija! Noņemiet un saglabājiet savu konfigurāciju šeit, lai izmantotu jauno vadīto procesu. Pēc tam nepieciešama restartēšana.",
       "meterDedicated": "Skaitītājs",
       "meterGrid": "Elektrotīkls",
+      "moveHere": "Pārvietot šeit",
+      "notAssigned": "Nav piešķirts",
+      "selectAssign": "Pieskarieties ķēdei, lai piešķirtu {title}.",
+      "selectMove": "Pieskarieties ķēdei, lai pārvietotu {title}, vai kopējam laukumam, lai to noņemtu.",
       "title": "Slodzes pārvaldība",
       "usableMeters": "Izmantojamās skaitītāju atsauces"
     },
@@ -231,6 +242,15 @@
       "title": "Atdeves ierobežošana",
       "titleAdd": "Pievienot atdeves ierobežošanas ierīci",
       "titleEdit": "Rediģēt atdeves ierobežošanas ierīci"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Pievienot lādētāju",
+        "meter": "Pievienot skaitītāju",
+        "switch": "Pievienot pārslēdzamo rozeti",
+        "tariff": "Pievienot tarifu"
+      },
+      "noNesting": "Ligzdošana ir ierobežota līdz vienam līmenim. Lūdzu, izvēlieties citu opciju."
     },
     "deviceValue": {
       "activeClients": "Aktīvie klienti",
@@ -310,8 +330,16 @@
           "returnEnergy": "Izlādēts (transports)"
         },
         "consumer": {
+          "chargeStatusB": "gaidīšanas režīms",
+          "chargeStatusC": "apsilde",
           "energy": "Patērēts (mājai)",
           "returnEnergy": "Saražots (saules)"
+        },
+        "continuous": {
+          "chargeStatusB": "parastais",
+          "chargeStatusC": "pastiprinājums",
+          "dimmed": "Ierobežota jauda",
+          "enabled": "Pastiprināta jauda"
         },
         "grid": {
           "energy": "Importēts (no tīkla)",
@@ -333,6 +361,7 @@
       "auxMeter": "Pašregulējošs patērētājs",
       "batteryStorage": "Mājas akumulatora",
       "consumer": "Patērētājs",
+      "extMeter": "Papildu skaitītājs",
       "solarSystem": "Saules enerģijas sistēma"
     },
     "editor": {
@@ -383,6 +412,7 @@
       "optional": "neobligāti"
     },
     "general": {
+      "add": "Pievienot",
       "applyAndClose": "Pieņemt un aizvērt",
       "authPerform": "Savienot ar {provider}",
       "authPerformHint": "Atvērsies jaunā cilnē. Atgriezieties šeit, lai turpinātu.",
@@ -394,6 +424,7 @@
       "confirmDisable": "Atspējot šo ierīci? Tā tiks ignorēta pēc nākamās restartēšanas.",
       "confirmEnable": "Vai atkal iespējot šo ierīci?",
       "confirmSave": "Ir nesaglabātas izmaiņas. Saglabāt tagad?",
+      "continue": "Turpināt",
       "copied": "Nokopēts!",
       "copy": "Kopēt",
       "customHelp": "Izveidot lietotāja definētu ierīci, izmantojot evcc spraudņu sistēmu.",
@@ -437,7 +468,7 @@
     },
     "grid": {
       "title": "Tīkla skaitītājs",
-      "titleAdd": "Pievienot tīkla skaitītāju",
+      "titleAdd": "Pievienot tīkla elektrības skaitītāju",
       "titleEdit": "Rediģēt tīkla skaitītāju"
     },
     "hems": {
@@ -495,7 +526,7 @@
         "charging": "Pievienot lādētāju",
         "heating": "Pievienot sildierīci"
       },
-      "addMeter": "Pievienot atsevišķu enerģijas skaitītāju",
+      "addMeter": "Pievienot skaitītāju",
       "advancedConfig": "Paplašinātā konfigurācija",
       "cancel": "Atcelt",
       "chargerError": {
@@ -531,10 +562,31 @@
       "defaultModeKeep": "atstāt kā ir",
       "defaultModeLabel": "Noklusējuma režīms",
       "delete": "Dzēst",
+      "demandPredictor": {
+        "daily": {
+          "description": "Nesenās dienas vidējā vērtība. Ierīcēm ar vienādu modeli katru dienu.",
+          "label": "Dienas vidējais"
+        },
+        "defaultGroup": "Ierīces noklusējums",
+        "description": "Kā optimizators prognozē pieprasījumu pēc iepriekšējā patēriņa.",
+        "label": "Profils",
+        "noTempTariff": "Nepieciešama temperatūras prognoze.",
+        "noTempTariffLink": "Pievienot prognozi",
+        "profilesGroup": "Profili",
+        "temperature": {
+          "description": "Iepriekšējais patēriņš pie līdzīgām āra temperatūrām. Telpu apsildei, piemēram, siltumsūkņiem.",
+          "label": "Temperatūra"
+        },
+        "title": "Pieprasījuma prognoze",
+        "weekday": {
+          "description": "Tās pašas nedēļas dienas vidējā vērtība. Ierīcēm ar nedēļas grafiku, piemēram, ūdens vai baseina sildītājiem.",
+          "label": "Nedēļas diena"
+        }
+      },
       "electricalSubtitle": "Šaubu gadījumā jautājiet elektriķim.",
       "electricalTitle": "Elektrība",
       "energyMeterHelp": "Papildu skaitītājs, ja lādētājam nav iebūvēta skaitītāja.",
-      "energyMeterLabel": "Enerģijas skaitītājs",
+      "energyMeterLabel": "Atsevišķs enerģijas skaitītājs",
       "estimateLabel": "Interpolēt uzlādes līmeni starp API atjauninājumiem",
       "maxCurrentHelp": "Jābūt lielākam par minimālo strāvu.",
       "maxCurrentLabel": "Maksimālā strāva",
@@ -568,16 +620,24 @@
       "priorityLabel": "Prioritāte",
       "save": "Saglabāt",
       "solarShareReset": "Noņemt sliekšņus",
+      "solarTitle": "Rīcība ar saules pārpalikumu",
       "temperatureRangeHelp": "Temperatūras joslas attēlošanas diapazons. Neietekmē vadību.",
       "temperatureRangeTitle": "Temperatūras diapazons",
+      "thresholdDisableDelayHelp": "Aptur, ja ilgāk par {delay} nav pietiekama pārpalikuma.",
       "thresholdDisableDelayLabel": "Izslēgšanas aizkave",
       "thresholdDisableHelpInvalid": "Lūdzu izmantojiet pozitīvu vērtību.",
-      "thresholdDisableHelpPositive": "Apturēt, kad vairāk nekā {power} tiek ņemts no tīkla {delay}.",
+      "thresholdDisableHelpPositive": "Aptur, ja ilgāk par {delay} no tīkla tiek patērēts vairāk nekā {power}.",
       "thresholdDisableLabel": "Izslēgšanas tīkla jauda",
+      "thresholdEnableDelayHelp": "Sāk, kad {delay} ir pietiekams pārpalikums.",
       "thresholdEnableDelayLabel": "Ieslēgšanas aizkave",
       "thresholdEnableHelpInvalid": "Lūdzu izmantojiet negatīvu vērtību.",
-      "thresholdEnableHelpNegative": "Sākt, kad {surplus} pārpalikums ir pieejams {delay}.",
+      "thresholdEnableHelpNegative": "Sāk, tiklīdz {delay} ir pieejams {surplus} pārpalikums.",
       "thresholdEnableLabel": "Ieslēgšanas tīkla jauda",
+      "thresholdsNote": {
+        "charging": "Lai regulētu tīkla patēriņu saules uzlādes laikā, izmantojiet slīdni {slider} uzlādes punkta iestatījumos lapā {page}. Šeit vērtības iestatiet tikai īpašos gadījumos.",
+        "heating": "Lai regulētu tīkla patēriņu saules sildīšanas laikā, izmantojiet slīdni {slider} sildītāja iestatījumos lapā {page}. Šeit vērtības norādiet tikai izņēmuma gadījumos."
+      },
+      "thresholdsSliderDisabled": "Slīdnis {slider} pašlaik ir atspējots, jo vērtības ir iestatītas šeit.",
       "titleAdd": {
         "charging": "Pievienot uzlādes punktu",
         "heating": "Pievienot sildītāju",
@@ -707,10 +767,18 @@
         "grid": "Pievienot tīkla skaitītāju",
         "pv": "Pievienot saules enerģijas skaitītāju"
       },
+      "reuseApply": "Izmantot tā iestatījumus.",
+      "reuseHint": "{device} var izmantot arī kā “{target}”.",
       "save": "Saglabāt",
       "specific": "Specifiskās integrācijas",
       "template": "Ražotājs",
       "titleChoice": "Ko vēlaties pievienot?",
+      "titleExample": {
+        "aux": "Viedais ūdens sildītājs u.c.",
+        "battery": "Pagrabs, garāža, spēkstacija u.c.",
+        "consumer": "Trauku mazgājamā mašīna, veļas mašīna, baseina sūknis u.c.",
+        "pv": "Dienvidu jumts, automašīnu nojume u.c."
+      },
       "titleLabel": "Nosaukums",
       "usage": {
         "aux": "Pašregulējošs patērētājs",
@@ -968,6 +1036,15 @@
         "example": "Jūsu uzlādes cena bija {price}. Jūs ietaupījāt {amount}.",
         "label": "Valūta"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V bez neitrālā vada (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V ar neitrālo vadu (3P4W)",
+        "description": {
+          "3p3w": "Tīkls bez neitrālā vada. Bieži sastopams Norvēģijā un daļā Beļģijas.",
+          "3p4w": "Visizplatītākais tīkls ar neitrālo vadu."
+        },
+        "label": "Tīkla pieslēgums"
+      },
       "siteTitle": {
         "description": "Tiek parādīts galvenajā ekrānā un pārlūkprogrammas cilnē.",
         "label": "Nosaukums"
@@ -981,6 +1058,18 @@
       "descriptionToken": "Kā GitHub Sponsors jūs atrodat savu marķieri {url}. Iesākumam piedāvājam {trialToken}.",
       "enterYourToken": "Jūsu sponsora marķieris",
       "error": "Sponsora marķieris nav derīgs.",
+      "inline": {
+        "applied": "Tokens lietots. Paldies par projekta atbalstu!",
+        "apply": "Lietot",
+        "becomeSponsor": "kļūt par sponsoru",
+        "device": "Šī ierīce pieejama tikai sponsoriem.",
+        "feature": "Šī funkcija pieejama tikai sponsoriem.",
+        "learn": "Uzziniet vairāk un {becomeSponsor}.",
+        "placeholder": "Ielīmēt tokenu",
+        "title": "Nepieciešams sponsora tokens",
+        "trial": "Ātri sāciet darbu.",
+        "trialLink": "Iegūt izmēģinājuma tokenu"
+      },
       "invalid": "nederīgs",
       "labelToken": "Sponsora marķieris",
       "title": "Sponsorēšana",
@@ -1075,7 +1164,8 @@
       "solar": {
         "description": "Saules enerģijas ražošanas prognoze jūsu saules sistēmai. Tiek attēlota saskarnē un nākotnē tiks izmantota optimizācijas algoritmos.",
         "titleAdd": "Pievienot saules enerģijas prognozi",
-        "titleEdit": "Rediģēt saules enerģijas prognozi"
+        "titleEdit": "Rediģēt saules enerģijas prognozi",
+        "titleExample": "Dienvidu jumts, automašīnu nojume u.c."
       },
       "temperature": {
         "description": "Āra temperatūras prognoze jūsu atrašanās vietai. Tiek rādīta saskarnē un izmantota, lai prognozētu sildīšanas pieprasījumu.",
@@ -1085,6 +1175,7 @@
       "template": "Pakalpojumu sniedzējs",
       "title": "Tarifi un prognozes",
       "titleChoice": "Ko vēlaties pievienot?",
+      "titleSub": "Apakštarifs",
       "type": {
         "co2": "CO₂ intensitāte",
         "feedIn": "Tīkla eksporta cena",
@@ -1252,6 +1343,8 @@
       "co2Saved": "Ietaupītais CO₂",
       "co2SavedTooltip": "Salīdzinot ar patērētās {energy} iegūšanu no tīkla.",
       "configure": "Konfigurēt tagad",
+      "energy": "Enerģija",
+      "fromGrid": "{value} no tīkla",
       "noCo2": "Nav CO₂ datu.",
       "noPrice": "Nav cenu datu.",
       "savings": "Ietaupījums",
@@ -1550,7 +1643,8 @@
         "continuousCo2Description": "Atlasa nepārtrauktu viszaļāko laika posmu virkni.",
         "continuousPriceDescription": "Atlasa nepārtrauktu zemākās cenas laika posmu virkni.",
         "disabledDescription": "Nepieciešams dinamisks tarifs vai CO₂ prognoze.",
-        "label": "Optimizācija"
+        "label": "Optimizācija",
+        "optimizerDescription": "{optimizer} izvēlas lētākos laika logus. Rezultātā var būt vairākas palaišanas un apstāšanās."
       },
       "planNumber": "Plāns {number}",
       "precondition": {
@@ -1708,6 +1802,11 @@
       "login": "pieteikties",
       "logout": "izrakstīties"
     },
+    "setup": {
+      "description": "Pievienojiet savas ierīces, lai redzētu enerģijas plūsmu un sāktu uzlādi ar saules enerģiju.",
+      "start": "Sākt iestatīšanu",
+      "title": "Laipni lūdzam!"
+    },
     "startConfiguration": "Sāksim konfigurāciju",
     "targetCharge": {
       "activate": "Aktivizēt",
@@ -1835,6 +1934,76 @@
     "restartNeeded": "Nepieciešams, lai piemērotu izmaiņas.",
     "restarting": "Serveris drīz atgriezīsies.",
     "starting": "Startē serveri..."
+  },
+  "onboarding": {
+    "another": "Pievienot vēl vienu",
+    "back": "Atpakaļ",
+    "battery": {
+      "add": "Pievienot mājas akumulatoru",
+      "description": "Pievienojiet savu akumulatoru, lai uzlāde to ņemtu vērā un jūs redzētu, ko tas dara.",
+      "none": "Nav mājas akumulatora",
+      "title": "Vai jums ir mājas akumulators?"
+    },
+    "checklist": {
+      "dismiss": "Noraidīt",
+      "legacyTariffs": "Tiek izmantota vecā tarifu konfigurācija.",
+      "progress": "{done} no {total} pabeigts",
+      "title": "Pabeidziet iestatīšanu"
+    },
+    "control": {
+      "description": "Sāciet ar pirmo. Vairāk varēs pievienot vēlāk konfigurācijas lapā.",
+      "none": "Vēl nekas",
+      "title": "Ko vēlaties kontrolēt?"
+    },
+    "done": {
+      "close": "Doties uz konfigurāciju",
+      "description": "Restartēšana piemēro konfigurāciju. Pēc tam izpētiet funkcijas. Transportlīdzekļus, tarifus un citus var pievienot jebkurā laikā.",
+      "restart": "Restartēt",
+      "title": "Esat gatavs"
+    },
+    "grid": {
+      "add": "Pievienot tīkla skaitītāju",
+      "confirm": "Tīkla skaitītājs ir pamats pārpalikuma uzlādei un enerģijas statistikai. Ieteicams to pievienot.",
+      "confirmNone": "Turpināt bez tā",
+      "description": "Mēra tīkla patēriņu un atdevi pieslēguma punktā. Padara pārpalikuma uzlādi precīzu.",
+      "none": "Nav tīkla skaitītāja",
+      "title": "Vai jums ir tīkla skaitītājs?"
+    },
+    "item": {
+      "battery": "Mājas akumulatora iekārta",
+      "co2": "CO₂ prognoze",
+      "consumer": "Patērētājs",
+      "grid": "Tīkla skaitītājs",
+      "gridExport": "Tīkla atdeves tarifs",
+      "gridImport": "Tīkla patēriņa tarifs",
+      "heater": "Sildītājs",
+      "loadpoint": "Uzlādes punkts",
+      "pv": "Saules sistēma",
+      "solar": "Saules prognoze"
+    },
+    "password": {
+      "description": "Aizsargā konfigurācijas iestatījumus no nesankcionētām izmaiņām. Atcerieties to, nav vienkārša veida to atiestatīt.",
+      "disabled": "Autentifikācija ir atspējota ({flag}). Ikviens ar tīkla piekļuvi var mainīt konfigurāciju, lasīt saglabātos akreditācijas datus un palaist skriptus. Nodrošiniet piekļuvi citā veidā.",
+      "title": "Iestatīt administratora paroli"
+    },
+    "pv": {
+      "add": "Pievienot saules sistēmu",
+      "description": "Mēra saules enerģijas ražošanu. Nepieciešams saules daļai un pārpalikuma uzlādei.",
+      "none": "Nav saules sistēmas",
+      "title": "Vai jums ir saules sistēma?"
+    },
+    "site": {
+      "currencyHint": "piem., {price}, {amount}",
+      "defaultTitle": "Mājas",
+      "description": "Daži pamati par jūsu mājām. Tos varat mainīt jebkurā laikā.",
+      "title": "Jūsu objekts"
+    },
+    "skip": "Izlaist iestatīšanu",
+    "step": "Solis {step} no {total}",
+    "welcome": {
+      "description": "Iestatiet svarīgākās mājas instalācijas daļas, lai sāktu viedo uzlādi.",
+      "start": "Sākt darbu"
+    }
   },
   "passwordModal": {
     "description": "Iestatiet paroli, lai aizsargātu konfigurācijas iestatījumus. Galvenā ekrāna lietošana joprojām iespējama bez pieteikšanās.",

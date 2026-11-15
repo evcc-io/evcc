@@ -39,7 +39,8 @@ const (
 
 // GrpcAPI is the Polestar gRPC battery API client
 type GrpcAPI struct {
-	client pb.BatteryServiceClient
+	client      pb.BatteryServiceClient
+	unsupported error // set once the backend permanently refuses the vehicle
 }
 
 // NewGrpcAPI creates a Polestar gRPC battery API client. The token source is
@@ -116,6 +117,10 @@ func discoverC3Host(log *util.Logger) (string, error) {
 
 // Battery returns the latest battery state for the given VIN
 func (v *GrpcAPI) Battery(ctx context.Context, vin string) (*pb.Battery, error) {
+	if v.unsupported != nil {
+		return nil, v.unsupported
+	}
+
 	ctx = metadata.AppendToOutgoingContext(ctx, "vin", vin)
 
 	res, err := v.client.GetLatestBattery(ctx, &pb.GetBatteryRequest{
@@ -123,7 +128,11 @@ func (v *GrpcAPI) Battery(ctx context.Context, vin string) (*pb.Battery, error) 
 		Vin: vin,
 	})
 	if err != nil {
-		return nil, retryable(err)
+		err = grpcError(err)
+		if errors.Is(err, api.ErrNotAvailable) {
+			v.unsupported = err
+		}
+		return nil, err
 	}
 
 	battery := res.GetBattery()
@@ -134,13 +143,15 @@ func (v *GrpcAPI) Battery(ctx context.Context, vin string) (*pb.Battery, error) 
 	return battery, nil
 }
 
-// retryable marks transient gRPC errors as api.ErrMustRetry so util.Cached
-// retries them on the next cycle instead of caching the failure and delaying
-// recovery via exponential back-off.
-func retryable(err error) error {
+// grpcError marks transient gRPC errors as api.ErrMustRetry so util.Cached retries
+// them on the next cycle, and permanent refusals as api.ErrNotAvailable.
+func grpcError(err error) error {
 	switch status.Code(err) {
 	case codes.Unavailable, codes.DeadlineExceeded:
 		return fmt.Errorf("%w: %w", api.ErrMustRetry, err)
+	case codes.PermissionDenied, codes.Unimplemented, codes.NotFound:
+		// vehicle not provisioned for this service, see pypolestar/pypolestar@99de7f0
+		return fmt.Errorf("not supported by this vehicle: %w: %w", api.ErrNotAvailable, err)
 	default:
 		return err
 	}

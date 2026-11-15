@@ -83,7 +83,7 @@
 					:key="index"
 					v-bind="labelBarProps('bottom', 'loadpoints', lp.chargePower)"
 				>
-					<VehicleIcon :names="[lp.icon]" />
+					<VehicleIcon :name="lp.icon" />
 				</LabelBar>
 				<LabelBar class="battery-label" v-bind="labelBarProps('bottom', 'batteryCharge')">
 					<BatteryIcon :soc="batterySoc" :mode="batteryMode" />

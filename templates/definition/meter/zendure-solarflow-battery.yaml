@@ -89,7 +89,7 @@ render: |
           headers:
           - content-type: application/json
           body: '{"sn":"{{ .serial }}","properties":{"smartMode":0,"acMode":2,"outputLimit":0,"inputLimit":0}}'
-      - case: 2 # hold
+      - case: 2 # holddischarge
         set:
           source: http
           uri: http://{{ .host }}/properties/write

@@ -70,6 +70,8 @@ func TestLoginRedirects(t *testing.T) {
 		authenticate     = vwidentity.BaseURL + "/login/authenticate"
 		signin           = vwidentity.BaseURL + "/signin-service/v1/signin/test"
 		vehicles         = BaseURL + "/proxy_api/consent/me/vehicles"
+		auth0Marketing   = vwidentity.BaseURL + "/v2/login/ui/marketing-consent"
+		auth0Skip        = auth0Marketing + "/skip"
 	)
 
 	for _, tc := range []struct {
@@ -79,6 +81,7 @@ func TestLoginRedirects(t *testing.T) {
 		callback        string
 		marketingStatus int
 		portalStatus    int
+		auth0           string
 		wantErr         string
 	}{
 		{name: "direct", landing: userPage},
@@ -105,6 +108,10 @@ func TestLoginRedirects(t *testing.T) {
 		{name: "wrong host", landing: "https://example.org/content/euda/de/de/user.html", wantErr: "unexpected login redirect host"},
 		{name: "insecure landing", landing: "http://" + portalHost + "/content/euda/de/de/user.html", wantErr: "unexpected landing page"},
 		{name: "unexpected redirect host", landing: "https://attacker.example/content/euda/de/de/user.html", wantErr: "unexpected login redirect host"},
+		{name: "auth0 marketing", landing: userPage, auth0: auth0Marketing},
+		{name: "auth0 country", auth0: vwidentity.BaseURL + "/v2/login/ui/country", wantErr: "open the portal and confirm consent"},
+		{name: "auth0 terms", auth0: vwidentity.BaseURL + "/v2/login/ui/terms-and-conditions", wantErr: "open the portal and confirm consent"},
+		{name: "auth0 consent", auth0: vwidentity.BaseURL + "/v2/login/ui/consent", wantErr: "open the portal and confirm consent"},
 		{name: "redirect loop", landing: portalCallback, wantErr: "stopped after 10 redirects"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -153,6 +160,20 @@ func TestLoginRedirects(t *testing.T) {
 							if tc.marketing {
 								resp.Header.Set("Location", marketingPage+"?"+url.Values{"callback": {tc.callback}}.Encode())
 							}
+							if tc.auth0 != "" {
+								resp.Header.Set("Location", tc.auth0)
+							}
+						case auth0Marketing:
+							body.Reader = strings.NewReader(`<script>window._IDK = {"Data":{"channels":[{"channelId":"MAIL","channelType":"BOUND_TO_BASIC_AGREEMENT"},{"channelId":"APP","channelType":"NOT_USED"}],"state":"test-state","relayStateToken":"test-relay","mdKey":"SEAT-MA","mdLanguage":"en"}};</script>`)
+						case auth0Skip:
+							assert.Equal(t, http.MethodPost, req.Method)
+							require.NoError(t, req.ParseForm())
+							assert.Equal(t, url.Values{
+								"channelMAIL": {"true"}, "channelAPP": {"not_used"},
+								"state": {"test-state"}, "relayState": {"test-relay"}, "mdKey": {"SEAT-MA"}, "mdLanguage": {"en"},
+							}, req.PostForm)
+							resp.StatusCode = http.StatusFound
+							resp.Header.Set("Location", portalCallback)
 						case identityCallback:
 							assert.Equal(t, http.MethodGet, req.Method)
 							assert.NotContains(t, req.URL.RawQuery, " ")
@@ -204,6 +225,9 @@ func TestLoginRedirects(t *testing.T) {
 				callback, err := url.Parse(tc.callback)
 				require.NoError(t, err)
 				assert.Contains(t, requested, callback.Scheme+"://"+callback.Host+callback.Path)
+			}
+			if tc.auth0 == auth0Marketing {
+				assert.Contains(t, requested, auth0Skip)
 			}
 			_, err = v.Vehicles()
 			assert.NoError(t, err)

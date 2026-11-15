@@ -23,6 +23,7 @@ params:
     advanced: true
   - name: hcaptcha
     required: true
+    private: true
     description:
       de: Captcha Token
       en: Captcha Token

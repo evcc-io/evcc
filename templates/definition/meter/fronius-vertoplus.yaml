@@ -11,6 +11,8 @@ requirements:
     en: |
       Meter address of primary or secondary meters: on the web interface of the inverter, only the address of the first meter (e.g., 200) can be set. Additional meters receive an ascending number (e.g., 201).
 discovery:
+  mdns: ["_Fronius-SE-Inverter._tcp"]
+  hostname: ["fronius*"]
   mac: ["0003AC"]
 params:
   - name: usage
@@ -269,7 +271,7 @@ render: |
             {{- include "modbus-connection" . | indent 10 }}
             id: 1
             value: 124:0:OutWRte
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

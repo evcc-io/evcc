@@ -4,7 +4,7 @@ import formatter, { POWER_UNIT } from "./formatter";
 import * as units from "../units";
 import settings from "../settings";
 import { defineComponent } from "vue";
-import { CURRENCY } from "@/types/evcc";
+import { CURRENCY, GRID_CONNECTION } from "@/types/evcc";
 
 const is12hSpy = vi.spyOn(units, "is12hFormat").mockReturnValue(false);
 
@@ -19,6 +19,18 @@ const fmt = mount(
     },
   })
 ).vm;
+
+describe("fmtPhasePower", () => {
+  test("should use phase count with neutral", () => {
+    expect(fmt.fmtPhasePower(16, 1)).eq("3,7 kW");
+    expect(fmt.fmtPhasePower(16, 3)).eq("11,0 kW");
+    expect(fmt.fmtPhasePower(16, 3, 230, GRID_CONNECTION.THREE_PHASE_FOUR_WIRE)).eq("11,0 kW");
+  });
+  test("should use line-to-line voltage without neutral", () => {
+    expect(fmt.fmtPhasePower(16, 1, 230, GRID_CONNECTION.THREE_PHASE_THREE_WIRE)).eq("3,7 kW");
+    expect(fmt.fmtPhasePower(16, 3, 230, GRID_CONNECTION.THREE_PHASE_THREE_WIRE)).eq("6,4 kW");
+  });
+});
 
 describe("fmtW", () => {
   test("should format with units", () => {
@@ -117,6 +129,8 @@ describe("fmtPricePerKWh", () => {
     expect(fmt.fmtPricePerKWh(1234, CURRENCY.SEK)).eq("123.400,0 öre/kWh");
     expect(fmt.fmtPricePerKWh(0.2, CURRENCY.EUR, false, false)).eq("20,0");
     expect(fmt.fmtPricePerKWh(0.123, CURRENCY.CHF)).eq("12,3 Rp./kWh");
+    expect(fmt.fmtPricePerKWh(0.43404, CURRENCY.EUR, false, true, true)).eq("43,404 ct/kWh");
+    expect(fmt.fmtPricePerKWh(0.435, CURRENCY.EUR, false, true, true)).eq("43,5 ct/kWh");
   });
 });
 

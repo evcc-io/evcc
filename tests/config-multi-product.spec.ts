@@ -4,7 +4,7 @@ import { expectModalVisible, expectModalHidden } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
-const flags = ["--disable-auth", "--template-type", "meter", "--template"];
+const flags = ["--disable-auth", "--disable-onboarding", "--template-type", "meter", "--template"];
 const v1Flags = [...flags, "tests/config-multi-product-v1.tpl.yaml"];
 const v2Flags = [...flags, "tests/config-multi-product-v2.tpl.yaml"];
 

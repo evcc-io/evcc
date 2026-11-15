@@ -186,14 +186,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* snarkdown renders the blank lines around a list as bare <br>, the list margin replaces them */
-.explanation :deep(ul) {
-	margin: 1rem 0;
-}
-.explanation :deep(ul + br) {
-	display: none;
-}
-
 /* busy state of the update link: a light sweeps across the text, same box as the idle link */
 .sweep {
 	background: linear-gradient(

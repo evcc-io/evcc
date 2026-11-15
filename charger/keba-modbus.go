@@ -406,8 +406,18 @@ func (wb *Keba) phases1p3p(phases int) error {
 		u = 1
 	}
 
-	_, err := wb.conn.WriteSingleRegister(kebaRegTriggerPhase, u)
-	return err
+	if _, err := wb.conn.WriteSingleRegister(kebaRegTriggerPhase, u); err != nil {
+		return err
+	}
+
+	// P30 x-series clears the external enable shortly after a phase toggle, re-apply disable
+	if !wb.enabled {
+		time.Sleep(2 * time.Second)
+		_, err := wb.conn.WriteSingleRegister(wb.regEnable, 0)
+		return err
+	}
+
+	return nil
 }
 
 // getPhases implements the api.PhaseGetter interface

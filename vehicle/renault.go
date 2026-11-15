@@ -97,7 +97,7 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]any) (api.Vehicle,
 		err = vehicle.Available()
 	}
 
-	v.Provider = renault.NewProvider(api, accountID, vehicle.VIN, cc.WakeupMode, cc.Cache)
+	v.Provider = renault.NewProvider(api, accountID, vehicle.VIN, vehicle.VehicleDetails.Model.Code, cc.WakeupMode, cc.Cache)
 
 	return v, err
 }

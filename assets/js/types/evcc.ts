@@ -32,6 +32,26 @@ declare global {
 export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
 
 export type DeviceColors = Record<string, string>;
+
+/** Setup checklist item. */
+export type OnboardingItem =
+  | "battery"
+  | "pv"
+  | "grid"
+  | "loadpoint"
+  | "heater"
+  | "consumer"
+  | "gridImport"
+  | "gridExport"
+  | "co2"
+  | "solar";
+/** Setup wizard and checklist state. */
+export interface OnboardingState {
+  /** Setup wizard was finished or skipped. */
+  done: boolean;
+  /** Dismissed setup checklist items. */
+  dismissed: OnboardingItem[];
+}
 /** Color assigned to a device for consistent UI display. */
 export type DeviceColorEntry = {
   /** Device title the color is assigned to. */
@@ -164,6 +184,8 @@ export interface State {
   experimental?: boolean;
   /** Initial setup is required. */
   setupRequired?: boolean;
+  /** Setup wizard and checklist state. */
+  onboarding?: OnboardingState;
   /** Startup has completed. */
   startupCompleted?: boolean;
   /** HTTP API is ready to accept requests. */
@@ -209,6 +231,10 @@ export interface State {
   grid?: Meter;
   /** A grid meter is configured. */
   gridConfigured?: boolean;
+  /** Grid connection, with or without neutral conductor. */
+  gridConnection?: GRID_CONNECTION;
+  /** Nominal grid voltage in V, line-to-line without neutral. */
+  voltage?: number;
   /** Solar meters. One entry per configured meter. */
   pv?: Meter[];
   /** Total solar power in W. Sum of all solar meters. */
@@ -340,6 +366,8 @@ export interface State {
   optimizerChargingStrategy?: string;
   /** Available battery optimizer charging strategies. */
   optimizerChargingStrategies?: string[];
+  /** Forecast uncertainty the optimizer hedges against. Null plans on the forecasts as they are. */
+  optimizerRiskProfile?: RiskProfile | null;
   /** Built-in MCP server is enabled. */
   mcp?: boolean;
   /** Instance runs in demo mode. */
@@ -521,6 +549,9 @@ export interface LoadpointThreshold {
   threshold: number;
 }
 
+/** Demand forecast strategy of a heating loadpoint. */
+export type DemandPredictor = "daily" | "weekday" | "temperature";
+
 export interface ConfigLoadpoint {
   id?: number;
   name?: string;
@@ -540,6 +571,8 @@ export interface ConfigLoadpoint {
   planStrategy?: PlanStrategy;
   limitEnergy?: number;
   limitSoc?: number;
+  minSoc?: number;
+  demandPredictor?: DemandPredictor;
   circuit?: string;
   thresholds: {
     enable: LoadpointThreshold;
@@ -597,13 +630,13 @@ export interface Loadpoint {
   chargePower: number;
   /** Estimated remaining charging time in seconds. */
   chargeRemainingDuration?: number;
-  /** Estimated remaining energy in kWh. */
+  /** Estimated remaining energy in Wh. */
   chargeRemainingEnergy?: number;
   /** Total energy imported by the charge meter in kWh. */
   chargeTotalImport?: number;
   /** Charging voltage per phase in V. */
   chargeVoltages?: number[];
-  /** Energy charged in the current charging session in kWh. */
+  /** Energy charged in the current charging session in Wh. */
   chargedEnergy: number;
   /** The connected vehicle is not identified automatically by its status. */
   chargerFeatureAutodetectDisabled: boolean;
@@ -741,13 +774,13 @@ export interface Loadpoint {
   pvAction: PV_ACTION;
   /** Remaining time until the pending charge start or stop action executes, in seconds. */
   pvRemaining: number;
-  /** Energy used in the last 24 hours in kWh. */
-  last24hEnergy?: number;
-  /** Energy used in the last 7 days in kWh. */
-  last7dEnergy?: number;
+  /** Energy stats of the last 24 hours. */
+  last24h?: PeriodStats;
+  /** Energy stats of the last 7 days. */
+  last7d?: PeriodStats;
   /** Average CO₂ emissions of the current charging session in g/kWh. */
   sessionCo2PerKWh: number | null;
-  /** Energy charged in the current charging session in kWh. */
+  /** Energy charged in the current charging session in Wh. */
   sessionEnergy: number;
   /** Total cost of the current charging session in the configured currency. */
   sessionPrice: number | null;
@@ -779,7 +812,7 @@ export interface Loadpoint {
   suggestion?: LoadpointSuggestion | null;
   /** Loadpoint title for UI display. */
   title: string;
-  /** Energy used since midnight in kWh. */
+  /** Energy used since midnight in Wh. */
   todayEnergy?: number;
   /** Climater of the connected vehicle is active. */
   vehicleClimaterActive: boolean | null;
@@ -803,6 +836,20 @@ export interface Loadpoint {
   batteryBoostLimit: number;
   /** Display-only UI settings. */
   ui?: LoadpointUi;
+}
+
+/** Energy stats of a loadpoint over a period, attributed per 15-minute slot like the energy page. */
+export interface PeriodStats {
+  /** Energy used in Wh. */
+  energy: number;
+  /** Energy from solar in Wh. */
+  pvEnergy: number;
+  /** Energy from the home battery in Wh. */
+  batteryEnergy: number;
+  /** Average energy price per kWh in the configured currency. */
+  pricePerKWh: number | null;
+  /** Total cost in the configured currency. */
+  price: number | null;
 }
 
 export interface UiLoadpoint extends Loadpoint {
@@ -832,6 +879,12 @@ export enum THEME {
   AUTO = "auto",
   LIGHT = "light",
   DARK = "dark",
+}
+
+/** Grid connection, with or without neutral conductor. */
+export enum GRID_CONNECTION {
+  THREE_PHASE_FOUR_WIRE = "3p4w",
+  THREE_PHASE_THREE_WIRE = "3p3w",
 }
 
 /** Currency in ISO 4217 format. */
@@ -903,7 +956,7 @@ export enum ALWAYS_CHARGE {
 export enum BATTERY_MODE {
   UNKNOWN = "unknown",
   NORMAL = "normal",
-  HOLD = "hold",
+  HOLDDISCHARGE = "holddischarge",
   CHARGE = "charge",
   HOLDCHARGE = "holdcharge",
   DISCHARGE = "discharge",
@@ -953,8 +1006,11 @@ export type SessionInfoKey =
   | "price"
   | "emission"
   | "co2"
-  | "last24hEnergy"
-  | "last7dEnergy";
+  | `${SessionInfoPeriod}${SessionInfoPeriodValue}`;
+
+export type SessionInfoPeriod = "last24h" | "last7d";
+
+export type SessionInfoPeriodValue = "Energy" | "Solar" | "AvgPrice" | "Price";
 
 /** Sponsorship status. */
 export interface SponsorStatus {
@@ -1212,7 +1268,7 @@ export interface Battery {
 /** Battery optimizer suggestion for a home battery. */
 export interface BatterySuggestion {
   /** Suggested operation mode. */
-  action: "normal" | "hold" | "charge" | "holdcharge" | "discharge";
+  action: "normal" | "holddischarge" | "charge" | "holdcharge" | "discharge";
   /** Recommended charge power in W. */
   charge?: number;
   /** Recommended discharge power in W. */
@@ -1234,7 +1290,9 @@ export interface LoadpointSuggestion {
   /** Planned site grid flow of the slot in W, positive means import. */
   grid?: number;
   /** Planned home battery discharge feeding the site in W. */
-  battery?: number;
+  batteryDischarge?: number;
+  /** Planned home battery charge in W. */
+  batteryCharge?: number;
   /** Suggestion differs from the current operating mode. */
   actionable?: boolean;
 }
@@ -1304,6 +1362,16 @@ export interface StaticEnergyPlan {
   time: Date;
 }
 
+/** Forecast uncertainty the optimizer hedges against. */
+export interface RiskProfile {
+  /** Share of the solar forecast a slot may fall short of, between 0 and 1. */
+  solar: number;
+  /** Share of the demand forecast a slot may exceed, between 0 and 1. */
+  demand: number;
+  /** 15min slots per day that deviate adversely, above 0 up to 96. */
+  budget: number;
+}
+
 /** Charging plan strategy. */
 export interface PlanStrategy {
   /** Force continuous charging without gaps. */
@@ -1336,6 +1404,8 @@ export interface Vehicle {
   features?: string[];
   /** Usable battery capacity in kWh. */
   capacity?: number;
+  /** Maximum number of phases supported by the vehicle. Zero means unknown. */
+  phases?: number;
   /** Vehicle icon name for UI display. */
   icon?: string;
 }
@@ -1460,6 +1530,7 @@ export interface SelectOption<T> {
   value: T;
   count?: number;
   disabled?: boolean;
+  group?: string;
 }
 
 export type DeviceType =
@@ -1507,6 +1578,7 @@ export interface EvOpt {
   req: OptimizationInput;
   res: OptimizationResult;
   details: OptimizationDetails;
+  hosted: boolean;
 }
 
 // last plan explanation, plan is the updated time of the explained plan

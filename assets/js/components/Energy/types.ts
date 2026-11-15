@@ -1,3 +1,4 @@
+import type { SourceRow } from "./mix";
 export type FlowSource = "pv" | "battery" | "grid";
 export type FlowSink = "home" | "battery" | "loadpoint" | "export";
 
@@ -7,6 +8,15 @@ export interface Flow {
   energy: number; // kWh
   cost?: number; // home and loadpoint only
   pricedEnergy?: number; // kWh with a price
+}
+
+// the flow chart shows loadpoints as two sinks
+export type ChartSink = Exclude<FlowSink, "loadpoint"> | "charging" | "heating";
+
+export interface ChartFlow {
+  from: FlowSource;
+  to: ChartSink;
+  energy: number; // kWh
 }
 
 export interface FlowCost {
@@ -24,11 +34,23 @@ export interface FlowCo2 {
   avgCo2: number; // g/kWh
 }
 
+// one consumer or loadpoint: its sink's split per slot, scaled to its energy and priced per slot
+export interface EntityFlows {
+  group: "consumer" | "loadpoint";
+  title: string;
+  virtual?: boolean; // home minus the tracked consumers
+  flows: Flow[];
+}
+
 export interface FlowResult {
   flows: Flow[];
+  entities?: EntityFlows[];
   cost?: FlowCost;
   co2?: FlowCo2;
 }
+
+// key of the virtual consumer: home minus the tracked consumers
+export const OTHERS = "others";
 
 export interface TariffSlot {
   start: string;
@@ -58,6 +80,7 @@ export interface PriceOverlay {
 export interface ConsumerEnergy {
   title: string;
   energy: number; // kWh
+  cost?: number; // undefined without price data
 }
 
 // loadpoint and consumer charts
@@ -88,5 +111,23 @@ export interface StatItem {
   sub?: string;
   tooltip?: string;
   accent?: string; // text color class for the value
-  empty?: string; // shown instead of a value, with a link to the tariff settings
+  pending?: boolean;
+  empty?: string; // shown instead of a value
+  configure?: boolean; // with a link to the tariff settings: nothing is configured yet
+  selectable?: boolean; // false: not a button in a row with a chosen stat
+}
+
+// a stat whose value is on its way, `sub` set keeps the subline's place
+export const pendingStat = (key: string, label: string, sub = ""): StatItem => ({
+  key,
+  label,
+  pending: true,
+  sub,
+});
+
+// a breakdown by source and the card it belongs to
+export interface SourcesDetail {
+  owner: string;
+  title: string;
+  rows: SourceRow[];
 }

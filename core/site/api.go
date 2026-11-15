@@ -30,6 +30,8 @@ type API interface {
 	SetTitle(string)
 	GetCountry() string
 	SetCountry(string)
+	GetGridConnection() string
+	SetGridConnection(string)
 
 	// Config
 	GetGridMeterRef() string
@@ -76,6 +78,10 @@ type API interface {
 	GetOptimizerChargingStrategy() string
 	// SetOptimizerChargingStrategy sets the optimizer grid charging strategy
 	SetOptimizerChargingStrategy(strategy string) error
+	// GetOptimizerRiskProfile gets the forecast uncertainty the optimizer hedges against, nil = none
+	GetOptimizerRiskProfile() *api.RiskProfile
+	// SetOptimizerRiskProfile sets the forecast uncertainty the optimizer hedges against, nil = none
+	SetOptimizerRiskProfile(profile *api.RiskProfile) error
 
 	//
 	// power and energy

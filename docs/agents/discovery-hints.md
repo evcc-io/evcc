@@ -66,7 +66,18 @@ Match the `domain` values against evcc template names and brands. Domains are sn
 
 Entries with only `registered_devices` carry no hint. `ssdp.py` is not used, evcc has no SSDP hints. The `HOMEKIT` block in `zeroconf.py` is irrelevant.
 
-## 5. Applying candidates
+## 5. Collection issue
+
+Users paste their "Configured devices" reports in [#34335](https://github.com/evcc-io/evcc/issues/34335). The PRs that processed earlier reports reference the issue and appear in its timeline.
+
+```sh
+gh api repos/evcc-io/evcc/issues/34335/timeline --paginate \
+  --jq '.[] | select(.event == "cross-referenced" and .source.issue.pull_request) | "\(.created_at) #\(.source.issue.number) \(.source.issue.title)"'
+```
+
+The body of the latest hint PR links the last processed report. Only later comments are new. Hostnames in reports are masked (`SMA*`) and the `mac` value is already the registered prefix. A new PR uses `relates to #34335` and links its last processed report.
+
+## 6. Applying candidates
 
 The guidelines in `templates/README.md` apply. In addition:
 
@@ -82,7 +93,7 @@ git log --oneline -S'0015BB' -- templates/definition
 git log -p --follow -- templates/definition/meter/sma-hybrid.yaml | grep -B3 -A3 '^-.*\(mdns\|hostname\|mac\):'
 ```
 
-## 6. Verify and report
+## 7. Verify and report
 
 ```sh
 go test ./util/templates/...

@@ -1,8 +1,23 @@
 <template>
-	<section class="evcc-card round-box p-3 p-sm-4" :class="{ 'evcc-card--edge': edgeToEdge }">
-		<CardHeader v-if="hasHeader" class="mb-3" :title="title" :subtitle="subtitle">
+	<section
+		class="evcc-card round-box p-3 p-sm-4"
+		:class="{ 'evcc-card--edge': edgeToEdge }"
+		:aria-label="label || title || undefined"
+	>
+		<CardHeader
+			v-if="hasHeader"
+			class="mb-3"
+			:title="title"
+			:subtitle="subtitle"
+			:parent="parent"
+			:parent-static="parentStatic"
+			@parent="$emit('parent')"
+		>
 			<template v-if="$slots['icon']" #icon><slot name="icon" /></template>
+			<template v-if="$slots['dot']" #dot><slot name="dot" /></template>
 			<template v-if="$slots['nav']" #nav><slot name="nav" /></template>
+			<template v-if="$slots['stats']" #stats><slot name="stats" /></template>
+			<template v-if="$slots['ring']" #ring><slot name="ring" /></template>
 			<template v-if="$slots['actions']" #actions><slot name="actions" /></template>
 		</CardHeader>
 		<slot />
@@ -20,13 +35,21 @@ export default defineComponent({
 	components: { CardHeader },
 	props: {
 		title: { type: String, default: "" },
+		label: { type: String, default: "" },
 		subtitle: { type: String, default: "" },
+		parent: { type: String, default: "" },
+		parentStatic: Boolean,
 		edgeToEdge: Boolean,
 	},
+	emits: ["parent"],
 	computed: {
 		hasHeader(): boolean {
 			return (
-				!!this.title || !!this.subtitle || !!this.$slots["nav"] || !!this.$slots["actions"]
+				!!this.title ||
+				!!this.subtitle ||
+				!!this.$slots["nav"] ||
+				!!this.$slots["stats"] ||
+				!!this.$slots["actions"]
 			);
 		},
 	},
@@ -34,14 +57,21 @@ export default defineComponent({
 </script>
 
 <style scoped>
-@media (max-width: 575.98px) {
-	.evcc-card--edge {
+@import "../../../css/breakpoints.css";
+@media (--below-sm) {
+	/* app sets .safe-area-side when a side inset exists (e.g. iPhone Duo), keep rounded cards then */
+	:root:not(.safe-area-side) .evcc-card--edge {
 		margin-left: -1.5rem;
 		margin-right: -1.5rem;
 		border-width: 1px 0;
 		border-radius: 0;
 		padding-left: 1.5rem !important;
 		padding-right: 1.5rem !important;
+	}
+	/* small side margin like .box-pull-out, also for cards without it */
+	:root.safe-area-side .evcc-card--edge {
+		margin-left: -1rem;
+		margin-right: -1rem;
 	}
 }
 </style>

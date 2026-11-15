@@ -8,6 +8,7 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 1
   - name: tempsource
     type: choice
     choice: ["warmwater_top", "buffer"]
@@ -27,14 +28,6 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 707 # aktuelle Aufnahmeleistung der WP
-      type: holding
-      decode: int16
-    scale: 1
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 706 # aktuelle Wärmemenge der WP
       type: holding
       decode: int16
     scale: 1

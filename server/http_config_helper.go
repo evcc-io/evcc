@@ -15,6 +15,7 @@ import (
 
 	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
@@ -394,6 +395,7 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 	wg.Go(func() {
 		if hasFeature(instance, api.Heating) {
 			makeResult("heating", true, nil)
+			makeResult("demandPredictor", core.DefaultDemandPredictor(instance), nil)
 		}
 	})
 
@@ -595,37 +597,64 @@ func configUnchanged(id int, req configReq) bool {
 	return err == nil && reflect.DeepEqual(req.Serialise(), stored.Data)
 }
 
-func configHasCriticalPlugin(req configReq) bool {
-	if req.Yaml != "" {
-		// any, not map: global yaml configs (circuits) are a list
-		var m any
-		if err := yaml.Unmarshal([]byte(req.Yaml), &m); err != nil {
-			return false // malformed yaml already rejected by decodeDeviceConfig
-		}
-		if valueHasCriticalSource(m) {
-			return true
-		}
+// configHasCriticalPlugin checks the config as it will be instantiated: custom yaml is
+// resolved and templates are rendered, since a param value can expand into a critical source
+func configHasCriticalPlugin(class templates.Class, req configReq) bool {
+	// any, not map: global yaml configs (circuits) are a list
+	var m any
+	if err := yaml.Unmarshal([]byte(req.Yaml), &m); err != nil || valueHasCriticalSource(class, m) {
+		return true
 	}
-	return valueHasCriticalSource(req.Other)
+
+	typ, other, err := config.CustomDevice(req.Type, req.Other)
+	return err != nil || typedHasCriticalSource(class, typ, other)
 }
 
-func valueHasCriticalSource(v any) bool {
+// typedHasCriticalSource renders whenever a template is referenced, not only when typ says so:
+// updating or testing an existing device instantiates with the stored type, not the request's
+func typedHasCriticalSource(class templates.Class, typ string, other map[string]any) bool {
+	_, template := lo.FindKeyBy(other, func(k string, _ any) bool { return strings.EqualFold(k, typeTemplate) })
+	return valueHasCriticalSource(class, other) ||
+		(template || strings.EqualFold(typ, typeTemplate)) && renderedHasCriticalSource(class, other)
+}
+
+// renderedHasCriticalSource fails closed: a template we cannot render to verify
+// may still be force-saved and instantiated later
+func renderedHasCriticalSource(class templates.Class, other map[string]any) bool {
+	instance, err := templates.RenderInstance(class, other)
+	return err != nil || typedHasCriticalSource(class, instance.Type, instance.Other)
+}
+
+func valueHasCriticalSource(class templates.Class, v any) bool {
 	switch t := v.(type) {
 	case map[string]any:
+		var template bool
 		for k, val := range t {
-			if strings.EqualFold(k, "source") {
-				if s, ok := val.(string); ok && slices.Contains(criticalPluginSources, strings.ToLower(strings.TrimSpace(s))) {
-					return true
-				}
-			}
-			if valueHasCriticalSource(val) {
+			if mapEntryIsCriticalSource(k, val) || valueHasCriticalSource(class, val) {
 				return true
 			}
+			if s, ok := val.(string); ok && strings.EqualFold(k, "type") && strings.EqualFold(s, typeTemplate) {
+				template = true
+			}
 		}
+		// nested typed configs like tariffs or messengers; the renderer accepts the type key
+		return template && renderedHasCriticalSource(class, t)
+	case map[any]any:
+		return true // yaml with non-string keys, fail closed
 	case []any:
-		return slices.ContainsFunc(t, valueHasCriticalSource)
+		return slices.ContainsFunc(t, func(v any) bool {
+			return valueHasCriticalSource(class, v)
+		})
 	}
 	return false
+}
+
+func mapEntryIsCriticalSource(key string, val any) bool {
+	if !strings.EqualFold(key, "source") {
+		return false
+	}
+	s, ok := val.(string)
+	return ok && slices.Contains(criticalPluginSources, strings.ToLower(s))
 }
 
 // decodeDeviceConfig extracts device configuration and yaml details

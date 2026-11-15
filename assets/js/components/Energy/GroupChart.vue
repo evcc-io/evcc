@@ -9,8 +9,8 @@ import { defineComponent, type PropType } from "vue";
 import {
 	echarts,
 	axisNameStyle,
+	energyGrid,
 	FONT_FAMILY,
-	forecastGrid,
 	forecastYAxis,
 	lineCasing,
 	tooltipStyle,
@@ -41,7 +41,15 @@ import type { PriceBand, PriceOverlay } from "./types";
 import { CURRENCY } from "@/types/evcc";
 import { energyAxisScale, type EnergyAxisScale } from "@/utils/energyAxis";
 import { labelStep, DAY_STEPS, MONTH_STEPS } from "@/utils/labelStep";
-import { PANEL_EXTRA, panelGrids, socTempPanel, type SubPanel } from "./subPanel";
+import {
+	PANEL_EXTRA,
+	panelGrids,
+	panelYAxis,
+	priceVaries,
+	slotStarts,
+	socTempPanel,
+	type SubPanel,
+} from "./subPanel";
 
 export interface HistorySlot {
 	start: string;
@@ -96,6 +104,8 @@ export default defineComponent({
 		overlayColor: { type: String, default: "" },
 		overlayLabel: { type: String, default: "" },
 		showOverlay: { type: Boolean, default: false },
+		// the gap between the overlay and the stacked sum as striped bars
+		overlayGap: Boolean,
 		focusedEntity: { type: Number as PropType<number | null>, default: null },
 		period: { type: String as PropType<PERIODS>, required: true },
 		from: { type: Date, required: true },
@@ -125,8 +135,6 @@ export default defineComponent({
 	},
 	emits: ["slot"],
 	data(): {
-		isMobile: boolean;
-		mediaQuery: MediaQueryList | null;
 		previousFocusedEntity: number | null;
 		previousPeriod: PERIODS;
 		previousSeriesKey: string;
@@ -135,8 +143,6 @@ export default defineComponent({
 		chartWidth: number;
 	} {
 		return {
-			isMobile: false,
-			mediaQuery: null,
 			chartWidth: 0,
 			previousFocusedEntity: this.focusedEntity as number | null,
 			previousPeriod: this.period as PERIODS,
@@ -156,6 +162,9 @@ export default defineComponent({
 		},
 		// Peak of stacked per-slot sums, incl. overlay when shown so its line isn't
 		// clipped. Bidirectional: pos/neg separately.
+		hasSlots(): boolean {
+			return this.series.some((s) => s.data.length > 0);
+		},
 		axisPeak(): number {
 			const factor = this.valueFactor;
 			// Stacked groups: sum entities per slot. Unstacked (grid, meter): max per entity.
@@ -221,10 +230,10 @@ export default defineComponent({
 		isBidirectional(): boolean {
 			return isBidirectional(this.group, this.series);
 		},
-		// day view: soc or temperature per category from the first series carrying it
+		// day view: soc or temperature per category from the first visible series carrying it
 		socTempValues(): (number | null)[] | null {
 			if (this.period !== PERIODS.DAY || !this.socTemp) return null;
-			const source = this.series.find((s) => s.data.some((slot) => slot.socTemp != null));
+			const source = this.socTempSource;
 			if (!source) return null;
 			const out: (number | null)[] = this.categoryKeys.map(() => null);
 			for (const slot of source.data) {
@@ -256,8 +265,8 @@ export default defineComponent({
 			const has = (key: "energy" | "returnEnergy") =>
 				this.series.some((s) => s.data.some((slot) => slot[key] > 0));
 			// each area runs from the baseline to its axis end (an infinite value is
-			// clipped to it) and carries its label on the outer corner: as far left of the
-			// plot as the tick labels are right of it, and shifted along the rotated text
+			// clipped to it) and carries its label on the outer corner: at the left edge of
+			// the grid's inset, and shifted along the rotated text
 			// (positive is up) to the chart's own top and bottom
 			return [
 				...(this.upperLabel && has("energy")
@@ -267,7 +276,7 @@ export default defineComponent({
 									name: this.upperLabel,
 									yAxis: 0,
 									label: {
-										position: [-14, "0%"],
+										position: [-30, "0%"],
 										align: "right",
 										offset: [28, 0],
 									},
@@ -283,7 +292,7 @@ export default defineComponent({
 									name: this.lowerLabel,
 									yAxis: 0,
 									label: {
-										position: [-14, "100%"],
+										position: [-30, "100%"],
 										align: "left",
 										offset: [-17, 0],
 									},
@@ -313,7 +322,7 @@ export default defineComponent({
 		},
 		// another view of the same data: stack order or the price overlay toggled
 		viewKey(): string {
-			return `${this.stackThrough}-${!!this.prices}`;
+			return `${this.stackThrough}-${!!this.prices}-${this.overlayGap}`;
 		},
 		// the prices that move over the period, zoomed into their range. A constant price
 		// is only in the tooltip
@@ -323,8 +332,7 @@ export default defineComponent({
 			const hi = (band: PriceBand) => Math.max(...known(band.hi));
 			const bands: { key: string; band: PriceBand; color: string }[] = [];
 			const add = (key: string, band: PriceBand | undefined, color: string) => {
-				// an effective price carries float noise, a flat tariff must stay flat
-				if (band && hi(band) - lo(band) > 1e-4) bands.push({ key, band, color });
+				if (band && priceVaries(band)) bands.push({ key, band, color });
 			};
 			add("import", this.prices?.import, colors.price || "");
 			add("feedin", this.prices?.feedin, colors.export || "");
@@ -335,12 +343,13 @@ export default defineComponent({
 				id: `price-${key}`,
 				name: `price-${key}`,
 				type: "line",
-				xAxisIndex: 1,
+				xAxisIndex: 2,
 				yAxisIndex: 1,
-				data: band.avg,
-				// a price holds for its whole slot: points sit at slot centers, so the
-				// jump between two points lands on the slot boundary
-				step: "middle",
+				data: slotStarts(band.avg),
+				// a price holds for its whole slot, until the next slot's start
+				step: "end",
+				// the area would sweep in whenever the chart comes back from the pattern
+				animation: false,
 				...hoverDot(color),
 				lineStyle: { ...lineDefaults, color },
 				// glow fading out below the line, like the price forecast
@@ -356,25 +365,16 @@ export default defineComponent({
 			return {
 				track: "transparent",
 				series: bands.map(series),
+				xAxis: { ...boundaryAxis(this.categoryTimestamps.length), gridIndex: 1 },
 				// the exact price range, currencies differ too much for rounding rules
-				yAxis: forecastYAxis({
-					gridIndex: 1,
-					position: "right",
-					min,
-					max,
-					// labels at both ends only
-					interval: max - min,
-					splitLine: { show: false },
-					axisLabel: {
-						color: colors.muted || "",
-						hideOverlap: true,
-						formatter: (v: number) => this.fmtPricePerKWh(v, this.currency, true),
-					},
-				}),
+				yAxis: panelYAxis(min, max, (v) => this.fmtPricePerKWh(v, this.currency, true)),
 			};
 		},
 		socTempIsTemp(): boolean {
-			return !!this.series.find((s) => s.data.some((slot) => slot.socTemp != null))?.isTemp;
+			return !!this.socTempSource?.isTemp;
+		},
+		socTempSource(): HistorySeries | undefined {
+			return this.visibleSeries.find((s) => s.data.some((slot) => slot.socTemp != null));
 		},
 		categoryTimestamps(): number[] {
 			const out: number[] = [];
@@ -468,20 +468,45 @@ export default defineComponent({
 				}
 			}
 			const overlayCol = this.overlayColor || this.color;
+			// the gap bars come on top of the line
+			const gap = this.overlayGap && this.showOverlay;
 			const overlay = {
 				id: "overlay",
 				name: this.overlayLabel || "overlay",
 				type: "line",
 				data: overlayValues,
 				smooth: true,
-				symbol: "none",
+				...hoverDot(overlayCol),
 				connectNulls: true,
 				lineStyle: { color: overlayCol, ...lineDefaults },
-				itemStyle: { color: overlayCol },
 				z: 4,
 			};
+			const casing = lineCasing(overlay, 3);
+			// a line through slot centers stops half a slot short of the plot edges: its
+			// first and last value repeated out to them on the boundary axis
+			const edges = (line: Record<string, unknown>) => {
+				const edge = (i: number, x: number) =>
+					overlayValues[i] == null
+						? []
+						: [
+								{
+									...line,
+									id: `${line["id"]}-edge${i}`,
+									xAxisIndex: 1,
+									data: [
+										[x, overlayValues[i]],
+										[i, overlayValues[i]],
+									],
+									symbol: "none",
+									silent: true,
+									emphasis: { disabled: true },
+								},
+							];
+				const last = overlayValues.length - 1;
+				return [...edge(0, -0.5), ...edge(last, last + 0.5)];
+			};
 			// the side labels ride on the overlay, not on its casing
-			result.push(lineCasing(overlay, 3), {
+			result.push(casing, {
 				...overlay,
 				...(this.sideLabels.length
 					? {
@@ -501,8 +526,10 @@ export default defineComponent({
 						}
 					: {}),
 			});
-
-			if (this.subPanel) result.push(...this.subPanel.series);
+			// grid 0 only has the boundary axis without a panel
+			result.push(
+				...(this.subPanel ? this.subPanel.series : [...edges(casing), ...edges(overlay)])
+			);
 
 			// Always render import + export series per entity, even if one direction
 			// is empty (null-filled). Stable series ids/structure across renders so
@@ -536,6 +563,34 @@ export default defineComponent({
 				energyByEntity.push(energyValues);
 				returnEnergyByEntity.push(returnEnergyValues);
 			});
+			// gap view: what the stack came to, then the bars end at the overlay. Where it
+			// fell short of them, the stripes take their upper part
+			const sums = cats.map((_, idx) =>
+				energyByEntity.reduce((acc, values) => acc + (values[idx] ?? 0), 0)
+			);
+			// a slot without an overlay value takes what the line shows there: the way
+			// between its neighbours. Bars would stick out of the stripes otherwise
+			const known = overlayValues.flatMap((v, i) => (v == null ? [] : [i]));
+			const gapValues = (gap ? overlayValues : []).map((o, idx) => {
+				if (o != null) return o;
+				const before = known.filter((i) => i < idx).pop();
+				const after = known.find((i) => i > idx);
+				if (before === undefined || after === undefined) return null;
+				const from = overlayValues[before]!;
+				const share = (idx - before) / (after - before);
+				return from + (overlayValues[after]! - from) * share;
+			});
+			if (gap) {
+				gapValues.forEach((o, idx) => {
+					let left = o ?? Infinity;
+					for (const values of energyByEntity) {
+						const v = values[idx];
+						if (v == null) continue;
+						values[idx] = Math.min(v, left) || null;
+						left -= values[idx] ?? 0;
+					}
+				});
+			}
 			// Per slot: index of the topmost (largest i) entity with a non-zero
 			// value. -1 = no entity has data at that slot.
 			const topEnergyPerSlot: number[] = Array.from({ length: cats.length }, () => -1);
@@ -555,6 +610,8 @@ export default defineComponent({
 			// hover lightens the active slot's bars (onChartMouseMove), like the sessions
 			// charts; silent stops single-segment highlight
 			const barEmphasis = { silent: true };
+			// the gap bars sit on the entity bars, not beside them
+			const barGap = gap ? "-100%" : "10%";
 			const returnSeries: Record<string, unknown>[] = [];
 			this.series.forEach((s, i) => {
 				const c = this.entryColors[i] || this.color;
@@ -609,7 +666,7 @@ export default defineComponent({
 					data: energyData,
 					itemStyle: { color: c, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
-					barGap: "10%",
+					barGap,
 					...barEmphasis,
 				});
 				(this.stackThrough ? returnSeries : result).push({
@@ -620,11 +677,53 @@ export default defineComponent({
 					data: returnEnergyData,
 					itemStyle: { color: returnEnergyColor, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
-					barGap: "10%",
+					barGap,
 					...barEmphasis,
 				});
 			});
 			result.push(...returnSeries.reverse());
+
+			if (gap) {
+				// from the lower to the higher of overlay and stacked sum, on a hidden base
+				const span = (pick: (o: number, sum: number) => number) =>
+					gapValues.map((o, idx) => (o == null ? null : pick(o, sums[idx] ?? 0)));
+				const shared = {
+					type: "bar",
+					stack: "overlay-gap",
+					barCategoryGap: "25%",
+					barGap,
+					z: 5,
+					...barEmphasis,
+				};
+				result.push(
+					{
+						...shared,
+						id: "overlay-gap-base",
+						data: span(Math.min),
+						itemStyle: { color: "transparent" },
+					},
+					{
+						...shared,
+						id: "overlay-gap",
+						name: this.overlayLabel,
+						data: span((o, sum) => Math.abs(o - sum)),
+						// in place of the bar's upper part or above it. Striped on dark, solid
+						// on light where stripes get lost
+						itemStyle: colors.dark
+							? {
+									color: "transparent",
+									borderRadius: radius,
+									decal: {
+										color: overlayCol,
+										dashArrayX: [1, 0],
+										dashArrayY: [3, 3],
+										rotation: -Math.PI / 4,
+									},
+								}
+							: { color: overlayCol, borderRadius: radius },
+					}
+				);
+			}
 
 			return result;
 		},
@@ -654,8 +753,8 @@ export default defineComponent({
 					return (day - 1) % step === 0 ? `${day}` : "";
 				};
 			}
-			// YEAR — narrow (single-letter) on mobile, short month name otherwise
-			return this.isMobile
+			// YEAR: single letters when twelve short month names would touch
+			return this.chartWidth < 640
 				? (t: number) => this.fmtMonthNarrow(new Date(t))
 				: (t: number) => this.fmtMonth(new Date(t), true);
 		},
@@ -688,9 +787,7 @@ export default defineComponent({
 			// the sub panel owns axis index 1 and only exists in the day view
 			const weekMarkers = this.period === PERIODS.MONTH && !this.subPanel;
 			const barGrid = {
-				...forecastGrid(),
-				left: this.socTempValues ? 36 : this.upperLabel || this.lowerLabel ? 22 : 0,
-				right: 36,
+				...energyGrid(),
 				...(this.showXAxis ? {} : { bottom: 4 }),
 			};
 			const xAxisLabel = {
@@ -911,10 +1008,9 @@ export default defineComponent({
 								axisLine: { show: false },
 								axisLabel: xAxisLabel,
 							},
+							this.subPanel.xAxis,
 						]
-					: weekMarkers
-						? [barXAxis, boundaryAxis(cats.length)]
-						: barXAxis,
+					: [barXAxis, boundaryAxis(cats.length)],
 				yAxis: [
 					forecastYAxis({
 						// automatic range must be allowed below zero for the export band
@@ -935,9 +1031,11 @@ export default defineComponent({
 							showMaxLine: true,
 							lineStyle: { color: colors.border || "" },
 						},
-						name: this.unit,
+						// without series the scale is made up, only its lines show
+						name: this.hasSlots ? this.unit : "",
 						...axisNameStyle(),
 						axisLabel: {
+							show: this.hasSlots,
 							color: colors.muted || "",
 							hideOverlap: true,
 							formatter: (v: number): string => {
@@ -967,12 +1065,6 @@ export default defineComponent({
 		const zr = this.chart?.getZr();
 		zr?.on("mousemove", this.onChartMouseMove);
 		zr?.on("globalout", this.clearHighlight);
-		this.mediaQuery = window.matchMedia("(max-width: 575.98px)");
-		this.isMobile = this.mediaQuery.matches;
-		this.mediaQuery.addEventListener("change", this.onMediaChange);
-	},
-	beforeUnmount() {
-		this.mediaQuery?.removeEventListener("change", this.onMediaChange);
 	},
 	methods: {
 		onChartInit() {
@@ -1056,9 +1148,12 @@ export default defineComponent({
 			const grid = this.chart.convertFromPixel({ gridIndex: 0 }, point) as number[];
 			const slot = Math.round(grid[0]!);
 			if (slot === this.activeSlot) return;
-			// nothing to highlight in a slot without a bar, the panel's line still gets
-			// its dot there
-			if (!this.slotsWithData[slot] && !this.subPanel) {
+			// in a slot without a bar only the lines get their dot
+			const lines = [
+				...(this.subPanel?.series.map((s) => s["id"]) ?? []),
+				...(this.showOverlay ? ["overlay"] : []),
+			];
+			if (!this.slotsWithData[slot] && !lines.length) {
 				this.clearHighlight();
 				return;
 			}
@@ -1067,18 +1162,13 @@ export default defineComponent({
 			this.chart.dispatchAction({
 				type: "highlight",
 				dataIndex: slot,
-				...(this.slotsWithData[slot]
-					? {}
-					: { seriesId: this.subPanel?.series.map((s) => s["id"]) }),
+				...(this.slotsWithData[slot] ? {} : { seriesId: lines }),
 			});
 		},
 		clearHighlight() {
 			if (this.activeSlot === null) return;
 			this.activeSlot = null;
 			this.chart?.dispatchAction({ type: "downplay" });
-		},
-		onMediaChange(e: MediaQueryListEvent) {
-			this.isMobile = e.matches;
 		},
 		timestampKey(t: number): string {
 			const d = new Date(t);
@@ -1112,5 +1202,10 @@ export default defineComponent({
 }
 .history-chart {
 	width: 100%;
+}
+/* an axis label wider than the grid's inset grows out of the chart instead of being cut off */
+.history-chart :deep(div),
+.history-chart :deep(svg) {
+	overflow: visible !important;
 }
 </style>

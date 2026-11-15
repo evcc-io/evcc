@@ -31,6 +31,15 @@ func TestMergeMaps(t *testing.T) {
 	}, target)
 }
 
+func TestMergeMapsAmbiguousKey(t *testing.T) {
+	for _, other := range []map[string]any{
+		{"foo": 1, "Foo": 2},
+		{"nested": map[string]any{"bar": 1, "Bar": 2}},
+	} {
+		require.Error(t, mergeMaps(other, map[string]any{"foo": "bar"}))
+	}
+}
+
 func TestMergeMapsEmptyKeepsDefault(t *testing.T) {
 	target := map[string]any{
 		"maxsoc": "100",

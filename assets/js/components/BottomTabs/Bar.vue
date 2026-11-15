@@ -86,6 +86,7 @@ export default defineComponent({
 		authDisabled: Boolean,
 		offline: Boolean,
 		startupCompleted: Boolean,
+		wizardPending: Boolean,
 		optimizer: Boolean,
 		installed: String,
 		availableVersion: String,
@@ -93,7 +94,7 @@ export default defineComponent({
 	},
 	computed: {
 		hidden() {
-			return this.offline || this.startupCompleted === false;
+			return this.offline || this.startupCompleted === false || this.wizardPending;
 		},
 		batterySoc() {
 			return this.battery?.soc;
@@ -112,6 +113,8 @@ export default defineComponent({
 <style scoped>
 .bottom-tab-bar {
 	z-index: 1030;
+	padding-left: var(--safe-area-inset-left);
+	padding-right: var(--safe-area-inset-right);
 	background: var(--tab-bar-background);
 	border-top: 1px solid var(--evcc-gray-25);
 	box-shadow: 0 -1px 6px var(--evcc-gray-25);

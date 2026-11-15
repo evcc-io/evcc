@@ -9,20 +9,20 @@ requirements:
   description:
     de: |
       Modbus Verbindung zur NIBE S Wärmepumpe.
-      Firmware 4.7.5 oder neuer benötigt.
+      Firmware 4.13.12 oder neuer benötigt.
       Benötigte Einstellungen in der Steuereinheit:
       - In der Inneneinheit muss im Menü 7.5.9 Modbus aktiviert sein.
-      - Zur Verwendung der Leistungssteuerung muss im Menü 7.4 unter dem Punkt AUX von Modbus ext. Leistungsbegrenzung ausgewählt sein. In den Ladepunkteinstellungen muss eine minimale Leistung von 1,2kW (1-phasig) eingestellt werden. Sollte der Normalverbrauch höher sein, muss dieser als minimale Leistung eingestellt werden.
+      - Zur Verwendung der Leistungssteuerung muss im Menü 7.4 unter dem Punkt AUX von Modbus ext. Leistungsbegrenzung ausgewählt sein. In den Ladepunkteinstellungen muss die minimale Leistung des Heizstabs eingestellt werden.
       - Im Menü 7.4 dürfen die Optionen SG-Ready A und SG-Ready B nicht vergeben sein.
-      - Es muss einmalig im Holding Register 3032 der Wert `1` (uint8) geschrieben werden.
+      - Im Menü 4.2.3 muss die Option "SG-Ready via API aktivieren" aktiv sein.
     en: |
       Modbus connection to the NIBE S heat pump.
-      Firmware version 4.7.5 or newer is required.
+      Firmware version 4.13.12 or newer is required.
       Required settings in the control unit:
       - In the indoor unit, Modbus must be enabled in menu 7.5.9
-      - To use power control, “external power limitation via Modbus” must be selected under AUX in menu 7.4. In the charging point settings, a minimum power of 1.2 kW (single-phase) must be configured. If the base load is higher, it must be set as the minimum power.
+      - To use power control, select Modbus ext. power limitation under AUX in menu 7.4. Set the minimum output of the immersion heater in the charging point settings.
       - In menu 7.4, the options “SG-Ready A” and “SG-Ready B” must not be assigned.
-      - The value `1` (uint8) must be written once to holding register 3032.
+      - Enable "Activate SG-Ready via API" in menu 4.2.3.
 params:
   - name: modbus
     choice: ["tcpip"]
@@ -75,7 +75,7 @@ render: |
                 register:
                   address: 6008
                   type: writesingle
-                  encoding: int16  
+                  encoding: int16
         - case: 1
           set:
             source: sequence
@@ -98,7 +98,7 @@ render: |
                 register:
                   address: 6008
                   type: writesingle
-                  encoding: int16         
+                  encoding: int16
         - case: 3
           set:
             source: sequence
@@ -121,7 +121,7 @@ render: |
                 register:
                   address: 6008
                   type: writesingle
-                  encoding: int16  
+                  encoding: int16
   getmode: # operation mode (1: reduced, 2: normal, 3 boost)
     source: map
     values:
@@ -152,7 +152,7 @@ render: |
       type: input
       encoding: uint16
     scale: 10
-  energy: 
+  energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -167,6 +167,6 @@ render: |
     register:
       address: 6007
       type: writesingle
-      encoding: int16
+      encoding: uint16
     scale: 0.01
   {{- end }}

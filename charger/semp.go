@@ -26,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/semp"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
@@ -81,7 +82,6 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 		cache:    cache,
 		phases:   3,
 		current:  6,
-		enabled:  true,
 		deviceID: deviceID,
 	}
 
@@ -139,10 +139,13 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 		wb.hasStatusParam = true
 	}
 
-	wb.enabled, err = wb.Enabled()
+	// initialize enabled state from the actual device status, not from the cached
+	// value Enabled() would return while the device is not running
+	status, err := wb.getDeviceStatus()
 	if err != nil {
 		return nil, err
 	}
+	wb.enabled = status.EMSignalsAccepted && status.Status == semp.StatusOn
 
 	go wb.heartbeat(ctx)
 
@@ -237,7 +240,7 @@ func (wb *SEMP) calcPower(enabled bool, current float64, phases int) int {
 		return 0
 	}
 
-	return min(max(int(230*float64(phases)*current), wb.minPower), wb.maxPower)
+	return min(max(int(grid.CurrentToPower(current, phases)), wb.minPower), wb.maxPower)
 }
 
 // Status implements the api.Charger interface
@@ -292,16 +295,18 @@ func (wb *SEMP) Enabled() (bool, error) {
 		return false, err
 	}
 
-	if status.EMSignalsAccepted {
-		if status.Status == semp.StatusOn {
-			return true, nil
-		}
-
-		// work around wrong status reporting during phase switching (SMA Chargers...)
-		return wb.enabled, nil
+	if !status.EMSignalsAccepted {
+		// no vehicle: drop cached state so it doesn't leak into the next session
+		wb.enabled = false
+		return false, nil
 	}
 
-	return false, nil
+	if status.Status == semp.StatusOn {
+		return true, nil
+	}
+
+	// work around wrong status reporting during phase switching (SMA Chargers...)
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface

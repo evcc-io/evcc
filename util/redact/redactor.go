@@ -33,7 +33,7 @@ func redactableParams() []string {
 	// Collect all sensitive params from templates (includes defaults)
 	var params []string
 	for _, class := range templates.ClassValues() {
-		for _, tmpl := range templates.ByClass(class) {
+		for _, tmpl := range templates.ByClass(class, templates.WithDeprecated()) {
 			for _, p := range tmpl.Params {
 				if p.IsMasked() || p.IsPrivate() {
 					params = append(params, strings.ToLower(p.Name))

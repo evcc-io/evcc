@@ -73,6 +73,7 @@
 	--evcc-transition-medium: 500ms;
 	--evcc-transition-fast: 250ms;
 	--evcc-transition-very-fast: 100ms;
+	--evcc-loading-delay: 100ms;
 
 	--bs-primary: var(--evcc-darker-green);
 	--bs-primary-rgb: var(--evcc-darker-green-rgb);
@@ -855,6 +856,13 @@ input[list]::-webkit-list-button {
 	}
 }
 
+html.embedded {
+	--safe-area-inset-top: 0px;
+	--safe-area-inset-bottom: 0px;
+	--safe-area-inset-left: 0px;
+	--safe-area-inset-right: 0px;
+}
+
 html.app .hide-in-app {
 	display: none !important;
 }
@@ -863,6 +871,12 @@ html.app .hide-in-app {
 	padding: max(1rem, var(--safe-area-inset-top)) var(--safe-area-inset-right)
 		calc(var(--safe-area-inset-bottom) + var(--bottom-space)) var(--safe-area-inset-left);
 	position: relative;
+}
+
+/* px-4 is !important and would drop the side insets */
+.safe-area-inset.px-4 {
+	padding-left: calc(1.5rem + var(--safe-area-inset-left)) !important;
+	padding-right: calc(1.5rem + var(--safe-area-inset-right)) !important;
 }
 
 .safe-area-inset::before {
@@ -878,9 +892,14 @@ html.app .hide-in-app {
 	background-color: var(--evcc-background);
 }
 
+html.app .modal {
+	padding-left: var(--safe-area-inset-left);
+	padding-right: var(--safe-area-inset-right);
+}
+
 html.app .modal-dialog {
-	margin-top: var(--safe-area-inset-top);
-	margin-bottom: var(--safe-area-inset-bottom);
+	margin-top: max(var(--bs-modal-margin), var(--safe-area-inset-top));
+	margin-bottom: max(var(--bs-modal-margin), var(--safe-area-inset-bottom));
 }
 
 .btn-neutral {
@@ -1055,6 +1074,20 @@ input::-webkit-date-and-time-value {
 		visibility var(--evcc-transition-fast) ease var(--evcc-transition-fast);
 }
 
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		animation: none !important;
+	}
+}
+
+/* shopicons are inline and size by font, component icons are block: same 24px row height for both */
+.icon-row {
+	font-size: 24px;
+	line-height: 0;
+}
+
 /* clearance so overflow-hidden containers don't clip focus rings */
 .ring-space {
 	padding: 0.5rem;
@@ -1079,4 +1112,65 @@ input::-webkit-date-and-time-value {
 	margin: auto;
 	border-radius: 2rem;
 	max-width: 480px;
+}
+
+.loading-line {
+	height: 2px;
+	overflow: hidden;
+	opacity: 0;
+	transition: opacity var(--evcc-transition-very-fast);
+}
+.loading-line--active {
+	opacity: 1;
+	transition-delay: var(--evcc-loading-delay);
+}
+.loading-line::before {
+	content: "";
+	display: block;
+	width: 40%;
+	height: 100%;
+	border-radius: 2px;
+	background: var(--bs-primary);
+}
+.loading-line--active::before {
+	animation: loading-line 1.2s ease-in-out infinite;
+}
+@keyframes loading-line {
+	from {
+		transform: translateX(-100%);
+	}
+	to {
+		transform: translateX(250%);
+	}
+}
+.stale {
+	opacity: 0.35;
+	pointer-events: none;
+	transition: opacity var(--evcc-transition-fast) var(--evcc-loading-delay);
+}
+.skeleton-chart,
+.skeleton-value {
+	background: var(--evcc-gray-10);
+	animation: skeleton-in var(--evcc-transition-fast) var(--evcc-loading-delay) backwards;
+}
+.skeleton-chart {
+	border-radius: 0.5rem;
+}
+.skeleton-value {
+	display: inline-block;
+	width: 3em;
+	height: 0.6em;
+	border-radius: 0.3em;
+}
+@keyframes skeleton-in {
+	from {
+		opacity: 0;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.loading-line--active::before {
+		width: 100%;
+		opacity: 0.5;
+		animation: none;
+	}
 }

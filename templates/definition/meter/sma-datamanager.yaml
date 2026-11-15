@@ -10,7 +10,7 @@ requirements:
     en: In the web interface of the SMA Data Manager you need to activate "Modbus Server activated" in the section "External communication".
 discovery:
   hostname: ["sma*"]
-  mac: ["0015BB"]
+  mac: ["0015BB", "0040AD"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

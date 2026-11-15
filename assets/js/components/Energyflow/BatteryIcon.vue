@@ -44,7 +44,7 @@ export default defineComponent({
 	},
 	computed: {
 		limit() {
-			return [BATTERY_MODE.HOLD, BATTERY_MODE.HOLDCHARGE].includes(this.mode);
+			return [BATTERY_MODE.HOLDDISCHARGE, BATTERY_MODE.HOLDCHARGE].includes(this.mode);
 		},
 		grid() {
 			return [BATTERY_MODE.CHARGE, BATTERY_MODE.DISCHARGE].includes(this.mode);

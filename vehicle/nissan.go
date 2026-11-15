@@ -34,7 +34,7 @@ func NewNissanFromConfig(other map[string]any) (api.Vehicle, error) {
 		Expiry              time.Duration
 		Cache               time.Duration
 	}{
-		Version: "v1", // battery api version: v2 for Ariya
+		Version: "v1", // battery api version: v3 for Ariya/Micra
 		Expiry:  expiry,
 		Cache:   interval,
 	}
@@ -60,10 +60,16 @@ func NewNissanFromConfig(other map[string]any) (api.Vehicle, error) {
 
 	api := nissan.NewAPI(log, identity)
 
-	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	vehicle, err := ensureVehicleEx(cc.VIN, api.Vehicles, func(v nissan.Vehicle) (string, error) {
+		return v.VIN, nil
+	})
 
 	if err == nil {
-		v.Provider = nissan.NewProvider(api, cc.VIN, cc.Version, cc.Expiry, cc.Cache)
+		var canGen string
+		if vehicle.CanGeneration != nil {
+			canGen = fmt.Sprint(vehicle.CanGeneration)
+		}
+		v.Provider = nissan.NewProvider(api, vehicle.VIN, cc.Version, canGen, cc.Expiry, cc.Cache)
 	}
 
 	return v, err

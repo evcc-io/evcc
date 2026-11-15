@@ -67,3 +67,8 @@ MainOnly.args = { circuits: circuits.slice(0, 1), gridMeter };
 
 export const Tree = Template.bind({});
 Tree.args = { circuits, gridMeter };
+Tree.args.loadpoints = [
+  { id: 13, title: "Wallbox left", circuit: null, editable: true, heating: false },
+  { id: 14, title: "Carport", circuit: "carport", editable: true, heating: false },
+  { id: 15, title: "Heat pump", circuit: "workshop", editable: true, heating: true },
+];

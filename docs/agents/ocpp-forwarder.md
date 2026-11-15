@@ -18,6 +18,8 @@ For the actions in `actionsRelayedToUpstream` (`Authorize`, `StartTransaction`, 
 
 evcc's handler is never invoked for these. This lets the pay backend control authorization, issue its own transaction IDs, and see consistent Start/Stop pairs.
 
+evcc still observes the outcome: when upstream accepts a `StartTransaction`, the charger's `idTag` and upstream's `transactionId` are recorded on the connector (`trackTransaction`), and `StopTransaction` clears them. This keeps RFID-based vehicle identification working without evcc answering or influencing authorization.
+
 ### Sidecar observation (informational)
 
 For all other messages (`BootNotification`, `StatusNotification`, `MeterValues`, `Heartbeat`, etc.):
@@ -41,7 +43,7 @@ When a rule sets `ReadOnly`, upstream may observe but cannot control the charger
 
 Frames that arrive from a charger before its sidecar finishes dialling are buffered (`pendingMsgs`) and flushed in order once the sidecar connects, so early messages such as `BootNotification` still reach upstream. If the dial fails or upstream drops mid-session, any buffered or in-flight relay Calls are answered to the charger with a `CallError` so it is not left hanging, and the failure is surfaced to the UI via `forwarderErrors`.
 
-When the upstream connection fails while the charger stays connected, the sidecar is re-dialled automatically with exponential backoff (`runUpstreamSidecar`, 5s up to 5min; a successful session resets the backoff). Between attempts the relay actions fall back to evcc's local handler, so charging continues but upstream misses those transactions. The reconnect loop ends when the charger disconnects, the rule is removed, or its connection parameters change (`ApplyForwarderRules` dials its own sidecar in that case).
+When the upstream connection fails while the charger stays connected, the sidecar is re-dialled automatically with exponential backoff (`runUpstreamSidecar`, 5s up to 5min; only a session lasting at least a minute resets the backoff, so an upstream that accepts and drops at once is not hammered). Between attempts the relay actions fall back to evcc's local handler, so charging continues but upstream misses those transactions. The reconnect loop ends when the charger disconnects, the rule is removed, its connection parameters change (`ApplyForwarderRules` dials its own sidecar in that case), or a newer loop for the same charger takes over. A loop that lost its reason to run exits after its current backoff wait. Only the charger's current loop may install a sidecar, so a dial still in flight for an outdated rule is discarded.
 
 The last `BootNotification` of each connected charger is cached (`lastBoot`). When a sidecar connects mid-session (after an upstream reconnect or a rule added at runtime) and the pending buffer does not already carry a boot frame, the cached frame is replayed to upstream with a fresh message id, since many backends expect a boot before accepting transactions. Upstream's reply to the replay is discarded; evcc answered the charger's original boot long ago.
 
