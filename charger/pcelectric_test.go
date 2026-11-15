@@ -12,8 +12,6 @@ import (
 )
 
 func TestPCElectricStatus(t *testing.T) {
-	withSponsor(t)
-
 	tests := []struct {
 		name  string
 		slave int

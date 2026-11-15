@@ -1,5 +1,9 @@
 <template>
-	<section class="evcc-card round-box p-3 p-sm-4" :class="{ 'evcc-card--edge': edgeToEdge }">
+	<section
+		class="evcc-card round-box p-3 p-sm-4"
+		:class="{ 'evcc-card--edge': edgeToEdge }"
+		:aria-label="label || title || undefined"
+	>
 		<CardHeader
 			v-if="hasHeader"
 			class="mb-3"
@@ -31,6 +35,7 @@ export default defineComponent({
 	components: { CardHeader },
 	props: {
 		title: { type: String, default: "" },
+		label: { type: String, default: "" },
 		subtitle: { type: String, default: "" },
 		parent: { type: String, default: "" },
 		parentStatic: Boolean,
