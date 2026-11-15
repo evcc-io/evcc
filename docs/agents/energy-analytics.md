@@ -110,7 +110,7 @@ Known data quality traits that are accepted, not fixed:
 
 Reading every slot of a month or year is too slow on small devices, so completed local days are summed up once and stored (`core/metrics/daily.go`).
 
-- `meters_daily` holds the energy and grid cost sums per entity and day. `flows_daily` holds the attribution of the day as JSON, one row per rolled up day even without data. The newest row marks how far the rollup got.
+- `meters_daily` holds the energy and grid cost sums per entity and day. `meters_flows_daily` holds the attribution of the day as JSON, one row per rolled up day even without data. The newest row marks how far the rollup got.
 - Day and month aggregates and the flows read whole rolled up days from these tables. Everything else comes from the slots: the current day, partial days at the edges of a period, 15 minute and hourly aggregates.
 - A day is rolled up once its slots cannot change anymore (`dailyDelay`). The rollup runs in the background at startup. A read rolls up at most the next chunk of days and never waits for a running rollup, it uses the slots for the days that are missing. A failed rollup does not fail the read.
 - Attribution stays per slot. A day stores the attributed sums, which add up over days. Never attribute daily sums.

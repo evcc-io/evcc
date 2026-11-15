@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Completed local days are rolled up once into meters_daily and flows_daily,
+// Completed local days are rolled up once into meters_daily and meters_flows_daily,
 // so month and year periods read a row per day instead of every 15min slot.
 
 // energySum is the energy of an entity summed over a bucket of slots, and a
@@ -41,11 +41,11 @@ func (energySum) TableName() string {
 // rolled up day, the newest marks how far the rollup got.
 type flowDay struct {
 	Day  int64  `gorm:"column:day;primaryKey;autoIncrement:false"`
-	Data []byte `gorm:"column:data"` // json flowAcc
+	Data string `gorm:"column:data"` // json flowAcc
 }
 
 func (flowDay) TableName() string {
-	return "flows_daily"
+	return "meters_flows_daily"
 }
 
 const (
@@ -256,7 +256,7 @@ func rollup(end int64, final time.Time) (int64, error) {
 		if err != nil {
 			return end, err
 		}
-		flows = append(flows, flowDay{Day: d[0], Data: data})
+		flows = append(flows, flowDay{Day: d[0], Data: string(data)})
 	}
 
 	dailyMu.Lock()
@@ -469,7 +469,7 @@ func dailyFlow(from, to time.Time) (*flowAcc, error) {
 	acc := &flowAcc{Entities: make(map[int]*flowEntity)}
 	for _, d := range days {
 		var day flowAcc
-		if err := json.Unmarshal(d.Data, &day); err != nil {
+		if err := json.Unmarshal([]byte(d.Data), &day); err != nil {
 			return nil, err
 		}
 		acc.merge(&day)

@@ -152,7 +152,7 @@ func (e *flowEntity) merge(o *flowEntity) {
 }
 
 // flowAcc is the unrounded attribution of a period. Periods add up, which
-// lets the daily rollup store one per day: clear flows_daily in SetupSchema
+// lets the daily rollup store one per day: clear meters_flows_daily in SetupSchema
 // when a field here or in FlowCost and FlowCo2 changes.
 type flowAcc struct {
 	Flows     [3][4]flowSum       `json:"flows"`    // per flowSources and flowSinks entry
