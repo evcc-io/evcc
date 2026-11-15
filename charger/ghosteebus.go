@@ -116,6 +116,8 @@ func (wb *GhostEEBus) Identify() ([]string, error) {
 	if wb.hasRFID {
 		if ids, err := wb.identify(); err == nil {
 			res = append(res, ids...)
+		} else {
+			wb.log.DEBUG.Println("rfid:", err)
 		}
 	}
 
