@@ -83,6 +83,11 @@ func collectDeviceRefs(class templates.Class, named iter.Seq[config.Named], refe
 		if referenced != nil && !slices.Contains(referenced, cc.Name) {
 			continue
 		}
+		// nested `type: device` references of non-template configs
+		if class == templates.Charger {
+			references.charger = append(references.charger, staticRefs(cc)...)
+		}
+
 		for refClass, refs := range config.DeviceRefs(class, cc) {
 			switch refClass {
 			case templates.Meter:

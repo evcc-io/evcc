@@ -466,6 +466,11 @@ func staticRefs(cc config.Named) []string {
 	return res
 }
 
+// chargerRefs returns the chargers a static charger references, directly or via template device params
+func chargerRefs(cc config.Named) []string {
+	return append(staticRefs(cc), config.DeviceRefs(templates.Charger, cc)[templates.Charger]...)
+}
+
 func configureChargers(static []config.Named, names ...string) error {
 	var items []orderedItem
 
@@ -485,7 +490,7 @@ func configureChargers(static []config.Named, names ...string) error {
 
 		items = append(items, orderedItem{
 			name: cc.Name,
-			refs: staticRefs(cc),
+			refs: chargerRefs(cc),
 			run: func() error {
 				return staticInstance("charger", cc, charger.NewFromConfig, config.Chargers())
 			},
