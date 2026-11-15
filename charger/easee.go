@@ -339,7 +339,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		// received observation is outdated, ignoring
 		return
 	}
-	replayed := seen && prevTime.Equal(res.Timestamp)
 
 	prevModeTime := c.obsTime[easee.CHARGER_OP_MODE]
 	c.obsTime[res.ID] = res.Timestamp
@@ -412,7 +411,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			break
 		}
 		// a reconnect replays the last completed session, which may predate the connected vehicle
-		if replayed {
+		if seen && prevTime.Equal(res.Timestamp) {
 			break
 		}
 		c.sessionEnergy = data.EnergyKwh

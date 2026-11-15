@@ -943,7 +943,8 @@ func TestChargingSession_ReconnectReplay(t *testing.T) {
 	start := stop.Add(-3 * time.Hour)
 	connected := stop.Add(time.Hour)
 
-	session, err := json.Marshal(easee.ChargingSessionData{ID: 42, Start: start, Stop: stop, EnergyKwh: 11.4, MeterValueStart: 10000, MeterValueStop: 10011.4})
+	// meter stop below start plus energy, so a wrongly applied session energy shows in the total
+	session, err := json.Marshal(easee.ChargingSessionData{ID: 42, Start: start, Stop: stop, EnergyKwh: 11.4, MeterValueStart: 10000, MeterValueStop: 10005})
 	require.NoError(t, err)
 
 	// cloud replay order, the vehicle is connected again and has not charged yet
@@ -966,7 +967,7 @@ func TestChargingSession_ReconnectReplay(t *testing.T) {
 
 		total, err := e.TotalEnergy()
 		require.NoError(t, err)
-		assert.Equal(t, 10011.4, total)
+		assert.Equal(t, 10005.0, total)
 	}
 }
 
