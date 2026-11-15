@@ -29,7 +29,9 @@ func TestFill(t *testing.T) {
 	require.NoError(t, persist(e, slot(12), 1, 0, nil, false))
 
 	for range 2 { // idempotent
-		require.NoError(t, fill(e))
+		for _, n := range []int{0, 4, 6, 12} {
+			require.NoError(t, fill(e, slot(n)))
+		}
 
 		var rows []meter
 		require.NoError(t, db.Instance.Where("meter = ?", e.Id).Order("ts").Find(&rows).Error)

@@ -20,66 +20,57 @@ const maxFillSlots = 4
 
 var slotSeconds = int64(tariff.SlotDuration / time.Second)
 
-// fill persists interpolated slots for the entity's short gaps, as left by a
-// restart. A recovered slot after the gap is shared evenly with it instead.
-func fill(e entity) error {
+// fill persists interpolated slots for a short gap before the given slot, as
+// left by a restart. A recovered slot is shared evenly with the gap instead.
+func fill(e entity, slot time.Time) error {
 	// forecast and temperature are not energy measurements
 	if e.Group == Forecast || e.Group == Temperature {
 		return nil
 	}
 
-	var gaps []struct {
-		Ts, PrevTs                   int64 // slot after and before the gap
-		Origin                       int
-		Energy, ReturnEnergy         float64
-		PrevEnergy, PrevReturnEnergy float64
-	}
-	if err := db.Instance.Raw(`SELECT * FROM (
-			SELECT ts, COALESCE(recovered, 0) AS origin,
-				COALESCE(energy, 0) AS energy, COALESCE(return_energy, 0) AS return_energy,
-				lag(ts) OVER w AS prev_ts,
-				COALESCE(lag(energy) OVER w, 0) AS prev_energy,
-				COALESCE(lag(return_energy) OVER w, 0) AS prev_return_energy
-			FROM meters WHERE meter = ?
-			WINDOW w AS (ORDER BY ts)
-		) WHERE ts - prev_ts BETWEEN ? AND ?`, e.Id, 2*slotSeconds, (maxFillSlots+1)*slotSeconds).Scan(&gaps).Error; err != nil {
+	// the slot and its predecessor
+	var ends []meter
+	if err := db.Instance.Where("meter = ? AND ts <= ?", e.Id, slot.Unix()).Order("ts DESC").Limit(2).Find(&ends).Error; err != nil {
 		return err
 	}
+	if len(ends) < 2 {
+		return nil // first slot of the entity, no predecessor
+	}
 
-	for _, g := range gaps {
-		n := float64((g.Ts-g.PrevTs)/slotSeconds - 1) // missing slots
-		recovered := g.Origin == slotRecovered
+	next, prev := ends[0], ends[1]
+	missing := (next.Timestamp-prev.Timestamp)/slotSeconds - 1
+	if missing < 1 || missing > maxFillSlots {
+		return nil
+	}
 
-		var rows []meter
-		for i := 1.0; i <= n; i++ {
-			m := meter{
-				Meter:        e.Id,
-				Timestamp:    g.PrevTs + int64(i)*slotSeconds,
-				Energy:       g.PrevEnergy + (g.Energy-g.PrevEnergy)*i/(n+1),
-				ReturnEnergy: g.PrevReturnEnergy + (g.ReturnEnergy-g.PrevReturnEnergy)*i/(n+1),
-				Recovered:    slotInterpolated,
-			}
-			if recovered {
-				m.Energy = g.Energy / (n + 1)
-				m.ReturnEnergy = g.ReturnEnergy / (n + 1)
-			}
-			rows = append(rows, m)
+	n := float64(missing + 1)
+	recovered := next.Recovered == slotRecovered
+
+	rows := make([]meter, missing)
+	for i := range rows {
+		f := float64(i+1) / n
+		rows[i] = meter{
+			Meter:        e.Id,
+			Timestamp:    prev.Timestamp + int64(i+1)*slotSeconds,
+			Energy:       prev.Energy + (next.Energy-prev.Energy)*f,
+			ReturnEnergy: prev.ReturnEnergy + (next.ReturnEnergy-prev.ReturnEnergy)*f,
+			Recovered:    slotInterpolated,
 		}
-
-		if err := db.Instance.Transaction(func(tx *gorm.DB) error {
-			if recovered {
-				if err := tx.Model(new(meter)).Where("meter = ? AND ts = ?", e.Id, g.Ts).UpdateColumns(map[string]any{
-					"energy":        g.Energy / (n + 1),
-					"return_energy": g.ReturnEnergy / (n + 1),
-				}).Error; err != nil {
-					return err
-				}
-			}
-			return tx.Create(rows).Error
-		}); err != nil {
-			return err
+		if recovered {
+			rows[i].Energy = next.Energy / n
+			rows[i].ReturnEnergy = next.ReturnEnergy / n
 		}
 	}
 
-	return nil
+	return db.Instance.Transaction(func(tx *gorm.DB) error {
+		if recovered {
+			if err := tx.Model(new(meter)).Where("meter = ? AND ts = ?", e.Id, next.Timestamp).UpdateColumns(map[string]any{
+				"energy":        next.Energy / n,
+				"return_energy": next.ReturnEnergy / n,
+			}).Error; err != nil {
+				return err
+			}
+		}
+		return tx.Create(rows).Error
+	})
 }

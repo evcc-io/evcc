@@ -113,7 +113,7 @@ func (c *Collector) process(fun func()) error {
 // slot, leaving it untouched within the current one.
 func (c *Collector) advanceSlot(now time.Time) error {
 	slotStart := now.Truncate(tariff.SlotDuration)
-	var persisted bool
+	var persisted time.Time
 
 	switch {
 	case c.started.IsZero():
@@ -137,7 +137,7 @@ func (c *Collector) advanceSlot(now time.Time) error {
 			if err := c.persist(recovered); err != nil {
 				return err
 			}
-			persisted = true
+			persisted = c.started
 		} else {
 			c.gap = true
 		}
@@ -153,8 +153,8 @@ func (c *Collector) advanceSlot(now time.Time) error {
 	c.accu.ReturnEnergy = 0
 	c.accu.SocTemp = nil
 
-	if persisted && c.gap {
-		if err := fill(c.entity); err != nil {
+	if !persisted.IsZero() && c.gap {
+		if err := fill(c.entity, persisted); err != nil {
 			return err
 		}
 		c.gap = false
