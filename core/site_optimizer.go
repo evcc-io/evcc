@@ -1146,7 +1146,7 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 		}
 		// add smartcost limit, precondition and plan goal, if configured
 		demand = applySmartCostLimit(lp, demand, planner, minLen)
-		demand = applyPrecondition(lp, demand, minLen)
+		demand = applyPrecondition(lp, demand, minLen, firstSlotDuration)
 		site.applyPlanGoal(lp, &bat, minLen)
 	}
 
@@ -1703,7 +1703,7 @@ func applySmartCostLimit(lp loadpoint.API, demand []float32, planner api.Rates, 
 
 // applyPrecondition forces max charging power during the planner's precondition window
 // ("late charging"), i.e. the last precondition duration before the plan time
-func applyPrecondition(lp loadpoint.API, demand []float32, minLen int) []float32 {
+func applyPrecondition(lp loadpoint.API, demand []float32, minLen int, firstSlotDuration time.Duration) []float32 {
 	precondition := lp.EffectivePlanStrategy().Precondition
 	if precondition <= 0 {
 		return demand
@@ -1723,14 +1723,31 @@ func applyPrecondition(lp loadpoint.API, demand []float32, minLen int) []float32
 		return demand
 	}
 
-	// TODO precise slot placement
+	// Calculate slot indices accounting for the first slot which may be partial
+	// end is time duration from now until plan time
 	end := time.Until(ts)
-	start := end - precondition
 	if end <= 0 {
 		return demand
 	}
 
-	first := max(int(start/tariff.SlotDuration), 0)
+	start := end - precondition
+
+	// Adjust for first slot duration: slot 0 ends after firstSlotDuration, not always 15 minutes
+	// Calculate which slot each time boundary falls into
+	timeToSlotIndex := func(duration time.Duration) int {
+		if duration <= 0 {
+			return 0
+		}
+		if duration <= firstSlotDuration {
+			return 0 // within the first (partial) slot
+		}
+		// after the first slot, regular 15-minute slots
+		return int((duration-firstSlotDuration)/tariff.SlotDuration) + 1
+	}
+
+	first := timeToSlotIndex(start)
+	last := timeToSlotIndex(end)
+
 	if first >= minLen {
 		return demand
 	}
@@ -1741,14 +1758,35 @@ func applyPrecondition(lp loadpoint.API, demand []float32, minLen int) []float32
 
 	energy := float32(lp.EffectiveMaxPower() / slotsPerHour)
 
-	for i := first; i < minLen; i++ {
-		slotStart := time.Duration(i) * tariff.SlotDuration
-		overlap := min(end, slotStart+tariff.SlotDuration) - max(start, slotStart)
-		if overlap <= 0 {
-			break
+	for i := first; i <= last && i < minLen; i++ {
+		// Calculate this slot's time boundaries
+		var slotStart, slotEnd time.Duration
+		if i == 0 {
+			slotStart = 0
+			slotEnd = firstSlotDuration
+		} else {
+			slotStart = firstSlotDuration + time.Duration(i-1)*tariff.SlotDuration
+			slotEnd = firstSlotDuration + time.Duration(i)*tariff.SlotDuration
 		}
 
-		demand[i] = max(demand[i], energy*float32(overlap)/float32(tariff.SlotDuration))
+		// Calculate overlap with precondition window [start, end]
+		overlapStart := max(start, slotStart)
+		overlapEnd := min(end, slotEnd)
+		overlap := overlapEnd - overlapStart
+
+		if overlap <= 0 {
+			continue
+		}
+
+		// Calculate the energy to request for this slot
+		// For the first slot, we need to account for its partial duration
+		var slotDuration time.Duration
+		if i == 0 {
+			slotDuration = firstSlotDuration
+		} else {
+			slotDuration = tariff.SlotDuration
+		}
+		demand[i] = max(demand[i], energy*float32(overlap)/float32(slotDuration))
 	}
 
 	return demand
