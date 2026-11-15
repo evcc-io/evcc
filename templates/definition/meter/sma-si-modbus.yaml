@@ -126,7 +126,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: -{{ mulf .maxchargepower 1.1 }} # Wirkleistungsvorgabe ---> SunnyIsland berechnet intern die max Wirkleistung via Ampere. 
+            value: -{{ mulf .maxchargepower 1.1 | int64 }} # Wirkleistungsvorgabe ---> SunnyIsland berechnet intern die max Wirkleistung via Ampere. 
                                                # im Falle des SI6.0H-1x sind das exemplarisch 20A, also 4600/230 = 20A. Der Max Wert ergibt sich aus dem maximal zulässigen 
                                                # Spannung im Europäischen Stromnetz (+/-10%), somit kann auf den Max Wert des Batteriestellers 10% aufgeschlagen werden 
                                                # um auch bei hohen Spannungen die max 20A auszunutzen. Dies trifft für alle SI zu. Somit erreicht man etwas mehr Leistung
