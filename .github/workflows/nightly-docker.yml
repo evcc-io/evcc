@@ -6,6 +6,8 @@ name: Nightly Docker
 on:
   workflow_call:
 
+permissions: {}
+
 jobs:
   docker:
     name: Publish Docker :nightly
@@ -52,9 +54,11 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
 
       - name: Delete old nightly.* tags
+        env:
+          DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
         run: |
           old_tags=$(curl -s "https://hub.docker.com/v2/repositories/evcc/evcc/tags/?page_size=100" | jq -r '.results | map(select(.name | startswith("nightly."))) | sort_by(.last_updated) | reverse | .[1:] | .[].name')
           for tag in $old_tags; do
             echo "Deleting tag: $tag"
-            curl -s -H "Authorization: Bearer ${{ secrets.DOCKER_PASS }}" -X DELETE "https://hub.docker.com/v2/repositories/evcc/evcc/tags/$tag/"
+            curl -s -H "Authorization: Bearer $DOCKER_PASS" -X DELETE "https://hub.docker.com/v2/repositories/evcc/evcc/tags/$tag/"
           done

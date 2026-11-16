@@ -12,6 +12,8 @@ concurrency:
   group: claude-review-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   prepare:
     # Skip draft PRs
