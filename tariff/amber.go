@@ -188,13 +188,14 @@ func (t *Amber) buildSlotRates(intervals []amberInterval) api.Rates {
 			if iv.isCurrent {
 				// Current interval overrides the entire slot
 				b.current = &iv.value
-				b.estimate = iv.estimate
-			} else if b.current == nil {
+			} else {
 				// Add to weighted average
 				b.weightedSum += iv.value * overlapSecs
 				b.totalSecs += overlapSecs
-				b.estimate = b.estimate || iv.estimate
 			}
+
+			// the slot stays an estimate while any part of it is, even if the current price is final
+			b.estimate = b.estimate || iv.estimate
 
 			slot = next
 		}
