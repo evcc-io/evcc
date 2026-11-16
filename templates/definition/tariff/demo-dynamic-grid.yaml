@@ -38,6 +38,16 @@ params:
       en: Length of the generated forecast, starting now
       de: Länge der erzeugten Vorhersage, beginnend jetzt
     advanced: true
+  - name: knowndays
+    type: int
+    default: 1
+    description:
+      en: Known days
+      de: Bekannte Tage
+    help:
+      en: Prices after this period are marked as estimate
+      de: Preise nach diesem Zeitraum werden als Schätzung markiert
+    advanced: true
   - name: noise
     type: float
     default: 0.01
@@ -106,7 +116,9 @@ render: |
       }
 
       // rolling horizon from the current slot, pattern stays anchored at midnight
-      var end = Math.floor(now.getTime() / slotDuration) * slotDuration + days * slotsPerDay * slotDuration;
+      var current = Math.floor(now.getTime() / slotDuration) * slotDuration;
+      var end = current + days * slotsPerDay * slotDuration;
+      var knownEnd = current + {{ .knowndays }} * slotsPerDay * slotDuration;
 
       for (var day = 0; day <= days; day++) {
         for (var slot = 0; slot < slotsPerDay; slot++) {
@@ -125,7 +137,8 @@ render: |
           rates.push({
             start: time.toISOString(),
             end: new Date(time.getTime() + slotDuration).toISOString(),
-            value: Math.round(price * 1000) / 1000 // Round to 3 decimal places
+            value: Math.round(price * 1000) / 1000, // Round to 3 decimal places
+            estimate: time.getTime() >= knownEnd
           });
         }
       }

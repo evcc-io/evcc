@@ -67,8 +67,7 @@ func (t *Merged) Rates() (api.Rates, error) {
 	result, err := t.primary.Rates()
 	if err != nil {
 		t.log.DEBUG.Printf("primary tariff failed, falling back to secondary: %v", err)
-		rates, err := t.secondary.Rates()
-		return estimated(rates), err
+		return t.secondary.Rates()
 	}
 
 	secondaryRates, err := t.secondary.Rates()
@@ -79,7 +78,7 @@ func (t *Merged) Rates() (api.Rates, error) {
 
 	// If primary is empty, use all secondary rates
 	if len(result) == 0 {
-		return estimated(secondaryRates), nil
+		return secondaryRates, nil
 	}
 
 	// Find where primary data ends and append secondary rates starting there
@@ -87,20 +86,11 @@ func (t *Merged) Rates() (api.Rates, error) {
 	if idx, found := slices.BinarySearchFunc(secondaryRates, primaryEnd, func(r api.Rate, t time.Time) int {
 		return r.Start.Compare(t)
 	}); found {
-		return append(result, estimated(secondaryRates[idx:])...), nil
+		return append(result, secondaryRates[idx:]...), nil
 	}
 
 	t.log.WARN.Printf("secondary tariff does not align gapless with primary, ignoring secondary")
 	return result, nil
-}
-
-// estimated returns a copy of the rates marked as estimate
-func estimated(rr api.Rates) api.Rates {
-	res := slices.Clone(rr)
-	for i := range res {
-		res[i].Estimate = true
-	}
-	return res
 }
 
 // Type implements the api.Tariff interface
