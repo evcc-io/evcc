@@ -2,7 +2,7 @@ name: Claude Code Review (run)
 
 # Stage 2 (privileged): triggered when the "Claude Code Review" workflow above
 # completes. workflow_run executes in the base-repo context, so it has access
-# to secrets and id-token even for PRs from forks. This is what makes reviewing
+# to secrets even for PRs from forks. This is what makes reviewing
 # external contributors' PRs possible.
 #
 # Security: the triggering workflow file is fork-controlled, so the uploaded
@@ -70,7 +70,6 @@ jobs:
       contents: read
       pull-requests: write # post the review on the PR
       issues: read
-      id-token: write
       statuses: write # mirror the review result onto the PR head commit
     concurrency:
       group: claude-review-run-${{ needs.gate.outputs.number }}

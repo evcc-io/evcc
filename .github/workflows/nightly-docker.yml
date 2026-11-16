@@ -5,6 +5,13 @@ name: Nightly Docker
 
 on:
   workflow_call:
+    secrets:
+      DOCKER_USER:
+        required: true
+      DOCKER_PASS:
+        required: true
+      DEPOT_PROJECT_ID:
+        required: true
 
 permissions: {}
 
