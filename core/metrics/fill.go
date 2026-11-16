@@ -5,23 +5,19 @@ import (
 
 	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/tariff"
-	"gorm.io/gorm"
 )
 
 // slot origin, stored in meters.recovered
 const (
 	slotMeasured     = iota
 	slotRecovered    // catch-up slot after downtime, excluded from profiles
-	slotInterpolated // short gap filled from its neighbours
+	slotInterpolated // single missing slot filled from its neighbors
 )
-
-// longer gaps are downtime and stay empty
-const maxFillSlots = 4
 
 var slotSeconds = int64(tariff.SlotDuration / time.Second)
 
-// fill persists interpolated slots for a short gap before the given slot, as
-// left by a restart. A recovered slot is shared evenly with the gap instead.
+// fill persists the mean of its neighbors for a single missing slot before
+// the given slot, as left by a restart.
 func fill(e entity, slot time.Time) error {
 	// temperature slots carry no energy
 	if e.Group == Temperature {
@@ -37,40 +33,17 @@ func fill(e entity, slot time.Time) error {
 		return nil // first slot of the entity, no predecessor
 	}
 
+	// longer gaps are downtime and stay empty, recovered slots hold more than their own energy
 	next, prev := ends[0], ends[1]
-	missing := (next.Timestamp-prev.Timestamp)/slotSeconds - 1
-	if missing < 1 || missing > maxFillSlots {
+	if next.Timestamp-prev.Timestamp != 2*slotSeconds || next.Recovered != slotMeasured || prev.Recovered != slotMeasured {
 		return nil
 	}
 
-	n := float64(missing + 1)
-	recovered := next.Recovered == slotRecovered
-
-	rows := make([]meter, missing)
-	for i := range rows {
-		f := float64(i+1) / n
-		rows[i] = meter{
-			Meter:        e.Id,
-			Timestamp:    prev.Timestamp + int64(i+1)*slotSeconds,
-			Energy:       prev.Energy + (next.Energy-prev.Energy)*f,
-			ReturnEnergy: prev.ReturnEnergy + (next.ReturnEnergy-prev.ReturnEnergy)*f,
-			Recovered:    slotInterpolated,
-		}
-		if recovered {
-			rows[i].Energy = next.Energy / n
-			rows[i].ReturnEnergy = next.ReturnEnergy / n
-		}
-	}
-
-	return db.Instance.Transaction(func(tx *gorm.DB) error {
-		if recovered {
-			if err := tx.Model(new(meter)).Where("meter = ? AND ts = ?", e.Id, next.Timestamp).UpdateColumns(map[string]any{
-				"energy":        next.Energy / n,
-				"return_energy": next.ReturnEnergy / n,
-			}).Error; err != nil {
-				return err
-			}
-		}
-		return tx.Create(rows).Error
-	})
+	return db.Instance.Create(&meter{
+		Meter:        e.Id,
+		Timestamp:    prev.Timestamp + slotSeconds,
+		Energy:       (prev.Energy + next.Energy) / 2,
+		ReturnEnergy: (prev.ReturnEnergy + next.ReturnEnergy) / 2,
+		Recovered:    slotInterpolated,
+	}).Error
 }

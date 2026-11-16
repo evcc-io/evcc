@@ -314,20 +314,15 @@ func TestCollectorRecoversDowntimeViaMeterReadings(t *testing.T) {
 
 	var m meter
 	require.NoError(t, db.Instance.Where("meter = ? AND ts = ?", col2.entity.Id, 90*60).First(&m).Error)
+	require.InDelta(t, 2.5, m.Energy, 1e-10)
+	require.InDelta(t, 1.0, m.ReturnEnergy, 1e-10)
 	require.Equal(t, slotRecovered, m.Recovered, "catchup slot must be flagged recovered")
-	require.False(t, col2.restored, "recovery flag cleared after first slot")
 
-	// the catchup slot is shared evenly with the 4 missing slots before it
-	var filled []meter
-	require.NoError(t, db.Instance.Where("meter = ? AND ts > ?", col2.entity.Id, 15*60).Order("ts").Find(&filled).Error)
-	require.Len(t, filled, 5)
-	for _, s := range filled[:4] {
-		require.Equal(t, slotInterpolated, s.Recovered)
-		require.InDelta(t, 0.5, s.Energy, 1e-10)
-		require.InDelta(t, 0.2, s.ReturnEnergy, 1e-10)
-	}
-	require.InDelta(t, 0.5, m.Energy, 1e-10)
-	require.InDelta(t, 0.2, m.ReturnEnergy, 1e-10)
+	// the recovered slot is excluded from the household profile
+	require.False(t, col2.restored, "recovery flag cleared after first slot")
+	var recovered int64
+	require.NoError(t, db.Instance.Model(new(meter)).Where("meter = ? AND recovered", col2.entity.Id).Count(&recovered).Error)
+	require.EqualValues(t, 1, recovered, "only the catchup slot is recovered")
 
 	// readings advanced with the persisted slot
 	require.NoError(t, db.Instance.First(&e, col2.entity.Id).Error)
@@ -711,9 +706,36 @@ func TestCollectorKeepsRestoreForSurvivingDirection(t *testing.T) {
 
 	var m meter
 	require.NoError(t, db.Instance.Where("meter = ? AND ts = ?", col2.entity.Id, 90*60).First(&m).Error)
+	require.InDelta(t, 10.0, m.Energy, 1e-10)
 	require.Equal(t, slotRecovered, m.Recovered, "catchup slot must be flagged recovered")
+}
 
-	var total float64
-	require.NoError(t, db.Instance.Model(new(meter)).Where("meter = ? AND ts > ?", col2.entity.Id, 15*60).Select("sum(energy)").Scan(&total).Error)
-	require.InDelta(t, 10.0, total, 1e-10)
+// TestCollectorFillsRestartSlot verifies that the slot lost by a restart of a
+// power-integrated entity is interpolated from its neighbors.
+func TestCollectorFillsRestartSlot(t *testing.T) {
+	clk := clock.NewMock() // 1970-01-01 00:00:00 UTC, on a slot boundary
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Home, "restart", "", WithClock(clk))
+	require.NoError(t, err)
+	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
+	clk.Add(15 * time.Minute) // 00:15, slot 00:00 persisted
+	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
+
+	// restart within slot 00:15, which is lost
+	clk.Add(5 * time.Minute) // 00:20
+	col2, err := NewCollector(Home, "restart", "", WithClock(clk))
+	require.NoError(t, err)
+	require.NoError(t, col2.AddEnergy(nil, nil, 3e3))
+	clk.Add(10 * time.Minute) // 00:30
+	require.NoError(t, col2.AddEnergy(nil, nil, 3e3))
+	clk.Add(15 * time.Minute) // 00:45, slot 00:30 persisted
+	require.NoError(t, col2.AddEnergy(nil, nil, 3e3))
+
+	var m meter
+	require.NoError(t, db.Instance.Where("meter = ? AND ts = ?", col2.entity.Id, 15*60).First(&m).Error)
+	require.Equal(t, slotInterpolated, m.Recovered)
+	require.InDelta(t, 0.5, m.Energy, 1e-10) // mean of 0.25 and 0.75 kWh
 }

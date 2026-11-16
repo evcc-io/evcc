@@ -21,21 +21,21 @@ func TestFill(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NoError(t, persist(e, slot(0), 1, 4, nil, false))
-	// slots 1-3 missing
-	require.NoError(t, persist(e, slot(4), 5, 0, nil, false))
-	// slot 5 missing, slot 6 holds its energy
-	require.NoError(t, persist(e, slot(6), 4, 2, nil, true))
-	// slots 7-11 missing: downtime, stays empty
-	require.NoError(t, persist(e, slot(12), 1, 0, nil, false))
+	// slot 1 missing
+	require.NoError(t, persist(e, slot(2), 5, 0, nil, false))
+	// slot 3 missing, slot 4 holds its energy: untouched
+	require.NoError(t, persist(e, slot(4), 4, 2, nil, true))
+	// slots 5-6 missing: downtime, stays empty
+	require.NoError(t, persist(e, slot(7), 1, 0, nil, false))
 
 	for range 2 { // idempotent
-		for _, n := range []int{0, 4, 6, 12} {
+		for _, n := range []int{0, 2, 4, 7} {
 			require.NoError(t, fill(e, slot(n)))
 		}
 
 		var rows []meter
 		require.NoError(t, db.Instance.Where("meter = ?", e.Id).Order("ts").Find(&rows).Error)
-		require.Len(t, rows, 8)
+		require.Len(t, rows, 5)
 
 		for i, tc := range []struct {
 			slot                 int
@@ -43,13 +43,10 @@ func TestFill(t *testing.T) {
 			origin               int
 		}{
 			{0, 1, 4, slotMeasured},
-			{1, 2, 3, slotInterpolated},
-			{2, 3, 2, slotInterpolated},
-			{3, 4, 1, slotInterpolated},
-			{4, 5, 0, slotMeasured},
-			{5, 2, 1, slotInterpolated},
-			{6, 2, 1, slotRecovered},
-			{12, 1, 0, slotMeasured},
+			{1, 3, 2, slotInterpolated},
+			{2, 5, 0, slotMeasured},
+			{4, 4, 2, slotRecovered},
+			{7, 1, 0, slotMeasured},
 		} {
 			assert.Equal(t, slot(tc.slot).Unix(), rows[i].Timestamp)
 			assert.InDelta(t, tc.energy, rows[i].Energy, 1e-10, "slot %d", tc.slot)
