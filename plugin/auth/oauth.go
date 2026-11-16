@@ -4,11 +4,13 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -172,6 +174,8 @@ func (o *OAuth) Token() (*oauth2.Token, error) {
 
 	token, err := o.oc.TokenSource(o.ctx, o.token).Token()
 	if err != nil {
+		o.log.ERROR.Printf("token refresh failed: %v", err)
+
 		// force logout
 		if strings.Contains(err.Error(), "invalid_") && settings.Exists(o.subject) {
 			o.token = nil
@@ -187,8 +191,53 @@ func (o *OAuth) Token() (*oauth2.Token, error) {
 	return token, nil
 }
 
+const shortRefreshLifetime = 24 * time.Hour
+
+// refreshExpiresIn reads the provider's refresh_expires_in extra, if present.
+func refreshExpiresIn(token *oauth2.Token) (time.Duration, bool) {
+	if token == nil {
+		return 0, false
+	}
+
+	switch v := token.Extra("refresh_expires_in").(type) {
+	case nil:
+		return 0, false
+	case float64:
+		return time.Duration(v) * time.Second, true
+	case int:
+		return time.Duration(v) * time.Second, true
+	case int64:
+		return time.Duration(v) * time.Second, true
+	case json.Number:
+		n, err := v.Int64()
+		if err != nil {
+			return 0, false
+		}
+		return time.Duration(n) * time.Second, true
+	case string:
+		n, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			return 0, false
+		}
+		return time.Duration(n) * time.Second, true
+	default:
+		return 0, false
+	}
+}
+
+func (o *OAuth) warnShortRefresh(token *oauth2.Token) {
+	d, ok := refreshExpiresIn(token)
+	if !ok || d <= 0 || d >= shortRefreshLifetime {
+		return
+	}
+
+	o.log.WARN.Printf("refresh token expires in %v; log in again if the session was not set to stay signed in", d.Round(time.Second))
+}
+
 // updateToken must only be called when lock is held
 func (o *OAuth) updateToken(token *oauth2.Token) {
+	o.warnShortRefresh(token)
+
 	var store any = token
 
 	// tokenStorer allows persisting the token together with it's extra properties
