@@ -15,8 +15,7 @@ import (
 // on the first poll of a session to seed the merged map.
 const maxBackfill = 8
 
-// errNoDatasets is returned when the portal lists no datasets for a vehicle that
-// has delivered data before
+// errNoDatasets means the portal lists no datasets although data was received before
 var errNoDatasets = errors.New("portal lists no datasets, vehicle data is outdated")
 
 // updateTimeout bounds a single update, so that waiting for the portal's rate
@@ -38,7 +37,7 @@ type vehicleState struct {
 	data       []point
 	after      time.Time
 	seq        uint64    // delivery counter, incremented per merged dataset
-	lastOK     time.Time // last successful update, shared by all providers of the vehicle
+	lastOK     time.Time // shared by all providers of the vehicle for the error grace period
 }
 
 var (
@@ -108,8 +107,7 @@ func (s *store) update(vin string) (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	// an empty list while data has been received before means the data request
-	// is gone or the portal has moved; report it instead of serving the old data
+	// a missing data request must not silently freeze the merged data
 	if len(list) == 0 && len(v.data) > 0 {
 		return time.Time{}, errNoDatasets
 	}

@@ -27,9 +27,8 @@ import (
 // https://github.com/TA2k/ioBroker.vw-connect (lib/euDataAct.js)
 
 const (
-	// BaseURL is the EU Data Act portal that delivers the mandated vehicle datasets.
-	// The portal moved from eu-data-act.drivesomethinggreater.com, which now redirects
-	// api calls to a path that answers 404.
+	// BaseURL is the EU Data Act portal. The former drivesomethinggreater.com host
+	// redirects API calls to a path that answers 404.
 	BaseURL = "https://eu-data-act.vwgroup-datahub.com"
 	// RedirectURI is the OIDC redirect target registered for the portal
 	RedirectURI = BaseURL + "/login"

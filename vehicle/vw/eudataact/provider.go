@@ -58,8 +58,6 @@ func NewProvider(log *util.Logger, client *API, vin string, cache time.Duration,
 		}
 
 		// serve the last data over transient portal errors, surface persistent ones
-		// the last success is tracked per vehicle, so providers sharing the vehicle
-		// state keep the grace period of the one that loaded the data
 		if data := s.snapshot(vin); keepData(data, s.lastOK(vin)) {
 			log.ERROR.Println(err)
 			return data, nil
