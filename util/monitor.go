@@ -99,18 +99,22 @@ func (m *Monitor[T]) GetFuncContext(ctx context.Context, get func(T)) error {
 			m.mu.RUnlock()
 
 			m.mu.Lock()
+			wait := false
 			if m.updated.IsZero() && !m.waited {
 				m.waited = true
+				wait = true
 			}
 			m.mu.Unlock()
 
-			select {
-			case <-m.done:
-				// got value and updated timestamp
-				err = nil
-			case <-ctx.Done():
-				err = ctx.Err()
-			case <-m.clock.After(m.timeout):
+			if wait {
+				select {
+				case <-m.done:
+					// got value and updated timestamp
+					err = nil
+				case <-ctx.Done():
+					err = ctx.Err()
+				case <-m.clock.After(m.timeout):
+				}
 			}
 
 			m.mu.RLock()
