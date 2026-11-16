@@ -251,7 +251,7 @@
       "amount": "Amount",
       "asleep": "sleeping",
       "broker": "Broker",
-      "bucket": "Bucket",
+      "bucket": "Bucket / Database",
       "capacity": "Capacity",
       "chargeStatus": "Status",
       "chargeStatusA": "not connected",
