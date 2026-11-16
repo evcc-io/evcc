@@ -502,7 +502,7 @@
     "influx": {
       "description": "Writes charging data and other metrics to InfluxDB. Use Grafana or other tools to visualize the data.",
       "descriptionToken": "Check the InfluxDB documentation to learn how to create one. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Bucket",
+      "labelBucket": "Bucket / Database",
       "labelCheckInsecure": "Allow self-signed certificates",
       "labelDatabase": "Database",
       "labelInsecure": "Certificate validation",
@@ -513,7 +513,7 @@
       "labelUser": "Username",
       "title": "InfluxDB",
       "v1Support": "Need support for InfluxDB 1.x?",
-      "v2Support": "Back to InfluxDB 2.x"
+      "v2Support": "Back to InfluxDB 2+"
     },
     "loadpoint": {
       "addCharger": {

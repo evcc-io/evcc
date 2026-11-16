@@ -502,7 +502,7 @@
     "influx": {
       "description": "Schreibt Ladedaten und andere Metriken in InfluxDB. Verwende Grafana oder andere Tools, um die Daten zu visualisieren.",
       "descriptionToken": "Siehe die InfluxDB-Dokumentation, um zu erfahren, wie du einen erstellst. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Bucket",
+      "labelBucket": "Bucket / Datenbank",
       "labelCheckInsecure": "Erlaube unsichere Verbindungen",
       "labelDatabase": "Datenbank",
       "labelInsecure": "Zertifikatsüberprüfung",
@@ -513,7 +513,7 @@
       "labelUser": "Benutzer",
       "title": "InfluxDB",
       "v1Support": "Unterstützung für InfluxDB 1.x?",
-      "v2Support": "Zurück zu InfluxDB 2.x"
+      "v2Support": "Zurück zu InfluxDB 2+"
     },
     "loadpoint": {
       "addCharger": {
