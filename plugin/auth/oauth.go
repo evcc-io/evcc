@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"slices"
@@ -53,9 +54,10 @@ type OAuth struct {
 	onlineC chan<- bool
 	redact  func(...string)
 
-	deviceFlow     bool
-	tokenRetriever func(string, *oauth2.Token) error
-	tokenStorer    func(*oauth2.Token) any
+	deviceFlow       bool
+	tokenRetriever   func(string, *oauth2.Token) error
+	tokenStorer      func(*oauth2.Token) any
+	refreshErrLogged bool
 }
 
 func NewOAuthFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
@@ -174,7 +176,10 @@ func (o *OAuth) Token() (*oauth2.Token, error) {
 
 	token, err := o.oc.TokenSource(o.ctx, o.token).Token()
 	if err != nil {
-		o.log.ERROR.Printf("token refresh failed: %v", err)
+		if !o.refreshErrLogged {
+			o.log.ERROR.Printf("token refresh failed: %v", err)
+			o.refreshErrLogged = true
+		}
 
 		// force logout
 		if strings.Contains(err.Error(), "invalid_") && settings.Exists(o.subject) {
@@ -193,7 +198,25 @@ func (o *OAuth) Token() (*oauth2.Token, error) {
 
 const shortRefreshLifetime = 24 * time.Hour
 
-// refreshExpiresIn reads the provider's refresh_expires_in extra, if present.
+func durationFromSeconds(sec int64) (time.Duration, bool) {
+	if sec > math.MaxInt64/int64(time.Second) || sec < math.MinInt64/int64(time.Second) {
+		return 0, false
+	}
+	return time.Duration(sec) * time.Second, true
+}
+
+func durationFromSecondsFloat(sec float64) (time.Duration, bool) {
+	if math.IsNaN(sec) || math.IsInf(sec, 0) {
+		return 0, false
+	}
+	maxSec := float64(math.MaxInt64 / int64(time.Second))
+	minSec := float64(math.MinInt64 / int64(time.Second))
+	if sec > maxSec || sec < minSec {
+		return 0, false
+	}
+	return time.Duration(sec) * time.Second, true
+}
+
 func refreshExpiresIn(token *oauth2.Token) (time.Duration, bool) {
 	if token == nil {
 		return 0, false
@@ -203,23 +226,23 @@ func refreshExpiresIn(token *oauth2.Token) (time.Duration, bool) {
 	case nil:
 		return 0, false
 	case float64:
-		return time.Duration(v) * time.Second, true
+		return durationFromSecondsFloat(v)
 	case int:
-		return time.Duration(v) * time.Second, true
+		return durationFromSeconds(int64(v))
 	case int64:
-		return time.Duration(v) * time.Second, true
+		return durationFromSeconds(v)
 	case json.Number:
 		n, err := v.Int64()
 		if err != nil {
 			return 0, false
 		}
-		return time.Duration(n) * time.Second, true
+		return durationFromSeconds(n)
 	case string:
 		n, err := strconv.ParseInt(v, 10, 64)
 		if err != nil {
 			return 0, false
 		}
-		return time.Duration(n) * time.Second, true
+		return durationFromSeconds(n)
 	default:
 		return 0, false
 	}
@@ -236,6 +259,7 @@ func (o *OAuth) warnShortRefresh(token *oauth2.Token) {
 
 // updateToken must only be called when lock is held
 func (o *OAuth) updateToken(token *oauth2.Token) {
+	o.refreshErrLogged = false
 	o.warnShortRefresh(token)
 
 	var store any = token
