@@ -44,6 +44,7 @@ render: |
       [.points[] | {
         "start": .start,
         "end": .end,
+        "estimate": (.source == "forecast"),
         {{- if eq .price "final" }}
         "value": (.final // .spot)
         {{- else }}
