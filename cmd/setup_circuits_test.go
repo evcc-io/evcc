@@ -161,55 +161,78 @@ loadpoints:
 	suite.Require().NoError(validateCircuits(lps))
 }
 
-func (suite *circuitsTestSuite) TestCircularCircuitReference() {
-	var conf globalconfig.All
-	viper.SetConfigType("yaml")
-
-	suite.Require().NoError(viper.ReadConfig(strings.NewReader(`
+func (suite *circuitsTestSuite) TestCircuitConfigErrors() {
+	for _, tc := range []struct {
+		name, yaml, want string
+	}{
+		{
+			name: "circular reference",
+			yaml: `
 circuits:
 - name: a
   parent: b
 - name: b
   parent: a
-`)))
-	suite.Require().NoError(viper.UnmarshalExact(&conf))
-
-	err := configureCircuits(&conf.Circuits)
-	suite.Require().Error(err)
-	suite.Contains(err.Error(), "circular reference")
-	suite.Contains(err.Error(), "a")
-	suite.Contains(err.Error(), "b")
-}
-
-func (suite *circuitsTestSuite) TestSelfParentCircuit() {
-	var conf globalconfig.All
-	viper.SetConfigType("yaml")
-
-	suite.Require().NoError(viper.ReadConfig(strings.NewReader(`
+`,
+			want: "circular reference: a, b",
+		},
+		{
+			name: "self parent",
+			yaml: `
 circuits:
 - name: loop
   parent: loop
-`)))
-	suite.Require().NoError(viper.UnmarshalExact(&conf))
-
-	err := configureCircuits(&conf.Circuits)
-	suite.Require().Error(err)
-	suite.Equal("circular reference: loop", err.Error())
-}
-
-func (suite *circuitsTestSuite) TestCircuitMissingParent() {
-	var conf globalconfig.All
-	viper.SetConfigType("yaml")
-
-	suite.Require().NoError(viper.ReadConfig(strings.NewReader(`
+`,
+			want: "circular reference: loop",
+		},
+		{
+			name: "missing parent",
+			yaml: `
 circuits:
 - name: root
 - name: child
   parent: missing
-`)))
-	suite.Require().NoError(viper.UnmarshalExact(&conf))
+`,
+			want: "circuit is missing parent: child",
+		},
+		{
+			name: "descendant of cycle is not a member",
+			yaml: `
+circuits:
+- name: a
+  parent: b
+- name: b
+  parent: a
+- name: child
+  parent: a
+`,
+			want: "circular reference: a, b",
+		},
+		{
+			name: "cycle and missing parent",
+			yaml: `
+circuits:
+- name: a
+  parent: b
+- name: b
+  parent: a
+- name: child
+  parent: missing
+`,
+			want: "circular reference: a, b\ncircuit is missing parent: child",
+		},
+	} {
+		suite.Run(tc.name, func() {
+			config.Reset()
 
-	err := configureCircuits(&conf.Circuits)
-	suite.Require().Error(err)
-	suite.Equal("circuit is missing parent: child", err.Error())
+			var conf globalconfig.All
+			viper.SetConfigType("yaml")
+			suite.Require().NoError(viper.ReadConfig(strings.NewReader(tc.yaml)))
+			suite.Require().NoError(viper.UnmarshalExact(&conf))
+
+			err := configureCircuits(&conf.Circuits)
+			suite.Require().Error(err)
+			suite.Equal(tc.want, err.Error())
+		})
+	}
 }

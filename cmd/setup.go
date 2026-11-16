@@ -205,6 +205,26 @@ func configureCircuits(conf *[]config.Named) error {
 	return nil
 }
 
+func circuitOnCycle(name string, parentOf map[string]string) bool {
+	seen := map[string]struct{}{name: {}}
+	cur, ok := parentOf[name]
+	if !ok {
+		return false
+	}
+	for cur != name {
+		if _, dup := seen[cur]; dup {
+			return false
+		}
+		seen[cur] = struct{}{}
+		next, ok := parentOf[cur]
+		if !ok {
+			return false
+		}
+		cur = next
+	}
+	return true
+}
+
 // validateCircuitConfigs validates circuit configurations with support for both static and configurable types
 func validateCircuitConfigs[T any](children []T, getConfigAndLogger func(T) (config.Named, *util.Logger), getDevice func(T, api.Circuit) config.Device[api.Circuit]) error {
 	var errs []error
@@ -259,23 +279,34 @@ NEXT:
 			leftover[cc.Name] = struct{}{}
 		}
 
+		parentOf := make(map[string]string, len(children))
 		var missing, cyclic []string
 		for _, child := range children {
 			cc, _ := getConfigAndLogger(child)
 			parent := cast.ToString(cc.Property("parent"))
 			if _, ok := leftover[parent]; ok {
-				cyclic = append(cyclic, cc.Name)
+				parentOf[cc.Name] = parent
 			} else {
 				missing = append(missing, cc.Name)
 			}
 		}
 
-		if len(missing) > 0 {
-			return fmt.Errorf("circuit is missing parent: %s", missing[0])
+		for name := range leftover {
+			if circuitOnCycle(name, parentOf) {
+				cyclic = append(cyclic, name)
+			}
 		}
 
-		slices.Sort(cyclic)
-		return fmt.Errorf("circular reference: %s", strings.Join(cyclic, ", "))
+		var leftoverErrs []error
+		if len(cyclic) > 0 {
+			slices.Sort(cyclic)
+			leftoverErrs = append(leftoverErrs, fmt.Errorf("circular reference: %s", strings.Join(cyclic, ", ")))
+		}
+		if len(missing) > 0 {
+			slices.Sort(missing)
+			leftoverErrs = append(leftoverErrs, fmt.Errorf("circuit is missing parent: %s", strings.Join(missing, ", ")))
+		}
+		return joinErrors(leftoverErrs...)
 	}
 
 	if len(errs) > 0 {
