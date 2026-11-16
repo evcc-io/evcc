@@ -207,7 +207,6 @@ func configureCircuits(conf *[]config.Named) error {
 
 // validateCircuitConfigs validates circuit configurations with support for both static and configurable types
 func validateCircuitConfigs[T any](children []T, getConfigAndLogger func(T) (config.Named, *util.Logger), getDevice func(T, api.Circuit) config.Device[api.Circuit]) error {
-	// TODO check for circular references
 	var errs []error
 
 NEXT:
@@ -254,8 +253,29 @@ NEXT:
 	}
 
 	if len(children) > 0 {
-		cn, _ := getConfigAndLogger(children[0])
-		return fmt.Errorf("circuit is missing parent: %s", cn.Name)
+		leftover := make(map[string]struct{}, len(children))
+		for _, child := range children {
+			cc, _ := getConfigAndLogger(child)
+			leftover[cc.Name] = struct{}{}
+		}
+
+		var missing, cyclic []string
+		for _, child := range children {
+			cc, _ := getConfigAndLogger(child)
+			parent := cast.ToString(cc.Property("parent"))
+			if _, ok := leftover[parent]; ok {
+				cyclic = append(cyclic, cc.Name)
+			} else {
+				missing = append(missing, cc.Name)
+			}
+		}
+
+		if len(missing) > 0 {
+			return fmt.Errorf("circuit is missing parent: %s", missing[0])
+		}
+
+		slices.Sort(cyclic)
+		return fmt.Errorf("circular reference: %s", strings.Join(cyclic, ", "))
 	}
 
 	if len(errs) > 0 {

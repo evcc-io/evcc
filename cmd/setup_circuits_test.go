@@ -160,3 +160,56 @@ loadpoints:
 	// lp using root circuit is valid
 	suite.Require().NoError(validateCircuits(lps))
 }
+
+func (suite *circuitsTestSuite) TestCircularCircuitReference() {
+	var conf globalconfig.All
+	viper.SetConfigType("yaml")
+
+	suite.Require().NoError(viper.ReadConfig(strings.NewReader(`
+circuits:
+- name: a
+  parent: b
+- name: b
+  parent: a
+`)))
+	suite.Require().NoError(viper.UnmarshalExact(&conf))
+
+	err := configureCircuits(&conf.Circuits)
+	suite.Require().Error(err)
+	suite.Contains(err.Error(), "circular reference")
+	suite.Contains(err.Error(), "a")
+	suite.Contains(err.Error(), "b")
+}
+
+func (suite *circuitsTestSuite) TestSelfParentCircuit() {
+	var conf globalconfig.All
+	viper.SetConfigType("yaml")
+
+	suite.Require().NoError(viper.ReadConfig(strings.NewReader(`
+circuits:
+- name: loop
+  parent: loop
+`)))
+	suite.Require().NoError(viper.UnmarshalExact(&conf))
+
+	err := configureCircuits(&conf.Circuits)
+	suite.Require().Error(err)
+	suite.Equal("circular reference: loop", err.Error())
+}
+
+func (suite *circuitsTestSuite) TestCircuitMissingParent() {
+	var conf globalconfig.All
+	viper.SetConfigType("yaml")
+
+	suite.Require().NoError(viper.ReadConfig(strings.NewReader(`
+circuits:
+- name: root
+- name: child
+  parent: missing
+`)))
+	suite.Require().NoError(viper.UnmarshalExact(&conf))
+
+	err := configureCircuits(&conf.Circuits)
+	suite.Require().Error(err)
+	suite.Equal("circuit is missing parent: child", err.Error())
+}
