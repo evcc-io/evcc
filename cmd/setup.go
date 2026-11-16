@@ -1451,7 +1451,7 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 	}
 
 	if len(config.Circuits().Devices()) > 0 {
-		if err := validateCircuits(loadpoints, site.GetGridMeterRef() != ""); err != nil {
+		if err := validateCircuits(site, loadpoints); err != nil {
 			return site, &ClassError{ClassCircuit, err}
 		}
 	}
@@ -1459,17 +1459,10 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 	return site, nil
 }
 
-// rootCircuitMeterWarning describes a root circuit that has no meter while a
-// grid meter is configured, so only charging points would be counted.
-func rootCircuitMeterWarning(name string, hasMeter, hasGridMeter bool) string {
-	if hasMeter || !hasGridMeter {
-		return ""
-	}
-	return fmt.Sprintf("root circuit %s has no meter although a grid meter is configured; only charging points are counted", name)
-}
-
-func validateCircuits(loadpoints []*core.Loadpoint, hasGridMeter bool) error {
+func validateCircuits(site *core.Site, loadpoints []*core.Loadpoint) error {
 	var hasRoot bool
+
+	hasGridMeter := site.GetGridMeterRef() != ""
 
 CONTINUE:
 	for _, dev := range config.Circuits().Devices() {
@@ -1483,10 +1476,8 @@ CONTINUE:
 
 			hasRoot = true
 
-			if hasGridMeter {
-				if msg := rootCircuitMeterWarning(dev.Config().Name, instance.HasMeter(), true); msg != "" {
-					log.WARN.Println(msg)
-				}
+			if hasGridMeter && !instance.HasMeter() {
+				log.WARN.Printf("root circuit %s has no meter although a grid meter is configured; only charging points and child circuits are counted", dev.Config().Name)
 			}
 		}
 

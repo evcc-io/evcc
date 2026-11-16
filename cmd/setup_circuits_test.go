@@ -9,6 +9,8 @@ import (
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/logstash"
+	jww "github.com/spf13/jwalterweatherman"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 )
@@ -101,7 +103,7 @@ loadpoints:
 	}
 
 	// circuit without device
-	err = validateCircuits(lps, false)
+	err = validateCircuits(core.NewSite(), lps)
 	suite.Require().NoError(err)
 }
 
@@ -117,11 +119,11 @@ func (suite *circuitsTestSuite) TestMissingRootCircuit() {
 	// root circuit present
 	circuit.EXPECT().GetParent().Return(nil)
 	circuit.EXPECT().HasMeter().Return(true)
-	suite.Require().NoError(validateCircuits(nil, false))
+	suite.Require().NoError(validateCircuits(core.NewSite(), nil))
 
 	// root circuit missing
 	circuit.EXPECT().GetParent().Return(circuit)
-	err := validateCircuits(nil, false)
+	err := validateCircuits(core.NewSite(), nil)
 	suite.Require().Error(err)
 	suite.Require().Equal("missing root circuit", err.Error())
 }
@@ -158,41 +160,53 @@ loadpoints:
 	}
 
 	// lp using root circuit is valid
-	suite.Require().NoError(validateCircuits(lps, false))
+	suite.Require().NoError(validateCircuits(core.NewSite(), lps))
+}
+
+func logsSince(before []string) []string {
+	all := logstash.All(nil, jww.LevelTrace, 0)
+	if len(before) > len(all) {
+		return nil
+	}
+	return all[len(before):]
 }
 
 func (suite *circuitsTestSuite) TestRootCircuitMeterWarning() {
-	suite.Empty(rootCircuitMeterWarning("main", true, true))
-	suite.Empty(rootCircuitMeterWarning("main", true, false))
-	suite.Empty(rootCircuitMeterWarning("main", false, false))
-	suite.Equal(
-		"root circuit main has no meter although a grid meter is configured; only charging points are counted",
-		rootCircuitMeterWarning("main", false, true),
-	)
-}
+	want := "root circuit main has no meter although a grid meter is configured; only charging points and child circuits are counted"
 
-func (suite *circuitsTestSuite) TestRootCircuitWithoutMeterAndGridMeter() {
-	ctrl := gomock.NewController(suite.T())
-	circuit := api.NewMockCircuit(ctrl)
+	for _, tc := range []struct {
+		name     string
+		hasMeter bool
+		logged   bool
+	}{
+		{name: "unmetered with grid", logged: true},
+		{name: "metered with grid", hasMeter: true},
+	} {
+		suite.Run(tc.name, func() {
+			config.Reset()
 
-	suite.Require().NoError(config.Circuits().Add(config.NewStaticDevice(config.Named{
-		Name: "main",
-	}, api.Circuit(circuit))))
+			ctrl := gomock.NewController(suite.T())
+			circuit := api.NewMockCircuit(ctrl)
 
-	circuit.EXPECT().GetParent().Return(nil)
-	circuit.EXPECT().HasMeter().Return(false)
-	suite.Require().NoError(validateCircuits(nil, true))
-}
+			suite.Require().NoError(config.Circuits().Add(config.NewStaticDevice(config.Named{
+				Name: "main",
+			}, api.Circuit(circuit))))
 
-func (suite *circuitsTestSuite) TestRootCircuitWithMeterAndGridMeter() {
-	ctrl := gomock.NewController(suite.T())
-	circuit := api.NewMockCircuit(ctrl)
+			circuit.EXPECT().GetParent().Return(nil)
+			circuit.EXPECT().HasMeter().Return(tc.hasMeter)
 
-	suite.Require().NoError(config.Circuits().Add(config.NewStaticDevice(config.Named{
-		Name: "main",
-	}, api.Circuit(circuit))))
+			site := core.NewSite()
+			site.Meters.GridMeterRef = "grid" // root meter warning only applies with a grid meter
 
-	circuit.EXPECT().GetParent().Return(nil)
-	circuit.EXPECT().HasMeter().Return(true)
-	suite.Require().NoError(validateCircuits(nil, true))
+			before := logstash.All(nil, jww.LevelTrace, 0)
+			suite.Require().NoError(validateCircuits(site, nil))
+			logs := strings.Join(logsSince(before), "\n")
+			if tc.logged {
+				suite.Contains(logs, want)
+			} else {
+				suite.NotContains(logs, want)
+				suite.NotContains(logs, "has no meter although a grid meter is configured")
+			}
+		})
+	}
 }
