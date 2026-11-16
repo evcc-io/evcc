@@ -101,7 +101,7 @@ loadpoints:
 	}
 
 	// circuit without device
-	err = validateCircuits(lps)
+	err = validateCircuits(lps, false)
 	suite.Require().NoError(err)
 }
 
@@ -117,11 +117,11 @@ func (suite *circuitsTestSuite) TestMissingRootCircuit() {
 	// root circuit present
 	circuit.EXPECT().GetParent().Return(nil)
 	circuit.EXPECT().HasMeter().Return(true)
-	suite.Require().NoError(validateCircuits(nil))
+	suite.Require().NoError(validateCircuits(nil, false))
 
 	// root circuit missing
 	circuit.EXPECT().GetParent().Return(circuit)
-	err := validateCircuits(nil)
+	err := validateCircuits(nil, false)
 	suite.Require().Error(err)
 	suite.Require().Equal("missing root circuit", err.Error())
 }
@@ -158,5 +158,41 @@ loadpoints:
 	}
 
 	// lp using root circuit is valid
-	suite.Require().NoError(validateCircuits(lps))
+	suite.Require().NoError(validateCircuits(lps, false))
+}
+
+func (suite *circuitsTestSuite) TestRootCircuitMeterWarning() {
+	suite.Empty(rootCircuitMeterWarning("main", true, true))
+	suite.Empty(rootCircuitMeterWarning("main", true, false))
+	suite.Empty(rootCircuitMeterWarning("main", false, false))
+	suite.Equal(
+		"root circuit main has no meter although a grid meter is configured; only charging points are counted",
+		rootCircuitMeterWarning("main", false, true),
+	)
+}
+
+func (suite *circuitsTestSuite) TestRootCircuitWithoutMeterAndGridMeter() {
+	ctrl := gomock.NewController(suite.T())
+	circuit := api.NewMockCircuit(ctrl)
+
+	suite.Require().NoError(config.Circuits().Add(config.NewStaticDevice(config.Named{
+		Name: "main",
+	}, api.Circuit(circuit))))
+
+	circuit.EXPECT().GetParent().Return(nil)
+	circuit.EXPECT().HasMeter().Return(false)
+	suite.Require().NoError(validateCircuits(nil, true))
+}
+
+func (suite *circuitsTestSuite) TestRootCircuitWithMeterAndGridMeter() {
+	ctrl := gomock.NewController(suite.T())
+	circuit := api.NewMockCircuit(ctrl)
+
+	suite.Require().NoError(config.Circuits().Add(config.NewStaticDevice(config.Named{
+		Name: "main",
+	}, api.Circuit(circuit))))
+
+	circuit.EXPECT().GetParent().Return(nil)
+	circuit.EXPECT().HasMeter().Return(true)
+	suite.Require().NoError(validateCircuits(nil, true))
 }
