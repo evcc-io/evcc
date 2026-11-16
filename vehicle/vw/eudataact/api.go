@@ -26,15 +26,20 @@ import (
 // https://github.com/TA2k/ioBroker.vw-connect (lib/euDataAct.js)
 
 const (
+	legacyBaseURL = "https://eu-data-act.drivesomethinggreater.com"
 	// BaseURL is the EU Data Act portal that delivers the mandated vehicle datasets
-	BaseURL = "https://eu-data-act.drivesomethinggreater.com"
-	// RedirectURI is the OIDC redirect target registered for the portal
-	RedirectURI = BaseURL + "/login"
+	BaseURL = "https://eu-data-act.vwgroup-datahub.com"
+	// RedirectURI is the OIDC redirect target registered for the portal. The legacy host
+	// is still the registered one and redirects to BaseURL.
+	RedirectURI = legacyBaseURL + "/login"
 	// Scope is the OIDC scope requested for the EU Data Act flow
 	Scope = "openid cars profile"
 )
 
-var portalHost = strings.TrimPrefix(BaseURL, "https://")
+var (
+	portalHost       = strings.TrimPrefix(BaseURL, "https://")
+	legacyPortalHost = strings.TrimPrefix(legacyBaseURL, "https://")
+)
 
 var ErrNotConfigured = errors.New("EU Data Act subscription not configured")
 
@@ -242,7 +247,7 @@ func (v *API) login(gen uint64) error {
 }
 
 func isLoginHost(host, identityHost string) bool {
-	return strings.EqualFold(host, identityHost) || strings.EqualFold(host, portalHost)
+	return strings.EqualFold(host, identityHost) || strings.EqualFold(host, portalHost) || strings.EqualFold(host, legacyPortalHost)
 }
 
 func isMarketingConsentPage(u *url.URL) bool {
