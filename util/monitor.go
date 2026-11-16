@@ -18,6 +18,7 @@ type Monitor[T any] struct {
 	done    chan struct{}
 	updated time.Time
 	timeout time.Duration
+	waited  bool
 }
 
 // NewMonitor created a new monitor with given timeout
@@ -94,13 +95,13 @@ func (m *Monitor[T]) GetFuncContext(ctx context.Context, get func(T)) error {
 		err := api.ErrOutdated
 
 		// wait once on very first call
-		if m.updated.IsZero() {
+		if m.updated.IsZero() && !m.waited {
 			m.mu.RUnlock()
 
-			// mark as waited once
 			m.mu.Lock()
-			// TODO fix and test
-			m.updated = m.updated.Add(time.Nanosecond)
+			if m.updated.IsZero() && !m.waited {
+				m.waited = true
+			}
 			m.mu.Unlock()
 
 			select {
