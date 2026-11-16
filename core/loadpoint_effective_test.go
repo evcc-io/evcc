@@ -313,7 +313,7 @@ func TestGetChargePowerFlexibility(t *testing.T) {
 			lp.alwaysCharge = tc.alwaysCharge
 			lp.status = tc.status
 			lp.chargePower = 2700
-			lp.planActive = tc.planActive
+			lp.planActive.Store(tc.planActive)
 			lp.batteryBoost = tc.boost
 			// EffectiveMinPower() = 230V * 6A * 1phase = 1380W
 			lp.minCurrent = 6

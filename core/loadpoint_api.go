@@ -805,7 +805,7 @@ func (lp *Loadpoint) GetChargePower() float64 {
 // GetChargePowerFlexibility returns the flexible amount of current charging power
 func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 	mode := lp.GetMode()
-	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() || lp.planActive ||
+	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() || lp.getPlanActive() ||
 		lp.GetBatteryBoost() != boostDisabled || lp.smartLimitActive(lp.GetSmartCostLimit(), rates, true) {
 		return 0
 	}
@@ -920,7 +920,7 @@ func (lp *Loadpoint) IsFastChargingActive() bool {
 	lp.RLock()
 	defer lp.RUnlock()
 
-	return lp.mode == api.ModeNow || lp.planActive || lp.minSocNotReached()
+	return lp.mode == api.ModeNow || lp.getPlanActive() || lp.minSocNotReached()
 }
 
 // GetRemainingDuration is the estimated remaining charging duration

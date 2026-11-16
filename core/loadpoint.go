@@ -168,7 +168,7 @@ type Loadpoint struct {
 	planEnergyOffset float64          // already charged energy in kWh when plan was set
 	planSlotEnd      time.Time        // current plan slot end time
 	criticalSlotEnd  time.Time        // optimizer: deadline critical verdict held until
-	planActive       bool             // charge plan exists and has a currently active slot
+	planActive       atomic.Bool      // charge plan exists and has a currently active slot
 	planOverrunSent  bool             // notification has been sent already
 	planLocked       PlanLock         // locked plan
 
@@ -876,7 +876,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.MinSoc, lp.minSoc)
 
 	// planner
-	lp.publish(keys.PlanActive, lp.planActive)
+	lp.publish(keys.PlanActive, lp.getPlanActive())
 
 	// battery boost
 	lp.publish(keys.BatteryBoost, lp.batteryBoost != boostDisabled)
@@ -2451,7 +2451,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	}
 
 	lp.RLock()
-	planActive := lp.planActive
+	planActive := lp.getPlanActive()
 	limitEnergy, energyLimited := lp.remainingLimitEnergy()
 	lp.RUnlock()
 
@@ -2676,7 +2676,7 @@ NO_DIM:
 	}
 
 	// a plan goal above the session limits is the optimizer's to reach, like the planner's slot is below
-	optimizerPlan := suggestion != nil && mode == api.ModeSmart && lp.planActive
+	optimizerPlan := suggestion != nil && mode == api.ModeSmart && lp.getPlanActive()
 
 	// update and publish min soc not reached state
 	minSocNotReached := lp.minSocNotReached()

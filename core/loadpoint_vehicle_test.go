@@ -253,11 +253,11 @@ func TestPublishSocAndRangePlanAboveLimit(t *testing.T) {
 			status:            api.StatusC,
 			mode:              tc.mode,
 			limitSoc:          80,
-			planActive:        true,
 			planLocked:        PlanLock{Id: 1, Soc: 100},
 			suggestion:        &types.Suggestion{},
 			suggestionUpdated: clck.Now(),
 		}
+		lp.planActive.Store(true)
 
 		lp.publishSocAndRange()
 		assert.InDelta(t, soc.RemainingChargeEnergy(tc.goal, 50, 10), lp.GetRemainingEnergy(), 1e-9, tc)

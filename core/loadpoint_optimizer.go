@@ -73,7 +73,7 @@ func (lp *Loadpoint) OptimizerPlan(planTime time.Time) (api.Rates, float64) {
 // may leave any single slot empty, which costs a stop and start of the vehicle. A full slot is
 // only bridged if it is no more expensive than the next plan slot, else it was skipped for its price.
 func (lp *Loadpoint) optimizerPlanGap() bool {
-	if !lp.planActive {
+	if !lp.getPlanActive() {
 		return false
 	}
 
@@ -134,7 +134,7 @@ func (lp *Loadpoint) fixedDemandModelled() bool {
 	lp.RLock()
 	defer lp.RUnlock()
 
-	return !(lp.planActive && continues) && !lp.minSocNotReached()
+	return !(lp.getPlanActive() && continues) && !lp.minSocNotReached()
 }
 
 // activeSuggestion returns the optimizer's start/stop decision for the current slot,

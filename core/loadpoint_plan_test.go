@@ -1,6 +1,7 @@
 package core
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -89,4 +90,24 @@ func TestNextActivePlanUnsampledSoc(t *testing.T) {
 	// goal energy charged
 	lp.energyMetrics.totalKWh = 3.5
 	assert.Nil(t, lp.nextActivePlan(1000, plans))
+}
+
+func TestPlanActiveRace(t *testing.T) {
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 10000; i++ {
+			lp.setPlanActive(i%2 == 0)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 10000; i++ {
+			_ = lp.IsFastChargingActive()
+		}
+	}()
+	wg.Wait()
 }

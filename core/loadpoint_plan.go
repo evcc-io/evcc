@@ -12,8 +12,6 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 )
 
-// TODO planActive is not guarded by mutex
-
 // PlanLock contains information about a locked plan.
 // It caches the goal a soc-based plan has committed to, so that an overrunning
 // plan keeps charging towards that goal instead of jumping to the next plan.
@@ -46,7 +44,9 @@ func (lp *Loadpoint) lockPlanGoal(planTime time.Time, soc int, id int) {
 	}
 }
 
-// setPlanActive updates plan active flag
+// setPlanActive updates plan active flag.
+// The flag is stored atomically so callers that already hold lp's mutex
+// (SetMode, SetPlanEnergy) do not deadlock.
 func (lp *Loadpoint) setPlanActive(active bool) {
 	if !active {
 		lp.planOverrunSent = false
@@ -54,10 +54,14 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 		lp.criticalSlotEnd = time.Time{}
 		lp.clearPlanLock()
 	}
-	if lp.planActive != active {
-		lp.planActive = active
-		lp.publish(keys.PlanActive, lp.planActive)
+	if lp.planActive.Load() != active {
+		lp.planActive.Store(active)
+		lp.publish(keys.PlanActive, active)
 	}
+}
+
+func (lp *Loadpoint) getPlanActive() bool {
+	return lp.planActive.Load()
 }
 
 // finishPlan deletes the charging plan, either loadpoint or vehicle
@@ -174,7 +178,7 @@ func (lp *Loadpoint) EffectivePlan(planTime time.Time, requiredDuration time.Dur
 
 // fullSocPlanContinues continues an active 100% plan as long as the vehicle is connected
 func (lp *Loadpoint) fullSocPlanContinues(goal float64, isSocBased bool) bool {
-	return lp.planActive && isSocBased && goal == 100
+	return lp.getPlanActive() && isSocBased && goal == 100
 }
 
 // plannerActive checks if the charging plan has a currently active slot
@@ -206,7 +210,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	}
 
 	// keep overrunning plans as long as a vehicle is connected
-	if lp.clock.Until(planTime) < 0 && (!lp.planActive || !lp.connected()) {
+	if lp.clock.Until(planTime) < 0 && (!lp.getPlanActive() || !lp.connected()) {
 		lp.log.DEBUG.Println("plan: deleting expired plan")
 		lp.finishPlan()
 		return false
@@ -277,7 +281,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	if active {
 		// short slots cost an extra start/stop cycle, defer them if a later slot follows anyway
-		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < tariff.SlotDuration-time.Minute && planner.SlotHasLaterSuccessor(activeSlot, plan) {
+		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.getPlanActive() && slotRemaining < tariff.SlotDuration-time.Minute && planner.SlotHasLaterSuccessor(activeSlot, plan) {
 			lp.log.DEBUG.Printf("plan: slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
 		}
@@ -289,7 +293,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 		// remember last active plan's slot end time
 		lp.planSlotEnd = activeSlot.End
-	} else if lp.planActive {
+	} else if lp.getPlanActive() {
 		// planner was active (any slot, not necessarily previous slot) and charge goal has not yet been met
 		switch {
 		case lp.clock.Now().After(planTime) && !planTime.IsZero():

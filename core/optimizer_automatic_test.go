@@ -480,7 +480,7 @@ func TestBatteryModeFixedDemandModelled(t *testing.T) {
 		lp.smartCostLimit = &above
 		lp.vehicle = modelledVehicle(ctrl)
 		lp.vehicleSoc = 50
-		lp.planActive = tc.planActive
+		lp.planActive.Store(tc.planActive)
 		lp.minSoc = tc.minSoc
 
 		site := &Site{
@@ -799,7 +799,7 @@ func TestOptimizerPlanAboveLimit(t *testing.T) {
 	charger.EXPECT().MaxCurrent(int64(maxA))
 	lp.Update(2000, 0, nil, nil, false, false, 0, nil, nil, nil)
 
-	assert.True(t, lp.planActive)
+	assert.True(t, lp.getPlanActive())
 	assert.True(t, lp.planSlotEnd.IsZero())
 
 	ctrl.Finish()
@@ -849,7 +849,7 @@ func TestOptimizerPlanFullSocContinues(t *testing.T) {
 
 	assert.False(t, lp.planDeadlineCritical(), "inactive plan")
 
-	lp.planActive = true
+	lp.planActive.Store(true)
 	lp.clock.(*clock.Mock).Add(time.Hour)
 	assert.True(t, lp.planDeadlineCritical(), "active plan")
 }
