@@ -111,10 +111,19 @@ export interface StatItem {
   sub?: string;
   tooltip?: string;
   accent?: string; // text color class for the value
+  pending?: boolean;
   empty?: string; // shown instead of a value
   configure?: boolean; // with a link to the tariff settings: nothing is configured yet
   selectable?: boolean; // false: not a button in a row with a chosen stat
 }
+
+// a stat whose value is on its way, `sub` set keeps the subline's place
+export const pendingStat = (key: string, label: string, sub = ""): StatItem => ({
+  key,
+  label,
+  pending: true,
+  sub,
+});
 
 // a breakdown by source and the card it belongs to
 export interface SourcesDetail {

@@ -1597,6 +1597,7 @@ func (site *Site) loopLoadpoints(next chan<- updater) {
 
 	for {
 		// optimizer runs on its own cadence, checked once per loadpoint cycle
+		// async: sponsor and settings checks may block behind a slow save or authorization
 		go site.optimizerUpdateAsync(false)
 
 		if len(active) == 0 {

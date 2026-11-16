@@ -74,19 +74,19 @@ test.describe("api", () => {
 
 async function gotoDay(page: Page, year: number, month: number, day: number): Promise<void> {
   await page.goto(`/#/energy?period=day&year=${year}&month=${month}&day=${day}`);
-  await expect(page.getByTestId("energy-flow")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Overview" })).toBeVisible();
 }
 
 async function gotoMonth(page: Page, year: number, month: number): Promise<void> {
   await page.goto(`/#/energy?period=month&year=${year}&month=${month}`);
-  await expect(page.getByTestId("energy-flow")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Overview" })).toBeVisible();
 }
 
 const CARDS: Record<string, string> = {
-  pv: "energy-production",
-  battery: "energy-battery",
-  consumer: "energy-consumers",
-  meter: "energy-meters",
+  pv: "Production",
+  battery: "Battery",
+  consumer: "Consumption",
+  meter: "Additional meters",
 };
 
 // the share of one source in the breakdown behind a sources button
@@ -100,7 +100,7 @@ async function expectSource(page: Page, sources: Locator, source: string, share:
 }
 
 function card(page: Page, group: string): Locator {
-  return page.getByTestId(CARDS[group] ?? "");
+  return page.getByRole("region", { name: CARDS[group] ?? "" });
 }
 
 function chart(page: Page, group: string): Locator {
@@ -311,7 +311,7 @@ test.describe("battery card", () => {
   test("month keeps charge and discharge apart per battery", async ({ page }) => {
     await gotoMonth(page, 2026, 7);
     // one card, a legend row per battery and the sums in the header
-    const battery = page.getByTestId("energy-battery");
+    const battery = page.getByRole("region", { name: "Battery" });
     await expect(battery).toHaveCount(1);
     await expect(battery.getByRole("button", { name: "Battery 6.0 kWh 3.0 kWh" })).toBeVisible();
     const second = battery.getByRole("button", { name: "Battery 2 4.5 kWh 4.5 kWh" });
@@ -365,6 +365,6 @@ test.describe("reconnect", () => {
   test("page still shows content after backend restart", async ({ page }) => {
     await gotoDay(page, 2026, 3, 24);
     await restart();
-    await expect(page.getByTestId("energy-flow")).toBeVisible();
+    await expect(page.getByRole("region", { name: "Overview" })).toBeVisible();
   });
 });

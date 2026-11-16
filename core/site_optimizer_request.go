@@ -832,21 +832,34 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	}
 
 	now := time.Now()
+	end := now.Truncate(tariff.SlotDuration).Add(time.Duration(minLen) * tariff.SlotDuration)
 
-	slot := planSlot(now, ts)
-	if slot >= 0 && slot < minLen {
-		setPlanGoal(bat, minLen, slot, goal)
-	} else {
-		site.log.DEBUG.Printf("plan beyond forecast range or overrun: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
+	// place sets the goal at its slot. Beyond the horizon, what full power cannot store between
+	// the horizon end and the plan time must be in by the horizon end.
+	place := func(goal float64, ts time.Time) int {
+		slot := planSlot(now, ts)
+		switch {
+		case slot >= minLen:
+			if rest := goal - float64(bat.CMax)*eta*ts.Sub(end).Hours(); rest > float64(bat.SInitial) {
+				setPlanGoal(bat, minLen, minLen-1, rest)
+			}
+		case slot >= 0:
+			setPlanGoal(bat, minLen, slot, goal)
+		}
+		return slot
+	}
+
+	if slot := place(goal, ts); slot >= minLen {
+		site.log.DEBUG.Printf("plan beyond forecast range: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
+	} else if slot < 0 {
+		site.log.DEBUG.Printf("plan overrun: %.1f at %v", goal, ts.Round(time.Minute))
 	}
 
 	// later plans let the optimizer charge ahead for them instead of replanning once the first goal is reached.
 	// Capped at s_max: the loadpoint only charges beyond its limit for the effective plan.
 	if socBased {
 		for _, g := range lp.GetSocPlanGoals() {
-			if slot := planSlot(now, g.Time); slot >= 0 && slot < minLen {
-				setPlanGoal(bat, minLen, slot, min(socToWh(vehicle.Capacity(), float64(g.Soc)), float64(bat.SMax)))
-			}
+			place(min(socToWh(vehicle.Capacity(), float64(g.Soc)), float64(bat.SMax)), g.Time)
 		}
 	}
 }

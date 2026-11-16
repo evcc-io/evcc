@@ -137,6 +137,14 @@ var errOptimizerNotReady = errors.New("battery measurements not ready")
 // only need one run per slot.
 const optimizerInterval = 5 * time.Minute
 
+// optimizerTrigger starts optimizerUpdateAsync in the background. Gating before
+// spawning keeps an inactive optimizer from leaving goroutines behind.
+func (site *Site) optimizerTrigger(force bool) {
+	if sponsor.IsAuthorized() && optimizerEnabled() {
+		go site.optimizerUpdateAsync(force)
+	}
+}
+
 // optimizerUpdateAsync runs the optimizer unless the last run is younger than
 // the mode's interval. Pass force to run regardless, e.g. when a changed setting
 // should take effect immediately. It is a no-op when the optimizer is not
@@ -306,7 +314,7 @@ func (site *Site) optimizerUnlock() {
 	site.optimizer.mu.Unlock()
 
 	if site.optimizer.rerun.Load() {
-		go site.optimizerUpdateAsync(false)
+		site.optimizerTrigger(false)
 	}
 }
 

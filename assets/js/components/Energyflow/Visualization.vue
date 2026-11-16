@@ -23,6 +23,7 @@
 					<QuestionIcon />
 				</LabelBar>
 			</div>
+			<!-- In/Out stay English: narrow column, translations would not fit -->
 			<div class="label-scale-name">In</div>
 		</div>
 		<div ref="site_progress" class="site-progress">
