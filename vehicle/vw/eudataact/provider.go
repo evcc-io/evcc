@@ -42,14 +42,10 @@ func NewProvider(log *util.Logger, client *API, vin string, cache time.Duration,
 	v := &Provider{socKeys: socKeys, limitKeys: limitKeys}
 	s := sharedStore(client)
 
-	var (
-		cached util.Cacheable[[]point]
-		lastOK time.Time
-	)
+	var cached util.Cacheable[[]point]
 	cached = util.ResettableCached(func() ([]point, error) {
 		ts, err := s.update(vin)
 		if err == nil {
-			lastOK = time.Now()
 			if !ts.IsZero() {
 				time.AfterFunc(resetDelay(ts, cache), cached.Reset)
 			}
@@ -62,7 +58,9 @@ func NewProvider(log *util.Logger, client *API, vin string, cache time.Duration,
 		}
 
 		// serve the last data over transient portal errors, surface persistent ones
-		if data := s.snapshot(vin); keepData(data, lastOK) {
+		// the last success is tracked per vehicle, so providers sharing the vehicle
+		// state keep the grace period of the one that loaded the data
+		if data := s.snapshot(vin); keepData(data, s.lastOK(vin)) {
 			log.ERROR.Println(err)
 			return data, nil
 		}

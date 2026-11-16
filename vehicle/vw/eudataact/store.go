@@ -37,7 +37,8 @@ type vehicleState struct {
 	identifier string
 	data       []point
 	after      time.Time
-	seq        uint64 // delivery counter, incremented per merged dataset
+	seq        uint64    // delivery counter, incremented per merged dataset
+	lastOK     time.Time // last successful update, shared by all providers of the vehicle
 }
 
 var (
@@ -166,7 +167,19 @@ func (s *store) update(vin string) (time.Time, error) {
 		logData(s.api.log, v.data)
 	}
 
+	v.lastOK = time.Now()
+
 	return newest, nil
+}
+
+// lastOK returns the time of the last successful update for vin
+func (s *store) lastOK(vin string) time.Time {
+	v := s.state(vin)
+
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	return v.lastOK
 }
 
 // snapshot returns a copy of the merged data for vin
