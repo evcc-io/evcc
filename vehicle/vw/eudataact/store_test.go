@@ -230,3 +230,12 @@ func TestProviderCatchUp(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, float64(total), soc)
 }
+
+// an empty dataset list after data has been received must not silently serve the old data
+func TestUpdateNoDatasetsAfterData(t *testing.T) {
+	_, _, s := testStore(testStart)
+
+	_, err := s.update(testVin)
+	require.ErrorIs(t, err, errNoDatasets)
+	assert.Equal(t, "0", socOf(s.snapshot(testVin)))
+}

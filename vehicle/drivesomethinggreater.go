@@ -11,7 +11,7 @@ import (
 // https://github.com/TA2k/ioBroker.vw-connect (EU Data Act data source)
 
 // DriveSomethingGreater is an api.Vehicle implementation for the VW group
-// "EU Data Act" data portal (eu-data-act.drivesomethinggreater.com)
+// "EU Data Act" data portal (eu-data-act.vwgroup-datahub.com)
 type DriveSomethingGreater struct {
 	*embed
 	*eudataact.Provider

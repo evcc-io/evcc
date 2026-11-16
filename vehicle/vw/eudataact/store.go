@@ -15,6 +15,10 @@ import (
 // on the first poll of a session to seed the merged map.
 const maxBackfill = 8
 
+// errNoDatasets is returned when the portal lists no datasets for a vehicle that
+// has delivered data before
+var errNoDatasets = errors.New("portal lists no datasets, vehicle data is outdated")
+
 // updateTimeout bounds a single update, so that waiting for the portal's rate
 // limit doesn't stall the site loop. Remaining datasets follow on the next poll.
 var updateTimeout = 10 * time.Second
@@ -101,6 +105,12 @@ func (s *store) update(vin string) (time.Time, error) {
 	list, err := s.api.datasets(ctx, vin, v.identifier)
 	if err != nil {
 		return time.Time{}, err
+	}
+
+	// an empty list while data has been received before means the data request
+	// is gone or the portal has moved; report it instead of serving the old data
+	if len(list) == 0 && len(v.data) > 0 {
+		return time.Time{}, errNoDatasets
 	}
 
 	content := contentDatasets(list)
