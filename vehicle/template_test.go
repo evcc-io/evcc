@@ -51,11 +51,11 @@ var onlineVehicleFeatures = []string{"streaming", "coarsecurrent", "welcomecharg
 // params. Stored configs carry the key, so undeclaring it makes evcc fail to
 // boot on the next restart (#31962). Deprecate such params, never remove them.
 var requiredFeatureParams = map[string][]string{
-	"vw":                    {"streaming", "coarsecurrent", "welcomecharge"},
-	"audi":                  {"streaming", "coarsecurrent", "welcomecharge"},
-	"seat":                  {"streaming", "coarsecurrent", "welcomecharge"},
-	"cupra":                 {"streaming", "coarsecurrent", "welcomecharge"},
-	"drivesomethinggreater": {"streaming", "coarsecurrent", "welcomecharge"},
+	"vw":              {"streaming", "coarsecurrent", "welcomecharge"},
+	"audi":            {"streaming", "coarsecurrent", "welcomecharge"},
+	"seat":            {"streaming", "coarsecurrent", "welcomecharge"},
+	"cupra":           {"streaming", "coarsecurrent", "welcomecharge"},
+	"vwgroup-datahub": {"streaming", "coarsecurrent", "welcomecharge"},
 }
 
 func TestVehicleFeatureParamsConsistent(t *testing.T) {

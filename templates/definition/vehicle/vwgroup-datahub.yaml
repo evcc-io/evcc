@@ -1,4 +1,5 @@
-template: drivesomethinggreater
+template: vwgroup-datahub
+covers: ["drivesomethinggreater"]
 deprecated: true
 products:
   - brand: Volkswagen
