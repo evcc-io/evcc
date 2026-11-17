@@ -5,12 +5,15 @@ import (
 	"encoding/binary"
 	"errors"
 	"math"
+	"net"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/andig/mbserver"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -143,6 +146,27 @@ func TestElli2ModbusMeasurements(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestElli2ModbusInitialization(t *testing.T) {
+	_, conn := elliTestCharger()
+	conn.input[elliRegMax] = 16
+	conn.input[elliRegMax+1] = 6
+	conn.holding[elliRegTimeout] = 0
+	wb, err := newElli2Modbus(t.Context(), conn, util.NewLogger("elli-test"))
+	require.NoError(t, err)
+	assert.Equal(t, uint16(60), wb.current)
+
+	conn.input[elliRegMax] = 5
+	_, err = newElli2Modbus(t.Context(), conn, util.NewLogger("elli-test"))
+	assert.ErrorContains(t, err, "invalid current limits")
+	delete(conn.input, elliRegMax)
+	_, err = newElli2Modbus(t.Context(), conn, util.NewLogger("elli-test"))
+	assert.ErrorContains(t, err, "current limits")
+	conn.input[elliRegMax] = 16
+	delete(conn.holding, elliRegTimeout)
+	_, err = newElli2Modbus(t.Context(), conn, util.NewLogger("elli-test"))
+	assert.ErrorContains(t, err, "watchdog timeout")
+}
+
 func TestElli2ModbusHeartbeat(t *testing.T) {
 	wb, conn := elliTestCharger()
 	conn.writes = make(chan uint16, 10)
@@ -163,4 +187,67 @@ func TestElli2ModbusHeartbeat(t *testing.T) {
 	}
 	cancel()
 	<-done
+}
+
+type elliWireHandler struct {
+	mbserver.RequestHandler
+	writes chan uint16
+}
+
+func (h *elliWireHandler) HandleInputRegisters(req *mbserver.InputRegistersRequest) ([]uint16, error) {
+	if req.UnitId != 1 {
+		return nil, mbserver.ErrIllegalDataAddress
+	}
+	switch {
+	case req.Addr == 100 && req.Quantity == 2:
+		return []uint16{20, 8}, nil
+	case req.Addr == 5 && req.Quantity == 1:
+		return []uint16{7}, nil
+	default:
+		return nil, mbserver.ErrIllegalDataAddress
+	}
+}
+
+func (h *elliWireHandler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) ([]uint16, error) {
+	if req.UnitId != 1 {
+		return nil, mbserver.ErrIllegalDataAddress
+	}
+	switch {
+	case !req.IsWrite && req.Addr == 257 && req.Quantity == 1:
+		return []uint16{0}, nil
+	case req.IsWrite && req.WriteFuncCode == 6 && req.Addr == 261 && len(req.Args) == 1:
+		h.writes <- req.Args[0]
+		return req.Args, nil
+	default:
+		return nil, mbserver.ErrIllegalDataAddress
+	}
+}
+
+func TestElli2ModbusWire(t *testing.T) {
+	handler := &elliWireHandler{
+		RequestHandler: new(mbserver.DummyHandler),
+		writes:         make(chan uint16, 2),
+	}
+	listener, err := net.Listen("tcp", "localhost:0")
+	require.NoError(t, err)
+	server, err := mbserver.New(handler)
+	require.NoError(t, err)
+	// Stop races the server's accept goroutine, as in the other Modbus tests.
+	require.NoError(t, server.Start(listener))
+
+	conn, err := modbus.NewConnection(t.Context(), listener.Addr().String(), "", "", 0, modbus.Tcp, 1)
+	require.NoError(t, err)
+	wb, err := newElli2Modbus(t.Context(), conn, util.NewLogger("elli-test"))
+	require.NoError(t, err)
+	minCurrent, maxCurrent, err := wb.GetMinMaxCurrent()
+	require.NoError(t, err)
+	assert.Equal(t, 8.0, minCurrent)
+	assert.Equal(t, 16.0, maxCurrent)
+	status, err := wb.Status()
+	require.NoError(t, err)
+	assert.Equal(t, api.StatusC, status)
+	require.NoError(t, wb.MaxCurrentMillis(12.3))
+	assert.Equal(t, uint16(123), <-handler.writes)
+	require.NoError(t, wb.Enable(false))
+	assert.Equal(t, uint16(0), <-handler.writes)
 }

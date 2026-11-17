@@ -90,8 +90,11 @@ func NewElli2Modbus(ctx context.Context, settings modbus.TcpSettings) (api.Charg
 
 	log := util.NewLogger("elli-2-modbus")
 	conn.Logger(log.TRACE)
-	wb := &Elli2Modbus{conn: conn, log: log}
+	return newElli2Modbus(ctx, conn, log)
+}
 
+func newElli2Modbus(ctx context.Context, conn elliModbusConn, log *util.Logger) (*Elli2Modbus, error) {
+	wb := &Elli2Modbus{conn: conn, log: log}
 	b, err := conn.ReadInputRegisters(elliRegMax, 2)
 	if err != nil {
 		return nil, fmt.Errorf("current limits: %w", err)
