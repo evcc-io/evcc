@@ -35,6 +35,9 @@ func TestIsUserPage(t *testing.T) {
 		{"lookalike host", BaseURL + ".example.org/content/euda/de/de/user.html", false},
 		{"HTTP", "http://" + portalHost + "/content/euda/de/de/user.html", false},
 		{"relative", "/content/euda/de/de/user.html", false},
+		{"short", BaseURL + "/de/en/user.html", true},
+		{"short lookalike", BaseURL + "/de/en/notuser.html", false},
+		{"short extra segment", BaseURL + "/x/de/en/user.html", false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			u, err := url.Parse(tc.uri)

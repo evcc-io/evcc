@@ -10,19 +10,20 @@ import (
 
 // https://github.com/TA2k/ioBroker.vw-connect (EU Data Act data source)
 
-// DriveSomethingGreater is an api.Vehicle implementation for the VW group
-// "EU Data Act" data portal (eu-data-act.drivesomethinggreater.com)
-type DriveSomethingGreater struct {
+// VWGroupDatahub is an api.Vehicle implementation for the VW group
+// "EU Data Act" data portal (eu-data-act.vwgroup-datahub.com)
+type VWGroupDatahub struct {
 	*embed
 	*eudataact.Provider
 }
 
 func init() {
-	registry.Add("drivesomethinggreater", NewDriveSomethingGreaterFromConfig)
+	registry.Add("vwgroup-datahub", NewVWGroupDatahubFromConfig)
+	registry.Add("drivesomethinggreater", NewVWGroupDatahubFromConfig) // deprecated
 }
 
-// NewDriveSomethingGreaterFromConfig creates a new vehicle
-func NewDriveSomethingGreaterFromConfig(other map[string]any) (api.Vehicle, error) {
+// NewVWGroupDatahubFromConfig creates a new vehicle
+func NewVWGroupDatahubFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed                      `mapstructure:",squash"`
 		Brand, User, Password, VIN string
@@ -41,7 +42,7 @@ func NewDriveSomethingGreaterFromConfig(other map[string]any) (api.Vehicle, erro
 		return nil, api.ErrMissingCredentials
 	}
 
-	v := &DriveSomethingGreater{
+	v := &VWGroupDatahub{
 		embed: &cc.embed,
 	}
 
