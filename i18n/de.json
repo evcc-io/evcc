@@ -1277,6 +1277,7 @@
       "exportPrice": "Einspeisepreis",
       "import": "Bezug",
       "importPrice": "Bezugspreis",
+      "power": "Leistung",
       "price": "Preis",
       "revenue": "Einspeisevergütung",
       "title": "Netz"

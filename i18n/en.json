@@ -1453,6 +1453,7 @@
       "exportPrice": "Export price",
       "import": "Import",
       "importPrice": "Import price",
+      "power": "Power",
       "price": "Price",
       "revenue": "Export revenue",
       "title": "Grid"

@@ -905,7 +905,11 @@ export default defineComponent({
 								name: showName
 									? (nameByIdx.get(i) ?? "")
 									: this.prices
-										? this.$t("energy.grid.energy")
+										? this.$t(
+												this.period === PERIODS.DAY
+													? "energy.grid.power"
+													: "energy.grid.energy"
+											)
 										: forecast != null
 											? this.singleEntityName(this.series[idx]!)
 											: undefined,
