@@ -35,7 +35,7 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.V
 	}
 
 	if cc.Cloud {
-		// keep an explicit brand (e.g. drivesomethinggreater's Audi/Seat/...);
+		// keep an explicit brand (e.g. vwgroup-datahub's Audi/Seat/...);
 		// otherwise the type itself is the brand (legacy per-brand vehicles)
 		if _, ok := cc.Other["brand"]; !ok {
 			cc.Other["brand"] = typ
