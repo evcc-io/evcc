@@ -364,6 +364,15 @@ render: |
                   type: writemultiple
                   decode: uint16
             - source: const
+              value: 0
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60312 # Energy Storage Forced Charging/Discharging Target SOC (%)
+                  type: writemultiple
+                  decode: uint16
+            - source: const
               value: {{ if eq .firmware "<01.01.00.28.15" }}99{{ else }}2{{ end }}
               set:
                 source: modbus
@@ -463,6 +472,15 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 60301 # Energy Storage Communication Control Mode (0 = Local, 1 = Remote Communication)
+                  type: writemultiple
+                  decode: uint16
+            - source: const
+              value: 0
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60312 # Energy Storage Forced Charging/Discharging Target SOC (%)
                   type: writemultiple
                   decode: uint16
             - source: const
