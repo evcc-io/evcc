@@ -35,7 +35,7 @@ params:
     deprecated: true
   - preset: vehicle-online
 render: |
-  type: drivesomethinggreater
+  type: vwgroup-datahub
   brand: Seat
   {{ include "base" . }}
   {{ include "features" (merge (dict "basefeatures" (list "streaming")) .) }}
