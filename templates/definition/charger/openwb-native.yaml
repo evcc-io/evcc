@@ -104,6 +104,7 @@ requirements:
 params:
   - name: modbus
     choice: ["rs485"]
+    id: 1
     baudrate: 9600
     comset: 8N1
   - name: phases1p3p

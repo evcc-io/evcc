@@ -22,6 +22,7 @@ params:
     choice: ["pv"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
     timeout: 5s
   - name: timeout
     deprecated: true

@@ -121,7 +121,7 @@ render: |
         # GS must be reset explicitly: MM (zero feed-in regulation) and GS (manual
         # setpoint) are independent, so a leftover GS would keep grid charging.
         body: '{"state":{"MM":1,"GS":0}}'
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: http
         method: POST

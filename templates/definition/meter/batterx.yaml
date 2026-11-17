@@ -64,7 +64,7 @@ render: |
           uri: http://{{ .host }}:{{ .port }}/api.php?set=command&type=20738&text1=3&text2=0 # Battery Charge AC - OFF
         - source: http
           uri: http://{{ .host }}:{{ .port }}/api.php?set=command&type=20738&text1=4&text2=1 # Battery Discharging - ON
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

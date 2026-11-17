@@ -334,7 +334,8 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	if prevTime, ok := c.obsTime[res.ID]; ok && prevTime.After(res.Timestamp) {
+	prevTime, seen := c.obsTime[res.ID]
+	if seen && prevTime.After(res.Timestamp) {
 		// received observation is outdated, ignoring
 		return
 	}
@@ -409,6 +410,10 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		if data.ID != c.sessionStart.ID {
 			break
 		}
+		// a reconnect replays the last completed session, which may predate the connected vehicle
+		if seen && prevTime.Equal(res.Timestamp) {
+			break
+		}
 		c.sessionEnergy = data.EnergyKwh
 		c.sessionEnergyTime = res.Timestamp
 
@@ -428,6 +433,10 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 				c.sessionEnergy = 0
 				c.obsTime[easee.SESSION_ENERGY] = time.Now()
 			}
+		}
+
+		if opModeStatus(c.opMode) != opModeStatus(opMode) && c.lp != nil {
+			c.lp.RequestUpdate()
 		}
 
 		c.opMode = opMode
@@ -482,21 +491,27 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 
-	res := api.StatusNone
-
-	switch c.opMode {
-	case easee.ModeDisconnected:
-		res = api.StatusA
-	case easee.ModeAwaitingStart, easee.ModeCompleted, easee.ModeReadyToCharge,
-		easee.ModeAwaitingAuthentication, easee.ModeDeauthenticating:
-		res = api.StatusB
-	case easee.ModeCharging:
-		res = api.StatusC
-	default:
+	res := opModeStatus(c.opMode)
+	if res == api.StatusNone {
 		return res, fmt.Errorf("invalid opmode: %d", c.opMode)
 	}
 
 	return res, nil
+}
+
+// opModeStatus maps the charger operation mode to the charge status, api.StatusNone if unknown
+func opModeStatus(opMode int) api.ChargeStatus {
+	switch opMode {
+	case easee.ModeDisconnected:
+		return api.StatusA
+	case easee.ModeAwaitingStart, easee.ModeCompleted, easee.ModeReadyToCharge,
+		easee.ModeAwaitingAuthentication, easee.ModeDeauthenticating:
+		return api.StatusB
+	case easee.ModeCharging:
+		return api.StatusC
+	default:
+		return api.StatusNone
+	}
 }
 
 // Enabled implements the api.Charger interface
@@ -845,11 +860,15 @@ func (c *Easee) Identify() ([]string, error) {
 
 // Set smart charging status to update the chargers led (smart=blue, fast=white)
 func (c *Easee) updateSmartCharging() {
-	if c.lp == nil {
+	c.mux.RLock()
+	lp := c.lp
+	c.mux.RUnlock()
+
+	if lp == nil {
 		return
 	}
 
-	mode := c.lp.GetMode()
+	mode := lp.GetMode()
 	isSmartCharging := mode == api.ModeSmart
 
 	c.mux.Lock()
@@ -878,5 +897,7 @@ var _ loadpoint.Controller = (*Easee)(nil)
 
 // LoadpointControl implements loadpoint.Controller
 func (c *Easee) LoadpointControl(lp loadpoint.API) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	c.lp = lp
 }

@@ -33,6 +33,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
     timeout: 5s
   - name: timeout
     deprecated: true
@@ -314,7 +315,7 @@ render: |
           decode: uint16
     script: v == 0
   # the sequence hides the switch, so the modes are declared here
-  batterymodes: ["normal", "hold", "charge", "holdcharge", "discharge"]
+  batterymodes: ["normal", "holddischarge", "charge", "holdcharge", "discharge"]
   batterymode:
     source: sequence
     set:
@@ -386,7 +387,7 @@ render: |
                   out := rated
                   if limit < rated { out = limit }
                   out
-          - case: 2 # hold
+          - case: 2 # holddischarge
             set:
               source: sequence
               set:

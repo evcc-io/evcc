@@ -170,6 +170,8 @@ export default defineComponent({
 			const { labels, datasets } = this.chartData;
 			const head = this.tooltipHead;
 			const isPrice = this.costType === TYPES.PRICE;
+			// without sessions the scales are made up, only their lines show
+			const named = (unit: string) => (this.hasSessions ? unit : "");
 			const fmtBarValue = (value: number) =>
 				isPrice ? this.fmtMoney(value, this.currency, true, true) : this.fmtGrams(value);
 			const fmtLineValue = (value: number) =>
@@ -251,7 +253,7 @@ export default defineComponent({
 						},
 						...(this.costType === TYPES.CO2
 							? {
-									name: this.co2Scale.small ? "g" : "kg",
+									name: named(this.co2Scale.small ? "g" : "kg"),
 									...(this.co2Scale.small
 										? {
 												max: this.co2Scale.limit,
@@ -262,6 +264,7 @@ export default defineComponent({
 							: {}),
 						...axisNameStyle(),
 						axisLabel: {
+							show: this.hasSessions,
 							color: colors.muted || "",
 							hideOverlap: true,
 							formatter: (value: number) =>
@@ -280,9 +283,10 @@ export default defineComponent({
 					forecastYAxis({
 						position: "left",
 						splitLine: { show: false },
-						name: isPrice ? this.pricePerKWhUnit(this.currency, false) : "g/kWh",
+						name: named(isPrice ? this.pricePerKWhUnit(this.currency, false) : "g/kWh"),
 						...axisNameStyle("right"),
 						axisLabel: {
+							show: this.hasSessions,
 							color: colors.muted || "",
 							hideOverlap: true,
 							formatter: (value: number) =>

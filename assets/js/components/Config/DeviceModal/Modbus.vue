@@ -45,7 +45,7 @@
 			type="Int"
 			class="me-2"
 			required
-			:model-value="id || defaultId"
+			:model-value="id ?? defaultId"
 			@update:model-value="(v) => $emit('update:id', v)"
 		/>
 	</FormRow>

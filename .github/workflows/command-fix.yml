@@ -1,5 +1,7 @@
 name: Claude Fix Command
 
+permissions: {}
+
 on:
   issue_comment:
     types: [created]

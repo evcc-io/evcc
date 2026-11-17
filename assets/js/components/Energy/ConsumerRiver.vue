@@ -161,7 +161,8 @@ export default defineComponent({
 					{
 						type: "themeRiver",
 						data: this.data,
-						boundaryGap: [0, 0],
+						// air above and below, the stream is heavy when it fills the frame
+						boundaryGap: ["10%", "10%"],
 						label: { show: false },
 						// flat layers, hovering changes nothing, a click still selects
 						emphasis: { disabled: true },
@@ -218,15 +219,9 @@ export default defineComponent({
 </script>
 
 <style scoped>
-@import "../../../css/breakpoints.css";
-
 /* same frame as the treemap, toggling does not jump */
+/* as high as a consumer's own chart, selecting one does not move the page */
 .river {
-	height: 360px;
-}
-@media (--sm-and-up) {
-	.river {
-		height: 260px;
-	}
+	height: 200px;
 }
 </style>

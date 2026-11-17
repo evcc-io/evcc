@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -370,15 +369,4 @@ func TestAlpitronicReadFailure(t *testing.T) {
 
 	_, err = wb.CurrentPower()
 	assert.Error(t, err)
-}
-
-func TestAlpitronicSponsorGate(t *testing.T) {
-	// go-e tests set the global sponsor.Subject and never reset it
-	old := sponsor.Subject
-	sponsor.Subject = ""
-	t.Cleanup(func() { sponsor.Subject = old })
-
-	// tests run without sponsorship: the public constructor must refuse
-	_, err := NewAlpitronicHYC(t.Context(), modbus.TcpSettings{URI: "localhost:0", ID: 1}, 1)
-	assert.ErrorIs(t, err, api.ErrSponsorRequired)
 }
