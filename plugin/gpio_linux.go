@@ -29,7 +29,13 @@ type sharedLine struct {
 	mu       sync.Mutex
 	line     *gpiocdev.Line
 	isOutput bool
-	bias     *GpioBias // explicitly configured bias, nil if default
+	applied  *GpioBias               // explicit bias currently set on the line
+	claims   map[*gpioClaim]struct{} // live instances using the line
+}
+
+// gpioClaim is held by a plugin instance until its context is done
+type gpioClaim struct {
+	bias *GpioBias
 }
 
 var (
@@ -37,14 +43,42 @@ var (
 	lines   = make(map[string]*sharedLine)
 )
 
+// claimedBias returns the explicit bias of any live claim
+func (sl *sharedLine) claimedBias() *GpioBias {
+	for c := range sl.claims {
+		if c.bias != nil {
+			return c.bias
+		}
+	}
+	return nil
+}
+
 // acquireLine returns the shared line for chip+pin, requesting it if not yet open.
 // An input line is reconfigured to output on demand, since output values can still be read back.
-// The bias is a property of the physical pin and must not conflict between instances.
-func acquireLine(chip string, pin int, output bool, initial int, bias *GpioBias) (*sharedLine, error) {
+// The bias is a property of the physical pin and must not conflict between live instances.
+// The returned release func drops the claim and closes the line once unused.
+func acquireLine(chip string, pin int, output bool, initial int, bias *GpioBias) (*sharedLine, func(), error) {
 	linesMu.Lock()
 	defer linesMu.Unlock()
 
 	key := chip + ":" + strconv.Itoa(pin)
+	claim := &gpioClaim{bias: bias}
+
+	release := func(sl *sharedLine) func() {
+		return func() {
+			linesMu.Lock()
+			defer linesMu.Unlock()
+
+			sl.mu.Lock()
+			defer sl.mu.Unlock()
+
+			delete(sl.claims, claim)
+			if len(sl.claims) == 0 {
+				_ = sl.line.Close()
+				delete(lines, key)
+			}
+		}
+	}
 
 	if sl, ok := lines[key]; ok {
 		sl.mu.Lock()
@@ -53,10 +87,10 @@ func acquireLine(chip string, pin int, output bool, initial int, bias *GpioBias)
 		var opts []gpiocdev.LineConfigOption
 
 		if bias != nil {
-			if sl.bias != nil && *sl.bias != *bias {
-				return nil, fmt.Errorf("conflicting GPIO bias: requested %s, pin already uses %s", bias, sl.bias)
+			if cb := sl.claimedBias(); cb != nil && *cb != *bias {
+				return nil, nil, fmt.Errorf("conflicting GPIO bias: requested %s, pin already uses %s", bias, cb)
 			}
-			if sl.bias == nil {
+			if sl.applied == nil || *sl.applied != *bias {
 				opts = append(opts, gpioBiasOptions[*bias])
 			}
 		}
@@ -67,15 +101,17 @@ func acquireLine(chip string, pin int, output bool, initial int, bias *GpioBias)
 
 		if len(opts) > 0 {
 			if err := sl.line.Reconfigure(opts...); err != nil {
-				return nil, fmt.Errorf("failed to reconfigure GPIO: %w", err)
+				return nil, nil, fmt.Errorf("failed to reconfigure GPIO: %w", err)
 			}
 			sl.isOutput = sl.isOutput || output
 			if bias != nil {
-				sl.bias = bias
+				sl.applied = bias
 			}
 		}
 
-		return sl, nil
+		sl.claims[claim] = struct{}{}
+
+		return sl, release(sl), nil
 	}
 
 	var opts []gpiocdev.LineReqOption
@@ -95,13 +131,18 @@ func acquireLine(chip string, pin int, output bool, initial int, bias *GpioBias)
 
 	line, err := gpiocdev.RequestLine(chip, pin, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open GPIO: %w", err)
+		return nil, nil, fmt.Errorf("failed to open GPIO: %w", err)
 	}
 
-	sl := &sharedLine{line: line, isOutput: output, bias: bias}
+	sl := &sharedLine{
+		line:     line,
+		isOutput: output,
+		applied:  bias,
+		claims:   map[*gpioClaim]struct{}{claim: {}},
+	}
 	lines[key] = sl
 
-	return sl, nil
+	return sl, release(sl), nil
 }
 
 type gpio struct {
@@ -142,12 +183,13 @@ func NewGpioPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 	}
 
 	// active low is applied per instance in software, since instances may share a line
-	shared, err := acquireLine(cc.Chip, cc.Pin, cc.Function == GpioTypeWrite, p.physical(false), cc.Bias)
+	shared, release, err := acquireLine(cc.Chip, cc.Pin, cc.Function == GpioTypeWrite, p.physical(false), cc.Bias)
 	if err != nil {
 		return nil, err
 	}
 
 	p.shared = shared
+	context.AfterFunc(ctx, release)
 
 	return p, nil
 }
