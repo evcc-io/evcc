@@ -16,6 +16,8 @@ requirements:
       ein kostenloses User Access Token benötigt.
   evcc: ["skiptest"]
 group: solar
+protocols: [http]
+cloud: true
 params:
   - name: idsite
     description:

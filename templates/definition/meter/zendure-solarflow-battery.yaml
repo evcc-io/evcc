@@ -18,6 +18,7 @@ requirements:
       For active battery control, the local API must be enabled via the Zendure App (add HEMS and then exit to apply).
       The device serial number can be found in the Zendure App in the device settings.
       For forced discharge to grid, Energy Export must also be enabled in the Zendure App.
+protocols: [http]
 params:
   - name: usage
     choice: ["battery"]

@@ -3,6 +3,7 @@ products:
   - brand: IOmeter
 discovery:
   mdns: ["_iometer._tcp"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

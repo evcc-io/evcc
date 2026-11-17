@@ -4,6 +4,7 @@ products:
     description:
       generic: Pantabox
 capabilities: ["meter", "dim"]
+protocols: [http]
 params:
   - name: host
 render: |

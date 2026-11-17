@@ -3,6 +3,8 @@ products:
   - brand: Powerfox
     description:
       generic: Poweropti
+protocols: [http]
+cloud: true
 params:
   - name: usage
     choice: ["grid", "pv"]

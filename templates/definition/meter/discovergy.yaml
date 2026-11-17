@@ -2,6 +2,8 @@ template: discovergy
 products:
   - description:
       generic: Discovergy
+protocols: [http]
+cloud: true
 params:
   - name: usage
     choice: ["grid", "pv"]

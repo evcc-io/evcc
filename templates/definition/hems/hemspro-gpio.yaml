@@ -3,6 +3,7 @@ products:
   - brand: Awatt Electronic
     description:
       generic: HEMS PRO (FNN-Schaltkontakte)
+protocols: []
 params:
   - name: maxconsumptionpower
     type: float

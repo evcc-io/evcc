@@ -34,6 +34,7 @@ requirements:
       5. "Trennung nach Vollladung" auf "Nein" stellen.
       6. Geräteneustart auslösen und warten, bis das Gerät wieder online ist.
       7. Die Wallbox in evcc anlegen und prüfen/speichern (eventuell muss ein Fahrzeug angeschlossen sein, damit die SEMP-Schnittstelle den richtigen Status zurückgibt).
+protocols: [http]
 params:
   - name: uri
     description:

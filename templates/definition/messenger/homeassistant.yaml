@@ -4,6 +4,7 @@ products:
 auth:
   type: homeassistant
   params: [uri, insecure]
+protocols: [http]
 params:
   - name: uri
     required: true

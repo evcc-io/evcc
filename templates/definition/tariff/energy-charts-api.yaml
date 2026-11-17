@@ -12,6 +12,8 @@ requirements:
   evcc: ["skiptest"]
 group: price
 countries: ["EU"]
+protocols: [http]
+cloud: true
 params:
   - name: bzn
     type: choice

@@ -3,6 +3,7 @@ products:
   - brand: Homey
     description:
       generic: Energy Dongle
+protocols: [websocket]
 params:
   - name: usage
     choice: ["grid"]

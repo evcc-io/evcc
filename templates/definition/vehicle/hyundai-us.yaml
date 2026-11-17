@@ -3,6 +3,8 @@ products:
   - brand: Hyundai
     description:
       generic: Bluelink (US)
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-base
   - preset: vehicle-online

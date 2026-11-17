@@ -22,6 +22,7 @@ requirements:
       Unterstützt alle IAMMETER-Zähler. Mehrkanal-Zähler (WEM2067, WEM3080T, WEM3046T, WEM3050T) werden über den Parameter `channel` als einphasige Zähler angesprochen.
     en: |
       Supports all IAMMETER meters. Multi-channel meters (WEM2067, WEM3080T, WEM3046T, WEM3050T) are addressed as single-phase meters via the `channel` parameter.
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

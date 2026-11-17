@@ -67,6 +67,10 @@ product:
 {{- if .Capabilities }}
 capabilities: ["{{ join "\", \"" .Capabilities }}"]
 {{- end }}
+protocols: [{{ join ", " .Protocols }}]
+{{- if .Cloud }}
+cloud: true
+{{- end }}
 {{- if .Countries }}
 countries: ["{{ join "\", \"" .Countries }}"]
 {{- end }}

@@ -16,6 +16,7 @@ requirements:
   description:
     de: Die Schaltkontakte der Steuerbox werden an die Eingänge SW1 bis SW4 angeschlossen. Alle verwendeten Eingänge müssen in der Shelly-App bzw. im Webinterface als Eingangstyp "Schalter" konfiguriert sein, nicht als "Taster".
     en: Connect the relay contacts of the control box to the inputs SW1 to SW4. All used inputs must be configured as input type "switch" in the Shelly app or web interface, not as "button".
+protocols: [http]
 params:
   - name: host
   - name: password

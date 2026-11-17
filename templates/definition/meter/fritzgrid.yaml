@@ -5,6 +5,7 @@ products:
       generic: "FRITZ!Smart Energy 250"
 discovery:
   hostname: ["fritz", "fritzbox"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv"]

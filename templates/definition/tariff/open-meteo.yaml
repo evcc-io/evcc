@@ -8,6 +8,8 @@ requirements:
     de: Freie Wetter API [open-meteo.com](https://open-meteo.com) Open-Meteo ist eine Open-Source-Wetter-API und bietet kostenlosen Zugriff für nicht-kommerzielle Nutzung. Kein API-Schlüssel erforderlich.
   evcc: ["skiptest"]
 group: solar
+protocols: [http]
+cloud: true
 params:
   - preset: forecast-base
   - name: ac

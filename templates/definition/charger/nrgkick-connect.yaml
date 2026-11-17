@@ -10,6 +10,7 @@ requirements:
     en: NRGkick charging unit via HTTP (older than 2022/2023)
 discovery:
   mdns: ["_nrgkick._tcp"]
+protocols: [http]
 params:
   - name: host
   - name: mac

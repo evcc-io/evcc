@@ -1,6 +1,8 @@
 template: mg
 products:
   - brand: MG
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-base
   - preset: vehicle-online

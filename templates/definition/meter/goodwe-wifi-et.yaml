@@ -9,6 +9,7 @@ products:
 capabilities: ["battery-control"]
 discovery:
   mac: ["F0C1CE"]
+protocols: [other]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

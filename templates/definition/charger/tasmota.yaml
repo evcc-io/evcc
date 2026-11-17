@@ -8,6 +8,7 @@ capabilities: ["meter"]
 group: switchsockets
 discovery:
   hostname: ["tasmota*"]
+protocols: [http]
 params:
   - name: host
   - name: user

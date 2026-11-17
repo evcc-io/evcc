@@ -11,6 +11,8 @@ requirements:
   evcc: ["skiptest"]
 group: price
 countries: ["DE", "AT", "NL", "BE", "SE", "DK"]
+protocols: [http]
+cloud: true
 params:
   - name: uri
     default: https://epexpredictor.batzill.com

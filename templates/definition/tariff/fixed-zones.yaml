@@ -8,6 +8,7 @@ requirements:
     de: Zeitabhängige Strompreise mit verschiedenen Preiszonen für Nachttarife, Wochenendtarife oder saisonale Tarife. Wenn sich Zonen überschneiden, gilt die zuletzt zutreffende Zone.
     en: Time-dependent electricity prices with different price zones for night rates, weekend rates or seasonal tariffs. If zones overlap, the last matching zone applies.
 group: price
+protocols: []
 params:
   - name: price
     type: pricePerKWh

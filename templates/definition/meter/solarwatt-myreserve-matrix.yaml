@@ -5,6 +5,7 @@ products:
       generic: MyReserve Matrix (LAN oder PowerGateway)
 discovery:
   mac: ["4C52EC"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

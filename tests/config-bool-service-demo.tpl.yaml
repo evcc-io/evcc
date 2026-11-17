@@ -3,6 +3,7 @@ group: generic
 products:
   - description:
       generic: Bool Service Meter
+protocols: []
 params:
   - name: usage
     choice: ["grid"]

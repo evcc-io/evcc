@@ -3,6 +3,8 @@ products:
   - description:
       generic: evNotify
 group: generic
+protocols: [http]
+cloud: true
 params:
   - name: akey
     required: true

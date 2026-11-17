@@ -9,6 +9,7 @@ requirements:
     en: Heat pump with SG Ready contacts switched by relays (e.g. Shelly).
   evcc: ["skiptest"]
 group: heatinggeneric
+protocols: []
 params:
   - name: boost
     type: device

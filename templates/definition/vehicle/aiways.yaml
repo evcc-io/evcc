@@ -1,6 +1,8 @@
 template: aiways
 products:
   - brand: Aiways
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-base
   - preset: vehicle-online

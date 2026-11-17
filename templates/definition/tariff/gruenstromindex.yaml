@@ -9,6 +9,8 @@ requirements:
   evcc: ["skiptest"]
 group: co2
 countries: ["DE"]
+protocols: [http]
+cloud: true
 params:
   - name: zip
     required: true

@@ -3,6 +3,7 @@ group: generic
 products:
   - description:
       generic: Hidden Defaults Meter
+protocols: []
 params:
   - name: usage
     choice: ["grid"]

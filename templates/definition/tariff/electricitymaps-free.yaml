@@ -10,6 +10,8 @@ requirements:
     en: "CO₂ data for many countries from [electricitymaps.com](https://electricitymaps.com). The 'Free Personal Tier' unfortunately does not include forecast data. You'll need a commercial account from [portal.electricitymaps.com](https://portal.electricitymaps.com). Free trial available."
   evcc: ["skiptest"]
 group: co2
+protocols: [http]
+cloud: true
 params:
   - name: token
     required: true

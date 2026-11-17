@@ -4,6 +4,8 @@ products:
   - brand: Awattar
 group: price
 countries: ["DE", "AT"]
+protocols: [http]
+cloud: true
 params:
   - name: region
     example: AT

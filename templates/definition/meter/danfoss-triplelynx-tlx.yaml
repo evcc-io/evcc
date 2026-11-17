@@ -35,6 +35,7 @@ requirements:
 
       Connect a USB-RS485 adapter (or a network serial bridge) to the RS485 bus.
       For multiple inverters on one bus set the `node` parameter for each meter entry.
+protocols: [other]
 params:
   - name: usage
     choice: ["pv"]

@@ -3,6 +3,8 @@ products:
   - brand: Nissan
     description:
       generic: Leaf (pre 2019)
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-base
   - preset: vehicle-online

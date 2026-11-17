@@ -11,6 +11,8 @@ requirements:
   evcc: ["skiptest"]
 group: price
 countries: ["CZ", "SK"]
+protocols: [http]
+cloud: true
 params:
   - name: apikey
     required: true

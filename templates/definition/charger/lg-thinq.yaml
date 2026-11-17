@@ -15,6 +15,8 @@ requirements:
       Controls LG heat pump water heaters (e.g. WH27S) via the LG ThinQ Connect cloud API.
       A personal access token (PAT) must be created at https://connect-pat.lgthinq.com with the permissions "view devices", "view device status" and "control devices".
       evcc sets the water heater target temperature: the normal temperature outside of boost, the boost temperature during boost.
+protocols: [http]
+cloud: true
 params:
   - name: token
     required: true

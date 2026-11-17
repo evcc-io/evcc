@@ -6,6 +6,7 @@ products:
 requirements:
   description:
     generic: "[Smartstuff API](https://docs.smart-stuff.nl/dsmr-api/geavanceerd/api-overzicht) REST-API version"
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

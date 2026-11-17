@@ -3,6 +3,8 @@ products:
   - brand: Smart
     description:
       generic: "#1"
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-base
   - preset: vehicle-features

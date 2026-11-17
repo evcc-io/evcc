@@ -16,6 +16,8 @@ requirements:
       One-time hot water preparation. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available). Requires the device to offer one-time hot water charging (`heating.dhw.oneTimeCharge`) via the API. Not all devices do (e.g. Vitocal 150-A).
 
       Optionally, power and temperature readings can be enabled. This requires data points of the One Base/E3 device generation (e.g. Vitocal 25x, tested with a Vitocal 250-A). Which data points a device provides is device-specific and can be inspected via the [Viessmann API](https://developer.viessmann-climatesolutions.com/) feature endpoint of the installation. The "Read power and temperature values" option is pre-set automatically after login if the device provides the data points.
+protocols: [http]
+cloud: true
 params:
   - name: user
     deprecated: true

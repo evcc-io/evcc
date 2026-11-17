@@ -9,6 +9,8 @@ requirements:
   evcc: ["skiptest"]
 group: price
 countries: ["CH"]
+protocols: [http]
+cloud: true
 params:
   - preset: tariff-base
   - name: tax

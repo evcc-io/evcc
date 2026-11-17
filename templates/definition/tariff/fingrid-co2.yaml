@@ -11,6 +11,8 @@ requirements:
   evcc: ["skiptest"]
 group: co2
 countries: ["FI"]
+protocols: [http]
+cloud: true
 params:
   - preset: tariff-base
   - name: apiKey

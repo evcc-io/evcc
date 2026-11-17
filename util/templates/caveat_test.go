@@ -9,6 +9,7 @@ import (
 func TestCaveatPushdown(t *testing.T) {
 	tmpl, err := fromBytes([]byte(`
 template: caveats-demo
+protocols: []
 caveats:
   - description:
       generic: template caveat

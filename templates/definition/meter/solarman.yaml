@@ -4,6 +4,7 @@ products:
   - brand: IGEN Tech
     description:
       generic: Solarman Logger
+protocols: [http]
 params:
   - name: usage
     choice: ["pv"]

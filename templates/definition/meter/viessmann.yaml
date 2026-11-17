@@ -15,6 +15,8 @@ requirements:
       Reads the heat pump's current electrical power consumption (heating.power.consumption.current) as an
       additional consumer (aux). The heat pump then appears under "Consumption" in the energy flow and its
       usage feeds the evcc statistics - independent of whether evcc controls the heat pump.
+protocols: [http]
+cloud: true
 params:
   - name: usage
     choice: ["aux"]

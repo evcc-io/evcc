@@ -10,6 +10,7 @@ requirements:
     de: Die Wallbox muss als Ladepunkt konfiguriert sein.
 discovery:
   hostname: ["openWB*"]
+protocols: [mqtt]
 params:
   - name: host
   - name: connector

@@ -8,6 +8,8 @@ requirements:
     de: Benötigt den API-Key und die Partner-ID aus der Localvolts Web-App (My Profile, General, API Key). Die Preise sind die standortspezifischen Flex-Preise für die aktuelle und die nächsten 24 Stunden.
 group: price
 countries: ["AU"]
+protocols: [http]
+cloud: true
 params:
   - name: apikey
     required: true

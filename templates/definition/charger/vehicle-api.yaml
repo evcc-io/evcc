@@ -21,6 +21,7 @@ requirements:
 
       Wenn das Fahrzeug die Positionsverfolgung unterstützt, kann dies für Geofencing verwendet werden.
       Wenn Geofencing aktiviert ist, wird evcc nur eingreifen, wenn sich das Fahrzeug innerhalb des angegebenen Radius des Standortes befindet.
+protocols: []
 params:
   - name: geofence_enabled
     description:

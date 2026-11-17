@@ -3,6 +3,7 @@ products:
   - brand: Everhome
     description:
       generic: Ecotracker
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

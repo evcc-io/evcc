@@ -76,6 +76,7 @@ requirements:
       ```
 discovery:
   hostname: ["tasmota*"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "charge"]

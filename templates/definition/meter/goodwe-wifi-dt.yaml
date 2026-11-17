@@ -7,6 +7,7 @@ products:
       generic: SDT/DT Inverter (WiFi)
 discovery:
   mac: ["F0C1CE"]
+protocols: [other]
 params:
   - name: usage
     choice: ["pv"]

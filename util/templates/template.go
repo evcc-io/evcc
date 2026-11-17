@@ -25,6 +25,8 @@ type Template struct {
 	Link         string         `json:",omitempty"` // integration provider link, can be overridden per product
 	Products     []Product      `json:",omitempty"` // list of products this template is compatible with
 	Capabilities []Capability   `json:"-"`
+	Protocols    []Protocol     `json:"-"`          // communication protocols, main one first. Empty list means no communication
+	Cloud        bool           `json:"-"`          // requires a vendor or third-party internet service
 	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
 	Requirements Requirements   `json:",omitempty"`
 	Caveats      []Caveat       `json:",omitempty"` // known device limitations
@@ -169,6 +171,35 @@ func (t *Template) Validate() error {
 				}
 			}
 		}
+	}
+
+	return nil
+}
+
+// ResolveProtocols derives the protocols from presets and the modbus param if not set explicitly.
+// Must run before ResolvePresets, which replaces the preset references.
+func (t *Template) ResolveProtocols() error {
+	// an explicit empty list means no communication, only a missing key is derived
+	if t.Protocols != nil {
+		if len(slices.Compact(slices.Sorted(slices.Values(t.Protocols)))) != len(t.Protocols) {
+			return fmt.Errorf("duplicate protocol: %v", t.Protocols)
+		}
+		return nil
+	}
+
+	for _, p := range t.Params {
+		if protocol, ok := presetProtocols[p.Preset]; ok {
+			t.Protocols = []Protocol{protocol}
+			return nil
+		}
+		if p.Name == ParamModbus {
+			t.Protocols = []Protocol{ProtocolModbus}
+			return nil
+		}
+	}
+
+	if !t.Deprecated {
+		return fmt.Errorf("missing protocols, use [] for no communication or a list of: %s", strings.Join(ProtocolStrings(), ", "))
 	}
 
 	return nil

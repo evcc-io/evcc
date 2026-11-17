@@ -7,6 +7,7 @@ requirements:
     en: Requires a device with SONOFF RPC API. The password is set in the eWeLink app.
 capabilities: ["meter"]
 group: switchsockets
+protocols: [http]
 params:
   - name: host
   - name: user

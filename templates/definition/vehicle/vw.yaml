@@ -28,6 +28,8 @@ requirements:
       consent screen, link the vehicle and enable a continuous data request
       (every 15 minutes). Without this activation the portal returns no data.
       Data is provided on the portal roughly every 15 minutes.
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-base
   - name: vin

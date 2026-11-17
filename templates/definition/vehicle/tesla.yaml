@@ -35,6 +35,8 @@ requirements:
       Start, stopp and current commands are sent to Tesla via this proxy.
 
       More information and alternatives can be found at [docs.evcc.io/blog](https://docs.evcc.io/en/blog/2025/01/20/tesla-api-update).
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-common
   - preset: vehicle-online

@@ -19,6 +19,7 @@ capabilities: ["meter"]
 group: switchsockets
 discovery:
   hostname: ["fritz", "fritzbox"]
+protocols: [http]
 params:
   - name: uri
     default: https://fritz.box

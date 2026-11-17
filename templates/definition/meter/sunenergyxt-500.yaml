@@ -36,6 +36,7 @@ caveats:
       en: |
         `maxacpower` and `maxdischargepower` are derived from the selected `model` when left empty.
         An explicitly configured value takes precedence and is not clamped to the model limit.
+protocols: [http]
 params:
   - name: usage
     type: choice

@@ -9,6 +9,7 @@ products:
   - brand: Smartstuff
     description:
       generic: P1 Dongle
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

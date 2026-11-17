@@ -3,6 +3,7 @@ products:
   - brand: TQ
     description:
       generic: Energy Manager EM2xx/EM3xx
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

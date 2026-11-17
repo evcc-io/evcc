@@ -4,6 +4,7 @@ products:
       de: Fester Preis
       en: Fixed Price
 group: price
+protocols: []
 params:
   - name: price
     type: pricePerKWh

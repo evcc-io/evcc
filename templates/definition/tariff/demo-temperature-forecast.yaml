@@ -9,6 +9,7 @@ requirements:
     en: For demonstration purposes. Provides outdoor temperature data based on a typical daily cycle.
   evcc: ["skiptest"]
 group: temperature
+protocols: []
 params:
   - name: min
     type: float

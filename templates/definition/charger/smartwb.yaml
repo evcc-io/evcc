@@ -3,6 +3,7 @@ products:
   - description:
       generic: smartWB
 capabilities: ["meter", "dim"]
+protocols: [http]
 params:
   - name: host
 render: |

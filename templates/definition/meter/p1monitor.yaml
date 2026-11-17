@@ -3,6 +3,7 @@ products:
   - brand: P1Monitor
     description:
       generic: P1 Monitor
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

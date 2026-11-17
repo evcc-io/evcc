@@ -10,6 +10,7 @@ requirements:
       Abrufen der Victron-Batteriedaten über das VRM-Portal [vrm.victronenergy.com](https://vrm.victronenergy.com).
       Es wird ein kostenloses User Access Token benötigt.
 capabilities: ["battery-control"]
+protocols: [http]
 params:
   - name: usage
     choice: ["battery"]

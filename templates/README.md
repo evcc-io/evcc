@@ -73,6 +73,56 @@ products:
 
 `group` is used to group switchable sockets and generic device support (e.g. SunSpec) templates.
 
+## `protocols`
+
+`protocols` lists how evcc communicates with the device or service, main protocol first. It is mandatory for every non-deprecated template, loading fails otherwise.
+
+**Possible values**:
+
+- `modbus`: Modbus TCP, RTU, SunSpec
+- `http`: REST or other HTTP API
+- `websocket`: WebSocket API
+- `mqtt`: MQTT via broker
+- `ocpp`: OCPP, the device connects to evcc
+- `eebus`: EEBus
+- `other`: any other protocol, e.g. vendor TCP or UDP protocols (SMA Speedwire, E3/DC RSCP, Solarman), DSMR, SMTP
+
+**Rules**:
+
+- Templates with a `modbus` param or an `ocpp`, `eebus` or `mqtt` preset derive the protocol and need no `protocols` key. All others set it explicitly.
+- Templates without any communication (e.g. demo devices, fixed tariffs) declare an empty list: `protocols: []`. Omitting the key is an error.
+- If an integration uses several protocols, list all of them and put the one that carries the main data first. This also applies to templates that would otherwise derive the protocol.
+- A protocol wrapped in another one is tagged by the outer protocol only. Example: Modbus frames inside Solarman are `other`.
+
+**Example**:
+
+```yaml
+template: go-e-v3
+protocols: [http]
+```
+
+```yaml
+template: tinkerforge-warp-ws
+protocols: [websocket, http] # state via WebSocket, commands via HTTP
+```
+
+## `cloud`
+
+`cloud: true` marks templates where evcc talks to a vendor or third-party service on the internet. The default is `false`.
+
+**Rules**:
+
+- A local bridge that itself talks to a cloud (e.g. TeslaMate) is not cloud.
+- A service with a public default server that can also be self-hosted is cloud.
+
+**Example**:
+
+```yaml
+template: easee
+protocols: [websocket, http]
+cloud: true
+```
+
 ## `capabilities`
 
 `capabilities` provides an option to define special capabilities of the device as a list of strings.

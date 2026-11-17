@@ -7,6 +7,8 @@ requirements:
       Benötigt Lexus Link+ Connected Services Account.
     en: |
       Requires Lexus Link+ Connected Services Account.
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-common
   - preset: vehicle-online

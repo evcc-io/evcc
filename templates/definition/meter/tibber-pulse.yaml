@@ -5,6 +5,8 @@ products:
       generic: Pulse
 requirements:
   evcc: ["skiptest"]
+protocols: [websocket, http]
+cloud: true
 params:
   - name: usage
     choice: ["grid"]

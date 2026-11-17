@@ -3,6 +3,7 @@ group: generic
 products:
   - description:
       generic: Usage Filter Demo
+protocols: []
 params:
   - name: usage
     choice: ["pv", "battery"]

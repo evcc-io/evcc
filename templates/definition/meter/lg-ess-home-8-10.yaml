@@ -10,6 +10,7 @@ requirements:
       To use the battery control, a firmware version greater than or equal to 10.05.7430 / R2155 is required
     de: >
       Um die Batteriesteuerung zu nutzen, wird eine Firmwareversionen größer gleich 10.05.7430 / R2155 benötigt
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

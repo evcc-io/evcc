@@ -7,6 +7,8 @@ requirements:
   description:
     en: Charger connected via the Tessie API. Allows control of charging state and configuration of maximum current.
     de: Ladegerät, das über die Tessie-API verbunden ist. Ermöglicht die Steuerung des Ladezustands und die Konfiguration des maximalen Stroms.
+protocols: [http]
+cloud: true
 params:
   - name: vin
     required: true

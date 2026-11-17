@@ -3,6 +3,7 @@ products:
   - brand: Homematic IP
 capabilities: ["meter"]
 group: switchsockets
+protocols: [http]
 params:
   - name: host
   - name: port

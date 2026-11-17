@@ -9,6 +9,7 @@ requirements:
     de: Erfordert ein stromleser.one-Gerät im lokalen Netzwerk.
 discovery:
   mdns: ["_stromleser._tcp"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv"]

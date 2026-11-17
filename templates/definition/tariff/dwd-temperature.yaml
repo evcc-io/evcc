@@ -7,6 +7,8 @@ requirements:
     de: Außentemperaturprognose auf Basis von MOSMIX-Daten des Deutschen Wetterdienstes (DWD), bereitgestellt als JSON über die freie [Bright Sky](https://brightsky.dev) API. Kein API-Schlüssel erforderlich.
   evcc: ["skiptest"]
 group: temperature
+protocols: [http]
+cloud: true
 params:
   - name: lat
     required: true

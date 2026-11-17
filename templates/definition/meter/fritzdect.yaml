@@ -18,6 +18,7 @@ products:
 group: switchsockets
 discovery:
   hostname: ["fritz", "fritzbox"]
+protocols: [http]
 params:
   - name: usage
     choice: ["pv", "charge"]

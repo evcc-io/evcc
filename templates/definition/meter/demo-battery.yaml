@@ -8,6 +8,7 @@ requirements:
   description:
     en: For demonstration purposes. Battery with a fixed set of values.
     de: Zu Demonstrationszwecken. Hausbatterie mit festen Werten.
+protocols: []
 params:
   - name: usage
     choice: ["battery"]

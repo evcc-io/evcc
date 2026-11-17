@@ -6,6 +6,7 @@ products:
 requirements:
   description:
     generic: "[DSMR-logger](https://github.com/mrWheel/DSMRloggerAPI) by Willem Aandewiel, REST-API version"
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

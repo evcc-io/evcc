@@ -8,6 +8,7 @@ requirements:
   description:
     en: For demonstration purposes. Charger with a fixed set of values.
     de: Zu Demonstrationszwecken. Wallbox mit festen Werten.
+protocols: []
 params:
   - name: status
     description:

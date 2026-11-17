@@ -16,6 +16,7 @@ requirements:
     en: |
       The connection uses the charger's Solarman WiFi logger (port 8899). The registers are not officially documented but reverse engineered.
       The charger's communication mode must be set to "WiFi", in "LoRa" mode the inverter overrides the power setpoint written by evcc.
+protocols: [other]
 params:
   - name: host
   - name: port

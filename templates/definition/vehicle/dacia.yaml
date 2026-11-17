@@ -1,6 +1,8 @@
 template: dacia
 products:
   - brand: Dacia
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-base
   - preset: vehicle-features
