@@ -327,7 +327,7 @@ render: |
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
-                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 4 = Self-consumption, 99 = Pause)
                   type: writemultiple
                   decode: uint16
             {{- if eq .firmware ">=01.01.00.28.15" }}
@@ -373,12 +373,12 @@ render: |
                   type: writemultiple
                   decode: uint16
             - source: const
-              value: {{ if eq .firmware "<01.01.00.28.15" }}99{{ else }}2{{ end }}
+              value: {{ if eq .firmware "<01.01.00.28.15" }}99{{ else }}4{{ end }}
               set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
-                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 4 = Self-consumption, 99 = Pause)
                   type: writemultiple
                   decode: uint16
             {{- if eq .firmware ">=01.01.00.28.15" }}
@@ -438,7 +438,7 @@ render: |
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
-                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 4 = Self-consumption, 99 = Pause)
                   type: writemultiple
                   decode: uint16
             {{- if eq .firmware ">=01.01.00.28.15" }}
@@ -484,12 +484,12 @@ render: |
                   type: writemultiple
                   decode: uint16
             - source: const
-              value: {{ if eq .firmware "<01.01.00.28.15" }}99{{ else }}2{{ end }}
+              value: {{ if eq .firmware "<01.01.00.28.15" }}99{{ else }}4{{ end }}
               set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
-                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 4 = Self-consumption, 99 = Pause)
                   type: writemultiple
                   decode: uint16
             {{- if eq .firmware ">=01.01.00.28.15" }}
@@ -549,7 +549,7 @@ render: |
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
-                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 4 = Self-consumption, 99 = Pause)
                   type: writemultiple
                   decode: uint16
             {{- if eq .firmware ">=01.01.00.28.15" }}
