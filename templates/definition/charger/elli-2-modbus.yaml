@@ -1,0 +1,61 @@
+template: elli-2-modbus
+products:
+  - brand: Elli
+    description:
+      generic: Charger Connect 2 (Modbus TCP)
+  - brand: Elli
+    description:
+      generic: Charger Pro 2 (Modbus TCP)
+  - brand: Elli
+    description:
+      generic: Charger Pro Eichrecht 2 (Modbus TCP)
+  - brand: Volkswagen
+    description:
+      generic: Charger Connect 2 (Modbus TCP)
+  - brand: Volkswagen
+    description:
+      generic: Charger Pro 2 (Modbus TCP)
+  - brand: Volkswagen
+    description:
+      generic: Charger Pro Eichrecht 2 (Modbus TCP)
+  - brand: Skoda
+    description:
+      generic: Charger Connect (Modbus TCP)
+  - brand: Skoda
+    description:
+      generic: Charger Pro (Modbus TCP)
+  - brand: Skoda
+    description:
+      generic: Charger Pro Eichrecht (Modbus TCP)
+  - brand: Cupra
+    description:
+      generic: Charger Connect 2 (Modbus TCP)
+  - brand: Cupra
+    description:
+      generic: Charger Pro 2 (Modbus TCP)
+  - brand: Cupra
+    description:
+      generic: Charger Pro Eichrecht 2 (Modbus TCP)
+capabilities: ["mA", "meter", "dim"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: |
+      Modbus-Server in der Wallbox aktivieren und PV-Überschussladen deaktivieren. Firmware R03.004.045.121 oder neuer ist erforderlich.
+
+      Der in der Wallbox konfigurierte Failsafe-Strom bestimmt das Verhalten bei Verlust der Modbus-Verbindung.
+    en: |
+      Enable the Modbus server and disable PV surplus charging in the wallbox. Firmware R03.004.045.121 or newer is required.
+
+      The failsafe current configured in the wallbox determines its behavior if the Modbus connection is lost.
+caveats:
+  - description:
+      de: Leistung und Energie werden als Scheinleistung und Scheinenergie angegeben. Die Steuerung ist auf maximal 16 A begrenzt.
+      en: Power and energy are reported as apparent power and energy. Control is limited to 16 A.
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+render: |
+  type: elli-2-modbus
+  {{- include "modbus" . }}
