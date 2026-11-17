@@ -42,10 +42,14 @@ func NewProvider(log *util.Logger, client *API, vin string, cache time.Duration,
 	v := &Provider{socKeys: socKeys, limitKeys: limitKeys}
 	s := sharedStore(client)
 
-	var cached util.Cacheable[[]point]
+	var (
+		cached util.Cacheable[[]point]
+		lastOK time.Time
+	)
 	cached = util.ResettableCached(func() ([]point, error) {
 		ts, err := s.update(vin)
 		if err == nil {
+			lastOK = time.Now()
 			if !ts.IsZero() {
 				time.AfterFunc(resetDelay(ts, cache), cached.Reset)
 			}
@@ -58,7 +62,7 @@ func NewProvider(log *util.Logger, client *API, vin string, cache time.Duration,
 		}
 
 		// serve the last data over transient portal errors, surface persistent ones
-		if data := s.snapshot(vin); keepData(data, s.lastOK(vin)) {
+		if data := s.snapshot(vin); keepData(data, lastOK) {
 			log.ERROR.Println(err)
 			return data, nil
 		}

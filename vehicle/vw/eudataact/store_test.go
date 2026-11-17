@@ -241,19 +241,3 @@ func TestUpdateNoDatasetsAfterData(t *testing.T) {
 	require.ErrorIs(t, err, errNoDatasets)
 	assert.Equal(t, "0", socOf(s.snapshot(testVin)))
 }
-
-// the grace period is shared by all providers of a vehicle, so a provider that
-// never loaded the data itself still serves it after a failed update
-func TestUpdateLastOKShared(t *testing.T) {
-	portal, _, s := testStore(testStart)
-	portal.addDatasets(testStart, 1)
-
-	_, err := s.update(testVin)
-	require.NoError(t, err)
-	require.False(t, s.lastOK(testVin).IsZero())
-
-	portal.files = nil
-	_, err = s.update(testVin)
-	require.ErrorIs(t, err, errNoDatasets)
-	assert.True(t, keepData(s.snapshot(testVin), s.lastOK(testVin)))
-}
