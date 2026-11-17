@@ -54,7 +54,7 @@ func acquireLine(chip string, pin int, output bool, initial int, bias *GpioBias)
 
 		if bias != nil {
 			if sl.bias != nil && *sl.bias != *bias {
-				return nil, fmt.Errorf("conflicting GPIO bias: %s already configured as %s", bias, sl.bias)
+				return nil, fmt.Errorf("conflicting GPIO bias: requested %s, pin already uses %s", bias, sl.bias)
 			}
 			if sl.bias == nil {
 				opts = append(opts, gpioBiasOptions[*bias])

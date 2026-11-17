@@ -33,13 +33,16 @@ func _GpioBiasNoOp() {
 var _GpioBiasValues = []GpioBias{GpioBiasAsIs, GpioBiasDisabled, GpioBiasPullUp, GpioBiasPullDown}
 
 var _GpioBiasNameToValueMap = map[string]GpioBias{
-	_GpioBiasName[0:5]:        GpioBiasAsIs,
+	_GpioBiasName[0:5]:   GpioBiasAsIs,
+	_GpioBiasName[5:13]:  GpioBiasDisabled,
+	_GpioBiasName[13:20]: GpioBiasPullUp,
+	_GpioBiasName[20:29]: GpioBiasPullDown,
+}
+
+var _GpioBiasLowerNameToValueMap = map[string]GpioBias{
 	_GpioBiasLowerName[0:5]:   GpioBiasAsIs,
-	_GpioBiasName[5:13]:       GpioBiasDisabled,
 	_GpioBiasLowerName[5:13]:  GpioBiasDisabled,
-	_GpioBiasName[13:20]:      GpioBiasPullUp,
 	_GpioBiasLowerName[13:20]: GpioBiasPullUp,
-	_GpioBiasName[20:29]:      GpioBiasPullDown,
 	_GpioBiasLowerName[20:29]: GpioBiasPullDown,
 }
 
@@ -57,7 +60,7 @@ func GpioBiasString(s string) (GpioBias, error) {
 		return val, nil
 	}
 
-	if val, ok := _GpioBiasNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _GpioBiasLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to GpioBias values", s)
