@@ -1438,11 +1438,28 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 	greenShareHome := site.greenShare(0, homePower)
 	greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
+	// A **self-metering heating device** books its counter in bursts, and the burst is observed at a poll that
+	// has nothing to do with the consumption: the device's cloud counter moves every ~11 min whether the pump
+	// runs or rests. At that moment `totalChargePower` is usually 0, so the share above is a 0/0 - and
+	// `greenShare` resolves a NaN to **1** whenever any green power exists. The result was a session claiming
+	// 98-100 % solar for a pump that ran all night on grid power, and the price that comes with it (feed-in
+	// 0.08 instead of grid 0.33 EUR/kWh); the same branch answers 0 when the battery was charging on a dark
+	// evening, which booked whole days at 0 % (measured 2026-11-04 on all three pumps).
+	//
+	// The house's own share is the right answer for a device that is part of the house, and it is defined at
+	// every moment: `homePower` is never 0, so there is no NaN to resolve. This does not fix the *sampling*
+	// (the share is still read when the counter moves, not integrated over the interval) - it removes the
+	// meaningless half of the problem, and the number now follows the house instead of a 0/0.
+	loadpointGreenShare := greenShareLoadpoints
+	if hd, ok := lp.(interface{ heatingDevice() bool }); ok && hd.heatingDevice() {
+		loadpointGreenShare = greenShareHome
+	}
+
 	// TODO
 	if lp != nil {
 		lp.Update(
 			site.loadpointSitePower(lp, res), state.battery.Power, consumption, feedin, res.batteryBuffered, res.batteryStart,
-			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
+			loadpointGreenShare, site.effectivePrice(loadpointGreenShare), site.effectiveCo2(loadpointGreenShare),
 			hems.Dimmed(site.hems),
 		)
 	}
