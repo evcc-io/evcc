@@ -1,5 +1,7 @@
 name: Hassio Addon Changelog Update (Reusable)
 
+permissions: {}
+
 on:
   workflow_call:
     inputs:

@@ -1,5 +1,7 @@
 name: Default
 
+permissions: {}
+
 on:
   push:
     branches:
@@ -120,7 +122,6 @@ jobs:
     name: UI
     permissions:
       contents: read
-      actions: write
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-24.04-arm' || 'depot-ubuntu-24.04-arm' }}
 
     steps:
@@ -190,7 +191,6 @@ jobs:
 
     permissions:
       contents: read
-      actions: write
 
     # the Playwright run is the longest step of the workflow, so it is split
     strategy:
@@ -328,7 +328,6 @@ jobs:
 
     permissions:
       contents: read
-      actions: write
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

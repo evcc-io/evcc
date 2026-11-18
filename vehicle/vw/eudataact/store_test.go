@@ -208,6 +208,8 @@ func TestProviderCatchUp(t *testing.T) {
 	total := 10
 
 	portal, a, _ := testStore(testStart)
+	// the portal still lists the dataset merged at start
+	portal.files = []dataset{{Name: "0.zip", CreatedOn: testStart}}
 	p := NewProvider(util.NewLogger("test"), a, testVin, time.Hour, nil, nil)
 
 	soc, err := p.Soc()
@@ -228,5 +230,14 @@ func TestProviderCatchUp(t *testing.T) {
 	}
 
 	require.NoError(t, err)
-	assert.Equal(t, float64(total), soc)
+	assert.Equal(t, float64(len(portal.files)), soc)
+}
+
+// an empty dataset list after data has been received must not silently serve the old data
+func TestUpdateNoDatasetsAfterData(t *testing.T) {
+	_, _, s := testStore(testStart)
+
+	_, err := s.update(testVin)
+	require.ErrorIs(t, err, errNoDatasets)
+	assert.Equal(t, "0", socOf(s.snapshot(testVin)))
 }

@@ -1,5 +1,7 @@
 name: Claude Analyze Command
 
+permissions: {}
+
 on:
   issue_comment:
     types: [created]

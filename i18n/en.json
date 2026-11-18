@@ -251,7 +251,7 @@
       "amount": "Amount",
       "asleep": "sleeping",
       "broker": "Broker",
-      "bucket": "Bucket",
+      "bucket": "Bucket / Database",
       "capacity": "Capacity",
       "chargeStatus": "Status",
       "chargeStatusA": "not connected",
@@ -502,7 +502,7 @@
     "influx": {
       "description": "Writes charging data and other metrics to InfluxDB. Use Grafana or other tools to visualize the data.",
       "descriptionToken": "Check the InfluxDB documentation to learn how to create one. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Bucket",
+      "labelBucket": "Bucket / Database",
       "labelCheckInsecure": "Allow self-signed certificates",
       "labelDatabase": "Database",
       "labelInsecure": "Certificate validation",
@@ -513,7 +513,7 @@
       "labelUser": "Username",
       "title": "InfluxDB",
       "v1Support": "Need support for InfluxDB 1.x?",
-      "v2Support": "Back to InfluxDB 2.x"
+      "v2Support": "Back to InfluxDB 2+"
     },
     "loadpoint": {
       "addCharger": {
@@ -974,7 +974,8 @@
       "manualLogin": "Or sign in manually at {url} in your browser using these credentials:",
       "noClients": "No clients yet. No one can connect yet.",
       "password": "Password",
-      "passwordOnce": "This password is shown only once. Scan the QR code or copy it now. You won't be able to see it again.",
+      "passwordOnce": "This password is shown only once. Scan the QR code, copy or print it now. You won't be able to see it again.",
+      "print": "Print / PDF",
       "privacy": "By enabling this feature, you agree to our {0}.",
       "privacyLink": "privacy policy",
       "qrInstall": "Install the evcc app for {ios} or {android}.",
