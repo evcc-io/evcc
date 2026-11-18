@@ -2660,6 +2660,11 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 
 	lp.energyMetrics.SetEnvironment(greenShare, effPrice, effCo2)
 
+	// Weight the environment with the energy actually consumed, so a counter step that arrives late is not
+	// valued with the environment of the instant it arrived at (see EnergyMetrics.Sample). This runs before
+	// publishChargeProgress, which is what moves the counter.
+	lp.energyMetrics.Sample(lp.chargePower, lp.clock.Now())
+
 	// update ChargeRater here to make sure initial meter update is caught
 	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 	lp.bus.Publish(evChargePower, lp.chargePower)

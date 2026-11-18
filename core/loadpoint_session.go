@@ -339,6 +339,13 @@ func (lp *Loadpoint) updateHeatingDaySession(nowT, dayStart time.Time) {
 	if lp.session == nil && !closed {
 		if open := lp.db.LastOpen(); open != nil && sameDay(open.Created, dayStart) {
 			lp.session = open
+
+			// The row carries what was already booked today; the accumulator in memory does not. Seed it,
+			// or the next counter move books the whole day again at one instant's share (see
+			// EnergyMetrics.Restore).
+			if open.SolarPercentage != nil {
+				lp.energyMetrics.Restore(open.ChargedEnergy, *open.SolarPercentage, open.PricePerKWh, open.Co2PerKWh)
+			}
 		} else if open != nil {
 			// an open row from an earlier day is a leftover (evcc stopped before the boundary): close it
 			// where it stands so it cannot shadow today's session forever
