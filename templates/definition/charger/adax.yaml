@@ -1,0 +1,91 @@
+template: adax
+products:
+  - brand: Adax
+    description:
+      generic: Neo Wi-Fi
+  - brand: Adax
+    description:
+      generic: Neo Compact Wi-Fi
+  - brand: Adax
+    description:
+      generic: Clea Wi-Fi
+  - brand: Adax
+    description:
+      generic: Nova Wi-Fi
+group: heating
+requirements:
+  description:
+    de: |
+      Steuert die Adax Heizkörper eines Raums über die Adax Cloud API.
+      In der Adax WiFi App (ab Version 3.7) unter Konto → Remote user client API eine Zugangsberechtigung anlegen. Benutzer ist die Konto-ID, Passwort ist das erzeugte Passwort.
+      evcc setzt die Zieltemperatur des Raums: außerhalb des Boosts auf die normale Temperatur, während des Boosts auf die Boost Temperatur.
+      Wochenprogramme in der Adax App und andere Dienste, die den Raum steuern (z.B. Tibber), deaktivieren. Sonst überschreiben sie die von evcc gesetzte Temperatur.
+      Die API liefert keine aktuelle Leistung. Ist die Nennleistung angegeben, wird die Leistung geschätzt. Für genaue Werte einen separaten Zähler verwenden.
+    en: |
+      Controls the Adax heaters of a room via the Adax cloud API.
+      In the Adax WiFi app (version 3.7 or later), create a credential under Account → Remote user client API. User is the account ID, password is the generated password.
+      evcc sets the room target temperature: the normal temperature outside of boost, the boost temperature during boost.
+      Disable weekly programs in the Adax app and other services controlling the room (e.g. Tibber). Otherwise they overwrite the temperature set by evcc.
+      The API does not report current power. If the rated power is given, power is estimated. Use a separate meter for accurate values.
+params:
+  - name: user
+    required: true
+    description:
+      de: Konto-ID
+      en: Account ID
+    help:
+      de: In der Adax App unter Konto
+      en: Shown in the Adax app under Account
+  - name: password
+    required: true
+  - name: room
+    description:
+      de: Raum
+      en: Room
+    help:
+      de: Name oder ID des Raums, notwendig falls mehrere Räume im Konto vorhanden sind
+      en: Name or ID of the room, required if the account has multiple rooms
+  - name: normal
+    type: float
+    unit: °C
+    default: 20
+    description:
+      de: Normale Temperatur
+      en: Normal temperature
+    help:
+      de: Zieltemperatur außerhalb des Boosts
+      en: Target temperature outside of boost
+  - name: setpoint
+    type: float
+    unit: °C
+    default: 22
+    description:
+      de: Boost Temperatur
+      en: Boost temperature
+    help:
+      de: Zieltemperatur während des Boosts, muss über der normalen Temperatur liegen
+      en: Target temperature during boost, must exceed the normal temperature
+  - name: power
+    type: int
+    unit: W
+    description:
+      de: Nennleistung
+      en: Rated power
+    help:
+      de: Summe der Nennleistung aller Heizkörper im Raum, zur Schätzung der Leistung
+      en: Combined rated power of all heaters in the room, used to estimate power
+  - name: cache
+    default: 5m
+render: |
+  type: adax
+  user: {{ .user }}
+  password: {{ .password }}
+  {{- if .room }}
+  room: {{ .room }}
+  {{- end }}
+  normal: {{ .normal }}
+  setpoint: {{ .setpoint }}
+  {{- if .power }}
+  power: {{ .power }}
+  {{- end }}
+  cache: {{ .cache }}
