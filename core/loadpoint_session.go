@@ -32,6 +32,30 @@ func (lp *Loadpoint) chargeMeterTotal() float64 {
 	return f
 }
 
+// heatingDevice reports a heating loadpoint that meters itself: the device's own counter is
+// the truth, not the power evcc integrates while it has the device switched on
+func (lp *Loadpoint) heatingDevice() bool {
+	return lp.chargerHasFeature(api.Heating) && lp.chargerHasFeature(api.IntegratedDevice)
+}
+
+// sessionChargeEnergy returns the energy charged in the current session in kWh
+func (lp *Loadpoint) sessionChargeEnergy() (float64, error) {
+	if s := lp.session; lp.heatingDevice() && s != nil && s.MeterStart != nil {
+		if f := lp.chargeMeterTotal(); f >= *s.MeterStart {
+			return f - *s.MeterStart, nil
+		}
+
+		return 0, nil
+	}
+
+	f, err := lp.chargeRater.ChargedEnergy()
+	if err != nil {
+		return 0, err
+	}
+
+	return f - lp.chargedAtStartup, nil
+}
+
 // createSession creates a charging session. The created timestamp is empty until set by evChargeStartHandler.
 // The session is not persisted yet. That will only happen when stopSession is called.
 func (lp *Loadpoint) createSession() {
@@ -72,8 +96,14 @@ func (lp *Loadpoint) createSession() {
 
 // applyEnergyMetrics writes current energy metrics into the session and persists it.
 func (lp *Loadpoint) applyEnergyMetrics(s *session.Session) {
-	if meterStop := lp.chargeMeterTotal(); meterStop > 0 {
+	meterStop := lp.chargeMeterTotal()
+	if meterStop > 0 {
 		s.MeterStop = &meterStop
+	}
+
+	// a heating device meters itself: book the counter delta, not the windows evcc switched it on
+	if lp.heatingDevice() && s.MeterStart != nil && meterStop >= *s.MeterStart {
+		lp.energyMetrics.Update(meterStop - *s.MeterStart)
 	}
 
 	if soc := lp.vehicleSoc; soc > 0 && !lp.chargerHasFeature(api.Heating) {
@@ -168,23 +198,28 @@ func (lp *Loadpoint) finalizeSessionEnergy() {
 }
 
 func (lp *Loadpoint) resetHeatingSession() {
-	if lp.session == nil || !lp.chargerHasFeature(api.Heating) || !lp.chargerHasFeature(api.IntegratedDevice) {
+	if !lp.heatingDevice() {
 		return
 	}
 
-	if !now.With(lp.clock.Now()).BeginningOfDay().After(lp.session.Created) {
-		return
+	if lp.session != nil && now.With(lp.clock.Now()).BeginningOfDay().After(lp.session.Created) {
+		lp.stopSession()
+		lp.clearSession()
+
+		if cr, ok := lp.chargeRater.(wrapper.ChargeResetter); ok {
+			cr.ResetCharge()
+		}
+		if ct, ok := lp.chargeTimer.(wrapper.ChargeResetter); ok {
+			ct.ResetCharge()
+		}
 	}
 
-	lp.stopSession()
-	lp.clearSession()
-
-	if cr, ok := lp.chargeRater.(wrapper.ChargeResetter); ok {
-		cr.ResetCharge()
+	// the day is the session: start it at the day boundary, so the device's counter is booked
+	// from midnight even when evcc never switches the device on
+	if lp.session == nil {
+		lp.createSession()
+		if lp.session != nil && lp.session.Created.IsZero() {
+			lp.session.Created = lp.clock.Now()
+		}
 	}
-	if ct, ok := lp.chargeTimer.(wrapper.ChargeResetter); ok {
-		ct.ResetCharge()
-	}
-
-	lp.createSession()
 }

@@ -283,7 +283,8 @@ func TestResetHeatingSession(t *testing.T) {
 
 	lp.resetHeatingSession()
 	require.NotNil(t, lp.session)
-	assert.True(t, lp.session.Created.IsZero())
+	// the day is the session: it starts at the day boundary, not at the first boost
+	assert.Equal(t, clock.Now(), lp.session.Created)
 
 	lp.updateSession(sessionStart(lp))
 	assert.Equal(t, clock.Now(), lp.session.Created)

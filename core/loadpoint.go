@@ -617,7 +617,11 @@ func (lp *Loadpoint) evChargeStopHandler() {
 		lp.resetPVTimer()
 	}
 
-	lp.stopSession()
+	// a heating device is metered by its own counter over the whole day; closing the session at
+	// every pause would book only the windows evcc switched the device on
+	if !lp.heatingDevice() {
+		lp.stopSession()
+	}
 }
 
 // evVehicleConnectHandler sends external start event
@@ -664,8 +668,11 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// re-read odometer to catch delayed update (#30225)
 	lp.vehicleOdometer()
 
-	// session is persisted during evChargeStopHandler which runs before
-	lp.clearSession()
+	// session is persisted during evChargeStopHandler which runs before; a heating device reports
+	// A whenever it rests, so it keeps the day's session (see loadpoint_session.go)
+	if !lp.heatingDevice() {
+		lp.clearSession()
+	}
 
 	// clear locked plan goal on disconnect
 	lp.clearPlanLock()
@@ -2288,10 +2295,10 @@ func (lp *Loadpoint) updateChargeVoltages() {
 
 // publish charged energy and duration
 func (lp *Loadpoint) publishChargeProgress() {
-	if f, err := lp.chargeRater.ChargedEnergy(); err == nil {
+	if f, err := lp.sessionChargeEnergy(); err == nil {
 		// workaround for Go-E resetting during disconnect, see
 		// https://github.com/evcc-io/evcc/issues/5092
-		switch session := f - lp.chargedAtStartup; {
+		switch session := f; {
 		case session > maxSessionEnergy:
 			// guard against meters reporting register garbage, see
 			// https://github.com/evcc-io/evcc/issues/32159
