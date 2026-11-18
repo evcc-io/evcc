@@ -59,6 +59,11 @@ const (
 
 	maxSessionEnergy = 1e3 // kWh, above this a charge rater reading is treated as garbage
 
+	// chargePowerGrace is how many consecutive failed power readings are tolerated before a loadpoint
+	// goes dark. A single blip must not flicker the display; a power outage must not leave yesterday's
+	// wattage standing. At the usual 30 s interval this is 90 s.
+	chargePowerGrace = 3
+
 	chargerSwitchDuration = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchDuration   = 60 * time.Second // allow out of sync and do not measure phases during this timespan
 	welcomeChargeDuration = 60 * time.Second // keep charging enabled after connect for vehicles requiring it
@@ -180,6 +185,7 @@ type Loadpoint struct {
 	// cached state
 	status         api.ChargeStatus // Charger status
 	chargePower    float64          // Charging power
+	chargePowerOff int              // consecutive failed power readings
 	chargeCurrents []float64        // Phase currents
 	connectedTime  time.Time        // Time when vehicle was connected
 	connectPending bool             // connect notification deferred until vehicle detection settles
@@ -2162,6 +2168,43 @@ func (lp *Loadpoint) pvEnableScalePhases(phases int) bool {
 	return err == nil
 }
 
+// chargePowerFailed records a failed power reading and returns the number of consecutive failures
+// plus whether this tick is the one that turns the loadpoint dark.
+//
+// The retained MQTT value is the reason this exists: an error used to leave both lp.chargePower and the
+// published topic untouched, so a consumer kept showing the last wattage for as long as the outage lasted
+// (measured 2026-11-01: a Stiebel radiator stood at 1807 W for 3,5 h while its plug had no power at all).
+// Going dark means zero for evcc's own arithmetic — never a real measurement — and an erased topic.
+func (lp *Loadpoint) chargePowerFailed() (fails int, dark bool) {
+	lp.Lock()
+	lp.chargePowerOff++
+	fails = lp.chargePowerOff
+	dark = fails == chargePowerGrace
+	if fails >= chargePowerGrace {
+		lp.chargePower = 0
+	}
+	lp.Unlock()
+
+	if dark {
+		// erase instead of publishing a zero as if it were measured — the last value may well have been
+		// zero already (a resting device), and the topic must still stop claiming a reading
+		lp.publish(keys.ChargePower, nil)
+	}
+
+	return fails, dark
+}
+
+// chargePowerOK resets the failure counter and reports whether the reading had been dark before
+func (lp *Loadpoint) chargePowerOK() bool {
+	lp.Lock()
+	defer lp.Unlock()
+
+	was := lp.chargePowerOff >= chargePowerGrace
+	lp.chargePowerOff = 0
+
+	return was
+}
+
 // UpdateChargePowerAndCurrents updates charge meter power and currents for load management
 func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 	power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, modbus.Backoff())
@@ -2169,6 +2212,10 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 		lp.Lock()
 		lp.chargePower = power // update value if no error
 		lp.Unlock()
+
+		if lp.chargePowerOK() {
+			lp.log.INFO.Println("charge power: reading is back")
+		}
 
 		lp.log.DEBUG.Printf("charge power: %.0fW", power)
 		lp.publish(keys.ChargePower, power)
@@ -2181,7 +2228,17 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 		}
 	} else {
 		power = 0
-		lp.log.ERROR.Printf("charge power: %v", err)
+		fails, dark := lp.chargePowerFailed()
+		switch {
+		case dark:
+			lp.log.WARN.Printf("charge power: no reading for %d ticks, going dark: %v", fails, err)
+		case fails < chargePowerGrace:
+			lp.log.ERROR.Printf("charge power: %v", err)
+		case fails%10 == 0:
+			// a heartbeat while it stays dark, not a line every tick: a 3,5 h outage would otherwise
+			// write 400 identical errors and bury the one line that mattered
+			lp.log.ERROR.Printf("charge power: still dark after %d ticks: %v", fails, err)
+		}
 	}
 
 	// update charge currents
