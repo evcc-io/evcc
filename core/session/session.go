@@ -1,6 +1,7 @@
 package session
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/evcc-io/evcc/util/export"
@@ -29,6 +30,27 @@ type Session struct {
 	ReferencePricePerKWh *float64       `json:"referencePricePerKWh" csv:"Reference Price/kWh" gorm:"column:reference_price_per_kwh"`
 	ReferenceCo2PerKWh   *float64       `json:"referenceCo2PerKWh" csv:"Reference CO2/kWh (gCO2eq)" gorm:"column:reference_co2_per_kwh"`
 }
+
+// MarshalJSON writes an **open** session without an end. Go's zero time would otherwise leave the API as
+// `"finished": "0001-01-01T00:00:00Z"`, and every consumer that asks "is there an end?" answers yes: the UI's
+// `v-if="session.finished"` rendered it as "Mo., 1. Jan. 1, 0:53" for a session that was simply still running.
+// A heating day session is open for a whole day, so that line sat on screen most of the time (measured
+// 2026-11-03, docs/57).
+func (s Session) MarshalJSON() ([]byte, error) {
+	type shadow struct {
+		sessionAlias
+		Finished *time.Time `json:"finished"`
+	}
+
+	v := shadow{sessionAlias: sessionAlias(s)}
+	if !s.Finished.IsZero() {
+		v.Finished = &s.Finished
+	}
+	return json.Marshal(v)
+}
+
+// sessionAlias sheds the method set above, so the shadow struct can embed the fields without recursing.
+type sessionAlias Session
 
 // Sessions is a list of sessions
 type Sessions []Session
