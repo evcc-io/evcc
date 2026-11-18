@@ -73,7 +73,7 @@ func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 // Returns locked plan if available, otherwise calculates fresh
 func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 	// return locked plan if available
-	if p := lp.planLocked; p.Id > 0 {
+	if p := lp.getPlanLock(); p.Id > 0 {
 		return p.Time, p.Soc, p.Id
 	}
 

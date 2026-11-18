@@ -25,6 +25,9 @@ type PlanLock struct {
 
 // clearPlanLock clears the locked plan goal
 func (lp *Loadpoint) clearPlanLock() {
+	lp.planLockMu.Lock()
+	defer lp.planLockMu.Unlock()
+
 	lp.planLocked = PlanLock{}
 }
 
@@ -37,11 +40,20 @@ func (lp *Loadpoint) ClearPlanLock() {
 
 // lockPlanGoal locks the current plan goal to handle overruns (soc-based plans)
 func (lp *Loadpoint) lockPlanGoal(planTime time.Time, soc int, id int) {
+	lp.planLockMu.Lock()
+	defer lp.planLockMu.Unlock()
+
 	lp.planLocked = PlanLock{
 		Time: planTime,
 		Soc:  soc,
 		Id:   id,
 	}
+}
+
+func (lp *Loadpoint) getPlanLock() PlanLock {
+	lp.planLockMu.Lock()
+	defer lp.planLockMu.Unlock()
+	return lp.planLocked
 }
 
 // setPlanActive updates plan active flag.
@@ -273,7 +285,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			lp.log.DEBUG.Printf("plan: avoid re-start within %v, continuing until %s", tariff.SlotDuration, planStart.Round(time.Second).Local())
 			active = true
 		}
-		if active && lp.planLocked.Id == 0 && isSocBased {
+		if active && lp.getPlanLock().Id == 0 && isSocBased {
 			lp.lockPlanGoal(planTime, int(goal), lp.getPlanId())
 		}
 		return active
@@ -287,7 +299,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		}
 
 		// lock the goal when soc-based plan becomes active for the first time
-		if lp.planLocked.Id == 0 && isSocBased {
+		if lp.getPlanLock().Id == 0 && isSocBased {
 			lp.lockPlanGoal(planTime, int(goal), lp.getPlanId())
 		}
 

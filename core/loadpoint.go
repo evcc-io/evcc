@@ -171,6 +171,7 @@ type Loadpoint struct {
 	planActive       atomic.Bool      // charge plan exists and has a currently active slot
 	planOverrunSent  bool             // notification has been sent already
 	planLocked       PlanLock         // locked plan
+	planLockMu       sync.Mutex       // guards planLocked; callers may already hold RWMutex
 
 	// optimizer
 	suggestion        *types.Suggestion // optimizer suggestion for the current slot

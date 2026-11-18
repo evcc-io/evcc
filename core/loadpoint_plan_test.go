@@ -111,3 +111,70 @@ func TestPlanActiveRace(t *testing.T) {
 	}()
 	wg.Wait()
 }
+
+func TestPlanLockConcurrentAccess(t *testing.T) {
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	goalTime := time.Now()
+	start := make(chan struct{})
+	var wg sync.WaitGroup
+	for _, action := range []func(){
+		func() { lp.lockPlanGoal(goalTime, 80, 2) },
+		func() { lp.ClearPlanLock() },
+		func() { lp.setPlanActive(false) },
+		func() {
+			when, soc, id := lp.nextVehiclePlan()
+			if id != 0 {
+				assert.Equal(t, goalTime, when)
+				assert.Equal(t, 80, soc)
+				assert.Equal(t, 2, id)
+			}
+		},
+	} {
+		wg.Go(func() {
+			<-start
+			for range 1000 {
+				action()
+			}
+		})
+	}
+	close(start)
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("concurrent plan operations did not finish")
+	}
+}
+
+func TestPlanLockWithLoadpointMutex(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		run  func(*Loadpoint)
+	}{
+		{"clear", func(lp *Loadpoint) { lp.clearPlanLock() }},
+		{"reset", func(lp *Loadpoint) { lp.setPlanActive(false) }},
+		{"lock", func(lp *Loadpoint) { lp.lockPlanGoal(time.Now(), 80, 2) }},
+		{"read", func(lp *Loadpoint) { lp.nextVehiclePlan() }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			lp := NewLoadpoint(util.NewLogger("foo"), nil)
+			lp.lockPlanGoal(time.Now(), 80, 2)
+			done := make(chan struct{})
+			go func() {
+				lp.Lock()
+				defer lp.Unlock()
+				tc.run(lp)
+				close(done)
+			}()
+			select {
+			case <-done:
+			case <-time.After(5 * time.Second):
+				t.Fatal("plan operation deadlocked with the loadpoint mutex held")
+			}
+		})
+	}
+}
