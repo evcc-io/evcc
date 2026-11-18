@@ -65,6 +65,15 @@ params:
     help:
       en: Output pin that mirrors the active LPC signal to an external system
       de: Ausgangspin, der das aktive Dimmsignal an ein externes System weiterleitet
+  - name: passthroughactivelow
+    type: bool
+    advanced: true
+    description:
+      en: Passthrough pin active low
+      de: Passthrough-Pin invertiert (active low)
+    help:
+      en: Output is pulled to ground while the LPC signal is active, e.g. for relay modules switching on low level.
+      de: Ausgang wird bei aktivem Dimmsignal auf Masse gezogen, z. B. für Relaismodule, die bei Low-Pegel schalten.
 render: |
   type: eebus
   ski: {{ .ski }}
@@ -78,4 +87,7 @@ render: |
     source: gpio
     pin: {{ .passthroughpin }}
     function: write
+    {{- if .passthroughactivelow }}
+    activelow: true
+    {{- end }}
   {{- end }}
