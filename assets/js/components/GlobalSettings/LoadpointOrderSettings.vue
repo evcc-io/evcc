@@ -3,6 +3,16 @@
 		<div class="small text-muted mb-2 col-form-label">
 			{{ $t("settings.loadpoints.help") }}
 		</div>
+		<div class="mb-3">
+			<label class="form-label" for="loadpoint-order-mode">
+				{{ $t("settings.loadpoints.orderMode") }}
+			</label>
+			<select id="loadpoint-order-mode" v-model="orderMode" class="form-select">
+				<option value="added">{{ $t("settings.loadpoints.orderModeAdded") }}</option>
+				<option value="priority">{{ $t("settings.loadpoints.orderModePriority") }}</option>
+			</select>
+			<div class="form-text">{{ $t("settings.loadpoints.orderModeHelp") }}</div>
+		</div>
 		<DragDropList :values="loadpoints.map((item) => item.id)" @reorder="handleReorder">
 			<DragDropItem
 				v-for="item in loadpoints"
@@ -54,6 +64,7 @@ import {
 } from "@/uiLoadpoints";
 import DragDropList from "@/components/Helper/DragDropList.vue";
 import DragDropItem from "@/components/Helper/DragDropItem.vue";
+import settings from "@/settings";
 
 export default defineComponent({
 	name: "LoadpointOrderSettings",
@@ -62,6 +73,14 @@ export default defineComponent({
 		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 	},
 	computed: {
+		orderMode: {
+			get(): string {
+				return settings.loadpointOrderMode;
+			},
+			set(value: string) {
+				settings.loadpointOrderMode = value;
+			},
+		},
 		resetDisabled() {
 			const allVisible = this.loadpoints.every((lp) => lp.disabled || lp.visible);
 			const noOrder = this.loadpoints.every((lp) => lp.order === null);

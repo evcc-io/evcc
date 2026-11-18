@@ -2123,6 +2123,10 @@
       "help": "Change order and visibility for the UI.",
       "hide": "Hide {title}",
       "label": "Charging points",
+      "orderMode": "Order of the charging points",
+      "orderModeAdded": "as added",
+      "orderModeHelp": "\"as added\" keeps the configuration order and lets you drag individual points; \"by priority\" sorts by the loadpoint priority and uses your manual order only within the same priority.",
+      "orderModePriority": "by priority",
       "show": "Show {title}"
     },
     "sponsorToken": {
