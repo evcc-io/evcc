@@ -1012,7 +1012,7 @@ func (lp *Loadpoint) syncCharger() error {
 			return fmt.Errorf("charger enable: %w", err)
 		}
 
-	case shouldBeConsistent && (enabled || lp.connected()):
+	case shouldBeConsistent && !lp.enableStateIsAdvisory() && (enabled || lp.connected()):
 		// ignore disabled state if vehicle was disconnected (!lp.enabled && !lp.connected)
 		lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 	}
@@ -2540,6 +2540,14 @@ func (lp *Loadpoint) stopWakeUpTimer() {
 
 func (lp *Loadpoint) shouldBeConsistent() bool {
 	return lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted()
+}
+
+// enableStateIsAdvisory reports whether a difference between the requested and the reported enable
+// state is an observation rather than a fault. A continuous device (heat pump, water heater) runs on
+// its own schedule, so "disabled" means normal operation and the loadpoint must not expect the device
+// to acknowledge its command - the same reason the "disabled but charging" check above skips it.
+func (lp *Loadpoint) enableStateIsAdvisory() bool {
+	return lp.chargerHasFeature(api.Continuous)
 }
 
 // chargerUpdateCompleted returns true if enable command should be already processed by the charger (so we can try to sync charger and loadpoint)
