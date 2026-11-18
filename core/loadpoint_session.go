@@ -223,6 +223,25 @@ func (lp *Loadpoint) resetHeatingSession() {
 		}
 	}
 
+	// The session store only records a start meter above zero (DB.New: `if meter > 0`). A heater that
+	// begins its counter at 0.0 kWh -- or a session restored after a restart, where the row was written
+	// without one -- therefore keeps MeterStart nil, and every reader of this session short-circuits:
+	// no counter delta, no energy, no money (measured 2026-10-30: both Stiebel sockets with
+	// meter_start_kwh NULL and charged_kwh 0.0 while todayEnergy showed 22 Wh). Take the start from the
+	// meter itself. publishChargeProgress runs before this in the same tick and may already have written
+	// a stop meter, so reconcile with it rather than requiring it to be empty.
+	if s := lp.session; s != nil && s.MeterStart == nil && !s.Created.IsZero() {
+		if m, ok := api.Cap[api.MeterEnergy](lp.chargeMeter); ok {
+			if f, err := m.TotalEnergy(); err == nil {
+				if s.MeterStop == nil || *s.MeterStop < f {
+					s.MeterStop = &f
+				}
+				s.MeterStart = &f
+				lp.db.Persist(s)
+			}
+		}
+	}
+
 	// A resting heating device draws no power, so publishChargeProgress -- the only other writer -- never
 	// runs and the day's session would stay in memory, invisible in the sessions list and absent from the
 	// database until midnight (measured 2026-10-30: 0.28 kWh on the counter, no row). Show the session from
