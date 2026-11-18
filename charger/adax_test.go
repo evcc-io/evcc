@@ -1,6 +1,8 @@
 package charger
 
 import (
+	"context"
+	"math"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -31,6 +33,26 @@ func TestAdaxRoom(t *testing.T) {
 
 	_, err = adaxRoom(rooms, "attic")
 	assert.Error(t, err)
+
+	// exact id wins over a name that looks like an id, duplicate names are rejected
+	tricky := []adax.Room{{Id: 1, Name: "2"}, {Id: 2, Name: "Office"}, {Id: 3, Name: "office"}}
+
+	r, err := adaxRoom(tricky, "2")
+	require.NoError(t, err)
+	assert.Equal(t, int64(2), r.Id)
+
+	_, err = adaxRoom(tricky, "Office")
+	assert.ErrorContains(t, err, "ambiguous")
+}
+
+func TestAdaxMode(t *testing.T) {
+	on, off := true, false
+	t20, t22 := 2000, 2200
+
+	assert.Equal(t, Dim, adaxMode(adax.Room{HeatingEnabled: &off, TargetTemperature: &t22}, 22))
+	assert.Equal(t, Boost, adaxMode(adax.Room{HeatingEnabled: &on, TargetTemperature: &t22}, 22))
+	assert.Equal(t, Normal, adaxMode(adax.Room{HeatingEnabled: &on, TargetTemperature: &t20}, 22))
+	assert.Equal(t, Normal, adaxMode(adax.Room{}, 22))
 }
 
 func TestAdaxPower(t *testing.T) {
@@ -59,4 +81,21 @@ func TestAdaxPower(t *testing.T) {
 
 	_, err := adaxPower(adax.Room{}, nil, 1000)
 	assert.ErrorIs(t, err, api.ErrNotAvailable)
+
+	// heating on but no reported target
+	_, err = adaxPower(adax.Room{HeatingEnabled: &on, Temperature: &temp}, nil, 1000)
+	assert.ErrorIs(t, err, api.ErrNotAvailable)
+}
+
+func TestAdaxInvalidTemperatures(t *testing.T) {
+	for _, tc := range []map[string]any{
+		{"normal": math.NaN()},
+		{"setpoint": math.NaN()},
+		{"normal": 22, "setpoint": 20},
+		{"setpoint": 40},
+	} {
+		tc["user"], tc["password"] = "user", "password"
+		_, err := NewAdaxFromConfig(context.Background(), tc)
+		assert.ErrorContains(t, err, "invalid temperatures", tc)
+	}
 }

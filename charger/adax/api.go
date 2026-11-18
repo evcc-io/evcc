@@ -2,7 +2,6 @@ package adax
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -93,18 +92,23 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 }
 
 // Rooms returns all rooms of the account
-func (api *API) Rooms() ([]Room, error) {
+func (api *API) Rooms(ctx context.Context) ([]Room, error) {
+	req, err := request.New(http.MethodGet, ApiURL+"/rest/v1/content/", nil, request.AcceptJSON)
+	if err != nil {
+		return nil, err
+	}
+
 	var res struct {
 		Rooms []Room `json:"rooms"`
 	}
 
-	err := api.GetJSON(ApiURL+"/rest/v1/content/", &res)
+	err = api.DoJSON(req.WithContext(ctx), &res)
 
 	return res.Rooms, err
 }
 
 // SetHeating switches room heating on with the given target temperature in °C, or off
-func (api *API) SetHeating(roomId int64, enabled bool, temp float64) error {
+func (api *API) SetHeating(ctx context.Context, roomId int64, enabled bool, temp float64) error {
 	room := controlRoom{Id: roomId, HeatingEnabled: enabled}
 	if enabled {
 		room.TargetTemperature = int(math.Round(temp * 100))
@@ -124,16 +128,19 @@ func (api *API) SetHeating(roomId int64, enabled bool, temp float64) error {
 		} `json:"rooms"`
 	}
 
-	if err := api.DoJSON(req, &res); err != nil {
+	if err := api.DoJSON(req.WithContext(ctx), &res); err != nil {
 		return err
 	}
 
-	var errs []error
 	for _, r := range res.Rooms {
-		if r.Status != "OK" {
-			errs = append(errs, fmt.Errorf("room %d: %s", r.Id, r.Status))
+		if r.Id != roomId {
+			continue
 		}
+		if r.Status != "OK" {
+			return fmt.Errorf("room %d: %s", r.Id, r.Status)
+		}
+		return nil
 	}
 
-	return errors.Join(errs...)
+	return fmt.Errorf("room %d: missing control status", roomId)
 }

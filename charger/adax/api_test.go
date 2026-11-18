@@ -39,6 +39,7 @@ func TestTokenSource(t *testing.T) {
 }
 
 func TestAPI(t *testing.T) {
+	ctx := context.Background()
 	api := NewAPI(util.NewLogger("test"), oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "jwt"}))
 
 	// mock below the oauth transport
@@ -64,17 +65,21 @@ func TestAPI(t *testing.T) {
 		require.Len(t, body.Rooms, 1)
 		control = body.Rooms[0]
 
-		status := "OK"
-		if control["id"] == 11.0 {
-			status = "NoAccess"
+		switch control["id"] {
+		case 11.0:
+			return httpmock.NewJsonResponse(http.StatusOK, map[string]any{
+				"rooms": []map[string]any{{"id": 11, "status": "NoAccess"}},
+			})
+		case 12.0:
+			return httpmock.NewJsonResponse(http.StatusOK, map[string]any{"rooms": []any{}})
 		}
 
 		return httpmock.NewJsonResponse(http.StatusOK, map[string]any{
-			"rooms": []map[string]any{{"id": control["id"], "status": status}},
+			"rooms": []map[string]any{{"id": control["id"], "status": "OK"}},
 		})
 	})
 
-	rooms, err := api.Rooms()
+	rooms, err := api.Rooms(ctx)
 	require.NoError(t, err)
 	require.Len(t, rooms, 2)
 
@@ -89,11 +94,12 @@ func TestAPI(t *testing.T) {
 	_, ok = rooms[1].CurrentTemperature()
 	assert.False(t, ok)
 
-	require.NoError(t, api.SetHeating(10, true, 21.3))
+	require.NoError(t, api.SetHeating(ctx, 10, true, 21.3))
 	assert.Equal(t, map[string]any{"id": 10.0, "heatingEnabled": true, "targetTemperature": 2130.0}, control)
 
-	require.NoError(t, api.SetHeating(10, false, 21.3))
+	require.NoError(t, api.SetHeating(ctx, 10, false, 21.3))
 	assert.Equal(t, map[string]any{"id": 10.0, "heatingEnabled": false}, control)
 
-	assert.EqualError(t, api.SetHeating(11, false, 0), "room 11: NoAccess")
+	assert.EqualError(t, api.SetHeating(ctx, 11, false, 0), "room 11: NoAccess")
+	assert.EqualError(t, api.SetHeating(ctx, 12, false, 0), "room 12: missing control status")
 }

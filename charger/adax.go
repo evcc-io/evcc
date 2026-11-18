@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -73,7 +74,8 @@ func NewAdaxFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		return nil, api.ErrMissingCredentials
 	}
 
-	if cc.Normal < adaxMinTemp || cc.Setpoint > adaxMaxTemp || cc.Setpoint <= cc.Normal {
+	// positive form so that NaN fails validation
+	if !(cc.Normal >= adaxMinTemp && cc.Setpoint <= adaxMaxTemp && cc.Setpoint > cc.Normal) {
 		return nil, fmt.Errorf("invalid temperatures: boost setpoint %.1f must exceed normal %.1f, both within %.0f..%.0f", cc.Setpoint, cc.Normal, adaxMinTemp, adaxMaxTemp)
 	}
 
@@ -86,7 +88,7 @@ func NewAdaxFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 
 	conn := adax.NewAPI(log, ts)
 
-	rooms, err := conn.Rooms()
+	rooms, err := conn.Rooms(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get rooms: %w", err)
 	}
@@ -98,7 +100,7 @@ func NewAdaxFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 
 	// commands only show up in the api after minutes, so there is no point resetting the cache after control
 	roomG := util.Cached(func() (adax.Room, error) {
-		rooms, err := conn.Rooms()
+		rooms, err := conn.Rooms(ctx)
 		if err != nil {
 			return adax.Room{}, err
 		}
@@ -107,31 +109,53 @@ func NewAdaxFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 
 	res := new(Adax)
 
-	// target set by evcc, 0 while off; nil until evcc first sets a mode
-	var setTarget *float64
+	target := func(mode int64) float64 {
+		return map[int64]float64{Normal: cc.Normal, Boost: cc.Setpoint}[mode]
+	}
+
+	// mode set by evcc, 0 until evcc first sets a mode
+	var (
+		mu      sync.Mutex
+		setMode int64
+	)
 
 	set := func(mode int64) error {
-		var target float64
-		switch mode {
-		case Dim:
-		case Normal:
-			target = cc.Normal
-		case Boost:
-			target = cc.Setpoint
-		default:
+		if mode != Dim && mode != Normal && mode != Boost {
 			return api.ErrNotAvailable
 		}
 
-		if err := conn.SetHeating(room.Id, target > 0, target); err != nil {
+		mu.Lock()
+		defer mu.Unlock()
+
+		t := target(mode)
+		if err := conn.SetHeating(ctx, room.Id, t > 0, t); err != nil {
 			return err
 		}
 
-		setTarget = &target
+		setMode = mode
 
 		return nil
 	}
 
-	res.SgReady, err = NewSgReady(ctx, &cc.embed, set, nil, nil)
+	// the set mode takes precedence over the room's reported state, which lags behind control commands by several minutes
+	getMode := func() (int64, error) {
+		mu.Lock()
+		mode := setMode
+		mu.Unlock()
+
+		if mode != 0 {
+			return mode, nil
+		}
+
+		r, err := roomG()
+		if err != nil {
+			return 0, err
+		}
+
+		return adaxMode(r, cc.Setpoint), nil
+	}
+
+	res.SgReady, err = NewSgReady(ctx, &cc.embed, set, getMode, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -158,6 +182,16 @@ func NewAdaxFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 				return 0, err
 			}
 
+			mu.Lock()
+			mode := setMode
+			mu.Unlock()
+
+			var setTarget *float64
+			if mode != 0 {
+				t := target(mode)
+				setTarget = &t
+			}
+
 			return adaxPower(r, setTarget, float64(cc.Power))
 		}))
 	}
@@ -165,8 +199,20 @@ func NewAdaxFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	return res, nil
 }
 
-// adaxPower estimates power as rated power while the room is below target. The target evcc has set takes
-// precedence over the room's reported target, which lags behind control commands by several minutes.
+// adaxMode derives the mode from the room's reported state
+func adaxMode(r adax.Room, setpoint float64) int64 {
+	if r.HeatingEnabled != nil && !*r.HeatingEnabled {
+		return Dim
+	}
+
+	if t, ok := r.TargetCelsius(); ok && t >= setpoint {
+		return Boost
+	}
+
+	return Normal
+}
+
+// adaxPower estimates power as rated power while the room is below target, using the target evcc has set if any
 func adaxPower(r adax.Room, setTarget *float64, power float64) (float64, error) {
 	temp, ok := r.CurrentTemperature()
 	if !ok {
@@ -177,8 +223,11 @@ func adaxPower(r adax.Room, setTarget *float64, power float64) (float64, error) 
 	switch {
 	case setTarget != nil:
 		target = *setTarget
-	case r.HeatingEnabled != nil && *r.HeatingEnabled:
-		target, _ = r.TargetCelsius()
+	case r.HeatingEnabled != nil && !*r.HeatingEnabled:
+	default:
+		if target, ok = r.TargetCelsius(); !ok {
+			return 0, api.ErrNotAvailable
+		}
 	}
 
 	if target == 0 || temp >= target {
@@ -188,19 +237,33 @@ func adaxPower(r adax.Room, setTarget *float64, power float64) (float64, error) 
 	return power, nil
 }
 
-// adaxRoom selects the room by id or name, or the only room if none is configured
+// adaxRoom selects the room by id or unique name, or the only room if none is configured
 func adaxRoom(rooms []adax.Room, id string) (adax.Room, error) {
 	if id == "" && len(rooms) == 1 {
 		return rooms[0], nil
 	}
 
 	if r, ok := lo.Find(rooms, func(r adax.Room) bool {
-		return id != "" && (strconv.FormatInt(r.Id, 10) == id || strings.EqualFold(r.Name, id))
+		return strconv.FormatInt(r.Id, 10) == id
 	}); ok {
 		return r, nil
 	}
 
-	return adax.Room{}, fmt.Errorf("cannot find room, got: %s", strings.Join(lo.Map(rooms, func(r adax.Room, _ int) string {
+	matches := lo.Filter(rooms, func(r adax.Room, _ int) bool {
+		return id != "" && strings.EqualFold(r.Name, id)
+	})
+
+	if len(matches) == 1 {
+		return matches[0], nil
+	}
+
+	names := strings.Join(lo.Map(rooms, func(r adax.Room, _ int) string {
 		return fmt.Sprintf("%d (%s)", r.Id, r.Name)
-	}), ", "))
+	}), ", ")
+
+	if len(matches) > 1 {
+		return adax.Room{}, fmt.Errorf("room name %q is ambiguous, use the id: %s", id, names)
+	}
+
+	return adax.Room{}, fmt.Errorf("cannot find room, got: %s", names)
 }
