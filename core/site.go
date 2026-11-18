@@ -1406,6 +1406,14 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 	res := site.sitePower(state, totalChargePower, flexiblePower)
 	state = res.state
 
+	// The number every loadpoint decision is built on. Until this line existed, `sitePower` was the only
+	// state evcc computed and never told anyone about: the loadpoints compare their thresholds against it
+	// (`pvEnableDecision`, core/loadpoint.go), the log prints it at DEBUG, and /api/state answered `null`
+	// because no key was registered for it. Everything outside evcc had to re-derive it from grid, battery
+	// and residualPower - a second implementation that drifts silently (docs/35 §12).
+	// Sign as everywhere else: negative = surplus available.
+	site.publish(keys.SitePower, res.power)
+
 	// retain the estimates for the api getters and the green share
 	if site.gridMeter == nil || site.pvMeters == nil {
 		site.Lock()

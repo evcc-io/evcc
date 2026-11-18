@@ -20,6 +20,7 @@ const (
 	PvEnergy              = "pvEnergy"
 	PvPower               = "pvPower"
 	ResidualPower         = "residualPower"
+	SitePower             = "sitePower"
 	SiteTitle             = "siteTitle"
 	SmartCostType         = "smartCostType"
 	Statistics            = "statistics"
