@@ -222,4 +222,18 @@ func (lp *Loadpoint) resetHeatingSession() {
 			lp.session.Created = lp.clock.Now()
 		}
 	}
+
+	// A resting heating device draws no power, so publishChargeProgress -- the only other writer -- never
+	// runs and the day's session would stay in memory, invisible in the sessions list and absent from the
+	// database until midnight (measured 2026-10-30: 0.28 kWh on the counter, no row). Show the session from
+	// the first tick and keep it current, but write only when something changed: one write per counter step.
+	if s := lp.session; s != nil && s.MeterStart != nil && !s.Created.IsZero() {
+		switch f := lp.chargeMeterTotal(); {
+		case s.MeterStop == nil:
+			s.MeterStop = s.MeterStart
+			lp.db.Persist(s)
+		case f > *s.MeterStop:
+			lp.applyEnergyMetrics(s)
+		}
+	}
 }

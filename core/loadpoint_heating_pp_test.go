@@ -145,8 +145,9 @@ func TestHeatingSessionIsTheDay(t *testing.T) {
 
 	sessions, err := db.Sessions()
 	require.NoError(t, err)
-	require.Len(t, sessions, 1)
-	assert.False(t, sessions[0].Finished.IsZero())
+	require.Len(t, sessions, 2, "yesterday closed, today open — both are visible while the day runs")
+	assert.False(t, sessions[0].Finished.IsZero(), "yesterday is closed")
+	assert.True(t, sessions[1].Finished.IsZero(), "today is still being written")
 }
 
 // TestHeatingSessionSurvivesDisconnect: an integrated device reports A whenever it rests. The

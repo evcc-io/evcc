@@ -279,7 +279,8 @@ func TestResetHeatingSession(t *testing.T) {
 	assert.Equal(t, clock.Now(), lp.session.Created)
 
 	clock.Add(36 * time.Hour)
-	me.EXPECT().TotalEnergy().Return(1.0, nil).MaxTimes(2)
+	// the day's session is persisted as its counter moves (0004), so resetHeatingSession reads the meter once more
+	me.EXPECT().TotalEnergy().Return(1.0, nil).MaxTimes(3)
 
 	lp.resetHeatingSession()
 	require.NotNil(t, lp.session)
