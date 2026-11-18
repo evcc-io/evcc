@@ -292,7 +292,7 @@ func (m *EcoFlow) soc() (float64, error) {
 // holdSoc returns the soc of the device the backup reserve is sent to
 func (m *EcoFlow) holdSoc() (float64, error) {
 	sn := m.serial()
-	if sn == m.serials[m.leader.Load()] {
+	if m.mainG == nil || sn == m.serials[0] {
 		return m.soc()
 	}
 
