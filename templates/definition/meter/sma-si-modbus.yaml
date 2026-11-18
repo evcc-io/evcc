@@ -120,12 +120,12 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 803 # inaktiv (Ina), self-consumption keeps charging from pv
+            value: 0 # 0%, no discharge
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
+                address: 40799 # SMA Modbus Profile: CmpBMS.BatDschMaxW (Maximale Batterieentladeleistung)
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -136,14 +136,14 @@ render: |
               register:
                 address: 40795 # SMA Modbus Profile: CmpBMS.BatChaMaxW (Maximale Batterieladeleistung)
                 type: writemultiple
-                decode: uint32
+                decode: uint32               
           - source: const
-            value: 0 # 0%, no discharge
+            value: 803 # inaktiv (Ina), self-consumption keeps charging from pv
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40799 # SMA Modbus Profile: CmpBMS.BatDschMaxW (Maximale Batterieentladeleistung)
+                address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
                 type: writemultiple
                 decode: uint32
       - case: 3 # charge
