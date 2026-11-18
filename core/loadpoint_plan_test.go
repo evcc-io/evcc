@@ -103,6 +103,9 @@ func TestUnsampledSocUnknownCapacity(t *testing.T) {
 	}{
 		{name: "unknown capacity while charging", capacity: 0, status: api.StatusC, charged: 5, wantSoc: 0, wantOk: false},
 		{name: "negative capacity", capacity: -8.5, status: api.StatusC, charged: 5, wantSoc: 0, wantOk: false},
+		{name: "NaN capacity", capacity: math.NaN(), status: api.StatusC, charged: 5},
+		{name: "infinite capacity", capacity: math.Inf(1), status: api.StatusB, charged: 5},
+		{name: "negative infinite capacity", capacity: math.Inf(-1), status: api.StatusC, charged: 5},
 		{name: "unknown capacity while disconnected still assumes 0%", capacity: 0, status: api.StatusA, charged: 5, wantSoc: 0, wantOk: true},
 		{name: "known capacity from energy", capacity: 8.5, status: api.StatusC, charged: 2, wantSoc: 20, wantOk: true},
 		{name: "known capacity no energy", capacity: 8.5, status: api.StatusC, charged: 0, wantSoc: 0, wantOk: true},
