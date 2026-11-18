@@ -20,7 +20,7 @@ func TestHeatingSessionStartsFromAZeroCounter(t *testing.T) {
 	counter := 0.0
 	me.EXPECT().TotalEnergy().DoAndReturn(func() (float64, error) { return counter, nil }).AnyTimes()
 
-	lp.resetHeatingSession()
+	lp.updateDaySession()
 	require.NotNil(t, lp.session)
 	require.NotNil(t, lp.session.MeterStart, "a counter at 0.0 must still produce a start meter")
 	assert.Equal(t, 0.0, *lp.session.MeterStart)
@@ -29,7 +29,7 @@ func TestHeatingSessionStartsFromAZeroCounter(t *testing.T) {
 
 	// the device ran on its own, evcc never switched it on
 	counter = 0.018
-	lp.resetHeatingSession()
+	lp.updateDaySession()
 
 	require.NotNil(t, lp.session.MeterStop)
 	assert.InDelta(t, 0.018, *lp.session.MeterStop, 1e-9)
@@ -48,12 +48,12 @@ func TestHeatingSessionSeedsStartOverAWrittenStop(t *testing.T) {
 	stop := 0.018
 	lp.session = &session.Session{Created: clck.Now(), MeterStop: &stop}
 
-	lp.resetHeatingSession()
+	lp.updateDaySession()
 	require.NotNil(t, lp.session)
 	require.NotNil(t, lp.session.MeterStart, "a restored row without a start still needs one")
 
 	// the next counter step is booked
 	counter = 0.030
-	lp.resetHeatingSession()
+	lp.updateDaySession()
 	assert.InDelta(t, 0.012, lp.session.ChargedEnergy, 1e-9)
 }

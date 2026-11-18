@@ -61,7 +61,7 @@ func TestHeatingSessionIsPersistedWhileTheDeviceRests(t *testing.T) {
 	meter := 7601.11
 	me.EXPECT().TotalEnergy().DoAndReturn(func() (float64, error) { return meter, nil }).AnyTimes()
 
-	lp.resetHeatingSession()
+	lp.updateDaySession()
 	require.NotNil(t, lp.session)
 
 	sessions, err := db.Sessions()
@@ -71,7 +71,7 @@ func TestHeatingSessionIsPersistedWhileTheDeviceRests(t *testing.T) {
 
 	// the device ran while nobody watched: the counter moved by 0.28 kWh
 	meter = 7601.39
-	lp.resetHeatingSession()
+	lp.updateDaySession()
 
 	sessions, err = db.Sessions()
 	require.NoError(t, err)

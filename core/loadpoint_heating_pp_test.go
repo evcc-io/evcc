@@ -7,8 +7,8 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/session"
-	serverdb "github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/core/settings"
+	serverdb "github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -128,20 +128,22 @@ func TestHeatingSessionIsTheDay(t *testing.T) {
 	me.EXPECT().TotalEnergy().Return(100.0, nil).AnyTimes()
 
 	// no session yet - the first tick of the day creates it
-	lp.resetHeatingSession()
+	lp.updateDaySession()
 	require.NotNil(t, lp.session)
 	assert.False(t, lp.session.Created.IsZero())
 
 	created := lp.session.Created
 	clck.Add(time.Hour)
-	lp.resetHeatingSession()
+	lp.updateDaySession()
 	assert.Equal(t, created, lp.session.Created, "same day keeps the session")
 
 	// a day later yesterday is closed and the new day starts
 	clck.Add(24 * time.Hour)
-	lp.resetHeatingSession()
+	lp.updateDaySession()
 	require.NotNil(t, lp.session)
-	assert.Equal(t, clck.Now(), lp.session.Created)
+	// the day is the session (0007): it is labelled with the day boundary, not with the tick that
+	// happened to cross it
+	assert.Equal(t, time.Date(1970, 1, 2, 0, 0, 0, 0, clck.Now().Location()), lp.session.Created)
 
 	sessions, err := db.Sessions()
 	require.NoError(t, err)

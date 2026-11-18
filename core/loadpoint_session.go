@@ -59,12 +59,23 @@ func (lp *Loadpoint) sessionChargeEnergy() (float64, error) {
 // createSession creates a charging session. The created timestamp is empty until set by evChargeStartHandler.
 // The session is not persisted yet. That will only happen when stopSession is called.
 func (lp *Loadpoint) createSession() {
+	// the guard has to run before the meter is read: a loadpoint without a charge meter would otherwise
+	// dereference it (measured as a nil-pointer panic in TestDefaultVehicle)
+	if lp.db == nil || lp.session != nil {
+		return
+	}
+
+	lp.createSessionAt(lp.chargeMeterTotal())
+}
+
+// createSessionAt is createSession with an explicit start meter (see applyEnergyMetricsAt).
+func (lp *Loadpoint) createSessionAt(meter float64) {
 	// test guard
 	if lp.db == nil || lp.session != nil {
 		return
 	}
 
-	lp.session = lp.db.New(lp.chargeMeterTotal())
+	lp.session = lp.db.New(meter)
 
 	if v := lp.GetVehicle(); v != nil {
 		lp.session.Vehicle = v.GetTitle()
@@ -96,7 +107,12 @@ func (lp *Loadpoint) createSession() {
 
 // applyEnergyMetrics writes current energy metrics into the session and persists it.
 func (lp *Loadpoint) applyEnergyMetrics(s *session.Session) {
-	meterStop := lp.chargeMeterTotal()
+	lp.applyEnergyMetricsAt(s, lp.chargeMeterTotal())
+}
+
+// applyEnergyMetricsAt is applyEnergyMetrics with an explicit meter reading, so a session that has to end
+// on a boundary no reading falls on (midnight) books the interpolated value.
+func (lp *Loadpoint) applyEnergyMetricsAt(s *session.Session, meterStop float64) {
 	if meterStop > 0 {
 		s.MeterStop = &meterStop
 	}
@@ -127,6 +143,16 @@ func (lp *Loadpoint) applyEnergyMetrics(s *session.Session) {
 
 // stopSession ends a charging session segment and persists the session.
 func (lp *Loadpoint) stopSession() {
+	if lp.db == nil || lp.session == nil {
+		return
+	}
+
+	lp.stopSessionAt(lp.clock.Now(), lp.chargeMeterTotal())
+}
+
+// stopSessionAt ends the session at the given time with the given meter reading. A heating session ends
+// on the day boundary (23:59:59), which is not a tick: the meter reading for that instant is interpolated.
+func (lp *Loadpoint) stopSessionAt(ts time.Time, meterStop float64) {
 	s := lp.session
 
 	// test guard
@@ -139,10 +165,10 @@ func (lp *Loadpoint) stopSession() {
 		return
 	}
 
-	s.Finished = lp.clock.Now()
+	s.Finished = ts
 	s.ChargeDuration = new(lp.chargeDuration.Abs())
 
-	lp.applyEnergyMetrics(s)
+	lp.applyEnergyMetricsAt(s, meterStop)
 }
 
 type sessionOption func(*session.Session)
@@ -197,14 +223,85 @@ func (lp *Loadpoint) finalizeSessionEnergy() {
 	lp.applyEnergyMetrics(s)
 }
 
-func (lp *Loadpoint) resetHeatingSession() {
-	if !lp.heatingDevice() {
+// updateDaySession runs on every loadpoint tick and keeps each session inside one day: a session still open
+// when the day turns is cut at 23:59:59 and continued at 00:00:00, so the kWh consumed on a day is booked to
+// that day — whether it comes from a device counter, a charge meter or evcc own integration of charge power.
+// Nothing here is keyed to a device type; the two branches differ only in what the day means for the session.
+func (lp *Loadpoint) updateDaySession() {
+	nowT := lp.clock.Now()
+	dayStart := now.With(nowT).BeginningOfDay()
+
+	if lp.heatingDevice() {
+		lp.updateHeatingDaySession(nowT, dayStart)
 		return
 	}
 
-	if lp.session != nil && now.With(lp.clock.Now()).BeginningOfDay().After(lp.session.Created) {
-		lp.stopSession()
+	lp.splitSessionAtDayBoundary(nowT, dayStart)
+}
+
+// splitSessionAtDayBoundary cuts an open session at the day boundary: the part before midnight is closed
+// with the reading of that instant and persisted, the rest continues as a session of its own day. A
+// loadpoint that is not delivering anything at the boundary simply ends its session there.
+func (lp *Loadpoint) splitSessionAtDayBoundary(nowT, dayStart time.Time) {
+	meterNow := lp.chargeMeterTotal()
+	kWhNow := lp.energyMetrics.TotalWh() / 1e3
+
+	if s := lp.session; lp.db != nil && s != nil && !s.Created.IsZero() && dayStart.After(s.Created) {
+		meterAt, kWhAt := lp.readingsAt(dayStart, meterNow, kWhNow, nowT)
+
+		// the closing part carries what was consumed before the boundary, and only that
+		lp.energyMetrics = lp.energyMetricsBefore(kWhAt)
+		lp.stopSessionAt(dayStart.Add(-time.Second), meterAt)
 		lp.clearSession()
+
+		// still delivering? then this day continues the session at the reading of the boundary
+		if lp.charging() {
+			if f, err := lp.chargeRater.ChargedEnergy(); err == nil {
+				lp.chargedAtStartup = f
+			}
+			lp.energyMetrics.Reset()
+			lp.createSessionAt(meterAt)
+
+			if s := lp.session; s != nil {
+				s.Created = dayStart
+				lp.db.Persist(s)
+			}
+		} else {
+			lp.energyMetrics.Reset()
+		}
+
+		lp.energyMetrics.Publish("session", lp)
+	}
+
+	lp.rememberReading(nowT, meterNow, kWhNow)
+}
+
+// updateHeatingDaySession is the day session of a device that meters itself and runs whether or not evcc
+// switches it on: its own counter is the truth, so the day is the session, and the session exists from the
+// first tick after midnight even while the device rests.
+func (lp *Loadpoint) updateHeatingDaySession(nowT, dayStart time.Time) {
+	meterNow := lp.chargeMeterTotal()
+
+	// **Der Tag ist die Sitzung — und er endet an seinem letzten Tagessekunde**, nicht beim ersten Tick
+	// danach. Vorher schloss der Tick nach Mitternacht die Sitzung: die Zeile hieß dann "00:02", trug aber
+	// das Geld des Vortags bis zu diesem Tick (gemessen 2026-11-01: Brauchwasser 00:02:20, FBH 00:02:50,
+	// Gewölbe 00:03:20; Bediener: "we shall strive to finalize the sessions at end of the previous day (at
+	// 23:59 or even 23:59:59) so that we do not effectively shift the accounting by one day"). Die Sitzung
+	// schließt jetzt auf 23:59:59 mit dem *interpolierten* Zählerstand dieser Sekunde, und die neue Sitzung
+	// beginnt auf 00:00:00 mit demselben Stand — der Zähler wird also genau an der Tagesgrenze geteilt.
+	var meterAtMidnight float64
+	closed := false
+	if s := lp.session; s != nil && dayStart.After(s.Created) {
+		meterAtMidnight = lp.meterAt(dayStart, meterNow, nowT)
+
+		// the closed part carries its own share of the cost and CO2, not the whole day's
+		if m0 := s.MeterStart; m0 != nil && meterNow > *m0 {
+			lp.energyMetrics = lp.energyMetricsShare((meterAtMidnight - *m0) / (meterNow - *m0))
+		}
+
+		lp.stopSessionAt(dayStart.Add(-time.Second), meterAtMidnight)
+		lp.clearSession()
+		closed = true
 
 		if cr, ok := lp.chargeRater.(wrapper.ChargeResetter); ok {
 			cr.ResetCharge()
@@ -217,9 +314,17 @@ func (lp *Loadpoint) resetHeatingSession() {
 	// the day is the session: start it at the day boundary, so the device's counter is booked
 	// from midnight even when evcc never switches the device on
 	if lp.session == nil {
-		lp.createSession()
+		if closed {
+			lp.createSessionAt(meterAtMidnight)
+		} else {
+			lp.createSessionAt(meterNow)
+		}
 		if lp.session != nil && lp.session.Created.IsZero() {
-			lp.session.Created = lp.clock.Now()
+			if closed {
+				lp.session.Created = dayStart
+			} else {
+				lp.session.Created = nowT
+			}
 		}
 	}
 
@@ -247,12 +352,97 @@ func (lp *Loadpoint) resetHeatingSession() {
 	// database until midnight (measured 2026-10-30: 0.28 kWh on the counter, no row). Show the session from
 	// the first tick and keep it current, but write only when something changed: one write per counter step.
 	if s := lp.session; s != nil && s.MeterStart != nil && !s.Created.IsZero() {
-		switch f := lp.chargeMeterTotal(); {
+		switch {
 		case s.MeterStop == nil:
 			s.MeterStop = s.MeterStart
 			lp.db.Persist(s)
-		case f > *s.MeterStop:
-			lp.applyEnergyMetrics(s)
+		case meterNow > *s.MeterStop:
+			lp.applyEnergyMetricsAt(s, meterNow)
 		}
 	}
+
+	// keep the readings for the interpolation at the next day boundary
+	lp.rememberReading(nowT, meterNow, lp.energyMetrics.TotalWh()/1e3)
+}
+
+// meterAt returns the counter reading at `at`, interpolated between the previous tick and this one (see
+// ramp). Falls back to the current reading when there is no usable pair: first tick, counter reset.
+func (lp *Loadpoint) meterAt(at time.Time, meterNow float64, nowT time.Time) float64 {
+	return ramp(lp.dayReading.meter, meterNow, lp.dayReading.at, nowT, at)
+}
+
+// readingsAt returns both readings at `at`: the charge meter counter and evcc own session accumulator.
+func (lp *Loadpoint) readingsAt(at time.Time, meterNow, kWhNow float64, nowT time.Time) (float64, float64) {
+	return ramp(lp.dayReading.meter, meterNow, lp.dayReading.at, nowT, at),
+		ramp(lp.dayReading.kWh, kWhNow, lp.dayReading.at, nowT, at)
+}
+
+// ramp interpolates v1 -> v0 across from..to at the instant at. A day boundary is not a tick, and booking a
+// whole tick to one side of it would move up to one poll of energy into the wrong day. Anything that is not
+// a clean rising pair (no sample, clock stepped back, counter reset, at outside the interval) falls back to
+// the current reading — a wrong guess is worse than the value the tick itself measured.
+func ramp(v1, v0 float64, from, to, at time.Time) float64 {
+	if from.IsZero() || !to.After(from) || v0 <= v1 || at.Before(from) || at.After(to) {
+		return v0
+	}
+
+	v := v1 + (v0-v1)*float64(at.Sub(from))/float64(to.Sub(from))
+	if v < v1 {
+		return v1
+	}
+	if v > v0 {
+		return v0
+	}
+
+	return v
+}
+
+// rememberReading keeps this tick readings for the next day boundary.
+func (lp *Loadpoint) rememberReading(nowT time.Time, meter, kWh float64) {
+	lp.dayReading = energyReading{at: nowT, meter: meter, kWh: kWh}
+}
+
+// energyMetricsBefore returns the accumulator as it stood at the day boundary: the energy interpolated to
+// that instant, with price, CO2 and solar energy scaled to the same share.
+func (lp *Loadpoint) energyMetricsBefore(kWhAt float64) EnergyMetrics {
+	if em := lp.energyMetrics; em.totalKWh > 0 {
+		return lp.energyMetricsShare(kWhAt / em.totalKWh)
+	}
+
+	return lp.energyMetrics
+}
+
+// energyMetricsShare reduces the accumulator to the given share of its energy, price, CO2 and solar energy.
+// The cost is linear in energy, so a part closed at the day boundary carries its own money instead of the
+// whole session's — whichever way the session is booked.
+func (lp *Loadpoint) energyMetricsShare(r float64) EnergyMetrics {
+	em := lp.energyMetrics
+
+	if r < 0 {
+		r = 0
+	}
+	if r >= 1 {
+		return em
+	}
+
+	em.totalKWh *= r
+	em.solarKWh *= r
+
+	if em.price != nil {
+		v := *em.price * r
+		em.price = &v
+	}
+	if em.co2 != nil {
+		v := *em.co2 * r
+		em.co2 = &v
+	}
+
+	return em
+}
+
+// energyReading is a pair of readings a session can be booked from at one instant.
+type energyReading struct {
+	at    time.Time
+	meter float64 // charge meter counter in kWh, zero without one
+	kWh   float64 // evcc own session accumulator in kWh
 }

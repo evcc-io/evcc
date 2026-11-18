@@ -89,8 +89,13 @@ type Task = func()
 // Loadpoint is responsible for controlling charge depending on
 // Soc needs and power availability.
 type Loadpoint struct {
-	clock    clock.Clock // mockable time
-	bus      evbus.Bus   // event bus
+	clock clock.Clock // mockable time
+	bus   evbus.Bus   // event bus
+
+	// readings of the previous tick, so a day boundary that no tick falls on can be interpolated
+	// for either way of bookkeeping: the charge meter counter and evcc own accumulator
+	dayReading energyReading
+
 	site     site.API
 	pushChan chan<- messenger.Event // notifications
 	uiChan   chan<- util.Param      // client push messages
@@ -2699,7 +2704,7 @@ NO_DIM:
 	lp.publish(keys.Connected, lp.connected())
 	lp.publish(keys.Charging, lp.charging())
 
-	lp.resetHeatingSession()
+	lp.updateDaySession()
 
 	if sr, ok := api.Cap[api.StatusReasoner](lp.charger); ok && lp.GetStatus() == api.StatusB {
 		if r, err := sr.StatusReason(); err == nil {

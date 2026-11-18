@@ -279,16 +279,19 @@ func TestResetHeatingSession(t *testing.T) {
 	assert.Equal(t, clock.Now(), lp.session.Created)
 
 	clock.Add(36 * time.Hour)
-	// the day's session is persisted as its counter moves (0004), so resetHeatingSession reads the meter once more
-	me.EXPECT().TotalEnergy().Return(1.0, nil).MaxTimes(3)
+	// one meter read per tick since 0007: the reading is taken once and shared by the boundary, the
+	// session creation and the energy write
+	me.EXPECT().TotalEnergy().Return(1.0, nil)
 
-	lp.resetHeatingSession()
+	lp.updateDaySession()
 	require.NotNil(t, lp.session)
 	// the day is the session: it starts at the day boundary, not at the first boost
-	assert.Equal(t, clock.Now(), lp.session.Created)
+	dayBoundary := time.Date(1970, 1, 2, 0, 0, 0, 0, clock.Now().Location())
+	assert.Equal(t, dayBoundary, lp.session.Created)
 
 	lp.updateSession(sessionStart(lp))
-	assert.Equal(t, clock.Now(), lp.session.Created)
+	// starting does not re-date a session that the day boundary already labelled
+	assert.Equal(t, dayBoundary, lp.session.Created)
 
 	me.EXPECT().TotalEnergy().Return(3.0, nil)
 	lp.stopSession()
