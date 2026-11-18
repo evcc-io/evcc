@@ -253,10 +253,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			}
 
 			// NOTE: this requires stopSession to respect async access
-			shutdown.Register(func() {
-				lp.finalizeSessionEnergy()
-				lp.stopSession()
-			})
+			shutdown.Register(lp.persistSessionOnShutdown)
 		}
 	}
 

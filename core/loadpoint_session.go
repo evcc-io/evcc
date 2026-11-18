@@ -10,7 +10,6 @@ import (
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/tariff"
-	"github.com/jinzhu/now"
 )
 
 func (lp *Loadpoint) chargeMeterTotal() float64 {
@@ -141,6 +140,24 @@ func (lp *Loadpoint) applyEnergyMetricsAt(s *session.Session, meterStop float64)
 	lp.db.Persist(s)
 }
 
+// persistSessionOnShutdown writes the last meter reading when evcc stops. A self-metering heater needs
+// this and nothing else: its session is the day, and closing it at shutdown made the next start open a
+// second row for the same day (measured 2026-11-02: every restart closed the day row at 08:54:52 and
+// opened another at 08:55:03). Patch 0008.
+func (lp *Loadpoint) persistSessionOnShutdown() {
+	if lp.heatingDevice() {
+		if s := lp.session; s != nil && s.MeterStart != nil {
+			lp.applyEnergyMetricsAt(s, lp.chargeMeterTotal())
+		}
+
+		return
+	}
+
+	// upstream's shutdown flush: the rater's energy is read one last time before the session ends
+	lp.finalizeSessionEnergy()
+	lp.stopSession()
+}
+
 // stopSession ends a charging session segment and persists the session.
 func (lp *Loadpoint) stopSession() {
 	if lp.db == nil || lp.session == nil {
@@ -229,7 +246,11 @@ func (lp *Loadpoint) finalizeSessionEnergy() {
 // Nothing here is keyed to a device type; the two branches differ only in what the day means for the session.
 func (lp *Loadpoint) updateDaySession() {
 	nowT := lp.clock.Now()
-	dayStart := now.With(nowT).BeginningOfDay()
+	// The boundary is midnight **of the clock's own location**, built explicitly. `now.With(t).BeginningOfDay()`
+	// keeps whatever location the time carries, so a process with the wrong TZ writes a plausible day row for the
+	// wrong day — measured 2026-11-01: a development run in +08 wrote 13 rows dated `2026-11-02 00:00:00+08:00`,
+	// i.e. 17:00 the previous afternoon, and they read as "yesterday landed on today" in the UI.
+	dayStart := time.Date(nowT.Year(), nowT.Month(), nowT.Day(), 0, 0, 0, 0, nowT.Location())
 
 	if lp.heatingDevice() {
 		lp.updateHeatingDaySession(nowT, dayStart)
@@ -311,6 +332,24 @@ func (lp *Loadpoint) updateHeatingDaySession(nowT, dayStart time.Time) {
 		}
 	}
 
+	// After a restart the day's row is already in the database. Adopt it instead of opening a second row
+	// backdated to midnight: every restart used to split one day into another zero-energy row and left the
+	// counter movement between shutdown and first tick unbooked (measured 2026-11-01: FBH 194/203/212, all
+	// three dated 00:00, and 0.43 kWh missing between them).
+	if lp.session == nil && !closed {
+		if open := lp.db.LastOpen(); open != nil && sameDay(open.Created, dayStart) {
+			lp.session = open
+		} else if open != nil {
+			// an open row from an earlier day is a leftover (evcc stopped before the boundary): close it
+			// where it stands so it cannot shadow today's session forever
+			f := open.Created.Add(24 * time.Hour).Add(-time.Second)
+			if f.After(open.Created) {
+				open.Finished = f
+				lp.db.Persist(open)
+			}
+		}
+	}
+
 	// the day is the session: start it at the day boundary, so the device's counter is booked
 	// from midnight even when evcc never switches the device on
 	if lp.session == nil {
@@ -363,6 +402,14 @@ func (lp *Loadpoint) updateHeatingDaySession(nowT, dayStart time.Time) {
 
 	// keep the readings for the interpolation at the next day boundary
 	lp.rememberReading(nowT, meterNow, lp.energyMetrics.TotalWh()/1e3)
+}
+
+// sameDay reports whether both instants fall on the same calendar day, compared in a's location.
+func sameDay(a, b time.Time) bool {
+	ay, am, ad := a.Date()
+	by, bm, bd := b.In(a.Location()).Date()
+
+	return ay == by && am == bm && ad == bd
 }
 
 // meterAt returns the counter reading at `at`, interpolated between the previous tick and this one (see

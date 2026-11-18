@@ -1,6 +1,8 @@
 package session
 
 import (
+	"time"
+
 	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/util"
 	"gorm.io/gorm"
@@ -49,6 +51,19 @@ func (s *DB) New(meter float64) *Session {
 	}
 
 	return &t
+}
+
+// LastOpen returns the loadpoint's most recent session without a finish time — the day session that a
+// restart continues instead of opening a second, backdated row for the same day.
+func (s *DB) LastOpen() *Session {
+	var session Session
+
+	if err := s.db.Where("loadpoint = ? AND finished <= ?", s.name, time.Time{}).
+		Order("id DESC").First(&session).Error; err != nil {
+		return nil
+	}
+
+	return &session
 }
 
 // Persist creates or updates a transaction in the database

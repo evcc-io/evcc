@@ -659,8 +659,12 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
 
-	// create charging session
-	lp.createSession()
+	// create charging session — except for a self-metering heater, whose session is the day: opening one
+	// here would book a start meter from this moment and leave the day split in two rows (measured
+	// 2026-11-01: Brauchwasser's 4.58 kWh in a charging row, both day rows at 0). Patch 0008.
+	if !lp.heatingDevice() {
+		lp.createSession()
+	}
 
 	// reset energy-based charging plan offset
 	lp.planEnergyOffset = 0
