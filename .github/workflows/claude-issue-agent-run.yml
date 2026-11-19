@@ -341,6 +341,7 @@ jobs:
                create a new label.
                Skip the area label only if the issue already carries any label: a
                maintainer has triaged it.
+               NEVER apply the `needs decision` label: that call is the maintainers'.
                NEVER apply a `bug` label. A bug is expressed as the issue type only
                (`gh issue edit ${{ inputs.issue_number }} --type Bug`). The type is
                set IN ADDITION to the area label, never instead of it: a confirmed
