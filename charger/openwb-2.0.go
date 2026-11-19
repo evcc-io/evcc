@@ -118,9 +118,8 @@ func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
 		return api.StatusB, err
 	}
 
-	// reset RFID tag on disconnect, retried until successful (requires openWB 2.3.0)
+	// reset RFID tag on disconnect, retried until successful (requires openWB 2.3.0); log only so the disconnect still reaches the loadpoint
 	if wb.rfid && wb.connected {
-		// keep the disconnect visible to the loadpoint
 		if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err != nil {
 			wb.log.WARN.Printf("reset rfid: %v", err)
 		} else {
