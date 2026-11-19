@@ -107,6 +107,9 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 func (wb *OpenWB20) Status() (res api.ChargeStatus, err error) {
 	// reset RFID tag on transition to A, retried until successful (requires openWB 2.3.0)
 	defer func() {
+		if err != nil {
+			return // keep previous status on read errors
+		}
 		if res == api.StatusA && wb.status != api.StatusA && api.HasCap[api.Identifier](wb) {
 			if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err != nil {
 				wb.log.WARN.Printf("reset rfid: %v", err)
