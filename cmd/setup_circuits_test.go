@@ -160,3 +160,79 @@ loadpoints:
 	// lp using root circuit is valid
 	suite.Require().NoError(validateCircuits(lps))
 }
+
+func (suite *circuitsTestSuite) TestCircuitConfigErrors() {
+	for _, tc := range []struct {
+		name, yaml, want string
+	}{
+		{
+			name: "circular reference",
+			yaml: `
+circuits:
+- name: a
+  parent: b
+- name: b
+  parent: a
+`,
+			want: "circular reference: a, b",
+		},
+		{
+			name: "self parent",
+			yaml: `
+circuits:
+- name: loop
+  parent: loop
+`,
+			want: "circular reference: loop",
+		},
+		{
+			name: "missing parent",
+			yaml: `
+circuits:
+- name: root
+- name: child
+  parent: missing
+`,
+			want: "circuit is missing parent: child",
+		},
+		{
+			name: "descendant of cycle is not a member",
+			yaml: `
+circuits:
+- name: a
+  parent: b
+- name: b
+  parent: a
+- name: child
+  parent: a
+`,
+			want: "circular reference: a, b",
+		},
+		{
+			name: "cycle and missing parent",
+			yaml: `
+circuits:
+- name: a
+  parent: b
+- name: b
+  parent: a
+- name: child
+  parent: missing
+`,
+			want: "circular reference: a, b\ncircuit is missing parent: child",
+		},
+	} {
+		suite.Run(tc.name, func() {
+			config.Reset()
+
+			var conf globalconfig.All
+			viper.SetConfigType("yaml")
+			suite.Require().NoError(viper.ReadConfig(strings.NewReader(tc.yaml)))
+			suite.Require().NoError(viper.UnmarshalExact(&conf))
+
+			err := configureCircuits(&conf.Circuits)
+			suite.Require().Error(err)
+			suite.Equal(tc.want, err.Error())
+		})
+	}
+}
