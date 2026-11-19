@@ -104,10 +104,17 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 }
 
 // Status implements the api.Charger interface
-func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
-	// reset RFID tag on transition to A, including the first A after startup
-	prev := wb.status
-	wb.status = api.StatusNone
+func (wb *OpenWB20) Status() (res api.ChargeStatus, err error) {
+	// reset RFID tag on transition to A, retried until successful (requires openWB 2.3.0)
+	defer func() {
+		if res == api.StatusA && wb.status != api.StatusA && api.HasCap[api.Identifier](wb) {
+			if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err != nil {
+				wb.log.WARN.Printf("reset rfid: %v", err)
+				return // keep previous status to retry
+			}
+		}
+		wb.status = res
+	}()
 
 	if b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegCharging, 1); err != nil || binary.BigEndian.Uint16(b) == 1 {
 		return api.StatusC, err
@@ -117,15 +124,6 @@ func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
 		return api.StatusB, err
 	}
 
-	// retried until successful (requires openWB 2.3.0); log only so the disconnect still reaches the loadpoint
-	if prev != api.StatusA && api.HasCap[api.Identifier](wb) {
-		if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err != nil {
-			wb.log.WARN.Printf("reset rfid: %v", err)
-			return api.StatusA, nil
-		}
-	}
-
-	wb.status = api.StatusA
 	return api.StatusA, nil
 }
 
