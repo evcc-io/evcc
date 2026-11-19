@@ -1172,6 +1172,11 @@
         "titleAdd": "Sıcaklık Tahmini Ekle",
         "titleEdit": "Sıcaklık Tahminini Düzenle"
       },
+      "temperature": {
+        "description": "Konumun için dış hava sıcaklığı tahmini. Arayüzde görüntülenir ve ısıtma ihtiyacını tahmin etmek için kullanılır.",
+        "titleAdd": "Sıcaklık Tahmini Ekle",
+        "titleEdit": "Sıcaklık Tahminini Düzenle"
+      },
       "template": "Sağlayıcı",
       "title": "Tarifeler ve Tahminler",
       "titleChoice": "Ne eklemek istersin?",

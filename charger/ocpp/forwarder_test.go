@@ -110,7 +110,7 @@ func TestForwarderUpstreamReconnect(t *testing.T) {
 	var conns atomic.Int32
 	frames := make(chan []byte, 1)
 
-	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{Subprotocols: []string{"ocpp1.6"}})
 		if err != nil {
 			return
@@ -128,7 +128,7 @@ func TestForwarderUpstreamReconnect(t *testing.T) {
 		}
 		c.CloseNow()
 	}))
-	srv.Start()
+	defer srv.Close()
 
 	cleanup := forwarderTestSetup(t, id)
 	defer cleanup()
@@ -190,7 +190,7 @@ func TestForwarderDialRetry(t *testing.T) {
 	var reqs atomic.Int32
 	frames := make(chan []byte, 1)
 
-	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if reqs.Add(1) <= 2 {
 			// reject the websocket upgrade to simulate an unreachable upstream
 			http.Error(w, "unavailable", http.StatusServiceUnavailable)
@@ -208,7 +208,7 @@ func TestForwarderDialRetry(t *testing.T) {
 		}
 		c.CloseNow()
 	}))
-	srv.Start()
+	defer srv.Close()
 
 	cleanup := forwarderTestSetup(t, id)
 	defer cleanup()
