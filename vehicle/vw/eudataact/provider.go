@@ -2,6 +2,7 @@ package eudataact
 
 import (
 	"errors"
+	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -116,7 +117,27 @@ func (v *Provider) Soc() (float64, error) {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
+	if soc, ok := energySoc(data); ok {
+		return soc, nil
+	}
+
 	return 0, api.ErrNotAvailable
+}
+
+// energySoc derives the soc from the battery energy content if no soc field is delivered
+func energySoc(data []point) (float64, bool) {
+	cur, maxE := find(data, FieldEnergyCurrent), find(data, FieldEnergyMaximal)
+	if cur == nil || maxE == nil {
+		return 0, false
+	}
+
+	c, err1 := strconv.ParseFloat(cur.Value, 64)
+	m, err2 := strconv.ParseFloat(maxE.Value, 64)
+	if err1 != nil || err2 != nil || math.IsNaN(c) || math.IsNaN(m) || math.IsInf(c, 0) || math.IsInf(m, 0) || m <= 0 || c < 0 {
+		return 0, false
+	}
+
+	return min(c/m*100, 100), true
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
