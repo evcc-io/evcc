@@ -1,0 +1,36 @@
+template: hypervolt
+products:
+  - brand: Hypervolt
+    description:
+      generic: Home 3 Pro
+capabilities: ["meter", "mA"]
+requirements:
+  description:
+    de: Verwendet die Hypervolt Cloud mit den Zugangsdaten der Hypervolt App.
+    en: Uses the Hypervolt cloud with your Hypervolt app credentials.
+params:
+  - name: user
+    required: true
+  - name: password
+    required: true
+  - name: id
+    description:
+      de: Wallbox ID
+      en: Charger ID
+    help:
+      de: Nur erforderlich, wenn mehrere Wallboxen im Konto vorhanden sind.
+      en: Only required if the account has multiple chargers.
+    advanced: true
+  - name: clientid
+    description:
+      generic: OAuth client ID
+    default: home-assistant
+    advanced: true
+render: |
+  type: hypervolt
+  user: {{ .user }}
+  password: {{ .password }}
+  {{- if .id }}
+  id: {{ .id }}
+  {{- end }}
+  clientid: {{ .clientid }}
