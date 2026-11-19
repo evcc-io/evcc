@@ -51,10 +51,11 @@ type FlowCo2 struct {
 
 // FlowResult is the source to sink energy attribution of a period.
 type FlowResult struct {
-	Flows    []Flow        `json:"flows"`
-	Entities []EntityFlows `json:"entities,omitempty"`
-	Cost     *FlowCost     `json:"cost,omitempty"`
-	Co2      *FlowCo2      `json:"co2,omitempty"`
+	Flows    []Flow              `json:"flows"`
+	Entities []EntityFlows       `json:"entities,omitempty"`
+	Cost     *FlowCost           `json:"cost,omitempty"`
+	Co2      *FlowCo2            `json:"co2,omitempty"`
+	entities map[int]*flowEntity // consumer and loadpoint flows by entity id, for the loadpoint card
 }
 
 // flowSlot holds one 15min slot with all groups pivoted into columns
@@ -118,7 +119,8 @@ func attribute(s flowSlot, add func(from, to string, energy float64)) {
 // flowEntity is a consumer or loadpoint priced on its own
 type flowEntity struct {
 	entity
-	flows [3]flowSum // per flowSources entry
+	flows   [3]flowSum // per flowSources entry
+	metered float64    // kWh, including slots the sources cannot cover
 }
 
 // share gives the entity its energy in the sink's source split of the slot.
@@ -171,7 +173,9 @@ func entitySlots(entities map[int]*flowEntity, from, to time.Time) (map[int64][]
 		if err := rows.Scan(&ts, &id, &energy); err != nil {
 			return nil, err
 		}
-		res[ts] = append(res[ts], slotEnergy{entities[id], energy})
+		e := entities[id]
+		e.metered += energy
+		res[ts] = append(res[ts], slotEnergy{e, energy})
 	}
 
 	return res, rows.Err()
@@ -377,5 +381,6 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 		res.Co2 = &co2
 	}
 
+	res.entities = entities
 	return res, nil
 }

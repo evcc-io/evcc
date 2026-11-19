@@ -222,7 +222,6 @@ export default defineComponent({
 			iframeHint: false,
 			error: "",
 			hideBackupRestoreModal: false,
-			navigateHomeAfterRestart: false,
 		};
 	},
 	computed: {
@@ -233,10 +232,10 @@ export default defineComponent({
 	watch: {
 		restarting(newVal) {
 			// wait for restarte before navigate (ensure lazy chunks are available)
-			if (!newVal && this.navigateHomeAfterRestart) {
+			if (!newVal && restart.navigateHomeAfterRestart) {
 				// home would redirect back to the already open wizard
 				if (!this.wizardPending) this.$router.push({ path: "/" });
-				this.navigateHomeAfterRestart = false;
+				restart.navigateHomeAfterRestart = false;
 			}
 		},
 	},
@@ -254,7 +253,7 @@ export default defineComponent({
 				remote: false,
 			};
 			this.file = null;
-			this.navigateHomeAfterRestart = false;
+			restart.navigateHomeAfterRestart = false;
 			this.hideBackupRestoreModal = false;
 			(
 				this.$refs["fileInput"] as InstanceType<typeof PropertyFileField> | undefined
@@ -345,7 +344,7 @@ export default defineComponent({
 
 			if (res) {
 				this.hideBackupRestoreModal = true;
-				this.navigateHomeAfterRestart = true;
+				restart.navigateHomeAfterRestart = true;
 				this.closeConfirmModal();
 				showRestarting();
 			}
@@ -358,7 +357,7 @@ export default defineComponent({
 
 			if (res) {
 				this.hideBackupRestoreModal = true;
-				this.navigateHomeAfterRestart = true;
+				restart.navigateHomeAfterRestart = true;
 				this.closeConfirmModal();
 				showRestarting();
 			}

@@ -118,7 +118,7 @@ render: |
               method: POST
               {{- include "auth" . | indent 14 }}
               jq: .result
-      - case: 2 # hold power
+      - case: 2 # holddischarge power
         set:
           source: sequence
           set:

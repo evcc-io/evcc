@@ -10,6 +10,7 @@ capabilities: ["rfid", "dim"]
 params:
   - name: modbus
     choice: ["rs485"]
+    id: 1
 render: |
   type: custom
   status:

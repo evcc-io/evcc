@@ -181,7 +181,7 @@ render: |
               address: 2176 # 0x0880 Dispatch start
               type: writemultiple
               decode: uint16
-      - case: 2 # hold -> no discharge, PV surplus may charge the battery
+      - case: 2 # holddischarge -> no discharge, PV surplus may charge the battery
         set:
           source: sequence
           set:

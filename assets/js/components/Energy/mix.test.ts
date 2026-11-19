@@ -1,5 +1,12 @@
 import { describe, expect, test } from "vite-plus/test";
-import { entityFlows, mergeSources, sinkCost, sinkPrice, sourceBreakdown } from "./mix";
+import {
+  entityFlows,
+  mergeSources,
+  sinkCost,
+  sinkPrice,
+  sourceBreakdown,
+  splitLoadpointFlows,
+} from "./mix";
 import { OTHERS, type EntityFlows } from "./types";
 
 describe("sourceBreakdown", () => {
@@ -61,6 +68,46 @@ describe("entityFlows", () => {
     expect(entityFlows(entities, "consumer", OTHERS)[0]?.energy).toBe(2);
     expect(entityFlows(entities, "consumer", "Oven")).toEqual([]);
     expect(entityFlows(undefined, "consumer", "Dryer")).toEqual([]);
+  });
+});
+
+describe("splitLoadpointFlows", () => {
+  test("replaces the loadpoint sink by charging and heating", () => {
+    const flows = splitLoadpointFlows(
+      [
+        { from: "pv", to: "home", energy: 1 },
+        { from: "pv", to: "loadpoint", energy: 5 },
+        { from: "grid", to: "loadpoint", energy: 4 },
+      ],
+      [
+        { group: "consumer", title: "Dryer", flows: [{ from: "pv", to: "home", energy: 1 }] },
+        {
+          group: "loadpoint",
+          title: "Carport",
+          flows: [{ from: "pv", to: "loadpoint", energy: 2 }],
+        },
+        {
+          group: "loadpoint",
+          title: "Garage",
+          flows: [{ from: "pv", to: "loadpoint", energy: 1 }],
+        },
+        {
+          group: "loadpoint",
+          title: "Heat pump",
+          flows: [
+            { from: "pv", to: "loadpoint", energy: 2 },
+            { from: "grid", to: "loadpoint", energy: 4 },
+          ],
+        },
+      ],
+      ["Heat pump"]
+    );
+    expect(flows).toEqual([
+      { from: "pv", to: "home", energy: 1 },
+      { from: "pv", to: "charging", energy: 3 },
+      { from: "pv", to: "heating", energy: 2 },
+      { from: "grid", to: "heating", energy: 4 },
+    ]);
   });
 });
 

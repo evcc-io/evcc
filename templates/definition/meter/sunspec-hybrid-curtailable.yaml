@@ -10,6 +10,7 @@ params:
     choice: ["pv"]
   - name: modbus
     choice: ["tcpip", "rs485"]
+    id: 1
   - name: maxacpower
     deprecated: true # read from nameplate
 render: |

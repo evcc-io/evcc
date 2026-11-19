@@ -37,8 +37,8 @@
       "energy": "Energia",
       "gridCharge": "ładowanie sieciowe",
       "gridDischarge": "rozładowywanie do sieci",
-      "hold": "rozładowywanie zablokowane",
       "holdCharge": "ładowanie zablokowane",
+      "holdDischarge": "rozładowywanie zablokowane",
       "ofTotal": "z {total}",
       "power": "Moc",
       "soc": "Poziom naładowania magazynu"
@@ -70,8 +70,8 @@
       "action": {
         "charge": "Ładowanie z sieci",
         "discharge": "Rozładowywanie do sieci",
-        "hold": "Zapobiegaj rozładowywaniu",
         "holdcharge": "Zapobiegaj ładowaniu",
+        "holddischarge": "Zapobiegaj rozładowywaniu",
         "normal": "Normalna praca"
       },
       "empty": "pusty",

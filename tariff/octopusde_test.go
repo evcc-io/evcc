@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	krakengql "github.com/evcc-io/evcc/tariff/octopuskraken/graphql"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -282,4 +283,197 @@ func TestRatesForAgreement_TimeOfUseDSTChange(t *testing.T) {
 			assert.Equal(t, at(day+1, 6), r.ValidTo, "night slot %d", i)
 		}
 	}
+}
+
+func TestOctopusDeConfigParse_TariffBase(t *testing.T) {
+	config := map[string]any{
+		"email":         "test@example.com",
+		"password":      "testpassword",
+		"accountNumber": "A-12345678",
+		"charges":       0.01,
+		"chargesZones": []any{
+			map[string]any{"hours": "0-7", "charges": -0.0858},
+			map[string]any{"hours": "15-20", "charges": 0.0612},
+		},
+	}
+
+	tariff, err := buildOctopusDeFromConfig(config)
+	require.NoError(t, err)
+	assert.Equal(t, 0.01, tariff.Charges)
+	require.Len(t, tariff.chargesZones, 2)
+
+	// zones are parsed with their hours and charges, default charges apply outside
+	at := func(hour int) time.Time {
+		return time.Date(2026, 1, 15, hour, 0, 0, 0, time.Local)
+	}
+	assert.Equal(t, -0.0858, tariff.effectiveCharges(at(3)))
+	assert.Equal(t, 0.0612, tariff.effectiveCharges(at(16)))
+	assert.Equal(t, 0.01, tariff.effectiveCharges(at(10)))
+
+	config["chargesZones"] = []any{
+		map[string]any{"hours": "invalid", "charges": 0.1},
+	}
+	_, err = buildOctopusDeFromConfig(config)
+	require.Error(t, err)
+}
+
+// newOctopusDeWithEmbed creates a tariff without network access for testing price conversion.
+func newOctopusDeWithEmbed(t *testing.T, e embed) *OctopusDe {
+	t.Helper()
+	require.NoError(t, e.init())
+	return &OctopusDe{embed: &e}
+}
+
+// priceAt returns the value of the rate containing ts.
+func priceAt(t *testing.T, rates api.Rates, ts time.Time) float64 {
+	t.Helper()
+	for _, r := range rates {
+		if !r.Start.After(ts) && r.End.After(ts) {
+			return r.Value
+		}
+	}
+	t.Fatalf("no rate found for %v", ts)
+	return 0
+}
+
+// requireContiguousSlots verifies that rates cover [from, to) without gaps or overlaps.
+func requireContiguousSlots(t *testing.T, rates api.Rates, from, to time.Time) {
+	t.Helper()
+	require.NotEmpty(t, rates)
+	assert.Equal(t, from, rates[0].Start)
+	assert.Equal(t, to, rates[len(rates)-1].End)
+	for i := 1; i < len(rates); i++ {
+		assert.Equal(t, rates[i-1].End, rates[i].Start, "gap or overlap at index %d", i)
+	}
+}
+
+func TestOctopusDeToRates_NoCharges(t *testing.T) {
+	tariff := newOctopusDeWithEmbed(t, embed{})
+
+	end := t0.AddDate(0, 0, 1)
+	rates := tariff.toRates([]RatePeriod{
+		{ValidFrom: t0, ValidTo: end, GrossUnitRateCentsPerKwh: 29.75},
+	})
+
+	// periods are split into slots with unchanged price
+	require.Len(t, rates, 96)
+	requireContiguousSlots(t, rates, t0, end)
+	for _, r := range rates {
+		assert.InDelta(t, 0.2975, r.Value, 1e-9)
+	}
+}
+
+func TestOctopusDeToRates_ChargesWithoutZones(t *testing.T) {
+	tariff := newOctopusDeWithEmbed(t, embed{Charges: 0.05, Tax: 0.1})
+
+	end := t0.AddDate(0, 0, 1)
+	rates := tariff.toRates([]RatePeriod{
+		{ValidFrom: t0, ValidTo: end, GrossUnitRateCentsPerKwh: 29.75},
+	})
+
+	require.Len(t, rates, 96)
+	requireContiguousSlots(t, rates, t0, end)
+	for _, r := range rates {
+		assert.InDelta(t, (0.2975+0.05)*1.1, r.Value, 1e-9)
+	}
+}
+
+func TestOctopusDeToRates_ChargesZonesSplitsLongPeriods(t *testing.T) {
+	tariff := newOctopusDeWithEmbed(t, embed{
+		ChargesZones_: []chargesZoneConfig{
+			{Hours: "0-7", Charges: -0.0858},
+			{Hours: "15-20", Charges: 0.0612},
+		},
+	})
+
+	// simple tariff: a single period spanning a full day
+	from := time.Date(2026, 1, 15, 0, 0, 0, 0, time.Local)
+	to := from.AddDate(0, 0, 1)
+	rates := tariff.toRates([]RatePeriod{
+		{ValidFrom: from, ValidTo: to, GrossUnitRateCentsPerKwh: 30},
+	})
+
+	require.Len(t, rates, 96)
+	requireContiguousSlots(t, rates, from, to)
+	for _, r := range rates {
+		assert.Equal(t, SlotDuration, r.End.Sub(r.Start))
+	}
+
+	at := func(hour, minute int) time.Time {
+		return time.Date(2026, 1, 15, hour, minute, 0, 0, time.Local)
+	}
+
+	assert.InDelta(t, 0.30-0.0858, priceAt(t, rates, at(0, 0)), 1e-9)
+	assert.InDelta(t, 0.30-0.0858, priceAt(t, rates, at(6, 45)), 1e-9)
+	assert.InDelta(t, 0.30, priceAt(t, rates, at(7, 0)), 1e-9)
+	assert.InDelta(t, 0.30, priceAt(t, rates, at(14, 45)), 1e-9)
+	assert.InDelta(t, 0.30+0.0612, priceAt(t, rates, at(15, 0)), 1e-9)
+	assert.InDelta(t, 0.30+0.0612, priceAt(t, rates, at(19, 45)), 1e-9)
+	assert.InDelta(t, 0.30, priceAt(t, rates, at(20, 0)), 1e-9)
+}
+
+func TestOctopusDeToRates_ChargesZonesMixedPeriodLengths(t *testing.T) {
+	tariff := newOctopusDeWithEmbed(t, embed{
+		ChargesZones_: []chargesZoneConfig{
+			{Hours: "10:30-11", Charges: 0.1},
+		},
+	})
+
+	at := func(hour, minute int) time.Time {
+		return time.Date(2026, 1, 15, hour, minute, 0, 0, time.Local)
+	}
+
+	rates := tariff.toRates([]RatePeriod{
+		// hourly period, zone starts within
+		{ValidFrom: at(10, 0), ValidTo: at(10, 45), GrossUnitRateCentsPerKwh: 20},
+		// already slot-sized period of a dynamic tariff
+		{ValidFrom: at(10, 45), ValidTo: at(11, 0), GrossUnitRateCentsPerKwh: 25},
+	})
+
+	require.Len(t, rates, 4)
+	requireContiguousSlots(t, rates, at(10, 0), at(11, 0))
+
+	assert.InDelta(t, 0.20, rates[0].Value, 1e-9)
+	assert.InDelta(t, 0.20, rates[1].Value, 1e-9)
+	assert.InDelta(t, 0.30, rates[2].Value, 1e-9)
+	assert.InDelta(t, 0.35, rates[3].Value, 1e-9)
+}
+
+func TestOctopusDeToRates_FormulaSplitsLongPeriods(t *testing.T) {
+	tariff := newOctopusDeWithEmbed(t, embed{
+		Formula: "x := 0.0; if ts.Hour() >= 12 { x = 0.1 }; price + x",
+	})
+
+	from := time.Date(2026, 1, 15, 0, 0, 0, 0, time.Local)
+	to := from.AddDate(0, 0, 1)
+	rates := tariff.toRates([]RatePeriod{
+		{ValidFrom: from, ValidTo: to, GrossUnitRateCentsPerKwh: 30},
+	})
+
+	require.Len(t, rates, 96)
+	requireContiguousSlots(t, rates, from, to)
+
+	assert.InDelta(t, 0.30, priceAt(t, rates, from.Add(11*time.Hour+45*time.Minute)), 1e-9)
+	assert.InDelta(t, 0.40, priceAt(t, rates, from.Add(12*time.Hour)), 1e-9)
+}
+
+// TestRatesForAgreement_HorizonAlignedToSlots verifies that an unaligned now is truncated to the
+// slot boundary, so that splitting a simple tariff yields full slots only.
+func TestRatesForAgreement_HorizonAlignedToSlots(t *testing.T) {
+	now := t0.Add(48*time.Hour + 7*time.Minute)
+
+	periods, err := ratesForAgreement(simpleAgreement(), now)
+	require.NoError(t, err)
+	require.Len(t, periods, 1)
+
+	from := t0.Add(48 * time.Hour)
+	assert.Equal(t, from, periods[0].ValidFrom)
+	assert.Equal(t, from.AddDate(0, 0, planDays), periods[0].ValidTo)
+
+	tariff := newOctopusDeWithEmbed(t, embed{})
+	rates := tariff.toRates(periods)
+
+	_, short := shortSlot(rates)
+	assert.False(t, short)
+	requireContiguousSlots(t, rates, from, from.AddDate(0, 0, planDays))
 }

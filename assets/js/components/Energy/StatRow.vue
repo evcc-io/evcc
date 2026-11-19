@@ -15,6 +15,7 @@
 				:number="stat.number"
 				:format="stat.format"
 				:sub="stat.sub"
+				:pending="stat.pending"
 				:tooltip="stat.tooltip"
 				:value-class="stat.accent"
 				:inline="inline"
