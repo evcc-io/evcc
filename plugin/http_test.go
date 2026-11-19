@@ -1,12 +1,15 @@
 package plugin
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
@@ -180,6 +183,37 @@ func TestRepeatedGetFailed(t *testing.T) {
 	httpSeenMu.Lock()
 	defer httpSeenMu.Unlock()
 	require.NotContains(t, httpSeen, srv.URL)
+}
+
+func TestErrorResponsePipeline(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		fmt.Fprintf(w, `{"response":{"result":false,"reason":%q}}`, req.URL.Query().Get("reason"))
+	}))
+	defer srv.Close()
+
+	jq := `if .response.reason == "vehicle is sleeping" then "ErrAsleep" else .response.response.soc end`
+
+	for _, tc := range []struct {
+		reason string
+		asleep bool
+	}{
+		{"vehicle is sleeping", true},
+		{"failed to perform handshake", false},
+	} {
+		p, err := NewHTTPPluginFromConfig(t.Context(), map[string]any{
+			"uri": srv.URL + "?reason=" + url.QueryEscape(tc.reason),
+			"jq":  jq,
+		})
+		require.NoError(t, err)
+
+		g, err := p.(StringGetter).StringGetter()
+		require.NoError(t, err)
+
+		_, err = g()
+		require.Error(t, err)
+		require.Equal(t, tc.asleep, errors.Is(err, api.ErrAsleep), tc.reason)
+	}
 }
 
 func TestRepeatedGet(t *testing.T) {

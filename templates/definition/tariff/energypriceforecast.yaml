@@ -82,8 +82,8 @@ params:
     choice: ["EUR", "DKK", "CZK", "PLN", "SEK", "NOK", "CHF", "RON", "GBP"]
   - name: apikey
     help:
-      en: "Optional for forecasts up to 120 hours. [Get an API key](https://energypriceforecast.eu/en/api-early-access/)."
-      de: "Optional für Prognosen bis zu 120 Stunden. [API-Key erhalten](https://energypriceforecast.eu/de/api-early-access/)."
+      en: "Optional for forecasts up to 120 hours. [Get an API key](https://energypriceforecast.eu/en/private-pro/)."
+      de: "Optional für Prognosen bis zu 120 Stunden. [API-Key erhalten](https://energypriceforecast.eu/de/private-pro/)."
   - name: horizon
     default: 120
     type: int

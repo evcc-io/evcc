@@ -98,7 +98,7 @@ func TestResolveBrand(t *testing.T) {
 	_, ok := resolveBrand("nope")
 	assert.False(t, ok)
 
-	// IsBrand drives the cloud server's brand -> drivesomethinggreater routing
+	// IsBrand drives the cloud server's brand -> vwgroup-datahub routing
 	for _, name := range []string{"audi", "Volkswagen", "seat", "CUPRA", "skoda"} {
 		assert.True(t, IsBrand(name), "%q is a VW group brand", name)
 	}
@@ -302,4 +302,46 @@ func TestKeepData(t *testing.T) {
 	assert.False(t, keepData(data, time.Now().Add(-2*errorGrace)), "persistent failure")
 	assert.False(t, keepData(data, time.Time{}), "never succeeded")
 	assert.False(t, keepData(nil, time.Now()), "no data")
+}
+
+// TestSocKeysPrepended: on the Cupra Born battery_level_HV.value
+// matches the app while battery_state_report.soc lags, both delivered together.
+func TestSocKeysPrepended(t *testing.T) {
+	const keyHv = "ac1108b1-b8cc-3db9-a663-03d387e42223" // battery_level_HV.value
+
+	data := []point{
+		{Key: KeyBatteryStateReportSoc, Name: "battery_state_report.soc", Value: "72"},
+		{Key: keyHv, Name: FieldHvBatteryLevelValue, Value: "73.0"},
+	}
+
+	p := testProvider(data)
+	soc, err := p.Soc()
+	require.NoError(t, err)
+	assert.Equal(t, 72.0, soc, "default prefers battery_state_report.soc")
+
+	p.socKeys = []string{keyHv}
+	soc, err = p.Soc()
+	require.NoError(t, err)
+	assert.Equal(t, 73.0, soc, "prepended key wins")
+}
+
+// TestLimitKeys: a car reporting settings.target_soc under several keys
+// is read by the configured key regardless of dataset order.
+func TestLimitKeys(t *testing.T) {
+	const keyApp = "b3b04f31-b10e-38aa-b8ad-c0da7c06caea"
+
+	data := []point{
+		{Key: "e21d4d25-98bc-3016-a234-1ad061cc313b", Name: FieldTargetSoc, Value: "100"},
+		{Key: keyApp, Name: FieldTargetSoc, Value: "80"},
+	}
+
+	p := testProvider(data)
+	limit, err := p.GetLimitSoc()
+	require.NoError(t, err)
+	assert.Equal(t, int64(100), limit, "name lookup takes the first key")
+
+	p.limitKeys = []string{keyApp}
+	limit, err = p.GetLimitSoc()
+	require.NoError(t, err)
+	assert.Equal(t, int64(80), limit)
 }

@@ -2,13 +2,17 @@ package tariff
 
 import (
 	"errors"
+	"net/http"
+	"net/url"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -150,5 +154,22 @@ func TestRunOrErrorStopsGoroutineOnStartupFailure(t *testing.T) {
 		// goroutine returned - no leak
 	case <-time.After(time.Second):
 		t.Fatal("run goroutine still alive after startup failure (goroutine leak)")
+	}
+}
+
+func TestBackoffPermanentError(t *testing.T) {
+	for _, tc := range []struct {
+		code      int
+		permanent bool
+	}{
+		{http.StatusBadRequest, true},
+		{http.StatusInternalServerError, true},
+		{http.StatusTooManyRequests, false},
+	} {
+		// status errors arrive wrapped as permanent from the request package
+		err := backoff.Permanent(request.NewStatusError(&http.Response{StatusCode: tc.code, Request: &http.Request{Method: http.MethodGet, URL: &url.URL{}}}))
+
+		var perm *backoff.PermanentError
+		assert.Equal(t, tc.permanent, errors.As(backoffPermanentError(err), &perm), "status %d", tc.code)
 	}
 }

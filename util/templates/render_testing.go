@@ -79,6 +79,10 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 	port := 20000
 
 	for _, tmpl := range ByClass(class, WithDeprecated()) {
+		if err := tmpl.ValidateUsages(class); err != nil {
+			t.Error(tmpl.Template+":", err)
+		}
+
 		// set default values for all params
 		values := tmpl.Defaults(RenderModeUnitTest)
 

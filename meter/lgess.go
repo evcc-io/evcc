@@ -76,10 +76,6 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ba
 	implement.May(m, implement.BatteryCapacity(batteryCapacity.Decorator()))
 	implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits.Decorator()))
 
-	if m.usage == "grid" && essType != lgpcs.LgEss15 {
-		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
-	}
-
 	if usage == "battery" {
 		implement.Has(m, implement.Battery(m.batterySoc))
 		implement.May(m, implement.BatterySocLimiter(batterySocLimits.Decorator()))
@@ -111,21 +107,6 @@ func (m *LgEss) CurrentPower() (float64, error) {
 	}
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (m *LgEss) totalEnergy() (float64, error) {
-	data, err := m.conn.Data()
-	if err != nil {
-		return 0, err
-	}
-
-	switch m.usage {
-	case "grid":
-		return data.GetCurrentGridFeedInEnergy() / 1e3, nil
-	default:
-		return 0, fmt.Errorf("invalid usage: %s", m.usage)
-	}
-}
-
 // batterySoc implements the api.Battery interface
 func (m *LgEss) batterySoc() (float64, error) {
 	data, err := m.conn.Data()
@@ -141,13 +122,13 @@ func (m *LgEss) batteryMode(batterySocLimits batterySocLimits) func(api.BatteryM
 	return func(mode api.BatteryMode) error {
 		switch mode {
 		case api.BatteryNormal:
-			// firmeware bug: battery not discharging after hold mode
+			// firmeware bug: battery not discharging after holddischarge mode
 			// if battery is sleeping, wake up with charging for 10sec
 			m.conn.BatteryMode("on", 100, true)
 			time.Sleep(10 * time.Second)
 			// now turn Battery discharge on
 			return m.conn.BatteryMode("on", int(batterySocLimits.MinSoc), true)
-		case api.BatteryHold:
+		case api.BatteryHoldDischarge:
 			soc, err := m.batterySoc()
 			if err != nil {
 				return err

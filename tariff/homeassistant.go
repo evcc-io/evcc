@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/homeassistant"
+	"github.com/jinzhu/now"
 )
 
 // HomeAssistant provides the solar forecast of the Home Assistant Energy dashboard
@@ -80,6 +81,8 @@ func (t *HomeAssistant) run(interval time.Duration, done chan error) {
 			if len(data) == 0 {
 				return backoff.Permanent(errors.New("no solar forecast configured in the energy dashboard"))
 			}
+			// cover full days, the optimizer horizon ends with the shortest series
+			data = zeroFill(data, beginningOfDay(), now.With(data[len(data)-1].Start).BeginningOfDay().AddDate(0, 0, 1))
 			return nil
 		}, bo()); err != nil {
 			if reportError(&once, done, err) {
@@ -133,6 +136,12 @@ func solarForecastRates(res map[string]homeassistant.SolarForecast) (api.Rates, 
 	// sum slots of different granularity on the common time grid
 	edges := slices.SortedFunc(maps.Keys(bounds), time.Time.Compare)
 
+	// forecasts omit zero-energy periods, the optimizer expects gapless slots
+	step := time.Hour
+	for i := 0; i+1 < len(edges); i++ {
+		step = min(step, edges[i+1].Sub(edges[i]))
+	}
+
 	data := make(api.Rates, 0, len(edges))
 	for i := 0; i+1 < len(edges); i++ {
 		start, end := edges[i], edges[i+1]
@@ -150,10 +159,51 @@ func solarForecastRates(res map[string]homeassistant.SolarForecast) (api.Rates, 
 
 		if found {
 			data = append(data, api.Rate{Start: start, End: end, Value: sum})
+			continue
+		}
+
+		for ; start.Before(end); start = start.Add(step) {
+			slotEnd := start.Add(step)
+			if slotEnd.After(end) {
+				slotEnd = end
+			}
+			data = append(data, api.Rate{Start: start, End: slotEnd})
 		}
 	}
 
 	return data, nil
+}
+
+// zeroFill pads data with zero-energy slots from the given time to the first slot and from the last slot to the given time
+func zeroFill(data api.Rates, from, to time.Time) api.Rates {
+	if len(data) == 0 {
+		return data
+	}
+
+	first, last := data[0], data[len(data)-1]
+
+	var pre api.Rates
+	for end := first.Start; end.After(from); {
+		start := end.Add(-first.End.Sub(first.Start))
+		if start.Before(from) {
+			start = from
+		}
+		pre = append(pre, api.Rate{Start: start, End: end})
+		end = start
+	}
+	slices.Reverse(pre)
+	data = append(pre, data...)
+
+	step := last.End.Sub(last.Start)
+	for start := last.End; start.Before(to); start = start.Add(step) {
+		end := start.Add(step)
+		if end.After(to) {
+			end = to
+		}
+		data = append(data, api.Rate{Start: start, End: end})
+	}
+
+	return data
 }
 
 // Rates implements the api.Tariff interface

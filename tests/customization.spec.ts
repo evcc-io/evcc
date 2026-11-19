@@ -1,32 +1,78 @@
+import { readFileSync } from "fs";
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
 import { openMoreMenu } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
-test.beforeAll(async () => {
-  await start("basics.evcc.yaml", null, [
-    "--disable-auth",
-    "--custom-brand",
-    "G1GA HEMS",
-    "--custom-logo-light",
-    "tests/custom-logo-light.svg",
-    "--custom-logo-dark",
-    "tests/custom-logo-dark.svg",
-    "--custom-website",
-    "https://example.com/hems",
-    "--custom-email",
-    "support@example.com",
-    "--custom-phone",
-    "+49 123 456789",
-  ]);
-});
+test.describe("default", async () => {
+  test.beforeAll(async () => {
+    await start("basics.evcc.yaml", null, ["--disable-auth"]);
+  });
 
-test.afterAll(async () => {
-  await stop();
+  test.afterAll(async () => {
+    await stop();
+  });
+
+  test("manifest and page title use evcc", async ({ page }) => {
+    const manifest = await (await page.request.get("/meta/site.webmanifest")).json();
+    expect(manifest.name).toBe("evcc");
+    expect(manifest.short_name).toBe("evcc");
+    expect(manifest.icons).toHaveLength(7);
+
+    const html = await (await page.request.get("/")).text();
+    expect(html).toContain('<meta name="apple-mobile-web-app-title" content="evcc" />');
+    expect(html).toContain("<title>evcc</title>");
+
+    await page.goto("/");
+    await expect(page).toHaveTitle("Hello World | evcc");
+  });
 });
 
 test.describe("customization", async () => {
+  test.beforeAll(async () => {
+    await start("basics.evcc.yaml", null, [
+      "--disable-auth",
+      "--custom-brand",
+      "G1GA HEMS",
+      "--custom-logo-light",
+      "tests/custom-logo-light.svg",
+      "--custom-logo-dark",
+      "tests/custom-logo-dark.svg",
+      "--custom-icon",
+      "tests/custom-icon.png",
+      "--custom-website",
+      "https://example.com/hems",
+      "--custom-email",
+      "support@example.com",
+      "--custom-phone",
+      "+49 123 456789",
+    ]);
+  });
+
+  test.afterAll(async () => {
+    await stop();
+  });
+
+  test("manifest, icon and page title use custom brand", async ({ page }) => {
+    const manifest = await (await page.request.get("/meta/site.webmanifest")).json();
+    expect(manifest.name).toBe("G1GA HEMS");
+    expect(manifest.short_name).toBe("G1GA HEMS");
+    expect(manifest.icons).toHaveLength(2);
+    expect(manifest.icons[0].src).toBe("android-chrome-512x512.png");
+
+    const html = await (await page.request.get("/")).text();
+    expect(html).toContain('<meta name="apple-mobile-web-app-title" content="G1GA HEMS" />');
+    expect(html).toContain("<title>G1GA HEMS</title>");
+
+    const icon = await page.request.get("/meta/apple-touch-icon.png");
+    expect(icon.headers()["content-type"]).toBe("image/png");
+    expect(await icon.body()).toEqual(readFileSync("tests/custom-icon.png"));
+
+    await page.goto("/");
+    await expect(page).toHaveTitle("Hello World | G1GA HEMS");
+  });
+
   test("more menu shows custom brand", async ({ page }) => {
     await page.goto("/");
     const menu = await openMoreMenu(page);

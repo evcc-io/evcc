@@ -24,6 +24,7 @@ params:
     service: homeassistant/instances
     required: true
   - name: insecure
+  - name: timeout
   - name: status
     description:
       de: Ladestatus-Sensor
@@ -120,6 +121,16 @@ params:
     help:
       en: Entity ID for cumulative energy measurement in kWh
       de: Entitäts-ID für kumulative Energiemessung in kWh
+  - name: identify
+    description:
+      de: Fahrzeugidentifikations-Sensor
+      en: Vehicle identification sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}
+    example: "sensor.charger_identify"
+    advanced: true
+    help:
+      en: Entity ID for the current RFID or vehicle identifier
+      de: Entitäts-ID für die aktuelle RFID- oder Fahrzeugkennung
   - name: temp
     description:
       de: Temperaturentität
@@ -210,6 +221,7 @@ render: |
   type: homeassistant
   uri: {{ .uri }}
   insecure: {{ .insecure }}
+  timeout: {{ .timeout }}
   status: {{ .status }}
   statusA: {{ .statusA }}
   statusB: {{ .statusB }}
@@ -220,6 +232,7 @@ render: |
   milliamps: {{ .milliamps }}
   power: {{ .power }}
   energy: {{ .energy }}
+  identify: {{ .identify }}
   temp: {{ .temp }}
   {{- if and .currentL1 .currentL2 .currentL3 }}
   currents:

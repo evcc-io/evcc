@@ -12,6 +12,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/ocpp"
+	"github.com/evcc-io/evcc/util/sponsor"
 	ocppapi "github.com/lorenzodonini/ocpp-go/ocpp"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -40,6 +41,9 @@ var testLogger ocppLogger
 var suiteRuns atomic.Int64
 
 func TestMain(m *testing.M) {
+	// sponsored constructors refuse otherwise
+	sponsor.Subject = "test"
+
 	ocpp.Timeout = 5 * time.Second
 
 	// the simulated charge points never send a spontaneous BootNotification,

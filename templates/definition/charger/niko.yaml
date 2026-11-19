@@ -1,0 +1,42 @@
+template: niko
+products:
+  - brand: Niko
+    description:
+      de: Smart Plug Wandsteckdose (552-80698, 552-80699)
+      en: Smart plug wall socket (552-80698, 552-80699)
+  - brand: Niko
+    description:
+      de: Smart Plug Unterputz (170-34505, 170-33505)
+      en: Smart plug flush-mounted (170-34505, 170-33505)
+requirements:
+  description:
+    de: Niko Home Control Hub oder Connected Controller (550-00003) mit aktivierter Hobby API. Das Token wird im Niko Home Control Portal erzeugt.
+    en: Niko Home Control hub or connected controller (550-00003) with Hobby API enabled. The token is generated in the Niko Home Control portal.
+capabilities: ["meter"]
+group: switchsockets
+discovery:
+  hostname: ["niko*"]
+params:
+  - name: host
+  - name: user
+    default: hobby
+    advanced: true
+  - name: token
+    required: true
+    help:
+      de: Hobby API Token des Controllers
+      en: Hobby API token of the controller
+  - name: device
+    required: true
+    description:
+      de: Gerät
+      en: Device
+    service: niko/devices?host={host}&user={user}&token={token}
+  - preset: switchsocket
+render: |
+  type: niko
+  host: {{ .host }}
+  user: {{ .user }}
+  token: {{ .token }}
+  device: {{ .device }}
+  {{ include "switchsocket" . }}

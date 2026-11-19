@@ -5,6 +5,7 @@
 				<span class="d-flex flex-nowrap">
 					<BatteryIcon v-if="isBattery" v-bind="iconProps" />
 					<VehicleIcon v-else-if="isVehicle" v-bind="iconProps" />
+					<LoadpointIcon v-else-if="isLoadpoint" />
 					<div v-else-if="!icon" class="icon-placeholder"></div>
 					<component :is="`shopicon-regular-${icon}`" v-else></component>
 				</span>
@@ -79,12 +80,20 @@ import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import VehicleIcon from "../VehicleIcon";
 import ForecastIcon from "../MaterialIcon/Forecast.vue";
+import LoadpointIcon from "../MaterialIcon/Loadpoint.vue";
 import DropdownIcon from "../MaterialIcon/Dropdown.vue";
 import { defineComponent, type PropType } from "vue";
 
 export default defineComponent({
 	name: "EnergyflowEntry",
-	components: { BatteryIcon, AnimatedNumber, VehicleIcon, ForecastIcon, DropdownIcon },
+	components: {
+		BatteryIcon,
+		AnimatedNumber,
+		VehicleIcon,
+		ForecastIcon,
+		LoadpointIcon,
+		DropdownIcon,
+	},
 	mixins: [formatter],
 	props: {
 		name: { type: String },
@@ -117,6 +126,9 @@ export default defineComponent({
 		},
 		isVehicle() {
 			return this.icon === "vehicle";
+		},
+		isLoadpoint() {
+			return this.icon === "loadpoint";
 		},
 	},
 	watch: {

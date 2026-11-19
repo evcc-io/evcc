@@ -25,11 +25,11 @@ func (ct *Timestamp) UnmarshalJSON(data []byte) (err error) {
 	return
 }
 
-func (ct *Timestamp) MarshalJSON() ([]byte, error) {
+func (ct Timestamp) MarshalJSON() ([]byte, error) {
 	if ct.Time.IsZero() {
 		return []byte("null"), nil
 	}
-	return []byte(ct.Time.Format(Layout)), nil
+	return []byte(`"` + ct.Time.UTC().Format(Layout) + `"`), nil
 }
 
 func (ct *Timestamp) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {

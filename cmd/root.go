@@ -110,6 +110,7 @@ func init() {
 	rootCmd.Flags().StringVar(&customization.Css, flagCustomCss, os.Getenv("EVCC_CUSTOM_CSS"), flagCustomCssDescription)
 	rootCmd.Flags().StringVar(&customization.LogoLight, flagCustomLogoLight, os.Getenv("EVCC_CUSTOM_LOGO_LIGHT"), flagCustomLogoLightDescription)
 	rootCmd.Flags().StringVar(&customization.LogoDark, flagCustomLogoDark, os.Getenv("EVCC_CUSTOM_LOGO_DARK"), flagCustomLogoDarkDescription)
+	rootCmd.Flags().StringVar(&customization.Icon, flagCustomIcon, os.Getenv("EVCC_CUSTOM_ICON"), flagCustomIconDescription)
 	rootCmd.Flags().StringVar(&customization.Brand, flagCustomBrand, os.Getenv("EVCC_CUSTOM_BRAND"), flagCustomBrandDescription)
 	rootCmd.Flags().StringVar(&customization.Website, flagCustomWebsite, os.Getenv("EVCC_CUSTOM_WEBSITE"), flagCustomWebsiteDescription)
 	rootCmd.Flags().StringVar(&customization.Email, flagCustomEmail, os.Getenv("EVCC_CUSTOM_EMAIL"), flagCustomEmailDescription)

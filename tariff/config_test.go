@@ -48,3 +48,21 @@ func TestNewFromConfigRejectsShortSlots(t *testing.T) {
 	_, err = NewFromConfig(context.TODO(), "test-15m", nil)
 	require.NoError(t, err)
 }
+
+func TestNewFromConfigWrapsMixedSlots(t *testing.T) {
+	now := time.Now().Truncate(SlotDuration)
+
+	// day-ahead 15m slots followed by hourly forecast
+	rr := append(makeRates(now, SlotDuration, 4, 0), makeRates(now.Add(time.Hour), time.Hour, 2, 0)...)
+	registry.Add("test-mixed", func(map[string]any) (api.Tariff, error) {
+		return &testTariff{rates: rr, typ: api.TariffTypePriceForecast}, nil
+	})
+
+	tf, err := NewFromConfig(context.TODO(), "test-mixed", nil)
+	require.NoError(t, err)
+
+	res, err := tf.Rates()
+	require.NoError(t, err)
+	require.Len(t, res, 12)
+	assert.Equal(t, now.Add(3*time.Hour), res[len(res)-1].End)
+}

@@ -199,7 +199,7 @@ render: |
                 address: 46610 # Maximum SOC
                 type: writesingle
                 encoding: uint16
-      - case: 2 # hold - stop battery discharge
+      - case: 2 # holddischarge - stop battery discharge
         set:
           source: sequence
           set:

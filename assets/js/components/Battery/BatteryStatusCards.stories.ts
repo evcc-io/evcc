@@ -48,7 +48,7 @@ Multiple.args = {
         power: 800,
         capacity: 13.5,
         controllable: true,
-        suggestion: { action: "hold", actionable: true },
+        suggestion: { action: "holddischarge", actionable: true },
       }),
       device({
         title: "Anker SOLIX X1 Home Energy Storage System Extended Pro Max",
