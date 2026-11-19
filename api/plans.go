@@ -31,7 +31,11 @@ func (ps PlanStrategy) MarshalJSON() ([]byte, error) {
 }
 
 func (ps *PlanStrategy) UnmarshalJSON(data []byte) error {
-	var res planStrategy
+	// fields missing in data keep their current value
+	res := planStrategy{
+		Continuous:   ps.Continuous,
+		Precondition: int64(ps.Precondition.Seconds()),
+	}
 	if err := json.Unmarshal(data, &res); err != nil {
 		return err
 	}
