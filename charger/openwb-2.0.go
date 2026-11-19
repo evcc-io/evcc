@@ -14,12 +14,12 @@ import (
 // OpenWB20 charger implementation
 type OpenWB20 struct {
 	implement.Caps
-	log       *util.Logger
-	conn      *modbus.Connection
-	enabled   bool
-	curr      uint16
-	base      uint16
-	connected bool
+	log     *util.Logger
+	conn    *modbus.Connection
+	enabled bool
+	curr    uint16
+	base    uint16
+	status  api.ChargeStatus
 }
 
 const (
@@ -74,8 +74,6 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 
 	if cc.Identify {
-		// reset stale tag on first disconnected status
-		wb.connected = true
 		implement.Has(wb, implement.Identifier(wb.identify))
 	}
 
@@ -107,9 +105,9 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 
 // Status implements the api.Charger interface
 func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
-	// B/C until proven otherwise, reset RFID tag on transition to A
-	connected := wb.connected
-	wb.connected = true
+	// reset RFID tag on transition to A, including the first A after startup
+	prev := wb.status
+	wb.status = api.StatusNone
 
 	if b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegCharging, 1); err != nil || binary.BigEndian.Uint16(b) == 1 {
 		return api.StatusC, err
@@ -120,14 +118,14 @@ func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
 	}
 
 	// retried until successful (requires openWB 2.3.0); log only so the disconnect still reaches the loadpoint
-	if connected && api.HasCap[api.Identifier](wb) {
+	if prev != api.StatusA && api.HasCap[api.Identifier](wb) {
 		if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err != nil {
 			wb.log.WARN.Printf("reset rfid: %v", err)
 			return api.StatusA, nil
 		}
 	}
 
-	wb.connected = false
+	wb.status = api.StatusA
 	return api.StatusA, nil
 }
 
