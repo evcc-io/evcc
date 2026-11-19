@@ -246,6 +246,11 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 	if err := wb.writeReg(foxRegTimeValidity, foxTimeValidity); err != nil {
 		wb.log.WARN.Printf("time validity: %v", err)
 	}
+	
+	// fall back to a safe current if evcc stops sending commands (§2.35); a rejected write is not fatal
+	if err := wb.writeReg(foxRegDefaultCurrent, foxDefaultCurrent); err != nil {
+		wb.log.WARN.Printf("default current: %v", err)
+	}
 
 	timeValidity, err := wb.readUint16(foxRegTimeValidity)
 	if err != nil {
