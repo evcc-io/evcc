@@ -1,0 +1,199 @@
+template: wattsonic-matic
+products:
+  - brand: Wattsonic
+    description:
+      generic: MATIC Hybrid Inverter
+capabilities: ["battery-control"]
+requirements:
+  description:
+    en: |
+      Requires ARM firmware 1130 or newer. Not compatible with the Wattsonic GEN2/GEN3 AIO series (use the Solinteg templates for those).
+
+      Battery control uses the inverter's EMS watchdog. Without it, the inverter ignores external power setpoints. Set these registers once during installation, in this order: 11701 = 60 (timeout in s), 11702 = 1 (on timeout fall back to self-consumption), 11704 = 1 (auto-resume, no latch), then 11700 = 1 (enable watchdog). 11704 can only be changed while the watchdog is disabled.
+
+      If evcc stops communicating, the inverter returns to self-consumption after the watchdog timeout.
+    de: |
+      Erfordert ARM-Firmware 1130 oder neuer. Nicht kompatibel mit der Wattsonic GEN2/GEN3 AIO-Serie (dafür die Solinteg-Vorlagen verwenden).
+
+      Die Batteriesteuerung nutzt den EMS-Watchdog des Wechselrichters. Ohne ihn ignoriert der Wechselrichter externe Leistungsvorgaben. Bei der Installation einmalig in dieser Reihenfolge setzen: 11701 = 60 (Timeout in s), 11702 = 1 (bei Timeout zurück zum Eigenverbrauch), 11704 = 1 (automatische Wiederaufnahme, keine Verriegelung), danach 11700 = 1 (Watchdog aktivieren). 11704 kann nur bei deaktiviertem Watchdog geändert werden.
+
+      Bricht die Kommunikation mit evcc ab, kehrt der Wechselrichter nach dem Watchdog-Timeout zum Eigenverbrauch zurück.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    id: 1
+    port: 502
+  - preset: battery-params
+  - name: maxchargepower
+    required: true
+  - name: capacity
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10765 # Meter Active Power Total, 0.01 kW, positive = export
+      type: holding
+      decode: int16
+    scale: -10
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10781 # Meter Energy Import, 0.1 kWh
+      type: holding
+      decode: uint32
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10367 # PV Total Power, 0.01 kW
+      type: holding
+      decode: int16
+    scale: 10
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10346 # Battery Power Total, 0.01 kW, positive = discharge
+      type: holding
+      decode: int16
+    scale: 10
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10671 # BMS Battery 1 SoC, 0.01 %
+      type: holding
+      decode: uint16
+    scale: 0.01
+  batterymode:
+    source: watchdog
+    timeout: 10s # repeated every 5 s, keeps the inverter watchdog (11701 = 60 s) alive
+    reset: 1 # reset to normal mode
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal: clear setpoint, leave external control, restore discharge limit
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 11045 # Active Power Setpoint
+                type: writesingle
+                encoding: int16
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 11060 # EMS Switch
+                type: writesingle
+                encoding: int16
+          - source: const
+            value: 2500 # >= 2500 = no limit
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 11069 # Battery Max Discharge Power, 0.01 kW
+                type: writesingle
+                encoding: int16
+      - case: 2 # holddischarge: leave external control first, then block discharge in local mode
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 11045 # Active Power Setpoint
+                type: writesingle
+                encoding: int16
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 11060 # EMS Switch
+                type: writesingle
+                encoding: int16
+          - source: const
+            value: 0 # 0 = no discharge
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 11069 # Battery Max Discharge Power, 0.01 kW
+                type: writesingle
+                encoding: int16
+      - case: 3 # charge: import maxchargepower from the grid (setpoint at the grid connection point)
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 1
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 12026 # EMS Heartbeat, refreshes the watchdog
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 2500 # >= 2500 = no limit, clears a previous holddischarge
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 11069 # Battery Max Discharge Power, 0.01 kW
+                type: writesingle
+                encoding: int16
+          - source: const
+            value: 1
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 11060 # EMS Switch
+                type: writesingle
+                encoding: int16
+          - source: const
+            value: 1
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 12002 # Remote Control Mode, volatile
+                type: writesingle
+                encoding: int16
+          - source: const
+            value: {{ div .maxchargepower -10 }} # W to 0.01 kW, negative = import
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 11045 # Active Power Setpoint at the grid connection point
+                type: writesingle
+                encoding: int16
+  {{- include "battery-params" . }}
+  {{- end }}
