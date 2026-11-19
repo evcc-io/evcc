@@ -19,7 +19,6 @@ type OpenWB20 struct {
 	enabled   bool
 	curr      uint16
 	base      uint16
-	rfid      bool
 	connected bool
 }
 
@@ -76,7 +75,7 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 
 	if cc.Identify {
 		// reset stale tag on first disconnected status
-		wb.rfid, wb.connected = true, true
+		wb.connected = true
 		implement.Has(wb, implement.Identifier(wb.identify))
 	}
 
@@ -121,7 +120,7 @@ func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
 	}
 
 	// retried until successful (requires openWB 2.3.0); log only so the disconnect still reaches the loadpoint
-	if wb.rfid && connected {
+	if connected && api.HasCap[api.Identifier](wb) {
 		if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err != nil {
 			wb.log.WARN.Printf("reset rfid: %v", err)
 			return api.StatusA, nil
