@@ -3,7 +3,7 @@
 		<div>
 			<ChargingPlanRepeatingSettings
 				:showHeader="index === 0"
-				:number="index + 2"
+				:number="index + 2 + numberOffset"
 				class="mb-4"
 				:formIdPrefix="formIdPrefix"
 				v-bind="plan"
@@ -47,6 +47,8 @@ export default defineComponent({
 	props: {
 		id: [Number, String],
 		rangePerSoc: Number,
+		// number of plans listed before the repeating plans (additional one-time plans)
+		numberOffset: { type: Number, default: 0 },
 		plans: { type: Array as PropType<RepeatingPlan[]>, default: () => [] },
 	},
 	emits: ["updated"],

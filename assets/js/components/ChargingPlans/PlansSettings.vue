@@ -15,8 +15,15 @@
 					@static-plan-removed="removeStaticPlan"
 					@plan-preview="previewStaticPlan"
 				/>
+				<ChargingPlansOneTimeSettings
+					v-if="socBasedPlanning"
+					:id="id"
+					:rangePerSoc="rangePerSoc"
+					:plans="oneTimePlans"
+					@updated="updateOneTimePlans"
+				/>
 				<div v-if="socBasedPlanning">
-					<div v-if="multiplePlans" class="d-none d-lg-block">
+					<div v-if="repeatingPlans.length !== 0" class="d-none d-lg-block">
 						<hr class="mt-5" />
 						<h5>
 							<div class="inner mb-3" data-testid="repeating-plan-title">
@@ -28,6 +35,7 @@
 					<ChargingPlansRepeatingSettings
 						:id="id"
 						:rangePerSoc="rangePerSoc"
+						:numberOffset="oneTimePlans.length"
 						:plans="repeatingPlans"
 						@updated="updateRepeatingPlans"
 					/>
@@ -64,6 +72,7 @@ import Preview from "./Preview.vue";
 import PlanStaticSettings from "./PlanStaticSettings.vue";
 import ChargingPlanStrategy from "./PlanStrategy.vue";
 import RepeatingSettings from "./PlansRepeatingSettings.vue";
+import OneTimeSettings from "./PlansOneTimeSettings.vue";
 import Warnings from "./Warnings.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector";
@@ -76,6 +85,7 @@ import type {
 	UiForecast,
 	PlanResponse,
 	PlanStrategy,
+	OneTimePlan,
 	PlanWrapper,
 	Rate,
 	RepeatingPlan,
@@ -93,6 +103,7 @@ export default defineComponent({
 		ChargingPlanStaticSettings: PlanStaticSettings,
 		ChargingPlanStrategy,
 		ChargingPlansRepeatingSettings: RepeatingSettings,
+		ChargingPlansOneTimeSettings: OneTimeSettings,
 		ChargingPlanWarnings: Warnings,
 	},
 	mixins: [formatter, collector],
@@ -100,6 +111,7 @@ export default defineComponent({
 		id: [String, Number],
 		staticPlan: Object as PropType<StaticPlan>,
 		repeatingPlans: { type: Array as PropType<RepeatingPlan[]>, default: () => [] },
+		oneTimePlans: { type: Array as PropType<OneTimePlan[]>, default: () => [] },
 		effectiveLimitSoc: Number,
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,
@@ -124,6 +136,7 @@ export default defineComponent({
 		"static-plan-removed",
 		"static-plan-updated",
 		"repeating-plans-updated",
+		"one-time-plans-updated",
 		"plan-strategy-updated",
 	],
 	data() {
@@ -139,10 +152,14 @@ export default defineComponent({
 	},
 	computed: {
 		noActivePlan(): boolean {
-			return !this.staticPlan && this.repeatingPlans.every((plan) => !plan.active);
+			return (
+				!this.staticPlan &&
+				this.oneTimePlans.length === 0 &&
+				this.repeatingPlans.every((plan) => !plan.active)
+			);
 		},
 		multiplePlans(): boolean {
-			return this.repeatingPlans.length !== 0;
+			return this.repeatingPlans.length !== 0 || this.oneTimePlans.length !== 0;
 		},
 		chargingPlanWarningsProps(): any {
 			return this.collectProps(Warnings);
@@ -196,6 +213,14 @@ export default defineComponent({
 		staticPlan: {
 			deep: true,
 			handler(vNew: StaticPlan, vOld: StaticPlan) {
+				if (!deepEqual(vNew, vOld)) {
+					this.updatePlanDebounced();
+				}
+			},
+		},
+		oneTimePlans: {
+			deep: true,
+			handler(vNew: OneTimePlan[], vOld: OneTimePlan[]) {
 				if (!deepEqual(vNew, vOld)) {
 					this.updatePlanDebounced();
 				}
@@ -314,6 +339,9 @@ export default defineComponent({
 		},
 		updateRepeatingPlans(plans: RepeatingPlan[]): void {
 			this.$emit("repeating-plans-updated", plans);
+		},
+		updateOneTimePlans(plans: OneTimePlan[]): void {
+			this.$emit("one-time-plans-updated", plans);
 		},
 		previewStaticPlan(plan: StaticPlan): void {
 			this.staticPlanPreview = plan;

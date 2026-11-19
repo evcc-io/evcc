@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -322,4 +323,62 @@ func TestGetChargePowerFlexibility(t *testing.T) {
 			assert.Equal(t, tc.want, lp.GetChargePowerFlexibility(nil))
 		})
 	}
+}
+
+func TestOneTimePlans(t *testing.T) {
+	config.Reset()
+	t.Cleanup(config.Reset)
+
+	ctrl := gomock.NewController(t)
+	v := api.NewMockVehicle(ctrl)
+	v.EXPECT().Capacity().Return(50.0).AnyTimes()
+	v.EXPECT().Features().Return(nil).AnyTimes()
+
+	const name = "vehicle"
+	require.NoError(t, config.Vehicles().Add(
+		config.NewStaticDevice(config.Named{Name: name}, api.Vehicle(v)),
+	))
+
+	key := func(k string) string { return "vehicle." + name + "." + k }
+	tuesday := time.Now().Add(2 * 24 * time.Hour).Round(time.Second).UTC()
+	friday := tuesday.Add(3 * 24 * time.Hour)
+
+	require.NoError(t, settings.SetJson(key(keys.RepeatingPlans), []api.RepeatingPlan{
+		{Weekdays: []int{0}, Time: "07:00", Tz: "UTC", Soc: 60, Active: true},
+	}))
+	require.NoError(t, settings.SetJson(key(keys.OneTimePlans), []api.OneTimePlan{
+		{Time: tuesday, Soc: 100},
+		{Time: friday, Soc: 65},
+	}))
+	t.Cleanup(func() {
+		_ = settings.Delete(key(keys.RepeatingPlans))
+		_ = settings.Delete(key(keys.OneTimePlans))
+	})
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.vehicle = v
+	lp.vehicleSoc = 20
+
+	plans := lp.vehiclePlans(v, 7)
+	assert.Equal(t, plan{Id: 2, End: tuesday, Soc: 100}, plans[0])
+	assert.Equal(t, plan{Id: 3, End: friday, Soc: 65}, plans[1])
+	assert.Equal(t, 4, plans[2].Id, "repeating plans follow one-time plans")
+
+	t.Run("finish one-time plan", func(t *testing.T) {
+		lp.lockPlanGoal(tuesday, 100, 2)
+		require.False(t, lp.repeatingPlanning())
+
+		lp.finishPlan()
+
+		assert.Equal(t, []api.OneTimePlan{{Time: friday, Soc: 65}}, vehicle.Settings(lp.log, v).GetOneTimePlans())
+	})
+
+	t.Run("finish repeating plan", func(t *testing.T) {
+		lp.lockPlanGoal(tuesday, 60, 3)
+		require.True(t, lp.repeatingPlanning())
+
+		lp.finishPlan()
+
+		assert.Len(t, vehicle.Settings(lp.log, v).GetOneTimePlans(), 1)
+	})
 }

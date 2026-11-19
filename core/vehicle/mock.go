@@ -97,6 +97,20 @@ func (mr *MockAPIMockRecorder) GetMode() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMode", reflect.TypeOf((*MockAPI)(nil).GetMode))
 }
 
+// GetOneTimePlans mocks base method.
+func (m *MockAPI) GetOneTimePlans() []api.OneTimePlan {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOneTimePlans")
+	ret0, _ := ret[0].([]api.OneTimePlan)
+	return ret0
+}
+
+// GetOneTimePlans indicates an expected call of GetOneTimePlans.
+func (mr *MockAPIMockRecorder) GetOneTimePlans() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOneTimePlans", reflect.TypeOf((*MockAPI)(nil).GetOneTimePlans))
+}
+
 // GetPlanSoc mocks base method.
 func (m *MockAPI) GetPlanSoc() (time.Time, int) {
 	m.ctrl.T.Helper()
@@ -214,6 +228,20 @@ func (m *MockAPI) SetMode(arg0 api.ChargeMode) {
 func (mr *MockAPIMockRecorder) SetMode(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMode", reflect.TypeOf((*MockAPI)(nil).SetMode), arg0)
+}
+
+// SetOneTimePlans mocks base method.
+func (m *MockAPI) SetOneTimePlans(arg0 []api.OneTimePlan) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetOneTimePlans", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetOneTimePlans indicates an expected call of SetOneTimePlans.
+func (mr *MockAPIMockRecorder) SetOneTimePlans(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOneTimePlans", reflect.TypeOf((*MockAPI)(nil).SetOneTimePlans), arg0)
 }
 
 // SetPlanSoc mocks base method.

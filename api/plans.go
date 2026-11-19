@@ -13,6 +13,11 @@ type RepeatingPlan struct {
 	Active   bool   `json:"active"`   // active flag
 }
 
+type OneTimePlan struct {
+	Time time.Time `json:"time"` // target time
+	Soc  int       `json:"soc"`  // target soc
+}
+
 type PlanStrategy struct {
 	Continuous   bool          `json:"continuous"`   // force continuous planning
 	Precondition time.Duration `json:"precondition"` // precondition duration in seconds

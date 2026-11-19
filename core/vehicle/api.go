@@ -43,6 +43,11 @@ type API interface {
 	// SetRepeatingPlans stores every repeating plan
 	SetRepeatingPlans([]api.RepeatingPlan) error
 
+	// GetOneTimePlans returns every one-time plan, ordered by time
+	GetOneTimePlans() []api.OneTimePlan
+	// SetOneTimePlans stores every one-time plan
+	SetOneTimePlans([]api.OneTimePlan) error
+
 	// GetPlanStrategy returns the plan strategy
 	GetPlanStrategy() api.PlanStrategy
 	// SetPlanStrategy sets the plan strategy

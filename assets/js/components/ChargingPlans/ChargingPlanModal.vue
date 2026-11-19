@@ -14,6 +14,7 @@
 					:id="id"
 					:staticPlan="staticPlan"
 					:repeatingPlans="repeatingPlans"
+					:oneTimePlans="oneTimePlans"
 					:effectiveLimitSoc="loadpoint?.effectiveLimitSoc"
 					:effectivePlanTime="loadpoint?.effectivePlanTime ?? undefined"
 					:effectivePlanSoc="loadpoint?.effectivePlanSoc"
@@ -36,6 +37,7 @@
 					@static-plan-updated="updateStaticPlan"
 					@static-plan-removed="removeStaticPlan"
 					@repeating-plans-updated="updateRepeatingPlans"
+					@one-time-plans-updated="updateOneTimePlans"
 					@plan-strategy-updated="updatePlanStrategy"
 				/>
 			</div>
@@ -51,6 +53,7 @@ import api from "@/api";
 import type {
 	CURRENCY,
 	UiForecast,
+	OneTimePlan,
 	PlanStrategy,
 	RepeatingPlan,
 	SMART_COST_TYPE,
@@ -119,6 +122,9 @@ export default defineComponent({
 		apiLoadpoint(): string {
 			return `loadpoints/${this.id}/`;
 		},
+		oneTimePlans(): OneTimePlan[] {
+			return this.vehicle?.oneTimePlans || [];
+		},
 		repeatingPlans(): RepeatingPlan[] {
 			if (
 				this.vehicle &&
@@ -161,6 +167,9 @@ export default defineComponent({
 		},
 		updateRepeatingPlans(plans: RepeatingPlan[]): void {
 			api.post(`${this.apiVehicle}plan/repeating`, plans);
+		},
+		updateOneTimePlans(plans: OneTimePlan[]): void {
+			api.post(`${this.apiVehicle}plan/onetime`, plans);
 		},
 		updatePlanStrategy(strategy: PlanStrategy): void {
 			if (this.loadpoint?.socBasedPlanning) {
