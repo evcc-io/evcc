@@ -54,6 +54,10 @@ type FoxESSEVC struct {
 	maxPower   uint16     // max supported power
 	minCurrent float64    // min supported current per phase
 	maxCurrent float64    // max supported current per phase
+
+	// multi-connector chargers (e.g. C-series)
+	connector uint16      // selected connector, 0 if not configured
+	connMu    *sync.Mutex // serializes connector selection and access, shared by all connectors of the device
 }
 
 // Register map per spec §2. Read-only and read/write registers are read with 0x03.
@@ -84,6 +88,7 @@ const (
 	foxRegRFID          = 0x101C // last RFID card, uint32 (§2.26)
 	foxRegModel         = 0x101E // model code, 4 registers, ASCII (§2.27)
 	foxRegSerial        = 0x1022 // serial number, 16 registers, ASCII (§2.28)
+	foxRegConnectors    = 0x103C // number of connectors (spec 1.08 §2.30)
 
 	// read/write registers (write with 0x10)
 	foxRegWorkMode        = 0x3000 // work mode (§2.29)
@@ -97,6 +102,7 @@ const (
 	foxRegOtaSize         = 0x3008 // OTA firmware size, uint32 (§2.37)
 	foxRegAutoPhaseSwitch = 0x300A // single/three-phase automatic switching (§2.38)
 	foxRegSwitchInterval  = 0x300B // min interval between phase switches, minutes (§2.39)
+	foxRegConnector       = 0x300C // selects the connector for multi-connector registers (spec 1.08 §2.50)
 	foxRegLockControl     = 0x4000 // electronic lock control, write-only (§2.40)
 	foxRegSessionControl  = 0x4001 // start/stop session, write-only (§2.41)
 	foxRegPhaseControl    = 0x4002 // phase sequence switching, write-only (§2.42)
@@ -133,6 +139,42 @@ const (
 	foxStatusSwitching = 9 // undocumented: automatic phase switch in progress
 )
 
+// foxConnectorLocks holds one lock per device. All connectors of a multi-connector charger share the
+// connector selection register, so selecting a connector and accessing its registers must not interleave.
+var (
+	foxConnectorLocksMu sync.Mutex
+	foxConnectorLocks   = make(map[string]*sync.Mutex)
+)
+
+func foxConnectorLock(key string) *sync.Mutex {
+	foxConnectorLocksMu.Lock()
+	defer foxConnectorLocksMu.Unlock()
+
+	mu, ok := foxConnectorLocks[key]
+	if !ok {
+		mu = new(sync.Mutex)
+		foxConnectorLocks[key] = mu
+	}
+
+	return mu
+}
+
+// foxDeviceRegister reports whether a register applies to the whole device instead of the selected
+// connector (spec 1.08 §2, register list column "multi-connector parameter")
+func foxDeviceRegister(reg uint16) bool {
+	switch reg {
+	case foxRegDeviceAddress, foxRegSwVersion, foxRegAmbientTemp, foxRegPhaseSequence,
+		foxRegMaxSupPower, foxRegMinSupPower, foxRegMaxSupCurrent, foxRegMinSupCurrent,
+		foxRegModel, foxRegSerial, foxRegConnectors,
+		foxRegWorkMode, foxRegTimeValidity, foxRegDefaultCurrent, foxRegOtaStatus, foxRegOtaSize,
+		foxRegAutoPhaseSwitch, foxRegSwitchInterval, foxRegConnector,
+		foxRegPhaseControl, foxRegRestart:
+		return true
+	default:
+		return false
+	}
+}
+
 func init() {
 	registry.AddCtx("foxess-evc", NewFoxESSEVCFromConfig)
 }
@@ -141,6 +183,7 @@ func init() {
 func NewFoxESSEVCFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
+		Connector          uint16
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 1,
@@ -151,11 +194,12 @@ func NewFoxESSEVCFromConfig(ctx context.Context, other map[string]any) (api.Char
 		return nil, err
 	}
 
-	return NewFoxESSEVC(ctx, cc.TcpSettings)
+	return NewFoxESSEVC(ctx, cc.TcpSettings, cc.Connector)
 }
 
-// NewFoxESSEVC creates a FoxESS EV charger
-func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+// NewFoxESSEVC creates a FoxESS EV charger. Connector selects the connector of multi-connector
+// chargers (e.g. C-series); 0 leaves the connector selection untouched.
+func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings, connector uint16) (api.Charger, error) {
 	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
@@ -172,6 +216,19 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 		Caps: implement.New(),
 		log:  log,
 		conn: conn,
+	}
+
+	if connector > 0 {
+		connectors, err := wb.readUint16(foxRegConnectors)
+		if err != nil {
+			return nil, fmt.Errorf("connectors: %w", err)
+		}
+		if connector > connectors {
+			return nil, fmt.Errorf("invalid connector: %d, charger has %d", connector, connectors)
+		}
+
+		wb.connector = connector
+		wb.connMu = foxConnectorLock(conn.Addr())
 	}
 
 	// device limits are model-specific and constant, so read them once (§2.18-§2.21)
@@ -260,9 +317,38 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 	return wb, nil
 }
 
+// withConnector runs fn with the configured connector selected if reg is a multi-connector register (§2.50)
+func (wb *FoxESSEVC) withConnector(reg uint16, fn func() error) error {
+	if wb.connector == 0 || foxDeviceRegister(reg) {
+		return fn()
+	}
+
+	wb.connMu.Lock()
+	defer wb.connMu.Unlock()
+
+	if err := wb.write(foxRegConnector, wb.connector); err != nil {
+		return fmt.Errorf("select connector: %w", err)
+	}
+
+	return fn()
+}
+
+// read reads consecutive holding registers, selecting the connector if required
+func (wb *FoxESSEVC) read(reg, words uint16) ([]byte, error) {
+	var b []byte
+
+	err := wb.withConnector(reg, func() error {
+		var err error
+		b, err = wb.conn.ReadHoldingRegisters(reg, words)
+		return err
+	})
+
+	return b, err
+}
+
 // readUint16 reads a register as a uint16
 func (wb *FoxESSEVC) readUint16(reg uint16) (uint16, error) {
-	b, err := wb.conn.ReadHoldingRegisters(reg, 1)
+	b, err := wb.read(reg, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -272,7 +358,7 @@ func (wb *FoxESSEVC) readUint16(reg uint16) (uint16, error) {
 
 // readUint32 reads two consecutive registers as a big-endian uint32
 func (wb *FoxESSEVC) readUint32(reg uint16) (uint32, error) {
-	b, err := wb.conn.ReadHoldingRegisters(reg, 2)
+	b, err := wb.read(reg, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -282,7 +368,7 @@ func (wb *FoxESSEVC) readUint32(reg uint16) (uint32, error) {
 
 // readString reads consecutive registers as a zero-padded ASCII string
 func (wb *FoxESSEVC) readString(reg, words uint16) (string, error) {
-	b, err := wb.conn.ReadHoldingRegisters(reg, words)
+	b, err := wb.read(reg, words)
 	if err != nil {
 		return "", err
 	}
@@ -292,7 +378,7 @@ func (wb *FoxESSEVC) readString(reg, words uint16) (string, error) {
 
 // getPhaseValues returns 3 sequential register values scaled by divider
 func (wb *FoxESSEVC) getPhaseValues(reg uint16, divider float64) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(reg, 3)
+	b, err := wb.read(reg, 3)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -305,8 +391,15 @@ func (wb *FoxESSEVC) getPhaseValues(reg uint16, divider float64) (float64, float
 	return res[0], res[1], res[2], nil
 }
 
-// writeReg writes a single read/write register (0x10)
+// writeReg writes a single read/write register (0x10), selecting the connector if required
 func (wb *FoxESSEVC) writeReg(reg, val uint16) error {
+	return wb.withConnector(reg, func() error {
+		return wb.write(reg, val)
+	})
+}
+
+// write writes a single read/write register (0x10) without connector selection
+func (wb *FoxESSEVC) write(reg, val uint16) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, val)
 
@@ -655,6 +748,9 @@ func (wb *FoxESSEVC) Diagnose() {
 	}
 	if s, err := wb.readString(foxRegSerial, 16); err == nil {
 		fmt.Printf("\tSerial:\t%s\n", s)
+	}
+	if wb.connector > 0 {
+		fmt.Printf("\tConnector:\t%d\n", wb.connector)
 	}
 	fmt.Printf("\tMax. Phases:\t%dp\n", wb.phases)
 	fmt.Printf("\tAuto phase switching:\t%v\n", wb.switchable)
