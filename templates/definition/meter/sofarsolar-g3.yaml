@@ -226,7 +226,7 @@ render: |
       decode: uint16
   {{- if not .slave }}
   {{- $charge := .maxchargepower | int }}
-  {{- $discharge := mod (sub 4294967296 (.maxdischargepower | int)) 4294967296 }}
+  {{- $discharge := mod (sub (int64 "4294967296") (.maxdischargepower | int)) (int64 "4294967296") }}
   batterymode:
     source: switch
     switch:
