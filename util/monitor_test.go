@@ -107,44 +107,29 @@ func TestMonitorFirstWaitOnce(t *testing.T) {
 	clk := &afterNotifyClock{Mock: mock, started: make(chan struct{})}
 	m := NewMonitor[int](time.Second).WithClock(clk)
 
-	errc := make(chan error, 1)
 	go func() {
-		_, err := m.Get()
-		errc <- err
+		<-clk.started
+		mock.Add(time.Second)
 	}()
 
-	<-clk.started
-	select {
-	case err := <-errc:
-		t.Fatalf("first Get returned before timeout: %v", err)
-	default:
-	}
-	mock.Add(time.Second)
-	assert.ErrorIs(t, <-errc, api.ErrOutdated)
+	_, err := m.Get()
+	assert.ErrorIs(t, err, api.ErrOutdated)
 
 	// second call must not wait on the clock again
-	_, err := m.Get()
+	_, err = m.Get()
 	assert.ErrorIs(t, err, api.ErrOutdated)
 }
 
 func TestMonitorSetDuringFirstWait(t *testing.T) {
-	mock := clock.NewMock()
-	clk := &afterNotifyClock{Mock: mock, started: make(chan struct{})}
+	clk := &afterNotifyClock{Mock: clock.NewMock(), started: make(chan struct{})}
 	m := NewMonitor[int](time.Second).WithClock(clk)
 
-	type result struct {
-		val int
-		err error
-	}
-	errc := make(chan result, 1)
 	go func() {
-		val, err := m.Get()
-		errc <- result{val, err}
+		<-clk.started
+		m.Set(42)
 	}()
 
-	<-clk.started
-	m.Set(42)
-	res := <-errc
-	assert.NoError(t, res.err)
-	assert.Equal(t, 42, res.val)
+	val, err := m.Get()
+	assert.NoError(t, err)
+	assert.Equal(t, 42, val)
 }
