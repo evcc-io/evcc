@@ -249,8 +249,5 @@ func (wb *OpenWB20) identify() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	if id := bytesAsString(b); id != "" {
-		return []string{id}, nil
-	}
-	return nil, nil
+	return []string{bytesAsString(b)}, nil
 }
