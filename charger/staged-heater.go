@@ -33,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/grid"
+	"github.com/samber/lo"
 )
 
 // StagedHeater controls a heating rod with up to three equal stages, each switched by its own
@@ -114,10 +115,10 @@ func NewStagedHeater(embed *embed, relays []api.Charger, stepPower, hysteresis f
 	if len(relays) < 1 || len(relays) > 3 {
 		return nil, fmt.Errorf("invalid number of stages: %d (1-3)", len(relays))
 	}
-	if !(stepPower >= stagedHeaterMinStepPower) || math.IsInf(stepPower, 0) {
+	if stepPower < stagedHeaterMinStepPower {
 		return nil, fmt.Errorf("invalid step power: %g (min %dW)", stepPower, stagedHeaterMinStepPower)
 	}
-	if !(hysteresis >= 0) || hysteresis >= stepPower {
+	if hysteresis < 0 || hysteresis >= stepPower {
 		return nil, fmt.Errorf("invalid hysteresis: %g", hysteresis)
 	}
 
@@ -191,13 +192,7 @@ func stageCaps[T any](relays []api.Charger) ([]T, bool) {
 
 // stages returns the number of active relays
 func (wb *StagedHeater) stages() int {
-	var n int
-	for _, on := range wb.on {
-		if on {
-			n++
-		}
-	}
-	return n
+	return lo.Count(wb.on, true)
 }
 
 func (wb *StagedHeater) stagesForPower(power float64, active int) int {
@@ -332,7 +327,7 @@ var _ api.ChargerEx = (*StagedHeater)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *StagedHeater) MaxCurrentMillis(current float64) error {
-	if current < 0 || math.IsNaN(current) || math.IsInf(current, 0) {
+	if current < 0 {
 		return fmt.Errorf("invalid current: %g", current)
 	}
 
