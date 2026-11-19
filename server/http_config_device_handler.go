@@ -317,7 +317,7 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	jsonWrite(w, testInstance(ctx, instance))
 }
 
-func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) (*config.Config, error) {
+func newDevice[T any](ctx context.Context, release func(), class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) (*config.Config, error) {
 	typ, other, err := config.CustomDevice(req.Type, req.Other)
 	if err != nil && !force {
 		return nil, err
@@ -333,7 +333,10 @@ func newDevice[T any](ctx context.Context, class templates.Class, req configReq,
 		return nil, err
 	}
 
-	return &conf, h.Add(config.NewConfigurableDevice(&conf, instance))
+	dev := config.NewConfigurableDevice(&conf, instance)
+	dev.SetRelease(release)
+
+	return &conf, h.Add(dev)
 }
 
 // newHemsFactory adapts hems.NewFromConfig to the generic newFromConfFunc signature.
@@ -380,32 +383,32 @@ func newDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 
 		switch class {
 		case templates.Charger:
-			conf, err = newDevice(ctx, class, req, charger.NewFromConfig, config.Chargers(), force)
+			conf, err = newDevice(ctx, cancel, class, req, charger.NewFromConfig, config.Chargers(), force)
 
 		case templates.Meter:
-			conf, err = newDevice(ctx, class, req, meter.NewFromConfig, config.Meters(), force)
+			conf, err = newDevice(ctx, cancel, class, req, meter.NewFromConfig, config.Meters(), force)
 
 		case templates.Vehicle:
-			conf, err = newDevice(ctx, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
+			conf, err = newDevice(ctx, cancel, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 		case templates.Circuit:
-			conf, err = newDevice(ctx, class, req, circuit.NewFromConfig, config.Circuits(), force)
+			conf, err = newDevice(ctx, cancel, class, req, circuit.NewFromConfig, config.Circuits(), force)
 
 		case templates.Curtailer:
-			conf, err = newDevice(ctx, class, req, curtailer.NewFromConfig, config.Curtailers(), force)
+			conf, err = newDevice(ctx, cancel, class, req, curtailer.NewFromConfig, config.Curtailers(), force)
 
 		case templates.Hems:
 			if existing, _ := config.ConfigurationByClass(templates.Hems); existing != nil {
 				err = errors.New("hems already configured")
 			} else {
-				conf, err = newDevice(ctx, class, req, newHemsFactory(site), config.Hems(), force)
+				conf, err = newDevice(ctx, cancel, class, req, newHemsFactory(site), config.Hems(), force)
 			}
 
 		case templates.Tariff:
-			conf, err = newDevice(ctx, class, req, tariff.NewFromConfig, config.Tariffs(), force)
+			conf, err = newDevice(ctx, cancel, class, req, tariff.NewFromConfig, config.Tariffs(), force)
 
 		case templates.Messenger:
-			conf, err = newDevice(ctx, class, req, messenger.NewFromConfig, config.Messengers(), force)
+			conf, err = newDevice(ctx, cancel, class, req, messenger.NewFromConfig, config.Messengers(), force)
 		}
 
 		if err != nil {
@@ -435,7 +438,7 @@ func newDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 	}
 }
 
-func updateDevice[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) error {
+func updateDevice[T any](ctx context.Context, release func(), id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) error {
 	dev, instance, merged, err := deviceInstanceFromMergedConfig(ctx, id, class, req, newFromConf, h)
 	if err != nil {
 		// allow force-updating if merged config exists
@@ -449,7 +452,7 @@ func updateDevice[T any](ctx context.Context, id int, class templates.Class, req
 		return errors.New("not configurable")
 	}
 
-	return configurable.Update(merged, instance, config.WithProperties(req.Properties))
+	return configurable.UpdateWithRelease(merged, instance, release, config.WithProperties(req.Properties))
 }
 
 // updateDeviceHandler updates database device's configuration by class
@@ -485,28 +488,28 @@ func updateDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 
 		switch class {
 		case templates.Charger:
-			err = updateDevice(ctx, id, class, req, charger.NewFromConfig, config.Chargers(), force)
+			err = updateDevice(ctx, cancel, id, class, req, charger.NewFromConfig, config.Chargers(), force)
 
 		case templates.Meter:
-			err = updateDevice(ctx, id, class, req, meter.NewFromConfig, config.Meters(), force)
+			err = updateDevice(ctx, cancel, id, class, req, meter.NewFromConfig, config.Meters(), force)
 
 		case templates.Vehicle:
-			err = updateDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
+			err = updateDevice(ctx, cancel, id, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 		case templates.Circuit:
-			err = updateDevice(ctx, id, class, req, circuit.NewFromConfig, config.Circuits(), force)
+			err = updateDevice(ctx, cancel, id, class, req, circuit.NewFromConfig, config.Circuits(), force)
 
 		case templates.Curtailer:
-			err = updateDevice(ctx, id, class, req, curtailer.NewFromConfig, config.Curtailers(), force)
+			err = updateDevice(ctx, cancel, id, class, req, curtailer.NewFromConfig, config.Curtailers(), force)
 
 		case templates.Hems:
-			err = updateDevice(ctx, id, class, req, newHemsFactory(site), config.Hems(), force)
+			err = updateDevice(ctx, cancel, id, class, req, newHemsFactory(site), config.Hems(), force)
 
 		case templates.Tariff:
-			err = updateDevice(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs(), force)
+			err = updateDevice(ctx, cancel, id, class, req, tariff.NewFromConfig, config.Tariffs(), force)
 
 		case templates.Messenger:
-			err = updateDevice(ctx, id, class, req, messenger.NewFromConfig, config.Messengers(), force)
+			err = updateDevice(ctx, cancel, id, class, req, messenger.NewFromConfig, config.Messengers(), force)
 		}
 
 		setConfigDirty()

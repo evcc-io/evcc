@@ -358,8 +358,13 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 		}
 	}
 
-	if e := h.Add(config.NewConfigurableDevice(conf, instance)); e != nil && err == nil {
+	dev := config.NewConfigurableDevice(conf, instance)
+	if e := h.Add(dev); e != nil && err == nil {
 		err = &DeviceError{cc.Name, e}
+	}
+
+	if err == nil {
+		dev.SetRelease(cancel)
 	}
 
 	return err
