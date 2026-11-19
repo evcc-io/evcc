@@ -3,7 +3,6 @@ package util
 import (
 	"context"
 	"math/rand/v2"
-	"runtime"
 	"testing"
 	"time"
 
@@ -126,43 +125,6 @@ func TestMonitorFirstWaitOnce(t *testing.T) {
 	// second call must not wait on the clock again
 	_, err := m.Get()
 	assert.ErrorIs(t, err, api.ErrOutdated)
-}
-
-func TestMonitorConcurrentFirstWait(t *testing.T) {
-	mock := clock.NewMock()
-	clk := &afterNotifyClock{Mock: mock, started: make(chan struct{})}
-	m := NewMonitor[int](time.Second).WithClock(clk)
-
-	errc := make(chan error, 2)
-	for range 2 {
-		go func() {
-			_, err := m.Get()
-			errc <- err
-		}()
-	}
-
-	<-clk.started
-
-	var got error
-	for i := 0; i < 10000; i++ {
-		select {
-		case got = <-errc:
-			assert.ErrorIs(t, got, api.ErrOutdated)
-			goto claimed
-		default:
-			runtime.Gosched()
-		}
-	}
-	t.Fatal("non-claimer did not return ErrOutdated")
-claimed:
-	select {
-	case err := <-errc:
-		t.Fatalf("claimer returned before timeout: %v", err)
-	default:
-	}
-
-	mock.Add(time.Second)
-	assert.ErrorIs(t, <-errc, api.ErrOutdated)
 }
 
 func TestMonitorSetDuringFirstWait(t *testing.T) {

@@ -3,6 +3,7 @@ package util
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/benbjohnson/clock"
@@ -18,7 +19,7 @@ type Monitor[T any] struct {
 	done    chan struct{}
 	updated time.Time
 	timeout time.Duration
-	waited  bool
+	waited  atomic.Bool
 }
 
 // NewMonitor created a new monitor with given timeout
@@ -95,26 +96,16 @@ func (m *Monitor[T]) GetFuncContext(ctx context.Context, get func(T)) error {
 		err := api.ErrOutdated
 
 		// wait once on very first call
-		if m.updated.IsZero() && !m.waited {
+		if m.updated.IsZero() && m.waited.CompareAndSwap(false, true) {
 			m.mu.RUnlock()
 
-			m.mu.Lock()
-			wait := false
-			if m.updated.IsZero() && !m.waited {
-				m.waited = true
-				wait = true
-			}
-			m.mu.Unlock()
-
-			if wait {
-				select {
-				case <-m.done:
-					// got value and updated timestamp
-					err = nil
-				case <-ctx.Done():
-					err = ctx.Err()
-				case <-m.clock.After(m.timeout):
-				}
+			select {
+			case <-m.done:
+				// got value and updated timestamp
+				err = nil
+			case <-ctx.Done():
+				err = ctx.Err()
+			case <-m.clock.After(m.timeout):
 			}
 
 			m.mu.RLock()
