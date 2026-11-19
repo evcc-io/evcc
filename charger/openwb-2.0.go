@@ -112,8 +112,7 @@ func (wb *OpenWB20) Status() (res api.ChargeStatus, err error) {
 		}
 		if res == api.StatusA && wb.status != api.StatusA && api.HasCap[api.Identifier](wb) {
 			if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err != nil {
-				wb.log.WARN.Printf("reset rfid: %v", err)
-				return // keep previous status to retry
+				return status, err
 			}
 		}
 		wb.status = res
