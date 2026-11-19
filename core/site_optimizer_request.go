@@ -402,23 +402,22 @@ func circuitMaxImport(c api.Circuit) float64 {
 // optimizerCircuits limits the summed charging of the loadpoints below each limited sub-circuit.
 // The root circuit is covered by the grid import limit, which also accounts for the household.
 func optimizerCircuits(root api.Circuit, batteries []optimizerBattery) []optimizer.CircuitConfig {
-	var res []optimizer.CircuitConfig
-	entry := make(map[api.Circuit]int) // index into res, -1 if unlimited
+	var order []api.Circuit
+	members := make(map[api.Circuit][]int)
 
 	for i, b := range batteries {
 		for c := b.circuit; c != nil && c != root; c = c.GetParent() {
-			j, ok := entry[c]
-			if !ok {
-				j = -1
-				if p := circuitMaxImport(c); p > 0 {
-					j = len(res)
-					res = append(res, optimizer.CircuitConfig{PMax: float32(p)})
-				}
-				entry[c] = j
+			if _, ok := members[c]; !ok {
+				order = append(order, c)
 			}
-			if j >= 0 {
-				res[j].Batteries = append(res[j].Batteries, i)
-			}
+			members[c] = append(members[c], i)
+		}
+	}
+
+	var res []optimizer.CircuitConfig
+	for _, c := range order {
+		if p := circuitMaxImport(c); p > 0 {
+			res = append(res, optimizer.CircuitConfig{PMax: float32(p), Batteries: members[c]})
 		}
 	}
 
