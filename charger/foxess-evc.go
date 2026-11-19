@@ -139,25 +139,9 @@ const (
 	foxStatusSwitching = 9 // undocumented: automatic phase switch in progress
 )
 
-// foxConnectorLocks holds one lock per device. All connectors of a multi-connector charger share the
+// foxConnectorLocks holds one *sync.Mutex per device. All connectors of a multi-connector charger share the
 // connector selection register, so selecting a connector and accessing its registers must not interleave.
-var (
-	foxConnectorLocksMu sync.Mutex
-	foxConnectorLocks   = make(map[string]*sync.Mutex)
-)
-
-func foxConnectorLock(key string) *sync.Mutex {
-	foxConnectorLocksMu.Lock()
-	defer foxConnectorLocksMu.Unlock()
-
-	mu, ok := foxConnectorLocks[key]
-	if !ok {
-		mu = new(sync.Mutex)
-		foxConnectorLocks[key] = mu
-	}
-
-	return mu
-}
+var foxConnectorLocks sync.Map
 
 // foxDeviceRegister reports whether a register applies to the whole device instead of the selected
 // connector (spec 1.08 §2, register list column "multi-connector parameter")
@@ -228,7 +212,8 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings, connector ui
 		}
 
 		wb.connector = connector
-		wb.connMu = foxConnectorLock(conn.Addr())
+		mu, _ := foxConnectorLocks.LoadOrStore(conn.Addr(), new(sync.Mutex))
+		wb.connMu = mu.(*sync.Mutex)
 	}
 
 	// device limits are model-specific and constant, so read them once (§2.18-§2.21)
