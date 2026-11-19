@@ -33,10 +33,10 @@ params:
 render: |
   type: custom
   {{ include "base" . }}
-  {{ include "features" (merge (dict "basefeatures" (list "cacheable")) .) }}
+  {{ include "features" (merge (dict "basefeatures" (list "cacheable")) (omit . "average")) }}
   forecast:
     source: http
-    uri: https://spotovyradar.cz/api/v1/forecast?hours=72
+    uri: https://spotovyradar.cz/api/v1/forecast?hours=72{{ if .average }}&resolution=hour{{ end }}
     auth:
       type: bearer
       token: {{ .apikey }}

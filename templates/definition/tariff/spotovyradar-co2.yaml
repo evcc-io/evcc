@@ -1,0 +1,37 @@
+template: spotovyradar-co2
+link: https://spotovyradar.cz/ucet/api
+products:
+  - brand: Spotový Radar
+    description:
+      generic: CO₂
+requirements:
+  description:
+    en: "72-hour forecast of the CO₂ intensity of electricity generated in Czechia (g/kWh, direct emissions, 15-minute intervals). Requires an API key from [spotovyradar.cz](https://spotovyradar.cz/ucet/api) (Smart Home plan)."
+    de: "72-Stunden-Prognose der CO₂-Intensität des in Tschechien erzeugten Stroms (g/kWh, direkte Emissionen, 15-Minuten-Intervalle). Benötigt einen API-Key von [spotovyradar.cz](https://spotovyradar.cz/ucet/api) (Tarif Smart Home)."
+  evcc: ["skiptest"]
+group: co2
+countries: ["CZ"]
+params:
+  - name: apikey
+    required: true
+    example: sr_live_abcdefgh_…
+    help:
+      en: "Create a key at [spotovyradar.cz/ucet/api](https://spotovyradar.cz/ucet/api)."
+      de: "Key erstellen unter [spotovyradar.cz/ucet/api](https://spotovyradar.cz/ucet/api)."
+render: |
+  type: custom
+  features: ["cacheable"]
+  tariff: co2
+  forecast:
+    source: http
+    uri: https://spotovyradar.cz/api/v1/co2?hours=72
+    auth:
+      type: bearer
+      token: {{ .apikey }}
+    jq: |
+      [.points[] | {
+        "start": .start,
+        "end": .end,
+        "estimate": true,
+        "value": .co2
+      }] | tostring
