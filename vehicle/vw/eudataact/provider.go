@@ -2,7 +2,6 @@ package eudataact
 
 import (
 	"errors"
-	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -133,11 +132,11 @@ func energySoc(data []point) (float64, bool) {
 
 	c, err1 := strconv.ParseFloat(cur.Value, 64)
 	m, err2 := strconv.ParseFloat(maxE.Value, 64)
-	if err1 != nil || err2 != nil || math.IsNaN(c) || math.IsNaN(m) || math.IsInf(c, 0) || math.IsInf(m, 0) || m <= 0 || c < 0 {
+	if err1 != nil || err2 != nil || m <= 0 || c < 0 || c > m {
 		return 0, false
 	}
 
-	return min(c/m*100, 100), true
+	return c / m * 100, true
 }
 
 var _ api.VehicleRange = (*Provider)(nil)

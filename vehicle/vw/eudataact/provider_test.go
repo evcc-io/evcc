@@ -18,8 +18,8 @@ func TestEnergySoc(t *testing.T) {
 	assert.False(t, ok)
 
 	_, ok = energySoc([]point{
-		{Name: FieldEnergyCurrent, Value: "1"},
-		{Name: FieldEnergyMaximal, Value: "0"},
+		{Name: FieldEnergyCurrent, Value: "700"},
+		{Name: FieldEnergyMaximal, Value: "670"},
 	})
 	assert.False(t, ok)
 }
