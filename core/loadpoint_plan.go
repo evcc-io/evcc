@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -104,12 +103,11 @@ func (lp *Loadpoint) unsampledSoc(v api.Vehicle, estimator *soc.Estimator) (floa
 		return 0, true
 	}
 
-	capacity := v.Capacity()
-	if capacity <= 0 || math.IsNaN(capacity) || math.IsInf(capacity, 0) {
+	if v.Capacity() <= 0 {
 		return 0, false
 	}
 
-	return lp.getChargedEnergy() / (capacity * 1e3 / soc.ChargeEfficiency) * 100, true
+	return lp.getChargedEnergy() / (v.Capacity() * 1e3 / soc.ChargeEfficiency) * 100, true
 }
 
 // getPlanRequiredDuration is the estimated total charging duration

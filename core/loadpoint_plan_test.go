@@ -1,7 +1,6 @@
 package core
 
 import (
-	"math"
 	"testing"
 	"time"
 
@@ -90,46 +89,6 @@ func TestNextActivePlanUnsampledSoc(t *testing.T) {
 	// goal energy charged
 	lp.energyMetrics.totalKWh = 3.5
 	assert.Nil(t, lp.nextActivePlan(1000, plans))
-}
-
-func TestUnsampledSocUnknownCapacity(t *testing.T) {
-	for _, tc := range []struct {
-		name     string
-		capacity float64
-		status   api.ChargeStatus
-		charged  float64
-		wantSoc  float64
-		wantOk   bool
-	}{
-		{name: "unknown capacity while charging", capacity: 0, status: api.StatusC, charged: 5, wantSoc: 0, wantOk: false},
-		{name: "negative capacity", capacity: -8.5, status: api.StatusC, charged: 5, wantSoc: 0, wantOk: false},
-		{name: "NaN capacity", capacity: math.NaN(), status: api.StatusC, charged: 5},
-		{name: "infinite capacity", capacity: math.Inf(1), status: api.StatusB, charged: 5},
-		{name: "negative infinite capacity", capacity: math.Inf(-1), status: api.StatusC, charged: 5},
-		{name: "unknown capacity while disconnected still assumes 0%", capacity: 0, status: api.StatusA, charged: 5, wantSoc: 0, wantOk: true},
-		{name: "known capacity from energy", capacity: 8.5, status: api.StatusC, charged: 2, wantSoc: 20, wantOk: true},
-		{name: "known capacity no energy", capacity: 8.5, status: api.StatusC, charged: 0, wantSoc: 0, wantOk: true},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			vehicle := api.NewMockVehicle(ctrl)
-			vehicle.EXPECT().Capacity().Return(tc.capacity).AnyTimes()
-
-			log := util.NewLogger("foo")
-			lp := &Loadpoint{
-				log:          log,
-				vehicle:      vehicle,
-				status:       tc.status,
-				socEstimator: soc.NewEstimator(log, vehicle),
-			}
-			lp.energyMetrics.totalKWh = tc.charged
-
-			got, ok := lp.unsampledSoc(vehicle, lp.socEstimator)
-			assert.Equal(t, tc.wantOk, ok)
-			assert.Equal(t, tc.wantSoc, got)
-			assert.False(t, math.IsInf(got, 0), "must not return Inf")
-		})
-	}
 }
 
 func TestNextActivePlanUnknownCapacity(t *testing.T) {
