@@ -1467,6 +1467,7 @@
     },
     "production": {
       "accuracy": "accuracy",
+      "deviation": "Deviation",
       "produced": "Produced",
       "remainingToday": "remaining today",
       "selfConsumed": "Self-consumed",

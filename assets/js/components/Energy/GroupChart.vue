@@ -707,20 +707,17 @@ export default defineComponent({
 						id: "overlay-gap",
 						name: this.overlayLabel,
 						data: span((o, sum) => Math.abs(o - sum)),
-						// in place of the bar's upper part or above it. Striped on dark, solid
-						// on light where stripes get lost
-						itemStyle: colors.dark
-							? {
-									color: "transparent",
-									borderRadius: radius,
-									decal: {
-										color: overlayCol,
-										dashArrayX: [1, 0],
-										dashArrayY: [3, 3],
-										rotation: -Math.PI / 4,
-									},
-								}
-							: { color: overlayCol, borderRadius: radius },
+						// in place of the bar's upper part or above it, striped
+						itemStyle: {
+							color: "transparent",
+							borderRadius: radius,
+							decal: {
+								color: overlayCol,
+								dashArrayX: [1, 0],
+								dashArrayY: [2, 1],
+								rotation: -Math.PI / 4,
+							},
+						},
 					}
 				);
 			}
