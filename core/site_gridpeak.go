@@ -15,7 +15,9 @@ func (site *Site) updateGridPeak() {
 	if c, ok := site.collectors[site.Meters.GridMeterRef]; ok {
 		var err error
 		if energy, err = c.DailyPeakEnergy(); err != nil {
+			// keep the last target, an unknown peak must not lower it
 			site.log.ERROR.Printf("grid peak: %v", err)
+			return
 		}
 	}
 
@@ -34,11 +36,9 @@ func (site *Site) updateGridPeak() {
 		return lp != nil && lp.GetMode() == api.ModeNow
 	})
 
-	baseline := site.GetGridPeakBaseline()
-
 	site.Lock()
 	site.gridPeakTarget = 0
-	if baseline > 0 && !fast {
+	if baseline := site.gridPeakBaseline; baseline > 0 && !fast {
 		site.gridPeakTarget = max(baseline, peak)
 	}
 	site.Unlock()

@@ -1367,6 +1367,9 @@ func (site *Site) update(lp updater) {
 	site.updateCircuits()
 	site.applyHemsLimits()
 
+	// before the loadpoint update, so the first cycle is limited already
+	site.updateGridPeak()
+
 	if state, err := site.updateMeters(); err != nil {
 		site.log.ERROR.Println(err)
 	} else {
@@ -1379,8 +1382,6 @@ func (site *Site) update(lp updater) {
 
 		site.updatePower(lp, state, totalChargePower, consumption, feedin)
 	}
-
-	site.updateGridPeak()
 
 	// smart grid charging
 	rate := site.currentRate(consumption)
