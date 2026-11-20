@@ -19,8 +19,13 @@ params:
       de: Der ModbusTCP Server muss aktiviert sein.
   - preset: battery-params
   - name: maxchargepower
-    default: 4200
+    service: modbus/read?address=40189&type=holding&encoding=uint32&resulttype=int&{modbus} # BatConv.WMaxCha
     required: true
+    example: 4600
+  - name: maxdischargepower
+    service: modbus/read?address=40191&type=holding&encoding=uint32&resulttype=int&{modbus} # BatConv.WMaxDsch
+    required: true
+    example: 4600
   - name: watchdog
     default: 60s
   - name: chargepower
@@ -58,30 +63,59 @@ render: |
       switch:
       - case: 1 # normal
         set:
-          source: const
-          value: 803 # inaktiv (Ina)
+          source: sequence
           set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
-              type: writemultiple
-              decode: uint32
+          - source: const
+            value: 803 # inaktiv (Ina)
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
+                type: writemultiple
+                decode: uint32
+          - source: const
+            value: {{ .maxchargepower }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40795 # SMA Modbus Profile: CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
+                type: writemultiple
+                decode: uint32
+          - source: const
+            value: {{ .maxdischargepower }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40799 # SMA Modbus Profile: CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
+                type: writemultiple
+                decode: uint32
       - case: 2 # holddischarge
         set:
           source: sequence
           set:
           - source: const
-            value: 0 # Wirkleistungsvorgabe
+            value: 0 # no discharge
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40149 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSpt
+                address: 40799 # SMA Modbus Profile: CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
                 type: writemultiple
-                decode: int32
+                decode: uint32
           - source: const
-            value: 802 # aktiv (Act)
+            value: {{ .maxchargepower }} # PV charging allowed
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40795 # SMA Modbus Profile: CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
+                type: writemultiple
+                decode: uint32
+          - source: const
+            value: 803 # inaktiv (Ina)
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -109,6 +143,15 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
+                type: writemultiple
+                decode: uint32
+          - source: const
+            value: {{ .maxdischargepower }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40799 # SMA Modbus Profile: CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
                 type: writemultiple
                 decode: uint32
   {{- include "battery-params" . }}
