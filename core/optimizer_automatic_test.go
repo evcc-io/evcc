@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"testing"
 	"time"
 
@@ -16,7 +18,6 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -24,8 +25,6 @@ import (
 // enableAutomatic puts the optimizer in control for the duration of the test
 func enableAutomatic(t *testing.T) {
 	t.Helper()
-
-	sponsor.SetSubjectForTest(t, "test")
 
 	for _, k := range []string{keys.Experimental, keys.Optimizer} {
 		settings.SetBool(k, true)
@@ -271,7 +270,7 @@ func TestOptimizerPrioritySoc(t *testing.T) {
 		{"uncontrolled below prioritySoc", false, actionStop, below, 100, 0},
 		// a charge next to planned battery charging gives the battery priority, the vehicle gets the remainder
 		{"charge with planned battery charge", true, actionCharge, above, 0, 1000},
-		{"charge with partial planned battery charge", true, actionCharge, above, 0, 400},
+		{"charge with partial planned battery charge", true, actionCharge, above, -600, 400},
 		{"charge below prioritySoc with planned battery charge", true, actionCharge, below, 0, 1000},
 		{"charge with planned battery charge below threshold", true, actionCharge, above, -1000, suggestionThreshold},
 	} {
@@ -443,8 +442,8 @@ func TestBatteryModeUnmodelledCharging(t *testing.T) {
 		suggestion, res api.BatteryMode
 	}{
 		{api.BatteryCharge, api.BatteryCharge},
-		{api.BatteryNormal, api.BatteryHold},
-		{api.BatteryDischarge, api.BatteryHold},
+		{api.BatteryNormal, api.BatteryHoldDischarge},
+		{api.BatteryDischarge, api.BatteryHoldDischarge},
 	} {
 		site.setSuggestions(map[string]types.Suggestion{
 			batteryKey("bat"): {Action: tc.suggestion.String()},
@@ -476,7 +475,7 @@ func TestBatteryModeFixedDemandModelled(t *testing.T) {
 		{"smart cost", api.ModeSmart, false, 0, api.BatteryDischarge},
 		{"fast", api.ModeNow, false, 0, api.BatteryDischarge},
 		{"plan", api.ModeSmart, true, 0, api.BatteryDischarge},
-		{"min soc", api.ModeSmart, false, 80, api.BatteryHold},
+		{"min soc", api.ModeSmart, false, 80, api.BatteryHoldDischarge},
 	} {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
 		lp.status = api.StatusC
@@ -656,7 +655,7 @@ func TestOptimizerPlanActive(t *testing.T) {
 		lp.planLocked = PlanLock{Time: planTime, Soc: 60, Id: 1}
 		lp.setSuggestion(&types.Suggestion{Action: actionCharge})
 		lp.setOptimizerPlan(optimizerPlan{
-			rates:  api.Rates{slot(0), slot(4), slot(14)},
+			rates:  api.Rates{slot(0), slot(4), slot(15)},
 			energy: []float64{920, 920, 920},
 		})
 	}
@@ -718,12 +717,12 @@ func TestBatteryModesPerDevice(t *testing.T) {
 		},
 		optimizer: optimizerState{suggestions: map[string]types.Suggestion{
 			batteryKey("active"): {Action: api.BatteryNormal.String()},
-			batteryKey("idle"):   {Action: api.BatteryHold.String()},
+			batteryKey("idle"):   {Action: api.BatteryHoldDischarge.String()},
 		}},
 	}
 
 	activeCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
-	idleCon.EXPECT().SetBatteryMode(api.BatteryHold).Times(1)
+	idleCon.EXPECT().SetBatteryMode(api.BatteryHoldDischarge).Times(1)
 
 	for range 3 {
 		site.updateBatteryMode(false, false, api.Rate{})
@@ -744,7 +743,7 @@ func TestBatteryModesReleasedWithoutSuggestion(t *testing.T) {
 		log:                util.NewLogger("foo"),
 		batteryMeters:      []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "idle"}, idle)},
 		batteryMode:        api.BatteryNormal,
-		batteryModeApplied: map[string]api.BatteryMode{"idle": api.BatteryHold},
+		batteryModeApplied: map[string]api.BatteryMode{"idle": api.BatteryHoldDischarge},
 	}
 
 	idleCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
@@ -785,6 +784,87 @@ func TestBatteryModesHemsCurtailed(t *testing.T) {
 	idleCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
 
 	site.updateBatteryMode(false, false, api.Rate{})
+}
+
+type tariffSite struct {
+	*mockSite
+	tariff api.Tariff
+}
+
+func (s *tariffSite) GetTariff(api.TariffUsage) api.Tariff {
+	return s.tariff
+}
+
+// TestOptimizerPlanGap covers a running plan with a gap before the optimizer's next slot:
+// up to one slot is bridged instead of stopping and restarting the vehicle, unless the
+// optimizer skipped the slot for its price
+func TestOptimizerPlanGap(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		next   int       // index of the second plan slot
+		prices []float64 // per slot, the last one repeats
+		bridge bool
+	}{
+		{"equal price", 2, []float64{0.2}, true},
+		{"cheaper gap", 2, []float64{0.2, 0.1, 0.2}, true},
+		{"pricier gap", 2, []float64{0.2, 0.3, 0.2}, false},
+		{"two slots", 3, []float64{0.2}, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			clck := clock.NewMock()
+			now := clck.Now()
+
+			slot := func(i int) api.Rate {
+				return api.Rate{Start: now.Add(time.Duration(i) * tariff.SlotDuration), End: now.Add(time.Duration(i+1) * tariff.SlotDuration)}
+			}
+
+			var rates api.Rates
+			for i := range 16 {
+				r := slot(i)
+				r.Value = tc.prices[min(i, len(tc.prices)-1)]
+				rates = append(rates, r)
+			}
+
+			tf := api.NewMockTariff(ctrl)
+			tf.EXPECT().Rates().Return(rates, nil).AnyTimes()
+
+			lp := &Loadpoint{
+				log:        util.NewLogger("foo"),
+				clock:      clck,
+				charger:    api.NewMockCharger(ctrl),
+				pushChan:   make(chan messenger.Event, 1),
+				vehicle:    modelledVehicle(ctrl),
+				site:       &tariffSite{&mockSite{automatic: true}, tf},
+				status:     api.StatusC,
+				phases:     1,
+				minCurrent: minA,
+				maxCurrent: maxA,
+				vehicleSoc: 50,
+			}
+
+			// plan far enough away not to be deadline critical
+			planTime := now.Add(4 * time.Hour)
+			optimize := func() {
+				lp.planLocked = PlanLock{Time: planTime, Soc: 60, Id: 1}
+				lp.setSuggestion(&types.Suggestion{Action: actionCharge})
+				lp.setOptimizerPlan(optimizerPlan{
+					rates:  api.Rates{slot(0), slot(tc.next)},
+					energy: []float64{920, 920},
+				})
+			}
+
+			optimize()
+			assert.True(t, lp.plannerActive(), "first slot")
+			assert.False(t, lp.optimizerPlanGap(), "inside a slot")
+
+			// just after the first slot, like the solve at the slot boundary
+			clck.Add(tariff.SlotDuration + 18*time.Second)
+			optimize()
+			assert.Equal(t, tc.bridge, lp.plannerActive())
+			assert.Equal(t, tc.bridge, lp.optimizerPlanGap())
+		})
+	}
 }
 
 // TestOptimizerPlanAboveLimit covers a plan goal above the session soc limit (#34868):
@@ -915,5 +995,39 @@ func TestOptimizerPhaseGap(t *testing.T) {
 			assert.Equal(t, 1, lp.GetPhases())
 			assert.Equal(t, float64(maxA), lp.offeredCurrent)
 		})
+	}
+}
+
+// TestPendingSuggestionsAutomatic covers notifications: devices the optimizer
+// controls are not advised about what it applies itself
+func TestPendingSuggestionsAutomatic(t *testing.T) {
+	enableAutomatic(t)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.vehicle = modelledVehicle(gomock.NewController(t))
+
+	site := &Site{loadpoints: []*Loadpoint{lp}}
+	lp.site = site
+
+	site.setSuggestions(map[string]types.Suggestion{
+		batteryKey("bat"): {Action: api.BatteryCharge.String()},
+		loadpointKey(0):   {Action: actionCharge},
+	})
+
+	details := []batteryDetail{
+		{Type: batteryTypeBattery, Name: "bat"},
+		{Type: batteryTypeVehicle, loadpoint: new(int)},
+	}
+
+	for _, tc := range []struct {
+		level string
+		keys  []string
+	}{
+		{OptimizerAutomaticOff, []string{batteryKey("bat"), loadpointKey(0)}},
+		{OptimizerAutomaticBattery, []string{loadpointKey(0)}},
+		{OptimizerAutomaticFull, nil},
+	} {
+		settings.SetString(keys.OptimizerAutomatic, tc.level)
+		assert.ElementsMatch(t, tc.keys, slices.Collect(maps.Keys(site.pendingSuggestions(details))), tc.level)
 	}
 }

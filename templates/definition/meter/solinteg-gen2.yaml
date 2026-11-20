@@ -140,7 +140,7 @@ render: |
             address: 50000
             type: writesingle
             decode: uint16
-    - case: 2 # eco mode (hold)
+    - case: 2 # eco mode (holddischarge)
       set:
         source: const
         value: 258

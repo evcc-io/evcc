@@ -334,7 +334,8 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	if prevTime, ok := c.obsTime[res.ID]; ok && prevTime.After(res.Timestamp) {
+	prevTime, seen := c.obsTime[res.ID]
+	if seen && prevTime.After(res.Timestamp) {
 		// received observation is outdated, ignoring
 		return
 	}
@@ -407,6 +408,10 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			c.totalEnergy = data.MeterValueStop
 		}
 		if data.ID != c.sessionStart.ID {
+			break
+		}
+		// a reconnect replays the last completed session, which may predate the connected vehicle
+		if seen && prevTime.Equal(res.Timestamp) {
 			break
 		}
 		c.sessionEnergy = data.EnergyKwh

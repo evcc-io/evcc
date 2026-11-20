@@ -9,15 +9,21 @@ products:
   - brand: Compleo
     description:
       generic: eBox
-capabilities: ["mA", "meter", "dim"]
+capabilities: ["mA", "dim"]
 requirements:
   evcc: ["sponsorship"]
+caveats:
+  - description:
+      de: Die Wallbox liefert keine Ladeleistung. Der Wert wird geschätzt und kann bei geringer Last deutlich zu hoch sein.
+      en: The charger doesn't report charging power. The value is estimated and can be far too high at low load.
+    link: https://github.com/evcc-io/evcc/issues/6848
 discovery:
   hostname: ["ebox*"]
   mac: ["9C3066"]
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 1
 render: |
   type: innogy
   {{- include "modbus" . }}

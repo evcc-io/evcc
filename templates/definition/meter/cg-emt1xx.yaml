@@ -11,6 +11,7 @@ params:
     choice: ["pv", "charge"]
   - name: modbus
     choice: ["rs485"]
+    id: 1
 render: |
   type: custom
   power:

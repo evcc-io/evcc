@@ -277,7 +277,7 @@ render: |
             uri: {{ joinHostPort .host .port }}
             id: 1
             value: 124:0:InWRte
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

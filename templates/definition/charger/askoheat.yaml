@@ -24,6 +24,7 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 1
   - name: tempsensor
     type: choice
     choice: ["0", "1", "2", "3", "4"]

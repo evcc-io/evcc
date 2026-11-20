@@ -32,7 +32,15 @@ export type Template = {
   };
 };
 
-export type TemplateParamUsage = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
+export type TemplateParamUsage =
+  | "vehicle"
+  | "battery"
+  | "grid"
+  | "pv"
+  | "charger"
+  | "aux"
+  | "ext"
+  | "curtailer";
 
 // mirrors util/templates/paramtype.go
 export type TemplateParamType =
@@ -117,8 +125,8 @@ export function handleError(e: any, msg: string) {
   alert(message);
 }
 
-export function applyDefaultsFromTemplate(template: Template | null, values: DeviceValues) {
-  const params = template?.Params || [];
+// only displayed params: hidden ones must not end up in the stored config
+export function applyDefaultsFromTemplate(params: TemplateParam[], values: DeviceValues) {
   params.forEach((p) => {
     if (p.Type === "Bool") {
       // template defaults are strings, and configs stored before bool params

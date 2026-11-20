@@ -139,7 +139,7 @@ render: |
           headers:
           - content-type: application/json
           body: '{"value": 0}'
-      - case: 2 # hold
+      - case: 2 # holddischarge
         set:
           source: http
           uri: http://{{ .host }}/rest/channel/{{ .battery }}/SetActivePowerLessOrEquals

@@ -1417,6 +1417,54 @@
         }
       }
     },
+    "/optimizerriskprofile": {
+      "post": {
+        "operationId": "setOptimizerRiskProfile",
+        "summary": "Set optimizer risk profile",
+        "description": "Make the optimizer hedge against forecast errors. A slot may deliver less solar and need more energy than forecasted by the given shares, in at most `budget` slots per day.",
+        "tags": [
+          "experimental"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskProfile"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid risk profile."
+          }
+        }
+      },
+      "delete": {
+        "operationId": "removeOptimizerRiskProfile",
+        "summary": "Remove optimizer risk profile",
+        "description": "The optimizer plans on the forecasts as they are.",
+        "tags": [
+          "experimental"
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        }
+      }
+    },
     "/config/optimizerautomatic/{value}": {
       "post": {
         "operationId": "setOptimizerAutomatic",
@@ -3535,7 +3583,7 @@
         "enum": [
           "unknown",
           "normal",
-          "hold",
+          "holddischarge",
           "charge",
           "holdcharge",
           "discharge"
@@ -3621,6 +3669,29 @@
           "precondition"
         ]
       },
+      "RiskProfile": {
+        "description": "Forecast uncertainty the optimizer hedges against.",
+        "type": "object",
+        "properties": {
+          "solar": {
+            "description": "Share of the solar forecast a slot may fall short of, between 0 and 1.",
+            "type": "number"
+          },
+          "demand": {
+            "description": "Share of the demand forecast a slot may exceed, between 0 and 1.",
+            "type": "number"
+          },
+          "budget": {
+            "description": "15min slots per day that deviate adversely, above 0 up to 96.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "solar",
+          "demand",
+          "budget"
+        ]
+      },
       "OnboardingItem": {
         "description": "Setup checklist item.",
         "type": "string",
@@ -3683,6 +3754,41 @@
           "inactive",
           "enable",
           "disable"
+        ]
+      },
+      "PeriodStats": {
+        "description": "Energy stats of a loadpoint over a period, attributed per 15-minute slot like the energy page.",
+        "type": "object",
+        "properties": {
+          "energy": {
+            "description": "Energy used in Wh.",
+            "type": "number"
+          },
+          "pvEnergy": {
+            "description": "Energy from solar in Wh.",
+            "type": "number"
+          },
+          "batteryEnergy": {
+            "description": "Energy from the home battery in Wh.",
+            "type": "number"
+          },
+          "pricePerKWh": {
+            "description": "Average energy price per kWh in the configured currency.",
+            "type": "number",
+            "nullable": true
+          },
+          "price": {
+            "description": "Total cost in the configured currency.",
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "energy",
+          "pvEnergy",
+          "batteryEnergy",
+          "pricePerKWh",
+          "price"
         ]
       },
       "LoadpointSuggestion": {
@@ -3780,7 +3886,7 @@
             "type": "number"
           },
           "chargeRemainingEnergy": {
-            "description": "Estimated remaining energy in kWh.",
+            "description": "Estimated remaining energy in Wh.",
             "type": "number"
           },
           "chargeTotalImport": {
@@ -3795,7 +3901,7 @@
             }
           },
           "chargedEnergy": {
-            "description": "Energy charged in the current charging session in kWh.",
+            "description": "Energy charged in the current charging session in Wh.",
             "type": "number"
           },
           "chargerFeatureAutodetectDisabled": {
@@ -4064,13 +4170,13 @@
             "description": "Remaining time until the pending charge start or stop action executes, in seconds.",
             "type": "number"
           },
-          "last24hEnergy": {
-            "description": "Energy used in the last 24 hours in kWh.",
-            "type": "number"
+          "last24h": {
+            "$ref": "#/components/schemas/PeriodStats",
+            "description": "Energy stats of the last 24 hours."
           },
-          "last7dEnergy": {
-            "description": "Energy used in the last 7 days in kWh.",
-            "type": "number"
+          "last7d": {
+            "$ref": "#/components/schemas/PeriodStats",
+            "description": "Energy stats of the last 7 days."
           },
           "sessionCo2PerKWh": {
             "description": "Average CO₂ emissions of the current charging session in g/kWh.",
@@ -4078,7 +4184,7 @@
             "nullable": true
           },
           "sessionEnergy": {
-            "description": "Energy charged in the current charging session in kWh.",
+            "description": "Energy charged in the current charging session in Wh.",
             "type": "number"
           },
           "sessionPrice": {
@@ -4143,7 +4249,7 @@
             "type": "string"
           },
           "todayEnergy": {
-            "description": "Energy used since midnight in kWh.",
+            "description": "Energy used since midnight in Wh.",
             "type": "number"
           },
           "vehicleClimaterActive": {
@@ -4476,7 +4582,7 @@
             "type": "string",
             "enum": [
               "normal",
-              "hold",
+              "holddischarge",
               "charge",
               "holdcharge",
               "discharge"
@@ -6139,6 +6245,15 @@
               "type": "string"
             }
           },
+          "optimizerRiskProfile": {
+            "description": "Forecast uncertainty the optimizer hedges against. Null plans on the forecasts as they are.",
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RiskProfile"
+              }
+            ]
+          },
           "mcp": {
             "description": "Built-in MCP server is enabled.",
             "type": "boolean"
@@ -6532,7 +6647,7 @@
           "application/json": {
             "schema": {
               "type": "integer",
-              "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge, 5: discharge",
+              "description": "Battery mode. 0: unknown, 1: normal, 2: holddischarge, 3: charge, 4: holdcharge, 5: discharge",
               "minimum": 0,
               "maximum": 5
             }

@@ -938,6 +938,73 @@ func TestTotalEnergy_CompletedSession(t *testing.T) {
 	assert.Equal(t, 10008.0, total)
 }
 
+func TestChargingSession_ReconnectReplay(t *testing.T) {
+	stop := time.Now().Add(-2 * time.Hour)
+	start := stop.Add(-3 * time.Hour)
+	connected := stop.Add(time.Hour)
+
+	// meter stop below start plus energy, so a wrongly applied session energy shows in the total
+	session, err := json.Marshal(easee.ChargingSessionData{ID: 42, Start: start, Stop: stop, EnergyKwh: 11.4, MeterValueStart: 10000, MeterValueStop: 10005})
+	require.NoError(t, err)
+
+	// cloud replay order, the vehicle is connected again and has not charged yet
+	replay := []json.RawMessage{
+		createPayload(easee.CHARGER_OP_MODE, connected, easee.Integer, fmt.Sprintf("%d", easee.ModeAwaitingAuthentication)),
+		createPayload(easee.SESSION_ENERGY, connected, easee.Double, "0"),
+		createPayload(easee.CHARGING_SESSION, stop, easee.String, string(session)),
+		sessionStartPayload(t, start, easee.ChargingSessionStartData{ID: 42, Start: start, MeterValue: 10000}),
+	}
+
+	e := newEasee()
+	for range 3 { // startup, then stream reconnects
+		for _, obs := range replay {
+			e.ProductUpdate(obs)
+		}
+
+		charged, err := e.ChargedEnergy()
+		require.NoError(t, err)
+		assert.Equal(t, 0.0, charged)
+
+		total, err := e.TotalEnergy()
+		require.NoError(t, err)
+		assert.Equal(t, 10005.0, total)
+	}
+}
+
+func TestChargingSession_CompletedOnDisconnect(t *testing.T) {
+	start := time.Now().Add(-time.Hour)
+	stop := start.Add(30 * time.Minute)
+
+	session, err := json.Marshal(easee.ChargingSessionData{ID: 42, Start: start, Stop: stop, EnergyKwh: 8, MeterValueStart: 10000, MeterValueStop: 10008})
+	require.NoError(t, err)
+
+	for _, tc := range []struct {
+		name      string
+		modeFirst bool
+	}{
+		{"session before disconnect", false},
+		{"disconnect before session", true},
+	} {
+		e := newEasee()
+		e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, start, easee.Integer, fmt.Sprintf("%d", easee.ModeCharging)))
+		e.ProductUpdate(sessionStartPayload(t, start, easee.ChargingSessionStartData{ID: 42, Start: start, MeterValue: 10000}))
+		e.ProductUpdate(createPayload(easee.SESSION_ENERGY, start.Add(time.Minute), easee.Double, "7.9"))
+
+		disconnect := createPayload(easee.CHARGER_OP_MODE, stop.Add(time.Second), easee.Integer, fmt.Sprintf("%d", easee.ModeDisconnected))
+		if tc.modeFirst {
+			e.ProductUpdate(disconnect)
+		}
+		e.ProductUpdate(createPayload(easee.CHARGING_SESSION, stop, easee.String, string(session)))
+		if !tc.modeFirst {
+			e.ProductUpdate(disconnect)
+		}
+
+		charged, err := e.ChargedEnergy()
+		require.NoError(t, err)
+		assert.Equal(t, 8.0, charged, tc.name)
+	}
+}
+
 func TestTotalEnergy_RestartWhileCharging(t *testing.T) {
 	e := newEasee()
 	start := time.Now().Add(-time.Hour)

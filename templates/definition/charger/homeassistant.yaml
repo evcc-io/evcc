@@ -24,6 +24,7 @@ params:
     service: homeassistant/instances
     required: true
   - name: insecure
+  - name: timeout
   - name: status
     description:
       de: Ladestatus-Sensor
@@ -220,6 +221,7 @@ render: |
   type: homeassistant
   uri: {{ .uri }}
   insecure: {{ .insecure }}
+  timeout: {{ .timeout }}
   status: {{ .status }}
   statusA: {{ .statusA }}
   statusB: {{ .statusB }}

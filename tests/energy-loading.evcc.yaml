@@ -1,0 +1,44 @@
+interval: 0.1s
+
+site:
+  title: Energy Loading
+  meters:
+    grid: grid
+    pv: pv
+    battery: battery
+
+meters:
+  - name: grid
+    type: template
+    template: demo-meter
+    power: 1000
+  - name: pv
+    type: template
+    template: demo-meter
+    power: 2000
+  - name: battery
+    type: template
+    template: demo-battery
+    power: -1000
+    soc: 50
+
+loadpoints:
+  - title: Carport
+    charger: charger
+
+chargers:
+  - name: charger
+    type: template
+    template: demo-charger
+
+tariffs:
+  currency: EUR
+  grid:
+    type: fixed
+    price: 0.3
+  feedin:
+    type: fixed
+    price: 0.1
+  co2:
+    type: template
+    template: demo-co2-forecast

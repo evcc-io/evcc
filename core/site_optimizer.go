@@ -108,6 +108,15 @@ func (d batteryDetail) currentAction(site *Site) string {
 	return loadpointCurrentAction(site.loadpoints[*d.loadpoint])
 }
 
+// controlled returns true if the optimizer applies its suggestion to the device
+// itself. Must only be called for devices with a non-empty key.
+func (d batteryDetail) controlled(site *Site) bool {
+	if d.Type == batteryTypeBattery {
+		return site.Automatic()
+	}
+	return site.loadpoints[*d.loadpoint].optimizerControlled()
+}
+
 // batteryAction returns the battery's current mode for suggestion comparison.
 // A battery that was never switched (BatteryUnknown) is in normal operation.
 func (site *Site) batteryAction() string {
@@ -136,6 +145,14 @@ var errOptimizerNotReady = errors.New("battery measurements not ready")
 // slot duration so every slot starts on a fresh result. Advisory suggestions
 // only need one run per slot.
 const optimizerInterval = 5 * time.Minute
+
+// optimizerTrigger starts optimizerUpdateAsync in the background. Gating before
+// spawning keeps an inactive optimizer from leaving goroutines behind.
+func (site *Site) optimizerTrigger(force bool) {
+	if sponsor.IsAuthorized() && optimizerEnabled() {
+		go site.optimizerUpdateAsync(force)
+	}
+}
 
 // optimizerUpdateAsync runs the optimizer unless the last run is younger than
 // the mode's interval. Pass force to run regardless, e.g. when a changed setting
@@ -306,7 +323,7 @@ func (site *Site) optimizerUnlock() {
 	site.optimizer.mu.Unlock()
 
 	if site.optimizer.rerun.Load() {
-		go site.optimizerUpdateAsync(false)
+		site.optimizerTrigger(false)
 	}
 }
 

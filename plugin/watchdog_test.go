@@ -205,3 +205,29 @@ func TestWatchdogResetStopsInflightTick(t *testing.T) {
 		require.Falsef(t, stale.Load(), "iter %d: watchdog re-asserted old value after reset", iter)
 	}
 }
+
+func TestNewWatchDogFromConfigTimeout(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		other   map[string]any
+		wantErr string
+	}{
+		{name: "missing", other: map[string]any{}, wantErr: "timeout is required"},
+		{name: "zero", other: map[string]any{"timeout": "0s"}, wantErr: "timeout is required"},
+		{name: "negative", other: map[string]any{"timeout": "-1s"}, wantErr: "timeout is required"},
+		{name: "one nanosecond", other: map[string]any{"timeout": "1ns"}, wantErr: "timeout is required"},
+		{name: "ok", other: map[string]any{"timeout": "1s"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p, err := NewWatchDogFromConfig(t.Context(), tc.other)
+			if tc.wantErr != "" {
+				require.EqualError(t, err, tc.wantErr)
+				require.Nil(t, p)
+				return
+			}
+			require.NoError(t, err)
+			require.NotNil(t, p)
+			require.Equal(t, time.Second, p.(*watchdogPlugin).timeout)
+		})
+	}
+}

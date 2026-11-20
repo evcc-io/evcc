@@ -141,7 +141,7 @@ render: |
       address: 33139 # Battery capacity SOC
       type: input
       decode: uint16
-  # reserve soc per mode: normal minsoc, hold current soc, charge maxsoc
+  # reserve soc per mode: normal minsoc, holddischarge current soc, charge maxsoc
   limitsoc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -163,7 +163,7 @@ render: |
             address: 43110
             type: writesingle
             decode: uint16
-    - case: 2  # hold
+    - case: 2  # holddischarge
       set:
         source: const
         value: 17 # Bits 0+4: Self Use (1) + Battery Reserve (16)

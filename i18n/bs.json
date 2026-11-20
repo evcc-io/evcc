@@ -37,8 +37,8 @@
       "energy": "Energija",
       "gridCharge": "mrežno punjenje",
       "gridDischarge": "mrežno pražnjenje",
-      "hold": "pražnjenje zaključano",
       "holdCharge": "punjenje zaključano",
+      "holdDischarge": "pražnjenje zaključano",
       "ofTotal": "od {total}",
       "power": "Snaga",
       "soc": "Napunjenost"
@@ -70,8 +70,8 @@
       "action": {
         "charge": "Punjenje iz mreže",
         "discharge": "Pražnjenje u mrežu",
-        "hold": "Spriječi pražnjenje",
         "holdcharge": "Spriječi punjenje",
+        "holddischarge": "Spriječi pražnjenje",
         "normal": "Normalan rad"
       },
       "empty": "prazno",

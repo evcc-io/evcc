@@ -118,6 +118,8 @@ render: |
       | .daily as $d
       | [ range(0; ($h.time | length))
           | . as $i
+          | select($h.global_tilted_irradiance_instant[$i] != null)
+          | select($h.temperature_2m[$i] != null)
           | $h.time[$i] as $time
           | ($i / 96 | floor) as $day
           | {

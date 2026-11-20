@@ -23,7 +23,7 @@ params:
       en: Max Discharge Current
       de: Max Entladestrom
     help:
-      en: Battery max discharge current in A, written back when leaving hold mode. Inverter default is 50 A for H3-Pro/Smart (26 A for H3).
+      en: Battery max discharge current in A, written back when leaving holddischarge mode. Inverter default is 50 A for H3-Pro/Smart (26 A for H3).
       de: Maximaler Batterieentladestrom in A, wird beim Verlassen des Haltemodus zurückgeschrieben. Werkseinstellung 50 A bei H3-Pro/Smart (26 A bei H3).
   - name: maxchargecurrent
     default: 50
@@ -180,7 +180,7 @@ render: |
           # 46609 is the Off-Grid (EPS) reserve and is left to the user
           - source: const
             value: {{ .minsoc }} # written before Maximum SoC: the inverter rejects a
-            # Maximum SoC at or below the On-Grid reserve, which earlier versions raised in hold mode
+            # Maximum SoC at or below the On-Grid reserve, which earlier versions raised in holddischarge mode
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -198,7 +198,7 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: {{ mul .maxdischargecurrent 10 }} # 0.1 A, restores the limit after hold
+            value: {{ mul .maxdischargecurrent 10 }} # 0.1 A, restores the limit after holddischarge
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -215,7 +215,7 @@ render: |
                 address: 46607 # Battery max charge current
                 type: writesingle
                 encoding: uint16
-      - case: 2 # hold - stop battery discharge
+      - case: 2 # holddischarge - stop battery discharge
         set:
           source: sequence
           set:
@@ -343,7 +343,7 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: {{ mul .maxdischargecurrent 10 }} # restores the limit when switching from hold
+            value: {{ mul .maxdischargecurrent 10 }} # restores the limit when switching from holddischarge
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
