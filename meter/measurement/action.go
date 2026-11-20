@@ -10,8 +10,9 @@ import (
 )
 
 type Dimmer struct {
-	Dim    *plugin.Config // optional
-	Dimmed *plugin.Config // optional
+	Dim      *plugin.Config // optional
+	Dimmed   *plugin.Config // optional
+	DimPower float64        // optional residual consumption power in W while dimmed
 }
 
 func (cc *Dimmer) Configure(ctx context.Context) (
@@ -42,7 +43,12 @@ func (cc *Dimmer) Implement(ctx context.Context, i implement.Caps) error {
 		return err
 	}
 
-	implement.May(i, implement.Dimmer(dimS, dimmedG))
+	if dimS != nil {
+		// plugin dimmers cannot enforce a limit, the configured value is declarative
+		setDim := func(dim bool, _ float64) error { return dimS(dim) }
+		dimPower := func() float64 { return cc.DimPower }
+		implement.May(i, implement.Dimmer(setDim, dimPower, dimmedG))
+	}
 
 	return nil
 }

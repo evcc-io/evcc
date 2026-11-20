@@ -26,8 +26,10 @@ params:
     help:
       de: Die vom Gerät gemeldete optionale Leistungsaufnahme nicht als Min-/Max-Leistung verwenden.
       en: Do not use the device's announced optional power consumption as min/max power.
+  - name: dimpower
 render: |
   type: eebus-ohpcf
+  dimpower: {{ .dimpower }}
   {{ include "eebus" . }}
   reboost: {{ .reboost }}
   disablepowerlimiter: {{ .disablepowerlimiter }}

@@ -188,6 +188,10 @@ func (d *dumper) Dump(name string, v any) {
 			dimmed, err := v.Dimmed()
 			return fmt.Sprintf("%t", dimmed), err
 		})
+
+		if p := v.DimPower(); p > 0 {
+			fmt.Fprintf(w, "Dim power:\t%.0fW\t\t\n", p)
+		}
 	}
 
 	if v, ok := api.Cap[api.Curtailer](v); ok {

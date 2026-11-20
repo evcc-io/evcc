@@ -211,24 +211,29 @@ func (i *iCurtailer) SetCurtailPercent(p0 int) error {
 	return i.curtailer1(p0)
 }
 
-func Dimmer(dimmer0 func(bool) error, dimmer1 func() (bool, error)) api.Dimmer {
-	if dimmer0 == nil || dimmer1 == nil {
+func Dimmer(dimmer0 func(bool, float64) error, dimmer1 func() float64, dimmer2 func() (bool, error)) api.Dimmer {
+	if dimmer0 == nil || dimmer1 == nil || dimmer2 == nil {
 		return nil
 	}
-	return &iDimmer{dimmer0, dimmer1}
+	return &iDimmer{dimmer0, dimmer1, dimmer2}
 }
 
 type iDimmer struct {
-	dimmer0 func(bool) error
-	dimmer1 func() (bool, error)
+	dimmer0 func(bool, float64) error
+	dimmer1 func() float64
+	dimmer2 func() (bool, error)
 }
 
-func (i *iDimmer) Dim(p0 bool) error {
-	return i.dimmer0(p0)
+func (i *iDimmer) Dim(p0 bool, p1 float64) error {
+	return i.dimmer0(p0, p1)
+}
+
+func (i *iDimmer) DimPower() float64 {
+	return i.dimmer1()
 }
 
 func (i *iDimmer) Dimmed() (bool, error) {
-	return i.dimmer1()
+	return i.dimmer2()
 }
 
 func Identifier(identifier0 func() ([]string, error)) api.Identifier {

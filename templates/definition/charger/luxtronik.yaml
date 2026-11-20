@@ -63,8 +63,10 @@ params:
       en: Heating temperature boost
     default: 0.0
     example: 2.0
+  - name: dimpower
 render: |
   type: sgready
+  dimpower: {{ .dimpower }}
   {{- $heatint := mulf .heatoffset 10.0 | int64 }} # scale user input (float) and cast to int for comparison operations
   {{- $waterint := mulf .wwoffset 10.0 | int64 }} # scale user input (float) and cast to int for comparison operations
   getmode:

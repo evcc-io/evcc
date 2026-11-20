@@ -85,7 +85,10 @@ func (c *EEBus) egLpcUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface)
 		c.egLpcEntity = entity
 
 		// [LPC-913]: state the limit to the newly available CS
-		go eebus.AssertLimit(c.ctx, c.log, func() error { return c.dim(c.lastDimmed()) })
+		go func() {
+			eebus.AssertLimit(c.ctx, c.log, c.restateDim)
+			eebus.WriteFailsafeConsumptionLimit(c.ctx, c.log, c.eg.EgLPCInterface, entity, c.dimPower)
+		}()
 	}
 }
 

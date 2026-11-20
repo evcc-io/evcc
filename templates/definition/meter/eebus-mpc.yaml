@@ -14,7 +14,9 @@ params:
   - name: usage
     choice: ["charge"]
   - preset: eebus
+  - name: dimpower
 render: |
   type: eebus
+  dimpower: {{ .dimpower }}
   {{ include "eebus" . }}
   usage: {{ .usage }}

@@ -148,6 +148,7 @@ type Loadpoint struct {
 	vehicleIdentifier   string
 
 	charger          api.Charger
+	dimApplied       dimState // last applied HEMS dim decision
 	chargeTimer      api.ChargeTimer
 	chargeRater      api.ChargeRater
 	chargedAtStartup float64 // session energy at startup
@@ -2546,7 +2547,7 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64, dim *bool) {
+func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64, dim *dimState) {
 	// hold battery boost when SOC drops below the limit: stop draining the battery, but
 	// keep the vehicle prioritised over recharging it (via sitePower priorityAdjustment)
 	// until the vehicle disconnects or the limit is relaxed (see SetBatteryBoostLimit).
@@ -2599,17 +2600,20 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 		}
 
 		if dim != nil {
-			if *dim != dimmed {
-				if err := dimmer.Dim(*dim); err != nil {
+			// re-apply while dimmed if the limit decision changed
+			if dim.active != dimmed || dim.active && lp.dimApplied != *dim {
+				limit := dim.limit(dimmer)
+				if err := dimmer.Dim(dim.active, limit); err != nil {
 					lp.log.ERROR.Printf("dim: %v", err)
 					return
 				}
 
-				lp.publish(keys.Dimmed, *dim)
-				lp.log.INFO.Printf("§14a dim: %t", *dim)
+				lp.dimApplied = *dim
+				lp.publish(keys.Dimmed, dim.active)
+				lp.log.INFO.Printf("§14a dim: %t (%.0fW)", dim.active, limit)
 			}
 
-			if *dim {
+			if dim.active {
 				return
 			}
 		}

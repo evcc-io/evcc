@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"math"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -140,7 +141,11 @@ func (m *dimmableMeter) Dimmed() (bool, error) {
 	return m.dimmed, m.getErr
 }
 
-func (m *dimmableMeter) Dim(dim bool) error {
+func (m *dimmableMeter) DimPower() float64 {
+	return 0
+}
+
+func (m *dimmableMeter) Dim(dim bool, _ float64) error {
 	m.dimCalls = append(m.dimCalls, dim)
 	if m.dimErr != nil {
 		return m.dimErr
@@ -160,23 +165,23 @@ func TestDimMetersCache(t *testing.T) {
 	m := &dimmableMeter{}
 	site := dimSite(m)
 
-	require.NoError(t, site.dimMeters(true))
+	require.NoError(t, site.dimMeters(dimState{active: true}))
 	assert.Equal(t, []bool{true}, m.dimCalls)
 	assert.Equal(t, 1, m.gets)
 
 	for range 3 {
-		require.NoError(t, site.dimMeters(true))
+		require.NoError(t, site.dimMeters(dimState{active: true}))
 	}
 	assert.Equal(t, []bool{true}, m.dimCalls)
 	assert.Equal(t, 1, m.gets)
 
-	require.NoError(t, site.dimMeters(false))
+	require.NoError(t, site.dimMeters(dimState{}))
 	assert.Equal(t, []bool{true, false}, m.dimCalls)
 
 	// failed write is retried
 	m.dimErr = errors.New("nope")
-	require.Error(t, site.dimMeters(true))
-	require.Error(t, site.dimMeters(true))
+	require.Error(t, site.dimMeters(dimState{active: true}))
+	require.Error(t, site.dimMeters(dimState{active: true}))
 	assert.Equal(t, []bool{true, false, true, true}, m.dimCalls)
 }
 
@@ -186,10 +191,48 @@ func TestDimMetersNotAvailable(t *testing.T) {
 	site := dimSite(m)
 
 	for range 3 {
-		require.NoError(t, site.dimMeters(true))
+		require.NoError(t, site.dimMeters(dimState{active: true}))
 	}
 	assert.Equal(t, []bool{true}, m.dimCalls)
 
-	require.NoError(t, site.dimMeters(false))
+	require.NoError(t, site.dimMeters(dimState{}))
 	assert.Equal(t, []bool{true, false}, m.dimCalls)
+}
+
+// A dimmer appearing later receives the current state although the state is unchanged.
+func TestDimMetersNewDimmer(t *testing.T) {
+	m1 := &dimmableMeter{}
+	site := dimSite(m1)
+
+	require.NoError(t, site.dimMeters(dimState{active: true}))
+	assert.Equal(t, []bool{true}, m1.dimCalls)
+
+	m2 := &dimmableMeter{}
+	site.auxMeters = append(site.auxMeters, config.NewStaticDevice[api.Meter](config.Named{}, m2))
+
+	require.NoError(t, site.dimMeters(dimState{active: true}))
+	assert.Equal(t, []bool{true}, m2.dimCalls)
+}
+
+type dimPowerMeter struct {
+	dimmableMeter
+	power float64
+}
+
+func (m *dimPowerMeter) DimPower() float64 {
+	return m.power
+}
+
+func TestDimPowerInvalid(t *testing.T) {
+	for _, p := range []float64{-1, math.NaN(), math.Inf(1)} {
+		assert.Zero(t, dimPower(&dimPowerMeter{power: p}), p)
+		assert.Zero(t, dimState{active: true}.limit(&dimPowerMeter{power: p}), p)
+	}
+	assert.Equal(t, 4200.0, dimPower(&dimPowerMeter{power: 4200}))
+}
+
+// Disabled loadpoints are kept as nil entries.
+func TestDimmersSkipsDisabledLoadpoint(t *testing.T) {
+	site := &Site{loadpoints: []*Loadpoint{nil}}
+	assert.Empty(t, site.dimmers())
 }

@@ -32,8 +32,10 @@ params:
     description:
       de: Basis-Topic des OneKey-Geräts
       en: Base topic of the OneKey device
+  - name: dimpower
 render: |
   type: sgready
+  dimpower: {{ .dimpower }}
   setmode:
     source: mqtt
     {{- include "mqtt" . | indent 2 }}

@@ -37,6 +37,8 @@ type SgReady struct {
 	modeS func(int64) error
 	modeG func() (int64, error)
 
+	dimPower float64 // declared residual consumption power while dimmed
+
 	// optional power setter for devices that support SGReady with power envelope
 	power     int64
 	lp        loadpoint.API
@@ -61,6 +63,7 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		SetMode                 plugin.Config
 		GetMode                 *plugin.Config // optional
 		SetMaxPower             *plugin.Config // optional
+		DimPower                float64        // optional
 		measurement.Temperature `mapstructure:",squash"`
 		measurement.Energy      `mapstructure:",squash"`
 	}{
@@ -107,6 +110,7 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 	if err != nil {
 		return nil, err
 	}
+	res.dimPower = cc.DimPower
 
 	powerG, energyG, returnG, err := cc.Energy.Configure(ctx)
 	if err != nil {
@@ -189,8 +193,13 @@ func (wb *SgReady) Dimmed() (bool, error) {
 	return mode == Dim, err
 }
 
-// Dimm implements the api.Dimmer interface
-func (wb *SgReady) Dim(dim bool) error {
+// DimPower implements the api.Dimmer interface
+func (wb *SgReady) DimPower() float64 {
+	return wb.dimPower
+}
+
+// Dim implements the api.Dimmer interface. SG Ready cannot enforce a limit, the dim mode reduces consumption device-side.
+func (wb *SgReady) Dim(dim bool, _ float64) error {
 	mode := Normal
 	if dim {
 		mode = Dim

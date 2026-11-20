@@ -15,8 +15,10 @@ params:
   - name: tempsource
     type: choice
     choice: ["warmwater", "buffer"]
+  - name: dimpower
 render: |
   type: sgready
+  dimpower: {{ .dimpower }}
   getmode:
     source: go
     script: |

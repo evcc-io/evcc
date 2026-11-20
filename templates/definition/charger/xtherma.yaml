@@ -10,8 +10,10 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 1
+  - name: dimpower
 render: |
   type: heatpump
+  dimpower: {{ .dimpower }}
   setmaxpower:
     source: watchdog
     timeout: 120s
