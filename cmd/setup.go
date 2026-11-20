@@ -28,7 +28,6 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
 	coresettings "github.com/evcc-io/evcc/core/settings"
-	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/curtailer"
 	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/db/settings"
@@ -876,7 +875,7 @@ func configureGo(conf []globalconfig.Go) error {
 // setup HEMS
 // configureGridConnectionPoint publishes the grid meter via EEBus MGCP for downstream energy managers.
 // An EEBus grid meter is not re-published since the grid connection point is already on the network.
-func configureGridConnectionPoint(site *core.Site, tee *util.Tee) error {
+func configureGridConnectionPoint(site *core.Site, tee *util.Tee, interval time.Duration) error {
 	srv, err := eebus.Instance()
 	if err != nil || site == nil || site.GetGridMeterRef() == "" {
 		return nil
@@ -897,13 +896,11 @@ func configureGridConnectionPoint(site *core.Site, tee *util.Tee) error {
 		return err
 	}
 
-	go func(in <-chan util.Param) {
-		for p := range in {
-			if m, ok := p.Val.(types.Measurement); ok && p.Key == keys.Grid && p.Loadpoint == nil {
-				gcp.Update(m)
-			}
-		}
-	}(tee.Attach())
+	ctx, cancel := context.WithCancel(context.Background())
+	shutdown.Register(cancel)
+
+	// values turn invalid once the grid meter missed a few cycles
+	go gcp.Run(ctx, tee.Attach(), 3*interval)
 
 	return nil
 }

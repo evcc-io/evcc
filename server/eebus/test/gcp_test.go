@@ -62,7 +62,8 @@ func createEMS(ctx context.Context, t *testing.T, remoteSki string) *ems {
 }
 
 func (h *ems) onEvent(_ string, _ spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event api.EventType) {
-	if event == mgcp.UseCaseSupportUpdate && entity != nil {
+	// the CEM entity also lists MGCP, as monitoring appliance
+	if event == mgcp.UseCaseSupportUpdate && entity != nil && entity.EntityType() == model.EntityTypeTypeGridConnectionPointOfPremises {
 		h.mu.Lock()
 		h.entity = entity
 		h.mu.Unlock()
@@ -141,29 +142,37 @@ func TestGridConnectionPoint(t *testing.T) {
 		Voltages:     []float64{230, 231, 232},
 	})
 
-	require.Eventually(t, func() bool {
-		p, err := h.ucmgcp.Power(entity)
-		return err == nil && p == -1500
-	}, 30*time.Second, 100*time.Millisecond, "power")
+	assert.EventuallyWithT(t, func(c *assert.CollectT) {
+		power, err := h.ucmgcp.Power(entity)
+		assert.NoError(c, err)
+		assert.Equal(c, -1500.0, power)
 
-	require.Eventually(t, func() bool {
-		v, err := h.ucmgcp.VoltagePerPhase(entity)
-		return err == nil && len(v) == 3
-	}, 10*time.Second, 100*time.Millisecond, "voltages")
+		energy, err := h.ucmgcp.EnergyConsumed(entity)
+		assert.NoError(c, err)
+		assert.Equal(c, 12500.0, energy)
 
-	energy, err := h.ucmgcp.EnergyConsumed(entity)
-	require.NoError(t, err)
-	assert.Equal(t, 12500.0, energy)
+		feedIn, err := h.ucmgcp.EnergyFeedIn(entity)
+		assert.NoError(c, err)
+		assert.Equal(c, 3250.0, feedIn)
 
-	feedIn, err := h.ucmgcp.EnergyFeedIn(entity)
-	require.NoError(t, err)
-	assert.Equal(t, 3250.0, feedIn)
+		currents, err := h.ucmgcp.CurrentPerPhase(entity)
+		assert.NoError(c, err)
+		assert.Equal(c, []float64{-2, -2.5, -2}, currents)
 
-	currents, err := h.ucmgcp.CurrentPerPhase(entity)
-	require.NoError(t, err)
-	assert.Equal(t, []float64{-2, -2.5, -2}, currents)
+		voltages, err := h.ucmgcp.VoltagePerPhase(entity)
+		assert.NoError(c, err)
+		assert.Equal(c, []float64{230, 231, 232}, voltages)
+	}, 30*time.Second, 100*time.Millisecond, "values")
 
-	voltages, err := h.ucmgcp.VoltagePerPhase(entity)
-	require.NoError(t, err)
-	assert.Equal(t, []float64{230, 231, 232}, voltages)
+	// a missing reading is restated as invalid instead of remaining current
+	gcp.Update(types.Measurement{Power: -1400, ReturnEnergy: new(3.5)})
+
+	assert.EventuallyWithT(t, func(c *assert.CollectT) {
+		feedIn, err := h.ucmgcp.EnergyFeedIn(entity)
+		assert.NoError(c, err)
+		assert.Equal(c, 3500.0, feedIn)
+
+		_, err = h.ucmgcp.EnergyConsumed(entity)
+		assert.Error(c, err)
+	}, 30*time.Second, 100*time.Millisecond, "missing value")
 }

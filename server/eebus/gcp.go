@@ -1,7 +1,9 @@
 package eebus
 
 import (
+	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	ucapi "github.com/enbility/eebus-go/usecases/api"
@@ -9,6 +11,7 @@ import (
 	"github.com/enbility/spine-go/model"
 	"github.com/enbility/spine-go/spine"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util"
 )
@@ -22,6 +25,11 @@ type GridConnectionPoint struct {
 	log                *util.Logger
 	uc                 ucapi.GcpMGCPInterface
 	currents, voltages bool // scenarios registered at creation; their update helpers panic otherwise
+
+	mu      sync.Mutex
+	last    types.Measurement // last known values, restated with error state while unavailable
+	updated time.Time
+	stale   bool
 }
 
 // gcpScenarios returns the optional MGCP scenarios the meter supports. The use case requires
@@ -93,33 +101,103 @@ func (c *EEBus) AddGridConnectionPoint(meter api.Meter) (*GridConnectionPoint, e
 	return &GridConnectionPoint{log: c.log, uc: uc, currents: currents, voltages: voltages}, nil
 }
 
-// Update publishes the grid measurement
+// Update publishes the grid measurement. Values missing from it are restated with error state.
 func (g *GridConnectionPoint) Update(m types.Measurement) {
-	now := time.Now()
+	g.mu.Lock()
+	defer g.mu.Unlock()
 
-	data := []ucapi.UpdateData{g.uc.UpdateDataPowerTotal(m.Power, &now, nil)}
+	g.updated = time.Now()
+	g.stale = false
+	g.publish(m, g.last, false)
+
+	if m.Energy == nil {
+		m.Energy = g.last.Energy
+	}
+	if m.ReturnEnergy == nil {
+		m.ReturnEnergy = g.last.ReturnEnergy
+	}
+	if len(m.Currents) != 3 {
+		m.Currents = g.last.Currents
+	}
+	if len(m.Voltages) != 3 {
+		m.Voltages = g.last.Voltages
+	}
+	g.last = m
+}
+
+// invalidate restates all values with error state once no measurement arrived within timeout
+func (g *GridConnectionPoint) invalidate(timeout time.Duration) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	if g.stale || g.updated.IsZero() || time.Since(g.updated) < timeout {
+		return
+	}
+
+	g.stale = true
+	g.publish(types.Measurement{}, g.last, true)
+}
+
+// Run publishes the grid measurements received from in and invalidates them if the grid meter stops updating
+func (g *GridConnectionPoint) Run(ctx context.Context, in <-chan util.Param, timeout time.Duration) {
+	tick := time.NewTicker(timeout / 2)
+	defer tick.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case p := <-in:
+			if m, ok := p.Val.(types.Measurement); ok && p.Key == keys.Grid && p.Loadpoint == nil {
+				g.Update(m)
+			}
+		case <-tick.C:
+			g.invalidate(timeout)
+		}
+	}
+}
+
+// publish writes the values of m, falling back to last with error state for missing values
+func (g *GridConnectionPoint) publish(m, last types.Measurement, stale bool) {
+	now := time.Now()
+	errState := new(model.MeasurementValueStateTypeError)
+
+	state := func(missing bool) *model.MeasurementValueStateType {
+		if stale || missing {
+			return errState
+		}
+		return nil
+	}
+
+	var data []ucapi.UpdateData
+
+	power := m.Power
+	if stale {
+		power = last.Power
+	}
+	data = append(data, g.uc.UpdateDataPowerTotal(power, &now, state(false)))
 
 	// MGCP energy is in Wh
-	if m.Energy != nil {
-		data = append(data, g.uc.UpdateDataEnergyConsumed(*m.Energy*1e3, &now, nil, nil, nil))
+	if v, missing := pick(m.Energy, last.Energy); v != nil {
+		data = append(data, g.uc.UpdateDataEnergyConsumed(*v*1e3, &now, state(missing), nil, nil))
 	}
-	if m.ReturnEnergy != nil {
-		data = append(data, g.uc.UpdateDataEnergyFeedIn(*m.ReturnEnergy*1e3, &now, nil, nil, nil))
+	if v, missing := pick(m.ReturnEnergy, last.ReturnEnergy); v != nil {
+		data = append(data, g.uc.UpdateDataEnergyFeedIn(*v*1e3, &now, state(missing), nil, nil))
 	}
 
-	if g.currents && len(m.Currents) == 3 {
+	if v, missing := pickPhases(m.Currents, last.Currents); g.currents && v != nil {
 		data = append(data,
-			g.uc.UpdateDataCurrentPhaseA(m.Currents[0], &now, nil),
-			g.uc.UpdateDataCurrentPhaseB(m.Currents[1], &now, nil),
-			g.uc.UpdateDataCurrentPhaseC(m.Currents[2], &now, nil),
+			g.uc.UpdateDataCurrentPhaseA(v[0], &now, state(missing)),
+			g.uc.UpdateDataCurrentPhaseB(v[1], &now, state(missing)),
+			g.uc.UpdateDataCurrentPhaseC(v[2], &now, state(missing)),
 		)
 	}
 
-	if g.voltages && len(m.Voltages) == 3 {
+	if v, missing := pickPhases(m.Voltages, last.Voltages); g.voltages && v != nil {
 		data = append(data,
-			g.uc.UpdateDataVoltagePhaseA(m.Voltages[0], &now, nil),
-			g.uc.UpdateDataVoltagePhaseB(m.Voltages[1], &now, nil),
-			g.uc.UpdateDataVoltagePhaseC(m.Voltages[2], &now, nil),
+			g.uc.UpdateDataVoltagePhaseA(v[0], &now, state(missing)),
+			g.uc.UpdateDataVoltagePhaseB(v[1], &now, state(missing)),
+			g.uc.UpdateDataVoltagePhaseC(v[2], &now, state(missing)),
 		)
 	}
 
@@ -134,4 +212,21 @@ func (g *GridConnectionPoint) Update(m types.Measurement) {
 	if err := g.uc.Update(supported...); err != nil {
 		g.log.WARN.Printf("mgcp update: %v", err)
 	}
+}
+
+func pick(v, last *float64) (*float64, bool) {
+	if v != nil {
+		return v, false
+	}
+	return last, true
+}
+
+func pickPhases(v, last []float64) ([]float64, bool) {
+	if len(v) == 3 {
+		return v, false
+	}
+	if len(last) == 3 {
+		return last, true
+	}
+	return nil, true
 }

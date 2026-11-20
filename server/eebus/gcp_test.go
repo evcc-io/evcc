@@ -2,8 +2,10 @@ package eebus
 
 import (
 	"testing"
+	"time"
 
 	"github.com/enbility/eebus-go/usecases/mocks"
+	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util"
@@ -59,4 +61,29 @@ func TestGridConnectionPointUpdateWithoutPhases(t *testing.T) {
 
 	g := &GridConnectionPoint{log: util.NewLogger("test"), uc: uc}
 	g.Update(types.Measurement{Currents: []float64{1, 2, 3}, Voltages: []float64{230, 230, 230}})
+}
+
+// Without a fresh measurement the last values are restated once with error state.
+func TestGridConnectionPointInvalidate(t *testing.T) {
+	data := mocks.NewUpdateData(t)
+	data.EXPECT().Supported().Return(true)
+
+	uc := mocks.NewGcpMGCPInterface(t)
+	uc.EXPECT().Update(mock.Anything).Return(nil)
+
+	g := &GridConnectionPoint{log: util.NewLogger("test"), uc: uc}
+
+	uc.EXPECT().UpdateDataPowerTotal(-1500.0, mock.Anything, (*model.MeasurementValueStateType)(nil)).Return(data).Once()
+	g.Update(types.Measurement{Power: -1500})
+
+	g.invalidate(time.Minute)
+
+	g.updated = time.Now().Add(-time.Hour)
+	uc.EXPECT().UpdateDataPowerTotal(-1500.0, mock.Anything, mock.MatchedBy(func(s *model.MeasurementValueStateType) bool {
+		return s != nil && *s == model.MeasurementValueStateTypeError
+	})).Return(data).Once()
+	g.invalidate(time.Minute)
+
+	// stale state is only written once
+	g.invalidate(time.Minute)
 }
