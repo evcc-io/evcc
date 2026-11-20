@@ -1629,8 +1629,7 @@
         "continuousCo2Description": "Wählt die sauberste unterbrechungsfreie Folge von Zeitfenstern.",
         "continuousPriceDescription": "Wählt die günstigste unterbrechungsfreie Folge von Zeitfenstern.",
         "disabledDescription": "Benötigt einen dynamischen Tarif oder eine CO₂-Vorhersage.",
-        "label": "Optimierung",
-        "optimizerDescription": "Der {optimizer} wählt die günstigsten Zeitfenster. Kann zu mehreren Starts und Stopps führen."
+        "label": "Optimierung"
       },
       "planNumber": "Plan {number}",
       "precondition": {
@@ -1647,7 +1646,8 @@
       "repeatingPlans": "Wiederholende Pläne",
       "selectAll": "Alle wählen",
       "strategy": {
-        "label": "Strategie"
+        "label": "Strategie",
+        "optimizerHint": "Der {optimizer} berücksichtigt Strategie-Einstellungen noch nicht und wählt immer die günstigsten Zeitfenster. Stelle die automatische Steuerung auf „Hausbatterie“, falls du sie brauchst."
       },
       "time": "Zeit",
       "title": "Plan",

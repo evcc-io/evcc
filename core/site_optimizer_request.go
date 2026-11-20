@@ -370,7 +370,8 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 		// add smartcost limit, precondition and plan goal, if configured
 		demand = applySmartCostLimit(lp, demand, planner, minLen)
 		if automatic {
-			demand = applyPrecondition(lp, demand, minLen)
+			// TODO re-enable once late charging is supported, see evcc-io/optimizer#336
+			// demand = applyPrecondition(lp, demand, minLen)
 			site.applyPlanGoal(lp, &bat, minLen)
 		}
 	}
