@@ -121,7 +121,7 @@ protocols: [websocket, http] # state via WebSocket, commands via HTTP
 
 - Devices reached in the local network, whatever the protocol
 - OCPP: the charger connects to evcc, evcc opens no outbound connection
-- Local bridges that talk to a cloud themselves: `teslamate`, `homeassistant`, `volvo2mqtt`
+- Local bridges that talk to a cloud themselves: `teslamate`, `homeassistant`, `mg2mqtt`
 - Cloud account needed for setup only: `tuya` (one-time local key retrieval)
 
 **Example**:

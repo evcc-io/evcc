@@ -11,6 +11,7 @@ requirements:
       Es wird ein kostenloses User Access Token benötigt.
 capabilities: ["battery-control"]
 protocols: [http]
+cloud: true
 params:
   - name: usage
     choice: ["battery"]
