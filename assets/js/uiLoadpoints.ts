@@ -62,8 +62,20 @@ export const convertToUiLoadpoints = (
     } satisfies UiLoadpoint;
   });
 
-  // Sort by order (loadpoints with no order go to the end)
-  return mappedLoadpoints.sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
+  // Order: either as added (server order, per-device override wins) or by loadpoint priority.
+  // `id` was captured as originalIndex + 1 *before* sorting, and every consumer reads it from the
+  // object — so reordering the display can never misaddress an API call. The server order, the API
+  // index and the MQTT topics stay untouched; this is presentation only.
+  const manualOrder = (a: UiLoadpoint, b: UiLoadpoint) =>
+    (a.order ?? Infinity) - (b.order ?? Infinity);
+  const byPriority = settings.loadpointOrderMode === "priority";
+  return mappedLoadpoints.sort((a, b) => {
+    if (byPriority) {
+      const priorityDiff = (b.priority ?? 0) - (a.priority ?? 0);
+      if (priorityDiff !== 0) return priorityDiff;
+    }
+    return manualOrder(a, b);
+  });
 };
 
 export const getLoadpointOrder = (id: string): number | null => {

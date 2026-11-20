@@ -2131,6 +2131,10 @@
       "help": "Reihenfolge und Sichtbarkeit für die Benutzeroberfläche ändern.",
       "hide": "{title} ausblenden",
       "label": "Ladepunkte",
+      "orderMode": "Reihenfolge der Ladepunkte",
+      "orderModeAdded": "wie angelegt",
+      "orderModeHelp": "„wie angelegt“ behält die Konfigurationsreihenfolge und lässt einzelne Punkte verschieben; „nach Priorität“ sortiert nach der Priorität des Ladepunkts und nutzt die manuelle Reihenfolge nur innerhalb gleicher Priorität.",
+      "orderModePriority": "nach Priorität",
       "show": "{title} anzeigen"
     },
     "sponsorToken": {

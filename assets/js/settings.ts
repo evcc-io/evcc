@@ -14,6 +14,7 @@ const SETTINGS_ENERGYFLOW_LOADPOINTS = "settings_energyflow_loadpoints";
 const SETTINGS_ENERGYFLOW_HEATING = "settings_energyflow_heating";
 const SETTINGS_ENERGYFLOW_CONSUMERS = "settings_energyflow_consumers";
 const LOADPOINTS = "loadpoints";
+const LOADPOINT_ORDER_MODE = "loadpoint_order_mode";
 const SESSION_COLUMNS = "session_columns";
 const SAVINGS_PERIOD = "savings_period";
 const SAVINGS_REGION = "savings_region";
@@ -145,6 +146,7 @@ export interface Settings {
   priceZoom: boolean;
   hideFeedin: boolean;
   loadpoints: Record<string, LoadpointSettings>;
+  loadpointOrderMode: string;
   lastBatterySmartCostLimit: number | undefined;
   lastBatteryGridDischargeLimit: number | undefined;
   lastTargetTime: string | null;
@@ -182,6 +184,7 @@ const settings: Settings = reactive({
   priceZoom: readBool(SETTINGS_PRICE_ZOOM),
   hideFeedin: readBool(SETTINGS_HIDE_FEEDIN),
   loadpoints: readJSON(LOADPOINTS),
+  loadpointOrderMode: read(LOADPOINT_ORDER_MODE) || "added",
   lastBatterySmartCostLimit: readNumber(LAST_BATTERY_SMART_COST_LIMIT),
   lastBatteryGridDischargeLimit: readNumber(LAST_BATTERY_GRID_DISCHARGE_LIMIT),
   lastTargetTime: read(LAST_TARGET_TIME),
@@ -218,6 +221,7 @@ watch(() => settings.batteryUnit, save(BATTERY_UNIT));
 watch(() => settings.priceZoom, saveBool(SETTINGS_PRICE_ZOOM));
 watch(() => settings.hideFeedin, saveBool(SETTINGS_HIDE_FEEDIN));
 watch(() => settings.loadpoints, saveJSON(LOADPOINTS), { deep: true });
+watch(() => settings.loadpointOrderMode, save(LOADPOINT_ORDER_MODE));
 watch(() => settings.lastBatterySmartCostLimit, saveNumber(LAST_BATTERY_SMART_COST_LIMIT));
 watch(() => settings.lastBatteryGridDischargeLimit, saveNumber(LAST_BATTERY_GRID_DISCHARGE_LIMIT));
 watch(() => settings.lastTargetTime, save(LAST_TARGET_TIME));
