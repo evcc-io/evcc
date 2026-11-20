@@ -62,7 +62,9 @@ func (site *Site) fromTo(requested, m api.BatteryMode) bool {
 	return requested == m || requested == api.BatteryUnknown && site.batteryMode == m
 }
 
-func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive bool, rate api.Rate) {
+// updateBatteryMode applies the required battery mode and reports whether load managed grid charging started
+func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive bool, rate api.Rate) bool {
+	previous := site.batteryMode
 	batteryMode := site.requiredBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate)
 
 	// grid charging no longer requested, forget the last load management stop
@@ -98,6 +100,8 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischarg
 			site.log.ERROR.Println("battery mode:", err)
 		}
 	}
+
+	return site.circuit != nil && previous != api.BatteryCharge && site.batteryMode == api.BatteryCharge
 }
 
 // requiredBatteryMode determines required battery mode based on grid charge/discharge and rate

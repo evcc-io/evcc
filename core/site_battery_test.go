@@ -668,9 +668,10 @@ func TestBatteryGridChargeCircuit(t *testing.T) {
 				batCon.EXPECT().SetBatteryMode(tc.expect).Times(1)
 			}
 
-			site.updateBatteryMode(true, false, api.Rate{})
+			started := site.updateBatteryMode(true, false, api.Rate{})
 
 			assert.Equal(t, tc.expect, site.GetBatteryMode())
+			assert.Equal(t, tc.mode != api.BatteryCharge && tc.expect == api.BatteryCharge, started, "charging started")
 			if tc.mode == api.BatteryCharge && tc.expect == api.BatteryHoldDischarge {
 				assert.Equal(t, 4000.0, site.batteryChargeStopPower, "stop power")
 			}
