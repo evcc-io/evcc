@@ -66,7 +66,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40236 # CmpBMS.OpMod - Betriebsart des BMS
+                address: 40236 # SMA Modbus Profile: CmpBMS.OpMod - Betriebsart des BMS
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -75,7 +75,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40793 # CmpBMS.BatChaMinW - Minimale Batterieladeleistung
+                address: 40793 # SMA Modbus Profile: CmpBMS.BatChaMinW - Minimale Batterieladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -84,7 +84,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40795 # CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
+                address: 40795 # SMA Modbus Profile: CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -93,16 +93,16 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40797 # CmpBMS.BatDschMinW - Minimale Batterieentladeleistung
+                address: 40797 # SMA Modbus Profile: CmpBMS.BatDschMinW - Minimale Batterieentladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: {{ .maxchargepower }}
+            value: {{ .maxdischargepower | default .maxchargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40799 # CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
+                address: 40799 # SMA Modbus Profile: CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -111,7 +111,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40801 # CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
+                address: 40801 # SMA Modbus Profile: CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
                 type: writemultiple
                 decode: uint32
       - case: 2 # holddischarge
@@ -124,7 +124,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40236 # CmpBMS.OpMod - Betriebsart des BMS
+                address: 40236 # SMA Modbus Profile: CmpBMS.OpMod - Betriebsart des BMS
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -133,7 +133,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40793 # CmpBMS.BatChaMinW - Minimale Batterieladeleistung
+                address: 40793 # SMA Modbus Profile: CmpBMS.BatChaMinW - Minimale Batterieladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -142,7 +142,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40795 # CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
+                address: 40795 # SMA Modbus Profile: CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -151,7 +151,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40797 # CmpBMS.BatDschMinW - Minimale Batterieentladeleistung
+                address: 40797 # SMA Modbus Profile: CmpBMS.BatDschMinW - Minimale Batterieentladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -160,7 +160,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40799 # CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
+                address: 40799 # SMA Modbus Profile: CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -169,7 +169,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40801 # CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
+                address: 40801 # SMA Modbus Profile: CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
                 type: writemultiple
                 decode: uint32
       - case: 3 # charge
@@ -182,7 +182,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40236 # CmpBMS.OpMod - Betriebsart des BMS
+                address: 40236 # SMA Modbus Profile: CmpBMS.OpMod - Betriebsart des BMS
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -191,7 +191,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40793 # CmpBMS.BatChaMinW - Minimale Batterieladeleistung
+                address: 40793 # SMA Modbus Profile: CmpBMS.BatChaMinW - Minimale Batterieladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -200,7 +200,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40795 # CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
+                address: 40795 # SMA Modbus Profile: CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -209,7 +209,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40797 # CmpBMS.BatDschMinW - Minimale Batterieentladeleistung
+                address: 40797 # SMA Modbus Profile: CmpBMS.BatDschMinW - Minimale Batterieentladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -218,7 +218,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40799 # CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
+                address: 40799 # SMA Modbus Profile: CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
                 type: writemultiple
                 decode: uint32
           - source: const
@@ -227,7 +227,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40801 # CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
+                address: 40801 # SMA Modbus Profile: CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
                 type: writemultiple
                 decode: uint32
   {{- include "battery-params" . }}
