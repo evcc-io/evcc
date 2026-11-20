@@ -26,47 +26,42 @@ func TestPriorityGap(t *testing.T) {
 	tc := []struct {
 		strategy      api.PriorityStrategy
 		basis         api.PriorityBasis
-		priority      int
 		soc, limitSoc float64
 		capacity      float64 // vehicle capacity in kWh, 0 = no/unknown vehicle
-		ref           float64
-		expected      float64 // legacy score, converted below to its native-unit gap
+		gap           float64
+		ok            bool
 	}{
-		// none: fractional part is always zero
-		{api.PriorityNone, api.PriorityBasisPercent, 0, 50, 0, 0, 100, 0},
-		{api.PriorityNone, api.PriorityBasisPercent, 2, 50, 0, 0, 100, 2},
-		// soc (percent): lower soc scores higher within the tier
-		{api.PrioritySoc, api.PriorityBasisPercent, 0, 20, 0, 0, 100, 0.80},
-		{api.PrioritySoc, api.PriorityBasisPercent, 0, 80, 0, 0, 100, 0.20},
-		{api.PrioritySoc, api.PriorityBasisPercent, 1, 20, 0, 0, 100, 1.80},
-		{api.PrioritySoc, api.PriorityBasisPercent, 0, 100, 0, 0, 100, 0}, // full vehicle: no boost
-		{api.PrioritySoc, api.PriorityBasisPercent, 0, 0, 0, 0, 100, 0},   // unknown soc: falls back to plain priority
-		// deficit (percent): larger gap to the limit soc scores higher within the tier
-		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 50, 80, 0, 100, 0.30},
-		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 50, 0, 0, 100, 0.50},   // no limit set -> default 100
-		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 90, 80, 0, 100, -0.10}, // soc above limit: negative gap
-		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 0, 80, 0, 100, 0},      // unknown soc: falls back to plain priority
-		// soc (energy): gap is scaled by capacity -> (100-soc)/100*capacity, normalised by ref
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 50, 100, 0.40}, // 80% * 50kWh = 40kWh of 100kWh
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 80, 0, 50, 100, 0.10}, // 20% * 50kWh = 10kWh of 100kWh
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 25, 100, 0.20}, // 80% * 25kWh = 20kWh of 100kWh
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 0, 100, 0},     // capacity unknown: no comparable gap
-		// deficit (energy): (limitSoc-soc)/100*capacity, normalised by ref
-		{api.PriorityDeficit, api.PriorityBasisEnergy, 0, 50, 80, 50, 100, 0.15}, // 30% * 50kWh = 15kWh of 100kWh
-		{api.PriorityDeficit, api.PriorityBasisEnergy, 0, 50, 80, 0, 100, 0},     // capacity unknown: no comparable gap
-		// Steve's case: a small second car is NOT over-prioritized under the energy basis.
-		// Percent basis would rank B (40%) above A (50%); energy basis ranks A (needs 37.5kWh) above B (15kWh).
-		{api.PrioritySoc, api.PriorityBasisPercent, 0, 50, 0, 75, 100, 0.50}, // car A, percent
-		{api.PrioritySoc, api.PriorityBasisPercent, 0, 40, 0, 25, 100, 0.60}, // car B, percent -> B wins
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 50, 0, 75, 75, 0.50},   // car A, energy -> A wins
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 40, 0, 25, 75, 0.20},   // car B, energy
+		// none: no comparable gap
+		{api.PriorityNone, api.PriorityBasisPercent, 50, 0, 0, 0, false},
+		// soc (percent): gap to full in soc-%; full vehicle is 0, unknown soc is not comparable
+		{api.PrioritySoc, api.PriorityBasisPercent, 20, 0, 0, 80, true},
+		{api.PrioritySoc, api.PriorityBasisPercent, 80, 0, 0, 20, true},
+		{api.PrioritySoc, api.PriorityBasisPercent, 100, 0, 0, 0, true},
+		{api.PrioritySoc, api.PriorityBasisPercent, 0, 0, 0, 0, false},
+		// deficit (percent): gap to the limit soc (default 100), negative above the limit
+		{api.PriorityDeficit, api.PriorityBasisPercent, 50, 80, 0, 30, true},
+		{api.PriorityDeficit, api.PriorityBasisPercent, 50, 0, 0, 50, true},
+		{api.PriorityDeficit, api.PriorityBasisPercent, 90, 80, 0, -10, true},
+		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 80, 0, 0, false},
+		// soc (energy): (100-soc)/100*capacity in kWh; unknown capacity is not comparable
+		{api.PrioritySoc, api.PriorityBasisEnergy, 20, 0, 50, 40, true},
+		{api.PrioritySoc, api.PriorityBasisEnergy, 80, 0, 50, 10, true},
+		{api.PrioritySoc, api.PriorityBasisEnergy, 20, 0, 25, 20, true},
+		{api.PrioritySoc, api.PriorityBasisEnergy, 20, 0, 0, 0, false},
+		// deficit (energy): (limitSoc-soc)/100*capacity in kWh
+		{api.PriorityDeficit, api.PriorityBasisEnergy, 50, 80, 50, 15, true},
+		{api.PriorityDeficit, api.PriorityBasisEnergy, 50, 80, 0, 0, false},
+		// Steve's case: percent ranks the small car B (40%) above A (50%), energy ranks A (37.5kWh) above B (15kWh)
+		{api.PrioritySoc, api.PriorityBasisPercent, 50, 0, 75, 50, true},
+		{api.PrioritySoc, api.PriorityBasisPercent, 40, 0, 25, 60, true},
+		{api.PrioritySoc, api.PriorityBasisEnergy, 50, 0, 75, 37.5, true},
+		{api.PrioritySoc, api.PriorityBasisEnergy, 40, 0, 25, 15, true},
 	}
 
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
-		lp.priority = tc.priority
 		lp.status = api.StatusB
 		lp.vehicleSoc = tc.soc
 		lp.limitSoc = int(tc.limitSoc)
@@ -80,11 +75,8 @@ func TestPriorityGap(t *testing.T) {
 		}
 
 		gap, ok := lp.PriorityGap(tc.strategy, tc.basis)
-		wantOK := tc.strategy != api.PriorityNone && tc.soc > 0 && (tc.basis != api.PriorityBasisEnergy || tc.capacity > 0)
-		assert.Equal(t, wantOK, ok)
-		if wantOK {
-			assert.InDelta(t, (tc.expected-float64(tc.priority))*tc.ref, gap, 1e-9)
-		}
+		assert.Equal(t, tc.ok, ok)
+		assert.InDelta(t, tc.gap, gap, 1e-9)
 	}
 }
 

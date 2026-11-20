@@ -490,21 +490,17 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.String(keys.PriorityStrategy); err == nil {
-		strategy, err := api.PriorityStrategyString(v)
-		if err != nil {
-			return err
-		}
-		if err := site.SetPriorityStrategy(strategy); err != nil {
-			return err
+		if strategy, err := api.PriorityStrategyString(v); err == nil {
+			if err := site.SetPriorityStrategy(strategy); err != nil {
+				return err
+			}
 		}
 	}
 	if v, err := settings.String(keys.PriorityBasis); err == nil {
-		basis, err := api.PriorityBasisString(v)
-		if err != nil {
-			return err
-		}
-		if err := site.SetPriorityBasis(basis); err != nil {
-			return err
+		if basis, err := api.PriorityBasisString(v); err == nil {
+			if err := site.SetPriorityBasis(basis); err != nil {
+				return err
+			}
 		}
 	}
 	if v, err := settings.Int(keys.PriorityHysteresis); err == nil {
