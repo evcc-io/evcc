@@ -180,6 +180,7 @@ export default defineComponent({
 			return {
 				title: this.title,
 				group: this.group,
+				isTemp: this.shown[0]?.isTemp,
 				data: discharged
 					? data.map((slot) => ({ ...slot, energy: slot.returnEnergy }))
 					: data,

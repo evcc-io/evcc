@@ -17,8 +17,8 @@ import (
 
 // Name returns the tariff type name
 func Name(conf config.Typed) string {
-	if conf.Other != nil && conf.Other["tariff"] != nil {
-		return conf.Other["tariff"].(string)
+	if name, ok := conf.Other["tariff"].(string); ok && name != "" {
+		return name
 	}
 	return conf.Type
 }

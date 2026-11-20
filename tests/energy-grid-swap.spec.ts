@@ -33,5 +33,5 @@ test("both grid entities count as one grid", async ({ page }) => {
   await chart.hover({ position: { x: 36 + ((box.width - 72) * 48.5) / 96, y: box.height / 2 } });
   // the tooltip renders outside the card
   await expect(page.getByRole("table")).toContainText("12:00 – 12:15");
-  await expect(page.getByRole("table")).toContainText("2.0 kW");
+  await expect(page.getByRole("table")).toContainText("500 Wh");
 });

@@ -23,17 +23,17 @@ Directions per group:
 
 `home` is not a meter. It is the residual of the live power balance: grid + pv + battery discharge minus loadpoint charging, clamped at zero, integrated per slot. It is the whole house load excluding loadpoints. Consumers are sub-meters of home; `meter` entities are monitoring only and never enter any balance.
 
-Everything works on slots, never on session records. Sessions use an instantaneous solar share, the slot model nets import and export inside 15 minutes. The two will disagree on "solar %", by design. The Energy page follows the slot model, Sessions stay as they are.
+Everything works on slots, never on session records. Sessions use an instantaneous solar share, the slot model only knows the sums of 15 minutes. The two will disagree on "solar %", by design. The Energy page follows the slot model, Sessions stay as they are.
 
 ## Source attribution
 
 Each slot has sources (PV production, battery discharge, grid import) and sinks (home, battery charge, loadpoints, export). Which source fed which sink is not measurable, so it is assigned by a priority rule, applied per slot and summed over the period:
 
 1. Sources in order PV, battery, grid.
-2. Sinks in order home, battery charge, loadpoints, export.
+2. Sinks in order export, home, battery charge, loadpoints.
 3. Walk sources outer, sinks inner, moving `min(remaining source, remaining sink)` each step. Battery does not feed itself, grid does not feed export.
 
-This is the same rule the live control loop uses for the green share, so the page and the running system tell the same story. Home comes before loadpoints because the house load is not steerable while charging is. Anything a slot's sources cannot cover (meter mismatch, coarse counters, missing entity) is silently dropped rather than invented. Attributed totals are therefore always at or below the metered totals.
+Export comes first because only own energy can be exported. A slot with both import and export keeps both: the export came from PV or battery, the import went to home, battery charge or loadpoints. Serving home first would hand it the exported PV and drop the import. Home, battery charge and loadpoints follow the rule the live control loop uses for the green share, so the page and the running system tell the same story. Home comes before loadpoints because the house load is not steerable while charging is. Anything a slot's sources cannot cover (meter mismatch, coarse counters, missing entity) is silently dropped rather than invented. Attributed totals are therefore always at or below the metered totals.
 
 Everything downstream is built on these flows: the flow chart, the source mix bars (share of PV, battery, grid in what reached a sink), autarky, cost and CO2.
 

@@ -90,3 +90,27 @@ func TestNextActivePlanUnsampledSoc(t *testing.T) {
 	lp.energyMetrics.totalKWh = 3.5
 	assert.Nil(t, lp.nextActivePlan(1000, plans))
 }
+
+func TestNextActivePlanUnknownCapacity(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	// no usable capacity, stale SoC from a previous session is below the goal
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(0.0).AnyTimes()
+	vehicle.EXPECT().Features().AnyTimes()
+
+	log := util.NewLogger("foo")
+	lp := &Loadpoint{
+		log:          log,
+		vehicle:      vehicle,
+		status:       api.StatusC,
+		vehicleSoc:   10,
+		socEstimator: soc.NewEstimator(log, vehicle),
+	}
+	lp.energyMetrics.totalKWh = 5
+
+	plans := []plan{{Id: 2, Soc: 80, End: time.Now().Add(12 * time.Hour)}}
+	p := lp.nextActivePlan(1000, plans)
+	require.NotNil(t, p)
+	assert.Equal(t, 2, p.Id)
+}

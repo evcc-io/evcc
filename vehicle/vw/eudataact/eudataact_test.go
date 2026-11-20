@@ -98,7 +98,7 @@ func TestResolveBrand(t *testing.T) {
 	_, ok := resolveBrand("nope")
 	assert.False(t, ok)
 
-	// IsBrand drives the cloud server's brand -> drivesomethinggreater routing
+	// IsBrand drives the cloud server's brand -> vwgroup-datahub routing
 	for _, name := range []string{"audi", "Volkswagen", "seat", "CUPRA", "skoda"} {
 		assert.True(t, IsBrand(name), "%q is a VW group brand", name)
 	}

@@ -23,6 +23,9 @@ Presentation:
 
 - One shared look for all charts: a heading with the time or category, rows with name and value, no color swatches.
 - Tooltip values carry their unit and pick it per value (auto W/kW), independent of the axis unit.
+- Energy page: a header row names the columns, rows are entities. The name column appears only with more than one row, several entities add a Total.
+- Energy page values are energy in every period. The day view adds a "ø Power" column where there is one energy column, and charge or temperature for a single entity. Two directions (battery, grid) get two energy columns and no power column. The grid with tariff lists quantities as rows and adds "ø Power" as one of them.
+- Energy column labels come from `energy.direction.<group>` via `energyLabel` in `assets/js/components/Energy/groups.ts`.
 
 ## Layout
 
