@@ -108,12 +108,22 @@ protocols: [websocket, http] # state via WebSocket, commands via HTTP
 
 ## `cloud`
 
-`cloud: true` marks templates where evcc talks to a vendor or third-party service on the internet. The default is `false`.
+`cloud: true` marks templates where evcc opens a connection to a vendor or third-party service on the internet and does not work without it. The default configuration and typical usage count, not what is technically possible. The default is `false`.
 
-**Rules**:
+**Cloud**:
 
-- A local bridge that itself talks to a cloud (e.g. TeslaMate) is not cloud.
-- A service with a public default server that can also be self-hosted is cloud.
+- Vendor APIs: `easee`, `zaptec`, `viessmann`, most vehicles
+- Online data: dynamic tariffs, solar and CO2 forecasts
+- Vendor MQTT brokers: `cardata`, `zendure-hyper`
+- Messaging: `telegram`, `pushover`, `email`. Also `ntfy`, which defaults to the public `ntfy.sh` although it can be self-hosted
+- Local device that additionally needs the vendor cloud: `tesla-powerwall-fleet`
+
+**Not cloud**:
+
+- Devices reached in the local network, whatever the protocol
+- OCPP: the charger connects to evcc, evcc opens no outbound connection
+- Local bridges that talk to a cloud themselves: `teslamate`, `homeassistant`, `volvo2mqtt`
+- Cloud account needed for setup only: `tuya` (one-time local key retrieval)
 
 **Example**:
 
