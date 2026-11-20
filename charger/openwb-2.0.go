@@ -14,10 +14,12 @@ import (
 // OpenWB20 charger implementation
 type OpenWB20 struct {
 	implement.Caps
+	log     *util.Logger
 	conn    *modbus.Connection
 	enabled bool
 	curr    uint16
 	base    uint16
+	status  api.ChargeStatus
 }
 
 const (
@@ -34,6 +36,7 @@ const (
 	openwbRegPhaseTarget  = 10180
 	openwbRegPhaseTrigger = 10181
 	openwbRegHeartbeat    = 10190
+	openwbRegResetRfid    = 10197
 	openwbRegCpTrigger    = 10198
 )
 
@@ -91,6 +94,7 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 
 	wb := &OpenWB20{
 		Caps: implement.New(),
+		log:  log,
 		conn: conn,
 		curr: 6 * 100,
 		base: (connector - 1) * 100,
@@ -100,7 +104,20 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 }
 
 // Status implements the api.Charger interface
-func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
+func (wb *OpenWB20) Status() (res api.ChargeStatus, err error) {
+	// reset RFID tag on transition to A, retried until successful (requires openWB 2.3.0)
+	defer func() {
+		if err != nil {
+			return // keep previous status on read errors
+		}
+		if res == api.StatusA && wb.status != api.StatusA && api.HasCap[api.Identifier](wb) {
+			if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1); err != nil {
+				return status, err
+			}
+		}
+		wb.status = res
+	}()
+
 	if b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegCharging, 1); err != nil || binary.BigEndian.Uint16(b) == 1 {
 		return api.StatusC, err
 	}
