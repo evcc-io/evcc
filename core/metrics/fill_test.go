@@ -4,7 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -54,4 +56,32 @@ func TestFill(t *testing.T) {
 			assert.Equal(t, tc.origin, rows[i].Recovered, "slot %d", tc.slot)
 		}
 	}
+}
+
+func TestBackfill(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	e, err := createEntity(Grid, "backfill", "")
+	require.NoError(t, err)
+
+	// existing history with slots 1 and 3 missing, backfill pending
+	for _, n := range []int64{0, 2, 4} {
+		require.NoError(t, persist(e, time.Unix(n*slotSeconds, 0), 1, 0, nil, false))
+	}
+	require.NoError(t, settings.Delete(keys.MetricsFillVersion))
+
+	require.NoError(t, SetupSchema())
+
+	// both gaps filled, remove them again
+	res := db.Instance.Where("meter = ? AND recovered = ?", e.Id, slotInterpolated).Delete(new(meter))
+	require.NoError(t, res.Error)
+	assert.Equal(t, int64(2), res.RowsAffected)
+
+	// already backfilled: gaps stay
+	require.NoError(t, SetupSchema())
+
+	var rows int64
+	require.NoError(t, db.Instance.Model(new(meter)).Where("meter = ?", e.Id).Count(&rows).Error)
+	assert.Equal(t, int64(3), rows)
 }

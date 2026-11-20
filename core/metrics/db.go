@@ -130,7 +130,11 @@ func SetupSchema() error {
 		}
 	}
 
-	return db.Instance.AutoMigrate(new(meter))
+	if err := db.Instance.AutoMigrate(new(meter)); err != nil {
+		return err
+	}
+
+	return backfill()
 }
 
 // OnPersist, if set, is called with the slot start after a slot is written.
