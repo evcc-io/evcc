@@ -25,8 +25,8 @@ type Template struct {
 	Link         string         `json:",omitempty"` // integration provider link, can be overridden per product
 	Products     []Product      `json:",omitempty"` // list of products this template is compatible with
 	Capabilities []Capability   `json:"-"`
-	Protocols    []Protocol     `json:"-"`          // communication protocols, main one first. Empty list means no communication
-	Cloud        bool           `json:"-"`          // requires a vendor or third-party internet service
+	Protocols    []Protocol     `json:",omitempty"` // communication protocols, main one first. Empty list means no communication
+	Cloud        bool           `json:",omitempty"` // requires a vendor or third-party internet service
 	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
 	Requirements Requirements   `json:",omitempty"`
 	Caveats      []Caveat       `json:",omitempty"` // known device limitations
