@@ -25,5 +25,6 @@ render: |
       map({
         "start": .start | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | mktime | strftime("%Y-%m-%dT%H:%M:%SZ"),
         "end":   .end   | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | mktime | strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "value": .price
+        "value": .price,
+        "estimate": (.price_origin == "forecast")
       }) | tostring

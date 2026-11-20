@@ -33,6 +33,7 @@
 				:color="legend.color"
 				:explicit="legend.id ? deviceColors[legend.id] || '' : ''"
 				:line="legend.type === 'line'"
+				:hatched="legend.type === 'hatched'"
 			/>
 			<div class="legend-label text-nowrap">{{ legend.label }}</div>
 			<div

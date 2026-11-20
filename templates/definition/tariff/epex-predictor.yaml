@@ -33,8 +33,10 @@ render: |
     source: http
     uri: {{ .uri }}/prices?region={{ .region }}&unit=EUR_PER_KWH&timezone=UTC
     jq: |
+      .knownUntil as $known |
       [.prices[] | {
         "start": .startsAt,
         "end": (.startsAt | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime + 900 | strftime("%Y-%m-%dT%H:%M:%SZ")),
-        "value": .total
+        "value": .total,
+        "estimate": (.startsAt > $known)
       }] | tostring
