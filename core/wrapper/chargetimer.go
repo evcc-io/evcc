@@ -56,6 +56,7 @@ func (m *ChargeTimer) ResetCharge() {
 	defer m.Unlock()
 
 	m.duration = 0
+	m.start = m.clck.Now()
 }
 
 // ChargeDuration implements the api.ChargeTimer interface

@@ -29,4 +29,14 @@ func TestTimer(t *testing.T) {
 	if d, err := ct.ChargeDuration(); d != 3*time.Hour || err != nil {
 		t.Error(d, err)
 	}
+
+	// reset while charging
+	ct.StartCharge(true)
+	clck.Add(time.Hour)
+	ct.ResetCharge()
+	clck.Add(time.Hour)
+
+	if d, err := ct.ChargeDuration(); d != 1*time.Hour || err != nil {
+		t.Error(d, err)
+	}
 }
