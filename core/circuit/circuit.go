@@ -308,15 +308,19 @@ func (c *Circuit) updateMeters() error {
 		}
 
 		var p1, p2, p3 float64
+		var powersErr error
 		if phaseMeter, ok := api.Cap[api.PhasePowers](c.meter); ok {
-			var err error // phases needed for signed currents
-			if p1, p2, p3, err = phaseMeter.Powers(); err != nil {
-				return fmt.Errorf("circuit powers: %w", err)
+			// phases needed for signed currents, unsigned currents overestimate load which is safe
+			if p1, p2, p3, powersErr = phaseMeter.Powers(); powersErr != nil {
+				p1, p2, p3 = 0, 0, 0
+				powersErr = fmt.Errorf("circuit powers: %w", powersErr)
 			}
 		}
 
 		c.current = max(util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3))
 		c.currentUpdated = time.Now()
+
+		return powersErr
 	}
 
 	return nil
@@ -340,16 +344,17 @@ func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 		}
 	}()
 
-	// update children depth-first
+	// update children depth-first, a failing child must not leave this circuit stale
+	var errs []error
 	for _, ch := range c.children {
 		if err := ch.Update(loadpoints); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 
 	// meter available
 	if c.meter != nil {
-		return c.updateMeters()
+		return errors.Join(append(errs, c.updateMeters())...)
 	}
 
 	// no meter available
@@ -359,7 +364,7 @@ func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 		c.current += ch.GetMaxPhaseCurrent()
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 // GetChargePower returns the actual power

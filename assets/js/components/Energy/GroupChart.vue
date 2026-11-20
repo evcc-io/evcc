@@ -36,7 +36,7 @@ import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import echartsChart from "@/mixins/echartsChart";
 import { PERIODS } from "../Sessions/types";
 import { is12hFormat } from "@/units";
-import { hasColorPicker, isBidirectional } from "./groups";
+import { energyLabel, hasColorPicker, isBidirectional } from "./groups";
 import type { PriceBand, PriceOverlay } from "./types";
 import { CURRENCY } from "@/types/evcc";
 import { energyAxisScale, type EnergyAxisScale } from "@/utils/energyAxis";
@@ -45,6 +45,7 @@ import {
 	PANEL_EXTRA,
 	panelGrids,
 	panelYAxis,
+	priceVaries,
 	slotStarts,
 	socTempPanel,
 	type SubPanel,
@@ -103,6 +104,8 @@ export default defineComponent({
 		overlayColor: { type: String, default: "" },
 		overlayLabel: { type: String, default: "" },
 		showOverlay: { type: Boolean, default: false },
+		// the gap between the overlay and the stacked sum as striped bars
+		overlayGap: Boolean,
 		focusedEntity: { type: Number as PropType<number | null>, default: null },
 		period: { type: String as PropType<PERIODS>, required: true },
 		from: { type: Date, required: true },
@@ -132,8 +135,6 @@ export default defineComponent({
 	},
 	emits: ["slot"],
 	data(): {
-		isMobile: boolean;
-		mediaQuery: MediaQueryList | null;
 		previousFocusedEntity: number | null;
 		previousPeriod: PERIODS;
 		previousSeriesKey: string;
@@ -142,8 +143,6 @@ export default defineComponent({
 		chartWidth: number;
 	} {
 		return {
-			isMobile: false,
-			mediaQuery: null,
 			chartWidth: 0,
 			previousFocusedEntity: this.focusedEntity as number | null,
 			previousPeriod: this.period as PERIODS,
@@ -163,6 +162,9 @@ export default defineComponent({
 		},
 		// Peak of stacked per-slot sums, incl. overlay when shown so its line isn't
 		// clipped. Bidirectional: pos/neg separately.
+		hasSlots(): boolean {
+			return this.series.some((s) => s.data.length > 0);
+		},
 		axisPeak(): number {
 			const factor = this.valueFactor;
 			// Stacked groups: sum entities per slot. Unstacked (grid, meter): max per entity.
@@ -228,10 +230,10 @@ export default defineComponent({
 		isBidirectional(): boolean {
 			return isBidirectional(this.group, this.series);
 		},
-		// day view: soc or temperature per category from the first series carrying it
+		// day view: soc or temperature per category from the first visible series carrying it
 		socTempValues(): (number | null)[] | null {
 			if (this.period !== PERIODS.DAY || !this.socTemp) return null;
-			const source = this.series.find((s) => s.data.some((slot) => slot.socTemp != null));
+			const source = this.socTempSource;
 			if (!source) return null;
 			const out: (number | null)[] = this.categoryKeys.map(() => null);
 			for (const slot of source.data) {
@@ -246,9 +248,10 @@ export default defineComponent({
 		subPanel(): SubPanel | null {
 			if (!this.socTempValues) return this.pricePanel;
 			const isTemp = this.socTempIsTemp;
+			const source = this.socTempSource ? this.series.indexOf(this.socTempSource) : -1;
 			return socTempPanel(
 				this.socTempValues,
-				this.entryColors[0] || this.color,
+				this.entryColors[source] || this.color,
 				isTemp,
 				(v) => (isTemp ? this.fmtNumber(v, 0, "celsius") : this.fmtPercentage(v))
 			);
@@ -320,7 +323,7 @@ export default defineComponent({
 		},
 		// another view of the same data: stack order or the price overlay toggled
 		viewKey(): string {
-			return `${this.stackThrough}-${!!this.prices}`;
+			return `${this.stackThrough}-${!!this.prices}-${this.overlayGap}`;
 		},
 		// the prices that move over the period, zoomed into their range. A constant price
 		// is only in the tooltip
@@ -330,8 +333,7 @@ export default defineComponent({
 			const hi = (band: PriceBand) => Math.max(...known(band.hi));
 			const bands: { key: string; band: PriceBand; color: string }[] = [];
 			const add = (key: string, band: PriceBand | undefined, color: string) => {
-				// an effective price carries float noise, a flat tariff must stay flat
-				if (band && hi(band) - lo(band) > 1e-4) bands.push({ key, band, color });
+				if (band && priceVaries(band)) bands.push({ key, band, color });
 			};
 			add("import", this.prices?.import, colors.price || "");
 			add("feedin", this.prices?.feedin, colors.export || "");
@@ -347,6 +349,8 @@ export default defineComponent({
 				data: slotStarts(band.avg),
 				// a price holds for its whole slot, until the next slot's start
 				step: "end",
+				// the area would sweep in whenever the chart comes back from the pattern
+				animation: false,
 				...hoverDot(color),
 				lineStyle: { ...lineDefaults, color },
 				// glow fading out below the line, like the price forecast
@@ -368,7 +372,10 @@ export default defineComponent({
 			};
 		},
 		socTempIsTemp(): boolean {
-			return !!this.series.find((s) => s.data.some((slot) => slot.socTemp != null))?.isTemp;
+			return !!this.socTempSource?.isTemp;
+		},
+		socTempSource(): HistorySeries | undefined {
+			return this.visibleSeries.find((s) => s.data.some((slot) => slot.socTemp != null));
 		},
 		categoryTimestamps(): number[] {
 			const out: number[] = [];
@@ -462,6 +469,8 @@ export default defineComponent({
 				}
 			}
 			const overlayCol = this.overlayColor || this.color;
+			// the gap bars come on top of the line
+			const gap = this.overlayGap && this.showOverlay;
 			const overlay = {
 				id: "overlay",
 				name: this.overlayLabel || "overlay",
@@ -555,6 +564,34 @@ export default defineComponent({
 				energyByEntity.push(energyValues);
 				returnEnergyByEntity.push(returnEnergyValues);
 			});
+			// gap view: what the stack came to, then the bars end at the overlay. Where it
+			// fell short of them, the stripes take their upper part
+			const sums = cats.map((_, idx) =>
+				energyByEntity.reduce((acc, values) => acc + (values[idx] ?? 0), 0)
+			);
+			// a slot without an overlay value takes what the line shows there: the way
+			// between its neighbours. Bars would stick out of the stripes otherwise
+			const known = overlayValues.flatMap((v, i) => (v == null ? [] : [i]));
+			const gapValues = (gap ? overlayValues : []).map((o, idx) => {
+				if (o != null) return o;
+				const before = known.filter((i) => i < idx).pop();
+				const after = known.find((i) => i > idx);
+				if (before === undefined || after === undefined) return null;
+				const from = overlayValues[before]!;
+				const share = (idx - before) / (after - before);
+				return from + (overlayValues[after]! - from) * share;
+			});
+			if (gap) {
+				gapValues.forEach((o, idx) => {
+					let left = o ?? Infinity;
+					for (const values of energyByEntity) {
+						const v = values[idx];
+						if (v == null) continue;
+						values[idx] = Math.min(v, left) || null;
+						left -= values[idx] ?? 0;
+					}
+				});
+			}
 			// Per slot: index of the topmost (largest i) entity with a non-zero
 			// value. -1 = no entity has data at that slot.
 			const topEnergyPerSlot: number[] = Array.from({ length: cats.length }, () => -1);
@@ -574,6 +611,8 @@ export default defineComponent({
 			// hover lightens the active slot's bars (onChartMouseMove), like the sessions
 			// charts; silent stops single-segment highlight
 			const barEmphasis = { silent: true };
+			// the gap bars sit on the entity bars, not beside them
+			const barGap = gap ? "-100%" : "10%";
 			const returnSeries: Record<string, unknown>[] = [];
 			this.series.forEach((s, i) => {
 				const c = this.entryColors[i] || this.color;
@@ -628,7 +667,7 @@ export default defineComponent({
 					data: energyData,
 					itemStyle: { color: c, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
-					barGap: "10%",
+					barGap,
 					...barEmphasis,
 				});
 				(this.stackThrough ? returnSeries : result).push({
@@ -639,11 +678,50 @@ export default defineComponent({
 					data: returnEnergyData,
 					itemStyle: { color: returnEnergyColor, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
-					barGap: "10%",
+					barGap,
 					...barEmphasis,
 				});
 			});
 			result.push(...returnSeries.reverse());
+
+			if (gap) {
+				// from the lower to the higher of overlay and stacked sum, on a hidden base
+				const span = (pick: (o: number, sum: number) => number) =>
+					gapValues.map((o, idx) => (o == null ? null : pick(o, sums[idx] ?? 0)));
+				const shared = {
+					type: "bar",
+					stack: "overlay-gap",
+					barCategoryGap: "25%",
+					barGap,
+					z: 5,
+					...barEmphasis,
+				};
+				result.push(
+					{
+						...shared,
+						id: "overlay-gap-base",
+						data: span(Math.min),
+						itemStyle: { color: "transparent" },
+					},
+					{
+						...shared,
+						id: "overlay-gap",
+						name: this.overlayLabel,
+						data: span((o, sum) => Math.abs(o - sum)),
+						// in place of the bar's upper part or above it
+						itemStyle: {
+							color: "transparent",
+							borderRadius: radius,
+							decal: {
+								color: overlayCol,
+								dashArrayX: [1, 0],
+								dashArrayY: [2, 1],
+								rotation: -Math.PI / 4,
+							},
+						},
+					}
+				);
+			}
 
 			return result;
 		},
@@ -673,22 +751,18 @@ export default defineComponent({
 					return (day - 1) % step === 0 ? `${day}` : "";
 				};
 			}
-			// YEAR — narrow (single-letter) on mobile, short month name otherwise
-			return this.isMobile
+			// YEAR: single letters when twelve short month names would touch
+			return this.chartWidth < 640
 				? (t: number) => this.fmtMonthNarrow(new Date(t))
 				: (t: number) => this.fmtMonth(new Date(t), true);
 		},
-		// Column headers for bidirectional tooltips (grid: imported/exported,
-		// battery: charged/discharged, meter: energy/reverse). Null when the group
-		// has no direction labels.
-		directionHeaders(): string[] | null {
-			if (!this.isBidirectional) return null;
-			const energyKey = `energy.direction.${this.group}.energy`;
-			const returnEnergyKey = `energy.direction.${this.group}.returnEnergy`;
-			const energy = this.$t(energyKey);
-			const returnEnergy = this.$t(returnEnergyKey);
-			if (energy === energyKey || returnEnergy === returnEnergyKey) return null;
-			return [String(energy), String(returnEnergy)];
+		// tooltip column headers: the group's energy, per direction when it has two
+		energyHeaders(): string[] {
+			const label = (direction: "energy" | "returnEnergy") =>
+				energyLabel((key) => this.$t(key), this.group, this.series[0]?.isTemp, direction);
+			return this.isBidirectional && !this.singleValue
+				? [label("energy"), label("returnEnergy")]
+				: [label("energy")];
 		},
 		tooltipDateLabel(): (t: number) => string {
 			if (this.period === PERIODS.DAY) {
@@ -788,50 +862,53 @@ export default defineComponent({
 						const nameByIdx = new Map(
 							this.series.map((s, i) => [s.paletteIndex ?? i, s.title])
 						);
-						const showName = this.series.length > 1 && this.focusedEntity === null;
-
-						// one unit for all rows, based on the largest individual value (not the total)
-						const rowValues = indices.map(
-							(i) => totals.get(i) ?? { energy: 0, returnEnergy: 0 }
-						);
-						const unit = this.getPowerUnit(
-							Math.max(
-								0,
-								...rowValues.flatMap((t) =>
-									this.isBidirectional && !this.singleValue
-										? [t.energy, t.returnEnergy]
-										: [t.energy + t.returnEnergy]
-								)
-							) * 1000
-						);
-						const formatValue = (v: number) => {
-							const watts = Math.abs(v) * 1000;
-							return this.period === PERIODS.DAY
-								? this.fmtW(watts, unit)
-								: this.fmtWh(watts, unit);
-						};
+						const several = this.series.length > 1 && this.focusedEntity === null;
+						const twoCols = this.isBidirectional && !this.singleValue;
+						// bar values are average power in the day view, the tooltip shows energy
+						const factor = this.valueFactor;
+						const withPower = this.period === PERIODS.DAY && !twoCols;
+						const rowValues = indices.map((i) => {
+							const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
+							// a single value covers both sides, a sink can draw from above and below
+							const cols = twoCols
+								? [t.energy, t.returnEnergy]
+								: [t.energy + t.returnEnergy];
+							return cols.map((v) => (v * 1000) / factor);
+						});
+						// one unit per column kind, based on the largest row value (not the total)
+						const peak = Math.max(0, ...rowValues.flat());
+						const energyUnit = this.getPowerUnit(peak);
+						const powerUnit = this.getPowerUnit(peak * factor);
+						const cells = (wh: number[]) => [
+							...wh.map((v) => this.fmtWh(v, energyUnit)),
+							...(withPower ? wh.map((v) => this.fmtW(v * factor, powerUnit)) : []),
+						];
 
 						// the overlay line's value in this slot, e.g. the solar forecast
 						const forecast = params.find((p) => p.seriesId === "overlay")?.value;
-						const rows: TooltipRow[] = indices.map((i, idx) => {
-							const t = rowValues[idx] ?? { energy: 0, returnEnergy: 0 };
-							// a single value covers both sides, a sink can draw from above and below
-							const values =
-								this.isBidirectional && !this.singleValue
-									? [formatValue(t.energy), formatValue(t.returnEnergy)]
-									: [formatValue(t.energy + t.returnEnergy)];
-							return {
-								// the price or forecast row below needs a name column to line up with
-								name: showName
-									? (nameByIdx.get(i) ?? "")
-									: this.prices
-										? this.$t("energy.grid.energy")
-										: forecast != null
-											? this.singleEntityName(this.series[idx]!)
-											: undefined,
-								values,
-							};
-						});
+						const rows: TooltipRow[] = indices.map((i, idx) => ({
+							// more than one row: each needs a name
+							name: several
+								? (nameByIdx.get(i) ?? "")
+								: this.prices
+									? this.$t("energy.grid.energy")
+									: forecast != null
+										? this.singleEntityName(this.series[idx]!)
+										: undefined,
+							values: cells(rowValues[idx] ?? []),
+						}));
+						// soc or temperature of the one entity shown, as its own column
+						const socTempValues = several ? null : this.socTempValues;
+						if (socTempValues) {
+							const socTemp = socTempValues[first.dataIndex];
+							rows[0]?.values.push(
+								socTemp == null
+									? ""
+									: this.socTempIsTemp
+										? this.fmtTemperature(socTemp)
+										: this.fmtPercentage(socTemp)
+							);
+						}
 						// cost or revenue and the price of the slot, per direction
 						const at = (
 							values: (number | null)[] | undefined,
@@ -840,7 +917,17 @@ export default defineComponent({
 							const v = values?.[first.dataIndex];
 							return v == null ? "" : fmt(v);
 						};
+						const sums = (rowValues[0] ?? []).map((_, col) =>
+							rowValues.reduce((acc, row) => acc + (row[col] ?? 0), 0)
+						);
 						if (this.prices) {
+							// its rows are quantities, the power fits in as one more
+							if (this.period === PERIODS.DAY) {
+								rows.push({
+									name: `ø ${this.$t("energy.socTemp.power")}`,
+									values: sums.map((v) => this.fmtW(v * factor, powerUnit)),
+								});
+							}
 							const { import: imported, feedin } = this.prices;
 							const money = (v: number) => this.fmtMoneyWithSymbol(v, this.currency);
 							const price = (v: number) => this.fmtPricePerKWh(v, this.currency);
@@ -857,18 +944,10 @@ export default defineComponent({
 								values: [at(imported?.avg, price), at(feedin?.avg, price)],
 							});
 						}
-						if (showName) {
-							const sum = (key: "energy" | "returnEnergy") =>
-								rowValues.reduce((acc, t) => acc + t[key], 0);
+						if (several) {
 							rows.push({
 								name: this.$t("sessions.total"),
-								values:
-									this.isBidirectional && !this.singleValue
-										? [
-												formatValue(sum("energy")),
-												formatValue(sum("returnEnergy")),
-											]
-										: [formatValue(sum("energy") + sum("returnEnergy"))],
+								values: cells(sums),
 								total: true,
 							});
 						}
@@ -876,47 +955,21 @@ export default defineComponent({
 						if (forecast != null) {
 							rows.push({
 								name: this.overlayLabel,
-								values: [formatValue(forecast)],
+								values: cells([(forecast * 1000) / factor]),
 								total: true,
 							});
 						}
-						// one entity with its soc or temperature in the day view: a named row
-						// per value
-						const socTemp = this.socTempValues?.[first.dataIndex];
-						if (socTemp != null && !showName) {
-							const socTempText = this.socTempIsTemp
-								? this.fmtTemperature(socTemp)
-								: this.fmtPercentage(socTemp);
-							const t = rowValues[0] ?? { energy: 0, returnEnergy: 0 };
-							const label = (key: string) => this.$t(`energy.socTemp.${key}`);
-							const named: TooltipRow[] = this.isBidirectional
+						return tooltipTable(head, rows, [
+							...this.energyHeaders,
+							...(withPower ? [`ø ${this.$t("energy.socTemp.power")}`] : []),
+							...(socTempValues
 								? [
-										{
-											name: this.directionHeaders?.[0],
-											values: [formatValue(t.energy)],
-										},
-										{
-											name: this.directionHeaders?.[1],
-											values: [formatValue(t.returnEnergy)],
-										},
+										this.$t(
+											`energy.socTemp.${this.socTempIsTemp ? "temperature" : "soc"}`
+										),
 									]
-								: [
-										{
-											name: label(this.socTempIsTemp ? "used" : "charged"),
-											values: [formatValue(t.energy)],
-										},
-									];
-							named.push({
-								name: label(this.socTempIsTemp ? "temperature" : "soc"),
-								values: [socTempText],
-							});
-							return tooltipTable(head, named);
-						}
-						return tooltipTable(
-							head,
-							rows,
-							this.singleValue ? undefined : (this.directionHeaders ?? undefined)
-						);
+								: []),
+						]);
 					},
 				},
 				xAxis: this.subPanel
@@ -951,9 +1004,11 @@ export default defineComponent({
 							showMaxLine: true,
 							lineStyle: { color: colors.border || "" },
 						},
-						name: this.unit,
+						// without series the scale is made up, only its lines show
+						name: this.hasSlots ? this.unit : "",
 						...axisNameStyle(),
 						axisLabel: {
+							show: this.hasSlots,
 							color: colors.muted || "",
 							hideOverlap: true,
 							formatter: (v: number): string => {
@@ -983,12 +1038,6 @@ export default defineComponent({
 		const zr = this.chart?.getZr();
 		zr?.on("mousemove", this.onChartMouseMove);
 		zr?.on("globalout", this.clearHighlight);
-		this.mediaQuery = window.matchMedia("(max-width: 575.98px)");
-		this.isMobile = this.mediaQuery.matches;
-		this.mediaQuery.addEventListener("change", this.onMediaChange);
-	},
-	beforeUnmount() {
-		this.mediaQuery?.removeEventListener("change", this.onMediaChange);
 	},
 	methods: {
 		onChartInit() {
@@ -1094,9 +1143,6 @@ export default defineComponent({
 			this.activeSlot = null;
 			this.chart?.dispatchAction({ type: "downplay" });
 		},
-		onMediaChange(e: MediaQueryListEvent) {
-			this.isMobile = e.matches;
-		},
 		timestampKey(t: number): string {
 			const d = new Date(t);
 			if (this.period === PERIODS.YEAR) return `m${d.getMonth()}`;
@@ -1129,5 +1175,10 @@ export default defineComponent({
 }
 .history-chart {
 	width: 100%;
+}
+/* an axis label wider than the grid's inset grows out of the chart instead of being cut off */
+.history-chart :deep(div),
+.history-chart :deep(svg) {
+	overflow: visible !important;
 }
 </style>

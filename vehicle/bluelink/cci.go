@@ -48,7 +48,7 @@ type CCIConfig struct {
 
 const (
 	cciClientVersion   = "1.3.3"
-	cciMobileUserAgent = "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS"
+	cciMobileUserAgent = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36_CCS_APP_AOS"
 	cciSettingsKeyFmt  = "bluelink-cci.%s.%s"
 )
 
@@ -229,6 +229,13 @@ func (v *Identity) loginCCIPassword(password string) (*oauth2.Token, error) {
 			return nil, errors.New("account consent required: log in via the manufacturer app once to accept the terms, then retry")
 		case loc.Query().Get("error_description") != "":
 			return nil, fmt.Errorf("signin rejected: %s", loc.Query().Get("error_description"))
+		case strings.Contains(loc.String(), "authorize"):
+			msg := "signin returned to login page: check username and password"
+			// some EU accounts hold only the first 20 password characters, see Hyundai-Kia-Connect/hyundai_kia_connect_api#1536
+			if len([]rune(password)) > 20 {
+				msg += " (if your password is longer than 20 characters, the account may only accept the first 20 of them)"
+			}
+			return nil, errors.New(msg)
 		default:
 			return nil, fmt.Errorf("unexpected redirect after signin: %s", request.Truncate(loc.String()))
 		}

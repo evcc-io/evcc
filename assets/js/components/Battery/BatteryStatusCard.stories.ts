@@ -55,7 +55,7 @@ export const OptimizerNormal = Narrow.bind({});
 OptimizerNormal.args = { ...base, soc: 62, power: 900, suggestion: { action: "normal" } };
 
 export const OptimizerHold = Narrow.bind({});
-OptimizerHold.args = { ...base, soc: 88, power: 0, suggestion: { action: "hold" } };
+OptimizerHold.args = { ...base, soc: 88, power: 0, suggestion: { action: "holddischarge" } };
 
 export const OptimizerCharge = Narrow.bind({});
 OptimizerCharge.args = {
@@ -106,7 +106,7 @@ const cards = [
     capacity: 7.5,
     color: "#7FC41B",
     controllable: true,
-    suggestion: { action: "hold", actionable: true },
+    suggestion: { action: "holddischarge", actionable: true },
   },
   {
     title: "Fox ESS",
@@ -125,7 +125,7 @@ const cards = [
     capacity: 5,
     color: "#4EABE6",
     controllable: true,
-    batteryMode: BATTERY_MODE.HOLD,
+    batteryMode: BATTERY_MODE.HOLDDISCHARGE,
     suggestion: { action: "charge", actionable: true },
   },
   {
@@ -145,7 +145,7 @@ const cards = [
     capacity: 12.8,
     color: "#E0457B",
     controllable: true,
-    suggestion: { action: "hold", actionable: true },
+    suggestion: { action: "holddischarge", actionable: true },
   },
   {
     title: "Pylontech",

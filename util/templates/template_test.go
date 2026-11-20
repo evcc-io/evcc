@@ -171,6 +171,54 @@ func TestRequiredPerUsage(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// TestRequiredPerClass guards that templates without usage param match param usages by class name
+func TestRequiredPerClass(t *testing.T) {
+	tmpl := &Template{
+		Params: []Param{
+			{
+				Name:     "param",
+				Required: true,
+				Usages:   []string{"pv", "curtailer"},
+			},
+		},
+	}
+
+	_, _, err := tmpl.RenderResult(Curtailer, RenderModeUnitTest, map[string]any{
+		"Param": nil,
+	})
+	require.Error(t, err)
+
+	_, _, err = tmpl.RenderResult(Curtailer, RenderModeUnitTest, map[string]any{
+		"Param": "foo",
+	})
+	require.NoError(t, err)
+
+	_, _, err = tmpl.RenderResult(Hems, RenderModeUnitTest, map[string]any{
+		"Param": nil,
+	})
+	require.NoError(t, err)
+}
+
+func TestValidateUsages(t *testing.T) {
+	tmpl := func(usages ...string) *Template {
+		return &Template{
+			Params: []Param{{Name: "param", Usages: usages}},
+		}
+	}
+
+	require.NoError(t, tmpl().ValidateUsages(Curtailer))
+	require.NoError(t, tmpl("pv", "curtailer").ValidateUsages(Curtailer))
+	require.Error(t, tmpl("pv").ValidateUsages(Curtailer), "usage never matches class")
+
+	withUsage := &Template{
+		Params: []Param{
+			{Name: ParamUsage, Choice: []string{"grid", "pv"}},
+			{Name: "param", Usages: []string{"battery"}},
+		},
+	}
+	require.Error(t, withUsage.ValidateUsages(Meter), "usage never matches template usages")
+}
+
 // TestModbusHostPattern guards that the modbus host is validated like the plain host
 // param instead of rendering invalid yaml (#34380)
 func TestModbusHostPattern(t *testing.T) {
@@ -383,4 +431,18 @@ func TestDeviceRefs(t *testing.T) {
 		Charger: {"db:2"},
 		Meter:   {"db:3"},
 	}, refs)
+}
+
+func TestRenderResultStaleKeys(t *testing.T) {
+	tmpl := &Template{
+		Params: []Param{{Name: "minCurrent", Type: TypeInt}},
+		Render: "min: {{ .minCurrent }}",
+	}
+
+	b, _, err := tmpl.RenderResult(Vehicle, RenderModeInstance, map[string]any{"minCurrent": 12, "mincurrent": 6})
+	require.NoError(t, err)
+	assert.Equal(t, "min: 12", string(b))
+
+	_, _, err = tmpl.RenderResult(Vehicle, RenderModeInstance, map[string]any{"MinCurrent": 12, "mincurrent": 6})
+	require.Error(t, err)
 }

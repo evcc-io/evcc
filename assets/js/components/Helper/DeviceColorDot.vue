@@ -38,13 +38,15 @@ export default defineComponent({
 		color: { type: String, default: "" }, // shown, resolved
 		explicit: { type: String, default: "" }, // configured, empty when automatic
 		line: Boolean, // a short line instead of a circle
+		hatched: Boolean, // striped like a hatched chart area
 	},
 	data() {
 		return { open: false, anchor: null as HTMLElement | null };
 	},
 	computed: {
 		shapeClass(): string {
-			return this.line ? "dot--line" : "rounded-circle";
+			if (this.line) return "dot--line";
+			return this.hatched ? "rounded-circle dot--hatched" : "rounded-circle";
 		},
 	},
 	methods: {
@@ -73,6 +75,9 @@ export default defineComponent({
 	height: 2px;
 	border-radius: 1px;
 	align-self: center;
+}
+.dot--hatched {
+	mask-image: repeating-linear-gradient(-45deg, #000 0 2px, transparent 2px 3px);
 }
 .dot-btn {
 	cursor: pointer;

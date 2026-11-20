@@ -67,9 +67,13 @@ const (
 	SolarAdjusted     = "solarAdjusted"
 	ProfilePercentile = "profilePercentile"
 
+	// metrics
+	MetricsFillVersion = "metricsFillVersion"
+
 	// optimizer
 	OptimizerChargingStrategy   = "optimizerChargingStrategy"
 	OptimizerChargingStrategies = "optimizerChargingStrategies"
+	OptimizerRiskProfile        = "optimizerRiskProfile"
 
 	// battery status
 	Battery     = "battery"

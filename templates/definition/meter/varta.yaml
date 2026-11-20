@@ -80,7 +80,7 @@ render: |
                     address: 1074  # max discharge power
                     type: writesingle
                     decode: int16
-        - case: 2  # hold
+        - case: 2  # holddischarge
           set:
             source: sequence
             set:

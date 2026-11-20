@@ -56,7 +56,7 @@ const (
 	flagCustomThemeDescription = "Default UI theme (auto, light, dark). Users can override in the UI."
 
 	flagBatteryMode                = "battery-mode"
-	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge, holdcharge, discharge)"
+	flagBatteryModeDescription     = "Set battery mode (normal, holddischarge, charge, holdcharge, discharge)"
 	flagBatteryModeWait            = "battery-mode-wait"
 	flagBatteryModeWaitDescription = "Wait given duration during which potential watchdogs are active"
 

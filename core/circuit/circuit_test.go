@@ -1,7 +1,9 @@
 package circuit
 
 import (
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -184,4 +186,38 @@ func TestHEMSConsumptionClamp(t *testing.T) {
 			assert.Equal(t, tc.want, c.ValidatePower(0, tc.request))
 		})
 	}
+}
+
+type failingPowers struct{}
+
+func (failingPowers) Powers() (float64, float64, float64, error) {
+	return 0, 0, 0, errors.New("powers failed")
+}
+
+// TestCircuitPowersFailure verifies that failing phase powers fall back to unsigned currents
+// and that a failing child does not leave its parent stale
+func TestCircuitPowersFailure(t *testing.T) {
+	log := util.NewLogger("foo")
+	ctrl := gomock.NewController(t)
+
+	pm := api.NewMockMeter(ctrl)
+	pc, err := New(log, "parent", 0, 0, pm, time.Minute)
+	require.NoError(t, err)
+
+	cm := struct {
+		*api.MockMeter
+		*api.MockPhaseCurrents
+		failingPowers
+	}{api.NewMockMeter(ctrl), api.NewMockPhaseCurrents(ctrl), failingPowers{}}
+	c, err := New(log, "child", 16, 0, cm, time.Minute)
+	require.NoError(t, err)
+	c.setParent(pc)
+
+	pm.EXPECT().CurrentPower().Return(1000.0, nil)
+	cm.MockMeter.EXPECT().CurrentPower().Return(0.0, nil)
+	cm.MockPhaseCurrents.EXPECT().Currents().Return(2.0, 5.0, 1.0, nil)
+
+	require.ErrorContains(t, pc.Update(nil), "circuit powers")
+	assert.Equal(t, 5.0, c.GetMaxPhaseCurrent(), "unsigned current")
+	assert.Equal(t, 1000.0, pc.GetChargePower(), "parent updated")
 }

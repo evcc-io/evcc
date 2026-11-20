@@ -33,6 +33,7 @@
 				:color="legend.color"
 				:explicit="legend.id ? deviceColors[legend.id] || '' : ''"
 				:line="legend.type === 'line'"
+				:hatched="legend.type === 'hatched'"
 			/>
 			<div class="legend-label text-nowrap">{{ legend.label }}</div>
 			<div
@@ -81,6 +82,8 @@ export default defineComponent({
 
 .root {
 	justify-content: flex-start;
+	/* an empty list keeps its line, entries that arrive later do not move the page */
+	min-height: 1lh;
 }
 .legend-item--focusable {
 	cursor: pointer;

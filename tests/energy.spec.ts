@@ -65,7 +65,7 @@ test.describe("api", () => {
 test.describe("page", () => {
   test("flow chart and stats", async ({ page }) => {
     await page.goto("/#/energy?year=2026&month=9&day=15");
-    const card = page.getByTestId("energy-flow");
+    const card = page.getByRole("region", { name: "Overview" });
     await expect(card).toBeVisible();
 
     // stacked areas with legend by default, usage and sankey behind the toggle
@@ -83,17 +83,17 @@ test.describe("page", () => {
 
     // autarky 1 - 2/5, grid import 2 kWh and export 1 kWh
     await expect(page.getByTestId("energy-stat-autarky")).toContainText("60%");
-    const grid = page.getByTestId("energy-grid");
+    const grid = page.getByRole("region", { name: "Grid" });
     await expect(grid).toContainText("Import");
     await expect(grid).toContainText("2.0 kWh");
     await expect(grid).toContainText("Export");
     await expect(grid).toContainText("1.0 kWh");
-    // priced: cost and revenue with the average price below
-    const gridImport = page.getByTestId("energy-stat-gridImport");
-    await expect(gridImport).toContainText("Grid cost");
-    await expect(gridImport).toContainText("0.60 €");
-    await expect(gridImport).toContainText("ø 30.0 ct/kWh");
-    await expect(page.getByTestId("energy-stat-gridExport")).toContainText("0.10 €");
+    // priced: cost and revenue beside the energy, the average price in the summary
+    await expect(grid.getByTestId("energy-stat-gridImport")).toContainText("0.60 €");
+    await expect(grid.getByTestId("energy-stat-gridExport")).toContainText("0.10 €");
+    const gridCost = page.getByTestId("energy-stat-gridCost");
+    await expect(gridCost).toContainText("0.60 €");
+    await expect(gridCost).toContainText("ø 30.0 ct/kWh");
     // every defined price is in the legend, the import price moves between 25 and 35 ct
     await expect(grid).toContainText("Import price");
     await expect(grid).toContainText("25.0 – 35.0 ct/kWh");
@@ -101,36 +101,44 @@ test.describe("page", () => {
     await expect(grid).toContainText("10.0 ct/kWh");
 
     // pv 4 kWh vs forecast 3.2 kWh, self-consumption 1 - 1/4
-    const production = page.getByTestId("energy-production");
+    const production = page.getByRole("region", { name: "Production" });
     await expect(production).toContainText("4.0 kWh");
-    await expect(production.getByText("Forecast", { exact: true })).toBeVisible();
+    const forecastLegend = production.getByRole("button", { name: "Forecast 3.2 kWh" });
+    await expect(forecastLegend).toBeVisible();
     const selfConsumed = page.getByTestId("energy-stat-selfConsumed");
     await expect(selfConsumed).toContainText("Self-consumed");
     await expect(selfConsumed).toContainText("75%");
-    await expect(selfConsumed).toContainText("25% exported");
     const forecast = page.getByTestId("energy-stat-forecast");
-    await expect(forecast).toContainText("Forecast accuracy");
+    await expect(forecast).toContainText("Forecast");
     await expect(forecast).toContainText("75%");
-    await expect(forecast).toContainText("800 Wh below");
+    await expect(forecast).toContainText("accuracy");
+    // tile and legend entry switch the gap view together
+    await expect(forecast).toHaveAttribute("aria-pressed", "false");
+    await forecastLegend.click();
+    await expect(forecast).toHaveAttribute("aria-pressed", "true");
+    await forecast.click();
+    await expect(forecast).toHaveAttribute("aria-pressed", "false");
 
     // battery 1 kWh charged, 1 kWh discharged
-    const battery = page.getByTestId("energy-battery");
+    const battery = page.getByRole("region", { name: "Battery" });
     await expect(battery).toContainText("Charged");
     await expect(battery).toContainText("Discharged");
 
-    // loadpoint card with its 3 kWh
-    const loadpoint = page.getByTestId("energy-loadpoint");
-    await expect(loadpoint.getByRole("heading", { name: "Carport 3.0 kWh" })).toBeVisible();
+    // charging card with the loadpoint's 3 kWh
+    const charging = page.getByRole("region", { name: "Charging" });
+    await expect(charging.getByRole("heading")).toContainText("Charging");
+    await expect(charging.getByRole("heading")).toContainText("Carport");
+    await expect(charging.getByTestId("energy-stat-energy")).toContainText("3.0 kWh");
 
     // additional meter outside the balance
-    const meters = page.getByTestId("energy-meters");
+    const meters = page.getByRole("region", { name: "Additional meters" });
     await expect(meters).toContainText("Pool");
     await expect(meters).toContainText("300 Wh");
 
     // fixture has no consumer meters, the house consumption stands alone
-    await expect(
-      page.getByTestId("energy-consumers").getByRole("heading", { name: "Consumption 2.0 kWh" })
-    ).toBeVisible();
+    const consumers = page.getByRole("region", { name: "Consumption" });
+    await expect(consumers.getByRole("heading", { name: "Consumption" })).toBeVisible();
+    await expect(consumers.getByTestId("energy-stat-energy")).toContainText("2.0 kWh");
 
     // savings 1.50 - 0.90
     await expect(page.getByTestId("energy-stat-savings")).toContainText("0.60 €");
@@ -143,7 +151,10 @@ test.describe("page", () => {
   // days 16 and 18, where grid import and battery discharge happen
   test("overview covers slots of every series", async ({ page }) => {
     const legend = (label: string) =>
-      page.getByTestId("energy-flow").getByRole("listitem").filter({ hasText: label });
+      page
+        .getByRole("region", { name: "Overview" })
+        .getByRole("listitem")
+        .filter({ hasText: label });
 
     await page.goto("/#/energy?year=2026&month=9&day=15");
     await expect(legend("Grid import")).toContainText("2.0 kWh");
@@ -161,20 +172,24 @@ test.describe("page", () => {
   test("production tooltip with forecast", async ({ page }) => {
     await page.goto("/#/energy?year=2026&month=9&day=15");
     // 12:00: 2 kWh produced, 1.6 kWh forecast, as average power
-    const chart = page.getByTestId("energy-production").getByTestId("group-chart-pv");
+    const chart = page.getByRole("region", { name: "Production" }).getByTestId("group-chart-pv");
     const box = await chart.boundingBox();
     if (!box) throw new Error("chart not visible");
     await chart.hover({ position: { x: slotX(box.width, 48), y: box.height / 2 } });
     const tooltip = page.getByRole("table");
     await expect(tooltip).toContainText("12:00 – 12:15");
-    await expect(tooltip.getByRole("row", { name: "Production" })).toContainText("8.0 kW");
-    await expect(tooltip.getByRole("row", { name: "Forecast" })).toContainText("6.4 kW");
+    await expect(
+      tooltip.getByRole("row", { name: "Production 2.0 kWh 8.0 kW", exact: true })
+    ).toBeVisible();
+    await expect(
+      tooltip.getByRole("row", { name: "Forecast 1.6 kWh 6.4 kW", exact: true })
+    ).toBeVisible();
   });
 
   test("battery soc below the bars", async ({ page }) => {
     await page.goto("/#/energy?year=2026&month=9&day=15");
     // 12:00: charging 0.5 kWh at 50%
-    const chart = page.getByTestId("energy-battery").getByTestId("group-chart-battery");
+    const chart = page.getByRole("region", { name: "Battery" }).getByTestId("group-chart-battery");
     const box = await chart.boundingBox();
     if (!box) throw new Error("chart not visible");
     const x = slotX(box.width, 48);
@@ -182,8 +197,12 @@ test.describe("page", () => {
     // the bars and the soc panel share one tooltip
     for (const y of [box.height / 3, box.height - 40]) {
       await chart.hover({ position: { x, y } });
-      await expect(tooltip.getByRole("row", { name: "charged 2.0 kW", exact: true })).toBeVisible();
-      await expect(tooltip.getByRole("row", { name: "charge 50%", exact: true })).toBeVisible();
+      await expect(
+        tooltip.getByRole("row", { name: "Charged Discharged Charge", exact: true })
+      ).toBeVisible();
+      await expect(
+        tooltip.getByRole("row", { name: "500 Wh 0 Wh 50%", exact: true })
+      ).toBeVisible();
       await page.mouse.move(0, 0);
     }
   });
@@ -191,7 +210,7 @@ test.describe("page", () => {
   test("grid tooltip with cost and effective price", async ({ page }) => {
     await page.goto("/#/energy?period=month&year=2026&month=9");
     // 15th: 2 kWh imported at 0.25 and 0.35, 1 kWh exported at 0.10
-    const chart = page.getByTestId("energy-grid").getByTestId("group-chart-grid");
+    const chart = page.getByRole("region", { name: "Grid" }).getByTestId("group-chart-grid");
     const box = await chart.boundingBox();
     if (!box) throw new Error("chart not visible");
     await chart.hover({ position: { x: slotX(box.width, 14, 30), y: box.height / 2 } });
@@ -204,8 +223,8 @@ test.describe("page", () => {
     await expect(price).toContainText("10.0 ct/kWh");
   });
 
-  test("flow chart loadpoint label", async ({ page }) => {
-    const card = page.getByTestId("energy-flow");
+  test("flow chart charging and heating", async ({ page }) => {
+    const card = page.getByRole("region", { name: "Overview" });
     const chart = card.getByTestId("flow-chart");
 
     // charger only
@@ -221,7 +240,7 @@ test.describe("page", () => {
 
     // both
     await page.goto("/#/energy?period=month&year=2026&month=9");
-    await expect(chart.getByText("Charging &")).toBeVisible();
+    await expect(chart.getByText("Charging")).toBeVisible();
     await expect(chart.getByText("Heating")).toBeVisible();
   });
 
@@ -250,10 +269,9 @@ test.describe("page", () => {
     test("shares and cost", async ({ page }) => {
       // carport 3 kWh: 1 solar at feed-in 0.10, 2 grid at ø 0.30
       await page.goto("/#/energy?year=2026&month=9&day=15");
-      const sources = page.getByTestId("energy-loadpoint").getByRole("button", { name: "Sources" });
-      await expect(sources).toContainText("33% Solar");
-      await expect(sources).toContainText("0% Battery, 67% Grid");
-
+      const sources = page
+        .getByRole("region", { name: "Charging" })
+        .getByRole("button", { name: "Sources" });
       await sources.click();
       const modal = page.getByTestId("energy-sources-modal");
       await expectModalVisible(modal);
@@ -278,16 +296,13 @@ test.describe("page", () => {
     test("no price data", async ({ page }) => {
       // solar only, neither battery nor grid has data that day
       await page.goto("/#/energy?year=2026&month=9&day=17");
-      const loadpoint = page.getByTestId("energy-loadpoint");
-      await expect(loadpoint.getByRole("heading", { name: "Carport 1.0 kWh" })).toBeVisible();
-      const sources = loadpoint.getByRole("button", { name: "Sources" });
-      await expect(sources).toContainText("100% Solar");
-      await expect(sources).not.toContainText("battery");
-      await expect(sources).not.toContainText("grid");
-
+      const charging = page.getByRole("region", { name: "Charging" });
+      await expect(charging.getByTestId("energy-stat-energy")).toContainText("1.0 kWh");
+      const sources = charging.getByRole("button", { name: "Sources" });
       await sources.click();
       const modal = page.getByTestId("energy-sources-modal");
       await expectModalVisible(modal);
+      await expect(modal.getByRole("row", { name: "Solar" })).toContainText("100%");
       await expect(modal.getByRole("row", { name: "Solar" })).toContainText("1.0 kWh");
       await expect(modal.getByRole("row", { name: "Battery" })).toHaveCount(0);
       await expect(modal.getByRole("row", { name: "Grid" })).toHaveCount(0);
@@ -297,21 +312,31 @@ test.describe("page", () => {
 
     test("battery leads without solar", async ({ page }) => {
       await page.goto("/#/energy?year=2026&month=9&day=18");
-      const sources = page.getByTestId("energy-loadpoint").getByRole("button", { name: "Sources" });
-      await expect(sources).toContainText("100% Battery");
-      await expect(sources).not.toContainText("solar");
+      await page
+        .getByRole("region", { name: "Charging" })
+        .getByRole("button", { name: "Sources" })
+        .click();
+      const modal = page.getByTestId("energy-sources-modal");
+      await expectModalVisible(modal);
+      await expect(modal.getByRole("row", { name: "Battery" })).toContainText("100%");
+      await expect(modal.getByRole("row", { name: "Solar" })).toHaveCount(0);
+      await expect(modal.getByRole("row", { name: "Grid" })).toHaveCount(0);
     });
 
     test("grid only", async ({ page }) => {
       await page.goto("/#/energy?year=2026&month=9&day=16");
-      const loadpoint = page.getByTestId("energy-loadpoint");
-      await expect(loadpoint.getByRole("heading", { name: "Heat pump 1.0 kWh" })).toBeVisible();
-      await expect(loadpoint.getByRole("button", { name: "Sources" })).toHaveCount(0);
+      const heating = page.getByRole("region", { name: "Heating" });
+      // the only heater is named beside the title
+      await expect(heating.getByRole("heading")).toContainText("Heating");
+      await expect(heating.getByRole("heading")).toContainText("Heat pump");
+      await expect(heating.getByRole("listitem")).toHaveCount(0);
+      await expect(heating.getByTestId("energy-stat-energy")).toContainText("1.0 kWh");
+      await expect(heating.getByRole("button", { name: "Sources" })).toHaveCount(0);
     });
   });
 
   test("empty state", async ({ page }) => {
     await page.goto("/#/energy?year=2026&month=1&day=1");
-    await expect(page.getByText("No energy data available")).toBeVisible();
+    await expect(page.getByText("No energy data for this period.")).toBeVisible();
   });
 });

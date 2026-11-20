@@ -75,6 +75,18 @@ notarize:
 checksum:
   name_template: "checksums.txt"
 
+# keyless signature bound to the release workflow identity, covers all assets
+# through the checksums
+signs:
+  - cmd: cosign
+    artifacts: checksum
+    signature: "${artifact}.sigstore.json"
+    args:
+      - sign-blob
+      - --bundle=${signature}
+      - ${artifact}
+      - --yes
+
 snapshot:
   # semver pre-release of the upcoming version, the timestamp keeps the package
   # version increasing monotonically for apt

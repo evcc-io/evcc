@@ -25,6 +25,12 @@ function getWeekday(offset = 1, style: "long" | "short" = "long") {
   return date.toLocaleDateString("en-US", { weekday: style });
 }
 
+// wait for the websocket update, the plan modal depends on the vehicle's SoC/capacity
+async function selectVehicle(lp: Locator, title: string) {
+  await lp.getByTestId("change-vehicle").getByRole("combobox").selectOption(title);
+  await expect(lp.getByTestId("vehicle-name")).toHaveText(title);
+}
+
 async function setAndVerifyPlan(
   page: Page,
   lp: Locator,
@@ -64,11 +70,7 @@ test.describe("basic functionality", async () => {
 
     const lp1 = await page.getByTestId("loadpoint").first();
 
-    // change vehicle
-    await lp1
-      .getByTestId("change-vehicle")
-      .locator("select")
-      .selectOption("Vehicle with SoC with Capacity");
+    await selectVehicle(lp1, "Vehicle with SoC with Capacity");
 
     await expect(lp1.getByTestId("plan-marker")).not.toBeVisible();
     await expect(lp1.getByText("Loadpoint", { exact: true })).toBeVisible();
@@ -160,11 +162,7 @@ test.describe("vehicle variations", async () => {
 
       const lp1 = await page.getByTestId("loadpoint").first();
 
-      // change vehicle
-      await lp1
-        .getByTestId("change-vehicle")
-        .locator("select")
-        .selectOption("Vehicle no SoC no Capacity");
+      await selectVehicle(lp1, "Vehicle no SoC no Capacity");
 
       // kWh based limit
       await lp1.getByTestId("limit-energy").getByRole("combobox").selectOption("50 kWh");
@@ -183,11 +181,7 @@ test.describe("vehicle variations", async () => {
 
       const lp1 = await page.getByTestId("loadpoint").first();
 
-      // change vehicle
-      await lp1
-        .getByTestId("change-vehicle")
-        .locator("select")
-        .selectOption("Vehicle no SoC with Capacity");
+      await selectVehicle(lp1, "Vehicle no SoC with Capacity");
 
       // kWh based limit
       await lp1.getByTestId("limit-energy").getByRole("combobox").selectOption("50 kWh (+50%)");
@@ -206,11 +200,7 @@ test.describe("vehicle variations", async () => {
 
       const lp1 = await page.getByTestId("loadpoint").first();
 
-      // change vehicle
-      await lp1
-        .getByTestId("change-vehicle")
-        .locator("select")
-        .selectOption("Vehicle with SoC no Capacity");
+      await selectVehicle(lp1, "Vehicle with SoC no Capacity");
 
       // soc based limit
       await lp1.getByTestId("limit-soc").getByRole("combobox").selectOption("80%");
@@ -229,11 +219,7 @@ test.describe("vehicle variations", async () => {
 
       const lp1 = await page.getByTestId("loadpoint").first();
 
-      // change vehicle
-      await lp1
-        .getByTestId("change-vehicle")
-        .locator("select")
-        .selectOption("Vehicle with SoC with Capacity");
+      await selectVehicle(lp1, "Vehicle with SoC with Capacity");
 
       // soc based limit
       await lp1.getByTestId("limit-soc").getByRole("combobox").selectOption("80%");
@@ -248,10 +234,7 @@ test.describe("vehicle variations", async () => {
     test("non-standard soc values are visible in dropdown", async ({ page }) => {
       await page.goto("/");
       const lp1 = await page.getByTestId("loadpoint").first();
-      await lp1
-        .getByTestId("change-vehicle")
-        .locator("select")
-        .selectOption("Vehicle with SoC with Capacity");
+      await selectVehicle(lp1, "Vehicle with SoC with Capacity");
 
       // create plan with non-standard SoC value via API
       const response = await page.request.post(
@@ -301,11 +284,7 @@ test.describe("vehicle variations", async () => {
 
       const lp2 = await page.getByTestId("loadpoint").last();
 
-      // change vehicle
-      await lp2
-        .getByTestId("change-vehicle")
-        .locator("select")
-        .selectOption("Vehicle no SoC with Capacity");
+      await selectVehicle(lp2, "Vehicle no SoC with Capacity");
 
       // soc based limit
       await lp2.getByTestId("limit-soc").getByRole("combobox").selectOption("80%");
@@ -339,8 +318,7 @@ test.describe("preview", async () => {
 
       const lp1 = await page.getByTestId("loadpoint").first();
 
-      // change vehicle
-      await lp1.getByTestId("change-vehicle").locator("select").selectOption(c.vehicle);
+      await selectVehicle(lp1, c.vehicle);
 
       await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
 
@@ -392,11 +370,7 @@ test.describe("warnings", async () => {
 
     const lp1 = await page.getByTestId("loadpoint").first();
 
-    // change vehicle
-    await lp1
-      .getByTestId("change-vehicle")
-      .locator("select")
-      .selectOption("Vehicle with SoC with Massive Capacity");
+    await selectVehicle(lp1, "Vehicle with SoC with Massive Capacity");
 
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
 
@@ -410,11 +384,7 @@ test.describe("warnings", async () => {
 
     const lp1 = await page.getByTestId("loadpoint").first();
 
-    // change vehicle
-    await lp1
-      .getByTestId("change-vehicle")
-      .locator("select")
-      .selectOption("Vehicle with SoC with Capacity");
+    await selectVehicle(lp1, "Vehicle with SoC with Capacity");
 
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
 
@@ -435,10 +405,7 @@ test.describe("repeating", async () => {
     await page.goto("/");
 
     const lp1 = await page.getByTestId("loadpoint").first();
-    await lp1
-      .getByTestId("change-vehicle")
-      .locator("select")
-      .selectOption("Vehicle with SoC with Capacity");
+    await selectVehicle(lp1, "Vehicle with SoC with Capacity");
 
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
     const modal = await page.getByTestId("charging-plan-modal");
@@ -463,10 +430,7 @@ test.describe("repeating", async () => {
     await page.goto("/");
 
     const lp1 = await page.getByTestId("loadpoint").first();
-    await lp1
-      .getByTestId("change-vehicle")
-      .locator("select")
-      .selectOption("Vehicle with SoC with Capacity");
+    await selectVehicle(lp1, "Vehicle with SoC with Capacity");
 
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
     const modal = await page.getByTestId("charging-plan-modal");
@@ -487,7 +451,6 @@ test.describe("repeating", async () => {
     await modal.getByTestId("repeating-plan-time").fill("11:11");
 
     // with multiple plans, preview shows first plan
-    await page.waitForLoadState("networkidle");
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Preview plan: #1");
     await expect(modal.getByTestId("target-text")).toContainText("09:00");
 
@@ -512,10 +475,7 @@ test.describe("repeating", async () => {
     await page.goto("/");
 
     const lp1 = await page.getByTestId("loadpoint").first();
-    await lp1
-      .getByTestId("change-vehicle")
-      .locator("select")
-      .selectOption("Vehicle with SoC with Capacity");
+    await selectVehicle(lp1, "Vehicle with SoC with Capacity");
 
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
     const modal = await page.getByTestId("charging-plan-modal");
@@ -548,7 +508,6 @@ test.describe("repeating", async () => {
     // activate
     await modal.getByTestId("repeating-plan-time").fill("09:22");
     await modal.getByTestId("repeating-plan-active").click();
-    await page.waitForLoadState("networkidle");
 
     // specific weekday and time
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan: #2");
@@ -562,10 +521,7 @@ test.describe("repeating", async () => {
     const tomorrow = getWeekday(1);
 
     const lp1 = await page.getByTestId("loadpoint").first();
-    await lp1
-      .getByTestId("change-vehicle")
-      .locator("select")
-      .selectOption("Vehicle with SoC with Capacity");
+    await selectVehicle(lp1, "Vehicle with SoC with Capacity");
 
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
     const modal = await page.getByTestId("charging-plan-modal");
@@ -640,10 +596,7 @@ test.describe("repeating", async () => {
     const tomorrowShort = getWeekday(1, "short");
 
     let lp1 = await page.getByTestId("loadpoint").first();
-    await lp1
-      .getByTestId("change-vehicle")
-      .locator("select")
-      .selectOption("Vehicle with SoC with Capacity");
+    await selectVehicle(lp1, "Vehicle with SoC with Capacity");
 
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
     const modal = await page.getByTestId("charging-plan-modal").first();
@@ -671,10 +624,7 @@ test.describe("repeating", async () => {
     await page.goto("/");
 
     lp1 = await page.getByTestId("loadpoint").first();
-    await lp1
-      .getByTestId("change-vehicle")
-      .locator("select")
-      .selectOption("Vehicle with SoC with Capacity");
+    await selectVehicle(lp1, "Vehicle with SoC with Capacity");
 
     await lp1
       .getByTestId("charging-plan")
@@ -755,10 +705,7 @@ test.describe("plan strategy", async () => {
     await page.setViewportSize(mobile);
 
     const lp1 = await page.getByTestId("loadpoint").first();
-    await lp1
-      .getByTestId("change-vehicle")
-      .locator("select")
-      .selectOption("Vehicle with SoC with Capacity");
+    await selectVehicle(lp1, "Vehicle with SoC with Capacity");
 
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
 

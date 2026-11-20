@@ -8,7 +8,7 @@ import (
 )
 
 func TestBatteryModeTransitions(t *testing.T) {
-	all := []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge, api.BatteryDischarge}
+	all := []api.BatteryMode{api.BatteryNormal, api.BatteryHoldDischarge, api.BatteryCharge, api.BatteryHoldCharge, api.BatteryDischarge}
 
 	for i := range all {
 		modes := all[:i+1]

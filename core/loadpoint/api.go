@@ -149,7 +149,7 @@ type API interface {
 	SetPlanEnergy(time.Time, float64) error
 	// ClearPlanLock clears the locked plan goal
 	ClearPlanLock()
-	// RequestUpdate triggers an immediate loadpoint update
+	// RequestUpdate triggers an immediate loadpoint update, non-blocking and safe to call while holding locks
 	RequestUpdate()
 	// GetPlanGoal returns the plan goal and if the goal is soc based
 	GetPlanGoal() (float64, bool)

@@ -26,6 +26,10 @@ test("lists consumers, aux and others, excludes ext", async ({ page }) => {
   await expect(consumers.filter({ hasText: "submeter" })).toBeHidden(); // ext excluded
   await expect(consumers).toContainText(["boiler", "fridge"]); // alphabetical, not config order
 
+  // consumers pick their own unit, top-level entries are in kW
+  await expect(page.getByTestId("energyflow-entry-gridexport")).toContainText("1.1 kW");
+  await expect(consumers).toContainText(["450 W", "200 W"]);
+
   // unmetered remainder: home 900 W minus fridge and boiler, ext not subtracted
   const others = page.getByTestId("energyflow-entry-consumer-other");
   await expect(others).toContainText("Others");

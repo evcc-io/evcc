@@ -6,6 +6,7 @@ products:
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
 render: |
   type: custom
   power:

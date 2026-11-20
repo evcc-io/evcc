@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -26,8 +27,9 @@ import (
 // https://github.com/TA2k/ioBroker.vw-connect (lib/euDataAct.js)
 
 const (
-	// BaseURL is the EU Data Act portal that delivers the mandated vehicle datasets
-	BaseURL = "https://eu-data-act.drivesomethinggreater.com"
+	// BaseURL is the EU Data Act portal. The former drivesomethinggreater.com host
+	// redirects API calls to a path that answers 404.
+	BaseURL = "https://eu-data-act.vwgroup-datahub.com"
 	// RedirectURI is the OIDC redirect target registered for the portal
 	RedirectURI = BaseURL + "/login"
 	// Scope is the OIDC scope requested for the EU Data Act flow
@@ -208,11 +210,21 @@ func (v *API) login(gen uint64) error {
 		if final, err = loginLocation(resp); err != nil {
 			return err
 		}
+	} else if resp.StatusCode == http.StatusOK && vwidentity.IsAuth0MarketingConsent(final) {
+		resp, err = vwidentity.SkipAuth0MarketingConsent(&client, resp)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		if final, err = loginLocation(resp); err != nil {
+			return err
+		}
 	}
 
 	// a successful login lands on the portal; a remaining signin/consent url means
 	// the user has not completed the one-time browser consent and vehicle linking
-	if strings.Contains(final.Path, "signin-service") || strings.Contains(final.Path, "/consent") || strings.Contains(final.Path, "/error") {
+	if strings.Contains(final.Path, "signin-service") || strings.Contains(final.Path, "/consent") || strings.Contains(final.Path, "/error") ||
+		strings.HasPrefix(final.Path, "/v2/login/ui/") {
 		return api.UrlError(
 			fmt.Sprintf("login did not complete- open the portal and confirm consent: %s", final),
 			final,
@@ -245,9 +257,15 @@ func validMarketingCallback(u *url.URL, identityHost string) bool {
 	return u.Scheme == "https" && strings.EqualFold(u.Host, identityHost) && validPath
 }
 
+// userPagePath matches the portal's short user page path, e.g. /de/en/user.html
+var userPagePath = regexp.MustCompile(`^/[a-z]{2}/[a-z]{2}/user\.html$`)
+
 func isUserPage(u *url.URL) bool {
-	return u.Scheme == "https" && strings.EqualFold(u.Host, portalHost) &&
-		strings.HasPrefix(u.Path, "/content/euda/") && strings.HasSuffix(u.Path, "/user.html")
+	if u.Scheme != "https" || !strings.EqualFold(u.Host, portalHost) {
+		return false
+	}
+	return strings.HasPrefix(u.Path, "/content/euda/") && strings.HasSuffix(u.Path, "/user.html") ||
+		userPagePath.MatchString(u.Path)
 }
 
 func loginLocation(resp *http.Response) (*url.URL, error) {

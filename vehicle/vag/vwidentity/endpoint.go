@@ -2,12 +2,14 @@ package vwidentity
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"regexp"
 	"strings"
 	"uuid"
 
@@ -195,6 +197,18 @@ func (v *Service) authLocation(resp *http.Response) (url.Values, error) {
 	// GET identity.vwgroup.io/signin-service/v1/consent/users/bca09cc0-8eba-4110-af71-7242868e1bf1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?scopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&callback=https://identity.vwgroup.io/oidc/v1/oauth/client/callback&hmac=a590931ca3cd9dc3a27f1d1c0c162bf1e5c5c32c9f5b40fcb36d4c6edc631e03
 	// GET identity.vwgroup.io/oidc/v1/oauth/client/callback/success?user_id=bca09cc0-8eba-4110-af71-7242868e1bf1&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com&scopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&consentedScopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&relayState=f89a0b750c93e278a7ace170ce374e9cb9eb0a74&hmac=2b728f463c3cfe80f3271fbb35680e5e5218ca70025a46e7fadf7c7982decc2b
 
+	if resp.Request != nil && IsAuth0MarketingConsent(resp.Request.URL) {
+		var err error
+		if resp, err = SkipAuth0MarketingConsent(v.Client, resp); err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode >= http.StatusBadRequest {
+			return nil, errors.New(resp.Status)
+		}
+	}
+
 	// VW periodically interjects an optional marketing consent page after an
 	// otherwise successful login. Skip it without consenting so evcc recovers
 	// automatically instead of requiring a restart (#29760).
@@ -246,6 +260,81 @@ func MarketingConsentCallback(u *url.URL) (*url.URL, error) {
 	cb.RawQuery = cb.Query().Encode()
 
 	return cb, nil
+}
+
+// IsAuth0MarketingConsent reports whether u is the marketing consent page of the Auth0 login flow
+func IsAuth0MarketingConsent(u *url.URL) bool {
+	return u != nil && strings.EqualFold(u.Host, strings.TrimPrefix(BaseURL, "https://")) && u.Path == "/v2/login/ui/marketing-consent"
+}
+
+var idkDataRegex = regexp.MustCompile(`window\._IDK\s*=\s*(\{[\s\S]*?\});`)
+
+// marketingSkipForm builds the "not now" form of the Auth0 marketing consent page from its window._IDK.Data,
+// bound channels keep the basic agreement status quo, see TA2k/ioBroker.vw-connect@5a8446b
+func marketingSkipForm(body []byte) (url.Values, error) {
+	m := idkDataRegex.FindSubmatch(body)
+	if m == nil {
+		return nil, errors.New("marketing consent page data not found")
+	}
+
+	var res struct {
+		Data struct {
+			Channels []struct {
+				ChannelID   string `json:"channelId"`
+				ChannelType string `json:"channelType"`
+			} `json:"channels"`
+			State           string `json:"state"`
+			RelayStateToken string `json:"relayStateToken"`
+			MdKey           string `json:"mdKey"`
+			MdLanguage      string `json:"mdLanguage"`
+		} `json:"Data"`
+	}
+	if err := json.Unmarshal(m[1], &res); err != nil {
+		return nil, fmt.Errorf("marketing consent page data: %w", err)
+	}
+
+	data := url.Values{}
+	for _, ch := range res.Data.Channels {
+		if ch.ChannelID == "" {
+			continue
+		}
+		// never opt into unknown channel types
+		val := "not_used"
+		if ch.ChannelType == "BOUND_TO_BASIC_AGREEMENT" {
+			val = "true"
+		}
+		data.Set("channel"+ch.ChannelID, val)
+	}
+
+	for k, v := range map[string]string{
+		"state":      res.Data.State,
+		"relayState": res.Data.RelayStateToken,
+		"mdKey":      res.Data.MdKey,
+		"mdLanguage": res.Data.MdLanguage,
+	} {
+		if v != "" {
+			data.Set(k, v)
+		}
+	}
+
+	return data, nil
+}
+
+// SkipAuth0MarketingConsent declines the Auth0 marketing consent page in resp and continues the login
+func SkipAuth0MarketingConsent(client *http.Client, resp *http.Response) (*http.Response, error) {
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := marketingSkipForm(body)
+	if err != nil {
+		return nil, err
+	}
+
+	uri := resp.Request.URL.ResolveReference(&url.URL{Path: "marketing-consent/skip"})
+
+	return client.PostForm(uri.String(), data)
 }
 
 // skipMarketingConsent detects the optional VW/Audi marketing consent page that

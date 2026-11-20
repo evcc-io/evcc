@@ -11,6 +11,7 @@ discovery:
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 1
   - name: connector
 render: |
   type: compleo

@@ -39,7 +39,6 @@ jobs:
     uses: ./.github/workflows/default.yml
     permissions:
       contents: read
-      actions: write
 
   docker:
     needs:

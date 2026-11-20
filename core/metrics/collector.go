@@ -113,6 +113,7 @@ func (c *Collector) process(fun func()) error {
 // slot, leaving it untouched within the current one.
 func (c *Collector) advanceSlot(now time.Time) error {
 	slotStart := now.Truncate(tariff.SlotDuration)
+	var persisted time.Time
 
 	switch {
 	case c.started.IsZero():
@@ -132,6 +133,7 @@ func (c *Collector) advanceSlot(now time.Time) error {
 			if err := c.persist(c.recovering()); err != nil {
 				return err
 			}
+			persisted = c.started
 		}
 
 		c.restored = false // only the first slot inherits recovery energy
@@ -144,7 +146,11 @@ func (c *Collector) advanceSlot(now time.Time) error {
 	c.accu.Energy = 0
 	c.accu.ReturnEnergy = 0
 	c.accu.SocTemp = nil
-	return nil
+
+	if persisted.IsZero() {
+		return nil
+	}
+	return fill(c.entity, persisted)
 }
 
 // recovering reports whether the current slot holds downtime catchup energy: a restore that
