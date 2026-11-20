@@ -19,6 +19,8 @@ package charger
 
 import (
 	"context"
+	"encoding/binary"
+	"errors"
 	"fmt"
 	"time"
 
@@ -30,34 +32,36 @@ import (
 )
 
 type SchneiderG4S struct {
-	log  *util.Logger
-	conn *modbus.Connection
-	curr uint16
+	log   *util.Logger
+	conn  *modbus.Connection
+	curr  uint16
+	read  func(address, quantity uint16) ([]byte, error)
+	write func(address, value uint16) error
 }
 
 const (
-	schneiderG4SRegCpwState             = 6    // 1 RO
-	schneiderG4SRegEvState              = 8    // 1 RO
-	schneiderG4SRegLastStopCause        = 9    // 1 RO
-	schneiderG4SRegCommandStatus        = 20   // 1 RO
-	schneiderG4SRegChargingTime         = 30   // 2 RO (seconds)
-	schneiderG4SRegSetCommand           = 150  // 1 RW
-	schneiderG4SRegSetPoint             = 301  // 1 RW unsigned (A)
-	schneiderG4SRegCurrents             = 350  // 6 RO float (A)
-	schneiderG4SRegEnergy               = 356  // 2 RO uint32t (Wh)
-	schneiderG4SRegPower                = 358  // 2 RO float (kW)
-	schneiderG4SRegVoltages             = 366  // 6 RO float (V)
-	schneiderG4SRegLifebit              = 932  // 1 RW
-	schneiderG4SRegSessionChargingTime  = 2004 // 2 RO (seconds)
+	schneiderG4SRegCpwState            = 6
+	schneiderG4SRegEvState             = 8
+	schneiderG4SRegLastStopCause       = 9
+	schneiderG4SRegCommandStatus       = 20
+	schneiderG4SRegChargingTime        = 30
+	schneiderG4SRegSetCommand          = 150
+	schneiderG4SRegSetPoint            = 301
+	schneiderG4SRegCurrents            = 350
+	schneiderG4SRegEnergy              = 356
+	schneiderG4SRegPower               = 358
+	schneiderG4SRegVoltages            = 366
+	schneiderG4SRegLifebit             = 932
+	schneiderG4SRegSessionChargingTime = 2004
 
 	schneiderG4SDisabled = uint16(0)
 )
 
 func init() {
-	registry.Add("schneider-g4s", NewSchneiderG4SFromConfig)
+	registry.AddCtx("schneider-g4s", NewSchneiderG4SFromConfig)
 }
 
-func NewSchneiderG4SFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewSchneiderG4SFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -66,11 +70,11 @@ func NewSchneiderG4SFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	return NewSchneiderG4S(cc.URI, cc.ID)
+	return NewSchneiderG4S(ctx, cc)
 }
 
-func NewSchneiderG4S(uri string, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(context.Background(), uri, "", "", 0, modbus.Tcp, id)
+func NewSchneiderG4S(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -88,29 +92,64 @@ func NewSchneiderG4S(uri string, id uint8) (api.Charger, error) {
 		curr: 6,
 	}
 
-	// get initial state from charger
+	// Detect the supported Modbus register protocol. Only fall back to input
+	// registers when holding-register access is rejected with a Modbus exception.
 	b, err := wb.conn.ReadHoldingRegisters(schneiderG4SRegSetPoint, 1)
-	if err != nil {
+	switch {
+	case err == nil:
+		wb.log.DEBUG.Println("using FC03/FC06 protocol")
+
+		wb.read = wb.conn.ReadHoldingRegisters
+		wb.write = func(address, value uint16) error {
+			_, err := wb.conn.WriteSingleRegister(address, value)
+			return err
+		}
+
+	case modbus.IsException(err):
+		b2, err2 := wb.conn.ReadInputRegisters(schneiderG4SRegSetPoint, 1)
+		if err2 != nil {
+			return nil, fmt.Errorf("current limit: %w", errors.Join(err, err2))
+		}
+		b = b2
+
+		wb.log.DEBUG.Println("using FC04/FC16 protocol")
+
+		wb.read = wb.conn.ReadInputRegisters
+		wb.write = func(address, value uint16) error {
+			data := make([]byte, 2)
+			binary.BigEndian.PutUint16(data, value)
+			_, err := wb.conn.WriteMultipleRegisters(address, 1, data)
+			return err
+		}
+
+	default:
 		return nil, fmt.Errorf("current limit: %w", err)
 	}
+
 	if u := encoding.Uint16(b); u > wb.curr {
 		wb.curr = u
 	}
 
-	b, err = wb.conn.ReadHoldingRegisters(schneiderG4SRegLifebit, 1)
+	b, err = wb.read(schneiderG4SRegLifebit, 1)
 	if err != nil {
 		return nil, fmt.Errorf("heartbeat timeout: %w", err)
 	}
 	if u := encoding.Uint16(b); u != 2 {
-		go wb.heartbeat(2 * time.Second)
+		go wb.heartbeat(ctx, 2*time.Second)
 	}
 
 	return wb, nil
 }
 
-func (wb *SchneiderG4S) heartbeat(timeout time.Duration) {
-	for range time.Tick(timeout) {
-		if _, err := wb.conn.WriteSingleRegister(schneiderG4SRegLifebit, 1); err != nil {
+func (wb *SchneiderG4S) heartbeat(ctx context.Context, timeout time.Duration) {
+	for tick := time.Tick(timeout); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
+		if err := wb.write(schneiderG4SRegLifebit, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
@@ -118,7 +157,7 @@ func (wb *SchneiderG4S) heartbeat(timeout time.Duration) {
 
 // Status implements the api.Charger interface
 func (wb *SchneiderG4S) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(schneiderG4SRegEvState, 1)
+	b, err := wb.read(schneiderG4SRegEvState, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -139,7 +178,7 @@ func (wb *SchneiderG4S) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *SchneiderG4S) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(schneiderG4SRegSetPoint, 1)
+	b, err := wb.read(schneiderG4SRegSetPoint, 1)
 	if err != nil {
 		return false, err
 	}
@@ -154,13 +193,12 @@ func (wb *SchneiderG4S) Enable(enable bool) error {
 		u = wb.curr
 	}
 
-	_, err := wb.conn.WriteSingleRegister(schneiderG4SRegSetPoint, u)
-	return err
+	return wb.write(schneiderG4SRegSetPoint, u)
 }
 
 // MaxCurrent implements the api.Charger interface
 func (wb *SchneiderG4S) MaxCurrent(current int64) error {
-	_, err := wb.conn.WriteSingleRegister(schneiderG4SRegSetPoint, uint16(current))
+	err := wb.write(schneiderG4SRegSetPoint, uint16(current))
 	if err == nil {
 		wb.curr = uint16(current)
 	}
@@ -170,7 +208,7 @@ func (wb *SchneiderG4S) MaxCurrent(current int64) error {
 
 // CurrentPower implements the api.Meter interface
 func (wb *SchneiderG4S) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(schneiderG4SRegPower, 2)
+	b, err := wb.read(schneiderG4SRegPower, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -181,7 +219,7 @@ var _ api.MeterEnergy = (*SchneiderG4S)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *SchneiderG4S) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(schneiderG4SRegEnergy, 2)
+	b, err := wb.read(schneiderG4SRegEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -205,7 +243,7 @@ func (wb *SchneiderG4S) Voltages() (float64, float64, float64, error) {
 
 // getPhaseValues returns 3 sequential phase values
 func (wb *SchneiderG4S) getPhaseValues(reg uint16) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
+	b, err := wb.read(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -222,7 +260,7 @@ var _ api.ChargeTimer = (*SchneiderG4S)(nil)
 
 // ChargeDuration implements the api.ChargeTimer interface
 func (wb *SchneiderG4S) ChargeDuration() (time.Duration, error) {
-	b, err := wb.conn.ReadHoldingRegisters(schneiderG4SRegSessionChargingTime, 2)
+	b, err := wb.read(schneiderG4SRegSessionChargingTime, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -234,25 +272,25 @@ var _ api.Diagnosis = (*SchneiderG4S)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *SchneiderG4S) Diagnose() {
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderG4SRegCpwState, 1); err == nil {
+	if b, err := wb.read(schneiderG4SRegCpwState, 1); err == nil {
 		fmt.Printf("\tcpwState:\t\t%d\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderG4SRegEvState, 1); err == nil {
+	if b, err := wb.read(schneiderG4SRegEvState, 1); err == nil {
 		fmt.Printf("\tevState:\t\t%d\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderG4SRegLastStopCause, 1); err == nil {
+	if b, err := wb.read(schneiderG4SRegLastStopCause, 1); err == nil {
 		fmt.Printf("\tLast stop cause:\t%d\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderG4SRegCommandStatus, 1); err == nil {
+	if b, err := wb.read(schneiderG4SRegCommandStatus, 1); err == nil {
 		fmt.Printf("\tCommand status:\t\t%d\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderG4SRegSetCommand, 1); err == nil {
+	if b, err := wb.read(schneiderG4SRegSetCommand, 1); err == nil {
 		fmt.Printf("\tSet command:\t\t%d\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderG4SRegSetPoint, 1); err == nil {
+	if b, err := wb.read(schneiderG4SRegSetPoint, 1); err == nil {
 		fmt.Printf("\tSet Point:\t\t%d\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderG4SRegLifebit, 1); err == nil {
+	if b, err := wb.read(schneiderG4SRegLifebit, 1); err == nil {
 		fmt.Printf("\tLifebit:\t\t%d\n", encoding.Uint16(b))
 	}
 }
