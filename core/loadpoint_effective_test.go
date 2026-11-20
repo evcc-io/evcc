@@ -22,6 +22,150 @@ func TestEffectiveLimitSoc(t *testing.T) {
 	assert.Equal(t, 100, lp.effectiveLimitSoc())
 }
 
+func TestPriorityGap(t *testing.T) {
+	tc := []struct {
+		strategy      api.PriorityStrategy
+		basis         api.PriorityBasis
+		soc, limitSoc float64
+		capacity      float64 // vehicle capacity in kWh, 0 = no/unknown vehicle
+		gap           float64
+		ok            bool
+	}{
+		// none: no comparable gap
+		{api.PriorityNone, api.PriorityBasisPercent, 50, 0, 0, 0, false},
+		// soc (percent): gap to full in soc-%; full vehicle is 0, unknown soc is not comparable
+		{api.PrioritySoc, api.PriorityBasisPercent, 20, 0, 0, 80, true},
+		{api.PrioritySoc, api.PriorityBasisPercent, 80, 0, 0, 20, true},
+		{api.PrioritySoc, api.PriorityBasisPercent, 100, 0, 0, 0, true},
+		{api.PrioritySoc, api.PriorityBasisPercent, 0, 0, 0, 0, false},
+		// deficit (percent): gap to the limit soc (default 100), negative above the limit
+		{api.PriorityDeficit, api.PriorityBasisPercent, 50, 80, 0, 30, true},
+		{api.PriorityDeficit, api.PriorityBasisPercent, 50, 0, 0, 50, true},
+		{api.PriorityDeficit, api.PriorityBasisPercent, 90, 80, 0, -10, true},
+		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 80, 0, 0, false},
+		// soc (energy): (100-soc)/100*capacity in kWh; unknown capacity is not comparable
+		{api.PrioritySoc, api.PriorityBasisEnergy, 20, 0, 50, 40, true},
+		{api.PrioritySoc, api.PriorityBasisEnergy, 80, 0, 50, 10, true},
+		{api.PrioritySoc, api.PriorityBasisEnergy, 20, 0, 25, 20, true},
+		{api.PrioritySoc, api.PriorityBasisEnergy, 20, 0, 0, 0, false},
+		// deficit (energy): (limitSoc-soc)/100*capacity in kWh
+		{api.PriorityDeficit, api.PriorityBasisEnergy, 50, 80, 50, 15, true},
+		{api.PriorityDeficit, api.PriorityBasisEnergy, 50, 80, 0, 0, false},
+		// Steve's case: percent ranks the small car B (40%) above A (50%), energy ranks A (37.5kWh) above B (15kWh)
+		{api.PrioritySoc, api.PriorityBasisPercent, 50, 0, 75, 50, true},
+		{api.PrioritySoc, api.PriorityBasisPercent, 40, 0, 25, 60, true},
+		{api.PrioritySoc, api.PriorityBasisEnergy, 50, 0, 75, 37.5, true},
+		{api.PrioritySoc, api.PriorityBasisEnergy, 40, 0, 25, 15, true},
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.status = api.StatusB
+		lp.vehicleSoc = tc.soc
+		lp.limitSoc = int(tc.limitSoc)
+
+		if tc.capacity > 0 {
+			ctrl := gomock.NewController(t)
+			vehicle := api.NewMockVehicle(ctrl)
+			vehicle.EXPECT().Capacity().Return(tc.capacity).AnyTimes()
+			vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+			lp.vehicle = vehicle
+		}
+
+		gap, ok := lp.PriorityGap(tc.strategy, tc.basis)
+		assert.Equal(t, tc.ok, ok)
+		assert.InDelta(t, tc.gap, gap, 1e-9)
+	}
+}
+
+// soc 0 is the unknown sentinel used across core: a vehicle reporting 0% has no comparable gap
+func TestPriorityGapZeroSocReadAsUnknown(t *testing.T) {
+	gap := func(strategy api.PriorityStrategy, soc float64) (float64, bool) {
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.status = api.StatusB
+		lp.vehicleSoc = soc
+		return lp.PriorityGap(strategy, api.PriorityBasisPercent)
+	}
+
+	for _, strategy := range []api.PriorityStrategy{api.PrioritySoc, api.PriorityDeficit} {
+		depleted, ok := gap(strategy, 0)
+		assert.False(t, ok)
+		assert.Zero(t, depleted)
+	}
+}
+
+// the energy basis must keep distinct kWh gaps distinct: a big pack near empty has to
+// outrank the same pack half full instead of both saturating the fraction
+func TestPriorityGapEnergyLargePack(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(200.0).AnyTimes()
+	vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+
+	gap := func(soc float64) float64 {
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.status = api.StatusB
+		lp.vehicleSoc = soc
+		lp.vehicle = vehicle
+		gap, ok := lp.PriorityGap(api.PrioritySoc, api.PriorityBasisEnergy)
+		require.True(t, ok)
+		return gap
+	}
+
+	assert.Greater(t, gap(5), gap(45), "190kWh gap must outrank 110kWh gap")
+}
+
+// the fraction must stay ordered just below the tier boundary: near-empty vehicles must
+// not collapse into a tie, and an out-of-range limit soc must not reach the next tier
+func TestPriorityGapDoesNotSaturate(t *testing.T) {
+	gap := func(strategy api.PriorityStrategy, soc float64, limitSoc int) float64 {
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.status = api.StatusB
+		lp.vehicleSoc = soc
+		lp.limitSoc = limitSoc
+		gap, ok := lp.PriorityGap(strategy, api.PriorityBasisPercent)
+		require.True(t, ok)
+		return gap
+	}
+
+	assert.Greater(t, gap(api.PrioritySoc, 0.2, 0), gap(api.PrioritySoc, 0.8, 0))
+	assert.Equal(t, 199.0, gap(api.PriorityDeficit, 1, 200))
+}
+
+// heating loadpoints alias temperature as soc, which is no charge level: they get
+// the plain tier score without strategy sub-ordering
+func TestPriorityGapUnavailable(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	describer := api.NewMockFeatureDescriber(ctrl)
+	describer.EXPECT().Features().Return([]api.Feature{api.Heating}).AnyTimes()
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.status = api.StatusB
+	lp.priority = 1
+	lp.vehicleSoc = 55 // temperature
+	lp.charger = struct {
+		api.Charger
+		api.FeatureDescriber
+	}{
+		Charger:          api.NewMockCharger(ctrl),
+		FeatureDescriber: describer,
+	}
+
+	_, ok := lp.PriorityGap(api.PrioritySoc, api.PriorityBasisPercent)
+	assert.False(t, ok)
+
+	lp.charger = nil
+	_, ok = lp.PriorityGap(api.PrioritySoc, api.PriorityBasisEnergy)
+	assert.False(t, ok, "energy basis without capacity must tie")
+
+	lp.status = api.StatusA
+	_, ok = lp.PriorityGap(api.PrioritySoc, api.PriorityBasisPercent)
+	assert.False(t, ok, "disconnected stale soc must tie")
+}
+
 func TestEffectiveMinSoc(t *testing.T) {
 	config.Reset()
 	t.Cleanup(config.Reset)

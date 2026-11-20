@@ -52,6 +52,10 @@ func (m *mockSite) GetResidualPower() float64 {
 	return m.residualPower
 }
 
+func (m *mockSite) GetPriorityStrategy() api.PriorityStrategy {
+	return api.PriorityNone
+}
+
 func TestBoostPower(t *testing.T) {
 	lp := &Loadpoint{
 		log:          util.NewLogger("lp"),
