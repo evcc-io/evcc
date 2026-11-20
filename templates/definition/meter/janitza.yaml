@@ -8,6 +8,7 @@ products:
       generic: UMG series
 discovery:
   mac: ["000E6B"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

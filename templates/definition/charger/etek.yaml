@@ -4,6 +4,7 @@ products:
     description:
       generic: EKEPC2-C/S EV Charge Controller
 capabilities: ["mA", "dim"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]

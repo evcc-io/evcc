@@ -7,6 +7,7 @@ capabilities: ["battery-control"]
 discovery:
   hostname: ["sma*"]
   mac: ["0015BB", "0040AD"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["battery"]

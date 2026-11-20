@@ -12,6 +12,7 @@ products:
   - brand: ZCS Azzurro
     description:
       generic: Hybrid Inverter
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

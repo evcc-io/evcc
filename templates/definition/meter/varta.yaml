@@ -17,6 +17,7 @@ requirements:
   description:
     de: PV ist nur mit einem zusätzlichen PV-Sensor verfügbar, da die Leistung der im SUNSPEC-Manager eingetragenen Geräte nicht über Modbus ausgegeben wird. Für den element backup ist mindestens die Firmwareversion F21000612 erforderlich. Das Firmware-Update wird nicht automatisch ausgerollt, kann aber auf Anfrage vom technischen Service von VARTA freigegeben werden.
     en: PV is only available with an additional PV sensor, as the power of the devices registered in the SUNSPEC Manager is not output via Modbus. Element backup requires at least firmware version F21000612. The firmware update is not rolled out automatically, but can be released upon request by VARTA's technical service.
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

@@ -3,6 +3,7 @@ products:
   - brand: SAJ
     description:
       generic: R5 Series Solar Inverter
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv"]

@@ -4,6 +4,7 @@ products:
     description:
       generic: Duo Power
 capabilities: ["meter", "dim"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

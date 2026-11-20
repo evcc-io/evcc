@@ -23,6 +23,7 @@ requirements:
       - To use power control, select Modbus ext. power limitation under AUX in menu 7.4. Set the minimum output of the immersion heater in the charging point settings.
       - In menu 7.4, the options “SG-Ready A” and “SG-Ready B” must not be assigned.
       - Enable "Activate SG-Ready via API" in menu 4.2.3.
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

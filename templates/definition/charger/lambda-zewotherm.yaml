@@ -23,6 +23,7 @@ requirements:
 
       - E-Meter communication type: "ModBus Client"
       - E-Meter measuring point: "Energy-Input"
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

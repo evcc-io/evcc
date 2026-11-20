@@ -8,6 +8,7 @@ products:
     description:
       generic: 3p hybrid inverter
 capabilities: ["battery-control", "curtail"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

@@ -8,6 +8,7 @@ products:
       generic: Ampere.StoragePro
 discovery:
   mdns: ["_modbus._tcp:*HST*", "_modbus._tcp:*HSR*"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

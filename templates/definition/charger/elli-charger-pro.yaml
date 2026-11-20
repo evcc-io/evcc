@@ -35,6 +35,7 @@ caveats:
       de: "Viele bekannte EEBUS-Firmware-Fehler, die der Hersteller nicht behebt: Ladewerte können unzuverlässig sein und die Verbindung bricht häufig ab. Ein externer Zähler ist erforderlich."
       en: "Many known EEBUS firmware bugs that the manufacturer will not fix: charging measurements can be unreliable and the connection drops frequently. An external meter is required."
     link: https://github.com/evcc-io/evcc/discussions/15367
+protocols: [eebus]
 params:
   - preset: eebus
   - name: ip

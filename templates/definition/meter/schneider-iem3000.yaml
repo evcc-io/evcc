@@ -3,6 +3,7 @@ products:
   - brand: Schneider Electric
     description:
       generic: iEM3xxx Modbus
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

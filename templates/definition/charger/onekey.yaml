@@ -20,6 +20,7 @@ requirements:
       device's energy manager must run in SG Ready mode with evcc selected
       as the SG Ready source. When evcc runs on the OneKey device itself the
       broker is `localhost`.
+protocols: [mqtt]
 params:
   - preset: mqtt
   - name: timeout

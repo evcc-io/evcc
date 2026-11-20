@@ -15,6 +15,7 @@ requirements:
       Modbus TCP must be enabled at the SolvisControl under "Settings / Network".
       Control is done via the hot water target temperature.
       The controller does not support power reduction (dim).
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

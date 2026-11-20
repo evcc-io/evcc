@@ -33,6 +33,7 @@ requirements:
       Für die Fahrzeugerkennung per RFID muss die OCPP-Einstellung `LocalAuthListEnabled` in der Wallbox deaktiviert sein (`false`).
     en: |
       For vehicle identification via RFID, the OCPP setting `LocalAuthListEnabled` must be disabled (`false`) in the charger.
+protocols: [ocpp]
 params:
   - preset: ocpp
   - name: metervalues

@@ -9,6 +9,7 @@ requirements:
   description:
     de: EEBus-Messstelle am Netzanschlusspunkt mit dem Use Case MGCP (Monitoring of Grid Connection Point).
     en: EEBus metering device at the grid connection point using use case MGCP (Monitoring of Grid Connection Point).
+protocols: [eebus]
 params:
   - name: usage
     choice: ["grid"]

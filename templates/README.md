@@ -89,9 +89,8 @@ products:
 
 **Rules**:
 
-- Templates with a `modbus` param or an `ocpp`, `eebus` or `mqtt` preset derive the protocol and need no `protocols` key. All others set it explicitly.
 - Templates without any communication (e.g. demo devices, fixed tariffs) declare an empty list: `protocols: []`. Omitting the key is an error.
-- If an integration uses several protocols, list all of them and put the one that carries the main data first. This also applies to templates that would otherwise derive the protocol.
+- If an integration uses several protocols, list all of them and put the one that carries the main data first.
 - A protocol wrapped in another one is tagged by the outer protocol only. Example: Modbus frames inside Solarman are `other`.
 
 **Example**:

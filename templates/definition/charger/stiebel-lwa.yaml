@@ -13,6 +13,7 @@ capabilities: ["dim"]
 discovery:
   hostname: ["servicewelt*"]
   mac: ["78E9962", "70B3D5C45"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

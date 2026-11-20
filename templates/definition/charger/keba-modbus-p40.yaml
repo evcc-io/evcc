@@ -22,6 +22,7 @@ requirements:
       * For phase switching the minimum firmware version 1.3.0 must be installed. In the "Photovoltaic Optimized Charging" settings, the phase switching needs to be enabled. The "communication channel" must be set to "Modbus".
 discovery:
   mac: ["0060B5", "00141D"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

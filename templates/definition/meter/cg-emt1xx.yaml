@@ -6,6 +6,7 @@ products:
   - brand: Carlo Gavazzi
     description:
       generic: ET112
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv", "charge"]

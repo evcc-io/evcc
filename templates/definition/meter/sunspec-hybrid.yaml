@@ -5,6 +5,7 @@ products:
       de: SunSpec Hybridwechselrichter
       en: SunSpec Hybrid Inverter
 group: generic
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

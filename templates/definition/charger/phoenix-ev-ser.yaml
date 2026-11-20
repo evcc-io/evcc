@@ -4,6 +4,7 @@ products:
     description:
       generic: EV-SER
 capabilities: ["dim"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["rs485"]

@@ -53,6 +53,7 @@ requirements:
   description:
     de: Die Schaltkontakte der Steuerbox werden an die Digitaleingänge des Moduls angeschlossen. Das Modul muss die Eingänge als Discrete Inputs (Funktionscode 02) bereitstellen, ein geschlossener Kontakt wird als aktiv gelesen.
     en: Connect the relay contacts of the control box to the digital inputs of the module. The module must provide the inputs as discrete inputs (function code 02), a closed contact reads as active.
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

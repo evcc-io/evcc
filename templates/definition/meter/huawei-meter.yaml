@@ -10,6 +10,7 @@ requirements:
   description:
     de: Der Zähler darf nicht gleichzeitig am Meter-Port eines Huawei-Wechselrichters angeschlossen sein. In diesem Fall die Netzwerte über das Wechselrichter-Template auslesen.
     en: The meter must not be connected to the meter port of a Huawei inverter at the same time. In that case, read the grid values via the inverter template.
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

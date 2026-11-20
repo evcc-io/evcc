@@ -15,6 +15,7 @@ requirements:
 discovery:
   mdns: ["_solaredge-modbus._tcp"]
   mac: ["002702", "84D6C5", "28B77C1", "9405BBA", "480BB25", "88A9A71"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip", "rs485"]

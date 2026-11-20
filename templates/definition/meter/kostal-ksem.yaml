@@ -7,6 +7,7 @@ discovery:
   mdns: ["_ship._tcp:KOSTAL*"]
   hostname: ["ksem-*"]
   mac: ["1897F1", "240BB1"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid"]

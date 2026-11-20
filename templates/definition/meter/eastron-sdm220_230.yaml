@@ -9,6 +9,7 @@ products:
   - brand: Weidmüller
     description:
       generic: EM111-RTU-2P
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

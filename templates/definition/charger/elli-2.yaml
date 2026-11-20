@@ -47,6 +47,7 @@ requirements:
       The wallbox PV surplus charging must be disabled (Charging management -> Charging settings -> PV surplus charging off).
 
       Phase switching and RFID identification require the IP address and technician password. Phase switching should be enabled in the wallbox settings (Charging management -> Charging settings).
+protocols: [eebus]
 params:
   - preset: eebus
   - name: ip

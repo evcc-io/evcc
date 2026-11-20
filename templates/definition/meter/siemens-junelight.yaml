@@ -9,6 +9,7 @@ requirements:
       Die Batterie muss mit dem Installer Zugang auf Loxone gestellt werden.
     en: |
       The battery has to be set to Loxone with the installer account.
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

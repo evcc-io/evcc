@@ -11,6 +11,7 @@ requirements:
     de: |
       Modbus TCP läuft am Ethernet-Port des Wechselrichters (RJ45-7), nicht am Dongle.
       Die Netz-Nutzung liest den am Wechselrichter angeschlossenen Smart Meter aus.
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

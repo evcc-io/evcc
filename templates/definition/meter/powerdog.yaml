@@ -2,6 +2,7 @@ template: powerdog
 products:
   - description:
       generic: Powerdog
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv"]

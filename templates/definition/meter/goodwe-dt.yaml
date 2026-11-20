@@ -5,6 +5,7 @@ products:
       generic: SDT/DT Inverter
 discovery:
   mac: ["F0C1CE"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv"]

@@ -11,6 +11,7 @@ requirements:
     de: |
       Der RS485-Port des Wechselrichters muss im Wechselrichtermenü auf
       das "Modbus"-Protokoll umgestellt werden.
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

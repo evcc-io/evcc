@@ -3,6 +3,7 @@ products:
   - brand: DZG
     description:
       generic: DVH4013
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv", "charge"]

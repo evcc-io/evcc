@@ -306,6 +306,7 @@ func TestBoolParamRendersAsBool(t *testing.T) {
 func TestValidateBoolParam(t *testing.T) {
 	tmpl := func(def, example string) *Template {
 		return &Template{
+			Protocols: []Protocol{},
 			Params: []Param{{
 				Name: "flag", Type: TypeBool, Default: def, Example: example,
 				Description: TextLanguage{DE: "Schalter", EN: "Flag"},
@@ -380,6 +381,7 @@ func TestAllTemplatesRenderWithBoolParams(t *testing.T) {
 func TestValidateDeviceParam(t *testing.T) {
 	tmpl := func(class string) *Template {
 		return &Template{
+			Protocols: []Protocol{},
 			Params: []Param{{
 				Name: "boost", Type: TypeDevice, Class: class, Usage: "switch",
 				Description: TextLanguage{DE: "Relais", EN: "Relay"},

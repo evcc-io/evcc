@@ -3,6 +3,7 @@ products:
   - brand: Acrel
     description:
       generic: ADW300
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

@@ -14,10 +14,3 @@ const (
 	ProtocolEEBus
 	ProtocolOther
 )
-
-// presetProtocols maps param presets to the protocol they imply
-var presetProtocols = map[string]Protocol{
-	"ocpp":  ProtocolOCPP,
-	"eebus": ProtocolEEBus,
-	"mqtt":  ProtocolMQTT,
-}

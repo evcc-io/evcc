@@ -3,6 +3,7 @@ products:
   - brand: Huawei
     description:
       generic: SmartLogger
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv"]

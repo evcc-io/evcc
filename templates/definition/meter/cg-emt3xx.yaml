@@ -18,6 +18,7 @@ products:
   - brand: Kostal
     description:
       generic: Energy Meter C (KEM-C)
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

@@ -12,6 +12,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
 
@@ -84,6 +85,14 @@ func (t *Template) SortRequiredParamsFirst() error {
 
 // validate the template (only rudimentary for now)
 func (t *Template) Validate() error {
+	// an explicit empty list means no communication
+	if t.Protocols == nil && !t.Deprecated {
+		return fmt.Errorf("missing protocols, use [] for no communication or a list of: %s", strings.Join(ProtocolStrings(), ", "))
+	}
+	if len(lo.Uniq(t.Protocols)) != len(t.Protocols) {
+		return fmt.Errorf("duplicate protocol: %v", t.Protocols)
+	}
+
 	for _, c := range t.Countries {
 		if !c.IsValid() {
 			return fmt.Errorf("invalid country code: '%s'", c)
@@ -171,35 +180,6 @@ func (t *Template) Validate() error {
 				}
 			}
 		}
-	}
-
-	return nil
-}
-
-// ResolveProtocols derives the protocols from presets and the modbus param if not set explicitly.
-// Must run before ResolvePresets, which replaces the preset references.
-func (t *Template) ResolveProtocols() error {
-	// an explicit empty list means no communication, only a missing key is derived
-	if t.Protocols != nil {
-		if len(slices.Compact(slices.Sorted(slices.Values(t.Protocols)))) != len(t.Protocols) {
-			return fmt.Errorf("duplicate protocol: %v", t.Protocols)
-		}
-		return nil
-	}
-
-	for _, p := range t.Params {
-		if protocol, ok := presetProtocols[p.Preset]; ok {
-			t.Protocols = []Protocol{protocol}
-			return nil
-		}
-		if p.Name == ParamModbus {
-			t.Protocols = []Protocol{ProtocolModbus}
-			return nil
-		}
-	}
-
-	if !t.Deprecated {
-		return fmt.Errorf("missing protocols, use [] for no communication or a list of: %s", strings.Join(ProtocolStrings(), ", "))
 	}
 
 	return nil

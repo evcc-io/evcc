@@ -5,6 +5,7 @@ products:
       generic: PowerBrain Meter
 requirements:
   evcc: ["sponsorship"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["charge"]

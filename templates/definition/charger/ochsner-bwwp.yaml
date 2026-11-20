@@ -5,6 +5,7 @@ products:
       generic: BWWP Genius 333
 capabilities: ["dim"]
 group: heating
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

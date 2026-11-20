@@ -5,6 +5,7 @@ products:
       en: SunSpec Battery (Model 124)
 capabilities: ["battery-control"]
 group: generic
+protocols: [modbus]
 params:
   - name: usage
     choice: ["battery"]

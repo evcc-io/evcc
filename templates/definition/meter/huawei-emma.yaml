@@ -3,6 +3,7 @@ products:
   - brand: Huawei
     description:
       generic: SmartAssistant (EMMA)
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

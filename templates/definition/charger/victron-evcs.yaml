@@ -19,6 +19,7 @@ requirements:
 discovery:
   hostname: ["venus"]
   mac: ["C0619AB"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

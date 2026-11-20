@@ -24,6 +24,7 @@ requirements:
     de: Der Modbus-Server (TCP-Port 502) muss über die Weboberfläche der Wallbox aktiviert werden. Getestet mit Firmware-Version v2.7.0
     en: The Modbus server (TCP port 502) must be activated on the Wallbox using the Web interface. Tested with Firmware version v2.7.0
   evcc: ["sponsorship"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

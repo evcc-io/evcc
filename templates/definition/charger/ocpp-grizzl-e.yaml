@@ -35,6 +35,7 @@ requirements:
       * In evcc, configure an OCPP forward with upstream server URL `wss://ocpp.unitedchargers.com/ocpp1.6` and the username and password from the charger OCPP configuration.
       * In the advanced forward settings, enable "Block commands from the upstream server".
       * In the advanced charger settings, set "Authentication token" to `uc_default_auth`.
+protocols: [ocpp]
 params:
   - preset: ocpp
   - name: idtag

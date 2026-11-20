@@ -2,6 +2,7 @@ template: fnn-eebus
 products:
   - description:
       generic: FNN-Steuerbox via EEBus LPC&LPP (§ 14a EnWG, § 9 EEG)
+protocols: [eebus]
 params:
   - preset: eebus
   - name: ski

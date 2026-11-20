@@ -4,6 +4,7 @@ products:
     description:
       generic: ASKOHEAT+
 group: heating
+protocols: [modbus]
 params:
   - name: usage
     choice: ["aux"]

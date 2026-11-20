@@ -4,6 +4,7 @@ products:
     description:
       generic: Mobile Charger Plus
 capabilities: ["meter", "dim"]
+protocols: [eebus]
 params:
   - preset: eebus
 render: |

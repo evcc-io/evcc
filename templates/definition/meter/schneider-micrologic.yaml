@@ -26,6 +26,7 @@ requirements:
       4-pole versions measure the neutral directly. 3-pole versions need an external neutral voltage tap (ENVT) for this, connected and declared in the trip unit (system type 40 or 41). Without ENVT, power values are wrong whenever current flows in the neutral.
 
       The power flow sign has to be set with "EcoStruxure Power Commission" so that the normal direction of flow counts as positive. Factory setting: from the top terminals to the bottom ones.
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

@@ -5,6 +5,7 @@ products:
       generic: Solaranzeige
 requirements:
   evcc: ["skiptest"]
+protocols: [mqtt]
 params:
   - name: usage
     choice: ["grid", "pv"]
