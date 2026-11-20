@@ -1,0 +1,25 @@
+template: usage-filter-demo
+group: generic
+products:
+  - description:
+      generic: Usage Filter Demo
+params:
+  - name: usage
+    choice: ["pv", "battery"]
+  - name: power
+    description:
+      generic: Power
+  - name: pvonly
+    description:
+      generic: PV only
+    usages: ["pv"]
+  - name: batteryonly
+    description:
+      generic: Battery only
+    usages: ["battery"]
+
+render: |
+  type: custom
+  power:
+    source: const
+    value: {{ .power }}

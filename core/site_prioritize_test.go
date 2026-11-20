@@ -59,8 +59,6 @@ func TestPvChargeStarting(t *testing.T) {
 }
 
 func TestReservedPVPower(t *testing.T) {
-	Voltage = 230
-
 	// higher-priority loadpoint (prio 1) starting up
 	high := newPVLoadpoint(1, api.ModeSmart, api.StatusB, false, clock.NewMock().Now())
 	// lower-priority loadpoint (prio 0) in PV mode
@@ -198,8 +196,6 @@ func startingPVLoadpoint(prio int, soc float64) *Loadpoint {
 // TestReservedPVPowerWithinTier asserts that the priority strategy orders the enable race
 // inside a tier: the emptier car starts against the surplus, the fuller one defers to it.
 func TestReservedPVPowerWithinTier(t *testing.T) {
-	Voltage = 230
-
 	// both claim the same surplus at the same priority tier
 	emptier := startingPVLoadpoint(0, 20)
 	fuller := startingPVLoadpoint(0, 80)
@@ -221,8 +217,6 @@ func TestReservedPVPowerWithinTier(t *testing.T) {
 }
 
 func TestReservedPVPowerUnknownSocTies(t *testing.T) {
-	Voltage = 230
-
 	known := startingPVLoadpoint(0, 80)
 	unknown := startingPVLoadpoint(0, 0)
 	site := newPrioritySite(api.PrioritySoc, 3, known, unknown)
@@ -236,7 +230,6 @@ func TestReservedPVPowerUnknownSocTies(t *testing.T) {
 }
 
 func TestReservedPVPowerEnergyWithoutCapacityTies(t *testing.T) {
-	Voltage = 230
 	ctrl := gomock.NewController(t)
 
 	vehicle := api.NewMockVehicle(ctrl)
@@ -259,8 +252,6 @@ func TestReservedPVPowerEnergyWithoutCapacityTies(t *testing.T) {
 
 // TestReservedPVPowerStrategyNone asserts that without a strategy only the tier decides.
 func TestReservedPVPowerStrategyNone(t *testing.T) {
-	Voltage = 230
-
 	// same tier, different soc: unordered, both race for the surplus
 	emptier := startingPVLoadpoint(0, 20)
 	fuller := startingPVLoadpoint(0, 80)
@@ -287,8 +278,6 @@ func TestReservedPVPowerStrategyNone(t *testing.T) {
 
 // TestReservedPVPowerHysteresis asserts the deadband applies to the enable race as well.
 func TestReservedPVPowerHysteresis(t *testing.T) {
-	Voltage = 230
-
 	emptier := startingPVLoadpoint(0, 20)
 	fuller := startingPVLoadpoint(0, 25)
 
@@ -317,8 +306,6 @@ func TestReservedPVPowerHysteresis(t *testing.T) {
 // TestReservedPVPowerAcrossTiers asserts the deadband sub-orders within a tier only: an
 // explicit priority wins even against a band wide enough to swallow a whole tier.
 func TestReservedPVPowerAcrossTiers(t *testing.T) {
-	Voltage = 230
-
 	ctrl := gomock.NewController(t)
 	newVehicle := func() api.Vehicle {
 		v := api.NewMockVehicle(ctrl)
@@ -350,8 +337,6 @@ func TestReservedPVPowerAcrossTiers(t *testing.T) {
 // TestReservedPVPowerHeating asserts a same-tier pair involving heating is left alone:
 // heating aliases temperature as soc and carries no score comparable to a car's.
 func TestReservedPVPowerHeating(t *testing.T) {
-	Voltage = 230
-
 	ctrl := gomock.NewController(t)
 	describer := api.NewMockFeatureDescriber(ctrl)
 	describer.EXPECT().Features().Return([]api.Feature{api.Heating}).AnyTimes()

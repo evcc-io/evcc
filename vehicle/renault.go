@@ -14,7 +14,6 @@ import (
 
 // Credits to
 //  https://github.com/hacf-fr/renault-api
-//  https://github.com/edent/Renault-Zoe-API/issues/18
 //  https://github.com/epenet/Renault-Zoe-API/blob/newapimockup/Test/MyRenault.py
 //  https://github.com/jamesremuscat/pyze
 //  https://muscatoxblog.blogspot.com/2019/07/delving-into-renaults-new-api.html
@@ -98,7 +97,7 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]any) (api.Vehicle,
 		err = vehicle.Available()
 	}
 
-	v.Provider = renault.NewProvider(api, accountID, vehicle.VIN, cc.WakeupMode, cc.Cache)
+	v.Provider = renault.NewProvider(api, accountID, vehicle.VIN, vehicle.VehicleDetails.Model.Code, cc.WakeupMode, cc.Cache)
 
 	return v, err
 }

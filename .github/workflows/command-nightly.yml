@@ -25,7 +25,7 @@ jobs:
       pull-requests: write
     steps:
       - name: React to comment
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             await github.rest.reactions.createForIssueComment({
@@ -35,7 +35,7 @@ jobs:
               content: 'eyes',
             });
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: master
           fetch-depth: 0
@@ -47,7 +47,7 @@ jobs:
         run: make patch-asn1-sudo
 
       - name: Create nightly build
-        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7
+        uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7
         with:
           version: "~> v2"
           args: --snapshot -f .goreleaser-nightly.yml --clean
@@ -75,7 +75,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Comment result
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             const num = context.payload.issue.number;
@@ -89,7 +89,7 @@ jobs:
             await github.rest.issues.createComment({ owner, repo, issue_number: num, body });
 
       - name: Resolve command comment
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             // collapse the /nightly comment as resolved now that the build is done

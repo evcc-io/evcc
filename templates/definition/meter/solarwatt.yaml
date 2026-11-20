@@ -10,6 +10,8 @@ products:
   - brand: Solarwatt
     description:
       generic: EnergyManager Pro
+discovery:
+  mac: ["4C52EC"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

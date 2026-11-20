@@ -141,13 +141,13 @@ render: |
       address: 33139 # Battery capacity SOC
       type: input
       decode: uint16
-  # reserve soc per mode: normal minsoc, hold current soc, charge maxsoc
+  # reserve soc per mode: normal minsoc, holddischarge current soc, charge maxsoc
   limitsoc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 43024 # Battery Reserve SOC
-      type: writeholding
+      type: writesingle
       decode: uint16
   batterymode:
     source: switch
@@ -161,9 +161,9 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 43110
-            type: writeholding
+            type: writesingle
             decode: uint16
-    - case: 2  # hold
+    - case: 2  # holddischarge
       set:
         source: const
         value: 17 # Bits 0+4: Self Use (1) + Battery Reserve (16)
@@ -172,7 +172,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 43110
-            type: writeholding
+            type: writesingle
             decode: uint16
     - case: 3  # charge
       set:
@@ -183,7 +183,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 43110
-            type: writeholding
+            type: writesingle
             decode: uint16
   {{- include "battery-params" . }}
   {{- end }}

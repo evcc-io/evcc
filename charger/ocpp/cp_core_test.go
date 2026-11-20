@@ -242,3 +242,86 @@ func TestMonitorRebootOnlyOnce(t *testing.T) {
 	require.Eventually(t, func() bool { return callCount.Load() == 1 }, time.Second, 10*time.Millisecond,
 		"setup should be called exactly once")
 }
+
+func TestConnectPublishesStatusChange(t *testing.T) {
+	log := util.NewLogger("test")
+	cp := NewChargePoint(log, instance, "test-cp")
+
+	var published atomic.Int32
+	instance.SetUpdated(func() { published.Add(1) })
+	defer instance.SetUpdated(nil)
+
+	cp.connect(true)
+	assert.Equal(t, int32(1), published.Load(), "connect should publish")
+
+	cp.connect(true)
+	assert.Equal(t, int32(1), published.Load(), "unchanged state should not publish")
+
+	cp.connect(false)
+	assert.Equal(t, int32(2), published.Load(), "disconnect should publish")
+}
+
+func TestBootTriggerRejectedConnects(t *testing.T) {
+	log := util.NewLogger("test")
+	cp := NewChargePoint(log, instance, "test-cp")
+
+	var published atomic.Int32
+	instance.SetUpdated(func() { published.Add(1) })
+	defer instance.SetUpdated(nil)
+
+	cp.onTransportConnect()
+
+	cp.mu.RLock()
+	timer := cp.bootTimer
+	cp.mu.RUnlock()
+
+	cp.endBootWait(&timer, "rejected")
+
+	assert.True(t, cp.Connected(), "should be connected after rejected trigger")
+	assert.Equal(t, int32(1), published.Load(), "rejected trigger should publish")
+
+	cp.mu.RLock()
+	assert.Nil(t, cp.bootTimer, "boot timer should be nil after rejected trigger")
+	cp.mu.RUnlock()
+}
+
+func TestBootTriggerRejectedIgnoresStaleConnection(t *testing.T) {
+	log := util.NewLogger("test")
+	cp := NewChargePoint(log, instance, "test-cp")
+
+	cp.onTransportConnect()
+
+	cp.mu.RLock()
+	stale := cp.bootTimer
+	cp.mu.RUnlock()
+
+	// reconnect before the rejected response of the first connection arrives
+	cp.connect(false)
+	cp.onTransportConnect()
+
+	cp.endBootWait(&stale, "rejected")
+
+	assert.False(t, cp.Connected(), "stale rejected trigger must not end the new boot wait")
+
+	cp.mu.RLock()
+	assert.NotNil(t, cp.bootTimer, "boot timer of new connection should remain active")
+	cp.mu.RUnlock()
+
+	cp.connect(false)
+}
+
+func TestBootTriggerRejectedAfterDisconnect(t *testing.T) {
+	log := util.NewLogger("test")
+	cp := NewChargePoint(log, instance, "test-cp")
+
+	cp.onTransportConnect()
+
+	cp.mu.RLock()
+	timer := cp.bootTimer
+	cp.mu.RUnlock()
+
+	cp.connect(false)
+	cp.endBootWait(&timer, "rejected")
+
+	assert.False(t, cp.Connected(), "rejected trigger after disconnect must not mark the station connected")
+}

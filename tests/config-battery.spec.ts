@@ -29,7 +29,6 @@ test.describe("battery meter", async () => {
     await meterModal.getByLabel("Manufacturer").selectOption("Demo battery");
     await meterModal.getByLabel("Power").fill("4000");
     await meterModal.getByLabel("Charge").fill("80");
-    await expect(meterModal.getByLabel("Maximum AC power of the hybrid inverter")).toHaveCount(0);
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
     await meterModal.getByRole("link", { name: "validate" }).click();
     await expect(meterModal.getByTestId("device-tag-power")).toContainText("4.0 kW");

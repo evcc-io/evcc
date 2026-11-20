@@ -1,5 +1,4 @@
-import { xAxisLabelStyle } from "../Forecast/echarts";
-import colors from "@/colors";
+import { boundarySeries, hoverDot, xAxisLabelStyle } from "../Forecast/echarts";
 import type { DemandDetail } from "@/types/evcc";
 
 export type Titled = { title?: string; name?: string };
@@ -57,6 +56,24 @@ export function slotXAxis(times: number[], weekdayShort: (d: Date) => string) {
   };
 }
 
+const QUARTER_SECONDS = 15 * 60;
+
+// source slot index per chart slot: a slot longer than a quarter hour is shown as equal
+// quarters, so the category axis keeps one width per slot when the request merges its
+// horizon tail into clock hours
+export function slotParents(dt: number[]): number[] {
+  return dt.flatMap((s, i) => Array<number>(Math.max(1, Math.round(s / QUARTER_SECONDS))).fill(i));
+}
+
+// values per chart slot, a split slot shares its value evenly among its quarters: energies
+// and dt both shrink, power per slot stays
+export function splitSlots(values: number[], parents: number[]): number[] {
+  if (!values.length) return [];
+  const count: number[] = [];
+  for (const p of parents) count[p] = (count[p] ?? 0) + 1;
+  return parents.map((p) => (values[p] ?? 0) / (count[p] ?? 1));
+}
+
 export function formatSlotRange(times: number[], dt: number[], index: number): string {
   const start = new Date(times[index] ?? 0);
   const end = new Date(start.getTime() + (dt[index] || 0) * 1000);
@@ -65,41 +82,19 @@ export function formatSlotRange(times: number[], dt: number[], index: number): s
   return `${f(start)} - ${f(end)}`;
 }
 
+// hover dot created on demand: a hidden symbol per slot makes the svg renderer re-insert all
+// of them on every hover frame. The temporary dot only drops when new data re-renders the chart.
+export function transientHoverDot(color: string) {
+  return { ...hoverDot(color), showSymbol: false };
+}
+
 // slot energy (Wh) to average power (kW)
 export function whToKW(wh: number, dtSeconds: number): number {
   return wh / (dtSeconds / 3600) / 1000;
 }
 
-// hidden value axis aligned with the category bands (slot i spans i-0.5..i+0.5)
-export function dayBoundaryAxis(times: number[]) {
-  return {
-    type: "value",
-    min: -0.5,
-    max: times.length - 0.5,
-    show: false,
-    axisPointer: { show: false },
-  };
-}
-
 // day boundary lines. A category split line would sit in the gap between bars
 // and show as a sliver; this draws them just inside the bar's left edge, behind the bars.
 export function dayBoundarySeries(times: number[]) {
-  const data = times
-    .map((t, i) => ({ t, i }))
-    .filter(({ t, i }) => i > 0 && isMidnight(t))
-    .map(({ i }) => ({ xAxis: i - 0.15 }));
-  return {
-    type: "line",
-    xAxisIndex: 1,
-    data: [] as number[],
-    silent: true,
-    markLine: {
-      silent: true,
-      z: 1,
-      symbol: "none",
-      label: { show: false },
-      lineStyle: { color: colors.muted || "", type: "solid" },
-      data,
-    },
-  };
+  return boundarySeries(times.flatMap((t, i) => (i > 0 && isMidnight(t) ? [i - 0.15] : [])));
 }

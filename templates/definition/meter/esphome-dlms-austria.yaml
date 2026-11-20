@@ -11,6 +11,8 @@ requirements:
     en: |
       Requires an ESPHome node running the `dlms_meter` component (e.g., from `github://SimonFischer04/esphome@dlms-meter`),
       configured for Austrian DLMS meters.
+discovery:
+  mdns: ["_esphomelib._tcp"]
 params:
   - name: usage
     choice: ["grid"]

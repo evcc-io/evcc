@@ -195,18 +195,18 @@ func TestRequiredBatteryMode(t *testing.T) {
 	}{
 		{false, false, api.BatteryUnknown, api.BatteryUnknown}, // ignore
 		{false, false, api.BatteryNormal, api.BatteryUnknown},  // ignore
-		{false, false, api.BatteryHold, api.BatteryNormal},
+		{false, false, api.BatteryHoldDischarge, api.BatteryNormal},
 		{false, false, api.BatteryCharge, api.BatteryNormal},
 
 		{true, false, api.BatteryUnknown, api.BatteryCharge},
 		{true, false, api.BatteryNormal, api.BatteryCharge},
-		{true, false, api.BatteryHold, api.BatteryCharge},
+		{true, false, api.BatteryHoldDischarge, api.BatteryCharge},
 		{true, false, api.BatteryCharge, api.BatteryUnknown}, // ignore
 
 		// grid discharge (feed-in arbitrage)
 		{false, true, api.BatteryUnknown, api.BatteryDischarge},
 		{false, true, api.BatteryNormal, api.BatteryDischarge},
-		{false, true, api.BatteryHold, api.BatteryDischarge},
+		{false, true, api.BatteryHoldDischarge, api.BatteryDischarge},
 		{false, true, api.BatteryDischarge, api.BatteryUnknown}, // ignore
 		{false, true, api.BatteryCharge, api.BatteryDischarge},
 
@@ -232,4 +232,28 @@ func TestRequiredBatteryMode(t *testing.T) {
 		res := s.requiredBatteryMode(tc.gridChargeActive, tc.gridDischargeActive, api.Rate{})
 		assert.Equal(t, tc.res, res, "expected %s, got %s", tc.res, res)
 	}
+}
+
+// nil instance marks a device disabled at runtime by a forced config update
+func TestSiteSkipsDisabledDevices(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	pv := api.NewMockMeter(ctrl)
+	pv.EXPECT().CurrentPower().Return(2e3, nil)
+
+	site := NewSite()
+	site.log = util.NewLogger("foo")
+	site.gridMeter = config.NewStaticDevice(config.Named{Name: "grid"}, api.Meter(nil))
+	site.curtailers = []config.Device[api.Curtailer]{config.NewStaticDevice(config.Named{Name: "curtailer"}, api.Curtailer(nil))}
+
+	mm := site.collectMeters("pv", []config.Device[api.Meter]{
+		config.NewStaticDevice(config.Named{Name: "pv1"}, api.Meter(pv)),
+		config.NewStaticDevice(config.Named{Name: "pv2"}, api.Meter(nil)),
+	})
+	require.Len(t, mm, 2)
+	assert.Equal(t, 2e3, mm[0].Power)
+	assert.Equal(t, types.Measurement{Name: "pv2"}, mm[1])
+
+	assert.Error(t, site.updateGridMeter())
+	assert.Empty(t, site.curtailables())
 }

@@ -2,11 +2,14 @@ template: e3dc
 deprecated: true
 products:
   - brand: E3/DC
+discovery:
+  mac: ["1CAE3E3", "0C86297"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip"]
+    id: 1
   - preset: battery-params
 render: |
   type: custom

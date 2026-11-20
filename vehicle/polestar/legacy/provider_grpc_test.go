@@ -7,7 +7,25 @@ import (
 	"github.com/evcc-io/evcc/vehicle/polestar/pb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
+
+func TestGrpcError(t *testing.T) {
+	for code, expected := range map[codes.Code]error{
+		codes.Unavailable:      api.ErrMustRetry,
+		codes.DeadlineExceeded: api.ErrMustRetry,
+		codes.PermissionDenied: api.ErrNotAvailable,
+		codes.Unimplemented:    api.ErrNotAvailable,
+		codes.NotFound:         api.ErrNotAvailable,
+	} {
+		assert.ErrorIs(t, grpcError(status.Error(code, "")), expected, code.String())
+	}
+
+	err := grpcError(status.Error(codes.Unauthenticated, ""))
+	assert.NotErrorIs(t, err, api.ErrMustRetry)
+	assert.NotErrorIs(t, err, api.ErrNotAvailable)
+}
 
 func TestGrpcStatus(t *testing.T) {
 	tc := []struct {

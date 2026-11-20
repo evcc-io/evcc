@@ -10,7 +10,7 @@ requirements:
       e-Golf, e-Up, ID Familie
 
       Nutzt die im Rahmen des EU Data Act bereitgestellten Fahrzeugdaten über das
-      [VW-Konzern-Portal](https://eu-data-act.drivesomethinggreater.com). Die Anmeldung
+      [VW-Konzern-Portal](https://eu-data-act.vwgroup-datahub.com). Die Anmeldung
       erfolgt mit den Zugangsdaten der Volkswagen-App / We Connect.
 
       Voraussetzung (einmalig im Browser): im Portal anmelden, die Einwilligung
@@ -21,7 +21,7 @@ requirements:
       e-Golf, e-Up, ID family
 
       Uses the vehicle data provided under the EU Data Act through the [VW group
-      portal](https://eu-data-act.drivesomethinggreater.com). Log in with the credentials
+      portal](https://eu-data-act.vwgroup-datahub.com). Log in with the credentials
       of the Volkswagen app / We Connect.
 
       Prerequisite (one-time, in a browser): log in to the portal, confirm the
@@ -42,7 +42,7 @@ params:
     deprecated: true
   - preset: vehicle-online
 render: |
-  type: drivesomethinggreater
+  type: vwgroup-datahub
   brand: Volkswagen
   {{ include "base" . }}
   {{ include "features" (merge (dict "basefeatures" (list "streaming")) .) }}

@@ -5,23 +5,21 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/tesla-proxy-client"
 )
 
 type Provider struct {
-	dataG  func() (*tesla.VehicleData, error)
-	wakeup func() (*tesla.Vehicle, error)
+	dataG  func() (*VehicleData, error)
+	wakeup func() error
 }
 
-func NewProvider(vehicle *tesla.Vehicle, cache time.Duration) *Provider {
+func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		dataG: util.Cached(func() (*tesla.VehicleData, error) {
-			res, err := vehicle.Data()
+		dataG: util.Cached(func() (*VehicleData, error) {
+			res, err := api.VehicleData(vin)
 			return res, apiError(err)
 		}, cache),
-		wakeup: func() (*tesla.Vehicle, error) {
-			res, err := vehicle.Wakeup()
-			return res, apiError(err)
+		wakeup: func() error {
+			return apiError(api.WakeUp(vin))
 		},
 	}
 	return impl
@@ -112,6 +110,10 @@ func (v *Provider) Position() (float64, float64, error) {
 	if err != nil {
 		return 0, 0, err
 	}
+	// position missing without location_data endpoint or location scope
+	if res.Response.DriveState.Latitude == 0 && res.Response.DriveState.Longitude == 0 {
+		return 0, 0, api.ErrNotAvailable
+	}
 	return res.Response.DriveState.Latitude, res.Response.DriveState.Longitude, nil
 }
 
@@ -130,6 +132,5 @@ var _ api.Resurrector = (*Provider)(nil)
 
 // WakeUp implements the api.Resurrector interface
 func (v *Provider) WakeUp() error {
-	_, err := v.wakeup()
-	return apiError(err)
+	return v.wakeup()
 }

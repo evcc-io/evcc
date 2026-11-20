@@ -21,7 +21,14 @@
 					<div class="bar-track d-flex min-w-0 me-2">
 						<div
 							class="bar-fill h-100"
-							:class="STATE_FILL[part.bar.state]"
+							:class="[
+								STATE_FILL[part.bar.state],
+								{
+									'bar-striped': part.striped,
+									'bar-export': part.export,
+									'bar-animated': part.striped && part.active,
+								},
+							]"
 							:style="{ width: part.bar.fill + '%' }"
 						/>
 						<div
@@ -69,6 +76,9 @@ interface LimitPart {
 	unit: "kW" | "A";
 	label: string;
 	bar: LimitBar;
+	striped?: boolean;
+	active?: boolean;
+	export?: boolean;
 }
 
 const STATE_TEXT: Record<LimitState, string> = {
@@ -116,15 +126,19 @@ export default {
 					bar: limitBar(current, node.maxCurrent),
 				});
 			}
-			// power always shown, without limit as full bar
+			// power always shown, without limit or on feed-in as full striped bar indicating activity
 			const power = node.power ?? 0;
+			const feedIn = power < 0;
 			const powerLabel = this.fmtW(power, this.POWER_UNIT.KW, false);
 			result.push({
 				unit: "kW",
 				label: node.maxPower
 					? `${powerLabel} / ${this.fmtW(node.maxPower, this.POWER_UNIT.KW, false)}`
 					: powerLabel,
-				bar: limitBar(power, node.maxPower),
+				bar: limitBar(power, feedIn ? undefined : node.maxPower),
+				striped: !node.maxPower || feedIn,
+				active: power !== 0,
+				export: feedIn,
 			});
 			return result;
 		},
@@ -162,6 +176,35 @@ export default {
 }
 .bar-excess {
 	margin-left: 1px;
+}
+.bar-export {
+	background-color: var(--evcc-export);
+}
+/* stripe period matches the bar height so the pattern stays legible on the thin track */
+.bar-striped {
+	--stripe: 8px;
+	background-image: repeating-linear-gradient(
+		-45deg,
+		rgba(255, 255, 255, 0.4) 0 calc(var(--stripe) / 2),
+		transparent calc(var(--stripe) / 2) var(--stripe)
+	);
+	background-size: calc(var(--stripe) * 1.4142) 100%;
+}
+.bar-animated {
+	animation: stripe-shift 0.6s linear infinite;
+}
+.bar-animated.bar-export {
+	animation-direction: reverse;
+}
+@keyframes stripe-shift {
+	to {
+		background-position: calc(var(--stripe) * 1.4142) 0;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.bar-animated {
+		animation: none;
+	}
 }
 /* icon sits in the parent's gutter, the inset equals icon plus gap */
 .child-icon {

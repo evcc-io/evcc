@@ -83,7 +83,10 @@ export default defineConfig({
     trailingComma: "es5",
     sortPackageJson: false,
     ignorePatterns: ["tests/custom-css.css"],
-    overrides: [{ files: ["**/*.vue"], options: { tabWidth: 4 } }],
+    overrides: [
+      { files: ["**/*.vue"], options: { tabWidth: 4 } },
+      { files: ["i18n/glossary/*.json"], options: { tabWidth: 4 } },
+    ],
   },
   root: "./assets",
   publicDir: "public",
@@ -105,6 +108,8 @@ export default defineConfig({
     emptyOutDir: true,
     assetsInlineLimit: 1024,
     chunkSizeWarningLimit: 800, // legacy build increases file size
+    // plugin-legacy defaults this to chrome61, the css minifier then drops every Safari-only prefix
+    cssTarget: ["chrome61", "ios12"],
   },
   server: {
     port: frontendPort,

@@ -3,8 +3,8 @@ products:
   - { brand: SONOFF, description: { generic: MINI-1GSP } }
 requirements:
   description:
-    de: Benötigt ein Gerät mit SONOFF RPC API. Das Passwort wird in der eWeLink App vergeben.
-    en: Requires a device with SONOFF RPC API. The password is set in the eWeLink app.
+    de: Benötigt ein Gerät mit SONOFF RPC API. Das Passwort wird im lokalen Webinterface des Geräts festgelegt.
+    en: Requires a device with SONOFF RPC API. The password is set in the device's local web interface.
 capabilities: ["meter"]
 group: switchsockets
 params:

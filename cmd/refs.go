@@ -55,7 +55,45 @@ func collectRefs(conf globalconfig.All) error {
 		return err
 	}
 
-	return collectLoadpointRefs(namedSeq(configurable))
+	if err := collectLoadpointRefs(namedSeq(configurable)); err != nil {
+		return err
+	}
+
+	collectDeviceRefs(templates.Charger, slices.Values(conf.Chargers), nil)
+
+	chargers, err := config.ConfigurationsByClass(templates.Charger)
+	if err != nil {
+		return err
+	}
+	collectDeviceRefs(templates.Charger, namedSeq(chargers), references.charger)
+
+	tariffs, err := config.ConfigurationsByClass(templates.Tariff)
+	if err != nil {
+		return err
+	}
+	collectDeviceRefs(templates.Tariff, namedSeq(tariffs), references.tariff)
+
+	return nil
+}
+
+// collectDeviceRefs adds the devices referenced by template params of the given parents.
+// Static parents are always instantiated, db parents only when referenced themselves.
+func collectDeviceRefs(class templates.Class, named iter.Seq[config.Named], referenced []string) {
+	for cc := range named {
+		if referenced != nil && !slices.Contains(referenced, cc.Name) {
+			continue
+		}
+		for refClass, refs := range config.DeviceRefs(class, cc) {
+			switch refClass {
+			case templates.Meter:
+				references.meter = append(references.meter, refs...)
+			case templates.Charger:
+				references.charger = append(references.charger, refs...)
+			case templates.Tariff:
+				references.tariff = append(references.tariff, refs...)
+			}
+		}
+	}
 }
 
 func namedSeq(configurable []config.Config) iter.Seq[config.Named] {

@@ -21,7 +21,7 @@
 					{{ $t("config.loadpoint.advancedConfig") }}
 				</a>
 				<button type="button" class="btn btn-primary" @click="finish">
-					{{ $t("config.general.close") }}
+					{{ $t("config.general.continue") }}
 				</button>
 			</template>
 		</CreateFlowStatus>
@@ -77,41 +77,39 @@
 					{{ addChargerLabel }}
 				</button>
 			</div>
-			<div v-if="charger || !isNew">
-				<FormRow
+			<FormRow
+				v-if="charger || !isNew"
+				id="loadpointParamMeter"
+				class="mb-6"
+				:label="$t('config.loadpoint.energyMeterLabel')"
+				:help="values.meter ? $t('config.loadpoint.energyMeterHelp') : undefined"
+				optional
+			>
+				<DeviceRefBox
 					v-if="values.meter"
-					id="loadpointParamMeter"
-					class="mb-6"
-					:label="$t('config.loadpoint.energyMeterLabel')"
-					:help="$t('config.loadpoint.energyMeterHelp')"
+					compact
+					:title="meterTitle"
+					:error="hasDeviceError('meter', values.meter)"
+					@edit="editMeter"
+				/>
+				<button
+					v-else
+					type="button"
+					class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
+					tabindex="0"
+					@click="editMeter"
 				>
-					<DeviceRefBox
-						compact
-						:title="meterTitle"
-						:error="hasDeviceError('meter', values.meter)"
-						@edit="editMeter"
-					/>
-				</FormRow>
-				<p v-else>
-					<button
-						class="btn btn-link btn-sm text-gray px-0"
-						style="margin-top: -1rem"
-						type="button"
-						tabindex="0"
-						@click="editMeter"
-					>
-						{{ $t(`config.loadpoint.addMeter`) }}
-					</button>
-				</p>
-			</div>
+					<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
+					{{ $t("config.loadpoint.addMeter") }}
+				</button>
+			</FormRow>
 
 			<div v-if="values.charger || !isNew">
 				<div class="collapsible-wrapper" :class="{ open: !isNew }">
 					<div class="collapsible-content ring-space">
-						<h6 class="mt-4">{{ $t("config.loadpoint.chargingTitle") }}</h6>
-
 						<FormRow
 							id="loadpointMode"
+							class="mt-4"
 							:label="$t('config.loadpoint.defaultModeLabel')"
 							:help="
 								values.defaultMode === ''
@@ -128,184 +126,7 @@
 							/>
 						</FormRow>
 
-						<FormRow
-							id="loadpointSolarMode"
-							:label="$t('config.loadpoint.solarBehaviorLabel')"
-							:help="
-								solarMode === 'default'
-									? $t('config.loadpoint.solarBehaviorDefaultHelp', {
-											enableDelay: fmtDurationNs(
-												values.thresholds.enable.delay,
-												true,
-												'm'
-											),
-											disableDelay: fmtDurationNs(
-												values.thresholds.disable.delay,
-												true,
-												'm'
-											),
-										})
-									: $t('config.loadpoint.solarBehaviorCustomHelp')
-							"
-						>
-							<SelectGroup
-								id="loadpointSolarMode"
-								v-model="solarMode"
-								class="w-100"
-								:options="[
-									{
-										name: $t('config.loadpoint.solarModeMaximum'),
-										value: 'default',
-									},
-									{
-										name: $t('config.loadpoint.solarModeCustom'),
-										value: 'custom',
-									},
-								]"
-								transparent
-								equal-width
-							/>
-						</FormRow>
-
-						<div v-show="solarMode === 'custom'" class="ms-3 mb-5">
-							<div class="mb-4">
-								<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
-									<FormRow
-										id="loadpointEnableThreshold"
-										:label="$t('config.loadpoint.thresholdEnableLabel')"
-										style="margin-bottom: 0 !important"
-									>
-										<PropertyField
-											id="loadpointEnableThreshold"
-											v-model="values.thresholds.enable.threshold"
-											type="Float"
-											unit="W"
-											size="w-25 w-min-200"
-											required
-										/>
-									</FormRow>
-									<FormRow
-										id="loadpointEnableDelay"
-										:label="$t('config.loadpoint.thresholdEnableDelayLabel')"
-										style="margin-bottom: 0 !important"
-									>
-										<PropertyField
-											id="loadpointEnableDelay"
-											v-model="values.thresholds.enable.delay"
-											type="Duration"
-											legacy-duration
-											unit="minute"
-											size="w-25 w-min-200"
-											required
-										/>
-									</FormRow>
-								</div>
-								<div class="form-text evcc-gray">
-									{{
-										values.thresholds.enable.threshold === 0
-											? $t("config.loadpoint.thresholdEnableHelpZero", {
-													delay: fmtDurationNs(
-														values.thresholds.enable.delay,
-														true,
-														"m"
-													),
-												})
-											: values.thresholds.enable.threshold < 0
-												? $t(
-														"config.loadpoint.thresholdEnableHelpNegative",
-														{
-															surplus: fmtW(
-																-1 *
-																	values.thresholds.enable
-																		.threshold,
-																powerUnit.AUTO
-															),
-															delay: fmtDurationNs(
-																values.thresholds.enable.delay,
-																true,
-																"m"
-															),
-														}
-													)
-												: $t("config.loadpoint.thresholdEnableHelpInvalid")
-									}}
-								</div>
-							</div>
-
-							<div>
-								<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
-									<FormRow
-										id="loadpointDisableThreshold"
-										:label="$t('config.loadpoint.thresholdDisableLabel')"
-										style="margin-bottom: 0 !important"
-									>
-										<PropertyField
-											id="loadpointDisableThreshold"
-											v-model="values.thresholds.disable.threshold"
-											type="Float"
-											unit="W"
-											size="w-25 w-min-200"
-											required
-										/>
-									</FormRow>
-									<FormRow
-										id="loadpointDisableDelay"
-										:label="$t('config.loadpoint.thresholdDisableDelayLabel')"
-										style="margin-bottom: 0 !important"
-									>
-										<PropertyField
-											id="loadpointDisableDelay"
-											v-model="values.thresholds.disable.delay"
-											type="Duration"
-											legacy-duration
-											unit="minute"
-											size="w-25 w-min-200"
-											required
-										/>
-									</FormRow>
-								</div>
-								<div class="form-text evcc-gray">
-									{{
-										values.thresholds.disable.threshold === 0
-											? $t("config.loadpoint.thresholdDisableHelpZero", {
-													delay: fmtDurationNs(
-														values.thresholds.disable.delay,
-														true,
-														"m"
-													),
-												})
-											: values.thresholds.disable.threshold > 0
-												? $t(
-														"config.loadpoint.thresholdDisableHelpPositive",
-														{
-															power: fmtW(
-																values.thresholds.disable.threshold,
-																powerUnit.AUTO
-															),
-															delay: fmtDurationNs(
-																values.thresholds.disable.delay,
-																true,
-																"m"
-															),
-														}
-													)
-												: $t("config.loadpoint.thresholdDisableHelpInvalid")
-									}}
-								</div>
-							</div>
-
-							<div v-if="thresholdsSet" class="form-text evcc-gray mt-4">
-								<i18n-t
-									keypath="config.loadpoint.solarShareNote"
-									tag="span"
-									scope="global"
-								>
-									<a href="#" @click.prevent="resetThresholds">
-										{{ $t("config.loadpoint.solarShareReset") }}
-									</a>
-								</i18n-t>
-							</div>
-						</div>
+						<h6>{{ $t("config.loadpoint.solarTitle") }}</h6>
 
 						<FormRow
 							v-if="showPriority"
@@ -323,6 +144,98 @@
 								:choice="priorityOptions"
 							/>
 						</FormRow>
+
+						<div class="mb-4">
+							<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
+								<FormRow
+									id="loadpointEnableDelay"
+									:label="$t('config.loadpoint.thresholdEnableDelayLabel')"
+									class="mb-0"
+								>
+									<PropertyField
+										id="loadpointEnableDelay"
+										v-model="values.thresholds.enable.delay"
+										type="Duration"
+										legacy-duration
+										unit="minute"
+										size="w-25 w-min-200"
+										required
+									/>
+								</FormRow>
+								<FormRow
+									id="loadpointDisableDelay"
+									:label="$t('config.loadpoint.thresholdDisableDelayLabel')"
+									class="mb-0"
+								>
+									<PropertyField
+										id="loadpointDisableDelay"
+										v-model="values.thresholds.disable.delay"
+										type="Duration"
+										legacy-duration
+										unit="minute"
+										size="w-25 w-min-200"
+										required
+									/>
+								</FormRow>
+							</div>
+							<div class="form-text evcc-gray">
+								<div v-if="enableDelayHelp">{{ enableDelayHelp }}</div>
+								<div v-if="disableDelayHelp">{{ disableDelayHelp }}</div>
+							</div>
+						</div>
+
+						<PropertyCollapsible :expanded="thresholdsExpanded" class="mb-4">
+							<template #advanced>
+								<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
+									<FormRow
+										id="loadpointEnableThreshold"
+										:label="$t('config.loadpoint.thresholdEnableLabel')"
+										class="mb-0"
+									>
+										<PropertyField
+											id="loadpointEnableThreshold"
+											v-model="values.thresholds.enable.threshold"
+											type="Float"
+											unit="W"
+											size="w-25 w-min-200"
+											required
+										/>
+									</FormRow>
+									<FormRow
+										id="loadpointDisableThreshold"
+										:label="$t('config.loadpoint.thresholdDisableLabel')"
+										class="mb-0"
+									>
+										<PropertyField
+											id="loadpointDisableThreshold"
+											v-model="values.thresholds.disable.threshold"
+											type="Float"
+											unit="W"
+											size="w-25 w-min-200"
+											required
+										/>
+									</FormRow>
+								</div>
+								<div class="form-text evcc-gray">
+									<div v-if="enableThresholdHelp">{{ enableThresholdHelp }}</div>
+									<div v-if="disableThresholdHelp">
+										{{ disableThresholdHelp }}
+									</div>
+									<div class="mt-2">
+										{{ thresholdsNote }}
+										<a :href="thresholdsDocsLink" target="_blank">
+											{{ $t("config.general.docsLink") }}
+										</a>
+									</div>
+									<div v-if="thresholdsSet" class="mt-2">
+										{{ thresholdsSliderDisabled }}
+										<a href="#" @click.prevent="resetThresholds">
+											{{ $t("config.loadpoint.solarShareReset") }}
+										</a>
+									</div>
+								</div>
+							</template>
+						</PropertyCollapsible>
 
 						<h6 v-if="!chargerIsSwitchDevice">
 							{{ $t("config.loadpoint.electricalTitle") }}
@@ -374,7 +287,7 @@
 											required
 										/>
 										<span class="evcc-gray text-nowrap power-hint">
-											≈ {{ fmtPhasePower(values.minCurrent, minPhases) }}
+											≈ {{ minPowerHint }}
 										</span>
 									</div>
 								</FormRow>
@@ -395,7 +308,7 @@
 											required
 										/>
 										<span class="evcc-gray text-nowrap power-hint">
-											≈ {{ fmtPhasePower(values.maxCurrent, maxPhases) }}
+											≈ {{ maxPowerHint }}
 										</span>
 									</div>
 								</FormRow>
@@ -533,7 +446,51 @@
 						</div>
 
 						<div v-if="chargerIsHeating">
-							<h6>{{ $t("config.loadpoint.temperatureRangeTitle") }}</h6>
+							<h6 class="mb-2">{{ $t("config.loadpoint.demandPredictor.title") }}</h6>
+							<p class="text-muted">
+								{{ $t("config.loadpoint.demandPredictor.description") }}
+							</p>
+							<FormRow
+								id="loadpointDemandPredictor"
+								:label="$t('config.loadpoint.demandPredictor.label')"
+								:help="demandPredictorHelp"
+							>
+								<select
+									id="loadpointDemandPredictor"
+									v-model="demandPredictorSelection"
+									class="form-select"
+								>
+									<optgroup
+										v-for="group in demandPredictorGroups"
+										:key="group.label"
+										:label="group.label"
+									>
+										<option
+											v-for="option in group.options"
+											:key="option.value"
+											:value="option.value"
+										>
+											{{ option.label }}
+										</option>
+									</optgroup>
+								</select>
+								<template #footer>
+									<div v-if="temperatureTariffMissing" class="text-warning mt-1">
+										{{ $t("config.loadpoint.demandPredictor.noTempTariff") }}
+										<a href="#" @click.prevent="addTemperatureTariff">
+											{{
+												$t(
+													"config.loadpoint.demandPredictor.noTempTariffLink"
+												)
+											}}
+										</a>
+									</div>
+								</template>
+							</FormRow>
+						</div>
+
+						<div v-if="chargerIsHeating">
+							<h6 class="mb-2">{{ $t("config.loadpoint.temperatureRangeTitle") }}</h6>
 							<p class="text-muted">
 								{{ $t("config.loadpoint.temperatureRangeHelp") }}
 							</p>
@@ -627,13 +584,14 @@
 <script lang="ts">
 import type { PropType } from "vue";
 import FormRow from "./FormRow.vue";
+import PropertyCollapsible from "./PropertyCollapsible.vue";
 import PropertyField from "./PropertyField.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import api from "@/api";
+import { docsPrefix } from "@/i18n";
 import GenericModal from "../Helper/GenericModal.vue";
 import chargeModeLabelKey from "@/utils/chargeModeLabel";
 import deepClone from "@/utils/deepClone";
-import deepEqual from "@/utils/deepEqual";
 import sleep from "@/utils/sleep";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import DeviceRefBox from "./DeviceRefBox.vue";
@@ -644,6 +602,7 @@ import { handleError, customChargerName, createDeviceUtils } from "./DeviceModal
 import { getModal, openModal, replaceModal, closeModal } from "@/configModal";
 import {
 	CHARGE_MODE,
+	GRID_CONNECTION,
 	LOADPOINT_TYPE,
 	type DeviceType,
 	type LoadpointType,
@@ -652,9 +611,12 @@ import {
 	type VehicleOption,
 	type ConfigCircuit,
 	type ConfigLoadpoint,
+	type DemandPredictor,
 } from "@/types/evcc";
 
 const nsPerMin = 60 * 1e9;
+
+const DEMAND_PREDICTORS: DemandPredictor[] = ["daily", "weekday", "temperature"];
 
 const { OFF, SMART, NOW } = CHARGE_MODE;
 
@@ -684,15 +646,11 @@ const defaultValues = {
 	meter: "",
 } as ConfigLoadpoint;
 
-const defaultThresholds = {
-	enable: { delay: 1 * nsPerMin, threshold: 0 },
-	disable: { delay: 3 * nsPerMin, threshold: 0 },
-};
-
 export default {
 	name: "LoadpointModal",
 	components: {
 		FormRow,
+		PropertyCollapsible,
 		PropertyField,
 		GenericModal,
 		SelectGroup,
@@ -713,6 +671,9 @@ export default {
 			type: Function as PropType<(type: DeviceType, name: string) => boolean>,
 			default: () => false,
 		},
+		voltage: Number,
+		gridConnection: String as PropType<GRID_CONNECTION>,
+		temperatureTariffConfigured: Boolean,
 	},
 	emits: ["changed", "dismissed", "disable"],
 	data() {
@@ -721,20 +682,104 @@ export default {
 			saving: false,
 			values: deepClone(defaultValues) as ConfigLoadpoint,
 			baseline: JSON.stringify(defaultValues),
-			solarMode: "default",
+			thresholdsExpanded: false,
 			autoCreate: false,
 			autoCreateInProgress: false,
 			tab: "solar",
-			powerUnit: POWER_UNIT,
 		};
 	},
 	computed: {
 		id(): number | undefined {
 			return getModal("loadpoint")?.id;
 		},
+		defaultDemandPredictor(): DemandPredictor {
+			return this.chargerStatus?.demandPredictor?.value ?? "daily";
+		},
+		demandPredictorGroups() {
+			const t = (key: string) => this.$t(`config.loadpoint.demandPredictor.${key}`);
+			const label = (profile: DemandPredictor) => t(`${profile}.label`);
+			return [
+				{
+					label: t("defaultGroup"),
+					options: [{ value: "", label: label(this.defaultDemandPredictor) }],
+				},
+				{
+					label: t("profilesGroup"),
+					options: DEMAND_PREDICTORS.map((value) => ({ value, label: label(value) })),
+				},
+			];
+		},
+		demandPredictorSelection: {
+			get(): string {
+				return this.values.demandPredictor ?? "";
+			},
+			set(value: string) {
+				this.values.demandPredictor = (value as DemandPredictor) || undefined;
+			},
+		},
+		activeDemandPredictor(): DemandPredictor {
+			return this.values.demandPredictor || this.defaultDemandPredictor;
+		},
+		demandPredictorHelp(): string {
+			return this.$t(
+				`config.loadpoint.demandPredictor.${this.activeDemandPredictor}.description`
+			);
+		},
+		temperatureTariffMissing(): boolean {
+			return (
+				this.activeDemandPredictor === "temperature" && !this.temperatureTariffConfigured
+			);
+		},
 		thresholdsSet(): boolean {
 			const { enable, disable } = this.values.thresholds;
-			return enable.threshold !== 0 || disable.threshold !== 0;
+			return !!(enable.threshold || disable.threshold);
+		},
+		thresholdsNote(): string {
+			return this.$t(`config.loadpoint.thresholdsNote.${this.loadpointType}`, {
+				page: this.$t("tabBar.charge"),
+				slider: this.$t("main.loadpointSettings.solarShare.label"),
+			});
+		},
+		thresholdsSliderDisabled(): string {
+			return this.$t("config.loadpoint.thresholdsSliderDisabled", {
+				slider: this.$t("main.loadpointSettings.solarShare.label"),
+			});
+		},
+		thresholdsDocsLink(): string {
+			return `${docsPrefix()}/reference/configuration/loadpoints/#enable`;
+		},
+		// cleared fields are "", skip their help text
+		enableDelayHelp(): string {
+			const { delay } = this.values.thresholds.enable;
+			if (typeof delay !== "number") return "";
+			return this.$t("config.loadpoint.thresholdEnableDelayHelp", {
+				delay: this.fmtDurationNs(delay, true, "m"),
+			});
+		},
+		disableDelayHelp(): string {
+			const { delay } = this.values.thresholds.disable;
+			if (typeof delay !== "number") return "";
+			return this.$t("config.loadpoint.thresholdDisableDelayHelp", {
+				delay: this.fmtDurationNs(delay, true, "m"),
+			});
+		},
+		enableThresholdHelp(): string {
+			const { threshold, delay } = this.values.thresholds.enable;
+			if (!threshold || typeof delay !== "number") return "";
+			if (threshold > 0) return this.$t("config.loadpoint.thresholdEnableHelpInvalid");
+			return this.$t("config.loadpoint.thresholdEnableHelpNegative", {
+				surplus: this.fmtW(-threshold, POWER_UNIT.AUTO),
+				delay: this.fmtDurationNs(delay, true, "m"),
+			});
+		},
+		disableThresholdHelp(): string {
+			const { threshold, delay } = this.values.thresholds.disable;
+			if (!threshold || typeof delay !== "number") return "";
+			if (threshold < 0) return this.$t("config.loadpoint.thresholdDisableHelpInvalid");
+			return this.$t("config.loadpoint.thresholdDisableHelpPositive", {
+				power: this.fmtW(threshold, POWER_UNIT.AUTO),
+				delay: this.fmtDurationNs(delay, true, "m"),
+			});
 		},
 		dirty(): boolean {
 			return JSON.stringify(this.values) !== this.baseline;
@@ -839,6 +884,22 @@ export default {
 		maxPhases() {
 			return this.values.phasesConfigured || 3;
 		},
+		minPowerHint() {
+			return this.fmtPhasePower(
+				this.values.minCurrent,
+				this.minPhases,
+				this.voltage,
+				this.gridConnection
+			);
+		},
+		maxPowerHint() {
+			return this.fmtPhasePower(
+				this.values.maxCurrent,
+				this.maxPhases,
+				this.voltage,
+				this.gridConnection
+			);
+		},
 		phasesOptions() {
 			return [
 				{ value: 1, name: this.$t("config.loadpoint.phases1p") },
@@ -910,11 +971,6 @@ export default {
 				this.loadConfiguration();
 			}
 		},
-		solarMode(value) {
-			if (value === "default") {
-				this.values.thresholds = deepClone(defaultThresholds);
-			}
-		},
 		chargerSupports1p3p() {
 			this.updatePhases();
 		},
@@ -931,6 +987,7 @@ export default {
 			this.values = deepClone(defaultValues);
 			this.autoCreate = false;
 			this.autoCreateInProgress = false;
+			this.thresholdsExpanded = false;
 			this.updatePhases();
 			this.rebaseline();
 		},
@@ -941,7 +998,7 @@ export default {
 			try {
 				const res = await api.get(`config/loadpoints/${this.id}`);
 				this.values = deepClone(res.data);
-				this.updateSolarMode();
+				this.thresholdsExpanded = this.thresholdsSet;
 				this.updatePhases();
 				this.rebaseline();
 			} catch (e) {
@@ -1048,6 +1105,9 @@ export default {
 				this.values.charger = "";
 			}
 		},
+		addTemperatureTariff() {
+			openModal("tariff", { type: "temperature" });
+		},
 		async editMeter() {
 			const meter = this.meters.find((m) => m.name === this.values.meter);
 			const result = await openModal("meter", {
@@ -1058,14 +1118,6 @@ export default {
 				this.values.meter = result.name;
 			} else if (result.action === "removed") {
 				this.values.meter = "";
-			}
-		},
-		updateSolarMode() {
-			const { thresholds } = this.values;
-			if (deepEqual(thresholds, defaultThresholds)) {
-				this.solarMode = "default";
-			} else {
-				this.solarMode = "custom";
 			}
 		},
 		updatePhases() {

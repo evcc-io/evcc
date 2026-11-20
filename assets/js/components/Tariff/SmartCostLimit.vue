@@ -7,6 +7,7 @@
 		:currency="currency"
 		:apply-all="multipleLoadpoints && isLoadpoint"
 		:possible="possible"
+		:disabled-hint="disabledHint"
 		:tariff="tariff"
 		:form-id="formId"
 		:is-slot-active="isSlotActive"
@@ -40,6 +41,7 @@ export default defineComponent({
 		isLoadpoint: Boolean,
 		loadpointId: String,
 		possible: Boolean,
+		disabledHint: String,
 		lastLimit: Number,
 		tariff: Array as PropType<UiForecastSlot[]>,
 	},

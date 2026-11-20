@@ -52,9 +52,7 @@ import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import type { CURRENCY, UiForecastSlot } from "@/types/evcc";
 import { isStaticTariff } from "@/utils/forecast";
-
-const MAX_HOURS = 96;
-const SLOTS_PER_HOUR = 4;
+import { filterForecastSlots } from "./echarts";
 
 export default defineComponent({
 	name: "GridDetails",
@@ -64,6 +62,7 @@ export default defineComponent({
 		feedin: { type: Array as PropType<UiForecastSlot[]> },
 		currency: { type: String as PropType<CURRENCY> },
 		showFeedin: { type: Boolean, default: true },
+		endDate: { type: Date, required: true },
 	},
 	emits: ["toggle-feedin"],
 	computed: {
@@ -88,18 +87,15 @@ export default defineComponent({
 			const avg = values.reduce((a, b) => a + b, 0) / values.length;
 			const fmtAvg = this.fmtPricePerKWh(avg, this.currency, false, true);
 			if (isStaticTariff(upcoming)) return { avg: fmtAvg, range: "" };
-			const min = Math.min(...values);
-			const max = Math.max(...values);
-			const fmtMin = this.fmtPricePerKWh(min, this.currency, false, false);
-			const fmtMax = this.fmtPricePerKWh(max, this.currency, false, true);
-			return { avg: `⌀ ${fmtAvg}`, range: `${fmtMin} – ${fmtMax}` };
+			const range = this.fmtPriceRange(
+				Math.min(...values),
+				Math.max(...values),
+				this.currency
+			);
+			return { avg: `⌀ ${fmtAvg}`, range };
 		},
 		upcomingSlots(slots?: UiForecastSlot[]): UiForecastSlot[] {
-			if (!Array.isArray(slots)) return [];
-			const now = new Date();
-			return slots
-				.filter((slot) => new Date(slot.end) > now)
-				.slice(0, MAX_HOURS * SLOTS_PER_HOUR);
+			return filterForecastSlots(slots || [], new Date(), this.endDate);
 		},
 	},
 });

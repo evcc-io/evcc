@@ -23,6 +23,29 @@ func TestMeterEnergyMeterTotal(t *testing.T) {
 	assert.Equal(t, 1.0, me.Energy)
 }
 
+func TestMeterEnergyMeterTotalDropout(t *testing.T) {
+	me := &Accumulator{clock: clock.NewMock()}
+
+	// transient lower reading must not rebase the baseline (#33820)
+	me.SetEnergyMeterTotal(20658)
+	me.SetEnergyMeterTotal(11179)
+	me.SetEnergyMeterTotal(20659)
+	assert.Equal(t, 1.0, me.Energy)
+
+	// a repeated lower reading that does not increase is still not accepted
+	me.SetEnergyMeterTotal(5)
+	me.SetEnergyMeterTotal(5)
+	me.SetEnergyMeterTotal(20660)
+	assert.Equal(t, 2.0, me.Energy)
+
+	// an increasing lower reading confirms a counter reset without adding energy
+	me.SetEnergyMeterTotal(5)
+	me.SetEnergyMeterTotal(6)
+	assert.Equal(t, 2.0, me.Energy)
+	me.SetEnergyMeterTotal(8)
+	assert.Equal(t, 4.0, me.Energy)
+}
+
 func TestMeterEnergyAddPower(t *testing.T) {
 	clock := clock.NewMock()
 	clock.Set(now.BeginningOfDay())

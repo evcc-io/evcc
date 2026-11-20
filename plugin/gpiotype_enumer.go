@@ -31,9 +31,12 @@ func _GpioTypeNoOp() {
 var _GpioTypeValues = []GpioType{GpioTypeRead, GpioTypeWrite}
 
 var _GpioTypeNameToValueMap = map[string]GpioType{
-	_GpioTypeName[0:4]:      GpioTypeRead,
+	_GpioTypeName[0:4]: GpioTypeRead,
+	_GpioTypeName[4:9]: GpioTypeWrite,
+}
+
+var _GpioTypeLowerNameToValueMap = map[string]GpioType{
 	_GpioTypeLowerName[0:4]: GpioTypeRead,
-	_GpioTypeName[4:9]:      GpioTypeWrite,
 	_GpioTypeLowerName[4:9]: GpioTypeWrite,
 }
 
@@ -49,7 +52,7 @@ func GpioTypeString(s string) (GpioType, error) {
 		return val, nil
 	}
 
-	if val, ok := _GpioTypeNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _GpioTypeLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to GpioType values", s)

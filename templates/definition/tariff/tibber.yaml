@@ -16,6 +16,7 @@ params:
     example: 476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4
     required: true
   - name: homeid
+    private: true
     description:
       generic: Home ID
     example: cc83e83e-8cbf-4595-9bf7-c3cf192f7d9c

@@ -10,6 +10,7 @@ export interface StateSchemas {
 // enums use SCREAMING_SNAKE in the frontend, schema names follow openapi PascalCase convention
 const RENAME: Record<string, string> = {
   CHARGE_MODE: "ChargeMode",
+  OPTIMIZER_AUTOMATIC: "OptimizerAutomatic",
   ALWAYS_CHARGE: "AlwaysCharge",
   BATTERY_MODE: "BatteryMode",
   CURRENCY: "Currency",

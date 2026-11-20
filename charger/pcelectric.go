@@ -26,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/pcelectric"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -114,7 +115,6 @@ func NewPCElectric(uri string, slaveIndex int, meter string) (*PCElectric, error
 // Status implements the api.Charger interface
 func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 	var chargeStatus int
-	var sessionStartTime int64
 
 	if wb.slaveIndex == 0 {
 		var status pcelectric.Status
@@ -124,7 +124,6 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 			return api.StatusNone, err
 		}
 		chargeStatus = status.ChargeStatus
-		sessionStartTime = status.SessionStartTime
 	} else {
 		var status pcelectric.SlaveStatus
 
@@ -136,7 +135,6 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 			return api.StatusNone, nil
 		}
 		chargeStatus = status[wb.slaveIndex].ChargeStatus
-		sessionStartTime = status[wb.slaveIndex].SessionStartTime
 	}
 	wb.log.DEBUG.Printf("chargeStatus: %d", chargeStatus)
 
@@ -149,13 +147,9 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 		return api.StatusC, nil
 	case 0x42, // chargepaused
 		0x50, // chargefinished
-		0x60: // chargecancelled
+		0x60, // chargecancelled
+		0x90: // unavailable: disabled with vehicle connected, disconnected reports 0x00
 		return api.StatusB, nil
-	case 0x90: // unavailable
-		if sessionStartTime > 0 {
-			return api.StatusB, nil
-		}
-		fallthrough
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", chargeStatus)
 	}
@@ -262,7 +256,7 @@ func (wb *PCElectric) MaxCurrent(current int64) error {
 // CurrentPower implements the api.Meter interface W
 func (wb *PCElectric) currentPower() (float64, error) {
 	l1, l2, l3, err := wb.currents()
-	return 230 * (l1 + l2 + l3), err
+	return grid.CurrentsToPower(l1, l2, l3), err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface kwh
