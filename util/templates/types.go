@@ -104,6 +104,7 @@ type TextLanguage struct {
 	Generic string `json:",omitempty"` // language independent
 	DE      string `json:",omitempty"` // german text
 	EN      string `json:",omitempty"` // english text
+	NL      string `json:",omitempty"` // dutch text
 }
 
 func (t *TextLanguage) String(lang string) string {
@@ -112,9 +113,14 @@ func (t *TextLanguage) String(lang string) string {
 		return t.DE
 	case lang == "en" && t.EN != "":
 		return t.EN
+	case lang == "nl" && t.NL != "":
+		return t.NL
 	default:
 		if t.Generic != "" {
 			return t.Generic
+		}
+		if t.EN != "" {
+			return t.EN
 		}
 		return t.DE
 	}

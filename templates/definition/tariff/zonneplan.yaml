@@ -1,0 +1,59 @@
+template: zonneplan
+link: https://www.zonneplan.nl
+products:
+  - brand: Zonneplan
+requirements:
+  description:
+    en: "Dynamic quarter-hourly prices from your Zonneplan contract. Login with your Zonneplan account email; Zonneplan mails a one-time password. Import returns the all-in price (energy tax and VAT included). Export returns the feed-in estimate including the Zonnebonus (10% between sunrise and sunset) and, until the salderingsregeling ends in 2027, the energy tax refund; use `charges`, `tax` or `formula` for other adjustments."
+    nl: "Dynamische kwartierprijzen uit je Zonneplan-contract. Log in met je Zonneplan-account-e-mailadres; Zonneplan mailt je een eenmalige code. Levering geeft de all-in prijs (inclusief energiebelasting en btw). Teruglevering geeft de terugleverschatting inclusief Zonnebonus (10% tussen zonsopkomst en zonsondergang) en, zolang de salderingsregeling loopt (tot 2027), de energiebelasting; gebruik `charges`, `tax` of `formula` voor afwijkingen."
+  evcc: ["skiptest"]
+group: price
+countries: ["NL"]
+params:
+  - name: email
+    required: true
+    description:
+      en: Zonneplan account email
+      nl: Zonneplan-account e-mailadres
+  - name: address
+    description:
+      en: Address
+      nl: Adres
+    help:
+      en: "Only needed if the account has electricity connections at several addresses; a part of street or city is enough. Leave empty otherwise."
+      nl: "Alleen nodig als het account stroomaansluitingen op meerdere adressen heeft; een deel van de straat of plaats volstaat. Laat verder leeg."
+  - name: connection
+    advanced: true
+    description:
+      en: Connection uuid for contract-scoped prices
+      nl: Verbindings-UUID voor contractspecifieke prijzen
+    help:
+      en: The first electricity connection of the account is used by default.
+      nl: Standaard wordt de eerste elektriciteitsaansluiting van het account gebruikt.
+  - name: tariffDirection
+    type: choice
+    choice: ["import", "export"]
+    default: import
+    description:
+      en: Tariff direction
+      nl: Tariefrichting
+    help:
+      en: "Use 'export' for the feed-in tariff. Zonneplan pays the market price plus a 2 ct fee (verkoopvergoeding), with the Zonnebonus adding 10% between sunrise and sunset. Within the salderingsregeling (until 2027) the energy tax comes back on top, e.g. as `formula`: `price + 0.1108`."
+      nl: "Gebruik 'export' voor het invoertarief. Zonneplan betaalt de marktprijs plus 2 ct verkoopvergoeding en tussen zonsopkomst en zonsondergang de Zonnebonus. Tot het eind van de salderingsregeling wordt ook de energiebelasting betaald."
+  - preset: tariff-base
+  - preset: tariff-features
+auth:
+  type: zonneplan
+  params: [email]
+render: |
+  type: zonneplan
+  email: {{ .email }}
+  {{- if .address }}
+  address: {{ .address }}
+  {{- end }}
+  {{- if .connection }}
+  connection: {{ .connection }}
+  {{- end }}
+  tariffDirection: {{ .tariffDirection }}
+  {{ include "base" . }}
+  {{ include "features" . }}

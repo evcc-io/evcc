@@ -56,6 +56,7 @@ require (
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/insomniacslk/tapo v1.1.0
 	github.com/itchyny/gojq v0.12.20
+	github.com/jap/go-zonneplan v0.1.0
 	github.com/jarcoal/httpmock v1.4.2
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/now v1.1.5
