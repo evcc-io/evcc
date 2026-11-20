@@ -65,6 +65,11 @@ func (site *Site) fromTo(requested, m api.BatteryMode) bool {
 func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive bool, rate api.Rate) {
 	batteryMode := site.requiredBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate)
 
+	// grid charging no longer requested, forget the last load management stop
+	if !site.fromTo(batteryMode, api.BatteryCharge) {
+		site.batteryChargeStopPower = 0
+	}
+
 	// put battery into holddischarge mode when charging is active and HEMS dimmed
 	if dimmed := hems.Dimmed(site.hems); site.fromTo(batteryMode, api.BatteryCharge) && dimmed != nil && *dimmed {
 		site.log.DEBUG.Println("battery mode: HEMS dimmed")
@@ -211,20 +216,21 @@ func (site *Site) batteryChargeExceedsCircuit() bool {
 		return false
 	}
 
-	if site.batteryMode == api.BatteryCharge {
-		// a meterless circuit sums loadpoints only, stopping the battery would not reduce its load
-		if !site.circuit.HasMeter() {
-			return false
-		}
-
+	// a meterless circuit sums loadpoints only, stopping the battery would not reduce its load
+	if site.circuit.HasMeter() {
 		maxPower, power := site.circuit.GetMaxPower(), site.circuit.GetChargePower()
 		maxCurrent, current := site.circuit.GetMaxCurrent(), site.circuit.GetMaxPhaseCurrent()
 		if maxPower > 0 && power > maxPower || maxCurrent > 0 && current > maxCurrent {
-			// restarting needs headroom for at least this power (charging is negative)
-			site.batteryChargeStopPower = max(0, -site.state().battery.Power)
-			site.log.DEBUG.Printf("battery mode: circuit over limit (%.0fW/%.0fW, %.3gA/%.3gA), stop charging at %.0fW", power, maxPower, current, maxCurrent, site.batteryChargeStopPower)
+			// restarting needs headroom for at least this power (charging is negative), keep the last one when idle
+			if charge := -site.state().battery.Power; site.batteryMode == api.BatteryCharge && charge > 0 {
+				site.batteryChargeStopPower = charge
+			}
+			site.log.DEBUG.Printf("battery mode: circuit over limit (%.0fW/%.0fW, %.3gA/%.3gA), no charging, stopped at %.0fW", power, maxPower, current, maxCurrent, site.batteryChargeStopPower)
 			return true
 		}
+	}
+
+	if site.batteryMode == api.BatteryCharge {
 		return false
 	}
 

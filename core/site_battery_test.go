@@ -614,6 +614,7 @@ func TestBatteryGridChargeCircuit(t *testing.T) {
 		{"start without headroom", api.BatteryNormal, 5000, 0, 3000, 0, api.BatteryHoldDischarge, true, false, 0, 0},
 		{"start with unknown power", api.BatteryNormal, 0, 0, 0, 0, api.BatteryCharge, true, false, 0, 0},
 		{"restart after stop needs headroom", api.BatteryHoldDischarge, 0, 4000, 2000, 0, api.BatteryHoldDischarge, true, false, 0, 0},
+		{"no restart with unknown power when over power", api.BatteryHoldDischarge, 0, 0, 0, 12000, api.BatteryHoldDischarge, true, false, 0, 0},
 		{"stop when over power", api.BatteryCharge, 0, 0, 0, 12000, api.BatteryHoldDischarge, true, false, 0, 0},
 		{"keep charging within limit", api.BatteryCharge, 0, 0, 0, 8000, api.BatteryCharge, false, false, 0, 0},
 		{"keep charging over power without meter", api.BatteryCharge, 0, 0, 0, 12000, api.BatteryCharge, false, true, 0, 0},
@@ -677,6 +678,43 @@ func TestBatteryGridChargeCircuit(t *testing.T) {
 			ctrl.Finish()
 		})
 	}
+}
+
+// TestBatteryGridChargeStopPower guards that the charge power of the last load management stop survives a stop
+// of an idle battery and is forgotten once grid charging is no longer requested.
+func TestBatteryGridChargeStopPower(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	batCon := batteryControllerMock(ctrl)
+	batCon.EXPECT().SetBatteryMode(gomock.Any()).AnyTimes()
+
+	circuit := api.NewMockCircuit(ctrl)
+	circuit.EXPECT().HasMeter().Return(true).AnyTimes()
+	circuit.EXPECT().GetMaxPower().Return(10000.0).AnyTimes()
+	circuit.EXPECT().GetChargePower().Return(12000.0).AnyTimes()
+	circuit.EXPECT().GetMaxCurrent().Return(0.0).AnyTimes()
+	circuit.EXPECT().GetMaxPhaseCurrent().Return(0.0).AnyTimes()
+
+	site := &Site{
+		log: util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, api.Meter(&struct {
+			api.Meter
+			api.BatteryController
+		}{BatteryController: batCon}))},
+		circuit:                circuit,
+		batteryMode:            api.BatteryCharge,
+		batteryChargeStopPower: 3000,
+	}
+
+	// idle battery: stop keeps the previous charge power
+	site.updateBatteryMode(true, false, api.Rate{})
+	assert.Equal(t, api.BatteryHoldDischarge, site.GetBatteryMode())
+	assert.Equal(t, 3000.0, site.batteryChargeStopPower)
+
+	// grid charging no longer requested
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryNormal, site.GetBatteryMode())
+	assert.Zero(t, site.batteryChargeStopPower)
 }
 
 // TestBatteryGridDischargeEvFastCharging ensures grid discharge is held back while an EV
