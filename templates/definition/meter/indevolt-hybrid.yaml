@@ -18,6 +18,7 @@ products:
   - brand: Indevolt
     description:
       generic: PowerFlex 3000 Hybrid
+capabilities: ["battery-control"]
 requirements:
   description:
     de: |
@@ -47,6 +48,11 @@ params:
   - name: cache
     default: 5s
   - preset: battery-params
+  - name: maxchargepower
+    default: 1200
+    help:
+      en: Power used for grid charging. Adjust to the supported charging power of your device.
+      de: Leistung für das Netzladen. An die unterstützte Ladeleistung des Geräts anpassen.
 render: |
   {{- define "auth" }}
   {{- if .user }}
@@ -112,5 +118,6 @@ render: |
     {{- include "auth" . | indent 2 }}
     jq: ."6007" # Battery Total Discharging Energy (kWh)
     cache: {{ .cache }}
+  {{- include "indevolt-batterymode" . }}
   {{- include "battery-params" . }}
   {{- end }}
