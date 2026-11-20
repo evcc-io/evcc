@@ -93,8 +93,7 @@ func (f *flowSum) add(s flowSlot, from string, energy float64) {
 var (
 	flowSources = []string{PV, Battery, Grid}
 	flowSinks   = []string{Home, Battery, Loadpoint, Export}
-	// only own energy can be exported. Serving home first would take it away
-	// and drop the import of a slot that has both.
+	// export first: only own energy can feed it
 	attributionSinks = []string{Export, Home, Battery, Loadpoint}
 )
 
