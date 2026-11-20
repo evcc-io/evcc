@@ -19,8 +19,9 @@ const gcpEntity = 4
 
 // GridConnectionPoint publishes the grid meter via MGCP with evcc as Grid Connection Point
 type GridConnectionPoint struct {
-	log *util.Logger
-	uc  ucapi.GcpMGCPInterface
+	log                *util.Logger
+	uc                 ucapi.GcpMGCPInterface
+	currents, voltages bool // scenarios registered at creation; their update helpers panic otherwise
 }
 
 // gcpScenarios returns the optional MGCP scenarios the meter supports. The use case requires
@@ -89,7 +90,7 @@ func (c *EEBus) AddGridConnectionPoint(meter api.Meter) (*GridConnectionPoint, e
 	localDevice.AddEntity(entity)
 	uc.AddUseCase()
 
-	return &GridConnectionPoint{log: c.log, uc: uc}, nil
+	return &GridConnectionPoint{log: c.log, uc: uc, currents: currents, voltages: voltages}, nil
 }
 
 // Update publishes the grid measurement
@@ -106,7 +107,7 @@ func (g *GridConnectionPoint) Update(m types.Measurement) {
 		data = append(data, g.uc.UpdateDataEnergyFeedIn(*m.ReturnEnergy*1e3, &now, nil, nil, nil))
 	}
 
-	if len(m.Currents) == 3 {
+	if g.currents && len(m.Currents) == 3 {
 		data = append(data,
 			g.uc.UpdateDataCurrentPhaseA(m.Currents[0], &now, nil),
 			g.uc.UpdateDataCurrentPhaseB(m.Currents[1], &now, nil),
@@ -114,7 +115,7 @@ func (g *GridConnectionPoint) Update(m types.Measurement) {
 		)
 	}
 
-	if len(m.Voltages) == 3 {
+	if g.voltages && len(m.Voltages) == 3 {
 		data = append(data,
 			g.uc.UpdateDataVoltagePhaseA(m.Voltages[0], &now, nil),
 			g.uc.UpdateDataVoltagePhaseB(m.Voltages[1], &now, nil),

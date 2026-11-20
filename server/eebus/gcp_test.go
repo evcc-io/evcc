@@ -3,8 +3,12 @@ package eebus
 import (
 	"testing"
 
+	"github.com/enbility/eebus-go/usecases/mocks"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 type powerMeter struct{}
@@ -42,4 +46,17 @@ func TestGcpScenarios(t *testing.T) {
 			assert.Equal(t, tc.voltages, voltages)
 		})
 	}
+}
+
+// Phase values without a registered scenario are skipped, their update helpers would dereference a nil config.
+func TestGridConnectionPointUpdateWithoutPhases(t *testing.T) {
+	power := mocks.NewUpdateData(t)
+	power.EXPECT().Supported().Return(true)
+
+	uc := mocks.NewGcpMGCPInterface(t)
+	uc.EXPECT().UpdateDataPowerTotal(mock.Anything, mock.Anything, mock.Anything).Return(power)
+	uc.EXPECT().Update(mock.Anything).Return(nil)
+
+	g := &GridConnectionPoint{log: util.NewLogger("test"), uc: uc}
+	g.Update(types.Measurement{Currents: []float64{1, 2, 3}, Voltages: []float64{230, 230, 230}})
 }
