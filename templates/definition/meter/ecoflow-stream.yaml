@@ -85,5 +85,6 @@ render: |
   {{- if eq .usage "battery" }}
   power: powGetBpCms
   soc: cmsBattSoc
+  maindevice: true
   {{- include "battery-params" . }}
   {{- end }}
