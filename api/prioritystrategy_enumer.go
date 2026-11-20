@@ -32,11 +32,14 @@ func _PriorityStrategyNoOp() {
 var _PriorityStrategyValues = []PriorityStrategy{PriorityNone, PrioritySoc, PriorityDeficit}
 
 var _PriorityStrategyNameToValueMap = map[string]PriorityStrategy{
-	_PriorityStrategyName[0:4]:       PriorityNone,
+	_PriorityStrategyName[0:4]:  PriorityNone,
+	_PriorityStrategyName[4:7]:  PrioritySoc,
+	_PriorityStrategyName[7:14]: PriorityDeficit,
+}
+
+var _PriorityStrategyLowerNameToValueMap = map[string]PriorityStrategy{
 	_PriorityStrategyLowerName[0:4]:  PriorityNone,
-	_PriorityStrategyName[4:7]:       PrioritySoc,
 	_PriorityStrategyLowerName[4:7]:  PrioritySoc,
-	_PriorityStrategyName[7:14]:      PriorityDeficit,
 	_PriorityStrategyLowerName[7:14]: PriorityDeficit,
 }
 
@@ -53,7 +56,7 @@ func PriorityStrategyString(s string) (PriorityStrategy, error) {
 		return val, nil
 	}
 
-	if val, ok := _PriorityStrategyNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _PriorityStrategyLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to PriorityStrategy values", s)

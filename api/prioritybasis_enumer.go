@@ -31,9 +31,12 @@ func _PriorityBasisNoOp() {
 var _PriorityBasisValues = []PriorityBasis{PriorityBasisPercent, PriorityBasisEnergy}
 
 var _PriorityBasisNameToValueMap = map[string]PriorityBasis{
-	_PriorityBasisName[0:7]:       PriorityBasisPercent,
+	_PriorityBasisName[0:7]:  PriorityBasisPercent,
+	_PriorityBasisName[7:13]: PriorityBasisEnergy,
+}
+
+var _PriorityBasisLowerNameToValueMap = map[string]PriorityBasis{
 	_PriorityBasisLowerName[0:7]:  PriorityBasisPercent,
-	_PriorityBasisName[7:13]:      PriorityBasisEnergy,
 	_PriorityBasisLowerName[7:13]: PriorityBasisEnergy,
 }
 
@@ -49,7 +52,7 @@ func PriorityBasisString(s string) (PriorityBasis, error) {
 		return val, nil
 	}
 
-	if val, ok := _PriorityBasisNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _PriorityBasisLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to PriorityBasis values", s)
