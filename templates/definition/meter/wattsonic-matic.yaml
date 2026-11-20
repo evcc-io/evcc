@@ -149,7 +149,7 @@ render: |
                 address: 11069
                 type: writesingle
                 encoding: int16
-      - case: 3 # charge
+      - case: 3 # charge: grid import target with discharge blocked, so the battery only charges
         set:
           source: sequence
           set:
@@ -163,7 +163,7 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 2500 # >= 2500 = no limit, clears a previous holddischarge
+            value: 0 # block discharge: 11045 targets the grid point, so a load above maxchargepower would otherwise drain the battery
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
