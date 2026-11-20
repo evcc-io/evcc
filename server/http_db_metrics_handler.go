@@ -32,6 +32,15 @@ func timeRange(r *http.Request) (time.Time, time.Time, error) {
 	return from, to, nil
 }
 
+// rebuildRollup rolls up the days a delete dropped, off the request and the control loop
+func rebuildRollup() {
+	go func() {
+		if err := metrics.Rollup(); err != nil {
+			log.ERROR.Printf("history rollup: %v", err)
+		}
+	}()
+}
+
 // deleteEnergyHandler removes energy metrics. Parameters match
 // /api/history/energy so the same request can be previewed before deleting.
 func deleteEnergyHandler(w http.ResponseWriter, r *http.Request) {
@@ -61,6 +70,7 @@ func deleteEnergyHandler(w http.ResponseWriter, r *http.Request) {
 
 	// invalidate cached values (e.g. the solar scale) derived from the deleted history
 	util.ResetCached()
+	rebuildRollup()
 
 	jsonWrite(w, deleteResult{rows})
 }
@@ -87,6 +97,8 @@ func deleteTariffsHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, status, err)
 		return
 	}
+
+	rebuildRollup()
 
 	jsonWrite(w, deleteResult{rows})
 }

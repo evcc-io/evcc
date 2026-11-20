@@ -97,6 +97,59 @@ func TestDailyRollup(t *testing.T) {
 	require.Equal(t, to.Unix(), dailyEnd.Load())
 }
 
+func TestDailyRollupMidnightSkipped(t *testing.T) {
+	local := time.Local
+	t.Cleanup(func() { time.Local = local })
+
+	var err error
+	time.Local, err = time.LoadLocation("America/Santiago")
+	require.NoError(t, err)
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	pv := entity{Name: PV, Group: PV}
+	require.NoError(t, db.Instance.Create(&pv).Error)
+
+	// the first chunk ends on 2024-09-08, which starts at 01:00
+	from := time.Date(2024, 9, 8-dailyChunk, 0, 0, 0, 0, time.Local)
+	skipped := localDate(2024, 9, 8)
+	to := time.Date(2024, 9, 10, 0, 0, 0, 0, time.Local)
+	require.Equal(t, 1, skipped.Hour())
+
+	for ts := from; ts.Before(to); ts = ts.Add(15 * time.Minute) {
+		require.NoError(t, persist(pv, ts, 1, 0, nil, false))
+	}
+
+	dailyNow = func() time.Time { return to.Add(12 * time.Hour) }
+	t.Cleanup(func() { dailyNow = time.Now })
+
+	require.NoError(t, Rollup())
+	require.Equal(t, to.Unix(), dailyEnd.Load())
+
+	var days []flowDay
+	require.NoError(t, db.Instance.Select("day").Order("day").Find(&days).Error)
+	require.Len(t, days, dailyChunk+2)
+	for _, d := range days {
+		day := time.Unix(d.Day, 0)
+		assert.True(t, day.Equal(dayStart(day)), day)
+	}
+
+	// a restart resumes at the start of the day after the newest one
+	require.NoError(t, deleteDaily(db.Instance, skipped.Unix(), dailyClean))
+	require.NoError(t, loadDaily())
+	assert.Equal(t, skipped.Unix(), dailyEnd.Load())
+
+	// a chunk is not appended to a rollup that was truncated meanwhile
+	next, err := rollup(to.Unix(), to.AddDate(0, 0, 1))
+	require.NoError(t, err)
+	assert.EqualValues(t, -1, next)
+	assert.Equal(t, skipped.Unix(), dailyEnd.Load())
+
+	d0, _ := wholeDays(skipped.Add(-time.Hour), to, to.Unix())
+	assert.Equal(t, skipped.Unix(), d0)
+}
+
 func TestBuckets(t *testing.T) {
 	local := time.Local
 	t.Cleanup(func() { time.Local = local })

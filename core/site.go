@@ -228,13 +228,6 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	// reload history in the UI on each persisted 15min slot instead of polling
 	metrics.OnPersist = func(slot time.Time) { site.publish(keys.HistoryUpdated, slot) }
 
-	// roll up the history in the background, an upgrade starts with all of it
-	go func() {
-		if err := metrics.Rollup(); err != nil {
-			site.log.ERROR.Printf("history rollup: %v", err)
-		}
-	}()
-
 	// upload telemetry on shutdown
 	if telemetry.Enabled() {
 		shutdown.Register(func() {
@@ -393,6 +386,14 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.curtailers = append(site.curtailers, dev)
 	}
+
+	// roll up the history in the background, an upgrade starts with all of it.
+	// The collectors above may have invalidated it.
+	go func() {
+		if err := metrics.Rollup(); err != nil {
+			site.log.ERROR.Printf("history rollup: %v", err)
+		}
+	}()
 
 	// revert battery mode on shutdown
 	shutdown.Register(func() {

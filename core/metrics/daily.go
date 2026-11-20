@@ -74,6 +74,12 @@ func dayStart(t time.Time) time.Time {
 	return aggregateStarts["day"](t)
 }
 
+// nextDay returns the start of the day after the one starting at day.
+// AddDate misses it where daylight saving skips midnight.
+func nextDay(day time.Time) time.Time {
+	return aggregateDurations["day"](day)
+}
+
 // atomicMin lowers v to ts
 func atomicMin(v *atomic.Int64, ts int64) {
 	for {
@@ -106,7 +112,7 @@ func loadDaily() error {
 		return deleteDaily(db.Instance, 0, dailyClean)
 	}
 
-	dailyEnd.Store(day.AddDate(0, 0, 1).Unix())
+	dailyEnd.Store(nextDay(day).Unix())
 	return nil
 }
 
@@ -228,7 +234,8 @@ func rollup(end int64, final time.Time) (int64, error) {
 		from = dayStart(time.Unix(first, 0))
 	}
 
-	to := from.AddDate(0, 0, dailyChunk)
+	year, month, day := from.Date()
+	to := localDate(year, month, day+dailyChunk)
 	if to.After(final) {
 		to = final
 	}
@@ -263,7 +270,8 @@ func rollup(end int64, final time.Time) (int64, error) {
 	dailyMu.Lock()
 	defer dailyMu.Unlock()
 
-	if dailyStale.Load() < to.Unix() {
+	// a truncated rollup must not be continued past the gap
+	if dailyStale.Load() < to.Unix() || dailyEnd.Load() != end {
 		return -1, nil
 	}
 
@@ -349,7 +357,7 @@ func wholeDays(from, to time.Time, end int64) (int64, int64) {
 	if !from.IsZero() {
 		day := dayStart(from)
 		if day.Before(from) {
-			day = day.AddDate(0, 0, 1)
+			day = nextDay(day)
 		}
 		d0 = day.Unix()
 	}
