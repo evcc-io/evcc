@@ -400,6 +400,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	// publish grid meter via EEBus
+	if err == nil {
+		if err := configureGridConnectionPoint(site, tee); err != nil {
+			log.ERROR.Println("eebus grid connection point:", err)
+		}
+	}
+
 	// all device skis are registered, unknown ones may now be denied
 	eebus.ConfigComplete()
 

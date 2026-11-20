@@ -25,6 +25,7 @@ import (
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
 	coresettings "github.com/evcc-io/evcc/core/settings"
@@ -873,6 +874,40 @@ func configureGo(conf []globalconfig.Go) error {
 }
 
 // setup HEMS
+// configureGridConnectionPoint publishes the grid meter via EEBus MGCP for downstream energy managers.
+// An EEBus grid meter is not re-published since the grid connection point is already on the network.
+func configureGridConnectionPoint(site *core.Site, tee *util.Tee) error {
+	srv, err := eebus.Instance()
+	if err != nil || site == nil || site.GetGridMeterRef() == "" {
+		return nil
+	}
+
+	dev, err := config.Meters().ByName(site.GetGridMeterRef())
+	if err != nil {
+		return err
+	}
+
+	gm := dev.Instance()
+	if _, ok := gm.(*meter.EEBus); ok || gm == nil {
+		return nil
+	}
+
+	gcp, err := srv.AddGridConnectionPoint(gm)
+	if err != nil || gcp == nil {
+		return err
+	}
+
+	go func(in <-chan util.Param) {
+		for p := range in {
+			if m, ok := p.Val.(types.Measurement); ok && p.Key == keys.Grid && p.Loadpoint == nil {
+				gcp.Update(m)
+			}
+		}
+	}(tee.Attach())
+
+	return nil
+}
+
 func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error) {
 	if conf.Type != "" {
 		yamlSource.hems = globalconfig.YamlSourceFile

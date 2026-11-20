@@ -1080,6 +1080,15 @@ func (site *Site) updateGridMeter() error {
 		}
 	}
 
+	if phaseMeter, ok := api.Cap[api.PhaseVoltages](meter); ok {
+		if u1, u2, u3, err := phaseMeter.Voltages(); err == nil {
+			mm.Voltages = []float64{u1, u2, u3}
+			site.log.DEBUG.Printf("grid voltages: %.0fV", mm.Voltages)
+		} else if !errors.Is(err, api.ErrNotAvailable) {
+			site.log.ERROR.Printf("grid voltages: %v", err)
+		}
+	}
+
 	// grid energy (import); nil when the device has no MeterEnergy capability or the read fails
 	// ignore spurious zero readings (NaN-derived or nightly reset, #30950)
 	if energyMeter, ok := api.Cap[api.MeterEnergy](meter); ok {
