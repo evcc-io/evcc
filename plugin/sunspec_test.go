@@ -7,6 +7,7 @@ import (
 
 	sunspec "github.com/andig/gosunspec"
 	"github.com/andig/gosunspec/memory"
+	"github.com/andig/gosunspec/models/model203"
 	"github.com/andig/gosunspec/models/model704"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -175,4 +176,32 @@ func TestSunspecConcurrentSharedDevice(t *testing.T) {
 		}
 	}
 	wg.Wait()
+}
+
+func TestSunspecHasModel(t *testing.T) {
+	slab, err := memory.NewSlabBuilder().AddModel(model203.ModelID).AddModel(model704.ModelID).Build()
+	require.NoError(t, err)
+
+	arr, err := memory.Open(slab)
+	require.NoError(t, err)
+
+	devices := arr.Collect(sunspec.AllDevices)
+	require.NotEmpty(t, devices)
+
+	for _, c := range []struct {
+		models []int
+		want   bool
+	}{
+		{[]int{model203.ModelID}, true},
+		{[]int{model704.ModelID}, true},
+		{[]int{201, 211, model203.ModelID, 213}, true},
+		{[]int{201, 211, 202, 212}, false},
+		{nil, false},
+	} {
+		var ops []modbus.SunSpecOperation
+		for _, m := range c.models {
+			ops = append(ops, modbus.SunSpecOperation{Model: m})
+		}
+		assert.Equal(t, c.want, hasSunspecModel(devices[0], ops), "models %v", c.models)
+	}
 }
