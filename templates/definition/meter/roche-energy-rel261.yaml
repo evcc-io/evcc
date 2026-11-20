@@ -17,6 +17,7 @@ requirements:
       Modbus TCP must be enabled in the cabinet's HMI under "Remote Management". Power and SoC are served on different Modbus IDs: PCS (ID 2) and BMS (ID 34).
 
       Power (register 30135) mirrors the setpoint applied by the PCS and is not an independent measurement. If the cabinet is controlled externally and does not follow the command (e.g. during a PCS fault), the value deviates from the actual power.
+protocols: [modbus]
 params:
   - name: usage
     choice: ["battery"]

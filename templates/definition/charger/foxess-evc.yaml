@@ -11,6 +11,7 @@ requirements:
     de: In der Fox Switch App muss der Arbeitsmodus auf "Modbus TCP" gestellt werden. Wie eine Ladesession beginnt, bestimmt der in der Wallbox eingestellte Betriebsmodus - entweder per App bzw. RFID-Karte oder automatisch beim Anstecken starten.
     en: The work mode must be set to "Modbus TCP" in the Fox Switch app. How a session starts depends on the charger's own operating mode - start either via app or RFID card, or automatically on plug-in.
   evcc: ["sponsorship"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

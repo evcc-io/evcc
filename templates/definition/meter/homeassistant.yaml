@@ -9,6 +9,7 @@ requirements:
 auth:
   type: homeassistant
   params: [uri, insecure]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "aux", "charge"]

@@ -6,6 +6,7 @@ products:
   - brand: Sunsynk
     description:
       generic: String inverter
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv"]

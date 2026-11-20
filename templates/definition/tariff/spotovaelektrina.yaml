@@ -9,6 +9,8 @@ requirements:
   evcc: ["skiptest"]
 group: price
 countries: ["CZ"]
+protocols: [http]
+cloud: true
 params:
   - name: currency
     choice: ["CZK", "EUR"]

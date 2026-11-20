@@ -6,6 +6,8 @@ products:
 capabilities: ["meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
+protocols: [http]
+cloud: true
 params:
   - name: user
   - name: password

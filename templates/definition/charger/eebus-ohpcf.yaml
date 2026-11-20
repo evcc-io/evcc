@@ -5,6 +5,7 @@ products:
       en: EEBUS heat pump (OHPCF)
 group: heatinggeneric
 capabilities: ["meter", "dim"]
+protocols: [eebus]
 params:
   - preset: eebus
   - name: reboost

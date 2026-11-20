@@ -10,6 +10,7 @@ capabilities: ["mA", "1p3p", "meter", "dim"]
 discovery:
   hostname: ["sungrow*"]
   mac: ["AC199F"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]

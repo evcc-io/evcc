@@ -10,6 +10,7 @@ requirements:
 auth:
   type: homeassistant
   params: [uri, insecure]
+protocols: [websocket, http]
 params:
   - name: uri
     description:

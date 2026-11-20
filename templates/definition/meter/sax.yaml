@@ -10,6 +10,7 @@ requirements:
       Für Batteriesteuerung müssen die Register 40044/40045 (43/44) vom techn. Support freigeschaltet werden. Hierzu ist die Seriennummer des Gerätes notwendig.
     en: |
       For battery control, registers 40044/40045 (43/44) must be enabled by technical support. The device's serial number is required for this.
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "battery"]

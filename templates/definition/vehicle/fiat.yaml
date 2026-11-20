@@ -2,6 +2,8 @@ template: fiat
 products:
   - brand: Fiat
   - brand: Jeep
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-base
   - name: vin

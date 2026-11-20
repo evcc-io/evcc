@@ -21,6 +21,8 @@ requirements:
     en: >-
       Cloud connection via the SENEC.Connect API. A subscription key from the SENEC
       developer portal is required. Access is read-only, battery control is not possible.
+protocols: [http]
+cloud: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

@@ -33,6 +33,7 @@ requirements:
       Local connection via the Tuya protocol for chargers using the Tuya data point layout of Feyree and Kolanky (e.g. Tuya product id `tj9l3ghsjnbdjom6`).
       Device ID and local key must be retrieved once, e.g. using `tinytuya wizard`, which requires an account on the Tuya IoT platform. No cloud access is needed during operation. The device accepts only one local connection at a time, other local integrations (e.g. LocalTuya, Tuya Local) must be disabled.
       Charging is started and paused using the start/stop command of the charger. Delay and timer functions in the app must be disabled.
+protocols: [other]
 params:
   - name: host
   - name: id

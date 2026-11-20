@@ -7,6 +7,8 @@ requirements:
   evcc: ["skiptest"]
 group: price
 countries: ["DK"]
+protocols: [http]
+cloud: true
 params:
   - name: region
     example: dk1

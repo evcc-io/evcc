@@ -19,6 +19,7 @@ discovery:
   mdns: ["_Fronius-SE-Inverter._tcp"]
   hostname: ["fronius*"]
   mac: ["0003AC"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

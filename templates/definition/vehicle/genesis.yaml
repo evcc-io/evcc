@@ -13,6 +13,8 @@ requirements:
       In das Passwort-Feld kann entweder das Passwort deines Kontos oder ein `refresh_token` ([Anleitung](https://github.com/evcc-io/evcc/wiki/Hyundai-Kia:-Refresh-Token)) eingetragen werden.
 
       Hinweis: Seit Kia/Hyundai/Genesis im August 2026 den alten Login-Flow gesperrt haben, können externe Tools keinen *neuen* `refresh_token` mehr erzeugen — nur ein bereits vorher erzeugter funktioniert noch. Falls du noch keinen hast, nutze stattdessen das Passwort deines Kontos.
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-base
   - preset: vehicle-online

@@ -2,6 +2,7 @@ template: homematic
 products:
   - brand: Homematic IP
 group: switchsockets
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

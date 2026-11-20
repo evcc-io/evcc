@@ -6,6 +6,7 @@ products:
 discovery:
   mdns: ["_zendure._tcp:Zendure-MeterReader*"]
   hostname: ["Zendure-MeterReader*"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

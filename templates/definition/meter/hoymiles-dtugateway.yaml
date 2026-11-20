@@ -12,6 +12,7 @@ requirements:
     en: |
       Requires a Hoymiles Inverter of the HMS Series with integrated Wifi,
       and an ESP-32 with firmware from https://github.com/ohAnd/dtuGateway
+protocols: [http]
 params:
   - name: usage
     choice: ["pv"]

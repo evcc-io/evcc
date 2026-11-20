@@ -1,6 +1,8 @@
 template: pushover
 products:
   - brand: Pushover
+protocols: [http]
+cloud: true
 params:
   - name: app
     required: true

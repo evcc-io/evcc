@@ -21,6 +21,7 @@ requirements:
       Setup, Backend, Communication Protocol: Open Charge Point Protocol v1.6J
       Setup, Backend, Backend Server: The evcc URL `ws://<evcc-host>:8887/` must be entered here. Basic Authentication: Disabled. OCPP 1.6 Settings: Enable all options.
   evcc: ["sponsorship", "skiptest"]
+protocols: [ocpp]
 params:
   - preset: ocpp
 render: |

@@ -6,6 +6,8 @@ products:
       generic: Product Code
 group: price
 countries: ["GB"]
+protocols: [http]
+cloud: true
 params:
   - name: productCode
     type: string

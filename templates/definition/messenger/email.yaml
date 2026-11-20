@@ -3,6 +3,8 @@ products:
   - description:
       en: Email
       de: E-Mail
+protocols: [other]
+cloud: true
 params:
   - name: host
     example: smtp.example.com

@@ -27,6 +27,7 @@ caveats:
       de: Phasenumschaltung deaktiviert sich gelegentlich von selbst. (Fixed in v3.187.42, siehe Requirements)
       en: Phase switching occasionally disables itself. (Fixed in v3.187.42, see requirements)
     link: https://github.com/evcc-io/evcc/issues/21708
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

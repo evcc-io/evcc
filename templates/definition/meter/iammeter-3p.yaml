@@ -15,6 +15,7 @@ requirements:
       Die Aktivierung des Net Metering Mode (NEM) (=phasensaldierende Zählung) ist erforderlich siehe [Dokumentation](https://www.iammeter.com/newsshow/net-energy-metering).
     en: |
       Net Metering Mode (NEM) must be enabled, see [documentation](https://www.iammeter.com/newsshow/net-energy-metering).
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

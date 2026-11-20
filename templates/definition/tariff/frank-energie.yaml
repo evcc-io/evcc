@@ -9,6 +9,8 @@ requirements:
   evcc: ["skiptest"]
 group: price
 countries: ["NL"]
+protocols: [http]
+cloud: true
 params:
   - name: tariffDirection
     type: choice

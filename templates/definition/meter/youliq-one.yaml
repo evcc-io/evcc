@@ -10,6 +10,7 @@ requirements:
       Lokaler Zugriff auf den Youliq One Speicher per HTTPS API. Das Gerät verwendet ein selbstsigniertes Zertifikat.
     en: |
       Local access to the Youliq One battery storage via HTTPS API. The device uses a self-signed certificate.
+protocols: [http]
 params:
   - name: usage
     choice: ["battery"]

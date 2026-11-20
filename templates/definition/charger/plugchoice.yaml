@@ -23,6 +23,8 @@ requirements:
       – Stellen Sie `MeterValuesSampledData` auf `Energy.Active.Import.Register,Current.Offered,Current.Import,Voltage` ein.
 
       Diese Anpassungen ermöglichen eine häufigere und detailliertere Meldung der Ladedaten an evcc.
+protocols: [http]
+cloud: true
 params:
   - name: token
     required: true

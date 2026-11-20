@@ -16,6 +16,7 @@ requirements:
       Grid values are measured by the external current transformers (CTs) at the grid connection point.
 discovery:
   mac: ["5C5A4C3"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

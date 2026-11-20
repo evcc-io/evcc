@@ -12,6 +12,7 @@ products:
   - brand: ABB
     description:
       generic: B24
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

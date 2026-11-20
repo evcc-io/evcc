@@ -4,6 +4,7 @@ products:
     description:
       generic: SimpleBox
 capabilities: ["dim"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["rs485"]

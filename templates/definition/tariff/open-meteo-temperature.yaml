@@ -8,6 +8,8 @@ requirements:
     de: Freie Wetter-API [open-meteo.com](https://open-meteo.com) für Außentemperaturdaten in 15-Minuten-Intervallen. Open-Meteo ist eine Open-Source-Wetter-API und bietet kostenlosen Zugriff für nicht-kommerzielle Nutzung. Kein API-Schlüssel erforderlich.
   evcc: ["skiptest"]
 group: temperature
+protocols: [http]
+cloud: true
 params:
   - name: lat
     required: true

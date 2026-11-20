@@ -12,6 +12,8 @@ requirements:
     de: "Day-Ahead-Strompreise von OMIE fuer Portugal und Spanien. Es ist kein API-Schluessel erforderlich."
 group: price
 countries: ["PT", "ES"]
+protocols: [http]
+cloud: true
 params:
   - name: country
     description:

@@ -7,6 +7,7 @@ requirements:
   description:
     de: Benötigt ein Gerät mit SONOFF RPC API. Das RPC-Passwort wird in der lokalen Web-Oberfläche des Geräts vergeben.
     en: Requires a device with SONOFF RPC API. The RPC password is set in the device's local web interface.
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "charge", "pv"]

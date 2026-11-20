@@ -27,6 +27,7 @@ requirements:
       Information on the energy state can be found within the installation manual. 
       Energy states 6 and 7 can be adapted at the indoor unit in the installer settings > "Connectivity" > "Energy state" >"Energy state definition".
       If the internal power measurement does not work (not all models support this register), please set energy metering to "false".
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["rs485"]

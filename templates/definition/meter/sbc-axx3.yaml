@@ -6,6 +6,7 @@ products:
   - brand: Saia-Burgess Controls (SBC)
     description:
       generic: AWD3
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

@@ -7,6 +7,7 @@ requirements:
   description:
     de: Open Source Tesla Datenlogger [github.com/bassmaster187/TeslaLogger](https://github.com/bassmaster187/TeslaLogger)
     en: Open source Tesla data logger [github.com/bassmaster187/TeslaLogger](https://github.com/bassmaster187/TeslaLogger)
+protocols: [http]
 params:
   - preset: vehicle-common
   - preset: vehicle-online

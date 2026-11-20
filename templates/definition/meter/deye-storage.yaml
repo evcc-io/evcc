@@ -6,6 +6,7 @@ products:
   - brand: Sunsynk
     description:
       generic: Storage (hybrid) inverter
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv", "battery", "grid"]

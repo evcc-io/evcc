@@ -20,6 +20,7 @@ requirements:
   evcc: ["sponsorship"]
 discovery:
   mac: ["202BDA1"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

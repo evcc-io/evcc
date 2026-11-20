@@ -3,6 +3,8 @@ products:
   - description:
       generic: Connected Cars (Volkswagen Australia)
 group: generic
+protocols: [http]
+cloud: true
 params:
   - name: deviceToken
     required: true

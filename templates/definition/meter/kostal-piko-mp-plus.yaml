@@ -8,6 +8,7 @@ products:
       generic: coolcept fleX
 discovery:
   mac: ["1897F1", "240BB1"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv"]

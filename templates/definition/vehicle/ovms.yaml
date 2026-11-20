@@ -7,6 +7,8 @@ requirements:
   description:
     de: Unterstützung für alle Fahrzeuge via ODB2 Adapter im Fahrzeug. Mehr Infos bei [api.openvehicles.com](http://api.openvehicles.com/).
     en: Support for all vehicles via ODB2 adapter in the vehicle. More info at [api.openvehicles.com](http://api.openvehicles.com/).
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-common
   - preset: vehicle-online

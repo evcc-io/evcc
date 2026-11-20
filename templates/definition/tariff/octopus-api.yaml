@@ -10,6 +10,8 @@ requirements:
     en: "You can get the API key in the Octopus portal: [octopus.energy](https://octopus.energy/dashboard/new/accounts/personal-details/api-access)"
 countries: ["GB"]
 group: price
+protocols: [http]
+cloud: true
 params:
   - name: apiKey
     type: string

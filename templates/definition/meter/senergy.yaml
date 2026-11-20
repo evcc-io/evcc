@@ -6,6 +6,7 @@ products:
   - brand: SolarMax
     description:
       generic: SP Series Inverter
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv"]

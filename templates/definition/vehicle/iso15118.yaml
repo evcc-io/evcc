@@ -16,6 +16,7 @@ requirements:
       Using ISO15118 with some VW group vehicles, e.g. Porsche Taycan, requires additional configuration in the vehicle.
       This requires an active location-based charging profile with the lowest minimum charge (25%) and direct charging disabled.
       Otherwise the vehicle cannot be put into sleep mode.
+protocols: []
 params:
   - preset: vehicle-common
   - name: climaterdisabled

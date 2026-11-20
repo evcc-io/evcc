@@ -10,6 +10,7 @@ requirements:
       Benötigt wird ein Hoymiles Wechselrichter der HMT/HMS Serie mit DTU PRO S datalogger mit Modbus TCP aktiviert (verbunden mit LAN)
     en: |
       Requires a Hoymiles Inverter of the HMT/HMS Series with DTU PRO S datalogger with Modbus TCP enabled (connected with LAN)
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv"]

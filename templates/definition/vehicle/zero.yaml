@@ -1,6 +1,8 @@
 template: zero
 products:
   - brand: Zero Motorcycles
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-base
   - preset: vehicle-online

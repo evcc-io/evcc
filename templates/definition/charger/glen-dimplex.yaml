@@ -8,6 +8,7 @@ group: heating
 capabilities: ["dim"]
 requirements:
   # evcc: ["sponsorship"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

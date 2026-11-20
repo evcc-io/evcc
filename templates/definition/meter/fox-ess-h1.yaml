@@ -4,6 +4,7 @@ products:
   - brand: FoxESS
     description:
       generic: H1 Series Hybrid Inverter
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv", "battery"]

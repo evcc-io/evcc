@@ -7,6 +7,7 @@ requirements:
   description:
     de: Neuere Slimmelezer-Geräte verwenden eine andere Konfiguration. Probieren Sie diese Vorlage aus, wenn die andere fehlschlägt.
     en: More recent slimmelezer devices use a different configuration. Try this template if the other one fails.
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

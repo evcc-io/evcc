@@ -3,6 +3,7 @@ products:
   - brand: DDM
     description:
       generic: DDM18SD
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv", "charge"]

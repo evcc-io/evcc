@@ -9,6 +9,7 @@ requirements:
     en: For demonstration purposes. Provides optimal solar production curve peaking at noon.
   evcc: ["skiptest"]
 group: solar
+protocols: []
 params:
   - name: kwp
     type: float

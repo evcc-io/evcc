@@ -15,6 +15,7 @@ products:
 capabilities: ["dim"]
 requirements:
   evcc: ["sponsorship"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]

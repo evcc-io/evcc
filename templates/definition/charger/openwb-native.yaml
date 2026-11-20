@@ -101,6 +101,7 @@ requirements:
 
       At https://github.com/evcc-io/images complete images for both variants are available.
 
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["rs485"]

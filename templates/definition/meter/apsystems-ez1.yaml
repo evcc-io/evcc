@@ -3,6 +3,7 @@ products:
   - brand: APsystems
     description:
       generic: EZ1
+protocols: [http]
 params:
   - name: usage
     choice: ["pv"]

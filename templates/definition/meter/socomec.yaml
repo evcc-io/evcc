@@ -3,6 +3,7 @@ products:
   - brand: Socomec
     description:
       generic: Countis E3x/E4x
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

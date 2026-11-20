@@ -8,6 +8,7 @@ products:
     description:
       generic: Venus D
 capabilities: ["battery-control"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv", "battery"]

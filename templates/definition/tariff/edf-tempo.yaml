@@ -11,6 +11,8 @@ requirements:
   evcc: ["skiptest"]
 group: price
 countries: ["FR"]
+protocols: [http]
+cloud: true
 params:
   - name: bluehp
     type: pricePerKWh

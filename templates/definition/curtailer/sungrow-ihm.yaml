@@ -12,6 +12,7 @@ requirements:
 discovery:
   hostname: ["sungrow*"]
   mac: ["AC199F"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip", "rs485"]

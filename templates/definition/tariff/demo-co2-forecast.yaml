@@ -9,6 +9,7 @@ requirements:
     en: For demonstration purposes. Provides CO₂ intensity data based on typical central european summer values.
   evcc: ["skiptest"]
 group: co2
+protocols: []
 params:
   - name: base
     type: float

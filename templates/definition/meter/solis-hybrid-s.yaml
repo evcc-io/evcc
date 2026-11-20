@@ -16,6 +16,7 @@ requirements:
       Die aktive Batteriesteuerung überschreibt die Wechselrichter Einstellungen "Allow grid charging" und "Battery Reserve SOC".
     en: |
       Active battery control overrides the inverter settings "Allow grid charging" and "Battery Reserve SOC".
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

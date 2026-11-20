@@ -24,6 +24,8 @@ requirements:
       6. Log in with your Volvo account and allow access to the data. If the authorization is successful, the vehicle can be added.
 
       **NOTE:** Volvo enforces re-login every 7 days. Use "hamburger" menu logout/login.
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-common
   - preset: vehicle-online

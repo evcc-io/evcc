@@ -4,6 +4,7 @@ products:
   - brand: B+GE-TECH
     description:
       generic: DS100
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

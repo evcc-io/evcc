@@ -4,6 +4,7 @@ products:
     description:
       generic: EM-CP-PP-ETH
 capabilities: ["dim"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

@@ -12,6 +12,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
 
@@ -25,6 +26,8 @@ type Template struct {
 	Link         string         `json:",omitempty"` // integration provider link, can be overridden per product
 	Products     []Product      `json:",omitempty"` // list of products this template is compatible with
 	Capabilities []Capability   `json:"-"`
+	Protocols    []Protocol     `json:",omitempty"` // communication protocols, main one first. Empty list means no communication
+	Cloud        bool           `json:",omitempty"` // requires a vendor or third-party internet service
 	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
 	Requirements Requirements   `json:",omitempty"`
 	Caveats      []Caveat       `json:",omitempty"` // known device limitations
@@ -82,6 +85,14 @@ func (t *Template) SortRequiredParamsFirst() error {
 
 // validate the template (only rudimentary for now)
 func (t *Template) Validate() error {
+	// an explicit empty list means no communication
+	if t.Protocols == nil && !t.Deprecated {
+		return fmt.Errorf("missing protocols, use [] for no communication or a list of: %s", strings.Join(ProtocolStrings(), ", "))
+	}
+	if len(lo.Uniq(t.Protocols)) != len(t.Protocols) {
+		return fmt.Errorf("duplicate protocol: %v", t.Protocols)
+	}
+
 	for _, c := range t.Countries {
 		if !c.IsValid() {
 			return fmt.Errorf("invalid country code: '%s'", c)

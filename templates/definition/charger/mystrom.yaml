@@ -7,6 +7,7 @@ capabilities: ["meter"]
 group: switchsockets
 discovery:
   hostname: ["mystrom-*"]
+protocols: [http]
 params:
   - name: host
   - name: token

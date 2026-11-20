@@ -4,6 +4,8 @@ products:
   - brand: National Grid ESO
 group: co2
 countries: ["GB"]
+protocols: [http]
+cloud: true
 params:
   - name: region
     type: string

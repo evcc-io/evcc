@@ -19,6 +19,8 @@ requirements:
       - The serial number of your PowerOcean system
 
       These credentials can be obtained through the EcoFlow Developer Console after registering your application.
+protocols: [http]
+cloud: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

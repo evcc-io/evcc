@@ -4,6 +4,7 @@ products:
     description:
       generic: H3 Series Hybrid Inverter
 capabilities: ["battery-control"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

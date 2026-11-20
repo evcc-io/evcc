@@ -26,6 +26,7 @@ requirements:
   evcc: ["sponsorship"]
 discovery:
   mac: ["7C70BC8"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["rs485"]

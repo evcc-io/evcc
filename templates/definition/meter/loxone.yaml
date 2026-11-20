@@ -5,6 +5,7 @@ products:
       generic: Miniserver
 discovery:
   mac: ["504F94", "785249"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "charge"]

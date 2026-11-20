@@ -13,6 +13,7 @@ requirements:
       configured for Austrian DLMS meters.
 discovery:
   mdns: ["_esphomelib._tcp"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

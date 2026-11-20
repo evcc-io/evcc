@@ -11,6 +11,8 @@ requirements:
     en: "You can request an API key at api@ews-schoenau.de"
 countries: ["DE"]
 group: price
+protocols: [http]
+cloud: true
 params:
   - name: apiKey
     type: string

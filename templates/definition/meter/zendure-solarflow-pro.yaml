@@ -3,6 +3,7 @@ products:
   - brand: Zendure
     description:
       generic: Solarflow 800 Pro
+protocols: [http]
 params:
   - name: usage
     choice: ["pv"]

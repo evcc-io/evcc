@@ -4,6 +4,7 @@ products:
     description:
       generic: HTTP API, Import & Export
 group: generic
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

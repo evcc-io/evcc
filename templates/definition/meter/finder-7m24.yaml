@@ -3,6 +3,7 @@ products:
   - brand: Finder
     description:
       generic: 7M.24
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

@@ -16,6 +16,7 @@ discovery:
   mdns: ["_go-e_go-eCharger._tcp"]
   hostname: ["go-echarger*"]
   mac: ["D455AD", "98FC841"]
+protocols: [http]
 params:
   - name: host
 render: |

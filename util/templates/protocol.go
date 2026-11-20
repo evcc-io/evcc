@@ -1,0 +1,16 @@
+package templates
+
+// Protocol is a communication protocol used by a template
+type Protocol int
+
+//go:generate go tool enumer -type Protocol -trimprefix Protocol -transform=lower -text
+const (
+	_ Protocol = iota
+	ProtocolModbus
+	ProtocolHTTP
+	ProtocolWebSocket
+	ProtocolMQTT
+	ProtocolOCPP
+	ProtocolEEBus
+	ProtocolOther
+)

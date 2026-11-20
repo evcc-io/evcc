@@ -8,6 +8,7 @@ requirements:
   description:
     en: For demonstration purposes. Heat pump with a fixed set of values.
     de: Zu Demonstrationszwecken. Wärmepumpe mit festen Werten.
+protocols: []
 params:
   - name: operationMode
     description:

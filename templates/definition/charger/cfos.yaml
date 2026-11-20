@@ -20,6 +20,7 @@ requirements:
       1) Home -> disable Load Balancing (Monitoring Mode)
       2) Configuration -> Hardware - Phase switch / Relais 2 (enable phase switching)
   evcc: ["sponsorship"]
+protocols: [modbus]
 params:
   - name: host
 render: |

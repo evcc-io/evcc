@@ -42,6 +42,7 @@ caveats:
       de: Die OCPP-Verbindung kann instabil sein und sich teils erst nach Neustart von evcc erholen.
       en: The OCPP connection can be unstable and may only recover after restarting evcc.
     link: https://github.com/evcc-io/evcc/issues/27203
+protocols: [ocpp]
 params:
   - preset: ocpp
   - name: metervalues

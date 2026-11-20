@@ -6,6 +6,7 @@ products:
 capabilities: ["battery-control", "curtail"]
 discovery:
   mac: ["F0C1CE"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

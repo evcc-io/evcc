@@ -4,6 +4,7 @@ products:
     description:
       generic: ESS Home 15
 capabilities: ["battery-control"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

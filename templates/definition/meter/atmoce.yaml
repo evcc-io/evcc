@@ -14,6 +14,7 @@ requirements:
       Support for Atmoce MG100 (included with MC100 and MC100-T).
       Requires installer to enable Modbus TCP in configuration or through Atmozen app; available in firmware 01.01.00.18.10 or later.
       'Grid Recharging' and 'Export Power' must be enabled in the Atmozen app to allow battery (dis)charging to/from grid.
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

@@ -13,6 +13,7 @@ discovery:
   mdns: ["_http._tcp:WiNet-WebServer"]
   hostname: ["sungrow*"]
   mac: ["AC199F"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]

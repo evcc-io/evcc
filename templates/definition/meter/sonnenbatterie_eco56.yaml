@@ -14,6 +14,7 @@ products:
       generic: oem 6.5
 discovery:
   hostname: ["sb-*"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

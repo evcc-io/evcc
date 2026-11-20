@@ -12,6 +12,7 @@ requirements:
     en: |
       Uses the REST API, requires firmware >= 3.11.2.
       The device is put into the configured mode and controls the charge current via `override_current`.
+protocols: [http]
 params:
   - name: host
   - name: cache

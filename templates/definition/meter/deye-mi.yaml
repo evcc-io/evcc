@@ -12,6 +12,7 @@ products:
   - brand: Sunsynk
     description:
       generic: Micro inverter
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv"]

@@ -17,6 +17,7 @@ products:
       generic: EEBus
 group: heating
 capabilities: ["meter", "dim"]
+protocols: [eebus]
 params:
   - preset: eebus
   - name: reboost

@@ -24,6 +24,7 @@ requirements:
       If you get the message '401 (Unauthorized)' without a username and password,
       use the username and password that you received from the installer of your wallbox.
       The combo that also works for the web interface of the wallbox.
+protocols: [http]
 params:
   - name: host
   - name: user

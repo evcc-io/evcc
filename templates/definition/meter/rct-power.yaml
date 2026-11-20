@@ -8,6 +8,7 @@ requirements:
   evcc: ["skiptest"]
 discovery:
   hostname: ["rct-ps*"]
+protocols: [other]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

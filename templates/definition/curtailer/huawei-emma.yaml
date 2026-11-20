@@ -9,6 +9,7 @@ requirements:
       Die Abregelung begrenzt die Einspeiseleistung auf den gewünschten Prozentsatz der maximalen AC-Leistung der angeschlossenen Wechselrichter.
     en: |
       Curtailment limits feed-in power to the desired percentage of the maximum AC power of the connected inverters.
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

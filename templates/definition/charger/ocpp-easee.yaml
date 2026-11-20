@@ -44,6 +44,7 @@ requirements:
       * Local network connection
       * Minimum meter interval: 30s
   evcc: ["sponsorship", "skiptest"]
+protocols: [ocpp]
 params:
   - preset: ocpp
   - name: metervalues

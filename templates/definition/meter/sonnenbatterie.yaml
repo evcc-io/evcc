@@ -19,6 +19,7 @@ requirements:
       evcc controls the backup buffer: the current SoC while holding, `minsoc` in normal operation and `maxsoc` while charging. A backup buffer set in the sonnenBatterie web interface is overwritten. The sonnenBatterie only accepts a backup buffer of 0 or 5 to 100, so `minsoc` must be 0 or at least 5.
 discovery:
   hostname: ["sb-*"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

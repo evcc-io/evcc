@@ -3,6 +3,7 @@ products:
   - brand: SAJ
     description:
       generic: H1 Series Hybrid Solar Inverter
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

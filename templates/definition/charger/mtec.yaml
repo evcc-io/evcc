@@ -5,6 +5,7 @@ capabilities: ["meter", "dim"]
 group: heating
 requirements:
   # evcc: ["sponsorship"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

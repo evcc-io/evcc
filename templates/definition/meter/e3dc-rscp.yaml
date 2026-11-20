@@ -14,6 +14,7 @@ requirements:
       **Note**: Active battery control will override Smart-Power/Operating Range settings.
 discovery:
   mac: ["1CAE3E3", "0C86297"]
+protocols: [other]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

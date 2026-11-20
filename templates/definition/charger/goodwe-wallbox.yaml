@@ -19,6 +19,7 @@ requirements:
       Note: Implementation is derived from the Home Assistant integration (gen2-modbus branch) and is not vendor-verified.
 discovery:
   mac: ["F0C1CE"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

@@ -15,6 +15,7 @@ requirements:
 
       **Important:** In the loadpoint configuration, set `mincurrent: 0.2` and `maxcurrent: 16`, as well as `phases: 1` for single-phase operation.
   evcc: ["sponsorship"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

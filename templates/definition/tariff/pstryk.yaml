@@ -10,6 +10,8 @@ requirements:
 group: price
 countries: ["PL"]
 
+protocols: [http]
+cloud: true
 params:
   - name: token
     type: string

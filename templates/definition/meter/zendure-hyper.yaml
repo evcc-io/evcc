@@ -6,6 +6,8 @@ products:
       generic: Hyper 2000
 requirements:
   evcc: ["skiptest"]
+protocols: [mqtt, http]
+cloud: true
 params:
   - name: usage
     choice: ["pv", "battery"]

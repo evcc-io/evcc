@@ -7,6 +7,7 @@ capabilities: ["iso151182", "mA", "1p3p", "meter", "dim"]
 discovery:
   mdns: ["_charge-control._tcp"]
   hostname: ["openWBPro*"]
+protocols: [http]
 params:
   - name: host
 render: |

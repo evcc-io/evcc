@@ -21,6 +21,7 @@ requirements:
       `aux` kann für die Leistung der Warmwasserbereitung verwendet werden.
     en: |
       `aux` can be used for water heating power.
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "aux"]

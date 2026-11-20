@@ -12,6 +12,8 @@ requirements:
       Basis for many dynamic tariffs.
 group: price
 countries: ["EU"]
+protocols: [http]
+cloud: true
 params:
   - name: securitytoken
     type: string

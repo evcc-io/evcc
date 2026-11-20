@@ -8,6 +8,7 @@ requirements:
   description:
     de: Die lokale Schnittstelle erfordert den powerfox PRO Service und Firmware v2.02.07 oder neuer.
     en: The local interface requires the powerfox PRO service and firmware v2.02.07 or newer.
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv"]

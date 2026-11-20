@@ -11,6 +11,7 @@ requirements:
     de: Firmware v2 erforderlich. Die WARP-eigene automatische Phasenumschaltung wird von evcc beim Verbinden mit der Wallbox deaktiviert. Siehe [docs.warp-charger.com](https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3).
     en: Firmware v2 required. WARP's own automatic phase switching will be deactivated by evcc when connecting to the wallbox. See [docs.warp-charger.com](https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3).
   evcc: ["skiptest"]
+protocols: [websocket, http]
 params:
   - name: uri
     required: true

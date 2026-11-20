@@ -20,6 +20,7 @@ products:
     description:
       generic: SEB Series GEN3
 capabilities: ["battery-control"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

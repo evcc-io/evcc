@@ -17,6 +17,7 @@ caveats:
   - description:
       de: Die Phasenumschaltung ist nur auf Ladegeräten ab Baujahr 2026 verfügbar (Seriennummer beginnt mit 1026). Ab Firmware 357 liest evcc die Fähigkeit vom Ladegerät und bietet die Phasenumschaltung nur dort an, wo sie unterstützt wird.
       en: Phase switching is only available on chargers manufactured from 2026 (serial number starting with 1026). From firmware 357 evcc reads the capability from the charger and only offers phase switching where it is supported.
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

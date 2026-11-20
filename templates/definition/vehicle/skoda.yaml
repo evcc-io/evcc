@@ -4,6 +4,8 @@ products:
   - brand: Škoda
     description:
       generic: MyŠkoda
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-base
   - name: welcomecharge

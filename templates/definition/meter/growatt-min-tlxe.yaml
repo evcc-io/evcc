@@ -3,6 +3,7 @@ products:
   - brand: Growatt
     description:
       generic: MIN 3000TL-XE (and similar MIN series)
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]
