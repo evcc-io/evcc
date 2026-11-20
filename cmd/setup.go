@@ -1451,7 +1451,7 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 	}
 
 	if len(config.Circuits().Devices()) > 0 {
-		if err := validateCircuits(loadpoints); err != nil {
+		if err := validateCircuits(site, loadpoints); err != nil {
 			return site, &ClassError{ClassCircuit, err}
 		}
 	}
@@ -1459,8 +1459,10 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 	return site, nil
 }
 
-func validateCircuits(loadpoints []*core.Loadpoint) error {
+func validateCircuits(site *core.Site, loadpoints []*core.Loadpoint) error {
 	var hasRoot bool
+
+	hasGridMeter := site.GetGridMeterRef() != ""
 
 CONTINUE:
 	for _, dev := range config.Circuits().Devices() {
@@ -1473,6 +1475,10 @@ CONTINUE:
 			}
 
 			hasRoot = true
+
+			if hasGridMeter && !instance.HasMeter() {
+				log.WARN.Printf("root circuit %s has no meter although a grid meter is configured; only charging points and child circuits are counted", dev.Config().Name)
+			}
 		}
 
 		if slices.ContainsFunc(loadpoints, func(lp *core.Loadpoint) bool {
