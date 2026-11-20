@@ -75,9 +75,61 @@ render: |
                 type: writemultiple
                 decode: uint32
           - source: go # charge limit
-            {{- include "sma-battery-limit-set" (dict "root" . "limit" "charge" "write" 40795 "name" "CmpBMS.BatChaMaxW - Maximale Batterieladeleistung") | indent 10 }}
+            in:
+            - name: limit
+              type: int
+              config:
+                {{- if gt (.maxchargepower | int) 0 }}
+                source: const
+                value: {{ .maxchargepower }}
+                {{- else }}
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40189 # SMA Modbus Profile: BatConv.WMaxCha
+                  type: holding
+                  decode: uint32
+                {{- end }}
+            script: |
+              limit
+            out:
+            - name: limit
+              type: int
+              config:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40795 # SMA Modbus Profile: CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
+                  type: writemultiple
+                  decode: uint32
           - source: go # discharge limit
-            {{- include "sma-battery-limit-set" (dict "root" . "limit" "discharge" "write" 40799 "name" "CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung") | indent 10 }}
+            in:
+            - name: limit
+              type: int
+              config:
+                {{- if gt (.maxdischargepower | int) 0 }}
+                source: const
+                value: {{ .maxdischargepower }}
+                {{- else }}
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40191 # SMA Modbus Profile: BatConv.WMaxDsch
+                  type: holding
+                  decode: uint32
+                {{- end }}
+            script: |
+              limit
+            out:
+            - name: limit
+              type: int
+              config:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40799 # SMA Modbus Profile: CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
+                  type: writemultiple
+                  decode: uint32
       - case: 2 # holddischarge
         set:
           source: sequence
@@ -92,7 +144,33 @@ render: |
                 type: writemultiple
                 decode: uint32
           - source: go # PV charging unrestricted
-            {{- include "sma-battery-limit-set" (dict "root" . "limit" "charge" "write" 40795 "name" "CmpBMS.BatChaMaxW - Maximale Batterieladeleistung") | indent 10 }}
+            in:
+            - name: limit
+              type: int
+              config:
+                {{- if gt (.maxchargepower | int) 0 }}
+                source: const
+                value: {{ .maxchargepower }}
+                {{- else }}
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40189 # SMA Modbus Profile: BatConv.WMaxCha
+                  type: holding
+                  decode: uint32
+                {{- end }}
+            script: |
+              limit
+            out:
+            - name: limit
+              type: int
+              config:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40795 # SMA Modbus Profile: CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
+                  type: writemultiple
+                  decode: uint32
           - source: const
             value: 803 # inaktiv (Ina)
             set:
@@ -107,7 +185,33 @@ render: |
           source: sequence
           set:
           - source: go # Wirkleistungsvorgabe
-            {{- include "sma-battery-limit-set" (dict "root" . "limit" "charge" "negate" true "write" 40149 "name" "Inverter.WModCfg.WCtlComCfg.WSpt") | indent 10 }}
+            in:
+            - name: limit
+              type: int
+              config:
+                {{- if gt (.maxchargepower | int) 0 }}
+                source: const
+                value: {{ .maxchargepower }}
+                {{- else }}
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40189 # SMA Modbus Profile: BatConv.WMaxCha
+                  type: holding
+                  decode: uint32
+                {{- end }}
+            script: |
+              -limit
+            out:
+            - name: limit
+              type: int
+              config:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40149 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSpt
+                  type: writemultiple
+                  decode: int32
           - source: const
             value: 802 # aktiv (Act)
             set:
@@ -118,8 +222,54 @@ render: |
                 type: writemultiple
                 decode: uint32
           - source: go # discharge limit
-            {{- include "sma-battery-limit-set" (dict "root" . "limit" "discharge" "write" 40799 "name" "CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung") | indent 10 }}
+            in:
+            - name: limit
+              type: int
+              config:
+                {{- if gt (.maxdischargepower | int) 0 }}
+                source: const
+                value: {{ .maxdischargepower }}
+                {{- else }}
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40191 # SMA Modbus Profile: BatConv.WMaxDsch
+                  type: holding
+                  decode: uint32
+                {{- end }}
+            script: |
+              limit
+            out:
+            - name: limit
+              type: int
+              config:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40799 # SMA Modbus Profile: CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
+                  type: writemultiple
+                  decode: uint32
   {{- include "battery-capacity" . }}
   {{- include "battery-minmaxsoc" . }}
-  maxchargepower:{{ include "sma-battery-limit" (dict "root" . "limit" "charge") }}
-  maxdischargepower:{{ include "sma-battery-limit" (dict "root" . "limit" "discharge") }}
+  {{- if gt (.maxchargepower | int) 0 }}
+  maxchargepower: {{ .maxchargepower }} # W
+  {{- else }}
+  maxchargepower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40189 # SMA Modbus Profile: BatConv.WMaxCha
+      type: holding
+      decode: uint32
+  {{- end }}
+  {{- if gt (.maxdischargepower | int) 0 }}
+  maxdischargepower: {{ .maxdischargepower }} # W
+  {{- else }}
+  maxdischargepower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40191 # SMA Modbus Profile: BatConv.WMaxDsch
+      type: holding
+      decode: uint32
+  {{- end }}
