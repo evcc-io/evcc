@@ -1,0 +1,83 @@
+template: staged-heater
+products:
+  - description:
+      de: Heizstab dreiphasig mit Stufen über Relais
+      en: Three-phase staged heating rod via relays
+requirements:
+  description:
+    de: |
+      Für dreiphasige Heizstäbe ohne eigene Leistungsregelung, bei denen jede Phase über ein eigenes einphasiges Relais geschaltet wird, z. B. 4.500 W mit drei Heizwendeln zu je 1.500 W und je einem Shelly 1PM. evcc schaltet je nach Überschuss eine, zwei oder drei Stufen zu (1.500, 3.000 oder 4.500 W), statt den ganzen Heizstab nur ein- oder auszuschalten. Ein Heizstab mit zwei Stufen funktioniert genauso.
+      Die Heizwendeln müssen in Sternschaltung mit Neutralleiter angeschlossen sein (jede Wendel zwischen ihrem Außenleiter und N), Stufe 1 bis 3 liegen auf L1 bis L3. Bei Dreieckschaltung funktioniert das Zuschalten einzelner Phasen nicht.
+      Relais mit Leistungsmessung (z. B. Shelly 1PM) verwenden, dann liefert der Heizstab Leistung, Energie und Phasenströme selbst. Bei Relais ohne Messung einen separaten Zähler im Ladepunkt eintragen.
+      Höchststrom des Ladepunkts mindestens (2 × Leistung je Stufe + Hysterese) / 230 V, z. B. 14,4 A bei 1.500 W je Stufe (der Standard von 16 A reicht) oder 27,4 A bei 3.000 W je Stufe. Sonst bleibt der Heizstab bei Stufe 1 stehen, weil evcc dann nur eine aktive Phase misst und die Leistung mit dem Höchststrom einer Phase begrenzt.
+      Heizstäbe mit eigener Leistungsregelung (z. B. my-PV, Askoma, E.G.O.) über ihre eigene Vorlage einbinden, einen einphasigen Heizstab an einem einzelnen Relais als Schaltsteckdose.
+    en: |
+      For three-phase heating rods without their own power control where each phase is switched by its own single-phase relay, e.g. 4,500 W with three heating elements of 1,500 W each and one Shelly 1PM per phase. Depending on surplus, evcc switches on one, two or three stages (1,500, 3,000 or 4,500 W) instead of only switching the whole rod on or off. A rod with two stages works the same way.
+      The heating elements must be wired in star with neutral (each element between its line conductor and N), stages 1 to 3 are on L1 to L3. With delta wiring, switching single phases does not work.
+      Use relays with power metering (e.g. Shelly 1PM), the heater then provides power, energy and phase currents itself. For relays without metering, add a separate meter to the loadpoint.
+      Set the loadpoint max current to at least (2 × power per stage + hysteresis) / 230 V, e.g. 14.4 A for 1,500 W per stage (the default of 16 A is sufficient) or 27.4 A for 3,000 W per stage. Otherwise the heater stays at stage 1, as evcc then measures only one active phase and limits the power to the max current of one phase.
+      Heating rods with their own power control (e.g. my-PV, Askoma, E.G.O.) use their own template, a single-phase rod on a single relay is a switch socket.
+  evcc: ["skiptest"]
+group: heatinggeneric
+params:
+  - name: stage1
+    type: device
+    class: charger
+    usage: switch
+    required: true
+    description:
+      de: Relais Stufe 1 (L1)
+      en: Relay stage 1 (L1)
+  - name: stage2
+    type: device
+    class: charger
+    usage: switch
+    description:
+      de: Relais Stufe 2 (L2)
+      en: Relay stage 2 (L2)
+  - name: stage3
+    type: device
+    class: charger
+    usage: switch
+    description:
+      de: Relais Stufe 3 (L3)
+      en: Relay stage 3 (L3)
+  - name: steppower
+    type: int
+    required: true
+    unit: W
+    description:
+      de: Leistung je Stufe (Phase)
+      en: Power per stage (phase)
+    help:
+      de: Gesamtleistung laut Typenschild geteilt durch die Zahl der Stufen, z. B. 4.500 W / 3 = 1.500 W
+      en: Total rated power divided by the number of stages, e.g. 4,500 W / 3 = 1,500 W
+    example: 1500
+  - name: hysteresis
+    type: int
+    advanced: true
+    default: 300
+    unit: W
+    description:
+      de: Hysterese beim Zuschalten
+      en: Switch-on hysteresis
+    help:
+      de: Eine weitere Stufe wird erst zugeschaltet, wenn zusätzlich dieser Überschuss vorhanden ist. Abgeschaltet wird sofort. Verhindert häufiges Schalten der Relais ohne Netzbezug. Für die letzte Stufe gilt die Hysterese nicht, da evcc nie mehr als die Gesamtleistung anfordert.
+      en: An additional stage is only switched on if this surplus is available on top. Switching off is immediate. Prevents frequent relay switching without grid import. The last stage is exempt, as evcc never requests more than the total power.
+render: |
+  type: staged-heater
+  stage1:
+    type: device
+    name: {{ .stage1 }}
+  {{- if or .stage2 .stage3 }}
+  stage2:
+    type: device
+    name: {{ .stage2 }}
+  {{- end }}
+  {{- if .stage3 }}
+  stage3:
+    type: device
+    name: {{ .stage3 }}
+  {{- end }}
+  steppower: {{ .steppower }}
+  hysteresis: {{ .hysteresis }}
