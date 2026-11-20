@@ -18,14 +18,6 @@ params:
       en: ModbusTCP server needs to be enabled.
       de: Der ModbusTCP Server muss aktiviert sein.
   - preset: battery-params
-  - name: maxchargepower
-    help:
-      en: Highest power the battery system can charge with. Leave empty to use the device maximum.
-      de: Höchste Leistung, mit der das Batteriesystem laden kann. Leer lassen, um das Gerätemaximum zu verwenden.
-  - name: maxdischargepower
-    help:
-      en: Highest power the battery system can discharge with. Leave empty to use the device maximum.
-      de: Höchste Leistung, mit der das Batteriesystem entladen kann. Leer lassen, um das Gerätemaximum zu verwenden.
   - name: watchdog
     default: 60s
   - name: chargepower
