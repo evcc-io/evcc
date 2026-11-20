@@ -1433,7 +1433,6 @@ export default defineComponent({
 					dim: this.focusedPv !== null,
 				});
 			}
-			// names the hatched bars of the gap view
 			if (this.showForecastGap) {
 				list.push({
 					label: this.$t("energy.production.deviation"),

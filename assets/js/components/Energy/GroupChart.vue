@@ -707,7 +707,7 @@ export default defineComponent({
 						id: "overlay-gap",
 						name: this.overlayLabel,
 						data: span((o, sum) => Math.abs(o - sum)),
-						// in place of the bar's upper part or above it, striped
+						// in place of the bar's upper part or above it
 						itemStyle: {
 							color: "transparent",
 							borderRadius: radius,
