@@ -11,8 +11,7 @@ export function isBidirectional(
   return group === "meter" && series.some((s) => s.data.some((slot) => slot.returnEnergy > 0));
 }
 
-// what a group's energy is called per direction, heaters have their own wording.
-// Groups without a label read like a meter
+// groups without their own label read like a meter
 export function energyLabel(
   t: (key: string) => string,
   group: string,

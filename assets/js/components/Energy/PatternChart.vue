@@ -151,8 +151,6 @@ export default defineComponent({
 						if (kWh === undefined && socTemp === null) return "";
 						const start = new Date(this.from.getTime() + i * SLOT_MS);
 						const t = (key: string) => this.$t(key);
-						// same columns as the bar chart: the slot's energy, its average power,
-						// and soc or temperature where the series carries one
 						const values = [
 							this.fmtKWh(kWh ?? 0),
 							this.fmtW(slotWatts(kWh ?? 0), POWER_UNIT.AUTO),

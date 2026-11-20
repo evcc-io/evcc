@@ -866,8 +866,7 @@ export default defineComponent({
 						);
 						const several = this.series.length > 1 && this.focusedEntity === null;
 						const twoCols = this.isBidirectional && !this.singleValue;
-						// the bars carry average power in the day view, the tooltip the slot's
-						// energy, with the power beside it where one energy column leaves room
+						// bar values are average power in the day view, the tooltip shows energy
 						const factor = this.valueFactor;
 						const withPower = this.period === PERIODS.DAY && !twoCols;
 						const rowValues = indices.map((i) => {

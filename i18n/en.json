@@ -1417,14 +1417,14 @@
         "returnEnergy": "Discharged"
       },
       "consumer": {
-        "energy": "Used"
+        "energy": "Consumed"
       },
       "grid": {
         "energy": "Import",
         "returnEnergy": "Export"
       },
       "heating": {
-        "energy": "Used"
+        "energy": "Consumed"
       },
       "loadpoint": {
         "energy": "Charged"

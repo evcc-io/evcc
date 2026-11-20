@@ -120,13 +120,12 @@ export default defineComponent({
 					...tooltipStyle(colors.text || ""),
 					formatter: (params: { value: [number, number, string] }[]) => {
 						if (!params?.length) return "";
-						// only what ran at that time, the list is long otherwise
-						// the slot's energy, in the day view with its average power beside it
 						const day = this.period === PERIODS.DAY;
 						const cells = (kWh: number) => [
 							this.fmtKWh(kWh),
 							...(day ? [this.fmtW(slotWatts(kWh), POWER_UNIT.AUTO)] : []),
 						];
+						// only what ran at that time, the list is long otherwise
 						const rows = [...params]
 							.reverse()
 							.filter((p) => p.value[1] > 0)
