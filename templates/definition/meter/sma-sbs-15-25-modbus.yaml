@@ -19,8 +19,13 @@ params:
       de: Der ModbusTCP Server muss aktiviert sein.
   - preset: battery-params
   - name: maxchargepower
-    default: 4200
-    required: true
+    help:
+      en: Highest power the battery system can charge with. Leave empty to use the device maximum.
+      de: Höchste Leistung, mit der das Batteriesystem laden kann. Leer lassen, um das Gerätemaximum zu verwenden.
+  - name: maxdischargepower
+    help:
+      en: Highest power the battery system can discharge with. Leave empty to use the device maximum.
+      de: Höchste Leistung, mit der das Batteriesystem entladen kann. Leer lassen, um das Gerätemaximum zu verwenden.
   - name: watchdog
     default: 60s
   - name: chargepower
@@ -78,15 +83,34 @@ render: |
                 address: 40793 # SMA Modbus Profile: CmpBMS.BatChaMinW - Minimale Batterieladeleistung
                 type: writemultiple
                 decode: uint32
-          - source: const
-            value: {{ .maxchargepower }}
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40795 # SMA Modbus Profile: CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
-                type: writemultiple
-                decode: uint32
+          - source: go # charge limit
+            in:
+            - name: limit
+              type: int
+              config:
+                {{- if gt (.maxchargepower | int) 0 }}
+                source: const
+                value: {{ .maxchargepower }}
+                {{- else }}
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40189 # SMA Modbus Profile: BatConv.WMaxCha
+                  type: holding
+                  decode: uint32
+                {{- end }}
+            script: |
+              limit
+            out:
+            - name: limit
+              type: int
+              config:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40795 # SMA Modbus Profile: CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
+                  type: writemultiple
+                  decode: uint32
           - source: const
             value: 0
             set:
@@ -96,15 +120,34 @@ render: |
                 address: 40797 # SMA Modbus Profile: CmpBMS.BatDschMinW - Minimale Batterieentladeleistung
                 type: writemultiple
                 decode: uint32
-          - source: const
-            value: {{ .maxdischargepower | default .maxchargepower }}
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40799 # SMA Modbus Profile: CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
-                type: writemultiple
-                decode: uint32
+          - source: go # discharge limit
+            in:
+            - name: limit
+              type: int
+              config:
+                {{- if gt (.maxdischargepower | int) 0 }}
+                source: const
+                value: {{ .maxdischargepower }}
+                {{- else }}
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40191 # SMA Modbus Profile: BatConv.WMaxDsch
+                  type: holding
+                  decode: uint32
+                {{- end }}
+            script: |
+              limit
+            out:
+            - name: limit
+              type: int
+              config:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40799 # SMA Modbus Profile: CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
+                  type: writemultiple
+                  decode: uint32
           - source: const
             value: 0
             set:
@@ -136,15 +179,34 @@ render: |
                 address: 40793 # SMA Modbus Profile: CmpBMS.BatChaMinW - Minimale Batterieladeleistung
                 type: writemultiple
                 decode: uint32
-          - source: const
-            value: {{ .maxchargepower }}
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40795 # SMA Modbus Profile: CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
-                type: writemultiple
-                decode: uint32
+          - source: go # charge limit
+            in:
+            - name: limit
+              type: int
+              config:
+                {{- if gt (.maxchargepower | int) 0 }}
+                source: const
+                value: {{ .maxchargepower }}
+                {{- else }}
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40189 # SMA Modbus Profile: BatConv.WMaxCha
+                  type: holding
+                  decode: uint32
+                {{- end }}
+            script: |
+              limit
+            out:
+            - name: limit
+              type: int
+              config:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40795 # SMA Modbus Profile: CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
+                  type: writemultiple
+                  decode: uint32
           - source: const
             value: 0
             set:
@@ -185,24 +247,62 @@ render: |
                 address: 40236 # SMA Modbus Profile: CmpBMS.OpMod - Betriebsart des BMS
                 type: writemultiple
                 decode: uint32
-          - source: const
-            value: {{ .maxchargepower }}
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40793 # SMA Modbus Profile: CmpBMS.BatChaMinW - Minimale Batterieladeleistung
-                type: writemultiple
-                decode: uint32
-          - source: const
-            value: {{ .maxchargepower }}
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40795 # SMA Modbus Profile: CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
-                type: writemultiple
-                decode: uint32
+          - source: go # charge limit
+            in:
+            - name: limit
+              type: int
+              config:
+                {{- if gt (.maxchargepower | int) 0 }}
+                source: const
+                value: {{ .maxchargepower }}
+                {{- else }}
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40189 # SMA Modbus Profile: BatConv.WMaxCha
+                  type: holding
+                  decode: uint32
+                {{- end }}
+            script: |
+              limit
+            out:
+            - name: limit
+              type: int
+              config:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40793 # SMA Modbus Profile: CmpBMS.BatChaMinW - Minimale Batterieladeleistung
+                  type: writemultiple
+                  decode: uint32
+          - source: go # charge limit
+            in:
+            - name: limit
+              type: int
+              config:
+                {{- if gt (.maxchargepower | int) 0 }}
+                source: const
+                value: {{ .maxchargepower }}
+                {{- else }}
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40189 # SMA Modbus Profile: BatConv.WMaxCha
+                  type: holding
+                  decode: uint32
+                {{- end }}
+            script: |
+              limit
+            out:
+            - name: limit
+              type: int
+              config:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 40795 # SMA Modbus Profile: CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
+                  type: writemultiple
+                  decode: uint32
           - source: const
             value: 0
             set:
@@ -230,4 +330,27 @@ render: |
                 address: 40801 # SMA Modbus Profile: CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
                 type: writemultiple
                 decode: uint32
-  {{- include "battery-params" . }}
+  {{- include "battery-capacity" . }}
+  {{- include "battery-minmaxsoc" . }}
+  {{- if gt (.maxchargepower | int) 0 }}
+  maxchargepower: {{ .maxchargepower }} # W
+  {{- else }}
+  maxchargepower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40189 # SMA Modbus Profile: BatConv.WMaxCha
+      type: holding
+      decode: uint32
+  {{- end }}
+  {{- if gt (.maxdischargepower | int) 0 }}
+  maxdischargepower: {{ .maxdischargepower }} # W
+  {{- else }}
+  maxdischargepower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40191 # SMA Modbus Profile: BatConv.WMaxDsch
+      type: holding
+      decode: uint32
+  {{- end }}
