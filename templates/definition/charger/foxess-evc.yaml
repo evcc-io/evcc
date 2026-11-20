@@ -16,10 +16,6 @@ params:
     choice: ["tcpip"]
     id: 1
   - name: connector
-    default: 0
-    help:
-      de: Nur bei Wallboxen mit mehreren Ladepunkten (z.B. C-Serie), 1 oder 2. Pro Ladepunkt eine eigene Wallbox mit gleicher Adresse anlegen. Bei Wallboxen mit einem Ladepunkt leer lassen.
-      en: Only for chargers with multiple connectors (e.g. C-series), 1 or 2. Add one charger per connector with the same address. Leave empty for single-connector chargers.
 render: |
   type: foxess-evc
   {{- include "modbus" . }}

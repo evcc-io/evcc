@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math"
 	"sync"
@@ -56,7 +57,7 @@ type FoxESSEVC struct {
 	maxCurrent float64    // max supported current per phase
 
 	// multi-connector chargers (e.g. C-series)
-	connector uint16      // selected connector, 0 if not configured
+	connector uint16      // selected connector, 0 on single-connector chargers
 	connMu    *sync.Mutex // serializes connector selection and access, shared by all connectors of the device
 }
 
@@ -139,8 +140,8 @@ const (
 	foxStatusSwitching = 9 // undocumented: automatic phase switch in progress
 )
 
-// foxConnectorLocks holds one *sync.Mutex per device. All connectors of a multi-connector charger share the
-// connector selection register, so selecting a connector and accessing its registers must not interleave.
+// foxConnectorLocks holds one *sync.Mutex per device, keyed by serial number. All connectors of a multi-connector
+// charger share the connector selection register, so selecting a connector and accessing its registers must not interleave.
 var foxConnectorLocks sync.Map
 
 // foxDeviceRegister reports whether a register applies to the whole device instead of the selected
@@ -172,6 +173,7 @@ func NewFoxESSEVCFromConfig(ctx context.Context, other map[string]any) (api.Char
 		TcpSettings: modbus.TcpSettings{
 			ID: 1,
 		},
+		Connector: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -182,7 +184,7 @@ func NewFoxESSEVCFromConfig(ctx context.Context, other map[string]any) (api.Char
 }
 
 // NewFoxESSEVC creates a FoxESS EV charger. Connector selects the connector of multi-connector
-// chargers (e.g. C-series); 0 leaves the connector selection untouched.
+// chargers (e.g. C-series) and must be 1 on single-connector chargers.
 func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings, connector uint16) (api.Charger, error) {
 	conn, err := settings.Connection(ctx)
 	if err != nil {
@@ -202,17 +204,28 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings, connector ui
 		conn: conn,
 	}
 
-	if connector > 0 {
-		connectors, err := wb.readUint16(foxRegConnectors)
+	// older firmware (e.g. A-series) has no connector count register
+	connectors, err := wb.readUint16(foxRegConnectors)
+	if err != nil {
+		wb.log.DEBUG.Printf("connector count not supported: %v", err)
+		connectors = 1
+	}
+	if connector == 0 || connector > max(connectors, 1) {
+		return nil, fmt.Errorf("invalid connector: %d, charger has %d", connector, max(connectors, 1))
+	}
+
+	// connectors share the selection register, so always select on multi-connector chargers
+	if connectors > 1 {
+		serial, err := wb.readString(foxRegSerial, 16)
 		if err != nil {
-			return nil, fmt.Errorf("connectors: %w", err)
+			return nil, fmt.Errorf("serial: %w", err)
 		}
-		if connector > connectors {
-			return nil, fmt.Errorf("invalid connector: %d, charger has %d", connector, connectors)
+		if serial == "" {
+			return nil, errors.New("serial: empty")
 		}
 
 		wb.connector = connector
-		mu, _ := foxConnectorLocks.LoadOrStore(conn.Addr(), new(sync.Mutex))
+		mu, _ := foxConnectorLocks.LoadOrStore(serial, new(sync.Mutex))
 		wb.connMu = mu.(*sync.Mutex)
 	}
 
