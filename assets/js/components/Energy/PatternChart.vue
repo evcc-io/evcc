@@ -23,6 +23,7 @@ import echartsChart from "@/mixins/echartsChart";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import colors, { setAlpha } from "@/colors";
 import { SLOT_MS, slotWatts } from "./slots";
+import { energyLabel } from "./groups";
 import type { HistorySeries } from "./GroupChart.vue";
 import { PERIODS } from "../Sessions/types";
 import { labelStep, DAY_STEPS, MONTH_STEPS } from "@/utils/labelStep";
@@ -144,33 +145,34 @@ export default defineComponent({
 					...tooltipStyle(colors.text || ""),
 					formatter: (params: { axisValue: string | number }[]) => {
 						const i = Number(params[0]?.axisValue);
-						const watts = energy.get(i);
-						const socTemp = this.socTempValues?.[i] ?? null;
-						if (watts === undefined && socTemp === null) return "";
+						const kWh = energy.get(i);
+						const socTemps = this.socTempValues;
+						const socTemp = socTemps?.[i] ?? null;
+						if (kWh === undefined && socTemp === null) return "";
 						const start = new Date(this.from.getTime() + i * SLOT_MS);
-						// 15 minute slot as average power, like the bar chart
-						const power = this.fmtW(slotWatts(watts ?? 0), POWER_UNIT.AUTO);
-						const label = (key: string) => this.$t(`energy.socTemp.${key}`);
+						const t = (key: string) => this.$t(key);
+						const values = [
+							this.fmtKWh(kWh ?? 0),
+							this.fmtW(slotWatts(kWh ?? 0), POWER_UNIT.AUTO),
+						];
+						const headers = [
+							this.valueLabel || energyLabel(t, this.series.group, isTemp),
+							`ø ${t("energy.socTemp.power")}`,
+						];
+						if (socTemps) {
+							headers.push(t(`energy.socTemp.${isTemp ? "temperature" : "soc"}`));
+							values.push(
+								socTemp === null
+									? ""
+									: isTemp
+										? this.fmtTemperature(socTemp)
+										: this.fmtPercentage(socTemp)
+							);
+						}
 						return tooltipTable(
 							this.fmtTimeSlot(start, SLOT_MS),
-							socTemp === null
-								? [{ values: [power] }]
-								: [
-										{
-											name:
-												this.valueLabel ||
-												label(isTemp ? "used" : "charged"),
-											values: [power],
-										},
-										{
-											name: label(isTemp ? "temperature" : "soc"),
-											values: [
-												isTemp
-													? this.fmtTemperature(socTemp)
-													: this.fmtPercentage(socTemp),
-											],
-										},
-									]
+							[{ values }],
+							headers
 						);
 					},
 				},

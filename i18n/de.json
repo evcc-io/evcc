@@ -1237,12 +1237,21 @@
     },
     "direction": {
       "battery": {
-        "energy": "geladen",
-        "returnEnergy": "entladen"
+        "energy": "Geladen",
+        "returnEnergy": "Entladen"
+      },
+      "consumer": {
+        "energy": "Verbraucht"
       },
       "grid": {
         "energy": "Bezug",
         "returnEnergy": "Einspeisung"
+      },
+      "heating": {
+        "energy": "Verbraucht"
+      },
+      "loadpoint": {
+        "energy": "Geladen"
       },
       "meter": {
         "energy": "Energie",
@@ -1297,10 +1306,9 @@
       "title": "Erzeugung"
     },
     "socTemp": {
-      "charged": "geladen",
+      "power": "Leistung",
       "soc": "Ladestand",
-      "temperature": "Temperatur",
-      "used": "verbraucht"
+      "temperature": "Temperatur"
     },
     "sources": {
       "battery": "Batterie",
