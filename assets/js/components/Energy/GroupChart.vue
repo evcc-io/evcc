@@ -248,9 +248,10 @@ export default defineComponent({
 		subPanel(): SubPanel | null {
 			if (!this.socTempValues) return this.pricePanel;
 			const isTemp = this.socTempIsTemp;
+			const source = this.socTempSource ? this.series.indexOf(this.socTempSource) : -1;
 			return socTempPanel(
 				this.socTempValues,
-				this.entryColors[0] || this.color,
+				this.entryColors[source] || this.color,
 				isTemp,
 				(v) => (isTemp ? this.fmtNumber(v, 0, "celsius") : this.fmtPercentage(v))
 			);
