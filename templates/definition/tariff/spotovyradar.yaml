@@ -1,0 +1,52 @@
+template: spotovyradar
+link: https://spotovyradar.cz/ucet/api
+products:
+  - brand: Spotový Radar
+    description:
+      generic: Predicted spot prices
+requirements:
+  description:
+    en: "Day-ahead prices for Czechia (OTE, CZK) or Slovakia (OKTE, EUR) in 15-minute intervals plus a 72-hour forecast. The market follows your account settings at spotovyradar.cz; set the matching currency in evcc. Optionally the final price including supplier fee, distribution (CZ) and VAT from your tariff settings. Requires an API key from [spotovyradar.cz](https://spotovyradar.cz/ucet/api) (Smart Home plan)."
+    de: "Day-Ahead-Preise für Tschechien (OTE, CZK) oder die Slowakei (OKTE, EUR) in 15-Minuten-Intervallen plus 72-Stunden-Prognose. Der Markt folgt den Kontoeinstellungen auf spotovyradar.cz; die passende Währung in evcc einstellen. Optional der Endpreis inklusive Händleraufschlag, Netzentgelte (CZ) und Mehrwertsteuer aus den Tarifeinstellungen. Benötigt einen API-Key von [spotovyradar.cz](https://spotovyradar.cz/ucet/api) (Tarif Smart Home)."
+  evcc: ["skiptest"]
+group: price
+countries: ["CZ", "SK"]
+params:
+  - name: apikey
+    required: true
+    example: sr_live_abcdefgh_…
+    help:
+      en: "Create a key at [spotovyradar.cz/ucet/api](https://spotovyradar.cz/ucet/api)."
+      de: "Key erstellen unter [spotovyradar.cz/ucet/api](https://spotovyradar.cz/ucet/api)."
+  - name: price
+    type: choice
+    choice: ["spot", "final"]
+    default: spot
+    description:
+      en: Price
+      de: Preis
+    help:
+      en: "spot = spot price per kWh excluding VAT and charges (add them with charges and tax). final = final price according to your tariff settings at spotovyradar.cz (supplier fee, distribution peak/off-peak, other charges, VAT). Do not combine final with charges or tax."
+      de: "spot = Börsenpreis pro kWh ohne Mehrwertsteuer und Gebühren (über charges und tax ergänzen). final = Endpreis gemäß den Tarifeinstellungen auf spotovyradar.cz (Händleraufschlag, Netzentgelt HT/NT, weitere Umlagen, Mehrwertsteuer). final nicht mit charges oder tax kombinieren."
+  - preset: tariff-base
+  - preset: tariff-features
+render: |
+  type: custom
+  {{ include "base" . }}
+  {{ include "features" (merge (dict "basefeatures" (list "cacheable")) .) }}
+  forecast:
+    source: http
+    uri: https://spotovyradar.cz/api/v1/forecast?hours=72
+    auth:
+      type: bearer
+      token: {{ .apikey }}
+    jq: |
+      [.points[] | {
+        "start": .start,
+        "end": .end,
+        {{- if eq .price "final" }}
+        "value": (.final // .spot)
+        {{- else }}
+        "value": .spot
+        {{- end }}
+      }] | tostring

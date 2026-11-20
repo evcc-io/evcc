@@ -3,6 +3,8 @@ package eebus
 import (
 	"context"
 	"errors"
+	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -68,6 +70,26 @@ type Limits struct {
 	FailsafeDurationMinimum time.Duration
 }
 
+// invalidLimit reports whether a limit stated as positive watts is negative or not finite
+func invalidLimit(limit float64) bool {
+	return limit < 0 || math.IsNaN(limit) || math.IsInf(limit, 0)
+}
+
+// validate checks the configured limits, which are all positive watts
+func (l Limits) validate() error {
+	switch {
+	case invalidLimit(l.ContractualConsumptionNominalMax):
+		return fmt.Errorf("invalid contractualconsumptionnominalmax: %.0fW", l.ContractualConsumptionNominalMax)
+	case invalidLimit(l.FailsafeConsumptionActivePowerLimit):
+		return fmt.Errorf("invalid failsafeconsumptionactivepowerlimit: %.0fW", l.FailsafeConsumptionActivePowerLimit)
+	case invalidLimit(l.ProductionNominalMax):
+		return fmt.Errorf("invalid productionnominalmax: %.0fW", l.ProductionNominalMax)
+	case l.FailsafeProductionActivePowerLimit != nil && invalidLimit(*l.FailsafeProductionActivePowerLimit):
+		return fmt.Errorf("invalid failsafeproductionactivepowerlimit: %.0fW", *l.FailsafeProductionActivePowerLimit)
+	}
+	return nil
+}
+
 // NewFromConfig creates an EEBus HEMS from generic config
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*EEBus, error) {
 	cc := struct {
@@ -96,6 +118,10 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 
 // NewEEBus creates EEBus HEMS
 func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(bool) error, site site.API, interval time.Duration) (*EEBus, error) {
+	if err := limits.validate(); err != nil {
+		return nil, err
+	}
+
 	inst, err := eebus.Instance()
 	if err != nil {
 		return nil, err

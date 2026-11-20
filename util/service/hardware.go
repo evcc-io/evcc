@@ -20,17 +20,32 @@ func init() {
 
 var (
 	once  sync.Once
-	ports []string
+	ports []service.Option
 )
 
 func getSerialPorts(w http.ResponseWriter, req *http.Request) {
 	once.Do(func() {
 		if env := os.Getenv("EVCC_SERIAL_PORTS"); env != "" {
-			ports = strings.Split(env, ",")
+			ports = plainOptions(strings.Split(env, ","))
 		} else {
-			ports, _ = serialports.GetPortsList()
+			ports = serialPortOptions()
 		}
 	})
 
 	json.NewEncoder(w).Encode(ports)
+}
+
+// plainOptions wraps port names as options without details
+func plainOptions(names []string) []service.Option {
+	res := make([]service.Option, 0, len(names))
+	for _, name := range names {
+		res = append(res, service.Option{Value: name, Match: true})
+	}
+	return res
+}
+
+// plainSerialPorts lists port names without USB details
+func plainSerialPorts() []service.Option {
+	names, _ := serialports.GetPortsList()
+	return plainOptions(names)
 }

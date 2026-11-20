@@ -23,6 +23,9 @@ type PinResponse struct {
 
 type VehiclesResponse struct {
 	AssignedVehicles []Vehicle
+	Fleets           []struct {
+		BookedVehicles []Vehicle
+	}
 }
 
 type Vehicle struct {

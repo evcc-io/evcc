@@ -8,12 +8,16 @@ requirements:
   evcc: ["skiptest"]
   description:
     de: |
-      Auf der verwendeten ioBroker Instanz muss der `rest-api` adapter (nicht `simple-api`) als Extension eines Web-Adapters installiert sein.
+      Auf der verwendeten ioBroker Instanz muss der `rest-api` adapter (nicht `simple-api`) installiert sein. Er kann stand alone oder als Extension eines Web Adapters 
+      konfiguriert sein. Der Parameter `webextension` legt fest, ob der Adapter als Web Extension konfiguriert ist. Standard ist true, was bedeutet, 
+      dass der Adapter als Web Extension konfiguriert ist.
       Authentifiziert werden kann nur mittels `basic` authentication. Wird kein Passwort angegeben, so wird keine Authentifizierung durchgeführt.
       Bei der Angabe der Entities für die einzelnen Messwerte ist darauf zu achten, dass diese korrekt URL-Encoded sind.
       So wird aus `shelly.0.SHEM-3#8CAAB561991E#1.Total.ConsumedPower  shelly.0.SHEM-3%238CAAB561991E%231.Total.ConsumedPower`
     en: |
-      The `rest-api` adapter (not `simple-api`) must be installed extension to a web adapter.
+      The `rest-api` adapter (not `simple-api`) must be installed on the ioBroker instance being used. It can be configured stand-alone or as an extension of a web adapter. 
+      The parameter `webextension` determines whether the adapter is configured as a web extension. Default is true, which means that the adapter 
+      is configured as a web extension.
       Authentication can only be performed using `basic` authentication. If no password is provided, no authentication will be performed. 
       When specifying the entities for the individual measured values, ensure that they are correctly URL-encoded.
       For example, `shelly.0.SHEM-3#8CAAB561991E#1.Total.ConsumedPower` becomes `shelly.0.SHEM-3%238CAAB561991E%231.Total.ConsumedPower`
@@ -24,6 +28,21 @@ params:
       en: The full uri of the host to query
       de: Der vollständige URI der ioBroker Instanz
     example: https://iobroker.homelab.lan:8082
+  - name: webextension
+    default: true
+    type: bool
+    description:
+      de: Rest als web extension
+      en: Rest as web extension
+    help:
+      de: |
+        Legt fest, ob der REST Adapter stand alone oder 
+        als Web Extension installiert ist.
+        Sollten 404 Fehler auftreten, ändern Sie versuchsweise den Wert.
+      en: |
+        Determines whether the REST adapter is installed 
+        stand alone or as a web extension.
+        Should 404 errors occur, try changing the value.
   - name: cache
   - name: user
   - name: password
@@ -73,13 +92,17 @@ params:
     # legacy state id; a non-string type keeps defaults.yaml from turning it into bool
     type: choice
 render: |
+  {{- $apipath :="" -}}
+  {{- if .webextension }}
+  {{- $apipath = "/rest-api" -}}
+  {{- end }}
   type: custom
   {{- if .status }}
   status:
     source: http
     headers:
      - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .status }}/plain?extraPlain=true
+    uri: {{ .uri }}{{ $apipath }}/v1/state/{{ .status }}/plain?extraPlain=true
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -93,7 +116,7 @@ render: |
     source: http
     headers:
        - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .power }}/plain
+    uri: {{ .uri }}{{ $apipath }}/v1/state/{{ .power }}/plain
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -107,7 +130,7 @@ render: |
       source: http
       headers:
        - accept: text/plain;charset=UTF-8
-      uri: {{ .uri }}/rest-api/v1/state/{{ .enabled }}/plain
+      uri: {{ .uri }}{{ $apipath }}/v1/state/{{ .enabled }}/plain
       cache: {{ .cache }}
       {{- if .user }}
       auth:
@@ -121,7 +144,7 @@ render: |
     source: http
     headers:
        - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .enable }}?value=${enable}    
+    uri: {{ .uri }}{{ $apipath }}/v1/state/{{ .enable }}?value=${enable}    
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -135,7 +158,7 @@ render: |
     source: http
     headers:
        - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .maxcurrent }}?value=${maxcurrent}
+    uri: {{ .uri }}{{ $apipath }}/v1/state/{{ .maxcurrent }}?value=${maxcurrent}
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -149,7 +172,7 @@ render: |
     source: http
     headers:
        - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .maxcurrentmillis }}?value=${maxcurrentmillis}
+    uri: {{ .uri }}{{ $apipath }}/v1/state/{{ .maxcurrentmillis }}?value=${maxcurrentmillis}
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -163,7 +186,7 @@ render: |
     source: http
     headers:
        - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ or .phaseswitch .phases1p3p }}?value=${phases}
+    uri: {{ .uri }}{{ $apipath }}/v1/state/{{ or .phaseswitch .phases1p3p }}?value=${phases}
     cache: {{ .cache }}
     {{- if .user }}
     auth:

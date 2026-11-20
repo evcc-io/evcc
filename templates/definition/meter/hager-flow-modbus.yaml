@@ -21,36 +21,33 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip"]
+    id: 0
   - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   currents:
   - source: modbus
-    id: 0
-    {{- include "modbus-connection" . | indent 2 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 4099 # Netz Ampere L1 | Grid amps L1
       type: holding
       decode: uint16
   - source: modbus
-    id: 0
-    {{- include "modbus-connection" . | indent 2 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 4100 # Netz Ampere L2 | Grid amps L2
       type: holding
       decode: uint16
   - source: modbus
-    id: 0
-    {{- include "modbus-connection" . | indent 2 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 4101 # Netz Ampere L3 | Grid amps L3
       type: holding
       decode: uint16
   power:
     source: modbus
-    id: 0
-    {{- include "modbus-connection" . | indent 2 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       type: holding
       decode: int32
@@ -61,8 +58,7 @@ render: |
     source: calc
     add:
     - source: modbus
-      id: 0
-      {{- include "modbus-connection" . | indent 4 }}
+      {{- include "modbus" . | indent 4 }}
       register:
         type: holding
         decode: uint32
@@ -71,8 +67,7 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: modbus
-    id: 0
-    {{- include "modbus-connection" . | indent 2 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       type: holding
       decode: int32
@@ -80,8 +75,7 @@ render: |
     scale: -1 # Vorzeichen umkehren | reverse direction
   soc:
     source: modbus
-    id: 0
-    {{- include "modbus-connection" . | indent 2 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 4146 # Batterie-SOC in %
       type: holding

@@ -1,8 +1,10 @@
 <template>
 	<DeviceModalBase
 		:id="id"
-		name="tariff"
+		:name="name"
 		device-type="tariff"
+		:hide-disable="hideDisable"
+		:has-device-error="hasDeviceError"
 		:modal-title="modalTitle"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
@@ -10,6 +12,7 @@
 		:on-template-change="handleTemplateChange"
 		:currency="currency"
 		:preserve-on-template-change="preserveFields"
+		:default-template="defaultTemplate"
 		@added="handleAdded"
 		@updated="handleUpdated"
 		@removed="handleRemoved"
@@ -39,6 +42,7 @@
 				v-if="hasDeviceTitle"
 				id="tariffParamDeviceTitle"
 				:label="$t('config.general.title')"
+				:example="$t('config.tariff.solar.titleExample')"
 			>
 				<PropertyField
 					id="tariffParamDeviceTitle"
@@ -59,10 +63,10 @@ import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
-import { ConfigType, CURRENCY, type TariffType } from "@/types/evcc";
+import { ConfigType, CURRENCY, type DeviceType, type TariffType } from "@/types/evcc";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import type { Product, DeviceValues } from "./DeviceModal";
-import { getModal } from "@/configModal";
+import { getModal, replaceModal } from "@/configModal";
 import tariffPriceYaml from "./defaultYaml/tariffPrice.yaml?raw";
 import tariffCo2Yaml from "./defaultYaml/tariffCo2.yaml?raw";
 import tariffSolarYaml from "./defaultYaml/tariffSolar.yaml?raw";
@@ -86,32 +90,41 @@ export default defineComponent({
 	},
 	props: {
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
+		name: { type: String, default: "tariff" },
+		hideDisable: Boolean,
+		hasDeviceError: Function as PropType<(type: DeviceType, name: string) => boolean>,
 	},
 	emits: ["changed", "disable", "close"],
 	data() {
 		return {
 			initialValues,
-			selectedType: null as TariffType | null,
 			preserveFields: ["deviceTitle"],
 		};
 	},
 	computed: {
 		id(): number | undefined {
-			return getModal("tariff")?.id;
+			return getModal(this.name)?.id;
 		},
 		type(): TariffType | undefined {
-			return getModal("tariff")?.type as TariffType | undefined;
+			return getModal(this.name)?.type as TariffType | undefined;
 		},
 		typeChoices(): TariffType[] {
-			return (getModal("tariff")?.choices as TariffType[]) || [];
+			return (getModal(this.name)?.choices as TariffType[]) || [];
 		},
 		isNew(): boolean {
 			return this.id === undefined;
 		},
 		tariffType(): TariffType | null {
-			return this.type || this.selectedType;
+			return this.type || null;
+		},
+		// a fixed price is the common case for grid import and export
+		defaultTemplate(): string | undefined {
+			return this.tariffType === "grid" || this.tariffType === "feedIn" ? "fixed" : undefined;
 		},
 		modalTitle(): string {
+			if (this.name !== "tariff") {
+				return this.$t("config.tariff.titleSub");
+			}
 			if (this.isNew) {
 				if (this.tariffType) {
 					return this.$t(`config.tariff.${this.tariffType}.titleAdd`);
@@ -142,6 +155,7 @@ export default defineComponent({
 			const genericTemplates = [
 				"fixed",
 				"fixed-zones",
+				"merged",
 				"demo-co2-forecast",
 				"demo-dynamic-grid",
 				"demo-solar-forecast",
@@ -239,7 +253,8 @@ export default defineComponent({
 			}
 		},
 		selectType(type: TariffType) {
-			this.selectedType = type;
+			// the stack entry is the source of truth, nested forms read the type from it
+			replaceModal(this.name, { type });
 		},
 		handleAdded(name: string) {
 			this.$emit("changed", { action: "added", type: this.tariffType, name });
@@ -251,7 +266,6 @@ export default defineComponent({
 			this.$emit("changed", { action: "removed", type: this.tariffType });
 		},
 		handleClose() {
-			this.selectedType = null;
 			this.$emit("close");
 		},
 	},

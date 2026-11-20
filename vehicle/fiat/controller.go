@@ -49,6 +49,10 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	if err != nil {
 		return err
 	}
+	// outdated schedules must not be written back
+	if stat.unplugged {
+		return api.ErrMustRetry
+	}
 	if stat.EvInfo == nil || stat.EvInfo.Schedules == nil || len(stat.EvInfo.Schedules) == 0 {
 		return api.ErrNotAvailable
 	}
@@ -207,7 +211,7 @@ func (c *Controller) WakeUp() error {
 
 	// get current schedule status from provider (cached)
 	stat, err := c.pvd.statusG()
-	if err == nil && stat.EvInfo != nil && stat.EvInfo.Schedules != nil && len(stat.EvInfo.Schedules) > 0 &&
+	if err == nil && !stat.unplugged && stat.EvInfo != nil && stat.EvInfo.Schedules != nil && len(stat.EvInfo.Schedules) > 0 &&
 		stat.EvInfo.Schedules[0].EnableScheduleType && stat.EvInfo.Schedules[0].ScheduleType == "CHARGE" {
 		// If the first schedule is already enabled for charge, don't go further to avoid chargeNow forcing immediate charge start and messing up with schedules
 		c.log.DEBUG.Printf("vehicle wakeup skipped because charge schedule is already enabled, to avoid conflicts with schedules")

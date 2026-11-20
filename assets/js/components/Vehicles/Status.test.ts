@@ -276,6 +276,12 @@ describe("vehicle target soc", () => {
       { charger: "Finished.", limit: "70 %" }
     );
   });
+  test("show limit independent of connection status", () => {
+    expectEntries(
+      { connected: false, vehicleLimitSoc: 70, vehicleSoc: 50 },
+      { charger: "Disconnected.", limit: "70\u00A0%" }
+    );
+  });
 });
 
 describe("smart grid charging", () => {

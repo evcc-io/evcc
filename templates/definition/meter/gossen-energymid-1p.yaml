@@ -11,6 +11,7 @@ params:
     choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
     comset: 8E1
 render: |
   type: mbmd

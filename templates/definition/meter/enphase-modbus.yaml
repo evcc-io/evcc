@@ -38,22 +38,28 @@ render: |
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value: 701:AL1
+      nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value: 701:AL2
+      nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value: 701:AL3
+      nan: true
   voltages:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value: 701:VL1
+      nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value: 701:VL2
+      nan: true
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value: 701:VL3
+      nan: true
   curtail:
     source: sequence
     set:

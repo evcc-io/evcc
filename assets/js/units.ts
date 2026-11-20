@@ -36,6 +36,22 @@ export function set12hFormat(value: boolean) {
   settings.is12hFormat = value;
 }
 
+// first weekday in Date.getDay() numbering from the site country, else the browser
+// region, Monday if unsupported
+export function weekStart(country?: string): number {
+  try {
+    // not in the TS lib yet; Safari exposes the accessor, Chrome the method
+    const locale = new Intl.Locale(country ? `und-${country}` : navigator.language) as {
+      getWeekInfo?: () => { firstDay: number };
+      weekInfo?: { firstDay: number };
+    };
+    const day = (locale.getWeekInfo?.() ?? locale.weekInfo)?.firstDay;
+    return day ? day % 7 : 1;
+  } catch {
+    return 1;
+  }
+}
+
 export function getDateFormat(): DateFormat {
   return settings.dateFormat || "";
 }

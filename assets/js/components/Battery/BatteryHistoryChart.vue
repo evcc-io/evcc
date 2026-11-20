@@ -182,16 +182,13 @@ export default defineComponent({
 		xAxes(): Record<string, unknown>[] {
 			// narrow 48h window: wider "4 PM" labels need extra spacing
 			const stepHours = is12hFormat() ? 6 : 4;
-			const [hourAxis, dayAxis] = forecastXAxes(
+			return forecastXAxes(
 				this.winStart,
 				this.winEnd,
 				this.hourShort,
 				this.weekdayShort,
 				stepHours
 			);
-			// stronger day divider
-			dayAxis.splitLine.lineStyle = { color: colors.muted || "", type: "solid" };
-			return [hourAxis, dayAxis];
 		},
 	},
 	mounted() {

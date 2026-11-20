@@ -33,11 +33,14 @@ func _StationStatusNoOp() {
 var _StationStatusValues = []StationStatus{StationStatusUnknown, StationStatusConfigured, StationStatusConnected}
 
 var _StationStatusNameToValueMap = map[string]StationStatus{
-	_StationStatusName[0:7]:        StationStatusUnknown,
+	_StationStatusName[0:7]:   StationStatusUnknown,
+	_StationStatusName[7:17]:  StationStatusConfigured,
+	_StationStatusName[17:26]: StationStatusConnected,
+}
+
+var _StationStatusLowerNameToValueMap = map[string]StationStatus{
 	_StationStatusLowerName[0:7]:   StationStatusUnknown,
-	_StationStatusName[7:17]:       StationStatusConfigured,
 	_StationStatusLowerName[7:17]:  StationStatusConfigured,
-	_StationStatusName[17:26]:      StationStatusConnected,
 	_StationStatusLowerName[17:26]: StationStatusConnected,
 }
 
@@ -54,7 +57,7 @@ func StationStatusString(s string) (StationStatus, error) {
 		return val, nil
 	}
 
-	if val, ok := _StationStatusNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _StationStatusLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to StationStatus values", s)

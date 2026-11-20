@@ -291,8 +291,9 @@ func (c *Zaptec) Enable(enable bool) error {
 
 	err := c.DoJSON(req, &res)
 
-	// ignore 528: Charging is not Paused nor Scheduled; Resume command cannot be sent
-	if err == nil || res.Code == 528 {
+	// ignore 528 (Go 2) and 520 (Pro): command rejected as it would not change the charger state,
+	// e.g. "Charging is not Paused nor Scheduled; Resume command cannot be sent"
+	if err == nil || res.Code == 520 || res.Code == 528 {
 		c.enabled = enable
 		c.statusG.Reset()
 		return nil

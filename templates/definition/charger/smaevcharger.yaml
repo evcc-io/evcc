@@ -15,7 +15,7 @@ requirements:
     en: The charger must be switched to "Fast" charging mode and the user must have "Administrator" rights.
 discovery:
   hostname: ["sma*"]
-  mac: ["0015BB"]
+  mac: ["0015BB", "0040AD"]
 params:
   - name: host
   - name: user

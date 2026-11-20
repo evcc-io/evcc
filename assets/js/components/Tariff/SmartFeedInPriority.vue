@@ -6,6 +6,7 @@
 		:currency="currency"
 		:apply-all="isLoadpoint && multipleLoadpoints"
 		:possible="possible"
+		:disabled-hint="disabledHint"
 		:tariff="tariff"
 		:form-id="formId"
 		:is-slot-active="isSlotActive"
@@ -41,6 +42,7 @@ export default defineComponent({
 		isLoadpoint: Boolean,
 		multipleLoadpoints: Boolean,
 		possible: Boolean,
+		disabledHint: String,
 		tariff: Array,
 	},
 	computed: {

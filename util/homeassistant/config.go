@@ -1,14 +1,19 @@
 package homeassistant
 
-import "github.com/evcc-io/evcc/util"
+import (
+	"time"
+
+	"github.com/evcc-io/evcc/util"
+)
 
 // Config holds the common Home Assistant instance connection parameters.
 // It is embedded into device configs via mapstructure squash.
 type Config struct {
 	URI      string
-	Token_   string `mapstructure:"token"` // TODO deprecated
-	Home_    string `mapstructure:"home"`  // TODO deprecated
-	Insecure bool   // optional - allow self-signed certificates
+	Token_   string        `mapstructure:"token"` // TODO deprecated
+	Home_    string        `mapstructure:"home"`  // TODO deprecated
+	Insecure bool          // optional - allow self-signed certificates
+	Timeout  time.Duration // optional - request timeout, default applies if zero
 }
 
 // NewConnection creates a Home Assistant connection from the config
@@ -17,5 +22,14 @@ func (c Config) NewConnection(log *util.Logger) (*Connection, error) {
 		log.WARN.Println("using deprecated 'token' parameter, it is no longer used for authentication - please authorize the Home Assistant instance via the web UI instead")
 	}
 
-	return NewConnection(log, c.URI, c.Home_, c.Insecure)
+	conn, err := NewConnection(log, c.URI, c.Home_, c.Insecure)
+	if err != nil {
+		return nil, err
+	}
+
+	if c.Timeout > 0 {
+		conn.Client.Timeout = c.Timeout
+	}
+
+	return conn, nil
 }

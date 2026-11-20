@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/samber/lo"
 )
 
@@ -23,6 +24,9 @@ var (
 	ErrBatteryNotConfigured             = errors.New("battery not configured")
 	ErrBatteryControlNotAvailable       = errors.New("battery control not available")
 	ErrBatteryGridDischargeNotAvailable = errors.New("battery grid discharge not available")
+
+	// ErrOptimizerAutomatic marks settings the optimizer decides on its own
+	ErrOptimizerAutomatic = errors.New("not available in automatic mode")
 )
 
 // filterConfigurableDevices filters references to configurable devices of the given handler
@@ -46,7 +50,7 @@ func filterConfigurableCurtailers(ref []string) []string {
 
 // Optimize updates the optimizer
 func (site *Site) Optimize() {
-	go site.optimizerUpdateAsync(0)
+	site.optimizerTrigger(true)
 }
 
 // GetTitle returns the title
@@ -76,6 +80,24 @@ func (site *Site) GetCountry() string {
 func (site *Site) SetCountry(country string) {
 	settings.SetString(keys.Country, country)
 	site.publish(keys.Country, country)
+}
+
+// GetGridConnection returns the grid connection, 3p4w (with neutral, default) or 3p3w (without neutral)
+func (site *Site) GetGridConnection() string {
+	if v, _ := settings.String(keys.GridConnection); v == grid.Connection3P3W {
+		return v
+	}
+	return grid.Connection3P4W
+}
+
+// SetGridConnection sets the grid connection and applies it to the current to power conversion
+func (site *Site) SetGridConnection(conn string) {
+	site.Lock()
+	defer site.Unlock()
+
+	settings.SetString(keys.GridConnection, conn)
+	grid.SetNoNeutral(conn == grid.Connection3P3W)
+	site.publish(keys.GridConnection, conn)
 }
 
 // GetGridMeterRef returns the GridMeterRef
@@ -423,7 +445,7 @@ func (site *Site) SetGridExportLimit(power float64) error {
 		site.publish(keys.GridExportLimit, power)
 
 		// re-run the optimizer so the new limit takes effect immediately
-		go site.optimizerUpdateAsync(0)
+		site.optimizerTrigger(true)
 	}
 
 	return nil
@@ -453,7 +475,7 @@ func (site *Site) SetProfilePercentile(percentile *float64) error {
 	site.publish(keys.ProfilePercentile, percentile)
 
 	// re-run the optimizer so the new profile takes effect immediately
-	go site.optimizerUpdateAsync(0)
+	site.optimizerTrigger(true)
 
 	return nil
 }
@@ -465,8 +487,13 @@ func (site *Site) GetTariff(tariff api.TariffUsage) api.Tariff {
 	return site.tariffs.Get(tariff)
 }
 
-// GetBatteryDischargeControl returns the battery control mode (no discharge only)
+// GetBatteryDischargeControl returns the battery control mode (no discharge only).
+// The optimizer replaces it in automatic mode, so it reads as disabled.
 func (site *Site) GetBatteryDischargeControl() bool {
+	if site.Automatic() {
+		return false
+	}
+
 	site.RLock()
 	defer site.RUnlock()
 	return site.batteryDischargeControl
@@ -474,6 +501,14 @@ func (site *Site) GetBatteryDischargeControl() bool {
 
 // SetBatteryDischargeControl sets the battery control mode (no discharge only)
 func (site *Site) SetBatteryDischargeControl(val bool) error {
+	if site.Automatic() {
+		return ErrOptimizerAutomatic
+	}
+
+	return site.setBatteryDischargeControl(val)
+}
+
+func (site *Site) setBatteryDischargeControl(val bool) error {
 	site.log.DEBUG.Println("set battery discharge control:", val)
 
 	if !site.hasBatteryControl() {
@@ -518,7 +553,7 @@ func (site *Site) SetBatteryGridDischarge(val bool) error {
 
 	if changed {
 		// re-run the optimizer so the new discharge mode takes effect immediately
-		go site.optimizerUpdateAsync(0)
+		site.optimizerTrigger(true)
 
 		// drop the limit, it is meaningless without the opt-in
 		if !val {
@@ -549,18 +584,31 @@ func (site *Site) SetSolarAdjusted(val bool) {
 		site.publish(keys.SolarAdjusted, val)
 
 		// re-run the optimizer so the adjusted forecast takes effect immediately
-		go site.optimizerUpdateAsync(0)
+		site.optimizerTrigger(true)
 	}
 }
 
+// The optimizer replaces the limit in automatic mode, so it reads as unset.
 func (site *Site) GetBatteryGridChargeLimit() *float64 {
+	if site.Automatic() {
+		return nil
+	}
+
 	site.RLock()
 	defer site.RUnlock()
 	return site.batteryGridChargeLimit
 }
 
 func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
-	site.log.DEBUG.Println("set grid charge limit:", printPtr("%.1f", val))
+	if site.Automatic() {
+		return ErrOptimizerAutomatic
+	}
+
+	return site.setBatteryGridChargeLimit(val)
+}
+
+func (site *Site) setBatteryGridChargeLimit(val *float64) error {
+	site.log.DEBUG.Println("set grid charge limit:", printPtr("%.3f", val))
 
 	if !site.hasBatteryControl() {
 		return ErrBatteryControlNotAvailable
@@ -574,14 +622,13 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 
 		if val == nil {
 			settings.SetString(keys.BatteryGridChargeLimit, "")
-			site.publish(keys.BatteryGridChargeLimit, nil)
 		} else {
 			settings.SetFloat(keys.BatteryGridChargeLimit, *val)
-			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
+		site.publish(keys.BatteryGridChargeLimit, val)
 
 		// re-run the optimizer so the new limit takes effect immediately
-		go site.optimizerUpdateAsync(0)
+		site.optimizerTrigger(true)
 	}
 
 	return nil
@@ -594,7 +641,7 @@ func (site *Site) GetBatteryGridDischargeLimit() *float64 {
 }
 
 func (site *Site) SetBatteryGridDischargeLimit(val *float64) error {
-	site.log.DEBUG.Println("set grid discharge limit:", printPtr("%.1f", val))
+	site.log.DEBUG.Println("set grid discharge limit:", printPtr("%.3f", val))
 
 	if !site.hasBatteryControl() {
 		return ErrBatteryControlNotAvailable
@@ -613,11 +660,10 @@ func (site *Site) SetBatteryGridDischargeLimit(val *float64) error {
 
 		if val == nil {
 			settings.SetString(keys.BatteryGridDischargeLimit, "")
-			site.publish(keys.BatteryGridDischargeLimit, nil)
 		} else {
 			settings.SetFloat(keys.BatteryGridDischargeLimit, *val)
-			site.publish(keys.BatteryGridDischargeLimit, *val)
 		}
+		site.publish(keys.BatteryGridDischargeLimit, val)
 	}
 
 	return nil
@@ -654,8 +700,40 @@ func (site *Site) SetOptimizerChargingStrategy(strategy string) error {
 		site.publish(keys.OptimizerChargingStrategy, strategy)
 
 		// re-run the optimizer so the new strategy takes effect immediately
-		go site.optimizerUpdateAsync(0)
+		site.optimizerTrigger(true)
 	}
+
+	return nil
+}
+
+// GetOptimizerRiskProfile returns the forecast uncertainty the optimizer hedges against, nil = none
+func (site *Site) GetOptimizerRiskProfile() *api.RiskProfile {
+	var res api.RiskProfile
+	if err := settings.Json(keys.OptimizerRiskProfile, &res); err != nil {
+		return nil
+	}
+	return &res
+}
+
+// SetOptimizerRiskProfile sets the forecast uncertainty the optimizer hedges against, nil = none
+func (site *Site) SetOptimizerRiskProfile(profile *api.RiskProfile) error {
+	if profile == nil {
+		if err := settings.Delete(keys.OptimizerRiskProfile); err != nil {
+			return err
+		}
+	} else {
+		if err := profile.Validate(); err != nil {
+			return err
+		}
+		if err := settings.SetJson(keys.OptimizerRiskProfile, profile); err != nil {
+			return err
+		}
+	}
+
+	site.publish(keys.OptimizerRiskProfile, profile)
+
+	// re-run the optimizer so the new profile takes effect immediately
+	site.optimizerTrigger(true)
 
 	return nil
 }

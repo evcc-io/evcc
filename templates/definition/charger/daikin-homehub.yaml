@@ -20,9 +20,11 @@ requirements:
       In combination with a HomeHub (EKRHH) configured in mode 3 (Modbus TCP/IP).
 discovery:
   mdns: ["_dkapi._tcp"]
+  hostname: ["altherma*"]
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 1
   - name: tempsource
     type: choice
     choice: ["warmwater", "buffer"]
@@ -54,7 +56,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 55
-            type: writeholding
+            type: writesingle
             encoding: int16
     - case: 3 # boost
       set:
@@ -65,7 +67,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 55
-            type: writeholding
+            type: writesingle
             encoding: int16
     - case: 1 # dimm
       set:
@@ -73,7 +75,7 @@ render: |
         {{- include "modbus" . | indent 6 }}
         register:
           address: 55
-          type: writeholding
+          type: writesingle
           encoding: int16
   {{- if .tempsource }}
   temp:
@@ -98,6 +100,6 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 56 # PV surplus
-      type: writeholding
+      type: writesingle
       decode: int16
     scale: 0.1

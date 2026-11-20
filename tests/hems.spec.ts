@@ -27,7 +27,7 @@ async function addMainCircuit(page: Page, title: string) {
   await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
   const circuitsModal = page.getByTestId("circuits-modal");
   await expectModalVisible(circuitsModal);
-  await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+  await circuitsModal.getByRole("button", { name: "Add root circuit" }).click();
 
   const circuitModal = page.getByTestId("circuit-modal");
   await expectModalVisible(circuitModal);
@@ -350,7 +350,9 @@ w4:${signalSource("w4")}`
 
     // no signals: no limits
     await page.goto("/#/config");
-    await expect(hems).toContainText(["Consumption limited", "no", "Feed-in limit", "no"].join(""));
+    await expect(hems).toContainText(
+      ["Consumption limited", "no", "Grid export limit", "no"].join("")
+    );
     await expect(hint).not.toBeVisible();
 
     // dim (W4): consumption limited
@@ -367,7 +369,7 @@ w4:${signalSource("w4")}`
     // full curtailment (W3): feed-in limited to 0
     await setSignal("w4", false);
     await setSignal("w3", true);
-    await expect(hems).toContainText(["Feed-in limit", "0.0 kW"].join(""));
+    await expect(hems).toContainText(["Grid export limit", "0.0 kW"].join(""));
     await expect(hint).not.toBeVisible();
     // device status is polled, reload for a fresh value
     await page.reload();
@@ -376,25 +378,29 @@ w4:${signalSource("w4")}`
     // partial curtailment (S1): 60% of 10 kW
     await setSignal("w3", false);
     await setSignal("s1", true);
-    await expect(hems).toContainText(["Feed-in limit", "6.0 kW"].join(""));
+    await expect(hems).toContainText(["Grid export limit", "6.0 kW"].join(""));
 
     // main screen shows the production warning
     await page.goto("/#/");
-    await expect(page.getByTestId("hems-warning")).toContainText(["Feed-in", "≤ 6.0 kW"].join(""));
+    await expect(page.getByTestId("hems-warning")).toContainText(
+      ["Grid export", "≤ 6.0 kW"].join("")
+    );
     await expect(page.getByTestId("hems-warning")).not.toContainText("Consumption");
     await page.goto("/#/config");
 
     // partial curtailment (S2): 30% of 10 kW
     await setSignal("s1", false);
     await setSignal("s2", true);
-    await expect(hems).toContainText(["Feed-in limit", "3.0 kW"].join(""));
+    await expect(hems).toContainText(["Grid export limit", "3.0 kW"].join(""));
 
     // all clear: banners disappear
     await setSignal("s2", false);
     await expect(hint).not.toBeVisible();
     await page.reload();
     await expect(pvBanner).not.toBeVisible();
-    await expect(hems).toContainText(["Consumption limited", "no", "Feed-in limit", "no"].join(""));
+    await expect(hems).toContainText(
+      ["Consumption limited", "no", "Grid export limit", "no"].join("")
+    );
 
     await stopSimulator();
   });
@@ -431,7 +437,7 @@ w3:
     await restart(GRID_CONFIG);
     await page.goto("/#/config");
 
-    await expect(page.getByTestId("hems")).toContainText(["Feed-in limit", "0.0 kW"].join(""));
+    await expect(page.getByTestId("hems")).toContainText(["Grid export limit", "0.0 kW"].join(""));
     await expect(page.getByTestId("pv").getByTestId("device-banner")).toHaveText(
       "Production limited"
     );

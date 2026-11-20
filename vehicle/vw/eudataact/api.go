@@ -1,7 +1,7 @@
 package eudataact
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,12 +9,16 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
 	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
@@ -23,8 +27,9 @@ import (
 // https://github.com/TA2k/ioBroker.vw-connect (lib/euDataAct.js)
 
 const (
-	// BaseURL is the EU Data Act portal that delivers the mandated vehicle datasets
-	BaseURL = "https://eu-data-act.drivesomethinggreater.com"
+	// BaseURL is the EU Data Act portal. The former drivesomethinggreater.com host
+	// redirects API calls to a path that answers 404.
+	BaseURL = "https://eu-data-act.vwgroup-datahub.com"
 	// RedirectURI is the OIDC redirect target registered for the portal
 	RedirectURI = BaseURL + "/login"
 	// Scope is the OIDC scope requested for the EU Data Act flow
@@ -47,6 +52,22 @@ type API struct {
 	log            *util.Logger
 	brand          brand
 	user, password string
+	jar            sessionJar
+	loginMu        sync.Mutex    // serializes logins
+	loginGen       atomic.Uint64 // incremented on each successful login
+}
+
+// sessionJar lets login replace the session cookies while other vehicles use the client.
+type sessionJar struct {
+	atomic.Pointer[cookiejar.Jar]
+}
+
+func (j *sessionJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
+	j.Load().SetCookies(u, cookies)
+}
+
+func (j *sessionJar) Cookies(u *url.URL) []*http.Cookie {
+	return j.Load().Cookies(u)
 }
 
 // apiKey identifies a portal account. All vehicles of the same brand and user
@@ -87,8 +108,14 @@ func NewAPI(log *util.Logger, brandName, user, password string) (*API, error) {
 		user:     user,
 		password: password,
 	}
+	v.Client.Jar = &v.jar
+	// the portal limits downloads per minute and answers bursts with a short Retry-After,
+	// waiting counts towards the client timeout
+	const maxRetryAfter = 30 * time.Second
+	v.Client.Transport = transport.RetryAfter(maxRetryAfter, v.Client.Transport)
+	v.Client.Timeout += maxRetryAfter
 
-	if err := v.login(); err != nil {
+	if err := v.login(0); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
@@ -101,18 +128,26 @@ func NewAPI(log *util.Logger, brandName, user, password string) (*API, error) {
 // service. The portal relies on the session cookies that are set while the
 // browser follows the redirect chain back to RedirectURI, so the cookie jar is
 // kept on the client for all subsequent data calls.
-func (v *API) login() error {
+// Logins are skipped if another caller has logged in since gen was observed.
+func (v *API) login(gen uint64) error {
+	v.loginMu.Lock()
+	defer v.loginMu.Unlock()
+
+	if v.loginGen.Load() != gen {
+		return nil
+	}
+
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
 		return err
 	}
 
-	v.Client.Jar = jar
-	previousRedirect := v.Client.CheckRedirect
-	defer func() { v.Client.CheckRedirect = previousRedirect }()
+	// private client copy, data requests keep their jar and redirect policy until login succeeds
+	client := *v.Client
+	client.Jar = jar
 
 	identityHost := strings.TrimPrefix(vwidentity.BaseURL, "https://")
-	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		// Cookies from the redirect response are already stored in the jar.
 		if req.URL.Scheme != "https" || isUserPage(req.URL) || isMarketingConsentPage(req.URL) {
 			return http.ErrUseLastResponse
@@ -137,7 +172,7 @@ func (v *API) login() error {
 		"nonce":         {lo.RandomString(43, lo.LettersCharset)},
 	}
 
-	resp, err := v.Get(vwidentity.Config.AuthURL + "?" + q.Encode())
+	resp, err := client.Get(vwidentity.Config.AuthURL + "?" + q.Encode())
 	if err != nil {
 		return err
 	}
@@ -148,44 +183,10 @@ func (v *API) login() error {
 		return err
 	}
 
-	// email/identifier step
-	vars, err := vwidentity.FormValues(bytes.NewReader(body), "form#emailPasswordForm")
+	// the client follows the redirect chain back to the portal which sets the session cookie
+	resp, err = vwidentity.SubmitCredentials(&client, body, v.user, v.password)
 	if err != nil {
-		return fmt.Errorf("identifier form: %w (portal layout may have changed)", err)
-	}
-
-	uri := vwidentity.BaseURL + vars.Action
-	resp, err = v.PostForm(uri, url.Values{
-		"_csrf":      {vars.Inputs["_csrf"]},
-		"relayState": {vars.Inputs["relayState"]},
-		"hmac":       {vars.Inputs["hmac"]},
-		"email":      {v.user},
-	})
-	if err != nil {
-		return err
-	}
-
-	params, err := vwidentity.ParseCredentialsPage(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		return fmt.Errorf("credentials page: %w", err)
-	}
-	if params.TemplateModel.Error != "" {
-		return errors.New(params.TemplateModel.Error)
-	}
-
-	// password/authenticate step - the client follows the redirect chain back to
-	// the portal which sets the session cookie
-	uri = strings.ReplaceAll(uri, params.TemplateModel.IdentifierUrl, params.TemplateModel.PostAction)
-	resp, err = v.PostForm(uri, url.Values{
-		"_csrf":      {params.CsrfToken},
-		"relayState": {params.TemplateModel.RelayState},
-		"hmac":       {params.TemplateModel.Hmac},
-		"email":      {v.user},
-		"password":   {v.password},
-	})
-	if err != nil {
-		return err
+		return fmt.Errorf("credentials: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -201,7 +202,16 @@ func (v *API) login() error {
 		if final.Scheme != "https" || !isLoginHost(final.Host, identityHost) || !validMarketingCallback(cb, identityHost) {
 			return errors.New("unexpected marketing consent callback URL")
 		}
-		resp, err = v.Get(cb.String())
+		resp, err = client.Get(cb.String())
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		if final, err = loginLocation(resp); err != nil {
+			return err
+		}
+	} else if resp.StatusCode == http.StatusOK && vwidentity.IsAuth0MarketingConsent(final) {
+		resp, err = vwidentity.SkipAuth0MarketingConsent(&client, resp)
 		if err != nil {
 			return err
 		}
@@ -213,7 +223,8 @@ func (v *API) login() error {
 
 	// a successful login lands on the portal; a remaining signin/consent url means
 	// the user has not completed the one-time browser consent and vehicle linking
-	if strings.Contains(final.Path, "signin-service") || strings.Contains(final.Path, "/consent") || strings.Contains(final.Path, "/error") {
+	if strings.Contains(final.Path, "signin-service") || strings.Contains(final.Path, "/consent") || strings.Contains(final.Path, "/error") ||
+		strings.HasPrefix(final.Path, "/v2/login/ui/") {
 		return api.UrlError(
 			fmt.Sprintf("login did not complete- open the portal and confirm consent: %s", final),
 			final,
@@ -225,6 +236,9 @@ func (v *API) login() error {
 	if !isUserPage(final) {
 		return errors.New("login did not complete: unexpected landing page")
 	}
+
+	v.jar.Store(jar)
+	v.loginGen.Add(1)
 
 	return nil
 }
@@ -243,9 +257,15 @@ func validMarketingCallback(u *url.URL, identityHost string) bool {
 	return u.Scheme == "https" && strings.EqualFold(u.Host, identityHost) && validPath
 }
 
+// userPagePath matches the portal's short user page path, e.g. /de/en/user.html
+var userPagePath = regexp.MustCompile(`^/[a-z]{2}/[a-z]{2}/user\.html$`)
+
 func isUserPage(u *url.URL) bool {
-	return u.Scheme == "https" && strings.EqualFold(u.Host, portalHost) &&
-		strings.HasPrefix(u.Path, "/content/euda/") && strings.HasSuffix(u.Path, "/user.html")
+	if u.Scheme != "https" || !strings.EqualFold(u.Host, portalHost) {
+		return false
+	}
+	return strings.HasPrefix(u.Path, "/content/euda/") && strings.HasSuffix(u.Path, "/user.html") ||
+		userPagePath.MatchString(u.Path)
 }
 
 func loginLocation(resp *http.Response) (*url.URL, error) {
@@ -269,12 +289,14 @@ func loginLocation(resp *http.Response) (*url.URL, error) {
 }
 
 // get executes a GET request, re-authenticating once on 401/403, and returns the body
-func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
+func (v *API) get(ctx context.Context, uri string, headers map[string]string) ([]byte, error) {
 	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
+	gen := v.loginGen.Load()
 	resp, err := v.Do(req)
 	if err != nil {
 		return nil, err
@@ -283,14 +305,14 @@ func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
 	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
 		resp.Body.Close()
 
-		if err := v.login(); err != nil {
+		if err := v.login(gen); err != nil {
 			return nil, fmt.Errorf("login failed: %w", err)
 		}
 
 		if req, err = request.New(http.MethodGet, uri, nil, headers); err != nil {
 			return nil, err
 		}
-		if resp, err = v.Do(req); err != nil {
+		if resp, err = v.Do(req.WithContext(ctx)); err != nil {
 			return nil, err
 		}
 	}
@@ -299,8 +321,8 @@ func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
 }
 
 // getJSON executes a GET request and decodes the JSON response
-func (v *API) getJSON(uri string, res any) error {
-	b, err := v.get(uri, map[string]string{"Accept": request.JSONContent})
+func (v *API) getJSON(ctx context.Context, uri string, res any) error {
+	b, err := v.get(ctx, uri, map[string]string{"Accept": request.JSONContent})
 	if err != nil {
 		return err
 	}
@@ -311,7 +333,7 @@ func (v *API) getJSON(uri string, res any) error {
 func (v *API) Vehicles() ([]Vehicle, error) {
 	uri := BaseURL + "/proxy_api/consent/me/vehicles?viewPosition=FRONT_LEFT"
 
-	b, err := v.get(uri, map[string]string{"Accept": request.JSONContent})
+	b, err := v.get(context.Background(), uri, map[string]string{"Accept": request.JSONContent})
 	if err != nil {
 		return nil, err
 	}
@@ -333,13 +355,13 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 }
 
 // identifier returns the data-request identifier required for the data delivery calls
-func (v *API) identifier(vin string) (string, error) {
+func (v *API) identifier(ctx context.Context, vin string) (string, error) {
 	uri := fmt.Sprintf("%s/proxy_api/euda-apim/datarequest/vehicles/%s/metadata/partial", BaseURL, vin)
 
 	var res struct {
 		Identifier string `json:"Identifier"`
 	}
-	if err := v.getJSON(uri, &res); err != nil {
+	if err := v.getJSON(ctx, uri, &res); err != nil {
 		if se, ok := errors.AsType[*request.StatusError](err); ok && se.HasStatus(404) {
 			err = ErrNotConfigured
 		}
@@ -354,10 +376,10 @@ func (v *API) identifier(vin string) (string, error) {
 }
 
 // datasets lists the available datasets for the given data request
-func (v *API) datasets(vin, identifier string) ([]dataset, error) {
+func (v *API) datasets(ctx context.Context, vin, identifier string) ([]dataset, error) {
 	uri := fmt.Sprintf("%s/proxy_api/euda-apim/datadelivery/vehicles/%s/%s/list", BaseURL, vin, identifier)
 
-	b, err := v.get(uri, map[string]string{"Accept": request.JSONContent, "type": "partial"})
+	b, err := v.get(ctx, uri, map[string]string{"Accept": request.JSONContent, "type": "partial"})
 	if err != nil {
 		// the portal answers 404 "No files available for this request" until the
 		// vehicle has delivered its first dataset
@@ -383,7 +405,7 @@ func (v *API) datasets(vin, identifier string) ([]dataset, error) {
 }
 
 // download fetches the dataset zip archive
-func (v *API) download(vin, identifier, name string) ([]byte, error) {
+func (v *API) download(ctx context.Context, vin, identifier, name string) ([]byte, error) {
 	uri := fmt.Sprintf("%s/proxy_api/euda-apim/datadelivery/vehicles/%s/%s/download", BaseURL, vin, identifier)
-	return v.get(uri, map[string]string{"filename": name, "type": "partial"})
+	return v.get(ctx, uri, map[string]string{"filename": name, "type": "partial"})
 }

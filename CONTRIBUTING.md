@@ -1,5 +1,23 @@
 # Contributing
 
+Thanks for your interest in evcc!
+Most ways to help don't need any code: answering questions, testing new versions, improving support for your own devices, translating or editing the docs.
+[docs.evcc.io/en/contribute](https://docs.evcc.io/en/contribute) gives an overview of all ways to help and of the project's repositories.
+This file covers the ground rules and how to develop in this repository.
+
+## Ground Rules
+
+- **Start small**: Good first contributions come from your own setup, e.g. an inverter, battery, vehicle or charger that maintainers can't test. Don't start with your favourite big feature. Get to know the community first and iterate from there.
+- **Discuss first**: Only open a pull request if there is a related issue or discussion where the team has indicated a positive tendency toward the proposed change. Link to it in your pull request description.
+- **Keep it focused**: One topic per pull request, written in English (see [Communication Language](#communication-language)).
+- **Understand your changes**: AI tools are welcome, but you remain responsible for your work regardless of which tools you used. Fully understand all changes and be prepared to answer questions about them.
+- **Mark AI-generated text**: Issues, pull request descriptions and comments written by an AI tool must say so, e.g. with the tool's attribution footer. This lets readers decide how to treat them. Keep them clear and concise.
+- **Respect review time**: Ensure contributions justify the review effort required from maintainers.
+
+If a contribution doesn't seem to follow these rules, we'll close it.
+
+General development topics are discussed on [Slack](https://evcc.io/slack).
+
 ## Developing
 
 ### Development environment
@@ -18,7 +36,7 @@ make lint-ui
 ### Device templates
 
 The software supports a massive amount of different devices (charger, meter, vehicle, tariff) that are defined by **templates**.
-A template can use the [plugin system](https://docs.evcc.io/docs/devices/plugins) (preferred) for communication with the device or reference a dedicated Go implementation.
+A template can use the [plugin system](https://docs.evcc.io/en/reference/plugins) (preferred) for communication with the device or reference a dedicated Go implementation.
 All bundled templates are located in the [`/templates/definition`](https://github.com/evcc-io/evcc/tree/master/templates/definition) directory.
 
 If you want to add a new plugin we recommend looking at existing, similar implementations for reference.
@@ -73,32 +91,6 @@ GOOS=linux GOARCH=arm GOARM=6 make
 ```sh
 make docker DOCKER_IMAGE=my/docker DOCKER_TAG=0815
 ```
-
-## Releases
-
-Releases are cut by pushing a `MAJOR.MINOR.PATCH` tag. Any other tag is ignored.
-
-Feature releases (`0.313.0`) must be tagged on `master`. The release workflow
-rejects a feature tag that is not reachable from `master`.
-
-Bugfix releases (`0.313.1`) may be tagged on any branch. That allows servicing
-an older release line without shipping everything that has landed on `master`
-since. Only the newest release moves the `latest` pointers, so a bugfix release
-of an older line publishes its artifacts, but leaves the `evcc/evcc:latest`
-docker tag, the homebrew formula, the GitHub latest release, the hassio addon
-and the demo instance untouched.
-
-To move a merged pull request onto a release branch, comment `/backport` on it.
-The pull request has to carry the `bug` label and must not be marked `(BC)`,
-only non-breaking bugfixes are backported.
-The commit is cherry-picked onto the branch of the next bugfix release, e.g.
-`release/0.313.1`, and a pull request is opened against it. The branch is
-created at the newest tag of that line if it does not exist yet. Pass a branch
-name, `/backport release/0.312.2`, to service an older line.
-
-Releasing a bugfix deletes its release branch, since the tag is the branch tip
-and everything on it has shipped. A branch that received further backports after
-the tag is kept.
 
 ## Debugging in VS Code
 
@@ -167,6 +159,11 @@ make ui build
 ./evcc --config tests/simulator.evcc.yaml
 ```
 
+### Test builds
+
+Maintainers can comment `/build` on a pull request.
+This publishes binaries and a Docker image `evcc/evcc:pr-<number>`, so others can test the change on their own hardware.
+
 ## Communication Language
 
 evcc has a large German-speaking user base, but we want to be open and accessible to everyone in the global community. To balance these needs:
@@ -183,26 +180,6 @@ evcc has a large German-speaking user base, but we want to be open and accessibl
 
 Thank you all for helping make evcc accessible! 🌍
 
-## AI-Generated Content
-
-AI tools can be valuable aids for writing code, documentation, and creating issue reports.
-We welcome their use as part of the development process.
-
-When submitting AI-assisted contributions, keep these principles in mind:
-
-- **Understanding**: Fully understand all changes and be prepared to answer questions about them.
-- **Human-written intent**: Write issue descriptions, PR explanations, and commit messages in your own words. Keep them clear and concise, not lengthy generated text.
-- **Value**: Ensure contributions justify the review effort required from maintainers.
-- **Prior consensus**: Only open a PR if there is a related issue or discussion where the team has indicated a positive tendency toward the proposed change. Link to it in your PR description.
-
-Contributors remain responsible for their work regardless of which tools were used to create it.
-
-Contributions that appear to violate these principles will be closed with the following comment:
-
-```
-This contribution does not appear to meet our [AI contribution guidelines](https://github.com/evcc-io/evcc/blob/master/CONTRIBUTING.md#ai-generated-content).
-```
-
 ## Adding or modifying translations
 
 evcc already includes many translations for the UI. We're using [Weblate](https://hosted.weblate.org/projects/evcc/evcc/) to maintain translations. Feel free to add more languages or verify and edit existing translations. Weblate will automatically push all modifications to the evcc repository where they get reviewed and merged.
@@ -216,21 +193,42 @@ Note: To ensure the build succeeds after creating new translations, make sure to
 
 [![Languages](https://hosted.weblate.org/widgets/evcc/-/evcc/multi-auto.svg)](https://hosted.weblate.org/engage/evcc/)
 
-[1]: https://go.dev
-[2]: https://nodejs.org/
-[3]: https://viteplus.dev/guide/#install-vp
+## Other Repositories
 
-## Documentation, Website and iOS/Android App
-
-We're always thankful for contributions.
-Docs, website and app have dedicated repositories.
-Please open a GitHub pull request in the respective repository.
-
-- Documentation: [evcc-io/docs](https://github.com/evcc-io/docs)
-- Website: [evcc-io/evcc.io](https://github.com/evcc-io/evcc.io)
-- iOS/Android App: [evcc-io/app](https://github.com/evcc-io/app)
+Docs, website, app, optimizer and Linux images have dedicated repositories.
+See the [project overview](https://docs.evcc.io/en/contribute#projects) and open pull requests in the respective repository.
 
 ## License
 
 By contributing to evcc, you agree that your contributions will be licensed under the existing license terms that apply to the respective parts of the project.
 This constitutes an implicit Contributor License Agreement (CLA), following GitHub's standard practice where contributions are made under the same terms as the project license.
+
+## Releases
+
+Releases are cut by pushing a `MAJOR.MINOR.PATCH` tag. Any other tag is ignored.
+
+Feature releases (`0.313.0`) must be tagged on `master`. The release workflow
+rejects a feature tag that is not reachable from `master`.
+
+Bugfix releases (`0.313.1`) may be tagged on any branch. That allows servicing
+an older release line without shipping everything that has landed on `master`
+since. Only the newest release moves the `latest` pointers, so a bugfix release
+of an older line publishes its artifacts, but leaves the `evcc/evcc:latest`
+docker tag, the homebrew formula, the GitHub latest release, the hassio addon
+and the demo instance untouched.
+
+To move a merged pull request onto a release branch, comment `/backport` on it.
+The pull request has to carry the `bug` label and must not be marked `(BC)`,
+only non-breaking bugfixes are backported.
+The commit is cherry-picked onto the branch of the next bugfix release, e.g.
+`release/0.313.1`, and a pull request is opened against it. The branch is
+created at the newest tag of that line if it does not exist yet. Pass a branch
+name, `/backport release/0.312.2`, to service an older line.
+
+Releasing a bugfix deletes its release branch, since the tag is the branch tip
+and everything on it has shipped. A branch that received further backports after
+the tag is kept.
+
+[1]: https://go.dev
+[2]: https://nodejs.org/
+[3]: https://viteplus.dev/guide/#install-vp

@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -91,4 +93,20 @@ func Instances[T any](devices []Device[T]) []T {
 		}
 	}
 	return res
+}
+
+// Instance returns the instance of the named device
+func Instance[T any](h Handler[T], name string) (T, error) {
+	var zero T
+
+	dev, err := h.ByName(name)
+	if err != nil {
+		return zero, err
+	}
+
+	if inst := dev.Instance(); any(inst) != nil {
+		return inst, nil
+	}
+
+	return zero, fmt.Errorf("%s not available (disabled or failed)", name)
 }

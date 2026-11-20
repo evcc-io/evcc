@@ -1,0 +1,66 @@
+template: stromligning
+link: https://stromligning.dk
+products:
+  - brand: Strømligning
+requirements:
+  evcc: ["skiptest"]
+  description:
+    en: "Requires an API key from [stromligning.dk](https://stromligning.dk/api/docs/). Prices are in DKK/kWh and include the applicable taxes and grid fees. Production prices exclude VAT and include production tariff deductions, but not electricity company fees. Commercial use requires permission from Strømligning."
+group: price
+countries: ["DK"]
+params:
+  - name: apikey
+    required: true
+  - name: pricetype
+    type: choice
+    choice: ["consumption", "production"]
+    default: consumption
+    description:
+      generic: Price type
+    help:
+      en: "Use consumption for grid prices and production for feed-in prices."
+  - name: productid
+    example: enkel_energi-enkel_kvartal
+    description:
+      generic: Product ID
+    help:
+      en: "Used for consumption prices only. Find IDs in the API documentation."
+  - name: supplierid
+    required: true
+    example: radius_c
+    description:
+      generic: Grid supplier ID
+  - name: customergroupid
+    example: C_egenproducent
+    description:
+      generic: Customer group ID
+    help:
+      en: "For production prices, leave empty to select the production customer group automatically."
+  - name: agreementstart
+    example: "2025-03-01"
+    description:
+      generic: Agreement start
+    help:
+      en: "Contract start date (YYYY-MM-DD). Only used for consumption prices, when product ID has discount based on start date."
+  - preset: tariff-base
+render: |
+  {{- if and (eq .pricetype "consumption") (not .productid) }}
+  {{ fail "productid is required for consumption prices" }}
+  {{- end }}
+  type: custom
+  {{ include "base" . }}
+  forecast:
+    source: http
+    uri: https://stromligning.dk/api/prices{{ if eq .pricetype "production" }}/production{{ end }}?supplierId={{ .supplierid | unquote | urlEncode }}{{ if .customergroupid }}&customerGroupId={{ .customergroupid | unquote | urlEncode }}{{ end }}{{ if eq .pricetype "consumption" }}&productId={{ .productid | unquote | urlEncode }}{{ if .agreementstart }}&agreementStart={{ .agreementstart | unquote | urlEncode }}{{ end }}{{ end }}&lean=true
+    auth:
+      type: bearer
+      token: {{ .apikey }}
+    jq: |
+      [ .[] | {
+        start: .date,
+        end: (.date | sub("\\.[0-9]+Z$"; "Z") | fromdate) +
+          (if .resolution == "15m" then 900
+           elif .resolution == "1h" then 3600
+           else error("unsupported price resolution: \(.resolution)") end) | todate,
+        value: (.price | if type == "number" then . else error("invalid price") end)
+      } ] | tostring

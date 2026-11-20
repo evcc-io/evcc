@@ -38,21 +38,24 @@ func _CapabilityNoOp() {
 var _CapabilityValues = []Capability{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilityBatteryControl, CapabilityMeter, CapabilityDim, CapabilityCurtail}
 
 var _CapabilityNameToValueMap = map[string]Capability{
-	_CapabilityName[0:9]:        CapabilityISO151182,
+	_CapabilityName[0:9]:   CapabilityISO151182,
+	_CapabilityName[9:11]:  CapabilityMilliAmps,
+	_CapabilityName[11:15]: CapabilityRFID,
+	_CapabilityName[15:19]: Capability1p3p,
+	_CapabilityName[19:34]: CapabilityBatteryControl,
+	_CapabilityName[34:39]: CapabilityMeter,
+	_CapabilityName[39:42]: CapabilityDim,
+	_CapabilityName[42:49]: CapabilityCurtail,
+}
+
+var _CapabilityLowerNameToValueMap = map[string]Capability{
 	_CapabilityLowerName[0:9]:   CapabilityISO151182,
-	_CapabilityName[9:11]:       CapabilityMilliAmps,
 	_CapabilityLowerName[9:11]:  CapabilityMilliAmps,
-	_CapabilityName[11:15]:      CapabilityRFID,
 	_CapabilityLowerName[11:15]: CapabilityRFID,
-	_CapabilityName[15:19]:      Capability1p3p,
 	_CapabilityLowerName[15:19]: Capability1p3p,
-	_CapabilityName[19:34]:      CapabilityBatteryControl,
 	_CapabilityLowerName[19:34]: CapabilityBatteryControl,
-	_CapabilityName[34:39]:      CapabilityMeter,
 	_CapabilityLowerName[34:39]: CapabilityMeter,
-	_CapabilityName[39:42]:      CapabilityDim,
 	_CapabilityLowerName[39:42]: CapabilityDim,
-	_CapabilityName[42:49]:      CapabilityCurtail,
 	_CapabilityLowerName[42:49]: CapabilityCurtail,
 }
 
@@ -74,7 +77,7 @@ func CapabilityString(s string) (Capability, error) {
 		return val, nil
 	}
 
-	if val, ok := _CapabilityNameToValueMap[strings.ToLower(s)]; ok {
+	if val, ok := _CapabilityLowerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to Capability values", s)

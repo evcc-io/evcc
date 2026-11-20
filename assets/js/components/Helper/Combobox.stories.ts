@@ -37,6 +37,23 @@ Matching.args = {
   options: options.map((o) => ({ ...o, match: o.hint?.startsWith("Fronius") })),
 };
 
+const entities = [
+  { value: "sensor.grid_power", label: "Grid Power", hint: "-25 W", match: true },
+  { value: "sensor.home_power", label: "Home Power", hint: "635 W", match: true, used: true },
+  {
+    value: "sensor.backup_next_scheduled_automatic_backup",
+    label: "Backup Next scheduled automatic backup",
+    hint: "2026-10-11T03:42:17+00:00",
+  },
+  { value: "sensor.backup_manager_state", label: "Backup Manager state", hint: "idle" },
+  { value: "sensor.battery_soc", label: "Battery", hint: "87 %" },
+  { value: "sensor.outdoor_temperature", label: "Outdoor", hint: "12.4 °C" },
+  { value: "sensor.unavailable_device", label: "Unavailable device" },
+];
+
+export const Entities = Template.bind({});
+Entities.args = { id: "power", options: entities };
+
 export const Selected = Template.bind({});
 Selected.args = { ...Default.args, modelValue: "192.168.31.21" };
 

@@ -408,6 +408,39 @@ func (suite *connTestSuite) TestOnMeterValuesBoundaryContextFirst() {
 	suite.Equal(241.010, res, "live reading must not be shadowed by the boundary snapshot")
 }
 
+// Huawei SCharger reports a zero energy register outside transactions
+func (suite *connTestSuite) TestOnMeterValuesIgnoreZeroEnergy() {
+	suite.meterValues(energySample("0.00", types.ReadingContextTrigger))
+
+	_, err := suite.conn.TotalEnergy()
+	suite.ErrorIs(err, api.ErrNotAvailable, "zero must not be stored")
+
+	suite.meterValues(energySample("537960", types.ReadingContextTransactionBegin))
+
+	suite.clock.Add(time.Hour)
+	suite.meterValues(energySample("0.00", types.ReadingContextTrigger))
+	suite.False(suite.conn.isMeterTimeout(), "zero must still update meter freshness")
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err, "TotalEnergy")
+	suite.Equal(537.960, res, "zero must not overwrite known energy")
+}
+
+func (suite *connTestSuite) TestOnMeterValuesIgnoreZeroPhaseEnergy() {
+	phase := func(value string, p types.Phase) types.SampledValue {
+		s := energySample(value, types.ReadingContextSamplePeriodic)
+		s.Phase = p
+		return s
+	}
+
+	suite.meterValues(phase("1000", types.PhaseL1), phase("2000", types.PhaseL2), phase("3000", types.PhaseL3))
+	suite.meterValues(phase("0", types.PhaseL1), phase("0", types.PhaseL2), phase("0", types.PhaseL3))
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err, "TotalEnergy")
+	suite.Equal(6.0, res, "zero must not overwrite known phase energy")
+}
+
 // meterValuesAt feeds the given samples with an explicit charger-side timestamp
 func (suite *connTestSuite) meterValuesAt(ts time.Time, samples ...types.SampledValue) {
 	_, err := suite.conn.OnMeterValues(&core.MeterValuesRequest{
@@ -461,9 +494,62 @@ func (suite *connTestSuite) TestOnStopTransactionResetsReportedPower() {
 	suite.Equal(res, 3.0, "CurrentPower")
 
 	// set powers to zero
-	suite.conn.OnStopTransaction(nil)
+	suite.conn.OnStopTransaction(&core.StopTransactionRequest{})
 
 	res, err = suite.conn.CurrentPower()
 	suite.NoError(err, "CurrentPower")
 	suite.Equal(res, 0.0, "CurrentPower")
+}
+
+func (suite *connTestSuite) TestOnStopTransactionUpdatesEnergy() {
+	suite.conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{Value: "1899.53", Unit: types.UnitOfMeasureKWh}
+
+	suite.conn.startTransaction(1, "evcc")
+	suite.conn.OnStopTransaction(&core.StopTransactionRequest{TransactionId: 1, MeterStop: 1899600})
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.InDelta(1899.6, res, 1e-9)
+
+	// lower readings are ignored
+	suite.conn.OnStopTransaction(&core.StopTransactionRequest{TransactionId: 1, MeterStop: 1000})
+
+	res, err = suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.InDelta(1899.6, res, 1e-9)
+}
+
+func (suite *connTestSuite) TestOnStatusChange() {
+	var calls int
+	suite.conn.OnStatusChange(func() { calls++ })
+
+	now := suite.clock.Now()
+	status := func(s core.ChargePointStatus, errorCode core.ChargePointErrorCode, d time.Duration) {
+		_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+			ConnectorId: 1,
+			Status:      s,
+			ErrorCode:   errorCode,
+			Timestamp:   types.NewDateTime(now.Add(d)),
+		})
+		suite.NoError(err)
+	}
+
+	for _, tc := range []struct {
+		status    core.ChargePointStatus
+		errorCode core.ChargePointErrorCode
+		d         time.Duration
+		calls     int
+	}{
+		{core.ChargePointStatusAvailable, core.NoError, 0, 1},
+		{core.ChargePointStatusPreparing, core.NoError, time.Second, 2},
+		{core.ChargePointStatusCharging, core.NoError, 2 * time.Second, 3},
+		{core.ChargePointStatusAvailable, core.NoError, -time.Second, 3}, // outdated
+		{core.ChargePointStatusSuspendedEV, core.NoError, 3 * time.Second, 4},
+		{core.ChargePointStatusSuspendedEVSE, core.NoError, 4 * time.Second, 4}, // same class
+		{core.ChargePointStatusSuspendedEVSE, core.GroundFailure, 5 * time.Second, 5},
+		{core.ChargePointStatusAvailable, core.NoError, 6 * time.Second, 6},
+	} {
+		status(tc.status, tc.errorCode, tc.d)
+		suite.Equal(tc.calls, calls, "%s %s", tc.status, tc.errorCode)
+	}
 }

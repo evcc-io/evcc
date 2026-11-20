@@ -79,6 +79,7 @@ export interface EvoptData {
 			c_min: number;
 			c_max: number;
 			d_max: number;
+			s_initial: number;
 		}>;
 	};
 	res: {
@@ -200,7 +201,7 @@ export default defineComponent({
 		// the profiles the household demand is summarized from, scaled against the total
 		demandRows(total: Row): Row[] {
 			const ref = Math.max(...total.nums.map(Math.abs));
-			const consumption = this.$t("main.history.group.consumer");
+			const consumption = this.$t("energy.group.consumer");
 			return this.demandDetails.map((d, i) =>
 				this.powerRow(
 					`↳ ${demandTitle(d, consumption)}`,

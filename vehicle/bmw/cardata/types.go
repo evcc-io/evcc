@@ -12,6 +12,7 @@ type Container struct {
 	Name        string    `json:"name"`
 	Purpose     string    `json:"purpose"`
 	ContainerId string    `json:"containerId"`
+	State       string    `json:"state"`
 	Created     time.Time `json:"created"`
 }
 

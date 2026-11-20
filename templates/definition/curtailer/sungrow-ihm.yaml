@@ -1,0 +1,87 @@
+template: sungrow-ihm
+products:
+  - brand: Sungrow
+    description:
+      generic: iHomeManager (iHM)
+requirements:
+  description:
+    de: |
+      Die Abregelung begrenzt die Einspeiseleistung auf den gewünschten Prozentsatz der Nennleistung der angeschlossenen Wechselrichter.
+    en: |
+      Curtailment limits feed-in power to the desired percentage of the rated power of the connected inverters.
+discovery:
+  hostname: ["sungrow*"]
+  mac: ["AC199F"]
+params:
+  - name: modbus
+    choice: ["tcpip", "rs485"]
+    baudrate: 9600
+    comset: "8N1"
+    id: 247
+    port: 502
+render: |
+  type: custom
+  curtail:
+    # the iHM rejects ratio writes while feed-in limitation is disabled, so the ratio
+    # must only be written after feed-in limitation has been enabled
+    source: switch
+    switch:
+    - case: 100 # uncurtailed: disable feed-in limitation, no ratio write needed
+      set:
+        source: const
+        value: 85 # 0x55: Disable feed-in limitation
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 8027 # Register 8028 (Feed-in limitation)
+            type: writesingle
+            decode: uint16
+    default:
+      source: sequence
+      set:
+      - source: const
+        value: 170 # 0xAA: Enable feed-in limitation
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 8027 # Register 8028 (Feed-in limitation)
+            type: writesingle
+            decode: uint16
+      # allowed feed-in power as percent of nominal (0-100 % -> 0-1000 = 0.1%)
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 8030 # Register 8031 (Feed-in limitation ratio, 0-1000 = 0.1%)
+          type: writesingle
+          decode: int16
+        scale: 10
+  curtailed: # the limitation ratio only applies while the feed-in limitation is enabled
+    source: go
+    in:
+    - name: ena
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 8027 # Register 8028 (Feed-in limitation, 0x55=off, 0xAA=on)
+          type: holding
+          decode: uint16
+    - name: ratio
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 8030 # Register 8031 (Feed-in limitation ratio, 0-1000 = 0.1%)
+          type: holding
+          decode: int16
+        scale: 0.1
+    script: |
+      percent := 100
+      if ena == 170 {
+        percent = ratio
+      }
+      percent

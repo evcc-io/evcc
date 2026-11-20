@@ -42,9 +42,11 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		Milliamps            bool     // optional - max current entity accepts fractional amps
 		Power                string   // optional - power sensor
 		Energy               string   // optional - energy sensor
+		Identify             string   // optional - RFID/vehicle identifier sensor
 		Currents             []string // optional - current sensors for L1, L2, L3
 		Voltages             []string // optional - voltage sensors for L1, L2, L3
 		Phases               string   // optional - select entity for 1p/3p phase switching
+		Temp                 string   // optional - temperature sensor (°C), for heating devices
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -94,11 +96,31 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		}))
 	}
 
+	// vehicle identification (optional)
+	if cc.Identify != "" {
+		implement.Has(c, implement.Identifier(func() ([]string, error) {
+			state, err := conn.GetState(cc.Identify)
+			if errors.Is(err, api.ErrNotAvailable) {
+				// unknown/unavailable: no vehicle identified
+				return nil, nil
+			}
+			if err != nil {
+				return nil, err
+			}
+			return []string{state.State}, nil
+		}))
+	}
+
 	if cc.Power != "" {
 		implement.Has(c, implement.Meter(func() (float64, error) { return conn.GetFloatState(cc.Power) }))
 	}
 	if cc.Energy != "" {
 		implement.Has(c, implement.MeterEnergy(func() (float64, error) { return conn.GetFloatState(cc.Energy) }))
+	}
+
+	// temperature (optional), reported as soc for heating devices
+	if cc.Temp != "" {
+		implement.Has(c, implement.Battery(func() (float64, error) { return conn.GetTemperatureState(cc.Temp) }))
 	}
 
 	// phase currents (optional)

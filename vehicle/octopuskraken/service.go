@@ -1,9 +1,11 @@
 package octopuskraken
 
 import (
+	"cmp"
 	"encoding/json"
 	"net/http"
 	"slices"
+	"strings"
 
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
@@ -24,7 +26,29 @@ func register(name, baseURI string) {
 	service.Register(name, mux)
 }
 
-// getDevices lists the ids of the SmartFlex devices in the account, driving
+// deviceTypes maps the Kraken device type enum to a readable hint.
+var deviceTypes = map[string]string{
+	"ELECTRIC_VEHICLES": "Vehicle",
+	"CHARGE_POINTS":     "Charge point",
+}
+
+func deviceOptions(devices []Device) []service.Option {
+	res := make([]service.Option, 0, len(devices))
+	for _, d := range devices {
+		parts := []string{cmp.Or(deviceTypes[d.DeviceType], d.DeviceType), d.Provider}
+		res = append(res, service.Option{
+			Value: d.ID,
+			Label: d.Name,
+			Hint:  strings.Join(slices.DeleteFunc(parts, func(s string) bool { return s == "" }), " · "),
+			// vehicle template: charge points are listed but don't match
+			Match: d.DeviceType == "ELECTRIC_VEHICLES",
+		})
+	}
+	slices.SortFunc(res, func(a, b service.Option) int { return cmp.Compare(a.Value, b.Value) })
+	return res
+}
+
+// getDevices lists the SmartFlex devices in the account, driving
 // device selection in the template.
 func getDevices(w http.ResponseWriter, req *http.Request, name, baseURI string) {
 	w.Header().Set("Content-Type", "application/json")
@@ -32,8 +56,8 @@ func getDevices(w http.ResponseWriter, req *http.Request, name, baseURI string) 
 	q := req.URL.Query()
 	email, password, account := q.Get("email"), q.Get("password"), q.Get("accountnumber")
 
-	ids := []string{}
-	defer func() { _ = json.NewEncoder(w).Encode(ids) }()
+	res := []service.Option{}
+	defer func() { _ = json.NewEncoder(w).Encode(res) }()
 
 	if email == "" || password == "" {
 		return
@@ -58,8 +82,5 @@ func getDevices(w http.ResponseWriter, req *http.Request, name, baseURI string) 
 		return
 	}
 
-	for _, d := range devices {
-		ids = append(ids, d.ID)
-	}
-	slices.Sort(ids)
+	res = deviceOptions(devices)
 }

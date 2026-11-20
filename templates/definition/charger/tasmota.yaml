@@ -21,6 +21,7 @@ params:
     description:
       de: Schaltkanal (1-8)
       en: Relay channel (1-8)
+    service: tasmota/channels?uri={host}&user={user}&password={password}
   - preset: switchsocket
 render: |
   type: tasmota

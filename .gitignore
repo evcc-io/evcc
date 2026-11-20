@@ -4,6 +4,8 @@ __debug_bin*
 .cache
 .DS_store
 *.db
+*.db-shm
+*.db-wal
 *.gz
 !util/discovery/oui.txt.gz
 *.py
@@ -11,6 +13,7 @@ testdata/**/*
 *.log
 *.json
 !i18n/*.json
+!i18n/glossary/*.json
 !.devcontainer/devcontainer.json
 *.yaml
 !templates/**/*.yaml
