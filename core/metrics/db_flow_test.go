@@ -40,6 +40,16 @@ func TestAttribute(t *testing.T) {
 			map[string]float64{"pv>home": 1, "battery>home": 1, "battery>loadpoint": 1, "grid>battery": 1},
 		},
 		{
+			"import and export in one slot, export before home",
+			flowSlot{PV: 5, GridIn: 2, GridOut: 3, Home: 4},
+			map[string]float64{"pv>export": 3, "pv>home": 2, "grid>home": 2},
+		},
+		{
+			"battery covers the export pv cannot",
+			flowSlot{PV: 1, BatOut: 2, GridIn: 1, GridOut: 2, Home: 2},
+			map[string]float64{"pv>export": 1, "battery>export": 1, "battery>home": 1, "grid>home": 1},
+		},
+		{
 			"grid never exports, mismatch dropped",
 			flowSlot{GridIn: 2, GridOut: 1, Home: 1},
 			map[string]float64{"grid>home": 1},
@@ -65,7 +75,7 @@ func TestQueryFlow(t *testing.T) {
 	base := time.Date(2026, 9, 1, 12, 0, 0, 0, time.Now().Location())
 	slot := func(i int) time.Time { return base.Add(time.Duration(i) * 15 * time.Minute) }
 
-	// slot 0: sunny, export; slot 1: night, grid import with unattributed export; slot 2: outside range
+	// slot 0: sunny, export; slot 1: night, battery exports while the grid is imported; slot 2: outside range
 	require.NoError(t, persist(entities[PV], slot(0), 2, 0, nil, false))
 	require.NoError(t, persist(entities[Home], slot(0), 0.5, 0, nil, false))
 	require.NoError(t, persist(entities[Battery], slot(0), 0.5, 0, nil, false))
@@ -86,13 +96,14 @@ func TestQueryFlow(t *testing.T) {
 	res, err := QueryFlow(slot(0), slot(2))
 	require.NoError(t, err)
 
-	// only slot 1 is priced: battery to home at feed-in 0.1, grid to loadpoint at 0.3
+	// only slot 1 is priced: grid to home and loadpoint at 0.3, half the loadpoint stays uncovered
 	assert.Equal(t, []Flow{
 		{From: PV, To: Home, Energy: 0.5},
 		{From: PV, To: Battery, Energy: 0.5},
 		{From: PV, To: Export, Energy: 1},
-		{From: Battery, To: Home, Energy: 0.5, Cost: 0.05, PricedEnergy: 0.5},
-		{From: Grid, To: Loadpoint, Energy: 1, Cost: 0.3, PricedEnergy: 1},
+		{From: Battery, To: Export, Energy: 0.5},
+		{From: Grid, To: Home, Energy: 0.5, Cost: 0.15, PricedEnergy: 0.5},
+		{From: Grid, To: Loadpoint, Energy: 0.5, Cost: 0.15, PricedEnergy: 0.5},
 	}, res.Flows)
 
 	require.NotNil(t, res.Cost)

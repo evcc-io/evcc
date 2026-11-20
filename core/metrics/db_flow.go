@@ -93,17 +93,20 @@ func (f *flowSum) add(s flowSlot, from string, energy float64) {
 var (
 	flowSources = []string{PV, Battery, Grid}
 	flowSinks   = []string{Home, Battery, Loadpoint, Export}
+	// only own energy can be exported. Serving home first would take it away
+	// and drop the import of a slot that has both.
+	attributionSinks = []string{Export, Home, Battery, Loadpoint}
 )
 
 // attribute distributes the slot's sources onto its sinks in priority order:
-// pv before battery before grid, home before battery charge before loadpoints
-// before export. Mirrors the live greenShare rule. Any balance mismatch is dropped.
+// pv before battery before grid, export before home before battery charge
+// before loadpoints. Any balance mismatch is dropped.
 func attribute(s flowSlot, add func(from, to string, energy float64)) {
 	src := map[string]float64{PV: s.PV, Battery: s.BatOut, Grid: s.GridIn}
 	dst := map[string]float64{Home: s.Home, Battery: s.BatIn, Loadpoint: s.Loadpoint, Export: s.GridOut}
 
 	for _, from := range flowSources {
-		for _, to := range flowSinks {
+		for _, to := range attributionSinks {
 			if from == to || (from == Grid && to == Export) {
 				continue
 			}
