@@ -30,6 +30,7 @@ func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]any) (api.C
 		embed                   `mapstructure:",squash"`
 		Boost                   config.Typed
 		Dim                     *config.Typed
+		DimPower                float64 // optional
 		measurement.Temperature `mapstructure:",squash"`
 		measurement.Energy      `mapstructure:",squash"`
 	}{
@@ -60,6 +61,7 @@ func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]any) (api.C
 	if err != nil {
 		return nil, err
 	}
+	res.dimPower = cc.DimPower
 
 	powerG, energyG, returnG, err := cc.Energy.Configure(ctx)
 	if err != nil {

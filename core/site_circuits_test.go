@@ -140,7 +140,11 @@ func (m *dimmableMeter) Dimmed() (bool, error) {
 	return m.dimmed, m.getErr
 }
 
-func (m *dimmableMeter) Dim(dim bool) error {
+func (m *dimmableMeter) DimPower() float64 {
+	return 0
+}
+
+func (m *dimmableMeter) Dim(dim bool, _ float64) error {
 	m.dimCalls = append(m.dimCalls, dim)
 	if m.dimErr != nil {
 		return m.dimErr
@@ -160,23 +164,23 @@ func TestDimMetersCache(t *testing.T) {
 	m := &dimmableMeter{}
 	site := dimSite(m)
 
-	require.NoError(t, site.dimMeters(true))
+	require.NoError(t, site.dimMeters(dimState{active: true}))
 	assert.Equal(t, []bool{true}, m.dimCalls)
 	assert.Equal(t, 1, m.gets)
 
 	for range 3 {
-		require.NoError(t, site.dimMeters(true))
+		require.NoError(t, site.dimMeters(dimState{active: true}))
 	}
 	assert.Equal(t, []bool{true}, m.dimCalls)
 	assert.Equal(t, 1, m.gets)
 
-	require.NoError(t, site.dimMeters(false))
+	require.NoError(t, site.dimMeters(dimState{}))
 	assert.Equal(t, []bool{true, false}, m.dimCalls)
 
 	// failed write is retried
 	m.dimErr = errors.New("nope")
-	require.Error(t, site.dimMeters(true))
-	require.Error(t, site.dimMeters(true))
+	require.Error(t, site.dimMeters(dimState{active: true}))
+	require.Error(t, site.dimMeters(dimState{active: true}))
 	assert.Equal(t, []bool{true, false, true, true}, m.dimCalls)
 }
 
@@ -186,10 +190,10 @@ func TestDimMetersNotAvailable(t *testing.T) {
 	site := dimSite(m)
 
 	for range 3 {
-		require.NoError(t, site.dimMeters(true))
+		require.NoError(t, site.dimMeters(dimState{active: true}))
 	}
 	assert.Equal(t, []bool{true}, m.dimCalls)
 
-	require.NoError(t, site.dimMeters(false))
+	require.NoError(t, site.dimMeters(dimState{}))
 	assert.Equal(t, []bool{true, false}, m.dimCalls)
 }

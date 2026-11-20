@@ -89,8 +89,58 @@ func TestLPC_EGMessages_ConsumptionLimit(t *testing.T) {
 				Run(ackWrite).
 				Return(new(model.MsgCounterType), nil)
 
-			assert.NoError(t, c.dim(tc.dim))
+			assert.NoError(t, c.dim(tc.dim, 0))
 		})
+	}
+}
+
+// Dim writes the residual dim power while dimmed and 0W on release.
+func TestLPC_Dim_Limit(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		dim   bool
+		limit float64
+		want  ucapi.LoadLimit
+	}{
+		{"dimmed", true, 4200, ucapi.LoadLimit{Value: 4200, IsActive: true}},
+		{"released", false, 4200, ucapi.LoadLimit{Value: 0, IsActive: false}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c, lpc, _, entity := newEGMeter(t)
+			lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
+			lpc.EXPECT().WriteConsumptionLimit(entity, tc.want, mock.Anything).Run(ackWrite).Return(new(model.MsgCounterType), nil)
+
+			require.NoError(t, c.dim(tc.dim, tc.limit))
+
+			dimmed, limit := c.lastDimmed()
+			assert.Equal(t, tc.dim, dimmed)
+			assert.Equal(t, tc.want.Value, limit)
+		})
+	}
+}
+
+// A configured dim power is stated as failsafe limit after the initial limit.
+func TestLPC_FailsafeLimit(t *testing.T) {
+	c, lpc, _, entity := newEGMeter(t)
+	c.egLpcEntity = nil
+	c.dimPower = 4200
+
+	written := make(chan float64, 1)
+	lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
+	lpc.EXPECT().WriteConsumptionLimit(entity, mock.Anything, mock.Anything).Run(ackWrite).Return(new(model.MsgCounterType), nil)
+	lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCFailsafe).Return(true)
+	lpc.EXPECT().
+		WriteFailsafeConsumptionActivePowerLimit(entity, 4200.0).
+		Run(func(_ spineapi.EntityRemoteInterface, value float64) { written <- value }).
+		Return(new(model.MsgCounterType), nil)
+
+	c.UseCaseEvent(nil, entity, eglpc.UseCaseSupportUpdate)
+
+	select {
+	case value := <-written:
+		assert.Equal(t, 4200.0, value)
+	case <-time.After(time.Second):
+		t.Fatal("no failsafe limit written after connect")
 	}
 }
 
@@ -106,7 +156,7 @@ func TestLPC_Dim_WriteRejected(t *testing.T) {
 		}).
 		Return(new(model.MsgCounterType), nil)
 
-	assert.Error(t, c.dim(true))
+	assert.Error(t, c.dim(true, 0))
 }
 
 // Dim is gated: no announced LPC scenario, or no connected entity → ErrNotAvailable.
@@ -115,14 +165,14 @@ func TestLPC_Dim_Gating(t *testing.T) {
 		c, lpc, _, entity := newEGMeter(t)
 		lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(false)
 
-		assert.ErrorIs(t, c.dim(true), api.ErrNotAvailable)
+		assert.ErrorIs(t, c.dim(true, 0), api.ErrNotAvailable)
 	})
 
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _, _ := newEGMeter(t)
 		c.egLpcEntity = nil
 
-		assert.ErrorIs(t, c.dim(true), api.ErrNotAvailable)
+		assert.ErrorIs(t, c.dim(true, 0), api.ErrNotAvailable)
 	})
 }
 

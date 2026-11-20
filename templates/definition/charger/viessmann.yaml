@@ -167,12 +167,14 @@ params:
       en: Parameter only exists for historic reasons. Target Temperature can be configured in the ViCare app (not supported by all devices)
     default: 45
     type: int
+  - name: dimpower
 auth:
   type: viessmann
   params: [clientid, redirecturi, gateway_serial]
 render: |
   {{- $device := printf "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/%s/gateways/%s/devices/%s" .installation_id .gateway_serial .device_id }}
   type: sgready
+  dimpower: {{ .dimpower }}
   getmode:
     source: http
     # Read the whole device feature list in ONE request. All GET readers below use

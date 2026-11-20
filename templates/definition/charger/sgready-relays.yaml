@@ -25,8 +25,10 @@ params:
     description:
       de: Dimm-Relais
       en: Dim relay
+  - name: dimpower
 render: |
   type: sgready-relay
+  dimpower: {{ .dimpower }}
   boost:
     type: device
     name: {{ .boost }}

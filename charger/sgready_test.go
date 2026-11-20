@@ -17,13 +17,13 @@ func TestSgReadyDimCachesMode(t *testing.T) {
 	}, nil, nil)
 	require.NoError(t, err)
 
-	require.NoError(t, wb.Dim(true))
+	require.NoError(t, wb.Dim(true, 0))
 	assert.Equal(t, Dim, mode)
 	dimmed, err := wb.Dimmed()
 	require.NoError(t, err)
 	assert.True(t, dimmed)
 
-	require.NoError(t, wb.Dim(false))
+	require.NoError(t, wb.Dim(false, 0))
 	assert.Equal(t, Normal, mode)
 	dimmed, err = wb.Dimmed()
 	require.NoError(t, err)

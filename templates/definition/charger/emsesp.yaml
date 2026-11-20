@@ -99,8 +99,10 @@ params:
       en: "Bitmask for SG4 in dim mode"
   - name: cache
     default: 1s
+  - name: dimpower
 render: |
   type: sgready
+  dimpower: {{ .dimpower }}
   power:
     source: http
     uri: http://{{ .host }}/api/boiler

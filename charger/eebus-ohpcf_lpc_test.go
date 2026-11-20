@@ -59,7 +59,7 @@ func TestOHPCF_LPC_EGMessages_ConsumptionLimit(t *testing.T) {
 				}).
 				Return(new(model.MsgCounterType), nil)
 
-			assert.NoError(t, c.dim(tc.dim))
+			assert.NoError(t, c.dim(tc.dim, 0))
 		})
 	}
 }
@@ -90,6 +90,24 @@ func TestOHPCF_LPC_InitialLimit(t *testing.T) {
 	}
 }
 
+// Dim writes the residual dim power while dimmed.
+func TestOHPCF_LPC_Dim_Limit(t *testing.T) {
+	c, lpc, entity := newOHPCFEGCharger(t)
+	lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
+	lpc.EXPECT().
+		WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 4200, IsActive: true}, mock.Anything).
+		Run(func(_ spineapi.EntityRemoteInterface, _ ucapi.LoadLimit, cb func(model.ResultDataType, model.MsgCounterType)) {
+			cb(model.ResultDataType{}, 0)
+		}).
+		Return(new(model.MsgCounterType), nil)
+
+	assert.NoError(t, c.dim(true, 4200))
+
+	dimmed, limit := c.lastDimmed()
+	assert.True(t, dimmed)
+	assert.Equal(t, 4200.0, limit)
+}
+
 // A rejected write (NACK) must surface as an error, not silent success.
 func TestOHPCF_LPC_Dim_WriteRejected(t *testing.T) {
 	c, lpc, entity := newOHPCFEGCharger(t)
@@ -102,7 +120,7 @@ func TestOHPCF_LPC_Dim_WriteRejected(t *testing.T) {
 		}).
 		Return(new(model.MsgCounterType), nil)
 
-	assert.Error(t, c.dim(true))
+	assert.Error(t, c.dim(true, 0))
 }
 
 // Dim is gated: no announced LPC scenario, or no connected entity → ErrNotAvailable.
@@ -111,14 +129,14 @@ func TestOHPCF_LPC_Dim_Gating(t *testing.T) {
 		c, lpc, entity := newOHPCFEGCharger(t)
 		lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(false)
 
-		assert.ErrorIs(t, c.dim(true), api.ErrNotAvailable)
+		assert.ErrorIs(t, c.dim(true, 0), api.ErrNotAvailable)
 	})
 
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _ := newOHPCFEGCharger(t)
 		c.egLpcEntity = nil
 
-		assert.ErrorIs(t, c.dim(true), api.ErrNotAvailable)
+		assert.ErrorIs(t, c.dim(true, 0), api.ErrNotAvailable)
 	})
 }
 

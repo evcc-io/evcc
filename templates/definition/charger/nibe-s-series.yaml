@@ -42,8 +42,10 @@ params:
     description:
       de: Leistungssteuerung
       en: power limitation
+  - name: dimpower
 render: |
   type: sgready
+  dimpower: {{ .dimpower }}
   setmode:
     source: map
     values:

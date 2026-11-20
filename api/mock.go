@@ -1189,17 +1189,31 @@ func (m *MockDimmer) EXPECT() *MockDimmerMockRecorder {
 }
 
 // Dim mocks base method.
-func (m *MockDimmer) Dim(arg0 bool) error {
+func (m *MockDimmer) Dim(dim bool, limit float64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Dim", arg0)
+	ret := m.ctrl.Call(m, "Dim", dim, limit)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Dim indicates an expected call of Dim.
-func (mr *MockDimmerMockRecorder) Dim(arg0 any) *gomock.Call {
+func (mr *MockDimmerMockRecorder) Dim(dim, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dim", reflect.TypeOf((*MockDimmer)(nil).Dim), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dim", reflect.TypeOf((*MockDimmer)(nil).Dim), dim, limit)
+}
+
+// DimPower mocks base method.
+func (m *MockDimmer) DimPower() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DimPower")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// DimPower indicates an expected call of DimPower.
+func (mr *MockDimmerMockRecorder) DimPower() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DimPower", reflect.TypeOf((*MockDimmer)(nil).DimPower))
 }
 
 // Dimmed mocks base method.

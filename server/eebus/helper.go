@@ -9,6 +9,8 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	eebusapi "github.com/enbility/eebus-go/api"
+	ucapi "github.com/enbility/eebus-go/usecases/api"
+	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -59,6 +61,18 @@ func AssertLimit(ctx context.Context, log *util.Logger, write func() error) {
 	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(limitTimeout))
 	if err := backoff.Retry(write, backoff.WithContext(bo, ctx)); err != nil && ctx.Err() == nil {
 		log.DEBUG.Printf("assert limit: %v", err)
+	}
+}
+
+// WriteFailsafeConsumptionLimit sets the limit the Controllable System falls back to when it
+// loses the Energy Guard heartbeat. A zero power keeps the device default.
+func WriteFailsafeConsumptionLimit(log *util.Logger, uc ucapi.EgLPCInterface, entity spineapi.EntityRemoteInterface, power float64) {
+	if power <= 0 || entity == nil || !uc.IsScenarioAvailableAtEntity(entity, LPCFailsafe) {
+		return
+	}
+
+	if _, err := uc.WriteFailsafeConsumptionActivePowerLimit(entity, power); err != nil {
+		log.WARN.Printf("failsafe consumption limit: %v", err)
 	}
 }
 

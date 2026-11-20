@@ -23,6 +23,7 @@ params:
   - name: power
     type: bool
     deprecated: true
+  - name: dimpower
 render: |
   {{- include "stiebel-wpm-base" . }}
   {{- if .power }}
