@@ -31,8 +31,8 @@ func TestDailyRollup(t *testing.T) {
 		require.NoError(t, persist(entities[Home], ts, 0.5, 0, nil, false))
 		require.NoError(t, persist(entities[Loadpoint], ts, 1, 0, nil, false))
 		require.NoError(t, persist(entities[Grid], ts, 0.75, 0.25, nil, false))
-		// binary fractions add up exactly in any order
-		require.NoError(t, PersistTariffs(ts, new(0.25), new(0.125), new(512.0), nil))
+		// binary fractions add up exactly in any order, also the co2 per kWh over 1e3
+		require.NoError(t, PersistTariffs(ts, new(0.25), new(0.125), new(500.0), nil))
 	}
 
 	query := func() ([]Series, FlowResult) {
