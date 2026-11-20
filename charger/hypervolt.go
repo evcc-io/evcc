@@ -31,30 +31,36 @@ const (
 	hypervoltSyncURI   = "wss://api.hypervolt.co.uk/ws/charger/%s/sync"
 	hypervoltOrigin    = "https://hypervolt.co.uk"
 	hypervoltClientID  = "home-assistant"
-	hypervoltStaleness = 5 * time.Minute
-	hypervoltReconnect = 10 * time.Second
+	hypervoltStaleness = 2 * time.Minute  // tolerated disconnect before data is considered stale
+	hypervoltReconnect = 10 * time.Second // delay between reconnect attempts
+	hypervoltPing      = time.Minute      // websocket keepalive
+	hypervoltSettle    = 3 * time.Second  // wait for an initial session push after connecting
 )
 
 // Hypervolt charger implementation
 type Hypervolt struct {
-	log *util.Logger
-	ts  oauth2.TokenSource
-	id  string
+	log     *util.Logger
+	ts      oauth2.TokenSource
+	id      string
+	timeout time.Duration
+	cancel  context.CancelFunc
 
-	mu       sync.RWMutex
-	conn     *websocket.Conn
-	pending  map[string]string // message id -> method
-	updated  time.Time
-	pilot    string // A, B, C
-	charging *bool
-	released *bool
-	current  int64   // max current in mA
-	power    float64 // W
-	energy   float64 // Wh, current session
+	mu           sync.RWMutex
+	conn         *websocket.Conn // set only while authenticated
+	disconnected time.Time       // zero while connected
+	pending      map[string]chan error
+	pilot        string // A, B, C
+	charging     *bool
+	released     *bool
+	current      int64   // max current in mA
+	power        float64 // W
+	energy       float64 // Wh, current session
+	session      bool    // session data received since connect
 
 	writeMu sync.Mutex
 	ready   chan struct{}
 	once    sync.Once
+	initErr chan error
 }
 
 func init() {
@@ -87,9 +93,8 @@ func NewHypervoltFromConfig(ctx context.Context, other map[string]any) (api.Char
 func NewHypervolt(ctx context.Context, user, password, id, clientID string, timeout time.Duration) (*Hypervolt, error) {
 	log := util.NewLogger("hypervolt").Redact(user, password)
 
-	client := request.NewClient(log)
-	client.Timeout = timeout
-	tctx := context.WithValue(ctx, oauth2.HTTPClient, client)
+	// token requests use an unlogged client so token responses never reach the trace log
+	tctx := context.WithValue(ctx, oauth2.HTTPClient, &http.Client{Timeout: timeout})
 
 	oc := &oauth2.Config{
 		ClientID: clientID,
@@ -102,32 +107,41 @@ func NewHypervolt(ctx context.Context, user, password, id, clientID string, time
 	if err != nil {
 		return nil, fmt.Errorf("login: %w", err)
 	}
+	log.Redact(token.AccessToken, token.RefreshToken)
 
 	wb := &Hypervolt{
 		log:     log,
 		ts:      oauth2.ReuseTokenSource(token, oauth.Redacted(log, pts)),
 		id:      id,
-		pending: make(map[string]string),
+		timeout: timeout,
+		pending: make(map[string]chan error),
 		ready:   make(chan struct{}),
+		initErr: make(chan error, 1),
 	}
 
 	if wb.id == "" {
-		if wb.id, err = wb.chargerID(client); err != nil {
+		if wb.id, err = wb.chargerID(timeout); err != nil {
 			return nil, err
 		}
 	}
 
-	go wb.run(ctx)
+	// the client runs for the charger's lifetime; cancel stops it if startup fails
+	var rctx context.Context
+	rctx, wb.cancel = context.WithCancel(ctx)
+	go wb.run(rctx)
 
 	select {
 	case <-wb.ready:
+		return wb, nil
+	case err = <-wb.initErr:
 	case <-time.After(timeout):
-		return nil, api.ErrTimeout
+		err = api.ErrTimeout
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		err = ctx.Err()
 	}
 
-	return wb, nil
+	wb.cancel()
+	return nil, err
 }
 
 // hypervoltTokenSource refreshes the token and falls back to a password login
@@ -159,11 +173,12 @@ func (s *hypervoltTokenSource) Token() (*oauth2.Token, error) {
 	return token, err
 }
 
-func (wb *Hypervolt) chargerID(client *http.Client) (string, error) {
+func (wb *Hypervolt) chargerID(timeout time.Duration) (string, error) {
+	// unlogged transport: the account response contains personal data (name, email, picture)
 	helper := request.NewHelper(wb.log)
 	helper.Client = &http.Client{
-		Timeout:   client.Timeout,
-		Transport: &oauth2.Transport{Source: wb.ts, Base: client.Transport},
+		Timeout:   timeout,
+		Transport: &oauth2.Transport{Source: wb.ts, Base: http.DefaultTransport},
 	}
 
 	var res struct {
@@ -191,8 +206,27 @@ func (wb *Hypervolt) chargerID(client *http.Client) (string, error) {
 }
 
 func (wb *Hypervolt) run(ctx context.Context) {
-	for ctx.Err() == nil {
-		if err := wb.connect(ctx); err != nil && ctx.Err() == nil {
+	for {
+		err := wb.connect(ctx)
+
+		wb.mu.Lock()
+		wb.conn = nil
+		if wb.disconnected.IsZero() {
+			wb.disconnected = time.Now()
+		}
+		wb.failPending(errors.New("connection closed"))
+		wb.mu.Unlock()
+
+		if ctx.Err() != nil {
+			return
+		}
+
+		if err != nil {
+			// report the first failure to the constructor, log the rest
+			select {
+			case wb.initErr <- err:
+			default:
+			}
 			wb.log.ERROR.Println(err)
 		}
 
@@ -210,7 +244,7 @@ func (wb *Hypervolt) connect(ctx context.Context) error {
 		return fmt.Errorf("token: %w", err)
 	}
 
-	dctx, cancel := context.WithTimeout(ctx, request.Timeout)
+	dctx, cancel := context.WithTimeout(ctx, wb.timeout)
 	defer cancel()
 
 	// Authenticate via the login message, not an Authorization header: with header
@@ -225,36 +259,102 @@ func (wb *Hypervolt) connect(ctx context.Context) error {
 	conn.SetReadLimit(1 << 20)
 	defer conn.CloseNow()
 
+	cctx, ccancel := context.WithCancel(ctx)
+	defer ccancel()
+
 	wb.mu.Lock()
-	wb.conn = conn
-	wb.pending = make(map[string]string)
+	wb.session = false
 	wb.mu.Unlock()
 
-	defer func() {
-		wb.mu.Lock()
-		wb.conn = nil
-		wb.mu.Unlock()
-	}()
-
-	if err := wb.send(ctx, "login", map[string]any{"token": token.AccessToken, "version": 3}); err != nil {
+	// login on the private connection; it is published for commands only once authenticated
+	_, loginDone, err := wb.write(cctx, conn, "login", map[string]any{"token": token.AccessToken, "version": 3})
+	if err != nil {
 		return err
 	}
 
+	go wb.keepalive(cctx, conn)
+
 	for {
-		_, b, err := conn.Read(ctx)
+		_, b, err := conn.Read(cctx)
 		if err != nil {
 			return fmt.Errorf("read: %w", err)
 		}
 
-		wb.log.TRACE.Printf("recv: %s", b)
-
-		if err := wb.handle(ctx, b); err != nil {
+		if err := wb.handle(b); err != nil {
 			return err
+		}
+
+		if loginDone != nil {
+			select {
+			case err := <-loginDone:
+				loginDone = nil
+				if err != nil {
+					return fmt.Errorf("login: %w", err)
+				}
+				if err := wb.authenticated(cctx, conn); err != nil {
+					return err
+				}
+			default:
+			}
 		}
 	}
 }
 
-func (wb *Hypervolt) send(ctx context.Context, method string, params any) error {
+// authenticated publishes the connection and requests the initial state
+func (wb *Hypervolt) authenticated(ctx context.Context, conn *websocket.Conn) error {
+	wb.mu.Lock()
+	wb.conn = conn
+	wb.disconnected = time.Time{}
+	wb.mu.Unlock()
+
+	_, done, err := wb.write(ctx, conn, "sync.snapshot", nil)
+	if err != nil {
+		return err
+	}
+
+	// a rejected snapshot aborts startup with the server's error and drops the connection
+	go func() {
+		select {
+		case err := <-done:
+			if err != nil {
+				err = fmt.Errorf("snapshot: %w", err)
+				select {
+				case wb.initErr <- err:
+				default:
+				}
+				wb.log.ERROR.Println(err)
+				conn.CloseNow()
+			}
+		case <-ctx.Done():
+		}
+	}()
+
+	// signal readiness once the initial session push has arrived, or after a short grace period
+	time.AfterFunc(hypervoltSettle, wb.signalReady)
+
+	return nil
+}
+
+func (wb *Hypervolt) keepalive(ctx context.Context, conn *websocket.Conn) {
+	for tick := time.Tick(hypervoltPing); ; {
+		select {
+		case <-ctx.Done():
+			return
+		case <-tick:
+			pctx, cancel := context.WithTimeout(ctx, wb.timeout)
+			err := conn.Ping(pctx)
+			cancel()
+			if err != nil {
+				wb.log.DEBUG.Println("ping:", err)
+				conn.CloseNow()
+				return
+			}
+		}
+	}
+}
+
+// write sends a request on conn and registers it for its reply
+func (wb *Hypervolt) write(ctx context.Context, conn *websocket.Conn, method string, params any) (string, chan error, error) {
 	id := strconv.FormatInt(time.Now().UnixNano(), 10)
 
 	msg := map[string]any{"jsonrpc": "2.0", "id": id, "method": method}
@@ -264,28 +364,76 @@ func (wb *Hypervolt) send(ctx context.Context, method string, params any) error 
 
 	b, err := json.Marshal(msg)
 	if err != nil {
-		return err
+		return "", nil, err
 	}
 
-	wb.writeMu.Lock()
-	defer wb.writeMu.Unlock()
+	done := make(chan error, 1)
 
 	wb.mu.Lock()
-	conn := wb.conn
-	if conn != nil {
-		wb.pending[id] = method
-	}
+	wb.pending[id] = done
 	wb.mu.Unlock()
+
+	wb.log.TRACE.Printf("send: %s", method)
+
+	wb.writeMu.Lock()
+	err = conn.Write(ctx, websocket.MessageText, b)
+	wb.writeMu.Unlock()
+
+	if err != nil {
+		wb.mu.Lock()
+		delete(wb.pending, id)
+		wb.mu.Unlock()
+		return "", nil, err
+	}
+
+	return id, done, nil
+}
+
+// call sends a command on the authenticated connection and waits for the server's reply
+func (wb *Hypervolt) call(method string, params any) error {
+	wb.mu.RLock()
+	conn := wb.conn
+	wb.mu.RUnlock()
 
 	if conn == nil {
 		return errors.New("not connected")
 	}
 
-	if method != "login" {
-		wb.log.TRACE.Printf("send: %s", b)
+	ctx, cancel := context.WithTimeout(context.Background(), wb.timeout)
+	defer cancel()
+
+	id, done, err := wb.write(ctx, conn, method, params)
+	if err != nil {
+		return err
 	}
 
-	return conn.Write(ctx, websocket.MessageText, b)
+	select {
+	case err := <-done:
+		return err
+	case <-ctx.Done():
+		wb.mu.Lock()
+		delete(wb.pending, id)
+		wb.mu.Unlock()
+		return api.ErrTimeout
+	}
+}
+
+// failPending completes all outstanding requests with err; requires wb.mu
+func (wb *Hypervolt) failPending(err error) {
+	for id, done := range wb.pending {
+		done <- err
+		delete(wb.pending, id)
+	}
+}
+
+func (wb *Hypervolt) signalReady() {
+	wb.mu.RLock()
+	ok := wb.released != nil
+	wb.mu.RUnlock()
+
+	if ok {
+		wb.once.Do(func() { close(wb.ready) })
+	}
 }
 
 type hypervoltMessage struct {
@@ -293,67 +441,87 @@ type hypervoltMessage struct {
 	Method string          `json:"method"`
 	Result json.RawMessage `json:"result"`
 	Params json.RawMessage `json:"params"`
-	Error  json.RawMessage `json:"error"`
+	Error  *struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	} `json:"error"`
 }
 
 // handle processes a single websocket message
-func (wb *Hypervolt) handle(ctx context.Context, b []byte) error {
+func (wb *Hypervolt) handle(b []byte) error {
 	var msg hypervoltMessage
 	if err := json.Unmarshal(b, &msg); err != nil {
 		return nil // ignore unknown messages
 	}
 
-	method, data := msg.Method, msg.Params
-	if msg.Result != nil {
-		data = msg.Result
-
+	// reply to one of our requests
+	if len(msg.ID) > 0 && msg.Method == "" {
 		var id string
 		if err := json.Unmarshal(msg.ID, &id); err != nil {
 			id = string(msg.ID)
 		}
 
 		wb.mu.Lock()
-		if m, ok := wb.pending[id]; ok {
-			method = m
-			delete(wb.pending, id)
-		}
+		done, ok := wb.pending[id]
+		delete(wb.pending, id)
 		wb.mu.Unlock()
-	}
 
-	if len(msg.Error) > 0 {
-		wb.log.WARN.Printf("error: %s", msg.Error)
+		var err error
+		switch {
+		case msg.Error != nil:
+			err = fmt.Errorf("%s (%d)", msg.Error.Message, msg.Error.Code)
+			wb.log.DEBUG.Printf("recv: error %v", err)
+		case isHypervoltLoginResult(msg.Result) && !hypervoltAuthenticated(msg.Result):
+			err = errors.New("not authenticated")
+		default:
+			wb.log.TRACE.Printf("recv: reply %s", id)
+			wb.applySync(msg.Result)
+		}
+
+		if ok {
+			done <- err
+		}
+
 		return nil
 	}
 
-	switch method {
-	case "login":
-		var res struct {
-			Authenticated bool `json:"authenticated"`
-		}
-		if err := json.Unmarshal(data, &res); err != nil || !res.Authenticated {
-			return errors.New("websocket login failed")
-		}
-		return wb.send(ctx, "sync.snapshot", nil)
+	wb.log.TRACE.Printf("recv: %s", msg.Method)
 
+	switch msg.Method {
 	case "sync.snapshot", "sync.apply":
-		wb.applySync(data)
+		wb.applySync(msg.Params)
 
 	case "get.session":
-		wb.applySession(data)
+		wb.applySession(msg.Params)
 
 	case "get.pilot_status":
 		var res struct {
 			PilotStatus string `json:"pilot_status"`
 		}
-		if json.Unmarshal(data, &res) == nil && res.PilotStatus != "" {
+		if json.Unmarshal(msg.Params, &res) == nil && res.PilotStatus != "" {
 			wb.mu.Lock()
 			wb.pilot = res.PilotStatus
-			wb.updated = time.Now()
 			wb.mu.Unlock()
 		}
 	}
 
 	return nil
+}
+
+func isHypervoltLoginResult(data json.RawMessage) bool {
+	var res map[string]json.RawMessage
+	if json.Unmarshal(data, &res) != nil {
+		return false
+	}
+	_, ok := res["authenticated"]
+	return ok
+}
+
+func hypervoltAuthenticated(data json.RawMessage) bool {
+	var res struct {
+		Authenticated bool `json:"authenticated"`
+	}
+	return json.Unmarshal(data, &res) == nil && res.Authenticated
 }
 
 // applySync handles sync payloads which are either an object or a list of single-key objects
@@ -368,8 +536,6 @@ func (wb *Hypervolt) applySync(data json.RawMessage) {
 	}
 
 	wb.mu.Lock()
-	defer wb.mu.Unlock()
-
 	for _, item := range items {
 		if v, ok := item["release_state"]; ok {
 			var s string
@@ -382,11 +548,12 @@ func (wb *Hypervolt) applySync(data json.RawMessage) {
 			_ = json.Unmarshal(v, &wb.current)
 		}
 	}
+	session := wb.session
+	wb.mu.Unlock()
 
-	wb.updated = time.Now()
-
-	if wb.released != nil {
-		wb.once.Do(func() { close(wb.ready) })
+	// session already seen: release state was the missing piece
+	if session {
+		wb.signalReady()
 	}
 }
 
@@ -401,8 +568,6 @@ func (wb *Hypervolt) applySession(data json.RawMessage) {
 	}
 
 	wb.mu.Lock()
-	defer wb.mu.Unlock()
-
 	if res.Charging != nil {
 		wb.charging = res.Charging
 	}
@@ -412,11 +577,20 @@ func (wb *Hypervolt) applySession(data json.RawMessage) {
 	if res.EvPower != nil {
 		wb.power = *res.EvPower
 	}
-	wb.updated = time.Now()
+	first := !wb.session
+	wb.session = true
+	wb.mu.Unlock()
+
+	// the initial session reading makes the startup energy baseline correct
+	if first {
+		wb.signalReady()
+	}
 }
 
+// stale returns an error only if the connection has been down for too long.
+// An idle charger sends no updates, so its last state stays valid while connected.
 func (wb *Hypervolt) stale() error {
-	if time.Since(wb.updated) > hypervoltStaleness {
+	if !wb.disconnected.IsZero() && time.Since(wb.disconnected) > hypervoltStaleness {
 		return api.ErrTimeout
 	}
 	return nil
@@ -461,7 +635,7 @@ func (wb *Hypervolt) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Hypervolt) Enable(enable bool) error {
-	return wb.send(context.Background(), "sync.apply", map[string]any{"release": !enable})
+	return wb.call("sync.apply", map[string]any{"release": !enable})
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -473,7 +647,7 @@ var _ api.ChargerEx = (*Hypervolt)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Hypervolt) MaxCurrentMillis(current float64) error {
-	return wb.send(context.Background(), "sync.apply", map[string]any{"max_current": int64(current * 1e3)})
+	return wb.call("sync.apply", map[string]any{"max_current": int64(current * 1e3)})
 }
 
 var _ api.CurrentGetter = (*Hypervolt)(nil)
