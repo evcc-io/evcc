@@ -1,9 +1,13 @@
 version: 2
 updates:
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directories:
+      - "/"
+      - "/.github/actions/*"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 7
     labels:
       - "infrastructure"
     # init and analyze must run the same version, SHA pins make them separate dependencies
@@ -15,6 +19,8 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 7
     labels:
       - "infrastructure"
   - package-ecosystem: "gomod"
@@ -36,5 +42,7 @@ updates:
     directory: "/.github"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 7
     labels:
       - "infrastructure"

@@ -1,0 +1,60 @@
+template: sonoff-pro-3pct120
+products:
+  - brand: SONOFF
+    description:
+      generic: Pro-3PCT120
+requirements:
+  description:
+    de: Benötigt ein Gerät mit SONOFF RPC API. Das RPC-Passwort wird in der lokalen Web-Oberfläche des Geräts vergeben.
+    en: Requires a device with SONOFF RPC API. The RPC password is set in the device's local web interface.
+params:
+  - name: usage
+    choice: ["grid", "charge", "pv"]
+  - name: host
+  - name: user
+    default: admin
+  - name: password
+  - name: cache
+    default: 1s
+render: |
+  {{- define "getter" }}
+  source: http
+  uri: http://{{ .host }}/rpc/EnergyMeter.GetStatus?id=0
+  auth:
+    type: digest
+    user: {{ .user }}
+    password: {{ .password }}
+  cache: {{ .cache }}
+  {{- end }}
+  {{- $sign := "" }}{{ if eq .usage "pv" }}{{ $sign = "-" }}{{ end }}
+  type: custom
+  power:
+    {{- include "getter" . | indent 2 }}
+    jq: .result.metrics.total_power
+    scale: {{ $sign }}1
+  energy:
+    {{- include "getter" . | indent 2 }}
+    jq: .result.metrics.total_energy.{{ if eq .usage "pv" }}reverse{{ else }}forward{{ end }}
+    scale: 0.001
+  returnenergy:
+    {{- include "getter" . | indent 2 }}
+    jq: .result.metrics.total_energy.{{ if eq .usage "pv" }}forward{{ else }}reverse{{ end }}
+    scale: 0.001
+  voltages:
+  {{- range list "a" "b" "c" }}
+    - {{ include "getter" $ | indent 4 | trim }}
+      jq: .result.metrics.phase_{{ . }}.voltage
+      scale: 0.01
+  {{- end }}
+  currents:
+  {{- range list "a" "b" "c" }}
+    - {{ include "getter" $ | indent 4 | trim }}
+      jq: .result.metrics.phase_{{ . }}.current
+      scale: 0.01
+  {{- end }}
+  powers:
+  {{- range list "a" "b" "c" }}
+    - {{ include "getter" $ | indent 4 | trim }}
+      jq: .result.metrics.phase_{{ . }}.active_power
+      scale: {{ $sign }}1
+  {{- end }}

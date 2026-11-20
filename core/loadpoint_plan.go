@@ -103,6 +103,10 @@ func (lp *Loadpoint) unsampledSoc(v api.Vehicle, estimator *soc.Estimator) (floa
 		return 0, true
 	}
 
+	if v.Capacity() <= 0 {
+		return 0, false
+	}
+
 	return lp.getChargedEnergy() / (v.Capacity() * 1e3 / soc.ChargeEfficiency) * 100, true
 }
 

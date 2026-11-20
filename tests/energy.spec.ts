@@ -178,8 +178,12 @@ test.describe("page", () => {
     await chart.hover({ position: { x: slotX(box.width, 48), y: box.height / 2 } });
     const tooltip = page.getByRole("table");
     await expect(tooltip).toContainText("12:00 – 12:15");
-    await expect(tooltip.getByRole("row", { name: "Production" })).toContainText("8.0 kW");
-    await expect(tooltip.getByRole("row", { name: "Forecast" })).toContainText("6.4 kW");
+    await expect(
+      tooltip.getByRole("row", { name: "Production 2.0 kWh 8.0 kW", exact: true })
+    ).toBeVisible();
+    await expect(
+      tooltip.getByRole("row", { name: "Forecast 1.6 kWh 6.4 kW", exact: true })
+    ).toBeVisible();
   });
 
   test("battery soc below the bars", async ({ page }) => {
@@ -193,8 +197,12 @@ test.describe("page", () => {
     // the bars and the soc panel share one tooltip
     for (const y of [box.height / 3, box.height - 40]) {
       await chart.hover({ position: { x, y } });
-      await expect(tooltip.getByRole("row", { name: "charged 2.0 kW", exact: true })).toBeVisible();
-      await expect(tooltip.getByRole("row", { name: "charge 50%", exact: true })).toBeVisible();
+      await expect(
+        tooltip.getByRole("row", { name: "Charged Discharged Charge", exact: true })
+      ).toBeVisible();
+      await expect(
+        tooltip.getByRole("row", { name: "500 Wh 0 Wh 50%", exact: true })
+      ).toBeVisible();
       await page.mouse.move(0, 0);
     }
   });

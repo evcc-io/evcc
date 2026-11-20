@@ -251,7 +251,7 @@
       "amount": "Amount",
       "asleep": "sleeping",
       "broker": "Broker",
-      "bucket": "Bucket",
+      "bucket": "Bucket / Database",
       "capacity": "Capacity",
       "chargeStatus": "Status",
       "chargeStatusA": "not connected",
@@ -502,7 +502,7 @@
     "influx": {
       "description": "Writes charging data and other metrics to InfluxDB. Use Grafana or other tools to visualize the data.",
       "descriptionToken": "Check the InfluxDB documentation to learn how to create one. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Bucket",
+      "labelBucket": "Bucket / Database",
       "labelCheckInsecure": "Allow self-signed certificates",
       "labelDatabase": "Database",
       "labelInsecure": "Certificate validation",
@@ -513,7 +513,7 @@
       "labelUser": "Username",
       "title": "InfluxDB",
       "v1Support": "Need support for InfluxDB 1.x?",
-      "v2Support": "Back to InfluxDB 2.x"
+      "v2Support": "Back to InfluxDB 2+"
     },
     "loadpoint": {
       "addCharger": {
@@ -974,7 +974,8 @@
       "manualLogin": "Or sign in manually at {url} in your browser using these credentials:",
       "noClients": "No clients yet. No one can connect yet.",
       "password": "Password",
-      "passwordOnce": "This password is shown only once. Scan the QR code or copy it now. You won't be able to see it again.",
+      "passwordOnce": "This password is shown only once. Scan the QR code, copy or print it now. You won't be able to see it again.",
+      "print": "Print / PDF",
       "privacy": "By enabling this feature, you agree to our {0}.",
       "privacyLink": "privacy policy",
       "qrInstall": "Install the evcc app for {ios} or {android}.",
@@ -1326,6 +1327,7 @@
     "price": {
       "average": "Average",
       "constant": "Price",
+      "estimate": "estimate",
       "lowestHour": "Cheapest hour",
       "range": "Range"
     },
@@ -1412,12 +1414,21 @@
     },
     "direction": {
       "battery": {
-        "energy": "charged",
-        "returnEnergy": "discharged"
+        "energy": "Charged",
+        "returnEnergy": "Discharged"
+      },
+      "consumer": {
+        "energy": "Consumed"
       },
       "grid": {
         "energy": "Import",
         "returnEnergy": "Export"
+      },
+      "heating": {
+        "energy": "Consumed"
+      },
+      "loadpoint": {
+        "energy": "Charged"
       },
       "meter": {
         "energy": "Energy",
@@ -1466,16 +1477,16 @@
     },
     "production": {
       "accuracy": "accuracy",
+      "deviation": "Deviation",
       "produced": "Produced",
       "remainingToday": "remaining today",
       "selfConsumed": "Self-consumed",
       "title": "Production"
     },
     "socTemp": {
-      "charged": "charged",
-      "soc": "charge",
-      "temperature": "temperature",
-      "used": "used"
+      "power": "Power",
+      "soc": "Charge",
+      "temperature": "Temperature"
     },
     "sources": {
       "battery": "Battery",
@@ -1620,8 +1631,7 @@
         "continuousCo2Description": "Selects the cleanest uninterrupted series of slots.",
         "continuousPriceDescription": "Selects the cheapest uninterrupted series of slots.",
         "disabledDescription": "Requires a dynamic tariff or CO₂ forecast.",
-        "label": "Optimization",
-        "optimizerDescription": "The {optimizer} selects the cheapest slots. May result in multiple starts and stops."
+        "label": "Optimization"
       },
       "planNumber": "Plan {number}",
       "precondition": {
@@ -1638,7 +1648,8 @@
       "repeatingPlans": "Repeating plans",
       "selectAll": "Select all",
       "strategy": {
-        "label": "Strategy"
+        "label": "Strategy",
+        "optimizerHint": "The {optimizer} does not take strategy settings into account yet and always chooses the cheapest slots. Limit automatic control to “Home battery” if you need them."
       },
       "time": "Time",
       "title": "Plan",
