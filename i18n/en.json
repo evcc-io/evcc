@@ -1413,12 +1413,21 @@
     },
     "direction": {
       "battery": {
-        "energy": "charged",
-        "returnEnergy": "discharged"
+        "energy": "Charged",
+        "returnEnergy": "Discharged"
+      },
+      "consumer": {
+        "energy": "Used"
       },
       "grid": {
         "energy": "Import",
         "returnEnergy": "Export"
+      },
+      "heating": {
+        "energy": "Used"
+      },
+      "loadpoint": {
+        "energy": "Charged"
       },
       "meter": {
         "energy": "Energy",
@@ -1473,10 +1482,9 @@
       "title": "Production"
     },
     "socTemp": {
-      "charged": "charged",
-      "soc": "charge",
-      "temperature": "temperature",
-      "used": "used"
+      "power": "Power",
+      "soc": "Charge",
+      "temperature": "Temperature"
     },
     "sources": {
       "battery": "Battery",
