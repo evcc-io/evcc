@@ -275,11 +275,7 @@ func rollup(end int64, final time.Time) (int64, error) {
 		return -1, nil
 	}
 
-	// replaces what another process may have rolled up for these days
 	if err := db.Instance.Transaction(func(tx *gorm.DB) error {
-		if err := deleteDaily(tx, from.Unix(), to.Unix()); err != nil {
-			return err
-		}
 		if len(sums) > 0 {
 			if err := tx.CreateInBatches(sums, 1000).Error; err != nil {
 				return err

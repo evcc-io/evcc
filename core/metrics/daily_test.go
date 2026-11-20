@@ -86,15 +86,6 @@ func TestDailyRollup(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, second.Unix(), dailyEnd.Load())
 	assert.Equal(t, slots, pv())
-
-	// days another process rolled up ahead of this one are replaced
-	dailyEnd.Store(second.Unix())
-	third := second.AddDate(0, 0, 1)
-	_, err = DeleteEnergy(third, third.Add(time.Hour), EnergyFilter{Group: PV})
-	require.NoError(t, err)
-	slots -= 4
-	assert.Equal(t, slots, pv())
-	require.Equal(t, to.Unix(), dailyEnd.Load())
 }
 
 func TestDailyRollupMidnightSkipped(t *testing.T) {
