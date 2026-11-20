@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -65,13 +66,17 @@ func AssertLimit(ctx context.Context, log *util.Logger, write func() error) {
 }
 
 // WriteFailsafeConsumptionLimit sets the limit the Controllable System falls back to when it
-// loses the Energy Guard heartbeat. A zero power keeps the device default.
-func WriteFailsafeConsumptionLimit(log *util.Logger, uc ucapi.EgLPCInterface, entity spineapi.EntityRemoteInterface, power float64) {
-	if power <= 0 || entity == nil || !uc.IsScenarioAvailableAtEntity(entity, LPCFailsafe) {
+// loses the Energy Guard heartbeat. A zero or invalid power keeps the device default.
+func WriteFailsafeConsumptionLimit(ctx context.Context, log *util.Logger, uc ucapi.EgLPCInterface, entity spineapi.EntityRemoteInterface, power float64) {
+	if !(power > 0) || math.IsInf(power, 0) || entity == nil || !uc.IsScenarioAvailableAtEntity(entity, LPCFailsafe) {
 		return
 	}
 
-	if _, err := uc.WriteFailsafeConsumptionActivePowerLimit(entity, power); err != nil {
+	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(limitTimeout))
+	if err := backoff.Retry(func() error {
+		_, err := uc.WriteFailsafeConsumptionActivePowerLimit(entity, power)
+		return err
+	}, backoff.WithContext(bo, ctx)); err != nil && ctx.Err() == nil {
 		log.WARN.Printf("failsafe consumption limit: %v", err)
 	}
 }

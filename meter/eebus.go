@@ -35,6 +35,7 @@ type EEBus struct {
 	scenarios maScenarios
 
 	mu          sync.Mutex
+	dimMu       sync.Mutex // serializes limit writes so a reconnect restatement cannot overtake a newer decision
 	maEntity    spineapi.EntityRemoteInterface
 	egLpcEntity spineapi.EntityRemoteInterface
 	egLppEntity spineapi.EntityRemoteInterface
@@ -290,6 +291,21 @@ func (c *EEBus) dimmed() (bool, error) {
 
 // dim sets or removes the consumption power limit
 func (c *EEBus) dim(dim bool, limit float64) error {
+	c.dimMu.Lock()
+	defer c.dimMu.Unlock()
+
+	return c.writeDim(dim, limit)
+}
+
+// restateDim writes the last applied limit again
+func (c *EEBus) restateDim() error {
+	c.dimMu.Lock()
+	defer c.dimMu.Unlock()
+
+	return c.writeDim(c.lastDimmed())
+}
+
+func (c *EEBus) writeDim(dim bool, limit float64) error {
 	var value float64
 	if dim {
 		value = limit

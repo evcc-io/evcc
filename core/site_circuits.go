@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
+	"math"
 	"slices"
 	"sync"
 
@@ -115,7 +116,16 @@ func (d dimState) limit(dimmer api.Dimmer) float64 {
 	if !d.active || d.fallback {
 		return 0
 	}
-	return dimmer.DimPower()
+	return dimPower(dimmer)
+}
+
+// dimPower returns the configured residual power, treating invalid values as 0W
+func dimPower(dimmer api.Dimmer) float64 {
+	p := dimmer.DimPower()
+	if !(p > 0) || math.IsInf(p, 0) {
+		return 0
+	}
+	return p
 }
 
 // dimmers returns all dimmable aux and ext meters and loadpoint chargers
@@ -128,7 +138,7 @@ func (site *Site) dimmers() []api.Dimmer {
 		}
 	}
 
-	for _, lp := range site.loadpoints {
+	for _, lp := range site.activeLoadpoints() {
 		if m, ok := api.Cap[api.Dimmer](lp.charger); ok {
 			res = append(res, m)
 		}
@@ -157,7 +167,7 @@ func (site *Site) hemsDimState() *dimState {
 
 	var total float64
 	for _, d := range site.dimmers() {
-		total += d.DimPower()
+		total += dimPower(d)
 	}
 
 	if total > *limit {
@@ -172,9 +182,22 @@ func (site *Site) hemsDimState() *dimState {
 }
 
 // dimMeters applies the HEMS dim state to all dimmable aux and ext meters.
-// Devices are only queried when the state changes or after a failed attempt.
+// Devices are only queried when the state or the set of dimmers changes, or after a failed attempt.
 func (site *Site) dimMeters(dim dimState) error {
-	if site.dimmed != nil && *site.dimmed == dim {
+	type namedDimmer struct {
+		name string
+		api.Dimmer
+	}
+
+	var dimmers []namedDimmer
+	for _, dev := range slices.Concat(site.auxMeters, site.extMeters) {
+		if m, ok := api.Cap[api.Dimmer](dev.Instance()); ok {
+			dimmers = append(dimmers, namedDimmer{deviceTitleOrName(dev), m})
+		}
+	}
+
+	// a dimmer appearing later, e.g. on EEBus reconnect, must receive the current state
+	if site.dimmed != nil && site.dimmed.state == dim && site.dimmed.devices == len(dimmers) {
 		return nil
 	}
 
@@ -182,16 +205,11 @@ func (site *Site) dimMeters(dim dimState) error {
 	site.dimmed = nil
 
 	var errs error
-	for _, dev := range slices.Concat(site.auxMeters, site.extMeters) {
-		m, ok := api.Cap[api.Dimmer](dev.Instance())
-		if !ok {
-			continue
-		}
-
+	for _, m := range dimmers {
 		// unreadable state: apply unconditionally
 		dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff())
 		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
-			errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
+			errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", m.name, err))
 			continue
 		}
 		// an active state is always written since the device may hold a different limit
@@ -201,17 +219,23 @@ func (site *Site) dimMeters(dim dimState) error {
 
 		limit := dim.limit(m)
 		if err := m.Dim(dim.active, limit); err == nil {
-			site.log.DEBUG.Printf("%s dim: %t (%.0fW)", deviceTitleOrName(dev), dim.active, limit)
+			site.log.DEBUG.Printf("%s dim: %t (%.0fW)", m.name, dim.active, limit)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
-			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", deviceTitleOrName(dev), err))
+			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", m.name, err))
 		}
 	}
 
 	if errs == nil {
-		site.dimmed = &dim
+		site.dimmed = &dimApplied{state: dim, devices: len(dimmers)}
 	}
 
 	return errs
+}
+
+// dimApplied is the dim state last applied to the dimmable meters
+type dimApplied struct {
+	state   dimState
+	devices int
 }
 
 // curtailable is a named curtailment device

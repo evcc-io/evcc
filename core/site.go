@@ -84,7 +84,7 @@ type Site struct {
 	dimState *dimState
 
 	// last applied HEMS state, nil until applied or after a failed attempt
-	dimmed         *dimState
+	dimmed         *dimApplied
 	curtailPercent *int
 
 	// battery settings

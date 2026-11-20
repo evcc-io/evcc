@@ -40,6 +40,7 @@ type EEBusOHPCF struct {
 	reboost time.Duration
 
 	mu          sync.RWMutex
+	dimMu       sync.Mutex // serializes limit writes so a reconnect restatement cannot overtake a newer decision
 	log         *util.Logger
 	compressor  spineapi.EntityRemoteInterface
 	mpcEntity   spineapi.EntityRemoteInterface
@@ -228,8 +229,8 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 
 			// [LPC-913]: state the limit to the newly available CS
 			go func() {
-				eebus.AssertLimit(c.ctx, c.log, func() error { return c.dim(c.lastDimmed()) })
-				eebus.WriteFailsafeConsumptionLimit(c.log, c.eg.EgLPCInterface, entity, c.dimPower)
+				eebus.AssertLimit(c.ctx, c.log, c.restateDim)
+				eebus.WriteFailsafeConsumptionLimit(c.ctx, c.log, c.eg.EgLPCInterface, entity, c.dimPower)
 			}()
 		}
 		c.mu.Unlock()
@@ -460,6 +461,21 @@ func (c *EEBusOHPCF) dimmed() (bool, error) {
 // dim implements the api.Dimmer interface. It writes a §14a/LPC consumption
 // limit to the heat pump while dimmed, releasing it otherwise.
 func (c *EEBusOHPCF) dim(dim bool, limit float64) error {
+	c.dimMu.Lock()
+	defer c.dimMu.Unlock()
+
+	return c.writeDim(dim, limit)
+}
+
+// restateDim writes the last applied limit again
+func (c *EEBusOHPCF) restateDim() error {
+	c.dimMu.Lock()
+	defer c.dimMu.Unlock()
+
+	return c.writeDim(c.lastDimmed())
+}
+
+func (c *EEBusOHPCF) writeDim(dim bool, limit float64) error {
 	c.mu.RLock()
 	entity := c.egLpcEntity
 	c.mu.RUnlock()

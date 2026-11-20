@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"math"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -196,4 +197,42 @@ func TestDimMetersNotAvailable(t *testing.T) {
 
 	require.NoError(t, site.dimMeters(dimState{}))
 	assert.Equal(t, []bool{true, false}, m.dimCalls)
+}
+
+// A dimmer appearing later receives the current state although the state is unchanged.
+func TestDimMetersNewDimmer(t *testing.T) {
+	m1 := &dimmableMeter{}
+	site := dimSite(m1)
+
+	require.NoError(t, site.dimMeters(dimState{active: true}))
+	assert.Equal(t, []bool{true}, m1.dimCalls)
+
+	m2 := &dimmableMeter{}
+	site.auxMeters = append(site.auxMeters, config.NewStaticDevice[api.Meter](config.Named{}, m2))
+
+	require.NoError(t, site.dimMeters(dimState{active: true}))
+	assert.Equal(t, []bool{true}, m2.dimCalls)
+}
+
+type dimPowerMeter struct {
+	dimmableMeter
+	power float64
+}
+
+func (m *dimPowerMeter) DimPower() float64 {
+	return m.power
+}
+
+func TestDimPowerInvalid(t *testing.T) {
+	for _, p := range []float64{-1, math.NaN(), math.Inf(1)} {
+		assert.Zero(t, dimPower(&dimPowerMeter{power: p}), p)
+		assert.Zero(t, dimState{active: true}.limit(&dimPowerMeter{power: p}), p)
+	}
+	assert.Equal(t, 4200.0, dimPower(&dimPowerMeter{power: 4200}))
+}
+
+// Disabled loadpoints are kept as nil entries.
+func TestDimmersSkipsDisabledLoadpoint(t *testing.T) {
+	site := &Site{loadpoints: []*Loadpoint{nil}}
+	assert.Empty(t, site.dimmers())
 }

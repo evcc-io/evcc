@@ -103,6 +103,10 @@
         "description": "Overlay opened from a page for settings or confirmations. Called modal only in code.",
         "other": "dialog"
     },
+    "dimPower": {
+        "description": "Maximum consumption a device keeps while the external limit dims it.",
+        "other": "power while dimmed"
+    },
     "dynamicTariff": {
         "description": "Tariff whose prices change over time, e.g. every hour or 15 minutes.",
         "other": "dynamic tariff"

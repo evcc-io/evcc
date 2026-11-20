@@ -25,6 +25,7 @@
     "cost": "Kosten",
     "curtailment": "Abregelung",
     "dialog": "Dialog",
+    "dimPower": "Leistung bei Dimmung",
     "dynamicTariff": "dynamischer Tarif",
     "emissions": "Emissionen",
     "energy": "Energie",
