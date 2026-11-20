@@ -68,6 +68,7 @@ func DeleteTariffs(from, to time.Time, usage string) (int64, error) {
 	if res.Error != nil {
 		return 0, res.Error
 	}
+	markDaily(from.Unix())
 
 	// drop the rows that no longer hold any value
 	err := inRange().

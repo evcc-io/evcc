@@ -12,6 +12,7 @@ import (
 
 	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util"
 	"gorm.io/gorm"
 )
 
@@ -60,9 +61,11 @@ const (
 // dailyNow is replaced in tests
 var dailyNow = time.Now
 
+var log = util.NewLogger("metrics")
+
 var (
 	dailyBusy  sync.Mutex   // one rollup at a time
-	dailyMu    sync.Mutex   // guards the rollup tables together with dailyEnd
+	dailyMu    sync.RWMutex // guards the rollup tables together with dailyEnd
 	dailyEnd   atomic.Int64 // start of the first day not rolled up, 0 if none is
 	dailyDirty atomic.Int64 // earliest change the rollup does not reflect yet
 	dailyStale atomic.Int64 // earliest change since the running rollup read its slots
@@ -185,14 +188,17 @@ func dailyUsable() int64 {
 	return end
 }
 
-// Rollup sums up all completed days that are not rolled up yet
-func Rollup() error {
-	return syncDaily(true)
+// Rollup sums up all completed days that are not rolled up yet, in the background
+func Rollup() {
+	go func() {
+		if err := syncDaily(); err != nil {
+			log.ERROR.Printf("history rollup: %v", err)
+		}
+	}()
 }
 
-// syncDaily rolls up completed days, all of them or the next chunk. It
-// returns right away while another rollup is running.
-func syncDaily(all bool) error {
+// syncDaily rolls up the completed days. It returns right away while another rollup is running.
+func syncDaily() error {
 	final := dailyFinal().Unix()
 	if dailyDirty.Load() == dailyClean && dailyEnd.Load() >= final {
 		return nil
@@ -214,7 +220,7 @@ func syncDaily(all bool) error {
 		}
 
 		next, err := rollup(end, time.Unix(final, 0))
-		if err != nil || next == end || !all {
+		if err != nil || next == end {
 			return err
 		}
 	}
@@ -275,7 +281,11 @@ func rollup(end int64, final time.Time) (int64, error) {
 		return -1, nil
 	}
 
+	// replaces what another process may have rolled up for these days
 	if err := db.Instance.Transaction(func(tx *gorm.DB) error {
+		if err := deleteDaily(tx, from.Unix(), to.Unix()); err != nil {
+			return err
+		}
 		if len(sums) > 0 {
 			if err := tx.CreateInBatches(sums, 1000).Error; err != nil {
 				return err
@@ -424,12 +434,12 @@ func scanEnergy(tx *gorm.DB) ([]energySum, error) {
 // dailyEnergy sums [from,to) per entity and local day. Rolled up days are
 // read from the rollup, the rest from the slots.
 func dailyEnergy(from, to time.Time, ids []int) ([]energySum, error) {
-	// a failed rollup leaves the days to the slots
-	_ = syncDaily(false)
-
+	// no invalidation may truncate the rollup between its end and its rows being read
+	dailyMu.RLock()
 	d0, d1 := wholeDays(from, to, dailyUsable())
 
 	var res []energySum
+	var err error
 	if d0 < d1 {
 		tx := db.Instance.Model(new(energySum)).
 			Select("day, meter, 0, energy, return_energy, NULL, cost, priced_energy, return_cost, priced_return_energy").
@@ -438,10 +448,11 @@ func dailyEnergy(from, to time.Time, ids []int) ([]energySum, error) {
 			tx = tx.Where("meter IN ?", ids)
 		}
 
-		var err error
-		if res, err = scanEnergy(tx); err != nil {
-			return nil, err
-		}
+		res, err = scanEnergy(tx)
+	}
+	dailyMu.RUnlock()
+	if err != nil {
+		return nil, err
 	}
 
 	var rest [][2]int64
@@ -458,17 +469,21 @@ func dailyEnergy(from, to time.Time, ids []int) ([]energySum, error) {
 // dailyFlow attributes [from,to). Rolled up days are read from the rollup,
 // the rest is attributed from the slots. Zero bounds are open ended.
 func dailyFlow(from, to time.Time) (*flowAcc, error) {
-	// a failed rollup leaves the days to the slots
-	_ = syncDaily(false)
-
+	dailyMu.RLock()
 	d0, d1 := wholeDays(from, to, dailyUsable())
-	if d0 >= d1 {
-		return accumulate(from, to)
-	}
 
 	var days []flowDay
-	if err := db.Instance.Select("data").Where("day >= ? AND day < ?", d0, d1).Find(&days).Error; err != nil {
+	var err error
+	if d0 < d1 {
+		err = db.Instance.Select("data").Where("day >= ? AND day < ?", d0, d1).Find(&days).Error
+	}
+	dailyMu.RUnlock()
+	if err != nil {
 		return nil, err
+	}
+
+	if d0 >= d1 {
+		return accumulate(from, to)
 	}
 
 	acc := &flowAcc{Entities: make(map[int]*flowEntity)}
