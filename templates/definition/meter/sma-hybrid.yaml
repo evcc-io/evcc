@@ -23,8 +23,16 @@ params:
       en: ModbusTCP server needs to be enabled.
       de: Der ModbusTCP Server muss aktiviert sein.
   - name: maxacpower
-    deprecated: true
+    service: modbus/read?address=30231&type=holding&encoding=uint32&resulttype=int&{modbus} # Inverter.WLim, rated power
   - preset: battery-params
+  - name: maxchargepower
+    service: modbus/read?address=40189&type=holding&encoding=uint32&resulttype=int&{modbus} # BatConv.WMaxCha
+    required: true
+    example: 4600
+  - name: maxdischargepower
+    service: modbus/read?address=40191&type=holding&encoding=uint32&resulttype=int&{modbus} # BatConv.WMaxDsch
+    required: true
+    example: 4600
   - name: watchdog
     default: 60s
     usages: ["battery"]
@@ -169,7 +177,7 @@ render: |
           address: 30967 # SMA Modbus Profile: DcMs.Watt [2]
           type: holding
           decode: int32nan
-  {{- include "sma-maxacpower" . }}
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -198,5 +206,5 @@ render: |
       type: holding
       decode: uint32nan
   {{- include "sma-batterymode" . }}
-  {{- include "sma-battery-params" . }}
+  {{- include "battery-params" . }}
   {{- end }}
