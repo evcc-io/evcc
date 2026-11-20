@@ -149,7 +149,7 @@ export default defineComponent({
 				// fall back to the none/percent defaults
 				priorityStrategy: priorityStrategy || PRIORITY_STRATEGY.NONE,
 				priorityBasis: priorityBasis || PRIORITY_BASIS.PERCENT,
-				priorityHysteresis: priorityHysteresis ?? 3,
+				priorityHysteresis: priorityHysteresis ?? 0,
 			};
 			this.serverValues = { ...this.values };
 		},

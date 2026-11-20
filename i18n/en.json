@@ -956,7 +956,7 @@
         "percent": "Vehicles are compared by their charge level in percent."
       },
       "description": "Decides who gets solar surplus first when multiple charging points have the same priority.",
-      "descriptionHysteresis": "Priority only changes when the difference exceeds this value. Avoids constant switching.",
+      "descriptionHysteresis": "Priority only changes above this difference. A higher value avoids constant switching.",
       "labelBasis": "Basis",
       "labelHysteresis": "Hysteresis",
       "labelStrategy": "Strategy",

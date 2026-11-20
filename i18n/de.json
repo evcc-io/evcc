@@ -956,7 +956,7 @@
         "percent": "Fahrzeuge werden nach ihrem Ladestand in Prozent verglichen."
       },
       "description": "Bestimmt, wer den Solarüberschuss zuerst bekommt, wenn mehrere Ladepunkte die gleiche Priorität haben.",
-      "descriptionHysteresis": "Die Priorität ändert sich erst, wenn der Unterschied diesen Wert überschreitet. Verhindert ständiges Hin- und Herwechseln.",
+      "descriptionHysteresis": "Die Priorität wechselt erst ab diesem Unterschied. Ein höherer Wert verhindert ständiges Wechseln.",
       "labelBasis": "Basis",
       "labelHysteresis": "Hysterese",
       "labelStrategy": "Strategie",

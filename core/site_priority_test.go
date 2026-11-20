@@ -48,7 +48,7 @@ func TestSetPriorityBasis(t *testing.T) {
 
 func TestSetPriorityHysteresis(t *testing.T) {
 	site := NewSite()
-	assert.Equal(t, 3, site.GetPriorityHysteresis())
+	assert.Zero(t, site.GetPriorityHysteresis())
 
 	require.NoError(t, site.SetPriorityHysteresis(5))
 	assert.Equal(t, 5, site.GetPriorityHysteresis())

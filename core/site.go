@@ -407,9 +407,8 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:                util.NewLogger("site"),
-		priorityHysteresis: 3,
-		collectors:         make(map[string]*metrics.Collector),
+		log:        util.NewLogger("site"),
+		collectors: make(map[string]*metrics.Collector),
 	}
 
 	// the result only depends on completed days, so it cannot change within a day
