@@ -1433,6 +1433,14 @@ export default defineComponent({
 					dim: this.focusedPv !== null,
 				});
 			}
+			if (this.showForecastGap) {
+				list.push({
+					label: this.$t("energy.production.deviation"),
+					color: groupColor("forecast"),
+					value: "",
+					type: "hatched",
+				});
+			}
 			return list;
 		},
 		entityChart(): ENTITY_CHART {

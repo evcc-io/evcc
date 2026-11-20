@@ -1300,6 +1300,7 @@
     },
     "production": {
       "accuracy": "Genauigkeit",
+      "deviation": "Abweichung",
       "produced": "Erzeugt",
       "remainingToday": "heute verbleibend",
       "selfConsumed": "Selbst verbraucht",
