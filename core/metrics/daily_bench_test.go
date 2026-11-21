@@ -108,5 +108,15 @@ func BenchmarkHistory(b *testing.B) {
 				})
 			}
 		}
+
+		// changes the history, so it comes last
+		b.Run(fmt.Sprintf("entities=%d/rollup/delete-hour-last-year", entities), func(b *testing.B) {
+			old := dayStart(now.AddDate(-1, 0, 0))
+			for b.Loop() {
+				_, err := DeleteEnergy(old, old.Add(time.Hour))
+				require.NoError(b, err)
+				require.NoError(b, rollupDays(now))
+			}
+		})
 	}
 }
