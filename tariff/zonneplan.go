@@ -28,6 +28,7 @@ type Zonneplan struct {
 	log        *util.Logger
 	export     bool
 	last       api.Rates // served without waiting for the first update
+	updated    time.Time
 	ts         oauth2.TokenSource
 	client     *zonneplan.Client
 	mu         sync.Mutex
@@ -109,9 +110,7 @@ func (t *Zonneplan) run(done chan error) {
 	// hourly once rates are flowing
 	delay := time.Minute
 
-	for {
-		<-time.After(delay)
-
+	for ; ; <-time.After(delay) {
 		// devices do not block on login: start empty, retry until the ui
 		// login succeeds
 		if _, err := t.ts.Token(); err != nil {
@@ -145,6 +144,7 @@ func (t *Zonneplan) run(done chan error) {
 
 		t.mu.Lock()
 		t.last = res
+		t.updated = time.Now()
 		t.mu.Unlock()
 
 		delay = time.Hour
@@ -207,10 +207,11 @@ func resolveGroup(account *zonneplan.Account, connection, address string) (zonne
 				return g, nil
 			}
 		}
+		return zonneplan.AddressGroup{}, fmt.Errorf("no electricity connection %s in the account", connection)
 	}
 
 	if address != "" {
-		if g, ok := account.MatchAddress(address); ok {
+		if g, ok := account.MatchAddress(address); ok && len(g.ElectricityUUIDs()) > 0 {
 			return g, nil
 		}
 		return zonneplan.AddressGroup{}, fmt.Errorf("no address matches %q, available: %s", address, addressOptions(account))
@@ -268,6 +269,11 @@ func (t *Zonneplan) mapRates(prices []zonneplan.PricePoint) api.Rates {
 func (t *Zonneplan) Rates() (api.Rates, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
+
+	// two missed hourly updates, as the monitor of other tariffs
+	if !t.updated.IsZero() && time.Since(t.updated) > 2*time.Hour {
+		return nil, api.ErrOutdated
+	}
 	return slices.Clone(t.last), nil
 }
 

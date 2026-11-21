@@ -5,6 +5,7 @@ products:
 requirements:
   description:
     en: "Dynamic quarter-hourly prices from your Zonneplan contract. Login with your Zonneplan account email; Zonneplan mails a one-time password. Import returns the all-in price (energy tax and VAT included). Export returns the feed-in estimate including the Zonnebonus (10% between sunrise and sunset) and, until the salderingsregeling ends in 2027, the energy tax refund; use `charges`, `tax` or `formula` for other adjustments."
+    de: "Dynamische Viertelstundenpreise aus dem Zonneplan-Vertrag. Anmeldung mit der E-Mail-Adresse des Zonneplan-Kontos; Zonneplan sendet ein Einmalpasswort per E-Mail. Bezug liefert den Gesamtpreis (inklusive Energiesteuer und Mehrwertsteuer). Einspeisung liefert die geschätzte Vergütung inklusive Zonnebonus (10% zwischen Sonnenaufgang und Sonnenuntergang) und, bis zum Ende der Salderingsregeling 2027, die Erstattung der Energiesteuer; für andere Anpassungen `charges`, `tax` oder `formula` verwenden."
     nl: "Dynamische kwartierprijzen uit je Zonneplan-contract. Log in met je Zonneplan-account-e-mailadres; Zonneplan mailt je een eenmalige code. Levering geeft de all-in prijs (inclusief energiebelasting en btw). Teruglevering geeft de terugleverschatting inclusief Zonnebonus (10% tussen zonsopkomst en zonsondergang) en, zolang de salderingsregeling loopt (tot 2027), de energiebelasting; gebruik `charges`, `tax` of `formula` voor afwijkingen."
   evcc: ["skiptest"]
 group: price
@@ -14,21 +15,26 @@ params:
     required: true
     description:
       en: Zonneplan account email
+      de: E-Mail-Adresse des Zonneplan-Kontos
       nl: Zonneplan-account e-mailadres
   - name: address
     description:
       en: Address
+      de: Adresse
       nl: Adres
     help:
       en: "Only needed if the account has electricity connections at several addresses; a part of street or city is enough. Leave empty otherwise."
+      de: "Nur nötig, wenn das Konto Stromanschlüsse an mehreren Adressen hat; ein Teil der Straße oder des Ortes genügt. Sonst leer lassen."
       nl: "Alleen nodig als het account stroomaansluitingen op meerdere adressen heeft; een deel van de straat of plaats volstaat. Laat verder leeg."
   - name: connection
     advanced: true
     description:
       en: Connection uuid for contract-scoped prices
+      de: Anschluss-UUID für vertragsbezogene Preise
       nl: Verbindings-UUID voor contractspecifieke prijzen
     help:
       en: The first electricity connection of the account is used by default.
+      de: Standardmäßig wird der erste Stromanschluss des Kontos verwendet.
       nl: Standaard wordt de eerste elektriciteitsaansluiting van het account gebruikt.
   - name: tariffDirection
     type: choice
@@ -36,10 +42,12 @@ params:
     default: import
     description:
       en: Tariff direction
+      de: Tarifrichtung
       nl: Tariefrichting
     help:
       en: "Use 'export' for the feed-in tariff. Zonneplan pays the market price plus a 2 ct fee (verkoopvergoeding), with the Zonnebonus adding 10% between sunrise and sunset. Within the salderingsregeling (until 2027) the energy tax comes back on top, e.g. as `formula`: `price + 0.1108`."
-      nl: "Gebruik 'export' voor het invoertarief. Zonneplan betaalt de marktprijs plus 2 ct verkoopvergoeding en tussen zonsopkomst en zonsondergang de Zonnebonus. Tot het eind van de salderingsregeling wordt ook de energiebelasting betaald."
+      de: "'export' für den Einspeisetarif verwenden. Zonneplan zahlt den Marktpreis plus 2 ct Vergütung (verkoopvergoeding), der Zonnebonus ergänzt 10% zwischen Sonnenaufgang und Sonnenuntergang. Innerhalb der Salderingsregeling (bis 2027) kommt die Energiesteuer hinzu, z. B. als `formula`: `price + 0.1108`."
+      nl: "Gebruik 'export' voor het teruglevertarief. Zonneplan betaalt de marktprijs plus 2 ct verkoopvergoeding en tussen zonsopkomst en zonsondergang de Zonnebonus. Tot het eind van de salderingsregeling wordt ook de energiebelasting betaald."
   - preset: tariff-base
   - preset: tariff-features
 auth:
