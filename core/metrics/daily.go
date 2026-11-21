@@ -38,8 +38,9 @@ func (energySum) TableName() string {
 	return "meters_daily"
 }
 
-// flowDay is the flow attribution of a local day. A row exists for every
-// rolled up day, the newest marks how far the rollup got.
+// flowDay holds the energy flows of a local day: its totals per source and
+// sink (pv to home, grid to loadpoint, ...) with their cost and co2. A row
+// exists for every rolled up day, the newest marks how far the rollup got.
 type flowDay struct {
 	Day  int64  `gorm:"column:day;primaryKey;autoIncrement:false"`
 	Data string `gorm:"column:data"` // json flowAcc
@@ -50,8 +51,9 @@ func (flowDay) TableName() string {
 }
 
 const (
-	// a day is complete once its slots cannot change anymore: the last slot is
-	// written when the next one starts, the rest is margin for late writes
+	// a day is complete once every entity wrote its last slot. That happens
+	// with its first update in the next slot, a gap before it is filled one
+	// slot later (fill). The rest is margin.
 	dailyDelay = 2 * time.Hour
 
 	// days rolled up per transaction
@@ -64,11 +66,10 @@ var dailyNow = time.Now
 var log = util.NewLogger("metrics")
 
 var (
-	dailyBusy  sync.Mutex   // one rollup at a time
-	dailyMu    sync.RWMutex // guards the rollup tables together with dailyEnd
-	dailyEnd   atomic.Int64 // start of the first day not rolled up, 0 if none is
-	dailyDirty atomic.Int64 // earliest change the rollup does not reflect yet
-	dailyStale atomic.Int64 // earliest change since the running rollup read its slots
+	dailyMu      sync.RWMutex // readers hold it while RunRollup drops rolled up days
+	dailyEnd     atomic.Int64 // start of the first day not rolled up, 0 if none is
+	dailyDirty   atomic.Int64 // earliest change the rollup does not reflect yet
+	dailyRequest = make(chan struct{}, 1)
 )
 
 const dailyClean = math.MaxInt64
@@ -135,14 +136,7 @@ func markDaily(ts int64) {
 		return // never rolled up
 	}
 
-	atomicMin(&dailyStale, ts)
 	atomicMin(&dailyDirty, ts)
-}
-
-// invalidateDaily drops the rollup from the day of ts on
-func invalidateDaily(ts int64) error {
-	markDaily(ts)
-	return applyDaily()
 }
 
 // applyDaily drops the rolled up days that markDaily noted a change for
@@ -188,26 +182,30 @@ func dailyUsable() int64 {
 	return end
 }
 
-// Rollup sums up all completed days that are not rolled up yet, in the background
+// Rollup requests a rollup of the completed days from RunRollup
 func Rollup() {
-	go func() {
-		if err := syncDaily(); err != nil {
-			log.ERROR.Printf("history rollup: %v", err)
-		}
-	}()
+	select {
+	case dailyRequest <- struct{}{}:
+	default: // already requested
+	}
 }
 
-// syncDaily rolls up the completed days. It returns right away while another rollup is running.
-func syncDaily() error {
+// RunRollup rolls up the completed days on each request. It blocks and is the
+// only writer of the rollup.
+func RunRollup() {
+	for range dailyRequest {
+		if err := rollupDays(); err != nil {
+			log.ERROR.Printf("history rollup: %v", err)
+		}
+	}
+}
+
+// rollupDays sums up all completed days that are not rolled up yet
+func rollupDays() error {
 	final := dailyFinal().Unix()
 	if dailyDirty.Load() == dailyClean && dailyEnd.Load() >= final {
 		return nil
 	}
-
-	if !dailyBusy.TryLock() {
-		return nil
-	}
-	defer dailyBusy.Unlock()
 
 	for {
 		if err := applyDaily(); err != nil {
@@ -219,18 +217,16 @@ func syncDaily() error {
 			return nil
 		}
 
-		next, err := rollup(end, time.Unix(final, 0))
+		next, err := rollupChunk(end, time.Unix(final, 0))
 		if err != nil || next == end {
 			return err
 		}
 	}
 }
 
-// rollup stores the next chunk of days before final and returns its end. A
-// chunk that a change arrived for meanwhile is discarded and returns -1.
-func rollup(end int64, final time.Time) (int64, error) {
-	dailyStale.Store(dailyClean)
-
+// rollupChunk stores the next chunk of days before final and returns its end.
+// A change that arrives meanwhile stays marked, the next applyDaily drops the chunk.
+func rollupChunk(end int64, final time.Time) (int64, error) {
 	from := time.Unix(end, 0)
 	if end == 0 {
 		first, _, err := slotRange()
@@ -273,19 +269,8 @@ func rollup(end int64, final time.Time) (int64, error) {
 		flows = append(flows, flowDay{Day: d[0], Data: string(data)})
 	}
 
-	dailyMu.Lock()
-	defer dailyMu.Unlock()
-
-	// a truncated rollup must not be continued past the gap
-	if dailyStale.Load() < to.Unix() || dailyEnd.Load() != end {
-		return -1, nil
-	}
-
-	// replaces what another process may have rolled up for these days
+	// readers ignore the rows until dailyEnd moves
 	if err := db.Instance.Transaction(func(tx *gorm.DB) error {
-		if err := deleteDaily(tx, from.Unix(), to.Unix()); err != nil {
-			return err
-		}
 		if len(sums) > 0 {
 			if err := tx.CreateInBatches(sums, 1000).Error; err != nil {
 				return err

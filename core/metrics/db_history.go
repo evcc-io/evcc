@@ -143,11 +143,9 @@ func DeleteEnergy(from, to time.Time, filter ...EnergyFilter) (int64, error) {
 	}
 
 	res := tx.Delete(new(meter))
-	if res.Error != nil {
-		return 0, res.Error
-	}
+	markDaily(from.Unix())
 
-	return res.RowsAffected, invalidateDaily(from.Unix())
+	return res.RowsAffected, res.Error
 }
 
 // QueryEnergy returns aggregated energy data, per title or per group.

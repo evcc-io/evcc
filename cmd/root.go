@@ -312,6 +312,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// roll up the energy history, an upgrade starts with all of it
 	if err == nil {
+		go metrics.RunRollup()
 		metrics.Rollup()
 	}
 

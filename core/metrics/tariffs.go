@@ -51,10 +51,8 @@ func DeleteTariffs(from, to time.Time, usage string) (int64, error) {
 
 	if usage == "" {
 		res := inRange().Delete(new(tariffValue))
-		if res.Error != nil {
-			return 0, res.Error
-		}
-		return res.RowsAffected, invalidateDaily(from.Unix())
+		markDaily(from.Unix())
+		return res.RowsAffected, res.Error
 	}
 
 	// guards the column interpolated below
@@ -74,11 +72,8 @@ func DeleteTariffs(from, to time.Time, usage string) (int64, error) {
 	err := inRange().
 		Where("grid IS NULL AND feedin IS NULL AND co2 IS NULL AND temperature IS NULL").
 		Delete(new(tariffValue)).Error
-	if err != nil {
-		return 0, err
-	}
 
-	return res.RowsAffected, invalidateDaily(from.Unix())
+	return res.RowsAffected, err
 }
 
 // PersistTariffs stores the tariff values at the given 15min boundary, nil values omitted

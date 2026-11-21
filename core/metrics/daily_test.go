@@ -48,7 +48,7 @@ func TestDailyRollup(t *testing.T) {
 	dailyNow = func() time.Time { return from }
 	t.Cleanup(func() { dailyNow = time.Now })
 
-	require.NoError(t, syncDaily())
+	require.NoError(t, rollupDays())
 	energy, flow := query()
 	require.Zero(t, dailyEnd.Load())
 	require.NotEmpty(t, flow.Entities)
@@ -57,7 +57,7 @@ func TestDailyRollup(t *testing.T) {
 	dailyNow = func() time.Time { return to.Add(-time.Hour) }
 	query()
 	require.Zero(t, dailyEnd.Load(), "a read does not roll up")
-	require.NoError(t, syncDaily())
+	require.NoError(t, rollupDays())
 	rolledEnergy, rolledFlow := query()
 	require.Equal(t, to.AddDate(0, 0, -1).Unix(), dailyEnd.Load())
 
@@ -82,7 +82,7 @@ func TestDailyRollup(t *testing.T) {
 	dailyNow = func() time.Time { return to.AddDate(0, 0, 1) }
 	require.NoError(t, persist(entities[PV], from.Add(3*time.Hour), 4, 0, nil, false))
 	assert.Equal(t, slots+4, pv())
-	require.NoError(t, syncDaily())
+	require.NoError(t, rollupDays())
 	assert.Equal(t, slots+4, pv())
 	require.Equal(t, to.Unix(), dailyEnd.Load())
 
@@ -90,17 +90,9 @@ func TestDailyRollup(t *testing.T) {
 	second := from.AddDate(0, 0, 1)
 	_, err := DeleteEnergy(second, second.Add(time.Hour), EnergyFilter{Group: PV})
 	require.NoError(t, err)
-	require.Equal(t, second.Unix(), dailyEnd.Load())
+	require.Equal(t, second.Unix(), dailyUsable())
 	assert.Equal(t, slots, pv())
-	require.NoError(t, syncDaily())
-
-	// days another process rolled up ahead of this one are replaced
-	dailyEnd.Store(second.Unix())
-	third := second.AddDate(0, 0, 1)
-	_, err = DeleteEnergy(third, third.Add(time.Hour), EnergyFilter{Group: PV})
-	require.NoError(t, err)
-	require.NoError(t, syncDaily())
-	slots -= 4
+	require.NoError(t, rollupDays())
 	assert.Equal(t, slots, pv())
 	require.Equal(t, to.Unix(), dailyEnd.Load())
 }
@@ -132,7 +124,7 @@ func TestDailyRollupMidnightSkipped(t *testing.T) {
 	dailyNow = func() time.Time { return to.Add(12 * time.Hour) }
 	t.Cleanup(func() { dailyNow = time.Now })
 
-	require.NoError(t, syncDaily())
+	require.NoError(t, rollupDays())
 	require.Equal(t, to.Unix(), dailyEnd.Load())
 
 	var days []flowDay
@@ -146,12 +138,6 @@ func TestDailyRollupMidnightSkipped(t *testing.T) {
 	// a restart resumes at the start of the day after the newest one
 	require.NoError(t, deleteDaily(db.Instance, skipped.Unix(), dailyClean))
 	require.NoError(t, loadDaily())
-	assert.Equal(t, skipped.Unix(), dailyEnd.Load())
-
-	// a chunk is not appended to a rollup that was truncated meanwhile
-	next, err := rollup(to.Unix(), to.AddDate(0, 0, 1))
-	require.NoError(t, err)
-	assert.EqualValues(t, -1, next)
 	assert.Equal(t, skipped.Unix(), dailyEnd.Load())
 
 	d0, _ := wholeDays(skipped.Add(-time.Hour), to, to.Unix())
