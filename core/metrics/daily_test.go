@@ -95,6 +95,8 @@ func TestDailyRollup(t *testing.T) {
 	assert.Equal(t, slots, pv())
 	_, holeFlow := query()
 
+	// sums left behind without their flow row are replaced
+	require.NoError(t, db.Instance.Create(&energySum{Start: second.Unix(), Meter: entities[PV].Id, Energy: 1000}).Error)
 	require.NoError(t, rollupDays(now))
 	assert.Equal(t, slots, pv())
 	_, filledFlow := query()

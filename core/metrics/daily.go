@@ -245,7 +245,16 @@ func rollupChunk(days [][2]int64) error {
 		flows = append(flows, flowDay{Day: d[0], Data: string(data)})
 	}
 
+	starts := make([]int64, 0, len(days))
+	for _, d := range days {
+		starts = append(starts, d[0])
+	}
+
 	return db.Instance.Transaction(func(tx *gorm.DB) error {
+		// sums left without their flow row would fail the insert for good
+		if err := tx.Where("day IN ?", starts).Delete(new(energySum)).Error; err != nil {
+			return err
+		}
 		if len(sums) > 0 {
 			if err := tx.CreateInBatches(sums, 1000).Error; err != nil {
 				return err
