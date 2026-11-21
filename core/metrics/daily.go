@@ -128,15 +128,20 @@ func deleteDaily(tx *gorm.DB, from, to int64) error {
 	return tx.Where("day >= ? AND day < ?", from, to).Delete(new(flowDay)).Error
 }
 
-// markDaily notes a change to the slots or tariffs at ts. It neither blocks
-// nor fails, so it is safe on the write path. Readers stop using the rollup
-// from that day on, the next rollup drops it.
+// markDaily notes a change to the slots or tariffs at ts and wakes up
+// RunRollup. It neither blocks nor fails, so it is safe on the write path.
+// Readers stop using the rollup from that day on, the next rollup drops it.
 func markDaily(ts int64) {
-	if ts >= dailyFinal().Unix() {
-		return // never rolled up
+	// later days are not rolled up yet
+	if ts < dailyFinal().Unix() {
+		atomicMin(&dailyDirty, ts)
 	}
 
-	atomicMin(&dailyDirty, ts)
+	// a new slot may have completed a day
+	select {
+	case dailyRequest <- struct{}{}:
+	default: // already requested
+	}
 }
 
 // applyDaily drops the rolled up days that markDaily noted a change for
@@ -182,15 +187,7 @@ func dailyUsable() int64 {
 	return end
 }
 
-// Rollup requests a rollup of the completed days from RunRollup
-func Rollup() {
-	select {
-	case dailyRequest <- struct{}{}:
-	default: // already requested
-	}
-}
-
-// RunRollup rolls up the completed days, then again on each request. It
+// RunRollup rolls up the completed days, then again after each write. It
 // blocks and is the only writer of the rollup.
 func RunRollup() {
 	for {

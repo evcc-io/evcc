@@ -61,7 +61,6 @@ func deleteEnergyHandler(w http.ResponseWriter, r *http.Request) {
 
 	// invalidate cached values (e.g. the solar scale) derived from the deleted history
 	util.ResetCached()
-	metrics.Rollup()
 
 	jsonWrite(w, deleteResult{rows})
 }
@@ -88,8 +87,6 @@ func deleteTariffsHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, status, err)
 		return
 	}
-
-	metrics.Rollup()
 
 	jsonWrite(w, deleteResult{rows})
 }
