@@ -28,11 +28,12 @@ const (
 // Because the optimization is linear, the slot is at an operating-range extreme, so it
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
-// (holddischarge), exporting means charging is withheld (holdcharge). At its soc bound nothing is
-// withheld, the bound does it, so the battery stays in normal mode. Without planned
-// discharge the battery is held when holdWorthwhile, since normal mode would let the
-// inverter cover intra-slot dips from the battery.
-func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, etaD float32, slot int, gridImport, gridExport float32, slotHours, pvShare float64) types.Suggestion {
+// (holddischarge), exporting means charging is withheld (holdcharge). Another battery discharging or
+// charging in the same slot counts like importing or exporting, it covers what this battery
+// could have. At its soc bound nothing is withheld, the bound does it, so the battery stays
+// in normal mode. Without planned discharge the battery is held when holdWorthwhile, since
+// normal mode would let the inverter cover intra-slot dips from the battery.
+func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, etaD float32, slot int, gridImport, gridExport float32, otherDischarging, otherCharging bool, slotHours, pvShare float64) types.Suggestion {
 	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
 		return types.Suggestion{}
 	}
@@ -62,10 +63,10 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 		case charge > pvShare+suggestionThreshold && gridImporting:
 			// charging beyond its PV surplus share while importing means grid charging
 			s.Action = api.BatteryCharge.String()
-		case idle && gridImporting && !empty:
+		case idle && (gridImporting || otherDischarging) && !empty:
 			// idle while importing: discharge is deliberately withheld
 			s.Action = api.BatteryHoldDischarge.String()
-		case idle && gridExporting && !full:
+		case idle && (gridExporting || otherCharging) && !full:
 			// idle while exporting: surplus is exported instead of charged
 			s.Action = api.BatteryHoldCharge.String()
 		case discharge > suggestionThreshold && gridExporting:
@@ -90,6 +91,28 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 	}
 
 	return s
+}
+
+// otherBatteryFlow reports whether any home battery other than self discharges or charges in the slot
+func otherBatteryFlow(details []batteryDetail, results []optimizer.BatteryResult, self, slot int, slotHours float64) (bool, bool) {
+	if slot < 0 || slotHours <= 0 {
+		return false, false
+	}
+
+	var discharging, charging bool
+	for j, res := range results {
+		if j == self || j >= len(details) || details[j].Type != batteryTypeBattery {
+			continue
+		}
+		if slot < len(res.DischargingPower) && float64(res.DischargingPower[slot])/slotHours > suggestionThreshold {
+			discharging = true
+		}
+		if slot < len(res.ChargingPower) && float64(res.ChargingPower[slot])/slotHours > suggestionThreshold {
+			charging = true
+		}
+	}
+
+	return discharging, charging
 }
 
 // holdWorthwhile reports whether energy kept in the battery now replaces a later import at a
@@ -226,7 +249,8 @@ func (site *Site) applyOptimizerResult(solve optimizerSolve, now time.Time) {
 			pvShare = pvSurplus * float64(batRes.ChargingPower[slot]) / slotHours / batteryCharge
 		}
 
-		suggestion := currentSlotSuggestion(detail, batReq, batRes, req.TimeSeries, req.EtaD, slot, gridImport, gridExport, slotHours, pvShare)
+		otherDischarging, otherCharging := otherBatteryFlow(details.BatteryDetails, res.Batteries, i, slot, slotHours)
+		suggestion := currentSlotSuggestion(detail, batReq, batRes, req.TimeSeries, req.EtaD, slot, gridImport, gridExport, otherDischarging, otherCharging, slotHours, pvShare)
 		if suggestion.Action == "" {
 			continue
 		}
