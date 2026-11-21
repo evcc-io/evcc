@@ -101,8 +101,8 @@ func (c *EEBus) AddGridConnectionPoint(meter api.Meter) (*GridConnectionPoint, e
 	return &GridConnectionPoint{log: c.log, uc: uc, currents: currents, voltages: voltages}, nil
 }
 
-// Update publishes the grid measurement. Values missing from it are restated with error state.
-func (g *GridConnectionPoint) Update(m types.Measurement) {
+// update publishes the grid measurement. Values missing from it are restated with error state.
+func (g *GridConnectionPoint) update(m types.Measurement) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
@@ -149,7 +149,7 @@ func (g *GridConnectionPoint) Run(ctx context.Context, in <-chan util.Param, tim
 			return
 		case p := <-in:
 			if m, ok := p.Val.(types.Measurement); ok && p.Key == keys.Grid && p.Loadpoint == nil {
-				g.Update(m)
+				g.update(m)
 			}
 		case <-tick.C:
 			g.invalidate(timeout)

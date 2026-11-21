@@ -63,7 +63,7 @@ Where `ChargeState` provides `Status() (ChargeStatus, error)` (A/B/C) and
 - **Easee** — REST + async SignalR; see `docs/agents/easee-architecture.md` for full detail
 - **OCPP** (`charger/ocpp.go`) — Full 1.6 with charge point management
 - **go-e** — Dual API (v1 local HTTP, v2 cloud); phase switching on v2
-- **EEBus** — Complex SPINE protocol with USE cases (CEM, EV, EVCC). evcc also serves the grid meter as MGCP Grid Connection Point on local entity 4 (`server/eebus/gcp.go`), only if the meter has both energy directions and is not itself an EEBus meter
+- **EEBus** — Complex SPINE protocol with USE cases (CEM, EV, EVCC). evcc also serves the grid meter as MGCP Grid Connection Point (`server/eebus/gcp.go`), only if the meter has both energy directions and is not itself an EEBus meter
 - **Generic configurable** (`charger/charger.go`) — plugin-driven via YAML template
 
 ### Adding a New Charger

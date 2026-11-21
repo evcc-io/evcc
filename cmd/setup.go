@@ -873,38 +873,6 @@ func configureGo(conf []globalconfig.Go) error {
 }
 
 // setup HEMS
-// configureGridConnectionPoint publishes the grid meter via EEBus MGCP for downstream energy managers.
-// An EEBus grid meter is not re-published since the grid connection point is already on the network.
-func configureGridConnectionPoint(site *core.Site, tee *util.Tee, interval time.Duration) error {
-	srv, err := eebus.Instance()
-	if err != nil || site == nil || site.GetGridMeterRef() == "" {
-		return nil
-	}
-
-	dev, err := config.Meters().ByName(site.GetGridMeterRef())
-	if err != nil {
-		return err
-	}
-
-	gm := dev.Instance()
-	if _, ok := gm.(*meter.EEBus); ok || gm == nil {
-		return nil
-	}
-
-	gcp, err := srv.AddGridConnectionPoint(gm)
-	if err != nil || gcp == nil {
-		return err
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	shutdown.Register(cancel)
-
-	// values turn invalid once the grid meter missed a few cycles
-	go gcp.Run(ctx, tee.Attach(), 3*interval)
-
-	return nil
-}
-
 func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error) {
 	if conf.Type != "" {
 		yamlSource.hems = globalconfig.YamlSourceFile
@@ -1089,6 +1057,37 @@ func configureEEBus(conf *eebus.Config) error {
 	}
 
 	shutdown.Register(srv.Shutdown)
+
+	return nil
+}
+
+// configureGridConnectionPoint publishes the grid meter via EEBus MGCP for downstream energy managers.
+// An EEBus grid meter is not re-published since the grid connection point is already on the network.
+func configureGridConnectionPoint(srv *eebus.EEBus, site *core.Site, tee *util.Tee, interval time.Duration) error {
+	if site == nil || site.GetGridMeterRef() == "" {
+		return nil
+	}
+
+	dev, err := config.Meters().ByName(site.GetGridMeterRef())
+	if err != nil {
+		return err
+	}
+
+	gm := dev.Instance()
+	if _, ok := gm.(*meter.EEBus); ok || gm == nil {
+		return nil
+	}
+
+	gcp, err := srv.AddGridConnectionPoint(gm)
+	if err != nil || gcp == nil {
+		return err
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	shutdown.Register(cancel)
+
+	// values turn invalid once the grid meter missed a few cycles
+	go gcp.Run(ctx, tee.Attach(), 3*interval)
 
 	return nil
 }

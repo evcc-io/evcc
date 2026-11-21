@@ -15,8 +15,10 @@ import (
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	evccapi "github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/types"
 	server "github.com/evcc-io/evcc/server/eebus"
+	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -134,13 +136,16 @@ func TestGridConnectionPoint(t *testing.T) {
 	require.Eventually(t, func() bool { return h.gcp() != nil }, 30*time.Second, 100*time.Millisecond, "mgcp support")
 	entity := h.gcp()
 
-	gcp.Update(types.Measurement{
+	in := make(chan util.Param)
+	go gcp.Run(t.Context(), in, time.Minute)
+
+	in <- util.Param{Key: keys.Grid, Val: types.Measurement{
 		Power:        -1500,
 		Energy:       new(12.5),
 		ReturnEnergy: new(3.25),
 		Currents:     []float64{-2, -2.5, -2},
 		Voltages:     []float64{230, 231, 232},
-	})
+	}}
 
 	assert.EventuallyWithT(t, func(c *assert.CollectT) {
 		power, err := h.ucmgcp.Power(entity)
@@ -165,7 +170,7 @@ func TestGridConnectionPoint(t *testing.T) {
 	}, 30*time.Second, 100*time.Millisecond, "values")
 
 	// a missing reading is restated as invalid instead of remaining current
-	gcp.Update(types.Measurement{Power: -1400, ReturnEnergy: new(3.5)})
+	in <- util.Param{Key: keys.Grid, Val: types.Measurement{Power: -1400, ReturnEnergy: new(3.5)}}
 
 	assert.EventuallyWithT(t, func(c *assert.CollectT) {
 		feedIn, err := h.ucmgcp.EnergyFeedIn(entity)
