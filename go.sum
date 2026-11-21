@@ -27,6 +27,8 @@ github.com/Shopify/toxiproxy v2.1.4+incompatible h1:TKdv8HiTLgE5wdJuEML90aBgNWso
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/WulfgarW/sensonet v0.0.9 h1:GwknMo1xdazwevNqogSWvB3McoCmBJgvtTPXEuS2D4M=
 github.com/WulfgarW/sensonet v0.0.9/go.mod h1:0+/yOlBRRTrk2RnR1oECenFCYjv5zQb1dQaAcgAzEHM=
+github.com/andig/eebus-go v0.7.1-0.20261121153524-423553beea28 h1:wbXRqFL5C7qyAvufE0MqgD0SoHkXJL5/MUqZ0a3hXHQ=
+github.com/andig/eebus-go v0.7.1-0.20261121153524-423553beea28/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
 github.com/andig/go-powerwall v0.3.0 h1:6g50+8xEwxrnzoSaPsxNRpc2fld8gARk0X78NEexFGI=
 github.com/andig/go-powerwall v0.3.0/go.mod h1:Xk09mD+7RTCuuHMX5RxlqgEUeh9oZdIX0rL0qiY6l/4=
 github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512 h1:1y8dS4GaBB9WUu/r8rInTaxdZhHG5GuwOfllzDAZXL8=
@@ -432,8 +434,6 @@ github.com/philippseith/signalr v0.11.0/go.mod h1:9VAFjplkNr3RKc3mH3L/L0KvCdF1xe
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/premultiply/eebus-go v0.0.0-20261120212518-86ca7369ad36 h1:CgOtlN4CAUdfmED78zdU7vIduOlVdhgubaH/sDnV+Gw=
-github.com/premultiply/eebus-go v0.0.0-20261120212518-86ca7369ad36/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
 github.com/prometheus-community/pro-bing v0.9.1 h1:kpuAr6AU2oRtzGihJSUcetHtjc7ku7h6PxeuW9RVrQw=
 github.com/prometheus-community/pro-bing v0.9.1/go.mod h1:z79wYTxAOf6FpTng0QdIhZ3j/Nd5l3+gnFSCIT+SiSQ=
 github.com/prometheus/client_golang v1.25.0 h1:cDtW1TcFsMi1RJc8khwCKB4VhzwV04aKqbYtNOXuiK0=
