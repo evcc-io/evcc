@@ -131,6 +131,11 @@ func resetDaily(change func(tx *gorm.DB) bool) error {
 	return nil
 }
 
+// ResetRollup drops the whole rollup, for slots that were changed outside of evcc
+func ResetRollup() error {
+	return resetDaily(nil)
+}
+
 // writeDays runs a change to the slots or tariffs in [from,to). Only for
 // completed days it waits for a running rollup and drops their rolled up rows.
 func writeDays(from, to time.Time, change func(tx *gorm.DB) error) error {
