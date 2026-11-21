@@ -62,6 +62,11 @@ func backfill() error {
 		return err
 	}
 
+	// the rolled up days do not hold the filled slots
+	if err := deleteDaily(db.Instance, 0, dailyClean); err != nil {
+		return err
+	}
+
 	settings.SetInt(keys.MetricsFillVersion, fillVersion)
 
 	return nil

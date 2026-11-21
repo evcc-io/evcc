@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/messenger"
@@ -307,6 +308,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 	var site *core.Site
 	if err == nil {
 		site, err = configureSiteAndLoadpoints(&conf)
+	}
+
+	// roll up the energy history, an upgrade starts with all of it
+	if err == nil {
+		go metrics.Rollup()
 	}
 
 	// setup influx
