@@ -37,8 +37,10 @@ func benchHistory(b *testing.B, entities int, now time.Time) {
 	require.NoError(b, err)
 	slot, err := tx.Prepare("INSERT INTO meters (meter, ts, energy, return_energy) VALUES (?, ?, ?, ?)")
 	require.NoError(b, err)
+	defer slot.Close()
 	price, err := tx.Prepare("INSERT INTO tariffs (ts, grid, feedin, co2) VALUES (?, ?, ?, ?)")
 	require.NoError(b, err)
+	defer price.Close()
 
 	end := now.Truncate(tariff.SlotDuration)
 	for ts := dayStart(now.AddDate(-2, 0, 0)); ts.Before(end); ts = ts.Add(tariff.SlotDuration) {
