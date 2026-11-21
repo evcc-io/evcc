@@ -1403,7 +1403,6 @@
       "solar": "Pozrite si očakávanú produkciu solárnej energie na dnes a nasledujúce dni. V budúcnosti sa použije aj na automatickú optimalizáciu nabíjania.",
       "temperature": "Pozrite si predpovedanú vonkajšiu teplotu pre vašu polohu. Použité na predpoveď dopytu na vyhrievanie."
     },
-    "hideLine": "skryť krivku",
     "modalTitle": "Predpoveď",
     "price": {
       "average": "Priemer",
@@ -1411,8 +1410,6 @@
       "lowestHour": "Najlacnejšia hodina",
       "range": "Rozsah"
     },
-    "priceZoom": "priblížiť",
-    "showLine": "zobraziť krivku",
     "solar": {
       "dayAfterTomorrow": "Pozajtra",
       "partly": "čiastočne",

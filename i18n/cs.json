@@ -1396,7 +1396,6 @@
       "solar": "Zobrazte očekávanou solární výrobu pro dnešek a následující dny. V budoucnu bude také využita pro automatickou optimalizaci nabíjení.",
       "temperature": "Zobrazit očekávanou venkovní teplotu ve vaší lokalitě. Použije se pro prediktivní model vytápění."
     },
-    "hideLine": "skrýt řádek",
     "modalTitle": "Předpověď",
     "price": {
       "average": "Průměr",
@@ -1404,8 +1403,6 @@
       "lowestHour": "Nejlevnější hodina",
       "range": "Rozsah"
     },
-    "priceZoom": "přiblížit",
-    "showLine": "zobrazit řádek",
     "solar": {
       "dayAfterTomorrow": "Pozítří",
       "partly": "Částečně",

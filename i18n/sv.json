@@ -1450,7 +1450,6 @@
       "solar": "Se hur mycket solel som väntas i dag och de kommande dagarna. Prognosen kommer framöver även att användas för att optimera laddningen automatiskt.",
       "temperature": "Se förväntad utomhustemperatur för din plats. Används till att förutse värmebehovet."
     },
-    "hideLine": "dölj linje",
     "modalTitle": "Prognos",
     "price": {
       "average": "Genomsnitt",
@@ -1458,8 +1457,6 @@
       "lowestHour": "Billigaste timmen",
       "range": "Intervall"
     },
-    "priceZoom": "zooma in",
-    "showLine": "visa linje",
     "solar": {
       "dayAfterTomorrow": "I övermorgon",
       "partly": "delvis",

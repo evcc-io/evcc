@@ -1397,7 +1397,6 @@
       "solar": "Zobacz oczekiwaną produkcję energii słonecznej na dziś i kolejne dni. W przyszłości będzie też używana do automatycznej optymalizacji ładowania.",
       "temperature": "Zobacz oczekiwaną temperaturę zewnętrzną dla Twojej lokalizacji. Używana do przewidywania zapotrzebowania na ciepło."
     },
-    "hideLine": "ukryj linię",
     "modalTitle": "Prognoza",
     "price": {
       "average": "Średnia",
@@ -1405,8 +1404,6 @@
       "lowestHour": "Najtańsza godzina",
       "range": "Zakres"
     },
-    "priceZoom": "powiększ",
-    "showLine": "pokaż linię",
     "solar": {
       "dayAfterTomorrow": "Pojutrze",
       "partly": "częściowo",

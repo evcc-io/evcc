@@ -1438,7 +1438,6 @@
       "solar": "Visualizza la produzione solare attesa per oggi e per i giorni seguenti. Sarà utilizzato anche per l'ottimizzazione automatica della ricarica futura.",
       "temperature": "Visualizza la temperatura esterna attesa per la tua località. Usata per stimare il fabbisogno di riscaldamento."
     },
-    "hideLine": "nascondi",
     "modalTitle": "Previsioni",
     "price": {
       "average": "Media",
@@ -1446,8 +1445,6 @@
       "lowestHour": "Ora più economica",
       "range": "Intervallo"
     },
-    "priceZoom": "ingrandisci",
-    "showLine": "mostra",
     "solar": {
       "dayAfterTomorrow": "Dopodomani",
       "partly": "dato parziale",

@@ -1386,7 +1386,6 @@
       "solar": "Nézd meg a várható napelemes termelést mára és a következő napokra. A jövőben az automatikus töltésoptimalizáláshoz is felhasználásra kerül.",
       "temperature": "Nézd meg a várható kültéri hőmérsékletet a helyszíneden. A fűtési igény előrejelzésére szolgál."
     },
-    "hideLine": "vonal elrejtése",
     "modalTitle": "Előrejelzés",
     "price": {
       "average": "Átlag",
@@ -1394,8 +1393,6 @@
       "lowestHour": "Legolcsóbb óra",
       "range": "Tartomány"
     },
-    "priceZoom": "nagyítás",
-    "showLine": "vonal megjelenítése",
     "solar": {
       "dayAfterTomorrow": "Holnap után",
       "partly": "részlegesen",

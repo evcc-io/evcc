@@ -1386,7 +1386,6 @@
       "solar": "查看今天及未来几天的预期太阳能发电量。未来还将用于自动充电优化。",
       "temperature": "查看您所在位置的预期室外温度。用于预测供暖需求。"
     },
-    "hideLine": "隐藏曲线",
     "modalTitle": "预测",
     "price": {
       "average": "平均值",
@@ -1394,8 +1393,6 @@
       "lowestHour": "最便宜时段",
       "range": "范围"
     },
-    "priceZoom": "放大",
-    "showLine": "显示曲线",
     "solar": {
       "dayAfterTomorrow": "后天",
       "partly": "部分",

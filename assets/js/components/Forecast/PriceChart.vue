@@ -32,14 +32,14 @@ export default defineComponent({
 	name: "PriceChart",
 	mixins: [formatter, chartMixin],
 	props: {
-		grid: { type: Array as PropType<UiForecastSlot[]>, required: true },
+		grid: { type: Array as PropType<UiForecastSlot[]> },
 		feedin: { type: Array as PropType<UiForecastSlot[]> },
 		currency: { type: String as PropType<CURRENCY> },
 		zoom: { type: Boolean, default: false },
 	},
 	computed: {
 		slots(): UiForecastSlot[] {
-			return filterForecastSlots(this.grid, this.startDate, this.endDate);
+			return this.grid ? filterForecastSlots(this.grid, this.startDate, this.endDate) : [];
 		},
 		feedinSlots(): UiForecastSlot[] {
 			return this.feedin
@@ -47,7 +47,7 @@ export default defineComponent({
 				: [];
 		},
 		markPoints(): { coord: [number, number]; value: string }[] {
-			const slots = this.slots;
+			const slots = this.slots.length ? this.slots : this.feedinSlots;
 			if (!slots.length) return [];
 			const minIdx = minSlotIndex(slots);
 			const maxIdx = maxSlotIndex(slots);
@@ -71,24 +71,39 @@ export default defineComponent({
 				...this.slots.map((s) => s.value),
 				...this.feedinSlots.map((s) => s.value),
 			];
+			if (!values.length) return {};
 			const dataMin = Math.min(...values);
 			const dataMax = Math.max(...values);
-			const rangeMin = this.zoom ? dataMin : Math.min(0, dataMin);
+			// a flat line has no range and keeps the zero baseline
+			const fit = this.zoom && dataMin !== dataMax;
+			const rangeMin = fit ? dataMin : Math.min(0, dataMin);
 			const rangeMax = Math.max(0, dataMax);
 			const range = rangeMax - rangeMin || 1;
 			const rawInterval = range / 5;
 			const magnitude = Math.pow(10, Math.floor(Math.log10(rawInterval)));
-			const nice = [1, 2, 2.5, 5, 10].find((n) => n * magnitude >= rawInterval) || 10;
-			const interval = nice * magnitude;
+			const nice = [1, 2, 5, 10].find((n) => n * magnitude >= rawInterval) || 10;
+			// labels are whole display units, finer steps would repeat them
+			const interval = Math.max(
+				nice * magnitude,
+				1 / this.pricePerKWhDisplayFactor(this.currency)
+			);
+			// rounded, float noise would add a tick
+			const snap = (steps: number) => Number((steps * interval).toFixed(10));
 
 			return {
-				min: Math.floor(rangeMin / interval) * interval,
-				max: Math.ceil(rangeMax / interval) * interval,
+				min: snap(Math.floor(rangeMin / interval + 1e-9)),
+				// a peak on a tick gets one more step, the line must not sit on the axis end
+				max: snap(rangeMax > 0 ? Math.floor(rangeMax / interval + 1e-9) + 1 : 0),
 				interval,
 			};
 		},
 		chartOption(): Record<string, unknown> {
 			const priceColor = colors.price || "";
+			const exportColor = colors.export || "";
+			// extremes are labelled on the first visible line
+			const [gridPoints, feedinPoints] = this.slots.length
+				? [this.markPoints, []]
+				: [[], this.markPoints];
 
 			// oxlint-disable-next-line typescript/no-this-alias
 			const vThis = this;
@@ -100,7 +115,7 @@ export default defineComponent({
 				tooltip: {
 					trigger: "axis",
 					axisPointer: { type: "line", snap: true, lineStyle: { color: "transparent" } },
-					...tooltipStyle(priceColor),
+					...tooltipStyle(this.slots.length ? priceColor : exportColor),
 					formatter(
 						params: {
 							value: [string, number];
@@ -149,12 +164,13 @@ export default defineComponent({
 						this.slots,
 						priceColor,
 						this.$t("main.energyflow.gridImport"),
-						this.markPoints
+						gridPoints
 					),
 					...this.priceSeries(
 						this.feedinSlots,
-						colors.export || "",
-						this.$t("main.energyflow.pvExport")
+						exportColor,
+						this.$t("main.energyflow.pvExport"),
+						feedinPoints
 					),
 				],
 			};
@@ -170,7 +186,7 @@ export default defineComponent({
 			slots: UiForecastSlot[],
 			color: string,
 			name: string,
-			points?: { coord: [number, number]; value: string }[]
+			points: { coord: [number, number]; value: string }[]
 		): Record<string, unknown>[] {
 			const avg = slots.length ? slots.reduce((a, s) => a + s.value, 0) / slots.length : 0;
 			const gradientDown = avg >= 0;
@@ -211,7 +227,8 @@ export default defineComponent({
 					],
 				};
 			};
-			const markPoint = points && {
+			// always set, a dropped key would keep the previous labels on merge
+			const markPoint = {
 				markPoint: markPointLabel(
 					color,
 					this.tooltipVisible ? [] : points,

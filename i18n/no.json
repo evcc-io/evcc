@@ -1393,7 +1393,6 @@
       "solar": "Se forventet solproduksjon for i dag og de kommende dagene. Vil i fremtiden også brukes til automatisk ladeoptimering.",
       "temperature": "Se forventet utetemperatur på din lokasjon. Brukes til å forutsi varmebehov."
     },
-    "hideLine": "skjul linje",
     "modalTitle": "Prognose",
     "price": {
       "average": "Gjennomsnitt",
@@ -1401,8 +1400,6 @@
       "lowestHour": "Billigste time",
       "range": "Rekkevidde"
     },
-    "priceZoom": "zoom inn",
-    "showLine": "vis linje",
     "solar": {
       "dayAfterTomorrow": "Overmorgen",
       "partly": "delvis",
