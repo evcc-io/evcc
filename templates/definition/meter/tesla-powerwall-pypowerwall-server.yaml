@@ -14,9 +14,9 @@ caveats:
         The actual backup reserve is read from the server cache and may update only after the next poll following a control action.
   - description:
       de: |
-        Netz- und Batterie-Energiezähler werden nur gelesen, wenn pypowerwall-server `cloud_energy.active` meldet. Ohne diesen Marker integriert evcc die lokale Leistung, statt möglicherweise unbalancierte Lifetime-Zähler zu verwenden.
+        Netz- und Batterie-Energiezähler werden nur gelesen, wenn pypowerwall-server für den jeweiligen Abschnitt `cloud_energy_active` meldet. Ohne diesen Marker integriert evcc die lokale Leistung, statt möglicherweise unbalancierte Lifetime-Zähler zu verwenden.
       en: |
-        Grid and battery energy counters are only read when pypowerwall-server reports `cloud_energy.active`. Without that marker, evcc integrates the local power instead of using possibly unbalanced lifetime counters.
+        Grid and battery energy counters are only read when pypowerwall-server reports `cloud_energy_active` for that section. Without that flag, evcc integrates the local power instead of using possibly unbalanced lifetime counters.
 requirements:
   description:
     de: |
@@ -68,16 +68,16 @@ render: |
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
     jq: .site.instant_power
-  # Cloud-backed lifetime counters are used only when the server marks the
-  # overlay active; zero makes evcc integrate the local power instead.
+  # Cloud-backed lifetime counters are used only when the server marks this
+  # section active; zero makes evcc integrate the local power instead.
   energy:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
-    jq: if .cloud_energy.active == true then .site.energy_imported / 1000 else 0 end
+    jq: if .site.cloud_energy_active == true then .site.energy_imported / 1000 else 0 end
   returnenergy:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
-    jq: if .cloud_energy.active == true then .site.energy_exported / 1000 else 0 end
+    jq: if .site.cloud_energy_active == true then .site.energy_exported / 1000 else 0 end
   currents:
     - uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
       jq: .site.i_a_current
@@ -117,11 +117,11 @@ render: |
   energy:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
-    jq: if .cloud_energy.active == true then .battery.energy_exported / 1000 else 0 end
+    jq: if .battery.cloud_energy_active == true then .battery.energy_exported / 1000 else 0 end
   returnenergy:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
-    jq: if .cloud_energy.active == true then .battery.energy_imported / 1000 else 0 end
+    jq: if .battery.cloud_energy_active == true then .battery.energy_imported / 1000 else 0 end
   soc:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/system_status/soe
