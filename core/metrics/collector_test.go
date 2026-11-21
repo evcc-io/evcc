@@ -526,7 +526,6 @@ func TestCreateEntityReconcileGuard(t *testing.T) {
 
 	// a rolled up day
 	require.NoError(t, db.Instance.Create(&flowDay{Day: 86400, Data: "{}"}).Error)
-	dailyEnd.Store(2 * 86400)
 
 	got, err := createEntity(Consumer, "db:7", "")
 	require.NoError(t, err)
