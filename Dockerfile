@@ -86,8 +86,6 @@ COPY --from=builder /build/evcc /usr/local/bin/evcc
 
 COPY packaging/docker/bin/* /app/
 
-# mDNS
-EXPOSE 5353/udp
 # EEBus
 EXPOSE 4712/tcp
 # mDNS
