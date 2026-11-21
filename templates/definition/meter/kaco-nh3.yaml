@@ -7,12 +7,12 @@ requirements:
   description:
     de: |
       Für KACO blueplanet Hybrid NH3 mit AI-Dongle/WLAN-Stick. Modbus TCP und lokale AISWEI-HTTP-API müssen über die IP-Adresse des Sticks erreichbar sein (Modbus TCP Port 502, Geräte-ID 3; HTTP Port 8484).
-      Die Batterie-Leistungsregelung verwendet die lokale Schnittstelle `fdbg.cgi`. Maximale Lade- und Entladeleistung müssen manuell angegeben werden. Batterie-Lade- und Entladeenergie werden über die lokale AISWEI-HTTP-API ausgelesen.
+      Die Batterie-Leistungsregelung verwendet die lokale Schnittstelle `fdbg.cgi`. Die maximale Lade- und Entladeleistung werden basierend auf der Batteriespannung und einer festen 30 A Stromgrenze berechnet, begrenzt durch die Nennleistung des ausgewählten Wechselrichters (6/8/10/12 kW). Batterie-Lade- und Entladeenergie werden über die lokale AISWEI-HTTP-API ausgelesen.
       Die Abregelung wird über ein separates KACO NH3 Abregelungsgerät konfiguriert.
       Der im SunSpec-Modell 203 bereitgestellte Netzzähler liefert Netzleistung, Import-/Export-Energie und phasenbezogene Messwerte.
     en: |
       For KACO blueplanet Hybrid NH3 with AI dongle/Wi-Fi stick. Modbus TCP and the local AISWEI HTTP API must be reachable at the stick's IP address (Modbus TCP port 502, device ID 3; HTTP port 8484).
-      Battery power control uses the local `fdbg.cgi` endpoint. Maximum charge and discharge power must be configured manually. Battery charge and discharge energy are read from the local AISWEI HTTP API.
+      Battery power control uses the local `fdbg.cgi` endpoint. Maximum charge and discharge power are calculated from battery voltage and a fixed 30 A current limit, capped by the selected inverter model's rated power (6/8/10/12 kW). Battery charge and discharge energy are read from the local AISWEI HTTP API.
       Configure curtailment through a separate KACO NH3 curtailer device.
       The grid meter exposed through SunSpec Model 203 provides grid power, import/export energy, and per-phase measurements.
 capabilities: ["battery-control"]
@@ -37,11 +37,17 @@ params:
     description:
       de: Seriennummer des Wechselrichters (isn)
       en: Inverter serial number (isn)
-  - preset: battery-params
-  - name: maxchargepower
+  - name: invertermodel
+    type: choice
+    choice: [6, 8, 10, 12]
+    default: 12
     required: true
-  - name: maxdischargepower
-    required: true
+    usages: ["battery"]
+    description:
+      de: Nennleistung des Wechselrichters in kW
+      en: Inverter rated power in kW
+  - preset: battery-capacity
+  - preset: battery-minmaxsoc
   - name: minsoc
     default: 10
     pattern:
@@ -205,6 +211,18 @@ render: |
                       source: http
                       uri: http://{{ .host }}:8484/getdefine.cgi
                       jq: 'if type == "object" and has("Pin") then .Pin = "__PIN__" else error("missing Pin field") end | tojson'
+                  - name: voltage
+                    type: int
+                    config:
+                      source: modbus
+                      id: 3
+                      # Modbus TCP
+                      uri: localhost:20064
+                      rtu: false
+                      register:
+                        address: 1616 # 31617 BMS{{ if eq .battery "2" }}2{{ else }}1{{ end }} battery voltage, 0.01 V
+                        type: input
+                        decode: uint16nan
                 out:
                   - name: frame
                     type: string
@@ -219,9 +237,18 @@ render: |
                 script: |
                   import "fmt"
                   import "strings"
-                  pin := {{ .maxchargepower }}
-                  if batteryMode == 4 {
+                  pin := 0
+                  if batteryMode == 1 || batteryMode == 2 {
                     pin = 0
+                  } else {
+                    maxInverterPower := {{ .invertermodel }} * 1000
+                    voltageInVolts := voltage * 0.01
+                    calculatedPower := int(voltageInVolts * 30)
+                    if calculatedPower > maxInverterPower {
+                      pin = maxInverterPower
+                    } else {
+                      pin = calculatedPower
+                    }
                   }
                   updated := strings.Replace(schedule, `"Pin":"__PIN__"`, fmt.Sprintf(`"Pin":%d`, pin), 1)
                   if updated == schedule {
@@ -316,6 +343,19 @@ render: |
               value: 3
               set:
                 source: go
+                in:
+                  - name: voltage
+                    type: int
+                    config:
+                      source: modbus
+                      id: 3
+                      # Modbus TCP
+                      uri: localhost:20064
+                      rtu: false
+                      register:
+                        address: 1616 # 31617 BMS{{ if eq .battery "2" }}2{{ else }}1{{ end }} battery voltage, 0.01 V
+                        type: input
+                        decode: uint16nan
                 <<: &setpoint
                   out:
                     - name: frame
@@ -325,11 +365,19 @@ render: |
                         <<: *fdbg
                         body: '{"data":"${frame}"}'
                   script: |
-                    power := 0
+                    maxInverterPower := {{ .invertermodel }} * 1000
+                    voltageInVolts := voltage * 0.01
+                    calculatedPower := int(voltageInVolts * 30)
+                    var power int
+                    if calculatedPower > maxInverterPower {
+                      power = maxInverterPower
+                    } else {
+                      power = calculatedPower
+                    }
                     if batteryMode == 3 {
-                      power = -{{ .maxchargepower }}
-                    } else if batteryMode == 5 {
-                      power = {{ .maxdischargepower }}
+                      power = -power
+                    } else if batteryMode != 5 {
+                      power = 0
                     }
                     frame := []byte{3, 6, 4, 128, byte(power >> 8), byte(power)}
                     crc := 0xffff
@@ -383,5 +431,4 @@ render: |
               set:
                 source: go
                 <<: *setpoint
-  {{- include "battery-params" . }}
   {{- end }}
