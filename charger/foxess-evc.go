@@ -44,17 +44,19 @@ type FoxESSEVC struct {
 	implement.Caps
 	log        *util.Logger
 	conn       *modbus.Connection
-	mu         sync.Mutex // guards the tracked state below against the heartbeat goroutine
-	current    float64    // tracks phase current, 0 if unset
-	enabled    bool       // tracks enabled state
-	phases     int        // tracks phase count; the charger does not report it
-	setpoint   uint16     // last known value of foxRegMaxPower
-	status     uint16     // last known value of foxRegStatus
-	switchable bool       // charger switches 1p/3p on its own, derived from the power setpoint
-	minPower   uint16     // min supported power
-	maxPower   uint16     // max supported power
-	minCurrent float64    // min supported current per phase
-	maxCurrent float64    // max supported current per phase
+	cache      *modbus.Cache // status block, see readBlock
+	block      bool          // firmware supports reading the status block
+	mu         sync.Mutex    // guards the tracked state below against the heartbeat goroutine
+	current    float64       // tracks phase current, 0 if unset
+	enabled    bool          // tracks enabled state
+	phases     int           // tracks phase count; the charger does not report it
+	setpoint   uint16        // last known value of foxRegMaxPower
+	status     uint16        // last known value of foxRegStatus
+	switchable bool          // charger switches 1p/3p on its own, derived from the power setpoint
+	minPower   uint16        // min supported power
+	maxPower   uint16        // max supported power
+	minCurrent float64       // min supported current per phase
+	maxCurrent float64       // max supported current per phase
 
 	// multi-connector chargers (e.g. C-series)
 	connector uint16      // selected connector, 0 on single-connector chargers
@@ -140,6 +142,14 @@ const (
 	foxStatusSwitching = 9 // undocumented: automatic phase switch in progress
 )
 
+// The per-connector values polled every cycle are read as one block (status registers plus the
+// power setpoint) within a single connector selection.
+const (
+	foxBlockStart = foxRegStopReason            // first status register of the block
+	foxBlockCount = foxRegModel - foxBlockStart // up to and including foxRegRFID
+	foxBlockTTL   = time.Second
+)
+
 // foxConnectorLocks holds one *sync.Mutex per device, keyed by serial number. All connectors of a multi-connector
 // charger share the connector selection register, so selecting a connector and accessing its registers must not interleave.
 var foxConnectorLocks sync.Map
@@ -199,9 +209,10 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings, connector ui
 	conn.Logger(log.TRACE)
 
 	wb := &FoxESSEVC{
-		Caps: implement.New(),
-		log:  log,
-		conn: conn,
+		Caps:  implement.New(),
+		log:   log,
+		conn:  conn,
+		cache: modbus.NewCache(foxBlockTTL),
 	}
 
 	// older firmware (e.g. A-series) has no connector count register
@@ -227,6 +238,12 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings, connector ui
 		wb.connector = connector
 		mu, _ := foxConnectorLocks.LoadOrStore(serial, new(sync.Mutex))
 		wb.connMu = mu.(*sync.Mutex)
+	}
+
+	if _, err := wb.readBlock(); err != nil {
+		wb.log.DEBUG.Printf("status block not supported: %v", err)
+	} else {
+		wb.block = true
 	}
 
 	// device limits are model-specific and constant, so read them once (§2.18-§2.21)
@@ -331,8 +348,53 @@ func (wb *FoxESSEVC) withConnector(reg uint16, fn func() error) error {
 	return fn()
 }
 
-// read reads consecutive holding registers, selecting the connector if required
+// readBlock returns the status block followed by the power setpoint, both read within one connector selection
+func (wb *FoxESSEVC) readBlock() ([]byte, error) {
+	b, _, err := wb.cache.Fetch("block", func() ([]byte, error) {
+		var res []byte
+
+		err := wb.withConnector(foxRegStatus, func() error {
+			b, err := wb.conn.ReadHoldingRegisters(foxBlockStart, foxBlockCount)
+			if err != nil {
+				return err
+			}
+
+			sp, err := wb.conn.ReadHoldingRegisters(foxRegMaxPower, 1)
+			if err != nil {
+				return err
+			}
+
+			res = append(b, sp...)
+			return nil
+		})
+
+		return res, err
+	})
+
+	return b, err
+}
+
+// read reads consecutive holding registers, from the status block if covered, selecting the connector if required
 func (wb *FoxESSEVC) read(reg, words uint16) ([]byte, error) {
+	if wb.block {
+		if reg == foxRegMaxPower && words == 1 {
+			b, err := wb.readBlock()
+			if err != nil {
+				return nil, err
+			}
+			return b[2*foxBlockCount:], nil
+		}
+
+		if reg >= foxBlockStart && reg+words <= foxBlockStart+foxBlockCount {
+			b, err := wb.readBlock()
+			if err != nil {
+				return nil, err
+			}
+			off := 2 * int(reg-foxBlockStart)
+			return b[off : off+2*int(words)], nil
+		}
+	}
+
 	var b []byte
 
 	err := wb.withConnector(reg, func() error {
@@ -391,6 +453,8 @@ func (wb *FoxESSEVC) getPhaseValues(reg uint16, divider float64) (float64, float
 
 // writeReg writes a single read/write register (0x10), selecting the connector if required
 func (wb *FoxESSEVC) writeReg(reg, val uint16) error {
+	defer wb.cache.Clear()
+
 	return wb.withConnector(reg, func() error {
 		return wb.write(reg, val)
 	})
