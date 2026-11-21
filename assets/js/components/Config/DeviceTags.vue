@@ -235,6 +235,7 @@ export default {
 				case "dimLimit":
 				case "curtailLimit":
 				case "exportLimit":
+				case "peakLimit":
 					return this.fmtW(value, POWER_UNIT.AUTO);
 				case "energy":
 				case "returnEnergy":

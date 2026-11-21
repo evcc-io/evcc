@@ -389,7 +389,13 @@
 									v-else
 									:nodes="[circuitsRoot]"
 									:loadpoints="circuitLoadpoints"
+									:peak-limit="gridPeakLimit"
+									:peak-limit-raised="gridPeakLimitRaised"
+									@peak-limit="openModal('hems', { type: 'static' })"
 								/>
+								<p v-if="circuitsPending" class="small evcc-gray mt-2 mb-0">
+									{{ $t("config.circuits.restartRequired") }}
+								</p>
 							</template>
 						</DeviceCard>
 						<DeviceCard
@@ -567,6 +573,7 @@
 				<HemsModal
 					:id="hemsDevices[0]?.id"
 					:yamlSource="hems?.yamlSource"
+					:has-circuit="circuits.length > 0"
 					@changed="hemsChanged"
 				/>
 				<ShmModal @changed="loadDirty" />
@@ -1251,8 +1258,14 @@ export default defineComponent({
 			if (exportLimit > 0) {
 				result["exportLimit"] = { value: exportLimit };
 			}
+			if (this.gridPeakLimit) {
+				result["peakLimit"] = {
+					value: this.gridPeakLimit,
+					warning: this.gridPeakLimitRaised,
+				};
+			}
 			if (this.hemsDevices.length === 0 && !this.hems?.config?.configured) {
-				return exportLimit > 0 ? result : { configured: { value: false } };
+				return Object.keys(result).length ? result : { configured: { value: false } };
 			}
 			const status = store.state?.hems?.status;
 			if (!status) {
@@ -1341,7 +1354,14 @@ export default defineComponent({
 			return { configured: { value: false } };
 		},
 		circuitsTags(): DeviceTags {
-			return this.circuitsRoot ? {} : { configured: { value: false } };
+			if (this.circuitsRoot) return {};
+			return { configured: { value: this.circuitsPending } };
+		},
+		// saved circuits only run after a restart, legacy ones never via this ui
+		circuitsPending(): boolean {
+			return (
+				!this.circuitsRoot && this.circuitsYamlSource !== "db" && this.circuits.length > 0
+			);
 		},
 		// maps an OCPP station id to its loadpoint title (fallback: charger title)
 		stationTitles(): Record<string, string> {
@@ -1410,6 +1430,14 @@ export default defineComponent({
 					power:
 						store.state.loadpoints?.find((s) => s.name === lp.name)?.chargePower ?? 0,
 				}));
+		},
+		gridPeakLimit(): number | undefined {
+			const baseline = store.state?.gridPeakBaseline || 0;
+			if (!baseline) return undefined;
+			return Math.max(baseline, store.state?.gridPeak || 0);
+		},
+		gridPeakLimitRaised(): boolean {
+			return (store.state?.gridPeak || 0) > (store.state?.gridPeakBaseline || 0);
 		},
 		hemsDimmed(): boolean {
 			// only consumption limits matter for circuits, curtailment affects feed-in

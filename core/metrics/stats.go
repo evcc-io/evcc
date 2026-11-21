@@ -2,8 +2,10 @@ package metrics
 
 import (
 	"math"
+	"slices"
 	"time"
 
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/jinzhu/now"
 )
@@ -94,5 +96,67 @@ func (c *Collector) EnergyStats() (EnergyStats, error) {
 
 	res := c.statsCache
 	res.Today = math.Round(res.Today + c.accu.Energy*1e3)
+	return res, nil
+}
+
+// dailyPeakEnergy returns the max persisted slot energy in kWh per day of the month of
+// slotStart, nil for days without a slot. Queried by group so a replaced meter keeps the month.
+func dailyPeakEnergy(group string, slotStart time.Time) ([]*float64, error) {
+	type row struct {
+		Day    int
+		Energy float64
+	}
+
+	var rows []row
+	err := db.Instance.Table("meters m").
+		Select(`CAST(strftime('%d', m.ts, 'unixepoch', 'localtime') AS INTEGER) AS day, MAX(m.energy) AS energy`).
+		Joins("JOIN entities e ON m.meter = e.id").
+		Where(`e."group" = ? AND m.ts >= ? AND m.ts < ? AND COALESCE(m.recovered, 0) = 0`,
+			group, now.With(slotStart).BeginningOfMonth().Unix(), slotStart.Unix()).
+		Group("day").
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+
+	days := make([]*float64, slotStart.Day())
+	for _, r := range rows {
+		if r.Day >= 1 && r.Day <= len(days) {
+			days[r.Day-1] = &r.Energy
+		}
+	}
+
+	return days, nil
+}
+
+// SlotEnergy returns the running slot's import in kWh and the time since its start, false if the
+// slot was not observed from its start or holds downtime catchup energy
+func (c *Collector) SlotEnergy() (float64, time.Duration, bool) {
+	now := c.accu.clock.Now()
+	slotStart := now.Truncate(tariff.SlotDuration)
+	return c.accu.Energy, now.Sub(slotStart), c.started.Equal(slotStart) && !c.recovering()
+}
+
+// DailyPeakEnergy returns the month's max slot import in kWh per day, index 0 is the 1st,
+// nil without a complete slot. Persisted peaks are cached per slot, the in-flight slot raises today.
+func (c *Collector) DailyPeakEnergy() ([]*float64, error) {
+	slotStart := c.accu.clock.Now().Truncate(tariff.SlotDuration)
+
+	if !slotStart.Equal(c.peakSlot) {
+		days, err := dailyPeakEnergy(c.entity.Group, slotStart)
+		if err != nil {
+			return nil, err
+		}
+
+		c.peakSlot, c.peakDays = slotStart, days
+	}
+
+	res := slices.Clone(c.peakDays)
+
+	// downtime catchup energy is not a peak, and zero in-flight energy is not a measurement
+	if today, energy := len(res)-1, c.accu.Energy; energy > 0 && !c.recovering() && (res[today] == nil || energy > *res[today]) {
+		res[today] = &energy
+	}
+
 	return res, nil
 }
