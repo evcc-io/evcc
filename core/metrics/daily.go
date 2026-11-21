@@ -190,13 +190,14 @@ func Rollup() {
 	}
 }
 
-// RunRollup rolls up the completed days on each request. It blocks and is the
-// only writer of the rollup.
+// RunRollup rolls up the completed days, then again on each request. It
+// blocks and is the only writer of the rollup.
 func RunRollup() {
-	for range dailyRequest {
+	for {
 		if err := rollupDays(); err != nil {
 			log.ERROR.Printf("history rollup: %v", err)
 		}
+		<-dailyRequest
 	}
 }
 
