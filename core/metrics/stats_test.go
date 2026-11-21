@@ -139,4 +139,21 @@ func TestCollectorDailyPeakEnergy(t *testing.T) {
 	days, err = col2.DailyPeakEnergy()
 	require.NoError(t, err)
 	assert.InDelta(t, 0.5, *days[2], 1e-9)
+
+	// slot not observed from its start, slot holding downtime catchup energy
+	_, _, ok := col.SlotEnergy()
+	assert.False(t, ok)
+	_, _, ok = col2.SlotEnergy()
+	assert.False(t, ok)
+
+	// first reading of the next slot starts it
+	clock.Add(5 * time.Minute)
+	require.NoError(t, col.AddEnergy(nil, nil, 9000))
+	clock.Add(2 * time.Minute)
+	require.NoError(t, col.AddEnergy(nil, nil, 9000))
+
+	energy, elapsed, ok := col.SlotEnergy()
+	assert.True(t, ok)
+	assert.InDelta(t, 0.3, energy, 1e-9)
+	assert.Equal(t, 4*time.Minute, elapsed)
 }

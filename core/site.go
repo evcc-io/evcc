@@ -98,6 +98,7 @@ type Site struct {
 	gridExportLimit  float64 // static grid export power limit in W, 0 = disabled
 	gridPeakBaseline float64 // grid import peak target floor in W, 0 = disabled
 	gridPeakTarget   float64 // grid import target from the month's peak in W, 0 = none
+	gridPeakLimit    float64 // target capped by the running slot's remaining budget in W, 0 = none
 
 	// forecast settings
 	solarAdjusted bool // adjust solar forecast to real production data
@@ -265,7 +266,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	// circuit
 	if c := circuit.Root(); c != nil {
 		site.circuit = c
-		c.SetPeakLimiter(gridPeakLimiter{site})
+		c.SetPeakLimiter(gridPeakLimiter(site.GetGridPeakTarget), gridPeakLimiter(site.getGridPeakLimit))
 	}
 
 	// grid meter

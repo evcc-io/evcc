@@ -39,6 +39,7 @@ type Circuit struct {
 
 	hems api.HEMS               // only set on the root circuit, supplies the HEMS consumption cap
 	peak api.ConsumptionLimiter // only set on the root circuit, supplies the grid import peak target
+	slot api.ConsumptionLimiter // only set on the root circuit, supplies the peak target capped by the running slot's budget
 
 	currentUpdated time.Time
 	powerUpdated   time.Time
@@ -207,11 +208,26 @@ func (c *Circuit) GetMaxPower() float64 {
 // consumption limit and the grid import peak target. Only the root circuit
 // applies these clamps; non-root callers walk up the parent chain via ValidatePower.
 func (c *Circuit) EffectiveMaxPower() float64 {
-	res := c.GetMaxPower()
-
 	c.mu.RLock()
 	limiters := []api.ConsumptionLimiter{c.hems, c.peak}
 	c.mu.RUnlock()
+
+	return c.limitedMaxPower(limiters)
+}
+
+// validateMaxPower returns the effective max power further capped by the running slot's budget.
+// The budget only applies to load management, planning keeps the steady EffectiveMaxPower.
+func (c *Circuit) validateMaxPower() float64 {
+	c.mu.RLock()
+	limiters := []api.ConsumptionLimiter{c.hems, c.peak, c.slot}
+	c.mu.RUnlock()
+
+	return c.limitedMaxPower(limiters)
+}
+
+// limitedMaxPower returns the configured max power clamped by the limiters
+func (c *Circuit) limitedMaxPower(limiters []api.ConsumptionLimiter) float64 {
+	res := c.GetMaxPower()
 
 	// unconfigured max power or limit means unlimited
 	for _, l := range limiters {
@@ -226,11 +242,13 @@ func (c *Circuit) EffectiveMaxPower() float64 {
 	return res
 }
 
-// SetPeakLimiter attaches the grid import peak target. Valid on root circuit only.
-func (c *Circuit) SetPeakLimiter(peak api.ConsumptionLimiter) {
+// SetPeakLimiter attaches the grid import peak target and its cap by the running slot's budget.
+// Valid on root circuit only.
+func (c *Circuit) SetPeakLimiter(peak, slot api.ConsumptionLimiter) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.peak = peak
+	c.slot = slot
 }
 
 // SetMaxPower sets the max power
@@ -379,7 +397,7 @@ func (c *Circuit) GetMaxPhaseCurrent() float64 {
 
 // ValidatePower validates power request
 func (c *Circuit) ValidatePower(old, new float64) float64 {
-	if maxPower := c.EffectiveMaxPower(); maxPower != 0 {
+	if maxPower := c.validateMaxPower(); maxPower != 0 {
 		delta := max(0, new-old)
 		potential := maxPower - c.power
 

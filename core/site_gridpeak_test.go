@@ -50,10 +50,33 @@ func TestGridPeakTarget(t *testing.T) {
 	site.updateGridPeak()
 	assert.Equal(t, 8000.0, site.GetGridPeakTarget())
 
+	assert.Equal(t, 8000.0, site.getGridPeakLimit(), "unused slot")
+
+	// 12 kW for 5 min uses half of the slot's 2 kWh, leaving 6 kW for the remaining 10 min
+	clock.Add(5 * time.Minute)
+	require.NoError(t, col.AddEnergy(nil, nil, 12000))
+	site.updateGridPeak()
+	assert.Equal(t, 8000.0, site.GetGridPeakTarget())
+	assert.InDelta(t, 6000, site.getGridPeakLimit(), 1e-6)
+
+	// time left is floored near the slot end
+	clock.Add(9*time.Minute + 30*time.Second)
+	require.NoError(t, col.AddEnergy(nil, nil, 1200))
+	site.updateGridPeak()
+	assert.InDelta(t, 8000, site.getGridPeakLimit(), 1e-6)
+
+	// 2.19 kWh exceed the slot's budget: the running slot raises the target, nothing is left to import
+	clock.Add(20 * time.Second)
+	require.NoError(t, col.AddEnergy(nil, nil, 180000))
+	site.updateGridPeak()
+	assert.InDelta(t, 8760, site.GetGridPeakTarget(), 1e-6)
+	assert.Equal(t, 1.0, site.getGridPeakLimit())
+
 	// fast charging accepts a higher peak
 	lp.mode = api.ModeNow
 	site.updateGridPeak()
 	assert.Equal(t, 0.0, site.GetGridPeakTarget())
+	assert.Equal(t, 0.0, site.getGridPeakLimit())
 
 	// disabled
 	lp.mode = api.ModePV

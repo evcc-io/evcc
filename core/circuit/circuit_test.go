@@ -180,12 +180,28 @@ func TestHEMSConsumptionClamp(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				peak := api.NewMockConsumptionLimiter(ctrl)
 				peak.EXPECT().MaxConsumptionPower().Return(&tc.peakLimit).AnyTimes()
-				c.SetPeakLimiter(peak)
+				c.SetPeakLimiter(peak, nil)
 			}
 
 			assert.Equal(t, tc.want, c.ValidatePower(0, tc.request))
 		})
 	}
+}
+
+// TestCircuitSlotBudget verifies that the slot budget caps load management but not planning
+func TestCircuitSlotBudget(t *testing.T) {
+	c, err := New(util.NewLogger("foo"), "root", 0, 0, nil, 0)
+	require.NoError(t, err)
+
+	ctrl := gomock.NewController(t)
+	peak := api.NewMockConsumptionLimiter(ctrl)
+	peak.EXPECT().MaxConsumptionPower().Return(new(8000.0)).AnyTimes()
+	slot := api.NewMockConsumptionLimiter(ctrl)
+	slot.EXPECT().MaxConsumptionPower().Return(new(6000.0)).AnyTimes()
+	c.SetPeakLimiter(peak, slot)
+
+	assert.Equal(t, 8000.0, c.EffectiveMaxPower())
+	assert.Equal(t, 6000.0, c.ValidatePower(0, 9000))
 }
 
 type failingPowers struct{}

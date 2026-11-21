@@ -129,6 +129,14 @@ func dailyPeakEnergy(group string, slotStart time.Time) ([]*float64, error) {
 	return days, nil
 }
 
+// SlotEnergy returns the running slot's import in kWh and the time since its start, false if the
+// slot was not observed from its start or holds downtime catchup energy
+func (c *Collector) SlotEnergy() (float64, time.Duration, bool) {
+	now := c.accu.clock.Now()
+	slotStart := now.Truncate(tariff.SlotDuration)
+	return c.accu.Energy, now.Sub(slotStart), c.started.Equal(slotStart) && !c.recovering()
+}
+
 // DailyPeakEnergy returns the month's max slot import in kWh per day, index 0 is the 1st,
 // nil without a complete slot. Persisted peaks are cached per slot, the in-flight slot raises today.
 func (c *Collector) DailyPeakEnergy() ([]*float64, error) {
