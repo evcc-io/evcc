@@ -130,11 +130,15 @@ func SetupSchema() error {
 		}
 	}
 
-	if err := db.Instance.AutoMigrate(new(meter)); err != nil {
+	if err := db.Instance.AutoMigrate(new(meter), new(energySum), new(flowDay)); err != nil {
 		return err
 	}
 
-	return backfill()
+	if err := backfill(); err != nil {
+		return err
+	}
+
+	return loadDaily()
 }
 
 // OnPersist, if set, is called with the slot start after a slot is written.
@@ -147,14 +151,16 @@ func persist(entity entity, ts time.Time, energy, returnEnergy float64, socTemp 
 	if recovered {
 		origin = slotRecovered
 	}
-	if err := db.Instance.Create(&meter{
-		Meter:        entity.Id,
-		Timestamp:    slot.Unix(),
-		Energy:       energy,
-		ReturnEnergy: returnEnergy,
-		SocTemp:      socTemp,
-		Recovered:    origin,
-	}).Error; err != nil {
+	if err := writeDays(slot, slot.Add(tariff.SlotDuration), func(tx *gorm.DB) error {
+		return tx.Create(&meter{
+			Meter:        entity.Id,
+			Timestamp:    slot.Unix(),
+			Energy:       energy,
+			ReturnEnergy: returnEnergy,
+			SocTemp:      socTemp,
+			Recovered:    origin,
+		}).Error
+	}); err != nil {
 		return err
 	}
 	if OnPersist != nil {

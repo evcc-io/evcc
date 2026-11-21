@@ -106,6 +106,19 @@ Known data quality traits that are accepted, not fixed:
 - Battery counters with coarse resolution can show cumulative discharge above charge. No efficiency figure is derived from them. Throughput and SoC are fine.
 - Entities have different "valid since" dates. Autarky without a grid meter, or savings before tariffs were persisted, is simply absent or covers less energy.
 
+## Daily rollup
+
+Reading every slot of a month or year is too slow on small devices, so completed local days are summed up once and stored (`core/metrics/daily.go`).
+
+- `meters_daily` holds the energy and grid cost sums per entity and day. `meters_flows_daily` holds the attribution of the day as JSON. A day is rolled up if and only if it has a row in `meters_flows_daily`, also without data. There is no other state, the rolled up days may have gaps.
+- Day and month aggregates and the flows read the rolled up days that are inside the period from start to end from these tables. Everything else comes from the slots: the current day, partial days at the edges of a period, days that are not rolled up, 15 minute and hourly aggregates. A reader gets the days and their rows in one statement, so it never sees half a day.
+- A day is rolled up once its slots cannot change anymore (`dailyDelay`). One background worker (`metrics.Rollup`, started by the run command) rolls up the days that are missing between the first slot and the last completed day: at startup, when the next day completes and after a change to completed days. A read never rolls up. A failed rollup is logged and retried after 15 minutes. Other commands (`evcc dump`, `evcc metrics`) read the rollup but do not write it.
+- Attribution stays per slot. A day stores the attributed sums, which add up over days. Never attribute daily sums.
+- A change to completed days goes through `writeDays`: slots, tariffs, deletes. It deletes the rollup of exactly these days in the transaction of the change and wakes up the worker. `dailyMu` keeps such a change and the worker apart, so no day is rolled up from slots that change meanwhile. Writes to the current day take neither the lock nor touch the rollup. A meter regrouped as consumer and a backfill of slot gaps (new `fillVersion`) drop the whole rollup. Slots edited outside of evcc need both tables cleared.
+- The rollup is dropped completely and rebuilt when the newest day is no local midnight anymore (time zone change). There is no version yet. The first change to attribution, pricing, the fields of `flowAcc` or the stored columns has to add one (a `version` column on `meters_flows_daily`, checked in `loadDaily`), otherwise past days are read with the new structure and sum up wrong. Rows written before count as version 0.
+- Slots changed by SQL do not pass `writeDays`. `evcc metrics reset` drops the rollup then, the worker of a running evcc rebuilds it within an hour.
+- All buckets are computed in Go from the local wall clock and passed to SQL as bounds. SQL never converts to local time. A day starts at the first instant of the local date, which is not midnight where daylight saving skips it. The hour repeated when daylight saving ends is one bucket.
+
 ## Tariff aggregation for charts
 
 The tariff read path can aggregate slots per hour, day or month, returning the mean plus min and max per bucket. These aggregates are display context only. Cost figures always come from the slot-level model above.

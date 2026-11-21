@@ -1,14 +1,15 @@
 package metrics
 
 import (
+	"cmp"
 	"errors"
-	"fmt"
 	"math"
 	"slices"
 	"sort"
 	"time"
 
 	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/export"
 	"gorm.io/gorm"
 )
@@ -47,36 +48,55 @@ type SeriesExport []Series
 // frontend GROUP_ORDER plus home/forecast.
 var GroupOrder = []string{PV, Battery, Grid, Loadpoint, Consumer, Meter, Home, Forecast, Temperature}
 
-var aggregateFormats = map[string]string{
-	"15m":   "%Y-%m-%d %H:%M",
-	"hour":  "%Y-%m-%d %H:00",
-	"day":   "%Y-%m-%d",
-	"month": "%Y-%m",
+// localDate returns the first instant of a local date. That is not midnight
+// where daylight saving skips it.
+func localDate(year int, month time.Month, day int) time.Time {
+	t := time.Date(year, month, day, 0, 0, 0, 0, time.Local)
+	for noon := time.Date(year, month, day, 12, 0, 0, 0, time.Local); t.Day() != noon.Day(); {
+		t = t.Add(tariff.SlotDuration)
+	}
+	return t
 }
 
-// aggregateStarts aligns a bucket's first slot to the bucket boundary, so all
-// entities share the same bucket start
+// localHour identifies the wall clock hour, which daylight saving can stretch
+func localHour(t time.Time) [2]int {
+	t = t.Local()
+	return [2]int{t.YearDay(), t.Hour()}
+}
+
+// aggregateStarts aligns a slot to the start of its bucket, so all entities
+// share the same bucket start. Buckets follow the local wall clock.
 var aggregateStarts = map[string]func(time.Time) time.Time{
 	"15m": func(t time.Time) time.Time { return t },
 	"hour": func(t time.Time) time.Time {
-		t = t.Local()
-		return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
+		t = t.Truncate(tariff.SlotDuration)
+		for prev := t.Add(-tariff.SlotDuration); localHour(prev) == localHour(t); prev = t.Add(-tariff.SlotDuration) {
+			t = prev
+		}
+		return t.Local()
 	},
 	"day": func(t time.Time) time.Time {
 		t = t.Local()
-		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+		return localDate(t.Year(), t.Month(), t.Day())
 	},
 	"month": func(t time.Time) time.Time {
 		t = t.Local()
-		return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location())
+		return localDate(t.Year(), t.Month(), 1)
 	},
 }
 
+// aggregateDurations returns the end of the bucket starting at t
 var aggregateDurations = map[string]func(time.Time) time.Time{
-	"15m":   func(t time.Time) time.Time { return t.Add(15 * time.Minute) },
-	"hour":  func(t time.Time) time.Time { return t.Add(time.Hour) },
-	"day":   func(t time.Time) time.Time { return t.AddDate(0, 0, 1) },
-	"month": func(t time.Time) time.Time { return t.AddDate(0, 1, 0) },
+	"15m": func(t time.Time) time.Time { return t.Add(tariff.SlotDuration) },
+	"hour": func(t time.Time) time.Time {
+		end := t.Add(tariff.SlotDuration)
+		for localHour(end) == localHour(t) {
+			end = end.Add(tariff.SlotDuration)
+		}
+		return end
+	},
+	"day":   func(t time.Time) time.Time { return localDate(t.Year(), t.Month(), t.Day()+1) },
+	"month": func(t time.Time) time.Time { return localDate(t.Year(), t.Month()+1, 1) },
 }
 
 // EnergyFilter narrows QueryEnergy to matching entities. Empty fields are ignored.
@@ -114,109 +134,145 @@ func DeleteEnergy(from, to time.Time, filter ...EnergyFilter) (int64, error) {
 		return 0, errors.New("missing from/to")
 	}
 
-	tx := db.Instance.Where("ts >= ? AND ts < ?", from.Unix(), to.Unix())
+	var rows int64
+	err := writeDays(from, to, func(tx *gorm.DB) error {
+		tx = tx.Where("ts >= ? AND ts < ?", from.Unix(), to.Unix())
 
-	if len(filter) > 0 {
-		if sub := entityQuery(filter[0]); sub != nil {
-			tx = tx.Where("meter IN (?)", sub)
+		if len(filter) > 0 {
+			if sub := entityQuery(filter[0]); sub != nil {
+				tx = tx.Where("meter IN (?)", sub)
+			}
 		}
+
+		res := tx.Delete(new(meter))
+		rows = res.RowsAffected
+		return res.Error
+	})
+	if err != nil {
+		return 0, err
 	}
 
-	res := tx.Delete(new(meter))
-
-	return res.RowsAffected, res.Error
+	return rows, nil
 }
 
 // QueryEnergy returns aggregated energy data, per title or per group.
 func QueryEnergy(from, to time.Time, aggregate string, grouped bool, filter ...EnergyFilter) ([]Series, error) {
 	addDuration := aggregateDurations[aggregate]
-	bucketStart := aggregateStarts[aggregate]
-
-	format, ok := aggregateFormats[aggregate]
+	bucketStart, ok := aggregateStarts[aggregate]
 	if !ok {
 		return nil, errors.New("invalid aggregate value")
 	}
 
-	titleExpr := `COALESCE(NULLIF(e.title,''), e.name)`
-	timeCol := fmt.Sprintf(`strftime('%s', m.ts, 'unixepoch', 'localtime')`, format)
-
-	selectTitle := titleExpr + ` AS title`
-	groupCols := titleExpr + `, e."group", ` + timeCol
-	if grouped {
-		selectTitle = `'' AS title`
-		groupCols = `e."group", ` + timeCol
-	}
-
-	type row struct {
-		Title        string
-		Group        string
-		Start        SqlTime
-		Energy       float64
-		ReturnEnergy float64
-		SocTemp      *float64
-		IsTemp       bool
-
-		Cost, PricedEnergy, ReturnCost, PricedReturnEnergy *float64
-	}
-
-	// soc_temp only for a single slot bucket; omitted for grouped sums
-	socCols := `, CASE WHEN COUNT(*) = 1 THEN m.soc_temp END AS soc_temp, e.is_temp AS is_temp`
-	if grouped {
-		socCols = ``
-	}
-
-	tx := db.Instance.Table("meters m").
-		Select(selectTitle + `, e."group",
-			MIN(m.ts) AS start,
-			COALESCE(SUM(m.energy), 0) AS energy,
-			COALESCE(SUM(m.return_energy), 0) AS return_energy,
-			SUM(CASE WHEN e."group" = 'grid' THEN m.energy * t.grid END) AS cost,
-			SUM(CASE WHEN e."group" = 'grid' AND t.grid IS NOT NULL THEN m.energy END) AS priced_energy,
-			SUM(CASE WHEN e."group" = 'grid' THEN m.return_energy * t.feedin END) AS return_cost,
-			SUM(CASE WHEN e."group" = 'grid' AND t.feedin IS NOT NULL THEN m.return_energy END) AS priced_return_energy` + socCols).
-		Joins("JOIN entities e ON m.meter = e.id").
-		Joins("LEFT JOIN tariffs t ON t.ts = m.ts").
-		Group(groupCols).
-		Order(groupCols)
-
-	if !from.IsZero() {
-		tx = tx.Where("m.ts >= ?", from.Unix())
-	}
-	if !to.IsZero() {
-		tx = tx.Where("m.ts < ?", to.Unix())
-	}
-
+	var ents []entity
+	tx := db.Instance.Select(`id, "group", COALESCE(NULLIF(title,''), name) AS title, is_temp`)
+	var ids []int
 	if len(filter) > 0 {
 		if sub := entityQuery(filter[0]); sub != nil {
-			tx = tx.Where("m.meter IN (?)", sub)
+			tx = tx.Where("id IN (?)", sub)
+			ids = []int{}
 		}
 	}
-
-	var rows []row
-	if err := tx.Scan(&rows).Error; err != nil {
+	if err := tx.Find(&ents).Error; err != nil {
 		return nil, err
 	}
 
+	entities := make(map[int]entity, len(ents))
+	for _, e := range ents {
+		entities[e.Id] = e
+		if ids != nil {
+			ids = append(ids, e.Id)
+		}
+	}
+
+	from, to, err := closeBounds(from, to, slotRange)
+	if err != nil {
+		return nil, err
+	}
+
+	var sums []energySum
+	switch aggregate {
+	case "15m":
+		sums, err = sumEnergy([][2]int64{{from.Unix(), to.Unix()}}, true, ids)
+	case "hour":
+		sums, err = sumEnergy(buckets(from, to, aggregate), false, ids)
+	default:
+		sums, err = dailyEnergy(from, to, ids)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// meters sharing a title or group are one series, days add up to months
+	type key struct {
+		title, group string
+		start        int64
+	}
+	series := make(map[key]*energySum)
+	var keys []key
+
+	add := func(dst **float64, src *float64) {
+		if src == nil {
+			return
+		}
+		if *dst == nil {
+			*dst = new(float64)
+		}
+		**dst += *src
+	}
+
+	for _, s := range sums {
+		e := entities[s.Meter]
+		k := key{e.Title, e.Group, bucketStart(time.Unix(s.Start, 0)).Unix()}
+		if grouped {
+			k.title = ""
+		}
+
+		b := series[k]
+		if b == nil {
+			b = &energySum{Meter: s.Meter, SocTemp: s.SocTemp}
+			series[k] = b
+			keys = append(keys, k)
+		}
+
+		b.Slots += s.Slots
+		b.Energy += s.Energy
+		b.ReturnEnergy += s.ReturnEnergy
+		add(&b.Cost, s.Cost)
+		add(&b.PricedEnergy, s.PricedEnergy)
+		add(&b.ReturnCost, s.ReturnCost)
+		add(&b.PricedReturnEnergy, s.PricedReturnEnergy)
+	}
+
+	slices.SortFunc(keys, func(a, b key) int {
+		return cmp.Or(cmp.Compare(a.title, b.title), cmp.Compare(a.group, b.group), cmp.Compare(a.start, b.start))
+	})
+
 	var res []Series
-	for _, r := range rows {
-		if n := len(res); n == 0 || res[n-1].Title != r.Title || res[n-1].Group != r.Group {
-			res = append(res, Series{Title: r.Title, Group: r.Group, IsTemp: r.IsTemp})
+	for _, k := range keys {
+		b := series[k]
+
+		if n := len(res); n == 0 || res[n-1].Title != k.title || res[n-1].Group != k.group {
+			res = append(res, Series{Title: k.title, Group: k.group, IsTemp: !grouped && entities[b.Meter].IsTemp})
 		}
 
 		s := &res[len(res)-1]
-		start := bucketStart(time.Time(r.Start))
-		s.Data = append(s.Data, Slot{
+		start := time.Unix(k.start, 0)
+		slot := Slot{
 			Start:        start,
 			End:          addDuration(start),
-			Energy:       roundEnergy(r.Energy),
-			ReturnEnergy: roundEnergy(r.ReturnEnergy),
-			SocTemp:      r.SocTemp,
+			Energy:       roundEnergy(b.Energy),
+			ReturnEnergy: roundEnergy(b.ReturnEnergy),
 
-			Cost:               r.Cost,
-			PricedEnergy:       r.PricedEnergy,
-			ReturnCost:         r.ReturnCost,
-			PricedReturnEnergy: r.PricedReturnEnergy,
-		})
+			Cost:               b.Cost,
+			PricedEnergy:       b.PricedEnergy,
+			ReturnCost:         b.ReturnCost,
+			PricedReturnEnergy: b.PricedReturnEnergy,
+		}
+		// soc_temp only for a single slot bucket; omitted for grouped sums
+		if !grouped && b.Slots == 1 {
+			slot.SocTemp = b.SocTemp
+		}
+		s.Data = append(s.Data, slot)
 	}
 
 	return res, nil
