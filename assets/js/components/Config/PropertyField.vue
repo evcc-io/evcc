@@ -130,6 +130,7 @@
 				:disabled="disabled"
 				@change="onFieldChange"
 				@input="onFieldInput"
+				@keydown="onFieldKeydown"
 			/>
 			<button
 				v-if="showClearButton"
@@ -499,6 +500,12 @@ export default {
 		onFieldInput(e) {
 			if (!this.useLazyBinding) {
 				this.value = this.coerceValue(e.target.value);
+			}
+		},
+		onFieldKeydown(e) {
+			// step does not block decimal separators
+			if (this.type === "Int" && [".", ","].includes(e.key)) {
+				e.preventDefault();
 			}
 		},
 		getOptionName(value) {

@@ -629,12 +629,24 @@ power:
 
     await expect(lpModal.getByText("Electrics")).toHaveCount(0);
     await expect(lpModal.getByLabel("Maximum current")).toHaveCount(0);
+    await expect(lpModal.getByLabel("Minimum current")).toHaveCount(0);
+
+    // default 6 A single phase
+    const power = lpModal.getByLabel("Expected power");
+    await expect(power).toHaveValue("1380");
+    await expect(lpModal).toContainText("≈ 6 A");
+    await power.fill("500");
+    await expect(lpModal).toContainText("≈ 2.17 A");
 
     // create
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await expect(page.getByTestId("loadpoint")).toContainText("Pool pump");
+
+    await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(lpModal);
+    await expect(power).toHaveValue("500");
   });
 });
 
