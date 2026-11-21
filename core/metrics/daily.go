@@ -233,8 +233,10 @@ func rollupChunk(days [][2]int64) error {
 		return err
 	}
 
+	starts := make([]int64, 0, len(days))
 	flows := make([]flowDay, 0, len(days))
 	for _, d := range days {
+		starts = append(starts, d[0])
 		acc, err := accumulate(time.Unix(d[0], 0), time.Unix(d[1], 0))
 		if err != nil {
 			return err
@@ -248,11 +250,6 @@ func rollupChunk(days [][2]int64) error {
 			return err
 		}
 		flows = append(flows, flowDay{Day: d[0], Data: string(data)})
-	}
-
-	starts := make([]int64, 0, len(days))
-	for _, d := range days {
-		starts = append(starts, d[0])
 	}
 
 	return db.Instance.Transaction(func(tx *gorm.DB) error {
@@ -407,18 +404,16 @@ func dailyEnergy(from, to time.Time, ids []int) ([]energySum, error) {
 	}
 
 	// a day that is only partly inside the period is summed from its slots
-	use := make(map[int64]bool)
 	var rest [][2]int64
 	for _, d := range buckets(from, to, "day") {
-		if rolled[d[0]] && wholeDay(d) {
-			use[d[0]] = true
-		} else {
+		if !rolled[d[0]] || !wholeDay(d) {
+			delete(rolled, d[0])
 			rest = append(rest, d)
 		}
 	}
 
 	res := slices.DeleteFunc(rows, func(s energySum) bool {
-		return s.Meter == 0 || !use[s.Start]
+		return s.Meter == 0 || !rolled[s.Start]
 	})
 
 	slots, err := sumEnergy(rest, false, ids)
