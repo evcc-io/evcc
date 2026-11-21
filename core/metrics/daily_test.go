@@ -45,19 +45,15 @@ func TestDailyRollup(t *testing.T) {
 	}
 
 	// slots only
-	dailyNow = func() time.Time { return from }
-	t.Cleanup(func() { dailyNow = time.Now })
-
-	require.NoError(t, rollupDays())
+	require.NoError(t, rollupDays(from))
 	energy, flow := query()
 	require.Zero(t, dailyEnd.Load())
 	require.NotEmpty(t, flow.Entities)
 
 	// rolled up days in between the partial first day and the slots after
-	dailyNow = func() time.Time { return to.Add(-time.Hour) }
 	query()
 	require.Zero(t, dailyEnd.Load(), "a read does not roll up")
-	require.NoError(t, rollupDays())
+	require.NoError(t, rollupDays(to.Add(-time.Hour)))
 	rolledEnergy, rolledFlow := query()
 	require.Equal(t, to.AddDate(0, 0, -1).Unix(), dailyEnd.Load())
 
@@ -79,10 +75,10 @@ func TestDailyRollup(t *testing.T) {
 	}
 
 	// a slot written into a rolled up day is not hidden by the rollup
-	dailyNow = func() time.Time { return to.AddDate(0, 0, 1) }
+	now := to.AddDate(0, 0, 1)
 	require.NoError(t, persist(entities[PV], from.Add(3*time.Hour), 4, 0, nil, false))
 	assert.Equal(t, slots+4, pv())
-	require.NoError(t, rollupDays())
+	require.NoError(t, rollupDays(now))
 	assert.Equal(t, slots+4, pv())
 	require.Equal(t, to.Unix(), dailyEnd.Load())
 
@@ -92,7 +88,7 @@ func TestDailyRollup(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, second.Unix(), dailyUsable())
 	assert.Equal(t, slots, pv())
-	require.NoError(t, rollupDays())
+	require.NoError(t, rollupDays(now))
 	assert.Equal(t, slots, pv())
 	require.Equal(t, to.Unix(), dailyEnd.Load())
 }
@@ -121,10 +117,7 @@ func TestDailyRollupMidnightSkipped(t *testing.T) {
 		require.NoError(t, persist(pv, ts, 1, 0, nil, false))
 	}
 
-	dailyNow = func() time.Time { return to.Add(12 * time.Hour) }
-	t.Cleanup(func() { dailyNow = time.Now })
-
-	require.NoError(t, rollupDays())
+	require.NoError(t, rollupDays(to.Add(12*time.Hour)))
 	require.Equal(t, to.Unix(), dailyEnd.Load())
 
 	var days []flowDay

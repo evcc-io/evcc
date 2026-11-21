@@ -60,9 +60,6 @@ const (
 	dailyChunk = 31
 )
 
-// dailyNow is replaced in tests
-var dailyNow = time.Now
-
 var log = util.NewLogger("metrics")
 
 var (
@@ -93,9 +90,9 @@ func atomicMin(v *atomic.Int64, ts int64) {
 	}
 }
 
-// dailyFinal returns the end of the days that are complete
-func dailyFinal() time.Time {
-	return dayStart(dailyNow().Add(-dailyDelay))
+// dailyFinal returns the end of the days that are complete at now
+func dailyFinal(now time.Time) time.Time {
+	return dayStart(now.Add(-dailyDelay))
 }
 
 // loadDaily restores how far the rollup got. A rollup of another time zone
@@ -132,10 +129,7 @@ func deleteDaily(tx *gorm.DB, from, to int64) error {
 // Rollup. It neither blocks nor fails, so it is safe on the write path.
 // Readers stop using the rollup from that day on, the next rollup drops it.
 func markDaily(ts int64) {
-	// later days are not rolled up yet
-	if ts < dailyFinal().Unix() {
-		atomicMin(&dailyDirty, ts)
-	}
+	atomicMin(&dailyDirty, ts)
 
 	// a new slot may have completed a day
 	select {
@@ -191,16 +185,16 @@ func dailyUsable() int64 {
 // blocks and is the only writer of the rollup.
 func Rollup() {
 	for {
-		if err := rollupDays(); err != nil {
+		if err := rollupDays(time.Now()); err != nil {
 			log.ERROR.Printf("history rollup: %v", err)
 		}
 		<-dailyRequest
 	}
 }
 
-// rollupDays sums up all completed days that are not rolled up yet
-func rollupDays() error {
-	final := dailyFinal().Unix()
+// rollupDays sums up all days completed at now that are not rolled up yet
+func rollupDays(now time.Time) error {
+	final := dailyFinal(now).Unix()
 	if dailyDirty.Load() == dailyClean && dailyEnd.Load() >= final {
 		return nil
 	}
