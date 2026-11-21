@@ -111,11 +111,12 @@ func BenchmarkHistory(b *testing.B) {
 			}
 		}
 
-		// changes the history, so it comes last
+		// rebuilds the rollup after a delete a year ago. The filter keeps the
+		// delete on the index, without one it scans all slots.
 		b.Run(fmt.Sprintf("entities=%d/rollup/delete-hour-last-year", entities), func(b *testing.B) {
 			old := dayStart(now.AddDate(-1, 0, 0))
 			for b.Loop() {
-				_, err := DeleteEnergy(old, old.Add(time.Hour))
+				_, err := DeleteEnergy(old, old.Add(time.Hour), EnergyFilter{Group: Grid})
 				require.NoError(b, err)
 				require.NoError(b, rollupDays(now))
 			}
