@@ -32,8 +32,7 @@ func QueryContext(ctx context.Context, query *gojq.Query, input []byte) (any, er
 
 	if err, ok := v.(error); ok {
 		// halt/halt_error do not terminate the iterator by themselves
-		var he *gojq.HaltError
-		if errors.As(err, &he) {
+		if _, ok := errors.AsType[*gojq.HaltError](err); ok {
 			return nil, errors.New("jq: query halted")
 		}
 
