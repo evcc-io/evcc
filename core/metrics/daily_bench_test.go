@@ -89,27 +89,29 @@ func BenchmarkHistory(b *testing.B) {
 	for _, entities := range []int{16, 32} {
 		benchHistory(b, entities, now)
 
-		for _, source := range []string{"slots", "rollup"} {
-			if source == "rollup" {
-				// rolls up once, so it is timed by hand
-				start := time.Now()
-				require.NoError(b, rollupDays(now))
-				initial := time.Since(start).Seconds()
-
-				b.Run(fmt.Sprintf("entities=%d/rollup", entities), func(b *testing.B) {
-					b.ReportMetric(initial, "s/rollup")
-					b.ReportMetric(0, "ns/op")
-				})
-			}
-
+		runQueries := func(state string) {
 			for _, q := range queries {
-				b.Run(fmt.Sprintf("entities=%d/%s/%s", entities, source, q.name), func(b *testing.B) {
+				b.Run(fmt.Sprintf("entities=%d/%s/%s", entities, state, q.name), func(b *testing.B) {
 					for b.Loop() {
 						require.NoError(b, q.run())
 					}
 				})
 			}
 		}
+
+		runQueries("slots")
+
+		// rolls up once, so it is timed by hand
+		start := time.Now()
+		require.NoError(b, rollupDays(now))
+		initial := time.Since(start).Seconds()
+
+		b.Run(fmt.Sprintf("entities=%d/rollup", entities), func(b *testing.B) {
+			b.ReportMetric(initial, "s/rollup")
+			b.ReportMetric(0, "ns/op")
+		})
+
+		runQueries("rollup")
 
 		// a delete a year ago, the delete itself is not timed
 		old := dayStart(now.AddDate(-1, 0, 0))
@@ -120,13 +122,7 @@ func BenchmarkHistory(b *testing.B) {
 
 		// the requests until the rollup has caught up
 		deleteHour(b)
-		for _, q := range queries {
-			b.Run(fmt.Sprintf("entities=%d/deleted/%s", entities, q.name), func(b *testing.B) {
-				for b.Loop() {
-					require.NoError(b, q.run())
-				}
-			})
-		}
+		runQueries("deleted")
 
 		b.Run(fmt.Sprintf("entities=%d/deleted/rollup", entities), func(b *testing.B) {
 			for b.Loop() {
