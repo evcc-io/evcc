@@ -54,6 +54,14 @@ render: |
       type: holding
       decode: uint32
     scale: 0.1
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10783
+      type: holding
+      decode: uint32
+    scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
