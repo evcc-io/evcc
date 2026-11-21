@@ -27,8 +27,7 @@ type Zonneplan struct {
 	*embed
 	log        *util.Logger
 	export     bool
-	data       *util.Monitor[api.Rates]
-	last       api.Rates // last fetched rates, served until the monitor fills
+	last       api.Rates // served without waiting for the first update
 	ts         oauth2.TokenSource
 	client     *zonneplan.Client
 	mu         sync.Mutex
@@ -94,7 +93,6 @@ func NewZonneplanFromConfig(ctx context.Context, other map[string]any) (api.Tari
 		embed:      &cc.embed,
 		log:        util.NewLogger("zonneplan").Redact(cc.Email),
 		export:     export,
-		data:       util.NewMonitor[api.Rates](2 * time.Hour),
 		ts:         ts,
 		client:     client,
 		address:    cc.Address,
@@ -114,14 +112,12 @@ func (t *Zonneplan) run(done chan error) {
 	for {
 		<-time.After(delay)
 
-		// login gate: devices do not block on login, the tariff starts empty
-		// and fills in from the next poll after the ui login
+		// devices do not block on login: start empty, retry until the ui
+		// login succeeds
 		if _, err := t.ts.Token(); err != nil {
 			delay = time.Minute
 
-			if errors.As(err, new(*api.ErrLoginRequired)) {
-				// devices do not block on login: start empty, retry until the
-				// ui login succeeds
+			if _, ok := errors.AsType[*api.ErrLoginRequired](err); ok {
 				t.log.WARN.Println("waiting for login:", err)
 				once.Do(func() { close(done) })
 				continue
@@ -150,10 +146,6 @@ func (t *Zonneplan) run(done chan error) {
 		t.mu.Lock()
 		t.last = res
 		t.mu.Unlock()
-
-		t.data.SetFunc(func(old api.Rates) api.Rates {
-			return mergeAfter(old, res, time.Now().Truncate(SlotDuration))
-		})
 
 		delay = time.Hour
 
@@ -271,9 +263,8 @@ func (t *Zonneplan) mapRates(prices []zonneplan.PricePoint) api.Rates {
 	return res
 }
 
-// Rates implements the api.Tariff interface. The monitor's first-value wait
-// must not block the config validation, so the last fetched rates are served
-// directly; they are empty until the first update after the ui login.
+// Rates implements the api.Tariff interface. It must not block the config
+// validation, so the rates are empty until the first update after the ui login.
 func (t *Zonneplan) Rates() (api.Rates, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()

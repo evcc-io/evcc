@@ -117,9 +117,6 @@ func newZonneplanIdentity(log *util.Logger, email string) (*zonneplanIdentity, e
 
 // setOnline notifies the auth handler without blocking; see OAuth.setOnline.
 func (o *zonneplanIdentity) setOnline(online bool) {
-	if o.onlineC == nil {
-		return
-	}
 	select {
 	case o.onlineC <- online:
 	default:
@@ -152,15 +149,7 @@ func (o *zonneplanIdentity) Token() (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	t := o.client.Token()
-	token := &oauth2.Token{
-		AccessToken:  t.AccessToken,
-		RefreshToken: t.RefreshToken,
-		Expiry:       t.Expiry,
-	}
-
-	if err := o.storeTokenLocked(token); err != nil {
-		o.log.ERROR.Printf("saving token: %v", err)
+	if err := o.storeTokenLocked(o.client.Token()); err != nil {
 		return nil, err
 	}
 
@@ -169,7 +158,13 @@ func (o *zonneplanIdentity) Token() (*oauth2.Token, error) {
 
 // storeTokenLocked persists and activates the token. Caller must hold o.mu.
 // Settings are flushed right away: a lost rotated token locks the user out.
-func (o *zonneplanIdentity) storeTokenLocked(token *oauth2.Token) error {
+func (o *zonneplanIdentity) storeTokenLocked(t *zonneplan.Token) error {
+	token := &oauth2.Token{
+		AccessToken:  t.AccessToken,
+		RefreshToken: t.RefreshToken,
+		Expiry:       t.Expiry,
+	}
+
 	if err := settings.SetJson(o.tokenKey, token); err != nil {
 		return err
 	}
@@ -231,8 +226,7 @@ func (o *zonneplanIdentity) DisplayName() string {
 }
 
 // StartChallenge implements api.AuthChallenger. It has Zonneplan mail a
-// one-time password to the account address. A pending login is re-served
-// instead of restarted, the ui may call this several times.
+// one-time password to the account address, a new one on every call.
 func (o *zonneplanIdentity) StartChallenge() (*api.AuthChallenge, error) {
 	o.loginMu.Lock()
 	defer o.loginMu.Unlock()
@@ -270,16 +264,10 @@ func (o *zonneplanIdentity) SubmitChallenge(answer string) (*api.AuthChallenge, 
 		return nil, err
 	}
 
-	t := o.client.Token()
-
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
-	if err := o.storeTokenLocked(&oauth2.Token{
-		AccessToken:  t.AccessToken,
-		RefreshToken: t.RefreshToken,
-		Expiry:       t.Expiry,
-	}); err != nil {
+	if err := o.storeTokenLocked(o.client.Token()); err != nil {
 		return nil, err
 	}
 
