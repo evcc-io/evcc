@@ -66,7 +66,7 @@ var dailyNow = time.Now
 var log = util.NewLogger("metrics")
 
 var (
-	dailyMu      sync.RWMutex // readers hold it while RunRollup drops rolled up days
+	dailyMu      sync.RWMutex // readers hold it while Rollup drops rolled up days
 	dailyEnd     atomic.Int64 // start of the first day not rolled up, 0 if none is
 	dailyDirty   atomic.Int64 // earliest change the rollup does not reflect yet
 	dailyRequest = make(chan struct{}, 1)
@@ -129,7 +129,7 @@ func deleteDaily(tx *gorm.DB, from, to int64) error {
 }
 
 // markDaily notes a change to the slots or tariffs at ts and wakes up
-// RunRollup. It neither blocks nor fails, so it is safe on the write path.
+// Rollup. It neither blocks nor fails, so it is safe on the write path.
 // Readers stop using the rollup from that day on, the next rollup drops it.
 func markDaily(ts int64) {
 	// later days are not rolled up yet
@@ -187,9 +187,9 @@ func dailyUsable() int64 {
 	return end
 }
 
-// RunRollup rolls up the completed days, then again after each write. It
+// Rollup rolls up the completed days, then again after each write. It
 // blocks and is the only writer of the rollup.
-func RunRollup() {
+func Rollup() {
 	for {
 		if err := rollupDays(); err != nil {
 			log.ERROR.Printf("history rollup: %v", err)
