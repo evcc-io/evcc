@@ -3,7 +3,7 @@ package eebus
 // EEBUS use case scenario numbers per the respective Use Case Technical Specifications.
 //
 // Spec scenario numbers diverge between use cases (e.g. MPC scenario 1 = active power,
-// MGCP scenario 1 = power factor; MPC scenario 2 = energy, MGCP scenario 2 = active power).
+// MGCP scenario 1 = PV feed-in limitation factor; MPC scenario 2 = energy, MGCP scenario 2 = active power).
 // Passing the wrong number to IsScenarioAvailableAtEntity gates reads on the wrong feature.
 //
 // Each block mirrors the scenarios registered in the corresponding eebus-go usecase, which
@@ -11,8 +11,8 @@ package eebus
 
 // MGCP — Monitoring of Grid Connection Point (UC TS v1.0.0)
 const (
-	MGCPPowerFactor     uint = 1 // S1 power factor (cos phi)
-	MGCPPower           uint = 2 // S2 active power per phase + total
+	MGCPPowerFactor     uint = 1 // S1 PV feed-in power limitation factor
+	MGCPPower           uint = 2 // S2 total active power
 	MGCPEnergyFeedIn    uint = 3 // S3 total feed-in energy
 	MGCPEnergyConsumed  uint = 4 // S4 total consumed energy
 	MGCPCurrentPerPhase uint = 5 // S5 phase-specific currents

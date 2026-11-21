@@ -1224,6 +1224,8 @@ export interface Meter {
   powers?: number[];
   /** Current per phase in A. */
   currents?: number[];
+  /** Voltage per phase in V. */
+  voltages?: number[];
 }
 
 /** Projected home battery charge levels based on the solar and price forecast. */
