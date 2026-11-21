@@ -35,6 +35,9 @@ on:
         required: false
         type: string
         default: ''
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN:
+        required: true
 
 jobs:
   run:
@@ -47,7 +50,6 @@ jobs:
       issues: write
       pull-requests: write
       discussions: read # referenced discussions, see the fetch step
-      id-token: write
       actions: read
     outputs:
       fix: ${{ steps.fix.outputs.found }}
@@ -103,8 +105,6 @@ jobs:
           path_to_bun_executable: ${{ steps.bun.outputs.path }}
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # surface the underlying API error when a run fails on the first turn
-          show_full_output: true
           # Issues/comments come from external users without write access; this
           # workflow's token is scoped by the caller. All fetched content is
           # treated as untrusted data in the prompt.
@@ -503,7 +503,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git am "$RUNNER_TEMP/fix.patch"
-          if git diff --name-only "$BASE" HEAD | grep -q '^\.github/'; then
+          if ! git diff --quiet --ignore-submodules=none "$BASE" HEAD -- .github; then
             echo "::error::agent changed workflow files"
             exit 1
           fi
