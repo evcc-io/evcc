@@ -26,12 +26,14 @@ params:
     id: 1
     port: 502
     baudrate: 115200
+  - name: maxacpower
+    service: modbus/read?address=13034&type=holding&encoding=uint16&scale=10&{modbus} # Inverter_Rated_Power, 0.01 kW
   - preset: battery-params
   - name: maxchargepower
     required: true
     usages: ["battery"]
   - name: capacity
-    advanced: true
+    service: modbus/read?address=10688&type=holding&encoding=uint16&scale=0.01&resulttype=float&{modbus} # BMS_Bat1_Rated_Capacity, 0.01 kWh
     usages: ["battery"]
 render: |
   type: custom
@@ -62,6 +64,7 @@ render: |
       type: holding
       decode: int16
     scale: 10
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
