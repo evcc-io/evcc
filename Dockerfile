@@ -110,7 +110,7 @@ HEALTHCHECK \
   --timeout=5s \
   --start-period=30s \
   --retries=3 \
-  CMD wget -qO /dev/null http://localhost:7070 || exit 1
+  CMD wget -qO /dev/null "http://localhost:${EVCC_NETWORK_PORT:-7070}" || exit 1
 
 ENTRYPOINT [ "/app/entrypoint.sh" ]
 CMD [ "evcc" ]
