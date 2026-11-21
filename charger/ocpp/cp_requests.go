@@ -41,11 +41,23 @@ func (cp *CP) GetCompositeScheduleRequest(connectorId int, duration int) (*smart
 	return res, wait(err, rc)
 }
 
+var errRemoteStartRejected = errors.New(string(types.RemoteStartStopStatusRejected))
+
 func (cp *CP) RemoteStartTransactionRequest(connectorId int, idTag string) error {
 	rc := make(chan error, 1)
-	err := cp.cs.RemoteStartTransaction(cp.id, func(request *core.RemoteStartTransactionConfirmation, err error) {
-		if err == nil && request != nil && request.Status != types.RemoteStartStopStatusAccepted {
-			err = errors.New(string(request.Status))
+	return wait(cp.enqueueRemoteStart(connectorId, idTag, rc), rc)
+}
+
+func (cp *CP) enqueueRemoteStart(connectorId int, idTag string, rc chan<- error) error {
+	return cp.cs.RemoteStartTransaction(cp.id, func(reply *core.RemoteStartTransactionConfirmation, err error) {
+		if err == nil && reply != nil {
+			switch reply.Status {
+			case types.RemoteStartStopStatusAccepted:
+			case types.RemoteStartStopStatusRejected:
+				err = errRemoteStartRejected
+			default:
+				err = errors.New(string(reply.Status))
+			}
 		}
 
 		rc <- err
@@ -54,8 +66,6 @@ func (cp *CP) RemoteStartTransactionRequest(connectorId int, idTag string) error
 			request.ConnectorId = &connectorId
 		}
 	})
-
-	return wait(err, rc)
 }
 
 func (cp *CP) SetChargingProfileRequest(connectorId int, profile *types.ChargingProfile) error {

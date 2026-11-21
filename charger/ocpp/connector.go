@@ -33,7 +33,8 @@ type Connector struct {
 	txnId int
 	idTag string
 
-	remoteIdTag string
+	remoteIdTag  string
+	profileStart *profileRemoteStart
 
 	meterInterval time.Duration
 
@@ -41,6 +42,11 @@ type Connector struct {
 }
 
 func NewConnector(ctx context.Context, log *util.Logger, id int, cp *CP, idTag string, meterInterval time.Duration) (*Connector, error) {
+	return NewConnectorWithProfileStart(ctx, log, id, cp, idTag, meterInterval, false)
+}
+
+// NewConnectorWithProfileStart optionally verifies watt profiles before a remote start.
+func NewConnectorWithProfileStart(ctx context.Context, log *util.Logger, id int, cp *CP, idTag string, meterInterval time.Duration, enabled bool) (*Connector, error) {
 	conn := &Connector{
 		log:          log,
 		cp:           cp,
@@ -51,6 +57,9 @@ func NewConnector(ctx context.Context, log *util.Logger, id int, cp *CP, idTag s
 
 		remoteIdTag:   idTag,
 		meterInterval: meterInterval,
+	}
+	if enabled {
+		conn.profileStart = &profileRemoteStart{ctx: ctx, armed: true}
 	}
 
 	if err := cp.registerConnector(id, conn); err != nil {
