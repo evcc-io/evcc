@@ -1327,6 +1327,7 @@
     "price": {
       "average": "Average",
       "constant": "Price",
+      "estimate": "estimate",
       "lowestHour": "Cheapest hour",
       "range": "Range"
     },
@@ -1413,12 +1414,21 @@
     },
     "direction": {
       "battery": {
-        "energy": "charged",
-        "returnEnergy": "discharged"
+        "energy": "Charged",
+        "returnEnergy": "Discharged"
+      },
+      "consumer": {
+        "energy": "Consumed"
       },
       "grid": {
         "energy": "Import",
         "returnEnergy": "Export"
+      },
+      "heating": {
+        "energy": "Consumed"
+      },
+      "loadpoint": {
+        "energy": "Charged"
       },
       "meter": {
         "energy": "Energy",
@@ -1467,16 +1477,16 @@
     },
     "production": {
       "accuracy": "accuracy",
+      "deviation": "Deviation",
       "produced": "Produced",
       "remainingToday": "remaining today",
       "selfConsumed": "Self-consumed",
       "title": "Production"
     },
     "socTemp": {
-      "charged": "charged",
-      "soc": "charge",
-      "temperature": "temperature",
-      "used": "used"
+      "power": "Power",
+      "soc": "Charge",
+      "temperature": "Temperature"
     },
     "sources": {
       "battery": "Battery",
@@ -1621,8 +1631,7 @@
         "continuousCo2Description": "Selects the cleanest uninterrupted series of slots.",
         "continuousPriceDescription": "Selects the cheapest uninterrupted series of slots.",
         "disabledDescription": "Requires a dynamic tariff or CO₂ forecast.",
-        "label": "Optimization",
-        "optimizerDescription": "The {optimizer} selects the cheapest slots. May result in multiple starts and stops."
+        "label": "Optimization"
       },
       "planNumber": "Plan {number}",
       "precondition": {
@@ -1639,7 +1648,8 @@
       "repeatingPlans": "Repeating plans",
       "selectAll": "Select all",
       "strategy": {
-        "label": "Strategy"
+        "label": "Strategy",
+        "optimizerHint": "The {optimizer} does not take strategy settings into account yet and always chooses the cheapest slots. Limit automatic control to “Home battery” if you need them."
       },
       "time": "Time",
       "title": "Plan",

@@ -64,6 +64,9 @@ const (
 	SolarAdjusted     = "solarAdjusted"
 	ProfilePercentile = "profilePercentile"
 
+	// metrics
+	MetricsFillVersion = "metricsFillVersion"
+
 	// optimizer
 	OptimizerChargingStrategy   = "optimizerChargingStrategy"
 	OptimizerChargingStrategies = "optimizerChargingStrategies"

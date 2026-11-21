@@ -23,17 +23,17 @@ Directions per group:
 
 `home` is not a meter. It is the residual of the live power balance: grid + pv + battery discharge minus loadpoint charging, clamped at zero, integrated per slot. It is the whole house load excluding loadpoints. Consumers are sub-meters of home; `meter` entities are monitoring only and never enter any balance.
 
-Everything works on slots, never on session records. Sessions use an instantaneous solar share, the slot model nets import and export inside 15 minutes. The two will disagree on "solar %", by design. The Energy page follows the slot model, Sessions stay as they are.
+Everything works on slots, never on session records. Sessions use an instantaneous solar share, the slot model only knows the sums of 15 minutes. The two will disagree on "solar %", by design. The Energy page follows the slot model, Sessions stay as they are.
 
 ## Source attribution
 
 Each slot has sources (PV production, battery discharge, grid import) and sinks (home, battery charge, loadpoints, export). Which source fed which sink is not measurable, so it is assigned by a priority rule, applied per slot and summed over the period:
 
 1. Sources in order PV, battery, grid.
-2. Sinks in order home, battery charge, loadpoints, export.
+2. Sinks in order export, home, battery charge, loadpoints.
 3. Walk sources outer, sinks inner, moving `min(remaining source, remaining sink)` each step. Battery does not feed itself, grid does not feed export.
 
-This is the same rule the live control loop uses for the green share, so the page and the running system tell the same story. Home comes before loadpoints because the house load is not steerable while charging is. Anything a slot's sources cannot cover (meter mismatch, coarse counters, missing entity) is silently dropped rather than invented. Attributed totals are therefore always at or below the metered totals.
+Export comes first because only own energy can be exported. A slot with both import and export keeps both: the export came from PV or battery, the import went to home, battery charge or loadpoints. Serving home first would hand it the exported PV and drop the import. Home, battery charge and loadpoints follow the rule the live control loop uses for the green share, so the page and the running system tell the same story. Home comes before loadpoints because the house load is not steerable while charging is. Anything a slot's sources cannot cover (meter mismatch, coarse counters, missing entity) is silently dropped rather than invented. Attributed totals are therefore always at or below the metered totals.
 
 Everything downstream is built on these flows: the flow chart, the source mix bars (share of PV, battery, grid in what reached a sink), autarky, cost and CO2.
 
@@ -98,13 +98,26 @@ Principles:
 - **Show what is covered.** Cost and CO2 tiles print the priced energy they explain. Without any tariff data they show a "no price data" state with a link to tariff configuration instead of zeros.
 - **Drop, do not stretch.** Attribution never scales a source up to meet a sink. Unexplained energy disappears from ratios rather than being assigned to grid by default.
 - **Clamp residuals at zero.** "Others" (home minus tracked consumers) is clamped per slot so meter noise or a consumer briefly exceeding home never produces negative consumption.
-- **Slot gaps are tolerated in sums.** A day with 91 to 95 slots after a restart sums fine. Recovered slots (downtime energy written into one slot) are kept in sums but excluded from profile averages, where they would distort the shape.
+- **A single missing slot is interpolated once, at write time.** A slot missing between two measured slots (a restart) is persisted as the mean of its neighbors (`core/metrics/fill.go`), readers never interpolate energy. Gaps in existing history are filled once at boot, tracked by the `metricsFillVersion` setting, so a changed algorithm can regenerate the interpolated slots. Longer gaps stay empty, sums tolerate them. Recovered slots (downtime energy written into one slot) are kept in sums but excluded from profile averages, where they would distort the shape.
 
 Known data quality traits that are accepted, not fixed:
 
 - Chargers that report energy hourly (Easee) lump an hour into one slot. Daily sums are right, slot-level solar share and cost for those loadpoints are approximate.
 - Battery counters with coarse resolution can show cumulative discharge above charge. No efficiency figure is derived from them. Throughput and SoC are fine.
 - Entities have different "valid since" dates. Autarky without a grid meter, or savings before tariffs were persisted, is simply absent or covers less energy.
+
+## Daily rollup
+
+Reading every slot of a month or year is too slow on small devices, so completed local days are summed up once and stored (`core/metrics/daily.go`).
+
+- `meters_daily` holds the energy and grid cost sums per entity and day. `meters_flows_daily` holds the attribution of the day as JSON. A day is rolled up if and only if it has a row in `meters_flows_daily`, also without data. There is no other state, the rolled up days may have gaps.
+- Day and month aggregates and the flows read the rolled up days that are inside the period from start to end from these tables. Everything else comes from the slots: the current day, partial days at the edges of a period, days that are not rolled up, 15 minute and hourly aggregates. A reader gets the days and their rows in one statement, so it never sees half a day.
+- A day is rolled up once its slots cannot change anymore (`dailyDelay`). One background worker (`metrics.Rollup`, started by the run command) rolls up the days that are missing between the first slot and the last completed day: at startup, when the next day completes and after a change to completed days. A read never rolls up. A failed rollup is logged and retried after 15 minutes. Other commands (`evcc dump`, `evcc metrics`) read the rollup but do not write it.
+- Attribution stays per slot. A day stores the attributed sums, which add up over days. Never attribute daily sums.
+- A change to completed days goes through `writeDays`: slots, tariffs, deletes. It deletes the rollup of exactly these days in the transaction of the change and wakes up the worker. `dailyMu` keeps such a change and the worker apart, so no day is rolled up from slots that change meanwhile. Writes to the current day take neither the lock nor touch the rollup. A meter regrouped as consumer and a backfill of slot gaps (new `fillVersion`) drop the whole rollup. Slots edited outside of evcc need both tables cleared.
+- The rollup is dropped completely and rebuilt when the newest day is no local midnight anymore (time zone change). There is no version yet. The first change to attribution, pricing, the fields of `flowAcc` or the stored columns has to add one (a `version` column on `meters_flows_daily`, checked in `loadDaily`), otherwise past days are read with the new structure and sum up wrong. Rows written before count as version 0.
+- Slots changed by SQL do not pass `writeDays`. `evcc metrics reset` drops the rollup then, the worker of a running evcc rebuilds it within an hour.
+- All buckets are computed in Go from the local wall clock and passed to SQL as bounds. SQL never converts to local time. A day starts at the first instant of the local date, which is not midnight where daylight saving skips it. The hour repeated when daylight saving ends is one bucket.
 
 ## Tariff aggregation for charts
 

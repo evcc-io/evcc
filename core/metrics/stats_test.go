@@ -78,5 +78,5 @@ func TestCollectorEnergyStats(t *testing.T) {
 }
 
 func TestPeriodStatsEmpty(t *testing.T) {
-	require.Equal(t, PeriodStats{Energy: 1000}, (&flowEntity{metered: 1}).stats())
+	require.Equal(t, PeriodStats{Energy: 1000}, (&flowEntity{Metered: 1}).stats())
 }

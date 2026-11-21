@@ -58,6 +58,26 @@ params:
     help:
       en: Input pin for the S2 signal (30% export power limit)
       de: Eingangspin für das S2-Signal (Reduzierung der Einspeiseleistung auf 30%)
+  - name: activelow
+    type: bool
+    advanced: true
+    description:
+      en: Inputs active low
+      de: Eingänge invertiert (active low)
+    help:
+      en: Signals are active when the input is pulled to ground, e.g. by a relay contact switching to GND.
+      de: Signale sind aktiv, wenn der Eingang auf Masse gezogen wird, z. B. durch einen Relaiskontakt gegen GND.
+  - name: bias
+    type: choice
+    choice: ["pull-up", "pull-down", "disabled", "as-is"]
+    default: pull-up
+    advanced: true
+    description:
+      en: Input bias
+      de: Interner Pull-Widerstand
+    help:
+      en: Internal pull resistor of the inputs. Determines the input level while the contact is open.
+      de: Interner Pull-Widerstand der Eingänge. Bestimmt den Eingangspegel bei offenem Kontakt.
 render: |
   type: fnn
   maxdimpower: {{ .maxconsumptionpower }}
@@ -65,20 +85,44 @@ render: |
     source: gpio
     pin: {{ .w4pin }}
     function: read
+    {{- if .activelow }}
+    activelow: true
+    {{- end }}
+    {{- if .bias }}
+    bias: {{ .bias }}
+    {{- end }}
   productionnominalmax: {{ or .productionnominalmax .maxproductionpower }}
   w3:
     source: gpio
     pin: {{ .w3pin }}
     function: read
+    {{- if .activelow }}
+    activelow: true
+    {{- end }}
+    {{- if .bias }}
+    bias: {{ .bias }}
+    {{- end }}
   {{- if .s1pin }}
   s1:
     source: gpio
     pin: {{ .s1pin }}
     function: read
+    {{- if .activelow }}
+    activelow: true
+    {{- end }}
+    {{- if .bias }}
+    bias: {{ .bias }}
+    {{- end }}
   {{- end }}
   {{- if .s2pin }}
   s2:
     source: gpio
     pin: {{ .s2pin }}
     function: read
+    {{- if .activelow }}
+    activelow: true
+    {{- end }}
+    {{- if .bias }}
+    bias: {{ .bias }}
+    {{- end }}
   {{- end }}

@@ -153,7 +153,7 @@ func TestTotalPriceFormulaMemoryStable(t *testing.T) {
 	}
 
 	before := int64(sample())
-	for i := 0; i < 10_000; i++ {
+	for range 10_000 {
 		e.totalPrice(0.20, ts)
 	}
 	after := int64(sample())

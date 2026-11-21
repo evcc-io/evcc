@@ -416,8 +416,7 @@ func (o *Identity) start() (*api.AuthChallenge, error) {
 // finish maps a login step result to the next challenge or exchanges the code.
 // Caller must hold o.loginMu.
 func (o *Identity) finish(s *LoginSession, code string, err error) (*api.AuthChallenge, error) {
-	var capErr *ErrCaptchaRequired
-	if errors.As(err, &capErr) {
+	if capErr, ok := errors.AsType[*ErrCaptchaRequired](err); ok {
 		s.challenge = &api.AuthChallenge{Kind: api.AuthChallengeCaptcha, Image: capErr.Image}
 		o.pending = s
 		return s.challenge, nil

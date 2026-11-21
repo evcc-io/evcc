@@ -61,7 +61,10 @@ func NewE3dcFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	port, _ := strconv.Atoi(port_)
+	port, err := strconv.Atoi(port_)
+	if err != nil {
+		return nil, fmt.Errorf("invalid port: %w", err)
+	}
 
 	cfg := rscp.ClientConfig{
 		Address:           host,
