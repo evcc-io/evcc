@@ -59,8 +59,9 @@ func endOfHorizonValue(pN, pE []float32, eta float32, canExport bool) float32 {
 
 // optimizerBattery pairs a battery request entry with its device detail
 type optimizerBattery struct {
-	cfg    optimizer.BatteryConfig
-	detail batteryDetail
+	cfg     optimizer.BatteryConfig
+	detail  batteryDetail
+	circuit api.Circuit // loadpoint circuit, nil for home batteries
 }
 
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
@@ -218,7 +219,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		// skip disabled loadpoints
 		if cfg, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, planner); cfg.CMax > 0 {
 			detail.loadpoint = &id
-			batteries = append(batteries, optimizerBattery{cfg, detail})
+			batteries = append(batteries, optimizerBattery{cfg, detail, lp.GetCircuit()})
 		}
 	}
 
@@ -243,7 +244,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		}
 
 		cfg, detail := site.batteryRequest(dev, b, planner, minLen, firstSlotDuration)
-		batteries = append(batteries, optimizerBattery{cfg, detail})
+		batteries = append(batteries, optimizerBattery{cfg: cfg, detail: detail})
 	}
 
 	for _, b := range batteries {
@@ -252,6 +253,8 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		req.Batteries = append(req.Batteries, b.cfg)
 		details.BatteryDetails = append(details.BatteryDetails, b.detail)
 	}
+
+	req.Circuits = optimizerCircuits(site.circuit, batteries)
 
 	// a lone base load profile is identical to the total
 	if len(details.DemandDetails) < 2 {
@@ -367,7 +370,8 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 		// add smartcost limit, precondition and plan goal, if configured
 		demand = applySmartCostLimit(lp, demand, planner, minLen)
 		if automatic {
-			demand = applyPrecondition(lp, demand, minLen)
+			// TODO re-enable once late charging is supported, see evcc-io/optimizer#336
+			// demand = applyPrecondition(lp, demand, minLen)
 			site.applyPlanGoal(lp, &bat, minLen)
 		}
 	}
@@ -393,6 +397,31 @@ func circuitMaxImport(c api.Circuit) float64 {
 			res = power
 		}
 	}
+	return res
+}
+
+// optimizerCircuits limits the summed charging of the loadpoints below each limited sub-circuit.
+// The root circuit is covered by the grid import limit, which also accounts for the household.
+func optimizerCircuits(root api.Circuit, batteries []optimizerBattery) []optimizer.CircuitConfig {
+	var order []api.Circuit
+	members := make(map[api.Circuit][]int)
+
+	for i, b := range batteries {
+		for c := b.circuit; c != nil && c != root; c = c.GetParent() {
+			if _, ok := members[c]; !ok {
+				order = append(order, c)
+			}
+			members[c] = append(members[c], i)
+		}
+	}
+
+	var res []optimizer.CircuitConfig
+	for _, c := range order {
+		if p := circuitMaxImport(c); p > 0 {
+			res = append(res, optimizer.CircuitConfig{PMax: float32(p), Batteries: members[c]})
+		}
+	}
+
 	return res
 }
 

@@ -36,7 +36,7 @@ import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import echartsChart from "@/mixins/echartsChart";
 import { PERIODS } from "../Sessions/types";
 import { is12hFormat } from "@/units";
-import { hasColorPicker, isBidirectional } from "./groups";
+import { energyLabel, hasColorPicker, isBidirectional } from "./groups";
 import type { PriceBand, PriceOverlay } from "./types";
 import { CURRENCY } from "@/types/evcc";
 import { energyAxisScale, type EnergyAxisScale } from "@/utils/energyAxis";
@@ -248,9 +248,10 @@ export default defineComponent({
 		subPanel(): SubPanel | null {
 			if (!this.socTempValues) return this.pricePanel;
 			const isTemp = this.socTempIsTemp;
+			const source = this.socTempSource ? this.series.indexOf(this.socTempSource) : -1;
 			return socTempPanel(
 				this.socTempValues,
-				this.entryColors[0] || this.color,
+				this.entryColors[source] || this.color,
 				isTemp,
 				(v) => (isTemp ? this.fmtNumber(v, 0, "celsius") : this.fmtPercentage(v))
 			);
@@ -707,20 +708,17 @@ export default defineComponent({
 						id: "overlay-gap",
 						name: this.overlayLabel,
 						data: span((o, sum) => Math.abs(o - sum)),
-						// in place of the bar's upper part or above it. Striped on dark, solid
-						// on light where stripes get lost
-						itemStyle: colors.dark
-							? {
-									color: "transparent",
-									borderRadius: radius,
-									decal: {
-										color: overlayCol,
-										dashArrayX: [1, 0],
-										dashArrayY: [3, 3],
-										rotation: -Math.PI / 4,
-									},
-								}
-							: { color: overlayCol, borderRadius: radius },
+						// in place of the bar's upper part or above it
+						itemStyle: {
+							color: "transparent",
+							borderRadius: radius,
+							decal: {
+								color: overlayCol,
+								dashArrayX: [1, 0],
+								dashArrayY: [2, 1],
+								rotation: -Math.PI / 4,
+							},
+						},
 					}
 				);
 			}
@@ -758,17 +756,13 @@ export default defineComponent({
 				? (t: number) => this.fmtMonthNarrow(new Date(t))
 				: (t: number) => this.fmtMonth(new Date(t), true);
 		},
-		// Column headers for bidirectional tooltips (grid: imported/exported,
-		// battery: charged/discharged, meter: energy/reverse). Null when the group
-		// has no direction labels.
-		directionHeaders(): string[] | null {
-			if (!this.isBidirectional) return null;
-			const energyKey = `energy.direction.${this.group}.energy`;
-			const returnEnergyKey = `energy.direction.${this.group}.returnEnergy`;
-			const energy = this.$t(energyKey);
-			const returnEnergy = this.$t(returnEnergyKey);
-			if (energy === energyKey || returnEnergy === returnEnergyKey) return null;
-			return [String(energy), String(returnEnergy)];
+		// tooltip column headers: the group's energy, per direction when it has two
+		energyHeaders(): string[] {
+			const label = (direction: "energy" | "returnEnergy") =>
+				energyLabel((key) => this.$t(key), this.group, this.series[0]?.isTemp, direction);
+			return this.isBidirectional && !this.singleValue
+				? [label("energy"), label("returnEnergy")]
+				: [label("energy")];
 		},
 		tooltipDateLabel(): (t: number) => string {
 			if (this.period === PERIODS.DAY) {
@@ -868,50 +862,53 @@ export default defineComponent({
 						const nameByIdx = new Map(
 							this.series.map((s, i) => [s.paletteIndex ?? i, s.title])
 						);
-						const showName = this.series.length > 1 && this.focusedEntity === null;
-
-						// one unit for all rows, based on the largest individual value (not the total)
-						const rowValues = indices.map(
-							(i) => totals.get(i) ?? { energy: 0, returnEnergy: 0 }
-						);
-						const unit = this.getPowerUnit(
-							Math.max(
-								0,
-								...rowValues.flatMap((t) =>
-									this.isBidirectional && !this.singleValue
-										? [t.energy, t.returnEnergy]
-										: [t.energy + t.returnEnergy]
-								)
-							) * 1000
-						);
-						const formatValue = (v: number) => {
-							const watts = Math.abs(v) * 1000;
-							return this.period === PERIODS.DAY
-								? this.fmtW(watts, unit)
-								: this.fmtWh(watts, unit);
-						};
+						const several = this.series.length > 1 && this.focusedEntity === null;
+						const twoCols = this.isBidirectional && !this.singleValue;
+						// bar values are average power in the day view, the tooltip shows energy
+						const factor = this.valueFactor;
+						const withPower = this.period === PERIODS.DAY && !twoCols;
+						const rowValues = indices.map((i) => {
+							const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
+							// a single value covers both sides, a sink can draw from above and below
+							const cols = twoCols
+								? [t.energy, t.returnEnergy]
+								: [t.energy + t.returnEnergy];
+							return cols.map((v) => (v * 1000) / factor);
+						});
+						// one unit per column kind, based on the largest row value (not the total)
+						const peak = Math.max(0, ...rowValues.flat());
+						const energyUnit = this.getPowerUnit(peak);
+						const powerUnit = this.getPowerUnit(peak * factor);
+						const cells = (wh: number[]) => [
+							...wh.map((v) => this.fmtWh(v, energyUnit)),
+							...(withPower ? wh.map((v) => this.fmtW(v * factor, powerUnit)) : []),
+						];
 
 						// the overlay line's value in this slot, e.g. the solar forecast
 						const forecast = params.find((p) => p.seriesId === "overlay")?.value;
-						const rows: TooltipRow[] = indices.map((i, idx) => {
-							const t = rowValues[idx] ?? { energy: 0, returnEnergy: 0 };
-							// a single value covers both sides, a sink can draw from above and below
-							const values =
-								this.isBidirectional && !this.singleValue
-									? [formatValue(t.energy), formatValue(t.returnEnergy)]
-									: [formatValue(t.energy + t.returnEnergy)];
-							return {
-								// the price or forecast row below needs a name column to line up with
-								name: showName
-									? (nameByIdx.get(i) ?? "")
-									: this.prices
-										? this.$t("energy.grid.energy")
-										: forecast != null
-											? this.singleEntityName(this.series[idx]!)
-											: undefined,
-								values,
-							};
-						});
+						const rows: TooltipRow[] = indices.map((i, idx) => ({
+							// more than one row: each needs a name
+							name: several
+								? (nameByIdx.get(i) ?? "")
+								: this.prices
+									? this.$t("energy.grid.energy")
+									: forecast != null
+										? this.singleEntityName(this.series[idx]!)
+										: undefined,
+							values: cells(rowValues[idx] ?? []),
+						}));
+						// soc or temperature of the one entity shown, as its own column
+						const socTempValues = several ? null : this.socTempValues;
+						if (socTempValues) {
+							const socTemp = socTempValues[first.dataIndex];
+							rows[0]?.values.push(
+								socTemp == null
+									? ""
+									: this.socTempIsTemp
+										? this.fmtTemperature(socTemp)
+										: this.fmtPercentage(socTemp)
+							);
+						}
 						// cost or revenue and the price of the slot, per direction
 						const at = (
 							values: (number | null)[] | undefined,
@@ -920,7 +917,17 @@ export default defineComponent({
 							const v = values?.[first.dataIndex];
 							return v == null ? "" : fmt(v);
 						};
+						const sums = (rowValues[0] ?? []).map((_, col) =>
+							rowValues.reduce((acc, row) => acc + (row[col] ?? 0), 0)
+						);
 						if (this.prices) {
+							// its rows are quantities, the power fits in as one more
+							if (this.period === PERIODS.DAY) {
+								rows.push({
+									name: `ø ${this.$t("energy.socTemp.power")}`,
+									values: sums.map((v) => this.fmtW(v * factor, powerUnit)),
+								});
+							}
 							const { import: imported, feedin } = this.prices;
 							const money = (v: number) => this.fmtMoneyWithSymbol(v, this.currency);
 							const price = (v: number) => this.fmtPricePerKWh(v, this.currency);
@@ -937,18 +944,10 @@ export default defineComponent({
 								values: [at(imported?.avg, price), at(feedin?.avg, price)],
 							});
 						}
-						if (showName) {
-							const sum = (key: "energy" | "returnEnergy") =>
-								rowValues.reduce((acc, t) => acc + t[key], 0);
+						if (several) {
 							rows.push({
 								name: this.$t("sessions.total"),
-								values:
-									this.isBidirectional && !this.singleValue
-										? [
-												formatValue(sum("energy")),
-												formatValue(sum("returnEnergy")),
-											]
-										: [formatValue(sum("energy") + sum("returnEnergy"))],
+								values: cells(sums),
 								total: true,
 							});
 						}
@@ -956,47 +955,21 @@ export default defineComponent({
 						if (forecast != null) {
 							rows.push({
 								name: this.overlayLabel,
-								values: [formatValue(forecast)],
+								values: cells([(forecast * 1000) / factor]),
 								total: true,
 							});
 						}
-						// one entity with its soc or temperature in the day view: a named row
-						// per value
-						const socTemp = this.socTempValues?.[first.dataIndex];
-						if (socTemp != null && !showName) {
-							const socTempText = this.socTempIsTemp
-								? this.fmtTemperature(socTemp)
-								: this.fmtPercentage(socTemp);
-							const t = rowValues[0] ?? { energy: 0, returnEnergy: 0 };
-							const label = (key: string) => this.$t(`energy.socTemp.${key}`);
-							const named: TooltipRow[] = this.isBidirectional
+						return tooltipTable(head, rows, [
+							...this.energyHeaders,
+							...(withPower ? [`ø ${this.$t("energy.socTemp.power")}`] : []),
+							...(socTempValues
 								? [
-										{
-											name: this.directionHeaders?.[0],
-											values: [formatValue(t.energy)],
-										},
-										{
-											name: this.directionHeaders?.[1],
-											values: [formatValue(t.returnEnergy)],
-										},
+										this.$t(
+											`energy.socTemp.${this.socTempIsTemp ? "temperature" : "soc"}`
+										),
 									]
-								: [
-										{
-											name: label(this.socTempIsTemp ? "used" : "charged"),
-											values: [formatValue(t.energy)],
-										},
-									];
-							named.push({
-								name: label(this.socTempIsTemp ? "temperature" : "soc"),
-								values: [socTempText],
-							});
-							return tooltipTable(head, named);
-						}
-						return tooltipTable(
-							head,
-							rows,
-							this.singleValue ? undefined : (this.directionHeaders ?? undefined)
-						);
+								: []),
+						]);
 					},
 				},
 				xAxis: this.subPanel

@@ -1340,6 +1340,36 @@ func TestCircuitMaxImport(t *testing.T) {
 	}
 }
 
+func TestOptimizerCircuits(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	circuit := func(parent api.Circuit, power float64) *api.MockCircuit {
+		c := api.NewMockCircuit(ctrl)
+		c.EXPECT().GetParent().Return(parent).AnyTimes()
+		c.EXPECT().EffectiveMaxPower().Return(power).AnyTimes()
+		c.EXPECT().GetMaxCurrent().Return(0.0).AnyTimes()
+		return c
+	}
+
+	root := circuit(nil, 40000)
+	garage := circuit(root, 13800)
+	wallbox := circuit(garage, 7000)
+	unlimited := circuit(root, 0)
+
+	batteries := []optimizerBattery{
+		{circuit: wallbox},
+		{circuit: garage},
+		{circuit: unlimited},
+		{circuit: root},
+		{}, // home battery
+	}
+
+	assert.Equal(t, []optimizer.CircuitConfig{
+		{PMax: 7000, Batteries: []int{0}},
+		{PMax: 13800, Batteries: []int{0, 1}},
+	}, optimizerCircuits(root, batteries))
+}
+
 // TestOptimizerRerunAfterBusy verifies that a forced trigger arriving during a run is not dropped
 func TestOptimizerRerunAfterBusy(t *testing.T) {
 	enableAutomatic(t)
