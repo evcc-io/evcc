@@ -9,8 +9,10 @@ requirements:
   description:
     de: |
       Die Modbus-TCP-Schnittstelle muss in der Anker-App freigeschaltet werden.
+      evcc steuert den Backup-SoC: beim Halten auf den aktuellen SoC, im Normalbetrieb auf `minsoc` und beim Laden auf `maxsoc`. Ein in der Anker-App eingestellter Backup-SoC wird dabei überschrieben.
     en: |
       The Modbus TCP interface must be enabled in the Anker app.
+      evcc controls the backup SoC: the current SoC while holding, `minsoc` in normal operation and `maxsoc` while charging. A backup SoC set in the Anker app is overwritten.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -94,6 +96,16 @@ render: |
       address: 10014 # SOC (%)
       type: input
       decode: uint16
+  limitsoc:
+    source: convert
+    convert: float2int
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 60002 # Backup SoC (%)
+        type: writesingle
+        encoding: uint16
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }}
@@ -123,12 +135,21 @@ render: |
                     address: 10064
                     type: writesingle
                     encoding: uint16
-        - case: 2 # holddischarge
+              - source: const
+                value: 1 # Backup SoC Enable (always on)
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 60003
+                    type: writesingle
+                    encoding: uint16
+        - case: 2 # holddischarge: self_consumption, discharge blocked by backup SoC raised to current SoC
           set:
             source: sequence
             set:
               - source: const
-                value: 3 # third_party_control
+                value: 0 # self_consumption
                 set:
                   source: modbus
                   {{- include "modbus" . | indent 16 }}
@@ -137,14 +158,14 @@ render: |
                     type: writesingle
                     encoding: uint16
               - source: const
-                value: 0
+                value: 1 # Backup SoC Enable (always on)
                 set:
                   source: modbus
                   {{- include "modbus" . | indent 16 }}
                   register:
-                    address: 10071
-                    type: writemultiple
-                    encoding: int32
+                    address: 60003
+                    type: writesingle
+                    encoding: uint16
         - case: 3 # charge
           set:
             source: sequence
@@ -179,6 +200,15 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 10064
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: {{ .minsoc | default 0 }} # discharge is not a limitsoc mode, reset Backup SoC raised by hold
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 60002
                     type: writesingle
                     encoding: uint16
               - source: const

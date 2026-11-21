@@ -114,14 +114,14 @@ func (site *Site) clearSuggestions() {
 	site.Unlock()
 }
 
-// pendingSuggestions collects the stored suggestions with their actionable flag
-// evaluated against the devices' current operating mode
+// pendingSuggestions collects the stored suggestions of advised devices with their
+// actionable flag evaluated against the devices' current operating mode
 func (site *Site) pendingSuggestions(details []batteryDetail) map[string]pendingSuggestion {
 	pending := make(map[string]pendingSuggestion, len(details))
 
 	for _, detail := range details {
 		key := detail.key()
-		if key == "" {
+		if key == "" || detail.controlled(site) {
 			continue
 		}
 

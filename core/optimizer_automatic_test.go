@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"testing"
 	"time"
 
@@ -16,7 +18,6 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -24,8 +25,6 @@ import (
 // enableAutomatic puts the optimizer in control for the duration of the test
 func enableAutomatic(t *testing.T) {
 	t.Helper()
-
-	sponsor.SetSubjectForTest(t, "test")
 
 	for _, k := range []string{keys.Experimental, keys.Optimizer} {
 		settings.SetBool(k, true)
@@ -271,7 +270,7 @@ func TestOptimizerPrioritySoc(t *testing.T) {
 		{"uncontrolled below prioritySoc", false, actionStop, below, 100, 0},
 		// a charge next to planned battery charging gives the battery priority, the vehicle gets the remainder
 		{"charge with planned battery charge", true, actionCharge, above, 0, 1000},
-		{"charge with partial planned battery charge", true, actionCharge, above, 0, 400},
+		{"charge with partial planned battery charge", true, actionCharge, above, -600, 400},
 		{"charge below prioritySoc with planned battery charge", true, actionCharge, below, 0, 1000},
 		{"charge with planned battery charge below threshold", true, actionCharge, above, -1000, suggestionThreshold},
 	} {
@@ -908,5 +907,39 @@ func TestOptimizerPhaseGap(t *testing.T) {
 			assert.Equal(t, 1, lp.GetPhases())
 			assert.Equal(t, float64(maxA), lp.offeredCurrent)
 		})
+	}
+}
+
+// TestPendingSuggestionsAutomatic covers notifications: devices the optimizer
+// controls are not advised about what it applies itself
+func TestPendingSuggestionsAutomatic(t *testing.T) {
+	enableAutomatic(t)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.vehicle = modelledVehicle(gomock.NewController(t))
+
+	site := &Site{loadpoints: []*Loadpoint{lp}}
+	lp.site = site
+
+	site.setSuggestions(map[string]types.Suggestion{
+		batteryKey("bat"): {Action: api.BatteryCharge.String()},
+		loadpointKey(0):   {Action: actionCharge},
+	})
+
+	details := []batteryDetail{
+		{Type: batteryTypeBattery, Name: "bat"},
+		{Type: batteryTypeVehicle, loadpoint: new(int)},
+	}
+
+	for _, tc := range []struct {
+		level string
+		keys  []string
+	}{
+		{OptimizerAutomaticOff, []string{batteryKey("bat"), loadpointKey(0)}},
+		{OptimizerAutomaticBattery, []string{loadpointKey(0)}},
+		{OptimizerAutomaticFull, nil},
+	} {
+		settings.SetString(keys.OptimizerAutomatic, tc.level)
+		assert.ElementsMatch(t, tc.keys, slices.Collect(maps.Keys(site.pendingSuggestions(details))), tc.level)
 	}
 }

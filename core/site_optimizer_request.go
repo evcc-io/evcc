@@ -59,8 +59,9 @@ func endOfHorizonValue(pN, pE []float32, eta float32, canExport bool) float32 {
 
 // optimizerBattery pairs a battery request entry with its device detail
 type optimizerBattery struct {
-	cfg    optimizer.BatteryConfig
-	detail batteryDetail
+	cfg     optimizer.BatteryConfig
+	detail  batteryDetail
+	circuit api.Circuit // loadpoint circuit, nil for home batteries
 }
 
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
@@ -157,6 +158,14 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		},
 	}
 
+	if rp := site.GetOptimizerRiskProfile(); rp != nil {
+		req.Uncertainty = optimizer.Uncertainty{
+			FtDev:  float32(rp.Solar),
+			GtDev:  float32(rp.Demand),
+			Budget: float32(rp.Budget),
+		}
+	}
+
 	// individual profiles summarized into Gt, for the debug view
 	details = requestDetails{
 		Timestamps: asTimestamps(dt, now),
@@ -199,9 +208,10 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 			continue
 		}
 
-		// no vehicle capacity and no session energy limit to model against:
-		// account for the consumption as uncontrollable load
-		if v := lp.GetVehicle(); v == nil || (v.Capacity() == 0 && lp.GetLimitEnergy() == 0) {
+		// no vehicle capacity and no session energy limit to model against, or a heater
+		// whose soc is a temperature: account for the consumption as uncontrollable load
+		if v := lp.GetVehicle(); v == nil || (v.Capacity() == 0 && lp.GetLimitEnergy() == 0) ||
+			site.loadpoints[id].chargerHasFeature(api.Heating) {
 			site.addUnmodelledLoad(req.TimeSeries.Gt, &details, lp, minLen, firstSlotDuration)
 			continue
 		}
@@ -209,7 +219,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		// skip disabled loadpoints
 		if cfg, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, planner); cfg.CMax > 0 {
 			detail.loadpoint = &id
-			batteries = append(batteries, optimizerBattery{cfg, detail})
+			batteries = append(batteries, optimizerBattery{cfg, detail, lp.GetCircuit()})
 		}
 	}
 
@@ -234,7 +244,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		}
 
 		cfg, detail := site.batteryRequest(dev, b, planner, minLen, firstSlotDuration)
-		batteries = append(batteries, optimizerBattery{cfg, detail})
+		batteries = append(batteries, optimizerBattery{cfg: cfg, detail: detail})
 	}
 
 	for _, b := range batteries {
@@ -243,6 +253,8 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		req.Batteries = append(req.Batteries, b.cfg)
 		details.BatteryDetails = append(details.BatteryDetails, b.detail)
 	}
+
+	req.Circuits = optimizerCircuits(site.circuit, batteries)
 
 	// a lone base load profile is identical to the total
 	if len(details.DemandDetails) < 2 {
@@ -358,7 +370,8 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 		// add smartcost limit, precondition and plan goal, if configured
 		demand = applySmartCostLimit(lp, demand, planner, minLen)
 		if automatic {
-			demand = applyPrecondition(lp, demand, minLen)
+			// TODO re-enable once late charging is supported, see evcc-io/optimizer#336
+			// demand = applyPrecondition(lp, demand, minLen)
 			site.applyPlanGoal(lp, &bat, minLen)
 		}
 	}
@@ -384,6 +397,31 @@ func circuitMaxImport(c api.Circuit) float64 {
 			res = power
 		}
 	}
+	return res
+}
+
+// optimizerCircuits limits the summed charging of the loadpoints below each limited sub-circuit.
+// The root circuit is covered by the grid import limit, which also accounts for the household.
+func optimizerCircuits(root api.Circuit, batteries []optimizerBattery) []optimizer.CircuitConfig {
+	var order []api.Circuit
+	members := make(map[api.Circuit][]int)
+
+	for i, b := range batteries {
+		for c := b.circuit; c != nil && c != root; c = c.GetParent() {
+			if _, ok := members[c]; !ok {
+				order = append(order, c)
+			}
+			members[c] = append(members[c], i)
+		}
+	}
+
+	var res []optimizer.CircuitConfig
+	for _, c := range order {
+		if p := circuitMaxImport(c); p > 0 {
+			res = append(res, optimizer.CircuitConfig{PMax: float32(p), Batteries: members[c]})
+		}
+	}
+
 	return res
 }
 
@@ -823,21 +861,34 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	}
 
 	now := time.Now()
+	end := now.Truncate(tariff.SlotDuration).Add(time.Duration(minLen) * tariff.SlotDuration)
 
-	slot := planSlot(now, ts)
-	if slot >= 0 && slot < minLen {
-		setPlanGoal(bat, minLen, slot, goal)
-	} else {
-		site.log.DEBUG.Printf("plan beyond forecast range or overrun: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
+	// place sets the goal at its slot. Beyond the horizon, what full power cannot store between
+	// the horizon end and the plan time must be in by the horizon end.
+	place := func(goal float64, ts time.Time) int {
+		slot := planSlot(now, ts)
+		switch {
+		case slot >= minLen:
+			if rest := goal - float64(bat.CMax)*eta*ts.Sub(end).Hours(); rest > float64(bat.SInitial) {
+				setPlanGoal(bat, minLen, minLen-1, rest)
+			}
+		case slot >= 0:
+			setPlanGoal(bat, minLen, slot, goal)
+		}
+		return slot
+	}
+
+	if slot := place(goal, ts); slot >= minLen {
+		site.log.DEBUG.Printf("plan beyond forecast range: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
+	} else if slot < 0 {
+		site.log.DEBUG.Printf("plan overrun: %.1f at %v", goal, ts.Round(time.Minute))
 	}
 
 	// later plans let the optimizer charge ahead for them instead of replanning once the first goal is reached.
 	// Capped at s_max: the loadpoint only charges beyond its limit for the effective plan.
 	if socBased {
 		for _, g := range lp.GetSocPlanGoals() {
-			if slot := planSlot(now, g.Time); slot >= 0 && slot < minLen {
-				setPlanGoal(bat, minLen, slot, min(socToWh(vehicle.Capacity(), float64(g.Soc)), float64(bat.SMax)))
-			}
+			place(min(socToWh(vehicle.Capacity(), float64(g.Soc)), float64(bat.SMax)), g.Time)
 		}
 	}
 }

@@ -21,6 +21,7 @@ params:
     choice: ["tcpip"]
     id: 1
   - name: maxacpower
+    required: true
     service: modbus/read?address=60027&type=holding&encoding=uint32&scale=1&resulttype=int&{modbus}
   - preset: battery-minmaxsoc
   - name: minsoc

@@ -90,9 +90,10 @@ func TestMixedSlots(t *testing.T) {
 
 	// second: an hour that follows immediately
 	r1 := api.Rate{
-		Start: r0.End,
-		End:   r0.End.Add(1 * time.Hour),
-		Value: 3.0,
+		Start:    r0.End,
+		End:      r0.End.Add(1 * time.Hour),
+		Value:    3.0,
+		Estimate: true,
 	}
 
 	w := &SlotWrapper{Tariff: &testTariff{
@@ -112,9 +113,10 @@ func TestMixedSlots(t *testing.T) {
 
 	for i := range 4 {
 		expected = append(expected, api.Rate{
-			Start: r1.Start.Add(time.Duration(i) * SlotDuration),
-			End:   r1.Start.Add(time.Duration(i+1) * SlotDuration),
-			Value: 3.0,
+			Start:    r1.Start.Add(time.Duration(i) * SlotDuration),
+			End:      r1.Start.Add(time.Duration(i+1) * SlotDuration),
+			Value:    3.0,
+			Estimate: true,
 		})
 	}
 

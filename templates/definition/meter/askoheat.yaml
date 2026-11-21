@@ -9,6 +9,7 @@ params:
     choice: ["aux"]
   - name: modbus
     choice: ["tcpip"]
+    id: 1
 render: |
   type: custom
   power:

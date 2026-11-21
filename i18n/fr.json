@@ -190,10 +190,20 @@
     "circuits": {
       "addMainCircuit": "Ajouter le circuit principal",
       "addSubCircuit": "Ajouter un sous-circuit",
+      "assignHere": "Assignez ici",
+      "assignmentFailed": "Impossible d’enregistrer l’assignation. Veuillez essayer plus tard.",
       "description": "Vérifiez que la somme de tous les points de charges connectés à un circuit ne dépassent pas les limites de puissance et de courant. Les circuits peuvent être combinés pour construire une hiérarchie.",
+      "destination": "Circuit {title}",
+      "dragHint": "Faites glisser sur un circuit, ou appuyez dessus pour sélectionner.",
+      "dropAssign": "Lâcher pour assigner",
+      "dropRemove": "Lâcher ici pour l’enlever du circuit.",
       "legacyWarning": "Une nouvelle configuration des circuits est disponible !. Supprimez et enregistrez votre configuration ici pour utiliser la nouvelle procédure guidée. Un redémarrage sera nécessaire.",
       "meterDedicated": "Compteur",
       "meterGrid": "Réseau",
+      "moveHere": "Déplacer ici",
+      "notAssigned": "Non assigné",
+      "selectAssign": "Tapez un circuit pour attribuer {title}.",
+      "selectMove": "Tapez sur un circuit pour déplacer {title}, ou sur la réserve pour l'enlever.",
       "title": "Gestion de la charge",
       "usableMeters": "Références des compteurs utilisables"
     },
@@ -351,6 +361,7 @@
       "auxMeter": "Consommateur auto-régulé",
       "batteryStorage": "Batterie domestique",
       "consumer": "Consommateur",
+      "extMeter": "Compteur supplémentaire",
       "solarSystem": "Système photovoltaïque"
     },
     "editor": {

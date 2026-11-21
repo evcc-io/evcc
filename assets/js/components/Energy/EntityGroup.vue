@@ -1,6 +1,7 @@
 <template>
 	<Card
 		:title="active ?? only?.title ?? title"
+		:label="title"
 		:parent="active || only ? title : ''"
 		:parent-static="!!only"
 		edge-to-edge
@@ -179,6 +180,7 @@ export default defineComponent({
 			return {
 				title: this.title,
 				group: this.group,
+				isTemp: this.shown[0]?.isTemp,
 				data: discharged
 					? data.map((slot) => ({ ...slot, energy: slot.returnEnergy }))
 					: data,

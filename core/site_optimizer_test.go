@@ -231,13 +231,60 @@ func TestApplyPlanGoalSoc(t *testing.T) {
 
 	site := &Site{log: util.NewLogger("foo")}
 
-	bat := optimizer.BatteryConfig{SMax: 40000}
+	bat := optimizer.BatteryConfig{SMax: 40000, CMax: 11000} // the plan beyond the horizon is reachable after it
 	site.applyPlanGoal(lp, &bat, 32)
 
 	require.Len(t, bat.SGoal, 32)
 	// goal values in slot order, independent of where applyPlanGoal's clock falls within the slot
 	assert.Equal(t, []float32{25000, 35000, 40000}, lo.Filter(bat.SGoal, func(g float32, _ int) bool { return g > 0 }))
 	assert.Equal(t, float32(40000), bat.SMax, "later goals must not raise s_max")
+}
+
+// TestApplyPlanGoalBeyondHorizon guards that a plan beyond the horizon asks for the energy that
+// full power, after charging losses, cannot store between the horizon end and the plan time
+func TestApplyPlanGoalBeyondHorizon(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(50.0).AnyTimes()
+
+	for _, tc := range []struct {
+		name  string
+		after time.Duration // plan time after horizon end
+		goal  float32
+	}{
+		{"remainder by horizon end", 2 * time.Hour, 25000 - 3000*eta*2},
+		{"reachable after horizon end", 8 * time.Hour, 0},
+	} {
+		var bat optimizer.BatteryConfig
+		var slot time.Time
+
+		// repeat if applyPlanGoal's clock crossed into the next slot, which moves the horizon end
+		for slot != time.Now().Truncate(tariff.SlotDuration) {
+			slot = time.Now().Truncate(tariff.SlotDuration)
+			end := slot.Add(16 * tariff.SlotDuration)
+
+			lp := loadpoint.NewMockAPI(ctrl)
+			lp.EXPECT().GetPlanGoal().Return(50.0, true).AnyTimes()
+			lp.EXPECT().GetVehicle().Return(vehicle).AnyTimes()
+			lp.EXPECT().EffectivePlanTime().Return(end.Add(tc.after)).AnyTimes()
+			lp.EXPECT().GetSocPlanGoals().Return(nil).AnyTimes()
+
+			site := &Site{log: util.NewLogger("foo")}
+
+			bat = optimizer.BatteryConfig{SInitial: 5000, SMax: 40000, CMax: 3000}
+			site.applyPlanGoal(lp, &bat, 16)
+		}
+
+		if tc.goal == 0 {
+			assert.Nil(t, bat.SGoal, tc.name)
+			continue
+		}
+
+		require.Len(t, bat.SGoal, 16, tc.name)
+		assert.InDelta(t, tc.goal, bat.SGoal[15], 1, tc.name)
+		assert.Equal(t, 1, lo.CountBy(bat.SGoal, func(g float32) bool { return g > 0 }), tc.name)
+	}
 }
 
 func TestLoadpointCurrentAction(t *testing.T) {
@@ -855,6 +902,28 @@ func TestProfilePercentile(t *testing.T) {
 	assert.Nil(t, site.GetProfilePercentile())
 }
 
+func TestOptimizerRiskProfile(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+	t.Cleanup(func() { require.NoError(t, site.SetOptimizerRiskProfile(nil)) })
+
+	// none by default
+	assert.Nil(t, site.GetOptimizerRiskProfile())
+
+	// out of range rejected, unchanged
+	require.Error(t, site.SetOptimizerRiskProfile(&api.RiskProfile{Solar: 1.1, Budget: 8}))
+	require.Error(t, site.SetOptimizerRiskProfile(&api.RiskProfile{Demand: -0.1, Budget: 8}))
+	require.Error(t, site.SetOptimizerRiskProfile(&api.RiskProfile{Solar: 0.3}))
+	require.Error(t, site.SetOptimizerRiskProfile(&api.RiskProfile{Solar: 0.3, Budget: 97}))
+	assert.Nil(t, site.GetOptimizerRiskProfile())
+
+	profile := api.RiskProfile{Solar: 0.3, Demand: 0.2, Budget: 8}
+	require.NoError(t, site.SetOptimizerRiskProfile(&profile))
+	assert.Equal(t, &profile, site.GetOptimizerRiskProfile())
+
+	require.NoError(t, site.SetOptimizerRiskProfile(nil))
+	assert.Nil(t, site.GetOptimizerRiskProfile())
+}
+
 func TestBlendMeasured(t *testing.T) {
 	slots := []float64{100, 100, 100, 100, 100, 100}
 	blendMeasured(slots, 200, 4)
@@ -1269,6 +1338,36 @@ func TestCircuitMaxImport(t *testing.T) {
 
 		assert.Equal(t, tc.expected, circuitMaxImport(c), "power %.0f current %.0f", tc.power, tc.current)
 	}
+}
+
+func TestOptimizerCircuits(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	circuit := func(parent api.Circuit, power float64) *api.MockCircuit {
+		c := api.NewMockCircuit(ctrl)
+		c.EXPECT().GetParent().Return(parent).AnyTimes()
+		c.EXPECT().EffectiveMaxPower().Return(power).AnyTimes()
+		c.EXPECT().GetMaxCurrent().Return(0.0).AnyTimes()
+		return c
+	}
+
+	root := circuit(nil, 40000)
+	garage := circuit(root, 13800)
+	wallbox := circuit(garage, 7000)
+	unlimited := circuit(root, 0)
+
+	batteries := []optimizerBattery{
+		{circuit: wallbox},
+		{circuit: garage},
+		{circuit: unlimited},
+		{circuit: root},
+		{}, // home battery
+	}
+
+	assert.Equal(t, []optimizer.CircuitConfig{
+		{PMax: 7000, Batteries: []int{0}},
+		{PMax: 13800, Batteries: []int{0, 1}},
+	}, optimizerCircuits(root, batteries))
 }
 
 // TestOptimizerRerunAfterBusy verifies that a forced trigger arriving during a run is not dropped

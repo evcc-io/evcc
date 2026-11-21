@@ -82,7 +82,7 @@ tariffs:
   currency: EUR
   grid:
     type: fixed
-    price: 0.2 # EUR/kWh
+    price: 0.20123 # EUR/kWh, more digits than the limit scale
     zones:
       - hours: 5-7
         price: 0.45

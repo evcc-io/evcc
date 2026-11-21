@@ -9,11 +9,13 @@
 			}"
 		>
 			<div v-if="label" class="label text-uppercase">{{ label }}</div>
-			<div v-if="format" class="value fw-bold text-truncate tabular" :class="valueClass">
+			<div v-if="pending" class="value"><span class="skeleton-value"></span></div>
+			<div v-else-if="format" class="value fw-bold text-truncate tabular" :class="valueClass">
 				<AnimatedNumber :to="number" :format="format" />
 			</div>
 			<div v-if="sub" class="sub tabular">
-				<span v-tooltip="tooltip" :class="{ hint: tooltip?.length }">{{ sub }}</span>
+				<span v-if="pending" class="skeleton-value"></span>
+				<span v-else v-tooltip="tooltip" :class="{ hint: tooltip?.length }">{{ sub }}</span>
 			</div>
 			<div v-if="$slots['default']" class="extra"><slot /></div>
 		</div>
@@ -33,6 +35,7 @@ export default defineComponent({
 		number: { type: Number, default: 0 },
 		format: Function as PropType<(n: number) => string>,
 		sub: String,
+		pending: Boolean,
 		// text or table rows, see the tooltip directive
 		tooltip: [String, Array] as PropType<string | string[][]>,
 		valueClass: String,

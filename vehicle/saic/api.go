@@ -138,26 +138,28 @@ func (v *API) doRequest[T any](req *http.Request, result *requests.Answer[T]) (s
 
 	event_id := resp.Header.Get("event-id")
 
-	if result != nil {
-		body, err2 := requests.DecodeResponse(resp)
-		if err2 != nil {
-			return event_id, fmt.Errorf("decrypt: %w", err2)
-		}
+	if result == nil {
+		return event_id, request.ResponseError(resp)
+	}
 
-		v.log.TRACE.Printf("recv: %s", body)
+	body, err2 := requests.DecodeResponse(resp)
+	if err2 != nil {
+		return event_id, fmt.Errorf("decrypt: %w", err2)
+	}
 
-		if err2 := json.Unmarshal(body, result); err2 == nil && result.Code != 0 {
-			switch result.Code {
-			case 4:
+	v.log.TRACE.Printf("recv: %s", body)
+
+	if err2 := json.Unmarshal(body, result); err2 == nil && result.Code != 0 {
+		switch result.Code {
+		case 4:
+			err = api.ErrMustRetry
+		case http.StatusUnauthorized, http.StatusForbidden:
+			v.log.TRACE.Printf("doRequest: code %d", result.Code)
+			if err = v.identity.Login(); err == nil {
 				err = api.ErrMustRetry
-			case http.StatusUnauthorized, http.StatusForbidden:
-				v.log.TRACE.Printf("doRequest: code %d", result.Code)
-				if err = v.identity.Login(); err == nil {
-					err = api.ErrMustRetry
-				}
-			default:
-				err = fmt.Errorf("%d: %s", result.Code, result.Message)
 			}
+		default:
+			err = fmt.Errorf("%d: %s", result.Code, result.Message)
 		}
 	}
 
@@ -192,9 +194,8 @@ func (v *API) Wakeup(vin string) error {
 		return err
 	}
 
-	v.doRequest[any](req, nil)
-
-	return nil
+	_, err = v.doRequest[any](req, nil)
+	return err
 }
 
 // Status implements the /user/vehicles/<vin>/status api
