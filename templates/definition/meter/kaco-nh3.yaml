@@ -7,12 +7,12 @@ requirements:
   description:
     de: |
       Für KACO blueplanet Hybrid NH3 mit AI-Dongle/WLAN-Stick. Modbus TCP und lokale AISWEI-HTTP-API müssen über die IP-Adresse des Sticks erreichbar sein (Modbus TCP Port 502, Geräte-ID 3; HTTP Port 8484).
-      Die Batterie-Leistungsregelung verwendet die lokale Schnittstelle `fdbg.cgi`. Maximale Lade- und Entladeleistung werden aus der Batteriespannung und einer Wechselrichter-Stromgrenze von 30 A berechnet. Die Spannung wird über Modbus gelesen. Batterie-Lade- und Entladeenergie werden über die lokale AISWEI-HTTP-API ausgelesen.
+      Die Batterie-Leistungsregelung verwendet die lokale Schnittstelle `fdbg.cgi`. Maximale Lade- und Entladeleistung müssen manuell angegeben werden. Batterie-Lade- und Entladeenergie werden über die lokale AISWEI-HTTP-API ausgelesen.
       Die Abregelung wird über ein separates KACO NH3 Abregelungsgerät konfiguriert.
       Der im SunSpec-Modell 203 bereitgestellte Netzzähler liefert Netzleistung, Import-/Export-Energie und phasenbezogene Messwerte.
     en: |
       For KACO blueplanet Hybrid NH3 with AI dongle/Wi-Fi stick. Modbus TCP and the local AISWEI HTTP API must be reachable at the stick's IP address (Modbus TCP port 502, device ID 3; HTTP port 8484).
-      Battery power control uses the local `fdbg.cgi` endpoint. Maximum charge and discharge power are calculated from battery voltage and a 30 A inverter current limit. Voltage is read over Modbus. Battery charge and discharge energy are read from the local AISWEI HTTP API.
+      Battery power control uses the local `fdbg.cgi` endpoint. Maximum charge and discharge power must be configured manually. Battery charge and discharge energy are read from the local AISWEI HTTP API.
       Configure curtailment through a separate KACO NH3 curtailer device.
       The grid meter exposed through SunSpec Model 203 provides grid power, import/export energy, and per-phase measurements.
 capabilities: ["battery-control"]
@@ -37,7 +37,11 @@ params:
     description:
       de: Seriennummer des Wechselrichters (isn)
       en: Inverter serial number (isn)
-  - preset: battery-capacity
+  - preset: battery-params
+  - name: maxchargepower
+    required: true
+  - name: maxdischargepower
+    required: true
   - name: minsoc
     default: 10
     pattern:
@@ -143,22 +147,6 @@ render: |
     uri: http://{{ .host }}:8484/getdevdata.cgi?device=4&sn={{ .serial }}
     jq: .ebo
     scale: 0.1
-  maxchargepower:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: {{ if eq .battery "2" }}1749{{ else }}1616{{ end }} # 31750/31617 BMS2/1 battery voltage (0.01 V)
-      type: input
-      decode: uint16nan
-    scale: 0.3 # 30 A * 0.01 V
-  maxdischargepower:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: {{ if eq .battery "2" }}1749{{ else }}1616{{ end }} # 31750/31617 BMS2/1 battery voltage (0.01 V)
-      type: input
-      decode: uint16nan
-    scale: 0.3 # 30 A * 0.01 V
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -217,16 +205,6 @@ render: |
                       source: http
                       uri: http://{{ .host }}:8484/getdefine.cgi
                       jq: 'if type == "object" and has("Pin") then .Pin = "__PIN__" else error("missing Pin field") end | tojson'
-                  - name: charge
-                    type: float
-                    config:
-                      source: modbus
-                      {{- include "modbus" . | indent 20 }}
-                      register:
-                        address: {{ if eq .battery "2" }}1749{{ else }}1616{{ end }} # 31750/31617 BMS2/1 battery voltage (0.01 V)
-                        type: input
-                        decode: uint16nan
-                      scale: 0.3 # 30 A * 0.01 V
                 out:
                   - name: frame
                     type: string
@@ -241,7 +219,7 @@ render: |
                 script: |
                   import "fmt"
                   import "strings"
-                  pin := int(charge + 0.5)
+                  pin := {{ .maxchargepower }}
                   if batteryMode == 4 {
                     pin = 0
                   }
@@ -339,27 +317,6 @@ render: |
               set:
                 source: go
                 <<: &setpoint
-                  in:
-                    - name: charge
-                      type: float
-                      config:
-                        source: modbus
-                        {{- include "modbus" . | indent 22 }}
-                        register:
-                          address: {{ if eq .battery "2" }}1749{{ else }}1616{{ end }} # 31750/31617 BMS2/1 battery voltage (0.01 V)
-                          type: input
-                          decode: uint16nan
-                        scale: 0.3 # 30 A * 0.01 V
-                    - name: discharge
-                      type: float
-                      config:
-                        source: modbus
-                        {{- include "modbus" . | indent 22 }}
-                        register:
-                          address: {{ if eq .battery "2" }}1749{{ else }}1616{{ end }} # 31750/31617 BMS2/1 battery voltage (0.01 V)
-                          type: input
-                          decode: uint16nan
-                        scale: 0.3 # 30 A * 0.01 V
                   out:
                     - name: frame
                       type: string
@@ -370,9 +327,9 @@ render: |
                   script: |
                     power := 0
                     if batteryMode == 3 {
-                      power = -int(charge + 0.5)
+                      power = -{{ .maxchargepower }}
                     } else if batteryMode == 5 {
-                      power = int(discharge + 0.5)
+                      power = {{ .maxdischargepower }}
                     }
                     frame := []byte{3, 6, 4, 128, byte(power >> 8), byte(power)}
                     crc := 0xffff
@@ -426,6 +383,5 @@ render: |
               set:
                 source: go
                 <<: *setpoint
-  {{- include "battery-capacity" . }}
-  {{- include "battery-minmaxsoc" . }}
+  {{- include "battery-params" . }}
   {{- end }}
