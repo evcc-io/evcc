@@ -26,9 +26,9 @@ func (conn *Connector) timestampValid(t time.Time) bool {
 	return !t.Before(conn.status.Timestamp.Time)
 }
 
-// statusClass maps a status to the charge status as seen by the loadpoint, api.StatusNone for errors
+// statusClass maps a status to the charge status as seen by the loadpoint, api.StatusNone for Faulted
 func statusClass(s *core.StatusNotificationRequest) api.ChargeStatus {
-	if s == nil || s.ErrorCode != core.NoError {
+	if s == nil {
 		return api.StatusNone
 	}
 
@@ -127,7 +127,8 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 		conn.txnId == 0 && conn.status != nil &&
 		(conn.status.Status == core.ChargePointStatusCharging ||
 			conn.status.Status == core.ChargePointStatusSuspendedEV ||
-			conn.status.Status == core.ChargePointStatusSuspendedEVSE) {
+			conn.status.Status == core.ChargePointStatusSuspendedEVSE ||
+			conn.status.Status == core.ChargePointStatusFaulted) {
 		conn.log.DEBUG.Printf("recovered transaction: %d", *request.TransactionId)
 		conn.txnId = *request.TransactionId
 	}
