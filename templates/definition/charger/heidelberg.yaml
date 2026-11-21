@@ -12,15 +12,57 @@ products:
   - brand: Amperfied
     description:
       generic: Wallbox Energy Control
+  - brand: Elli
+    description:
+      generic: Charger Connect 2 (Modbus TCP)
+  - brand: Elli
+    description:
+      generic: Charger Pro 2 (Modbus TCP)
+  - brand: Elli
+    description:
+      generic: Charger Pro Eichrecht 2 (Modbus TCP)
+  - brand: Volkswagen
+    description:
+      generic: Charger Connect 2 (Modbus TCP)
+  - brand: Volkswagen
+    description:
+      generic: Charger Pro 2 (Modbus TCP)
+  - brand: Volkswagen
+    description:
+      generic: Charger Pro Eichrecht 2 (Modbus TCP)
+  - brand: Skoda
+    description:
+      generic: Charger Connect (Modbus TCP)
+  - brand: Skoda
+    description:
+      generic: Charger Pro (Modbus TCP)
+  - brand: Skoda
+    description:
+      generic: Charger Pro Eichrecht (Modbus TCP)
+  - brand: Cupra
+    description:
+      generic: Charger Connect 2 (Modbus TCP)
+  - brand: Cupra
+    description:
+      generic: Charger Pro 2 (Modbus TCP)
+  - brand: Cupra
+    description:
+      generic: Charger Pro Eichrecht 2 (Modbus TCP)
 capabilities: ["mA", "meter", "dim"]
 requirements:
   description:
-    de: Bitte das Handbuch zur Verkabelung und Konfiguration genau lesen. Alle Boxen müssen für die externe Steuerung auf Follower-Modus konfiguriert sein (DIP S5/4 OFF). Jede Box braucht eine individuelle Modbus-ID (DIP S4). Auf korrekte RS485-Verkabelung inkl. Busterminierung (DIP S6/2) achten.
-    en: Please read the wiring and configuration manual carefully. All boxes must be configured for external control in follower mode (DIP S5/4 OFF). Each box needs an individual Modbus ID (DIP S4). Ensure correct RS485 cabling including bus termination (DIP S6/2).
+    de: |
+      RS485: Bitte das Handbuch zur Verkabelung und Konfiguration genau lesen. Alle Boxen müssen für die externe Steuerung auf Follower-Modus konfiguriert sein (DIP S5/4 OFF). Jede Box braucht eine individuelle Modbus-ID (DIP S4). Auf korrekte RS485-Verkabelung inkl. Busterminierung (DIP S6/2) achten.
+
+      Elli (Modbus TCP): Modbus-Server in der Weboberfläche der Wallbox unter Verbindungen aktivieren.
+    en: |
+      RS485: Please read the wiring and configuration manual carefully. All boxes must be configured for external control in follower mode (DIP S5/4 OFF). Each box needs an individual Modbus ID (DIP S4). Ensure correct RS485 cabling including bus termination (DIP S6/2).
+
+      Elli (Modbus TCP): Enable the Modbus server under Connections in the wallbox web interface.
   evcc: ["sponsorship"]
 params:
   - name: modbus
-    choice: ["rs485"]
+    choice: ["rs485", "tcpip"]
     id: 1
     baudrate: 19200
     comset: 8E1
