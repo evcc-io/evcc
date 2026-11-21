@@ -141,7 +141,7 @@ func ResetRollup() error {
 func writeDays(from, to time.Time, change func(tx *gorm.DB) error) error {
 	// a day that completes while the change runs counts as well
 	if !from.Before(dailyFinal(time.Now().Add(tariff.SlotDuration))) {
-		return change(db.Instance)
+		return db.Instance.Transaction(change)
 	}
 
 	dailyMu.Lock()
@@ -404,16 +404,18 @@ func dailyEnergy(from, to time.Time, ids []int) ([]energySum, error) {
 	}
 
 	// a day that is only partly inside the period is summed from its slots
+	use := make(map[int64]bool)
 	var rest [][2]int64
 	for _, d := range buckets(from, to, "day") {
-		if !rolled[d[0]] || !wholeDay(d) {
-			delete(rolled, d[0])
+		if rolled[d[0]] && wholeDay(d) {
+			use[d[0]] = true
+		} else {
 			rest = append(rest, d)
 		}
 	}
 
 	res := slices.DeleteFunc(rows, func(s energySum) bool {
-		return s.Meter == 0 || !rolled[s.Start]
+		return s.Meter == 0 || !use[s.Start]
 	})
 
 	slots, err := sumEnergy(rest, false, ids)

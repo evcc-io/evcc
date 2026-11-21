@@ -102,6 +102,12 @@ func TestDailyRollup(t *testing.T) {
 	_, filledFlow := query()
 	assert.Equal(t, holeFlow, filledFlow)
 	require.Len(t, rolled(t), 3)
+
+	// rows off the day grid, as left by another time zone, are not read
+	off := second.Add(time.Hour).Unix()
+	require.NoError(t, db.Instance.Create(&flowDay{Day: off, Data: "{}"}).Error)
+	require.NoError(t, db.Instance.Create(&energySum{Start: off, Meter: entities[PV].Id, Energy: 1000}).Error)
+	assert.Equal(t, slots, pv())
 }
 
 func TestWriteDays(t *testing.T) {
