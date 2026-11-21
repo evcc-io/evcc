@@ -63,7 +63,9 @@ func createEntity(group, name, title string) (entity, error) {
 		if db.Instance.Where(`"group" = ? AND name = ?`, Meter, name).Limit(1).Find(&prev).RowsAffected > 0 {
 			// an existing consumer row blocks the relabel, otherwise the rolled up flows do not know the consumer yet
 			if tx := db.Instance.Model(&prev).UpdateColumn("group", Consumer); tx.Error == nil && tx.RowsAffected > 0 {
-				markDaily(0)
+				if err := resetDaily(); err != nil {
+					return entity{}, err
+				}
 			}
 		}
 	}

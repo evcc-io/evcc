@@ -134,18 +134,22 @@ func DeleteEnergy(from, to time.Time, filter ...EnergyFilter) (int64, error) {
 		return 0, errors.New("missing from/to")
 	}
 
-	tx := db.Instance.Where("ts >= ? AND ts < ?", from.Unix(), to.Unix())
+	var rows int64
+	err := writeDays(from, to, func(tx *gorm.DB) error {
+		tx = tx.Where("ts >= ? AND ts < ?", from.Unix(), to.Unix())
 
-	if len(filter) > 0 {
-		if sub := entityQuery(filter[0]); sub != nil {
-			tx = tx.Where("meter IN (?)", sub)
+		if len(filter) > 0 {
+			if sub := entityQuery(filter[0]); sub != nil {
+				tx = tx.Where("meter IN (?)", sub)
+			}
 		}
-	}
 
-	res := tx.Delete(new(meter))
-	markDaily(from.Unix())
+		res := tx.Delete(new(meter))
+		rows = res.RowsAffected
+		return res.Error
+	})
 
-	return res.RowsAffected, res.Error
+	return rows, err
 }
 
 // QueryEnergy returns aggregated energy data, per title or per group.

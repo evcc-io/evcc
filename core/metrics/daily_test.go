@@ -1,13 +1,22 @@
 package metrics
 
 import (
+	"math"
 	"testing"
 	"time"
 
 	"github.com/evcc-io/evcc/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
+
+// rolled returns the days that are rolled up
+func rolled(t *testing.T) []int64 {
+	var days []int64
+	require.NoError(t, db.Instance.Model(new(flowDay)).Order("day").Pluck("day", &days).Error)
+	return days
+}
 
 func TestDailyRollup(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
@@ -47,19 +56,15 @@ func TestDailyRollup(t *testing.T) {
 	// slots only
 	require.NoError(t, rollupDays(from))
 	energy, flow := query()
-	require.Zero(t, dailyEnd.Load())
+	require.Empty(t, rolled(t), "a read does not roll up")
 	require.NotEmpty(t, flow.Entities)
 
 	// rolled up days in between the partial first day and the slots after
-	query()
-	require.Zero(t, dailyEnd.Load(), "a read does not roll up")
+	second := nextDay(from)
+	third := nextDay(second)
 	require.NoError(t, rollupDays(to.Add(-time.Hour)))
 	rolledEnergy, rolledFlow := query()
-	require.Equal(t, to.AddDate(0, 0, -1).Unix(), dailyEnd.Load())
-
-	var days int64
-	require.NoError(t, db.Instance.Model(new(flowDay)).Count(&days).Error)
-	require.Equal(t, int64(2), days)
+	require.Equal(t, []int64{from.Unix(), second.Unix()}, rolled(t))
 
 	assert.Equal(t, energy, rolledEnergy)
 	assert.Equal(t, flow, rolledFlow)
@@ -74,23 +79,52 @@ func TestDailyRollup(t *testing.T) {
 		return 0
 	}
 
-	// a slot written into a rolled up day is not hidden by the rollup
+	// a slot written into a rolled up day drops only that day
 	now := to.AddDate(0, 0, 1)
 	require.NoError(t, persist(entities[PV], from.Add(3*time.Hour), 4, 0, nil, false))
+	require.Equal(t, []int64{second.Unix()}, rolled(t))
 	assert.Equal(t, slots+4, pv())
 	require.NoError(t, rollupDays(now))
 	assert.Equal(t, slots+4, pv())
-	require.Equal(t, to.Unix(), dailyEnd.Load())
+	require.Equal(t, []int64{from.Unix(), second.Unix(), third.Unix()}, rolled(t))
 
-	// neither are deleted slots
-	second := from.AddDate(0, 0, 1)
+	// so do deleted slots, the day in between is read from the slots
 	_, err := DeleteEnergy(second, second.Add(time.Hour), EnergyFilter{Group: PV})
 	require.NoError(t, err)
-	require.Equal(t, second.Unix(), dailyUsable())
+	require.Equal(t, []int64{from.Unix(), third.Unix()}, rolled(t))
 	assert.Equal(t, slots, pv())
+	_, holeFlow := query()
+
 	require.NoError(t, rollupDays(now))
 	assert.Equal(t, slots, pv())
-	require.Equal(t, to.Unix(), dailyEnd.Load())
+	_, filledFlow := query()
+	assert.Equal(t, holeFlow, filledFlow)
+	require.Len(t, rolled(t), 3)
+}
+
+func TestWriteDays(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	pv := entity{Name: PV, Group: PV}
+	require.NoError(t, db.Instance.Create(&pv).Error)
+
+	now := time.Now()
+	today := dayStart(now).Unix()
+	old := dayStart(now.AddDate(0, 0, -7))
+	for _, day := range []int64{old.Unix(), today} {
+		require.NoError(t, db.Instance.Create(&flowDay{Day: day, Data: "{}"}).Error)
+	}
+
+	// the current slot leaves the rollup alone
+	require.NoError(t, persist(pv, now, 1, 0, nil, false))
+	require.Len(t, rolled(t), 2)
+
+	// a completed day loses its rollup, a failed change keeps it
+	require.Error(t, writeDays(old, nextDay(old), func(*gorm.DB) error { return assert.AnError }))
+	require.Len(t, rolled(t), 2)
+	require.NoError(t, persist(pv, old, 1, 0, nil, false))
+	require.Equal(t, []int64{today}, rolled(t))
 }
 
 func TestDailyRollupMidnightSkipped(t *testing.T) {
@@ -118,23 +152,25 @@ func TestDailyRollupMidnightSkipped(t *testing.T) {
 	}
 
 	require.NoError(t, rollupDays(to.Add(12*time.Hour)))
-	require.Equal(t, to.Unix(), dailyEnd.Load())
 
-	var days []flowDay
-	require.NoError(t, db.Instance.Select("day").Order("day").Find(&days).Error)
+	days := rolled(t)
 	require.Len(t, days, dailyChunk+2)
 	for _, d := range days {
-		day := time.Unix(d.Day, 0)
+		day := time.Unix(d, 0)
 		assert.True(t, day.Equal(dayStart(day)), day)
 	}
 
-	// a restart resumes at the start of the day after the newest one
-	require.NoError(t, deleteDaily(db.Instance, skipped.Unix(), dailyClean))
+	// a restart keeps the rollup, the missing days start at the skipped midnight
+	require.NoError(t, deleteDaily(db.Instance, skipped.Unix(), math.MaxInt64))
 	require.NoError(t, loadDaily())
-	assert.Equal(t, skipped.Unix(), dailyEnd.Load())
+	require.Len(t, rolled(t), dailyChunk)
 
-	d0, _ := wholeDays(skipped.Add(-time.Hour), to, to.Unix())
-	assert.Equal(t, skipped.Unix(), d0)
+	missing, err := missingDays(to)
+	require.NoError(t, err)
+	require.Len(t, missing, 2)
+	assert.Equal(t, skipped.Unix(), missing[0][0])
+	assert.True(t, wholeDay(missing[0]))
+	assert.False(t, wholeDay([2]int64{skipped.Add(-time.Hour).Unix(), missing[0][1]}))
 }
 
 func TestBuckets(t *testing.T) {
@@ -184,10 +220,12 @@ func TestBuckets(t *testing.T) {
 		})
 	}
 
-	// only whole days below the rollup end are read from it
+	// only days that are inside the period from start to end are read from the rollup
 	time.Local = local
 	from := time.Date(2025, 3, 29, 6, 15, 0, 0, time.Local)
-	day := dayStart(from)
-	d0, d1 := wholeDays(from, day.AddDate(0, 0, 3), day.AddDate(0, 0, 2).Unix())
-	assert.Equal(t, [2]int64{day.AddDate(0, 0, 1).Unix(), day.AddDate(0, 0, 2).Unix()}, [2]int64{d0, d1})
+	var whole []bool
+	for _, b := range buckets(from, nextDay(nextDay(dayStart(from))).Add(time.Hour), "day") {
+		whole = append(whole, wholeDay(b))
+	}
+	assert.Equal(t, []bool{false, true, false}, whole)
 }

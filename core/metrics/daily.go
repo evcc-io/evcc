@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"maps"
 	"math"
+	"slices"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/evcc-io/evcc/db"
@@ -38,9 +38,8 @@ func (energySum) TableName() string {
 	return "meters_daily"
 }
 
-// flowDay holds the energy flows of a local day: its totals per source and
-// sink (pv to home, grid to loadpoint, ...) with their cost and co2. A row
-// exists for every rolled up day, the newest marks how far the rollup got.
+// flowDay holds the totals of a local day per source and sink (pv to home, ...)
+// with cost and co2. A day is rolled up if and only if it has a row here.
 type flowDay struct {
 	Day  int64  `gorm:"column:day;primaryKey;autoIncrement:false"`
 	Data string `gorm:"column:data"` // json flowAcc
@@ -51,9 +50,8 @@ func (flowDay) TableName() string {
 }
 
 const (
-	// a day is complete once every entity wrote its last slot. That happens
-	// with its first update in the next slot, a gap before it is filled one
-	// slot later (fill). The rest is margin.
+	// a day is complete once every entity wrote its last slot, which is up to
+	// two slots after midnight (advanceSlot, fill). The rest is margin.
 	dailyDelay = 2 * time.Hour
 
 	// days rolled up per transaction
@@ -63,13 +61,11 @@ const (
 var log = util.NewLogger("metrics")
 
 var (
-	dailyMu      sync.RWMutex // readers hold it while Rollup drops rolled up days
-	dailyEnd     atomic.Int64 // start of the first day not rolled up, 0 if none is
-	dailyDirty   atomic.Int64 // earliest change the rollup does not reflect yet
-	dailyRequest = make(chan struct{}, 1)
+	// held while days are rolled up and while completed days change, so no
+	// day is rolled up from slots that change meanwhile
+	dailyMu      sync.Mutex
+	dailyRequest = make(chan struct{}, 1) // wakes up Rollup
 )
-
-const dailyClean = math.MaxInt64
 
 func dayStart(t time.Time) time.Time {
 	return aggregateStarts["day"](t)
@@ -81,13 +77,10 @@ func nextDay(day time.Time) time.Time {
 	return aggregateDurations["day"](day)
 }
 
-// atomicMin lowers v to ts
-func atomicMin(v *atomic.Int64, ts int64) {
-	for {
-		if old := v.Load(); ts >= old || v.CompareAndSwap(old, ts) {
-			return
-		}
-	}
+// wholeDay reports whether the bucket is a local day from start to end
+func wholeDay(b [2]int64) bool {
+	day := time.Unix(b[0], 0)
+	return day.Equal(dayStart(day)) && nextDay(day).Unix() == b[1]
 }
 
 // dailyFinal returns the end of the days that are complete at now
@@ -95,29 +88,23 @@ func dailyFinal(now time.Time) time.Time {
 	return dayStart(now.Add(-dailyDelay))
 }
 
-// loadDaily restores how far the rollup got. A rollup of another time zone
-// is dropped. The first change to what a day sums up to needs the same: add
-// a version to flowDay and drop the rollup here when it differs.
+// loadDaily drops a rollup of another time zone. A change to what a day sums
+// up to needs the same: add a version to flowDay and drop on a mismatch.
 func loadDaily() error {
-	dailyEnd.Store(0)
-	dailyDirty.Store(dailyClean)
-
 	var last flowDay
 	tx := db.Instance.Select("day").Order("day DESC").Limit(1).Find(&last)
 	if tx.Error != nil {
 		return tx.Error
 	}
 
-	day := time.Unix(last.Day, 0)
-	if tx.RowsAffected == 0 || !day.Equal(dayStart(day)) {
-		return deleteDaily(db.Instance, 0, dailyClean)
+	if day := time.Unix(last.Day, 0); tx.RowsAffected > 0 && !day.Equal(dayStart(day)) {
+		return resetDaily()
 	}
-
-	dailyEnd.Store(nextDay(day).Unix())
 	return nil
 }
 
-// deleteDaily removes the rolled up days in [from,to)
+// deleteDaily removes the rolled up days in [from,to). Both tables change in
+// the transaction tx, a day with only one of them is read wrong.
 func deleteDaily(tx *gorm.DB, from, to int64) error {
 	if err := tx.Where("day >= ? AND day < ?", from, to).Delete(new(energySum)).Error; err != nil {
 		return err
@@ -125,130 +112,119 @@ func deleteDaily(tx *gorm.DB, from, to int64) error {
 	return tx.Where("day >= ? AND day < ?", from, to).Delete(new(flowDay)).Error
 }
 
-// markDaily notes a change to the slots or tariffs at ts and wakes up
-// Rollup. It neither blocks nor fails, so it is safe on the write path.
-// Readers stop using the rollup from that day on, the next rollup drops it.
-func markDaily(ts int64) {
-	atomicMin(&dailyDirty, ts)
+// resetDaily drops the whole rollup
+func resetDaily() error {
+	dailyMu.Lock()
+	defer dailyMu.Unlock()
 
-	// a new slot may have completed a day
+	if err := db.Instance.Transaction(func(tx *gorm.DB) error {
+		return deleteDaily(tx, math.MinInt64, math.MaxInt64)
+	}); err != nil {
+		return err
+	}
+
+	requestRollup()
+	return nil
+}
+
+// writeDays runs a change to the slots or tariffs in [from,to). Only for
+// completed days it waits for a running rollup and drops their rolled up rows.
+func writeDays(from, to time.Time, change func(tx *gorm.DB) error) error {
+	// a day that completes while the change runs counts as well
+	if !from.Before(dailyFinal(time.Now().Add(tariff.SlotDuration))) {
+		return change(db.Instance)
+	}
+
+	dailyMu.Lock()
+	defer dailyMu.Unlock()
+
+	if err := db.Instance.Transaction(func(tx *gorm.DB) error {
+		if err := change(tx); err != nil {
+			return err
+		}
+		return deleteDaily(tx, dayStart(from).Unix(), to.Unix())
+	}); err != nil {
+		return err
+	}
+
+	requestRollup()
+	return nil
+}
+
+// requestRollup wakes up Rollup
+func requestRollup() {
 	select {
 	case dailyRequest <- struct{}{}:
 	default: // already requested
 	}
 }
 
-// applyDaily drops the rolled up days that markDaily noted a change for
-func applyDaily() error {
+// Rollup rolls up the completed days: at start, when the next day completes
+// and after a change to completed days. It blocks and is the only writer.
+func Rollup() {
+	for {
+		now := time.Now()
+		err := rollupDays(now)
+
+		// the current day is complete
+		wait := time.Until(nextDay(dailyFinal(now)).Add(dailyDelay))
+		if err != nil {
+			log.ERROR.Printf("history rollup: %v", err)
+			wait = tariff.SlotDuration
+		}
+
+		select {
+		case <-dailyRequest:
+		case <-time.After(wait):
+		}
+	}
+}
+
+// rollupDays sums up the days completed at now that are not rolled up
+func rollupDays(now time.Time) error {
+	days, err := missingDays(dailyFinal(now))
+	for err == nil && len(days) > 0 {
+		n := min(len(days), dailyChunk)
+		err = rollupChunk(days[:n])
+		days = days[n:]
+	}
+	return err
+}
+
+// missingDays lists the days from the first slot up to final that are not rolled up
+func missingDays(final time.Time) ([][2]int64, error) {
+	first, _, err := slotRange()
+	if err != nil || first == 0 {
+		return nil, err
+	}
+
+	var rolled []int64
+	if err := db.Instance.Model(new(flowDay)).Order("day").Pluck("day", &rolled).Error; err != nil {
+		return nil, err
+	}
+
+	days := buckets(dayStart(time.Unix(first, 0)), final, "day")
+	return slices.DeleteFunc(days, func(d [2]int64) bool {
+		_, ok := slices.BinarySearch(rolled, d[0])
+		return ok
+	}), nil
+}
+
+// rollupChunk sums up the given days and stores them
+func rollupChunk(days [][2]int64) error {
 	dailyMu.Lock()
 	defer dailyMu.Unlock()
 
-	dirty := dailyDirty.Load()
-	if dirty == dailyClean {
-		return nil
-	}
-
-	if dirty < dailyEnd.Load() {
-		day := dayStart(time.Unix(dirty, 0)).Unix()
-		if err := db.Instance.Transaction(func(tx *gorm.DB) error {
-			return deleteDaily(tx, day, dailyClean)
-		}); err != nil {
-			return err
-		}
-
-		// nothing left: start over at the first slot, which may have moved
-		var n int64
-		if err := db.Instance.Model(new(flowDay)).Count(&n).Error; err != nil {
-			return err
-		}
-		if n == 0 {
-			day = 0
-		}
-		dailyEnd.Store(day)
-	}
-
-	// an earlier change that arrived meanwhile stays for the next run
-	dailyDirty.CompareAndSwap(dirty, dailyClean)
-	return nil
-}
-
-// dailyUsable returns the end of the rolled up days that reflect all changes
-func dailyUsable() int64 {
-	end := dailyEnd.Load()
-	if dirty := dailyDirty.Load(); dirty < end {
-		end = dayStart(time.Unix(dirty, 0)).Unix()
-	}
-	return end
-}
-
-// Rollup rolls up the completed days, then again after each write. It
-// blocks and is the only writer of the rollup.
-func Rollup() {
-	for {
-		if err := rollupDays(time.Now()); err != nil {
-			log.ERROR.Printf("history rollup: %v", err)
-		}
-		<-dailyRequest
-	}
-}
-
-// rollupDays sums up all days completed at now that are not rolled up yet
-func rollupDays(now time.Time) error {
-	final := dailyFinal(now).Unix()
-	if dailyDirty.Load() == dailyClean && dailyEnd.Load() >= final {
-		return nil
-	}
-
-	for {
-		if err := applyDaily(); err != nil {
-			return err
-		}
-
-		end := dailyEnd.Load()
-		if end >= final {
-			return nil
-		}
-
-		next, err := rollupChunk(end, time.Unix(final, 0))
-		if err != nil || next == end {
-			return err
-		}
-	}
-}
-
-// rollupChunk stores the next chunk of days before final and returns its end.
-// A change that arrives meanwhile stays marked, the next applyDaily drops the chunk.
-func rollupChunk(end int64, final time.Time) (int64, error) {
-	from := time.Unix(end, 0)
-	if end == 0 {
-		first, _, err := slotRange()
-		if err != nil || first == 0 {
-			return end, err
-		}
-		from = dayStart(time.Unix(first, 0))
-	}
-
-	year, month, day := from.Date()
-	to := localDate(year, month, day+dailyChunk)
-	if to.After(final) {
-		to = final
-	}
-	if !from.Before(to) {
-		return end, nil
-	}
-
-	days := buckets(from, to, "day")
-
 	sums, err := sumEnergy(days, false, nil)
 	if err != nil {
-		return end, err
+		return err
 	}
 
 	flows := make([]flowDay, 0, len(days))
 	for _, d := range days {
 		acc, err := accumulate(time.Unix(d[0], 0), time.Unix(d[1], 0))
 		if err != nil {
-			return end, err
+			return err
 		}
 		// most entities are idle on a given day
 		maps.DeleteFunc(acc.Entities, func(_ int, e *flowEntity) bool {
@@ -256,25 +232,19 @@ func rollupChunk(end int64, final time.Time) (int64, error) {
 		})
 		data, err := json.Marshal(acc)
 		if err != nil {
-			return end, err
+			return err
 		}
 		flows = append(flows, flowDay{Day: d[0], Data: string(data)})
 	}
 
-	// readers ignore the rows until dailyEnd moves
-	if err := db.Instance.Transaction(func(tx *gorm.DB) error {
+	return db.Instance.Transaction(func(tx *gorm.DB) error {
 		if len(sums) > 0 {
 			if err := tx.CreateInBatches(sums, 1000).Error; err != nil {
 				return err
 			}
 		}
 		return tx.Create(flows).Error
-	}); err != nil {
-		return end, err
-	}
-
-	dailyEnd.Store(to.Unix())
-	return to.Unix(), nil
+	})
 }
 
 // slotRange returns the first and last slot, 0 without slots. The lookup per
@@ -332,25 +302,6 @@ func bucketValues(buckets [][2]int64) string {
 		fmt.Fprintf(&res, "(%d,%d)", b[0], b[1])
 	}
 	return res.String()
-}
-
-// wholeDays returns the rolled up days [d0,d1) inside [from,to). Zero bounds are open ended.
-func wholeDays(from, to time.Time, end int64) (int64, int64) {
-	var d0 int64
-	if !from.IsZero() {
-		day := dayStart(from)
-		if day.Before(from) {
-			day = nextDay(day)
-		}
-		d0 = day.Unix()
-	}
-
-	d1 := end
-	if !to.IsZero() {
-		d1 = min(d1, dayStart(to).Unix())
-	}
-
-	return d0, d1
 }
 
 const energySumColumns = `COUNT(*), COALESCE(SUM(m.energy), 0), COALESCE(SUM(m.return_energy), 0),
@@ -411,33 +362,42 @@ func scanEnergy(tx *gorm.DB) ([]energySum, error) {
 // dailyEnergy sums [from,to) per entity and local day. Rolled up days are
 // read from the rollup, the rest from the slots.
 func dailyEnergy(from, to time.Time, ids []int) ([]energySum, error) {
-	// no invalidation may truncate the rollup between its end and its rows being read
-	dailyMu.RLock()
-	d0, d1 := wholeDays(from, to, dailyUsable())
-
-	var res []energySum
-	var err error
-	if d0 < d1 {
-		tx := db.Instance.Model(new(energySum)).
-			Select("day, meter, 0, energy, return_energy, NULL, cost, priced_energy, return_cost, priced_return_energy").
-			Where("day >= ? AND day < ?", d0, d1)
-		if ids != nil {
-			tx = tx.Where("meter IN ?", ids)
-		}
-
-		res, err = scanEnergy(tx)
+	join := "LEFT JOIN meters_daily d ON d.day = f.day"
+	var args []any
+	if ids != nil {
+		join += " AND d.meter IN ?"
+		args = append(args, ids)
 	}
-	dailyMu.RUnlock()
+
+	// one statement, so a day comes with all of its rows or not at all. A
+	// day without energy has meter 0.
+	rows, err := scanEnergy(db.Instance.Table("meters_flows_daily f").
+		Select("f.day, COALESCE(d.meter, 0), 0, COALESCE(d.energy, 0), COALESCE(d.return_energy, 0), NULL, d.cost, d.priced_energy, d.return_cost, d.priced_return_energy").
+		Joins(join, args...).
+		Where("f.day >= ? AND f.day < ?", from.Unix(), to.Unix()))
 	if err != nil {
 		return nil, err
 	}
 
+	rolled := make(map[int64]bool)
+	for _, r := range rows {
+		rolled[r.Start] = true
+	}
+
+	// a day that is only partly inside the period is summed from its slots
+	use := make(map[int64]bool)
 	var rest [][2]int64
 	for _, d := range buckets(from, to, "day") {
-		if d[0] < d0 || d[0] >= d1 {
+		if rolled[d[0]] && wholeDay(d) {
+			use[d[0]] = true
+		} else {
 			rest = append(rest, d)
 		}
 	}
+
+	res := slices.DeleteFunc(rows, func(s energySum) bool {
+		return s.Meter == 0 || !use[s.Start]
+	})
 
 	slots, err := sumEnergy(rest, false, ids)
 	return append(res, slots...), err
@@ -446,47 +406,54 @@ func dailyEnergy(from, to time.Time, ids []int) ([]energySum, error) {
 // dailyFlow attributes [from,to). Rolled up days are read from the rollup,
 // the rest is attributed from the slots. Zero bounds are open ended.
 func dailyFlow(from, to time.Time) (*flowAcc, error) {
-	dailyMu.RLock()
-	d0, d1 := wholeDays(from, to, dailyUsable())
-
-	var days []flowDay
-	var err error
-	if d0 < d1 {
-		err = db.Instance.Select("data").Where("day >= ? AND day < ?", d0, d1).Find(&days).Error
-	}
-	dailyMu.RUnlock()
+	from, to, err := closeBounds(from, to, slotRange)
 	if err != nil {
 		return nil, err
 	}
 
-	if d0 >= d1 {
-		return accumulate(from, to)
+	var rows []flowDay
+	if err := db.Instance.Where("day >= ? AND day < ?", from.Unix(), to.Unix()).Find(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	rolled := make(map[int64]string, len(rows))
+	for _, r := range rows {
+		rolled[r.Day] = r.Data
 	}
 
 	acc := &flowAcc{Entities: make(map[int]*flowEntity)}
-	for _, d := range days {
+
+	// the slots in between the rolled up days
+	slots := func(start, end int64) error {
+		if start == end {
+			return nil
+		}
+		part, err := accumulate(time.Unix(start, 0), time.Unix(end, 0))
+		if err != nil {
+			return err
+		}
+		acc.merge(part)
+		return nil
+	}
+
+	gap := from.Unix()
+	for _, d := range buckets(from, to, "day") {
+		data, ok := rolled[d[0]]
+		if !ok || !wholeDay(d) {
+			continue
+		}
+
+		if err := slots(gap, d[0]); err != nil {
+			return nil, err
+		}
+		gap = d[1]
+
 		var day flowAcc
-		if err := json.Unmarshal([]byte(d.Data), &day); err != nil {
+		if err := json.Unmarshal([]byte(data), &day); err != nil {
 			return nil, err
 		}
 		acc.merge(&day)
 	}
 
-	// the slots before and after the rolled up days
-	if !from.IsZero() && from.Unix() < d0 {
-		head, err := accumulate(from, time.Unix(d0, 0))
-		if err != nil {
-			return nil, err
-		}
-		acc.merge(head)
-	}
-	if to.IsZero() || d1 < to.Unix() {
-		tail, err := accumulate(time.Unix(d1, 0), to)
-		if err != nil {
-			return nil, err
-		}
-		acc.merge(tail)
-	}
-
-	return acc, nil
+	return acc, slots(gap, to.Unix())
 }
