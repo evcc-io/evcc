@@ -103,9 +103,8 @@ render: |
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
     jq: .battery.instant_power
-  # Powerwall reports battery.energy_imported as charged and
-  # battery.energy_exported as discharged. evcc's battery meter expects
-  # energy (discharge) and returnenergy (charge), so the counters are swapped.
+  # Powerwall energy_imported is charge and energy_exported is discharge;
+  # evcc battery energy is discharge and returnenergy is charge.
   energy:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
