@@ -313,12 +313,21 @@ render: |
           source: sequence
           set:
             - source: const
-              value: 2
+              value: 0 # Local: energy storage operates according to the locally set 'Self-consumption' or 'TOU' mode
               set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
-                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                  address: 60301 # Energy Storage Communication Control Mode
+                  type: writemultiple
+                  decode: uint16
+            - source: const
+              value: 2 # Exit forced charging/discharging (normal mode)
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60310 # Energy Storage Forced Charging/Discharging
                   type: writemultiple
                   decode: uint16
             {{- if eq .firmware ">=01.01.00.28.15" }}
@@ -346,12 +355,30 @@ render: |
           source: sequence
           set:
             - source: const
-              value: {{ if eq .firmware "<01.01.00.28.15" }}99{{ else }}2{{ end }}
+              value: 1 # Remote Communication
               set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
-                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                  address: 60301 # Energy Storage Communication Control Mode
+                  type: writemultiple
+                  decode: uint16
+            - source: const
+              value: 0
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60312 # Energy Storage Forced Charging/Discharging Target SOC (%)
+                  type: writemultiple
+                  decode: uint16
+            - source: const
+              value: {{ if eq .firmware "<01.01.00.28.15" }}99 # Pause{{ else }}4 # Self-consumption{{ end }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60310 # Energy Storage Forced Charging/Discharging
                   type: writemultiple
                   decode: uint16
             {{- if eq .firmware ">=01.01.00.28.15" }}
@@ -379,6 +406,15 @@ render: |
           source: sequence
           set:
             - source: const
+              value: 1 # Remote Communication
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60301 # Energy Storage Communication Control Mode
+                  type: writemultiple
+                  decode: uint16
+            - source: const
               value: {{ .maxsoc }}
               set:
                 source: modbus
@@ -388,21 +424,21 @@ render: |
                   type: writemultiple
                   decode: uint16
             - source: const
-              value: 0
+              value: 0 # Target SOC
               set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
-                  address: 60311 # Energy Storage Forced Charging/Discharging Mode (0 = Target SOC, 1 = Charging/discharging duration)
+                  address: 60311 # Energy Storage Forced Charging/Discharging Mode
                   type: writemultiple
                   decode: uint16
             - source: const
-              value: 0
+              value: 0 # Forced charging
               set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
-                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                  address: 60310 # Energy Storage Forced Charging/Discharging
                   type: writemultiple
                   decode: uint16
             {{- if eq .firmware ">=01.01.00.28.15" }}
@@ -430,12 +466,30 @@ render: |
           source: sequence
           set:
             - source: const
-              value: {{ if eq .firmware "<01.01.00.28.15" }}99{{ else }}2{{ end }}
+              value: 1 # Remote Communication
               set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
-                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                  address: 60301 # Energy Storage Communication Control Mode
+                  type: writemultiple
+                  decode: uint16
+            - source: const
+              value: 0
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60312 # Energy Storage Forced Charging/Discharging Target SOC (%)
+                  type: writemultiple
+                  decode: uint16
+            - source: const
+              value: {{ if eq .firmware "<01.01.00.28.15" }}99 # Pause{{ else }}4 # Self-consumption{{ end }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60310 # Energy Storage Forced Charging/Discharging
                   type: writemultiple
                   decode: uint16
             {{- if eq .firmware ">=01.01.00.28.15" }}
@@ -463,6 +517,15 @@ render: |
           source: sequence
           set:
             - source: const
+              value: 1 # Remote Communication
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60301 # Energy Storage Communication Control Mode
+                  type: writemultiple
+                  decode: uint16
+            - source: const
               value: {{ .minsoc }}
               set:
                 source: modbus
@@ -472,21 +535,21 @@ render: |
                   type: writemultiple
                   decode: uint16
             - source: const
-              value: 0
+              value: 0 # Target SOC
               set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
-                  address: 60311 # Energy Storage Forced Charging/Discharging Mode (0 = Target SOC, 1 = Charging/discharging duration)
+                  address: 60311 # Energy Storage Forced Charging/Discharging Mode
                   type: writemultiple
                   decode: uint16
             - source: const
-              value: 1
+              value: 1 # Forced discharging
               set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
-                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                  address: 60310 # Energy Storage Forced Charging/Discharging
                   type: writemultiple
                   decode: uint16
             {{- if eq .firmware ">=01.01.00.28.15" }}
