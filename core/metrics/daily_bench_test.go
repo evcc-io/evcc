@@ -111,13 +111,28 @@ func BenchmarkHistory(b *testing.B) {
 			}
 		}
 
-		// rebuilds the rollup after a delete a year ago. The filter keeps the
-		// delete on the index, without one it scans all slots.
-		b.Run(fmt.Sprintf("entities=%d/rollup/delete-hour-last-year", entities), func(b *testing.B) {
-			old := dayStart(now.AddDate(-1, 0, 0))
+		// a delete a year ago, the delete itself is not timed
+		old := dayStart(now.AddDate(-1, 0, 0))
+		deleteHour := func(b *testing.B) {
+			_, err := DeleteEnergy(old, old.Add(time.Hour))
+			require.NoError(b, err)
+		}
+
+		// the requests until the rollup has caught up
+		deleteHour(b)
+		for _, q := range queries {
+			b.Run(fmt.Sprintf("entities=%d/deleted/%s", entities, q.name), func(b *testing.B) {
+				for b.Loop() {
+					require.NoError(b, q.run())
+				}
+			})
+		}
+
+		b.Run(fmt.Sprintf("entities=%d/deleted/rollup", entities), func(b *testing.B) {
 			for b.Loop() {
-				_, err := DeleteEnergy(old, old.Add(time.Hour), EnergyFilter{Group: Grid})
-				require.NoError(b, err)
+				b.StopTimer()
+				deleteHour(b)
+				b.StartTimer()
 				require.NoError(b, rollupDays(now))
 			}
 		})
