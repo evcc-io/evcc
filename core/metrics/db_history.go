@@ -148,8 +148,11 @@ func DeleteEnergy(from, to time.Time, filter ...EnergyFilter) (int64, error) {
 		rows = res.RowsAffected
 		return res.Error
 	})
+	if err != nil {
+		return 0, err
+	}
 
-	return rows, err
+	return rows, nil
 }
 
 // QueryEnergy returns aggregated energy data, per title or per group.

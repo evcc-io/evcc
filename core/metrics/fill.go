@@ -63,7 +63,7 @@ func backfill() error {
 	}
 
 	// the rolled up days do not hold the filled slots
-	if err := resetDaily(); err != nil {
+	if err := resetDaily(nil); err != nil {
 		return err
 	}
 

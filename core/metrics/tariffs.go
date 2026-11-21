@@ -76,8 +76,11 @@ func DeleteTariffs(from, to time.Time, usage string) (int64, error) {
 			Where("grid IS NULL AND feedin IS NULL AND co2 IS NULL AND temperature IS NULL").
 			Delete(new(tariffValue)).Error
 	})
+	if err != nil {
+		return 0, err
+	}
 
-	return rows, err
+	return rows, nil
 }
 
 // PersistTariffs stores the tariff values at the given 15min boundary, nil values omitted

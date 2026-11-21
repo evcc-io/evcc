@@ -98,7 +98,7 @@ func loadDaily() error {
 	}
 
 	if day := time.Unix(last.Day, 0); tx.RowsAffected > 0 && !day.Equal(dayStart(day)) {
-		return resetDaily()
+		return resetDaily(nil)
 	}
 	return nil
 }
@@ -112,12 +112,16 @@ func deleteDaily(tx *gorm.DB, from, to int64) error {
 	return tx.Where("day >= ? AND day < ?", from, to).Delete(new(flowDay)).Error
 }
 
-// resetDaily drops the whole rollup
-func resetDaily() error {
+// resetDaily drops the whole rollup. A given change runs along with it and
+// reports whether it applied, otherwise the rollup stays.
+func resetDaily(change func(tx *gorm.DB) bool) error {
 	dailyMu.Lock()
 	defer dailyMu.Unlock()
 
 	if err := db.Instance.Transaction(func(tx *gorm.DB) error {
+		if change != nil && !change(tx) {
+			return nil
+		}
 		return deleteDaily(tx, math.MinInt64, math.MaxInt64)
 	}); err != nil {
 		return err
@@ -166,8 +170,8 @@ func Rollup() {
 		now := time.Now()
 		err := rollupDays(now)
 
-		// the current day is complete
-		wait := time.Until(nextDay(dailyFinal(now)).Add(dailyDelay))
+		// the current day is complete, checked hourly in case the clock was set
+		wait := min(time.Until(nextDay(dailyFinal(now)).Add(dailyDelay)), time.Hour)
 		if err != nil {
 			log.ERROR.Printf("history rollup: %v", err)
 			wait = tariff.SlotDuration
@@ -183,12 +187,16 @@ func Rollup() {
 // rollupDays sums up the days completed at now that are not rolled up
 func rollupDays(now time.Time) error {
 	days, err := missingDays(dailyFinal(now))
-	for err == nil && len(days) > 0 {
-		n := min(len(days), dailyChunk)
-		err = rollupChunk(days[:n])
-		days = days[n:]
+	if err != nil {
+		return err
 	}
-	return err
+
+	for chunk := range slices.Chunk(days, dailyChunk) {
+		if err := rollupChunk(chunk); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // missingDays lists the days from the first slot up to final that are not rolled up

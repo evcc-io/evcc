@@ -210,14 +210,8 @@ func entitySlots(entities map[int]*flowEntity, from, to time.Time) (map[int64][]
 
 	tx := db.Instance.Table("meters").
 		Select("ts, meter, energy").
-		Where("meter IN ? AND energy <> 0", slices.Collect(maps.Keys(entities)))
-
-	if !from.IsZero() {
-		tx = tx.Where("ts >= ?", from.Unix())
-	}
-	if !to.IsZero() {
-		tx = tx.Where("ts < ?", to.Unix())
-	}
+		Where("meter IN ? AND energy <> 0", slices.Collect(maps.Keys(entities))).
+		Where("ts >= ? AND ts < ?", from.Unix(), to.Unix())
 
 	rows, err := tx.Rows()
 	if err != nil {
@@ -255,14 +249,8 @@ func sinkSlots(from, to time.Time) ([]flowSlot, error) {
 		Joins("JOIN entities e ON m.meter = e.id").
 		Joins("LEFT JOIN tariffs t ON t.ts = m.ts").
 		Where(`e."group" IN ?`, []string{PV, Grid, Battery, Home}).
+		Where("m.ts >= ? AND m.ts < ?", from.Unix(), to.Unix()).
 		Group("m.ts")
-
-	if !from.IsZero() {
-		tx = tx.Where("m.ts >= ?", from.Unix())
-	}
-	if !to.IsZero() {
-		tx = tx.Where("m.ts < ?", to.Unix())
-	}
 
 	rows, err := tx.Rows()
 	if err != nil {
@@ -284,7 +272,7 @@ func sinkSlots(from, to time.Time) ([]flowSlot, error) {
 }
 
 // accumulate attributes the energy of [from,to) from sources to sinks per
-// 15min slot. Zero bounds are open ended.
+// 15min slot.
 func accumulate(from, to time.Time) (*flowAcc, error) {
 	// consumers and loadpoints are priced individually
 	var ents []entity
