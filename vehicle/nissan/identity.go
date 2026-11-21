@@ -49,8 +49,8 @@ var OAuth2Config = &oauth2.Config{
 }
 
 var (
-	authBaseURI = lo.Must(url.Parse(AuthBaseURL))
-	redirectURI = lo.Must(url.Parse(RedirectURI))
+	authBaseURI = url.MustParse(AuthBaseURL)
+	redirectURI = url.MustParse(RedirectURI)
 )
 
 // ErrInvalidCredentials is returned when Nissan rejects the credentials
