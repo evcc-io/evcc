@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/util"
@@ -78,7 +79,15 @@ func deleteTariffsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := metrics.DeleteTariffs(from, to, r.URL.Query().Get("usage"))
+	var usage api.TariffUsage
+	if s := r.URL.Query().Get("usage"); s != "" {
+		if usage, err = api.TariffUsageString(s); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+	}
+
+	rows, err := metrics.DeleteTariffs(from, to, usage)
 	if err != nil {
 		status := http.StatusInternalServerError
 		if errors.Is(err, metrics.ErrInvalidUsage) {

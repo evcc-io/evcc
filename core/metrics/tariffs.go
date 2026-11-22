@@ -3,10 +3,9 @@ package metrics
 import (
 	"errors"
 	"fmt"
-	"slices"
-	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/tariff"
 	"gorm.io/gorm"
@@ -34,21 +33,26 @@ func init() {
 // ErrInvalidUsage is returned for an unknown tariff usage
 var ErrInvalidUsage = errors.New("invalid usage")
 
-// tariffUsages are the deletable usages, named after their table column
-var tariffUsages = []string{"grid", "feedin", "co2", "temperature"}
+// tariffColumns maps the deletable usages to their table column
+var tariffColumns = map[api.TariffUsage]string{
+	api.TariffUsageGrid:        "grid",
+	api.TariffUsageFeedIn:      "feedin",
+	api.TariffUsageCo2:         "co2",
+	api.TariffUsageTemperature: "temperature",
+}
 
-// DeleteTariffs removes the persisted values in [from,to). An empty usage drops
+// DeleteTariffs removes the persisted values in [from,to). A zero usage drops
 // the entire row, otherwise only that usage is cleared. Both bounds are
 // required, a full wipe is /api/db/reset. The count is the number of affected
 // rows; rows dropped by the cleanup are a subset of the cleared ones.
-func DeleteTariffs(from, to time.Time, usage string) (int64, error) {
+func DeleteTariffs(from, to time.Time, usage api.TariffUsage) (int64, error) {
 	if from.IsZero() || to.IsZero() {
 		return 0, errors.New("missing from/to")
 	}
 
-	// guards the column interpolated below
-	if usage != "" && !slices.Contains(tariffUsages, usage) {
-		return 0, fmt.Errorf("%w: %s (valid: %s)", ErrInvalidUsage, usage, strings.Join(tariffUsages, ", "))
+	col, ok := tariffColumns[usage]
+	if usage != 0 && !ok {
+		return 0, fmt.Errorf("%w: %s", ErrInvalidUsage, usage)
 	}
 
 	var rows int64
@@ -57,15 +61,15 @@ func DeleteTariffs(from, to time.Time, usage string) (int64, error) {
 			return tx.Where("ts >= ? AND ts < ?", from.Unix(), to.Unix())
 		}
 
-		if usage == "" {
+		if usage == 0 {
 			res := inRange().Delete(new(tariffValue))
 			rows = res.RowsAffected
 			return res.Error
 		}
 
 		res := inRange().Model(new(tariffValue)).
-			Where(usage+" IS NOT NULL").
-			Update(usage, gorm.Expr("NULL"))
+			Where(col+" IS NOT NULL").
+			Update(col, gorm.Expr("NULL"))
 		if res.Error != nil {
 			return res.Error
 		}

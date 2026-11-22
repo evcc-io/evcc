@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/db"
 	"github.com/stretchr/testify/require"
 )
@@ -71,16 +72,16 @@ func TestDeleteTariffs(t *testing.T) {
 		return n
 	}
 
-	_, err := DeleteTariffs(base, time.Time{}, "")
+	_, err := DeleteTariffs(base, time.Time{}, 0)
 	require.Error(t, err)
 
-	// unknown usage never reaches the column interpolation
-	_, err = DeleteTariffs(base, base.Add(time.Hour), "unknown")
+	// usage without a column never reaches the column interpolation
+	_, err = DeleteTariffs(base, base.Add(time.Hour), api.TariffUsageSolar)
 	require.ErrorIs(t, err, ErrInvalidUsage)
 	require.Equal(t, int64(4), count())
 
 	// clearing one usage keeps the row as long as another value remains
-	rows, err := DeleteTariffs(base, base.Add(30*time.Minute), "grid")
+	rows, err := DeleteTariffs(base, base.Add(30*time.Minute), api.TariffUsageGrid)
 	require.NoError(t, err)
 	require.Equal(t, int64(2), rows)
 	require.Equal(t, int64(4), count())
@@ -91,13 +92,13 @@ func TestDeleteTariffs(t *testing.T) {
 	require.InDelta(t, 250, *res.Co2, 0.001)
 
 	// clearing the last usage drops the now empty rows
-	rows, err = DeleteTariffs(base, base.Add(30*time.Minute), "co2")
+	rows, err = DeleteTariffs(base, base.Add(30*time.Minute), api.TariffUsageCo2)
 	require.NoError(t, err)
 	require.Equal(t, int64(2), rows)
 	require.Equal(t, int64(2), count())
 
 	// no usage drops the whole row
-	rows, err = DeleteTariffs(base, base.Add(time.Hour), "")
+	rows, err = DeleteTariffs(base, base.Add(time.Hour), 0)
 	require.NoError(t, err)
 	require.Equal(t, int64(2), rows)
 	require.Zero(t, count())
