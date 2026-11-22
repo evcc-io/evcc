@@ -37,9 +37,10 @@ import (
 // Registers are reverse engineered, see https://github.com/davidrapan/ha-solarman/pull/1073.
 // The charger takes a power setpoint in W; writing 0 stops charging.
 type DeyeEvse struct {
-	lp    loadpoint.API
-	conn  deyeEvseConn
-	power uint16
+	lp        loadpoint.API
+	conn      deyeEvseConn
+	power     uint16
+	connected bool // last known, the charger reports available with a zero limit even if a vehicle is plugged in
 }
 
 // deyeEvseConn is implemented by *modbus.Connection and the Solarman V5 logger
@@ -64,11 +65,12 @@ func (s *deyeEvseSolarman) WriteMultipleRegisters(address, _ uint16, value []byt
 
 const (
 	deyeEvseRegPowerLimit = 18 // 0x0012 charging power limit W, 0 stops charging
-	deyeEvseRegEnergy     = 34 // 0x0022 total charged energy kWh
 	deyeEvseRegPowers     = 38 // 0x0026 charging power L1-L3 ×10 W, 3 regs
 	deyeEvseRegVoltages   = 44 // 0x002C charging voltage L1-L3 ×0.1 V, 3 regs
 	deyeEvseRegCurrents   = 47 // 0x002F charging current L1-L3 ×0.1 A, 3 regs
 	deyeEvseRegState      = 57 // 0x0039 charging state, low byte
+
+	deyeEvseStateAvailable = 0x01 // no vehicle detected
 )
 
 func init() {
@@ -131,16 +133,56 @@ func NewDeyeEvse(conn deyeEvseConn) (api.Charger, error) {
 	return wb, nil
 }
 
+// state returns the operational state from the low byte, high byte flags are ignored
+func (wb *DeyeEvse) state() (uint16, error) {
+	b, err := wb.conn.ReadHoldingRegisters(deyeEvseRegState, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return binary.BigEndian.Uint16(b) & 0x7F, nil
+}
+
+// limit returns the power limit in W
+func (wb *DeyeEvse) limit() (uint16, error) {
+	b, err := wb.conn.ReadHoldingRegisters(deyeEvseRegPowerLimit, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return binary.BigEndian.Uint16(b), nil
+}
+
 // Status implements the api.Charger interface
 func (wb *DeyeEvse) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(deyeEvseRegState, 1)
+	s, err := wb.state()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	switch s := binary.BigEndian.Uint16(b) & 0x7F; s {
-	case 0x01: // available
-		return api.StatusA, nil
+	if s != deyeEvseStateAvailable {
+		wb.connected = true
+	}
+
+	switch s {
+	case deyeEvseStateAvailable:
+		limit, err := wb.limit()
+		if err != nil {
+			return api.StatusNone, err
+		}
+
+		switch {
+		case limit != 0:
+			// with a non-zero limit, available reliably means no vehicle
+			wb.connected = false
+			return api.StatusA, nil
+		case wb.connected:
+			// disabled by evcc, an unplug cannot be detected until enabled again
+			return api.StatusB, nil
+		default:
+			// a zero limit prevents the charger from detecting a plugged-in vehicle
+			return api.StatusA, wb.setPower(wb.power)
+		}
 	case 0x02, 0x04, 0x08, 0x10: // finishing, preparing, suspended by EV, suspended by EVSE
 		return api.StatusB, nil
 	case 0x20: // charging
@@ -152,22 +194,37 @@ func (wb *DeyeEvse) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *DeyeEvse) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(deyeEvseRegPowerLimit, 1)
+	s, err := wb.state()
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) != 0, nil
+	// a limit kept while no vehicle is connected does not count as enabled
+	if s == deyeEvseStateAvailable {
+		return false, nil
+	}
+
+	limit, err := wb.limit()
+	return limit != 0, err
 }
 
 // Enable implements the api.Charger interface
 func (wb *DeyeEvse) Enable(enable bool) error {
-	var power uint16
 	if enable {
-		power = wb.power
+		return wb.setPower(wb.power)
 	}
 
-	return wb.setPower(power)
+	s, err := wb.state()
+	if err != nil {
+		return err
+	}
+
+	// keep the limit while no vehicle is connected so the charger can detect one
+	if s == deyeEvseStateAvailable && !wb.connected {
+		return wb.setPower(wb.power)
+	}
+
+	return wb.setPower(0)
 }
 
 // setPower writes the power limit in W
@@ -248,18 +305,6 @@ var _ api.PhaseVoltages = (*DeyeEvse)(nil)
 // Voltages implements the api.PhaseVoltages interface
 func (wb *DeyeEvse) Voltages() (float64, float64, float64, error) {
 	return wb.phaseValues(deyeEvseRegVoltages, 0.1)
-}
-
-var _ api.MeterEnergy = (*DeyeEvse)(nil)
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *DeyeEvse) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(deyeEvseRegEnergy, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(binary.BigEndian.Uint16(b)), nil
 }
 
 var _ loadpoint.Controller = (*DeyeEvse)(nil)
