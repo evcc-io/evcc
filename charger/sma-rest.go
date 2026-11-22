@@ -142,8 +142,8 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 		return nil, err
 	}
 
-	if mode != sma.ModeStop && mode != sma.ModeFast {
-		log.WARN.Printf("charging mode is %d, fast charging (%d) required", mode, sma.ModeFast)
+	if mode != sma.ChargeStop && mode != sma.BoostCharging {
+		log.WARN.Printf("charging mode is %d, fast charging (%d) required", mode, sma.BoostCharging)
 	}
 
 	// the eCharger has no rotary switch and reports a meaningless position
@@ -172,7 +172,7 @@ func (wb *SmaRest) Status() (api.ChargeStatus, error) {
 }
 
 func (wb *SmaRest) status() (sma.Code, error) {
-	res, err := wb.getMeasurement(sma.ChannelStatus)
+	res, err := wb.getMeasurement(sma.OperationEVehChaStt)
 	return sma.Code(res), err
 }
 
@@ -180,12 +180,12 @@ var _ api.StatusReasoner = (*SmaRest)(nil)
 
 // StatusReason implements the api.StatusReasoner interface
 func (wb *SmaRest) StatusReason() (api.Reason, error) {
-	access, err := wb.code(sma.ChannelAccessManagement)
+	access, err := wb.code(sma.ChrgChrgLok)
 	if err != nil {
 		return api.ReasonUnknown, err
 	}
 
-	release, err := wb.code(sma.ChannelRelease)
+	release, err := wb.code(sma.ChrgChrgApv)
 	if err != nil {
 		return api.ReasonUnknown, err
 	}
@@ -201,21 +201,21 @@ func (wb *SmaRest) Enabled() (bool, error) {
 	}
 
 	// the eCharger falls back to its default pv surplus mode on its own, report it as disabled to restore fast charging
-	return mode == sma.ModeFast, nil
+	return mode == sma.BoostCharging, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *SmaRest) Enable(enable bool) error {
-	mode := sma.ModeStop
+	mode := sma.ChargeStop
 	if enable {
-		mode = sma.ModeFast
+		mode = sma.BoostCharging
 	}
 
-	return wb.Send(value(sma.ChannelMode, mode.String()))
+	return wb.Send(value(sma.ChrgActChaMod, mode.String()))
 }
 
 func (wb *SmaRest) mode() (sma.Code, error) {
-	return wb.code(sma.ChannelMode)
+	return wb.code(sma.ChrgActChaMod)
 }
 
 // code reads an enum parameter
@@ -270,7 +270,7 @@ var _ api.ChargeRater = (*SmaRest)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *SmaRest) ChargedEnergy() (float64, error) {
-	res, err := wb.getMeasurement(sma.ChannelSessionEnergy)
+	res, err := wb.getMeasurement(sma.ChaSessWhIn)
 	if _, ok := errors.AsType[*smarest.ErrUnknownMeasurement](err); ok {
 		res, err = wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn.ChaSta")
 	}

@@ -131,18 +131,18 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 	}
 
 	// Check if device supports charged energy reporting via Parameters endpoint
-	if _, err := wb.getParameter(sma.ChannelSessionEnergy); err == nil {
+	if _, err := wb.getParameter(sma.ChaSessWhIn); err == nil {
 		implement.Has(wb, implement.ChargeRater(wb.chargedEnergy))
 	}
 
 	// Check if device supports status reporting via Parameters endpoint
-	if _, err := wb.getParameter(sma.ChannelStatus); err == nil {
+	if _, err := wb.getParameter(sma.OperationEVehChaStt); err == nil {
 		wb.hasStatusParam = true
 	}
 
 	// Check if device reports access management and charging release via Parameters endpoint
-	_, errAccess := wb.getParameter(sma.ChannelAccessManagement)
-	_, errRelease := wb.getParameter(sma.ChannelRelease)
+	_, errAccess := wb.getParameter(sma.ChrgChrgLok)
+	_, errRelease := wb.getParameter(sma.ChrgChrgApv)
 	if errAccess == nil && errRelease == nil {
 		implement.Has(wb, implement.StatusReasoner(wb.statusReason))
 	}
@@ -289,12 +289,12 @@ func (wb *SEMP) Status() (api.ChargeStatus, error) {
 
 // statusReason implements the api.StatusReasoner interface
 func (wb *SEMP) statusReason() (api.Reason, error) {
-	access, err := wb.smaCode(sma.ChannelAccessManagement)
+	access, err := wb.smaCode(sma.ChrgChrgLok)
 	if err != nil {
 		return api.ReasonUnknown, err
 	}
 
-	release, err := wb.smaCode(sma.ChannelRelease)
+	release, err := wb.smaCode(sma.ChrgChrgApv)
 	if err != nil {
 		return api.ReasonUnknown, err
 	}
@@ -304,7 +304,7 @@ func (wb *SEMP) statusReason() (api.Reason, error) {
 
 // smaStatus returns the SMA charging status from the parameters endpoint
 func (wb *SEMP) smaStatus() (sma.Code, error) {
-	return wb.smaCode(sma.ChannelStatus)
+	return wb.smaCode(sma.OperationEVehChaStt)
 }
 
 // smaCode reads an SMA enum value from the parameters endpoint
@@ -385,7 +385,7 @@ func (wb *SEMP) CurrentPower() (float64, error) {
 
 // chargedEnergy implements the api.ChargeRater interface (via decorator)
 func (wb *SEMP) chargedEnergy() (float64, error) {
-	value, err := wb.getParameter(sma.ChannelSessionEnergy)
+	value, err := wb.getParameter(sma.ChaSessWhIn)
 	if err != nil {
 		return 0, err
 	}

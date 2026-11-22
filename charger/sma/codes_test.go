@@ -14,13 +14,13 @@ func TestChargeStatus(t *testing.T) {
 		status api.ChargeStatus
 		err    bool
 	}{
-		{StatusNotConnected, api.StatusA, false},
-		{StatusSleeping, api.StatusB, false},
-		{StatusFinished, api.StatusB, false},
-		{StatusLocked, api.StatusB, false},
-		{StatusCharging, api.StatusC, false},
-		{StatusWarning, api.StatusNone, true},
-		{StatusError, api.StatusNone, true},
+		{NotConnected, api.StatusA, false},
+		{SleepMode, api.StatusB, false},
+		{ChargeTargetReached, api.StatusB, false},
+		{StationLocked, api.StatusB, false},
+		{ActiveMode, api.StatusC, false},
+		{Warning, api.StatusNone, true},
+		{StationFault, api.StatusNone, true},
 	} {
 		status, err := ChargeStatus(tc.code)
 		assert.Equal(t, tc.status, status, tc.code)
@@ -29,15 +29,15 @@ func TestChargeStatus(t *testing.T) {
 }
 
 func TestStatusReason(t *testing.T) {
-	assert.Equal(t, api.ReasonWaitingForAuthorization, StatusReason(AccessManagementOn, ChargingLocked))
-	assert.Equal(t, api.ReasonUnknown, StatusReason(AccessManagementOn, ChargingReleased))
-	assert.Equal(t, api.ReasonUnknown, StatusReason(AccessManagementOff, ChargingLocked))
+	assert.Equal(t, api.ReasonWaitingForAuthorization, StatusReason(Yes, ChargingLock))
+	assert.Equal(t, api.ReasonUnknown, StatusReason(Yes, ChargingRelease))
+	assert.Equal(t, api.ReasonUnknown, StatusReason(No, ChargingLock))
 }
 
 func TestParseCode(t *testing.T) {
 	c, err := ParseCode("5169")
 	require.NoError(t, err)
-	assert.Equal(t, StatusLocked, c)
+	assert.Equal(t, StationLocked, c)
 	assert.Equal(t, "5169", c.String())
 
 	_, err = ParseCode("invalid")

@@ -10,11 +10,11 @@ import (
 
 // Channel ids as used by the REST and SEMP parameter interfaces
 const (
-	ChannelStatus           = "Measurement.Operation.EVeh.ChaStt"
-	ChannelSessionEnergy    = "Measurement.ChaSess.WhIn"
-	ChannelMode             = "Parameter.Chrg.ActChaMod"
-	ChannelRelease          = "Parameter.Chrg.ChrgApv"
-	ChannelAccessManagement = "Parameter.Chrg.ChrgLok"
+	OperationEVehChaStt = "Measurement.Operation.EVeh.ChaStt"
+	ChaSessWhIn         = "Measurement.ChaSess.WhIn"
+	ChrgActChaMod       = "Parameter.Chrg.ActChaMod"
+	ChrgChrgApv         = "Parameter.Chrg.ChrgApv"
+	ChrgChrgLok         = "Parameter.Chrg.ChrgLok"
 )
 
 // Code is an SMA enum value
@@ -31,54 +31,54 @@ func ParseCode(s string) (Code, error) {
 	return Code(c), err
 }
 
+// Generic values, e.g. Parameter.Chrg.ChrgLok (access management) and Parameter.Chrg.StpWhenFl
+const (
+	Yes Code = 1129
+	No  Code = 1130
+)
+
 // Measurement.Operation.EVeh.ChaStt
 const (
-	StatusWarning      Code = 200106
-	StatusNotConnected Code = 200111
-	StatusSleeping     Code = 200112
-	StatusCharging     Code = 200113
-	StatusFinished     Code = 200114 // charge target reached
-	StatusError        Code = 200115
-	StatusLocked       Code = 5169 // connected, waiting for charging release
+	Warning             Code = 200106 // Warnung
+	NotConnected        Code = 200111 // nicht verbunden
+	SleepMode           Code = 200112 // schlafend
+	ActiveMode          Code = 200113 // Laden aktiv
+	ChargeTargetReached Code = 200114 // Ladeziel erreicht
+	StationFault        Code = 200115 // Fehler
+	StationLocked       Code = 5169   // gesperrt, connected and waiting for charging release
 )
 
 // Parameter.Chrg.ActChaMod
 const (
-	ModeFast      Code = 4718
-	ModePVSurplus Code = 4719
-	ModeTarget    Code = 4720
-	ModeStop      Code = 4721
+	BoostCharging     Code = 4718 // Schnellladen
+	OptimizedCharging Code = 4719 // Laden mit PV-Überschuss
+	SetpointCharging  Code = 4720 // Laden mit Zielvorgabe
+	ChargeStop        Code = 4721 // Ladestopp
 )
 
 // Parameter.Chrg.ChrgApv
 const (
-	ChargingLocked   Code = 5171
-	ChargingReleased Code = 5172
-)
-
-// Parameter.Chrg.ChrgLok
-const (
-	AccessManagementOn  Code = 1129 // charging release via app or RFID required
-	AccessManagementOff Code = 1130
+	ChargingLock    Code = 5171 // Ladesperre
+	ChargingRelease Code = 5172 // Ladefreigabe
 )
 
 // ChargeStatus maps the charging status
 func ChargeStatus(c Code) (api.ChargeStatus, error) {
 	switch c {
-	case StatusNotConnected:
+	case NotConnected:
 		return api.StatusA, nil
-	case StatusSleeping, StatusFinished, StatusLocked:
+	case SleepMode, ChargeTargetReached, StationLocked:
 		return api.StatusB, nil
-	case StatusCharging:
+	case ActiveMode:
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", c)
 	}
 }
 
-// StatusReason reports waiting for authorization while access management requires a release not yet given
-func StatusReason(accessManagement, release Code) api.Reason {
-	if accessManagement == AccessManagementOn && release != ChargingReleased {
+// StatusReason reports waiting for authorization while access management (ChrgLok) requires a release (ChrgApv) not yet given
+func StatusReason(chrgLok, chrgApv Code) api.Reason {
+	if chrgLok == Yes && chrgApv != ChargingRelease {
 		return api.ReasonWaitingForAuthorization
 	}
 	return api.ReasonUnknown
