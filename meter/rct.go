@@ -249,10 +249,6 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 			case api.BatteryHoldDischarge:
 				writes = append(writes, func() error {
-					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
-				})
-
-				writes = append(writes, func() error {
 					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MaxSoc/100))
 				})
 
@@ -264,6 +260,11 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 						return err
 					}
 					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(soc))
+				})
+
+				// strategy last so the hold targets are already in place
+				writes = append(writes, func() error {
+					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
 				})
 
 			case api.BatteryCharge:
@@ -286,15 +287,16 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 			case api.BatteryHoldCharge:
 				writes = append(writes, func() error {
-					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
-				})
-
-				writes = append(writes, func() error {
 					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
 				})
 
 				writes = append(writes, func() error {
 					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MinSoc/100))
+				})
+
+				// strategy last so the hold targets are already in place
+				writes = append(writes, func() error {
+					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
 				})
 
 			case api.BatteryDischarge:
@@ -315,13 +317,13 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			}
 
 			// write sequentially, the inverter drops concurrent writes (#36498)
+			// attempt all writes so one failure does not leave the rest unapplied
+			var errs []error
 			for _, write := range writes {
-				if err := write(); err != nil {
-					return err
-				}
+				errs = append(errs, write())
 			}
 
-			return nil
+			return errors.Join(errs...)
 		}
 
 		implement.Has(m, implement.BatteryController(m.getBatteryModes, batteryMode))
