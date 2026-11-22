@@ -50,9 +50,7 @@ func TestSolarForecasts(t *testing.T) {
 
 	res, err := c.SolarForecasts(context.Background())
 	require.NoError(t, err)
-	require.Len(t, res, 1)
-	assert.Len(t, res["entry"].WhHours, 1)
-	wh := res["entry"].WhHours["2026-09-12T12:00:00+00:00"]
-	require.NotNil(t, wh)
-	assert.Equal(t, 500.0, *wh)
+	assert.Equal(t, map[string]SolarForecast{
+		"entry": {WhHours: map[string]float64{"2026-09-12T12:00:00+00:00": 500}},
+	}, res)
 }

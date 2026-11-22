@@ -114,11 +114,8 @@ func solarForecastRates(res map[string]homeassistant.SolarForecast) (api.Rates, 
 			if !ts.Equal(ts.Truncate(15 * time.Minute)) {
 				continue
 			}
-			// skip unavailable (null) or negative readings, a genuine zero stays valid
-			if wh == nil || *wh < 0 {
-				continue
-			}
-			energy[ts.Local()] += *wh
+			// production can't be negative
+			energy[ts.Local()] += max(wh, 0)
 		}
 
 		ts := slices.SortedFunc(maps.Keys(energy), time.Time.Compare)
