@@ -152,6 +152,11 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 		log.WARN.Println(`"Disconnect after full charge" must be set to "No"`)
 	}
 
+	// SEMP control requires operation with a grid connection point meter
+	if v, err := wb.smaCode(sma.ChrgUseEnergyMeter); err == nil && v == sma.No {
+		log.WARN.Println(`"Operation with grid connection point meter" must be set to "Yes"`)
+	}
+
 	// initialize enabled state from the actual device status, not from the cached
 	// value Enabled() would return while the device is not running
 	status, err := wb.getDeviceStatus()

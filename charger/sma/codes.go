@@ -16,6 +16,7 @@ const (
 	ChrgChrgApv         = "Parameter.Chrg.ChrgApv"
 	ChrgChrgLok         = "Parameter.Chrg.ChrgLok"
 	ChrgStpWhenFl       = "Parameter.Chrg.StpWhenFl"
+	ChrgUseEnergyMeter  = "Parameter.Chrg.UseEnergyMeter"
 )
 
 // Code is an SMA enum value
