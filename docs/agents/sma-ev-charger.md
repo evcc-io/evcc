@@ -40,20 +40,21 @@ Confidence markers: **verified** (tested on a device or reported by users with l
 
 ## Charging release and access management
 
-- **verified**: with access management off (`ChrgLok` 1130), writing `ChrgApv` 5171 stops charging on an eCharger (Modbus).
+- **verified**: on the EV Charger (`EVC22-3AC-10`, 1.2.23.R) `ChrgApv` 5171 does not block charging while access management is off. A SEMP parameter dump shows `ChrgLok` 1130, `ChrgApv` 5171, mode 4718 and status 200113 at 3608 W (evcc-io/evcc#25778). evcc-io/evcc#33350 reports no difference between 5171 and 5172 on the same model.
 - **verified**: with access management on (`ChrgLok` 1129), writing `ChrgApv` 5171 stops charging immediately on an eCharger 2.7.31.R, even while SEMP commands are ignored (evcc-io/evcc#36465, written via Home Assistant).
 - **verified**: with access management on, the charger sets `ChrgApv` 5172 itself after app or RFID release and starts charging immediately, before any energy manager command (evcc-io/evcc#36465).
 - **documented**: with access management on, the release applies to the active charging process. When charging is complete the station locks again (manual 4.5.12, 8.13.3.1).
 - **documented**: after plug-in with access management on, the yellow LED shows "locked, release required" (manual 4.6, 8.13.4). Before plug-in the green LED is blinking. Status 5169 therefore implies a connected vehicle.
-- **assumed**: on EV Charger firmware 1.2.x, `ChrgApv` 5171 does not block charging while access management is off. The REST driver wrote 5171 on startup from 2022 and charging via mode still worked.
+- **assumed**: the eCharger behaves the same with access management off. evcc-io/evcc#23789 controlled an eCharger via mode while the REST driver wrote `ChrgApv` 5171 on startup.
+- **assumed**: with access management on, withdrawing the release ends the charging process on the charger rather than pausing it, since the release applies to the active process. This would reset the session energy.
 
-App or RFID release enables charging on its own and conflicts with energy manager control. Access management must be set to "Entsperrt" for evcc.
+App or RFID release enables charging on its own and conflicts with energy manager control. Access management must be set to "Entsperrt" for evcc. Charging is therefore controlled via the charging mode, `ChrgApv` is left untouched.
 
 ## Control paths
 
-- **REST**: `ChrgApv` for enable, `Inverter.AcALim` for current, mode must stay on fast charging and the EV Charger rotary switch on boost. `Measurement.Chrg.ModSw` is only meaningful on the EV Charger, the eCharger reports it without a physical switch. Elevated rights ("Administrator" or installer) are required for limits. Home Assistant (`alengwenus/ha-sma-ev-charger`) exposes the same channels and confirms REST works on the eCharger.
+- **REST**: mode 4718/4721 for enable, `Inverter.AcALim` for current. Only 4721 counts as disabled. The EV Charger rotary switch must be on boost, `Measurement.Chrg.ModSw` is only meaningful there, the eCharger reports it without a physical switch. Elevated rights ("Administrator" or installer) are required for limits. Home Assistant (`alengwenus/ha-sma-ev-charger`) exposes the same channels and confirms REST works on the eCharger. Toggling between boost and stop was confirmed working on an EV Charger (`alengwenus/ha-sma-ev-charger#1`).
 - **SEMP**: `On` plus `RecommendedPowerConsumption`, sent at least once per minute. eCharger firmware 2.7.31.R accepts but ignores SEMP commands and charges at full power (evcc-io/evcc#36465). A power cycle helps temporarily.
-- **Modbus**: `ChrgApv` for enable, `WMaxIn` for power, mode must stay on fast charging. The charger switches 1p/3p internally based on the power limit (120 s changeover pause, manual 8.13.2).
+- **Modbus**: mode 4718/4721 for enable, `WMaxIn` for power. The charger switches 1p/3p internally based on the power limit (120 s changeover pause, manual 8.13.2).
 
 ## Power limits
 

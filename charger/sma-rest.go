@@ -148,13 +148,13 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 	}
 
 	// pv surplus and target modes would regulate charging on their own
-	mode, err := wb.getParameter(sma.ChannelMode)
+	mode, err := wb.mode()
 	if err != nil {
 		return nil, err
 	}
 
-	if mode != sma.ModeFast.String() {
-		log.WARN.Printf("charging mode is %s, fast charging (%s) required", mode, sma.ModeFast)
+	if mode != sma.ModeStop && mode != sma.ModeFast {
+		log.WARN.Printf("charging mode is %d, fast charging (%d) required", mode, sma.ModeFast)
 	}
 
 	// the eCharger has no rotary switch and reports a meaningless position
@@ -214,22 +214,27 @@ func (wb *SmaRest) StatusReason() (api.Reason, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *SmaRest) Enabled() (bool, error) {
-	res, err := wb.getParameter(sma.ChannelRelease)
-	if err != nil {
-		return false, err
-	}
-
-	return res == sma.ChargingReleased.String(), nil
+	mode, err := wb.mode()
+	return mode != sma.ModeStop, err
 }
 
 // Enable implements the api.Charger interface
 func (wb *SmaRest) Enable(enable bool) error {
-	val := sma.ChargingLocked
+	mode := sma.ModeStop
 	if enable {
-		val = sma.ChargingReleased
+		mode = sma.ModeFast
 	}
 
-	return wb.Send(value(sma.ChannelRelease, val.String()))
+	return wb.Send(value(sma.ChannelMode, mode.String()))
+}
+
+func (wb *SmaRest) mode() (sma.Code, error) {
+	res, err := wb.getParameter(sma.ChannelMode)
+	if err != nil {
+		return 0, err
+	}
+
+	return sma.ParseCode(res)
 }
 
 // MaxCurrent implements the api.Charger interface
