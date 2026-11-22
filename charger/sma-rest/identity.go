@@ -1,4 +1,4 @@
-package smaevcharger
+package smarest
 
 import (
 	"net/http"

@@ -25,6 +25,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/semp"
+	"github.com/evcc-io/evcc/charger/sma"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -130,12 +131,12 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 	}
 
 	// Check if device supports charged energy reporting via Parameters endpoint
-	if _, err := wb.getParameter("Measurement.ChaSess.WhIn"); err == nil {
+	if _, err := wb.getParameter(sma.ChannelSessionEnergy); err == nil {
 		implement.Has(wb, implement.ChargeRater(wb.chargedEnergy))
 	}
 
 	// Check if device supports status reporting via Parameters endpoint
-	if _, err := wb.getParameter("Measurement.Operation.EVeh.ChaStt"); err == nil {
+	if _, err := wb.getParameter(sma.ChannelStatus); err == nil {
 		wb.hasStatusParam = true
 		implement.Has(wb, implement.StatusReasoner(wb.statusReason))
 	}
@@ -247,21 +248,12 @@ func (wb *SEMP) calcPower(enabled bool, current float64, phases int) int {
 // Status implements the api.Charger interface
 func (wb *SEMP) Status() (api.ChargeStatus, error) {
 	if wb.hasStatusParam {
-		value, err := wb.getParameter("Measurement.Operation.EVeh.ChaStt")
+		status, err := wb.smaStatus()
 		if err != nil {
 			return api.StatusNone, err
 		}
 
-		switch value {
-		case "200111": // "nicht verbunden"
-			return api.StatusA, nil
-		case "200112", "200114", "5169": // "verbunden", "Ladeziel erreicht", "gesperrt"
-			return api.StatusB, nil
-		case "200113": // "Ladevorgang aktiv"
-			return api.StatusC, nil
-		default:
-			return api.StatusNone, fmt.Errorf("unknown status value: %s", value)
-		}
+		return sma.ChargeStatus(status)
 	}
 
 	status, err := wb.getDeviceStatus()
@@ -291,17 +283,23 @@ func (wb *SEMP) Status() (api.ChargeStatus, error) {
 
 // statusReason implements the api.StatusReasoner interface
 func (wb *SEMP) statusReason() (api.Reason, error) {
-	value, err := wb.getParameter("Measurement.Operation.EVeh.ChaStt")
+	status, err := wb.smaStatus()
 	if err != nil {
 		return api.ReasonUnknown, err
 	}
 
-	// SEMP cannot release charging, locked requires release via app or RFID
-	if value == "5169" {
-		return api.ReasonWaitingForAuthorization, nil
+	// SEMP cannot release charging, locked always requires release via app or RFID
+	return sma.StatusReason(status, true), nil
+}
+
+// smaStatus returns the SMA charging status from the parameters endpoint
+func (wb *SEMP) smaStatus() (sma.Code, error) {
+	value, err := wb.getParameter(sma.ChannelStatus)
+	if err != nil {
+		return 0, err
 	}
 
-	return api.ReasonUnknown, nil
+	return sma.ParseCode(value)
 }
 
 // Enabled implements the api.Charger interface
@@ -372,7 +370,7 @@ func (wb *SEMP) CurrentPower() (float64, error) {
 
 // chargedEnergy implements the api.ChargeRater interface (via decorator)
 func (wb *SEMP) chargedEnergy() (float64, error) {
-	value, err := wb.getParameter("Measurement.ChaSess.WhIn")
+	value, err := wb.getParameter(sma.ChannelSessionEnergy)
 	if err != nil {
 		return 0, err
 	}
