@@ -30,10 +30,11 @@ Confidence markers: **verified** (tested on a device or reported by users with l
 | `Parameter.Chrg.AMinCha`            | 41473       | 0.1 A (Modbus), 6 to 32 A                                                                                                       | Minimum charging current                                                                                      |
 | `Parameter.Inverter.AcALim`         | none        | A, 6 to 32                                                                                                                      | Current limit, REST only                                                                                      |
 | `Parameter.Inverter.WMaxIn`         | 44383       | W                                                                                                                               | Power limit. EV Charger range 4500 to 22000 W                                                                 |
+| `Parameter.Inverter.WMax`           | 40915       | W                                                                                                                               | Maximum active power. EV Charger range 4500 to 22000 W                                                        |
 | `Parameter.Inverter.WMaxInRtg`      | 33019       | W                                                                                                                               | Rated maximum input power                                                                                     |
 | `Parameter.Inverter.OutPhs`         | 40183       | 326, 5194, 5195                                                                                                                 | Output phase configuration, meaning of codes unknown                                                          |
 | `Parameter.PCC.ARtg`                | 40131       | A, 16 to 1000                                                                                                                   | Rated current at grid connection point                                                                        |
-| `Parameter.PCC.WMaxAsym`            | none listed | W                                                                                                                               | Maximum unbalanced load                                                                                       |
+| `Parameter.PCC.WMaxAsym`            | none listed | W, 0 to 10000                                                                                                                   | Maximum unbalanced load, EV Charger default 4600 W                                                            |
 | `Parameter.PCC.FlbInv.WMax`         | 41491       | W                                                                                                                               | Fallback power limit                                                                                          |
 | `Measurement.Chrg.ModSw`            | none        | 4950 smart, 4718 boost                                                                                                          | EV Charger rotary switch position                                                                             |
 
@@ -57,7 +58,9 @@ App or RFID release enables charging on its own and conflicts with energy manage
 ## Power limits
 
 - SEMP device info of an eCharger reports `MinPowerConsumption` 1518 W (6 A at 253 V) and `MaxPowerConsumption` 11040 W (16 A, 3p at 230 V).
-- **assumed**: if the eCharger enforces the EV Charger `WMaxIn` minimum of 4500 W, single phase charging via power limit is not possible. Check the `WMaxIn` range on an eCharger.
+- **documented**: the EV Charger (`EVC22-3AC-10`, package 1.2.23.R) exposes `WMaxIn` as writable with a range of 4500 to 22000 W. The minimum is above 3p at 6 A (4140 W), so the power limit cannot cover 1p or the lowest 3p currents there. `AcALim` (6 to 32 A) can.
+- **assumed**: whether `WMaxIn` limits the charging power at runtime on the EV Charger or only acts as an installation limit is unverified.
+- **assumed**: if the eCharger enforces the same `WMaxIn` minimum of 4500 W, single phase charging via power limit is not possible. Check the `WMaxIn` range on an eCharger, e.g. via the `min`/`max` fields of the REST parameter response.
 
 ## Modbus specifics
 
@@ -69,5 +72,5 @@ App or RFID release enables charging on its own and conflicts with energy manage
 - eCharger operating manual EVC22-3AC-20-BE (en-10)
 - SMA Modbus interface ennexOS TI (de-12)
 - eCharger Modbus register list (SW 2.7, internal)
-- `alengwenus/ha-sma-ev-charger` and `alengwenus/pysmaev` (parameter fixture of an EV Charger 22, firmware SA-01.03.27)
+- `alengwenus/ha-sma-ev-charger` and `alengwenus/pysmaev` (parameter fixture of an EV Charger 22 `EVC22-3AC-10`, package 1.2.23.R, charge controller SA-01.03.27)
 - evcc-io/evcc#36465
