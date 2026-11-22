@@ -5,8 +5,6 @@ package smarest
 const (
 	MinAcceptedVersion = "1.2.23"
 	TimestampFormat    = "2006-01-02T15:04:05.000Z"
-
-	SwitchOeko = float64(4950) // mode switch in PV charging position
 )
 
 type ErrUnknownMeasurement struct {

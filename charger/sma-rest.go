@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -109,14 +110,6 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 		Base:   wb.Client.Transport,
 	}
 
-	// get model
-	model, err := wb.getParameter("Parameter.Nameplate.ModelStr")
-	if err != nil {
-		return nil, err
-	}
-
-	isLegacyHw := !strings.HasSuffix(model, "-20")
-
 	// get version
 	pkgRev, err := wb.getParameter("Parameter.Nameplate.PkgRev")
 	if err != nil {
@@ -146,16 +139,9 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 		log.WARN.Printf("charging mode is %d, fast charging (%d) required", mode, sma.BoostCharging)
 	}
 
-	// the eCharger has no rotary switch and reports a meaningless position
-	if isLegacyHw {
-		pos, err := wb.getMeasurement("Measurement.Chrg.ModSw")
-		if err != nil {
-			return nil, err
-		}
-
-		if pos == smarest.SwitchOeko {
-			log.WARN.Println("rotary switch must be set to fast charging")
-		}
+	// the EV Charger rotary switch in smart position removes fast charging from the possible modes
+	if values, err := wb.possibleValues(sma.ChrgActChaMod); err == nil && !slices.Contains(values, sma.BoostCharging.String()) {
+		log.WARN.Println("rotary switch must be set to fast charging")
 	}
 
 	// disconnecting after full charge ends the session on the charger side
@@ -360,6 +346,21 @@ func (wb *SmaRest) getParameter(id string) (string, error) {
 	}
 
 	return "", fmt.Errorf("unknown parameter: %s", id)
+}
+
+func (wb *SmaRest) possibleValues(id string) ([]string, error) {
+	res, err := wb.parameterG.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, el := range res[0].Values {
+		if el.ChannelId == id {
+			return el.PossibleValues, nil
+		}
+	}
+
+	return nil, fmt.Errorf("unknown parameter: %s", id)
 }
 
 func (wb *SmaRest) Send(values ...smarest.Value) error {

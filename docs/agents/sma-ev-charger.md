@@ -52,7 +52,7 @@ evcc controls charging via the charging mode and leaves `ChrgApv` untouched. Acc
 
 ## Control paths
 
-- **REST**: mode 4718/4721 for enable, `Inverter.AcALim` for current. Only 4718 counts as enabled. The EV Charger rotary switch must be on boost, `Measurement.Chrg.ModSw` is only meaningful there, the eCharger reports it without a physical switch. Elevated rights ("Administrator" or installer) are required for limits. Home Assistant (`alengwenus/ha-sma-ev-charger`) exposes the same channels and confirms REST works on the eCharger. Toggling between boost and stop was confirmed working on an EV Charger (`alengwenus/ha-sma-ev-charger#1`).
+- **REST**: mode 4718/4721 for enable, `Inverter.AcALim` for current. Only 4718 counts as enabled. The EV Charger rotary switch must be on boost. It is detected via the `possibleValues` of `ActChaMod`, since `Measurement.Chrg.ModSw` is meaningless on the eCharger. Elevated rights ("Administrator" or installer) are required for limits. Home Assistant (`alengwenus/ha-sma-ev-charger`) exposes the same channels and confirms REST works on the eCharger. Toggling between boost and stop was confirmed working on an EV Charger (`alengwenus/ha-sma-ev-charger#1`).
 - **SEMP**: `On` plus `RecommendedPowerConsumption`, sent at least once per minute. eCharger firmware 2.7.31.R accepts but ignores SEMP commands and charges at full power (evcc-io/evcc#36465). A power cycle helps temporarily.
 - **Modbus**: mode 4718/4721 for enable, only 4718 counts as enabled, `WMaxIn` for power. The charger switches 1p/3p internally based on the power limit (120 s changeover pause, manual 8.13.2).
 
@@ -61,6 +61,7 @@ evcc controls charging via the charging mode and leaves `ChrgApv` untouched. Acc
 - **verified**: on the eCharger, switching the mode via REST stops and starts charging. The charger event log shows "Parameteränderung für Parameter Parameter.Chrg.ActChaMod ... von Wert Schnellladen auf Ladestopp" followed by "Ladestation wechselt in Ladebetrieb Ladestopp" (evcc-io/evcc#16071).
 - **verified**: the eCharger falls back to its default mode "Laden mit PV-Überschuss" (4719) on its own, also while controlled by evcc (evcc-io/evcc#16071). The default mode is reportedly configurable on the charger. Treating only 4718 as enabled lets evcc restore fast charging.
 - **verified**: the eCharger reports `Measurement.Chrg.ModSw` 4950 (smart) without a physical switch, which made the rotary switch check fail on enable (evcc-io/evcc#16071, fixed by evcc-io/evcc#23789).
+- **verified**: on the EV Charger the rotary switch limits the possible values of `ActChaMod` (REST `possibleValues`): boost position allows 4718 and 4721, smart position allows 4719, 4720 and 4721 (three parameter dumps of `EVC22-3AC-10`, 1.2.23.R: `alengwenus/ha-sma-ev-charger`, `J0B10/MAD-MyEnergy`, `PaulV71/gwHEMS-Userbase`). On the eCharger 4718 is writable while `ModSw` reports 4950 (evcc-io/evcc#16071).
 - **verified**: without the Sunny Home Manager, the charger does not charge in PV surplus mode (evcc-io/evcc#33350).
 - **verified**: `Inverter.AcALim` keeps the last value written by evcc after the session. Charging started via the SMA app then uses that limit, even in fast charging mode (evcc-io/evcc#16071).
 
@@ -82,7 +83,10 @@ All drivers only read on startup and warn on settings that conflict with evcc co
 
 ## Power limits
 
-- SEMP device info of an eCharger reports `MinPowerConsumption` 1518 W (6 A at 253 V) and `MaxPowerConsumption` 11040 W (16 A, 3p at 230 V).
+- SEMP device info reports `MinPowerConsumption` 1518 W on the EV Charger `EVC22-3AC-10` 1.2.23.R (max 22000 W in evcc-io/evcc#25778, max 7400 W in evcc-io/evcc#33350) and on the eCharger 2.7.31.R (max 11040 W, evcc-io/evcc#36465), and 1524 W on the eCharger 2.7.22.R (max 11000 W, evcc-io/evcc discussion 33281). How the minimum is derived is unknown (1518 W matches both 6 A at 253 V and 6.6 A at 230 V). It is well below the `WMaxIn` minimum, so SEMP power control reaches single phase charging while `WMaxIn` does not.
+- **documented**: `WMaxIn` reports a range of 4500 to 22000 W on the EV Charger (three parameter dumps). The eCharger ioBroker adapter (`SpongeTroN86/ioBroker.sma-echarger`) uses 4500 to 11000 W. The minimum comes from the parameter metadata of the charger, SMA gives no rationale. `WMax` has the same range and FHEM labels `WMaxIn` "Nennwirkleistung", which suggests a rating or installation limit rather than a control setpoint.
+- **documented**: `erwin1/homecontrol` controls an SMA charger via REST with mode 4718/4721 and `WMaxIn` between 1380 and 7400 W, written together with mode 4718. The model is not stated, the 7400 W cap suggests an `EVC7.4-1AC-10`.
+- **documented**: `AcALim` (6 to 32 A, fractional values accepted) is available via REST on both generations. It is not part of the Modbus profile.
 - **documented**: the EV Charger (`EVC22-3AC-10`, package 1.2.23.R) exposes `WMaxIn` as writable with a range of 4500 to 22000 W. The minimum is above 3p at 6 A (4140 W), so the power limit cannot cover 1p or the lowest 3p currents there. `AcALim` (6 to 32 A) can.
 - **assumed**: whether `WMaxIn` limits the charging power at runtime on the EV Charger or only acts as an installation limit is unverified.
 - **assumed**: if the eCharger enforces the same `WMaxIn` minimum of 4500 W, single phase charging via power limit is not possible. Check the `WMaxIn` range on an eCharger, e.g. via the `min`/`max` fields of the REST parameter response.
@@ -99,3 +103,7 @@ All drivers only read on startup and warn on settings that conflict with evcc co
 - eCharger Modbus register list (SW 2.7, internal)
 - `alengwenus/ha-sma-ev-charger` and `alengwenus/pysmaev` (parameter fixture of an EV Charger 22 `EVC22-3AC-10`, package 1.2.23.R, charge controller SA-01.03.27)
 - evcc-io/evcc#36465
+- `SpongeTroN86/ioBroker.sma-echarger` (eCharger, REST via HTTPS)
+- FHEM `76_SMAEVCharger.pm` (EV Charger, German value names)
+- `erwin1/homecontrol` (REST control and `/SEMP/Parameters`)
+- `J0B10/MAD-MyEnergy`, `PaulV71/gwHEMS-Userbase` (REST parameter dumps of `EVC22-3AC-10`)
