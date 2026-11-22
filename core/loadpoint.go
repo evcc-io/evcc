@@ -181,7 +181,7 @@ type Loadpoint struct {
 	status         api.ChargeStatus // Charger status
 	chargePower    float64          // Charging power
 	chargeCurrents []float64        // Phase currents
-	chargeCurrent  float64          // Max phase current, sampled for load management
+	chargeCurrent  float64          // Max measured phase current, else offered current; sampled per cycle for load management
 	connectedTime  time.Time        // Time when vehicle was connected
 	connectPending bool             // connect notification deferred until vehicle detection settles
 	welcomeUntil   time.Time        // welcome charge deadline, set until surplus confirms the session
