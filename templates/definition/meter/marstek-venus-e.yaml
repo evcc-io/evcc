@@ -77,7 +77,6 @@ render: |
       type: holding
       decode: uint32
     scale: 0.01
-  {{- if eq .generation "3" }}
   returnenergy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -86,7 +85,6 @@ render: |
       type: holding
       decode: uint32
     scale: 0.01
-  {{- end }}
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
