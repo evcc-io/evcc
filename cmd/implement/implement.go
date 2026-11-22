@@ -91,7 +91,6 @@ func generate(out io.Writer) error {
 		reflect.TypeFor[api.SocLimiter](),
 		reflect.TypeFor[api.StatusReasoner](),
 		reflect.TypeFor[api.VehicleClimater](),
-		reflect.TypeFor[api.VehicleFinishTimer](),
 		reflect.TypeFor[api.VehicleOdometer](),
 		reflect.TypeFor[api.VehiclePosition](),
 		reflect.TypeFor[api.VehicleRange](),

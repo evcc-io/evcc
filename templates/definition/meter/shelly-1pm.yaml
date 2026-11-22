@@ -9,7 +9,12 @@ products:
   - { brand: Shelly, description: { generic: Pro 3EM (monophase device profile) } }
   - { brand: Shelly, description: { generic: Pro 4PM } }
   - { brand: Shelly, description: { generic: Plug S } }
+  - { brand: Shelly, description: { generic: Plug M } }
 group: switchsockets
+discovery:
+  mdns: ["_shelly._tcp", "_http._tcp:shelly*"]
+  hostname: ["shelly*"]
+  mac: ["8400EC"]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]
@@ -17,6 +22,7 @@ params:
   - name: user
   - name: password
   - name: channel
+    service: shelly/channels?uri={host}&user={user}&password={password}&metered=1
 render: |
   type: shelly
   uri: http://{{ .host }}  # shelly device ip address (local)

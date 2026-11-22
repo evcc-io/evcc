@@ -1,0 +1,37 @@
+template: polestar-data-portal
+products:
+  - brand: Polestar
+requirements:
+  evcc: ["skiptest"]
+  description:
+    en: |
+      Requires client credentials from the [Polestar Data Portal](https://data-portal.polestar.com/) developer account (EU Data Act). Register at the [Polestar Data Portal](https://data-portal.polestar.com/) to obtain a client ID, client secret and account ID.
+    de: |
+      Benötigt Client-Zugangsdaten aus dem [Polestar Data Portal](https://data-portal.polestar.com/) Entwicklerkonto (EU Data Act). Registrierung im [Polestar Data Portal](https://data-portal.polestar.com/) für Client ID, Client Secret und Account ID.
+params:
+  - preset: vehicle-common
+  - preset: vehicle-online
+  - name: clientid
+    required: true
+  - name: clientsecret
+    required: true
+  - name: accountid
+    required: true
+    description:
+      generic: Account ID
+    help:
+      en: Account ID sent as the x-client-id header.
+      de: Account ID, wird als x-client-id Header gesendet.
+  - name: vin
+    example: LPSVS...
+  - name: cache
+    default: 15m
+render: |
+  type: polestar-data-portal
+  clientid: {{ .clientid }}
+  clientsecret: {{ .clientsecret }}
+  accountid: {{ .accountid }}
+  vin: {{ .vin }}
+  {{ include "common" . }}
+  cache: {{ .cache }}
+  {{ include "features" . }}

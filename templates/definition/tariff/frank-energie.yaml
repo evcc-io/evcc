@@ -1,0 +1,29 @@
+template: frank-energie
+link: https://www.frankenergie.nl
+products:
+  - brand: Frank Energie
+requirements:
+  description:
+    en: "Dynamic prices from the public Frank Energie API, no login required. Import returns the all-in price including energy tax, markup and VAT. Export returns the bare market price, use `charges`, `tax` or `formula` for the feed-in fee or bonus of your contract. If `charges`, `tax` or `formula` is set, import is also calculated from the bare market price."
+    de: "Dynamische Preise aus der öffentlichen Frank Energie API, keine Anmeldung erforderlich. Bezug liefert den All-in-Preis inklusive Energiesteuer, Aufschlag und Mehrwertsteuer. Einspeisung liefert den reinen Marktpreis, nutze `charges`, `tax` oder `formula` für die Einspeisegebühr oder den Bonus deines Vertrags. Ist `charges`, `tax` oder `formula` gesetzt, wird auch der Bezug aus dem reinen Marktpreis berechnet."
+  evcc: ["skiptest"]
+group: price
+countries: ["NL"]
+params:
+  - name: tariffDirection
+    type: choice
+    choice: ["import", "export"]
+    default: import
+    description:
+      en: Tariff direction
+      de: Tarifrichtung
+    help:
+      en: "Use 'export' for the feed-in tariff. Frank pays the market price plus a purchase fee (inkoopvergoeding), and with Slim Terugleveren a bonus of about 15% during the day. Set the current fee as `formula`, e.g. `price + 0.0182`, or with Slim Terugleveren `price * 1.15 + 0.0182`."
+      de: "Verwende 'export' für den Einspeisetarif. Frank zahlt den Marktpreis plus eine Einkaufsvergütung (inkoopvergoeding), mit Slim Terugleveren tagsüber zusätzlich einen Bonus von etwa 15%. Trage die aktuelle Vergütung als `formula` ein, z.B. `price + 0.0182` oder mit Slim Terugleveren `price * 1.15 + 0.0182`."
+  - preset: tariff-base
+  - preset: tariff-features
+render: |
+  type: frank-energie
+  tariffDirection: {{ .tariffDirection }}
+  {{ include "base" . }}
+  {{ include "features" . }}

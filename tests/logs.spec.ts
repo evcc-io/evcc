@@ -44,9 +44,21 @@ test.describe("opening logs", async () => {
 
 test.describe("features", async () => {
   test("content", async ({ page }) => {
-    await page.goto("/#/log");
+    // the page shows the latest 1000 lines only; at debug level the 0.1s
+    // interval pushes the startup line out within seconds, info keeps it
+    await page.goto("/#/log?level=info");
     await page.getByTestId("log-search").fill("UI local");
     await expect(page.getByTestId("log-content")).toContainText("UI local");
+  });
+});
+
+test.describe("areas", async () => {
+  test("loadpoint title", async ({ page }) => {
+    await page.goto("/#/log?level=info");
+    await page.getByRole("button", { name: "All areas" }).click();
+    await page.getByRole("checkbox", { name: "lp-1 (Carport)" }).check();
+    await expect(page).toHaveURL(/areas=lp-1/);
+    await expect(page.getByRole("button", { name: "lp-1 (Carport)" })).toBeVisible();
   });
 });
 

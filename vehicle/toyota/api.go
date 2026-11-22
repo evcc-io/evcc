@@ -21,7 +21,7 @@ const (
 	AuthenticationPath               = "json/realms/root/realms/tme/authenticate?authIndexType=service&authIndexValue=oneapp"
 	AuthorizationPath                = "oauth2/realms/root/realms/tme/authorize?client_id=oneapp&scope=openid+profile+write&response_type=code&redirect_uri=com.toyota.oneapp:/oauth2Callback&code_challenge=plain&code_challenge_method=plain"
 	VehicleGuidPath                  = "v2/vehicle/guid"
-	RemoteElectricStatusPath         = "v1/global/remote/electric/status"
+	RemoteElectricStatusPath         = "v1/vehicle/electric/status"
 	RemoteElectricRealtimeStatusPath = "v1/global/remote/electric/realtime-status"
 	apiKey                           = "tTZipv6liF74PwMfk9Ed68AQ0bISswwf3iHQdqcF"
 	clientRefKey                     = "3e0b15f6c9c87fbd"

@@ -5,7 +5,7 @@
 		:title="copied ? 'Copied!' : 'Copy to clipboard'"
 		@click="handleCopy"
 	>
-		<shopicon-regular-checkmark v-if="copied"></shopicon-regular-checkmark>
+		<CheckIcon v-if="copied" />
 		<shopicon-regular-copy v-else></shopicon-regular-copy>
 	</button>
 </template>
@@ -14,10 +14,11 @@
 import { defineComponent } from "vue";
 import { copyWithFeedback } from "@/utils/clipboard";
 import "@h2d2/shopicons/es/regular/copy";
-import "@h2d2/shopicons/es/regular/checkmark";
+import CheckIcon from "../MaterialIcon/Check.vue";
 
 export default defineComponent({
 	name: "CopyButton",
+	components: { CheckIcon },
 	props: {
 		content: {
 			type: String,

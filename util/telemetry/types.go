@@ -2,6 +2,7 @@ package telemetry
 
 type InstanceChargeProgress struct {
 	InstanceID string `json:"instanceId"`
+	Loadpoints int    `json:"loadpoints,omitempty"`
 	ChargeProgress
 }
 

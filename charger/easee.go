@@ -67,9 +67,10 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	currentSessionID int
-	rfid             string
-	lp               loadpoint.API
+	sessionStart      easee.ChargingSessionStartData
+	sessionEnergyTime time.Time
+	rfid              string
+	lp                loadpoint.API
 
 	dispatcher *easee.CommandDispatcher
 
@@ -333,11 +334,13 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	if prevTime, ok := c.obsTime[res.ID]; ok && prevTime.After(res.Timestamp) {
+	prevTime, seen := c.obsTime[res.ID]
+	if seen && prevTime.After(res.Timestamp) {
 		// received observation is outdated, ignoring
 		return
 	}
 
+	prevModeTime := c.obsTime[easee.CHARGER_OP_MODE]
 	c.obsTime[res.ID] = res.Timestamp
 
 	// Update liveness timestamp for observations with a fresh charger-side timestamp.
@@ -360,6 +363,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		// Reset to 0 is done in case CHARGER_OP_MODE
 		if value.(float64) != 0 {
 			c.sessionEnergy = value.(float64)
+			c.sessionEnergyTime = res.Timestamp
 		}
 	case easee.LIFETIME_ENERGY:
 		if v := value.(float64); v >= c.totalEnergy {
@@ -389,7 +393,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			c.log.ERROR.Printf("CHARGE_SESSION_START: %v", err)
 			break
 		}
-		c.currentSessionID = data.ID
+		c.sessionStart = data
 		if data.MeterValue >= c.totalEnergy {
 			c.totalEnergy = data.MeterValue
 		}
@@ -403,20 +407,36 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		if data.MeterValueStop >= c.totalEnergy {
 			c.totalEnergy = data.MeterValueStop
 		}
-		if data.ID != c.currentSessionID {
+		if data.ID != c.sessionStart.ID {
+			break
+		}
+		// a reconnect replays the last completed session, which may predate the connected vehicle
+		if seen && prevTime.Equal(res.Timestamp) {
 			break
 		}
 		c.sessionEnergy = data.EnergyKwh
+		c.sessionEnergyTime = res.Timestamp
 
 	case easee.CHARGER_OP_MODE:
 		opMode := value.(int)
 
 		// New charging session pending, reset internal value of SESSION_ENERGY to 0, and its observation timestamp to "now".
 		// This should be done in a proper way by the api, but it's not.
-		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
-			c.sessionEnergy = 0
-			c.currentSessionID = 0
-			c.obsTime[easee.SESSION_ENERGY] = time.Now()
+		// The first mode after startup is replayed state, not a transition.
+		if !prevModeTime.IsZero() && c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
+			// session start arrives before the mode change, a session started after the disconnect is kept
+			if c.sessionStart.Start.Before(prevModeTime) {
+				c.sessionStart = easee.ChargingSessionStartData{}
+			}
+			// energy observed before the kept session started still belongs to the previous session
+			if c.sessionStart.ID == 0 || c.sessionEnergyTime.Before(c.sessionStart.Start) {
+				c.sessionEnergy = 0
+				c.obsTime[easee.SESSION_ENERGY] = time.Now()
+			}
+		}
+
+		if opModeStatus(c.opMode) != opModeStatus(opMode) && c.lp != nil {
+			c.lp.RequestUpdate()
 		}
 
 		c.opMode = opMode
@@ -471,21 +491,27 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 
-	res := api.StatusNone
-
-	switch c.opMode {
-	case easee.ModeDisconnected:
-		res = api.StatusA
-	case easee.ModeAwaitingStart, easee.ModeCompleted, easee.ModeReadyToCharge,
-		easee.ModeAwaitingAuthentication, easee.ModeDeauthenticating:
-		res = api.StatusB
-	case easee.ModeCharging:
-		res = api.StatusC
-	default:
+	res := opModeStatus(c.opMode)
+	if res == api.StatusNone {
 		return res, fmt.Errorf("invalid opmode: %d", c.opMode)
 	}
 
 	return res, nil
+}
+
+// opModeStatus maps the charger operation mode to the charge status, api.StatusNone if unknown
+func opModeStatus(opMode int) api.ChargeStatus {
+	switch opMode {
+	case easee.ModeDisconnected:
+		return api.StatusA
+	case easee.ModeAwaitingStart, easee.ModeCompleted, easee.ModeReadyToCharge,
+		easee.ModeAwaitingAuthentication, easee.ModeDeauthenticating:
+		return api.StatusB
+	case easee.ModeCharging:
+		return api.StatusC
+	default:
+		return api.StatusNone
+	}
 }
 
 // Enabled implements the api.Charger interface
@@ -714,10 +740,12 @@ var _ api.MeterEnergy = (*Easee)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Easee) TotalEnergy() (float64, error) {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
-	// updates for this are only sent once an hour, so inaccurate by design
-	// see also https://github.com/evcc-io/evcc/issues/20594
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	// LIFETIME_ENERGY arrives hourly, advance it with the energy of the current session
+	if c.sessionStart.ID != 0 && !c.sessionEnergyTime.Before(c.sessionStart.Start) {
+		c.totalEnergy = max(c.totalEnergy, c.sessionStart.MeterValue+c.sessionEnergy)
+	}
 	return c.totalEnergy, nil
 }
 
@@ -763,34 +791,8 @@ func (c *Easee) Phases1p3p(phases int) error {
 		if err != nil {
 			c.dispatcher.CancelOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
 		}
-
-		// Sending DCC:7 to skip charge pause after scaling down to 1p.
-		// The loadpoint's next control interval will send the real target current.
-		if err == nil && phases == 1 {
-			override := 7.0
-			chargerData := easee.ChargerSettings{
-				DynamicChargerCurrent: &override,
-			}
-			chargerURI := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-			noop, sendErr := c.dispatcher.Send(chargerURI, chargerData)
-			if sendErr != nil {
-				c.log.WARN.Printf("phase switch: failed to set charger current override: %v", sendErr)
-			} else if !noop {
-				if waitErr := c.waitForDynamicChargerCurrent(override); waitErr != nil {
-					c.log.WARN.Printf("phase switch: charger current override confirmation timeout: %v", waitErr)
-				}
-			}
-
-			c.mux.Lock()
-			c.current = override
-			c.mux.Unlock()
-		}
 	} else {
-		// charger level
-		if phases == 3 {
-			phases = 2 // mode 2 means auto
-		}
-
+		// charger level: phaseMode 1 and 3 lock the phases, 2 would leave them to the charger
 		// change phaseMode only if necessary
 		if phases != c.phaseMode {
 			data := easee.ChargerSettings{
@@ -825,10 +827,9 @@ func (c *Easee) GetPhases() (int, error) {
 			}
 		}
 	} else {
-		// charger level
-		phases = c.phaseMode
-		if phases == 2 { // map automatic to 3p
-			phases = 3
+		// charger level: automatic (2, left by earlier versions) is unknown so the loadpoint locks the phases
+		if c.phaseMode != 2 {
+			phases = c.phaseMode
 		}
 	}
 	return phases, nil
@@ -859,11 +860,15 @@ func (c *Easee) Identify() ([]string, error) {
 
 // Set smart charging status to update the chargers led (smart=blue, fast=white)
 func (c *Easee) updateSmartCharging() {
-	if c.lp == nil {
+	c.mux.RLock()
+	lp := c.lp
+	c.mux.RUnlock()
+
+	if lp == nil {
 		return
 	}
 
-	mode := c.lp.GetMode()
+	mode := lp.GetMode()
 	isSmartCharging := mode == api.ModeSmart
 
 	c.mux.Lock()
@@ -892,5 +897,7 @@ var _ loadpoint.Controller = (*Easee)(nil)
 
 // LoadpointControl implements loadpoint.Controller
 func (c *Easee) LoadpointControl(lp loadpoint.API) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	c.lp = lp
 }

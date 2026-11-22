@@ -20,10 +20,18 @@ type API interface {
 	ActiveLoadpoints() iter.Seq2[int, loadpoint.API]
 	Vehicles() Vehicles
 	Optimize()
+	// Automatic returns true if the optimizer controls the home battery instead of only advising
+	Automatic() bool
+	// AutomaticLoadpoints returns true if the optimizer controls the loadpoints as well
+	AutomaticLoadpoints() bool
 
 	// Meta
 	GetTitle() string
 	SetTitle(string)
+	GetCountry() string
+	SetCountry(string)
+	GetGridConnection() string
+	SetGridConnection(string)
 
 	// Config
 	GetGridMeterRef() string
@@ -70,6 +78,10 @@ type API interface {
 	GetOptimizerChargingStrategy() string
 	// SetOptimizerChargingStrategy sets the optimizer grid charging strategy
 	SetOptimizerChargingStrategy(strategy string) error
+	// GetOptimizerRiskProfile gets the forecast uncertainty the optimizer hedges against, nil = none
+	GetOptimizerRiskProfile() *api.RiskProfile
+	// SetOptimizerRiskProfile sets the forecast uncertainty the optimizer hedges against, nil = none
+	SetOptimizerRiskProfile(profile *api.RiskProfile) error
 
 	//
 	// power and energy

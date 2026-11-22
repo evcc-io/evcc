@@ -2,12 +2,14 @@ package vwidentity
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"regexp"
 	"strings"
 	"uuid"
 
@@ -108,16 +110,27 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 		return nil, err
 	}
 
-	// Try to extract legacy form, but don't fail if it's not found
-	if vars, err := FormValues(bytes.NewReader(body), "form#emailPasswordForm"); err == nil {
-		return v.loginLegacy(vars, user, password)
+	resp, err = SubmitCredentials(v.Client, body, user, password)
+	if err != nil {
+		return nil, err
 	}
+	defer resp.Body.Close()
 
-	return v.loginNew(body, user, password)
+	return v.authLocation(resp)
 }
 
-// loginLegacy performs the legacy VW identity login flow
-func (v *Service) loginLegacy(vars FormVars, user, password string) (url.Values, error) {
+// SubmitCredentials posts user and password to the signin page in body, using either the
+// legacy two-step form or the Auth0 universal login. The client's redirect policy decides where it ends.
+func SubmitCredentials(client *http.Client, body []byte, user, password string) (*http.Response, error) {
+	if vars, err := FormValues(bytes.NewReader(body), "form#emailPasswordForm"); err == nil {
+		return submitLegacy(client, vars, user, password)
+	}
+
+	return submitUniversal(client, body, user, password)
+}
+
+// submitLegacy performs the legacy VW identity identifier and password steps
+func submitLegacy(client *http.Client, vars FormVars, user, password string) (*http.Response, error) {
 	var params CredentialParams
 
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/identifier
@@ -129,7 +142,7 @@ func (v *Service) loginLegacy(vars FormVars, user, password string) (url.Values,
 	}
 
 	uri := BaseURL + vars.Action
-	resp, err := v.PostForm(uri, data)
+	resp, err := client.PostForm(uri, data)
 	if err != nil {
 		return nil, err
 	}
@@ -155,12 +168,27 @@ func (v *Service) loginLegacy(vars FormVars, user, password string) (url.Values,
 	// reuse url from identifier step before
 	uri = strings.ReplaceAll(uri, params.TemplateModel.IdentifierUrl, params.TemplateModel.PostAction)
 
-	resp, err = v.PostForm(uri, data)
+	return client.PostForm(uri, data)
+}
+
+// submitUniversal performs the Auth0 universal login step
+func submitUniversal(client *http.Client, body []byte, user, password string) (*http.Response, error) {
+	state, err := extractState(body)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
+	data := url.Values{
+		"username": {user},
+		"password": {password},
+		"state":    {state},
+	}
+
+	return client.PostForm(fmt.Sprintf("%s/u/login?state=%s", BaseURL, state), data)
+}
+
+// authLocation returns the auth code parameters from the redirect after password submission
+func (v *Service) authLocation(resp *http.Response) (url.Values, error) {
 	if resp.StatusCode >= http.StatusBadRequest {
 		return nil, errors.New(resp.Status)
 	}
@@ -168,6 +196,18 @@ func (v *Service) loginLegacy(vars FormVars, user, password string) (url.Values,
 	// GET identity.vwgroup.io/oidc/v1/oauth/sso?clientId=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com&relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&userId=bca09cc0-8eba-4110-af71-7242868e1bf1&HMAC=2b01ce6a351fad4dd97dc8110d0967b46c95889ab5010c660a616462e66a83ca
 	// GET identity.vwgroup.io/signin-service/v1/consent/users/bca09cc0-8eba-4110-af71-7242868e1bf1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?scopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&callback=https://identity.vwgroup.io/oidc/v1/oauth/client/callback&hmac=a590931ca3cd9dc3a27f1d1c0c162bf1e5c5c32c9f5b40fcb36d4c6edc631e03
 	// GET identity.vwgroup.io/oidc/v1/oauth/client/callback/success?user_id=bca09cc0-8eba-4110-af71-7242868e1bf1&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com&scopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&consentedScopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&relayState=f89a0b750c93e278a7ace170ce374e9cb9eb0a74&hmac=2b728f463c3cfe80f3271fbb35680e5e5218ca70025a46e7fadf7c7982decc2b
+
+	if resp.Request != nil && IsAuth0MarketingConsent(resp.Request.URL) {
+		var err error
+		if resp, err = SkipAuth0MarketingConsent(v.Client, resp); err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode >= http.StatusBadRequest {
+			return nil, errors.New(resp.Status)
+		}
+	}
 
 	// VW periodically interjects an optional marketing consent page after an
 	// otherwise successful login. Skip it without consenting so evcc recovers
@@ -186,11 +226,16 @@ func (v *Service) loginLegacy(vars FormVars, user, password string) (url.Values,
 		return nil, errors.New("login redirect missing after password submission - open the myAudi app or website, accept any pending terms or consent prompts, then retry")
 	}
 
-	parsed, err := url.Parse(location)
+	redirectURL, err := resolveLocation(resp.Request.URL, location)
 	if err != nil {
 		return nil, err
 	}
-	return parseAuthLocation(parsed)
+
+	if redirectURL.Scheme == "https" || redirectURL.Scheme == "http" {
+		return nil, fmt.Errorf("unexpected redirect URL scheme: %s, expected app specific url (e.g. 'weconnect://...')", redirectURL.Scheme)
+	}
+
+	return parseAuthLocation(redirectURL)
 }
 
 // MarketingConsentCallback returns the OIDC callback url embedded in an
@@ -215,6 +260,81 @@ func MarketingConsentCallback(u *url.URL) (*url.URL, error) {
 	cb.RawQuery = cb.Query().Encode()
 
 	return cb, nil
+}
+
+// IsAuth0MarketingConsent reports whether u is the marketing consent page of the Auth0 login flow
+func IsAuth0MarketingConsent(u *url.URL) bool {
+	return u != nil && strings.EqualFold(u.Host, strings.TrimPrefix(BaseURL, "https://")) && u.Path == "/v2/login/ui/marketing-consent"
+}
+
+var idkDataRegex = regexp.MustCompile(`window\._IDK\s*=\s*(\{[\s\S]*?\});`)
+
+// marketingSkipForm builds the "not now" form of the Auth0 marketing consent page from its window._IDK.Data,
+// bound channels keep the basic agreement status quo, see TA2k/ioBroker.vw-connect@5a8446b
+func marketingSkipForm(body []byte) (url.Values, error) {
+	m := idkDataRegex.FindSubmatch(body)
+	if m == nil {
+		return nil, errors.New("marketing consent page data not found")
+	}
+
+	var res struct {
+		Data struct {
+			Channels []struct {
+				ChannelID   string `json:"channelId"`
+				ChannelType string `json:"channelType"`
+			} `json:"channels"`
+			State           string `json:"state"`
+			RelayStateToken string `json:"relayStateToken"`
+			MdKey           string `json:"mdKey"`
+			MdLanguage      string `json:"mdLanguage"`
+		} `json:"Data"`
+	}
+	if err := json.Unmarshal(m[1], &res); err != nil {
+		return nil, fmt.Errorf("marketing consent page data: %w", err)
+	}
+
+	data := url.Values{}
+	for _, ch := range res.Data.Channels {
+		if ch.ChannelID == "" {
+			continue
+		}
+		// never opt into unknown channel types
+		val := "not_used"
+		if ch.ChannelType == "BOUND_TO_BASIC_AGREEMENT" {
+			val = "true"
+		}
+		data.Set("channel"+ch.ChannelID, val)
+	}
+
+	for k, v := range map[string]string{
+		"state":      res.Data.State,
+		"relayState": res.Data.RelayStateToken,
+		"mdKey":      res.Data.MdKey,
+		"mdLanguage": res.Data.MdLanguage,
+	} {
+		if v != "" {
+			data.Set(k, v)
+		}
+	}
+
+	return data, nil
+}
+
+// SkipAuth0MarketingConsent declines the Auth0 marketing consent page in resp and continues the login
+func SkipAuth0MarketingConsent(client *http.Client, resp *http.Response) (*http.Response, error) {
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := marketingSkipForm(body)
+	if err != nil {
+		return nil, err
+	}
+
+	uri := resp.Request.URL.ResolveReference(&url.URL{Path: "marketing-consent/skip"})
+
+	return client.PostForm(uri.String(), data)
 }
 
 // skipMarketingConsent detects the optional VW/Audi marketing consent page that
@@ -242,55 +362,6 @@ func (v *Service) skipMarketingConsent(resp *http.Response) (*url.URL, bool, err
 
 	location, err := url.Parse(cbResp.Header.Get("Location"))
 	return location, true, err
-}
-
-// loginNew performs the new VW identity login flow
-func (v *Service) loginNew(body []byte, user, password string) (url.Values, error) {
-	state, err := extractState(body)
-	if err != nil {
-		return nil, err
-	}
-
-	// POST to new login endpoint
-	loginData := url.Values{
-		"username": {user},
-		"password": {password},
-		"state":    {state},
-	}
-
-	uri := fmt.Sprintf("%s/u/login?state=%s", BaseURL, state)
-	resp, err := v.PostForm(uri, loginData)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	location := resp.Header.Get("Location")
-	if resp.StatusCode >= http.StatusBadRequest {
-		return nil, errors.New(resp.Status)
-	}
-
-	// skip the optional marketing consent page without consenting (#29760)
-	if loc, ok, err := v.skipMarketingConsent(resp); err != nil {
-		return nil, err
-	} else if ok {
-		return parseAuthLocation(loc)
-	}
-
-	if location == "" {
-		return nil, errors.New("no redirect location in new login flow")
-	}
-
-	redirectURL, err := resolveLocation(resp.Request.URL, location)
-	if err != nil {
-		return nil, err
-	}
-
-	if redirectURL.Scheme == "https" || redirectURL.Scheme == "http" {
-		return nil, fmt.Errorf("unexpected redirect URL scheme: %s, expected app specific url (e.g. 'weconnect://...')", redirectURL.Scheme)
-	}
-
-	return parseAuthLocation(redirectURL)
 }
 
 func resolveLocation(base *url.URL, location string) (*url.URL, error) {

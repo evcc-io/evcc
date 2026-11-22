@@ -1,5 +1,5 @@
 import bodyParser from "body-parser";
-import type { Connect, ViteDevServer } from "vite";
+import type { Connect, PreviewServer } from "vite";
 import type { ServerResponse } from "http";
 import { OcppClient } from "./ocppClient";
 import { ocppServer } from "./ocppServer";
@@ -213,20 +213,16 @@ const ocppMiddleware = (
 export default () => ({
   name: "api",
   enforce: "pre",
-  configureServer(server: ViteDevServer) {
+  configurePreviewServer(server: PreviewServer) {
     console.log("[simulator] configured");
-    if (server.httpServer) {
-      ocppServer.attach(server.httpServer);
-    }
-    return () => {
-      server.middlewares.use(loggingMiddleware);
-      server.middlewares.use(bodyParser.json());
-      server.middlewares.use(stateApiMiddleware);
-      server.middlewares.use(openemsMiddleware);
-      server.middlewares.use(teslaloggerMiddleware);
-      server.middlewares.use(shellyMiddleware);
-      server.middlewares.use(demoAuthMiddleware);
-      server.middlewares.use(ocppMiddleware);
-    };
+    ocppServer.attach(server.httpServer);
+    server.middlewares.use(loggingMiddleware);
+    server.middlewares.use(bodyParser.json());
+    server.middlewares.use(stateApiMiddleware);
+    server.middlewares.use(openemsMiddleware);
+    server.middlewares.use(teslaloggerMiddleware);
+    server.middlewares.use(shellyMiddleware);
+    server.middlewares.use(demoAuthMiddleware);
+    server.middlewares.use(ocppMiddleware);
   },
 });

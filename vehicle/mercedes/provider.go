@@ -49,21 +49,3 @@ func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.dataG()
 	return res.LocationResponse.Latitude, res.LocationResponse.Longitude, err
 }
-
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	data, err := v.dataG()
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	now := time.Now()
-	res := time.Date(now.Year(), now.Month(), now.Day(), 0, data.EvInfo.Battery.EndOfChargeTime, 0, 0, now.Location())
-
-	if res.Before(now) {
-		res = res.Add(24 * time.Hour)
-	}
-	return res, nil
-}

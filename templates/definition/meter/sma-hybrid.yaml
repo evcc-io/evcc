@@ -9,6 +9,9 @@ requirements:
   description:
     en: When using active battery control by evcc, the 'Forecast-based Charging' function in the SMA portal must not be active. Otherwise, conflicts may arise when controlling the battery.
     de: Bei der Nutzung der aktiven Speichersteuerung durch evcc darf die Funktion 'Prognosebasierten Laden' im SMA Portal nicht aktiv sein. Ansonsten kann es zu Konflikten bei der Steuerung des Speichers kommen.
+discovery:
+  hostname: ["sma*"]
+  mac: ["0015BB", "0040AD"]
 params:
   - name: usage
     choice: ["pv", "battery", "grid"]
@@ -174,28 +177,22 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: calc
-    add:
+    mul:
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 31395 # SMA Modbus Profile: BatDsch.CurBatDsch
-          type: input
-          decode: uint32nan
+          address: 30843 # SMA Modbus Profile: Bat.Amp, positive while discharging
+          type: holding
+          decode: int32nan
+        scale: 0.001
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 31393 # SMA Modbus Profile: BatChrg.CurBatCha
-          type: input
+          address: 30851 # SMA Modbus Profile: Bat.Vol
+          type: holding
           decode: uint32nan
-        scale: -1
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 31401 # SMA Modbus Profile: CmpBMS.GetBatDschWh
-      type: holding
-      decode: uint64nan
-    scale: 0.001
+        scale: 0.01
+  # no energy: BMS counters BatDsch.ActBatDsch (34665) and BatChrg.ActBatChrg (34661) only count whole kWh, power is integrated instead
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -268,7 +265,7 @@ render: |
                 address: 40801 # CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
                 type: writemultiple
                 decode: uint32
-      - case: 2 # hold
+      - case: 2 # holddischarge
         set:
           source: sequence
           set:

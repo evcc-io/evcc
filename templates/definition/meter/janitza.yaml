@@ -6,11 +6,14 @@ products:
   - brand: Janitza
     description:
       generic: UMG series
+discovery:
+  mac: ["000E6B"]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
 render: |
   type: mbmd
   {{- include "modbus" . }}

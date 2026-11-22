@@ -13,7 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-// https://www.nrgkick.com/wp-content/uploads/2019/08/20190814_API-Dokumentation_04.pdf
+// https://web.archive.org/web/20200927184746/https://www.nrgkick.com/wp-content/uploads/2019/08/20190814_API-Dokumentation_04.pdf
 
 // NRGKickConnect charger implementation
 type NRGKickConnect struct {
@@ -130,7 +130,7 @@ func (nrg *NRGKickConnect) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (nrg *NRGKickConnect) Enabled() (bool, error) {
-	return nrg.enabled, nil
+	return verifyEnabled(nrg, nrg.enabled)
 }
 
 // putSettings writes charging status and current in a single request.

@@ -108,7 +108,7 @@ func (cp *CP) ChangeConfigurationRequest(key, value string) error {
 	return wait(err, rc)
 }
 
-func (cp *CP) GetConfigurationRequest() (*core.GetConfigurationConfirmation, error) {
+func (cp *CP) GetConfigurationRequest(keys ...string) (*core.GetConfigurationConfirmation, error) {
 	rc := make(chan error, 1)
 
 	var res *core.GetConfigurationConfirmation
@@ -116,7 +116,7 @@ func (cp *CP) GetConfigurationRequest() (*core.GetConfigurationConfirmation, err
 		res = request
 
 		rc <- err
-	}, nil)
+	}, keys)
 
 	return res, wait(err, rc)
 }

@@ -16,6 +16,8 @@ products:
     description:
       generic: "FRITZ!Smart Energy 210"
 group: switchsockets
+discovery:
+  hostname: ["fritz", "fritzbox"]
 params:
   - name: usage
     choice: ["pv", "charge"]

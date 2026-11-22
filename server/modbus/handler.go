@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"math/bits"
+	"net"
 
 	"github.com/andig/mbserver"
 	"github.com/evcc-io/evcc/util"
@@ -41,14 +42,21 @@ func (h *handler) logResult(op string, b []byte, err error) {
 	}
 }
 
+// mapError passes device exceptions through and reports upstream timeouts as gateway target failure (0x0B)
+// instead of letting mbserver map them to server device failure (0x04)
+func mapError(err error) error {
+	if me, ok := errors.AsType[*gridx.Error](err); ok {
+		return mbserver.MapExceptionCodeToError(me.ExceptionCode)
+	}
+	if ne, ok := errors.AsType[net.Error](err); ok && ne.Timeout() {
+		return mbserver.ErrGWTargetFailedToRespond
+	}
+	return err
+}
+
 func (h *handler) exceptionToUint16AndError(op string, b []byte, err error) ([]uint16, error) {
 	h.logResult(op, b, err)
-
-	if me, ok := errors.AsType[*gridx.Error](err); ok {
-		err = mbserver.MapExceptionCodeToError(me.ExceptionCode)
-	}
-
-	return bytesAsUint16(b), err
+	return bytesAsUint16(b), mapError(err)
 }
 
 func coilsToBytes(b []bool) []byte {
@@ -73,10 +81,7 @@ func coilsToBytes(b []bool) []byte {
 
 func (h *handler) bytesToBoolResult(op string, qty uint16, b []byte, err error) ([]bool, error) {
 	h.logResult(op, b, err)
-
-	if me, ok := errors.AsType[*gridx.Error](err); ok {
-		err = mbserver.MapExceptionCodeToError(me.ExceptionCode)
-	}
+	err = mapError(err)
 
 	var res []bool
 
@@ -164,4 +169,25 @@ func (h *handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) 
 	h.log.TRACE.Printf("read holdings: id %d addr %d qty %d", req.UnitId, req.Addr, req.Quantity)
 	b, err := h.conn.Clone(req.UnitId).ReadHoldingRegisters(req.Addr, req.Quantity)
 	return h.exceptionToUint16AndError("read holding", b, err)
+}
+
+var _ mbserver.RawRequestHandler = (*handler)(nil)
+
+// HandleRaw forwards function codes not handled by mbserver
+func (h *handler) HandleRaw(req *mbserver.RawRequest) ([]byte, error) {
+	// unknown function codes may write to the device
+	if h.readOnly != ReadOnlyFalse {
+		h.log.TRACE.Printf("deny: raw: id %d func %02x", req.UnitId, req.FunctionCode)
+		return nil, mbserver.ErrIllegalFunction
+	}
+
+	h.log.TRACE.Printf("raw: id %d func %02x data % x", req.UnitId, req.FunctionCode, req.Payload)
+	b, err := h.conn.Clone(req.UnitId).SendRaw(req.FunctionCode, req.Payload)
+	h.logResult("raw", b, err)
+
+	if errors.Is(err, modbus.ErrRawUnsupported) {
+		return nil, mbserver.ErrIllegalFunction
+	}
+
+	return b, mapError(err)
 }

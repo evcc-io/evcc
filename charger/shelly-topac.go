@@ -35,8 +35,9 @@ import (
 // API Reference: https://shelly-api-docs.shelly.cloud/gen2/Devices/ShellyX/XT1/TopACPortableEVCharger/
 type ShellyTopAC struct {
 	*request.Helper
-	uri    string
-	phaseG util.Cacheable[shelly.Measurements]
+	uri     string
+	phaseG  util.Cacheable[shelly.Measurements]
+	enabled bool
 }
 
 func init() {
@@ -126,11 +127,11 @@ func (c *ShellyTopAC) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	// Possible states: charger_free, charger_wait, charger_pause, charger_charging, charger_complete, charger_error
+	// Possible states: charger_free, charger_insert, charger_wait, charger_pause, charger_charging, charger_complete, charger_end, charger_error
 	switch res.Result.Value {
 	case "charger_free":
 		return api.StatusA, nil
-	case "charger_wait", "charger_pause", "charger_complete", "charger_end":
+	case "charger_insert", "charger_wait", "charger_pause", "charger_complete", "charger_end":
 		return api.StatusB, nil
 	case "charger_charging":
 		return api.StatusC, nil
@@ -141,16 +142,18 @@ func (c *ShellyTopAC) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *ShellyTopAC) Enabled() (bool, error) {
-	var res shelly.RpcResponse[bool]
-	err := c.execRpc("Boolean.GetStatus", "service:0", "start_charging", nil, &res)
-
-	return res.Result.Value, err
+	return verifyEnabled(c, c.enabled)
 }
 
 // Enable implements the api.Charger interface
 func (c *ShellyTopAC) Enable(enable bool) error {
 	var res any
-	return c.execRpc("Boolean.Set", "service:0", "start_charging", enable, &res)
+	err := c.execRpc("Boolean.Set", "service:0", "start_charging", enable, &res)
+	if err == nil {
+		c.enabled = enable
+	}
+
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface

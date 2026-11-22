@@ -3,6 +3,9 @@ products:
   - brand: Zendure
     description:
       generic: 3CT
+discovery:
+  mdns: ["_zendure._tcp:Zendure-MeterReader*"]
+  hostname: ["Zendure-MeterReader*"]
 params:
   - name: usage
     choice: ["grid"]

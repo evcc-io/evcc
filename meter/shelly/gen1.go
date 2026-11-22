@@ -8,7 +8,6 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
 )
 
 // Gen1API endpoint reference: https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
@@ -18,6 +17,9 @@ type Gen1SwitchResponse struct {
 }
 
 type Gen1Status struct {
+	Relays []struct {
+		Ison bool
+	}
 	Meters []struct {
 		Power          float64
 		Current        float64
@@ -46,11 +48,7 @@ type gen1 struct {
 }
 
 // newGen1 initializes the connection to the shelly gen1 api and sets up the cached gen1Status
-func newGen1(client *request.Helper, uri, model string, channel int, user, password string, cache time.Duration) *gen1 {
-	if user != "" {
-		client.Transport = transport.BasicAuth(user, password, client.Transport)
-	}
-
+func newGen1(client *request.Helper, uri, model string, channel int, cache time.Duration) *gen1 {
 	c := &gen1{
 		Helper:  client,
 		uri:     uri,
@@ -154,6 +152,11 @@ func (c *gen1) IsReversed() bool {
 func (c *gen1) HasReturnEnergy() bool {
 	res, err := c.status.Get()
 	return err == nil && c.channel >= len(res.Meters) && c.channel < len(res.EMeters)
+}
+
+// HasPhases reports whether the device provides phase readings. Gen1 exposes none.
+func (c *gen1) HasPhases() bool {
+	return false
 }
 
 // IsThreePhase reports whether the device is a three-phase energy meter.

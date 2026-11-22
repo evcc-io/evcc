@@ -16,9 +16,13 @@ requirements:
       Power is switched in stages of 3, 6 and 9 kW. Power limits are applied automatically.
       The additional SELV relay is not controlled.
   evcc: ["sponsorship"]
+discovery:
+  mdns: ["_mypv._tcp"]
+  mac: ["986D35C"]
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 1
   - name: tempsource
     choice: ["1", "2"]
     default: "1"

@@ -33,7 +33,7 @@ func redactableParams() []string {
 	// Collect all sensitive params from templates (includes defaults)
 	var params []string
 	for _, class := range templates.ClassValues() {
-		for _, tmpl := range templates.ByClass(class) {
+		for _, tmpl := range templates.ByClass(class, templates.WithDeprecated()) {
 			for _, p := range tmpl.Params {
 				if p.IsMasked() || p.IsPrivate() {
 					params = append(params, strings.ToLower(p.Name))
@@ -45,9 +45,29 @@ func redactableParams() []string {
 	return lo.Uniq(params)
 }
 
-// String redacts a configuration string by replacing sensitive values with *****
+// String redacts a configuration string by replacing sensitive values with *****.
+// Lines nested below a redacted key (block scalars, nested maps, lists) are dropped.
 func String(src string) string {
-	return configRedactRegex.ReplaceAllString(src, "$1: *****")
+	lines := strings.Split(src, "\n")
+	res := make([]string, 0, len(lines))
+
+	skip := -1 // indent of the redacted key whose nested lines are dropped
+	for _, line := range lines {
+		indent := len(line) - len(strings.TrimLeft(line, " \t"))
+		if skip >= 0 && (indent > skip || strings.TrimSpace(line) == "") {
+			continue
+		}
+
+		skip = -1
+		if redacted := configRedactRegex.ReplaceAllString(line, "$1: *****"); redacted != line {
+			line = redacted
+			skip = indent
+		}
+
+		res = append(res, line)
+	}
+
+	return strings.Join(res, "\n")
 }
 
 // Map redacts sensitive keys in a configuration map

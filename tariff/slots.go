@@ -1,15 +1,29 @@
 package tariff
 
 import (
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 )
 
 const SlotDuration = 15 * time.Minute
 
 type SlotWrapper struct {
 	api.Tariff
+	once sync.Once
+}
+
+// shortSlot returns the first slot shorter than SlotDuration. The leading slot
+// is skipped since it may legitimately be truncated to the current period.
+func shortSlot(rr api.Rates) (api.Rate, bool) {
+	for _, r := range rr[min(1, len(rr)):] {
+		if r.End.Sub(r.Start) < SlotDuration {
+			return r, true
+		}
+	}
+	return api.Rate{}, false
 }
 
 // Rates converts arbitrary slot lengths (multiples of SlotDuration) to 15m slots.
@@ -18,6 +32,12 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 	rates, err := t.Tariff.Rates()
 	if err != nil {
 		return nil, err
+	}
+
+	if r, ok := shortSlot(rates); ok {
+		t.once.Do(func() {
+			util.NewLogger("tariff").WARN.Printf("slot duration %v shorter than %v, results will be incorrect", r.End.Sub(r.Start), SlotDuration)
+		})
 	}
 
 	var res api.Rates
@@ -48,9 +68,10 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 			start := r.Start.Add(time.Duration(j) * SlotDuration)
 
 			res = append(res, api.Rate{
-				Start: start,
-				End:   start.Add(SlotDuration),
-				Value: vals[j],
+				Start:    start,
+				End:      start.Add(SlotDuration),
+				Value:    vals[j],
+				Estimate: r.Estimate,
 			})
 		}
 	}

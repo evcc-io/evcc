@@ -4,7 +4,6 @@ power: # current power
   source: const
   value: 1000 # W
 
-
 ## optional attributes (read-only)
 
 #energy: # meter reading in kWh
@@ -22,6 +21,8 @@ power: # current power
 #soc: # state of charge in % (for battery)
 #  source: const
 #  value: 75
+#minsoc: 10 # minimum state of charge in % (for battery)
+#maxsoc: 90 # maximum state of charge in % (for battery)
 #capacity: 10.5 # capacity in kWh (for battery)
 #powers: # phase powers in W
 #  - source: const
@@ -50,7 +51,7 @@ power: # current power
 #limitsoc: # set battery charge target in % (for battery)
 #  source: js
 #  script: console.log(limitsoc)
-#batterymode: # set charging mode directly (1: normal, 2: hold, 3: charge) (for battery)
+#batterymode: # set charging mode directly (1: normal, 2: holddischarge, 3: charge) (for battery)
 #  source: js
 #  script: console.log(batterymode)
 #curtail: # set feed-in limit in % (0..100, 100 = uncurtailed)

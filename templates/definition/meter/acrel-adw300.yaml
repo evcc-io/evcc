@@ -8,6 +8,7 @@ params:
     choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
     baudrate: 1200
 render: |
   type: custom

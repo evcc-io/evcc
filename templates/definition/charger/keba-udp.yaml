@@ -18,6 +18,8 @@ requirements:
   description:
     de: Es muss eine sogenannte UDP Funktion über den DIP Schalter 1.3 eingeschaltet (ON) werden. Die Installationsanleitung der Wallbox hilft hier weiter.
     en: This requires the UDP function to be enabled with DIP 1.3 = ON, see the installation manual.
+discovery:
+  mac: ["0060B5", "00141D"]
 params:
   - name: host
   - name: rfid
@@ -33,9 +35,13 @@ params:
     help:
       de: Die Seriennummer, ermöglicht es auch mit der Wallbox zu kommunizieren wenn evcc in Docker läuft.
       en: The serial number, allows to communicate with the Wallbox when running evcc in docker
+  - name: welcomecharge
 render: |
   type: keba-udp
   uri: {{ .host }}
+  {{- if .welcomecharge }}
+  features: ["welcomecharge"]
+  {{- end }}
   {{- if .rfid }}
   rfid:
     tag: {{ .rfid }}

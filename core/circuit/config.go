@@ -35,7 +35,7 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.C
 
 func Root() api.Circuit {
 	for _, dev := range config.Circuits().Devices() {
-		if c := dev.Instance(); c.GetParent() == nil {
+		if c := dev.Instance(); c != nil && c.GetParent() == nil {
 			return c
 		}
 	}

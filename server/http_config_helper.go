@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"maps"
 	"reflect"
@@ -14,6 +15,7 @@ import (
 
 	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
@@ -54,11 +56,6 @@ func (c *configReq) UnmarshalJSON(data []byte) error {
 }
 
 func (c *configReq) Serialise() map[string]any {
-	if c.Yaml != "" {
-		return map[string]any{
-			"yaml": c.Yaml,
-		}
-	}
 	return c.Other
 }
 
@@ -340,8 +337,10 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 
 	wg.Go(func() {
 		if dev, ok := api.Cap[api.BatteryCapacity](instance); ok {
-			val := dev.Capacity()
-			makeResult("capacity", val, nil)
+			val, err := dev.Capacity()
+			makeResult("capacity", val, err)
+		} else if dev, ok := instance.(api.Vehicle); ok {
+			makeResult("capacity", dev.Capacity(), nil)
 		}
 	})
 
@@ -396,6 +395,7 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 	wg.Go(func() {
 		if hasFeature(instance, api.Heating) {
 			makeResult("heating", true, nil)
+			makeResult("demandPredictor", core.DefaultDemandPredictor(instance), nil)
 		}
 	})
 
@@ -479,6 +479,22 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 				if limit := dev.MaxProductionPower(); limit != nil {
 					makeResult("curtailLimit", *limit, nil)
 				}
+			}
+		}
+	})
+
+	wg.Go(func() {
+		if dev, ok := api.Cap[api.Circuit](instance); ok {
+			if val := dev.GetMaxPower(); val > 0 {
+				makeResult("maxPower", val, nil)
+			}
+			if val := dev.GetMaxCurrent(); val > 0 {
+				makeResult("maxCurrent", val, nil)
+			}
+			if dev.HasMeter() {
+				err := dev.Update(nil)
+				makeResult("power", dev.GetChargePower(), err)
+				makeResult("current", dev.GetMaxPhaseCurrent(), err)
 			}
 		}
 	})
@@ -575,39 +591,74 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 
 var criticalPluginSources = []string{"script"}
 
-func configHasCriticalPlugin(req configReq) bool {
-	if req.Yaml != "" {
-		// any, not map: global yaml configs (circuits) are a list
-		var m any
-		if err := yaml.Unmarshal([]byte(req.Yaml), &m); err != nil {
-			return false // malformed yaml already rejected by decodeDeviceConfig
-		}
-		return valueHasCriticalSource(m)
-	}
-	return valueHasCriticalSource(req.Other)
+// configUnchanged reports whether req matches the stored config, e.g. when only toggling deviceDisable
+func configUnchanged(id int, req configReq) bool {
+	stored, err := config.ConfigByID(id)
+	return err == nil && reflect.DeepEqual(req.Serialise(), stored.Data)
 }
 
-func valueHasCriticalSource(v any) bool {
+// configHasCriticalPlugin checks the config as it will be instantiated: custom yaml is
+// resolved and templates are rendered, since a param value can expand into a critical source
+func configHasCriticalPlugin(class templates.Class, req configReq) bool {
+	// any, not map: global yaml configs (circuits) are a list
+	var m any
+	if err := yaml.Unmarshal([]byte(req.Yaml), &m); err != nil || valueHasCriticalSource(class, m) {
+		return true
+	}
+
+	typ, other, err := config.CustomDevice(req.Type, req.Other)
+	return err != nil || typedHasCriticalSource(class, typ, other)
+}
+
+// typedHasCriticalSource renders whenever a template is referenced, not only when typ says so:
+// updating or testing an existing device instantiates with the stored type, not the request's
+func typedHasCriticalSource(class templates.Class, typ string, other map[string]any) bool {
+	_, template := lo.FindKeyBy(other, func(k string, _ any) bool { return strings.EqualFold(k, typeTemplate) })
+	return valueHasCriticalSource(class, other) ||
+		(template || strings.EqualFold(typ, typeTemplate)) && renderedHasCriticalSource(class, other)
+}
+
+// renderedHasCriticalSource fails closed: a template we cannot render to verify
+// may still be force-saved and instantiated later
+func renderedHasCriticalSource(class templates.Class, other map[string]any) bool {
+	instance, err := templates.RenderInstance(class, other)
+	return err != nil || typedHasCriticalSource(class, instance.Type, instance.Other)
+}
+
+func valueHasCriticalSource(class templates.Class, v any) bool {
 	switch t := v.(type) {
 	case map[string]any:
+		var template bool
 		for k, val := range t {
-			if strings.EqualFold(k, "source") {
-				if s, ok := val.(string); ok && slices.Contains(criticalPluginSources, strings.ToLower(strings.TrimSpace(s))) {
-					return true
-				}
-			}
-			if valueHasCriticalSource(val) {
+			if mapEntryIsCriticalSource(k, val) || valueHasCriticalSource(class, val) {
 				return true
 			}
+			if s, ok := val.(string); ok && strings.EqualFold(k, "type") && strings.EqualFold(s, typeTemplate) {
+				template = true
+			}
 		}
+		// nested typed configs like tariffs or messengers; the renderer accepts the type key
+		return template && renderedHasCriticalSource(class, t)
+	case map[any]any:
+		return true // yaml with non-string keys, fail closed
 	case []any:
-		return slices.ContainsFunc(t, valueHasCriticalSource)
+		return slices.ContainsFunc(t, func(v any) bool {
+			return valueHasCriticalSource(class, v)
+		})
 	}
 	return false
 }
 
+func mapEntryIsCriticalSource(key string, val any) bool {
+	if !strings.EqualFold(key, "source") {
+		return false
+	}
+	s, ok := val.(string)
+	return ok && slices.Contains(criticalPluginSources, strings.ToLower(s))
+}
+
 // decodeDeviceConfig extracts device configuration and yaml details
-func decodeDeviceConfig(r io.Reader) (configReq, error) {
+func decodeDeviceConfig(r io.Reader, class templates.Class) (configReq, error) {
 	var res configReq
 
 	if err := json.NewDecoder(r).Decode(&res); err != nil {
@@ -624,17 +675,26 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return configReq{}, errors.New("invalid config: yaml only allowed for types " + strings.Join(customTypes, ", "))
 	}
 
-	if len(res.Other) != 0 {
-		return configReq{}, errors.New("invalid config: cannot mix yaml and other")
-	}
-
 	// validate yaml syntax; tolerate whitespace/comment-only input
 	var tmp map[string]any
 	if err := yaml.Unmarshal([]byte(res.Yaml), &tmp); err != nil {
 		return configReq{}, err
 	}
 
-	res.Other = map[string]any{"yaml": res.Yaml}
+	// circuit references are structured form fields, not yaml
+	if class == templates.Circuit {
+		for _, k := range []string{"parent", "meter"} {
+			if _, ok := tmp[k]; ok {
+				return configReq{}, fmt.Errorf("invalid config: '%s' must not be set in yaml", k)
+			}
+		}
+	}
+
+	// structured fields (e.g. references) are stored next to the yaml
+	if res.Other == nil {
+		res.Other = make(map[string]any)
+	}
+	res.Other["yaml"] = res.Yaml
 
 	return res, nil
 }

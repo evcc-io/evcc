@@ -25,10 +25,17 @@ products:
   - brand: Fronius
     description:
       generic: Wattpilot (OCPP)
-capabilities: ["rfid", "1p3p", "dim"]
+capabilities: ["rfid", "1p3p", "meter", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
+  description:
+    de: |
+      Für die Fahrzeugerkennung per RFID muss die OCPP-Einstellung `LocalAuthListEnabled` in der Wallbox deaktiviert sein (`false`).
+    en: |
+      For vehicle identification via RFID, the OCPP setting `LocalAuthListEnabled` must be disabled (`false`) in the charger.
 params:
   - preset: ocpp
+  - name: metervalues
+    default: -Current.Offered
 render: |
   {{ include "ocpp" . }}

@@ -26,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -105,7 +106,7 @@ func NewCompleo(ctx context.Context, settings modbus.TcpSettings, connector uint
 	wb := &Compleo{
 		conn:   conn,
 		offset: (connector - 1) * 0x10,
-		power:  3 * 230 * 6, // assume min power
+		power:  uint16(grid.CurrentToPower(6, 3)), // assume min power
 	}
 
 	// heartbeat
@@ -211,7 +212,7 @@ func (wb *Compleo) MaxCurrentMillis(current float64) error {
 		}
 	}
 
-	power := uint16(voltage * current * float64(phases))
+	power := uint16(grid.CurrentToPower(current, phases))
 
 	err := wb.setPower(power)
 	if err == nil {

@@ -50,7 +50,6 @@ func siteCycle(t *testing.T, c api.Circuit, lps ...*Loadpoint) {
 // a loadpoint that has been offered current but is not charging yet must not be
 // blocked by its own offer
 func TestSetLimitDeadlockPrevention(t *testing.T) {
-	Voltage = 230
 	ctrl := gomock.NewController(t)
 
 	c, err := circuit.New(util.NewLogger("circuit"), "main", 16, 0, nil, 0)
@@ -71,7 +70,6 @@ func TestSetLimitDeadlockPrevention(t *testing.T) {
 // the circuit limit is still enforced when the charger starts charging after the
 // circuit has been updated
 func TestSetLimitWithMeterlessCircuitAndMeterlessCharger(t *testing.T) {
-	Voltage = 230
 	ctrl := gomock.NewController(t)
 
 	c, err := circuit.New(util.NewLogger("circuit"), "main", 12, 0, nil, 0)
@@ -83,8 +81,7 @@ func TestSetLimitWithMeterlessCircuitAndMeterlessCharger(t *testing.T) {
 	siteCycle(t, c, lp)
 
 	chg.EXPECT().Status().Return(api.StatusC, nil)
-	_, err = lp.updateChargerStatus()
-	require.NoError(t, err)
+	require.NoError(t, lp.updateChargerStatus())
 
 	chg.EXPECT().MaxCurrent(int64(12)).Return(nil)
 
@@ -95,7 +92,6 @@ func TestSetLimitWithMeterlessCircuitAndMeterlessCharger(t *testing.T) {
 // a loadpoint that has been offered current but never draws it must not block
 // another loadpoint on the same circuit
 func TestSetLimitMeterlessDoesNotBlockOtherLoadpoint(t *testing.T) {
-	Voltage = 230
 	ctrl := gomock.NewController(t)
 
 	c, err := circuit.New(util.NewLogger("circuit"), "main", 16, 0, nil, 0)
@@ -115,7 +111,6 @@ func TestSetLimitMeterlessDoesNotBlockOtherLoadpoint(t *testing.T) {
 
 // once both loadpoints charge the circuit limit applies again
 func TestSetLimitMeterlessBothCharging(t *testing.T) {
-	Voltage = 230
 	ctrl := gomock.NewController(t)
 
 	c, err := circuit.New(util.NewLogger("circuit"), "main", 16, 0, nil, 0)
@@ -132,4 +127,55 @@ func TestSetLimitMeterlessBothCharging(t *testing.T) {
 
 	require.NoError(t, lp2.setLimit(16))
 	assert.Equal(t, 0.0, lp2.offeredCurrent)
+}
+
+// A charging loadpoint measuring below its offer on a full circuit keeps its min current
+func TestSetLimitCircuitKeepsMinCurrent(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		headroom float64 // circuit headroom beyond the measured current
+		status   api.ChargeStatus
+		disable  bool
+	}{
+		{"within limits", 0, api.StatusC, false},
+		{"over limit", -2, api.StatusC, true},
+		{"not charging", 0, api.StatusB, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			charger := api.NewMockCharger(ctrl)
+			circuit := api.NewMockCircuit(ctrl)
+
+			circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any()).DoAndReturn(func(old, new float64) float64 {
+				return min(new, max(0, old+tc.headroom))
+			}).AnyTimes()
+			circuit.EXPECT().ValidatePower(gomock.Any(), gomock.Any()).DoAndReturn(func(_, new float64) float64 {
+				return new
+			}).AnyTimes()
+
+			lp := &Loadpoint{
+				log:            util.NewLogger("foo"),
+				bus:            evbus.New(),
+				clock:          clock.New(),
+				charger:        charger,
+				circuit:        circuit,
+				wakeUpTimer:    NewTimer(),
+				minCurrent:     6,
+				maxCurrent:     16,
+				phases:         3,
+				status:         tc.status,
+				enabled:        true,
+				offeredCurrent: 6,
+				chargeCurrents: []float64{5.9, 5.9, 5.9},
+				chargeCurrent:  5.9,
+			}
+
+			if tc.disable {
+				charger.EXPECT().Enable(false).Return(nil)
+			}
+
+			require.NoError(t, lp.setLimit(16))
+			require.Equal(t, !tc.disable, lp.enabled)
+		})
+	}
 }

@@ -39,7 +39,8 @@
 					</div>
 					<div class="col-6 offset-lg-1 col-lg-4 mb-4 mb-lg-0">
 						<input
-							v-model="search"
+							:value="q"
+							@input="changeSearch"
 							type="search"
 							class="form-control search"
 							:placeholder="$t('log.search')"
@@ -135,12 +136,12 @@ export default defineComponent({
 	props: {
 		areas: { type: Array as PropType<string[]>, default: () => [] },
 		level: { type: String, default: DEFAULT_LOG_LEVEL },
+		q: { type: String, default: "" },
 	},
 	data() {
 		return {
 			lines: [] as string[],
 			availableAreas: [] as string[],
-			search: "",
 			timeout: null as Timeout,
 			levels: LOG_LEVELS,
 			busy: false,
@@ -153,8 +154,7 @@ export default defineComponent({
 	computed: {
 		filteredLines() {
 			return this.lines.filter(
-				(line) =>
-					!this.search || line.toLowerCase().includes(this.search.toLocaleLowerCase())
+				(line) => !this.q || line.toLowerCase().includes(this.q.toLocaleLowerCase())
 			);
 		},
 		lineEntries() {
@@ -172,17 +172,22 @@ export default defineComponent({
 				return { key, className, line };
 			});
 		},
+		loadpointTitles(): Record<string, string> {
+			return Object.fromEntries(
+				(store.state?.loadpoints || []).map((lp, i) => [`lp-${i + 1}`, lp.title])
+			);
+		},
 		areaOptions() {
 			return this.availableAreas
 				.slice()
 				.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-				.map((area) => ({ name: area, value: area }));
+				.map((area) => ({ name: this.areaName(area), value: area }));
 		},
 		areasLabel() {
 			if (this.areas.length === 0) {
 				return this.$t("log.areas");
 			} else if (this.areas.length === 1) {
-				return this.areas[0];
+				return this.areaName(this.areas[0] as string);
 			} else {
 				return this.$t("log.nAreas", { count: this.areas.length });
 			}
@@ -225,6 +230,10 @@ export default defineComponent({
 	},
 	methods: {
 		handleDownloadClick,
+		areaName(area: string) {
+			const title = this.loadpointTitles[area];
+			return title ? `${area} (${title})` : area;
+		},
 		async updateLogs(showAll: boolean = false) {
 			// prevent concurrent requests
 			if (this.busy) return;
@@ -296,15 +305,24 @@ export default defineComponent({
 				this.startInterval();
 			}
 		},
-		updateQuery({ level: l, areas: a }: { level?: string; areas?: string[] }) {
+		updateQuery(
+			{ level: l, areas: a, q: s }: { level?: string; areas?: string[]; q?: string },
+			replace = false
+		) {
 			const newLevel = l || this.level;
 			const newAreas = a || this.areas;
+			const newSearch = s ?? this.q;
 
 			// reset to default level
 			const level = newLevel === DEFAULT_LOG_LEVEL ? undefined : newLevel;
 			const areas = newAreas.length ? newAreas.join(",") : undefined;
+			const q = newSearch || undefined;
 
-			this.$router.push({ query: { level, areas } });
+			// typing shouldn't spam the history
+			this.$router[replace ? "replace" : "push"]({ query: { level, areas, q } });
+		},
+		changeSearch(event: Event) {
+			this.updateQuery({ q: (event.target as HTMLInputElement).value }, true);
 		},
 		changeLevel(event: Event) {
 			this.updateQuery({ level: (event.target as HTMLSelectElement).value });

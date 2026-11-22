@@ -160,9 +160,10 @@ func (t *Stekker) run(done chan error) {
 				}
 
 				res = append(res, api.Rate{
-					Start: start,
-					End:   start.Add(t.interval),
-					Value: t.totalPrice(yt/1000.0, start), // €/MWh → €/kWh
+					Start:    start,
+					End:      start.Add(t.interval),
+					Value:    t.totalPrice(yt/1000.0, start), // €/MWh → €/kWh
+					Estimate: strings.Contains(name, "Forecast"),
 				})
 			}
 		}

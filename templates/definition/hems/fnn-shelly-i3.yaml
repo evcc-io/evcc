@@ -1,0 +1,102 @@
+template: fnn-shelly-i3
+products:
+  - brand: Shelly
+    description:
+      generic: i3
+requirements:
+  description:
+    de: Die Schaltkontakte der Steuerbox werden an die Eingänge SW1 bis SW3 angeschlossen. Mit drei Eingängen ist standardmäßig nur die Einspeisebegrenzung (W3, S1, S2) belegt. Für das Dimmen der steuerbaren Verbrauchseinrichtungen (W4) muss ein Eingang umgewidmet werden.
+    en: Connect the relay contacts of the control box to the inputs SW1 to SW3. With three inputs only the feed-in limitation (W3, S1, S2) is mapped by default. Dimming of controllable loads (W4) requires reassigning one of the inputs.
+params:
+  - name: host
+  - name: user
+    help:
+      en: Only required if authentication is enabled on the device
+      de: Nur erforderlich, wenn am Gerät die Authentifizierung aktiviert ist
+  - name: password
+  - name: productionnominalmax
+    type: float
+    unit: Wp
+    description:
+      en: Installed generator power
+      de: Installierte Generatorleistung
+    help:
+      en: Rated generator/module power of the installation (reference value according to § 9 EEG).
+      de: Gesamtnennleistung bzw. Modul- oder Generatorleistung der Anlage (Bezugsgröße nach § 9 EEG).
+  - name: w3input
+    type: int
+    required: true
+    default: 1
+    description:
+      en: W3 input
+      de: W3-Eingang
+    help:
+      en: Input number for the W3 signal (Zero export, 0%), 1 to 3 (SW1 = 1)
+      de: Nummer des Eingangs für das W3-Signal (Keine Netzeinspeisung, 0%), 1 bis 3 (SW1 = 1)
+  - name: s1input
+    type: int
+    default: 2
+    description:
+      en: S1 input
+      de: S1-Eingang
+    help:
+      en: Input number for the S1 signal (60% export power limit), 1 to 3 (SW1 = 1)
+      de: Nummer des Eingangs für das S1-Signal (Reduzierung der Einspeiseleistung auf 60%), 1 bis 3 (SW1 = 1)
+  - name: s2input
+    type: int
+    default: 3
+    description:
+      en: S2 input
+      de: S2-Eingang
+    help:
+      en: Input number for the S2 signal (30% export power limit), 1 to 3 (SW1 = 1)
+      de: Nummer des Eingangs für das S2-Signal (Reduzierung der Einspeiseleistung auf 30%), 1 bis 3 (SW1 = 1)
+  - name: w4input
+    type: int
+    advanced: true
+    description:
+      en: W4 input
+      de: W4-Eingang
+    help:
+      en: Input number for the W4 signal (Dimmer for controllable loads), 1 to 3 (SW1 = 1). Not mapped by default.
+      de: Nummer des Eingangs für das W4-Signal (Dimmen der steuerbaren Verbrauchseinrichtungen), 1 bis 3 (SW1 = 1). Standardmäßig nicht belegt.
+  - name: maxconsumptionpower
+    type: float
+    unit: W
+    advanced: true
+    description:
+      en: Guaranteed minimum power (Pmin)
+      de: Garantierte Mindestleistung (Pmin)
+    help:
+      en: Power limit applied to the root circuit while the limit is active. Required if W4 is mapped.
+      de: Leistungsbegrenzung des Hauptstromkreises während die Limitierung aktiv ist. Erforderlich, wenn W4 belegt ist.
+render: |
+  {{- define "input" }}
+  source: http
+  uri: http://{{ .host }}/status
+  {{- if .user }}
+  auth:
+    type: basic
+    user: {{ .user }}
+    password: {{ .password }}
+  {{- end }}
+  cache: 1s # inputs share one /status response per cycle
+  jq: .inputs[{{ sub (int .input) 1 }}].input | if . == 1 then true elif . == 0 then false else error("invalid input state") end
+  {{- end }}
+  type: fnn
+  productionnominalmax: {{ .productionnominalmax }}
+  w3:
+    {{- include "input" (dict "host" .host "user" .user "password" .password "input" .w3input) | indent 2 }}
+  {{- if .s1input }}
+  s1:
+    {{- include "input" (dict "host" .host "user" .user "password" .password "input" .s1input) | indent 2 }}
+  {{- end }}
+  {{- if .s2input }}
+  s2:
+    {{- include "input" (dict "host" .host "user" .user "password" .password "input" .s2input) | indent 2 }}
+  {{- end }}
+  {{- if .w4input }}
+  maxdimpower: {{ .maxconsumptionpower }}
+  w4:
+    {{- include "input" (dict "host" .host "user" .user "password" .password "input" .w4input) | indent 2 }}
+  {{- end }}

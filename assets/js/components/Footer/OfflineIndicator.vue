@@ -171,6 +171,8 @@ export default defineComponent({
 		opacity var(--evcc-transition-fast) ease-in,
 		padding-bottom var(--evcc-transition-fast) ease-in;
 	padding-bottom: max(0.5rem, var(--safe-area-inset-bottom)) !important;
+	padding-left: calc(0.5rem + var(--safe-area-inset-left)) !important;
+	padding-right: calc(0.5rem + var(--safe-area-inset-right)) !important;
 	border-bottom: none;
 	border-left: none;
 	border-right: none;

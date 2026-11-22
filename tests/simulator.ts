@@ -6,12 +6,13 @@ import axios from "axios";
 import { spawn } from "child_process";
 import { Transform } from "stream";
 import type { Page } from "@playwright/test";
+import { WAIT_OPTS } from "./evcc";
 
 const LOG_ENABLED = !process.env["GITHUB_ACTIONS"];
 
 function workerPort() {
   const index = parseInt(process.env["TEST_WORKER_INDEX"] ?? "-1");
-  return 13000 + index;
+  return 15000 + index;
 }
 
 function logPrefix() {
@@ -45,12 +46,11 @@ export function simulatorUrl() {
   return `http://${simulatorHost()}`;
 }
 
-export function simulatorConfig() {
-  const input = "./tests/simulator.evcc.yaml";
+export function simulatorConfig(input = "./tests/simulator.evcc.yaml") {
   const content = fs.readFileSync(input, "utf8");
   const result = content.replace(/localhost:7072/g, simulatorHost());
   // per-worker file name, multiple workers write their own port concurrently
-  const resultName = `simulator-${workerPort()}.evcc.generated.yaml`;
+  const resultName = `${path.basename(input, ".evcc.yaml")}-${workerPort()}.evcc.generated.yaml`;
   const resultPath = path.join(os.tmpdir(), resultName);
   fs.writeFileSync(resultPath, result);
   return resultPath;
@@ -60,9 +60,9 @@ export async function startSimulator() {
   const port = workerPort();
   log("starting simulator", { port });
   log(`wait until port ${port} is available`);
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, ...WAIT_OPTS });
 
-  const instance = spawn("vp", ["run", "simulator", "--port", port.toString()]);
+  const instance = spawn("vp", ["preview", "tests/simulator", "--port", port.toString()]);
 
   const steamLog = createSteamLog();
   instance.stdout.pipe(steamLog);
@@ -72,7 +72,7 @@ export async function startSimulator() {
     steamLog.end();
   });
 
-  await waitOn({ resources: [`${simulatorUrl()}/api/state`], log: LOG_ENABLED });
+  await waitOn({ resources: [`${simulatorUrl()}/api/state`], ...WAIT_OPTS });
 }
 
 export async function stopSimulator() {
@@ -80,7 +80,7 @@ export async function stopSimulator() {
   log("shutting down simulator", { port });
   await axios.post(`${simulatorUrl()}/api/shutdown`);
   log(`wait until port ${port} is closed`);
-  await waitOn({ resources: [`tcp:localhost:${port}`], reverse: true, log: LOG_ENABLED });
+  await waitOn({ resources: [`tcp:localhost:${port}`], reverse: true, ...WAIT_OPTS });
 }
 
 export const simulatorApply = async (page: Page) => {

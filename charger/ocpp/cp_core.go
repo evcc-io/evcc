@@ -20,13 +20,14 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 		Status:      core.RegistrationStatusAccepted,
 	}
 
+	// mark charge point as ready for communication
 	cp.mu.Lock()
 	cp.BootNotificationResult = request
 	cp.stopBootTimer()
+	changed := cp.setConnected(true)
 	cp.mu.Unlock()
 
-	// mark charge point as ready for communication
-	cp.connect(true)
+	cp.markRebooted()
 
 	// Notify the reboot monitor (and the initial Setup). The channel is
 	// buffered (size 1) and coalescing: if an older notification is still
@@ -42,6 +43,9 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 	case cp.bootNotificationRequestC <- request:
 	default:
 	}
+
+	// publish last, the status callback may block on a full update channel
+	cp.publishStatus(changed)
 
 	return res, nil
 }

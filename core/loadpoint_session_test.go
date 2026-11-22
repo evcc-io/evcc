@@ -7,6 +7,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/session"
+	"github.com/evcc-io/evcc/core/soc"
 	serverdb "github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
@@ -20,6 +21,43 @@ func sessionStart(lp *Loadpoint) func(session *session.Session) {
 			session.Created = lp.clock.Now()
 		}
 	}
+}
+
+func TestSessionResetsSocEstimator(t *testing.T) {
+	database, err := serverdb.New("sqlite", ":memory:")
+	require.NoError(t, err)
+	db, err := session.NewStore("foo", database)
+	require.NoError(t, err)
+
+	ctrl := gomock.NewController(t)
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().GetTitle().Return("vehicle").AnyTimes()
+	vehicle.EXPECT().Capacity().Return(80.0)
+
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		clock:       clock.NewMock(),
+		db:          db,
+		chargeMeter: newChargeMeter(nil),
+		vehicle:     vehicle,
+		vehicleSoc:  40,
+	}
+	lp.energyMetrics.Update(20)
+	lp.socEstimator = soc.NewEstimator(lp.log, vehicle)
+	lp.socEstimator.Soc(&lp.vehicleSoc, lp.GetChargedEnergy())
+
+	lp.createSession()
+	require.NotNil(t, lp.session)
+	assert.Zero(t, lp.GetChargedEnergy())
+	assert.Equal(t, 40.0, lp.vehicleSoc)
+
+	fetchedSoc := 30.0
+	lp.socEstimator.Soc(&fetchedSoc, lp.GetChargedEnergy())
+	lp.energyMetrics.Update(30)
+	fetchedSoc = 60
+	lp.socEstimator.Soc(&fetchedSoc, lp.GetChargedEnergy())
+	assert.Equal(t, 20.0, lp.socEstimator.RemainingChargeEnergy(80))
+	assert.Equal(t, 2*time.Hour, lp.socEstimator.RemainingChargeDuration(80, 10000))
 }
 
 func TestSession(t *testing.T) {

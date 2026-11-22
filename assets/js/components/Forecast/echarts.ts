@@ -1,6 +1,6 @@
 import * as echarts from "echarts/core";
-import colors from "@/colors";
-import { attachTouchTooltipGate } from "@/utils/swipe";
+import colors, { setAlpha } from "@/colors";
+import { attachTouchTooltipGate, pointerState } from "@/utils/swipe";
 import escapeHtml from "@/utils/escapeHtml";
 import type { UiForecastSlot } from "@/types/evcc";
 import { BarChart, LineChart } from "echarts/charts";
@@ -99,6 +99,25 @@ export function hoverDot(color: string, lineStyle: Record<string, unknown> = {})
   };
 }
 
+// diagonal-stripe fill for forecast areas
+export function hatchPattern(color: string) {
+  const size = 8;
+  const dpr = window.devicePixelRatio || 1;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size * dpr;
+  const ctx = canvas.getContext("2d")!;
+  ctx.scale(dpr, dpr);
+  ctx.strokeStyle = setAlpha(color, "66") || color;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (const o of [-size, 0, size]) {
+    ctx.moveTo(o, size);
+    ctx.lineTo(o + size, 0);
+  }
+  ctx.stroke();
+  return { image: canvas, repeat: "repeat" };
+}
+
 // wider box-colored twin drawn beneath a line so it stays readable over bars
 export function lineCasing(line: Record<string, unknown>, z: number): Record<string, unknown> {
   return {
@@ -114,30 +133,49 @@ export function lineCasing(line: Record<string, unknown>, z: number): Record<str
   };
 }
 
+// fixed, clipped layer so a tooltip can leave its chart box (sparklines are tiny)
+// without ever widening the page: echarts parks a fresh tooltip at the chart
+// center before positioning it, which off the right edge would make the page pannable
+function tooltipLayer(): HTMLElement {
+  let el = document.getElementById("chart-tooltips");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "chart-tooltips";
+    el.className = "chart-tooltip-layer";
+    document.body.append(el);
+  }
+  return el;
+}
+
 export function tooltipStyle(color: string) {
   return {
-    confine: true,
+    appendTo: tooltipLayer,
+    // echarts also triggers on mousewheel; a chart scrolling past a resting cursor would
+    // show its tooltip without ever getting the mouseout that hides it
+    triggerOn: "mousemove|click",
     // re-show after hide would otherwise slide in from the stale position
     transitionDuration: 0,
     backgroundColor: color,
     borderColor: color,
     borderWidth: 0,
     padding: [5, 10],
-    extraCssText: "box-shadow: none; border-radius: 4px; text-align: center; z-index: 1000;",
-    // beside the pointer so it never covers the hovered slot, flips left near the right edge
-    position(
-      point: [number, number],
-      _params: unknown,
-      el: HTMLElement,
-      _rect: unknown,
-      size: { viewSize: [number, number] }
-    ): [number, number] {
+    extraCssText: "box-shadow: none; border-radius: 4px; text-align: center;",
+    // beside the pointer so it never covers the hovered slot, flips left near the viewport
+    // edge. A finger hides what is under and beside it, so on touch the tooltip sits
+    // above the touch point, or below when the viewport has no room above
+    position(point: [number, number], _params: unknown, el: HTMLElement): [number, number] {
       const w = el?.offsetWidth || 0;
       const h = el?.offsetHeight || 0;
-      const margin = 16;
-      const x =
-        point[0] + margin + w > size.viewSize[0] ? point[0] - margin - w : point[0] + margin;
-      return [x, point[1] - h / 2];
+      const { x: px, y: py, touch } = pointerState();
+      const edge = 8;
+      // 40px clears a fingertip, 16px keeps a cursor off the tooltip
+      const [x, y] = touch
+        ? [px - w / 2, py - 40 - h >= edge ? py - 40 - h : py + 40]
+        : [px + 16 + w + edge > window.innerWidth ? px - 16 - w : px + 16, py - h / 2];
+      const cx = Math.min(Math.max(x, edge), window.innerWidth - w - edge);
+      const cy = Math.min(Math.max(y, edge), window.innerHeight - h - edge);
+      // the pointer sits at `point` in chart space, translate back from the viewport
+      return [cx - (px - point[0]), cy - (py - point[1])];
     },
     textStyle: {
       fontFamily: FONT_FAMILY,
@@ -152,12 +190,17 @@ export function tooltipStyle(color: string) {
 export function registerTouchTooltip(
   chart: Pick<echarts.ECharts, "dispatchAction">,
   el: HTMLElement,
-  onReset?: () => void
+  onReset?: () => void,
+  onTap?: (x: number, y: number) => void
 ) {
-  attachTouchTooltipGate(el, () => {
-    chart.dispatchAction({ type: "hideTip" });
-    onReset?.();
-  });
+  attachTouchTooltipGate(
+    el,
+    () => {
+      chart.dispatchAction({ type: "hideTip" });
+      onReset?.();
+    },
+    onTap
+  );
 }
 
 export interface TooltipRow {
@@ -204,7 +247,10 @@ export function tooltipTable(head: string, rows: TooltipRow[], headers?: string[
         .map(rowHtml)
         .join("")}</tfoot>`
     : "";
-  return `<table class="lh-sm"><thead><tr><th colspan="${colCount}" class="fw-bold text-center pb-1">${head}</th></tr></thead><tbody>${headerRow}${body}</tbody>${foot}</table>`;
+  const thead = head
+    ? `<thead><tr><th colspan="${colCount}" class="fw-bold text-center pb-1">${head}</th></tr></thead>`
+    : "";
+  return `<table class="lh-sm">${thead}<tbody>${headerRow}${body}</tbody>${foot}</table>`;
 }
 
 export function forecastGrid() {
@@ -265,10 +311,40 @@ export function forecastXAxes(
         show: true,
         showMinLine: false,
         showMaxLine: false,
-        lineStyle: { color: colors.border || "", type: "dashed" },
+        lineStyle: { color: colors.muted || "", type: "solid" },
       },
     },
   ];
+}
+
+// hidden value axis aligned with the category bands (slot i spans i-0.5..i+0.5)
+export function boundaryAxis(count: number) {
+  return {
+    type: "value",
+    min: -0.5,
+    max: count - 0.5,
+    show: false,
+    axisPointer: { show: false, triggerTooltip: false },
+  };
+}
+
+// vertical marker lines at positions on the boundary axis, same style as the day dividers.
+// Above the series so cell borders can't cover a line sitting in the gap
+export function boundarySeries(positions: number[]) {
+  return {
+    type: "line",
+    xAxisIndex: 1,
+    data: [] as number[],
+    silent: true,
+    markLine: {
+      silent: true,
+      z: 3,
+      symbol: "none",
+      label: { show: false },
+      lineStyle: { color: colors.muted || "", type: "solid" },
+      data: positions.map((xAxis) => ({ xAxis })),
+    },
+  };
 }
 
 export function forecastYAxis(overrides: Record<string, unknown> = {}) {
@@ -276,7 +352,8 @@ export function forecastYAxis(overrides: Record<string, unknown> = {}) {
   return {
     type: "value",
     min: 0,
-    axisLine: { show: false },
+    // stay at the grid's side, not at zero of a hidden value x axis like the boundary axis
+    axisLine: { show: false, onZero: false },
     axisTick: { show: false },
     splitLine: {
       showMinLine: true,

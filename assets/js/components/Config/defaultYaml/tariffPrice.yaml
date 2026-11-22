@@ -4,7 +4,6 @@ price: # current price
   source: const
   value: 0.294 # EUR/kWh
 
-
 ## dynamic price (uncomment to use)
 
 #price: # current price

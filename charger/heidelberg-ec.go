@@ -57,7 +57,7 @@ func init() {
 	registry.AddCtx("heidelberg", NewHeidelbergECFromConfig)
 }
 
-// https://wallbox.heidelberg.com/wp-content/uploads/2021/05/EC_ModBus_register_table_20210222.pdf (newer)
+// https://www.amperfied.de/wp-content/uploads/2023/03/EC_ModBus_register_table_20210222_LW.pdf (newer)
 // https://cdn.shopify.com/s/files/1/0101/2409/9669/files/heidelberg-energy-control-modbus.pdf (older)
 
 // NewHeidelbergECFromConfig creates a HeidelbergEC charger from generic config

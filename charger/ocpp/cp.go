@@ -87,6 +87,16 @@ func (cp *CP) connectorByID(id int) *Connector {
 	return cp.connectors[id]
 }
 
+// markRebooted flags all connectors after a BootNotification.
+func (cp *CP) markRebooted() {
+	cp.mu.RLock()
+	defer cp.mu.RUnlock()
+
+	for _, conn := range cp.connectors {
+		conn.markRebooted()
+	}
+}
+
 func (cp *CP) connectorByTransactionID(id int) *Connector {
 	cp.mu.RLock()
 	defer cp.mu.RUnlock()
@@ -129,8 +139,16 @@ func (cp *CP) stopBootTimer() {
 
 func (cp *CP) connect(connect bool) {
 	cp.mu.Lock()
-	defer cp.mu.Unlock()
+	changed := cp.setConnected(connect)
+	cp.mu.Unlock()
 
+	cp.publishStatus(changed)
+}
+
+// setConnected updates the connection state and reports whether it changed.
+// Must be called with cp.mu held.
+func (cp *CP) setConnected(connect bool) bool {
+	changed := cp.connected != connect
 	cp.connected = connect
 
 	if connect {
@@ -139,6 +157,15 @@ func (cp *CP) connect(connect bool) {
 		})
 	} else {
 		cp.stopBootTimer()
+	}
+
+	return changed
+}
+
+// publishStatus must be called without cp.mu held, the status callback reads Connected().
+func (cp *CP) publishStatus(changed bool) {
+	if changed && cp.cs != nil {
+		cp.cs.publish()
 	}
 }
 
@@ -155,7 +182,12 @@ func (cp *CP) onTransportConnect() {
 	defer cp.mu.Unlock()
 
 	cp.stopBootTimer()
-	cp.bootTimer = time.AfterFunc(Timeout, cp.onBootTimeout)
+	// timer is passed by reference since the callback may fire before the assignment
+	var timer *time.Timer
+	timer = time.AfterFunc(Timeout, func() {
+		cp.endBootWait(&timer, "boot notification timeout")
+	})
+	cp.bootTimer = timer
 
 	// Proactively trigger BootNotification after a short delay.
 	// This helps chargers that don't send it spontaneously (e.g. Wallbox FW 6.x).
@@ -163,9 +195,8 @@ func (cp *CP) onTransportConnect() {
 	// Connected() check which would fail at this point.
 	time.AfterFunc(TriggerBootDelay, func() {
 		cp.mu.RLock()
-		// If BootNotification already arrived or timer was cancelled (disconnect),
-		// there is nothing to do.
-		if cp.bootTimer == nil || cp.BootNotificationResult != nil {
+		// BootNotification arrived, disconnect or newer connection: the timer has been replaced
+		if cp.bootTimer != timer {
 			cp.mu.RUnlock()
 			return
 		}
@@ -178,6 +209,10 @@ func (cp *CP) onTransportConnect() {
 			func(conf *remotetrigger.TriggerMessageConfirmation, err error) {
 				if err != nil {
 					cp.log.ERROR.Printf("trigger BootNotification response error: %v", err)
+					return
+				}
+				if conf != nil && conf.Status != remotetrigger.TriggerMessageStatusAccepted {
+					cp.endBootWait(&timer, "trigger BootNotification: "+string(conf.Status))
 				}
 			},
 			core.BootNotificationFeatureName,
@@ -188,19 +223,21 @@ func (cp *CP) onTransportConnect() {
 	})
 }
 
-// onBootTimeout is called when the BootNotification wait timer expires.
-func (cp *CP) onBootTimeout() {
+// endBootWait stops waiting for BootNotification if timer still belongs to the current connection.
+func (cp *CP) endBootWait(timer **time.Timer, reason string) {
 	cp.mu.Lock()
-	if cp.bootTimer == nil {
-		// timer was cancelled by disconnect or BootNotification
+	if cp.bootTimer != *timer {
+		// BootNotification arrived, disconnect or newer connection
 		cp.mu.Unlock()
 		return
 	}
-	cp.bootTimer = nil
+
+	cp.stopBootTimer()
+	changed := cp.setConnected(true)
 	cp.mu.Unlock()
 
-	cp.log.DEBUG.Printf("boot notification timeout, proceeding")
-	cp.connect(true)
+	cp.log.DEBUG.Printf("%s, proceeding", reason)
+	cp.publishStatus(changed)
 }
 
 func (cp *CP) Connected() bool {

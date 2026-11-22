@@ -1,5 +1,5 @@
 # STEP 1 build ui
-FROM --platform=$BUILDPLATFORM ghcr.io/voidzero-dev/vite-plus:0.2.6@sha256:de284eb61eb6ee5fe1da3824032ed6fb37827eecd597d0d796cacd4434f806ea AS node
+FROM --platform=$BUILDPLATFORM ghcr.io/voidzero-dev/vite-plus:1.7.0@sha256:dcdbe5282b3c2087fec3f5e38272b8e04939f1ef5c565b8bfec0cbfb66f238ae AS node
 
 USER root
 
@@ -21,7 +21,7 @@ RUN make ui
 
 
 # STEP 2 build executable binary
-FROM --platform=$BUILDPLATFORM golang:1.27.0-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27.3-alpine@sha256:fa3d596898d9f126af7c01d14ee7597bab3f39cccf392ef36b69fe77cd681f18 AS builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -69,6 +69,12 @@ RUN --mount=type=cache,target=${GOCACHE} --mount=type=cache,target=${GOMODCACHE}
 # STEP 3 build a small image including module support
 FROM alpine:3.23@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11
 
+# add labels
+LABEL org.opencontainers.image.documentation="https://docs.evcc.io"
+LABEL org.opencontainers.image.source="https://github.com/evcc-io/evcc"
+LABEL org.opencontainers.image.url="https://github.com/evcc-io/evcc"
+LABEL org.opencontainers.image.licenses="MIT"
+
 WORKDIR /app
 
 ENV TZ=Europe/Berlin
@@ -80,8 +86,6 @@ COPY --from=builder /build/evcc /usr/local/bin/evcc
 
 COPY packaging/docker/bin/* /app/
 
-# mDNS
-EXPOSE 5353/udp
 # EEBus
 EXPOSE 4712/tcp
 # mDNS
@@ -104,7 +108,7 @@ HEALTHCHECK \
   --timeout=5s \
   --start-period=30s \
   --retries=3 \
-  CMD wget -qO /dev/null http://localhost:7070 || exit 1
+  CMD wget -qO /dev/null "http://localhost:${EVCC_NETWORK_PORT:-7070}" || exit 1
 
 ENTRYPOINT [ "/app/entrypoint.sh" ]
 CMD [ "evcc" ]

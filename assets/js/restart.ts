@@ -4,10 +4,12 @@ import api from "./api";
 const restart = reactive({
   restartNeeded: false,
   restarting: false,
+  navigateHomeAfterRestart: false,
 });
 
 export async function performRestart() {
   restart.restarting = true;
+  restart.navigateHomeAfterRestart = false;
   try {
     await api.post("/system/shutdown");
   } catch (e: any) {

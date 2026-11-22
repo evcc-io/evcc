@@ -14,7 +14,10 @@ type pvMaxACPower struct {
 
 // Decorator returns the max AC power decorator
 func (m *pvMaxACPower) Decorator() func() float64 {
-	return staticFloat(m.MaxACPower)
+	if m.MaxACPower == 0 {
+		return nil
+	}
+	return func() float64 { return m.MaxACPower }
 }
 
 type pvMaxACPowerCtx struct {
@@ -27,10 +30,14 @@ type pvMaxACPowerCtx struct {
 // float plugin like the SunSpec nameplate rating. Since the rating is constant, the
 // plugin is read once. Unavailable or zero means not configured.
 func (m *pvMaxACPowerCtx) Decorator(ctx context.Context) func() float64 {
+	var power float64
 	get, err := resolveFloat(ctx, m.MaxACPower)
+	if err == nil && get != nil {
+		power, err = get()
+	}
 	if err != nil {
 		// not all devices expose the rating- must not fail configuration
 		util.NewLogger("meter").WARN.Printf("maxacpower: %v", err)
 	}
-	return staticFloat(floatOr0(get))
+	return (&pvMaxACPower{power}).Decorator()
 }

@@ -1,10 +1,17 @@
 package modbus
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"sync/atomic"
 	"testing"
 	"time"
 
+	gridx "github.com/grid-x/modbus"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/volkszaehler/mbmd/meters"
 )
 
 // TestSharedSettings ensures the largest delay and timeout wins for all
@@ -34,6 +41,40 @@ func TestSharedSettings(t *testing.T) {
 
 	// timeout has been applied to the physical connection
 	require.Equal(t, 3*time.Second, c1.physical.Connection.Timeout(3*time.Second))
+}
+
+type closeCounter struct {
+	meters.Connection
+	closed atomic.Int32
+}
+
+func (c *closeCounter) Close() {
+	c.closed.Add(1)
+	c.Connection.Close()
+}
+
+func TestSharedConnectionRelease(t *testing.T) {
+	uri := "localhost:15021"
+	conn := &closeCounter{Connection: meters.NewTCP(uri)}
+
+	ctx1, cancel1 := context.WithCancel(t.Context())
+	ctx2, cancel2 := context.WithCancel(t.Context())
+
+	_, err := registeredConnection(ctx1, uri, Tcp, conn)
+	require.NoError(t, err)
+
+	_, err = registeredConnection(ctx2, uri, Tcp, conn)
+	require.NoError(t, err)
+
+	cancel1()
+	require.Never(t, func() bool { return conn.closed.Load() > 0 }, 50*time.Millisecond, time.Millisecond)
+
+	cancel2()
+	require.Eventually(t, func() bool { return conn.closed.Load() == 1 }, time.Second, time.Millisecond)
+
+	mu.Lock()
+	defer mu.Unlock()
+	require.NotContains(t, connections, uri)
 }
 
 func TestParsePoint(t *testing.T) {
@@ -69,4 +110,10 @@ func TestSettingsProtocol(t *testing.T) {
 	for _, tc := range tc {
 		require.Equal(t, tc.res, tc.Protocol(), tc)
 	}
+}
+
+func TestIsException(t *testing.T) {
+	assert.True(t, IsException(fmt.Errorf("wrapped: %w", &gridx.Error{FunctionCode: 3, ExceptionCode: 2})))
+	assert.False(t, IsException(errors.New("timeout")))
+	assert.False(t, IsException(nil))
 }
