@@ -77,6 +77,14 @@ render: |
       type: holding
       decode: uint32
     scale: 0.01
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 33000 # Total energy charged into battery (kWh)
+      type: holding
+      decode: uint32
+    scale: 0.01
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
