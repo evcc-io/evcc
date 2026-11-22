@@ -110,30 +110,29 @@ render: |
   {{- if $curtail }}
   productionnominalmax: {{ .productionnominalmax }}
   {{- end }}
-  signals:
+  {{- define "ehive-input" }}
     source: http
     uri: http://127.0.0.1:3000/api/fnn
     timeout: 2s
-    cache: 0s
+    cache: 1s
     jq: >-
       if .version != 1 or .valid != true or
-        (.age_ms | type) != "number" or .age_ms < 0 or .age_ms > {{ int .maxagems }} or
+        (.age_ms | type) != "number" or .age_ms < 0 or .age_ms > {{ int .maxage }} or
         (.sequence | type) != "number" or .sequence < 1
       then error("ioManager snapshot is missing, invalid or stale") else . end
-      {{- range $input, $config := dict "di1" (dict "function" $d1 "polarity" .di1polarity) "di2" (dict "function" $d2 "polarity" .di2polarity) }}
-      {{- if ne $config.function "unused" }}
-      | if (.{{ $input }} | type) != "boolean" then error("ioManager input must be boolean") else . end
-      {{- end }}
-      {{- end }}
-      | {
-      {{- if and $curtail (and (ne $d1 "w3") (ne $d2 "w3")) }}
-        "w3": false,
-      {{- end }}
-      {{- $comma := "" }}
-      {{- range $input, $config := dict "di1" (dict "function" $d1 "polarity" .di1polarity) "di2" (dict "function" $d2 "polarity" .di2polarity) }}
-      {{- if ne $config.function "unused" }}
-        {{ $comma }}"{{ $config.function }}": {{ if eq $config.polarity "inverted" }}(.{{ $input }} | not){{ else }}.{{ $input }}{{ end }}
-        {{- $comma = "," }}
-      {{- end }}
-      {{- end }}
-      } | tojson
+      | if (.{{ .input }} | type) != "boolean" then error("ioManager input must be boolean") else .{{ .input }} end
+      {{- if eq .polarity "inverted" }} | not{{ end }}
+  {{- end }}
+  {{- if ne $d1 "unused" }}
+  {{ $d1 }}:
+  {{- template "ehive-input" (dict "input" "di1" "polarity" .di1polarity "maxage" .maxagems) }}
+  {{- end }}
+  {{- if ne $d2 "unused" }}
+  {{ $d2 }}:
+  {{- template "ehive-input" (dict "input" "di2" "polarity" .di2polarity "maxage" .maxagems) }}
+  {{- end }}
+  {{- if and $curtail (and (ne $d1 "w3") (ne $d2 "w3")) }}
+  w3:
+    source: const
+    value: false
+  {{- end }}
