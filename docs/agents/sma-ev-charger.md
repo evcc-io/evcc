@@ -64,6 +64,14 @@ evcc controls charging via the charging mode and leaves `ChrgApv` untouched. Acc
 - **verified**: without the Sunny Home Manager, the charger does not charge in PV surplus mode (evcc-io/evcc#33350).
 - **verified**: `Inverter.AcALim` keeps the last value written by evcc after the session. Charging started via the SMA app then uses that limit, even in fast charging mode (evcc-io/evcc#16071).
 
+## SEMP parameters endpoint
+
+`/SEMP/Parameters` is read only and complements the SEMP device document.
+
+- **verified**: the EV Charger (`EVC22-3AC-10`, 1.2.23.R) exposes `Measurement.Operation.EVeh.ChaStt`, `Measurement.Operation.EVeh.Health`, `Measurement.Operation.Health`, `Measurement.Operation.Evt.Msg`, `Measurement.ChaSess.WhIn`, `Measurement.Metering.GridMs.TotWIn.ChaSta`, `Measurement.Chrg.ModSw`, `Parameter.Chrg.ActChaMod`, `Parameter.Chrg.ChrgApv`, `Parameter.Chrg.ChrgLok`, `Parameter.Chrg.Plan.En`, `Parameter.Chrg.Plan.StopTm`, `Parameter.Chrg.StpWhenFl`, `Parameter.Chrg.StpWhenFlTm`, `Parameter.Inverter.OutPhs`, `Parameter.Nameplate.PkgRev` and `Setpoint.PlantControl.PCC.ChrgActCnt` (identical in evcc-io/evcc#13695 and evcc-io/evcc#25778).
+- Not exposed: limits (`AcALim`, `WMaxIn`, `AMinCha`), total energy and per phase values.
+- **unknown**: whether the eCharger provides this endpoint and which channels. Only the SEMP device document of eCharger firmware 2.7.22.R and 2.7.31.R has been seen (evcc-io/evcc discussion 33281, evcc-io/evcc#36465). The SEMP driver detects the channels on startup and only uses status and status reason when present.
+
 ## Power limits
 
 - SEMP device info of an eCharger reports `MinPowerConsumption` 1518 W (6 A at 253 V) and `MaxPowerConsumption` 11040 W (16 A, 3p at 230 V).
