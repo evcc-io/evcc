@@ -201,7 +201,8 @@ func (wb *SmaECharger) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return v != smaEChargerModeStop, nil
+	// the charger falls back to its default pv surplus mode on its own, report it as disabled to restore fast charging
+	return v == smaEChargerModeFast, nil
 }
 
 // Enable implements the api.Charger interface
