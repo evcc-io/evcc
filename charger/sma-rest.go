@@ -40,7 +40,6 @@ type SmaRest struct {
 	log          *util.Logger
 	uri          string // 192.168.XXX.XXX
 	cache        time.Duration
-	oldstate     sma.Code
 	measurementG util.Cacheable[[]smarest.Measurements]
 	parameterG   util.Cacheable[[]smarest.Parameters]
 }
@@ -179,14 +178,6 @@ func (wb *SmaRest) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	// Explicitly stop charging when the vehicle is connected to prevent unauthorised charging
-	if wb.oldstate == sma.StatusNotConnected && state != sma.StatusNotConnected {
-		if err := wb.Enable(false); err != nil {
-			return api.StatusNone, err
-		}
-	}
-	wb.oldstate = state
-
 	return sma.ChargeStatus(state)
 }
 
@@ -215,7 +206,12 @@ func (wb *SmaRest) StatusReason() (api.Reason, error) {
 // Enabled implements the api.Charger interface
 func (wb *SmaRest) Enabled() (bool, error) {
 	mode, err := wb.mode()
-	return mode != sma.ModeStop, err
+	if err != nil {
+		return false, err
+	}
+
+	// the eCharger falls back to its default pv surplus mode on its own, report it as disabled to restore fast charging
+	return mode == sma.ModeFast, nil
 }
 
 // Enable implements the api.Charger interface

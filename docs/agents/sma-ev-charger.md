@@ -52,9 +52,17 @@ App or RFID release enables charging on its own and conflicts with energy manage
 
 ## Control paths
 
-- **REST**: mode 4718/4721 for enable, `Inverter.AcALim` for current. Only 4721 counts as disabled. The EV Charger rotary switch must be on boost, `Measurement.Chrg.ModSw` is only meaningful there, the eCharger reports it without a physical switch. Elevated rights ("Administrator" or installer) are required for limits. Home Assistant (`alengwenus/ha-sma-ev-charger`) exposes the same channels and confirms REST works on the eCharger. Toggling between boost and stop was confirmed working on an EV Charger (`alengwenus/ha-sma-ev-charger#1`).
+- **REST**: mode 4718/4721 for enable, `Inverter.AcALim` for current. Only 4718 counts as enabled. The EV Charger rotary switch must be on boost, `Measurement.Chrg.ModSw` is only meaningful there, the eCharger reports it without a physical switch. Elevated rights ("Administrator" or installer) are required for limits. Home Assistant (`alengwenus/ha-sma-ev-charger`) exposes the same channels and confirms REST works on the eCharger. Toggling between boost and stop was confirmed working on an EV Charger (`alengwenus/ha-sma-ev-charger#1`).
 - **SEMP**: `On` plus `RecommendedPowerConsumption`, sent at least once per minute. eCharger firmware 2.7.31.R accepts but ignores SEMP commands and charges at full power (evcc-io/evcc#36465). A power cycle helps temporarily.
-- **Modbus**: mode 4718/4721 for enable, `WMaxIn` for power. The charger switches 1p/3p internally based on the power limit (120 s changeover pause, manual 8.13.2).
+- **Modbus**: mode 4718/4721 for enable, only 4718 counts as enabled, `WMaxIn` for power. The charger switches 1p/3p internally based on the power limit (120 s changeover pause, manual 8.13.2).
+
+## Charging mode
+
+- **verified**: on the eCharger, switching the mode via REST stops and starts charging. The charger event log shows "Parameteränderung für Parameter Parameter.Chrg.ActChaMod ... von Wert Schnellladen auf Ladestopp" followed by "Ladestation wechselt in Ladebetrieb Ladestopp" (evcc-io/evcc#16071).
+- **verified**: the eCharger falls back to its default mode "Laden mit PV-Überschuss" (4719) on its own, also while controlled by evcc (evcc-io/evcc#16071). The default mode is reportedly configurable on the charger. Treating only 4718 as enabled lets evcc restore fast charging.
+- **verified**: the eCharger reports `Measurement.Chrg.ModSw` 4950 (smart) without a physical switch, which made the rotary switch check fail on enable (evcc-io/evcc#16071, fixed by evcc-io/evcc#23789).
+- **verified**: without the Sunny Home Manager, the charger does not charge in PV surplus mode (evcc-io/evcc#33350).
+- **verified**: `Inverter.AcALim` keeps the last value written by evcc after the session. Charging started via the SMA app then uses that limit, even in fast charging mode (evcc-io/evcc#16071).
 
 ## Power limits
 
