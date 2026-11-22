@@ -43,7 +43,6 @@ type SmaRest struct {
 	oldstate     sma.Code
 	measurementG util.Cacheable[[]smarest.Measurements]
 	parameterG   util.Cacheable[[]smarest.Parameters]
-	isLegacyHw   bool
 }
 
 func init() {
@@ -117,7 +116,7 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 		return nil, err
 	}
 
-	wb.isLegacyHw = !strings.HasSuffix(model, "-20")
+	isLegacyHw := !strings.HasSuffix(model, "-20")
 
 	// get version
 	pkgRev, err := wb.getParameter("Parameter.Nameplate.PkgRev")
@@ -146,6 +145,28 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 
 	if lock == sma.AccessManagementOn.String() {
 		log.WARN.Println(`access management must be set to "Unlocked" instead of "App / RFID"`)
+	}
+
+	// pv surplus and target modes would regulate charging on their own
+	mode, err := wb.getParameter(sma.ChannelMode)
+	if err != nil {
+		return nil, err
+	}
+
+	if mode != sma.ModeFast.String() {
+		log.WARN.Printf("charging mode is %s, fast charging (%s) required", mode, sma.ModeFast)
+	}
+
+	// the eCharger has no rotary switch and reports a meaningless position
+	if isLegacyHw {
+		pos, err := wb.getMeasurement("Measurement.Chrg.ModSw")
+		if err != nil {
+			return nil, err
+		}
+
+		if pos == smarest.SwitchOeko {
+			log.WARN.Println("rotary switch must be set to fast charging")
+		}
 	}
 
 	return wb, nil
@@ -193,51 +214,22 @@ func (wb *SmaRest) StatusReason() (api.Reason, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *SmaRest) Enabled() (bool, error) {
-	res, err := wb.getParameter(sma.ChannelMode)
+	res, err := wb.getParameter(sma.ChannelRelease)
 	if err != nil {
 		return false, err
 	}
 
-	mode, err := sma.ParseCode(res)
-	if err != nil {
-		return false, err
-	}
-
-	switch mode {
-	case sma.ModeFast, sma.ModePVSurplus, sma.ModeTarget:
-		return true, nil
-	case sma.ModeStop:
-		return false, nil
-	default:
-		return false, fmt.Errorf("invalid charge mode: %d", mode)
-	}
+	return res == sma.ChargingReleased.String(), nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *SmaRest) Enable(enable bool) error {
+	val := sma.ChargingLocked
 	if enable {
-		res, err := wb.getMeasurement("Measurement.Chrg.ModSw")
-		if err != nil {
-			return err
-		}
-
-		if wb.isLegacyHw && res == smarest.SwitchOeko {
-			// Hardware mode switch is in the solar charging position.
-			// If the selector switch of the charger is in the wrong position (eco-charging and not fast charging),
-			// the charging process is started with eco-charging when it is activated,
-			// which may be desired when still integrated with SHM.
-			// Since evcc does not have full control over the charging station in this mode,
-			// a corresponding error is returned to indicate the incorrect switch position.
-			// If the charger is installed without SHM, charging in eco mode is not possible.
-			_ = wb.Send(value(sma.ChannelMode, sma.ModePVSurplus.String()))
-			return fmt.Errorf("charge mode switch not in fast-charging position - charger controlled by SHM")
-		}
-
-		// Switch in Fast charging position
-		return wb.Send(value(sma.ChannelMode, sma.ModeFast.String()))
+		val = sma.ChargingReleased
 	}
 
-	return wb.Send(value(sma.ChannelMode, sma.ModeStop.String()))
+	return wb.Send(value(sma.ChannelRelease, val.String()))
 }
 
 // MaxCurrent implements the api.Charger interface

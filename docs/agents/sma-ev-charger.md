@@ -51,7 +51,7 @@ App or RFID release enables charging on its own and conflicts with energy manage
 
 ## Control paths
 
-- **REST**: mode 4718/4721 for enable, `Inverter.AcALim` for current. Elevated rights ("Administrator" or installer) are required for limits. Home Assistant (`alengwenus/ha-sma-ev-charger`) exposes the same channels and confirms REST works on the eCharger.
+- **REST**: `ChrgApv` for enable, `Inverter.AcALim` for current, mode must stay on fast charging and the EV Charger rotary switch on boost. `Measurement.Chrg.ModSw` is only meaningful on the EV Charger, the eCharger reports it without a physical switch. Elevated rights ("Administrator" or installer) are required for limits. Home Assistant (`alengwenus/ha-sma-ev-charger`) exposes the same channels and confirms REST works on the eCharger.
 - **SEMP**: `On` plus `RecommendedPowerConsumption`, sent at least once per minute. eCharger firmware 2.7.31.R accepts but ignores SEMP commands and charges at full power (evcc-io/evcc#36465). A power cycle helps temporarily.
 - **Modbus**: `ChrgApv` for enable, `WMaxIn` for power, mode must stay on fast charging. The charger switches 1p/3p internally based on the power limit (120 s changeover pause, manual 8.13.2).
 
