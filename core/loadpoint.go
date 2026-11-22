@@ -1039,10 +1039,8 @@ func (lp *Loadpoint) actualMaxChargeCurrent() float64 {
 		}
 		return current
 	}
-	if lp.charging() {
-		return lp.offeredCurrent
-	}
-	return 0
+	// the charger may start drawing its offer any time, keep it reserved
+	return lp.offeredCurrent
 }
 
 // measuredMaxPhaseCurrent returns the highest measured phase current, 0 without

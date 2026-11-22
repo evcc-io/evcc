@@ -59,7 +59,7 @@ func TestSetLimitDeadlockPrevention(t *testing.T) {
 	lp := meterlessLoadpoint(chg, c, api.StatusB, 10)
 
 	siteCycle(t, c, lp)
-	assert.Equal(t, 0.0, c.GetMaxPhaseCurrent(), "not charging, hence no load")
+	assert.Equal(t, 10.0, c.GetMaxPhaseCurrent(), "offer is reserved")
 
 	chg.EXPECT().MaxCurrent(int64(16)).Return(nil)
 
@@ -89,9 +89,8 @@ func TestSetLimitWithMeterlessCircuitAndMeterlessCharger(t *testing.T) {
 	assert.Equal(t, 12.0, lp.offeredCurrent)
 }
 
-// a loadpoint that has been offered current but never draws it must not block
-// another loadpoint on the same circuit
-func TestSetLimitMeterlessDoesNotBlockOtherLoadpoint(t *testing.T) {
+// an offered but not yet drawn current stays reserved, the charger may start any time
+func TestSetLimitMeterlessReservesOffer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	c, err := circuit.New(util.NewLogger("circuit"), "main", 16, 0, nil, 0)
@@ -103,10 +102,11 @@ func TestSetLimitMeterlessDoesNotBlockOtherLoadpoint(t *testing.T) {
 
 	siteCycle(t, c, lp1, lp2)
 
-	chg2.EXPECT().MaxCurrent(int64(16)).Return(nil)
+	chg2.EXPECT().Enable(false).Return(nil)
 
 	require.NoError(t, lp2.setLimit(16))
-	assert.Equal(t, 16.0, lp2.offeredCurrent)
+	assert.False(t, lp2.enabled)
+	assert.Equal(t, 0.0, lp2.offeredCurrent)
 }
 
 // once both loadpoints charge the circuit limit applies again
