@@ -218,7 +218,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				}
 			}
 
-			var eg errgroup.Group
+			var writes []func() error
 
 			switch mode {
 			case api.BatteryNormal:
@@ -230,33 +230,33 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				}
 
 				if strategy != nil {
-					eg.Go(func() error {
+					writes = append(writes, func() error {
 						return m.conn.Write(rct.PowerMngSocStrategy, []byte{*strategy})
 					})
 				}
 
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
 				})
 
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MaxSoc/100))
 				})
 
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(0))
 				})
 
 			case api.BatteryHoldDischarge:
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
 				})
 
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MaxSoc/100))
 				})
 
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					// hold at current SoC (not MaxSoc): otherwise the gap between current
 					// and target SoC lets the inverter charge from the grid (#31280)
 					soc, err := m.queryFloat(rct.BatterySoC)
@@ -267,46 +267,46 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				})
 
 			case api.BatteryCharge:
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					return m.conn.Write(rct.PowerMngUseGridPowerEnable, []byte{1})
 				})
 
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(-batteryPowerLimits.MaxChargePower))
 				})
 
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					// can't go lower than 5%
 					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(0.05))
 				})
 
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
 				})
 
 			case api.BatteryHoldCharge:
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
 				})
 
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
 				})
 
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MinSoc/100))
 				})
 
 			case api.BatteryDischarge:
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(batteryPowerLimits.MaxDischargePower))
 				})
 
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
 				})
 
-				eg.Go(func() error {
+				writes = append(writes, func() error {
 					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
 				})
 
@@ -314,7 +314,17 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				return errInvalidBatteryMode(mode)
 			}
 
-			return eg.Wait()
+			// write sequentially, the inverter drops back-to-back writes (#36498)
+			for i, write := range writes {
+				if i > 0 {
+					time.Sleep(50 * time.Millisecond)
+				}
+				if err := write(); err != nil {
+					return err
+				}
+			}
+
+			return nil
 		}
 
 		implement.Has(m, implement.BatteryController(m.getBatteryModes, batteryMode))
