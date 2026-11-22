@@ -64,10 +64,12 @@ const (
 	smaEChargerRegMode       = 41471 // ENUM32
 	smaEChargerRegRelease    = 41475 // ENUM32
 	smaEChargerRegChargeLock = 41477 // ENUM32, access management: free charging mode or app/RFID release
+	smaEChargerRegStpWhenFl  = 41485 // UINT32, disconnect after full charge
 	smaEChargerRegSetpoint   = 44383 // INT32 W
 	smaEChargerRegMinPower   = 44387 // INT32 W
 
-	smaEChargerChargeLockOn = 1129
+	smaEChargerYes          = 1129
+	smaEChargerChargeLockOn = smaEChargerYes
 	smaEChargerReleased     = 5172
 	smaEChargerModeFast     = 4718
 	smaEChargerModeStop     = 4721
@@ -116,6 +118,11 @@ func NewSmaECharger(ctx context.Context, settings modbus.Settings) (api.Charger,
 		return nil, fmt.Errorf("mode: %w", err)
 	} else if v != smaEChargerModeStop && v != smaEChargerModeFast {
 		log.WARN.Printf("charging mode is %d, fast charging (%d) required", v, smaEChargerModeFast)
+	}
+
+	// disconnecting after full charge ends the session on the charger side
+	if v, err := wb.readHolding32(smaEChargerRegStpWhenFl); err == nil && v == smaEChargerYes {
+		log.WARN.Println(`"Disconnect after full charge" must be set to "No"`)
 	}
 
 	return wb, nil
@@ -443,6 +450,7 @@ func (wb *SmaECharger) Diagnose() {
 		{"Mode", smaEChargerRegMode},
 		{"Release", smaEChargerRegRelease},
 		{"Charge lock", smaEChargerRegChargeLock},
+		{"Disconnect after full charge", smaEChargerRegStpWhenFl},
 		{"Max power", smaEChargerRegSetpoint},
 		{"Min power", smaEChargerRegMinPower},
 		{"Rated max current", smaEChargerRegMaxCurrent},
