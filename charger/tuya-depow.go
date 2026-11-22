@@ -185,17 +185,6 @@ func tuyaDepowSteps(dps map[string]any) []int64 {
 	return tuyaDepowDefaultSteps
 }
 
-// tuyaDepowStep returns the highest supported current not exceeding the requested current
-func tuyaDepowStep(steps []int64, current int64) int64 {
-	res := steps[0]
-	for _, s := range steps {
-		if s <= current {
-			res = s
-		}
-	}
-	return res
-}
-
 // Status implements the api.Charger interface
 func (wb *TuyaDepow) Status() (api.ChargeStatus, error) {
 	dps, err := wb.conn.Dps()
@@ -262,7 +251,7 @@ func (wb *TuyaDepow) Enable(enable bool) error {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 
-	// start/stop is write-only, the charging current must stay within the supported steps
+	// start/stop is write-only, the charging current must be re-sent
 	set := map[string]any{tuyaDepowDpCharge: enable}
 	if enable && tuyaDepowInt(dps[tuyaDepowDpCurrent]) != wb.current {
 		set[tuyaDepowDpCurrent] = wb.current
@@ -283,7 +272,8 @@ func (wb *TuyaDepow) MaxCurrent(current int64) error {
 		return err
 	}
 
-	step := tuyaDepowStep(tuyaDepowSteps(dps), current)
+	minCurrent, maxCurrent := tuyaDepowLimits(dps)
+	step := min(max(current, minCurrent), maxCurrent)
 
 	wb.mu.Lock()
 	wb.current = step
@@ -296,13 +286,13 @@ func (wb *TuyaDepow) MaxCurrent(current int64) error {
 	return wb.conn.Set(map[string]any{tuyaDepowDpCurrent: step})
 }
 
-// tuyaDepowLimits returns the lowest and highest supported step, limited by the installation maximum
+// tuyaDepowLimits returns the lowest and highest supported current, limited by the installation maximum
 func tuyaDepowLimits(dps map[string]any) (int64, int64) {
 	steps := tuyaDepowSteps(dps)
 	maxCurrent := steps[len(steps)-1]
 
 	if limit := tuyaDepowInt(dps[tuyaDepowDpMaxConfig]); limit > 0 {
-		maxCurrent = tuyaDepowStep(steps, min(maxCurrent, limit))
+		maxCurrent = max(steps[0], min(maxCurrent, limit))
 	}
 
 	return steps[0], maxCurrent

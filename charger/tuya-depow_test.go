@@ -7,16 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTuyaDepowStep(t *testing.T) {
-	for _, tc := range []struct {
-		current, expected int64
-	}{
-		{5, 6}, {6, 6}, {7, 6}, {8, 8}, {9, 8}, {12, 10}, {13, 13}, {15, 13}, {16, 16}, {32, 16},
-	} {
-		assert.Equal(t, tc.expected, tuyaDepowStep(tuyaDepowDefaultSteps, tc.current), tc.current)
-	}
-}
-
 func TestTuyaDepowStatus(t *testing.T) {
 	for _, tc := range []struct {
 		code     any
@@ -40,7 +30,7 @@ func TestTuyaDepowLimits(t *testing.T) {
 	}{
 		{map[string]any{}, 6, 16},
 		{map[string]any{"107": "[6, 8, 10, 13, 16]", "152": float64(16)}, 6, 16},
-		{map[string]any{"107": "[6, 8, 10, 13, 16]", "152": float64(12)}, 6, 10},
+		{map[string]any{"107": "[6, 8, 10, 13, 16]", "152": float64(12)}, 6, 12},
 		{map[string]any{"107": "[6, 8, 10, 13, 16, 20, 25, 32]", "152": float64(32)}, 6, 32},
 	} {
 		minCurrent, maxCurrent := tuyaDepowLimits(tc.dps)
