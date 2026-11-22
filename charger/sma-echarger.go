@@ -62,16 +62,15 @@ const (
 	smaEChargerRegMaxCurrent = 40480 // UINT32 0.001 A
 	smaEChargerRegMinCurrent = 41473 // UINT32 0.1 A
 	smaEChargerRegMode       = 41471 // ENUM32
-	smaEChargerRegEnable     = 41475 // ENUM32
+	smaEChargerRegRelease    = 41475 // ENUM32
 	smaEChargerRegChargeLock = 41477 // ENUM32, access management: free charging mode or app/RFID release
 	smaEChargerRegSetpoint   = 44383 // INT32 W
 	smaEChargerRegMinPower   = 44387 // INT32 W
 
-	smaEChargerDisabled      = 5171
-	smaEChargerEnabled       = 5172
 	smaEChargerChargeLockOn  = 1129
 	smaEChargerChargeLockOff = 1130
 	smaEChargerModeFast      = 4718
+	smaEChargerModeStop      = 4721
 
 	smaEChargerNaN32 = 0x80000000
 )
@@ -122,7 +121,7 @@ func NewSmaECharger(ctx context.Context, settings modbus.Settings) (api.Charger,
 	// pv surplus and target modes would regulate charging on their own
 	if v, err := wb.readHolding32(smaEChargerRegMode); err != nil {
 		return nil, fmt.Errorf("mode: %w", err)
-	} else if v != smaEChargerModeFast {
+	} else if v != smaEChargerModeStop && v != smaEChargerModeFast {
 		log.WARN.Printf("charging mode is %d, fast charging (%d) required", v, smaEChargerModeFast)
 	}
 
@@ -197,22 +196,22 @@ func (wb *SmaECharger) StatusReason() (api.Reason, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *SmaECharger) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(smaEChargerRegEnable, 2)
+	v, err := wb.readHolding32(smaEChargerRegMode)
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint32(b) == smaEChargerEnabled, nil
+	return v != smaEChargerModeStop, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *SmaECharger) Enable(enable bool) error {
-	val := uint32(smaEChargerDisabled)
+	mode := uint32(smaEChargerModeStop)
 	if enable {
-		val = smaEChargerEnabled
+		mode = smaEChargerModeFast
 	}
 
-	return wb.write(smaEChargerRegEnable, val)
+	return wb.write(smaEChargerRegMode, mode)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -449,7 +448,7 @@ func (wb *SmaECharger) Diagnose() {
 		reg  uint16
 	}{
 		{"Mode", smaEChargerRegMode},
-		{"Enable", smaEChargerRegEnable},
+		{"Release", smaEChargerRegRelease},
 		{"Charge lock", smaEChargerRegChargeLock},
 		{"Max power", smaEChargerRegSetpoint},
 		{"Min power", smaEChargerRegMinPower},
