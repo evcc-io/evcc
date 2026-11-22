@@ -314,11 +314,8 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				return errInvalidBatteryMode(mode)
 			}
 
-			// write sequentially, the inverter drops back-to-back writes (#36498)
-			for i, write := range writes {
-				if i > 0 {
-					time.Sleep(50 * time.Millisecond)
-				}
+			// write sequentially, the inverter drops concurrent writes (#36498)
+			for _, write := range writes {
 				if err := write(); err != nil {
 					return err
 				}
