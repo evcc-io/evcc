@@ -7,8 +7,8 @@ capabilities: ["mA", "1p3p", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
   description:
-    de: Firmware 2.7 oder neuer. Der Modbus TCP Server muss aktiviert sein. Der Charger darf nicht gleichzeitig vom Sunny Home Manager gesteuert werden. Die Zugriffsverwaltung muss auf "Entsperrt" stehen und "Trennung nach Vollladung" auf "Nein".
-    en: Firmware 2.7 or newer. The Modbus TCP server must be enabled. The charger must not be controlled by the Sunny Home Manager at the same time. Access management must be set to "Unlocked" and "Disconnect after full charge" to "No".
+    de: Firmware 2.7 oder neuer. Der Modbus TCP Server muss aktiviert sein. Der Charger darf nicht gleichzeitig vom Sunny Home Manager gesteuert werden. "Trennung nach Vollladung" muss auf "Nein" stehen.
+    en: Firmware 2.7 or newer. The Modbus TCP server must be enabled. The charger must not be controlled by the Sunny Home Manager at the same time. "Disconnect after full charge" must be set to "No".
 discovery:
   hostname: ["sma*"]
   mac: ["0015BB", "0040AD"]

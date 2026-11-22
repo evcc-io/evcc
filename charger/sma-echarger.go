@@ -68,7 +68,7 @@ const (
 	smaEChargerRegMinPower   = 44387 // INT32 W
 
 	smaEChargerChargeLockOn  = 1129
-	smaEChargerChargeLockOff = 1130
+	smaEChargerReleased      = 5172
 	smaEChargerModeFast      = 4718
 	smaEChargerModeStop      = 4721
 
@@ -109,13 +109,6 @@ func NewSmaECharger(ctx context.Context, settings modbus.Settings) (api.Charger,
 	wb := &SmaECharger{
 		conn:   conn,
 		phases: 3,
-	}
-
-	// app or RFID release enables charging on its own and conflicts with charging control
-	if v, err := wb.readHolding32(smaEChargerRegChargeLock); err != nil {
-		return nil, fmt.Errorf("charge lock: %w", err)
-	} else if v == smaEChargerChargeLockOn {
-		log.WARN.Println(`access management must be set to "Unlocked" instead of "App / RFID"`)
 	}
 
 	// pv surplus and target modes would regulate charging on their own
@@ -180,14 +173,13 @@ var _ api.StatusReasoner = (*SmaECharger)(nil)
 
 // StatusReason implements the api.StatusReasoner interface
 func (wb *SmaECharger) StatusReason() (api.Reason, error) {
-	v, err := wb.read32(smaEChargerRegStatus, 1)
-	if err != nil || v[0] != 5169 {
+	lock, err := wb.readHolding32(smaEChargerRegChargeLock)
+	if err != nil || lock != smaEChargerChargeLockOn {
 		return api.ReasonUnknown, err
 	}
 
-	// locked status may also be caused by disabling charging, only the charge lock requires authorization
-	lock, err := wb.readHolding32(smaEChargerRegChargeLock)
-	if err != nil || lock != smaEChargerChargeLockOn {
+	release, err := wb.readHolding32(smaEChargerRegRelease)
+	if err != nil || release == smaEChargerReleased {
 		return api.ReasonUnknown, err
 	}
 
