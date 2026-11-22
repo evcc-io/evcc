@@ -6,10 +6,11 @@ const (
 	MinAcceptedVersion = "1.2.23"
 	TimestampFormat    = "2006-01-02T15:04:05.000Z"
 
-	StatusA       = float64(200111) // Not connected
-	StatusB       = float64(200112) // Connected and not charging
-	StatusC       = float64(200113) // Connected and charging
-	ChargerLocked = float64(5169)   // Charger locked
+	StatusA        = float64(200111) // Not connected
+	StatusB        = float64(200112) // Connected and not charging
+	StatusC        = float64(200113) // Connected and charging
+	StatusFinished = float64(200114) // Charge target reached
+	StatusLocked   = float64(5169)   // Connected, waiting for charging release
 
 	SwitchOeko = float64(4950) // Switch in PV Loading (Optimized or Planned PV loading)
 	SwitchFast = float64(4718) // Switch in Fast Charge Mode
@@ -19,11 +20,11 @@ const (
 	PlanCharge = "4720" // Laden mit Vorgabe - 4720
 	StopCharge = "4721" // Ladestopp - 4721
 
-	ChargerAppLockEnabled  = "1129"
-	ChargerAppLockDisabled = "1130"
+	AccessManagementOn  = "1129" // charging release via app or RFID required
+	AccessManagementOff = "1130"
 
-	ChargerManualLockEnabled  = "5171"
-	ChargerManualLockDisabled = "5172"
+	ChargingLocked   = "5171"
+	ChargingReleased = "5172"
 )
 
 type ErrUnknownMeasurement struct {

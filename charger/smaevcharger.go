@@ -137,13 +137,10 @@ func NewSmaevcharger(uri, user, password string, cache time.Duration) (api.Charg
 		return nil, fmt.Errorf("charger firmware version not supported - please update >= %s", smaevcharger.MinAcceptedVersion)
 	}
 
-	// Prepare charger: disable App Lock functionality.
-	// This option have been introduced with 1.2.23 and will lock the charger
-	// until unlocked via SMA App. Unfortunately this Lock option will overwrite
-	// the status of the charger and prevent ev detection
+	// access management requires charging release via app or RFID and a locked release stops charging
 	err = wb.Send(
-		value("Parameter.Chrg.ChrgLok", smaevcharger.ChargerAppLockDisabled),
-		value("Parameter.Chrg.ChrgApv", smaevcharger.ChargerManualLockEnabled),
+		value("Parameter.Chrg.ChrgLok", smaevcharger.AccessManagementOff),
+		value("Parameter.Chrg.ChrgApv", smaevcharger.ChargingReleased),
 	)
 	if err != nil {
 		return nil, err
@@ -170,13 +167,30 @@ func (wb *Smaevcharger) Status() (api.ChargeStatus, error) {
 	switch state {
 	case smaevcharger.StatusA:
 		return api.StatusA, nil
-	case smaevcharger.StatusB:
+	case smaevcharger.StatusB, smaevcharger.StatusFinished, smaevcharger.StatusLocked:
 		return api.StatusB, nil
 	case smaevcharger.StatusC:
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid state: %.0f", state)
 	}
+}
+
+var _ api.StatusReasoner = (*Smaevcharger)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (wb *Smaevcharger) StatusReason() (api.Reason, error) {
+	state, err := wb.getMeasurement("Measurement.Operation.EVeh.ChaStt")
+	if err != nil || state != smaevcharger.StatusLocked {
+		return api.ReasonUnknown, err
+	}
+
+	lock, err := wb.getParameter("Parameter.Chrg.ChrgLok")
+	if err != nil || lock != smaevcharger.AccessManagementOn {
+		return api.ReasonUnknown, err
+	}
+
+	return api.ReasonWaitingForAuthorization, nil
 }
 
 // Enabled implements the api.Charger interface

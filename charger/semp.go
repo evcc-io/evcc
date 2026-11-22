@@ -137,6 +137,7 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 	// Check if device supports status reporting via Parameters endpoint
 	if _, err := wb.getParameter("Measurement.Operation.EVeh.ChaStt"); err == nil {
 		wb.hasStatusParam = true
+		implement.Has(wb, implement.StatusReasoner(wb.statusReason))
 	}
 
 	// initialize enabled state from the actual device status, not from the cached
@@ -254,7 +255,7 @@ func (wb *SEMP) Status() (api.ChargeStatus, error) {
 		switch value {
 		case "200111": // "nicht verbunden"
 			return api.StatusA, nil
-		case "200112": // "verbunden"
+		case "200112", "200114", "5169": // "verbunden", "Ladeziel erreicht", "gesperrt"
 			return api.StatusB, nil
 		case "200113": // "Ladevorgang aktiv"
 			return api.StatusC, nil
@@ -286,6 +287,21 @@ func (wb *SEMP) Status() (api.ChargeStatus, error) {
 
 	// Everything else (ready, waiting, etc.) -> Status B
 	return api.StatusB, nil
+}
+
+// statusReason implements the api.StatusReasoner interface
+func (wb *SEMP) statusReason() (api.Reason, error) {
+	value, err := wb.getParameter("Measurement.Operation.EVeh.ChaStt")
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
+
+	// SEMP cannot release charging, locked requires release via app or RFID
+	if value == "5169" {
+		return api.ReasonWaitingForAuthorization, nil
+	}
+
+	return api.ReasonUnknown, nil
 }
 
 // Enabled implements the api.Charger interface
