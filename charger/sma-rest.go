@@ -148,10 +148,6 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 		log.WARN.Println(`access management must be set to "Unlocked" instead of "App / RFID"`)
 	}
 
-	if err := wb.Send(value(sma.ChannelRelease, sma.ChargingLocked.String())); err != nil {
-		return nil, err
-	}
-
 	return wb, nil
 }
 
