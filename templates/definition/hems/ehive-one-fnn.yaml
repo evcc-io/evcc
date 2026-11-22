@@ -64,6 +64,17 @@ params:
     help:
       de: Erforderlich bei W3, S1 oder S2. Positive Nennleistung der Anlage als Bezugswert der Einspeisebegrenzung.
       en: Required for W3, S1 or S2. Positive rated installation power used as the reference for feed-in limits.
+  - name: maxagems
+    type: int
+    unit: ms
+    default: 5000
+    advanced: true
+    description:
+      de: Maximales Messwertalter
+      en: Maximum sample age
+    help:
+      de: Erfordert die ioManager-Snapshot-API v1. Veraltete oder ungültige Messungen werden abgelehnt. Größer als das konfigurierte Erfassungsintervall wählen.
+      en: Requires ioManager snapshot API v1. Stale or invalid samples are rejected. Set above the configured acquisition interval.
 render: |
   {{- $d1 := .di1function -}}
   {{- $d2 := .di2function -}}
@@ -88,6 +99,9 @@ render: |
   {{- if and $curtail (or (not (gt (float64 .productionnominalmax) 0.0)) (regexMatch "(?i)nan|inf" (toString .productionnominalmax))) -}}
     {{- fail "Einspeisebegrenzung erfordert positive Generatorleistung / feed-in limiting requires positive productionnominalmax" -}}
   {{- end -}}
+  {{- if le (int .maxagems) 0 -}}
+    {{- fail "maxagems must be positive" -}}
+  {{- end -}}
   type: fnn
   interval: 5s
   {{- if $dim }}
@@ -95,21 +109,31 @@ render: |
   {{- end }}
   {{- if $curtail }}
   productionnominalmax: {{ .productionnominalmax }}
-  {{- if and (ne $d1 "w3") (ne $d2 "w3") }}
-  w3:
-    source: const
-    value: false
   {{- end }}
-  {{- end }}
-  {{- range $input, $config := dict "di1" (dict "function" $d1 "polarity" .di1polarity) "di2" (dict "function" $d2 "polarity" .di2polarity) }}
-  {{- if ne $config.function "unused" }}
-  {{ $config.function }}:
+  signals:
     source: http
-    uri: http://127.0.0.1:3000/api/gpio
+    uri: http://127.0.0.1:3000/api/fnn
     timeout: 2s
+    cache: 0s
     jq: >-
-      if (.{{ $input }} | type) == "boolean" then
-        {{ if eq $config.polarity "inverted" }}(.{{ $input }} | not){{ else }}.{{ $input }}{{ end }}
-      else error("ioManager input must be boolean") end
-  {{- end }}
-  {{- end }}
+      if .version != 1 or .valid != true or
+        (.age_ms | type) != "number" or .age_ms < 0 or .age_ms > {{ int .maxagems }} or
+        (.sequence | type) != "number" or .sequence < 1
+      then error("ioManager snapshot is missing, invalid or stale") else . end
+      {{- range $input, $config := dict "di1" (dict "function" $d1 "polarity" .di1polarity) "di2" (dict "function" $d2 "polarity" .di2polarity) }}
+      {{- if ne $config.function "unused" }}
+      | if (.{{ $input }} | type) != "boolean" then error("ioManager input must be boolean") else . end
+      {{- end }}
+      {{- end }}
+      | {
+      {{- if and $curtail (and (ne $d1 "w3") (ne $d2 "w3")) }}
+        "w3": false,
+      {{- end }}
+      {{- $comma := "" }}
+      {{- range $input, $config := dict "di1" (dict "function" $d1 "polarity" .di1polarity) "di2" (dict "function" $d2 "polarity" .di2polarity) }}
+      {{- if ne $config.function "unused" }}
+        {{ $comma }}"{{ $config.function }}": {{ if eq $config.polarity "inverted" }}(.{{ $input }} | not){{ else }}.{{ $input }}{{ end }}
+        {{- $comma = "," }}
+      {{- end }}
+      {{- end }}
+      } | tojson

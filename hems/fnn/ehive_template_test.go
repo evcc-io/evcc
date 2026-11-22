@@ -17,7 +17,7 @@ import (
 func TestEhiveFlexibleInputs(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	var response atomic.Value
-	response.Store(map[string]any{"di1": false, "di2": false})
+	response.Store(ehiveResponse(false, false))
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(response.Load()); err != nil {
@@ -48,17 +48,9 @@ func TestEhiveFlexibleInputs(t *testing.T) {
 							instance, err := templates.RenderInstance(templates.Hems, params)
 							require.NoError(t, err)
 							require.Equal(t, "fnn", instance.Type)
-							for _, key := range []string{"w4", "w3", "s1", "s2"} {
-								if value, ok := instance.Other[key]; ok {
-									plugin, ok := value.(map[string]any)
-									require.True(t, ok, "%s plugin type", key)
-									if plugin["source"] == "http" {
-										plugin["uri"] = server.URL
-									}
-								}
-							}
+							instance.Other["signals"].(map[string]any)["uri"] = server.URL
 							set := func(value int) {
-								response.Store(map[string]any{"di1": value&1 != 0, "di2": value&2 != 0})
+								response.Store(ehiveResponse(value&1 != 0, value&2 != 0))
 							}
 							set(bits)
 							fnn, err := NewFromConfig(t.Context(), instance.Other, &stubSite{})
@@ -97,8 +89,7 @@ func TestEhiveFlexibleInputs(t *testing.T) {
 							}
 							verify(bits)
 							set(bits ^ 3)
-							require.NoError(t, fnn.runCurtail())
-							require.NoError(t, fnn.runDim())
+							require.NoError(t, fnn.runCycle())
 							verify(bits ^ 3)
 							checks++
 						})
@@ -141,7 +132,7 @@ func TestEhiveFlexibleValidation(t *testing.T) {
 func TestEhiveInvalidInputKeepsActiveLimit(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	var response atomic.Value
-	response.Store(map[string]any{"di1": true, "di2": true})
+	response.Store(ehiveResponse(true, true))
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(response.Load()); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -158,18 +149,18 @@ func TestEhiveInvalidInputKeepsActiveLimit(t *testing.T) {
 				}
 				instance, err := templates.RenderInstance(templates.Hems, params)
 				require.NoError(t, err)
-				instance.Other[signal].(map[string]any)["uri"] = server.URL
+				instance.Other["signals"].(map[string]any)["uri"] = server.URL
 				for _, bad := range []any{nil, 0, 1, "true", "false", []any{}, map[string]any{}} {
-					response.Store(map[string]any{input: polarity != "inverted"})
+					good := ehiveResponse(false, false)
+					good[input] = polarity != "inverted"
+					response.Store(good)
 					fnn, err := NewFromConfig(t.Context(), instance.Other, &stubSite{})
 					require.NoError(t, err)
 					beforeDim, beforePercent := fnn.MaxConsumptionPower(), fnn.CurtailedPercent()
-					response.Store(map[string]any{input: bad})
-					if signal == "w4" {
-						require.Error(t, fnn.runDim())
-					} else {
-						require.Error(t, fnn.runCurtail())
-					}
+					invalid := ehiveResponse(false, false)
+					invalid[input] = bad
+					response.Store(invalid)
+					require.Error(t, fnn.runCycle())
 					assert.Equal(t, beforeDim, fnn.MaxConsumptionPower())
 					assert.Equal(t, beforePercent, fnn.CurtailedPercent())
 				}
@@ -179,4 +170,59 @@ func TestEhiveInvalidInputKeepsActiveLimit(t *testing.T) {
 			}
 		}
 	}
+}
+
+func ehiveResponse(di1, di2 bool) map[string]any {
+	return map[string]any{"version": 1, "sequence": 1, "valid": true, "age_ms": 0, "di1": di1, "di2": di2}
+}
+
+func TestEhiveSnapshotContract(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	body := ehiveResponse(true, true)
+	status, calls := http.StatusOK, 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		w.WriteHeader(status)
+		_ = json.NewEncoder(w).Encode(body)
+	}))
+	defer server.Close()
+	instance, err := templates.RenderInstance(templates.Hems, map[string]any{
+		"template": "ehive-one-fnn", "di1function": "w3", "di2function": "w4",
+		"maxconsumptionpower": 4200, "productionnominalmax": 10000,
+	})
+	require.NoError(t, err)
+	instance.Other["signals"].(map[string]any)["uri"] = server.URL
+	c, err := NewFromConfig(t.Context(), instance.Other, &stubSite{})
+	require.NoError(t, err)
+	require.Equal(t, 1, calls)
+	for _, tc := range []struct {
+		key   string
+		value any
+	}{
+		{"version", nil}, {"version", 0}, {"valid", false}, {"valid", nil}, {"valid", "true"},
+		{"age_ms", nil}, {"age_ms", -1}, {"age_ms", 5001}, {"age_ms", "0"},
+		{"sequence", nil}, {"sequence", 0}, {"sequence", "1"},
+		{"di1", nil}, {"di2", nil},
+	} {
+		t.Run(fmt.Sprintf("%s/%v", tc.key, tc.value), func(t *testing.T) {
+			body = ehiveResponse(false, false)
+			body[tc.key] = tc.value
+			before := calls
+			require.Error(t, c.runCycle())
+			assert.Equal(t, before+1, calls)
+			assert.Equal(t, 0, *c.CurtailedPercent())
+			assert.Equal(t, 4200.0, *c.MaxConsumptionPower())
+			_, err := NewFromConfig(t.Context(), instance.Other, &stubSite{})
+			require.Error(t, err)
+		})
+	}
+	body = ehiveResponse(false, false)
+	status = http.StatusServiceUnavailable
+	require.Error(t, c.runCycle())
+	assert.Equal(t, 0, *c.CurtailedPercent())
+	assert.Equal(t, 4200.0, *c.MaxConsumptionPower())
+	status = http.StatusOK
+	require.NoError(t, c.runCycle())
+	assert.Equal(t, 100, *c.CurtailedPercent())
+	assert.Zero(t, *c.MaxConsumptionPower())
 }

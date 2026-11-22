@@ -31,6 +31,7 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		S1                   *plugin.Config
 		S2                   *plugin.Config
 		W4                   *plugin.Config
+		Signals              *plugin.Config
 		Interval             time.Duration
 	}{
 		Interval: 10 * time.Second,
@@ -38,6 +39,29 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	productionNominalMax := math.Abs(cc.MaxCurtailPower)
+	if cc.MaxPower > 0 {
+		productionNominalMax = cc.MaxPower
+	}
+	// ProductionNominalMax supersedes deprecated MaxCurtailPower/MaxPower
+	if cc.ProductionNominalMax > 0 {
+		productionNominalMax = math.Abs(cc.ProductionNominalMax)
+	}
+
+	if cc.Signals != nil {
+		if cc.W3 != nil || cc.W4 != nil || cc.S1 != nil || cc.S2 != nil {
+			return nil, errors.New("signals cannot be combined with individual contacts")
+		}
+		getter, err := cc.Signals.StringGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if getter == nil {
+			return nil, errors.New("missing signals getter")
+		}
+		return newSnapshotFnn(site, math.Abs(cc.MaxDimPower), productionNominalMax, getter, cc.Interval)
 	}
 
 	w3G, err := cc.W3.BoolGetter(ctx)
@@ -65,15 +89,6 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		return nil, err
 	}
 
-	productionNominalMax := math.Abs(cc.MaxCurtailPower)
-	if cc.MaxPower > 0 {
-		productionNominalMax = cc.MaxPower
-	}
-	// ProductionNominalMax supersedes deprecated MaxCurtailPower/MaxPower
-	if cc.ProductionNominalMax > 0 {
-		productionNominalMax = math.Abs(cc.ProductionNominalMax)
-	}
-
 	return NewFnn(site, math.Abs(cc.MaxDimPower), productionNominalMax, w3G, s1G, s2G, w4G, cc.Interval)
 }
 
@@ -96,10 +111,7 @@ func NewFnn(site site.API, maxDimPower, productionNominalMax float64, w3G, s1G, 
 	}
 
 	// read the relays once synchronously so limits are valid as soon as NewFnn returns
-	if err := c.runCurtail(); err != nil {
-		return nil, err
-	}
-	if err := c.runDim(); err != nil {
+	if err := c.runCycle(); err != nil {
 		return nil, err
 	}
 
@@ -115,6 +127,7 @@ type Fnn struct {
 	s1, s2, w3  func() (bool, error)
 	w4          func() (bool, error)
 	publishFunc func()
+	readSignals func() error
 
 	maxDimPower          float64
 	productionNominalMax float64
@@ -137,11 +150,7 @@ func (c *Fnn) SetUpdated(f func()) {
 // Run starts the FNN control loop. NewFnn already ran the first pass.
 func (c *Fnn) Run() {
 	for range time.Tick(c.interval) {
-		if err := c.runCurtail(); err != nil {
-			c.log.ERROR.Println(err)
-		}
-
-		if err := c.runDim(); err != nil {
+		if err := c.runCycle(); err != nil {
 			c.log.ERROR.Println(err)
 		}
 
@@ -151,59 +160,66 @@ func (c *Fnn) Run() {
 	}
 }
 
-// runCurtail evaluates curtailment rules and applies the appropriate limit.
-// No-op if no curtail input is configured.
-func (c *Fnn) runCurtail() error {
-	if c.w3 == nil {
-		return nil
-	}
-
-	rules := []struct {
-		get     func() (bool, error)
-		percent int
-	}{
-		{get: c.w3, percent: 0},
-		{get: c.s2, percent: 30},
-		{get: c.s1, percent: 60},
-	}
-
-	for _, rule := range rules {
-		if rule.get == nil {
-			continue
-		}
-
-		active, err := rule.get()
-		if err != nil {
+// runCycle validates all needed reads before changing limits or audit sessions.
+func (c *Fnn) runCycle() error {
+	if c.readSignals != nil {
+		if err := c.readSignals(); err != nil {
 			return err
 		}
-
-		if active {
-			return c.setProductionLimit(rule.percent)
-		}
 	}
-
-	// 100%
-	return c.setProductionLimit(100)
-}
-
-// runDim evaluates the dimming rule and applies the dim limit.
-// No-op if dim input is not configured.
-func (c *Fnn) runDim() error {
-	if c.w4 == nil {
-		return nil
-	}
-
-	active, err := c.w4()
+	percent, err := c.readCurtail()
 	if err != nil {
 		return err
 	}
-
-	limit := 0.0
-	if active {
-		limit = c.maxDimPower
+	limit, err := c.readDim()
+	if err != nil {
+		return err
 	}
+	if c.w3 != nil {
+		if err := c.setProductionLimit(percent); err != nil {
+			return err
+		}
+	}
+	if c.w4 != nil {
+		return c.setConsumptionLimit(limit)
+	}
+	return nil
+}
 
-	return c.setConsumptionLimit(limit)
+func (c *Fnn) readCurtail() (int, error) {
+	if c.w3 == nil {
+		return 100, nil
+	}
+	for _, rule := range []struct {
+		get     func() (bool, error)
+		percent int
+	}{{c.w3, 0}, {c.s2, 30}, {c.s1, 60}} {
+		if rule.get == nil {
+			continue
+		}
+		active, err := rule.get()
+		if err != nil {
+			return 0, err
+		}
+		if active {
+			return rule.percent, nil
+		}
+	}
+	return 100, nil
+}
+
+func (c *Fnn) readDim() (float64, error) {
+	if c.w4 == nil {
+		return 0, nil
+	}
+	active, err := c.w4()
+	if err != nil {
+		return 0, err
+	}
+	if active {
+		return c.maxDimPower, nil
+	}
+	return 0, nil
 }
 
 // setProductionLimit applies the curtailment limit.
