@@ -1,0 +1,115 @@
+template: ehive-one-fnn
+products:
+  - brand: eHive
+    description:
+      generic: One (FNN-Schaltkontakte, § 14a / § 9)
+params:
+  - name: di1function
+    type: choice
+    choice: [unused, w4, w3, s1, s2]
+    default: w4
+    description:
+      de: Funktion von DI1
+      en: DI1 function
+    help:
+      de: unused = unbenutzt, W4 = Verbrauch dimmen, W3 = 0 %, S1 = 60 %, S2 = 30 % Einspeisung. Jedes Signal darf nur einmal zugeordnet sein.
+      en: unused = not used, W4 = consumption dimming, W3 = 0%, S1 = 60%, S2 = 30% feed-in. Assign each signal only once.
+  - name: di1polarity
+    type: choice
+    choice: [normal, inverted]
+    default: normal
+    description:
+      de: Polarität von DI1
+      en: DI1 polarity
+    help:
+      de: normal = true ist aktiv, inverted = false ist aktiv. Mit der tatsächlichen Verdrahtung einschließlich Kabelbruch prüfen.
+      en: normal = true is active, inverted = false is active. Verify against actual wiring including a broken wire.
+  - name: di2function
+    type: choice
+    choice: [unused, w4, w3, s1, s2]
+    default: unused
+    description:
+      de: Funktion von DI2
+      en: DI2 function
+    help:
+      de: unused = unbenutzt, W4 = Verbrauch dimmen, W3 = 0 %, S1 = 60 %, S2 = 30 % Einspeisung. Zwei Eingänge erlauben zwei unabhängige Signale.
+      en: unused = not used, W4 = consumption dimming, W3 = 0%, S1 = 60%, S2 = 30% feed-in. Two inputs allow two independent signals.
+  - name: di2polarity
+    type: choice
+    choice: [normal, inverted]
+    default: normal
+    description:
+      de: Polarität von DI2
+      en: DI2 polarity
+    help:
+      de: normal = true ist aktiv, inverted = false ist aktiv. Mit der tatsächlichen Verdrahtung einschließlich Kabelbruch prüfen.
+      en: normal = true is active, inverted = false is active. Verify against actual wiring including a broken wire.
+  - name: maxconsumptionpower
+    type: float
+    unit: W
+    example: 4200
+    description:
+      de: Garantierte Mindestleistung (Pmin)
+      en: Guaranteed minimum power (Pmin)
+    help:
+      de: Erforderlich bei W4. Positives Verbrauchslimit des Hauptstromkreises während der Dimmung, anlagenspezifisch festlegen.
+      en: Required for W4. Positive root circuit consumption limit during dimming, set according to the installation.
+  - name: productionnominalmax
+    type: float
+    unit: Wp
+    example: 10000
+    description:
+      de: Installierte Generatorleistung
+      en: Installed generator power
+    help:
+      de: Erforderlich bei W3, S1 oder S2. Positive Nennleistung der Anlage als Bezugswert der Einspeisebegrenzung.
+      en: Required for W3, S1 or S2. Positive rated installation power used as the reference for feed-in limits.
+render: |
+  {{- $d1 := .di1function -}}
+  {{- $d2 := .di2function -}}
+  {{- $functions := list "unused" "w4" "w3" "s1" "s2" -}}
+  {{- if not (and (has $d1 $functions) (has $d2 $functions)) -}}
+    {{- fail "Unbekannte Eingangsfunktion / unknown input function" -}}
+  {{- end -}}
+  {{- if not (and (has .di1polarity (list "normal" "inverted")) (has .di2polarity (list "normal" "inverted"))) -}}
+    {{- fail "Unbekannte Polarität / unknown polarity" -}}
+  {{- end -}}
+  {{- if and (eq $d1 "unused") (eq $d2 "unused") -}}
+    {{- fail "Mindestens einen Eingang zuordnen / assign at least one input" -}}
+  {{- end -}}
+  {{- if and (ne $d1 "unused") (eq $d1 $d2) -}}
+    {{- fail "Jedes Signal nur einmal zuordnen / assign each signal only once" -}}
+  {{- end -}}
+  {{- $dim := or (eq $d1 "w4") (eq $d2 "w4") -}}
+  {{- $curtail := or (and (ne $d1 "unused") (ne $d1 "w4")) (and (ne $d2 "unused") (ne $d2 "w4")) -}}
+  {{- if and $dim (or (not (gt (float64 .maxconsumptionpower) 0.0)) (regexMatch "(?i)nan|inf" (toString .maxconsumptionpower))) -}}
+    {{- fail "W4 erfordert positives Pmin / W4 requires positive maxconsumptionpower" -}}
+  {{- end -}}
+  {{- if and $curtail (or (not (gt (float64 .productionnominalmax) 0.0)) (regexMatch "(?i)nan|inf" (toString .productionnominalmax))) -}}
+    {{- fail "Einspeisebegrenzung erfordert positive Generatorleistung / feed-in limiting requires positive productionnominalmax" -}}
+  {{- end -}}
+  type: fnn
+  interval: 5s
+  {{- if $dim }}
+  maxdimpower: {{ .maxconsumptionpower }}
+  {{- end }}
+  {{- if $curtail }}
+  productionnominalmax: {{ .productionnominalmax }}
+  {{- if and (ne $d1 "w3") (ne $d2 "w3") }}
+  w3:
+    source: const
+    value: false
+  {{- end }}
+  {{- end }}
+  {{- range $input, $config := dict "di1" (dict "function" $d1 "polarity" .di1polarity) "di2" (dict "function" $d2 "polarity" .di2polarity) }}
+  {{- if ne $config.function "unused" }}
+  {{ $config.function }}:
+    source: http
+    uri: http://127.0.0.1:3000/api/gpio
+    timeout: 2s
+    jq: >-
+      if (.{{ $input }} | type) == "boolean" then
+        {{ if eq $config.polarity "inverted" }}(.{{ $input }} | not){{ else }}.{{ $input }}{{ end }}
+      else error("ioManager input must be boolean") end
+  {{- end }}
+  {{- end }}
