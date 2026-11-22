@@ -67,10 +67,10 @@ const (
 	smaEChargerRegSetpoint   = 44383 // INT32 W
 	smaEChargerRegMinPower   = 44387 // INT32 W
 
-	smaEChargerChargeLockOn  = 1129
-	smaEChargerReleased      = 5172
-	smaEChargerModeFast      = 4718
-	smaEChargerModeStop      = 4721
+	smaEChargerChargeLockOn = 1129
+	smaEChargerReleased     = 5172
+	smaEChargerModeFast     = 4718
+	smaEChargerModeStop     = 4721
 
 	smaEChargerNaN32 = 0x80000000
 )
