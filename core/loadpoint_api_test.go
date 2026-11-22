@@ -31,7 +31,7 @@ func TestGetMaxPhaseCurrentPhaseSwitch(t *testing.T) {
 				phasesSwitched: clck.Now().Add(-tc.since),
 			}
 
-			assert.Equal(t, tc.want, lp.actualMaxChargeCurrent())
+			assert.Equal(t, tc.want, lp.GetMaxPhaseCurrent())
 		})
 	}
 }

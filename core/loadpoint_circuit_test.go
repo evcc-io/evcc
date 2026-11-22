@@ -163,7 +163,6 @@ func TestSetLimitCircuitKeepsMinCurrent(t *testing.T) {
 				enabled:        true,
 				offeredCurrent: 6,
 				chargeCurrents: []float64{5.9, 5.9, 5.9},
-				chargeCurrent:  5.9,
 			}
 
 			if tc.disable {
