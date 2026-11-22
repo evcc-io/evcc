@@ -138,12 +138,17 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 		return nil, fmt.Errorf("charger firmware version not supported - please update >= %s", smarest.MinAcceptedVersion)
 	}
 
-	// access management requires charging release via app or RFID and a locked release stops charging
-	err = wb.Send(
-		value(sma.ChannelAccessManagement, sma.AccessManagementOff.String()),
-		value(sma.ChannelRelease, sma.ChargingReleased.String()),
-	)
+	// app or RFID release enables charging on its own and conflicts with charging control
+	lock, err := wb.getParameter(sma.ChannelAccessManagement)
 	if err != nil {
+		return nil, err
+	}
+
+	if lock == sma.AccessManagementOn.String() {
+		log.WARN.Println(`access management must be set to "Unlocked" instead of "App / RFID"`)
+	}
+
+	if err := wb.Send(value(sma.ChannelRelease, sma.ChargingLocked.String())); err != nil {
 		return nil, err
 	}
 
