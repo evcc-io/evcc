@@ -67,8 +67,7 @@ func TestSetLimitDeadlockPrevention(t *testing.T) {
 	assert.Equal(t, 16.0, lp.offeredCurrent)
 }
 
-// the circuit limit is still enforced when the charger starts charging after the
-// circuit has been updated
+// an increase is capped at the remaining circuit headroom
 func TestSetLimitWithMeterlessCircuitAndMeterlessCharger(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -79,9 +78,6 @@ func TestSetLimitWithMeterlessCircuitAndMeterlessCharger(t *testing.T) {
 	lp := meterlessLoadpoint(chg, c, api.StatusB, 10)
 
 	siteCycle(t, c, lp)
-
-	chg.EXPECT().Status().Return(api.StatusC, nil)
-	require.NoError(t, lp.updateChargerStatus())
 
 	chg.EXPECT().MaxCurrent(int64(12)).Return(nil)
 
