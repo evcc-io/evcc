@@ -256,6 +256,25 @@ func TestApplyPlanGoalSoc(t *testing.T) {
 	assert.Equal(t, float32(40000), bat.SMax, "later goals must not raise s_max")
 }
 
+// TestPlanGoalsInHorizon guards that the displayed goals keep their soc above the limit (#36467)
+func TestPlanGoalsInHorizon(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	now := time.Now()
+	inside := []loadpoint.PlanGoal{
+		{Time: now.Add(2 * time.Hour), Soc: 75},
+		{Time: now.Add(5 * time.Hour), Soc: 90},
+	}
+
+	lp := loadpoint.NewMockAPI(ctrl)
+	lp.EXPECT().GetSocPlanGoals().Return(append(inside,
+		loadpoint.PlanGoal{Time: now.Add(100 * time.Hour), Soc: 90}, // beyond horizon
+		loadpoint.PlanGoal{Time: now.Add(-time.Hour), Soc: 90},      // past
+	))
+
+	assert.Equal(t, inside, planGoalsInHorizon(lp, 32))
+}
+
 // TestApplyPlanGoalBeyondHorizon guards that a plan beyond the horizon asks for the energy that
 // full power, after charging losses, cannot store between the horizon end and the plan time
 func TestApplyPlanGoalBeyondHorizon(t *testing.T) {

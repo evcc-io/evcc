@@ -85,3 +85,21 @@ VehicleAndBattery.args = { devices: [vehicle, battery] };
 
 export const MultipleDevices = Template.bind({});
 MultipleDevices.args = { devices: [vehicle, secondVehicle, battery, secondBattery] };
+
+const at = (h: number) => new Date(2025, 5, 12, h).toISOString();
+
+// the optimizer only plans up to the 80% limit, the 90% plan lifts it once the 75% plan has passed
+export const PlanGoalAboveLimit = Template.bind({});
+PlanGoalAboveLimit.args = {
+  devices: [
+    {
+      ...vehicle,
+      soc: (h) => clamp(22 + Math.max(0, Math.min(h, 30) - 26) * 14.5),
+      planGoals: [
+        { time: at(30), soc: 75 },
+        { time: at(33), soc: 90 },
+      ],
+    },
+    battery,
+  ],
+};

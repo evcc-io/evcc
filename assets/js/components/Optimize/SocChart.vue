@@ -30,6 +30,7 @@ export interface SocChartEntry {
 	title: string;
 	capacity: number; // kWh
 	color: string;
+	planGoals?: { time: string; soc: number }[];
 }
 
 export default defineComponent({
@@ -71,6 +72,10 @@ export default defineComponent({
 				t,
 				capacityWh > 0 ? ((soc[i] ?? 0) / capacityWh) * 100 : 0,
 			]);
+		},
+		// plan goals as set by the user, above the soc line where a later plan lifts the limit
+		goalSeries(): [number, number][] {
+			return (this.entry.planGoals || []).map((g) => [new Date(g.time).getTime(), g.soc]);
 		},
 		xAxes(): Record<string, unknown>[] {
 			const stepHours = is12hFormat() ? 6 : 4;
@@ -126,16 +131,35 @@ export default defineComponent({
 						lineStyle: { color: this.entry.color, ...lineDefaults },
 						areaStyle: { color: dimColor(this.entry.color) },
 					},
+					{
+						type: "scatter",
+						z: 4,
+						data: this.goalSeries,
+						symbol: "emptyCircle",
+						symbolSize: 8,
+						itemStyle: { color: this.entry.color, borderWidth: 2 },
+						label: {
+							show: true,
+							position: "top",
+							color: colors.muted || "",
+							formatter: (p: { value: [number, number] }) =>
+								this.fmtPercentage(p.value[1]),
+						},
+						silent: true,
+					},
 				],
 			};
 		},
 	},
 	methods: {
-		tooltipFormatter(params: { axisValue: number; value?: [number, number] }[]): string {
+		tooltipFormatter(
+			params: { axisValue: number; seriesIndex: number; value?: [number, number] }[]
+		): string {
 			const arr = Array.isArray(params) ? params : [params];
-			const v = arr[0]?.value?.[1];
+			const soc = arr.find((p) => p.seriesIndex === 0);
+			const v = soc?.value?.[1];
 			if (v == null || Number.isNaN(v)) return "";
-			const t = new Date(arr[0]!.axisValue);
+			const t = new Date(soc!.axisValue);
 			const head = `${this.weekdayShort(t)} ${this.fmtHourMinute(t)}`;
 			return tooltipTable(head, [{ values: [this.fmtPercentage(v)] }]);
 		},
