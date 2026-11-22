@@ -158,6 +158,11 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 		}
 	}
 
+	// disconnecting after full charge ends the session on the charger side
+	if v, err := wb.code(sma.ChrgStpWhenFl); err == nil && v == sma.Yes {
+		log.WARN.Println(`"Disconnect after full charge" must be set to "No"`)
+	}
+
 	return wb, nil
 }
 

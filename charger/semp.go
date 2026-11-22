@@ -147,6 +147,11 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 		implement.Has(wb, implement.StatusReasoner(wb.statusReason))
 	}
 
+	// disconnecting after full charge ends the session on the charger side
+	if v, err := wb.smaCode(sma.ChrgStpWhenFl); err == nil && v == sma.Yes {
+		log.WARN.Println(`"Disconnect after full charge" must be set to "No"`)
+	}
+
 	// initialize enabled state from the actual device status, not from the cached
 	// value Enabled() would return while the device is not running
 	status, err := wb.getDeviceStatus()

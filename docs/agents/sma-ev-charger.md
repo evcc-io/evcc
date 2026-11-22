@@ -64,6 +64,10 @@ evcc controls charging via the charging mode and leaves `ChrgApv` untouched. Acc
 - **verified**: without the Sunny Home Manager, the charger does not charge in PV surplus mode (evcc-io/evcc#33350).
 - **verified**: `Inverter.AcALim` keeps the last value written by evcc after the session. Charging started via the SMA app then uses that limit, even in fast charging mode (evcc-io/evcc#16071).
 
+## Startup checks
+
+All drivers only read on startup and warn on settings that conflict with evcc control: charging mode neither stop nor fast charging (REST, Modbus), EV Charger rotary switch in smart position (REST), "Trennung nach Vollladung" (`StpWhenFl`) enabled (all, SEMP only when the parameters endpoint provides it).
+
 ## SEMP parameters endpoint
 
 `/SEMP/Parameters` is read only and complements the SEMP device document.
