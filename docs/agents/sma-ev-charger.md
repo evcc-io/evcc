@@ -48,7 +48,7 @@ Confidence markers: **verified** (tested on a device or reported by users with l
 - **assumed**: the eCharger behaves the same with access management off. evcc-io/evcc#23789 controlled an eCharger via mode while the REST driver wrote `ChrgApv` 5171 on startup.
 - **assumed**: with access management on, withdrawing the release ends the charging process on the charger rather than pausing it, since the release applies to the active process. This would reset the session energy.
 
-App or RFID release enables charging on its own and conflicts with energy manager control. Access management must be set to "Entsperrt" for evcc. Charging is therefore controlled via the charging mode, `ChrgApv` is left untouched.
+evcc controls charging via the charging mode and leaves `ChrgApv` untouched. Access management "App / RFID" is allowed: until the release is given (`ChrgLok` 1129 and `ChrgApv` not 5172) the drivers report waiting for authorization. The SEMP parameters endpoint exposes both channels as well (evcc-io/evcc#25778).
 
 ## Control paths
 

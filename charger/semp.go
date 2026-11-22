@@ -138,6 +138,12 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 	// Check if device supports status reporting via Parameters endpoint
 	if _, err := wb.getParameter(sma.ChannelStatus); err == nil {
 		wb.hasStatusParam = true
+	}
+
+	// Check if device reports access management and charging release via Parameters endpoint
+	_, errAccess := wb.getParameter(sma.ChannelAccessManagement)
+	_, errRelease := wb.getParameter(sma.ChannelRelease)
+	if errAccess == nil && errRelease == nil {
 		implement.Has(wb, implement.StatusReasoner(wb.statusReason))
 	}
 
@@ -283,18 +289,27 @@ func (wb *SEMP) Status() (api.ChargeStatus, error) {
 
 // statusReason implements the api.StatusReasoner interface
 func (wb *SEMP) statusReason() (api.Reason, error) {
-	status, err := wb.smaStatus()
+	access, err := wb.smaCode(sma.ChannelAccessManagement)
 	if err != nil {
 		return api.ReasonUnknown, err
 	}
 
-	// SEMP cannot release charging, locked always requires release via app or RFID
-	return sma.StatusReason(status, true), nil
+	release, err := wb.smaCode(sma.ChannelRelease)
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
+
+	return sma.StatusReason(access, release), nil
 }
 
 // smaStatus returns the SMA charging status from the parameters endpoint
 func (wb *SEMP) smaStatus() (sma.Code, error) {
-	value, err := wb.getParameter(sma.ChannelStatus)
+	return wb.smaCode(sma.ChannelStatus)
+}
+
+// smaCode reads an SMA enum value from the parameters endpoint
+func (wb *SEMP) smaCode(channel string) (sma.Code, error) {
+	value, err := wb.getParameter(channel)
 	if err != nil {
 		return 0, err
 	}

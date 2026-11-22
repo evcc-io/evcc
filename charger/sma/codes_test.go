@@ -29,9 +29,9 @@ func TestChargeStatus(t *testing.T) {
 }
 
 func TestStatusReason(t *testing.T) {
-	assert.Equal(t, api.ReasonWaitingForAuthorization, StatusReason(StatusLocked, true))
-	assert.Equal(t, api.ReasonUnknown, StatusReason(StatusLocked, false))
-	assert.Equal(t, api.ReasonUnknown, StatusReason(StatusSleeping, true))
+	assert.Equal(t, api.ReasonWaitingForAuthorization, StatusReason(AccessManagementOn, ChargingLocked))
+	assert.Equal(t, api.ReasonUnknown, StatusReason(AccessManagementOn, ChargingReleased))
+	assert.Equal(t, api.ReasonUnknown, StatusReason(AccessManagementOff, ChargingLocked))
 }
 
 func TestParseCode(t *testing.T) {

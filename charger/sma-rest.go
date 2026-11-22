@@ -136,16 +136,6 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 		return nil, fmt.Errorf("charger firmware version not supported - please update >= %s", smarest.MinAcceptedVersion)
 	}
 
-	// app or RFID release enables charging on its own and conflicts with charging control
-	lock, err := wb.getParameter(sma.ChannelAccessManagement)
-	if err != nil {
-		return nil, err
-	}
-
-	if lock == sma.AccessManagementOn.String() {
-		log.WARN.Println(`access management must be set to "Unlocked" instead of "App / RFID"`)
-	}
-
 	// pv surplus and target modes would regulate charging on their own
 	mode, err := wb.mode()
 	if err != nil {
@@ -190,17 +180,17 @@ var _ api.StatusReasoner = (*SmaRest)(nil)
 
 // StatusReason implements the api.StatusReasoner interface
 func (wb *SmaRest) StatusReason() (api.Reason, error) {
-	state, err := wb.status()
-	if err != nil || state != sma.StatusLocked {
-		return api.ReasonUnknown, err
-	}
-
-	lock, err := wb.getParameter(sma.ChannelAccessManagement)
+	access, err := wb.code(sma.ChannelAccessManagement)
 	if err != nil {
 		return api.ReasonUnknown, err
 	}
 
-	return sma.StatusReason(state, lock == sma.AccessManagementOn.String()), nil
+	release, err := wb.code(sma.ChannelRelease)
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
+
+	return sma.StatusReason(access, release), nil
 }
 
 // Enabled implements the api.Charger interface
@@ -225,7 +215,12 @@ func (wb *SmaRest) Enable(enable bool) error {
 }
 
 func (wb *SmaRest) mode() (sma.Code, error) {
-	res, err := wb.getParameter(sma.ChannelMode)
+	return wb.code(sma.ChannelMode)
+}
+
+// code reads an enum parameter
+func (wb *SmaRest) code(channel string) (sma.Code, error) {
+	res, err := wb.getParameter(channel)
 	if err != nil {
 		return 0, err
 	}

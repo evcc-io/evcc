@@ -76,9 +76,9 @@ func ChargeStatus(c Code) (api.ChargeStatus, error) {
 	}
 }
 
-// StatusReason reports waiting for authorization while locked by access management
-func StatusReason(status Code, accessManagement bool) api.Reason {
-	if status == StatusLocked && accessManagement {
+// StatusReason reports waiting for authorization while access management requires a release not yet given
+func StatusReason(accessManagement, release Code) api.Reason {
+	if accessManagement == AccessManagementOn && release != ChargingReleased {
 		return api.ReasonWaitingForAuthorization
 	}
 	return api.ReasonUnknown
