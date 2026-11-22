@@ -63,7 +63,7 @@ const (
 	smaEChargerRegMinCurrent = 41473 // UINT32 0.1 A
 	smaEChargerRegMode       = 41471 // ENUM32
 	smaEChargerRegEnable     = 41475 // ENUM32
-	smaEChargerRegChargeLock = 41477 // ENUM32, charging release required via app, RFID or UI
+	smaEChargerRegChargeLock = 41477 // ENUM32, access management: free charging mode or app/RFID release
 	smaEChargerRegSetpoint   = 44383 // INT32 W
 	smaEChargerRegMinPower   = 44387 // INT32 W
 
@@ -110,6 +110,13 @@ func NewSmaECharger(ctx context.Context, settings modbus.Settings) (api.Charger,
 	wb := &SmaECharger{
 		conn:   conn,
 		phases: 3,
+	}
+
+	// app or RFID release enables charging on its own and conflicts with charging control
+	if v, err := wb.readHolding32(smaEChargerRegChargeLock); err != nil {
+		return nil, fmt.Errorf("charge lock: %w", err)
+	} else if v == smaEChargerChargeLockOn {
+		log.WARN.Println(`access management must be set to "Unlocked" instead of "App / RFID"`)
 	}
 
 	// pv surplus and target modes would regulate charging on their own
