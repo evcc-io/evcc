@@ -11,9 +11,10 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-// SolarForecast is an energy platform solar forecast: energy in Wh by ISO hour
+// SolarForecast is an energy platform solar forecast: energy in Wh by ISO hour.
+// A nil value marks an unavailable reading, distinct from a genuine zero.
 type SolarForecast struct {
-	WhHours map[string]float64 `json:"wh_hours"`
+	WhHours map[string]*float64 `json:"wh_hours"`
 }
 
 type wsMessage struct {
