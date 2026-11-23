@@ -2,136 +2,119 @@ template: ehive-one-fnn
 products:
   - brand: eHive
     description:
-      generic: One (FNN-Schaltkontakte, § 14a / § 9)
+      generic: One
+requirements:
+  description:
+    en: Requires ioManager 1.1.3 or later. The relay contacts of the control box are connected to the digital inputs DI1 and DI2.
+    de: Erfordert ioManager 1.1.3 oder neuer. Die Schaltkontakte der Steuerbox werden an die Digitaleingänge DI1 und DI2 angeschlossen.
 params:
-  - name: di1function
-    type: choice
-    choice: [unused, w4, w3, s1, s2]
-    default: w4
-    description:
-      de: Funktion von DI1
-      en: DI1 function
-    help:
-      de: unused = unbenutzt, W4 = Verbrauch dimmen, W3 = 0 %, S1 = 60 %, S2 = 30 % Einspeisung. Jedes Signal darf nur einmal zugeordnet sein.
-      en: unused = not used, W4 = consumption dimming, W3 = 0%, S1 = 60%, S2 = 30% feed-in. Assign each signal only once.
-  - name: di1polarity
-    type: choice
-    choice: [normal, inverted]
-    default: normal
-    description:
-      de: Polarität von DI1
-      en: DI1 polarity
-    help:
-      de: normal = true ist aktiv, inverted = false ist aktiv. Mit der tatsächlichen Verdrahtung einschließlich Kabelbruch prüfen.
-      en: normal = true is active, inverted = false is active. Verify against actual wiring including a broken wire.
-  - name: di2function
-    type: choice
-    choice: [unused, w4, w3, s1, s2]
-    default: unused
-    description:
-      de: Funktion von DI2
-      en: DI2 function
-    help:
-      de: unused = unbenutzt, W4 = Verbrauch dimmen, W3 = 0 %, S1 = 60 %, S2 = 30 % Einspeisung. Zwei Eingänge erlauben zwei unabhängige Signale.
-      en: unused = not used, W4 = consumption dimming, W3 = 0%, S1 = 60%, S2 = 30% feed-in. Two inputs allow two independent signals.
-  - name: di2polarity
-    type: choice
-    choice: [normal, inverted]
-    default: normal
-    description:
-      de: Polarität von DI2
-      en: DI2 polarity
-    help:
-      de: normal = true ist aktiv, inverted = false ist aktiv. Mit der tatsächlichen Verdrahtung einschließlich Kabelbruch prüfen.
-      en: normal = true is active, inverted = false is active. Verify against actual wiring including a broken wire.
+  - name: host
+    default: 127.0.0.1
+    advanced: true
+  - name: port
+    default: 3000
+    advanced: true
   - name: maxconsumptionpower
     type: float
     unit: W
-    example: 4200
+    required: true
     description:
-      de: Garantierte Mindestleistung (Pmin)
       en: Guaranteed minimum power (Pmin)
+      de: Garantierte Mindestleistung (Pmin)
     help:
-      de: Erforderlich bei W4. Positives Verbrauchslimit des Hauptstromkreises während der Dimmung, anlagenspezifisch festlegen.
-      en: Required for W4. Positive root circuit consumption limit during dimming, set according to the installation.
+      en: Power limit applied to the root circuit while the limit is active. Only used if an input is assigned to W4.
+      de: Leistungsbegrenzung des Hauptstromkreises während die Limitierung aktiv ist. Wird nur verwendet, wenn ein Eingang W4 zugeordnet ist.
   - name: productionnominalmax
     type: float
     unit: Wp
-    example: 10000
     description:
-      de: Installierte Generatorleistung
       en: Installed generator power
+      de: Installierte Generatorleistung
     help:
-      de: Erforderlich bei W3, S1 oder S2. Positive Nennleistung der Anlage als Bezugswert der Einspeisebegrenzung.
-      en: Required for W3, S1 or S2. Positive rated installation power used as the reference for feed-in limits.
-  - name: maxagems
-    type: int
-    unit: ms
-    default: 5000
+      en: Rated generator/module power of the installation (reference value according to § 9 EEG). Required if an input is assigned to W3, S1 or S2.
+      de: Gesamtnennleistung bzw. Modul- oder Generatorleistung der Anlage (Bezugsgröße nach § 9 EEG). Erforderlich, wenn ein Eingang W3, S1 oder S2 zugeordnet ist.
+  - name: di1function
+    type: choice
+    choice: [w4, w3, s1, s2, unused]
+    default: w4
+    description:
+      en: DI1 signal
+      de: DI1-Signal
+    help:
+      en: W4 (Dimmer for controllable loads), W3 (Zero export, 0%), S1 (60% export power limit), S2 (30% export power limit) or unused
+      de: W4 (Dimmen der steuerbaren Verbrauchseinrichtungen), W3 (Keine Netzeinspeisung, 0%), S1 (Reduzierung der Einspeiseleistung auf 60%), S2 (Reduzierung der Einspeiseleistung auf 30%) oder unbenutzt
+  - name: di2function
+    type: choice
+    choice: [w4, w3, s1, s2, unused]
+    default: unused
+    description:
+      en: DI2 signal
+      de: DI2-Signal
+    help:
+      en: W4 (Dimmer for controllable loads), W3 (Zero export, 0%), S1 (60% export power limit), S2 (30% export power limit) or unused
+      de: W4 (Dimmen der steuerbaren Verbrauchseinrichtungen), W3 (Keine Netzeinspeisung, 0%), S1 (Reduzierung der Einspeiseleistung auf 60%), S2 (Reduzierung der Einspeiseleistung auf 30%) oder unbenutzt
+  - name: di1activelow
+    type: bool
     advanced: true
     description:
-      de: Maximales Messwertalter
-      en: Maximum sample age
+      en: DI1 active low
+      de: DI1 invertiert (active low)
     help:
-      de: Erfordert die ioManager-Snapshot-API v1. Veraltete oder ungültige Messungen werden abgelehnt. Größer als das konfigurierte Erfassungsintervall wählen.
-      en: Requires ioManager snapshot API v1. Stale or invalid samples are rejected. Set above the configured acquisition interval.
+      en: Signal is active while the input reports false.
+      de: Signal ist aktiv, solange der Eingang false meldet.
+  - name: di2activelow
+    type: bool
+    advanced: true
+    description:
+      en: DI2 active low
+      de: DI2 invertiert (active low)
+    help:
+      en: Signal is active while the input reports false.
+      de: Signal ist aktiv, solange der Eingang false meldet.
+  - name: maxage
+    type: duration
+    default: 5s
+    advanced: true
+    description:
+      en: Maximum sample age
+      de: Maximales Messwertalter
+    help:
+      en: Older or invalid samples are rejected. Must be longer than the acquisition interval of the ioManager.
+      de: Ältere oder ungültige Messwerte werden verworfen. Muss länger als das Erfassungsintervall des ioManagers sein.
 render: |
-  {{- $d1 := .di1function -}}
-  {{- $d2 := .di2function -}}
-  {{- $functions := list "unused" "w4" "w3" "s1" "s2" -}}
-  {{- if not (and (has $d1 $functions) (has $d2 $functions)) -}}
-    {{- fail "Unbekannte Eingangsfunktion / unknown input function" -}}
-  {{- end -}}
-  {{- if not (and (has .di1polarity (list "normal" "inverted")) (has .di2polarity (list "normal" "inverted"))) -}}
-    {{- fail "Unbekannte Polarität / unknown polarity" -}}
-  {{- end -}}
-  {{- if and (eq $d1 "unused") (eq $d2 "unused") -}}
-    {{- fail "Mindestens einen Eingang zuordnen / assign at least one input" -}}
-  {{- end -}}
-  {{- if and (ne $d1 "unused") (eq $d1 $d2) -}}
-    {{- fail "Jedes Signal nur einmal zuordnen / assign each signal only once" -}}
-  {{- end -}}
-  {{- $dim := or (eq $d1 "w4") (eq $d2 "w4") -}}
-  {{- $curtail := or (and (ne $d1 "unused") (ne $d1 "w4")) (and (ne $d2 "unused") (ne $d2 "w4")) -}}
-  {{- if and $dim (or (not (gt (float64 .maxconsumptionpower) 0.0)) (regexMatch "(?i)nan|inf" (toString .maxconsumptionpower))) -}}
-    {{- fail "W4 erfordert positives Pmin / W4 requires positive maxconsumptionpower" -}}
-  {{- end -}}
-  {{- if and $curtail (or (not (gt (float64 .productionnominalmax) 0.0)) (regexMatch "(?i)nan|inf" (toString .productionnominalmax))) -}}
-    {{- fail "Einspeisebegrenzung erfordert positive Generatorleistung / feed-in limiting requires positive productionnominalmax" -}}
-  {{- end -}}
-  {{- if le (int .maxagems) 0 -}}
-    {{- fail "maxagems must be positive" -}}
-  {{- end -}}
+  {{- define "ehive-input" }}
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/api/fnn
+    timeout: 2s
+    cache: 1s
+    jq: >-
+      if .version != 1 or .valid != true or
+        (.age_ms | type) != "number" or .age_ms < 0 or .age_ms > {{ mulf 1000 (durationSeconds .maxage) }} or
+        (.sequence | type) != "number" or .sequence < 1
+      then error("ioManager snapshot is missing, invalid or stale") else . end
+      | if (.{{ .input }} | type) != "boolean" then error("ioManager input must be boolean") else .{{ .input }} end
+      {{- if .activelow }} | not{{ end }}
+  {{- end }}
+  {{- $d1 := .di1function }}
+  {{- $d2 := .di2function }}
+  {{- $curtail := or (has $d1 (list "w3" "s1" "s2")) (has $d2 (list "w3" "s1" "s2")) }}
   type: fnn
   interval: 5s
-  {{- if $dim }}
+  {{- if or (eq $d1 "w4") (eq $d2 "w4") }}
   maxdimpower: {{ .maxconsumptionpower }}
   {{- end }}
   {{- if $curtail }}
   productionnominalmax: {{ .productionnominalmax }}
   {{- end }}
-  {{- define "ehive-input" }}
-    source: http
-    uri: http://127.0.0.1:3000/api/fnn
-    timeout: 2s
-    cache: 1s
-    jq: >-
-      if .version != 1 or .valid != true or
-        (.age_ms | type) != "number" or .age_ms < 0 or .age_ms > {{ int .maxage }} or
-        (.sequence | type) != "number" or .sequence < 1
-      then error("ioManager snapshot is missing, invalid or stale") else . end
-      | if (.{{ .input }} | type) != "boolean" then error("ioManager input must be boolean") else .{{ .input }} end
-      {{- if eq .polarity "inverted" }} | not{{ end }}
-  {{- end }}
   {{- if ne $d1 "unused" }}
   {{ $d1 }}:
-  {{- template "ehive-input" (dict "input" "di1" "polarity" .di1polarity "maxage" .maxagems) }}
+  {{- template "ehive-input" (dict "host" .host "port" .port "input" "di1" "activelow" .di1activelow "maxage" .maxage) }}
   {{- end }}
   {{- if ne $d2 "unused" }}
   {{ $d2 }}:
-  {{- template "ehive-input" (dict "input" "di2" "polarity" .di2polarity "maxage" .maxagems) }}
+  {{- template "ehive-input" (dict "host" .host "port" .port "input" "di2" "activelow" .di2activelow "maxage" .maxage) }}
   {{- end }}
-  {{- if and $curtail (and (ne $d1 "w3") (ne $d2 "w3")) }}
+  {{- if and $curtail (ne $d1 "w3") (ne $d2 "w3") }}
   w3:
     source: const
     value: false
