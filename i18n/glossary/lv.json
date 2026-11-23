@@ -76,5 +76,6 @@
     "vehicle": "transportlīdzeklis",
     "vehicleLimit": "transportlīdzekļa ierobežojums",
     "vehicleRange": "diapazons",
-    "withdrawal": "ņemšana no tīkla"
+    "withdrawal": "ņemšana no tīkla",
+    "consumed": "patērēts"
 }

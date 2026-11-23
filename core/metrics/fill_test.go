@@ -70,8 +70,10 @@ func TestBackfill(t *testing.T) {
 		require.NoError(t, persist(e, time.Unix(n*slotSeconds, 0), 1, 0, nil, false))
 	}
 	require.NoError(t, settings.Delete(keys.MetricsFillVersion))
+	require.NoError(t, db.Instance.Create(&flowDay{Day: dayStart(time.Unix(86400, 0)).Unix(), Data: "{}"}).Error)
 
 	require.NoError(t, SetupSchema())
+	require.Empty(t, rolled(t), "rollup dropped")
 
 	// both gaps filled, remove them again
 	res := db.Instance.Where("meter = ? AND recovered = ?", e.Id, slotInterpolated).Delete(new(meter))

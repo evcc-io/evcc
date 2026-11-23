@@ -79,6 +79,7 @@ type batteryDetail struct {
 	loadpoint    *int              // originating loadpoint id for loadpoint/vehicle entries
 	controllable bool              // device can act on suggestions
 	modes        []api.BatteryMode // modes the battery controller supports
+	precondition []float32         // late charging window charged by the loadpoint itself (Wh per slot)
 }
 
 // batteryKey and loadpointKey build the canonical device keys used for
@@ -141,8 +142,8 @@ func optimizerAuth(req *http.Request) {
 // startup); the slot gate is left open so the next cycle retries.
 var errOptimizerNotReady = errors.New("battery measurements not ready")
 
-// optimizerInterval is the refresh cadence in automatic mode. It divides the
-// slot duration so every slot starts on a fresh result. Advisory suggestions
+// optimizerInterval is the minimum gap between runs in automatic mode. The gate is
+// checked once per loadpoint loop, so the actual gap is longer. Advisory suggestions
 // only need one run per slot.
 const optimizerInterval = 5 * time.Minute
 
@@ -214,6 +215,12 @@ func (site *Site) optimizerUpdateAsync(force bool) {
 }
 
 func (site *Site) optimizerUpdate(battery []types.Measurement) error {
+	// the loadpoint loop quantises the cadence above optimizerInterval, the previous gap estimates the next one (#36530)
+	var gap time.Duration
+	if !site.optimizer.updated.IsZero() {
+		gap = min(time.Since(site.optimizer.updated), tariff.SlotDuration)
+	}
+
 	req, details, err := site.optimizerRequest(battery)
 	if err != nil {
 		return err
@@ -279,7 +286,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return errors.New("optimizer result expired")
 	}
 
-	site.applyOptimizerResult(optimizerSolve{req: req, details: details, res: *resp.JSON200, schedule: schedule, completed: now}, now)
+	site.applyOptimizerResult(optimizerSolve{req: req, details: details, res: *resp.JSON200, schedule: schedule, completed: now, gap: gap}, now)
 
 	return nil
 }
@@ -306,8 +313,9 @@ type optimizerSolve struct {
 	details   requestDetails
 	res       optimizer.OptimizationResult
 	schedule  optimizerSchedule
-	slot      int       // last applied slot
-	completed time.Time // solve completion, not last reapply
+	slot      int           // last applied slot
+	completed time.Time     // solve completion, not last reapply
+	gap       time.Duration // expected time until the next solve
 }
 
 // setLastOptimizerSolve remembers a solve's inputs for reapplySuggestions

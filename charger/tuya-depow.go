@@ -37,7 +37,7 @@ package charger
 //	105  x_charge_history    ro      charge history              last session {"t":"2026-09-05 13:15:20","s":"13:15","e":"10:50","d":77732,"c":62}, c 0.1 kWh
 //	106  x_charger_info      rw      device info                 {"r":"Type B, AC 30mA + DC 6mA","fv":"2.9.3","cp":"11.5","t":"0","e":"0"}
 //	                                                             r RCD type, fv firmware, cp control pilot voltage
-//	107  x_adjust_current    ro      selectable currents         "[6, 8, 10, 13, 16]"
+//	107  x_adjust_current    ro      current presets (app)       "[6, 8, 10, 13, 16]", min/max used as range
 //	108  x_downcounter       ro      countdown remaining         s
 //	109  x_work_st_debug     ro      work state (debug)          SLEEP, IDLE, IDLEINS, WORKING, WAIT, ERRORPAUSE, PAUSE, STOP, EMPTY
 //	110  x_single_fase_mode  rw      single/three phase mode     bool, not seen on firmware 2.9.3 and 9.2.9
@@ -185,17 +185,6 @@ func tuyaDepowSteps(dps map[string]any) []int64 {
 	return tuyaDepowDefaultSteps
 }
 
-// tuyaDepowStep returns the highest supported current not exceeding the requested current
-func tuyaDepowStep(steps []int64, current int64) int64 {
-	res := steps[0]
-	for _, s := range steps {
-		if s <= current {
-			res = s
-		}
-	}
-	return res
-}
-
 // Status implements the api.Charger interface
 func (wb *TuyaDepow) Status() (api.ChargeStatus, error) {
 	dps, err := wb.conn.Dps()
@@ -262,7 +251,7 @@ func (wb *TuyaDepow) Enable(enable bool) error {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 
-	// start/stop is write-only, the charging current must stay within the supported steps
+	// start/stop is write-only, the charging current must be re-sent
 	set := map[string]any{tuyaDepowDpCharge: enable}
 	if enable && tuyaDepowInt(dps[tuyaDepowDpCurrent]) != wb.current {
 		set[tuyaDepowDpCurrent] = wb.current
@@ -283,29 +272,35 @@ func (wb *TuyaDepow) MaxCurrent(current int64) error {
 		return err
 	}
 
-	step := tuyaDepowStep(tuyaDepowSteps(dps), current)
+	current = tuyaDepowCurrent(dps, current)
 
 	wb.mu.Lock()
-	wb.current = step
+	wb.current = current
 	wb.mu.Unlock()
 
-	if tuyaDepowInt(dps[tuyaDepowDpCurrent]) == step {
+	if tuyaDepowInt(dps[tuyaDepowDpCurrent]) == current {
 		return nil
 	}
 
-	return wb.conn.Set(map[string]any{tuyaDepowDpCurrent: step})
+	return wb.conn.Set(map[string]any{tuyaDepowDpCurrent: current})
 }
 
-// tuyaDepowLimits returns the lowest and highest supported step, limited by the installation maximum
+// tuyaDepowLimits returns the lowest and highest supported current, limited by the installation maximum
 func tuyaDepowLimits(dps map[string]any) (int64, int64) {
 	steps := tuyaDepowSteps(dps)
 	maxCurrent := steps[len(steps)-1]
 
 	if limit := tuyaDepowInt(dps[tuyaDepowDpMaxConfig]); limit > 0 {
-		maxCurrent = tuyaDepowStep(steps, min(maxCurrent, limit))
+		maxCurrent = max(steps[0], min(maxCurrent, limit))
 	}
 
 	return steps[0], maxCurrent
+}
+
+// tuyaDepowCurrent clamps the requested current to the supported range
+func tuyaDepowCurrent(dps map[string]any, current int64) int64 {
+	minCurrent, maxCurrent := tuyaDepowLimits(dps)
+	return min(max(current, minCurrent), maxCurrent)
 }
 
 var _ api.CurrentLimiter = (*TuyaDepow)(nil)

@@ -667,7 +667,7 @@ func resetDatabase(shutdown func()) http.HandlerFunc {
 		}
 
 		if req.Settings {
-			tables := []string{"settings", "configs", "caches", "meters"}
+			tables := []string{"settings", "configs", "caches", "meters", "meters_daily", "meters_flows_daily"}
 
 			for _, table := range tables {
 				if err := db.Instance.Exec("DELETE FROM " + table).Error; err != nil {

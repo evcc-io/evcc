@@ -6,6 +6,7 @@ import (
 	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/jinzhu/now"
+	"gorm.io/gorm"
 )
 
 const (
@@ -61,7 +62,13 @@ func createEntity(group, name, title string) (entity, error) {
 	if group == Consumer {
 		var prev entity
 		if db.Instance.Where(`"group" = ? AND name = ?`, Meter, name).Limit(1).Find(&prev).RowsAffected > 0 {
-			db.Instance.Model(&prev).UpdateColumn("group", Consumer)
+			// an existing consumer row blocks the relabel, otherwise the rolled up flows do not know the consumer yet
+			if err := resetDaily(func(tx *gorm.DB) bool {
+				res := tx.Model(&prev).UpdateColumn("group", Consumer)
+				return res.Error == nil && res.RowsAffected > 0
+			}); err != nil {
+				return entity{}, err
+			}
 		}
 	}
 

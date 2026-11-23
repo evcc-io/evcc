@@ -36,6 +36,14 @@ func TestSolarForecastRates(t *testing.T) {
 		"a": {WhHours: map[string]float64{"invalid": 1}},
 	})
 	assert.Error(t, err)
+
+	// negative production is clamped
+	data, err = solarForecastRates(map[string]homeassistant.SolarForecast{
+		"a": {WhHours: map[string]float64{"2026-09-12T12:00:00+00:00": -100}},
+	})
+	require.NoError(t, err)
+	require.Len(t, data, 1)
+	assert.Zero(t, data[0].Value)
 }
 
 func TestSolarForecastRatesHalfHourly(t *testing.T) {

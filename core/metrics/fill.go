@@ -62,6 +62,11 @@ func backfill() error {
 		return err
 	}
 
+	// the rolled up days do not hold the filled slots
+	if err := resetDaily(nil); err != nil {
+		return err
+	}
+
 	settings.SetInt(keys.MetricsFillVersion, fillVersion)
 
 	return nil

@@ -120,7 +120,7 @@ func testDigestClient(t *testing.T, algorithm string) (*digestDevice, *http.Clie
 func TestDigestPreemptive(t *testing.T) {
 	dev, client, uri := testDigestClient(t, "SHA-256")
 
-	for i := 0; i < 4; i++ {
+	for i := range 4 {
 		resp, err := client.Get(uri + "/rpc/Switch.GetStatus")
 		require.NoError(t, err, "request %d", i)
 		resp.Body.Close()
@@ -142,7 +142,7 @@ func TestDigestNonRfcAlgorithm(t *testing.T) {
 		t.Run(algorithm, func(t *testing.T) {
 			dev, client, uri := testDigestClient(t, algorithm)
 
-			for i := 0; i < 3; i++ {
+			for i := range 3 {
 				resp, err := client.Get(uri)
 				require.NoError(t, err, "request %d", i)
 				resp.Body.Close()
@@ -169,7 +169,7 @@ func TestDigestNonStandardHeader(t *testing.T) {
 
 	client := &http.Client{Transport: Digest(digestUser, digestPass, nil)}
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		resp, err := client.Get(srv.URL)
 		require.NoError(t, err, "request %d", i)
 		resp.Body.Close()

@@ -1030,13 +1030,16 @@ func (lp *Loadpoint) roundedCurrent(current float64) float64 {
 // actualMaxChargeCurrent returns the maximum of all phase currents.
 // If currents not measured falls back to offered current.
 func (lp *Loadpoint) actualMaxChargeCurrent() float64 {
-	if lp.chargeCurrents != nil {
-		return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
-	}
-	if lp.charging() {
+	// the charger may start drawing its offer any time, keep it reserved
+	if lp.chargeCurrents == nil {
 		return lp.offeredCurrent
 	}
-	return 0
+	current := max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+	// measurements drop to ~0 while phases switch, reserve the offered current
+	if lp.enabled && !lp.phaseSwitchCompleted() {
+		current = max(current, lp.offeredCurrent)
+	}
+	return current
 }
 
 // setLimit applies charger current limits and enables/disables accordingly

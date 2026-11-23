@@ -524,6 +524,9 @@ func TestCreateEntityReconcileGuard(t *testing.T) {
 	conRow := entity{Group: Consumer, Name: "db:7"}
 	require.NoError(t, db.Instance.Create(&conRow).Error)
 
+	// a rolled up day
+	require.NoError(t, db.Instance.Create(&flowDay{Day: 86400, Data: "{}"}).Error)
+
 	got, err := createEntity(Consumer, "db:7", "")
 	require.NoError(t, err)
 	require.Equal(t, conRow.Id, got.Id, "must reuse existing consumer row")
@@ -532,6 +535,11 @@ func TestCreateEntityReconcileGuard(t *testing.T) {
 	var stored entity
 	require.NoError(t, db.Instance.First(&stored, meterRow.Id).Error)
 	require.Equal(t, Meter, stored.Group)
+
+	// rollup kept
+	var days int64
+	require.NoError(t, db.Instance.Model(new(flowDay)).Count(&days).Error)
+	require.EqualValues(t, 1, days)
 }
 
 func TestCollectorLastSlotEnergy(t *testing.T) {
