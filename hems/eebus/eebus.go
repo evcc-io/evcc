@@ -41,12 +41,12 @@ type EEBus struct {
 
 	smartgridConsumptionId    uint
 	consumptionLimit          ucapi.LoadLimit // LPC-041
-	consumptionLimitActivated *time.Time      // nil until first connected, then always set
+	consumptionLimitActivated *time.Time      // nil until first run or connect, then always set
 	failsafeConsumptionLimit  float64
 
 	smartgridProductionId    uint
 	productionLimit          ucapi.LoadLimit // feed-in limit (NOT production despite its name)
-	productionLimitActivated *time.Time      // nil until first connected, then always set
+	productionLimitActivated *time.Time      // nil until first run or connect, then always set
 	failsafeProductionLimit  *float64        // feed-in limit (NOT production despite its name)
 	productionNominalMax     float64
 
@@ -90,6 +90,22 @@ func (l Limits) validate() error {
 	return nil
 }
 
+// service is the part of the EEBus server used by the HEMS
+type service interface {
+	RegisterDevice(ski, ip string, device eebus.Device) error
+	UnregisterDevice(ski string, device eebus.Device)
+	ControllableSystem() *eebus.ControllableSystem
+}
+
+// instance returns the EEBus server, replaced in tests
+var instance = func() (service, error) {
+	inst, err := eebus.Instance()
+	if err != nil {
+		return nil, err
+	}
+	return inst, nil
+}
+
 // NewFromConfig creates an EEBus HEMS from generic config
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*EEBus, error) {
 	cc := struct {
@@ -122,7 +138,7 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 		return nil, err
 	}
 
-	inst, err := eebus.Instance()
+	inst, err := instance()
 	if err != nil {
 		return nil, err
 	}
@@ -147,10 +163,18 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 		return nil, err
 	}
 
-	if err := c.Wait(ctx); err != nil {
+	// The HEMS must not depend on the Energy Guard being reachable. After a (re)start
+	// the CS is in state "init" and limited to the failsafe limit ([LPC-901/1]), which
+	// Run applies from its first cycle. Waiting here blocked the startup for up to 90s,
+	// then failed it, leaving the site without any control for the restart delay and the
+	// Energy Guard's ski untrusted. The device test waits for the connection instead
+	// (see Wait), so the UI keeps reporting whether the Energy Guard is reachable.
+	//
+	// The device is unregistered when its lifetime ends, e.g. after a device test.
+	go func() {
+		<-ctx.Done()
 		inst.UnregisterDevice(ski, c)
-		return nil, err
-	}
+	}()
 
 	// controllable system
 	eebus.LogEntities(c.log.DEBUG, "CS LPC", c.cs.CsLPCInterface)
@@ -407,7 +431,7 @@ func (c *EEBus) CurtailedPercent() *int {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 
-	// no statement until first connected
+	// no statement until first run or connect
 	if c.productionLimitActivated == nil {
 		return nil
 	}
@@ -426,7 +450,7 @@ func (c *EEBus) CurtailedPercent() *int {
 	return &percent
 }
 
-// MaxConsumptionPower implements api.HEMS: nil until first connected,
+// MaxConsumptionPower implements api.HEMS: nil until first run or connect,
 // else failsafe limit in failsafe, else the active EG-supplied LPC limit, else 0.
 func (c *EEBus) MaxConsumptionPower() *float64 {
 	c.mux.RLock()
@@ -440,7 +464,7 @@ func (c *EEBus) MaxConsumptionPower() *float64 {
 	return new(c.effectiveConsumptionLimit())
 }
 
-// MaxProductionPower implements api.HEMS: nil until first connected,
+// MaxProductionPower implements api.HEMS: nil until first run or connect,
 // else failsafe limit in failsafe, else the active EG-supplied LPP limit, else 0.
 func (c *EEBus) MaxProductionPower() *float64 {
 	c.mux.RLock()

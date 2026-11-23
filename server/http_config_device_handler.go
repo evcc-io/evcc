@@ -863,6 +863,16 @@ func testConfig[T any](ctx context.Context, id int, class templates.Class, req c
 	return instance, err
 }
 
+// waitConnected waits for a device that connects asynchronously, like an EEBus HEMS
+// that does not wait for its Energy Guard on creation, so the device test reports
+// whether the remote side is reachable.
+func waitConnected(ctx context.Context, instance any) error {
+	if w, ok := instance.(interface{ Wait(context.Context) error }); ok {
+		return w.Wait(ctx)
+	}
+	return nil
+}
+
 // testConfigHandler tests a configuration by class
 func testConfigHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -915,6 +925,9 @@ func testConfigHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 
 		case templates.Hems:
 			instance, err = testConfig(ctx, id, class, req, newHemsFactory(site), config.Hems())
+			if err == nil {
+				err = waitConnected(ctx, instance)
+			}
 
 		case templates.Tariff:
 			instance, err = testConfig(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs())
