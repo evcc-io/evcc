@@ -807,10 +807,11 @@ func TestLoadpointRequestChargeGoal(t *testing.T) {
 			lp.EXPECT().EffectivePlanTime().Return(time.Time{}).AnyTimes()
 			lp.EXPECT().GetPlanGoal().Return(0.0, false).AnyTimes()
 
-			req, _ := site.loadpointRequest(lp, 8, 15*time.Minute, nil)
+			req, detail := site.loadpointRequest(lp, 8, 15*time.Minute, nil)
 
 			assert.Equal(t, tc.wantInitial, req.SInitial)
 			assert.Equal(t, tc.wantSMax, req.SMax)
+			assert.Equal(t, tc.capacity == 0 || tc.soc == 0, detail.SocUnknown, "soc unknown")
 		})
 	}
 }
