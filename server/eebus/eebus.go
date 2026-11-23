@@ -205,8 +205,10 @@ func NewServer(other Config) (*EEBus, error) {
 		return nil, err
 	}
 
+	id := deviceIdentity(serial)
+
 	configuration, err := eebusapi.NewConfiguration(
-		BrandName, BrandName, Model, serial,
+		id.vendor, id.brand, id.model, id.serial,
 		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeEnergyManagementSystem},
 		model.DeviceTypeTypeEnergyManagementSystem,
 		[]model.EntityTypeType{model.EntityTypeTypeCEM},
