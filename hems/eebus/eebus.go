@@ -56,6 +56,9 @@ type EEBus struct {
 	limitReceived     time.Time // last limit written by the Energy Guard
 	controlled        bool      // a limit following a heartbeat was accepted since entering "init" or "failsafe state"
 	interval          time.Duration
+
+	// limits to be stated as deactivated to the Energy Guard, see publishLimitStates
+	unpublished struct{ consumption, production bool }
 }
 
 // failsafeReleaseTimeout is how long the CS keeps the failsafe limit after the
@@ -229,6 +232,8 @@ func (c *EEBus) Run() {
 			c.log.ERROR.Println(err)
 		}
 
+		c.publishLimitStates()
+
 		if c.publishFunc != nil {
 			c.publishFunc()
 		}
@@ -259,6 +264,13 @@ func (c *EEBus) run() error {
 		c.log.WARN.Println("missing heartbeat- entering failsafe mode")
 		c.setStatus(StatusFailsafe)
 		c.controlled = false
+
+		// [LPC-009/2], [LPP-009/2]: the power limit is deactivated in "failsafe state".
+		// Leaving it requires a fresh limit, so the previous one is not resumed after
+		// a heartbeat without a following limit ([LPC-921]).
+		c.consumptionLimit.IsActive = false
+		c.productionLimit.IsActive = false
+		c.unpublished.consumption, c.unpublished.production = true, true
 
 		c.setConsumptionLimit(c.failsafeConsumptionLimit)
 
@@ -317,6 +329,8 @@ func (c *EEBus) run() error {
 			c.log.DEBUG.Println("consumption limit duration exceeded")
 			c.setConsumptionLimit(0)
 			c.consumptionLimit.IsActive = false
+			c.consumptionLimit.Duration = 0
+			c.unpublished.consumption = true // [LPC-007]
 		}
 	}
 
@@ -340,6 +354,8 @@ func (c *EEBus) run() error {
 			c.log.DEBUG.Println("production limit duration exceeded")
 			c.setProductionLimit(0, false)
 			c.productionLimit.IsActive = false
+			c.productionLimit.Duration = 0
+			c.unpublished.production = true // [LPP-007]
 		}
 	}
 
@@ -356,6 +372,32 @@ func (c *EEBus) acceptsLimitWrite() bool {
 		return true
 	}
 	return c.heartbeatAt.After(c.statusUpdated) && time.Since(c.heartbeatAt) <= limitWriteWindow
+}
+
+// publishLimitStates states limits the CS deactivated itself as deactivated to the Energy
+// Guard and removes their expired duration ([LPC-007], [LPC-009], [LPP-007], [LPP-009]).
+// Without this the Energy Guard kept reading an expired or failsafe-suspended limit as
+// active, and a later limit written without a duration inherited the expired one and
+// was read as already expired, i.e. acknowledged but not applied. It calls into eebus-go
+// outside the mutex.
+func (c *EEBus) publishLimitStates() {
+	c.mux.Lock()
+	pending := c.unpublished
+	c.unpublished.consumption, c.unpublished.production = false, false
+	consumption, production := c.consumptionLimit.Value, c.productionLimit.Value
+	c.mux.Unlock()
+
+	if pending.consumption {
+		if err := c.cs.CsLPCInterface.SetConsumptionLimit(ucapi.LoadLimit{Value: consumption, IsChangeable: true}); err != nil {
+			c.log.ERROR.Println("CS LPC SetConsumptionLimit:", err)
+		}
+	}
+
+	if pending.production {
+		if err := c.cs.CsLPPInterface.SetProductionLimit(ucapi.LoadLimit{Value: production, IsChangeable: true}); err != nil {
+			c.log.ERROR.Println("CS LPP SetProductionLimit:", err)
+		}
+	}
 }
 
 // limitActive reports whether t denotes a currently active limit: known (non-nil) and non-zero.
