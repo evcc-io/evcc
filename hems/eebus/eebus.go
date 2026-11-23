@@ -51,14 +51,20 @@ type EEBus struct {
 	productionNominalMax     float64
 
 	heartbeat         *util.Value[struct{}]
+	heartbeatAt       time.Time // last heartbeat of the Energy Guard
 	heartbeatReturned time.Time // heartbeat resumed while in failsafe
 	limitReceived     time.Time // last limit written by the Energy Guard
+	controlled        bool      // a limit following a heartbeat was accepted since entering "init" or "failsafe state"
 	interval          time.Duration
 }
 
 // failsafeReleaseTimeout is how long the CS keeps the failsafe limit after the
 // heartbeat resumed but the Energy Guard has not stated a limit yet ([LPC-921]).
 const failsafeReleaseTimeout = 2 * time.Minute
+
+// limitWriteWindow is how long after a heartbeat a limit write is evaluated while the
+// CS is not controlled by the Energy Guard (LPC/LPP UC TS 1.0.0 section 2.2).
+const limitWriteWindow = 60 * time.Second
 
 type Limits struct {
 	ContractualConsumptionNominalMax    float64
@@ -252,6 +258,7 @@ func (c *EEBus) run() error {
 	if heartbeatErr != nil && c.status != StatusFailsafe {
 		c.log.WARN.Println("missing heartbeat- entering failsafe mode")
 		c.setStatus(StatusFailsafe)
+		c.controlled = false
 
 		c.setConsumptionLimit(c.failsafeConsumptionLimit)
 
@@ -337,6 +344,18 @@ func (c *EEBus) run() error {
 	}
 
 	return nil
+}
+
+// acceptsLimitWrite reports whether a limit write is evaluated now. While controlled by
+// the Energy Guard any write is. In "init", "failsafe state" and "unlimited/autonomous"
+// only a write within 60s after a heartbeat received in that state is (LPC/LPP UC TS
+// 1.0.0 section 2.2, ATC_COM_NT_CSConnection_001, ATC_COM_PT_CSFS_001).
+// Caller holds the mutex.
+func (c *EEBus) acceptsLimitWrite() bool {
+	if c.controlled {
+		return true
+	}
+	return c.heartbeatAt.After(c.statusUpdated) && time.Since(c.heartbeatAt) <= limitWriteWindow
 }
 
 // limitActive reports whether t denotes a currently active limit: known (non-nil) and non-zero.
