@@ -29,7 +29,7 @@ batterymode:
               address: 40793 # SMA Modbus Profile: CmpBMS.BatChaMinW - Minimale Batterieladeleistung
               type: writemultiple
               decode: uint32
-        - source: go # charge limit
+        - source: fallback # charge limit
           {{- include "sma-battery-limit" (dict "root" . "limit" "charge" "write" 40795 "name" "CmpBMS.BatChaMaxW - Maximale Batterieladeleistung") | indent 10 }}
         - source: const
           value: 0
@@ -40,7 +40,7 @@ batterymode:
               address: 40797 # SMA Modbus Profile: CmpBMS.BatDschMinW - Minimale Batterieentladeleistung
               type: writemultiple
               decode: uint32
-        - source: go # discharge limit
+        - source: fallback # discharge limit
           {{- include "sma-battery-limit" (dict "root" . "limit" "discharge" "write" 40799 "name" "CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung") | indent 10 }}
         - source: const
           value: 0
@@ -73,7 +73,7 @@ batterymode:
               address: 40793 # SMA Modbus Profile: CmpBMS.BatChaMinW - Minimale Batterieladeleistung
               type: writemultiple
               decode: uint32
-        - source: go # charge limit
+        - source: fallback # charge limit
           {{- include "sma-battery-limit" (dict "root" . "limit" "charge" "write" 40795 "name" "CmpBMS.BatChaMaxW - Maximale Batterieladeleistung") | indent 10 }}
         - source: const
           value: 0
@@ -115,9 +115,9 @@ batterymode:
               address: 40236 # SMA Modbus Profile: CmpBMS.OpMod - Betriebsart des BMS
               type: writemultiple
               decode: uint32
-        - source: go # charge limit
+        - source: fallback # charge limit
           {{- include "sma-battery-limit" (dict "root" . "limit" "charge" "write" 40793 "name" "CmpBMS.BatChaMinW - Minimale Batterieladeleistung") | indent 10 }}
-        - source: go # charge limit
+        - source: fallback # charge limit
           {{- include "sma-battery-limit" (dict "root" . "limit" "charge" "write" 40795 "name" "CmpBMS.BatChaMaxW - Maximale Batterieladeleistung") | indent 10 }}
         - source: const
           value: 0
@@ -186,7 +186,7 @@ batterymode:
               address: 40797 # SMA Modbus Profile: CmpBMS.BatDschMinW - Minimale Batterieentladeleistung
               type: writemultiple
               decode: uint32
-        - source: go # discharge limit
+        - source: fallback # discharge limit
           {{- include "sma-battery-limit" (dict "root" . "limit" "discharge" "write" 40799 "name" "CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung") | indent 10 }}
         - source: const
           value: 0

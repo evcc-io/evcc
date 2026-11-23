@@ -55,4 +55,4 @@ render: |
       type: holding
       decode: uint32nan
   {{- include "sma-batterymode" . }}
-  {{- include "battery-params" . }}
+  {{- include "sma-battery-params" . }}
