@@ -108,60 +108,76 @@ func TestOptimizerRequestForecastUnavailable(t *testing.T) {
 	}
 }
 
-func TestApplyPrecondition(t *testing.T) {
+func TestPreconditionDemand(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
+	now := time.Date(2026, 1, 1, 10, 5, 0, 0, time.UTC) // 10 min left in current slot
+	plan := now.Add(time.Hour)
+
 	lp := loadpoint.NewMockAPI(ctrl)
-	lp.EXPECT().EffectiveMaxPower().Return(8000.0).AnyTimes() // 2 kWh per slot
+	lp.EXPECT().EffectiveMaxPower().Return(8000.0).AnyTimes()
+	lp.EXPECT().EffectivePlanTime().Return(plan).AnyTimes()
+	lp.EXPECT().GetPlanGoal().Return(15.0, false).AnyTimes() // energy plan
+	lp.EXPECT().GetVehicle().Return(nil).AnyTimes()
 
 	// no precondition configured
 	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{}).Times(1)
-	assert.Nil(t, applyPrecondition(lp, nil, 8))
+	res, held, _ := preconditionDemand(lp, 0, 8, now)
+	assert.Nil(t, res)
+	assert.Zero(t, held)
 
-	// no plan
-	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: time.Hour}).Times(1)
-	lp.EXPECT().EffectivePlanTime().Return(time.Time{}).Times(1)
-	assert.Nil(t, applyPrecondition(lp, nil, 8))
-
-	// plan in 1h, 40min precondition: slots 1 (10min) and 2, 3 (full)
-	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
+	// goal reached
 	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 40 * time.Minute}).Times(1)
-	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
-	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(2 * time.Hour).Times(1)
-	res := applyPrecondition(lp, nil, 8)
-	require.Len(t, res, 8)
-	assert.InDeltaSlice(t, []float32{0, 2000. / 1.5, 2000, 2000, 0, 0, 0, 0}, res, 1)
+	lp.EXPECT().GetPlanRemainingEnergy().Return(0.0).Times(1)
+	res, held, _ = preconditionDemand(lp, 0, 8, now)
+	assert.Nil(t, res)
+	assert.Zero(t, held)
 
-	// existing demand is kept where higher
-	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
-	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 30 * time.Minute}).Times(1)
-	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
-	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(2 * time.Hour).Times(1)
-	res = applyPrecondition(lp, []float32{3000, 3000, 3000, 3000, 0, 0, 0, 0}, 8)
-	assert.InDeltaSlice(t, []float32{3000, 3000, 3000, 3000, 0, 0, 0, 0}, res, 1)
+	// 40 min window, 4 kWh missing: full power for 4000/0.9/8000 h = 33:20 min right before the plan at 11:05
+	grid, total := float32(4000/eta), float32(100.0/3)                                   // Wh, min
+	for _, precondition := range []time.Duration{40 * time.Minute, 7 * 24 * time.Hour} { // "everything" is limited to what is missing
+		lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: precondition}).Times(1)
+		lp.EXPECT().GetPlanRemainingEnergy().Return(4.0).Times(1)
+		res, held, start := preconditionDemand(lp, 0, 8, now)
+		assert.WithinDuration(t, plan.Add(-(33*time.Minute + 20*time.Second)), start, time.Second)
+		assert.InDelta(t, 4000, held, 1)
+		assert.InDeltaSlice(t, []float32{0, 0, grid * (total - 20) / total, grid * 15 / total, grid * 5 / total, 0, 0, 0}, res, 1)
+	}
 
-	// plan beyond horizon
-	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(24 * time.Hour)).Times(1)
-	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: time.Hour}).Times(1)
-	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
-	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(2 * time.Hour).Times(1)
-	assert.Nil(t, applyPrecondition(lp, nil, 8))
+	// window reaches back to now: limited to what full power stores until the plan time
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 2 * time.Hour}).Times(1)
+	lp.EXPECT().GetPlanRemainingEnergy().Return(20.0).Times(1)
+	_, held, start := preconditionDemand(lp, 0, 8, now)
+	assert.WithinDuration(t, now, start, time.Second)
+	assert.InDelta(t, 8000*eta, held, 1)
+}
 
-	// "all" precondition is limited to the required charging duration (#33135)
-	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
-	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 7 * 24 * time.Hour}).Times(1)
-	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
-	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(40 * time.Minute).Times(1)
-	res = applyPrecondition(lp, nil, 8)
-	require.Len(t, res, 8)
-	assert.InDeltaSlice(t, []float32{0, 2000. / 1.5, 2000, 2000, 0, 0, 0, 0}, res, 1)
+// TestApplyPlanGoalPrecondition guards that the vehicle holds back the window energy until the window starts
+func TestApplyPlanGoalPrecondition(t *testing.T) {
+	ctrl := gomock.NewController(t)
 
-	// goal already reached: no demand
-	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
-	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 7 * 24 * time.Hour}).Times(1)
-	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
-	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(time.Duration(0)).Times(1)
-	assert.Nil(t, applyPrecondition(lp, nil, 8))
+	plan := time.Now().Add(4 * time.Hour)
+
+	lp := loadpoint.NewMockAPI(ctrl)
+	lp.EXPECT().GetPlanGoal().Return(15.0, false).AnyTimes()
+	lp.EXPECT().GetVehicle().Return(nil).AnyTimes()
+	lp.EXPECT().EffectivePlanTime().Return(plan).AnyTimes()
+	lp.EXPECT().GetPlanRemainingEnergy().Return(15.0).AnyTimes()
+
+	site := &Site{log: util.NewLogger("foo")}
+
+	bat := optimizer.BatteryConfig{SMax: 66000}
+	site.applyPlanGoal(lp, &bat, 32, 4000, plan.Add(-time.Hour))
+
+	require.Len(t, bat.SGoal, 32)
+	assert.Equal(t, []float32{11000}, lo.Filter(bat.SGoal, func(g float32, _ int) bool { return g > 0 }))
+	assert.Equal(t, float32(11000), bat.SMax, "capped until the window")
+
+	// inside the window the vehicle only holds what it has
+	bat = optimizer.BatteryConfig{SInitial: 2000, SMax: 66000}
+	site.applyPlanGoal(lp, &bat, 32, 15000, time.Now().Add(-time.Minute))
+	assert.Nil(t, bat.SGoal)
+	assert.Equal(t, float32(2000), bat.SMax)
 }
 
 func TestPlanDemand(t *testing.T) {
@@ -199,7 +215,7 @@ func TestApplyPlanGoalEnergy(t *testing.T) {
 
 	for _, sInitial := range []float32{0, 20000} { // offline vehicle, vehicle with soc
 		bat := optimizer.BatteryConfig{SInitial: sInitial, SMax: 66000}
-		site.applyPlanGoal(lp, &bat, 16)
+		site.applyPlanGoal(lp, &bat, 16, 0, time.Time{})
 
 		require.Len(t, bat.SGoal, 16)
 		assert.Equal(t, sInitial+11000, lo.Max(bat.SGoal), "s_initial %.0f", sInitial)
@@ -232,7 +248,7 @@ func TestApplyPlanGoalSoc(t *testing.T) {
 	site := &Site{log: util.NewLogger("foo")}
 
 	bat := optimizer.BatteryConfig{SMax: 40000, CMax: 11000} // the plan beyond the horizon is reachable after it
-	site.applyPlanGoal(lp, &bat, 32)
+	site.applyPlanGoal(lp, &bat, 32, 0, time.Time{})
 
 	require.Len(t, bat.SGoal, 32)
 	// goal values in slot order, independent of where applyPlanGoal's clock falls within the slot
@@ -273,7 +289,7 @@ func TestApplyPlanGoalBeyondHorizon(t *testing.T) {
 			site := &Site{log: util.NewLogger("foo")}
 
 			bat = optimizer.BatteryConfig{SInitial: 5000, SMax: 40000, CMax: 3000}
-			site.applyPlanGoal(lp, &bat, 16)
+			site.applyPlanGoal(lp, &bat, 16, 0, time.Time{})
 		}
 
 		if tc.goal == 0 {

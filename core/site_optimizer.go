@@ -79,6 +79,7 @@ type batteryDetail struct {
 	loadpoint    *int              // originating loadpoint id for loadpoint/vehicle entries
 	controllable bool              // device can act on suggestions
 	modes        []api.BatteryMode // modes the battery controller supports
+	precondition []float32         // late charging window charged by the loadpoint itself (Wh per slot)
 }
 
 // batteryKey and loadpointKey build the canonical device keys used for
