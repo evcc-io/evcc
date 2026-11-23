@@ -98,6 +98,15 @@ All drivers only read on startup and warn on settings that conflict with evcc co
 - **assumed**: whether `WMaxIn` limits the charging power at runtime on the EV Charger or only acts as an installation limit is unverified.
 - **assumed**: if the eCharger enforces the same `WMaxIn` minimum of 4500 W, single phase charging via power limit is not possible. Check the `WMaxIn` range on an eCharger, e.g. via the `min`/`max` fields of the REST parameter response.
 
+## External active power setpoint
+
+SMA inverters share the `Inverter.WModCfg.WCtlComCfg` channel family for active power control via communication ("Externe Wirkleistungsvorgabe"). Known from inverter parameter lists: `WSptMaxNom` (Modbus 44039, "Maximale Wirkleistung") and `WSptMinNom` (44041, "Minimale Wirkleistung") as S32 percent of nominal power with 0.01 resolution, `WSpt` (40149/44425, "Wirkleistungsvorgabe" in W), `WCtlComCfg.WMaxIn` (41251, "Begrenzung der Leistungsaufnahme in W") and the fallback group `CtlComCfg.WCtlCom.CtlComMssMod` / `TmsOut` / `FlbWNom` (41193, 41195, 41197). Signs follow the generator convention, positive means output, negative means consumption.
+
+- **assumed**: on the eCharger `Setpoint.PlantControl.Inverter.WModCfg.WCtlComCfg.WSptMaxNom` 0 and `WSptMinNom` -100 define the allowed range of an external setpoint, from no output to consuming 100 % of nominal power. They are not a minimum charging power.
+- **assumed**: as `Setpoint.PlantControl` channels they are written by plant control, likely the Sunny Home Manager or the charger itself when converting SEMP commands. SMA permits cyclic writes only for such setpoints.
+- **documented**: the eCharger Modbus register list contains neither 44039/44041 nor `WSpt`, only `Setpoint.PlantControl.Inverter.FstStop` (41253). Of the fallback group it lists 41193 and 41525 (`TmsOutPrc`).
+- **documented**: inverter parameter lists name `Inverter.WMax` "Nennwirkleistung WMaxOut", supporting that `WMax`/`WMaxIn` are rated or installation limits.
+
 ## Modbus specifics
 
 - Unit id 3, big endian, 32 bit registers. NaN: S32 `0x80000000`, U32 `0xFFFFFFFF`, U64 all ones, status values use the lower 24 bits (`0xFFFFFD`). STR32 strings are 16 registers.
@@ -114,3 +123,4 @@ All drivers only read on startup and warn on settings that conflict with evcc co
 - FHEM `76_SMAEVCharger.pm` (EV Charger, German value names)
 - `erwin1/homecontrol` (REST control and `/SEMP/Parameters`)
 - `J0B10/MAD-MyEnergy`, `PaulV71/gwHEMS-Userbase` (REST parameter dumps of `EVC22-3AC-10`)
+- SMA "Parameter und Messwerte" STP x.0-3SE-40 and `StefanLSA/py-sma-modbus2` (inverter `WCtlComCfg` channels)
