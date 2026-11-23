@@ -103,14 +103,16 @@ render: |
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
     jq: .battery.instant_power
+  # Powerwall energy_imported is charge and energy_exported is discharge;
+  # evcc battery energy is discharge and returnenergy is charge.
   energy:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
-    jq: .battery.energy_imported / 1000
+    jq: .battery.energy_exported / 1000
   returnenergy:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/meters/aggregates
-    jq: .battery.energy_exported / 1000
+    jq: .battery.energy_imported / 1000
   soc:
     {{- include "pypowerwall-http" . | nindent 2 }}
     uri: {{ include "pypowerwall-base" . }}/api/system_status/soe

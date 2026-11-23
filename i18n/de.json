@@ -1649,7 +1649,7 @@
       "selectAll": "Alle wählen",
       "strategy": {
         "label": "Strategie",
-        "optimizerHint": "Der {optimizer} berücksichtigt Strategie-Einstellungen noch nicht und wählt immer die günstigsten Zeitfenster. Stelle die automatische Steuerung auf „Hausbatterie“, falls du sie brauchst."
+        "optimizerHint": "Der {optimizer} berücksichtigt die Optimierung noch nicht und wählt immer die günstigsten Zeitfenster. Stelle die automatische Steuerung auf „Hausbatterie“, falls du sie brauchst."
       },
       "time": "Zeit",
       "title": "Plan",

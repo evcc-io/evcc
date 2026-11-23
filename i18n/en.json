@@ -1649,7 +1649,7 @@
       "selectAll": "Select all",
       "strategy": {
         "label": "Strategy",
-        "optimizerHint": "The {optimizer} does not take strategy settings into account yet and always chooses the cheapest slots. Limit automatic control to “Home battery” if you need them."
+        "optimizerHint": "The {optimizer} does not take the optimization setting into account yet and always chooses the cheapest slots. Limit automatic control to “Home battery” if you need it."
       },
       "time": "Time",
       "title": "Plan",

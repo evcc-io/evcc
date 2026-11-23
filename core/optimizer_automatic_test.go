@@ -216,6 +216,29 @@ func TestOptimizerBatteryFed(t *testing.T) {
 	ctrl.Finish()
 }
 
+// TestOptimizerFullPowerPvShortfall covers a full power charge the optimizer planned from
+// forecast pv surplus (no grid, no battery discharge), while the measured pv falls short
+// because the home demand exceeds its forecast: the vehicle must follow the measured
+// surplus instead of drawing the shortfall from home battery and grid at max current
+func TestOptimizerFullPowerPvShortfall(t *testing.T) {
+	enableAutomatic(t)
+
+	lp, charger, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
+	lp.Disable.Delay = time.Minute
+	lp.offeredCurrent = maxA
+
+	// the 1p test loadpoint tops out at 3680W, the forecast surplus covers it fully
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 3680, BatteryCharge: 469})
+
+	// measured: 771W grid import plus 2185W home battery discharge feed the vehicle
+	charger.EXPECT().MaxCurrent(int64(minA))
+	lp.Update(771+2185, 2185, nil, nil, false, false, 0, nil, nil, nil)
+
+	assert.False(t, lp.pvTimer.Equal(elapsed), "pv timer must not be elapsed by a pv-covered plan")
+
+	ctrl.Finish()
+}
+
 // TestOptimizerStopFollowsSurplus covers a stop based on a forecast surplus that is
 // too low: the pv loop still enables on measured surplus after the enable delay
 func TestOptimizerStopFollowsSurplus(t *testing.T) {

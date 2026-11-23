@@ -51,7 +51,7 @@ render: |
   {{ include "base" . }}
   forecast:
     source: http
-    uri: https://stromligning.dk/api/prices{{ if eq .pricetype "production" }}/production{{ end }}?supplierId={{ .supplierid | unquote | urlEncode }}{{ if .customergroupid }}&customerGroupId={{ .customergroupid | unquote | urlEncode }}{{ end }}{{ if eq .pricetype "consumption" }}&productId={{ .productid | unquote | urlEncode }}{{ if .agreementstart }}&agreementStart={{ .agreementstart | unquote | urlEncode }}{{ end }}{{ end }}&lean=true
+    uri: https://stromligning.dk/api/prices{{ if eq .pricetype "production" }}/production{{ end }}?supplierId={{ .supplierid | unquote | urlEncode }}{{ if .customergroupid }}&customerGroupId={{ .customergroupid | unquote | urlEncode }}{{ end }}{{ if eq .pricetype "consumption" }}&productId={{ .productid | unquote | urlEncode }}{{ if .agreementstart }}&agreementStart={{ .agreementstart | unquote | urlEncode }}{{ end }}{{ end }}&forecast=true&lean=true
     auth:
       type: bearer
       token: {{ .apikey }}
@@ -62,5 +62,6 @@ render: |
           (if .resolution == "15m" then 900
            elif .resolution == "1h" then 3600
            else error("unsupported price resolution: \(.resolution)") end) | todate,
-        value: (.price | if type == "number" then . else error("invalid price") end)
+        value: (.price | if type == "number" then . else error("invalid price") end),
+        estimate: (.forecast == true)
       } ] | tostring
