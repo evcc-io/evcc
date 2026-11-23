@@ -33,9 +33,11 @@ import (
 
 // SmaECharger charger implementation for the SMA eCharger (Modbus profile SW 2.7)
 type SmaECharger struct {
-	conn    *modbus.Connection
-	phases  int
-	current float64
+	conn     *modbus.Connection
+	phases   int
+	current  float64
+	minPower float64
+	maxPower float64
 }
 
 const (
@@ -118,6 +120,14 @@ func NewSmaECharger(ctx context.Context, settings modbus.Settings) (api.Charger,
 		return nil, fmt.Errorf("mode: %w", err)
 	} else if v != smaEChargerModeStop && v != smaEChargerModeFast {
 		log.WARN.Printf("charging mode is %d, fast charging (%d) required", v, smaEChargerModeFast)
+	}
+
+	// the charger may reject values outside its range, e.g. a 4500 W minimum on the EV Charger
+	if v, err := wb.readHolding32(smaEChargerRegMinPower); err == nil {
+		wb.minPower = smaEChargerInt32(v)
+	}
+	if v, err := wb.read32(smaEChargerRegMaxPowerRtg, 1); err == nil {
+		wb.maxPower = smaEChargerInt32(v[0])
 	}
 
 	// disconnecting after full charge ends the session on the charger side
@@ -240,16 +250,11 @@ func (wb *SmaECharger) MaxCurrentMillis(current float64) error {
 func (wb *SmaECharger) setPower(current float64, phases int) error {
 	power := grid.CurrentToPower(current, phases)
 
-	// the charger may reject values outside its range, e.g. a 4500 W minimum on the EV Charger
-	if v, err := wb.readHolding32(smaEChargerRegMinPower); err == nil {
-		if p := smaEChargerInt32(v); p > 0 {
-			power = max(power, p)
-		}
+	if wb.minPower > 0 {
+		power = max(power, wb.minPower)
 	}
-	if v, err := wb.read32(smaEChargerRegMaxPowerRtg, 1); err == nil {
-		if p := smaEChargerInt32(v[0]); p > 0 {
-			power = min(power, p)
-		}
+	if wb.maxPower > 0 {
+		power = min(power, wb.maxPower)
 	}
 
 	return wb.write(smaEChargerRegSetpoint, uint32(int32(math.Round(power))))
