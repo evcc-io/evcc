@@ -74,7 +74,7 @@ export default defineComponent({
 			]);
 		},
 		// plan goals as set by the user, above the soc line where a later plan lifts the limit
-		goalSeries(): [number, number][] {
+		goals(): [number, number][] {
 			return (this.entry.planGoals || []).map((g) => [new Date(g.time).getTime(), g.soc]);
 		},
 		xAxes(): Record<string, unknown>[] {
@@ -130,22 +130,44 @@ export default defineComponent({
 						...transientHoverDot(this.entry.color),
 						lineStyle: { color: this.entry.color, ...lineDefaults },
 						areaStyle: { color: dimColor(this.entry.color) },
-					},
-					{
-						type: "scatter",
-						z: 4,
-						data: this.goalSeries,
-						symbol: "emptyCircle",
-						symbolSize: 8,
-						itemStyle: { color: this.entry.color, borderWidth: 2 },
-						label: {
-							show: true,
-							position: "top",
-							color: colors.muted || "",
-							formatter: (p: { value: [number, number] }) =>
-								this.fmtPercentage(p.value[1]),
+						// deadline line from the axis up to the goal soc
+						markLine: {
+							data: this.goals.map((coord) => [{ coord: [coord[0], 0] }, { coord }]),
+							symbol: "none",
+							lineStyle: { color: this.entry.color, type: "solid", width: 1 },
+							label: { show: false },
+							silent: true,
 						},
-						silent: true,
+						// ring at the goal, value pill at the bottom of the plot
+						markPoint: {
+							data: this.goals.flatMap(([t, soc]) => [
+								{
+									coord: [t, soc],
+									symbol: "circle",
+									symbolSize: 8,
+									itemStyle: {
+										color: colors.background || "",
+										borderColor: this.entry.color,
+										borderWidth: 2,
+									},
+									label: { show: false },
+								},
+								{ coord: [t, 0], symbolSize: 0, value: soc },
+							]),
+							label: {
+								show: true,
+								position: "top",
+								distance: 0,
+								fontSize: 10,
+								fontWeight: "bold",
+								color: colors.background || "",
+								backgroundColor: this.entry.color,
+								borderRadius: 7,
+								padding: [2, 5],
+								formatter: (p: { value: number }) => this.fmtPercentage(p.value),
+							},
+							silent: true,
+						},
 					},
 				],
 			};
@@ -153,15 +175,24 @@ export default defineComponent({
 	},
 	methods: {
 		tooltipFormatter(
-			params: { axisValue: number; seriesIndex: number; value?: [number, number] }[]
+			params: { axisValue: number; dataIndex: number; value?: [number, number] }[]
 		): string {
 			const arr = Array.isArray(params) ? params : [params];
-			const soc = arr.find((p) => p.seriesIndex === 0);
-			const v = soc?.value?.[1];
-			if (v == null || Number.isNaN(v)) return "";
-			const t = new Date(soc!.axisValue);
+			const p = arr[0];
+			const v = p?.value?.[1];
+			if (!p || v == null || Number.isNaN(v)) return "";
+			// goal falls into the slot ending at the hovered point
+			const prev = this.socSeries[p.dataIndex - 1]?.[0] ?? -Infinity;
+			const goal = this.goals.find(([gt]) => gt > prev && gt <= p.axisValue);
+			const t = new Date(goal ? goal[0] : p.axisValue);
 			const head = `${this.weekdayShort(t)} ${this.fmtHourMinute(t)}`;
-			return tooltipTable(head, [{ values: [this.fmtPercentage(v)] }]);
+			if (!goal) {
+				return tooltipTable(head, [{ values: [this.fmtPercentage(v)] }]);
+			}
+			return tooltipTable(head, [
+				{ name: "Charge", values: [this.fmtPercentage(v)] },
+				{ name: "Goal", values: [this.fmtPercentage(goal[1])] },
+			]);
 		},
 	},
 });
