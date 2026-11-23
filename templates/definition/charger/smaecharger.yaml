@@ -1,4 +1,4 @@
-template: sma-modbus
+template: smaecharger
 products:
   - brand: SMA
     description:
