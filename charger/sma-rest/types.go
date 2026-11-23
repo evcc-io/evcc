@@ -27,15 +27,20 @@ type Measurements struct {
 
 // Parameter Data json Response structure
 type Parameters struct {
-	ComponentId string `json:"componentId"`
-	Values      []struct {
-		ChannelId      string   `json:"channelId"`
-		Editable       bool     `json:"editable"`
-		PossibleValues []string `json:"possibleValues,omitempty"`
-		State          string   `json:"state"`
-		Timestamp      string   `json:"timestamp"`
-		Value          string   `json:"value"`
-	} `json:"values"`
+	ComponentId string      `json:"componentId"`
+	Values      []Parameter `json:"values"`
+}
+
+// Parameter is a single parameter including its metadata
+type Parameter struct {
+	ChannelId      string   `json:"channelId"`
+	Editable       bool     `json:"editable"`
+	PossibleValues []string `json:"possibleValues,omitempty"`
+	Min            *float64 `json:"min,omitempty"`
+	Max            *float64 `json:"max,omitempty"`
+	State          string   `json:"state"`
+	Timestamp      string   `json:"timestamp"`
+	Value          string   `json:"value"`
 }
 
 // Parameter Data json Send structure

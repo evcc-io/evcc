@@ -20,8 +20,10 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -29,6 +31,7 @@ import (
 	"github.com/evcc-io/evcc/charger/sma"
 	smarest "github.com/evcc-io/evcc/charger/sma-rest"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/hashicorp/go-version"
@@ -43,6 +46,8 @@ type SmaRest struct {
 	cache        time.Duration
 	measurementG util.Cacheable[[]smarest.Measurements]
 	parameterG   util.Cacheable[[]smarest.Parameters]
+	phases       int
+	current      float64
 }
 
 func init() {
@@ -89,6 +94,7 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 		log:    log,
 		uri:    util.DefaultScheme(strings.TrimRight(uri, "/"), "http") + "/api/v1",
 		cache:  cache,
+		phases: 3,
 	}
 
 	if !sponsor.IsAuthorized() {
@@ -232,7 +238,53 @@ func (wb *SmaRest) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.5g", current)
 	}
 
-	return wb.Send(value("Parameter.Inverter.AcALim", fmt.Sprintf("%.2f", current)))
+	if err := wb.setPower(current, wb.phases); err != nil {
+		return err
+	}
+
+	wb.current = current
+
+	return nil
+}
+
+// setPower writes the power limit, the charger selects 1p or 3p internally based on it
+func (wb *SmaRest) setPower(current float64, phases int) error {
+	power := grid.CurrentToPower(current, phases)
+
+	// the charger rejects values outside the parameter range, e.g. a 4500 W minimum on the EV Charger
+	if p, err := wb.parameter(sma.InverterWMaxIn); err == nil {
+		if p.Min != nil {
+			power = max(power, *p.Min)
+		}
+		if p.Max != nil {
+			power = min(power, *p.Max)
+		}
+	}
+
+	return wb.Send(value(sma.InverterWMaxIn, strconv.Itoa(int(math.Round(power)))))
+}
+
+var _ api.PhaseSwitcher = (*SmaRest)(nil)
+
+// Phases1p3p implements the api.PhaseSwitcher interface
+func (wb *SmaRest) Phases1p3p(phases int) error {
+	// loadpoint may not rewrite an unchanged current, hence apply the new phases immediately
+	if wb.current > 0 {
+		if err := wb.setPower(wb.current, phases); err != nil {
+			return err
+		}
+	}
+
+	wb.phases = phases
+
+	return nil
+}
+
+var _ api.PhaseGetter = (*SmaRest)(nil)
+
+// GetPhases implements the api.PhaseGetter interface
+func (wb *SmaRest) GetPhases() (int, error) {
+	return wb.phases, nil
 }
 
 var _ api.MeterEnergy = (*SmaRest)(nil)
@@ -333,34 +385,29 @@ func (wb *SmaRest) getMeasurement(id string) (float64, error) {
 	return 0, &smarest.ErrUnknownMeasurement{Measurement: id}
 }
 
-func (wb *SmaRest) getParameter(id string) (string, error) {
+func (wb *SmaRest) parameter(id string) (smarest.Parameter, error) {
 	res, err := wb.parameterG.Get()
 	if err != nil {
-		return "", err
+		return smarest.Parameter{}, err
 	}
 
 	for _, el := range res[0].Values {
 		if el.ChannelId == id {
-			return el.Value, nil
+			return el, nil
 		}
 	}
 
-	return "", fmt.Errorf("unknown parameter: %s", id)
+	return smarest.Parameter{}, fmt.Errorf("unknown parameter: %s", id)
+}
+
+func (wb *SmaRest) getParameter(id string) (string, error) {
+	p, err := wb.parameter(id)
+	return p.Value, err
 }
 
 func (wb *SmaRest) possibleValues(id string) ([]string, error) {
-	res, err := wb.parameterG.Get()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, el := range res[0].Values {
-		if el.ChannelId == id {
-			return el.PossibleValues, nil
-		}
-	}
-
-	return nil, fmt.Errorf("unknown parameter: %s", id)
+	p, err := wb.parameter(id)
+	return p.PossibleValues, err
 }
 
 func (wb *SmaRest) Send(values ...smarest.Value) error {
