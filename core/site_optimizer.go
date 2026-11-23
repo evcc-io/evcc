@@ -75,7 +75,6 @@ type batteryDetail struct {
 	Title    string      `json:"title,omitempty"`
 	Name     string      `json:"name,omitempty"`
 	Capacity float64     `json:"capacity,omitempty"`
-	// vehicle without capacity or soc: s_initial counts the energy charged this session, not its charge level
 	SocUnknown bool `json:"socUnknown,omitempty"`
 
 	loadpoint    *int              // originating loadpoint id for loadpoint/vehicle entries
