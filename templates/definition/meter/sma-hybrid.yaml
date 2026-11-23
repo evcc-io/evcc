@@ -27,12 +27,8 @@ params:
   - preset: battery-params
   - name: maxchargepower
     service: modbus/read?address=40189&type=holding&encoding=uint32&resulttype=int&{modbus} # BatConv.WMaxCha
-    required: true
-    example: 4600
   - name: maxdischargepower
     service: modbus/read?address=40191&type=holding&encoding=uint32&resulttype=int&{modbus} # BatConv.WMaxDsch
-    required: true
-    example: 4600
   - name: watchdog
     default: 60s
     usages: ["battery"]
