@@ -257,7 +257,7 @@
       "amount": "Antal",
       "asleep": "sover",
       "broker": "Broker",
-      "bucket": "Bucket",
+      "bucket": "Bucket / databas",
       "capacity": "Kapacitet",
       "chargeStatus": "Status",
       "chargeStatusA": "ej ansluten",
@@ -286,7 +286,7 @@
       "exportLimit": "Gräns för inmatning till elnätet",
       "feedinPrice": "Pris för el som matas in på elnätet",
       "forecast": "Prognos",
-      "gridPrice": "Pris för el som köps från elnätet",
+      "gridPrice": "Importpris från elnät",
       "heaterTempLimit": "Värmarens temperaturgräns",
       "identifier": "RFID-identifierare",
       "loginBlocked": "Inloggningsgräns nådd",
@@ -508,7 +508,7 @@
     "influx": {
       "description": "Skriver laddata och andra mätningar till InfluxDB. Använd Grafana eller andra verktyg för att visualisera data.",
       "descriptionToken": "Se InfluxDB-dokumentationen för att läsa om hur du skapar en API-token. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Bucket",
+      "labelBucket": "Bucket / databas",
       "labelCheckInsecure": "Tillåt egensignerade certifikat",
       "labelDatabase": "Databas",
       "labelInsecure": "Certifikatvalidering",
@@ -519,7 +519,7 @@
       "labelUser": "Användarnamn",
       "title": "InfluxDB",
       "v1Support": "Behöver du stöd för InfluxDB 1.x?",
-      "v2Support": "Tillbaka till InfluxDB 2.x"
+      "v2Support": "Tillbaka till InfluxDB 2+"
     },
     "loadpoint": {
       "addCharger": {
@@ -982,7 +982,8 @@
       "manualLogin": "Eller logga in manuellt på {url} i din webbläsare med dessa inloggningsuppgifter:",
       "noClients": "Det finns inga klienter än. Ingen kan ansluta just nu.",
       "password": "Lösenord",
-      "passwordOnce": "Lösenordet visas bara en gång. Skanna QR-koden eller kopiera lösenordet nu. Du kan inte visa det igen senare.",
+      "passwordOnce": "Lösenordet visas bara en gång. Skanna QR-koden kopiera eller skriv ut den nu. Du kan inte visa den igen senare.",
+      "print": "Skriv ut / PDF",
       "privacy": "Genom att aktivera denna funktion accepterar du vår {0}.",
       "privacyLink": "integritetspolicy",
       "qrInstall": "Installera evcc-appen för {ios} eller {android}.",
@@ -1178,8 +1179,8 @@
       "titleSub": "Undertariff",
       "type": {
         "co2": "CO₂-intensitet",
-        "feedIn": "Exportpris",
-        "grid": "Importpris från nätet",
+        "feedIn": "Exportpris till elnät",
+        "grid": "Importpris från elnät",
         "planner": "Planering",
         "solar": "Sol",
         "temperature": "Temperaturprognos"
@@ -1253,26 +1254,39 @@
     },
     "direction": {
       "battery": {
-        "energy": "laddad",
-        "returnEnergy": "urladdad"
+        "energy": "Laddad",
+        "returnEnergy": "Urladdad"
+      },
+      "consumer": {
+        "energy": "Förbrukat"
       },
       "grid": {
         "energy": "Import",
         "returnEnergy": "Export"
+      },
+      "heating": {
+        "energy": "Förbrukat"
+      },
+      "loadpoint": {
+        "energy": "Laddat"
       },
       "meter": {
         "energy": "Energi",
         "returnEnergy": "Energi (motsatt riktning)"
       }
     },
-    "empty": "Inga energidata tillgängliga för denna period.",
+    "empty": {
+      "description": "Inga energidata för denna period.",
+      "descriptionCurrent": "Inga energidata ännu. Värden visas när de första mätningarna har registrerats.",
+      "showCurrent": "Visa nuvarande period"
+    },
     "flow": {
       "battery": "Batteri",
       "batteryCharge": "Batteriladdning",
       "batteryDischarge": "Batteriurladdning",
       "charging": "Laddning",
-      "export": "Export till elnätet",
-      "grid": "Import från elnätet",
+      "export": "Nätexport",
+      "grid": "Nätimport",
       "heating": "Uppvärmning",
       "home": "Förbrukning",
       "overview": "Översikt",
@@ -1304,7 +1318,7 @@
     },
     "production": {
       "above": "{value} över",
-      "accuracy": "Prognosprecision",
+      "accuracy": "precision",
       "below": "{value} under",
       "deviation": "Avvikelse",
       "expectedTomorrow": "förväntat i morgon",
@@ -1316,8 +1330,9 @@
     },
     "socTemp": {
       "charged": "laddat",
-      "soc": "laddnivå",
-      "temperature": "temperatur",
+      "power": "Effekt",
+      "soc": "Laddnivå",
+      "temperature": "Temperatur",
       "used": "förbrukat"
     },
     "sources": {
@@ -1338,12 +1353,15 @@
       "co2Saved": "Minskade CO₂-utsläpp",
       "co2SavedTooltip": "Jämfört med om hela förbrukningen på {energy} hade täckts med el från nätet.",
       "configure": "Konfigurera nu",
+      "energy": "Energi",
+      "fromGrid": "{value} från elnät",
       "noCo2": "Inga CO₂-data.",
       "noPrice": "Inga prisdata.",
-      "savings": "Besparing",
+      "savings": "Sparat",
       "savingsTooltip": "Jämfört med om hela förbrukningen på {energy} hade köpts från elnätet.",
       "versus": "{value} mot {reference}"
     },
+    "summary": "Sammanfattning",
     "title": "Energi"
   },
   "footer": {
@@ -1370,12 +1388,12 @@
         "co2saved": "Minskade CO₂-utsläpp",
         "none": "inget",
         "price": "energipris",
-        "savings": "besparing",
+        "savings": "sparat",
         "solar": "solenergi"
       },
       "indicatorLabel": "Information i sidhuvudet",
       "modalTitle": "Översikt över energin som använts för laddning",
-      "moneySaved": "{value} i besparing",
+      "moneySaved": "{value} sparat",
       "percentGrid": "{grid} kWh från elnätet",
       "percentSelf": "{self} kWh solel",
       "percentTitle": "Solenergi",
@@ -1486,6 +1504,7 @@
     "cancel": "Avbryt",
     "download": "Ladda hem",
     "error": "Fel",
+    "loading": "Laddar",
     "none": "inget",
     "note": "Anmärkning:",
     "warning": "Varning"
@@ -1679,13 +1698,14 @@
       "batteryTooltip": "{energy} av {total} ({soc})",
       "forecast": "Prognos",
       "forecastTooltip": "Prognos: återstående solproduktion idag",
-      "gridImport": "Import från elnätet",
+      "gridImport": "Nätimport",
+      "heaters": "Värmare | flera värmare",
       "homePower": "Förbrukning",
-      "loadpoints": "Laddare | Laddare | {count} laddare",
+      "loadpoints": "Laddare | flera laddare",
       "loadpointsLimit": "Gräns: {limit}",
       "noEnergy": "Inga mätaruppgifter",
       "pv": "Solcellsanläggning",
-      "pvExport": "Export till elnätet",
+      "pvExport": "Nätexport",
       "pvProduction": "Produktion",
       "selfConsumption": "Egenförbrukning",
       "toggleDetails": "Detaljer om energiflödet"
@@ -1701,25 +1721,29 @@
     },
     "hemsWarning": {
       "consumption": "Förbrukning",
-      "feedIn": "Inmatning till elnätet",
+      "feedIn": "Export till elnät",
       "title": "Extern begränsning aktiv"
     },
     "loadpoint": {
       "avgPrice": "⌀ pris",
       "charged": "Laddat",
       "co2": "⌀ CO₂",
+      "consumed": "Förbrukat",
       "duration": "Laddtid",
       "emission": "Utsläpp",
       "fallbackName": "Laddpunkt",
       "finished": "Sluttid",
       "last24hEnergy": "Senaste 24 timmarna",
+      "last24hShort": "24h",
       "last7dEnergy": "Senaste 7 dagarna",
+      "last7dShort": "7d",
       "phasesMismatch": "Fler faser är aktiva än vad som angetts. Kontrollera fasinställningarna.",
       "power": "Effekt",
       "price": "Kostnad",
       "remaining": "Återstående tid",
       "remoteDisabledHard": "{source}: avstängd",
       "remoteDisabledSoft": "{source}: adaptiv laddning med solel avstängd",
+      "session": "Laddning",
       "solar": "Solenergi",
       "todayEnergy": "Idag"
     },
