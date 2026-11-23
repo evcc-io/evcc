@@ -1094,6 +1094,25 @@ func TestCurrentSlotSuggestionHoldWorthwhile(t *testing.T) {
 	assert.Equal(t, api.BatteryHoldDischarge.String(), currentSlotSuggestion(battery, req, res, ts, 1, 0, 1000, 0, 0.25, 0, 0).Action, "idle while importing")
 }
 
+func TestOptimizerObserveGap(t *testing.T) {
+	now := time.Now()
+	var o optimizerState
+
+	assert.Zero(t, o.observeGap(now), "first run has no gap")
+
+	o.updated = now.Add(-6 * time.Minute)
+	assert.Equal(t, 6*time.Minute, o.observeGap(now), "gap between runs")
+
+	o.updated = now.Add(-time.Minute)
+	assert.Equal(t, 6*time.Minute, o.observeGap(now), "short gap after forced run keeps estimate")
+
+	o.updated = time.Time{}
+	assert.Equal(t, 6*time.Minute, o.observeGap(now), "forced run keeps estimate")
+
+	o.updated = now.Add(-time.Hour)
+	assert.Equal(t, tariff.SlotDuration, o.observeGap(now), "capped at one slot")
+}
+
 // TestHoldWorthwhilePriceAtShortfall compares the price where the plan runs the battery short,
 // not at its first discharge
 func TestHoldWorthwhilePriceAtShortfall(t *testing.T) {

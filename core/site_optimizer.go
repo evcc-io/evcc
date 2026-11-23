@@ -214,12 +214,6 @@ func (site *Site) optimizerUpdateAsync(force bool) {
 }
 
 func (site *Site) optimizerUpdate(battery []types.Measurement) error {
-	// the loadpoint loop quantises the cadence above optimizerInterval, the previous gap estimates the next one (#36530)
-	var gap time.Duration
-	if !site.optimizer.updated.IsZero() {
-		gap = min(time.Since(site.optimizer.updated), tariff.SlotDuration)
-	}
-
 	req, details, err := site.optimizerRequest(battery)
 	if err != nil {
 		return err
@@ -285,16 +279,27 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return errors.New("optimizer result expired")
 	}
 
-	site.applyOptimizerResult(optimizerSolve{req: req, details: details, res: *resp.JSON200, schedule: schedule, completed: now, gap: gap}, now)
+	site.applyOptimizerResult(optimizerSolve{req: req, details: details, res: *resp.JSON200, schedule: schedule, completed: now, gap: site.optimizer.observeGap(now)}, now)
 
 	return nil
 }
 
+// observeGap returns the expected gap until the next run. The loadpoint loop stretches runs
+// beyond optimizerInterval, so the last gap estimates the next one. Shorter gaps follow a
+// forced run and are not representative.
+func (o *optimizerState) observeGap(now time.Time) time.Duration {
+	if d := now.Sub(o.updated); !o.updated.IsZero() && d >= optimizerInterval {
+		o.gap = min(d, tariff.SlotDuration)
+	}
+	return o.gap
+}
+
 // optimizerState holds the optimizer runtime state of a site
 type optimizerState struct {
-	mu      sync.Mutex  // guards optimizer runs
-	updated time.Time   // last optimizer run, guarded by mu
-	rerun   atomic.Bool // forced trigger arrived during a run, re-run when done
+	mu      sync.Mutex    // guards optimizer runs
+	updated time.Time     // last optimizer run, guarded by mu
+	gap     time.Duration // last observed gap between runs, guarded by mu
+	rerun   atomic.Bool   // forced trigger arrived during a run, re-run when done
 
 	// guarded by the site lock
 	suggestions       map[string]types.Suggestion // suggestions by device key
