@@ -16,8 +16,11 @@
 		</div>
 		<div class="collapsible-wrapper" :class="{ open }">
 			<div class="collapsible-content ring-space">
-				<div class="row" :class="{ 'opacity-25 pe-none': optimizerControlled }">
-					<div class="col-12 col-lg-6 mb-3">
+				<div class="row">
+					<div
+						class="col-12 col-lg-6 mb-3"
+						:class="{ 'opacity-25 pe-none': optimizerControlled }"
+					>
 						<div class="row">
 							<label
 								:for="formId('continuous')"
@@ -79,7 +82,6 @@
 									:id="formId('precondition')"
 									v-model="localPrecondition"
 									class="form-select"
-									:disabled="optimizerControlled"
 									@change="updateStrategy"
 								>
 									<option :value="0">
@@ -175,14 +177,15 @@ export default defineComponent({
 			return this.disabled || this.preconditionAll;
 		},
 		summary(): string {
-			// the optimizer schedules by grid price, it knows neither "continuous" nor late charging
-			if (this.optimizerControlled) {
-				return this.$t("main.chargingPlan.optimization.cheapest");
-			}
 			if (this.disabled || this.precondition >= EVERYTHING) {
 				return this.$t("main.chargingPlan.precondition.summaryAll");
 			}
-			const optimization = this.continuous ? "continuous" : this.cheapestKey;
+			// the optimizer schedules by grid price and does not know "continuous"
+			const optimization = this.optimizerControlled
+				? "cheapest"
+				: this.continuous
+					? "continuous"
+					: this.cheapestKey;
 			const parts = [this.$t(`main.chargingPlan.optimization.${optimization}`)];
 			if (this.precondition) {
 				parts.push(
