@@ -81,6 +81,8 @@ func TestFallbackReadsOnceAndRetriesErrors(t *testing.T) {
 }
 
 func TestFallbackSetter(t *testing.T) {
+	fallbackRecorder.vals = nil
+
 	p, err := NewFallbackFromConfig(t.Context(), map[string]any{
 		"fallback": map[string]any{"source": "const", "value": 3680},
 		"scale":    -1,
