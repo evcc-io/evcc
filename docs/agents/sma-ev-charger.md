@@ -11,7 +11,7 @@ All protocols expose the same SMA channels (`Parameter.*`, `Measurement.*`) with
 | ----------------------------------- | ----------------------- | -------------------------------------------- | ----------------------- |
 | REST (`/api/v1`, OAuth token)       | `charger/sma-rest.go`   | `smaevcharger` (deprecated, type `sma-rest`) | EV Charger, eCharger    |
 | SEMP (`/SEMP`, XML)                 | `charger/semp.go`       | `semp-sma`                                   | EV Charger, eCharger    |
-| Modbus TCP (SMA profile, unit id 3) | `charger/sma-modbus.go` | `sma-modbus`                                 | eCharger, firmware 2.7+ |
+| Modbus TCP (SMA profile, unit id 3) | `charger/sma-modbus.go` | `smaecharger` (type `sma-modbus`)            | eCharger, firmware 2.7+ |
 
 Confidence markers: **verified** (tested on a device or reported by users with logs), **documented** (manual or SMA register list), **assumed** (derived, needs device verification).
 
