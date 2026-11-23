@@ -26,16 +26,6 @@ func BenchmarkMeters(b *testing.B) {
 		b.ReportMetric(0, "ns/op")
 	})
 
-	// one slot for one meter as the collector writes it every 15 minutes
-	// -count repeats the sub-benchmark on the same database, so the slot carries over
-	slot := now.Truncate(tariff.SlotDuration)
-	b.Run("persist", func(b *testing.B) {
-		for b.Loop() {
-			require.NoError(b, persist(home, slot, 0.25, 0, nil, false))
-			slot = slot.Add(tariff.SlotDuration)
-		}
-	})
-
 	// last slot of a meter as the collector reads it on start
 	b.Run("last-slot", func(b *testing.B) {
 		for b.Loop() {
@@ -57,6 +47,17 @@ func BenchmarkMeters(b *testing.B) {
 		for b.Loop() {
 			_, err := energyProfileFiltered(home, now.AddDate(0, 0, -90), &weekday, 0.5)
 			require.NoError(b, err)
+		}
+	})
+
+	// one slot for one meter as the collector writes it every 15 minutes. Runs last: its slots
+	// lie after now and would enter the profiles above.
+	// -count repeats the sub-benchmark on the same database, so the slot carries over
+	slot := now.Truncate(tariff.SlotDuration)
+	b.Run("persist", func(b *testing.B) {
+		for b.Loop() {
+			require.NoError(b, persist(home, slot, 0.25, 0, nil, false))
+			slot = slot.Add(tariff.SlotDuration)
 		}
 	})
 }

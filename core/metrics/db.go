@@ -15,9 +15,9 @@ type meter struct {
 	Meter        int      `json:"meter" gorm:"column:meter;primaryKey;autoIncrement:false"`
 	Timestamp    int64    `json:"ts" gorm:"column:ts;primaryKey;autoIncrement:false"` // start of 15min slot
 	Entity       entity   `json:"-" gorm:"foreignkey:Meter;references:Id"`
-	Energy       float64  `json:"energy" gorm:"column:energy"`
-	ReturnEnergy float64  `json:"returnEnergy" gorm:"column:return_energy"`
-	SocTemp      *float64 `json:"socTemp,omitempty" gorm:"column:soc_temp"`                 // at start of slot
+	Energy       float64  `json:"energy" gorm:"column:energy;type:numeric"` // numeric stores whole numbers compactly, real does not WITHOUT ROWID
+	ReturnEnergy float64  `json:"returnEnergy" gorm:"column:return_energy;type:numeric"`
+	SocTemp      *float64 `json:"socTemp,omitempty" gorm:"column:soc_temp;type:numeric"`    // at start of slot
 	Recovered    int      `json:"recovered,omitempty" gorm:"column:recovered;type:numeric"` // slot origin, slotMeasured etc
 }
 
@@ -150,18 +150,32 @@ const withoutRowid = "WITHOUT ROWID"
 // migrateMeterWithoutRowid keeps meters clustered on its primary key (meter, ts). A table from
 // before stores every row twice, in the table and in its unique index, and is rebuilt once.
 func migrateMeterWithoutRowid() error {
-	// add the columns an older table lacks, so the copy finds them all
-	if err := db.Instance.Set("gorm:table_options", withoutRowid).AutoMigrate(new(meter)); err != nil {
-		return err
+	m := db.Instance.Set("gorm:table_options", withoutRowid).Migrator()
+	if !m.HasTable(new(meter)) {
+		return m.CreateTable(new(meter))
 	}
 
-	var ddl string
-	if err := db.Instance.Raw(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'meters'`).Scan(&ddl).Error; err != nil {
+	current, err := meterTableCurrent()
+	if err != nil {
 		return err
 	}
-	if strings.Contains(strings.ToUpper(ddl), withoutRowid) {
+	if current {
 		// an older version run in between recreates the unique index
 		return db.Instance.Exec(`DROP INDEX IF EXISTS meters_meter_ts`).Error
+	}
+
+	// add the columns an older table lacks, so the copy finds them all. AutoMigrate would
+	// also alter the changed column types, rebuilding the table once per column.
+	stmt := &gorm.Statement{DB: db.Instance}
+	if err := stmt.Parse(new(meter)); err != nil {
+		return err
+	}
+	for _, name := range stmt.Schema.DBNames {
+		if !m.HasColumn(new(meter), name) {
+			if err := m.AddColumn(new(meter), name); err != nil {
+				return err
+			}
+		}
 	}
 
 	return db.Instance.Transaction(func(tx *gorm.DB) error {
@@ -197,6 +211,31 @@ func migrateMeterWithoutRowid() error {
 		}
 		return nil
 	})
+}
+
+// meterTableCurrent reports whether meters is WITHOUT ROWID with numeric measurement columns
+func meterTableCurrent() (bool, error) {
+	var ddl string
+	if err := db.Instance.Raw(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'meters'`).Scan(&ddl).Error; err != nil {
+		return false, err
+	}
+	if !strings.Contains(strings.ToUpper(ddl), withoutRowid) {
+		return false, nil
+	}
+
+	types, err := db.Instance.Migrator().ColumnTypes(new(meter))
+	if err != nil {
+		return false, err
+	}
+	for _, typ := range types {
+		switch typ.Name() {
+		case "energy", "return_energy", "soc_temp":
+			if !strings.EqualFold(typ.DatabaseTypeName(), "numeric") {
+				return false, nil
+			}
+		}
+	}
+	return true, nil
 }
 
 // OnPersist, if set, is called with the slot start after a slot is written.
