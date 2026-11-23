@@ -105,7 +105,9 @@ SMA inverters share the `Inverter.WModCfg.WCtlComCfg` channel family for active 
 - **assumed**: on the eCharger `Setpoint.PlantControl.Inverter.WModCfg.WCtlComCfg.WSptMaxNom` 0 and `WSptMinNom` -100 define the allowed range of an external setpoint, from no output to consuming 100 % of nominal power. They are not a minimum charging power.
 - **assumed**: as `Setpoint.PlantControl` channels they are written by plant control, likely the Sunny Home Manager or the charger itself when converting SEMP commands. SMA permits cyclic writes only for such setpoints.
 - **documented**: the eCharger Modbus register list contains neither 44039/44041 nor `WSpt`, only `Setpoint.PlantControl.Inverter.FstStop` (41253). Of the fallback group it lists 41193 and 41525 (`TmsOutPrc`).
-- **documented**: inverter parameter lists name `Inverter.WMax` "Nennwirkleistung WMaxOut", supporting that `WMax`/`WMaxIn` are rated or installation limits.
+- **documented**: in inverter parameter lists `Inverter.WMax` is "Nennwirkleistung WMaxOut" (menu "Maximale Wirkleistungsabgabe", configurable below the rating), `Inverter.WLim` is "Bemessungswirkleistung WMaxOutRtg", and percent values refer to `WMax` (fallback "in % von WMax", manual mode "in % Pmax", P(U) reference "Maximale Wirkleistung WMax (WMaxInOut)").
+- **assumed**: the same pattern applies to the input direction of the charger. `WMaxIn` is the configured nominal input power the station is installed for and the 100 % reference of `WSptMinNom`, `WMaxInRtg` is the rating. `WMax` is a leftover of the inverter model on a charger without feed-in and mirrors `WMaxIn` in all dumps. The 4500 W minimum fits a nominal installation value.
+- **assumed**: writing `WMaxIn` cyclically therefore changes the nominal power instead of a setpoint: the 4500 W minimum applies, flash wear is likely, and percent based setpoints from plant control shift their reference.
 
 ## Modbus specifics
 
