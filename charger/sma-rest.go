@@ -135,6 +135,13 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 		return nil, fmt.Errorf("charger firmware version not supported - please update >= %s", smarest.MinAcceptedVersion)
 	}
 
+	// charging control requires write access, accounts without sufficient rights do not get these parameters or cannot edit them
+	for _, id := range []string{sma.ChrgActChaMod, sma.InverterWMaxIn} {
+		if p, err := wb.parameter(id); err != nil || !p.Editable {
+			return nil, fmt.Errorf("%s not writable, user requires administrator or installer rights", id)
+		}
+	}
+
 	// pv surplus and target modes would regulate charging on their own
 	mode, err := wb.mode()
 	if err != nil {
