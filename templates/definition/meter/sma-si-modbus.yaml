@@ -70,9 +70,9 @@ render: |
                 address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
                 type: writemultiple
                 decode: uint32
-          - source: go # charge limit
+          - source: fallback # charge limit
             {{- include "sma-battery-limit" (dict "root" . "limit" "charge" "write" 40795 "name" "CmpBMS.BatChaMaxW - Maximale Batterieladeleistung") | indent 10 }}
-          - source: go # discharge limit
+          - source: fallback # discharge limit
             {{- include "sma-battery-limit" (dict "root" . "limit" "discharge" "write" 40799 "name" "CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung") | indent 10 }}
       - case: 2 # holddischarge
         set:
@@ -87,7 +87,7 @@ render: |
                 address: 40799 # SMA Modbus Profile: CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
                 type: writemultiple
                 decode: uint32
-          - source: go # PV charging allowed
+          - source: fallback # PV charging allowed
             {{- include "sma-battery-limit" (dict "root" . "limit" "charge" "write" 40795 "name" "CmpBMS.BatChaMaxW - Maximale Batterieladeleistung") | indent 10 }}
           - source: const
             value: 803 # inaktiv (Ina)
@@ -102,7 +102,7 @@ render: |
         set:
           source: sequence
           set:
-          - source: go # Wirkleistungsvorgabe
+          - source: fallback # Wirkleistungsvorgabe
             {{- include "sma-battery-limit" (dict "root" . "limit" "charge" "negate" true "write" 40149 "name" "Inverter.WModCfg.WCtlComCfg.WSpt") | indent 10 }}
           - source: const
             value: 802 # aktiv (Act)
@@ -113,6 +113,6 @@ render: |
                 address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
                 type: writemultiple
                 decode: uint32
-          - source: go # discharge limit
+          - source: fallback # discharge limit
             {{- include "sma-battery-limit" (dict "root" . "limit" "discharge" "write" 40799 "name" "CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung") | indent 10 }}
-  {{- include "battery-params" . }}
+  {{- include "sma-battery-params" . }}
