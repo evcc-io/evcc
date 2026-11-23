@@ -160,7 +160,8 @@ func migrateMeterWithoutRowid() error {
 		return err
 	}
 	if strings.Contains(strings.ToUpper(ddl), withoutRowid) {
-		return nil
+		// an older version run in between recreates the unique index
+		return db.Instance.Exec(`DROP INDEX IF EXISTS meters_meter_ts`).Error
 	}
 
 	return db.Instance.Transaction(func(tx *gorm.DB) error {
@@ -184,9 +185,10 @@ func migrateMeterWithoutRowid() error {
 		}
 		list := strings.Join(cols, ",")
 
-		// copy in key order along the old index, so the new table fills its pages in sequence
+		// copy in key order along the old index, so the new table fills its pages in sequence. A row
+		// without meter or ts no query can reach, and the primary key rejects it
 		for _, stmt := range []string{
-			`INSERT INTO meters (` + list + `) SELECT ` + list + ` FROM meters_rowid ORDER BY meter, ts`,
+			`INSERT INTO meters (` + list + `) SELECT ` + list + ` FROM meters_rowid WHERE meter IS NOT NULL AND ts IS NOT NULL ORDER BY meter, ts`,
 			`DROP TABLE meters_rowid`,
 		} {
 			if err := tx.Exec(stmt).Error; err != nil {

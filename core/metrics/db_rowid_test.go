@@ -22,6 +22,11 @@ func TestMeterWithoutRowid(t *testing.T) {
 	// a second start keeps the table as it is
 	require.NoError(t, SetupSchema())
 	require.Contains(t, meterTableDDL(t), withoutRowid)
+
+	// the unique index an older version recreates is dropped again
+	require.NoError(t, db.Instance.Exec("CREATE UNIQUE INDEX `meters_meter_ts` ON `meters`(`meter`,`ts`)").Error)
+	require.NoError(t, SetupSchema())
+	require.False(t, db.Instance.Migrator().HasIndex(new(meter), "meters_meter_ts"))
 }
 
 func TestMeterWithoutRowidMigration(t *testing.T) {
@@ -33,7 +38,7 @@ func TestMeterWithoutRowidMigration(t *testing.T) {
 		"INSERT INTO entities (id, `group`, name, title) VALUES (2, 'grid', 'db:1', 'grid')",
 		"CREATE TABLE \"meters\"  (`meter` integer,`ts` integer,\"energy\" real,\"return_energy\" real, `soc_temp` real, `recovered` numeric,CONSTRAINT `fk_meters_entity` FOREIGN KEY (`meter`) REFERENCES `entities`(`id`))",
 		"CREATE UNIQUE INDEX `meters_meter_ts` ON `meters`(`meter`,`ts`)",
-		"INSERT INTO meters VALUES (2, 1800, 0.5, 0.1, NULL, 0), (2, 900, 0.25, 0, NULL, 1), (1, 900, 0.3, 0, 21.5, 0)",
+		"INSERT INTO meters VALUES (2, 1800, 0.5, 0.1, NULL, 0), (2, 900, 0.25, 0, NULL, 1), (1, 900, 0.3, 0, 21.5, 0), (2, NULL, 1, 0, NULL, 0)",
 	} {
 		require.NoError(t, db.Instance.Exec(stmt).Error, stmt)
 	}
