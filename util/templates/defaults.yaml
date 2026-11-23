@@ -89,11 +89,11 @@ params:
   - name: dimpower
     unit: W
     description:
-      de: Leistung bei Dimmung
-      en: Power while dimmed
+      de: Max. Verbrauch (gedimmt)
+      en: Max. consumption (dimmed)
     help:
-      de: Maximale Leistungsaufnahme während der Dimmung durch den Netzbetreiber (§14a EnWG). Geräte mit Leistungsvorgabe erhalten diesen Wert als Grenze, sonst gilt er als geräteseitig zugesicherte Obergrenze. Die Summe aller Geräte darf die Grenze des Netzbetreibers nicht überschreiten, sonst werden alle Geräte auf 0 W gedimmt.
-      en: Maximum consumption while dimmed by the grid operator (§14a EnWG). Devices accepting a power limit receive this value, otherwise it declares the device's own reduced consumption. The sum across all devices must not exceed the grid operator limit, otherwise all devices are dimmed to 0 W.
+      de: Zugeordnete maximale Leistungsaufnahme während der aktiven Dimmung (§14a EnWG). Die Summe über alle Geräte darf Pmin nicht überschreiten.
+      en: Assigned maximum consumption while dimmed. The sum across all devices must not exceed Pmin.
     default: 0
     example: 4200
     type: float
