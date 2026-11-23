@@ -142,13 +142,28 @@ const (
 	foxStatusSwitching = 9 // undocumented: automatic phase switch in progress
 )
 
-// The per-connector values polled every cycle are read as one block (status registers plus the
-// power setpoint) within a single connector selection.
-const (
-	foxBlockStart = foxRegStopReason            // first status register of the block
-	foxBlockCount = foxRegModel - foxBlockStart // up to and including foxRegRFID
-	foxBlockTTL   = time.Second
-)
+// The per-connector values polled every cycle are read as a block of register ranges (status
+// registers plus the power setpoint) within a single connector selection.
+var foxBlockRanges = []struct{ start, count uint16 }{
+	{foxRegStopReason, foxRegPhaseSequence - foxRegStopReason}, // C-series rejects any read including foxRegPhaseSequence
+	{foxRegMaxSupPower, foxRegModel - foxRegMaxSupPower},       // up to and including foxRegRFID
+	{foxRegMaxPower, 1},
+}
+
+const foxBlockTTL = time.Second
+
+// foxBlockOffset returns the byte offset of the given registers within the status block
+func foxBlockOffset(reg, words uint16) (int, bool) {
+	var off int
+	for _, r := range foxBlockRanges {
+		if reg >= r.start && reg+words <= r.start+r.count {
+			return off + 2*int(reg-r.start), true
+		}
+		off += 2 * int(r.count)
+	}
+
+	return 0, false
+}
 
 // foxConnectorLocks holds one *sync.Mutex per device, keyed by serial number. All connectors of a multi-connector
 // charger share the connector selection register, so selecting a connector and accessing its registers must not interleave.
@@ -348,23 +363,20 @@ func (wb *FoxESSEVC) withConnector(reg uint16, fn func() error) error {
 	return fn()
 }
 
-// readBlock returns the status block followed by the power setpoint, both read within one connector selection
+// readBlock returns the concatenated status block ranges, all read within one connector selection
 func (wb *FoxESSEVC) readBlock() ([]byte, error) {
 	b, _, err := wb.cache.Fetch("block", func() ([]byte, error) {
 		var res []byte
 
 		err := wb.withConnector(foxRegStatus, func() error {
-			b, err := wb.conn.ReadHoldingRegisters(foxBlockStart, foxBlockCount)
-			if err != nil {
-				return err
+			for _, r := range foxBlockRanges {
+				b, err := wb.conn.ReadHoldingRegisters(r.start, r.count)
+				if err != nil {
+					return err
+				}
+				res = append(res, b...)
 			}
 
-			sp, err := wb.conn.ReadHoldingRegisters(foxRegMaxPower, 1)
-			if err != nil {
-				return err
-			}
-
-			res = append(b, sp...)
 			return nil
 		})
 
@@ -376,23 +388,12 @@ func (wb *FoxESSEVC) readBlock() ([]byte, error) {
 
 // read reads consecutive holding registers, from the status block if covered, selecting the connector if required
 func (wb *FoxESSEVC) read(reg, words uint16) ([]byte, error) {
-	if wb.block {
-		if reg == foxRegMaxPower && words == 1 {
-			b, err := wb.readBlock()
-			if err != nil {
-				return nil, err
-			}
-			return b[2*foxBlockCount:], nil
+	if off, ok := foxBlockOffset(reg, words); ok && wb.block {
+		b, err := wb.readBlock()
+		if err != nil {
+			return nil, err
 		}
-
-		if reg >= foxBlockStart && reg+words <= foxBlockStart+foxBlockCount {
-			b, err := wb.readBlock()
-			if err != nil {
-				return nil, err
-			}
-			off := 2 * int(reg-foxBlockStart)
-			return b[off : off+2*int(words)], nil
-		}
+		return b[off : off+2*int(words)], nil
 	}
 
 	var b []byte
