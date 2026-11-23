@@ -1,4 +1,4 @@
-template: sma-echarger
+template: sma-modbus
 products:
   - brand: SMA
     description:
@@ -18,5 +18,5 @@ params:
     port: 502
     id: 3
 render: |
-  type: sma-echarger
+  type: sma-modbus
   {{- include "modbus" . }}
