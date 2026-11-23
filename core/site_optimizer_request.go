@@ -342,6 +342,7 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 
 	detail.Type = batteryTypeVehicle
 	detail.Capacity = capacity
+	detail.SocUnknown = capacity == 0 || soc == 0
 
 	if vt := v.GetTitle(); vt != "" {
 		if detail.Title != "" {
