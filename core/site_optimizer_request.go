@@ -382,8 +382,8 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 			var start time.Time
 			detail.precondition, held, start = preconditionDemand(lp, bat.SInitial, minLen, time.Now())
 			site.applyPlanGoal(lp, &bat, minLen, held, start)
-			detail.PlanGoals = planGoalsInHorizon(lp, minLen)
 		}
+		detail.PlanGoals = planGoalsInHorizon(lp, minLen)
 	}
 
 	// the loadpoint follows its own planner in any mode, which the optimizer must not reschedule

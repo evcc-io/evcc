@@ -256,7 +256,7 @@ func TestApplyPlanGoalSoc(t *testing.T) {
 	assert.Equal(t, float32(40000), bat.SMax, "later goals must not raise s_max")
 }
 
-// TestPlanGoalsInHorizon guards that the displayed goals keep their soc above the limit (#36467)
+// TestPlanGoalsInHorizon guards that the displayed goals keep their SoC above the limit
 func TestPlanGoalsInHorizon(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -825,6 +825,7 @@ func TestLoadpointRequestChargeGoal(t *testing.T) {
 			lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{}).AnyTimes()
 			lp.EXPECT().EffectivePlanTime().Return(time.Time{}).AnyTimes()
 			lp.EXPECT().GetPlanGoal().Return(0.0, false).AnyTimes()
+			lp.EXPECT().GetSocPlanGoals().Return(nil).AnyTimes()
 
 			req, _ := site.loadpointRequest(lp, 8, 15*time.Minute, nil)
 

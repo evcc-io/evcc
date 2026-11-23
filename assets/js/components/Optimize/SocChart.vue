@@ -73,7 +73,7 @@ export default defineComponent({
 				capacityWh > 0 ? ((soc[i] ?? 0) / capacityWh) * 100 : 0,
 			]);
 		},
-		// plan goals as set by the user, above the soc line where a later plan lifts the limit
+		// plan goals as set by the user, above the SoC line where a later plan lifts the limit
 		goals(): [number, number][] {
 			return (this.entry.planGoals || []).map((g) => [new Date(g.time).getTime(), g.soc]);
 		},
@@ -130,7 +130,7 @@ export default defineComponent({
 						...transientHoverDot(this.entry.color),
 						lineStyle: { color: this.entry.color, ...lineDefaults },
 						areaStyle: { color: dimColor(this.entry.color) },
-						// deadline line from the axis up to the goal soc
+						// deadline line from the axis up to the goal SoC
 						markLine: {
 							data: this.goals.map((coord) => [{ coord: [coord[0], 0] }, { coord }]),
 							symbol: "none",
