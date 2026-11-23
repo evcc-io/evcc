@@ -391,23 +391,6 @@ func (wb *SmaECharger) GetMinMaxCurrent() (float64, float64, error) {
 	return smaEChargerUint32(minCurrent) / 10, smaEChargerUint32(maxCurrent) / 1e3, nil
 }
 
-var _ api.PowerLimiter = (*SmaECharger)(nil)
-
-// GetMinMaxPower implements the api.PowerLimiter interface
-func (wb *SmaECharger) GetMinMaxPower() (float64, float64, error) {
-	minPower, err := wb.readHolding32(smaEChargerRegMinPower)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	maxPower, err := wb.read32(smaEChargerRegMaxPowerRtg, 1)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	return smaEChargerInt32(minPower), smaEChargerInt32(maxPower[0]), nil
-}
-
 var _ api.Diagnosis = (*SmaECharger)(nil)
 
 // Diagnose implements the api.Diagnosis interface
