@@ -272,8 +272,7 @@ func (wb *TuyaDepow) MaxCurrent(current int64) error {
 		return err
 	}
 
-	minCurrent, maxCurrent := tuyaDepowLimits(dps)
-	current = min(max(current, minCurrent), maxCurrent)
+	current = tuyaDepowCurrent(dps, current)
 
 	wb.mu.Lock()
 	wb.current = current
@@ -296,6 +295,12 @@ func tuyaDepowLimits(dps map[string]any) (int64, int64) {
 	}
 
 	return steps[0], maxCurrent
+}
+
+// tuyaDepowCurrent clamps the requested current to the supported range
+func tuyaDepowCurrent(dps map[string]any, current int64) int64 {
+	minCurrent, maxCurrent := tuyaDepowLimits(dps)
+	return min(max(current, minCurrent), maxCurrent)
 }
 
 var _ api.CurrentLimiter = (*TuyaDepow)(nil)

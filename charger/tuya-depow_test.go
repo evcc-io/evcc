@@ -38,3 +38,21 @@ func TestTuyaDepowLimits(t *testing.T) {
 		assert.Equal(t, tc.max, maxCurrent, tc.dps)
 	}
 }
+
+func TestTuyaDepowCurrent(t *testing.T) {
+	steps := "[6, 8, 10, 13, 16]"
+	for _, tc := range []struct {
+		dps               map[string]any
+		current, expected int64
+	}{
+		{map[string]any{"107": steps}, 5, 6},
+		{map[string]any{"107": steps}, 11, 11},
+		{map[string]any{"107": steps}, 12, 12},
+		{map[string]any{"107": steps}, 14, 14},
+		{map[string]any{"107": steps}, 15, 15},
+		{map[string]any{"107": steps}, 32, 16},
+		{map[string]any{"107": steps, "152": float64(12)}, 15, 12},
+	} {
+		assert.Equal(t, tc.expected, tuyaDepowCurrent(tc.dps, tc.current), tc.current)
+	}
+}
