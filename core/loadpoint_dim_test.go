@@ -54,3 +54,44 @@ func TestLoadpointDim(t *testing.T) {
 
 	assert.True(t, ctrl.Satisfied())
 }
+
+// A negative dim power exempts the loadpoint from dimming and releases it.
+func TestLoadpointDimExempt(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	dimmer := api.NewMockDimmer(ctrl)
+	charger := &struct {
+		*api.MockCharger
+		api.Dimmer
+	}{api.NewMockCharger(ctrl), dimmer}
+	charger.MockCharger.EXPECT().Enabled().Return(false, nil).AnyTimes()
+	charger.MockCharger.EXPECT().Status().Return(api.StatusA, nil).AnyTimes()
+
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock.NewMock(),
+		charger:     charger,
+		chargeMeter: newChargeMeter(&Null{}),
+		chargeRater: &Null{},
+		chargeTimer: &Null{},
+		wakeUpTimer: NewTimer(),
+		minCurrent:  minA,
+		maxCurrent:  maxA,
+		phases:      1,
+	}
+	attachListeners(t, lp)
+
+	dimmer.EXPECT().DimPower().Return(-1.0).AnyTimes()
+
+	// dimmed device is released
+	dimmer.EXPECT().Dimmed().Return(true, nil)
+	dimmer.EXPECT().Dim(false, 0.0).Return(nil)
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, &dimState{active: true})
+
+	// undimmed device is left alone
+	dimmer.EXPECT().Dimmed().Return(false, nil)
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, &dimState{active: true})
+
+	assert.True(t, ctrl.Satisfied())
+}

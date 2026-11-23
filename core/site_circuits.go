@@ -119,7 +119,17 @@ func (d dimState) limit(dimmer api.Dimmer) float64 {
 	return dimPower(dimmer)
 }
 
-// dimPower returns the configured residual power, treating invalid values as 0W
+// dimActive returns whether the dimmer is dimmed, exempt dimmers are never dimmed
+func (d dimState) dimActive(dimmer api.Dimmer) bool {
+	return d.active && !dimExempt(dimmer)
+}
+
+// dimExempt returns whether the dimmer is exempt from dimming by a negative dim power
+func dimExempt(dimmer api.Dimmer) bool {
+	return dimmer.DimPower() < 0
+}
+
+// dimPower returns the configured residual power, treating exempt and invalid values as 0W
 func dimPower(dimmer api.Dimmer) float64 {
 	p := dimmer.DimPower()
 	if !(p > 0) || math.IsInf(p, 0) {
@@ -213,13 +223,14 @@ func (site *Site) dimMeters(dim dimState) error {
 			continue
 		}
 		// an active state is always written since the device may hold a different limit
-		if err == nil && !dim.active && !dimmed {
+		active := dim.dimActive(m)
+		if err == nil && !active && !dimmed {
 			continue
 		}
 
 		limit := dim.limit(m)
-		if err := m.Dim(dim.active, limit); err == nil {
-			site.log.DEBUG.Printf("%s dim: %t (%.0fW)", m.name, dim.active, limit)
+		if err := m.Dim(active, limit); err == nil {
+			site.log.DEBUG.Printf("%s dim: %t (%.0fW)", m.name, active, limit)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", m.name, err))
 		}

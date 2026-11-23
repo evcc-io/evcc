@@ -231,6 +231,23 @@ func TestDimPowerInvalid(t *testing.T) {
 	assert.Equal(t, 4200.0, dimPower(&dimPowerMeter{power: 4200}))
 }
 
+// A negative dim power exempts the device: never dimmed, released if dimmed, not counted.
+func TestDimMetersExempt(t *testing.T) {
+	m := &dimPowerMeter{power: -1}
+	site := dimSite(m)
+
+	require.NoError(t, site.dimMeters(dimState{active: true}))
+	assert.Empty(t, m.dimCalls)
+
+	m.dimmed = true
+	site.dimmed = nil
+	require.NoError(t, site.dimMeters(dimState{active: true}))
+	assert.Equal(t, []bool{false}, m.dimCalls)
+
+	assert.False(t, dimState{active: true}.dimActive(m))
+	assert.True(t, dimState{active: true}.dimActive(&dimPowerMeter{power: 0}))
+}
+
 // Disabled loadpoints are kept as nil entries.
 func TestDimmersSkipsDisabledLoadpoint(t *testing.T) {
 	site := &Site{loadpoints: []*Loadpoint{nil}}

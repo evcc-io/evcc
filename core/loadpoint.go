@@ -2600,20 +2600,22 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 		}
 
 		if dim != nil {
+			active := dim.dimActive(dimmer)
+
 			// re-apply while dimmed if the limit decision changed
-			if dim.active != dimmed || dim.active && lp.dimApplied != *dim {
+			if active != dimmed || active && lp.dimApplied != *dim {
 				limit := dim.limit(dimmer)
-				if err := dimmer.Dim(dim.active, limit); err != nil {
+				if err := dimmer.Dim(active, limit); err != nil {
 					lp.log.ERROR.Printf("dim: %v", err)
 					return
 				}
 
 				lp.dimApplied = *dim
-				lp.publish(keys.Dimmed, dim.active)
-				lp.log.INFO.Printf("§14a dim: %t (%.0fW)", dim.active, limit)
+				lp.publish(keys.Dimmed, active)
+				lp.log.INFO.Printf("§14a dim: %t (%.0fW)", active, limit)
 			}
 
-			if dim.active {
+			if active {
 				return
 			}
 		}
