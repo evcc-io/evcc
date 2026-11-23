@@ -71,11 +71,11 @@ const (
 )
 
 type batteryDetail struct {
-	Type     batteryType `json:"type"`
-	Title    string      `json:"title,omitempty"`
-	Name     string      `json:"name,omitempty"`
-	Capacity float64     `json:"capacity,omitempty"`
-	SocUnknown bool `json:"socUnknown,omitempty"`
+	Type       batteryType `json:"type"`
+	Title      string      `json:"title,omitempty"`
+	Name       string      `json:"name,omitempty"`
+	Capacity   float64     `json:"capacity,omitempty"`
+	SocUnknown bool        `json:"socUnknown,omitempty"`
 
 	loadpoint    *int              // originating loadpoint id for loadpoint/vehicle entries
 	controllable bool              // device can act on suggestions
