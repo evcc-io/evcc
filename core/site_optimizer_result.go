@@ -32,7 +32,7 @@ const (
 // withheld, the bound does it, so the battery stays in normal mode. Without planned
 // discharge the battery is held when holdWorthwhile, since normal mode would let the
 // inverter cover intra-slot dips from the battery.
-func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, etaD float32, slot int, gridImport, gridExport float32, slotHours, pvShare float64) types.Suggestion {
+func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, etaD float32, slot int, gridImport, gridExport float32, slotHours, pvShare float64, gap time.Duration) types.Suggestion {
 	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
 		return types.Suggestion{}
 	}
@@ -71,7 +71,7 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 		case discharge > suggestionThreshold && gridExporting:
 			// discharging while exporting means battery-to-grid discharge
 			s.Action = api.BatteryDischarge.String()
-		case discharge <= suggestionThreshold && !(idle && empty) && holdWorthwhile(req, res, ts, etaD, slot):
+		case discharge <= suggestionThreshold && !(idle && empty) && holdWorthwhile(req, res, ts, etaD, slot, gap):
 			s.Action = api.BatteryHoldDischarge.String()
 		default:
 			s.Action = api.BatteryNormal.String()
@@ -96,14 +96,14 @@ func currentSlotSuggestion(detail batteryDetail, req optimizer.BatteryConfig, re
 // higher price. That happens where the plan, once discharging, runs the battery short. A
 // battery that fills up first only displaces pv charging with the kept energy, and one with
 // energy to spare only raises the leftover at the end of the horizon.
-func holdWorthwhile(req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, etaD float32, slot int) bool {
+func holdWorthwhile(req optimizer.BatteryConfig, res optimizer.BatteryResult, ts optimizer.TimeSeries, etaD float32, slot int, gap time.Duration) bool {
 	if slot >= len(ts.PN) {
 		return false
 	}
 
 	discharging := false
 	// normal mode may drain the battery at full power until the next run sees the drained soc
-	drain := req.DMax * float32(optimizerInterval.Hours())
+	drain := req.DMax * float32(max(gap, optimizerInterval).Hours())
 	if etaD > 0 {
 		drain /= etaD
 	}
@@ -226,7 +226,7 @@ func (site *Site) applyOptimizerResult(solve optimizerSolve, now time.Time) {
 			pvShare = pvSurplus * float64(batRes.ChargingPower[slot]) / slotHours / batteryCharge
 		}
 
-		suggestion := currentSlotSuggestion(detail, batReq, batRes, req.TimeSeries, req.EtaD, slot, gridImport, gridExport, slotHours, pvShare)
+		suggestion := currentSlotSuggestion(detail, batReq, batRes, req.TimeSeries, req.EtaD, slot, gridImport, gridExport, slotHours, pvShare, solve.gap)
 		if suggestion.Action == "" {
 			continue
 		}
