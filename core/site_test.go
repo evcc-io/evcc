@@ -216,7 +216,7 @@ func TestRequiredBatteryMode(t *testing.T) {
 
 	{
 		// no battery
-		res := new(Site).requiredBatteryMode(true, false, api.Rate{})
+		res, _ := new(Site).requiredBatteryMode(true, false, api.Rate{})
 		assert.Equal(t, api.BatteryUnknown, res, "expected %s, got %s", api.BatteryUnknown, res)
 	}
 
@@ -229,7 +229,7 @@ func TestRequiredBatteryMode(t *testing.T) {
 			batteryMode:   tc.mode,
 		}
 
-		res := s.requiredBatteryMode(tc.gridChargeActive, tc.gridDischargeActive, api.Rate{})
+		res, _ := s.requiredBatteryMode(tc.gridChargeActive, tc.gridDischargeActive, api.Rate{})
 		assert.Equal(t, tc.res, res, "expected %s, got %s", tc.res, res)
 	}
 }
