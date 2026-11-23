@@ -52,6 +52,7 @@ type SmaRest struct {
 
 func init() {
 	// TODO remove deprecated
+	registry.Add("sma-rest", NewSmaRestFromConfig)
 	registry.Add("smaevcharger", NewSmaRestFromConfig)
 }
 

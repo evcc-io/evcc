@@ -23,7 +23,7 @@ params:
   - name: password
     required: true
 render: |
-  type: smaevcharger
+  type: sma-rest
   uri: http://{{ .host }}
   user: {{ .user }}
   password: {{ .password }}
