@@ -43,6 +43,10 @@ func NewFallbackFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 		return nil, err
 	}
 
+	if !isFinite(cc.Scale) {
+		return nil, fmt.Errorf("invalid scale: %v", cc.Scale)
+	}
+
 	p := &fallbackPlugin{
 		ctx:   ctx,
 		scale: cc.Scale,
@@ -54,6 +58,9 @@ func NewFallbackFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 		if err != nil {
 			return nil, fmt.Errorf("value: %w", err)
 		}
+		if !isFinite(val) {
+			return nil, fmt.Errorf("invalid value: %v", val)
+		}
 		if val != 0 {
 			p.val, p.read = val, true
 			return p, nil
@@ -64,7 +71,7 @@ func NewFallbackFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 		return nil, errors.New("missing value or fallback")
 	}
 
-	source, err := cc.Fallback.FloatGetter(ctx)
+	source, err := numericGetter(ctx, cc.Fallback)
 	if err != nil {
 		return nil, fmt.Errorf("fallback: %w", err)
 	}
@@ -73,7 +80,44 @@ func NewFallbackFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 	return p, nil
 }
 
-// value returns the configured value or the first successful fallback reading
+func isFinite(v float64) bool {
+	return !math.IsNaN(v) && !math.IsInf(v, 0)
+}
+
+// numericGetter creates a float getter from a source providing float or int values
+func numericGetter(ctx context.Context, c *Config) (func() (float64, error), error) {
+	if c.Source == "" {
+		return nil, errors.New("missing plugin source")
+	}
+
+	factory, err := registry.Get(c.Source)
+	if err != nil {
+		return nil, err
+	}
+
+	prov, err := factory(ctx, c.Other)
+	if err != nil {
+		return nil, err
+	}
+
+	switch g := prov.(type) {
+	case FloatGetter:
+		return g.FloatGetter()
+	case IntGetter:
+		get, err := g.IntGetter()
+		if err != nil {
+			return nil, err
+		}
+		return func() (float64, error) {
+			v, err := get()
+			return float64(v), err
+		}, nil
+	default:
+		return nil, fmt.Errorf("invalid plugin source for type float or int: %s", c.Source)
+	}
+}
+
+// value returns the configured value or the first valid fallback reading
 func (p *fallbackPlugin) value() (float64, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -83,10 +127,28 @@ func (p *fallbackPlugin) value() (float64, error) {
 		if err != nil {
 			return 0, fmt.Errorf("fallback: %w", err)
 		}
+		if !isFinite(v) {
+			return 0, fmt.Errorf("fallback: invalid value: %v", v)
+		}
 		p.val, p.read = v, true
 	}
 
 	return p.scale * p.val, nil
+}
+
+// intValue returns the rounded value, rejecting values outside the int64 range
+func (p *fallbackPlugin) intValue() (int64, error) {
+	v, err := p.value()
+	if err != nil {
+		return 0, err
+	}
+
+	v = math.Round(v)
+	if v < math.MinInt64 || v >= math.MaxInt64 {
+		return 0, fmt.Errorf("value out of range: %v", v)
+	}
+
+	return int64(v), nil
 }
 
 var _ FloatGetter = (*fallbackPlugin)(nil)
@@ -98,10 +160,7 @@ func (p *fallbackPlugin) FloatGetter() (func() (float64, error), error) {
 var _ IntGetter = (*fallbackPlugin)(nil)
 
 func (p *fallbackPlugin) IntGetter() (func() (int64, error), error) {
-	return func() (int64, error) {
-		v, err := p.value()
-		return int64(math.Round(v)), err
-	}, nil
+	return p.intValue, nil
 }
 
 var _ FloatSetter = (*fallbackPlugin)(nil)
@@ -138,10 +197,10 @@ func (p *fallbackPlugin) IntSetter(param string) (func(int64) error, error) {
 	}
 
 	return func(_ int64) error {
-		v, err := p.value()
+		v, err := p.intValue()
 		if err != nil {
 			return err
 		}
-		return set(int64(math.Round(v)))
+		return set(v)
 	}, nil
 }

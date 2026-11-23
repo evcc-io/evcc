@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"errors"
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -94,6 +95,64 @@ func TestFallbackSetter(t *testing.T) {
 	require.NoError(t, set(1))
 	require.NoError(t, set(2))
 	assert.Equal(t, []int64{-3680, -3680}, fallbackRecorder.vals)
+}
+
+type intOnlyGetter struct{}
+
+func (intOnlyGetter) IntGetter() (func() (int64, error), error) {
+	return func() (int64, error) { return 3900, nil }, nil
+}
+
+func init() {
+	registry.AddCtx("fallback-test-int", func(context.Context, map[string]any) (Plugin, error) {
+		return intOnlyGetter{}, nil
+	})
+}
+
+func TestFallbackIntSource(t *testing.T) {
+	p, err := NewFallbackFromConfig(t.Context(), map[string]any{
+		"fallback": map[string]any{"source": "fallback-test-int"},
+	})
+	require.NoError(t, err)
+
+	g, err := p.(FloatGetter).FloatGetter()
+	require.NoError(t, err)
+
+	v, err := g()
+	require.NoError(t, err)
+	assert.Equal(t, 3900.0, v)
+}
+
+func TestFallbackInvalidValues(t *testing.T) {
+	for _, value := range []string{"NaN", "Inf", "-Inf"} {
+		_, err := NewFallbackFromConfig(t.Context(), map[string]any{"value": value})
+		assert.Error(t, err, value)
+	}
+
+	_, err := NewFallbackFromConfig(t.Context(), map[string]any{"value": 1, "scale": "NaN"})
+	assert.Error(t, err)
+
+	// non-finite readings are rejected and not kept
+	var calls int
+	p := &fallbackPlugin{scale: 1, source: func() (float64, error) {
+		calls++
+		if calls == 1 {
+			return math.NaN(), nil
+		}
+		return 3680, nil
+	}}
+
+	_, err = p.value()
+	require.Error(t, err)
+
+	v, err := p.value()
+	require.NoError(t, err)
+	assert.Equal(t, 3680.0, v)
+
+	// values outside the int64 range are rejected
+	p = &fallbackPlugin{scale: 1, val: 1e300, read: true}
+	_, err = p.intValue()
+	assert.Error(t, err)
 }
 
 func TestFallbackMissing(t *testing.T) {
