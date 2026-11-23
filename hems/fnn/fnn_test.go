@@ -49,3 +49,29 @@ func TestDimmingNotConfigured(t *testing.T) {
 	assert.NotNil(t, fnn.CurtailedPercent())
 	assert.NotNil(t, hems.Curtailed(fnn))
 }
+
+// TestProductionNominalMaxMissing verifies that partial curtailment without
+// generator power yields no export limit instead of 0 W, while W3 stays at 0 W.
+func TestProductionNominalMaxMissing(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+
+	for _, tc := range []struct {
+		name       string
+		w3, s1, s2 bool
+		percent    int
+		limit      *float64
+	}{
+		{"uncurtailed", false, false, false, 100, new(0.0)},
+		{"w3", true, false, false, 0, new(0.0)},
+		{"s1", false, true, false, 60, nil},
+		{"s2", false, false, true, 30, nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			fnn, err := NewFnn(&stubSite{}, 0, 0, boolG(tc.w3), boolG(tc.s1), boolG(tc.s2), nil, 0)
+			require.NoError(t, err)
+
+			assert.Equal(t, tc.percent, *fnn.CurtailedPercent())
+			assert.Equal(t, tc.limit, fnn.MaxProductionPower())
+		})
+	}
+}
