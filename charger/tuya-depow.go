@@ -37,7 +37,7 @@ package charger
 //	105  x_charge_history    ro      charge history              last session {"t":"2026-09-05 13:15:20","s":"13:15","e":"10:50","d":77732,"c":62}, c 0.1 kWh
 //	106  x_charger_info      rw      device info                 {"r":"Type B, AC 30mA + DC 6mA","fv":"2.9.3","cp":"11.5","t":"0","e":"0"}
 //	                                                             r RCD type, fv firmware, cp control pilot voltage
-//	107  x_adjust_current    ro      selectable currents         "[6, 8, 10, 13, 16]"
+//	107  x_adjust_current    ro      current presets (app)       "[6, 8, 10, 13, 16]", min/max used as range
 //	108  x_downcounter       ro      countdown remaining         s
 //	109  x_work_st_debug     ro      work state (debug)          SLEEP, IDLE, IDLEINS, WORKING, WAIT, ERRORPAUSE, PAUSE, STOP, EMPTY
 //	110  x_single_fase_mode  rw      single/three phase mode     bool, not seen on firmware 2.9.3 and 9.2.9
@@ -273,17 +273,17 @@ func (wb *TuyaDepow) MaxCurrent(current int64) error {
 	}
 
 	minCurrent, maxCurrent := tuyaDepowLimits(dps)
-	step := min(max(current, minCurrent), maxCurrent)
+	current = min(max(current, minCurrent), maxCurrent)
 
 	wb.mu.Lock()
-	wb.current = step
+	wb.current = current
 	wb.mu.Unlock()
 
-	if tuyaDepowInt(dps[tuyaDepowDpCurrent]) == step {
+	if tuyaDepowInt(dps[tuyaDepowDpCurrent]) == current {
 		return nil
 	}
 
-	return wb.conn.Set(map[string]any{tuyaDepowDpCurrent: step})
+	return wb.conn.Set(map[string]any{tuyaDepowDpCurrent: current})
 }
 
 // tuyaDepowLimits returns the lowest and highest supported current, limited by the installation maximum
