@@ -31,7 +31,6 @@ params:
       en: The unit ids of the Multi RS units are listed in the GX device list (Modbus TCP).
   - preset: battery-params
 render: |
-  {{- if eq .usage "battery" }}
   type: custom
   power:
     source: modbus
@@ -47,7 +46,7 @@ render: |
     {{- include "modbus-connection" . | indent 2 }}
     id: 100 # com.victronenergy.system
     register:
-      address: 843 # Soc
+      address: 843 # SoC
       type: input
       decode: uint16
   limitsoc:
@@ -56,14 +55,20 @@ render: |
     set:
       source: sequence
       set:
-      {{- range splitList "," (.units | unquote) }}
+      {{- range splitList "," (printf "%v" .units | unquote) }}
+      {{- $unit := trim . }}
+      {{- if not (regexMatch "^[0-9]{1,3}$" $unit) }}
+      {{- fail (printf "units: invalid modbus unit id %q" $unit) }}
+      {{- end }}
+      {{- if gt (int $unit) 247 }}
+      {{- fail (printf "units: modbus unit id %d out of range 0..247" (int $unit)) }}
+      {{- end }}
       - source: modbus
         {{- include "modbus-connection" $ | indent 6 }}
-        id: {{ . | trim }}
+        id: {{ $unit }}
         register:
           address: 4614 # /Settings/Ess/MinimumSocLimit
           type: writesingle
           decode: uint16
       {{- end }}
   {{- include "battery-params" . }}
-  {{- end }}
