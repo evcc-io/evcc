@@ -17,16 +17,16 @@ params:
   - name: maxconsumptionpower
     type: float
     unit: W
-    required: true
     description:
       en: Guaranteed minimum power (Pmin)
       de: Garantierte Mindestleistung (Pmin)
     help:
-      en: Power limit applied to the root circuit while the limit is active. Only used if an input is assigned to W4.
-      de: Leistungsbegrenzung des Hauptstromkreises während die Limitierung aktiv ist. Wird nur verwendet, wenn ein Eingang W4 zugeordnet ist.
+      en: Power limit applied to the root circuit while the limit is active. Required if an input is assigned to W4.
+      de: Leistungsbegrenzung des Hauptstromkreises während die Limitierung aktiv ist. Erforderlich, wenn ein Eingang W4 zugeordnet ist.
   - name: productionnominalmax
     type: float
     unit: Wp
+    example: 10000
     description:
       en: Installed generator power
       de: Installierte Generatorleistung
@@ -98,6 +98,9 @@ render: |
   {{- $d1 := .di1function }}
   {{- $d2 := .di2function }}
   {{- $curtail := or (has $d1 (list "w3" "s1" "s2")) (has $d2 (list "w3" "s1" "s2")) }}
+  {{- if and $curtail (le (float64 .productionnominalmax) 0.0) }}
+  {{- fail "productionnominalmax is required for W3, S1 or S2" }}
+  {{- end }}
   type: fnn
   interval: 5s
   {{- if or (eq $d1 "w4") (eq $d2 "w4") }}
