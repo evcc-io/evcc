@@ -12,8 +12,8 @@ import (
 )
 
 type meter struct {
-	Meter        int      `json:"meter" gorm:"column:meter;uniqueIndex:meters_meter_ts"`
-	Timestamp    int64    `json:"ts" gorm:"column:ts;uniqueIndex:meters_meter_ts"` // start of 15min slot
+	Meter        int      `json:"meter" gorm:"column:meter;primaryKey;autoIncrement:false"`
+	Timestamp    int64    `json:"ts" gorm:"column:ts;primaryKey;autoIncrement:false"` // start of 15min slot
 	Entity       entity   `json:"-" gorm:"foreignkey:Meter;references:Id"`
 	Energy       float64  `json:"energy" gorm:"column:energy"`
 	ReturnEnergy float64  `json:"returnEnergy" gorm:"column:return_energy"`
@@ -130,7 +130,11 @@ func SetupSchema() error {
 		}
 	}
 
-	if err := db.Instance.AutoMigrate(new(meter), new(energySum), new(flowDay)); err != nil {
+	if err := migrateMeterWithoutRowid(); err != nil {
+		return err
+	}
+
+	if err := db.Instance.AutoMigrate(new(energySum), new(flowDay)); err != nil {
 		return err
 	}
 
@@ -139,6 +143,58 @@ func SetupSchema() error {
 	}
 
 	return loadDaily()
+}
+
+const withoutRowid = "WITHOUT ROWID"
+
+// migrateMeterWithoutRowid keeps meters clustered on its primary key (meter, ts). A table from
+// before stores every row twice, in the table and in its unique index, and is rebuilt once.
+func migrateMeterWithoutRowid() error {
+	// add the columns an older table lacks, so the copy finds them all
+	if err := db.Instance.Set("gorm:table_options", withoutRowid).AutoMigrate(new(meter)); err != nil {
+		return err
+	}
+
+	var ddl string
+	if err := db.Instance.Raw(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'meters'`).Scan(&ddl).Error; err != nil {
+		return err
+	}
+	if strings.Contains(strings.ToUpper(ddl), withoutRowid) {
+		return nil
+	}
+
+	return db.Instance.Transaction(func(tx *gorm.DB) error {
+		// the unique index moves along and guarantees (meter, ts) holds no duplicates for the new primary key
+		if err := tx.Exec(`ALTER TABLE meters RENAME TO meters_rowid`).Error; err != nil {
+			return err
+		}
+
+		m := tx.Set("gorm:table_options", withoutRowid).Migrator()
+		if err := m.CreateTable(new(meter)); err != nil {
+			return err
+		}
+
+		types, err := m.ColumnTypes(new(meter))
+		if err != nil {
+			return err
+		}
+		cols := make([]string, 0, len(types))
+		for _, typ := range types {
+			cols = append(cols, `"`+typ.Name()+`"`)
+		}
+		list := strings.Join(cols, ",")
+
+		// copy in key order along the old index, so the new table fills its pages in sequence
+		for _, stmt := range []string{
+			`INSERT INTO meters (` + list + `) SELECT ` + list + ` FROM meters_rowid ORDER BY meter, ts`,
+			`DROP TABLE meters_rowid`,
+		} {
+			if err := tx.Exec(stmt).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 // OnPersist, if set, is called with the slot start after a slot is written.
