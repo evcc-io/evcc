@@ -41,7 +41,7 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	//
 	// Use Case LPC, Scenario 2
 	case lpc.ConfigurationWriteApprovalRequired:
-		c.approveDeviceConfigurations(c.cs.CsLPCInterface.PendingDeviceConfigurations(), c.cs.CsLPCInterface.ApproveOrDenyDeviceConfiguration)
+		c.approveDeviceConfigurations(c.cs.CsLPCInterface.PendingDeviceConfigurations(), c.cs.CsLPCInterface.ApproveOrDenyDeviceConfiguration, c.cs.CsLPCInterface.SetFailsafeDurationMinimum)
 
 	// Failsafe limit for the consumed active (real) power of the
 	// Controllable System data update received
@@ -91,7 +91,7 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	//
 	// Use Case LPP, Scenario 2
 	case lpp.ConfigurationWriteApprovalRequired:
-		c.approveDeviceConfigurations(c.cs.CsLPPInterface.PendingDeviceConfigurations(), c.cs.CsLPPInterface.ApproveOrDenyDeviceConfiguration)
+		c.approveDeviceConfigurations(c.cs.CsLPPInterface.PendingDeviceConfigurations(), c.cs.CsLPPInterface.ApproveOrDenyDeviceConfiguration, c.cs.CsLPPInterface.SetFailsafeDurationMinimum)
 
 	// Failsafe limit for the produced active (real) power of the
 	// Controllable System data update received
@@ -233,22 +233,90 @@ func (c *EEBus) productionWriteApprovalRequired() {
 	}
 }
 
-// approveDeviceConfigurations approves pending device configuration writes,
-// denying those that state an invalid failsafe limit
+// failsafe duration minimum range the Energy Guard may choose from ([LPC-022/3], [LPP-022/3])
+const (
+	failsafeDurationMin = 2 * time.Hour
+	failsafeDurationMax = 24 * time.Hour // our maximum, see [LPC-022/4]
+)
+
+// approveDeviceConfigurations approves pending device configuration writes. It denies
+//   - all writes while the CS is not controlled by the Energy Guard: in "init", "failsafe
+//     state" and "unlimited/autonomous" other data points are evaluated only after a
+//     heartbeat and a following limit (LPC/LPP UC TS 1.0.0 section 2.2, [LPC-003/2])
+//   - writes stating an invalid failsafe limit
+//   - a failsafe duration minimum below 2h ([LPC-003/2], [LPC-022/3])
+//   - a failsafe duration minimum above our maximum, which then becomes the failsafe
+//     duration minimum ([LPC-022/4], [LPC-022/5])
 func (c *EEBus) approveDeviceConfigurations(
 	pending map[model.MsgCounterType][]ucapi.PendingDeviceConfiguration,
 	approve func(msgCounter model.MsgCounterType, approve bool, reason string),
+	setDuration func(duration time.Duration, changeable bool) error,
 ) {
+	c.mux.RLock()
+	controlled := c.controlled
+	c.mux.RUnlock()
+
 	for msg, configs := range pending {
-		if slices.ContainsFunc(configs, invalidFailsafeLimit) {
+		switch {
+		case !controlled:
+			c.log.DEBUG.Println("denying device configuration write while not controlled by the energy guard:", msg, configs)
+			approve(msg, false, "not controlled by energy guard")
+
+		case slices.ContainsFunc(configs, invalidFailsafeLimit):
 			c.log.ERROR.Println("denying device configuration write:", msg, configs)
 			approve(msg, false, "invalid limit")
-			continue
-		}
 
-		c.log.DEBUG.Println("approving device configuration write:", msg, configs)
-		approve(msg, true, "")
+		case slices.ContainsFunc(configs, failsafeDurationTooShort):
+			c.log.ERROR.Println("denying failsafe duration below minimum:", msg, configs)
+			approve(msg, false, "failsafe duration below minimum")
+
+		case slices.ContainsFunc(configs, failsafeDurationTooLong):
+			c.log.ERROR.Println("denying failsafe duration above maximum:", msg, configs)
+			approve(msg, false, "failsafe duration above maximum")
+
+			if err := setDuration(failsafeDurationMax, true); err != nil {
+				c.log.ERROR.Println("SetFailsafeDurationMinimum:", err)
+				continue
+			}
+
+			c.mux.Lock()
+			c.failsafeDuration = failsafeDurationMax
+			c.mux.Unlock()
+
+		default:
+			c.log.DEBUG.Println("approving device configuration write:", msg, configs)
+			approve(msg, true, "")
+		}
 	}
+}
+
+// failsafeDurationOf returns the failsafe duration minimum a configuration write states
+func failsafeDurationOf(config ucapi.PendingDeviceConfiguration) (time.Duration, bool) {
+	if config.Value == nil || config.Value.Duration == nil {
+		return 0, false
+	}
+	d, err := config.Value.Duration.GetTimeDuration()
+	return d, err == nil
+}
+
+// failsafeDurationTooShort reports whether a configuration write states an unreadable
+// failsafe duration minimum or one below 2h
+func failsafeDurationTooShort(config ucapi.PendingDeviceConfiguration) bool {
+	if config.KeyName != model.DeviceConfigurationKeyNameTypeFailsafeDurationMinimum {
+		return false
+	}
+	d, ok := failsafeDurationOf(config)
+	return !ok || d < failsafeDurationMin
+}
+
+// failsafeDurationTooLong reports whether a configuration write states a failsafe
+// duration minimum above our maximum
+func failsafeDurationTooLong(config ucapi.PendingDeviceConfiguration) bool {
+	if config.KeyName != model.DeviceConfigurationKeyNameTypeFailsafeDurationMinimum {
+		return false
+	}
+	d, ok := failsafeDurationOf(config)
+	return ok && d > failsafeDurationMax
 }
 
 // invalidFailsafeLimit reports whether a configuration write states an invalid failsafe limit
