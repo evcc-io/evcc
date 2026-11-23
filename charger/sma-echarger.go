@@ -238,8 +238,21 @@ func (wb *SmaECharger) MaxCurrentMillis(current float64) error {
 
 // setPower writes the power limit, the charger selects 1p or 3p internally based on it
 func (wb *SmaECharger) setPower(current float64, phases int) error {
-	power := int32(math.Round(grid.CurrentToPower(current, phases)))
-	return wb.write(smaEChargerRegSetpoint, uint32(power))
+	power := grid.CurrentToPower(current, phases)
+
+	// the charger may reject values outside its range, e.g. a 4500 W minimum on the EV Charger
+	if v, err := wb.readHolding32(smaEChargerRegMinPower); err == nil {
+		if p := smaEChargerInt32(v); p > 0 {
+			power = max(power, p)
+		}
+	}
+	if v, err := wb.read32(smaEChargerRegMaxPowerRtg, 1); err == nil {
+		if p := smaEChargerInt32(v[0]); p > 0 {
+			power = min(power, p)
+		}
+	}
+
+	return wb.write(smaEChargerRegSetpoint, uint32(int32(math.Round(power))))
 }
 
 var _ api.PhaseSwitcher = (*SmaECharger)(nil)
