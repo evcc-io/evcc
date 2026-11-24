@@ -77,6 +77,9 @@ const (
 	smaModbusModeStop     = 4721
 
 	smaModbusNaN32 = 0x80000000
+
+	// the charger delivers about 0.5 A less than the setpoint and drops to 1p below 6 A at 3p
+	smaModbusMinCurrent3p = 6.5 // A
 )
 
 func init() {
@@ -128,6 +131,21 @@ func NewSmaModbus(ctx context.Context, settings modbus.Settings) (api.Charger, e
 	}
 	if v, err := wb.read32(smaModbusRegMaxPowerRtg, 1); err == nil {
 		wb.maxPower = smaModbusInt32(v[0])
+	}
+
+	// the charger may already charge on 1p after a restart
+	if s, err := wb.Status(); err == nil && s == api.StatusC {
+		if l1, l2, l3, err := wb.Currents(); err == nil {
+			var active int
+			for _, l := range []float64{l1, l2, l3} {
+				if l > 1 {
+					active++
+				}
+			}
+			if active == 1 {
+				wb.phases = 1
+			}
+		}
 	}
 
 	// disconnecting after full charge ends the session on the charger side
@@ -248,16 +266,40 @@ func (wb *SmaModbus) MaxCurrentMillis(current float64) error {
 
 // setPower writes the power limit, the charger selects 1p or 3p internally based on it
 func (wb *SmaModbus) setPower(current float64, phases int) error {
-	power := grid.CurrentToPower(current, phases)
-
-	if wb.minPower > 0 {
-		power = max(power, wb.minPower)
-	}
-	if wb.maxPower > 0 {
-		power = min(power, wb.maxPower)
+	if phases > 1 {
+		current = max(current, smaModbusMinCurrent3p)
 	}
 
-	return wb.write(smaModbusRegSetpoint, uint32(int32(math.Round(power))))
+	power := grid.CurrentToPower(current, phases) * wb.voltageFactor(phases)
+
+	// limits are reported as negative consumption values
+	if minPower := math.Abs(wb.minPower); minPower > 0 {
+		power = max(power, minPower)
+	}
+	if maxPower := math.Abs(wb.maxPower); maxPower > 0 {
+		power = min(power, maxPower)
+	}
+
+	// the charger rejects positive setpoints, consumption is negative
+	return wb.write(smaModbusRegSetpoint, uint32(int32(-math.Ceil(power))))
+}
+
+// voltageFactor scales from nominal to measured voltage since the charger derives the phase current from the latter
+func (wb *SmaModbus) voltageFactor(phases int) float64 {
+	u1, u2, u3, err := wb.Voltages()
+	if err != nil {
+		return 1
+	}
+
+	u := u1
+	if phases > 1 {
+		u = max(u1, u2, u3)
+	}
+	if u <= 0 {
+		return 1
+	}
+
+	return u / grid.Voltage
 }
 
 var _ api.PhaseSwitcher = (*SmaModbus)(nil)
