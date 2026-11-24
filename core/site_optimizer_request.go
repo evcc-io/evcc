@@ -384,6 +384,7 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 			detail.precondition, held, start = preconditionDemand(lp, bat.SInitial, minLen, time.Now())
 			site.applyPlanGoal(lp, &bat, minLen, held, start)
 		}
+		detail.PlanGoals = planGoalsInHorizon(lp, minLen)
 	}
 
 	// the loadpoint follows its own planner in any mode, which the optimizer must not reschedule
@@ -926,6 +927,16 @@ func capPlanGoal(bat *optimizer.BatteryConfig, limit float64) {
 	for i, g := range bat.SGoal {
 		bat.SGoal[i] = min(g, bat.SMax)
 	}
+}
+
+// planGoalsInHorizon returns the vehicle plan goals within the horizon for display. Unlike the
+// goals passed to the optimizer they are not capped at the limit, which later plans lift.
+func planGoalsInHorizon(lp loadpoint.API, minLen int) []loadpoint.PlanGoal {
+	now := time.Now()
+	return lo.Filter(lp.GetSocPlanGoals(), func(g loadpoint.PlanGoal, _ int) bool {
+		slot := planSlot(now, g.Time)
+		return slot >= 0 && slot < minLen
+	})
 }
 
 // planGoalWh converts the plan goal to Wh. Energy plans count from the energy
