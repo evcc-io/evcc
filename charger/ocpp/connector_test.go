@@ -480,6 +480,24 @@ func (suite *connTestSuite) TestOnStartTransactionIgnoresQueuedMeterStart() {
 	suite.Equal(18.367, res, "outdated meterStart must not overwrite the register")
 }
 
+func (suite *connTestSuite) TestOnStartTransactionAfterIdle() {
+	suite.meterValues(energySample("18367", types.ReadingContextTrigger))
+
+	suite.clock.Add(time.Hour)
+	suite.startTransactionAt(suite.clock.Now(), 0)
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err, "meterStart must be readable despite stale meter values")
+	suite.Equal(0.0, res)
+
+	_, err = suite.conn.CurrentPower()
+	suite.ErrorIs(err, api.ErrTimeout, "meterStart must not refresh other measurements")
+
+	suite.clock.Add(time.Hour)
+	_, err = suite.conn.TotalEnergy()
+	suite.ErrorIs(err, api.ErrTimeout, "meterStart must expire like a meter value")
+}
+
 func (suite *connTestSuite) TestOnStartTransactionRejectsDelayedEnergy() {
 	start := suite.clock.Now()
 	suite.meterValuesAt(start.Add(-time.Hour), energySample("18000", types.ReadingContextTrigger))

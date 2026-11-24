@@ -224,6 +224,7 @@ func (conn *Connector) setStartEnergy(wh int, ts *types.DateTime) {
 	if ts != nil {
 		conn.energyTimestamp = ts.Time
 	}
+	conn.meterStartUpdated = conn.clock.Now()
 }
 
 // clearTransaction resets transaction state and zeroes reported power.
