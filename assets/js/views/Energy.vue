@@ -1078,7 +1078,6 @@ export default defineComponent({
 			const heatingTitles = this.loadpoints.filter((lp) => lp.isTemp).map((lp) => lp.title);
 			return splitLoadpointFlows(this.flows, this.flow?.entities, heatingTitles);
 		},
-		// the nodes carry the numbers of the cards
 		flowChartTotals(): Record<string, number> {
 			const groups = this.loadpointGroups.map((g) => [`to-${g.key}`, this.total(g.entities)]);
 			return {

@@ -61,7 +61,7 @@ export default defineComponent({
 				flows.filter((f) => f[key] === id).reduce((acc, f) => acc + f.energy, 0);
 			// label shows the metered total, the node is drawn only if a visible link remains
 			const node = (key: "from" | "to", id: string) => ({
-				value: this.totals[`${key}-${id}`] || sum(this.flows, key, id),
+				value: this.totals[`${key}-${id}`] ?? sum(this.flows, key, id),
 				drawn: sum(this.visibleFlows, key, id) > 0,
 			});
 			const src = SOURCES.map((id) => ({
