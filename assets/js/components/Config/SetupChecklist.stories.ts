@@ -15,7 +15,7 @@ const Template: StoryFn<typeof SetupChecklist> = (args) => ({
   setup() {
     return { args };
   },
-  template: '<div style="max-width: 760px"><SetupChecklist v-bind="args" /></div>',
+  template: '<SetupChecklist v-bind="args" />',
 });
 
 export const Empty = Template.bind({});
@@ -36,4 +36,10 @@ OneLeft.args = {
     "gridExport",
     "co2",
   ]),
+};
+
+export const Mixed = Template.bind({});
+Mixed.args = {
+  configured: configured(["pv", "grid", "loadpoint", "gridImport", "gridExport", "solar"]),
+  dismissed: ["battery", "co2"],
 };

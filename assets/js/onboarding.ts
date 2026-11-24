@@ -34,16 +34,36 @@ export function isDismissed(item: OnboardingItem): boolean {
   return current().dismissed.includes(item);
 }
 
+// applied locally first, so a change made before an earlier request returns builds on it
+// instead of overwriting it; only the response to the latest change is applied
 async function save(patch: Partial<OnboardingState>) {
-  const res = await api.put("/config/onboarding", { ...current(), ...patch });
-  store.state.onboarding = res.data;
+  const prev = current();
+  const next = { ...prev, ...patch };
+  store.state.onboarding = next;
+  try {
+    const res = await api.put("/config/onboarding", next);
+    if (store.state.onboarding === next) store.state.onboarding = res.data;
+  } catch (e) {
+    if (store.state.onboarding === next) store.state.onboarding = prev;
+    throw e;
+  }
 }
 
 // no solar system means no export tariff and no solar forecast either
-export function dismiss(item: OnboardingItem) {
-  const implied: OnboardingItem[] = item === "pv" ? ["gridExport", "solar"] : [];
-  const dismissed = new Set([...current().dismissed, item, ...implied]);
+const IMPLIED: Partial<Record<OnboardingItem, OnboardingItem[]>> = { pv: ["gridExport", "solar"] };
+
+function withImplied(items: OnboardingItem[]): OnboardingItem[] {
+  return [...items, ...items.flatMap((i) => IMPLIED[i] ?? [])];
+}
+
+export function dismiss(...items: OnboardingItem[]) {
+  const dismissed = new Set([...current().dismissed, ...withImplied(items)]);
   return save({ dismissed: [...dismissed] });
+}
+
+export function undismiss(item: OnboardingItem) {
+  const restored = withImplied([item]);
+  return save({ dismissed: current().dismissed.filter((i) => !restored.includes(i)) });
 }
 
 export function finish() {
