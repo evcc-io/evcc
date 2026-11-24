@@ -480,6 +480,31 @@ func (suite *connTestSuite) TestOnStartTransactionIgnoresQueuedMeterStart() {
 	suite.Equal(18.367, res, "outdated meterStart must not overwrite the register")
 }
 
+func (suite *connTestSuite) TestOnStartTransactionRejectsDelayedEnergy() {
+	start := suite.clock.Now()
+	suite.meterValuesAt(start.Add(-time.Hour), energySample("18000", types.ReadingContextTrigger))
+	suite.startTransactionAt(start, 0)
+
+	suite.meterValuesAt(start.Add(-time.Minute), energySample("18367", types.ReadingContextSamplePeriodic))
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.Equal(0.0, res, "energy sampled before meterStart must not replace it")
+}
+
+func (suite *connTestSuite) TestOnStartTransactionIgnoresUnrelatedSamples() {
+	start := suite.clock.Now()
+	suite.meterValuesAt(start.Add(-time.Hour), energySample("18367", types.ReadingContextTrigger))
+
+	power := types.SampledValue{Value: "0", Measurand: types.MeasurandPowerActiveImport, Unit: types.UnitOfMeasureW}
+	suite.meterValuesAt(start.Add(time.Second), power)
+	suite.startTransactionAt(start, 0)
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.Equal(0.0, res, "newer non-energy samples must not block meterStart")
+}
+
 func (suite *connTestSuite) TestOnStartTransactionKeepsPhaseEnergy() {
 	phase := func(value string, p types.Phase) types.SampledValue {
 		s := energySample(value, types.ReadingContextSamplePeriodic)

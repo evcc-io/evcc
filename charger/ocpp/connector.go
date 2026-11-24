@@ -26,9 +26,10 @@ type Connector struct {
 	statusC  chan struct{}
 	rebooted bool
 
-	meterUpdated   time.Time // local receive time, drives watchdog and timeout
-	meterTimestamp time.Time // charger sample time, orders incoming meter values
-	measurements   map[types.Measurand]types.SampledValue
+	meterUpdated    time.Time // local receive time, drives watchdog and timeout
+	meterTimestamp  time.Time // charger sample time, orders incoming meter values
+	energyTimestamp time.Time // charger time of the total energy register, orders meterStart against samples
+	measurements    map[types.Measurand]types.SampledValue
 
 	txnId int
 	idTag string

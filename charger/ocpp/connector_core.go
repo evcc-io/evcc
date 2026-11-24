@@ -152,9 +152,16 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 
 					sample.Value = strings.TrimSpace(sample.Value)
 
-					// a lifetime register is never zero, some chargers (Huawei) report 0 outside transactions
-					if !isZeroEnergy(sample) {
-						conn.measurements[getSampleKey(sample)] = sample
+					key := getSampleKey(sample)
+					isTotal := key == types.MeasurandEnergyActiveImportRegister
+
+					// a lifetime register is never zero, some chargers (Huawei) report 0 outside transactions.
+					// A total older than the meterStart baseline must not replace it.
+					if !isZeroEnergy(sample) && (!isTotal || !meterValue.Timestamp.Time.Before(conn.energyTimestamp)) {
+						conn.measurements[key] = sample
+						if isTotal {
+							conn.energyTimestamp = meterValue.Timestamp.Time
+						}
 					}
 
 					conn.meterTimestamp = meterValue.Timestamp.Time
@@ -205,13 +212,17 @@ func (conn *Connector) setStartEnergy(wh int, ts *types.DateTime) {
 	}
 
 	// a StartTransaction queued while offline carries an outdated meterStart
-	if ts != nil && ts.Time.Before(conn.meterTimestamp) {
+	if ts != nil && ts.Time.Before(conn.energyTimestamp) {
 		return
 	}
 
 	conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{
 		Value: strconv.Itoa(wh),
 		Unit:  types.UnitOfMeasureWh,
+	}
+
+	if ts != nil {
+		conn.energyTimestamp = ts.Time
 	}
 }
 
