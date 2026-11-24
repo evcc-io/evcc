@@ -68,7 +68,7 @@ For values the device can report itself (nameplate ratings, power limits),
 keep the param optional with a `service:` suggestion and fall back to the
 device at runtime via the `fallback` plugin instead of making the param
 required. `fallback` returns `value` if set and non-zero, otherwise reads the
-`fallback` source once (failures retry). With `set` it writes that value,
+`fallback` source once (failures and zero readings retry). With `set` it writes that value,
 optionally `scale`d, ignoring the value passed in:
 
 ```yaml

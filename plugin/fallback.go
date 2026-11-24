@@ -100,24 +100,47 @@ func numericGetter(ctx context.Context, c *Config) (func() (float64, error), err
 		return nil, err
 	}
 
-	switch g := prov.(type) {
-	case FloatGetter:
-		return g.FloatGetter()
-	case IntGetter:
-		get, err := g.IntGetter()
-		if err != nil {
+	fg, isFloat := prov.(FloatGetter)
+	ig, isInt := prov.(IntGetter)
+
+	var getFloat func() (float64, error)
+	if isFloat {
+		if getFloat, err = fg.FloatGetter(); err != nil {
 			return nil, err
 		}
-		return func() (float64, error) {
-			v, err := get()
-			return float64(v), err
-		}, nil
-	default:
+	}
+
+	var getInt func() (int64, error)
+	if isInt {
+		if getInt, err = ig.IntGetter(); err != nil {
+			return nil, err
+		}
+	}
+
+	if getFloat == nil && getInt == nil {
 		return nil, fmt.Errorf("invalid plugin source for type float or int: %s", c.Source)
 	}
+
+	// sources like go only succeed through the getter matching their result type
+	return func() (float64, error) {
+		var ferr error
+		if getFloat != nil {
+			v, err := getFloat()
+			if err == nil || getInt == nil {
+				return v, err
+			}
+			ferr = err
+		}
+
+		v, err := getInt()
+		if err != nil {
+			return 0, errors.Join(ferr, err)
+		}
+		return float64(v), nil
+	}, nil
 }
 
-// value returns the configured value or the first valid fallback reading
+// value returns the configured value or the first valid, non-zero fallback reading
 func (p *fallbackPlugin) value() (float64, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -130,10 +153,19 @@ func (p *fallbackPlugin) value() (float64, error) {
 		if !isFinite(v) {
 			return 0, fmt.Errorf("fallback: invalid value: %v", v)
 		}
+		// zero means unavailable, e.g. a decoded NaN register
+		if v == 0 {
+			return 0, errors.New("fallback: no value")
+		}
 		p.val, p.read = v, true
 	}
 
-	return p.scale * p.val, nil
+	v := p.scale * p.val
+	if !isFinite(v) {
+		return 0, fmt.Errorf("invalid value: %v", v)
+	}
+
+	return v, nil
 }
 
 // intValue returns the rounded value, rejecting values outside the int64 range
