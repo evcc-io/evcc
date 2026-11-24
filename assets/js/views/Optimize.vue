@@ -3,30 +3,29 @@
 		class="container px-4 safe-area-inset d-flex flex-column"
 		:class="{ 'empty-container': !hasResult }"
 	>
-		<TopHeader title="Optimize Debug 🧪" />
+		<TopHeader :title="`${$t('optimize.title')} 🧪`" />
 		<OptimizerModal :is-sponsor="isSponsor" />
 		<div v-if="!optimizer" class="flex-grow-1 d-flex">
 			<div class="empty-box d-flex flex-column p-5">
-				<p class="text-muted mb-4">The optimizer is disabled.</p>
+				<p class="text-muted mb-4">{{ $t("optimize.disabled") }}</p>
 				<button type="button" class="btn btn-outline-secondary" @click="openOptimizerModal">
-					Open settings
+					{{ $t("optimize.openSettings") }}
 				</button>
 			</div>
 		</div>
 		<div v-else-if="!evopt" class="flex-grow-1 d-flex" data-testid="optimize-empty">
 			<div class="empty-box d-flex flex-column p-5">
 				<p class="text-muted">
-					The optimizer is enabled and collecting data. For new installations this can
-					take up to 24 hours.
+					{{ $t("optimize.collectingData") }}
 				</p>
 				<p class="text-muted mb-4">
-					If nothing shows up after that, the logs may tell why.
+					{{ $t("optimize.collectingDataHint") }}
 				</p>
 				<router-link
 					:to="{ path: '/log', query: { q: 'optimizer' } }"
 					class="btn btn-outline-primary"
 				>
-					Check logs
+					{{ $t("optimize.checkLogs") }}
 				</router-link>
 			</div>
 		</div>
@@ -48,10 +47,10 @@
 		<div v-if="hasResult && evopt" class="row">
 			<main class="col-12">
 				<div>
-					<h2 class="mt-2 mb-4">Optimizer Plan</h2>
+					<h2 class="mt-2 mb-4">{{ $t("optimize.optimizerPlan") }}</h2>
 
 					<Card
-						title="Charging Plan"
+						:title="$t('optimize.chargingPlan')"
 						subtitle="kW"
 						edge-to-edge
 						class="box-pull-out mb-4"
@@ -82,7 +81,7 @@
 
 					<Card
 						v-if="socEntries.length"
-						title="SoC Projections"
+						:title="$t('optimize.socProjections')"
 						subtitle="%"
 						edge-to-edge
 						class="box-pull-out mb-4"
@@ -102,7 +101,7 @@
 					</Card>
 
 					<Card
-						title="Timeline"
+						:title="$t('optimize.timeline')"
 						:subtitle="timeSeriesSubtitle"
 						edge-to-edge
 						class="box-pull-out mb-4"
@@ -117,10 +116,10 @@
 						/>
 					</Card>
 
-					<h2 class="section-title mb-4">Optimizer Inputs</h2>
+					<h2 class="section-title mb-4">{{ $t("optimize.optimizerInputs") }}</h2>
 
 					<Card
-						title="Batteries"
+						:title="$t('optimize.batteries')"
 						:subtitle="batteryEfficiencySubtitle"
 						edge-to-edge
 						class="box-pull-out mb-4"
@@ -134,7 +133,7 @@
 					</Card>
 
 					<Card
-						title="Environment"
+						:title="$t('optimize.environment')"
 						:subtitle="timeSeriesSubtitle"
 						edge-to-edge
 						class="box-pull-out mb-4"
@@ -151,9 +150,9 @@
 						/>
 					</Card>
 
-					<h2 class="section-title mb-4">Raw Data</h2>
+					<h2 class="section-title mb-4">{{ $t("optimize.rawData") }}</h2>
 
-					<Card title="Request" edge-to-edge class="box-pull-out mb-4">
+					<Card :title="$t('optimize.request')" edge-to-edge class="box-pull-out mb-4">
 						<div class="position-relative">
 							<pre
 								class="p-3 overflow-auto"
@@ -163,7 +162,7 @@
 						</div>
 					</Card>
 
-					<Card title="Response" edge-to-edge class="box-pull-out mb-4">
+					<Card :title="$t('optimize.response')" edge-to-edge class="box-pull-out mb-4">
 						<div class="position-relative">
 							<pre
 								class="p-3 overflow-auto"
@@ -236,7 +235,7 @@ export default defineComponent({
 		};
 	},
 	head() {
-		return { title: "Optimize Debug" };
+		return { title: this.$t("optimize.title") };
 	},
 	computed: {
 		// the last explanation evcc published, in the language it was requested in
@@ -279,7 +278,10 @@ export default defineComponent({
 		batteryEfficiencySubtitle(): string {
 			const etaC = this.fmtPercentage((this.evopt?.req.eta_c || 1) * 100, 1);
 			const etaD = this.fmtPercentage((this.evopt?.req.eta_d || 1) * 100, 1);
-			return `${etaC} charge efficiency ・ ${etaD} discharge efficiency`;
+			return this.$t("optimize.batteryEfficiency", {
+				charge: etaC,
+				discharge: etaD,
+			});
 		},
 		deviceColors() {
 			return deviceColorMap(store.state.deviceColors);
@@ -332,7 +334,10 @@ export default defineComponent({
 			];
 		},
 		timeSeriesSubtitle(): string {
-			return `${this.evopt?.req.time_series.dt.length || 0} steps ・ ${this.horizonHours} h horizon`;
+			return this.$t("optimize.timeSeriesSubtitle", {
+				steps: this.evopt?.req.time_series.dt.length || 0,
+				horizon: this.horizonHours,
+			});
 		},
 		formattedRequest() {
 			return this.evopt?.req ? formatCompactJson(this.evopt.req) : "";
