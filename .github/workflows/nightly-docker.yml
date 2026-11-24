@@ -15,8 +15,6 @@ on:
 
 permissions: {}
 
-permissions: {}
-
 jobs:
   docker:
     name: Publish Docker :nightly
