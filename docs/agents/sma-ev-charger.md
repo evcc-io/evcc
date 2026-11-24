@@ -104,7 +104,8 @@ All drivers only read on startup and warn on settings that conflict with evcc co
 - **verified** (same device): the charger derives the phase current from the power limit and the measured voltage and delivers about 0.5 A less. Below 6 A per phase at 3p it pauses and continues on 1p, e.g. held 3p at 4545 W but dropped to 1p at 4250 W and 4140 W with 234 to 239 V.
 - **verified** (same device): each start and each 1p/3p switch pauses about 2 to 2.5 min, caused by `Chrg.MinSwTms` (minimum relay switching time, default 120 s). REST and SEMP warn on startup above 60 s, the loadpoint phase switch grace period.
 - **documented**: the channel is named `Parameter.Chrg.MinSwTms`, "Minimale Schaltdauer Relais" (FHEM `76_SMAEVCharger.pm`). It is not part of the eCharger Modbus register list.
-- **assumed**: `MinSwTms` is in seconds. In SMA channel names `Tms` is a time in seconds, `Tmm` in minutes (`Chrg.Plan.DurTmm`) and `Tmms` in milliseconds (`VolCtl.lLimTmms`). `Spdwr.IgmpQryTms` reports 125 with a maximum of 31744, the IGMP default query interval and the IGMPv3 maximum, both in seconds. `GriFltMonTms` uses 0.001 s on Modbus, which is a fixed point scale of seconds.
+- **verified** (eCharger, FW 2.7.31.R): the UI offers `MinSwTms` as a choice of 15, 30, 60, 90 or 120 s, default 120 s. Whether REST and SEMP report seconds or SMA enum codes is unknown. The startup warning assumes seconds.
+- **assumed**: the raw value of `MinSwTms` is in seconds, not an enum code. In SMA channel names `Tms` is a time in seconds, `Tmm` in minutes (`Chrg.Plan.DurTmm`) and `Tmms` in milliseconds (`VolCtl.lLimTmms`). `Spdwr.IgmpQryTms` reports 125 with a maximum of 31744, the IGMP default query interval and the IGMPv3 maximum, both in seconds. `GriFltMonTms` uses 0.001 s on Modbus, which is a fixed point scale of seconds.
 
 ## External active power setpoint
 
@@ -113,6 +114,8 @@ SMA inverters share the `Inverter.WModCfg.WCtlComCfg` channel family for active 
 - **assumed**: on the eCharger `Setpoint.PlantControl.Inverter.WModCfg.WCtlComCfg.WSptMaxNom` 0 and `WSptMinNom` -100 define the allowed range of an external setpoint, from no output to consuming 100 % of nominal power. They are not a minimum charging power.
 - **assumed**: as `Setpoint.PlantControl` channels they are written by plant control, likely the Sunny Home Manager or the charger itself when converting SEMP commands. SMA permits cyclic writes only for such setpoints.
 - **documented**: the eCharger Modbus register list contains neither 44039/44041 nor `WSpt`, only `Setpoint.PlantControl.Inverter.FstStop` (41253). Of the fallback group it lists 41193 and 41525 (`TmsOutPrc`).
+- **verified** (eCharger, FW 2.7.31.R): the unlisted holding registers answer anyway. 44039 reads 0 and 44041 -10000, as FIX2 percent 0 % and -100 %, matching `WSptMaxNom` / `WSptMinNom` from REST. 44425 and 40149 (`WSpt`) read NaN, so they exist but are not set. Writing them is untested.
+- **assumed**: `WSpt` (44425) could replace cyclic writes to `WMaxIn` as a setpoint channel. Like inverter setpoints it likely falls back after the communication timeout (41193/41525, 600 s and 100 % seen on the eCharger), so it would need periodic rewrites.
 - **documented**: in inverter parameter lists `Inverter.WMax` is "Nennwirkleistung WMaxOut" (menu "Maximale Wirkleistungsabgabe", configurable below the rating), `Inverter.WLim` is "Bemessungswirkleistung WMaxOutRtg", and percent values refer to `WMax` (fallback "in % von WMax", manual mode "in % Pmax", P(U) reference "Maximale Wirkleistung WMax (WMaxInOut)").
 - **assumed**: the same pattern applies to the input direction of the charger. `WMaxIn` is the configured nominal input power the station is installed for and the 100 % reference of `WSptMinNom`, `WMaxInRtg` is the rating. `WMax` is a leftover of the inverter model on a charger without feed-in and mirrors `WMaxIn` in all dumps. The 4500 W minimum fits a nominal installation value.
 - **assumed**: writing `WMaxIn` cyclically therefore changes the nominal power instead of a setpoint: the 4500 W minimum applies, flash wear is likely, and percent based setpoints from plant control shift their reference.
@@ -122,6 +125,7 @@ SMA inverters share the `Inverter.WModCfg.WCtlComCfg` channel family for active 
 - Unit id 3, big endian, 32 bit registers. NaN: S32 `0x80000000`, U32 `0xFFFFFFFF`, U64 all ones, status values use the lower 24 bits (`0xFFFFFD`). STR32 strings are 16 registers.
 - Writable parameters are stored in flash. SMA warns that cyclic changes destroy the flash, except grid service parameters marked in the device's "Parameter und Messwerte" document. Whether `WMaxIn` and `ChrgApv` may be written cyclically is unknown.
 - **verified** (eCharger, FW 2.7.31.R): every write to 44383 appears in the event log as a parameter change of `Inverter.WMaxIn`. This only shows that the charger logs the change, not that it is persisted to flash. No alternative setpoint register is known.
+- **verified** (same device): 44383 still reads the last written value hours later. It is retained, whether in flash or RAM is unknown.
 
 ## Sources
 
