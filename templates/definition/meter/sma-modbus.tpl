@@ -11,7 +11,7 @@ maxchargepower:
     register:
       address: 40189 # SMA Modbus Profile: BatConv.WMaxCha
       type: holding
-      decode: uint32
+      decode: uint32nan
 maxdischargepower:
   source: fallback
   value: {{ .maxdischargepower | default "" }}
@@ -21,7 +21,7 @@ maxdischargepower:
     register:
       address: 40191 # SMA Modbus Profile: BatConv.WMaxDsch
       type: holding
-      decode: uint32
+      decode: uint32nan
 {{- end }}
 
 {{/* fallback setter writing the configured power limit, or the device maximum, to register .write */}}
@@ -41,7 +41,7 @@ fallback:
   register:
     address: {{ $read }} # SMA Modbus Profile: {{ $readname }}
     type: holding
-    decode: uint32
+    decode: uint32nan
 {{- if .negate }}
 scale: -1
 {{- end }}
