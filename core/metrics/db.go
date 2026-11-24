@@ -178,7 +178,7 @@ func migrateMeterWithoutRowid() error {
 		}
 	}
 
-	return db.Instance.Transaction(func(tx *gorm.DB) error {
+	if err := db.Instance.Transaction(func(tx *gorm.DB) error {
 		// the unique index moves along and guarantees (meter, ts) holds no duplicates for the new primary key
 		if err := tx.Exec(`ALTER TABLE meters RENAME TO meters_rowid`).Error; err != nil {
 			return err
@@ -210,7 +210,13 @@ func migrateMeterWithoutRowid() error {
 			}
 		}
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+
+	// the dropped table leaves its pages on the freelist, about half the file. Return them, which
+	// also applies auto_vacuum to a database created before it was set
+	return db.Instance.Exec(`VACUUM`).Error
 }
 
 // meterTableCurrent reports whether meters is WITHOUT ROWID with numeric measurement columns
