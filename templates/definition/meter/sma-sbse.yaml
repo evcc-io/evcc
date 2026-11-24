@@ -1,0 +1,46 @@
+template: sma-sbse
+products:
+  - brand: SMA
+    description:
+      generic: Sunny Boy Smart Energy
+capabilities: ["battery-control"]
+requirements:
+  description:
+    en: When using active battery control by evcc, the 'Forecast-based Charging' function in the SMA portal must not be active. Otherwise, conflicts may arise when controlling the battery.
+    de: Bei der Nutzung der aktiven Speichersteuerung durch evcc darf die Funktion 'Prognosebasierte Batterieladung' im SMA Portal nicht aktiv sein. Ansonsten kann es zu Konflikten bei der Steuerung des Speichers kommen.
+discovery:
+  hostname: ["sma*"]
+  mac: ["0015BB", "0040AD"]
+params:
+  - name: usage
+    choice: ["pv", "battery", "grid"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 3
+    help:
+      en: ModbusTCP server needs to be enabled.
+      de: Der ModbusTCP Server muss aktiviert sein.
+  - name: maxacpower
+    service: modbus/read?address=30231&type=holding&encoding=uint32&resulttype=int&{modbus} # Inverter.WLim, rated power
+  - preset: battery-params
+  - name: maxchargepower
+    service: modbus/read?address=40189&type=holding&encoding=uint32&resulttype=int&{modbus} # BatConv.WMaxCha
+  - name: maxdischargepower
+    service: modbus/read?address=40191&type=holding&encoding=uint32&resulttype=int&{modbus} # BatConv.WMaxDsch
+  - name: watchdog
+    default: 60s
+    usages: ["battery"]
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  {{- include "sma-hybrid-grid" . }}
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  {{- include "sma-hybrid-pv" . }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  {{- include "sma-hybrid-battery" . }}
+  {{- include "sma-batterymode-setpoint" . }}
+  {{- include "sma-battery-params" . }}
+  {{- end }}
