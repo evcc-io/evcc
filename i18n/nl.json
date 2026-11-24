@@ -1357,7 +1357,6 @@
       "co2Saved": "CO₂ bespaard",
       "co2SavedTooltip": "Vergeleken met het afnemen van de verbruikte {energy} van het net.",
       "configure": "Nu configureren",
-      "energy": "Energie",
       "fromGrid": "{value} van het net",
       "noCo2": "Geen CO₂-gegevens.",
       "noPrice": "Geen prijsgegevens.",

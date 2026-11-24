@@ -1326,7 +1326,6 @@
       "co2Saved": "Ušetřené CO₂",
       "co2SavedTooltip": "Ve srovnání s odběrem spotřebovaných {energy} ze sítě.",
       "configure": "Nastavit nyní",
-      "energy": "Energie",
       "noCo2": "Žádná data o CO₂.",
       "noPrice": "Žádná data o cenách.",
       "savings": "Úspory",

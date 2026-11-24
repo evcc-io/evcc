@@ -1346,7 +1346,6 @@
       "co2Saved": "Prihranjen CO₂",
       "co2SavedTooltip": "V primerjavi z odjemom porabljene {energy} iz omrežja.",
       "configure": "Konfiguriraj zdaj",
-      "energy": "Energija",
       "fromGrid": "{value} iz omrežja",
       "noCo2": "Ni podatkov o CO₂.",
       "noPrice": "Ni podatkov o ceni.",

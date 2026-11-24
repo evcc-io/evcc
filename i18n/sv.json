@@ -1353,7 +1353,6 @@
       "co2Saved": "Minskade CO₂-utsläpp",
       "co2SavedTooltip": "Jämfört med om hela förbrukningen på {energy} hade täckts med el från nätet.",
       "configure": "Konfigurera nu",
-      "energy": "Energi",
       "fromGrid": "{value} från elnät",
       "noCo2": "Inga CO₂-data.",
       "noPrice": "Inga prisdata.",

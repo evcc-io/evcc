@@ -1348,7 +1348,6 @@
       "co2Saved": "CO₂ économisé",
       "co2SavedTooltip": "Comparé au prélèvement de l'{energy} consommée sur le réseau.",
       "configure": "Configurer maintenant",
-      "energy": "Énergie",
       "fromGrid": "{value} du réseau",
       "noCo2": "Aucune donnée sur le CO₂.",
       "noPrice": "Aucune donnée de prix.",

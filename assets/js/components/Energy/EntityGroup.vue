@@ -45,6 +45,8 @@
 			:series="series"
 			:focused-entity="focusedIndex"
 			:soc-temp="shown.length === 1"
+			:upper-label="upperLabel"
+			:lower-label="lowerLabel"
 			:period="period"
 			:from="from"
 			:to="to"
@@ -70,6 +72,7 @@ import StatRow from "./StatRow.vue";
 import SourcesButton from "./SourcesButton.vue";
 import GroupChart, { type HistorySeries } from "./GroupChart.vue";
 import PatternChart from "./PatternChart.vue";
+import { energyLabel } from "./groups";
 import LegendList from "../Sessions/LegendList.vue";
 import type { Legend } from "../Sessions/types";
 import EntityChartToggle from "./EntityChartToggle.vue";
@@ -163,6 +166,12 @@ export default defineComponent({
 		wantsPattern(): boolean {
 			return this.chart === ENTITY_CHART.PATTERN;
 		},
+		upperLabel(): string {
+			return this.isBattery ? this.$t("energy.battery.charge") : "";
+		},
+		lowerLabel(): string {
+			return this.isBattery ? this.$t("energy.battery.discharge") : "";
+		},
 		patternLabel(): string | undefined {
 			return this.isBattery ? this.$t(`energy.battery.${this.direction}`) : undefined;
 		},
@@ -234,7 +243,7 @@ export default defineComponent({
 			const list: StatItem[] = [
 				{
 					key: "energy",
-					label: this.$t("energy.stat.energy"),
+					label: energyLabel((key) => this.$t(key), this.group, this.entities[0]?.isTemp),
 					number: this.energy,
 					format: kWh,
 				},

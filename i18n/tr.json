@@ -1353,7 +1353,6 @@
       "co2Saved": "CO₂ tasarrufu",
       "co2SavedTooltip": "Tüketilen {energy} enerjinin şebekeden çekilmesine kıyasla.",
       "configure": "Şimdi yapılandır",
-      "energy": "Enerji",
       "fromGrid": "{value} şebekeden",
       "noCo2": "CO₂ verisi yok.",
       "noPrice": "Fiyat verisi yok.",
