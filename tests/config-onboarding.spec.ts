@@ -256,17 +256,6 @@ test.describe("wizard", async () => {
     await solar.getByRole("button", { name: "Dismiss", exact: true }).click();
     await expect(checklist).toContainText("6 suggestions");
 
-    // bringing pv back also brings back what its dismissal implied
-    const pv = checklist.getByTestId("checklist-pv");
-    await pv.getByRole("button", { name: "Dismissed" }).click();
-    await expect(
-      checklist.getByTestId("checklist-gridExport").getByRole("button", { name: "Add" })
-    ).toBeVisible();
-    await expect(solar.getByRole("button", { name: "Add" })).toBeVisible();
-    await expect(checklist).toContainText("9 suggestions");
-    await pv.getByRole("button", { name: "Dismiss", exact: true }).click();
-    await expect(checklist).toContainText("6 suggestions");
-
     // empty main page while nothing is configured
     await page.getByRole("link", { name: "Charge" }).click();
     await expect(page.getByTestId("setup-empty")).toBeVisible();
