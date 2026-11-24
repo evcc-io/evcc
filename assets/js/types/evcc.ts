@@ -491,12 +491,17 @@ export interface Circuit {
   maxCurrent?: number;
 }
 
+export interface DevicePreferences {
+  demandPredictor?: DemandPredictor | "";
+}
+
 export interface Entity<C = never> {
   name: string;
   type: string;
   id: number;
   config: Config | C;
   deviceDisable?: boolean;
+  devicePreferences?: DevicePreferences;
 }
 
 export enum ConfigType {
@@ -549,7 +554,7 @@ export interface LoadpointThreshold {
   threshold: number;
 }
 
-/** Demand forecast strategy of a heating loadpoint. */
+/** Demand forecast strategy of a heating loadpoint or consumer. */
 export type DemandPredictor = "daily" | "weekday" | "temperature";
 
 export interface ConfigLoadpoint {
@@ -1668,8 +1673,8 @@ export interface BatteryDetail {
 
 // Single profile summarized into the household demand time series
 export interface DemandDetail {
-  type: "home" | "heating" | "unmodelled" | "precondition"; // Origin of the profile
-  title?: string; // Loadpoint title, unset for the base load
+  type: "home" | "consumer" | "heating" | "unmodelled" | "precondition"; // Origin of the profile
+  title?: string; // Loadpoint or consumer title, unset for the base load
   values: number[]; // Energy per slot (Wh)
 }
 

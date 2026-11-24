@@ -2,6 +2,8 @@ package metrics
 
 import (
 	"errors"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
@@ -26,14 +28,22 @@ func profilePercentile() float64 {
 
 // energyProfileFiltered queries the 96-slot profile at the given percentile
 // (0..1, linear interpolation between ranks; 0 = average), optionally
-// restricted to a single weekday (strftime %w, 0=Sunday).
-func energyProfileFiltered(entity entity, from time.Time, weekday *int, percentile float64) (*[96]float64, error) {
+// restricted to a single weekday (strftime %w, 0=Sunday). The energy of the
+// excluded entities is subtracted per slot before aggregating, floored at zero.
+func energyProfileFiltered(entity entity, from time.Time, weekday *int, percentile float64, exclude ...any) (*[96]float64, error) {
 	database, err := db.Instance.DB()
 	if err != nil {
 		return nil, err
 	}
 
-	args := []any{entity.Id, from.Unix()}
+	energy := `COALESCE(energy, 0)`
+
+	if len(exclude) > 0 {
+		energy = `max(0, COALESCE(energy, 0) - COALESCE((SELECT sum(x.energy) FROM meters x
+			WHERE x.ts = meters.ts AND x.meter IN (?` + strings.Repeat(",?", len(exclude)-1) + `)), 0))`
+	}
+
+	args := append(slices.Clone(exclude), entity.Id, from.Unix())
 
 	var weekdayFilter string
 	if weekday != nil {
@@ -43,7 +53,7 @@ func energyProfileFiltered(entity entity, from time.Time, weekday *int, percenti
 	}
 
 	// COALESCE guards against legacy rows with NULL energy
-	slots := `SELECT COALESCE(energy, 0) AS energy, strftime('%H:%M', ts, 'unixepoch', 'localtime') AS slot
+	slots := `SELECT ` + energy + ` AS energy, strftime('%H:%M', ts, 'unixepoch', 'localtime') AS slot
 		FROM meters
 		WHERE meter = ? AND ts >= ? AND COALESCE(recovered, 0) <> 1` + weekdayFilter
 

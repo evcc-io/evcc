@@ -120,3 +120,43 @@ func TestEnergyProfileTemperatureBinned(t *testing.T) {
 	require.Contains(t, resPerc[0], 4)
 	require.InDelta(t, 0.55, resPerc[0][4], 1e-6)
 }
+
+func TestEnergyProfileExclude(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	home := entity{Id: 11, Name: "house", Group: Meter}
+	consumer := entity{Id: 12, Name: "heater", Group: Consumer}
+	require.NoError(t, db.Instance.Create(&home).Error)
+	require.NoError(t, db.Instance.Create(&consumer).Error)
+
+	// consumer runs every second day and exceeds home in the last slot of the day
+	for day := -4; day < 0; day++ {
+		base := now.BeginningOfDay().AddDate(0, 0, day)
+
+		for slot := range 96 {
+			ts := base.Add(time.Duration(slot) * tariff.SlotDuration)
+			require.NoError(t, persist(home, ts, 1, 0, nil, false))
+
+			if day%2 == 0 {
+				energy := 0.4
+				if slot == 95 {
+					energy = 2
+				}
+				require.NoError(t, persist(consumer, ts, energy, 0, nil, false))
+			}
+		}
+	}
+
+	from := now.BeginningOfDay().AddDate(0, 0, -4)
+
+	for _, percentile := range []float64{0, 0.5} {
+		res, err := energyProfileFiltered(home, from, nil, percentile, consumer.Id)
+		require.NoError(t, err)
+
+		// (1 + 0.6) / 2, subtracted per slot before aggregating
+		require.InDelta(t, 0.8, res[0], 1e-6, "percentile %v", percentile)
+		// floored at zero: (1 + 0) / 2
+		require.InDelta(t, 0.5, res[95], 1e-6, "percentile %v", percentile)
+	}
+}

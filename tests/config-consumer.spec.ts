@@ -26,6 +26,9 @@ test.describe("consumer", () => {
     await modal.getByLabel("Title").fill("EV charger");
     await modal.getByLabel("Manufacturer").selectOption("Demo meter");
     await modal.getByLabel("Power").fill("3500");
+    await modal.getByRole("button", { name: "Show advanced settings" }).click();
+    await modal.getByRole("switch", { name: "Separate demand forecast" }).check();
+    await modal.getByLabel("Profile").selectOption("Temperature");
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
 
@@ -38,6 +41,12 @@ test.describe("consumer", () => {
     await page.reload();
     await expect(page.getByTestId("consumer")).toHaveCount(1);
     await expect(page.getByTestId("consumer")).toContainText("EV charger");
+
+    // demand forecast profile is kept
+    await page.getByTestId("consumer").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+    await modal.getByRole("button", { name: "Show advanced settings" }).click();
+    await expect(modal.getByLabel("Profile")).toHaveValue("temperature");
   });
 
   test("self-regulating consumer", async ({ page }) => {

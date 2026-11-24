@@ -15,17 +15,118 @@ import (
 )
 
 // homeProfile returns the predicted home base load in Wh for minLen 15min slots
-// starting now.
-func (site *Site) homeProfile(minLen int) ([]float64, error) {
+// starting now, without the energy of the given collectors.
+func (site *Site) homeProfile(minLen int, without ...*metrics.Collector) ([]float64, error) {
 	col := site.collectors[metrics.Home]
 
-	base, err := col.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -28))
+	base, err := col.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -28), without...)
 	if err != nil {
 		return nil, err
 	}
 
 	// convert to Wh
 	return lo.Map(tileAndTrim(base[:], minLen), func(v float64, _ int) float64 { return v * 1e3 }), nil
+}
+
+// demandForecast returns the demand in kWh for minLen 15min slots starting now, forecast from
+// the collected energy by the given predictor. Returns nil when unavailable.
+func (site *Site) demandForecast(title string, col *metrics.Collector, predictor string, minLen int) []float64 {
+	if predictor == "weekday" {
+		firstSlot := int(time.Now().Truncate(tariff.SlotDuration).Sub(now.BeginningOfDay()) / tariff.SlotDuration)
+		profiles := make(map[time.Weekday]*[96]float64)
+		res := make([]float64, minLen)
+
+		for i := range res {
+			absSlot := firstSlot + i
+			weekday := now.BeginningOfDay().AddDate(0, 0, absSlot/96).Weekday()
+
+			profile, ok := profiles[weekday]
+			if !ok {
+				var err error
+				if profile, err = col.EnergyProfileWeekday(weekday); err != nil {
+					site.log.DEBUG.Printf("demand forecast: weekday profile unavailable for %s (%s): %v", title, weekday, err)
+					return nil
+				}
+				profiles[weekday] = profile
+			}
+
+			res[i] = profile[absSlot%96]
+		}
+
+		site.log.DEBUG.Printf("demand forecast: added weekday forecast for %s (%d slots)", title, len(res))
+		return res
+	}
+
+	temp := predictor == "temperature"
+
+	from := now.BeginningOfDay().AddDate(0, 0, -28) // default: 28-day daily average
+	if temp {
+		from = now.BeginningOfDay().AddDate(0, 0, -7) // temperature: 7-day window
+	}
+
+	profile, err := col.EnergyProfile(from)
+	if err != nil {
+		site.log.DEBUG.Printf("demand forecast: profile unavailable for %s: %v", title, err)
+		return nil
+	}
+
+	res := tileAndTrim(profile[:], minLen)
+	if !temp {
+		site.log.DEBUG.Printf("demand forecast: added daily forecast for %s (%d slots)", title, len(res))
+		return res
+	}
+
+	binned, err := col.EnergyProfileTemperatureBinned()
+	if err != nil && !errors.Is(err, metrics.ErrNoBinnedData) {
+		site.log.DEBUG.Printf("temperature correction: binned profile unavailable for %s: %v", title, err)
+	}
+
+	return site.applyTemperatureCorrection(title, res, binned)
+}
+
+// consumerDemand is the forecast demand in Wh of a consumer meter, which is
+// taken out of the home load
+type consumerDemand struct {
+	title    string
+	col      *metrics.Collector
+	values   []float64
+	measured float64 // Wh of the last metrics slot, blended into values
+}
+
+// consumerDemands returns the forecast demand of the consumer meters with a demand predictor.
+// Consumers without a forecast remain part of the home load.
+func (site *Site) consumerDemands(minLen int) []consumerDemand {
+	var res []consumerDemand
+
+	for _, dev := range site.consumerMeters {
+		predictor := deviceProperties(dev).Preferences.DemandPredictor
+		if predictor != "weekday" && predictor != "temperature" {
+			continue
+		}
+
+		col := site.collectors[dev.Config().Name]
+		title := deviceTitleOrName(dev)
+
+		p := site.demandForecast(title, col, predictor, minLen)
+		if p == nil {
+			continue
+		}
+
+		// profiles are kWh
+		for i := range p {
+			p[i] *= 1e3
+		}
+
+		c := consumerDemand{title: title, col: col, values: p}
+		if v, ok := col.LastSlotEnergy(); ok {
+			c.measured = v * 1e3
+			blendMeasured(c.values, c.measured, optimizerDecaySlots)
+		}
+
+		res = append(res, c)
+	}
+
+	return res
 }
 
 // heatingDemand is the forecast demand in Wh a single heating loadpoint contributes
@@ -58,23 +159,12 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
 			continue
 		}
 
-		var p []float64
+		if lp.chargeEnergy == nil || !lp.chargerHasFeature(api.Heating) {
+			continue
+		}
 
-		if profile, correct := lp.demandProfile(); profile != nil {
-			p = tileAndTrim(profile[:], minLen)
-			if correct {
-				binned, err := lp.chargeEnergy.EnergyProfileTemperatureBinned()
-				if err != nil && !errors.Is(err, metrics.ErrNoBinnedData) {
-					site.log.DEBUG.Printf("temperature correction: binned profile unavailable for %s: %v", lp.GetTitle(), err)
-				}
-				p = site.applyTemperatureCorrection(lp.GetTitle(), p, binned)
-			} else {
-				site.log.DEBUG.Printf("heating demand: added daily forecast for %s (%d slots)", lp.GetTitle(), len(p))
-			}
-		} else if wp := lp.demandProfileWeekday(minLen); wp != nil {
-			p = wp
-			site.log.DEBUG.Printf("heating demand: added weekday forecast for %s (%d slots)", lp.GetTitle(), len(p))
-		} else {
+		p := site.demandForecast(lp.GetTitle(), lp.chargeEnergy, lp.activeDemandPredictor(), minLen)
+		if p == nil {
 			continue
 		}
 
@@ -136,7 +226,7 @@ func lookupBin(bins map[int]float64, t float64) (float64, bool) {
 func (site *Site) applyTemperatureCorrection(lpTitle string, profile []float64, binned map[int]map[int]float64) []float64 {
 	var binnedSlots, scaledSlots int
 	defer func() {
-		site.log.DEBUG.Printf("heating demand: added temperature forecast for %s (%d slots: %d binned, %d scaled)",
+		site.log.DEBUG.Printf("demand forecast: added temperature forecast for %s (%d slots: %d binned, %d scaled)",
 			lpTitle, len(profile), binnedSlots, scaledSlots)
 	}()
 

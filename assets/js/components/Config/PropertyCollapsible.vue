@@ -16,7 +16,6 @@
 			<div class="collapsible-content ring-space">
 				<div v-if="rendered" class="pt-2">
 					<slot name="advanced"></slot>
-					<hr v-if="$slots.advanced && $slots.more" class="my-5" />
 					<slot name="more"></slot>
 				</div>
 			</div>

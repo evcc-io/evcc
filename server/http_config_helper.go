@@ -74,6 +74,8 @@ func propsToMap(props config.Properties) (map[string]any, error) {
 			return val != ""
 		case bool:
 			return val
+		case map[string]any:
+			return len(val) > 0
 		}
 		return true
 	}), nil

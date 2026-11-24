@@ -105,6 +105,24 @@
 			</FormRow>
 		</template>
 
+		<template v-if="showDemandPredictor" #collapsible-more="{ values }">
+			<DemandPredictorSwitch
+				v-model="values.devicePreferences"
+				:temperature-tariff-configured="temperatureTariffConfigured"
+				@add-temperature-tariff="addTemperatureTariff"
+			/>
+		</template>
+
+		<template #before-actions="{ values }">
+			<DemandPredictorSwitch
+				v-if="isUserDefinedConsumer(values)"
+				class="mt-4"
+				v-model="values.devicePreferences"
+				:temperature-tariff-configured="temperatureTariffConfigured"
+				@add-temperature-tariff="addTemperatureTariff"
+			/>
+		</template>
+
 		<template #after-test>
 			<button
 				v-if="canConvertToConsumer"
@@ -123,6 +141,7 @@
 import { defineComponent } from "vue";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
+import DemandPredictorSwitch from "./DemandPredictorSwitch.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import { ICONS } from "../VehicleIcon/VehicleIcon.vue";
@@ -136,7 +155,7 @@ import {
 } from "./DeviceModal";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import defaultMeterYaml from "./defaultYaml/meter.yaml?raw";
-import { getModal, replaceModal, closeModal } from "@/configModal";
+import { getModal, openModal, replaceModal, closeModal } from "@/configModal";
 import { prefillFor, suggestions, type CachedDevice } from "@/onboarding";
 
 const initialValues = {
@@ -162,11 +181,13 @@ export default defineComponent({
 	components: {
 		FormRow,
 		PropertyField,
+		DemandPredictorSwitch,
 		NewDeviceButton,
 		DeviceModalBase,
 	},
 	props: {
 		isSponsor: Boolean,
+		temperatureTariffConfigured: Boolean,
 	},
 	emits: ["changed", "disable", "close"],
 	data() {
@@ -176,7 +197,7 @@ export default defineComponent({
 			iconChoices: ICONS,
 			initialValues,
 			customFields: CUSTOM_FIELDS,
-			preserveFields: ["deviceTitle", "deviceIcon"],
+			preserveFields: ["deviceTitle", "deviceIcon", "devicePreferences"],
 		};
 	},
 	computed: {
@@ -243,6 +264,9 @@ export default defineComponent({
 		canConvertToConsumer(): boolean {
 			return !this.isNew && this.selectedType === "ext" && this.extMeterUsage === "charge";
 		},
+		showDemandPredictor(): boolean {
+			return this.selectedType === "consumer" && !!this.selectedTemplate;
+		},
 		extMeterUsageOptions() {
 			return ["charge", "aux", "grid", "pv", "battery"].map((key) => ({
 				name: this.$t(`config.meter.usage.${key}`),
@@ -260,6 +284,12 @@ export default defineComponent({
 			if (this.selectedType === "ext" && values.usage) {
 				this.extMeterUsage = values.usage;
 			}
+		},
+		isUserDefinedConsumer(values: DeviceValues): boolean {
+			return this.selectedType === "consumer" && values.type === ConfigType.Custom;
+		},
+		addTemperatureTariff() {
+			openModal("tariff", { type: "temperature" });
 		},
 		selectType(type: string) {
 			replaceModal("meter", { id: this.id, type: type as MeterType });

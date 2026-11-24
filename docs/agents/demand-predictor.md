@@ -104,7 +104,7 @@ Because the lookup indexes by both time-of-day and temperature it automatically 
 
 If `EnergyProfileTemperatureBinned()` returns `ErrNoBinnedData` (normal on first run before sufficient data is collected), `binned` is `nil`. A nil map lookup in `lookupBin` returns `(0, false)`, so all slots fall through cleanly to steps 3–4. This is expected, not an error condition.
 
-Note also that `demandProfile()` calls `EnergyProfile()` to build the baseline profile. If fewer than 96 slots are recorded (e.g. less than one full day of data), `EnergyProfile()` returns `ErrIncomplete` and `demandProfile()` returns nil. In that case `addHeatingDemand()` skips the loadpoint entirely. The physics model is only available once a full 96-slot profile exists.
+Note also that `demandForecast()` calls `EnergyProfile()` to build the baseline profile. If fewer than 96 slots are recorded (e.g. less than one full day of data), `EnergyProfile()` returns `ErrIncomplete` and `demandForecast()` returns nil. In that case `addHeatingDemand()` skips the loadpoint entirely. The physics model is only available once a full 96-slot profile exists.
 
 On a fresh installation with at least one full day of data, the system uses the physics model for all slots. As it runs through its first season, bins accumulate for the temperatures seen. After a year, most common slot/temperature combinations have at least 2 observations and use the binned lookup. Rare temperature extremes or infrequently occupied slots may still fall back to physics indefinitely. Each slot independently promotes from physics to data-driven as its bin reaches the 2-sample threshold, with no retraining and no configuration change.
 
@@ -117,11 +117,25 @@ Seasonal transitions are handled naturally: the 1-year lookback carries observat
 - Skips loadpoints where status is not `StatusB` (connected, not charging) or `StatusC` (charging), i.e. disconnected or unknown
 - Skips non-`Continuous` loadpoints in `ModeOff`; `Continuous` devices in `ModeOff` mean "normal operation" and are included
 - Skips non-`Continuous` loadpoints charging from surplus only (`surplusOnly`: smart mode without always charge, smart cost limit, plan, battery boost or min soc charging); that consumption is never must-serve demand
-- Calls `lp.demandProfile()` for daily/temperature strategies, `lp.demandProfileWeekday()` for weekday
-- Temperature correction (`applyTemperatureCorrection`) is called when `demandProfile()` returns `correct = true`, even if binned data is not yet available (nil map falls through to physics)
+- Calls `site.demandForecast()` with the loadpoint's charge energy collector and active strategy
+- Temperature correction (`applyTemperatureCorrection`) is applied for the temperature strategy, even if binned data is not yet available (nil map falls through to physics)
 - The resulting Wh values are added directly to the `gt` (grid total) forecast slice
 
 The optimizer therefore sees a home load that already includes all active heating loadpoints except those charging from surplus only, giving it an accurate demand baseline to plan solar surplus against.
+
+## Consumer meters
+
+Consumer meters are sub-meters of home, so their energy is part of the home base load by default. A consumer can opt into its own forecast (`weekday` or `temperature`) via the "Separate demand forecast" switch in the advanced settings of the meter modal, e.g. a self-controlled frost guard heater that follows the outdoor temperature. The choice is a device preference (`config.Preferences.DemandPredictor`, `preferences` JSON column of the `configs` table), so it exists for UI-configured meters only.
+
+`consumerDemands()` runs before the home profile is built:
+
+- Forecasts each consumer with a predictor through the same `demandForecast()` as heating loadpoints, using the consumer's metrics collector
+- A consumer whose forecast is unavailable (incomplete history) stays part of the home load
+- `homeProfile()` subtracts the forecast consumers per slot in SQL before averaging or taking the percentile, floored at zero (`energyProfileFiltered` with `exclude`)
+- The measured energy of the last slot is split the same way: the consumer's share is blended into its forecast, the rest into the home profile
+- Aux meters are not offered a predictor: they run on surplus, which is not must-serve demand
+
+During the first 28 days after a consumer is added, older home slots still contain its energy since there is nothing to subtract.
 
 ## Key files
 
@@ -129,11 +143,13 @@ The optimizer therefore sees a home load that already includes all active heatin
 |---|---|
 | `api/feature.go` | `DemandWeekday`, `DemandTemperature` feature flag constants |
 | `charger/embed.go` | `predictor:` YAML key to feature flags mapping for charger templates |
-| `core/loadpoint_load_predictor.go` | Strategy resolution, `GetDemandPredictor()`, `SetDemandPredictor()`, `demandProfile()`, `demandProfileWeekday()` |
-| `core/site_load_predictor.go` | `addHeatingDemand()`, `applyTemperatureCorrection()`, `lookupBin()` |
+| `core/loadpoint_load_predictor.go` | Strategy resolution, `GetDemandPredictor()`, `SetDemandPredictor()` |
+| `core/site_load_predictor.go` | `demandForecast()`, `addHeatingDemand()`, `consumerDemands()`, `applyTemperatureCorrection()`, `lookupBin()` |
 | `core/metrics/db_profile.go` | `energyProfileTemperatureBinned()`, `energyProfileFiltered()` SQL queries |
 | `server/http_config_loadpoint_handler.go` | Exposes `demandPredictor` in the loadpoint config API response |
+| `util/config/config.go` | `Preferences` with the consumer `DemandPredictor` |
 | `assets/js/components/Config/LoadpointModal.vue` | UI "Demand forecast" selector, warning for missing weather source |
+| `assets/js/components/Config/DemandPredictorSwitch.vue` | UI "Separate demand forecast" switch for consumer meters, used by `MeterModal.vue` |
 
 ## Pull requests
 

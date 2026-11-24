@@ -804,6 +804,9 @@ export default defineComponent({
 				if (device.deviceDisable !== undefined) {
 					this.values.deviceDisable = device.deviceDisable;
 				}
+				if (device.devicePreferences !== undefined) {
+					this.values.devicePreferences = device.devicePreferences;
+				}
 				this.applyDefaults();
 				this.templateName = this.values.template;
 
