@@ -1,6 +1,6 @@
 <template>
 	<div class="container px-4 safe-area-inset d-flex flex-column">
-		<TopHeader :title="`${$t('energy.title')} 🧪`" />
+		<TopHeader :title="$t('energy.title')" />
 		<div class="row flex-grow-1 d-flex">
 			<main class="col-12 d-flex flex-column">
 				<PeriodHeader ref="header" :loading="loading">

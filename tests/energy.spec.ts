@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden } from "./utils";
+import { expectModalVisible } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -242,27 +242,6 @@ test.describe("page", () => {
     await page.goto("/#/energy?period=month&year=2026&month=9");
     await expect(chart.getByText("Charging")).toBeVisible();
     await expect(chart.getByText("Heating")).toBeVisible();
-  });
-
-  test("bottom tab with experimental, sessions moves to more on phones", async ({ page }) => {
-    await page.goto("/#/config");
-    const experimentalEntry = page.getByTestId("generalconfig-experimental");
-    await experimentalEntry.getByRole("button", { name: "edit" }).click();
-    const experimentalModal = page.getByTestId("experimental-modal");
-    await expectModalVisible(experimentalModal);
-    await experimentalModal.getByLabel("Enable experimental features.").click();
-    await experimentalModal.getByRole("button", { name: "Close" }).click();
-    await expectModalHidden(experimentalModal);
-
-    const bar = page.getByTestId("bottom-tab-bar");
-    await expect(bar.getByRole("link", { name: "Sessions" })).toBeVisible();
-    await bar.getByRole("link", { name: "Energy" }).click();
-    await expect(page.getByRole("heading", { name: "Energy" })).toBeVisible();
-
-    await page.setViewportSize({ width: 390, height: 800 });
-    await expect(bar.getByRole("link", { name: "Sessions" })).toBeHidden();
-    await bar.getByTestId("tab-more").click();
-    await expect(bar.getByTestId("tab-more").getByRole("link", { name: "Sessions" })).toBeVisible();
   });
 
   test.describe("sources", () => {
