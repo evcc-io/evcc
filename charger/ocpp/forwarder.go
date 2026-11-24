@@ -747,7 +747,7 @@ func trackTransaction(cs *CS, chargerID string, call, result []byte) {
 			return
 		}
 		if conn := cp.connectorByID(request.ConnectorId); conn != nil {
-			conn.startTransaction(conf.TransactionId, request.IdTag)
+			conn.startTransaction(conf.TransactionId, &request)
 		}
 
 	case "StopTransaction":
