@@ -82,6 +82,10 @@ func NewFnn(site site.API, maxDimPower, productionNominalMax float64, w3G, s1G, 
 		return nil, errors.New("cannot have w4 without power limit")
 	}
 
+	if (s1G != nil || s2G != nil) && productionNominalMax <= 0 {
+		return nil, errors.New("cannot have s1 or s2 without productionnominalmax")
+	}
+
 	c := &Fnn{
 		log:                  util.NewLogger("fnn"),
 		site:                 site,
@@ -93,10 +97,6 @@ func NewFnn(site site.API, maxDimPower, productionNominalMax float64, w3G, s1G, 
 		w4:                   w4G,
 		productionPercent:    100,
 		interval:             interval,
-	}
-
-	if w3G != nil && productionNominalMax <= 0 {
-		c.log.WARN.Println("productionnominalmax not configured, S1/S2 feed-in limits are not applied to the grid export")
 	}
 
 	// read the relays once synchronously so limits are valid as soon as NewFnn returns
@@ -286,11 +286,6 @@ func (c *Fnn) MaxProductionPower() *float64 {
 	defer c.mu.Unlock()
 	if c.productionPercent >= 100 {
 		return new(0.0)
-	}
-
-	// without generator power a partial limit cannot be converted to watts
-	if c.productionPercent > 0 && c.productionNominalMax <= 0 {
-		return nil
 	}
 
 	return new(float64(c.productionPercent) / 100 * c.productionNominalMax)

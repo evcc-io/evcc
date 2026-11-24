@@ -50,28 +50,18 @@ func TestDimmingNotConfigured(t *testing.T) {
 	assert.NotNil(t, hems.Curtailed(fnn))
 }
 
-// TestProductionNominalMaxMissing verifies that partial curtailment without
-// generator power yields no export limit instead of 0 W, while W3 stays at 0 W.
+// TestProductionNominalMaxMissing verifies that S1/S2 require generator power
+// to convert their percentage into a watt limit, while W3 alone does not.
 func TestProductionNominalMaxMissing(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 
-	for _, tc := range []struct {
-		name       string
-		w3, s1, s2 bool
-		percent    int
-		limit      *float64
-	}{
-		{"uncurtailed", false, false, false, 100, new(0.0)},
-		{"w3", true, false, false, 0, new(0.0)},
-		{"s1", false, true, false, 60, nil},
-		{"s2", false, false, true, 30, nil},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			fnn, err := NewFnn(&stubSite{}, 0, 0, boolG(tc.w3), boolG(tc.s1), boolG(tc.s2), nil, 0)
-			require.NoError(t, err)
+	_, err := NewFnn(&stubSite{}, 0, 0, boolG(false), boolG(false), nil, nil, 0)
+	assert.Error(t, err)
 
-			assert.Equal(t, tc.percent, *fnn.CurtailedPercent())
-			assert.Equal(t, tc.limit, fnn.MaxProductionPower())
-		})
-	}
+	_, err = NewFnn(&stubSite{}, 0, 0, boolG(false), nil, boolG(false), nil, 0)
+	assert.Error(t, err)
+
+	fnn, err := NewFnn(&stubSite{}, 0, 0, boolG(true), nil, nil, nil, 0)
+	require.NoError(t, err)
+	assert.Equal(t, new(0.0), fnn.MaxProductionPower())
 }
