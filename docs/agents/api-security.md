@@ -88,6 +88,7 @@ achieves the same effect (the previous key stops working immediately).
 | State / read-only / basic charging control   | Public    |                                    |
 | Set or update admin password                 | Public    | admin password                     |
 | Configuration                                | Secure    |                                    |
+| Charging session edit / delete               | Secure    |                                    |
 | Configuration embedding a script plugin       | Critical  | api key or admin password          |
 | System: logs, cache, shutdown                | Secure    |                                    |
 | API key status                               | Secure    |                                    |

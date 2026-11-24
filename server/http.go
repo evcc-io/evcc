@@ -229,8 +229,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"smartfeedindelete":               {"DELETE", "/smartfeedinprioritylimit", updateSmartCostLimit(site, smartFeedInPriorityLimit)},
 		"tariff":                          {"GET", "/tariff/{tariff:[a-z0-9]+}", tariffHandler(site)},
 		"sessions":                        {"GET", "/sessions", sessionHandler},
-		"updatesession":                   {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
-		"deletesession":                   {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
 		"gridsessions":                    {"GET", "/gridsessions", gridSessionsHandler},
 		"energyhistory":                   {"GET", "/history/energy", energyHistoryHandler},
 		"energyflow":                      {"GET", "/history/flow", energyFlowHandler},
@@ -341,6 +339,10 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		for _, r := range routes {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
+
+		ensureAuth := EnsureAuthHandler(auth)
+		api.Methods("PUT").Path("/session/{id:[0-9]+}").Handler(ensureAuth(http.HandlerFunc(updateSessionHandler)))
+		api.Methods("DELETE").Path("/session/{id:[0-9]+}").Handler(ensureAuth(http.HandlerFunc(deleteSessionHandler)))
 	}
 
 	{
