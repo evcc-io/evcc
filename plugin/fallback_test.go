@@ -125,6 +125,21 @@ func TestFallbackIntSource(t *testing.T) {
 	assert.Equal(t, 3900.0, v)
 }
 
+func TestFallbackGoIntSource(t *testing.T) {
+	// go implements both getters but only the int getter accepts an int64 result
+	p, err := NewFallbackFromConfig(t.Context(), map[string]any{
+		"fallback": map[string]any{"source": "go", "script": "int64(3900)"},
+	})
+	require.NoError(t, err)
+
+	g, err := p.(IntGetter).IntGetter()
+	require.NoError(t, err)
+
+	v, err := g()
+	require.NoError(t, err)
+	assert.Equal(t, int64(3900), v)
+}
+
 func TestFallbackInvalidValues(t *testing.T) {
 	for _, value := range []string{"NaN", "Inf", "-Inf"} {
 		_, err := NewFallbackFromConfig(t.Context(), map[string]any{"value": value})
@@ -150,6 +165,28 @@ func TestFallbackInvalidValues(t *testing.T) {
 	v, err := p.value()
 	require.NoError(t, err)
 	assert.Equal(t, 3680.0, v)
+
+	// zero readings mean unavailable and are not kept
+	calls = 0
+	p = &fallbackPlugin{scale: 1, source: func() (float64, error) {
+		calls++
+		if calls == 1 {
+			return 0, nil
+		}
+		return 3680, nil
+	}}
+
+	_, err = p.value()
+	require.Error(t, err)
+
+	v, err = p.value()
+	require.NoError(t, err)
+	assert.Equal(t, 3680.0, v)
+
+	// scaled values must stay finite
+	p = &fallbackPlugin{scale: 2, val: 1e308, read: true}
+	_, err = p.value()
+	assert.Error(t, err)
 
 	// values outside the int64 range are rejected
 	p = &fallbackPlugin{scale: 1, val: 1e300, read: true}
