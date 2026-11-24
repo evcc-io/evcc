@@ -32,13 +32,13 @@ jobs:
       issues: write # add labels + comment analysis + close duplicates
       pull-requests: write # open the draft PR
       discussions: read # read referenced discussions
-      id-token: write
       actions: read
     uses: ./.github/workflows/claude-issue-agent-run.yml
     with:
       issue_number: ${{ github.event.issue.number }}
       mode: triage
-    secrets: inherit
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
   # The triage agent asks for missing information and applies `waiting for
   # feedback`. Nothing re-runs it once the reporter answers, so the report sits
@@ -87,14 +87,14 @@ jobs:
       issues: write # comment
       pull-requests: write # the reusable job requests it, a caller may not grant less
       discussions: read # read referenced discussions
-      id-token: write
       actions: read
     uses: ./.github/workflows/claude-issue-agent-run.yml
     with:
       issue_number: ${{ github.event.issue.number }}
       # no comment_id: there is no invoking command to read or resolve
       mode: analyze
-    secrets: inherit
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
   # The triage agent closes duplicates and tells the reporter that a reply
   # reopens the issue. Only a duplicate closed by the bot and answered by its
@@ -147,7 +147,6 @@ jobs:
     permissions:
       contents: read # read base repo for area classification
       pull-requests: write # add labels
-      id-token: write
       actions: read
     steps:
       # base repo checkout only — never the untrusted PR head; the agent reads PR
