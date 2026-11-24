@@ -7,13 +7,13 @@ capabilities: ["battery-control"]
 requirements:
   description:
     en: |
-      Requires ARM firmware 1130 or newer. Not compatible with the Wattsonic GEN2/GEN3 AIO series (use the Solinteg templates for those).
+      Requires ARM firmware 1133 or newer. Register documentation: [Wattsonic MATIC Modbus](https://github.com/WattsonicAdmin/wattsonic-modbus-docs). Not compatible with the Wattsonic GEN2/GEN3 AIO series (use the Solinteg templates for those).
 
       Battery control uses the inverter's EMS watchdog. Without it, the inverter ignores external power setpoints. Set these registers once during installation, in this order: 11701 = 60 (timeout in s), 11702 = 1 (on timeout fall back to self-consumption), 11704 = 1 (auto-resume, no latch), then 11700 = 1 (enable watchdog). 11704 can only be changed while the watchdog is disabled.
 
       If evcc stops communicating, the inverter returns to self-consumption after the watchdog timeout.
     de: |
-      Erfordert ARM-Firmware 1130 oder neuer. Nicht kompatibel mit der Wattsonic GEN2/GEN3 AIO-Serie (dafür die Solinteg-Vorlagen verwenden).
+      Erfordert ARM-Firmware 1133 oder neuer. Registerdokumentation: [Wattsonic MATIC Modbus](https://github.com/WattsonicAdmin/wattsonic-modbus-docs). Nicht kompatibel mit der Wattsonic GEN2/GEN3 AIO-Serie (dafür die Solinteg-Vorlagen verwenden).
 
       Die Batteriesteuerung nutzt den EMS-Watchdog des Wechselrichters. Ohne ihn ignoriert der Wechselrichter externe Leistungsvorgaben. Bei der Installation einmalig in dieser Reihenfolge setzen: 11701 = 60 (Timeout in s), 11702 = 1 (bei Timeout zurück zum Eigenverbrauch), 11704 = 1 (automatische Wiederaufnahme, keine Verriegelung), danach 11700 = 1 (Watchdog aktivieren). 11704 kann nur bei deaktiviertem Watchdog geändert werden.
 
@@ -31,7 +31,6 @@ params:
   - preset: battery-params
   - name: maxchargepower
     required: true
-    usages: ["battery"]
   - name: capacity
     service: modbus/read?address=10688&type=holding&encoding=uint16&scale=0.01&resulttype=float&{modbus} # BMS_Bat1_Rated_Capacity, 0.01 kWh
     usages: ["battery"]
