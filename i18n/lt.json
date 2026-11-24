@@ -1259,12 +1259,21 @@
     },
     "direction": {
       "battery": {
-        "energy": "įkrauta",
-        "returnEnergy": "iškrauta"
+        "energy": "Įkrauta",
+        "returnEnergy": "Iškrauta"
+      },
+      "consumer": {
+        "energy": "Suvartota"
       },
       "grid": {
         "energy": "iš tinklo",
         "returnEnergy": "į tinklą"
+      },
+      "heating": {
+        "energy": "Suvartota"
+      },
+      "loadpoint": {
+        "energy": "Įkrauta"
       },
       "meter": {
         "energy": "Energija iš tinklo",
@@ -1326,8 +1335,9 @@
     },
     "socTemp": {
       "charged": "įkrauta",
-      "soc": "įkrova",
-      "temperature": "temperatūra",
+      "power": "Galia",
+      "soc": "Įkrova",
+      "temperature": "Temperatūra",
       "used": "sunaudota"
     },
     "sources": {
@@ -1468,6 +1478,7 @@
     "price": {
       "average": "Vidurkis",
       "constant": "Kaina",
+      "estimate": "numatoma",
       "lowestHour": "Pigiausia valanda",
       "range": "Diapazonas"
     },
@@ -1668,7 +1679,8 @@
       "repeatingPlans": "Pasikartojantys planai",
       "selectAll": "Pasirinkti visus",
       "strategy": {
-        "label": "Strategija"
+        "label": "Strategija",
+        "optimizerHint": "{optimizer} kol kas neatsižvelgia į optimizavimo nustatymą ir visada pasirenka pigiausius laiko intervalus. Jei to reikia, apribokite automatinį valdymą į “Kaupiklis” ."
       },
       "time": "Laikas",
       "title": "Planas",

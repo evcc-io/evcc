@@ -285,7 +285,7 @@
       "events": "Etkinlikler",
       "exportLimit": "Şebekeye satış sınırı",
       "feedinPrice": "Şebekeye enerji verme fiyatı",
-      "forecast": "Tahmin",
+      "forecast": "Öngörü",
       "gridPrice": "Şebekeden enerji alma fiyatı",
       "heaterTempLimit": "Isıtıcı sınırlaması",
       "identifier": "RFID tanımlayıcısı",
@@ -311,7 +311,7 @@
       "returnEnergy": "Enerji (ters)",
       "singlePhase": "“Tek aşamalı”",
       "soc": "Doluluk",
-      "solarForecast": "Güneş tahmini",
+      "solarForecast": "Güneş öngörüsü",
       "switchDevice": "Akım yönetimi",
       "temp": "Isı",
       "topic": "Konu",
@@ -570,14 +570,14 @@
         "defaultGroup": "Cihazın varsayılan ayarı",
         "description": "İyileştiricinin geçmiş tüketim verilerine dayanarak talebi nasıl tahmin ettiği.",
         "label": "Profil",
-        "noTempTariff": "Sıcaklık tahmini gerektirir.",
-        "noTempTariffLink": "Tahmin ekle",
+        "noTempTariff": "Sıcaklık öngörüsü gerektirir.",
+        "noTempTariffLink": "Öngörü ekle",
         "profilesGroup": "Profiller",
         "temperature": {
           "description": "Isı pompaları gibi oda ısıtma sistemleri için benzer dış ortam sıcaklıklarındaki geçmiş tüketim verileri.",
           "label": "Sıcaklık"
         },
-        "title": "Talep tahmini",
+        "title": "Talep öngörüsü",
         "weekday": {
           "description": "Aynı haftanın gününe ait ortalama. Haftalık düzende çalışan sıcak su veya havuz ısıtıcıları gibi cihazlar için.",
           "label": "Haftanın günü"
@@ -731,7 +731,7 @@
           "titleDefault": "Doldurma tamamlandı"
         },
         "suggestion": {
-          "messageDefault": "{suggestionTitle} için iyileştirici önerisi: iyileştirici kontrolü etkin olsaydı şimdi '{suggestionAction}' uygulanırdı. Yalnızca öneridir, hiçbir şey değiştirilmedi. Deneysel — geri bildirimlerini bekliyoruz: https://github.com/evcc-io/evcc/issues/31903",
+          "messageDefault": "{suggestionTitle} için iyileştirme önerisi: İyileştirme denetimi etkin olsaydı, şu anda ‘{suggestionAction}’ işlemini uygulardı. Bu sadece bir öneri; herhangi bir değişiklik yapılmadı. Deney aşamasında — geri bildirimlerini https://github.com/evcc-io/evcc/issues/31903 adresine bekliyoruz.",
           "title": "İyileştiricinin önerdiği işlem değiştiğinde",
           "titleDefault": "İyileştirici önerisi"
         }
@@ -783,7 +783,7 @@
       "usage": {
         "aux": "Kendi kendini düzenleyen tüketici",
         "battery": "Batarya",
-        "charge": "Tüketici / Doldurma Cihazı",
+        "charge": "Doldurma Cihazı",
         "grid": "Şebeke",
         "label": "Kullanım",
         "pv": "Üretim"
@@ -925,7 +925,7 @@
       },
       "controlled": "Otomatik kontrol tarafından devre dışı bırakıldı. Bunun yerine {optimizer} karar verir.",
       "controls": "Kontrol eder",
-      "description": "Güneş enerjisi tahminlerini, elektrik fiyatlarını ve tüketim alışkanlıklarını inceleyerek batarya ve doldurma yöntemini iyileştirir. Veriler, işlenmek üzere evcc iyileştirme hizmetine gönderilir. Şu anda yalnızca hesaplama ve görselleştirme yapmaktadır. Henüz cihazları denetlememektedir.",
+      "description": "Güneş enerjisi öngörülerini, enerji fiyatlarını ve tüketim alışkanlıklarını kullanarak batarya ve doldurma işlemlerini planlar. Veriler, evcc iyileştirme hizmetine gönderilir.",
       "enable": "İyileştiriciyi Etkinleştir",
       "info": "İyileştirici menü öğesinin görünür hale gelmesi birkaç dakika sürebilir. Yeni kurulumlarda, evcc'nin yeterli veriyi toplaması 24 saate kadar sürebilir.",
       "linkWord": "iyileştirici",
@@ -1125,17 +1125,17 @@
       "restartingMessage": "evcc yeniden başlatılıyor."
     },
     "tariff": {
-      "addForecast": "Tahmin ekle",
+      "addForecast": "Öngörü ekle",
       "addTariff": "Tarife ekle",
       "co2": {
-        "description": "Şebeke elektriği için CO₂ yoğunluğu tahmini. CO₂ iyileştirmeli doldurma ve salım tasarruflarının hesaplanması için.",
-        "titleAdd": "CO₂ Tahmini Ekle",
-        "titleEdit": "CO₂ Tahminini Düzenle"
+        "description": "Şebeke elektriği için CO₂ yoğunluğu öngörüsü. CO₂ iyileştirmeli doldurma ve salım tasarruflarının hesaplanması için.",
+        "titleAdd": "CO₂ Öngörüsü Ekle",
+        "titleEdit": "CO₂ Öngörüsünü Düzenle"
       },
       "co2Services": "CO₂ Hizmetleri",
-      "customForecast": "Kullanıcı tanımlı tahmin",
+      "customForecast": "Kullanıcı tanımlı öngörü",
       "customTariff": "Kullanıcı tanımlı tarife",
-      "description": "Enerji tarifelerini ve tahminlerini yapılandır. Dinamik yönetim için cihaz tabanlı yapılandırmayı veya statik ayarlar için YAML kullan.",
+      "description": "Enerji tarifelerini ve öngörülerini yapılandır. Dinamik yönetim için cihaz tabanlı yapılandırmayı veya statik ayarlar için YAML kullan.",
       "feedIn": {
         "description": "Şebekeye ihraç edilen elektrik için alınan ücret. Gerçek doldurma maliyetlerini hesaplamak için kullanılır.",
         "titleAdd": "Şebekeye İhracat Tarifesi Ekle",
@@ -1149,32 +1149,32 @@
       },
       "legacyWarning": "Yeni tarife yapılandırması mevcut! Yeni kılavuzlu süreci kullanmak için tarifelerini buradan kaldır ve kayded.",
       "option": {
-        "co2": "CO₂ tahmini ekle",
+        "co2": "CO₂ öngörüsü ekle",
         "feedIn": "Şebekeye ihracat tarifesi ekle",
         "grid": "Şebekeden ithalat tarifesi ekle",
-        "planner": "Planlayıcı tahmini ekle",
-        "solar": "Güneş tahmini ekle",
-        "temperature": "Sıcaklık tahmini ekle"
+        "planner": "Planlayıcı öngörüsü ekle",
+        "solar": "Güneş öngörüsü ekle",
+        "temperature": "Sıcaklık öngörüsü ekle"
       },
       "planner": {
-        "description": "Gelişmiş ayar. Dinamik elektrik tarifeleri veya CO₂ tahminleri otomatik olarak kullanıldığından genellikle gerekli değildir. İstatistik ve fiyat hesaplamaları için değil, yalnızca doldurma planlaması için kullanılan ek bir veri kaynağını etkinleştirir.",
-        "titleAdd": "Planlayıcı Tahmini Ekle",
-        "titleEdit": "Planlayıcı Tahminini Düzenle"
+        "description": "Bu gelişmiş ayar genellikle gerekli değil. Planlayıcı öngörüsü, doldurma planları ile ekonomik veya çevre dostu şebeke doldurması (araçlar, ısıtma cihazları, ev bataryası) için temel oluşturur. Bu ayar yapılmadığında, dinamik şebeke fiyatı veya CO₂ öngörüsü otomatik olarak kullanılır. İstatistikler, maliyet hesaplamaları ve iyileştirme kararları bundan etkilenmez.",
+        "titleAdd": "Planlayıcı Öngörüsü Ekle",
+        "titleEdit": "Planlayıcı Öngörüsünü Düzenle"
       },
       "services": "Hizmetler",
       "solar": {
-        "description": "GES için güneş enerjisi üretim tahmini. Arayüzde görüntülenir ve ileride iyileştirme hesaplamaları için kullanılacak.",
-        "titleAdd": "Güneş Tahmini Ekle",
-        "titleEdit": "Güneş Tahmini Düzenle",
+        "description": "GES için güneş enerjisi üretim öngörüsü. Arayüzde görüntülenir ve ileride iyileştirme hesaplamaları için kullanılacak.",
+        "titleAdd": "Güneş Öngörüsü Ekle",
+        "titleEdit": "Güneş Öngörüsünü Düzenle",
         "titleExample": "Güney çatı, garaj vb."
       },
       "temperature": {
-        "description": "Konumun için dış hava sıcaklığı tahmini. Arayüzde görüntülenir ve ısıtma ihtiyacını tahmin etmek için kullanılır.",
-        "titleAdd": "Sıcaklık Tahmini Ekle",
-        "titleEdit": "Sıcaklık Tahminini Düzenle"
+        "description": "Konumun için dış hava sıcaklığı öngörüsü. Arayüzde görüntülenir ve ısıtma ihtiyacını tahmin etmek için kullanılır.",
+        "titleAdd": "Sıcaklık Öngörüsü Ekle",
+        "titleEdit": "Sıcaklık Öngörüsünü Düzenle"
       },
       "template": "Sağlayıcı",
-      "title": "Tarifeler ve Tahminler",
+      "title": "Tarifeler ve öngörüler",
       "titleChoice": "Ne eklemek istersin?",
       "titleSub": "Alt tarife",
       "type": {
@@ -1183,7 +1183,7 @@
         "grid": "Şebekeden Alım Fiyatı",
         "planner": "Planlayıcı",
         "solar": "Güneş enerjisi",
-        "temperature": "Sıcaklık Tahmini"
+        "temperature": "Sıcaklık Öngörüsü"
       },
       "zones": {
         "add": "Bölge ekle",
@@ -1257,9 +1257,18 @@
         "energy": "doldu",
         "returnEnergy": "boşaldı"
       },
+      "consumer": {
+        "energy": "Tüketildi"
+      },
       "grid": {
         "energy": "alındı",
         "returnEnergy": "satıldı"
+      },
+      "heating": {
+        "energy": "Tüketildi"
+      },
+      "loadpoint": {
+        "energy": "Dolduruldu"
       },
       "meter": {
         "energy": "Enerji",
@@ -1309,7 +1318,7 @@
     },
     "production": {
       "above": "{value} üstünde",
-      "accuracy": "Tahmin doğruluğu",
+      "accuracy": "doğruluk",
       "below": "{value} altında",
       "deviation": "Sapma",
       "expectedTomorrow": "yarın beklenen",
@@ -1321,6 +1330,7 @@
     },
     "socTemp": {
       "charged": "doldu",
+      "power": "Güç",
       "soc": "doluluk",
       "temperature": "sıcaklık",
       "used": "kullanıldı"
@@ -1454,7 +1464,7 @@
     "empty": {
       "co2": "Bölgendeki şebeke enerjisinin ne zaman temiz olduğunu gör. Doldurma planları, düşük emisyonlara göre iyileştirilecek ve CO₂ tasarrufu hesaplanacak.",
       "price": "Dinamik elektrik tarifeni yapılandırarak doldurma planlarını otomatik olarak iyileştir ve tasarrufları hesapla.",
-      "setup": "Fiyatlar ve tahminler oluştur",
+      "setup": "Tarifeler ve öngörüler oluştur",
       "solar": "Bugün ve önümüzdeki günler için beklenen güneş enerjisi üretimini gör. Bu veriler gelecekte otomatik doldurma iyileştirmesi için de kullanılacak.",
       "temperature": "Konumun için beklenen dış hava sıcaklığını gör. Isıtma ihtiyacını tahmin etmek için kullanılır."
     },
@@ -1463,6 +1473,7 @@
     "price": {
       "average": "“Ortalama”",
       "constant": "Fiyat",
+      "estimate": "tahmin",
       "lowestHour": "“En ucuz saat”",
       "range": "“Aralık”"
     },
@@ -1475,7 +1486,7 @@
       "today": "“Bugün”",
       "tomorrow": "“Yarın”"
     },
-    "solarAdjust": "Güneş enerjisi tahminlerini gerçek üretim verilerine göre ayarla{percent}.",
+    "solarAdjust": "Güneş enerjisi öngörülerini gerçek üretim verilerine göre ayarla{percent}.",
     "solarAdjustMedium": "gerçek verilere ayarla",
     "solarAdjustShort": "ayarla",
     "temperature": {
@@ -1644,7 +1655,7 @@
         "continuous": "sürekli",
         "continuousCo2Description": "En temiz kesintisiz dilim dizisini seçer.",
         "continuousPriceDescription": "En ucuz kesintisiz dilim dizisini seçer.",
-        "disabledDescription": "Dinamik tarife veya CO₂ tahmini gerektirir.",
+        "disabledDescription": "Dinamik tarife veya CO₂ öngörüsü gerektirir.",
         "label": "Optimizasyon",
         "optimizerDescription": "{optimizer} en ucuz zaman dilimlerini seçer. Birden fazla başlatma ve durdurmaya neden olabilir."
       },
@@ -1663,7 +1674,8 @@
       "repeatingPlans": "“Tekrarlanan planlar”",
       "selectAll": "“Tümünü seç”",
       "strategy": {
-        "label": "Strateji"
+        "label": "Strateji",
+        "optimizerHint": "{optimizer} iyileştirme ayarını henüz dikkate almıyor ve daima en ucuz zaman dilimlerini seçiyor. Gerekirse otomatik kontrolü “Ev bataryası” ile sınırla."
       },
       "time": "Zaman",
       "title": "Plan",
@@ -1686,7 +1698,7 @@
       "batteryGridChargeLimit": "Şebekeden doldurma: şayet",
       "batteryStatus": "Batarya durumu",
       "batteryTooltip": "{total} ({soc})'ın {energy}'ı",
-      "forecast": "Tahmin",
+      "forecast": "Öngörü",
       "forecastTooltip": "“öngörü: bugün kalan güneşden üreti̇m”",
       "gridImport": "Şebekeden alım",
       "heaters": "Isıtıcı | Isıtıcılar",
@@ -1976,7 +1988,7 @@
     },
     "item": {
       "battery": "Ev bataryası",
-      "co2": "CO₂ tahmini",
+      "co2": "CO₂ öngörüsü",
       "consumer": "Tüketici",
       "grid": "Şebeke sayacı",
       "gridExport": "Şebekeye ihracat tarifesi",
@@ -1984,7 +1996,7 @@
       "heater": "Isıtıcı",
       "loadpoint": "Doldurma noktası",
       "pv": "Güneş enerji sistemi",
-      "solar": "Güneş tahmini"
+      "solar": "Güneş öngörüsü"
     },
     "password": {
       "description": "Yapılandırma ayarlarını yetkisiz değişikliklerden korur. Unutma, kolay bir sıfırlama yolu yok.",
@@ -2230,7 +2242,7 @@
     "charge": "Doldurma",
     "comingSoon": "Bu sayfa yapım aşamasında.",
     "energy": "Enerji",
-    "forecast": "Tahmin",
+    "forecast": "Öngörü",
     "more": "Daha fazla",
     "sessions": "Oturumlar"
   }
