@@ -255,14 +255,14 @@
       "capacity": "Kapaciteta",
       "chargeStatus": "Status",
       "chargeStatusA": "brez povezave",
-      "chargeStatusB": "povezan",
+      "chargeStatusB": "priključeno",
       "chargeStatusC": "polnjenje",
       "chargeStatusE": "brez moči",
       "chargeStatusF": "napaka",
-      "chargedEnergy": "Napolnjeno (seja)",
+      "chargedEnergy": "Napolnjeno (trenutno)",
       "co2": "CO₂ iz omrežja",
       "configured": "Konfigurirano",
-      "connected": "Povezano",
+      "connected": "Priključeno",
       "connections": "Povezave",
       "controllable": "Nadzorljiv",
       "currency": "Valuta",
@@ -347,8 +347,8 @@
       "yes": "da"
     },
     "deviceValueChargeStatus": {
-      "A": "A (brez povezave)",
-      "B": "B (povezan)",
+      "A": "A (ni priključeno)",
+      "B": "B (priključeno)",
       "C": "C (polnjenje)"
     },
     "devices": {
@@ -513,7 +513,7 @@
       "labelUser": "Uporabniško ime",
       "title": "InfluxDB",
       "v1Support": "Potrebujete podporo za InfluxDB 1.x?",
-      "v2Support": "Nazaj na InfluxDB 2.x"
+      "v2Support": "Nazaj na InfluxDB 2+"
     },
     "loadpoint": {
       "addCharger": {
@@ -549,7 +549,7 @@
         "heating": "Odvisno od nazivne moči ogrevalne naprave (glejte podatkovni list)."
       },
       "defaultModeHelp": {
-        "charging": "Način polnjenja pri priklopu vozila.",
+        "charging": "Način polnjenja ob priključitvi vozila.",
         "heating": "Nastavi se ob zagonu sistema."
       },
       "defaultModeHelpKeep": "Ohrani nazadnje izbran način.",
@@ -604,11 +604,11 @@
       "pollIntervalHelp": "Čas med posodobitvami API-ja vozila. Kratki intervali lahko izpraznijo akumulator vozila.",
       "pollIntervalLabel": "Interval posodabljanja",
       "pollModeAlways": "vedno",
-      "pollModeAlwaysHelp": "Vedno zahtevajte posodobitve stanja v rednih intervalih.",
-      "pollModeCharging": "polnjenje",
-      "pollModeChargingHelp": "Zahtevaj posodobitve statusa vozila samo med polnjenjem.",
-      "pollModeConnected": "povezan",
-      "pollModeConnectedHelp": "Ko je vzpostavljena povezava redno posodobi stanje vozila.",
+      "pollModeAlwaysHelp": "Stanje vozila se vedno posodablja v rednih intervalih.",
+      "pollModeCharging": "med polnjenjem",
+      "pollModeChargingHelp": "Stanje vozila se posodablja samo med polnjenjem.",
+      "pollModeConnected": "priključeno",
+      "pollModeConnectedHelp": "Stanje vozila se v rednih intervalih posodablja, ko je vozilo priključeno.",
       "pollModeLabel": "Vedenje posodobitev",
       "priorityHelp": "Višja prioriteta ima prednostni dostop do presežka sončne energije.",
       "priorityLabel": "Prioriteta",
@@ -682,7 +682,7 @@
     },
     "messaging": {
       "addMessenger": "Dodaj storitev",
-      "description": "Prejemanje obvestil o vaših sejah polnjenja.",
+      "description": "Prejemanje obvestil o polnjenjih.",
       "event": {
         "asleep": {
           "messageDefault": "Polnjenje sproščeno, vozilo {vehicleName} se ne polni.",
@@ -690,9 +690,9 @@
           "titleDefault": "Vozilo spi"
         },
         "connect": {
-          "messageDefault": "Vozilo priklopljeno: {pvPower} kW sončne energije",
+          "messageDefault": "Vozilo priključeno. Sončna proizvodnja: {pvPower} kW",
           "title": "Ko se vozilo poveže",
-          "titleDefault": "Vozilo povezano"
+          "titleDefault": "Vozilo priključeno"
         },
         "disconnect": {
           "messageDefault": "Vozilo odklopljeno po {connectedDuration}",
@@ -700,7 +700,7 @@
           "titleDefault": "Vozilo odklopljeno"
         },
         "guest": {
-          "messageDefault": "Neznano vozilo, gost povezan?",
+          "messageDefault": "Priključeno neznano vozilo – morda gost?",
           "title": "Ko se poveže neznano vozilo",
           "titleDefault": "Neznano vozilo"
         },
@@ -943,8 +943,8 @@
         "https": "HTTPS (šifrirano)"
       },
       "status": {
-        "A": "A (brez povezave)",
-        "B": "B (povezan)",
+        "A": "A (ni priključeno)",
+        "B": "B (priključeno)",
         "C": "C (polnjenje)"
       }
     },
@@ -976,7 +976,8 @@
       "manualLogin": "Ali pa se ročno prijavite na {url} v brskalniku s temi poverilnicami:",
       "noClients": "Še ni odjemalcev. Nihče se še ne more povezati.",
       "password": "Geslo",
-      "passwordOnce": "To geslo je prikazano samo enkrat. Skenirajte kodo QR ali ga kopirajte zdaj. Kasneje ga ne boste mogli več videti.",
+      "passwordOnce": "To geslo je prikazano samo enkrat. Skenirajte kodo QR ali pa ga zdaj kopirajte oziroma natisnite. Kasneje ga ne boste mogli več videti.",
+      "print": "Natisni / PDF",
       "privacy": "Z omogočanjem te funkcije se strinjate z našo {0}.",
       "privacyLink": "politiko zasebnosti",
       "qrInstall": "Namestite aplikacijo evcc za {ios} ali {android}.",
@@ -1094,7 +1095,7 @@
           "description": "Imate težave s konfiguracijo in želite začeti znova? Izbrišite vse podatke in začnite znova.",
           "remote": "Oddaljeni dostop",
           "remoteDescription": "Izbriše konfiguracijo in poverilnice.",
-          "sessions": "Seje polnjenja",
+          "sessions": "Zgodovina polnjenj",
           "sessionsDescription": "Izbriše zgodovino vaših polnjenj.",
           "settings": "Konfiguracija in nastavitve",
           "settingsDescription": "Izbriše vse konfigurirane naprave, storitve, pakete, predpomnilnike itd.",
@@ -1238,7 +1239,7 @@
         "pattern": "Vzorec"
       },
       "cost": "Stroški",
-      "others": "Drugi",
+      "others": "Ostalo",
       "title": "Porabniki",
       "view": {
         "river": "Energetski tok",
@@ -1250,16 +1251,29 @@
         "energy": "napolnjeno",
         "returnEnergy": "izpraznjeno"
       },
+      "consumer": {
+        "energy": "Porabljeno"
+      },
       "grid": {
         "energy": "Odjem",
         "returnEnergy": "Oddaja"
+      },
+      "heating": {
+        "energy": "Porabljeno"
+      },
+      "loadpoint": {
+        "energy": "Napolnjeno"
       },
       "meter": {
         "energy": "Energija",
         "returnEnergy": "Energija (povratna)"
       }
     },
-    "empty": "Za to časovno obdobje ni podatkov o energiji.",
+    "empty": {
+      "description": "Za to obdobje ni podatkov o energiji.",
+      "descriptionCurrent": "Podatkov o energiji še ni. Vrednosti se bodo prikazale, ko bodo zabeležene prve meritve.",
+      "showCurrent": "Prikaži trenutno obdobje"
+    },
     "flow": {
       "battery": "Baterija",
       "batteryCharge": "Polnjenje baterije",
@@ -1297,7 +1311,7 @@
     },
     "production": {
       "above": "{value} nad",
-      "accuracy": "Natančnost napovedi",
+      "accuracy": "natančnost",
       "below": "{value} pod",
       "deviation": "Odstopanje",
       "expectedTomorrow": "pričakovano jutri",
@@ -1309,6 +1323,7 @@
     },
     "socTemp": {
       "charged": "napolnjeno",
+      "power": "Moč",
       "soc": "napolnjenost",
       "temperature": "temperatura",
       "used": "porabljeno"
@@ -1331,12 +1346,14 @@
       "co2Saved": "Prihranjen CO₂",
       "co2SavedTooltip": "V primerjavi z odjemom porabljene {energy} iz omrežja.",
       "configure": "Konfiguriraj zdaj",
+      "fromGrid": "{value} iz omrežja",
       "noCo2": "Ni podatkov o CO₂.",
       "noPrice": "Ni podatkov o ceni.",
       "savings": "Prihranki",
       "savingsTooltip": "V primerjavi z nakupom porabljene {energy} iz omrežja.",
       "versus": "{value} v primerjavi z {reference}"
     },
+    "summary": "Povzetek",
     "title": "Energija"
   },
   "footer": {
@@ -1382,7 +1399,7 @@
       "priceTitle": "Cena energije",
       "referenceGrid": "omrežje",
       "referenceLabel": "Referenčni podatki",
-      "sessionInfo": "Na podlagi zaključenih sej polnjenja.",
+      "sessionInfo": "Na podlagi zaključenih polnjenj.",
       "tabTitle": "Moji podatki"
     },
     "sponsor": {
@@ -1448,6 +1465,7 @@
     "price": {
       "average": "Povprečje",
       "constant": "Cena",
+      "estimate": "ocena",
       "lowestHour": "Najcenejša ura",
       "range": "Doseg"
     },
@@ -1479,6 +1497,7 @@
     "cancel": "Prekliči",
     "download": "Prenesi",
     "error": "Napaka",
+    "loading": "Nalaganje",
     "none": "brez",
     "note": "Opomba:",
     "warning": "Opozorilo"
@@ -1491,7 +1510,7 @@
     "logout": "Odjava",
     "nativeSettings": "Zamenjaj strežnik",
     "needHelp": "Potrebuješ pomoč?",
-    "sessions": "Seje polnjenja"
+    "sessions": "Zgodovina polnjenj"
   },
   "help": {
     "contactButton": "Kontakt",
@@ -1608,8 +1627,8 @@
       "label": "Vedno polni",
       "labelHeating": "Vedno ogrevaj",
       "minCurrent": "min. {current}",
-      "once": "do konca seje",
-      "onceTip": "Samo za to sejo",
+      "once": "samo tokrat",
+      "onceTip": "Samo tokrat",
       "permanent": "ostane trajno vklopljeno"
     },
     "chargingPlan": {
@@ -1647,7 +1666,8 @@
       "repeatingPlans": "Ponavljajoči načrti",
       "selectAll": "Izberi vse",
       "strategy": {
-        "label": "Strategija"
+        "label": "Strategija",
+        "optimizerHint": "Zaenkrat {optimizer} ne upošteva nastavitev strategije in vedno izbere najcenejše časovne bloke. Če jih potrebujete, omejite samodejno krmiljenje na možnost »Domača baterija«."
       },
       "time": "Čas",
       "title": "Načrt",
@@ -1673,12 +1693,13 @@
       "forecast": "Napoved",
       "forecastTooltip": "napoved: preostala sončna proizvodnja danes",
       "gridImport": "Odjem iz omrežja",
-      "homePower": "Poraba objekta",
-      "loadpoints": "Polnilnica | Polnilnici | {count} polnilnih mest",
+      "heaters": "Ogrevanje | Ogrevanje",
+      "homePower": "Poraba",
+      "loadpoints": "Polnilnica | Polnilnice",
       "loadpointsLimit": "omejitev {limit}",
       "noEnergy": "Ni podatkov o merilniku",
       "pv": "Solarni sistem",
-      "pvExport": "Izvoz v omrežje",
+      "pvExport": "Oddaja v omrežje",
       "pvProduction": "Proizvodnja",
       "selfConsumption": "Samoporaba",
       "toggleDetails": "Podrobnosti pretoka energije"
@@ -1690,7 +1711,7 @@
       "suggestionStartTooltip": "Optimizator priporoča ogrevanje zdaj.",
       "suggestionStopTooltip": "Optimizator priporoča prekinitev ogrevanja.",
       "vehicleLimit": "Omejitev ogrevanja",
-      "waitForVehicle": "Pripravljen. Čakam na grelnik…"
+      "waitForVehicle": "Pripravljeno za ogrevanje…"
     },
     "hemsWarning": {
       "consumption": "Poraba",
@@ -1701,18 +1722,22 @@
       "avgPrice": "⌀ Cena",
       "charged": "Napolnjeno",
       "co2": "⌀ CO₂",
+      "consumed": "Porabljeno",
       "duration": "Trajanje",
       "emission": "Emisije",
       "fallbackName": "Polnilno mesto",
       "finished": "Končni čas",
-      "last24hEnergy": "Zadnjih 24h",
+      "last24hEnergy": "Zadnjih 24 ur",
+      "last24hShort": "24 ur",
       "last7dEnergy": "Zadnjih 7 dni",
+      "last7dShort": "7 dni",
       "phasesMismatch": "Aktivnih je več faz, kot je konfigurirano. Preverite konfiguracijo faz.",
       "power": "Moč",
       "price": "Cena",
       "remaining": "Preostalo",
       "remoteDisabledHard": "{source}: izključeno",
       "remoteDisabledSoft": "{source}: izklopljeno prilagodljivo solarno polnjenje",
+      "session": "Polnjenje",
       "solar": "Sončna energija",
       "todayEnergy": "Danes"
     },
@@ -1723,7 +1748,7 @@
         "disabled": "Onemogočeno",
         "label": "Pospeševanje baterije",
         "mode": "Na voljo samo v pametnem načinu.",
-        "once": "Pospeševanje z baterijo aktivno za to sejo polnjenja.",
+        "once": "Pospeševanje z baterijo je aktivno med tem polnjenjem.",
         "stateActive": "Pospeševanje iz baterije aktivno",
         "stateBelowLimit": "Baterija prenizka za pospeševanje",
         "stateHold": "Baterija zaklenjena",
@@ -1850,11 +1875,11 @@
       "temp": "Temperatura.",
       "tempLimit": "Temperaturna omejitev",
       "unknown": "Neznano vozilo",
-      "vehicleSoc": "Napolnjeno"
+      "vehicleSoc": "Napolnjenost"
     },
     "vehicleSettings": {
-      "connectedTo": "povezano z {0}",
-      "description": "Te privzete nastavitve se uporabijo, ko se vozilo poveže s polnilnim mestom.",
+      "connectedTo": "priključeno: {0}",
+      "description": "Te privzete nastavitve se uporabijo, ko se vozilo priključi na polnilno mesto.",
       "editHint": "Vozila lahko urejate v {0}.",
       "keepAsIs": "Ohrani nespremenjeno",
       "learnMore": "Več o tem.",
@@ -1862,7 +1887,7 @@
       "menu": "Vozila",
       "minSoc": "Minimalno polnjenje",
       "mode": "Privzeti način",
-      "notConnected": "ni povezano",
+      "notConnected": "ni priključeno",
       "title": "Nastavitve vozila"
     },
     "vehicleStatus": {
@@ -1880,9 +1905,9 @@
       "cleanEnergyNextStart": "Čista energija na voljo čez {duration}.",
       "cleanEnergySet": "Omejitev CO₂ je nastavljena.",
       "climating": "Zaznano predkondicioniranje.",
-      "connected": "Povezan.",
-      "disconnectRequired": "Seja prekinjena. Ponovno se povežite.",
-      "disconnected": "Odklopljen.",
+      "connected": "Priključeno.",
+      "disconnectRequired": "Polnjenje prekinjeno. Ponovno priključite vozilo.",
+      "disconnected": "Odklopljeno.",
       "feedinPriorityNextStart": "Visoke tarife za dovajanje energije se začnejo čez {duration}.",
       "feedinPriorityPausing": "Polnjenje s sončno energijo je začasno ustavljeno za maksimiranje dovajanja energije.",
       "finished": "Končano.",
@@ -1896,11 +1921,11 @@
       "suggestionStopTooltip": "Optimizator priporoča prekinitev polnjenja.",
       "targetChargeActive": "Ciljno polnjenje je aktivno, predviden konec {duration}.",
       "targetChargePlanned": "Ciljno polnjenje se začne čez {duration}.",
-      "targetChargeWaitForVehicle": "Načrt polnjenja je pripravljen. Čakam na vozilo…",
+      "targetChargeWaitForVehicle": "Načrt polnjenja pripravljen. Čakanje na vozilo…",
       "vehicleLimit": "Omejitev vozila",
       "vehicleLimitReached": "Omejitev vozila dosežena.",
-      "waitForAuthorization": "Povezan. Čakanje na avtorizacijo…",
-      "waitForVehicle": "Pripravljen. Čakam na vozilo…",
+      "waitForAuthorization": "Priključeno. Čakanje na avtorizacijo…",
+      "waitForVehicle": "Pripravljeno. Čakanje na vozilo…",
       "welcome": "Kratko začetno polnjenje za potrditev povezave."
     },
     "vehicles": "Parkiranje",
@@ -1958,8 +1983,8 @@
       "co2": "Napoved CO₂",
       "consumer": "Potrošnik",
       "grid": "Omrežni števec",
-      "gridExport": "Tarifa za izvoz v omrežje",
-      "gridImport": "Tarifa za uvoz iz omrežja",
+      "gridExport": "Tarifa za oddajo v omrežje",
+      "gridImport": "Tarifa za odjem iz omrežja",
       "heater": "Grelnik",
       "loadpoint": "Polnilno mesto",
       "pv": "Solarni sistem",
@@ -2016,7 +2041,7 @@
     "price": "Cena",
     "soc": "Napolnjenost",
     "started": "Začetek",
-    "title": "Seja polnjenja"
+    "title": "Polnjenje"
   },
   "sessions": {
     "addedRange": "Doseg",
@@ -2032,7 +2057,7 @@
       "energy": "Napolnjena energija",
       "energyGrouped": "Sončna energija v primerjavi z omrežno energijo",
       "energyGroupedByGroup": "Energija {byGroup}",
-      "energySubSolar": "{value} sončna energija",
+      "energySubSolar": "{value} sončne energije",
       "energySubTotal": "{value} skupaj",
       "groupedCo2ByGroup": "CO₂-Količina {byGroup}",
       "groupedPriceByGroup": "Skupni stroški {byGroup}",
@@ -2084,7 +2109,7 @@
       "vehicle": "Vozilo"
     },
     "loadpoint": "Polnilno mesto",
-    "noData": "Ta mesec ni bilo sej polnjenja.",
+    "noData": "Ta mesec ni bilo polnjenj.",
     "odometer": "Kilometri",
     "overview": "Pregled",
     "period": {
@@ -2094,10 +2119,10 @@
       "year": "Leto"
     },
     "price": "Cena",
-    "reallyDelete": "Ali res želite izbrisati to sejo?",
-    "showIndividualEntries": "Prikaži posamezne seje",
+    "reallyDelete": "Ali res želite izbrisati to polnjenje?",
+    "showIndividualEntries": "Prikaži posamezna polnjenja",
     "solar": "Sončna energija",
-    "title": "Seje polnjenja",
+    "title": "Zgodovina polnjenj",
     "total": "Skupaj",
     "type": {
       "co2": "CO₂",
@@ -2183,7 +2208,7 @@
     "saved": "Shranjeno."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Aktivni čass",
+    "activeHoursLabel": "Aktivni čas",
     "batteryDescription": "Prazni domačo baterijo v omrežje, dokler je tarifa za oddajo visoka.",
     "description": "Prekine polnjenje med visokimi cenami, da daje prednost donosnemu dovajanju v omrežje.",
     "priceLabel": "Cena uvoza energije",
@@ -2211,6 +2236,6 @@
     "energy": "Energija",
     "forecast": "Napoved",
     "more": "Več",
-    "sessions": "Seje"
+    "sessions": "Zgodovina"
   }
 }

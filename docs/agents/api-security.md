@@ -10,6 +10,36 @@ protects credential management, configuration changes, and system operations
 (logs, backup/restore/reset, shutdown). Read-only state and basic charging
 controls are intentionally unauthenticated.
 
+"Trusted network" means devices on the network, not websites opened in a
+browser on it. See [Cross-Origin Protection](#cross-origin-protection).
+
+## Cross-Origin Protection
+
+Browser requests from foreign origins are rejected, independent of auth:
+
+- The API sends no CORS headers and routes do not answer `OPTIONS`, so other
+  sites cannot read responses or pass a preflight.
+- Non-GET requests get a 403 unless `Sec-Fetch-Site` is `same-origin` or the
+  `Origin` host equals the `Host` header.
+- The websocket handshake is rejected unless the `Origin` host equals the
+  `Host` header.
+- Requests without an `Origin` header (integrations, scripts) pass.
+
+### Reverse proxies
+
+A reverse proxy must forward the original `Host` header. If it replaces it
+with the upstream address, the websocket fails and the UI shows as offline.
+Over plain HTTP, writes fail as well. The log then contains
+`request Origin "…" is not authorized for Host "…"` for the websocket and
+`cross-origin request detected…` for writes.
+
+| Proxy   | Setting                                       |
+| ------- | --------------------------------------------- |
+| nginx   | `proxy_set_header Host $http_host;`           |
+| Apache  | `ProxyPreserveHost On`                        |
+| Caddy   | none, `reverse_proxy` keeps `Host` by default |
+| Traefik | none, `Host` is kept by default               |
+
 ## Auth Modes
 
 | Mode       | Trigger               | Behavior                                          |
@@ -88,6 +118,7 @@ achieves the same effect (the previous key stops working immediately).
 | State / read-only / basic charging control   | Public    |                                    |
 | Set or update admin password                 | Public    | admin password                     |
 | Configuration                                | Secure    |                                    |
+| Charging session edit / delete               | Secure    |                                    |
 | Configuration embedding a script plugin       | Critical  | api key or admin password          |
 | System: logs, cache, shutdown                | Secure    |                                    |
 | API key status                               | Secure    |                                    |

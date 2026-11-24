@@ -257,7 +257,7 @@
       "amount": "Kiekis",
       "asleep": "miega",
       "broker": "Broker sistema",
-      "bucket": "Bucket",
+      "bucket": "Bucket / Duomenų bazė",
       "capacity": "Talpa",
       "chargeStatus": "Statusas",
       "chargeStatusA": "neprijungta",
@@ -508,7 +508,7 @@
     "influx": {
       "description": "Įrašo įkrovimo ir kitus duomenis į InfluxDB. Duomenims vizualizuoti naudokite \"Grafana\" ar panašius įrankius.",
       "descriptionToken": "Patikrinkite InfluxDB dokumentaciją, kad sužinotumėte, kaip ją sukurti. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Bucket",
+      "labelBucket": "Bucket / Duomenų bazė",
       "labelCheckInsecure": "Leisti naudoti savarankiškai pasirašytus sertifikatus",
       "labelDatabase": "Duomenų bazė",
       "labelInsecure": "Sertifikato patvirtinimas",
@@ -519,7 +519,7 @@
       "labelUser": "Vartotojo vardas",
       "title": "InfluxDB",
       "v1Support": "Reikia InfluxDB 1.x palaikymo?",
-      "v2Support": "Atgal į InfluxDB 2.x"
+      "v2Support": "Atgal į InfluxDB 2+"
     },
     "loadpoint": {
       "addCharger": {
@@ -982,7 +982,8 @@
       "manualLogin": "Arba prisijunkite rankiniu būdu adresu {url} naršyklėje naudodami šiuos prisijungimo duomenis:",
       "noClients": "Kol kas nėra vartotojų. Niekas dar negali prisijungti.",
       "password": "Slaptažodis",
-      "passwordOnce": "Šis slaptažodis rodomas tik vieną kartą. Nuskaitykite QR kodą arba nukopijuokite jį dabar. Daugiau jo nebegalėsite pamatyti.",
+      "passwordOnce": "Šis slaptažodis rodomas tik vieną kartą. Nuskaitykite QR kodą, nukopijuokite ar atspausdinkite jį dabar. Daugiau jo nebegalėsite pamatyti.",
+      "print": "Spausdinti / PDF",
       "privacy": "Įjungdami šią funkciją, sutinkate su mūsų {0}.",
       "privacyLink": "privatumo politika",
       "qrInstall": "Įdiekite evcc programėlę, skirtą {ios} arba {android}.",
@@ -1258,19 +1259,32 @@
     },
     "direction": {
       "battery": {
-        "energy": "įkrauta",
-        "returnEnergy": "iškrauta"
+        "energy": "Įkrauta",
+        "returnEnergy": "Iškrauta"
+      },
+      "consumer": {
+        "energy": "Suvartota"
       },
       "grid": {
         "energy": "iš tinklo",
         "returnEnergy": "į tinklą"
+      },
+      "heating": {
+        "energy": "Suvartota"
+      },
+      "loadpoint": {
+        "energy": "Įkrauta"
       },
       "meter": {
         "energy": "Energija iš tinklo",
         "returnEnergy": "Energija (patiekta į tinklą)"
       }
     },
-    "empty": "Šiam laikotarpiui energijos duomenų nėra.",
+    "empty": {
+      "description": "Šiam laikotarpiui energijos duomenų nėra.",
+      "descriptionCurrent": "Energijos duomenų dar nėra. Reikšmės pasirodo, kai užfiksuojami pirmieji matavimai.",
+      "showCurrent": "Rodyti dabartinį laikotarpį"
+    },
     "flow": {
       "battery": "Kaupiklis",
       "batteryCharge": "Kaupiklis įkrauta",
@@ -1309,7 +1323,7 @@
     },
     "production": {
       "above": "{value} virš",
-      "accuracy": "Prognozės tikslumas",
+      "accuracy": "tikslumas",
       "below": "{value} žemiau",
       "deviation": "Nuokrypis",
       "expectedTomorrow": "tikimasi rytoj",
@@ -1321,8 +1335,9 @@
     },
     "socTemp": {
       "charged": "įkrauta",
-      "soc": "įkrova",
-      "temperature": "temperatūra",
+      "power": "Galia",
+      "soc": "Įkrova",
+      "temperature": "Temperatūra",
       "used": "sunaudota"
     },
     "sources": {
@@ -1343,12 +1358,14 @@
       "co2Saved": "CO₂ sutaupyta",
       "co2SavedTooltip": "Palyginus su suvartojimu {energy} iš tinklo.",
       "configure": "Konfigūruoti dabar",
+      "fromGrid": "{value} iš tinklo",
       "noCo2": "Nėra CO₂ duomenų.",
       "noPrice": "Nėra kainos duomenų.",
       "savings": "Sutaupymai",
       "savingsTooltip": "Palyginus su suvartotos {energy} pirkimu iš tinklo.",
       "versus": "{value} vs. {reference}"
     },
+    "summary": "Santrauka",
     "title": "Energija"
   },
   "footer": {
@@ -1460,6 +1477,7 @@
     "price": {
       "average": "Vidurkis",
       "constant": "Kaina",
+      "estimate": "numatoma",
       "lowestHour": "Pigiausia valanda",
       "range": "Diapazonas"
     },
@@ -1491,6 +1509,7 @@
     "cancel": "Atšaukti",
     "download": "Atsisiųsti",
     "error": "Klaida",
+    "loading": "Įkeliama",
     "none": "nė vienas",
     "note": "Pastaba:",
     "warning": "Perspėjimas"
@@ -1659,7 +1678,8 @@
       "repeatingPlans": "Pasikartojantys planai",
       "selectAll": "Pasirinkti visus",
       "strategy": {
-        "label": "Strategija"
+        "label": "Strategija",
+        "optimizerHint": "{optimizer} kol kas neatsižvelgia į optimizavimo nustatymą ir visada pasirenka pigiausius laiko intervalus. Jei to reikia, apribokite automatinį valdymą į “Kaupiklis” ."
       },
       "time": "Laikas",
       "title": "Planas",
@@ -1685,8 +1705,9 @@
       "forecast": "Prognozė",
       "forecastTooltip": "prognozė: likusi saulės energijos gamyba šiandien",
       "gridImport": "Iš tinklo",
+      "heaters": "Šildytuvas | Šildytuvai",
       "homePower": "Namo suvartojimas",
-      "loadpoints": "Įkroviklis | Įkroviklis | {count} įkrovikliai",
+      "loadpoints": "Įkroviklis | Įkrovikliai",
       "loadpointsLimit": "{limit} limitas",
       "noEnergy": "Nėra skaitiklių duomenų",
       "pv": "Saulės jėgainė",
@@ -1713,18 +1734,22 @@
       "avgPrice": "⌀ Kaina",
       "charged": "Įkrauta",
       "co2": "⌀ CO₂",
+      "consumed": "Suvartota",
       "duration": "Trukmė",
       "emission": "Emisijos",
       "fallbackName": "Įkroviklis",
       "finished": "Bus baigta",
       "last24hEnergy": "Pastarosios 24 val",
+      "last24hShort": "24 val",
       "last7dEnergy": "Pastarosios 7 dienos",
+      "last7dShort": "7d",
       "phasesMismatch": "Daugiau fazių aktyvios, nei sukonfigūruota. Patikrinkite fazių konfigūraciją.",
       "power": "Galia",
       "price": "Kaina",
       "remaining": "Liko",
       "remoteDisabledHard": "{source}: išjungtas",
       "remoteDisabledSoft": "{source}: adaptyvus Saulės įkrovimas išjungtas",
+      "session": "Sesija",
       "solar": "Saulės",
       "todayEnergy": "Šiandien"
     },

@@ -42,6 +42,10 @@ export function registerModal(name: string, el: HTMLElement): void {
   syncModal(name);
 }
 
+export function isConfigModal(el: HTMLElement): boolean {
+  return [..._modals.values()].includes(el);
+}
+
 export function unregisterModal(name: string): void {
   _modals.delete(name);
   _dismissingViaRoute.delete(name);

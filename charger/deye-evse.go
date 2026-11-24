@@ -45,7 +45,7 @@ type DeyeEvse struct {
 // deyeEvseConn is implemented by *modbus.Connection and the Solarman V5 logger
 type deyeEvseConn interface {
 	ReadHoldingRegisters(address, quantity uint16) ([]byte, error)
-	WriteSingleRegister(address, value uint16) ([]byte, error)
+	WriteMultipleRegisters(address, quantity uint16, value []byte) ([]byte, error)
 }
 
 type deyeEvseSolarman struct {
@@ -58,8 +58,8 @@ func (s *deyeEvseSolarman) ReadHoldingRegisters(address, quantity uint16) ([]byt
 	return s.client.ReadHoldingRegisters(s.ctx, s.id, address, quantity)
 }
 
-func (s *deyeEvseSolarman) WriteSingleRegister(address, value uint16) ([]byte, error) {
-	return nil, s.client.WriteSingleRegister(s.ctx, s.id, address, value)
+func (s *deyeEvseSolarman) WriteMultipleRegisters(address, _ uint16, value []byte) ([]byte, error) {
+	return nil, s.client.WriteMultipleRegisters(s.ctx, s.id, address, value)
 }
 
 const (
@@ -171,8 +171,9 @@ func (wb *DeyeEvse) Enable(enable bool) error {
 }
 
 // setPower writes the power limit in W
+// FC16 since FC06 writes to this register time out on some units
 func (wb *DeyeEvse) setPower(power uint16) error {
-	_, err := wb.conn.WriteSingleRegister(deyeEvseRegPowerLimit, power)
+	_, err := wb.conn.WriteMultipleRegisters(deyeEvseRegPowerLimit, 1, binary.BigEndian.AppendUint16(nil, power))
 	return err
 }
 

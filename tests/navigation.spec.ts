@@ -4,6 +4,9 @@ import { expectModalHidden, expectModalVisible } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
+const phone = { width: 430, height: 800 };
+const desktop = { width: 1280, height: 720 };
+
 test.describe("bottom navigation", async () => {
   test.afterAll(async () => {
     await stop();
@@ -20,15 +23,22 @@ test.describe("bottom navigation", async () => {
     const tabCharge = bottomNav.getByRole("link", { name: "Charge" });
     const tabBattery = bottomNav.getByRole("link", { name: "Battery" });
     const tabForecast = bottomNav.getByRole("link", { name: "Forecast" });
+    const tabEnergy = bottomNav.getByRole("link", { name: "Energy" });
     const tabSessions = bottomNav.getByRole("link", { name: "Sessions" });
     const tabMore = bottomNav.getByTestId("tab-more");
 
     // verify bottom nav tabs (no battery)
     await expect(tabCharge).toBeVisible();
     await expect(tabForecast).toBeVisible();
+    await expect(tabEnergy).toBeVisible();
     await expect(tabSessions).toBeVisible();
     await expect(tabMore).toBeVisible();
     await expect(tabBattery).toHaveCount(0);
+
+    // phone without battery: sessions still fits the bar
+    await page.setViewportSize(phone);
+    await expect(tabSessions).toBeVisible();
+    await page.setViewportSize(desktop);
 
     // more menu opens and closes on the same tab
     const configLink = tabMore.getByRole("link", { name: "Configuration" });
@@ -65,6 +75,14 @@ test.describe("bottom navigation", async () => {
     await page.goto("/");
     await expect(tabBattery).toBeVisible();
 
+    // phone with battery: sessions moves into the more menu
+    await page.setViewportSize(phone);
+    await expect(tabSessions).toBeHidden();
+    await tabMore.click();
+    await expect(tabMore.getByRole("link", { name: "Sessions" })).toBeVisible();
+    await tabMore.click();
+    await page.setViewportSize(desktop);
+
     // click all tabs, verify headlines
     await tabCharge.click();
     await expect(page.getByRole("heading", { name: "evcc" })).toBeVisible();
@@ -74,6 +92,9 @@ test.describe("bottom navigation", async () => {
 
     await tabForecast.click();
     await expect(page.getByRole("heading", { name: "Forecast" })).toBeVisible();
+
+    await tabEnergy.click();
+    await expect(page.getByRole("heading", { name: "Energy" })).toBeVisible();
 
     await tabSessions.click();
     await expect(page.getByRole("heading", { name: "Sessions" })).toBeVisible();

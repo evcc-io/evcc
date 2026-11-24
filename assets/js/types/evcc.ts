@@ -1430,6 +1430,8 @@ export interface Rate {
   end: Date;
   /** Price per kWh in the configured currency or emissions in g/kWh. */
   value: number;
+  /** Predicted value that may still be replaced by an actual one. */
+  estimate?: boolean;
 }
 
 export interface Slot {
@@ -1444,8 +1446,8 @@ export interface Slot {
   selectable?: boolean | null;
 }
 
-/** A forecast time slot as [start, end, value] array. Start and end are unix seconds. Value unit depends on the forecast type. */
-export type ForecastSlot = [number, number, number];
+/** A forecast time slot as [start, end, value] array. Start and end are unix seconds. Value unit depends on the forecast type. A trailing 1 marks an estimate. */
+export type ForecastSlot = [number, number, number] | [number, number, number, 1];
 
 /** A forecast value at a point in time as [ts, val] array. ts is unix seconds, val is power in W. */
 export type TimeseriesEntry = [number, number];
@@ -1500,6 +1502,7 @@ export interface UiForecastSlot {
   start: number;
   end: number;
   value: number;
+  estimate?: boolean;
 }
 
 export interface UiSolarDetails extends Omit<SolarDetails, "timeseries"> {
@@ -1660,11 +1663,12 @@ export interface BatteryDetail {
   title: string; // Display title
   name: string; // Internal name/identifier
   capacity: number; // Battery capacity (kWh)
+  planGoals?: { time: string; soc: number }[]; // Vehicle plan goals within the horizon (%), not capped at the limit
 }
 
 // Single profile summarized into the household demand time series
 export interface DemandDetail {
-  type: "home" | "heating" | "unmodelled"; // Origin of the profile
+  type: "home" | "heating" | "unmodelled" | "precondition"; // Origin of the profile
   title?: string; // Loadpoint title, unset for the base load
   values: number[]; // Energy per slot (Wh)
 }

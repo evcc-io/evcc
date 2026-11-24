@@ -9,7 +9,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/OpenEVSE/go-openevse v0.3.0
 	github.com/PanterSoft/comlynx-go v0.1.0
-	github.com/PuerkitoBio/goquery v1.13.0
+	github.com/PuerkitoBio/goquery v1.14.0
 	github.com/WulfgarW/sensonet v0.0.9
 	github.com/andig/go-powerwall v0.3.0
 	github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512
@@ -25,21 +25,21 @@ require (
 	github.com/d2r2/go-i2c v0.0.0-20191123181816-73a8a799d6bc
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dylanmei/iso8601 v0.1.0
-	github.com/eclipse/paho.mqtt.golang v1.5.1
+	github.com/eclipse/paho.mqtt.golang v1.5.2
 	github.com/enbility/eebus-go v0.7.1-0.20260720111250-363db3c5c262
 	github.com/enbility/ship-go v0.6.1-0.20260720110450-0aa90f64ac76
 	github.com/enbility/spine-go v0.7.1-0.20260629113257-b3bcc643f323
 	github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4
-	github.com/evcc-io/optimizer v0.0.0-20261119153406-fea59468635e
+	github.com/evcc-io/optimizer v0.0.0-20261123163355-5998ea97e0ba
 	github.com/evcc-io/rct v0.3.0
 	github.com/fatih/structs v1.1.0
 	github.com/getkin/kin-openapi v0.153.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/go-playground/validator/v10 v10.30.6
-	github.com/go-telegram/bot v1.28.0
+	github.com/go-telegram/bot v1.30.0
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/godbus/dbus/v5 v5.2.4
-	github.com/gokrazy/updater v0.0.0-20260620140544-0a84d8ab3878
+	github.com/gokrazy/updater v0.0.0-20261116075426-e284d6734437
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.6.0
@@ -54,7 +54,7 @@ require (
 	github.com/holoplot/go-evdev v0.0.0-20260909133534-d873ed210bda
 	github.com/icholy/digest v1.2.0
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
-	github.com/insomniacslk/tapo v1.1.0
+	github.com/insomniacslk/tapo v1.2.0
 	github.com/itchyny/gojq v0.12.20
 	github.com/jarcoal/httpmock v1.4.2
 	github.com/jeremywohl/flatten v1.0.1
@@ -72,7 +72,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/modelcontextprotocol/go-sdk v1.8.0
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
-	github.com/nicholas-fedor/shoutrrr v0.24.0
+	github.com/nicholas-fedor/shoutrrr v0.25.0
 	github.com/nicksnyder/go-i18n/v2 v2.7.0
 	github.com/olekukonko/tablewriter v1.1.5
 	github.com/philippseith/signalr v0.11.0
@@ -86,7 +86,7 @@ require (
 	github.com/sirupsen/logrus v1.10.2
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/smallnest/chanx v1.2.0
-	github.com/spali/go-rscp v0.2.2
+	github.com/spali/go-rscp v0.2.3
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/jwalterweatherman v1.1.0
@@ -104,23 +104,24 @@ require (
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v4 v4.0.0
 	golang.org/x/crypto v0.59.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20261111203624-6bec4215b57b
-	golang.org/x/exp v0.0.0-20261113113407-e3970619a1a4
-	golang.org/x/net v0.62.0
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20261123192653-4dc4fb521066
+	golang.org/x/exp v0.0.0-20261124000051-d6646c509b6d
+	golang.org/x/net v0.63.0
 	golang.org/x/oauth2 v0.38.0
 	golang.org/x/sync v0.25.0
 	golang.org/x/text v0.44.0
-	golang.org/x/tools v0.52.1-0.20261106145633-d407941a339a
+	golang.org/x/tools v0.53.0
 	google.golang.org/grpc v1.85.0
 	google.golang.org/protobuf v1.36.12
 	gorm.io/gorm v1.31.2
-	modernc.org/sqlite v1.62.0
+	modernc.org/sqlite v1.63.0
 )
 
 require (
+	filippo.io/nistec v0.0.4 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
-	github.com/andybalholm/cascadia v1.3.4 // indirect
+	github.com/andybalholm/cascadia v1.3.5 // indirect
 	github.com/antihax/optional v1.0.0 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/azihsoyn/rijndael256 v0.0.0-20200316065338-d14eefa2b66b // indirect

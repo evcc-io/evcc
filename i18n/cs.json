@@ -9,7 +9,8 @@
     "buttonDisconnect": "Odpojit",
     "challenge": {
       "captcha": {
-        "label": "Zadejte znaky zobrazené na obrázku."
+        "label": "Zadejte znaky zobrazené na obrázku.",
+        "title": "Captcha ověření"
       },
       "code": {
         "label": "Vložte kód nebo adresu stránky, na kterou jste byli přesměrováni.",
@@ -41,12 +42,12 @@
       "holdDischarge": "vybíjení zamčené",
       "ofTotal": "ze {total}",
       "power": "Výkon",
-      "soc": "Nabití baterie"
+      "soc": "Nabití"
     },
     "combined": "Kombinovaný",
     "config": {
-      "buffer": "Baterie FVE nabitá nad {soc} může být použita k podpoře nabíjení a pomůže oddálit pozastavení nabíjení v solárním režimu při nedostatečném výkonu. Zahájí solární nabíjení automaticky {start}.",
-      "bufferNone": "Energie uložená v baterii není využita pro nabíjení. Nastavte hodnotu pod {soc} abyste využití povolili.",
+      "buffer": "Baterie domu nabitá nad {soc} může být použita k podpoře nabíjení a pomůže oddálit pozastavení nabíjení v chytrém režimu při nedostatečném výkonu. Zahájí solární nabíjení automaticky {start}. Poznámka: Volba \"Plynule nabíjet\" toto nastavení ignoruje.",
+      "bufferNone": "Energie uložená v domácí baterii není využita pro nabíjení. Nastavte hodnotu pod {soc} abyste využití povolili v chytrém režimu. Poznámka: Volba \"Plynule nabíjet\" toto nastavení ignoruje.",
       "bufferStart": {
         "above": "jakmile má baterie stav nabití nad {soc}",
         "full": "jakmile je baterie plně nabitá",
@@ -145,11 +146,13 @@
       "template": "Výrobce",
       "titleAdd": {
         "charging": "Přidat nabíječku",
-        "heating": "Přidat zařízení pro vytápění"
+        "heating": "Přidat zařízení pro vytápění",
+        "switch": "Přidat chytrou zásuvku"
       },
       "titleEdit": {
         "charging": "Upravit nabíječku",
-        "heating": "Upravit zařízení pro vytápění"
+        "heating": "Upravit zařízení pro vytápění",
+        "switch": "Upravit chytrou zásuvku"
       },
       "type": {
         "custom": {
@@ -167,17 +170,17 @@
       "addMeter": "Přidat samostatný měřič energie",
       "custom": "Uživatelem definovaný okruh",
       "deleteChildrenFirst": "Pro smazání tohoto okruhu nejprve smažte jeho podřízené okruhy.",
-      "meterDedicated": "Samostatný měřič",
-      "meterGrid": "Měřič sítě",
+      "meterDedicated": "Samostatný elektroměr",
+      "meterGrid": "Elektroměr",
       "meterHelp": "Měřič, který měří celkovou spotřebu tohoto okruhu.",
       "meterLabel": "Elektroměr",
       "meterLabelAdd": "Přidat měřič okruhu",
       "meterLabelEdit": "Upravit měřič okruhu",
-      "meterNone": "Bez měřiče",
-      "meterSelectionHelpDedicatedMeter": "Níže přidejte k tomuto okruhu existující měřič.",
-      "meterSelectionHelpGridMeter": "Použije stávající měřič sítě vaší instalace.",
+      "meterNone": "Bez elektroměru",
+      "meterSelectionHelpDedicatedMeter": "Níže přidejte k tomuto okruhu existující elektroměr.",
+      "meterSelectionHelpGridMeter": "Použije stávající elektroměr vaší instalace.",
       "meterSelectionHelpNoMeter": "Použije se součet všech nabíjecích bodů.",
-      "meterSelectionLabel": "Výběr měřiče",
+      "meterSelectionLabel": "Výběr elektroměru",
       "parentCircuit": "Nadřazený okruh",
       "template": "Okruh",
       "titleAdd": "Přidat okruh",
@@ -185,12 +188,22 @@
       "titleLabel": "Název"
     },
     "circuits": {
-      "addMainCircuit": "Přidat hlavní okruh",
+      "addMainCircuit": "Přidat zdrojový okruh",
       "addSubCircuit": "Přidat podřízený okruh",
-      "description": "Zajišťuje, že součet všech nabíjecích bodů připojených k danému okruhu nepřekročí nastavené limity výkonu a proudu. Okruhy lze vnořovat a vytvářet tak hierarchii.",
-      "legacyWarning": "K dispozici je nová konfigurace okruhů! Odeberte a uložte zde svou konfiguraci, abyste mohli použít nový průvodce.",
-      "meterDedicated": "Měřič",
+      "assignHere": "Přiřadit zde",
+      "assignmentFailed": "Nebylo možné výběr uložit. Zkuste to znovu.",
+      "description": "Zajišťuje, že součet všech nabíjecích bodů/topení připojených k danému okruhu nepřekročí nastavené limity výkonu a proudu. Okruhy lze vnořovat a vytvářet tak hierarchii.",
+      "destination": "Okruh {title}",
+      "dragHint": "Přesuňte na požadovaný okruh nebo stiskněte pro výběr.",
+      "dropAssign": "Pusť pro přiřazení",
+      "dropRemove": "Přesuňte sem pro odebrání z přiřazeného okruhu.",
+      "legacyWarning": "K dispozici je nová konfigurace okruhů! Odeberte a uložte zde svou konfiguraci, abyste mohli použít nový průvodce. Bude potřeba restart.",
+      "meterDedicated": "Elektroměr",
       "meterGrid": "Síť",
+      "moveHere": "Přesunout sem",
+      "notAssigned": "Nepřiřazeno",
+      "selectAssign": "Klikněte na okruh pro přiřazení {title}.",
+      "selectMove": "Klikněte na okruh pro přesun {title}, nebo pro odstranění.",
       "title": "Řízení zátěže",
       "usableMeters": "Použitelné elektroměry"
     },
@@ -203,13 +216,13 @@
       "used": "již použito"
     },
     "consumer": {
-      "description": "Sleduje menší, neovladatelná zařízení (ledničky, pračky, ...). Dá vám lepší přehled o spotřebě vaší domácnosti.",
+      "description": "Sleduje menší, neovladatelná zařízení (ledničky, pračky, ...). Dá vám lepší přehled o vaší spotřebě.",
       "titleAdd": "Přidat elektroměr spotřebiče",
       "titleEdit": "Upravit elektroměr spotřebiče"
     },
     "control": {
       "description": "Obvykle jsou výchozí hodnoty správné. Měňte je jen pokud víte, co děláte.",
-      "descriptionInterval": "Aktualizační cyklus v sekundách. Určuje, jak často evcc čte data z měřiče a upravuje nabíjení. Výchozí hodnota 30 sekund je bezpečná volba. Zařízení jako vozidla, nástěnné skříňky a střídače obvykle potřebují několik sekund, aby upravila své chování. Pokud vaše komponenty reagují rychle, můžete použít nižší hodnoty. Důrazně doporučujeme nepřekračovat hodnotu 10 sekund. Pokud pozorujete nepravidelné chování ovládání nebo skokové hodnoty výkonu, zvolte větší interval.",
+      "descriptionInterval": "Aktualizační cyklus v sekundách. Určuje, jak často evcc čte data z měřiče a upravuje nabíjení. Výchozí hodnota 30 sekund je bezpečná volba. Zařízení jako vozidla, nabíjecí stanice a střídače obvykle potřebují několik sekund, aby upravila své chování. Pokud vaše komponenty reagují rychle, můžete použít nižší hodnoty. Důrazně doporučujeme nepřekračovat hodnotu 10 sekund. Pokud pozorujete nepravidelné chování ovládání nebo skokové hodnoty výkonu, zvolte větší interval.",
       "descriptionResidualPower": "Posouvá pracovní bod regulační smyčky. Pokud máte domácí baterii, doporučuje se nastavit hodnotu 100 W. Tím získá baterie mírnou prioritu před spotřebou ze sítě.",
       "labelInterval": "Interval aktualizace",
       "labelResidualPower": "Zbytkový výkon",
@@ -230,12 +243,21 @@
       "titleAdd": "Přidat zařízení omezující výkon",
       "titleEdit": "Upravit zařízení omezující výkon"
     },
+    "deviceRef": {
+      "add": {
+        "charger": "Přidat nabíjecí zařízení",
+        "meter": "Přidat elektroměr",
+        "switch": "Přidat chytrou zásuvku",
+        "tariff": "Přidat tarif"
+      },
+      "noNesting": "Limitováno jen na jednu úroveň. Vyberte jinou možnost."
+    },
     "deviceValue": {
       "activeClients": "Aktivní klienti",
       "amount": "Množství",
       "asleep": "standby",
       "broker": "Zprostředkovatel",
-      "bucket": "Úložiště (bucket)",
+      "bucket": "Úložiště/Databáze (bucket)",
       "capacity": "Kapacita",
       "chargeStatus": "Stav",
       "chargeStatusA": "nepřipojeno",
@@ -243,7 +265,7 @@
       "chargeStatusC": "Nabíjení",
       "chargeStatusE": "žádný výkon",
       "chargeStatusF": "chyba",
-      "chargedEnergy": "Nabito",
+      "chargedEnergy": "Nabito (relace)",
       "co2": "CO₂ ze sítě",
       "configured": "Nastaveno",
       "connected": "Připojeno",
@@ -252,9 +274,9 @@
       "currency": "Měna",
       "current": "Proud",
       "currentRange": "Proud",
-      "curtailLimit": "Limit dodávky energie",
+      "curtailLimit": "Limit dodávky energie do sítě",
       "curtailable": "Omezitelné",
-      "curtailed": "Limit exportu",
+      "curtailed": "Limit dodávky energie do sítě",
       "detected": "Detekováno",
       "dimLimit": "Limit spotřeby",
       "dimmed": "Spotřeba snížena",
@@ -262,9 +284,9 @@
       "energy": "Energie",
       "events": "Události",
       "exportLimit": "Limit exportu do sítě",
-      "feedinPrice": "Cena za výkup energie",
+      "feedinPrice": "Výkupní cena elektřiny do sítě",
       "forecast": "Předpověď",
-      "gridPrice": "Cena ze sítě",
+      "gridPrice": "Cena elektřiny ze sítě",
       "heaterTempLimit": "Limit topení",
       "identifier": "RFID identifikátor",
       "loginBlocked": "Dosažen limit přihlášení",
@@ -273,7 +295,7 @@
       "maxPower": "Max. výkon",
       "messengers": "Služby",
       "no": "ne",
-      "odometer": "Ujetých km",
+      "odometer": "Nájezd",
       "org": "Organizace",
       "outdoorTemp": "Venkovní teplota",
       "phaseCurrents": "Proud",
@@ -308,18 +330,26 @@
           "returnEnergy": "Vybito"
         },
         "consumer": {
+          "chargeStatusB": "pohotovostní režim",
+          "chargeStatusC": "Vytápění",
           "energy": "Spotřebováno",
           "returnEnergy": "Vyrobeno"
         },
+        "continuous": {
+          "chargeStatusB": "normální",
+          "chargeStatusC": "Boost",
+          "dimmed": "Utlumeno",
+          "enabled": "Boost"
+        },
         "grid": {
-          "energy": "Odebráno",
-          "returnEnergy": "Dodáno"
+          "energy": "Odebráno ze sítě",
+          "returnEnergy": "Dodáno do sítě"
         },
         "pv": {
           "energy": "Vyrobeno"
         }
       },
-      "vehicleLimitSoc": "Limit nabíjení",
+      "vehicleLimitSoc": "Limit vozidla",
       "yes": "ano"
     },
     "deviceValueChargeStatus": {
@@ -329,8 +359,9 @@
     },
     "devices": {
       "auxMeter": "Chytrý spotřebič",
-      "batteryStorage": "Bateriové úložiště",
+      "batteryStorage": "Domácí baterie",
       "consumer": "Spotřebič",
+      "extMeter": "Externí elektroměr",
       "solarSystem": "Fotovoltaický systém"
     },
     "editor": {
@@ -343,26 +374,26 @@
         "title": "Ověřovací klíče"
       },
       "configuredDevices": "Nakonfigurovaná zařízení",
-      "description": "Nastavení, které umožňuje evcc komunikovat s dalšími zařízeními komunikujícími skrze EEBus jako např. nabíjecí stanice, nebo chytré řízení vašeho poskytovatele energie. Všechny kroky inicializace a generování priv./veř. klíčů proběhne automaticky při prvním spuštění.",
+      "description": "Nastavení, které umožňuje evcc komunikovat s dalšími zařízeními komunikujícími skrze EEBUS jako např. nabíjecí stanice, nebo chytré řízení vašeho poskytovatele energie. Všechny kroky inicializace a generování priv./veř. klíčů proběhne automaticky při prvním spuštění.",
       "descriptionAdvanced": "Žádné změny nejsou běžně potřeba. Provádějte změny, jen pokud víte co děláte. Pokud změníte SHIP identifikátor nebo klíče, bude nutné opětovně propojit zařízení.",
       "interfaces": "Rozhraní",
-      "interfacesHelp": "Omezte síťová rozhraní, která může EEBus protokol použít abyste předešli problémům. Ponechte prázdné pro použití všech rozhrazení. Jeden vstup - jeden řádek.",
+      "interfacesHelp": "Omezte síťová rozhraní, která může EEBUS protokol použít abyste předešli problémům. Ponechte prázdné pro použití všech rozhrazení. Jeden vstup - jeden řádek.",
       "noConfiguredDevices": "Žádná zařízení nejsou konfigurována s pomocí SKI.",
       "noPairings": "Žádná spárovaná zařízení.",
       "pairings": "Spárovaná zařízení",
       "port": "Port",
       "portHelp": "Port k využití.",
       "qr": "Párovácí kód",
-      "qrExplain": "Skenovat z jiného zařízení EEBus během instalace pro automatické spárování, bez zadávání SKI manuálně.",
-      "removeConfirm": "Všechna konfigurace EEBus bude odebrána. Nové certifikáty a identifikátory budou vygenerovány při dalším spuštění. Chcete pokračovat?",
+      "qrExplain": "Skenovat z jiného zařízení EEBUS během instalace pro automatické spárování, bez zadávání SKI manuálně.",
+      "removeConfirm": "Všechna konfigurace EEBUS bude odebrána. Nové certifikáty a identifikátory budou vygenerovány při dalším spuštění. Chcete pokračovat?",
       "removePairing": "Odstranit párování",
       "removePairingConfirm": "Zařízení bude odpojeno a musí být znovu spárováno. Chcete pokračovat?",
       "shipid": "SHIP-ID",
-      "shipidExplain": "Stálý identifikátor zařízení sloužící pro identifikaci v rámci sítě EEBus.",
+      "shipidExplain": "Stálý identifikátor zařízení sloužící pro identifikaci v rámci sítě EEBUS.",
       "shipidHelp": "Toto SHIP-ID je spojeno s certifikáty níže.",
       "ski": "SKI",
-      "skiExplain": "Unikátní bezpečnostní identifikátor pro párování s EEBus zařízeními.",
-      "title": "EEBus"
+      "skiExplain": "Unikátní bezpečnostní identifikátor pro párování s EEBUS zařízeními.",
+      "title": "EEBUS"
     },
     "experimental": {
       "description": "Povolí přístup k funkcím, které jsou stále testovány. Mohou se v budoucích verzích změnit, nebo být úplně odebrány a nemusí být plně a spolehlivě funkční.",
@@ -437,7 +468,7 @@
     },
     "grid": {
       "title": "Měřič sítě",
-      "titleAdd": "Přidat měřič spotřeby ze sítě",
+      "titleAdd": "Přidat elektroměr sítě",
       "titleEdit": "Editovat měřič spotřeby ze sítě"
     },
     "hems": {
@@ -477,7 +508,7 @@
     "influx": {
       "description": "Zapisuje údaje o nabíjení a další metriky do InfluxDB. K vizualizaci dat použijte Grafanu nebo jiné nástroje.",
       "descriptionToken": "Podívejte se do dokumentace InfluxDB, kde se dozvíte, jak ji vytvořit: https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Úložiště (bucket)",
+      "labelBucket": "Úložiště/Databáze (bucket)",
       "labelCheckInsecure": "Povolit self-signed certifikáty",
       "labelDatabase": "Databáze",
       "labelInsecure": "Ověření certifikátu",
@@ -488,14 +519,14 @@
       "labelUser": "Uživatelské jméno",
       "title": "InfluxDB",
       "v1Support": "Potřebujete podporu pro InfluxDB verze 1.x?",
-      "v2Support": "Zpět na InfluxDB verze 2.x"
+      "v2Support": "Zpět na InfluxDB verze 2+"
     },
     "loadpoint": {
       "addCharger": {
         "charging": "Přidat nabíječku",
         "heating": "Přidat zařízení pro vytápění"
       },
-      "addMeter": "Přidat samostatný měřič energie",
+      "addMeter": "Přidat elektroměr",
       "advancedConfig": "Pokročilá konfigurace",
       "cancel": "Zrušit",
       "chargerError": {
@@ -521,7 +552,7 @@
       },
       "currentRangeHelp": {
         "charging": "Obvykle: 6-16 A pro 11 kW, 6-32 A pro 22 kW nabíječky (3 fáze).",
-        "heating": "Závisí na jmenovitém výkonu topného zařízení (viz datový list)."
+        "heating": "Závisí na jmenovitém výkonu topného zařízení (zkontrolujte technické parametry)."
       },
       "defaultModeHelp": {
         "charging": "Režim nabíjení po připojení vozidla.",
@@ -531,10 +562,21 @@
       "defaultModeKeep": "ponechat",
       "defaultModeLabel": "Výchozí režim",
       "delete": "Smazat",
+      "demandPredictor": {
+        "daily": {
+          "description": "Průměr posledních dní. Pro zařízení se stejným chováním každý den.",
+          "label": "Denní průměr"
+        },
+        "defaultGroup": "Výchozí pro dané zařízení",
+        "description": "Jak optimalizátor předpovídá budoucí spotřebu na základě předchozí.",
+        "label": "Profil",
+        "noTempTariff": "Vyžaduje předpověď teploty.",
+        "noTempTariffLink": "Přidat předpovědní model"
+      },
       "electricalSubtitle": "Pokud váháte, konzultujte se svým elektrikářem.",
       "electricalTitle": "Elektřina",
       "energyMeterHelp": "Doplňkový měřič, pokud nabíječka nemá integrovaný.",
-      "energyMeterLabel": "Elektroměr",
+      "energyMeterLabel": "Přiřazený elektroměr",
       "estimateLabel": "Odhadovat úroveň nabití vozu mezi aktualizacemi z API",
       "maxCurrentHelp": "Musí být větší než nastavený minimální proud.",
       "maxCurrentLabel": "Maximální proud",
@@ -612,7 +654,7 @@
       "addAdditional": "Přidat další měřič",
       "addConsumer": "Přidat spotřebitele",
       "addCurtailer": "Přidat omezující zařízení",
-      "addGrid": "Přidat měřič spotřeby ze sítě",
+      "addGrid": "Přidat elektroměr sítě",
       "addLoadpoint": "Přidejte nabíjecí místo nebo topení",
       "addPvBattery": "Přidat solar nebo baterii",
       "addTariffs": "Přidat tarify",
@@ -725,7 +767,7 @@
         "aux": "Chytrý bojler apod.",
         "battery": "Sklep, garáž, powerstation apod.",
         "consumer": "Myčka, pračka, čerpadlo bazénu apod.",
-        "pv": "Jižní střecha, přístřešek apod."
+        "pv": "Střecha, přístřešek apod."
       },
       "titleLabel": "Název",
       "usage": {
@@ -734,7 +776,7 @@
         "charge": "Nabíjecí stanice",
         "grid": "Distribuční síť",
         "label": "Využití",
-        "pv": "Produkce"
+        "pv": "Výroba"
       },
       "validateSave": "Zkontrolovat a uložit"
     },
@@ -875,7 +917,7 @@
       "controls": "Řídí",
       "description": "Analyzuje solární předpověď, ceny elektřiny a vaše vzorce spotřeby, aby optimalizoval strategii baterie a nabíjení. Data jsou odesílána do optimalizační služby evcc ke zpracování. Aktuálně pouze počítá a vizualizuje. Zařízení zatím neovládá.",
       "enable": "Povolit optimalizátor",
-      "info": "Může trvat několik minut, než se položka nabídky optimalizátoru zobrazí. U nových instalací může trvat až 24 hodin, než evcc shromáždí dostatek dat.",
+      "info": "U nových instalací může trvat až 24 hodin, než evcc shromáždí dostatek dat.",
       "linkWord": "optimalizátor",
       "title": "Optimalizátor"
     },
@@ -991,7 +1033,7 @@
           "3p3w": "Síť bez neutrálního vodiče. Běžná v Norsku a části Belgie.",
           "3p4w": "Nejběžnější síť s neutrálním vodičem."
         },
-        "label": "Připojení k síti"
+        "label": "Připojení k distribuční síti"
       },
       "siteTitle": {
         "description": "Zobrazuje se na hlavní obrazovce a v záložce prohlížeče.",
@@ -1104,13 +1146,13 @@
         "temperature": "Předpověď teploty"
       },
       "planner": {
-        "description": "Pokročilá nastavení. Většinou není nutné použít, protože dynamický tarif elektřiny nebo předpověď uhlíkové stopy jsou použity automaticky. Přidávají možnost dalších zdrojů dat, které jsou použity pro plánovač nabíjení ale ne pro statistiky a výpočet cen.",
+        "description": "Toto pokročilé nastavení není obvykle zapotřebí. Předpovědi plánovač slouží jako základ pro nabíjecí plány a levné nebo bezemisní dodávku z distribuční sítě (vozidla, topení, nabíjení domácí baterie). Bez ní se používá spotová cena nebo předpověď CO2. Statistika, náklady výpočty a optimalizace rozhodnutí nejsou ovlivněny.",
         "titleAdd": "Přidat předpověď plánovače",
         "titleEdit": "Upravit předpověď plánovače"
       },
       "services": "Služby",
       "solar": {
-        "description": "Předpověď výroby pro Vaši fotovoltaiku. Zobrazeno v uživatelském rozhraní a v budoucnu využito také optimalizačními algoritmy.",
+        "description": "Předpověď výroby pro Vaši fotovoltaiku. Zobrazeno v uživatelském rozhraní a využito také optimalizačními algoritmy.",
         "titleAdd": "Přidat předpověď fotovoltaiky",
         "titleEdit": "Upravit předpověď fotovoltaiky",
         "titleExample": "Jižní střecha, přístřešek apod."
@@ -1201,7 +1243,7 @@
     "direction": {
       "battery": {
         "energy": "nabito",
-        "returnEnergy": "vybito"
+        "returnEnergy": "Vybito"
       },
       "grid": {
         "energy": "nakoupeno z distribuce",
@@ -1233,7 +1275,7 @@
       "cost": "Náklady za síť",
       "energy": "Energie",
       "exportPrice": "Výkupní cena",
-      "import": "Odběr",
+      "import": "Nakoupeno z distribuce",
       "importPrice": "Cena odběru",
       "price": "Cena",
       "revenue": "Výnos z výkupu",
@@ -1307,7 +1349,7 @@
     },
     "savings": {
       "co2Saved": "{value} uchováno",
-      "co2Title": "CO₂ emise",
+      "co2Title": "Emise CO₂",
       "configurePriceCo2": "Zjistit jak nastavit cenu a data CO₂.",
       "footerLong": "{percent} solární energie",
       "footerShort": "{percent} solár",
@@ -1558,7 +1600,7 @@
   "main": {
     "alwaysCharge": {
       "description": "bez přerušení",
-      "label": "Vždy nabíjet",
+      "label": "Plynule nabíjet",
       "labelHeating": "Vždy topit",
       "minCurrent": "min. {current}",
       "once": "do konce relace",
@@ -1653,12 +1695,14 @@
       "avgPrice": "⌀ Cena",
       "charged": "Nabito",
       "co2": "⌀ CO₂",
+      "consumed": "Spotřebováno",
       "duration": "Doba trvání",
       "emission": "Emise",
       "fallbackName": "Nabíjecí bod",
       "finished": "Čas dokončení",
       "last24hEnergy": "Posledních 24h",
       "last7dEnergy": "Poslední 7 dní",
+      "last7dShort": "7 dní",
       "phasesMismatch": "Aktivních je více fází, než je nastaveno. Zkontrolujte nastavení fází.",
       "power": "Výkon",
       "price": "Náklad",
@@ -1674,7 +1718,7 @@
         "descriptionDisabled": "Zvolte limit pro povolení rychlého dobití z baterie FVE.",
         "disabled": "Zakázáno",
         "label": "Rychlé dobití",
-        "mode": "Dostupné pouze v solárním režimu a režimu min+solar.",
+        "mode": "Dostupné pouze v chytrém režimu.",
         "once": "Rychlé dobití je aktivováno pro tuto nabíjecí relaci.",
         "stateActive": "Rychlé dobití aktivní",
         "stateBelowLimit": "Baterie má příliš nízký stav nabití pro funkci rychlého dobití",
@@ -1709,12 +1753,12 @@
       "solar": "Solární přebytek",
       "solarShare": {
         "charging": {
-          "description": "Alespoň {share} minimálního nabíjecího výkonu musí pocházet ze solární energie.",
+          "description": "Alespoň {share} minimálního nabíjecího výkonu musí pocházet ze solárních přebytků.",
           "descriptionFull": "Nabíjení začne, jakmile přebytek pokryje minimální nabíjecí výkon.",
           "descriptionZero": "Nabíjení začne, jakmile je k dispozici nějaký přebytek."
         },
         "heating": {
-          "description": "Alespoň {share} minimálního topného výkonu musí pocházet ze solární energie.",
+          "description": "Alespoň {share} minimálního topného výkonu musí pocházet ze solárních přebytků.",
           "descriptionFull": "Topení začne, jakmile přebytek pokryje minimální topný výkon.",
           "descriptionZero": "Topení začne, jakmile je k dispozici nějaký přebytek."
         },
@@ -1893,17 +1937,17 @@
       "title": "Co chcete ovládat?"
     },
     "done": {
-      "close": "Do konfigurace",
+      "close": "Pokračovat ke konfiguraci",
       "description": "Konfigurace se použije po restartu. Poté můžete prozkoumat funkce. Vozidla, tarify a další lze přidat kdykoli.",
       "restart": "Restartovat",
       "title": "Je hotovo"
     },
     "grid": {
-      "add": "Přidat měřič sítě",
+      "add": "Přidat elektroměr sítě",
       "confirm": "Měřič sítě je základem pro nabíjení z přebytků a statistiky energie. Doporučujeme jej přidat.",
       "confirmNone": "Pokračovat bez něj",
       "description": "Měří odběr ze sítě i dodávku do sítě v bodě připojení. Zpřesňuje nabíjení z přebytků.",
-      "none": "Bez měřiče sítě",
+      "none": "Bez elektroměru připojení k distribuci",
       "title": "Máte měřič sítě?"
     },
     "item": {
@@ -2136,7 +2180,7 @@
     "saved": "Uloženo."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Doba pozastavení",
+    "activeHoursLabel": "Aktivní čas",
     "batteryDescription": "Vybíjí domácí baterii do sítě, dokud je cena výkupu vysoká.",
     "description": "Pozastaví nabíjení pro maximalizaci výdělečné dodávky do distribuční sítě.",
     "priceLabel": "Cena výkupu energie",

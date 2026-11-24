@@ -14,4 +14,5 @@ jobs:
     with:
       addon_path: evcc
       include_unreleased: false
-    secrets: inherit
+    secrets:
+      HASSIO_DEPLOY_TOKEN: ${{ secrets.HASSIO_DEPLOY_TOKEN }}

@@ -47,7 +47,7 @@
     "combined": "Birleşik",
     "config": {
       "buffer": "{soc} üzerindeki ev bataryası enerjisi, doldurma noktalarını desteklemek için kullanılabilir ve akıllı modda kapanmayı geciktirir. Güneş enerjisiyle doldurmayı otomatik olarak başlatır {start}. Not: “Hep doldur” bu ayarı yok sayar.",
-      "bufferNone": "Doldurma noktaları için ev bataryasından enerji kullanılmamaktadır. Desteği etkinleştirmek için {soc} değerinden daha düşük bir değer ayarla.",
+      "bufferNone": "Ev bataryasındaki enerji, doldurma noktaları için kullanılmaz. Akıllı modda desteği etkinleştirmek için {soc} değerinin altında bir değer belirle. Not: “Hep doldur” bu ayarı göz ardı eder.",
       "bufferStart": {
         "above": "batarya doluluk seviyesi {soc} oranının üzerine çıktığında",
         "full": "batarya dolduğunda",
@@ -192,12 +192,12 @@
       "addSubCircuit": "Alt devre ekle",
       "assignHere": "Buraya ata",
       "assignmentFailed": "Atama kaydedilemedi. Lütfen tekrar dene.",
-      "description": "Bir devreye bağlı tüm yük noktalarının toplamının, yapılandırılan güç ve akım limitlerini aşmamasını sağlar. Devreler, bir hiyerarşi oluşturacak şekilde iç içe yerleştirilebilir.",
+      "description": "Bir devreye bağlı tüm doldurma noktaları ve ısıtıcıların toplamının, yapılandırılan güç ve akım sınırlarını aşmamasını sağlar. Devreler, hiyerarşik bir yapı oluşturmak için iç içe yerleştirilebilir.",
       "destination": "Devre {title}",
       "dragHint": "Bir devrenin üzerine sürükle veya seçmek için dokun.",
       "dropAssign": "Atamak için bırak",
       "dropRemove": "Devresinden çıkarmak için buraya bırak",
-      "legacyWarning": "Yeni devre yapılandırması kullanıma sunuldu! Yeni adım adım kılavuzlu süreci kullanmak için yapılandırmanı buradan sil ve kaydet.",
+      "legacyWarning": "Yeni devre yapılandırması kullanıma sunuldu! Yeni adım adım kılavuzlu süreci kullanmak için yapılandırmanı buradan sil ve kaydet. Ardından sistemi yeniden başlatman gerekir.",
       "meterDedicated": "Sayaç",
       "meterGrid": "Şebeke",
       "moveHere": "Buraya taşı",
@@ -208,15 +208,15 @@
       "usableMeters": "Kullanılabilir sayaç referansları"
     },
     "combobox": {
-      "count": "{count} öneri",
-      "matching": "Eşleşenler",
+      "count": "{count} öneriler",
+      "matching": "Uyumlu",
       "other": "Diğer",
       "searching": "Aranıyor…",
       "suggestions": "Öneriler",
-      "used": "zaten kullanılıyor"
+      "used": "önceden kullanılmış"
     },
     "consumer": {
-      "description": "Daha küçük, yönetilemeyen cihazları (buzdolabı, çamaşır makinesi, ...) takip eder. Evindeki tüketim hakkında daha iyi bir genel bakış sağlar.",
+      "description": "Daha küçük, yönetilemeyen cihazları (buzdolabı, çamaşır makinesi, ...) takip eder. Böylece tüketimin hakkında daha iyi bir genel bakış sağlar.",
       "titleAdd": "Tüketici Sayacı Ekle",
       "titleEdit": "Tüketici Sayacını Düzenle"
     },
@@ -235,7 +235,7 @@
       "title": "Para birimi"
     },
     "curtailer": {
-      "description": "Şebeke işletmecisinin talebi üzerine şebekeye beslemeyi sınırlayan cihaz (§ 9 EEG). Birçok güneş enerjisi eviricisi, GES sayacı yapılandırması aracılığıyla bunu doğrudan destekler. Ayrı bir yapılandırma yalnızca bazı üreticiler veya çoklu evirici sistemleri için gereklidir.",
+      "description": "Şebeke işletmecisinin talebi üzerine şebekeye enerji vermeyi sınırlayan cihaz (§ 9 EEG). Birçok güneş enerjisi eviricisi, GES sayacı yapılandırması aracılığıyla bunu doğrudan destekler. Ayrı bir yapılandırma yalnızca bazı üreticiler veya çoklu evirici sistemleri için gereklidir.",
       "generic": "Genel birleşimler",
       "specific": "Özel birleşimler",
       "template": "Üretici",
@@ -257,7 +257,7 @@
       "amount": "Miktar",
       "asleep": "uyuyor",
       "broker": "Aracı",
-      "bucket": "Kova",
+      "bucket": "Kova / Veritabanı",
       "capacity": "Kapasite",
       "chargeStatus": "Durum",
       "chargeStatusA": "bağlı değil",
@@ -274,9 +274,9 @@
       "currency": "Para Birimi",
       "current": "Akım",
       "currentRange": "Akım",
-      "curtailLimit": "Şebekeye satış sınırı",
+      "curtailLimit": "Şebekeye enerji verme sınırı",
       "curtailable": "Kısıtlanabilir",
-      "curtailed": "Şebekeye satış sınırı",
+      "curtailed": "Şebekeye enerji verme sınırı",
       "detected": "Algılandı",
       "dimLimit": "Tüketim sınırı",
       "dimmed": "Tüketim sınırlı",
@@ -284,9 +284,9 @@
       "energy": "Enerji",
       "events": "Etkinlikler",
       "exportLimit": "Şebekeye satış sınırı",
-      "feedinPrice": "Satış fiyatı",
-      "forecast": "Tahmin",
-      "gridPrice": "Alım fiyatı",
+      "feedinPrice": "Şebekeye enerji verme fiyatı",
+      "forecast": "Öngörü",
+      "gridPrice": "Şebekeden enerji alma fiyatı",
       "heaterTempLimit": "Isıtıcı sınırlaması",
       "identifier": "RFID tanımlayıcısı",
       "loginBlocked": "Giriş sınırına ulaşıldı",
@@ -311,7 +311,7 @@
       "returnEnergy": "Enerji (ters)",
       "singlePhase": "“Tek aşamalı”",
       "soc": "Doluluk",
-      "solarForecast": "Güneş tahmini",
+      "solarForecast": "Güneş öngörüsü",
       "switchDevice": "Akım yönetimi",
       "temp": "Isı",
       "topic": "Konu",
@@ -349,7 +349,7 @@
           "energy": "Üretilen"
         }
       },
-      "vehicleLimitSoc": "Doldurma sınırı",
+      "vehicleLimitSoc": "Araç sınırı",
       "yes": "evet"
     },
     "deviceValueChargeStatus": {
@@ -358,8 +358,8 @@
       "C": "“C (dolduruyor)”"
     },
     "devices": {
-      "auxMeter": "“Akıllı tüketici”",
-      "batteryStorage": "“Batarya”",
+      "auxMeter": "Kendi kendini düzenleyen tüketici",
+      "batteryStorage": "Ev bataryası",
       "consumer": "Tüketici",
       "extMeter": "Ek sayaç",
       "solarSystem": "“Güneş Enerji Sistemi”"
@@ -374,33 +374,33 @@
         "title": "Sertifikalar"
       },
       "configuredDevices": "Yapılandırılmış cihazlar",
-      "description": "EVCC'nin doldurma cihazları veya şebeke operatörünüzün kontrol ünitesi gibi EEBus uyumlu cihazlarla iletişim kurmasını sağlayan yapılandırma. İlgili tüm başlatma ve sertifika oluşturma işlemleri ilk başlatmada otomatik olarak gerçekleştirilir.",
+      "description": "EVCC'nin doldurma cihazları veya şebeke operatörünüzün kontrol ünitesi gibi EEBUSuyumlu cihazlarla iletişim kurmasını sağlayan yapılandırma. İlgili tüm başlatma ve sertifika oluşturma işlemleri ilk başlatmada otomatik olarak gerçekleştirilir.",
       "descriptionAdvanced": "Değişiklik yapmaya gerek yok. Yalnızca ne yaptığını gerçekten biliyorsan değişiklik yap. SHIP kimliğini veya sertifikaları değiştirirsen, cihazlarını yeniden eşleştirmen gerekir.",
       "interfaces": "Arayüzler",
-      "interfacesHelp": "İletişim sorunlarını önlemek için EEBus'un kullanacağı ağ arayüzlerini sınırla. Tüm arayüzleri kullanmak için alanı boş bırak. Her satıra bir giriş yap.",
+      "interfacesHelp": "İletişim sorunlarını önlemek için EEBUS'un kullanacağı ağ arayüzlerini sınırla. Tüm arayüzleri kullanmak için alanı boş bırak. Her satıra bir giriş yap.",
       "noConfiguredDevices": "SKI tarafından yapılandırılmış cihaz yok.",
       "noPairings": "Eşleştirilmiş cihaz yok.",
       "pairings": "Eşleştirilmiş cihazlar",
       "port": "Port",
       "portHelp": "Kullanılacak port.",
       "qr": "Eşleştirme kodu",
-      "qrExplain": "Kurulum sırasında başka bir EEBus cihazını tarayarak, SKI kodunu girmeden otomatik olarak eşleştir.",
-      "removeConfirm": "Tüm EEBus yapılandırmaları kaldırılacak. Bir sonraki başlatmada yeni sertifikalar ve tanımlayıcılar oluşturulacak. Emin misin?",
+      "qrExplain": "Kurulum sırasında başka bir EEBUS cihazını tarayarak, SKI kodunu girmeden otomatik olarak eşleştir.",
+      "removeConfirm": "Tüm EEBUS yapılandırmaları kaldırılacak. Bir sonraki başlatmada yeni sertifikalar ve tanımlayıcılar oluşturulacak. Emin misin?",
       "removePairing": "Eşleştirmeyi kaldır",
       "removePairingConfirm": "Cihazın bağlantısı kesilecek ve yeniden eşleştirilmesi gerekecek. Emin misin?",
       "shipid": "SHIP-ID",
-      "shipidExplain": "EEBus ağında tanımlama için kalıcı cihaz tanımlayıcı.",
+      "shipidExplain": "EEBUS ağında tanımlama için kalıcı cihaz tanımlayıcı.",
       "shipidHelp": "Bu SHIP-ID, aşağıdaki sertifikalarla bağlantılı.",
       "ski": "SKI",
-      "skiExplain": "EEBus cihazlarını eşleştirmek için benzersiz güvenlik tanımlayıcı.",
-      "title": "EEBus"
+      "skiExplain": "EEBUS cihazlarını eşleştirmek için benzersiz güvenlik tanımlayıcı.",
+      "title": "EEBUS"
     },
     "experimental": {
       "description": "Hala test aşamasında olan özelliklere erken erişim sağlar. Bu özellikler istikrarsız olabilir ve gelecek sürümlerde değiştirilebilir veya kaldırılabilir.",
       "title": "Deneysel"
     },
     "ext": {
-      "description": "Kontrol edilemeyen tüketicilerin (örneğin buzdolabı, çamaşır makinesi vb.) enerji değerlerini istatistiksel amaçlarla kaydeder. Bu sayaçlar yük yönetimi (örneğin alt dağıtım) için de kullanılabilir.",
+      "description": "Düzenleme amacıyla kullanılmayan veya kullanıcı arayüzünde gösterilmeyen sayaçları (alt dağıtım sayaçları, alternatif şebeke veya güneş enerjisi sayaçları vb.) izler. Bu sayaçların verileri, diğer sayaçlar gibi kaydedilir ve dışa aktarılır.",
       "titleAdd": "Ek Sayaç Ekle",
       "titleEdit": "Ek Sayacı Düzenle"
     },
@@ -459,7 +459,7 @@
       "saving": "Kaydediliyor…",
       "selectFile": "Gözat",
       "showAdvancedSettings": "“Gelişmiş ayarları göster”",
-      "site": "Tesis",
+      "site": "Konum",
       "telemetry": "Uzölçüm",
       "templateLoading": "Dolduruyorum...",
       "title": "Başlık",
@@ -472,7 +472,7 @@
       "titleEdit": "Elektrik Sayacını Düzenle"
     },
     "hems": {
-      "changeConfirm": "Mevcut yapılandırma silinecek. Devam edilsin mi?",
+      "changeConfirm": "Mevcut yapılandırma silinecek. Devam mı?",
       "csv": {
         "created": "Oluşturuldu",
         "finished": "Bitiş zamanı",
@@ -480,25 +480,25 @@
         "limitpower": "Sınır (kW)",
         "type": "Tür"
       },
-      "customOption": "Kullanıcı tanımlı entegrasyon",
-      "description": "Harici sistemler tarafından güç sınırlaması (ör. §14a EnWG, §9 EEG arayüzü veya üst düzey enerji yönetim sistemi). Yük yönetimi özelliği ile birlikte çalışır.",
+      "customOption": "Kullanıcı tanımlı tümleme",
+      "description": "Harici sistemler tarafından güç sınırlaması (ör. §14a EnWG, §9 EEG arayüzü veya üst düzey enerji yönetim sistemi). Yük yönetimi özelliği ile birlikte çalışır. Belirli cihazlar için güneş enerjisi üretiminin kısıtlanması da desteklenmekte. Gerçek kısıtlama sınırı, her bir çevirici yapılandırmasında ayarlanmalı.",
       "download": "İndir",
       "dynamicLimits": "Dinamik sınırlar",
       "eventsRecorded": "{count} şebeke sınırlama etkinliği kaydedildi.",
-      "exportLimit": "Şebekeye satış sınırı",
-      "exportLimitDescription": "Batarya iyileştiricisi güneş enerjisi kayıplarını önlemek için bu sınırı dikkate alır. Dinamik sınır entegrasyonundan gelen etkin bir kısıtlama sinyali önceliklidir.",
-      "exportLimitHint": "Şebeke bağlantı noktasında sabit besleme sınırı.",
-      "generic": "Genel entegrasyonlar",
-      "integrations": "Entegrasyonlar",
+      "exportLimit": "Şebekeye enerji verme sınırı",
+      "exportLimitDescription": "İyileştirici, güneş enerjisi kayıplarını önlemek için bu sınırı dikkate alır. Dinamik sınır entegrasyonundan gelen etkin bir kısıtlama sinyali önceliklidir.",
+      "exportLimitHint": "Şebeke bağlantı noktasında sabit enerji verme sınırı.",
+      "generic": "Genel tümlemeler",
+      "integrations": "Tümlemeler",
       "lastEvent": "En son {timeAgo}.",
       "noEvents": "Henüz kaydedilmiş etkinlik yok.",
       "recordedEvents": "Kaydedilen etkinlikler",
       "staticLimits": "Sabit sınırlar",
-      "template": "Entegrasyon",
+      "template": "Tümleme",
       "title": "Dış Limit",
       "type": {
-        "custom": "Kullanıcı tanımlı entegrasyon",
-        "relay": "Kullanıcı tanımlı entegrasyon (röle)"
+        "custom": "Kullanıcı tanımlı tümleme",
+        "relay": "Kullanıcı tanımlı tümleme (röle)"
       }
     },
     "icon": {
@@ -508,7 +508,7 @@
     "influx": {
       "description": "Doldurma verilerini ve diğer ölçümleri InfluxDB'ye yazar. Verileri görselleştirmek için Grafana veya başka araçlar kullan.",
       "descriptionToken": "Nasıl oluşturulacağını öğrenmek için InfluxDB belgelerine göz at. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Kova",
+      "labelBucket": "Kova / Veritabanı",
       "labelCheckInsecure": "“Güvensiz bağlantılara izin ver”",
       "labelDatabase": "Veritabanı",
       "labelInsecure": "“Sertifika doğrulama”",
@@ -519,23 +519,23 @@
       "labelUser": "Kullanıcı Adı",
       "title": "InfluxDB",
       "v1Support": "InfluxDB 1.x için desteğe mi ihtiyacın var?",
-      "v2Support": "InfluxDB 2.x'e geri dön"
+      "v2Support": "InfluxDB 2+'ya geri dön"
     },
     "loadpoint": {
       "addCharger": {
         "charging": "“Doldurma cihazı ekle”",
-        "heating": "Isıtıcı ekle"
+        "heating": "Isıtma cihazı ekle"
       },
-      "addMeter": "İlave enerji sayacı ekle",
+      "addMeter": "Sayaç ekle",
       "advancedConfig": "Gelişmiş yapılandırma",
       "cancel": "“İptal”",
       "chargerError": {
         "charging": "Doldurma cihazı yapılandırılmalı.",
-        "heating": "Bir ısıtıcının yapılandırılması gerekli."
+        "heating": "Bir ısıtma cihazının yapılandırılması gerekiyor."
       },
       "chargerLabel": {
         "charging": "“Doldurma cihazı”",
-        "heating": "Isıtıcı"
+        "heating": "Isıtma cihazı"
       },
       "circuitHelp": "Güç ve akım limitlerinin aşılmaması için yük yönetim ataması.",
       "circuitInvalid": "Devre mevcut değil",
@@ -570,14 +570,14 @@
         "defaultGroup": "Cihazın varsayılan ayarı",
         "description": "İyileştiricinin geçmiş tüketim verilerine dayanarak talebi nasıl tahmin ettiği.",
         "label": "Profil",
-        "noTempTariff": "Sıcaklık tahmini gerektirir.",
-        "noTempTariffLink": "Tahmin ekle",
+        "noTempTariff": "Sıcaklık öngörüsü gerektirir.",
+        "noTempTariffLink": "Öngörü ekle",
         "profilesGroup": "Profiller",
         "temperature": {
           "description": "Isı pompaları gibi oda ısıtma sistemleri için benzer dış ortam sıcaklıklarındaki geçmiş tüketim verileri.",
           "label": "Sıcaklık"
         },
-        "title": "Talep tahmini",
+        "title": "Talep öngörüsü",
         "weekday": {
           "description": "Aynı haftanın gününe ait ortalama. Haftalık düzende çalışan sıcak su veya havuz ısıtıcıları gibi cihazlar için.",
           "label": "Haftanın günü"
@@ -586,7 +586,7 @@
       "electricalSubtitle": "Emin değilsen elektrikçine sor.",
       "electricalTitle": "Elektrik",
       "energyMeterHelp": "Doldurma cihazında bütünleşik bir sayaç yoksa ek sayaç.",
-      "energyMeterLabel": "“Enerji sayacı”",
+      "energyMeterLabel": "Özel enerji sayacı",
       "estimateLabel": "“API güncellemeleri arasında doldurma seviyesini hesapla”",
       "maxCurrentHelp": "Asgari akımdan büyük olmalı.",
       "maxCurrentLabel": "“Azami akım”",
@@ -594,7 +594,7 @@
       "maxTempLabel": "Azami sıcaklık",
       "minCurrentHelp": "Sadece ne yaptığını biliyorsan 6 A altına in.",
       "minCurrentLabel": "“Asgari akım”",
-      "minTempLabel": "Asgari sıcaklık",
+      "minTempLabel": "Asgari ısı",
       "noVehicles": "Hiç araç yapılandırılmamış.",
       "option": {
         "charging": "Doldurma noktası ekle",
@@ -640,12 +640,12 @@
       "thresholdsSliderDisabled": "{slider} kaydırma çubuğu, buraya değerler girildiği için şu anda devre dışı.",
       "titleAdd": {
         "charging": "Doldurma Noktası Ekle",
-        "heating": "Isıtma Cihazı Ekle",
+        "heating": "Isıtıcı Ekle",
         "unknown": "Doldurma Cihazı veya Isıtıcı Ekle"
       },
       "titleEdit": {
         "charging": "Doldurma Noktasını Düzenle",
-        "heating": "Isıtma Cihazını Düzenle",
+        "heating": "Isıtıcıyı Düzenle",
         "unknown": "Doldurma Cihazını veya Isıtıcıyı Düzenle"
       },
       "titleExample": {
@@ -663,7 +663,7 @@
     "main": {
       "addAdditional": "Ek sayaç ekle",
       "addConsumer": "Tüketici ekle",
-      "addCurtailer": "Kısıtlama cihazı ekle",
+      "addCurtailer": "Sınırlama cihazı ekle",
       "addGrid": "“Elektrik sayacı ekle”",
       "addLoadpoint": "Doldurma cihazı veya ısıtıcı ekle",
       "addPvBattery": "Güneş enerjisi veya enerji deposu ekle",
@@ -731,7 +731,7 @@
           "titleDefault": "Doldurma tamamlandı"
         },
         "suggestion": {
-          "messageDefault": "{suggestionTitle} için iyileştirici önerisi: iyileştirici kontrolü etkin olsaydı şimdi '{suggestionAction}' uygulanırdı. Yalnızca öneridir, hiçbir şey değiştirilmedi. Deneysel — geri bildirimlerini bekliyoruz: https://github.com/evcc-io/evcc/issues/31903",
+          "messageDefault": "{suggestionTitle} için iyileştirme önerisi: İyileştirme denetimi etkin olsaydı, şu anda ‘{suggestionAction}’ işlemini uygulardı. Bu sadece bir öneri; herhangi bir değişiklik yapılmadı. Deney aşamasında — geri bildirimlerini https://github.com/evcc-io/evcc/issues/31903 adresine bekliyoruz.",
           "title": "İyileştiricinin önerdiği işlem değiştiğinde",
           "titleDefault": "İyileştirici önerisi"
         }
@@ -783,7 +783,7 @@
       "usage": {
         "aux": "Kendi kendini düzenleyen tüketici",
         "battery": "Batarya",
-        "charge": "Tüketici / Doldurma Cihazı",
+        "charge": "Doldurma Cihazı",
         "grid": "Şebeke",
         "label": "Kullanım",
         "pv": "Üretim"
@@ -925,7 +925,7 @@
       },
       "controlled": "Otomatik kontrol tarafından devre dışı bırakıldı. Bunun yerine {optimizer} karar verir.",
       "controls": "Kontrol eder",
-      "description": "Güneş enerjisi tahminlerini, elektrik fiyatlarını ve tüketim alışkanlıklarını inceleyerek batarya ve doldurma yöntemini iyileştirir. Veriler, işlenmek üzere evcc iyileştirme hizmetine gönderilir. Şu anda yalnızca hesaplama ve görselleştirme yapmaktadır. Henüz cihazları denetlememektedir.",
+      "description": "Güneş enerjisi öngörülerini, enerji fiyatlarını ve tüketim alışkanlıklarını kullanarak batarya ve doldurma işlemlerini planlar. Veriler, evcc iyileştirme hizmetine gönderilir.",
       "enable": "İyileştiriciyi Etkinleştir",
       "info": "İyileştirici menü öğesinin görünür hale gelmesi birkaç dakika sürebilir. Yeni kurulumlarda, evcc'nin yeterli veriyi toplaması 24 saate kadar sürebilir.",
       "linkWord": "iyileştirici",
@@ -983,6 +983,7 @@
       "noClients": "Henüz müşteri yok. Henüz kimse bağlanamıyor.",
       "password": "Şifre",
       "passwordOnce": "Bu şifre yalnızca bir kez görüntülenir. QR kodunu tara veya hemen kopyala. Bir daha göremeyeceksin.",
+      "print": "Yazdır / PDF",
       "privacy": "Bu özelliği etkinleştirerek {0} kabul etmiş olursun.",
       "privacyLink": "gizlilik politikamızı",
       "qrInstall": "{ios} veya {android} için evcc uygulamasını yükle.",
@@ -1124,17 +1125,17 @@
       "restartingMessage": "evcc yeniden başlatılıyor."
     },
     "tariff": {
-      "addForecast": "Tahmin ekle",
+      "addForecast": "Öngörü ekle",
       "addTariff": "Tarife ekle",
       "co2": {
-        "description": "Şebeke elektriği için CO₂ yoğunluğu tahmini. CO₂ iyileştirmeli doldurma ve salım tasarruflarının hesaplanması için.",
-        "titleAdd": "CO₂ Tahmini Ekle",
-        "titleEdit": "CO₂ Tahminini Düzenle"
+        "description": "Şebeke elektriği için CO₂ yoğunluğu öngörüsü. CO₂ iyileştirmeli doldurma ve salım tasarruflarının hesaplanması için.",
+        "titleAdd": "CO₂ Öngörüsü Ekle",
+        "titleEdit": "CO₂ Öngörüsünü Düzenle"
       },
       "co2Services": "CO₂ Hizmetleri",
-      "customForecast": "Kullanıcı tanımlı tahmin",
+      "customForecast": "Kullanıcı tanımlı öngörü",
       "customTariff": "Kullanıcı tanımlı tarife",
-      "description": "Enerji tarifelerini ve tahminlerini yapılandır. Dinamik yönetim için cihaz tabanlı yapılandırmayı veya statik ayarlar için YAML kullan.",
+      "description": "Enerji tarifelerini ve öngörülerini yapılandır. Dinamik yönetim için cihaz tabanlı yapılandırmayı veya statik ayarlar için YAML kullan.",
       "feedIn": {
         "description": "Şebekeye ihraç edilen elektrik için alınan ücret. Gerçek doldurma maliyetlerini hesaplamak için kullanılır.",
         "titleAdd": "Şebekeye İhracat Tarifesi Ekle",
@@ -1148,32 +1149,32 @@
       },
       "legacyWarning": "Yeni tarife yapılandırması mevcut! Yeni kılavuzlu süreci kullanmak için tarifelerini buradan kaldır ve kayded.",
       "option": {
-        "co2": "CO₂ tahmini ekle",
+        "co2": "CO₂ öngörüsü ekle",
         "feedIn": "Şebekeye ihracat tarifesi ekle",
         "grid": "Şebekeden ithalat tarifesi ekle",
-        "planner": "Planlayıcı tahmini ekle",
-        "solar": "Güneş tahmini ekle",
-        "temperature": "Sıcaklık tahmini ekle"
+        "planner": "Planlayıcı öngörüsü ekle",
+        "solar": "Güneş öngörüsü ekle",
+        "temperature": "Sıcaklık öngörüsü ekle"
       },
       "planner": {
-        "description": "Gelişmiş ayar. Dinamik elektrik tarifeleri veya CO₂ tahminleri otomatik olarak kullanıldığından genellikle gerekli değildir. İstatistik ve fiyat hesaplamaları için değil, yalnızca doldurma planlaması için kullanılan ek bir veri kaynağını etkinleştirir.",
-        "titleAdd": "Planlayıcı Tahmini Ekle",
-        "titleEdit": "Planlayıcı Tahminini Düzenle"
+        "description": "Bu gelişmiş ayar genellikle gerekli değil. Planlayıcı öngörüsü, doldurma planları ile ekonomik veya çevre dostu şebeke doldurması (araçlar, ısıtma cihazları, ev bataryası) için temel oluşturur. Bu ayar yapılmadığında, dinamik şebeke fiyatı veya CO₂ öngörüsü otomatik olarak kullanılır. İstatistikler, maliyet hesaplamaları ve iyileştirme kararları bundan etkilenmez.",
+        "titleAdd": "Planlayıcı Öngörüsü Ekle",
+        "titleEdit": "Planlayıcı Öngörüsünü Düzenle"
       },
       "services": "Hizmetler",
       "solar": {
-        "description": "GES için güneş enerjisi üretim tahmini. Arayüzde görüntülenir ve ileride iyileştirme hesaplamaları için kullanılacak.",
-        "titleAdd": "Güneş Tahmini Ekle",
-        "titleEdit": "Güneş Tahmini Düzenle",
+        "description": "GES için güneş enerjisi üretim öngörüsü. Arayüzde görüntülenir ve ileride iyileştirme hesaplamaları için kullanılacak.",
+        "titleAdd": "Güneş Öngörüsü Ekle",
+        "titleEdit": "Güneş Öngörüsünü Düzenle",
         "titleExample": "Güney çatı, garaj vb."
       },
       "temperature": {
-        "description": "Konumun için dış hava sıcaklığı tahmini. Arayüzde görüntülenir ve ısıtma ihtiyacını tahmin etmek için kullanılır.",
-        "titleAdd": "Sıcaklık Tahmini Ekle",
-        "titleEdit": "Sıcaklık Tahminini Düzenle"
+        "description": "Konumun için dış hava sıcaklığı öngörüsü. Arayüzde görüntülenir ve ısıtma ihtiyacını tahmin etmek için kullanılır.",
+        "titleAdd": "Sıcaklık Öngörüsü Ekle",
+        "titleEdit": "Sıcaklık Öngörüsünü Düzenle"
       },
       "template": "Sağlayıcı",
-      "title": "Tarifeler ve Tahminler",
+      "title": "Tarifeler ve öngörüler",
       "titleChoice": "Ne eklemek istersin?",
       "titleSub": "Alt tarife",
       "type": {
@@ -1182,7 +1183,7 @@
         "grid": "Şebekeden Alım Fiyatı",
         "planner": "Planlayıcı",
         "solar": "Güneş enerjisi",
-        "temperature": "Sıcaklık Tahmini"
+        "temperature": "Sıcaklık Öngörüsü"
       },
       "zones": {
         "add": "Bölge ekle",
@@ -1256,16 +1257,29 @@
         "energy": "doldu",
         "returnEnergy": "boşaldı"
       },
+      "consumer": {
+        "energy": "Tüketildi"
+      },
       "grid": {
         "energy": "alındı",
         "returnEnergy": "satıldı"
+      },
+      "heating": {
+        "energy": "Tüketildi"
+      },
+      "loadpoint": {
+        "energy": "Dolduruldu"
       },
       "meter": {
         "energy": "Enerji",
         "returnEnergy": "Enerji (ters)"
       }
     },
-    "empty": "Bu zaman aralığı için enerji verisi yok.",
+    "empty": {
+      "description": "Bu dönem için enerji verisi yok.",
+      "descriptionCurrent": "Henüz enerji verisi yok. İlk ölçümler kaydedildiğinde değerler görünür.",
+      "showCurrent": "Güncel dönemi göster"
+    },
     "flow": {
       "battery": "Batarya",
       "batteryCharge": "Batarya doldurma",
@@ -1304,7 +1318,7 @@
     },
     "production": {
       "above": "{value} üstünde",
-      "accuracy": "Tahmin doğruluğu",
+      "accuracy": "doğruluk",
       "below": "{value} altında",
       "deviation": "Sapma",
       "expectedTomorrow": "yarın beklenen",
@@ -1316,6 +1330,7 @@
     },
     "socTemp": {
       "charged": "doldu",
+      "power": "Güç",
       "soc": "doluluk",
       "temperature": "sıcaklık",
       "used": "kullanıldı"
@@ -1338,12 +1353,14 @@
       "co2Saved": "CO₂ tasarrufu",
       "co2SavedTooltip": "Tüketilen {energy} enerjinin şebekeden çekilmesine kıyasla.",
       "configure": "Şimdi yapılandır",
+      "fromGrid": "{value} şebekeden",
       "noCo2": "CO₂ verisi yok.",
       "noPrice": "Fiyat verisi yok.",
       "savings": "Tasarruf",
       "savingsTooltip": "Tüketilen {energy} enerjinin şebekeden satın alınmasına kıyasla.",
       "versus": "{value} / {reference}"
     },
+    "summary": "Özet",
     "title": "Enerji"
   },
   "footer": {
@@ -1446,7 +1463,7 @@
     "empty": {
       "co2": "Bölgendeki şebeke enerjisinin ne zaman temiz olduğunu gör. Doldurma planları, düşük emisyonlara göre iyileştirilecek ve CO₂ tasarrufu hesaplanacak.",
       "price": "Dinamik elektrik tarifeni yapılandırarak doldurma planlarını otomatik olarak iyileştir ve tasarrufları hesapla.",
-      "setup": "Fiyatlar ve tahminler oluştur",
+      "setup": "Tarifeler ve öngörüler oluştur",
       "solar": "Bugün ve önümüzdeki günler için beklenen güneş enerjisi üretimini gör. Bu veriler gelecekte otomatik doldurma iyileştirmesi için de kullanılacak.",
       "temperature": "Konumun için beklenen dış hava sıcaklığını gör. Isıtma ihtiyacını tahmin etmek için kullanılır."
     },
@@ -1455,6 +1472,7 @@
     "price": {
       "average": "“Ortalama”",
       "constant": "Fiyat",
+      "estimate": "tahmin",
       "lowestHour": "“En ucuz saat”",
       "range": "“Aralık”"
     },
@@ -1467,7 +1485,7 @@
       "today": "“Bugün”",
       "tomorrow": "“Yarın”"
     },
-    "solarAdjust": "Güneş enerjisi tahminlerini gerçek üretim verilerine göre ayarla{percent}.",
+    "solarAdjust": "Güneş enerjisi öngörülerini gerçek üretim verilerine göre ayarla{percent}.",
     "solarAdjustMedium": "gerçek verilere ayarla",
     "solarAdjustShort": "ayarla",
     "temperature": {
@@ -1486,6 +1504,7 @@
     "cancel": "İptal",
     "download": "İndir",
     "error": "Hata",
+    "loading": "Doluyor",
     "none": "yok",
     "note": "Not:",
     "warning": "Uyarı"
@@ -1635,7 +1654,7 @@
         "continuous": "sürekli",
         "continuousCo2Description": "En temiz kesintisiz dilim dizisini seçer.",
         "continuousPriceDescription": "En ucuz kesintisiz dilim dizisini seçer.",
-        "disabledDescription": "Dinamik tarife veya CO₂ tahmini gerektirir.",
+        "disabledDescription": "Dinamik tarife veya CO₂ öngörüsü gerektirir.",
         "label": "Optimizasyon",
         "optimizerDescription": "{optimizer} en ucuz zaman dilimlerini seçer. Birden fazla başlatma ve durdurmaya neden olabilir."
       },
@@ -1654,7 +1673,8 @@
       "repeatingPlans": "“Tekrarlanan planlar”",
       "selectAll": "“Tümünü seç”",
       "strategy": {
-        "label": "Strateji"
+        "label": "Strateji",
+        "optimizerHint": "{optimizer} iyileştirme ayarını henüz dikkate almıyor ve daima en ucuz zaman dilimlerini seçiyor. Gerekirse otomatik kontrolü “Ev bataryası” ile sınırla."
       },
       "time": "Zaman",
       "title": "Plan",
@@ -1677,9 +1697,10 @@
       "batteryGridChargeLimit": "Şebekeden doldurma: şayet",
       "batteryStatus": "Batarya durumu",
       "batteryTooltip": "{total} ({soc})'ın {energy}'ı",
-      "forecast": "Tahmin",
+      "forecast": "Öngörü",
       "forecastTooltip": "“öngörü: bugün kalan güneşden üreti̇m”",
       "gridImport": "Şebekeden alım",
+      "heaters": "Isıtıcı | Isıtıcılar",
       "homePower": "Tüketim",
       "loadpoints": "Doldurma cihazı| Doldurma cihazı | {count} doldurma cihazları",
       "loadpointsLimit": "{limit} sınır",
@@ -1708,18 +1729,22 @@
       "avgPrice": "⌀ Fiyat",
       "charged": "Doldu",
       "co2": "⌀ CO₂",
+      "consumed": "Tüketilen",
       "duration": "Doldurma süresi",
       "emission": "Salım",
       "fallbackName": "Doldurma noktası",
       "finished": "Doldurma sonu",
       "last24hEnergy": "Son 24 saat",
+      "last24hShort": "24 saat",
       "last7dEnergy": "Son 7 gün",
+      "last7dShort": "7 gün",
       "phasesMismatch": "Yapılandırılandan daha fazla aşama etkin. Aşama yapılandırmasını kontrol et.",
       "power": "Güç",
       "price": "Maliyet",
       "remaining": "Kalan süre",
       "remoteDisabledHard": "{source}: kapatıldı",
       "remoteDisabledSoft": "{source}: uyumlu güneş enerjili doldurma kapatıldı",
+      "session": "Oturum",
       "solar": "Güneş Enerjisi",
       "todayEnergy": "Bugün"
     },
@@ -1748,7 +1773,7 @@
       },
       "minTemp": {
         "description": "{0} altında, bu sıcaklığı korumak için akıllı modda batarya ve şebeke gücü de kullanılır.",
-        "label": "Asgari sıcaklık"
+        "label": "Asg. ısı"
       },
       "phasesConfigured": {
         "label": "Aşamalar",
@@ -1962,7 +1987,7 @@
     },
     "item": {
       "battery": "Ev bataryası",
-      "co2": "CO₂ tahmini",
+      "co2": "CO₂ öngörüsü",
       "consumer": "Tüketici",
       "grid": "Şebeke sayacı",
       "gridExport": "Şebekeye ihracat tarifesi",
@@ -1970,7 +1995,7 @@
       "heater": "Isıtıcı",
       "loadpoint": "Doldurma noktası",
       "pv": "Güneş enerji sistemi",
-      "solar": "Güneş tahmini"
+      "solar": "Güneş öngörüsü"
     },
     "password": {
       "description": "Yapılandırma ayarlarını yetkisiz değişikliklerden korur. Unutma, kolay bir sıfırlama yolu yok.",
@@ -2216,7 +2241,7 @@
     "charge": "Doldurma",
     "comingSoon": "Bu sayfa yapım aşamasında.",
     "energy": "Enerji",
-    "forecast": "Tahmin",
+    "forecast": "Öngörü",
     "more": "Daha fazla",
     "sessions": "Oturumlar"
   }

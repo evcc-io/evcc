@@ -832,15 +832,7 @@ func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	if lp.chargeCurrents == nil {
-		return lp.offeredCurrent
-	}
-	current := max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
-	// measurements drop to ~0 while phases switch, reserve the offered current
-	if lp.enabled && !lp.phaseSwitchCompleted() {
-		current = max(current, lp.offeredCurrent)
-	}
-	return current
+	return lp.actualMaxChargeCurrent()
 }
 
 // GetMinCurrent returns the min loadpoint current

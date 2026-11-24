@@ -961,6 +961,9 @@ paths:
       description: "Update vehicle, loadpoint or odometer of a charging session. Only provided fields are changed; a null odometer clears the stored value."
       externalDocs:
         url: https://docs.evcc.io/en/features/sessions
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
       tags:
         - sessions
       requestBody:
@@ -985,6 +988,9 @@ paths:
       description: "Delete charging session."
       externalDocs:
         url: https://docs.evcc.io/en/features/sessions
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
       tags:
         - sessions
       responses:

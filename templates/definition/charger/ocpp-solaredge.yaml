@@ -12,5 +12,7 @@ requirements:
 protocols: [ocpp]
 params:
   - preset: ocpp
+  - name: metervalues
+    default: -Current.Offered
 render: |
   {{ include "ocpp" . }}

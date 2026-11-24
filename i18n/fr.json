@@ -257,7 +257,7 @@
       "amount": "Montant",
       "asleep": "en veille",
       "broker": "Courtier",
-      "bucket": "Seau",
+      "bucket": "Seau / Base de données",
       "capacity": "Capacité",
       "chargeStatus": "Statut",
       "chargeStatusA": "pas connecté",
@@ -508,7 +508,7 @@
     "influx": {
       "description": "Écrit les données de charge et autres métriques dans InfluxDB. Utilise Grafana ou d’autres outils pour visualiser les données.",
       "descriptionToken": "Se référer à la documentation InfluxDB pour apprendre comment en créer un. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Seau",
+      "labelBucket": "Seau / Base de données",
       "labelCheckInsecure": "Autoriser les certificats auto-signés",
       "labelDatabase": "Base de données",
       "labelInsecure": "Validation du certificat",
@@ -519,7 +519,7 @@
       "labelUser": "Nom d’utilisateur",
       "title": "InfluxDB",
       "v1Support": "Besoin d’aide pour InfluxDB 1x ?",
-      "v2Support": "Revenir à InfluxDB 2.x"
+      "v2Support": "Revenir à InfluxDB 2.+"
     },
     "loadpoint": {
       "addCharger": {
@@ -982,7 +982,8 @@
       "manualLogin": "Ou authentifiez-vous manuellement sur {url} dans votre navigateur en utilisant ces données de connexion :",
       "noClients": "Aucun client pour l’instant. Personne ne peut encore se connecter.",
       "password": "Mot de passe",
-      "passwordOnce": "Ce mot de passe n’est affiché qu’une seule fois. Scannez le code QR ou copiez-le maintenant dans votre gestionnaire de mots de passe. Vous ne pourrez plus le ré-afficher.",
+      "passwordOnce": "Ce mot de passe n’est affiché qu’une seule fois. Scannez le code QR, copiez-le maintenant dans votre gestionnaire de mots de passe ou imprimez-le maintenant. Vous ne pourrez plus le ré-afficher.",
+      "print": "Imprimer / PDF",
       "privacy": "En activant cette fonctionnalité, vous acceptez notre {0}.",
       "privacyLink": "politique de confidentialité",
       "qrInstall": "Installer l’app evcc pour {ios} ou {android}.",
@@ -1270,7 +1271,11 @@
         "returnEnergy": "Énergie (inversée)"
       }
     },
-    "empty": "Aucune donnée énergétique disponible pour cette période.",
+    "empty": {
+      "description": "Aucune donnée d'énergie pour cette période.",
+      "descriptionCurrent": "Pas encore de données d'énergie. Les valeurs apparaissent une fois les premières mesures enregistrées.",
+      "showCurrent": "Montre période actuelle"
+    },
     "flow": {
       "battery": "Batterie",
       "batteryCharge": "Charge de la batterie",
@@ -1309,7 +1314,7 @@
     },
     "production": {
       "above": "{value} au dessus",
-      "accuracy": "Précision des prévisions",
+      "accuracy": "Précision",
       "below": "{value} en dessous",
       "deviation": "Déviation",
       "expectedTomorrow": "prévu demain",
@@ -1343,12 +1348,14 @@
       "co2Saved": "CO₂ économisé",
       "co2SavedTooltip": "Comparé au prélèvement de l'{energy} consommée sur le réseau.",
       "configure": "Configurer maintenant",
+      "fromGrid": "{value} du réseau",
       "noCo2": "Aucune donnée sur le CO₂.",
       "noPrice": "Aucune donnée de prix.",
       "savings": "Économies",
       "savingsTooltip": "Par rapport à l'achat de l'{energy} consommée auprès du réseau.",
       "versus": "{value} par rapport {reference}"
     },
+    "summary": "Résumé",
     "title": "Énergie"
   },
   "footer": {
@@ -1491,6 +1498,7 @@
     "cancel": "Annuler",
     "download": "Télécharger",
     "error": "Erreur",
+    "loading": "Chargement",
     "none": "aucun",
     "note": "Remarque :",
     "warning": "Avertissement"
@@ -1685,8 +1693,9 @@
       "forecast": "Prévisions",
       "forecastTooltip": "prévision : production solaire restante aujourd’hui",
       "gridImport": "Import du réseau",
+      "heaters": "Radiateur | Radiateurs",
       "homePower": "Consommation",
-      "loadpoints": "Chargeur| Chargeur | {count} chargeurs",
+      "loadpoints": "Chargeur | Chargeurs",
       "loadpointsLimit": "limite à {limit}",
       "noEnergy": "Aucune donnée de compteur",
       "pv": "Système photovoltaïque",
@@ -1713,18 +1722,22 @@
       "avgPrice": "Prix ⌀",
       "charged": "Chargé",
       "co2": "CO₂ ⌀",
+      "consumed": "Consommée",
       "duration": "Durée",
       "emission": "Émissions",
       "fallbackName": "Point de chargement",
       "finished": "Heure de fin",
       "last24hEnergy": "24 dernières heures",
+      "last24hShort": "24h",
       "last7dEnergy": "7 derniers jours",
+      "last7dShort": "7d",
       "phasesMismatch": "Plus de phases actives que configurées. Vérifiez la configuration de phase.",
       "power": "Puissance",
       "price": "Coût",
       "remaining": "Temps restant",
       "remoteDisabledHard": "{source} : désactivée",
       "remoteDisabledSoft": "{source} : charge solaire adaptative désactivée",
+      "session": "Session",
       "solar": "Solaire",
       "todayEnergy": "Aujourd'hui"
     },

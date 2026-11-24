@@ -257,7 +257,7 @@
       "amount": "Aantal",
       "asleep": "niet actief",
       "broker": "Agent",
-      "bucket": "Geldpotje",
+      "bucket": "Bucket / Database",
       "capacity": "Capaciteit",
       "chargeStatus": "Status",
       "chargeStatusA": "niet verbonden",
@@ -508,7 +508,7 @@
     "influx": {
       "description": "Schrijft laad-data en andere cijfers naar InfluxDB. Gebruik Grafana of andere tools om de data te visualiseren.",
       "descriptionToken": "Bekijk de InfluxDB documentatie om te zien hoe je er een maakt. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Bucket",
+      "labelBucket": "Bucket / Database",
       "labelCheckInsecure": "Sta zelfondertekende certificaten toe",
       "labelDatabase": "Database",
       "labelInsecure": "Certificaat validatie",
@@ -519,7 +519,7 @@
       "labelUser": "Gebruikersnaam",
       "title": "InfluxDB",
       "v1Support": "Ondersteuning voor InfluxDB 1.x?",
-      "v2Support": "Terug naar InfluxDB 2.x"
+      "v2Support": "Terug naar InfluxDB 2+"
     },
     "loadpoint": {
       "addCharger": {
@@ -906,10 +906,10 @@
       "usernameHelp": "Voor HTTP Basic Auth richting de upstream server."
     },
     "optimizer": {
-      "automatic": "Automatische controle",
+      "automatic": "Automatische aansturing",
       "automaticLevel": {
         "battery": {
-          "description": "Controleert alleen de thuisbatterij.",
+          "description": "Beheert alleen de thuisbatterij.",
           "label": "Thuisbatterij",
           "status": "{automatic} controleert de thuisbatterij."
         },
@@ -982,7 +982,8 @@
       "manualLogin": "Of log handmatig in via uw browser op {url}, met de volgende credentials:",
       "noClients": "Er zijn nog geen clients. Niemand kan nog verbinden.",
       "password": "Wachtwoord",
-      "passwordOnce": "Het wachtwoord wordt eenmalig getoond. Scan of kopieer de QR-code. Je kunt hem niet nogmaals bekijken.",
+      "passwordOnce": "Het wachtwoord wordt eenmalig getoond. Kopieer of print de QR-code. Je kunt hem niet nogmaals bekijken.",
+      "print": "Printen / PDF",
       "privacy": "Door het inschakelen van deze functionaliteit, ga je akkoord met ons {0}.",
       "privacyLink": "privacybeleid",
       "qrInstall": "Installeer de evcc app voor {ios} of {android}.",
@@ -1257,19 +1258,32 @@
     },
     "direction": {
       "battery": {
-        "energy": "geladen",
-        "returnEnergy": "ontladen"
+        "energy": "Geladen",
+        "returnEnergy": "Ontladen"
+      },
+      "consumer": {
+        "energy": "Verbruikt"
       },
       "grid": {
         "energy": "geimporteerd",
         "returnEnergy": "geexporteerd"
+      },
+      "heating": {
+        "energy": "Verbruikt"
+      },
+      "loadpoint": {
+        "energy": "Geladen"
       },
       "meter": {
         "energy": "Energie",
         "returnEnergy": "Energie (omgekeerd)"
       }
     },
-    "empty": "Geen energiegegevens beschikbaar voor het gekozen tijdsvenster.",
+    "empty": {
+      "description": "Geen energiedata voor deze periode.",
+      "descriptionCurrent": "Nog geen energie data. Waarden verschijnen zodra de eerste metingen zijn opgeslagen.",
+      "showCurrent": "Bekijk huidige periode"
+    },
     "flow": {
       "battery": "Batterij",
       "batteryCharge": "Batterijniveau",
@@ -1320,8 +1334,9 @@
     },
     "socTemp": {
       "charged": "geladen",
-      "soc": "lading",
-      "temperature": "temperatuur",
+      "power": "Vermogen",
+      "soc": "Lading",
+      "temperature": "Temperatuur",
       "used": "verbruikt"
     },
     "sources": {
@@ -1342,7 +1357,6 @@
       "co2Saved": "CO₂ bespaard",
       "co2SavedTooltip": "Vergeleken met het afnemen van de verbruikte {energy} van het net.",
       "configure": "Nu configureren",
-      "energy": "Energie",
       "fromGrid": "{value} van het net",
       "noCo2": "Geen CO₂-gegevens.",
       "noPrice": "Geen prijsgegevens.",
@@ -1350,6 +1364,7 @@
       "savingsTooltip": "Vergeleken met het inkopen van de verbruikte {energy} van het net.",
       "versus": "{value} vs. {reference}"
     },
+    "summary": "Samenvatting",
     "title": "Energie"
   },
   "footer": {
@@ -1461,11 +1476,12 @@
     "price": {
       "average": "Gemiddeld",
       "constant": "Prijs",
+      "estimate": "schatting",
       "lowestHour": "Goedkoopste uur",
       "range": "Bereik"
     },
     "priceZoom": "zoom in",
-    "showLine": "regel tonen",
+    "showLine": "toon lijn",
     "solar": {
       "dayAfterTomorrow": "Overmorgen",
       "partly": "gedeeltelijk",
@@ -1492,6 +1508,7 @@
     "cancel": "Annuleren",
     "download": "Download",
     "error": "Fout",
+    "loading": "Laden",
     "none": "geen",
     "note": "Let op:",
     "warning": "Waarschuwing"
@@ -1660,7 +1677,8 @@
       "repeatingPlans": "Herhalende schema's",
       "selectAll": "Alles selectreren",
       "strategy": {
-        "label": "Strategie"
+        "label": "Strategie",
+        "optimizerHint": "De {optimizer} houdt momenteel nog geen rekening met de optimalisatie-instellingen en kiest altijd de goedkoopste tijdsloten. Beperk de automatische aansturing tot ‘Thuisbatterij’ indien je dit wenst."
       },
       "time": "Tijd",
       "title": "Plan",
@@ -1686,8 +1704,9 @@
       "forecast": "Verwachting",
       "forecastTooltip": "verwachting: resterende zonne-energieproductie voor vandaag",
       "gridImport": "Netafname",
+      "heaters": "Verwarmer | Verwarmers",
       "homePower": "Consumptie",
-      "loadpoints": "Lader| Lader | {count} laders",
+      "loadpoints": "Lader | Laders",
       "loadpointsLimit": "{limit} limiet",
       "noEnergy": "Geen meter data",
       "pv": "Zonnepanelen systeem",
@@ -1714,18 +1733,22 @@
       "avgPrice": "⌀ Prijs",
       "charged": "Geladen",
       "co2": "⌀ CO₂",
+      "consumed": "Verbruikt",
       "duration": "Duur",
       "emission": "Uitstoot",
       "fallbackName": "Laadpunt",
       "finished": "Eindtijd",
       "last24hEnergy": "Laatste 24h",
+      "last24hShort": "24u",
       "last7dEnergy": "Laatste 7 dagen",
+      "last7dShort": "7d",
       "phasesMismatch": "Meer fases actief dan geconfigureerd. Controleer de fase-configuratie.",
       "power": "Vermogen",
       "price": "Kosten",
       "remaining": "Resterend",
       "remoteDisabledHard": "{source}: uitgeschakeld",
       "remoteDisabledSoft": "{source}: adaptief laden van zonnepanelen uitgeschakeld",
+      "session": "Sessie",
       "solar": "Zon",
       "todayEnergy": "Vandaag"
     },

@@ -257,7 +257,7 @@
       "amount": "Daudzums",
       "asleep": "miega režīmā",
       "broker": "Brokeris",
-      "bucket": "Tvertne",
+      "bucket": "Tvertne / datubāze",
       "capacity": "Kapacitāte",
       "chargeStatus": "Statuss",
       "chargeStatusA": "nav pievienots",
@@ -508,7 +508,7 @@
     "influx": {
       "description": "Raksta uzlādes datus un citus rādītājus uz InfluxDB. Izmantojiet Grafana vai citus rīkus datu vizualizēšanai.",
       "descriptionToken": "Skatiet InfluxDB dokumentāciju, lai uzzinātu kā to izveidot. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Tvertne",
+      "labelBucket": "Tvertne / datubāze",
       "labelCheckInsecure": "Atļaut pašparakstītus sertifikātus",
       "labelDatabase": "Datubāze",
       "labelInsecure": "Sertifikātu validācija",
@@ -982,7 +982,8 @@
       "manualLogin": "Vai piesakieties manuāli {url} savā pārlūkā izmantojot šos datus:",
       "noClients": "Pagaidām nav klientu. Neviens vēl nevar pieslēgties.",
       "password": "Parole",
-      "passwordOnce": "Šī parole tiek rādīta tikai vienreiz. Noskenējiet QR kodu vai nokopējiet to tagad. Vēlāk to vairs nevarēs redzēt.",
+      "passwordOnce": "Šī parole tiek parādīta tikai vienu reizi. Noskenējiet QR kodu, nokopējiet vai izdrukājiet to tagad. Vēlāk to vairs nevarēs apskatīt.",
+      "print": "Drukāt / PDF",
       "privacy": "Iespējojot šo funkciju, jūs piekrītat mūsu {0}.",
       "privacyLink": "privātuma politikai",
       "qrInstall": "Instalējiet evcc lietotni {ios} vai {android}.",
@@ -1258,19 +1259,32 @@
     },
     "direction": {
       "battery": {
-        "energy": "uzlādēts",
-        "returnEnergy": "izlādēts"
+        "energy": "Uzlādēts",
+        "returnEnergy": "Izlādēts"
+      },
+      "consumer": {
+        "energy": "Patērēts"
       },
       "grid": {
         "energy": "importēts",
         "returnEnergy": "eksportēts"
+      },
+      "heating": {
+        "energy": "Patērēts"
+      },
+      "loadpoint": {
+        "energy": "Uzlādēts"
       },
       "meter": {
         "energy": "Enerģija",
         "returnEnergy": "Enerģija (atpakaļvirzienā)"
       }
     },
-    "empty": "Šim laika diapazonam nav pieejamu enerģijas datu.",
+    "empty": {
+      "description": "Šim periodam nav enerģijas datu.",
+      "descriptionCurrent": "Vēl nav enerģijas datu. Vērtības parādīsies, tiklīdz būs reģistrēti pirmie mērījumi.",
+      "showCurrent": "Rādīt pašreizējo periodu"
+    },
     "flow": {
       "battery": "Akumulators",
       "batteryCharge": "Akumulatora lādēšana",
@@ -1321,8 +1335,9 @@
     },
     "socTemp": {
       "charged": "uzlādēts",
-      "soc": "uzlāde",
-      "temperature": "temperatūra",
+      "power": "Jauda",
+      "soc": "Uzlāde",
+      "temperature": "Temperatūra",
       "used": "izmantots"
     },
     "sources": {
@@ -1343,7 +1358,6 @@
       "co2Saved": "Ietaupītais CO₂",
       "co2SavedTooltip": "Salīdzinot ar patērētās {energy} iegūšanu no tīkla.",
       "configure": "Konfigurēt tagad",
-      "energy": "Enerģija",
       "fromGrid": "{value} no tīkla",
       "noCo2": "Nav CO₂ datu.",
       "noPrice": "Nav cenu datu.",
@@ -1351,6 +1365,7 @@
       "savingsTooltip": "Salīdzinot ar patērētās {energy} iegādi no tīkla.",
       "versus": "{value} pret {reference}"
     },
+    "summary": "Kopsavilkums",
     "title": "Enerģija"
   },
   "footer": {
@@ -1462,6 +1477,7 @@
     "price": {
       "average": "Vidējā",
       "constant": "Cena",
+      "estimate": "Aplēse",
       "lowestHour": "Zemākās cenas stunda",
       "range": "Diapazons"
     },
@@ -1493,6 +1509,7 @@
     "cancel": "Atcelt",
     "download": "Lejupielādēt",
     "error": "Kļūda",
+    "loading": "Notiek ielāde",
     "none": "nav",
     "note": "Piezīme:",
     "warning": "Brīdinājums"
@@ -1661,7 +1678,8 @@
       "repeatingPlans": "Atkārtojošie plāni",
       "selectAll": "Izvēlēties visus",
       "strategy": {
-        "label": "Stratēģija"
+        "label": "Stratēģija",
+        "optimizerHint": "{optimizer} vēl neņem vērā optimizācijas iestatījumu un vienmēr izvēlas lētākos laika posmus. Ierobežojiet automātisko vadību tikai ar “Mājas akumulators”, ja tā jums ir nepieciešama."
       },
       "time": "Laiks",
       "title": "Plāns",
@@ -1687,8 +1705,9 @@
       "forecast": "Prognoze",
       "forecastTooltip": "prognoze: atlikusī saules enerģijas ražošana šodien",
       "gridImport": "Tīkla patēriņš",
+      "heaters": "Sildītājs | Sildītāji | {count} sildītāji",
       "homePower": "Patēriņš",
-      "loadpoints": "Lādētājs | Lādētājs | {count} lādētāji",
+      "loadpoints": "Lādētājs | Lādētāji | {count} lādētāji",
       "loadpointsLimit": "{limit} ierobežojums",
       "noEnergy": "Nav skaitītāja datu",
       "pv": "Saules enerģijas ražošanas sistēma",
@@ -1715,18 +1734,22 @@
       "avgPrice": "⌀ Cena",
       "charged": "Uzlādēts",
       "co2": "⌀ CO₂",
+      "consumed": "Patērēts",
       "duration": "Ilgums",
       "emission": "Emisijas",
       "fallbackName": "Uzlādes punkts",
       "finished": "Beigu laiks",
       "last24hEnergy": "Pēdējās 24 stundas",
+      "last24hShort": "24 st.",
       "last7dEnergy": "Pēdējās 7 dienas",
+      "last7dShort": "7 d.",
       "phasesMismatch": "Aktīvo fāžu skaits pārsniedz konfigurēto. Pārbaudiet fāžu konfigurāciju.",
       "power": "Jauda",
       "price": "Izmaksas",
       "remaining": "Atlicis",
       "remoteDisabledHard": "{source}: izslēgts",
       "remoteDisabledSoft": "{source}: izslēgta adaptīvā saules enerģijas uzlāde",
+      "session": "Sesija",
       "solar": "Saules enerģija",
       "todayEnergy": "Šodien"
     },
