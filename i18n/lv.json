@@ -1680,7 +1680,7 @@
       "selectAll": "Izvēlēties visus",
       "strategy": {
         "label": "Stratēģija",
-        "optimizerHint": "{optimizer} vēl neņem vērā stratēģijas iestatījumus un vienmēr izvēlas lētākos laika posmus. Ja tie jums ir nepieciešami, ierobežojiet automātisko vadību ar “Mājas akumulators”."
+        "optimizerHint": "{optimizer} vēl neņem vērā optimizācijas iestatījumu un vienmēr izvēlas lētākos laika posmus. Ierobežojiet automātisko vadību tikai ar “Mājas akumulators”, ja tā jums ir nepieciešama."
       },
       "time": "Laiks",
       "title": "Plāns",
