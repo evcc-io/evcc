@@ -55,12 +55,12 @@ func withService(t *testing.T) *fakeService {
 	lpp := mocks.NewCsLPPInterface(t)
 	lpc.EXPECT().RemoteEntitiesScenarios().Return(nil).Maybe()
 	lpp.EXPECT().RemoteEntitiesScenarios().Return(nil).Maybe()
-	lpc.EXPECT().SetFailsafeConsumptionActivePowerLimit(testFailsafeConsumption, true).Return(nil).Maybe()
-	lpc.EXPECT().SetFailsafeDurationMinimum(testFailsafeDuration, true).Return(nil).Maybe()
+	lpc.EXPECT().SetFailsafeConsumptionActivePowerLimit(testFailsafeConsumption, true).Return(nil).Once()
+	lpc.EXPECT().SetFailsafeDurationMinimum(testFailsafeDuration, true).Return(nil).Once()
 	lpc.EXPECT().SetConsumptionLimit(mock.Anything).Return(nil).Maybe()
-	lpp.EXPECT().SetProductionNominalMax(testProductionNominal).Return(nil).Maybe()
-	lpp.EXPECT().SetFailsafeProductionActivePowerLimit(testFailsafeProduction, true).Return(nil).Maybe()
-	lpp.EXPECT().SetFailsafeDurationMinimum(testFailsafeDuration, true).Return(nil).Maybe()
+	lpp.EXPECT().SetProductionNominalMax(testProductionNominal).Return(nil).Once()
+	lpp.EXPECT().SetFailsafeProductionActivePowerLimit(testFailsafeProduction, true).Return(nil).Once()
+	lpp.EXPECT().SetFailsafeDurationMinimum(testFailsafeDuration, true).Return(nil).Once()
 	lpp.EXPECT().SetProductionLimit(mock.Anything).Return(nil).Maybe()
 
 	svc := &fakeService{cs: &eebus.ControllableSystem{CsLPCInterface: lpc, CsLPPInterface: lpp}}
@@ -82,28 +82,28 @@ func testLimits() Limits {
 	}
 }
 
-// TestNewEEBus_StartsWithoutEnergyGuard covers [LPC-901/1]: after a (re)start the
-// CS is in "init" and limited to the failsafe limit, whether or not the Energy Guard
-// is reachable. Startup must neither wait for it nor fail without it.
+// TestNewEEBus_StartsWithoutEnergyGuard covers [LPC-901/1]: startup neither waits for
+// nor fails without the Energy Guard, and "init" applies the failsafe limits.
 func TestNewEEBus_StartsWithoutEnergyGuard(t *testing.T) {
 	svc := withService(t)
 
 	start := time.Now()
-	c, err := NewEEBus(context.Background(), "abcd", testLimits(), nil, &stubSite{}, time.Millisecond)
+	c, err := NewEEBus(t.Context(), "abcd", testLimits(), nil, &stubSite{}, time.Millisecond)
 	require.NoError(t, err)
 	assert.Less(t, time.Since(start), time.Second, "startup must not wait for the Energy Guard")
 	assert.Equal(t, []string{"abcd"}, svc.registered, "the Energy Guard stays trusted")
 	assert.Empty(t, svc.unregistered())
 
-	// first cycle: "init" applies the failsafe limits before any Energy Guard was heard
 	require.NoError(t, c.run())
 	assert.Equal(t, StatusFailsafe, c.status)
 	assertConsumptionLimit(t, c, testFailsafeConsumption)
-	assertProductionLimit(t, c, true)
+
+	production := c.MaxProductionPower()
+	require.NotNil(t, production)
+	assert.Equal(t, testFailsafeProduction, *production)
 }
 
-// TestNewEEBus_UnregistersWhenContextEnds: a device created for a test is unregistered
-// when its lifetime ends, instead of staying registered until the next restart.
+// TestNewEEBus_UnregistersWhenContextEnds: the device is unregistered when its context ends
 func TestNewEEBus_UnregistersWhenContextEnds(t *testing.T) {
 	svc := withService(t)
 
@@ -116,7 +116,7 @@ func TestNewEEBus_UnregistersWhenContextEnds(t *testing.T) {
 	cancel()
 	assert.Eventually(t, func() bool { return len(svc.unregistered()) == 1 }, time.Second, time.Millisecond)
 
-	// the device test still sees an unreachable Energy Guard
+	// Wait still reports the Energy Guard as unreachable
 	waitCtx, waitCancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
 	defer waitCancel()
 	require.ErrorIs(t, c.Wait(waitCtx), context.DeadlineExceeded)

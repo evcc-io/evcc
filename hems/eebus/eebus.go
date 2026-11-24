@@ -163,14 +163,8 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 		return nil, err
 	}
 
-	// The HEMS must not depend on the Energy Guard being reachable. After a (re)start
-	// the CS is in state "init" and limited to the failsafe limit ([LPC-901/1]), which
-	// Run applies from its first cycle. Waiting here blocked the startup for up to 90s,
-	// then failed it, leaving the site without any control for the restart delay and the
-	// Energy Guard's ski untrusted. The device test waits for the connection instead
-	// (see Wait), so the UI keeps reporting whether the Energy Guard is reachable.
-	//
-	// The device is unregistered when its lifetime ends, e.g. after a device test.
+	// Do not wait for the Energy Guard: in "init" Run applies the failsafe limits ([LPC-901/1]).
+	// Unregister when the context ends, so short-lived instances do not stay registered.
 	go func() {
 		<-ctx.Done()
 		inst.UnregisterDevice(ski, c)

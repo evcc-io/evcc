@@ -863,9 +863,7 @@ func testConfig[T any](ctx context.Context, id int, class templates.Class, req c
 	return instance, err
 }
 
-// waitConnected waits for a device that connects asynchronously, like an EEBus HEMS
-// that does not wait for its Energy Guard on creation, so the device test reports
-// whether the remote side is reachable.
+// waitConnected waits until a device that connects asynchronously is connected
 func waitConnected(ctx context.Context, instance any) error {
 	if w, ok := instance.(interface{ Wait(context.Context) error }); ok {
 		return w.Wait(ctx)
