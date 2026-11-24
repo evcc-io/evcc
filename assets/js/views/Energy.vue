@@ -175,6 +175,8 @@
 							group="grid"
 							:color="colors.grid || ''"
 							:series="gridSeries"
+							:upper-label="$t('energy.grid.export')"
+							:lower-label="$t('energy.grid.import')"
 							:prices="chartPrices"
 							:currency="currency"
 							:height="200"
@@ -677,8 +679,8 @@ export default defineComponent({
 			const wait = (key: string, label: string, sub = "") =>
 				pendingStat(key, this.$t(label), sub);
 			const cost = this.hasPriceTariff ? "…" : "";
-			const consumed = [
-				wait("energy", "energy.stat.energy"),
+			const consumed = (label: string) => [
+				wait("energy", label),
 				...(cost ? [wait("cost", "energy.consumers.cost", cost)] : []),
 			];
 			const cards = [
@@ -689,8 +691,8 @@ export default defineComponent({
 					height: 200,
 					icon: "shopicon-regular-powersupply",
 					stats: [
-						wait("gridImport", "energy.direction.grid.energy", cost),
 						wait("gridExport", "energy.direction.grid.returnEnergy", cost),
+						wait("gridImport", "energy.direction.grid.energy", cost),
 					],
 				},
 				{
@@ -721,7 +723,7 @@ export default defineComponent({
 					title: "energy.flow.charging",
 					height: 200,
 					icon: "LoadpointIcon",
-					stats: consumed,
+					stats: consumed("energy.direction.loadpoint.energy"),
 				},
 				{
 					show: loadpoints.some((lp) => lp.chargerFeatureHeating),
@@ -729,7 +731,7 @@ export default defineComponent({
 					title: "energy.flow.heating",
 					height: 200,
 					icon: "",
-					stats: consumed,
+					stats: consumed("energy.direction.heating.energy"),
 				},
 			];
 			return cards.filter((c) => c.show).map((c) => ({ ...c, title: this.$t(c.title) }));
@@ -760,7 +762,7 @@ export default defineComponent({
 			const list: StatItem[] = [
 				{
 					key: "energy",
-					label: this.$t("energy.stat.energy"),
+					label: this.$t("energy.direction.consumer.energy"),
 					number: this.homeEnergy,
 					format: (v: number) => this.fmtKWh(v),
 				},
@@ -1166,18 +1168,19 @@ export default defineComponent({
 			const shown = this.gridDaily ? this.gridDirection : null;
 			const pick = (direction: "import" | "export") =>
 				shown ? { focusable: true, focusKey: direction, dim: shown !== direction } : {};
+			// export first, the chart draws it above the baseline
 			const list: Legend[] = [
-				{
-					label: this.$t("energy.grid.import"),
-					color: colors.grid || "",
-					value: this.fmtKWh(this.gridImport),
-					...pick("import"),
-				},
 				{
 					label: this.$t("energy.grid.export"),
 					color: colors.export || "",
 					value: this.fmtKWh(this.gridExport),
 					...pick("export"),
+				},
+				{
+					label: this.$t("energy.grid.import"),
+					color: colors.grid || "",
+					value: this.fmtKWh(this.gridImport),
+					...pick("import"),
 				},
 			];
 			const prices = this.gridPrices;
@@ -1195,20 +1198,20 @@ export default defineComponent({
 				this.isDay || !amount || !energy
 					? range(band)
 					: `ø ${this.fmtPricePerKWh(amount / energy, this.currency)}`;
-			if (prices?.import) {
-				list.push({
-					label: this.$t("energy.grid.importPrice"),
-					color: colors.price || "",
-					value: price(prices.import, cost?.import, cost?.importEnergy),
-					type: "line",
-					dim: !!shown,
-				});
-			}
 			if (prices?.feedin) {
 				list.push({
 					label: this.$t("energy.grid.exportPrice"),
 					color: colors.export || "",
 					value: price(prices.feedin, cost?.export, cost?.exportEnergy),
+					type: "line",
+					dim: !!shown,
+				});
+			}
+			if (prices?.import) {
+				list.push({
+					label: this.$t("energy.grid.importPrice"),
+					color: colors.price || "",
+					value: price(prices.import, cost?.import, cost?.importEnergy),
 					type: "line",
 					dim: !!shown,
 				});
@@ -1791,9 +1794,9 @@ export default defineComponent({
 			};
 			frame = requestAnimationFrame(tick);
 			this.holdStop = stop;
-			// the user takes over
+			// the user takes over. Capture phase: the chart touch gate stops propagation
 			for (const event of ["wheel", "touchstart", "keydown"]) {
-				window.addEventListener(event, stop, { once: true, passive: true });
+				window.addEventListener(event, stop, { once: true, passive: true, capture: true });
 			}
 		},
 		// the card under the sticky header first, then the ones below it. A card that

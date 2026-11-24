@@ -1338,7 +1338,6 @@
       "co2Saved": "CO₂ säästetty",
       "co2SavedTooltip": "Verrattuna siihen, että kulutettu {energy} olisi otettu sähköverkosta.",
       "configure": "Määritä nyt",
-      "energy": "Energia",
       "fromGrid": "{value} sähköverkosta",
       "noCo2": "Ei CO₂-tilastotietoja.",
       "noPrice": "Ei hintatietoja.",

@@ -1400,7 +1400,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Charge",
       "charged": "Charged",
+      "discharge": "Discharge",
       "discharged": "Discharged"
     },
     "consumers": {
@@ -1424,8 +1426,8 @@
         "energy": "Consumed"
       },
       "grid": {
-        "energy": "Import",
-        "returnEnergy": "Export"
+        "energy": "Imported",
+        "returnEnergy": "Exported"
       },
       "heating": {
         "energy": "Consumed"
@@ -1436,6 +1438,9 @@
       "meter": {
         "energy": "Energy",
         "returnEnergy": "Energy (reverse)"
+      },
+      "pv": {
+        "energy": "Produced"
       }
     },
     "empty": {
@@ -1508,7 +1513,6 @@
       "co2Saved": "CO₂ saved",
       "co2SavedTooltip": "Compared to drawing the consumed {energy} from the grid.",
       "configure": "Configure now",
-      "energy": "Energy",
       "fromGrid": "{value} from grid",
       "noCo2": "No CO₂ data.",
       "noPrice": "No price data.",

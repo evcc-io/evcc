@@ -1358,7 +1358,6 @@
       "co2Saved": "Ietaupītais CO₂",
       "co2SavedTooltip": "Salīdzinot ar patērētās {energy} iegūšanu no tīkla.",
       "configure": "Konfigurēt tagad",
-      "energy": "Enerģija",
       "fromGrid": "{value} no tīkla",
       "noCo2": "Nav CO₂ datu.",
       "noPrice": "Nav cenu datu.",

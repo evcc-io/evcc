@@ -1338,7 +1338,6 @@
       "co2Saved": "CO₂ estalviat",
       "co2SavedTooltip": "En comparació amb obtenir de la xarxa els {energy} consumits.",
       "configure": "Configura ara",
-      "energy": "Energia",
       "fromGrid": "{value} de la xarxa",
       "noCo2": "Sense dades de CO₂.",
       "noPrice": "Sense dades de preu.",

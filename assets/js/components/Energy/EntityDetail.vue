@@ -58,6 +58,7 @@ import SourcesButton from "./SourcesButton.vue";
 import CardHeader from "../Helper/CardHeader.vue";
 import GroupChart, { type HistorySeries } from "./GroupChart.vue";
 import PatternChart from "./PatternChart.vue";
+import { energyLabel } from "./groups";
 import EntityChartToggle from "./EntityChartToggle.vue";
 import formatter from "@/mixins/formatter";
 import { CURRENCY } from "@/types/evcc";
@@ -136,7 +137,11 @@ export default defineComponent({
 			const list: StatItem[] = [
 				{
 					key: "energy",
-					label: this.$t("energy.stat.energy"),
+					label: energyLabel(
+						(key) => this.$t(key),
+						this.series?.group ?? "",
+						this.series?.isTemp
+					),
 					number: this.energy,
 					format: (v: number) => this.fmtKWh(v),
 				},

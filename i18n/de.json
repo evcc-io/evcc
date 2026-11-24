@@ -1223,7 +1223,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Ladung",
       "charged": "Geladen",
+      "discharge": "Entladung",
       "discharged": "Entladen"
     },
     "consumers": {
@@ -1247,8 +1249,8 @@
         "energy": "Verbraucht"
       },
       "grid": {
-        "energy": "Bezug",
-        "returnEnergy": "Einspeisung"
+        "energy": "Bezogen",
+        "returnEnergy": "Eingespeist"
       },
       "heating": {
         "energy": "Verbraucht"
@@ -1259,6 +1261,9 @@
       "meter": {
         "energy": "Energie",
         "returnEnergy": "Energie (rückwärts)"
+      },
+      "pv": {
+        "energy": "Erzeugt"
       }
     },
     "empty": {
@@ -1331,7 +1336,6 @@
       "co2Saved": "CO₂ gespart",
       "co2SavedTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz.",
       "configure": "Jetzt einrichten",
-      "energy": "Energie",
       "fromGrid": "{value} aus dem Netz",
       "noCo2": "Keine CO₂-Daten.",
       "noPrice": "Keine Preisdaten.",
