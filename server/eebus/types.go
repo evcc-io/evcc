@@ -9,21 +9,16 @@ import (
 	"github.com/evcc-io/evcc/util/machine"
 )
 
-// default device identity
 const (
 	BrandName string = "EVCC"
 	Model     string = "HEMS"
 )
 
-// identity is the device identity stated via SHIP (mDNS TXT record, QR code) and SPINE
-// (device classification). A white label product states its own brand, model and serial
-// number ([SRIP-220/10], [SRIP-220/13], [SRIP-220/14]).
+// identity stated via SHIP and SPINE: white label products state their own ([SRIP-220/10], [SRIP-220/13], [SRIP-220/14])
 type identity struct {
 	vendor, brand, model, serial string
 }
 
-// deviceIdentity reads the device identity from the environment (EEBUS_BRAND,
-// EEBUS_MODEL, EEBUS_VENDOR, EEBUS_SERIAL). The serial number defaults to the SHIP ID.
 func deviceIdentity(shipID string) identity {
 	brand := util.Getenv("EEBUS_BRAND", BrandName)
 	return identity{
