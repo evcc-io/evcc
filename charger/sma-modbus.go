@@ -33,11 +33,12 @@ import (
 
 // SmaModbus charger implementation for the SMA eCharger (Modbus profile SW 2.7)
 type SmaModbus struct {
-	conn     *modbus.Connection
-	phases   int
-	current  float64
-	minPower float64
-	maxPower float64
+	conn       *modbus.Connection
+	phases     int
+	current    float64
+	minCurrent float64
+	minPower   float64
+	maxPower   float64
 }
 
 const (
@@ -77,9 +78,6 @@ const (
 	smaModbusModeStop     = 4721
 
 	smaModbusNaN32 = 0x80000000
-
-	// the charger delivers about 0.5 A less than the setpoint and drops to 1p below 6 A at 3p
-	smaModbusMinCurrent3p = 6.5 // A
 )
 
 func init() {
@@ -126,6 +124,9 @@ func NewSmaModbus(ctx context.Context, settings modbus.Settings) (api.Charger, e
 	}
 
 	// the charger may reject values outside its range, e.g. a 4500 W minimum on the EV Charger
+	if v, err := wb.readHolding32(smaModbusRegMinCurrent); err == nil {
+		wb.minCurrent = smaModbusUint32(v) / 10
+	}
 	if v, err := wb.readHolding32(smaModbusRegMinPower); err == nil {
 		wb.minPower = smaModbusInt32(v)
 	}
@@ -266,9 +267,8 @@ func (wb *SmaModbus) MaxCurrentMillis(current float64) error {
 
 // setPower writes the power limit, the charger selects 1p or 3p internally based on it
 func (wb *SmaModbus) setPower(current float64, phases int) error {
-	if phases > 1 {
-		current = max(current, smaModbusMinCurrent3p)
-	}
+	// the charger derives the phase current from the setpoint and drops to 1p or pauses below its minimum current
+	current = max(current, wb.minCurrent)
 
 	power := grid.CurrentToPower(current, phases) * wb.voltageFactor(phases)
 
