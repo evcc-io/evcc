@@ -121,7 +121,7 @@ SMA inverters share the `Inverter.WModCfg.WCtlComCfg` channel family for active 
 
 - Unit id 3, big endian, 32 bit registers. NaN: S32 `0x80000000`, U32 `0xFFFFFFFF`, U64 all ones, status values use the lower 24 bits (`0xFFFFFD`). STR32 strings are 16 registers.
 - Writable parameters are stored in flash. SMA warns that cyclic changes destroy the flash, except grid service parameters marked in the device's "Parameter und Messwerte" document. Whether `WMaxIn` and `ChrgApv` may be written cyclically is unknown.
-- **verified** (eCharger, FW 2.7.31.R): every write to 44383 appears in the event log as a parameter change of `Inverter.WMaxIn`.
+- **verified** (eCharger, FW 2.7.31.R): every write to 44383 appears in the event log as a parameter change of `Inverter.WMaxIn`. This only shows that the charger logs the change, not that it is persisted to flash. No alternative setpoint register is known.
 
 ## Sources
 
