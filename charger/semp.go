@@ -20,6 +20,7 @@ package charger
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -150,6 +151,13 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 	// disconnecting after full charge ends the session on the charger side
 	if v, err := wb.smaCode(sma.ChrgStpWhenFl); err == nil && v == sma.Yes {
 		log.WARN.Println(`"Disconnect after full charge" must be set to "No"`)
+	}
+
+	// relay switching pauses charging beyond the loadpoint phase switch grace period
+	if v, err := wb.getParameter(sma.ChrgMinSwTms); err == nil {
+		if t, err := strconv.ParseFloat(v, 64); err == nil && t > sma.MaxMinSwTms {
+			log.WARN.Printf(`"Minimum relay switching time" is %.0fs, should be at most %ds`, t, sma.MaxMinSwTms)
+		}
 	}
 
 	// SEMP control requires operation with a grid connection point meter
