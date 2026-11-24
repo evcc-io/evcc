@@ -95,7 +95,7 @@
     "yaml": "^2.9.1"
   },
   "overrides": {
-    "joi": "^18.3.0",
+    "joi": "^18.3.1",
     "js-beautify": {
       "editorconfig": "^4.0.1",
       "glob": "^14.0.2"
