@@ -246,6 +246,7 @@ func TestDimMetersExempt(t *testing.T) {
 
 	assert.False(t, dimState{active: true}.dimActive(m))
 	assert.True(t, dimState{active: true}.dimActive(&dimPowerMeter{power: 0}))
+	assert.True(t, dimState{active: true}.dimActive(&dimPowerMeter{power: math.Inf(-1)}))
 }
 
 // Disabled loadpoints are kept as nil entries.

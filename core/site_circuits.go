@@ -124,9 +124,10 @@ func (d dimState) dimActive(dimmer api.Dimmer) bool {
 	return d.active && !dimExempt(dimmer)
 }
 
-// dimExempt returns whether the dimmer is exempt from dimming by a negative dim power
+// dimExempt returns whether the dimmer is exempt from dimming by a finite negative dim power
 func dimExempt(dimmer api.Dimmer) bool {
-	return dimmer.DimPower() < 0
+	p := dimmer.DimPower()
+	return p < 0 && !math.IsInf(p, -1)
 }
 
 // dimPower returns the configured residual power, treating exempt and invalid values as 0W
