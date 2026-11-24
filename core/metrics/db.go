@@ -215,8 +215,12 @@ func migrateMeterWithoutRowid() error {
 	}
 
 	// the dropped table leaves its pages on the freelist, about half the file. Return them, which
-	// also applies auto_vacuum to a database created before it was set
-	return db.Instance.Exec(`VACUUM`).Error
+	// also applies auto_vacuum to a database created before it was set. The rebuild is committed,
+	// so a failure (e.g. not enough disk space for the copy) only costs space
+	if err := db.Instance.Exec(`VACUUM`).Error; err != nil {
+		log.WARN.Printf("vacuum after meters migration: %v", err)
+	}
+	return nil
 }
 
 // meterTableCurrent reports whether meters is WITHOUT ROWID with numeric measurement columns
