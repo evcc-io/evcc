@@ -239,6 +239,27 @@ func TestOptimizerFullPowerPvShortfall(t *testing.T) {
 	ctrl.Finish()
 }
 
+// TestOptimizerFullPowerPvExport covers a full power charge with forecast export left
+// over: the pv covers more than the vehicle takes, so a measured shortfall must still
+// be followed instead of drawn from grid at max current
+func TestOptimizerFullPowerPvExport(t *testing.T) {
+	enableAutomatic(t)
+
+	lp, charger, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
+	lp.Disable.Delay = time.Minute
+	lp.offeredCurrent = maxA
+
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 3680, Grid: -195})
+
+	// measured: 1094W grid import feeds the vehicle
+	charger.EXPECT().MaxCurrent(int64(maxA - 5))
+	lp.Update(1094, 0, nil, nil, false, false, 0, nil, nil, nil)
+
+	assert.False(t, lp.pvTimer.Equal(elapsed), "pv timer must not be elapsed by a pv-covered plan")
+
+	ctrl.Finish()
+}
+
 // TestOptimizerStopFollowsSurplus covers a stop based on a forecast surplus that is
 // too low: the pv loop still enables on measured surplus after the enable delay
 func TestOptimizerStopFollowsSurplus(t *testing.T) {
