@@ -1997,6 +1997,26 @@
       "start": "Los geht's"
     }
   },
+  "optimize": {
+    "batteries": "Batterien",
+    "batteryEfficiency": "{charge} Ladewirkungsgrad ・ {discharge} Entladewirkungsgrad",
+    "chargingPlan": "Ladeplan",
+    "checkLogs": "Logs prüfen",
+    "collectingData": "Der Optimizer ist aktiviert und sammelt Daten. Bei neuen Installationen kann es bis zu 24 Stunden dauern.",
+    "collectingDataHint": "Falls danach nichts angezeigt wird, geben die Logs möglicherweise Aufschluss.",
+    "disabled": "Der Optimizer ist deaktiviert.",
+    "environment": "Umgebung",
+    "openSettings": "Einstellungen öffnen",
+    "optimizerInputs": "Optimizer-Eingaben",
+    "optimizerPlan": "Optimizer-Plan",
+    "rawData": "Rohdaten",
+    "request": "Anfrage",
+    "response": "Antwort",
+    "socProjections": "Ladestandsprognosen",
+    "timeline": "Zeitverlauf",
+    "timeSeriesSubtitle": "{steps} Schritte ・ {horizon} Std. Horizont",
+    "title": "Optimize Debug"
+  },
   "passwordModal": {
     "empty": "Passwort darf nicht leer sein",
     "labelCurrent": "Aktuelles Passwort",

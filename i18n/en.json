@@ -1997,6 +1997,26 @@
     "restarting": "Server will be back in a moment.",
     "starting": "Starting server..."
   },
+  "optimize": {
+    "batteries": "Batteries",
+    "batteryEfficiency": "{charge} charge efficiency ・ {discharge} discharge efficiency",
+    "chargingPlan": "Charging Plan",
+    "checkLogs": "Check logs",
+    "collectingData": "The optimizer is enabled and collecting data. For new installations this can take up to 24 hours.",
+    "collectingDataHint": "If nothing shows up after that, the logs may tell why.",
+    "disabled": "The optimizer is disabled.",
+    "environment": "Environment",
+    "openSettings": "Open settings",
+    "optimizerInputs": "Optimizer Inputs",
+    "optimizerPlan": "Optimizer Plan",
+    "rawData": "Raw Data",
+    "request": "Request",
+    "response": "Response",
+    "socProjections": "SoC Projections",
+    "timeline": "Timeline",
+    "timeSeriesSubtitle": "{steps} steps ・ {horizon} h horizon",
+    "title": "Optimize Debug"
+  },
   "passwordModal": {
     "empty": "Password should not be empty",
     "labelCurrent": "Current password",
