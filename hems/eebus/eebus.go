@@ -62,8 +62,7 @@ type EEBus struct {
 // heartbeat resumed but the Energy Guard has not stated a limit yet ([LPC-921]).
 const failsafeReleaseTimeout = 2 * time.Minute
 
-// limitWriteWindow is how long after a heartbeat a limit write is evaluated while the
-// CS is not controlled by the Energy Guard (LPC/LPP UC TS 1.0.0 section 2.2).
+// limitWriteWindow is how long after a heartbeat a limit write is evaluated while not controlled (LPC/LPP 2.2)
 const limitWriteWindow = 60 * time.Second
 
 type Limits struct {
@@ -346,11 +345,8 @@ func (c *EEBus) run() error {
 	return nil
 }
 
-// acceptsLimitWrite reports whether a limit write is evaluated now. While controlled by
-// the Energy Guard any write is. In "init", "failsafe state" and "unlimited/autonomous"
-// only a write within 60s after a heartbeat received in that state is (LPC/LPP UC TS
-// 1.0.0 section 2.2, ATC_COM_NT_CSConnection_001, ATC_COM_PT_CSFS_001).
-// Caller holds the mutex.
+// acceptsLimitWrite reports whether a limit write is evaluated: while controlled, or within
+// limitWriteWindow after a heartbeat received in the current state. Caller holds the mutex.
 func (c *EEBus) acceptsLimitWrite() bool {
 	if c.controlled {
 		return true

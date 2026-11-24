@@ -13,6 +13,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// pending limit writes served by withLimitMocks, distinct from the failsafe limits
+const (
+	testPendingConsumption = 5000.0
+	testPendingProduction  = 1500.0
+)
+
 // newExpiredHeartbeat is a heartbeat that was never set, i.e. missing
 func newExpiredHeartbeat() *util.Value[struct{}] {
 	return util.NewValue[struct{}](time.Hour)
@@ -27,36 +33,64 @@ func withLimitMocks(t *testing.T, c *EEBus) (*mocks.CsLPCInterface, *mocks.CsLPP
 	c.cs = &eebus.ControllableSystem{CsLPCInterface: lpc, CsLPPInterface: lpp}
 
 	lpc.EXPECT().PendingConsumptionLimits().Return(map[model.MsgCounterType]ucapi.LoadLimit{
-		1: {Value: 5000, IsActive: true},
+		1: {Value: testPendingConsumption, IsActive: true},
 	}).Maybe()
 	lpp.EXPECT().PendingProductionLimits().Return(map[model.MsgCounterType]ucapi.LoadLimit{
-		2: {Value: -1000, IsActive: true},
+		2: {Value: -testPendingProduction, IsActive: true},
 	}).Maybe()
 
 	return lpc, lpp
 }
 
-// TestLimitWrite_InitWithoutHeartbeat covers ATC_COM_NT_CSConnection_001: in "init" a
-// limit is only evaluated after a heartbeat, an earlier write is rejected.
-func TestLimitWrite_InitWithoutHeartbeat(t *testing.T) {
-	c := newTestEEBus(t)
-	require.NoError(t, c.run()) // init: failsafe limits apply
-	require.Equal(t, StatusFailsafe, c.status)
-
-	lpc, lpp := withLimitMocks(t, c)
-	lpc.EXPECT().ApproveOrDenyConsumptionLimit(model.MsgCounterType(1), false, "no preceding heartbeat").Once()
-	lpp.EXPECT().ApproveOrDenyProductionLimit(model.MsgCounterType(2), false, "no preceding heartbeat").Once()
-
-	c.consumptionWriteApprovalRequired()
-	c.productionWriteApprovalRequired()
+// assertRejectedNotApplied checks that rejected limit writes were not stored and are not
+// applied once a heartbeat arrives: the CS keeps its failsafe limits.
+func assertRejectedNotApplied(t *testing.T, c *EEBus) {
+	t.Helper()
 
 	assert.False(t, c.controlled)
 	assert.Zero(t, c.consumptionLimit)
+	assert.Zero(t, c.productionLimit)
 
-	// still in init, limited to the failsafe limit
+	c.updateHeartbeat()
 	require.NoError(t, c.run())
 	assert.Equal(t, StatusFailsafe, c.status)
 	assertConsumptionLimit(t, c, testFailsafeConsumption)
+
+	production := c.MaxProductionPower()
+	require.NotNil(t, production)
+	assert.Equal(t, testFailsafeProduction, *production)
+}
+
+// TestLimitWrite_WithoutHeartbeat covers ATC_COM_NT_CSConnection_001: in "init" a limit
+// written before a heartbeat is rejected, before and after the first cycle.
+func TestLimitWrite_WithoutHeartbeat(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		firstCycle bool
+	}{
+		{"before first cycle", false},
+		{"after first cycle", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := newTestEEBus(t)
+			if tc.firstCycle {
+				require.NoError(t, c.run())
+				require.Equal(t, StatusFailsafe, c.status)
+			}
+
+			lpc, lpp := withLimitMocks(t, c)
+			lpc.EXPECT().ApproveOrDenyConsumptionLimit(model.MsgCounterType(1), false, "no preceding heartbeat").Once()
+			lpp.EXPECT().ApproveOrDenyProductionLimit(model.MsgCounterType(2), false, "no preceding heartbeat").Once()
+
+			c.consumptionWriteApprovalRequired()
+			c.productionWriteApprovalRequired()
+
+			if !tc.firstCycle {
+				require.NoError(t, c.run())
+			}
+			assertRejectedNotApplied(t, c)
+		})
+	}
 }
 
 // TestLimitWrite_InitAfterHeartbeat covers transition 2 (init -> limited): a heartbeat
@@ -76,7 +110,7 @@ func TestLimitWrite_InitAfterHeartbeat(t *testing.T) {
 
 	require.NoError(t, c.run())
 	assert.Equal(t, StatusNormal, c.status)
-	assertConsumptionLimit(t, c, 5000)
+	assertConsumptionLimit(t, c, testPendingConsumption)
 }
 
 // TestLimitWrite_HeartbeatTooOld rejects a write more than 60s after the last heartbeat
@@ -89,11 +123,13 @@ func TestLimitWrite_HeartbeatTooOld(t *testing.T) {
 	c.heartbeatAt = time.Now().Add(-limitWriteWindow - time.Second)
 	c.statusUpdated = c.heartbeatAt.Add(-time.Second)
 
-	lpc, _ := withLimitMocks(t, c)
+	lpc, lpp := withLimitMocks(t, c)
 	lpc.EXPECT().ApproveOrDenyConsumptionLimit(model.MsgCounterType(1), false, "no preceding heartbeat").Once()
+	lpp.EXPECT().ApproveOrDenyProductionLimit(model.MsgCounterType(2), false, "no preceding heartbeat").Once()
 
 	c.consumptionWriteApprovalRequired()
-	assert.False(t, c.controlled)
+	c.productionWriteApprovalRequired()
+	assertRejectedNotApplied(t, c)
 }
 
 // TestLimitWrite_FailsafeBeforeHeartbeat covers ATC_COM_PT_CSFS_001: in "failsafe state"
@@ -110,13 +146,16 @@ func TestLimitWrite_FailsafeBeforeHeartbeat(t *testing.T) {
 	require.Equal(t, StatusFailsafe, c.status)
 	require.False(t, c.controlled)
 
-	lpc, _ := withLimitMocks(t, c)
+	lpc, lpp := withLimitMocks(t, c)
 	lpc.EXPECT().ApproveOrDenyConsumptionLimit(model.MsgCounterType(1), false, "no preceding heartbeat").Once()
+	lpp.EXPECT().ApproveOrDenyProductionLimit(model.MsgCounterType(2), false, "no preceding heartbeat").Once()
+
 	c.consumptionWriteApprovalRequired()
+	c.productionWriteApprovalRequired()
 
 	require.NoError(t, c.run())
 	assert.Equal(t, StatusFailsafe, c.status)
-	assertConsumptionLimit(t, c, testFailsafeConsumption)
+	assertRejectedNotApplied(t, c)
 }
 
 // TestLimitWrite_ControlledWithoutRecentHeartbeat covers ATC_COM_PT_CSLimited_002: while
@@ -130,5 +169,5 @@ func TestLimitWrite_ControlledWithoutRecentHeartbeat(t *testing.T) {
 	lpc.EXPECT().ApproveOrDenyConsumptionLimit(model.MsgCounterType(1), true, "").Once()
 
 	c.consumptionWriteApprovalRequired()
-	assert.Equal(t, 5000.0, c.consumptionLimit.Value)
+	assert.Equal(t, testPendingConsumption, c.consumptionLimit.Value)
 }
