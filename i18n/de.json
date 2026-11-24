@@ -415,6 +415,7 @@
       "change": "Ändern",
       "clear": "Löschen",
       "close": "Schließen",
+      "configured": "Konfiguriert",
       "confirmDisable": "Dieses Gerät deaktivieren? Es wird nach dem nächsten Neustart ignoriert.",
       "confirmEnable": "Dieses Gerät wieder aktivieren?",
       "confirmSave": "Es gibt ungespeicherte Änderungen. Jetzt speichern?",
@@ -426,7 +427,9 @@
       "delete": "Löschen",
       "disable": "Deaktivieren",
       "disabled": "deaktiviert",
-      "dismiss": "Ausblenden",
+      "dismiss": "Ignorieren",
+      "dismissAll": "Alle ignorieren",
+      "dismissed": "Ignoriert",
       "docsLink": "Siehe Dokumentation.",
       "dragHandle": "Verschieben",
       "dragItem": "Verschiebbar: {title}",
@@ -1931,10 +1934,9 @@
       "title": "Gibt es eine Hausbatterie?"
     },
     "checklist": {
-      "dismiss": "Ausblenden",
       "legacyTariffs": "Veraltete Tarifkonfiguration aktiv.",
-      "progress": "{done} von {total} erledigt",
-      "title": "Einrichtung abschließen"
+      "suggestions": "1 Vorschlag | {count} Vorschläge",
+      "title": "Deine Einrichtung"
     },
     "control": {
       "description": "Beginne mit dem ersten. Weitere lassen sich später auf der Konfigurationsseite ergänzen.",

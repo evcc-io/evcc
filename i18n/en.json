@@ -412,13 +412,14 @@
       "authPerformHint": "Will open in a new tab. Return here to continue.",
       "authPrepare": "Prepare connection",
       "cancel": "Cancel",
-      "continue": "Continue",
       "change": "Change",
       "clear": "Clear",
       "close": "Close",
+      "configured": "Configured",
       "confirmDisable": "Disable this device? It will be ignored after the next restart.",
       "confirmEnable": "Enable this device again?",
       "confirmSave": "There are unsaved changes. Save now?",
+      "continue": "Continue",
       "copied": "Copied!",
       "copy": "Copy",
       "customHelp": "Create a user-defined device using evcc's plugin system.",
@@ -427,6 +428,8 @@
       "disable": "Disable",
       "disabled": "disabled",
       "dismiss": "Dismiss",
+      "dismissAll": "Dismiss all",
+      "dismissed": "Dismissed",
       "docsLink": "See documentation.",
       "dragHandle": "Drag handle",
       "dragItem": "Draggable: {title}",
@@ -453,10 +456,10 @@
       "saving": "Saving…",
       "selectFile": "Browse",
       "showAdvancedSettings": "Show advanced settings",
+      "site": "Site",
       "telemetry": "Telemetry",
       "templateLoading": "Loading...",
       "title": "Title",
-      "site": "Site",
       "typeDeprecated": "The type '{type}' is outdated and will be removed in a future version. Please check the changelog and recreate this device.",
       "validateSave": "Validate & save"
     },
@@ -1923,10 +1926,9 @@
       "title": "Do you have a home battery?"
     },
     "checklist": {
-      "dismiss": "Dismiss",
       "legacyTariffs": "Legacy tariff configuration in use.",
-      "progress": "{done} of {total} done",
-      "title": "Complete your setup"
+      "suggestions": "1 suggestion | {count} suggestions",
+      "title": "Your setup"
     },
     "control": {
       "description": "Start with your first one. More can be added later on the configuration page.",
