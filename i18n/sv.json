@@ -1143,7 +1143,7 @@
       },
       "generic": "Generiska integrationer",
       "grid": {
-        "description": "Priset på el som köps från elnätet. Det används för att beräkna de faktiska laddkostnaderna och för att styra fordonsladdning, uppvärmning och laddning av hembatteriet från elnätet efter elpriset.",
+        "description": "Energipris för nätimport. För beräkning av faktiska laddningskostnader och prisoptimerad laddning av fordon, värmeenheter eller nätladdning av ditt hembatteri.",
         "titleAdd": "Lägg till tariff för import av el",
         "titleEdit": "Ändra tariff för import av el"
       },
@@ -1473,6 +1473,7 @@
     "price": {
       "average": "Genomsnitt",
       "constant": "Pris",
+      "estimate": "uppskattning",
       "lowestHour": "Billigaste timmen",
       "range": "Intervall"
     },
@@ -1673,7 +1674,8 @@
       "repeatingPlans": "Återkommande planer",
       "selectAll": "Välj alla",
       "strategy": {
-        "label": "Strategi"
+        "label": "Strategi",
+        "optimizerHint": "{optimizer} tar ännu inte hänsyn till optimeringsinställningen och väljer alltid de billigaste tidsluckorna. Begränsa den automatiska styrningen till ”Hembatteri” om det behövs."
       },
       "time": "Tid",
       "title": "Plan",
@@ -1982,7 +1984,7 @@
       "add": "Lägg till elnätsmätare",
       "confirm": "Elnätsmätaren ger underlag för överskottsladdning och energistatistik. Vi rekommenderar att du lägger till en.",
       "confirmNone": "Fortsätt utan",
-      "description": "Mäter hur mycket el som tas från och matas ut till elnätet vid anslutningspunkten. Det gör att överskottsladdningen kan styras mer exakt.",
+      "description": "Mäter nätimport och nätexport vid anslutningspunkten. Möjliggör exakt laddning med överskottsel.",
       "none": "Ingen elnätsmätare",
       "title": "Har du en elnätsmätare?"
     },
@@ -2085,7 +2087,7 @@
       "created": "Starttid",
       "finished": "Sluttid",
       "identifier": "Identifierare",
-      "loadpoint": "Laddpunkt",
+      "loadpoint": "Laddplats",
       "meterstart": "Elmätarställning vid start (kWh)",
       "meterstop": "Elmätarställning vid slut (kWh)",
       "odometer": "Fordonets mätarställning (km)",
@@ -2101,7 +2103,7 @@
     "downloadTotal": "Ladda ner alla laddningar",
     "energy": "Laddat",
     "filter": {
-      "allLoadpoints": "alla laddpunkter",
+      "allLoadpoints": "Alla laddplatser",
       "allVehicles": "alla fordon",
       "filter": "Filter"
     },
@@ -2112,11 +2114,11 @@
       "self": "Sol"
     },
     "groupBy": {
-      "loadpoint": "Laddpunkt",
+      "loadpoint": "Laddplats",
       "none": "Sol",
       "vehicle": "Fordon"
     },
-    "loadpoint": "Laddpunkt",
+    "loadpoint": "Laddplats",
     "noData": "Inga laddningar denna månad.",
     "odometer": "Mätarställning",
     "overview": "Överblick",
@@ -2185,8 +2187,8 @@
       "light": "ljus"
     },
     "time": {
-      "12h": "12 timmar",
-      "24h": "24 timmar",
+      "12h": "12t",
+      "24h": "24t",
       "label": "Tidsformat"
     },
     "title": "Användargränssnitt",
@@ -2217,9 +2219,9 @@
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Aktiv tid",
-    "batteryDescription": "Matar ut el från hembatteriet till elnätet när inmatningsersättningen är hög.",
-    "description": "Pausar laddningen när inmatningsersättningen är hög så att mer el kan säljas till elnätet.",
-    "priceLabel": "Inmatningsersättning",
+    "batteryDescription": "Laddar ur hembatteriet till elnätet när ersättningen för inmatad el är hög.",
+    "description": "Pausar laddningen vid höga priser för att prioritera lönsam inmatning till elnätet.",
+    "priceLabel": "Inmatningstaxa",
     "priceLimit": "Prisgräns för inmatning",
     "resetWarning": "Ingen dynamisk inmatningstariff har angetts, men gränsen {limit} finns kvar. Vill du ta bort gränsen?",
     "title": "Inmatningsprioritet"
