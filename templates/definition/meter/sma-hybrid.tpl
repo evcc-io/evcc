@@ -1,4 +1,3 @@
-{{/* hybrid inverter grid meter */}}
 {{ define "sma-hybrid-grid" }}
 power:
   source: calc
@@ -119,7 +118,6 @@ powers:
         scale: -1
 {{- end }}
 
-{{/* hybrid inverter pv dc power */}}
 {{ define "sma-hybrid-pv" }}
 power:
   source: calc
@@ -145,7 +143,6 @@ power:
 maxacpower: {{ .maxacpower }} # W
 {{- end }}
 
-{{/* hybrid inverter battery power and soc */}}
 {{ define "sma-hybrid-battery" }}
 power:
   source: calc
