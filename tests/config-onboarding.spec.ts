@@ -241,12 +241,11 @@ test.describe("wizard", async () => {
       .getByTestId("checklist-pv")
       .getByRole("button", { name: "Dismiss", exact: true })
       .click();
-    await expect(
-      checklist.getByTestId("checklist-gridExport").getByRole("button", { name: "Add" })
-    ).toHaveCount(0);
-    await expect(
-      checklist.getByTestId("checklist-solar").getByRole("button", { name: "Add" })
-    ).toHaveCount(0);
+    for (const item of ["gridExport", "solar"]) {
+      const row = checklist.getByTestId(`checklist-${item}`);
+      await expect(row.getByRole("button", { name: "Add" })).toHaveCount(0);
+      await expect(row.getByRole("button", { name: "Dismissed" })).toBeVisible();
+    }
     await expect(checklist).toContainText("6 suggestions");
 
     // second click brings it back
@@ -255,6 +254,17 @@ test.describe("wizard", async () => {
     await expect(solar.getByRole("button", { name: "Add" })).toBeVisible();
     await expect(checklist).toContainText("7 suggestions");
     await solar.getByRole("button", { name: "Dismiss", exact: true }).click();
+    await expect(checklist).toContainText("6 suggestions");
+
+    // bringing pv back also brings back what its dismissal implied
+    const pv = checklist.getByTestId("checklist-pv");
+    await pv.getByRole("button", { name: "Dismissed" }).click();
+    await expect(
+      checklist.getByTestId("checklist-gridExport").getByRole("button", { name: "Add" })
+    ).toBeVisible();
+    await expect(solar.getByRole("button", { name: "Add" })).toBeVisible();
+    await expect(checklist).toContainText("9 suggestions");
+    await pv.getByRole("button", { name: "Dismiss", exact: true }).click();
     await expect(checklist).toContainText("6 suggestions");
 
     // empty main page while nothing is configured
@@ -292,6 +302,9 @@ test.describe("existing configuration", async () => {
       checklist.getByTestId("checklist-heater").getByRole("button", { name: "Add" })
     ).toBeVisible();
     await checklist.getByRole("button", { name: "Dismiss all" }).click();
+    await expect(checklist).not.toBeVisible();
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
     await expect(checklist).not.toBeVisible();
   });
 
