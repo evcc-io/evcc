@@ -23,11 +23,11 @@ type Config struct {
 }
 
 type Properties struct {
-	Type    string
-	Disable bool   `json:"deviceDisable,omitempty" mapstructure:"deviceDisable"`
-	Title   string `json:"deviceTitle,omitempty" mapstructure:"deviceTitle"`
-	Icon    string `json:"deviceIcon,omitempty" mapstructure:"deviceIcon"`
-	Product string `json:"deviceProduct,omitempty" mapstructure:"deviceProduct"`
+	Type        string
+	Disable     bool        `json:"deviceDisable,omitempty" mapstructure:"deviceDisable"`
+	Title       string      `json:"deviceTitle,omitempty" mapstructure:"deviceTitle"`
+	Icon        string      `json:"deviceIcon,omitempty" mapstructure:"deviceIcon"`
+	Product     string      `json:"deviceProduct,omitempty" mapstructure:"deviceProduct"`
 	Preferences Preferences `json:"devicePreferences,omitzero" mapstructure:"devicePreferences" gorm:"column:preferences;type:string;serializer:json"`
 }
 
