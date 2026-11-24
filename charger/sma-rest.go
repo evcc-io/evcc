@@ -158,6 +158,21 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 		log.WARN.Println("rotary switch must be set to fast charging")
 	}
 
+	// the charger may already charge on 1p after a restart
+	if s, err := wb.Status(); err == nil && s == api.StatusC {
+		if l1, l2, l3, err := wb.Currents(); err == nil {
+			var active int
+			for _, l := range []float64{l1, l2, l3} {
+				if math.Abs(l) > 1 {
+					active++
+				}
+			}
+			if active == 1 {
+				wb.phases = 1
+			}
+		}
+	}
+
 	// disconnecting after full charge ends the session on the charger side
 	if v, err := wb.code(sma.ChrgStpWhenFl); err == nil && v == sma.Yes {
 		log.WARN.Println(`"Disconnect after full charge" must be set to "No"`)
@@ -385,7 +400,7 @@ func (wb *SmaRest) getMeasurement(id string) (float64, error) {
 	}
 
 	for _, el := range res {
-		if el.ChannelId == id {
+		if el.ChannelId == id && len(el.Values) > 0 {
 			return el.Values[0].Value, nil
 		}
 	}
@@ -397,6 +412,10 @@ func (wb *SmaRest) parameter(id string) (smarest.Parameter, error) {
 	res, err := wb.parameterG.Get()
 	if err != nil {
 		return smarest.Parameter{}, err
+	}
+
+	if len(res) == 0 {
+		return smarest.Parameter{}, fmt.Errorf("unknown parameter: %s", id)
 	}
 
 	for _, el := range res[0].Values {

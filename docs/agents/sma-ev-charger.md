@@ -98,7 +98,10 @@ All drivers only read on startup and warn on settings that conflict with evcc co
 - **documented**: `AcALim` (6 to 32 A, fractional values accepted) is available via REST on both generations. It is not part of the Modbus profile.
 - **documented**: the EV Charger (`EVC22-3AC-10`, package 1.2.23.R) exposes `WMaxIn` as writable with a range of 4500 to 22000 W. The minimum is above 3p at 6 A (4140 W), so the power limit cannot cover 1p or the lowest 3p currents there. `AcALim` (6 to 32 A) can.
 - **assumed**: whether `WMaxIn` limits the charging power at runtime on the EV Charger or only acts as an installation limit is unverified.
-- **assumed**: if the eCharger enforces the same `WMaxIn` minimum of 4500 W, single phase charging via power limit is not possible. Check the `WMaxIn` range on an eCharger, e.g. via the `min`/`max` fields of the REST parameter response.
+- **verified** (eCharger `EVC22-3AC-20`, FW 2.7.31.R, Modbus): 44387 `WMinIn` reads -1380 W and 33019 `WMaxInRtg` -22080 W. The 4500 W minimum of the EV Charger does not apply, 1p charging via power limit works.
+- **verified** (same device): 44383 `WMaxIn` only accepts negative values (consumption), positive values fail with Modbus exception 3. Whether REST on the eCharger uses the same sign is unknown.
+- **verified** (same device): the charger derives the phase current from the power limit and the measured voltage and delivers about 0.5 A less. Below 6 A per phase at 3p it pauses and continues on 1p, e.g. held 3p at 4545 W but dropped to 1p at 4250 W and 4140 W with 234 to 239 V.
+- **verified** (same device): each start and each 1p/3p switch pauses about 2 to 2.5 min, caused by `Chrg.MinSwTm` (minimum relay switching time, default 120 s).
 
 ## External active power setpoint
 
@@ -115,6 +118,7 @@ SMA inverters share the `Inverter.WModCfg.WCtlComCfg` channel family for active 
 
 - Unit id 3, big endian, 32 bit registers. NaN: S32 `0x80000000`, U32 `0xFFFFFFFF`, U64 all ones, status values use the lower 24 bits (`0xFFFFFD`). STR32 strings are 16 registers.
 - Writable parameters are stored in flash. SMA warns that cyclic changes destroy the flash, except grid service parameters marked in the device's "Parameter und Messwerte" document. Whether `WMaxIn` and `ChrgApv` may be written cyclically is unknown.
+- **verified** (eCharger, FW 2.7.31.R): every write to 44383 appears in the event log as a parameter change of `Inverter.WMaxIn`.
 
 ## Sources
 
