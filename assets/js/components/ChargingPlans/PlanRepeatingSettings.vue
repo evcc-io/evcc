@@ -45,7 +45,7 @@
 			<div class="col-7 col-lg-3 mb-2 mb-lg-0">
 				<MultiSelect
 					:id="formId('weekdays')"
-					:value="selectedWeekdays"
+					:modelValue="selectedWeekdays"
 					:options="dayOptions"
 					:selectAllLabel="$t('main.chargingPlan.selectAll')"
 					data-testid="repeating-plan-weekdays"
