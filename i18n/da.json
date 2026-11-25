@@ -421,6 +421,7 @@
       "change": "Ændre",
       "clear": "Slet",
       "close": "Luk",
+      "configured": "Konfigureret",
       "confirmDisable": "Deaktiver denne enhed? Den ignoreres efter næste genstart.",
       "confirmEnable": "Aktiver denne enhed igen?",
       "confirmSave": "Ændringer er ikke gemt. Skal de gemmes nu?",
@@ -433,6 +434,8 @@
       "disable": "Deaktivér",
       "disabled": "deaktiveret",
       "dismiss": "Afvis",
+      "dismissAll": "Luk alle",
+      "dismissed": "Lukket",
       "docsLink": "Se dokumentation.",
       "dragHandle": "Træk-håndtag",
       "dragItem": "Kan trækkes: {title}",
@@ -1236,7 +1239,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Oplad",
       "charged": "Opladet",
+      "discharge": "Aflad",
       "discharged": "Afladet"
     },
     "consumers": {
@@ -1261,8 +1266,8 @@
         "energy": "Forbrugt"
       },
       "grid": {
-        "energy": "importeret",
-        "returnEnergy": "eksporteret"
+        "energy": "Importeret",
+        "returnEnergy": "Eksporteret"
       },
       "heating": {
         "energy": "Forbrugt"
@@ -1273,12 +1278,15 @@
       "meter": {
         "energy": "Energi",
         "returnEnergy": "Energi (eksport)"
+      },
+      "pv": {
+        "energy": "Produceret"
       }
     },
     "empty": {
       "description": "Ingen energidata for denne periode.",
       "descriptionCurrent": "Ingen energidata endnu. Værdier vises når de første målinger er registreret.",
-      "showCurrent": "Vi aktuel periode"
+      "showCurrent": "Vis aktuel periode"
     },
     "flow": {
       "battery": "Batteri",
@@ -1967,7 +1975,8 @@
       "dismiss": "Afvis",
       "legacyTariffs": "Gammel tarifkonfiguration er i brug.",
       "progress": "{done} af {total} udført",
-      "title": "Fuldfør din opsætning"
+      "suggestions": "1 forslag | {count} forslag",
+      "title": "Din opsætning"
     },
     "control": {
       "description": "Begynd med din første. Flere kan tilføjes senere på konfigurationssiden.",
