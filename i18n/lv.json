@@ -421,6 +421,7 @@
       "change": "Mainīt",
       "clear": "Notīrīt",
       "close": "Aizvērt",
+      "configured": "Konfigurēts",
       "confirmDisable": "Atspējot šo ierīci? Tā tiks ignorēta pēc nākamās restartēšanas.",
       "confirmEnable": "Vai atkal iespējot šo ierīci?",
       "confirmSave": "Ir nesaglabātas izmaiņas. Saglabāt tagad?",
@@ -433,6 +434,8 @@
       "disable": "Atspējot",
       "disabled": "atspējots",
       "dismiss": "Noraidīt",
+      "dismissAll": "Noraidīt visus",
+      "dismissed": "Noraidīts",
       "docsLink": "Skatīt dokumentāciju.",
       "dragHandle": "Vilkt",
       "dragItem": "Velkams: {title}",
@@ -1236,7 +1239,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Uzlāde",
       "charged": "Uzlādēts",
+      "discharge": "Izlāde",
       "discharged": "Izlādēts"
     },
     "consumers": {
@@ -1266,8 +1271,8 @@
         "energy": "Patērēts"
       },
       "grid": {
-        "energy": "importēts",
-        "returnEnergy": "eksportēts"
+        "energy": "Importēts",
+        "returnEnergy": "Eksportēts"
       },
       "heating": {
         "energy": "Patērēts"
@@ -1278,6 +1283,9 @@
       "meter": {
         "energy": "Enerģija",
         "returnEnergy": "Enerģija (atpakaļvirzienā)"
+      },
+      "pv": {
+        "energy": "Saražots"
       }
     },
     "empty": {
@@ -1971,7 +1979,8 @@
       "dismiss": "Noraidīt",
       "legacyTariffs": "Tiek izmantota vecā tarifu konfigurācija.",
       "progress": "{done} no {total} pabeigts",
-      "title": "Pabeidziet iestatīšanu"
+      "suggestions": "1 ieteikums | {count} ieteikumi",
+      "title": "Jūsu iestatījumi"
     },
     "control": {
       "description": "Sāciet ar pirmo. Vairāk varēs pievienot vēlāk konfigurācijas lapā.",

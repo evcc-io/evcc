@@ -421,6 +421,7 @@
       "change": "Ändra",
       "clear": "Rensa",
       "close": "Stäng",
+      "configured": "Konfigurerad",
       "confirmDisable": "Vill du inaktivera enheten? Den ignoreras efter nästa omstart.",
       "confirmEnable": "Aktivera denna enhet igen?",
       "confirmSave": "Det finns osparade ändringar. Vill du spara dem nu?",
@@ -433,6 +434,8 @@
       "disable": "Avaktivera",
       "disabled": "avaktiverad",
       "dismiss": "Avvisa",
+      "dismissAll": "Avfärda alla",
+      "dismissed": "Avfärdad",
       "docsLink": "Se dokumentationen.",
       "dragHandle": "Draghandtag",
       "dragItem": "Kan dras: {title}",
@@ -1236,7 +1239,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Laddnivå",
       "charged": "Laddat",
+      "discharge": "Urladda",
       "discharged": "Urladdat"
     },
     "consumers": {
@@ -1261,8 +1266,8 @@
         "energy": "Förbrukat"
       },
       "grid": {
-        "energy": "Import",
-        "returnEnergy": "Export"
+        "energy": "Importerad",
+        "returnEnergy": "Exporterad"
       },
       "heating": {
         "energy": "Förbrukat"
@@ -1273,6 +1278,9 @@
       "meter": {
         "energy": "Energi",
         "returnEnergy": "Energi (motsatt riktning)"
+      },
+      "pv": {
+        "energy": "Producerad"
       }
     },
     "empty": {
@@ -1966,7 +1974,8 @@
       "dismiss": "Avfärda",
       "legacyTariffs": "Äldre tariffkonfiguration används.",
       "progress": "{done} av {total} klara",
-      "title": "Slutför din installation"
+      "suggestions": "1 förslag | {count} förslag",
+      "title": "Din uppsättning"
     },
     "control": {
       "description": "Börja med en enhet. Du kan lägga till fler senare på konfigurationssidan.",

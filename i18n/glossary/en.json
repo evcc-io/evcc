@@ -1,6 +1,6 @@
 {
     "autarky": {
-        "description": "Share of consumption covered without the grid.",
+        "description": "Share of total consumption covered without the grid.",
         "other": "autarky"
     },
     "authorization": {
@@ -290,6 +290,10 @@
     "tariffSurcharge": {
         "description": "Fixed amount per kWh added to the energy price, e.g. grid fees or provider margin. Not the charge level.",
         "other": "surcharge"
+    },
+    "totalConsumption": {
+        "description": "Consumption plus charging and heating controlled by evcc. Basis for autarky and savings.",
+        "other": "total consumption"
     },
     "usage": {
         "description": "Energy overview view showing where energy went.",

@@ -36,6 +36,8 @@ export default defineComponent({
 	mixins: [formatter, echartsChart],
 	props: {
 		flows: { type: Array as PropType<ChartFlow[]>, default: () => [] },
+		// metered kWh per node name, the attributed links add up to less
+		totals: { type: Object as PropType<Record<string, number>>, default: () => ({}) },
 	},
 	data() {
 		return { compact: COMPACT.matches };
@@ -57,9 +59,9 @@ export default defineComponent({
 		nodes(): Node[] {
 			const sum = (flows: ChartFlow[], key: "from" | "to", id: string) =>
 				flows.filter((f) => f[key] === id).reduce((acc, f) => acc + f.energy, 0);
-			// label shows the full total, the node is drawn only if a visible link remains
+			// label shows the metered total, the node is drawn only if a visible link remains
 			const node = (key: "from" | "to", id: string) => ({
-				value: sum(this.flows, key, id),
+				value: this.totals[`${key}-${id}`] ?? sum(this.flows, key, id),
 				drawn: sum(this.visibleFlows, key, id) > 0,
 			});
 			const src = SOURCES.map((id) => ({

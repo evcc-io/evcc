@@ -114,7 +114,7 @@ export default defineComponent({
 			]);
 			const consumption = this.ring(
 				"consumption",
-				this.$t("energy.flow.home"),
+				this.$t("energy.flow.totalConsumption"),
 				this.consumption,
 				(["pv", "battery", "grid"] as const).map((from) => ({
 					label: this.$t(`energy.sources.${from}`),
