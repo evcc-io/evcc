@@ -45,11 +45,13 @@ The usage view keeps that column, from minus import and discharge up to producti
 
 ## Metered versus attributed
 
-Headline numbers that a user can compare against their meter (grid import, grid export, production, home consumption, battery charge and discharge) are metered sums. Numbers that describe relationships (autarky, self-consumption, source mix, savings) are derived from the attribution. The two can differ slightly, which is accepted. A cost box never claims to explain more energy than the tariff-covered attributed energy.
+Headline numbers that a user can compare against their meter (grid import, grid export, production, home consumption, battery charge and discharge) are metered sums. Numbers that describe relationships (autarky, self-consumption, source mix, savings) are derived from the attribution. The two can differ, which is accepted: counters that tick in 0.1 kWh steps land a slot late and lose several percent to the attribution. A cost box never claims to explain more energy than the tariff-covered attributed energy.
+
+The flow chart follows the same split. Its node labels are the metered totals of the cards, its links are attributed and add up to less.
 
 ## Derived ratios
 
-- **Autarky** = 1 - grid share of what reached home and loadpoints.
+- **Autarky** = 1 - attributed grid import over what reached home and loadpoints. Grid energy charged into the battery counts as import, so it can be lower than the grid share of the summary ring suggests.
 - **Self-consumption** = 1 - export share of PV production.
 - **Source mix per sink** = share of each source in the energy that reached that sink.
 

@@ -1460,6 +1460,7 @@
       "overview": "Overview",
       "pv": "Production",
       "title": "Energy flow",
+      "totalConsumption": "Total consumption",
       "usage": "Usage",
       "withdrawal": "Withdrawal"
     },

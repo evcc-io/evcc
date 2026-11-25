@@ -86,7 +86,7 @@
 								<LegendList class="mt-4" :legends="stackLegends" />
 							</div>
 							<div v-if="cold" class="skeleton-chart"></div>
-							<FlowChart v-else :flows="flowChartFlows" />
+							<FlowChart v-else :flows="flowChartFlows" :totals="flowChartTotals" />
 						</div>
 						<template v-else>
 							<GroupChart
@@ -1078,6 +1078,18 @@ export default defineComponent({
 			const heatingTitles = this.loadpoints.filter((lp) => lp.isTemp).map((lp) => lp.title);
 			return splitLoadpointFlows(this.flows, this.flow?.entities, heatingTitles);
 		},
+		flowChartTotals(): Record<string, number> {
+			const groups = this.loadpointGroups.map((g) => [`to-${g.key}`, this.total(g.entities)]);
+			return {
+				"from-pv": this.pvTotal,
+				"from-battery": this.total(this.batteries, "returnEnergy"),
+				"from-grid": this.gridImport,
+				"to-home": this.homeEnergy,
+				...Object.fromEntries(groups),
+				"to-battery": this.total(this.batteries),
+				"to-export": this.gridExport,
+			};
+		},
 		loadpointColors(): Record<string, string> {
 			return this.entityColors(this.loadpoints);
 		},
@@ -1276,7 +1288,7 @@ export default defineComponent({
 			return this.gridSeries.reduce((acc, s) => acc + sumEnergy(s), 0);
 		},
 		gridExport(): number {
-			return this.gridSeries.reduce((acc, s) => acc + sumEnergy(s, "returnEnergy"), 0);
+			return this.total(this.gridSeries, "returnEnergy");
 		},
 		// no grid meter rows in the period, the cards would only show zeros
 		hasGrid(): boolean {
@@ -1573,8 +1585,8 @@ export default defineComponent({
 					return d.getMonth();
 			}
 		},
-		total(list: HistorySeries[]): number {
-			return list.reduce((acc, s) => acc + sumEnergy(s), 0);
+		total(list: HistorySeries[], key: "energy" | "returnEnergy" = "energy"): number {
+			return list.reduce((acc, s) => acc + sumEnergy(s, key), 0);
 		},
 		// entities of a group that metered anything in the period
 		withData(group: string): HistorySeries[] {
