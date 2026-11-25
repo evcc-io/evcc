@@ -53,10 +53,17 @@
 								></shopicon-regular-exclamationtriangle>
 								<span class="flex-grow-1 px-2 py-1 text-break">
 									<span
-										v-for="(line, idx) in message(msg)"
+										v-for="(line, idx) in lines(msg.message)"
 										:key="idx"
 										class="d-block"
 									>
+										<template v-if="idx === 0 && msg.area">
+											<router-link
+												:to="logLink(msg.area)"
+												class="text-muted"
+												>{{ areaLabel(msg) }}</router-link
+											>:
+										</template>
 										{{ line }}
 									</span>
 								</span>
@@ -125,15 +132,17 @@ export default defineComponent({
 		}
 	},
 	methods: {
-		message({ message, lp }: { message: string | string[]; lp?: number }) {
-			const lines = Array.isArray(message) ? message : [message];
-			if (lp) {
-				// Find loadpoint by id (which is the original 1-based index)
-				const loadpoint = this.loadpoints.find((l) => l.id === String(lp));
-				const title = loadpoint?.displayTitle || lp;
-				lines[0] = `${title}: ${lines[0]}`;
-			}
-			return lines;
+		lines(message: string | string[]) {
+			return Array.isArray(message) ? message : [message];
+		},
+		areaLabel({ area, lp }: Notification) {
+			// loadpoint id is the original 1-based index
+			const loadpoint = this.loadpoints.find((l) => l.id === String(lp));
+			if (!loadpoint) return area;
+			return loadpoint.title || this.$t("main.loadpoint.fallbackName");
+		},
+		logLink(area: string) {
+			return { path: "/log", query: { areas: area } };
 		},
 		clear() {
 			window.app?.clear();
