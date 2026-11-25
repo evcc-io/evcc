@@ -1,0 +1,128 @@
+template: homeassistant-sgready
+products:
+  - brand: Home Assistant
+    description:
+      de: SG-Ready Wärmepumpe
+      en: SG Ready heat pump
+group: heatinggeneric
+capabilities: ["dim"]
+requirements:
+  evcc: ["skiptest"]
+  description:
+    en: Heat pump with SG Ready contacts switched by Home Assistant entities. Home Assistant instances in your network will be auto-discovered and suitable entities (e.g. `switch.*`, `sensor.*`) will be suggested.
+    de: Wärmepumpe mit SG-Ready-Kontakten, die über Home Assistant Entitäten geschaltet werden. Home Assistant Instanzen in deinem Netzwerk werden automatisch erkannt und passende Entitäten (z.B. `switch.*`, `sensor.*`) werden vorgeschlagen.
+auth:
+  type: homeassistant
+  params: [uri, insecure]
+params:
+  - name: uri
+    description:
+      de: Home Assistant URI
+      en: Home Assistant URI
+    example: http://homeassistant.local:8123
+    help:
+      en: " " # overwrite default
+      de: " " # overwrite default
+    service: homeassistant/instances
+    required: true
+  - name: insecure
+  - name: boost
+    description:
+      de: Entity ID des Boost-Relais
+      en: Entity ID of the boost relay
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=switch,input_boolean
+    example: switch.heatpump_sgready_boost
+    required: true
+  - name: dim
+    description:
+      de: Entity ID des Dimm-Relais
+      en: Entity ID of the dim relay
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=switch,input_boolean
+    example: switch.heatpump_sgready_dim
+  - name: power
+    description:
+      de: Entity ID für Leistungsmessung
+      en: Entity ID for power measurement
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=W,kW
+    example: sensor.heatpump_power
+  - name: energy
+    description:
+      de: Entity ID für Energiemessung
+      en: Entity ID for energy measurement
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=Wh,kWh,MWh
+    example: sensor.heatpump_energy
+    advanced: true
+  - name: temp
+    description:
+      de: Entity ID für Temperaturmessung
+      en: Entity ID for temperature measurement
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=°C,°F,K
+    example: sensor.heatpump_temperature
+  - name: limittemp
+    description:
+      de: Entity ID für Temperaturbegrenzung
+      en: Entity ID for temperature limit
+    help:
+      de: Im Gerät konfigurierte Begrenzung
+      en: Limit configured in the device
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor&unit=°C,°F,K
+    example: sensor.heatpump_target_temperature
+    advanced: true
+render: |
+  type: sgready-relay
+  boost:
+    type: switchsocket
+    standbypower: -1
+    enabled:
+      source: homeassistant
+      uri: {{ .uri }}
+      insecure: {{ .insecure }}
+      entity: {{ .boost }}
+    enable:
+      source: homeassistant
+      uri: {{ .uri }}
+      insecure: {{ .insecure }}
+      entity: {{ .boost }}
+  {{- if .dim }}
+  dim:
+    type: switchsocket
+    standbypower: -1
+    enabled:
+      source: homeassistant
+      uri: {{ .uri }}
+      insecure: {{ .insecure }}
+      entity: {{ .dim }}
+    enable:
+      source: homeassistant
+      uri: {{ .uri }}
+      insecure: {{ .insecure }}
+      entity: {{ .dim }}
+  {{- end }}
+  {{- if .power }}
+  power:
+    source: homeassistant
+    uri: {{ .uri }}
+    insecure: {{ .insecure }}
+    entity: {{ .power }}
+  {{- end }}
+  {{- if .energy }}
+  energy:
+    source: homeassistant
+    uri: {{ .uri }}
+    insecure: {{ .insecure }}
+    entity: {{ .energy }}
+  {{- end }}
+  {{- if .temp }}
+  temp:
+    source: homeassistant
+    uri: {{ .uri }}
+    insecure: {{ .insecure }}
+    entity: {{ .temp }}
+  {{- end }}
+  {{- if .limittemp }}
+  limittemp:
+    source: homeassistant
+    uri: {{ .uri }}
+    insecure: {{ .insecure }}
+    entity: {{ .limittemp }}
+  {{- end }}
