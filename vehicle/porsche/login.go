@@ -22,7 +22,7 @@ import (
 // Server-side port of the Auth0 "Identifier First" login used by the My Porsche
 // app, adapted from https://github.com/CJNE/pyporscheconnectapi. Because evcc
 // performs the HTTP requests itself (rather than a browser), it can read the
-// authorization code straight from the my-porsche-app:// redirect Location
+// authorization code straight from the callback redirect Location
 // header. The only step that needs the user is solving the captcha.
 
 var (
@@ -416,8 +416,7 @@ func (o *Identity) start() (*api.AuthChallenge, error) {
 // finish maps a login step result to the next challenge or exchanges the code.
 // Caller must hold o.loginMu.
 func (o *Identity) finish(s *LoginSession, code string, err error) (*api.AuthChallenge, error) {
-	var capErr *ErrCaptchaRequired
-	if errors.As(err, &capErr) {
+	if capErr, ok := errors.AsType[*ErrCaptchaRequired](err); ok {
 		s.challenge = &api.AuthChallenge{Kind: api.AuthChallengeCaptcha, Image: capErr.Image}
 		o.pending = s
 		return s.challenge, nil

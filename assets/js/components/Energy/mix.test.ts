@@ -1,5 +1,12 @@
 import { describe, expect, test } from "vite-plus/test";
-import { entityFlows, sinkCost, sinkPrice, sourceBreakdown } from "./mix";
+import {
+  entityFlows,
+  mergeSources,
+  sinkCost,
+  sinkPrice,
+  sourceBreakdown,
+  splitLoadpointFlows,
+} from "./mix";
 import { OTHERS, type EntityFlows } from "./types";
 
 describe("sourceBreakdown", () => {
@@ -64,6 +71,46 @@ describe("entityFlows", () => {
   });
 });
 
+describe("splitLoadpointFlows", () => {
+  test("replaces the loadpoint sink by charging and heating", () => {
+    const flows = splitLoadpointFlows(
+      [
+        { from: "pv", to: "home", energy: 1 },
+        { from: "pv", to: "loadpoint", energy: 5 },
+        { from: "grid", to: "loadpoint", energy: 4 },
+      ],
+      [
+        { group: "consumer", title: "Dryer", flows: [{ from: "pv", to: "home", energy: 1 }] },
+        {
+          group: "loadpoint",
+          title: "Carport",
+          flows: [{ from: "pv", to: "loadpoint", energy: 2 }],
+        },
+        {
+          group: "loadpoint",
+          title: "Garage",
+          flows: [{ from: "pv", to: "loadpoint", energy: 1 }],
+        },
+        {
+          group: "loadpoint",
+          title: "Heat pump",
+          flows: [
+            { from: "pv", to: "loadpoint", energy: 2 },
+            { from: "grid", to: "loadpoint", energy: 4 },
+          ],
+        },
+      ],
+      ["Heat pump"]
+    );
+    expect(flows).toEqual([
+      { from: "pv", to: "home", energy: 1 },
+      { from: "pv", to: "charging", energy: 3 },
+      { from: "pv", to: "heating", energy: 2 },
+      { from: "grid", to: "heating", energy: 4 },
+    ]);
+  });
+});
+
 describe("sinkPrice", () => {
   test("cost over priced energy, undefined without any", () => {
     const flows = [
@@ -72,5 +119,30 @@ describe("sinkPrice", () => {
     ] as const;
     expect(sinkPrice([...flows], "home")).toBeCloseTo(0.2);
     expect(sinkPrice([...flows], "loadpoint")).toBeUndefined();
+  });
+});
+
+describe("mergeSources", () => {
+  test("adds energy and cost, shares and prices follow", () => {
+    const rows = mergeSources([
+      [
+        { from: "pv", share: 75, energy: 3, cost: 0.3, price: 0.1 },
+        { from: "grid", share: 25, energy: 1, cost: 0.3, price: 0.3 },
+      ],
+      [
+        { from: "pv", share: 0, energy: 0 },
+        { from: "grid", share: 100, energy: 4, cost: 1.3, price: 0.325 },
+      ],
+    ]);
+    expect(rows).toEqual([
+      { from: "pv", share: 37.5, energy: 3, cost: expect.closeTo(0.3), price: expect.closeTo(0.1) },
+      {
+        from: "grid",
+        share: 62.5,
+        energy: 5,
+        cost: expect.closeTo(1.6),
+        price: expect.closeTo(0.32),
+      },
+    ]);
   });
 });

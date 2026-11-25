@@ -29,7 +29,7 @@ type Measurement struct {
 // Suggestion is the optimizer's advisory action for the current slot
 type Suggestion struct {
 	// Action is the recommended action for the current slot.
-	// home battery: normal|hold|charge|holdcharge; loadpoint/vehicle: charge|stop
+	// home battery: normal|holddischarge|charge|holdcharge; loadpoint/vehicle: charge|stop
 	Action           string  `json:"action"`
 	Charge           float64 `json:"charge"`           // recommended charge power, W
 	Discharge        float64 `json:"discharge"`        // recommended discharge power, W

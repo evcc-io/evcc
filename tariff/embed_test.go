@@ -153,7 +153,7 @@ func TestTotalPriceFormulaMemoryStable(t *testing.T) {
 	}
 
 	before := int64(sample())
-	for i := 0; i < 10_000; i++ {
+	for range 10_000 {
 		e.totalPrice(0.20, ts)
 	}
 	after := int64(sample())
@@ -203,4 +203,13 @@ func TestTotalPriceFormulaMultiline(t *testing.T) {
 func TestTotalPriceFormulaNoTrailingExpression(t *testing.T) {
 	e := embed{Formula: "x := price"}
 	require.ErrorContains(t, e.init(), "must end with an expression")
+}
+
+func TestTotalPriceRounded(t *testing.T) {
+	e := embed{Charges: 0.1255, Tax: 0.2}
+	assert.Equal(t, 0.43404, e.totalPrice(0.2362, time.Now()))
+
+	e.Formula = "(price + charges) * (1 + tax)"
+	require.NoError(t, e.init())
+	assert.Equal(t, 0.43404, e.totalPrice(0.2362, time.Now()))
 }

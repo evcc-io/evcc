@@ -34,16 +34,22 @@ export function isDismissed(item: OnboardingItem): boolean {
   return current().dismissed.includes(item);
 }
 
+// applied locally so fast clicks build on each other, the websocket pushes the saved state
 async function save(patch: Partial<OnboardingState>) {
-  const res = await api.put("/config/onboarding", { ...current(), ...patch });
-  store.state.onboarding = res.data;
+  const next = { ...current(), ...patch };
+  store.state.onboarding = next;
+  await api.put("/config/onboarding", next);
 }
 
 // no solar system means no export tariff and no solar forecast either
-export function dismiss(item: OnboardingItem) {
-  const implied: OnboardingItem[] = item === "pv" ? ["gridExport", "solar"] : [];
-  const dismissed = new Set([...current().dismissed, item, ...implied]);
+export function dismiss(...items: OnboardingItem[]) {
+  const implied: OnboardingItem[] = items.includes("pv") ? ["gridExport", "solar"] : [];
+  const dismissed = new Set([...current().dismissed, ...items, ...implied]);
   return save({ dismissed: [...dismissed] });
+}
+
+export function undismiss(item: OnboardingItem) {
+  return save({ dismissed: current().dismissed.filter((i) => i !== item) });
 }
 
 export function finish() {

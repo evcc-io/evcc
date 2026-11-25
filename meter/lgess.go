@@ -122,23 +122,20 @@ func (m *LgEss) batteryMode(batterySocLimits batterySocLimits) func(api.BatteryM
 	return func(mode api.BatteryMode) error {
 		switch mode {
 		case api.BatteryNormal:
-			// firmeware bug: battery not discharging after hold mode
+			// firmeware bug: battery not discharging after holddischarge mode
 			// if battery is sleeping, wake up with charging for 10sec
 			m.conn.BatteryMode("on", 100, true)
 			time.Sleep(10 * time.Second)
 			// now turn Battery discharge on
 			return m.conn.BatteryMode("on", int(batterySocLimits.MinSoc), true)
-		case api.BatteryHold:
+		case api.BatteryHoldDischarge:
 			soc, err := m.batterySoc()
 			if err != nil {
 				return err
 			}
 			// soc needs to be the next higher int value to stop discharging immediately
 			// example: batterySoc=50.7 -> set 51
-			if int(soc)+1 < 100 {
-				soc++
-			}
-			return m.conn.BatteryMode("on", int(soc), true)
+			return m.conn.BatteryMode("on", min(int(soc)+1, 100), true)
 		case api.BatteryCharge:
 			return m.conn.BatteryMode("on", int(batterySocLimits.MaxSoc), true)
 		default:

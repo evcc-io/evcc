@@ -91,7 +91,7 @@ render: |
           user: {{ .user }}
           password: {{ .password }}
         body: '{"timeofuse":[]}'
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: http
         uri: http://{{ .host }}{{ .batteryconfiguri }}/timeofuse

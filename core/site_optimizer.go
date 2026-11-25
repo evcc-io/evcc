@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/request"
@@ -71,14 +72,18 @@ const (
 )
 
 type batteryDetail struct {
-	Type     batteryType `json:"type"`
-	Title    string      `json:"title,omitempty"`
-	Name     string      `json:"name,omitempty"`
-	Capacity float64     `json:"capacity,omitempty"`
+	Type       batteryType `json:"type"`
+	Title      string      `json:"title,omitempty"`
+	Name       string      `json:"name,omitempty"`
+	Capacity   float64     `json:"capacity,omitempty"`
+	SocUnknown bool        `json:"socUnknown,omitempty"`
+
+	PlanGoals []loadpoint.PlanGoal `json:"planGoals,omitempty"` // vehicle plan goals within the horizon, not capped at the limit
 
 	loadpoint    *int              // originating loadpoint id for loadpoint/vehicle entries
 	controllable bool              // device can act on suggestions
 	modes        []api.BatteryMode // modes the battery controller supports
+	precondition []float32         // late charging window charged by the loadpoint itself (Wh per slot)
 }
 
 // batteryKey and loadpointKey build the canonical device keys used for
@@ -108,6 +113,15 @@ func (d batteryDetail) currentAction(site *Site) string {
 	return loadpointCurrentAction(site.loadpoints[*d.loadpoint])
 }
 
+// controlled returns true if the optimizer applies its suggestion to the device
+// itself. Must only be called for devices with a non-empty key.
+func (d batteryDetail) controlled(site *Site) bool {
+	if d.Type == batteryTypeBattery {
+		return site.Automatic()
+	}
+	return site.loadpoints[*d.loadpoint].optimizerControlled()
+}
+
 // batteryAction returns the battery's current mode for suggestion comparison.
 // A battery that was never switched (BatteryUnknown) is in normal operation.
 func (site *Site) batteryAction() string {
@@ -132,10 +146,18 @@ func optimizerAuth(req *http.Request) {
 // startup); the slot gate is left open so the next cycle retries.
 var errOptimizerNotReady = errors.New("battery measurements not ready")
 
-// optimizerInterval is the refresh cadence in automatic mode. It divides the
-// slot duration so every slot starts on a fresh result. Advisory suggestions
+// optimizerInterval is the minimum gap between runs in automatic mode. The gate is
+// checked once per loadpoint loop, so the actual gap is longer. Advisory suggestions
 // only need one run per slot.
 const optimizerInterval = 5 * time.Minute
+
+// optimizerTrigger starts optimizerUpdateAsync in the background. Gating before
+// spawning keeps an inactive optimizer from leaving goroutines behind.
+func (site *Site) optimizerTrigger(force bool) {
+	if sponsor.IsAuthorized() && optimizerEnabled() {
+		go site.optimizerUpdateAsync(force)
+	}
+}
 
 // optimizerUpdateAsync runs the optimizer unless the last run is younger than
 // the mode's interval. Pass force to run regardless, e.g. when a changed setting
@@ -197,6 +219,12 @@ func (site *Site) optimizerUpdateAsync(force bool) {
 }
 
 func (site *Site) optimizerUpdate(battery []types.Measurement) error {
+	// the loadpoint loop quantises the cadence above optimizerInterval, the previous gap estimates the next one (#36530)
+	var gap time.Duration
+	if !site.optimizer.updated.IsZero() {
+		gap = min(time.Since(site.optimizer.updated), tariff.SlotDuration)
+	}
+
 	req, details, err := site.optimizerRequest(battery)
 	if err != nil {
 		return err
@@ -262,7 +290,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return errors.New("optimizer result expired")
 	}
 
-	site.applyOptimizerResult(optimizerSolve{req: req, details: details, res: *resp.JSON200, schedule: schedule, completed: now}, now)
+	site.applyOptimizerResult(optimizerSolve{req: req, details: details, res: *resp.JSON200, schedule: schedule, completed: now, gap: gap}, now)
 
 	return nil
 }
@@ -289,8 +317,9 @@ type optimizerSolve struct {
 	details   requestDetails
 	res       optimizer.OptimizationResult
 	schedule  optimizerSchedule
-	slot      int       // last applied slot
-	completed time.Time // solve completion, not last reapply
+	slot      int           // last applied slot
+	completed time.Time     // solve completion, not last reapply
+	gap       time.Duration // expected time until the next solve
 }
 
 // setLastOptimizerSolve remembers a solve's inputs for reapplySuggestions
@@ -306,7 +335,7 @@ func (site *Site) optimizerUnlock() {
 	site.optimizer.mu.Unlock()
 
 	if site.optimizer.rerun.Load() {
-		go site.optimizerUpdateAsync(false)
+		site.optimizerTrigger(false)
 	}
 }
 

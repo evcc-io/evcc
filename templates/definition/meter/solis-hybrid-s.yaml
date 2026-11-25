@@ -14,8 +14,10 @@ requirements:
   description:
     de: |
       Die aktive Batteriesteuerung überschreibt die Wechselrichter Einstellungen "Allow grid charging" und "Battery Reserve SOC".
+      In der SolisCloud App muss die Funktion "Solis AI" / "Smart Strategy" vollständig deaktiviert sein (nicht nur auf "Self-Use" oder Standard gestellt), da die Cloud sonst die lokale Steuerung regelmäßig zurücksetzt.
     en: |
       Active battery control overrides the inverter settings "Allow grid charging" and "Battery Reserve SOC".
+      In the SolisCloud app, the "Solis AI" / "Smart Strategy" feature must be turned off completely (setting it to "Self-Use" or standard is not sufficient), otherwise the cloud periodically resets local control.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -141,7 +143,7 @@ render: |
       address: 33139 # Battery capacity SOC
       type: input
       decode: uint16
-  # reserve soc per mode: normal minsoc, hold current soc, charge maxsoc
+  # reserve soc per mode: normal minsoc, holddischarge current soc, charge maxsoc
   limitsoc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -163,7 +165,7 @@ render: |
             address: 43110
             type: writesingle
             decode: uint16
-    - case: 2  # hold
+    - case: 2  # holddischarge
       set:
         source: const
         value: 17 # Bits 0+4: Self Use (1) + Battery Reserve (16)

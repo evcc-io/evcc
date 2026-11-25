@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/api"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -82,4 +83,53 @@ func TestMonitorGetContext(t *testing.T) {
 	_, err := m.GetContext(ctx)
 	assert.ErrorIs(t, err, context.DeadlineExceeded)
 	assert.Less(t, time.Since(start), time.Second, "context must cancel the first-read wait")
+}
+
+// afterNotifyClock wraps a mock clock and closes started once After is called,
+// so tests can advance the clock only after the first-wait timer is registered.
+type afterNotifyClock struct {
+	*clock.Mock
+	started chan struct{}
+}
+
+func (c *afterNotifyClock) After(d time.Duration) <-chan time.Time {
+	ch := c.Mock.After(d)
+	select {
+	case <-c.started:
+	default:
+		close(c.started)
+	}
+	return ch
+}
+
+func TestMonitorFirstWaitOnce(t *testing.T) {
+	mock := clock.NewMock()
+	clk := &afterNotifyClock{Mock: mock, started: make(chan struct{})}
+	m := NewMonitor[int](time.Second).WithClock(clk)
+
+	go func() {
+		<-clk.started
+		mock.Add(time.Second)
+	}()
+
+	_, err := m.Get()
+	assert.ErrorIs(t, err, api.ErrOutdated)
+
+	// second call must not wait on the clock again
+	_, err = m.Get()
+	assert.ErrorIs(t, err, api.ErrOutdated)
+}
+
+func TestMonitorSetDuringFirstWait(t *testing.T) {
+	clk := &afterNotifyClock{Mock: clock.NewMock(), started: make(chan struct{})}
+	m := NewMonitor[int](time.Second).WithClock(clk)
+
+	go func() {
+		<-clk.started
+		m.Set(42)
+	}()
+
+	val, err := m.Get()
+	assert.NoError(t, err)
+	assert.Equal(t, 42, val)
 }

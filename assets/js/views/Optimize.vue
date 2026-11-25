@@ -323,6 +323,7 @@ export default defineComponent({
 				type: d.type,
 				title: d.title || d.name,
 				capacity: d.capacity,
+				planGoals: d.planGoals,
 				color: this.batteryColors[i] || "",
 			}));
 			return [

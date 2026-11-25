@@ -154,10 +154,10 @@ func (p *constPlugin) BytesSetter(param string) (func([]byte) error, error) {
 
 	val, err := hex.DecodeString(str)
 	if err != nil {
-		err = nil
+		return nil, err
 	}
 
 	return func(_ []byte) error {
 		return set(val)
-	}, err
+	}, nil
 }

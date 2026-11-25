@@ -101,9 +101,10 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			}
 			for i, r := range data {
 				data[i] = api.Rate{
-					Value: t.totalPrice(r.Value, r.Start),
-					Start: r.Start.Local(),
-					End:   r.End.Local(),
+					Value:    t.totalPrice(r.Value, r.Start),
+					Start:    r.Start.Local(),
+					End:      r.End.Local(),
+					Estimate: r.Estimate,
 				}
 			}
 			return nil

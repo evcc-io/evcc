@@ -73,6 +73,7 @@
 	--evcc-transition-medium: 500ms;
 	--evcc-transition-fast: 250ms;
 	--evcc-transition-very-fast: 100ms;
+	--evcc-loading-delay: 100ms;
 
 	--bs-primary: var(--evcc-darker-green);
 	--bs-primary-rgb: var(--evcc-darker-green-rgb);
@@ -1111,4 +1112,65 @@ input::-webkit-date-and-time-value {
 	margin: auto;
 	border-radius: 2rem;
 	max-width: 480px;
+}
+
+.loading-line {
+	height: 2px;
+	overflow: hidden;
+	opacity: 0;
+	transition: opacity var(--evcc-transition-very-fast);
+}
+.loading-line--active {
+	opacity: 1;
+	transition-delay: var(--evcc-loading-delay);
+}
+.loading-line::before {
+	content: "";
+	display: block;
+	width: 40%;
+	height: 100%;
+	border-radius: 2px;
+	background: var(--bs-primary);
+}
+.loading-line--active::before {
+	animation: loading-line 1.2s ease-in-out infinite;
+}
+@keyframes loading-line {
+	from {
+		transform: translateX(-100%);
+	}
+	to {
+		transform: translateX(250%);
+	}
+}
+.stale {
+	opacity: 0.35;
+	pointer-events: none;
+	transition: opacity var(--evcc-transition-fast) var(--evcc-loading-delay);
+}
+.skeleton-chart,
+.skeleton-value {
+	background: var(--evcc-gray-10);
+	animation: skeleton-in var(--evcc-transition-fast) var(--evcc-loading-delay) backwards;
+}
+.skeleton-chart {
+	border-radius: 0.5rem;
+}
+.skeleton-value {
+	display: inline-block;
+	width: 3em;
+	height: 0.6em;
+	border-radius: 0.3em;
+}
+@keyframes skeleton-in {
+	from {
+		opacity: 0;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.loading-line--active::before {
+		width: 100%;
+		opacity: 0.5;
+		animation: none;
+	}
 }

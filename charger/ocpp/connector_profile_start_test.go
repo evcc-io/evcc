@@ -95,7 +95,13 @@ func (suite *connTestSuite) TestProfileStartInvalidatedBeforeEnqueue() {
 			}, time.Second, time.Millisecond)
 
 			if event == "local start" {
-				conn.startTransaction(42, "local")
+				suite.addMeasurements()
+				conn.startTransaction(42, &core.StartTransactionRequest{
+					IdTag: "local", MeterStart: 123000, Timestamp: types.NewDateTime(suite.clock.Now()),
+				})
+				suite.Equal("123000", conn.measurements[types.MeasurandEnergyActiveImportRegister].Value)
+				suite.False(p.armed)
+				suite.Nil(p.cancel)
 			} else {
 				conn.cp.setConnected(false)
 				conn.cp.setConnected(true)

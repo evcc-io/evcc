@@ -11,6 +11,7 @@ import colors, { setAlpha } from "@/colors";
 import { PERIODS } from "../Sessions/types";
 import type { HistorySeries } from "./GroupChart.vue";
 import { SLOT_MS, slotWatts } from "./slots";
+import { energyLabel } from "./groups";
 import { labelStep, DAY_STEPS, MONTH_STEPS } from "@/utils/labelStep";
 import { is12hFormat } from "@/units";
 
@@ -119,23 +120,29 @@ export default defineComponent({
 					...tooltipStyle(colors.text || ""),
 					formatter: (params: { value: [number, number, string] }[]) => {
 						if (!params?.length) return "";
+						const day = this.period === PERIODS.DAY;
+						const cells = (kWh: number) => [
+							this.fmtKWh(kWh),
+							...(day ? [this.fmtW(slotWatts(kWh), POWER_UNIT.AUTO)] : []),
+						];
 						// only what ran at that time, the list is long otherwise
 						const rows = [...params]
 							.reverse()
 							.filter((p) => p.value[1] > 0)
-							.map((p) => ({
-								name: p.value[2],
-								values: [this.fmtValue(p.value[1])],
-							}));
+							.map((p) => ({ name: p.value[2], values: cells(p.value[1]) }));
 						const total = params.reduce((acc, p) => acc + p.value[1], 0);
-						return tooltipTable(this.fmtTime(params[0]!.value[0]), [
-							...rows,
-							{
-								name: this.$t("sessions.total"),
-								values: [this.fmtValue(total)],
-								total: true,
-							},
-						]);
+						const t = (key: string) => this.$t(key);
+						return tooltipTable(
+							this.fmtTime(params[0]!.value[0]),
+							[
+								...rows,
+								{ name: t("sessions.total"), values: cells(total), total: true },
+							],
+							[
+								energyLabel(t, "consumer"),
+								...(day ? [`ø ${t("energy.socTemp.power")}`] : []),
+							]
+						);
 					},
 				},
 				singleAxis: {
@@ -161,7 +168,8 @@ export default defineComponent({
 					{
 						type: "themeRiver",
 						data: this.data,
-						boundaryGap: [0, 0],
+						// air above and below, the stream is heavy when it fills the frame
+						boundaryGap: ["10%", "10%"],
 						label: { show: false },
 						// flat layers, hovering changes nothing, a click still selects
 						emphasis: { disabled: true },
@@ -181,12 +189,6 @@ export default defineComponent({
 				const layer = this.stack[params.dataIndex];
 				if (layer) this.$emit("select", layer.key);
 			});
-		},
-		// 15 minute slot as average power, longer buckets as energy
-		fmtValue(energy: number): string {
-			return this.period === PERIODS.DAY
-				? this.fmtW(slotWatts(energy), POWER_UNIT.AUTO)
-				: this.fmtKWh(energy);
 		},
 		fmtTime(t: number): string {
 			const d = new Date(t);
@@ -218,15 +220,9 @@ export default defineComponent({
 </script>
 
 <style scoped>
-@import "../../../css/breakpoints.css";
-
 /* same frame as the treemap, toggling does not jump */
+/* as high as a consumer's own chart, selecting one does not move the page */
 .river {
-	height: 360px;
-}
-@media (--sm-and-up) {
-	.river {
-		height: 260px;
-	}
+	height: 200px;
 }
 </style>

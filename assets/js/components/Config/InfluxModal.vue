@@ -27,8 +27,9 @@
 				id="influxOrg"
 				:label="$t('config.influx.labelOrg')"
 				example="home"
+				optional
 			>
-				<input id="influxOrg" v-model="values.org" class="form-control" required />
+				<input id="influxOrg" v-model="values.org" class="form-control" />
 			</FormRow>
 			<FormRow
 				id="influxDatabase"

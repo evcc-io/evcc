@@ -4,6 +4,7 @@ import store from "@/store";
 
 import Modal from "bootstrap/js/dist/modal";
 import { isSystemError } from "@/utils/fatal.js";
+import { isConfigModal } from "@/configModal";
 
 const auth = reactive({
   configured: true,
@@ -84,6 +85,15 @@ export function openLoginModal(nextUrl: string | null = null, nextModal: Modal |
   auth.nextModal = nextModal;
   const modal = Modal.getOrCreateInstance(document.getElementById("loginModal") as HTMLElement);
   modal.show();
+}
+
+export function interruptWithLogin() {
+  const open = document.querySelector<HTMLElement>(".modal.show");
+  if (open?.id === "loginModal") return;
+
+  const resumable = open && !isConfigModal(open) ? Modal.getOrCreateInstance(open) : null;
+  resumable?.hide();
+  openLoginModal(null, resumable);
 }
 
 let timeoutId: number | undefined = undefined;

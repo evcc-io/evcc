@@ -251,7 +251,11 @@ func (lp *Loadpoint) SetAlwaysCharge(ac api.AlwaysCharge) error {
 	}
 
 	lp.log.DEBUG.Println("set always charge:", ac)
-	lp.setAlwaysCharge(ac)
+
+	if ac != lp.alwaysCharge {
+		lp.setAlwaysCharge(ac)
+		lp.triggerOptimizer()
+	}
 
 	return nil
 }
@@ -411,6 +415,7 @@ func (lp *Loadpoint) SetMinSoc(soc int) {
 	if lp.minSoc != soc {
 		lp.setMinSoc(soc)
 		lp.requestUpdate()
+		lp.triggerOptimizer()
 	}
 }
 
@@ -741,6 +746,8 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 			lp.batteryBoost = boostStart
 			lp.requestUpdate()
 		}
+
+		lp.triggerOptimizer()
 	}
 
 	return nil
@@ -825,15 +832,7 @@ func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	if lp.chargeCurrents == nil {
-		return lp.offeredCurrent
-	}
-	current := max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
-	// measurements drop to ~0 while phases switch, reserve the offered current
-	if lp.enabled && !lp.phaseSwitchCompleted() {
-		current = max(current, lp.offeredCurrent)
-	}
-	return current
+	return lp.actualMaxChargeCurrent()
 }
 
 // GetMinCurrent returns the min loadpoint current
@@ -1039,6 +1038,7 @@ func (lp *Loadpoint) setSmartCostLimit(val *float64) {
 
 		lp.settings.SetFloatPtr(keys.SmartCostLimit, val)
 		lp.publish(keys.SmartCostLimit, val)
+		lp.triggerOptimizer()
 	}
 }
 

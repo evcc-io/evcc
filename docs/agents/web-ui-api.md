@@ -3,7 +3,7 @@
 ## Server Architecture
 
 - **Router:** gorilla/mux, strict slash
-- **Middleware:** GZIP, CORS (`*`), ETag caching, request logging, JSON headers, JWT auth
+- **Middleware:** GZIP, cross-origin protection, ETag caching, request logging, JSON headers, JWT auth
 - **Timeouts:** Read 5s, Write 10s, Idle 120s
 - **Static assets:** embedded in binary (`fs.FS`)
 - **Default port:** 7070

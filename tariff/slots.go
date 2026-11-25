@@ -68,9 +68,10 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 			start := r.Start.Add(time.Duration(j) * SlotDuration)
 
 			res = append(res, api.Rate{
-				Start: start,
-				End:   start.Add(SlotDuration),
-				Value: vals[j],
+				Start:    start,
+				End:      start.Add(SlotDuration),
+				Value:    vals[j],
+				Estimate: r.Estimate,
 			})
 		}
 	}

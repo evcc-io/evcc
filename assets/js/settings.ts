@@ -11,6 +11,7 @@ const SETTINGS_ENERGYFLOW_CO2 = "settings_energyflow_co2";
 const SETTINGS_ENERGYFLOW_PV = "settings_energyflow_pv";
 const SETTINGS_ENERGYFLOW_BATTERY = "settings_energyflow_battery";
 const SETTINGS_ENERGYFLOW_LOADPOINTS = "settings_energyflow_loadpoints";
+const SETTINGS_ENERGYFLOW_HEATING = "settings_energyflow_heating";
 const SETTINGS_ENERGYFLOW_CONSUMERS = "settings_energyflow_consumers";
 const LOADPOINTS = "loadpoints";
 const SESSION_COLUMNS = "session_columns";
@@ -20,6 +21,8 @@ const SAVINGS_INDICATOR = "savings_indicator";
 const SESSIONS_GROUP = "sessions_group";
 const SESSIONS_TYPE = "sessions_type";
 const ENERGY_ENTITY_CHART = "energy_entity_chart";
+const ENERGY_GRID_DIRECTION = "energy_grid_direction";
+const ENERGY_BATTERY_DIRECTION = "energy_battery_direction";
 const ENERGY_OVERVIEW = "energy_overview";
 const ENERGY_CONSUMER_VIEW = "energy_consumer_view";
 const BATTERY_UNIT = "battery_unit";
@@ -125,6 +128,7 @@ export interface Settings {
   energyflowPv: boolean;
   energyflowBattery: boolean;
   energyflowLoadpoints: boolean;
+  energyflowHeating: boolean;
   energyflowConsumers: boolean;
   sessionColumns: string[];
   savingsPeriod: string;
@@ -133,6 +137,8 @@ export interface Settings {
   sessionsGroup: string;
   sessionsType: string;
   energyEntityChart: string;
+  energyGridDirection: string;
+  energyBatteryDirection: string;
   energyOverview: string;
   energyConsumerView: string;
   batteryUnit: string;
@@ -159,6 +165,7 @@ const settings: Settings = reactive({
   energyflowPv: readBool(SETTINGS_ENERGYFLOW_PV),
   energyflowBattery: readBool(SETTINGS_ENERGYFLOW_BATTERY),
   energyflowLoadpoints: readBool(SETTINGS_ENERGYFLOW_LOADPOINTS),
+  energyflowHeating: readBool(SETTINGS_ENERGYFLOW_HEATING),
   energyflowConsumers: readBool(SETTINGS_ENERGYFLOW_CONSUMERS),
   sessionColumns: readArray(SESSION_COLUMNS),
   savingsPeriod: read(SAVINGS_PERIOD),
@@ -167,6 +174,8 @@ const settings: Settings = reactive({
   sessionsGroup: read(SESSIONS_GROUP),
   sessionsType: read(SESSIONS_TYPE),
   energyEntityChart: read(ENERGY_ENTITY_CHART),
+  energyGridDirection: read(ENERGY_GRID_DIRECTION),
+  energyBatteryDirection: read(ENERGY_BATTERY_DIRECTION),
   energyOverview: read(ENERGY_OVERVIEW),
   energyConsumerView: read(ENERGY_CONSUMER_VIEW),
   batteryUnit: read(BATTERY_UNIT),
@@ -192,6 +201,7 @@ watch(() => settings.energyflowCo2, saveBool(SETTINGS_ENERGYFLOW_CO2));
 watch(() => settings.energyflowPv, saveBool(SETTINGS_ENERGYFLOW_PV));
 watch(() => settings.energyflowBattery, saveBool(SETTINGS_ENERGYFLOW_BATTERY));
 watch(() => settings.energyflowLoadpoints, saveBool(SETTINGS_ENERGYFLOW_LOADPOINTS));
+watch(() => settings.energyflowHeating, saveBool(SETTINGS_ENERGYFLOW_HEATING));
 watch(() => settings.energyflowConsumers, saveBool(SETTINGS_ENERGYFLOW_CONSUMERS));
 watch(() => settings.sessionColumns as string[], saveArray(SESSION_COLUMNS));
 watch(() => settings.savingsPeriod, save(SAVINGS_PERIOD));
@@ -200,6 +210,8 @@ watch(() => settings.savingsIndicator, save(SAVINGS_INDICATOR));
 watch(() => settings.sessionsGroup, save(SESSIONS_GROUP));
 watch(() => settings.sessionsType, save(SESSIONS_TYPE));
 watch(() => settings.energyEntityChart, save(ENERGY_ENTITY_CHART));
+watch(() => settings.energyGridDirection, save(ENERGY_GRID_DIRECTION));
+watch(() => settings.energyBatteryDirection, save(ENERGY_BATTERY_DIRECTION));
 watch(() => settings.energyOverview, save(ENERGY_OVERVIEW));
 watch(() => settings.energyConsumerView, save(ENERGY_CONSUMER_VIEW));
 watch(() => settings.batteryUnit, save(BATTERY_UNIT));

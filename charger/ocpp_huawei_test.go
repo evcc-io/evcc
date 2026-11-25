@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
@@ -50,7 +49,6 @@ func (h *huaweiScheduleHandler) OnGetCompositeSchedule(req *smartcharging.GetCom
 
 func (suite *ocppTestSuite) TestHuaweiStartAfterProfile() {
 	t := suite.T()
-	sponsor.SetSubjectForTest(t, "test")
 	id := suite.stationID("huawei-profile")
 	cp, _, _ := suite.startChargePoint(id, 1)
 	h := &huaweiScheduleHandler{

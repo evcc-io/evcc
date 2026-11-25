@@ -121,7 +121,7 @@ func TestKeepLastGood(t *testing.T) {
 }
 
 func TestBatteryModes(t *testing.T) {
-	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold}, batteryModes([]int64{1, 2}))
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHoldDischarge}, batteryModes([]int64{1, 2}))
 
 	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHoldCharge, api.BatteryDischarge}, batteryModes([]int64{1, 4, 5}))
 
@@ -177,8 +177,8 @@ func TestConfigurableBatteryModes(t *testing.T) {
 		declared string
 		modes    []api.BatteryMode
 	}{
-		{"keys", readable, "", []api.BatteryMode{api.BatteryNormal, api.BatteryHold}},
-		{"keys win over declaration", readable, `["charge"]`, []api.BatteryMode{api.BatteryNormal, api.BatteryHold}},
+		{"keys", readable, "", []api.BatteryMode{api.BatteryNormal, api.BatteryHoldDischarge}},
+		{"keys win over declaration", readable, `["charge"]`, []api.BatteryMode{api.BatteryNormal, api.BatteryHoldDischarge}},
 		{"declaration for a hidden switch", unreadable, `["normal", "charge"]`, []api.BatteryMode{api.BatteryNormal, api.BatteryCharge}},
 		{"declaration for a default", withDefault, `["normal"]`, []api.BatteryMode{api.BatteryNormal}},
 		{"neither keys nor declaration", unreadable, "", nil},

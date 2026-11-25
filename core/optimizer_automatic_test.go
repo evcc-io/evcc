@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"testing"
 	"time"
 
@@ -16,7 +18,6 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -24,8 +25,6 @@ import (
 // enableAutomatic puts the optimizer in control for the duration of the test
 func enableAutomatic(t *testing.T) {
 	t.Helper()
-
-	sponsor.SetSubjectForTest(t, "test")
 
 	for _, k := range []string{keys.Experimental, keys.Optimizer} {
 		settings.SetBool(k, true)
@@ -217,6 +216,50 @@ func TestOptimizerBatteryFed(t *testing.T) {
 	ctrl.Finish()
 }
 
+// TestOptimizerFullPowerPvShortfall covers a full power charge the optimizer planned from
+// forecast pv surplus (no grid, no battery discharge), while the measured pv falls short
+// because the home demand exceeds its forecast: the vehicle must follow the measured
+// surplus instead of drawing the shortfall from home battery and grid at max current
+func TestOptimizerFullPowerPvShortfall(t *testing.T) {
+	enableAutomatic(t)
+
+	lp, charger, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
+	lp.Disable.Delay = time.Minute
+	lp.offeredCurrent = maxA
+
+	// the 1p test loadpoint tops out at 3680W, the forecast surplus covers it fully
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 3680, BatteryCharge: 469})
+
+	// measured: 771W grid import plus 2185W home battery discharge feed the vehicle
+	charger.EXPECT().MaxCurrent(int64(minA))
+	lp.Update(771+2185, 2185, nil, nil, false, false, 0, nil, nil, nil)
+
+	assert.False(t, lp.pvTimer.Equal(elapsed), "pv timer must not be elapsed by a pv-covered plan")
+
+	ctrl.Finish()
+}
+
+// TestOptimizerFullPowerPvExport covers a full power charge with forecast export left
+// over: the pv covers more than the vehicle takes, so a measured shortfall must still
+// be followed instead of drawn from grid at max current
+func TestOptimizerFullPowerPvExport(t *testing.T) {
+	enableAutomatic(t)
+
+	lp, charger, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
+	lp.Disable.Delay = time.Minute
+	lp.offeredCurrent = maxA
+
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 3680, Grid: -195})
+
+	// measured: 1094W grid import feeds the vehicle
+	charger.EXPECT().MaxCurrent(int64(maxA - 5))
+	lp.Update(1094, 0, nil, nil, false, false, 0, nil, nil, nil)
+
+	assert.False(t, lp.pvTimer.Equal(elapsed), "pv timer must not be elapsed by a pv-covered plan")
+
+	ctrl.Finish()
+}
+
 // TestOptimizerStopFollowsSurplus covers a stop based on a forecast surplus that is
 // too low: the pv loop still enables on measured surplus after the enable delay
 func TestOptimizerStopFollowsSurplus(t *testing.T) {
@@ -271,7 +314,7 @@ func TestOptimizerPrioritySoc(t *testing.T) {
 		{"uncontrolled below prioritySoc", false, actionStop, below, 100, 0},
 		// a charge next to planned battery charging gives the battery priority, the vehicle gets the remainder
 		{"charge with planned battery charge", true, actionCharge, above, 0, 1000},
-		{"charge with partial planned battery charge", true, actionCharge, above, 0, 400},
+		{"charge with partial planned battery charge", true, actionCharge, above, -600, 400},
 		{"charge below prioritySoc with planned battery charge", true, actionCharge, below, 0, 1000},
 		{"charge with planned battery charge below threshold", true, actionCharge, above, -1000, suggestionThreshold},
 	} {
@@ -443,8 +486,8 @@ func TestBatteryModeUnmodelledCharging(t *testing.T) {
 		suggestion, res api.BatteryMode
 	}{
 		{api.BatteryCharge, api.BatteryCharge},
-		{api.BatteryNormal, api.BatteryHold},
-		{api.BatteryDischarge, api.BatteryHold},
+		{api.BatteryNormal, api.BatteryHoldDischarge},
+		{api.BatteryDischarge, api.BatteryHoldDischarge},
 	} {
 		site.setSuggestions(map[string]types.Suggestion{
 			batteryKey("bat"): {Action: tc.suggestion.String()},
@@ -475,7 +518,7 @@ func TestBatteryModeFixedDemandModelled(t *testing.T) {
 		{"smart cost", api.ModeSmart, false, 0, api.BatteryDischarge},
 		{"fast", api.ModeNow, false, 0, api.BatteryDischarge},
 		{"plan", api.ModeSmart, true, 0, api.BatteryDischarge},
-		{"min soc", api.ModeSmart, false, 80, api.BatteryHold},
+		{"min soc", api.ModeSmart, false, 80, api.BatteryHoldDischarge},
 	} {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
 		lp.status = api.StatusC
@@ -908,5 +951,39 @@ func TestOptimizerPhaseGap(t *testing.T) {
 			assert.Equal(t, 1, lp.GetPhases())
 			assert.Equal(t, float64(maxA), lp.offeredCurrent)
 		})
+	}
+}
+
+// TestPendingSuggestionsAutomatic covers notifications: devices the optimizer
+// controls are not advised about what it applies itself
+func TestPendingSuggestionsAutomatic(t *testing.T) {
+	enableAutomatic(t)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.vehicle = modelledVehicle(gomock.NewController(t))
+
+	site := &Site{loadpoints: []*Loadpoint{lp}}
+	lp.site = site
+
+	site.setSuggestions(map[string]types.Suggestion{
+		batteryKey("bat"): {Action: api.BatteryCharge.String()},
+		loadpointKey(0):   {Action: actionCharge},
+	})
+
+	details := []batteryDetail{
+		{Type: batteryTypeBattery, Name: "bat"},
+		{Type: batteryTypeVehicle, loadpoint: new(int)},
+	}
+
+	for _, tc := range []struct {
+		level string
+		keys  []string
+	}{
+		{OptimizerAutomaticOff, []string{batteryKey("bat"), loadpointKey(0)}},
+		{OptimizerAutomaticBattery, []string{loadpointKey(0)}},
+		{OptimizerAutomaticFull, nil},
+	} {
+		settings.SetString(keys.OptimizerAutomatic, tc.level)
+		assert.ElementsMatch(t, tc.keys, slices.Collect(maps.Keys(site.pendingSuggestions(details))), tc.level)
 	}
 }

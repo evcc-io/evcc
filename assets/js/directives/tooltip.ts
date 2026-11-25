@@ -42,8 +42,14 @@ const tooltip: Directive<HTMLElement, Content> = {
   mounted(el, binding) {
     update(el, binding);
     // the focus a click leaves behind would keep the tooltip open after the page moved
-    // on; bootstrap shows on a zero timeout, so the hide has to run after that
-    el.addEventListener("click", () => setTimeout(() => Tooltip.getInstance(el)?.hide()));
+    // on; bootstrap shows on a zero timeout, so the hide has to run after that. A tap is
+    // the only way to open it on touch, it stays until the next tap elsewhere
+    let touch = false;
+    el.addEventListener("pointerdown", (e) => (touch = e.pointerType === "touch"));
+    el.addEventListener("click", () => {
+      if (!touch) setTimeout(() => Tooltip.getInstance(el)?.hide());
+      touch = false;
+    });
   },
   updated: update,
   beforeUnmount(el) {

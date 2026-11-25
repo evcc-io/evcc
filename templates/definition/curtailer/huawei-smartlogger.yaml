@@ -17,8 +17,7 @@ render: |
   type: custom
   curtail:
     source: modbus
-    id: 0
-    {{- include "modbus-connection" . | indent 2 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 40428 # Active power [–100%, 100%] - a negative value indicates the limit for active power supplied from the grid to the ESS
       type: writesingle
@@ -31,8 +30,7 @@ render: |
       type: int
       config:
         source: modbus
-        id: 0
-        {{- include "modbus-connection" . | indent 6 }}
+        {{- include "modbus" . | indent 6 }}
         register:
           address: 40428 # Active power [–100%, 100%] - a negative value indicates the limit for active power supplied from the grid to the ESS
           type: holding

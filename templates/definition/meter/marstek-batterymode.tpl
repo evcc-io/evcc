@@ -56,7 +56,7 @@ batterymode:
             address: 42000 # RS485 Control Mode = Disabled
             type: writesingle
             decode: uint16
-  - case: 2 # hold -> no discharging, charging allowed
+  - case: 2 # holddischarge -> no discharging, charging allowed
     set:
       source: sequence
       set:

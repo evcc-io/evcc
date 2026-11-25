@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 type handler struct {
@@ -38,8 +37,6 @@ func TestGoEV1(t *testing.T) {
 	srv := httptest.NewTestServer(t, new(handler))
 	srv.Start()
 
-	sponsor.SetSubjectForTest(t, "foo")
-
 	wb, err := newGoEFromConfig(false, map[string]any{"uri": srv.URL})
 	if err != nil {
 		t.Error(err)
@@ -67,8 +64,6 @@ func TestGoEV2(t *testing.T) {
 	srv := httptest.NewTestServer(t, h)
 	srv.Start()
 	h.expect("/api/status?filter=alw")
-
-	sponsor.SetSubjectForTest(t, "foo")
 
 	wb, err := newGoEFromConfig(false, map[string]any{"uri": srv.URL, "cache": "0s"})
 	if err != nil {

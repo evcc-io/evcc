@@ -1,6 +1,7 @@
 package relay
 
 import (
+	"math"
 	"testing"
 
 	"github.com/evcc-io/evcc/hems/hems"
@@ -27,4 +28,11 @@ func TestCurtailmentNotConfigured(t *testing.T) {
 	// curtailment statement unaffected by relay activity
 	assert.Nil(t, c.CurtailedPercent())
 	assert.Nil(t, hems.Curtailed(c))
+}
+
+func TestInvalidPowerLimit(t *testing.T) {
+	for _, maxPower := range []float64{0, -4200, math.NaN(), math.Inf(1)} {
+		_, err := NewRelay(nil, nil, nil, maxPower, 0)
+		assert.Error(t, err)
+	}
 }
