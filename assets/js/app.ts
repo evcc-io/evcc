@@ -56,7 +56,8 @@ if (!window.CSS.supports("scroll-behavior", "smooth")) {
 }
 
 // messages that differ only in numbers count as the same notification
-const dedupeKey = (message: string | string[]) => String(message).replace(/\d+([.,]\d+)*/g, "#");
+const dedupeKey = (message: string | string[]) =>
+  JSON.stringify(message).replace(/\d+([.,]\d+)*/g, "#");
 
 const app = createApp(
   defineComponent({
