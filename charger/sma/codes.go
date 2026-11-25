@@ -15,14 +15,11 @@ const (
 	ChrgActChaMod       = "Parameter.Chrg.ActChaMod"
 	ChrgChrgApv         = "Parameter.Chrg.ChrgApv"
 	ChrgChrgLok         = "Parameter.Chrg.ChrgLok"
-	ChrgMinSwTms        = "Parameter.Chrg.MinSwTms"
+	ChrgMinSwTm         = "Parameter.Chrg.MinSwTm"
 	ChrgStpWhenFl       = "Parameter.Chrg.StpWhenFl"
 	ChrgUseEnergyMeter  = "Parameter.Chrg.UseEnergyMeter"
 	InverterWMaxIn      = "Parameter.Inverter.WMaxIn"
 )
-
-// MaxMinSwTms is the longest relay switching time in seconds that ends within the loadpoint phase switch grace period
-const MaxMinSwTms = 60
 
 // Code is an SMA enum value
 type Code uint32
@@ -67,6 +64,11 @@ const (
 const (
 	ChargingLock    Code = 5171 // Ladesperre
 	ChargingRelease Code = 5172 // Ladefreigabe
+)
+
+// Parameter.Chrg.MinSwTm, codes for 15 to 90 s are unknown
+const (
+	SwitchingTime120s Code = 6715 // 120 s
 )
 
 // ChargeStatus maps the charging status

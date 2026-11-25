@@ -179,10 +179,8 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 	}
 
 	// relay switching pauses charging beyond the loadpoint phase switch grace period
-	if v, err := wb.getParameter(sma.ChrgMinSwTms); err == nil {
-		if t, err := strconv.ParseFloat(v, 64); err == nil && t > sma.MaxMinSwTms {
-			log.WARN.Printf(`"Minimum relay switching time" is %.0fs, should be at most %ds`, t, sma.MaxMinSwTms)
-		}
+	if v, err := wb.code(sma.ChrgMinSwTm); err == nil && v == sma.SwitchingTime120s {
+		log.WARN.Println(`"Minimum relay switching time" should be at most 60s`)
 	}
 
 	return wb, nil
