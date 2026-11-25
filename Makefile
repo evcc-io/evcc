@@ -90,6 +90,7 @@ license::
 	--ignore github.com/cespare/xxhash \
 	--ignore github.com/coder/websocket \
 	--ignore github.com/cronokirby/saferith \
+	--ignore filippo.io/nistec \
 	--ignore github.com/modern-go/reflect2 \
 	--ignore github.com/prometheus/client_golang \
 	--ignore golang.org/x \

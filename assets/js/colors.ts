@@ -30,6 +30,7 @@ const colors: {
   background: string | null;
   box: string | null;
   light: string | null;
+  dark: boolean; // the dark theme is on
   selfPalette: string[];
   palette: string[];
   batteryPalette: string[];
@@ -49,6 +50,7 @@ const colors: {
   background: null,
   box: null,
   light: null,
+  dark: false,
   selfPalette: ["#0FDE41", "#FFBD2F", "#FD6158", "#03C1EF", "#0F662D", "#FF922E"],
   palette: [
     // light
@@ -176,6 +178,7 @@ export function updateCssColors() {
   colors.pricePerKWh = get("--bs-gray-medium");
   colors.co2PerKWh = get("--bs-gray-medium");
   colors.light = get("--bs-gray-light");
+  colors.dark = document.documentElement.classList.contains("dark");
 }
 
 // initialize colors

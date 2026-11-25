@@ -38,8 +38,8 @@
       "energy": "Energie",
       "gridCharge": "laden met netstroom",
       "gridDischarge": "ontladen naar het net",
-      "hold": "ontladen gesperd",
       "holdCharge": "opladen gesperd",
+      "holdDischarge": "ontladen gesperd",
       "ofTotal": "van {total}",
       "power": "Vermogen",
       "soc": "Batterijniveau"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Laden met netstroom",
         "discharge": "Ontladen naar het net",
-        "hold": "Blokkeer ontladen",
         "holdcharge": "Blokkeer laden",
+        "holddischarge": "Blokkeer ontladen",
         "normal": "Normale werking"
       },
       "empty": "leeg",
@@ -146,11 +146,13 @@
       "template": "Fabrikant",
       "titleAdd": {
         "charging": "Voeg lader toe",
-        "heating": "Voeg verwarmer toe"
+        "heating": "Voeg verwarmer toe",
+        "switch": "Schakelbaar Stopcontact Toevoegen"
       },
       "titleEdit": {
         "charging": "Wijzig lader",
-        "heating": "Pas verwarmer aan"
+        "heating": "Pas verwarmer aan",
+        "switch": "Schakelbaar stopcontact wijzigen"
       },
       "type": {
         "custom": {
@@ -188,10 +190,20 @@
     "circuits": {
       "addMainCircuit": "Hoofdcircuit toevoegen",
       "addSubCircuit": "Onderliggend circuit toevoegen",
+      "assignHere": "Hier toewijzen",
+      "assignmentFailed": "Kan toewijzing niet opslaan. Probeer het opnieuw.",
       "description": "Zorgt ervoor dat de som van alle laadpunten en verwarmers die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
+      "destination": "Circuit {title}",
+      "dragHint": "Sleep op een circuit, of tik om te selecteren.",
+      "dropAssign": "Loslaten om toe te wijzen",
+      "dropRemove": "Hier loslaten om van het circuit te ontkoppelen.",
       "legacyWarning": "Nieuwe circuitconfiguratie beschikbaar! Verwijder en sla uw configuratie hier op om het nieuwe, begeleide proces te gebruiken. Een herstart is daarna vereist.",
       "meterDedicated": "Meter",
       "meterGrid": "Net",
+      "moveHere": "Hierheen verplaatsen",
+      "notAssigned": "Niet toegewezen",
+      "selectAssign": "Tik op een circuit om {title} toe te wijzen.",
+      "selectMove": "Tik op een circuit om {title} te verplaatsen, of de groep om te verwijderen.",
       "title": "Load Balancing",
       "usableMeters": "Bruikbare meterreferenties"
     },
@@ -231,12 +243,21 @@
       "titleAdd": "Voeg opwekbegrenzingsapparaat toe",
       "titleEdit": "Bewerk opwekbegrenzingsapparaat"
     },
+    "deviceRef": {
+      "add": {
+        "charger": "Lader toevoegen",
+        "meter": "Meter toevoegen",
+        "switch": "Schakelbaar stopcontact toevoegen",
+        "tariff": "Tarief toevoegen"
+      },
+      "noNesting": "Nestelen is gelimiteerd tot één niveau. Kies een andere optie."
+    },
     "deviceValue": {
       "activeClients": "Actieve clients",
       "amount": "Aantal",
       "asleep": "niet actief",
       "broker": "Agent",
-      "bucket": "Geldpotje",
+      "bucket": "Bucket / Database",
       "capacity": "Capaciteit",
       "chargeStatus": "Status",
       "chargeStatusA": "niet verbonden",
@@ -309,8 +330,16 @@
           "returnEnergy": "Ontladen"
         },
         "consumer": {
+          "chargeStatusB": "standby",
+          "chargeStatusC": "verwarmen",
           "energy": "Verbruikt",
           "returnEnergy": "Geproduceerd"
+        },
+        "continuous": {
+          "chargeStatusB": "normaal",
+          "chargeStatusC": "boost",
+          "dimmed": "Gedimd",
+          "enabled": "Boost"
         },
         "grid": {
           "energy": "Geïmporteerd",
@@ -332,6 +361,7 @@
       "auxMeter": "Zelf-regulerende verbruiker",
       "batteryStorage": "Thuisbatterij",
       "consumer": "Verbruiker",
+      "extMeter": "Extra meter",
       "solarSystem": "Zonnepanelen systeem"
     },
     "editor": {
@@ -391,6 +421,7 @@
       "change": "Wijzigen",
       "clear": "Leegmaken",
       "close": "Sluiten",
+      "configured": "Geconfigureerd",
       "confirmDisable": "Dit apparaat deactiveren? Het zal genegeerd worden na de volgende herstart.",
       "confirmEnable": "Dit apparaat heractiveren?",
       "confirmSave": "Er zijn niet-opgeslagen wijzigingen. Nu opslaan?",
@@ -403,6 +434,8 @@
       "disable": "Uitschakelen",
       "disabled": "uitgeschakeld",
       "dismiss": "Negeren",
+      "dismissAll": "Alles afwijzen",
+      "dismissed": "Afgewezen",
       "docsLink": "Zie documentatie.",
       "dragHandle": "Schuifknop",
       "dragItem": "Verschuifbaar:{title}",
@@ -478,7 +511,7 @@
     "influx": {
       "description": "Schrijft laad-data en andere cijfers naar InfluxDB. Gebruik Grafana of andere tools om de data te visualiseren.",
       "descriptionToken": "Bekijk de InfluxDB documentatie om te zien hoe je er een maakt. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Bucket",
+      "labelBucket": "Bucket / Database",
       "labelCheckInsecure": "Sta zelfondertekende certificaten toe",
       "labelDatabase": "Database",
       "labelInsecure": "Certificaat validatie",
@@ -489,14 +522,14 @@
       "labelUser": "Gebruikersnaam",
       "title": "InfluxDB",
       "v1Support": "Ondersteuning voor InfluxDB 1.x?",
-      "v2Support": "Terug naar InfluxDB 2.x"
+      "v2Support": "Terug naar InfluxDB 2+"
     },
     "loadpoint": {
       "addCharger": {
         "charging": "Laadpunt toevoegen",
         "heating": "Verwarmingstoestel toevoegen"
       },
-      "addMeter": "Toevoegen van een individuele energiemeter",
+      "addMeter": "Meter toevoegen",
       "advancedConfig": "Geavanceerde configuratie",
       "cancel": "Annuleren",
       "chargerError": {
@@ -556,7 +589,7 @@
       "electricalSubtitle": "Bij twijfel, raadpleeg een elektricien.",
       "electricalTitle": "Elektrisch",
       "energyMeterHelp": "Extra meter voor laadstations zonder geïntegreerde meter.",
-      "energyMeterLabel": "Energiemeter",
+      "energyMeterLabel": "Specifieke energiemeter",
       "estimateLabel": "Interpoleer batterijpercentage tussen API updates",
       "maxCurrentHelp": "Moet groter zijn dan de minimum stroom.",
       "maxCurrentLabel": "Maximale stroom",
@@ -876,10 +909,10 @@
       "usernameHelp": "Voor HTTP Basic Auth richting de upstream server."
     },
     "optimizer": {
-      "automatic": "Automatische controle",
+      "automatic": "Automatische aansturing",
       "automaticLevel": {
         "battery": {
-          "description": "Controleert alleen de thuisbatterij.",
+          "description": "Beheert alleen de thuisbatterij.",
           "label": "Thuisbatterij",
           "status": "{automatic} controleert de thuisbatterij."
         },
@@ -952,7 +985,8 @@
       "manualLogin": "Of log handmatig in via uw browser op {url}, met de volgende credentials:",
       "noClients": "Er zijn nog geen clients. Niemand kan nog verbinden.",
       "password": "Wachtwoord",
-      "passwordOnce": "Het wachtwoord wordt eenmalig getoond. Scan of kopieer de QR-code. Je kunt hem niet nogmaals bekijken.",
+      "passwordOnce": "Het wachtwoord wordt eenmalig getoond. Kopieer of print de QR-code. Je kunt hem niet nogmaals bekijken.",
+      "print": "Printen / PDF",
       "privacy": "Door het inschakelen van deze functionaliteit, ga je akkoord met ons {0}.",
       "privacyLink": "privacybeleid",
       "qrInstall": "Installeer de evcc app voor {ios} of {android}.",
@@ -1145,6 +1179,7 @@
       "template": "Aanbieder",
       "title": "Tarieven & verwachtingen",
       "titleChoice": "Wat wilt u toevoegen?",
+      "titleSub": "Subtarief",
       "type": {
         "co2": "CO₂ intensiteit",
         "feedIn": "Terugleververgoeding",
@@ -1226,19 +1261,35 @@
     },
     "direction": {
       "battery": {
-        "energy": "geladen",
-        "returnEnergy": "ontladen"
+        "energy": "Geladen",
+        "returnEnergy": "Ontladen"
+      },
+      "consumer": {
+        "energy": "Verbruikt"
       },
       "grid": {
-        "energy": "geimporteerd",
-        "returnEnergy": "geexporteerd"
+        "energy": "Geïmporteerd",
+        "returnEnergy": "Geëxporteerd"
+      },
+      "heating": {
+        "energy": "Verbruikt"
+      },
+      "loadpoint": {
+        "energy": "Geladen"
       },
       "meter": {
         "energy": "Energie",
         "returnEnergy": "Energie (omgekeerd)"
+      },
+      "pv": {
+        "energy": "Geproduceerd"
       }
     },
-    "empty": "Geen energiegegevens beschikbaar voor het gekozen tijdsvenster.",
+    "empty": {
+      "description": "Geen energiedata voor deze periode.",
+      "descriptionCurrent": "Nog geen energie data. Waarden verschijnen zodra de eerste metingen zijn opgeslagen.",
+      "showCurrent": "Bekijk huidige periode"
+    },
     "flow": {
       "battery": "Batterij",
       "batteryCharge": "Batterijniveau",
@@ -1277,7 +1328,7 @@
     },
     "production": {
       "above": "{value} hoger dan",
-      "accuracy": "Nauwkeurigheid van de verwachting",
+      "accuracy": "nauwkeurigheid",
       "below": "{value} lager dan",
       "deviation": "Afwijking",
       "expectedTomorrow": "verwacht morgen",
@@ -1289,8 +1340,9 @@
     },
     "socTemp": {
       "charged": "geladen",
-      "soc": "lading",
-      "temperature": "temperatuur",
+      "power": "Vermogen",
+      "soc": "Lading",
+      "temperature": "Temperatuur",
       "used": "verbruikt"
     },
     "sources": {
@@ -1311,12 +1363,14 @@
       "co2Saved": "CO₂ bespaard",
       "co2SavedTooltip": "Vergeleken met het afnemen van de verbruikte {energy} van het net.",
       "configure": "Nu configureren",
+      "fromGrid": "{value} van het net",
       "noCo2": "Geen CO₂-gegevens.",
       "noPrice": "Geen prijsgegevens.",
       "savings": "Besparing",
       "savingsTooltip": "Vergeleken met het inkopen van de verbruikte {energy} van het net.",
       "versus": "{value} vs. {reference}"
     },
+    "summary": "Samenvatting",
     "title": "Energie"
   },
   "footer": {
@@ -1428,11 +1482,12 @@
     "price": {
       "average": "Gemiddeld",
       "constant": "Prijs",
+      "estimate": "schatting",
       "lowestHour": "Goedkoopste uur",
       "range": "Bereik"
     },
     "priceZoom": "zoom in",
-    "showLine": "regel tonen",
+    "showLine": "toon lijn",
     "solar": {
       "dayAfterTomorrow": "Overmorgen",
       "partly": "gedeeltelijk",
@@ -1459,6 +1514,7 @@
     "cancel": "Annuleren",
     "download": "Download",
     "error": "Fout",
+    "loading": "Laden",
     "none": "geen",
     "note": "Let op:",
     "warning": "Waarschuwing"
@@ -1609,7 +1665,8 @@
         "continuousCo2Description": "Kiest de meest ecologische, continue reeks laadmomenten.",
         "continuousPriceDescription": "Kiest de goedkoopste, continue reeks laadmomenten.",
         "disabledDescription": "Vereist een verwachting van dynamische tarieven of CO₂.",
-        "label": "Optimalisatie"
+        "label": "Optimalisatie",
+        "optimizerDescription": "De {optimizer} slecteert het goedkoopste tijdsvenster. Kan leiden tot meerdere keren starten en stoppen."
       },
       "planNumber": "Schema {number}",
       "precondition": {
@@ -1626,7 +1683,8 @@
       "repeatingPlans": "Herhalende schema's",
       "selectAll": "Alles selectreren",
       "strategy": {
-        "label": "Strategie"
+        "label": "Strategie",
+        "optimizerHint": "De {optimizer} houdt momenteel nog geen rekening met de optimalisatie-instellingen en kiest altijd de goedkoopste tijdsloten. Beperk de automatische aansturing tot ‘Thuisbatterij’ indien je dit wenst."
       },
       "time": "Tijd",
       "title": "Plan",
@@ -1652,8 +1710,9 @@
       "forecast": "Verwachting",
       "forecastTooltip": "verwachting: resterende zonne-energieproductie voor vandaag",
       "gridImport": "Netafname",
+      "heaters": "Verwarmer | Verwarmers",
       "homePower": "Consumptie",
-      "loadpoints": "Lader| Lader | {count} laders",
+      "loadpoints": "Lader | Laders",
       "loadpointsLimit": "{limit} limiet",
       "noEnergy": "Geen meter data",
       "pv": "Zonnepanelen systeem",
@@ -1680,18 +1739,22 @@
       "avgPrice": "⌀ Prijs",
       "charged": "Geladen",
       "co2": "⌀ CO₂",
+      "consumed": "Verbruikt",
       "duration": "Duur",
       "emission": "Uitstoot",
       "fallbackName": "Laadpunt",
       "finished": "Eindtijd",
       "last24hEnergy": "Laatste 24h",
+      "last24hShort": "24u",
       "last7dEnergy": "Laatste 7 dagen",
+      "last7dShort": "7d",
       "phasesMismatch": "Meer fases actief dan geconfigureerd. Controleer de fase-configuratie.",
       "power": "Vermogen",
       "price": "Kosten",
       "remaining": "Resterend",
       "remoteDisabledHard": "{source}: uitgeschakeld",
       "remoteDisabledSoft": "{source}: adaptief laden van zonnepanelen uitgeschakeld",
+      "session": "Sessie",
       "solar": "Zon",
       "todayEnergy": "Vandaag"
     },
@@ -1913,7 +1976,7 @@
       "dismiss": "Afwijzen",
       "legacyTariffs": "Er wordt een verouderde tariefconfiguratie gebruikt.",
       "progress": "{done} uit {total} voltooid",
-      "title": "Configuratie afronden"
+      "title": "Jouw configuratie"
     },
     "control": {
       "description": "Begin met de eerste. Meerdere exemplaren kunnen later toegevoegd worden op de configuratiepagina.",

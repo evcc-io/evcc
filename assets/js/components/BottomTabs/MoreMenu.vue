@@ -82,7 +82,7 @@
 		</router-link>
 		<!-- the menu opens upwards, the tab that moved here on phones stays closest to the bar -->
 		<router-link
-			v-if="experimental"
+			v-if="hideSessions"
 			class="dropdown-item d-sm-none"
 			to="/sessions"
 			active-class="active"
@@ -116,6 +116,7 @@ export default defineComponent({
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		experimental: Boolean,
+		hideSessions: Boolean,
 		authDisabled: Boolean,
 		optimizer: Boolean,
 		installed: String,

@@ -16,13 +16,14 @@ test("both grid entities count as one grid", async ({ page }) => {
   await page.goto("/#/energy?period=day&year=2026&month=4&day=11");
 
   // 8 slots of 0.5 / 0.1 kWh across both entities
-  const grid = page.getByTestId("energy-grid");
+  const grid = page.getByRole("region", { name: "Grid" });
   await expect(grid).toContainText("Import");
   await expect(grid).toContainText("4.0 kWh");
-  // no tariff, no prices in the chart, the tiles point at the tariff settings
+  // no tariff, no prices in the chart
   await expect(grid).not.toContainText("Import price");
-  await expect(page.getByTestId("energy-stat-gridImport")).toContainText("No price data.");
-  await expect(page.getByTestId("energy-stat-gridExport")).toContainText("Configure now");
+  await expect(grid.getByTestId("energy-stat-gridImport")).toContainText("4.0 kWh");
+  // neither production nor battery: no overview
+  await expect(page.getByRole("region", { name: "Summary" })).toHaveCount(0);
 
   // the slot of the leftover entity reads like any other slot
   const chart = grid.getByTestId("group-chart-grid");
@@ -32,5 +33,5 @@ test("both grid entities count as one grid", async ({ page }) => {
   await chart.hover({ position: { x: 36 + ((box.width - 72) * 48.5) / 96, y: box.height / 2 } });
   // the tooltip renders outside the card
   await expect(page.getByRole("table")).toContainText("12:00 – 12:15");
-  await expect(page.getByRole("table")).toContainText("2.0 kW");
+  await expect(page.getByRole("table")).toContainText("500 Wh");
 });

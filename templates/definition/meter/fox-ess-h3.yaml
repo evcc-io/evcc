@@ -20,7 +20,7 @@ params:
       en: Max Discharge Current
       de: Max Entladestrom
     help:
-      en: Battery max discharge current in A, written back when leaving hold mode. Inverter default is 26 A for H3.
+      en: Battery max discharge current in A, written back when leaving holddischarge mode. Inverter default is 26 A for H3.
       de: Maximaler Batterieentladestrom in A, wird beim Verlassen des Haltemodus zurückgeschrieben. Werkseinstellung 26 A bei H3.
   - name: capacity
     advanced: true
@@ -97,16 +97,6 @@ render: |
       address: 31038 # Soc
       type: holding
       decode: int16
-  limitsoc:
-    source: convert
-    convert: float2int
-    set:
-      source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 41009 # limit soc
-        type: writesingle
-        decode: uint16
   batterymode:
     source: watchdog
     timeout: 30s
@@ -136,13 +126,14 @@ render: |
                 address: 41000 # Work Mode
                 type: writesingle
                 encoding: uint16
+          # 41009 is the Off-Grid (EPS) reserve and is left to the user
           - source: const
             value: {{ .minsoc }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 41009 # Minimum SoC
+                address: 41011 # Minimum SoC On-Grid
                 type: writesingle
                 encoding: uint16
           - source: const
@@ -155,7 +146,7 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: {{ mul .maxdischargecurrent 10 }} # 0.1 A, restores the limit after hold
+            value: {{ mul .maxdischargecurrent 10 }} # 0.1 A, restores the limit after holddischarge
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -163,7 +154,7 @@ render: |
                 address: 41008 # Battery max discharge current
                 type: writesingle
                 encoding: uint16
-      - case: 2 # hold - stop battery discharge
+      - case: 2 # holddischarge - stop battery discharge
         set:
           source: sequence
           set:
@@ -196,54 +187,5 @@ render: |
                 address: 41008 # Battery max discharge current
                 type: writesingle
                 encoding: uint16
-      - case: 3 # charge - force battery charge
-        set:
-          source: sequence
-          set:
-          - source: const
-            value: 2 # Back-up, fallback if the remote control watchdog expires
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 41000 # Work Mode
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: {{ mul .maxdischargecurrent 10 }} # restores the limit when switching from hold
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 41008 # Battery max discharge current
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 60 # Remote timeout 60 seconds
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 44001 # Remote Timeout Set
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 1 # Enabled
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 44000 # Remote Enable
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: {{ mul .maxchargepower -1 }} # negative power means charging
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 44002 # Remote Active Power
-                type: writemultiple
-                encoding: int32
   {{- include "battery-params" . }}
   {{- end }}

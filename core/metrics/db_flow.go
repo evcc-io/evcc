@@ -51,10 +51,11 @@ type FlowCo2 struct {
 
 // FlowResult is the source to sink energy attribution of a period.
 type FlowResult struct {
-	Flows    []Flow        `json:"flows"`
-	Entities []EntityFlows `json:"entities,omitempty"`
-	Cost     *FlowCost     `json:"cost,omitempty"`
-	Co2      *FlowCo2      `json:"co2,omitempty"`
+	Flows    []Flow              `json:"flows"`
+	Entities []EntityFlows       `json:"entities,omitempty"`
+	Cost     *FlowCost           `json:"cost,omitempty"`
+	Co2      *FlowCo2            `json:"co2,omitempty"`
+	entities map[int]*flowEntity // consumer and loadpoint flows by entity id, for the loadpoint card
 }
 
 // flowSlot holds one 15min slot with all groups pivoted into columns
@@ -80,29 +81,41 @@ func (s flowSlot) price(from string, energy float64) (cost, priced float64) {
 }
 
 // flowSum accumulates one flow over the period
-type flowSum struct{ energy, cost, priced float64 }
+type flowSum struct {
+	Energy float64 `json:"e,omitempty"`
+	Cost   float64 `json:"c,omitempty"`
+	Priced float64 `json:"p,omitempty"`
+}
 
 func (f *flowSum) add(s flowSlot, from string, energy float64) {
 	c, p := s.price(from, energy)
-	f.energy += energy
-	f.cost += c
-	f.priced += p
+	f.Energy += energy
+	f.Cost += c
+	f.Priced += p
+}
+
+func (f *flowSum) merge(o flowSum) {
+	f.Energy += o.Energy
+	f.Cost += o.Cost
+	f.Priced += o.Priced
 }
 
 var (
 	flowSources = []string{PV, Battery, Grid}
 	flowSinks   = []string{Home, Battery, Loadpoint, Export}
+	// export first: only own energy can feed it
+	attributionSinks = []string{Export, Home, Battery, Loadpoint}
 )
 
 // attribute distributes the slot's sources onto its sinks in priority order:
-// pv before battery before grid, home before battery charge before loadpoints
-// before export. Mirrors the live greenShare rule. Any balance mismatch is dropped.
+// pv before battery before grid, export before home before battery charge
+// before loadpoints. Any balance mismatch is dropped.
 func attribute(s flowSlot, add func(from, to string, energy float64)) {
 	src := map[string]float64{PV: s.PV, Battery: s.BatOut, Grid: s.GridIn}
 	dst := map[string]float64{Home: s.Home, Battery: s.BatIn, Loadpoint: s.Loadpoint, Export: s.GridOut}
 
 	for _, from := range flowSources {
-		for _, to := range flowSinks {
+		for _, to := range attributionSinks {
 			if from == to || (from == Grid && to == Export) {
 				continue
 			}
@@ -117,8 +130,9 @@ func attribute(s flowSlot, add func(from, to string, energy float64)) {
 
 // flowEntity is a consumer or loadpoint priced on its own
 type flowEntity struct {
-	entity
-	flows [3]flowSum // per flowSources entry
+	entity  `json:"-"`
+	Flows   [3]flowSum `json:"f"` // per flowSources entry
+	Metered float64    `json:"m"` // kWh, including slots the sources cannot cover
 }
 
 // share gives the entity its energy in the sink's source split of the slot.
@@ -128,8 +142,55 @@ func (e *flowEntity) share(s flowSlot, energy float64, sink [3]float64, metered 
 		return
 	}
 	for i, from := range flowSources {
-		e.flows[i].add(s, from, energy*sink[i]/metered)
+		e.Flows[i].add(s, from, energy*sink[i]/metered)
 	}
+}
+
+func (e *flowEntity) merge(o *flowEntity) {
+	for i := range e.Flows {
+		e.Flows[i].merge(o.Flows[i])
+	}
+	e.Metered += o.Metered
+}
+
+// flowAcc is the unrounded attribution of a period. Periods add up, which
+// lets the daily rollup store one per day. A change to a field here or in
+// FlowCost and FlowCo2 needs the rollup rebuilt, see loadDaily.
+type flowAcc struct {
+	Flows     [3][4]flowSum       `json:"flows"`    // per flowSources and flowSinks entry
+	Entities  map[int]*flowEntity `json:"entities"` // consumers and loadpoints by entity id
+	Others    flowEntity          `json:"others"`   // home minus the tracked consumers
+	Cost      FlowCost            `json:"cost"`     // AvgGrid holds the sum
+	CostSlots float64             `json:"costSlots"`
+	Co2       FlowCo2             `json:"co2"` // AvgCo2 holds the sum
+	Co2Slots  float64             `json:"co2Slots"`
+}
+
+func (a *flowAcc) merge(o *flowAcc) {
+	for i := range a.Flows {
+		for j := range a.Flows[i] {
+			a.Flows[i][j].merge(o.Flows[i][j])
+		}
+	}
+	for id, e := range o.Entities {
+		if a.Entities[id] == nil {
+			a.Entities[id] = new(flowEntity)
+		}
+		a.Entities[id].merge(e)
+	}
+	a.Others.merge(&o.Others)
+
+	a.Cost.Import += o.Cost.Import
+	a.Cost.Export += o.Cost.Export
+	a.Cost.ImportEnergy += o.Cost.ImportEnergy
+	a.Cost.ExportEnergy += o.Cost.ExportEnergy
+	a.Cost.AvgGrid += o.Cost.AvgGrid
+	a.CostSlots += o.CostSlots
+
+	a.Co2.Consumption += o.Co2.Consumption
+	a.Co2.ConsumptionEnergy += o.Co2.ConsumptionEnergy
+	a.Co2.AvgCo2 += o.Co2.AvgCo2
+	a.Co2Slots += o.Co2Slots
 }
 
 // slotEnergy is the energy of a consumer or loadpoint in one slot
@@ -149,14 +210,8 @@ func entitySlots(entities map[int]*flowEntity, from, to time.Time) (map[int64][]
 
 	tx := db.Instance.Table("meters").
 		Select("ts, meter, energy").
-		Where("meter IN ? AND energy <> 0", slices.Collect(maps.Keys(entities)))
-
-	if !from.IsZero() {
-		tx = tx.Where("ts >= ?", from.Unix())
-	}
-	if !to.IsZero() {
-		tx = tx.Where("ts < ?", to.Unix())
-	}
+		Where("meter IN ? AND energy <> 0", slices.Collect(maps.Keys(entities))).
+		Where("ts >= ? AND ts < ?", from.Unix(), to.Unix())
 
 	rows, err := tx.Rows()
 	if err != nil {
@@ -171,7 +226,9 @@ func entitySlots(entities map[int]*flowEntity, from, to time.Time) (map[int64][]
 		if err := rows.Scan(&ts, &id, &energy); err != nil {
 			return nil, err
 		}
-		res[ts] = append(res[ts], slotEnergy{entities[id], energy})
+		e := entities[id]
+		e.Metered += energy
+		res[ts] = append(res[ts], slotEnergy{e, energy})
 	}
 
 	return res, rows.Err()
@@ -192,14 +249,8 @@ func sinkSlots(from, to time.Time) ([]flowSlot, error) {
 		Joins("JOIN entities e ON m.meter = e.id").
 		Joins("LEFT JOIN tariffs t ON t.ts = m.ts").
 		Where(`e."group" IN ?`, []string{PV, Grid, Battery, Home}).
+		Where("m.ts >= ? AND m.ts < ?", from.Unix(), to.Unix()).
 		Group("m.ts")
-
-	if !from.IsZero() {
-		tx = tx.Where("m.ts >= ?", from.Unix())
-	}
-	if !to.IsZero() {
-		tx = tx.Where("m.ts < ?", to.Unix())
-	}
 
 	rows, err := tx.Rows()
 	if err != nil {
@@ -220,10 +271,106 @@ func sinkSlots(from, to time.Time) ([]flowSlot, error) {
 	return res, rows.Err()
 }
 
-// QueryFlow attributes the energy of [from,to) from sources to sinks per 15min
-// slot and sums the result. Zero bounds are open ended.
-func QueryFlow(from, to time.Time) (FlowResult, error) {
+// accumulate attributes the energy of [from,to) from sources to sinks per
+// 15min slot.
+func accumulate(from, to time.Time) (*flowAcc, error) {
 	// consumers and loadpoints are priced individually
+	var ents []entity
+	if err := db.Instance.Select(`id, "group"`).Where(`"group" IN ?`, []string{Consumer, Loadpoint}).Find(&ents).Error; err != nil {
+		return nil, err
+	}
+
+	acc := &flowAcc{Entities: make(map[int]*flowEntity, len(ents))}
+	for _, e := range ents {
+		acc.Entities[e.Id] = &flowEntity{entity: e}
+	}
+
+	// both reads are bound by page lookups and run side by side on WAL readers
+	var perSlot map[int64][]slotEnergy
+	var slots []flowSlot
+	var eg errgroup.Group
+	eg.Go(func() error {
+		var err error
+		perSlot, err = entitySlots(acc.Entities, from, to)
+		return err
+	})
+	eg.Go(func() error {
+		var err error
+		slots, err = sinkSlots(from, to)
+		return err
+	})
+	if err := eg.Wait(); err != nil {
+		return nil, err
+	}
+
+	for _, s := range slots {
+		// the slot's loadpoints add up to their sink
+		slotEntities := perSlot[s.Ts]
+		for _, se := range slotEntities {
+			if se.Group == Loadpoint {
+				s.Loadpoint += se.energy
+			}
+		}
+
+		// energy that reached home and loadpoints, and the grid's part of it.
+		// Consumption a slot's sources cannot cover (meter mismatch, coarse
+		// counters) stays out of the cost model on both sides.
+		var consumption, gridToConsumption float64
+		var homeSink, lpSink [3]float64 // per flowSources entry
+		attribute(s, func(from, to string, energy float64) {
+			i := slices.Index(flowSources, from)
+			f := &acc.Flows[i][slices.Index(flowSinks, to)]
+			if to != Home && to != Loadpoint {
+				f.Energy += energy
+				return
+			}
+			f.add(s, from, energy)
+			consumption += energy
+			if from == Grid {
+				gridToConsumption += energy
+			}
+			if to == Home {
+				homeSink[i] += energy
+			} else {
+				lpSink[i] += energy
+			}
+		})
+
+		var tracked float64
+		for _, se := range slotEntities {
+			if se.Group == Loadpoint {
+				se.share(s, se.energy, lpSink, s.Loadpoint)
+			} else {
+				se.share(s, se.energy, homeSink, s.Home)
+				tracked += se.energy
+			}
+		}
+		acc.Others.share(s, max(0, s.Home-tracked), homeSink, s.Home)
+
+		if s.Grid != nil {
+			acc.Cost.Import += s.GridIn * *s.Grid
+			acc.Cost.ImportEnergy += s.GridIn
+			acc.Cost.AvgGrid += *s.Grid
+			acc.CostSlots++
+			if s.FeedIn != nil {
+				acc.Cost.Export += s.GridOut * *s.FeedIn
+				acc.Cost.ExportEnergy += s.GridOut
+			}
+		}
+
+		if s.Co2 != nil {
+			acc.Co2.Consumption += gridToConsumption * *s.Co2 / 1e3
+			acc.Co2.ConsumptionEnergy += consumption
+			acc.Co2.AvgCo2 += *s.Co2
+			acc.Co2Slots++
+		}
+	}
+
+	return acc, nil
+}
+
+// result rounds the attribution and names its entities
+func (a *flowAcc) result() (FlowResult, error) {
 	var ents []entity
 	if err := db.Instance.Select(`id, "group", COALESCE(NULLIF(title,''), name) AS title`).
 		Where(`"group" IN ?`, []string{Consumer, Loadpoint}).Order(`"group", title`).Find(&ents).Error; err != nil {
@@ -241,110 +388,20 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 			list = append(list, byTitle[key])
 		}
 		entities[e.Id] = byTitle[key]
+		if f := a.Entities[e.Id]; f != nil {
+			byTitle[key].merge(f)
+		}
 	}
 
-	// both reads are bound by page lookups and run side by side on WAL readers
-	var perSlot map[int64][]slotEnergy
-	var slots []flowSlot
-	var eg errgroup.Group
-	eg.Go(func() error {
-		var err error
-		perSlot, err = entitySlots(entities, from, to)
-		return err
-	})
-	eg.Go(func() error {
-		var err error
-		slots, err = sinkSlots(from, to)
-		return err
-	})
-	if err := eg.Wait(); err != nil {
-		return FlowResult{}, err
-	}
-
-	// home minus the tracked consumers, per slot like the UI's residual
-	others := &flowEntity{}
+	others := a.Others
 	others.Group = Consumer
-	list = append(list, others)
-
-	sums := make(map[[2]string]flowSum)
-	var cost FlowCost
-	var co2 FlowCo2
-	var costSlots, co2Slots float64
-
-	for _, s := range slots {
-		// the slot's loadpoints add up to their sink
-		slotEntities := perSlot[s.Ts]
-		for _, se := range slotEntities {
-			if se.Group == Loadpoint {
-				s.Loadpoint += se.energy
-			}
-		}
-
-		// energy that reached home and loadpoints, and the grid's part of it.
-		// Consumption a slot's sources cannot cover (meter mismatch, coarse
-		// counters) stays out of the cost model on both sides.
-		var consumption, gridToConsumption float64
-		var homeSink, lpSink [3]float64 // per flowSources entry
-		attribute(s, func(from, to string, energy float64) {
-			key := [2]string{from, to}
-			f := sums[key]
-			consumed := to == Home || to == Loadpoint
-			if consumed {
-				f.add(s, from, energy)
-			} else {
-				f.energy += energy
-			}
-			sums[key] = f
-			if !consumed {
-				return
-			}
-			consumption += energy
-			if from == Grid {
-				gridToConsumption += energy
-			}
-			i := slices.Index(flowSources, from)
-			if to == Home {
-				homeSink[i] += energy
-			} else {
-				lpSink[i] += energy
-			}
-		})
-
-		var tracked float64
-		for _, se := range slotEntities {
-			if se.Group == Loadpoint {
-				se.share(s, se.energy, lpSink, s.Loadpoint)
-			} else {
-				se.share(s, se.energy, homeSink, s.Home)
-				tracked += se.energy
-			}
-		}
-		others.share(s, max(0, s.Home-tracked), homeSink, s.Home)
-
-		if s.Grid != nil {
-			cost.Import += s.GridIn * *s.Grid
-			cost.ImportEnergy += s.GridIn
-			cost.AvgGrid += *s.Grid
-			costSlots++
-			if s.FeedIn != nil {
-				cost.Export += s.GridOut * *s.FeedIn
-				cost.ExportEnergy += s.GridOut
-			}
-		}
-
-		if s.Co2 != nil {
-			co2.Consumption += gridToConsumption * *s.Co2 / 1e3
-			co2.ConsumptionEnergy += consumption
-			co2.AvgCo2 += *s.Co2
-			co2Slots++
-		}
-	}
+	list = append(list, &others)
 
 	var res FlowResult
-	for _, from := range flowSources {
-		for _, to := range flowSinks {
-			if f := sums[[2]string{from, to}]; roundEnergy(f.energy) > 0 {
-				res.Flows = append(res.Flows, Flow{From: from, To: to, Energy: roundEnergy(f.energy), Cost: f.cost, PricedEnergy: f.priced})
+	for i, from := range flowSources {
+		for j, to := range flowSinks {
+			if f := a.Flows[i][j]; roundEnergy(f.Energy) > 0 {
+				res.Flows = append(res.Flows, Flow{From: from, To: to, Energy: roundEnergy(f.Energy), Cost: f.Cost, PricedEnergy: f.Priced})
 			}
 		}
 	}
@@ -354,11 +411,11 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 		if e.Group == Loadpoint {
 			sink = Loadpoint
 		}
-		ef := EntityFlows{Group: e.Group, Title: e.Title, Virtual: e == others}
+		ef := EntityFlows{Group: e.Group, Title: e.Title, Virtual: e == &others}
 		for i, from := range flowSources {
-			f := e.flows[i]
-			if energy := roundEnergy(f.energy); energy > 0 {
-				ef.Flows = append(ef.Flows, Flow{From: from, To: sink, Energy: energy, Cost: f.cost, PricedEnergy: f.priced})
+			f := e.Flows[i]
+			if energy := roundEnergy(f.Energy); energy > 0 {
+				ef.Flows = append(ef.Flows, Flow{From: from, To: sink, Energy: energy, Cost: f.Cost, PricedEnergy: f.Priced})
 			}
 		}
 		if len(ef.Flows) > 0 {
@@ -366,16 +423,29 @@ func QueryFlow(from, to time.Time) (FlowResult, error) {
 		}
 	}
 
-	if costSlots > 0 {
-		cost.AvgGrid /= costSlots
+	if a.CostSlots > 0 {
+		cost := a.Cost
+		cost.AvgGrid /= a.CostSlots
 		res.Cost = &cost
 	}
 
-	if co2Slots > 0 {
-		co2.AvgCo2 /= co2Slots
+	if a.Co2Slots > 0 {
+		co2 := a.Co2
+		co2.AvgCo2 /= a.Co2Slots
 		co2.Baseline = co2.AvgCo2 * co2.ConsumptionEnergy / 1e3
 		res.Co2 = &co2
 	}
 
+	res.entities = entities
 	return res, nil
+}
+
+// QueryFlow attributes the energy of [from,to) from sources to sinks per 15min
+// slot and sums the result. Zero bounds are open ended.
+func QueryFlow(from, to time.Time) (FlowResult, error) {
+	acc, err := dailyFlow(from, to)
+	if err != nil {
+		return FlowResult{}, err
+	}
+	return acc.result()
 }

@@ -76,6 +76,14 @@ test.describe("battery settings", async () => {
     await page.getByRole("button", { name: "Grid charging: active (≤ 50.0 ct)" }).click();
     await expect(page).toHaveURL(/#\/battery/);
 
+    // a slot sets its exact price as limit. 10 o'clock is base price with 12h and 24h labels
+    const limit = page.getByLabel("Price limit");
+    await page.getByTestId("tariff-slot").filter({ hasText: "10" }).first().click();
+    await expect(page.getByTestId("active-hours")).toContainText("72 hr");
+    await page.reload();
+    await expect(limit).toHaveValue("0.20123");
+    await expect(limit.getByRole("option", { name: "≤ 20.123 ct/kWh" })).toHaveCount(1);
+
     await page.getByLabel("Price limit").selectOption({ label: "≤ -10.0 ct/kWh" });
     await expect(page.getByTestId("active-hours")).toHaveText("Active time");
 
@@ -135,7 +143,7 @@ test.describe("battery settings", async () => {
     await expect(optimizerHints).toHaveCount(0);
   });
 
-  test("hold mode display", async ({ page }) => {
+  test("holddischarge mode display", async ({ page }) => {
     await page.goto("/");
     await page.getByTestId("energyflow").click();
 

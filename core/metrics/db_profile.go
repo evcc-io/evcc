@@ -7,7 +7,6 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/db/settings"
-	"github.com/evcc-io/evcc/tariff"
 	"github.com/jinzhu/now"
 )
 
@@ -44,12 +43,12 @@ func energyProfileFiltered(entity entity, from time.Time, weekday *int, percenti
 	}
 
 	// COALESCE guards against legacy rows with NULL energy
-	slots := `SELECT ts, COALESCE(energy, 0) AS energy, strftime('%H:%M', ts, 'unixepoch', 'localtime') AS slot
+	slots := `SELECT COALESCE(energy, 0) AS energy, strftime('%H:%M', ts, 'unixepoch', 'localtime') AS slot
 		FROM meters
-		WHERE meter = ? AND ts >= ? AND COALESCE(recovered, 0) = 0` + weekdayFilter
+		WHERE meter = ? AND ts >= ? AND COALESCE(recovered, 0) <> 1` + weekdayFilter
 
 	query := `WITH slots AS (` + slots + `)
-		SELECT min(ts) AS ts, avg(energy) AS energy
+		SELECT avg(energy) AS energy
 		FROM slots
 		GROUP BY slot
 		ORDER BY slot ASC`
@@ -61,12 +60,11 @@ func energyProfileFiltered(entity entity, from time.Time, weekday *int, percenti
 		args = append(args, percentile)
 		query = `WITH slots AS (` + slots + `), ranked AS (
 			SELECT slot, energy,
-				min(ts) OVER (PARTITION BY slot) AS ts,
 				row_number() OVER (PARTITION BY slot ORDER BY energy) AS rn,
 				? * (count(*) OVER (PARTITION BY slot) - 1) + 1 AS pos
 			FROM slots
 		)
-		SELECT ts, sum(energy * (1 - abs(rn - pos))) AS energy
+		SELECT sum(energy * (1 - abs(rn - pos))) AS energy
 		FROM ranked
 		WHERE abs(rn - pos) < 1
 		GROUP BY slot
@@ -79,22 +77,14 @@ func energyProfileFiltered(entity entity, from time.Time, weekday *int, percenti
 	}
 	defer rows.Close()
 
-	var prev time.Time
 	res := make([]float64, 0, 96)
 
 	for rows.Next() {
-		var ts SqlTime
 		var val float64
 
-		if err := rows.Scan(&ts, &val); err != nil {
+		if err := rows.Scan(&val); err != nil {
 			return nil, err
 		}
-
-		// interpolate single missing value, maybe due to regular restarts?
-		if time.Time(ts).Sub(prev) == 2*tariff.SlotDuration {
-			res = append(res, (val+res[len(res)-1])/2)
-		}
-		prev = time.Time(ts)
 
 		res = append(res, val)
 	}
@@ -126,7 +116,7 @@ func energyProfileTemperatureBinned(entity entity) (map[int]map[int]float64, err
 		m.energy AS energy
 	FROM meters m
 	JOIN tariffs t ON m.ts = t.ts
-	WHERE m.meter = ? AND m.ts >= ? AND COALESCE(m.recovered, 0) = 0
+	WHERE m.meter = ? AND m.ts >= ? AND COALESCE(m.recovered, 0) <> 1
 		AND m.energy IS NOT NULL AND t.temperature IS NOT NULL`
 
 	args := []any{entity.Id, from}

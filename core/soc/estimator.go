@@ -1,6 +1,7 @@
 package soc
 
 import (
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -21,9 +22,15 @@ const (
 // Estimator provides vehicle soc and charge duration
 // Vehicle Soc can be estimated to provide more granularity
 type Estimator struct {
-	log *util.Logger
+	mu       sync.Mutex
+	log      *util.Logger
+	capacity float64 // vehicle capacity in Wh
 
-	capacity          float64 // vehicle capacity in Wh
+	session
+}
+
+// session holds the per-session estimator state
+type session struct {
 	energyPerSocStep  float64 // energy per soc percent in Wh
 	vehicleSoc        float64 // estimated vehicle soc in %
 	initialSoc        float64 // first received valid vehicle soc in %
@@ -35,12 +42,21 @@ type Estimator struct {
 
 // NewEstimator creates new estimator
 func NewEstimator(log *util.Logger, vehicle api.Vehicle) *Estimator {
-	capacity := vehicle.Capacity() * 1e3
+	s := &Estimator{
+		log:      log,
+		capacity: vehicle.Capacity() * 1e3,
+	}
+	s.Reset()
+	return s
+}
 
-	return &Estimator{
-		log:              log,
-		capacity:         capacity,
-		energyPerSocStep: capacity / ChargeEfficiency / 100, // initial gradient taking efficiency into account
+// Reset clears session samples and restores the initial charging efficiency.
+func (s *Estimator) Reset() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.session = session{
+		energyPerSocStep: s.capacity / ChargeEfficiency / 100,
 	}
 }
 
@@ -49,8 +65,17 @@ func (s *Estimator) virtualCapacity() float64 {
 	return max(s.capacity, s.energyPerSocStep*100)
 }
 
+// Sampled returns true once a valid vehicle SoC was received
+func (s *Estimator) Sampled() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.sampled
+}
+
 // RemainingChargeDuration returns the estimated remaining duration
 func (s *Estimator) RemainingChargeDuration(targetSoc, chargePower float64) time.Duration {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	return remainingChargeDuration(targetSoc, chargePower, s.vehicleSoc, s.virtualCapacity())
 }
 
@@ -79,6 +104,8 @@ func remainingChargeDuration(targetSoc, chargePower, vehicleSoc, virtualCapacity
 
 // RemainingChargeEnergy returns the remaining charge energy in kWh
 func (s *Estimator) RemainingChargeEnergy(targetSoc int) float64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	return remainingChargeEnergy(float64(targetSoc), s.vehicleSoc, s.virtualCapacity())
 }
 
@@ -92,6 +119,8 @@ func remainingChargeEnergy(targetSoc, vehicleSoc, virtualCapacity float64) float
 
 // Soc replaces the api.Vehicle.Soc interface to take charged energy into account
 func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) float64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if fetchedSoc == nil {
 		// extrapolate soc from charged energy while no vehicle soc is available,
 		// never below the current estimate to stay monotonic across energy resets

@@ -1607,9 +1607,6 @@ func configureLoadpoints(conf globalconfig.All) error {
 func configureAuth(router *mux.Router, authMiddleware mux.MiddlewareFunc, paramC chan<- util.Param) {
 	auth := router.PathPrefix("/providerauth").Subrouter()
 	auth.Use(handlers.CompressHandler)
-	auth.Use(handlers.CORS(
-		handlers.AllowedHeaders([]string{"Content-Type"}),
-	))
 
 	// backwards-compatible revert of https://github.com/evcc-io/evcc/pull/21266
 	router.PathPrefix("/oauth").Handler(auth)

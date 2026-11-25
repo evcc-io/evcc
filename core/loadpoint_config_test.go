@@ -63,8 +63,6 @@ func (s *blobSettings) SetJson(key string, val any) error {
 // persisted into its own config blob, remain decodable as loadpoint config on the next boot.
 func TestPersistedSettingsAreValidConfig(t *testing.T) {
 	store := newBlobSettings()
-	uiChan, pushChan, lpChan := createChannels(t)
-
 	planTime := time.Now().Add(4 * time.Hour).Round(time.Second)
 	limit := 0.25
 
@@ -74,7 +72,7 @@ func TestPersistedSettingsAreValidConfig(t *testing.T) {
 
 	lp := NewLoadpoint(util.NewLogger("foo"), store)
 	lp.charger = charger
-	lp.Prepare(new(Site), uiChan, pushChan, lpChan)
+	lp.Prepare(new(Site), nil, nil, nil)
 
 	// exercise the persisting setters
 	lp.SetTitle("title")

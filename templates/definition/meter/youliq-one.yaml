@@ -48,7 +48,7 @@ render: |
           headers:
             - content-type: application/json
           body: '{"operating_mode":"pv_surplus"}'
-      - case: 2 # hold
+      - case: 2 # holddischarge
         set:
           source: http
           uri: https://{{ .host }}/api/v1/device/config

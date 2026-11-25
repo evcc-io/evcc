@@ -19,6 +19,7 @@ params:
     choice: ["battery"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 1
     baudrate: 115200
     comset: 8N1
   - name: generation
@@ -73,6 +74,14 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 33002 # Total energy discharged from battery (kWh)
+      type: holding
+      decode: uint32
+    scale: 0.01
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 33000 # Total energy charged into battery (kWh)
       type: holding
       decode: uint32
     scale: 0.01

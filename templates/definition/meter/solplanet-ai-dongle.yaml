@@ -60,7 +60,7 @@ render: |
             headers:
               Content-Type: application/json
           body: '{"data":"0306044f0002390e"}' # write reg 1103 (mode) = 2 (normal)
-      - case: 2 # hold: custom mode + 0 W
+      - case: 2 # holddischarge: custom mode + 0 W
         set:
           source: sequence
           set:

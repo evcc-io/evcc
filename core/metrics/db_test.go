@@ -10,40 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSqliteTimestamp(t *testing.T) {
-	clock := clock.NewMock()
-	clock.Add(time.Hour)
-
-	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	require.NoError(t, SetupSchema())
-
-	entity := entity{Name: "foo"}
-	require.NoError(t, db.Instance.FirstOrCreate(&entity).Error)
-
-	persist(entity, clock.Now(), 0, 0, nil, false)
-
-	db, err := db.Instance.DB()
-	require.NoError(t, err)
-
-	var ts SqlTime
-
-	for _, sql := range []string{
-		`SELECT ts FROM meters`,
-		`SELECT min(ts) FROM meters`,
-		// `SELECT unixepoch(ts) FROM meters`,
-		// `SELECT unixepoch(min(ts)) FROM meters`,
-		`SELECT min(ts) AS ts FROM meters
-			GROUP BY strftime("%H:%M", ts)
-			ORDER BY ts`,
-	} {
-		require.NoError(t, db.QueryRow(sql).Scan(&ts))
-		require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v (%s)", clock.Now().Local(), time.Time(ts).Local(), sql)
-	}
-
-	require.NoError(t, db.QueryRow(`SELECT ts FROM meters WHERE ts >= ?`, clock.Now().Unix()).Scan(&ts))
-	require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
-}
-
 func TestQueryEnergyUTCFilter(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())

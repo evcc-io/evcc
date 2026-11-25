@@ -63,6 +63,9 @@ func (lp *Loadpoint) createSession() {
 
 	// energy
 	lp.energyMetrics.Reset()
+	if _, estimator := lp.getVehicleAndSocEstimator(); estimator != nil {
+		estimator.Reset()
+	}
 	lp.energyMetrics.Publish("session", lp)
 	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
 }

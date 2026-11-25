@@ -8,7 +8,6 @@ import (
 	"math"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -116,21 +115,13 @@ type Site struct {
 	// cached measurement state, guarded by RWMutex
 	siteState
 
-	batteryMaxDischargePower *float64                    // Max discharge power of all battery meters
-	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
-	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
-	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
-	batteryModeApplied       map[string]api.BatteryMode  // Battery mode last applied per battery meter
-	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
-	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
-	lastOptimizerSolve       *optimizerSolve             // last successful solve, reapplied to newer slots by the control cycle
-	optimizerResult          *optimizerResult            // last published plan, explained on request
-	explainMu                sync.Mutex                  // serializes explain requests
-	explained                explainCache                // last explanation, guarded by explainMu
+	batteryMaxDischargePower *float64                   // Max discharge power of all battery meters
+	batteryMode              api.BatteryMode            // Battery mode (runtime only, not persisted)
+	batteryModeExternal      api.BatteryMode            // Battery mode (external, runtime only, not persisted)
+	batteryModeExternalTimer time.Time                  // Battery mode timer for external control
+	batteryModeApplied       map[string]api.BatteryMode // Battery mode last applied per battery meter
 
-	optimizerMu      sync.Mutex  // guards optimizer runs
-	optimizerUpdated time.Time   // last optimizer run, guarded by optimizerMu
-	optimizerRerun   atomic.Bool // forced trigger arrived during a run, re-run when done
+	optimizer optimizerState // optimizer runs, cached results and suggestions
 
 	solarScaleCached func() (float64, error) // util.Cached wrapper around querySolarScale
 }
@@ -1306,8 +1297,17 @@ func (site *Site) loadpointSitePower(lp updater, res sitePowerResult) float64 {
 		sitePower += res.priorityAdjustment
 	}
 
-	if suggestion != nil && suggestion.Action != actionCharge && res.state.battery.Power < 0 {
-		sitePower -= res.state.battery.Power + res.state.excessDCPower
+	// a charge next to planned battery charging gives the battery priority, too: the PV loop
+	// would otherwise take the battery's charge power and invert the optimizer's PV split
+	if suggestion != nil && (suggestion.Action != actionCharge || suggestion.BatteryCharge > suggestionThreshold) && res.state.battery.Power < 0 {
+		hide := -(res.state.battery.Power + res.state.excessDCPower)
+
+		// only the planned share: a battery charging beyond it would keep the vehicle below its minimum power
+		if suggestion.Action == actionCharge {
+			hide = min(hide, suggestion.BatteryCharge)
+		}
+
+		sitePower += hide
 	}
 
 	return sitePower
@@ -1496,6 +1496,7 @@ func (site *Site) prepare() {
 	site.publish(keys.ResidualPower, site.GetResidualPower())
 	site.publish(keys.GridExportLimit, site.GetGridExportLimit())
 	site.publish(keys.ProfilePercentile, site.GetProfilePercentile())
+	site.publish(keys.OptimizerRiskProfile, site.GetOptimizerRiskProfile())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
 
@@ -1546,7 +1547,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 		}
 	}()
 
-	site.lpUpdateChan = make(chan *Loadpoint, 1) // 1 capacity to avoid deadlock
+	site.lpUpdateChan = make(chan *Loadpoint, max(1, len(site.loadpoints))) // room for every loadpoint, see requestUpdate
 
 	site.prepare()
 
@@ -1596,6 +1597,7 @@ func (site *Site) loopLoadpoints(next chan<- updater) {
 
 	for {
 		// optimizer runs on its own cadence, checked once per loadpoint cycle
+		// async: sponsor and settings checks may block behind a slow save or authorization
 		go site.optimizerUpdateAsync(false)
 
 		if len(active) == 0 {
@@ -1641,7 +1643,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		case <-tick:
 			site.update(<-loadpointChan)
 		case lp := <-site.lpUpdateChan:
-			site.update(lp)
+			site.update(lp.dequeued())
 		case <-stopC:
 			return
 		}
