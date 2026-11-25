@@ -93,7 +93,7 @@ render: |
     register:
       address: 37121 # Active energy imported from the grid
       type: holding
-      decode: uint32nan
+      decode: int32nan
     block: # 37101-37137
       register: 37101
       count: 37
@@ -104,7 +104,7 @@ render: |
     register:
       address: 37119 # Active energy exported to the grid
       type: holding
-      decode: uint32nan
+      decode: int32nan
     block: # 37101-37137
       register: 37101
       count: 37
