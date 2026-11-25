@@ -37,6 +37,7 @@ type SmaModbus struct {
 	phases     int
 	current    float64
 	minCurrent float64
+	maxCurrent float64
 	minPower   float64
 	maxPower   float64
 }
@@ -78,6 +79,9 @@ const (
 	smaModbusModeStop     = 4721
 
 	smaModbusNaN32 = 0x80000000
+
+	// the charger drops to 1p below this power, matches the 4500 W WMaxIn minimum of the EV Charger
+	smaModbusMinPower3p = 4500 // W
 )
 
 func init() {
@@ -126,6 +130,9 @@ func NewSmaModbus(ctx context.Context, settings modbus.Settings) (api.Charger, e
 	// the charger may reject values outside its range, e.g. a 4500 W minimum on the EV Charger
 	if v, err := wb.readHolding32(smaModbusRegMinCurrent); err == nil {
 		wb.minCurrent = smaModbusUint32(v) / 10
+	}
+	if v, err := wb.readHolding32(smaModbusRegMaxCurrent); err == nil {
+		wb.maxCurrent = smaModbusUint32(v) / 1e3
 	}
 	if v, err := wb.readHolding32(smaModbusRegMinPower); err == nil {
 		wb.minPower = smaModbusInt32(v)
@@ -267,10 +274,14 @@ func (wb *SmaModbus) MaxCurrentMillis(current float64) error {
 
 // setPower writes the power limit, the charger selects 1p or 3p internally based on it
 func (wb *SmaModbus) setPower(current float64, phases int) error {
-	// the charger derives the phase current from the setpoint and drops to 1p or pauses below its minimum current
+	// the charger derives the phase current from the setpoint and pauses below its minimum current
 	current = max(current, wb.minCurrent)
 
 	power := grid.CurrentToPower(current, phases) * wb.voltageFactor(phases)
+
+	if phases > 1 {
+		power = max(power, smaModbusMinPower3p)
+	}
 
 	// limits are reported as negative consumption values
 	if minPower := math.Abs(wb.minPower); minPower > 0 {
@@ -438,17 +449,11 @@ var _ api.CurrentLimiter = (*SmaModbus)(nil)
 
 // GetMinMaxCurrent implements the api.CurrentLimiter interface
 func (wb *SmaModbus) GetMinMaxCurrent() (float64, float64, error) {
-	minCurrent, err := wb.readHolding32(smaModbusRegMinCurrent)
-	if err != nil {
-		return 0, 0, err
+	if wb.minCurrent == 0 || wb.maxCurrent == 0 {
+		return 0, 0, api.ErrNotAvailable
 	}
 
-	maxCurrent, err := wb.readHolding32(smaModbusRegMaxCurrent)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	return smaModbusUint32(minCurrent) / 10, smaModbusUint32(maxCurrent) / 1e3, nil
+	return wb.minCurrent, wb.maxCurrent, nil
 }
 
 var _ api.Diagnosis = (*SmaModbus)(nil)
