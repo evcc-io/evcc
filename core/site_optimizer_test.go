@@ -905,6 +905,20 @@ func TestEndOfHorizonValue(t *testing.T) {
 	}
 }
 
+func TestVehicleRanks(t *testing.T) {
+	vehicle := func(prio int, soc float64) optimizerBattery {
+		return optimizerBattery{detail: batteryDetail{loadpoint: new(int)}, priority: prio, soc: soc}
+	}
+
+	batteries := []optimizerBattery{
+		vehicle(0, 80),
+		{}, // home battery
+		vehicle(1, 90),
+		vehicle(0, 20),
+	}
+	assert.Equal(t, []int{2, 0, 0, 1}, vehicleRanks(batteries))
+}
+
 func TestGridExportLimit(t *testing.T) {
 	site := &Site{log: util.NewLogger("foo")}
 

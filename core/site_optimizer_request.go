@@ -1,6 +1,7 @@
 package core
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"math"
@@ -58,11 +59,30 @@ func endOfHorizonValue(pN, pE []float32, eta float32, canExport bool) float32 {
 	return max(lo.Min(pN)*eta*0.99, lo.Min(pE)/eta*1.01)
 }
 
+// vehicleTieBreak lowers the end value per vehicle rank, so surplus prefers one vehicle over flipping between equals
+const vehicleTieBreak = 1e-4
+
+// vehicleRanks ranks the vehicles by loadpoint priority, then lower soc; home batteries get 0
+func vehicleRanks(batteries []optimizerBattery) []int {
+	idx := lo.Filter(lo.Range(len(batteries)), func(i, _ int) bool { return batteries[i].detail.loadpoint != nil })
+	slices.SortStableFunc(idx, func(a, b int) int {
+		return cmp.Or(cmp.Compare(batteries[b].priority, batteries[a].priority), cmp.Compare(batteries[a].soc, batteries[b].soc))
+	})
+
+	ranks := make([]int, len(batteries))
+	for r, i := range idx {
+		ranks[i] = r
+	}
+	return ranks
+}
+
 // optimizerBattery pairs a battery request entry with its device detail
 type optimizerBattery struct {
-	cfg     optimizer.BatteryConfig
-	detail  batteryDetail
-	circuit api.Circuit // loadpoint circuit, nil for home batteries
+	cfg      optimizer.BatteryConfig
+	detail   batteryDetail
+	circuit  api.Circuit // loadpoint circuit, nil for home batteries
+	priority int         // loadpoint priority
+	soc      float64     // vehicle soc in percent
 }
 
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
@@ -227,7 +247,9 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		// skip disabled loadpoints
 		if cfg.CMax > 0 {
 			detail.loadpoint = &id
-			batteries = append(batteries, optimizerBattery{cfg, detail, lp.GetCircuit()})
+			batteries = append(batteries, optimizerBattery{
+				cfg: cfg, detail: detail, circuit: lp.GetCircuit(), priority: lp.EffectivePriority(), soc: lp.GetSoc(),
+			})
 		}
 	}
 
@@ -255,9 +277,11 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		batteries = append(batteries, optimizerBattery{cfg: cfg, detail: detail})
 	}
 
-	for _, b := range batteries {
+	ranks := vehicleRanks(batteries)
+	for i, b := range batteries {
 		// vehicles cannot export
 		b.cfg.PA = endOfHorizonValue(req.TimeSeries.PN, req.TimeSeries.PE, eta, b.detail.loadpoint == nil)
+		b.cfg.PA *= 1 - float32(ranks[i])*vehicleTieBreak
 		req.Batteries = append(req.Batteries, b.cfg)
 		details.BatteryDetails = append(details.BatteryDetails, b.detail)
 	}
