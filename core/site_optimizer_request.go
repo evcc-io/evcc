@@ -48,14 +48,13 @@ type demandDetail struct {
 	Values []float32  `json:"values"`
 }
 
-// endOfHorizonValue is the Wh value of energy left in storage at the end of the horizon, floored
-// at pE/eta for storage that can export: charging surplus only stores eta Wh per Wh
+// endOfHorizonValue is the Wh value of energy left in storage at the end of the horizon: a vehicle's Wh
+// replaces later charging (pN/eta), a home battery's Wh returns eta Wh (pN*eta, floored at pE/eta)
 func endOfHorizonValue(pN, pE []float32, eta float32, canExport bool) float32 {
-	pa := lo.Min(pN) * eta * 0.99
-	if canExport {
-		pa = max(pa, lo.Min(pE)/eta*1.01)
+	if !canExport {
+		return lo.Min(pN) / eta * 0.99
 	}
-	return pa
+	return max(lo.Min(pN)*eta*0.99, lo.Min(pE)/eta*1.01)
 }
 
 // optimizerBattery pairs a battery request entry with its device detail
