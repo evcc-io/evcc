@@ -29,6 +29,17 @@ params:
   - preset: battery-params
   - name: defaultmode
     default: 0 # "SelfUse"
+  - name: remotecontrol
+    type: bool
+    default: false
+    advanced: true
+    usages: ["battery"]
+    description:
+      de: Batteriesteuerung per Fernsteuerung (VPP)
+      en: Battery control by remote control (VPP)
+    help:
+      de: Steuert die Batterie über die Modbus Power Control Register statt über die Betriebsart. Diese Register werden nicht im EEPROM gespeichert. evcc erneuert sie regelmäßig, ohne Erneuerung kehrt der Wechselrichter nach etwa 10 Minuten zum Eigenverbrauch zurück. Nur Gen4 und neuer, getestet mit X3-Hybrid G4.
+      en: Controls the battery using the Modbus Power Control registers instead of the work mode. These registers are not stored in EEPROM. evcc refreshes them regularly, without refresh the inverter returns to self use after about 10 minutes. Gen4 and later only, tested with X3-Hybrid G4.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -151,6 +162,65 @@ render: |
   #     type: input
   #     decode: uint32s
   #   scale: 0.1
+  {{- if .remotecontrol }}
+  {{- /* Modbus Power Control (VPP): FC16 block at 0x7C, 32 bit values low word first.
+         0x7C mode, 0x7D set type, 0x7E active power, 0x80 reactive power, 0x82 duration, 0x83 target soc,
+         0x84 target energy, 0x86 charge/discharge power, 0x88 timeout (s), 0x89 push power (mode 4-7).
+         Mode 7 ends after 600s unless re-written, mode 3 holds the target soc for timeout seconds. */}}
+  {{- $soc := .maxsoc | int }}
+  {{- if eq $soc 0 }}{{ $soc = 100 }}{{ end }}
+  {{- $power := .maxchargepower | int }}
+  {{- if eq $power 0 }}{{ $power = 30000 }}{{ end }}
+  batterymode:
+    source: watchdog
+    timeout: 5m # re-write at timeout/2, inverter leaves the mode after 600s
+    reset: 1 # reset watchdog on normal
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal
+        set:
+          source: convert
+          convert: int2bytes
+          set:
+            source: const
+            value: "0x0000_0000_00000000_00000000_0000_0000_00000000_00000000_0000" # disabled
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x007C # ModbusPowerControl
+                type: writemultiple
+                decode: bytes
+      - case: 2 # holddischarge
+        set:
+          source: convert
+          convert: int2bytes
+          set:
+            source: const
+            value: "0x0007_0001_00000000_00000000_0000_0000_00000000_00000000_0258_00000000" # self-consume, charge only
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x007C # ModbusPowerControl
+                type: writemultiple
+                decode: bytes
+      - case: 3 # charge
+        set:
+          source: convert
+          convert: int2bytes
+          set:
+            source: const
+            value: '{{ printf "0x0003_0001_00000000_00000000_0000_%04X_00000000_%04X%04X_0258" $soc (mod $power 65536) (div $power 65536) }}' # soc target control
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x007C # ModbusPowerControl
+                type: writemultiple
+                decode: bytes
+  {{- else }}
   batterymode:
     source: switch
     switch:
@@ -218,5 +288,6 @@ render: |
               address: 0x001F # SolarChargeUseMode
               type: writesingle
               decode: uint16
+  {{- end }}
   {{- include "battery-params" . }}
   {{- end }}
