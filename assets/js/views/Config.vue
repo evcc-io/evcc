@@ -857,7 +857,7 @@ export default defineComponent({
 			circuitAssignmentError: "",
 			circuitAssignmentRevision: 0,
 			circuitAssignmentFlash: undefined as number | undefined,
-			// checklist state is derived from loaded config, keep it hidden until then
+			// checklist state is derived from loaded config and device values, keep it hidden until then
 			loaded: false,
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
@@ -1540,8 +1540,8 @@ export default defineComponent({
 			await this.loadTariffRefs();
 			await this.loadHems();
 			await this.loadDirty();
+			await this.updateValues();
 			this.loaded = true;
-			this.updateValues();
 		},
 		async loadDirty() {
 			const data = await this.loadConfig("dirty");
