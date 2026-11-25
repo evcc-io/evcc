@@ -895,8 +895,8 @@ func TestEndOfHorizonValue(t *testing.T) {
 	}{
 		{"battery, export below import", 0.3, 0.08, true, 0.3 * eta * 0.99},
 		{"battery, export above import", 0.3, 0.33, true, 0.33 / eta * 1.01},
-		{"vehicle, export below import", 0.3, 0.08, false, 0.3 / eta * 0.99},
-		{"vehicle, export above import", 0.3, 0.33, false, 0.3 / eta * 0.99},
+		{"vehicle, export below import", 0.3, 0.08, false, 0.3 / eta * 0.98},
+		{"vehicle, export above import", 0.3, 0.33, false, 0.3 / eta * 0.98},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			got := endOfHorizonValue([]float32{tc.pN, 2 * tc.pN}, []float32{tc.pE, 2 * tc.pE}, eta, tc.canExport)

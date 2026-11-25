@@ -52,7 +52,8 @@ type demandDetail struct {
 // replaces later charging (pN/eta), a home battery's Wh returns eta Wh (pN*eta, floored at pE/eta)
 func endOfHorizonValue(pN, pE []float32, eta float32, canExport bool) float32 {
 	if !canExport {
-		return lo.Min(pN) / eta * 0.99
+		// below 0.99 so moving home battery energy into the vehicle loses instead of tying
+		return lo.Min(pN) / eta * 0.98
 	}
 	return max(lo.Min(pN)*eta*0.99, lo.Min(pE)/eta*1.01)
 }
