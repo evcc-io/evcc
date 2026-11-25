@@ -216,12 +216,9 @@ func (v *MqttConnector) runMqtt(ctx context.Context, token *oauth2.Token) error 
 		ConnectPassword:               []byte(idToken),
 		ClientConfig: paho.ClientConfig{
 			PacketTimeout: timeout,
-			OnPublishReceived: []func(paho.PublishReceived) (bool, error){
-				func(pr paho.PublishReceived) (bool, error) {
-					v.handler(pr.Packet.Topic, pr.Packet.Payload)
-					return true, nil
-				},
-			},
+			OnPublishReceived: pluginmqtt.OnPublish(func(m *paho.Publish) {
+				v.handler(m.Topic, m.Payload)
+			}),
 		},
 	}, timeout)
 	if err != nil {

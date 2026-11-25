@@ -23,9 +23,6 @@ var Instance *Client
 
 const parallelInflightLimit int64 = 32
 
-// keepAlive is the keep alive interval in seconds
-const keepAlive = 30
-
 // cleanupMaxDuration stops Cleanup from blocking forever on brokers that never
 // stop delivering non-empty messages for the cleaned topic
 const cleanupMaxDuration = 30 * time.Second
@@ -115,7 +112,7 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	cfg := autopaho.ClientConfig{
 		ServerUrls:                    []*url.URL{u},
 		TlsCfg:                        tlsConfig,
-		KeepAlive:                     keepAlive,
+		KeepAlive:                     30,
 		CleanStartOnInitialConnection: true,
 		ConnectTimeout:                request.Timeout,
 		ConnectUsername:               user,
@@ -128,12 +125,9 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 		ClientConfig: paho.ClientConfig{
 			ClientID:      clientID,
 			PacketTimeout: request.Timeout,
-			OnPublishReceived: []func(paho.PublishReceived) (bool, error){
-				func(pr paho.PublishReceived) (bool, error) {
-					mc.router.Route(pr.Packet.Packet())
-					return true, nil
-				},
-			},
+			OnPublishReceived: OnPublish(func(msg *paho.Publish) {
+				mc.router.Route(msg.Packet())
+			}),
 			OnClientError: func(err error) {
 				log.ERROR.Printf("%s connection lost: %v", mc.broker, err)
 			},
@@ -193,6 +187,16 @@ func Connect(ctx context.Context, cfg autopaho.ClientConfig, timeout time.Durati
 	}
 
 	return cm, nil
+}
+
+// OnPublish adapts handler to the client config's publish callbacks
+func OnPublish(handler func(*paho.Publish)) []func(paho.PublishReceived) (bool, error) {
+	return []func(paho.PublishReceived) (bool, error){
+		func(pr paho.PublishReceived) (bool, error) {
+			handler(pr.Packet)
+			return true, nil
+		},
+	}
 }
 
 // timeout returns a context limiting a single broker request
@@ -339,7 +343,8 @@ func (m *Client) Publish(topic string, retained bool, payload string) {
 		}
 
 		m.log.TRACE.Printf("send %s: '%v'", topic, request.Truncate(payload))
-		_, err := m.client.Publish(ctx, &paho.Publish{Topic: topic, QoS: m.Qos, Retain: retained, Payload: []byte(payload)})
+		// limited by the packet timeout
+		_, err := m.client.Publish(connCtx, &paho.Publish{Topic: topic, QoS: m.Qos, Retain: retained, Payload: []byte(payload)})
 		if err != nil && connCtx.Err() == nil {
 			m.log.ERROR.Printf("send: %s: %v", topic, err)
 		}

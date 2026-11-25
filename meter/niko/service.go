@@ -97,18 +97,15 @@ func listDevices(host, user, token string) ([]Device, error) {
 		ClientConfig: paho.ClientConfig{
 			ClientID:      mqtt.ClientID(),
 			PacketTimeout: request.Timeout,
-			OnPublishReceived: []func(paho.PublishReceived) (bool, error){
-				func(pr paho.PublishReceived) (bool, error) {
-					var msg Message
-					if err := json.Unmarshal(pr.Packet.Payload, &msg); err == nil && msg.Method == MethodList {
-						select {
-						case res <- msg.Devices():
-						default:
-						}
+			OnPublishReceived: mqtt.OnPublish(func(m *paho.Publish) {
+				var msg Message
+				if err := json.Unmarshal(m.Payload, &msg); err == nil && msg.Method == MethodList {
+					select {
+					case res <- msg.Devices():
+					default:
 					}
-					return true, nil
-				},
-			},
+				}
+			}),
 		},
 	}, request.Timeout)
 	if err != nil {

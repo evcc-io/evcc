@@ -52,15 +52,12 @@ func (h *MqttHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 		ConnectTimeout:                timeout,
 		ClientConfig: paho.ClientConfig{
 			PacketTimeout: timeout,
-			OnPublishReceived: []func(paho.PublishReceived) (bool, error){
-				func(paho.PublishReceived) (bool, error) {
-					select {
-					case recv <- true:
-					default:
-					}
-					return true, nil
-				},
-			},
+			OnPublishReceived: mqtt.OnPublish(func(*paho.Publish) {
+				select {
+				case recv <- true:
+				default:
+				}
+			}),
 		},
 	}, timeout)
 	if err != nil {
