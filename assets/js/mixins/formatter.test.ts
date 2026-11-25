@@ -32,6 +32,15 @@ describe("fmtPhasePower", () => {
   });
 });
 
+describe("fmtA", () => {
+  test("should use up to two decimals without trailing zeros", () => {
+    expect(fmt.fmtA(6)).eq("6 A");
+    expect(fmt.fmtA(2.174)).eq("2,17 A");
+    expect(fmt.fmtA(0.5)).eq("0,5 A");
+    expect(fmt.fmtA(10061)).eq("10.061 A");
+  });
+});
+
 describe("fmtW", () => {
   test("should format with units", () => {
     expect(fmt.fmtW(0, POWER_UNIT.AUTO)).eq("0,0 kW");

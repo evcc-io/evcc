@@ -723,7 +723,7 @@ export interface Loadpoint {
   limitSoc: number;
   /** Maximum charging current in A. */
   maxCurrent: number;
-  /** Minimum charging current in A. */
+  /** Minimum charging current in A, or the expected current of a switchable device. */
   minCurrent: number;
   /** Minimum SoC in %. Vehicle is fast-charged until this level is reached. */
   minSoc: number;

@@ -237,14 +237,36 @@
 							</template>
 						</PropertyCollapsible>
 
-						<h6 v-if="!chargerIsSwitchDevice">
-							{{ $t("config.loadpoint.electricalTitle") }}
-							<small class="text-muted">{{
-								$t("config.loadpoint.electricalSubtitle")
-							}}</small>
-						</h6>
+						<FormRow
+							v-if="chargerIsSwitchDevice"
+							id="loadpointExpectedPower"
+							:label="$t('config.loadpoint.expectedPowerLabel')"
+							:help="$t('config.loadpoint.expectedPowerHelp')"
+						>
+							<div class="d-flex align-items-center gap-2">
+								<PropertyField
+									id="loadpointExpectedPower"
+									v-model="expectedPower"
+									type="Int"
+									unit="W"
+									size="w-25 w-min-200"
+									required
+									@input="updateExpectedPower"
+								/>
+								<span class="evcc-gray text-nowrap power-hint">
+									≈ {{ expectedCurrentHint }}
+								</span>
+							</div>
+						</FormRow>
 
-						<template v-if="!chargerIsSwitchDevice">
+						<template v-else>
+							<h6>
+								{{ $t("config.loadpoint.electricalTitle") }}
+								<small class="text-muted">{{
+									$t("config.loadpoint.electricalSubtitle")
+								}}</small>
+							</h6>
+
 							<template v-if="!chargerIsSinglePhase">
 								<FormRow
 									v-if="chargerSupports1p3p"
@@ -592,6 +614,7 @@ import { docsPrefix } from "@/i18n";
 import GenericModal from "../Helper/GenericModal.vue";
 import chargeModeLabelKey from "@/utils/chargeModeLabel";
 import deepClone from "@/utils/deepClone";
+import { currentToPower, powerToCurrent } from "@/utils/phasePower";
 import sleep from "@/utils/sleep";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import DeviceRefBox from "./DeviceRefBox.vue";
@@ -881,6 +904,31 @@ export default {
 		minPhases() {
 			return this.values.phasesConfigured || 1;
 		},
+		// switch devices: min current is the expected draw
+		expectedPower: {
+			get(): number {
+				return Math.round(
+					currentToPower(
+						this.values.minCurrent,
+						this.minPhases,
+						this.voltage,
+						this.gridConnection
+					)
+				);
+			},
+			set(power: number) {
+				const current = powerToCurrent(
+					power,
+					this.minPhases,
+					this.voltage,
+					this.gridConnection
+				);
+				this.values.minCurrent = Math.round(current * 1000) / 1000;
+			},
+		},
+		expectedCurrentHint() {
+			return this.fmtA(this.values.minCurrent);
+		},
 		maxPhases() {
 			return this.values.phasesConfigured || 3;
 		},
@@ -1118,6 +1166,13 @@ export default {
 				this.values.meter = result.name;
 			} else if (result.action === "removed") {
 				this.values.meter = "";
+			}
+		},
+		// number fields bind lazily, keep the hint live
+		updateExpectedPower(event: Event) {
+			const value = (event.target as HTMLInputElement).value;
+			if (value !== "") {
+				this.expectedPower = Number(value);
 			}
 		},
 		updatePhases() {

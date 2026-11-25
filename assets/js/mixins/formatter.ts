@@ -3,6 +3,7 @@ import { is12hFormat } from "@/units";
 import { CURRENCY, GRID_CONNECTION } from "../types/evcc";
 import settings from "@/settings";
 import type { DateFormat } from "@/settings";
+import { currentToPower } from "@/utils/phasePower";
 
 // Extract a single part in date context, where names can differ from their
 // standalone forms (German "So.", "Jan." vs "So", "Jan").
@@ -142,11 +143,13 @@ export default defineComponent({
       voltage = 230,
       gridConnection?: GRID_CONNECTION
     ) {
-      const factor =
-        gridConnection === GRID_CONNECTION.THREE_PHASE_THREE_WIRE && phases === 3
-          ? Math.sqrt(3)
-          : phases || 0;
-      return this.fmtW(voltage * (current || 0) * factor);
+      return this.fmtW(currentToPower(current, phases, voltage, gridConnection));
+    },
+    fmtA(current = 0) {
+      const value = new Intl.NumberFormat(this.$i18n?.locale, {
+        maximumFractionDigits: 2,
+      }).format(current);
+      return `${value} A`;
     },
     fmtW(watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number, signed = false) {
       let unit = format;
