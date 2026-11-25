@@ -130,7 +130,7 @@ func (sm *SMA) CurrentPower() (float64, error) {
 					return sma.AsFloat(p), err
 				}
 				// some hybrids (e.g. STP SE) don't provide PvPower, only per-string DC power
-				return sma.AsFloat(values[sunny.PowerS1]) + sma.AsFloat(values[sunny.PowerS2]), err
+				return sma.AsFloat(values[sunny.DcPower]), err
 			}
 		case "battery":
 			if sm.dc {
