@@ -87,7 +87,6 @@ const (
 	smaModbusYes          = 1129
 	smaModbusChargeLockOn = smaModbusYes
 	smaModbusReleased     = 5172
-	smaModbusModeStop     = 4721
 
 	smaModbusNaN32 = 0x80000000
 
@@ -134,13 +133,6 @@ func NewSmaModbus(ctx context.Context, settings modbus.Settings) (api.Charger, e
 		conn:    conn,
 		phases:  3,
 		refresh: smaModbusRefresh,
-	}
-
-	// the setpoint applies in all charging modes except charge stop
-	if v, err := wb.readHolding32(smaModbusRegMode); err != nil {
-		return nil, fmt.Errorf("mode: %w", err)
-	} else if v == smaModbusModeStop {
-		log.WARN.Println("charging mode is charge stop, charging is not possible")
 	}
 
 	if enabled, err := wb.Enabled(); err == nil {
