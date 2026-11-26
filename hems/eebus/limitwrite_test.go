@@ -171,3 +171,40 @@ func TestLimitWrite_ControlledWithoutRecentHeartbeat(t *testing.T) {
 	c.consumptionWriteApprovalRequired()
 	assert.Equal(t, testPendingConsumption, c.consumptionLimit.Value)
 }
+
+// TestLimitWrite_AfterFailsafeRelease covers "unlimited/autonomous" after LPC-921: a limit
+// within 60s after the last heartbeat is evaluated, also if that heartbeat preceded the release.
+func TestLimitWrite_AfterFailsafeRelease(t *testing.T) {
+	for _, tc := range []struct {
+		name         string
+		heartbeatAge time.Duration
+		accept       bool
+		reason       string
+	}{
+		{"recent heartbeat", 5 * time.Second, true, ""},
+		{"heartbeat older than 60s", limitWriteWindow + time.Second, false, "no preceding heartbeat"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := newTestEEBus(t)
+			require.NoError(t, c.run())
+			require.Equal(t, StatusFailsafe, c.status)
+
+			// heartbeat returns without a following limit, the release window has passed
+			c.updateHeartbeat()
+			require.NoError(t, c.run())
+			c.heartbeatReturned = time.Now().Add(-failsafeReleaseTimeout)
+			c.heartbeatAt = time.Now().Add(-tc.heartbeatAge)
+			require.NoError(t, c.run())
+			require.Equal(t, StatusNormal, c.status)
+			require.False(t, c.controlled)
+
+			lpc, lpp := withLimitMocks(t, c)
+			lpc.EXPECT().ApproveOrDenyConsumptionLimit(model.MsgCounterType(1), tc.accept, tc.reason).Once()
+			lpp.EXPECT().ApproveOrDenyProductionLimit(model.MsgCounterType(2), tc.accept, tc.reason).Once()
+
+			c.consumptionWriteApprovalRequired()
+			c.productionWriteApprovalRequired()
+			assert.Equal(t, tc.accept, c.controlled)
+		})
+	}
+}

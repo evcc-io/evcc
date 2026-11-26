@@ -346,12 +346,15 @@ func (c *EEBus) run() error {
 }
 
 // acceptsLimitWrite reports whether a limit write is evaluated: while controlled, or within
-// limitWriteWindow after a heartbeat received in the current state. Caller holds the mutex.
+// limitWriteWindow after a heartbeat, in failsafe one received after entering it. Caller holds the mutex.
 func (c *EEBus) acceptsLimitWrite() bool {
 	if c.controlled {
 		return true
 	}
-	return c.heartbeatAt.After(c.statusUpdated) && time.Since(c.heartbeatAt) <= limitWriteWindow
+	if c.status == StatusFailsafe && !c.heartbeatAt.After(c.statusUpdated) {
+		return false
+	}
+	return time.Since(c.heartbeatAt) <= limitWriteWindow
 }
 
 // limitActive reports whether t denotes a currently active limit: known (non-nil) and non-zero.
