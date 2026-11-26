@@ -38,7 +38,7 @@ type SmaModbus struct {
 	log        *util.Logger
 	conn       *modbus.Connection
 	mu         sync.Mutex
-	setpoint   []byte // last written WSptMax/WSptMin pair
+	setpoint   *uint32 // last written WSptMin
 	phases     int
 	current    float64
 	minCurrent float64
@@ -205,7 +205,7 @@ func (wb *SmaModbus) watchdog(ctx context.Context, interval time.Duration) {
 		wb.mu.Lock()
 		var err error
 		if wb.setpoint != nil {
-			err = wb.writeSetpoint(wb.setpoint)
+			err = wb.write(smaModbusRegWSptMin, *wb.setpoint)
 		}
 		wb.mu.Unlock()
 
@@ -213,12 +213,6 @@ func (wb *SmaModbus) watchdog(ctx context.Context, interval time.Duration) {
 			wb.log.ERROR.Println("watchdog:", err)
 		}
 	}
-}
-
-// writeSetpoint writes WSptMax and WSptMin in one request
-func (wb *SmaModbus) writeSetpoint(b []byte) error {
-	_, err := wb.conn.WriteMultipleRegisters(smaModbusRegWSptMax, 4, b)
-	return err
 }
 
 func (wb *SmaModbus) write(reg uint16, val uint32) error {
@@ -348,18 +342,17 @@ func (wb *SmaModbus) setPower(current float64, phases int) error {
 		power = min(power, maxPower)
 	}
 
-	// consumption is negative, equal bounds make the setpoint exact
+	// consumption is negative, the lower bound limits the charging power
 	val := uint32(int32(-math.Ceil(power)))
-	b := binary.BigEndian.AppendUint32(binary.BigEndian.AppendUint32(nil, val), val)
 
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 
-	if err := wb.writeSetpoint(b); err != nil {
+	if err := wb.write(smaModbusRegWSptMin, val); err != nil {
 		return err
 	}
 
-	wb.setpoint = b
+	wb.setpoint = &val
 
 	return nil
 }
