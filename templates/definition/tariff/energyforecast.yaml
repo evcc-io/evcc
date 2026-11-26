@@ -25,7 +25,7 @@ render: |
   # without zones or formula, charges and tax are applied by the API, unset values fall back to the energyforecast.de profile
   forecast:
     source: http
-    uri: https://www.energyforecast.de/api/v2/forecast?token={{ .token }}{{ if .domain }}&market_zone={{ .domain }}{{ end }}{{ if not $local }}{{ if .charges }}&fixed_cost_cent={{ round (mulf .charges 100) 4 }}{{ end }}{{ if .tax }}&vat={{ round (mulf .tax 100) 4 }}{{ end }}{{ end }}
+    uri: https://www.energyforecast.de/api/v2/forecast?token={{ .token }}{{ if .domain }}&market_zone={{ .domain }}{{ end }}{{ if not $local }}{{ if ne (toString .charges) "" }}&fixed_cost_cent={{ round (mulf .charges 100) 4 }}{{ end }}{{ if ne (toString .tax) "" }}&vat={{ round (mulf .tax 100) 4 }}{{ end }}{{ end }}
     jq: |
       .data | map({
         "start": .start,
