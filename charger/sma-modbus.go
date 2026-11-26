@@ -39,6 +39,7 @@ type SmaModbus struct {
 	conn       *modbus.Connection
 	mu         sync.Mutex
 	setpoint   *uint32 // last written WSptMin
+	updated    time.Time
 	phases     int
 	current    float64
 	minCurrent float64
@@ -76,7 +77,7 @@ const (
 	smaModbusRegStpWhenFl  = 41485 // UINT32, disconnect after full charge
 	smaModbusRegWSptMax    = 41431 // INT32 W, active power setpoint upper bound
 	smaModbusRegWSptMin    = 41433 // INT32 W, active power setpoint lower bound
-	smaModbusRegCtlTimeout = 41525 // UINT32 0.01 s, active power control timeout
+	smaModbusRegTmsOutPrc  = 41525 // UINT32 0.01, active power control timeout or fallback, unclear
 	smaModbusRegMaxPower   = 44383 // INT32 W, configured maximum power WMaxIn, must not be used for control
 	smaModbusRegMinPower   = 44387 // INT32 W
 
@@ -91,8 +92,8 @@ const (
 	// the charger drops to 1p below this power, matches the 4500 W WMaxIn minimum of the EV Charger
 	smaModbusMinPower3p = 4500 // W
 
-	// setpoint refresh interval if the control timeout is unknown
-	smaModbusRefresh = time.Minute
+	// setpoint refresh after the last write, well within the 600 s control timeout seen on the eCharger
+	smaModbusRefresh = 30 * time.Second
 )
 
 func init() {
@@ -180,38 +181,35 @@ func NewSmaModbus(ctx context.Context, settings modbus.Settings) (api.Charger, e
 		log.WARN.Println(`"Disconnect after full charge" must be set to "No"`)
 	}
 
-	// setpoints fall back after the control timeout
-	interval := smaModbusRefresh
-	if v, err := wb.readHolding32(smaModbusRegCtlTimeout); err == nil {
-		if timeout := time.Duration(smaModbusUint32(v)*10) * time.Millisecond; timeout > 0 {
-			interval = max(timeout/2, time.Second)
-		}
-	}
-
-	go wb.watchdog(ctx, interval)
+	go wb.watchdog(ctx)
 
 	return wb, nil
 }
 
 // watchdog rewrites the setpoint before the charger falls back after the control timeout
-func (wb *SmaModbus) watchdog(ctx context.Context, interval time.Duration) {
-	for tick := time.Tick(interval); ; {
+func (wb *SmaModbus) watchdog(ctx context.Context) {
+	for {
+		wb.mu.Lock()
+		wait := smaModbusRefresh
+		if wb.setpoint != nil {
+			wait -= time.Since(wb.updated)
+		}
+		wb.mu.Unlock()
+
 		select {
-		case <-tick:
+		case <-time.After(wait):
 		case <-ctx.Done():
 			return
 		}
 
 		wb.mu.Lock()
-		var err error
-		if wb.setpoint != nil {
-			err = wb.write(smaModbusRegWSptMin, *wb.setpoint)
+		if wb.setpoint != nil && time.Since(wb.updated) >= smaModbusRefresh {
+			if err := wb.write(smaModbusRegWSptMin, *wb.setpoint); err != nil {
+				wb.log.ERROR.Println("watchdog:", err)
+			}
+			wb.updated = time.Now()
 		}
 		wb.mu.Unlock()
-
-		if err != nil {
-			wb.log.ERROR.Println("watchdog:", err)
-		}
 	}
 }
 
@@ -353,6 +351,7 @@ func (wb *SmaModbus) setPower(current float64, phases int) error {
 	}
 
 	wb.setpoint = &val
+	wb.updated = time.Now()
 
 	return nil
 }
@@ -563,7 +562,7 @@ func (wb *SmaModbus) Diagnose() {
 		{"Disconnect after full charge", smaModbusRegStpWhenFl},
 		{"Setpoint max", smaModbusRegWSptMax},
 		{"Setpoint min", smaModbusRegWSptMin},
-		{"Control timeout", smaModbusRegCtlTimeout},
+		{"Control TmsOutPrc", smaModbusRegTmsOutPrc},
 		{"Max power", smaModbusRegMaxPower},
 		{"Min power", smaModbusRegMinPower},
 		{"Rated max current", smaModbusRegMaxCurrent},
