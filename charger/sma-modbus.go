@@ -90,7 +90,7 @@ const (
 
 	smaModbusNaN32 = 0x80000000
 
-	// the charger drops to 1p below this power, matches the 4500 W WMaxIn minimum of the EV Charger
+	// the charger selects 3p from this power and 1p below, matches the 4500 W WMaxIn minimum of the EV Charger
 	smaModbusMinPower3p = 4500 // W
 
 	// setpoint refresh if the control timeout is unknown
@@ -153,19 +153,10 @@ func NewSmaModbus(ctx context.Context, settings modbus.Settings) (api.Charger, e
 		wb.maxPower = smaModbusInt32(v)
 	}
 
-	// the charger may already charge on 1p after a restart
-	if s, err := wb.Status(); err == nil && s == api.StatusC {
-		if l1, l2, l3, err := wb.Currents(); err == nil {
-			var active int
-			for _, l := range []float64{l1, l2, l3} {
-				if l > 1 {
-					active++
-				}
-			}
-			if active == 1 {
-				wb.phases = 1
-			}
-		}
+	// the charger may already run a 1p setpoint after a restart
+	if v, err := wb.readHolding32(smaModbusRegWSptMin); err == nil && v != 0 && v != smaModbusNaN32 {
+		wb.power = math.Abs(smaModbusInt32(v))
+		wb.phases = smaModbusPhases(wb.power)
 	}
 
 	// disconnecting after full charge ends the session on the charger side
@@ -382,6 +373,8 @@ func (wb *SmaModbus) calcPower(current float64, phases int) float64 {
 
 	if phases > 1 {
 		power = max(power, smaModbusMinPower3p)
+	} else {
+		power = min(power, smaModbusMinPower3p-1)
 	}
 
 	// limits are reported as negative consumption values
@@ -433,7 +426,36 @@ var _ api.PhaseGetter = (*SmaModbus)(nil)
 
 // GetPhases implements the api.PhaseGetter interface
 func (wb *SmaModbus) GetPhases() (int, error) {
-	return wb.phases, nil
+	v, err := wb.readHolding32(smaModbusRegWSptMin)
+	if err != nil {
+		return 0, err
+	}
+
+	var power float64
+	switch v {
+	case smaModbusNaN32: // not limited, the charger uses its configured maximum
+		power = wb.maxPower
+	case 0: // disabled, phases follow the stored setpoint on enable
+		wb.mu.Lock()
+		power = wb.power
+		wb.mu.Unlock()
+	default:
+		power = smaModbusInt32(v)
+	}
+
+	if power == 0 {
+		return 0, nil
+	}
+
+	return smaModbusPhases(math.Abs(power)), nil
+}
+
+// smaModbusPhases returns the phases the charger selects for the setpoint power
+func smaModbusPhases(power float64) int {
+	if power >= smaModbusMinPower3p {
+		return 3
+	}
+	return 1
 }
 
 var _ api.Meter = (*SmaModbus)(nil)
