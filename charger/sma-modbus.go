@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -35,6 +36,7 @@ import (
 
 // SmaModbus charger implementation for the SMA eCharger (Modbus profile SW 2.7)
 type SmaModbus struct {
+	implement.Caps
 	log        *util.Logger
 	conn       *modbus.Connection
 	mu         sync.Mutex
@@ -129,6 +131,7 @@ func NewSmaModbus(ctx context.Context, settings modbus.Settings) (api.Charger, e
 	conn.Logger(log.TRACE)
 
 	wb := &SmaModbus{
+		Caps:    implement.New(),
 		log:     log,
 		conn:    conn,
 		phases:  3,
@@ -153,10 +156,17 @@ func NewSmaModbus(ctx context.Context, settings modbus.Settings) (api.Charger, e
 		wb.maxPower = smaModbusInt32(v)
 	}
 
-	// the charger may already run a 1p setpoint after a restart
-	if v, err := wb.readHolding32(smaModbusRegWSptMin); err == nil && v != 0 && v != smaModbusNaN32 {
-		wb.power = math.Abs(smaModbusInt32(v))
-		wb.phases = smaModbusPhases(wb.power)
+	if wb.phaseSwitching() {
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
+
+		// the charger may already run a 1p setpoint after a restart
+		if v, err := wb.readHolding32(smaModbusRegWSptMin); err == nil && v != 0 && v != smaModbusNaN32 {
+			wb.power = math.Abs(smaModbusInt32(v))
+			wb.phases = smaModbusPhases(wb.power)
+		}
+	} else {
+		wb.phases = 1
 	}
 
 	// disconnecting after full charge ends the session on the charger side
@@ -416,10 +426,26 @@ func (wb *SmaModbus) voltageFactor(phases int) float64 {
 	return sum / float64(n) / grid.Voltage
 }
 
-var _ api.PhaseSwitcher = (*SmaModbus)(nil)
+// phaseSwitching reports whether the charger reaches 3p, it selects 1p below the threshold power
+func (wb *SmaModbus) phaseSwitching() bool {
+	if maxPower := math.Abs(wb.maxPower); maxPower > 0 && maxPower < smaModbusMinPower3p {
+		wb.log.DEBUG.Printf("max power %.0fW below 3p threshold, charging 1p only", maxPower)
+		return false
+	}
 
-// Phases1p3p implements the api.PhaseSwitcher interface
-func (wb *SmaModbus) Phases1p3p(phases int) error {
+	// single phase devices are rated for the max current on one phase
+	if v, err := wb.read32(smaModbusRegMaxPowerRtg, 1); err == nil && wb.maxCurrent > 0 {
+		if rated := math.Abs(smaModbusInt32(v[0])); rated > 0 && math.Round(rated/(wb.maxCurrent*grid.Voltage)) == 1 {
+			wb.log.DEBUG.Println("single phase device")
+			return false
+		}
+	}
+
+	return true
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *SmaModbus) phases1p3p(phases int) error {
 	// loadpoint may not rewrite an unchanged current, hence apply the new phases immediately
 	if wb.current > 0 {
 		if err := wb.setPower(wb.current, phases); err != nil {
@@ -432,10 +458,8 @@ func (wb *SmaModbus) Phases1p3p(phases int) error {
 	return nil
 }
 
-var _ api.PhaseGetter = (*SmaModbus)(nil)
-
-// GetPhases implements the api.PhaseGetter interface
-func (wb *SmaModbus) GetPhases() (int, error) {
+// getPhases implements the api.PhaseGetter interface
+func (wb *SmaModbus) getPhases() (int, error) {
 	v, err := wb.readHolding32(smaModbusRegWSptMin)
 	if err != nil {
 		return 0, err
@@ -466,6 +490,18 @@ func smaModbusPhases(power float64) int {
 		return 3
 	}
 	return 1
+}
+
+var _ api.PowerLimiter = (*SmaModbus)(nil)
+
+// GetMinMaxPower implements the api.PowerLimiter interface
+func (wb *SmaModbus) GetMinMaxPower() (float64, float64, error) {
+	if wb.minPower == 0 || wb.maxPower == 0 {
+		return 0, 0, api.ErrNotAvailable
+	}
+
+	// limits are reported as negative consumption values
+	return math.Abs(wb.minPower), math.Abs(wb.maxPower), nil
 }
 
 var _ api.Meter = (*SmaModbus)(nil)
