@@ -72,7 +72,7 @@
     "@vue/compiler-sfc": "^3.5.43",
     "@vue/test-utils": "^2.5.1",
     "@vue/tsconfig": "^0.9.1",
-    "aedes": "^1.2.0",
+    "aedes": "2.0.0-beta.1",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "body-parser": "^2.3.0",

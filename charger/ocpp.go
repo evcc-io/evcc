@@ -188,8 +188,11 @@ func NewOCPP(ctx context.Context,
 		return nil, fmt.Errorf("invalid connector: %d", connector)
 	}
 
+	// remotestart is the master switch, idtag only applies when it is enabled
 	if remoteStart {
 		idTag = cmp.Or(idTag, cp.IdTag, defaultIdTag)
+	} else {
+		idTag = ""
 	}
 
 	conn, err := ocpp.NewConnector(ctx, log, connector, cp, idTag, meterInterval)
