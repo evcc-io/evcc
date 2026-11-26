@@ -206,6 +206,8 @@ func (v *MqttConnector) runMqtt(ctx context.Context, token *oauth2.Token) error 
 	}
 
 	timeout := 30 * time.Second
+	topic := fmt.Sprintf("%s/+", gcid)
+	errC := make(chan error, 1)
 
 	client, err := pluginmqtt.Connect(ctx, autopaho.ClientConfig{
 		ServerUrls:                    []*url.URL{u},
@@ -214,6 +216,22 @@ func (v *MqttConnector) runMqtt(ctx context.Context, token *oauth2.Token) error 
 		ConnectTimeout:                timeout,
 		ConnectUsername:               gcid,
 		ConnectPassword:               []byte(idToken),
+		// the broker drops the subscription when the connection is lost
+		OnConnectionUp: func(cm *autopaho.ConnectionManager, _ *paho.Connack) {
+			go func() {
+				if _, err := cm.Subscribe(ctx, &paho.Subscribe{
+					Subscriptions: []paho.SubscribeOptions{{Topic: topic}},
+				}); err != nil {
+					select {
+					case errC <- fmt.Errorf("subscribe: %w", err):
+					default:
+					}
+					return
+				}
+
+				v.log.DEBUG.Println("connected streaming")
+			}()
+		},
 		ClientConfig: paho.ClientConfig{
 			PacketTimeout: timeout,
 			OnPublishReceived: pluginmqtt.OnPublish(func(m *paho.Publish) {
@@ -226,22 +244,15 @@ func (v *MqttConnector) runMqtt(ctx context.Context, token *oauth2.Token) error 
 	}
 	defer func() { _ = client.Disconnect(context.Background()) }()
 
-	topic := fmt.Sprintf("%s/+", gcid)
-
-	if _, err := client.Subscribe(ctx, &paho.Subscribe{
-		Subscriptions: []paho.SubscribeOptions{{Topic: topic}},
-	}); err != nil {
-		return fmt.Errorf("subscribe: %w", err)
-	}
-
-	v.log.DEBUG.Println("connected streaming")
-
-	ctx, cancel := context.WithDeadline(ctx, token.Expiry)
+	expired, cancel := context.WithDeadline(ctx, token.Expiry)
 	defer cancel()
 
-	<-ctx.Done()
-
-	return nil
+	select {
+	case err := <-errC:
+		return err
+	case <-expired.Done():
+		return nil
+	}
 }
 
 func (v *MqttConnector) handler(topic string, payload []byte) {
