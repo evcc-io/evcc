@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -25,6 +26,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -48,16 +50,19 @@ type SmaRest struct {
 	parameterG   util.Cacheable[[]smarest.Parameters]
 	phases       int
 	current      float64
+	control      string // channel used for power control
+	mu           sync.Mutex
+	setpoint     string // last written setpoint
 }
 
 func init() {
 	// TODO remove deprecated
-	registry.Add("sma-rest", NewSmaRestFromConfig)
-	registry.Add("smaevcharger", NewSmaRestFromConfig)
+	registry.AddCtx("sma-rest", NewSmaRestFromConfig)
+	registry.AddCtx("smaevcharger", NewSmaRestFromConfig)
 }
 
 // NewSmaRestFromConfig creates a SMA EV Charger from generic config
-func NewSmaRestFromConfig(other map[string]any) (api.Charger, error) {
+func NewSmaRestFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Uri      string
 		User     string
@@ -83,11 +88,11 @@ func NewSmaRestFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, errors.New(`user "admin" not allowed, create new user`)
 	}
 
-	return NewSmaRest(cc.Uri, cc.User, cc.Password, cc.Cache)
+	return NewSmaRest(ctx, cc.Uri, cc.User, cc.Password, cc.Cache)
 }
 
 // NewSmaRest creates an SMA EV Charger
-func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, error) {
+func NewSmaRest(ctx context.Context, uri, user, password string, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("sma-rest").Redact(user, password)
 
 	wb := &SmaRest{
@@ -137,10 +142,19 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 	}
 
 	// charging control requires write access, accounts without sufficient rights do not get these parameters or cannot edit them
-	for _, id := range []string{sma.ChrgActChaMod, sma.InverterWMaxIn} {
-		if p, err := wb.parameter(id); err != nil || !p.Editable {
-			return nil, fmt.Errorf("%s not writable, user requires administrator or installer rights", id)
-		}
+	if !wb.editable(sma.ChrgActChaMod) {
+		return nil, fmt.Errorf("%s not writable, user requires administrator or installer rights", sma.ChrgActChaMod)
+	}
+
+	// WMaxIn is the configured maximum power, devices without the active power setpoint are controlled via WMaxIn as before
+	switch {
+	case wb.editable(sma.SetpointWSptMin):
+		wb.control = sma.SetpointWSptMin
+	case wb.editable(sma.InverterWMaxIn):
+		wb.control = sma.InverterWMaxIn
+		log.DEBUG.Println("active power setpoint not available, using maximum power")
+	default:
+		return nil, fmt.Errorf("%s not writable, user requires administrator or installer rights", sma.SetpointWSptMin)
 	}
 
 	// pv surplus and target modes would regulate charging on their own
@@ -183,7 +197,46 @@ func NewSmaRest(uri, user, password string, cache time.Duration) (api.Charger, e
 		log.WARN.Println(`"Minimum relay switching time" should be at most 60s`)
 	}
 
+	// setpoints fall back after the control timeout
+	if wb.control == sma.SetpointWSptMin {
+		interval := time.Minute
+		if v, err := wb.getParameter(sma.InverterTmsOutPrc); err == nil {
+			if t, err := strconv.ParseFloat(v, 64); err == nil && t > 0 {
+				interval = max(time.Duration(t*float64(time.Second))/2, time.Second)
+			}
+		}
+
+		go wb.watchdog(ctx, interval)
+	}
+
 	return wb, nil
+}
+
+// watchdog rewrites the setpoint before the charger falls back after the control timeout
+func (wb *SmaRest) watchdog(ctx context.Context, interval time.Duration) {
+	for tick := time.Tick(interval); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
+		wb.mu.Lock()
+		var err error
+		if wb.setpoint != "" {
+			err = wb.Send(value(wb.control, wb.setpoint))
+		}
+		wb.mu.Unlock()
+
+		if err != nil {
+			wb.log.ERROR.Println("watchdog:", err)
+		}
+	}
+}
+
+func (wb *SmaRest) editable(id string) bool {
+	p, err := wb.parameter(id)
+	return err == nil && p.Editable
 }
 
 // Status implements the api.Charger interface
@@ -279,17 +332,36 @@ func (wb *SmaRest) MaxCurrentMillis(current float64) error {
 func (wb *SmaRest) setPower(current float64, phases int) error {
 	power := grid.CurrentToPower(current, phases)
 
-	// the charger rejects values outside the parameter range, e.g. a 4500 W minimum on the EV Charger
-	if p, err := wb.parameter(sma.InverterWMaxIn); err == nil {
+	p, err := wb.parameter(sma.InverterWMaxIn)
+
+	val := strconv.Itoa(int(math.Round(power)))
+	if wb.control == sma.SetpointWSptMin {
+		// the setpoint is limited by the configured maximum power and negative for consumption
+		if v, err := strconv.ParseFloat(p.Value, 64); err == nil && v != 0 {
+			power = min(power, math.Abs(v))
+		}
+		val = strconv.Itoa(-int(math.Round(power)))
+	} else if err == nil {
+		// the charger rejects values outside the parameter range, e.g. a 4500 W minimum on the EV Charger
 		if p.Min != nil {
 			power = max(power, *p.Min)
 		}
 		if p.Max != nil {
 			power = min(power, *p.Max)
 		}
+		val = strconv.Itoa(int(math.Round(power)))
 	}
 
-	return wb.Send(value(sma.InverterWMaxIn, strconv.Itoa(int(math.Round(power)))))
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	if err := wb.Send(value(wb.control, val)); err != nil {
+		return err
+	}
+
+	wb.setpoint = val
+
+	return nil
 }
 
 var _ api.PhaseSwitcher = (*SmaRest)(nil)
