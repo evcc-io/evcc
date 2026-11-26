@@ -203,8 +203,8 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 	// Monitoring Appliance MPC provides the measured power consumption
 	case mpc.UseCaseSupportUpdate:
 		c.mu.Lock()
-		// use most specific selector
-		if c.mpcEntity == nil || len(entity.Address().Entity) < len(c.mpcEntity.Address().Entity) {
+		// use most specific selector, a re-announced entity replaces its stale instance
+		if c.mpcEntity == nil || len(entity.Address().Entity) <= len(c.mpcEntity.Address().Entity) {
 			c.mpcEntity = entity
 		}
 		c.mu.Unlock()
